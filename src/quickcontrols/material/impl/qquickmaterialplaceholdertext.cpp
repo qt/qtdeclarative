@@ -9,6 +9,7 @@
 #include <QtGui/qpainterpath.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
+#include <QtQuickTemplates2/private/qquicktextarea_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -100,13 +101,25 @@ bool QQuickMaterialPlaceholderText::shouldAnimate() const
         : !m_controlHasText && !text().isEmpty();
 }
 
+void QQuickMaterialPlaceholderText::updateY()
+{
+    setY(shouldFloat() ? floatingTargetY() : normalTargetY());
+}
+
 qreal QQuickMaterialPlaceholderText::normalTargetY() const
 {
+    auto *textArea = qobject_cast<QQuickTextArea *>(parentItem());
+    if (textArea && m_controlHeight >= textArea->implicitHeight()) {
+        // TextArea can be multiple lines in height, and we want the
+        // placeholder text to sit in the middle of its default-height
+        // (one-line) if its explicit height is greater than or equal to its
+        // implicit height - i.e. if it has room for it. If it doesn't have
+        // room, just do what TextField does.
+        return (m_controlImplicitBackgroundHeight - m_largestHeight) / 2.0;
+    }
+
     // When the placeholder text shouldn't float, it should sit in the middle of the TextField.
-    // We could just use the control's height minus our height instead of the members, but
-    // that doesn't work for TextArea, which can be multiple lines in height and hence taller.
-    // In that case, we want the placeholder text to sit in the middle of its default-height (one-line).
-    return (m_controlImplicitBackgroundHeight - m_largestHeight) / 2.0;
+    return (m_controlHeight - height()) / 2.0;
 }
 
 qreal QQuickMaterialPlaceholderText::floatingTargetY() const
@@ -142,8 +155,32 @@ void QQuickMaterialPlaceholderText::setControlImplicitBackgroundHeight(qreal con
         return;
 
     m_controlImplicitBackgroundHeight = controlImplicitBackgroundHeight;
-    setY(shouldFloat() ? floatingTargetY() : normalTargetY());
+    updateY();
     emit controlImplicitBackgroundHeightChanged();
+}
+
+/*!
+    \internal
+
+    Exists so that we can call updateY when the control's height changes,
+    which is necessary for some y position calculations.
+
+    We don't really need it for the actual calculations, since we already
+    have access to the parent item, from which the property comes, but
+    it's simpler just to use it.
+*/
+qreal QQuickMaterialPlaceholderText::controlHeight() const
+{
+    return m_controlHeight;
+}
+
+void QQuickMaterialPlaceholderText::setControlHeight(qreal controlHeight)
+{
+    if (qFuzzyCompare(m_controlHeight, controlHeight))
+        return;
+
+    m_controlHeight = controlHeight;
+    updateY();
 }
 
 qreal QQuickMaterialPlaceholderText::verticalPadding() const
@@ -185,8 +222,7 @@ void QQuickMaterialPlaceholderText::controlGotActiveFocus()
 
         m_focusInAnimation->start(QAbstractAnimation::DeleteWhenStopped);
     } else {
-        const int newY = shouldFloat() ? floatingTargetY() : normalTargetY();
-        setY(newY);
+        updateY();
     }
 }
 
@@ -212,16 +248,14 @@ void QQuickMaterialPlaceholderText::controlLostActiveFocus()
 
         m_focusOutAnimation->start(QAbstractAnimation::DeleteWhenStopped);
     } else {
-        const int newY = shouldFloat() ? floatingTargetY() : normalTargetY();
-        setY(newY);
+        updateY();
     }
 }
 
 void QQuickMaterialPlaceholderText::maybeSetFocusAnimationProgress()
 {
-    const bool shouldWeFloat = shouldFloat();
-    setY(shouldWeFloat ? floatingTargetY() : normalTargetY());
-    setScale(shouldWeFloat ? floatingScale : 1.0);
+    updateY();
+    setScale(shouldFloat() ? floatingScale : 1.0);
 }
 
 void QQuickMaterialPlaceholderText::componentComplete()

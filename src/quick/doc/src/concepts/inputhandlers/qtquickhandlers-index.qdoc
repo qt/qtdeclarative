@@ -17,6 +17,8 @@
     behavioral concerns are better separated, and the behavior is built up by
     finer-grained composition.
 
+    The \l {Pointer Handlers Example} demonstrates some use cases for these.
+
     The pre-existing \l Keys attached property is similar in concept, so we
     refer to the pointing-device-oriented handlers plus \c Keys together as the
     set of Input Handlers. We expect to offer more attached-property use cases
@@ -70,7 +72,8 @@
     PointHandler) can work only with passive grabs; others require exclusive
     grabs; and others can "lurk" with passive grabs until they detect that a
     gesture is being performed, and then make the transition from passive to
-    exclusive grab.
+    exclusive grab. TapHandler's grabbing behavior is
+    \l {TapHandler::gesturePolicy}{configurable}.
 
     When a grab transition is requested, \l PointerHandler::grabPermissions,
     \l QQuickItem::keepMouseGrab() and \l QQuickItem::keepTouchGrab() control

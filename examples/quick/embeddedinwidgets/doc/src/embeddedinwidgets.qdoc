@@ -1,0 +1,45 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+/*!
+    \title Qt Quick Examples - Embedded in Widgets
+    \example embeddedinwidgets
+    \image qml-embeddedinwidgets-example.jpg
+    \brief Demonstrates embedding a QQuickWindow into a QWidget UI via QWidget::createWindowContainer().
+    \ingroup qtquickexamples
+
+    This example demonstrates one of the approaches to adding Qt Quick content
+    into a QWidget-based application. QQuickView, and its parent class,
+    QQuickWindow derive from QWindow. This means that they can be used with
+    QWidget::createWindowContainer(), like any other QWindow.
+
+    \include examples-run.qdocinc
+
+    Embedding the window internally leads to creating a native child widget
+    inside the widget hierarchy, and the window (the QQuickView in the example)
+    is reparented. The container widget takes care of repositioning the child
+    window so that it appears to be part of the user interface, even though in
+    reality it is separate native window that paints independently from its
+    parent, the QWidget-based top-level window.
+
+    \snippet embeddedinwidgets/main.cpp ctor
+
+    The key step during initialization is the creation of \c container, a
+    QWidget that wraps and hosts the QQuickView. This widget can then added to a
+    layout like any other QWidget.
+
+    \note Using native window embedding is just one possible approach to
+    combining QWidget and Qt Quick user interfaces. The other, more commonly
+    used approach for this is QQuickWidget. See the \l{Qt Quick Widgets Example}
+    for an example of using QQuickWidget. There are significant differences
+    internally when it comes to rendering and event handling. QQuickWidget does
+    not use native windows at all and redirects the Qt Quick rendering into a
+    texture that is then composited with the rest of the QWidget content via a
+    3D graphics API such as OpenGL or Vulkan. This brings more flexibility, at
+    the expense of performance. It also works on platforms where there is no
+    actual windowing system and no concept of native windows. Whereas the window
+    embedding approach demonstrated by this example can be more performant, but
+    it is best suited for user interfaces where the Qt Quick content occupies a
+    fixed rectangular area and is not resized, stacked, or clipped afterwards.
+
+    \sa QWidget::createWindowContainer()
+*/

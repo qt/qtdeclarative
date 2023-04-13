@@ -33,6 +33,7 @@ public:
     qreal m_opacity;
     QSGRenderTarget m_rt;
     QMatrix4x4 m_projectionMatrix;
+    QMatrix4x4 m_localMatrix; //  ### Qt 7 m_matrix should not be a pointer
 };
 
 QT_END_NAMESPACE

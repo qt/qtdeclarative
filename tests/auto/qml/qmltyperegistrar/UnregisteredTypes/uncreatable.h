@@ -39,6 +39,39 @@ public:
     static SingletonCreatable3 *create(QQmlEngine *, QJSEngine *) { return nullptr; }
 };
 
+class SingletonForeign : public QObject
+{
+    Q_OBJECT
+    SingletonForeign() = delete;
+};
+
+class SingletonLocalCreatable
+{
+    Q_GADGET
+    QML_FOREIGN(SingletonForeign)
+    QML_ELEMENT
+    QML_SINGLETON
+public:
+    static SingletonForeign *create(QQmlEngine *, QJSEngine *) { return nullptr; }
+};
+
+class SingletonLocalUncreatable1
+{
+    Q_GADGET
+    QML_FOREIGN(SingletonForeign)
+    QML_ELEMENT
+    QML_SINGLETON
+    static SingletonForeign *create(QQmlEngine *, QJSEngine *) { return nullptr; }
+};
+
+class SingletonLocalUncreatable2
+{
+    Q_GADGET
+    QML_FOREIGN(SingletonForeign)
+    QML_ELEMENT
+    QML_SINGLETON
+};
+
 class SingletonIncreatable : public QObject
 {
     Q_OBJECT

@@ -14,6 +14,7 @@ qt_internal_add_module(QmlDomPrivate
     SOURCES
         qqmldom_fwd_p.h
         qqmldom_global.h
+        qqmldom_utils_p.h
         qqmldomastcreator.cpp qqmldomastcreator_p.h
         qqmldomastdumper.cpp qqmldomastdumper_p.h
         qqmldomattachedinfo.cpp qqmldomattachedinfo_p.h

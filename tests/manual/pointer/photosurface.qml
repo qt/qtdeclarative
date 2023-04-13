@@ -1,9 +1,10 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-import QtQuick 2.12
-import QtQuick.Dialogs 1.0
-import Qt.labs.folderlistmodel 1.0
+import QtCore
+import QtQuick
+import QtQuick.Dialogs
+import Qt.labs.folderlistmodel
 import "content"
 
 Rectangle {
@@ -11,36 +12,37 @@ Rectangle {
     visible: true
     width: 1024; height: 600
     color: "black"
-    property int highestZ: 0
     property real defaultSize: 200
     property real surfaceViewportRatio: 1.5
 
-    FileDialog {
-        id: fileDialog
+    FolderDialog {
+        id: folderDialog
         title: "Choose a folder with some images"
-        selectFolder: true
-        onAccepted: folderModel.folder = fileUrl + "/"
+        onAccepted: folderModel.folder = selectedFolder + "/"
     }
     Shortcut {
         id: openShortcut
         sequence: StandardKey.Open
-        onActivated: fileDialog.open()
+        onActivated: folderDialog.open()
     }
 
     FakeFlickable {
         id: flick
         anchors.fill: parent
-        contentWidth: width * 2
-        contentHeight: height * 2
+        contentWidth: width * root.surfaceViewportRatio
+        contentHeight: height * root.surfaceViewportRatio
+        property int highestZ: 0
         Repeater {
             model: FolderListModel {
                 id: folderModel
-                folder: "resources/"
                 objectName: "folderModel"
                 showDirs: false
                 nameFilters: ["*.png", "*.jpg", "*.gif"]
             }
-            Rectangle {
+            delegate: Rectangle {
+                required property string fileModified
+                required property string fileName
+                required property string fileUrl
                 id: photoFrame
                 objectName: "frame-" + fileName
                 width: image.width * (1 + 0.10 * image.height / image.width)
@@ -58,21 +60,34 @@ Rectangle {
                     y = Math.random() * root.height - height / 2
                     rotation = Math.random() * 13 - 6
                 }
+
                 Image {
                     id: image
                     anchors.centerIn: parent
                     fillMode: Image.PreserveAspectFit
-                    source: folderModel.folder + fileName
+                    source: photoFrame.fileUrl
                     antialiasing: true
                 }
 
-                MomentumAnimation { id: anim; target: photoFrame }
+                Text {
+                    text: fileName + " ❖ " + Qt.formatDateTime(fileModified, Locale.LongFormat)
+                    horizontalAlignment: Text.AlignHCenter
+                    elide: Text.ElideRight
+                    font.pixelSize: (parent.height - image.height) / 3
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        bottom: parent.bottom
+                        margins: font.pixelSize / 5
+                    }
+                }
 
-                DragHandler {
-                    id: dragHandler
-                    onActiveChanged: {
-                        if (!active)
-                            anim.restart(point.velocity)
+                MomentumAnimation {
+                    id: anim
+                    target: photoFrame
+                    onFinished: {
+                        flick.contentWidth = Math.max(photoFrame.x + photoFrame.width, flick.contentWidth)
+                        flick.contentHeight = Math.max(photoFrame.y + photoFrame.height, flick.contentHeight)
                     }
                 }
 
@@ -82,7 +97,18 @@ Rectangle {
                     maximumRotation: 360
                     minimumScale: 0.1
                     maximumScale: 10
-                    property real zRestore: 0
+                    grabPermissions: PointerHandler.CanTakeOverFromAnything // and never gonna give it up
+                    onActiveChanged: if (active) photoFrame.z = ++flick.highestZ
+                }
+
+                DragHandler {
+                    id: dragHandler
+                    onActiveChanged: {
+                        if (active)
+                            photoFrame.z = ++flick.highestZ
+                        else
+                            anim.restart(centroid.velocity)
+                    }
                 }
             }
         }
@@ -133,5 +159,23 @@ Rectangle {
         text: "Press " + openShortcut.nativeText + " to choose a different image folder\n" +
               "On a touchscreen: use two fingers to zoom and rotate, one finger to drag\n" +
               "With a mouse: drag normally"
+    }
+
+    Shortcut { sequence: StandardKey.Quit; onActivated: Qt.quit() }
+
+    Component.onCompleted: {
+        const lastArg = Application.arguments.slice(-1)[0]
+        const standardPicturesLocations = StandardPaths.standardLocations(StandardPaths.PicturesLocation)
+        const hasValidPicturesLocation = standardPicturesLocations.length > 0
+        if (hasValidPicturesLocation)
+            folderDialog.currentFolder = standardPicturesLocations[0]
+        if (/.*hotosurface.*|--+/.test(lastArg)) {
+            if (hasValidPicturesLocation)
+                folderModel.folder = standardPicturesLocations[0]
+            else
+                folderDialog.open()
+        }
+        else
+            folderModel.folder = Qt.resolvedUrl("file:" + lastArg)
     }
 }

@@ -33,12 +33,14 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackView : public QQuickControl
     Q_PROPERTY(int depth READ depth NOTIFY depthChanged FINAL)
     Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
     Q_PROPERTY(QJSValue initialItem READ initialItem WRITE setInitialItem FINAL)
+#if QT_CONFIG(quick_viewtransitions)
     Q_PROPERTY(QQuickTransition *popEnter READ popEnter WRITE setPopEnter NOTIFY popEnterChanged FINAL)
     Q_PROPERTY(QQuickTransition *popExit READ popExit WRITE setPopExit NOTIFY popExitChanged FINAL)
     Q_PROPERTY(QQuickTransition *pushEnter READ pushEnter WRITE setPushEnter NOTIFY pushEnterChanged FINAL)
     Q_PROPERTY(QQuickTransition *pushExit READ pushExit WRITE setPushExit NOTIFY pushExitChanged FINAL)
     Q_PROPERTY(QQuickTransition *replaceEnter READ replaceEnter WRITE setReplaceEnter NOTIFY replaceEnterChanged FINAL)
     Q_PROPERTY(QQuickTransition *replaceExit READ replaceExit WRITE setReplaceExit NOTIFY replaceExitChanged FINAL)
+#endif
     // 2.3 (Qt 5.10)
     Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged FINAL REVISION(2, 3))
     QML_NAMED_ELEMENT(StackView)
@@ -66,6 +68,7 @@ public:
     QJSValue initialItem() const;
     void setInitialItem(const QJSValue &item);
 
+#if QT_CONFIG(quick_viewtransitions)
     QQuickTransition *popEnter() const;
     void setPopEnter(QQuickTransition *enter);
 
@@ -83,6 +86,7 @@ public:
 
     QQuickTransition *replaceExit() const;
     void setReplaceExit(QQuickTransition *exit);
+#endif
 
     enum LoadBehavior {
         DontLoad,
@@ -90,8 +94,8 @@ public:
     };
     Q_ENUM(LoadBehavior)
 
-    Q_INVOKABLE QQuickItem *get(int index, LoadBehavior behavior = DontLoad);
-    Q_INVOKABLE QQuickItem *find(const QJSValue &callback, LoadBehavior behavior = DontLoad);
+    Q_INVOKABLE QQuickItem *get(int index, QQuickStackView::LoadBehavior behavior = DontLoad);
+    Q_INVOKABLE QQuickItem *find(const QJSValue &callback, QQuickStackView::LoadBehavior behavior = DontLoad);
 
     enum Operation {
         Transition = -1, // ### Deprecated in Qt 6; remove in Qt 7.
@@ -116,12 +120,14 @@ Q_SIGNALS:
     void busyChanged();
     void depthChanged();
     void currentItemChanged();
+#if QT_CONFIG(quick_viewtransitions)
     void popEnterChanged();
     void popExitChanged();
     void pushEnterChanged();
     void pushExitChanged();
     void replaceEnterChanged();
     void replaceExitChanged();
+#endif
     // 2.3 (Qt 5.10)
     Q_REVISION(2, 3) void emptyChanged();
 

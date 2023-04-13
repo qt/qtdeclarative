@@ -23,15 +23,7 @@ QSGRhiTextureGlyphCache::QSGRhiTextureGlyphCache(QSGDefaultRenderContext *rc,
 
 QSGRhiTextureGlyphCache::~QSGRhiTextureGlyphCache()
 {
-    // A plain delete should work, but just in case commitResourceUpdates was
-    // not called and something is enqueued on the update batch for m_texture,
-    // defer until the end of the frame.
-    if (m_texture)
-        m_texture->deleteLater();
-
-    // should be empty, but just in case
-    for (QRhiTexture *t : std::as_const(m_pendingDispose))
-        t->deleteLater();
+    m_rc->deferredReleaseGlyphCacheTexture(m_texture);
 }
 
 QRhiTexture *QSGRhiTextureGlyphCache::createEmptyTexture(QRhiTexture::Format format)
@@ -97,7 +89,7 @@ void QSGRhiTextureGlyphCache::resizeTextureData(int width, int height)
             resourceUpdates->uploadTexture(t, QRhiTextureUploadEntry(0, 0, subresDesc));
         }
 
-        m_pendingDispose.insert(m_texture);
+        m_rc->deferredReleaseGlyphCacheTexture(m_texture);
         m_texture = t;
     }
 }
@@ -220,14 +212,8 @@ void QSGRhiTextureGlyphCache::commitResourceUpdates(QRhiResourceUpdateBatch *mer
 {
     if (QRhiResourceUpdateBatch *resourceUpdates = m_rc->maybeGlyphCacheResourceUpdates()) {
         mergeInto->merge(resourceUpdates);
-        m_rc->releaseGlyphCacheResourceUpdates();
+        m_rc->resetGlyphCacheResources();
     }
-
-    // now let's assume the resource updates will be committed in this frame
-    for (QRhiTexture *t : std::as_const(m_pendingDispose))
-        t->deleteLater(); // will be deleted after the frame is submitted -> safe
-
-    m_pendingDispose.clear();
 }
 
 bool QSGRhiTextureGlyphCache::eightBitFormatIsAlphaSwizzled() const

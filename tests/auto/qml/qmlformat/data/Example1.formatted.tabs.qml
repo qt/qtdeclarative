@@ -54,6 +54,7 @@ Item {
 	// Another orphan
 
 	// More orphans
+
 	property variant some_array_literal: [30, 20, Math["PI"], [4, 3, 2], "foo", 0.3]
 	property bool something_computed: function (x) {
 		const PI = 3, DAYS_PER_YEAR = 365.25;
@@ -124,6 +125,7 @@ Item {
 		}
 
 		// Another orphan inside something_computed
+
 		return "foobar";
 	}()
 

@@ -17,7 +17,7 @@ Rectangle {
       anchors.top: parent.top
       anchors.right: parent.right
       anchors.margins: 10
-      text: hidingRect.visible ? "Hide" : "Show"
+      text: hidingRect.visible ? qsTr("Hide") : qsTr("Show")
       onClicked: hidingRect.visible = !hidingRect.visible
     }
 
@@ -42,9 +42,9 @@ Rectangle {
               anchors.left: parent.right
               anchors.leftMargin: 20
               anchors.verticalCenter: parent.verticalCenter
-              text: "Index: " + parent.Positioner.index
-                  + (parent.Positioner.isFirstItem ? " (First)" : "")
-                  + (parent.Positioner.isLastItem ? " (Last)" : "")
+              text: qsTr("Index: %1%2%3").arg(parent.Positioner.index)
+                        .arg(parent.Positioner.isFirstItem ? qsTr(" (First)") : "")
+                        .arg(parent.Positioner.isLastItem ? qsTr(" (Last)") : "")
             }
 
             // When mouse is clicked, display the values of the positioner
@@ -65,9 +65,9 @@ Rectangle {
               anchors.left: parent.right
               anchors.leftMargin: 20
               anchors.verticalCenter: parent.verticalCenter
-              text: "Index: " + parent.Positioner.index
-                  + (parent.Positioner.isFirstItem ? " (First)" : "")
-                  + (parent.Positioner.isLastItem ? " (Last)" : "")
+              text: qsTr("Index: %1%2%3").arg(parent.Positioner.index)
+                        .arg(parent.Positioner.isFirstItem ? qsTr(" (First)") : "")
+                        .arg(parent.Positioner.isLastItem ? qsTr(" (Last)") : "")
             }
 
             // When mouse is clicked, display the values of the positioner
@@ -87,9 +87,9 @@ Rectangle {
               anchors.left: parent.right
               anchors.leftMargin: 20
               anchors.verticalCenter: parent.verticalCenter
-              text: "Index: " + parent.Positioner.index
-                  + (parent.Positioner.isFirstItem ? " (First)" : "")
-                  + (parent.Positioner.isLastItem ? " (Last)" : "")
+              text: qsTr("Index: %1%2%3").arg(parent.Positioner.index)
+                        .arg(parent.Positioner.isFirstItem ? qsTr(" (First)") : "")
+                        .arg(parent.Positioner.isLastItem ? qsTr(" (Last)") : "")
             }
 
             // When mouse is clicked, display the values of the positioner
@@ -111,18 +111,18 @@ Rectangle {
                 anchors.left: parent.right
                 anchors.leftMargin: 20
                 anchors.verticalCenter: parent.verticalCenter
-                text: "Index: " + parent.Positioner.index
-                    + (parent.Positioner.isFirstItem ? " (First)" : "")
-                    + (parent.Positioner.isLastItem ? " (Last)" : "")
+                text: qsTr("Index: %1%2%3").arg(parent.Positioner.index)
+                          .arg(parent.Positioner.isFirstItem ? qsTr(" (First)") : "")
+                          .arg(parent.Positioner.isLastItem ? qsTr(" (Last)") : "")
             }
         }
 
         // Print the index of the child item in the positioner and convenience
         // properties showing if it's the first or last item.
         function showInfo(positioner) {
-            console.log("Item Index = " + positioner.index)
-            console.log("  isFirstItem = " + positioner.isFirstItem)
-            console.log("  isLastItem = " + positioner.isLastItem)
+            console.log(qsTr("Item Index = ") + positioner.index)
+            console.log(qsTr("  isFirstItem = ") + positioner.isFirstItem)
+            console.log(qsTr("  isLastItem = ") + positioner.isLastItem)
         }
     }
 }

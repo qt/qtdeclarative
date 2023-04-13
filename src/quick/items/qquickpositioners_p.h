@@ -20,7 +20,9 @@
 QT_REQUIRE_CONFIG(quick_positioners);
 
 #include "qquickimplicitsizeitem_p.h"
+#if QT_CONFIG(quick_viewtransitions)
 #include "qquickitemviewtransition_p.h"
+#endif
 
 #include <private/qpodvector_p.h>
 
@@ -67,9 +69,11 @@ class Q_QUICK_PRIVATE_EXPORT QQuickBasePositioner : public QQuickImplicitSizeIte
     Q_OBJECT
 
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged)
+#if QT_CONFIG(quick_viewtransitions)
     Q_PROPERTY(QQuickTransition *populate READ populate WRITE setPopulate NOTIFY populateChanged)
     Q_PROPERTY(QQuickTransition *move READ move WRITE setMove NOTIFY moveChanged)
     Q_PROPERTY(QQuickTransition *add READ add WRITE setAdd NOTIFY addChanged)
+#endif
 
     Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION(2, 6))
     Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION(2, 6))
@@ -91,6 +95,7 @@ public:
     qreal spacing() const;
     void setSpacing(qreal);
 
+#if QT_CONFIG(quick_viewtransitions)
     QQuickTransition *populate() const;
     void setPopulate(QQuickTransition *);
 
@@ -99,6 +104,7 @@ public:
 
     QQuickTransition *add() const;
     void setAdd(QQuickTransition *);
+#endif
 
     static QQuickPositionerAttached *qmlAttachedProperties(QObject *obj);
 
@@ -164,14 +170,18 @@ protected:
 
         void moveTo(const QPointF &pos);
 
+#if QT_CONFIG(quick_viewtransitions)
         void transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget);
         bool prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds);
         void startTransition(QQuickItemViewTransitioner *transitioner);
+#endif
 
         void updatePadding(qreal lp, qreal tp, qreal rp, qreal bp);
 
         QQuickItem *item;
+#if QT_CONFIG(quick_viewtransitions)
         QQuickItemViewTransitionableItem *transitionableItem;
+#endif
         int index;
         bool isNew;
         bool isVisible;

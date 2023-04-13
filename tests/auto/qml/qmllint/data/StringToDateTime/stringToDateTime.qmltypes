@@ -1,0 +1,14 @@
+import QtQuick.tooling 1.2
+Module {
+    Component {
+        file: "stringToQDateTime.h"
+        name: "StringToDateTimeComponent"
+        exports: ["QmlLintTestLib/StringToDateTime 1.0"]
+        exportMetaObjectRevisions: [256]
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property { name: "aDate"; type: "QDate"; read: "getADate"; write: "setADate" }
+        Property { name: "aTime"; type: "QTime"; read: "getATime"; write: "setATime" }
+        Property { name: "aDateTime"; type: "QDateTime"; read: "getADateTime"; write: "setADateTime" }
+    }
+}

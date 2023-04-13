@@ -33,7 +33,7 @@ Q_LOGGING_CATEGORY(lcHoverHandler, "qt.quick.handler.hover")
     The \l cursorShape property allows changing the cursor whenever
     \l hovered changes to \c true.
 
-    \sa MouseArea, PointHandler
+    \sa MouseArea, PointHandler, {Pointer Handlers Example}
 */
 
 class QQuickHoverHandlerPrivate : public QQuickSinglePointHandlerPrivate
@@ -336,6 +336,13 @@ void QQuickHoverHandler::setHovered(bool hovered)
     if you read the value it will return \c Qt.ArrowCursor.
 
     \sa Qt::CursorShape, QQuickItem::cursor()
+*/
+
+/*!
+    \internal
+    \qmlproperty flags HoverHandler::dragThreshold
+
+    This property is not used in HoverHandler.
 */
 
 QT_END_NAMESPACE

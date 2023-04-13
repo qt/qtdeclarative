@@ -8,6 +8,7 @@ CanvasTestCase {
    function init_data() { return testData("2d"); }
    function test_default(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        compare(ctx.strokeStyle, "#000000")
@@ -17,6 +18,7 @@ CanvasTestCase {
    }
    function test_saverestore(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        var old = ctx.strokeStyle;
        ctx.save();
@@ -33,6 +35,7 @@ CanvasTestCase {
    }
    function test_namedColor(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.strokeStyle = "red";
@@ -50,6 +53,7 @@ CanvasTestCase {
    }
    function test_colorFromObjectToString(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
 
        ctx.reset();
@@ -68,6 +72,7 @@ CanvasTestCase {
    }
    function test_withInvalidColor(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
 
        ctx.reset();

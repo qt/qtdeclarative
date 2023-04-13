@@ -15,12 +15,12 @@ ScrollablePage {
             width: parent.width
             wrapMode: Label.Wrap
             horizontalAlignment: Qt.AlignHCenter
-            text: "TextField is a single-line text editor."
+            text: qsTr("TextField is a single-line text editor.")
         }
 
         TextField {
             id: field
-            placeholderText: "TextField"
+            placeholderText: qsTr("TextField")
             anchors.horizontalCenter: parent.horizontalCenter
         }
     }

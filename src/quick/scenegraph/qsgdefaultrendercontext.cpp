@@ -119,7 +119,7 @@ void QSGDefaultRenderContext::invalidate()
     qDeleteAll(m_glyphCaches);
     m_glyphCaches.clear();
 
-    releaseGlyphCacheResourceUpdates();
+    resetGlyphCacheResources();
 
     m_rhi = nullptr;
 
@@ -264,12 +264,23 @@ QRhiResourceUpdateBatch *QSGDefaultRenderContext::glyphCacheResourceUpdates()
     return m_glyphCacheResourceUpdates;
 }
 
-void QSGDefaultRenderContext::releaseGlyphCacheResourceUpdates()
+void QSGDefaultRenderContext::deferredReleaseGlyphCacheTexture(QRhiTexture *texture)
+{
+    if (texture)
+        m_pendingGlyphCacheTextures.insert(texture);
+}
+
+void QSGDefaultRenderContext::resetGlyphCacheResources()
 {
     if (m_glyphCacheResourceUpdates) {
         m_glyphCacheResourceUpdates->release();
         m_glyphCacheResourceUpdates = nullptr;
     }
+
+    for (QRhiTexture *t : std::as_const(m_pendingGlyphCacheTextures))
+        t->deleteLater(); // the QRhiTexture object stays valid for the current frame
+
+    m_pendingGlyphCacheTextures.clear();
 }
 
 QT_END_NAMESPACE

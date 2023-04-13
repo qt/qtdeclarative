@@ -17,7 +17,9 @@
 
 #include <QtQuickTemplates2/private/qquickstackview_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
+#if QT_CONFIG(quick_viewtransitions)
 #include <QtQuick/private/qquickitemviewtransition_p.h>
+#endif
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQml/private/qv4value_p.h>
 #include <QtQml/private/qqmlcontextdata_p.h>
@@ -29,7 +31,10 @@ QT_BEGIN_NAMESPACE
 class QQuickStackElement;
 struct QQuickStackTransition;
 
-class QQuickStackViewPrivate : public QQuickControlPrivate, public QQuickItemViewTransitionChangeListener
+class QQuickStackViewPrivate : public QQuickControlPrivate
+#if QT_CONFIG(quick_viewtransitions)
+        , public QQuickItemViewTransitionChangeListener
+#endif
 {
     Q_DECLARE_PUBLIC(QQuickStackView)
 
@@ -53,11 +58,13 @@ public:
     bool popElements(QQuickStackElement *element);
     bool replaceElements(QQuickStackElement *element, const QList<QQuickStackElement *> &elements);
 
+#if QT_CONFIG(quick_viewtransitions)
     void ensureTransitioner();
     void startTransition(const QQuickStackTransition &first, const QQuickStackTransition &second, bool immediate);
     void completeTransition(QQuickStackElement *element, QQuickTransition *transition, QQuickStackView::Status status);
 
     void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) override;
+#endif
     void setBusy(bool busy);
     void depthChange(int newDepth, int oldDepth);
 
@@ -69,10 +76,15 @@ public:
     QSet<QQuickStackElement*> removing;
     QList<QQuickStackElement*> removed;
     QStack<QQuickStackElement *> elements;
+#if QT_CONFIG(quick_viewtransitions)
     QQuickItemViewTransitioner *transitioner = nullptr;
+#endif
 };
 
-class QQuickStackViewAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
+class QQuickStackViewAttachedPrivate : public QObjectPrivate
+//#if QT_CONFIG(quick_viewtransitions)
+        , public QQuickItemChangeListener
+//#endif
 {
     Q_DECLARE_PUBLIC(QQuickStackViewAttached)
 
@@ -82,7 +94,9 @@ public:
         return attached->d_func();
     }
 
+//#if QT_CONFIG(quick_viewtransitions)
     void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
+//#endif
 
     bool explicitVisible = false;
     QQuickStackElement *element = nullptr;

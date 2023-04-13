@@ -17,7 +17,9 @@
 
 #include <QtQuick/private/qtquickglobal_p.h>
 #include <QtQuick/private/qquickitem_p.h>
+#if QT_CONFIG(quick_viewtransitions)
 #include <QtQuick/private/qquickitemviewtransition_p.h>
+#endif
 #include <private/qanimationjobutil_p.h>
 
 QT_REQUIRE_CONFIG(quick_itemview);
@@ -42,6 +44,7 @@ public:
     QRectF geometry() const;
     void setGeometry(const QRectF &geometry);
 
+#if QT_CONFIG(quick_viewtransitions)
     QQuickItemViewTransitioner::TransitionType scheduledTransitionType() const;
     bool transitionScheduledOrRunning() const;
     bool transitionRunning() const;
@@ -50,6 +53,7 @@ public:
     void transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget);
     bool prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds);
     void startTransition(QQuickItemViewTransitioner *transitioner);
+#endif
 
     // these are positions and sizes along the current direction of scrolling/flicking
     virtual qreal position() const = 0;
@@ -62,7 +66,9 @@ public:
     SelfDeletable m_selfDeletable;
     QPointer<QQuickItem> item;
     QQuickItemChangeListener *changeListener;
+#if QT_CONFIG(quick_viewtransitions)
     QQuickItemViewTransitionableItem *transitionableItem;
+#endif
     int index = -1;
     bool ownItem : 1;
     bool releaseAfterTransition : 1;

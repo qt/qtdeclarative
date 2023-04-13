@@ -81,11 +81,12 @@ steps such as use cases and introductory material. For more information about Qt
 
 \section2 Extending QML
 
-The following tutorials show how a QML-based application can be combined with
-C++ code using the \l{Qt QML} module. For information about extending QML, visit
-the \l{Writing QML Extensions with C++} page.
-
-\annotatedlist{qmlextendingexamples}
+The following tutorials show how a QML-based application can be combined and
+exteneded with C++ code using the \l{Qt QML} module.
+\list
+    \li \l {Writing QML Extensions with C++}
+    \li \l {Writing advanced QML Extensions with C++}
+\endlist
 
 \section1 Examples
 
@@ -121,6 +122,8 @@ Creator.
         \li \l{Qt Quick Examples - Animation}{Animation}
         \li \l{Qt Quick Examples - Canvas}{Canvas API}
         \li \l{Qt Quick Examples - Shader Effects}{Shader Effects}
+        \li \l{Qt Quick Examples - MultiEffect Test Bed}{MultiEffect}
+        \li \l{Qt Quick Examples - MultiEffect Item Switcher}{MultiEffect-based Item Transitions}
         \endlist
     \enddiv
 \enddiv
@@ -157,6 +160,14 @@ Creator.
         \li \l{Scene Graph - Metal Under QML}{Metal Under QML}
         \li \l{Scene Graph - Metal Texture Import}{Metal Texture Import}
         \li \l{Scene Graph - Rendering FBOs}{Rendering to OpenGL FBOs}
+        \endlist
+    \enddiv
+    \div {class="doc-column"}
+        \b{Adding Qt Quick scenes in QWidget applications}
+        \list
+        \li \l{Qt Quick Widgets Example}{Using QQuickWidget}
+        \li \l{QQuickWidget - QQuickView Comparison Example}{QQuickWidget - QQuickView Comparison (OpenGL)}
+        \li \l{Qt Quick Examples - Embedded in Widgets}{Embedding a QQuickView as Native Window}
         \endlist
     \enddiv
 \enddiv

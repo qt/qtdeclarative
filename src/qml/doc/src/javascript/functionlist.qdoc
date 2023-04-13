@@ -209,9 +209,9 @@
     \li [Symbol.iterator]()
     \endlist
 
-    Additionally, the QML engine adds the following functions to the \l String prototype:
+    Additionally, the QML engine adds the following functions to the \c String prototype:
     \list
-    \li \l {String::arg}{arg()}
+    \li \l {string}{string::arg()}
     \endlist
 
 

@@ -6,20 +6,22 @@ import QtQuick.Layouts
 import "components"
 
 Item {
-    width: 800
+    width: 1024
     height: 480
 
     Rectangle {
         id: rect
         anchors.fill: parent; anchors.margins: 40; anchors.topMargin: 60
-        border.width: 3; border.color: "transparent"
-        color: handler.pressed ? "lightsteelblue" : "darkgrey"
+        border.width: 4; border.color: "transparent"
+        color: handler.pressed ? "lightsteelblue" : "aliceblue"
 
         TapHandler {
             id: handler
             acceptedButtons: (leftAllowedCB.checked ? Qt.LeftButton : Qt.NoButton) |
                              (middleAllowedCB.checked ? Qt.MiddleButton : Qt.NoButton) |
                              (rightAllowedCB.checked ? Qt.RightButton : Qt.NoButton)
+            exclusiveSignals: (singleExclusiveCB.checked ? TapHandler.SingleTap : TapHandler.NotExclusive) |
+                             (doubleExclusiveCB.checked ? TapHandler.DoubleTap : TapHandler.NotExclusive)
             gesturePolicy: (policyDragThresholdCB.checked ? TapHandler.DragThreshold :
                             policyWithinBoundsCB.checked ? TapHandler.WithinBounds :
                             policyDragWithinBoundsCB.checked ? TapHandler.DragWithinBounds :
@@ -30,6 +32,16 @@ Item {
                 borderBlink.blinkColor = "red"
                 borderBlink.start()
             }
+            onSingleTapped: function(point, button) {
+                console.log("single-tapped button " + button + " @ " + point.scenePosition)
+                rect.border.width = 4
+                borderBlink.tapFeedback(button)
+            }
+            onDoubleTapped: function(point, button) {
+                console.log("double-tapped button " + button + " @ " + point.scenePosition)
+                rect.border.width = 12
+                borderBlink.tapFeedback(button)
+            }
             onTapped: function(point, button) {
                 console.log("tapped button " + button + " @ " + point.scenePosition +
                             " on device '" + point.device.name + "' with modifiers " + handler.point.modifiers +
@@ -37,8 +49,6 @@ Item {
                 if (tapCount > 1) {
                     tapCountLabel.text = tapCount
                     flashAnimation.start()
-                } else {
-                    borderBlink.tapFeedback(button)
                 }
             }
             onLongPressed: longPressFeedback.createObject(rect,
@@ -97,10 +107,10 @@ Item {
             id: borderBlink
             property color blinkColor: "red"
             function tapFeedback(button) {
+                stop();
                 blinkColor = buttonToBlinkColor(button);
                 start();
             }
-            loops: 3
             ScriptAction { script: rect.border.color = borderBlink.blinkColor }
             PauseAnimation { duration: 100 }
             ScriptAction { script: rect.border.color = "transparent" }
@@ -142,6 +152,18 @@ Item {
         CheckBox {
             id: rightAllowedCB
             text: "right"
+        }
+
+        Text {
+            text: "exclusive signals:"
+        }
+        CheckBox {
+            id: singleExclusiveCB
+            text: "single"
+        }
+        CheckBox {
+            id: doubleExclusiveCB
+            text: "double"
         }
 
         Text {

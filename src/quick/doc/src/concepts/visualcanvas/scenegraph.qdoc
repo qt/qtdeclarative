@@ -1154,7 +1154,7 @@ with multiple windows.
 
   From Qt 6.0 onwards, the default adaptation always renders via a graphics
   abstraction layer, the Qt Rendering Hardware Interface (RHI), provided by the
-  \l QtGui module. This means that, unlike Qt 5, no direct OpenGL calls are made
+  \l [QtGui]{Qt GUI} module. This means that, unlike Qt 5, no direct OpenGL calls are made
   by the scene graph. Rather, it records resource and draw commands by using the
   RHI APIs, which then translate the command stream into OpenGL, Vulkan, Metal,
   or Direct 3D calls. Shader handling is also unified by writing shader code
@@ -1225,6 +1225,6 @@ with multiple windows.
   as environment variables are available as C++ APIs in
   QQuickGraphicsConfiguration. For example, setting \c QSG_RHI_DEBUG_LAYER and
   calling
-  \l{QQuickGraphicsConfiguration::setDebugLayerEnabled()}{setDebugLayerEnabled(true)}
+  \l{QQuickGraphicsConfiguration::setDebugLayer()}{setDebugLayer(true)}
   are equivalent.
  */

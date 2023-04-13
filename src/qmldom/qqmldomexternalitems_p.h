@@ -323,7 +323,7 @@ public:
     const ImportScope &importScope() const { return m_importScope; }
 
 private:
-    friend class QmlDomAstCreator;
+    friend class QQmlDomAstCreator;
     std::shared_ptr<Engine> m_engine;
     AST::UiProgram *m_ast; // avoid? would make moving away from it easier
     std::shared_ptr<AstComments> m_astComments;

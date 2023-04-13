@@ -108,7 +108,8 @@ void QSGDefaultPainterNode::paint()
     }
 
     painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.fillRect(clipRect, m_fillColor);
+    if (m_fillColor.isValid())
+        painter.fillRect(clipRect, m_fillColor);
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
     m_item->paint(&painter);
@@ -167,7 +168,7 @@ void QSGDefaultPainterNode::updateRenderTarget()
     if (!m_image.isNull() && !m_dirtyGeometry)
         return;
 
-    m_image = QImage(m_textureSize, QImage::Format_ARGB32_Premultiplied);
+    m_image = QImage(m_textureSize, QImage::Format_RGBA8888_Premultiplied);
     m_image.fill(Qt::transparent);
 
     if (!m_texture) {

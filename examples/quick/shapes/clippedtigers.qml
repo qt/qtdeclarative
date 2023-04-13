@@ -9,12 +9,24 @@ Rectangle {
     width: 1024
     height: 768
 
-    property color col: "lightsteelblue"
+    readonly property color col: "lightsteelblue"
     gradient: Gradient {
-        GradientStop { position: 0.0; color: Qt.tint(root.col, "#20FFFFFF") }
-        GradientStop { position: 0.1; color: Qt.tint(root.col, "#20AAAAAA") }
-        GradientStop { position: 0.9; color: Qt.tint(root.col, "#20666666") }
-        GradientStop { position: 1.0; color: Qt.tint(root.col, "#20000000") }
+        GradientStop {
+            position: 0.0
+            color: Qt.tint(root.col, "#20FFFFFF")
+        }
+        GradientStop {
+            position: 0.1
+            color: Qt.tint(root.col, "#20AAAAAA")
+        }
+        GradientStop {
+            position: 0.9
+            color: Qt.tint(root.col, "#20666666")
+        }
+        GradientStop {
+            position: 1.0
+            color: Qt.tint(root.col, "#20000000")
+        }
     }
 
     Rectangle {
@@ -22,7 +34,7 @@ Rectangle {
         width: 200
         height: 200
         x: 150
-        property real centerY: parent.height / 2 - height / 2
+        readonly property real centerY: parent.height / 2 - height / 2
         property real dy: 0
         y: centerY + dy
         clip: true
@@ -37,20 +49,26 @@ Rectangle {
             visible: status === Loader.Ready
         }
 
-        SequentialAnimation on dy {
+        SequentialAnimation {
             loops: Animation.Infinite
-            running: loader1.status === Loader.Ready && loader1.item.status === Shape.Ready
+            running: loader1.status === Loader.Ready && (loader1.item as Shape)?.status === Shape.Ready
             NumberAnimation {
+                target: scissorRect
+                property: "dy"
                 from: 0
                 to: -scissorRect.centerY
                 duration: 2000
             }
             NumberAnimation {
+                target: scissorRect
+                property: "dy"
                 from: -scissorRect.centerY
                 to: scissorRect.centerY
                 duration: 4000
             }
             NumberAnimation {
+                target: scissorRect
+                property: "dy"
                 from: scissorRect.centerY
                 to: 0
                 duration: 2000
@@ -66,9 +84,11 @@ Rectangle {
         id: stencilRect
         width: 300
         height: 200
-        anchors.right: parent.right
-        anchors.rightMargin: 100
-        anchors.verticalCenter: parent.verticalCenter
+        anchors {
+            right: parent.right
+            rightMargin: 100
+            verticalCenter: parent.verticalCenter
+        }
         clip: true // NB! still clips to bounding rect (not shape)
 
         Loader {

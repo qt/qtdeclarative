@@ -15,8 +15,8 @@ ScrollablePage {
             width: parent.width
             wrapMode: Label.Wrap
             horizontalAlignment: Qt.AlignHCenter
-            text: "SpinBox allows the user to choose an integer value by clicking the up or down indicator buttons, "
-                + "by pressing up or down on the keyboard, or by entering a text value in the input field."
+            text: qsTr("SpinBox allows the user to choose an integer value by clicking the up or down indicator buttons, "
+                + "by pressing up or down on the keyboard, or by entering a text value in the input field.")
         }
 
         SpinBox {

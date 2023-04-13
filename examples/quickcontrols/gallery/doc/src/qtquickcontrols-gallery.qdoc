@@ -35,5 +35,16 @@
     graphical appearance of a control, allows you to interact with the control,
     and explains in which circumstances it is handy to use this control.
 
+    When the application is in portrait mode, the drawer is an interactive
+    side panel that can be swiped open from the left edge. It appears on
+    top of the content, blocking user interaction through its modal
+    background. When the application is in landscape mode, the drawer and
+    the content are laid out side-by-side.
+
+    The current orientation of the application is determined by comparing
+    the width and height of the window:
+
+    \snippet gallery/gallery.qml orientation
+
     \include examples-run.qdocinc
 */

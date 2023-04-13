@@ -12,8 +12,6 @@ Item {
         visible: true
         enabled: true
         modal: true
-        header: Text {
-            text: qsTr("dialog 1")
-        }
+        title: qsTr("dialog 1")
     }
 }

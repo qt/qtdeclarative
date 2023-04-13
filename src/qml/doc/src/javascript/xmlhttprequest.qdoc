@@ -1,0 +1,285 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \qmltype XMLHttpRequest
+    \inqmlmodule QtQml
+    \brief Object for sending requests to a server.
+
+    The \c XMLHttpRequest object allows scripts to perform HTTP client functionality,
+    such as submitting form data or loading data asynchronously from a server.
+
+    The \c XMLHttpRequest API is a partial implementation of the
+    \l {https://www.w3.org/TR/2014/WD-XMLHttpRequest-20140130/}{W3C XHR Level 1 standard}
+    with the following exception:
+    \list
+    \li It does not enforce the same origin policy.
+    \endlist
+
+    \section1 Sending requests
+
+    Use the following steps to send a request using the \c XMLHttpRequest API:
+    \list 1
+    \li Create a \c XMLHttpRequest object.
+    \li Assign a callback function to the \l {XMLHttpRequest::onreadystatechange}{onreadystatechange} signal handler.
+    \li Call \l {XMLHttpRequest::open}{open()} with the appropriate HTTP method and URL to request.
+    \li Call \l {XMLHttpRequest::send}{send()}
+    \endlist
+
+    The callback function handles the HTTP response for a request.
+    It's a good practice to check if the \l{XMLHttpRequest::readyState}{readyState} is \c DONE in the handler,
+    before you use one of the following methods to read the response:
+    \list
+    \li \l {XMLHttpRequest::response}{response}
+    \li \l {XMLHttpRequest::responseText}{responseText}
+    \li \l {XMLHttpRequest::responseXML}{responseXML}
+    \endlist
+
+    The following example demonstrates how to send a request and read the response:
+
+    \snippet qml/XHRForm.qml 0
+
+    The earlier snippet connects the button's clicked signal to an external \c sendRequest function.
+    A resource URL is passed as the first argument, and a callback function to handle UI updates is passed as the second.
+    The \c sendRequest function, which exists in an external \c request.js file, can be implemented like this:
+
+    \snippet qml/xmlhttprequest.js 0
+
+    The earlier snippet follows the four simple steps mentioned at the beginning.
+    It instantiates the \c XMLHttpRequest object first, and assigns a callback function to handle the response.
+    It also calls \l {XMLHttpRequest::open}{open()} with an HTTP method and URL, before it sends the request to the server.
+    Notice that the second argument to \c sendRequest is called at the end of \l {XMLHttpRequest::onreadystatechange}{onreadystatechange},
+    in order to handle UI updates based on the HTTP response.
+
+    Set the \c QML_XHR_DUMP environment variable to \c 1 if you want to debug a request.
+    This will log the following information:
+    \list
+    \li Method type (GET or POST), URL, and body of sent requests.
+    \li URL and body of responses received.
+    \li Network error, if any.
+    \endlist
+
+    \section1 Accessing local files
+
+    By default, you cannot use the \c XMLHttpRequest object to read files from your local file system.
+    If you wish to use this feature to access local files, you can set the following environment variables to \c 1.
+    \list
+    \li QML_XHR_ALLOW_FILE_READ
+    \li QML_XHR_ALLOW_FILE_WRITE
+    \endlist
+    \warning Use this feature only if you know that the application runs trusted QML and JavaScript code.
+
+    \section1 responseXML document
+
+    The \c responseXML XML DOM tree currently supported by QML is a reduced subset of
+    the \l {http://www.w3.org/TR/DOM-Level-3-Core/}{DOM Level 3 Core} API supported in a web browser.
+    The following objects and properties are supported by the QML implementation:
+
+    \table
+    \header
+    \li \b {Node}
+    \li \b {Document}
+    \li \b {Element}
+    \li \b {Attr}
+    \li \b {CharacterData}
+    \li \b {Text}
+
+    \row
+    \li
+    \list
+    \li nodeName
+    \li nodeValue
+    \li nodeType
+    \li parentNode
+    \li childNodes
+    \li firstChild
+    \li lastChild
+    \li previousSibling
+    \li nextSibling
+    \li attributes
+    \endlist
+
+    \li
+    \list
+    \li xmlVersion
+    \li xmlEncoding
+    \li xmlStandalone
+    \li documentElement
+    \endlist
+
+    \li
+    \list
+    \li tagName
+    \endlist
+
+    \li
+    \list
+    \li name
+    \li value
+    \li ownerElement
+    \endlist
+
+    \li
+    \list
+    \li data
+    \li length
+    \endlist
+
+    \li
+    \list
+    \li isElementContentWhitespace
+    \li wholeText
+    \endlist
+
+    \endtable
+*/
+
+/*!
+    \qmlmethod void XMLHttpRequest::abort()
+
+    Cancels the current request.
+
+    It changes the \l {XMLHttpRequest::readyState}{readyState} property to be \c XMLHttpRequest.UNSENT and emits the \c readystatechange signal.
+*/
+
+/*!
+    \qmlmethod string XMLHttpRequest::getAllResponseHeaders()
+
+    Returns a \c String of headers received from the last response.
+
+    The following is an example response header:
+    \code
+    content-encoding: gzip
+    content-type: text/html; charset=UTF-8
+    date: Mon, 06 Feb 2023 09:00:08 GMT
+    expires: Mon, 13 Feb 2023 09:00:08 GMT
+    last-modified: Thu, 17 Oct 2019 07:18:26 GMT
+    \endcode
+
+    \sa {XMLHttpRequest::getResponseHeader}{getResponseHeader()}
+*/
+
+/*!
+    \qmlmethod string XMLHttpRequest::getResponseHeader(headerName)
+
+    Returns either the \a headerName value from the last response, or an empty \c String, if the \a headerName is missing.
+
+    \sa {XMLHttpRequest::getAllResponseHeaders}{getAllResponseHeaders()}
+*/
+
+/*!
+    \qmlmethod void XMLHttpRequest::open(method, url, async)
+
+    Specify the HTTP \a method you want the request to use, as well as the \a url you wish to request.
+    You should make sure to always call this function before \l {XMLHttpRequest::send}{send()}.
+    An optional third parameter \a async can be used to decide whether the request should be asynchronous or not.
+    The default value is \c true.
+
+    Emits the \c readystatechange signal, which calls the \l {XMLHttpRequest::onreadystatechange}{onreadystatechange} handler with
+    the \l {XMLHttpRequest::readyState}{readyState} property set to \c XMLHttpRequest.OPENED.
+*/
+
+/*!
+    \qmlmethod void XMLHttpRequest::send(data)
+
+    Sends the request to the server.
+    You can use the optional argument \a data to add extra data to the body of the request.
+    This can be useful for POST requests, where you typically want the request to contain extra data.
+
+    The \l {XMLHttpRequest::readyState}{readyState} property is updated once a response has been received from the server,
+    and while the response is being processed. It will first be set to \c HEADERS_RECEIVED, then to \c LOADING,
+    and finally \c DONE, once the response has been fully processed.
+    The \c readystatechange signal is emitted every time \l {XMLHttpRequest::readyState}{readyState} is updated.
+*/
+
+/*!
+    \qmlmethod void XMLHttpRequest::setRequestHeader(header, value)
+
+    Adds a new header to the next request you wish to send.
+    This is a key-value pair, which has the name \a header and the corresponding \a value.
+*/
+
+/*!
+    \qmlproperty function XMLHttpRequest::onreadystatechange
+
+    Choose a callback function you want to get invoked whenever the \l {XMLHttpRequest::readyState}{readyState} of the \c XMLHttpRequest object changes.
+
+    \sa {XMLHttpRequest::readyState}{readyState}
+*/
+
+/*!
+    \qmlproperty enumeration XMLHttpRequest::readyState
+    \readonly
+
+    Indicates the current state of the \c XMLHttpRequest object.
+
+    The value can be one of the following:
+    \value XMLHttpRequest.UNSENT The request is not initialized, which is the state before calling \l {XMLHttpRequest::open}{open()}.
+    \value XMLHttpRequest.OPENED The request is initialized, meaning \l {XMLHttpRequest::open}{open()} was previously called, but no further progress.
+    \value XMLHttpRequest.HEADERS_RECEIVED Received a reply from the sever, but the request is not fully processed yet.
+    \value XMLHttpRequest.LOADING Downloading data from the server.
+    \value XMLHttpRequest.DONE Finished processing the request.
+
+    \sa {XMLHttpRequest::onreadystatechange}{onreadystatechange}
+*/
+
+/*!
+    \qmlproperty string XMLHttpRequest::responseText
+    \readonly
+
+    Returns a \c String containing the data received from the last response.
+
+    \sa {XMLHttpRequest::responseXML}{responseXML}
+*/
+
+/*!
+    \qmlproperty var XMLHttpRequest::responseXML
+    \readonly
+
+    Returns either a \c Document, or \c null, if the response content cannot be parsed as XML or HTML.
+    See the \l {responseXML document}{responseXML document} section for more information.
+
+    \sa {XMLHttpRequest::responseText}{responseText}
+*/
+
+/*!
+    \qmlproperty var XMLHttpRequest::response
+    \readonly
+
+    Returns either a \c String, an \c ArrayBuffer, or a \c Document,
+    depending on the \l {XMLHttpRequest::responseType}{responseType} of the last request.
+
+    \sa {XMLHttpRequest::responseType}{responseType}, {XMLHttpRequest::responseText}{responseText}, {XMLHttpRequest::responseXML}{responseXML}
+*/
+
+/*!
+    \qmlproperty string XMLHttpRequest::responseType
+
+    Returns a \c String describing the content type of the last response received.
+    \list
+    \li If the response type is "text" or an empty \c String, the response content is a UTF-16 encoded \c String.
+    \li If the response type is "arraybuffer", it means that the response content is an \c ArrayBuffer containing binary data.
+    \li If the response type is "json", the response content should be a JSON \c Document.
+    \li If the response type is "document", it means that the response content is an XML \c Document, which can be safely read with the \l {XMLHttpRequest::responseXML}{responseXML} property.
+    \endlist
+
+    \sa {XMLHttpRequest::response}{response}
+*/
+
+/*!
+    \qmlproperty int XMLHttpRequest::status
+    \readonly
+
+    Returns the status code for the last response received.
+
+    \sa {XMLHttpRequest::statusText}{statusText}
+*/
+
+/*!
+    \qmlproperty string XMLHttpRequest::statusText
+    \readonly
+
+    Returns a \c String that has the status message associated with the status code for the last response received.
+
+    \sa {XMLHttpRequest::status}{status}
+*/

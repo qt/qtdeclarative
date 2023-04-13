@@ -19,6 +19,7 @@ private slots:
     void unaryOperators();
 
     void toFromVariant();
+    void coercion();
 
     void ctor_invalid();
     void ctor_undefinedWithEngine();
@@ -313,25 +314,37 @@ void tst_QJSPrimitiveValue::toFromVariant()
         switch (operand.type()) {
         case QJSPrimitiveValue::Undefined:
             QVERIFY(!var.isValid());
+            QCOMPARE(operand.metaType(), QMetaType());
+            QCOMPARE(operand.data(), nullptr);
             break;
         case QJSPrimitiveValue::Null:
             QCOMPARE(var.typeId(), QMetaType::Nullptr);
+            QCOMPARE(operand.metaType(), QMetaType::fromType<std::nullptr_t>());
+            QCOMPARE(operand.data(), nullptr);
             break;
         case QJSPrimitiveValue::Boolean:
             QCOMPARE(var.typeId(), QMetaType::Bool);
             QCOMPARE(var.toBool(), operand.toBoolean());
+            QCOMPARE(operand.metaType(), QMetaType::fromType<bool>());
+            QCOMPARE(*static_cast<const bool *>(operand.data()), operand.toBoolean());
             break;
         case QJSPrimitiveValue::Integer:
             QCOMPARE(var.typeId(), QMetaType::Int);
             QCOMPARE(var.toInt(), operand.toInteger());
+            QCOMPARE(operand.metaType(), QMetaType::fromType<int>());
+            QCOMPARE(*static_cast<const int *>(operand.data()), operand.toInteger());
             break;
         case QJSPrimitiveValue::Double:
             QCOMPARE(var.typeId(), QMetaType::Double);
             QCOMPARE(var.toDouble(), operand.toDouble());
+            QCOMPARE(operand.metaType(), QMetaType::fromType<double>());
+            QCOMPARE(*static_cast<const double *>(operand.data()), operand.toDouble());
             break;
         case QJSPrimitiveValue::String:
             QCOMPARE(var.typeId(), QMetaType::QString);
             QCOMPARE(var.toString(), operand.toString());
+            QCOMPARE(operand.metaType(), QMetaType::fromType<QString>());
+            QCOMPARE(*static_cast<const QString *>(operand.data()), operand.toString());
             break;
         }
 
@@ -341,6 +354,25 @@ void tst_QJSPrimitiveValue::toFromVariant()
             QVERIFY(fromVar != operand);
         else
             QCOMPARE(fromVar, operand);
+    }
+}
+
+void tst_QJSPrimitiveValue::coercion()
+{
+    for (const QJSPrimitiveValue &operand : operands) {
+        QCOMPARE(operand.to<QJSPrimitiveValue::Undefined>(), QJSPrimitiveUndefined());
+        QCOMPARE(operand.to<QJSPrimitiveValue::Null>(), QJSPrimitiveNull());
+        QCOMPARE(operand.to<QJSPrimitiveValue::Boolean>(), operand.toBoolean());
+        QCOMPARE(operand.to<QJSPrimitiveValue::Integer>(), operand.toInteger());
+        QCOMPARE(operand.to<QJSPrimitiveValue::String>(), operand.toString());
+
+        const QJSPrimitiveValue lhs = operand.to<QJSPrimitiveValue::Double>();
+        QCOMPARE(lhs.type(), QJSPrimitiveValue::Double);
+        const double rhs = operand.toDouble();
+        if (std::isnan(rhs))
+            QVERIFY(std::isnan(lhs.toDouble()));
+        else
+            QCOMPARE(lhs.toDouble(), rhs);
     }
 }
 

@@ -38,6 +38,7 @@ qt_add_qml_module(
     [DESIGNER_SUPPORTED]
     [FOLLOW_FOREIGN_VERSIONING]
     [NAMESPACE namespace]
+    [NO_PLUGIN]
     [NO_PLUGIN_OPTIONAL]
     [NO_CREATE_PLUGIN_TARGET]
     [NO_GENERATE_PLUGIN_SOURCE]
@@ -270,7 +271,7 @@ set_target_properties(someTarget PROPERTIES
 \endcode
 
 Another important argument is \c{--direct-calls}. You can use it to enable the
-direct mode of \l{The QML Script Compiler} in case the QtQuick Compiler
+direct mode of \l{The QML script compiler} in case the Qt Quick Compiler
 Extensions are installed. If the extensions are not installed, the argument is
 ignored. There is a shorthand called \c {QT_QMLCACHEGEN_DIRECT_CALLS} for it.
 
@@ -314,10 +315,10 @@ See \l{qt_target_qml_sources_example}{qt_target_qml_sources()} for an example on
 how to set the \c QT_QML_SINGLETON_TYPE property.
 
 \target qmltc-cmake
-\section2 Compiling QML to C++ with QML Type Compiler
+\section2 Compiling QML to C++ with QML type compiler
 
 If a QML module has \c{.qml} files, you can compile them to C++ using \l{QML
-Type Compiler}{qmltc}. Unlike \l{qmlcachegen-auto}{bytecode compilation}, you
+type compiler}{qmltc}. Unlike \l{qmlcachegen-auto}{bytecode compilation}, you
 have to explicitly enable qmltc via \l{ENABLE_TYPE_COMPILER} argument. In which
 case, \c{.qml} files specified under \c{QML_FILES} would be compiled. Files
 ending with \c{.js} and \c{.mjs} are ignored as qmltc does not compile
@@ -513,7 +514,7 @@ class MyItem: public QQuickItem { ... };
 then one has to make sure that the module containing \c QQuickItem, called
 \c Quick, is declared as a dependency via the \c DEPENDENCIES option. Not doing
 so might result in errors during type compilation with
-\l{QML Type Compiler}{qmltc} or during binding and function compilation to C++
+\l{QML type compiler}{qmltc} or during binding and function compilation to C++
 with \l{qmlcachegen-auto}{qmlcachegen}.
 
 \note Adding the module to \c DEPENDENCIES is not necessary if the module
@@ -578,7 +579,21 @@ plugin class, the \c NO_GENERATE_PLUGIN_SOURCE option should be given. Where no
 \c CLASS_NAME is provided, it defaults to the \c URI with dots replaced by
 underscores, then \c Plugin appended. Unless the QML module has no plugin, the
 class name will be recorded as a \c classname line in the generated
-\l{Module Definition qmldir Files}{qmldir} file.
+\l{Module Definition qmldir Files}{qmldir} file. You need to add any C++ files
+with custom plugin code to the plugin target. Since the plugin then likely
+contains functionality that goes beyond simply loading the backing library, you
+will probably want to add \l{NO_PLUGIN_OPTIONAL}, too. Otherwise the QML engine
+may skip loading the plugin if it detects that the backing library is already
+linked.
+
+\target NO_PLUGIN
+If the \c NO_PLUGIN keyword is given, then no plugin will be built. This
+keyword is thus incompatible with all the options that customize the plugin
+target, in particular \l{NO_GENERATE_PLUGIN_SOURCE}, \l{NO_PLUGIN_OPTIONAL},
+\l{PLUGIN_TARGET}, \l{NO_CREATE_PLUGIN_TARGET}, and \l{CLASS_NAME}. If you do
+not provide a plugin for your module, it will only be fully usable if its
+backing library has been linked into the executable. It is generally hard to
+guarantee that a linker preserves the linkage to a library it considers unused.
 
 \target NO_PLUGIN_OPTIONAL
 If the \c NO_PLUGIN_OPTIONAL keyword is given, then the plugin is recorded in
@@ -662,23 +677,23 @@ code will be generated into a C++ namespace of this name.
 For static Qt builds, \c{qmlimportscanner} is run at configure time to scan the
 \c{.qml} files of a QML module and identify the QML imports it uses (see
 \l{qt6_import_qml_plugins}{qt_import_qml_plugins()}). For non-static Qt builds,
-if the target is an executable, a similar scan is performed at build time
-to provide the information needed by deployment scripts (see
-\l{qt_deploy_qml_imports()}). Both scans can be disabled by providing the
-\c{NO_IMPORT_SCAN} option. Doing so means the project takes on the
-responsibility of ensuring all required plugins are instantiated and linked for
-static builds. For non-static builds the project must manually work out
-and deploy all QML modules used by an executable target.
+if the target is an executable, a similar scan is performed at build time to
+provide the information needed by deployment scripts (see
+\l{qt6_deploy_qml_imports}{qt_deploy_qml_imports()}). Both scans can be
+disabled by providing the \c{NO_IMPORT_SCAN} option. Doing so means the project
+takes on the responsibility of ensuring all required plugins are instantiated
+and linked for static builds. For non-static builds the project must manually
+work out and deploy all QML modules used by an executable target.
 
 \section2 Arguments for qmltc
 
 \target ENABLE_TYPE_COMPILER
 \c ENABLE_TYPE_COMPILER can be used to compile \c{.qml} files to C++ source code
-with \l{QML Type Compiler}{qmltc}. Files with the source property
+with \l{QML type compiler}{qmltc}. Files with the source property
 \c{QT_QML_SKIP_TYPE_COMPILER} are not compiled to C++.
 
 \c TYPE_COMPILER_NAMESPACE argument allows to override the namespace in which
-\l{QML Type Compiler}{qmltc} generates code.
+\l{QML type compiler}{qmltc} generates code.
 By default, the namespace of the generated code follows the module
 hierarchy as depicted in the URI,
 e.g., \c MyModule for a module with URI \c MyModule or
@@ -690,7 +705,7 @@ is inside the MyNamespace. Apart from the "::", C++ namespace naming rules
 apply.
 
 \c QMLTC_QMLTC_EXPORT_DIRECTIVE should be used with \c QMLTC_EXPORT_FILE_NAME when
-the classes generated by \l{QML Type Compiler}{qmltc} should be exported from
+the classes generated by \l{QML type compiler}{qmltc} should be exported from
 the qml library. By default, classes generated by qmltc are not exported from
 their library.
 The header defining the export macro for the current library

@@ -42,6 +42,9 @@ private slots:
     void reuseStaticMappings();
     void invalidateSaveLoadCache();
 
+    void inlineComponentDoesNotCauseConstantInvalidation_data();
+    void inlineComponentDoesNotCauseConstantInvalidation();
+
 private:
     QDir m_qmlCacheDirectory;
 };
@@ -1115,6 +1118,129 @@ void tst_qmldiskcache::invalidateSaveLoadCache()
     QVERIFY2(unit->loadFromDisk(url, QFileInfo(fileName).lastModified(), &errorString), qPrintable(errorString));
 
     QVERIFY(unit->unitData() != oldUnit->unitData());
+}
+
+void tst_qmldiskcache::inlineComponentDoesNotCauseConstantInvalidation_data()
+{
+    QTest::addColumn<QByteArray>("code");
+
+    QTest::addRow("simple") << QByteArray(R"(
+        import QtQml
+        QtObject {
+            component Test: QtObject {
+                property int i: 28
+            }
+            property Test test: Test {
+                objectName: "foobar"
+            }
+            property int k: test.i
+        }
+    )");
+
+    QTest::addRow("with function") << QByteArray(R"(
+        import QtQml
+        QtObject {
+            component Test : QtObject {
+                id: self
+                property int i: 2
+                property alias j: self.i
+            }
+            property Test test: Test {
+                function updateValue() {}
+                objectName: 'foobar'
+                j: 28
+            }
+            property int k: test.j
+        }
+    )");
+
+    QTest::addRow("in nested") << QByteArray(R"(
+        import QtQuick
+        Item {
+            Item {
+                component Line: Item {
+                    property alias endY: pathLine.y
+                    Item {
+                        Item {
+                            id: pathLine
+                        }
+                    }
+                }
+            }
+            Line {
+                id: primaryLine
+                endY: 28
+            }
+            property int k: primaryLine.endY
+        }
+    )");
+
+    QTest::addRow("with revision") << QByteArray(R"(
+        import QtQuick
+        ListView {
+            Item {
+                id: scrollBar
+            }
+            delegate: Image {
+                mipmap: true
+            }
+            Item {
+                id: refreshNodesIndicator
+            }
+            property int k: delegate.createObject().mipmap ? 28 : 4
+        }
+    )");
+}
+
+void tst_qmldiskcache::inlineComponentDoesNotCauseConstantInvalidation()
+{
+    QFETCH(QByteArray, code);
+
+    QQmlEngine engine;
+
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    auto check = [&](){
+        QQmlComponent c(&engine, QUrl::fromLocalFile(testCompiler.testFilePath));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(!o.isNull());
+        QCOMPARE(o->property("k"), QVariant::fromValue<int>(28));
+    };
+
+    testCompiler.reset();
+    QVERIFY(testCompiler.writeTestFile(code));
+
+    QVERIFY(testCompiler.loadTestFile());
+
+    const quintptr data1 = testCompiler.unitData();
+    QVERIFY(data1 != 0);
+    QCOMPARE(testCompiler.unitData(), data1);
+    check();
+
+    engine.clearComponentCache();
+
+    // inline component does not invalidate cache
+    QVERIFY(testCompiler.loadTestFile());
+    QCOMPARE(testCompiler.unitData(), data1);
+    check();
+
+    testCompiler.reset();
+    QVERIFY(testCompiler.writeTestFile(R"(
+        import QtQml
+        QtObject {
+            component Test : QtObject {
+                property double d: 2
+            }
+            property Test test: Test {
+                objectName: 'foobar'
+            }
+        })"));
+    QVERIFY(testCompiler.loadTestFile());
+    const quintptr data2 = testCompiler.unitData();
+    QVERIFY(data2);
+    QVERIFY(data1 != data2);
 }
 
 QTEST_MAIN(tst_qmldiskcache)

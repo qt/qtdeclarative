@@ -33,7 +33,9 @@ void QQuickBasePositionerPrivate::unwatchChanges(QQuickItem* other)
 
 QQuickBasePositioner::PositionedItem::PositionedItem(QQuickItem *i)
     : item(i)
+#if QT_CONFIG(quick_viewtransitions)
     , transitionableItem(nullptr)
+#endif
     , index(-1)
     , isNew(false)
     , isVisible(true)
@@ -46,27 +48,40 @@ QQuickBasePositioner::PositionedItem::PositionedItem(QQuickItem *i)
 
 QQuickBasePositioner::PositionedItem::~PositionedItem()
 {
+#if QT_CONFIG(quick_viewtransitions)
     delete transitionableItem;
+#endif
 }
 
 qreal QQuickBasePositioner::PositionedItem::itemX() const
 {
-    return transitionableItem ? transitionableItem->itemX() : item->x();
+    return
+#if QT_CONFIG(quick_viewtransitions)
+            transitionableItem ? transitionableItem->itemX() :
+#endif
+            item->x();
 }
 
 qreal QQuickBasePositioner::PositionedItem::itemY() const
 {
-    return transitionableItem ? transitionableItem->itemY() : item->y();
+    return
+#if QT_CONFIG(quick_viewtransitions)
+            transitionableItem ? transitionableItem->itemY() :
+#endif
+            item->y();
 }
 
 void QQuickBasePositioner::PositionedItem::moveTo(const QPointF &pos)
 {
+#if QT_CONFIG(quick_viewtransitions)
     if (transitionableItem)
         transitionableItem->moveTo(pos);
     else
+#endif
         item->setPosition(pos);
 }
 
+#if QT_CONFIG(quick_viewtransitions)
 void QQuickBasePositioner::PositionedItem::transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget)
 {
     if (!transitioner)
@@ -86,6 +101,7 @@ void QQuickBasePositioner::PositionedItem::startTransition(QQuickItemViewTransit
     if (transitionableItem)
         transitionableItem->startTransition(transitioner, index);
 }
+#endif
 
 void QQuickBasePositioner::PositionedItem::updatePadding(qreal lp, qreal tp, qreal rp, qreal bp)
 {
@@ -132,7 +148,9 @@ QQuickBasePositioner::QQuickBasePositioner(QQuickBasePositionerPrivate &dd, Posi
 QQuickBasePositioner::~QQuickBasePositioner()
 {
     Q_D(QQuickBasePositioner);
+#if QT_CONFIG(quick_viewtransitions)
     delete d->transitioner;
+#endif
     for (int i = 0; i < positionedItems.count(); ++i)
         d->unwatchChanges(positionedItems.at(i).item);
     for (int i = 0; i < unpositionedItems.count(); ++i)
@@ -164,6 +182,7 @@ void QQuickBasePositioner::setSpacing(qreal s)
     emit spacingChanged();
 }
 
+#if QT_CONFIG(quick_viewtransitions)
 QQuickTransition *QQuickBasePositioner::populate() const
 {
     Q_D(const QQuickBasePositioner);
@@ -216,17 +235,24 @@ void QQuickBasePositioner::setAdd(QQuickTransition *add)
     d->transitioner->addTransition = add;
     emit addChanged();
 }
+#endif
 
 void QQuickBasePositioner::componentComplete()
 {
+#if QT_CONFIG(quick_viewtransitions)
     Q_D(QQuickBasePositioner);
+#endif
     QQuickItem::componentComplete();
+#if QT_CONFIG(quick_viewtransitions)
     if (d->transitioner)
         d->transitioner->setPopulateTransitionEnabled(true);
+#endif
     positionedItems.reserve(childItems().size());
     prePositioning();
+#if QT_CONFIG(quick_viewtransitions)
     if (d->transitioner)
         d->transitioner->setPopulateTransitionEnabled(false);
+#endif
 }
 
 void QQuickBasePositioner::itemChange(ItemChange change, const ItemChangeData &value)
@@ -275,7 +301,9 @@ void QQuickBasePositioner::prePositioning()
     for (int ii = 0; ii < unpositionedItems.count(); ii++)
         oldItems.append(unpositionedItems[ii]);
     unpositionedItems.clear();
+#if QT_CONFIG(quick_viewtransitions)
     int addedIndex = -1;
+#endif
 
     for (int ii = 0; ii < children.size(); ++ii) {
         QQuickItem *child = children.at(ii);
@@ -295,6 +323,7 @@ void QQuickBasePositioner::prePositioning()
                 posItem.index = positionedItems.count();
                 positionedItems.append(posItem);
 
+#if QT_CONFIG(quick_viewtransitions)
                 if (d->transitioner) {
                     if (addedIndex < 0)
                         addedIndex = posItem.index;
@@ -304,6 +333,7 @@ void QQuickBasePositioner::prePositioning()
                     else if (!d->transitioner->populateTransitionEnabled())
                         theItem->transitionNextReposition(d->transitioner, QQuickItemViewTransitioner::AddTransition, true);
                 }
+#endif
             }
         } else {
             PositionedItem *item = &oldItems[wIdx];
@@ -320,11 +350,13 @@ void QQuickBasePositioner::prePositioning()
                 item->index = positionedItems.count();
                 positionedItems.append(*item);
 
+#if QT_CONFIG(quick_viewtransitions)
                 if (d->transitioner) {
                     if (addedIndex < 0)
                         addedIndex = item->index;
                     positionedItems[positionedItems.count()-1].transitionNextReposition(d->transitioner, QQuickItemViewTransitioner::AddTransition, true);
                 }
+#endif
             } else {
                 item->isNew = false;
                 item->index = positionedItems.count();
@@ -333,6 +365,7 @@ void QQuickBasePositioner::prePositioning()
         }
     }
 
+#if QT_CONFIG(quick_viewtransitions)
     if (d->transitioner) {
         for (int i=0; i<positionedItems.count(); i++) {
             if (!positionedItems[i].isNew) {
@@ -346,6 +379,7 @@ void QQuickBasePositioner::prePositioning()
             }
         }
     }
+#endif
 
     QSizeF contentSize(0,0);
     reportConflictingAnchors();
@@ -354,6 +388,7 @@ void QQuickBasePositioner::prePositioning()
         updateAttachedProperties();
     }
 
+#if QT_CONFIG(quick_viewtransitions)
     if (d->transitioner) {
         QRectF viewBounds(QPointF(), contentSize);
         for (int i=0; i<positionedItems.count(); i++)
@@ -362,6 +397,7 @@ void QQuickBasePositioner::prePositioning()
             positionedItems[i].startTransition(d->transitioner);
         d->transitioner->resetTargetLists();
     }
+#endif
 
     d->doingPositioning = false;
 
@@ -403,13 +439,17 @@ void QQuickBasePositioner::positionItemY(qreal y, PositionedItem *target)
 void QQuickBasePositioner::removePositionedItem(QPODVector<PositionedItem,8> *items, int index)
 {
     Q_ASSERT(index >= 0 && index < items->count());
+#if QT_CONFIG(quick_viewtransitions)
     delete items->at(index).transitionableItem;
+#endif
     items->remove(index);
 }
 void QQuickBasePositioner::clearPositionedItems(QPODVector<PositionedItem,8> *items)
 {
+#if QT_CONFIG(quick_viewtransitions)
     for (int i=0; i<items->count(); i++)
         delete items->at(i).transitionableItem;
+#endif
     items->clear();
 }
 
@@ -1111,12 +1151,10 @@ QQuickRow::QQuickRow(QQuickItem *parent)
 
     Possible values:
 
-    \list
-    \li Qt.LeftToRight (default) - Items are laid out from left to right. If the width of the row is explicitly set,
-    the left anchor remains to the left of the row.
-    \li Qt.RightToLeft - Items are laid out from right to left. If the width of the row is explicitly set,
-    the right anchor remains to the right of the row.
-    \endlist
+    \value Qt.LeftToRight   (default) Items are laid out from left to right. If the width of the row is
+                            explicitly set, the left anchor remains to the left of the row.
+    \value Qt.RightToLeft   Items are laid out from right to left. If the width of the row is
+                            explicitly set, the right anchor remains to the right of the row.
 
     \sa Grid::layoutDirection, Flow::layoutDirection, {Qt Quick Examples - Right to Left}
 */

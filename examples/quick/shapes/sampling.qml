@@ -9,24 +9,38 @@ Rectangle {
     width: 1024
     height: 768
 
-    property color col: "lightsteelblue"
+    readonly property color col: "lightsteelblue"
     gradient: Gradient {
-        GradientStop { position: 0.0; color: Qt.tint(root.col, "#20FFFFFF") }
-        GradientStop { position: 0.1; color: Qt.tint(root.col, "#20AAAAAA") }
-        GradientStop { position: 0.9; color: Qt.tint(root.col, "#20666666") }
-        GradientStop { position: 1.0; color: Qt.tint(root.col, "#20000000") }
+        GradientStop {
+            position: 0.0
+            color: Qt.tint(root.col, "#20FFFFFF")
+        }
+        GradientStop {
+            position: 0.1
+            color: Qt.tint(root.col, "#20AAAAAA")
+        }
+        GradientStop {
+            position: 0.9
+            color: Qt.tint(root.col, "#20666666")
+        }
+        GradientStop {
+            position: 1.0
+            color: Qt.tint(root.col, "#20000000")
+        }
     }
 
     Row {
-        anchors.fill: parent
-        anchors.margins: 20
+        anchors {
+            fill: parent
+            margins: 20
+        }
         spacing: 40
 
         Column {
             spacing: 40
 
             Text {
-                text: "Original"
+                text: qsTr("Original")
             }
 
             // A simple Shape without anything special.
@@ -44,20 +58,38 @@ Rectangle {
 
                     ShapePath {
                         strokeColor: "green"
-                        NumberAnimation on strokeWidth { from: 1; to: 20; duration: 5000 }
+                        NumberAnimation on strokeWidth {
+                            from: 1
+                            to: 20
+                            duration: 5000
+                        }
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
 
-                        startX: 40; startY: 30
-                        PathQuad { x: 50; y: 80; controlX: 0; controlY: 80 }
-                        PathLine { x: 150; y: 80 }
-                        PathQuad { x: 160; y: 30; controlX: 200; controlY: 80 }
+                        startX: 40
+                        startY: 30
+                        PathQuad {
+                            x: 50
+                            y: 80
+                            controlX: 0
+                            controlY: 80
+                        }
+                        PathLine {
+                            x: 150
+                            y: 80
+                        }
+                        PathQuad {
+                            x: 160
+                            y: 30
+                            controlX: 200
+                            controlY: 80
+                        }
                     }
                 }
             }
 
             Text {
-                text: "Supersampling (2x)"
+                text: qsTr("Supersampling (2x)")
             }
 
             // Now let's use 2x supersampling via layers. This way the entire subtree
@@ -83,14 +115,32 @@ Rectangle {
 
                     ShapePath {
                         strokeColor: "green"
-                        NumberAnimation on strokeWidth { from: 1; to: 20; duration: 5000 }
+                        NumberAnimation on strokeWidth {
+                            from: 1
+                            to: 20
+                            duration: 5000
+                        }
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
 
-                        startX: 40; startY: 30
-                        PathQuad { x: 50; y: 80; controlX: 0; controlY: 80 }
-                        PathLine { x: 150; y: 80 }
-                        PathQuad { x: 160; y: 30; controlX: 200; controlY: 80 }
+                        startX: 40
+                        startY: 30
+                        PathQuad {
+                            x: 50
+                            y: 80
+                            controlX: 0
+                            controlY: 80
+                        }
+                        PathLine {
+                            x: 150
+                            y: 80
+                        }
+                        PathQuad {
+                            x: 160
+                            y: 30
+                            controlX: 200
+                            controlY: 80
+                        }
                     }
                 }
             }
@@ -100,7 +150,7 @@ Rectangle {
             spacing: 40
 
             Text {
-                text: "Multisampling (4x)"
+                text: qsTr("Multisampling (4x)")
             }
 
             // Now let's use 4x MSAA, again via layers. This needs support for
@@ -123,14 +173,32 @@ Rectangle {
 
                     ShapePath {
                         strokeColor: "green"
-                        NumberAnimation on strokeWidth { from: 1; to: 20; duration: 5000 }
+                        NumberAnimation on strokeWidth {
+                            from: 1
+                            to: 20
+                            duration: 5000
+                        }
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
 
-                        startX: 40; startY: 30
-                        PathQuad { x: 50; y: 80; controlX: 0; controlY: 80 }
-                        PathLine { x: 150; y: 80 }
-                        PathQuad { x: 160; y: 30; controlX: 200; controlY: 80 }
+                        startX: 40
+                        startY: 30
+                        PathQuad {
+                            x: 50
+                            y: 80
+                            controlX: 0
+                            controlY: 80
+                        }
+                        PathLine {
+                            x: 150
+                            y: 80
+                        }
+                        PathQuad {
+                            x: 160
+                            y: 30
+                            controlX: 200
+                            controlY: 80
+                        }
                     }
                 }
             }

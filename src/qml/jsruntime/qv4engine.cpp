@@ -1569,9 +1569,9 @@ static QVariant toVariant(
                 QV4::ScopedValue arrayValue(scope);
                 for (qint64 i = 0; i < length; ++i) {
                     arrayValue = a->get(i);
-                    QVariant asVariant(valueMetaType);
-                    if (QQmlValueTypeProvider::createValueType(
-                                arrayValue, valueMetaType, asVariant.data())) {
+                    QVariant asVariant = QQmlValueTypeProvider::createValueType(
+                                arrayValue, valueMetaType);
+                    if (asVariant.isValid()) {
                         retnAsIterable.metaContainer().addValue(retn.data(), asVariant.constData());
                         continue;
                     }
@@ -1662,8 +1662,8 @@ static QVariant toVariant(
 #endif
 
     if (metaType.isValid() && !(metaType.flags() & QMetaType::PointerToQObject)) {
-        QVariant result(metaType);
-        if (QQmlValueTypeProvider::createValueType(value, metaType, result.data()))
+        const QVariant result = QQmlValueTypeProvider::createValueType(value, metaType);
+        if (result.isValid())
             return result;
     }
 
@@ -1850,7 +1850,7 @@ QV4::ReturnedValue ExecutionEngine::fromData(
             }
         }
 
-    } else {
+    } else if (!(metaType.flags() & QMetaType::IsEnumeration)) {
         QV4::Scope scope(this);
         if (metaType == QMetaType::fromType<QQmlListReference>()) {
             typedef QQmlListReferencePrivate QDLRP;
@@ -1936,9 +1936,8 @@ QV4::ReturnedValue ExecutionEngine::fromData(
     //    + QObjectList
     //    + QList<int>
 
-    // Enumeration types can just be treated as integers for now
     if (metaType.flags() & QMetaType::IsEnumeration)
-        return QV4::Encode(*reinterpret_cast<const int *>(ptr));
+        return fromData(metaType.underlyingType(), ptr, container, property, flags);
 
     return QV4::Encode(newVariantObject(metaType, ptr));
 }

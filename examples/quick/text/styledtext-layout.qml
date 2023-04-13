@@ -5,11 +5,12 @@ import QtQuick
 
 Rectangle {
     id: main
-    width: 320; height: 480
-    focus: true
 
-    property real offset: 0
-    property real margin: 8
+    readonly property real margin: 8
+
+    width: 320
+    height: 480
+    focus: true
 
     Text {
         id: myText
@@ -47,11 +48,10 @@ Rectangle {
 
             Text {
                 id: theEndText
-                text: "THE\nEND"
+                text: qsTr("THE\nEND")
                 anchors.centerIn: parent
                 font.pixelSize: myText.font.pixelSize / 2
             }
         }
     }
-
 }

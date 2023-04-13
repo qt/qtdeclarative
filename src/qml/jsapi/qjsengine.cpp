@@ -243,7 +243,7 @@ Q_DECLARE_METATYPE(QList<int>)
   \section1 Extensions
 
   QJSEngine provides a compliant ECMAScript implementation. By default,
-  familiar utilities like logging are not available, but they can can be
+  familiar utilities like logging are not available, but they can be
   installed via the \l installExtensions() function.
 
   \sa QJSValue, {Making Applications Scriptable},
@@ -922,6 +922,7 @@ bool QJSEngine::convertV2(const QJSValue &value, QMetaType metaType, void *ptr)
     if (const QString *string = QJSValuePrivate::asQString(&value))
         return convertString(*string, metaType, ptr);
 
+    // Does not need scoping since QJSValue still holds on to the value.
     return QV4::ExecutionEngine::metaTypeFromJS(QJSValuePrivate::asReturnedValue(&value), metaType, ptr);
 }
 
@@ -929,14 +930,18 @@ bool QJSEngine::convertVariant(const QVariant &value, QMetaType metaType, void *
 {
     // TODO: We could probably avoid creating a QV4::Value in many cases, but we'd have to
     //       duplicate much of metaTypeFromJS and some methods of QV4::Value itself here.
-    return QV4::ExecutionEngine::metaTypeFromJS(handle()->fromVariant(value), metaType, ptr);
+    QV4::Scope scope(handle());
+    QV4::ScopedValue scoped(scope, scope.engine->fromVariant(value));
+    return QV4::ExecutionEngine::metaTypeFromJS(scoped, metaType, ptr);
 }
 
 bool QJSEngine::convertMetaType(QMetaType fromType, const void *from, QMetaType toType, void *to)
 {
     // TODO: We could probably avoid creating a QV4::Value in many cases, but we'd have to
     //       duplicate much of metaTypeFromJS and some methods of QV4::Value itself here.
-    return QV4::ExecutionEngine::metaTypeFromJS(handle()->fromData(fromType, from), toType, to);
+    QV4::Scope scope(handle());
+    QV4::ScopedValue scoped(scope, scope.engine->fromData(fromType, from));
+    return QV4::ExecutionEngine::metaTypeFromJS(scoped, toType, to);
 }
 
 QString QJSEngine::convertQObjectToString(QObject *object)
@@ -1037,7 +1042,7 @@ QDate QJSEngine::convertDateTimeToDate(const QDateTime &dateTime)
     JavaScript function through QJSEngine.
 
     When returning from C++, the engine will interrupt the normal flow of
-    execution and call the the next pre-registered exception handler with
+    execution and call the next pre-registered exception handler with
     an error object that contains the given \a message. The error object
     will point to the location of the top-most context on the JavaScript
     caller stack; specifically, it will have properties \c lineNumber,

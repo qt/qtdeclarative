@@ -96,4 +96,12 @@ Module {
        Property { name: "foo"; type: "string" }
        hasCustomParser: true
     }
+    Component {
+        file: "mediaplayer-qml.h"
+        name: "MediaPlayerStateMachine"
+        accessSemantics: "value"
+        exports: ["Mediaplayer/MediaPlayerStateMachine 1.0"]
+        isCreatable: false
+        exportMetaObjectRevisions: [256]
+    }
 }

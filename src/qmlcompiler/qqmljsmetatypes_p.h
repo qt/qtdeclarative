@@ -250,8 +250,29 @@ public:
     const QVector<QQmlJSAnnotation>& annotations() const { return m_annotations; }
     void setAnnotations(QVector<QQmlJSAnnotation> annotations) { m_annotations = annotations; }
 
-    void setJsFunctionIndex(RelativeFunctionIndex index) { m_jsFunctionIndex = index; }
-    RelativeFunctionIndex jsFunctionIndex() const { return m_jsFunctionIndex; }
+    void setJsFunctionIndex(RelativeFunctionIndex index)
+    {
+        Q_ASSERT(!m_isConstructor);
+        m_relativeFunctionIndex = index;
+    }
+
+    RelativeFunctionIndex jsFunctionIndex() const
+    {
+        Q_ASSERT(!m_isConstructor);
+        return m_relativeFunctionIndex;
+    }
+
+    void setConstructorIndex(RelativeFunctionIndex index)
+    {
+        Q_ASSERT(m_isConstructor);
+        m_relativeFunctionIndex = index;
+    }
+
+    RelativeFunctionIndex constructorIndex() const
+    {
+        Q_ASSERT(m_isConstructor);
+        return m_relativeFunctionIndex;
+    }
 
     friend bool operator==(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
     {
@@ -298,7 +319,7 @@ private:
     Type m_methodType = Signal;
     Access m_methodAccess = Public;
     int m_revision = 0;
-    RelativeFunctionIndex m_jsFunctionIndex = RelativeFunctionIndex::Invalid;
+    RelativeFunctionIndex m_relativeFunctionIndex = RelativeFunctionIndex::Invalid;
     bool m_isCloned = false;
     bool m_isConstructor = false;
     bool m_isJavaScriptFunction = false;

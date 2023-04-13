@@ -26,7 +26,6 @@
 #include <private/qqmlobjectmodel_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
-#include <QtQuick/private/qquickitemview_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 
@@ -105,6 +104,16 @@ static const int SUBMENU_DELAY = 225;
             }
         }
     }
+    \endcode
+
+    If the button should also close the menu when clicked, use the
+    \c Popup.CloseOnPressOutsideParent flag:
+    \code
+    onClicked: menu.visible = !menu.visible
+
+    Menu {
+        // ...
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
     \endcode
 
     Since QtQuick.Controls 2.3 (Qt 5.10), it is also possible to create sub-menus
@@ -1116,7 +1125,7 @@ void QQuickMenu::setTitle(QString &title)
 
     \include qquickicon.qdocinc grouped-properties
 
-    \sa text, display, {Icons in Qt Quick Controls}
+    \sa AbstractButton::text, AbstractButton::display, {Icons in Qt Quick Controls}
 */
 
 QQuickIcon QQuickMenu::icon() const

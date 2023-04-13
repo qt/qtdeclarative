@@ -172,7 +172,7 @@ private:
 };
 
 #if QT_CONFIG(wheelevent)
-class QQuickWheelEvent : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickWheelEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(const QPointingDevice *device READ pointingDevice CONSTANT)

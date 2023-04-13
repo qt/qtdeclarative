@@ -6,6 +6,7 @@ CanvasTestCase {
    function init_data() { return testData("2d"); }
    function test_default(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        verify(ctx.fillStyle, "#000000");
@@ -14,6 +15,7 @@ CanvasTestCase {
    }
    function test_get(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#fa0';
@@ -23,6 +25,7 @@ CanvasTestCase {
    }
    function test_hex(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#f00';
@@ -37,6 +40,7 @@ CanvasTestCase {
    }
    function test_invalid(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#fa0';
@@ -60,6 +64,7 @@ CanvasTestCase {
    }
    function test_saverestore(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        var old = ctx.fillStyle;
        ctx.save();
@@ -75,6 +80,7 @@ CanvasTestCase {
    }
    function test_namedColor(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = "red";
@@ -91,6 +97,7 @@ CanvasTestCase {
    }
    function test_rgba(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = "rgb(-100, 300, 255)";
@@ -108,6 +115,7 @@ CanvasTestCase {
 
    function test_hsla(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = "hsla(120, 100%, 50%, 0.499)";

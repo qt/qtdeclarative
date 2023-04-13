@@ -40,6 +40,7 @@ the client to import the module which provides them.
 All of the value types listed below may be used as a \c property type in a QML
 document, with the following exceptions:
 \list
+  \li \c void, which marks the absence of a value
   \li \c list must be used in conjunction with an object or value type as element
   \li \c enumeration cannot be used directly as the enumeration must be defined by a registered QML object type
 \endlist
@@ -202,9 +203,10 @@ property is only invoked when the property is reassigned to a different object v
 /*!
     \qmlvaluetype string
     \ingroup qmlvaluetypes
-    \brief a free form text string.
+    \brief A free form text string.
 
-    The \c string type refers to a free form text string in quotes, e.g. "Hello world!".
+    The \c string type refers to a free form text string in quotes, for example
+    "Hello world!". The QML language provides this value type by default.
 
     Example:
     \qml
@@ -213,19 +215,43 @@ property is only invoked when the property is reassigned to a different object v
 
     Properties of type \c string are empty by default.
 
-    Strings have a \c length attribute that holds the number of characters in the
-    string.
+    Strings have a \c length attribute that holds the number of characters in
+    the string.
 
-    QML extends the JavaScript String type with a \l {String::arg}{arg()} function
-    to support value substitution.
+    The string value type is backed by the C++ type QString. It extends the
+    JavaScript String primitive type in that it provides much of the same API,
+    plus some extra methods. For example, the QML string value type method
+    \c {arg()} supports value substitution:
+
+    \qml
+        var message = "There are %1 items"
+        var count = 20
+        console.log(message.arg(count))
+    \endqml
+
+    The example above prints "There are 20 items".
+
+    The QML string value type supports most of the ECMAScript string features,
+    such as template (string) literals, string interpolation, multi-line
+    strings, and looping over strings.
+
+    In general, QML string supports most JavaScript String methods, including
+    checking for inclusion using \c string.includes(), \c string.startsWith(),
+    and \c string.endsWith(); repeating a string using \c string.repeats(), and
+    slicing and splitting using \c string.slice() and \c string.split().
+
+    For more information about which version of ECMAScript QML supports, see
+    \l {JavaScript Host Environment}
+
+    For more information about JavaScript String methods, see
+    \l {https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String}
+    {mdn JavaScript String}
 
     When integrating with C++, note that any QString value
-    \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
-    converted into a \c string value, and vice-versa.
+    \l{qtqml-cppintegration-data.html}{passed into QML from C++} is
+    automatically converted into a \c string value, and vice-versa.
 
-    This value type is provided by the QML language.
-
-    \sa {QML Value Types}
+    \sa {QML Value Types}, {ECMA-262}{ECMAScript Language Specification}
 */
 
 /*!

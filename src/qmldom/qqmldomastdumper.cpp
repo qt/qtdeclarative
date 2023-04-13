@@ -990,12 +990,6 @@ public:
     }
     void endVisit(AST::Type *) override { stop(u"Type"); }
 
-    bool visit(AST::TypeArgument *) override {
-        start(u"TypeArgument");
-        return true;
-    }
-    void endVisit(AST::TypeArgument *) override { stop(u"TypeArgument"); }
-
     bool visit(AST::TypeAnnotation *el) override {
         start(QLatin1String("TypeAnnotation colonToken=%1")
               .arg(loc(el->colonToken)));

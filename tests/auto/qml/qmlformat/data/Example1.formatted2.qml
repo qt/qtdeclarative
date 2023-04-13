@@ -39,6 +39,7 @@ Item {
     // Another orphan
 
     // More orphans
+
     property variant some_array_literal: [30, 20, Math["PI"], [4, 3, 2], "foo", 0.3]
     property bool some_bool: false
     default property bool some_default_bool: 500 % 5 !== 0 // some_default_bool
@@ -114,6 +115,7 @@ Item {
         }
 
         // Another orphan inside something_computed
+
         return "foobar";
     }()
 

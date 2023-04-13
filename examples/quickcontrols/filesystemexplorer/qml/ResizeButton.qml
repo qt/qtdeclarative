@@ -11,7 +11,7 @@ Button {
     rightPadding: 3
     bottomPadding: 3
 
-    icon.source: "qrc:/icons/resize.svg"
+    icon.source: "../icons/resize.svg"
     icon.color: down || checked ? Colors.iconIndicator : Colors.icon
 
     checkable: false

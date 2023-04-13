@@ -66,7 +66,7 @@ Rectangle {
 
             // Shows help text when clicked.
             SidebarEntry {
-                icon.source: "qrc:/icons/light_bulb.svg"
+                icon.source: "../icons/light_bulb.svg"
                 checkable: true
                 checked: true
 
@@ -75,7 +75,7 @@ Rectangle {
 
             // Shows the file system when clicked.
             SidebarEntry {
-                icon.source: "qrc:/icons/read.svg"
+                icon.source: "../icons/read.svg"
                 checkable: true
 
                 Layout.alignment: Qt.AlignHCenter
@@ -94,7 +94,7 @@ Rectangle {
         // Opens the Qt website in the system's web browser.
         SidebarEntry {
             id: qtWebsiteButton
-            icon.source: "qrc:/icons/globe.svg"
+            icon.source: "../icons/globe.svg"
             checkable: false
 
             onClicked: Qt.openUrlExternally("https://www.qt.io/")
@@ -103,7 +103,7 @@ Rectangle {
         // Opens the About Qt Window.
         SidebarEntry {
             id: aboutQtButton
-            icon.source: "qrc:/icons/info_sign.svg"
+            icon.source: "../icons/info_sign.svg"
             checkable: false
 
             onClicked: aboutQtWindow.visible = !aboutQtWindow.visible

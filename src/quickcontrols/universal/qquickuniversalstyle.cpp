@@ -4,7 +4,9 @@
 #include "qquickuniversalstyle_p.h"
 
 #include <QtCore/qdebug.h>
+#if QT_CONFIG(settings)
 #include <QtCore/qsettings.h>
+#endif
 #include <QtQml/qqmlinfo.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 

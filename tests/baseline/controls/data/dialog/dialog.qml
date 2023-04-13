@@ -12,9 +12,7 @@ Item {
         width: 50
         visible: true
         enabled: true
-        header: Text {
-            text: qsTr("dialog 1")
-        }
+        title: qsTr("dialog 1")
     }
 
     Dialog {

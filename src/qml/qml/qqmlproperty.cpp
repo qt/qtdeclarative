@@ -1225,14 +1225,9 @@ bool QQmlPropertyPrivate::writeEnumProperty(const QMetaProperty &prop, int idx, 
                 v = QVariant(menum.keyToValue(value.toByteArray(), &ok));
             if (!ok)
                 return false;
-        } else if (v.userType() != QMetaType::Int && v.userType() != QMetaType::UInt) {
-            int enumMetaTypeId = QMetaType::fromName(
-                        QByteArray(menum.scope() + QByteArray("::") + menum.name())).id();
-            if ((enumMetaTypeId == QMetaType::UnknownType) || (v.userType() != enumMetaTypeId) || !v.constData())
-                return false;
-            v = QVariant(*reinterpret_cast<const int *>(v.constData()));
         }
-        v.convert(QMetaType(QMetaType::Int));
+        if (!v.convert(prop.metaType())) // ### TODO: underlyingType might be faster?
+            return false;
     }
 
     // the status variable is changed by qt_metacall to indicate what it did
@@ -1423,14 +1418,15 @@ static ConvertAndAssignResult tryConvertAndAssign(
     }
     }
 
-    QVariant converted(propertyMetaType);
-    if (QQmlValueTypeProvider::createValueType(value, propertyMetaType, converted.data())
-            || QMetaType::convert(value.metaType(), value.constData(),
-                                  propertyMetaType, converted.data()))  {
-        return {true, property.writeProperty(object, converted.data(), flags)};
+    QVariant converted = QQmlValueTypeProvider::createValueType(value, propertyMetaType);
+    if (!converted.isValid()) {
+        converted = QVariant(propertyMetaType);
+        if (!QMetaType::convert(value.metaType(), value.constData(),
+                                propertyMetaType, converted.data()))  {
+            return {false, false};
+        }
     }
-
-    return {false, false};
+    return {true, property.writeProperty(object, converted.data(), flags)};
 };
 
 template<typename Op>

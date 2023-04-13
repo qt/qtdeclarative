@@ -9,7 +9,7 @@ Item {
         anchors.centerIn: parent
         modal: true
         visible: true
-        Text {
+        Label {
             text: "visible"
         }
     }

@@ -11,12 +11,12 @@ CanvasTestCase {
        canvas.loadImage('rgrg-256x256.png');
        canvas.loadImage('ggrr-256x256.png');
        canvas.loadImage('broken.png');
-       while (!canvas.isImageLoaded('green.png'))
-          wait(200);
+       tryVerify(function() { return canvas.isImageLoaded('green.png'); })
    }
 
    function test_3args(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
        ctx.reset();
@@ -35,6 +35,7 @@ CanvasTestCase {
   }
    function test_5args(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -54,6 +55,7 @@ CanvasTestCase {
   }
    function test_9args(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -118,6 +120,7 @@ CanvasTestCase {
    }
    function test_animated(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -125,6 +128,7 @@ CanvasTestCase {
   }
    function test_clip(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -139,6 +143,7 @@ CanvasTestCase {
   }
    function test_self(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -170,6 +175,7 @@ CanvasTestCase {
 
    function test_outsidesource(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -207,6 +213,7 @@ CanvasTestCase {
 
    function test_null(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -220,15 +227,18 @@ CanvasTestCase {
 
    function test_url(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
 
        canvas.loadImage(testCase.green);
+       tryVerify(function() { return canvas.isImageLoaded(testCase.green); })
        ctx.drawImage(testCase.green, 0, 0);
        comparePixel(ctx, 0,0, 0,255,0,255,2);
    }
 
    function test_composite(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -241,12 +251,14 @@ CanvasTestCase {
   }
    function test_path(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
   }
    function test_transform(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -260,6 +272,7 @@ CanvasTestCase {
 
    function test_imageitem(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -268,6 +281,7 @@ CanvasTestCase {
 
    function test_imageData(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -276,6 +290,7 @@ CanvasTestCase {
 
    function test_wrongtype(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -293,6 +308,7 @@ CanvasTestCase {
 
    function test_nonfinite(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -606,6 +622,7 @@ CanvasTestCase {
 
    function test_negative(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -661,6 +678,7 @@ CanvasTestCase {
 
    function test_canvas(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -684,6 +702,7 @@ CanvasTestCase {
 
    function test_broken(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -694,6 +713,7 @@ CanvasTestCase {
 
    function test_alpha(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
@@ -706,6 +726,7 @@ CanvasTestCase {
    }
    function test_multiple_painting(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 

@@ -27,7 +27,6 @@ void QQmlJSLinterCodegen::setDocument(const QmlIR::JSCodeGen *codegen,
     Q_UNUSED(codegen);
     m_document = document;
     m_unitGenerator = &document->jsGenerator;
-    m_entireSourceCodeLines = document->code.split(u'\n');
 }
 
 std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage>

@@ -33,13 +33,7 @@
     The Universal style has been designed to look good on all devices, from
     phones and tablets to PCs.
 
-    \table
-        \row
-            \li \image qtquickcontrols-universal-light.png
-                \caption The Universal style in light theme
-            \li \image qtquickcontrols-universal-dark.png
-                \caption The Universal style in dark theme
-    \endtable
+    \include style-screenshots.qdocinc {file} {Universal} {universal}
 
     To run an application with the Universal style, see
     \l {Using Styles in Qt Quick Controls}.

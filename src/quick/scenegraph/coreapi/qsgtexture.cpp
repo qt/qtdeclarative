@@ -687,6 +687,7 @@ namespace QNativeInterface {
     \inmodule QtQuick
     \ingroup native-interfaces
     \ingroup native-interfaces-qsgtexture
+    \inheaderfile QSGTexture
     \brief Provides access to and enables adopting OpenGL texture objects.
     \since 6.0
 */
@@ -787,6 +788,7 @@ namespace QNativeInterface {
     \inmodule QtQuick
     \ingroup native-interfaces
     \ingroup native-interfaces-qsgtexture
+    \inheaderfile QSGTexture
     \brief Provides access to and enables adopting Direct3D 11 texture objects.
     \since 6.0
 */
@@ -845,6 +847,7 @@ namespace QNativeInterface {
     \inmodule QtQuick
     \ingroup native-interfaces
     \ingroup native-interfaces-qsgtexture
+    \inheaderfile QSGTexture
     \brief Provides access to and enables adopting Direct3D 12 texture objects.
     \since 6.6
 */
@@ -873,6 +876,10 @@ QT_DEFINE_NATIVE_INTERFACE(QSGD3D12Texture);
     TextureHasAlphaChannel and TextureHasMipmaps are taken into account here.
 
     \a size specifies the size in pixels.
+
+    \a resourceState must specify the
+    \l{https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_resource_states}{current state}
+    of the texture resource.
 
     \note This function must be called on the scene graph rendering thread.
 
@@ -914,6 +921,7 @@ namespace QNativeInterface {
     \inmodule QtQuick
     \ingroup native-interfaces
     \ingroup native-interfaces-qsgtexture
+    \inheaderfile QSGTexture
     \brief Provides access to and enables adopting Metal texture objects.
     \since 6.0
 */
@@ -961,6 +969,7 @@ namespace QNativeInterface {
     \inmodule QtQuick
     \ingroup native-interfaces
     \ingroup native-interfaces-qsgtexture
+    \inheaderfile QSGTexture
     \brief Provides access to and enables adopting Vulkan image objects.
     \since 6.0
 */

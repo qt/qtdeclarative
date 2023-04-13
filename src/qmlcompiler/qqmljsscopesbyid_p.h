@@ -34,6 +34,9 @@ public:
     void setValueTypesAreCopied(bool copied) { m_valueTypesAreCopied = copied; }
     bool valueTypesAreCopied() const { return m_valueTypesAreCopied; }
 
+    void setValueTypesAreAddressable(bool addressable) { m_valueTypesAreAddressable = addressable; }
+    bool valueTypesAreAddressable() const { return m_valueTypesAreAddressable; }
+
     QString id(const QQmlJSScope::ConstPtr &scope, const QQmlJSScope::ConstPtr &referrer) const
     {
         const QQmlJSScope::ConstPtr referrerRoot = componentRoot(referrer);
@@ -113,6 +116,7 @@ private:
     bool m_componentsAreBound = false;
     bool m_signaturesAreEnforced = true;
     bool m_valueTypesAreCopied = true;
+    bool m_valueTypesAreAddressable = false;
 };
 
 QT_END_NAMESPACE

@@ -41,8 +41,10 @@ Rectangle {
 
             AnchorChanges {
                 target: icon
-                anchors.horizontalCenter: undefined
-                anchors.verticalCenter: undefined
+                anchors {
+                    horizontalCenter: undefined
+                    verticalCenter: undefined
+                }
             }
         }
     ]

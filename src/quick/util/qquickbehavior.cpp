@@ -151,7 +151,7 @@ public:
 UntypedProxyProperty::UntypedProxyProperty(QUntypedBindable bindable, QQuickBehaviorPrivate *behavior) :
     m_sourcePropertyData(QUntypedBindablePrivate::getPropertyData(bindable)),
     m_sourceInterface(QUntypedBindablePrivate::getInterface(bindable)),
-    m_storage(QVariant(QUntypedBindablePrivate::getInterface(bindable)->metaType()))
+    m_storage(QVariant(bindable.metaType()))
 {
     behavior->setSource(m_bindingData);
 }

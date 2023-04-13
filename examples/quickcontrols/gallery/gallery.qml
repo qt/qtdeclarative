@@ -1,6 +1,8 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
+
 import QtCore
 import QtQuick
 import QtQuick.Layouts
@@ -13,7 +15,11 @@ ApplicationWindow {
     width: 360
     height: 520
     visible: true
-    title: "Qt Quick Controls"
+    title: qsTr("Qt Quick Controls")
+
+    //! [orientation]
+    readonly property bool portraitMode: window.width < window.height
+    //! [orientation]
 
     function help() {
         let displayingControl = listView.currentIndex !== -1
@@ -41,7 +47,7 @@ ApplicationWindow {
 
     Shortcut {
         sequence: StandardKey.HelpContents
-        onActivated: help()
+        onActivated: window.help()
     }
 
     Action {
@@ -72,14 +78,16 @@ ApplicationWindow {
         RowLayout {
             spacing: 20
             anchors.fill: parent
+            anchors.leftMargin: !window.portraitMode ? drawer.width : undefined
 
             ToolButton {
                 action: navigateBackAction
+                visible: window.portraitMode
             }
 
             Label {
                 id: titleLabel
-                text: listView.currentItem ? listView.currentItem.text : "Gallery"
+                text: listView.currentItem ? (listView.currentItem as ItemDelegate).text : qsTr("Gallery")
                 font.pixelSize: 20
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignHCenter
@@ -96,15 +104,15 @@ ApplicationWindow {
                     transformOrigin: Menu.TopRight
 
                     Action {
-                        text: "Settings"
+                        text: qsTr("Settings")
                         onTriggered: settingsDialog.open()
                     }
                     Action {
-                        text: "Help"
-                        onTriggered: help()
+                        text: qsTr("Help")
+                        onTriggered: window.help()
                     }
                     Action {
-                        text: "About"
+                        text: qsTr("About")
                         onTriggered: aboutDialog.open()
                     }
                 }
@@ -114,9 +122,13 @@ ApplicationWindow {
 
     Drawer {
         id: drawer
+
         width: Math.min(window.width, window.height) / 3 * 2
         height: window.height
-        interactive: stackView.depth === 1
+        modal: window.portraitMode
+        interactive: window.portraitMode ? (stackView.depth === 1) : false
+        position: window.portraitMode ? 0 : 1
+        visible: !window.portraitMode
 
         ListView {
             id: listView
@@ -125,44 +137,52 @@ ApplicationWindow {
             currentIndex: -1
             anchors.fill: parent
 
-            delegate: ItemDelegate {
-                width: listView.width
-                text: model.title
-                highlighted: ListView.isCurrentItem
-                onClicked: {
-                    listView.currentIndex = index
-                    stackView.push(model.source)
-                    drawer.close()
-                }
+            model: ListModel {
+                ListElement { title: qsTr("BusyIndicator"); source: "qrc:/pages/BusyIndicatorPage.qml" }
+                ListElement { title: qsTr("Button"); source: "qrc:/pages/ButtonPage.qml" }
+                ListElement { title: qsTr("CheckBox"); source: "qrc:/pages/CheckBoxPage.qml" }
+                ListElement { title: qsTr("ComboBox"); source: "qrc:/pages/ComboBoxPage.qml" }
+                ListElement { title: qsTr("DelayButton"); source: "qrc:/pages/DelayButtonPage.qml" }
+                ListElement { title: qsTr("Dial"); source: "qrc:/pages/DialPage.qml" }
+                ListElement { title: qsTr("Dialog"); source: "qrc:/pages/DialogPage.qml" }
+                ListElement { title: qsTr("Delegates"); source: "qrc:/pages/DelegatePage.qml" }
+                ListElement { title: qsTr("Frame"); source: "qrc:/pages/FramePage.qml" }
+                ListElement { title: qsTr("GroupBox"); source: "qrc:/pages/GroupBoxPage.qml" }
+                ListElement { title: qsTr("PageIndicator"); source: "qrc:/pages/PageIndicatorPage.qml" }
+                ListElement { title: qsTr("ProgressBar"); source: "qrc:/pages/ProgressBarPage.qml" }
+                ListElement { title: qsTr("RadioButton"); source: "qrc:/pages/RadioButtonPage.qml" }
+                ListElement { title: qsTr("RangeSlider"); source: "qrc:/pages/RangeSliderPage.qml" }
+                ListElement { title: qsTr("ScrollBar"); source: "qrc:/pages/ScrollBarPage.qml" }
+                ListElement { title: qsTr("ScrollIndicator"); source: "qrc:/pages/ScrollIndicatorPage.qml" }
+                ListElement { title: qsTr("Slider"); source: "qrc:/pages/SliderPage.qml" }
+                ListElement { title: qsTr("SpinBox"); source: "qrc:/pages/SpinBoxPage.qml" }
+                ListElement { title: qsTr("StackView"); source: "qrc:/pages/StackViewPage.qml" }
+                ListElement { title: qsTr("SwipeView"); source: "qrc:/pages/SwipeViewPage.qml" }
+                ListElement { title: qsTr("Switch"); source: "qrc:/pages/SwitchPage.qml" }
+                ListElement { title: qsTr("TabBar"); source: "qrc:/pages/TabBarPage.qml" }
+                ListElement { title: qsTr("TextArea"); source: "qrc:/pages/TextAreaPage.qml" }
+                ListElement { title: qsTr("TextField"); source: "qrc:/pages/TextFieldPage.qml" }
+                ListElement { title: qsTr("ToolTip"); source: "qrc:/pages/ToolTipPage.qml" }
+                ListElement { title: qsTr("Tumbler"); source: "qrc:/pages/TumblerPage.qml" }
             }
 
-            model: ListModel {
-                ListElement { title: "BusyIndicator"; source: "qrc:/pages/BusyIndicatorPage.qml" }
-                ListElement { title: "Button"; source: "qrc:/pages/ButtonPage.qml" }
-                ListElement { title: "CheckBox"; source: "qrc:/pages/CheckBoxPage.qml" }
-                ListElement { title: "ComboBox"; source: "qrc:/pages/ComboBoxPage.qml" }
-                ListElement { title: "DelayButton"; source: "qrc:/pages/DelayButtonPage.qml" }
-                ListElement { title: "Dial"; source: "qrc:/pages/DialPage.qml" }
-                ListElement { title: "Dialog"; source: "qrc:/pages/DialogPage.qml" }
-                ListElement { title: "Delegates"; source: "qrc:/pages/DelegatePage.qml" }
-                ListElement { title: "Frame"; source: "qrc:/pages/FramePage.qml" }
-                ListElement { title: "GroupBox"; source: "qrc:/pages/GroupBoxPage.qml" }
-                ListElement { title: "PageIndicator"; source: "qrc:/pages/PageIndicatorPage.qml" }
-                ListElement { title: "ProgressBar"; source: "qrc:/pages/ProgressBarPage.qml" }
-                ListElement { title: "RadioButton"; source: "qrc:/pages/RadioButtonPage.qml" }
-                ListElement { title: "RangeSlider"; source: "qrc:/pages/RangeSliderPage.qml" }
-                ListElement { title: "ScrollBar"; source: "qrc:/pages/ScrollBarPage.qml" }
-                ListElement { title: "ScrollIndicator"; source: "qrc:/pages/ScrollIndicatorPage.qml" }
-                ListElement { title: "Slider"; source: "qrc:/pages/SliderPage.qml" }
-                ListElement { title: "SpinBox"; source: "qrc:/pages/SpinBoxPage.qml" }
-                ListElement { title: "StackView"; source: "qrc:/pages/StackViewPage.qml" }
-                ListElement { title: "SwipeView"; source: "qrc:/pages/SwipeViewPage.qml" }
-                ListElement { title: "Switch"; source: "qrc:/pages/SwitchPage.qml" }
-                ListElement { title: "TabBar"; source: "qrc:/pages/TabBarPage.qml" }
-                ListElement { title: "TextArea"; source: "qrc:/pages/TextAreaPage.qml" }
-                ListElement { title: "TextField"; source: "qrc:/pages/TextFieldPage.qml" }
-                ListElement { title: "ToolTip"; source: "qrc:/pages/ToolTipPage.qml" }
-                ListElement { title: "Tumbler"; source: "qrc:/pages/TumblerPage.qml" }
+            delegate: ItemDelegate {
+                id: delegateItem
+                width: ListView.view.width
+                text: title
+                highlighted: ListView.isCurrentItem
+
+                required property int index
+                required property var model
+                required property string title
+                required property string source
+
+                onClicked: {
+                    listView.currentIndex = index
+                    stackView.push(source)
+                    if (window.portraitMode)
+                        drawer.close()
+                }
             }
 
             ScrollIndicator.vertical: ScrollIndicator { }
@@ -171,7 +191,9 @@ ApplicationWindow {
 
     StackView {
         id: stackView
+
         anchors.fill: parent
+        anchors.leftMargin: !window.portraitMode ? drawer.width : undefined
 
         initialItem: Pane {
             id: pane
@@ -187,7 +209,7 @@ ApplicationWindow {
             }
 
             Label {
-                text: "Qt Quick Controls provides a set of controls that can be used to build complete interfaces in Qt Quick."
+                text: qsTr("Qt Quick Controls provides a set of controls that can be used to build complete interfaces in Qt Quick.")
                 anchors.margins: 20
                 anchors.top: logo.bottom
                 anchors.left: parent.left
@@ -203,6 +225,7 @@ ApplicationWindow {
                 source: "images/arrow.png"
                 anchors.left: parent.left
                 anchors.bottom: parent.bottom
+                visible: window.portraitMode
             }
         }
     }
@@ -214,7 +237,7 @@ ApplicationWindow {
         width: Math.round(Math.min(window.width, window.height) / 3 * 2)
         modal: true
         focus: true
-        title: "Settings"
+        title: qsTr("Settings")
 
         standardButtons: Dialog.Ok | Dialog.Cancel
         onAccepted: {
@@ -234,7 +257,7 @@ ApplicationWindow {
                 spacing: 10
 
                 Label {
-                    text: "Style:"
+                    text: qsTr("Style:")
                 }
 
                 ComboBox {
@@ -251,7 +274,7 @@ ApplicationWindow {
             }
 
             Label {
-                text: "Restart required"
+                text: qsTr("Restart required")
                 color: "#e41e25"
                 opacity: styleBox.currentIndex !== styleBox.styleIndex ? 1.0 : 0.0
                 horizontalAlignment: Label.AlignHCenter
@@ -266,7 +289,7 @@ ApplicationWindow {
         id: aboutDialog
         modal: true
         focus: true
-        title: "About"
+        title: qsTr("About")
         x: (window.width - width) / 2
         y: window.height / 6
         width: Math.min(window.width, window.height) / 3 * 2
@@ -278,15 +301,15 @@ ApplicationWindow {
 
             Label {
                 width: aboutDialog.availableWidth
-                text: "The Qt Quick Controls module delivers the next generation user interface controls based on Qt Quick."
+                text: qsTr("The Qt Quick Controls module delivers the next generation user interface controls based on Qt Quick.")
                 wrapMode: Label.Wrap
                 font.pixelSize: 12
             }
 
             Label {
                 width: aboutDialog.availableWidth
-                text: "In comparison to Qt Quick Controls 1, Qt Quick Controls "
-                    + "are an order of magnitude simpler, lighter, and faster."
+                text: qsTr("In comparison to Qt Quick Controls 1, Qt Quick Controls "
+                    + "are an order of magnitude simpler, lighter, and faster.")
                 wrapMode: Label.Wrap
                 font.pixelSize: 12
             }

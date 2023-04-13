@@ -15,10 +15,12 @@ void deduplicate(Container &container)
 
 QQmlJSCompilePass::InstructionAnnotations QQmlJSBasicBlocks::run(
         const Function *function,
-        const InstructionAnnotations &annotations)
+        const InstructionAnnotations &annotations,
+        QQmlJS::DiagnosticMessage *error)
 {
     m_function = function;
     m_annotations = annotations;
+    m_error = error;
 
     for (int i = 0, end = function->argumentTypes.size(); i != end; ++i) {
         InstructionAnnotation annotation;
@@ -214,12 +216,15 @@ void QQmlJSBasicBlocks::populateReaderLocations()
                 it->second.changedRegister = QQmlJSRegisterContent();
             } else {
                 // void the output, rather than deleting it. We still need its variant.
-                m_typeResolver->adjustTrackedType(
+                bool adjusted = m_typeResolver->adjustTrackedType(
                             it->second.changedRegister.storedType(),
                             m_typeResolver->voidType());
-                m_typeResolver->adjustTrackedType(
+                Q_ASSERT(adjusted); // Can always convert to void
+
+                adjusted = m_typeResolver->adjustTrackedType(
                             m_typeResolver->containedType(it->second.changedRegister),
                             m_typeResolver->voidType());
+                Q_ASSERT(adjusted); // Can always convert to void
             }
             m_readerLocations.erase(reader);
 
@@ -392,6 +397,27 @@ bool QQmlJSBasicBlocks::canMove(int instructionOffset, const RegisterAccess &acc
             == basicBlockForInstruction(access.registerReadersAndConversions.begin().key());
 }
 
+static QString adjustErrorMessage(
+        const QQmlJSScope::ConstPtr &origin, const QQmlJSScope::ConstPtr &conversion) {
+    return QLatin1String("Cannot convert from ")
+            + origin->internalName() + QLatin1String(" to ") + conversion->internalName();
+}
+
+static QString adjustErrorMessage(
+        const QQmlJSScope::ConstPtr &origin, const QList<QQmlJSScope::ConstPtr> &conversions) {
+    if (conversions.size() == 1)
+        return adjustErrorMessage(origin, conversions[0]);
+
+    QString types;
+    for (const QQmlJSScope::ConstPtr &type : conversions) {
+        if (!types.isEmpty())
+            types += QLatin1String(", ");
+        types += type->internalName();
+    }
+    return QLatin1String("Cannot convert from ")
+            + origin->internalName() + QLatin1String(" to union of ") + types;
+}
+
 void QQmlJSBasicBlocks::adjustTypes()
 {
     using NewVirtualRegisters = NewFlatMap<int, VirtualRegister>;
@@ -424,15 +450,18 @@ void QQmlJSBasicBlocks::adjustTypes()
         Q_ASSERT(it->trackedTypes[0] == m_typeResolver->containedType(annotation.changedRegister));
         Q_ASSERT(!annotation.readRegisters.isEmpty());
 
-        m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->typeReaders.values());
+        if (!m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->typeReaders.values()))
+            setError(adjustErrorMessage(it->trackedTypes[0], it->typeReaders.values()));
 
         // Now we don't adjust the type we store, but rather the type we expect to read. We
         // can do this because we've tracked the read type when we defined the array in
         // QQmlJSTypePropagator.
         if (QQmlJSScope::ConstPtr valueType = it->trackedTypes[0]->valueType()) {
-            m_typeResolver->adjustTrackedType(
-                    m_typeResolver->containedType(annotation.readRegisters.begin().value().content),
-                    valueType);
+            const QQmlJSScope::ConstPtr contained
+                    = m_typeResolver->containedType(
+                        annotation.readRegisters.begin().value().content);
+            if (!m_typeResolver->adjustTrackedType(contained, valueType))
+                setError(adjustErrorMessage(contained, valueType));
         }
 
         handleRegisterReadersAndConversions(it);
@@ -447,13 +476,15 @@ void QQmlJSBasicBlocks::adjustTypes()
         if (it->trackedTypes.size() != 1)
             continue;
 
-        m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->typeReaders.values());
+        if (!m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->typeReaders.values()))
+            setError(adjustErrorMessage(it->trackedTypes[0], it->typeReaders.values()));
     }
 
     const auto transformRegister = [&](QQmlJSRegisterContent &content) {
-        m_typeResolver->adjustTrackedType(
-                    content.storedType(),
-                    m_typeResolver->storedType(m_typeResolver->containedType(content)));
+        const QQmlJSScope::ConstPtr conversion
+                = m_typeResolver->storedType(m_typeResolver->containedType(content));
+        if (!m_typeResolver->adjustTrackedType(content.storedType(), conversion))
+            setError(adjustErrorMessage(content.storedType(), conversion));
     };
 
     NewVirtualRegisters newRegisters;
@@ -472,7 +503,8 @@ void QQmlJSBasicBlocks::adjustTypes()
             QQmlJSScope::ConstPtr newResult;
             for (const auto &origin : conversionOrigins)
                 newResult = m_typeResolver->merge(newResult, origin);
-            m_typeResolver->adjustTrackedType(conversionResult, newResult);
+            if (!m_typeResolver->adjustTrackedType(conversionResult, newResult))
+                setError(adjustErrorMessage(conversionResult, newResult));
             transformRegister(conversion->second.content);
             newRegisters.appendOrdered(conversion);
         }

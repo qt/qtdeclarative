@@ -426,9 +426,9 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     }
     break;
     case QMetaType::QColor: {
-        QVariant data(propertyType);
-        if (QQmlValueTypeProvider::createValueType(
-                    compilationUnit->bindingValueAsString(binding), propertyType, data.data())) {
+        QVariant data = QQmlValueTypeProvider::createValueType(
+                    compilationUnit->bindingValueAsString(binding), propertyType);
+        if (data.isValid()) {
             property->writeProperty(_qobject, data.data(), propertyWriteFlags);
         }
     }
@@ -509,12 +509,9 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     case QMetaType::QVector3D:
     case QMetaType::QVector4D:
     case QMetaType::QQuaternion: {
-        QVariant result(propertyType);
-        bool ok = QQmlValueTypeProvider::createValueType(
-                    compilationUnit->bindingValueAsString(binding),
-                    result.metaType(), result.data());
-        assertOrNull(ok);
-        Q_UNUSED(ok);
+        QVariant result = QQmlValueTypeProvider::createValueType(
+                    compilationUnit->bindingValueAsString(binding), propertyType);
+        assertOrNull(result.isValid());
         property->writeProperty(_qobject, result.data(), propertyWriteFlags);
         break;
     }
@@ -602,8 +599,8 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
                 break;
             }
 
-            QVariant target(propertyType);
-            if (QQmlValueTypeProvider::createValueType(source, propertyType, target.data())) {
+            QVariant target = QQmlValueTypeProvider::createValueType(source, propertyType);
+            if (target.isValid()) {
                 property->writeProperty(_qobject, target.data(), propertyWriteFlags);
                 break;
             }

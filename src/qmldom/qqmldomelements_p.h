@@ -554,7 +554,7 @@ public:
     QString postCode() const { return postCodeForName(m_name); }
 
 private:
-    friend class QmlDomAstCreator;
+    friend class QQmlDomAstCreator;
     BindingType m_bindingType;
     QString m_name;
     std::unique_ptr<BindingValue> m_value;
@@ -876,8 +876,11 @@ public:
                                       std::shared_ptr<ScriptExpression> accessSequence) const;
     LocallyResolvedAlias resolveAlias(DomItem &self, const QStringList &accessSequence) const;
 
+    QQmlJSScope::Ptr semanticScope() const { return m_scope; }
+    void setSemanticScope(const QQmlJSScope::Ptr &scope) { m_scope = scope; }
+
 private:
-    friend class QmlDomAstCreator;
+    friend class QQmlDomAstCreator;
     QString m_idStr;
     QString m_name;
     QList<Path> m_prototypePaths;
@@ -888,6 +891,7 @@ private:
     QMultiMap<QString, MethodInfo> m_methods;
     QList<QmlObject> m_children;
     QList<QmlObject> m_annotations;
+    QQmlJSScope::Ptr m_scope;
 };
 
 class Export
@@ -966,7 +970,7 @@ public:
     void setAttachedTypePath(Path p) { m_attachedTypePath = p; }
 
 private:
-    friend class QmlDomAstCreator;
+    friend class QQmlDomAstCreator;
     QString m_name;
     QMultiMap<QString, EnumDecl> m_enumerations;
     QList<QmlObject> m_objects;
@@ -1066,7 +1070,7 @@ public:
     QList<DomItem> subComponents(DomItem &self) const;
 
 private:
-    friend class QmlDomAstCreator;
+    friend class QQmlDomAstCreator;
     Path m_nextComponentPath;
     QMultiMap<QString, Id> m_ids;
 };

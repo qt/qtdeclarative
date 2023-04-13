@@ -33,7 +33,7 @@ public:
     QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerContext,
                        const QV4::Compiler::JSUnitGenerator *unitGenerator,
                        const QQmlJSTypeResolver *typeResolver,
-                       QQmlJSLogger *logger, const QStringList &sourceCodeLines);
+                       QQmlJSLogger *logger);
     ~QQmlJSCodeGenerator() = default;
 
     QQmlJSAotFunction run(const Function *function, const InstructionAnnotations *annotations,
@@ -63,6 +63,7 @@ protected:
     };
 
     virtual QString metaObject(const QQmlJSScope::ConstPtr &objectType);
+    virtual QString metaType(const QQmlJSScope::ConstPtr &type);
 
     void generate_Ret() override;
     void generate_Debug() override;
@@ -210,14 +211,34 @@ protected:
 
     QString conversion(const QQmlJSRegisterContent &from,
                        const QQmlJSRegisterContent &to,
-                       const QString &variable)
-    {
-        return conversion(from.storedType(), to.storedType(), variable);
-    }
+                       const QString &variable);
 
     QString conversion(const QQmlJSScope::ConstPtr &from,
-                       const QQmlJSScope::ConstPtr &to,
-                       const QString &variable);
+                       const QQmlJSRegisterContent &to,
+                       const QString &variable)
+    {
+        const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(to);
+        if (m_typeResolver->equals(to.storedType(), contained)
+                || to.storedType()->isReferenceType()
+                || m_typeResolver->equals(from, contained)) {
+            // If:
+            // * the output is not actually wrapped at all, or
+            // * the output is a QObject pointer, or
+            // * we merely wrap the value into a new container,
+            // we can convert by stored type.
+            return convertStored(from, to.storedType(), variable);
+        } else {
+            return convertContained(m_typeResolver->globalType(from), to, variable);
+        }
+    }
+
+    QString convertStored(const QQmlJSScope::ConstPtr &from,
+                          const QQmlJSScope::ConstPtr &to,
+                          const QString &variable);
+
+    QString convertContained(const QQmlJSRegisterContent &from,
+                             const QQmlJSRegisterContent &to,
+                             const QString &variable);
 
     QString errorReturnValue();
     void reject(const QString &thing);
@@ -262,7 +283,6 @@ private:
     void generateInPlaceOperation(const QString &cppOperator);
     void generateMoveOutVar(const QString &outVar);
     void generateTypeLookup(int index);
-    void generateOutputVariantConversion(const QQmlJSScope::ConstPtr &containedType);
     void generateVariantEqualityComparison(const QQmlJSRegisterContent &nonStorable,
                                            const QString &registerName, bool invert);
     void rejectIfNonQObjectOut(const QString &error);
@@ -288,9 +308,15 @@ private:
         return m_typeResolver->jsGlobalObject()->property(u"console"_s).type();
     }
 
-    int nextJSLine(uint line) const;
-
-    QStringList m_sourceCodeLines;
+    QString resolveValueTypeContentPointer(
+            const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
+            const QString &variable, const QString &errorMessage);
+    QString resolveQObjectPointer(
+            const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
+            const QString &variable, const QString &errorMessage);
+    bool generateContentPointerCheck(
+            const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
+            const QString &variable, const QString &errorMessage);
 
     // map from instruction offset to sequential label number
     QHash<int, QString> m_labels;
@@ -298,7 +324,6 @@ private:
     const QV4::Compiler::Context *m_context = nullptr;
     const InstructionAnnotations *m_annotations = nullptr;
 
-    int m_lastLineNumberUsed = -1;
     bool m_skipUntilNextLabel = false;
 
     QStringList m_includes;

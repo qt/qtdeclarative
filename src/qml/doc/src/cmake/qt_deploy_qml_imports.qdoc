@@ -6,15 +6,15 @@
 \ingroup cmake-commands-qtqml
 
 \title qt_deploy_qml_imports
-\target qt6_deploy_qml_imports
+\keyword qt6_deploy_qml_imports
 
 \summary {Deploy the runtime components of QML modules needed by an executable.}
 
 \include cmake-find-package-qml.qdocinc
 
-Unlike most other CMake commands provided by Qt, \c{qt_deploy_qml_imports()}
-can only be called from a deployment script. It cannot be called directly by the
-project.
+Unlike most other CMake commands provided by Qt,
+\c{qt6_deploy_qml_imports}{qt_deploy_qml_imports()} can only be called from a
+deployment script. It cannot be called directly by the project.
 
 \include cmake-qml-qt-finalize-target-warning.qdocinc
 
@@ -38,9 +38,9 @@ qt_deploy_qml_imports(
 When installing an application that uses QML, it may be non-trivial to work out
 which QML modules and which parts of those QML modules need to also be
 installed. Because QML plugins are not linked directly to an application's
-executable, \l{qt_deploy_runtime_dependencies()} won't find these QML modules.
-The \c{qt_deploy_qml_imports()} command provides the necessary logic which
-complements \l{qt_deploy_runtime_dependencies()} and deploys the runtime parts
+executable, \l{qt6_deploy_runtime_dependencies}{qt_deploy_runtime_dependencies()} won't find these QML modules.
+The \c{qt6_deploy_qml_imports}{qt_deploy_qml_imports()} command provides the necessary logic which
+complements \l{qt6_deploy_runtime_dependencies}{qt_deploy_runtime_dependencies()} and deploys the runtime parts
 of all QML modules imported by the application.
 
 The \c{TARGET} option is mandatory and should specify a \c{target} that is an
@@ -62,10 +62,11 @@ choice.
 The command will store a list of all QML plugins it deploys in the variable
 named by the \c{PLUGINS_FOUND} option, if given. This is often passed as the
 \c{ADDITIONAL_MODULES} argument in a subsequent call to
-\l{qt_deploy_runtime_dependencies()}.
+\l{qt6_deploy_runtime_dependencies}{qt_deploy_runtime_dependencies()}.
 
 \sa {qt6_generate_deploy_qml_app_script}{qt_generate_deploy_qml_app_script()},
-    qt_deploy_runtime_dependencies(), QT_DEPLOY_QML_DIR
+    {qt6_deploy_runtime_dependencies}{qt_deploy_runtime_dependencies()},
+    QT_DEPLOY_QML_DIR
 
 \section1 Example
 

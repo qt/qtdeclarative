@@ -3,7 +3,7 @@
 
 qt_get_tool_target_name(target_name qmltc)
 qt_internal_add_tool(${target_name}
-    TARGET_DESCRIPTION "QML Type Compiler"
+    TARGET_DESCRIPTION "QML type compiler"
     TOOLS_TARGET Qml
     SOURCES
         main.cpp

@@ -42,9 +42,9 @@ public:
     {
     }
 
-    static int getCount(const QDate& from, const QDate &to);
+    static int getCount(QDate from, QDate to);
 
-    void populate(const QDate &from, const QDate &to, bool force = false);
+    void populate(QDate from, QDate to, bool force = false);
 
     bool complete;
     QDate from;
@@ -52,24 +52,26 @@ public:
     int count;
 };
 
-int QQuickCalendarModelPrivate::getCount(const QDate& from, const QDate &to)
+// Returns the number of months we need to display for both from and to to be shown,
+// or zero if from is in a later month than to, or either is invalid.
+int QQuickCalendarModelPrivate::getCount(QDate from, QDate to)
 {
     if (!from.isValid() || !to.isValid())
         return 0;
 
-    QDate f(from.year(), from.month(), 1);
-    QDate t(to.year(), to.month(), to.daysInMonth());
-    int days = f.daysTo(t);
-    if (days < 0)
+    const QCalendar gregorian;
+    Q_ASSERT(gregorian.isGregorian());
+    const QCalendar::YearMonthDay &f = gregorian.partsFromDate(from);
+    const QCalendar::YearMonthDay &t = gregorian.partsFromDate(to);
+    Q_ASSERT(f.isValid() && t.isValid()); // ... because from and to are valid.
+    if (f.year > t.year || (f.year == t.year && f.month > t.month))
         return 0;
 
-    QDate r = QDate(1, 1, 1).addDays(days);
-    int years = r.year() - 1;
-    int months = r.month() - 1;
-    return 12 * years + months + (r.day() / t.day());
+    // Count from's month and every subsequent month until to's:
+    return 1 + t.month + 12 * (t.year - f.year) - f.month;
 }
 
-void QQuickCalendarModelPrivate::populate(const QDate &f, const QDate &t, bool force)
+void QQuickCalendarModelPrivate::populate(QDate f, QDate t, bool force)
 {
     Q_Q(QQuickCalendarModel);
     if (!force && f == from && t == to)

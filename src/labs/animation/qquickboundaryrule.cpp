@@ -111,7 +111,7 @@ void QQuickBoundaryReturnJob::updateState(QAbstractAnimationJob::State newState,
     Note that a property cannot have more than one assigned BoundaryRule.
 
     \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation#Behaviors}{Behavior
-example}, {Qt QML}
+example}, {Qt QML}, {Pointer Handlers Example}
 */
 
 QQuickBoundaryRule::QQuickBoundaryRule(QObject *parent)

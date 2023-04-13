@@ -1,6 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 
 #include "data/druggeljug.h"
+#include "data/withlength.h"
 #include <data/birthdayparty.h>
 #include <data/cppbaseclass.h>
 #include <data/enumproblems.h>
@@ -169,6 +170,12 @@ private slots:
     void equalityQUrl();
     void undefinedToDouble();
     void variantMapLookup();
+    void mathMinMax();
+    void enumFromBadSingleton();
+    void objectLookupOnListElement();
+    void multipleCtors();
+    void boolCoercions();
+    void ambiguousAs();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -531,6 +538,7 @@ void tst_QmlCppCodegen::math()
     QVERIFY(!object.isNull());
     QCOMPARE(object->property("a").toInt(), 9);
     QCOMPARE(object->property("b").toDouble(), 50.0 / 22.0);
+    QCOMPARE(object->property("c").toDouble(), std::atan(1.0) * 8.0);
 }
 
 void tst_QmlCppCodegen::unknownParameter()
@@ -1264,6 +1272,10 @@ void tst_QmlCppCodegen::overriddenProperty()
     QVERIFY2(component.isReady(), component.errorString().toUtf8());
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
+
+    QObject *child = object->property("child").value<QObject *>();
+    QVERIFY(child);
+
     QCOMPARE(object->objectName(), u"kraut"_s);
     QCOMPARE(object->property("doneThing").toInt(), 5);
     QCOMPARE(object->property("usingFinal").toInt(), 5);
@@ -1274,6 +1286,13 @@ void tst_QmlCppCodegen::overriddenProperty()
         QCOMPARE(object->objectName(), newName);
     };
     checkAssignment();
+
+    QMetaObject::invokeMethod(child, "doString");
+    QCOMPARE(child->objectName(), u"string"_s);
+    QMetaObject::invokeMethod(child, "doNumber");
+    QCOMPARE(child->objectName(), u"double"_s);
+    QMetaObject::invokeMethod(child, "doArray");
+    QCOMPARE(child->objectName(), u"javaScript"_s);
 
     ObjectWithMethod *benign = new ObjectWithMethod(object.data());
     benign->theThing = 10;
@@ -3024,10 +3043,10 @@ void tst_QmlCppCodegen::lengthAccessArraySequenceCompat()
     QCOMPARE(o->property("length").toInt(), 100);
 }
 
-static QList<QString> convertToStrings(const QList<int> &ints)
+static QList<QString> convertToStrings(const QList<qint64> &ints)
 {
     QList<QString> strings;
-    for (int i : ints)
+    for (qint64 i : ints)
         strings.append(QString::number(i));
     return strings;
 }
@@ -3040,12 +3059,41 @@ void tst_QmlCppCodegen::numbersInJsPrimitive()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
 
-    const QList<int> zeroes  = {0, 0, 0, 0};
-    const QList<int> written = {39, 40, 41, 42};
-    const QList<int> stored  = {1334, 1335, 1336, 1337};
-    QStringList asStrings(4);
+    const QList<qint64> zeroes
+            = {0, 0, 0, 0, 0, 0, 0, 0};
+    const QList<qint64> written
+            = {35, 36, 37, 38, 39, 40, 41, 42};
+    const QList<qint64> writtenNegative
+            = {-35, 220, -37, 65498, -39, 4294967256, -41, 4294967254};
+    const QList<QList<qint64>> writtenShuffled = {
+        { -36, 219, -38, 65497, -40, 4294967255, -42, 4294967260 },
+        { -37, 218, -39, 65496, -41, 4294967254, -36, 4294967259 },
+        { -38, 217, -40, 65495, -42, 4294967260, -37, 4294967258 },
+        { -39, 216, -41, 65494, -36, 4294967259, -38, 4294967257 },
+        { -40, 215, -42, 65500, -37, 4294967258, -39, 4294967256 },
+        { -41, 214, -36, 65499, -38, 4294967257, -40, 4294967255 },
+        { -42, 220, -37, 65498, -39, 4294967256, -41, 4294967254 },
+        { -36, 219, -38, 65497, -40, 4294967255, -42, 4294967260 },
+    };
 
-    for (int i = 0; i < 4; ++i) {
+    const QList<qint64> stored
+            = {50, 51, 1332, 1333, 1334, 1335, 1336, 1337};
+    const QList<qint64> storedNegative
+            = {-50, 205, -1332, 64203, -1334, 4294965961, -1336, 4294965959};
+    const QList<QList<qint64>> storedShuffled = {
+        { -51, 204, -1333, 64202, -1335, 4294965960, -1337, 4294967245 },
+        { -52, 203, -1334, 64201, -1336, 4294965959, -51,   4294967244 },
+        { -53, 202, -1335, 64200, -1337, 4294967245, -52,   4294967243 },
+        { -54, 201, -1336, 64199, -51,   4294967244, -53,   4294967242 },
+        { -55, 200, -1337, 65485, -52,   4294967243, -54,   4294967241 },
+        { -56, 199, -51,   65484, -53,   4294967242, -55,   4294967240 },
+        { -57, 205, -52,   65483, -54,   4294967241, -56,   4294967239 },
+        { -51, 204, -53,   65482, -55,   4294967240, -57,   4294967245 },
+    };
+
+    QStringList asStrings(8);
+
+    for (int i = 0; i < 8; ++i) {
         QMetaObject::invokeMethod(
                     o.data(), "readValueAsString",
                     Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
@@ -3053,20 +3101,56 @@ void tst_QmlCppCodegen::numbersInJsPrimitive()
     QCOMPARE(asStrings, convertToStrings(zeroes));
 
     QMetaObject::invokeMethod(o.data(), "writeValues");
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 8; ++i) {
         QMetaObject::invokeMethod(
                     o.data(), "readValueAsString",
                     Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
     }
     QCOMPARE(asStrings, convertToStrings(written));
 
+    QMetaObject::invokeMethod(o.data(), "negateValues");
+    for (int i = 0; i < 8; ++i) {
+        QMetaObject::invokeMethod(
+                    o.data(), "readValueAsString",
+                    Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
+    }
+    QCOMPARE(asStrings, convertToStrings(writtenNegative));
+
+    for (int i = 0; i < 8; ++i) {
+        QMetaObject::invokeMethod(o.data(), "shuffleValues");
+        for (int i = 0; i < 8; ++i) {
+            QMetaObject::invokeMethod(
+                        o.data(), "readValueAsString",
+                        Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
+        }
+        QCOMPARE(asStrings, convertToStrings(writtenShuffled[i]));
+    }
+
     QMetaObject::invokeMethod(o.data(), "storeValues");
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 8; ++i) {
         QMetaObject::invokeMethod(
                     o.data(), "readValueAsString",
                     Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
     }
     QCOMPARE(asStrings, convertToStrings(stored));
+
+    QMetaObject::invokeMethod(o.data(), "negateValues");
+    for (int i = 0; i < 8; ++i) {
+        QMetaObject::invokeMethod(
+                    o.data(), "readValueAsString",
+                    Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
+    }
+    QCOMPARE(asStrings, convertToStrings(storedNegative));
+
+    for (int i = 0; i < 8; ++i) {
+        QMetaObject::invokeMethod(o.data(), "shuffleValues");
+        for (int i = 0; i < 8; ++i) {
+            QMetaObject::invokeMethod(
+                        o.data(), "readValueAsString",
+                        Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
+        }
+        QCOMPARE(asStrings, convertToStrings(storedShuffled[i]));
+    }
 }
 
 void tst_QmlCppCodegen::infinitiesToInt()
@@ -3209,6 +3293,22 @@ void tst_QmlCppCodegen::valueTypeBehavior()
     QVERIFY(!o2.isNull());
     QVERIFY(qIsNaN(o2->property("e").toDouble()));
     QCOMPARE(o2->property("f").toDouble(), 5.0);
+
+    const QUrl cast(u"qrc:/qt/qml/TestTypes/valueTypeCast.qml"_s);
+    QQmlComponent c3(&engine, cast);
+    QVERIFY2(c3.isReady(), qPrintable(c3.errorString()));
+    QScopedPointer o3(c3.create());
+    QVERIFY(!o3.isNull());
+    QCOMPARE(o3->property("x"), 10);
+
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(cast.toString()
+                           + u":8: TypeError: Cannot read property 'x' of undefined"_s));
+    o3->setProperty("v", QLatin1String("not a rect"));
+
+    // If the binding throws an exception, the value doesn't change.
+    QCOMPARE(o3->property("x"), 10);
 }
 
 void tst_QmlCppCodegen::invisibleSingleton()
@@ -3279,6 +3379,170 @@ void tst_QmlCppCodegen::variantMapLookup()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("i"), 42);
+}
+
+void tst_QmlCppCodegen::mathMinMax()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/mathMinMax.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    // Math.max()
+    QTest::ignoreMessage(QtDebugMsg, "1");
+    QTest::ignoreMessage(QtDebugMsg, "2");
+    QTest::ignoreMessage(QtDebugMsg, "2");
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "1");
+    QTest::ignoreMessage(QtDebugMsg, "2");
+    QTest::ignoreMessage(QtDebugMsg, "2");
+    QTest::ignoreMessage(QtDebugMsg, "9");
+
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "0.002");
+    QTest::ignoreMessage(QtDebugMsg, "5.4");
+    QTest::ignoreMessage(QtDebugMsg, "NaN");
+    QTest::ignoreMessage(QtDebugMsg, "Infinity");
+    QTest::ignoreMessage(QtDebugMsg, "1");
+    QTest::ignoreMessage(QtDebugMsg, "0.08");
+    QTest::ignoreMessage(QtDebugMsg, "Infinity");
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "NaN");
+
+    // Math.min()
+    QTest::ignoreMessage(QtDebugMsg, "1");
+    QTest::ignoreMessage(QtDebugMsg, "1");
+    QTest::ignoreMessage(QtDebugMsg, "1");
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "-2");
+    QTest::ignoreMessage(QtDebugMsg, "-2");
+    QTest::ignoreMessage(QtDebugMsg, "0");
+
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "-0.001");
+    QTest::ignoreMessage(QtDebugMsg, "0.002");
+    QTest::ignoreMessage(QtDebugMsg, "NaN");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+    QTest::ignoreMessage(QtDebugMsg, "-8");
+    QTest::ignoreMessage(QtDebugMsg, "NaN");
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+}
+
+void tst_QmlCppCodegen::enumFromBadSingleton()
+{
+    QQmlEngine e;
+    const QUrl url(u"qrc:/qt/qml/TestTypes/enumFromBadSingleton.qml"_s);
+    QQmlComponent c(&e, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+#if QT_DEPRECATED_SINCE(6,4)
+    QTest::ignoreMessage(
+                QtWarningMsg, qPrintable(
+                    url.toString()
+                    + u":5:5: TypeError: Cannot read property 'TestA' of undefined"_s));
+#else
+    QTest::ignoreMessage(
+                QtWarningMsg, qPrintable(
+                    url.toString()
+                    + u":5:5: ReferenceError: DummyObjekt is not defined"_s));
+#endif
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QVERIFY(o->objectName().isEmpty());
+}
+
+void tst_QmlCppCodegen::objectLookupOnListElement()
+{
+    QQmlEngine engine;
+
+    const QUrl url(u"qrc:/qt/qml/TestTypes/objectLookupOnListElement.qml"_s);
+    QQmlComponent c1(&engine, url);
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+
+    QScopedPointer<QObject> object(c1.create());
+    QVERIFY(!object.isNull());
+
+    QList<int> zOrders;
+    QMetaObject::invokeMethod(object.data(), "zOrders", Q_RETURN_ARG(QList<int>, zOrders));
+    QCOMPARE(zOrders, (QList<int>{1, 0, 0}));
+    object->setProperty("current", 1);
+    QMetaObject::invokeMethod(object.data(), "zOrders", Q_RETURN_ARG(QList<int>, zOrders));
+    QCOMPARE(zOrders, (QList<int>{0, 1, 0}));
+
+    QMetaObject::invokeMethod(object.data(), "clearChildren");
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(url.toString()
+                           + u":21: TypeError: Cannot read property 'z' of undefined"_s));
+    QMetaObject::invokeMethod(object.data(), "zOrders", Q_RETURN_ARG(QList<int>, zOrders));
+    QCOMPARE(zOrders, (QList<int>()));
+}
+
+void tst_QmlCppCodegen::multipleCtors()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/multipleCtors.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("wr").value<ValueTypeWithLength>().length(), 3);
+    QCOMPARE(o->property("wp").value<ValueTypeWithLength>().length(), 11);
+    QCOMPARE(o->property("wi").value<ValueTypeWithLength>().length(), 17);
+}
+
+void tst_QmlCppCodegen::boolCoercions()
+{
+    QQmlEngine e;
+    const QUrl url(u"qrc:/qt/qml/TestTypes/boolCoercions.qml"_s);
+    QQmlComponent c(&e, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(url.toString() + ":41:5: Unable to assign [undefined] to bool"_L1));
+    QScopedPointer<QObject> o(c.create());
+
+    for (char p = '1'; p <= '8'; ++p) {
+        const QVariant t = o->property(qPrintable(QLatin1String("t%1").arg(p)));
+        QCOMPARE(t.metaType(), QMetaType::fromType<bool>());
+        QVERIFY(t.toBool());
+    }
+
+    for (char p = '1'; p <= '5'; ++p) {
+        const QVariant f = o->property(qPrintable(QLatin1String("f%1").arg(p)));
+        QCOMPARE(f.metaType(), QMetaType::fromType<bool>());
+        QVERIFY(!f.toBool());
+    }
+}
+
+void tst_QmlCppCodegen::ambiguousAs()
+{
+    QQmlEngine e;
+    const QUrl url(u"qrc:/qt/qml/TestTypes/ambiguousAs.qml"_s);
+    QQmlComponent c(&e, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("other").value<QObject *>(), o.data());
+    o->setProperty("useSelf", QVariant::fromValue(false));
+    QCOMPARE(o->property("other").value<QObject *>(), nullptr);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

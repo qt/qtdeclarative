@@ -153,7 +153,7 @@ private slots:
         DomItem tFile;
         env.loadBuiltins();
         env.loadFile(
-                testFilePath, QString(),
+                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFilePath),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
         env.loadPendingDependencies();
@@ -260,7 +260,7 @@ private slots:
         DomItem tFile;
         env.loadBuiltins();
         env.loadFile(
-                testFilePath, QString(),
+                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFilePath),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
         env.loadPendingDependencies();

@@ -15,7 +15,7 @@ ScrollablePage {
             width: parent.width
             wrapMode: Label.Wrap
             horizontalAlignment: Qt.AlignHCenter
-            text: "Tumbler is used to select a value by spinning a wheel."
+            text: qsTr("Tumbler is used to select a value by spinning a wheel.")
         }
 
         Tumbler {

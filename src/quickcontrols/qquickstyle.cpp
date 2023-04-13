@@ -7,7 +7,9 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qdebug.h>
+#if QT_CONFIG(settings)
 #include <QtCore/qsettings.h>
+#endif
 #include <QtCore/qfileselector.h>
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qloggingcategory.h>

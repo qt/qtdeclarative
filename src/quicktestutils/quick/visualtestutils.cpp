@@ -6,7 +6,9 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDebug>
 #include <QtQuick/QQuickItem>
+#if QT_CONFIG(quick_itemview)
 #include <QtQuick/private/qquickitemview_p.h>
+#endif
 #include <QtQuickTest/QtQuickTest>
 
 QT_BEGIN_NAMESPACE
@@ -111,6 +113,7 @@ bool QQuickVisualTestUtils::compareImages(const QImage &ia, const QImage &ib, QS
     return true;
 }
 
+#if QT_CONFIG(quick_itemview)
 /*!
     \internal
 
@@ -139,6 +142,7 @@ QQuickItem *QQuickVisualTestUtils::findViewDelegateItem(QQuickItemView *itemView
 
     return itemView->itemAtIndex(index);
 }
+#endif
 
 QQuickVisualTestUtils::QQuickApplicationHelper::QQuickApplicationHelper(QQmlDataTest *testCase,
     const QString &testFilePath, const QVariantMap &initialProperties, const QStringList &qmlImportPaths)
@@ -196,6 +200,21 @@ void QQuickVisualTestUtils::MnemonicKeySimulator::click(Qt::Key key)
 {
     press(key);
     release(key);
+}
+
+QPoint QQuickVisualTestUtils::mapCenterToWindow(const QQuickItem *item)
+{
+    return item->mapToScene(QPointF(item->width() / 2, item->height() / 2)).toPoint();
+}
+
+QPoint QQuickVisualTestUtils::mapToWindow(const QQuickItem *item, qreal relativeX, qreal relativeY)
+{
+    return item->mapToScene(QPointF(relativeX, relativeY)).toPoint();
+}
+
+QPoint QQuickVisualTestUtils::mapToWindow(const QQuickItem *item, const QPointF &relativePos)
+{
+    return mapToWindow(item, relativePos.x(), relativePos.y());
 }
 
 QT_END_NAMESPACE

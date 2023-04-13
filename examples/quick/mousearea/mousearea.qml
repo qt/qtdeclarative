@@ -5,16 +5,26 @@ import QtQuick
 
 Rectangle {
     id: box
-    width: 320; height: 480
+    width: 320
+    height: 480
 
     Rectangle {
         id: redSquare
-        width: 120; height: 120
-        anchors.top: parent.top; anchors.left: parent.left; anchors.margins: 10
+        width: 120
+        height: 120
+        anchors {
+            top: parent.top
+            left: parent.left
+            margins: 10
+        }
         color: "red"
         opacity: redSquareMouseArea.containsPress ? 0.6 : 1.0
 
-        Text { text: "Click"; font.pixelSize: 16; anchors.centerIn: parent }
+        Text {
+            text: qsTr("Click")
+            font.pixelSize: 16
+            anchors.centerIn: parent
+        }
 
         MouseArea {
             id: redSquareMouseArea
@@ -26,92 +36,99 @@ Rectangle {
             // Value 'All.Buttons' is eqivalent to:
             // 'Qt::LeftButton | Qt::RightButton | Qt::MiddleButton  .... | Qt::ExtraButton24'
 
-            onEntered: info.text = 'Entered'
-            onExited: info.text = 'Exited (pressed=' + pressed + ')'
+            onEntered: info.text = qsTr('Entered')
+            onExited: info.text = qsTr('Exited (pressed=') + pressed + ')'
 
             onPressed: (mouse) => {
                 if (mouse.button == Qt.LeftButton)
-                    buttonID = 'LeftButton'
+                    buttonID = qsTr('LeftButton')
                 else if (mouse.button == Qt.RightButton)
-                    buttonID = 'RightButton'
+                    buttonID = qsTr('RightButton')
                 else if (mouse.button == Qt.MiddleButton)
-                    buttonID = 'MiddleButton'
+                    buttonID = qsTr('MiddleButton')
                 else if (mouse.button == Qt.BackButton)
-                    buttonID = 'BackButton'
+                    buttonID = qsTr('BackButton')
                 else if (mouse.button == Qt.ForwardButton)
-                    buttonID = 'ForwardButton'
+                    buttonID = qsTr('ForwardButton')
                 else if (mouse.button == Qt.TaskButton)
-                    buttonID = 'TaskButton'
+                    buttonID = qsTr('TaskButton')
                 else if (mouse.button == Qt.ExtraButton4)
-                    buttonID = 'ExtraButton4'
+                    buttonID = qsTr('ExtraButton4')
                 else if (mouse.button == Qt.ExtraButton5)
-                    buttonID = 'ExtraButton5'
+                    buttonID = qsTr('ExtraButton5')
                 else if (mouse.button == Qt.ExtraButton6)
-                    buttonID = 'ExtraButton6'
+                    buttonID = qsTr('ExtraButton6')
                 else if (mouse.button == Qt.ExtraButton7)
-                    buttonID = 'ExtraButton7'
+                    buttonID = qsTr('ExtraButton7')
                 else if (mouse.button == Qt.ExtraButton8)
-                    buttonID = 'ExtraButton8'
+                    buttonID = qsTr('ExtraButton8')
                 else if (mouse.button == Qt.ExtraButton9)
-                    buttonID = 'ExtraButton9'
+                    buttonID = qsTr('ExtraButton9')
                 else if (mouse.button == Qt.ExtraButton10)
-                    buttonID = 'ExtraButton10'
+                    buttonID = qsTr('ExtraButton10')
                 else if (mouse.button == Qt.ExtraButton11)
-                    buttonID = 'ExtraButton11'
+                    buttonID = qsTr('ExtraButton11')
                 else if (mouse.button == Qt.ExtraButton12)
-                    buttonID = 'ExtraButton12'
+                    buttonID = qsTr('ExtraButton12')
                 else if (mouse.button == Qt.ExtraButton13)
-                    buttonID = 'ExtraButton13'
+                    buttonID = qsTr('ExtraButton13')
                 else if (mouse.button == Qt.ExtraButton14)
-                    buttonID = 'ExtraButton14'
+                    buttonID = qsTr('ExtraButton14')
                 else if (mouse.button == Qt.ExtraButton15)
-                    buttonID = 'ExtraButton15'
+                    buttonID = qsTr('ExtraButton15')
                 else if (mouse.button == Qt.ExtraButton16)
-                    buttonID = 'ExtraButton16'
+                    buttonID = qsTr('ExtraButton16')
                 else if (mouse.button == Qt.ExtraButton17)
-                    buttonID = 'ExtraButton17'
+                    buttonID = qsTr('ExtraButton17')
                 else if (mouse.button == Qt.ExtraButton18)
-                    buttonID = 'ExtraButton18'
+                    buttonID = qsTr('ExtraButton18')
                 else if (mouse.button == Qt.ExtraButton19)
-                    buttonID = 'ExtraButton19'
+                    buttonID = qsTr('ExtraButton19')
                 else if (mouse.button == Qt.ExtraButton20)
-                    buttonID = 'ExtraButton20'
+                    buttonID = qsTr('ExtraButton20')
                 else if (mouse.button == Qt.ExtraButton21)
-                    buttonID = 'ExtraButton21'
+                    buttonID = qsTr('ExtraButton21')
                 else if (mouse.button == Qt.ExtraButton22)
-                    buttonID = 'ExtraButton22'
+                    buttonID = qsTr('ExtraButton22')
                 else if (mouse.button == Qt.ExtraButton23)
-                    buttonID = 'ExtraButton23'
+                    buttonID = qsTr('ExtraButton23')
                 else if (mouse.button == Qt.ExtraButton24)
-                    buttonID = 'ExtraButton24'
+                    buttonID = qsTr('ExtraButton24')
 
-                info.text = 'Pressed (' + buttonID + ' shift='
-                    + (mouse.modifiers & Qt.ShiftModifier ? 'true' : 'false') + ')'
-                var posInBox = redSquare.mapToItem(box, mouse.x, mouse.y)
-                posInfo.text = + mouse.x + ',' + mouse.y + ' in square'
-                        + ' (' + posInBox.x + ',' + posInBox.y + ' in window)'
+                info.text = qsTr('Pressed (') + buttonID + qsTr(' shift=')
+                    + (mouse.modifiers & Qt.ShiftModifier ? qsTr('true') : qsTr('false')) + ')'
+                const posInBox = redSquare.mapToItem(box, mouse.x, mouse.y)
+                posInfo.text = + mouse.x + ',' + mouse.y + qsTr(' in square')
+                    + ' (' + posInBox.x + ',' + posInBox.y + qsTr(' in window)')
             }
 
             onReleased: (mouse) => {
-                btn.text = 'Released (isClick=' + mouse.isClick + ' wasHeld=' + mouse.wasHeld + ')'
+                btn.text = qsTr('Released (isClick=') + mouse.isClick + qsTr(' wasHeld=') + mouse.wasHeld + ')'
                 posInfo.text = ''
             }
 
             //! [clicks]
-            onPressAndHold: btn.text = 'Press and hold'
-            onClicked: (mouse) => { btn.text = 'Clicked (wasHeld=' + mouse.wasHeld + ')' }
-            onDoubleClicked: btn.text = 'Double clicked'
+            onPressAndHold: btn.text = qsTr('Press and hold')
+            onClicked: (mouse) => { btn.text = qsTr('Clicked (wasHeld=') + mouse.wasHeld + ')' }
+            onDoubleClicked: btn.text = qsTr('Double clicked')
             //! [clicks]
         }
     }
 
     Rectangle {
         id: blueSquare
-        width: 120; height: 120
-        x: box.width - width - 10; y: 10    // making this item draggable, so don't use anchors
+        width: 120
+        height: 120
+        x: box.width - width - 10
+        y: 10    // making this item draggable, so don't use anchors
         color: "blue"
 
-        Text { text: "Drag"; font.pixelSize: 16; color: "white"; anchors.centerIn: parent }
+        Text {
+            text: qsTr("Drag")
+            font.pixelSize: 16
+            color: "white"
+            anchors.centerIn: parent
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -128,18 +145,30 @@ Rectangle {
 
     Text {
         id: info
-        anchors.bottom: btn.top; anchors.horizontalCenter: parent.horizontalCenter; anchors.margins: 20
+        anchors{
+            bottom: btn.top
+            horizontalCenter: parent.horizontalCenter
+            margins: 20
+        }
 
-        onTextChanged: function(text) { console.log(text) }
+        onTextChanged: console.log(text)
     }
 
     Text {
         id: btn
-        anchors.bottom: posInfo.top; anchors.horizontalCenter: parent.horizontalCenter; anchors.margins: 20
+        anchors {
+            bottom: posInfo.top
+            horizontalCenter: parent.horizontalCenter
+            margins: 20
+        }
     }
 
     Text {
         id: posInfo
-        anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; anchors.margins: 20
+        anchors {
+            bottom: parent.bottom
+            horizontalCenter: parent.horizontalCenter
+            margins: 20
+        }
     }
 }

@@ -406,8 +406,12 @@ private slots:
 
     void objectAndGadgetMethodCallsRejectThisObject();
     void objectAndGadgetMethodCallsAcceptThisObject();
+    void asValueType();
 
     void longConversion();
+
+    void typedEnums_data();
+    void typedEnums();
 
 private:
     QQmlEngine engine;
@@ -7896,6 +7900,78 @@ void tst_qqmllanguage::longConversion()
         QCOMPARE(val.metaType(), QMetaType::fromType<bool>());
         QVERIFY(!val.toBool());
     }
+}
+
+void tst_qqmllanguage::asValueType()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("asValueType.qml");
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(url.toString() + ":6:5: Unable to assign [undefined] to QRectF"_L1));
+    QScopedPointer<QObject> o(c.create());
+
+    QCOMPARE(o->property("a"), QVariant());
+    QCOMPARE(o->property("b").value<QRectF>(), QRectF());
+    QVERIFY(!o->property("c").toBool());
+
+    const QRectF rect(1, 2, 3, 4);
+    o->setProperty("a", QVariant(rect));
+    QCOMPARE(o->property("b").value<QRectF>(), rect);
+    QVERIFY(o->property("c").toBool());
+
+    QVERIFY(!o->property("d").toBool());
+    const QPointF point = o->property("e").value<QPointF>();
+    QCOMPARE(point.x(), 10.0);
+    QCOMPARE(point.y(), 20.0);
+}
+
+void tst_qqmllanguage::typedEnums_data()
+{
+    QTest::addColumn<QString>("property");
+    QTest::addColumn<double>("value");
+    const QMetaObject *mo = &TypedEnums::staticMetaObject;
+    for (int i = 0, end = mo->enumeratorCount(); i != end; ++i) {
+        const QMetaEnum e = mo->enumerator(i);
+        for (int k = 0, end = e.keyCount(); k != end; ++k) {
+            QTest::addRow("%s::%s", e.name(), e.key(k))
+                    << QString::fromLatin1(e.name()).toLower()
+                    << double(e.value(k));
+        }
+    }
+}
+void tst_qqmllanguage::typedEnums()
+{
+    QFETCH(QString, property);
+    QFETCH(double, value);
+    QQmlEngine e;
+    const QString qml = QLatin1String(R"(
+        import QtQml
+        import TypedEnums
+        ObjectWithEnums {
+            property real input: %2
+            %1: input
+            g.%1: input
+            property real output1: %1
+            property real output2: g.%1
+        }
+    )").arg(property).arg(value, 0, 'f');
+    QQmlComponent c(&engine);
+    c.setData(qml.toUtf8(), QUrl("enums.qml"_L1));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    // TODO: This silently fails for quint32, qint64 and quint64 because QMetaEnum cannot encode
+    //       such values either. For the 64bit values we'll also need a better type than double
+    //       inside QML.
+    QEXPECT_FAIL("E32U::E32UD", "Not supported", Abort);
+    QEXPECT_FAIL("E32U::E32UE", "Not supported", Abort);
+    QEXPECT_FAIL("E64U::E64UE", "Not supported", Abort);
+
+    QCOMPARE(o->property("output1").toDouble(), value);
+    QCOMPARE(o->property("output2").toDouble(), value);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

@@ -181,11 +181,11 @@ void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
         if (indexCancelled())
             return;
         QString fPath = dir.filePath(file);
-        QFileInfo fInfo(fPath);
-        QString cPath = fInfo.canonicalFilePath();
-        if (!cPath.isEmpty()) {
+        FileToLoad fileToLoad =
+                FileToLoad::fromFileSystem(newCurrent.ownerAs<DomEnvironment>(), fPath);
+        if (!fileToLoad.canonicalPath().isEmpty()) {
             newCurrent.loadBuiltins();
-            newCurrent.loadFile(cPath, fPath, [](Path, DomItem &, DomItem &) {}, {});
+            newCurrent.loadFile(fileToLoad, [](Path, DomItem &, DomItem &) {}, {});
             newCurrent.loadPendingDependencies();
             newCurrent.commitToBase(m_validEnv.ownerAs<DomEnvironment>());
         }
@@ -420,7 +420,8 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
     QString fPath = url2Path(url, UrlLookup::ForceLookup);
     Path p;
     newCurrent.loadFile(
-            fPath, fPath, docText, QDateTime::currentDateTimeUtc(),
+            FileToLoad::fromMemory(newCurrent.ownerAs<DomEnvironment>(), fPath, docText,
+                                   DomCreationOption::WithSemanticAnalysis),
             [&p](Path, DomItem &, DomItem &newValue) { p = newValue.fileObject().canonicalPath(); },
             {});
     newCurrent.loadPendingDependencies();

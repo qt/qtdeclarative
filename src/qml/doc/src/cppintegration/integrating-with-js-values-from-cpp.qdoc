@@ -121,7 +121,8 @@ QJSManagedValue is similar to QJSValue, with a few differences:
 \list
 \li The constructors (except for the default and move constructor2) require
     passing a QJSEngine pointer.
-\li Methods like \c deleteProperty and \l isSymbol are added.
+\li Methods like  \l {QJSManagedValue::}{deleteProperty} and
+    \l {QJSManagedValue::}{isSymbol} are added.
 \li If QJSManagedValue methods encounter an exception, they leave it intact.
 \endlist
 

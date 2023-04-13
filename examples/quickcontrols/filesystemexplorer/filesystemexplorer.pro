@@ -45,7 +45,7 @@ theme_resources.files = \
     icons/resize.svg \
     icons/qt_logo.svg \
 
-theme_resources.prefix = /
+theme_resources.prefix = /qt/qml/FileSystemModule
 
 RESOURCES += qml_resources theme_resources
 

@@ -23,6 +23,8 @@ qt_internal_add_test(tst_qmlls_modules
     TESTDATA ${test_data}
 )
 
+add_dependencies(tst_qmlls_modules qmlls)
+
 qt_internal_extend_target(tst_qmlls_modules CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=":/domdata"

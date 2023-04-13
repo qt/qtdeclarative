@@ -6,13 +6,6 @@ file(GLOB_RECURSE test_data_glob
     data)
 list(APPEND test_data ${test_data_glob})
 
-qt_internal_add_qml_module(tst_qmlls_utils_module
-    STATIC
-    URI TstQmllsUtils
-    VERSION 254.254
-    QML_FILES ${test_data}
-)
-
 qt_internal_add_test(tst_qmlls_utils
     SOURCES
     tst_qmlls_utils.cpp
@@ -25,7 +18,6 @@ qt_internal_add_test(tst_qmlls_utils
         Qt::Test
         Qt::QuickTestUtilsPrivate
         Qt::QmlLSPrivate
-        tst_qmlls_utils_module
     TESTDATA ${test_data}
 )
 

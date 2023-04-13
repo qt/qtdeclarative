@@ -1,0 +1,417 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+#ifndef QQMLCOMPONENTANDALIASRESOLVER_P_H
+#define QQMLCOMPONENTANDALIASRESOLVER_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlerror.h>
+
+#include <QtCore/qglobal.h>
+#include <QtCore/qhash.h>
+
+#include <private/qqmltypeloader_p.h>
+#include <private/qqmlpropertycachecreator_p.h>
+
+QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcQmlTypeCompiler);
+
+template<typename ObjectContainer>
+class QQmlComponentAndAliasResolver
+{
+    Q_DECLARE_TR_FUNCTIONS(QQmlComponentAndAliasResolver)
+public:
+    using CompiledObject = typename ObjectContainer::CompiledObject;
+    using CompiledBinding = typename ObjectContainer::CompiledBinding;
+
+    QQmlComponentAndAliasResolver(
+            ObjectContainer *compiler,
+            QQmlEnginePrivate *enginePrivate,
+            QQmlPropertyCacheVector *propertyCaches);
+
+    [[nodiscard]] QQmlError resolve(int root = 0);
+
+private:
+    enum AliasResolutionResult {
+        NoAliasResolved,
+        SomeAliasesResolved,
+        AllAliasesResolved
+    };
+
+    // To be specialized for each container
+    void allocateNamedObjects(CompiledObject *object) const;
+    void setObjectId(int index) const;
+    [[nodiscard]] bool markAsComponent(int index) const;
+    [[nodiscard]] AliasResolutionResult resolveAliasesInObject(int objectIndex, QQmlError *error);
+    [[nodiscard]] bool wrapImplicitComponent(CompiledBinding *binding);
+
+    [[nodiscard]] QQmlError findAndRegisterImplicitComponents(
+            const CompiledObject *obj, const QQmlPropertyCache::ConstPtr &propertyCache);
+    [[nodiscard]] QQmlError collectIdsAndAliases(int objectIndex);
+    [[nodiscard]] QQmlError resolveAliases(int componentIndex);
+
+    QString stringAt(int idx) const { return m_compiler->stringAt(idx); }
+    QV4::ResolvedTypeReference *resolvedType(int id) const { return m_compiler->resolvedType(id); }
+
+    [[nodiscard]] QQmlError error(
+            const QV4::CompiledData::Location &location,
+            const QString &description)
+    {
+        QQmlError error;
+        error.setLine(qmlConvertSourceCoordinate<quint32, int>(location.line()));
+        error.setColumn(qmlConvertSourceCoordinate<quint32, int>(location.column()));
+        error.setDescription(description);
+        error.setUrl(m_compiler->url());
+        return error;
+    }
+
+    template<typename Token>
+    [[nodiscard]] QQmlError error(Token token, const QString &description)
+    {
+        return error(token->location, description);
+    }
+
+    static bool isUsableComponent(const QMetaObject *metaObject)
+    {
+        // The metaObject is a component we're interested in if it either is a QQmlComponent itself
+        // or if any of its parents is a QQmlAbstractDelegateComponent. We don't want to include
+        // qqmldelegatecomponent_p.h because it belongs to QtQmlModels.
+
+        if (metaObject == &QQmlComponent::staticMetaObject)
+            return true;
+
+        for (; metaObject; metaObject = metaObject->superClass()) {
+            if (qstrcmp(metaObject->className(), "QQmlAbstractDelegateComponent") == 0)
+                return true;
+        }
+
+        return false;
+    }
+
+    ObjectContainer *m_compiler = nullptr;
+    QQmlEnginePrivate *m_enginePrivate = nullptr;
+
+    // Implicit component insertion may have added objects and thus we also need
+    // to extend the symmetric propertyCaches. Therefore, non-const propertyCaches.
+    QQmlPropertyCacheVector *m_propertyCaches = nullptr;
+
+    // indices of the objects that are actually Component {}
+    QVector<quint32> m_componentRoots;
+    QVector<int> m_objectsWithAliases;
+    typename ObjectContainer::IdToObjectMap m_idToObjectIndex;
+};
+
+template<typename ObjectContainer>
+QQmlComponentAndAliasResolver<ObjectContainer>::QQmlComponentAndAliasResolver(
+        ObjectContainer *compiler,
+        QQmlEnginePrivate *enginePrivate,
+        QQmlPropertyCacheVector *propertyCaches)
+    : m_compiler(compiler)
+    , m_enginePrivate(enginePrivate)
+    , m_propertyCaches(propertyCaches)
+{
+}
+
+template<typename ObjectContainer>
+QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::findAndRegisterImplicitComponents(
+        const CompiledObject *obj, const QQmlPropertyCache::ConstPtr &propertyCache)
+{
+    QQmlPropertyResolver propertyResolver(propertyCache);
+
+    const QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1
+            ? propertyCache->parent()->defaultProperty()
+            : propertyCache->defaultProperty();
+
+    for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding) {
+        if (binding->type() != QV4::CompiledData::Binding::Type_Object)
+            continue;
+        if (binding->hasFlag(QV4::CompiledData::Binding::IsSignalHandlerObject))
+            continue;
+
+        auto targetObject = m_compiler->objectAt(binding->value.objectIndex);
+        auto typeReference = resolvedType(targetObject->inheritedTypeNameIndex);
+        Q_ASSERT(typeReference);
+
+        const QMetaObject *firstMetaObject = nullptr;
+        const auto type = typeReference->type();
+        if (type.isValid())
+            firstMetaObject = type.metaObject();
+        else if (const auto compilationUnit = typeReference->compilationUnit())
+            firstMetaObject = compilationUnit->rootPropertyCache()->firstCppMetaObject();
+        if (isUsableComponent(firstMetaObject))
+            continue;
+
+        // if here, not a QQmlComponent, so needs wrapping
+        const QQmlPropertyData *pd = nullptr;
+        if (binding->propertyNameIndex != quint32(0)) {
+            bool notInRevision = false;
+            pd = propertyResolver.property(stringAt(binding->propertyNameIndex), &notInRevision);
+        } else {
+            pd = defaultProperty;
+        }
+        if (!pd || !pd->isQObject())
+            continue;
+
+        // If the version is given, use it and look up by QQmlType.
+        // Otherwise, make sure we look up by metaobject.
+        // TODO: Is this correct?
+        QQmlPropertyCache::ConstPtr pc = pd->typeVersion().hasMinorVersion()
+                ? QQmlMetaType::rawPropertyCacheForType(pd->propType(), pd->typeVersion())
+                : QQmlMetaType::rawPropertyCacheForType(pd->propType());
+        const QMetaObject *mo = pc ? pc->firstCppMetaObject() : nullptr;
+        while (mo) {
+            if (mo == &QQmlComponent::staticMetaObject)
+                break;
+            mo = mo->superClass();
+        }
+
+        if (!mo)
+            continue;
+
+        if (!wrapImplicitComponent(binding))
+            return error(binding, tr("Cannot wrap implicit component"));
+    }
+
+    return QQmlError();
+}
+
+// Resolve ignores everything relating to inline components, except for implicit components.
+template<typename ObjectContainer>
+QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolve(int root)
+{
+    // Detect real Component {} objects as well as implicitly defined components, such as
+    //     someItemDelegate: Item {}
+    // In the implicit case Item is surrounded by a synthetic Component {} because the property
+    // on the left hand side is of QQmlComponent type.
+    const int objCountWithoutSynthesizedComponents = m_compiler->objectCount();
+
+    // root+1, as ic root is handled at the end
+    const int startObjectIndex = root == 0 ? root : root+1;
+
+    for (int i = startObjectIndex; i < objCountWithoutSynthesizedComponents; ++i) {
+        auto obj = m_compiler->objectAt(i);
+        const bool isInlineComponentRoot
+                = obj->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot);
+        const bool isPartOfInlineComponent
+                = obj->hasFlag(QV4::CompiledData::Object::IsPartOfInlineComponent);
+        QQmlPropertyCache::ConstPtr cache = m_propertyCaches->at(i);
+
+        bool isExplicitComponent = false;
+        if (obj->inheritedTypeNameIndex) {
+            auto *tref = resolvedType(obj->inheritedTypeNameIndex);
+            Q_ASSERT(tref);
+            if (tref->type().metaObject() == &QQmlComponent::staticMetaObject)
+                isExplicitComponent = true;
+        }
+
+        if (isInlineComponentRoot && isExplicitComponent) {
+            qCWarning(lcQmlTypeCompiler).nospace().noquote()
+                    << m_compiler->url().toString() << ":" << obj->location.line() << ":"
+                    << obj->location.column()
+                    << ": Using a Component as the root of an inline component is deprecated: "
+                       "inline components are "
+                       "automatically wrapped into Components when needed.";
+        }
+
+        if (root == 0) {
+            // normal component root, skip over anything inline component related
+            if (isInlineComponentRoot || isPartOfInlineComponent)
+                continue;
+        } else if (!isPartOfInlineComponent || isInlineComponentRoot) {
+            // We've left the current inline component (potentially entered a new one),
+            // but we still need to resolve implicit components which are part of inline components.
+            if (cache && !isExplicitComponent) {
+                const QQmlError error = findAndRegisterImplicitComponents(obj, cache);
+                if (error.isValid())
+                    return error;
+            }
+            break;
+        }
+
+        if (obj->inheritedTypeNameIndex == 0 && !cache)
+            continue;
+
+        if (!isExplicitComponent) {
+            if (cache) {
+                const QQmlError error = findAndRegisterImplicitComponents(obj, cache);
+                if (error.isValid())
+                    return error;
+            }
+            continue;
+        }
+
+        if (!markAsComponent(i))
+            return error(obj, tr("Cannot mark object as component"));
+
+        // check if this object is the root
+        if (i == 0) {
+            if (isExplicitComponent)
+                qCWarning(lcQmlTypeCompiler).nospace().noquote()
+                        << m_compiler->url().toString() << ":" << obj->location.line() << ":"
+                        << obj->location.column()
+                        << ": Using a Component as the root of a qmldocument is deprecated: types "
+                           "defined in qml documents are "
+                           "automatically wrapped into Components when needed.";
+        }
+
+        if (obj->functionCount() > 0)
+            return error(obj, tr("Component objects cannot declare new functions."));
+        if (obj->propertyCount() > 0 || obj->aliasCount() > 0)
+            return error(obj, tr("Component objects cannot declare new properties."));
+        if (obj->signalCount() > 0)
+            return error(obj, tr("Component objects cannot declare new signals."));
+
+        if (obj->bindingCount() == 0)
+            return error(obj, tr("Cannot create empty component specification"));
+
+        const auto rootBinding = obj->bindingsBegin();
+        const auto bindingsEnd = obj->bindingsEnd();
+
+        // Produce the more specific "no properties" error rather than the "invalid body" error
+        // where possible.
+        for (auto b = rootBinding; b != bindingsEnd; ++b) {
+            if (b->propertyNameIndex == 0)
+                continue;
+
+            return error(b, tr("Component elements may not contain properties other than id"));
+        }
+
+        if (auto b = rootBinding;
+                b->type() != QV4::CompiledData::Binding::Type_Object || ++b != bindingsEnd) {
+            return error(obj, tr("Invalid component body specification"));
+        }
+
+        // For the root object, we are going to collect ids/aliases and resolve them for as a
+        // separate last pass.
+        if (i != 0)
+            m_componentRoots.append(i);
+    }
+
+    for (int i = 0; i < m_componentRoots.size(); ++i) {
+        CompiledObject *component = m_compiler->objectAt(m_componentRoots.at(i));
+        const auto rootBinding = component->bindingsBegin();
+
+        m_idToObjectIndex.clear();
+        m_objectsWithAliases.clear();
+
+        if (const QQmlError error = collectIdsAndAliases(rootBinding->value.objectIndex);
+                error.isValid()) {
+            return error;
+        }
+
+        allocateNamedObjects(component);
+
+        if (const QQmlError error = resolveAliases(m_componentRoots.at(i)); error.isValid())
+            return error;
+    }
+
+    // Collect ids and aliases for root
+    m_idToObjectIndex.clear();
+    m_objectsWithAliases.clear();
+
+    if (const QQmlError error = collectIdsAndAliases(root); error.isValid())
+        return error;
+
+    allocateNamedObjects(m_compiler->objectAt(root));
+    return resolveAliases(root);
+}
+
+template<typename ObjectContainer>
+QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::collectIdsAndAliases(int objectIndex)
+{
+    auto obj = m_compiler->objectAt(objectIndex);
+
+    if (obj->idNameIndex != 0) {
+        if (m_idToObjectIndex.contains(obj->idNameIndex))
+            return error(obj->locationOfIdProperty, tr("id is not unique"));
+        setObjectId(objectIndex);
+        m_idToObjectIndex.insert(obj->idNameIndex, objectIndex);
+    }
+
+    if (obj->aliasCount() > 0)
+        m_objectsWithAliases.append(objectIndex);
+
+    // Stop at Component boundary
+    if (obj->hasFlag(QV4::CompiledData::Object::IsComponent) && objectIndex != /*root object*/0)
+        return QQmlError();
+
+    for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd();
+         binding != end; ++binding) {
+        switch (binding->type()) {
+        case QV4::CompiledData::Binding::Type_Object:
+        case QV4::CompiledData::Binding::Type_AttachedProperty:
+        case QV4::CompiledData::Binding::Type_GroupProperty:
+            if (const QQmlError error = collectIdsAndAliases(binding->value.objectIndex);
+                    error.isValid()) {
+                return error;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    return QQmlError();
+}
+
+template<typename ObjectContainer>
+QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolveAliases(int componentIndex)
+{
+    if (m_objectsWithAliases.isEmpty())
+        return QQmlError();
+
+    QQmlPropertyCacheAliasCreator<ObjectContainer> aliasCacheCreator(m_propertyCaches, m_compiler);
+
+    bool atLeastOneAliasResolved;
+    do {
+        atLeastOneAliasResolved = false;
+        QVector<int> pendingObjects;
+
+        for (int objectIndex: std::as_const(m_objectsWithAliases)) {
+
+            QQmlError error;
+            const auto result = resolveAliasesInObject(objectIndex, &error);
+            if (error.isValid())
+                return error;
+
+            if (result == AllAliasesResolved) {
+                QQmlError error = aliasCacheCreator.appendAliasesToPropertyCache(
+                            *m_compiler->objectAt(componentIndex), objectIndex, m_enginePrivate);
+                if (error.isValid())
+                    return error;
+                atLeastOneAliasResolved = true;
+            } else if (result == SomeAliasesResolved) {
+                atLeastOneAliasResolved = true;
+                pendingObjects.append(objectIndex);
+            } else {
+                pendingObjects.append(objectIndex);
+            }
+        }
+        qSwap(m_objectsWithAliases, pendingObjects);
+    } while (!m_objectsWithAliases.isEmpty() && atLeastOneAliasResolved);
+
+    if (!atLeastOneAliasResolved && !m_objectsWithAliases.isEmpty()) {
+        const CompiledObject *obj = m_compiler->objectAt(m_objectsWithAliases.first());
+        for (auto alias = obj->aliasesBegin(), end = obj->aliasesEnd(); alias != end; ++alias) {
+            if (!alias->hasFlag(QV4::CompiledData::Alias::Resolved))
+                return error(alias->location, tr("Circular alias reference detected"));
+        }
+    }
+
+    return QQmlError();
+}
+
+QT_END_NAMESPACE
+
+#endif // QQMLCOMPONENTANDALIASRESOLVER_P_H

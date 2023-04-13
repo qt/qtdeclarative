@@ -162,10 +162,6 @@ Now we can build and run the application:
       cannot update the binding if the \c name value changes. This is addressed in
       the following chapters.
 
-The source code from the following files are referred to in this chapter:
-\noautolist
-\generatelist examplefiles .*chapter1.*
-
 \section1 Chapter 2: Connecting to C++ Methods and Signals
 \c extending-qml/chapter2-methods
 
@@ -205,8 +201,7 @@ disappears, and the application outputs:
     qml: The chart has been cleared
 \endcode
 
-The source code from the following files are referred to in this chapter:
-\generatelist examplefiles .*chapter2.*
+
 
 \section1 Chapter 3: Adding Property Bindings
 \c extending-qml/chapter3-bindings
@@ -256,8 +251,7 @@ automatically updated and cannot be used as flexibly in QML. Also, since
 bindings are invoked so often and relied upon in QML usage, users of your
 custom QML types may see unexpected behavior if bindings are not implemented.
 
-The source code from the following files are referred to in this chapter:
-\generatelist examplefiles .*chapter3.*
+
 
 \section1 Chapter 4: Using Custom Property Types
 
@@ -346,8 +340,7 @@ Using CMake:
 \snippet tutorials/extending-qml/chapter4-customPropertyTypes/CMakeLists.txt 1
 \dots
 
-The source code from the following files are referred to in this chapter:
-\generatelist examplefiles .*chapter4.*
+
 
 \section1 Chapter 5: Using List Property Types
 \c extending-qml/chapter5-listproperties
@@ -391,8 +384,7 @@ The \c PieSlice class has also been modified to include \c fromAngle and \c angl
 properties and to draw the slice according to these values. This is a straightforward
 modification if you have read the previous pages in this tutorial, so the code is not shown here.
 
-The source code from the following files are referred to in this chapter:
-\generatelist examplefiles .*chapter5.*
+
 
 \section1 Chapter 6: Writing an Extension Plugin
 
@@ -467,8 +459,7 @@ setting the import path to the current directory so that it finds the \c qmldir 
 The module "Charts" will be loaded by the QML engine, and the types provided by that
 module will be available for use in any QML document which imports it.
 
-The source code from the following files are referred to in this chapter:
-\generatelist examplefiles .*chapter6.*
+
 
 \section1 Chapter 7: Summary
 
@@ -507,4 +498,6 @@ Or randomly add and remove slices from time to time using \l{Property Value Sour
     }
 \endcode
 
+\note To continue learning about QML extensions and features follow the
+\l {Writing advanced QML Extensions with C++} tutorial.
 */

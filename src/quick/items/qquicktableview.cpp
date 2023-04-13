@@ -40,6 +40,10 @@
     in a TableView. To create models with multiple columns, either use
     \l TableModel or a C++ model that inherits QAbstractItemModel.
 
+    A TableView does not include headers by default. You can add headers
+    using the \l HorizontalHeaderView and \l VerticalHeaderView from
+    Qt Quick Controls.
+
     \section1 Example Usage
 
     \section2 C++ Models
@@ -102,7 +106,7 @@
     the width of the column. Otherwise, it will check if an explicit width has
     been set with \l setColumnWidth(). If not, \l implicitColumnWidth() will be used.
     The implicit width of a column is the same as the largest
-    \l {implicit width}{QQuickItem::implicitWidth()} found among the currently loaded
+    \l {Item::implicitWidth}{implicit width} found among the currently loaded
     delegate items in that column. Trying to set an explicit \c width directly on
     a delegate has no effect, and will be ignored and overwritten. The same logic also
     applies to row heights.
@@ -126,7 +130,7 @@
     of the view, and is recalculated again if it's flicked back in. This means that if the
     width depends on the \l implicitColumnWidth(), the calculation can be different each time,
     depending on which row you're at when the column enters (since \l implicitColumnWidth()
-    only considers the delegate items that are currently \l {loaded}{isColumnLoaded()}).
+    only considers the delegate items that are currently \l {isColumnLoaded()}{loaded}).
     To avoid this, you should use a \l columnWidthProvider, or ensure that all the delegate
     items in the same column have the same \c implicitWidth.
 
@@ -156,13 +160,13 @@
     You can let the user edit table cells by providing an edit delegate. The
     edit delegate will be instantiated according to the \l editTriggers, which
     by default is when the user double taps on a cell, or presses e.g
-    \l Qt.Key_Enter or \l Qt.Key_Return. The edit delegate is set using
+    \l Qt::Key_Enter or \l Qt::Key_Return. The edit delegate is set using
     \l {TableView::editDelegate}, which is an attached property that you set
     on the \l delegate. The following snippet shows how to do that:
 
     \snippet qml/tableview/editdelegate.qml 0
 
-    If the user presses Qt.Key_Enter or Qt.Key_Return while the edit delegate
+    If the user presses Qt::Key_Enter or Qt::Key_Return while the edit delegate
     is active, TableView will emit the \l TableView::commit signal to the edit
     delegate, so that it can write back the changed data to the model.
 
@@ -207,7 +211,7 @@
     \snippet qml/tableview/overlay.qml 0
 
     You could also parent the overlay directly to the cell instead of the
-    \l contentItem. But doing so will be fragile since the cell is unloaded
+    \l {Flickable::}{contentItem}. But doing so will be fragile since the cell is unloaded
     or reused whenever it's flicked out of the viewport.
 
     \sa layoutChanged()
@@ -248,7 +252,7 @@
     to let the user select cells.
 
     \note By default, a cell will become
-    \l {QQuickItemSelectionModel::currentIndex()}{current}, and any selections will
+    \l {ItemSelectionModel::currentIndex}{current}, and any selections will
     be removed, when the user taps on it. If such default tap behavior is not wanted
     (e.g if you use custom pointer handlers inside your delegate), you can set
     \l pointerNavigationEnabled to \c false.
@@ -257,11 +261,17 @@
 
     In order to support keyboard navigation, you need to assign an \l ItemSelectionModel
     to the \l selectionModel property. TableView will then use this model to manipulate
-    the model's \l {ItemSelectionModel::currentIndex}{currentIndex}. You can
-    disable keyboard navigation fully (in case you want to implement your own key
-    handlers) by setting \l keyNavigationEnabled to \c false. Below is an
-    example that demonstrates how to use keyboard navigation together with
-    \c current and \c selected properties:
+    the model's \l {ItemSelectionModel::currentIndex}{currentIndex}.
+
+    It's the responsibility of the delegate to render itself as
+    \l {ItemSelectionModel::currentIndex}{current}. You can do this by adding a
+    property \c {required property bool current} to it, and let the appearance
+    depend on its state. The \c current property's value is set by the TableView.
+    You can also disable keyboard navigation fully (in case you want to implement your
+    own key handlers) by setting \l keyNavigationEnabled to \c false.
+
+    The following example demonstrates how you can use keyboard navigation together
+    with \c current and \c selected properties:
 
     \snippet qml/tableview/keyboard-navigation.qml 0
 
@@ -324,7 +334,7 @@
     }
     \endcode
 
-    \sa mimeData(), dropMimeData(), QUndoStack, QUndoCommand, QClipboard
+    \sa QAbstractItemModel::mimeData(), QAbstractItemModel::dropMimeData(), QUndoStack, QUndoCommand, QClipboard
 */
 
 /*!
@@ -442,11 +452,32 @@
     \l {Item::}{implicitHeight}. The TableView lays out the items based on that
     information. Explicit width or height settings are ignored and overwritten.
 
+    Inside the delegate, you can optionally add one or more of the following
+    properties. TableView modifies the values of these properties to inform the
+    delegate which state it's in. This can be used by the delegate to render
+    itself differently according on its own state.
+
+    \list
+    \li required property bool current - \c true if the delegate is \l {Keyboard navigation}{current.}
+    \li required property bool selected - \c true if the delegate is \l {Selecting items}{selected.}
+    \li required property bool editing - \c true if the delegate is being \l {Editing cells}{edited.}
+    \endlist
+
+    The following example shows how to use these properties:
+    \code
+    delegate: Rectangle {
+        required property bool current
+        required property bool selected
+        border.width: current ? 1 : 0
+        color: selected ? palette.highlight : palette.base
+    }
+    \endcode
+
     \note Delegates are instantiated as needed and may be destroyed at any time.
     They are also reused if the \l reuseItems property is set to \c true. You
     should therefore avoid storing state information in the delegates.
 
-    \sa {Row heights and column widths}, {Reusing items}
+    \sa {Row heights and column widths}, {Reusing items}, {Required Properties}
 */
 
 /*!
@@ -570,7 +601,7 @@
     \readonly
 
     This read-only property holds the column in the view that contains the
-    item that is current. If no item is current, it will be \c -1.
+    item that is \l {Keyboard navigation}{current.} If no item is current, it will be \c -1.
 
     \note In order for TableView to report what the current column is, you
     need to assign an \l ItemSelectionModel to \l selectionModel.
@@ -583,7 +614,7 @@
     \readonly
 
     This read-only property holds the row in the view that contains the item
-    that is current. If no item is current, it will be \c -1.
+    that is \l {Keyboard navigation}{current.} If no item is current, it will be \c -1.
 
     \note In order for TableView to report what the current row is, you
     need to assign an \l ItemSelectionModel to \l selectionModel.
@@ -698,25 +729,25 @@
         But the application can call \l edit() and \l closeEditor() manually.
     \value TableView.SingleTapped - the user can edit a cell by single tapping it.
     \value TableView.DoubleTapped - the user can edit a cell by double tapping it.
-    \value TableView.SelectedTapped - the user can edit the
-        \l {QItemSelectionModel::currentIndex()}{current cell} by tapping it.
+    \value TableView.SelectedTapped - the user can edit a
+        \l {QItemSelectionModel::selectedIndexes()}{selected cell} by tapping it.
     \value TableView.EditKeyPressed - the user can edit the
-        \l {QItemSelectionModel::currentIndex()}{current cell} by pressing one
+        \l {ItemSelectionModel::currentIndex}{current cell} by pressing one
         of the edit keys. The edit keys are decided by the OS, but are normally
-        \c Qt.Key_Enter and \c Qt.Key_Return.
+        \c Qt::Key_Enter and \c Qt::Key_Return.
     \value TableView.AnyKeyPressed - the user can edit the
-        \l {TableView::current}{current cell} by pressing any key, other
+        \l {ItemSelectionModel::currentIndex}{current cell} by pressing any key, other
         than the cell navigation keys. The pressed key is also sent to the
         focus object inside the \l {TableView::editDelegate}{edit delegate}.
 
     For \c TableView.SelectedTapped, \c TableView.EditKeyPressed, and
     \c TableView.AnyKeyPressed to have any effect, TableView needs to have a
     \l {selectionModel}{selection model} assigned, since they depend on a
-    \l {QItemSelectionModel::currentIndex()}{current index} being set. To be
+    \l {ItemSelectionModel::currentIndex}{current index} being set. To be
     able to receive any key events at all, TableView will also need to have
     \l QQuickItem::activeFocus.
 
-    When editing a cell, the user can press \c Qt.Key_Tab or \c Qt.Key_Backtab
+    When editing a cell, the user can press \c Qt::Key_Tab or \c Qt::Key_Backtab
     to \l {TableView::commit}{commit} the data, and move editing to the next
     cell. This behavior can be disabled by setting
     \l QQuickItem::activeFocusOnTab on TableView to \c false.
@@ -802,14 +833,15 @@
 
 /*!
     \qmlmethod QtQuick::TableView::positionViewAtIndex(QModelIndex index, PositionMode mode, point offset, rect subRect)
+    \since 6.5
 
     Positions the view such that \a index is at the position specified
     by \a mode, \a offset and \a subRect.
 
     Convenience method for calling
     \code
-    positionViewAtRow(index.row, mode & Qt.AlignVertical_Mask, offset.y, subRect)
-    positionViewAtColumn(index.column, mode & Qt.AlignVertical_Mask, offset.x, subRect)
+    positionViewAtRow(rowAtIndex(index), mode & Qt.AlignVertical_Mask, offset.y, subRect)
+    positionViewAtColumn(columnAtIndex(index), mode & Qt.AlignVertical_Mask, offset.x, subRect)
     \endcode
 */
 
@@ -956,15 +988,6 @@
     Returns the width of the given \a column. If the column is not
     loaded (and therefore not visible), the return value will be \c -1.
 
-    \note It's the applications responsibility to store what the
-    column widths are, by using a \l columnWidthProvider. Hence,
-    there is no setter function. This getter function is mostly
-    useful if the TableView doesn't have a columnWidthProvider set, since
-    otherwise you can call that function instead (which will work, even
-    for columns that are not currently visible).
-    If no columnWidthProvider is set, the width of a column will be
-    equal to its \l implicitColumnWidth().
-
     \sa columnWidthProvider, implicitColumnWidth(), isColumnLoaded(), {Row heights and column widths}
 */
 
@@ -974,15 +997,6 @@
 
     Returns the height of the given \a row. If the row is not
     loaded (and therefore not visible), the return value will be \c -1.
-
-    \note It's the applications responsibility to store what the
-    row heights are, by using a \l rowHeightProvider. Hence,
-    there is no setter function. This getter function is mostly
-    useful if the TableView doesn't have a rowHeightProvider set, since
-    otherwise you can call that function instead (which will work, even
-    for rows that are not currently visible).
-    If no rowHeightProvider is set, the height of a row will be
-    equal to its \l implicitRowHeight().
 
     \sa rowHeightProvider, implicitRowHeight(), isRowLoaded(), {Row heights and column widths}
 */
@@ -1079,7 +1093,7 @@
     \qmlmethod qreal QtQuick::TableView::explicitColumnWidth(int column)
 
     Returns the width of the \a column set with \l setColumnWidth(). This width might
-    differ from the actual width of the column, if a \l columnWidthProvider()
+    differ from the actual width of the column, if a \l columnWidthProvider
     is in use. To get the actual width of a column, use \l columnWidth().
 
     A return value equal to \c 0 means that the column has been told to hide.
@@ -1151,7 +1165,7 @@
     \qmlmethod qreal QtQuick::TableView::explicitRowHeight(int row)
 
     Returns the height of the \a row set with \l setRowHeight(). This height might
-    differ from the actual height of the column, if a \l rowHeightProvider()
+    differ from the actual height of the column, if a \l rowHeightProvider
     is in use. To get the actual height of a row, use \l rowHeight().
 
     A return value equal to \c 0 means that the row has been told to hide.
@@ -1168,7 +1182,7 @@
     \since 6.4
     \deprecated
 
-    Use \l index(row, column) instead.
+    Use \l {QtQuick::TableView::}{index(int row, int column)} instead.
 
     \note Because of an API incompatible change between Qt 6.4.0 and Qt 6.4.2, the
     order of \c row and \c column was specified in the opposite order. If you
@@ -1330,13 +1344,13 @@
     This signal is emitted by the \l {TableView::editDelegate}{edit delegate}
 
     This attached signal is emitted when the \l {TableView::editDelegate}{edit delegate}
-    is active, and the user presses \l Qt.Key_Enter or \l Qt.Key_Return. It will also
+    is active, and the user presses \l Qt::Key_Enter or \l Qt::Key_Return. It will also
     be emitted if TableView has \l QQuickItem::activeFocusOnTab set, and the user
-    presses Qt.Key_Tab or Qt.Key_Backtab.
+    presses Qt::Key_Tab or Qt::Key_Backtab.
 
     This signal will \e not be emitted if editing ends because of reasons other
     than the ones mentioned. This includes e.g if the user presses
-    Qt.Key_Escape, taps outside the delegate, the row or column being
+    Qt::Key_Escape, taps outside the delegate, the row or column being
     edited is deleted, or if the application calls \l closeEditor().
 
     Upon receiving the signal, the edit delegate should write any modified data
@@ -1369,12 +1383,12 @@
     and \l closeEditor(), respectively. The \c Qt::ItemIsEditable flag will
     then be ignored.
 
-    Editing ends when the user presses \c Qt.Key_Enter or \c Qt.Key_Return
-    (and also \c Qt.Key_Tab or \c Qt.Key_Backtab, if TableView has
+    Editing ends when the user presses \c Qt::Key_Enter or \c Qt::Key_Return
+    (and also \c Qt::Key_Tab or \c Qt::Key_Backtab, if TableView has
     \l QQuickItem::activeFocusOnTab set). In that case, the \l TableView::commit
     signal will be emitted, so that the edit delegate can respond by writing any
     modified data back to the model. If editing ends because of other reasons
-    (e.g if the user presses Qt.Key_Escape), the signal will not be emitted.
+    (e.g if the user presses Qt::Key_Escape), the signal will not be emitted.
     In any case will \l {Component::destruction}{destruction()} be emitted in the end.
 
     While the edit delegate is showing, the cell underneath will still be visible, and
@@ -1383,7 +1397,7 @@
     of the edit delegate be a solid \l Rectangle, or hide some of the items
     inside the \l {TableView::delegate}{TableView delegate.}. The latter can be done
     by defining a property \c {required property bool editing} inside it, that you
-    bind to the \l visible property of some of the child items.
+    bind to the \l {QQuickItem::}{visible} property of some of the child items.
     The following snippet shows how to do that:
 
     \snippet qml/tableview/editdelegate.qml 1
@@ -1767,7 +1781,7 @@ QRectF QQuickTableViewPrivate::selectionRectangle() const
     // If the corner cells of the selection are loaded, we can position the
     // selection rectangle at its exact location. Otherwise we extend it out
     // to the edges of the content item. This is not ideal, but the best we
-    // can do while the location of the the corner cells are unknown.
+    // can do while the location of the corner cells are unknown.
     // This will at least move the selection handles (and other overlay) out
     // of the viewport until the affected cells are eventually loaded.
     int left = 0;
@@ -4699,7 +4713,7 @@ void QQuickTableViewPrivate::init()
     positionYAnimation.setProperty(QStringLiteral("contentY"));
     positionYAnimation.setEasing(QEasingCurve::OutQuart);
 
-    auto tapHandler = new QQuickTapHandler(q->contentItem());
+    auto tapHandler = new QQuickTableViewTapHandler(q);
 
     hoverHandler = new QQuickTableViewHoverHandler(q);
     resizeHandler = new QQuickTableViewResizeHandler(q);
@@ -4763,24 +4777,31 @@ void QQuickTableViewPrivate::handleTap(const QQuickHandlerPoint &point)
     if (resizeHandler->state() != QQuickTableViewResizeHandler::Listening)
         return;
 
-    QModelIndex prevIndex;
-    if (selectionModel) {
-        prevIndex = selectionModel->currentIndex();
-        if (pointerNavigationEnabled) {
-            clearSelection();
-            setCurrentIndexFromTap(point.position());
+    const QModelIndex tappedIndex = q->modelIndex(q->cellAtPosition(point.position()));
+    bool tappedCellIsSelected = false;
+
+    if (selectionModel)
+        tappedCellIsSelected = selectionModel->isSelected(tappedIndex);
+
+    if (canEdit(tappedIndex, false)) {
+        if (editTriggers & QQuickTableView::SingleTapped) {
+            if (selectionBehavior != QQuickTableView::SelectionDisabled)
+                clearSelection();
+            q->edit(tappedIndex);
+            return;
+        } else if (editTriggers & QQuickTableView::SelectedTapped && tappedCellIsSelected) {
+            q->edit(tappedIndex);
+            return;
         }
     }
 
-    if (editTriggers != QQuickTableView::NoEditTriggers)
+    // Since the tap didn't result in selecting or editing cells, we clear
+    // the current selection and move the current index instead.
+    if (pointerNavigationEnabled) {
         q->closeEditor();
-
-    const QModelIndex tappedIndex = q->modelIndex(q->cellAtPosition(point.position()));
-    if (canEdit(tappedIndex, false)) {
-        if (editTriggers & QQuickTableView::SingleTapped)
-            q->edit(tappedIndex);
-        else if ((editTriggers & QQuickTableView::SelectedTapped) && tappedIndex == prevIndex)
-            q->edit(tappedIndex);
+        if (selectionBehavior != QQuickTableView::SelectionDisabled)
+            clearSelection();
+        setCurrentIndexFromTap(point.position());
     }
 }
 
@@ -6617,6 +6638,20 @@ void QQuickTableViewResizeHandler::updateDrag(QPointerEvent *event, QEventPoint 
 #endif
         break; }
     }
+}
+
+// ----------------------------------------------
+
+QQuickTableViewTapHandler::QQuickTableViewTapHandler(QQuickTableView *view)
+    : QQuickTapHandler(view->contentItem())
+{
+}
+
+bool QQuickTableViewTapHandler::wantsEventPoint(const QPointerEvent *event, const QEventPoint &point)
+{
+    auto tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+    auto tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+    return tableViewPrivate->pointerNavigationEnabled && QQuickTapHandler::wantsEventPoint(event, point);
 }
 
 QT_END_NAMESPACE

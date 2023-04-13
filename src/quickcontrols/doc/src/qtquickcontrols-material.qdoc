@@ -36,13 +36,7 @@
     {Google Material Design Guidelines}. It allows for a unified experience
     across platforms and device sizes.
 
-    \table
-        \row
-            \li \image qtquickcontrols-material-light.png
-                \caption The Material style in light theme
-            \li \image qtquickcontrols-material-dark.png
-                \caption The Material style in dark theme
-    \endtable
+    \include style-screenshots.qdocinc {file} {Material} {material}
 
     To run an application with the Material style, see
     \l {Using Styles in Qt Quick Controls}.
@@ -388,9 +382,9 @@
 
     The default value is control-specific.
 
-    Available scales:
-    \value Material.Filled Square corners
-    \value Material.Outlined Extra small rounded corners
+    Available styles:
+    \value Material.Filled Use the filled container variant if available
+    \value Material.Outlined Use the outlined container variant if available
 
     This property was added in Qt 6.5.
 

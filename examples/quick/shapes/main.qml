@@ -10,10 +10,10 @@ Item {
     LauncherList {
         anchors.fill: parent
         Component.onCompleted: {
-            addExample("Shape Gallery", "Simple path rendering examples", Qt.resolvedUrl("shapegallery.qml"))
-            addExample("Interactive Shape", "Dynamic, interactive path rendering examples", Qt.resolvedUrl("interactive.qml"))
-            addExample("Super- and multisampling", "Improving quality", Qt.resolvedUrl("sampling.qml"))
-            addExample("Clip My Tiger!", "Clip examples, a.k.a. What Not To Do", Qt.resolvedUrl("clippedtigers.qml"))
+            addExample(qsTr("Shape Gallery"), qsTr("Simple path rendering examples"), Qt.resolvedUrl("shapegallery.qml"))
+            addExample(qsTr("Interactive Shape"), qsTr("Dynamic, interactive path rendering examples"), Qt.resolvedUrl("interactive.qml"))
+            addExample(qsTr("Super- and multisampling"), qsTr("Improving quality"), Qt.resolvedUrl("sampling.qml"))
+            addExample(qsTr("Clip My Tiger!"), qsTr("Clip examples, a.k.a. What Not To Do"), Qt.resolvedUrl("clippedtigers.qml"))
         }
     }
 }

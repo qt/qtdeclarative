@@ -477,11 +477,9 @@ void QQuickDragAttached::setProposedAction(Qt::DropAction action)
 
     A drag can also be started manually using \l startDrag.
 
-    \list
-    \li Drag.None - do not start drags automatically
-    \li Drag.Automatic - start drags automatically
-    \li Drag.Internal (default) - start backwards compatible drags automatically
-    \endlist
+    \value Drag.None        do not start drags automatically
+    \value Drag.Automatic   start drags automatically
+    \value Drag.Internal    (default) start backwards compatible drags automatically
 
     When using \c Drag.Automatic you should also define \l mimeData and bind the
     \l active property to the active property of MouseArea : \l {MouseArea::drag.active}
@@ -576,12 +574,10 @@ void QQuickDragAttached::start(QQmlV4Function *args)
 
     The returned drop action may be one of:
 
-    \list
-    \li Qt.CopyAction Copy the data to the target
-    \li Qt.MoveAction Move the data from the source to the target
-    \li Qt.LinkAction Create a link from the source to the target.
-    \li Qt.IgnoreAction Ignore the action (do nothing with the data).
-    \endlist
+    \value Qt.CopyAction    Copy the data to the target
+    \value Qt.MoveAction    Move the data from the source to the target
+    \value Qt.LinkAction    Create a link from the source to the target.
+    \value Qt.IgnoreAction  Ignore the action (do nothing with the data).
 */
 
 int QQuickDragAttached::drop()

@@ -167,6 +167,9 @@ struct PoolList
         bool operator!=(const Iterator &rhs) const {
             return ptr != rhs.ptr;
         }
+
+        operator T *() { return ptr; }
+        operator const T *() const { return ptr; }
     };
 
     Iterator begin() { return Iterator(first); }
@@ -437,9 +440,10 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT Pragma
 
     enum ValueTypeBehaviorValue
     {
-        Reference,
-        Copy
+        Copy        = 0x1,
+        Addressable = 0x2,
     };
+    Q_DECLARE_FLAGS(ValueTypeBehaviorValues, ValueTypeBehaviorValue);
 
     PragmaType type;
 
@@ -448,7 +452,7 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT Pragma
         ComponentBehaviorValue componentBehavior;
         FunctionSignatureBehaviorValue functionSignatureBehavior;
         NativeMethodBehaviorValue nativeMethodBehavior;
-        ValueTypeBehaviorValue valueTypeBehavior;
+        ValueTypeBehaviorValues::Int valueTypeBehavior;
     };
 
     QV4::CompiledData::Location location;

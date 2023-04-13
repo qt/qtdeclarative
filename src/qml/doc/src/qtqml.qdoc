@@ -115,10 +115,11 @@ the QML code to interact with C++ code.
     \li \l {Important C++ Classes Provided By The Qt QML Module}
 \endlist
 
-\section2 Examples
+\section2 Tutorials
 
 \list
     \li \l {Writing QML Extensions with C++}
+    \li \l {Writing advanced QML Extensions with C++}
 \endlist
 
 \omit
@@ -165,6 +166,5 @@ Further information for writing QML applications:
 \list
     \li \l {Qt QML C++ Classes} {C++ Classes}
     \li \l {Qt QML QML Types} {QML Types}
-    \li \l {Qt QML Examples} {Examples}
 \endlist
 */

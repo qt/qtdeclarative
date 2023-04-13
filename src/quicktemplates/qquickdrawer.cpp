@@ -127,7 +127,7 @@ QT_BEGIN_NAMESPACE
 
     Drawer can be configured as a non-closable persistent side panel by
     making the Drawer \l {Popup::modal}{non-modal} and \l {interactive}
-    {non-interactive}. See the \l {Qt Quick Controls 2 - Side Panel}{Side Panel}
+    {non-interactive}. See the \l {Qt Quick Controls 2 - Gallery}{Gallery}
     example for more details.
 
     \note On some platforms, certain edges may be reserved for system

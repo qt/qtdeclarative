@@ -1,7 +1,0 @@
-<RCC>
-    <qresource prefix="/qt/qml/xmlhttprequest">
-        <file>xmlhttprequest.qml</file>
-        <file>methods.js</file>
-        <file>data.xml</file>
-    </qresource>
-</RCC>

@@ -1,0 +1,3 @@
+module StringToDateTime
+typeinfo stringToDateTime.qmltypes
+import QtQml

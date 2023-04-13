@@ -195,9 +195,6 @@ Now we can build and run the application:
 
 \borderedimage qtquickcontrols-chattutorial-chapter1.png
 
-\noautolist
-\generatelist examplefiles .*chapter1.*
-
 \section1 Chapter 2: Lists
 
 In this chapter, we'll explain how to create a list of interactive items using
@@ -272,8 +269,6 @@ vertical space.
 
 \borderedimage qtquickcontrols-chattutorial-chapter2.png
 
-\generatelist examplefiles .*(chapter2|shared).*
-\generatelist exampleimages .*shared.*(Einstein|Hemingway|Gude)\.png
 
 \section1 Chapter 3: Navigation
 
@@ -499,8 +494,6 @@ Finally, the button is only enabled when there is actually a message to send.
 
 \borderedimage qtquickcontrols-chattutorial-chapter3.gif
 
-\generatelist examplefiles .*(chapter3|shared).*
-\generatelist exampleimages .*shared.*(Einstein|Hemingway|Gude)\.png
 
 \section1 Chapter 4: Models
 
@@ -718,8 +711,6 @@ text field to make way for future input.
 
 \borderedimage qtquickcontrols-chattutorial-chapter4.gif
 
-\generatelist examplefiles .*(chapter4|shared).*
-\generatelist exampleimages
 
 \section1 Chapter 5: Styling
 
@@ -848,8 +839,6 @@ After building and running the application, you should see these results:
 \borderedimage qtquickcontrols-chattutorial-chapter5-contacts-universal-dark.png
 \borderedimage qtquickcontrols-chattutorial-chapter5-conversations-universal-dark.png
 
-\generatelist examplefiles .*(chapter5|shared).*
-\generatelist exampleimages
 
 \section1 Summary
 

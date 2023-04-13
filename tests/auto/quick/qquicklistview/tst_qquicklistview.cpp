@@ -187,6 +187,7 @@ private slots:
 
     void populateTransitions();
     void populateTransitions_data();
+    void repositionFirstItemOnPopulateTransition();
     void sizeTransitions();
     void sizeTransitions_data();
 
@@ -6792,6 +6793,20 @@ void tst_QQuickListView::populateTransitions_data()
     QTest::newRow("empty to start with, no populate") << false << false << false;
 }
 
+// QTBUG-111050
+/* Reposition first visible item in list view on populate transition
+   Note: Occurs only in BottomToTop or RightToLeft layout */
+void tst_QQuickListView::repositionFirstItemOnPopulateTransition()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("repositionListViewOnPopulateTransition.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
+    QTRY_VERIFY(listview != nullptr);
+    QTRY_COMPARE(listview->contentY(), -100.0);
+}
 
 /*
  * Tests if the first visible item is not repositioned if the same item

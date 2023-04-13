@@ -49,11 +49,7 @@ static inline qreal hcenter(const QQuickItem *item)
         if (!QQuickAnchorsPrivate::get(anchors)->centerAligned)
             return width / 2;
     }
-    int iw = width;
-    if (iw % 2)
-        return (width + 1) / 2;
-    else
-        return width / 2;
+    return qRound(width / 2);
 }
 
 static inline qreal vcenter(const QQuickItem *item)
@@ -63,11 +59,7 @@ static inline qreal vcenter(const QQuickItem *item)
         if (!QQuickAnchorsPrivate::get(anchors)->centerAligned)
             return height / 2;
     }
-    int ih = height;
-    if (ih % 2)
-        return (height + 1) / 2;
-    else
-        return height / 2;
+    return qRound(height / 2);
 }
 
 //local position

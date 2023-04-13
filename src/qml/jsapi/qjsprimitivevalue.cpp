@@ -273,6 +273,40 @@ QT_BEGIN_NAMESPACE
   result.
  */
 
+/*!
+  \fn QMetaType QJSPrimitiveValue::metaType() const
+  \since 6.6
+
+  Returns the QMetaType of the value stored in the QJSPrimitiveValue.
+ */
+
+/*!
+  \fn const void *QJSPrimitiveValue::constData() const
+  \fn const void *QJSPrimitiveValue::data() const
+  \since 6.6
+
+  Returns a pointer to the contained value as a generic void* that cannot be
+  written to.
+ */
+
+/*!
+  \fn const void *QJSPrimitiveValue::data()
+  \since 6.6
+
+  Returns a pointer to the contained data as a generic void* that can be
+  written to.
+*/
+
+/*!
+  \fn template<Type type> QJSPrimitiveValue QJSPrimitiveValue::to() const
+  \since 6.6
+
+  Coerces the value to the specified \e type and returns the result as a new
+  QJSPrimitiveValue.
+
+  \sa toBoolean(), toInteger(), toDouble(), toString()
+*/
+
 QString QJSPrimitiveValue::toString(double d)
 {
     QString result;

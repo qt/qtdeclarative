@@ -13,7 +13,7 @@ ColumnLayout {
 
     GroupBox {
         title: "Title 2"
-        label: Text {
+        label: Label {
             text: "I am Text label in GroupBox"
         }
     }

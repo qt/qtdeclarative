@@ -29,25 +29,25 @@ QQmlInstantiatorPrivate::QQmlInstantiatorPrivate()
 {
 }
 
-QQmlInstantiatorPrivate::~QQmlInstantiatorPrivate()
-{
-    qDeleteAll(objects);
-}
-
 void QQmlInstantiatorPrivate::clear()
 {
     Q_Q(QQmlInstantiator);
     if (!instanceModel)
         return;
-    if (!objects.size())
+
+    if (objects.isEmpty())
         return;
 
     for (int i=0; i < objects.size(); i++) {
-        q->objectRemoved(i, objects[i]);
-        instanceModel->release(objects[i]);
+        QObject *object = objects[i];
+        emit q->objectRemoved(i, object);
+        instanceModel->release(object);
+        if (object && object->parent() == q)
+            object->setParent(nullptr);
     }
+
     objects.clear();
-    q->objectChanged();
+    emit q->objectChanged();
 }
 
 QObject *QQmlInstantiatorPrivate::modelObject(int index, bool async)
@@ -207,6 +207,8 @@ QQmlInstantiator::QQmlInstantiator(QObject *parent)
 
 QQmlInstantiator::~QQmlInstantiator()
 {
+    Q_D(QQmlInstantiator);
+    d->clear();
 }
 
 /*!

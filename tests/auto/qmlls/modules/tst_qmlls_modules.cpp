@@ -45,6 +45,7 @@ tst_qmlls_modules::tst_qmlls_modules()
     // qmllanguageservertool.cpp)
     m_qmllsPath = qEnvironmentVariable("QMLLS", m_qmllsPath);
     m_server.setProgram(m_qmllsPath);
+    // m_server.setArguments(QStringList() << u"-v"_s << u"-w"_s << u"8"_s);
     m_protocol.registerPublishDiagnosticsNotificationHandler([](const QByteArray &, auto) {
         // ignoring qmlint notifications
     });
@@ -61,7 +62,10 @@ void tst_qmlls_modules::initTestCase()
     m_server.start();
     InitializeParams clientInfo;
     clientInfo.rootUri = QUrl::fromLocalFile(dataDirectory() + "/default").toString().toUtf8();
+
     TextDocumentClientCapabilities tDoc;
+    tDoc.typeDefinition = TypeDefinitionClientCapabilities{ false, false };
+
     PublishDiagnosticsClientCapabilities pDiag;
     tDoc.publishDiagnostics = pDiag;
     pDiag.versionSupport = true;
@@ -75,7 +79,9 @@ void tst_qmlls_modules::initTestCase()
     QTRY_COMPARE_WITH_TIMEOUT(didInit, true, 10000);
 
     for (const QString &filePath :
-         QStringList({ u"completions/Yyy.qml"_s, u"completions/fromBuildDir.qml"_s })) {
+         QStringList({ u"completions/Yyy.qml"_s,
+                     u"completions/fromBuildDir.qml"_s,
+                     u"completions/SomeBase.qml"_s })) {
         QFile file(testFile(filePath));
         QVERIFY(file.open(QIODevice::ReadOnly));
         DidOpenTextDocumentParams oParams;
@@ -452,6 +458,75 @@ void tst_qmlls_modules::cleanupTestCase()
     m_server.closeWriteChannel();
     QTRY_COMPARE(m_server.state(), QProcess::NotRunning);
     QCOMPARE(m_server.exitStatus(), QProcess::NormalExit);
+}
+
+void tst_qmlls_modules::goToTypeDefinition_data()
+{
+    QTest::addColumn<QByteArray>("uri");
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+    QTest::addColumn<QByteArray>("expectedUri");
+    QTest::addColumn<int>("expectedStartLine");
+    QTest::addColumn<int>("expectedStartCharacter");
+    QTest::addColumn<int>("expectedEndLine");
+    QTest::addColumn<int>("expectedEndCharacter");
+
+    QByteArray yyyUri = testFileUrl("completions/Yyy.qml").toString().toUtf8();
+    QByteArray zzzUri = testFileUrl("completions/Zzz.qml").toString().toUtf8();
+    QByteArray someBaseUri = testFileUrl("completions/SomeBase.qml").toString().toUtf8();
+
+    QTest::newRow("BaseOfYyy") << yyyUri << 3 << 1 << zzzUri << 2 << 0 << 9 << 1;
+    QTest::newRow("BaseOfIC") << yyyUri << 29 << 19 << zzzUri << 2 << 0 << 9 << 1;
+
+    QTest::newRow("PropertyType") << yyyUri << 30 << 14 << someBaseUri << 2 << 0 << 4 << 1;
+
+    QTest::newRow("TypeInIC") << yyyUri << 29 << 36 << someBaseUri << 2 << 0 << 4 << 1;
+    QTest::newRow("ICTypeDefinition") << yyyUri << 29 << 15 << yyyUri << 29 << 18 << 29 << 48;
+}
+
+void tst_qmlls_modules::goToTypeDefinition()
+{
+    QFETCH(QByteArray, uri);
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QByteArray, expectedUri);
+    QFETCH(int, expectedStartLine);
+    QFETCH(int, expectedStartCharacter);
+    QFETCH(int, expectedEndLine);
+    QFETCH(int, expectedEndCharacter);
+
+    // TODO
+    TypeDefinitionParams params;
+    params.position.line = line;
+    params.position.character = character;
+    params.textDocument.uri = uri;
+
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    auto clean = [didFinish]() { *didFinish = true; };
+
+    m_protocol.requestTypeDefinition(
+            params,
+            [&](auto res) {
+                QScopeGuard cleanup(clean);
+                auto *result = std::get_if<QList<Location>>(&res);
+
+                QVERIFY(result);
+
+                QCOMPARE(result->size(), 1);
+
+                Location l = result->front();
+                QCOMPARE(u"file://"_s + l.uri, expectedUri);
+                QCOMPARE(l.range.start.line, expectedStartLine);
+                QCOMPARE(l.range.start.character, expectedStartCharacter);
+                QCOMPARE(l.range.end.line, expectedEndLine);
+                QCOMPARE(l.range.end.character, expectedEndCharacter);
+            },
+            [clean](const ResponseError &err) {
+                QScopeGuard cleanup(clean);
+                ProtocolBase::defaultResponseErrorHandler(err);
+                QVERIFY2(false, "error computing the completion");
+            });
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 30000);
 }
 
 QTEST_MAIN(tst_qmlls_modules)

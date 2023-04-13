@@ -386,6 +386,7 @@ QImage::Format qVGImageFormatToQImageFormat(VGImageFormat format)
         break;
     case VG_sL_8:
         qImageFormat = QImage::Format_Grayscale8;
+        break;
     default:
         qImageFormat = QImage::Format_ARGB32;
         break;

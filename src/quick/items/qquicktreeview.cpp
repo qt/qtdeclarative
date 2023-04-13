@@ -81,10 +81,10 @@
 
     By default, TreeView \l {toggleExpanded()}{toggles} the expanded state
     of a row when you double tap on it. Since this is in conflict with
-    double tapping to edit a cell, TreeView sets \l editTriggers to
+    double tapping to edit a cell, TreeView sets \l {TableView::}{editTriggers} to
     \c TableView.EditKeyPressed by default (which is different from TableView,
     which uses \c {TableView.EditKeyPressed | TableView.DoubleTapped}.
-    If you change \l editTriggers to also contain \c TableView.DoubleTapped,
+    If you change \l {TableView::}{editTriggers} to also contain \c TableView.DoubleTapped,
     toggling the expanded state with a double tap will be disabled.
 
     \note A TreeView only accepts a model that inherits \l QAbstractItemModel.

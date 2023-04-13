@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
     qsizetype iPos = 0;
     for (const QString &s : std::as_const(positionalArguments)) {
         env.loadFile(
-                s, QString(),
+                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), s),
                 [&loadedFiles, iPos](Path, const DomItem &, const DomItem &newIt) {
                     loadedFiles[iPos] = newIt;
                 },

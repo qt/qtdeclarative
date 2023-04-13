@@ -865,15 +865,32 @@ private:
                 return false;
             });
         } else if constexpr (std::is_same_v<Argument, Pragma::ValueTypeBehaviorValue>) {
+            pragma->valueTypeBehavior = Pragma::ValueTypeBehaviorValues().toInt();
             return iterateValues(values, [pragma](QStringView value) {
+                const auto setFlag = [pragma](Pragma::ValueTypeBehaviorValue flag, bool value) {
+                    pragma->valueTypeBehavior
+                            = Pragma::ValueTypeBehaviorValues(pragma->valueTypeBehavior)
+                                .setFlag(flag, value).toInt();
+                };
+
                 if (value == "Reference"_L1) {
-                    pragma->valueTypeBehavior = Pragma::Reference;
+                    setFlag(Pragma::Copy, false);
                     return true;
                 }
                 if (value == "Copy"_L1) {
-                    pragma->valueTypeBehavior = Pragma::Copy;
+                    setFlag(Pragma::Copy, true);
                     return true;
                 }
+
+                if (value == "Inaddressable"_L1) {
+                    setFlag(Pragma::Addressable, false);
+                    return true;
+                }
+                if (value == "Addressable"_L1) {
+                    setFlag(Pragma::Addressable, true);
+                    return true;
+                }
+
                 return false;
             });
         }
@@ -1716,13 +1733,13 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
                 }
                 break;
             case Pragma::ValueTypeBehavior:
-                switch (p->valueTypeBehavior) {
-                case Pragma::Copy:
+                if (Pragma::ValueTypeBehaviorValues(p->valueTypeBehavior)
+                        .testFlag(Pragma::Copy)) {
                     createdUnit->flags |= Unit::ValueTypesCopied;
-                    break;
-                case Pragma::Reference:
-                    //this is the default;
-                    break;
+                }
+                if (Pragma::ValueTypeBehaviorValues(p->valueTypeBehavior)
+                        .testFlag(Pragma::Addressable)) {
+                    createdUnit->flags |= Unit::ValueTypesAddressable;
                 }
                 break;
             }

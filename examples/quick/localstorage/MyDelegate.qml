@@ -4,14 +4,9 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.LocalStorage
-import "Database.js" as JS
 
 Item {
     id: delegate
-
-    width: ListView.view.width
-    implicitHeight: rDate.implicitHeight * 1.5
 
     required property int index
     required property int distance
@@ -20,13 +15,18 @@ Item {
 
     signal clicked()
 
+    width: ListView.view.width
+    implicitHeight: rDate.implicitHeight * 1.5
+
     Rectangle {
         id: baseRec
         anchors.fill: parent
         opacity: 0.8
         color: delegate.index % 2 ? "lightgrey" : "grey"
-        border.width: 2
-        border.color: Qt.lighter(color)
+        border {
+            width: 2
+            color: Qt.lighter(color)
+        }
         radius: 5
 
         MouseArea {

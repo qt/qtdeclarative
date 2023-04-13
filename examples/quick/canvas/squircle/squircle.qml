@@ -6,21 +6,25 @@ import QtQuick.Controls
 import "../"
 
 Item {
-    id: container
+    id: root
     width: 320
     height: 480
 
     Column {
         spacing: 6
-        anchors.fill: parent
-        anchors.topMargin: 12
+        anchors {
+            fill: parent
+            topMargin: 12
+        }
 
         Label {
-            font.pointSize: 24
-            font.bold: true
-            text: "Squircles"
             anchors.horizontalCenter: parent.horizontalCenter
-            color: "#777"
+            text: qsTr("Squircles")
+            color: Qt.lighter(palette.text)
+            font {
+                pointSize: 24
+                bold: true
+            }
         }
 
         Image {
@@ -32,84 +36,106 @@ Item {
 
         Canvas {
             id: canvas
-            width: 320
-            height: 250
+
+            readonly property color strokeStyle: Qt.darker(fillStyle, 1.2)
+            readonly property color fillStyle: "#6400aa"
+            readonly property int lineWidth: 2
+            readonly property alias nSize: nCtrl.value
+            readonly property alias radius: rCtrl.value
+            readonly property alias fill: toggleFillCheckBox.checked
+            readonly property alias stroke: toggleStrokeCheckBox.checked
+            readonly property real px: width / 2
+            readonly property real py: height / 2 + 10
+            readonly property real alpha: 1.0
+
+            width: root.width
+            height: parent.height - controls.height
             antialiasing: true
 
-            property color strokeStyle: Qt.darker(fillStyle, 1.2)
-            property color fillStyle: "#6400aa"
+            onRadiusChanged: requestPaint()
+            onLineWidthChanged: requestPaint()
+            onNSizeChanged: requestPaint()
+            onFillChanged: requestPaint()
+            onStrokeChanged: requestPaint()
 
-            property int lineWidth: 2
-            property int nSize: nCtrl.value
-            property real radius: rCtrl.value
-            property bool fill: true
-            property bool stroke: false
-            property real px: width/2
-            property real py: height/2 + 10
-            property real alpha: 1.0
+            onPaint: function () {
+                let ctx = canvas.getContext("2d")
+                const N = Math.abs(canvas.nSize)
+                const R = canvas.radius
 
-            onRadiusChanged: requestPaint();
-            onLineWidthChanged: requestPaint();
-            onNSizeChanged: requestPaint();
-            onFillChanged: requestPaint();
-            onStrokeChanged: requestPaint();
+                const M = Math.max(0.00000000001, Math.min(N, 100))
 
-            onPaint: squircle();
+                ctx.save()
+                ctx.globalAlpha = canvas.alpha
+                ctx.fillStyle = "white"
+                ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-            function squircle() {
-                var ctx = canvas.getContext("2d");
-                var N = canvas.nSize;
-                var R = canvas.radius;
+                ctx.strokeStyle = canvas.strokeStyle
+                ctx.fillStyle = canvas.fillStyle
+                ctx.lineWidth = canvas.lineWidth
 
-                N=Math.abs(N);
-                var M=N;
-                if (N>100) M=100;
-                if (N<0.00000000001) M=0.00000000001;
+                ctx.beginPath()
+                let i, x, y;
+                for (i = 0; i < (2 * R + 1); i++) {
+                    x = Math.round(i - R) + canvas.px
+                    y = Math.round(Math.pow(Math.abs(Math.pow(R, M) - Math.pow(Math.abs(i - R), M)), 1 / M)) + canvas.py
 
-                ctx.save();
-                ctx.globalAlpha =canvas.alpha;
-                ctx.fillStyle = "white";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.strokeStyle = canvas.strokeStyle;
-                ctx.fillStyle = canvas.fillStyle;
-                ctx.lineWidth = canvas.lineWidth;
-
-                ctx.beginPath();
-                var i = 0, x, y;
-                for (i=0; i<(2*R+1); i++){
-                    x = Math.round(i-R) + canvas.px;
-                    y = Math.round(Math.pow(Math.abs(Math.pow(R,M)-Math.pow(Math.abs(i-R),M)),1/M)) + canvas.py;
-
-                    if (i == 0)
-                        ctx.moveTo(x, y);
+                    if (i === 0)
+                        ctx.moveTo(x, y)
                     else
-                        ctx.lineTo(x, y);
+                        ctx.lineTo(x, y)
                 }
 
-                for (i=(2*R); i<(4*R+1); i++){
-                    x =Math.round(3*R-i)+canvas.px;
-                    y = Math.round(-Math.pow(Math.abs(Math.pow(R,M)-Math.pow(Math.abs(3*R-i),M)),1/M)) + canvas.py;
-                    ctx.lineTo(x, y);
+                for (i = (2 * R); i < (4 * R + 1); i++) {
+                    x = Math.round(3 * R - i) + canvas.px
+                    y = Math.round(-Math.pow(Math.abs(Math.pow(R, M) - Math.pow(Math.abs(3 * R - i), M)), 1 / M)) + canvas.py
+                    ctx.lineTo(x, y)
                 }
-                ctx.closePath();
+                ctx.closePath()
                 if (canvas.stroke) {
-                    ctx.stroke();
+                    ctx.stroke()
                 }
-
                 if (canvas.fill) {
-                    ctx.fill();
+                    ctx.fill()
                 }
-                ctx.restore();
+                ctx.restore()
             }
         }
 
     }
     Column {
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 12
+        id: controls
+        anchors {
+            bottom: parent.bottom
+            bottomMargin: 12
+        }
 
-        LabeledSlider {id: nCtrl ; min: 1 ; max: 10 ; init: 2 ; name: "N"; width: container.width}
-        LabeledSlider {id: rCtrl ; min: 30 ; max: 180 ; init: 60 ; name: "Radius"; width: container.width}
+        LabeledSlider {
+            id: nCtrl
+            name: qsTr("N")
+            width: root.width
+            min: 1
+            max: 10
+            value: 2
+        }
+        LabeledSlider {
+            id: rCtrl
+            name: qsTr("Radius")
+            width: root.width
+            min: 30
+            max: 180
+            value: 60
+        }
+        Row {
+            CheckBox {
+                id: toggleFillCheckBox
+                text: qsTr("Toggle fill")
+            }
+            CheckBox {
+                id: toggleStrokeCheckBox
+                checked: true
+                text: qsTr("Toggle stroke")
+            }
+        }
     }
 }

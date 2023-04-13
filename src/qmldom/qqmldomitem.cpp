@@ -1,5 +1,6 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+#include "qqmldomitem_p.h"
 #include "qqmldomtop_p.h"
 #include "qqmldomelements_p.h"
 #include "qqmldomexternalitems_p.h"
@@ -11,6 +12,7 @@
 #include "qqmldomcompare_p.h"
 #include "qqmldomastdumper_p.h"
 #include "qqmldomlinewriter_p.h"
+#include "qqmldom_utils_p.h"
 
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
@@ -32,6 +34,8 @@
 #include <QtCore/QScopeGuard>
 #include <QtCore/QtGlobal>
 #include <QtCore/QTimeZone>
+#include <optional>
+#include <type_traits>
 
 QT_BEGIN_NAMESPACE
 
@@ -40,6 +44,37 @@ namespace Dom {
 
 Q_LOGGING_CATEGORY(writeOutLog, "qt.qmldom.writeOut", QtWarningMsg);
 static Q_LOGGING_CATEGORY(refLog, "qt.qmldom.ref", QtWarningMsg);
+
+template<class... TypeList>
+struct CheckDomElementT;
+
+template<class... Ts>
+struct CheckDomElementT<std::variant<Ts...>> : std::conjunction<IsInlineDom<Ts>...>
+{
+};
+
+/*!
+   \internal
+   \class QQmljs::Dom::ElementT
+
+   \brief A variant that contains all the Dom elements that an DomItem can contain.
+
+   Types in this variant are divided in two categories: normal Dom elements and internal Dom
+   elements.
+   The first ones are inheriting directly or indirectly from DomBase, and are the usual elements
+   that a DomItem can wrap around, like a QmlFile or an QmlObject. They should all appear in
+   ElementT as pointers, e.g. QmlFile*.
+   The internal Dom elements are a little bit special. They appear in ElementT without pointer, do
+   not inherit from DomBase \b{but} should behave like a smart DomBase-pointer. That is, they should
+   dereference as if they were a DomBase* pointing to a normal DomElement by implementing
+   operator->() and operator*().
+   Adding types here that are neither inheriting from DomBase nor implementing a smartpointer to
+   DomBase will throw compilation errors in the std::visit()-calls on this type.
+*/
+static_assert(CheckDomElementT<ElementT>::value,
+              "Types in ElementT must either be a pointer to a class inheriting "
+              "from DomBase or (for internal Dom structures) implement a smart "
+              "pointer pointing to a class inheriting from DomBase");
 
 using std::shared_ptr;
 /*!
@@ -59,17 +94,36 @@ The subclass *must* have a
 \endcode
 entry with its kind to enable casting usng the DomItem::as DomItem::ownerAs templates.
 
-The minimal overload set to be usable is:
+The minimal overload set to be usable consists of following methods:
+\list
+\li \c{kind()} returns the kind of the current element:
 \code
-    Kind kind() const override {  return kindValue; } // returns the kind of the current element
-    Path pathFromOwner(DomItem &self) const override; // returns the path from the owner to the
-current element Path canonicalPath(DomItem &self) const override; // returns the path from virtual
-bool iterateDirectSubpaths(DomItem &self, function_ref<bool(Path, DomItem)>) const = 0; // iterates
-the *direct* subpaths, returns false if a quick end was requested \endcode But you probably want to
-subclass either DomElement of OwningItem for your element. DomElement stores its pathFromOwner, and
-computes the canonicalPath from it and its owner. OwningItem is the unit for updates to the Dom
-model, exposed changes always change at least one OwningItem. They have their lifetime handled with
-shared_ptr and own (i.e. are responsible of freeing) other items in them.
+    Kind kind() const override {  return kindValue; }
+\endcode
+
+\li \c{pathFromOwner()} returns the path from the owner to the current element
+\code
+    Path pathFromOwner(DomItem &self) const override;
+\endcode
+
+\li \c{canonicalPath()} returns the path
+\code
+    Path canonicalPath(DomItem &self) const override;
+\endcode
+
+\li \c{iterateDirectSubpaths} iterates the *direct* subpaths/children and returns false if a quick
+end was requested:
+\code
+bool iterateDirectSubpaths(DomItem &self, function_ref<bool(Path, DomItem)>) const = 0;
+\endcode
+
+\endlist
+
+But you probably want to subclass either \c DomElement or \c OwningItem for your element. \c
+DomElement stores its \c pathFromOwner, and computes the \c canonicalPath from it and its owner. \c
+OwningItem is the unit for updates to the Dom model, exposed changes always change at least one \c
+OwningItem. They have their lifetime handled with \c shared_ptr and own (i.e. are responsible of
+freeing) other items in them.
 
 \sa QQml::Dom::DomItem, QQml::Dom::DomElement, QQml::Dom::OwningItem
 */
@@ -302,6 +356,33 @@ It does not keep any pointers to internal elements, but rather the path to them,
 it every time it needs.
 */
 
+FileToLoad::FileToLoad(const std::weak_ptr<DomEnvironment> &environment,
+                       const QString &canonicalPath, const QString &logicalPath,
+                       std::optional<InMemoryContents> content, DomCreationOptions options)
+    : m_environment(environment),
+      m_canonicalPath(canonicalPath),
+      m_logicalPath(logicalPath),
+      m_content(content),
+      m_options(options)
+{
+}
+
+FileToLoad FileToLoad::fromMemory(const std::weak_ptr<DomEnvironment> &environment,
+                                  const QString &path, const QString &code,
+                                  DomCreationOptions options)
+{
+    const QString canonicalPath = QFileInfo(path).canonicalFilePath();
+    return { environment, canonicalPath, path, InMemoryContents{ code }, options };
+}
+
+FileToLoad FileToLoad::fromFileSystem(const std::weak_ptr<DomEnvironment> &environment,
+                                      const QString &path, DomCreationOptions options)
+{
+    // make the path canonical so the file content can be loaded from it later
+    const QString canonicalPath = QFileInfo(path).canonicalFilePath();
+    return { environment, canonicalPath, path, std::nullopt, options };
+}
+
 ErrorGroup DomItem::domErrorGroup = NewErrorGroup("Dom");
 DomItem DomItem::empty = DomItem();
 
@@ -519,6 +600,24 @@ DomItem DomItem::scope(FilterUpOptions options)
 {
     DomItem res = filterUp([](DomType, DomItem &el) { return el.isScope(); }, options);
     return res;
+}
+
+QQmlJSScope::Ptr DomItem::nearestSemanticScope()
+{
+    QQmlJSScope::Ptr scope;
+    visitUp([&scope](DomItem &item) {
+        scope = std::visit(
+                [](auto &&e) -> QQmlJSScope::Ptr {
+                    using T = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
+                    if constexpr (std::is_same_v<T, QmlObject *>) {
+                        return e->semanticScope();
+                    }
+                    return {};
+                },
+                item.m_element);
+        return !scope; // stop when scope was true
+    });
+    return scope;
 }
 
 DomItem DomItem::get(ErrorHandler h, QList<Path> *visitedRefs)
@@ -1309,6 +1408,70 @@ bool DomItem::visitTree(Path basePath, DomItem::ChildrenVisitor visitor, VisitOp
                 });
     });
 }
+static bool visitPrototypeIndex(QList<DomItem> &toDo, DomItem &current,
+                                DomItem &derivedFromPrototype, ErrorHandler h,
+                                QList<Path> *visitedRefs, VisitPrototypesOptions options,
+                                DomItem &prototype)
+{
+    Path elId = prototype.canonicalPath();
+    if (visitedRefs->contains(elId))
+        return true;
+    else
+        visitedRefs->append(elId);
+    QList<DomItem> protos = prototype.getAll(h, visitedRefs);
+    if (protos.isEmpty()) {
+        if (std::shared_ptr<DomEnvironment> envPtr =
+                    derivedFromPrototype.environment().ownerAs<DomEnvironment>())
+            if (!(envPtr->options() & DomEnvironment::Option::NoDependencies))
+                derivedFromPrototype.myErrors()
+                        .warning(derivedFromPrototype.tr("could not resolve prototype %1 (%2)")
+                                         .arg(current.canonicalPath().toString(),
+                                              prototype.field(Fields::referredObjectPath)
+                                                      .value()
+                                                      .toString()))
+                        .withItem(derivedFromPrototype)
+                        .handle(h);
+    } else {
+        if (protos.size() > 1) {
+            QStringList protoPaths;
+            for (DomItem &p : protos)
+                protoPaths.append(p.canonicalPath().toString());
+            derivedFromPrototype.myErrors()
+                    .warning(derivedFromPrototype
+                                     .tr("Multiple definitions found, using first only, resolving "
+                                         "prototype %1 (%2): %3")
+                                     .arg(current.canonicalPath().toString(),
+                                          prototype.field(Fields::referredObjectPath)
+                                                  .value()
+                                                  .toString(),
+                                          protoPaths.join(QLatin1String(", "))))
+                    .withItem(derivedFromPrototype)
+                    .handle(h);
+        }
+        int nProtos = 1; // change to protos.length() to use all prototypes
+        // (sloppier)
+        for (int i = nProtos; i != 0;) {
+            DomItem proto = protos.at(--i);
+            if (proto.internalKind() == DomType::Export) {
+                if (!(options & VisitPrototypesOption::ManualProceedToScope))
+                    proto = proto.proceedToScope(h, visitedRefs);
+                toDo.append(proto);
+            } else if (proto.internalKind() == DomType::QmlObject) {
+                toDo.append(proto);
+            } else {
+                derivedFromPrototype.myErrors()
+                        .warning(derivedFromPrototype.tr("Unexpected prototype type %1 (%2)")
+                                         .arg(current.canonicalPath().toString(),
+                                              prototype.field(Fields::referredObjectPath)
+                                                      .value()
+                                                      .toString()))
+                        .withItem(derivedFromPrototype)
+                        .handle(h);
+            }
+        }
+    }
+    return true;
+}
 
 bool DomItem::visitPrototypeChain(function_ref<bool(DomItem &)> visitor,
                                   VisitPrototypesOptions options, ErrorHandler h,
@@ -1349,63 +1512,7 @@ bool DomItem::visitPrototypeChain(function_ref<bool(DomItem &)> visitor,
         shouldVisit = true;
         current.field(Fields::prototypes)
                 .visitIndexes([&toDo, &current, this, &h, visitedRefs, options](DomItem &el) {
-                    Path elId = el.canonicalPath();
-                    if (visitedRefs->contains(elId))
-                        return true;
-                    else
-                        visitedRefs->append(elId);
-                    QList<DomItem> protos = el.getAll(h, visitedRefs);
-                    if (protos.isEmpty()) {
-                        if (std::shared_ptr<DomEnvironment> envPtr =
-                                    environment().ownerAs<DomEnvironment>())
-                            if (!(envPtr->options() & DomEnvironment::Option::NoDependencies))
-                                myErrors()
-                                        .warning(tr("could not resolve prototype %1 (%2)")
-                                                         .arg(current.canonicalPath().toString(),
-                                                              el.field(Fields::referredObjectPath)
-                                                                      .value()
-                                                                      .toString()))
-                                        .withItem(*this)
-                                        .handle(h);
-                    } else {
-                        if (protos.size() > 1) {
-                            QStringList protoPaths;
-                            for (DomItem &p : protos)
-                                protoPaths.append(p.canonicalPath().toString());
-                            myErrors()
-                                    .warning(tr("Multiple definitions found, using first only, "
-                                                "resolving prototype %1 (%2): %3")
-                                                     .arg(current.canonicalPath().toString(),
-                                                          el.field(Fields::referredObjectPath)
-                                                                  .value()
-                                                                  .toString(),
-                                                          protoPaths.join(QLatin1String(", "))))
-                                    .withItem(*this)
-                                    .handle(h);
-                        }
-                        int nProtos = 1; // change to protos.length() to us all prototypes found
-                                         // (sloppier)
-                        for (int i = nProtos; i != 0;) {
-                            DomItem proto = protos.at(--i);
-                            if (proto.internalKind() == DomType::Export) {
-                                if (!(options & VisitPrototypesOption::ManualProceedToScope))
-                                    proto = proto.proceedToScope(h, visitedRefs);
-                                toDo.append(proto);
-                            } else if (proto.internalKind() == DomType::QmlObject) {
-                                toDo.append(proto);
-                            } else {
-                                myErrors()
-                                        .warning(tr("Unexpected prototype type %1 (%2)")
-                                                         .arg(current.canonicalPath().toString(),
-                                                              el.field(Fields::referredObjectPath)
-                                                                      .value()
-                                                                      .toString()))
-                                        .withItem(*this)
-                                        .handle(h);
-                            }
-                        }
-                    }
-                    return true;
+                    return visitPrototypeIndex(toDo, current, *this, h, visitedRefs, options, el);
                 });
     }
     return true;
@@ -1478,6 +1585,24 @@ bool DomItem::visitStaticTypePrototypeChains(function_ref<bool(DomItem &)> visit
     return true;
 }
 
+/*!
+    \brief Let the visitor visit the Dom Tree hierarchy of this DomItem.
+ */
+bool DomItem::visitUp(function_ref<bool(DomItem &)> visitor)
+{
+    Path p = canonicalPath();
+    while (p.length() > 0) {
+        DomItem current = top().path(p);
+        if (!visitor(current))
+            return false;
+        p = p.dropTail();
+    }
+    return true;
+}
+
+/*!
+    \brief Let the visitor visit the QML scope hierarchy of this DomItem.
+ */
 bool DomItem::visitScopeChain(function_ref<bool(DomItem &)> visitor, LookupOptions options,
                               ErrorHandler h, QSet<quintptr> *visited, QList<Path> *visitedRefs)
 {
@@ -2369,52 +2494,26 @@ DomItem::DomItem(std::shared_ptr<DomUniverse> universePtr):
 {
 }
 
-void DomItem::loadFile(QString canonicalFilePath, QString logicalPath, QString code,
-                       QDateTime codeDate, DomTop::Callback callback, LoadOptions loadOptions,
+void DomItem::loadFile(const FileToLoad &file, DomTop::Callback callback, LoadOptions loadOptions,
                        std::optional<DomType> fileType)
 {
     DomItem topEl = top();
     if (topEl.internalKind() == DomType::DomEnvironment
         || topEl.internalKind() == DomType::DomUniverse) {
         if (auto univ = topEl.ownerAs<DomUniverse>())
-            univ->loadFile(*this, canonicalFilePath, logicalPath, code, codeDate, callback,
-                           loadOptions, fileType);
+            univ->loadFile(*this, file, callback, loadOptions, fileType);
         else if (auto env = topEl.ownerAs<DomEnvironment>()) {
             if (env->options() & DomEnvironment::Option::NoDependencies)
-                env->loadFile(topEl, canonicalFilePath, logicalPath, code, codeDate, callback,
-                              DomTop::Callback(), DomTop::Callback(), loadOptions, fileType);
+                env->loadFile(topEl, file, callback, DomTop::Callback(), DomTop::Callback(),
+                              loadOptions, fileType);
             else
-                env->loadFile(topEl, canonicalFilePath, logicalPath, code, codeDate,
-                              DomTop::Callback(), DomTop::Callback(), callback, loadOptions,
-                              fileType);
+                env->loadFile(topEl, file, DomTop::Callback(), DomTop::Callback(), callback,
+                              loadOptions, fileType);
         } else
             Q_ASSERT(false && "expected either DomUniverse or DomEnvironment cast to succeed");
     } else {
         addError(myErrors().warning(tr("loadFile called without DomEnvironment or DomUniverse.")));
-        callback(Paths::qmlFileInfoPath(canonicalFilePath), DomItem::empty, DomItem::empty);
-    }
-}
-
-void DomItem::loadFile(QString filePath, QString logicalPath, DomTop::Callback callback,
-                       LoadOptions loadOptions, std::optional<DomType> fileType)
-{
-    DomItem topEl = top();
-    if (topEl.internalKind() == DomType::DomEnvironment
-        || topEl.internalKind() == DomType::DomUniverse) {
-        if (auto univ = topEl.ownerAs<DomUniverse>())
-            univ->loadFile(*this, filePath, logicalPath, callback, loadOptions);
-        else if (auto env = topEl.ownerAs<DomEnvironment>()) {
-            if (env->options() & DomEnvironment::Option::NoDependencies)
-                env->loadFile(topEl, filePath, logicalPath, callback, DomTop::Callback(),
-                              DomTop::Callback(), loadOptions, fileType);
-            else
-                env->loadFile(topEl, filePath, logicalPath, DomTop::Callback(), DomTop::Callback(),
-                              callback, loadOptions, fileType);
-        } else
-            Q_ASSERT(false && "expected either DomUniverse or DomEnvironment cast to succeed");
-    } else {
-        addError(myErrors().warning(tr("loadFile called without DomEnvironment or DomUniverse.")));
-        callback(Paths::qmlFileInfoPath(filePath), DomItem::empty, DomItem::empty);
+        callback(Paths::qmlFileInfoPath(file.canonicalPath()), DomItem::empty, DomItem::empty);
     }
 }
 
@@ -2473,10 +2572,11 @@ DomItem DomItem::fromCode(QString code, DomType fileType)
                                            | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
     DomItem tFile;
+
     env.loadFile(
-            QString(), QString(), code, QDateTime::currentDateTimeUtc(),
+            FileToLoad::fromMemory(env.ownerAs<DomEnvironment>(), QString(), code),
             [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
-            LoadOption::DefaultLoad, fileType);
+            LoadOption::DefaultLoad, std::make_optional(fileType));
     env.loadPendingDependencies();
     return tFile.fileObject();
 }

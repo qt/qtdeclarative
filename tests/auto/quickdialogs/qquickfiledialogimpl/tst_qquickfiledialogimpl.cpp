@@ -91,6 +91,15 @@ private slots:
     void selectNewFileViaTextField();
 
 private:
+    enum DelegateOrderPolicy
+    {
+        ShowDirectoriesFirst,
+        ShowFilesFirst
+    };
+
+    QStringList tempDirExpectedVisibleFiles(DelegateOrderPolicy order) const;
+    QStringList tempSubDirExpectedVisibleFiles(DelegateOrderPolicy order) const;
+
     QTemporaryDir tempDir;
     QScopedPointer<QFile> tempFile1;
     QScopedPointer<QFile> tempFile2;
@@ -109,6 +118,20 @@ private:
     const QKeySequence goUpKeySequence = QKeySequence(Qt::ALT | Qt::Key_Up);
     const QKeySequence editPathKeySequence = QKeySequence(Qt::CTRL | Qt::Key_L);
 };
+
+QStringList tst_QQuickFileDialogImpl::tempDirExpectedVisibleFiles(DelegateOrderPolicy order) const
+{
+    return order == ShowDirectoriesFirst
+        ? QStringList { tempSubDir.path(), tempFile1->fileName(), tempFile2->fileName() }
+        : QStringList { tempFile1->fileName(), tempFile2->fileName(), tempSubDir.path() };
+}
+
+QStringList tst_QQuickFileDialogImpl::tempSubDirExpectedVisibleFiles(DelegateOrderPolicy order) const
+{
+    return order == ShowDirectoriesFirst
+        ? QStringList { tempSubSubDir.path(), tempSubFile1->fileName(), tempSubFile2->fileName() }
+        : QStringList { tempSubFile1->fileName(), tempSubFile2->fileName(), tempSubSubDir.path() };
+}
 
 // We don't want to fail on warnings until QTBUG-98964 is fixed,
 // as we deliberately prevent deferred execution in some of the tests here,
@@ -135,13 +158,13 @@ void tst_QQuickFileDialogImpl::initTestCase()
     /*
         Create a couple of files within the temporary directory. The structure is:
 
-        [temp directory]
-            ├── sub-dir
-            │   ├── sub-sub-dir
-            │   ├── sub-file1.txt
-            │   └── sub-file2.txt
-            ├── file1.txt
-            └── file2.txt
+        [temp directory] (tempDir)
+            ├── sub-dir (tempSubDir)
+            │   ├── sub-sub-dir (tempSubSubDir)
+            │   ├── sub-file1.txt (tempSubFile1)
+            │   └── sub-file2.txt (tempSubFile2)
+            ├── file1.txt (tempFile1)
+            └── file2.txt (tempFile2)
     */
     tempSubDir = QDir(tempDir.path());
     QVERIFY2(tempSubDir.mkdir("sub-dir"), qPrintable(QString::fromLatin1(
@@ -232,8 +255,8 @@ void tst_QQuickFileDialogImpl::cleanupTestCase()
     QTRY_VERIFY(findViewDelegateItem(dialogHelper.fileDialogListView, expectedCurrentIndex, fileDelegate)); \
     QVERIFY2(fileDelegate->hasActiveFocus(), qPrintable(QString::fromLatin1( \
         "Expected delegate at index %1 to have focus, but %2 has it") \
-            .arg(QString::number(expectedCurrentIndex)) \
-            .arg(QDebug::toString(dialogHelper.window()->activeFocusItem())))); \
+            .arg(QString::number(expectedCurrentIndex), \
+                QDebug::toString(dialogHelper.window()->activeFocusItem())))); \
     QVERIFY(fileDelegate->isHighlighted()); \
 }
 
@@ -418,8 +441,8 @@ void tst_QQuickFileDialogImpl::bindCurrentFolder_data()
     const auto tempSubDirUrl = QUrl::fromLocalFile(tempSubDir.path());
     const auto tempSubFile1Url = QUrl::fromLocalFile(tempSubFile1->fileName());
 
-    const QStringList currentDirFiles = { tempSubDir.path(), tempFile1->fileName(), tempFile2->fileName() };
-    const QStringList tempSubDirFiles = { tempSubSubDir.path(), tempSubFile1->fileName(), tempSubFile2->fileName() };
+    const QStringList currentDirFiles = tempDirExpectedVisibleFiles(ShowDirectoriesFirst);
+    const QStringList tempSubDirFiles = tempSubDirExpectedVisibleFiles(ShowDirectoriesFirst);
 
     // Setting the folder to "sub-dir" should result in "sub-file1.txt" and "sub-file2.txt" being visible.
     QTest::addRow("sub-dir") << tempSubDirUrl << tempSubDirUrl << tempSubDirFiles;
@@ -505,9 +528,7 @@ void tst_QQuickFileDialogImpl::changeFolderViaDoubleClick()
     QTRY_VERIFY(findViewDelegateItem(dialogHelper.fileDialogListView, subDirIndex, subDirDelegate));
     COMPARE_URL(subDirDelegate->file(), QUrl::fromLocalFile(tempSubDir.path()));
     QVERIFY(doubleClickButton(subDirDelegate));
-    const QStringList expectedVisibleFiles = showDirsFirst
-        ? QStringList { tempSubSubDir.path(), tempSubFile1->fileName(), tempSubFile2->fileName() }
-        : QStringList { tempSubFile1->fileName(), tempSubFile2->fileName(), tempSubSubDir.path() };
+    const QStringList expectedVisibleFiles = tempSubDirExpectedVisibleFiles(showDirsFirst ? ShowDirectoriesFirst : ShowFilesFirst);
     QString failureMessage;
     QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView, expectedVisibleFiles, failureMessage), qPrintable(failureMessage));
     // The first file in the directory should now be selected.
@@ -544,6 +565,9 @@ void tst_QQuickFileDialogImpl::chooseFolderViaTextEdit()
 
     // Hit enter to accept.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
+    QString failureMessage;
+    QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView,
+        tempSubDirExpectedVisibleFiles(ShowDirectoriesFirst), failureMessage), qPrintable(failureMessage));
     // The first file in the directory should be selected, which is "sub-sub-dir".
     // Note that the TextEdit will still have focus, so we can't use VERIFY_FILE_SELECTED_AND_FOCUSED.
     VERIFY_FILE_SELECTED(QUrl::fromLocalFile(tempSubDir.path()), QUrl::fromLocalFile(tempSubSubDir.path()));
@@ -566,9 +590,9 @@ void tst_QQuickFileDialogImpl::chooseFolderViaEnter()
 
     // Select the delegate by pressing enter.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
-    const QStringList expectedVisibleFiles = { tempSubSubDir.path(), tempSubFile1->fileName(), tempSubFile2->fileName() };
     QString failureMessage;
-    QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView, expectedVisibleFiles, failureMessage), qPrintable(failureMessage));
+    QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView,
+        tempSubDirExpectedVisibleFiles(ShowDirectoriesFirst), failureMessage), qPrintable(failureMessage));
     // The first file in the new directory should be selected, which is "sub-sub-dir".
     VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempSubDir.path()), QUrl::fromLocalFile(tempSubSubDir.path()), 0);
     // Since we only chose a folder, the dialog should still be open.
@@ -628,6 +652,9 @@ void tst_QQuickFileDialogImpl::chooseFileAndThenFolderViaTextEdit()
 
     // Hit enter to accept.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
+    QString failureMessage;
+    QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView,
+        tempSubDirExpectedVisibleFiles(ShowDirectoriesFirst), failureMessage), qPrintable(failureMessage));
     // The first file in the directory should be selected, which is "sub-sub-dir".
     // Note that the TextEdit will still have focus, so we can't use VERIFY_FILE_SELECTED_AND_FOCUSED.
     VERIFY_FILE_SELECTED(QUrl::fromLocalFile(tempSubDir.path()), QUrl::fromLocalFile(tempSubSubDir.path()));
@@ -727,6 +754,9 @@ void tst_QQuickFileDialogImpl::goUp()
         QVERIFY(QQuickTest::qWaitForPolish(barListView));
     QVERIFY(clickButton(breadcrumbBar->upButton()));
     // The previous directory that we were in should now be selected (matches e.g. Windows and Ubuntu).
+    QString failureMessage;
+    QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView,
+        tempDirExpectedVisibleFiles(showDirsFirst ? ShowDirectoriesFirst : ShowFilesFirst), failureMessage), qPrintable(failureMessage));
     int expectedCurrentIndex = showDirsFirst ? 0 : 2;
     VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempDir.path()), QUrl::fromLocalFile(tempSubDir.path()), expectedCurrentIndex);
 
@@ -878,7 +908,7 @@ void tst_QQuickFileDialogImpl::bindNameFilters()
     // Only "sub-dir", "text1.txt" and "text2.txt" should be visible, since *.txt is the first filter.
     QString failureMessage;
     QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView,
-        { tempSubDir.path(), tempFile1->fileName(), tempFile2->fileName() }, failureMessage), qPrintable(failureMessage));
+        tempDirExpectedVisibleFiles(ShowDirectoriesFirst), failureMessage), qPrintable(failureMessage));
 }
 
 void tst_QQuickFileDialogImpl::changeNameFilters()
@@ -929,7 +959,7 @@ void tst_QQuickFileDialogImpl::changeNameFilters()
     // Only "sub-dir", "text1.txt" and "text2.txt" should be visible, since *.txt is the first filter.
     QString failureMessage;
     QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView,
-        { tempSubDir.path(), tempFile1->fileName(), tempFile2->fileName() }, failureMessage), qPrintable(failureMessage));
+        tempDirExpectedVisibleFiles(ShowDirectoriesFirst), failureMessage), qPrintable(failureMessage));
 
     // Open the ComboBox's popup.
     const QQuickComboBox *comboBox = dialogHelper.quickDialog->findChild<QQuickComboBox*>();
@@ -964,7 +994,7 @@ void tst_QQuickFileDialogImpl::changeNameFilters()
     }
     QTRY_VERIFY(!comboBox->popup()->isVisible());
     QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView,
-        { tempSubDir.path(), tempFile1->fileName(), tempFile2->fileName() }, failureMessage), qPrintable(failureMessage));
+        tempDirExpectedVisibleFiles(ShowDirectoriesFirst), failureMessage), qPrintable(failureMessage));
 }
 
 void tst_QQuickFileDialogImpl::changeNameFiltersAfterChangingFolder()
@@ -976,7 +1006,7 @@ void tst_QQuickFileDialogImpl::changeNameFiltersAfterChangingFolder()
     // Go into the "sub-dir" folder.
     QString failureMessage;
     QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView,
-        { tempSubDir.path(), tempFile1->fileName(), tempFile2->fileName() }, failureMessage), qPrintable(failureMessage));
+        tempDirExpectedVisibleFiles(ShowDirectoriesFirst), failureMessage), qPrintable(failureMessage));
     QQuickFileDialogDelegate *subDirDelegate = nullptr;
     QTRY_VERIFY(findViewDelegateItem(dialogHelper.fileDialogListView, 0, subDirDelegate));
     QVERIFY(doubleClickButton(subDirDelegate));

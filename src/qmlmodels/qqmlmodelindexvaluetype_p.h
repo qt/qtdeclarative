@@ -54,6 +54,8 @@ public:
 
     static QPersistentModelIndex toPersistentModelIndex(const QModelIndex &index)
     { return QPersistentModelIndex(index); }
+
+    operator QModelIndex() const { return v; }
 };
 
 struct QQmlPersistentModelIndexValueType
@@ -82,6 +84,8 @@ public:
     inline bool isValid() const { return v.isValid(); }
     inline QAbstractItemModel *model() const { return const_cast<QAbstractItemModel *>(v.model()); }
     inline quint64 internalId() const { return v.internalId(); }
+
+    operator QPersistentModelIndex() const { return v; }
 };
 
 struct QQmlItemSelectionRangeValueType
@@ -129,6 +133,8 @@ public:
     inline QAbstractItemModel *model() const { return const_cast<QAbstractItemModel *>(v.model()); }
     inline bool isValid() const { return v.isValid(); }
     inline bool isEmpty() const { return v.isEmpty(); }
+
+    operator QItemSelectionRange() const { return v; }
 };
 
 struct QModelIndexListForeign

@@ -92,12 +92,10 @@ void QQuickTextMetrics::setText(const QString &text)
     This property holds the elide mode of the text. This determines the
     position in which the string is elided. The possible values are:
 
-    \list
-        \li \c Qt::ElideNone - No eliding; this is the default value.
-        \li \c Qt::ElideLeft - For example: "...World"
-        \li \c Qt::ElideMiddle - For example: "He...ld"
-        \li \c Qt::ElideRight - For example: "Hello..."
-    \endlist
+    \value Qt::ElideNone    No eliding; this is the default value.
+    \value Qt::ElideLeft    For example: "...World"
+    \value Qt::ElideMiddle  For example: "He...ld"
+    \value Qt::ElideRight   For example: "Hello..."
 
     \sa elideWidth, QFontMetrics::elidedText
 */
@@ -238,12 +236,11 @@ QString QQuickTextMetrics::elidedText() const
     Override the default rendering type for this component.
 
     Supported render types are:
-    \list
-    \li Text.QtRendering
-    \li Text.NativeRendering
-    \endlist
 
-    This should match the intended renderType where you draw the text.
+    \value TextEdit.QtRendering     Text is rendered using a scalable distance field for each glyph.
+    \value TextEdit.NativeRendering Text is rendered using a platform-specific technique.
+
+    This should match the intended \c renderType where you draw the text.
 
     \since 6.3
     \sa {Text::renderType}{Text.renderType}

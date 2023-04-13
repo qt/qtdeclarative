@@ -1,4 +1,4 @@
-pragma ValueTypeBehavior: Reference
+pragma ValueTypeBehavior: Reference, Inaddressable
 import QtQml
 
 QtObject {

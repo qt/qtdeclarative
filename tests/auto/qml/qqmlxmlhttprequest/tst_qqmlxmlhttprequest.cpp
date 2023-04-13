@@ -1323,7 +1323,6 @@ void tst_qqmlxmlhttprequest::redirects()
         QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
         QVERIFY(!object.isNull());
         object->setProperty("url", server.urlString("/redirect.html"));
-        object->setProperty("expectedText", "");
         component.completeCreate();
 
         QTRY_VERIFY(object->property("done").toBool());
@@ -1340,7 +1339,6 @@ void tst_qqmlxmlhttprequest::redirects()
         QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
         QVERIFY(!object.isNull());
         object->setProperty("url", server.urlString("/redirect.html"));
-        object->setProperty("expectedText", "");
         component.completeCreate();
 
         QTRY_VERIFY(object->property("done").toBool());
@@ -1357,7 +1355,6 @@ void tst_qqmlxmlhttprequest::redirects()
         QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
         QVERIFY(!object.isNull());
         object->setProperty("url", server.urlString("/redirect.html"));
-        object->setProperty("expectedText", "");
         component.completeCreate();
 
         for (int ii = 0; ii < 60; ++ii) {

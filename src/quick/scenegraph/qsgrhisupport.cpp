@@ -718,6 +718,10 @@ static const void *qsgrhi_vk_rifResource(QSGRendererInterface::Resource res,
             return &maybeVkRpNat->renderPass;
         else
             return nullptr;
+    case QSGRendererInterface::GraphicsQueueFamilyIndexResource:
+        return &vknat->gfxQueueFamilyIdx;
+    case QSGRendererInterface::GraphicsQueueIndexResource:
+        return &vknat->gfxQueueIdx;
     default:
         return nullptr;
     }

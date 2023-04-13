@@ -87,6 +87,7 @@ public:
     static const QMetaType valueMetaType(const Heap::Sequence *p);
     static QV4::ReturnedValue virtualGet(
             const QV4::Managed *that, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static qint64 virtualGetLength(const Managed *m);
     static bool virtualPut(Managed *that, PropertyKey id, const QV4::Value &value, Value *receiver);
     static bool virtualDeleteProperty(QV4::Managed *that, PropertyKey id);
     static bool virtualIsEqualTo(Managed *that, Managed *other);

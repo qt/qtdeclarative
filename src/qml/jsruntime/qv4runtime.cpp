@@ -329,7 +329,7 @@ ReturnedValue Runtime::DeleteName::call(ExecutionEngine *engine, Function *funct
     }
 }
 
-QV4::ReturnedValue Runtime::Instanceof::call(ExecutionEngine *engine, const Value &lval, const Value &rval)
+static QV4::ReturnedValue doInstanceof(ExecutionEngine *engine, const Value &lval, const Value &rval)
 {
     // 11.8.6, 5: rval must be an Object
     const Object *rhs = rval.as<Object>();
@@ -345,26 +345,48 @@ QV4::ReturnedValue Runtime::Instanceof::call(ExecutionEngine *engine, const Valu
     Scope scope(engine);
     ScopedValue hasInstance(scope, rhs->get(engine->symbol_hasInstance()));
     if (hasInstance->isUndefined())
-        return rhs->instanceOf(lval);
+        return Encode(rhs->instanceOf(lval));
+
     FunctionObject *fHasInstance = hasInstance->as<FunctionObject>();
     if (!fHasInstance)
         return engine->throwTypeError();
 
-    ScopedValue result(scope, fHasInstance->call(&rval, &lval, 1));
+    return Encode(fHasInstance->call(&rval, &lval, 1));
+}
+
+QV4::ReturnedValue Runtime::Instanceof::call(ExecutionEngine *engine, const Value &lval, const Value &rval)
+{
+    Scope scope(engine);
+    ScopedValue result(scope, doInstanceof(engine, lval, rval));
     return scope.hasException() ? Encode::undefined() : Encode(result->toBoolean());
 }
 
 QV4::ReturnedValue Runtime::As::call(ExecutionEngine *engine, const Value &lval, const Value &rval)
 {
     Scope scope(engine);
-    ScopedValue result(scope, Runtime::Instanceof::call(engine, lval, rval));
+    ScopedValue result(scope, doInstanceof(engine, lval, rval));
 
-    if (scope.hasException())
+    if (scope.hasException()) {
+        // "foo instanceof valueType" must not throw an exception.
+        // So this can only be an object type.
         engine->catchException();
-    else if (result->toBoolean())
-        return lval.asReturnedValue();
+        return Encode::null();
+    }
 
-    return Encode::null();
+    if (result->toBoolean())
+        return lval.asReturnedValue();
+    else if (result->isBoolean())
+        return Encode::null();
+
+    // Try to convert the value type
+    if (Scoped<QQmlTypeWrapper> typeWrapper(scope, rval); typeWrapper) {
+        const QMetaType metaType = typeWrapper->d()->type().typeId();
+        const QVariant result = engine->toVariant(lval, metaType);
+        if (result.metaType() == metaType)
+            return engine->metaTypeToJS(metaType, result.constData());
+    }
+
+    return Encode::undefined();
 }
 
 QV4::ReturnedValue Runtime::In::call(ExecutionEngine *engine, const Value &left, const Value &right)

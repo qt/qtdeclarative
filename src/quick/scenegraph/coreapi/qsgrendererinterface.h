@@ -46,7 +46,9 @@ public:
         CommandEncoderResource,
         VulkanInstanceResource,
         RenderPassResource,
-        RedirectPaintDevice
+        RedirectPaintDevice,
+        GraphicsQueueFamilyIndexResource,
+        GraphicsQueueIndexResource
     };
 
     enum ShaderType {

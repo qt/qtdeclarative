@@ -143,9 +143,15 @@ public:
 void QQuickButtonGroupPrivate::clear()
 {
     for (QQuickAbstractButton *button : std::as_const(buttons)) {
-        QQuickAbstractButtonPrivate::get(button)->group = nullptr;
-        QObjectPrivate::disconnect(button, &QQuickAbstractButton::clicked, this, &QQuickButtonGroupPrivate::buttonClicked);
-        QObjectPrivate::disconnect(button, &QQuickAbstractButton::checkedChanged, this, &QQuickButtonGroupPrivate::_q_updateCurrent);
+        auto *attached = qobject_cast<QQuickButtonGroupAttached *>(
+            qmlAttachedPropertiesObject<QQuickButtonGroup>(button, false));
+        if (attached) {
+            attached->setGroup(nullptr);
+        } else {
+            QQuickAbstractButtonPrivate::get(button)->group = nullptr;
+            QObjectPrivate::disconnect(button, &QQuickAbstractButton::clicked, this, &QQuickButtonGroupPrivate::buttonClicked);
+            QObjectPrivate::disconnect(button, &QQuickAbstractButton::checkedChanged, this, &QQuickButtonGroupPrivate::_q_updateCurrent);
+        }
     }
     buttons.clear();
 }
@@ -500,11 +506,12 @@ void QQuickButtonGroupAttached::setGroup(QQuickButtonGroup *group)
     if (d->group == group)
         return;
 
+    auto *button = qobject_cast<QQuickAbstractButton *>(parent());
     if (d->group)
-        d->group->removeButton(qobject_cast<QQuickAbstractButton*>(parent()));
+        d->group->removeButton(button);
     d->group = group;
     if (group)
-        group->addButton(qobject_cast<QQuickAbstractButton*>(parent()));
+        group->addButton(button);
     emit groupChanged();
 }
 

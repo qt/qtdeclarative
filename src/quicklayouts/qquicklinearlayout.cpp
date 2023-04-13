@@ -247,10 +247,8 @@ QSizeF QQuickGridLayoutBase::sizeHint(Qt::SizeHint whichSizeHint) const
 
     Possible values:
 
-    \list
-    \li Qt.LeftToRight (default) - Items are laid out from left to right.
-    \li Qt.RightToLeft - Items are laid out from right to left.
-    \endlist
+    \value Qt.LeftToRight   (default) Items are laid out from left to right.
+    \value Qt.RightToLeft   Items are laid out from right to left.
 
     \sa RowLayout::layoutDirection, ColumnLayout::layoutDirection
 */
@@ -459,6 +457,10 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
         return;
     }
 
+    // Should normally not be needed, but there might be an incoming window resize event that we
+    // will process before we process updatePolish()
+    ensureLayoutItemsUpdated(QQuickLayout::ApplySizeHints | QQuickLayout::Recursive);
+
     d->m_rearranging = true;
     qCDebug(lcQuickLayouts) << objectName() << "QQuickGridLayoutBase::rearrange()" << size;
     Qt::LayoutDirection visualDir = effectiveLayoutDirection();
@@ -595,12 +597,10 @@ void QQuickGridLayout::setRows(int rows)
 
     Possible values are:
 
-    \list
-    \li GridLayout.LeftToRight (default) - Items are positioned next to
-       each other, then wrapped to the next line.
-    \li GridLayout.TopToBottom - Items are positioned next to each
-       other from top to bottom, then wrapped to the next column.
-    \endlist
+    \value GridLayout.LeftToRight
+        (default) Items are positioned next to each other, then wrapped to the next line.
+    \value GridLayout.TopToBottom
+        Items are positioned next to each other from top to bottom, then wrapped to the next column.
 
     \sa rows
     \sa columns
@@ -775,10 +775,8 @@ QQuickLinearLayout::QQuickLinearLayout(Qt::Orientation orientation,
 
     Possible values:
 
-    \list
-    \li Qt.LeftToRight (default) - Items are laid out from left to right.
-    \li Qt.RightToLeft - Items are laid out from right to left
-    \endlist
+    \value Qt.LeftToRight   (default) Items are laid out from left to right.
+    \value Qt.RightToLeft   Items are laid out from right to left
 
     \sa GridLayout::layoutDirection, ColumnLayout::layoutDirection
 */
@@ -792,10 +790,8 @@ QQuickLinearLayout::QQuickLinearLayout(Qt::Orientation orientation,
 
     Possible values:
 
-    \list
-    \li Qt.LeftToRight (default) - Items are laid out from left to right.
-    \li Qt.RightToLeft - Items are laid out from right to left
-    \endlist
+    \value Qt.LeftToRight   (default) Items are laid out from left to right.
+    \value Qt.RightToLeft   Items are laid out from right to left
 
     \sa GridLayout::layoutDirection, RowLayout::layoutDirection
 */

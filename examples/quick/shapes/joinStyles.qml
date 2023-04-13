@@ -23,15 +23,21 @@ Rectangle {
             capStyle: ShapePath.RoundCap
 
             property int joinStyleIdx: 0
-            property variant styles: [ ShapePath.BevelJoin, ShapePath.MiterJoin, ShapePath.RoundJoin ]
-            property variant styleTexts: [ "BevelJoin", "MiterJoin", "RoundJoin" ]
+            readonly property variant styles: [ ShapePath.BevelJoin, ShapePath.MiterJoin, ShapePath.RoundJoin ]
+            readonly property variant styleTexts: [ qsTr("BevelJoin"), qsTr("MiterJoin"), qsTr("RoundJoin") ]
 
             joinStyle: styles[joinStyleIdx]
 
             startX: 30
             startY: 30
-            PathLine { x: 100; y: 100 }
-            PathLine { x: 30; y: 100 }
+            PathLine {
+                x: 100
+                y: 100
+            }
+            PathLine {
+                x: 30
+                y: 100
+            }
         }
     }
 
