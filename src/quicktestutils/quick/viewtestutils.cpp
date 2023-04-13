@@ -4,6 +4,7 @@
 #include "viewtestutils_p.h"
 
 #include <QtCore/QRandomGenerator>
+#include <QtCore/QTimer>
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickView>
 #include <QtGui/QScreen>
@@ -12,7 +13,9 @@
 #include <QtTest/QTest>
 
 #include <QtQuick/private/qquickdeliveryagent_p_p.h>
+#if QT_CONFIG(quick_itemview)
 #include <QtQuick/private/qquickitemview_p_p.h>
+#endif
 #include <QtQuick/private/qquickwindow_p.h>
 
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
@@ -391,6 +394,7 @@ void QQuickViewTestUtils::StressTestModel::updateModel()
     }
 }
 
+#if QT_CONFIG(quick_itemview)
 bool QQuickViewTestUtils::testVisibleItems(const QQuickItemViewPrivate *priv, bool *nonUnique, FxViewItem **failItem, int *expectedIdx)
 {
     QHash<QQuickItem*, int> uniqueItems;
@@ -427,6 +431,7 @@ bool QQuickViewTestUtils::testVisibleItems(const QQuickItemViewPrivate *priv, bo
 
     return true;
 }
+#endif
 
 namespace QQuickTouchUtils {
 

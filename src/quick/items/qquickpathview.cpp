@@ -26,6 +26,9 @@
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcItemViewDelegateLifecycle)
+#if !QT_CONFIG(quick_itemview)
+Q_LOGGING_CATEGORY(lcItemViewDelegateLifecycle, "qt.quick.itemview.lifecycle")
+#endif
 Q_LOGGING_CATEGORY(lcPathView, "qt.quick.pathview")
 
 static QQmlOpenMetaObjectType *qPathViewAttachedType = nullptr;

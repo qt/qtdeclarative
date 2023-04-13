@@ -4,18 +4,24 @@
 #include "dialogstestutils_p.h"
 
 #include <QtTest/qsignalspy.h>
+#include <QtQuick/private/qtquickglobal_p.h>
+#if QT_CONFIG(quick_listview)
 #include <QtQuick/private/qquicklistview_p.h>
+#endif
 #include <QtQuickTest/quicktest.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>
+#if QT_CONFIG(quick_listview)
 #include <QtQuickDialogs2QuickImpl/private/qquickfiledialogdelegate_p.h>
 #include <QtQuickDialogs2QuickImpl/private/qquickfolderbreadcrumbbar_p.h>
 #include <QtQuickDialogs2QuickImpl/private/qquickfolderbreadcrumbbar_p_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
+#if QT_CONFIG(quick_listview)
 bool QQuickDialogTestUtils::verifyFileDialogDelegates(QQuickListView *fileDialogListView,
     const QStringList &expectedFiles, QString &failureMessage)
 {
@@ -105,6 +111,7 @@ bool QQuickDialogTestUtils::verifyBreadcrumbDelegates(QQuickFolderBreadcrumbBar 
 
     return true;
 }
+#endif
 
 QQuickAbstractButton *QQuickDialogTestUtils::findDialogButton(QQuickDialogButtonBox *box, const QString &buttonText)
 {

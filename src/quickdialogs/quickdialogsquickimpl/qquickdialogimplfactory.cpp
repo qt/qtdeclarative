@@ -5,9 +5,12 @@
 
 #include <QtCore/qloggingcategory.h>
 
+#include <QtQuick/private/qtquickglobal_p.h>
+#if QT_CONFIG(quick_listview)
 #include "qquickplatformfiledialog_p.h"
 #include "qquickplatformfolderdialog_p.h"
 #include "qquickplatformfontdialog_p.h"
+#endif
 #include "qquickplatformcolordialog_p.h"
 #include "qquickplatformmessagedialog_p.h"
 
@@ -29,6 +32,7 @@ std::unique_ptr<QPlatformDialogHelper> QQuickDialogImplFactory::createPlatformDi
         dialogHelper.reset(new QQuickPlatformColorDialog(parent));
         break;
     }
+#if QT_CONFIG(quick_listview)
     case QQuickDialogType::FileDialog: {
         dialogHelper.reset(new QQuickPlatformFileDialog(parent));
         break;
@@ -41,6 +45,7 @@ std::unique_ptr<QPlatformDialogHelper> QQuickDialogImplFactory::createPlatformDi
         dialogHelper.reset(new QQuickPlatformFontDialog(parent));
         break;
     }
+#endif
     case QQuickDialogType::MessageDialog: {
         dialogHelper.reset(new QQuickPlatformMessageDialog(parent));
         break;
