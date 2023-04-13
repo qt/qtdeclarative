@@ -5,6 +5,7 @@
 #define QSTYLEREADER_H
 
 #include <QtCore>
+#include <QMargins>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkAccessManager>
@@ -14,11 +15,6 @@
 #include "jsontools.h"
 
 using namespace JsonTools;
-
-struct Strectch9p {
-    const QJsonArray horizontal;
-    const QJsonArray vertical;
-};
 
 class StyleGenerator {
 
@@ -337,10 +333,10 @@ private:
         outputConfig.insert("width", geometry.width());
         outputConfig.insert("height", geometry.height());
 
-        if (!stretch.horizontal.isEmpty())
-            outputConfig.insert("horizontalStretch", stretch.horizontal);
-        if (!stretch.vertical.isEmpty())
-            outputConfig.insert("verticalStretch", stretch.vertical);
+        outputConfig.insert("leftOffset", stretch.left());
+        outputConfig.insert("topOffset", stretch.top());
+        outputConfig.insert("rightOffset", stretch.right());
+        outputConfig.insert("bottomOffset", stretch.bottom());
 
         // Todo: resolve insets for rectangles with drop shadow
         // config.insert("leftInset", 0);
@@ -439,8 +435,10 @@ private:
         config.insert("topPadding", coGeo.y());
         config.insert("rightPadding", qMax(0., bgGeo.width() - coGeo.x() - coGeo.width()));
         config.insert("bottomPadding", qMax(0., bgGeo.height() - coGeo.y() - coGeo.height()));
-        config.insert("horizontalStretch", stretch.horizontal);
-        config.insert("verticalStretch", stretch.vertical);
+        config.insert("leftOffset", stretch.left());
+        config.insert("topOffset", stretch.top());
+        config.insert("rightOffset", stretch.right());
+        config.insert("bottomOffset", stretch.bottom());
 
         // Todo: resolve insets for rectangles with drop shadow
         config.insert("leftInset", 0);
@@ -530,7 +528,7 @@ private:
         return QRectF(x, y, width, height);
     }
 
-    Strectch9p getStretch(const QJsonObject rectangle) const
+    QMargins getStretch(const QJsonObject rectangle) const
     {
         // Determine the stretch factor of the rectangle based on its corner radii
         qreal topLeftRadius = 0;
@@ -561,9 +559,8 @@ private:
         const qreal right = qMax(topRightRadius, bottomRightRadius);
         const qreal top = qMax(topLeftRadius, topRightRadius);
         const qreal bottom = qMax(bottomLeftRadius, bottomRightRadius);
-        const QRectF geo = getGeometry(rectangle);
 
-        return { {left, geo.width() - right}, {top, geo.height() - bottom} };
+        return QMargins(left, top, right, bottom);
     }
 
     QString networkErrorString(QNetworkReply *reply)
