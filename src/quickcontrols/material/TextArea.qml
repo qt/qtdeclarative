@@ -29,7 +29,7 @@ T.TextArea {
     color: enabled ? Material.foreground : Material.hintTextColor
     selectionColor: Material.accentColor
     selectedTextColor: Material.primaryHighlightedTextColor
-    placeholderTextColor: Material.hintTextColor
+    placeholderTextColor: enabled && activeFocus ? Material.accentColor : Material.hintTextColor
 
     Material.containerStyle: Material.Outlined
 

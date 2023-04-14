@@ -28,7 +28,7 @@ T.TextField {
     color: enabled ? Material.foreground : Material.hintTextColor
     selectionColor: Material.accentColor
     selectedTextColor: Material.primaryHighlightedTextColor
-    placeholderTextColor: Material.hintTextColor
+    placeholderTextColor: enabled && activeFocus ? Material.accentColor : Material.hintTextColor
     verticalAlignment: TextInput.AlignVCenter
 
     Material.containerStyle: Material.Outlined
