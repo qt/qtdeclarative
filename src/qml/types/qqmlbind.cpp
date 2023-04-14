@@ -463,10 +463,26 @@ void QQmlBind::setObject(QObject *obj)
         eval();
         d->when = true;
     }
+    /* if "when" and "target" depend on the same property, we might
+       end up here before we could have updated "when". So reevaluate
+       when manually here.
+     */
+    const QQmlProperty whenProp(this, QLatin1StringView("when"));
+    const auto potentialWhenBinding = QQmlAnyBinding::ofProperty(whenProp);
+    if (auto abstractBinding = potentialWhenBinding.asAbstractBinding()) {
+        QQmlBinding *binding = static_cast<QQmlBinding *>(abstractBinding);
+        if (binding->hasValidContext()) {
+            const auto boolType = QMetaType::fromType<bool>();
+            bool when;
+            binding->evaluate(&when, boolType);
+            d->when = when;
+        }
+    }
     d->obj = obj;
     if (d->componentComplete) {
         setTarget(QQmlProperty(d->obj, d->propName, qmlContext(this)));
-        d->validate(this);
+        if (d->when)
+            d->validate(this);
     }
     eval();
 }
@@ -520,7 +536,8 @@ void QQmlBind::setProperty(const QString &p)
     d->propName = p;
     if (d->componentComplete) {
         setTarget(QQmlProperty(d->obj, d->propName, qmlContext(this)));
-        d->validate(this);
+        if (d->when)
+            d->validate(this);
     }
     eval();
 }

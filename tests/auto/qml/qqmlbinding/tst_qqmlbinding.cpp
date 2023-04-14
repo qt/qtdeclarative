@@ -38,6 +38,7 @@ private slots:
     void intOverflow();
     void generalizedGroupedProperties();
     void localSignalHandler();
+    void whenEvaluatedEarlyEnough();
 
 private:
     QQmlEngine engine;
@@ -594,6 +595,19 @@ void tst_qqmlbinding::localSignalHandler()
     QVERIFY(!o.isNull());
     o->setProperty("input", QStringLiteral("abc"));
     QCOMPARE(o->property("output").toString(), QStringLiteral("abc"));
+}
+
+void tst_qqmlbinding::whenEvaluatedEarlyEnough()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("whenEvaluatedEarlyEnough.qml"));
+    QTest::failOnWarning(QRegularExpression(".*"));
+    std::unique_ptr<QObject> root { c.create() };
+    root->setProperty("toggle", false); // should not cause warnings
+    // until "when" is actually true
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg,
+                         QRegularExpression(".*QML Binding: Property 'i' does not exist on Item.*"));
+    root->setProperty("forceEnable", true);
 }
 
 QTEST_MAIN(tst_qqmlbinding)
