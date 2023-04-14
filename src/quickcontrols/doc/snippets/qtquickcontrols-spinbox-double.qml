@@ -6,27 +6,35 @@ import QtQuick.Controls
 
 //! [1]
 SpinBox {
-    id: spinbox
+    id: spinBox
     from: 0
-    value: 110
-    to: 100 * 100
-    stepSize: 100
+    value: decimalToInt(1.1)
+    to: decimalToInt(100)
+    stepSize: decimalFactor
+    editable: true
     anchors.centerIn: parent
 
     property int decimals: 2
-    property real realValue: value / 100
+    property real realValue: value / decimalFactor
+    readonly property int decimalFactor: Math.pow(10, decimals)
+
+    function decimalToInt(decimal) {
+        return decimal * decimalFactor
+    }
 
     validator: DoubleValidator {
-        bottom: Math.min(spinbox.from, spinbox.to)
-        top:  Math.max(spinbox.from, spinbox.to)
+        bottom: Math.min(spinBox.from, spinBox.to)
+        top:  Math.max(spinBox.from, spinBox.to)
+        decimals: spinBox.decimals
+        notation: DoubleValidator.StandardNotation
     }
 
     textFromValue: function(value, locale) {
-        return Number(value / 100).toLocaleString(locale, 'f', spinbox.decimals)
+        return Number(value / decimalFactor).toLocaleString(locale, 'f', spinBox.decimals)
     }
 
     valueFromText: function(text, locale) {
-        return Number.fromLocaleString(locale, text) * 100
+        return Math.round(Number.fromLocaleString(locale, text) * decimalFactor)
     }
 }
 //! [1]
