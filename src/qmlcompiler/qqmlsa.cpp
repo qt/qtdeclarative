@@ -168,7 +168,6 @@ void PassManager::analyze(const Element &root)
         for (auto &elementPass : m_elementPasses)
             if (elementPass->shouldRun(element))
                 elementPass->run(element);
-        const auto ownPropertyBindings = element->ownPropertyBindings();
 
         for (auto it = element->childScopesBegin(); it != element->childScopesEnd(); ++it) {
             if ((*it)->scopeType() == QQmlJSScope::QMLScope)
