@@ -206,6 +206,8 @@ private slots:
     void touchscreenDoesNotSelect();
     void touchscreenSetsFocusAndMovesCursor();
 
+    void rtlAlignmentInColumnLayout_QTBUG_112858();
+
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
 #if QT_CONFIG(shortcut)
@@ -6486,6 +6488,38 @@ void tst_qquicktextedit::touchscreenSetsFocusAndMovesCursor()
     QQuickTouchUtils::flush(&window);
     QCOMPARE(qApp->focusObject(), top);
     QVERIFY(top->selectedText().isEmpty());
+}
+
+void tst_qquicktextedit::rtlAlignmentInColumnLayout_QTBUG_112858()
+{
+    QQuickView window(testFileUrl("qtbug-112858.qml"));
+    QVERIFY(window.rootObject() != nullptr);
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QQuickTextEdit *edit = window.rootObject()->findChild<QQuickTextEdit *>();
+    QVERIFY(edit != nullptr);
+
+    const auto text = edit->text();
+    const auto lines = text.split("\n");
+    QCOMPARE(lines.size(), edit->lineCount());
+
+    int currentLineStartPos = 0;
+    QRectF firstLineStartPosRect;
+
+    // check that all lines are aligned, for RTL text it means that they have the same pos at the right
+    for (int i = 0; i < lines.size(); ++i) {
+        const auto lineStartPosRect = edit->positionToRectangle(currentLineStartPos);
+        QVERIFY(lineStartPosRect.isValid());
+
+        if (i == 0)
+            firstLineStartPosRect = lineStartPosRect;
+        else
+            QCOMPARE(lineStartPosRect.right(), firstLineStartPosRect.right());
+
+        currentLineStartPos += lines.at(i).size() + 1;
+    }
 }
 
 QTEST_MAIN(tst_qquicktextedit)

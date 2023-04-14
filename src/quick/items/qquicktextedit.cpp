@@ -2653,9 +2653,6 @@ void QQuickTextEdit::updateSize()
         return;
     }
 
-    qreal naturalWidth = d->implicitWidth - leftPadding() - rightPadding();
-
-    qreal newWidth = d->document->idealWidth();
     // ### assumes that if the width is set, the text will fill to edges
     // ### (unless wrap is false, then clipping will occur)
     if (widthValid()) {
@@ -2667,8 +2664,7 @@ void QQuickTextEdit::updateSize()
         }
         if (d->requireImplicitWidth) {
             d->document->setTextWidth(-1);
-            naturalWidth = d->document->idealWidth();
-
+            const qreal naturalWidth = d->document->idealWidth();
             const bool wasInLayout = d->inLayout;
             d->inLayout = true;
             if (d->isImplicitResizeEnabled())
@@ -2678,19 +2674,22 @@ void QQuickTextEdit::updateSize()
                 return;         // get this far we'll get a warning to that effect.
         }
         const qreal newTextWidth = width() - leftPadding() - rightPadding();
-        if (d->document->textWidth() != newTextWidth) {
+        if (d->document->textWidth() != newTextWidth)
             d->document->setTextWidth(newTextWidth);
-            newWidth = d->document->idealWidth();
-        }
-        //### need to confirm cost of always setting these
-    } else if (d->wrapMode == NoWrap && d->document->textWidth() != newWidth) {
-        d->document->setTextWidth(newWidth); // ### Text does not align if width is not set or the idealWidth exceeds the textWidth (QTextDoc bug)
+    } else if (d->wrapMode == NoWrap) {
+        // normally, if explicit width is not set, we should call setTextWidth(-1) here,
+        // as we don't need to fit the text to any fixed width. But because of some bug
+        // in QTextDocument it also breaks RTL text alignment, so we use "idealWidth" instead.
+        const qreal newTextWidth = d->document->idealWidth();
+        if (d->document->textWidth() != newTextWidth)
+            d->document->setTextWidth(newTextWidth);
     } else {
         d->document->setTextWidth(-1);
     }
 
     QFontMetricsF fm(d->font);
-    qreal newHeight = d->document->isEmpty() ? qCeil(fm.height()) : d->document->size().height();
+    const qreal newHeight = d->document->isEmpty() ? qCeil(fm.height()) : d->document->size().height();
+    const qreal newWidth = d->document->idealWidth();
 
     if (d->isImplicitResizeEnabled()) {
         // ### Setting the implicitWidth triggers another updateSize(), and unless there are bindings nothing has changed.
