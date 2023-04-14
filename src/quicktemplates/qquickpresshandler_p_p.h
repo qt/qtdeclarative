@@ -19,6 +19,8 @@
 #include <QtCore/qbasictimer.h>
 #include <QtCore/private/qglobal_p.h>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
