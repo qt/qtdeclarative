@@ -1449,8 +1449,15 @@ void QQuickFlickablePrivate::handleReleaseEvent(QPointerEvent *event)
         fixupX();
 
     flickingStarted(flickedHorizontally, flickedVertically);
-    if (!isViewMoving())
+    if (!isViewMoving()) {
         q->movementEnding();
+    } else {
+        if (flickedVertically)
+            vMoved = true;
+        if (flickedHorizontally)
+            hMoved = true;
+        q->movementStarting();
+    }
 }
 
 void QQuickFlickable::mousePressEvent(QMouseEvent *event)
