@@ -2453,7 +2453,7 @@ void tst_QQuickTableView::checkChangingModelFromDelegate()
     // And since the QML code tried to add another row as well, we
     // expect rebuildScheduled to be true, and a polish event to be pending.
     QVERIFY(tableViewPrivate->scheduledRebuildOptions);
-    QCOMPARE(tableViewPrivate->polishScheduled, true);
+    QVERIFY(tableViewPrivate->polishScheduled);
     WAIT_UNTIL_POLISHED;
 
     // After handling the polish event, we expect also the third row to now be added
