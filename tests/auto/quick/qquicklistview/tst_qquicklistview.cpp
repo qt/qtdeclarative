@@ -2739,7 +2739,7 @@ void tst_QQuickListView::sectionsSnap()
     QTRY_VERIFY(listview != nullptr);
     listview->setSnapMode(snapMode);
 
-    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+    QTRY_VERIFY(!QQuickItemPrivate::get(listview)->polishScheduled);
     QTRY_COMPARE(listview->currentIndex(), 0);
     QCOMPARE(listview->contentY(), qreal(-50));
 
