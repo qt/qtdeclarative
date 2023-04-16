@@ -9808,6 +9808,9 @@ QPointF QQuickItem::mapToGlobal(qreal x, qreal y) const
 QPointF QQuickItem::mapFromGlobal(qreal x, qreal y) const
 { return mapFromGlobal(QPointF(x, y)); }
 
+//! \internal
+QQuickItemChangeListener::~QQuickItemChangeListener() = default;
+
 QT_END_NAMESPACE
 
 #include <moc_qquickitem.cpp>
