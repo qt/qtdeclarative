@@ -3601,6 +3601,17 @@ void tst_QmlCppCodegen::listConversion()
         QVERIFY(person);
         QCOMPARE(person->name(), u"Horst %1"_s.arg(i + 1));
     }
+
+    QStringList strings = o->property("s").value<QStringList>();
+    QCOMPARE(strings, QStringList({u"Horst 1"_s, u"Horst 2"_s, u"Horst 3"_s}));
+
+    QVariantList vars = o->property("v").toList();
+    QCOMPARE(vars, QVariantList({
+        QString(),
+        QVariant::fromValue<qsizetype>(3),
+        QVariant::fromValue<Person *>(nullptr)
+    }));
+
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

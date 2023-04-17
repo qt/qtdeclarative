@@ -1050,6 +1050,22 @@ QQmlJSMetaMethod QQmlJSTypeResolver::selectConstructor(
     return candidate;
 }
 
+bool QQmlJSTypeResolver::areEquivalentLists(
+        const QQmlJSScope::ConstPtr &a, const QQmlJSScope::ConstPtr &b) const
+{
+    const QQmlJSScope::ConstPtr equivalentLists[2][2] = {
+        { m_stringListType, m_stringType->listType() },
+        { m_variantListType, m_varType->listType() }
+    };
+
+    for (const auto eq : equivalentLists) {
+        if ((equals(a, eq[0]) && equals(b, eq[1])) || (equals(a, eq[1]) && equals(b, eq[0])))
+            return true;
+    }
+
+    return false;
+}
+
 bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
         const QQmlJSScope::ConstPtr &from, const QQmlJSScope::ConstPtr &to) const
 {
@@ -1134,6 +1150,9 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
 
     // We can convert everything to bool.
     if (equals(to, m_boolType))
+        return true;
+
+    if (areEquivalentLists(from, to))
         return true;
 
     if (from->isListProperty()

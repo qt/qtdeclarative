@@ -12,4 +12,6 @@ BirthdayParty {
     ]
 
     property list<QtObject> o: self.guests
+    property list<string> s: self.guestNames
+    property list<var> v: self.stuffs
 }

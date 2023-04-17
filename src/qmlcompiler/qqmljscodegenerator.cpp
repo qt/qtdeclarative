@@ -3312,6 +3312,9 @@ QString QQmlJSCodeGenerator::convertStored(
         return u"true"_s;
     }
 
+    if (m_typeResolver->areEquivalentLists(from, to))
+        return variable;
+
     if (from->isListProperty()
             && to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
             && to->valueType()->isReferenceType()

@@ -183,6 +183,8 @@ public:
             const QQmlJSScope::ConstPtr &type, const QQmlJSScope::ConstPtr &argument,
             bool *isExtension) const;
 
+    bool areEquivalentLists(const QQmlJSScope::ConstPtr &a, const QQmlJSScope::ConstPtr &b) const;
+
 protected:
 
     QQmlJSRegisterContent memberType(const QQmlJSScope::ConstPtr &type, const QString &name) const;
@@ -202,6 +204,7 @@ protected:
             const QString &name,
             const QQmlJSScope::ConstPtr &scopeType = QQmlJSScope::ConstPtr(),
             bool hasObjectModuelPrefix = false) const;
+
 
     QQmlJSScope::ConstPtr m_voidType;
     QQmlJSScope::ConstPtr m_emptyListType;
