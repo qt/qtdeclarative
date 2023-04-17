@@ -616,39 +616,33 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
             handleCompileErrors(fi, view.errors(), view.engine(), &view);
             continue;
         }
-        if (!QTestRootObject::instance()->hasQuit) {
-            // If the test already quit, then it was performed
-            // synchronously during setSource().  Otherwise it is
-            // an asynchronous test and we need to show the window
-            // and wait for the first frame to be rendered
-            // and then wait for quit indication.
-            view.setFramePosition(QPoint(50, 50));
-            if (view.size().isEmpty()) { // Avoid hangs with empty windows.
-                view.resize(200, 200);
-            }
-            view.show();
-            if (!QTest::qWaitForWindowExposed(&view)) {
-                qWarning().nospace()
-                    << "Test '" << QDir::toNativeSeparators(path) << "' window not exposed after show().";
-            }
-            view.requestActivate();
-            if (!QTest::qWaitForWindowActive(&view)) {
-                qWarning().nospace()
-                    << "Test '" << QDir::toNativeSeparators(path) << "' window not active after requestActivate().";
-            }
-            if (view.isExposed()) {
-                // Defer property update until event loop has started
-                QTimer::singleShot(0, []() {
-                    QTestRootObject::instance()->setWindowShown(true);
-                });
-            } else {
-                qWarning().nospace()
-                    << "Test '" << QDir::toNativeSeparators(path) << "' window was never exposed! "
-                    << "If the test case was expecting windowShown, it will hang.";
-            }
-            if (!QTestRootObject::instance()->hasQuit && QTestRootObject::instance()->hasTestCase())
-                eventLoop.exec();
+
+        view.setFramePosition(QPoint(50, 50));
+        if (view.size().isEmpty()) { // Avoid hangs with empty windows.
+            view.resize(200, 200);
         }
+        view.show();
+        if (!QTest::qWaitForWindowExposed(&view)) {
+            qWarning().nospace()
+                << "Test '" << QDir::toNativeSeparators(path) << "' window not exposed after show().";
+        }
+        view.requestActivate();
+        if (!QTest::qWaitForWindowActive(&view)) {
+            qWarning().nospace()
+                << "Test '" << QDir::toNativeSeparators(path) << "' window not active after requestActivate().";
+        }
+        if (view.isExposed()) {
+            // Defer property update until event loop has started
+            QTimer::singleShot(0, []() {
+                QTestRootObject::instance()->setWindowShown(true);
+            });
+        } else {
+            qWarning().nospace()
+                << "Test '" << QDir::toNativeSeparators(path) << "' window was never exposed! "
+                << "If the test case was expecting windowShown, it will hang.";
+        }
+        if (!QTestRootObject::instance()->hasQuit && QTestRootObject::instance()->hasTestCase())
+            eventLoop.exec();
     }
 
     if (setup)
