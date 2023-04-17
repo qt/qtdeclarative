@@ -269,6 +269,7 @@ private slots:
     void editWarning_nonEditableModelItem();
     void attachedPropertiesOnEditDelegate();
     void requiredPropertiesOnEditDelegate();
+    void resettingRolesRespected();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -7293,6 +7294,20 @@ void tst_QQuickTableView::requiredPropertiesOnEditDelegate()
     QCOMPARE(textInput->property("selected").toBool(), true);
     selectionModel.setCurrentIndex(index2, QItemSelectionModel::Select);
     QCOMPARE(textInput->property("current").toBool(), false);
+}
+
+void tst_QQuickTableView::resettingRolesRespected()
+{
+    LOAD_TABLEVIEW("resetModelData.qml");
+
+    TestModel model(1, 1);
+    tableView->setModel(QVariant::fromValue(&model));
+
+    WAIT_UNTIL_POLISHED;
+
+    QVERIFY(!tableView->property("success").toBool());
+    model.useCustomRoleNames(true);
+    QTRY_VERIFY(tableView->property("success").toBool());
 }
 
 QTEST_MAIN(tst_QQuickTableView)
