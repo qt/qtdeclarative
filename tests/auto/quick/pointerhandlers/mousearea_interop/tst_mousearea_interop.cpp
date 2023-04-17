@@ -32,6 +32,7 @@ private slots:
     void dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch();
     void hoverHandlerDoesntHoverOnPress();
     void doubleClickInMouseAreaWithDragHandlerInGrandparent();
+    void doubleClickInMouseArea();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -202,6 +203,26 @@ void tst_MouseAreaInterop::doubleClickInMouseAreaWithDragHandlerInGrandparent()
     QTest::mouseDClick(&window, Qt::LeftButton, Qt::NoModifier, p);
     QCOMPARE(dClickSpy.size(), 1);
     QCOMPARE(dragActiveSpy.size(), 0);
+}
+
+void tst_MouseAreaInterop::doubleClickInMouseArea()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("doubleClickInMouseArea.qml")));
+
+    auto *ma = window.rootObject()->findChild<QQuickMouseArea *>();
+    QVERIFY(ma);
+    QSignalSpy doubleClickSpy(ma, &QQuickMouseArea::doubleClicked);
+    QSignalSpy longPressSpy(ma, &QQuickMouseArea::pressAndHold);
+    QPoint p = ma->mapToScene(ma->boundingRect().center()).toPoint();
+
+    // check with normal double click
+    QTest::mouseDClick(&window, Qt::LeftButton, Qt::NoModifier, p);
+    QCOMPARE(doubleClickSpy.count(), 1);
+
+    // wait enough time for a wrong long press to happen
+    QTest::qWait(QGuiApplication::styleHints()->mousePressAndHoldInterval() + 10);
+    QCOMPARE(longPressSpy.count(), 0);
 }
 
 QTEST_MAIN(tst_MouseAreaInterop)
