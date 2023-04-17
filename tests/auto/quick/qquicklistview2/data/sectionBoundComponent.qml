@@ -2,7 +2,9 @@ pragma ComponentBehavior: Bound
 import QtQuick
 ListView {
    id: view
-    model: ListModel {
+   width: 100
+   height: 100
+   model: ListModel {
         ListElement { name: "foo"; age: 42  }
         ListElement { name: "bar"; age: 13  }
     }

@@ -1549,6 +1549,8 @@ void tst_qqmllistmodel::modify_through_delegate()
         "       ListElement { name: \"Doe\"; age: 33 }\n"
         "   }\n"
         "   ListView {\n"
+        "       height: 100\n" \
+        "       width: 100\n" \
         "       model: testModel\n"
         "       delegate: Item {\n"
         "           Component.onCompleted: model.age = 18;\n"

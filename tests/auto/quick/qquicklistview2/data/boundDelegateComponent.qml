@@ -6,6 +6,8 @@ Item {
     objectName: "outer"
     ListView {
         id: listView
+        width: 100
+        height: 100
         model: 1
         property string foo: "foo"
         delegate: Text {
@@ -16,6 +18,8 @@ Item {
 
     ListView {
         id: listView2
+        width: 100
+        height: 100
         model: 1
         delegate: Text {
             required property int index
@@ -49,6 +53,8 @@ Item {
             }
 
             ListView {
+                width: 100
+                height: 100
                 id: innerListView
                 model: listModel
                 delegate: innerComponent
