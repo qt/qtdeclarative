@@ -35,10 +35,10 @@ T.CheckBox {
         source: Qt.resolvedUrl("images/checkbox-indicator-background")
         ImageSelector on source {
             states: [
-                {"tristate": control.checkState === Qt.PartiallyChecked},
-                {"icon": control.checkState !== Qt.PartiallyChecked},
+                {"partialicon": control.checkState === Qt.PartiallyChecked},
                 {"disabled": !control.enabled},
                 {"checked": control.checkState === Qt.Checked},
+                {"partially-checked": control.checkState === Qt.PartiallyChecked},
                 {"pressed": control.down},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
@@ -52,11 +52,10 @@ T.CheckBox {
             source: Qt.resolvedUrl("images/checkbox-indicator")
             ImageSelector on source {
                 states: [
-                    {"icon": control.checkState !== Qt.PartiallyChecked},
                     {"partialicon": control.checkState === Qt.PartiallyChecked},
-                    {"tristate": control.checkState === Qt.PartiallyChecked},
                     {"disabled": !control.enabled},
                     {"checked": control.checkState === Qt.Checked},
+                    {"partially-checked": control.checkState === Qt.PartiallyChecked},
                     {"pressed": control.down},
                     {"focused": control.visualFocus},
                     {"mirrored": control.mirrored},
@@ -87,9 +86,9 @@ T.CheckBox {
 
         ImageSelector on source {
             states: [
-                {"tristate": control.checkState === Qt.PartiallyChecked},
-                {"disabled": !control.enabled},
                 {"checked": control.checkState === Qt.Checked},
+                {"partially-checked": control.checkState === Qt.PartiallyChecked},
+                {"disabled": !control.enabled},
                 {"pressed": control.down},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},

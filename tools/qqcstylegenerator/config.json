@@ -19,6 +19,30 @@
         }
     },
     {
+        "name": "CheckBox",
+        "copy": ":/CheckBox.qml",
+        "component set": "CheckBoxTemplate",
+        "atoms": {
+            "background": "CheckBoxBackground, background (image)",
+            "indicator": "CheckBoxIndicator, indicator (image)",
+            "indicator-background": "CheckBoxIndicator, indicatorBackground (image)"
+        },
+        "states": {
+            "normal": "normal",
+            "disabled": "disabled",
+            "pressed": "pressed",
+            "hovered": "hovered",
+            "checked": "checked",
+            "checked-disabled": "checkedDisabled",
+            "checked-hovered": "checkedHovered",
+            "checked-pressed": "checkedPressed",
+            "partially-checked": "partiallyChecked",
+            "partially-checked-disabled": "partiallyCheckedDisabled",
+            "partially-checked-pressed": "partiallyCheckedPressed",
+            "partially-checked-hovered": "partiallyCheckedHovered"
+        }
+    },
+    {
         "name": "Switch",
         "copy": ":/Switch.qml",
         "component set": "SwitchTemplate",
