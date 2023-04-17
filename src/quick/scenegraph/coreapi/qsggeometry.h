@@ -30,8 +30,6 @@ public:
         StaticPattern       = 3
     };
 
-    // Equivalents to GL_* drawing modes.
-    // Keep in sync with GL headers.
     enum DrawingMode {
         DrawPoints = 0x0000,
         DrawLines = 0x0001,
@@ -42,8 +40,6 @@ public:
         DrawTriangleFan = 0x0006
     };
 
-    // Equivalents to GL_BYTE and similar type constants.
-    // Keep in sync with GL headers.
     enum Type {
         ByteType = 0x1400,
         UnsignedByteType = 0x1401,
