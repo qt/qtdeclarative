@@ -44,6 +44,7 @@ qt_internal_add_module(QmlDomPrivate
     PUBLIC_LIBRARIES
         Qt::QmlPrivate
         Qt::QmlCompilerPrivate
+    NO_UNITY_BUILD
 )
 
 #### Keys ignored in scope 1:.:.:qmldom.pro:<TRUE>:
