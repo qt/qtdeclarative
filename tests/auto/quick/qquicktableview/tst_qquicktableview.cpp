@@ -212,6 +212,7 @@ private slots:
     void testSelectableStartPosEndPos();
     void testSelectableStartPosEndPosOutsideView();
     void testSelectableScrollTowardsPos();
+    void resettingRolesRespected();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -3972,6 +3973,20 @@ void tst_QQuickTableView::testSelectableScrollTowardsPos()
     tableViewPrivate->scrollTowardsSelectionPoint(topLeft, step);
     QCOMPARE(tableView->contentX(), 0);
     QCOMPARE(tableView->contentY(), 0);
+}
+
+void tst_QQuickTableView::resettingRolesRespected()
+{
+    LOAD_TABLEVIEW("resetModelData.qml");
+
+    TestModel model(1, 1);
+    tableView->setModel(QVariant::fromValue(&model));
+
+    WAIT_UNTIL_POLISHED;
+
+    QVERIFY(!tableView->property("success").toBool());
+    model.useCustomRoleNames(true);
+    QTRY_VERIFY(tableView->property("success").toBool());
 }
 
 QTEST_MAIN(tst_QQuickTableView)
