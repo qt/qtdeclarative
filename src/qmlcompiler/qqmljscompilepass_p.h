@@ -32,6 +32,7 @@ public:
     enum RegisterShortcuts {
         InvalidRegister = -1,
         Accumulator = QV4::CallData::Accumulator,
+        This = QV4::CallData::This,
         FirstArgument = QV4::CallData::OffsetCount
     };
 

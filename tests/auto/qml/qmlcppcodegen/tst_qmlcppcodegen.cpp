@@ -179,6 +179,7 @@ private slots:
     void boolPointerMerge();
     void mergedObjectReadWrite();
     void listConversion();
+    void thisObject();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3611,7 +3612,16 @@ void tst_QmlCppCodegen::listConversion()
         QVariant::fromValue<qsizetype>(3),
         QVariant::fromValue<Person *>(nullptr)
     }));
+}
 
+void tst_QmlCppCodegen::thisObject()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/thisObject.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("warned").value<QObject *>(), o.data());
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

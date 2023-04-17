@@ -804,6 +804,12 @@ void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
     qmlregister(TypeAndRevisionsRegistration, &type);
 }
 
+QObject *AOTCompiledContext::thisObject() const
+{
+    return static_cast<QV4::MetaTypesStackFrame *>(engine->handle()->currentStackFrame)
+            ->thisObject();
+}
+
 QQmlEngine *AOTCompiledContext::qmlEngine() const
 {
     return qmlContext ? qmlContext->engine() : nullptr;

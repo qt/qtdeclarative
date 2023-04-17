@@ -192,6 +192,7 @@ set(qml_files
     text.qml
     themerbad.qml
     themergood.qml
+    thisObject.qml
     throwObjectName.qml
     toString.qml
     translation.qml

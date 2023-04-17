@@ -1520,8 +1520,22 @@ void QQmlJSTypePropagator::generate_UnwindToLabel(int level, int offset)
 
 void QQmlJSTypePropagator::generate_DeadTemporalZoneCheck(int name)
 {
-    Q_UNUSED(name)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    const auto fail = [this, name]() {
+        setError(u"Cannot statically assert the dead temporal zone check for %1"_s.arg(
+                name ? m_jsUnitGenerator->stringForIndex(name) : u"the anonymous accumulator"_s));
+    };
+
+    const QQmlJSRegisterContent in = m_state.accumulatorIn();
+    if (in.isConversion()) {
+        for (const QQmlJSScope::ConstPtr &origin : in.conversionOrigins()) {
+            if (!m_typeResolver->equals(origin, m_typeResolver->emptyType()))
+                continue;
+            fail();
+            break;
+        }
+    } else if (m_typeResolver->registerContains(in, m_typeResolver->emptyType())) {
+        fail();
+    }
 }
 
 void QQmlJSTypePropagator::generate_ThrowException()
@@ -1703,7 +1717,7 @@ void QQmlJSTypePropagator::generate_CreateRestParameter(int argIndex)
 
 void QQmlJSTypePropagator::generate_ConvertThisToObject()
 {
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    setRegister(This, m_typeResolver->globalType(m_typeResolver->qObjectType()));
 }
 
 void QQmlJSTypePropagator::generate_LoadSuperConstructor()
@@ -2161,9 +2175,8 @@ void QQmlJSTypePropagator::generate_Sub(int lhs)
 
 void QQmlJSTypePropagator::generate_InitializeBlockDeadTemporalZone(int firstReg, int count)
 {
-    Q_UNUSED(firstReg)
-    Q_UNUSED(count)
-    // Ignore. We reject uninitialized values anyway.
+    for (int reg = firstReg, end = firstReg + count; reg < end; ++reg)
+        setRegister(reg, m_typeResolver->globalType(m_typeResolver->emptyType()));
 }
 
 void QQmlJSTypePropagator::generate_ThrowOnNullOrUndefined()
@@ -2270,6 +2283,8 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
     case QV4::Moth::Instr::Type::PushCatchContext:
     case QV4::Moth::Instr::Type::UnwindDispatch:
     case QV4::Moth::Instr::Type::InitializeBlockDeadTemporalZone:
+    case QV4::Moth::Instr::Type::ConvertThisToObject:
+    case QV4::Moth::Instr::Type::DeadTemporalZoneCheck:
         if (m_state.changedRegisterIndex() == Accumulator && !m_error->isValid()) {
             setError(u"Instruction is not expected to populate the accumulator"_s);
             return;

@@ -623,6 +623,7 @@ namespace QQmlPrivate
             qintptr extraData;
         };
 
+        QObject *thisObject() const;
         QQmlEngine *qmlEngine() const;
 
         QJSValue jsMetaType(int index) const;

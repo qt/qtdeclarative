@@ -175,7 +175,9 @@ QT_WARNING_POP
             else
                 result.code += u' ';
 
-            if (!registerIsArgument && registerIndex != Accumulator
+            if (!registerIsArgument
+                    && registerIndex != Accumulator
+                    && registerIndex != This
                     && !m_typeResolver->registerIsStoredIn(
                         function->registerTypes[registerIndex - firstRegisterIndex()],
                         m_typeResolver->voidType())) {
@@ -1902,7 +1904,8 @@ void QQmlJSCodeGenerator::generate_UnwindToLabel(int level, int offset)
 void QQmlJSCodeGenerator::generate_DeadTemporalZoneCheck(int name)
 {
     Q_UNUSED(name)
-    BYTECODE_UNIMPLEMENTED();
+    // Nothing to do here. If we have statically asserted the dtz check in the type propagator
+    // the value cannot be empty. Otherwise we can't get here.
 }
 
 void QQmlJSCodeGenerator::generate_ThrowException()
@@ -2121,7 +2124,7 @@ void QQmlJSCodeGenerator::generate_CreateRestParameter(int argIndex)
 
 void QQmlJSCodeGenerator::generate_ConvertThisToObject()
 {
-    BYTECODE_UNIMPLEMENTED();
+    m_body += changedRegisterVariable() + u" = aotContext->thisObject();\n"_s;
 }
 
 void QQmlJSCodeGenerator::generate_LoadSuperConstructor()

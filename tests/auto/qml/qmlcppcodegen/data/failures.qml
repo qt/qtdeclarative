@@ -70,4 +70,18 @@ QtObject {
     function readTracks(metadataList : list<badType>): int {
         return metadataList.length
     }
+
+    function dtzFail() : int {
+        for (var a = 10; a < 20; ++a) {
+            switch (a) {
+            case 11:
+                let b = 5;
+                break;
+            case 10:
+                console.log(b);
+                break;
+            }
+        }
+        return a;
+    }
 }

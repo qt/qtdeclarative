@@ -49,6 +49,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     m_varType = builtinTypes.type(u"QVariant"_s).scope;
     m_jsValueType = builtinTypes.type(u"QJSValue"_s).scope;
     m_listPropertyType = builtinTypes.type(u"QQmlListProperty<QObject>"_s).scope;
+    m_qObjectType = builtinTypes.type(u"QObject"_s).scope;
     m_qObjectListType = builtinTypes.type(u"QObjectList"_s).scope;
 
     QQmlJSScope::Ptr emptyType = QQmlJSScope::create();
