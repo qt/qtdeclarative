@@ -105,6 +105,14 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt
         return;
 
     const QQmlScriptStringPrivate *scriptPrivate = script.d.data();
+    if (!scriptPrivate) {
+        // A null QQmlScriptStringPrivate is an empty expression without context.
+        // We may still want the explicitly passed context, though.
+        if (ctxt)
+            d->init(QQmlContextData::get(ctxt), QString(), scope);
+        return;
+    }
+
     if (!ctxt && (!scriptPrivate->context || !scriptPrivate->context->isValid()))
         return;
 
