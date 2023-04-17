@@ -217,6 +217,9 @@ private slots:
 
     void bindToNonQObjectTarget();
     void assignVariantList();
+
+    void listAssignmentSignals();
+
 private:
     QQmlEngine engine;
 };
@@ -2542,6 +2545,19 @@ void tst_qqmlproperty::assignVariantList()
     ListHolder *holder = qobject_cast<ListHolder *>(o.data());
     const QList<double> doubleList = {1.1, 2.2, 3.3, 11, 5.25, 11};
     QCOMPARE(holder->doubleList(), doubleList);
+}
+
+void tst_qqmlproperty::listAssignmentSignals()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("listAssignmentSignals.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+
+    QCOMPARE(root->property("signalCounter").toInt(), 1);
+    QMetaObject::invokeMethod(root.get(), "assignList");
+    QCOMPARE(root->property("signalCounter").toInt(), 2);
 }
 
 QTEST_MAIN(tst_qqmlproperty)

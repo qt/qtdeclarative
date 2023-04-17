@@ -1549,18 +1549,26 @@ bool QQmlPropertyPrivate::write(
             if (valueMetaObject.isNull())
                 return false;
 
-            QQmlListProperty<void> prop;
+            QQmlListProperty<QObject> prop;
             property.readProperty(object, &prop);
 
-            if (!prop.clear)
+            if (!prop.clear || !prop.append)
                 return false;
 
-            prop.clear(&prop);
+            const bool useNonsignalingListOps = prop.clear == &QQmlVMEMetaObject::list_clear
+                    && prop.append == &QQmlVMEMetaObject::list_append;
+
+            auto propClear =
+                    useNonsignalingListOps ? &QQmlVMEMetaObject::list_clear_nosignal : prop.clear;
+            auto propAppend =
+                    useNonsignalingListOps ? &QQmlVMEMetaObject::list_append_nosignal : prop.append;
+
+            propClear(&prop);
 
             const auto doAppend = [&](QObject *o) {
                 if (o && !QQmlMetaObject::canConvert(o, valueMetaObject))
                     o = nullptr;
-                prop.append(&prop, o);
+                propAppend(&prop, o);
             };
 
             if (variantMetaType == QMetaType::fromType<QQmlListReference>()) {
@@ -1573,6 +1581,10 @@ bool QQmlPropertyPrivate::write(
                     doAppend(list.at(ii));
             } else if (!iterateQObjectContainer(variantMetaType, value.data(), doAppend)) {
                 doAppend(QQmlMetaType::toQObject(value));
+            }
+            if (useNonsignalingListOps) {
+                Q_ASSERT(QQmlVMEMetaObject::get(object));
+                QQmlVMEResolvedList(&prop).activateSignal();
             }
         } else if (variantMetaType == propertyMetaType) {
             QVariant v = value;
