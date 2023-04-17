@@ -464,7 +464,10 @@ TestCase {
         ];
         for (var i = 0; i < data.length; ++i) {
             var row = data[i];
-            row.tag = "delegate" + row.index + " offset=" + row.offset + " expectedDisplacement=" + row.expectedDisplacement;
+            row.tag = "count=" + row.count
+                + " delegate" + row.index
+                + " offset=" + row.offset
+                + " expectedDisplacement=" + row.expectedDisplacement;
         }
         return data;
     }
