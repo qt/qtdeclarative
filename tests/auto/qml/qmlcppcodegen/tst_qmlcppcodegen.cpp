@@ -178,6 +178,7 @@ private slots:
     void ambiguousAs();
     void boolPointerMerge();
     void mergedObjectReadWrite();
+    void listConversion();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3581,6 +3582,24 @@ void tst_QmlCppCodegen::mergedObjectReadWrite()
                         "TypeError: Value is null and could not be converted to an object"));
         QScopedPointer<QObject> o(c.create());
         QVERIFY(!o.isNull());
+    }
+}
+
+void tst_QmlCppCodegen::listConversion()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/listConversion.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QQmlListProperty<QObject> list = o->property("o").value<QQmlListProperty<QObject>>();
+    QCOMPARE(list.count(&list), 3);
+    for (int i = 0; i < 3; ++i) {
+        QObject *entry = list.at(&list, i);
+        Person *person = qobject_cast<Person *>(entry);
+        QVERIFY(person);
+        QCOMPARE(person->name(), u"Horst %1"_s.arg(i + 1));
     }
 }
 

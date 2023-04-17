@@ -1136,6 +1136,12 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     if (equals(to, m_boolType))
         return true;
 
+    if (from->isListProperty()
+            && to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
+            && canConvertFromTo(from->valueType(), to->valueType())) {
+        return true;
+    }
+
     return selectConstructor(to, from, nullptr).isValid();
 }
 

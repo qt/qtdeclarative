@@ -137,6 +137,7 @@ set(qml_files
     library.js
     letAndConst.qml
     listAsArgument.qml
+    listConversion.qml
     listIndices.qml
     listPropertyAsModel.qml
     listlength.qml

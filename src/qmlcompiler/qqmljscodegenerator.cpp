@@ -3312,6 +3312,13 @@ QString QQmlJSCodeGenerator::convertStored(
         return u"true"_s;
     }
 
+    if (from->isListProperty()
+            && to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
+            && to->valueType()->isReferenceType()
+            && !to->isListProperty()) {
+        return variable + u".toList<"_s + to->internalName() + u">()"_s;
+    }
+
     bool isExtension = false;
     if (const auto ctor = m_typeResolver->selectConstructor(to, from, &isExtension); ctor.isValid()) {
         const auto argumentTypes = ctor.parameters();
