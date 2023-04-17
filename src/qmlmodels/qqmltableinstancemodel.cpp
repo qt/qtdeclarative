@@ -436,11 +436,15 @@ void QQmlTableInstanceModel::setModel(const QVariant &model)
     // needs to stay in sync with the model. So we need to drain the pool
     // completely when the model changes.
     drainReusableItemsPool(0);
-    if (auto const aim = abstractItemModel())
+    if (auto const aim = abstractItemModel()) {
         disconnect(aim, &QAbstractItemModel::dataChanged, this, &QQmlTableInstanceModel::dataChangedCallback);
+        disconnect(aim, &QAbstractItemModel::modelAboutToBeReset, this, &QQmlTableInstanceModel::modelAboutToBeResetCallback);
+    }
     m_adaptorModel.setModel(model);
-    if (auto const aim = abstractItemModel())
+    if (auto const aim = abstractItemModel()) {
         connect(aim, &QAbstractItemModel::dataChanged, this, &QQmlTableInstanceModel::dataChangedCallback);
+        connect(aim, &QAbstractItemModel::modelAboutToBeReset, this, &QQmlTableInstanceModel::modelAboutToBeResetCallback);
+    }
 }
 
 void QQmlTableInstanceModel::dataChangedCallback(const QModelIndex &begin, const QModelIndex &end, const QVector<int> &roles)
@@ -456,6 +460,21 @@ void QQmlTableInstanceModel::dataChangedCallback(const QModelIndex &begin, const
         const int rowIndex = begin.row() + (columnIndex * rows());
         m_adaptorModel.notify(m_modelItems.values(), rowIndex, numberOfRowsChanged, roles);
     }
+}
+
+void QQmlTableInstanceModel::modelAboutToBeResetCallback()
+{
+    // When the model is reset, we can no longer rely on any of the data it has
+    // provided us so far. Normally it's enough for the view to recreate all the
+    // delegate items in that case, except if the model roles has changed as well
+    // (since those are cached by QQmlAdaptorModel / Accessors). For the latter case, we
+    // simply set the model once more in the delegate model to rebuild everything.
+    auto const aim = abstractItemModel();
+    auto oldRoleNames = aim->roleNames();
+    QObject::connect(aim, &QAbstractItemModel::modelReset, this, [this, aim, oldRoleNames](){
+        if (oldRoleNames != aim->roleNames())
+            setModel(model());
+    }, Qt::SingleShotConnection);
 }
 
 QQmlComponent *QQmlTableInstanceModel::delegate() const
