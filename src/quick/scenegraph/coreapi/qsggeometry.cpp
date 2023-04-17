@@ -496,13 +496,18 @@ const void *QSGGeometry::indexData() const
 
     Specifies the drawing mode, also called primitive topology.
 
+    \note Starting with Qt 6 the scene graph only exposes topologies that are
+    supported across all the supported 3D graphics APIs. As a result, the
+    values \c DrawLineLoop and \c DrawTriangleFan are no longer supported at
+    run time in Qt 6, even though the enum values themselves are still present.
+
     \value DrawPoints
     \value DrawLines
-    \value DrawLineLoop
+    \omitvalue DrawLineLoop
     \value DrawLineStrip
     \value DrawTriangles
     \value DrawTriangleStrip
-    \value DrawTriangleFan
+    \omitvalue DrawTriangleFan
  */
 
 /*!
@@ -536,10 +541,10 @@ void QSGGeometry::setDrawingMode(unsigned int mode)
 }
 
 /*!
-    Gets the current line or point width or to be used for this
-    geometry. This property only applies to line width when the drawingMode
-    is DrawLines, DarwLineStrip, or DrawLineLoop. When supported, it also
-    applies to point size when the drawingMode is DrawPoints.
+    Gets the current line or point width or to be used for this geometry. This
+    property only applies to line width when the drawingMode is DrawLines or
+    DrawLineStrip. When supported, it also applies to point size when the
+    drawingMode is DrawPoints.
 
     The default value is \c 1.0
 
@@ -558,10 +563,10 @@ float QSGGeometry::lineWidth() const
 }
 
 /*!
-    Sets the line or point width to be used for this geometry to \a
-    width. This property only applies to line width when the drawingMode is
-    DrawLines, DrawLineStrip, or DrawLineLoop. When supported, it also
-    applies to point size when the drawingMode is DrawPoints.
+    Sets the line or point width to be used for this geometry to \a width. This
+    property only applies to line width when the drawingMode is DrawLines or
+    DrawLineStrip. When supported, it also applies to point size when the
+    drawingMode is DrawPoints.
 
     \note Support for point and line drawing may be limited at run time,
     depending on the platform and graphics API. For example, some APIs do
