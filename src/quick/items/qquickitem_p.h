@@ -338,7 +338,7 @@ public:
 #endif // QT_NO_DEBUG_STREAM
     };
 
-    // call QQuickItemChangeListener PMF
+    // call QQuickItemChangeListener
     template <typename Fn, typename ...Args>
     void notifyChangeListeners(QQuickItemPrivate::ChangeTypes changeTypes, Fn &&function, Args &&...args)
     {
@@ -347,20 +347,12 @@ public:
 
         const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
         for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & changeTypes)
-                (change.listener->*function)(args...);
-        }
-    }
-    // call functor
-    template <typename Fn>
-    void notifyChangeListeners(QQuickItemPrivate::ChangeTypes changeTypes, Fn &&function) {
-        if (changeListeners.isEmpty())
-            return;
-
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & changeTypes)
-                function(change);
+            if (change.types & changeTypes) {
+                if constexpr (std::is_member_function_pointer_v<Fn>)
+                    (change.listener->*function)(args...);
+                else
+                    function(change, args...);
+            }
         }
     }
 
