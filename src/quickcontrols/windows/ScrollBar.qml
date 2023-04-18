@@ -7,6 +7,8 @@ import QtQuick.NativeStyle as NativeStyle
 NativeStyle.DefaultScrollBar {
     id: controlRoot
 
+    readonly property bool __notCustomizable: true
+
     topPadding:    orientation === Qt.Vertical   ? controlRoot.__decreaseVisual.indicator.height : 0
     bottomPadding: orientation === Qt.Vertical   ? controlRoot.__increaseVisual.indicator.height : 0
     leftPadding:   orientation === Qt.Horizontal ? controlRoot.__decreaseVisual.indicator.width : 0
@@ -15,6 +17,8 @@ NativeStyle.DefaultScrollBar {
     contentItem: NativeStyle.ScrollBar {
         control: controlRoot
         subControl: NativeStyle.ScrollBar.Handle
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 
     NativeStyle.ScrollBar {
@@ -29,7 +33,6 @@ NativeStyle.DefaultScrollBar {
         subControl: NativeStyle.ScrollBar.Handle
         overrideState: NativeStyle.StyleItem.AlwaysHovered
         opacity: controlRoot.hovered || control.pressed ? 1 : 0
-        visible: contentItem instanceof NativeStyle.StyleItem
         Behavior on opacity { NumberAnimation { duration: contentItem.transitionDuration } }
     }
 
@@ -47,6 +50,8 @@ NativeStyle.DefaultScrollBar {
         control: controlRoot
         subControl: NativeStyle.ScrollBar.Groove
         overrideState: NativeStyle.ScrollBar.NeverHovered
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 
     __decreaseVisual.indicator: NativeStyle.ScrollBar {
@@ -54,9 +59,10 @@ NativeStyle.DefaultScrollBar {
         subControl: NativeStyle.ScrollBar.SubLine
         overrideState: NativeStyle.ScrollBar.AlwaysHovered
         opacity: controlRoot.__decreaseVisual.hovered ? 1 : 0
-        visible: contentItem instanceof NativeStyle.StyleItem
         Behavior on opacity { NumberAnimation { duration: contentItem.transitionDuration } }
         useNinePatchImage: false
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 
     NativeStyle.ScrollBar {
@@ -64,7 +70,6 @@ NativeStyle.DefaultScrollBar {
         subControl: NativeStyle.ScrollBar.SubLine
         overrideState: NativeStyle.ScrollBar.AlwaysSunken
         opacity: controlRoot.__decreaseVisual.pressed ? 1 : 0
-        visible: contentItem instanceof NativeStyle.StyleItem
         useNinePatchImage: false
         z: 1
     }
@@ -76,9 +81,10 @@ NativeStyle.DefaultScrollBar {
         y: orientation === Qt.Vertical ? controlRoot.height - height : 0
         overrideState: NativeStyle.ScrollBar.AlwaysHovered
         opacity: controlRoot.__increaseVisual.hovered ? 1 : 0
-        visible: contentItem instanceof NativeStyle.StyleItem
         Behavior on opacity { NumberAnimation { duration: contentItem.transitionDuration } }
         useNinePatchImage: false
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 
     NativeStyle.ScrollBar {
@@ -89,7 +95,6 @@ NativeStyle.DefaultScrollBar {
         z: 1
         overrideState: NativeStyle.ScrollBar.AlwaysSunken
         opacity: controlRoot.__increaseVisual.pressed ? 1 : 0
-        visible: contentItem instanceof NativeStyle.StyleItem
         useNinePatchImage: false
     }
 }
