@@ -2399,7 +2399,7 @@ bool QQuickItemPrivate::canAcceptTabFocus(QQuickItem *item)
         return true;
 
 #if QT_CONFIG(accessibility)
-    QAccessible::Role role = QQuickItemPrivate::get(item)->accessibleRole();
+    QAccessible::Role role = QQuickItemPrivate::get(item)->effectiveAccessibleRole();
     if (role == QAccessible::EditableText || role == QAccessible::Table || role == QAccessible::List) {
         return true;
     } else if (role == QAccessible::ComboBox || role == QAccessible::SpinBox) {
@@ -9314,13 +9314,20 @@ QQuickItemPrivate::ExtraData::ExtraData()
 
 
 #if QT_CONFIG(accessibility)
-QAccessible::Role QQuickItemPrivate::accessibleRole() const
+QAccessible::Role QQuickItemPrivate::effectiveAccessibleRole() const
 {
     Q_Q(const QQuickItem);
-    QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, false));
-    if (accessibleAttached)
-        return accessibleAttached->role();
+    auto *attached = qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, false);
+    auto role = QAccessible::NoRole;
+    if (auto *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(attached))
+        role = accessibleAttached->role();
+    if (role == QAccessible::NoRole)
+        role = accessibleRole();
+    return role;
+}
 
+QAccessible::Role QQuickItemPrivate::accessibleRole() const
+{
     return QAccessible::NoRole;
 }
 #endif

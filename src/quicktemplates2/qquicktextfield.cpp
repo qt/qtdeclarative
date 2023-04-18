@@ -319,7 +319,7 @@ void QQuickTextFieldPrivate::accessibilityActiveChanged(bool active)
     Q_Q(QQuickTextField);
     QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
     Q_ASSERT(accessibleAttached);
-    accessibleAttached->setRole(accessibleRole());
+    accessibleAttached->setRole(effectiveAccessibleRole());
     accessibleAttached->set_readOnly(m_readOnly);
     accessibleAttached->set_passwordEdit((m_echoMode == QQuickTextField::Password || m_echoMode == QQuickTextField::PasswordEchoOnEdit) ? true : false);
     accessibleAttached->setDescription(placeholder);

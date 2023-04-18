@@ -47,6 +47,7 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/private/qquickaccessibleattached_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 
@@ -2759,6 +2760,19 @@ QFont QQuickPopup::defaultFont() const
 }
 
 #if QT_CONFIG(accessibility)
+QAccessible::Role QQuickPopup::effectiveAccessibleRole() const
+{
+    auto *attached = qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, false);
+
+    auto role = QAccessible::NoRole;
+    if (auto *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(attached))
+        role = accessibleAttached->role();
+    if (role == QAccessible::NoRole)
+        role = accessibleRole();
+
+    return role;
+}
+
 QAccessible::Role QQuickPopup::accessibleRole() const
 {
     return QAccessible::Dialog;

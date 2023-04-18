@@ -2187,12 +2187,13 @@ QAccessible::Role QQuickControl::accessibleRole() const
 
 void QQuickControl::accessibilityActiveChanged(bool active)
 {
+    Q_D(QQuickControl);
     if (!active)
         return;
 
     QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
     Q_ASSERT(accessibleAttached);
-    accessibleAttached->setRole(accessibleRole());
+    accessibleAttached->setRole(d->effectiveAccessibleRole());
 }
 #endif
 
