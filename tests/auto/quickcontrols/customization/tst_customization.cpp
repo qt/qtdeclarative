@@ -375,8 +375,7 @@ void tst_customization::override_data()
             "Windows",
             {
                 "Button", "CheckBox", "ComboBox", "Frame", "GroupBox", "ProgressBar", "RadioButton",
-                "SelectionRectangle", "Slider", "SpinBox", "TextArea", "TextField"
-                // TODO: ScrollView
+                "SelectionRectangle", "ScrollBar", "Slider", "SpinBox", "TextArea", "TextField"
             }
         }
     };
