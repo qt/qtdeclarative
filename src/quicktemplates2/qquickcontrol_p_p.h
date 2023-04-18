@@ -161,8 +161,14 @@ public:
     virtual void cancelBackground();
     virtual void executeBackground(bool complete = false);
 
+    enum class UnhideVisibility {
+        Show,
+        Hide
+    };
+
     static void hideOldItem(QQuickItem *item);
-    static void unhideOldItem(QQuickControl *control, QQuickItem *item);
+    static void unhideOldItem(QQuickControl *control, QQuickItem *item,
+        UnhideVisibility visibility = UnhideVisibility::Show);
 
     void updateBaselineOffset();
 

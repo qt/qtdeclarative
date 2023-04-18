@@ -954,11 +954,11 @@ void QQuickScrollBarAttachedPrivate::initHorizontal()
 
     // If a scroll bar was previously hidden (due to e.g. setting a new contentItem
     // on a ScrollView), we need to make sure that we un-hide it.
-    // We don't bother checking if the item is actually the old one, because
-    // if it's not, all of the things the function does (setting parent, visibility, etc.)
-    // should be no-ops anyway.
-    if (auto control = qobject_cast<QQuickControl*>(q_func()->parent()))
-        QQuickControlPrivate::unhideOldItem(control, horizontal);
+    if (auto control = qobject_cast<QQuickControl*>(q_func()->parent())) {
+        const auto visibility = horizontal->policy() != QQuickScrollBar::AlwaysOff
+            ? QQuickControlPrivate::UnhideVisibility::Show : QQuickControlPrivate::UnhideVisibility::Hide;
+        QQuickControlPrivate::unhideOldItem(control, horizontal, visibility);
+    }
 
     layoutHorizontal();
     horizontal->setSize(area->property("widthRatio").toReal());
@@ -981,8 +981,11 @@ void QQuickScrollBarAttachedPrivate::initVertical()
     if (parent && parent == flickable->parentItem())
         vertical->stackAfter(flickable);
 
-    if (auto control = qobject_cast<QQuickControl*>(q_func()->parent()))
-        QQuickControlPrivate::unhideOldItem(control, vertical);
+    if (auto control = qobject_cast<QQuickControl*>(q_func()->parent())) {
+        const auto visibility = vertical->policy() != QQuickScrollBar::AlwaysOff
+            ? QQuickControlPrivate::UnhideVisibility::Show : QQuickControlPrivate::UnhideVisibility::Hide;
+        QQuickControlPrivate::unhideOldItem(control, vertical, visibility);
+    }
 
     layoutVertical();
     vertical->setSize(area->property("heightRatio").toReal());
