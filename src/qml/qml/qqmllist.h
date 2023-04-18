@@ -23,6 +23,8 @@ struct QMetaObject;
 template<typename T>
 class QQmlListProperty {
 public:
+    using value_type = T*;
+
     using AppendFunction = void (*)(QQmlListProperty<T> *, T *);
     using CountFunction = qsizetype (*)(QQmlListProperty<T> *);
     using AtFunction = T *(*)(QQmlListProperty<T> *, qsizetype);

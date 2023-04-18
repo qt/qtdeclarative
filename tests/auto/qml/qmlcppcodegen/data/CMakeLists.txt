@@ -130,6 +130,10 @@ set(qml_files
     interceptor.qml
     isnan.qml
     javaScriptArgument.qml
+    jsArrayMethods.qml
+    jsArrayMethodsUntyped.qml
+    jsArrayMethodsWithParams.qml
+    jsArrayMethodsWithParamsUntyped.qml
     jsMathObject.qml
     jsimport.qml
     jsmoduleimport.qml

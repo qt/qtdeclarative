@@ -147,6 +147,7 @@ qt_internal_add_qml_module(Qml
         debugger/qqmlprofiler_p.h
         inlinecomponentutils_p.h
         jsapi/qjsengine.cpp jsapi/qjsengine.h jsapi/qjsengine_p.h
+        jsapi/qjslist.cpp jsapi/qjslist.h
         jsapi/qjsmanagedvalue.cpp jsapi/qjsmanagedvalue.h
         jsapi/qjsprimitivevalue.cpp jsapi/qjsprimitivevalue.h
         jsapi/qjsvalue.cpp jsapi/qjsvalue.h jsapi/qjsvalue_p.h

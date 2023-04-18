@@ -180,6 +180,9 @@ private slots:
     void mergedObjectReadWrite();
     void listConversion();
     void thisObject();
+    void jsArrayMethods();
+    void jsArrayMethodsWithParams_data();
+    void jsArrayMethodsWithParams();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3627,6 +3630,128 @@ void tst_QmlCppCodegen::thisObject()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("warned").value<QObject *>(), o.data());
+}
+
+static void listsEqual(QObject *listProp, QObject *array, const char *method)
+{
+    const QByteArray listPropertyPropertyName = QByteArray("listProperty") + method;
+    const QByteArray jsArrayPropertyName = QByteArray("jsArray") + method;
+
+    const QQmlListReference listPropertyProperty(listProp, listPropertyPropertyName.constData());
+    const QVariantList jsArrayProperty = array->property(jsArrayPropertyName.constData()).toList();
+
+    const qsizetype listPropertyCount = listPropertyProperty.count();
+    QCOMPARE(listPropertyCount, jsArrayProperty.count());
+
+    for (qsizetype i = 0; i < listPropertyCount; ++i)
+        QCOMPARE(listPropertyProperty.at(i), jsArrayProperty.at(i).value<QObject *>());
+}
+
+void tst_QmlCppCodegen::jsArrayMethods()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/jsArrayMethods.qml"_s));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QQmlComponent untyped(&engine, QUrl(u"qrc:/qt/qml/TestTypes/jsArrayMethodsUntyped.qml"_s));
+    QVERIFY2(untyped.isReady(), qPrintable(untyped.errorString()));
+    QScopedPointer<QObject> check(untyped.create());
+    QVERIFY(!check.isNull());
+
+    check->setProperty("l1", object->property("l1"));
+    check->setProperty("l2", object->property("l2"));
+    check->setProperty("l3", object->property("l3"));
+
+    QCOMPARE(object->property("listPropertyToString"), object->property("jsArrayToString"));
+    QCOMPARE(object->property("listPropertyToString"), check->property("jsArrayToString"));
+
+    QCOMPARE(object->property("listPropertyIncludes"), object->property("jsArrayIncludes"));
+    QVERIFY(object->property("listPropertyIncludes").toBool());
+
+    QCOMPARE(object->property("listPropertyJoin"), object->property("jsArrayJoin"));
+    QCOMPARE(object->property("listPropertyJoin"), check->property("jsArrayJoin"));
+    QVERIFY(object->property("listPropertyJoin").toString().contains(QStringLiteral("klaus")));
+
+    QCOMPARE(object->property("listPropertyIndexOf"), object->property("jsArrayIndexOf"));
+    QCOMPARE(object->property("listPropertyIndexOf").toInt(), 1);
+
+    QCOMPARE(object->property("listPropertyLastIndexOf"), object->property("jsArrayLastIndexOf"));
+    QCOMPARE(object->property("listPropertyLastIndexOf").toInt(), 5);
+}
+
+void tst_QmlCppCodegen::jsArrayMethodsWithParams_data()
+{
+    QTest::addColumn<int>("i");
+    QTest::addColumn<int>("j");
+    QTest::addColumn<int>("k");
+
+    const int indices[] = {
+        std::numeric_limits<int>::min(),
+        -10, -3, -2, -1, 0, 1, 2, 3, 10,
+        std::numeric_limits<int>::max(),
+    };
+
+    // We cannot test the full cross product. So, take a random sample instead.
+    const qsizetype numIndices = sizeof(indices) / sizeof(int);
+    qsizetype seed = QRandomGenerator::global()->generate();
+    const int numSamples = 4;
+    for (int i = 0; i < numSamples; ++i) {
+        seed = qHash(i, seed);
+        const int vi = indices[qAbs(seed) % numIndices];
+        for (int j = 0; j < numSamples; ++j) {
+            seed = qHash(j, seed);
+            const int vj = indices[qAbs(seed) % numIndices];
+            for (int k = 0; k < numSamples; ++k) {
+                seed = qHash(k, seed);
+                const int vk = indices[qAbs(seed) % numIndices];
+                const QString tag = QLatin1String("%1/%2/%3").arg(
+                        QString::number(vi), QString::number(vj), QString::number(vk));
+                QTest::newRow(qPrintable(tag)) << vi << vj << vk;
+
+                // output all the tags so that we can find out
+                // what combination caused a test to hang.
+                qDebug().noquote() << "scheduling" << tag;
+            }
+        }
+    }
+}
+
+void tst_QmlCppCodegen::jsArrayMethodsWithParams()
+{
+    QFETCH(int, i);
+    QFETCH(int, j);
+    QFETCH(int, k);
+    QQmlEngine engine;
+    QQmlComponent component
+            (&engine, QUrl(u"qrc:/qt/qml/TestTypes/jsArrayMethodsWithParams.qml"_s));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QQmlComponent untyped(
+            &engine, QUrl(u"qrc:/qt/qml/TestTypes/jsArrayMethodsWithParamsUntyped.qml"_s));
+    QVERIFY2(untyped.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.createWithInitialProperties({
+            {QStringLiteral("i"), i},
+            {QStringLiteral("j"), j},
+            {QStringLiteral("k"), k}
+    }));
+    QVERIFY(!object.isNull());
+    QScopedPointer<QObject> check(untyped.createWithInitialProperties({
+            {QStringLiteral("i"), i},
+            {QStringLiteral("j"), j},
+            {QStringLiteral("k"), k}
+    }));
+    QVERIFY(!check.isNull());
+    check->setProperty("l1", object->property("l1"));
+    check->setProperty("l2", object->property("l2"));
+    check->setProperty("l3", object->property("l3"));
+
+    listsEqual(object.data(), object.data(), "Slice");
+    listsEqual(object.data(), check.data(), "Slice");
+    QCOMPARE(object->property("listPropertyIndexOf"), object->property("jsArrayIndexOf"));
+    QCOMPARE(object->property("listPropertyIndexOf"), check->property("jsArrayIndexOf"));
+    QCOMPARE(object->property("listPropertyLastIndexOf"), object->property("jsArrayLastIndexOf"));
+    QCOMPARE(object->property("listPropertyLastIndexOf"), check->property("jsArrayLastIndexOf"));
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

@@ -71,6 +71,7 @@ public:
     QQmlJSScope::ConstPtr jsGlobalObject() const { return m_jsGlobalObject; }
     QQmlJSScope::ConstPtr qObjectType() const { return m_qObjectType; }
     QQmlJSScope::ConstPtr qObjectListType() const { return m_qObjectListType; }
+    QQmlJSScope::ConstPtr arrayType() const { return m_arrayType; }
 
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
     QQmlJSScope::ConstPtr scopeForId(

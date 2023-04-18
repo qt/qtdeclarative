@@ -1737,6 +1737,85 @@ bool QQmlJSCodeGenerator::inlineConsoleMethod(const QString &name, int argc, int
     return true;
 }
 
+bool QQmlJSCodeGenerator::inlineArrayMethod(const QString &name, int base, int argc, int argv)
+{
+    const auto intType = m_typeResolver->int32Type();
+    const auto valueType = registerType(base).storedType()->valueType();
+    const auto boolType = m_typeResolver->boolType();
+    const auto stringType = m_typeResolver->stringType();
+    const auto baseType = registerType(base);
+
+    const QString baseVar = registerVariable(base);
+    const QString qjsListMethod = u"QJSList(&"_s + baseVar + u", aotContext->engine)."
+            + name + u"(";
+
+    addInclude(u"qjslist.h"_s);
+
+    if (name == u"includes" && argc > 0 && argc < 3) {
+        QString call = qjsListMethod
+                + convertStored(registerType(argv).storedType(), valueType,
+                                consumedRegisterVariable(argv));
+        if (argc == 2) {
+            call += u", " + convertStored(registerType(argv + 1).storedType(), intType,
+                                              consumedRegisterVariable(argv + 1));
+        }
+        call += u")";
+
+        m_body += m_state.accumulatorVariableOut + u" = "_s
+                + conversion(boolType, m_state.accumulatorOut(), call) + u";\n"_s;
+        return true;
+    }
+
+    if (name == u"toString" || (name == u"join" && argc < 2)) {
+        QString call = qjsListMethod;
+        if (argc == 1) {
+            call += convertStored(registerType(argv).storedType(), stringType,
+                                  consumedRegisterVariable(argv));
+        }
+        call += u")";
+
+        m_body += m_state.accumulatorVariableOut + u" = "_s
+                + conversion(stringType, m_state.accumulatorOut(), call) + u";\n"_s;
+        return true;
+    }
+
+    if (name == u"slice" && argc < 3) {
+        QString call = qjsListMethod;
+        for (int i = 0; i < argc; ++i) {
+            if (i > 0)
+                call += u", ";
+            call += convertStored(registerType(argv + i).storedType(), intType,
+                                   consumedRegisterVariable(argv + i));
+        }
+        call += u")";
+
+        const auto outType = baseType.storedType()->isListProperty()
+                ? m_typeResolver->globalType(m_typeResolver->qObjectListType())
+                : baseType;
+
+        m_body += m_state.accumulatorVariableOut + u" = "_s
+                + conversion(outType, m_state.accumulatorOut(), call) + u";\n"_s;
+        return true;
+    }
+
+    if ((name == u"indexOf" || name == u"lastIndexOf") && argc > 0 && argc < 3) {
+        QString call = qjsListMethod
+                + convertStored(registerType(argv).storedType(), valueType,
+                                consumedRegisterVariable(argv));
+        if (argc == 2) {
+            call += u", " + convertStored(registerType(argv + 1).storedType(), intType,
+                                          consumedRegisterVariable(argv + 1));
+        }
+        call += u")";
+
+        m_body += m_state.accumulatorVariableOut + u" = "_s
+                + conversion(intType, m_state.accumulatorOut(), call) + u";\n"_s;
+        return true;
+    }
+
+    return false;
+}
+
 void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int argc, int argv)
 {
     INJECT_TRACE_INFO(generate_CallPropertyLookup);
@@ -1763,6 +1842,11 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
         if (m_typeResolver->equals(m_typeResolver->originalContainedType(baseType),
                                    m_typeResolver->stringType())) {
             if (inlineStringMethod(name, base, argc, argv))
+                return;
+        }
+
+        if (baseType.storedType()->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
+            if (inlineArrayMethod(name, base, argc, argv))
                 return;
         }
 
