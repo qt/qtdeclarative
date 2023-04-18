@@ -1,4 +1,4 @@
 [movingItemWithHoverHandler]
 macos  # Can't move cursor (QTBUG-76312)
-sles-15     # (QTBUG-111294)
+sles-15.4     # (QTBUG-111294)
 
