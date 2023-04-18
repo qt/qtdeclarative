@@ -253,6 +253,15 @@ TestCase {
         compare(depthSpy.count, depthChanges)
         compare(control.empty, true)
         compare(emptySpy.count, emptyChanges)
+
+        control.push(item, StackView.PushTransition)
+        compare(depthSpy.count, ++depthChanges)
+        compare(emptySpy.count, ++emptyChanges)
+        compare(control.depth, 1)
+        control.clear(StackView.PopTransition)
+        compare(depthSpy.count, ++depthChanges)
+        compare(emptySpy.count, ++emptyChanges)
+        compare(control.depth, 0)
     }
 
     function test_size() {
