@@ -167,7 +167,7 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypePropagator : public QQmlJSCompileP
     void generate_ThrowOnNullOrUndefined() override;
     void generate_GetTemplateObject(int index) override;
 
-    bool checkForEnumProblems(const QString &propertyName) const;
+    bool checkForEnumProblems(const QQmlJSRegisterContent &base, const QString &propertyName) const;
 
     Verdict startInstruction(QV4::Moth::Instr::Type instr) override;
     void endInstruction(QV4::Moth::Instr::Type instr) override;

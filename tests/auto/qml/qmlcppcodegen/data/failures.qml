@@ -62,4 +62,8 @@ QtObject {
         let a;
         return a;
     }
+
+    function getText(myArr: list<string>): string {
+        myArr.shiftss()
+    }
 }
