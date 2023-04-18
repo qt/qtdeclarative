@@ -379,6 +379,7 @@ qt_internal_add_qml_module(Qml
         WTFReportBacktrace=qmlWTFReportBacktrace
         WTF_EXPORT_PRIVATE= # special case
     INCLUDE_DIRECTORIES
+        ${CMAKE_CURRENT_BINARY_DIR}/.generated
         ${CMAKE_CURRENT_BINARY_DIR}/compiler
         ${CMAKE_CURRENT_BINARY_DIR}/jsruntime
         ${CMAKE_CURRENT_BINARY_DIR}/memory
@@ -393,7 +394,6 @@ qt_internal_add_qml_module(Qml
         ../3rdparty/masm/stubs/runtime
         ../3rdparty/masm/stubs/wtf
         ../3rdparty/masm/wtf
-        .generated
         compiler
         debugger
         jsruntime
