@@ -601,7 +601,10 @@ public:
     virtual void implicitHeightChanged();
 
 #if QT_CONFIG(accessibility)
+    QAccessible::Role effectiveAccessibleRole() const;
+private:
     virtual QAccessible::Role accessibleRole() const;
+public:
 #endif
 
     void setImplicitAntialiasing(bool antialiasing);

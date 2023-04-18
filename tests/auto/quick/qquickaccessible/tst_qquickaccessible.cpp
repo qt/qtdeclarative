@@ -56,6 +56,7 @@ private slots:
     void commonTests();
 
     void quickAttachedProperties();
+    void attachedWins();
     void basicPropertiesTest();
     void hitTest();
     void checkableTest();
@@ -319,6 +320,31 @@ void tst_QQuickAccessible::quickAttachedProperties()
         QCOMPARE(attachedObject->name(), QLatin1String("Explicit"));
         QVERIFY(attachedObject->wasNameExplicitlySet());
     }
+    QTestAccessibility::clearEvents();
+}
+
+// Verify that a role can be explicitly set, and that the values from the
+// attached object are used even if the item has a default role - QTBUG-110114
+void tst_QQuickAccessible::attachedWins()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(R"(
+        import QtQuick
+        import QtQuick.Controls
+        Button {
+            text: "Button"
+            objectName: "button"
+            Accessible.role: Accessible.RadioButton
+            Accessible.description: "Radio Button"
+        })", QUrl());
+    auto button = std::unique_ptr<QObject>(component.create());
+    QVERIFY(button);
+
+    QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(button.get());
+    QVERIFY(iface);
+
+    QCOMPARE(iface->role(), QAccessible::RadioButton);
     QTestAccessibility::clearEvents();
 }
 

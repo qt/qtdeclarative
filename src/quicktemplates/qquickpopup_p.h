@@ -419,7 +419,10 @@ protected:
     virtual QFont defaultFont() const;
 
 #if QT_CONFIG(accessibility)
+    QAccessible::Role effectiveAccessibleRole() const;
+private:
     virtual QAccessible::Role accessibleRole() const;
+protected:
     virtual void accessibilityActiveChanged(bool active);
 #endif
 
