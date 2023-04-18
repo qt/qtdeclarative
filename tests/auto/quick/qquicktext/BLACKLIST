@@ -6,3 +6,5 @@ macos
 opensuse-42.1
 [hAlignVisual]
 sles
+[contentSize]
+sles-15.4 # QTBUG-112360
