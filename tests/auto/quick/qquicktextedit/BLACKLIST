@@ -11,4 +11,5 @@ sles
 # QTBUG-82052
 [linkHover]
 macos ci
+sles-15.4
 
