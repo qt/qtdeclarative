@@ -190,7 +190,7 @@ void QQuickLabelPrivate::accessibilityActiveChanged(bool active)
     Q_Q(QQuickLabel);
     QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
     Q_ASSERT(accessibleAttached);
-    accessibleAttached->setRole(accessibleRole());
+    accessibleAttached->setRole(effectiveAccessibleRole());
     maybeSetAccessibleName(text);
 }
 
