@@ -526,22 +526,21 @@ bool QQuickRangeSliderPrivate::handleRelease(const QPointF &point, ulong timesta
         return true;
     QQuickRangeSliderNodePrivate *pressedNodePrivate = QQuickRangeSliderNodePrivate::get(pressedNode);
 
-    if (q->keepMouseGrab() || q->keepTouchGrab()) {
-        const qreal oldPos = pressedNode->position();
-        qreal pos = positionAt(q, pressedNode->handle(), point);
-        if (snapMode != QQuickRangeSlider::NoSnap)
-            pos = snapPosition(q, pos);
-        qreal val = valueAt(q, pos);
-        if (!qFuzzyCompare(val, pressedNode->value()))
-            pressedNode->setValue(val);
-        else if (snapMode != QQuickRangeSlider::NoSnap)
-            pressedNodePrivate->setPosition(pos);
-        q->setKeepMouseGrab(false);
-        q->setKeepTouchGrab(false);
+    const qreal oldPos = pressedNode->position();
+    qreal pos = positionAt(q, pressedNode->handle(), point);
+    if (snapMode != QQuickRangeSlider::NoSnap)
+        pos = snapPosition(q, pos);
+    qreal val = valueAt(q, pos);
+    if (!qFuzzyCompare(val, pressedNode->value()))
+        pressedNode->setValue(val);
+    else if (snapMode != QQuickRangeSlider::NoSnap)
+        pressedNodePrivate->setPosition(pos);
+    q->setKeepMouseGrab(false);
+    q->setKeepTouchGrab(false);
 
-        if (!qFuzzyCompare(pressedNode->position(), oldPos))
-            emit pressedNode->moved();
-    }
+    if (!qFuzzyCompare(pressedNode->position(), oldPos))
+        emit pressedNode->moved();
+
     pressedNode->setPressed(false);
     pressedNodePrivate->touchId = -1;
     return true;
