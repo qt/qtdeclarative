@@ -233,32 +233,34 @@ private:
         for (const QString &imageState : std::as_const(states).keys()) {
             // Resolve all atoms for the given state
             for (const QString &atomName : atoms.keys()) {
+                m_currentQualifiedAtomName = m_currentControl.toLower()
+                    + "-" + atomName + (imageState == "normal" ? "" : "-" + imageState);
+                m_currentAtomInfo = m_currentQualifiedAtomName
+                    + "; path: " + componentSetName + ", "
+                    + states.value(imageState).toString();
+
                 try {
                     const auto figmaState = states[imageState].toString();
                     const auto atomString = atoms[atomName].toString();
                     const auto atomPath = getAtomPath(atomString);
+                    if (!atomPath.isEmpty())
+                        m_currentAtomInfo += ", " + atomPath;
+
                     const auto atomInputConfig = getAtomConfig(atomString);
                     const auto atom = findAtomObject(atomPath, figmaState, componentSet);
                     const auto figmaId = getString("id", atom);
-
-                    m_currentQualifiedAtomName = m_currentControl.toLower()
-                        + "-" + atomName + (imageState == "normal" ? "" : "-" + imageState);
-                    m_currentQualifiedAtomPath = componentSetName + ", "
-                        + states.value(imageState).toString() + (atomPath.isEmpty() ? "" : ", " + atomPath);
-                    m_currentAtomInfo = m_currentQualifiedAtomName
-                        + "; path: " + m_currentQualifiedAtomPath
-                        + "; id: " + figmaId;
+                    m_currentAtomInfo += "; id: " + figmaId;
 
                     generateAtomAssets(atomInputConfig, atom);
                 } catch (std::exception &e) {
-                    qWarning().noquote() << "Warning! " << m_currentAtomInfo << "; Generate control:" << e.what();
+                    qWarning().nospace().noquote() << "Warning! " << m_currentAtomInfo << "; Generate control: " << e.what();
                 }
             }
 
             try {
                 generatePaddingAndSpacing(controlObj, imageState);
             } catch (std::exception &e) {
-                qWarning().noquote() << "Warning! " << m_currentAtomInfo << "; Padding:" << e.what();
+                qWarning().nospace().noquote() << "Warning! " << m_currentAtomInfo << "; Padding: " << e.what();
             }
         }
     }
@@ -619,7 +621,6 @@ private:
 
     QString m_currentControl;
     QString m_currentQualifiedAtomName;
-    QString m_currentQualifiedAtomPath;
     QString m_currentAtomInfo;
 
     QString m_progressLabel;
