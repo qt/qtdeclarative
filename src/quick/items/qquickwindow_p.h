@@ -179,6 +179,8 @@ public:
     void fireFrameSwapped() { Q_EMIT q_func()->frameSwapped(); }
     void fireAboutToStop() { Q_EMIT q_func()->sceneGraphAboutToStop(); }
 
+    void clearGrabbers(QPointerEvent *event);
+
     QSGRenderContext *context;
     QSGRenderer *renderer;
     QByteArray visualizationMode; // Default renderer supports "clip", "overdraw", "changes", "batches" and blank.
