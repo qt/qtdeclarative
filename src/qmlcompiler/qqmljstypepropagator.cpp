@@ -634,10 +634,11 @@ void QQmlJSTypePropagator::generate_StoreNameStrict(int name)
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
-bool QQmlJSTypePropagator::checkForEnumProblems(const QString &propertyName) const
+bool QQmlJSTypePropagator::checkForEnumProblems(
+        const QQmlJSRegisterContent &base, const QString &propertyName) const
 {
-    if (m_state.accumulatorIn().isEnumeration()) {
-        const auto metaEn = m_state.accumulatorIn().enumeration();
+    if (base.isEnumeration()) {
+        const auto metaEn = base.enumeration();
         if (!metaEn.isScoped()) {
             m_logger->log(u"You cannot access unscoped enum \"%1\" from here."_s.arg(propertyName),
                           qmlRestrictedType, getCurrentSourceLocation());
@@ -753,7 +754,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
         setAccumulator(QQmlJSRegisterContent());
     }
 
-    if (checkForEnumProblems(propertyName))
+    if (checkForEnumProblems(m_state.accumulatorIn(), propertyName))
         return;
 
     if (!m_state.accumulatorOut().isValid()) {
@@ -1045,7 +1046,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         if (callBase.isType() && isCallingProperty(callBase.type(), propertyName))
             return;
 
-        if (checkForEnumProblems(propertyName))
+        if (checkForEnumProblems(callBase, propertyName))
             return;
 
         std::optional<QQmlJSFixSuggestion> fixSuggestion;
