@@ -143,6 +143,8 @@ set(qml_files
     math.qml
     mathMinMax.qml
     mathOperations.qml
+    mergedObjectRead.qml
+    mergedObjectWrite.qml
     methods.qml
     modulePrefix.qml
     moveRegVoid.qml

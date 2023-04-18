@@ -931,6 +931,13 @@ void QQmlJSCodeGenerator::rejectIfNonQObjectOut(const QString &error)
     }
 }
 
+/*!
+ * \internal
+ *
+ * generates a check for the content pointer to be valid.
+ * Returns true if the content pointer needs to be retrieved from a QVariant, or
+ * false if the variable can be used as-is.
+ */
 bool QQmlJSCodeGenerator::generateContentPointerCheck(
         const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
         const QString &variable, const QString &errorMessage)
@@ -948,22 +955,32 @@ bool QQmlJSCodeGenerator::generateContentPointerCheck(
         reject(u"lookup of members of %1 in %2"_s.arg(
                    scope->internalName(), input->internalName()));
     }
-    if (!m_typeResolver->equals(actual.storedType(),
-                                m_typeResolver->varType())) {
+
+    bool needsVarContentConversion = false;
+    QString processedErrorMessage;
+    if (actual.storedType()->isReferenceType()) {
+        // Since we have verified the type in qqmljstypepropagator.cpp we now know
+        // that we can only have either null or the actual type here. Therefore,
+        // it's enough to check the pointer for null.
+        m_body += u"if ("_s + variable + u" == nullptr) {\n    "_s;
+        processedErrorMessage = errorMessage.arg(u"null");
+    } else if (m_typeResolver->equals(actual.storedType(), m_typeResolver->varType())) {
+        // Since we have verified the type in qqmljstypepropagator.cpp we now know
+        // that we can only have either undefined or the actual type here. Therefore,
+        // it's enough to check the QVariant for isValid().
+        m_body += u"if (!"_s + variable + u".isValid()) {\n    "_s;
+        needsVarContentConversion = true;
+        processedErrorMessage = errorMessage.arg(u"undefined");
+    } else {
         reject(u"retrieving metatype from %1"_s.arg(actual.descriptiveName()));
     }
 
-    // Since we have verified the type in qqmljstypepropagator.cpp we now know
-    // that we can only have either undefined or the actual type here. Therefore,
-    // it's enough to check the QVariant for isValid().
-
-    m_body += u"if (!"_s + variable + u".isValid()) {\n    "_s;
     generateSetInstructionPointer();
     m_body += u"    aotContext->engine->throwError(QJSValue::TypeError, "_s;
-    m_body += u"QLatin1String(\"%1\"));\n"_s.arg(errorMessage);
+    m_body += u"QLatin1String(\"%1\"));\n"_s.arg(processedErrorMessage);
     m_body += u"    return "_s + errorReturnValue() + u";\n"_s;
     m_body += u"}\n"_s;
-    return true;
+    return needsVarContentConversion;
 }
 
 QString QQmlJSCodeGenerator::resolveValueTypeContentPointer(
@@ -1057,7 +1074,7 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
     } else if (isReferenceType) {
         const QString inputPointer = resolveQObjectPointer(
                     scope, accumulatorIn, m_state.accumulatorVariableIn,
-                    u"Cannot read property '%1' of undefined"_s.arg(
+                    u"Cannot read property '%1' of %2"_s.arg(
                         m_jsUnitGenerator->lookupName(index)));
         const QString lookup = u"aotContext->getObjectLookup("_s + indexString
                 + u", "_s + inputPointer + u", "_s
@@ -1099,7 +1116,7 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
 
         const QString inputContentPointer = resolveValueTypeContentPointer(
                     scope, accumulatorIn, m_state.accumulatorVariableIn,
-                    u"Cannot read property '%1' of undefined"_s.arg(
+                    u"Cannot read property '%1' of %2"_s.arg(
                         m_jsUnitGenerator->lookupName(index)));
 
         const QString lookup = u"aotContext->getValueLookup("_s + indexString
@@ -1154,16 +1171,12 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
 
     const QString indexString = QString::number(index);
     const QQmlJSScope::ConstPtr valueType = m_state.accumulatorIn().storedType();
-    const QQmlJSRegisterContent callBase = registerType(baseReg);
+    const QQmlJSRegisterContent callBase = m_typeResolver->original(registerType(baseReg));
     const QQmlJSRegisterContent specific = m_typeResolver->memberType(
                 callBase, m_jsUnitGenerator->lookupName(index));
-    if (specific.storedType().isNull()) {
-        reject(u"SetLookup. Could not find property "
-               + m_jsUnitGenerator->lookupName(index)
-               + u" on type "
-               + callBase.storedType()->internalName());
-        return;
-    }
+
+    // We have checked that in the type propagator.
+    Q_ASSERT(!specific.storedType().isNull());
 
     // Choose a container that can hold both, the "in" accumulator and what we actually want.
     // If the types are all the same because we can all store them as verbatim C++ types,
@@ -1199,7 +1212,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
     case QQmlJSScope::AccessSemantics::Reference: {
         const QString basePointer = resolveQObjectPointer(
                     property.scopeType(), registerType(baseReg), object,
-                    u"TypeError: Value is undefined and could not be converted to an object"_s);
+                    u"TypeError: Value is %1 and could not be converted to an object"_s);
 
         const QString lookup = u"aotContext->setObjectLookup("_s + indexString
                 + u", "_s + basePointer + u", "_s + variableIn + u')';
@@ -1215,7 +1228,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
             break;
         }
 
-        if (!m_typeResolver->registerIsStoredIn(callBase, m_typeResolver->listPropertyType())) {
+        if (!callBase.storedType()->isListProperty()) {
             if (m_typeResolver->canUseValueTypes())
                 reject(u"resizing sequence types (because of missing write-back)"_s);
             else
@@ -1237,14 +1250,13 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
     }
     case QQmlJSScope::AccessSemantics::Value: {
         const QString propertyName = m_jsUnitGenerator->lookupName(index);
-        const QQmlJSRegisterContent specific = m_typeResolver->memberType(callBase, propertyName);
         Q_ASSERT(specific.isProperty());
         const QQmlJSRegisterContent property = specific.storedIn(
                     m_typeResolver->genericType(specific.storedType()));
 
         const QString baseContentPointer = resolveValueTypeContentPointer(
                     property.scopeType(), registerType(baseReg), object,
-                    u"TypeError: Value is undefined and could not be converted to an object"_s);
+                    u"TypeError: Value is %1 and could not be converted to an object"_s);
 
         const QString lookup = u"aotContext->setValueLookup("_s + indexString
                 + u", "_s + baseContentPointer
