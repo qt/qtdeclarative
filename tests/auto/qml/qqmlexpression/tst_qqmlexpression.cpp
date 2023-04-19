@@ -131,6 +131,7 @@ void tst_qqmlexpression::emptyScriptString()
     QVERIFY(context->isValid());
 
     QQmlScriptString empty;
+    QVERIFY(empty.isEmpty());
 
     QQmlExpression expression(empty, context, this);
     QCOMPARE(expression.context(), context);

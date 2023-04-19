@@ -128,7 +128,9 @@ Returns whether the QQmlScriptString is empty.
 */
 bool QQmlScriptString::isEmpty() const
 {
-    if (!d || !d->script.isEmpty())
+    if (!d)
+        return true;
+    if (!d->script.isEmpty())
         return false;
     return d->bindingId == -1;
 }
