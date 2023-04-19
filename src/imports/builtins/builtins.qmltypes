@@ -24,6 +24,7 @@ Module {
 
     Component {
         name: "QVariantList"
+        extension: "Array"
         valueType: "QVariant"
         accessSemantics: "sequence"
     }
@@ -156,6 +157,7 @@ Module {
     Component {
         file: "qqmllist.h"
         name: "QQmlListProperty<QObject>"
+        extension: "Array"
         accessSemantics: "sequence"
         valueType: "QObject"
     }
@@ -163,6 +165,7 @@ Module {
     Component {
         file: "qobject.h"
         name: "QObjectList"
+        extension: "Array"
         accessSemantics: "sequence"
         valueType: "QObject"
     }
@@ -244,6 +247,7 @@ Module {
 
     Component {
         name: "QStringList"
+        extension: "Array"
         valueType: "QString"
         accessSemantics: "sequence"
     }
