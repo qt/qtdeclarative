@@ -364,6 +364,14 @@ bool QQuickStackLayout::shouldIgnoreItem(QQuickItem *item) const
     return QQuickItemPrivate::get(item)->isTransparentForPositioner();
 }
 
+void QQuickStackLayout::itemSiblingOrderChanged(QQuickItem *)
+{
+    if (!isReady())
+        return;
+    childItemsChanged();
+    invalidate();
+}
+
 QQuickStackLayoutAttached::QQuickStackLayoutAttached(QObject *object)
 {
     auto item = qobject_cast<QQuickItem*>(object);
