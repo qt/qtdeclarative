@@ -927,6 +927,45 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
     d->outputWarningsToMsgLog = enabled;
 }
 
+
+/*!
+  \since 6.6
+  If this method is called inside of a function that is part of
+  a binding in QML, the binding will be treated as a translation binding.
+
+  \code
+  class I18nAwareClass : public QObject {
+
+    //...
+
+     QString text() const
+     {
+          if (auto engine = qmlEngine(this))
+              engine->markCurrentFunctionAsTranslationBinding();
+          return tr("Hello, world!");
+     }
+  };
+  \endcode
+
+  \note This function is mostly useful if you wish to provide your
+  own alternative to the qsTr function. To ensure that properties
+  exposed from C++ classes are updated on language changes, it is
+  instead recommended to react to \c LanguageChange events. That
+  is a more general mechanism which also works when the class is
+  used in a non-QML context, and has slightly less overhead. However,
+  using \c markCurrentFunctionAsTranslationBinding can be acceptable
+  when the class is already closely tied to the QML engine.
+  For more details, see \l {Prepare for Dynamic Language Changes}
+
+  \sa QQmlEngine::retranslate
+*/
+void QQmlEngine::markCurrentFunctionAsTranslationBinding()
+{
+    Q_D(QQmlEngine);
+    if (auto propertyCapture = d->propertyCapture)
+        propertyCapture->captureTranslation();
+}
+
 /*!
   \internal
 
