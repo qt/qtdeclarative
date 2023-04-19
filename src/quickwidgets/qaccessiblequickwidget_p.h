@@ -31,6 +31,7 @@ class QAccessibleQuickWidget: public QAccessibleWidget
 {
 public:
     QAccessibleQuickWidget(QQuickWidget* widget);
+    ~QAccessibleQuickWidget();
 
     QAccessibleInterface *child(int index) const override;
     int childCount() const override;
@@ -41,6 +42,7 @@ private:
     void repairWindow();
 
     std::unique_ptr<QAccessibleQuickWindow> m_accessibleWindow;
+    QMetaObject::Connection m_connection;
     Q_DISABLE_COPY(QAccessibleQuickWidget)
 };
 

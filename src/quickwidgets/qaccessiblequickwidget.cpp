@@ -19,6 +19,11 @@ QAccessibleQuickWidget::QAccessibleQuickWidget(QQuickWidget* widget)
     repairWindow();
 }
 
+QAccessibleQuickWidget::~QAccessibleQuickWidget()
+{
+    QObject::disconnect(m_connection);
+}
+
 void QAccessibleQuickWidget::repairWindow()
 {
     if (!m_accessibleWindow || !m_accessibleWindow->object()) {
@@ -28,9 +33,8 @@ void QAccessibleQuickWidget::repairWindow()
         // not the one getting destroyed right now.
         if (qobject_cast<QQuickWindow *>(newOffscreen)) {
             m_accessibleWindow.reset(new QAccessibleQuickWindow(newOffscreen));
-            QObject::connect(newOffscreen, &QObject::destroyed, theWidget, [this]{
-                repairWindow();
-            });
+            m_connection = QObject::connect(newOffscreen, &QObject::destroyed, theWidget,
+                                            [this] { repairWindow(); });
         }
     }
 }
