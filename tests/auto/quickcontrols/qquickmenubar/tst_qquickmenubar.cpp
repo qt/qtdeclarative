@@ -757,32 +757,33 @@ void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
         QPointF(staticMenuBarItem->width() / 2, staticMenuBarItem->height() / 2)).toPoint());
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
         staticMenuBarItem->mapToScene(QPointF(staticMenuBarItem->width() / 2, staticMenuBarItem->height() / 2)).toPoint());
-    QCOMPARE(staticMenuBarItem->isHighlighted(), true);
-    QCOMPARE(staticMenu->isVisible(), true);
-    QTRY_COMPARE(staticMenu->isOpened(), true);
-
+    QVERIFY(staticMenuBarItem->isHighlighted());
+    QVERIFY(staticMenu->isVisible());
+    QTRY_VERIFY(staticMenu->isOpened());
     // click a menu item to dismiss the menu and unhighlight the static MenuBarItem
     QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(staticMenu->itemAt(0));
     QVERIFY(menuItem);
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
         menuItem->mapToScene(QPointF(menuItem->width() / 2, menuItem->height() / 2)).toPoint());
-    QCOMPARE(staticMenuBarItem->isHighlighted(), false);
+    QVERIFY(!staticMenuBarItem->isHighlighted());
+    // wait for the menu to be fully gone so that it doesn't interfere with the next test
+    QTRY_VERIFY(!staticMenu->isVisible());
 
     // highlight the dynamic MenuBarItem and open the menu
     QTest::mouseMove(window.data(), dynamicMenuBarItem->mapToScene(
         QPointF(dynamicMenuBarItem->width() / 2, dynamicMenuBarItem->height() / 2)).toPoint());
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
         dynamicMenuBarItem->mapToScene(QPointF(dynamicMenuBarItem->width() / 2, dynamicMenuBarItem->height() / 2)).toPoint());
-    QCOMPARE(dynamicMenuBarItem->isHighlighted(), true);
-    QCOMPARE(dynamicMenu->isVisible(), true);
-    QTRY_COMPARE(dynamicMenu->isOpened(), true);
+    QVERIFY(dynamicMenuBarItem->isHighlighted());
+    QVERIFY(dynamicMenu->isVisible());
+    QTRY_VERIFY(dynamicMenu->isOpened());
 
     // click a menu item to dismiss the menu and unhighlight the dynamic MenuBarItem
     menuItem = qobject_cast<QQuickMenuItem *>(dynamicMenu->itemAt(0));
     QVERIFY(menuItem);
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
         menuItem->mapToScene(QPointF(menuItem->width() / 2, menuItem->height() / 2)).toPoint());
-    QCOMPARE(dynamicMenuBarItem->isHighlighted(), false);
+    QVERIFY(!dynamicMenuBarItem->isHighlighted());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_qquickmenubar)
