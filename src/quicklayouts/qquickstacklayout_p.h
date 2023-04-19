@@ -52,6 +52,9 @@ public:
     int itemCount() const override;
     int indexOf(QQuickItem *item) const;
 
+    /* QQuickItemChangeListener */
+    void itemSiblingOrderChanged(QQuickItem *item) override;
+
     static QQuickStackLayoutAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:

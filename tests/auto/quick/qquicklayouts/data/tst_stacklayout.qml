@@ -757,5 +757,112 @@ Item {
             compare(stackLayoutObj.children[1].StackLayout.index, 1)
             compare(stackLayoutObj.children[2].StackLayout.index, 2)
         }
+
+        Component {
+            id: test_repeater_Component
+
+            Item {
+                property alias stackLayout : stackLayout
+                property var model : ListModel {
+                    /*
+                     * We cannot programmatically reorder siblings (QQuickItem::stackBefore()
+                     * and QQuickItem::stackAfter() are not not available to QML, and we cannot
+                     * alter the Item::children property to reorder siblings)
+                     * Therefore, we have to go through the hoops with a ListModel and Repeater in
+                     * order to trigger sibling reordering, just as reported in QTBUG-112691.
+                     * Adding an item to a specific index (with model.insert()), will be done in
+                     * two steps:
+                     *  1. Append an Item to be the last of the siblings
+                     *  2. Reorder that Rectangle to be at the correct child index that corresponds
+                     *     to the index given to model.insert()
+                     *
+                     * Adding an item to a specific index will therefore test sibling reordering
+                     */
+                    id: listModel
+                }
+                StackLayout {
+                    id: stackLayout
+                    anchors.fill: parent
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+                    Repeater {
+                        id: repeater
+                        model:listModel
+                        delegate: Rectangle {
+                            implicitWidth: 100
+                            implicitHeight: 100
+                            objectName: model.color
+                            color: model.color
+                        }
+                    }
+                }
+            }
+        }
+
+        function test_repeater() {
+            let item = createTemporaryObject(test_repeater_Component, container)
+            let layout = item.stackLayout
+            let model = item.model
+            function verifyVisibilityOfItems() {
+                for (let i = 0; i < layout.count; ++i) {
+                    compare(layout.children[i].visible, layout.currentIndex === i)
+                }
+            }
+
+            compare(layout.currentIndex, -1)
+            compare(layout.count, 0)
+
+            model.append({ "color": "red" })
+            compare(layout.currentIndex, 0)
+            compare(layout.count, 1)
+            verifyVisibilityOfItems()
+
+            model.append({ "color": "green" })
+            compare(layout.currentIndex, 0)
+            compare(layout.count, 2)
+            verifyVisibilityOfItems()
+
+            model.append({ "color": "blue" })
+            compare(layout.currentIndex, 0)
+            compare(layout.count, 3)
+            verifyVisibilityOfItems()
+
+            model.insert(0, { "color": "black" })
+            compare(layout.currentIndex, 0)
+            compare(layout.count, 4)
+            verifyVisibilityOfItems()
+
+            // An implicit currentIndex will reset back to -1 if
+            // the StackLayout is empty
+            model.clear()
+            compare(layout.currentIndex, -1)
+            compare(layout.count, 0)
+
+            // set explicit index to out of bounds
+            layout.currentIndex = 1
+            compare(layout.currentIndex, 1)
+            compare(layout.count, 0)
+            verifyVisibilityOfItems()
+
+            model.append({ "color": "red" })
+            compare(layout.currentIndex, 1)
+            compare(layout.count, 1)
+            verifyVisibilityOfItems()
+
+            model.append({ "color": "green" })
+            compare(layout.currentIndex, 1)
+            compare(layout.count, 2)
+            verifyVisibilityOfItems()
+
+            model.insert(1, { "color": "brown" })
+            compare(layout.currentIndex, 1)
+            compare(layout.count, 3)
+            verifyVisibilityOfItems()
+
+            model.remove(0, 1)
+            compare(layout.currentIndex, 1)
+            compare(layout.count, 2)
+            verifyVisibilityOfItems()
+        }
     }
 }
