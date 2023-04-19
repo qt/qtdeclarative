@@ -40,7 +40,7 @@ Rectangle {
             model: 10
             delegate: TouchpointFeedbackSprite { parent: glassPane }
         }
-
-        MouseFeedbackSprite { }
     }
+
+    MouseFeedbackSprite { }
 }
