@@ -1,0 +1,7 @@
+// Copyright (C) 2022 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+//! [class name must be qualified]
+\note The class name needs to be fully qualified, even if you're already
+  inside the namespace.
+//! [class name must be qualified]

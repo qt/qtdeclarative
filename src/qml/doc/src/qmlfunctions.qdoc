@@ -57,6 +57,8 @@
   \l QML_ELEMENT on both of them will cause a conflict.
   Make sure to use \l QML_NAMED_ELEMENT() for one of them instead.
 
+  \include {qualified-class-name.qdocinc} {class name must be qualified}
+
   \sa {Choosing the Correct Integration Method Between C++ and QML}, QML_NAMED_ELEMENT(),
       Q_REVISION(), QML_ADDED_IN_MINOR_VERSION()
 */
@@ -136,8 +138,8 @@
 
   This macro tells Qt which QML \a interfaces the class implements.
   This macro should only be used for interfacing with classes using \l QML_INTERFACE, use \l Q_INTERFACES otherwise.
-  It's required in order for declarative registration via \l QML_ELEMENT to function properly.
-
+  It's required in order for declarative registration via \l QML_ELEMENT to
+  function properly.
 
   \sa QML_INTERFACE, Q_INTERFACES
 */
@@ -155,7 +157,8 @@
   \l QML_ANONYMOUS or namespaces exposed with \l QML_ELEMENT or
   \l QML_NAMED_ELEMENT().
 
-  Since Qt 6.0 you can use "" instead of a reason to use a standard message instead.
+  Since Qt 6.0 you can use "" instead of a reason to use a standard message
+  instead.
 
   \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_ANONYMOUS
 */
@@ -377,6 +380,8 @@
   {attached property} to other types. This takes effect if the type
   is exposed to QML using a \l QML_ELEMENT or \l QML_NAMED_ELEMENT() macro.
 
+  \include {qualified-class-name.qdocinc} {class name must be qualified}
+
   \sa QML_ELEMENT, QML_NAMED_ELEMENT(), qmlAttachedPropertiesObject(),
       {Providing Attached Properties}
 */
@@ -391,6 +396,8 @@
   \l QML_NAMED_ELEMENT() macro.
 
   \warning Members of \a EXTENDED_TYPE are implicitly treated as FINAL.
+
+  \include {qualified-class-name.qdocinc} {class name must be qualified}
 
   \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_EXTENDED_NAMESPACE(),
       {Registering Extension Objects}
@@ -435,6 +442,8 @@
   \note \a EXTENDED_NAMESPACE must have a metaobject; i.e. it must either be a namespace which
   contains the Q_NAMESPACE macro or a QObject/QGadget.
 
+  \include {qualified-class-name.qdocinc} {class name must be qualified}
+
   \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_EXTENDED(),
       {Registering Extension Objects}, Q_ENUM, Q_ENUM_NS
 */
@@ -459,6 +468,8 @@
   \b{NOTE:} You may want to use \l QML_NAMED_ELEMENT() instead of \l QML_ELEMENT due to the fact that
   the element will be named like the struct it is contained in, not the foreign type.
   See the \l {Extension Objects} for an example.
+
+  \include {qualified-class-name.qdocinc} {class name must be qualified}
 
   \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_FOREIGN_NAMESPACE()
 */
@@ -528,6 +539,8 @@
   \l QML_UNAVAILABLE still results in a more specific error message than the usual
   "is not a type" for completely unknown types.
 
+  \include {qualified-class-name.qdocinc} {class name must be qualified}
+
   \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_UNCREATABLE(), QML_FOREIGN()
 */
 
@@ -587,6 +600,8 @@
   passed to \l{QML_NAMED_ELEMENT} is ignored. The automatically registered
   sequential containers are available under the familiar \e{list<...>} names,
   for example \e{list<QtObject>} or \e{list<font>}.
+
+  \include {qualified-class-name.qdocinc} {class name must be qualified}
 
   \sa QML_ANONYMOUS, QML_FOREIGN()
 */
