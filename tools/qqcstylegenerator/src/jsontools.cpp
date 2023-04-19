@@ -78,7 +78,11 @@ void findChildrenImpl(const QStringList &keyValueList, const QJsonObject &root, 
             const auto key = keyValueList[i];
             const auto value = keyValueList[i + 1];
             const auto foundValue = object.value(key).toString();
-            if (foundValue.compare(value, Qt::CaseInsensitive) != 0)
+
+            QRegularExpression re('^' + value + '$', QRegularExpression::CaseInsensitiveOption);
+            if (!re.isValid())
+                throw NoChildFoundException("value is not a valid regexp: " + foundValue);
+            if (!re.match(foundValue).hasMatch())
                 break;
             if (i == keyValueList.length() - 2) {
                 // All key-value pairs were matched, so add the object to
