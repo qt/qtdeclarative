@@ -136,8 +136,10 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::typeFromAST(QQmlJS::AST::Type *type) c
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
     if (!type->typeArgument)
         return m_imports.type(typeId).scope;
-    if (typeId == u"list"_s)
-        return typeForName(type->typeArgument->toString())->listType();
+    if (typeId == u"list"_s) {
+        if (const QQmlJSScope::ConstPtr typeArgument = typeForName(type->typeArgument->toString()))
+            return typeArgument->listType();
+    }
     return QQmlJSScope::ConstPtr();
 #else
     return m_imports.type(typeId).scope;
