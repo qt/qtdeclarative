@@ -95,6 +95,7 @@ private slots:
     void mirroredCombobox();
     void rotatedCombobox();
     void focusMultiplePopup();
+    void contentChildrenChange();
 
 private:
     static bool hasWindowActivation();
@@ -2195,6 +2196,25 @@ void tst_QQuickPopup::focusMultiplePopup()
     QTRY_VERIFY(!buttonPopup->isVisible());
 
     QVERIFY(rootItem->hasFocus());
+}
+
+void tst_QQuickPopup::contentChildrenChange()
+{
+    QQmlEngine engine;
+    QQmlComponent comp(&engine);
+    comp.loadFromModule("QtQuick.Controls", "Popup");
+    std::unique_ptr<QObject> root {comp.create()};
+    QVERIFY(root);
+    QQuickPopup *popup = qobject_cast<QQuickPopup *>(root.get());
+    QVERIFY(popup);
+    QSignalSpy spy(popup, &QQuickPopup::contentChildrenChanged);
+    auto contentItem = std::make_unique<QQuickItem>();
+    popup->setContentItem(contentItem.get());
+    QCOMPARE(spy.count(), 1);
+    auto newChild = std::make_unique<QQuickItem>();
+    QQmlProperty contentItemChildren(contentItem.get());
+    contentItemChildren.write(QVariant::fromValue(newChild.get()));
+    QCOMPARE(spy.count(), 2);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
