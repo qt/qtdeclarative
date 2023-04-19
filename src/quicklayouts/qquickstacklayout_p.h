@@ -62,9 +62,14 @@ Q_SIGNALS:
     void countChanged();
 
 private:
+    enum AdjustCurrentIndexPolicy {
+        DontAdjustCurrentIndex,
+        AdjustCurrentIndex
+    };
+
     static void collectItemSizeHints(QQuickItem *item, QSizeF *sizeHints);
     bool shouldIgnoreItem(QQuickItem *item) const;
-    void childItemsChanged();
+    void childItemsChanged(AdjustCurrentIndexPolicy adjustCurrentIndexPolicy = DontAdjustCurrentIndex);
     Q_DECLARE_PRIVATE(QQuickStackLayout)
 
     friend class QQuickStackLayoutAttached;

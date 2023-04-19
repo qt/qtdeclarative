@@ -828,7 +828,7 @@ Item {
             verifyVisibilityOfItems()
 
             model.insert(0, { "color": "black" })
-            compare(layout.currentIndex, 0)
+            compare(layout.currentIndex, 1)
             compare(layout.count, 4)
             verifyVisibilityOfItems()
 
@@ -855,10 +855,11 @@ Item {
             verifyVisibilityOfItems()
 
             model.insert(1, { "color": "brown" })
-            compare(layout.currentIndex, 1)
+            compare(layout.currentIndex, 2)
             compare(layout.count, 3)
             verifyVisibilityOfItems()
 
+            // remove red, currentIndex should decrease
             model.remove(0, 1)
             compare(layout.currentIndex, 1)
             compare(layout.count, 2)
