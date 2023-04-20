@@ -53,6 +53,7 @@ private slots:
     void implicitElide_data();
     void implicitElide();
     void textFormat();
+    void clipRectOutsideViewportDynamicallyChanged();
 
     void baseUrl();
     void embeddedImages_data();
@@ -825,6 +826,28 @@ void tst_qquicktext::textFormat()
         QVERIFY(textPrivate->elideLayout);
         QVERIFY(textPrivate->layout.formats().isEmpty());
     }
+}
+
+void tst_qquicktext::clipRectOutsideViewportDynamicallyChanged()
+{
+    // QTBUG-106205
+    QScopedPointer<QQuickView> view(createView(testFile("qtbug_106205.qml")));
+    view->setWidth(100);
+    view->setHeight(200);
+    view->showNormal();
+    QQuickItem *root = view->rootObject();
+    QVERIFY(root);
+    QVERIFY(QTest::qWaitForWindowExposed(view.get()));
+
+    auto clipRectMatches = [&]() -> bool {
+        auto *textOutsideInitialViewport = root->findChild<QQuickText *>("textOutsideViewport");
+        if (!textOutsideInitialViewport)
+            return false;
+        auto *clipNode = QQuickItemPrivate::get(textOutsideInitialViewport)->clipNode();
+
+        return textOutsideInitialViewport->clipRect() == clipNode->clipRect();
+    };
+    QTRY_VERIFY(clipRectMatches());
 }
 
 //the alignment tests may be trivial o.oa
