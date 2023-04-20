@@ -12,7 +12,6 @@ QtObject {
     Component.onCompleted: {
         var x = new XMLHttpRequest;
         x.open("PATCH", url);
-        x.setRequestHeader("Accept-Language","en-US");
         x.setRequestHeader("If-Match","\"ETagNumber\"");
 
         // Test to the end

@@ -8,7 +8,6 @@ QtObject {
         var x = new XMLHttpRequest;
         x.open("POST", url);
         x.setRequestHeader("Content-Type", "text/plain;charset=latin1");
-        x.setRequestHeader("Accept-Language","en-US");
 
         // Test to the end
         x.onreadystatechange = function() {

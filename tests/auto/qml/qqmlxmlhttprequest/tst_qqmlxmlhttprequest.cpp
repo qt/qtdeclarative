@@ -640,8 +640,6 @@ void tst_qqmlxmlhttprequest::send_options()
 
 void tst_qqmlxmlhttprequest::send_options_data()
 {
-    if (QLocale::system() != QLocale(QLocale::English, QLocale::UnitedStates))
-        QSKIP("Test is locale dependent");
     QTest::addColumn<QString>("url_suffix");
     QTest::addColumn<QString>("file_expected");
     QTest::addColumn<QString>("file_qml");
@@ -866,8 +864,6 @@ void tst_qqmlxmlhttprequest::getAllResponseHeaders_args()
 
 void tst_qqmlxmlhttprequest::getBinaryData()
 {
-    if (QLocale::system() != QLocale(QLocale::English, QLocale::UnitedStates))
-        QSKIP("Test is locale dependent");
     TestHTTPServer server;
     QVERIFY2(server.listen(), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("receive_binary_data.expect"),
@@ -880,15 +876,13 @@ void tst_qqmlxmlhttprequest::getBinaryData()
     object->setProperty("url", server.urlString("/gml_logo.png"));
     component.completeCreate();
 
-    QFileInfo fileInfo("data/qml_logo.png");
+    const QFileInfo fileInfo(testFile("qml_logo.png"));
     QTRY_COMPARE(object->property("readSize").toInt(), fileInfo.size());
     QCOMPARE(object->property("status").toInt(), 200);
 }
 
 void tst_qqmlxmlhttprequest::getJsonData()
 {
-    if (QLocale::system() != QLocale(QLocale::English, QLocale::UnitedStates))
-        QSKIP("Test is locale dependent");
     TestHTTPServer server;
     QVERIFY2(server.listen(), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("receive_json_data.expect"),
@@ -1303,8 +1297,6 @@ void tst_qqmlxmlhttprequest::sendFileRequestNoRead() {
 
 void tst_qqmlxmlhttprequest::sendPropfind()
 {
-    if (QLocale::system() != QLocale(QLocale::English, QLocale::UnitedStates))
-        QSKIP("Test is locale dependent");
     const QString prefix = "WebDAV//";
 
     QFETCH(QString, qml);
