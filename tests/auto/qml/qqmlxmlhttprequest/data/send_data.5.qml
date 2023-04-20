@@ -2,7 +2,6 @@ import QtQuick 2.0
 
 QtObject {
     property string url
-
     property bool dataOK: false
 
     Component.onCompleted: {
@@ -13,12 +12,10 @@ QtObject {
 
         // Test to the end
         x.onreadystatechange = function() {
-            if (x.readyState == XMLHttpRequest.DONE) {
+            if (x.readyState == XMLHttpRequest.DONE)
                 dataOK = (x.responseText == "QML Rocks!\n");
-            }
         }
 
         x.send("My Sent Data\n");
     }
 }
-

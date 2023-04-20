@@ -14,12 +14,10 @@ QtObject {
 
         // Test to the end
         x.onreadystatechange = function() {
-            if (x.readyState === XMLHttpRequest.DONE) {
+            if (x.readyState === XMLHttpRequest.DONE)
                 dataOK = (x.responseURL === expectedURL);
-            }
         }
 
         x.send()
     }
 }
-

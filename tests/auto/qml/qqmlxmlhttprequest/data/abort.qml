@@ -17,28 +17,23 @@ QtObject {
         x.send();
 
         x.onreadystatechange = function() {
-            if (x.readyState == XMLHttpRequest.DONE) {
+            if (x.readyState == XMLHttpRequest.DONE)
                 seenDone = true;
-            } else if (x.readyState == XMLHttpRequest.UNSENT) {
+            else if (x.readyState == XMLHttpRequest.UNSENT)
                 didNotSeeUnsent = false;
-            }
         }
 
         x.abort();
 
-        if (x.readyState == XMLHttpRequest.UNSENT) {
+        if (x.readyState == XMLHttpRequest.UNSENT)
             endStateUnsent = true;
-        }
 
         x.onreadystatechange = function() {
-            if (x.readyState == XMLHttpRequest.DONE) {
+            if (x.readyState == XMLHttpRequest.DONE)
                 dataOK = (x.responseText == "QML Rocks!\n");
-            }
         }
         x.open("PUT", url);
         x.setRequestHeader("Accept-Language", "en-US");
         x.send("Test Data\n");
     }
 }
-
-

@@ -42,13 +42,10 @@ QtObject {
 
         // Test to the end
         x.onreadystatechange = function() {
-            if (x.readyState == XMLHttpRequest.DONE) {
+            if (x.readyState == XMLHttpRequest.DONE)
                 dataOK = (x.responseText == "QML Rocks!\n");
-            }
         }
-
 
         x.send()
     }
 }
-
