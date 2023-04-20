@@ -170,6 +170,36 @@ Q_LOGGING_CATEGORY(lcPopup, "qt.quick.controls.popup")
      }
     \endcode
 
+    \note The popup's \l{contentItem}{content item} gets parented to the
+    \l{Overlay::overlay}{overlay}, and does not live within the popup's parent.
+    Because of that, a \l{Item::scale}{scale} applied to the tree in which
+    the popup lives does not apply to the visual popup. To make the popup
+    of e.g. a \l{ComboBox} follow the scale of the combobox, apply the same scale
+    to the \l{Overlay::overlay}{overlay} as well:
+
+    \code
+    Window {
+        property double scaleFactor: 2.0
+
+        Scale {
+            id: scale
+            xScale: scaleFactor
+            yScale: scaleFactor
+        }
+        Item {
+            id: scaledContent
+            transform: scale
+
+            ComboBox {
+                id: combobox
+                // ...
+            }
+        }
+
+        Overlay.overlay.transform: scale
+    }
+    \endcode
+
     \section1 Popup Positioning
 
     Similar to items in Qt Quick, Popup's \l x and \l y coordinates are
