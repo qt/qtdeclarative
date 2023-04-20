@@ -84,7 +84,7 @@ void QQuickWheelHandler::setOrientation(Qt::Orientation orientation)
     \qmlproperty bool QtQuick::WheelHandler::invertible
 
     Whether or not to reverse the direction of property change if
-    QQuickPointerScrollEvent::inverted is true. The default is \c true.
+    \l QWheelEvent::inverted is \c true. The default is \c true.
 
     If the operating system has a "natural scrolling" setting that causes
     scrolling to be in the same direction as the finger movement, then if this
