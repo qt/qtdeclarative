@@ -1954,19 +1954,14 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
         itemPriv->itemNode()->setMatrix(matrix);
     }
 
-    bool clipEffectivelyChanged = (dirty & (QQuickItemPrivate::Clip | QQuickItemPrivate::Window)) &&
-                                  ((item->clip() == false) != (itemPriv->clipNode() == nullptr));
-    int effectRefCount = itemPriv->extra.isAllocated()?itemPriv->extra->effectRefCount:0;
-    bool effectRefEffectivelyChanged = (dirty & (QQuickItemPrivate::EffectReference | QQuickItemPrivate::Window)) &&
-                                  ((effectRefCount == 0) != (itemPriv->rootNode() == nullptr));
-
+    const bool clipEffectivelyChanged = dirty & (QQuickItemPrivate::Clip | QQuickItemPrivate::Window);
     if (clipEffectivelyChanged) {
-        QSGNode *parent = itemPriv->opacityNode() ? (QSGNode *) itemPriv->opacityNode() :
-                                                    (QSGNode *) itemPriv->itemNode();
+        QSGNode *parent = itemPriv->opacityNode() ? (QSGNode *)itemPriv->opacityNode()
+                                                  : (QSGNode *)itemPriv->itemNode();
         QSGNode *child = itemPriv->rootNode();
 
-        if (item->clip()) {
-            Q_ASSERT(itemPriv->clipNode() == nullptr);
+        if (bool initializeClipNode = item->clip() && itemPriv->clipNode() == nullptr;
+            initializeClipNode) {
             QQuickDefaultClipNode *clip = new QQuickDefaultClipNode(item->clipRect());
             itemPriv->extra.value().clipNode = clip;
             clip->update();
@@ -1980,9 +1975,14 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
                 parent->appendChildNode(clip);
             }
 
-        } else {
+        } else if (bool updateClipNode = item->clip() && itemPriv->clipNode() != nullptr;
+                   updateClipNode) {
             QQuickDefaultClipNode *clip = itemPriv->clipNode();
-            Q_ASSERT(clip);
+            clip->setClipRect(item->clipRect());
+            clip->update();
+        } else if (bool removeClipNode = !item->clip() && itemPriv->clipNode() != nullptr;
+                   removeClipNode) {
+            QQuickDefaultClipNode *clip = itemPriv->clipNode();
             parent->removeChildNode(clip);
             if (child) {
                 clip->removeChildNode(child);
@@ -1996,6 +1996,10 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
         }
     }
 
+    const int effectRefCount = itemPriv->extra.isAllocated() ? itemPriv->extra->effectRefCount : 0;
+    const bool effectRefEffectivelyChanged =
+            (dirty & (QQuickItemPrivate::EffectReference | QQuickItemPrivate::Window))
+            && ((effectRefCount == 0) != (itemPriv->rootNode() == nullptr));
     if (effectRefEffectivelyChanged) {
         if (dirty & QQuickItemPrivate::ChildrenUpdateMask)
             itemPriv->childContainerNode()->removeAllChildNodes();
