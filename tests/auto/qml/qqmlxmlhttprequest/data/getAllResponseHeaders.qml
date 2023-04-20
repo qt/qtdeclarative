@@ -43,7 +43,11 @@ QtObject {
                 openedException = true;
         }
 
-        var headers = "connection: close\r\ncontent-type: text/html; charset=UTF-8\r\ntest-header: TestValue\r\nmultitest-header: TestValue, SecondTestValue\r\ncontent-length: 11";
+        var headers = [ "connection: close",
+                        "content-type: text/html; charset=UTF-8",
+                        "test-header: TestValue",
+                        "multitest-header: TestValue, SecondTestValue",
+                        "content-length: 11" ].join("\r\n");
 
         // Test to the end
         x.onreadystatechange = function() {
