@@ -16,6 +16,10 @@ T.TextArea {
     implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
                              implicitBackgroundHeight + topInset + bottomInset)
 
+    // If we're clipped, or we're in a Flickable that's clipped, set our topInset
+    // to half the height of the placeholder text to avoid it being clipped.
+    topInset: clip || (parent?.parent as Flickable && parent?.parent.clip) ? placeholder.largestHeight / 2 : 0
+
     leftPadding: Material.textFieldHorizontalPadding
     rightPadding: Material.textFieldHorizontalPadding
     // Need to account for the placeholder text when it's sitting on top.
@@ -23,7 +27,8 @@ T.TextArea {
         ? Material.textFieldVerticalPadding + placeholder.largestHeight
         // When the condition above is not met, the text should always sit in the middle
         // of a default-height TextArea, which is just near the top for a higher-than-default one.
-        : (implicitBackgroundHeight - placeholder.largestHeight) / 2
+        // Account for any topInset as well, otherwise the text will be too close to the background.
+        : ((implicitBackgroundHeight - placeholder.largestHeight) / 2) + topInset
     bottomPadding: Material.textFieldVerticalPadding
 
     color: enabled ? Material.foreground : Material.hintTextColor

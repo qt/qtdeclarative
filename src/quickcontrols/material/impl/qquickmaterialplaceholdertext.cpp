@@ -10,6 +10,7 @@
 #include <QtQml/qqmlinfo.h>
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 #include <QtQuickTemplates2/private/qquicktextarea_p.h>
+#include <QtQuickTemplates2/private/qquicktextfield_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -106,6 +107,17 @@ void QQuickMaterialPlaceholderText::updateY()
     setY(shouldFloat() ? floatingTargetY() : normalTargetY());
 }
 
+qreal controlTopInset(QQuickItem *textControl)
+{
+    if (const auto textArea = qobject_cast<QQuickTextArea *>(textControl))
+        return textArea->topInset();
+
+    if (const auto textField = qobject_cast<QQuickTextField *>(textControl))
+        return textField->topInset();
+
+    return 0;
+}
+
 qreal QQuickMaterialPlaceholderText::normalTargetY() const
 {
     auto *textArea = qobject_cast<QQuickTextArea *>(textControl());
@@ -115,7 +127,10 @@ qreal QQuickMaterialPlaceholderText::normalTargetY() const
         // (one-line) if its explicit height is greater than or equal to its
         // implicit height - i.e. if it has room for it. If it doesn't have
         // room, just do what TextField does.
-        return (m_controlImplicitBackgroundHeight - m_largestHeight) / 2.0;
+        // We should also account for any topInset the user might have specified,
+        // which is useful to ensure that the text doesn't get clipped.
+        return ((m_controlImplicitBackgroundHeight - m_largestHeight) / 2.0)
+            + controlTopInset(textControl());
     }
 
     // When the placeholder text shouldn't float, it should sit in the middle of the TextField.
@@ -131,7 +146,7 @@ qreal QQuickMaterialPlaceholderText::floatingTargetY() const
 
     // Outlined text fields have the placeaholder vertically centered
     // along the outline at the top.
-    return -m_largestHeight / 2;
+    return (-m_largestHeight / 2) + controlTopInset(textControl());
 }
 
 /*!
