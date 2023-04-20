@@ -221,6 +221,27 @@
     Note that the heights shown above may vary based on differences in fonts
     across platforms.
 
+    \section2 Control-Specific Notes
+
+    \target material-control-specific-notes-textarea
+    \section3 TextArea
+
+    TextArea supports two
+    \l {material-containerStyle-attached-prop}{containerStyles}: \c Filled and
+    \c Outlined. Outlined TextAreas have floating placeholder text that sits at
+    the top of the control. This requires the placeholder text to go outside
+    the bounds of the control, which can cause it to be
+    clipped when the TextArea or the Flickable it's a child of sets
+    \l {Item::}{clip} to \c true. To avoid this, \l {Control::}{topInset} is
+    set to an appropriate value in these cases.
+
+    \section3 TextField
+
+    The same \l {material-control-specific-notes-textarea}{issue with clipping}
+    explained above for TextArea can also occur with \l TextField. To avoid
+    this, \l {Control::}{topInset} is set to an appropriate value when the
+    TextField sets clip to \c true.
+
     \section1 Attached Property Documentation
 
     \styleproperty {Material.accent} {color} {material-accent-attached-prop}

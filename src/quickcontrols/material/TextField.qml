@@ -15,6 +15,9 @@ T.TextField {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
+    // If we're clipped, set topInset to half the height of the placeholder text to avoid it being clipped.
+    topInset: clip ? placeholder.largestHeight / 2 : 0
+
     leftPadding: Material.textFieldHorizontalPadding
     rightPadding: Material.textFieldHorizontalPadding
     // Need to account for the placeholder text when it's sitting on top.
@@ -22,7 +25,9 @@ T.TextField {
         ? placeholderText.length > 0 && (activeFocus || length > 0)
             ? Material.textFieldVerticalPadding + placeholder.largestHeight
             : Material.textFieldVerticalPadding
-        : Material.textFieldVerticalPadding
+        // Account for any topInset (used to avoid floating placeholder text being clipped),
+        // otherwise the text will be too close to the background.
+        : Material.textFieldVerticalPadding + topInset
     bottomPadding: Material.textFieldVerticalPadding
 
     color: enabled ? Material.foreground : Material.hintTextColor
