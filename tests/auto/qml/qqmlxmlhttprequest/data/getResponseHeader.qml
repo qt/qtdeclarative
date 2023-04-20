@@ -62,7 +62,7 @@ QtObject {
                     (x.getResponseHeader("Set-Cookie") == ""
                      && x.getResponseHeader("Set-Cookie2") == "");
             } else if (x.readyState == XMLHttpRequest.DONE) {
-                doneState = headersReceivedState && true;
+                doneState = headersReceivedState;
 
                 doneNullHeader = (x.getResponseHeader("Nonexistant-header") == "");
                 doneValidHeader = (x.getResponseHeader("Test-HEAder") == "TestValue");

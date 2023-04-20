@@ -56,7 +56,7 @@ QtObject {
 
                 headersReceivedHeader = (x.getAllResponseHeaders() == headers);
             } else if (x.readyState == XMLHttpRequest.DONE) {
-                doneState = headersReceivedState && true;
+                doneState = headersReceivedState;
 
                 doneHeader = (x.getAllResponseHeaders() == headers);
                 dataOK = (x.responseText == "QML Rocks!\n");
