@@ -1,5 +1,5 @@
 GET /gml_logo.png HTTP/1.1
-Accept-Language: en-US,*
+Accept-Language: {{Ignore}}
 Content-Type: image/png
 Connection: Keep-Alive{{Ignore}}
 HTTP2-Settings: {{Ignore}}

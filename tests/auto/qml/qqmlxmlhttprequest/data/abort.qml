@@ -13,7 +13,6 @@ QtObject {
         var x = new XMLHttpRequest;
         x.open("GET", urlDummy);
         x.setRequestHeader("Test-header", "TestValue");
-        x.setRequestHeader("Accept-Language", "en-US");
         x.send();
 
         x.onreadystatechange = function() {
@@ -36,7 +35,6 @@ QtObject {
             }
         }
         x.open("PUT", url);
-        x.setRequestHeader("Accept-Language", "en-US");
         x.send("Test Data\n");
     }
 }

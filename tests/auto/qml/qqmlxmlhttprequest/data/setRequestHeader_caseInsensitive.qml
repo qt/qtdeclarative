@@ -9,9 +9,8 @@ QtObject {
         var x = new XMLHttpRequest;
 
         x.open("GET", url);
-        x.setRequestHeader("Accept-Language","en-US");
-
         x.setRequestHeader("Test-header", "value");
+
         //Setting headers with just different cases
         //will be treated as the same header, and accepted
         //as the last setting.

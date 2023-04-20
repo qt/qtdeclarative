@@ -7,9 +7,7 @@ QtObject {
 
     Component.onCompleted: {
         var x = new XMLHttpRequest;
-
         x.open("GET", url);
-        x.setRequestHeader("Accept-Language","en-US");
 
         x.setRequestHeader("Test-header", "value");
         x.setRequestHeader("Test-header2", "value");

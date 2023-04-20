@@ -8,7 +8,6 @@ QtObject {
     Component.onCompleted: {
         var x = new XMLHttpRequest;
         x.open("PUT", url);
-        x.setRequestHeader("Accept-Language","en-US");
 
         // Test to the end
         x.onreadystatechange = function() {
