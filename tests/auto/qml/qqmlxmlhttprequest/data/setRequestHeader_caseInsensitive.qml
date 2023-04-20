@@ -11,9 +11,8 @@ QtObject {
         x.open("GET", url);
         x.setRequestHeader("Test-header", "value");
 
-        //Setting headers with just different cases
-        //will be treated as the same header, and accepted
-        //as the last setting.
+        // Setting headers differing only in case will treat them as one header,
+        // and the values are joined with a comma.
         x.setRequestHeader("Test-hEADEr2", "value");
         x.setRequestHeader("Test-header2", "value2");
 
