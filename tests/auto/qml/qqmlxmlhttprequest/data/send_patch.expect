@@ -1,5 +1,5 @@
 PATCH /qqmlxmlhttprequest.cpp HTTP/1.1
-Accept-Language: en-US
+Accept-Language: {{Ignore}}
 If-Match: "ETagNumber"
 Content-Type: application/example
 Content-Length: 247
