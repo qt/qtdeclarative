@@ -2185,7 +2185,7 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     of type \l [QML] {real}, so it is possible to set fractional
     values like \c 0.1.
 
-    \section1 Reusing items
+    \section1 Reusing Items
 
     Since 5.15, ListView can be configured to recycle items instead of instantiating
     from the \l delegate whenever new rows are flicked into view. This approach improves
@@ -2219,6 +2219,18 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     \snippet qml/listview/ReusableDelegate.qml 0
 
     \sa {QML Data Models}, GridView, PathView, {Qt Quick Examples - Views}
+
+    \section 1 Variable Delegate Size and Section Labels
+
+    Variable delegate sizes might lead to resizing and skipping of any attached
+    \l Scrollbar. This is because ListView estimates its content size from
+    allocated items (usually only the visible items, the rest is assumed to be of
+    similar size), and variable delegate sizes prevent an accurate estimation. To
+    reduce this effect, \l ItemView::cacheBuffer can be set to higher values,
+    effectively creating more items and improving the size estimate of unallocated
+    items, at the expense of additional memory usage. Sections have the same effect
+    because they attach and elongate the section label to the first item within
+    the section.
 */
 QQuickListView::QQuickListView(QQuickItem *parent)
     : QQuickItemView(*(new QQuickListViewPrivate), parent)
