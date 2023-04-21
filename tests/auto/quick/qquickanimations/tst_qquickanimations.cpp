@@ -98,6 +98,8 @@ private slots:
     void infiniteLoopsWithoutFrom();
     void frameAnimation1();
     void frameAnimation2();
+    void restartAnimationGroupWhenDirty();
+    void restartNestedAnimationGroupWhenDirty();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -2212,6 +2214,65 @@ void tst_qquickanimations::frameAnimation2()
     QVERIFY(frameAnimation->currentFrame() > 3);
 }
 
+//QTBUG-110589
+void tst_qquickanimations::restartAnimationGroupWhenDirty()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("restartAnimationGroupWhenDirty.qml"));
+    QScopedPointer<QObject> obj(c.create());
+    auto *root = qobject_cast<QQuickRectangle*>(obj.data());
+    QVERIFY2(root, qPrintable(c.errorString()));
+
+    QQuickSequentialAnimation *seqAnim0 = root->findChild<QQuickSequentialAnimation*>("seqAnim0");
+    QVERIFY(seqAnim0);
+    QQuickRectangle *target0 = root->findChild<QQuickRectangle*>("target0");
+    QVERIFY(target0);
+    QQuickParallelAnimation *parAnim0 = root->findChild<QQuickParallelAnimation*>("parAnim0");
+    QVERIFY(parAnim0);
+    QQuickRectangle *target1 = root->findChild<QQuickRectangle*>("target1");
+    QVERIFY(target1);
+
+    QTRY_VERIFY(seqAnim0->isPaused());
+    QTRY_VERIFY(parAnim0->isPaused());
+    QTRY_VERIFY(target0->x() > 140);
+    QTRY_VERIFY(target1->x() > 140);
+    seqAnim0->resume();
+    parAnim0->resume();
+    QTRY_VERIFY(target0->property("onFinishedCalled").value<bool>());
+    QTRY_VERIFY(target1->property("onFinishedCalled").value<bool>());
+    QTRY_COMPARE(target0->x(), 140);
+    QTRY_COMPARE(target1->x(), 140);
+}
+
+//QTBUG-95840
+void tst_qquickanimations::restartNestedAnimationGroupWhenDirty()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("restartNestedAnimationGroupWhenDirty.qml"));
+    QScopedPointer<QObject> obj(c.create());
+    auto *root = qobject_cast<QQuickRectangle*>(obj.data());
+    QVERIFY2(root, qPrintable(c.errorString()));
+
+    QQuickSequentialAnimation *seqAnim0 = root->findChild<QQuickSequentialAnimation*>("seqAnim0");
+    QVERIFY(seqAnim0);
+    QQuickRectangle *target0 = root->findChild<QQuickRectangle*>("target0");
+    QVERIFY(target0);
+    QQuickParallelAnimation *parAnim0 = root->findChild<QQuickParallelAnimation*>("parAnim0");
+    QVERIFY(parAnim0);
+    QQuickRectangle *target1 = root->findChild<QQuickRectangle*>("target1");
+    QVERIFY(target1);
+
+    QTRY_VERIFY(seqAnim0->isPaused());
+    QTRY_VERIFY(parAnim0->isPaused());
+    QTRY_VERIFY(target0->x() > 140);
+    QTRY_VERIFY(target1->x() > 140);
+    seqAnim0->resume();
+    parAnim0->resume();
+    QTRY_VERIFY(target0->property("onFinishedCalled").value<bool>());
+    QTRY_VERIFY(target1->property("onFinishedCalled").value<bool>());
+    QTRY_COMPARE(target0->x(), 140);
+    QTRY_COMPARE(target1->x(), 140);
+}
 QTEST_MAIN(tst_qquickanimations)
 
 #include "tst_qquickanimations.moc"
