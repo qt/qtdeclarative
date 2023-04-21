@@ -159,6 +159,8 @@ void QQuickStackLayout::componentComplete()
 void QQuickStackLayout::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
 {
     QQuickLayout::itemChange(change, value);
+    if (!isReady())
+        return;
 
     if (change == ItemChildRemovedChange) {
         QQuickItem *item = value.item;
