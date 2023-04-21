@@ -164,6 +164,7 @@ public:
     QAbstractAnimationJob* animationInstance;
 
     static QQmlProperty createProperty(QObject *obj, const QString &str, QObject *infoObj, QString *errorMessage = nullptr);
+    void animationGroupDirty();
 };
 
 class QQuickPauseAnimationPrivate : public QQuickAbstractAnimationPrivate
@@ -217,7 +218,7 @@ class QQuickAnimationGroupPrivate : public QQuickAbstractAnimationPrivate
     Q_DECLARE_PUBLIC(QQuickAnimationGroup)
 public:
     QQuickAnimationGroupPrivate()
-    : QQuickAbstractAnimationPrivate() {}
+    : QQuickAbstractAnimationPrivate(), animationDirty(false) {}
 
     static void append_animation(QQmlListProperty<QQuickAbstractAnimation> *list, QQuickAbstractAnimation *role);
     static QQuickAbstractAnimation *at_animation(QQmlListProperty<QQuickAbstractAnimation> *list, qsizetype index);
@@ -227,6 +228,10 @@ public:
                                   QQuickAbstractAnimation *role);
     static void removeLast_animation(QQmlListProperty<QQuickAbstractAnimation> *list);
     QList<QQuickAbstractAnimation *> animations;
+
+    void restartFromCurrentLoop();
+    void animationCurrentLoopChanged(QAbstractAnimationJob *job) override;
+    bool animationDirty: 1;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickPropertyAnimationPrivate : public QQuickAbstractAnimationPrivate
