@@ -14,7 +14,7 @@
 
 \cmakecommandsince 6.3
 
-\include cmake-qml-qt-finalize-target-warning.qdocinc
+\include cmake-qml-qt-finalize-target-warning.qdocinc warning
 
 \section1 Synopsis
 
