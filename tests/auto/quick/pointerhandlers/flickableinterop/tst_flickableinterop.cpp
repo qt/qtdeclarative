@@ -949,7 +949,7 @@ void tst_FlickableInterop::nativeGesturePinchOnFlickableWithParentTapHandler()
     QCOMPARE(tapHandler->point().id(), expectTap ? 0 : -1);
     QQuickTest::pointerRelease(device, &window, 0, pinchPos, button);
     if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
-    QCOMPARE(tapSpy.size(), expectTap);
+    QCOMPARE(tapSpy.size() != 0, expectTap);
     QCOMPARE(tapActiveSpy.size(), 0);
     QCOMPARE(tapHandler->point().id(), -1); // does not keep tracking after release
 

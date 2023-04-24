@@ -33,7 +33,7 @@ public:
     tst_Sanity();
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void jsFiles();
     void qmllint();
