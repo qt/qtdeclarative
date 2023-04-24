@@ -77,6 +77,7 @@ private slots:
     void mouseGestureStarted();
     void cancel();
     void stationaryTouchWithChangingPressure();
+    void nestedPinchAreaMouse();
 
 private:
     QQuickView *createAndShowView(const QString &file);
@@ -1406,6 +1407,53 @@ void tst_QQuickMultiPointTouchArea::stationaryTouchWithChangingPressure() // QTB
 
     QCOMPARE(point1->pressed(), false);
     QCOMPARE(point1->pressure(), 0);
+}
+
+void tst_QQuickMultiPointTouchArea::nestedPinchAreaMouse()
+{
+    QScopedPointer<QQuickView> window(createAndShowView("nestedPinchArea.qml"));
+    QQuickMultiPointTouchArea *mpta = qobject_cast<QQuickMultiPointTouchArea *>(window->rootObject());
+    QVERIFY(mpta);
+
+    QQuickTouchPoint *point1 = mpta->findChild<QQuickTouchPoint*>("point1");
+    QCOMPARE(point1->pressed(), false);
+    QQuickTouchPoint *point2 = mpta->findChild<QQuickTouchPoint*>("point2");
+    QCOMPARE(point2->pressed(), false);
+    QSignalSpy pressedSpy(mpta, &QQuickMultiPointTouchArea::pressed);
+    QSignalSpy updatedSpy(mpta, &QQuickMultiPointTouchArea::updated);
+    QSignalSpy releasedSpy(mpta, &QQuickMultiPointTouchArea::released);
+
+    QPoint p1(20, 20);
+    QTest::mousePress(window.data(), Qt::LeftButton, Qt::NoModifier, p1);
+    QCOMPARE(point1->pressed(), true);
+    QCOMPARE(point2->pressed(), false);
+    QCOMPARE(pressedSpy.count(), 1);
+    QCOMPARE(mpta->property("pressedCount").toInt(), 1);
+    QCOMPARE(updatedSpy.count(), 0);
+    QCOMPARE(mpta->property("updatedCount").toInt(), 0);
+    QCOMPARE(releasedSpy.count(), 0);
+    QCOMPARE(mpta->property("releasedCount").toInt(), 0);
+
+    p1 += QPoint(0, 15);
+    QTest::mouseMove(window.data(), p1);
+    QCOMPARE(point1->pressed(), true);
+    QCOMPARE(point2->pressed(), false);
+    QCOMPARE(pressedSpy.count(), 1);
+    QCOMPARE(mpta->property("pressedCount").toInt(), 1);
+    QCOMPARE(updatedSpy.count(), 1);
+    QCOMPARE(mpta->property("updatedCount").toInt(), 1);
+    QCOMPARE(releasedSpy.count(), 0);
+    QCOMPARE(mpta->property("releasedCount").toInt(), 0);
+
+    QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, p1);
+    QCOMPARE(point1->pressed(), false);
+    QCOMPARE(point2->pressed(), false);
+    QCOMPARE(pressedSpy.count(), 1);
+    QCOMPARE(mpta->property("pressedCount").toInt(), 1);
+    QCOMPARE(updatedSpy.count(), 1);
+    QCOMPARE(mpta->property("updatedCount").toInt(), 1);
+    QCOMPARE(releasedSpy.count(), 1);
+    QCOMPARE(mpta->property("releasedCount").toInt(), 1);
 }
 
 

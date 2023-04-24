@@ -742,3 +742,5 @@ bool QQuickPointerHandlerPrivate::dragOverThreshold(const QQuickEventPoint *poin
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpointerhandler_p.cpp"

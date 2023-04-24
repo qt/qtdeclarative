@@ -466,3 +466,5 @@ void QSGPlainTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qsgplaintexture_p.cpp"

@@ -163,3 +163,5 @@ QVector2D QQuickPointHandler::translation() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpointhandler_p.cpp"

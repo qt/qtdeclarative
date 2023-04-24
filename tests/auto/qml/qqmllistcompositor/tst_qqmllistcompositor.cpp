@@ -89,14 +89,12 @@ QT_END_NAMESPACE
 static const C::Group Visible = C::Group(2);
 static const C::Group Selection = C::Group(3);
 
+constexpr auto VisibleFlag = C::Flag(0x04);
+constexpr auto SelectionFlag = C::Flag(0x08);
+
 class tst_qqmllistcompositor : public QObject
 {
     Q_OBJECT
-
-    enum {
-        VisibleFlag   = 0x04,
-        SelectionFlag = 0x08
-    };
 
     void populateChange(
             C::Change &change, int sIndex, int vIndex, int dIndex, int cIndex, int count, int flags, int moveId)

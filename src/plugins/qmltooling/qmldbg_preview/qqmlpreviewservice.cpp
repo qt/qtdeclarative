@@ -197,3 +197,5 @@ void QQmlPreviewServiceImpl::forwardFps(const QQmlPreviewHandler::FpsInfo &frame
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlpreviewservice.cpp"

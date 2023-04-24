@@ -137,3 +137,5 @@ void QQmlPreviewClient::triggerLanguage(const QUrl &url, const QString &locale)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlpreviewclient_p.cpp"

@@ -159,3 +159,5 @@ void QQmlProfilerAdapter::receiveData(const QVector<QQmlProfilerData> &new_data,
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlprofileradapter.cpp"

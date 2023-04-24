@@ -965,7 +965,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             const qreal availWidth = availableWidth();
             const qreal availHeight = availableHeight();
 
-            lineWidth = q->widthValid() && availWidth > 0 ? availWidth : naturalWidth;
+            lineWidth = q->widthValid() && q->width() > 0 ? availWidth : naturalWidth;
             maxHeight = q->heightValid() ? availHeight : FLT_MAX;
 
             // If the width of the item has changed and it's possible the result of wrapping,

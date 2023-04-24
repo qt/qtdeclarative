@@ -572,10 +572,10 @@ void QSGRhiShaderEffectMaterial::updateTextureProviders(bool layoutChange)
 
 QSGRhiShaderEffectNode::QSGRhiShaderEffectNode(QSGDefaultRenderContext *rc, QSGRhiGuiThreadShaderEffectManager *mgr)
     : QSGShaderEffectNode(mgr),
-      m_rc(rc),
       m_mgr(mgr),
       m_material(this)
 {
+    Q_UNUSED(rc);
     setFlag(UsePreprocess, true);
     setMaterial(&m_material);
 }
@@ -884,3 +884,5 @@ bool QSGRhiGuiThreadShaderEffectManager::reflect(ShaderInfo *result)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qsgrhishadereffectnode_p.cpp"

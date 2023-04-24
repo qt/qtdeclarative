@@ -382,3 +382,5 @@ QSize QSGCompressedTextureFactory::textureSize() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qsgcompressedtexture_p.cpp"

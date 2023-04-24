@@ -268,6 +268,7 @@ private slots:
     void dataViewCtor();
 
     void uiLanguage();
+    void forOfAndGc();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5248,6 +5249,77 @@ void tst_QJSEngine::uiLanguage()
         qmlEngine.setUiLanguage("Blah");
         QCOMPARE(qmlEngine.globalObject().property("Qt").property("uiLanguage").toString(), "Blah");
     }
+}
+
+void tst_QJSEngine::forOfAndGc()
+{
+    // We want to guard against the iterator of a for..of loop leaving the result unprotected from
+    // garbage collection. It should be possible to construct a pure JS test case, but due to the
+    // vaguaries of garbage collection it's hard to reliably trigger the crash. This test is the
+    // best I could come up with.
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(R"(
+        import QtQml 2.15
+        import QtQml.Models 2.15
+
+        QtObject {
+            id: counter
+            property int count: 0
+
+            property DelegateModel model: DelegateModel {
+                id: filesModel
+
+                model: ListModel {
+                    Component.onCompleted: {
+                        for (let idx = 0; idx < 50; idx++)
+                            append({"i" : idx})
+                    }
+                }
+
+                groups: [
+                    DelegateModelGroup {
+                        name: "selected"
+                    }
+                ]
+
+                function getSelected() {
+                    for (let i = 0; i < items.count; ++i) {
+                        var item = items.get(i)
+                        for (let el of item.groups) {
+                            if (el === "selected")
+                                ++counter.count
+                        }
+                    }
+                }
+
+                property bool bSelect: true
+                function selectAll() {
+                    for (let i = 0; i < items.count; ++i) {
+                        if (bSelect && !items.get(i).inSelected)
+                            items.addGroups(i, 1, ["selected"])
+                        else
+                            items.removeGroups(i, 1, ["selected"])
+                        getSelected()
+                    }
+                    bSelect = !bSelect
+                }
+            }
+
+            property Timer timer: Timer {
+                running: true
+                interval: 1
+                repeat: true
+                onTriggered: filesModel.selectAll()
+            }
+        }
+    )", QUrl());
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QTRY_VERIFY(o->property("count").toInt() > 32768);
 }
 
 QTEST_MAIN(tst_QJSEngine)

@@ -650,3 +650,5 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
 }
 
 QT_END_NAMESPACE
+
+#include "moc_quicktest_p.cpp"

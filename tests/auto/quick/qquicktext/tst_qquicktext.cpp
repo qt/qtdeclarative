@@ -55,6 +55,8 @@ QT_BEGIN_NAMESPACE
 extern void qt_setQtEnableTestFont(bool value);
 QT_END_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
 class tst_qquicktext : public QQmlDataTest
 {
     Q_OBJECT
@@ -153,6 +155,7 @@ private slots:
     void growFromZeroWidth();
 
     void padding();
+    void paddingInLoader();
 
     void hintingPreference();
 
@@ -4342,6 +4345,20 @@ void tst_qquicktext::padding()
     obj->setElideMode(QQuickText::ElideRight);
     QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
     QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+
+    obj->setLeftPadding(0);
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+
+    obj->setWidth(cw);
+    obj->setRightPadding(cw);
+    QCOMPARE(obj->contentWidth(), 0);
+
+    for (int incr = 1; incr < 50 && qFuzzyIsNull(obj->contentWidth()); ++incr)
+        obj->setWidth(cw + incr);
+    QVERIFY(obj->contentWidth() > 0);
+    qCDebug(lcTests) << "increasing Text width from" << cw << "to" << obj->width()
+                     << "rendered a character: contentWidth now" << obj->contentWidth();
+
     obj->setElideMode(QQuickText::ElideNone);
     obj->resetWidth();
 
@@ -4384,6 +4401,34 @@ void tst_qquicktext::padding()
     QCOMPARE(obj->bottomPadding(), 0.0);
 
     delete root;
+}
+
+void tst_qquicktext::paddingInLoader() // QTBUG-83413
+{
+    QQuickView view(testFileUrl("paddingInLoader.qml"));
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QQuickText *qtext = view.rootObject()->findChild<QQuickText*>();
+    QVERIFY(qtext);
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(qtext);
+    QVERIFY(textPrivate);
+    QCOMPARE(qtext->contentWidth(), 0); // does not render text, because width == rightPadding
+    QCOMPARE(textPrivate->availableWidth(), 0);
+
+    qtext->setLeftPadding(qtext->width());
+    qtext->setRightPadding(0);
+    QCOMPARE(qtext->contentWidth(), 0); // does not render text, because width == leftPadding
+    QCOMPARE(textPrivate->availableWidth(), 0);
+
+    qtext->setRightPadding(qtext->width());
+    QCOMPARE(qtext->contentWidth(), 0); // does not render text: available space is negative
+    QCOMPARE(textPrivate->availableWidth(), -qtext->width());
+
+    qtext->setLeftPadding(2);
+    qtext->setRightPadding(2);
+    QVERIFY(qtext->contentWidth() > 0); // finally space is available to render text
+    QCOMPARE(textPrivate->availableWidth(), qtext->width() - 4);
 }
 
 void tst_qquicktext::hintingPreference()

@@ -16,6 +16,7 @@ SOURCES += \
     qqmlprofilerclient.cpp \
     qqmlprofilerevent.cpp \
     qqmlprofilereventlocation.cpp \
+    qqmlprofilereventreceiver.cpp \
     qqmlprofilereventtype.cpp \
     qqmlprofilertypedevent.cpp \
     qv4debugclient.cpp

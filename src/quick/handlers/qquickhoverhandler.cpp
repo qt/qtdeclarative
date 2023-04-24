@@ -154,6 +154,98 @@ void QQuickHoverHandler::setHovered(bool hovered)
 }
 
 /*!
+    \internal
+    \qmlproperty flags QtQuick::HoverHandler::acceptedButtons
+
+    This property is not used in HoverHandler.
+*/
+
+/*!
+    \qmlproperty flags QtQuick::HoverHandler::acceptedDevices
+
+    The types of pointing devices that can activate the pointer handler.
+
+    By default, this property is set to
+    \l{QInputDevice::DeviceType}{PointerDevice.AllDevices}.
+    If you set it to an OR combination of device types, it will ignore pointer
+    events from the non-matching devices.
+
+    For example, an item could be made to respond to mouse hover in one way,
+    and stylus hover in another way, with two handlers:
+
+    \snippet pointerHandlers/hoverMouseOrStylus.qml 0
+
+    The available device types are as follows:
+
+    \value PointerDevice.Mouse          A mouse.
+    \value PointerDevice.TouchScreen    A touchscreen.
+    \value PointerDevice.TouchPad       A touchpad or trackpad.
+    \value PointerDevice.Stylus         A stylus on a graphics tablet.
+    \value PointerDevice.Airbrush       An airbrush on a graphics tablet.
+    \value PointerDevice.Puck           A digitizer with crosshairs, on a graphics tablet.
+    \value PointerDevice.AllDevices     Any type of pointing device.
+
+    \sa QInputDevice::DeviceType
+*/
+
+/*!
+    \qmlproperty flags QtQuick::HoverHandler::acceptedPointerTypes
+
+    The types of pointing instruments (generic, stylus, eraser, and so on)
+    that can activate the pointer handler.
+
+    By default, this property is set to
+    \l {QPointingDevice::PointerType} {PointerDevice.AllPointerTypes}.
+    If you set it to an OR combination of device types, it will ignore events
+    from non-matching events.
+
+    For example, you could provide feedback by changing the cursor depending on
+    whether a stylus or eraser is hovering over a graphics tablet:
+
+    \snippet pointerHandlers/hoverStylusOrEraser.qml 0
+
+    The available pointer types are as follows:
+
+    \value PointerDevice.Generic          A mouse or a device that emulates a mouse.
+    \value PointerDevice.Finger           A finger on a touchscreen (hover detection is unlikely).
+    \value PointerDevice.Pen              A stylus on a graphics tablet.
+    \value PointerDevice.Eraser           An eraser on a graphics tablet.
+    \value PointerDevice.Cursor           A digitizer with crosshairs, on a graphics tablet.
+    \value PointerDevice.AllPointerTypes  Any type of pointing device.
+
+    \sa QPointingDevice::PointerType
+*/
+
+/*!
+    \qmlproperty flags QtQuick::HoverHandler::acceptedModifiers
+
+    If this property is set, a hover event is handled only if the given keyboard
+    modifiers are pressed. The event is ignored without the modifiers.
+
+    This property is set to \c Qt.KeyboardModifierMask by default, resulting
+    in handling hover events regardless of any modifier keys.
+
+    For example, an \l[QML]{Item} could have two handlers of the same type, one
+    of which is enabled only if the required keyboard modifiers are pressed:
+
+    \snippet pointerHandlers/hoverModifiers.qml 0
+
+    The available modifiers are as follows:
+
+    \value Qt.NoModifier        No modifier key is allowed.
+    \value Qt.ShiftModifier     A Shift key on the keyboard must be pressed.
+    \value Qt.ControlModifier   A Ctrl key on the keyboard must be pressed.
+    \value Qt.AltModifier       An Alt key on the keyboard must be pressed.
+    \value Qt.MetaModifier      A Meta key on the keyboard must be pressed.
+    \value Qt.KeypadModifier    A keypad button must be pressed.
+    \value Qt.GroupSwitchModifier A Mode_switch key on the keyboard must be pressed.
+                                X11 only (unless activated on Windows by a command line argument).
+    \value Qt.KeyboardModifierMask The handler ignores modifier keys.
+
+    \sa Qt::KeyboardModifier
+*/
+
+/*!
     \since 5.15
     \qmlproperty Qt::CursorShape QtQuick::HoverHandler::cursorShape
     This property holds the cursor shape that will appear whenever
@@ -202,3 +294,5 @@ void QQuickHoverHandler::setHovered(bool hovered)
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qquickhoverhandler_p.cpp"

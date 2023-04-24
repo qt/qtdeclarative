@@ -676,11 +676,11 @@ public:
             struct RealTypes {
                 int64_t m_from : 48;
                 int64_t m_to : 48;
+                RegisterID m_compareRegister;
                 JumpType m_type : 8;
                 JumpLinkType m_linkType : 8;
                 Condition m_condition : 4;
                 unsigned m_bitNumber : 6;
-                RegisterID m_compareRegister : 6;
                 bool m_is64Bit : 1;
             } realTypes;
         } data;

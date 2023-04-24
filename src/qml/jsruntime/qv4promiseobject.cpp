@@ -116,6 +116,8 @@ struct ResolveThenableEvent : public QEvent
 } // namespace QV4
 QT_END_NAMESPACE
 
+#include "moc_qv4promiseobject_p.cpp"
+
 ReactionHandler::ReactionHandler(QObject *parent)
     : QObject(parent)
 {}

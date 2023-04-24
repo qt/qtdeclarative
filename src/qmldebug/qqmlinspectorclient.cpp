@@ -148,3 +148,5 @@ void QQmlInspectorClient::messageReceived(const QByteArray &message)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlinspectorclient_p.cpp"

@@ -831,7 +831,20 @@ void QQuickTextInput::setCursorVisible(bool on)
 
 /*!
     \qmlproperty int QtQuick::TextInput::cursorPosition
-    The position of the cursor in the TextInput.
+    The position of the cursor in the TextInput. The cursor is positioned between
+    characters.
+
+    \note The \e characters in this case refer to the string of \l QChar objects,
+    therefore 16-bit Unicode characters, and the position is considered an index
+    into this string. This does not necessarily correspond to individual graphemes
+    in the writing system, as a single grapheme may be represented by multiple
+    Unicode characters, such as in the case of surrogate pairs, linguistic
+    ligatures or diacritics.
+
+    \l displayText is different if echoMode is set to \l TextInput.Password: then
+    each passwordMaskCharacter is a "narrow" character
+    (the cursorPosition always moves by 1), even if the text in the TextInput is not.
+
 */
 int QQuickTextInput::cursorPosition() const
 {
@@ -1152,6 +1165,7 @@ void QQuickTextInput::setInputMask(const QString &im)
 
 /*!
     \qmlproperty bool QtQuick::TextInput::acceptableInput
+    \readonly
 
     This property is always true unless a validator or input mask has been set.
     If a validator or input mask has been set, this property will only be true

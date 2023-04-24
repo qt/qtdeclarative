@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QML preview debug service.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,22 +37,13 @@
 **
 ****************************************************************************/
 
-#include "qqmlpreviewservicefactory.h"
-#include "qqmlpreviewservice.h"
-#include "qqmldebugtranslationservice.h"
+#include "qqmldebugserver_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QQmlDebugService *QQmlPreviewServiceFactory::create(const QString &key)
-{
-    if (key == QQmlPreviewServiceImpl::s_key)
-        return new QQmlPreviewServiceImpl(this);
-    if (key == QQmlDebugTranslationServiceImpl::s_key)
-        return new QQmlDebugTranslationServiceImpl(this);
-
-    return nullptr;
-}
+QQmlDebugServer::~QQmlDebugServer()
+    = default;
 
 QT_END_NAMESPACE
 
-#include "moc_qqmlpreviewservicefactory.cpp"
+#include "moc_qqmldebugserver_p.cpp"

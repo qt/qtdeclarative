@@ -128,6 +128,8 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(lcTransient)
 QT_END_NAMESPACE
 
+#include "moc_qquickitemsmodule_p.cpp"
+
 static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject *parent)
 {
     // When setting a parent (especially during dynamic object creation) in QML,

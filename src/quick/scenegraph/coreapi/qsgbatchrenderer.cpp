@@ -4024,6 +4024,7 @@ void Renderer::renderBatches()
 
         if (m_useDepthBuffer) {
             glClearDepthf(1); // calls glClearDepth() under the hood for desktop OpenGL
+            glDepthMask(true);
         }
         glColorMask(true, true, true, true);
         glDisable(GL_SCISSOR_TEST);

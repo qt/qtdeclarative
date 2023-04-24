@@ -439,9 +439,8 @@ void QQuickLoader::loadFromSource()
     }
 
     if (isComponentComplete()) {
-        QQmlComponent::CompilationMode mode = d->asynchronous ? QQmlComponent::Asynchronous : QQmlComponent::PreferSynchronous;
         if (!d->component)
-            d->component.setObject(new QQmlComponent(qmlEngine(this), d->source, mode, this), this);
+            d->createComponent();
         d->load();
     }
 }
@@ -806,11 +805,8 @@ void QQuickLoader::componentComplete()
     Q_D(QQuickLoader);
     QQuickItem::componentComplete();
     if (active()) {
-        if (d->loadingFromSource) {
-            QQmlComponent::CompilationMode mode = d->asynchronous ? QQmlComponent::Asynchronous : QQmlComponent::PreferSynchronous;
-            if (!d->component)
-                d->component.setObject(new QQmlComponent(qmlEngine(this), d->source, mode, this), this);
-        }
+        if (d->loadingFromSource && !d->component)
+            d->createComponent();
         d->load();
     }
 }
@@ -1042,6 +1038,22 @@ void QQuickLoaderPrivate::updateStatus()
         status = newStatus;
         emit q->statusChanged();
     }
+}
+
+void QQuickLoaderPrivate::createComponent()
+{
+    Q_Q(QQuickLoader);
+    const QQmlComponent::CompilationMode mode = asynchronous
+            ? QQmlComponent::Asynchronous
+            : QQmlComponent::PreferSynchronous;
+    if (QQmlContext *context = qmlContext(q)) {
+        if (QQmlEngine *engine = context->engine()) {
+            component.setObject(new QQmlComponent(engine, source, mode, q), q);
+            return;
+        }
+    }
+
+    qmlWarning(q) << "createComponent: Cannot find a QML engine.";
 }
 
 #include <moc_qquickloader_p.cpp>

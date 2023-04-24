@@ -213,8 +213,6 @@ Q_SIGNALS:
     void setSizeHintChanged();
 
 private:
-    int mIndex = -1;
-
     // We store these in hashes because QQuickTableModel needs string-based lookup in certain situations.
     QHash<QString, QJSValue> mGetters;
     QHash<QString, QJSValue> mSetters;

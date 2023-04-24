@@ -106,3 +106,5 @@ void QDebugMessageServiceImpl::synchronizeTime(const QElapsedTimer &otherTimer)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qdebugmessageservice.cpp"

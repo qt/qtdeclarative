@@ -546,3 +546,5 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpinchhandler_p.cpp"

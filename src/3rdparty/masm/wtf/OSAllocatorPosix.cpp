@@ -111,7 +111,11 @@ void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, 
                         (fd == -1 ? MAP_ANON : 0), fd, 0);
     if (result == MAP_FAILED)
         CRASH();
-    madvise(result, bytes, MADV_DONTNEED);
+
+    while (madvise(result, bytes, MADV_DONTNEED)) {
+        if (errno != EAGAIN)
+            CRASH();
+    }
 
     if (fd != -1)
         close(fd);
@@ -218,7 +222,12 @@ void OSAllocator::commit(void* address, size_t bytes, bool writable, bool execut
         protection |= PROT_EXEC;
     if (mprotect(address, bytes, protection))
         CRASH();
-    madvise(address, bytes, MADV_WILLNEED);
+
+    while (madvise(address, bytes, MADV_WILLNEED)) {
+        if (errno != EAGAIN)
+            CRASH();
+    }
+
 #elif HAVE(MADV_FREE_REUSE)
     UNUSED_PARAM(writable);
     UNUSED_PARAM(executable);
@@ -238,7 +247,10 @@ void OSAllocator::decommit(void* address, size_t bytes)
     // Use PROT_NONE and MAP_LAZY to decommit the pages.
     mmap(address, bytes, PROT_NONE, MAP_FIXED | MAP_LAZY | MAP_PRIVATE | MAP_ANON, -1, 0);
 #elif OS(LINUX)
-    madvise(address, bytes, MADV_DONTNEED);
+    while (madvise(address, bytes, MADV_DONTNEED)) {
+        if (errno != EAGAIN)
+            CRASH();
+    }
     if (mprotect(address, bytes, PROT_NONE))
         CRASH();
 #elif HAVE(MADV_FREE_REUSE)

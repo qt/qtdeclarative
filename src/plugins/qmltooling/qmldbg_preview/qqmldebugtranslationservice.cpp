@@ -66,3 +66,5 @@ void QQmlDebugTranslationServiceImpl::foundTranslationBinding(QQmlTranslationBin
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmldebugtranslationservice.cpp"

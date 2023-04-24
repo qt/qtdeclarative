@@ -133,6 +133,7 @@ private slots:
 
     void setSourceAndCheckStatus();
     void asyncLoaderRace();
+    void noEngine();
 };
 
 Q_DECLARE_METATYPE(QList<QQmlError>)
@@ -1513,6 +1514,20 @@ void tst_QQuickLoader::asyncLoaderRace()
     QSignalSpy spy(loader, &QQuickLoader::itemChanged);
     QVERIFY(!spy.wait(100));
     QCOMPARE(loader->item(), nullptr);
+}
+
+void tst_QQuickLoader::noEngine()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("noEngine.qml");
+    QQmlComponent component(&engine, url);
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+
+    const QString message = url.toString()
+            + QStringLiteral(":27:13: QML Loader: createComponent: Cannot find a QML engine.");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(message));
+    QTRY_COMPARE(o->property("changes").toInt(), 1);
 }
 
 QTEST_MAIN(tst_QQuickLoader)

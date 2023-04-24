@@ -62,7 +62,8 @@ class QQmlProfilerEventReceiver : public QObject
 {
     Q_OBJECT
 public:
-    QQmlProfilerEventReceiver(QObject *parent = nullptr) : QObject(parent) {}
+    explicit QQmlProfilerEventReceiver(QObject *parent = nullptr) : QObject(parent) {}
+    ~QQmlProfilerEventReceiver() override;
 
     virtual int numLoadedEventTypes() const = 0;
     virtual void addEventType(const QQmlProfilerEventType &type) = 0;
