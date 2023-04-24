@@ -55,10 +55,14 @@ public:
     IndexType index() const { return m_data.get<IndexField>(); }
 };
 
+using NodeList = std::vector<Node>;
 using AdjacencyList = std::vector<std::vector<Node*>>;
 
 template<typename ObjectContainer, typename InlineComponent>
-void fillAdjacencyListForInlineComponents(ObjectContainer *objectContainer, AdjacencyList &adjacencyList, std::vector<Node> &nodes, const std::vector<InlineComponent> &allICs) {
+void fillAdjacencyListForInlineComponents(ObjectContainer *objectContainer,
+                                          AdjacencyList &adjacencyList, NodeList &nodes,
+                                          const std::vector<InlineComponent> &allICs)
+{
     using CompiledObject = typename ObjectContainer::CompiledObject;
     // add an edge from A to B if A and B are inline components with the same containing type
     // and A inherits from B (ignore indirect chains through external types for now)
@@ -102,7 +106,9 @@ void fillAdjacencyListForInlineComponents(ObjectContainer *objectContainer, Adja
     }
 };
 
-inline void topoVisit(Node *node, AdjacencyList &adjacencyList, bool &hasCycle, std::vector<Node> &nodesSorted) {
+inline void topoVisit(Node *node, AdjacencyList &adjacencyList, bool &hasCycle,
+                      NodeList &nodesSorted)
+{
     if (node->hasPermanentMark())
         return;
     if (node->hasTemporaryMark()) {
@@ -121,8 +127,9 @@ inline void topoVisit(Node *node, AdjacencyList &adjacencyList, bool &hasCycle, 
 };
 
 // Use DFS based topological sorting (https://en.wikipedia.org/wiki/Topological_sorting)
-inline std::vector<Node> topoSort(std::vector<Node> &nodes, AdjacencyList &adjacencyList, bool &hasCycle) {
-    std::vector<Node> nodesSorted;
+inline NodeList topoSort(NodeList &nodes, AdjacencyList &adjacencyList, bool &hasCycle)
+{
+    NodeList nodesSorted;
     nodesSorted.reserve(nodes.size());
 
     hasCycle = false;

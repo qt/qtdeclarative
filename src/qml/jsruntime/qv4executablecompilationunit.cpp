@@ -395,7 +395,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
             allICs.push_back(*it);
         }
     }
-    std::vector<Node> nodes;
+    NodeList nodes;
     nodes.resize(allICs.size());
     std::iota(nodes.begin(), nodes.end(), 0);
     AdjacencyList adjacencyList;
