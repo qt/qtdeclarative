@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 if (TARGET Qt::LanguageServerPrivate AND TARGET Qt::qmlls)
-    add_subdirectory(qmlls)
     add_subdirectory(lifecycle)
-    add_subdirectory(modules)
-    add_subdirectory(utils)
+    if (TARGET Qt::QuickTestUtilsPrivate)
+        add_subdirectory(qmlls)
+        add_subdirectory(utils)
+        add_subdirectory(modules)
+    endif()
 endif()
