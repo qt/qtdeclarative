@@ -9,8 +9,8 @@
             "contentItem": "label"
         },
         "states": {
-            "normal": "idle",
-            "disabled": "blocked",
+            "normal": "normal",
+            "disabled": "disabled",
             "hovered": "hovered",
             "pressed": "pressed",
             "checked": "checked",
@@ -48,21 +48,21 @@
         "component set": "SwitchTemplate",
         "atoms": {
             "background": "SwitchBackground, background (image)",
-            "background-lefticon": "SwitchBackground, iconLeftOff (image)",
-            "background-righticon": "SwitchBackground, iconRightOff (image)",
+            "background-lefticon": "SwitchBackground, leftIcon (image)",
+            "background-righticon": "SwitchBackground, rightIcon (image)",
             "handle": "SwitchHandle, handle (image)",
-            "handle-lefticon": "SwitchHandle, iconLeftOn (image)",
-            "handle-righticon": "SwitchHandle, iconRightOn (image)"
+            "handle-lefticon": "SwitchHandle, leftIcon (image)",
+            "handle-righticon": "SwitchHandle, rightIcon (image)"
         },
         "states": {
-            "normal": "idleOFF",
-            "disabled": "blockedOFF",
-            "disabled-checked": "blockedOFF",
-            "hovered": "hoveredOFF",
-            "pressed": "pressedOFF",
-            "checked": "idleON",
-            "checked-pressed": "pressedON",
-            "checked-hovered": "hoveredON"
+            "normal": "normal",
+            "disabled": "disabled",
+            "pressed": "pressed",
+            "hovered": "hovered",
+            "checked": "checked",
+            "checked-disabled": "checkedDisabled",
+            "checked-pressed": "checkedPressed",
+            "checked-hovered": "checkedHovered"
         }
     }
     ]
