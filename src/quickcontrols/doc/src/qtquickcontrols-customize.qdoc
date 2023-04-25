@@ -590,46 +590,21 @@
         \snippet qtquickcontrols-combobox-custom.qml file
 
         As explained in \l {ComboBox Model Roles}, ComboBox supports multiple
-        types of models. If you know that your ComboBox instances will only
-        ever use one particular type of model, then it is possible to simplify
-        the code above.
+        types of models.
 
-        For example, if your models will only ever be derived from
-        \l QAbstractItemModel and have more than one role, the following
-        binding is sufficient:
+        Since \l {qml-data-models}{all the models provide an anonymous property}
+        with \c modelData, the following expression retrieves the right text in
+        all cases:
 
         \code
         text: model[control.textRole]
         \endcode
 
-        However, if you want to support all standard models, the more complex
-        binding is necessary, and is explained in detail below.
-
-        \quotefromfile qtquickcontrols-combobox-custom.qml
-        \skipto control.textRole
-        \printto Array.isArray
-
-        The first line checks if the \l {ComboBox::}{textRole} property has
-        been set. It is only necessary to set this property if the model
-        has more than one role.
-
-        \printline Array.isArray
-
-        If \c textRole has been set, the next step is to check if the model
-        is an array.
-
-        If it is an array, the \c modelData context property will be available,
-        and so it must be used. Square bracket notation is used to access
-        the property of modelData since the property name is not known ahead
-        of time.
-
-        If it is not an array, the \c model context property must be used
-        instead.
-
-        \printline modelData
-
-        Finally, if \c textRole has not been set, then the model only has one
-        role, and so it is sufficient to use the value of \c modelData.
+        When you provide a specific \c textRole and a model with structured
+        data that provides the selected role, this is expression is a regular
+        property lookup. When you provide a model with singular data, such as
+        a list of strings, and an empty \c textRole, this expression retrieves
+        the \c modelData.
 
     \section2 Customizing DelayButton
 
