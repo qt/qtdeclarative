@@ -217,6 +217,7 @@ private slots:
     void receiveTapOutsideContentItem();
     void flickWhenRotated_data();
     void flickWhenRotated();
+    void flickAndReleaseOutsideBounds();
     void scrollingWithFractionalExtentSize_data();
     void scrollingWithFractionalExtentSize();
     void setContentPositionWhileDragging_data();
@@ -2937,6 +2938,42 @@ void tst_qquickflickable::flickWhenRotated() // QTBUG-99639
     QVERIFY(!flickable->isAtYBeginning());
 }
 
+void tst_qquickflickable::flickAndReleaseOutsideBounds() // QTBUG-104987
+{
+    // Check that flicking works when the mouse release happens
+    // outside the bounds of the flickable (and the flick started on top
+    // of a TapHandler that has a passive grab).
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("flickableWithTapHandler.qml")));
+    QQuickItem *rootItem = window.rootObject();
+    QVERIFY(rootItem);
+    QQuickFlickable *flickable = rootItem->findChild<QQuickFlickable*>();
+    QVERIFY(flickable);
+    QQuickItem *childItem = flickable->findChild<QQuickItem*>("childItem");
+    QVERIFY(childItem);
+
+    QVERIFY(flickable->isAtYBeginning());
+
+    // Startpoint is on top of the tapHandler, while the endpoint is outside the flickable
+    const QPointF startPos = childItem->mapToGlobal(QPoint(10, 10));
+    const QPointF endPos = flickable->mapToGlobal(QPoint(10, -10));
+    const QPoint globalStartPos = window.mapFromGlobal(startPos).toPoint();
+    const QPoint globalEndPos = window.mapFromGlobal(endPos).toPoint();
+    const qreal dragDistance = 20;
+
+    // Note: here we need to initiate a flick using raw events, rather than
+    // flickable.flick(), since we're testing if the mouse events takes the
+    // correct path to starts a flick (among passive and exclusive grabbers, combined
+    // with childMouseEventFilter()).
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, globalStartPos);
+    QTest::mouseMove(&window, globalStartPos - QPoint(0, dragDistance / 2));
+    QTest::mouseMove(&window, globalStartPos - QPoint(0, dragDistance));
+    QTest::mouseMove(&window, globalEndPos);
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, globalEndPos);
+
+    // Ensure that the content item ends up being moved more than what we dragged
+    QTRY_VERIFY(flickable->contentY() > dragDistance * 2);
+}
 
 void tst_qquickflickable::scrollingWithFractionalExtentSize_data()
 {
