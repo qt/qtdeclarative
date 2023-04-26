@@ -2604,7 +2604,20 @@ bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *ev
     } else {
         qCDebug(lcFilter) << objectName() << "filtering" << event << "for" << receiver;
     }
+
     const auto &firstPoint = event->points().first();
+
+    if (event->pointCount() == 1 && event->exclusiveGrabber(firstPoint) == this) {
+        // We have an exclusive grab (since we're e.g dragging), but at the same time, we have
+        // a child with a passive grab (which is why this filter is being called). And because
+        // of that, we end up getting the same pointer events twice; First in our own event
+        // handlers (because of the grab), then once more in here, since we filter the child.
+        // To avoid processing the event twice (e.g avoid calling handleReleaseEvent once more
+        // from below), we mark the event as filtered, and simply return.
+        event->setAccepted(true);
+        return true;
+    }
+
     QPointF localPos = mapFromScene(firstPoint.scenePosition());
     bool receiverDisabled = receiver && !receiver->isEnabled();
     bool stealThisEvent = d->stealMouse;
