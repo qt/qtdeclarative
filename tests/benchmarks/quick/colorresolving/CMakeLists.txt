@@ -7,25 +7,20 @@
 ## tst_colorresolving Test:
 #####################################################################
 
-# Collect test data
-file(GLOB_RECURSE test_data_glob
-    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/tst_*)
-list(APPEND test_data ${test_data_glob})
-
-qt_internal_add_test(tst_colorresolving
-    GUI
-    QMLTEST
+qt_internal_add_benchmark(tst_colorresolving
     SOURCES
         tst_colorresolving.cpp
     LIBRARIES
         Qt::Gui
-    TESTDATA ${test_data}
+        Qt::QuickTest
 )
 
-#### Keys ignored in scope 1:.:.:colorresolving.pro:<TRUE>:
-# OTHER_FILES = "$$PWD/data/*.qml"
-# TEMPLATE = "app"
+qt_internal_extend_target(tst_colorresolving CONDITION NOT ANDROID AND NOT IOS
+DEFINES
+    QUICK_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
+)
 
-## Scopes:
-#####################################################################
+qt_internal_extend_target(tst_colorresolving CONDITION ANDROID OR IOS
+DEFINES
+    QUICK_TEST_SOURCE_DIR=":/data"
+)
