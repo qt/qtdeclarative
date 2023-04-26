@@ -27,6 +27,9 @@ static bool isBlockedByPopup(QQuickItem *item)
         if (qobject_cast<QQuickToolTip *>(popup))
             continue; // ignore tooltips (QTBUG-60492)
         if (popup->isModal() || popup->closePolicy() & QQuickPopup::CloseOnEscape) {
+            qCDebug(lcContextMatcher) << popup << "is modal or has a CloseOnEscape policy;"
+                << "if the following are both true," << item << "will be blocked by it:"
+                << (item != popup->popupItem()) << !popup->popupItem()->isAncestorOf(item);
             return item != popup->popupItem() && !popup->popupItem()->isAncestorOf(item);
         }
     }
@@ -67,7 +70,7 @@ bool QQuickShortcutContext::matcher(QObject *obj, Qt::ShortcutContext context)
         }
         if (QWindow *renderWindow = QQuickRenderControl::renderWindowFor(qobject_cast<QQuickWindow *>(obj)))
             obj = renderWindow;
-        qCDebug(lcContextMatcher) << "obj" << obj << "focusWindow" << QGuiApplication::focusWindow()
+        qCDebug(lcContextMatcher) << "obj" << obj << "item" << item << "focusWindow" << QGuiApplication::focusWindow()
             << "!isBlockedByPopup(item)" << !isBlockedByPopup(item);
         return obj && obj == QGuiApplication::focusWindow() && !isBlockedByPopup(item);
     default:
