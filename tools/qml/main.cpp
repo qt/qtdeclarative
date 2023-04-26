@@ -73,8 +73,8 @@ static QQmlApplicationEngine *qae = nullptr;
 #if defined(Q_OS_DARWIN) || defined(QT_GUI_LIB)
 static int exitTimerId = -1;
 #endif
-static const QString iconResourcePath(QStringLiteral(":/qt-project.org/QmlRuntime/resources/qml-64.png"));
-static const QString confResourcePath(QStringLiteral(":/qt-project.org/QmlRuntime/conf/"));
+static const QString iconResourcePath(QStringLiteral(":/qt-project.org/imports/QmlRuntime/Config/resources/qml-64.png"));
+static const QString confResourcePath(QStringLiteral(":/qt-project.org/imports/QmlRuntime/Config/"));
 static const QString customConfFileName(QStringLiteral("configuration.qml"));
 static bool verboseMode = false;
 static bool quietMode = false;
@@ -156,8 +156,16 @@ static void listConfFiles()
 {
     const QDir confResourceDir(confResourcePath);
     printf("%s\n", qPrintable(QCoreApplication::translate("main", "Built-in configurations:")));
-    for (const QFileInfo &fi : confResourceDir.entryInfoList(QDir::Files))
-        printf("  %s\n", qPrintable(fi.baseName()));
+    for (const QFileInfo &fi : confResourceDir.entryInfoList(QDir::Files)) {
+        if (fi.completeSuffix() != QLatin1String("qml"))
+            continue;
+
+        const QString baseName = fi.baseName();
+        if (baseName.isEmpty() || baseName[0].isUpper())
+            continue;
+
+        printf("  %s\n", qPrintable(baseName));
+    }
     printf("%s\n", qPrintable(QCoreApplication::translate("main", "Other configurations:")));
     bool foundOther = false;
     const QStringList otherLocations = QStandardPaths::standardLocations(QStandardPaths::AppConfigLocation);
