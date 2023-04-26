@@ -425,7 +425,6 @@ int main(int argc, char *argv[])
     app->setOrganizationDomain("qt-project.org");
     QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
 
-    QQmlApplicationEngine e;
     QStringList files;
     QString confFile;
     QString translationFile;
@@ -553,6 +552,9 @@ int main(int argc, char *argv[])
     if (parser.isSet(fixedAnimationsOption))
         QUnifiedTimer::instance()->setConsistentTiming(true);
 #endif
+
+    QQmlApplicationEngine e;
+
     for (const QString &importPath : parser.values(importOption))
         e.addImportPath(importPath);
 
