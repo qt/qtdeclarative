@@ -621,10 +621,22 @@ This is because the default property of \l Item is its \c data property, and
 any items added to this list for an \l Item are automatically added to its
 list of \l {Item::children}{children}.
 
-Default properties can be useful for reassigning the children of an item. See
-the \l{TabWidget Example}, which uses a default property to
-automatically reassign children of the TabWidget as children of an inner
-ListView.  See also \l {Extending QML}.
+Default properties can be useful for reassigning the children of an item.
+For example:
+
+\qml
+Item {
+    default property alias content: inner.children
+
+    Item {
+        id: inner
+     }
+}
+\endqml
+
+By setting the default property \e alias to \c {inner.children}, any object
+assigned as a child of the outer item is automatically reassigned as a child
+of the inner item.
 
 \section3 Required Properties
 
