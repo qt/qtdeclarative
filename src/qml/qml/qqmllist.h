@@ -5,9 +5,11 @@
 #define QQMLLIST_H
 
 #include <QtQml/qtqmlglobal.h>
+
+#include <QtCore/qcontainerinfo.h>
 #include <QtCore/qlist.h>
+#include <QtCore/qmetatype.h>
 #include <QtCore/qvariant.h>
-#include <QtCore/QMetaType>
 
 QT_BEGIN_NAMESPACE
 
