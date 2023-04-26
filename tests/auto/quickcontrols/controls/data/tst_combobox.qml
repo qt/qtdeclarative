@@ -2324,4 +2324,16 @@ TestCase {
         control.currentIndex = 1;
         compare(control.displayText, "7");
     }
+
+    function test_contextObject() {
+        // Now we pass an AbstractItemModel with 2 roles. Since we use required properties
+        // the model object should still have the anonymous property, and it should be a
+        // QQmlDMAbstractItemModelData.
+
+        var control = createTemporaryObject(comboBox, testCase, { model: fruitmodel });
+        verify(control);
+        for (var i = 0; i < 3; ++i)
+            ignoreWarning(/ComboBox\.qml\:[0-9]+\:[0-9]+\: Unable to assign QQmlDMAbstractItemModelData to QString/);
+        compare(control.popup.contentItem.itemAtIndex(0).text, "");
+    }
 }
