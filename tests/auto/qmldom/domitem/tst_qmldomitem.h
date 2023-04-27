@@ -882,22 +882,30 @@ private slots:
     void domConstructionTime_data()
     {
         QTest::addColumn<QString>("fileName");
-        QTest::addColumn<DomCreationOption>("withScope");
+        QTest::addColumn<DomCreationOptions>("withScope");
 
-        auto withScope = DomCreationOption::WithSemanticAnalysis;
-        auto noScope = DomCreationOption::None;
+        DomCreationOptions withScope = DomCreationOption::WithSemanticAnalysis;
+        DomCreationOptions noScope = DomCreationOption::None;
+        DomCreationOptions withScopeAndScriptExpressions;
+        withScopeAndScriptExpressions.setFlag(DomCreationOption::WithSemanticAnalysis);
+        withScopeAndScriptExpressions.setFlag(DomCreationOption::WithScriptExpressions);
 
         QTest::addRow("tiger.qml") << baseDir + u"/longQmlFile.qml"_s << noScope;
         QTest::addRow("tiger.qml-with-scope") << baseDir + u"/longQmlFile.qml"_s << withScope;
+        QTest::addRow("tiger.qml-with-scope-and-scriptexpressions")
+                << baseDir + u"/longQmlFile.qml"_s << withScopeAndScriptExpressions;
+
         QTest::addRow("deeplyNested.qml") << baseDir + u"/deeplyNested.qml"_s << noScope;
         QTest::addRow("deeplyNested.qml-with-scope")
                 << baseDir + u"/deeplyNested.qml"_s << withScope;
+        QTest::addRow("deeplyNested.qml-with-scope-and-scriptexpressions")
+                << baseDir + u"/deeplyNested.qml"_s << withScopeAndScriptExpressions;
     }
 
     void domConstructionTime()
     {
         QFETCH(QString, fileName);
-        QFETCH(DomCreationOption, withScope);
+        QFETCH(DomCreationOptions, withScope);
 
         const QStringList importPaths = {
             QLibraryInfo::path(QLibraryInfo::QmlImportsPath),
