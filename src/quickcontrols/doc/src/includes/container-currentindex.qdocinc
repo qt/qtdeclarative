@@ -6,4 +6,10 @@ of each control. To do this without breaking bindings, avoid setting
 \c currentIndex directly, and instead use
 \l {Container::}{setCurrentIndex()}, for example.
 See \l {Managing the Current Index} for more information.
+
+To perform an action when \c currentIndex changes, use the
+\c onCurrentIndexChanged
+\l {Property Change Signal Handlers}{property change signal handler}:
+
+\snippet qtquickcontrols-container-oncurrentindexchanged.qml 1
 //! [file]
