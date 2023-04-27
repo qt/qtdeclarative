@@ -5,8 +5,7 @@
         "copy": ":/Button.qml",
         "component set": "ButtonTemplate",
         "atoms": {
-            "background": "background (image)",
-            "contentItem": "label"
+            "background": "background (image)"
         },
         "states": {
             "normal": "normal",
@@ -21,11 +20,12 @@
     {
         "name": "CheckBox",
         "copy": ":/CheckBox.qml",
-        "component set": "CheckBoxTemplate",
+        "component set": "CheckBoxTemplateAL",
         "atoms": {
-            "background": "CheckBoxBackground, background (image)",
-            "indicator": "CheckBoxIndicator, indicator (image)",
-            "indicator-background": "CheckBoxIndicator, indicatorBackground (image)"
+            "background": "CheckBoxBackgroundAL, background (image)",
+            "contentItem": "contentItem",
+            "indicator": "CheckBoxIndicatorAL, indicator (image)",
+            "indicator-background": "CheckBoxIndicatorAL, indicatorBackground (image)"
         },
         "states": {
             "normal": "normal",

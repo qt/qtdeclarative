@@ -229,12 +229,16 @@ private:
         // Add this control to the list of controls that goes into the qmldir file
         m_qmlDirControls.append(controlName);
 
+        // Search for contentItem below, and process it last, so that we can
+        // make use of the other atoms in the calculations while doing so.
+        QJsonObject contentItemObj;
+
         const auto states = getObject("states", controlObj);
         for (const QString &imageState : std::as_const(states).keys()) {
             // Resolve all atoms for the given state
+            contentItemObj = QJsonObject();
             for (const QString &atomName : atoms.keys()) {
-                m_currentQualifiedAtomName = m_currentControl.toLower()
-                    + "-" + atomName + (imageState == "normal" ? "" : "-" + imageState);
+                m_currentQualifiedAtomName = qualifiedAtomName(atomName, imageState);
                 m_currentAtomInfo = m_currentQualifiedAtomName
                     + "; path: " + componentSetName + ", "
                     + states.value(imageState).toString();
@@ -251,16 +255,19 @@ private:
                     const auto figmaId = getString("id", atom);
                     m_currentAtomInfo += "; id: " + figmaId;
 
+                    if (atomName == "contentItem")
+                        contentItemObj = atom;
+
                     generateAtomAssets(atomInputConfig, atom);
                 } catch (std::exception &e) {
                     qWarning().nospace().noquote() << "Warning! " << m_currentAtomInfo << "; Generate control: " << e.what();
                 }
             }
 
-            try {
-                generatePaddingAndSpacing(controlObj, imageState);
+            if (!contentItemObj.isEmpty()) try {
+                generatePaddingAndSpacing(contentItemObj, imageState);
             } catch (std::exception &e) {
-                qWarning().nospace().noquote() << "Warning! " << m_currentAtomInfo << "; Padding: " << e.what();
+                    qWarning().nospace().noquote() << "Warning! " << m_currentAtomInfo << "; Padding: " << e.what();
             }
         }
     }
@@ -376,26 +383,23 @@ private:
         addExportType("json", outputConfig);
     }
 
-    void generatePaddingAndSpacing(const QJsonObject &controlObj, const QString &imageState)
+    void generatePaddingAndSpacing(const QJsonObject &contentItemObj, const QString &imageState)
     {
-        Q_UNUSED(controlObj);
-        Q_UNUSED(imageState);
-
-        const QString controlName = m_currentControl.toLower();
-        const QString stateName = imageState == "normal" ? "" : "-" + imageState;
+        // We expect there to be a "contentItem" atom that points to node
+        // that contain all the content atoms. And for now we assume that the
+        // contentItem always uses "auto layout" in Figma, so that we can read
+        // out all the padding information directly from the design.
 
         // Store padding and spacing info inside the background atom config
-        const QString bgQualifiedName = controlName + "-background" + stateName;
-        auto bgConfig = m_outputConfig[bgQualifiedName].toObject();
-        if (bgConfig.isEmpty())
-            throw std::runtime_error("atom not found: background");
+        const QString bgQualifiedName = qualifiedAtomName("background", imageState);
+        QJsonObject bgConfig = getConfigObject(bgQualifiedName);
 
         // Set padding and spacing to 0 for now
-        bgConfig.insert("leftPadding", 0);
-        bgConfig.insert("topPadding", 0);
-        bgConfig.insert("rightPadding", 0);
-        bgConfig.insert("bottomPadding", 0);
-        bgConfig.insert("spacing", 0);
+        bgConfig.insert("leftPadding", contentItemObj["paddingLeft"]);
+        bgConfig.insert("topPadding", contentItemObj["paddingTop"]);
+        bgConfig.insert("rightPadding", contentItemObj["paddingRight"]);
+        bgConfig.insert("bottomPadding", contentItemObj["paddingBottom"]);
+        bgConfig.insert("spacing", contentItemObj["itemSpacing"]);
 
         // Overwrite the previous config
         m_outputConfig.insert(bgQualifiedName, bgConfig);
@@ -518,6 +522,24 @@ private:
         const auto width = getValue("width", bb).toDouble();
         const auto height = getValue("height", bb).toDouble();
         return QRectF(x, y, width, height);
+    }
+
+    QString qualifiedAtomName(const QString &atomName, const QString &imageState)
+    {
+        // The "qualified" name is the complete name of the atom
+        // which is equal to the name of the exported image (if any), and
+        // also the key/name of the atom in the config.json file we produce.
+        const QString stateString = imageState == "normal" ? "" : "-" + imageState;
+        return m_currentControl.toLower() + "-" + atomName + stateString;
+    }
+
+    QJsonObject getConfigObject(const QString &qualifiedName)
+    {
+        // Read back the atom configuration from the already generated config object
+        QJsonObject config = m_outputConfig[qualifiedName].toObject();
+        if (config.isEmpty())
+            throw std::runtime_error("atom config not found: " + qualifiedName.toStdString());
+        return config;
     }
 
     QRectF getConfigGeometry(const QJsonObject configAtom) const
