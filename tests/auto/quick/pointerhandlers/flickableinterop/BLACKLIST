@@ -26,3 +26,6 @@ android
 android
 [touchAndDragHandlerOnFlickable]
 android
+# QTBUG-113226
+[pinchHandlerOnFlickable]
+*
