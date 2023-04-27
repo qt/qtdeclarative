@@ -284,7 +284,7 @@ struct QQmlMetaTypeInterface : QtPrivate::QMetaTypeInterface
     const QByteArray name;
     QQmlMetaTypeInterface(const QByteArray &name)
         : QMetaTypeInterface {
-            /*.revision=*/ 0,
+            /*.revision=*/ QMetaTypeInterface::CurrentRevision,
             /*.alignment=*/ alignof(QObject *),
             /*.size=*/ sizeof(QObject *),
             /*.flags=*/ QtPrivate::QMetaTypeTypeFlags<QObject *>::Flags,
@@ -319,7 +319,7 @@ struct QQmlListMetaTypeInterface : QtPrivate::QMetaTypeInterface
     const QtPrivate::QMetaTypeInterface *valueType;
     QQmlListMetaTypeInterface(const QByteArray &name, const QtPrivate::QMetaTypeInterface *valueType)
         : QMetaTypeInterface {
-            /*.revision=*/ 0,
+            /*.revision=*/ QMetaTypeInterface::CurrentRevision,
             /*.alignment=*/ alignof(QQmlListProperty<QObject>),
             /*.size=*/ sizeof(QQmlListProperty<QObject>),
             /*.flags=*/ QtPrivate::QMetaTypeTypeFlags<QQmlListProperty<QObject>>::Flags,
