@@ -27,13 +27,12 @@
 #include <QOperatingSystemVersion>
 #include <functional>
 #include <QtGui/private/qeventpoint_p.h>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 #if QT_CONFIG(opengl)
 #include <QOpenGLContext>
 #endif
 #if QT_CONFIG(vulkan)
 #include <QVulkanInstance>
-#include <QtGui/private/qrhivulkan_p.h>
 #endif
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")

@@ -17,7 +17,7 @@
 
 #include "qsgadaptationlayer_p.h"
 #include <private/qsgareaallocator_p.h>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 QT_BEGIN_NAMESPACE
 

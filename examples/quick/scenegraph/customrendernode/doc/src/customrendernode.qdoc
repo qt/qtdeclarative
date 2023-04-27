@@ -12,15 +12,21 @@
 
     \image customrendernode-example.gif
 
-    QSGRenderNode allows direct access to the Render Hardware Interface (RHI) within the
-    scenegraph. This example demonstrates how to create QSGRenderNode based render node
-    and manage it with a custom item. The render node creates an RHI pipeline, updates
-    vertex and uniform buffers, and renders into the RHI command buffer.
+    QSGRenderNode allows direct access to the Render Hardware Interface (RHI)
+    within the scenegraph. This example demonstrates how to create QSGRenderNode
+    based render node and manage it with a custom item. The render node creates
+    an RHI pipeline, updates vertex and uniform buffers, and renders into the
+    RHI command buffer.
 
-    \warning This example demonstrates advanced, low-level functionality
-    performing portable, cross-platform 3D rendering, while relying on private
-    APIs from the Qt Gui and Qt Quick modules. Developers are encouraged to
-    carefully evaluate the potential lack of source and binary compatibility
-    guarantees before using these APIs in their applications.
+    In practice this is a portable, cross-platform approach to perform custom
+    rendering inline with the scenegraph's own rendering, without resorting to a
+    native 3D API such as OpenGL, Metal, or Vulkan. Rather, the application uses
+    Qt's graphics and shader abstraction layer.
 
- */
+    \note This example demonstrates advanced, low-level functionality performing
+    portable, cross-platform 3D rendering, while relying on APIs with limited
+    compatibility guarantee from the Qt Gui module.  To be able to use the QRhi
+    APIs, the application links to \c{Qt::GuiPrivate} and includes
+    \c{<rhi/qrhi.h>}.
+
+*/

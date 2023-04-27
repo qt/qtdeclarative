@@ -49,7 +49,7 @@
 #include <private/qdebug_p.h>
 #endif
 
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -3825,6 +3825,48 @@ QSGRendererInterface *QQuickWindow::rendererInterface() const
     // use)
 
     return d->context->sceneGraphContext()->rendererInterface(d->context);
+}
+
+/*!
+    \return the QRhi object used by this window for rendering.
+
+    Available only when the window is using Qt's 3D API and shading language
+    abstractions, meaning the result is always null when using the \c software
+    adaptation.
+
+    The result is valid only when rendering has been initialized, which is
+    indicated by the emission of the sceneGraphInitialized() signal. Before
+    that point, the returned value is null. With a regular, on-screen
+    QQuickWindow scenegraph initialization typically happens when the native
+    window gets exposed (shown) the first time. When using QQuickRenderControl,
+    initialization is done in the explicit
+    \l{QQuickRenderControl::initialize()}{initialize()} call.
+
+    In practice this function is a shortcut to querying the QRhi via the
+    QSGRendererInterface.
+
+    \since 6.6
+ */
+QRhi *QQuickWindow::rhi() const
+{
+    Q_D(const QQuickWindow);
+    return d->rhi;
+}
+
+/*!
+    \return the QRhiSwapChain used by this window, if there is one.
+
+    \note Only on-screen windows backed by one of the standard render loops
+    (such as, \c basic or \c threaded) will have a swapchain. Otherwise the
+    returned value is null. For example, the result is always null when the
+    window is used with QQuickRenderControl.
+
+    \since 6.6
+ */
+QRhiSwapChain *QQuickWindow::swapChain() const
+{
+    Q_D(const QQuickWindow);
+    return d->swapchain;
 }
 
 /*!

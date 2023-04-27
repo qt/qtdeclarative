@@ -5,7 +5,7 @@
 #define RHIITEM_H
 
 #include <QQuickItem>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 class RhiItem;
 class RhiItemPrivate;

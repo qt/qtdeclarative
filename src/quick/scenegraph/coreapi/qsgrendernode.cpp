@@ -366,6 +366,59 @@ qreal QSGRenderNode::inheritedOpacity() const
     return d->m_opacity;
 }
 
+/*!
+    \return the current render target.
+
+    This is provided mainly to enable prepare() and render() implementations
+    that use QRhi accessing the QRhiRenderTarget's
+    \l{QRhiRenderPassDescriptor}{renderPassDescriptor} or
+    \l{QRhiRenderTarget::pixelSize()}{pixel size}.
+
+    To build a QRhiGraphicsPipeline, which implies having to provide a
+    QRhiRenderPassDescriptor, query the renderPassDescriptor from the render
+    target. Be aware however that the render target may change over the
+    lifetime of the custom QQuickItem and the QSGRenderNode. For example,
+    consider what happens when dynamically setting \c{layer.enabled: true} on
+    the item or an ancestor of it: this triggers rendering into a texture, not
+    directly to the window, which means the QSGRenderNode is going to work with
+    a different render target from then on. The new render target may then have
+    a different pixel format, which can make already built graphics pipelines
+    incompatible. This can be handled with logic such as the following:
+
+    \code
+      if (m_pipeline && renderTarget()->renderPassDescriptor()->serializedFormat() != m_renderPassFormat) {
+          delete m_pipeline;
+          m_pipeline = nullptr;
+      }
+      if (!m_pipeline) {
+          // Build a new QRhiGraphicsPipeline.
+          // ...
+          // Store the serialized format for fast and simple comparisons later on.
+          m_renderPassFormat = renderTarget()->renderPassDescriptor()->serializedFormat();
+      }
+    \endcode
+
+    \since 6.6
+
+    \sa commandBuffer()
+ */
+QRhiRenderTarget *QSGRenderNode::renderTarget() const
+{
+    return d->m_rt.rt;
+}
+
+/*!
+    \return the current command buffer.
+
+    \since 6.6
+
+    \sa renderTarget()
+ */
+QRhiCommandBuffer *QSGRenderNode::commandBuffer() const
+{
+    return d->m_rt.cb;
+}
+
 QSGRenderNode::RenderState::~RenderState()
 {
 }

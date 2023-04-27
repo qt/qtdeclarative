@@ -10,7 +10,7 @@
 #include <QtGui/private/qdrawhelper_p.h>
 #include <QOpenGLFunctions>
 #include <QLoggingCategory>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 static void initResources()
 {

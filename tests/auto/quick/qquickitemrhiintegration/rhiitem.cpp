@@ -51,8 +51,7 @@ void RhiItemNode::releaseNativeTexture()
 void RhiItemNode::sync()
 {
     if (!m_rhi) {
-        QSGRendererInterface *rif = m_window->rendererInterface();
-        m_rhi = static_cast<QRhi *>(rif->getResource(m_window, QSGRendererInterface::RhiResource));
+        m_rhi = m_window->rhi();
         if (!m_rhi) {
             qWarning("No QRhi found for window %p, RhiItem will not be functional", m_window);
             return;

@@ -17,7 +17,7 @@
 #include <private/qqmlglobal_p.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtCore/QtMath>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 #include <cmath>
 

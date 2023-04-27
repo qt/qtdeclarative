@@ -18,8 +18,8 @@
 #include <private/qtquickglobal_p.h>
 #include "qsgmaterialshader.h"
 #include "qsgmaterial.h"
-#include <QtGui/private/qrhi_p.h>
-#include <QtGui/private/qshader_p.h>
+#include <rhi/qrhi.h>
+#include <rhi/qshader.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -4,7 +4,7 @@
 #include "qquickshapegenericrenderer_p.h"
 #include <QtGui/private/qtriangulator_p.h>
 #include <QtGui/private/qtriangulatingstroker_p.h>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 #include <QSGVertexColorMaterial>
 
 #if QT_CONFIG(thread)

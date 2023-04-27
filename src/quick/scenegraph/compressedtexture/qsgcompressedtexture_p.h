@@ -18,7 +18,7 @@
 #include <private/qtexturefiledata_p.h>
 #include <private/qsgcontext_p.h>
 #include <private/qsgtexture_p.h>
-#include <private/qrhi_p.h>
+#include <rhi/qrhi.h>
 #include <QQuickTextureFactory>
 #include <QOpenGLFunctions>
 

@@ -33,6 +33,8 @@ class QQuickPalette;
 class QQuickRenderTarget;
 class QQuickGraphicsDevice;
 class QQuickGraphicsConfiguration;
+class QRhi;
+class QRhiSwapChain;
 
 class Q_QUICK_EXPORT QQuickWindow : public QWindow
 {
@@ -154,6 +156,9 @@ public:
 
     static TextRenderType textRenderType();
     static void setTextRenderType(TextRenderType renderType);
+
+    QRhi *rhi() const;
+    QRhiSwapChain *swapChain() const;
 
 Q_SIGNALS:
     void frameSwapped();

@@ -3,10 +3,7 @@
 
 #include "qquickgraphicsconfiguration_p.h"
 #include <QCoreApplication>
-
-#if QT_CONFIG(vulkan)
-#include <QtGui/private/qrhivulkan_p.h>
-#endif
+#include <rhi/qrhi.h>
 
 QT_BEGIN_NAMESPACE
 

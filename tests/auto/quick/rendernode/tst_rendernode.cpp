@@ -6,7 +6,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 #include <private/qsgrendernode_p.h>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 

@@ -31,7 +31,7 @@
 #include <QtGui/private/qdatabuffer_p.h>
 #include <private/qdistancefield_p.h>
 #include <private/qintrusivelist_p.h>
-#include <QtGui/private/qshader_p.h>
+#include <rhi/qshader.h>
 
 // ### remove
 #include <QtQuick/private/qquicktext_p.h>
