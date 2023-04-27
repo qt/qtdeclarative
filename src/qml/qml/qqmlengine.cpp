@@ -386,11 +386,15 @@ int QQmlData::endpointCount(int index)
 
 void QQmlData::markAsDeleted(QObject *o)
 {
-    QQmlData::setQueuedForDeletion(o);
-
-    QObjectPrivate *p = QObjectPrivate::get(o);
-    for (QList<QObject *>::const_iterator it = p->children.constBegin(), end = p->children.constEnd(); it != end; ++it) {
-        QQmlData::markAsDeleted(*it);
+    QVarLengthArray<QObject *> workStack;
+    workStack.push_back(o);
+    while (!workStack.isEmpty()) {
+        auto currentObject = workStack.last();
+        workStack.pop_back();
+        QQmlData::setQueuedForDeletion(currentObject);
+        auto currentObjectPriv = QObjectPrivate::get(currentObject);
+        for (QObject *child: std::as_const(currentObjectPriv->children))
+            workStack.push_back(child);
     }
 }
 
