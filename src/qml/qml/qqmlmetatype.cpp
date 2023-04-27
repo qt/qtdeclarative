@@ -282,7 +282,7 @@ void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
         }
     }
 
-    // Clone Q_ENUMS
+    // Clone enums registered with the metatype system
     for (int ii = mo->enumeratorOffset(); ii < mo->enumeratorCount(); ++ii) {
         QMetaEnum enumerator = mo->enumerator(ii);
 
