@@ -4,6 +4,9 @@
 file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     data)
+file(GLOB_RECURSE test_data_glob_qmlformat
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/../../qml/qmlformat/
+    data)
 list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qmlls_modules
@@ -13,6 +16,7 @@ qt_internal_add_test(tst_qmlls_modules
     DEFINES
         QT_DEPRECATED_WARNINGS
         QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
+        QT_QMLFORMATTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/../../qml/qmlformat/data"
     LIBRARIES
         Qt::Core
         Qt::QmlDomPrivate

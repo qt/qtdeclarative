@@ -23,6 +23,7 @@
 #include "qworkspace_p.h"
 #include "qqmlcompletionsupport_p.h"
 #include "qqmlgototypedefinitionsupport_p.h"
+#include "qqmlformatting_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -63,6 +64,7 @@ private:
     QmlCompletionSupport m_completionSupport;
     QmlGoToTypeDefinitionSupport m_navigationSupport;
     QQmlFindUsagesSupport m_referencesSupport;
+    QQmlDocumentFormatting m_documentFormatting;
     int m_returnValue = 1;
 };
 

@@ -46,6 +46,8 @@ private slots:
     void goToTypeDefinition();
     void findUsages_data();
     void findUsages();
+    void documentFormatting_data();
+    void documentFormatting();
 
 private:
     QProcess m_server;

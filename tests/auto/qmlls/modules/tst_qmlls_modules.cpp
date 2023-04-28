@@ -624,10 +624,8 @@ void tst_qmlls_modules::findUsages()
     params.position.line = line - 1;
     params.position.character = character - 1;
     params.textDocument.uri = uri;
-
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     auto clean = [didFinish]() { *didFinish = true; };
-
     m_protocol.requestReference(
             params,
             [&](auto res) {
@@ -656,6 +654,118 @@ void tst_qmlls_modules::findUsages()
                 QVERIFY2(false, "error computing the completion");
             });
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 3000);
+}
+
+void tst_qmlls_modules::documentFormatting_data()
+{
+    QTest::addColumn<QString>("originalFile");
+    QTest::addColumn<QString>("expectedFile");
+
+    QDir directory(QT_QMLFORMATTEST_DATADIR);
+
+    // Exclude some test files which require options support
+    QStringList excludedFiles;
+    excludedFiles << "tests/auto/qml/qmlformat/data/checkIdsNewline.qml";
+    excludedFiles << "tests/auto/qml/qmlformat/data/normalizedFunctionsSpacing.qml";
+    excludedFiles << "tests/auto/qml/qmlformat/data/normalizedObjectsSpacing.qml";
+
+    const auto shouldSkip = [&excludedFiles](const QString &fileName) {
+        for (const QString &file : excludedFiles) {
+            if (fileName.endsWith(file))
+                return true;
+        }
+        return false;
+    };
+
+    // TODO: move into a separate member function
+    const auto registerFile = [this](const QString &filePath) {
+        QFile testFile(filePath);
+        QVERIFY(testFile.open(QIODevice::ReadOnly));
+        const auto fileUri = QUrl::fromLocalFile(filePath).toEncoded();
+        DidOpenTextDocumentParams oParams;
+        oParams.textDocument = TextDocumentItem{ fileUri, testFile.readAll() };
+        m_protocol.notifyDidOpenTextDocument(oParams);
+        m_uriToClose.append(fileUri);
+    };
+
+    // Filter to include files contain .formatted.
+    const auto formattedFilesInfo =
+            directory.entryInfoList(QStringList{ { "*.formatted.qml" } }, QDir::Files);
+    for (const auto &formattedFileInfo : formattedFilesInfo) {
+        const QFileInfo unformattedFileInfo(directory, formattedFileInfo.fileName().remove(".formatted"));
+        const auto unformattedFilePath = unformattedFileInfo.canonicalFilePath();
+        if (shouldSkip(unformattedFilePath))
+            continue;
+
+        registerFile(unformattedFilePath);
+        QTest::newRow(qPrintable(unformattedFileInfo.fileName()))
+                << unformattedFilePath << formattedFileInfo.canonicalFilePath();
+    }
+
+    // Extra tests
+    const QString blanklinesPath = testFile("formatting/blanklines.qml");
+    registerFile(blanklinesPath);
+    QTest::newRow("leading-and-trailing-blanklines")
+            << testFile("formatting/blanklines.qml")
+            << testFile("formatting/blanklines.formatted.qml");
+}
+
+void tst_qmlls_modules::documentFormatting()
+{
+    QFETCH(QString, originalFile);
+    QFETCH(QString, expectedFile);
+
+    DocumentFormattingParams params;
+    params.textDocument.uri = QUrl::fromLocalFile(originalFile).toEncoded();
+
+    const auto lineCount = [](const QString &filePath) {
+        QFile file(filePath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            qWarning() << "Error while opening the file " << filePath;
+            return -1;
+        }
+        int lineCount = 0;
+        QString line;
+        while (!file.atEnd()) {
+            line = file.readLine();
+            ++lineCount;
+        }
+        if (line.endsWith('\n'))
+            ++lineCount;
+        return lineCount;
+    };
+
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    auto clean = [didFinish]() { *didFinish = true; };
+    auto &&responseHandler = [&](auto response) {
+        QScopeGuard cleanup(clean);
+        if (std::holds_alternative<QList<TextEdit>>(response)) {
+            const auto results = std::get<QList<TextEdit>>(response);
+            QVERIFY(results.size() == 1);
+            QFile file(expectedFile);
+            if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                qWarning() << "Error while opening the file " << expectedFile;
+                return;
+            }
+
+            const auto &textEdit = results.first();
+            QCOMPARE(textEdit.range.start.line, 0);
+            QCOMPARE(textEdit.range.start.character, 0);
+            QCOMPARE(textEdit.range.end.line, lineCount(originalFile));
+            QCOMPARE(textEdit.range.end.character, 0);
+            QCOMPARE(textEdit.newText, file.readAll());
+        }
+    };
+
+    auto &&errorHandler = [&clean](const ResponseError &err) {
+        QScopeGuard cleanup(clean);
+        ProtocolBase::defaultResponseErrorHandler(err);
+        QVERIFY2(false, "error computing the completion");
+    };
+    m_protocol.requestDocumentFormatting(params, std::move(responseHandler),
+                                         std::move(errorHandler));
+
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 50000);
 }
 
 QTEST_MAIN(tst_qmlls_modules)

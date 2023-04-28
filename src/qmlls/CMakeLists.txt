@@ -18,6 +18,7 @@ qt_internal_add_module(QmlLSPrivate
         qqmlcodemodel_p.h qqmlcodemodel.cpp
         qqmlbasemodule_p.h
         qqmlgototypedefinitionsupport_p.h qqmlgototypedefinitionsupport.cpp
+        qqmlformatting_p.h qqmlformatting.cpp
         qqmllsutils_p.h qqmllsutils.cpp
         qqmlfindusagessupport_p.h qqmlfindusagessupport.cpp
 
