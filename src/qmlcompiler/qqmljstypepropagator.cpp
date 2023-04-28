@@ -1670,9 +1670,7 @@ void QQmlJSTypePropagator::generate_DeclareVar(int varName, int isDeletable)
 
 void QQmlJSTypePropagator::generate_DefineArray(int argc, int args)
 {
-    setAccumulator(m_typeResolver->globalType(argc == 0
-                                                      ? m_typeResolver->emptyListType()
-                                                      : m_typeResolver->variantListType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->variantListType()));
 
     // Track all arguments as the same type.
     const QQmlJSRegisterContent elementType

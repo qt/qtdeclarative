@@ -44,7 +44,6 @@ static bool isTypeStorable(const QQmlJSTypeResolver *resolver, const QQmlJSScope
 {
     return !type.isNull()
             && !resolver->equals(type, resolver->nullType())
-            && !resolver->equals(type, resolver->emptyListType())
             && !resolver->equals(type, resolver->voidType());
 }
 
@@ -2047,14 +2046,6 @@ void QQmlJSCodeGenerator::generate_DefineArray(int argc, int args)
 {
     INJECT_TRACE_INFO(generate_DefineArray);
 
-
-    if (argc == 0) {
-        m_body += m_state.accumulatorVariableOut + u" = "_s;
-        m_body += conversion(m_typeResolver->emptyListType(), m_state.accumulatorOut(), QString());
-        m_body += u";\n"_s;
-        return;
-    }
-
     const QQmlJSScope::ConstPtr stored = m_state.accumulatorOut().storedType();
     if (stored->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence) {
         // This rejects any attempt to store the list into a QVariant.
@@ -2742,10 +2733,6 @@ void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &func
             m_body += conversion(m_typeResolver->boolType(), m_state.accumulatorOut(),
                                  consumedRegisterVariable(lhs) + (invert ? u" != "_s : u" == "_s)
                                  + consumedAccumulatorVariableIn());
-        } else if (m_typeResolver->equals(lhsType, m_typeResolver->emptyListType())) {
-            // We cannot compare two empty lists, because we don't know whether it's
-            // the same  instance or not. "[] === []" is false, but "var a = []; a === a" is true;
-            reject(u"comparison of two empty lists"_s);
         } else {
             // null === null and  undefined === undefined
             m_body += invert ? u"false"_s : u"true"_s;
@@ -3114,16 +3101,6 @@ QString QQmlJSCodeGenerator::convertStored(
         if (m_typeResolver->equals(from, to))
             return QString();
         reject(u"Conversion from null to %1"_s.arg(to->internalName()));
-    }
-
-    if (m_typeResolver->equals(from, m_typeResolver->emptyListType())) {
-        if (to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence)
-            return castTargetName(to) + u"()"_s;
-        if (m_typeResolver->equals(to, m_typeResolver->varType()))
-            return u"QVariant(QVariantList())"_s;
-        if (m_typeResolver->equals(from, to))
-            return QString();
-        reject(u"Conversion from empty list to %1"_s.arg(to->internalName()));
     }
 
     if (m_typeResolver->equals(from, to))

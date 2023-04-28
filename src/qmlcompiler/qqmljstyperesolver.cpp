@@ -56,13 +56,6 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     emptyType->setAccessSemantics(QQmlJSScope::AccessSemantics::None);
     m_emptyType = emptyType;
 
-    QQmlJSScope::Ptr emptyListType = QQmlJSScope::create();
-    emptyListType->setInternalName(u"void*"_s);
-    emptyListType->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
-    QQmlJSScope::resolveTypes(emptyListType, builtinTypes);
-    Q_ASSERT(!emptyListType->extensionType().scope.isNull());
-    m_emptyListType = emptyListType;
-
     QQmlJSScope::Ptr jsPrimitiveType = QQmlJSScope::create();
     jsPrimitiveType->setInternalName(u"QJSPrimitiveValue"_s);
     jsPrimitiveType->setFilePath(u"qjsprimitivevalue.h"_s);
@@ -812,7 +805,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
         || equals(type, m_dateTimeType) || equals(type, m_dateType) || equals(type, m_timeType)
         || equals(type, m_variantListType) || equals(type, m_variantMapType)
         || equals(type, m_varType) || equals(type, m_stringListType)
-        || equals(type, m_emptyListType) || equals(type, m_byteArrayType)) {
+        || equals(type, m_byteArrayType)) {
         return type;
     }
 
@@ -1133,7 +1126,7 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     if (equals(to, m_jsPrimitiveType))
         return isPrimitive(from);
 
-    if (equals(from, m_emptyListType) || equals(from, m_variantListType))
+    if (equals(from, m_variantListType))
         return to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence;
 
     const bool matchByName = !to->isComposite();

@@ -302,6 +302,7 @@ void QQmlJSBasicBlocks::populateReaderLocations()
                     if (!blockInstr->second.isRename && containsAny(
                                 readIt->second.content.conversionOrigins(), access.trackedTypes)) {
                         Q_ASSERT(readIt->second.content.isConversion());
+                        Q_ASSERT(readIt->second.content.conversionResult());
                         access.typeReaders[blockInstr.key()]
                                 = readIt->second.content.conversionResult();
                     }
