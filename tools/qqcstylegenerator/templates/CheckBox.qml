@@ -14,7 +14,7 @@ T.CheckBox {
 
     readonly property string backgroundName: "checkbox-background"
     readonly property var config: ConfigReader.images[backgroundName]
-    readonly property bool mirroredIndicator: control.mirrored !== (config?.flipped || 0)
+    readonly property bool mirroredIndicator: control.mirrored !== (config?.mirrored || false)
 
     spacing: config?.spacing || 0
 

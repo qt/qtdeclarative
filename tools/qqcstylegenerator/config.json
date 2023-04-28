@@ -21,8 +21,10 @@
         "name": "CheckBox",
         "copy": ":/CheckBox.qml",
         "component set": "CheckBoxTemplateAL",
+        "contents": "indicator, label",
         "atoms": {
             "background": "CheckBoxBackgroundAL, background (image)",
+            "label": "Label",
             "contentItem": "contentItem",
             "indicator": "CheckBoxIndicatorAL, indicator (image)",
             "indicator-background": "CheckBoxIndicatorAL, indicatorBackground (image)"

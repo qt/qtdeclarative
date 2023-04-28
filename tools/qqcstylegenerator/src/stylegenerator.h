@@ -226,6 +226,9 @@ private:
         for (const QString &file : files)
             copyFileToStyleFolder(file.trimmed(), false);
 
+        // We use content atoms to figure out properties such as spacing and mirrored
+        const auto contentAtoms = controlObj["contents"].toString().split(',');
+
         // Add this control to the list of controls that goes into the qmldir file
         m_qmlDirControls.append(controlName);
 
@@ -265,9 +268,9 @@ private:
             }
 
             if (!contentItemObj.isEmpty()) try {
-                generatePaddingAndSpacing(contentItemObj, imageState);
+                generatePaddingAndSpacing(contentItemObj, contentAtoms, imageState);
             } catch (std::exception &e) {
-                    qWarning().nospace().noquote() << "Warning! " << m_currentAtomInfo << "; Padding: " << e.what();
+                    qWarning().nospace().noquote() << "Warning! " << m_currentAtomInfo << "; Padding and Spacing: " << e.what();
             }
         }
     }
@@ -383,23 +386,64 @@ private:
         addExportType("json", outputConfig);
     }
 
-    void generatePaddingAndSpacing(const QJsonObject &contentItemObj, const QString &imageState)
+    void generatePaddingAndSpacing(const QJsonObject &contentItemObj, const QStringList &contentAtoms, const QString &imageState)
     {
         // We expect there to be a "contentItem" atom that points to node
         // that contain all the content atoms. And for now we assume that the
         // contentItem always uses "auto layout" in Figma, so that we can read
         // out all the padding information directly from the design.
 
+        const bool hasHorizontalLayout = contentItemObj["layoutMode"].toString() == "HORIZONTAL";
+        if (!hasHorizontalLayout)
+            throw std::runtime_error("the contentItem needs to a use horizontal auto layout!");
+
         // Store padding and spacing info inside the background atom config
         const QString bgQualifiedName = qualifiedAtomName("background", imageState);
         QJsonObject bgConfig = getConfigObject(bgQualifiedName);
 
-        // Set padding and spacing to 0 for now
+        // Resolve the geometries of the content item atoms
+        QRectF atom0Geo, atom1Geo;
+        if (contentAtoms.size() >= 2) {
+            const QString atom0Name = contentAtoms[0].trimmed();
+            const QString atom1Name = contentAtoms[1].trimmed();
+            const QString atom0QualifiedName = qualifiedAtomName(atom0Name, imageState);
+            const QString atom1QualifiedName = qualifiedAtomName(atom1Name, imageState);
+            const QJsonObject atom0Obj = getConfigObject(atom0QualifiedName);
+            const QJsonObject atom1Obj = getConfigObject(atom1QualifiedName);
+            atom0Geo = getConfigGeometry(atom0Obj);
+            atom1Geo = getConfigGeometry(atom1Obj);
+        }
+
+        // Note that the order in which the content atoms are listed in
+        // the config file matters when we now try to calculate if the
+        // control is mirrored in the design.
+        const bool mirrored = !atom0Geo.isEmpty() && !atom1Geo.isEmpty() && atom0Geo.x() > atom1Geo.x();
+
+        qreal spacing = 0;
+        const QString sizingMode = contentItemObj["primaryAxisAlignItems"].toString();
+        if (sizingMode == "SPACE_BETWEEN") {
+            try {
+                // SPACE_BETWEEN means spread the atoms evenly in the available space (and
+                // align left-most atom to the left, and the right-most atom to the right).
+                // But since we currently don't support that way of aligning the atoms in
+                // our controls templates, we try to calculate a fixed spacing instead by
+                // looking at the children geometries.
+                spacing = mirrored ?
+                    atom0Geo.x() - atom1Geo.x() - atom1Geo.width() :
+                    atom1Geo.x() - atom0Geo.x() - atom0Geo.width();
+            } catch (std::exception &e) {
+                qWarning().noquote() << "Warning! " << m_currentAtomInfo << "; Could not calculate spacing:" << e.what();
+            }
+        } else {
+            spacing = contentItemObj["itemSpacing"].toDouble();
+        }
+
+        bgConfig.insert("spacing", spacing);
+        bgConfig.insert("mirrored", mirrored);
         bgConfig.insert("leftPadding", contentItemObj["paddingLeft"]);
         bgConfig.insert("topPadding", contentItemObj["paddingTop"]);
         bgConfig.insert("rightPadding", contentItemObj["paddingRight"]);
         bgConfig.insert("bottomPadding", contentItemObj["paddingBottom"]);
-        bgConfig.insert("spacing", contentItemObj["itemSpacing"]);
 
         // Overwrite the previous config
         m_outputConfig.insert(bgQualifiedName, bgConfig);
@@ -487,11 +531,11 @@ private:
         out << contents;
     }
 
-    QRectF getGeometry(const QJsonObject figmaComponent, bool ignoreOrigin = true) const
+    QRectF getGeometry(const QJsonObject figmaObject) const
     {
-        const auto bb = getObject("absoluteBoundingBox", figmaComponent);
-        const auto x = ignoreOrigin ? 0. : getValue("x", bb).toDouble();
-        const auto y = ignoreOrigin ? 0. : getValue("y", bb).toDouble();
+        const auto bb = getObject("absoluteBoundingBox", figmaObject);
+        const auto x = getValue("x", bb).toDouble();
+        const auto y = getValue("y", bb).toDouble();
         const auto width = getValue("width", bb).toDouble();
         const auto height = getValue("height", bb).toDouble();
         return QRectF(x, y, width, height);
