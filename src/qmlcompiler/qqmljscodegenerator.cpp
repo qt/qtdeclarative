@@ -120,7 +120,7 @@ QT_WARNING_DISABLE_CLANG("-Wrange-loop-analysis")
         for (auto it = annotation.second.typeConversions.begin(),
              end = annotation.second.typeConversions.end();
              it != end; ++it) {
-            addVariable(it.key(), it.value().storedType());
+            addVariable(it.key(), it.value().content.storedType());
         }
     }
 QT_WARNING_POP
@@ -719,8 +719,8 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
     // TODO: Once we get a char type in QML, use it here.
     if (m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->stringType()))
         access = u"QString("_s + access + u")"_s;
-    else if (!m_typeResolver->canUseValueTypes())
-        reject(u"LoadElement in sequence type reference"_s);
+    else if (m_state.isRegisterAffectedBySideEffects(base))
+        reject(u"LoadElement on a sequence potentially affected by side effects"_s);
 
     m_body += u"if ("_s + indexName + u" >= 0 && "_s + indexName
             + u" < "_s + baseName + u".size())\n"_s;
@@ -743,10 +743,7 @@ void QQmlJSCodeGenerator::generate_StoreElement(int base, int index)
     }
 
     if (!m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->listPropertyType())) {
-        if (m_typeResolver->canUseValueTypes())
-            reject(u"indirect StoreElement"_s);
-        else
-            reject(u"StoreElement in sequence type reference"_s);
+        reject(u"indirect StoreElement"_s);
         return;
     }
 
@@ -817,7 +814,7 @@ void QQmlJSCodeGenerator::generateEnumLookup(int index)
 void QQmlJSCodeGenerator::generateTypeLookup(int index)
 {
     const QString indexString = QString::number(index);
-    const QQmlJSRegisterContent accumulatorIn = m_state.registers.value(Accumulator);
+    const QQmlJSRegisterContent accumulatorIn = m_state.registers.value(Accumulator).content;
     const QString namespaceString
             = accumulatorIn.isImportNamespace()
                 ? QString::number(accumulatorIn.importNamespace())
@@ -1054,7 +1051,10 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
                 + u";\n"_s;
     } else if (m_typeResolver->registerIsStoredIn(accumulatorIn, m_typeResolver->jsValueType())) {
         reject(u"lookup in QJSValue"_s);
-    } else if (m_typeResolver->canUseValueTypes()) {
+    } else {
+        if (m_state.isRegisterAffectedBySideEffects(Accumulator))
+            reject(u"reading from a value that's potentially affected by side effects"_s);
+
         const QString lookup = u"aotContext->getValueLookup("_s + indexString
                 + u", "_s + contentPointer(m_state.accumulatorIn(),
                                             m_state.accumulatorVariableIn)
@@ -1068,8 +1068,6 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
         const QString preparation = getLookupPreparation(
                     m_state.accumulatorOut(), m_state.accumulatorVariableOut, index);
         generateLookup(lookup, initialization, preparation);
-    } else {
-        reject(u"lookup in value type reference"_s);
     }
 }
 
@@ -1163,10 +1161,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
         }
 
         if (!m_typeResolver->registerIsStoredIn(callBase, m_typeResolver->listPropertyType())) {
-            if (m_typeResolver->canUseValueTypes())
-                reject(u"resizing sequence types (because of missing write-back)"_s);
-            else
-                reject(u"resizing sequence type references"_s);
+            reject(u"resizing sequence types (because of missing write-back)"_s);
             break;
         }
 
@@ -1197,10 +1192,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
                 + u", "_s + contentType(registerType(baseReg), object) + u')';
 
         generateLookup(lookup, initialization, preparation);
-        if (m_typeResolver->canUseValueTypes())
-            reject(u"SetLookup on value types (because of missing write-back)"_s);
-        else
-            reject(u"SetLookup on value type references"_s);
+        reject(u"SetLookup on value types (because of missing write-back)"_s);
         break;
     }
     case QQmlJSScope::AccessSemantics::None:
@@ -1672,14 +1664,8 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
                 return;
         }
 
-        if (m_typeResolver->canUseValueTypes()) {
-            // This is possible, once we establish the right kind of lookup for it
-            reject(u"call to property '%1' of %2"_s.arg(name, baseType.descriptiveName()));
-        } else {
-            // This is not possible.
-            reject(u"call to property '%1' of value type reference %2"_s
-                   .arg(name, baseType.descriptiveName()));
-        }
+        // This is possible, once we establish the right kind of lookup for it
+        reject(u"call to property '%1' of %2"_s.arg(name, baseType.descriptiveName()));
     }
 
     const QString indexString = QString::number(index);
@@ -2529,9 +2515,9 @@ QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(
     m_state.State::operator=(nextStateFromAnnotations(m_state, *m_annotations));
     const auto accumulatorIn = m_state.registers.find(Accumulator);
     if (accumulatorIn != m_state.registers.end()
-            && isTypeStorable(m_typeResolver, accumulatorIn.value().storedType())) {
+            && isTypeStorable(m_typeResolver, accumulatorIn.value().content.storedType())) {
         m_state.accumulatorVariableIn = m_registerVariables.value(Accumulator)
-                .value(accumulatorIn.value().storedType());
+                .value(accumulatorIn.value().content.storedType());
         Q_ASSERT(!m_state.accumulatorVariableIn.isEmpty());
     } else {
         m_state.accumulatorVariableIn.clear();
@@ -2803,7 +2789,7 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset
         for (auto regIt = conversions.constBegin(), regEnd = conversions.constEnd();
              regIt != regEnd; ++regIt) {
             int registerIndex = regIt.key();
-            const QQmlJSRegisterContent targetType = regIt.value();
+            const QQmlJSRegisterContent targetType = regIt.value().content;
             if (!targetType.isValid())
                 continue;
 
@@ -2816,7 +2802,7 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset
                 auto it = m_state.registers.find(registerIndex);
                 if (it == m_state.registers.end())
                     continue;
-                currentType = it.value();
+                currentType = it.value().content;
                 currentVariable = registerVariable(registerIndex);
             }
 
@@ -2872,7 +2858,7 @@ QQmlJSRegisterContent QQmlJSCodeGenerator::registerType(int index) const
 {
     auto it = m_state.registers.find(index);
     if (it != m_state.registers.end())
-        return it.value();
+        return it.value().content;
 
     return QQmlJSRegisterContent();
 }

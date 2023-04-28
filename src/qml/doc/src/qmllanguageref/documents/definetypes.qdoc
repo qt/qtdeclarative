@@ -334,54 +334,67 @@ JIT-compiled.
 
 \section2 ValueTypeBehavior
 
-The behavior of \l{QML Value Types} and list types differs slightly
-depending on whether a QML document is compiled to C++ using the
-\l{QML script compiler} or interpreted at run time.
+With this pragma you can change the way value types and sequences are handled.
 
-With this pragma you can change the way value types and sequences are handled
-when retrieved as locals from properties. By default, the interpreter and JIT
-treat all value types and sequences as references. This means, if you change
-the local value, the original property is also changed. Furthermore, if you
-write the original property explicitly, the local value is also updated.
+Value types and sequences are generally treated as references. This means, if
+you retrieve a value type instance from a property into a local value, and then
+change the local value, the original property is also changed. Furthermore,
+if you write the original property explicitly, the local value is also updated.
+This behavior is rather unintuitive in many places, and you should not rely on
+it. The \c{Copy} and \c{Reference} values for the \c{ValueTypeBehavior} pragma
+are experimental options to change this behavior. You should not use them.
+Specifying \c{Copy} causes all value types to be treated as actual copies.
+Specifying \c{Reference} explicitly states the default behavior.
 
-When compiled to C++ using the \l{QML script compiler}, the local value is not
-updated when the property is written, and the property is only updated when
-written directly, without retrieving it as local value before.
-
-For example, the following code prints "1 1" when compiled to C++ and "5 5"
-when interpreted or JIT-compiled:
+Rather than using \c{Copy} you should explicitly re-load references to value
+types and sequences any time they can have been affected by side effects. Side
+effects can happen whenever you call a function or imperatively set a property.
+\l qmllint provides guidance on this. For example, in the following code
+the variable \c f is affected by side effects after writing \c width. This is
+because there may be a binding in a derived type or in a \c Binding element
+that updates \c font when \c width is changed.
 
 \qml
-import QtQml
-
-QtObject {
-    id: root
-
-    property rect r: ({x: 1, y: 2, width: 3, height: 4})
-    property list<double> numbers: [1, 2, 3, 4, 5]
-
-    function manipulate() {
-        root.r = {x: 5, y: 6, width: 7, height: 8};
-        root.numbers = [5, 4, 3, 2, 1];
-    }
-
-    Component.onCompleted: {
-        var numbers = root.numbers;
-        var r = root.r;
-        manipulate()
-        console.log(r.x, numbers[0]);
+import QtQuick
+Text {
+    function a() : real {
+        var f = font;
+        width = f.pixelSize;
+        return f.pointSize;
     }
 }
 \endqml
 
-You may notice that the behavior when interpreted or JIT-compiled can be rather
-confusing.
+In order to address this, you can avoid holding \c f across the write operation
+on \c width:
 
-Specifying \c{Copy} as value to the pragma makes the interpreter and JIT behave
-like the generated C++ code. This is the recommended way to handle the problem.
-Specifying \c{Reference} makes the \l{QML script compiler} skip any functions
-that use value types or sequences when generating C++ code. Those functions are
-then left to be interpreted or JIT-compiled with the default behavior of the
-interpreter and JIT.
+\qml
+import QtQuick
+Text {
+    function a() : real {
+        var f = font;
+        width = f.pixelSize;
+        f = font;
+        return f.pointSize;
+    }
+}
+\endqml
+
+This, in turn can be shortened to:
+
+\qml
+import QtQuick
+Text {
+    function a() : real {
+        width = font.pixelSize;
+        return font.pointSize;
+    }
+}
+\endqml
+
+You might assume that re-retrieving the \c font property is costly, but actually
+the QML engine automatically refreshes value type references each time you read
+from them. So this is not more expensive than the first version, but a clearer
+way to express the same operations.
 
 */

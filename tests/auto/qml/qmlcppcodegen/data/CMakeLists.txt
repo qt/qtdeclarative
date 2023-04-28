@@ -201,6 +201,7 @@ set(qml_files
     urlString.qml
     usingCxxTypesFromFileImports.qml
     valueTypeCopy.qml
+    valueTypeDefault.qml
     valueTypeLists.qml
     valueTypeProperty.qml
     valueTypeReference.qml

@@ -2302,9 +2302,9 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
         }
     } else if (pragma->name == u"ValueTypeBehavior") {
         if (pragma->value == u"Copy") {
-            m_scopesById.setValueTypesAreCopied(true);
+            // Ignore
         } else if (pragma->value == u"Reference") {
-            m_scopesById.setValueTypesAreCopied(false);
+            // Ignore
         } else {
             m_logger->log(
                     u"Unkonwn argument \"%s\" to pragma ValueTypeBehavior"_s
