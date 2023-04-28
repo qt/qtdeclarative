@@ -221,7 +221,7 @@ private:
         const auto documentRoot = getObject("document", m_document.object());
         const auto componentSet = findChild({"type", "COMPONENT_SET", "name", componentSetName}, documentRoot);
 
-        const auto copy = getString("copy", controlObj);
+        const auto copy = controlObj["copy"].toString();
         QStringList files = copy.split(',');
         for (const QString &file : files)
             copyFileToStyleFolder(file.trimmed(), false);
