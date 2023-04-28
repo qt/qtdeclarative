@@ -428,33 +428,6 @@ private:
         createTextFileInStylefolder("qmldir", qmldir);
     }
 
-    QJsonObject createConfiguration(const QJsonObject &background, const QJsonObject &contents)
-    {
-        const auto bgGeo = getGeometry(background);
-        const auto coGeo = getGeometry(contents);
-        const auto stretch = getStretch(background);
-
-        QJsonObject config;
-        config.insert("width", bgGeo.width());
-        config.insert("height", bgGeo.height());
-        config.insert("leftPadding", coGeo.x());
-        config.insert("topPadding", coGeo.y());
-        config.insert("rightPadding", qMax(0., bgGeo.width() - coGeo.x() - coGeo.width()));
-        config.insert("bottomPadding", qMax(0., bgGeo.height() - coGeo.y() - coGeo.height()));
-        config.insert("leftOffset", stretch.left());
-        config.insert("topOffset", stretch.top());
-        config.insert("rightOffset", stretch.right());
-        config.insert("bottomOffset", stretch.bottom());
-
-        // Todo: resolve insets for rectangles with drop shadow
-        config.insert("leftInset", 0);
-        config.insert("topInset", 0);
-        config.insert("rightInset", 0);
-        config.insert("bottomInset", 0);
-
-        return config;
-    }
-
     void addExportType(const QString &type, QJsonObject &outputConfig)
     {
         QString exportTypes = outputConfig.value("export").toString();
