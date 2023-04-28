@@ -1719,7 +1719,7 @@ void ScriptExpression::writeOut(DomItem &self, OutWriter &lw) const
 
 SourceLocation ScriptExpression::globalLocation(DomItem &self) const
 {
-    if (const FileLocations *fLocPtr = FileLocations::fileLocationsPtr(self)) {
+    if (const FileLocations *fLocPtr = FileLocations::fileLocationsOf(self)) {
         return fLocPtr->regions.value(QString(), fLocPtr->fullRegion);
     }
     return SourceLocation();

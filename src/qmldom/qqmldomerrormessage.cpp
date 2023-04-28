@@ -388,7 +388,7 @@ ErrorMessage &ErrorMessage::withItem(DomItem el)
     if (file.isEmpty())
         file = el.canonicalFilePath();
     if (location == SourceLocation()) {
-        if (const FileLocations *fLocPtr = FileLocations::fileLocationsPtr(el)) {
+        if (const FileLocations *fLocPtr = FileLocations::fileLocationsOf(el)) {
             location = fLocPtr->regions.value(QString(), fLocPtr->fullRegion);
         }
     }

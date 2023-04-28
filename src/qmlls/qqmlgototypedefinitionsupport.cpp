@@ -105,8 +105,8 @@ void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
         qWarning() << u"Could not obtain the base from the item"_s;
         return;
     }
-    QQmlJS::Dom::FileLocations::Tree location = QQmlLSUtils::textLocationFromItem(base);
-    if (!location) {
+    auto locationInfo = QQmlJS::Dom::FileLocations::fileLocationsOf(base);
+    if (!locationInfo) {
         qWarning()
                 << u"Could not obtain the text location from the base item, was it correctly resolved?\nBase was "_s
                 << base.toString();
@@ -125,11 +125,11 @@ void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
 
     const QString qmlCode = fileOfBasePtr->code();
 
-    auto begin = QQmlLSUtils::textRowAndColumnFrom(qmlCode, location->info().fullRegion.begin());
+    auto begin = QQmlLSUtils::textRowAndColumnFrom(qmlCode, locationInfo->fullRegion.begin());
     l.range.start.line = begin.line;
     l.range.start.character = begin.character;
 
-    auto end = QQmlLSUtils::textRowAndColumnFrom(qmlCode, location->info().fullRegion.end());
+    auto end = QQmlLSUtils::textRowAndColumnFrom(qmlCode, locationInfo->fullRegion.end());
     l.range.end.line = end.line;
     l.range.end.character = end.character;
 

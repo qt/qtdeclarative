@@ -408,7 +408,7 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
         return;
     }
 
-    QQmlJS::Dom::FileLocations::Tree typeLocationToTest = QQmlLSUtils::textLocationFromItem(type);
+    QQmlJS::Dom::FileLocations::Tree typeLocationToTest = QQmlJS::Dom::FileLocations::treeOf(type);
 
     QEXPECT_FAIL("findIntProperty", "Builtins not supported yet", Abort);
     QEXPECT_FAIL("function-parameter-builtin", "Base types defined in C++ are not supported yet",
@@ -496,7 +496,7 @@ void tst_qmlls_utils::findLocationOfItem()
     QCOMPARE(locations.size(), 1);
 
     // once the item is grabbed, make sure its line/character position can be obtained back
-    auto t = QQmlLSUtils::textLocationFromItem(locations.front().domItem);
+    auto t = QQmlJS::Dom::FileLocations::treeOf(locations.front().domItem);
 
     QCOMPARE(t->info().fullRegion.startLine, quint32(expectedLine));
     QCOMPARE(t->info().fullRegion.startColumn, quint32(expectedCharacter));

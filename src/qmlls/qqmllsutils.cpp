@@ -199,19 +199,6 @@ QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(DomItem file, 
     return itemsFound;
 }
 
-QQmlJS::Dom::FileLocations::Tree QQmlLSUtils::textLocationFromItem(QQmlJS::Dom::DomItem qmlObject)
-{
-    DomItem file = qmlObject.containingFile();
-    std::shared_ptr<QmlFile> filePtr = file.ownerAs<QmlFile>();
-    if (!filePtr)
-        return {};
-    FileLocations::Tree t = filePtr->fileLocationsTree();
-
-    Path fromFileToObject = qmlObject.canonicalPath();
-    t = t->find(t, fromFileToObject, QQmlJS::Dom::AttachedInfo::PathType::Canonical);
-    return t;
-}
-
 DomItem QQmlLSUtils::baseObject(DomItem object)
 {
     if (!object.as<QmlObject>())

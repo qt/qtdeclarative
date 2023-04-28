@@ -105,14 +105,22 @@ FileLocations::findAttachedInfo(DomItem &item, AttachedInfo::FindOptions options
     return AttachedInfoT<FileLocations>::findAttachedInfo(item, Fields::fileLocationsTree, options);
 }
 
-FileLocations::Tree FileLocations::treePtr(DomItem &item)
+/*!
+   \internal
+   Returns the tree corresponding to a DomItem.
+ */
+FileLocations::Tree FileLocations::treeOf(DomItem &item)
 {
     return AttachedInfoT<FileLocations>::treePtr(item, Fields::fileLocationsTree);
 }
 
-const FileLocations *FileLocations::fileLocationsPtr(DomItem &item)
+/*!
+   \internal
+   Returns the filelocation Info corresponding to a DomItem.
+ */
+const FileLocations *FileLocations::fileLocationsOf(DomItem &item)
 {
-    if (FileLocations::Tree t = treePtr(item))
+    if (FileLocations::Tree t = treeOf(item))
         return &(t->info());
     return nullptr;
 }

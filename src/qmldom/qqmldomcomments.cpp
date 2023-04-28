@@ -469,7 +469,7 @@ void AstComments::collectComments(MutableDomItem &item)
     if (std::shared_ptr<ScriptExpression> scriptPtr = item.ownerAs<ScriptExpression>()) {
         DomItem itemItem = item.item();
         return collectComments(scriptPtr->engine(), scriptPtr->ast(), scriptPtr->astComments(),
-                               item, FileLocations::treePtr(itemItem));
+                               item, FileLocations::treeOf(itemItem));
     } else if (std::shared_ptr<QmlFile> qmlFilePtr = item.ownerAs<QmlFile>()) {
         return collectComments(qmlFilePtr->engine(), qmlFilePtr->ast(), qmlFilePtr->astComments(),
                                item, qmlFilePtr->fileLocationsTree());
