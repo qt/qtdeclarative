@@ -54,7 +54,6 @@ tst_examples::tst_examples()
     // Add directories you want excluded here
     excludedDirs << "shared"; //Not an example
     excludedDirs << "snippets/qml/path"; //No root QQuickItem
-    excludedDirs << "examples/qml/qmlextensionplugins"; //Requires special import search path
 
     // These snippets are not expected to run on their own.
     excludedDirs << "snippets/qml/visualdatamodel_rootindex";
