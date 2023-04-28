@@ -2287,9 +2287,9 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
     } else if (pragma->name == u"ValueTypeBehavior") {
         handlePragmaValues(pragma, [this, pragma](QStringView value) {
             if (value == u"Copy") {
-                m_scopesById.setValueTypesAreCopied(true);
+                // Ignore
             } else if (value == u"Reference") {
-                m_scopesById.setValueTypesAreCopied(false);
+                // Ignore
             } else if (value == u"Addressable") {
                 m_scopesById.setValueTypesAreAddressable(true);
             } else if (value == u"Inaddressable") {

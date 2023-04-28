@@ -3693,42 +3693,59 @@ void tst_QmlCppCodegen::valueTypeBehavior()
 {
     QQmlEngine engine;
 
-    const QUrl copy(u"qrc:/qt/qml/TestTypes/valueTypeCopy.qml"_s);
+    {
+        const QUrl url(u"qrc:/qt/qml/TestTypes/valueTypeCopy.qml"_s);
+        QQmlComponent c(&engine, url);
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QTest::ignoreMessage(QtWarningMsg, bindingLoopMessage(url, 'e'));
+        QTest::ignoreMessage(QtWarningMsg, bindingLoopMessage(url, 'f'));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(!o.isNull());
+        QCOMPARE(o->property("e").toDouble(), 45.0);
+        QCOMPARE(o->property("f").toDouble(), 1.0);
+    }
 
-    QQmlComponent c1(&engine, copy);
-    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
-    QTest::ignoreMessage(QtWarningMsg, bindingLoopMessage(copy, 'e'));
-    QTest::ignoreMessage(QtWarningMsg, bindingLoopMessage(copy, 'f'));
-    QScopedPointer<QObject> o1(c1.create());
-    QVERIFY(!o1.isNull());
-    QCOMPARE(o1->property("e").toDouble(), 45.0);
-    QCOMPARE(o1->property("f").toDouble(), 1.0);
+    {
+        const QUrl url(u"qrc:/qt/qml/TestTypes/valueTypeReference.qml"_s);
+        QQmlComponent c(&engine, url);
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QTest::ignoreMessage(QtWarningMsg, bindingLoopMessage(url, 'e'));
+        QTest::ignoreMessage(QtWarningMsg, bindingLoopMessage(url, 'f'));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(!o.isNull());
+        QVERIFY(qIsNaN(o->property("e").toDouble()));
+        QCOMPARE(o->property("f").toDouble(), 5.0);
+    }
 
-    const QUrl reference(u"qrc:/qt/qml/TestTypes/valueTypeReference.qml"_s);
-    QQmlComponent c2(&engine, reference);
-    QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
-    QTest::ignoreMessage(QtWarningMsg, bindingLoopMessage(reference, 'e'));
-    QTest::ignoreMessage(QtWarningMsg, bindingLoopMessage(reference, 'f'));
-    QScopedPointer<QObject> o2(c2.create());
-    QVERIFY(!o2.isNull());
-    QVERIFY(qIsNaN(o2->property("e").toDouble()));
-    QCOMPARE(o2->property("f").toDouble(), 5.0);
+    {
+        const QUrl url(u"qrc:/qt/qml/TestTypes/valueTypeDefault.qml"_s);
+        QQmlComponent c(&engine, url);
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QTest::ignoreMessage(QtWarningMsg, bindingLoopMessage(url, 'e'));
+        QTest::ignoreMessage(QtWarningMsg, bindingLoopMessage(url, 'f'));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(!o.isNull());
+        QVERIFY(qIsNaN(o->property("e").toDouble()));
+        QCOMPARE(o->property("f").toDouble(), 5.0);
+    }
 
-    const QUrl cast(u"qrc:/qt/qml/TestTypes/valueTypeCast.qml"_s);
-    QQmlComponent c3(&engine, cast);
-    QVERIFY2(c3.isReady(), qPrintable(c3.errorString()));
-    QScopedPointer o3(c3.create());
-    QVERIFY(!o3.isNull());
-    QCOMPARE(o3->property("x"), 10);
+    {
+        const QUrl url(u"qrc:/qt/qml/TestTypes/valueTypeCast.qml"_s);
+        QQmlComponent c(&engine, url);
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer o(c.create());
+        QVERIFY(!o.isNull());
+        QCOMPARE(o->property("x"), 10);
 
-    QTest::ignoreMessage(
+        QTest::ignoreMessage(
                 QtWarningMsg,
-                qPrintable(cast.toString()
+                qPrintable(url.toString()
                            + u":8: TypeError: Cannot read property 'x' of undefined"_s));
-    o3->setProperty("v", QLatin1String("not a rect"));
+        o->setProperty("v", QLatin1String("not a rect"));
 
-    // If the binding throws an exception, the value doesn't change.
-    QCOMPARE(o3->property("x"), 10);
+               // If the binding throws an exception, the value doesn't change.
+        QCOMPARE(o->property("x"), 10);
+    }
 }
 
 void tst_QmlCppCodegen::valueTypeLists()

@@ -219,6 +219,7 @@ set(qml_files
     usingCxxTypesFromFileImports.qml
     valueTypeCast.qml
     valueTypeCopy.qml
+    valueTypeDefault.qml
     valueTypeLists.qml
     valueTypeProperty.qml
     valueTypeReference.qml

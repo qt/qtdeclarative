@@ -723,8 +723,8 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
     // TODO: Once we get a char type in QML, use it here.
     if (m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->stringType()))
         access = u"QString("_s + access + u")"_s;
-    else if (!m_typeResolver->canUseValueTypes())
-        reject(u"LoadElement in sequence type reference"_s);
+    else if (m_state.isRegisterAffectedBySideEffects(base))
+        reject(u"LoadElement on a sequence potentially affected by side effects"_s);
 
     m_body += u"if ("_s + indexName + u" < "_s + baseName + u".size())\n"_s;
     m_body += u"    "_s + m_state.accumulatorVariableOut + u" = "_s +
@@ -746,10 +746,7 @@ void QQmlJSCodeGenerator::generate_StoreElement(int base, int index)
     }
 
     if (!m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->listPropertyType())) {
-        if (m_typeResolver->canUseValueTypes())
-            reject(u"indirect StoreElement"_s);
-        else
-            reject(u"StoreElement in sequence type reference"_s);
+        reject(u"indirect StoreElement"_s);
         return;
     }
 
@@ -1120,7 +1117,9 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
                              m_state.accumulatorOut(),
                              m_state.accumulatorVariableIn + u".length()"_s)
                 + u";\n"_s;
-    } else if (m_typeResolver->canUseValueTypes()) {
+    } else {
+        if (m_state.isRegisterAffectedBySideEffects(Accumulator))
+            reject(u"reading from a value that's potentially affected by side effects"_s);
 
         const QString inputContentPointer = resolveValueTypeContentPointer(
                     scope, accumulatorIn, m_state.accumulatorVariableIn,
@@ -1138,8 +1137,6 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
         const QString preparation = getLookupPreparation(
                     m_state.accumulatorOut(), m_state.accumulatorVariableOut, index);
         generateLookup(lookup, initialization, preparation);
-    } else {
-        reject(u"lookup in value type reference"_s);
     }
 }
 
@@ -1237,10 +1234,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
         }
 
         if (!callBase.storedType()->isListProperty()) {
-            if (m_typeResolver->canUseValueTypes())
-                reject(u"resizing sequence types (because of missing write-back)"_s);
-            else
-                reject(u"resizing sequence type references"_s);
+            reject(u"resizing sequence types (because of missing write-back)"_s);
             break;
         }
 
@@ -1274,10 +1268,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
                 + u", "_s + argType + u')';
 
         generateLookup(lookup, initialization, preparation);
-        if (m_typeResolver->canUseValueTypes())
-            reject(u"SetLookup on value types (because of missing write-back)"_s);
-        else
-            reject(u"SetLookup on value type references"_s);
+        reject(u"SetLookup on value types (because of missing write-back)"_s);
         break;
     }
     case QQmlJSScope::AccessSemantics::None:
@@ -1857,14 +1848,8 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
                 return;
         }
 
-        if (m_typeResolver->canUseValueTypes()) {
-            // This is possible, once we establish the right kind of lookup for it
-            reject(u"call to property '%1' of %2"_s.arg(name, baseType.descriptiveName()));
-        } else {
-            // This is not possible.
-            reject(u"call to property '%1' of value type reference %2"_s
-                   .arg(name, baseType.descriptiveName()));
-        }
+        // This is possible, once we establish the right kind of lookup for it
+        reject(u"call to property '%1' of %2"_s.arg(name, baseType.descriptiveName()));
     }
 
     const QString indexString = QString::number(index);

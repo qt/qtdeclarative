@@ -157,7 +157,6 @@ public:
 
     const QQmlJSScopesById &objectsById() const { return m_objectsById; }
     bool canCallJSFunctions() const { return m_objectsById.signaturesAreEnforced(); }
-    bool canUseValueTypes() const { return m_objectsById.valueTypesAreCopied(); }
     bool canAddressValueTypes() const { return m_objectsById.valueTypesAreAddressable(); }
 
     const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers() const

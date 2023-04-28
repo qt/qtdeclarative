@@ -1193,19 +1193,19 @@ void QQmlJSTypePropagator::mergeRegister(
         if (conversion == it->second.typeConversions.end())
             return false;
 
-        const QQmlJSRegisterContent &lastTry = conversion.value().content;
+        const VirtualRegister &lastTry = conversion.value();
 
-        Q_ASSERT(lastTry.isValid());
-        Q_ASSERT(lastTry.isConversion());
+        Q_ASSERT(lastTry.content.isValid());
+        Q_ASSERT(lastTry.content.isConversion());
 
-        if (!m_typeResolver->equals(lastTry.conversionResult(), merged.conversionResult())
-                || lastTry.conversionOrigins() != merged.conversionOrigins()) {
+        if (!m_typeResolver->equals(lastTry.content.conversionResult(), merged.conversionResult())
+                || lastTry.content.conversionOrigins() != merged.conversionOrigins()) {
             return false;
         }
 
         // We don't need to track it again if we've come to the same conclusion before.
-        m_state.annotations[currentInstructionOffset()].typeConversions[index].content = lastTry;
-        m_state.registers[index].content = lastTry;
+        m_state.annotations[currentInstructionOffset()].typeConversions[index] = lastTry;
+        m_state.registers[index] = lastTry;
         return true;
     };
 
@@ -2425,9 +2425,6 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
     currentInstruction.readRegisters = m_state.takeReadRegisters();
     currentInstruction.hasSideEffects = m_state.hasSideEffects();
     currentInstruction.isRename = m_state.isRename();
-    m_state.setHasSideEffects(false);
-    m_state.setIsRename(false);
-    m_state.setReadRegisters(VirtualRegisters());
 
     switch (instr) {
     // the following instructions are not expected to produce output in the accumulator
@@ -2470,9 +2467,17 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
 
     if (m_state.changedRegisterIndex() != InvalidRegister) {
         Q_ASSERT(m_error->isValid() || m_state.changedRegister().isValid());
-        m_state.registers[m_state.changedRegisterIndex()].content = m_state.changedRegister();
+        VirtualRegister &r = m_state.registers[m_state.changedRegisterIndex()];
+        r.content = m_state.changedRegister();
+        r.canMove = false;
+        r.affectedBySideEffects = m_state.isRename()
+                && m_state.isRegisterAffectedBySideEffects(m_state.renameSourceRegisterIndex());
         m_state.clearChangedRegister();
     }
+
+    m_state.setHasSideEffects(false);
+    m_state.setIsRename(false);
+    m_state.setReadRegisters(VirtualRegisters());
 }
 
 QQmlJSRegisterContent QQmlJSTypePropagator::propagateBinaryOperation(QSOperator::Op op, int lhs)
