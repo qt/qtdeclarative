@@ -23,10 +23,10 @@ qt_add_executable(animationexample
 )
 
 target_link_libraries(animationexample PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
 )
 
 add_dependencies(animationexample animation_shared)

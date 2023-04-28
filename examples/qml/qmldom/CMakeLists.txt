@@ -25,8 +25,8 @@ qt_add_executable(qmldomloadeditwrite
 )
 
 target_link_libraries(qmldomloadeditwrite PUBLIC
-    Qt::Core
-    Qt::Qml
+    Qt6::Core
+    Qt6::Qml
     qmldomlib
 )
 

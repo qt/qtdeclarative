@@ -33,15 +33,15 @@ qt_add_qml_module(texteditorexample
 )
 
 target_link_libraries(texteditorexample PUBLIC
-    Qt::Core
-    Qt::Gui
-    Qt::Quick
-    Qt::QuickControls2
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Quick
+    Qt6::QuickControls2
 )
 
-if(TARGET Qt::Widgets)
+if(TARGET Qt6::Widgets)
     target_link_libraries(texteditorexample PUBLIC
-        Qt::Widgets
+        Qt6::Widgets
     )
 endif()
 

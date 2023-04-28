@@ -20,9 +20,9 @@ qt_add_executable(customgeometry_declarative WIN32 MACOSX_BUNDLE
 )
 
 target_link_libraries(customgeometry_declarative PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Quick
 )
 
 qt_add_qml_module(customgeometry_declarative

@@ -14,10 +14,10 @@ target_sources(chartsplugin PRIVATE
 )
 
 target_link_libraries(chartsplugin PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
 )
 
 if(QT6_IS_SHARED_LIBS_BUILD AND APPLE)

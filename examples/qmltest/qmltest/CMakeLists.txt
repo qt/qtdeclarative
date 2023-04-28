@@ -25,18 +25,18 @@ set_target_properties(tst_qmltestexample PROPERTIES
 )
 
 target_link_libraries(tst_qmltestexample PUBLIC
-    Qt::Core
-    Qt::Gui
+    Qt6::Core
+    Qt6::Gui
 
-    Qt::QuickTest
+    Qt6::QuickTest
 
 )
 
 # This line get added, but does not make sense
 #if(QT_BUILDING_QT)
 #    target_link_libraries(tst_qmltestexample PUBLIC
-#        Qt::Qml
-#        Qt::QuickTest
+#        Qt6::Qml
+#        Qt6::QuickTest
 #    )
 #endif()
 

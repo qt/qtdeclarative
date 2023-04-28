@@ -28,10 +28,10 @@ set_target_properties(viewsexample PROPERTIES
 )
 
 target_link_libraries(viewsexample PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
 )
 
 add_dependencies(viewsexample views_shared)

@@ -24,8 +24,8 @@ set_target_properties(chapter6-plugins PROPERTIES
 )
 
 target_link_libraries(chapter6-plugins PRIVATE
-    Qt::Qml
-    Qt::Quick
+    Qt6::Qml
+    Qt6::Quick
 )
 
 qt_add_qml_module(chapter6-plugins

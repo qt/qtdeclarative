@@ -26,10 +26,10 @@ set_target_properties(chapter4-customPropertyTypes PROPERTIES
 )
 
 target_link_libraries(chapter4-customPropertyTypes PUBLIC
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
 )
 #![1]
 qt_add_qml_module(chapter4-customPropertyTypes

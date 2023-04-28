@@ -24,11 +24,11 @@ qt_add_executable(qquickwidgetversuswindow_opengl
 )
 
 target_link_libraries(qquickwidgetversuswindow_opengl PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Quick
-    Qt::QuickWidgets
-    Qt::Widgets
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Quick
+    Qt6::QuickWidgets
+    Qt6::Widgets
 )
 
 qt_add_qml_module(qquickwidgetversuswindow_opengl

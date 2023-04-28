@@ -23,10 +23,10 @@ qt_add_executable(textexample
 )
 
 target_link_libraries(textexample PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
 )
 
 add_dependencies(textexample text_shared)

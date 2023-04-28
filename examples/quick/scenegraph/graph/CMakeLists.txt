@@ -28,9 +28,9 @@ set_target_properties(graph PROPERTIES
 )
 
 target_link_libraries(graph PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Quick
 )
 
 qt_add_qml_module(graph

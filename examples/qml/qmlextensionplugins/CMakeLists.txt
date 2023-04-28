@@ -50,9 +50,9 @@ set_target_properties(qmlqtimeexample PROPERTIES
 )
 
 target_link_libraries(qmlqtimeexample PUBLIC
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
 )
 
 install(TARGETS qmlqtimeexample
