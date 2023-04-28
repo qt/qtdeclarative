@@ -18,10 +18,10 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Qml LinguistTools)
 qt_add_executable(qmli18n WIN32 MACOSX_BUNDLE main.cpp)
 
 target_link_libraries(qmli18n PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
 )
 
 qt_add_qml_module(qmli18n

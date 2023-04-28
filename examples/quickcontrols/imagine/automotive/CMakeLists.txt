@@ -132,10 +132,10 @@ qt_add_qml_module(automotiveexample
 )
 
 target_link_libraries(automotiveexample PUBLIC
-    Qt::Core
-    Qt::Gui
-    Qt::Quick
-    Qt::QuickControls2
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Quick
+    Qt6::QuickControls2
 )
 
 install(TARGETS automotiveexample

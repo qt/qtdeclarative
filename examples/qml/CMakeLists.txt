@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 add_subdirectory(tutorials)
-if(TARGET Qt::Quick)
+if(TARGET Qt6::Quick)
     qt_internal_add_example(qmlextensionplugins)
-    if (TARGET Qt::lupdate)
+    if (TARGET Qt6::lupdate)
         qt_internal_add_example(qml-i18n)
     endif()
     qt_internal_add_example(dynamicscene)

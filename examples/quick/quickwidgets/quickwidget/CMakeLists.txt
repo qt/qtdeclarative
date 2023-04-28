@@ -21,11 +21,11 @@ qt_add_executable(quickwidget
 )
 
 target_link_libraries(quickwidget PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Quick
-    Qt::QuickWidgets
-    Qt::Widgets
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Quick
+    Qt6::QuickWidgets
+    Qt6::Widgets
 )
 
 qt_add_qml_module(quickwidget

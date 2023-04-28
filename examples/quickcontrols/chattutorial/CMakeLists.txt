@@ -4,7 +4,7 @@
 qt_internal_add_example(chapter1)
 qt_internal_add_example(chapter2)
 qt_internal_add_example(chapter3)
-if (TARGET Qt::Sql)
+if (TARGET Qt6::Sql)
     qt_internal_add_example(chapter4)
     if(TARGET chattutorial-chapter4)
         set_target_properties(chattutorial-chapter4 PROPERTIES UNITY_BUILD OFF)

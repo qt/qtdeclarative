@@ -21,10 +21,10 @@ qt_add_executable(itemvariablerefreshrateexample
 )
 
 target_link_libraries(itemvariablerefreshrateexample PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
 )
 
 qt_add_qml_module(itemvariablerefreshrateexample

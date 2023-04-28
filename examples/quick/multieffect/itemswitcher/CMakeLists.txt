@@ -21,11 +21,11 @@ qt_add_executable(itemswitcherexample WIN32 MACOSX_BUNDLE
 )
 
 target_link_libraries(itemswitcherexample PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
-    Qt::QuickControls2
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
+    Qt6::QuickControls2
 )
 
 add_dependencies(itemswitcherexample itemswitcher_shared)

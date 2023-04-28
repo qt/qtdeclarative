@@ -21,11 +21,11 @@ qt_add_executable(testbedexample WIN32 MACOSX_BUNDLE
 )
 
 target_link_libraries(testbedexample PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
-    Qt::QuickControls2
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
+    Qt6::QuickControls2
 )
 
 add_dependencies(testbedexample testbed_shared)

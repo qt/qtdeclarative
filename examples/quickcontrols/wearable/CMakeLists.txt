@@ -24,17 +24,17 @@ set_target_properties(wearable PROPERTIES
 )
 
 target_link_libraries(wearable PUBLIC
-    Qt::Core
-    Qt::Gui
-    Qt::Quick
-    Qt::QuickControls2
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Quick
+    Qt6::QuickControls2
 )
 
 if(UNIX AND NOT APPLE AND CMAKE_CROSSCOMPILING)
     find_package(Qt6 REQUIRED COMPONENTS QuickTemplates2)
 
     # Work around QTBUG-86533
-    target_link_libraries(wearable PRIVATE Qt::QuickTemplates2)
+    target_link_libraries(wearable PRIVATE Qt6::QuickTemplates2)
 endif()
 
 # Resources:

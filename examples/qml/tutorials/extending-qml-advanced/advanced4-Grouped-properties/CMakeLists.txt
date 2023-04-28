@@ -27,9 +27,9 @@ set_target_properties(grouped PROPERTIES
 )
 
 target_link_libraries(grouped PUBLIC
-    Qt::Core
-    Qt::Qml
-    Qt::Gui
+    Qt6::Core
+    Qt6::Qml
+    Qt6::Gui
 )
 
 qt_add_qml_module(grouped

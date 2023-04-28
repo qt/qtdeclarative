@@ -27,10 +27,10 @@ set_target_properties(eventcalendar PROPERTIES
 )
 
 target_link_libraries(eventcalendar PUBLIC
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Sql
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Sql
 )
 
 qt_add_qml_module(eventcalendar

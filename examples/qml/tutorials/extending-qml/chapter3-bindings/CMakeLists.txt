@@ -25,10 +25,10 @@ set_target_properties(chapter3-bindings PROPERTIES
 )
 
 target_link_libraries(chapter3-bindings PUBLIC
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
 )
 
 qt_add_qml_module(chapter3-bindings
