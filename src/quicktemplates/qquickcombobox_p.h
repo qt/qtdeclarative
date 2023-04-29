@@ -16,7 +16,10 @@
 //
 
 #include <QtCore/qloggingcategory.h>
+#include <QtQmlModels/private/qtqmlmodels-config_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
+
+QT_REQUIRE_CONFIG(qml_delegate_model);
 
 QT_BEGIN_NAMESPACE
 

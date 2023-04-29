@@ -26,7 +26,6 @@ qt_internal_add_qml_module(QuickTemplates2
         qquickbuttongroup.cpp qquickbuttongroup_p.h
         qquickcheckbox.cpp qquickcheckbox_p.h
         qquickcheckdelegate.cpp qquickcheckdelegate_p.h
-        qquickcombobox.cpp qquickcombobox_p.h
         qquickcontainer.cpp qquickcontainer_p.h
         qquickcontainer_p_p.h
         qquickcontentitem.cpp qquickcontentitem_p.h
@@ -184,6 +183,12 @@ qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quick_viewtransit
     SOURCES
         qquickstacktransition.cpp
         qquickstacktransition_p_p.h
+)
+
+qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_qml_delegate_model
+    SOURCES
+        qquickcombobox.cpp
+        qquickcombobox_p.h
 )
 
 qt_internal_extend_Target(qtquicktemplates2plugin

@@ -45,7 +45,6 @@ qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
         items/qquickstyleitem.cpp items/qquickstyleitem.h
         items/qquickstyleitembutton.cpp items/qquickstyleitembutton.h
         items/qquickstyleitemcheckbox.cpp items/qquickstyleitemcheckbox.h
-        items/qquickstyleitemcombobox.cpp items/qquickstyleitemcombobox.h
         items/qquickstyleitemdial.cpp items/qquickstyleitemdial.h
         items/qquickstyleitemframe.cpp items/qquickstyleitemframe.h
         items/qquickstyleitemgroupbox.cpp items/qquickstyleitemgroupbox.h
@@ -84,6 +83,11 @@ qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
 qt_internal_extend_target(qtquickcontrols2nativestyleplugin CONDITION QT_FEATURE_quick_treeview
     SOURCES
         items/qquickstyleitemtreeindicator.cpp items/qquickstyleitemtreeindicator.h
+)
+
+qt_internal_extend_target(qtquickcontrols2nativestyleplugin CONDITION QT_FEATURE_qml_delegate_model
+    SOURCES
+        items/qquickstyleitemcombobox.cpp items/qquickstyleitemcombobox.h
 )
 
 qt_internal_extend_target(qtquickcontrols2nativestyleplugin CONDITION MACOS

@@ -17,7 +17,6 @@
 
 #include <QtGui/qcolor.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuickTemplates2/private/qquickcombobox_p.h>
 #include <QtQuickTemplates2/private/qquicktextfield_p.h>
 
 #include "qtquickdialogs2quickimplglobal_p.h"
