@@ -57,9 +57,21 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QPointerEvent *event)
                     point = &p;
             }
         }
-        if (missing)
-            qCWarning(lcTouchTarget) << this << "pointId" << Qt::hex << d->pointInfo.id()
-                << "is missing from current event, but was neither canceled nor released";
+        if (missing) {
+            // Received a stray touch begin event => reset and start over.
+            if (event->type() == QEvent::TouchBegin && event->points().count() == 1) {
+                const QEventPoint &point = event->point(0);
+                qCDebug(lcTouchTarget) << this << "pointId" << Qt::hex << point.id()
+                    << "was received as a stray TouchBegin event. Canceling existing gesture"
+                    " and starting over.";
+                d->pointInfo.reset(event, point);
+                return true;
+            } else {
+                qCWarning(lcTouchTarget) << this << "pointId" << Qt::hex << d->pointInfo.id()
+                    << "is missing from current event, but was neither canceled nor released."
+                    " Ignoring:" << event->type();
+            }
+        }
         if (point) {
             if (candidatePointCount == 1 || (candidatePointCount > 1 && d->ignoreAdditionalPoints)) {
                 point->setAccepted();
