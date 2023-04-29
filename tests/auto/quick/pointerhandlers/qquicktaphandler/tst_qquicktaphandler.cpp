@@ -509,6 +509,23 @@ void tst_TapHandler::touchMultiTap()
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(!button->property("pressed").toBool());
     QCOMPARE(tappedSpy.size(), 4);
+
+    // Test a stray touch begin
+    tappedSpy.clear();
+    constexpr int count = 2;
+    for (int i = 0; i < count; ++i) {
+        QTest::touchEvent(window, touchDevice).press(1, p1, window);
+        QQuickTouchUtils::flush(window);
+        p1 -= QPoint(dragThreshold, dragThreshold);
+        QTest::touchEvent(window, touchDevice).move(1, p1, window);
+        QQuickTouchUtils::flush(window);
+        QTest::touchEvent(window, touchDevice).release(1, p1, window);
+        QQuickTouchUtils::flush(window);
+        p1 += QPoint(dragThreshold, dragThreshold);
+        QTest::touchEvent(window, touchDevice).press(1, p1, window);
+        QQuickTouchUtils::flush(window);
+    }
+    QCOMPARE(tappedSpy.count(), count);
 }
 
 void tst_TapHandler::mouseMultiTap_data()
