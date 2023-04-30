@@ -38,7 +38,6 @@ struct BaseRequest
     Response response;
 
     bool fillFrom(QmlLsp::OpenDocument doc, const Parameters &params, Response &&response);
-    void sendResponse();
 };
 
 template<typename RequestType>
