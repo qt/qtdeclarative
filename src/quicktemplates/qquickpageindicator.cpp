@@ -177,6 +177,13 @@ QQuickPageIndicator::QQuickPageIndicator(QQuickItem *parent)
 {
 }
 
+QQuickPageIndicator::~QQuickPageIndicator()
+{
+    Q_D(QQuickPageIndicator);
+    if (d->contentItem)
+        QQuickItemPrivate::get(d->contentItem)->removeItemChangeListener(d, QQuickItemPrivate::Children);
+}
+
 /*!
     \qmlproperty int QtQuick.Controls::PageIndicator::count
 
