@@ -741,6 +741,11 @@ QQuickMenu::~QQuickMenu()
     // been destroyed before that is called.
     while (d->contentModel->count() > 0)
         d->removeItem(0, d->itemAt(0));
+
+    if (d->contentItem) {
+        QQuickItemPrivate::get(d->contentItem)->removeItemChangeListener(d, QQuickItemPrivate::Children);
+        QQuickItemPrivate::get(d->contentItem)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
+    }
 }
 
 /*!
