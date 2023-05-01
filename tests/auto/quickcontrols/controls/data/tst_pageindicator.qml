@@ -15,12 +15,17 @@ TestCase {
 
     Component {
         id: pageIndicator
-        PageIndicator { }
+        PageIndicator {
+            objectName: "pageIndicator"
+            contentItem.objectName: "pageIndicatorContentItem"
+        }
     }
 
     Component {
         id: mouseArea
-        MouseArea { }
+        MouseArea {
+            objectName: "mouseArea"
+        }
     }
 
     function test_defaults() {
