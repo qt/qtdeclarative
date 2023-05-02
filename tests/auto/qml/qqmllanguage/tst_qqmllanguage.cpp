@@ -1388,13 +1388,13 @@ void tst_qqmllanguage::rootItemIsComponent()
             QtWarningMsg,
             QRegularExpression(
                     ".*/rootItemIsComponent\\.qml:3:1: Using a Component as the root of "
-                    "a qmldocument is deprecated: types defined in qml documents are automatically "
-                    "wrapped into Components when needed\\."));
+                    "a QML document is deprecated: types defined in qml documents are "
+                    "automatically wrapped into Components when needed\\."));
     QTest::ignoreMessage(
             QtWarningMsg,
             QRegularExpression(
                     ".*/EvilComponentType\\.qml:3:1: Using a Component as the root of a "
-                    "qmldocument is deprecated: types defined in qml documents are automatically "
+                    "QML document is deprecated: types defined in qml documents are automatically "
                     "wrapped into Components when needed\\."));
     QTest::ignoreMessage(
             QtWarningMsg,

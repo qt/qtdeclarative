@@ -184,6 +184,7 @@ private slots:
     void jsArrayMethodsWithParams_data();
     void jsArrayMethodsWithParams();
     void shadowedMethod();
+    void topLevelComponent();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3765,6 +3766,31 @@ void tst_QmlCppCodegen::shadowedMethod()
     QCOMPARE(o->property("athing"), QVariant::fromValue<bool>(false));
     QCOMPARE(o->property("bthing"), QVariant::fromValue(u"b"_s));
     QCOMPARE(o->property("cthing"), QVariant::fromValue(u"c"_s));
+}
+
+void tst_QmlCppCodegen::topLevelComponent()
+{
+    // TODO: Once we stop accepting top level Component elements, this test can be removed.
+
+    QQmlEngine e;
+
+    const QUrl url(u"qrc:/qt/qml/TestTypes/topLevelComponent.qml"_s);
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url.toString() + u":4:1: Using a Component as the root of a QML document "
+                                        "is deprecated: types defined in qml documents are "
+                                        "automatically wrapped into Components when needed."_s));
+
+    QQmlComponent c(&e, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QQmlComponent *inner = qobject_cast<QQmlComponent *>(o.data());
+    QVERIFY(inner);
+
+    QScopedPointer<QObject> o2(inner->create());
+    QCOMPARE(o2->objectName(), u"foo"_s);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
