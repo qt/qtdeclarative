@@ -28,6 +28,7 @@ TestCase {
     Component {
         id: scrollBar
         ScrollBar {
+            objectName: "scrollBar"
             padding: 0
             minimumSize: 0
         }
@@ -43,6 +44,7 @@ TestCase {
     Component {
         id: flickable
         Flickable {
+            objectName: "flickable"
             width: 100
             height: 100
             contentWidth: 200
@@ -64,7 +66,7 @@ TestCase {
         verify(container)
         waitForRendering(container)
 
-        var vertical = scrollBar.createObject()
+        var vertical = scrollBar.createObject(null, { objectName: "verticalScrollBar" })
         verify(!vertical.parent)
         compare(vertical.size, 0.0)
         compare(vertical.position, 0.0)
@@ -94,7 +96,7 @@ TestCase {
         container.width += 10
         compare(vertical.x, 123)
 
-        var horizontal = createTemporaryObject(scrollBar, null)
+        var horizontal = createTemporaryObject(scrollBar, null, { objectName: "horizontalScrollBar" })
         verify(!horizontal.parent)
         compare(horizontal.size, 0.0)
         compare(horizontal.position, 0.0)
