@@ -265,18 +265,21 @@ public:
     static qsizetype data_count(QQmlListProperty<QObject> *);
     static QObject *data_at(QQmlListProperty<QObject> *, qsizetype);
     static void data_clear(QQmlListProperty<QObject> *);
+    static void data_removeLast(QQmlListProperty<QObject> *);
 
     // resources property
     static QObject *resources_at(QQmlListProperty<QObject> *, qsizetype);
     static void resources_append(QQmlListProperty<QObject> *, QObject *);
     static qsizetype resources_count(QQmlListProperty<QObject> *);
     static void resources_clear(QQmlListProperty<QObject> *);
+    static void resources_removeLast(QQmlListProperty<QObject> *);
 
     // children property
     static void children_append(QQmlListProperty<QQuickItem> *, QQuickItem *);
     static qsizetype children_count(QQmlListProperty<QQuickItem> *);
     static QQuickItem *children_at(QQmlListProperty<QQuickItem> *, qsizetype);
     static void children_clear(QQmlListProperty<QQuickItem> *);
+    static void children_removeLast(QQmlListProperty<QQuickItem> *);
 
     // visibleChildren property
     static void visibleChildren_append(QQmlListProperty<QQuickItem> *prop, QQuickItem *o);
