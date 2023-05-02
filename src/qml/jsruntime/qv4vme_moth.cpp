@@ -485,6 +485,17 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
                     = (resultObj && resultObj->metaObject()->inherits(frameReturn.metaObject()))
                             ? resultObj
                             : nullptr;
+        } else if (returnType == QMetaType::fromType<QVariant>()) {
+            const QVariant *resultVariant = static_cast<QVariant *>(transformedResult);
+            if (resultVariant->metaType() == frameReturn) {
+                frameReturn.construct(frame->returnValue(), resultVariant->data());
+            } else {
+                // Convert needs a pre-constructed target.
+                frameReturn.construct(frame->returnValue());
+                QMetaType::convert(resultVariant->metaType(), resultVariant->data(),
+                               frameReturn, frame->returnValue());
+            }
+            resultVariant->~QVariant();
         } else {
             // Convert needs a pre-constructed target.
             frameReturn.construct(frame->returnValue());

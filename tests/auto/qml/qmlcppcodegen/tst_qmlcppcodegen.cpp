@@ -169,6 +169,7 @@ private slots:
     void enumFromBadSingleton();
     void ambiguousAs();
     void topLevelComponent();
+    void variantReturn();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3288,6 +3289,31 @@ void tst_QmlCppCodegen::topLevelComponent()
 
     QScopedPointer<QObject> o2(inner->create());
     QCOMPARE(o2->objectName(), u"foo"_s);
+}
+
+void tst_QmlCppCodegen::variantReturn()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/variantReturn.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QObject *a = o->property("a").value<QObject *>();
+    QVERIFY(a);
+    const QVariant x = a->property("x");
+    const QMetaObject *meta = x.metaType().metaObject();
+    QVERIFY(meta);
+    const QMetaProperty property = meta->property(meta->indexOfProperty("timeIndex"));
+    QVERIFY(property.isValid());
+    const QVariant timeIndex = property.readOnGadget(x.data());
+    QCOMPARE(timeIndex.metaType(), QMetaType::fromType<qsizetype>());
+    QCOMPARE(timeIndex.value<qsizetype>(), qsizetype(1));
+
+    QObject *b = o->property("b").value<QObject *>();
+    QVERIFY(b);
+    QCOMPARE(b->property("z").toInt(), 2);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

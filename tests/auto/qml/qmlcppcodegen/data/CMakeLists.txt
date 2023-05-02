@@ -20,6 +20,8 @@ set(cpp_sources
     theme.cpp theme.h
     timelinetheme.cpp timelinetheme.h
     variantMapLookup.h
+    variantreturn.h
+    weathermoduleurl.h
     wrapwithvariant.h
     withlength.h
 )
@@ -202,6 +204,7 @@ set(qml_files
     valueTypeLists.qml
     valueTypeProperty.qml
     valueTypeReference.qml
+    variantReturn.qml
     variantlist.qml
     variantMapLookup.qml
     versionmismatch.qml
