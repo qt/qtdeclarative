@@ -26,6 +26,8 @@ public:
     };
     Q_ENUM(SubControl)
 
+    explicit QQuickStyleItemScrollBar(QQuickItem *parent = nullptr);
+
     QFont styleFont(QQuickItem *control) const override;
 
 protected:

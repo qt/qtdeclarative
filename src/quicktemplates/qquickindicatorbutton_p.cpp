@@ -31,6 +31,14 @@ QQuickIndicatorButton::QQuickIndicatorButton(QObject *parent)
 {
 }
 
+QQuickIndicatorButton::~QQuickIndicatorButton()
+{
+    Q_D(QQuickIndicatorButton);
+    QQuickControl *parentControl = static_cast<QQuickControl *>(parent());
+    if (parentControl)
+        QQuickControlPrivate::get(parentControl)->removeImplicitSizeListener(d->indicator);
+}
+
 bool QQuickIndicatorButton::isPressed() const
 {
     Q_D(const QQuickIndicatorButton);
