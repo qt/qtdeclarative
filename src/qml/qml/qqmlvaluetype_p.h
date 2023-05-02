@@ -93,6 +93,11 @@ public:
         property.writeOnGadget(m_gadgetPtr, value);
     }
 
+    void writeOnGadget(const QMetaProperty &property, QVariant &&value)
+    {
+        property.writeOnGadget(m_gadgetPtr, std::move(value));
+    }
+
 private:
     const QQmlValueType *valueType() const;
     void *m_gadgetPtr = nullptr;

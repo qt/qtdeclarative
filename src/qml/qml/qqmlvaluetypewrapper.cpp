@@ -842,7 +842,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
         v = v.toInt();
 
     void *gadget = r->d()->gadgetPtr();
-    property.writeOnGadget(gadget, v);
+    property.writeOnGadget(gadget, std::move(v));
 
     if (heapObject)
         r->d()->writeBack(pd.coreIndex());

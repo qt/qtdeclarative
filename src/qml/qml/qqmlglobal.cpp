@@ -212,20 +212,20 @@ static void doWriteProperties(const QMetaObject *mo, const QV4::Value &s, void *
         const QMetaType propertyType = metaProperty.metaType();
         QVariant property = QV4::ExecutionEngine::toVariant(v4PropValue, propertyType);
         if (property.metaType() == propertyType) {
-            metaProperty.writeOnGadget(target, property);
+            metaProperty.writeOnGadget(target, std::move(property));
             continue;
         }
 
         QVariant converted = QQmlValueTypeProvider::createValueType(v4PropValue, propertyType);
         if (converted.isValid()) {
-            metaProperty.writeOnGadget(target, converted);
+            metaProperty.writeOnGadget(target, std::move(converted));
             continue;
         }
 
         converted = QVariant(propertyType);
         if (QMetaType::convert(property.metaType(), property.constData(),
                                propertyType, converted.data())) {
-            metaProperty.writeOnGadget(target, converted);
+            metaProperty.writeOnGadget(target, std::move(converted));
             continue;
         }
 

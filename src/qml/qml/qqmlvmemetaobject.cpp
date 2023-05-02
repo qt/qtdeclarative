@@ -340,7 +340,7 @@ bool QQmlInterceptorMetaObject::doIntercept(QMetaObject::Call c, int id, void **
                     // change the value soon. Such an animation needs to be canceled if the
                     // current value is explicitly set.
                     // So, we cannot return here if prevComponentValue == newComponentValue.
-                    valueType->writeOnGadget(valueProp, prevComponentValue);
+                    valueType->writeOnGadget(valueProp, std::move(prevComponentValue));
                     valueType->write(object, id, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
 
                     vi->write(newComponentValue);
