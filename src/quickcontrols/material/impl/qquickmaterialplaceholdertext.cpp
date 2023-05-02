@@ -260,7 +260,9 @@ void QQuickMaterialPlaceholderText::maybeSetFocusAnimationProgress()
 
 void QQuickMaterialPlaceholderText::componentComplete()
 {
-    QQuickPlaceholderText::componentComplete();
+    // We deliberately do not call QQuickPlaceholderText's implementation here,
+    // as Material 3 placeholder text should always be left-aligned.
+    QQuickText::componentComplete();
 
     if (!parentItem())
         qmlWarning(this) << "Expected parent item by component completion!";
