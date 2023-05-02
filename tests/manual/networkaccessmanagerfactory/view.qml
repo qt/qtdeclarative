@@ -4,7 +4,7 @@
 import QtQuick
 
 Image {
-    width: 200
-    height: 100
-    source: "http://doc.qt.io/qt-6/images/logo.png"
+    width: 300
+    height: 214
+    source: "https://www.qt.io/hs-fs/hubfs/Qt-logo-neon_900px.png"
 }
