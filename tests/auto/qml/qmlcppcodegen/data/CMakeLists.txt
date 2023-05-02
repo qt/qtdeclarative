@@ -184,6 +184,7 @@ set(qml_files
     themergood.qml
     throwObjectName.qml
     toString.qml
+    topLevelComponent.qml
     translation.qml
     trivialSignalHandler.qml
     typePropagationLoop.qml

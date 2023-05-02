@@ -1402,7 +1402,6 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
             if (isRoot && base->internalName() == u"QQmlComponent") {
                 m_logger->log(u"Qml top level type cannot be 'Component'."_s, qmlTopLevelComponent,
                               definition->qualifiedTypeNameId->identifierToken, true, true);
-                return false;
             }
             if (base->isSingleton() && m_currentScope->isComposite()) {
                 m_logger->log(u"Singleton Type %1 is not creatable."_s.arg(
