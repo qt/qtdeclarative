@@ -964,7 +964,54 @@ TestCase {
         TextArea {}
     }
 
-    function test_placeholderText() {
+    function test_textFieldPlaceholderTextHorizontalAlignment_data() {
+        return [
+            { tag: "AlignLeft", horizontalAlignment: TextField.AlignLeft },
+            { tag: "AlignHCenter", horizontalAlignment: TextField.AlignHCenter },
+            { tag: "AlignRight", horizontalAlignment: TextField.AlignRight }
+        ]
+    }
+
+    function test_textFieldPlaceholderTextHorizontalAlignment(data) {
+        // The placeholder text should always be near the left side of the TextField, regardless of its horizontalAlignment.
+        let textField = createTemporaryObject(textFieldComponent, testCase, {
+            placeholderText: "TextField",
+            horizontalAlignment: data.horizontalAlignment
+        })
+        verify(textField)
+        let placeholderTextItem = textField.children[0]
+        verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+        compare(placeholderTextItem.horizontalAlignment, TextField.AlignLeft)
+
+        textField.forceActiveFocus()
+        compare(placeholderTextItem.horizontalAlignment, TextField.AlignLeft)
+        textField.destroy()
+    }
+
+    function test_textAreaPlaceholderTextHorizontalAlignment_data() {
+        return [
+            { tag: "AlignLeft", horizontalAlignment: TextArea.AlignLeft },
+            { tag: "AlignHCenter", horizontalAlignment: TextArea.AlignHCenter },
+            { tag: "AlignRight", horizontalAlignment: TextArea.AlignRight }
+        ]
+    }
+
+    function test_textAreaPlaceholderTextHorizontalAlignment(data) {
+        // The placeholder text should always be near the left side of the TextArea, regardless of its horizontalAlignment.
+        let textArea = createTemporaryObject(textAreaComponent, testCase, {
+            placeholderText: "TextArea",
+            horizontalAlignment: data.horizontalAlignment
+        })
+        verify(textArea)
+        let placeholderTextItem = textArea.children[0]
+        verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+        compare(placeholderTextItem.horizontalAlignment, TextArea.AlignLeft)
+
+        textArea.forceActiveFocus()
+        compare(placeholderTextItem.horizontalAlignment, TextArea.AlignLeft)
+    }
+
+    function test_placeholderTextPos() {
         {
             // The non-floating placeholder text should be in the middle of TextField regardless of its height.
             let textField = createTemporaryObject(textFieldComponent, testCase, { placeholderText: "TextField" })
