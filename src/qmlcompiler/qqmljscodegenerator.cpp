@@ -3116,12 +3116,12 @@ QString QQmlJSCodeGenerator::conversion(
     }
 
     if (m_typeResolver->registerIsStoredIn(to, contained)
-            || m_typeResolver->isNumeric(from.storedType())
+            || m_typeResolver->isNumeric(to.storedType())
             || to.storedType()->isReferenceType()
             || m_typeResolver->registerContains(from, contained)) {
         // If:
         // * the output is not actually wrapped at all, or
-        // * the input is stored in a numeric type (as there are no internals to a number), or
+        // * the output is stored in a numeric type (as there are no internals to a number), or
         // * the output is a QObject pointer, or
         // * we merely wrap the value into a new container,
         // we can convert by stored type.

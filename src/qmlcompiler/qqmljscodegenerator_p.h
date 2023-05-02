@@ -219,10 +219,12 @@ protected:
     {
         const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(to);
         if (m_typeResolver->equals(to.storedType(), contained)
+                || m_typeResolver->isNumeric(to.storedType())
                 || to.storedType()->isReferenceType()
                 || m_typeResolver->equals(from, contained)) {
             // If:
             // * the output is not actually wrapped at all, or
+            // * the output is a number (as there are no internals to a number)
             // * the output is a QObject pointer, or
             // * we merely wrap the value into a new container,
             // we can convert by stored type.

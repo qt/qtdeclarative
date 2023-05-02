@@ -1,6 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 
 #include "data/druggeljug.h"
+#include "data/enumProperty.h"
 #include "data/withlength.h"
 #include <data/birthdayparty.h>
 #include <data/cppbaseclass.h>
@@ -185,6 +186,7 @@ private slots:
     void jsArrayMethodsWithParams();
     void shadowedMethod();
     void topLevelComponent();
+    void intToEnum();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3791,6 +3793,18 @@ void tst_QmlCppCodegen::topLevelComponent()
 
     QScopedPointer<QObject> o2(inner->create());
     QCOMPARE(o2->objectName(), u"foo"_s);
+}
+
+void tst_QmlCppCodegen::intToEnum()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/intToEnum.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    MyType *m = qobject_cast<MyType *>(o.data());
+    QCOMPARE(m->a(), MyType::D);
+    QCOMPARE(m->property("b").toInt(), 24);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

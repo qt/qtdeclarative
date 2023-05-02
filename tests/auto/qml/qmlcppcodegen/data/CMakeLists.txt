@@ -123,6 +123,7 @@ set(qml_files
     infinitiesToInt.qml
     intEnumCompare.qml
     intOverflow.qml
+    intToEnum.qml
     interactive.qml
     interceptor.qml
     invisibleBase.qml

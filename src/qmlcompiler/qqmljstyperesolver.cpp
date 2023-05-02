@@ -1095,6 +1095,10 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     if (isNumeric(from) && equals(to, m_stringType))
         return true;
 
+    // We can convert strings to numbers, but not to enums
+    if (equals(from, m_stringType) && isNumeric(to))
+        return to->scopeType() != QQmlJSScope::ScopeType::EnumScope;
+
     // We can always convert between strings and urls.
     if ((equals(from, m_stringType) && equals(to, m_urlType))
             || (equals(from, m_urlType) && equals(to, m_stringType))) {
