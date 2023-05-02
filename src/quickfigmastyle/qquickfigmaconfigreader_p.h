@@ -16,8 +16,8 @@
 //
 
 #include <QtCore/qobject.h>
-#include <QtQml/qqml.h>
 #include <QtCore/QVariantMap>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -37,6 +37,8 @@ public:
     void setConfigPath(const QString &path);
 
     QVariantMap images() const;
+
+    Q_INVOKABLE QVariant configForImageUrl(const QUrl &url) const;
 
 Q_SIGNALS:
     void configPathChanged();

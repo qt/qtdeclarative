@@ -12,8 +12,7 @@ T.CheckBox {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
-    readonly property string backgroundName: "checkbox-background"
-    readonly property var config: ConfigReader.images[backgroundName]
+    readonly property var config: ConfigReader.configForImageUrl(background?.source ?? "")
     readonly property bool mirroredIndicator: control.mirrored !== (config?.mirrored || false)
 
     spacing: config?.spacing || 0
@@ -77,7 +76,7 @@ T.CheckBox {
     }
 
     background: BorderImage {
-        source: Qt.resolvedUrl("images/" + control.backgroundName)
+        source: Qt.resolvedUrl("images/checkbox-background")
 
         border.top: control.config?.topOffset || 0
         border.bottom: control.config?.bottomOffset || 0

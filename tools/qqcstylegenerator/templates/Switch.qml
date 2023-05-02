@@ -12,8 +12,7 @@ T.Switch {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
-    readonly property string backgroundName: "switch-background"
-    readonly property var config: ConfigReader.images[backgroundName]
+    readonly property var config: ConfigReader.configForImageUrl(background?.source ?? "")
 
     spacing: config?.spacing || 0
 
@@ -35,6 +34,13 @@ T.Switch {
             parent: control.indicator
             x: Math.max(0, Math.min(parent.width - width, control.visualPosition * parent.width - (width / 2)))
             y: (parent.height - height) / 2
+            source: Qt.resolvedUrl("images/switch-handle")
+            border.top: config.topOffset || 0
+            border.bottom: config.bottomOffset || 0
+            border.left: config.leftOffset || 0
+            border.right: config.rightOffset || 0
+
+            readonly property var config: ConfigReader.configForImageUrl(source)
 
             Behavior on x {
                 enabled: !control.down
@@ -42,14 +48,6 @@ T.Switch {
                     velocity: 200
                 }
             }
-
-            readonly property string name: "switch-handle"
-            source: Qt.resolvedUrl("images/" + name)
-
-            border.top: ConfigReader.images[name].topOffset || 0
-            border.bottom: ConfigReader.images[name].bottomOffset || 0
-            border.left: ConfigReader.images[name].leftOffset || 0
-            border.right: ConfigReader.images[name].rightOffset || 0
 
             ImageSelector on source {
                 states: [
@@ -91,7 +89,7 @@ T.Switch {
     }
 
     background: BorderImage {
-        source: Qt.resolvedUrl("images/" + control.backgroundName)
+        source: Qt.resolvedUrl("images/switch-background")
 
         border.top: control.config?.topOffset || 0
         border.bottom: control.config?.bottomOffset || 0

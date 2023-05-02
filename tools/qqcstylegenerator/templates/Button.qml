@@ -11,8 +11,7 @@ T.Button {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    readonly property string backgroundName: "button-background"
-    readonly property var config: ConfigReader.images[backgroundName]
+    readonly property var config: ConfigReader.configForImageUrl(background?.source ?? "")
 
     spacing: config?.spacing || 0
 
@@ -46,7 +45,7 @@ T.Button {
     }
 
     background: BorderImage {
-        source: Qt.resolvedUrl("images/" + control.backgroundName)
+        source: Qt.resolvedUrl("images/button-background")
 
         border.top: control.config?.topOffset || 0
         border.bottom: control.config?.bottomOffset || 0

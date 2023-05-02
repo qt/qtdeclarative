@@ -47,6 +47,18 @@ QVariantMap QQuickFigmaConfigReader::images() const
     return m_imagesConfig;
 }
 
+QVariant QQuickFigmaConfigReader::configForImageUrl(const QUrl &url) const
+{
+    if (url.isValid()) {
+        const QFileInfo fileInfo(url.toString());
+        const QString fileName = fileInfo.baseName();
+        if (m_imagesConfig[fileName].isValid()) {
+            return m_imagesConfig[fileName];
+        }
+    }
+    return QVariant();
+}
+
 /**
  * Opens and stores the JSON config file into a QVariantMap.
  * The config file consists of a JSON object where the keys are the
