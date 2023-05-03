@@ -434,6 +434,8 @@ void QQuickLayoutAttached::setAlignment(Qt::Alignment align)
 
     \note This requires that Layout::fillWidth is set to true
 
+    \since Qt 6.5
+
     \sa verticalStretchFactor
 */
 void QQuickLayoutAttached::setHorizontalStretchFactor(int factor)
@@ -468,6 +470,8 @@ void QQuickLayoutAttached::setHorizontalStretchFactor(int factor)
     The default value is \c -1, which means that no stretch factor is applied.
 
     \note This requires that Layout::fillHeight is set to true
+
+    \since Qt 6.5
 
     \sa horizontalStretchFactor
 */
