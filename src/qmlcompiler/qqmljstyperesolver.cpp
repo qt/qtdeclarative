@@ -20,8 +20,8 @@ using namespace Qt::StringLiterals;
 Q_LOGGING_CATEGORY(lcTypeResolver, "qt.qml.compiler.typeresolver", QtInfoMsg);
 
 QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
-    : m_imports(importer->builtinInternalNames())
-    , m_trackedTypes(std::make_unique<QHash<QQmlJSScope::ConstPtr, TrackedType>>())
+    : m_imports(importer->builtinInternalNames()),
+      m_trackedTypes(std::make_unique<QHash<QQmlJSScope::ConstPtr, TrackedType>>())
 {
     const QQmlJSImporter::ImportedTypes &builtinTypes = m_imports;
     m_voidType = builtinTypes.type(u"void"_s).scope;
@@ -90,7 +90,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     \internal
 
     Initializes the type resolver. As part of that initialization, makes \a
-    visitor traverse the program.
+    visitor traverse the program when given.
 */
 void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *program)
 {
@@ -101,7 +101,8 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *p
     m_imports.clearTypes();
     m_signalHandlers.clear();
 
-    program->accept(visitor);
+    if (program)
+        program->accept(visitor);
 
     m_objectsById = visitor->addressableScopes();
     m_objectsByLocation = visitor->scopesBylocation();

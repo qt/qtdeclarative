@@ -386,8 +386,12 @@ public:
         m_domCreator.enableScriptExpressions(enable);
     }
 
+    QQmlJSImporter &importer() { return m_importer; }
+    QQmlJSImportVisitor &scopeCreator() { return m_scopeCreator; }
+
 private:
-    void setScopeInDom();
+    void setScopeInDomAfterEndvisit();
+    void setScopeInDomBeforeEndvisit();
 
     template<typename T>
     bool visitT(T *t)
@@ -452,8 +456,9 @@ private:
             Q_UNREACHABLE();
         }
 
+        setScopeInDomBeforeEndvisit();
         m_domCreator.endVisit(t);
-        setScopeInDom();
+        setScopeInDomAfterEndvisit();
         m_scopeCreator.endVisit(t);
     }
 

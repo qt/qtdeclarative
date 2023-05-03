@@ -1418,6 +1418,8 @@ void QQmlDomAstCreator::endVisit(AST::ArrayMemberExpression *expression)
 
     if (expression->expression) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        // if scriptNodeStack.last() is fieldmember expression, add expression to it instead of
+        // creating new one
         current->setRight(currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
@@ -1520,7 +1522,7 @@ QQmlJSASTClassListToVisit
 #undef X
 
         void
-        QQmlDomAstCreatorWithQQmlJSScope::setScopeInDom()
+        QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomAfterEndvisit()
 {
     QQmlJSScope::Ptr scope = m_scopeCreator.m_currentScope;
     if (!m_domCreator.scriptNodeStack.isEmpty()) {
@@ -1542,6 +1544,8 @@ QQmlJSASTClassListToVisit
                     // TODO: find which dom elements also have a scope and implement them here
                     if constexpr (std::is_same_v<U, QmlObject>) {
                         e.setSemanticScope(scope);
+                    } else if constexpr (std::is_same_v<U, QmlComponent>) {
+                        e.setSemanticScope(scope);
                     } else if constexpr (std::is_same_v<U, MethodInfo>) {
                         if (e.body) {
                             if (auto scriptElement = e.body->scriptElement())
@@ -1549,6 +1553,35 @@ QQmlJSASTClassListToVisit
                         }
                         e.setSemanticScope(scope);
                     }
+                },
+                m_domCreator.currentNodeEl().item.value);
+    }
+}
+
+void QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomBeforeEndvisit()
+{
+    QQmlJSScope::Ptr scope = m_scopeCreator.m_currentScope;
+
+    auto visitPropertyDefinition = [&scope](auto &&e) {
+        using U = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
+        if constexpr (std::is_same_v<U, PropertyDefinition>) {
+            e.scope = scope;
+            Q_ASSERT(e.scope);
+        }
+    };
+
+    // depending whether the property definition has a binding, the property definition might be
+    // either at the last position in the stack or at the position before the last position.
+    if (m_domCreator.nodeStack.size() > 1
+        && m_domCreator.nodeStack.last().item.kind == DomType::Binding) {
+        std::visit([&visitPropertyDefinition](auto &&e) { visitPropertyDefinition(e); },
+                   m_domCreator.currentNodeEl(1).item.value);
+    }
+    if (m_domCreator.nodeStack.size() > 0) {
+        std::visit(
+                [&visitPropertyDefinition](auto &&e) {
+                    visitPropertyDefinition(e);
+                    // TODO: find which dom elements also have a scope and implement them here
                 },
                 m_domCreator.currentNodeEl().item.value);
     }
@@ -1562,18 +1595,23 @@ void createDom(MutableDomItem qmlFile, DomCreationOptions options)
 {
     if (std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>()) {
         QQmlJSLogger logger; // TODO
-        std::unique_ptr<BaseVisitor> visitor;
         if (options.testFlag(DomCreationOption::WithSemanticAnalysis)) {
             auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(qmlFile, &logger);
             v->enableScriptExpressions(options.testFlag(DomCreationOption::WithScriptExpressions));
-            visitor = std::move(v);
+
+            AST::Node::accept(qmlFilePtr->ast(), v.get());
+            AstComments::collectComments(qmlFile);
+
+            auto typeResolver = std::make_shared<QQmlJSTypeResolver>(&v->importer());
+            typeResolver->init(&v->scopeCreator(), nullptr);
+            qmlFilePtr->setTypeResolver(typeResolver);
         } else {
             auto v = std::make_unique<QQmlDomAstCreator>(qmlFile);
             v->enableScriptExpressions(options.testFlag(DomCreationOption::WithScriptExpressions));
-            visitor = std::move(v);
+
+            AST::Node::accept(qmlFilePtr->ast(), v.get());
+            AstComments::collectComments(qmlFile);
         }
-        AST::Node::accept(qmlFilePtr->ast(), visitor.get());
-        AstComments::collectComments(qmlFile);
     } else {
         qCWarning(creatorLog) << "createDom called on non qmlFile";
     }

@@ -696,8 +696,67 @@ void tst_qmlls_utils::findUsages_data()
         sourceLocationFrom(testFileName, testFileContent, 10, 25, strlen("i")),
     };
 
+    QList<QQmlLSUtilsLocation> helloPropertyUsages{
+        sourceLocationFrom(testFileName, testFileContent, 17, 5,
+                           strlen("property int helloProperty: 0")),
+        sourceLocationFrom(testFileName, testFileContent, 24, 13, strlen("helloProperty")),
+        sourceLocationFrom(testFileName, testFileContent, 24, 29, strlen("helloProperty")),
+        sourceLocationFrom(testFileName, testFileContent, 65, 60, strlen("helloProperty")),
+    };
+
+    QList<QQmlLSUtilsLocation> subItemHelloPropertyUsages{
+        sourceLocationFrom(testFileName, testFileContent, 32, 20, strlen("helloProperty")),
+        sourceLocationFrom(testFileName, testFileContent, 34, 9,
+                           strlen("property string helloProperty")),
+    };
+
+    QList<QQmlLSUtilsLocation> ICHelloPropertyUsages{
+        sourceLocationFrom(testFileName, testFileContent, 37, 9,
+                           strlen("property var helloProperty")),
+        sourceLocationFrom(testFileName, testFileContent, 39, 20, strlen("helloProperty")),
+    };
+
+    QList<QQmlLSUtilsLocation> p2Usages{
+        sourceLocationFrom(testFileName, testFileContent, 18, 5, strlen("property int p2: 1")),
+        sourceLocationFrom(testFileName, testFileContent, 24, 55, strlen("p2")),
+        sourceLocationFrom(testFileName, testFileContent, 32, 36, strlen("p2")),
+        sourceLocationFrom(testFileName, testFileContent, 39, 36, strlen("p2")),
+        sourceLocationFrom(testFileName, testFileContent, 66, 31, strlen("p2")),
+        sourceLocationFrom(testFileName, testFileContent, 67, 37, strlen("p2")),
+        sourceLocationFrom(testFileName, testFileContent, 68, 43, strlen("p2")),
+        sourceLocationFrom(testFileName, testFileContent, 69, 49, strlen("p2")),
+    };
+
+    QList<QQmlLSUtilsLocation> nestedUsages{
+        sourceLocationFrom(testFileName, testFileContent, 62, 13, strlen("myNested")),
+        sourceLocationFrom(testFileName, testFileContent, 65, 17, strlen("myNested")),
+        sourceLocationFrom(testFileName, testFileContent, 66, 17, strlen("myNested")),
+        sourceLocationFrom(testFileName, testFileContent, 67, 17, strlen("myNested")),
+        sourceLocationFrom(testFileName, testFileContent, 68, 17, strlen("myNested")),
+        sourceLocationFrom(testFileName, testFileContent, 69, 17, strlen("myNested")),
+    };
+
+    QList<QQmlLSUtilsLocation> nestedComponent3Usages{
+        sourceLocationFrom(testFileName, testFileContent, 47, 9,
+                           strlen("property NestedComponent3 inner")),
+        sourceLocationFrom(testFileName, testFileContent, 65, 32, strlen("inner")),
+        sourceLocationFrom(testFileName, testFileContent, 68, 32, strlen("inner")),
+        sourceLocationFrom(testFileName, testFileContent, 69, 32, strlen("inner")),
+    };
+
+    QList<QQmlLSUtilsLocation> nestedComponent3P2Usages{
+        sourceLocationFrom(testFileName, testFileContent, 68, 38, strlen("p2")),
+        sourceLocationFrom(testFileName, testFileContent, 53, 9, strlen("property int p2")),
+    };
+
     std::sort(sumUsages.begin(), sumUsages.end());
     std::sort(iUsages.begin(), iUsages.end());
+    std::sort(subItemHelloPropertyUsages.begin(), subItemHelloPropertyUsages.end());
+    std::sort(ICHelloPropertyUsages.begin(), ICHelloPropertyUsages.end());
+    std::sort(p2Usages.begin(), p2Usages.end());
+    std::sort(nestedUsages.begin(), nestedUsages.end());
+    std::sort(nestedComponent3Usages.begin(), nestedComponent3Usages.end());
+    std::sort(nestedComponent3P2Usages.begin(), nestedComponent3P2Usages.end());
 
     QTest::addRow("findSumFromDeclaration") << testFileName << 8 << 13 << sumUsages;
     QTest::addRow("findSumFromUsage") << testFileName << 10 << 20 << sumUsages;
@@ -705,6 +764,31 @@ void tst_qmlls_utils::findUsages_data()
     QTest::addRow("findIFromDeclaration") << testFileName << 9 << 17 << iUsages;
     QTest::addRow("findIFromUsage") << testFileName << 9 << 24 << iUsages;
     QTest::addRow("findIFromUsage2") << testFileName << 10 << 25 << iUsages;
+
+    QTest::addRow("findPropertyFromDeclaration") << testFileName << 17 << 18 << helloPropertyUsages;
+    QTest::addRow("findPropertyFromDeclaration2") << testFileName << 18 << 18 << p2Usages;
+    QTest::addRow("findPropertyFromDeclarationInSubItem")
+            << testFileName << 34 << 29 << subItemHelloPropertyUsages;
+    QTest::addRow("findPropertyFromDeclarationInIC")
+            << testFileName << 37 << 22 << ICHelloPropertyUsages;
+
+    QTest::addRow("findPropertyFromUsage") << testFileName << 24 << 13 << helloPropertyUsages;
+    QTest::addRow("findPropertyFromUsage2") << testFileName << 24 << 36 << helloPropertyUsages;
+    QTest::addRow("findPropertyFromUsageInSubItem")
+            << testFileName << 32 << 26 << subItemHelloPropertyUsages;
+    QTest::addRow("findPropertyFromUsageInIC") << testFileName << 39 << 20 << ICHelloPropertyUsages;
+
+    QTest::addRow("findIdFromUsage") << testFileName << 67 << 20 << nestedUsages;
+    QTest::addRow("findIdFromDefinition") << testFileName << 62 << 17 << nestedUsages;
+
+    QTest::addRow("findPropertyFromUsageInFieldMemberExpression")
+            << testFileName << 69 << 34 << nestedComponent3Usages;
+
+    QTest::addRow("findFieldMemberExpressionUsageFromPropertyDefinition")
+            << testFileName << 47 << 38 << nestedComponent3Usages;
+
+    QTest::addRow("findProperty2FromUsageInFieldMemberExpression")
+            << testFileName << 68 << 39 << nestedComponent3P2Usages;
 }
 
 void tst_qmlls_utils::findUsages()

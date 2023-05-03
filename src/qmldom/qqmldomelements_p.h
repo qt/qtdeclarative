@@ -639,6 +639,7 @@ public:
     bool isPointer = false;
     bool isDefaultMember = false;
     bool isRequired = false;
+    std::optional<QQmlJSScope::Ptr> scope;
 };
 
 class QMLDOM_EXPORT PropertyInfo
@@ -1073,10 +1074,14 @@ public:
     QList<QString> subComponentsNames(DomItem &self) const;
     QList<DomItem> subComponents(DomItem &self) const;
 
+    void setSemanticScope(const QQmlJSScope::Ptr &scope) { m_semanticScope = scope; }
+    std::optional<QQmlJSScope::Ptr> semanticScope() { return m_semanticScope; }
+
 private:
     friend class QQmlDomAstCreator;
     Path m_nextComponentPath;
     QMultiMap<QString, Id> m_ids;
+    std::optional<QQmlJSScope::Ptr> m_semanticScope;
 };
 
 class QMLDOM_EXPORT GlobalComponent final : public Component

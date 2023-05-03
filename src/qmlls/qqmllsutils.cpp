@@ -13,7 +13,9 @@
 #include <QtQmlDom/private/qqmldom_utils_p.h>
 #include <memory>
 #include <optional>
+#include <stack>
 #include <type_traits>
+#include <utility>
 #include <variant>
 
 QT_USE_NAMESPACE
@@ -22,6 +24,32 @@ using namespace QQmlJS::Dom;
 using namespace Qt::StringLiterals;
 
 Q_LOGGING_CATEGORY(QQmlLSUtilsLog, "qt.languageserver.utils")
+
+/*!
+   \internal
+    Helper to check if item is a Field Member Expression \c {<someExpression>.propertyName}.
+*/
+static bool isFieldMemberExpression(DomItem &item)
+{
+    return item.internalKind() == DomType::ScriptBinaryExpression
+            && item.field(Fields::operation).value().toInteger()
+            == ScriptElements::BinaryExpression::FieldMemberAccess;
+}
+
+/*!
+   \internal
+    Helper to check if item is a Field Member Access \c memberAccess in
+    \c {<someExpression>.memberAccess}.
+*/
+static bool isFieldMemberAccess(DomItem &item)
+{
+    auto parent = item.directParent();
+    if (!isFieldMemberExpression(parent))
+        return false;
+
+    DomItem rightHandSide = parent.field(Fields::right);
+    return item == rightHandSide;
+}
 
 /*!
    \internal
@@ -323,24 +351,69 @@ DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
     return result;
 }
 
-QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
+static void findUsagesOfPropertiesAndIds(DomItem item, const QString &name,
+                                         QList<QQmlLSUtilsLocation> &result)
 {
-    QList<QQmlLSUtilsLocation> result;
+    QQmlJSScope::ConstPtr targetType;
+    targetType = QQmlLSUtils::resolveExpressionType(item, QQmlLSUtilsResolveOptions::JustOwner);
 
-    QString name;
+    auto findUsages = [&targetType, &result, &name](Path, DomItem &current, bool) -> bool {
+        bool resolveType = false;
+        bool continueForChildren = true;
+        DomItem toBeResolved = current;
 
-    switch (item.internalKind()) {
-    case DomType::ScriptIdentifierExpression:
-    case DomType::ScriptVariableDeclarationEntry:
-        name = item.field(Fields::identifier).value().toString();
-        break;
-    default:
-        qDebug() << item.internalKindStr() << "was not implemented for QQmlLSUtils::findUsagesOf";
-        return result;
-    }
+        if (auto scope = current.semanticScope()) {
+            // is the current property shadowed by some JS identifier? ignore current + its children
+            if (scope.value()->JSIdentifier(name)) {
+                return false;
+            }
+        }
 
+        switch (current.internalKind()) {
+        case DomType::PropertyDefinition: {
+            const QString propertyName = current.field(Fields::name).value().toString();
+            if (name == propertyName) {
+                resolveType = true;
+            } else {
+                return true;
+            }
+            break;
+        }
+        case DomType::ScriptIdentifierExpression: {
+            const QString propertyName = current.field(Fields::identifier).value().toString();
+            if (name != propertyName)
+                return true;
+
+            resolveType = true;
+            break;
+        }
+        default:
+            break;
+        };
+
+        if (resolveType) {
+            auto currentType = QQmlLSUtils::resolveExpressionType(
+                    toBeResolved, QQmlLSUtilsResolveOptions::JustOwner);
+            qCDebug(QQmlLSUtilsLog) << "Will resolve type of" << toBeResolved.internalKindStr();
+            if (currentType == targetType) {
+                auto tree = FileLocations::treeOf(current);
+                QQmlLSUtilsLocation location{ current.canonicalFilePath(),
+                                              tree->info().fullRegion };
+                result.append(location);
+            }
+        }
+        return continueForChildren;
+    };
+
+    item.containingFile()
+            .field(Fields::components)
+            .visitTree(Path(), emptyChildrenVisitor, VisitOption::Recurse | VisitOption::VisitSelf,
+                       findUsages);
+}
+
+static void findUsagesHelper(DomItem item, const QString &name, QList<QQmlLSUtilsLocation> &result)
+{
     qCDebug(QQmlLSUtilsLog) << "Looking for JS identifier with name" << name;
-
     DomItem definitionOfItem;
 
     item.visitUp([&name, &definitionOfItem](DomItem &i) {
@@ -355,8 +428,18 @@ QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
             qCDebug(QQmlLSUtilsLog)
                     << "Searching for definition in" << i.internalKindStr() << "that has no scope";
         }
+        // early exit: no JS definitions/usages outside the ScriptExpression DOM element.
+        if (i.internalKind() == DomType::ScriptExpression)
+            return false;
         return true;
     });
+
+    // if there is no definition found: check if name was a property or an id instead
+    if (!definitionOfItem) {
+        qCDebug(QQmlLSUtilsLog) << "No defining JS-Scope found!";
+        findUsagesOfPropertiesAndIds(item, name, result);
+        return;
+    }
 
     definitionOfItem.visitTree(
             Path(), emptyChildrenVisitor, VisitOption::VisitAdopted | VisitOption::Recurse,
@@ -381,6 +464,33 @@ QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
                 }
                 return true;
             });
+}
+
+QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
+{
+    QList<QQmlLSUtilsLocation> result;
+
+    switch (item.internalKind()) {
+    case DomType::ScriptIdentifierExpression: {
+        const QString name = item.field(Fields::identifier).value().toString();
+        findUsagesHelper(item, name, result);
+        break;
+    }
+    case DomType::ScriptVariableDeclarationEntry: {
+        const QString name = item.field(Fields::identifier).value().toString();
+        findUsagesHelper(item, name, result);
+        break;
+    }
+    case DomType::PropertyDefinition: {
+        const QString name = item.field(Fields::name).value().toString();
+        findUsagesHelper(item, name, result);
+        break;
+    }
+    default:
+        qCDebug(QQmlLSUtilsLog) << item.internalKindStr()
+                                << "was not implemented for QQmlLSUtils::findUsagesOf";
+        return result;
+    }
 
     std::sort(result.begin(), result.end());
 
@@ -388,9 +498,114 @@ QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
         qCDebug(QQmlLSUtilsLog) << "Found following usages:";
         for (auto r : result) {
             qCDebug(QQmlLSUtilsLog)
-                    << r.filename << " @ " << r.location.startLine << ":" << r.location.startColumn;
+                    << r.filename << " @ " << r.location.startLine << ":" << r.location.startColumn
+                    << " with length " << r.location.length;
         }
     }
 
     return result;
+}
+
+/*!
+   \internal
+    Resolves the type of the given DomItem, when possible (e.g., when there are enough type
+    annotations).
+*/
+QQmlJSScope::ConstPtr QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem item,
+                                                         QQmlLSUtilsResolveOptions options)
+{
+    switch (item.internalKind()) {
+    case DomType::ScriptIdentifierExpression: {
+        auto referrerScope = item.nearestSemanticScope();
+        if (!referrerScope)
+            return {};
+
+        const QString name = item.field(Fields::identifier).value().toString();
+
+        if (isFieldMemberAccess(item)) {
+            DomItem parent = item.directParent();
+            auto owner = QQmlLSUtils::resolveExpressionType(parent.field(Fields::left),
+                                                            QQmlLSUtilsResolveOptions::Everything);
+            if (owner) {
+                if (auto property = owner->property(name); property.isValid()) {
+                    switch (options) {
+                    case JustOwner:
+                        return owner;
+                    case Everything:
+                        return property.type();
+                    }
+                }
+            } else {
+                return {};
+            }
+        } else {
+            // check if its an (unqualified) property
+            for (QQmlJSScope::Ptr current = *referrerScope; current;
+                 current = current->parentScope()) {
+                if (auto property = current->property(name); property.isValid()) {
+                    switch (options) {
+                    case JustOwner:
+                        return current;
+                    case Everything:
+                        return property.type();
+                    }
+                }
+            }
+        }
+
+        // check if its an id
+        auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
+        if (!resolver)
+            return {};
+        QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope.value());
+        if (fromId)
+            return fromId;
+
+        return {};
+    }
+    case DomType::PropertyDefinition: {
+        auto propertyDefinition = item.as<PropertyDefinition>();
+        if (propertyDefinition && propertyDefinition->scope) {
+            switch (options) {
+            case JustOwner:
+                return propertyDefinition->scope.value();
+            case Everything:
+                return propertyDefinition->scope.value()->property(propertyDefinition->name).type();
+            }
+        }
+
+        return {};
+    }
+    case DomType::QmlObject: {
+        auto object = item.as<QmlObject>();
+        if (object && object->semanticScope())
+            return object->semanticScope();
+
+        return {};
+    }
+    case DomType::ScriptBinaryExpression: {
+        if (isFieldMemberExpression(item)) {
+            DomItem owner = item.field(Fields::left);
+            QString propertyName =
+                    item.field(Fields::right).field(Fields::identifier).value().toString();
+            auto ownerType = QQmlLSUtils::resolveExpressionType(
+                    owner, QQmlLSUtilsResolveOptions::Everything);
+            if (!ownerType)
+                return ownerType;
+            switch (options) {
+            case JustOwner:
+                return ownerType;
+            case Everything:
+                return ownerType->property(propertyName).type();
+            }
+        }
+        return {};
+    }
+    default: {
+        qCDebug(QQmlLSUtilsLog) << "Type" << item.internalKindStr()
+                                << "is unimplemented in QQmlLSUtils::resolveExpressionType";
+        return {};
+    }
+    }
+    Q_UNREACHABLE();
 }

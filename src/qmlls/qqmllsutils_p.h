@@ -20,6 +20,7 @@
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include <algorithm>
 #include <tuple>
+#include <variant>
 
 struct QQmlLSUtilsItemLocation
 {
@@ -50,6 +51,17 @@ struct QQmlLSUtilsLocation
     }
 };
 
+/*!
+   \internal
+    Choose whether to resolve the entire type (useful for QmlObjects, Inline Components) or just
+    the owner type (useful for properties, which are only unique given an ownerType and their
+    property name).
+ */
+enum QQmlLSUtilsResolveOptions {
+    JustOwner,
+    Everything,
+};
+
 class QQmlLSUtils
 {
 public:
@@ -64,6 +76,9 @@ public:
     static QQmlJS::Dom::DomItem baseObject(QQmlJS::Dom::DomItem qmlObject);
     static QQmlJS::Dom::DomItem findTypeDefinitionOf(QQmlJS::Dom::DomItem item);
     static QList<QQmlLSUtilsLocation> findUsagesOf(QQmlJS::Dom::DomItem item);
+
+    static QQmlJSScope::ConstPtr resolveExpressionType(QQmlJS::Dom::DomItem item,
+                                                       QQmlLSUtilsResolveOptions);
 };
 
 #endif // QLANGUAGESERVERUTILS_P_H

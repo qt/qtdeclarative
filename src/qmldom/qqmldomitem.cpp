@@ -536,6 +536,25 @@ DomItem DomItem::containingFile()
     return DomItem();
 }
 
+/*!
+   \internal
+   In the DomItem hierarchy, go \c n levels up.
+ */
+DomItem DomItem::goUp(int n)
+{
+    DomItem parent = owner().path(pathFromOwner().dropTail(n));
+    return parent;
+}
+
+/*!
+   \internal
+   In the DomItem hierarchy, go 1 level up to get the direct parent.
+ */
+DomItem DomItem::directParent()
+{
+    return goUp(1);
+}
+
 DomItem DomItem::filterUp(function_ref<bool(DomType k, DomItem &)> filter, FilterUpOptions options)
 {
     DomItem it = *this;
@@ -618,6 +637,8 @@ std::optional<QQmlJSScope::Ptr> DomItem::semanticScope()
             [](auto &&e) -> std::optional<QQmlJSScope::Ptr> {
                 using T = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
                 if constexpr (std::is_same_v<T, QmlObject *>) {
+                    return e->semanticScope();
+                } else if constexpr (std::is_same_v<T, QmlComponent *>) {
                     return e->semanticScope();
                 } else if constexpr (std::is_same_v<T, ScriptElementDomWrapper>) {
                     return e.element().base()->semanticScope();

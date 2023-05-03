@@ -931,6 +931,8 @@ public:
     DomItem environment();
     DomItem universe();
     DomItem containingFile();
+    DomItem goUp(int);
+    DomItem directParent();
 
     DomItem qmlObject(GoTo option = GoTo::Strict,
                       FilterUpOptions options = FilterUpOptions::ReturnOuter);
