@@ -23,6 +23,7 @@ qt_add_resources(qqcstylegenerator "controls"
     FILES
         templates/Button.qml
         templates/CheckBox.qml
+        templates/SpinBox.qml
         templates/Switch.qml
         templates/TextField.qml
         config.json
