@@ -551,14 +551,26 @@ void QObjectWrapper::setProperty(
 
     if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
         if (auto binding = QQmlPropertyPrivate::binding(object, QQmlPropertyIndex(property->coreIndex()))) {
-            Q_ASSERT(binding->kind() == QQmlAbstractBinding::QmlBinding);
-            const auto qmlBinding = static_cast<const QQmlBinding*>(binding);
             const auto stackFrame = engine->currentStackFrame;
-            qCInfo(lcBindingRemoval,
-                   "Overwriting binding on %s::%s at %s:%d that was initially bound at %s",
-                   object->metaObject()->className(), qPrintable(property->name(object)),
-                   qPrintable(stackFrame->source()), stackFrame->lineNumber(),
-                   qPrintable(qmlBinding->expressionIdentifier()));
+            switch (binding->kind()) {
+            case QQmlAbstractBinding::QmlBinding: {
+                const auto qmlBinding = static_cast<const QQmlBinding*>(binding);
+                qCInfo(lcBindingRemoval,
+                       "Overwriting binding on %s::%s at %s:%d that was initially bound at %s",
+                       object->metaObject()->className(), qPrintable(property->name(object)),
+                       qPrintable(stackFrame->source()), stackFrame->lineNumber(),
+                       qPrintable(qmlBinding->expressionIdentifier()));
+                break;
+            }
+            case QQmlAbstractBinding::ValueTypeProxy:
+            case QQmlAbstractBinding::PropertyToPropertyBinding: {
+                qCInfo(lcBindingRemoval,
+                       "Overwriting binding on %s::%s at %s:%d",
+                       object->metaObject()->className(), qPrintable(property->name(object)),
+                       qPrintable(stackFrame->source()), stackFrame->lineNumber());
+                break;
+            }
+            }
         }
     }
     QQmlPropertyPrivate::removeBinding(object, QQmlPropertyIndex(property->coreIndex()));
