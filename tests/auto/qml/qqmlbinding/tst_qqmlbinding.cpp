@@ -459,9 +459,15 @@ void tst_qqmlbinding::bindingOverwriting()
     QQmlComponent c(&engine, testFileUrl("bindingOverwriting.qml"));
     QScopedPointer<QQuickItem> item {qobject_cast<QQuickItem*>(c.create())};
     QVERIFY(item);
+    QCOMPARE(messageHandler.messages().size(), 2);
+
+    QQmlComponent c2(&engine, testFileUrl("bindingOverwriting2.qml"));
+    QScopedPointer<QObject> o(c2.create());
+    QVERIFY(o);
+    QTRY_COMPARE(o->property("i").toInt(), 123);
+    QCOMPARE(messageHandler.messages().size(), 3);
 
     QLoggingCategory::setFilterRules(QString());
-    QCOMPARE(messageHandler.messages().size(), 2);
 }
 
 void tst_qqmlbinding::bindToQmlComponent()
