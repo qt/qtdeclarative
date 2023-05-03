@@ -121,7 +121,7 @@ void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
     }
 
     QLspSpecification::Location l;
-    l.uri = fileOfBasePtr->canonicalFilePath().toLatin1();
+    l.uri = QUrl::fromLocalFile(fileOfBasePtr->canonicalFilePath()).toEncoded();
 
     const QString qmlCode = fileOfBasePtr->code();
 

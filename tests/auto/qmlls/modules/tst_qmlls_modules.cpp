@@ -515,7 +515,7 @@ void tst_qmlls_modules::goToTypeDefinition()
                 QCOMPARE(result->size(), 1);
 
                 Location l = result->front();
-                QCOMPARE(u"file://"_s + l.uri, expectedUri);
+                QCOMPARE(l.uri, expectedUri);
                 QCOMPARE(l.range.start.line, expectedStartLine);
                 QCOMPARE(l.range.start.character, expectedStartCharacter);
                 QCOMPARE(l.range.end.line, expectedEndLine);
