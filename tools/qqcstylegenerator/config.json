@@ -1,71 +1,72 @@
 {
+    "default export": ["image", "geometry"],
     "controls": [
     {
         "name": "Button",
         "copy": ":/Button.qml",
         "component set": "ButtonTemplate",
-        "atoms": {
-            "background": "background (image)"
-        },
-        "states": {
-            "normal": "normal",
-            "disabled": "disabled",
-            "hovered": "hovered",
-            "pressed": "pressed",
-            "checked": "checked",
-            "checked-pressed": "checkedPressed",
-            "checked-hovered": "checkedHovered"
-        }
+        "atoms": [
+            {"atom": "background", "figmaPath": "background"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "pressed", "figmaState": "pressed"},
+            {"state": "checked", "figmaState": "checked"},
+            {"state": "checked-pressed", "figmaState": "checkedPressed"},
+            {"state": "checked-hovered", "figmaState": "checkedHovered"}
+        ]
     },
     {
         "name": "CheckBox",
         "copy": ":/CheckBox.qml",
         "component set": "CheckBoxTemplateAL",
-        "contents": "indicator, label",
-        "atoms": {
-            "background": "CheckBoxBackgroundAL, background (image)",
-            "label": "Label",
-            "contentItem": "contentItem",
-            "indicator": "CheckBoxIndicatorAL, indicator (image)",
-            "indicator-background": "CheckBoxIndicatorAL, indicatorBackground (image)"
-        },
-        "states": {
-            "normal": "normal",
-            "disabled": "disabled",
-            "pressed": "pressed",
-            "hovered": "hovered",
-            "checked": "checked",
-            "checked-disabled": "checkedDisabled",
-            "checked-hovered": "checkedHovered",
-            "checked-pressed": "checkedPressed",
-            "partially-checked": "partiallyChecked",
-            "partially-checked-disabled": "partiallyCheckedDisabled",
-            "partially-checked-pressed": "partiallyCheckedPressed",
-            "partially-checked-hovered": "partiallyCheckedHovered"
-        }
+        "contents": ["indicator", "label"],
+        "atoms": [
+            {"atom": "background", "figmaPath": "CheckBoxBackgroundAL, background"},
+            {"atom": "label", "figmaPath": "Label", "export": ["geometry"]},
+            {"atom": "contentItem", "figmaPath": "contentItem", "export": ["geometry"]},
+            {"atom": "indicator", "figmaPath": "CheckBoxIndicatorAL, indicator"},
+            {"atom": "indicator-background", "figmaPath": "CheckBoxIndicatorAL, indicatorBackground"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "pressed", "figmaState": "pressed"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "checked", "figmaState": "checked"},
+            {"state": "checked-disabled", "figmaState": "checkedDisabled"},
+            {"state": "checked-hovered", "figmaState": "checkedHovered"},
+            {"state": "checked-pressed", "figmaState": "checkedPressed"},
+            {"state": "partially-checked", "figmaState": "partiallyChecked"},
+            {"state": "partially-checked-disabled", "figmaState": "partiallyCheckedDisabled"},
+            {"state": "partially-checked-pressed", "figmaState": "partiallyCheckedPressed"},
+            {"state": "partially-checked-hovered", "figmaState": "partiallyCheckedHovered"}
+        ]
     },
     {
         "name": "Switch",
         "copy": ":/Switch.qml",
         "component set": "SwitchTemplate",
-        "atoms": {
-            "background": "SwitchBackground, background (image)",
-            "background-lefticon": "SwitchBackground, leftIcon (image)",
-            "background-righticon": "SwitchBackground, rightIcon (image)",
-            "handle": "SwitchHandle, handle (image)",
-            "handle-lefticon": "SwitchHandle, leftIcon (image)",
-            "handle-righticon": "SwitchHandle, rightIcon (image)"
-        },
-        "states": {
-            "normal": "normal",
-            "disabled": "disabled",
-            "pressed": "pressed",
-            "hovered": "hovered",
-            "checked": "checked",
-            "checked-disabled": "checkedDisabled",
-            "checked-pressed": "checkedPressed",
-            "checked-hovered": "checkedHovered"
-        }
+        "atoms": [
+            {"atom": "background", "figmaPath": "SwitchBackground, background"},
+            {"atom": "background-lefticon", "figmaPath": "SwitchBackground, leftIcon"},
+            {"atom": "background-righticon", "figmaPath": "SwitchBackground, rightIcon"},
+            {"atom": "handle", "figmaPath": "SwitchHandle, handle"},
+            {"atom": "handle-lefticon", "figmaPath": "SwitchHandle, leftIcon"},
+            {"atom": "handle-righticon", "figmaPath": "SwitchHandle, rightIcon"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "pressed", "figmaState": "pressed"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "checked", "figmaState": "checked"},
+            {"state": "checked-disabled", "figmaState": "checkedDisabled"},
+            {"state": "checked-pressed", "figmaState": "checkedPressed"},
+            {"state": "checked-hovered", "figmaState": "checkedHovered"}
+        ]
     }
     ]
 }

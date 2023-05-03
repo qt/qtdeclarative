@@ -187,7 +187,12 @@ private:
         if (!file.open(QIODevice::ReadOnly))
             throw std::runtime_error("Could not open file for reading: " + file.fileName().toStdString());
 
-        QJsonDocument configDoc = QJsonDocument::fromJson(file.readAll());
+        QJsonParseError parseError;
+        QJsonDocument configDoc = QJsonDocument::fromJson(file.readAll(), &parseError);
+        if (parseError.error != QJsonParseError::NoError)
+            throw std::runtime_error(QString("Could not parse " + file.fileName()
+                + ": " + parseError.errorString()).toStdString());
+
         const auto rootObject = configDoc.object();
         QJsonArray controlsArray;
         try {
@@ -195,6 +200,10 @@ private:
         } catch (std::exception &e) {
             throw std::runtime_error("Could not parse " + file.fileName().toStdString() + ": " + e.what());
         }
+
+        const QJsonArray exportArray = rootObject.value("default export").toArray();
+        for (const QJsonValue &exportValue : exportArray)
+            m_defaultExport.append(exportValue.toString());
 
         for (const auto controlValue : controlsArray) {
             const auto controlObj = controlValue.toObject();
@@ -214,7 +223,7 @@ private:
         debugHeader(controlName);
 
         // info from config document
-        const auto atoms = getObject("atoms", controlObj);
+        const auto configAtoms = getArray("atoms", controlObj);
         const auto componentSetName = getString("component set", controlObj);
 
         // info from figma document
@@ -227,7 +236,10 @@ private:
             copyFileToStyleFolder(file.trimmed(), false);
 
         // We use content atoms to figure out properties such as spacing and mirrored
-        const auto contentAtoms = controlObj["contents"].toString().split(',');
+        QStringList contentAtoms;
+        const auto contentAtomsArray = controlObj["contents"].toArray();
+        for (const QJsonValue &atomValue : contentAtomsArray)
+            contentAtoms.append(atomValue.toString());
 
         // Add this control to the list of controls that goes into the qmldir file
         m_qmlDirControls.append(controlName);
@@ -236,57 +248,64 @@ private:
         // make use of the other atoms in the calculations while doing so.
         QJsonObject contentItemObj;
 
-        const auto states = getObject("states", controlObj);
-        for (const QString &imageState : std::as_const(states).keys()) {
+        const auto configStatesArray = getArray("states", controlObj);
+        for (const QJsonValue &configStateValue : configStatesArray) try {
             // Resolve all atoms for the given state
             contentItemObj = QJsonObject();
-            for (const QString &atomName : atoms.keys()) {
-                m_currentQualifiedAtomName = qualifiedAtomName(atomName, imageState);
-                m_currentAtomInfo = m_currentQualifiedAtomName
-                    + "; path: " + componentSetName + ", "
-                    + states.value(imageState).toString();
+            m_currentAtomInfo = "control: " + controlName;
+            const QJsonObject configStateObj = configStateValue.toObject();
+            const QString controlState = getString("state", configStateObj);
+            const QString figmaState = getString("figmaState", configStateObj);
 
-                try {
-                    const auto figmaState = states[imageState].toString();
-                    const auto atomString = atoms[atomName].toString();
-                    const auto atomPath = getAtomPath(atomString);
-                    if (!atomPath.isEmpty())
-                        m_currentAtomInfo += ", " + atomPath;
+            for (const QJsonValue &atomConfigValue : configAtoms) try {
+                m_currentQualifiedAtomName = "";
+                m_currentAtomInfo = "control: " + controlName + ", " + controlState;
+                const QJsonObject atomConfigObj = atomConfigValue.toObject();
+                const QString atomName = getString("atom", atomConfigObj);
+                m_currentQualifiedAtomName = qualifiedAtomName(atomName, controlState);
+                m_currentAtomInfo = "atom: " + m_currentQualifiedAtomName;
+                const auto figmaPath = getString("figmaPath", atomConfigObj);
+                m_currentAtomInfo += "; figma path: " + figmaPath;
+                const auto atomExport = getAtomExport(atomConfigObj);
+                const auto figmaAtomObj = findAtomObject(figmaPath, figmaState, componentSet);
+                const auto figmaId = getString("id", figmaAtomObj);
+                m_currentAtomInfo += "; id: " + figmaId;
 
-                    const auto atomInputConfig = getAtomConfig(atomString);
-                    const auto atom = findAtomObject(atomPath, figmaState, componentSet);
-                    const auto figmaId = getString("id", atom);
-                    m_currentAtomInfo += "; id: " + figmaId;
+                if (atomName == "contentItem")
+                    contentItemObj = figmaAtomObj;
 
-                    if (atomName == "contentItem")
-                        contentItemObj = atom;
-
-                    generateAtomAssets(atomInputConfig, atom);
-                } catch (std::exception &e) {
-                    qWarning().nospace().noquote() << "Warning! " << m_currentAtomInfo << "; Generate control: " << e.what();
-                }
+                generateAtomAssets(atomExport, figmaAtomObj);
+            } catch (std::exception &e) {
+                qWarning().nospace().noquote() << "Warning, generate atom: " << e.what() << " " << m_currentAtomInfo;
             }
 
             if (!contentItemObj.isEmpty()) try {
-                generatePaddingAndSpacing(contentItemObj, contentAtoms, imageState);
+                generatePaddingAndSpacing(contentItemObj, contentAtoms, controlState);
             } catch (std::exception &e) {
-                    qWarning().nospace().noquote() << "Warning! " << m_currentAtomInfo << "; Padding and Spacing: " << e.what();
+                qWarning().nospace().noquote() << "Warning, generate padding: " << e.what() << " " << m_currentAtomInfo;
             }
+        } catch (std::exception &e) {
+            qWarning().nospace().noquote() << "Warning, generate control: " << e.what() << " " << m_currentAtomInfo;
         }
     }
 
-    QString getAtomConfig(const QString &atomString)
+    QStringList getAtomExport(const QJsonObject &atomObj)
     {
-        const int configPos = atomString.indexOf("(");
-        if (configPos == -1)
-            return {};
-        return atomString.sliced(configPos);
-    }
+        const QJsonValue exportValue = atomObj["export"];
+        if (!exportValue.isUndefined() && !exportValue.isArray())
+            throw std::runtime_error("export is not an array!");
 
-    QString getAtomPath(const QString &atomString)
-    {
-        const int configPos = atomString.indexOf("(");
-        return configPos != -1 ? atomString.first(configPos).trimmed() : atomString;
+        const QJsonArray exportArray = exportValue.toArray();
+        if (exportArray.isEmpty())
+            return m_defaultExport;
+
+        QStringList exportList;
+        for (const QJsonValue &exportValue : exportArray)
+            exportList.append(exportValue.toString());
+        if (exportList.isEmpty())
+            throw std::runtime_error("missing export config!");
+
+        return exportList;
     }
 
     QJsonObject findAtomObject(const QString &path, const QString &figmaState, const QJsonObject &componentSet)
@@ -305,38 +324,32 @@ private:
         return findNamedChild(jsonPath, componentSet);
     }
 
-    void generateAtomAssets(const QString &inputConfig, const QJsonObject &atom)
+    void generateAtomAssets(const QStringList &atomExportList, const QJsonObject &figmaAtomObj)
     {
         QJsonObject atomOutputConfig;
-        atomOutputConfig.insert("figmaId", getString("id", atom));
+        atomOutputConfig.insert("figmaId", getString("id", figmaAtomObj));
 
-        try {
-            // Generate/export the atom assets according to the input config
-            generateGeometry(inputConfig, atomOutputConfig, atom);
-        } catch (std::exception &e) {
-            qWarning().noquote() << "Warning! " << m_currentAtomInfo << "; Geometry:" << e.what();
-        }
-
-        if (inputConfig.contains("image")) try {
-            generateImage(inputConfig, atomOutputConfig, atom);
-        } catch (std::exception &e) {
-            qWarning().noquote() << "Warning! " << m_currentAtomInfo << "; Export image:" << e.what();
-        }
-
-        if (inputConfig.contains("json")) try {
-            generateJson(inputConfig, atomOutputConfig, atom);
-        } catch (std::exception &e) {
-            qWarning().noquote() << "Warning! " << m_currentAtomInfo << "; Export json:" << e.what();
+        for (const QString &atomExport : atomExportList) {
+            try {
+                if (atomExport == "geometry")
+                    generateGeometry(figmaAtomObj, atomOutputConfig);
+                else if (atomExport == "image")
+                    generateImage(figmaAtomObj, atomOutputConfig);
+                else if (atomExport == "json")
+                    generateJson(figmaAtomObj, atomOutputConfig);
+                else
+                    throw std::runtime_error("Unknown option: '" + atomExport.toStdString() + "'");
+            } catch (std::exception &e) {
+                qWarning().nospace().noquote() << "Warning, export atom: " << e.what() << " " << m_currentAtomInfo;
+            }
         }
 
         // Add the atom configuration to the global config document
         m_outputConfig.insert(m_currentQualifiedAtomName, atomOutputConfig);
     }
 
-    void generateGeometry(const QString &inputConfig, QJsonObject &outputConfig, const QJsonObject &atom)
+    void generateGeometry(const QJsonObject &atom, QJsonObject &outputConfig)
     {
-        Q_UNUSED(inputConfig);
-
         const auto geometry = getGeometry(atom);
         const auto stretch = getStretch(atom);
 
@@ -357,10 +370,8 @@ private:
         // config.insert("bottomInset", 0);
     }
 
-    void generateImage(const QString &inputConfig, QJsonObject &outputConfig, const QJsonObject &atom)
+    void generateImage(const QJsonObject &atom, QJsonObject &outputConfig)
     {
-        Q_UNUSED(inputConfig);
-
         const QString figmaId = getString("id", atom);
         const QJsonValue visible = atom.value("visible");
 
@@ -375,10 +386,8 @@ private:
         addExportType("image", outputConfig);
     }
 
-    void generateJson(const QString &inputConfig, QJsonObject &outputConfig, const QJsonObject &atom)
+    void generateJson(const QJsonObject &atom, QJsonObject &outputConfig)
     {
-        Q_UNUSED(inputConfig);
-
         const QString figmaId = getString("id", atom);
         const QString fileName = "json/" + m_currentQualifiedAtomName + ".json";
         debug("export json: " + m_currentAtomInfo + "; filename: " + fileName);
@@ -652,6 +661,8 @@ private:
     QString m_targetPath;
     bool m_verbose = false;
     bool m_silent = false;
+
+    QStringList m_defaultExport;
 
     QJsonDocument m_document;
     QJsonObject m_outputConfig;
