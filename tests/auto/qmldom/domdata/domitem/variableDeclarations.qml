@@ -4,9 +4,12 @@
 import QtQuick
 
 Item {
-    // TODO: Add tests for other types i.e const, var
+    // for now only numeric literal and string literal is supported
     function f() {
         let sum = 0, helloWorld = "hello"
+        const a = 3;
+        const b = "patron";
+        var aa = helloWorld, bb = aa;
         return sum;
     }
 }
