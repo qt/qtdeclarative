@@ -47,7 +47,6 @@ void QQuickMaterialTheme::initialize(QQuickTheme *theme)
 
     // https://material.io/guidelines/components/buttons.html#buttons-style
     buttonFont.setPixelSize(dense ? 13 : 14);
-    buttonFont.setCapitalization(QFont::AllUppercase);
     buttonFont.setWeight(QFont::Medium);
     theme->setFont(QQuickTheme::Button, buttonFont);
     theme->setFont(QQuickTheme::TabBar, buttonFont);
