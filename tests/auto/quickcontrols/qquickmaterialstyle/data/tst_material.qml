@@ -636,15 +636,15 @@ TestCase {
         return [
             {tag: "Button:pixelSize", type: "Button", attribute: "pixelSize", value: 14, window: 20, pane: 10},
             {tag: "Button:weight", type: "Button", attribute: "weight", value: Font.Medium, window: Font.Black, pane: Font.Bold},
-            {tag: "Button:capitalization", type: "Button", attribute: "capitalization", value: Font.AllUppercase, window: Font.Capitalize, pane: Font.AllLowercase},
+            {tag: "Button:capitalization", type: "Button", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase},
 
             {tag: "TabButton:pixelSize", type: "TabButton", attribute: "pixelSize", value: 14, window: 20, pane: 10},
             {tag: "TabButton:weight", type: "TabButton", attribute: "weight", value: Font.Medium, window: Font.Black, pane: Font.Bold},
-            {tag: "TabButton:capitalization", type: "TabButton", attribute: "capitalization", value: Font.AllUppercase, window: Font.Capitalize, pane: Font.AllLowercase},
+            {tag: "TabButton:capitalization", type: "TabButton", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase},
 
             {tag: "ToolButton:pixelSize", type: "ToolButton", attribute: "pixelSize", value: 14, window: 20, pane: 10},
             {tag: "ToolButton:weight", type: "ToolButton", attribute: "weight", value: Font.Medium, window: Font.Black, pane: Font.Bold},
-            {tag: "ToolButton:capitalization", type: "ToolButton", attribute: "capitalization", value: Font.AllUppercase, window: Font.Capitalize, pane: Font.AllLowercase},
+            {tag: "ToolButton:capitalization", type: "ToolButton", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase},
 
             {tag: "ItemDelegate:pixelSize", type: "ItemDelegate", attribute: "pixelSize", value: 14, window: 20, pane: 10},
             {tag: "ItemDelegate:weight", type: "ItemDelegate", attribute: "weight", value: Font.Medium, window: Font.Black, pane: Font.Bold},
