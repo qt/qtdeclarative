@@ -463,6 +463,12 @@ void TestQmllint::dirtyQmlCode_data()
                        QStringLiteral("Invalid alias expression. Only IDs and field member "
                                       "expressions can be aliased"),
                        5, 26 } } };
+    QTest::newRow("badAliasNotAnExpression")
+            << QStringLiteral("badAliasNotAnExpression.qml")
+            << Result { { Message {
+                                  QStringLiteral("Invalid alias expression. Only IDs and field member "
+                                                 "expressions can be aliased"),
+                                  4, 30 } } };
     QTest::newRow("aliasCycle1") << QStringLiteral("aliasCycle.qml")
                                  << Result { { Message {
                                             QStringLiteral("Alias \"b\" is part of an alias cycle"),
