@@ -19,6 +19,7 @@
 #include "qqmldomattachedinfo_p.h"
 #include "qqmldompath_p.h"
 #include <algorithm>
+#include <limits>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -295,6 +296,12 @@ class BinaryExpression : public ScriptElementBase<DomType::ScriptBinaryExpressio
 public:
     using BaseT::BaseT;
 
+    enum Operator : char {
+        FieldMemberAccess,
+        ArrayMemberAccess,
+        TO_BE_IMPLEMENTED = std::numeric_limits<char>::max(), // not required by qmlls
+    };
+
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
     void updatePathFromOwner(Path p) override;
@@ -305,12 +312,12 @@ public:
     ScriptElementVariant right() const { return m_right; }
     void setRight(const ScriptElementVariant &newRight) { m_right = newRight; }
     int op() const { return m_operator; }
-    void setOp(int op) { m_operator = op; }
+    void setOp(Operator op) { m_operator = op; }
 
 private:
     ScriptElementVariant m_left;
     ScriptElementVariant m_right;
-    int m_operator; // TODO: Do an enum out of it?
+    Operator m_operator = TO_BE_IMPLEMENTED;
 };
 
 class VariableDeclarationEntry : public ScriptElementBase<DomType::ScriptVariableDeclarationEntry>

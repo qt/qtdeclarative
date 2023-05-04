@@ -19,6 +19,7 @@
 
 #include <deque>
 #include <memory>
+#include <utility>
 #include <variant>
 
 QT_BEGIN_NAMESPACE
@@ -1389,6 +1390,96 @@ private slots:
         }
     }
 
+    void fieldMemberExpression()
+    {
+        using namespace Qt::StringLiterals;
+        QString testFile = baseDir + u"/fieldMemberExpression.qml"_s;
+        DomItem rootQmlObject = rootQmlObjectFromFile(testFile, qmltypeDirs);
+
+        {
+            DomItem p1 = rootQmlObject.path(".bindings[\"p1\"][0].value.scriptElement");
+            QCOMPARE(p1.internalKind(), DomType::ScriptIdentifierExpression);
+            QCOMPARE(p1.field(Fields::identifier).value().toString(), "p");
+        }
+
+        {
+            DomItem p1Qualified =
+                    rootQmlObject.path(".bindings[\"p1Qualified\"][0].value.scriptElement");
+            fieldMemberExpressionHelper(p1Qualified, QStringList{ u"p"_s });
+            QCOMPARE(p1Qualified.field(Fields::left).internalKind(),
+                     DomType::ScriptIdentifierExpression);
+            QCOMPARE(p1Qualified.field(Fields::left).field(Fields::identifier).value().toString(),
+                     "root");
+        }
+        {
+            // property var p1Bracket: root["p"]
+            DomItem p1 = rootQmlObject.path(".bindings[\"p1Bracket\"][0].value.scriptElement");
+            QCOMPARE(p1.internalKind(), DomType::ScriptBinaryExpression);
+            QCOMPARE(p1.field(Fields::operation).value().toInteger(),
+                     ScriptElements::BinaryExpression::ArrayMemberAccess);
+
+            QCOMPARE(p1.field(Fields::left).internalKind(), DomType::ScriptIdentifierExpression);
+            QCOMPARE(p1.field(Fields::left).field(Fields::identifier).value().toString(), "root");
+
+            QCOMPARE(p1.field(Fields::right).internalKind(), DomType::ScriptLiteral);
+            QCOMPARE(p1.field(Fields::right).field(Fields::value).value().toString(), "p");
+        }
+        {
+            // property var p1Index: root[42]
+            DomItem p1 = rootQmlObject.path(".bindings[\"p1Index\"][0].value.scriptElement");
+            QCOMPARE(p1.internalKind(), DomType::ScriptBinaryExpression);
+            QCOMPARE(p1.field(Fields::operation).value().toInteger(),
+                     ScriptElements::BinaryExpression::ArrayMemberAccess);
+
+            QCOMPARE(p1.field(Fields::left).internalKind(), DomType::ScriptIdentifierExpression);
+            QCOMPARE(p1.field(Fields::left).field(Fields::identifier).value().toString(), "root");
+
+            QCOMPARE(p1.field(Fields::right).internalKind(), DomType::ScriptLiteral);
+            QCOMPARE(p1.field(Fields::right).field(Fields::value).value().toInteger(), 42);
+        }
+        {
+            // property var p1Key: root[p]
+            DomItem p1 = rootQmlObject.path(".bindings[\"p1Key\"][0].value.scriptElement");
+            QCOMPARE(p1.internalKind(), DomType::ScriptBinaryExpression);
+            QCOMPARE(p1.field(Fields::operation).value().toInteger(),
+                     ScriptElements::BinaryExpression::ArrayMemberAccess);
+
+            QCOMPARE(p1.field(Fields::left).internalKind(), DomType::ScriptIdentifierExpression);
+            QCOMPARE(p1.field(Fields::left).field(Fields::identifier).value().toString(), "root");
+
+            QCOMPARE(p1.field(Fields::right).internalKind(), DomType::ScriptIdentifierExpression);
+            QCOMPARE(p1.field(Fields::right).field(Fields::identifier).value().toString(), "p");
+        }
+        {
+            DomItem p1Qualified =
+                    rootQmlObject.path(".bindings[\"p1Qualified\"][0].value.scriptElement");
+            fieldMemberExpressionHelper(p1Qualified, QStringList{ u"p"_s });
+            QCOMPARE(p1Qualified.field(Fields::left).internalKind(),
+                     DomType::ScriptIdentifierExpression);
+            QCOMPARE(p1Qualified.field(Fields::left).field(Fields::identifier).value().toString(),
+                     "root");
+        }
+
+        {
+            DomItem p3 = rootQmlObject.path(".bindings[\"p3\"][0].value.scriptElement");
+            fieldMemberExpressionHelper(p3, QStringList{ u"property2"_s, u"p"_s });
+            DomItem p3Left = p3.field(Fields::left).field(Fields::left);
+            QCOMPARE(p3Left.internalKind(), DomType::ScriptIdentifierExpression);
+            QCOMPARE(p3Left.field(Fields::identifier).value().toString(), "property1");
+        }
+
+        {
+            DomItem p3Qualified =
+                    rootQmlObject.path(".bindings[\"p3Qualified\"][0].value.scriptElement");
+            fieldMemberExpressionHelper(p3Qualified,
+                                        QStringList{ u"property1"_s, u"property2"_s, u"p"_s });
+            DomItem p3Left =
+                    p3Qualified.field(Fields::left).field(Fields::left).field(Fields::left);
+            QCOMPARE(p3Left.internalKind(), DomType::ScriptIdentifierExpression);
+            QCOMPARE(p3Left.field(Fields::identifier).value().toString(), "root");
+        }
+    }
+
 private:
     struct DomItemWithLocation
     {
@@ -1578,6 +1669,24 @@ private:
         env.loadPendingDependencies();
 
         return tFile.rootQmlObject(GoTo::MostLikely);
+    }
+
+    void fieldMemberExpressionHelper(DomItem &actual, const QStringList &expected)
+    {
+        Q_ASSERT(!expected.isEmpty());
+        auto currentString = expected.rbegin();
+        auto endString = expected.rend();
+        DomItem current = actual;
+
+        for (; currentString != endString; ++currentString, current = current.field(Fields::left)) {
+            QCOMPARE(current.internalKind(), DomType::ScriptBinaryExpression);
+            QCOMPARE(current.field(Fields::operation).value().toInteger(),
+                     ScriptElements::BinaryExpression::FieldMemberAccess);
+            QCOMPARE(current.field(Fields::right).internalKind(),
+                     DomType::ScriptIdentifierExpression);
+            QCOMPARE(current.field(Fields::right).field(Fields::identifier).value().toString(),
+                     *currentString);
+        }
     }
 
 private:

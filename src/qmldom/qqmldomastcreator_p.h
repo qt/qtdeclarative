@@ -337,6 +337,12 @@ public:
     bool visit(AST::IfStatement *) override;
     void endVisit(AST::IfStatement *) override;
 
+    bool visit(AST::FieldMemberExpression *) override;
+    void endVisit(AST::FieldMemberExpression *) override;
+
+    bool visit(AST::ArrayMemberExpression *) override;
+    void endVisit(AST::ArrayMemberExpression *) override;
+
     bool visit(AST::CallExpression *) override;
     void endVisit(AST::CallExpression *) override;
 

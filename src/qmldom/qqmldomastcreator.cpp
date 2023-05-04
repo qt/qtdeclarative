@@ -1098,7 +1098,6 @@ void QQmlDomAstCreator::endVisit(AST::BinaryExpression *exp)
     current->setLeft(currentScriptNodeEl().takeVariant());
     removeCurrentScriptNode({});
 
-    current->setOp(exp->op);
     pushScriptElement(current);
 }
 
@@ -1363,6 +1362,69 @@ void QQmlDomAstCreator::endVisit(AST::ReturnStatement *returnStatement)
     if (returnStatement->expression) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
         current->setExpression(currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::FieldMemberExpression *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::FieldMemberExpression *expression)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeScriptElement<ScriptElements::BinaryExpression>(expression);
+    current->setOp(ScriptElements::BinaryExpression::FieldMemberAccess);
+
+    if (expression->base) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->setLeft(currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    if (!expression->name.empty()) {
+        auto scriptIdentifier =
+                std::make_shared<ScriptElements::IdentifierExpression>(expression->identifierToken);
+        scriptIdentifier->setName(expression->name);
+        current->setRight(ScriptElementVariant::fromElement(scriptIdentifier));
+    }
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::ArrayMemberExpression *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::ArrayMemberExpression *expression)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeScriptElement<ScriptElements::BinaryExpression>(expression);
+    current->setOp(ScriptElements::BinaryExpression::ArrayMemberAccess);
+
+    if (expression->expression) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->setRight(currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    if (expression->base) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->setLeft(currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
 

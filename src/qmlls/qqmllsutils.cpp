@@ -184,9 +184,12 @@ QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(DomItem file, 
             if (containsTarget(subLoc->info().fullRegion)) {
                 QQmlLSUtilsItemLocation subItem;
                 subItem.domItem = iLoc.domItem.path(it.key());
-                Q_ASSERT_X(subItem.domItem, "QQmlLSUtils::itemsFromTextLocation",
-                           "A DomItem child is missing or the FileLocationsTree structure does not "
-                           "follow the DomItem Structure.");
+                if (!subItem.domItem) {
+                    qCDebug(QQmlLSUtilsLog)
+                            << "A DomItem child is missing or the FileLocationsTree structure does "
+                               "not follow the DomItem Structure.";
+                    continue;
+                }
                 subItem.fileLocation = subLoc;
                 toDo.append(subItem);
                 inParentButOutsideChildren = false;
