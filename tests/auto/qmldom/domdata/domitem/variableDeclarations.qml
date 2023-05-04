@@ -10,6 +10,10 @@ Item {
         const a = 3;
         const b = "patron";
         var aa = helloWorld, bb = aa;
+
+        const bool1 = true;
+        let bool2 = false;
+        var nullVar = null;
         return sum;
     }
 }

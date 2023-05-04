@@ -321,6 +321,9 @@ public:
     bool visit(AST::IdentifierExpression *expression) override;
     bool visit(AST::NumericLiteral *expression) override;
     bool visit(AST::StringLiteral *expression) override;
+    bool visit(AST::NullExpression *expression) override;
+    bool visit(AST::TrueLiteral *expression) override;
+    bool visit(AST::FalseLiteral *expression) override;
 
     void throwRecursionDepthError() override;
 

@@ -956,9 +956,11 @@ private slots:
         QVERIFY(blockSemanticScope.value()->JSIdentifier(u"b"_s));
         QVERIFY(blockSemanticScope.value()->JSIdentifier(u"aa"_s));
         QVERIFY(blockSemanticScope.value()->JSIdentifier(u"bb"_s));
-
+        QVERIFY(blockSemanticScope.value()->JSIdentifier(u"bool1"_s));
+        QVERIFY(blockSemanticScope.value()->JSIdentifier(u"bool2"_s));
+        QVERIFY(blockSemanticScope.value()->JSIdentifier(u"nullVar"_s));
         DomItem statements = block.field(Fields::statements);
-        QCOMPARE(statements.indexes(), 5);
+        QCOMPARE(statements.indexes(), 8);
 
         {
             // let sum = 0, helloWorld = "hello"
@@ -1023,6 +1025,33 @@ private slots:
                      DomType::ScriptIdentifierExpression);
             QCOMPARE(bb.field(Fields::initializer).field(Fields::identifier).value().toString(),
                      "aa");
+        }
+        {
+            // const bool1 = true
+            DomItem bool1 = statements.index(4).field(Fields::declarations).index(0);
+            QCOMPARE(bool1.field(Fields::scopeType).value().toInteger(),
+                     ScriptElements::VariableDeclarationEntry::ScopeType::Const);
+            QCOMPARE(bool1.field(Fields::identifier).value().toString(), "bool1");
+            QCOMPARE(bool1.field(Fields::initializer).internalKind(), DomType::ScriptLiteral);
+            QVERIFY(bool1.field(Fields::initializer).field(Fields::value).value().isTrue());
+        }
+        {
+            // let bool2 = false
+            DomItem bool2 = statements.index(5).field(Fields::declarations).index(0);
+            QCOMPARE(bool2.field(Fields::scopeType).value().toInteger(),
+                     ScriptElements::VariableDeclarationEntry::ScopeType::Let);
+            QCOMPARE(bool2.field(Fields::identifier).value().toString(), "bool2");
+            QCOMPARE(bool2.field(Fields::initializer).internalKind(), DomType::ScriptLiteral);
+            QVERIFY(bool2.field(Fields::initializer).field(Fields::value).value().isFalse());
+        }
+        {
+            // var nullVar = null
+            DomItem nullVar = statements.index(6).field(Fields::declarations).index(0);
+            QCOMPARE(nullVar.field(Fields::scopeType).value().toInteger(),
+                     ScriptElements::VariableDeclarationEntry::ScopeType::Var);
+            QCOMPARE(nullVar.field(Fields::identifier).value().toString(), "nullVar");
+            QCOMPARE(nullVar.field(Fields::initializer).internalKind(), DomType::ScriptLiteral);
+            QVERIFY(nullVar.field(Fields::initializer).field(Fields::value).value().isNull());
         }
     }
 

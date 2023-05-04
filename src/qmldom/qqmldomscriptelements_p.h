@@ -167,7 +167,7 @@ public:
     using BaseT::BaseT;
     ~Literal() override{};
 
-    using VariantT = std::variant<QString, double>;
+    using VariantT = std::variant<QString, double, bool, std::nullptr_t>;
 
     void setLiteralValue(VariantT value) { m_value = value; }
     VariantT literalValue() const { return m_value; }

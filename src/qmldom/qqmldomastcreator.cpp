@@ -1155,6 +1155,39 @@ bool QQmlDomAstCreator::visit(AST::StringLiteral *expression)
     return true;
 }
 
+bool QQmlDomAstCreator::visit(AST::NullExpression *expression)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto current = makeScriptElement<ScriptElements::Literal>(expression);
+    current->setLiteralValue(nullptr);
+    pushScriptElement(current);
+    return true;
+}
+
+bool QQmlDomAstCreator::visit(AST::TrueLiteral *expression)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto current = makeScriptElement<ScriptElements::Literal>(expression);
+    current->setLiteralValue(true);
+    pushScriptElement(current);
+    return true;
+}
+
+bool QQmlDomAstCreator::visit(AST::FalseLiteral *expression)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto current = makeScriptElement<ScriptElements::Literal>(expression);
+    current->setLiteralValue(false);
+    pushScriptElement(current);
+    return true;
+}
+
 bool QQmlDomAstCreator::visit(AST::VariableDeclarationList *)
 {
     if (!m_enableScriptExpressions)
