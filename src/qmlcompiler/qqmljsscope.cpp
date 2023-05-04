@@ -516,9 +516,15 @@ QTypeRevision QQmlJSScope::resolveType(
             auto &parameter = parameters[i];
             if (const QString typeName = parameter.typeName();
                 !parameter.type() && !typeName.isEmpty()) {
-                const auto type = findType(typeName, context, usedTypes);
-                if (type.scope && type.scope->isReferenceType())
+                auto type = findType(typeName, context, usedTypes);
+                if (type.scope && parameter.isList()) {
+                    type.scope = type.scope->listType();
+                    parameter.setIsList(false);
+                    parameter.setIsPointer(false);
+                    parameter.setTypeName(type.scope ? type.scope->internalName() : QString());
+                } else if (type.scope && type.scope->isReferenceType()) {
                     parameter.setIsPointer(true);
+                }
                 parameter.setType({ type.scope });
             }
         }

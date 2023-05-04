@@ -139,6 +139,8 @@ public:
     void setTypeQualifier(Constness typeQualifier) { m_typeQualifier = typeQualifier; }
     bool isPointer() const { return m_isPointer; }
     void setIsPointer(bool isPointer) { m_isPointer = isPointer; }
+    bool isList() const { return m_isList; }
+    void setIsList(bool isList) { m_isList = isList; }
 
     friend bool operator==(const QQmlJSMetaParameter &a, const QQmlJSMetaParameter &b)
     {
@@ -164,6 +166,7 @@ private:
     QWeakPointer<const QQmlJSScope> m_type;
     Constness m_typeQualifier = NonConst;
     bool m_isPointer = false;
+    bool m_isList = false;
 };
 
 class QQmlJSMetaMethod

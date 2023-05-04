@@ -62,6 +62,8 @@ signals:
     void ambiguous(int a = 9);
 
     void cousinsChanged();
+    void objectListHappened(const QList<QObject *> &);
+    void variantListHappened(const QList<QVariant> &);
 
 private:
     QString m_name;

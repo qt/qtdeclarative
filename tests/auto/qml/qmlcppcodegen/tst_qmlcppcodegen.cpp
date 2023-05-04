@@ -3359,6 +3359,10 @@ void tst_QmlCppCodegen::signalsWithLists()
     QCOMPARE(objlist.at(&objlist, 0), o.data());
     QCOMPARE(objlist.at(&objlist, 1), nullptr);
     QCOMPARE(objlist.at(&objlist, 2), o.data());
+
+    QCOMPARE(o->property("happening").toInt(), 0);
+    o->metaObject()->invokeMethod(o.data(), "sendSignals");
+    QCOMPARE(o->property("happening").toInt(), 8);
 }
 
 void tst_QmlCppCodegen::signatureIgnored()

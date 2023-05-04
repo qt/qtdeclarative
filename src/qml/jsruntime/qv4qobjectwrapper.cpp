@@ -2147,6 +2147,11 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
                 return true;
             }
 
+            if (const QmlListWrapper *listWrapper = value.as<QmlListWrapper>()) {
+                *qlistPtr = listWrapper->d()->property().toList<QList<QObject *>>();
+                return true;
+            }
+
             qlistPtr->append(nullptr);
             return value.isNullOrUndefined();
         }
