@@ -519,6 +519,15 @@ struct InvisibleForeign
     QML_NAMED_ELEMENT(Invisible)
 };
 
+class ListSignal : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+
+Q_SIGNALS:
+    void objectListHappened(const QList<QObject *> &);
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -569,6 +578,7 @@ private slots:
     void baseVersionInQmltypes();
     void anonymousAndUncreatable();
     void omitInvisible();
+    void listSignal();
 
 private:
     QByteArray qmltypesData;

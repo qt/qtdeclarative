@@ -591,4 +591,19 @@ void tst_qmltyperegistrar::omitInvisible()
     R"(Component { file: "tst_qmltyperegistrar.h"; name: "Invisible"; accessSemantics: "none" })"));
 }
 
+void tst_qmltyperegistrar::listSignal()
+{
+    QVERIFY(qmltypesData.contains(
+    R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "ListSignal"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Signal {
+            name: "objectListHappened"
+            Parameter { type: "QObjectList" }
+        }
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

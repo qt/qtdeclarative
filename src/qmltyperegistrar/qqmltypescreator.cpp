@@ -195,6 +195,8 @@ void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key)
         type = QLatin1String("qlonglong");
     } else if (type == QLatin1String("quint64")) {
         type = QLatin1String("qulonglong");
+    } else if (type == QLatin1String("QList<QObject*>")) {
+        type = QLatin1String("QObjectList");
     }
 
     m_qml.writeScriptBinding(typeKey, enquote(type));
