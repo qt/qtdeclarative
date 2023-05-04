@@ -2191,6 +2191,8 @@ void QQmlJSCodeGenerator::generate_CreateRestParameter(int argIndex)
 
 void QQmlJSCodeGenerator::generate_ConvertThisToObject()
 {
+    INJECT_TRACE_INFO(generate_ConvertThisToObject);
+
     m_body += changedRegisterVariable() + u" = "_s
             + conversion(m_typeResolver->qObjectType(), m_state.changedRegister(),
                          u"aotContext->thisObject()"_s)
