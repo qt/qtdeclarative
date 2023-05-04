@@ -61,6 +61,28 @@ QString getString(const QString &key, const QJsonObject object)
     return foundValue.toString();
 }
 
+QStringList getStringList(const QString &key, const QJsonObject object, bool required)
+{
+    const auto value = object[key];
+    if (value.isUndefined()) {
+        if (required)
+            throw std::runtime_error("key not found: '" + key.toStdString() + "'");
+        return {};
+    }
+
+    if (value.isString()) {
+        return {value.toString()};
+    } else if (value.isArray()) {
+        QStringList strings;
+        const QJsonArray array = value.toArray();
+        for (const QJsonValue &element : array)
+            strings.append(element.toString());
+        return strings;
+    } else {
+        throw std::runtime_error("key is not string or array: '" + key.toStdString() + "'");
+    }
+}
+
 void findChildrenImpl(const QStringList &keyValueList, const QJsonObject &root, bool firstOnly, QList<QJsonObject> &result)
 {
     // Assert that the key-value list comes in pairs:

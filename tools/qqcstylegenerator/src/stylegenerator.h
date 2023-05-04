@@ -230,10 +230,9 @@ private:
         const auto documentRoot = getObject("document", m_document.object());
         const auto componentSet = findChild({"type", "COMPONENT_SET", "name", componentSetName}, documentRoot);
 
-        const auto copy = controlObj["copy"].toString();
-        QStringList files = copy.split(',');
+        QStringList files = getStringList("copy", controlObj, false);
         for (const QString &file : files)
-            copyFileToStyleFolder(file.trimmed(), false);
+            copyFileToStyleFolder(file, false);
 
         // We use content atoms to figure out properties such as spacing and mirrored
         QStringList contentAtoms;
@@ -291,21 +290,8 @@ private:
 
     QStringList getAtomExport(const QJsonObject &atomObj)
     {
-        const QJsonValue exportValue = atomObj["export"];
-        if (!exportValue.isUndefined() && !exportValue.isArray())
-            throw std::runtime_error("export is not an array!");
-
-        const QJsonArray exportArray = exportValue.toArray();
-        if (exportArray.isEmpty())
-            return m_defaultExport;
-
-        QStringList exportList;
-        for (const QJsonValue &exportValue : exportArray)
-            exportList.append(exportValue.toString());
-        if (exportList.isEmpty())
-            throw std::runtime_error("missing export config!");
-
-        return exportList;
+        QStringList customExport = getStringList("export", atomObj, false);
+        return customExport.isEmpty() ? m_defaultExport : customExport;
     }
 
     QJsonObject findAtomObject(const QString &path, const QString &figmaState, const QJsonObject &componentSet)
