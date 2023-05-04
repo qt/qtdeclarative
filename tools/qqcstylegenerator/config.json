@@ -67,6 +67,22 @@
             {"state": "checked-pressed", "figmaState": "checkedPressed"},
             {"state": "checked-hovered", "figmaState": "checkedHovered"}
         ]
+    },
+    {
+        "name": "TextField",
+        "copy": ":/TextField.qml",
+        "component set": "TextFieldTemplate",
+        "atoms": [
+            {"atom": "background", "figmaPath": "TextFieldBackground"},
+            {"atom": "contentItem", "figmaPath": "contentItem", "export": "geometry"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "focused", "figmaState": "focused"},
+            {"state": "focused-hovered", "figmaState": "hoveredFocused"}
+        ]
     }
     ]
 }
