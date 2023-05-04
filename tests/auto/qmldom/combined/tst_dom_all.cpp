@@ -7,7 +7,6 @@
 #include "merging/tst_dommerging.h"
 #include "path/tst_qmldompath.h"
 #include "reformatter/tst_reformatter.h"
-#include "standalone/tst_standalone.h"
 
 #include <QtCore/qdebug.h>
 
@@ -36,10 +35,6 @@ int main(int argc, char *argv[])
     }
     {
         QQmlJS::Dom::TestReformatter test;
-        status |= QTest::qExec(&test, argc, argv);
-    }
-    {
-        QQmlJS::Dom::TestStandalone test;
         status |= QTest::qExec(&test, argc, argv);
     }
     if (status)
