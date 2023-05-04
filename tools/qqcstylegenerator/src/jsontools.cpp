@@ -22,7 +22,7 @@ QJsonObject getObject(const QString &key, const QJsonObject object)
 {
     const auto foundValue = object.value(key);
     if (foundValue.isUndefined())
-        throw std::runtime_error("could not find object '" + key.toStdString() + "'");
+        throw std::runtime_error("key not found: '" + key.toStdString() + "'");
     if (!foundValue.isObject())
         throw std::runtime_error("'" + key.toStdString() + "' is not an object!");
     return foundValue.toObject();
@@ -33,7 +33,7 @@ QJsonArray getArray(const QString &key, const QJsonObject object)
 {
     const auto foundValue = object.value(key);
     if (foundValue.isUndefined())
-        throw std::runtime_error("could not find array '" + key.toStdString() + "'");
+        throw std::runtime_error("key not found: '" + key.toStdString() + "'");
     if (!foundValue.isArray())
         throw std::runtime_error("'" + key.toStdString() + "' is not an array!");
     return foundValue.toArray();
@@ -45,7 +45,7 @@ QJsonValue getValue(const QString &key, const QJsonObject object)
 {
     const auto foundValue = object.value(key);
     if (foundValue.isUndefined())
-        throw std::runtime_error("could not find value '" + key.toStdString() + "'");
+        throw std::runtime_error("key not found: '" + key.toStdString() + "'");
     return foundValue;
 }
 
@@ -55,7 +55,7 @@ QString getString(const QString &key, const QJsonObject object)
 {
     const auto foundValue = object.value(key);
     if (foundValue.isUndefined())
-        throw std::runtime_error("could not find value '" + key.toStdString() + "'");
+        throw std::runtime_error("key not found: '" + key.toStdString() + "'");
     if (!foundValue.isString())
         throw std::runtime_error("'" + key.toStdString() + "' is not a string!");
     return foundValue.toString();
@@ -141,7 +141,7 @@ QJsonObject findChild(const QStringList &keyValueList, const QJsonObject &root)
         QStringList msg;
         for (int i = 0; i < keyValueList.count(); i += 2)
             msg << "'" + keyValueList[i] + ":" + keyValueList[i + 1] + "'";
-        throw NoChildFoundException(QStringLiteral("could not find node: ") + msg.join(","));
+        throw NoChildFoundException(QStringLiteral("could not find Figma child: ") + msg.join(","));
     }
     return result.value(0);
 }

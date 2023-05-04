@@ -198,7 +198,7 @@ private:
         try {
             controlsArray = getArray("controls", rootObject);
         } catch (std::exception &e) {
-            throw std::runtime_error("Could not parse " + file.fileName().toStdString() + ": " + e.what());
+            throw std::runtime_error("Error, could not parse " + file.fileName().toStdString() + ": " + e.what());
         }
 
         const QJsonArray exportArray = rootObject.value("default export").toArray();
@@ -211,7 +211,7 @@ private:
             try {
                 generateControl(controlObj);
             } catch (std::exception &e) {
-                qWarning().nospace().noquote() << "Could not generate control: " << e.what();
+                qWarning().nospace().noquote() << "Warning, could not generate " << name << ": " << e.what();
             }
         }
     }
