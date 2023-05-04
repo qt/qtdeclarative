@@ -60,6 +60,12 @@ void ShoeDescription::setPrice(qreal price)
     }
 }
 
+bool ShoeDescription::operatorEqualsImpl(const ShoeDescription &lhs, const ShoeDescription &rhs)
+{
+    return lhs.m_size == rhs.m_size && lhs.m_color == rhs.m_color && lhs.m_brand == rhs.m_brand
+            && lhs.m_price == rhs.m_price;
+}
+
 QString Person::name() const
 {
     return m_name;
@@ -80,7 +86,10 @@ ShoeDescription *Person::shoe() const
 
 void Person::setShoe(ShoeDescription *shoe)
 {
-    if (m_shoe != shoe) {
+    if (!shoe)
+        return;
+
+    if (*m_shoe != *shoe) {
         m_shoe = shoe;
         emit shoeChanged();
     }
