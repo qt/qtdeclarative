@@ -20,7 +20,6 @@ qt_internal_add_test(tst_dom_all
         ../domitem/tst_qmldomitem.h
         ../merging/tst_dommerging.h
         ../reformatter/tst_reformatter.h
-        ../standalone/tst_standalone.h
     INCLUDE_DIRECTORIES
         ..
     DEFINES

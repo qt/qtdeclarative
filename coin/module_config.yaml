@@ -17,5 +17,3 @@ instructions:
   Test:
     - !include "{{qt/qtbase}}/coin_module_test_template_v3.yaml"
     - !include "{{qt/qtbase}}/coin_module_test_docs.yaml"
-    - !include "{{qt/qtdeclarative}}/coin_dom_standalone_old_qt_mac.yaml"
-    - !include "{{qt/qtdeclarative}}/coin_dom_standalone_old_qt_win.yaml"

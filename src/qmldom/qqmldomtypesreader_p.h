@@ -20,13 +20,9 @@
 
 // for Q_DECLARE_TR_FUNCTIONS
 #include <QtCore/qcoreapplication.h>
-#ifdef QMLDOM_STANDALONE
-#    include "qmlcompiler/qqmljsmetatypes_p.h"
-#    include "qmlcompiler/qqmljsscope_p.h"
-#else
-#    include <private/qqmljsmetatypes_p.h>
-#    include <private/qqmljsscope_p.h>
-#endif
+#include <private/qqmljsmetatypes_p.h>
+#include <private/qqmljsscope_p.h>
+
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
