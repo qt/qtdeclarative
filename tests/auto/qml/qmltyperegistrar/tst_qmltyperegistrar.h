@@ -557,6 +557,15 @@ public:
     Q_ENUM(V)
 };
 
+class ListSignal : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+
+Q_SIGNALS:
+    void objectListHappened(const QList<QObject *> &);
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -609,6 +618,7 @@ private slots:
     void anonymousAndUncreatable();
     void omitInvisible();
     void typedEnum();
+    void listSignal();
 
 private:
     QByteArray qmltypesData;
