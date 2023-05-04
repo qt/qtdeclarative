@@ -190,6 +190,7 @@ set(qml_files
     signal.qml
     signalHandler.qml
     signalIndexMismatch.qml
+    signalsWithLists.qml
     signatureIgnored.qml
     specificParent.qml
     storeElementSideEffects.qml

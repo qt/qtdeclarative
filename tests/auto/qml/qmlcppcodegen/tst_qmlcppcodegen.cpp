@@ -158,6 +158,7 @@ private slots:
     void shifts();
     void signalHandler();
     void signalIndexMismatch();
+    void signalsWithLists();
     void signatureIgnored();
     void simpleBinding();
     void storeElementSideEffects();
@@ -3308,6 +3309,29 @@ void tst_QmlCppCodegen::signalIndexMismatch()
 
     QCOMPARE(visualIndexBeforeMoveList, QList<QVariant>({ 0, 1, 2 }));
     QCOMPARE(visualIndexAfterMoveList, QList<QVariant>({ 0, 1, 2 }));
+}
+
+void tst_QmlCppCodegen::signalsWithLists()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/signalsWithLists.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QVariantList varlist = o->property("varlist").toList();
+    QCOMPARE(varlist.size(), 5);
+    QCOMPARE(varlist[0], QVariant::fromValue(1));
+    QCOMPARE(varlist[1], QVariant::fromValue(u"foo"_s));
+    QCOMPARE(varlist[2], QVariant::fromValue(o.data()));
+    QCOMPARE(varlist[3], QVariant());
+    QCOMPARE(varlist[4], QVariant::fromValue(true));
+
+    QQmlListProperty<QObject> objlist = o->property("objlist").value<QQmlListProperty<QObject>>();
+    QCOMPARE(objlist.count(&objlist), 3);
+    QCOMPARE(objlist.at(&objlist, 0), o.data());
+    QCOMPARE(objlist.at(&objlist, 1), nullptr);
+    QCOMPARE(objlist.at(&objlist, 2), o.data());
 }
 
 void tst_QmlCppCodegen::signatureIgnored()
