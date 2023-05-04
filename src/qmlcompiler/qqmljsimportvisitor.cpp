@@ -1530,9 +1530,11 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             if (const auto idExpression = cast<IdentifierExpression *>(node)) {
                 aliasExpr.prepend(idExpression->name.toString());
             } else {
+                // cast to expression might have failed above, so use publicMember->statement
+                // to obtain the source location
                 m_logger->log(QStringLiteral("Invalid alias expression. Only IDs and field "
                                              "member expressions can be aliased."),
-                              qmlSyntax, expression->firstSourceLocation());
+                              qmlSyntax, publicMember->statement->firstSourceLocation());
             }
             };
             tryParseAlias();
