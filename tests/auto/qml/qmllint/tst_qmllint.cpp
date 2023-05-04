@@ -2009,6 +2009,7 @@ void TestQmllint::quickPlugin()
                       13, 31
                 }
             } });
+    runTest("pluginQuick_propertyChangesInvalidTarget.qml", Result {}); // we don't care about the specific warnings
 }
 #endif
 

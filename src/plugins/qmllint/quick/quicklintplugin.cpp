@@ -773,7 +773,7 @@ void PropertyChangesValidatorPass::run(const QQmlSA::Element &element)
             continue;
 
         const QQmlJS::SourceLocation bindingLocation = it->sourceLocation();
-        if (!targetElement->hasProperty(name)) {
+        if (!targetElement.isNull() && !targetElement->hasProperty(name)) {
             emitWarning(
                     "Unknown property \"%1\" in PropertyChanges."_L1.arg(name),
                     quickPropertyChangesParsed, bindingLocation);
