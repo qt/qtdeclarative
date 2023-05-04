@@ -336,6 +336,7 @@ bool Id::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     cont = cont && self.dvReferenceField(visitor, Fields::referredObject, referredObjectPath);
     cont = cont && self.dvWrapField(visitor, Fields::comments, comments);
     cont = cont && self.dvWrapField(visitor, Fields::annotations, annotations);
+    cont = cont && self.dvWrapField(visitor, Fields::value, value);
     return cont;
 }
 

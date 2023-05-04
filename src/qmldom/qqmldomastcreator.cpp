@@ -1,6 +1,6 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
-#include "qqmldom_global.h"
+
 #include "qqmldomastcreator_p.h"
 #include "qqmldomelements_p.h"
 #include "qqmldomitem_p.h"
@@ -726,6 +726,7 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
             QmlObject &containingObject = std::get<QmlObject>(containingObjectEl.item.value);
             QString idName = iExp->name.toString();
             Id idVal(idName, qmlFile.canonicalPath().path(containingObject.pathFromOwner()));
+            idVal.value = script;
             containingObject.setIdStr(idName);
             FileLocations::addRegion(containingObjectEl.fileLocations, u"idToken",
                                      combineLocations(el->qualifiedId));
@@ -774,20 +775,26 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
     return true;
 }
 
+void QQmlDomAstCreator::setScriptExpression (const std::shared_ptr<ScriptExpression>& value)
+{
+    if (m_enableScriptExpressions
+        && (scriptNodeStack.size() != 1 || currentScriptNodeEl().isList()))
+        Q_SCRIPTELEMENT_DISABLE();
+    if (m_enableScriptExpressions) {
+        value->setScriptElement(
+                finalizeScriptExpression(currentScriptNodeEl().takeVariant()));
+        removeCurrentScriptNode({});
+    }
+};
+
 void QQmlDomAstCreator::endVisit(AST::UiScriptBinding *)
 {
     DomValue &lastEl = currentNode();
     index_type idx = currentIndex();
     if (lastEl.kind == DomType::Binding) {
         Binding &b = std::get<Binding>(lastEl.value);
-        if (m_enableScriptExpressions
-            && (scriptNodeStack.size() != 1 || currentScriptNodeEl().isList()))
-            Q_SCRIPTELEMENT_DISABLE();
-        if (m_enableScriptExpressions) {
-            b.scriptExpressionValue()->setScriptElement(
-                    finalizeScriptExpression(currentScriptNodeEl().takeVariant()));
-            removeCurrentScriptNode({});
-        }
+
+        setScriptExpression(b.scriptExpressionValue());
 
         QmlObject &containingObject = current<QmlObject>();
         Binding *bPtr = valueFromMultimap(containingObject.m_bindings, b.name(), idx);
@@ -795,6 +802,9 @@ void QQmlDomAstCreator::endVisit(AST::UiScriptBinding *)
         *bPtr = b;
     } else if (lastEl.kind == DomType::Id) {
         Id &id = std::get<Id>(lastEl.value);
+
+        setScriptExpression(id.value);
+
         QmlComponent &comp = current<QmlComponent>();
         Id *idPtr = valueFromMultimap(comp.m_ids, id.name, idx);
         *idPtr = id;

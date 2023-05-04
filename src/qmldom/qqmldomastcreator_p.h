@@ -17,6 +17,7 @@
 
 #include "qqmldomelements_p.h"
 #include "qqmldomitem_p.h"
+#include "qqmldompath_p.h"
 #include "qqmldomscriptelements_p.h"
 
 #include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
@@ -197,6 +198,7 @@ private:
 
     const ScriptElementVariant &finalizeScriptExpression(const ScriptElementVariant &element, FileLocations::Tree base = nullptr);
     const ScriptElementVariant &finalizeScriptList(AST::Node *ast, FileLocations::Tree base);
+    void setScriptExpression (const std::shared_ptr<ScriptExpression>& value);
 
     Path pathOfLastScriptNode() const;
 

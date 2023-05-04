@@ -937,6 +937,17 @@ private slots:
 
         DomItem b = rootQmlObject.path(".bindings[\"b\"][0].value.scriptElement.identifier");
         QCOMPARE(b.value().toString(), "a");
+
+        DomItem root = rootQmlObject.path(".idStr");
+        QCOMPARE(root.value().toString(), "root");
+
+        DomItem componentIds = rootQmlObject.component().path(".ids");
+        QCOMPARE(componentIds.keys(), QSet<QString>({ "root" }));
+
+        DomItem idScriptExpression =
+                componentIds.key("root").index(0).field(Fields::value).field(Fields::scriptElement);
+        QCOMPARE(idScriptExpression.internalKind(), DomType::ScriptIdentifierExpression);
+        QCOMPARE(idScriptExpression.field(Fields::identifier).value().toString(), "root");
     }
 
     void variableDeclarations()

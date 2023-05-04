@@ -366,6 +366,7 @@ public:
     Path referredObjectPath;
     RegionComments comments;
     QList<QmlObject> annotations;
+    std::shared_ptr<ScriptExpression> value;
 };
 
 // TODO: rename? it may contain statements and stuff, not only expressions
