@@ -1537,7 +1537,7 @@ public:
         if (index < data->stringTableSize)
             return data->stringAtInternal(index);
 
-        const uint dynamicIndex = index - data->stringTableSize;
+        const qsizetype dynamicIndex = index - data->stringTableSize;
         Q_ASSERT(dynamicIndex < dynamicStrings.size());
         return dynamicStrings.at(dynamicIndex);
     }
