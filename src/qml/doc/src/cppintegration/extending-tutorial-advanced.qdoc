@@ -71,7 +71,7 @@ time, and how to expose third party objects to QML.
 
 
 \section1 Inheritance and Coercion
-\c extending-qml-advanced/advanced2-Inheritanace-and-coercion
+\c extending-qml-advanced/advanced2-Inheritance-and-coercion
 
 Right now, each attendant is being modelled as a person. This is a bit too
 generic and it would be nice to be able to know more about the attendees. By
