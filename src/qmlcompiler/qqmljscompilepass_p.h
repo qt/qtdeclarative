@@ -47,7 +47,8 @@ public:
     private:
         friend bool operator==(const VirtualRegister &a, const VirtualRegister &b)
         {
-            return a.content == b.content && a.canMove == b.canMove;
+            return a.content == b.content && a.canMove == b.canMove
+                && a.affectedBySideEffects == b.affectedBySideEffects;
         }
     };
 
