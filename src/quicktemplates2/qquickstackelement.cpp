@@ -215,7 +215,9 @@ void QQuickStackElement::initialize(RequiredProperties &requiredProperties)
         QV4::ScopedValue ipv(scope, properties.value());
         QV4::Scoped<QV4::QmlContext> qmlContext(scope, qmlCallingContext.value());
         QV4::ScopedValue qmlObject(scope, QV4::QObjectWrapper::wrap(v4, item));
-        QQmlComponentPrivate::setInitialProperties(v4, qmlContext, qmlObject, ipv, requiredProperties, item);
+        QQmlComponentPrivate::setInitialProperties(
+            v4, qmlContext, qmlObject, ipv, requiredProperties, item,
+            component ? QQmlComponentPrivate::get(component)->state.creator.data() : nullptr);
         properties.clear();
     }
 

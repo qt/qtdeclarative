@@ -130,6 +130,7 @@ private slots:
     void testSetInitialProperties();
     void createInsideJSModule();
     void qmlErrorIsReported();
+    void removeBinding();
 
 private:
     QQmlEngine engine;
@@ -1020,6 +1021,16 @@ void tst_qqmlcomponent::qmlErrorIsReported()
     QVERIFY(std::any_of(componentErrors.begin(), componentErrors.end(), [&](const QQmlError &e) {
         return errorMessage.match(e.toString()).hasMatch();
     }));
+}
+
+void tst_qqmlcomponent::removeBinding()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("removeBinding.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("result"), QStringLiteral("42"));
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

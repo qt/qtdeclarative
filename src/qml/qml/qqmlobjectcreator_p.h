@@ -152,6 +152,16 @@ public:
     RequiredProperties &requiredProperties() {return sharedState->requiredProperties;}
     bool componentHadRequiredProperties() const {return sharedState->hadRequiredProperties;}
 
+    void removePendingBinding(QObject *target, int propertyIndex)
+    {
+        QList<DeferredQPropertyBinding> &pendingBindings = sharedState.data()->allQPropertyBindings;
+        auto it = std::remove_if(pendingBindings.begin(), pendingBindings.end(),
+                                 [&](const DeferredQPropertyBinding &deferred) {
+            return deferred.properyIndex == propertyIndex && deferred.target == target;
+        });
+        pendingBindings.erase(it, pendingBindings.end());
+    }
+
 private:
     QQmlObjectCreator(QQmlRefPointer<QQmlContextData> contextData,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
