@@ -1711,10 +1711,7 @@ static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObject
         }
 
         result = list;
-    } else if (const FunctionObject *f = o->as<FunctionObject>()) {
-        // If it's a FunctionObject, we can only save it as QJSValue.
-        result = QVariant::fromValue(QJSValuePrivate::fromReturnedValue(f->asReturnedValue()));
-    } else {
+    } else if (o->getPrototypeOf() == o->engine()->objectPrototype()->d()) {
         QVariantMap map;
         QV4::Scope scope(o->engine());
         QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly);
@@ -1732,6 +1729,9 @@ static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObject
         }
 
         result = map;
+    } else {
+        // If it's not a plain object, we can only save it as QJSValue.
+        result = QVariant::fromValue(QJSValuePrivate::fromReturnedValue(o->asReturnedValue()));
     }
 
     visitedObjects->remove(o->d());
