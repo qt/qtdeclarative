@@ -146,6 +146,7 @@ private slots:
     void loadFromModuleRequired();
     void loadFromQrc();
     void removeBinding();
+    void complexObjectArgument();
 
 private:
     QQmlEngine engine;
@@ -1448,6 +1449,16 @@ void tst_qqmlcomponent::removeBinding()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("result"), QStringLiteral("42"));
+}
+
+void tst_qqmlcomponent::complexObjectArgument()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("complexObjectArgument.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), QStringLiteral("26"));
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
