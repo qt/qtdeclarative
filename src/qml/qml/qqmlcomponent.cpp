@@ -351,12 +351,32 @@ bool QQmlComponentPrivate::setInitialProperty(
             if (scope.engine->hasException)
                 break;
         }
-        segment = scope.engine->newString(properties.last());
+        const QString lastProperty = properties.last();
+        segment = scope.engine->newString(lastProperty);
         object->put(segment, scope.engine->metaTypeToJS(value.metaType(), value.constData()));
         if (scope.engine->hasException) {
             qmlWarning(base, scope.engine->catchExceptionAsQmlError());
             scope.engine->hasException = false;
             return false;
+        }
+        if (QQmlObjectCreator *creator = state.creator()) {
+            if (QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>()) {
+                if (QObject *o = wrapper->object()) {
+                    if (QQmlData *ddata = QQmlData::get(o)) {
+                        if (const QQmlPropertyData *propData = ddata->propertyCache->property(
+                                    lastProperty, o, ddata->outerContext)) {
+                            if (propData->isBindable())
+                                creator->removePendingBinding(o, propData->coreIndex());
+                        }
+                    } else {
+                        const QMetaObject *meta = o->metaObject();
+                        Q_ASSERT(meta);
+                        const int index = meta->indexOfProperty(lastProperty.toUtf8());
+                        if (index != -1 && meta->property(index).isBindable())
+                            creator->removePendingBinding(o, index);
+                    }
+                }
+            }
         }
         return true;
     }
@@ -369,7 +389,12 @@ bool QQmlComponentPrivate::setInitialProperty(
         prop = QQmlProperty(base, name, engine);
     QQmlPropertyPrivate *privProp = QQmlPropertyPrivate::get(prop);
     const bool isValid = prop.isValid();
-    if (!isValid || !privProp->writeValueProperty(value, {})) {
+    if (isValid && privProp->writeValueProperty(value, {})) {
+        if (prop.isBindable()) {
+            if (QQmlObjectCreator *creator = state.creator())
+                creator->removePendingBinding(prop.object(), prop.index());
+        }
+    } else {
         QQmlError error{};
         error.setUrl(url);
         if (isValid) {
