@@ -1359,6 +1359,36 @@ private slots:
         QCOMPARE(statements.index(3).field(Fields::statements).length(), 0);
     }
 
+    void callExpressions()
+    {
+        using namespace Qt::StringLiterals;
+        QString testFile = baseDir + u"/callExpressions.qml"_s;
+        DomItem rootQmlObject = rootQmlObjectFromFile(testFile, qmltypeDirs);
+
+        {
+            DomItem p1 = rootQmlObject.path(".bindings[\"p\"][0].value.scriptElement");
+            QCOMPARE(p1.internalKind(), DomType::ScriptCallExpression);
+            QCOMPARE(p1.field(Fields::callee).internalKind(), DomType::ScriptIdentifierExpression);
+            QCOMPARE(p1.field(Fields::callee).field(Fields::identifier).value().toString(), "f");
+            QCOMPARE(p1.field(Fields::arguments).internalKind(), DomType::List);
+            QCOMPARE(p1.field(Fields::arguments).indexes(), 0);
+        }
+
+        {
+            DomItem p2 = rootQmlObject.path(".bindings[\"p2\"][0].value.scriptElement");
+            QCOMPARE(p2.internalKind(), DomType::ScriptCallExpression);
+            QCOMPARE(p2.field(Fields::callee).internalKind(), DomType::ScriptIdentifierExpression);
+            QCOMPARE(p2.field(Fields::callee).field(Fields::identifier).value().toString(), "f");
+
+            DomItem p2List = p2.field(Fields::arguments);
+            QCOMPARE(p2List.indexes(), 20);
+            for (int i = 0; i < p2List.indexes(); ++i) {
+                QCOMPARE(p2List.index(i).internalKind(), DomType::ScriptLiteral);
+                QCOMPARE(p2List.index(i).field(Fields::value).value().toInteger(), i + 1);
+            }
+        }
+    }
+
 private:
     struct DomItemWithLocation
     {

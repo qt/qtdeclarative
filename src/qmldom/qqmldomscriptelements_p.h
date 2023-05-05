@@ -17,8 +17,11 @@
 
 #include "qqmldomitem_p.h"
 #include "qqmldomattachedinfo_p.h"
+#include "qqmldompath_p.h"
 #include <algorithm>
 #include <type_traits>
+#include <utility>
+#include <variant>
 
 QT_BEGIN_NAMESPACE
 
@@ -85,6 +88,8 @@ protected:
 class ScriptList : public ScriptElementBase<DomType::List>
 {
 public:
+    using typename ScriptElementBase<DomType::List>::BaseT;
+
     using BaseT::BaseT;
 
     // minimal required overload for this to be wrapped as DomItem:
@@ -129,11 +134,39 @@ private:
     QList<ScriptElementVariant> m_list;
 };
 
+class GenericScriptElement : public ScriptElementBase<DomType::ScriptGenericElement>
+{
+public:
+    using BaseT::BaseT;
+    using VariantT = std::variant<ScriptElementVariant, ScriptList>;
+
+    bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
+    void updatePathFromOwner(Path p) override;
+    void createFileLocations(FileLocations::Tree base) override;
+
+    DomType kind() const override { return m_kind; }
+    void setKind(DomType kind) { m_kind = kind; }
+
+    decltype(auto) insertChild(QStringView name, VariantT v)
+    {
+        return m_children.insert(std::make_pair(name, v));
+    }
+
+private:
+    /*!
+       \internal
+       The DomItem interface will use iterateDirectSubpaths for all kinds of operations on the
+       GenericScriptElement. Therefore, to avoid bad surprises when using the DomItem interface, use
+       a sorted map to always iterate the children in the same order.
+     */
+    std::map<QQmlJS::Dom::FieldType, VariantT> m_children;
+    DomType m_kind;
+};
+
 class BlockStatement : public ScriptElementBase<DomType::ScriptBlockStatement>
 {
 public:
     using BaseT::BaseT;
-    ~BlockStatement() override{};
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
@@ -151,7 +184,6 @@ class IdentifierExpression : public ScriptElementBase<DomType::ScriptIdentifierE
 {
 public:
     using BaseT::BaseT;
-    ~IdentifierExpression() override{};
     void setName(QStringView name) { m_name = name.toString(); }
     QString name() { return m_name; }
 
@@ -166,7 +198,6 @@ class Literal : public ScriptElementBase<DomType::ScriptLiteral>
 {
 public:
     using BaseT::BaseT;
-    ~Literal() override{};
 
     using VariantT = std::variant<QString, double, bool, std::nullptr_t>;
 
@@ -185,7 +216,6 @@ class ForStatement : public ScriptElementBase<DomType::ScriptForStatement>
 {
 public:
     using BaseT::BaseT;
-    ~ForStatement() override{};
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
@@ -222,7 +252,6 @@ class IfStatement : public ScriptElementBase<DomType::ScriptIfStatement>
 {
 public:
     using BaseT::BaseT;
-    ~IfStatement() override{};
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
@@ -246,7 +275,6 @@ class ReturnStatement : public ScriptElementBase<DomType::ScriptReturnStatement>
 {
 public:
     using BaseT::BaseT;
-    ~ReturnStatement() override{};
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
@@ -264,7 +292,6 @@ class BinaryExpression : public ScriptElementBase<DomType::ScriptBinaryExpressio
 {
 public:
     using BaseT::BaseT;
-    ~BinaryExpression() override{};
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
@@ -288,7 +315,6 @@ class VariableDeclarationEntry : public ScriptElementBase<DomType::ScriptVariabl
 {
 public:
     using BaseT::BaseT;
-    ~VariableDeclarationEntry() override{};
 
     enum ScopeType { Var, Let, Const };
 
@@ -315,7 +341,6 @@ class VariableDeclaration : public ScriptElementBase<DomType::ScriptVariableDecl
 {
 public:
     using BaseT::BaseT;
-    ~VariableDeclaration() override{};
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;

@@ -223,6 +223,20 @@ private:
 
     /*!
        \internal
+       Helper to create generic script elements from AST nodes.
+       \sa makeScriptElement
+     */
+    template<typename AstNodeT>
+    static decltype(auto) makeGenericScriptElement(AstNodeT *ast, DomType kind)
+    {
+        auto myExp = std::make_shared<ScriptElements::GenericScriptElement>(
+                ast->firstSourceLocation(), ast->lastSourceLocation());
+        myExp->setKind(kind);
+        return myExp;
+    }
+
+    /*!
+       \internal
        Helper to create script lists from AST nodes.
        \sa makeScriptElement
      */
@@ -323,6 +337,13 @@ public:
     bool visit(AST::IfStatement *) override;
     void endVisit(AST::IfStatement *) override;
 
+    bool visit(AST::CallExpression *) override;
+    void endVisit(AST::CallExpression *) override;
+
+    // lists of stuff
+    bool visit(AST::ArgumentList *) override;
+
+    // literals and ids
     bool visit(AST::IdentifierExpression *expression) override;
     bool visit(AST::NumericLiteral *expression) override;
     bool visit(AST::StringLiteral *expression) override;

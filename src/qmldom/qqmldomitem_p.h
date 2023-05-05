@@ -730,7 +730,7 @@ public:
             VariantOfPointer<ScriptElements::BlockStatement, ScriptElements::IdentifierExpression,
                              ScriptElements::ForStatement, ScriptElements::BinaryExpression,
                              ScriptElements::VariableDeclarationEntry, ScriptElements::Literal,
-                             ScriptElements::IfStatement,
+                             ScriptElements::IfStatement, ScriptElements::GenericScriptElement,
                              ScriptElements::VariableDeclaration, ScriptElements::ReturnStatement>;
 
     template<typename T>

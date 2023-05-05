@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qqmldomastcreator_p.h"
+#include "qqmldomconstants_p.h"
 #include "qqmldomelements_p.h"
 #include "qqmldomitem_p.h"
 #include "qqmldompath_p.h"
@@ -871,6 +872,34 @@ bool QQmlDomAstCreator::visit(AST::UiParameterList *el)
                        {} };
     return true;
 }
+
+bool QQmlDomAstCreator::visit(AST::ArgumentList *list)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto currentList = makeScriptList(list);
+
+    // custom iteration generate all children, such that they can be collected all together in
+    // endVisit().
+    for (auto it = list; it; it = it->next) {
+        Node::accept(it->expression, this);
+        if (!m_enableScriptExpressions)
+            return false;
+
+        if (scriptNodeStack.empty()) {
+            Q_SCRIPTELEMENT_DISABLE();
+            return false;
+        }
+        currentList.append(scriptNodeStack.last().takeVariant());
+        scriptNodeStack.removeLast();
+    }
+
+    pushScriptElement(currentList);
+
+    return false; // return false because we already iterated over the children using the custom
+                  // iteration above
+}
 void QQmlDomAstCreator::endVisit(AST::UiParameterList *el)
 {
     Node::accept(el->next, this); // put other args at the same level as this one...
@@ -1329,6 +1358,40 @@ void QQmlDomAstCreator::endVisit(AST::ReturnStatement *returnStatement)
     if (returnStatement->expression) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
         current->setExpression(currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::CallExpression *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::CallExpression *exp)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(exp, DomType::ScriptCallExpression);
+
+    if (exp->arguments) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->insertChild(Fields::arguments, currentScriptNodeEl().takeList());
+        removeCurrentScriptNode({});
+    } else {
+        // insert empty list
+        current->insertChild(Fields::arguments,
+                             ScriptElements::ScriptList(exp->lparenToken, exp->rparenToken));
+    }
+
+    if (exp->base) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->insertChild(Fields::callee, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
     }
 

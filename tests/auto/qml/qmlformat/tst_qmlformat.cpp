@@ -151,6 +151,9 @@ void TestQmlformat::initTestCase()
     // These files are too big
     m_ignoreFiles << "tests/auto/qmldom/domdata/domitem/longQmlFile.qml";
     m_ignoreFiles << "tests/auto/qmldom/domdata/domitem/deeplyNested.qml";
+
+    // qmlformat cannot handle deconstructing arguments
+    m_ignoreFiles << "tests/auto/qmldom/domdata/domitem/callExpressions.qml";
 }
 
 QStringList TestQmlformat::findFiles(const QDir &d)

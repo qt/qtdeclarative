@@ -1,9 +1,11 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
+#include "qqmldom_utils_p.h"
 #include "qqmldomitem_p.h"
 #include "qqmldompath_p.h"
 #include "qqmldomscriptelements_p.h"
+#include <utility>
 
 using namespace QQmlJS::Dom::ScriptElements;
 using QQmlJS::Dom::DomType;
@@ -96,10 +98,42 @@ static bool wrap(QQmlJS::Dom::DomItem &self, QQmlJS::Dom::DirectVisitor visitor,
     return b;
 }
 
-// for the iterateDirectSubpaths implementation:
-// only the fields inside the different script elements need to have a name, not the elements
-// themselves. The script element themselves get their name during construction in
-// qqmldomastcreator.cpp.
+bool GenericScriptElement::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+{
+    bool cont = true;
+    for (auto it = m_children.begin(); it != m_children.end(); ++it) {
+        cont &= std::visit(
+                [&self, &visitor, &it](auto &&e) { return wrap(self, visitor, it->first, e); },
+                it->second);
+    }
+    return cont;
+}
+
+void GenericScriptElement::updatePathFromOwner(Path p)
+{
+    BaseT::updatePathFromOwner(p);
+    for (auto it = m_children.begin(); it != m_children.end(); ++it) {
+        std::visit(qOverloadedVisitor{ [&p, &it](ScriptElementVariant &e) {
+                                          e.base()->updatePathFromOwner(p.field(it->first));
+                                      },
+                                       [&p, &it](ScriptList &list) {
+                                           list.updatePathFromOwner(p.field(it->first));
+                                       } },
+                   it->second);
+    }
+}
+
+void GenericScriptElement::createFileLocations(FileLocations::Tree base)
+{
+    BaseT::createFileLocations(base);
+    for (auto it = m_children.begin(); it != m_children.end(); ++it) {
+        std::visit(
+                qOverloadedVisitor{
+                        [&base](ScriptElementVariant &e) { e.base()->createFileLocations(base); },
+                        [&base](ScriptList &list) { list.createFileLocations(base); } },
+                it->second);
+    }
+}
 
 bool BlockStatement::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
 {
