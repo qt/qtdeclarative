@@ -269,9 +269,9 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(
     QQmlJSMetaMethod metaMethod;
     // ### confusion between Method and Slot. Method should be removed.
     if (isMethod)
-        metaMethod.setMethodType(QQmlJSMetaMethod::Slot);
+        metaMethod.setMethodType(QQmlJSMetaMethodType::Slot);
     else
-        metaMethod.setMethodType(QQmlJSMetaMethod::Signal);
+        metaMethod.setMethodType(QQmlJSMetaMethodType::Signal);
 
     for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
         UiObjectMember *member = it->member;

@@ -1,0 +1,27 @@
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
+
+project                 = QtQmlCompiler
+description             = Qt QML Compiler Reference Documentation
+version                 = $QT_VERSION
+
+depends += \
+    qtcore \
+    qtnetwork \
+    qtqmlmodels \
+    qtqmlworkerscript \
+    qtgui \
+    qtquick \
+    qtdoc \
+    qtlinguist \
+    qtwidgets \
+    qtquickcontrols \
+    qmake \
+    qtcmake \
+    qtqml
+
+headerdirs  += ..
+
+sourcedirs  += ..
+
+navigation.landingpage = "Qt QML Compiler"
+navigation.cppclassespage = "Qt QML Compiler C++ Classes"

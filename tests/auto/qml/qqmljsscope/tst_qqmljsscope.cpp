@@ -160,14 +160,14 @@ void tst_qqmljsscope::orderedBindings()
     QCOMPARE(std::distance(pBindingsBegin, pBindingsEnd), 2);
 
     // check that the bindings are properly ordered
-    QCOMPARE(pBindingsBegin->bindingType(), QQmlJSMetaPropertyBinding::Object);
-    QCOMPARE(std::next(pBindingsBegin)->bindingType(), QQmlJSMetaPropertyBinding::Interceptor);
+    QCOMPARE(pBindingsBegin->bindingType(), QQmlSA::BindingType::Object);
+    QCOMPARE(std::next(pBindingsBegin)->bindingType(), QQmlSA::BindingType::Interceptor);
 
     auto [itemsBindingsBegin, itemsBindingsEnd] = root->ownPropertyBindings(u"items"_s);
     QCOMPARE(std::distance(itemsBindingsBegin, itemsBindingsEnd), 2);
 
-    QCOMPARE(itemsBindingsBegin->bindingType(), QQmlJSMetaPropertyBinding::Object);
-    QCOMPARE(std::next(itemsBindingsBegin)->bindingType(), QQmlJSMetaPropertyBinding::Object);
+    QCOMPARE(itemsBindingsBegin->bindingType(), QQmlSA::BindingType::Object);
+    QCOMPARE(std::next(itemsBindingsBegin)->bindingType(), QQmlSA::BindingType::Object);
 
     QCOMPARE(itemsBindingsBegin->objectType()->baseTypeName(), u"Item"_s);
     QCOMPARE(std::next(itemsBindingsBegin)->objectType()->baseTypeName(), u"Text"_s);
@@ -184,8 +184,8 @@ void tst_qqmljsscope::signalCreationDifferences()
 
     const auto conflicting = root->ownMethods(u"conflictingPropertyChanged"_s);
     QCOMPARE(conflicting.size(), 2);
-    QCOMPARE(conflicting[0].methodType(), QQmlJSMetaMethod::Signal);
-    QCOMPARE(conflicting[1].methodType(), QQmlJSMetaMethod::Signal);
+    QCOMPARE(conflicting[0].methodType(), QQmlJSMetaMethodType::Signal);
+    QCOMPARE(conflicting[1].methodType(), QQmlJSMetaMethodType::Signal);
 
     const QQmlJSMetaMethod *explicitMethod = nullptr;
     if (conflicting[0].isImplicitQmlPropertyChangeSignal())
@@ -302,7 +302,7 @@ void tst_qqmljsscope::groupedProperties()
     const auto getBindingsWithinGroup =
             [&](QMultiHash<QString, QQmlJSMetaPropertyBinding> *bindings, qsizetype index) -> void {
         const auto &binding = anchorBindings[index];
-        QCOMPARE(binding.bindingType(), QQmlJSMetaPropertyBinding::GroupProperty);
+        QCOMPARE(binding.bindingType(), QQmlSA::BindingType::GroupProperty);
         auto anchorScope = binding.groupType();
         QVERIFY(anchorScope);
         *bindings = anchorScope->ownPropertyBindings();
@@ -316,14 +316,14 @@ void tst_qqmljsscope::groupedProperties()
     QMultiHash<QString, QQmlJSMetaPropertyBinding> bindingsOfType;
     getBindingsWithinGroup(&bindingsOfType, 0);
     QCOMPARE(bindingsOfType.size(), 2);
-    QCOMPARE(value(bindingsOfType, u"left"_s).bindingType(), QQmlJSMetaPropertyBinding::Script);
+    QCOMPARE(value(bindingsOfType, u"left"_s).bindingType(), QQmlSA::BindingType::Script);
     QCOMPARE(value(bindingsOfType, u"leftMargin"_s).bindingType(),
-             QQmlJSMetaPropertyBinding::NumberLiteral);
+             QQmlSA::BindingType::NumberLiteral);
 
     QMultiHash<QString, QQmlJSMetaPropertyBinding> bindingsOfBaseType;
     getBindingsWithinGroup(&bindingsOfBaseType, 1);
     QCOMPARE(bindingsOfBaseType.size(), 1);
-    QCOMPARE(value(bindingsOfBaseType, u"top"_s).bindingType(), QQmlJSMetaPropertyBinding::Script);
+    QCOMPARE(value(bindingsOfBaseType, u"top"_s).bindingType(), QQmlSA::BindingType::Script);
 }
 
 void tst_qqmljsscope::descriptiveNameOfNull()
@@ -363,8 +363,8 @@ void tst_qqmljsscope::groupedPropertiesConsistency()
 
         // The binding order in QQmlJSScope case is "reversed": first come
         // bindings on the leaf type, followed by the bindings on the base type
-        QCOMPARE(fontBindings[0].bindingType(), QQmlJSMetaPropertyBinding::GroupProperty);
-        QCOMPARE(fontBindings[1].bindingType(), QQmlJSMetaPropertyBinding::Script);
+        QCOMPARE(fontBindings[0].bindingType(), QQmlSA::BindingType::GroupProperty);
+        QCOMPARE(fontBindings[1].bindingType(), QQmlSA::BindingType::Script);
     }
 }
 
@@ -378,7 +378,7 @@ void tst_qqmljsscope::groupedPropertySyntax()
 
     // The binding order in QQmlJSScope case is "reversed": first come
     // bindings on the leaf type, followed by the bindings on the base type
-    QCOMPARE(fontBindings[0].bindingType(), QQmlJSMetaPropertyBinding::GroupProperty);
+    QCOMPARE(fontBindings[0].bindingType(), QQmlSA::BindingType::GroupProperty);
     auto fontScope = fontBindings[0].groupType();
     QVERIFY(fontScope);
     QCOMPARE(fontScope->accessSemantics(), QQmlJSScope::AccessSemantics::Value);
@@ -390,9 +390,8 @@ void tst_qqmljsscope::groupedPropertySyntax()
         return bindings.value(key, QQmlJSMetaPropertyBinding(QQmlJS::SourceLocation {}));
     };
 
-    QCOMPARE(value(subbindings, u"pixelSize"_s).bindingType(),
-             QQmlJSMetaPropertyBinding::NumberLiteral);
-    QCOMPARE(value(subbindings, u"bold"_s).bindingType(), QQmlJSMetaPropertyBinding::BoolLiteral);
+    QCOMPARE(value(subbindings, u"pixelSize"_s).bindingType(), QQmlSA::BindingType::NumberLiteral);
+    QCOMPARE(value(subbindings, u"bold"_s).bindingType(), QQmlSA::BindingType::BoolLiteral);
 }
 
 void tst_qqmljsscope::attachedProperties()
@@ -407,7 +406,7 @@ void tst_qqmljsscope::attachedProperties()
     const auto getBindingsWithinAttached =
             [&](QMultiHash<QString, QQmlJSMetaPropertyBinding> *bindings, qsizetype index) -> void {
         const auto &binding = keysBindings[index];
-        QCOMPARE(binding.bindingType(), QQmlJSMetaPropertyBinding::AttachedProperty);
+        QCOMPARE(binding.bindingType(), QQmlSA::BindingType::AttachedProperty);
         auto keysScope = binding.attachingType();
         QVERIFY(keysScope);
         QCOMPARE(keysScope->accessSemantics(), QQmlJSScope::AccessSemantics::Reference);
@@ -422,23 +421,21 @@ void tst_qqmljsscope::attachedProperties()
     QMultiHash<QString, QQmlJSMetaPropertyBinding> bindingsOfType;
     getBindingsWithinAttached(&bindingsOfType, 0);
     QCOMPARE(bindingsOfType.size(), 2);
-    QCOMPARE(value(bindingsOfType, u"enabled"_s).bindingType(),
-             QQmlJSMetaPropertyBinding::BoolLiteral);
-    QCOMPARE(value(bindingsOfType, u"forwardTo"_s).bindingType(),
-             QQmlJSMetaPropertyBinding::Script);
+    QCOMPARE(value(bindingsOfType, u"enabled"_s).bindingType(), QQmlSA::BindingType::BoolLiteral);
+    QCOMPARE(value(bindingsOfType, u"forwardTo"_s).bindingType(), QQmlSA::BindingType::Script);
 
     QMultiHash<QString, QQmlJSMetaPropertyBinding> bindingsOfBaseType;
     getBindingsWithinAttached(&bindingsOfBaseType, 1);
     QCOMPARE(bindingsOfBaseType.size(), 1);
-    QCOMPARE(value(bindingsOfBaseType, u"priority"_s).bindingType(),
-             QQmlJSMetaPropertyBinding::Script);
+    QCOMPARE(value(bindingsOfBaseType, u"priority"_s).bindingType(), QQmlSA::BindingType::Script);
 }
 
 inline QString getScopeName(const QQmlJSScope::ConstPtr &scope)
 {
     Q_ASSERT(scope);
     QQmlJSScope::ScopeType type = scope->scopeType();
-    if (type == QQmlJSScope::GroupedPropertyScope || type == QQmlJSScope::AttachedPropertyScope)
+    if (type == QQmlSA::ScopeType::GroupedPropertyScope
+        || type == QQmlSA::ScopeType::AttachedPropertyScope)
         return scope->internalName();
     return scope->baseTypeName();
 }
@@ -537,8 +534,9 @@ void tst_qqmljsscope::scriptIndices()
 
     const auto suitableScope = [](const QQmlJSScope::ConstPtr &scope) {
         const auto type = scope->scopeType();
-        return type == QQmlJSScope::QMLScope || type == QQmlJSScope::GroupedPropertyScope
-                || type == QQmlJSScope::AttachedPropertyScope;
+        return type == QQmlSA::ScopeType::QMLScope
+                || type == QQmlSA::ScopeType::GroupedPropertyScope
+                || type == QQmlSA::ScopeType::AttachedPropertyScope;
     };
 
     QList<QQmlJSScope::ConstPtr> queue;
@@ -550,7 +548,7 @@ void tst_qqmljsscope::scriptIndices()
         if (suitableScope(current)) {
             const auto methods = current->ownMethods();
             for (const auto &method : methods) {
-                if (method.methodType() == QQmlJSMetaMethod::Signal)
+                if (method.methodType() == QQmlJSMetaMethodType::Signal)
                     continue;
                 QString name = method.methodName();
                 auto relativeIndex = method.jsFunctionIndex();
@@ -563,7 +561,7 @@ void tst_qqmljsscope::scriptIndices()
 
             const auto bindings = current->ownPropertyBindings();
             for (const auto &binding : bindings) {
-                if (binding.bindingType() != QQmlJSMetaPropertyBinding::Script)
+                if (binding.bindingType() != QQmlSA::BindingType::Script)
                     continue;
                 QString name = binding.propertyName();
                 auto relativeIndex = binding.scriptIndex();
@@ -711,32 +709,32 @@ void tst_qqmljsscope::resolvedNonUniqueScopes()
     {
         auto topLevelBindings = root->propertyBindings(u"Component"_s);
         QCOMPARE(topLevelBindings.size(), 1);
-        QCOMPARE(topLevelBindings[0].bindingType(), QQmlJSMetaPropertyBinding::AttachedProperty);
+        QCOMPARE(topLevelBindings[0].bindingType(), QQmlSA::BindingType::AttachedProperty);
         auto componentScope = topLevelBindings[0].attachingType();
         auto componentBindings = componentScope->ownPropertyBindings();
         QCOMPARE(componentBindings.size(), 2);
         auto onCompletedBinding = value(componentBindings, u"onCompleted"_s);
         QVERIFY(onCompletedBinding.isValid());
-        QCOMPARE(onCompletedBinding.bindingType(), QQmlJSMetaPropertyBinding::Script);
-        QCOMPARE(onCompletedBinding.scriptKind(), QQmlJSMetaPropertyBinding::Script_SignalHandler);
+        QCOMPARE(onCompletedBinding.bindingType(), QQmlSA::BindingType::Script);
+        QCOMPARE(onCompletedBinding.scriptKind(), QQmlSA::ScriptBindingKind::Script_SignalHandler);
         auto onDestructionBinding = value(componentBindings, u"onDestruction"_s);
         QVERIFY(onDestructionBinding.isValid());
-        QCOMPARE(onDestructionBinding.bindingType(), QQmlJSMetaPropertyBinding::Script);
+        QCOMPARE(onDestructionBinding.bindingType(), QQmlSA::BindingType::Script);
         QCOMPARE(onDestructionBinding.scriptKind(),
-                 QQmlJSMetaPropertyBinding::Script_SignalHandler);
+                 QQmlSA::ScriptBindingKind::Script_SignalHandler);
     }
 
     {
         auto topLevelBindings = root->propertyBindings(u"p"_s);
         QCOMPARE(topLevelBindings.size(), 1);
-        QCOMPARE(topLevelBindings[0].bindingType(), QQmlJSMetaPropertyBinding::GroupProperty);
+        QCOMPARE(topLevelBindings[0].bindingType(), QQmlSA::BindingType::GroupProperty);
         auto pScope = topLevelBindings[0].groupType();
         auto pBindings = pScope->ownPropertyBindings();
         QCOMPARE(pBindings.size(), 1);
         auto onXChangedBinding = value(pBindings, u"onXChanged"_s);
         QVERIFY(onXChangedBinding.isValid());
-        QCOMPARE(onXChangedBinding.bindingType(), QQmlJSMetaPropertyBinding::Script);
-        QCOMPARE(onXChangedBinding.scriptKind(), QQmlJSMetaPropertyBinding::Script_SignalHandler);
+        QCOMPARE(onXChangedBinding.bindingType(), QQmlSA::BindingType::Script);
+        QCOMPARE(onXChangedBinding.scriptKind(), QQmlSA::ScriptBindingKind::Script_SignalHandler);
     }
 }
 

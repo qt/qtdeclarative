@@ -55,6 +55,7 @@ public:
 
     QQmlJSScope::Ptr result() const { return m_exportedRootScope; }
 
+    const QQmlJSLogger *logger() const { return m_logger; }
     QQmlJSLogger *logger() { return m_logger; }
 
     QQmlJSImporter::ImportedTypes imports() const { return m_rootScopeImports; }
@@ -73,7 +74,9 @@ public:
     static QString implicitImportDirectory(
             const QString &localFile, QQmlJSResourceFileMapper *mapper);
 
-    QQmlJSImporter *importer() { return m_importer; } // ### should this be restricted?
+    // ### should this be restricted?
+    QQmlJSImporter *importer() { return m_importer; }
+    const QQmlJSImporter *importer() const { return m_importer; }
 
     struct UnfinishedBinding
     {

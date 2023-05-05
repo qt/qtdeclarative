@@ -154,7 +154,7 @@ void QmlLintSuggestions::diagnose(const QByteArray &url)
         fileContents = doc.field(Fields::code).value().toString();
         QStringList qmltypesFiles;
         QStringList resourceFiles;
-        QList<QQmlJSLogger::Category> categories;
+        QList<QQmlJS::LoggerCategory> categories;
 
         QQmlJSLinter linter(imports);
 

@@ -9,6 +9,8 @@
 
 #include <private/qv4compilerscanfunctions_p.h>
 
+#include <QtQmlCompiler/private/qqmlsasourcelocation_p.h>
+
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
@@ -59,10 +61,9 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSTypePropagator::run(
     return m_state.annotations;
 }
 
-#define INSTR_PROLOGUE_NOT_IMPLEMENTED()                                                           \
-    setError(u"Instruction \"%1\" not implemented"_s                                              \
-                     .arg(QString::fromUtf8(__func__)));                                           \
-    return;
+#define INSTR_PROLOGUE_NOT_IMPLEMENTED()                                              \
+  setError(u"Instruction \"%1\" not implemented"_s.arg(QString::fromUtf8(__func__))); \
+  return;
 
 #define INSTR_PROLOGUE_NOT_IMPLEMENTED_IGNORE()                                                    \
     m_logger->log(u"Instruction \"%1\" not implemented"_s.arg(QString::fromUtf8(__func__)),        \
@@ -72,9 +73,12 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSTypePropagator::run(
 void QQmlJSTypePropagator::generate_Ret()
 {
     if (m_passManager != nullptr && m_function->isProperty) {
-        m_passManager->analyzeBinding(m_function->qmlScope,
-                                      m_typeResolver->containedType(m_state.accumulatorIn()),
-                                      getCurrentBindingSourceLocation());
+        m_passManager->d_func()->analyzeBinding(
+                QQmlJSScope::createQQmlSAElement(m_function->qmlScope),
+                QQmlJSScope::createQQmlSAElement(
+                        m_typeResolver->containedType(m_state.accumulatorIn())),
+                QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
+                        getCurrentBindingSourceLocation()));
     }
 
     if (m_function->isSignalHandler) {
@@ -500,15 +504,17 @@ bool QQmlJSTypePropagator::isCallingProperty(QQmlJSScope::ConstPtr scope, const 
     if (!methods.isEmpty()) {
         errorType = u"shadowed by a property."_s;
         switch (methods.first().methodType()) {
-        case QQmlJSMetaMethod::Signal:
+        case QQmlJSMetaMethodType::Signal:
             propertyType = u"Signal"_s;
             break;
-        case QQmlJSMetaMethod::Slot:
+        case QQmlJSMetaMethodType::Slot:
             propertyType = u"Slot"_s;
             break;
-        case QQmlJSMetaMethod::Method:
+        case QQmlJSMetaMethodType::Method:
             propertyType = u"Method"_s;
             break;
+        default:
+            Q_UNREACHABLE();
         }
     } else if (m_typeResolver->equals(property.type(), m_typeResolver->varType())) {
         errorType =
@@ -569,8 +575,11 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
     }
 
     if (m_passManager != nullptr) {
-        m_passManager->analyzeRead(m_function->qmlScope, name, m_function->qmlScope,
-                                   getCurrentSourceLocation());
+        m_passManager->d_func()->analyzeRead(
+                QQmlJSScope::createQQmlSAElement(m_function->qmlScope), name,
+                QQmlJSScope::createQQmlSAElement(m_function->qmlScope),
+                QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
+                        getCurrentBindingSourceLocation()));
     }
 
     if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ScopeAttached)
@@ -608,9 +617,12 @@ void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
     }
 
     if (m_passManager != nullptr) {
-        m_passManager->analyzeWrite(m_function->qmlScope, name,
-                                    m_typeResolver->containedType(in),
-                                    m_function->qmlScope, getCurrentSourceLocation());
+        m_passManager->d_func()->analyzeWrite(
+                QQmlJSScope::createQQmlSAElement(m_function->qmlScope), name,
+                QQmlJSScope::createQQmlSAElement(m_typeResolver->containedType(in)),
+                QQmlJSScope::createQQmlSAElement(m_function->qmlScope),
+                QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
+                        getCurrentBindingSourceLocation()));
     }
 
     m_state.setHasSideEffects(true);
@@ -825,9 +837,14 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
         const bool isAttached =
                 m_state.accumulatorIn().variant() == QQmlJSRegisterContent::ObjectAttached;
 
-        m_passManager->analyzeRead(
-                m_typeResolver->containedType(m_state.accumulatorIn()), propertyName,
-                isAttached ? m_attachedContext : m_function->qmlScope, getCurrentSourceLocation());
+        m_passManager->d_func()->analyzeRead(
+                QQmlJSScope::createQQmlSAElement(
+                        m_typeResolver->containedType(m_state.accumulatorIn())),
+                propertyName,
+                QQmlJSScope::createQQmlSAElement(isAttached ? m_attachedContext
+                                                            : m_function->qmlScope),
+                QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
+                        getCurrentBindingSourceLocation()));
     }
 
     if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ObjectAttached)
@@ -902,10 +919,15 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
     if (m_passManager != nullptr) {
         const bool isAttached = callBase.variant() == QQmlJSRegisterContent::ObjectAttached;
 
-        m_passManager->analyzeWrite(m_typeResolver->containedType(callBase), propertyName,
-                                    m_typeResolver->containedType(m_state.accumulatorIn()),
-                                    isAttached ? m_attachedContext : m_function->qmlScope,
-                                    getCurrentSourceLocation());
+        m_passManager->d_func()->analyzeWrite(
+                QQmlJSScope::createQQmlSAElement(m_typeResolver->containedType(callBase)),
+                propertyName,
+                QQmlJSScope::createQQmlSAElement(
+                        m_typeResolver->containedType(m_state.accumulatorIn())),
+                QQmlJSScope::createQQmlSAElement(isAttached ? m_attachedContext
+                                                            : m_function->qmlScope),
+                QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
+                        getCurrentBindingSourceLocation()));
     }
 
     m_state.setHasSideEffects(true);
@@ -1068,9 +1090,11 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
 
     if (m_passManager != nullptr) {
         // TODO: Should there be an analyzeCall() in the future? (w. corresponding onCall in Pass)
-        m_passManager->analyzeRead(
-                    baseType,
-                    propertyName, m_function->qmlScope, getCurrentSourceLocation());
+        m_passManager->d_func()->analyzeRead(
+                QQmlJSScope::createQQmlSAElement(baseType), propertyName,
+                QQmlJSScope::createQQmlSAElement(m_function->qmlScope),
+                QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
+                        getCurrentBindingSourceLocation()));
     }
 
     addReadRegister(base, callBase);
@@ -1977,7 +2001,7 @@ void QQmlJSTypePropagator::recordEqualsType(int lhs)
 
     const auto isIntCompatible = [this](const QQmlJSRegisterContent &content) {
         auto contained = m_typeResolver->containedType(content);
-        if (contained->scopeType() == QQmlJSScope::EnumScope)
+        if (contained->scopeType() == QQmlSA::ScopeType::EnumScope)
             contained = contained->baseType();
         return m_typeResolver->isIntegral(contained)
                 && !m_typeResolver->equals(contained, m_typeResolver->uint32Type());

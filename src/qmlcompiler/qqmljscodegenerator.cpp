@@ -2350,7 +2350,7 @@ QString QQmlJSCodeGenerator::contentPointer(const QQmlJSRegisterContent &content
         return u'&' + var;
 
     if (m_typeResolver->isNumeric(content.storedType())
-             && m_typeResolver->containedType(content)->scopeType() == QQmlJSScope::EnumScope) {
+        && m_typeResolver->containedType(content)->scopeType() == QQmlSA::ScopeType::EnumScope) {
         return u'&' + var;
     }
 
@@ -2377,7 +2377,7 @@ QString QQmlJSCodeGenerator::contentType(const QQmlJSRegisterContent &content, c
     if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
         return metaTypeFromName(contained);
 
-    if (m_typeResolver->isNumeric(stored) && contained->scopeType() == QQmlJSScope::EnumScope)
+    if (m_typeResolver->isNumeric(stored) && contained->scopeType() == QQmlSA::ScopeType::EnumScope)
         return metaTypeFromType(contained->baseType());
 
     if (stored->isListProperty() && m_typeResolver->containedType(content)->isListProperty())
@@ -3217,7 +3217,7 @@ QString QQmlJSCodeGenerator::convertStored(
     const auto isBoolOrNumber = [&](const QQmlJSScope::ConstPtr &type) {
         return m_typeResolver->isNumeric(m_typeResolver->globalType(type))
                 || m_typeResolver->equals(type, m_typeResolver->boolType())
-                || type->scopeType() ==  QQmlJSScope::EnumScope;
+                || type->scopeType() == QQmlSA::ScopeType::EnumScope;
     };
 
     if (m_typeResolver->equals(from, m_typeResolver->realType())

@@ -31,7 +31,7 @@ using namespace Qt::StringLiterals;
 
 void setupLogger(QQmlJSLogger &logger) // prepare logger to work with compiler
 {
-    for (const QQmlJSLogger::Category &category : logger.categories()) {
+    for (const QQmlJS::LoggerCategory &category : logger.categories()) {
         if (category == qmlUnusedImports)
             continue;
         logger.setCategoryLevel(category.id(), QtCriticalMsg);

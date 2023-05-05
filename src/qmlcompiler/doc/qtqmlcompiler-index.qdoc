@@ -1,0 +1,47 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtqmlcompiler-index.html
+    \title Qt QML Compiler
+    \brief Provides tools for static analysis of QML code.
+
+    The Qt QML Compiler module offers the QQmlSA framework which provides tools
+    for static analysis of QML code. These tools can help ensure syntactic
+    validity and warn about QML anti-patterns.
+
+    Adding static analysis to a QML program is done by writing plugins. They
+    will run a collection of analysis passes over the elements and properties
+    of the QML code. The passes can be registered with a PassManager which
+    holds the passes and can be called to analyze an element and its children.
+
+    A pass is a check for a certain rule or condition evaluated on elements or
+    properties. If the condition is met, the pass can warn the user of an
+    indentified issue in the code and maybe even suggest a fix. It is called a
+    pass because the analysis performed on elements and properties happens by
+    running a collection of passes on them in succesion. Each pass should be
+    responsible for identifying one specific issue only. Combining a set of
+    passes can perform more complex analysis and, together, form a plugin.
+
+    Element passes are defined by two main components, namely \c shouldRun()
+    and \c run(). When performing the analysis, the pass manager will execute
+    the pass over every element it encounters while traversing the children of
+    the root element. For each element, if \c shouldRun() evaluated on that
+    element returns \c true then \c run() is executed on it.
+
+    Passes on properties trigger on three different events, namely when the
+    property is bound, when it is read, and when it is written to. These can be
+    implemented by overriding the \c onBinding(), \c onRead() and \c onWrite()
+    functions respectively.
+
+    As the code grows, so does the number of elements and properties.
+    Performing the static analysis passes on all of them can become expensive.
+    That's why it is good to be granular when deciding which elements and
+    properties to analyze. For elements, the \c shouldRun() is intended to be a
+    cheap check to determine if \c run(), which performs the real computation,
+    should be run. For properties, the selection is done when registering the
+    passes with the manager. The \c registerPropertyPass() function takes the
+    \c moduleName, \c typeName and \c propertyName strings as arguments. These
+    are used to filter down the set of properties affected by the registered
+    pass.
+ */

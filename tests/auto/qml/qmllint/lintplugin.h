@@ -6,7 +6,7 @@
 
 #include <QtPlugin>
 #include <QtCore/qobject.h>
-#include <QtQmlCompiler/private/qqmlsa_p.h>
+#include <QtQmlCompiler/qqmlsa.h>
 
 class LintPlugin : public QObject, public QQmlSA::LintPlugin
 {

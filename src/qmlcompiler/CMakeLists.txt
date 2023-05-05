@@ -24,6 +24,7 @@ qt_internal_add_module(QmlCompilerPrivate
         qqmljsliteralbindingcheck.cpp qqmljsliteralbindingcheck_p.h
         qqmljsloadergenerator.cpp qqmljsloadergenerator_p.h
         qqmljslogger_p.h qqmljslogger.cpp
+        qqmljsloggingutils.h qqmljsloggingutils.cpp qqmljsloggingutils_p.h
         qqmljsmetatypes_p.h qqmljsmetatypes.cpp
         qqmljsregistercontent.cpp qqmljsregistercontent_p.h
         qqmljsresourcefilemapper.cpp qqmljsresourcefilemapper_p.h
@@ -39,7 +40,9 @@ qt_internal_add_module(QmlCompilerPrivate
         qqmljsutils_p.h qqmljsutils.cpp
         qqmljslinter_p.h qqmljslinter.cpp
         qqmljslintercodegen_p.h qqmljslintercodegen.cpp
-        qqmlsa_p.h qqmlsa.cpp
+        qqmlsa_p.h qqmlsa.h qqmlsa.cpp
+        qqmlsaconstants.h
+        qqmlsasourcelocation.h qqmlsasourcelocation.cpp qqmlsasourcelocation_p.h
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
@@ -53,4 +56,8 @@ qt_internal_add_resource(QmlCompilerPrivate "builtins"
     FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/../imports/builtins/builtins.qmltypes"
         "${CMAKE_CURRENT_SOURCE_DIR}/../imports/builtins/jsroot.qmltypes"
+)
+
+qt_internal_add_docs(QmlCompilerPrivate
+    doc/qtqmlcompiler.qdocconf
 )

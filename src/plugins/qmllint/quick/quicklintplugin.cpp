@@ -3,21 +3,18 @@
 
 #include "quicklintplugin.h"
 
-#include <QtQmlCompiler/private/qqmljslogger_p.h>
-#include <QtQmlCompiler/private/qqmljsutils_p.h>
-
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-static constexpr LoggerWarningId quickLayoutPositioning { "Quick.layout-positioning" };
-static constexpr LoggerWarningId quickAttachedPropertyType { "Quick.attached-property-type" };
-static constexpr LoggerWarningId quickControlsNativeCustomize { "Quick.controls-native-customize" };
-static constexpr LoggerWarningId quickAnchorCombinations { "Quick.anchor-combinations" };
-static constexpr LoggerWarningId quickUnexpectedVarType { "Quick.unexpected-var-type" };
-static constexpr LoggerWarningId quickPropertyChangesParsed { "Quick.property-changes-parsed" };
-static constexpr LoggerWarningId quickControlsAttachedPropertyReuse { "Quick.controls-attached-property-reuse" };
-static constexpr LoggerWarningId quickAttachedPropertyReuse { "Quick.attached-property-reuse" };
+static constexpr QQmlJS::LoggerWarningId quickLayoutPositioning { "Quick.layout-positioning" };
+static constexpr QQmlJS::LoggerWarningId quickAttachedPropertyType { "Quick.attached-property-type" };
+static constexpr QQmlJS::LoggerWarningId quickControlsNativeCustomize { "Quick.controls-native-customize" };
+static constexpr QQmlJS::LoggerWarningId quickAnchorCombinations { "Quick.anchor-combinations" };
+static constexpr QQmlJS::LoggerWarningId quickUnexpectedVarType { "Quick.unexpected-var-type" };
+static constexpr QQmlJS::LoggerWarningId quickPropertyChangesParsed { "Quick.property-changes-parsed" };
+static constexpr QQmlJS::LoggerWarningId quickControlsAttachedPropertyReuse { "Quick.controls-attached-property-reuse" };
+static constexpr QQmlJS::LoggerWarningId quickAttachedPropertyReuse { "Quick.attached-property-reuse" };
 
 ForbiddenChildrenPropertyValidatorPass::ForbiddenChildrenPropertyValidatorPass(
         QQmlSA::PassManager *manager)
@@ -37,11 +34,11 @@ void ForbiddenChildrenPropertyValidatorPass::addWarning(QAnyStringView moduleNam
 
 bool ForbiddenChildrenPropertyValidatorPass::shouldRun(const QQmlSA::Element &element)
 {
-    if (!element->parentScope())
+    if (!element.parentScope())
         return false;
 
     for (const auto pair : m_types.asKeyValueRange()) {
-        if (element->parentScope()->inherits(pair.first))
+        if (element.parentScope().inherits(pair.first))
             return true;
     }
 
@@ -52,16 +49,16 @@ void ForbiddenChildrenPropertyValidatorPass::run(const QQmlSA::Element &element)
 {
     for (const auto elementPair : m_types.asKeyValueRange()) {
         const QQmlSA::Element &type = elementPair.first;
-        if (!element->parentScope()->inherits(type))
+        if (!element.parentScope().inherits(type))
             continue;
 
         for (const auto &warning : elementPair.second) {
-            if (!element->hasOwnPropertyBindings(warning.propertyName))
+            if (!element.hasOwnPropertyBindings(warning.propertyName))
                 continue;
 
-            auto bindings = element->ownPropertyBindings(warning.propertyName);
-
-            emitWarning(warning.message, quickLayoutPositioning, bindings.first->sourceLocation());
+            const auto bindings = element.ownPropertyBindings(warning.propertyName);
+            const auto &firstBinding = bindings.constBegin().value();
+            emitWarning(warning.message, quickLayoutPositioning, firstBinding.sourceLocation());
         }
         break;
     }
@@ -80,7 +77,7 @@ QString AttachedPropertyTypeValidatorPass::addWarning(TypeDescription attachType
 
     const QQmlSA::Element baseType = resolveType(attachType.module, attachType.name);
 
-    QString typeName = baseType->attachedTypeName();
+    QString typeName = baseType.attachedTypeName();
 
     for (const TypeDescription &desc : allowedTypes) {
         const QQmlSA::Element type = resolveType(desc.module, desc.name);
@@ -97,28 +94,28 @@ QString AttachedPropertyTypeValidatorPass::addWarning(TypeDescription attachType
 
 void AttachedPropertyTypeValidatorPass::checkWarnings(const QQmlSA::Element &element,
                                                       const QQmlSA::Element &scopeUsedIn,
-                                                      const QQmlJS::SourceLocation &location)
+                                                      const QQmlSA::SourceLocation &location)
 {
-    auto warning = m_attachedTypes.constFind(element->internalName());
+    auto warning = m_attachedTypes.constFind(element.internalName());
     if (warning == m_attachedTypes.cend())
         return;
     for (const QQmlSA::Element &type : warning->allowedTypes) {
-        if (scopeUsedIn->inherits(type))
+        if (scopeUsedIn.inherits(type))
             return;
     }
 
     if (warning->allowInDelegate) {
-        if (scopeUsedIn->isPropertyRequired(u"index"_s)
-            || scopeUsedIn->isPropertyRequired(u"model"_s))
+        if (scopeUsedIn.isPropertyRequired(u"index"_s)
+            || scopeUsedIn.isPropertyRequired(u"model"_s))
             return;
 
         // If the scope is at the root level, we cannot know whether it will be used
         // as a delegate or not.
-        if (!scopeUsedIn->parentScope() || scopeUsedIn->parentScope()->internalName() == u"global"_s)
-           return;
+        if (!scopeUsedIn.parentScope() || scopeUsedIn.parentScope().internalName() == u"global"_s)
+            return;
 
-        for (const QQmlJSMetaPropertyBinding &binding :
-             scopeUsedIn->parentScope()->propertyBindings(u"delegate"_s)) {
+        for (const QQmlSA::Binding &binding :
+             scopeUsedIn.parentScope().propertyBindings(u"delegate"_s)) {
             if (!binding.hasObject())
                 continue;
             if (binding.objectType() == scopeUsedIn)
@@ -131,7 +128,7 @@ void AttachedPropertyTypeValidatorPass::checkWarnings(const QQmlSA::Element &ele
 
 void AttachedPropertyTypeValidatorPass::onBinding(const QQmlSA::Element &element,
                                                   const QString &propertyName,
-                                                  const QQmlJSMetaPropertyBinding &binding,
+                                                  const QQmlSA::Binding &binding,
                                                   const QQmlSA::Element &bindingScope,
                                                   const QQmlSA::Element &value)
 {
@@ -140,17 +137,17 @@ void AttachedPropertyTypeValidatorPass::onBinding(const QQmlSA::Element &element
     Q_UNUSED(bindingScope)
     Q_UNUSED(value)
 
-    checkWarnings(bindingScope->baseType(), element, binding.sourceLocation());
+    checkWarnings(bindingScope.baseType(), element, binding.sourceLocation());
 }
 
 void AttachedPropertyTypeValidatorPass::onRead(const QQmlSA::Element &element,
                                                const QString &propertyName,
                                                const QQmlSA::Element &readScope,
-                                               QQmlJS::SourceLocation location)
+                                               QQmlSA::SourceLocation location)
 {
     // If the attachment does not have such a property or method then
     // it's either a more general error or an enum. Enums are fine.
-    if (element->hasProperty(propertyName) || element->hasMethod(propertyName))
+    if (element.hasProperty(propertyName) || element.hasMethod(propertyName))
         checkWarnings(element, readScope, location);
 }
 
@@ -158,7 +155,7 @@ void AttachedPropertyTypeValidatorPass::onWrite(const QQmlSA::Element &element,
                                                 const QString &propertyName,
                                                 const QQmlSA::Element &value,
                                                 const QQmlSA::Element &writeScope,
-                                                QQmlJS::SourceLocation location)
+                                                QQmlSA::SourceLocation location)
 {
     Q_UNUSED(propertyName)
     Q_UNUSED(value)
@@ -209,7 +206,7 @@ ControlsNativeValidatorPass::ControlsNativeValidatorPass(QQmlSA::PassManager *ma
             if (type.isNull())
                 continue;
 
-            element.inheritsControl = !element.isControl && type->inherits(control);
+            element.inheritsControl = !element.isControl && type.inherits(control);
             element.element = type;
         }
 
@@ -225,7 +222,7 @@ bool ControlsNativeValidatorPass::shouldRun(const QQmlSA::Element &element)
         // If our element inherits control, we don't have to individually check for them here.
         if (controlElement.inheritsControl)
             continue;
-        if (element->inherits(controlElement.element))
+        if (element.inherits(controlElement.element))
             return true;
     }
     return false;
@@ -234,16 +231,16 @@ bool ControlsNativeValidatorPass::shouldRun(const QQmlSA::Element &element)
 void ControlsNativeValidatorPass::run(const QQmlSA::Element &element)
 {
     for (const ControlElement &controlElement : m_elements) {
-        if (element->inherits(controlElement.element)) {
+        if (element.inherits(controlElement.element)) {
             for (const QString &propertyName : controlElement.restrictedProperties) {
-                if (element->hasOwnPropertyBindings(propertyName)) {
+                if (element.hasOwnPropertyBindings(propertyName)) {
                     emitWarning(QStringLiteral("Not allowed to override \"%1\" because native "
                                                "styles cannot be customized: See "
                                                "https://doc-snapshots.qt.io/qt6-dev/"
                                                "qtquickcontrols-customize.html#customization-"
                                                "reference for more information.")
                                         .arg(propertyName),
-                                quickControlsNativeCustomize, element->sourceLocation());
+                                quickControlsNativeCustomize, element.sourceLocation());
                 }
             }
             // Since all the different types we have rules for don't inherit from each other (except
@@ -263,8 +260,8 @@ AnchorsValidatorPass::AnchorsValidatorPass(QQmlSA::PassManager *manager)
 
 bool AnchorsValidatorPass::shouldRun(const QQmlSA::Element &element)
 {
-    return !m_item.isNull() && element->inherits(m_item)
-            && element->hasOwnPropertyBindings(u"anchors"_s);
+    return !m_item.isNull() && element.inherits(m_item)
+            && element.hasOwnPropertyBindings(u"anchors"_s);
 }
 
 void AnchorsValidatorPass::run(const QQmlSA::Element &element)
@@ -276,21 +273,22 @@ void AnchorsValidatorPass::run(const QQmlSA::Element &element)
                                      u"top"_s,     u"bottom"_s, u"verticalCenter"_s,
                                      u"baseline"_s };
 
-    QList<QQmlJSMetaPropertyBinding> anchorBindings = element->propertyBindings(u"anchors"_s);
+    QList<QQmlSA::Binding> anchorBindings = element.propertyBindings(u"anchors"_s);
 
     for (qsizetype i = anchorBindings.size() - 1; i >= 0; i--) {
         auto groupType = anchorBindings[i].groupType();
-        if (groupType == nullptr)
+        if (groupType.isNull())
             continue;
 
         for (const QString &name : properties) {
-            auto pair = groupType->ownPropertyBindings(name);
-            if (pair.first == pair.second)
+
+            const auto &propertyBindings = groupType.ownPropertyBindings(name);
+            if (propertyBindings.begin() == propertyBindings.end())
                 continue;
+
             bool isUndefined = false;
-            for (auto it = pair.first; it != pair.second; it++) {
-                if (it->bindingType() == QQmlJSMetaPropertyBinding::Script
-                    && it->scriptValueType() == QQmlJSMetaPropertyBinding::ScriptValue_Undefined) {
+            for (const auto &propertyBinding : propertyBindings) {
+                if (propertyBinding.hasUndefinedScriptValue()) {
                     isUndefined = true;
                     break;
                 }
@@ -303,14 +301,15 @@ void AnchorsValidatorPass::run(const QQmlSA::Element &element)
         }
     }
 
-    auto ownSourceLocation = [&](QStringList properties) {
-        QQmlJS::SourceLocation warnLoc;
+    auto ownSourceLocation = [&](QStringList properties) -> QQmlSA::SourceLocation {
+        QQmlSA::SourceLocation warnLoc;
+
         for (const QString &name : properties) {
             if (bindings[name] & Own) {
-                QQmlSA::Element groupType = anchorBindings[0].groupType();
-                auto bindingRange = groupType->ownPropertyBindings(name);
-                Q_ASSERT(bindingRange.first != bindingRange.second);
-                warnLoc = bindingRange.first->sourceLocation();
+                QQmlSA::Element groupType = QQmlSA::Element{ anchorBindings[0].groupType() };
+                auto bindings = groupType.ownPropertyBindings(name);
+                Q_ASSERT(bindings.begin() != bindings.end());
+                warnLoc = bindings.begin().value().sourceLocation();
                 break;
             }
         }
@@ -318,7 +317,7 @@ void AnchorsValidatorPass::run(const QQmlSA::Element &element)
     };
 
     if ((bindings[u"left"_s] & bindings[u"right"_s] & bindings[u"horizontalCenter"_s]) & Exists) {
-        QQmlJS::SourceLocation warnLoc =
+        QQmlSA::SourceLocation warnLoc =
                 ownSourceLocation({ u"left"_s, u"right"_s, u"horizontalCenter"_s });
 
         if (warnLoc.isValid()) {
@@ -329,7 +328,7 @@ void AnchorsValidatorPass::run(const QQmlSA::Element &element)
     }
 
     if ((bindings[u"top"_s] & bindings[u"bottom"_s] & bindings[u"verticalCenter"_s]) & Exists) {
-        QQmlJS::SourceLocation warnLoc =
+        QQmlSA::SourceLocation warnLoc =
                 ownSourceLocation({ u"top"_s, u"bottom"_s, u"verticalCenter"_s });
         if (warnLoc.isValid()) {
             emitWarning("Cannot specify top, bottom, and verticalCenter anchors at the same time.",
@@ -339,7 +338,7 @@ void AnchorsValidatorPass::run(const QQmlSA::Element &element)
 
     if ((bindings[u"baseline"_s] & (bindings[u"bottom"_s] | bindings[u"verticalCenter"_s]))
         & Exists) {
-        QQmlJS::SourceLocation warnLoc =
+        QQmlSA::SourceLocation warnLoc =
                 ownSourceLocation({ u"baseline"_s, u"bottom"_s, u"verticalCenter"_s });
         if (warnLoc.isValid()) {
             emitWarning("Baseline anchor cannot be used in conjunction with top, bottom, or "
@@ -357,31 +356,30 @@ ControlsSwipeDelegateValidatorPass::ControlsSwipeDelegateValidatorPass(QQmlSA::P
 
 bool ControlsSwipeDelegateValidatorPass::shouldRun(const QQmlSA::Element &element)
 {
-    return !m_swipeDelegate.isNull() && element->inherits(m_swipeDelegate);
+    return !m_swipeDelegate.isNull() && element.inherits(m_swipeDelegate);
 }
 
 void ControlsSwipeDelegateValidatorPass::run(const QQmlSA::Element &element)
 {
     for (const auto &property : { u"background"_s, u"contentItem"_s }) {
-        auto bindings = element->ownPropertyBindings(property);
-        for (auto it = bindings.first; it != bindings.second; it++) {
-            if (!it->hasObject())
+        for (const auto &binding : element.ownPropertyBindings(property)) {
+            if (!binding.hasObject())
                 continue;
-            const QQmlSA::Element element = it->objectType();
-            const auto bindings = element->propertyBindings(u"anchors"_s);
+            const QQmlSA::Element element = QQmlSA::Element{ binding.objectType() };
+            const auto &bindings = element.propertyBindings(u"anchors"_s);
             if (bindings.isEmpty())
                 continue;
 
-            if (bindings.first().bindingType() != QQmlJSMetaPropertyBinding::GroupProperty)
+            if (bindings.first().bindingType() != QQmlSA::BindingType::GroupProperty)
                 continue;
 
             auto anchors = bindings.first().groupType();
             for (const auto &disallowed : { u"fill"_s, u"centerIn"_s, u"left"_s, u"right"_s }) {
-                if (anchors->hasPropertyBindings(disallowed)) {
-                    QQmlJS::SourceLocation location;
-                    auto ownBindings = anchors->ownPropertyBindings(disallowed);
-                    if (ownBindings.first != ownBindings.second) {
-                        location = ownBindings.first->sourceLocation();
+                if (anchors.hasPropertyBindings(disallowed)) {
+                    QQmlSA::SourceLocation location;
+                    const auto &ownBindings = anchors.ownPropertyBindings(disallowed);
+                    if (ownBindings.begin() != ownBindings.end()) {
+                        location = ownBindings.begin().value().sourceLocation();
                     }
 
                     emitWarning(
@@ -395,30 +393,31 @@ void ControlsSwipeDelegateValidatorPass::run(const QQmlSA::Element &element)
         }
     }
 
-    auto swipe = element->ownPropertyBindings(u"swipe"_s);
-    if (swipe.first == swipe.second)
+    const auto &swipe = element.ownPropertyBindings(u"swipe"_s);
+    if (swipe.begin() == swipe.end())
         return;
 
-    if (swipe.first->bindingType() != QQmlJSMetaPropertyBinding::GroupProperty)
+    const auto &firstSwipe = swipe.begin().value();
+    if (firstSwipe.bindingType() != QQmlSA::BindingType::GroupProperty)
         return;
 
-    auto group = swipe.first->groupType();
+    auto group = firstSwipe.groupType();
 
-    const std::array ownDirBindings = { group->ownPropertyBindings(u"right"_s),
-                                        group->ownPropertyBindings(u"left"_s),
-                                        group->ownPropertyBindings(u"behind"_s) };
+    const std::array ownDirBindings = { group.ownPropertyBindings(u"right"_s),
+                                        group.ownPropertyBindings(u"left"_s),
+                                        group.ownPropertyBindings(u"behind"_s) };
 
     auto ownBindingIterator =
             std::find_if(ownDirBindings.begin(), ownDirBindings.end(),
-                         [](const auto &pair) { return pair.first != pair.second; });
+                         [](const auto &bindings) { return bindings.begin() != bindings.end(); });
 
     if (ownBindingIterator == ownDirBindings.end())
         return;
 
-    if (group->hasPropertyBindings(u"behind"_s)
-        && (group->hasPropertyBindings(u"right"_s) || group->hasPropertyBindings(u"left"_s))) {
+    if (group.hasPropertyBindings(u"behind"_s)
+        && (group.hasPropertyBindings(u"right"_s) || group.hasPropertyBindings(u"left"_s))) {
         emitWarning("SwipeDelegate: Cannot set both behind and left/right properties",
-                    quickAnchorCombinations, ownBindingIterator->first->sourceLocation());
+                    quickAnchorCombinations, ownBindingIterator->begin().value().sourceLocation());
     }
 }
 
@@ -427,7 +426,7 @@ VarBindingTypeValidatorPass::VarBindingTypeValidatorPass(
         const QMultiHash<QString, TypeDescription> &expectedPropertyTypes)
     : QQmlSA::PropertyPass(manager)
 {
-    QMultiHash<QString, QQmlJSScope::ConstPtr> propertyTypes;
+    QMultiHash<QString, QQmlSA::Element> propertyTypes;
 
     for (const auto pair : expectedPropertyTypes.asKeyValueRange()) {
         QQmlSA::Element propType;
@@ -437,9 +436,7 @@ VarBindingTypeValidatorPass::VarBindingTypeValidatorPass(
             if (propType.isNull())
                 continue;
         } else {
-            auto scope = QQmlJSScope::create();
-            scope->setInternalName(pair.second.name);
-            propType = scope;
+            propType = QQmlSA::Element{ pair.second.name };
         }
 
         propertyTypes.insert(pair.first, propType);
@@ -450,7 +447,7 @@ VarBindingTypeValidatorPass::VarBindingTypeValidatorPass(
 
 void VarBindingTypeValidatorPass::onBinding(const QQmlSA::Element &element,
                                             const QString &propertyName,
-                                            const QQmlJSMetaPropertyBinding &binding,
+                                            const QQmlSA::Binding &binding,
                                             const QQmlSA::Element &bindingScope,
                                             const QQmlSA::Element &value)
 {
@@ -467,14 +464,14 @@ void VarBindingTypeValidatorPass::onBinding(const QQmlSA::Element &element,
     if (!value.isNull()) {
         bindingType = value;
     } else {
-        if (QQmlJSMetaPropertyBinding::isLiteralBinding(binding.bindingType())) {
+        if (QQmlSA::Binding::isLiteralBinding(binding.bindingType())) {
             bindingType = resolveLiteralType(binding);
         } else {
             switch (binding.bindingType()) {
-            case QQmlJSMetaPropertyBinding::Object:
-                bindingType = binding.objectType();
+            case QQmlSA::BindingType::Object:
+                bindingType = QQmlSA::Element{ binding.objectType() };
                 break;
-            case QQmlJSMetaPropertyBinding::Script:
+            case QQmlSA::BindingType::Script:
                 break;
             default:
                 return;
@@ -483,11 +480,11 @@ void VarBindingTypeValidatorPass::onBinding(const QQmlSA::Element &element,
     }
 
     if (std::find_if(range.first, range.second,
-                     [&](const QQmlSA::Element &scope) { return bindingType->inherits(scope); })
+                     [&](const QQmlSA::Element &scope) { return bindingType.inherits(scope); })
         == range.second) {
 
-        const bool bindingTypeIsComposite = bindingType->isComposite();
-        if (bindingTypeIsComposite && !bindingType->baseType()) {
+        const bool bindingTypeIsComposite = bindingType.isComposite();
+        if (bindingTypeIsComposite && !bindingType.baseType()) {
             /* broken module or missing import, there is nothing we
                can really check here, as something is amiss. We
                simply skip this binding, and assume that whatever
@@ -496,14 +493,13 @@ void VarBindingTypeValidatorPass::onBinding(const QQmlSA::Element &element,
              */
             return;
         }
-        const QString bindingTypeName = QQmlJSScope::prettyName(
-                    bindingTypeIsComposite
-                    ? bindingType->baseType()->internalName()
-                    : bindingType->internalName());
+        const QString bindingTypeName = QQmlSA::Element::prettyName(
+                bindingTypeIsComposite ? bindingType.baseType().internalName()
+                                       : bindingType.internalName());
         QStringList expectedTypeNames;
 
         for (auto it = range.first; it != range.second; it++)
-            expectedTypeNames << QQmlJSScope::prettyName(it.value()->internalName());
+            expectedTypeNames << QQmlSA::Element::prettyName(it.value().internalName());
 
         emitWarning(u"Unexpected type for property \"%1\" expected %2 got %3"_s.arg(
                             propertyName, expectedTypeNames.join(u", "_s), bindingTypeName),
@@ -511,9 +507,9 @@ void VarBindingTypeValidatorPass::onBinding(const QQmlSA::Element &element,
     }
 }
 
-void AttachedPropertyReuse::onRead(
-        const QQmlSA::Element &element, const QString &propertyName,
-        const QQmlSA::Element &readScope, QQmlJS::SourceLocation location)
+void AttachedPropertyReuse::onRead(const QQmlSA::Element &element, const QString &propertyName,
+                                   const QQmlSA::Element &readScope,
+                                   QQmlSA::SourceLocation location)
 {
     const auto range = usedAttachedTypes.equal_range(readScope);
     const auto attachedTypeAndLocation = std::find_if(
@@ -521,16 +517,15 @@ void AttachedPropertyReuse::onRead(
         return elementAndLocation.element == element;
     });
     if (attachedTypeAndLocation != range.second) {
-        const QQmlJS::SourceLocation attachedLocation = attachedTypeAndLocation->location;
+        const QQmlSA::SourceLocation attachedLocation = attachedTypeAndLocation->location;
 
         // Ignore enum accesses, as these will not cause the attached object to be created.
         // Also ignore anything we cannot determine.
-        if (!element->hasProperty(propertyName) && !element->hasMethod(propertyName))
+        if (!element.hasProperty(propertyName) && !element.hasMethod(propertyName))
             return;
 
-        for (QQmlJSScope::ConstPtr scope = readScope->parentScope(); !scope.isNull();
-             scope = scope->parentScope()) {
-
+        for (QQmlSA::Element scope = readScope.parentScope(); !scope.isNull();
+             scope = scope.parentScope()) {
             const auto range = usedAttachedTypes.equal_range(scope);
             bool found = false;
             for (auto it = range.first; it != range.second; ++it) {
@@ -543,41 +538,36 @@ void AttachedPropertyReuse::onRead(
                 continue;
 
             const QString id = resolveElementToId(scope, readScope);
-            const QQmlJS::SourceLocation idInsertLocation {
-                attachedLocation.offset, 0,
-                attachedLocation.startLine, attachedLocation.startColumn
-            };
-            QQmlJSFixSuggestion suggestion {
-                "Reference it by id instead:"_L1,
-                idInsertLocation,
-                id.isEmpty() ? "<id>."_L1 : (id + '.'_L1)
-            };
+            const QQmlSA::SourceLocation idInsertLocation{ attachedLocation.offset(), 0,
+                                                           attachedLocation.startLine(),
+                                                           attachedLocation.startColumn() };
+            QQmlSA::FixSuggestion suggestion{ "Reference it by id instead:"_L1, idInsertLocation,
+                                              id.isEmpty() ? "<id>."_L1 : (id + '.'_L1) };
 
             if (id.isEmpty())
                 suggestion.setHint("You first have to give the element an id"_L1);
             else
                 suggestion.setAutoApplicable();
 
-            emitWarning("Using attached type %1 already initialized in a parent scope."_L1
-                            .arg(element->internalName()),
+            emitWarning("Using attached type %1 already initialized in a parent scope."_L1.arg(
+                                element.internalName()),
                         category, attachedLocation, suggestion);
         }
 
         return;
     }
 
-
-    if (element->hasProperty(propertyName))
+    if (element.hasProperty(propertyName))
         return; // an actual property
 
     QQmlSA::Element type = resolveTypeInFileScope(propertyName);
-    if (!type || type->attachedTypeName().isEmpty())
+    if (!type || type.attachedTypeName().isEmpty())
         return;
 
-    const QQmlSA::Element attached = type->attachedType();
+    const QQmlSA::Element attached = type.attachedType();
     if (category == quickControlsAttachedPropertyReuse) {
-        for (QQmlSA::Element parent = attached; parent; parent = parent->baseType()) {
-            if (parent->internalName() == "QQuickAttachedPropertyPropagator"_L1) {
+        for (QQmlSA::Element parent = attached; parent; parent = parent.baseType()) {
+            if (parent.internalName() == "QQuickAttachedPropertyPropagator"_L1) {
                 usedAttachedTypes.insert(readScope, {attached, location});
                 break;
             }
@@ -588,10 +578,9 @@ void AttachedPropertyReuse::onRead(
     }
 }
 
-void AttachedPropertyReuse::onWrite(
-            const QQmlSA::Element &element, const QString &propertyName,
-            const QQmlSA::Element &value, const QQmlSA::Element &writeScope,
-            QQmlJS::SourceLocation location)
+void AttachedPropertyReuse::onWrite(const QQmlSA::Element &element, const QString &propertyName,
+                                    const QQmlSA::Element &value, const QQmlSA::Element &writeScope,
+                                    QQmlSA::SourceLocation location)
 {
     Q_UNUSED(value);
     onRead(element, propertyName, writeScope, location);
@@ -600,7 +589,7 @@ void AttachedPropertyReuse::onWrite(
 void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
                                         const QQmlSA::Element &rootElement)
 {
-    const LoggerWarningId attachedReuseCategory = [manager](){
+    const QQmlJS::LoggerWarningId attachedReuseCategory = [manager]() {
         if (manager->isCategoryEnabled(quickAttachedPropertyReuse))
             return quickAttachedPropertyReuse;
         if (manager->isCategoryEnabled(qmlAttachedPropertyReuse))
@@ -750,32 +739,35 @@ PropertyChangesValidatorPass::PropertyChangesValidatorPass(QQmlSA::PassManager *
 
 bool PropertyChangesValidatorPass::shouldRun(const QQmlSA::Element &element)
 {
-    return !m_propertyChanges.isNull() && element->inherits(m_propertyChanges);
+    return !m_propertyChanges.isNull() && element.inherits(m_propertyChanges);
 }
 
 void PropertyChangesValidatorPass::run(const QQmlSA::Element &element)
 {
-    const QMultiHash<QString, QQmlJSMetaPropertyBinding> bindings = element->ownPropertyBindings();
+    const QQmlSA::Binding::Bindings bindings = element.ownPropertyBindings();
 
-    const auto target = bindings.find(u"target"_s);
-    if (target == bindings.end())
+    const auto target =
+            std::find_if(bindings.constBegin(), bindings.constEnd(),
+                         [](const auto binding) { return binding.propertyName() == u"target"_s; });
+    if (target == bindings.constEnd())
         return;
 
     QString targetId = u"<id>"_s;
-    const QString targetBinding = sourceCode(target->sourceLocation());
+    const QString targetBinding = sourceCode(target.value().sourceLocation());
     const QQmlSA::Element targetElement = resolveIdToElement(targetBinding, element);
     if (!targetElement.isNull())
         targetId = targetBinding;
 
-    for (auto it = bindings.begin(), end = bindings.end(); it != end; ++it) {
-        const QString name = it->propertyName();
-        if (element->hasProperty(name))
+    for (auto it = bindings.constBegin(); it != bindings.constEnd(); ++it) {
+        const auto &propertyName = it.key();
+        const auto &propertyBinding = it.value();
+        if (element.hasProperty(propertyName))
             continue;
 
-        const QQmlJS::SourceLocation bindingLocation = it->sourceLocation();
-        if (!targetElement.isNull() && !targetElement->hasProperty(name)) {
+        const QQmlSA::SourceLocation bindingLocation = propertyBinding.sourceLocation();
+        if (!targetElement.isNull() && !targetElement.hasProperty(propertyName)) {
             emitWarning(
-                    "Unknown property \"%1\" in PropertyChanges."_L1.arg(name),
+                    "Unknown property \"%1\" in PropertyChanges."_L1.arg(propertyName),
                     quickPropertyChangesParsed, bindingLocation);
             continue;
         }
@@ -784,11 +776,10 @@ void PropertyChangesValidatorPass::run(const QQmlSA::Element &element)
         if (binding.length() > 16)
             binding = binding.left(13) + "..."_L1;
 
-        emitWarning(
-                "Property \"%1\" is custom-parsed in PropertyChanges. "
-                "You should phrase this binding as \"%2.%1: %3\""_L1
-                    .arg(name, targetId, binding),
-                quickPropertyChangesParsed, bindingLocation);
+        emitWarning("Property \"%1\" is custom-parsed in PropertyChanges. "
+                    "You should phrase this binding as \"%2.%1: %3\""_L1.arg(propertyName, targetId,
+                                                                             binding),
+                    quickPropertyChangesParsed, bindingLocation);
     }
 }
 

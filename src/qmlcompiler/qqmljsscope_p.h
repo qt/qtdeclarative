@@ -19,6 +19,8 @@
 #include "qqmljsmetatypes_p.h"
 #include "qdeferredpointer_p.h"
 #include "qqmljsannotation_p.h"
+#include "qqmlsaconstants.h"
+#include "qqmlsa_p.h"
 
 #include <QtQml/private/qqmljssourcelocation_p.h>
 
@@ -27,6 +29,7 @@
 #include <QtCore/qset.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qversionnumber.h>
+#include "qqmlsaconstants.h"
 
 #include <optional>
 
@@ -34,9 +37,69 @@ QT_BEGIN_NAMESPACE
 
 class QQmlJSImporter;
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSScope
+namespace QQmlJS {
+
+class ConstPtrWrapperIterator
 {
 public:
+    using Ptr = QDeferredSharedPointer<QQmlJSScope>;
+    using ConstPtr = QDeferredSharedPointer<const QQmlJSScope>;
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = ConstPtr;
+    using pointer = value_type *;
+    using reference = value_type &;
+
+    ConstPtrWrapperIterator(QList<Ptr>::const_iterator iterator) : m_iterator(iterator) { }
+
+    friend bool operator==(const ConstPtrWrapperIterator &a, const ConstPtrWrapperIterator &b)
+    {
+        return a.m_iterator == b.m_iterator;
+    }
+    friend bool operator!=(const ConstPtrWrapperIterator &a, const ConstPtrWrapperIterator &b)
+    {
+        return a.m_iterator != b.m_iterator;
+    }
+
+    reference operator*()
+    {
+        if (!m_pointer)
+            m_pointer = *m_iterator;
+        return m_pointer;
+    }
+    pointer operator->()
+    {
+        if (!m_pointer)
+            m_pointer = *m_iterator;
+        return &m_pointer;
+    }
+
+    ConstPtrWrapperIterator &operator++()
+    {
+        m_iterator++;
+        m_pointer = {};
+        return *this;
+    }
+    ConstPtrWrapperIterator operator++(int)
+    {
+        auto before = *this;
+        ++(*this);
+        return before;
+    }
+
+private:
+    QList<Ptr>::const_iterator m_iterator;
+    ConstPtr m_pointer;
+};
+
+} // namespace QQmlJS
+
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSScope
+{
+    friend QQmlSA::Element;
+
+public:
+    explicit QQmlJSScope(const QString &internalName);
     QQmlJSScope(QQmlJSScope &&) = default;
     QQmlJSScope &operator=(QQmlJSScope &&) = default;
 
@@ -45,6 +108,9 @@ public:
     using ConstPtr = QDeferredSharedPointer<const QQmlJSScope>;
     using WeakConstPtr = QDeferredWeakPointer<const QQmlJSScope>;
 
+    using AccessSemantics = QQmlSA::AccessSemantics;
+    using ScopeType = QQmlSA::ScopeType;
+
     using InlineComponentNameType = QString;
     using RootDocumentNameType = std::monostate; // an empty type that has std::hash
     /*!
@@ -52,23 +118,6 @@ public:
      */
     using InlineComponentOrDocumentRootName =
             std::variant<InlineComponentNameType, RootDocumentNameType>;
-
-    enum ScopeType
-    {
-        JSFunctionScope,
-        JSLexicalScope,
-        QMLScope,
-        GroupedPropertyScope,
-        AttachedPropertyScope,
-        EnumScope
-    };
-
-    enum class AccessSemantics {
-        Reference,
-        Value,
-        None,
-        Sequence
-    };
 
     enum Flag {
         Creatable = 0x1,
@@ -85,60 +134,6 @@ public:
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
-
-    class ConstPtrWrapperIterator
-    {
-    public:
-        using iterator_category = std::forward_iterator_tag;
-        using difference_type = std::ptrdiff_t;
-        using value_type = ConstPtr;
-        using pointer = value_type *;
-        using reference = value_type &;
-
-        ConstPtrWrapperIterator(QList<QQmlJSScope::Ptr>::const_iterator iterator)
-            : m_iterator(iterator)
-        {
-        }
-
-        friend bool operator==(const ConstPtrWrapperIterator &a, const ConstPtrWrapperIterator &b)
-        {
-            return a.m_iterator == b.m_iterator;
-        }
-        friend bool operator!=(const ConstPtrWrapperIterator &a, const ConstPtrWrapperIterator &b)
-        {
-            return a.m_iterator != b.m_iterator;
-        }
-
-        reference operator*()
-        {
-            if (!m_pointer)
-                m_pointer = *m_iterator;
-            return m_pointer;
-        }
-        pointer operator->()
-        {
-            if (!m_pointer)
-                m_pointer = *m_iterator;
-            return &m_pointer;
-        }
-
-        ConstPtrWrapperIterator &operator++()
-        {
-            m_iterator++;
-            m_pointer = {};
-            return *this;
-        }
-        ConstPtrWrapperIterator operator++(int)
-        {
-            auto before = *this;
-            ++(*this);
-            return before;
-        }
-
-    private:
-        QList<QQmlJSScope::Ptr>::const_iterator m_iterator;
-        QQmlJSScope::ConstPtr m_pointer;
-    };
 
     class Import
     {
@@ -292,6 +287,10 @@ public:
     };
 
     static QQmlJSScope::Ptr create() { return QSharedPointer<QQmlJSScope>(new QQmlJSScope); }
+    static QQmlJSScope::Ptr create(const QString &internalName)
+    {
+        return QSharedPointer<QQmlJSScope>(new QQmlJSScope(internalName));
+    }
     static QQmlJSScope::Ptr clone(const QQmlJSScope::ConstPtr &origin);
     static QQmlJSScope::ConstPtr findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope);
 
@@ -330,7 +329,7 @@ QT_WARNING_POP
     bool hasMethod(const QString &name) const;
     QHash<QString, QQmlJSMetaMethod> methods() const;
     QList<QQmlJSMetaMethod> methods(const QString &name) const;
-    QList<QQmlJSMetaMethod> methods(const QString &name, QQmlJSMetaMethod::Type type) const;
+    QList<QQmlJSMetaMethod> methods(const QString &name, QQmlJSMetaMethodType type) const;
 
     void addOwnEnumeration(const QQmlJSMetaEnum &enumeration) { m_enumerations.insert(enumeration.name(), enumeration); }
     QHash<QString, QQmlJSMetaEnum> ownEnumerations() const { return m_enumerations; }
@@ -574,8 +573,8 @@ QT_WARNING_POP
     std::optional<JavaScriptIdentifier> findJSIdentifier(const QString &id) const;
     std::optional<JavaScriptIdentifier> JSIdentifier(const QString &id) const;
 
-    ConstPtrWrapperIterator childScopesBegin() const { return m_childScopes.constBegin(); }
-    ConstPtrWrapperIterator childScopesEnd() const { return m_childScopes.constEnd(); }
+    QQmlJS::ConstPtrWrapperIterator childScopesBegin() const { return m_childScopes.constBegin(); }
+    QQmlJS::ConstPtrWrapperIterator childScopesEnd() const { return m_childScopes.constEnd(); }
 
     void setInlineComponentName(const QString &inlineComponentName)
     {
@@ -712,6 +711,11 @@ QT_WARNING_POP
                                                          const ContextualTypes &contextualTypes,
                                                          QSet<QString> *usedTypes = nullptr);
 
+    static QQmlSA::Element createQQmlSAElement(const ConstPtr &);
+    static QQmlSA::Element createQQmlSAElement(ConstPtr &&);
+    static const QQmlJSScope::ConstPtr &scope(const QQmlSA::Element &);
+    static constexpr qsizetype sizeofQQmlSAElement() { return QQmlSA::Element::sizeofElement; }
+
 private:
     QQmlJSScope() = default;
     QQmlJSScope(const QQmlJSScope &) = default;
@@ -753,7 +757,7 @@ private:
     // the only relation between two types where the revisions matter.
     ImportedScope<QQmlJSScope::WeakConstPtr> m_baseType;
 
-    ScopeType m_scopeType = QMLScope;
+    ScopeType m_scopeType = ScopeType::QMLScope;
     QStringList m_interfaceNames;
     QStringList m_ownDeferredNames;
     QStringList m_ownImmediateNames;

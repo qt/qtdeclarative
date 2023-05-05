@@ -141,7 +141,7 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
         const auto base = scope->baseType();
         if (!base)
             return false;
-        return base->isComposite() && base->scopeType() == QQmlJSScope::QMLScope;
+        return base->isComposite() && base->scopeType() == QQmlSA::ScopeType::QMLScope;
     }
 
     enum PropertyAccessor {

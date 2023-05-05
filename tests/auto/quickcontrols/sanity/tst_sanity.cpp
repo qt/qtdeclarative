@@ -48,7 +48,7 @@ private:
     QStringList m_importPaths;
 
     QQmlJSLinter m_linter;
-    QList<QQmlJSLogger::Category> m_categories;
+    QList<QQmlJS::LoggerCategory> m_categories;
 };
 
 tst_Sanity::tst_Sanity()
@@ -65,9 +65,11 @@ tst_Sanity::tst_Sanity()
 
     for (auto &category : m_categories) {
         if (category == qmlDeferredPropertyId || category == qmlAttachedPropertyReuse) {
-            category.setLevel(u"warning"_s);
+            category.setLevel(QtWarningMsg);
+            category.setIgnored(false);
         } else {
-            category.setLevel(u"disable"_s);
+            category.setLevel(QtCriticalMsg);
+            category.setIgnored(true);
         }
     }
 }

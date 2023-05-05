@@ -9,7 +9,8 @@
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qhash.h>
 
-#include <QtQmlCompiler/private/qqmlsa_p.h>
+#include <QtQmlCompiler/qqmlsa.h>
+#include "qqmlsaconstants.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -58,17 +59,17 @@ public:
                        bool allowInDelegate, QAnyStringView warning);
 
     void onBinding(const QQmlSA::Element &element, const QString &propertyName,
-                   const QQmlJSMetaPropertyBinding &binding, const QQmlSA::Element &bindingScope,
+                   const QQmlSA::Binding &binding, const QQmlSA::Element &bindingScope,
                    const QQmlSA::Element &value) override;
     void onRead(const QQmlSA::Element &element, const QString &propertyName,
-                const QQmlSA::Element &readScope, QQmlJS::SourceLocation location) override;
+                const QQmlSA::Element &readScope, QQmlSA::SourceLocation location) override;
     void onWrite(const QQmlSA::Element &element, const QString &propertyName,
                  const QQmlSA::Element &value, const QQmlSA::Element &writeScope,
-                 QQmlJS::SourceLocation location) override;
+                 QQmlSA::SourceLocation location) override;
 
 private:
     void checkWarnings(const QQmlSA::Element &element, const QQmlSA::Element &scopeUsedIn,
-                       const QQmlJS::SourceLocation &location);
+                       const QQmlSA::SourceLocation &location);
 
     struct Warning
     {
@@ -132,7 +133,7 @@ public:
                                 const QMultiHash<QString, TypeDescription> &expectedPropertyTypes);
 
     void onBinding(const QQmlSA::Element &element, const QString &propertyName,
-                   const QQmlJSMetaPropertyBinding &binding, const QQmlSA::Element &bindingScope,
+                   const QQmlSA::Binding &binding, const QQmlSA::Element &bindingScope,
                    const QQmlSA::Element &value) override;
 
 private:
@@ -159,24 +160,24 @@ public:
         RestrictToControls
     };
 
-    AttachedPropertyReuse(QQmlSA::PassManager *manager, LoggerWarningId category)
-        : QQmlSA::PropertyPass(manager)
-        , category(category)
+    AttachedPropertyReuse(QQmlSA::PassManager *manager, QQmlJS::LoggerWarningId category)
+        : QQmlSA::PropertyPass(manager), category(category)
     {}
 
     void onRead(const QQmlSA::Element &element, const QString &propertyName,
-                const QQmlSA::Element &readScope, QQmlJS::SourceLocation location) override;
+                const QQmlSA::Element &readScope, QQmlSA::SourceLocation location) override;
     void onWrite(const QQmlSA::Element &element, const QString &propertyName,
                  const QQmlSA::Element &value, const QQmlSA::Element &writeScope,
-                 QQmlJS::SourceLocation location) override;
+                 QQmlSA::SourceLocation location) override;
+
 private:
     struct ElementAndLocation {
         QQmlSA::Element element;
-        QQmlJS::SourceLocation location;
+        QQmlSA::SourceLocation location;
     };
 
     QMultiHash<QQmlSA::Element, ElementAndLocation> usedAttachedTypes;
-    LoggerWarningId category;
+    QQmlJS::LoggerWarningId category;
 };
 
 QT_END_NAMESPACE

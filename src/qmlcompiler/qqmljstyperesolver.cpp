@@ -812,7 +812,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
     if (type->isListProperty())
         return m_listPropertyType;
 
-    if (type->scopeType() == QQmlJSScope::EnumScope)
+    if (type->scopeType() == QQmlSA::ScopeType::EnumScope)
         return type->baseType();
 
     if (isPrimitive(type))
@@ -887,7 +887,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
         const QList<QQmlJSMetaPropertyBinding> defaultPropBindings =
                 parent->propertyBindings(defaultPropertyName);
         for (const QQmlJSMetaPropertyBinding &binding : defaultPropBindings) {
-            if (binding.bindingType() == QQmlJSMetaPropertyBinding::Object
+            if (binding.bindingType() == QQmlSA::BindingType::Object
                 && equals(binding.objectType(), child)) {
                 return true;
             }

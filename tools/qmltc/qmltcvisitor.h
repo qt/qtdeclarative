@@ -57,7 +57,7 @@ public:
 
     qsizetype creationIndex(const QQmlJSScope::ConstPtr &type) const
     {
-        Q_ASSERT(type->scopeType() == QQmlJSScope::QMLScope);
+        Q_ASSERT(type->scopeType() == QQmlSA::ScopeType::QMLScope);
         return m_creationIndices.value(type, -1);
     }
 
@@ -68,13 +68,13 @@ public:
 
     qsizetype qmlComponentIndex(const QQmlJSScope::ConstPtr &type) const
     {
-        Q_ASSERT(type->scopeType() == QQmlJSScope::QMLScope);
+        Q_ASSERT(type->scopeType() == QQmlSA::ScopeType::QMLScope);
         return m_syntheticTypeIndices.value(type, -1);
     }
 
     qsizetype qmlIrObjectIndex(const QQmlJSScope::ConstPtr &type) const
     {
-        Q_ASSERT(type->scopeType() == QQmlJSScope::QMLScope);
+        Q_ASSERT(type->scopeType() == QQmlSA::ScopeType::QMLScope);
         Q_ASSERT(m_qmlIrObjectIndices.contains(type));
         return m_qmlIrObjectIndices.value(type, -1);
     }

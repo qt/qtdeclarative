@@ -13,7 +13,10 @@ QT_BEGIN_NAMESPACE
     A binding is valid when it has both a target (m_propertyName is set)
     and some content set (m_bindingType != Invalid).
 */
-bool QQmlJSMetaPropertyBinding::isValid() const { return !m_propertyName.isEmpty() && bindingType() != Invalid; }
+bool QQmlJSMetaPropertyBinding::isValid() const
+{
+    return !m_propertyName.isEmpty() && bindingType() != QQmlSA::BindingType::Invalid;
+}
 
 QString QQmlJSMetaPropertyBinding::literalTypeName() const
 {
@@ -93,28 +96,30 @@ QSharedPointer<const QQmlJSScope> QQmlJSMetaPropertyBinding::literalType(const Q
 {
     Q_ASSERT(resolver);
     switch (bindingType()) {
-    case QQmlJSMetaPropertyBinding::BoolLiteral:
+    case BindingType::BoolLiteral:
         return resolver->boolType();
-    case QQmlJSMetaPropertyBinding::NumberLiteral:
+    case BindingType::NumberLiteral:
         return resolver->typeForName(QLatin1String("double"));
-    case QQmlJSMetaPropertyBinding::Translation: // translations are strings
-    case QQmlJSMetaPropertyBinding::TranslationById:
-    case QQmlJSMetaPropertyBinding::StringLiteral:
+    case BindingType::Translation: // translations are strings
+    case BindingType::TranslationById:
+    case BindingType::StringLiteral:
         return resolver->stringType();
-    case QQmlJSMetaPropertyBinding::RegExpLiteral:
+    case BindingType::RegExpLiteral:
         return resolver->typeForName(QLatin1String("regexp"));
-    case QQmlJSMetaPropertyBinding::Null:
+    case BindingType::Null:
         return resolver->nullType();
-    case QQmlJSMetaPropertyBinding::Invalid:
-    case QQmlJSMetaPropertyBinding::Script:
-    case QQmlJSMetaPropertyBinding::Object:
-    case QQmlJSMetaPropertyBinding::Interceptor:
-    case QQmlJSMetaPropertyBinding::ValueSource:
-    case QQmlJSMetaPropertyBinding::AttachedProperty:
-    case QQmlJSMetaPropertyBinding::GroupProperty:
+    case BindingType::Invalid:
+    case BindingType::Script:
+    case BindingType::Object:
+    case BindingType::Interceptor:
+    case BindingType::ValueSource:
+    case BindingType::AttachedProperty:
+    case BindingType::GroupProperty:
         return {};
     }
     Q_UNREACHABLE_RETURN({});
 }
+
+QQmlJSMetaPropertyBinding::QQmlJSMetaPropertyBinding() = default;
 
 QT_END_NAMESPACE

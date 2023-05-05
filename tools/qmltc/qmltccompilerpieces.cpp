@@ -15,8 +15,8 @@ static QString scopeName(const QQmlJSScope::ConstPtr &scope)
 {
     Q_ASSERT(scope->isFullyResolved());
     const auto scopeType = scope->scopeType();
-    if (scopeType == QQmlJSScope::GroupedPropertyScope
-        || scopeType == QQmlJSScope::AttachedPropertyScope) {
+    if (scopeType == QQmlSA::ScopeType::GroupedPropertyScope
+        || scopeType == QQmlSA::ScopeType::AttachedPropertyScope) {
         return scope->baseType()->internalName();
     }
     return scope->internalName();

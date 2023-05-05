@@ -75,7 +75,7 @@ struct QmltcMethodBase
 struct QmltcMethod : QmltcMethodBase
 {
     QString returnType; // C++ return type
-    QQmlJSMetaMethod::Type type = QQmlJSMetaMethod::Method; // Qt function type
+    QQmlJSMetaMethodType type = QQmlJSMetaMethodType::Method; // Qt function type
 
     // TODO: should be a better way to handle this
     bool userVisible = false; // tells if a function is prioritized during the output generation

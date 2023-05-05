@@ -6,6 +6,7 @@
 #include <QtQmlCompiler/private/qqmljsresourcefilemapper_p.h>
 #include <QtQmlCompiler/private/qqmljscompiler_p.h>
 #include <QtQmlCompiler/private/qqmljslinter_p.h>
+#include <QtQmlCompiler/private/qqmljsloggingutils_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qfile.h>
@@ -32,7 +33,7 @@ constexpr int JSON_LOGGING_FORMAT_REVISION = 3;
 int main(int argv, char *argc[])
 {
     QHashSeed::setDeterministicGlobalSeed();
-    QList<QQmlJSLogger::Category> categories;
+    QList<QQmlJS::LoggerCategory> categories;
 
     QCoreApplication app(argv, argc);
     QCoreApplication::setApplicationName("qmllint");
@@ -150,20 +151,36 @@ All warnings can be set to three levels:
             QLatin1String("directory"));
     parser.addOption(pluginPathsOption);
 
-    auto addCategory = [&](const QQmlJSLogger::Category &category) {
+    auto levelToString = [](const QQmlJS::LoggerCategory &category) -> QString {
+        Q_ASSERT(category.isIgnored() || category.level() != QtCriticalMsg);
+        if (category.isIgnored())
+            return QStringLiteral("disable");
+
+        switch (category.level()) {
+        case QtInfoMsg:
+            return QStringLiteral("info");
+        case QtWarningMsg:
+            return QStringLiteral("warning");
+        default:
+            Q_UNREACHABLE();
+            break;
+        }
+    };
+
+    auto addCategory = [&](const QQmlJS::LoggerCategory &category) {
         categories.push_back(category);
-        if (category.isDefault)
+        if (category.isDefault())
             return;
         QCommandLineOption option(
                 category.id().name().toString(),
-                category.description
-                        + QStringLiteral(" (default: %1)").arg(category.levelToString()),
-                QStringLiteral("level"), category.levelToString());
-        if (category.ignored)
+                category.description()
+                        + QStringLiteral(" (default: %1)").arg(levelToString(category)),
+                QStringLiteral("level"), levelToString(category));
+        if (category.isIgnored())
             option.setFlags(QCommandLineOption::HiddenFromHelp);
         parser.addOption(option);
-        settings.addOption(QStringLiteral("Warnings/") + category.settingsName,
-                           category.levelToString());
+        settings.addOption(QStringLiteral("Warnings/") + category.settingsName(),
+                           levelToString(category));
     };
 
     for (const auto &category : QQmlJSLogger::defaultCategories()) {
@@ -192,21 +209,30 @@ All warnings can be set to three levels:
 
     auto updateLogLevels = [&]() {
         for (auto &category : categories) {
-            if (category.isDefault)
+            if (category.isDefault())
                 continue;
 
             const QString &key = category.id().name().toString();
-            const QString &settingsName = QStringLiteral("Warnings/") + category.settingsName;
+            const QString &settingsName = QStringLiteral("Warnings/") + category.settingsName();
             if (parser.isSet(key) || settings.isSet(settingsName)) {
                 const QString value = parser.isSet(key) ? parser.value(key)
                                                         : settings.value(settingsName).toString();
 
                 // Do not try to set the levels if it's due to a default config option.
                 // This way we can tell which options have actually been overwritten by the user.
-                if (category.levelToString() == value && !parser.isSet(key))
+                if (levelToString(category) == value && !parser.isSet(key))
                     continue;
 
-                if (!category.setLevel(value)) {
+                if (value == "disable"_L1) {
+                    category.setLevel(QtCriticalMsg);
+                    category.setIgnored(true);
+                } else if (value == "info"_L1) {
+                    category.setLevel(QtInfoMsg);
+                    category.setIgnored(false);
+                } else if (value == "warning"_L1) {
+                    category.setLevel(QtWarningMsg);
+                    category.setIgnored(false);
+                } else {
                     qWarning() << "Invalid logging level" << value << "provided for"
                                << category.id().name().toString()
                                << "(allowed are: disable, info, warning)";
@@ -267,7 +293,7 @@ All warnings can be set to three levels:
     QQmlJSLinter linter(qmlImportPaths, pluginPaths, useAbsolutePath);
 
     for (const QQmlJSLinter::Plugin &plugin : linter.plugins()) {
-        for (const QQmlJSLogger::Category &category : plugin.categories())
+        for (const QQmlJS::LoggerCategory &category : plugin.categories())
             addCategory(category);
     }
 
