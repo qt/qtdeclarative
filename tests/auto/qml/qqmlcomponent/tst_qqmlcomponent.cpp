@@ -145,6 +145,7 @@ private slots:
     void loadFromModuleFailures();
     void loadFromModuleRequired();
     void loadFromQrc();
+    void removeBinding();
 
 private:
     QQmlEngine engine;
@@ -1437,6 +1438,16 @@ void tst_qqmlcomponent::loadFromQrc()
     QVERIFY(p);
     QVERIFY(p->compilationUnit);
     QVERIFY(p->compilationUnit->aotCompiledFunctions);
+}
+
+void tst_qqmlcomponent::removeBinding()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("removeBinding.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("result"), QStringLiteral("42"));
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
