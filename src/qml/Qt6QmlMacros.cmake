@@ -2062,14 +2062,16 @@ function(qt6_target_qml_sources target)
                 get_filename_component(file_out_dir ${file_out} DIRECTORY)
                 file(MAKE_DIRECTORY ${file_out_dir})
 
-                if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.21")
-                    # Significantly increases copying speed according to profiling, presumably
-                    # because we bypass process creation.
-                    file(COPY_FILE "${file_absolute}" "${file_out}" ONLY_IF_DIFFERENT)
-                else()
-                    execute_process(COMMAND
-                        ${CMAKE_COMMAND} -E copy_if_different ${file_absolute} ${file_out}
-                    )
+                if(EXISTS "${file_absolute}")
+                    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.21")
+                        # Significantly increases copying speed according to profiling, presumably
+                        # because we bypass process creation.
+                        file(COPY_FILE "${file_absolute}" "${file_out}" ONLY_IF_DIFFERENT)
+                    else()
+                        execute_process(COMMAND
+                            ${CMAKE_COMMAND} -E copy_if_different ${file_absolute} ${file_out}
+                        )
+                    endif()
                 endif()
 
                 add_custom_command(OUTPUT ${file_out}
