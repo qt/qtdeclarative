@@ -1429,9 +1429,11 @@ function(qt6_target_qml_sources target)
             get_filename_component(file_out_dir ${file_out} DIRECTORY)
             file(MAKE_DIRECTORY ${file_out_dir})
 
-            execute_process(COMMAND
-                ${CMAKE_COMMAND} -E copy_if_different ${file_absolute} ${file_out}
-            )
+            if(EXISTS "${file_absolute}")
+                execute_process(COMMAND
+                    ${CMAKE_COMMAND} -E copy_if_different ${file_absolute} ${file_out}
+                )
+            endif()
 
             add_custom_command(OUTPUT ${file_out}
                 COMMAND ${CMAKE_COMMAND} -E copy ${file_src} ${file_out}
