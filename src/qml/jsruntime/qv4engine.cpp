@@ -2402,6 +2402,23 @@ void ExecutionEngine::setExtensionData(int index, Deletable *data)
     m_extensionData[index] = data;
 }
 
+template<typename Source>
+bool convertToIterable(QMetaType metaType, void *data, Source *sequence)
+{
+    QSequentialIterable iterable;
+    if (!QMetaType::view(metaType, data, QMetaType::fromType<QSequentialIterable>(), &iterable))
+        return false;
+
+    const QMetaType elementMetaType = iterable.valueMetaType();
+    QVariant element(elementMetaType);
+    for (qsizetype i = 0, end = sequence->getLength(); i < end; ++i) {
+        if (!ExecutionEngine::metaTypeFromJS(sequence->get(i), elementMetaType, element.data()))
+            element = QVariant(elementMetaType);
+        iterable.addValue(element, QSequentialIterable::AtEnd);
+    }
+    return true;
+}
+
 // Converts a JS value to a meta-type.
 // data must point to a place that can store a value of the given type.
 // Returns true if conversion succeeded, false otherwise.
@@ -2677,21 +2694,14 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
             metaType.construct(data, result.constData());
             return true;
         }
+
+        if (convertToIterable(metaType, data, sequence))
+            return true;
     }
 
     if (const QV4::ArrayObject *array = value.as<ArrayObject>()) {
-        QSequentialIterable iterable;
-        if (QMetaType::view(
-                    metaType, data, QMetaType::fromType<QSequentialIterable>(), &iterable)) {
-            const QMetaType elementMetaType = iterable.valueMetaType();
-            QVariant element(elementMetaType);
-            for (qsizetype i = 0, end = array->getLength(); i < end; ++i) {
-                if (!metaTypeFromJS(array->get(i), elementMetaType, element.data()))
-                    element = QVariant(elementMetaType);
-                iterable.addValue(element, QSequentialIterable::AtEnd);
-            }
+        if (convertToIterable(metaType, data, array))
             return true;
-        }
     }
 
     return false;

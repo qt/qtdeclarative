@@ -39,6 +39,7 @@ private slots:
     void intOverflow();
     void stringLength();
     void scopeVsObject();
+    void sequenceToIterable();
     void compositeTypeMethod();
     void excessiveParameters();
     void jsImport();
@@ -415,6 +416,16 @@ void tst_QmlCppCodegen::scopeVsObject()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
     QCOMPARE(object->property("objectName").toString(), u"foobar"_s);
+}
+
+void tst_QmlCppCodegen::sequenceToIterable()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/sequenceToIterable.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QCOMPARE(object->property("c").toInt(), 11);
 }
 
 void tst_QmlCppCodegen::compositeTypeMethod()

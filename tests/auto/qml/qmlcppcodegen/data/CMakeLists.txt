@@ -15,6 +15,7 @@ set(cpp_sources
     multiforeign.h
     objectwithmethod.h
     person.cpp person.h
+    sequenceToIterable.h
     sequencetypeexample.cpp sequencetypeexample.h
     state.h
     theme.cpp theme.h
@@ -170,6 +171,7 @@ set(qml_files
     scopeVsObject.qml
     script.js
     script.mjs
+    sequenceToIterable.qml
     shared/Slider.qml
     shifts.qml
     signal.qml
