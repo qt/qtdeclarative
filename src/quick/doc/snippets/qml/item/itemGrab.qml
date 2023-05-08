@@ -12,12 +12,13 @@ Rectangle {
     id: sourceRectangle
     width: 100
     height: 100
+    focus: true
     gradient: Gradient {
         GradientStop { position: 0; color: "steelblue" }
         GradientStop { position: 1; color: "black" }
     }
 
-    Component.onCompleted: {
+    Keys.onSpacePressed: {
         sourceRectangle.grabToImage(function(result) {
            result.saveToFile("something.png")
         })
@@ -30,7 +31,7 @@ Image {
     id: image
 }
 
-Component.onCompleted: {
+Keys.onSpacePressed: {
     sourceRectangle.grabToImage(function(result) {
         image.source = result.url
     }, Qt.size(50, 50))
