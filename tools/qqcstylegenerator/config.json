@@ -6,7 +6,8 @@
         "copy": ":/Button.qml",
         "component set": "ButtonTemplate",
         "atoms": [
-            {"atom": "background", "figmaPath": "background"}
+            {"atom": "background", "figmaPath": "background"},
+            {"atom": "contentItem", "figmaPath": "contentItem", "export": "layout"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -26,7 +27,7 @@
         "atoms": [
             {"atom": "background", "figmaPath": "CheckBoxBackgroundAL, background"},
             {"atom": "label", "figmaPath": "Label", "export": ["geometry"]},
-            {"atom": "contentItem", "figmaPath": "contentItem", "export": ["geometry"]},
+            {"atom": "contentItem", "figmaPath": "contentItem", "export": "layout"},
             {"atom": "indicator", "figmaPath": "CheckBoxIndicatorAL, indicator"},
             {"atom": "indicator-background", "figmaPath": "CheckBoxIndicatorAL, indicatorBackground"}
         ],
@@ -74,7 +75,7 @@
         "component set": "TextFieldTemplate",
         "atoms": [
             {"atom": "background", "figmaPath": "TextFieldBackground"},
-            {"atom": "contentItem", "figmaPath": "contentItem", "export": "geometry"}
+            {"atom": "contentItem", "figmaPath": "contentItem", "export": "layout"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
