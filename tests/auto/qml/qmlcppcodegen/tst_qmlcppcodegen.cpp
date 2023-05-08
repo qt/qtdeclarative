@@ -117,6 +117,7 @@ private slots:
     void typedArray();
     void prefixedType();
     void evadingAmbiguity();
+    void exceptionFromInner();
     void fromBoolValue();
     void invisibleTypes();
     void invalidPropertyType();
@@ -2133,6 +2134,20 @@ void tst_QmlCppCodegen::evadingAmbiguity()
     QScopedPointer<QObject> o2(c2.create());
     QCOMPARE(o2->objectName(), QStringLiteral("Ambiguous"));
     QCOMPARE(o2->property("i").toString(), QStringLiteral("Ambiguous2"));
+}
+
+void tst_QmlCppCodegen::exceptionFromInner()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/exceptionFromInner.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QTest::ignoreMessage(
+        QtWarningMsg,
+        "qrc:/qt/qml/TestTypes/exceptionFromInner.qml:7: TypeError: "
+        "Cannot read property 'objectName' of null");
+    QMetaObject::invokeMethod(object.data(), "disbelieveFail");
 }
 
 void tst_QmlCppCodegen::fromBoolValue()

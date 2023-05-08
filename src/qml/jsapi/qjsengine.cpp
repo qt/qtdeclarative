@@ -529,7 +529,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
             for (auto &&frame: trace)
                 exceptionStackTrace->push_back(QString::fromLatin1("%1:%2:%3:%4").arg(
                                           frame.function,
-                                          QString::number(frame.line),
+                                          QString::number(qAbs(frame.line)),
                                           QString::number(frame.column),
                                           frame.source)
                                       );

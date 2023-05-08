@@ -40,7 +40,7 @@ int CppStackFrame::lineNumber() const
 {
     if (auto *line = lineAndStatement(this))
         return line->line;
-    return -1;
+    return missingLineNumber();
 }
 
 int CppStackFrame::statementNumber() const
@@ -48,6 +48,15 @@ int CppStackFrame::statementNumber() const
     if (auto *statement = lineAndStatement(this))
         return statement->statement;
     return -1;
+}
+
+int CppStackFrame::missingLineNumber() const
+{
+    // Remove the first bit so that we can cast to positive int and negate.
+    // Remove the last bit so that it can't be -1.
+    const int result = -int(quintptr(this) & 0x7ffffffe);
+    Q_ASSERT(result < -1);
+    return result;
 }
 
 ReturnedValue QV4::CppStackFrame::thisObject() const

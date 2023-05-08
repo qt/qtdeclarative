@@ -220,7 +220,7 @@ QJsonObject QV4DataCollector::buildFrame(const QV4::StackFrame &stackFrame, int 
     frame[QLatin1String("debuggerFrame")] = false;
     frame[QLatin1String("func")] = stackFrame.function;
     frame[QLatin1String("script")] = stackFrame.source;
-    frame[QLatin1String("line")] = stackFrame.line - 1;
+    frame[QLatin1String("line")] = qAbs(stackFrame.line) - 1;
     if (stackFrame.column >= 0)
         frame[QLatin1String("column")] = stackFrame.column;
 

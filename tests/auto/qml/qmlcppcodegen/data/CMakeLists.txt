@@ -101,6 +101,7 @@ set(qml_files
     equalityQUrl.qml
     equalityVarAndNonStorable.qml
     equalsUndefined.qml
+    exceptionFromInner.qml
     excessiveParameters.qml
     extendedTypes.qml
     failures.qml

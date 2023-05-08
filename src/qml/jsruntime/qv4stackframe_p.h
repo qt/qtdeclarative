@@ -83,6 +83,8 @@ struct Q_QML_PRIVATE_EXPORT CppStackFrame : protected CppStackFrameBase
     int lineNumber() const;
     int statementNumber() const;
 
+    int missingLineNumber() const;
+
     CppStackFrame *parentFrame() const { return parent; }
     void setParentFrame(CppStackFrame *parentFrame) { parent = parentFrame; }
 

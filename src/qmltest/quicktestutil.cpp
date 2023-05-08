@@ -87,7 +87,7 @@ int QuickTestUtil::callerLine(int frameIndex) const
 
     QVector<QV4::StackFrame> stack = v4->stackTrace(frameIndex + 2);
     if (stack.size() > frameIndex + 1)
-        return stack.at(frameIndex + 1).line;
+        return qAbs(stack.at(frameIndex + 1).line);
     return -1;
 }
 
