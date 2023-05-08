@@ -56,7 +56,7 @@ void Heap::ErrorObject::init(const Value &message, ErrorType t)
     e->d()->stackTrace = new StackTrace(scope.engine->stackTrace());
     if (!e->d()->stackTrace->isEmpty()) {
         setProperty(scope.engine, QV4::ErrorObject::Index_FileName, scope.engine->newString(e->d()->stackTrace->at(0).source));
-        setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Value::fromInt32(e->d()->stackTrace->at(0).line));
+        setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Value::fromInt32(qAbs(e->d()->stackTrace->at(0).line)));
     }
 
     if (!message.isUndefined())
@@ -84,7 +84,7 @@ void Heap::ErrorObject::init(const Value &message, const QString &fileName, int 
 
     Q_ASSERT(!e->d()->stackTrace->isEmpty());
     setProperty(scope.engine, QV4::ErrorObject::Index_FileName, scope.engine->newString(e->d()->stackTrace->at(0).source));
-    setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Value::fromInt32(e->d()->stackTrace->at(0).line));
+    setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Value::fromInt32(qAbs(e->d()->stackTrace->at(0).line)));
 
     if (!message.isUndefined())
         setProperty(scope.engine, QV4::ErrorObject::Index_Message, message);

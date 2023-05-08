@@ -274,9 +274,10 @@ public:
     void dumpStackTrace() const
     {
         qDebug() << "Stack depth:" << m_stackTrace.size();
-        foreach (const QV4::StackFrame &frame, m_stackTrace)
+        for (const QV4::StackFrame &frame : m_stackTrace) {
             qDebug("\t%s (%s:%d:%d)", qPrintable(frame.function), qPrintable(frame.source),
-                   frame.line, frame.column);
+                   qAbs(frame.line), frame.column);
+        }
     }
 };
 

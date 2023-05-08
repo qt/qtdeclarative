@@ -1234,13 +1234,25 @@ static bool initValueLookup(QV4::Lookup *l, QV4::ExecutableCompilationUnit *comp
 
 static void amendException(QV4::ExecutionEngine *engine)
 {
+    const int missingLineNumber = engine->currentStackFrame->missingLineNumber();
     const int lineNumber = engine->currentStackFrame->lineNumber();
-    engine->exceptionStackTrace.front().line = lineNumber;
+    Q_ASSERT(missingLineNumber != lineNumber);
+
+    auto amendStackTrace = [&](QV4::StackTrace *stackTrace) {
+        for (auto it = stackTrace->begin(), end = stackTrace->end(); it != end; ++it) {
+            if (it->line == missingLineNumber) {
+                it->line = lineNumber;
+                break;
+            }
+        }
+    };
+
+    amendStackTrace(&engine->exceptionStackTrace);
 
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::ErrorObject> error(scope, *engine->exceptionValue);
     if (error) // else some other value was thrown
-        error->d()->stackTrace->front().line = lineNumber;
+        amendStackTrace(error->d()->stackTrace);
 }
 
 

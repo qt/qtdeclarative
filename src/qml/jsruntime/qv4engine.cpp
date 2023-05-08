@@ -1234,7 +1234,7 @@ StackTrace ExecutionEngine::stackTrace(int frameLimit) const
         QV4::StackFrame frame;
         frame.source = f->source();
         frame.function = f->function();
-        frame.line = qAbs(f->lineNumber());
+        frame.line = f->lineNumber();
         frame.column = -1;
         stack.append(frame);
         if (f->isJSTypesFrame()) {
@@ -1272,7 +1272,7 @@ static inline char *v4StackTrace(const ExecutionContext *context)
             const QString fileName = url.isLocalFile() ? url.toLocalFile() : url.toString();
             str << "frame={level=\"" << i << "\",func=\"" << stackTrace.at(i).function
                 << "\",file=\"" << fileName << "\",fullname=\"" << fileName
-                << "\",line=\"" << stackTrace.at(i).line << "\",language=\"js\"}";
+                << "\",line=\"" << qAbs(stackTrace.at(i).line) << "\",language=\"js\"}";
         }
     }
     str << ']';
@@ -1467,7 +1467,7 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError()
     if (!trace.isEmpty()) {
         QV4::StackFrame frame = trace.constFirst();
         error.setUrl(QUrl(frame.source));
-        error.setLine(frame.line);
+        error.setLine(qAbs(frame.line));
         error.setColumn(frame.column);
     }
     QV4::Scoped<QV4::ErrorObject> errorObj(scope, exception);

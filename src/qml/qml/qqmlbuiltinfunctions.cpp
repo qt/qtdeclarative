@@ -1755,15 +1755,14 @@ static QString jsStack(QV4::ExecutionEngine *engine) {
         const QV4::StackFrame &frame = stackTrace.at(i);
 
         QString stackFrame;
-        if (frame.column >= 0)
-            stackFrame = QStringLiteral("%1 (%2:%3:%4)").arg(frame.function,
-                                                             frame.source,
-                                                             QString::number(frame.line),
-                                                             QString::number(frame.column));
-        else
-            stackFrame = QStringLiteral("%1 (%2:%3)").arg(frame.function,
-                                                             frame.source,
-                                                             QString::number(frame.line));
+        if (frame.column >= 0) {
+            stackFrame = QStringLiteral("%1 (%2:%3:%4)").arg(
+                frame.function, frame.source,
+                QString::number(qAbs(frame.line)), QString::number(frame.column));
+        } else {
+            stackFrame = QStringLiteral("%1 (%2:%3)").arg(
+                frame.function, frame.source, QString::number(qAbs(frame.line)));
+        }
 
         if (i)
             stack += QLatin1Char('\n');
