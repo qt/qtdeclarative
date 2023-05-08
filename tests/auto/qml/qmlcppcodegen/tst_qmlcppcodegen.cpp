@@ -154,6 +154,7 @@ private slots:
     void revisions();
     void scopeObjectDestruction();
     void scopeVsObject();
+    void sequenceToIterable();
     void shadowedMethod();
     void shifts();
     void signalHandler();
@@ -3253,6 +3254,16 @@ void tst_QmlCppCodegen::scopeVsObject()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
     QCOMPARE(object->property("objectName").toString(), u"foobar"_s);
+}
+
+void tst_QmlCppCodegen::sequenceToIterable()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/sequenceToIterable.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QCOMPARE(object->property("c").toInt(), 11);
 }
 
 void tst_QmlCppCodegen::shadowedMethod()
