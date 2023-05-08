@@ -12,6 +12,7 @@ Item {
         Item {
             required property int index
             required property QtObject modelData
+            objectName: modelData + ": " + index
         }
     }
 

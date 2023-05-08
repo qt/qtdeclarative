@@ -3280,6 +3280,15 @@ void tst_QmlCppCodegen::sequenceToIterable()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
     QCOMPARE(object->property("c").toInt(), 11);
+
+    QQmlListReference children(object.data(), "children");
+    QCOMPARE(children.count(), 11);
+    static const QRegularExpression name("Entry\\(0x[0-9a-f]+, \"Item ([0-9])\"\\): ([0-9])");
+    for (int i = 0; i < 10; ++i) {
+        const auto match = name.match(children.at(i)->objectName());
+        QVERIFY(match.hasMatch());
+        QCOMPARE(match.captured(1), QString::number(i));
+    }
 }
 
 void tst_QmlCppCodegen::shadowedMethod()
