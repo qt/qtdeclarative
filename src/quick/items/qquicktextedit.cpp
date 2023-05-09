@@ -2172,6 +2172,10 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
     RootNode *rootNode = static_cast<RootNode *>(oldNode);
     TextNodeIterator nodeIterator = d->textNodeMap.begin();
+    std::optional<int> firstPosAcrossAllNodes;
+    if (nodeIterator != d->textNodeMap.end())
+        firstPosAcrossAllNodes = nodeIterator->startPos();
+
     while (nodeIterator != d->textNodeMap.end() && !nodeIterator->dirty())
         ++nodeIterator;
 
@@ -2290,7 +2294,8 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                             coveredRegion = block.layout()->boundingRect().adjusted(nodeOffset.x(), nodeOffset.y(), nodeOffset.x(), nodeOffset.y());
                             inView = coveredRegion.bottom() > viewport.top();
                         }
-                        if (d->firstBlockInViewport < 0 && inView) {
+                        const bool potentiallyScrollingBackwards = firstPosAcrossAllNodes && *firstPosAcrossAllNodes == firstDirtyPos;
+                        if (d->firstBlockInViewport < 0 && inView && potentiallyScrollingBackwards) {
                             // During backward scrolling, we need to iterate backwards from textNodeMap.begin() to fill the top of the viewport.
                             if (coveredRegion.top() > viewport.top() + 1) {
                                 qCDebug(lcVP) << "checking backwards from block" << block.blockNumber() << "@" << nodeOffset.y() << coveredRegion;
