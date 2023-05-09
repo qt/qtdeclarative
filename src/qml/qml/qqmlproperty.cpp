@@ -1378,6 +1378,18 @@ static ConvertAndAssignResult tryConvertAndAssign(
         return {false, false};
     }
 
+    if (variantMetaType == QMetaType::fromType<QJSValue>()) {
+        // Handle Qt.binding bindings here to avoid mistaken conversion below
+        const QJSValue &jsValue = *static_cast<const QJSValue *>(value.constData());
+        const QV4::FunctionObject *f
+                = QJSValuePrivate::asManagedType<QV4::FunctionObject>(&jsValue);
+        if (f && f->isBinding()) {
+            QV4::QObjectWrapper::setProperty(
+                    f->engine(), object, &property, f->asReturnedValue());
+            return {true, true};
+        }
+    }
+
     // common cases:
     switch (propertyMetaType.id()) {
     case QMetaType::Bool:
@@ -1594,16 +1606,6 @@ bool QQmlPropertyPrivate::write(
                 sequence.addValue(list.data(), value.data());
             property.writeProperty(object, list.data(), flags);
         }
-    } else if (variantMetaType == QMetaType::fromType<QJSValue>()) {
-        QJSValue jsValue = qvariant_cast<QJSValue>(value);
-        const QV4::FunctionObject *f
-                = QJSValuePrivate::asManagedType<QV4::FunctionObject>(&jsValue);
-        if (f && f->isBinding()) {
-            QV4::QObjectWrapper::setProperty(
-                    f->engine(), object, &property, f->asReturnedValue());
-            return true;
-        }
-        return false;
     } else if (enginePriv && propertyMetaType == QMetaType::fromType<QJSValue>()) {
         // We can convert everything into a QJSValue if we have an engine.
         QJSValue jsValue = QJSValuePrivate::fromReturnedValue(
