@@ -82,4 +82,9 @@ QtObject {
         }
         return a;
     }
+
+    // TODO: Drop these once we can manipulate QVariant-wrapped lists.
+    property list<withLength> withLengths
+    property int l: withLengths.length
+    property withLength w: withLengths[10]
 }

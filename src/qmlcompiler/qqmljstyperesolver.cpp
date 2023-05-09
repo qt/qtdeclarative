@@ -814,26 +814,18 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
     if (type->scopeType() == QQmlJSScope::EnumScope)
         return type->baseType();
 
-    if (isPrimitive(type) || equals(type, m_jsValueType) || equals(type, m_urlType)
-        || equals(type, m_dateTimeType) || equals(type, m_dateType) || equals(type, m_timeType)
-        || equals(type, m_variantListType) || equals(type, m_variantMapType)
-        || equals(type, m_varType) || equals(type, m_stringListType)
-        || equals(type, m_byteArrayType)) {
+    if (isPrimitive(type))
         return type;
-    }
 
-    if (type->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
-        if (const QQmlJSScope::ConstPtr valueType = type->valueType()) {
-            switch (valueType->accessSemantics()) {
-            case QQmlJSScope::AccessSemantics::Value:
-                return genericType(valueType)->listType();
-            case QQmlJSScope::AccessSemantics::Reference:
-                return m_qObjectListType;
-            default:
-                break;
-            }
-        }
-        return m_variantListType;
+    for (const QQmlJSScope::ConstPtr &builtin : {
+                 m_realType, m_floatType, m_int8Type, m_uint8Type, m_int16Type, m_uint16Type,
+                 m_int32Type, m_uint32Type, m_int64Type, m_uint64Type, m_boolType, m_stringType,
+                 m_stringListType, m_byteArrayType, m_urlType, m_dateTimeType, m_dateType,
+                 m_timeType, m_variantListType, m_variantMapType, m_varType, m_jsValueType,
+                 m_jsPrimitiveType, m_listPropertyType, m_qObjectType, m_qObjectListType,
+                 m_metaObjectType }) {
+        if (equals(type, builtin) || equals(type, builtin->listType()))
+            return type;
     }
 
     return m_varType;

@@ -725,6 +725,8 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
         access = u"QString("_s + access + u")"_s;
     else if (m_state.isRegisterAffectedBySideEffects(base))
         reject(u"LoadElement on a sequence potentially affected by side effects"_s);
+    else if (baseType.storedType()->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence)
+        reject(u"LoadElement on a sequence wrapped in a non-sequence type"_s);
 
     m_body += u"if ("_s + indexName + u" < "_s + baseName + u".size())\n"_s;
     m_body += u"    "_s + m_state.accumulatorVariableOut + u" = "_s +
@@ -1091,15 +1093,28 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
         const QString preparation = getLookupPreparation(
                     m_state.accumulatorOut(), m_state.accumulatorVariableOut, index);
         generateLookup(lookup, initialization, preparation);
-    } else if (m_typeResolver->registerIsStoredIn(accumulatorIn, m_typeResolver->listPropertyType())
+    } else if ((accumulatorIn.isList()
+                || m_typeResolver->registerContains(accumulatorIn, m_typeResolver->stringType()))
                && m_jsUnitGenerator->lookupName(index) == u"length"_s) {
-        m_body += m_state.accumulatorVariableOut + u" = "_s;
-        m_body += conversion(
-                    m_typeResolver->globalType(m_typeResolver->int32Type()),
-                    m_state.accumulatorOut(),
-                    m_state.accumulatorVariableIn + u".count("_s + u'&'
-                        + m_state.accumulatorVariableIn + u')');
-        m_body += u";\n"_s;
+        const QQmlJSScope::ConstPtr stored = accumulatorIn.storedType();
+        if (stored->isListProperty()) {
+            m_body += m_state.accumulatorVariableOut + u" = "_s;
+            m_body += conversion(
+                        m_typeResolver->globalType(m_typeResolver->int32Type()),
+                        m_state.accumulatorOut(),
+                        m_state.accumulatorVariableIn + u".count("_s + u'&'
+                            + m_state.accumulatorVariableIn + u')');
+            m_body += u";\n"_s;
+        } else if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
+                   || m_typeResolver->equals(stored, m_typeResolver->stringType())) {
+            m_body += m_state.accumulatorVariableOut + u" = "_s
+                    + conversion(m_typeResolver->globalType(m_typeResolver->int32Type()),
+                                 m_state.accumulatorOut(),
+                                 m_state.accumulatorVariableIn + u".length()"_s)
+                    + u";\n"_s;
+        } else {
+            reject(u"access to 'length' property of sequence wrapped in non-sequence"_s);
+        }
     } else if (m_typeResolver->registerIsStoredIn(accumulatorIn,
                                                   m_typeResolver->variantMapType())) {
         QString mapLookup = m_state.accumulatorVariableIn + u"["_s
@@ -1108,15 +1123,6 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
         m_body += conversion(m_typeResolver->globalType(m_typeResolver->varType()),
                              m_state.accumulatorOut(), mapLookup);
         m_body += u";\n"_s;
-    } else if ((m_typeResolver->registerIsStoredIn(accumulatorIn, m_typeResolver->stringType())
-                || accumulatorIn.storedType()->accessSemantics()
-                    == QQmlJSScope::AccessSemantics::Sequence)
-               && m_jsUnitGenerator->lookupName(index) == u"length"_s) {
-        m_body += m_state.accumulatorVariableOut + u" = "_s
-                + conversion(m_typeResolver->globalType(m_typeResolver->int32Type()),
-                             m_state.accumulatorOut(),
-                             m_state.accumulatorVariableIn + u".length()"_s)
-                + u";\n"_s;
     } else {
         if (m_state.isRegisterAffectedBySideEffects(Accumulator))
             reject(u"reading from a value that's potentially affected by side effects"_s);
