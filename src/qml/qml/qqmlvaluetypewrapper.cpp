@@ -835,6 +835,12 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
 
     QMetaProperty property = metaObject->property(pd.coreIndex());
     Q_ASSERT(property.isValid());
+    if (value.isUndefined() && pd.isResettable()) {
+        property.resetOnGadget(reinterpret_cast<QObject *>(r->d()->gadgetPtr()));
+        if (heapObject)
+            r->d()->writeBack(pd.coreIndex());
+        return true;
+    }
 
     QVariant v = QV4::ExecutionEngine::toVariant(value, property.metaType());
 
