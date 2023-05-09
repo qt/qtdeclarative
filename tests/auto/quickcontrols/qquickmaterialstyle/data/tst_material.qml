@@ -24,12 +24,12 @@ TestCase {
     }
 
     Component {
-        id: button
+        id: buttonComponent
         Button { }
     }
 
     Component {
-        id: styledButton
+        id: styledButtonComponent
         Button {
             Material.theme: Material.Dark
             Material.primary: Material.DeepOrange
@@ -152,7 +152,7 @@ TestCase {
     }
 
     function test_defaults() {
-        let control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(buttonComponent, testCase)
         verify(control)
         verify(control.Material)
         compare(control.Material.primary, Material.color(Material.Indigo))
@@ -166,7 +166,7 @@ TestCase {
     }
 
     function test_set() {
-        let control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(buttonComponent, testCase)
         verify(control)
         control.Material.primary = Material.Green
         control.Material.accent = Material.Brown
@@ -183,7 +183,7 @@ TestCase {
     }
 
     function test_reset() {
-        let control = createTemporaryObject(styledButton, testCase)
+        let control = createTemporaryObject(styledButtonComponent, testCase)
         verify(control)
         compare(control.Material.primary, Material.color(Material.DeepOrange))
         compare(control.Material.accent, Material.color(Material.DeepPurple, themeshade(control.Material.theme)))
@@ -219,18 +219,18 @@ TestCase {
 
     function test_inheritance(data) {
         let prop = data.tag
-        let parent = createTemporaryObject(button, testCase)
+        let parent = createTemporaryObject(buttonComponent, testCase)
         parent.Material[prop] = data.value1
         compare(parent.Material[prop], data.value1)
 
-        let child1 = button.createObject(parent)
+        let child1 = buttonComponent.createObject(parent)
         compare(child1.Material[prop], data.value1)
 
         parent.Material[prop] = data.value2
         compare(parent.Material[prop], data.value2)
         compare(child1.Material[prop], data.value2)
 
-        let child2 = button.createObject(parent)
+        let child2 = buttonComponent.createObject(parent)
         compare(child2.Material[prop], data.value2)
 
         child2.Material[prop] = data.value1
@@ -244,13 +244,13 @@ TestCase {
         compare(child1.Material[prop], parent.Material[prop])
         verify(child2.Material[prop] !== parent.Material[prop])
 
-        let grandChild1 = button.createObject(child1)
-        let grandChild2 = button.createObject(child2)
+        let grandChild1 = buttonComponent.createObject(child1)
+        let grandChild2 = buttonComponent.createObject(child2)
         compare(grandChild1.Material[prop], child1.Material[prop])
         compare(grandChild2.Material[prop], child2.Material[prop])
 
-        let themelessGrandGrandChild = button.createObject(grandChild1)
-        let grandGrandGrandChild1 = button.createObject(themelessGrandGrandChild)
+        let themelessGrandGrandChild = buttonComponent.createObject(grandChild1)
+        let grandGrandGrandChild1 = buttonComponent.createObject(themelessGrandGrandChild)
         compare(grandGrandGrandChild1.Material[prop], parent.Material[prop])
 
         child1.Material[prop] = data.value2
@@ -418,7 +418,7 @@ TestCase {
         let parentWindow = createTemporaryObject(data.component, null)
         verify(parentWindow)
 
-        let control = button.createObject(parentWindow.contentItem)
+        let control = buttonComponent.createObject(parentWindow.contentItem)
         verify(control)
         compare(control.Material.primary, parentWindow.Material.primary)
         compare(control.Material.accent, parentWindow.Material.accent)
@@ -590,7 +590,7 @@ TestCase {
     }
 
     function test_colors(data) {
-        let control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(buttonComponent, testCase)
         verify(control)
 
         let prop = data.tag
@@ -1145,5 +1145,16 @@ TestCase {
         textField.clip = true
         compare(textField.topInset, placeholderTextItem.largestHeight / 2)
         compare(textField.topPadding, textField.Material.textFieldVerticalPadding + textField.topInset)
+    }
+
+    function test_flatButton() {
+        let button = createTemporaryObject(buttonComponent, testCase, { flat: true })
+        verify(button)
+        // A flat button should be transparent by default.
+        compare(button.background.color, "#00000000")
+
+        // However, if a background color is explicitly specified, it should be respected.
+        button.Material.background = "#ff6347"
+        compare(button.background.color, "#ff6347")
     }
 }
