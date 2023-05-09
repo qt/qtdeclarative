@@ -945,10 +945,7 @@ QColor QQuickMaterialStyle::iconDisabledColor() const
 QColor QQuickMaterialStyle::buttonColor(Theme theme, const QVariant &background, const QVariant &accent,
     bool enabled, bool flat, bool highlighted, bool checked) const
 {
-    if (flat)
-        return Qt::transparent;
-
-    if (!enabled) {
+    if (!enabled && !flat) {
         return QColor::fromRgba(m_theme == Light
             ? raisedButtonDisabledColorLight : raisedButtonDisabledColorDark);
     }
@@ -974,7 +971,7 @@ QColor QQuickMaterialStyle::buttonColor(Theme theme, const QVariant &background,
             // A highlighted + checked button should become darker.
             color = accentColor(checked ? Shade100 : shade);
         }
-    } else {
+    } else if (!flat) {
         // Even if the elevation is zero, it should still have a background if it's not flat.
         color = QColor::fromRgba(m_theme == Light ? raisedButtonColorLight
                                                   : raisedButtonColorDark);
