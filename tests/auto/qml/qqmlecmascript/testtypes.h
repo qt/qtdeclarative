@@ -2034,6 +2034,41 @@ public:
     QBindable<int> bindableX() const { return &_xProp; }
 };
 
+class ResettableGadget
+{
+    Q_GADGET
+    Q_PROPERTY(qreal value READ value WRITE setValue RESET resetValue)
+
+    qreal m_value = 0;
+
+public:
+    qreal value() const { return m_value; }
+    void setValue(qreal val) { m_value = val; }
+    void resetValue() { m_value = 42; }
+};
+
+class ResettableGadgetHolder : public QObject {
+    Q_OBJECT
+    QML_ELEMENT
+
+    Q_PROPERTY(ResettableGadget g READ g WRITE setG NOTIFY gChanged)
+    ResettableGadget m_g;
+
+signals:
+    void gChanged();
+
+public:
+    ResettableGadget g() const { return m_g; }
+    void setG(ResettableGadget newG)
+    {
+        if (m_g.value() == newG.value())
+            return;
+        m_g = newG;
+        Q_EMIT gChanged();
+    }
+};
+
+
 void registerTypes();
 
 #endif // TESTTYPES_H
