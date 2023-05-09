@@ -1316,7 +1316,6 @@ QString QQmlJSCodeGenerator::argumentsList(int argc, int argv, QString *outVar)
 {
     QString types;
     QString args;
-    QString conversions;
 
     if (m_state.changedRegisterIndex() == InvalidRegister ||
             m_typeResolver->registerContains(
@@ -1326,39 +1325,29 @@ QString QQmlJSCodeGenerator::argumentsList(int argc, int argv, QString *outVar)
     } else {
         *outVar = u"callResult"_s;
         const QQmlJSScope::ConstPtr outType = m_state.accumulatorOut().storedType();
-        m_body += outType->internalName();
-        if (outType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
-            m_body += u" *"_s;
-        else
-            m_body += u' ';
-        m_body += *outVar + u";\n";
+        m_body += outType->augmentedInternalName() + u' ' + *outVar;
+        if (!m_typeResolver->registerContains(m_state.accumulatorOut(), outType)) {
+             if (m_typeResolver->equals(outType, m_typeResolver->varType())
+                || m_typeResolver->equals(outType, m_typeResolver->jsPrimitiveType())) {
+                m_body += u'('
+                        + metaType(m_typeResolver->containedType(m_state.accumulatorOut()))
+                        + u')';
+             }
+        }
+        m_body += u";\n";
 
-        types = metaTypeFromType(m_state.accumulatorOut().storedType());
-        args = u'&' + *outVar;
+        args = contentPointer(m_state.accumulatorOut(), *outVar);
+        types = contentType(m_state.accumulatorOut(), *outVar);
     }
 
     for (int i = 0; i < argc; ++i) {
         const QQmlJSRegisterContent content = registerType(argv + i);
-        if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->jsPrimitiveType())) {
-            QString argName = u"arg"_s + QString::number(i);
-            conversions += u"QVariant "_s + argName + u" = "_s
-                    + convertStored(content.storedType(), m_typeResolver->varType(),
-                                    consumedRegisterVariable(argv + i)) + u";\n"_s;
-            args += u", "_s + argName + u".data()"_s;
-            types += u", "_s + argName + u".metaType()"_s;
-        } else if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->varType())
-                   && !m_typeResolver->registerContains(content, m_typeResolver->varType())) {
-            const QString var = registerVariable(argv + i);
-            args += u", "_s + var + u".data()"_s;
-            types += u", "_s + var + u".metaType()"_s;
-        } else {
-            const QString var = registerVariable(argv + i);
-            args += u", &"_s + var;
-            types += u", "_s + metaTypeFromType(content.storedType());
-        }
+        const QString var = registerVariable(argv + i);
+        args += u", "_s + contentPointer(content, var);
+        types += u", "_s + contentType(content, var);
     }
-    return conversions
-            + u"void *args[] = { "_s + args + u" };\n"_s
+
+    return u"void *args[] = { "_s + args + u" };\n"_s
             + u"const QMetaType types[] = { "_s + types + u" };\n"_s;
 }
 

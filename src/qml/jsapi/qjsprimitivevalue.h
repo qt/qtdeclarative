@@ -163,6 +163,33 @@ public:
         }
     }
 
+    explicit QJSPrimitiveValue(const QMetaType type) noexcept
+    {
+        switch (type.id()) {
+        case QMetaType::UnknownType:
+            d = QJSPrimitiveUndefined();
+            break;
+        case QMetaType::Nullptr:
+            d = QJSPrimitiveNull();
+            break;
+        case QMetaType::Bool:
+            d = false;
+            break;
+        case QMetaType::Int:
+            d = 0;
+            break;
+        case QMetaType::Double:
+            d = 0.0;
+            break;
+        case QMetaType::QString:
+            d = QString();
+            break;
+        default:
+            // Unsupported. Remains undefined.
+            break;
+        }
+    }
+
     explicit QJSPrimitiveValue(const QVariant &variant) noexcept
         : QJSPrimitiveValue(variant.metaType(), variant.data())
     {
