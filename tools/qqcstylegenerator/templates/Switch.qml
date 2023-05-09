@@ -12,19 +12,26 @@ T.Switch {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
-    readonly property var config: ConfigReader.configForImageUrl(background?.source ?? "")
+    spacing: config.spacing || 0
 
-    spacing: config?.spacing || 0
-
-    topPadding: config?.topPadding || 0
+    topPadding: config.topPadding || 0
     leftPadding: background.width + spacing
     rightPadding: spacing
-    bottomPadding: config?.bottomPadding || 0
+    bottomPadding: config.bottomPadding || 0
 
-    topInset: -config?.topInset || 0
-    leftInset: -config?.leftInset || 0
-    rightInset: (-config?.rightInset || 0) + (2 * spacing + implicitContentWidth + rightPadding)
-    bottomInset: -config?.bottomInset || 0
+    topInset: -config.topInset || 0
+    leftInset: -config.leftInset || 0
+    rightInset: (-config.rightInset || 0) + (2 * spacing + implicitContentWidth + rightPadding)
+    bottomInset: -config.bottomInset || 0
+
+    readonly property string currentState: [
+        control.checked && "checked",
+        !control.enabled && "disabled",
+        control.visualFocus && "focused",
+        control.enabled && !control.down && control.hovered && "hovered",
+        control.down && "pressed",
+    ].filter(Boolean).join("-") || "normal"
+    readonly property var config: ConfigReader.controls.switch[currentState] || {}
 
     indicator: Item {
         implicitWidth: Math.max(handle.width, background.implicitWidth)
@@ -34,13 +41,15 @@ T.Switch {
             parent: control.indicator
             x: Math.max(0, Math.min(parent.width - width, control.visualPosition * parent.width - (width / 2)))
             y: (parent.height - height) / 2
-            source: Qt.resolvedUrl("images/switch-handle")
-            border.top: config.topOffset || 0
-            border.bottom: config.bottomOffset || 0
-            border.left: config.leftOffset || 0
-            border.right: config.rightOffset || 0
-
-            readonly property var config: ConfigReader.configForImageUrl(source)
+            source: control.config.handle?.export === "image"
+                        ? Qt.resolvedUrl("images/" + control.config.handle.name)
+                        : ""
+            border {
+                top: control.config.handle?.topOffset || 0
+                bottom: control.config.handle?.bottomOffset || 0
+                left: control.config.handle?.leftOffset || 0
+                right: control.config.handle?.rightOffset || 0
+            }
 
             Behavior on x {
                 enabled: !control.down
@@ -49,33 +58,13 @@ T.Switch {
                 }
             }
 
-            ImageSelector on source {
-                states: [
-                    {"disabled": !control.enabled},
-                    {"pressed": control.down},
-                    {"checked": control.checked},
-                    {"focused": control.visualFocus},
-                    {"mirrored": control.mirrored},
-                    {"hovered": control.enabled && control.hovered}
-                ]
-            }
-
             Image {
                 x: (parent.width - width) / 2
                 y: (parent.height - height) / 2
-                source: Qt.resolvedUrl("images/switch-handle")
-                ImageSelector on source {
-                    states: [
-                        {"righticon": control.checked},
-                        {"lefticon": !control.checked},
-                        {"disabled": !control.enabled},
-                        {"pressed": control.down},
-                        {"checked": control.checked},
-                        {"focused": control.visualFocus},
-                        {"mirrored": control.mirrored},
-                        {"hovered": control.enabled && control.hovered}
-                    ]
-                }
+                source: control.config[handle]?.export === "image"
+                            ? Qt.resolvedUrl("images/" + control.config[handle].name)
+                            : ""
+                readonly property string handle: "handle_" + (control.checked ? "righticon" : "lefticon")
             }
         }
     }
@@ -89,56 +78,32 @@ T.Switch {
     }
 
     background: BorderImage {
-        source: Qt.resolvedUrl("images/switch-background")
-
-        border.top: control.config?.topOffset || 0
-        border.bottom: control.config?.bottomOffset || 0
-        border.left: control.config?.leftOffset || 0
-        border.right: control.config?.rightOffset || 0
-
-        ImageSelector on source {
-            states: [
-                {"disabled": !control.enabled},
-                {"pressed": control.down},
-                {"checked": control.checked},
-                {"focused": control.visualFocus},
-                {"mirrored": control.mirrored},
-                {"hovered": control.enabled && control.hovered}
-            ]
+        source: control.config.background?.export === "image"
+                    ? Qt.resolvedUrl("images/" + control.config.background.name)
+                    : ""
+        border {
+            top: control.config.background?.topOffset || 0
+            bottom: control.config.background?.bottomOffset || 0
+            left: control.config.background?.leftOffset || 0
+            right: control.config.background?.rightOffset || 0
         }
 
         Image {
             // TODO: The exact position on the icon should be set from the json config file
             x: (control.indicator.handle.width - width) / 2
             y: (parent.height - height) / 2
-            source: Qt.resolvedUrl("images/switch-background-lefticon")
-            ImageSelector on source {
-                states: [
-                    {"disabled": !control.enabled},
-                    {"pressed": control.down},
-                    {"checked": control.checked},
-                    {"focused": control.visualFocus},
-                    {"mirrored": control.mirrored},
-                    {"hovered": control.enabled && control.hovered}
-                ]
-            }
+            source: control.config.background_lefticon?.export === "image"
+                        ? Qt.resolvedUrl("images/" + control.config.background_lefticon.name)
+                        : ""
         }
 
         Image {
             // TODO: The exact position on the icon should be set from the json config file
             x: parent.width - control.indicator.handle.width + (control.indicator.handle.width / 2)
             y: (parent.height - height) / 2
-            source: Qt.resolvedUrl("images/switch-background-righticon")
-            ImageSelector on source {
-                states: [
-                    {"disabled": !control.enabled},
-                    {"pressed": control.down},
-                    {"checked": control.checked},
-                    {"focused": control.visualFocus},
-                    {"mirrored": control.mirrored},
-                    {"hovered": control.enabled && control.hovered}
-                ]
-            }
+            source: control.config.background_righticon?.export === "image"
+                        ? Qt.resolvedUrl("images/" + control.config.background_righticon.name)
+                        : ""
         }
     }
 }

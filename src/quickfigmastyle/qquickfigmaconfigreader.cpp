@@ -42,21 +42,9 @@ void QQuickFigmaConfigReader::setConfigPath(const QString &path)
     }
 }
 
-QVariantMap QQuickFigmaConfigReader::images() const
+QVariantMap QQuickFigmaConfigReader::controls() const
 {
-    return m_imagesConfig;
-}
-
-QVariant QQuickFigmaConfigReader::configForImageUrl(const QUrl &url) const
-{
-    if (url.isValid()) {
-        const QFileInfo fileInfo(url.toString());
-        const QString fileName = fileInfo.baseName();
-        if (m_imagesConfig[fileName].isValid()) {
-            return m_imagesConfig[fileName];
-        }
-    }
-    return QVariant();
+    return m_controlsConfig;
 }
 
 /**
@@ -104,9 +92,9 @@ void QQuickFigmaConfigReader::parseConfig()
     }
 
     const auto jsonObject = config.object();
-    if (jsonObject.contains(QString::fromLatin1("atoms"))) {
-        const QJsonObject images = jsonObject[QString::fromLatin1("atoms")].toObject();
-        m_imagesConfig = images.toVariantMap();
+    if (jsonObject.contains(QString::fromLatin1("controls"))) {
+        const QJsonObject controls = jsonObject[QString::fromLatin1("controls")].toObject();
+        m_controlsConfig = controls.toVariantMap();
     }
 }
 

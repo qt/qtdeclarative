@@ -12,17 +12,22 @@ T.TextField {
                              contentHeight + topPadding + bottomPadding,
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
-    readonly property var config: ConfigReader.configForImageUrl(background?.source ?? "")
+    readonly property string currentState: [
+        !control.enabled && "disabled",
+        control.visualFocus && "focused",
+        control.enabled && !control.down && control.hovered && "hovered",
+    ].filter(Boolean).join("-") || "normal"
+    readonly property var config: ConfigReader.controls.textfield[currentState] || {}
 
-    topPadding: config?.topPadding || 0
-    bottomPadding: config?.bottomPadding || 0
-    leftPadding: config?.leftPadding || 0
-    rightPadding: config?.rightPadding || 0
+    topPadding: config.topPadding || 0
+    bottomPadding: config.bottomPadding || 0
+    leftPadding: config.leftPadding || 0
+    rightPadding: config.rightPadding || 0
 
-    topInset: -config?.topInset || 0
-    bottomInset: -config?.bottomInset || 0
-    leftInset: -config?.leftInset || 0
-    rightInset: -config?.rightInset || 0
+    topInset: -config.topInset || 0
+    bottomInset: -config.bottomInset || 0
+    leftInset: -config.leftInset || 0
+    rightInset: -config.rightInset || 0
 
     color: control.palette.text
     selectionColor: control.palette.highlight
@@ -47,19 +52,14 @@ T.TextField {
     }
 
     background: BorderImage {
-        source: Qt.resolvedUrl("images/textfield-background")
-
-        border.top: control.config?.topOffset || 0
-        border.bottom: control.config?.bottomOffset || 0
-        border.left: control.config?.leftOffset || 0
-        border.right: control.config?.rightOffset || 0
-
-        ImageSelector on source {
-            states: [
-                {"disabled": !control.enabled},
-                {"focused": control.activeFocus},
-                {"hovered": control.enabled && control.hovered}
-            ]
+        source: control.config.background?.export === "image"
+                    ? Qt.resolvedUrl("images/" + control.config.background.name)
+                    : ""
+        border {
+            top: control.config.background?.topOffset || 0
+            bottom: control.config.background?.bottomOffset || 0
+            left: control.config.background?.leftOffset || 0
+            right: control.config.background?.rightOffset || 0
         }
     }
 }

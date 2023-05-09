@@ -26,7 +26,7 @@ class QQuickFigmaConfigReader : public QObject
     Q_OBJECT
     QML_SINGLETON
     Q_PROPERTY(QString configPath READ configPath NOTIFY configPathChanged FINAL)
-    Q_PROPERTY(QVariantMap images READ images CONSTANT FINAL)
+    Q_PROPERTY(QVariantMap controls READ controls CONSTANT FINAL)
     QML_NAMED_ELEMENT(ConfigReader)
     QML_ADDED_IN_VERSION(6, 6)
 
@@ -36,9 +36,7 @@ public:
     QString configPath() const;
     void setConfigPath(const QString &path);
 
-    QVariantMap images() const;
-
-    Q_INVOKABLE QVariant configForImageUrl(const QUrl &url) const;
+    QVariantMap controls() const;
 
 Q_SIGNALS:
     void configPathChanged();
@@ -50,7 +48,7 @@ private:
     void parseConfig();
 
     QString m_configPath;
-    QVariantMap m_imagesConfig;
+    QVariantMap m_controlsConfig;
 };
 
 QT_END_NAMESPACE

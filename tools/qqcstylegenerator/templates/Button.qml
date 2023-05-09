@@ -11,25 +11,33 @@ T.Button {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    readonly property var config: ConfigReader.configForImageUrl(background?.source ?? "")
+    spacing: config.spacing || 0
 
-    spacing: config?.spacing || 0
+    topPadding: config.topPadding || 0
+    bottomPadding: config.bottomPadding || 0
+    leftPadding: config.leftPadding || 0
+    rightPadding: config.rightPadding || 0
 
-    topPadding: config?.topPadding || 0
-    bottomPadding: config?.bottomPadding || 0
-    leftPadding: config?.leftPadding || 0
-    rightPadding: config?.rightPadding || 0
-
-    topInset: -config?.topInset || 0
-    bottomInset: -config?.bottomInset || 0
-    leftInset: -config?.leftInset || 0
-    rightInset: -config?.rightInset || 0
+    topInset: -config.topInset || 0
+    bottomInset: -config.bottomInset || 0
+    leftInset: -config.leftInset || 0
+    rightInset: -config.rightInset || 0
 
     icon.width: 17
     icon.height: 17
     icon.color: control.flat ? (control.enabled ? (control.down ? control.palette.highlight : control.palette.button)
                                                 : control.palette.mid)
                              : control.palette.buttonText
+
+    readonly property string currentState: [
+        control.checked && "checked",
+        !control.enabled && "disabled",
+        control.flat && "flat",
+        control.visualFocus && "focused",
+        control.enabled && !control.down && control.hovered && "hovered",
+        control.down && "pressed"
+    ].filter(Boolean).join("-") || "normal"
+    readonly property var config: ConfigReader.controls.button[currentState] || {}
 
     contentItem: IconLabel {
         spacing: control.spacing
@@ -39,31 +47,18 @@ T.Button {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.flat ? (control.enabled ? (control.down ? control.palette.highlight : control.palette.button)
-                                               : control.palette.mid)
-                            : control.palette.buttonText
+        color: control.icon.color
     }
 
     background: BorderImage {
-        source: Qt.resolvedUrl("images/button-background")
-
-        border.top: control.config?.topOffset || 0
-        border.bottom: control.config?.bottomOffset || 0
-        border.left: control.config?.leftOffset || 0
-        border.right: control.config?.rightOffset || 0
-
-        ImageSelector on source {
-            states: [
-                {"disabled": !control.enabled},
-                {"pressed": control.down},
-                {"checked": control.checked},
-                {"checkable": control.checkable},
-                {"focused": control.visualFocus},
-                {"highlighted": control.highlighted},
-                {"mirrored": control.mirrored},
-                {"flat": control.flat},
-                {"hovered": control.enabled && control.hovered}
-            ]
+        source: control.config.background?.export === "image"
+                    ? Qt.resolvedUrl("images/" + control.config.background.name)
+                    : ""
+        border {
+            top: control.config.background?.topOffset || 0
+            bottom: control.config.background?.bottomOffset || 0
+            left: control.config.background?.leftOffset || 0
+            right: control.config.background?.rightOffset || 0
         }
     }
 }

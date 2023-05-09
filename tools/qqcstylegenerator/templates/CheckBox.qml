@@ -12,55 +12,42 @@ T.CheckBox {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
-    readonly property var config: ConfigReader.configForImageUrl(background?.source ?? "")
-    readonly property bool mirroredIndicator: control.mirrored !== (config?.mirrored || false)
+    spacing: config.spacing || 0
 
-    spacing: config?.spacing || 0
+    topPadding: config.topPadding || 0
+    bottomPadding: config.bottomPadding || 0
+    leftPadding: config.leftPadding || 0
+    rightPadding: config.rightPadding || 0
 
-    topPadding: config?.topPadding || 0
-    bottomPadding: config?.bottomPadding || 0
-    leftPadding: config?.leftPadding || 0
-    rightPadding: config?.rightPadding || 0
+    topInset: -config.topInset || 0
+    bottomInset: -config.bottomInset || 0
+    leftInset: -config.leftInset || 0
+    rightInset: -config.rightInset || 0
 
-    topInset: -config?.topInset || 0
-    bottomInset: -config?.bottomInset || 0
-    leftInset: -config?.leftInset || 0
-    rightInset: -config?.rightInset || 0
+    readonly property string currentState: [
+        control.checkState === Qt.Checked && "checked",
+        control.checkState === Qt.PartiallyChecked && "partially-checked",
+        !control.enabled && "disabled",
+        control.visualFocus && "focused",
+        control.enabled && !control.down && control.hovered && "hovered",
+        control.down && "pressed",
+    ].filter(Boolean).join("-") || "normal"
+    readonly property var config: ConfigReader.controls.checkbox[currentState] || {}
+    readonly property bool mirroredIndicator: control.mirrored !== (config.mirrored || false)
 
     indicator: Image {
         x: control.text ? (control.mirroredIndicator ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-
-        source: Qt.resolvedUrl("images/checkbox-indicator-background")
-        ImageSelector on source {
-            states: [
-                {"partialicon": control.checkState === Qt.PartiallyChecked},
-                {"disabled": !control.enabled},
-                {"checked": control.checkState === Qt.Checked},
-                {"partially-checked": control.checkState === Qt.PartiallyChecked},
-                {"pressed": control.down},
-                {"focused": control.visualFocus},
-                {"mirrored": control.mirrored},
-                {"hovered": control.enabled && control.hovered}
-            ]
-        }
+        source: control.config.indicator_background?.export === "image"
+                    ? Qt.resolvedUrl("images/" + control.config.indicator_background.name)
+                    : ""
 
         Image {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
-            source: Qt.resolvedUrl("images/checkbox-indicator")
-            ImageSelector on source {
-                states: [
-                    {"partialicon": control.checkState === Qt.PartiallyChecked},
-                    {"disabled": !control.enabled},
-                    {"checked": control.checkState === Qt.Checked},
-                    {"partially-checked": control.checkState === Qt.PartiallyChecked},
-                    {"pressed": control.down},
-                    {"focused": control.visualFocus},
-                    {"mirrored": control.mirrored},
-                    {"hovered": control.enabled && control.hovered}
-                ]
-            }
+            source: control.config.indicator?.export === "image"
+                    ? Qt.resolvedUrl("images/" + control.config.indicator.name)
+                    : ""
         }
     }
 
@@ -76,23 +63,14 @@ T.CheckBox {
     }
 
     background: BorderImage {
-        source: Qt.resolvedUrl("images/checkbox-background")
-
-        border.top: control.config?.topOffset || 0
-        border.bottom: control.config?.bottomOffset || 0
-        border.left: control.config?.leftOffset || 0
-        border.right: control.config?.rightOffset || 0
-
-        ImageSelector on source {
-            states: [
-                {"checked": control.checkState === Qt.Checked},
-                {"partially-checked": control.checkState === Qt.PartiallyChecked},
-                {"disabled": !control.enabled},
-                {"pressed": control.down},
-                {"focused": control.visualFocus},
-                {"mirrored": control.mirrored},
-                {"hovered": control.enabled && control.hovered}
-            ]
+        source: control.config.background?.export === "image"
+                    ? Qt.resolvedUrl("images/" + control.config.background.name)
+                    : ""
+        border {
+            top: control.config.background?.topOffset || 0
+            bottom: control.config.background?.bottomOffset || 0
+            left: control.config.background?.leftOffset || 0
+            right: control.config.background?.rightOffset || 0
         }
     }
 }
