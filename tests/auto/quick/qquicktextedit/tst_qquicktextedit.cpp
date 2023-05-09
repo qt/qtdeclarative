@@ -140,6 +140,7 @@ private slots:
     void implicitSizeBinding();
     void largeTextObservesViewport_data();
     void largeTextObservesViewport();
+    void largeTextSelection();
     void renderingAroundSelection();
 
     void signal_editingfinished();
@@ -348,7 +349,7 @@ public:
 
     void populateLinePositions(QSGNode *node)
     {
-        linePositions.clear();
+        sortedLinePositions.clear();
         lastLinePosition = 0;
         QSGNode *ch = node->firstChild();
         while (ch != node->lastChild()) {
@@ -363,14 +364,12 @@ public:
                 qCDebug(lcTests) << "ignoring leaf TransformNode" << tn << "@ y" << y;
             } else {
                 qCDebug(lcTests) << "child" << tn << "@ y" << y << "has children" << tn->childCount();
-                if (!linePositions.contains(y)) {
-                    linePositions.append(y);
-                    lastLinePosition = qMax(lastLinePosition, y);
-                }
+                sortedLinePositions.append(y);
+                lastLinePosition = qMax(lastLinePosition, y);
             }
             ch = ch->nextSibling();
         }
-        std::sort(linePositions.begin(), linePositions.end());
+        std::sort(sortedLinePositions.begin(), sortedLinePositions.end());
     }
 
     QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *data) override
@@ -381,7 +380,7 @@ public:
        return ret;
     }
 
-    QList<int> linePositions;
+    QList<int> sortedLinePositions;
     int lastLinePosition;
 };
 
@@ -3883,14 +3882,49 @@ void tst_qquicktextedit::largeTextObservesViewport()
     QCOMPARE(textPriv->cursorItem->isVisible(), textPriv->renderedRegion.intersects(textItem->cursorRectangle()));
 }
 
+void tst_qquicktextedit::largeTextSelection()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("qtConfigureHelp.qml")));
+    NodeCheckerTextEdit *textItem = qmlobject_cast<NodeCheckerTextEdit *>(window.rootObject());
+    QVERIFY(textItem);
+    QTRY_VERIFY(textItem->sortedLinePositions.size() > 0);
+    const auto sortedLinePositions = textItem->sortedLinePositions;
+
+    QQuickTextEditPrivate *textPriv = QQuickTextEditPrivate::get(textItem);
+    QSignalSpy renderSpy(&window, &QQuickWindow::afterRendering);
+    if (lcTests().isDebugEnabled())
+        QTest::qWait(500); // for visual check; not needed in CI
+
+    const int renderCount = renderSpy.size();
+    textItem->setCursorPosition(200);
+    textItem->moveCursorSelection(220);
+    QTRY_COMPARE_GT(renderSpy.size(), renderCount);
+
+    if (lcTests().isDebugEnabled())
+        QTest::qWait(500); // for visual check; not needed in CI
+
+    qCDebug(lcTests) << "TextEdit's nodes" << textPriv->textNodeMap;
+    qCDebug(lcTests) << "font" << textItem->font() << "line positions"
+                     << textItem->sortedLinePositions << "expected" << sortedLinePositions;
+
+    const bool eachTextNodeRenderedOnlyOnce = [textItem]() -> bool {
+        for (auto i = 1; i < textItem->sortedLinePositions.count(); ++i)
+            if (textItem->sortedLinePositions[i - 1] == textItem->sortedLinePositions[i])
+                return false;
+        return true;
+    }();
+    QVERIFY(eachTextNodeRenderedOnlyOnce);
+}
+
 void tst_qquicktextedit::renderingAroundSelection()
 {
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("threeLines.qml")));
     NodeCheckerTextEdit *textItem = qmlobject_cast<NodeCheckerTextEdit*>(window.rootObject());
     QVERIFY(textItem);
-    QTRY_VERIFY(textItem->linePositions.size() > 0);
-    const auto linePositions = textItem->linePositions;
+    QTRY_VERIFY(textItem->sortedLinePositions.size() > 0);
+    const auto sortedLinePositions = textItem->sortedLinePositions;
     const int lastLinePosition = textItem->lastLinePosition;
     QQuickTextEditPrivate *textPriv = QQuickTextEditPrivate::get(textItem);
     QSignalSpy renderSpy(&window, &QQuickWindow::afterRendering);
@@ -3912,9 +3946,9 @@ void tst_qquicktextedit::renderingAroundSelection()
         QTest::qWait(500); // for visual check; not needed in CI
 
     qCDebug(lcTests) << "TextEdit's nodes" << textPriv->textNodeMap;
-    qCDebug(lcTests) << "font" << textItem->font() << "line positions" << textItem->linePositions << "should be" << linePositions;
+    qCDebug(lcTests) << "font" << textItem->font() << "line positions" << textItem->sortedLinePositions << "should be" << sortedLinePositions;
     QCOMPARE(textItem->lastLinePosition, lastLinePosition);
-    QTRY_COMPARE(textItem->linePositions, linePositions);
+    QTRY_COMPARE(textItem->sortedLinePositions, sortedLinePositions);
 }
 
 void tst_qquicktextedit::signal_editingfinished()
