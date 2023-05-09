@@ -75,7 +75,7 @@
         "copy": ":/TextField.qml",
         "component set": "TextFieldTemplate",
         "atoms": [
-            {"atom": "background", "figmaPath": "TextFieldBackground"},
+            {"atom": "background", "figmaPath": "TextFieldBackground, background"},
             {"atom": "contentItem", "figmaPath": "contentItem", "export": "layout"}
         ],
         "states": [
