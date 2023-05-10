@@ -46,7 +46,8 @@ public:
     DomType kind() const override { return type; }
     DomKind domKind() const override { return domKindValue; }
 
-    void createFileLocations(FileLocations::Tree base) override {
+    void createFileLocations(FileLocations::Tree base) override
+    {
         FileLocations::Tree res = FileLocations::ensure(base, pathFromOwner(), AttachedInfo::PathType::Relative);
         FileLocations::addRegion(res, QString(), m_combinedLocation);
     }

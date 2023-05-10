@@ -17,6 +17,7 @@
 #include <QtCore/QLibraryInfo>
 #include <QtCore/QFileInfo>
 
+#include <deque>
 #include <memory>
 #include <variant>
 
@@ -1356,6 +1357,175 @@ private slots:
         // Empty block
         QVERIFY(statements.index(3).field(Fields::statements).internalKind() != DomType::Empty);
         QCOMPARE(statements.index(3).field(Fields::statements).length(), 0);
+    }
+
+private:
+    struct DomItemWithLocation
+    {
+        DomItem item;
+        FileLocations::Tree tree;
+    };
+private slots:
+
+    void fileLocations_data()
+    {
+        QTest::addColumn<QString>("fileName");
+
+        // ignore the very big files for this
+        QSet<QString> blackList = { u"deeplyNested.qml"_s, u"longQmlFile.qml"_s };
+
+        QDir dir(baseDir);
+        for (const QString &file : dir.entryList(QDir::Files, QDir::Name)) {
+            if (!file.endsWith(".qml") || blackList.contains(file))
+                continue;
+
+            QTest::addRow("%s", file.toStdString().c_str()) << baseDir + QDir::separator() + file;
+        }
+    }
+
+    void fileLocations()
+    {
+        QFETCH(QString, fileName);
+
+        DomItem rootQmlObject = rootQmlObjectFromFile(fileName, qmltypeDirs);
+        std::deque<DomItemWithLocation> queue;
+
+        DomItem fileDomItem = rootQmlObject.containingFile();
+        std::shared_ptr<QmlFile> file = fileDomItem.ownerAs<QmlFile>();
+        QVERIFY(file);
+
+        DomItemWithLocation root{ fileDomItem, file->fileLocationsTree() };
+        queue.push_back(root);
+
+        while (!queue.empty()) {
+            DomItemWithLocation current = queue.front();
+            queue.pop_front();
+
+            auto subEls = current.tree->subItems();
+            for (auto it = subEls.begin(); it != subEls.end(); ++it) {
+                DomItem childItem = current.item.path(it.key());
+                FileLocations::Tree childTree =
+                        std::static_pointer_cast<AttachedInfoT<FileLocations>>(it.value());
+                QVERIFY(childItem.internalKind() != DomType::Empty);
+                queue.push_back({ childItem, childTree });
+            }
+        }
+    }
+
+private:
+    static Path reconstructPathFromFileLocations(DomItem item)
+    {
+        QList<Path> paths;
+        for (FileLocations::Tree current = FileLocations::treeOf(item); current;
+             current = current->parent()) {
+            Q_ASSERT(paths.isEmpty() || FileLocations::find(current, paths.back()));
+            paths.append(current->path());
+        }
+        Path result;
+        for (auto it = paths.crbegin(); it != paths.crend(); ++it) {
+            result = result.path(*it);
+        }
+        return result;
+    }
+private slots:
+
+    void finalizeScriptExpressions()
+    {
+        QString fileName = baseDir + u"/finalizeScriptExpressions.qml"_s;
+        DomItem rootQmlObject = rootQmlObjectFromFile(fileName, qmltypeDirs);
+
+        /*
+           Check if the path obtained by the filelocations is the same as the DomItem path. Both
+           need to be equal to find DomItem's from their location in the source code.
+        */
+        auto compareFileLocationsPathWithCanonicalPath = [](DomItem item) {
+            Path canonical = item.canonicalPath();
+            QVERIFY(canonical.length() > 0);
+            if (canonical.length() > 0)
+                QCOMPARE(canonical, reconstructPathFromFileLocations(item));
+        };
+
+        /*
+        for all places, where scriptelements are attached to Qml elements in the Dom, check if:
+            a) scriptelement is accessible from the DomItem (is it correclty attached?)
+            b) scriptelement has the correct path (is its pathFromOwner the path where it was
+        attached?)
+        */
+
+        {
+            DomItem binding = rootQmlObject.field(Fields::bindings).key("binding");
+            QCOMPARE(binding.indexes(), 1);
+
+            QCOMPARE(binding.index(0).field(Fields::value).internalKind(),
+                     DomType::ScriptExpression);
+            QCOMPARE(binding.index(0)
+                             .field(Fields::value)
+                             .field(Fields::scriptElement)
+                             .internalKind(),
+                     DomType::ScriptLiteral);
+            // Fields::value is in the path of the owner, and therefore should not be in
+            // pathFromOwner!
+            DomItem scriptElement =
+                    binding.index(0).field(Fields::value).field(Fields::scriptElement);
+            QCOMPARE(scriptElement.pathFromOwner(), Path().field(Fields::scriptElement));
+            compareFileLocationsPathWithCanonicalPath(scriptElement);
+        }
+
+        {
+            DomItem bindingInPropertyDefinition =
+                    rootQmlObject.field(Fields::bindings).key("bindingInPropertyDefinition");
+            QCOMPARE(bindingInPropertyDefinition.indexes(), 1);
+
+            QCOMPARE(bindingInPropertyDefinition.index(0).field(Fields::value).internalKind(),
+                     DomType::ScriptExpression);
+            QCOMPARE(bindingInPropertyDefinition.index(0)
+                             .field(Fields::value)
+                             .field(Fields::scriptElement)
+                             .internalKind(),
+                     DomType::ScriptLiteral);
+            // Fields::value is in the path of the owner, and therefore should not be in
+            // pathFromOwner!
+            DomItem scriptElement = bindingInPropertyDefinition.index(0)
+                                            .field(Fields::value)
+                                            .field(Fields::scriptElement);
+            QCOMPARE(scriptElement.pathFromOwner(), Path().field(Fields::scriptElement));
+            compareFileLocationsPathWithCanonicalPath(scriptElement);
+        }
+        // check the parameters of the method
+        {
+            DomItem return42 = rootQmlObject.field(Fields::methods).key("return42");
+            QCOMPARE(return42.indexes(), 1);
+
+            DomItem parameters = return42.index(0).field(Fields::parameters);
+            QCOMPARE(parameters.indexes(), 3);
+            for (int i = 0; i < 3; ++i) {
+                QCOMPARE(parameters.index(i).field(Fields::defaultValue).internalKind(),
+                         DomType::ScriptExpression);
+                QEXPECT_FAIL(nullptr, "FunctionDeclaration not implemented as script element yet.",
+                             TestFailMode::Continue);
+                DomItem scriptElement = parameters.index(i)
+                                                .field(Fields::defaultValue)
+                                                .field(Fields::scriptElement);
+                QCOMPARE(scriptElement.internalKind(), DomType::ScriptLiteral);
+                QEXPECT_FAIL(nullptr, "FunctionDeclaration not implemented as script element yet.",
+                             TestFailMode::Continue);
+                QCOMPARE(scriptElement.pathFromOwner(), Path().field(Fields::scriptElement));
+                QEXPECT_FAIL(nullptr, "FunctionDeclaration not implemented as script element yet.",
+                             TestFailMode::Continue);
+                compareFileLocationsPathWithCanonicalPath(scriptElement);
+            }
+        }
+        // check the body of the methods
+        QList<QString> methodNames = { "full", "return42" };
+        for (QString &methodName : methodNames) {
+            DomItem method = rootQmlObject.field(Fields::methods).key(methodName);
+            DomItem body = method.index(0).field(Fields::body);
+            QCOMPARE(body.internalKind(), DomType::ScriptExpression);
+            DomItem scriptElement = body.field(Fields::scriptElement);
+            QCOMPARE(scriptElement.internalKind(), DomType::ScriptBlockStatement);
+            QCOMPARE(scriptElement.pathFromOwner(), Path().field(Fields::scriptElement));
+            compareFileLocationsPathWithCanonicalPath(scriptElement);
+        }
     }
 
 private:

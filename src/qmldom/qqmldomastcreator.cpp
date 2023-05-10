@@ -170,16 +170,19 @@ void QQmlDomAstCreator::removeCurrentScriptNode(std::optional<DomType> expectedT
 /*!
    \internal
    Prepares a script element DOM representation such that it can be used inside a QML DOM element.
+
+   Make sure to add, for each of its use, a test in tst_qmldomitem:finalizeScriptExpressions, as
+   using a wrong pathFromOwner and/or a wrong base might lead to bugs hard to debug and spurious
+   crashes.
  */
 const ScriptElementVariant &
-QQmlDomAstCreator::finalizeScriptExpression(const ScriptElementVariant &element,
-                                            FileLocations::Tree base)
+QQmlDomAstCreator::finalizeScriptExpression(const ScriptElementVariant &element, Path pathFromOwner,
+                                            const FileLocations::Tree &base)
 {
     auto e = element.base();
     Q_ASSERT(e);
-    e->updatePathFromOwner(Path().field(Fields::scriptElement));
-    if (!base)
-        base = currentNodeEl().fileLocations;
+
+    e->updatePathFromOwner(pathFromOwner);
     e->createFileLocations(base);
     return element;
 }
@@ -422,8 +425,10 @@ void QQmlDomAstCreator::endVisit(AST::UiPublicMember *el)
         if (m_enableScriptExpressions && scriptNodeStack.size() != 1)
             Q_SCRIPTELEMENT_DISABLE();
         if (m_enableScriptExpressions) {
-            b.scriptExpressionValue()->setScriptElement(
-                    finalizeScriptExpression(currentScriptNodeEl().takeVariant()));
+            b.scriptExpressionValue()->setScriptElement(finalizeScriptExpression(
+                    currentScriptNodeEl().takeVariant(), Path().field(Fields::scriptElement),
+                    FileLocations::ensure(currentNodeEl().fileLocations,
+                                          Path().field(Fields::value))));
             removeCurrentScriptNode({});
         }
 
@@ -489,26 +494,26 @@ bool QQmlDomAstCreator::visit(AST::UiSourceElement *el)
         }
         m.access = MethodInfo::Public;
         m.methodType = MethodInfo::Method;
-        if (fDef->body) {
-            SourceLocation bodyLoc = combineLocations(fDef->body);
-            SourceLocation methodLoc = combineLocations(el);
-            QStringView preCode = code.mid(methodLoc.begin(), bodyLoc.begin() - methodLoc.begin());
-            QStringView postCode = code.mid(bodyLoc.end(), methodLoc.end() - bodyLoc.end());
-            m.body = std::make_shared<ScriptExpression>(
-                    code.mid(bodyLoc.offset, bodyLoc.length), qmlFilePtr->engine(), fDef->body,
-                    qmlFilePtr->astComments(), ScriptExpression::ExpressionType::FunctionBody,
-                    bodyLoc, 0, preCode, postCode);
-        }
+
+        SourceLocation bodyLoc = fDef->body
+                ? combineLocations(fDef->body)
+                : combineLocations(fDef->lbraceToken, fDef->rbraceToken);
+        SourceLocation methodLoc = combineLocations(el);
+        QStringView preCode = code.mid(methodLoc.begin(), bodyLoc.begin() - methodLoc.begin());
+        QStringView postCode = code.mid(bodyLoc.end(), methodLoc.end() - bodyLoc.end());
+        m.body = std::make_shared<ScriptExpression>(
+                code.mid(bodyLoc.offset, bodyLoc.length), qmlFilePtr->engine(), fDef->body,
+                qmlFilePtr->astComments(), ScriptExpression::ExpressionType::FunctionBody, bodyLoc,
+                0, preCode, postCode);
+
         MethodInfo *mPtr;
         Path mPathFromOwner = current<QmlObject>().addMethod(m, AddOption::KeepExisting, &mPtr);
         pushEl(mPathFromOwner, *mPtr,
                fDef); // add at the start and use the normal recursive visit?
         FileLocations::Tree &fLoc = nodeStack.last().fileLocations;
-        if (fDef->body) {
-            auto bodyLoc = FileLocations::ensure(fLoc, Path::Field(Fields::body),
-                                                 AttachedInfo::PathType::Relative);
-            FileLocations::addRegion(bodyLoc, QString(), combineLocations(fDef->body));
-        }
+        auto bodyTree = FileLocations::ensure(fLoc, Path::Field(Fields::body),
+                                              AttachedInfo::PathType::Relative);
+        FileLocations::addRegion(bodyTree, QString(), bodyLoc);
         if (fDef->lparenToken.length != 0)
             FileLocations::addRegion(fLoc, u"leftParen", fDef->lparenToken);
         if (fDef->rparenToken.length != 0)
@@ -555,27 +560,31 @@ bool QQmlDomAstCreator::visit(AST::UiSourceElement *el)
 void QQmlDomAstCreator::endVisit(AST::UiSourceElement *el)
 {
     MethodInfo &m = std::get<MethodInfo>(currentNode().value);
-    if (FunctionDeclaration *fDef = cast<FunctionDeclaration *>(el->sourceElement);
-        fDef && fDef->body) {
-        FileLocations::Tree bodyLoc =
-                FileLocations::find(currentNodeEl().fileLocations, Path().field(Fields::body));
-        Q_ASSERT(bodyLoc);
-        if (m_enableScriptExpressions && scriptNodeStack.size() != 1)
-            Q_SCRIPTELEMENT_DISABLE();
-        if (m_enableScriptExpressions) {
-            if (currentScriptNodeEl().isList()) {
-                // It is more intuitive to have functions with a block as a body instead of a list.
-                auto body = makeScriptElement<ScriptElements::BlockStatement>(fDef->body);
-                body->setStatements(currentScriptNodeEl().takeList());
-                if (auto semanticScope = body->statements().semanticScope())
-                    body->setSemanticScope(*semanticScope);
-                m.body->setScriptElement(
-                        finalizeScriptExpression(ScriptElementVariant::fromElement(body), bodyLoc));
-            } else {
-                m.body->setScriptElement(
-                        finalizeScriptExpression(currentScriptNodeEl().takeVariant(), bodyLoc));
+    if (FunctionDeclaration *fDef = cast<FunctionDeclaration *>(el->sourceElement)) {
+
+        const FileLocations::Tree bodyTree =
+                FileLocations::ensure(currentNodeEl().fileLocations, Path().field(Fields::body));
+        const Path bodyPath = Path().field(Fields::scriptElement);
+
+        if (fDef->body) {
+            if (m_enableScriptExpressions && scriptNodeStack.isEmpty())
+                Q_SCRIPTELEMENT_DISABLE();
+            if (m_enableScriptExpressions) {
+                if (currentScriptNodeEl().isList()) {
+                    // It is more intuitive to have functions with a block as a body instead of a
+                    // list.
+                    auto body = makeScriptElement<ScriptElements::BlockStatement>(fDef->body);
+                    body->setStatements(currentScriptNodeEl().takeList());
+                    if (auto semanticScope = body->statements().semanticScope())
+                        body->setSemanticScope(*semanticScope);
+                    m.body->setScriptElement(finalizeScriptExpression(
+                            ScriptElementVariant::fromElement(body), bodyPath, bodyTree));
+                } else {
+                    m.body->setScriptElement(finalizeScriptExpression(
+                            currentScriptNodeEl().takeVariant(), bodyPath, bodyTree));
+                }
+                removeCurrentScriptNode({});
             }
-            removeCurrentScriptNode({});
         }
     }
     QmlObject &obj = current<QmlObject>();
@@ -781,8 +790,11 @@ void QQmlDomAstCreator::setScriptExpression (const std::shared_ptr<ScriptExpress
         && (scriptNodeStack.size() != 1 || currentScriptNodeEl().isList()))
         Q_SCRIPTELEMENT_DISABLE();
     if (m_enableScriptExpressions) {
-        value->setScriptElement(
-                finalizeScriptExpression(currentScriptNodeEl().takeVariant()));
+        FileLocations::Tree valueLoc = FileLocations::ensure(currentNodeEl().fileLocations,
+                                                             Path().field(Fields::value));
+        value->setScriptElement(finalizeScriptExpression(currentScriptNodeEl().takeVariant(),
+                                                         Path().field(Fields::scriptElement),
+                                                         valueLoc));
         removeCurrentScriptNode({});
     }
 };

@@ -1760,7 +1760,9 @@ bool MethodInfo::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
         cont = cont && self.dvValueField(visitor, Fields::isConstructor, isConstructor);
     }
     if (body)
-        cont = cont && self.dvWrapField(visitor, Fields::body, body);
+        cont = cont && self.dvItemField(visitor, Fields::body, [this, &self]() {
+            return self.subOwnerItem(PathEls::Field(Fields::body), body);
+        });
     return cont;
 }
 

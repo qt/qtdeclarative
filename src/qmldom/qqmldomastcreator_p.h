@@ -196,7 +196,10 @@ private:
 
     FileLocations::Tree createMap(DomType k, Path p, AST::Node *n);
 
-    const ScriptElementVariant &finalizeScriptExpression(const ScriptElementVariant &element, FileLocations::Tree base = nullptr);
+    const ScriptElementVariant &finalizeScriptExpression(const ScriptElementVariant &element,
+                                                         Path pathFromOwner,
+                                                         const FileLocations::Tree &base);
+
     const ScriptElementVariant &finalizeScriptList(AST::Node *ast, FileLocations::Tree base);
     void setScriptExpression (const std::shared_ptr<ScriptExpression>& value);
 
