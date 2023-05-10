@@ -281,6 +281,23 @@ set_target_properties(someTarget PROPERTIES
 )
 \endcode
 
+Finally, the \c --verbose argument can be used to see diagnostic output from
+qmlcachegen:
+
+\badcode
+set_target_properties(someTarget PROPERTIES
+    QT_QMLCACHEGEN_ARGUMENTS "--verbose"
+)
+\endcode
+
+With this flag set, qmlcachegen will output warnings for each function it
+cannot compile to C++. Some of these warnings will point to problems in your
+QML code and some will tell you that certain features of the QML language are
+not implemented in the C++ code generator. In both cases, qmlcachegen will
+still generate byte code for such functions. If you want to see only the
+problems in your QML code, you should use qmllint and the targets generated
+for it instead.
+
 \target qmllint-auto
 \section2 Linting QML sources
 
