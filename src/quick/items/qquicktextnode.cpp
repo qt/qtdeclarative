@@ -16,7 +16,6 @@
 #include <qtextdocument.h>
 #include <qtextlayout.h>
 #include <qabstracttextdocumentlayout.h>
-#include <qxmlstream.h>
 #include <private/qquickstyledtext_p.h>
 #include <private/qquicktext_p_p.h>
 #include <private/qfont_p.h>

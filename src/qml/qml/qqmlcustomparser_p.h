@@ -20,7 +20,6 @@
 #include <private/qv4compileddata_p.h>
 
 #include <QtCore/qbytearray.h>
-#include <QtCore/qxmlstream.h>
 
 QT_BEGIN_NAMESPACE
 
