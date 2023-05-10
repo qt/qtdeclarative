@@ -2340,14 +2340,25 @@ ReturnedValue QObjectMethod::create(
     else
         method->d()->setObject(object);
 
-    if (cloneFrom->methodCount == 1) {
+    Q_ASSERT(method->d()->methods == nullptr);
+    switch (cloneFrom->methodCount) {
+    case 0:
+        Q_ASSERT(cloneFrom->methods == nullptr);
+        break;
+    case 1:
+        Q_ASSERT(cloneFrom->methods
+                 == reinterpret_cast<QQmlPropertyData *>(&cloneFrom->_singleMethod));
         method->d()->methods = reinterpret_cast<QQmlPropertyData *>(&method->d()->_singleMethod);
         *method->d()->methods = *cloneFrom->methods;
-    } else {
+        break;
+    default:
+        Q_ASSERT(cloneFrom->methods != nullptr);
         method->d()->methods = new QQmlPropertyData[cloneFrom->methodCount];
         memcpy(method->d()->methods, cloneFrom->methods,
                cloneFrom->methodCount * sizeof(QQmlPropertyData));
+        break;
     }
+
     return method.asReturnedValue();
 }
 
@@ -2473,8 +2484,10 @@ QString Heap::QObjectMethod::name() const
 
 void Heap::QObjectMethod::ensureMethodsCache(const QMetaObject *thisMeta)
 {
-    if (methods)
+    if (methods) {
+        Q_ASSERT(methodCount > 0);
         return;
+    }
 
     const QMetaObject *mo = metaObject();
 
@@ -2511,6 +2524,8 @@ void Heap::QObjectMethod::ensureMethodsCache(const QMetaObject *thisMeta)
         *methods = resolvedMethods.at(0);
         methodCount = 1;
     }
+
+    Q_ASSERT(methodCount > 0);
 }
 
 static QObject *qObject(const Value *v)
@@ -2637,6 +2652,7 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
     };
 
     if (d()->methodCount != 1) {
+        Q_ASSERT(d()->methodCount > 0);
         method = ResolveOverloaded(object, d()->methods, d()->methodCount, v4, callData);
         if (method == nullptr)
             return Encode::undefined();

@@ -413,6 +413,8 @@ private slots:
     void typedEnums_data();
     void typedEnums();
 
+    void objectMethodClone();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -7972,6 +7974,16 @@ void tst_qqmllanguage::typedEnums()
 
     QCOMPARE(o->property("output1").toDouble(), value);
     QCOMPARE(o->property("output2").toDouble(), value);
+}
+
+void tst_qqmllanguage::objectMethodClone()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("objectMethodClone.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QTRY_COMPARE(o->property("doneClicks").toInt(), 2);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
