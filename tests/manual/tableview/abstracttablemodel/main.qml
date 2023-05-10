@@ -12,7 +12,7 @@ import Qt.labs.qmlmodels
 ApplicationWindow {
     id: window
     width: 1000
-    height: 800
+    height: 600
     visible: true
 
     readonly property var currentIndex: tableView.selectionModel.currentIndex
@@ -52,7 +52,7 @@ ApplicationWindow {
                     CheckBox {
                         id: flickingMode
                         checkable: true
-                        checked: true
+                        checked: false
                         text: "Interactive"
                     }
 
@@ -136,6 +136,7 @@ ApplicationWindow {
 
                     ComboBox {
                         id: selectionCombo
+                        currentIndex: 1
                         model: [
                             "SelectionDisabled",
                             "SelectCells",
@@ -143,6 +144,20 @@ ApplicationWindow {
                             "SelectColumns",
                         ]
                     }
+
+                    ComboBox {
+                        id: selectionModeTv
+                        textRole: "text"
+                        valueRole: "value"
+                        implicitContentWidthPolicy: ComboBox.WidestText
+                        currentIndex: 2
+                        model: [
+                            { text: "SingleSelection", value: TableView.SingleSelection },
+                            { text: "ContiguousSelection", value: TableView.ContiguousSelection },
+                            { text: "ExtendedSelection", value: TableView.ExtendedSelection }
+                        ]
+                    }
+
                     ComboBox {
                         id: selectionModeCombo
                         enabled: selectionCombo.currentText != "SelectionDisabled"
@@ -480,6 +495,7 @@ ApplicationWindow {
                 }
                 return TableView.SelectionDisabled
             }
+            selectionMode: selectionModeTv.currentValue
             editTriggers: {
                 switch (editCombo.currentText) {
                 case "NoEditTriggers": return TableView.NoEditTriggers
@@ -512,6 +528,7 @@ ApplicationWindow {
     SelectionRectangle {
         id: selectionRectangle
         target: tableView
+        enabled: selectionCombo.currentText != "SelectionDisabled"
         topLeftHandle: Rectangle {
             width: 20
             height: 20

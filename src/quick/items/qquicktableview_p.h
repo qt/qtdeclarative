@@ -64,6 +64,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable, public QQ
     Q_PROPERTY(bool resizableColumns READ resizableColumns WRITE setResizableColumns NOTIFY resizableColumnsChanged REVISION(6, 5) FINAL)
     Q_PROPERTY(bool resizableRows READ resizableRows WRITE setResizableRows NOTIFY resizableRowsChanged REVISION(6, 5) FINAL)
     Q_PROPERTY(EditTriggers editTriggers READ editTriggers WRITE setEditTriggers NOTIFY editTriggersChanged REVISION(6, 5) FINAL)
+    Q_PROPERTY(SelectionMode selectionMode READ selectionMode WRITE setSelectionMode NOTIFY selectionModeChanged REVISION(6, 6) FINAL)
 
     QML_NAMED_ELEMENT(TableView)
     QML_ADDED_IN_VERSION(2, 12)
@@ -91,6 +92,13 @@ public:
         SelectColumns
     };
     Q_ENUM(SelectionBehavior)
+
+    enum SelectionMode {
+        SingleSelection,
+        ContiguousSelection,
+        ExtendedSelection
+    };
+    Q_ENUM(SelectionMode)
 
     enum EditTrigger {
         NoEditTriggers = 0x0,
@@ -162,6 +170,8 @@ public:
 
     SelectionBehavior selectionBehavior() const;
     void setSelectionBehavior(SelectionBehavior selectionBehavior);
+    SelectionMode selectionMode() const;
+    void setSelectionMode(SelectionMode selectionMode);
 
     bool resizableColumns() const;
     void setResizableColumns(bool enabled);
@@ -253,6 +263,7 @@ Q_SIGNALS:
     Q_REVISION(6, 5) void resizableRowsChanged();
     Q_REVISION(6, 5) void editTriggersChanged();
     Q_REVISION(6, 5) void layoutChanged();
+    Q_REVISION(6, 6) void selectionModeChanged();
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;

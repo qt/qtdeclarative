@@ -177,49 +177,113 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
     });
 
     QObject::connect(m_tapHandler, &QQuickTapHandler::tapped, [this] {
+        const auto modifiers = m_tapHandler->point().modifiers();
+        if (modifiers != Qt::NoModifier)
+            return;
+
         updateActiveState(false);
     });
 
-    QObject::connect(m_tapHandler, &QQuickTapHandler::longPressed, [this]() {
+    QObject::connect(m_tapHandler, &QQuickTapHandler::pressedChanged, [this]() {
+        if (!m_tapHandler->isPressed())
+            return;
+        if (m_effectiveSelectionMode != QQuickSelectionRectangle::Drag)
+            return;
+
         const QPointF pos = m_tapHandler->point().pressPosition();
         const auto modifiers = m_tapHandler->point().modifiers();
-
-        if (!m_selectable->startSelection(pos))
+        if (modifiers & ~(Qt::ControlModifier | Qt::ShiftModifier))
             return;
+
+        if (modifiers & Qt::ShiftModifier) {
+            // Extend the existing selection towards the pressed cell
+            if (!m_active)
+                return;
+            m_selectable->setSelectionEndPos(pos);
+            updateHandles();
+            updateActiveState(true);
+        } else if (modifiers & Qt::ControlModifier) {
+            // Select a single cell, but keep the old selection (unless
+            // m_selectable->startSelection(pos) returns false, which
+            // it will if selectionMode only allows a single selection).
+            if (handleUnderPos(pos) != nullptr) {
+                // Don't allow press'n'hold to start a new
+                // selection if it started on top of a handle.
+                return;
+            }
+
+            if (!m_selectable->startSelection(pos))
+                return;
+            m_selectable->setSelectionStartPos(pos);
+            m_selectable->setSelectionEndPos(pos);
+            updateHandles();
+            updateActiveState(true);
+        } else if (modifiers == Qt::NoModifier) {
+            // Don't select any cell
+            updateActiveState(false);
+        }
+    });
+
+    QObject::connect(m_tapHandler, &QQuickTapHandler::longPressed, [this]() {
+        if (m_effectiveSelectionMode != QQuickSelectionRectangle::PressAndHold)
+            return;
+
+        const QPointF pos = m_tapHandler->point().pressPosition();
+        const auto modifiers = m_tapHandler->point().modifiers();
         if (handleUnderPos(pos) != nullptr) {
             // Don't allow press'n'hold to start a new
             // selection if it started on top of a handle.
             return;
         }
-        if (!m_alwaysAcceptPressAndHold) {
-            if (m_selectionMode == QQuickSelectionRectangle::Auto) {
-                // In Auto mode, we only accept press and hold from touch
-                if (m_tapHandler->point().device()->pointerType() != QPointingDevice::PointerType::Finger)
-                    return;
-            } else if (m_selectionMode != QQuickSelectionRectangle::PressAndHold) {
-                return;
-            }
-        }
 
-        if (!modifiers.testFlag(Qt::ControlModifier))
+        if (modifiers == Qt::ShiftModifier) {
+            // Extend the existing selection towards the pressed cell
+            if (!m_active)
+                return;
+            m_selectable->setSelectionEndPos(pos);
+            updateHandles();
+            updateActiveState(true);
+        } else if (modifiers == Qt::ControlModifier) {
+            // Select a single cell, but keep the old selection (unless
+            // m_selectable->startSelection(pos) returns false, which
+            // it will if selectionMode only allows a single selection).
+            if (!m_selectable->startSelection(pos))
+                return;
+            m_selectable->setSelectionStartPos(pos);
+            m_selectable->setSelectionEndPos(pos);
+            updateHandles();
+            updateActiveState(true);
+        } else if (modifiers == Qt::NoModifier) {
+            // Select a single cell
             m_selectable->clearSelection();
-        m_selectable->setSelectionStartPos(pos);
-        m_selectable->setSelectionEndPos(pos);
-        updateHandles();
-        updateActiveState(true);
+            if (!m_selectable->startSelection(pos))
+                return;
+            m_selectable->setSelectionStartPos(pos);
+            m_selectable->setSelectionEndPos(pos);
+            updateHandles();
+            updateActiveState(true);
+        }
     });
 
     QObject::connect(m_dragHandler, &QQuickDragHandler::activeChanged, [this]() {
+        Q_ASSERT(m_effectiveSelectionMode == QQuickSelectionRectangle::Drag);
         const QPointF startPos = m_dragHandler->centroid().pressPosition();
         const QPointF dragPos = m_dragHandler->centroid().position();
         const auto modifiers = m_dragHandler->centroid().modifiers();
+        if (modifiers & ~(Qt::ControlModifier | Qt::ShiftModifier))
+            return;
 
         if (m_dragHandler->active()) {
-            if (!m_selectable->startSelection(startPos))
-                return;
-            if (!modifiers.testFlag(Qt::ControlModifier))
-                m_selectable->clearSelection();
-            m_selectable->setSelectionStartPos(startPos);
+            // Start a new selection, unless Shift is being pressed. Shift
+            // means that we should extend the existing selection instead.
+            if (modifiers & Qt::ShiftModifier) {
+                if (!m_active)
+                    return;
+            } else {
+                if (!m_selectable->startSelection(startPos))
+                    return;
+                m_selectable->setSelectionStartPos(startPos);
+            }
             m_selectable->setSelectionEndPos(dragPos);
             m_draggedHandle = nullptr;
             updateHandles();
@@ -422,23 +486,30 @@ void QQuickSelectionRectanglePrivate::updateSelectionMode()
         if (qobject_cast<QQuickScrollView *>(m_target->parentItem())) {
             // ScrollView allows flicking with touch, but not with mouse. So we do
             // the same here: you can drag to select with a mouse, but not with touch.
+            m_effectiveSelectionMode = QQuickSelectionRectangle::Drag;
             m_dragHandler->setAcceptedDevices(QInputDevice::DeviceType::Mouse);
             m_dragHandler->setEnabled(enabled);
         } else if (const auto flickable = qobject_cast<QQuickFlickable *>(m_target)) {
-            m_dragHandler->setEnabled(enabled && !flickable->isInteractive());
+            if (enabled && !flickable->isInteractive()) {
+                m_effectiveSelectionMode = QQuickSelectionRectangle::Drag;
+                m_dragHandler->setEnabled(true);
+            } else {
+                m_effectiveSelectionMode = QQuickSelectionRectangle::PressAndHold;
+                m_dragHandler->setEnabled(false);
+            }
         } else {
+            m_effectiveSelectionMode = QQuickSelectionRectangle::Drag;
             m_dragHandler->setAcceptedDevices(QInputDevice::DeviceType::Mouse);
             m_dragHandler->setEnabled(enabled);
         }
     } else if (m_selectionMode == QQuickSelectionRectangle::Drag) {
+        m_effectiveSelectionMode = QQuickSelectionRectangle::Drag;
         m_dragHandler->setAcceptedDevices(QInputDevice::DeviceType::AllDevices);
         m_dragHandler->setEnabled(enabled);
     } else {
+        m_effectiveSelectionMode = QQuickSelectionRectangle::PressAndHold;
         m_dragHandler->setEnabled(false);
     }
-
-    // If you can't select using a drag, we always accept a PressAndHold
-    m_alwaysAcceptPressAndHold = !m_dragHandler->enabled();
 }
 
 QQuickSelectionRectangleAttached *QQuickSelectionRectanglePrivate::getAttachedObject(const QObject *object) const
