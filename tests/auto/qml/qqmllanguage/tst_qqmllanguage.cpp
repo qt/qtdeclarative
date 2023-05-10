@@ -409,6 +409,8 @@ private slots:
 
     void longConversion();
 
+    void objectMethodClone();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -7896,6 +7898,16 @@ void tst_qqmllanguage::longConversion()
         QCOMPARE(val.metaType(), QMetaType::fromType<bool>());
         QVERIFY(!val.toBool());
     }
+}
+
+void tst_qqmllanguage::objectMethodClone()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("objectMethodClone.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QTRY_COMPARE(o->property("doneClicks").toInt(), 2);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
