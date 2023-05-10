@@ -107,6 +107,8 @@ Q_LOGGING_CATEGORY(lcItemManagement, "qt.quick.controls.control.itemmanagement")
     }
     \endcode
 
+    Wheel events are consumed by controls if \l wheelEnabled is \c true.
+
     \sa ApplicationWindow, Container, {Using Qt Quick Controls types in
         property declarations}
 */
