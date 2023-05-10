@@ -18,4 +18,15 @@ QtObject {
         const item = customItem.createObject(root, properties)
         return item.objectName;
     }
+
+    property string result2: {
+        const properties = {
+            "objectName": "43",
+        }
+
+        // add some junk argument to trigger the QQmlV4Function overload
+        const item = customItem.createObject(root, properties, 13)
+
+        return item.objectName;
+    }
 }
