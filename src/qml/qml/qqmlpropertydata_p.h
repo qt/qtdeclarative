@@ -397,6 +397,8 @@ private:
     Q_STATIC_ASSERT(sizeof(QQmlPropertyData) == 32);
 #endif
 
+static_assert(std::is_trivially_copyable<QQmlPropertyData>::value);
+
 bool QQmlPropertyData::operator==(const QQmlPropertyData &other) const
 {
     return flags() == other.flags() &&
