@@ -317,6 +317,9 @@ private:
                 generateSpacing(contentAtoms, outputStateConfig);
                 generatePadding(outputStateConfig);
 
+                const auto stateComponent = findChild({"type", "COMPONENT", "name", "state=" + figmaState}, componentSet);
+                generateTransitions(stateComponent, outputStateConfig, configStatesArray);
+
             } catch (std::exception &e) {
                 qWarning().nospace().noquote() << "Warning, generate control: " << e.what() << "; " << m_currentAtomInfo;
             }
@@ -403,6 +406,52 @@ private:
         outputConfig.insert("bottomPadding", atom["paddingBottom"]);
         outputConfig.insert("alignItems", atom["primaryAxisAlignItems"]);
         outputConfig.insert("spacing", atom["itemSpacing"]);
+    }
+
+    void generateTransitions(const QJsonObject &component, QJsonObject &outputConfig, const QJsonArray &statesArray)
+    {
+        // Due to a limitation in Figma's REST API we are only able
+        // to get one transition per component, no matter how many
+        // transitions(interactions) the component might have defined in Figma.
+        const auto duration = component.value("transitionDuration");
+        const auto easingType = component.value("transitionEasing");
+        const auto nodeId = component.value("transitionNodeID");
+
+        if (duration == QJsonValue::Undefined
+            || easingType == QJsonValue::Undefined
+            || nodeId == QJsonValue::Undefined)
+            return;
+
+        // Find state for nodeId
+        //Get the component name with the given figma id from the "components" key
+        const auto components = getObject("components", m_document.object());
+        const auto stateComponent = getObject(nodeId.toString(), components);
+        const auto figmaStateName = getValue("name", stateComponent);
+
+        // Iterate through the states array in the config.json to find the
+        // corresponding control state for the given figma state
+        QString stateValue;
+        for (auto it = statesArray.begin(); it != statesArray.end(); ++it) {
+            const auto stateObject = it->toObject();
+            if (QString("state=" + stateObject.value("figmaState").toString()) == figmaStateName.toString()) {
+                stateValue = stateObject.value("state").toString();
+                break;
+            }
+        }
+
+        if (stateValue.isEmpty()) {
+            qWarning().noquote().nospace() << "No corresponding state found for figma state: " << figmaStateName.toString();
+            return;
+        }
+
+        QJsonObject transitionObject;
+        transitionObject.insert("duration", duration);
+        transitionObject.insert("type", easingType);
+        transitionObject.insert("to", stateValue);
+
+        QJsonArray transitionsArray;
+        transitionsArray.append(transitionObject);
+        outputConfig.insert("transitions", transitionsArray);
     }
 
     void generateMirrored(const QStringList &contentAtoms, QJsonObject &outputConfig)
