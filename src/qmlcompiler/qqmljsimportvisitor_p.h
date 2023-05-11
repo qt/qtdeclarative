@@ -347,6 +347,11 @@ private:
     void enterRootScope(QQmlJSScope::ScopeType type, const QString &name,
                            const QQmlJS::SourceLocation &location);
 
+    void importFromHost(const QString &path, const QString &prefix,
+                        const QQmlJS::SourceLocation &location);
+    void importFromQrc(const QString &path, const QString &prefix,
+                       const QQmlJS::SourceLocation &location);
+
 public:
     friend class QQmlJS::Dom::QQmlDomAstCreatorWithQQmlJSScope;
 };

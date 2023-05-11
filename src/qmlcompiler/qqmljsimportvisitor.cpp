@@ -2149,63 +2149,81 @@ void QQmlJSImportVisitor::addImportWithLocation(const QString &name,
         m_importLocations.insert(loc);
 }
 
+void QQmlJSImportVisitor::importFromHost(const QString &path, const QString &prefix,
+                                         const QQmlJS::SourceLocation &location)
+{
+    QFileInfo fileInfo(path);
+    if (fileInfo.isFile()) {
+        const auto scope = m_importer->importFile(path);
+        const QString actualPrefix = prefix.isEmpty() ? scope->internalName() : prefix;
+        m_rootScopeImports.setType(actualPrefix, { scope, QTypeRevision() });
+        addImportWithLocation(actualPrefix, location);
+    } else if (fileInfo.isDir()) {
+        const auto scopes = m_importer->importDirectory(path, prefix);
+        m_rootScopeImports.addTypes(scopes);
+        for (auto it = scopes.types().keyBegin(), end = scopes.types().keyEnd(); it != end; it++)
+            addImportWithLocation(*it, location);
+    }
+}
+
+void QQmlJSImportVisitor::importFromQrc(const QString &path, const QString &prefix,
+                                        const QQmlJS::SourceLocation &location)
+{
+    if (const auto &mapper = m_importer->resourceFileMapper()) {
+        if (mapper->isFile(path)) {
+            const auto entry = m_importer->resourceFileMapper()->entry(
+                    QQmlJSResourceFileMapper::resourceFileFilter(path));
+            const auto scope = m_importer->importFile(entry.filePath);
+            const QString actualPrefix =
+                    prefix.isEmpty() ? QFileInfo(entry.resourcePath).baseName() : prefix;
+            m_rootScopeImports.setType(actualPrefix, { scope, QTypeRevision() });
+            addImportWithLocation(actualPrefix, location);
+        } else {
+            const auto scopes = m_importer->importDirectory(path, prefix);
+            m_rootScopeImports.addTypes(scopes);
+            for (auto it = scopes.types().keyBegin(), end = scopes.types().keyEnd(); it != end; it++)
+                addImportWithLocation(*it, location);
+        }
+    }
+}
+
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
 {
-    auto addImportLocation = [this, import](const QString &name) {
-        addImportWithLocation(name, import->firstSourceLocation());
-    };
     // construct path
     QString prefix = QLatin1String("");
     if (import->asToken.isValid()) {
         prefix += import->importId;
     }
+
     auto filename = import->fileName.toString();
     if (!filename.isEmpty()) {
-        const QFileInfo file(filename);
-        const QString absolute = file.isRelative()
-                ? QDir::cleanPath(QDir(m_implicitImportDirectory).filePath(filename))
-                : filename;
-
-        if (absolute.startsWith(u':')) {
-            if (m_importer->resourceFileMapper()) {
-                if (m_importer->resourceFileMapper()->isFile(absolute.mid(1))) {
-                    const auto entry = m_importer->resourceFileMapper()->entry(
-                                QQmlJSResourceFileMapper::resourceFileFilter(absolute.mid(1)));
-                    const auto scope = m_importer->importFile(entry.filePath);
-                    const QString actualPrefix = prefix.isEmpty()
-                            ? QFileInfo(entry.resourcePath).baseName()
-                            : prefix;
-                    m_rootScopeImports.setType(actualPrefix, { scope, QTypeRevision() });
-
-                    addImportLocation(actualPrefix);
-                } else {
-                    const auto scopes = m_importer->importDirectory(absolute, prefix);
-                    m_rootScopeImports.addTypes(scopes);
-                    for (auto it = scopes.types().keyBegin(), end = scopes.types().keyEnd(); it != end;
-                         it++)
-                        addImportLocation(*it);
-                }
+        const QUrl url(filename);
+        const QString scheme = url.scheme();
+        const QQmlJS::SourceLocation importLocation = import->firstSourceLocation();
+        if (scheme == ""_L1) {
+            QFileInfo fileInfo(url.path());
+            QString absolute = fileInfo.isRelative()
+                    ? QDir::cleanPath(QDir(m_implicitImportDirectory).filePath(filename))
+                    : filename;
+            if (absolute.startsWith(u':')) {
+                importFromQrc(absolute, prefix, importLocation);
+            } else {
+                importFromHost(absolute, prefix, importLocation);
             }
-
-            processImportWarnings(QStringLiteral("URL \"%1\"").arg(absolute), import->firstSourceLocation());
+            processImportWarnings("path \"%1\""_L1.arg(url.path()), importLocation);
             return true;
+        } else if (scheme == "file"_L1) {
+            importFromHost(url.path(), prefix, importLocation);
+            processImportWarnings("URL \"%1\""_L1.arg(url.path()), importLocation);
+            return true;
+        } else if (scheme == "qrc"_L1) {
+            importFromQrc(":"_L1 + url.path(), prefix, importLocation);
+            processImportWarnings("URL \"%1\""_L1.arg(url.path()), importLocation);
+            return true;
+        } else {
+            m_logger->log("Unknown import syntax. Imports can be paths, qrc urls or file urls"_L1,
+                          qmlImport, import->firstSourceLocation());
         }
-
-        QFileInfo path(absolute);
-        if (path.isDir()) {
-            const auto scopes = m_importer->importDirectory(path.canonicalFilePath(), prefix);
-            m_rootScopeImports.addTypes(scopes);
-            for (auto it = scopes.types().keyBegin(), end = scopes.types().keyEnd(); it != end; it++)
-                addImportLocation(*it);
-        } else if (path.isFile()) {
-            const auto scope = m_importer->importFile(path.canonicalFilePath());
-            const QString actualPrefix = prefix.isEmpty() ? scope->internalName() : prefix;
-            m_rootScopeImports.setType(actualPrefix, { scope, QTypeRevision() });
-            addImportLocation(actualPrefix);
-        }
-
-        processImportWarnings(QStringLiteral("path \"%1\"").arg(path.canonicalFilePath()), import->firstSourceLocation());
-        return true;
     }
 
     const QString path = buildName(import->importUri);
@@ -2217,7 +2235,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
             &staticModulesProvided);
     m_rootScopeImports.addTypes(imported);
     for (auto it = imported.types().keyBegin(), end = imported.types().keyEnd(); it != end; it++)
-        addImportLocation(*it);
+        addImportWithLocation(*it, import->firstSourceLocation());
 
     if (prefix.isEmpty()) {
         for (const QString &staticModule : staticModulesProvided) {
