@@ -34,7 +34,7 @@ namespace QV4 {
 static inline QMLJS_READONLY ReturnedValue add_int32(int a, int b)
 {
     int result;
-    if (Q_UNLIKELY(add_overflow(a, b, &result)))
+    if (Q_UNLIKELY(qAddOverflow(a, b, &result)))
         return StaticValue::fromDouble(static_cast<double>(a) + b).asReturnedValue();
     return StaticValue::fromInt32(result).asReturnedValue();
 }
@@ -42,7 +42,7 @@ static inline QMLJS_READONLY ReturnedValue add_int32(int a, int b)
 static inline QMLJS_READONLY ReturnedValue sub_int32(int a, int b)
 {
     int result;
-    if (Q_UNLIKELY(sub_overflow(a, b, &result)))
+    if (Q_UNLIKELY(qSubOverflow(a, b, &result)))
         return StaticValue::fromDouble(static_cast<double>(a) - b).asReturnedValue();
     return StaticValue::fromInt32(result).asReturnedValue();
 }
@@ -50,7 +50,7 @@ static inline QMLJS_READONLY ReturnedValue sub_int32(int a, int b)
 static inline QMLJS_READONLY ReturnedValue mul_int32(int a, int b)
 {
     int result;
-    if (Q_UNLIKELY(mul_overflow(a, b, &result)))
+    if (Q_UNLIKELY(qMulOverflow(a, b, &result)))
         return StaticValue::fromDouble(static_cast<double>(a) * b).asReturnedValue();
     // need to handle the case where one number is negative and the other 0 ==> -0
     if (((a < 0) xor (b < 0)) && (result == 0))

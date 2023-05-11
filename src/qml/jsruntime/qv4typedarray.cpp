@@ -373,7 +373,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
 
     uint elementSize = operations[that->d()->type].bytesPerElement;
     size_t bufferSize;
-    if (mul_overflow(size_t(l), size_t(elementSize), &bufferSize))
+    if (qMulOverflow(size_t(l), size_t(elementSize), &bufferSize))
         return scope.engine->throwRangeError(QLatin1String("new TypedArray: invalid length"));
     Scoped<ArrayBuffer> newBuffer(scope, scope.engine->newArrayBuffer(bufferSize));
     if (scope.hasException())
