@@ -35,6 +35,10 @@ public:
     void setGradientStops(const QGradientStops &stops) override;
     void setGradientVertical(bool vertical) override;
     void setRadius(qreal radius) override;
+    void setTopLeftRadius(qreal radius) override;
+    void setTopRightRadius(qreal radius) override;
+    void setBottomLeftRadius(qreal radius) override;
+    void setBottomRightRadius(qreal radius) override;
     void setAntialiasing(bool antialiasing) override { Q_UNUSED(antialiasing); }
     void setAligned(bool aligned) override;
 
@@ -46,14 +50,19 @@ public:
     QRectF rect() const;
 private:
     void paintRectangle(QPainter *painter, const QRect &rect);
+    void paintRectangleIndividualCorners(QPainter *painter, const QRect &rect);
     void generateCornerPixmap();
 
     QRect m_rect;
     QColor m_color;
     QColor m_penColor;
-    double m_penWidth;
+    qreal m_penWidth;
     QGradientStops m_stops;
-    double m_radius;
+    qreal m_radius;
+    qreal m_topLeftRadius;
+    qreal m_topRightRadius;
+    qreal m_bottomLeftRadius;
+    qreal m_bottomRightRadius;
     QPen m_pen;
     QBrush m_brush;
     bool m_vertical;

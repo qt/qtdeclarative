@@ -110,6 +110,10 @@ public:
     virtual void setGradientStops(const QGradientStops &stops) = 0;
     virtual void setGradientVertical(bool vertical) = 0;
     virtual void setRadius(qreal radius) = 0;
+    virtual void setTopLeftRadius(qreal radius) = 0;
+    virtual void setTopRightRadius(qreal radius) = 0;
+    virtual void setBottomLeftRadius(qreal radius) = 0;
+    virtual void setBottomRightRadius(qreal radius) = 0;
     virtual void setAntialiasing(bool antialiasing) { Q_UNUSED(antialiasing); }
     virtual void setAligned(bool aligned) = 0;
 

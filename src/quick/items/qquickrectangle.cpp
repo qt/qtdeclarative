@@ -264,6 +264,17 @@ void QQuickGradient::doUpdate()
 
 int QQuickRectanglePrivate::doUpdateSlotIdx = -1;
 
+void QQuickRectanglePrivate::maybeSetImplicitAntialiasing()
+{
+    bool implicitAA = (radius != 0);
+    if (extraRectangle.isAllocated() && !implicitAA) {
+        implicitAA = extraRectangle.value().topLeftRadius > 0.0
+            || extraRectangle.value().topRightRadius > 0.0
+            || extraRectangle.value().bottomLeftRadius > 0.0
+            || extraRectangle.value().bottomRightRadius > 0.0;
+    }
+    setImplicitAntialiasing(implicitAA);
+}
 /*!
     \qmltype Rectangle
     \instantiates QQuickRectangle
@@ -288,7 +299,10 @@ int QQuickRectanglePrivate::doUpdateSlotIdx = -1;
 
     You can also create rounded rectangles using the \l radius property. Since this
     introduces curved edges to the corners of a rectangle, it may be appropriate to
-    set the \l Item::antialiasing property to improve its appearance.
+    set the \l Item::antialiasing property to improve its appearance.  To set the
+    radii individually for different corners, you can use the properties
+    \l topLeftRadius, \l topRightRadius, \l bottomLeftRadius and
+    \l bottomRightRadius.
 
     \section1 Example Usage
 
@@ -462,9 +476,12 @@ void QQuickRectangle::resetGradient()
     \qmlproperty real QtQuick::Rectangle::radius
     This property holds the corner radius used to draw a rounded rectangle.
 
-    If radius is non-zero, the rectangle will be painted as a rounded rectangle, otherwise it will be
-    painted as a normal rectangle. The same radius is used by all 4 corners; there is currently
-    no way to specify different radii for different corners.
+    If radius is non-zero, the rectangle will be painted as a rounded rectangle,
+    otherwise it will be painted as a normal rectangle. Individual corner radii
+    can be set as well (see below). These values will override \l radius. If
+    they are unset (by setting them to \c undefined), \l radius will be used instead.
+
+    \sa topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius
 */
 qreal QQuickRectangle::radius() const
 {
@@ -479,10 +496,240 @@ void QQuickRectangle::setRadius(qreal radius)
         return;
 
     d->radius = radius;
-    d->setImplicitAntialiasing(radius != 0.0);
+    d->maybeSetImplicitAntialiasing();
 
     update();
     emit radiusChanged();
+
+    if (d->extraRectangle.isAllocated()) {
+        if (d->extraRectangle->topLeftRadius < 0.)
+            emit topLeftRadiusChanged();
+        if (d->extraRectangle->topRightRadius < 0.)
+            emit topRightRadiusChanged();
+        if (d->extraRectangle->bottomLeftRadius < 0.)
+            emit bottomLeftRadiusChanged();
+        if (d->extraRectangle->bottomRightRadius < 0.)
+            emit bottomRightRadiusChanged();
+    } else {
+        emit topLeftRadiusChanged();
+        emit topRightRadiusChanged();
+        emit bottomLeftRadiusChanged();
+        emit bottomRightRadiusChanged();
+    }
+}
+
+/*!
+    \since 6.7
+    \qmlproperty real QtQuick::Rectangle::topLeftRadius
+    This property holds the radius used to draw the top left corner.
+
+    If \l topLeftRadius is not set, \l radius will be used instead.
+    If \l topLeftRadius is zero, the corner will be sharp.
+
+    \note This API is considered tech preview and may change or be removed in
+    future versions of Qt.
+
+    \sa radius, topRightRadius, bottomLeftRadius, bottomRightRadius
+*/
+qreal QQuickRectangle::topLeftRadius() const
+{
+    Q_D(const QQuickRectangle);
+    if (d->extraRectangle.isAllocated() && d->extraRectangle->topLeftRadius >= 0.)
+        return d->extraRectangle.value().topLeftRadius;
+    return d->radius;
+}
+
+void QQuickRectangle::setTopLeftRadius(qreal radius)
+{
+    Q_D(QQuickRectangle);
+    if (d->extraRectangle.value().topLeftRadius == radius)
+        return;
+
+    if (radius < 0) { // use the fact that radius < 0 resets the radius.
+        qmlWarning(this) << "topLeftRadius (" << radius << ") cannot be less than 0.";
+        return;
+    }
+    d->extraRectangle.value().topLeftRadius = radius;
+    d->maybeSetImplicitAntialiasing();
+
+    update();
+    emit topLeftRadiusChanged();
+}
+
+void QQuickRectangle::resetTopLeftRadius()
+{
+    Q_D(QQuickRectangle);
+    if (!d->extraRectangle.isAllocated())
+        return;
+    if (d->extraRectangle.value().topLeftRadius < 0)
+        return;
+
+    d->extraRectangle.value().topLeftRadius = -1.;
+    d->maybeSetImplicitAntialiasing();
+
+    update();
+    emit topLeftRadiusChanged();
+}
+
+/*!
+    \since 6.7
+    \qmlproperty real QtQuick::Rectangle::topRightRadius
+    This property holds the radius used to draw the top right corner.
+
+    If \l topRightRadius is not set, \l radius will be used instead.
+    If \l topRightRadius is zero, the corner will be sharp.
+
+    \note This API is considered tech preview and may change or be removed in
+    future versions of Qt.
+
+    \sa radius, topLeftRadius, bottomLeftRadius, bottomRightRadius
+*/
+qreal QQuickRectangle::topRightRadius() const
+{
+    Q_D(const QQuickRectangle);
+    if (d->extraRectangle.isAllocated()  && d->extraRectangle->topRightRadius >= 0.)
+        return d->extraRectangle.value().topRightRadius;
+    return d->radius;
+}
+
+void QQuickRectangle::setTopRightRadius(qreal radius)
+{
+    Q_D(QQuickRectangle);
+    if (d->extraRectangle.value().topRightRadius == radius)
+        return;
+
+    if (radius < 0) { // use the fact that radius < 0 resets the radius.
+        qmlWarning(this) << "topRightRadius (" << radius << ") cannot be less than 0.";
+        return;
+    }
+    d->extraRectangle.value().topRightRadius = radius;
+    d->maybeSetImplicitAntialiasing();
+
+    update();
+    emit topRightRadiusChanged();
+}
+
+void QQuickRectangle::resetTopRightRadius()
+{
+    Q_D(QQuickRectangle);
+    if (!d->extraRectangle.isAllocated())
+        return;
+    if (d->extraRectangle.value().topRightRadius < 0)
+        return;
+
+    d->extraRectangle.value().topRightRadius = -1.;
+    d->maybeSetImplicitAntialiasing();
+
+    update();
+    emit topRightRadiusChanged();
+}
+
+/*!
+    \since 6.7
+    \qmlproperty real QtQuick::Rectangle::bottomLeftRadius
+    This property holds the radius used to draw the bottom left corner.
+
+    If \l bottomLeftRadius is not set, \l radius will be used instead.
+    If \l bottomLeftRadius is zero, the corner will be sharp.
+
+    \note This API is considered tech preview and may change or be removed in
+    future versions of Qt.
+
+    \sa radius, topLeftRadius, topRightRadius, bottomRightRadius
+*/
+qreal QQuickRectangle::bottomLeftRadius() const
+{
+    Q_D(const QQuickRectangle);
+    if (d->extraRectangle.isAllocated() && d->extraRectangle->bottomLeftRadius >= 0.)
+        return d->extraRectangle.value().bottomLeftRadius;
+    return d->radius;
+}
+
+void QQuickRectangle::setBottomLeftRadius(qreal radius)
+{
+    Q_D(QQuickRectangle);
+    if (d->extraRectangle.value().bottomLeftRadius == radius)
+        return;
+
+    if (radius < 0) { // use the fact that radius < 0 resets the radius.
+        qmlWarning(this) << "bottomLeftRadius (" << radius << ") cannot be less than 0.";
+        return;
+    }
+
+    d->extraRectangle.value().bottomLeftRadius = radius;
+    d->maybeSetImplicitAntialiasing();
+
+    update();
+    emit bottomLeftRadiusChanged();
+}
+
+void QQuickRectangle::resetBottomLeftRadius()
+{
+    Q_D(QQuickRectangle);
+    if (!d->extraRectangle.isAllocated())
+        return;
+    if (d->extraRectangle.value().bottomLeftRadius < 0)
+        return;
+
+    d->extraRectangle.value().bottomLeftRadius = -1.;
+    d->maybeSetImplicitAntialiasing();
+
+    update();
+    emit bottomLeftRadiusChanged();
+}
+
+/*!
+    \since 6.7
+    \qmlproperty real QtQuick::Rectangle::bottomRightRadius
+    This property holds the radius used to draw the bottom right corner.
+
+    If \l bottomRightRadius is not set, \l radius will be used instead.
+    If \l bottomRightRadius is zero, the corner will be sharp.
+
+    \note This API is considered tech preview and may change or be removed in
+    future versions of Qt.
+
+    \sa radius, topLeftRadius, topRightRadius, bottomLeftRadius
+*/
+qreal QQuickRectangle::bottomRightRadius() const
+{
+    Q_D(const QQuickRectangle);
+    if (d->extraRectangle.isAllocated() && d->extraRectangle->bottomRightRadius >= 0.)
+        return d->extraRectangle.value().bottomRightRadius;
+    return d->radius;
+}
+
+void QQuickRectangle::setBottomRightRadius(qreal radius)
+{
+    Q_D(QQuickRectangle);
+    if (d->extraRectangle.value().bottomRightRadius == radius)
+        return;
+
+    if (radius < 0) { // use the fact that radius < 0 resets the radius.
+        qmlWarning(this) << "bottomRightRadius (" << radius << ") cannot be less than 0.";
+        return;
+    }
+
+    d->extraRectangle.value().bottomRightRadius = radius;
+    d->maybeSetImplicitAntialiasing();
+
+    update();
+    emit bottomRightRadiusChanged();
+}
+
+void QQuickRectangle::resetBottomRightRadius()
+{
+    Q_D(QQuickRectangle);
+    if (!d->extraRectangle.isAllocated())
+        return;
+    if (d->extraRectangle.value().bottomRightRadius < 0)
+        return;
+
+    d->extraRectangle.value().bottomRightRadius = -1.;
+    d->maybeSetImplicitAntialiasing();
+
+    update();
+    emit bottomRightRadiusChanged();
 }
 
 /*!
@@ -553,6 +800,17 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     }
 
     rectangle->setRadius(d->radius);
+    if (d->extraRectangle.isAllocated()) {
+        rectangle->setTopLeftRadius(d->extraRectangle.value().topLeftRadius);
+        rectangle->setTopRightRadius(d->extraRectangle.value().topRightRadius);
+        rectangle->setBottomLeftRadius(d->extraRectangle.value().bottomLeftRadius);
+        rectangle->setBottomRightRadius(d->extraRectangle.value().bottomRightRadius);
+    } else {
+        rectangle->setTopLeftRadius(-1.);
+        rectangle->setTopRightRadius(-1.);
+        rectangle->setBottomLeftRadius(-1.);
+        rectangle->setBottomRightRadius(-1.);
+    }
     rectangle->setAntialiasing(antialiasing());
 
     QGradientStops stops;
