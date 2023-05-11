@@ -22,14 +22,14 @@
     {
         "name": "CheckBox",
         "copy": ":/CheckBox.qml",
-        "component set": "CheckBoxTemplateAL",
+        "component set": "CheckBoxTemplate",
         "contents": ["indicator", "label"],
         "atoms": [
-            {"atom": "background", "figmaPath": "CheckBoxBackgroundAL, background"},
-            {"atom": "label", "figmaPath": "Label", "export": ["geometry"]},
-            {"atom": "contentItem", "figmaPath": "contentItem", "export": "layout"},
-            {"atom": "indicator", "figmaPath": "CheckBoxIndicatorAL, indicator"},
-            {"atom": "indicator-background", "figmaPath": "CheckBoxIndicatorAL, indicatorBackground"}
+            {"atom": "background", "figmaPath": "CheckBoxBackground, background"},
+            {"atom": "label", "figmaPath": "ContentItem, Label", "export": "geometry"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "indicator", "figmaPath": "CheckBoxIndicator, indicator"},
+            {"atom": "indicator-background", "figmaPath": "CheckBoxIndicator, indicatorBackground"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
