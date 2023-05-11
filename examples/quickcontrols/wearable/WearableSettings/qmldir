@@ -1,0 +1,5 @@
+# This file only exists for qmake.
+
+module WearableSettings
+prefer :/qt/qml/WearableSettings/
+singleton WearableSettings 254.0 WearableSettings.qml

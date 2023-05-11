@@ -1,0 +1,19 @@
+# This file only exists for qmake.
+
+module Wearable
+prefer :/qt/qml/Wearable/
+AlarmsPage 254.0 AlarmsPage.qml
+Clock 254.0 Clock.qml
+DemoMode 254.0 DemoMode.qml
+DemoModeIndicator 254.0 DemoModeIndicator.qml
+FitnessPage 254.0 FitnessPage.qml
+LauncherPage 254.0 LauncherPage.qml
+Main 254.0 Main.qml
+NaviButton 254.0 NaviButton.qml
+NavigationPage 254.0 NavigationPage.qml
+NotificationsPage 254.0 NotificationsPage.qml
+RouteElement 254.0 RouteElement.qml
+SettingsPage 254.0 SettingsPage.qml
+SwipeViewPage 254.0 SwipeViewPage.qml
+WeatherPage 254.0 WeatherPage.qml
+WorldClockPage 254.0 WorldClockPage.qml
