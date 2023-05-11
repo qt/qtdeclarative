@@ -43,7 +43,7 @@ uint stringToArrayIndex(const T *ch, const T *end)
         uint x = charToUInt(ch) - '0';
         if (x > 9)
             return std::numeric_limits<uint>::max();
-        if (mul_overflow(i, uint(10), &i) || add_overflow(i, x, &i)) // i = i * 10 + x
+        if (qMulOverflow(i, uint(10), &i) || qAddOverflow(i, x, &i)) // i = i * 10 + x
             return std::numeric_limits<uint>::max();
         ++ch;
     }
