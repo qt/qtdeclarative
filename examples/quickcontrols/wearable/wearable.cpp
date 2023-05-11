@@ -8,21 +8,25 @@
 
 int main(int argc, char *argv[])
 {
+    // Allow navigation.js to "GET" walk_route.json with XMLHttpRequest.
+    qputenv("QML_XHR_ALLOW_FILE_READ", "1");
+
     QCoreApplication::setApplicationName("Wearable");
     QCoreApplication::setOrganizationName("QtProject");
 
     QGuiApplication app(argc, argv);
 
     //! [style]
-    QQuickStyle::setStyle(QStringLiteral("qrc:/qml/Style"));
+    QQuickStyle::setStyle(QStringLiteral("WearableStyle"));
     //! [style]
 
     //! [icons]
+    QIcon::setThemeSearchPaths(QStringList() << ":/qt/qml/Wearable/icons");
     QIcon::setThemeName(QStringLiteral("wearable"));
     //! [icons]
 
     QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/wearable.qml")));
+    engine.loadFromModule("Wearable", "Main");
 
     return app.exec();
 }
