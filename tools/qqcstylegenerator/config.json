@@ -50,13 +50,14 @@
         "name": "Switch",
         "copy": ":/Switch.qml",
         "component set": "SwitchTemplate",
+        "contents": ["handle-background", "label"],
         "atoms": [
             {"atom": "background", "figmaPath": "SwitchBackground, background"},
-            {"atom": "background-lefticon", "figmaPath": "SwitchBackground, leftIcon"},
-            {"atom": "background-righticon", "figmaPath": "SwitchBackground, rightIcon"},
-            {"atom": "handle", "figmaPath": "SwitchHandle, handle"},
-            {"atom": "handle-lefticon", "figmaPath": "SwitchHandle, leftIcon"},
-            {"atom": "handle-righticon", "figmaPath": "SwitchHandle, rightIcon"}
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "handle", "figmaPath": "ContentItem, SwitchHandle"},
+            {"atom": "handle-background", "figmaPath": "ContentItem, HandleBackground, background"},
+            {"atom": "handle-contentItem", "figmaPath": "ContentItem, HandleTemplate, ContentItem", "export": "layout"},
+            {"atom": "label", "figmaPath": "ContentItem, Label", "export": "geometry"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
