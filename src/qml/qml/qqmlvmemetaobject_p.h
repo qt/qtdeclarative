@@ -16,23 +16,25 @@
 // We mean it.
 //
 
-#include <QtCore/QMetaObject>
-#include <QtCore/QBitArray>
-#include <QtCore/QPair>
-#include <QtCore/QDate>
-#include <QtCore/qlist.h>
-#include <QtCore/qdebug.h>
-
-#include <private/qobject_p.h>
-
-#include "qqmlguard_p.h"
-
-#include <private/qqmlguardedcontextdata_p.h>
 #include <private/qbipointer_p.h>
-
+#include <private/qqmlguard_p.h>
+#include <private/qqmlguardedcontextdata_p.h>
+#include <private/qqmlpropertyvalueinterceptor_p.h>
 #include <private/qv4object_p.h>
 #include <private/qv4value_p.h>
-#include <private/qqmlpropertyvalueinterceptor_p.h>
+
+#include <QtCore/private/qobject_p.h>
+
+#if QT_CONFIG(regularexpression)
+#include <QtCore/qregularexpression.h>
+#endif
+
+#include <QtCore/qbitarray.h>
+#include <QtCore/qdatetime.h>
+#include <QtCore/qdebug.h>
+#include <QtCore/qlist.h>
+#include <QtCore/qmetaobject.h>
+#include <QtCore/qpair.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -201,6 +203,11 @@ public:
     QDate readPropertyAsDate(int id) const;
     QTime readPropertyAsTime(int id) const;
     QDateTime readPropertyAsDateTime(int id) const;
+
+#if QT_CONFIG(regularexpression)
+    QRegularExpression readPropertyAsRegularExpression(int id) const;
+#endif
+
     QRectF readPropertyAsRectF(int id) const;
     QObject *readPropertyAsQObject(int id) const;
     QVector<QQmlGuard<QObject> > *readPropertyAsList(int id) const;

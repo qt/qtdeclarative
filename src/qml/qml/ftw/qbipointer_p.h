@@ -17,6 +17,8 @@
 
 #include <QtCore/private/qglobal_p.h>
 
+#include <QtCore/qhashfunctions.h>
+
 QT_BEGIN_NAMESPACE
 
 namespace QtPrivate {

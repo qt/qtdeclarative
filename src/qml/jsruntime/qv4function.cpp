@@ -117,8 +117,8 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
         ic = ic->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[formalsIndices[i].nameIndex]), Attr_NotConfigurable);
         if (enforcesSignature
                 && !hasTypes
-                && formalsIndices[i].type.typeNameIndexOrBuiltinType()
-                    != quint32(QV4::CompiledData::BuiltinType::InvalidBuiltin)) {
+                && formalsIndices[i].type.typeNameIndexOrCommonType()
+                   != quint32(QV4::CompiledData::CommonType::Invalid)) {
             hasTypes = true;
         }
     }
@@ -130,8 +130,8 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
         return;
 
     if (!hasTypes
-            && compiledFunction->returnType.typeNameIndexOrBuiltinType()
-                == quint32(QV4::CompiledData::BuiltinType::InvalidBuiltin)) {
+            && compiledFunction->returnType.typeNameIndexOrCommonType()
+               == quint32(QV4::CompiledData::CommonType::Invalid)) {
         return;
     }
 
@@ -139,14 +139,14 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
     QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine->qmlEngine());
 
     auto findMetaType = [&](const CompiledData::ParameterType &param) {
-        const quint32 type = param.typeNameIndexOrBuiltinType();
-        if (param.indexIsBuiltinType()) {
+        const quint32 type = param.typeNameIndexOrCommonType();
+        if (param.indexIsCommonType()) {
             if (param.isList()) {
                 return QQmlPropertyCacheCreatorBase::listTypeForPropertyType(
-                            QV4::CompiledData::BuiltinType(type));
+                    QV4::CompiledData::CommonType(type));
             }
             return QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(
-                        QV4::CompiledData::BuiltinType(type));
+                QV4::CompiledData::CommonType(type));
         }
 
         if (type == 0)

@@ -66,8 +66,8 @@ struct QQmlPropertyCacheCreatorBase
 public:
     static QAtomicInt Q_AUTOTEST_EXPORT classIndexCounter;
 
-    static QMetaType metaTypeForPropertyType(QV4::CompiledData::BuiltinType type);
-    static QMetaType listTypeForPropertyType(QV4::CompiledData::BuiltinType type);
+    static QMetaType metaTypeForPropertyType(QV4::CompiledData::CommonType type);
+    static QMetaType listTypeForPropertyType(QV4::CompiledData::CommonType type);
 
     static QByteArray createClassNameTypeByUrl(const QUrl &url);
 
@@ -592,24 +592,25 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
         QTypeRevision propertyTypeVersion = QTypeRevision::zero();
         QQmlPropertyData::Flags propertyFlags;
 
-        const QV4::CompiledData::BuiltinType type = p->builtinType();
+        const QV4::CompiledData::CommonType type = p->commonType();
 
         if (p->isList())
             propertyFlags.type = QQmlPropertyData::Flags::QListType;
-        else if (type == QV4::CompiledData::BuiltinType::Var)
+        else if (type == QV4::CompiledData::CommonType::Var)
             propertyFlags.type = QQmlPropertyData::Flags::VarPropertyType;
 
-        if (type != QV4::CompiledData::BuiltinType::InvalidBuiltin) {
+        if (type != QV4::CompiledData::CommonType::Invalid) {
             propertyType = p->isList()
                     ? listTypeForPropertyType(type)
                     : metaTypeForPropertyType(type);
         } else {
-            Q_ASSERT(!p->isBuiltinType());
+            Q_ASSERT(!p->isCommonType());
 
             QQmlType qmltype;
             bool selfReference = false;
-            if (!imports->resolveType(stringAt(p->builtinTypeOrTypeNameIndex()), &qmltype, nullptr, nullptr,
-                                      nullptr, QQmlType::AnyRegistrationType, &selfReference)) {
+            if (!imports->resolveType(
+                    stringAt(p->commonTypeOrTypeNameIndex()), &qmltype, nullptr, nullptr,
+                    nullptr, QQmlType::AnyRegistrationType, &selfReference)) {
                 return qQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Invalid property type"));
             }
 
@@ -679,19 +680,19 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
 }
 
 template <typename ObjectContainer>
-inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(const QV4::CompiledData::ParameterType &param,
-                                                                           QString *customTypeName)
+inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(
+    const QV4::CompiledData::ParameterType &param, QString *customTypeName)
 {
-    const quint32 typeId = param.typeNameIndexOrBuiltinType();
-    if (param.indexIsBuiltinType()) {
+    const quint32 typeId = param.typeNameIndexOrCommonType();
+    if (param.indexIsCommonType()) {
         // built-in type
         if (param.isList())
-            return listTypeForPropertyType(QV4::CompiledData::BuiltinType(typeId));
-        return metaTypeForPropertyType(QV4::CompiledData::BuiltinType(typeId));
+            return listTypeForPropertyType(QV4::CompiledData::CommonType(typeId));
+        return metaTypeForPropertyType(QV4::CompiledData::CommonType(typeId));
     }
 
     // lazily resolved type
-    const QString typeName = stringAt(param.typeNameIndexOrBuiltinType());
+    const QString typeName = stringAt(param.typeNameIndexOrCommonType());
     if (customTypeName)
         *customTypeName = typeName;
     QQmlType qmltype;

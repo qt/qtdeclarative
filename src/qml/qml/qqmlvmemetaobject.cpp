@@ -588,6 +588,22 @@ QDateTime QQmlVMEMetaObject::readPropertyAsDateTime(int id) const
     return v->d()->data().value<QDateTime>();
 }
 
+#if QT_CONFIG(regularexpression)
+QRegularExpression QQmlVMEMetaObject::readPropertyAsRegularExpression(int id) const
+{
+    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
+    if (!md)
+        return QRegularExpression();
+
+    QV4::Scope scope(engine);
+    QV4::ScopedValue sv(scope, *(md->data() + id));
+    const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+    if (!v || v->d()->data().userType() != QMetaType::QRegularExpression)
+        return QRegularExpression();
+    return v->d()->data().value<QRegularExpression>();
+}
+#endif
+
 QSizeF QQmlVMEMetaObject::readPropertyAsSizeF(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
@@ -683,7 +699,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 // if we reach this point, propertyCount must have been > 0, and thus compiledObject != nullptr
                 Q_ASSERT(compiledObject);
                 const QV4::CompiledData::Property &property = compiledObject->propertyTable()[id];
-                const QV4::CompiledData::BuiltinType t = property.builtinType();
+                const QV4::CompiledData::CommonType t = property.commonType();
 
                 // the context can be null if accessing var properties from cpp after re-parenting an item.
                 QQmlEnginePrivate *ep = (ctxt.isNull() || ctxt->engine() == nullptr)
@@ -744,40 +760,48 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         }
                     } else {
                         switch (t) {
-                        case QV4::CompiledData::BuiltinType::Int:
+                        case QV4::CompiledData::CommonType::Void:
+                            break;
+                        case QV4::CompiledData::CommonType::Int:
                             *reinterpret_cast<int *>(a[0]) = readPropertyAsInt(id);
                             break;
-                        case QV4::CompiledData::BuiltinType::Bool:
+                        case QV4::CompiledData::CommonType::Bool:
                             *reinterpret_cast<bool *>(a[0]) = readPropertyAsBool(id);
                             break;
-                        case QV4::CompiledData::BuiltinType::Real:
+                        case QV4::CompiledData::CommonType::Real:
                             *reinterpret_cast<double *>(a[0]) = readPropertyAsDouble(id);
                             break;
-                        case QV4::CompiledData::BuiltinType::String:
+                        case QV4::CompiledData::CommonType::String:
                             *reinterpret_cast<QString *>(a[0]) = readPropertyAsString(id);
                             break;
-                        case QV4::CompiledData::BuiltinType::Url:
+                        case QV4::CompiledData::CommonType::Url:
                             *reinterpret_cast<QUrl *>(a[0]) = readPropertyAsUrl(id);
                             break;
-                        case QV4::CompiledData::BuiltinType::Date:
+                        case QV4::CompiledData::CommonType::Date:
                             *reinterpret_cast<QDate *>(a[0]) = readPropertyAsDate(id);
                             break;
-                        case QV4::CompiledData::BuiltinType::DateTime:
+                        case QV4::CompiledData::CommonType::DateTime:
                             *reinterpret_cast<QDateTime *>(a[0]) = readPropertyAsDateTime(id);
                             break;
-                        case QV4::CompiledData::BuiltinType::Rect:
+                        case QV4::CompiledData::CommonType::RegExp:
+#if QT_CONFIG(regularexpression)
+                            *reinterpret_cast<QRegularExpression *>(a[0])
+                                = readPropertyAsRegularExpression(id);
+#endif
+                            break;
+                        case QV4::CompiledData::CommonType::Rect:
                             *reinterpret_cast<QRectF *>(a[0]) = readPropertyAsRectF(id);
                             break;
-                        case QV4::CompiledData::BuiltinType::Size:
+                        case QV4::CompiledData::CommonType::Size:
                             *reinterpret_cast<QSizeF *>(a[0]) = readPropertyAsSizeF(id);
                             break;
-                        case QV4::CompiledData::BuiltinType::Point:
+                        case QV4::CompiledData::CommonType::Point:
                             *reinterpret_cast<QPointF *>(a[0]) = readPropertyAsPointF(id);
                             break;
-                        case QV4::CompiledData::BuiltinType::Time:
+                        case QV4::CompiledData::CommonType::Time:
                             *reinterpret_cast<QTime *>(a[0]) = readPropertyAsTime(id);
                             break;
-                        case QV4::CompiledData::BuiltinType::Var:
+                        case QV4::CompiledData::CommonType::Var:
                             if (ep) {
                                 *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
                             } else {
@@ -786,7 +810,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                                 *reinterpret_cast<QVariant *>(a[0]) = QVariant();
                             }
                             break;
-                        case QV4::CompiledData::BuiltinType::InvalidBuiltin:
+                        case QV4::CompiledData::CommonType::Invalid:
                             if (QV4::MemberData *md = propertyAndMethodStorageAsMemberData()) {
                                 QV4::Scope scope(engine);
                                 QV4::ScopedValue sv(scope, *(md->data() + id));
@@ -855,55 +879,64 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         }
                     } else {
                         switch (t) {
-                        case QV4::CompiledData::BuiltinType::Int:
+                        case QV4::CompiledData::CommonType::Void:
+                            break;
+                        case QV4::CompiledData::CommonType::Int:
                             needActivate = *reinterpret_cast<int *>(a[0]) != readPropertyAsInt(id);
                             writeProperty(id, *reinterpret_cast<int *>(a[0]));
                             break;
-                        case QV4::CompiledData::BuiltinType::Bool:
+                        case QV4::CompiledData::CommonType::Bool:
                             needActivate = *reinterpret_cast<bool *>(a[0]) != readPropertyAsBool(id);
                             writeProperty(id, *reinterpret_cast<bool *>(a[0]));
                             break;
-                        case QV4::CompiledData::BuiltinType::Real:
+                        case QV4::CompiledData::CommonType::Real:
                             needActivate = *reinterpret_cast<double *>(a[0]) != readPropertyAsDouble(id);
                             writeProperty(id, *reinterpret_cast<double *>(a[0]));
                             break;
-                        case QV4::CompiledData::BuiltinType::String:
+                        case QV4::CompiledData::CommonType::String:
                             needActivate = *reinterpret_cast<QString *>(a[0]) != readPropertyAsString(id);
                             writeProperty(id, *reinterpret_cast<QString *>(a[0]));
                             break;
-                        case QV4::CompiledData::BuiltinType::Url:
+                        case QV4::CompiledData::CommonType::Url:
                             needActivate = *reinterpret_cast<QUrl *>(a[0]) != readPropertyAsUrl(id);
                             writeProperty(id, *reinterpret_cast<QUrl *>(a[0]));
                             break;
-                        case QV4::CompiledData::BuiltinType::Date:
+                        case QV4::CompiledData::CommonType::Date:
                             needActivate = *reinterpret_cast<QDate *>(a[0]) != readPropertyAsDate(id);
                             writeProperty(id, *reinterpret_cast<QDate *>(a[0]));
                             break;
-                        case QV4::CompiledData::BuiltinType::DateTime:
+                        case QV4::CompiledData::CommonType::DateTime:
                             needActivate = *reinterpret_cast<QDateTime *>(a[0]) != readPropertyAsDateTime(id);
                             writeProperty(id, *reinterpret_cast<QDateTime *>(a[0]));
                             break;
-                        case QV4::CompiledData::BuiltinType::Rect:
+                        case QV4::CompiledData::CommonType::RegExp:
+#if QT_CONFIG(regularexpression)
+                            needActivate = *reinterpret_cast<QRegularExpression *>(a[0])
+                                           != readPropertyAsRegularExpression(id);
+                            writeProperty(id, *reinterpret_cast<QRegularExpression *>(a[0]));
+#endif
+                            break;
+                        case QV4::CompiledData::CommonType::Rect:
                             needActivate = *reinterpret_cast<QRectF *>(a[0]) != readPropertyAsRectF(id);
                             writeProperty(id, *reinterpret_cast<QRectF *>(a[0]));
                             break;
-                        case QV4::CompiledData::BuiltinType::Size:
+                        case QV4::CompiledData::CommonType::Size:
                             needActivate = *reinterpret_cast<QSizeF *>(a[0]) != readPropertyAsSizeF(id);
                             writeProperty(id, *reinterpret_cast<QSizeF *>(a[0]));
                             break;
-                        case QV4::CompiledData::BuiltinType::Point:
+                        case QV4::CompiledData::CommonType::Point:
                             needActivate = *reinterpret_cast<QPointF *>(a[0]) != readPropertyAsPointF(id);
                             writeProperty(id, *reinterpret_cast<QPointF *>(a[0]));
                             break;
-                        case QV4::CompiledData::BuiltinType::Time:
+                        case QV4::CompiledData::CommonType::Time:
                             needActivate = *reinterpret_cast<QTime *>(a[0]) != readPropertyAsTime(id);
                             writeProperty(id, *reinterpret_cast<QTime *>(a[0]));
                             break;
-                        case QV4::CompiledData::BuiltinType::Var:
+                        case QV4::CompiledData::CommonType::Var:
                             if (ep)
                                 writeProperty(id, *reinterpret_cast<QVariant *>(a[0]));
                             break;
-                        case QV4::CompiledData::BuiltinType::InvalidBuiltin:
+                        case QV4::CompiledData::CommonType::Invalid:
                             if (QV4::MemberData *md = propertyAndMethodStorageAsMemberData()) {
                                 QV4::Scope scope(engine);
                                 QV4::ScopedValue sv(scope, *(md->data() + id));
@@ -1118,7 +1151,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::method(int index) const
 
 QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id) const
 {
-    Q_ASSERT(compiledObject && compiledObject->propertyTable()[id].builtinType() == QV4::CompiledData::BuiltinType::Var);
+    Q_ASSERT(compiledObject && compiledObject->propertyTable()[id].commonType() == QV4::CompiledData::CommonType::Var);
 
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
@@ -1143,7 +1176,7 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id) const
 
 void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
 {
-    Q_ASSERT(compiledObject && compiledObject->propertyTable()[id].builtinType() == QV4::CompiledData::BuiltinType::Var);
+    Q_ASSERT(compiledObject && compiledObject->propertyTable()[id].commonType() == QV4::CompiledData::CommonType::Var);
 
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -1204,7 +1237,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
 
 void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
 {
-    if (compiledObject && compiledObject->propertyTable()[id].builtinType() == QV4::CompiledData::BuiltinType::Var) {
+    if (compiledObject && compiledObject->propertyTable()[id].commonType() == QV4::CompiledData::CommonType::Var) {
         QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
         if (!md)
             return;

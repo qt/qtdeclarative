@@ -15,16 +15,17 @@
 // We mean it.
 //
 
+#include <private/qbipointer_p.h>
+#include <private/qintrusivelist_p.h>
+#include <private/qqmldata_p.h>
+#include <private/qv4functionobject_p.h>
+#include <private/qv4lookup_p.h>
+#include <private/qv4value_p.h>
+
 #include <QtCore/qglobal.h>
 #include <QtCore/qmetatype.h>
 #include <QtCore/qpair.h>
 #include <QtCore/qhash.h>
-#include <private/qqmldata_p.h>
-#include <private/qintrusivelist_p.h>
-
-#include <private/qv4value_p.h>
-#include <private/qv4functionobject_p.h>
-#include <private/qv4lookup_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -59,7 +59,7 @@ bool Parameter::initType(
         QV4::CompiledData::ParameterType::Flag listFlag)
 {
     auto builtinType = stringToBuiltinType(typeName);
-    if (builtinType == QV4::CompiledData::BuiltinType::InvalidBuiltin) {
+    if (builtinType == QV4::CompiledData::CommonType::Invalid) {
         if (typeName.isEmpty()) {
             paramType->set(listFlag, 0);
             return false;
@@ -68,31 +68,33 @@ bool Parameter::initType(
         paramType->set(listFlag, typeNameIndex);
     } else {
         Q_ASSERT(quint32(builtinType) < (1u << 31));
-        paramType->set(listFlag | QV4::CompiledData::ParameterType::Builtin,
+        paramType->set(listFlag | QV4::CompiledData::ParameterType::Common,
                        static_cast<quint32>(builtinType));
     }
     return true;
 }
 
-QV4::CompiledData::BuiltinType Parameter::stringToBuiltinType(const QString &typeName)
+QV4::CompiledData::CommonType Parameter::stringToBuiltinType(const QString &typeName)
 {
     static const struct TypeNameToType {
         const char *name;
         size_t nameLength;
-        QV4::CompiledData::BuiltinType type;
+        QV4::CompiledData::CommonType type;
     } propTypeNameToTypes[] = {
-        { "int", strlen("int"), QV4::CompiledData::BuiltinType::Int },
-        { "bool", strlen("bool"), QV4::CompiledData::BuiltinType::Bool },
-        { "double", strlen("double"), QV4::CompiledData::BuiltinType::Real },
-        { "real", strlen("real"), QV4::CompiledData::BuiltinType::Real },
-        { "string", strlen("string"), QV4::CompiledData::BuiltinType::String },
-        { "url", strlen("url"), QV4::CompiledData::BuiltinType::Url },
-        { "date", strlen("date"), QV4::CompiledData::BuiltinType::DateTime },
-        { "rect", strlen("rect"), QV4::CompiledData::BuiltinType::Rect },
-        { "point", strlen("point"), QV4::CompiledData::BuiltinType::Point },
-        { "size", strlen("size"), QV4::CompiledData::BuiltinType::Size },
-        { "variant", strlen("variant"), QV4::CompiledData::BuiltinType::Var },
-        { "var", strlen("var"), QV4::CompiledData::BuiltinType::Var }
+        { "void", strlen("void"), QV4::CompiledData::CommonType::Void },
+        { "int", strlen("int"), QV4::CompiledData::CommonType::Int },
+        { "bool", strlen("bool"), QV4::CompiledData::CommonType::Bool },
+        { "double", strlen("double"), QV4::CompiledData::CommonType::Real },
+        { "real", strlen("real"), QV4::CompiledData::CommonType::Real },
+        { "string", strlen("string"), QV4::CompiledData::CommonType::String },
+        { "url", strlen("url"), QV4::CompiledData::CommonType::Url },
+        { "date", strlen("date"), QV4::CompiledData::CommonType::DateTime },
+        { "regexp", strlen("regexp"), QV4::CompiledData::CommonType::RegExp },
+        { "rect", strlen("rect"), QV4::CompiledData::CommonType::Rect },
+        { "point", strlen("point"), QV4::CompiledData::CommonType::Point },
+        { "size", strlen("size"), QV4::CompiledData::CommonType::Size },
+        { "variant", strlen("variant"), QV4::CompiledData::CommonType::Var },
+        { "var", strlen("var"), QV4::CompiledData::CommonType::Var }
     };
     static const int propTypeNameToTypesCount = sizeof(propTypeNameToTypes) /
                                                 sizeof(propTypeNameToTypes[0]);
@@ -103,7 +105,7 @@ QV4::CompiledData::BuiltinType Parameter::stringToBuiltinType(const QString &typ
             return t->type;
         }
     }
-    return QV4::CompiledData::BuiltinType::InvalidBuiltin;
+    return QV4::CompiledData::CommonType::Invalid;
 }
 
 void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex,
@@ -1091,12 +1093,12 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             property->setIsReadOnly(node->isReadonly());
             property->setIsRequired(node->isRequired());
 
-            const QV4::CompiledData::BuiltinType builtinPropertyType
+            const QV4::CompiledData::CommonType builtinPropertyType
                     = Parameter::stringToBuiltinType(memberType);
-            if (builtinPropertyType != QV4::CompiledData::BuiltinType::InvalidBuiltin)
-                property->setBuiltinType(builtinPropertyType);
+            if (builtinPropertyType != QV4::CompiledData::CommonType::Invalid)
+                property->setCommonType(builtinPropertyType);
             else
-                property->setCustomType(registerString(memberType));
+                property->setTypeNameIndex(registerString(memberType));
 
             QStringView typeModifier = node->typeModifier;
             if (typeModifier == QLatin1String("list")) {
@@ -1653,7 +1655,7 @@ bool IRBuilder::isStatementNodeScript(QQmlJS::AST::Statement *statement)
 
 bool IRBuilder::isRedundantNullInitializerForPropertyDeclaration(Property *property, QQmlJS::AST::Statement *statement)
 {
-    if (property->isBuiltinType() || property->isList())
+    if (property->isCommonType() || property->isList())
         return false;
     QQmlJS::AST::ExpressionStatement *exprStmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(statement);
     if (!exprStmt)
