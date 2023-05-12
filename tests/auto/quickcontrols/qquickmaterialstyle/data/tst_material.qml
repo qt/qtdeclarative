@@ -1070,7 +1070,7 @@ TestCase {
         // The placeholder text should always float at a fixed position at the top
         // when text has been set, even when it's in a Flickable.
         flickable.contentY = -50
-        compare(placeholderTextItem.y, -Math.floor(placeholderTextItem.largestHeight / 2))
+        compare(placeholderTextItem.y, -placeholderTextItem.largestHeight / 2)
         flickable.contentY = 0
 
         // When the text is cleared, it shouldn't float.
