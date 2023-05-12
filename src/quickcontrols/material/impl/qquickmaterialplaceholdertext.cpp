@@ -146,7 +146,7 @@ qreal QQuickMaterialPlaceholderText::floatingTargetY() const
 
     // Outlined text fields have the placeaholder vertically centered
     // along the outline at the top.
-    return (-m_largestHeight / 2) + controlTopInset(textControl());
+    return (-m_largestHeight / 2.0) + controlTopInset(textControl());
 }
 
 /*!
