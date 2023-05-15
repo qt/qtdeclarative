@@ -19,6 +19,7 @@
 #include <private/qv4module_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4stackframe_p.h>
 #include <private/qv4value_p.h>
 
 #include <QtCore/qloggingcategory.h>

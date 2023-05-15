@@ -1,14 +1,16 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
-#include <qv4argumentsobject_p.h>
-#include <qv4arrayobject_p.h>
-#include <qv4scopedvalue_p.h>
-#include <qv4string_p.h>
-#include <qv4function_p.h>
-#include <qv4jscall_p.h>
-#include <qv4symbol_p.h>
+
+#include "qv4argumentsobject_p.h"
 
 #include <private/qv4alloca_p.h>
+#include <private/qv4arrayobject_p.h>
+#include <private/qv4function_p.h>
+#include <private/qv4jscall_p.h>
+#include <private/qv4scopedvalue_p.h>
+#include <private/qv4stackframe_p.h>
+#include <private/qv4string_p.h>
+#include <private/qv4symbol_p.h>
 
 using namespace QV4;
 

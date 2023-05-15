@@ -4,13 +4,14 @@
 
 #include "qv4module_p.h"
 
-#include <private/qv4mm_p.h>
-#include <private/qv4vme_moth_p.h>
 #include <private/qv4context_p.h>
-#include <private/qv4symbol_p.h>
 #include <private/qv4identifiertable_p.h>
+#include <private/qv4mm_p.h>
+#include <private/qv4stackframe_p.h>
+#include <private/qv4symbol_p.h>
+#include <private/qv4vme_moth_p.h>
 
-#include <QScopeGuard>
+#include <QtCore/qscopeguard.h>
 
 using namespace QV4;
 

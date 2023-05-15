@@ -14,17 +14,13 @@
 // We mean it.
 //
 
-#include "qv4engine_p.h"
-#include "qv4context_p.h"
-#include "qv4functionobject_p.h"
-#include "qv4managed_p.h"
-#include "qv4regexp_p.h"
+#include <private/qv4context_p.h>
+#include <private/qv4engine_p.h>
+#include <private/qv4functionobject_p.h>
+#include <private/qv4managed_p.h>
 
-#include <QtCore/QString>
-#include <QtCore/QHash>
-#include <QtCore/QScopedPointer>
-#include <cstdio>
-#include <cassert>
+#include <QtCore/qhash.h>
+#include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -110,11 +106,19 @@ struct Q_QML_PRIVATE_EXPORT RegExpObject: Object {
         return s->toQString();
     }
 
-    Heap::RegExp *value() const { return d()->value; }
-    uint flags() const { return d()->value->flags; }
-    bool global() const { return d()->value->global(); }
-    bool sticky() const { return d()->value->sticky(); }
-    bool unicode() const { return d()->value->unicode(); }
+    // We cannot name Heap::RegExp here since we don't want to include qv4regexp_p.h but we still
+    // want to keep the methods inline. We shift the requirement to name the type to the caller by
+    // making it a template.
+    template<typename RegExp = Heap::RegExp>
+    RegExp *value() const { return d()->value; }
+    template<typename RegExp = Heap::RegExp>
+    uint flags() const { return value<RegExp>()->flags; }
+    template<typename RegExp = Heap::RegExp>
+    bool global() const { return value<RegExp>()->global(); }
+    template<typename RegExp = Heap::RegExp>
+    bool sticky() const { return value<RegExp>()->sticky(); }
+    template<typename RegExp = Heap::RegExp>
+    bool unicode() const { return value<RegExp>()->unicode(); }
 
     ReturnedValue builtinExec(ExecutionEngine *engine, const String *s);
 };

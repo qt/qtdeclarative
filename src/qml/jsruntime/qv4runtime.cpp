@@ -1,41 +1,43 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include "qv4global_p.h"
 #include "qv4runtime_p.h"
-#include "qv4engine_p.h"
-#include "qv4object_p.h"
-#include "qv4globalobject_p.h"
-#include "qv4argumentsobject_p.h"
-#include "qv4lookup_p.h"
-#include "qv4function_p.h"
-#include "qv4regexp_p.h"
-#include "qv4regexpobject_p.h"
-#include "private/qlocale_tools_p.h"
-#include "qv4scopedvalue_p.h"
-#include "qv4jscall_p.h"
-#include <private/qv4qmlcontext_p.h>
-#include <private/qqmltypewrapper_p.h>
+
 #include <private/qqmlengine_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 #include <private/qqmljsast_p.h>
+#include <private/qqmltypewrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
-#include "qv4qobjectwrapper_p.h"
-#include "qv4symbol_p.h"
-#include "qv4generatorobject_p.h"
-#include <QtQml/private/qv4math_p.h>
-
-#include <QtCore/QDebug>
-#include <cassert>
-#include <cstdio>
-#include <stdlib.h>
+#include <private/qv4argumentsobject_p.h>
+#include <private/qv4engine_p.h>
+#include <private/qv4function_p.h>
+#include <private/qv4generatorobject_p.h>
+#include <private/qv4global_p.h>
+#include <private/qv4globalobject_p.h>
+#include <private/qv4jscall_p.h>
+#include <private/qv4lookup_p.h>
+#include <private/qv4math_p.h>
+#include <private/qv4object_p.h>
+#include <private/qv4qmlcontext_p.h>
+#include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4regexp_p.h>
+#include <private/qv4regexpobject_p.h>
+#include <private/qv4scopedvalue_p.h>
+#include <private/qv4stackframe_p.h>
+#include <private/qv4symbol_p.h>
 
 #include <wtf/MathExtras.h>
 
+#include <QtCore/private/qlocale_tools_p.h>
+#include <QtCore/qdebug.h>
+
 #ifdef QV4_COUNT_RUNTIME_FUNCTIONS
-#  include <QtCore/QBuffer>
-#  include <QtCore/QDebug>
+#  include <QtCore/qbuffer.h>
 #endif // QV4_COUNT_RUNTIME_FUNCTIONS
+
+#include <cassert>
+#include <cstdio>
+#include <stdlib.h>
 
 QT_BEGIN_NAMESPACE
 

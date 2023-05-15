@@ -3,12 +3,13 @@
 
 #include "qv4debugjob.h"
 
-#include <private/qv4script_p.h>
 #include <private/qqmlcontext_p.h>
-#include <private/qv4qmlcontext_p.h>
-#include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmldebugservice_p.h>
 #include <private/qv4jscall_p.h>
+#include <private/qv4qmlcontext_p.h>
+#include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4script_p.h>
+#include <private/qv4stackframe_p.h>
 
 #include <QtQml/qqmlengine.h>
 
