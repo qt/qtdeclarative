@@ -8,3 +8,4 @@ find_package(Qt6 REQUIRED COMPONENTS Qml)
 set(CMAKE_AUTOMOC TRUE)
 
 add_subdirectory(My/Things)
+add_subdirectory(My/OtherThings)

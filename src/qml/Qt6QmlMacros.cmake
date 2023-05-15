@@ -532,21 +532,6 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         )
     endif()
 
-    set(ensure_set_properties
-        QT_QML_MODULE_PLUGIN_TYPES_FILE
-        QT_QML_MODULE_RESOURCES       # Original files as provided by the project (absolute)
-        QT_QML_MODULE_RESOURCE_PATHS  # By qmlcachegen (resource paths)
-        QT_QMLCACHEGEN_DIRECT_CALLS
-        QT_QMLCACHEGEN_EXECUTABLE
-        QT_QMLCACHEGEN_ARGUMENTS
-    )
-    foreach(prop IN LISTS ensure_set_properties)
-        get_target_property(val ${target} ${prop})
-        if("${val}" MATCHES "-NOTFOUND$")
-            set_target_properties(${target} PROPERTIES ${prop} "")
-        endif()
-    endforeach()
-
     if(NOT arg_NO_GENERATE_QMLTYPES)
         set(type_registration_extra_args "")
         if(arg_NAMESPACE)
@@ -706,6 +691,23 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
     if(arg_OUTPUT_TARGETS)
         set(${arg_OUTPUT_TARGETS} ${output_targets} PARENT_SCOPE)
     endif()
+
+
+    set(ensure_set_properties
+        QT_QML_MODULE_PLUGIN_TYPES_FILE
+        QT_QML_MODULE_QML_FILES
+        QT_QML_MODULE_RESOURCES       # Original files as provided by the project (absolute)
+        QT_QML_MODULE_RESOURCE_PATHS  # By qmlcachegen (resource paths)
+        QT_QMLCACHEGEN_DIRECT_CALLS
+        QT_QMLCACHEGEN_EXECUTABLE
+        QT_QMLCACHEGEN_ARGUMENTS
+    )
+    foreach(prop IN LISTS ensure_set_properties)
+        get_target_property(val ${target} ${prop})
+        if("${val}" MATCHES "-NOTFOUND$")
+            set_target_properties(${target} PROPERTIES ${prop} "")
+        endif()
+    endforeach()
 
 endfunction()
 
