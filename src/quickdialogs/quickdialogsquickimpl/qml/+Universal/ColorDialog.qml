@@ -47,6 +47,7 @@ ColorDialogImpl {
         spacing: 12
 
         Label {
+            objectName: "titleLabel"
             text: control.title
             elide: Label.ElideRight
             // TODO: QPlatformTheme::TitleBarFont
@@ -63,10 +64,12 @@ ColorDialogImpl {
             Layout.leftMargin: 18
             Layout.fillWidth: true
             Layout.preferredWidth: control.title.length > 0 ? implicitHeight : 0
+            Layout.preferredHeight: control.title.length > 0 ? implicitHeight : 15
         }
 
         Button {
             id: eyeDropperButton
+            objectName: "eyeDropperButton"
             icon.source: "qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/eye-dropper.png"
             flat: true
             topPadding: 24

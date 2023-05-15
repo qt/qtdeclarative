@@ -18,6 +18,7 @@
 #include <QtQuickTemplates2/private/qquicklabel_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickslider_p.h>
+#include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 
 #include <qpa/qplatformintegration.h>
@@ -126,6 +127,23 @@ void tst_QQuickColorDialogImpl::defaultValues()
     dialogHelper.dialog->setOptions(QColorDialogOptions::ShowAlphaChannel);
     QVERIFY(dialogHelper.openDialog());
     QVERIFY(alphaSlider->isVisible());
+
+    const bool wayland = QGuiApplication::platformName().compare(QLatin1String("wayland"), Qt::CaseInsensitive) == 0;
+    const bool offscreen = qgetenv("QT_QPA_PLATFORM").compare(QLatin1String("offscreen"), Qt::CaseInsensitive) == 0;
+
+    if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ScreenWindowGrabbing) && !wayland && !offscreen) {
+        QQuickButton *eyeDropperButton = dialogHelper.quickDialog->findChild<QQuickButton *>("eyeDropperButton");
+        QVERIFY(eyeDropperButton);
+
+        QVERIFY2(eyeDropperButton->isVisible(),
+                 "The Eye Dropper Button should be visible unless the NoEyeDropperButton option has "
+                 "explicitly been set");
+        dialogHelper.dialog->close();
+        QTRY_VERIFY(!dialogHelper.isQuickDialogOpen());
+        dialogHelper.dialog->setOptions(QColorDialogOptions::NoEyeDropperButton);
+        QVERIFY(dialogHelper.openDialog());
+        QVERIFY(!eyeDropperButton->isVisible());
+    }
 
     QVERIFY(dialogHelper.quickDialog->isHsl());
     QCOMPARE(dialogHelper.quickDialog->alpha(), 1.0);

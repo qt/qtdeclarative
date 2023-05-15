@@ -102,6 +102,7 @@ void QQuickColorDialog::setSelectedColor(const QColor &color)
     \value ColorDialog.ShowAlphaChannel Show a slider and additional input fields for the alpha value.
     \value ColorDialog.NoButtons Don't display \uicontrol Open and \uicontrol Cancel buttons (useful
    for "live dialogs").
+    \value ColorDialog.NoEyeDropperButton Don't display \uicontrol {Eye Dropper} button. This value was added in Qt 6.6.
     \value ColorDialog.DontUseNativeDialog Forces the dialog to use a non-native quick implementation.
 */
 
