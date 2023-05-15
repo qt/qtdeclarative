@@ -26,6 +26,7 @@ public:
 
     bool complete = false;
     bool visible = false;
+    bool visibleExplicitlySet = false;
     QQuickWindow::Visibility visibility = QQuickWindow::AutomaticVisibility;
     QV4::PersistentValue rootItemMarker;
 };

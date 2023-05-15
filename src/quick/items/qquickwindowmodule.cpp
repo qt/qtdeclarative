@@ -33,6 +33,7 @@ void QQuickWindowQmlImpl::setVisible(bool visible)
 {
     Q_D(QQuickWindowQmlImpl);
     d->visible = visible;
+    d->visibleExplicitlySet = true;
     if (d->complete && (!transientParent() || transientParentVisible()))
         QQuickWindow::setVisible(visible);
 }
@@ -118,7 +119,8 @@ void QQuickWindowQmlImpl::setWindowVisibility()
     // We have deferred window creation until we have the full picture of what
     // the user wanted in terms of window state, geometry, visibility, etc.
 
-    if ((d->visibility == Hidden && d->visible) || (d->visibility > AutomaticVisibility && !d->visible)) {
+    if (d->visibleExplicitlySet && ((d->visibility == Hidden && d->visible) ||
+                                    (d->visibility > AutomaticVisibility && !d->visible))) {
         QQmlData *data = QQmlData::get(this);
         Q_ASSERT(data && data->context);
 
