@@ -1542,8 +1542,10 @@ bool QQuickWindow::event(QEvent *event)
         d->inheritPalette(QGuiApplication::palette());
         if (d->contentItem)
             QCoreApplication::sendEvent(d->contentItem, event);
+        break;
     case QEvent::DevicePixelRatioChange:
         physicalDpiChanged();
+        break;
     default:
         break;
     }
