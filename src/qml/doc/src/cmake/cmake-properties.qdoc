@@ -17,7 +17,7 @@ global CMake properties:
 \ingroup cmake-properties-qtqml
 \ingroup cmake-global-properties-qtqml
 
-\title QT_QMLLLINTER_TARGETS_FOLDER
+\title QT_QMLLINTER_TARGETS_FOLDER
 
 \brief Sets the FOLDER property for targets that belong to the QML linter.
 

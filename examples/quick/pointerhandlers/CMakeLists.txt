@@ -19,11 +19,11 @@ add_subdirectory("../shared" "shared")
 qt_add_executable(pointerhandlersexample WIN32 MACOSX_BUNDLE main.cpp)
 
 target_link_libraries(pointerhandlersexample PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
-    Qt::Svg
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
+    Qt6::Svg
 )
 
 add_dependencies(pointerhandlersexample pointerhandlers_shared)

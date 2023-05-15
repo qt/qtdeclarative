@@ -5,9 +5,11 @@
 #define QQMLLIST_H
 
 #include <QtQml/qtqmlglobal.h>
+
+#include <QtCore/qcontainerinfo.h>
 #include <QtCore/qlist.h>
+#include <QtCore/qmetatype.h>
 #include <QtCore/qvariant.h>
-#include <QtCore/QMetaType>
 
 QT_BEGIN_NAMESPACE
 
@@ -21,6 +23,8 @@ struct QMetaObject;
 template<typename T>
 class QQmlListProperty {
 public:
+    using value_type = T*;
+
     using AppendFunction = void (*)(QQmlListProperty<T> *, T *);
     using CountFunction = qsizetype (*)(QQmlListProperty<T> *);
     using AtFunction = T *(*)(QQmlListProperty<T> *, qsizetype);
@@ -84,24 +88,45 @@ public:
     ReplaceFunction replace = nullptr;
     RemoveLastFunction removeLast = nullptr;
 
+    template<typename List>
+    List toList()
+    {
+        if constexpr (std::is_same_v<List, QList<T *>>) {
+            if (append == qlist_append)
+                return *static_cast<QList<T *> *>(data);
+        }
+
+        const qsizetype size = count(this);
+
+        List result;
+        if constexpr (QContainerInfo::has_reserve_v<List>)
+            result.reserve(size);
+
+        static_assert(QContainerInfo::has_push_back_v<List>);
+        for (qsizetype i = 0; i < size; ++i)
+            result.push_back(at(this, i));
+
+        return result;
+    }
+
 private:
     static void qlist_append(QQmlListProperty *p, T *v) {
-        reinterpret_cast<QList<T *> *>(p->data)->append(v);
+        static_cast<QList<T *> *>(p->data)->append(v);
     }
     static qsizetype qlist_count(QQmlListProperty *p) {
-        return reinterpret_cast<QList<T *> *>(p->data)->size();
+        return static_cast<QList<T *> *>(p->data)->size();
     }
     static T *qlist_at(QQmlListProperty *p, qsizetype idx) {
-        return reinterpret_cast<QList<T *> *>(p->data)->at(idx);
+        return static_cast<QList<T *> *>(p->data)->at(idx);
     }
     static void qlist_clear(QQmlListProperty *p) {
-        return reinterpret_cast<QList<T *> *>(p->data)->clear();
+        return static_cast<QList<T *> *>(p->data)->clear();
     }
     static void qlist_replace(QQmlListProperty *p, qsizetype idx, T *v) {
-        return reinterpret_cast<QList<T *> *>(p->data)->replace(idx, v);
+        return static_cast<QList<T *> *>(p->data)->replace(idx, v);
     }
     static void qlist_removeLast(QQmlListProperty *p) {
-        return reinterpret_cast<QList<T *> *>(p->data)->removeLast();
+        return static_cast<QList<T *> *>(p->data)->removeLast();
     }
 
     static void qslow_replace(QQmlListProperty<T> *list, qsizetype idx, T *v)

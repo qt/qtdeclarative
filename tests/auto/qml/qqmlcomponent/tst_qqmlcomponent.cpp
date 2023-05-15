@@ -145,6 +145,8 @@ private slots:
     void loadFromModuleFailures();
     void loadFromModuleRequired();
     void loadFromQrc();
+    void removeBinding();
+    void complexObjectArgument();
 
 private:
     QQmlEngine engine;
@@ -282,7 +284,7 @@ void tst_qqmlcomponent::qmlCreateObjectWithProperties()
     QTest::ignoreMessage(
             QtMsgType::QtWarningMsg,
             QRegularExpression(
-                    ".*createObjectWithScript.qml:42:13: Required property i was not initialized"));
+                    ".*createObjectWithScript.qml:45:13: Required property i was not initialized"));
 
     QQmlComponent component(&engine, testFileUrl("createObjectWithScript.qml"));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
@@ -341,6 +343,12 @@ void tst_qqmlcomponent::qmlCreateObjectWithProperties()
         QVERIFY(goodRequired);
         QCOMPARE(goodRequired->parent(), object.data());
         QCOMPARE(goodRequired->property("i").value<int>(), 42);
+    }
+
+    {
+        QScopedPointer<QObject> bindingAsInitial(object->property("bindingAsInitial").value<QObject *>());
+        QVERIFY(bindingAsInitial);
+        QVERIFY(object->property("bindingUsed").toBool());
     }
 }
 
@@ -1437,6 +1445,36 @@ void tst_qqmlcomponent::loadFromQrc()
     QVERIFY(p);
     QVERIFY(p->compilationUnit);
     QVERIFY(p->compilationUnit->aotCompiledFunctions);
+}
+
+void tst_qqmlcomponent::removeBinding()
+{
+    QQmlEngine e;
+    const QUrl url = testFileUrl("removeBinding.qml");
+    QQmlComponent c(&e, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+        QtWarningMsg,
+        qPrintable(url.toString() + QStringLiteral(":7:27: QML Component: Unsuitable arguments "
+                                                   "passed to createObject(). The first argument "
+                                                   "should be a QObject* or null, and the second "
+                                                   "argument should be a JavaScript object or a "
+                                                   "QVariantMap")));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("result"), QStringLiteral("42"));
+    QCOMPARE(o->property("result2"), QStringLiteral("43"));
+}
+
+void tst_qqmlcomponent::complexObjectArgument()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("complexObjectArgument.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), QStringLiteral("26"));
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

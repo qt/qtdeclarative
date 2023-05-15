@@ -25,6 +25,8 @@ class QQuickBasicDial : public QQuickPaintedItem
 {
     Q_OBJECT
     Q_PROPERTY(qreal progress READ progress WRITE setProgress FINAL)
+    Q_PROPERTY(qreal startAngle READ startAngle WRITE setStartAngle FINAL)
+    Q_PROPERTY(qreal endAngle READ endAngle WRITE setEndAngle FINAL)
     Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
     QML_NAMED_ELEMENT(DialImpl)
     QML_ADDED_IN_VERSION(2, 0)
@@ -35,6 +37,12 @@ public:
     qreal progress() const;
     void setProgress(qreal progress);
 
+    qreal startAngle() const;
+    void setStartAngle(qreal startAngle);
+
+    qreal endAngle() const;
+    void setEndAngle(qreal endAngle);
+
     QColor color() const;
     void setColor(const QColor &color);
 
@@ -42,6 +50,8 @@ public:
 
 private:
     qreal m_progress = 0;
+    qreal m_startAngle = -140.;
+    qreal m_endAngle = 140.;
     QColor m_color = Qt::black;
 };
 

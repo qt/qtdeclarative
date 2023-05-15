@@ -24,12 +24,12 @@ TestCase {
     }
 
     Component {
-        id: button
+        id: buttonComponent
         Button { }
     }
 
     Component {
-        id: styledButton
+        id: styledButtonComponent
         Button {
             Material.theme: Material.Dark
             Material.primary: Material.DeepOrange
@@ -152,7 +152,7 @@ TestCase {
     }
 
     function test_defaults() {
-        let control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(buttonComponent, testCase)
         verify(control)
         verify(control.Material)
         compare(control.Material.primary, Material.color(Material.Indigo))
@@ -166,7 +166,7 @@ TestCase {
     }
 
     function test_set() {
-        let control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(buttonComponent, testCase)
         verify(control)
         control.Material.primary = Material.Green
         control.Material.accent = Material.Brown
@@ -183,7 +183,7 @@ TestCase {
     }
 
     function test_reset() {
-        let control = createTemporaryObject(styledButton, testCase)
+        let control = createTemporaryObject(styledButtonComponent, testCase)
         verify(control)
         compare(control.Material.primary, Material.color(Material.DeepOrange))
         compare(control.Material.accent, Material.color(Material.DeepPurple, themeshade(control.Material.theme)))
@@ -219,18 +219,18 @@ TestCase {
 
     function test_inheritance(data) {
         let prop = data.tag
-        let parent = createTemporaryObject(button, testCase)
+        let parent = createTemporaryObject(buttonComponent, testCase)
         parent.Material[prop] = data.value1
         compare(parent.Material[prop], data.value1)
 
-        let child1 = button.createObject(parent)
+        let child1 = buttonComponent.createObject(parent)
         compare(child1.Material[prop], data.value1)
 
         parent.Material[prop] = data.value2
         compare(parent.Material[prop], data.value2)
         compare(child1.Material[prop], data.value2)
 
-        let child2 = button.createObject(parent)
+        let child2 = buttonComponent.createObject(parent)
         compare(child2.Material[prop], data.value2)
 
         child2.Material[prop] = data.value1
@@ -244,13 +244,13 @@ TestCase {
         compare(child1.Material[prop], parent.Material[prop])
         verify(child2.Material[prop] !== parent.Material[prop])
 
-        let grandChild1 = button.createObject(child1)
-        let grandChild2 = button.createObject(child2)
+        let grandChild1 = buttonComponent.createObject(child1)
+        let grandChild2 = buttonComponent.createObject(child2)
         compare(grandChild1.Material[prop], child1.Material[prop])
         compare(grandChild2.Material[prop], child2.Material[prop])
 
-        let themelessGrandGrandChild = button.createObject(grandChild1)
-        let grandGrandGrandChild1 = button.createObject(themelessGrandGrandChild)
+        let themelessGrandGrandChild = buttonComponent.createObject(grandChild1)
+        let grandGrandGrandChild1 = buttonComponent.createObject(themelessGrandGrandChild)
         compare(grandGrandGrandChild1.Material[prop], parent.Material[prop])
 
         child1.Material[prop] = data.value2
@@ -418,7 +418,7 @@ TestCase {
         let parentWindow = createTemporaryObject(data.component, null)
         verify(parentWindow)
 
-        let control = button.createObject(parentWindow.contentItem)
+        let control = buttonComponent.createObject(parentWindow.contentItem)
         verify(control)
         compare(control.Material.primary, parentWindow.Material.primary)
         compare(control.Material.accent, parentWindow.Material.accent)
@@ -590,7 +590,7 @@ TestCase {
     }
 
     function test_colors(data) {
-        let control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(buttonComponent, testCase)
         verify(control)
 
         let prop = data.tag
@@ -636,15 +636,15 @@ TestCase {
         return [
             {tag: "Button:pixelSize", type: "Button", attribute: "pixelSize", value: 14, window: 20, pane: 10},
             {tag: "Button:weight", type: "Button", attribute: "weight", value: Font.Medium, window: Font.Black, pane: Font.Bold},
-            {tag: "Button:capitalization", type: "Button", attribute: "capitalization", value: Font.AllUppercase, window: Font.Capitalize, pane: Font.AllLowercase},
+            {tag: "Button:capitalization", type: "Button", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase},
 
             {tag: "TabButton:pixelSize", type: "TabButton", attribute: "pixelSize", value: 14, window: 20, pane: 10},
             {tag: "TabButton:weight", type: "TabButton", attribute: "weight", value: Font.Medium, window: Font.Black, pane: Font.Bold},
-            {tag: "TabButton:capitalization", type: "TabButton", attribute: "capitalization", value: Font.AllUppercase, window: Font.Capitalize, pane: Font.AllLowercase},
+            {tag: "TabButton:capitalization", type: "TabButton", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase},
 
             {tag: "ToolButton:pixelSize", type: "ToolButton", attribute: "pixelSize", value: 14, window: 20, pane: 10},
             {tag: "ToolButton:weight", type: "ToolButton", attribute: "weight", value: Font.Medium, window: Font.Black, pane: Font.Bold},
-            {tag: "ToolButton:capitalization", type: "ToolButton", attribute: "capitalization", value: Font.AllUppercase, window: Font.Capitalize, pane: Font.AllLowercase},
+            {tag: "ToolButton:capitalization", type: "ToolButton", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase},
 
             {tag: "ItemDelegate:pixelSize", type: "ItemDelegate", attribute: "pixelSize", value: 14, window: 20, pane: 10},
             {tag: "ItemDelegate:weight", type: "ItemDelegate", attribute: "weight", value: Font.Medium, window: Font.Black, pane: Font.Bold},
@@ -964,7 +964,54 @@ TestCase {
         TextArea {}
     }
 
-    function test_placeholderText() {
+    function test_textFieldPlaceholderTextHorizontalAlignment_data() {
+        return [
+            { tag: "AlignLeft", horizontalAlignment: TextField.AlignLeft },
+            { tag: "AlignHCenter", horizontalAlignment: TextField.AlignHCenter },
+            { tag: "AlignRight", horizontalAlignment: TextField.AlignRight }
+        ]
+    }
+
+    function test_textFieldPlaceholderTextHorizontalAlignment(data) {
+        // The placeholder text should always be near the left side of the TextField, regardless of its horizontalAlignment.
+        let textField = createTemporaryObject(textFieldComponent, testCase, {
+            placeholderText: "TextField",
+            horizontalAlignment: data.horizontalAlignment
+        })
+        verify(textField)
+        let placeholderTextItem = textField.children[0]
+        verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+        compare(placeholderTextItem.horizontalAlignment, TextField.AlignLeft)
+
+        textField.forceActiveFocus()
+        compare(placeholderTextItem.horizontalAlignment, TextField.AlignLeft)
+        textField.destroy()
+    }
+
+    function test_textAreaPlaceholderTextHorizontalAlignment_data() {
+        return [
+            { tag: "AlignLeft", horizontalAlignment: TextArea.AlignLeft },
+            { tag: "AlignHCenter", horizontalAlignment: TextArea.AlignHCenter },
+            { tag: "AlignRight", horizontalAlignment: TextArea.AlignRight }
+        ]
+    }
+
+    function test_textAreaPlaceholderTextHorizontalAlignment(data) {
+        // The placeholder text should always be near the left side of the TextArea, regardless of its horizontalAlignment.
+        let textArea = createTemporaryObject(textAreaComponent, testCase, {
+            placeholderText: "TextArea",
+            horizontalAlignment: data.horizontalAlignment
+        })
+        verify(textArea)
+        let placeholderTextItem = textArea.children[0]
+        verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+        compare(placeholderTextItem.horizontalAlignment, TextArea.AlignLeft)
+
+        textArea.forceActiveFocus()
+        compare(placeholderTextItem.horizontalAlignment, TextArea.AlignLeft)
+    }
+
+    function test_placeholderTextPos() {
         {
             // The non-floating placeholder text should be in the middle of TextField regardless of its height.
             let textField = createTemporaryObject(textFieldComponent, testCase, { placeholderText: "TextField" })
@@ -978,15 +1025,136 @@ TestCase {
         }
 
         {
-            // The non-floating placeholder text should be near the top of TextArea while it has room, but when it
-            // doesn't have room, it should start behaving like TextField's.
+            // The non-floating placeholder text should be near the top of TextArea while it has room...
             let textArea = createTemporaryObject(textAreaComponent, testCase, { placeholderText: "TextArea" })
             verify(textArea)
             let placeholderTextItem = textArea.children[0]
             verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
             compare(placeholderTextItem.y, (placeholderTextItem.controlImplicitBackgroundHeight - placeholderTextItem.largestHeight) / 2)
+
+            // ... also when it has a lot of room...
+            textArea.height = 200
+            compare(placeholderTextItem.y, (placeholderTextItem.controlImplicitBackgroundHeight - placeholderTextItem.largestHeight) / 2)
+
+            // ... but when it doesn't have room, it should start behaving like TextField's.
             textArea.height = 10
             compare(placeholderTextItem.y, (textArea.height - placeholderTextItem.height) / 2)
         }
+    }
+
+    Component {
+        id: flickableTextAreaComponent
+
+        Flickable {
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 20
+            width: 180
+            height: 100
+
+            TextArea.flickable: TextArea {
+                placeholderText: "Type something..."
+                text: "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn"
+            }
+        }
+    }
+
+    function test_placeholderTextInFlickable() {
+        let flickable = createTemporaryObject(flickableTextAreaComponent, testCase)
+        verify(flickable)
+
+        let textArea = flickable.TextArea.flickable
+        verify(textArea)
+        let placeholderTextItem = flickable.children[2]
+        verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+
+        // The placeholder text should always float at a fixed position at the top
+        // when text has been set, even when it's in a Flickable.
+        flickable.contentY = -50
+        compare(placeholderTextItem.y, -Math.floor(placeholderTextItem.largestHeight / 2))
+        flickable.contentY = 0
+
+        // When the text is cleared, it shouldn't float.
+        flickable.height = 160
+        textArea.text = ""
+        compare(placeholderTextItem.y, (placeholderTextItem.controlImplicitBackgroundHeight - placeholderTextItem.largestHeight) / 2)
+        // The background outline gap should be closed.
+        let textContainer = flickable.children[1]
+        verify(textContainer as MaterialImpl.MaterialTextContainer)
+        compare(textContainer.focusAnimationProgress, 0)
+    }
+
+    function test_outlinedTextAreaInFlickablePlaceholderTextClipping() {
+        let flickable = createTemporaryObject(flickableTextAreaComponent, testCase)
+        verify(flickable)
+
+        let textArea = flickable.TextArea.flickable
+        verify(textArea)
+        let placeholderTextItem = flickable.children[2]
+        verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+        compare(textArea.Material.containerStyle, Material.Outlined)
+        // The Flickable doesn't clip at the moment so topInset should be 0.
+        compare(textArea.topInset, 0)
+        compare(textArea.topPadding, (textArea.implicitBackgroundHeight - placeholderTextItem.largestHeight) / 2)
+
+        // topInset should now be half the placeholder text's height,
+        // and topPadding adjusted accordingly.
+        flickable.clip = true
+        compare(textArea.topInset, placeholderTextItem.largestHeight / 2)
+        compare(textArea.topPadding, ((textArea.implicitBackgroundHeight - placeholderTextItem.largestHeight) / 2) + textArea.topInset)
+
+        // When the text is cleared, the placeholder text shouldn't float, but it should still be accounted for
+        // to avoid it causing jumps in layout sizes, for example.
+        const initialText = textArea.text
+        textArea.text = ""
+        compare(textArea.topPadding, ((textArea.implicitBackgroundHeight - placeholderTextItem.largestHeight) / 2) + textArea.topInset)
+
+        flickable.clip = false
+        compare(textArea.topInset, 0)
+        compare(textArea.topPadding, (textArea.implicitBackgroundHeight - placeholderTextItem.largestHeight) / 2)
+    }
+
+    function test_outlinedTextAreaPlaceholderTextClipping() {
+        let textArea = createTemporaryObject(textAreaComponent, testCase, {
+            placeholderText: "Type something",
+            text: "Text"
+        })
+        verify(textArea)
+        let placeholderTextItem = textArea.children[0]
+        verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+        compare(textArea.topInset, 0)
+        compare(textArea.topPadding, (textArea.implicitBackgroundHeight - placeholderTextItem.largestHeight) / 2)
+
+        // topInset should now be half the placeholder text's height, and topPadding adjusted accordingly.
+        textArea.clip = true
+        compare(textArea.topInset, placeholderTextItem.largestHeight / 2)
+        compare(textArea.topPadding, ((textArea.implicitBackgroundHeight - placeholderTextItem.largestHeight) / 2) + textArea.topInset)
+    }
+
+    function test_outlinedTextFieldPlaceholderTextClipping() {
+        let textField = createTemporaryObject(textFieldComponent, testCase, {
+            placeholderText: "Type something",
+            text: "Text"
+        })
+        verify(textField)
+        let placeholderTextItem = textField.children[0]
+        verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+        compare(textField.topInset, 0)
+        compare(textField.topPadding, textField.Material.textFieldVerticalPadding)
+
+        // topInset should now be half the placeholder text's height, and topPadding adjusted accordingly.
+        textField.clip = true
+        compare(textField.topInset, placeholderTextItem.largestHeight / 2)
+        compare(textField.topPadding, textField.Material.textFieldVerticalPadding + textField.topInset)
+    }
+
+    function test_flatButton() {
+        let button = createTemporaryObject(buttonComponent, testCase, { flat: true })
+        verify(button)
+        // A flat button should be transparent by default.
+        compare(button.background.color, "#00000000")
+
+        // However, if a background color is explicitly specified, it should be respected.
+        button.Material.background = "#ff6347"
+        compare(button.background.color, "#ff6347")
     }
 }

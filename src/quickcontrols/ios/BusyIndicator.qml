@@ -30,7 +30,7 @@ T.BusyIndicator {
                 (Qt.styleHints.colorScheme === Qt.Light ? "-light.png" : "-dark.png")
         fillMode: Image.PreserveAspectFit
         NumberAnimation on currentImage {
-            running: control.running
+            running: control.visible && control.running
             loops: -1
             from: 8
             to: 1

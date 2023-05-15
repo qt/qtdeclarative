@@ -31,10 +31,10 @@ qt_add_qml_module(localstorageexample
     )
 
 target_link_libraries(localstorageexample PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
 )
 
 install(TARGETS localstorageexample

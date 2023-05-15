@@ -438,7 +438,7 @@ void QQuickTextAreaPrivate::accessibilityActiveChanged(bool active)
     Q_Q(QQuickTextArea);
     QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
     Q_ASSERT(accessibleAttached);
-    accessibleAttached->setRole(accessibleRole());
+    accessibleAttached->setRole(effectiveAccessibleRole());
     accessibleAttached->set_readOnly(q->isReadOnly());
     accessibleAttached->setDescription(placeholder);
 }

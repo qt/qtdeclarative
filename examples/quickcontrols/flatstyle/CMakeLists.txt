@@ -35,11 +35,11 @@ qt_add_qml_module(flatstyleexample
 )
 
 target_link_libraries(flatstyleexample PUBLIC
-    Qt::Core
-    Qt::Gui
-    Qt::Quick
-    Qt::QuickControls2
-    Qt::Widgets
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Quick
+    Qt6::QuickControls2
+    Qt6::Widgets
 )
 
 install(TARGETS flatstyleexample

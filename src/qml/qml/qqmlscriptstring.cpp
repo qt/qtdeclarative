@@ -44,7 +44,7 @@ const QQmlScriptStringPrivate* QQmlScriptStringPrivate::get(const QQmlScriptStri
 Constructs an empty instance.
 */
 QQmlScriptString::QQmlScriptString()
-:  d(new QQmlScriptStringPrivate)
+:  d()
 {
 }
 
@@ -92,6 +92,8 @@ bool QQmlScriptString::operator==(const QQmlScriptString &other) const
 {
     if (d == other.d)
         return true;
+    if (!d)
+        return false;
 
     if (d->isNumberLiteral || other.d->isNumberLiteral)
         return d->isNumberLiteral && other.d->isNumberLiteral && d->numberValue == other.d->numberValue;
@@ -126,6 +128,8 @@ Returns whether the QQmlScriptString is empty.
 */
 bool QQmlScriptString::isEmpty() const
 {
+    if (!d)
+        return true;
     if (!d->script.isEmpty())
         return false;
     return d->bindingId == -1;
@@ -136,7 +140,7 @@ Returns whether the content of the QQmlScriptString is the \c undefined literal.
 */
 bool QQmlScriptString::isUndefinedLiteral() const
 {
-    return d->script == QLatin1String("undefined");
+    return d && d->script == QLatin1String("undefined");
 }
 
 /*!
@@ -144,7 +148,7 @@ Returns whether the content of the QQmlScriptString is the \c null literal.
 */
 bool QQmlScriptString::isNullLiteral() const
 {
-    return d->script == QLatin1String("null");
+    return d && d->script == QLatin1String("null");
 }
 
 /*!
@@ -153,7 +157,7 @@ Otherwise returns a null QString.
 */
 QString QQmlScriptString::stringLiteral() const
 {
-    if (d->isStringLiteral)
+    if (d && d->isStringLiteral)
         return d->script.mid(1, d->script.size()-2);
     return QString();
 }
@@ -165,8 +169,8 @@ sets \a ok to true. Otherwise returns 0.0 and sets \a ok to false.
 qreal QQmlScriptString::numberLiteral(bool *ok) const
 {
     if (ok)
-        *ok = d->isNumberLiteral;
-    return d->isNumberLiteral ? d->numberValue : 0.;
+        *ok = d && d->isNumberLiteral;
+    return (d && d->isNumberLiteral) ? d->numberValue : 0.;
 }
 
 /*!
@@ -175,8 +179,8 @@ sets \a ok to true. Otherwise returns false and sets \a ok to false.
 */
 bool QQmlScriptString::booleanLiteral(bool *ok) const
 {
-    bool isTrue = d->script == QLatin1String("true");
-    bool isFalse = !isTrue && d->script == QLatin1String("false");
+    bool isTrue = d && d->script == QLatin1String("true");
+    bool isFalse = !isTrue && d && d->script == QLatin1String("false");
     if (ok)
         *ok = isTrue || isFalse;
     return isTrue ? true : false;

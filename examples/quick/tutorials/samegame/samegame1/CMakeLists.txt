@@ -37,10 +37,10 @@ qt_add_qml_module(samegame1
 )
 
 target_link_libraries(samegame1 PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
 )
 
 install(TARGETS samegame1

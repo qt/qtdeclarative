@@ -281,6 +281,23 @@ set_target_properties(someTarget PROPERTIES
 )
 \endcode
 
+Finally, the \c --verbose argument can be used to see diagnostic output from
+qmlcachegen:
+
+\badcode
+set_target_properties(someTarget PROPERTIES
+    QT_QMLCACHEGEN_ARGUMENTS "--verbose"
+)
+\endcode
+
+With this flag set, qmlcachegen will output warnings for each function it
+cannot compile to C++. Some of these warnings will point to problems in your
+QML code and some will tell you that certain features of the QML language are
+not implemented in the C++ code generator. In both cases, qmlcachegen will
+still generate byte code for such functions. If you want to see only the
+problems in your QML code, you should use qmllint and the targets generated
+for it instead.
+
 \target qmllint-auto
 \section2 Linting QML sources
 
@@ -298,9 +315,7 @@ JavaScript file names that are intended to be addressed as components should
 start with an uppercase letter.
 
 Alternatively, you may use lowercase file names and set the source file
-property
-\l{cmake-source-file-property-QT_QML_SOURCE_TYPENAME}{QT_QML_SOURCE_TYPE_NAME}
-to the desired type name.
+property \l QT_QML_SOURCE_TYPENAME to the desired type name.
 
 \target qml-cmake-singletons
 \section2 Singletons
@@ -449,6 +464,7 @@ under the \c RESOURCE_PREFIX instead. This can be achieved by specifying the
 \c NO_RESOURCE_TARGET_PATH option, which may only be used if the backing target
 is an executable.
 
+\target PAST_MAJOR_VERSIONS
 \section2 Registering past major versions
 
 \c PAST_MAJOR_VERSIONS contains a list of additional major version that the module
@@ -539,6 +555,7 @@ These additional targets are generated internally by \c{qt_add_qml_module()}
 and are referenced by the backing target's linking requirements as part of
 ensuring that resources are set up and loaded correctly.
 
+\target PLUGIN_TARGET
 \section2 Targets and plugin targets
 
 \c PLUGIN_TARGET specifies the plugin target associated with the QML module.
@@ -563,6 +580,7 @@ link directly to the backing target and do not need a plugin, it can be
 disabled by adding the \c NO_PLUGIN option. Specifying both \c NO_PLUGIN and
 \c PLUGIN_TARGET is an error.
 
+\target NO_CREATE_PLUGIN_TARGET
 In certain situations, the project may want to delay creating the plugin target
 until after the call. The \c NO_CREATE_PLUGIN_TARGET option can be given in
 that situation. The project is then expected to call
@@ -570,6 +588,7 @@ that situation. The project is then expected to call
 been created. When  \c NO_CREATE_PLUGIN_TARGET is given, \c PLUGIN_TARGET must
 also be provided to explicitly name the plugin target.
 
+\target CLASS_NAME
 \target NO_GENERATE_PLUGIN_SOURCE
 By default, \c{qt_add_qml_module()} will auto-generate a \c{.cpp} file that
 implements the plugin class named by the \c CLASS_NAME argument. The generated

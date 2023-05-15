@@ -21,7 +21,10 @@ Q_LOGGING_CATEGORY(complLog, "qt.languageserver.completions")
 bool CompletionRequest::fillFrom(QmlLsp::OpenDocument doc, const Parameters &params,
                                  Response &&response)
 {
-    BaseRequest<Parameters, Response>::fillFrom(doc, params, std::move(response));
+    // do not call BaseRequest::fillFrom() to avoid taking the Mutex twice and getting an
+    // inconsistent state.
+    m_parameters = params;
+    m_response = std::move(response);
 
     if (!doc.textDocument)
         return false;
@@ -32,34 +35,17 @@ bool CompletionRequest::fillFrom(QmlLsp::OpenDocument doc, const Parameters &par
         targetVersion = doc.textDocument->version();
         code = doc.textDocument->toPlainText();
     }
-    minVersion = (targetVersion ? *targetVersion : 0);
+    m_minVersion = (targetVersion ? *targetVersion : 0);
 
     return true;
 }
 
 void QmlCompletionSupport::registerHandlers(QLanguageServer *, QLanguageServerProtocol *protocol)
 {
-    protocol->registerCompletionRequestHandler([this](const QByteArray &,
-                                                      const RequestParameters &cParams,
-                                                      RequestResponse &&response) {
-        QmlLsp::OpenDocument doc = m_codeModel->openDocumentByUrl(
-                QQmlLSUtils::lspUriToQmlUrl(cParams.textDocument.uri));
-
-        const bool needsUpdate = addRequestAndCheckForUpdate(doc, cParams, std::move(response));
-
-        if (needsUpdate)
-            updatedSnapshot(QQmlLSUtils::lspUriToQmlUrl(cParams.textDocument.uri));
-    });
+    protocol->registerCompletionRequestHandler(getRequestHandler());
     protocol->registerCompletionItemResolveRequestHandler(
             [](const QByteArray &, const CompletionItem &cParams,
                LSPResponse<CompletionItem> &&response) { response.sendResponse(cParams); });
-}
-
-QmlCompletionSupport::QmlCompletionSupport(QmlLsp::QQmlCodeModel *codeModel)
-    : QQmlBaseModule(codeModel)
-{
-    QObject::connect(m_codeModel, &QmlLsp::QQmlCodeModel::updatedSnapshot, this,
-                     &QmlCompletionSupport::updatedSnapshot);
 }
 
 QString QmlCompletionSupport::name() const
@@ -79,22 +65,18 @@ void QmlCompletionSupport::setupCapabilities(
     serverCapabilities.capabilities.completionProvider = cOptions;
 }
 
-void QmlCompletionSupport::updatedSnapshot(const QByteArray &url)
-{
-    processPending(url);
-}
-
 void QmlCompletionSupport::process(RequestPointerArgument req)
 {
-    QmlLsp::OpenDocumentSnapshot doc = m_codeModel->snapshotByUrl(req->parameters.textDocument.uri);
+    QmlLsp::OpenDocumentSnapshot doc =
+            m_codeModel->snapshotByUrl(req->m_parameters.textDocument.uri);
     req->sendCompletions(doc);
 }
 
 QString CompletionRequest::urlAndPos() const
 {
-    return QString::fromUtf8(parameters.textDocument.uri) + u":"
-            + QString::number(parameters.position.line) + u":"
-            + QString::number(parameters.position.character);
+    return QString::fromUtf8(m_parameters.textDocument.uri) + u":"
+            + QString::number(m_parameters.position.line) + u":"
+            + QString::number(m_parameters.position.character);
 }
 
 // finds the filter string, the base (for fully qualified accesses) and the whole string
@@ -186,7 +168,7 @@ enum class ImportCompletionType { None, Module, Version };
 void CompletionRequest::sendCompletions(QmlLsp::OpenDocumentSnapshot &doc)
 {
     QList<CompletionItem> res = completions(doc);
-    response.sendResponse(res);
+    m_response.sendResponse(res);
 }
 
 static QList<CompletionItem> importCompletions(DomItem &file, const CompletionContextStrings &ctx)
@@ -459,24 +441,24 @@ QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapsho
     QList<CompletionItem> res;
     if (!doc.validDoc) {
         qCWarning(complLog) << "No valid document for completions  for "
-                            << QString::fromUtf8(parameters.textDocument.uri);
+                            << QString::fromUtf8(m_parameters.textDocument.uri);
         // try to add some import and global completions?
         return res;
     }
-    if (!doc.docVersion || *doc.docVersion < minVersion) {
+    if (!doc.docVersion || *doc.docVersion < m_minVersion) {
         qCWarning(complLog) << "sendCompletions on older doc version";
-    } else if (!doc.validDocVersion || *doc.validDocVersion < minVersion) {
+    } else if (!doc.validDocVersion || *doc.validDocVersion < m_minVersion) {
         qCWarning(complLog) << "using outdated valid doc, position might be incorrect";
     }
     DomItem file = doc.validDoc.fileObject(QQmlJS::Dom::GoTo::MostLikely);
     // clear reference cache to resolve latest versions (use a local env instead?)
     if (std::shared_ptr<DomEnvironment> envPtr = file.environment().ownerAs<DomEnvironment>())
         envPtr->clearReferenceCache();
-    qsizetype pos = QQmlLSUtils::textOffsetFrom(code, parameters.position.line,
-                                                parameters.position.character);
+    qsizetype pos = QQmlLSUtils::textOffsetFrom(code, m_parameters.position.line,
+                                                m_parameters.position.character);
     CompletionContextStrings ctx(code, pos);
-    auto itemsFound = QQmlLSUtils::itemsFromTextLocation(file, parameters.position.line,
-                                                         parameters.position.character
+    auto itemsFound = QQmlLSUtils::itemsFromTextLocation(file, m_parameters.position.line,
+                                                         m_parameters.position.character
                                                                  - ctx.filterChars().size());
     if (itemsFound.size() > 1) {
         QStringList paths;
@@ -488,9 +470,9 @@ QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapsho
     DomItem currentItem;
     if (!itemsFound.isEmpty())
         currentItem = itemsFound.first().domItem;
-    qCDebug(complLog) << "Completion at " << urlAndPos() << " " << parameters.position.line << ":"
-                      << parameters.position.character << "offset:" << pos << "base:" << ctx.base()
-                      << "filter:" << ctx.filterChars()
+    qCDebug(complLog) << "Completion at " << urlAndPos() << " " << m_parameters.position.line << ":"
+                      << m_parameters.position.character << "offset:" << pos
+                      << "base:" << ctx.base() << "filter:" << ctx.filterChars()
                       << "lastVersion:" << (doc.docVersion ? (*doc.docVersion) : -1)
                       << "validVersion:" << (doc.validDocVersion ? (*doc.validDocVersion) : -1)
                       << "in" << currentItem.internalKindStr() << currentItem.canonicalPath();

@@ -3,21 +3,19 @@
 
 # Generated from tools.pro.
 
-if(QT_FEATURE_qml_devtools)
-    add_subdirectory(qmldom)
-    if(QT_FEATURE_commandlineparser)
-        add_subdirectory(qmllint)
-        add_subdirectory(qmltc)
-        add_subdirectory(qmltyperegistrar)
-    endif()
-    add_subdirectory(qmlimportscanner)
-    add_subdirectory(qmlformat)
-    if (TARGET Qt::LanguageServerPrivate
-            AND NOT WASM AND NOT IOS AND NOT ANDROID AND NOT QNX AND NOT INTEGRITY AND NOT WEBOS)
-        add_subdirectory(qmlls)
-    endif()
+add_subdirectory(qmldom)
+if(QT_FEATURE_commandlineparser)
+    add_subdirectory(qmllint)
+    add_subdirectory(qmltc)
+    add_subdirectory(qmltyperegistrar)
 endif()
-if(QT_FEATURE_qml_devtools AND QT_FEATURE_xmlstreamwriter)
+add_subdirectory(qmlimportscanner)
+add_subdirectory(qmlformat)
+if (TARGET Qt::LanguageServerPrivate
+        AND NOT WASM AND NOT IOS AND NOT ANDROID AND NOT QNX AND NOT INTEGRITY AND NOT WEBOS)
+    add_subdirectory(qmlls)
+endif()
+if(QT_FEATURE_xmlstreamwriter)
     # special case begin
     # Do not build qmlcachegen here but build it at src/
     # time, so that we can use it for our own .qml files in src/imports.

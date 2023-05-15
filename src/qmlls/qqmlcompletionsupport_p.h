@@ -42,14 +42,12 @@ class QmlCompletionSupport : public QQmlBaseModule<CompletionRequest>
 {
     Q_OBJECT
 public:
-    QmlCompletionSupport(QmlLsp::QQmlCodeModel *codeModel);
+    using BaseT::BaseT;
     QString name() const override;
     void registerHandlers(QLanguageServer *server, QLanguageServerProtocol *protocol) override;
     void setupCapabilities(const QLspSpecification::InitializeParams &clientInfo,
                            QLspSpecification::InitializeResult &) override;
     void process(RequestPointerArgument req) override;
-public Q_SLOTS:
-    void updatedSnapshot(const QByteArray &uri);
 };
 
 #endif // QMLCOMPLETIONSUPPORT_P_H

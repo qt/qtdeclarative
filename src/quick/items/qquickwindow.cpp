@@ -198,6 +198,8 @@ void QQuickWindow::showEvent(QShowEvent *)
 void QQuickWindow::hideEvent(QHideEvent *)
 {
     Q_D(QQuickWindow);
+    if (auto da = d->deliveryAgentPrivate())
+        da->handleWindowHidden(this);
     if (d->windowManager)
         d->windowManager->hide(this);
 }
@@ -396,29 +398,13 @@ void QQuickWindow::physicalDpiChanged()
     d->lastReportedItemDevicePixelRatio = newPixelRatio;
     if (d->contentItem)
         updatePixelRatioHelper(d->contentItem, newPixelRatio);
+    d->forcePolish();
 }
 
 void QQuickWindow::handleFontDatabaseChanged()
 {
     Q_D(QQuickWindow);
     d->pendingFontUpdate = true;
-}
-
-void QQuickWindow::handleScreenChanged(QScreen *screen)
-{
-    Q_D(QQuickWindow);
-    // we connected to the initial screen in QQuickWindowPrivate::init, but the screen changed
-    disconnect(d->physicalDpiChangedConnection);
-    if (screen) {
-        physicalDpiChanged();
-        // When physical DPI changes on the same screen, either the resolution or the device pixel
-        // ratio changed. We must check what it is. Device pixel ratio does not have its own
-        // ...Changed() signal. Reconnect, same as in QQuickWindowPrivate::init.
-        d->physicalDpiChangedConnection = connect(screen, &QScreen::physicalDotsPerInchChanged,
-                                                  this, &QQuickWindow::physicalDpiChanged);
-    }
-
-    d->forcePolish();
 }
 
 void forcePolishHelper(QQuickItem *item)
@@ -430,6 +416,13 @@ void forcePolishHelper(QQuickItem *item)
     QList <QQuickItem *> items = item->childItems();
     for (int i=0; i<items.size(); ++i)
         forcePolishHelper(items.at(i));
+}
+
+void QQuickWindow::handleScreenChanged(QScreen *screen)
+{
+    Q_D(QQuickWindow);
+    Q_UNUSED(screen);
+    d->forcePolish();
 }
 
 /*!
@@ -744,12 +737,8 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
                      q,
                      &QQuickWindow::handleFontDatabaseChanged);
 
-    if (QScreen *screen = q->screen()) {
+    if (q->screen()) {
         lastReportedItemDevicePixelRatio = q->effectiveDevicePixelRatio();
-        // if the screen changes, then QQuickWindow::handleScreenChanged disconnects
-        // and connects to the new screen
-        physicalDpiChangedConnection = QObject::connect(screen, &QScreen::physicalDotsPerInchChanged,
-                                                        q, &QQuickWindow::physicalDpiChanged);
     }
 
     QSGContext *sg;
@@ -1553,6 +1542,8 @@ bool QQuickWindow::event(QEvent *event)
         d->inheritPalette(QGuiApplication::palette());
         if (d->contentItem)
             QCoreApplication::sendEvent(d->contentItem, event);
+    case QEvent::DevicePixelRatioChange:
+        physicalDpiChanged();
     default:
         break;
     }
@@ -1963,19 +1954,14 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
         itemPriv->itemNode()->setMatrix(matrix);
     }
 
-    bool clipEffectivelyChanged = (dirty & (QQuickItemPrivate::Clip | QQuickItemPrivate::Window)) &&
-                                  ((item->clip() == false) != (itemPriv->clipNode() == nullptr));
-    int effectRefCount = itemPriv->extra.isAllocated()?itemPriv->extra->effectRefCount:0;
-    bool effectRefEffectivelyChanged = (dirty & (QQuickItemPrivate::EffectReference | QQuickItemPrivate::Window)) &&
-                                  ((effectRefCount == 0) != (itemPriv->rootNode() == nullptr));
-
+    const bool clipEffectivelyChanged = dirty & (QQuickItemPrivate::Clip | QQuickItemPrivate::Window);
     if (clipEffectivelyChanged) {
-        QSGNode *parent = itemPriv->opacityNode() ? (QSGNode *) itemPriv->opacityNode() :
-                                                    (QSGNode *) itemPriv->itemNode();
+        QSGNode *parent = itemPriv->opacityNode() ? (QSGNode *)itemPriv->opacityNode()
+                                                  : (QSGNode *)itemPriv->itemNode();
         QSGNode *child = itemPriv->rootNode();
 
-        if (item->clip()) {
-            Q_ASSERT(itemPriv->clipNode() == nullptr);
+        if (bool initializeClipNode = item->clip() && itemPriv->clipNode() == nullptr;
+            initializeClipNode) {
             QQuickDefaultClipNode *clip = new QQuickDefaultClipNode(item->clipRect());
             itemPriv->extra.value().clipNode = clip;
             clip->update();
@@ -1989,9 +1975,14 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
                 parent->appendChildNode(clip);
             }
 
-        } else {
+        } else if (bool updateClipNode = item->clip() && itemPriv->clipNode() != nullptr;
+                   updateClipNode) {
             QQuickDefaultClipNode *clip = itemPriv->clipNode();
-            Q_ASSERT(clip);
+            clip->setClipRect(item->clipRect());
+            clip->update();
+        } else if (bool removeClipNode = !item->clip() && itemPriv->clipNode() != nullptr;
+                   removeClipNode) {
+            QQuickDefaultClipNode *clip = itemPriv->clipNode();
             parent->removeChildNode(clip);
             if (child) {
                 clip->removeChildNode(child);
@@ -2005,6 +1996,10 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
         }
     }
 
+    const int effectRefCount = itemPriv->extra.isAllocated() ? itemPriv->extra->effectRefCount : 0;
+    const bool effectRefEffectivelyChanged =
+            (dirty & (QQuickItemPrivate::EffectReference | QQuickItemPrivate::Window))
+            && ((effectRefCount == 0) != (itemPriv->rootNode() == nullptr));
     if (effectRefEffectivelyChanged) {
         if (dirty & QQuickItemPrivate::ChildrenUpdateMask)
             itemPriv->childContainerNode()->removeAllChildNodes();

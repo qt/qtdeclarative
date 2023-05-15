@@ -37,6 +37,26 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlVMEMetaObject;
+class QQmlVMEResolvedList
+{
+    Q_DISABLE_COPY_MOVE(QQmlVMEResolvedList)
+
+public:
+    QQmlVMEResolvedList(QQmlListProperty<QObject> *prop);
+    ~QQmlVMEResolvedList();
+
+    QQmlVMEMetaObject *metaObject() const { return m_metaObject; }
+    QVector<QQmlGuard<QObject>> *list() const { return m_list; }
+    quintptr id() const { return m_id; }
+
+    void activateSignal() const;
+
+private:
+    QQmlVMEMetaObject *m_metaObject = nullptr;
+    QVector<QQmlGuard<QObject>> *m_list = nullptr;
+    quintptr m_id = 0;
+};
+
 class QQmlVMEVariantQObjectPtr : public QQmlGuard<QObject>
 {
 public:
@@ -148,6 +168,11 @@ public:
     static QQmlVMEMetaObject *getForProperty(QObject *o, int coreIndex);
     static QQmlVMEMetaObject *getForMethod(QObject *o, int coreIndex);
     static QQmlVMEMetaObject *getForSignal(QObject *o, int coreIndex);
+
+    static void list_append(QQmlListProperty<QObject> *prop, QObject *o);
+    static void list_clear(QQmlListProperty<QObject> *prop);
+    static void list_append_nosignal(QQmlListProperty<QObject> *prop, QObject *o);
+    static void list_clear_nosignal(QQmlListProperty<QObject> *prop);
 
 protected:
     int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a) override;

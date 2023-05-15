@@ -28,10 +28,10 @@ generate_export_header(MyStyle)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml QuickControls2)
 
 target_link_libraries(MyStyle PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::QuickControls2
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::QuickControls2
 )
 
 install(TARGETS MyStyle

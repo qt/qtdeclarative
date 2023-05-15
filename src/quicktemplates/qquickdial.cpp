@@ -57,10 +57,30 @@ QT_BEGIN_NAMESPACE
     by the user by either touch, mouse, or keys.
 */
 
-static const qreal startAngleRadians = (M_PI * 2.0) * (4.0 / 6.0);
-static const qreal startAngle = -140;
-static const qreal endAngleRadians = (M_PI * 2.0) * (5.0 / 6.0);
-static const qreal endAngle = 140;
+/*!
+    \qmlsignal QtQuick.Controls::Dial::wrapped(Dial.WrapDirection direction)
+    \since 6.6
+
+    This signal is emitted when the dial wraps around, i.e. goes beyond its
+    maximum value to its minimum value, or vice versa. It is only emitted when
+    \l wrap is \c true.
+    The \a direction argument specifies the direction of the full rotation and
+    will be one of the following arguments:
+
+    \value Dial.Clockwise           The dial wrapped in clockwise direction.
+    \value Dial.CounterClockwise    The dial wrapped in counterclockwise direction.
+*/
+
+// The user angle is the clockwise angle between the position and the vertical
+// y-axis (12 o clock position).
+// Using radians for logic (atan2(...)) and degree for user interface
+constexpr qreal toUserAngleDeg(qreal logicAngleRad) {
+    // minus to turn clockwise, add 90 deg clockwise
+    return -logicAngleRad / M_PI * 180. + 90;
+}
+
+static const qreal defaultStartAngle = -140;
+static const qreal defaultEndAngle = 140;
 
 class QQuickDialPrivate : public QQuickControlPrivate
 {
@@ -74,7 +94,7 @@ public:
     qreal linearPositionAt(const QPointF &point) const;
     void setPosition(qreal position);
     void updatePosition();
-    bool isLargeChange(const QPointF &eventPos, qreal proposedPosition) const;
+    bool isLargeChange(qreal proposedPosition) const;
     bool isHorizontalOrVertical() const;
 
     bool handlePress(const QPointF &point, ulong timestamp) override;
@@ -87,10 +107,14 @@ public:
 
     void updateAllValuesAreInteger();
 
+    void maybeEmitWrapAround(qreal pos);
+
     qreal from = 0;
     qreal to = 1;
     qreal value = 0;
     qreal position = 0;
+    qreal startAngle = defaultStartAngle;
+    qreal endAngle = defaultEndAngle;
     qreal angle = startAngle;
     qreal stepSize = 0;
     QPointF pressPoint;
@@ -140,13 +164,34 @@ qreal QQuickDialPrivate::circularPositionAt(const QPointF &point) const
 {
     qreal yy = height / 2.0 - point.y();
     qreal xx = point.x() - width / 2.0;
-    qreal angle = (xx || yy) ? std::atan2(yy, xx) : 0;
+    qreal alpha = (xx || yy) ? toUserAngleDeg(std::atan2(yy, xx)) : 0;
 
-    if (angle < M_PI / -2)
-        angle = angle + M_PI * 2;
+    // Move around the circle to reach the interval.
+    if (alpha < startAngle && alpha + 360. < endAngle)
+        alpha += 360.;
+    else if (alpha >= endAngle && alpha - 360. >= startAngle)
+        alpha -= 360.;
 
-    qreal normalizedAngle = (startAngleRadians - angle) / endAngleRadians;
-    return normalizedAngle;
+    // If wrap is on and we are out of the interval [startAngle, endAngle],
+    // we want to jump to the closest border to make it feel nice and responsive
+    if ((alpha < startAngle || alpha > endAngle) && wrap) {
+        if (abs(alpha - startAngle) > abs(endAngle - alpha - 360.))
+            alpha += 360.;
+        else if (abs(alpha - startAngle - 360.) < abs(endAngle - alpha))
+            alpha -= 360.;
+    }
+
+    // If wrap is off,
+    // we want to stay as close as possible to the current angle.
+    // This is important to allow easy setting of boundary values (0,1)
+    if (!wrap) {
+        if (abs(angle - alpha) > abs(angle - (alpha + 360.)))
+            alpha += 360.;
+        if (abs(angle - alpha) > abs(angle - (alpha - 360.)))
+            alpha -= 360.;
+    }
+
+    return (alpha - startAngle) / (endAngle - startAngle);
 }
 
 qreal QQuickDialPrivate::linearPositionAt(const QPointF &point) const
@@ -179,12 +224,13 @@ void QQuickDialPrivate::setPosition(qreal pos)
 {
     Q_Q(QQuickDial);
     pos = qBound<qreal>(qreal(0), pos, qreal(1));
-    if (qFuzzyCompare(position, pos))
+    const qreal alpha = startAngle + pos * qAbs(endAngle - startAngle);
+    if (qFuzzyCompare(position, pos) && qFuzzyCompare(angle, alpha))
         return;
 
+    angle = alpha;
     position = pos;
 
-    angle = startAngle + position * qAbs(endAngle - startAngle);
 
     emit q->positionChanged();
     emit q->angleChanged();
@@ -198,9 +244,11 @@ void QQuickDialPrivate::updatePosition()
     setPosition(pos);
 }
 
-bool QQuickDialPrivate::isLargeChange(const QPointF &eventPos, qreal proposedPosition) const
+bool QQuickDialPrivate::isLargeChange(qreal proposedPosition) const
 {
-    return qAbs(proposedPosition - position) >= qreal(0.5) && eventPos.y() >= height / 2;
+    if (endAngle - startAngle < 180.0)
+        return false;
+    return qAbs(proposedPosition - position) > qreal(0.5);
 }
 
 bool QQuickDialPrivate::isHorizontalOrVertical() const
@@ -223,11 +271,13 @@ bool QQuickDialPrivate::handleMove(const QPointF &point, ulong timestamp)
     Q_Q(QQuickDial);
     QQuickControlPrivate::handleMove(point, timestamp);
     const qreal oldPos = position;
-    qreal pos = positionAt(point);
+    qreal pos = qBound(0.0, positionAt(point), 1.0);
     if (snapMode == QQuickDial::SnapAlways)
         pos = snapPosition(pos);
 
-    if (wrap || isHorizontalOrVertical() || !isLargeChange(point, pos)) {
+    maybeEmitWrapAround(pos);
+
+    if (wrap || isHorizontalOrVertical() || !isLargeChange(pos)) {
         if (live)
             q->setValue(valueAt(pos));
         else
@@ -248,7 +298,9 @@ bool QQuickDialPrivate::handleRelease(const QPointF &point, ulong timestamp)
         if (snapMode != QQuickDial::NoSnap)
             pos = snapPosition(pos);
 
-        if (wrap || isHorizontalOrVertical() || !isLargeChange(point, pos))
+        maybeEmitWrapAround(pos);
+
+        if (wrap || isHorizontalOrVertical() || !isLargeChange(pos))
             q->setValue(valueAt(pos));
         if (!qFuzzyCompare(pos, oldPos))
             emit q->moved();
@@ -299,6 +351,14 @@ static bool areRepresentableAsInteger(Real... numbers) {
 void QQuickDialPrivate::updateAllValuesAreInteger()
 {
     allValuesAreInteger = areRepresentableAsInteger(to, from, stepSize) && stepSize != 0.0;
+}
+
+void QQuickDialPrivate::maybeEmitWrapAround(qreal pos)
+{
+    Q_Q(QQuickDial);
+
+    if (wrap && isLargeChange(pos))
+        emit q->wrapped((pos < q->position()) ? QQuickDial::Clockwise : QQuickDial::CounterClockwise);
 }
 
 QQuickDial::QQuickDial(QQuickItem *parent)
@@ -420,11 +480,12 @@ qreal QQuickDial::position() const
     \qmlproperty real QtQuick.Controls::Dial::angle
     \readonly
 
-    This property holds the angle of the handle.
+    This property holds the clockwise angle of the handle in degrees.
 
-    The range is from \c -140 degrees to \c 140 degrees.
+    The angle is zero at the 12 o'clock position and the range is from
+    \l startAngle to \c endAngle.
 
-    \sa position
+    \sa position, startAngle, endAngle
 */
 qreal QQuickDial::angle() const
 {
@@ -465,6 +526,129 @@ void QQuickDial::setStepSize(qreal step)
     d->stepSize = step;
     d->updateAllValuesAreInteger();
     emit stepSizeChanged();
+}
+
+
+/*!
+    \qmlproperty real QtQuick.Controls::Dial::startAngle
+    \since 6.6
+
+    This property holds the starting angle of the dial in degrees.
+
+    This is the \l angle the dial will have for its minimum value, i.e. \l from.
+    The \l startAngle has to be smaller than the \l endAngle, larger than -360
+    and larger or equal to the \l endAngle - 360 degrees.
+
+    \sa endAngle, angle
+*/
+qreal QQuickDial::startAngle() const
+{
+    Q_D(const QQuickDial);
+    return d->startAngle;
+}
+
+void QQuickDial::setStartAngle(qreal startAngle)
+{
+    Q_D(QQuickDial);
+    if (!d->componentComplete) {
+        // Binding evaluation order can cause warnings with certain combinations
+        // of start and end angles, so delay the actual setting until after component completion.
+        // Store the requested value in the existing member to avoid the need for an extra one.
+        d->startAngle = startAngle;
+        return;
+    }
+
+    if (qFuzzyCompare(d->startAngle, startAngle))
+        return;
+
+    // do not allow to change direction
+    if (startAngle >= d->endAngle) {
+        qmlWarning(this) << "startAngle (" << startAngle
+            << ") cannot be greater than or equal to endAngle (" << d->endAngle << ")";
+        return;
+    }
+
+    // Keep the interval around 0
+    if (startAngle <= -360.) {
+        qmlWarning(this) << "startAngle (" << startAngle << ") cannot be less than or equal to -360";
+        return;
+    }
+
+    // keep the interval [startAngle, endAngle] unique
+    if (startAngle < d->endAngle - 360.) {
+        qmlWarning(this) << "Difference between startAngle (" << startAngle
+            << ") and endAngle (" << d->endAngle << ") cannot be greater than 360."
+            << " Changing endAngle to avoid overlaps.";
+        d->endAngle = startAngle + 360.;
+        emit endAngleChanged();
+    }
+
+    d->startAngle = startAngle;
+    // changing the startAngle will change the angle
+    // if the value is kept constant
+    d->updatePosition();
+    emit startAngleChanged();
+}
+
+/*!
+    \qmlproperty real QtQuick.Controls::Dial::endAngle
+    \since 6.6
+
+    This property holds the end angle of the dial in degrees.
+
+    This is the \l angle the dial will have for its maximum value, i.e. \l to.
+    The \l endAngle has to be bigger than the \l startAngle, smaller than 720
+    and smaller or equal than the \l startAngle + 360 degrees.
+
+    \sa endAngle, angle
+*/
+qreal QQuickDial::endAngle() const
+{
+    Q_D(const QQuickDial);
+    return d->endAngle;
+
+}
+
+void QQuickDial::setEndAngle(qreal endAngle)
+{
+    Q_D(QQuickDial);
+    if (!d->componentComplete) {
+        // Binding evaluation order can cause warnings with certain combinations
+        // of start and end angles, so delay the actual setting until after component completion.
+        // Store the requested value in the existing member to avoid the need for an extra one.
+        d->endAngle = endAngle;
+        return;
+    }
+
+    if (qFuzzyCompare(d->endAngle, endAngle))
+        return;
+
+    if (endAngle <= d->startAngle) {
+        qmlWarning(this) << "endAngle (" << endAngle
+            << ") cannot be less than or equal to startAngle (" << d->startAngle << ")";
+        return;
+    }
+
+    // Keep the interval around 0
+    if (endAngle >= 720.) {
+        qmlWarning(this) << "endAngle (" << endAngle << ") cannot be greater than or equal to 720";
+        return;
+    }
+
+    // keep the interval [startAngle, endAngle] unique
+    if (endAngle > d->startAngle + 360.) {
+        qmlWarning(this) << "Difference between startAngle (" << d->startAngle
+            << ") and endAngle (" << endAngle << ") cannot be greater than 360."
+            << " Changing startAngle to avoid overlaps.";
+        d->startAngle = endAngle - 360.;
+        emit startAngleChanged();
+    }
+
+    d->endAngle = endAngle;
+    // changing the startAngle will change the angle
+    // if the value is kept constant
+    d->updatePosition();
+    emit endAngleChanged();
 }
 
 /*!
@@ -806,6 +990,21 @@ void QQuickDial::componentComplete()
     Q_D(QQuickDial);
     d->executeHandle(true);
     QQuickControl::componentComplete();
+
+    // Set the (delayed) start and end angles, if necessary (see the setters for more info).
+    if (!qFuzzyCompare(d->startAngle, defaultStartAngle)) {
+        const qreal startAngle = d->startAngle;
+        // Temporarily set it to something else so that it sees that it has changed.
+        d->startAngle = defaultStartAngle;
+        setStartAngle(startAngle);
+    }
+
+    if (!qFuzzyCompare(d->endAngle, defaultEndAngle)) {
+        const qreal endAngle = d->endAngle;
+        d->endAngle = defaultEndAngle;
+        setEndAngle(endAngle);
+    }
+
     setValue(d->value);
     d->updatePosition();
 }

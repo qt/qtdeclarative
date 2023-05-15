@@ -1,11 +1,6 @@
 TEMPLATE = subdirs
 QT_FOR_CONFIG += qml
 
-qtHaveModule(quick) {
-    SUBDIRS += \
-        qmlextensionplugins
-}
-
 SUBDIRS += \
           tutorials
 

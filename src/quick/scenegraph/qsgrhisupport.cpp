@@ -1116,6 +1116,7 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
 
     const bool debugLayer = wd->graphicsConfig.isDebugLayerEnabled();
     const bool debugMarkers = wd->graphicsConfig.isDebugMarkersEnabled();
+    const bool timestamps = wd->graphicsConfig.isTimestampsEnabled();
     const bool preferSoftware = wd->graphicsConfig.prefersSoftwareDevice();
     const bool pipelineCacheSave = !wd->graphicsConfig.pipelineCacheSaveFile().isEmpty()
             || (wd->graphicsConfig.isAutomaticPipelineCacheEnabled()
@@ -1126,13 +1127,17 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
             "Creating QRhi with backend %s for window %p (wflags 0x%X)\n"
             "  Graphics API debug/validation layers: %d\n"
             "  Debug markers: %d\n"
+            "  Timestamps: %d\n"
             "  Prefer software device: %d\n"
             "  Shader/pipeline cache collection: %d",
-            qPrintable(backendName), window, int(window->flags()), debugLayer, debugMarkers, preferSoftware, pipelineCacheSave);
+            qPrintable(backendName), window, int(window->flags()), debugLayer,
+            debugMarkers, timestamps, preferSoftware, pipelineCacheSave);
 
     QRhi::Flags flags;
     if (debugMarkers)
         flags |= QRhi::EnableDebugMarkers;
+    if (timestamps)
+        flags |= QRhi::EnableTimestamps;
     if (preferSoftware)
         flags |= QRhi::PreferSoftwareRenderer;
     if (pipelineCacheSave)

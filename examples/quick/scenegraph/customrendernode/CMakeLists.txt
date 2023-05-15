@@ -20,10 +20,10 @@ qt_add_executable(customrendernode WIN32 MACOSX_BUNDLE
 )
 
 target_link_libraries(customrendernode PRIVATE
-    Qt::Core
-    Qt::GuiPrivate
-    Qt::Qml
-    Qt::QuickPrivate
+    Qt6::Core
+    Qt6::GuiPrivate
+    Qt6::Qml
+    Qt6::QuickPrivate
 )
 
 qt_add_qml_module(customrendernode

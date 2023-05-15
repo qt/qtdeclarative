@@ -31,10 +31,21 @@ public:
     qreal price() const;
     void setPrice(qreal);
 
+    friend bool operator==(const ShoeDescription &lhs, const ShoeDescription &rhs)
+    {
+        return operatorEqualsImpl(lhs, rhs);
+    }
+    friend bool operator!=(const ShoeDescription &lhs, const ShoeDescription &rhs)
+    {
+        return !operatorEqualsImpl(lhs, rhs);
+    }
+
 signals:
     void shoeChanged();
 
 private:
+    static bool operatorEqualsImpl(const ShoeDescription &, const ShoeDescription &);
+
     int m_size = 0;
     QColor m_color;
     QString m_brand;

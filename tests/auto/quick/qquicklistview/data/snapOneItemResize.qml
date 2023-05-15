@@ -2,6 +2,7 @@ import QtQuick 2.0
 
 ListView {
     id: list
+    anchors.fill: parent
     currentIndex: 5
     snapMode: ListView.SnapOneItem
     orientation: ListView.Horizontal

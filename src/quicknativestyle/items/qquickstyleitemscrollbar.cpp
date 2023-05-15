@@ -5,6 +5,14 @@
 
 QT_BEGIN_NAMESPACE
 
+QQuickStyleItemScrollBar::QQuickStyleItemScrollBar(QQuickItem *parent)
+    : QQuickStyleItem(parent)
+{
+#ifdef QT_DEBUG
+    setObjectName("styleItemScrollBar");
+#endif
+}
+
 QFont QQuickStyleItemScrollBar::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_ProgressBarLabel, controlSize(control));

@@ -19,10 +19,10 @@ qt_add_executable(embeddedinwidgetsexample WIN32 MACOSX_BUNDLE
 )
 
 target_link_libraries(embeddedinwidgetsexample PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Quick
-    Qt::Widgets
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Quick
+    Qt6::Widgets
 )
 
 # Resources:

@@ -11,6 +11,9 @@ Item{
     property QtObject badRequired: null
     property QtObject goodRequired: null
 
+    property QtObject bindingAsInitial: null
+    property bool bindingUsed: false
+
     Component{
         id: a
         Rectangle {
@@ -43,6 +46,11 @@ Item{
         }
     }
 
+    Component {
+        id: e
+        Rectangle {}
+    }
+
     Component.onCompleted: {
         root.declarativerectangle = a.createObject(root, {"x":17,"y":17, "color":"white", "border.width":3, "innerRect.border.width": 20});
         root.declarativeitem = b.createObject(root, {"x":17,"y":17,"testBool":true,"testInt":17,"testObject":root});
@@ -52,5 +60,9 @@ Item{
 
         root.badRequired = d.createObject(root, { "not_i": 42 });
         root.goodRequired = d.createObject(root, { "i": 42 });
+
+        root.bindingAsInitial = e.createObject(root, {color: Qt.binding(() => {
+            root.bindingUsed = true; return '#ff0000'
+        })});
     }
 }

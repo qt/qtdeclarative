@@ -18,6 +18,13 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_TRACE_POINT(qtquick, QSGDistanceFieldGlyphCache_update_entry, int count)
+Q_TRACE_POINT(qtquick, QSGDistanceFieldGlyphCache_update_exit)
+Q_TRACE_POINT(qtquick, QSGDistanceFieldGlyphCache_glyphRender_entry)
+Q_TRACE_POINT(qtquick, QSGDistanceFieldGlyphCache_glyphRender_exit)
+Q_TRACE_POINT(qtquick, QSGDistanceFieldGlyphCache_glyphStore_entry)
+Q_TRACE_POINT(qtquick, QSGDistanceFieldGlyphCache_glyphStore_exit)
+
 static QElapsedTimer qsg_render_timer;
 
 QSGDistanceFieldGlyphCache::Texture QSGDistanceFieldGlyphCache::s_emptyTexture;

@@ -908,7 +908,7 @@ void tst_QJSEngine::newQObjectRace()
         {
             int newObjectCount = 1000;
 #if defined(Q_OS_QNX)
-            newObjectCount = 256;
+            newObjectCount = 128;
 #endif
             for (int i=0;i<newObjectCount;++i)
             {

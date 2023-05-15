@@ -926,7 +926,17 @@ Item {
                   },
                   layoutWidth:     28,
                   expectedWidths: [22, 6]
-                }
+                },{
+                    tag: "resize_to_0_width",
+                    layout: {
+                      type: "RowLayout",
+                      items: [
+                          {preferredWidth: 10, fillWidth: true},
+                        ]
+                    },
+                    layoutWidth:     0,
+                    expectedWidths: [0]
+                  }
             ];
         }
 

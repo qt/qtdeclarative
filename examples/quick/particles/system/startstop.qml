@@ -9,15 +9,16 @@ Rectangle {
     height: 540
     color: "black"
     Text {
-        text: "Left click to start/stop\nRight click to pause/unpause"
+        text: qsTr("Left click to start/stop\nRight click to pause/unpause")
         color: "white"
         font.pixelSize: 24
     }
-    MouseArea {
-        anchors.fill: parent
+
+    TapHandler {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: (mouse) => {
-            if (mouse.button == Qt.LeftButton)
+        onTapped: function (event, mouseButton)
+        {
+            if (mouseButton === Qt.LeftButton)
                 particles.running = !particles.running
             else
                 particles.paused = !particles.paused;

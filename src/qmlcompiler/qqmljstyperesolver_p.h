@@ -41,7 +41,6 @@ public:
 
     QQmlJSScope::ConstPtr voidType() const { return m_voidType; }
     QQmlJSScope::ConstPtr emptyType() const { return m_emptyType; }
-    QQmlJSScope::ConstPtr emptyListType() const { return m_emptyListType; }
     QQmlJSScope::ConstPtr nullType() const { return m_nullType; }
     QQmlJSScope::ConstPtr realType() const { return m_realType; }
     QQmlJSScope::ConstPtr floatType() const { return m_floatType; }
@@ -70,7 +69,9 @@ public:
     QQmlJSScope::ConstPtr metaObjectType() const { return m_metaObjectType; }
     QQmlJSScope::ConstPtr functionType() const { return m_functionType; }
     QQmlJSScope::ConstPtr jsGlobalObject() const { return m_jsGlobalObject; }
+    QQmlJSScope::ConstPtr qObjectType() const { return m_qObjectType; }
     QQmlJSScope::ConstPtr qObjectListType() const { return m_qObjectListType; }
+    QQmlJSScope::ConstPtr arrayType() const { return m_arrayType; }
 
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
     QQmlJSScope::ConstPtr scopeForId(
@@ -139,6 +140,8 @@ public:
     [[nodiscard]] bool adjustTrackedType(
             const QQmlJSScope::ConstPtr &tracked,
             const QList<QQmlJSScope::ConstPtr> &conversions) const;
+    void adjustOriginalType(
+            const QQmlJSScope::ConstPtr &tracked, const QQmlJSScope::ConstPtr &conversion) const;
     void generalizeType(const QQmlJSScope::ConstPtr &type) const;
 
     void setParentMode(ParentMode mode) { m_parentMode = mode; }
@@ -154,7 +157,6 @@ public:
 
     const QQmlJSScopesById &objectsById() const { return m_objectsById; }
     bool canCallJSFunctions() const { return m_objectsById.signaturesAreEnforced(); }
-    bool canUseValueTypes() const { return m_objectsById.valueTypesAreCopied(); }
     bool canAddressValueTypes() const { return m_objectsById.valueTypesAreAddressable(); }
 
     const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers() const
@@ -183,6 +185,8 @@ public:
             const QQmlJSScope::ConstPtr &type, const QQmlJSScope::ConstPtr &argument,
             bool *isExtension) const;
 
+    bool areEquivalentLists(const QQmlJSScope::ConstPtr &a, const QQmlJSScope::ConstPtr &b) const;
+
 protected:
 
     QQmlJSRegisterContent memberType(const QQmlJSScope::ConstPtr &type, const QString &name) const;
@@ -203,8 +207,8 @@ protected:
             const QQmlJSScope::ConstPtr &scopeType = QQmlJSScope::ConstPtr(),
             bool hasObjectModuelPrefix = false) const;
 
+
     QQmlJSScope::ConstPtr m_voidType;
-    QQmlJSScope::ConstPtr m_emptyListType;
     QQmlJSScope::ConstPtr m_emptyType;
     QQmlJSScope::ConstPtr m_nullType;
     QQmlJSScope::ConstPtr m_numberPrototype;
@@ -233,6 +237,7 @@ protected:
     QQmlJSScope::ConstPtr m_jsValueType;
     QQmlJSScope::ConstPtr m_jsPrimitiveType;
     QQmlJSScope::ConstPtr m_listPropertyType;
+    QQmlJSScope::ConstPtr m_qObjectType;
     QQmlJSScope::ConstPtr m_qObjectListType;
     QQmlJSScope::ConstPtr m_metaObjectType;
     QQmlJSScope::ConstPtr m_functionType;

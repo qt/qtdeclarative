@@ -146,6 +146,17 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
+  \fn QJSPrimitiveValue::QJSPrimitiveValue(QMetaType type)
+  \since 6.6
+  \internal
+
+  Creates a QJSPrimitiveValue of type \a type, and initializes with a
+  default-constructed value if \a type can be stored in QJSPrimtiveValue.
+  If \a type cannot be stored this results in a QJSPrimitiveValue of type
+  Undefined.
+*/
+
+/*!
   \fn QJSPrimitiveValue::QJSPrimitiveValue(const QVariant &value)
 
   Creates a QJSPrimitiveValue from the contents of \a value if those contents

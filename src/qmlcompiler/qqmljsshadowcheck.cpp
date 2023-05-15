@@ -26,10 +26,16 @@ using namespace Qt::StringLiterals;
  * 3. The property is declared final.
  * 4. The object we are retrieving the property from is a value type. Value
  *    types cannot be used polymorphically.
+ *
+ * If the property is potentially shadowed, we can still retrieve it, but we
+ * don't know its type. We should assume "var" then.
+ *
+ * All of the above also holds for methods. There we have to transform the
+ * arguments and return types into "var".
  */
 
 void QQmlJSShadowCheck::run(
-        const InstructionAnnotations *annotations, const Function *function,
+        InstructionAnnotations *annotations, const Function *function,
         QQmlJS::DiagnosticMessage *error)
 {
     m_annotations = annotations;
@@ -45,8 +51,11 @@ void QQmlJSShadowCheck::generate_LoadProperty(int nameIndex)
         return; // enum lookup cannot be shadowed.
 
     auto accumulatorIn = m_state.registers.find(Accumulator);
-    if (accumulatorIn != m_state.registers.end())
-        checkShadowing(accumulatorIn.value().content, m_jsUnitGenerator->stringForIndex(nameIndex));
+    if (accumulatorIn != m_state.registers.end()) {
+        checkShadowing(
+                accumulatorIn.value().content, m_jsUnitGenerator->stringForIndex(nameIndex),
+                Accumulator);
+    }
 }
 
 void QQmlJSShadowCheck::generate_GetLookup(int index)
@@ -55,18 +64,35 @@ void QQmlJSShadowCheck::generate_GetLookup(int index)
         return; // enum lookup cannot be shadowed.
 
     auto accumulatorIn = m_state.registers.find(Accumulator);
-    if (accumulatorIn != m_state.registers.end())
-        checkShadowing(accumulatorIn.value().content, m_jsUnitGenerator->lookupName(index));
+    if (accumulatorIn != m_state.registers.end()) {
+        checkShadowing(
+                accumulatorIn.value().content, m_jsUnitGenerator->lookupName(index), Accumulator);
+    }
 }
 
 void QQmlJSShadowCheck::generate_StoreProperty(int nameIndex, int base)
 {
-    checkShadowing(m_state.registers[base].content, m_jsUnitGenerator->stringForIndex(nameIndex));
+    checkShadowing(
+            m_state.registers[base].content, m_jsUnitGenerator->stringForIndex(nameIndex), base);
 }
 
 void QQmlJSShadowCheck::generate_SetLookup(int index, int base)
 {
-    checkShadowing(m_state.registers[base].content, m_jsUnitGenerator->lookupName(index));
+    checkShadowing(m_state.registers[base].content, m_jsUnitGenerator->lookupName(index), base);
+}
+
+void QQmlJSShadowCheck::generate_CallProperty(int nameIndex, int base, int argc, int argv)
+{
+    Q_UNUSED(argc);
+    Q_UNUSED(argv);
+    checkShadowing(m_state.registers[base].content, m_jsUnitGenerator->lookupName(nameIndex), base);
+}
+
+void QQmlJSShadowCheck::generate_CallPropertyLookup(int nameIndex, int base, int argc, int argv)
+{
+    Q_UNUSED(argc);
+    Q_UNUSED(argv);
+    checkShadowing(m_state.registers[base].content, m_jsUnitGenerator->lookupName(nameIndex), base);
 }
 
 QV4::Moth::ByteCodeHandler::Verdict QQmlJSShadowCheck::startInstruction(QV4::Moth::Instr::Type)
@@ -82,7 +108,7 @@ void QQmlJSShadowCheck::endInstruction(QV4::Moth::Instr::Type)
 }
 
 void QQmlJSShadowCheck::checkShadowing(
-        const QQmlJSRegisterContent &baseType, const QString &memberName)
+        const QQmlJSRegisterContent &baseType, const QString &memberName, int baseRegister)
 {
     if (baseType.storedType()->accessSemantics() != QQmlJSScope::AccessSemantics::Reference)
         return;
@@ -110,8 +136,30 @@ void QQmlJSShadowCheck::checkShadowing(
             return; // Only properties and methods can be shadowed
         }
 
-        setError(u"Member %1 of %2 can be shadowed"_s
-                         .arg(memberName, m_state.accumulatorIn().descriptiveName()));
+        m_logger->log(
+                u"Member %1 of %2 can be shadowed"_s.arg(
+                        memberName, m_state.accumulatorIn().descriptiveName()),
+                qmlCompiler, currentSourceLocation());
+
+        // Make it "var". We don't know what it is.
+        const QQmlJSScope::ConstPtr varType = m_typeResolver->varType();
+        const QQmlJSRegisterContent varContent = m_typeResolver->globalType(varType);
+        InstructionAnnotation &currentAnnotation = (*m_annotations)[currentInstructionOffset()];
+
+        if (currentAnnotation.changedRegisterIndex != InvalidRegister) {
+            m_typeResolver->adjustOriginalType(
+                    currentAnnotation.changedRegister.storedType(), varType);
+            m_typeResolver->adjustOriginalType(
+                    m_typeResolver->containedType(currentAnnotation.changedRegister), varType);
+        }
+
+        for (auto it = currentAnnotation.readRegisters.begin(),
+             end = currentAnnotation.readRegisters.end();
+             it != end; ++it) {
+            if (it.key() != baseRegister)
+                it->second.content = m_typeResolver->convert(it->second.content, varContent);
+        }
+
         return;
     }
     default:

@@ -75,6 +75,7 @@ private slots:
     void statusText_data();
     void responseText();
     void responseText_data();
+    void responseURL();
     void responseXML_invalid();
     void invalidMethodUsage();
     void redirects();
@@ -88,6 +89,8 @@ private slots:
     void sendFileRequestNoWrite();
     void sendFileRequestNoRead();
 #endif
+
+    void overrideMime();
 
     // WebDAV
     void sendPropfind();
@@ -1025,6 +1028,64 @@ void tst_qqmlxmlhttprequest::responseText_data()
     QTest::newRow("Internal server error") << testFileUrl("status.500.reply") << testFileUrl("testdocument.html") << "QML Rocks!\n";
 }
 
+
+void tst_qqmlxmlhttprequest::responseURL()
+{
+    // 200 OK
+    {
+        TestHTTPServer server;
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
+        QVERIFY(server.wait(testFileUrl("status.expect"),
+                            testFileUrl("status.200.reply"),
+                            testFileUrl("testdocument.html")));
+
+        QQmlComponent component(engine.get(), testFileUrl("responseURL.qml"));
+        QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
+        QVERIFY(!object.isNull());
+        object->setProperty("url", server.urlString("/testdocument.html"));
+        object->setProperty("expectedURL", server.urlString("/testdocument.html"));
+        component.completeCreate();
+
+        QTRY_VERIFY(object->property("dataOK").toBool());
+    }
+
+    // 200 OK with the exclude fragment flag set
+    {
+        TestHTTPServer server;
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
+        QVERIFY(server.wait(testFileUrl("status.expect"),
+                            testFileUrl("status.200.reply"),
+                            testFileUrl("testdocument.html")));
+
+        QQmlComponent component(engine.get(), testFileUrl("responseURL.qml"));
+        QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
+        QVERIFY(!object.isNull());
+        object->setProperty("url", server.urlString("/testdocument.html#fragment"));
+        object->setProperty("expectedURL", server.urlString("/testdocument.html"));
+        component.completeCreate();
+
+        QTRY_VERIFY(object->property("dataOK").toBool());
+    }
+
+    // 302 Found
+    {
+        TestHTTPServer server;
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
+        server.addRedirect("redirect.html", server.urlString("/redirecttarget.html"));
+        server.serveDirectory(dataDirectory());
+
+        QQmlComponent component(engine.get(), testFileUrl("responseURL.qml"));
+        QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
+        QVERIFY(!object.isNull());
+        object->setProperty("url", server.urlString("/redirect.html"));
+        object->setProperty("expectedURL", server.urlString("/redirecttarget.html"));
+        component.completeCreate();
+
+        QTRY_VERIFY(object->property("dataOK").toBool());
+    }
+}
+
+
 void tst_qqmlxmlhttprequest::nonUtf8()
 {
     QFETCH(QString, fileName);
@@ -1277,14 +1338,17 @@ void tst_qqmlxmlhttprequest::sendPropfind_data()
     QTest::addColumn<QString>("replyHeader");
     QTest::addColumn<QString>("replyBody");
 
-    QTest::newRow("Send PROPFIND for file (bigbox, author, DingALing, Random properties). Get response with responseXML.")
+    QTest::newRow("Send PROPFIND for file (bigbox, author, DingALing, Random properties). "
+                  "Get response with responseXML.")
             << "sendPropfind.responseXML.qml" << "/file" << "propfind.file.expect"
             << "propfind.file.reply.header" << "propfind.file.reply.body";
-    QTest::newRow("Send PROPFIND for file (bigbox, author, DingALing, Random properties). Get response with response.")
+    QTest::newRow("Send PROPFIND for file (bigbox, author, DingALing, Random properties). "
+                  "Get response with response.")
             << "sendPropfind.response.qml" << "/file" << "propfind.file.expect"
             << "propfind.file.reply.header" << "propfind.file.reply.body";
     QTest::newRow("Send PROPFIND \"allprop\" request for collection.")
-            << "sendPropfind.collection.allprop.qml" << "/container/" << "propfind.collection.allprop.expect"
+            << "sendPropfind.collection.allprop.qml" << "/container/"
+            << "propfind.collection.allprop.expect"
             << "propfind.file.reply.header" << "propfind.collection.allprop.reply.body";
 }
 
@@ -1484,6 +1548,26 @@ void tst_qqmlxmlhttprequest::stateChangeCallingContext()
     component.completeCreate();
     server.sendDelayedItem();
     QTRY_VERIFY(object->property("success").toBool());
+}
+
+void tst_qqmlxmlhttprequest::overrideMime()
+{
+    // overrideMimeType.reply sets the Content-Type to text/plain
+    // overrideMimeType.qml overrides it to text/xml and checks the responseXML property.
+
+    TestHTTPServer server;
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
+    QVERIFY(server.wait(testFileUrl("text.expect"),
+                        testFileUrl("overrideMimeType.reply"),
+                        testFileUrl("text.xml")));
+
+    QQmlComponent component(engine.get(), testFileUrl("overrideMimeType.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
+    QVERIFY(!object.isNull());
+    object->setProperty("url", server.urlString("/text.xml"));
+    component.completeCreate();
+
+    QTRY_VERIFY(object->property("dataOK").toBool());
 }
 
 QTEST_MAIN(tst_qqmlxmlhttprequest)

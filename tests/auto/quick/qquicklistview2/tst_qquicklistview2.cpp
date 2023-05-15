@@ -53,6 +53,8 @@ private slots:
     void pullbackSparseList();
     void highlightWithBound();
     void sectionIsCompatibleWithBoundComponents();
+    void sectionGeometryChange();
+    void areaZeroviewDoesNotNeedlesslyPopulateWholeModel();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -333,7 +335,7 @@ void tst_QQuickListView2::boundDelegateComponent()
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
 
     QTest::ignoreMessage(
-            QtWarningMsg, qPrintable(QLatin1String("%1:12: ReferenceError: index is not defined")
+            QtWarningMsg, qPrintable(QLatin1String("%1:14: ReferenceError: index is not defined")
                                              .arg(url.toString())));
 
     QScopedPointer<QObject> o(c.create());
@@ -364,7 +366,7 @@ void tst_QQuickListView2::boundDelegateComponent()
     for (int i = 0; i < 3; ++i) {
         QTest::ignoreMessage(
                 QtWarningMsg,
-                qPrintable(QLatin1String("%1:47:21: ReferenceError: model is not defined")
+                qPrintable(QLatin1String("%1:51:21: ReferenceError: model is not defined")
                                    .arg(url.toString())));
     }
 
@@ -958,6 +960,55 @@ void tst_QQuickListView2::sectionIsCompatibleWithBoundComponents()
     QQuickListView *listView = qobject_cast<QQuickListView *>(o.data());
     QVERIFY(listView);
     QTRY_COMPARE(listView->currentSection(), "42");
+}
+
+void tst_QQuickListView2::sectionGeometryChange()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QTRY_VERIFY(window);
+    window->setSource(testFileUrl("sectionGeometryChange.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem);
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+
+    QQuickItem *section1 = findItem<QQuickItem>(contentItem, "Section1");
+    QVERIFY(section1);
+    QQuickItem *element1 = findItem<QQuickItem>(contentItem, "Element1");
+    QVERIFY(element1);
+
+    QCOMPARE(element1->y(), section1->y() + section1->height());
+
+    // Update the height of the section delegate and verify that the next element is not overlapping
+    section1->setHeight(section1->height() + 10);
+    QTRY_COMPARE(element1->y(), section1->y() + section1->height());
+}
+
+void tst_QQuickListView2::areaZeroviewDoesNotNeedlesslyPopulateWholeModel()
+{
+    QTest::failOnWarning(QRegularExpression(".*"));
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("areaZeroView.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+    auto delegateCreationCounter = [&]() {
+        return root->property("delegateCreationCounter").toInt();
+    };
+    // wait for onComplete to be settled
+    QTRY_VERIFY(delegateCreationCounter() != 0);
+    auto view = qobject_cast<QQuickListView *>(qmlContext(root.get())->objectForName("lv"));
+    QVERIFY(view);
+    QCOMPARE(view->count(), 6'000);
+    // we use 100, which is < 6000, but larger than the actual expected value
+    // that's to give the test some leniency in case the ListView implementation
+    // changes in the future to instantiate a few more items outside of the viewport
+    QVERIFY(delegateCreationCounter() < 100);
 }
 
 QTEST_MAIN(tst_QQuickListView2)

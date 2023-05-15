@@ -260,7 +260,7 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolve(int root)
                 qCWarning(lcQmlTypeCompiler).nospace().noquote()
                         << m_compiler->url().toString() << ":" << obj->location.line() << ":"
                         << obj->location.column()
-                        << ": Using a Component as the root of a qmldocument is deprecated: types "
+                        << ": Using a Component as the root of a QML document is deprecated: types "
                            "defined in qml documents are "
                            "automatically wrapped into Components when needed.";
         }

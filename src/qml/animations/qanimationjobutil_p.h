@@ -15,9 +15,18 @@
 // We mean it.
 //
 
+#include <QtCore/qcompilerdetection.h>
+#include <QtCore/qtconfigmacros.h>
+
 #include <type_traits>
 
 QT_REQUIRE_CONFIG(qml_animation);
+
+#if defined(Q_CC_GNU_ONLY) && Q_CC_GNU_ONLY >= 1300
+#  define ACTION_IF_DISABLE_DANGLING_POINTER_WARNING    QT_WARNING_DISABLE_GCC("-Wdangling-pointer")
+#else
+#  define ACTION_IF_DISABLE_DANGLING_POINTER_WARNING
+#endif
 
 // SelfDeletable is used for self-destruction detection along with
 // ACTION_IF_DELETED and RETURN_IF_DELETED macros. While using, the objects
@@ -35,6 +44,8 @@ struct SelfDeletable {
 // \param action post process if p was deleted under test.
 #define ACTION_IF_DELETED(p, func, action) \
 do { \
+    QT_WARNING_PUSH \
+    ACTION_IF_DISABLE_DANGLING_POINTER_WARNING \
     static_assert(std::is_same<decltype((p)->m_selfDeletable), SelfDeletable>::value, "m_selfDeletable must be SelfDeletable");\
     bool *prevWasDeleted = (p)->m_selfDeletable.m_wasDeleted; \
     bool wasDeleted = false; \
@@ -46,6 +57,7 @@ do { \
         {action;} \
     } \
     (p)->m_selfDeletable.m_wasDeleted = prevWasDeleted; \
+    QT_WARNING_POP \
 } while (false)
 
 #define RETURN_IF_DELETED(func) \

@@ -100,6 +100,9 @@ int QQuickStackLayout::count() const
 
     This property holds the index of the child item that is currently visible in the StackLayout.
     By default it will be \c -1 for an empty layout, otherwise the default is \c 0 (referring to the first item).
+
+    Since 6.5, inserting/removing a new Item at an index less than or equal to the current index
+    will increment/decrement the current index, but keep the current Item.
 */
 int QQuickStackLayout::currentIndex() const
 {
@@ -159,6 +162,8 @@ void QQuickStackLayout::componentComplete()
 void QQuickStackLayout::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
 {
     QQuickLayout::itemChange(change, value);
+    if (!isReady())
+        return;
 
     if (change == ItemChildRemovedChange) {
         QQuickItem *item = value.item;
@@ -169,7 +174,7 @@ void QQuickStackLayout::itemChange(QQuickItem::ItemChange change, const QQuickIt
             stackLayoutAttached->setIsCurrentItem(false);
         }
         m_cachedItemSizeHints.remove(item);
-        childItemsChanged();
+        childItemsChanged(AdjustCurrentIndex);  // removal; might have to adjust currentIndex
         invalidate();
     } else if (change == ItemChildAddedChange) {
         childItemsChanged();
@@ -272,7 +277,7 @@ void QQuickStackLayout::invalidate(QQuickItem *childItem)
         parentLayout->invalidate(this);
 }
 
-void QQuickStackLayout::childItemsChanged()
+void QQuickStackLayout::childItemsChanged(AdjustCurrentIndexPolicy adjustCurrentIndexPolicy)
 {
     Q_D(QQuickStackLayout);
     const int count = itemCount();
@@ -280,6 +285,28 @@ void QQuickStackLayout::childItemsChanged()
     if (!d->explicitCurrentIndex)
         d->currentIndex = (count > 0 ? 0 : -1);
 
+    if (adjustCurrentIndexPolicy == AdjustCurrentIndex) {
+        /*
+         * If an item is inserted or deleted at an index less than or equal to the current index it
+         * will affect the current index, but keep the current item. This is consistent with
+         * QStackedLayout, QStackedWidget and TabBar
+         *
+         * Unless the caller is componentComplete(), we can assume that only one of the children
+         * are visible, and we should keep that visible even if the stacking order has changed.
+         * This means that if the sibling order has changed (or an item stacked before the current
+         * item is added/removed), we must update the currentIndex so that it corresponds with the
+         * current visible item.
+         */
+        if (d->currentIndex < d->count) {
+            for (int i = 0; i < count; ++i) {
+                QQuickItem *child = itemAt(i);
+                if (child->isVisible()) {
+                    d->currentIndex = i;
+                    break;
+                }
+            }
+        }
+    }
     if (d->currentIndex != oldIndex)
         emit currentIndexChanged();
 
@@ -362,6 +389,14 @@ bool QQuickStackLayout::shouldIgnoreItem(QQuickItem *item) const
     return QQuickItemPrivate::get(item)->isTransparentForPositioner();
 }
 
+void QQuickStackLayout::itemSiblingOrderChanged(QQuickItem *)
+{
+    if (!isReady())
+        return;
+    childItemsChanged(AdjustCurrentIndex);
+    invalidate();
+}
+
 QQuickStackLayoutAttached::QQuickStackLayoutAttached(QObject *object)
 {
     auto item = qobject_cast<QQuickItem*>(object);
@@ -387,6 +422,11 @@ QQuickStackLayoutAttached::QQuickStackLayoutAttached(QObject *object)
     setLayout(stackLayout);
     setIndex(index);
     setIsCurrentItem(stackLayout->currentIndex() == index);
+
+    // In case of lazy loading in loader, attachedProperties are created and updated for the
+    // object after adding the child object to the stack layout, which leads to entries with
+    // same index. Triggering childItemsChanged() resets to right index in the stack layout.
+    stackLayout->childItemsChanged();
 }
 
 /*!

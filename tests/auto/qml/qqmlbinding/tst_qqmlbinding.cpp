@@ -38,6 +38,7 @@ private slots:
     void intOverflow();
     void generalizedGroupedProperties();
     void localSignalHandler();
+    void whenEvaluatedEarlyEnough();
 
 private:
     QQmlEngine engine;
@@ -458,9 +459,15 @@ void tst_qqmlbinding::bindingOverwriting()
     QQmlComponent c(&engine, testFileUrl("bindingOverwriting.qml"));
     QScopedPointer<QQuickItem> item {qobject_cast<QQuickItem*>(c.create())};
     QVERIFY(item);
+    QCOMPARE(messageHandler.messages().size(), 2);
+
+    QQmlComponent c2(&engine, testFileUrl("bindingOverwriting2.qml"));
+    QScopedPointer<QObject> o(c2.create());
+    QVERIFY(o);
+    QTRY_COMPARE(o->property("i").toInt(), 123);
+    QCOMPARE(messageHandler.messages().size(), 3);
 
     QLoggingCategory::setFilterRules(QString());
-    QCOMPARE(messageHandler.messages().size(), 2);
 }
 
 void tst_qqmlbinding::bindToQmlComponent()
@@ -594,6 +601,19 @@ void tst_qqmlbinding::localSignalHandler()
     QVERIFY(!o.isNull());
     o->setProperty("input", QStringLiteral("abc"));
     QCOMPARE(o->property("output").toString(), QStringLiteral("abc"));
+}
+
+void tst_qqmlbinding::whenEvaluatedEarlyEnough()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("whenEvaluatedEarlyEnough.qml"));
+    QTest::failOnWarning(QRegularExpression(".*"));
+    std::unique_ptr<QObject> root { c.create() };
+    root->setProperty("toggle", false); // should not cause warnings
+    // until "when" is actually true
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg,
+                         QRegularExpression(".*QML Binding: Property 'i' does not exist on Item.*"));
+    root->setProperty("forceEnable", true);
 }
 
 QTEST_MAIN(tst_qqmlbinding)

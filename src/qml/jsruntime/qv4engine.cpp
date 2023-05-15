@@ -1234,7 +1234,7 @@ StackTrace ExecutionEngine::stackTrace(int frameLimit) const
         QV4::StackFrame frame;
         frame.source = f->source();
         frame.function = f->function();
-        frame.line = qAbs(f->lineNumber());
+        frame.line = f->lineNumber();
         frame.column = -1;
         stack.append(frame);
         if (f->isJSTypesFrame()) {
@@ -1272,7 +1272,7 @@ static inline char *v4StackTrace(const ExecutionContext *context)
             const QString fileName = url.isLocalFile() ? url.toLocalFile() : url.toString();
             str << "frame={level=\"" << i << "\",func=\"" << stackTrace.at(i).function
                 << "\",file=\"" << fileName << "\",fullname=\"" << fileName
-                << "\",line=\"" << stackTrace.at(i).line << "\",language=\"js\"}";
+                << "\",line=\"" << qAbs(stackTrace.at(i).line) << "\",language=\"js\"}";
         }
     }
     str << ']';
@@ -1467,7 +1467,7 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError()
     if (!trace.isEmpty()) {
         QV4::StackFrame frame = trace.constFirst();
         error.setUrl(QUrl(frame.source));
-        error.setLine(frame.line);
+        error.setLine(qAbs(frame.line));
         error.setColumn(frame.column);
     }
     QV4::Scoped<QV4::ErrorObject> errorObj(scope, exception);
@@ -1711,10 +1711,7 @@ static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObject
         }
 
         result = list;
-    } else if (const FunctionObject *f = o->as<FunctionObject>()) {
-        // If it's a FunctionObject, we can only save it as QJSValue.
-        result = QVariant::fromValue(QJSValuePrivate::fromReturnedValue(f->asReturnedValue()));
-    } else {
+    } else if (o->getPrototypeOf() == o->engine()->objectPrototype()->d()) {
         QVariantMap map;
         QV4::Scope scope(o->engine());
         QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly);
@@ -1732,6 +1729,9 @@ static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObject
         }
 
         result = map;
+    } else {
+        // If it's not a plain object, we can only save it as QJSValue.
+        result = QVariant::fromValue(QJSValuePrivate::fromReturnedValue(o->asReturnedValue()));
     }
 
     visitedObjects->remove(o->d());
@@ -2444,6 +2444,23 @@ void ExecutionEngine::setExtensionData(int index, Deletable *data)
     m_extensionData[index] = data;
 }
 
+template<typename Source>
+bool convertToIterable(QMetaType metaType, void *data, Source *sequence)
+{
+    QSequentialIterable iterable;
+    if (!QMetaType::view(metaType, data, QMetaType::fromType<QSequentialIterable>(), &iterable))
+        return false;
+
+    const QMetaType elementMetaType = iterable.valueMetaType();
+    QVariant element(elementMetaType);
+    for (qsizetype i = 0, end = sequence->getLength(); i < end; ++i) {
+        if (!ExecutionEngine::metaTypeFromJS(sequence->get(i), elementMetaType, element.data()))
+            element = QVariant(elementMetaType);
+        iterable.addValue(element, QSequentialIterable::AtEnd);
+    }
+    return true;
+}
+
 // Converts a JS value to a meta-type.
 // data must point to a place that can store a value of the given type.
 // Returns true if conversion succeeded, false otherwise.
@@ -2711,21 +2728,14 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
             metaType.construct(data, result.constData());
             return true;
         }
+
+        if (convertToIterable(metaType, data, sequence))
+            return true;
     }
 
     if (const QV4::ArrayObject *array = value.as<ArrayObject>()) {
-        QSequentialIterable iterable;
-        if (QMetaType::view(
-                    metaType, data, QMetaType::fromType<QSequentialIterable>(), &iterable)) {
-            const QMetaType elementMetaType = iterable.valueMetaType();
-            QVariant element(elementMetaType);
-            for (qsizetype i = 0, end = array->getLength(); i < end; ++i) {
-                if (!metaTypeFromJS(array->get(i), elementMetaType, element.data()))
-                    element = QVariant(elementMetaType);
-                iterable.addValue(element, QSequentialIterable::AtEnd);
-            }
+        if (convertToIterable(metaType, data, array))
             return true;
-        }
     }
 
     return false;

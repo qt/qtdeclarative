@@ -2277,6 +2277,35 @@ TestCase {
         compare(control.currentIndex, 1)
     }
 
+    // QTBUG-109721 - verify that an eaten press event for the space key
+    // doesn't open the popup when the key is released.
+    Component {
+        id: comboboxEatsSpace
+        ComboBox {
+            id: nonEditableComboBox
+            editable: false
+            model: ["NonEditable", "Delta", "Echo", "Foxtrot"]
+            Keys.onSpacePressed: (event) => event.accept
+        }
+    }
+
+    function test_spacePressEaten() {
+        let control = createTemporaryObject(comboboxEatsSpace, testCase)
+        verify(control)
+        control.forceActiveFocus()
+
+        var visibleChangedSpy = signalSpy.createObject(control, {target: control.popup, signalName: "visibleChanged"})
+        verify(visibleChangedSpy.valid)
+
+        // press doesn't open
+        keyPress(Qt.Key_Space)
+        verify(!control.pressed)
+        compare(visibleChangedSpy.count, 0)
+        // neither does release
+        keyRelease(Qt.Key_Space)
+        compare(visibleChangedSpy.count, 0)
+    }
+
     Component {
         id: listOfGadgets
         QtObject {
@@ -2294,5 +2323,26 @@ TestCase {
 
         control.currentIndex = 1;
         compare(control.displayText, "7");
+    }
+
+    function test_contextObject() {
+        // We use the default delegate with required properties and pass
+        // an array of objects as model. This should work despite
+        // ComboBox setting itself as model object for the delegate.
+
+        let control = createTemporaryObject(
+                comboBox, testCase, {model: fruitarray, textRole: "color"});
+        verify(control);
+        compare(control.popup.contentItem.itemAtIndex(0).text, "red");
+
+        // Now we pass an AbstractItemModel with 2 roles. Since we use required properties
+        // the model object should still have the anonymous property, and it should be a
+        // QQmlDMAbstractItemModelData.
+
+        control = createTemporaryObject(comboBox, testCase, { model: fruitmodel });
+        verify(control);
+        for (var i = 0; i < 3; ++i)
+            ignoreWarning(/ComboBox\.qml\:[0-9]+\:[0-9]+\: Unable to assign QQmlDMAbstractItemModelData to QString/);
+        compare(control.popup.contentItem.itemAtIndex(0).text, "");
     }
 }

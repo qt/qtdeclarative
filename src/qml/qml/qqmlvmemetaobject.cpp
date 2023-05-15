@@ -25,100 +25,96 @@
 
 QT_BEGIN_NAMESPACE
 
-class ResolvedList
+QQmlVMEResolvedList::QQmlVMEResolvedList(QQmlListProperty<QObject> *prop)
 {
-    Q_DISABLE_COPY_MOVE(ResolvedList)
+    // see QQmlVMEMetaObject::metaCall for how this was constructed
+    auto encodedIndex = quintptr(prop->data);
+    constexpr quintptr usableBits = sizeof(quintptr) * CHAR_BIT;
+    quintptr inheritanceDepth = encodedIndex >> (usableBits / 2);
+    m_id = encodedIndex & ((quintptr(1) << (usableBits / 2)) - 1);
 
-public:
-    ResolvedList(QQmlListProperty<QObject> *prop)
-    {
-        // see QQmlVMEMetaObject::metaCall for how this was constructed
-        auto encodedIndex = quintptr(prop->data);
-        constexpr quintptr usableBits = sizeof(quintptr)  * CHAR_BIT;
-        quintptr inheritanceDepth = encodedIndex >> (usableBits / 2);
-        m_id = encodedIndex & ((quintptr(1) << (usableBits / 2)) - 1);
+    // walk up to the correct meta object if necessary
+    auto mo = static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(prop->object)->metaObject);
+    while (inheritanceDepth--)
+        mo = mo->parentVMEMetaObject();
+    m_metaObject = mo;
+    Q_ASSERT(m_metaObject);
+    Q_ASSERT(::strstr(m_metaObject->toDynamicMetaObject(prop->object)
+                              ->property(m_metaObject->propOffset() + m_id)
+                              .typeName(),
+                      "QQmlListProperty"));
+    Q_ASSERT(m_metaObject->object == prop->object);
 
-        // walk up to the correct meta object if necessary
-        auto mo = static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(prop->object)->metaObject);
-        while (inheritanceDepth--)
-            mo = mo->parentVMEMetaObject();
-        m_metaObject = mo;
-        Q_ASSERT(m_metaObject);
-        Q_ASSERT(::strstr(m_metaObject->toDynamicMetaObject(prop->object)->property(
-                              m_metaObject->propOffset() + m_id).typeName(), "QQmlListProperty") );
-        Q_ASSERT(m_metaObject->object == prop->object);
-
-        // readPropertyAsList() with checks transformed into Q_ASSERT
-        // and without allocation.
-        if (m_metaObject->propertyAndMethodStorage.isUndefined() &&
-                m_metaObject->propertyAndMethodStorage.valueRef()) {
-            return;
-        }
-
-        if (auto *md = static_cast<QV4::MemberData *>(
-                    m_metaObject->propertyAndMethodStorage.asManaged())) {
-            const auto *v = (md->data() + m_id)->as<QV4::VariantObject>();
-            Q_ASSERT(v);
-            Q_ASSERT(v->d());
-            QVariant &data = v->d()->data();
-            Q_ASSERT(data.userType() == qMetaTypeId<QVector<QQmlGuard<QObject>>>());
-            m_list = static_cast<QVector<QQmlGuard<QObject>> *>(data.data());
-            Q_ASSERT(m_list);
-        }
+    // readPropertyAsList() with checks transformed into Q_ASSERT
+    // and without allocation.
+    if (m_metaObject->propertyAndMethodStorage.isUndefined()
+        && m_metaObject->propertyAndMethodStorage.valueRef()) {
+        return;
     }
 
-    ~ResolvedList() = default;
-
-    QQmlVMEMetaObject *metaObject() const { return m_metaObject; }
-    QVector<QQmlGuard<QObject>> *list() const { return m_list; }
-    quintptr id() const { return m_id; }
-
-    void activateSignal() const
-    {
-        m_metaObject->activate(m_metaObject->object, int(m_id + m_metaObject->methodOffset()),
-                               nullptr);
+    if (auto *md = static_cast<QV4::MemberData *>(
+                m_metaObject->propertyAndMethodStorage.asManaged())) {
+        const auto *v = (md->data() + m_id)->as<QV4::VariantObject>();
+        Q_ASSERT(v);
+        Q_ASSERT(v->d());
+        QVariant &data = v->d()->data();
+        Q_ASSERT(data.userType() == qMetaTypeId<QVector<QQmlGuard<QObject>>>());
+        m_list = static_cast<QVector<QQmlGuard<QObject>> *>(data.data());
+        Q_ASSERT(m_list);
     }
+}
 
-private:
-    QQmlVMEMetaObject *m_metaObject = nullptr;
-    QVector<QQmlGuard<QObject>> *m_list = nullptr;
-    quintptr m_id = 0;
-};
+QQmlVMEResolvedList::~QQmlVMEResolvedList() = default;
 
-static void list_append(QQmlListProperty<QObject> *prop, QObject *o)
+void QQmlVMEResolvedList::activateSignal() const
 {
-    const ResolvedList resolved(prop);
+    m_metaObject->activate(m_metaObject->object, int(m_id + m_metaObject->methodOffset()), nullptr);
+}
+
+void QQmlVMEMetaObject::list_append(QQmlListProperty<QObject> *prop, QObject *o)
+{
+    const QQmlVMEResolvedList resolved(prop);
     resolved.list()->append(o);
     resolved.activateSignal();
 }
 
+void QQmlVMEMetaObject::list_append_nosignal(QQmlListProperty<QObject> *prop, QObject *o)
+{
+    QQmlVMEResolvedList(prop).list()->append(o);
+}
+
 static qsizetype list_count(QQmlListProperty<QObject> *prop)
 {
-    return ResolvedList(prop).list()->size();
+    return QQmlVMEResolvedList(prop).list()->size();
 }
 
 static QObject *list_at(QQmlListProperty<QObject> *prop, qsizetype index)
 {
-    return ResolvedList(prop).list()->at(index);
+    return QQmlVMEResolvedList(prop).list()->at(index);
 }
 
-static void list_clear(QQmlListProperty<QObject> *prop)
+void QQmlVMEMetaObject::list_clear(QQmlListProperty<QObject> *prop)
 {
-    const ResolvedList resolved(prop);
+    const QQmlVMEResolvedList resolved(prop);
     resolved.list()->clear();
     resolved.activateSignal();
 }
 
+void QQmlVMEMetaObject::list_clear_nosignal(QQmlListProperty<QObject> *prop)
+{
+    QQmlVMEResolvedList(prop).list()->clear();
+}
+
 static void list_replace(QQmlListProperty<QObject> *prop, qsizetype index, QObject *o)
 {
-    const ResolvedList resolved(prop);
+    const QQmlVMEResolvedList resolved(prop);
     resolved.list()->replace(index, o);
     resolved.activateSignal();
 }
 
 static void list_removeLast(QQmlListProperty<QObject> *prop)
 {
-    const ResolvedList resolved(prop);
+    const QQmlVMEResolvedList resolved(prop);
     resolved.list()->removeLast();
     resolved.activateSignal();
 }
@@ -344,7 +340,7 @@ bool QQmlInterceptorMetaObject::doIntercept(QMetaObject::Call c, int id, void **
                     // change the value soon. Such an animation needs to be canceled if the
                     // current value is explicitly set.
                     // So, we cannot return here if prevComponentValue == newComponentValue.
-                    valueType->writeOnGadget(valueProp, prevComponentValue);
+                    valueType->writeOnGadget(valueProp, std::move(prevComponentValue));
                     valueType->write(object, id, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
 
                     vi->write(newComponentValue);

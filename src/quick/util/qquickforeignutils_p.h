@@ -99,6 +99,14 @@ struct QEventPointForeign
     QML_ADDED_IN_VERSION(6, 5)
 };
 
+namespace QEventPointForeignNamespace
+{
+    Q_NAMESPACE
+    QML_FOREIGN_NAMESPACE(QEventPoint)
+    QML_NAMED_ELEMENT(EventPoint)
+    QML_ADDED_IN_VERSION(6, 6)
+};
+
 QT_END_NAMESPACE
 
 #endif // QTQUICKFOREIGN_P_H

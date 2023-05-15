@@ -16,7 +16,7 @@ Unlike most other CMake commands provided by Qt,
 \c{qt6_deploy_qml_imports}{qt_deploy_qml_imports()} can only be called from a
 deployment script. It cannot be called directly by the project.
 
-\include cmake-qml-qt-finalize-target-warning.qdocinc
+\include cmake-qml-qt-finalize-target-warning.qdocinc warning
 
 \section1 Synopsis
 

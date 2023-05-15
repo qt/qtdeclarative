@@ -26,10 +26,10 @@ set_target_properties(openglunderqml PROPERTIES
 )
 
 target_link_libraries(openglunderqml PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
 )
 
 qt_add_qml_module(openglunderqml

@@ -27,8 +27,8 @@ set_target_properties(baseproject PROPERTIES
 )
 
 target_link_libraries(baseproject PUBLIC
-    Qt::Core
-    Qt::Qml
+    Qt6::Core
+    Qt6::Qml
 )
 
 qt_add_qml_module(baseproject

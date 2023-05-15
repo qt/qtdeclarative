@@ -216,16 +216,13 @@ public:
         ContextualTypes(
                 CompileContext context,
                 const QHash<QString, ImportedScope<ConstPtr>> types,
-                const QQmlJSScope::ConstPtr &intType,
                 const QQmlJSScope::ConstPtr &arrayType)
             : m_types(types)
             , m_context(context)
-            , m_intType(intType)
             , m_arrayType(arrayType)
         {}
 
         CompileContext context() const { return m_context; }
-        ConstPtr intType() const { return m_intType; }
         ConstPtr arrayType() const { return m_arrayType; }
 
         bool hasType(const QString &name) const { return m_types.contains(name); }
@@ -573,6 +570,7 @@ QT_WARNING_POP
     bool isIdInjectedFromSignal(const QString &id) const;
 
     std::optional<JavaScriptIdentifier> findJSIdentifier(const QString &id) const;
+    std::optional<JavaScriptIdentifier> JSIdentifier(const QString &id) const;
 
     ConstPtrWrapperIterator childScopesBegin() const { return m_childScopes.constBegin(); }
     ConstPtrWrapperIterator childScopesEnd() const { return m_childScopes.constEnd(); }
@@ -606,7 +604,8 @@ QT_WARNING_POP
             const QQmlJSScope::Ptr &self, const QQmlJSScope::ContextualTypes &contextualTypes,
             QSet<QString> *usedTypes = nullptr);
     static void resolveEnums(
-            const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &intType);
+            const QQmlJSScope::Ptr &self, const QQmlJSScope::ContextualTypes &contextualTypes,
+            QSet<QString> *usedTypes = nullptr);
     static void resolveList(
             const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &arrayType);
     static void resolveGeneralizedGroup(

@@ -531,6 +531,41 @@ struct InvisibleForeign
     QML_NAMED_ELEMENT(Invisible)
 };
 
+class TypedEnum : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    enum S: qint16 {
+        A, B, C
+    };
+    Q_ENUM(S)
+
+    enum T: quint16 {
+        D, E, F
+    };
+    Q_ENUM(T)
+
+    enum U: qint8 {
+        G, H, I
+    };
+    Q_ENUM(U)
+
+    enum V: quint8 {
+        J, K, L
+    };
+    Q_ENUM(V)
+};
+
+class ListSignal : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+
+Q_SIGNALS:
+    void objectListHappened(const QList<QObject *> &);
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -582,6 +617,8 @@ private slots:
     void constructibleValueType();
     void anonymousAndUncreatable();
     void omitInvisible();
+    void typedEnum();
+    void listSignal();
 
 private:
     QByteArray qmltypesData;

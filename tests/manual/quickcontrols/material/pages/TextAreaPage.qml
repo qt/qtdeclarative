@@ -7,6 +7,7 @@ import QtQuick.Layouts
 import ".."
 
 Page {
+    id: root
     topPadding: Constants.pageTopPadding
 
 //    Component.onCompleted: Material.background = "red"
@@ -89,28 +90,73 @@ Page {
 
             Material.containerStyle: layout.containerStyle
         }
+
+        Flickable {
+            width: 200
+            height: 100
+
+            TextArea.flickable: TextArea {
+                placeholderText: "placeholderText"
+                text: "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn"
+
+                Material.containerStyle: layout.containerStyle
+            }
+        }
+
+        TextArea {
+            text: "AlignLeft"
+            placeholderText: "AlignLeft"
+            horizontalAlignment: TextArea.AlignLeft
+            // Make it a big bigger so it's easier to see the effects of alignment.
+            width: implicitWidth + 30
+
+            Material.containerStyle: layout.containerStyle
+        }
+
+        TextArea {
+            text: "AlignHCenter"
+            placeholderText: "AlignMiddle"
+            horizontalAlignment: TextArea.AlignMiddle
+            width: implicitWidth + 30
+
+            Material.containerStyle: layout.containerStyle
+        }
+
+        TextArea {
+            text: "AlignRight"
+            placeholderText: "AlignRight"
+            horizontalAlignment: TextArea.AlignRight
+            width: implicitWidth + 30
+
+            Material.containerStyle: layout.containerStyle
+        }
     }
 
-    ColumnLayout {
-        width: parent.width
+    ScrollView {
+        id: scrollView
+        anchors.fill: parent
 
-        Label {
-            text: "Filled"
-        }
-        TextAreaFlow {
-            containerStyle: Material.Filled
+        ColumnLayout {
+            width: scrollView.availableWidth
 
-            Layout.fillWidth: true
-            Layout.bottomMargin: 40
-        }
+            Label {
+                text: "Filled"
+            }
+            TextAreaFlow {
+                containerStyle: Material.Filled
 
-        Label {
-            text: "Outlined"
-        }
-        TextAreaFlow {
-            containerStyle: Material.Outlined
+                Layout.fillWidth: true
+                Layout.bottomMargin: 40
+            }
 
-            Layout.fillWidth: true
+            Label {
+                text: "Outlined"
+            }
+            TextAreaFlow {
+                containerStyle: Material.Outlined
+
+                Layout.fillWidth: true
+            }
         }
     }
 }

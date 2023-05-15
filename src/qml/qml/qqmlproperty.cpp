@@ -1373,6 +1373,18 @@ static ConvertAndAssignResult tryConvertAndAssign(
         return {false, false};
     }
 
+    if (variantMetaType == QMetaType::fromType<QJSValue>()) {
+        // Handle Qt.binding bindings here to avoid mistaken conversion below
+        const QJSValue &jsValue = get<QJSValue>(value);
+        const QV4::FunctionObject *f
+                = QJSValuePrivate::asManagedType<QV4::FunctionObject>(&jsValue);
+        if (f && f->isBinding()) {
+            QV4::QObjectWrapper::setProperty(
+                    f->engine(), object, &property, f->asReturnedValue());
+            return {true, true};
+        }
+    }
+
     // common cases:
     switch (propertyMetaType.id()) {
     case QMetaType::Bool:
@@ -1549,18 +1561,26 @@ bool QQmlPropertyPrivate::write(
             if (valueMetaObject.isNull())
                 return false;
 
-            QQmlListProperty<void> prop;
+            QQmlListProperty<QObject> prop;
             property.readProperty(object, &prop);
 
-            if (!prop.clear)
+            if (!prop.clear || !prop.append)
                 return false;
 
-            prop.clear(&prop);
+            const bool useNonsignalingListOps = prop.clear == &QQmlVMEMetaObject::list_clear
+                    && prop.append == &QQmlVMEMetaObject::list_append;
+
+            auto propClear =
+                    useNonsignalingListOps ? &QQmlVMEMetaObject::list_clear_nosignal : prop.clear;
+            auto propAppend =
+                    useNonsignalingListOps ? &QQmlVMEMetaObject::list_append_nosignal : prop.append;
+
+            propClear(&prop);
 
             const auto doAppend = [&](QObject *o) {
                 if (o && !QQmlMetaObject::canConvert(o, valueMetaObject))
                     o = nullptr;
-                prop.append(&prop, o);
+                propAppend(&prop, o);
             };
 
             if (variantMetaType == QMetaType::fromType<QQmlListReference>()) {
@@ -1574,6 +1594,10 @@ bool QQmlPropertyPrivate::write(
             } else if (!iterateQObjectContainer(variantMetaType, value.data(), doAppend)) {
                 doAppend(QQmlMetaType::toQObject(value));
             }
+            if (useNonsignalingListOps) {
+                Q_ASSERT(QQmlVMEMetaObject::get(object));
+                QQmlVMEResolvedList(&prop).activateSignal();
+            }
         } else if (variantMetaType == propertyMetaType) {
             QVariant v = value;
             property.writeProperty(object, v.data(), flags);
@@ -1585,16 +1609,6 @@ bool QQmlPropertyPrivate::write(
                 sequence.addValue(list.data(), value.data());
             property.writeProperty(object, list.data(), flags);
         }
-    } else if (variantMetaType == QMetaType::fromType<QJSValue>()) {
-        QJSValue jsValue = qvariant_cast<QJSValue>(value);
-        const QV4::FunctionObject *f
-                = QJSValuePrivate::asManagedType<QV4::FunctionObject>(&jsValue);
-        if (f && f->isBinding()) {
-            QV4::QObjectWrapper::setProperty(
-                    f->engine(), object, &property, f->asReturnedValue());
-            return true;
-        }
-        return false;
     } else if (enginePriv && propertyMetaType == QMetaType::fromType<QJSValue>()) {
         // We can convert everything into a QJSValue if we have an engine.
         QJSValue jsValue = QJSValuePrivate::fromReturnedValue(

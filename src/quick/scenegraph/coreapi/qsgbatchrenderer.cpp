@@ -960,8 +960,10 @@ void Renderer::releaseCachedResources()
 
     m_rhi->releaseCachedResources();
 
-    m_vertexUploadPool.resize(0);
-    m_indexUploadPool.resize(0);
+    m_vertexUploadPool.shrink(0);
+    m_vertexUploadPool.reset();
+    m_indexUploadPool.shrink(0);
+    m_indexUploadPool.reset();
 }
 
 void Renderer::invalidateAndRecycleBatch(Batch *b)
@@ -3664,14 +3666,14 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
 
     if (Q_UNLIKELY(debug_render())) ctx->timeSorting = ctx->timer.restart();
 
-    quint32 largestVBO = 0;
-    quint32 largestIBO = 0;
+    // Set size to 0, nothing is deallocated, they will "grow" again
+    // as part of uploadBatch.
+    m_vertexUploadPool.reset();
+    m_indexUploadPool.reset();
 
     if (Q_UNLIKELY(debug_upload())) qDebug("Uploading Opaque Batches:");
     for (int i=0; i<m_opaqueBatches.size(); ++i) {
         Batch *b = m_opaqueBatches.at(i);
-        largestVBO = qMax(b->vbo.size, largestVBO);
-        largestIBO = qMax(b->ibo.size, largestIBO);
         uploadBatch(b);
     }
     if (Q_UNLIKELY(debug_render())) ctx->timeUploadOpaque = ctx->timer.restart();
@@ -3680,13 +3682,8 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
     for (int i=0; i<m_alphaBatches.size(); ++i) {
         Batch *b = m_alphaBatches.at(i);
         uploadBatch(b);
-        largestVBO = qMax(b->vbo.size, largestVBO);
-        largestIBO = qMax(b->ibo.size, largestIBO);
     }
     if (Q_UNLIKELY(debug_render())) ctx->timeUploadAlpha = ctx->timer.restart();
-
-    m_vertexUploadPool.resize(largestVBO);
-    m_indexUploadPool.resize(largestIBO);
 
     if (Q_UNLIKELY(debug_render())) {
         qDebug().nospace() << "Rendering:" << Qt::endl

@@ -255,10 +255,8 @@ public:
     static AttachedInfoLookupResult<Tree>
     findAttachedInfo(DomItem &item,
                      AttachedInfo::FindOptions options = AttachedInfo::FindOption::Default);
-    // convenience: find FileLocations::Tree attached to the given item
-    static FileLocations::Tree treePtr(DomItem &);
-    // convenience: find FileLocations* attached to the given item (if there is one)
-    static const FileLocations *fileLocationsPtr(DomItem &);
+    static FileLocations::Tree treeOf(DomItem &);
+    static const FileLocations *fileLocationsOf(DomItem &);
 
     static void updateFullLocation(Tree fLoc, SourceLocation loc);
     static void addRegion(Tree fLoc, QString locName, SourceLocation loc);

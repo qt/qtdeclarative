@@ -36,6 +36,23 @@ Person *BirthdayParty::guest(int index) const
     return m_guests.at(index);
 }
 
+QStringList BirthdayParty::guestNames() const
+{
+    QStringList names;
+    for (Person *guest: m_guests)
+        names.append(guest->name());
+    return names;
+}
+
+QVariantList BirthdayParty::stuffs() const
+{
+    return QVariantList({
+            QVariant::fromValue(objectName()),
+            QVariant::fromValue(m_guests.size()),
+            QVariant::fromValue(m_host)
+    });
+}
+
 void BirthdayParty::invite(const QString &name)
 {
     auto *person = new Person(this);

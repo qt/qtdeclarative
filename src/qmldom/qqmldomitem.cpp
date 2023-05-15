@@ -602,21 +602,29 @@ DomItem DomItem::scope(FilterUpOptions options)
     return res;
 }
 
-QQmlJSScope::Ptr DomItem::nearestSemanticScope()
+std::optional<QQmlJSScope::Ptr> DomItem::nearestSemanticScope()
 {
-    QQmlJSScope::Ptr scope;
+    std::optional<QQmlJSScope::Ptr> scope;
     visitUp([&scope](DomItem &item) {
-        scope = std::visit(
-                [](auto &&e) -> QQmlJSScope::Ptr {
-                    using T = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
-                    if constexpr (std::is_same_v<T, QmlObject *>) {
-                        return e->semanticScope();
-                    }
-                    return {};
-                },
-                item.m_element);
+        scope = item.semanticScope();
         return !scope; // stop when scope was true
     });
+    return scope;
+}
+
+std::optional<QQmlJSScope::Ptr> DomItem::semanticScope()
+{
+    std::optional<QQmlJSScope::Ptr> scope = std::visit(
+            [](auto &&e) -> std::optional<QQmlJSScope::Ptr> {
+                using T = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
+                if constexpr (std::is_same_v<T, QmlObject *>) {
+                    return e->semanticScope();
+                } else if constexpr (std::is_same_v<T, ScriptElementDomWrapper>) {
+                    return e.element().base()->semanticScope();
+                }
+                return {};
+            },
+            m_element);
     return scope;
 }
 
@@ -1325,13 +1333,15 @@ DomItem DomItem::writeOut(QString path, int nBackups, const LineWriterOptions &o
 
 bool DomItem::isCanonicalChild(DomItem &item)
 {
+    bool isChild = false;
     if (item.isOwningItem()) {
-        return canonicalPath() == item.canonicalPath().dropTail();
+        isChild = canonicalPath() == item.canonicalPath().dropTail();
     } else {
         DomItem itemOw = item.owner();
         DomItem selfOw = owner();
-        return itemOw == selfOw && item.pathFromOwner().dropTail() == pathFromOwner();
+        isChild = itemOw == selfOw && item.pathFromOwner().dropTail() == pathFromOwner();
     }
+    return isChild;
 }
 
 bool DomItem::hasAnnotations()
@@ -1365,6 +1375,23 @@ bool DomItem::hasAnnotations()
     return hasAnnotations;
 }
 
+/*!
+    \internal
+    \brief Visits recursively all the children of this item using the given visitors.
+
+    First, the visitor is called and can continue or exit the visit by returning true or false.
+
+    Second, the openingVisitor is called and controls if the children of the current item needs to
+   be visited or not by returning true or false. In either case, the visitation of all the other
+   siblings is not affected. If both visitor and openingVisitor returned true, then the childrens of
+   the current item will be recursively visited.
+
+    Finally, after all the children were visited by visitor and openingVisitor, the closingVisitor
+   is called. Its return value is currently ignored.
+
+    Compared to the AST::Visitor*, openingVisitor and closingVisitor are called in the same order as
+   the visit() and endVisit()-calls.
+ */
 bool DomItem::visitTree(Path basePath, DomItem::ChildrenVisitor visitor, VisitOptions options,
                         DomItem::ChildrenVisitor openingVisitor,
                         DomItem::ChildrenVisitor closingVisitor)
@@ -2474,14 +2501,22 @@ shared_ptr<OwningItem> DomItem::owningItemPtr()
     return {};
 }
 
+/*!
+   \internal
+   Returns a pointer to the virtual base pointer to a DomBase.
+*/
 const DomBase *DomItem::base()
 {
-    return visitEl([](auto &&el) { return static_cast<const DomBase *>(&(*el)); });
+    return visitEl([](auto &&el) -> DomBase * { return el->domBase(); });
 }
 
+/*!
+   \internal
+   Returns a pointer to the virtual base pointer to a DomBase.
+*/
 DomBase *DomItem::mutableBase()
 {
-    return visitMutableEl([](auto &&el) { return static_cast<DomBase *>(&(*el)); });
+    return visitMutableEl([](auto &&el) -> DomBase * { return el->domBase(); });
 }
 
 DomItem::DomItem(std::shared_ptr<DomEnvironment> envPtr):
@@ -2682,6 +2717,9 @@ void DomBase::dump(
     case DomKind::Map:
         sink(u"{");
         break;
+    case DomKind::ScriptElement:
+        // nothing to print
+        break;
     }
     auto closeParens = qScopeGuard(
                 [dK, sink, indent]{
@@ -2701,6 +2739,9 @@ void DomBase::dump(
         case DomKind::Map:
             sinkNewline(sink, indent);
             sink(u"}");
+            break;
+        case DomKind::ScriptElement:
+            // nothing to print
             break;
         }
     });
@@ -3591,6 +3632,15 @@ void ListPBase::writeOut(DomItem &self, OutWriter &ow, bool compact) const
         ow.newline();
     ow.decreaseIndent(1, baseIndent);
     ow.writeRegion(u"rightSquareBrace", u"]");
+}
+
+std::optional<QQmlJSScope::Ptr> ScriptElement::semanticScope()
+{
+    return m_scope;
+}
+void ScriptElement::setSemanticScope(const QQmlJSScope::Ptr &scope)
+{
+    m_scope = scope;
 }
 
 } // end namespace Dom

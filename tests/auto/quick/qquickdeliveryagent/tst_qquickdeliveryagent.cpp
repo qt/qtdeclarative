@@ -138,6 +138,8 @@ private slots:
     void hoverPropagation_nested_data();
     void hoverPropagation_nested();
     void hoverPropagation_siblings();
+    void hoverEnterOnItemMove();
+    void hoverEnterOnItemMoveAfterHide();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -519,6 +521,65 @@ void tst_qquickdeliveryagent::hoverPropagation_siblings()
     QTest::mouseMove(&window, QPoint(50, 50));
     QCOMPARE(sibling1.hoverEnter, false);
     QCOMPARE(sibling2.hoverEnter, true);
+}
+
+void tst_qquickdeliveryagent::hoverEnterOnItemMove()
+{
+    QQuickWindow window;
+    auto deliveryAgent = QQuickWindowPrivate::get(&window)->deliveryAgentPrivate();
+    window.resize(200, 200);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    // start with the mouse in the bottom right
+    QTest::mouseMove(&window, QPoint(150, 150));
+
+    HoverItem hoverItem(window.contentItem());
+    hoverItem.setAcceptHoverEvents(true);
+    hoverItem.setWidth(100);
+    hoverItem.setHeight(100);
+
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+
+    QCOMPARE(hoverItem.hoverEnter, false);
+
+    // move the item so the mouse is now inside where the mouse was
+    hoverItem.setX(100);
+    hoverItem.setY(100);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QCOMPARE(hoverItem.hoverEnter, true);
+}
+
+void tst_qquickdeliveryagent::hoverEnterOnItemMoveAfterHide()
+{
+    QQuickWindow window;
+    auto deliveryAgent = QQuickWindowPrivate::get(&window)->deliveryAgentPrivate();
+    window.resize(200, 200);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    // start with the mouse in the bottom right
+    QTest::mouseMove(&window, QPoint(149, 149));
+
+    HoverItem hoverItem(window.contentItem());
+    hoverItem.setAcceptHoverEvents(true);
+    hoverItem.setWidth(100);
+    hoverItem.setHeight(100);
+
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QCOMPARE(hoverItem.hoverEnter, false);
+
+    window.hide();
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QCOMPARE(hoverItem.hoverEnter, false);
+
+    // move the item so the mouse is now inside where the mouse was
+    hoverItem.setX(100);
+    hoverItem.setY(100);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QCOMPARE(hoverItem.hoverEnter, false);
 }
 
 QTEST_MAIN(tst_qquickdeliveryagent)

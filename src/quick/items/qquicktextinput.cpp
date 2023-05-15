@@ -1630,9 +1630,11 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
         }
     }
 #endif
+
     // On a touchscreen or with a stylus, set cursor position and focus on release, not on press;
     // if Flickable steals the grab in the meantime, the cursor won't move.
-    if (!isMouse)
+    // Check d->hasSelectedText() to keep touch-and-hold word selection working.
+    if (!isMouse && !d->hasSelectedText())
         d->moveCursor(d->positionAt(event->position()), false);
 
     if (d->focusOnPress && qGuiApp->styleHints()->setFocusOnTouchRelease())

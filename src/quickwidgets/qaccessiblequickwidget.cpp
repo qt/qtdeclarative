@@ -11,32 +11,52 @@ QT_BEGIN_NAMESPACE
 
 QAccessibleQuickWidget::QAccessibleQuickWidget(QQuickWidget* widget)
 : QAccessibleWidget(widget)
-, m_accessibleWindow(QQuickWidgetPrivate::get(widget)->offscreenWindow)
 {
     // NOTE: m_accessibleWindow is a QAccessibleQuickWindow, and not a
     // QAccessibleQuickWidgetOffscreenWindow (defined below). This means
     // it will return the Quick item child interfaces, which is what's needed here
     // (unlike QAccessibleQuickWidgetOffscreenWindow, which will report 0 children).
+    repairWindow();
+}
+
+QAccessibleQuickWidget::~QAccessibleQuickWidget()
+{
+    QObject::disconnect(m_connection);
+}
+
+void QAccessibleQuickWidget::repairWindow()
+{
+    if (!m_accessibleWindow || !m_accessibleWindow->object()) {
+        QQuickWidget *theWidget = static_cast<QQuickWidget *>(object());
+        QQuickWindow *newOffscreen = QQuickWidgetPrivate::get(theWidget)->offscreenWindow;
+        // We use the qobject_cast here to detect that the newOffscreen is
+        // not the one getting destroyed right now.
+        if (qobject_cast<QQuickWindow *>(newOffscreen)) {
+            m_accessibleWindow.reset(new QAccessibleQuickWindow(newOffscreen));
+            m_connection = QObject::connect(newOffscreen, &QObject::destroyed, theWidget,
+                                            [this] { repairWindow(); });
+        }
+    }
 }
 
 QAccessibleInterface *QAccessibleQuickWidget::child(int index) const
 {
-    return m_accessibleWindow.child(index);
+    return m_accessibleWindow->child(index);
 }
 
 int QAccessibleQuickWidget::childCount() const
 {
-    return m_accessibleWindow.childCount();
+    return m_accessibleWindow->childCount();
 }
 
 int QAccessibleQuickWidget::indexOfChild(const QAccessibleInterface *iface) const
 {
-    return m_accessibleWindow.indexOfChild(iface);
+    return m_accessibleWindow->indexOfChild(iface);
 }
 
 QAccessibleInterface *QAccessibleQuickWidget::childAt(int x, int y) const
 {
-    return m_accessibleWindow.childAt(x, y);
+    return m_accessibleWindow->childAt(x, y);
 }
 
 QAccessibleQuickWidgetOffscreenWindow::QAccessibleQuickWidgetOffscreenWindow(QQuickWindow *window)

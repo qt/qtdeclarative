@@ -17,10 +17,13 @@
 
 #include "qqmldomelements_p.h"
 #include "qqmldomitem_p.h"
+#include "qqmldomscriptelements_p.h"
 
 #include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
 
 #include <QtQml/private/qqmljsastvisitor_p.h>
+#include <type_traits>
+#include <variant>
 
 QT_BEGIN_NAMESPACE
 
@@ -48,7 +51,7 @@ class QQmlDomAstCreator final : public AST::Visitor
                 value;
     };
 
-    class StackEl
+    class QmlStackElement
     {
     public:
         Path path;
@@ -56,14 +59,84 @@ class QQmlDomAstCreator final : public AST::Visitor
         FileLocations::Tree fileLocations;
     };
 
+    /*!
+      \internal
+      Contains a ScriptElementVariant, that can be used everywhere in the DOM representation, or a
+      List that should always be inside of something else, e.g., that cannot be the root of the
+      script element DOM representation.
+
+      Also, it makes sure you do not mistreat a list as a regular script element and vice versa.
+
+      The reason for this is that Lists can get pretty unintuitive, as a List could be a Block of
+      statements or a list of variable declarations (let i = 3, j = 4, ...) or something completely
+      different. Instead, always put lists inside named construct (BlockStatement,
+      VariableDeclaration, ...).
+     */
+    class ScriptStackElement
+    {
+    public:
+        template<typename T>
+        static ScriptStackElement from(const T &obj)
+        {
+            if constexpr (std::is_same_v<T, ScriptElements::ScriptList>) {
+                ScriptStackElement s{ ScriptElements::ScriptList::kindValue, obj };
+                return s;
+            } else {
+                ScriptStackElement s{ T::element_type::kindValue,
+                                      ScriptElementVariant::fromElement(obj) };
+                return s;
+            }
+            Q_UNREACHABLE();
+        }
+
+        DomType kind;
+        using Variant = std::variant<ScriptElementVariant, ScriptElements::ScriptList>;
+        Variant value;
+
+        ScriptElementVariant takeVariant()
+        {
+            Q_ASSERT_X(std::holds_alternative<ScriptElementVariant>(value), "takeVariant",
+                       "Should be a variant, did the parser change?");
+            return std::get<ScriptElementVariant>(std::move(value));
+        }
+
+        bool isList() const { return std::holds_alternative<ScriptElements::ScriptList>(value); };
+
+        ScriptElements::ScriptList takeList()
+        {
+            Q_ASSERT_X(std::holds_alternative<ScriptElements::ScriptList>(value), "takeList",
+                       "Should be a List, did the parser change?");
+            return std::get<ScriptElements::ScriptList>(std::move(value));
+        }
+
+        void setSemanticScope(const QQmlJSScope::Ptr &scope)
+        {
+            if (auto x = std::get_if<ScriptElementVariant>(&value)) {
+                x->base()->setSemanticScope(scope);
+                return;
+            } else if (auto x = std::get_if<ScriptElements::ScriptList>(&value)) {
+                x->setSemanticScope(scope);
+                return;
+            }
+            Q_UNREACHABLE();
+        }
+    };
+
+public:
+    void enableScriptExpressions(bool enable = true) { m_enableScriptExpressions = enable; }
+
+private:
+
     MutableDomItem qmlFile;
     std::shared_ptr<QmlFile> qmlFilePtr;
-    QVector<StackEl> nodeStack;
+    QVector<QmlStackElement> nodeStack;
+    QList<ScriptStackElement> scriptNodeStack;
     QVector<int> arrayBindingLevels;
     FileLocations::Tree rootMap;
+    bool m_enableScriptExpressions;
 
     template<typename T>
-    StackEl &currentEl(int idx = 0)
+    QmlStackElement &currentEl(int idx = 0)
     {
         Q_ASSERT_X(idx < nodeStack.size() && idx >= 0, "currentQmlObjectOrComponentEl",
                    "Stack does not contain enough elements!");
@@ -78,6 +151,24 @@ class QQmlDomAstCreator final : public AST::Visitor
     }
 
     template<typename T>
+    ScriptStackElement &currentScriptEl(int idx = 0)
+    {
+        Q_ASSERT_X(m_enableScriptExpressions, "currentScriptEl",
+                   "Cannot access script elements when they are disabled!");
+
+        Q_ASSERT_X(idx < scriptNodeStack.size() && idx >= 0, "currentQmlObjectOrComponentEl",
+                   "Stack does not contain enough elements!");
+        int i = scriptNodeStack.size() - idx;
+        while (i-- > 0) {
+            DomType k = scriptNodeStack.at(i).kind;
+            if (k == T::element_type::kindValue)
+                return scriptNodeStack[i];
+        }
+        Q_ASSERT_X(false, "currentEl", "Stack does not contain object of type ");
+        return scriptNodeStack.last();
+    }
+
+    template<typename T>
     T &current(int idx = 0)
     {
         return std::get<T>(currentEl<T>(idx).item.value);
@@ -85,13 +176,15 @@ class QQmlDomAstCreator final : public AST::Visitor
 
     index_type currentIndex() { return currentNodeEl().path.last().headIndex(); }
 
-    StackEl &currentQmlObjectOrComponentEl(int idx = 0);
+    QmlStackElement &currentQmlObjectOrComponentEl(int idx = 0);
 
-    StackEl &currentNodeEl(int i = 0);
+    QmlStackElement &currentNodeEl(int i = 0);
+    ScriptStackElement &currentScriptNodeEl(int i = 0);
 
     DomValue &currentNode(int i = 0);
 
     void removeCurrentNode(std::optional<DomType> expectedType);
+    void removeCurrentScriptNode(std::optional<DomType> expectedType);
 
     void pushEl(Path p, DomValue it, AST::Node *n)
     {
@@ -101,6 +194,54 @@ class QQmlDomAstCreator final : public AST::Visitor
     FileLocations::Tree createMap(FileLocations::Tree base, Path p, AST::Node *n);
 
     FileLocations::Tree createMap(DomType k, Path p, AST::Node *n);
+
+    const ScriptElementVariant &finalizeScriptExpression(const ScriptElementVariant &element, FileLocations::Tree base = nullptr);
+    const ScriptElementVariant &finalizeScriptList(AST::Node *ast, FileLocations::Tree base);
+
+    Path pathOfLastScriptNode() const;
+
+    /*!
+       \internal
+       Helper to create script elements from AST nodes, as the DOM classes should be completely
+       dependency-free from AST and parser classes. Using the AST classes in qqmldomastcreator is
+       fine because it needs them for the construction/visit. \sa makeScriptList
+     */
+    template<typename ScriptElementT, typename AstNodeT,
+             typename Enable =
+                     std::enable_if_t<!std::is_same_v<ScriptElementT, ScriptElements::ScriptList>>>
+    static decltype(auto) makeScriptElement(AstNodeT *ast)
+    {
+        auto myExp = std::make_shared<ScriptElementT>(ast->firstSourceLocation(),
+                                                      ast->lastSourceLocation());
+        return myExp;
+    }
+
+    /*!
+       \internal
+       Helper to create script lists from AST nodes.
+       \sa makeScriptElement
+     */
+    template<typename AstNodeT>
+    static decltype(auto) makeScriptList(AstNodeT *ast)
+    {
+        auto myExp =
+                ScriptElements::ScriptList(ast->firstSourceLocation(), ast->lastSourceLocation());
+        return myExp;
+    }
+
+    template<typename ScriptElementT>
+    void pushScriptElement(ScriptElementT element)
+    {
+        Q_ASSERT_X(m_enableScriptExpressions, "pushScriptElement",
+                   "Cannot create script elements when they are disabled!");
+        scriptNodeStack.append(ScriptStackElement::from(element));
+    }
+
+    void disableScriptElements()
+    {
+        m_enableScriptExpressions = false;
+        scriptNodeStack.clear();
+    }
 
 public:
     QQmlDomAstCreator(MutableDomItem qmlFile);
@@ -151,6 +292,39 @@ public:
     bool visit(AST::UiAnnotation *el) override;
     void endVisit(AST::UiAnnotation *) override;
 
+
+    // for Script elements:
+    bool visit(AST::StatementList *list) override;
+    void endVisit(AST::StatementList *list) override;
+
+    bool visit(AST::BinaryExpression *exp) override;
+    void endVisit(AST::BinaryExpression *exp) override;
+
+    bool visit(AST::Block *block) override;
+    void endVisit(AST::Block *) override;
+
+    bool visit(AST::ReturnStatement *block) override;
+    void endVisit(AST::ReturnStatement *) override;
+
+    bool visit(AST::ForStatement *forStatement) override;
+    void endVisit(AST::ForStatement *forStatement) override;
+
+    bool visit(AST::VariableDeclarationList *vdl) override;
+    void endVisit(AST::VariableDeclarationList *vdl) override;
+
+    bool visit(AST::PatternElement *pe) override;
+    void endVisit(AST::PatternElement *pe) override;
+
+    bool visit(AST::IfStatement *) override;
+    void endVisit(AST::IfStatement *) override;
+
+    bool visit(AST::IdentifierExpression *expression) override;
+    bool visit(AST::NumericLiteral *expression) override;
+    bool visit(AST::StringLiteral *expression) override;
+    bool visit(AST::NullExpression *expression) override;
+    bool visit(AST::TrueLiteral *expression) override;
+    bool visit(AST::FalseLiteral *expression) override;
+
     void throwRecursionDepthError() override;
 
 public:
@@ -169,22 +343,19 @@ public:
 #undef X
 
     virtual void throwRecursionDepthError() override;
+    /*!
+       \internal
+       Disable the DOM for scriptexpressions, as not yet unimplemented script elements might crash
+       the construction.
+     */
+    void enableScriptExpressions(bool enable = true)
+    {
+        m_enableScriptExpressions = enable;
+        m_domCreator.enableScriptExpressions(enable);
+    }
 
 private:
-    void setScopeInDom()
-    {
-        QQmlJSScope::Ptr scope = m_scopeCreator.m_currentScope;
-        if (!m_domCreator.nodeStack.isEmpty()) {
-            std::visit(
-                    [&scope](auto &&e) {
-                        using U = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
-                        if constexpr (std::is_same_v<U, QmlObject>) {
-                            e.setSemanticScope(scope);
-                        }
-                    },
-                    m_domCreator.currentNodeEl().item.value);
-        }
-    }
+    void setScopeInDom();
 
     template<typename T>
     bool visitT(T *t)
@@ -269,6 +440,7 @@ private:
         InactiveVisitor inactiveVisitor;
     };
     std::optional<Marker> m_marker;
+    bool m_enableScriptExpressions;
 };
 
 } // end namespace Dom

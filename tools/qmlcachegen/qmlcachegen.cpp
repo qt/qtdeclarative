@@ -98,6 +98,10 @@ int main(int argc, char **argv)
                 QCoreApplication::translate(
                     "main", "Generate only byte code for bindings and functions, no C++ code"));
     parser.addOption(onlyBytecode);
+    QCommandLineOption verboseOption(
+            QStringLiteral("verbose"),
+            QCoreApplication::translate("main", "Output compile warnings"));
+    parser.addOption(verboseOption);
 
     QCommandLineOption outputFileOption(QStringLiteral("o"), QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
     parser.addOption(outputFileOption);
@@ -254,12 +258,7 @@ int main(int argc, char **argv)
             logger.setCategoryIgnored(qmlCompiler, false);
             logger.setCategoryFatal(qmlCompiler, true);
 
-            // By default, we're completely silent,
-            // as the lcAotCompiler category default is QtFatalMsg
-            const bool loggingEnabled = lcAotCompiler().isDebugEnabled()
-                    || lcAotCompiler().isInfoEnabled() || lcAotCompiler().isWarningEnabled()
-                    || lcAotCompiler().isCriticalEnabled();
-            if (!loggingEnabled)
+            if (!parser.isSet(verboseOption))
                 logger.setSilent(true);
 
             QQmlJSAotCompiler cppCodeGen(

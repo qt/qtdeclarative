@@ -56,15 +56,20 @@ QtObject {
 
                 headersReceivedNullHeader = (x.getResponseHeader("Nonexistant-header") == "");
                 headersReceivedValidHeader = (x.getResponseHeader("Test-HEAder") == "TestValue");
-                headersReceivedMultiValidHeader = (x.getResponseHeader("MultiTest-HEAder") == "TestValue, SecondTestValue");
-                headersReceivedCookieHeader = (x.getResponseHeader("Set-Cookie") == "" && x.getResponseHeader("Set-Cookie2") == "");
+                headersReceivedMultiValidHeader =
+                    (x.getResponseHeader("MultiTest-HEAder") == "TestValue, SecondTestValue");
+                headersReceivedCookieHeader =
+                    (x.getResponseHeader("Set-Cookie") == ""
+                     && x.getResponseHeader("Set-Cookie2") == "");
             } else if (x.readyState == XMLHttpRequest.DONE) {
-                doneState = headersReceivedState && true;
+                doneState = headersReceivedState;
 
                 doneNullHeader = (x.getResponseHeader("Nonexistant-header") == "");
                 doneValidHeader = (x.getResponseHeader("Test-HEAder") == "TestValue");
-                doneMultiValidHeader = (x.getResponseHeader("MultiTest-HEAder") == "TestValue, SecondTestValue");
-                doneCookieHeader = (x.getResponseHeader("Set-Cookie") == "" && x.getResponseHeader("Set-Cookie2") == "");
+                doneMultiValidHeader =
+                    (x.getResponseHeader("MultiTest-HEAder") == "TestValue, SecondTestValue");
+                doneCookieHeader = (x.getResponseHeader("Set-Cookie") == ""
+                                    && x.getResponseHeader("Set-Cookie2") == "");
                 dataOK = (x.responseText == "QML Rocks!\n");
             }
         }

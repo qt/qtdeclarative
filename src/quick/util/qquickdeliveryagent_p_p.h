@@ -131,6 +131,7 @@ public:
     void flushFrameSynchronousEvents(QQuickWindow *win);
     void deliverDelayedTouchEvent();
     void handleWindowDeactivate(QQuickWindow *win);
+    void handleWindowHidden(QQuickWindow *win);
 
     // utility functions that used to be in QQuickPointerEvent et al.
     bool allUpdatedPointsAccepted(const QPointerEvent *ev);

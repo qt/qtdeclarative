@@ -53,8 +53,6 @@ QtObject {
             }
         }
 
-
         x.send()
     }
 }
-

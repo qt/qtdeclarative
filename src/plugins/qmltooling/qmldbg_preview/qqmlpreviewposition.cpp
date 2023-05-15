@@ -63,7 +63,6 @@ QQmlPreviewPosition::QQmlPreviewPosition()
 
 QQmlPreviewPosition::~QQmlPreviewPosition()
 {
-    saveWindowPosition();
 }
 
 void QQmlPreviewPosition::takePosition(QWindow *window, InitializeState state)

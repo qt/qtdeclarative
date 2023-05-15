@@ -21,10 +21,10 @@ qt_add_executable(affectorsexample WIN32 MACOSX_BUNDLE
 )
 
 target_link_libraries(affectorsexample PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
 )
 
 add_dependencies(affectorsexample affectors_shared)

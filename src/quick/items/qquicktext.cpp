@@ -2538,6 +2538,11 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 void QQuickText::updatePolish()
 {
     Q_D(QQuickText);
+    const bool clipNodeChanged =
+            d->componentComplete && d->clipNode() && d->clipNode()->rect() != clipRect();
+    if (clipNodeChanged)
+        d->dirty(QQuickItemPrivate::Clip);
+
     // If the fonts used for rendering are different from the ones used in the GUI thread,
     // it means we will get warnings and corrupted text. If this case is detected, we need
     // to update the text layout before creating the scenegraph nodes.

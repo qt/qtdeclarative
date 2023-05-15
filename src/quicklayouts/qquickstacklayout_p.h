@@ -52,6 +52,9 @@ public:
     int itemCount() const override;
     int indexOf(QQuickItem *item) const;
 
+    /* QQuickItemChangeListener */
+    void itemSiblingOrderChanged(QQuickItem *item) override;
+
     static QQuickStackLayoutAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
@@ -59,9 +62,14 @@ Q_SIGNALS:
     void countChanged();
 
 private:
+    enum AdjustCurrentIndexPolicy {
+        DontAdjustCurrentIndex,
+        AdjustCurrentIndex
+    };
+
     static void collectItemSizeHints(QQuickItem *item, QSizeF *sizeHints);
     bool shouldIgnoreItem(QQuickItem *item) const;
-    void childItemsChanged();
+    void childItemsChanged(AdjustCurrentIndexPolicy adjustCurrentIndexPolicy = DontAdjustCurrentIndex);
     Q_DECLARE_PRIVATE(QQuickStackLayout)
 
     friend class QQuickStackLayoutAttached;

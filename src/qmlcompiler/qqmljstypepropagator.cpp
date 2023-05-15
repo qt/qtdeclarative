@@ -634,10 +634,11 @@ void QQmlJSTypePropagator::generate_StoreNameStrict(int name)
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
-bool QQmlJSTypePropagator::checkForEnumProblems(const QString &propertyName) const
+bool QQmlJSTypePropagator::checkForEnumProblems(
+        const QQmlJSRegisterContent &base, const QString &propertyName) const
 {
-    if (m_state.accumulatorIn().isEnumeration()) {
-        const auto metaEn = m_state.accumulatorIn().enumeration();
+    if (base.isEnumeration()) {
+        const auto metaEn = base.enumeration();
         if (!metaEn.isScoped()) {
             m_logger->log(u"You cannot access unscoped enum \"%1\" from here."_s.arg(propertyName),
                           qmlRestrictedType, getCurrentSourceLocation());
@@ -659,8 +660,8 @@ void QQmlJSTypePropagator::generate_LoadElement(int base)
 {
     const QQmlJSRegisterContent baseRegister = m_state.registers[base].content;
 
-    if ((baseRegister.storedType()->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence
-         && !m_typeResolver->registerIsStoredIn(baseRegister, m_typeResolver->stringType()))
+    if ((!baseRegister.isList()
+         && !m_typeResolver->registerContains(baseRegister, m_typeResolver->stringType()))
             || !m_typeResolver->isNumeric(m_state.accumulatorIn())) {
         const auto jsValue = m_typeResolver->globalType(m_typeResolver->jsValueType());
         addReadAccumulator(jsValue);
@@ -689,7 +690,7 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
     const QQmlJSRegisterContent baseRegister = m_state.registers[base].content;
     const QQmlJSRegisterContent indexRegister = checkedInputRegister(index);
 
-    if (baseRegister.storedType()->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence
+    if (!baseRegister.isList()
             || !m_typeResolver->isNumeric(indexRegister)) {
         const auto jsValue = m_typeResolver->globalType(m_typeResolver->jsValueType());
         addReadAccumulator(jsValue);
@@ -753,7 +754,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
         setAccumulator(QQmlJSRegisterContent());
     }
 
-    if (checkForEnumProblems(propertyName))
+    if (checkForEnumProblems(m_state.accumulatorIn(), propertyName))
         return;
 
     if (!m_state.accumulatorOut().isValid()) {
@@ -1037,6 +1038,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         return;
     }
 
+    const auto baseType = m_typeResolver->containedType(callBase);
     const auto member = m_typeResolver->memberType(callBase, propertyName);
     if (!member.isMethod()) {
         setError(u"Type %1 does not have a property %2 for calling"_s
@@ -1045,12 +1047,10 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         if (callBase.isType() && isCallingProperty(callBase.type(), propertyName))
             return;
 
-        if (checkForEnumProblems(propertyName))
+        if (checkForEnumProblems(callBase, propertyName))
             return;
 
         std::optional<QQmlJSFixSuggestion> fixSuggestion;
-
-        const auto baseType = m_typeResolver->containedType(callBase);
 
         if (auto suggestion = QQmlJSUtils::didYouMean(propertyName, baseType->methods().keys(),
                                                       getCurrentSourceLocation());
@@ -1064,12 +1064,12 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         return;
     }
 
-    checkDeprecated(m_typeResolver->containedType(callBase), propertyName, true);
+    checkDeprecated(baseType, propertyName, true);
 
     if (m_passManager != nullptr) {
         // TODO: Should there be an analyzeCall() in the future? (w. corresponding onCall in Pass)
         m_passManager->analyzeRead(
-                    m_typeResolver->containedType(callBase),
+                    baseType,
                     propertyName, m_function->qmlScope, getCurrentSourceLocation());
     }
 
@@ -1080,6 +1080,14 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
             propagateStringArgCall(argv);
             return;
         }
+    }
+
+    if (baseType->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
+            && m_typeResolver->equals(
+                member.scopeType(),
+                m_typeResolver->arrayType()->baseType())
+            && propagateArrayMethod(propertyName, argc, argv, callBase)) {
+        return;
     }
 
     propagateCall(member.method(), argc, argv, member.scopeType());
@@ -1185,19 +1193,19 @@ void QQmlJSTypePropagator::mergeRegister(
         if (conversion == it->second.typeConversions.end())
             return false;
 
-        const QQmlJSRegisterContent &lastTry = conversion.value().content;
+        const VirtualRegister &lastTry = conversion.value();
 
-        Q_ASSERT(lastTry.isValid());
-        Q_ASSERT(lastTry.isConversion());
+        Q_ASSERT(lastTry.content.isValid());
+        Q_ASSERT(lastTry.content.isConversion());
 
-        if (!m_typeResolver->equals(lastTry.conversionResult(), merged.conversionResult())
-                || lastTry.conversionOrigins() != merged.conversionOrigins()) {
+        if (!m_typeResolver->equals(lastTry.content.conversionResult(), merged.conversionResult())
+                || lastTry.content.conversionOrigins() != merged.conversionOrigins()) {
             return false;
         }
 
         // We don't need to track it again if we've come to the same conclusion before.
-        m_state.annotations[currentInstructionOffset()].typeConversions[index].content = lastTry;
-        m_state.registers[index].content = lastTry;
+        m_state.annotations[currentInstructionOffset()].typeConversions[index] = lastTry;
+        m_state.registers[index] = lastTry;
         return true;
     };
 
@@ -1400,6 +1408,169 @@ void QQmlJSTypePropagator::propagateStringArgCall(int argv)
     addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->stringType()));
 }
 
+bool QQmlJSTypePropagator::propagateArrayMethod(
+        const QString &name, int argc, int argv, const QQmlJSRegisterContent &baseType)
+{
+    // TODO:
+    // * For concat() we need to decide what kind of array to return and what kinds of arguments to
+    //   accept.
+    // * For entries(), keys(), and values() we need iterators.
+    // * For find(), findIndex(), sort(), every(), some(), forEach(), map(), filter(), reduce(),
+    //   and reduceRight() we need typed function pointers.
+
+    const auto intType = m_typeResolver->globalType(m_typeResolver->int32Type());
+    const auto boolType = m_typeResolver->globalType(m_typeResolver->boolType());
+    const auto stringType = m_typeResolver->globalType(m_typeResolver->stringType());
+    const auto valueType = m_typeResolver->globalType(
+            m_typeResolver->containedType(baseType)->valueType());
+
+    // TODO: We should remember whether a register content can be written back when
+    //       converting and merging. Also, we need a way to detect the "only in same statement"
+    //       write back case. To do this, we should store the statementNumber(s) in
+    //       Property and Conversion RegisterContents.
+    const bool canHaveSideEffects = (baseType.isProperty() && baseType.isWritable())
+            || baseType.isConversion();
+
+    if (name == u"copyWithin" && argc > 0 && argc < 4) {
+        for (int i = 0; i < argc; ++i) {
+            if (!canConvertFromTo(m_state.registers[argv + i].content, intType))
+                return false;
+        }
+
+        for (int i = 0; i < argc; ++i)
+            addReadRegister(argv + i, intType);
+
+        setAccumulator(baseType);
+        m_state.setHasSideEffects(canHaveSideEffects);
+        return true;
+    }
+
+    if (name == u"fill" && argc > 0 && argc < 4) {
+        if (!canConvertFromTo(m_state.registers[argv].content, valueType))
+            return false;
+
+        for (int i = 1; i < argc; ++i) {
+            if (!canConvertFromTo(m_state.registers[argv + i].content, intType))
+                return false;
+        }
+
+        addReadRegister(argv, valueType);
+
+        for (int i = 1; i < argc; ++i)
+            addReadRegister(argv + i, intType);
+
+        setAccumulator(baseType);
+        m_state.setHasSideEffects(canHaveSideEffects);
+        return true;
+    }
+
+    if (name == u"includes" && argc > 0 && argc < 3) {
+        if (!canConvertFromTo(m_state.registers[argv].content, valueType))
+            return false;
+
+        if (argc == 2) {
+            if (!canConvertFromTo(m_state.registers[argv + 1].content, intType))
+                return false;
+            addReadRegister(argv + 1, intType);
+        }
+
+        addReadRegister(argv, valueType);
+        setAccumulator(boolType);
+        return true;
+    }
+
+    if (name == u"toString" || (name == u"join" && argc < 2)) {
+        if (argc == 1) {
+            if (!canConvertFromTo(m_state.registers[argv].content, stringType))
+                return false;
+            addReadRegister(argv, stringType);
+        }
+
+        setAccumulator(stringType);
+        return true;
+    }
+
+    if ((name == u"pop" || name == u"shift") && argc == 0) {
+        setAccumulator(valueType);
+        m_state.setHasSideEffects(canHaveSideEffects);
+        return true;
+    }
+
+    if (name == u"push" || name == u"unshift") {
+        for (int i = 0; i < argc; ++i) {
+            if (!canConvertFromTo(m_state.registers[argv + i].content, valueType))
+                return false;
+        }
+
+        for (int i = 0; i < argc; ++i)
+            addReadRegister(argv + i, valueType);
+
+        setAccumulator(intType);
+        m_state.setHasSideEffects(canHaveSideEffects);
+        return true;
+    }
+
+    if (name == u"reverse" && argc == 0) {
+        setAccumulator(baseType);
+        m_state.setHasSideEffects(canHaveSideEffects);
+        return true;
+    }
+
+    if (name == u"slice" && argc < 3) {
+        for (int i = 0; i < argc; ++i) {
+            if (!canConvertFromTo(m_state.registers[argv + i].content, intType))
+                return false;
+        }
+
+        for (int i = 0; i < argc; ++i)
+            addReadRegister(argv + i, intType);
+
+        setAccumulator(baseType.storedType()->isListProperty()
+                               ? m_typeResolver->globalType(m_typeResolver->qObjectListType())
+                               : baseType);
+        return true;
+    }
+
+    if (name == u"splice" && argc > 0) {
+        for (int i = 0; i < 2; ++i) {
+            if (!canConvertFromTo(m_state.registers[argv + i].content, intType))
+                return false;
+        }
+
+        for (int i = 2; i < argc; ++i) {
+            if (!canConvertFromTo(m_state.registers[argv + i].content, valueType))
+                return false;
+        }
+
+        for (int i = 0; i < 2; ++i)
+            addReadRegister(argv + i, intType);
+
+        for (int i = 2; i < argc; ++i)
+            addReadRegister(argv + i, valueType);
+
+        setAccumulator(baseType);
+        m_state.setHasSideEffects(canHaveSideEffects);
+        return true;
+    }
+
+    if ((name == u"indexOf" || name == u"lastIndexOf") && argc > 0 && argc < 3) {
+        if (!canConvertFromTo(m_state.registers[argv].content, valueType))
+            return false;
+
+        if (argc == 2) {
+            if (!canConvertFromTo(m_state.registers[argv + 1].content, intType))
+                return false;
+            addReadRegister(argv + 1, intType);
+        }
+
+        addReadRegister(argv, valueType);
+        setAccumulator(intType);
+        return true;
+    }
+
+    return false;
+}
+
 void QQmlJSTypePropagator::generate_CallPropertyLookup(int lookupIndex, int base, int argc,
                                                        int argv)
 {
@@ -1519,8 +1690,22 @@ void QQmlJSTypePropagator::generate_UnwindToLabel(int level, int offset)
 
 void QQmlJSTypePropagator::generate_DeadTemporalZoneCheck(int name)
 {
-    Q_UNUSED(name)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    const auto fail = [this, name]() {
+        setError(u"Cannot statically assert the dead temporal zone check for %1"_s.arg(
+                name ? m_jsUnitGenerator->stringForIndex(name) : u"the anonymous accumulator"_s));
+    };
+
+    const QQmlJSRegisterContent in = m_state.accumulatorIn();
+    if (in.isConversion()) {
+        for (const QQmlJSScope::ConstPtr &origin : in.conversionOrigins()) {
+            if (!m_typeResolver->equals(origin, m_typeResolver->emptyType()))
+                continue;
+            fail();
+            break;
+        }
+    } else if (m_typeResolver->registerContains(in, m_typeResolver->emptyType())) {
+        fail();
+    }
 }
 
 void QQmlJSTypePropagator::generate_ThrowException()
@@ -1655,9 +1840,7 @@ void QQmlJSTypePropagator::generate_DeclareVar(int varName, int isDeletable)
 
 void QQmlJSTypePropagator::generate_DefineArray(int argc, int args)
 {
-    setAccumulator(m_typeResolver->globalType(argc == 0
-                                                      ? m_typeResolver->emptyListType()
-                                                      : m_typeResolver->variantListType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->variantListType()));
 
     // Track all arguments as the same type.
     const QQmlJSRegisterContent elementType
@@ -1702,7 +1885,7 @@ void QQmlJSTypePropagator::generate_CreateRestParameter(int argIndex)
 
 void QQmlJSTypePropagator::generate_ConvertThisToObject()
 {
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    setRegister(This, m_typeResolver->globalType(m_typeResolver->qObjectType()));
 }
 
 void QQmlJSTypePropagator::generate_LoadSuperConstructor()
@@ -2160,9 +2343,8 @@ void QQmlJSTypePropagator::generate_Sub(int lhs)
 
 void QQmlJSTypePropagator::generate_InitializeBlockDeadTemporalZone(int firstReg, int count)
 {
-    Q_UNUSED(firstReg)
-    Q_UNUSED(count)
-    // Ignore. We reject uninitialized values anyway.
+    for (int reg = firstReg, end = firstReg + count; reg < end; ++reg)
+        setRegister(reg, m_typeResolver->globalType(m_typeResolver->emptyType()));
 }
 
 void QQmlJSTypePropagator::generate_ThrowOnNullOrUndefined()
@@ -2243,9 +2425,6 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
     currentInstruction.readRegisters = m_state.takeReadRegisters();
     currentInstruction.hasSideEffects = m_state.hasSideEffects();
     currentInstruction.isRename = m_state.isRename();
-    m_state.setHasSideEffects(false);
-    m_state.setIsRename(false);
-    m_state.setReadRegisters(VirtualRegisters());
 
     switch (instr) {
     // the following instructions are not expected to produce output in the accumulator
@@ -2269,6 +2448,8 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
     case QV4::Moth::Instr::Type::PushCatchContext:
     case QV4::Moth::Instr::Type::UnwindDispatch:
     case QV4::Moth::Instr::Type::InitializeBlockDeadTemporalZone:
+    case QV4::Moth::Instr::Type::ConvertThisToObject:
+    case QV4::Moth::Instr::Type::DeadTemporalZoneCheck:
         if (m_state.changedRegisterIndex() == Accumulator && !m_error->isValid()) {
             setError(u"Instruction is not expected to populate the accumulator"_s);
             return;
@@ -2286,9 +2467,17 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
 
     if (m_state.changedRegisterIndex() != InvalidRegister) {
         Q_ASSERT(m_error->isValid() || m_state.changedRegister().isValid());
-        m_state.registers[m_state.changedRegisterIndex()].content = m_state.changedRegister();
+        VirtualRegister &r = m_state.registers[m_state.changedRegisterIndex()];
+        r.content = m_state.changedRegister();
+        r.canMove = false;
+        r.affectedBySideEffects = m_state.isRename()
+                && m_state.isRegisterAffectedBySideEffects(m_state.renameSourceRegisterIndex());
         m_state.clearChangedRegister();
     }
+
+    m_state.setHasSideEffects(false);
+    m_state.setIsRename(false);
+    m_state.setReadRegisters(VirtualRegisters());
 }
 
 QQmlJSRegisterContent QQmlJSTypePropagator::propagateBinaryOperation(QSOperator::Op op, int lhs)

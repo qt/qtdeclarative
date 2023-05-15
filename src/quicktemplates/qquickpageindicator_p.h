@@ -34,6 +34,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPageIndicator : public QQuickContro
 
 public:
     explicit QQuickPageIndicator(QQuickItem *parent = nullptr);
+    ~QQuickPageIndicator() override;
 
     int count() const;
     void setCount(int count);

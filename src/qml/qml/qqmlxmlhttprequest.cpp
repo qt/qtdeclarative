@@ -998,9 +998,15 @@ public:
     QString responseBody();
     const QByteArray & rawResponseBody() const;
     bool receivedXml() const;
+    QUrl url() const;
 
     const QString & responseType() const;
     void setResponseType(const QString &);
+    void setOverrideMimeType(QStringView mimeType) { m_overrideMime = mimeType.toUtf8(); }
+    void setOverrideCharset(QStringView charset) { m_overrideCharset = charset.toUtf8(); }
+
+    const QByteArray mimeType() const;
+    const QByteArray charset() const;
 
     QV4::ReturnedValue jsonResponseBody(QV4::ExecutionEngine*);
     QV4::ReturnedValue xmlResponseBody(QV4::ExecutionEngine*);
@@ -1029,6 +1035,9 @@ private:
     bool m_gotXml;
     QByteArray m_mime;
     QByteArray m_charset;
+    QByteArray m_overrideMime;
+    QByteArray m_overrideCharset;
+
     QStringDecoder findTextDecoder() const;
     void readEncoding();
 
@@ -1057,8 +1066,6 @@ private:
 QQmlXMLHttpRequest::QQmlXMLHttpRequest(QNetworkAccessManager *manager, QV4::ExecutionEngine *v4)
     : m_state(Unsent), m_errorFlag(false), m_sendFlag(false)
     , m_redirectCount(0), m_gotXml(false), m_network(nullptr), m_nam(manager)
-    , m_responseType()
-    , m_parsedDocument()
 {
     m_wasConstructedWithQmlContext = !v4->callingQmlContext().isNull();
 }
@@ -1162,6 +1169,7 @@ void QQmlXMLHttpRequest::fillHeadersList()
 
 void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
 {
+    m_url = url;
     QNetworkRequest request = m_request;
 
     if (QQmlFile::isLocalFile(url)) {
@@ -1453,13 +1461,33 @@ void QQmlXMLHttpRequest::readEncoding()
         }
     }
 
-    if (m_mime.isEmpty() || m_mime == "text/xml" || m_mime == "application/xml" || m_mime.endsWith("+xml"))
+    const auto mime = mimeType();
+    if (mime.isEmpty() || mime == "text/xml" || mime == "application/xml" || mime.endsWith("+xml"))
         m_gotXml = true;
 }
 
 bool QQmlXMLHttpRequest::receivedXml() const
 {
     return m_gotXml;
+}
+
+QUrl QQmlXMLHttpRequest::url() const
+{
+    return m_url;
+}
+
+const QByteArray QQmlXMLHttpRequest::mimeType() const
+{
+    // Final MIME type is the override MIME type unless that is null in which
+    // case it is the response MIME type.
+    return m_overrideMime.isEmpty() ? m_mime : m_overrideMime;
+}
+
+const QByteArray QQmlXMLHttpRequest::charset() const
+{
+    // Final charset is the override charset unless that is null in which case
+    // it is the response charset.
+    return m_overrideCharset.isEmpty() ? m_charset : m_overrideCharset;
 }
 
 const QString & QQmlXMLHttpRequest::responseType() const
@@ -1503,8 +1531,8 @@ QStringDecoder QQmlXMLHttpRequest::findTextDecoder() const
 {
     QStringDecoder decoder;
 
-    if (!m_charset.isEmpty())
-        decoder = QStringDecoder(m_charset);
+    if (!charset().isEmpty())
+        decoder = QStringDecoder(charset());
 
     if (!decoder.isValid() && m_gotXml) {
         QXmlStreamReader reader(m_responseEntityBody);
@@ -1512,7 +1540,7 @@ QStringDecoder QQmlXMLHttpRequest::findTextDecoder() const
         decoder = QStringDecoder(reader.documentEncoding().toString().toUtf8());
     }
 
-    if (!decoder.isValid() && m_mime == "text/html")
+    if (!decoder.isValid() && mimeType() == "text/html")
         decoder = QStringDecoder::decoderForHtml(m_responseEntityBody);
 
     if (!decoder.isValid()) {
@@ -1629,6 +1657,7 @@ struct QQmlXMLHttpRequestWrapper : public Object
     V4_NEEDS_DESTROY
 };
 
+// https://xhr.spec.whatwg.org/
 struct QQmlXMLHttpRequestCtor : public FunctionObject
 {
     V4_OBJECT2(QQmlXMLHttpRequestCtor, FunctionObject)
@@ -1657,6 +1686,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     static ReturnedValue method_abort(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_getResponseHeader(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_getAllResponseHeaders(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_overrideMimeType(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 
     static ReturnedValue method_get_readyState(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_status(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
@@ -1666,6 +1696,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     static ReturnedValue method_get_response(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_responseType(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_set_responseType(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_responseURL(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 };
 
 }
@@ -1706,6 +1737,7 @@ void QQmlXMLHttpRequestCtor::setupProto()
     p->defineDefaultProperty(QStringLiteral("abort"), method_abort);
     p->defineDefaultProperty(QStringLiteral("getResponseHeader"), method_getResponseHeader);
     p->defineDefaultProperty(QStringLiteral("getAllResponseHeaders"), method_getAllResponseHeaders);
+    p->defineDefaultProperty(QStringLiteral("overrideMimeType"), method_overrideMimeType);
 
     // Read-only properties
     p->defineAccessorProperty(QStringLiteral("readyState"), method_get_readyState, nullptr);
@@ -1714,6 +1746,7 @@ void QQmlXMLHttpRequestCtor::setupProto()
     p->defineAccessorProperty(QStringLiteral("responseText"),method_get_responseText, nullptr);
     p->defineAccessorProperty(QStringLiteral("responseXML"),method_get_responseXML, nullptr);
     p->defineAccessorProperty(QStringLiteral("response"),method_get_response, nullptr);
+    p->defineAccessorProperty(QStringLiteral("responseURL"),method_get_responseURL, nullptr);
 
     // Read-write properties
     p->defineAccessorProperty(QStringLiteral("responseType"), method_get_responseType, method_set_responseType);
@@ -2035,6 +2068,71 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_set_responseType(const FunctionObje
 
     // Argument 0 - response type
     r->setResponseType(argv[0].toQStringNoThrow());
+
+    return Encode::undefined();
+}
+
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseURL(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    Scope scope(b);
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, thisObject->as<QQmlXMLHttpRequestWrapper>());
+    if (!w)
+        V4THROW_REFERENCE("Not an XMLHttpRequest object");
+    QQmlXMLHttpRequest *r = w->d()->request;
+
+    if (r->readyState() != QQmlXMLHttpRequest::Loading &&
+        r->readyState() != QQmlXMLHttpRequest::Done) {
+        return Encode(scope.engine->newString(QString()));
+    } else {
+        QUrl url = r->url();
+        url.setFragment(QString());
+        return Encode(scope.engine->newString(url.toString()));
+    }
+}
+
+ReturnedValue QQmlXMLHttpRequestCtor::method_overrideMimeType(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, thisObject->as<QQmlXMLHttpRequestWrapper>());
+    if (!w)
+        V4THROW_REFERENCE("Not an XMLHttpRequest object");
+    QQmlXMLHttpRequest *r = w->d()->request;
+
+    if (argc != 1)
+        THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
+
+    // If state is loading or done, throw an InvalidStateError exception.
+    if (r->readyState() == QQmlXMLHttpRequest::Loading ||
+        r->readyState() == QQmlXMLHttpRequest::Done)
+        THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
+
+    // Set override MIME type to `application/octet-stream`.
+    r->setOverrideMimeType(QStringLiteral("application/octet-stream"));
+    const auto parts = argv[0].toQStringNoThrow().split(QLatin1Char(';'));
+    const auto type = parts.at(0).trimmed();
+
+    const auto mimeInvalidCharacter = [](QChar uni) {
+        if (uni.unicode() > 127) // Only accept ASCII
+            return true;
+        const char ch = char(uni.unicode());
+        return !(ch == '-' || ch == '/' || isAsciiLetterOrNumber(ch));
+    };
+
+    // If mime is a parsable MIME type, ...
+    if (type.count(QLatin1Char('/')) == 1
+        && std::find_if(type.begin(), type.end(), mimeInvalidCharacter) == type.end()) {
+        // ... then set override MIME type to its MIME type portion.
+        r->setOverrideMimeType(type);
+    }
+    for (const auto &part : parts) {
+        const QLatin1String charset("charset=");
+        // If override MIME type has a `charset` parameter, ...
+        if (part.trimmed().startsWith(charset)) {
+            // ... then set override charset to its value.
+            const int offset(part.indexOf(charset) + charset.size());
+            r->setOverrideCharset(part.sliced(offset).trimmed());
+        }
+    }
 
     return Encode::undefined();
 }

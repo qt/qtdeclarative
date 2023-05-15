@@ -40,6 +40,18 @@ extern bool qsg_useConsistentTiming();
 
 #define ENABLE_DEFAULT_BACKEND
 
+Q_TRACE_POINT(qtquick, QSG_renderWindow_entry)
+Q_TRACE_POINT(qtquick, QSG_renderWindow_exit)
+Q_TRACE_POINT(qtquick, QSG_polishItems_entry)
+Q_TRACE_POINT(qtquick, QSG_polishItems_exit)
+Q_TRACE_POINT(qtquick, QSG_sync_entry)
+Q_TRACE_POINT(qtquick, QSG_sync_exit)
+Q_TRACE_POINT(qtquick, QSG_render_entry)
+Q_TRACE_POINT(qtquick, QSG_render_exit)
+Q_TRACE_POINT(qtquick, QSG_swap_entry)
+Q_TRACE_POINT(qtquick, QSG_swap_exit)
+
+
 /*
      - Uses one QRhi per window. (and so each window has its own QOpenGLContext or ID3D11Device(Context) etc.)
      - Animations are advanced using the standard timer (no custom animation
@@ -659,6 +671,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     Q_TRACE(QSG_swap_entry);
 
     const bool needsPresent = alsoSwap && window->isVisible();
+    double lastCompletedGpuTime = 0;
     if (cd->swapchain) {
         QRhi::EndFrameFlags flags;
         if (!needsPresent)
@@ -670,6 +683,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             else if (frameResult == QRhi::FrameOpError)
                 qWarning("Failed to end frame");
         }
+        lastCompletedGpuTime = cd->swapchain->currentFrameCommandBuffer()->lastCompletedGpuTime();
     }
     if (needsPresent)
         cd->fireFrameSwapped();
@@ -694,6 +708,11 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
                 int((renderTime - syncTime) / 1000000),
                 int((swapTime - renderTime) / 1000000),
                 int(data.timeBetweenRenders.restart()));
+        if (!qFuzzyIsNull(lastCompletedGpuTime) && cd->graphicsConfig.isTimestampsEnabled()) {
+            qCDebug(QSG_LOG_TIME_RENDERLOOP, "[window %p][gui thread] syncAndRender: last retrieved GPU frame time was %.4f ms",
+                    window,
+                    lastCompletedGpuTime * 1000.0);
+        }
     }
 
     // Might have been set during syncSceneGraph()

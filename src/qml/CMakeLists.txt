@@ -147,6 +147,7 @@ qt_internal_add_qml_module(Qml
         debugger/qqmlprofiler_p.h
         inlinecomponentutils_p.h
         jsapi/qjsengine.cpp jsapi/qjsengine.h jsapi/qjsengine_p.h
+        jsapi/qjslist.cpp jsapi/qjslist.h
         jsapi/qjsmanagedvalue.cpp jsapi/qjsmanagedvalue.h
         jsapi/qjsprimitivevalue.cpp jsapi/qjsprimitivevalue.h
         jsapi/qjsvalue.cpp jsapi/qjsvalue.h jsapi/qjsvalue_p.h
@@ -379,6 +380,7 @@ qt_internal_add_qml_module(Qml
         WTFReportBacktrace=qmlWTFReportBacktrace
         WTF_EXPORT_PRIVATE= # special case
     INCLUDE_DIRECTORIES
+        ${CMAKE_CURRENT_BINARY_DIR}/.generated
         ${CMAKE_CURRENT_BINARY_DIR}/compiler
         ${CMAKE_CURRENT_BINARY_DIR}/jsruntime
         ${CMAKE_CURRENT_BINARY_DIR}/memory
@@ -393,7 +395,6 @@ qt_internal_add_qml_module(Qml
         ../3rdparty/masm/stubs/runtime
         ../3rdparty/masm/stubs/wtf
         ../3rdparty/masm/wtf
-        .generated
         compiler
         debugger
         jsruntime
@@ -700,7 +701,15 @@ qt_internal_extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
         ../3rdparty/masm/disassembler/udis86/udis86_syn-intel.c
 )
 
-qt_internal_create_tracepoints(Qml qtqml.tracepoints)
+qt_internal_generate_tracepoints(Qml qml
+    SOURCES
+        qml/qqmlobjectcreator.cpp
+        qml/qqmlboundsignal.cpp
+        qml/qqmlbinding.cpp
+        qml/qqmltypeloader.cpp
+        jsruntime/qv4vme_moth.cpp
+)
+
 qt_internal_add_docs(Qml
     doc/qtqml.qdocconf
 )

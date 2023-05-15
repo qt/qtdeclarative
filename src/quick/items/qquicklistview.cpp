@@ -703,6 +703,8 @@ bool QQuickListViewPrivate::releaseItem(FxViewItem *item, QQmlInstanceModel::Reu
 
     bool released = QQuickItemViewPrivate::releaseItem(item, reusableFlag);
     if (released && it && att && att->m_sectionItem) {
+        QQuickItemPrivate::get(att->m_sectionItem)->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+
         // We hold no more references to this item
         int i = 0;
         do {
@@ -1112,6 +1114,9 @@ QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
         sectionCriteria->delegate()->completeCreate();
     }
 
+    if (sectionItem)
+        QQuickItemPrivate::get(sectionItem)->addItemChangeListener(this, QQuickItemPrivate::Geometry);
+
     return sectionItem;
 }
 
@@ -1120,6 +1125,9 @@ void QQuickListViewPrivate::releaseSectionItem(QQuickItem *item)
     if (!item)
         return;
     int i = 0;
+
+    QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+
     do {
         if (!sectionCache[i]) {
             sectionCache[i] = item;
@@ -3620,11 +3628,15 @@ void QQuickListViewPrivate::updateSectionCriteria()
 
 bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView)
 {
+    Q_Q(QQuickListView);
 #if QT_CONFIG(quick_viewtransitions)
     Q_UNUSED(movingIntoView)
 #endif
     int modelIndex = change.index;
     int count = change.count;
+
+    if (q->size().isEmpty() && visibleItems.isEmpty())
+        return false;
 
     qreal tempPos = isContentFlowReversed() ? -position()-size() : position();
     int index = visibleItems.size() ? mapFromModel(modelIndex) : 0;

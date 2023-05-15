@@ -6,7 +6,7 @@ import QtQuick
 Item {
     id: container
 
-    property string text: "Button"
+    required property string text
     property string subText: ""
     signal clicked
 

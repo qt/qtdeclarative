@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include <qtest.h>
-#include <QtQml/qqmlengine.h>
-#include <QtQml/qqmlfile.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlexpression.h>
+#include <QtQml/qqmlfile.h>
 #include <QtQml/qqmlscriptstring.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -20,6 +21,7 @@ private slots:
     void syntaxError();
     void exception();
     void expressionFromDataComponent();
+    void emptyScriptString();
 };
 
 class TestObject : public QObject
@@ -119,6 +121,25 @@ void tst_qqmlexpression::expressionFromDataComponent()
     QVariant result = expression.evaluate();
     QCOMPARE(result.typeId(), QMetaType::QString);
     QCOMPARE(result.toString(), QStringLiteral("success"));
+}
+
+void tst_qqmlexpression::emptyScriptString()
+{
+    QQmlEngine engine;
+    QQmlContext *context = engine.rootContext();
+    QVERIFY(context);
+    QVERIFY(context->isValid());
+
+    QQmlScriptString empty;
+    QVERIFY(empty.isEmpty());
+
+    QQmlExpression expression(empty, context, this);
+    QCOMPARE(expression.context(), context);
+    QCOMPARE(expression.scopeObject(), this);
+    QCOMPARE(expression.expression(), QString());
+
+    const QVariant result = expression.evaluate();
+    QVERIFY(!result.isValid());
 }
 
 QTEST_MAIN(tst_qqmlexpression)

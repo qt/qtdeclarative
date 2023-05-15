@@ -25,6 +25,8 @@ Item {
     ListView {
         id: listView
         model: myModel
+        width: 100
+        height: 100
         delegate: AnotherDelegate {
             age: model.age
             text: model.noise

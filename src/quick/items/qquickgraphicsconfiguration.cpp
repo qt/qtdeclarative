@@ -573,6 +573,48 @@ bool QQuickGraphicsConfiguration::isDebugMarkersEnabled() const
 }
 
 /*!
+    When enabled, GPU timing data is collected from command buffers on
+    platforms and 3D APIs where this is supported. This data is then printed in
+    the renderer logs that can be enabled via \c{QSG_RENDER_TIMING} environment
+    variable or logging categories such as \c{qt.scenegraph.time.renderloop},
+    and may also be made visible to other modules, such as Qt Quick 3D's
+    \l DebugView item.
+
+    By default this is disabled, because collecting the data may involve
+    additional work, such as inserting timestamp queries in the command stream,
+    depending on the underlying graphics API. To enable, either call this
+    function with \a enable set to true, or set the \c{QSG_RHI_PROFILE}
+    environment variable to a non-zero value.
+
+    Graphics APIs where this can be expected to be supported are Direct 3D 11,
+    Vulkan, and Metal.
+
+    \since 6.6
+
+    \sa isTimestampsEnabled(), setDebugMarkers()
+ */
+void QQuickGraphicsConfiguration::setTimestamps(bool enable)
+{
+    if (d->flags.testFlag(QQuickGraphicsConfigurationPrivate::EnableTimestamps) != enable) {
+        detach();
+        d->flags.setFlag(QQuickGraphicsConfigurationPrivate::EnableTimestamps, enable);
+    }
+}
+
+/*!
+    \return true if GPU timing collection is enabled.
+
+    By default the value is false.
+
+    \since 6.6
+    \sa setTimestamps()
+ */
+bool QQuickGraphicsConfiguration::isTimestampsEnabled() const
+{
+    return d->flags.testFlag(QQuickGraphicsConfigurationPrivate::EnableTimestamps);
+}
+
+/*!
     Requests choosing an adapter or physical device that uses software-based
     rasterization. Applicable only when the underlying API has support for
     enumerating adapters (for example, Direct 3D or Vulkan), and is ignored
@@ -780,9 +822,9 @@ QQuickGraphicsConfigurationPrivate::QQuickGraphicsConfigurationPrivate()
     if (enableDebugLayer)
         flags |= EnableDebugLayer;
 
-    static const bool enableDebugMarkers = qEnvironmentVariableIntValue("QSG_RHI_PROFILE");
-    if (enableDebugMarkers)
-        flags |= EnableDebugMarkers;
+    static const bool enableProfilingRelated = qEnvironmentVariableIntValue("QSG_RHI_PROFILE");
+    if (enableProfilingRelated)
+        flags |= EnableDebugMarkers | EnableTimestamps;
 
     static const bool preferSoftwareDevice = qEnvironmentVariableIntValue("QSG_RHI_PREFER_SOFTWARE_RENDERER");
     if (preferSoftwareDevice)

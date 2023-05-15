@@ -335,6 +335,35 @@ QObject *QQmlComponentPrivate::doBeginCreate(QQmlComponent *q, QQmlContext *cont
     return q->beginCreate(context);
 }
 
+static void removePendingQPropertyBinding(
+    QV4::Value *object, const QString &propertyName, QQmlObjectCreator *creator)
+{
+    if (!creator)
+        return;
+
+    QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>();
+    if (!wrapper)
+        return;
+
+    QObject *o = wrapper->object();
+    if (!o)
+        return;
+
+    if (QQmlData *ddata = QQmlData::get(o)) {
+        const QQmlPropertyData *propData = ddata->propertyCache->property(
+            propertyName, o, ddata->outerContext);
+        if (propData && propData->isBindable())
+            creator->removePendingBinding(o, propData->coreIndex());
+        return;
+    }
+
+    const QMetaObject *meta = o->metaObject();
+    Q_ASSERT(meta);
+    const int index = meta->indexOfProperty(propertyName.toUtf8());
+    if (index != -1 && meta->property(index).isBindable())
+        creator->removePendingBinding(o, index);
+}
+
 bool QQmlComponentPrivate::setInitialProperty(
         QObject *base, const QString &name, const QVariant &value)
 {
@@ -351,13 +380,16 @@ bool QQmlComponentPrivate::setInitialProperty(
             if (scope.engine->hasException)
                 break;
         }
-        segment = scope.engine->newString(properties.last());
+        const QString lastProperty = properties.last();
+        segment = scope.engine->newString(lastProperty);
         object->put(segment, scope.engine->metaTypeToJS(value.metaType(), value.constData()));
         if (scope.engine->hasException) {
             qmlWarning(base, scope.engine->catchExceptionAsQmlError());
             scope.engine->hasException = false;
             return false;
         }
+
+        removePendingQPropertyBinding(object, lastProperty, state.creator());
         return true;
     }
 
@@ -369,7 +401,12 @@ bool QQmlComponentPrivate::setInitialProperty(
         prop = QQmlProperty(base, name, engine);
     QQmlPropertyPrivate *privProp = QQmlPropertyPrivate::get(prop);
     const bool isValid = prop.isValid();
-    if (!isValid || !privProp->writeValueProperty(value, {})) {
+    if (isValid && privProp->writeValueProperty(value, {})) {
+        if (prop.isBindable()) {
+            if (QQmlObjectCreator *creator = state.creator())
+                creator->removePendingBinding(prop.object(), prop.index());
+        }
+    } else {
         QQmlError error{};
         error.setUrl(url);
         if (isValid) {
@@ -1563,7 +1600,10 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
 */
 
 
-void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v, RequiredProperties *requiredProperties, QObject *createdComponent)
+void QQmlComponentPrivate::setInitialProperties(
+    QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o,
+    const QV4::Value &v, RequiredProperties *requiredProperties, QObject *createdComponent,
+    QQmlObjectCreator *creator)
 {
     QV4::Scope scope(engine);
     QV4::ScopedObject object(scope);
@@ -1603,7 +1643,8 @@ void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV
             qmlWarning(createdComponent, error);
             continue;
         }
-        name = engine->newString(properties.last());
+        const QString lastProperty = properties.last();
+        name = engine->newString(lastProperty);
         object->put(name, val);
         if (engine->hasException) {
             qmlWarning(createdComponent, engine->catchExceptionAsQmlError());
@@ -1612,6 +1653,8 @@ void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV
             auto prop = removePropertyFromRequired(createdComponent, name->toQString(),
                                                    requiredProperties, engine->qmlEngine());
         }
+
+        removePendingQPropertyBinding(object, lastProperty, creator);
     }
 
     engine->hasException = false;
@@ -1697,8 +1740,9 @@ void QQmlComponent::createObject(QQmlV4Function *args)
 
     if (!valuemap->isUndefined()) {
         QV4::Scoped<QV4::QmlContext> qmlContext(scope, v4->qmlContext());
-        QQmlComponentPrivate::setInitialProperties(v4, qmlContext, object, valuemap,
-                                                   d->state.requiredProperties(), rv);
+        QQmlComponentPrivate::setInitialProperties(
+            v4, qmlContext, object, valuemap, d->state.requiredProperties(), rv,
+            d->state.creator());
     }
     if (d->state.hasUnsetRequiredProperties()) {
         QList<QQmlError> errors;
@@ -1867,8 +1911,10 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(QV4::QmlContext
     QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, toCreate));
     Q_ASSERT(object->as<QV4::Object>());
 
-    if (!valuemap.isUndefined())
-        setInitialProperties(v4engine, qmlContext, object, valuemap, requiredProperties, toCreate);
+    if (!valuemap.isUndefined()) {
+        setInitialProperties(
+            v4engine, qmlContext, object, valuemap, requiredProperties, toCreate, state.creator());
+    }
 }
 
 QQmlComponentExtension::QQmlComponentExtension(QV4::ExecutionEngine *v4)
@@ -1967,7 +2013,9 @@ void QV4::QmlIncubatorObject::setInitialState(QObject *o, RequiredProperties *re
         QV4::Scope scope(v4);
         QV4::ScopedObject obj(scope, QV4::QObjectWrapper::wrap(v4, o));
         QV4::Scoped<QV4::QmlContext> qmlCtxt(scope, d()->qmlContext);
-        QQmlComponentPrivate::setInitialProperties(v4, qmlCtxt, obj, d()->valuemap, requiredProperties, o);
+        QQmlComponentPrivate::setInitialProperties(
+            v4, qmlCtxt, obj, d()->valuemap, requiredProperties, o,
+            QQmlIncubatorPrivate::get(d()->incubator)->creator.data());
     }
 }
 

@@ -192,7 +192,7 @@ void tst_Scenegraph::runTest(const QStringList& extraArgs)
         consecutiveErrors = 0;
     }
     else {
-        if (++consecutiveErrors >= 3)
+        if (++consecutiveErrors >= 3 && QBaselineTest::shouldAbortIfUnstable())
             aborted = true;                   // Just give up if screen grabbing fails 3 times in a row
         QFAIL(qPrintable("QuickView grabbing failed: " + errorMessage));
     }

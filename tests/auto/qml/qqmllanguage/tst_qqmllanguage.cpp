@@ -413,6 +413,8 @@ private slots:
     void typedEnums_data();
     void typedEnums();
 
+    void objectMethodClone();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -1388,13 +1390,13 @@ void tst_qqmllanguage::rootItemIsComponent()
             QtWarningMsg,
             QRegularExpression(
                     ".*/rootItemIsComponent\\.qml:3:1: Using a Component as the root of "
-                    "a qmldocument is deprecated: types defined in qml documents are automatically "
-                    "wrapped into Components when needed\\."));
+                    "a QML document is deprecated: types defined in qml documents are "
+                    "automatically wrapped into Components when needed\\."));
     QTest::ignoreMessage(
             QtWarningMsg,
             QRegularExpression(
                     ".*/EvilComponentType\\.qml:3:1: Using a Component as the root of a "
-                    "qmldocument is deprecated: types defined in qml documents are automatically "
+                    "QML document is deprecated: types defined in qml documents are automatically "
                     "wrapped into Components when needed\\."));
     QTest::ignoreMessage(
             QtWarningMsg,
@@ -7972,6 +7974,16 @@ void tst_qqmllanguage::typedEnums()
 
     QCOMPARE(o->property("output1").toDouble(), value);
     QCOMPARE(o->property("output2").toDouble(), value);
+}
+
+void tst_qqmllanguage::objectMethodClone()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("objectMethodClone.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QTRY_COMPARE(o->property("doneClicks").toInt(), 2);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

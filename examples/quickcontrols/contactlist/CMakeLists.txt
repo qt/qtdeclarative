@@ -33,9 +33,9 @@ qt_add_qml_module(contactlistexample
 )
 
 target_link_libraries(contactlistexample PUBLIC
-    Qt::Core
-    Qt::Gui
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Quick
 )
 
 install(TARGETS contactlistexample

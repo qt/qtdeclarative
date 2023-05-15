@@ -157,6 +157,10 @@
     tst_example -help
     \endcode
 
+    \note Running a Qt Quick test case will always show a window on the screen,
+    even if the test code doesn't involve any Quick UI. To avoid that, run the
+    test executable with \c {-platform offscreen}.
+
     \section1 Executing C++ Before QML Tests
 
     To execute C++ code before any of the QML tests are run, the

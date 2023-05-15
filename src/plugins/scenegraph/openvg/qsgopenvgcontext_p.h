@@ -71,6 +71,6 @@ public:
     QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;
 };
 
-#endif // QSGOPENVGCONTEXT_H
-
 QT_END_NAMESPACE
+
+#endif // QSGOPENVGCONTEXT_H

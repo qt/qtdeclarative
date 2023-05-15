@@ -416,6 +416,8 @@ private slots:
 
     void doNotCrashOnReadOnlyBindable();
 
+    void resetGadet();
+
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     static void verifyContextLifetime(const QQmlRefPointer<QQmlContextData> &ctxt);
@@ -10371,6 +10373,20 @@ void tst_qqmlecmascript::doNotCrashOnReadOnlyBindable()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
     QCOMPARE(o->property("x").toInt(), 7);
+}
+
+void tst_qqmlecmascript::resetGadet()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("resetGadget.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    auto resettableGadgetHolder = qobject_cast<ResettableGadgetHolder *>(o.get());
+    QVERIFY(resettableGadgetHolder);
+    QCOMPARE(resettableGadgetHolder->g().value(), 0);
+    resettableGadgetHolder->setProperty("trigger", QVariant::fromValue(true));
+    QCOMPARE(resettableGadgetHolder->g().value(), 42);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

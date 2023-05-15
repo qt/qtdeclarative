@@ -81,14 +81,12 @@ add_subdirectory(labs)
 # These need to be included here since they have dependencies on the modules
 # specified above.
 
-if(QT_FEATURE_qml_devtools)
-    add_subdirectory(qmlcompiler)
-    add_subdirectory(qmldom)
+add_subdirectory(qmlcompiler)
+add_subdirectory(qmldom)
 
-    # Build qmlcachegen now, so that we can use it in src/imports.
-    if(QT_FEATURE_qml_devtools AND QT_FEATURE_xmlstreamwriter)
-        add_subdirectory(../tools/qmlcachegen qmlcachegen)
-    endif()
+# Build qmlcachegen now, so that we can use it in src/imports.
+if(QT_FEATURE_xmlstreamwriter)
+    add_subdirectory(../tools/qmlcachegen qmlcachegen)
 endif()
 
 if(QT_FEATURE_thread AND TARGET Qt::LanguageServerPrivate AND NOT WASM AND NOT IOS AND NOT ANDROID AND NOT QNX AND NOT INTEGRITY AND NOT WEBOS)

@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/untitled/">
+    <file alias="main.qml">main.qml</file>
+    <file alias="components/Foo.qml">components/Foo.qml</file>
+  </qresource>
+</RCC>

@@ -34,6 +34,31 @@ Q_LOGGING_CATEGORY(QQSHAPE_LOG_TIME_DIRTY_SYNC, "qt.shape.time.sync")
     \qml
     import QtQuick.Shapes
     \endqml
+
+    Qt Quick Shapes provides tools for drawing arbitrary shapes in a Qt Quick scene.
+    \l{Shape}{Shapes} can be constructed from basic building blocks like \l{PathLine}{lines} and
+    \l{PathCubic}{curves} that define sub-shapes. The sub-shapes can then be filled with solid
+    colors or gradients, and an outline stroke can be defined.
+
+    Qt Quick Shapes also supports higher level path element types, such as \l{PathText}{text} and
+    \l{PathSvg}{SVG path descriptions}. The currently supported element types is: PathMove,
+    PathLine, PathQuad, PathCubic, PathArc, PathText and PathSvg.
+
+    Qt Quick Shapes triangulates the shapes and renders the corresponding triangles on the GPU.
+    Therefore, altering the control points of elements will lead to re-triangulation of the
+    affected paths, at some performance cost. In addition, curves are flattened before they are
+    rendered, so applying a very high scale to the shape may show artifacts where it is visible
+    that the curves are represented by a sequence of smaller, straight lines.
+
+    \note Qt Quick Shapes relies on multi-sampling for anti-aliasing. This can be enabled for the
+    entire application or window using the corresponding settings in QSurfaceFormat. It can also
+    be enabled for only the shape, by setting its \l{Item::layer.enabled}{layer.enabled} property to
+    true and then adjusting the \l{Item::layer.samples}{layer.samples} property. In the latter case,
+    multi-sampling will not be applied to the entire scene, but the shape will be rendered via an
+    intermediate off-screen buffer.
+
+    For further information, the \l{Qt Quick Examples - Shapes}{Shapes example} shows how to
+    implement different types of shapes, fills and strokes.
 */
 
 void QQuickShapes_initializeModule()
@@ -512,7 +537,7 @@ void QQuickShapePath::resetFillGradient()
     Shape. However, not all Shape implementations support all path
     element types, while some may not make sense for PathView. Shape's
     currently supported subset is: PathMove, PathLine, PathQuad, PathCubic,
-    PathArc, and PathSvg.
+    PathArc, PathText and PathSvg.
 
     See \l Path for a detailed overview of the supported path elements.
 

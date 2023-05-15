@@ -1,0 +1,6 @@
+GET /text.xml HTTP/1.1
+Host: {{ServerHostUrl}}
+Connection: Keep-Alive{{Ignore}}
+Accept-Encoding: {{Ignore}}
+Accept-Language: {{Ignore}}
+User-Agent: {{Ignore}}

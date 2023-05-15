@@ -19,6 +19,8 @@ void QQuickStyleItemDial::connectToControl() const
     connect(dial, &QQuickDial::positionChanged, this, &QQuickStyleItem::markImageDirty);
     connect(dial, &QQuickDial::valueChanged, this, &QQuickStyleItem::markImageDirty);
     connect(dial, &QQuickDial::stepSizeChanged, this, &QQuickStyleItem::markImageDirty);
+    connect(dial, &QQuickDial::startAngleChanged, this, &QQuickStyleItem::markImageDirty);
+    connect(dial, &QQuickDial::endAngleChanged, this, &QQuickStyleItem::markImageDirty);
     connect(dial, &QQuickDial::pressedChanged, this, &QQuickStyleItem::markImageDirty);
 }
 
@@ -54,6 +56,8 @@ void QQuickStyleItemDial::initStyleOption(QStyleOptionSlider &styleOption) const
     styleOption.tickInterval = dial->stepSize();
     styleOption.dialWrapping = dial->wrap();
     styleOption.upsideDown = true;
+    styleOption.startAngle = dial->startAngle();
+    styleOption.endAngle = dial->endAngle();
 
     if (dial->isPressed())
         styleOption.state |= QStyle::State_Sunken;

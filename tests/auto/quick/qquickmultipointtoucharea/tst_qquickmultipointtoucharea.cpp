@@ -52,6 +52,7 @@ private slots:
     void stationaryTouchWithChangingPressure();
     void touchFiltering();
     void nestedPinchAreaMouse();
+    void disabledIgnoresHover();
 
 private:
     QQuickView *createAndShowView(const QString &file);
@@ -1445,6 +1446,23 @@ void tst_QQuickMultiPointTouchArea::nestedPinchAreaMouse() // QTBUG-83662
     QCOMPARE(mpta->property("updatedCount").toInt(), 1);
     QCOMPARE(releasedSpy.size(), 1);
     QCOMPARE(mpta->property("releasedCount").toInt(), 1);
+}
+
+/*
+    A disabled MultiPointTouchArea should not interfere with hover event
+    propagation to siblings underneath.
+*/
+void tst_QQuickMultiPointTouchArea::disabledIgnoresHover()
+{
+    QScopedPointer<QQuickView> window(createAndShowView("touchOverMouseArea.qml"));
+    QQuickItem *root = qobject_cast<QQuickItem *>(window->rootObject());
+    QVERIFY(root);
+
+    QQuickMouseArea *mouseArea = root->findChild<QQuickMouseArea *>();
+
+    QTest::mouseMove(window.data(), QPoint(40, 40));
+    QTest::mouseMove(window.data(), QPoint(50, 50));
+    QVERIFY(mouseArea->hovered());
 }
 
 QTEST_MAIN(tst_QQuickMultiPointTouchArea)

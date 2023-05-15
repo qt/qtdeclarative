@@ -112,17 +112,14 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
     Q_ASSERT(!runtimeStrings);
     Q_ASSERT(data);
     const quint32 stringCount = totalStringCount();
-    runtimeStrings = (QV4::Heap::String **)malloc(stringCount * sizeof(QV4::Heap::String*));
-    // memset the strings to 0 in case a GC run happens while we're within the loop below
-    memset(runtimeStrings, 0, stringCount * sizeof(QV4::Heap::String*));
+    // strings need to be 0 in case a GC run happens while we're within the loop below
+    runtimeStrings = (QV4::Heap::String **)calloc(stringCount, sizeof(QV4::Heap::String*));
     for (uint i = 0; i < stringCount; ++i)
         runtimeStrings[i] = engine->newString(stringAt(i));
 
+    // zero-initialize regexps in case a GC run happens while we're within the loop below
     runtimeRegularExpressions
-            = new QV4::Value[data->regexpTableSize];
-    // memset the regexps to 0 in case a GC run happens while we're within the loop below
-    memset(runtimeRegularExpressions, 0,
-           data->regexpTableSize * sizeof(QV4::Value));
+            = new QV4::Value[data->regexpTableSize] {};
     for (uint i = 0; i < data->regexpTableSize; ++i) {
         const CompiledData::RegExp *re = data->regexpAt(i);
         uint f = re->flags();
@@ -154,12 +151,11 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
     }
 
     if (data->jsClassTableSize) {
+        // zero the regexps with calloc in case a GC run happens while we're within the loop below
         runtimeClasses
-                = (QV4::Heap::InternalClass **)malloc(data->jsClassTableSize
-                                                      * sizeof(QV4::Heap::InternalClass *));
-        // memset the regexps to 0 in case a GC run happens while we're within the loop below
-        memset(runtimeClasses, 0,
-               data->jsClassTableSize * sizeof(QV4::Heap::InternalClass *));
+                = (QV4::Heap::InternalClass **)calloc(data->jsClassTableSize,
+                                                      sizeof(QV4::Heap::InternalClass *));
+
         for (uint i = 0; i < data->jsClassTableSize; ++i) {
             int memberCount = 0;
             const CompiledData::JSClassMember *member
@@ -395,7 +391,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
             allICs.push_back(*it);
         }
     }
-    std::vector<Node> nodes;
+    NodeList nodes;
     nodes.resize(allICs.size());
     std::iota(nodes.begin(), nodes.end(), 0);
     AdjacencyList adjacencyList;

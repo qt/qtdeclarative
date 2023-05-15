@@ -29,10 +29,10 @@ qt_add_qml_module(attachedstylepropertiesexample
 )
 
 target_link_libraries(attachedstylepropertiesexample PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::QuickControls2
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::QuickControls2
 )
 
 add_dependencies(attachedstylepropertiesexample MyStyle)

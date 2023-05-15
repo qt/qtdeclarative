@@ -23,10 +23,10 @@ qt_add_executable(touchinteractionexample
 )
 
 target_link_libraries(touchinteractionexample PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
 )
 
 add_dependencies(touchinteractionexample touchinteraction_shared)

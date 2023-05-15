@@ -265,18 +265,21 @@ public:
     static qsizetype data_count(QQmlListProperty<QObject> *);
     static QObject *data_at(QQmlListProperty<QObject> *, qsizetype);
     static void data_clear(QQmlListProperty<QObject> *);
+    static void data_removeLast(QQmlListProperty<QObject> *);
 
     // resources property
     static QObject *resources_at(QQmlListProperty<QObject> *, qsizetype);
     static void resources_append(QQmlListProperty<QObject> *, QObject *);
     static qsizetype resources_count(QQmlListProperty<QObject> *);
     static void resources_clear(QQmlListProperty<QObject> *);
+    static void resources_removeLast(QQmlListProperty<QObject> *);
 
     // children property
     static void children_append(QQmlListProperty<QQuickItem> *, QQuickItem *);
     static qsizetype children_count(QQmlListProperty<QQuickItem> *);
     static QQuickItem *children_at(QQmlListProperty<QQuickItem> *, qsizetype);
     static void children_clear(QQmlListProperty<QQuickItem> *);
+    static void children_removeLast(QQmlListProperty<QQuickItem> *);
 
     // visibleChildren property
     static void visibleChildren_append(QQmlListProperty<QQuickItem> *prop, QQuickItem *o);
@@ -338,7 +341,7 @@ public:
 #endif // QT_NO_DEBUG_STREAM
     };
 
-    // call QQuickItemChangeListener PMF
+    // call QQuickItemChangeListener
     template <typename Fn, typename ...Args>
     void notifyChangeListeners(QQuickItemPrivate::ChangeTypes changeTypes, Fn &&function, Args &&...args)
     {
@@ -347,20 +350,12 @@ public:
 
         const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
         for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & changeTypes)
-                (change.listener->*function)(args...);
-        }
-    }
-    // call functor
-    template <typename Fn>
-    void notifyChangeListeners(QQuickItemPrivate::ChangeTypes changeTypes, Fn &&function) {
-        if (changeListeners.isEmpty())
-            return;
-
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & changeTypes)
-                function(change);
+            if (change.types & changeTypes) {
+                if constexpr (std::is_member_function_pointer_v<Fn>)
+                    (change.listener->*function)(args...);
+                else
+                    function(change, args...);
+            }
         }
     }
 
@@ -609,7 +604,10 @@ public:
     virtual void implicitHeightChanged();
 
 #if QT_CONFIG(accessibility)
+    QAccessible::Role effectiveAccessibleRole() const;
+private:
     virtual QAccessible::Role accessibleRole() const;
+public:
 #endif
 
     void setImplicitAntialiasing(bool antialiasing);

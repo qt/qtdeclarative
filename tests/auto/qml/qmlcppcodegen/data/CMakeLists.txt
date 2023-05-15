@@ -15,11 +15,14 @@ set(cpp_sources
     multiforeign.h
     objectwithmethod.h
     person.cpp person.h
+    sequenceToIterable.h
     sequencetypeexample.cpp sequencetypeexample.h
     state.h
     theme.cpp theme.h
     timelinetheme.cpp timelinetheme.h
     variantMapLookup.h
+    variantreturn.h
+    weathermoduleurl.h
     wrapwithvariant.h
     withlength.h
 )
@@ -30,11 +33,11 @@ set(qml_files
     BadType.qml
     BaseMember.qml
     BindingExpression.qml
+    CxxTypeFromDir.qml
+    CxxTypeFromImplicit.qml
     Cycle1.qml
     Cycle2.qml
     Cycle3.qml
-    CxxTypeFromDir.qml
-    CxxTypeFromImplicit.qml
     Dummy.qml
     Enums.qml
     Foozle.qml
@@ -66,16 +69,17 @@ set(qml_files
     bindToValueType.qml
     blockComments.qml
     boolCoercions.qml
+    boolPointerMerge.qml
     boundComponents.qml
     callContextPropertyLookupResult.qml
     callWithSpread.qml
     childobject.qml
     colorAsVariant.qml
     colorString.qml
-    consoleObject.qml
     componentReturnType.qml
     compositeTypeMethod.qml
     compositesingleton.qml
+    consoleObject.qml
     construct.qml
     contextParam.qml
     conversionDecrement.qml
@@ -101,14 +105,15 @@ set(qml_files
     equalityQUrl.qml
     equalityVarAndNonStorable.qml
     equalsUndefined.qml
+    exceptionFromInner.qml
     excessiveParameters.qml
     extendedTypes.qml
     failures.qml
     fallbacklookups.qml
     fileDialog.qml
     fromBoolValue.qml
-    functionLookup.qml
     funcWithParams.qml
+    functionLookup.qml
     functionReturningVoid.qml
     functionTakingVar.qml
     globals.qml
@@ -120,28 +125,36 @@ set(qml_files
     importsFromImportPath.qml
     infinities.qml
     infinitiesToInt.qml
-    invisibleBase.qml
-    invisibleTypes.qml
-    invisibleListElementType.qml
     intEnumCompare.qml
     intOverflow.qml
+    intToEnum.qml
     interactive.qml
     interceptor.qml
+    invisibleBase.qml
+    invisibleListElementType.qml
+    invisibleTypes.qml
     isnan.qml
     javaScriptArgument.qml
+    jsArrayMethods.qml
+    jsArrayMethodsUntyped.qml
+    jsArrayMethodsWithParams.qml
+    jsArrayMethodsWithParamsUntyped.qml
     jsMathObject.qml
     jsimport.qml
     jsmoduleimport.qml
     layouts.qml
-    library.js
     letAndConst.qml
+    library.js
     listAsArgument.qml
+    listConversion.qml
     listIndices.qml
     listPropertyAsModel.qml
     listlength.qml
     math.qml
     mathMinMax.qml
     mathOperations.qml
+    mergedObjectRead.qml
+    mergedObjectWrite.qml
     methods.qml
     modulePrefix.qml
     moveRegVoid.qml
@@ -167,17 +180,20 @@ set(qml_files
     popContextAfterRet.qml
     prefixedMetaType.qml
     pressAndHoldButton.qml
-    registerelimination.qml
     registerPropagation.qml
+    registerelimination.qml
     revisions.qml
     scopeVsObject.qml
     script.js
     script.mjs
+    sequenceToIterable.qml
+    shadowedMethod.qml
     shared/Slider.qml
     shifts.qml
     signal.qml
     signalHandler.qml
     signalIndexMismatch.qml
+    signalsWithLists.qml
     signatureIgnored.qml
     specificParent.qml
     storeElementSideEffects.qml
@@ -188,8 +204,10 @@ set(qml_files
     text.qml
     themerbad.qml
     themergood.qml
+    thisObject.qml
     throwObjectName.qml
     toString.qml
+    topLevelComponent.qml
     translation.qml
     trivialSignalHandler.qml
     typePropagationLoop.qml
@@ -205,11 +223,13 @@ set(qml_files
     usingCxxTypesFromFileImports.qml
     valueTypeCast.qml
     valueTypeCopy.qml
+    valueTypeDefault.qml
     valueTypeLists.qml
     valueTypeProperty.qml
     valueTypeReference.qml
-    variantlist.qml
     variantMapLookup.qml
+    variantReturn.qml
+    variantlist.qml
     versionmismatch.qml
     voidfunction.qml
     dummy_imports.qml

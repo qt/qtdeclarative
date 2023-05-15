@@ -326,6 +326,15 @@ QQmlJSScope::findJSIdentifier(const QString &id) const
     return std::optional<JavaScriptIdentifier>{};
 }
 
+std::optional<QQmlJSScope::JavaScriptIdentifier> QQmlJSScope::JSIdentifier(const QString &id) const
+{
+    auto it = m_jsIdentifiers.find(id);
+    if (it != m_jsIdentifiers.end())
+        return *it;
+
+    return std::optional<JavaScriptIdentifier>{};
+}
+
 static QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr>
 qFindInlineComponents(QStringView typeName, const QQmlJSScope::ContextualTypes &contextualTypes)
 {
@@ -507,9 +516,15 @@ QTypeRevision QQmlJSScope::resolveType(
             auto &parameter = parameters[i];
             if (const QString typeName = parameter.typeName();
                 !parameter.type() && !typeName.isEmpty()) {
-                const auto type = findType(typeName, context, usedTypes);
-                if (type.scope && type.scope->isReferenceType())
+                auto type = findType(typeName, context, usedTypes);
+                if (type.scope && parameter.isList()) {
+                    type.scope = type.scope->listType();
+                    parameter.setIsList(false);
+                    parameter.setIsPointer(false);
+                    parameter.setTypeName(type.scope ? type.scope->internalName() : QString());
+                } else if (type.scope && type.scope->isReferenceType()) {
                     parameter.setIsPointer(true);
+                }
                 parameter.setType({ type.scope });
             }
         }
@@ -576,7 +591,7 @@ QTypeRevision QQmlJSScope::resolveTypes(
     const auto resolveAll = [](const QQmlJSScope::Ptr &self,
                                const QQmlJSScope::ContextualTypes &contextualTypes,
                                QSet<QString> *usedTypes) {
-        resolveEnums(self, contextualTypes.intType());
+        resolveEnums(self, contextualTypes, usedTypes);
         resolveList(self, contextualTypes.arrayType());
         return resolveType(self, contextualTypes, usedTypes);
     };
@@ -601,7 +616,9 @@ void QQmlJSScope::resolveNonEnumTypes(
    resolveEnums() will create a QQmlJSMetaEnum copy for the alias in case the 'self'-scope already
    does not have an enum called like the alias.
  */
-void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &intType)
+void QQmlJSScope::resolveEnums(
+        const QQmlJSScope::Ptr &self, const QQmlJSScope::ContextualTypes &contextualTypes,
+        QSet<QString> *usedTypes)
 {
     // temporary hash to avoid messing up m_enumerations while iterators are active on it
     QHash<QString, QQmlJSMetaEnum> toBeAppended;
@@ -609,12 +626,17 @@ void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self, const QQmlJSScope::
          ++it) {
         if (it->type())
             continue;
-        Q_ASSERT(intType); // We need an "int" type to resolve enums
         QQmlJSScope::Ptr enumScope = QQmlJSScope::create();
         reparent(self, enumScope);
         enumScope->m_scopeType = EnumScope;
-        enumScope->setBaseTypeName(QStringLiteral("int"));
-        enumScope->m_baseType.scope = intType;
+
+        QString typeName = it->typeName();
+        if (typeName.isEmpty())
+            typeName = QStringLiteral("int");
+        enumScope->setBaseTypeName(typeName);
+        const auto type = findType(typeName, contextualTypes, usedTypes);
+        enumScope->m_baseType = { type.scope, type.revision };
+
         enumScope->m_semantics = AccessSemantics::Value;
         enumScope->m_internalName = self->internalName() + QStringLiteral("::") + it->name();
         if (QString alias = it->alias(); !alias.isEmpty()
@@ -658,7 +680,7 @@ void QQmlJSScope::resolveList(const QQmlJSScope::Ptr &self, const QQmlJSScope::C
     const QQmlJSImportedScope array = {arrayType, QTypeRevision()};
     QQmlJSScope::ContextualTypes contextualTypes(
                 QQmlJSScope::ContextualTypes::INTERNAL, { { self->internalName(), element }, },
-                QQmlJSScope::ConstPtr(), arrayType);
+                arrayType);
     QQmlJSScope::resolveTypes(listType, contextualTypes);
 
     Q_ASSERT(listType->valueType() == self);
@@ -1097,7 +1119,7 @@ void QDeferredFactory<QQmlJSScope>::populate(const QSharedPointer<QQmlJSScope> &
     typeReader(scope);
     m_importer->m_globalWarnings.append(typeReader.errors());
     scope->setInternalName(internalName());
-    QQmlJSScope::resolveEnums(scope, m_importer->builtinInternalNames().intType());
+    QQmlJSScope::resolveEnums(scope, m_importer->builtinInternalNames());
     QQmlJSScope::resolveList(scope, m_importer->builtinInternalNames().arrayType());
 
     if (m_isSingleton && !scope->isSingleton()) {

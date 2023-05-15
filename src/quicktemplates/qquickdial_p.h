@@ -32,6 +32,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDial : public QQuickControl
     Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged FINAL)
     Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
     Q_PROPERTY(qreal angle READ angle NOTIFY angleChanged FINAL)
+    Q_PROPERTY(qreal startAngle READ startAngle WRITE setStartAngle NOTIFY startAngleChanged FINAL REVISION(6, 6))
+    Q_PROPERTY(qreal endAngle READ endAngle WRITE setEndAngle NOTIFY endAngleChanged FINAL REVISION(6, 6))
     Q_PROPERTY(qreal stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL)
     Q_PROPERTY(bool wrap READ wrap WRITE setWrap NOTIFY wrapChanged FINAL)
@@ -64,6 +66,12 @@ public:
     qreal stepSize() const;
     void setStepSize(qreal step);
 
+    qreal startAngle() const;
+    void setStartAngle(qreal startAngle);
+
+    qreal endAngle() const;
+    void setEndAngle(qreal endAngle);
+
     enum SnapMode {
         NoSnap,
         SnapAlways,
@@ -80,6 +88,12 @@ public:
         Vertical,
     };
     Q_ENUM(InputMode)
+
+    enum WrapDirection {
+        Clockwise,
+        CounterClockwise
+    };
+    Q_ENUM(WrapDirection)
 
     bool wrap() const;
     void setWrap(bool wrap);
@@ -118,6 +132,9 @@ Q_SIGNALS:
     Q_REVISION(2, 2) void liveChanged();
     // 2.5 (Qt 5.12)
     Q_REVISION(2, 5) void inputModeChanged();
+    Q_REVISION(6, 6) void startAngleChanged();
+    Q_REVISION(6, 6) void endAngleChanged();
+    Q_REVISION(6, 6) void wrapped(WrapDirection);
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;

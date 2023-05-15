@@ -10,8 +10,8 @@ add_library(library ThirdPartyDisplay.cpp ThirdPartyDisplay.h)
 qt_extract_metatypes(library)
 
 target_link_libraries(library PUBLIC
-    Qt::Core
-    Qt::Qml
-    Qt::Quick
-    Qt::Gui
+    Qt6::Core
+    Qt6::Qml
+    Qt6::Quick
+    Qt6::Gui
 )

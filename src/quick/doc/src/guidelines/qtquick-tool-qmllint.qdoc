@@ -46,7 +46,7 @@ To get an overview and explanation of all available command line options, run \c
 
 qmllint can warn you about code that cannot be compiled by \l{qmlsc}.
 
-These warnigs are not enabled by default. In order to enable them specify
+These warnings are not enabled by default. In order to enable them specify
 \c{--compiler warning} or adjust your settings file accordingly.
 
 \section2 Marking components and properties as deprecated

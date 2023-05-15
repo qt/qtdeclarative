@@ -67,6 +67,7 @@ private slots:
     void cachedGetterLookup_qtbug_75335();
     void createComponentOnSingletonDestruction();
     void uiLanguage();
+    void markCurrentFunctionAsTranslationBinding();
     void executeRuntimeFunction();
     void captureQProperty();
     void listWrapperAsListReference();
@@ -1377,6 +1378,35 @@ void tst_qqmlengine::uiLanguage()
         engine.setUiLanguage("TestLanguage");
         QCOMPARE(object->property("chosenLanguage").toString(), "TestLanguage");
     }
+}
+
+class I18nAwareClass : public QObject {
+    Q_OBJECT
+    QML_NAMED_ELEMENT(I18nAware)
+
+    Q_PROPERTY(QString text READ text NOTIFY textChanged)
+signals:
+    void textChanged();
+public:
+    int counter = 0;
+
+    QString text()
+    {
+        if (auto engine = qmlEngine(this))
+            engine->markCurrentFunctionAsTranslationBinding();
+        return QLatin1String("Hello, %1").arg(QString::number(counter++));
+    }
+};
+
+void tst_qqmlengine::markCurrentFunctionAsTranslationBinding()
+{
+    QQmlEngine engine;
+    qmlRegisterTypesAndRevisions<I18nAwareClass>("i18ntest", 1);
+    QQmlComponent comp(&engine, testFileUrl("markCurrentFunctionAsTranslationBinding.qml"));
+    std::unique_ptr<QObject> root { comp.create() };
+    QCOMPARE(root->property("result"), "Hello, 0");
+    engine.retranslate();
+    QCOMPARE(root->property("result"), "Hello, 1");
 }
 
 void tst_qqmlengine::executeRuntimeFunction()

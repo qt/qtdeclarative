@@ -123,6 +123,8 @@ public:
     bool outputWarningsToStandardError() const;
     void setOutputWarningsToStandardError(bool);
 
+    void markCurrentFunctionAsTranslationBinding();
+
     template<typename T>
     T singletonInstance(int qmlTypeId);
 

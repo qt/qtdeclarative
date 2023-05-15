@@ -149,7 +149,7 @@ void QQuickPointerDeviceHandler::setAcceptedDevices(QPointingDevice::DeviceTypes
     Rectangle {
        id: rect
        TapHandler {
-           acceptedPointerTypes: PointerDevice.GenericPointer | PointerDevice.Finger | PointerDevice.Pen
+           acceptedPointerTypes: PointerDevice.Generic | PointerDevice.Finger | PointerDevice.Pen
            onTapped: console.log("clicked")
        }
        TapHandler {

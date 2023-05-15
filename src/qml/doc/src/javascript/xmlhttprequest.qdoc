@@ -200,6 +200,13 @@
 */
 
 /*!
+    \qmlmethod void XMLHttpRequest::overrideMimeType(mime)
+
+    Forces the \c XMLHttpRequest to interpret the data received in the next HTTP response,
+    as if it had the MIME type \a mime, rather than the one provided by the server.
+*/
+
+/*!
     \qmlproperty function XMLHttpRequest::onreadystatechange
 
     Choose a callback function you want to get invoked whenever the \l {XMLHttpRequest::readyState}{readyState} of the \c XMLHttpRequest object changes.
@@ -221,6 +228,13 @@
     \value XMLHttpRequest.DONE Finished processing the request.
 
     \sa {XMLHttpRequest::onreadystatechange}{onreadystatechange}
+*/
+
+/*!
+    \qmlproperty string XMLHttpRequest::responseURL
+    \readonly
+
+    Returns the url that was used to retrieve the response data, after any redirects have occurred.
 */
 
 /*!

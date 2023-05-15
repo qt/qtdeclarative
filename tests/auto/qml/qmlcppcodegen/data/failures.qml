@@ -30,8 +30,6 @@ QtObject {
 
     Component.onCompleted: doesNotExist()
 
-    property string aString: self + "a"
-
     property BirthdayParty party: BirthdayParty {
         onPartyStarted: (foozle) => { objectName = foozle }
     }
@@ -62,4 +60,31 @@ QtObject {
         let a;
         return a;
     }
+
+    function getText(myArr: list<string>): string {
+        myArr.shiftss()
+    }
+
+    function readTracks(metadataList : list<badType>): int {
+        return metadataList.length
+    }
+
+    function dtzFail() : int {
+        for (var a = 10; a < 20; ++a) {
+            switch (a) {
+            case 11:
+                let b = 5;
+                break;
+            case 10:
+                console.log(b);
+                break;
+            }
+        }
+        return a;
+    }
+
+    // TODO: Drop these once we can manipulate QVariant-wrapped lists.
+    property list<withLength> withLengths
+    property int l: withLengths.length
+    property withLength w: withLengths[10]
 }

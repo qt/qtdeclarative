@@ -10,25 +10,8 @@
 QT_USE_NAMESPACE
 using namespace Qt::StringLiterals;
 
-bool TypeDefinitionRequest::fillFrom(QmlLsp::OpenDocument doc, const Parameters &params,
-                                     Response &&response)
-{
-    BaseRequest<Parameters, Response>::fillFrom(doc, params, std::move(response));
-
-    if (!doc.textDocument)
-        return false;
-
-    std::optional<int> targetVersion;
-    {
-        QMutexLocker l(doc.textDocument->mutex());
-        targetVersion = doc.textDocument->version();
-    }
-    minVersion = (targetVersion ? *targetVersion : 0);
-    return true;
-}
-
 QmlGoToTypeDefinitionSupport::QmlGoToTypeDefinitionSupport(QmlLsp::QQmlCodeModel *codeModel)
-    : QQmlBaseModule<TypeDefinitionRequest>(codeModel)
+    : BaseT(codeModel)
 {
 }
 
@@ -50,43 +33,32 @@ void QmlGoToTypeDefinitionSupport::setupCapabilities(
 void QmlGoToTypeDefinitionSupport::registerHandlers(QLanguageServer *,
                                                     QLanguageServerProtocol *protocol)
 {
-    protocol->registerTypeDefinitionRequestHandler([this](const QByteArray &,
-                                                          const RequestParameters &parameters,
-                                                          RequestResponse &&response) {
-        QmlLsp::OpenDocument doc = m_codeModel->openDocumentByUrl(
-                QQmlLSUtils::lspUriToQmlUrl(parameters.textDocument.uri));
-
-        bool checkUpdate = addRequestAndCheckForUpdate(doc, parameters, std::move(response));
-
-        if (checkUpdate)
-            updatedSnapshot(QQmlLSUtils::lspUriToQmlUrl(parameters.textDocument.uri));
-    });
+    protocol->registerTypeDefinitionRequestHandler(getRequestHandler());
 }
 
 void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
 {
     QList<QLspSpecification::Location> results;
-    QScopeGuard onExit([&results, &request]() { request->response.sendResponse(results); });
+    QScopeGuard onExit([&results, &request]() { request->m_response.sendResponse(results); });
 
     QmlLsp::OpenDocument doc;
     {
         doc = m_codeModel->openDocumentByUrl(
-                QQmlLSUtils::lspUriToQmlUrl(request->parameters.textDocument.uri));
+                QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
     }
 
     QQmlJS::Dom::DomItem file = doc.snapshot.validDoc.fileObject(QQmlJS::Dom::GoTo::MostLikely);
     // clear reference cache to resolve latest versions (use a local env instead?)
     if (auto envPtr = file.environment().ownerAs<QQmlJS::Dom::DomEnvironment>())
         envPtr->clearReferenceCache();
-    auto filePtr = file.as<QQmlJS::Dom::QmlFile>();
-    if (!filePtr || !filePtr->isValid()) {
+    if (!file) {
         qWarning() << u"Could not find file in Dom Environment from Codemodel :"_s
                    << doc.snapshot.doc.toString();
         return;
     }
 
-    auto itemsFound = QQmlLSUtils::itemsFromTextLocation(file, request->parameters.position.line,
-                                                         request->parameters.position.character);
+    auto itemsFound = QQmlLSUtils::itemsFromTextLocation(file, request->m_parameters.position.line,
+                                                         request->m_parameters.position.character);
     if (itemsFound.size() == 0) {
         qWarning() << u"Could not find any items at given text location."_s;
         return;
@@ -105,8 +77,8 @@ void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
         qWarning() << u"Could not obtain the base from the item"_s;
         return;
     }
-    QQmlJS::Dom::FileLocations::Tree location = QQmlLSUtils::textLocationFromItem(base);
-    if (!location) {
+    auto locationInfo = QQmlJS::Dom::FileLocations::fileLocationsOf(base);
+    if (!locationInfo) {
         qWarning()
                 << u"Could not obtain the text location from the base item, was it correctly resolved?\nBase was "_s
                 << base.toString();
@@ -121,22 +93,17 @@ void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
     }
 
     QLspSpecification::Location l;
-    l.uri = fileOfBasePtr->canonicalFilePath().toLatin1();
+    l.uri = QUrl::fromLocalFile(fileOfBasePtr->canonicalFilePath()).toEncoded();
 
     const QString qmlCode = fileOfBasePtr->code();
 
-    auto begin = QQmlLSUtils::textRowAndColumnFrom(qmlCode, location->info().fullRegion.begin());
+    auto begin = QQmlLSUtils::textRowAndColumnFrom(qmlCode, locationInfo->fullRegion.begin());
     l.range.start.line = begin.line;
     l.range.start.character = begin.character;
 
-    auto end = QQmlLSUtils::textRowAndColumnFrom(qmlCode, location->info().fullRegion.end());
+    auto end = QQmlLSUtils::textRowAndColumnFrom(qmlCode, locationInfo->fullRegion.end());
     l.range.end.line = end.line;
     l.range.end.character = end.character;
 
     results.append(l);
-}
-
-void QmlGoToTypeDefinitionSupport::updatedSnapshot(const QByteArray &url)
-{
-    processPending(url);
 }

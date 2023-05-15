@@ -1681,15 +1681,20 @@ bool QQuickWidget::event(QEvent *e)
         QScreen *newScreen = screen();
         if (d->offscreenWindow)
             d->offscreenWindow->setScreen(newScreen);
-
+        break;
+    }
+    case QEvent::DevicePixelRatioChange:
         if (d->useSoftwareRenderer || d->outputTexture) {
             // This will check the size taking the devicePixelRatio into account
             // and recreate if needed.
             createFramebufferObject();
             d->render(true);
         }
+        if (d->offscreenWindow) {
+            QEvent dprChangeEvent(QEvent::DevicePixelRatioChange);
+            QGuiApplication::sendEvent(d->offscreenWindow, &dprChangeEvent);
+        }
         break;
-    }
     case QEvent::Show:
     case QEvent::Move:
         d->updatePosition();

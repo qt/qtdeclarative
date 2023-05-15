@@ -25,8 +25,8 @@ DelegateModel {
         }
     }
 
-    // useful object as modelData
-    // useless object as model because the list accessor cannot deal with it yet.
+    // useful but different objects as modelData and model
+    // This is how the array accessor works. We can live with it.
     property var array: [
         {a: "a", b: "a"}, {a: "b", b: "a"}
     ]

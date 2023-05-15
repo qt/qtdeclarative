@@ -219,10 +219,12 @@ protected:
     {
         const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(to);
         if (m_typeResolver->equals(to.storedType(), contained)
+                || m_typeResolver->isNumeric(to.storedType())
                 || to.storedType()->isReferenceType()
                 || m_typeResolver->equals(from, contained)) {
             // If:
             // * the output is not actually wrapped at all, or
+            // * the output is a number (as there are no internals to a number)
             // * the output is a QObject pointer, or
             // * we merely wrap the value into a new container,
             // we can convert by stored type.
@@ -295,6 +297,7 @@ private:
     bool inlineTranslateMethod(const QString &name, int argc, int argv);
     bool inlineMathMethod(const QString &name, int argc, int argv);
     bool inlineConsoleMethod(const QString &name, int argc, int argv);
+    bool inlineArrayMethod(const QString &name, int base, int argc, int argv);
 
     QQmlJSScope::ConstPtr mathObject() const
     {
@@ -306,6 +309,11 @@ private:
     {
         using namespace Qt::StringLiterals;
         return m_typeResolver->jsGlobalObject()->property(u"console"_s).type();
+    }
+
+    QQmlJSScope::ConstPtr arrayPrototype() const
+    {
+        return m_typeResolver->arrayType()->baseType();
     }
 
     QString resolveValueTypeContentPointer(

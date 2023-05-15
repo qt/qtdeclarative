@@ -29,9 +29,9 @@ qt_add_executable(foreign
 )
 
 target_link_libraries(foreign PUBLIC
-    Qt::Core
-    Qt::Qml
-    Qt::Gui
+    Qt6::Core
+    Qt6::Qml
+    Qt6::Gui
     library
 )
 

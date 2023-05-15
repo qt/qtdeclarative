@@ -32,6 +32,8 @@ public:
 protected:
     void componentComplete() override;
 
+    QQuickItem *textControl() const;
+
 private Q_SLOTS:
     void updateAlignment();
 };

@@ -31,7 +31,6 @@ Rectangle {
             width: parent.width
             x: parent. width / 4
             anchors.fill: parent
-            strength: 32
             NumberAnimation on strength{from: 16; to: 64; easing.type: Easing.InOutBounce; duration: 1800; loops: -1}
         }
         //! [0]

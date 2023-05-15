@@ -2358,6 +2358,9 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
 {
     Q_Q(QQuickGridView);
 
+    if (q->size().isEmpty())
+        return false;
+
     int modelIndex = change.index;
     int count = change.count;
 

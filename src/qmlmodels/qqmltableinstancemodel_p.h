@@ -115,6 +115,7 @@ private:
     void destroyModelItem(QQmlDelegateModelItem *modelItem, DestructionMode mode);
 
     void dataChangedCallback(const QModelIndex &begin, const QModelIndex &end, const QVector<int> &roles);
+    void modelAboutToBeResetCallback();
 
     static bool isDoneIncubating(QQmlDelegateModelItem *modelItem);
     static void deleteModelItemLater(QQmlDelegateModelItem *modelItem);

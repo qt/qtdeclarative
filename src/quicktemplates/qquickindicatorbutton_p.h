@@ -38,6 +38,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickIndicatorButton : public QObject
 
 public:
     explicit QQuickIndicatorButton(QObject *parent);
+    ~QQuickIndicatorButton() override;
 
     bool isPressed() const;
     void setPressed(bool pressed);

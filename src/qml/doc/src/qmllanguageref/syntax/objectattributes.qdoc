@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
@@ -621,10 +621,22 @@ This is because the default property of \l Item is its \c data property, and
 any items added to this list for an \l Item are automatically added to its
 list of \l {Item::children}{children}.
 
-Default properties can be useful for reassigning the children of an item. See
-the \l{TabWidget Example}, which uses a default property to
-automatically reassign children of the TabWidget as children of an inner
-ListView.  See also \l {Extending QML}.
+Default properties can be useful for reassigning the children of an item.
+For example:
+
+\qml
+Item {
+    default property alias content: inner.children
+
+    Item {
+        id: inner
+     }
+}
+\endqml
+
+By setting the default property \e alias to \c {inner.children}, any object
+assigned as a child of the outer item is automatically reassigned as a child
+of the inner item.
 
 \section3 Required Properties
 
@@ -671,12 +683,12 @@ An object declaration may define a read-only property using the \c readonly
 keyword, with the following syntax:
 
 \code
-    readonly property <propertyType> <propertyName> : <initialValue>
+    readonly property <propertyType> <propertyName> : <value>
 \endcode
 
-Read-only properties must be assigned a value on initialization. After a
-read-only property is initialized, it no longer possible to give it a value,
-whether from imperative code or otherwise.
+Read-only properties must be assigned a static value or a binding expression on
+initialization. After a read-only property is initialized, you cannot change
+its static value or binding expression anymore.
 
 For example, the code in the \c Component.onCompleted block below is invalid:
 
@@ -684,7 +696,7 @@ For example, the code in the \c Component.onCompleted block below is invalid:
 Item {
     readonly property int someNumber: 10
 
-    Component.onCompleted: someNumber = 20  // doesn't work, causes an error
+    Component.onCompleted: someNumber = 20  // TypeError: Cannot assign to read-only property
 }
 \endqml
 

@@ -25,7 +25,6 @@ Rectangle {
     ImageParticle {
         system: sys1
         source: "qrc:///particleresources/glowdot.png"
-        color: "cyan"
         alpha: 0
         SequentialAnimation on color {
             loops: Animation.Infinite
@@ -73,7 +72,6 @@ Rectangle {
     //! [0]
     ParticleSystem { id: sys2 }
     ImageParticle {
-        color: "cyan"
         system: sys2
         alpha: 0
         SequentialAnimation on color {
@@ -114,7 +112,6 @@ Rectangle {
     ImageParticle {
         source: "qrc:///particleresources/glowdot.png"
         system: sys3
-        color: "orange"
         alpha: 0
         SequentialAnimation on color {
             loops: Animation.Infinite
@@ -155,7 +152,6 @@ Rectangle {
     ImageParticle {
         system: sys4
         source: "qrc:///particleresources/star.png"
-        color: "green"
         alpha: 0
         SequentialAnimation on color {
             loops: Animation.Infinite
@@ -199,12 +195,12 @@ Rectangle {
     Item {
         id: circle
         //anchors.fill: parent
-        property real radius: 0
+        property real radius
         property real dx: root.width / 2
         property real dy: root.height / 2
         property real cx: radius * Math.sin(percent*6.283185307179) + dx
         property real cy: radius * Math.cos(percent*6.283185307179) + dy
-        property real percent: 0
+        property real percent
 
         SequentialAnimation on percent {
             loops: Animation.Infinite
@@ -247,7 +243,7 @@ Rectangle {
         property real dy: root.height / 2
         property real cx: radius * Math.sin(percent*6.283185307179) + dx
         property real cy: radius * Math.cos(percent*6.283185307179) + dy
-        property real percent: 0
+        property real percent
 
         SequentialAnimation on percent {
             loops: Animation.Infinite
@@ -263,7 +259,7 @@ Rectangle {
         property real dy: circle3.cy
         property real cx: radius * Math.sin(percent*6.283185307179) + dx
         property real cy: radius * Math.cos(percent*6.283185307179) + dy
-        property real percent: 0
+        property real percent
 
         SequentialAnimation on percent {
             loops: Animation.Infinite

@@ -31,7 +31,6 @@ class QGfxSourceProxy : public QQuickItem
     Q_PROPERTY(QRectF sourceRect READ sourceRect WRITE setSourceRect NOTIFY sourceRectChanged)
     Q_PROPERTY(bool active READ isActive NOTIFY activeChanged)
     Q_PROPERTY(Interpolation interpolation READ interpolation WRITE setInterpolation NOTIFY interpolationChanged)
-    Q_ENUMS(Interpolation)
 
 public:
     enum class Interpolation {
@@ -39,6 +38,7 @@ public:
         Nearest,
         Linear
     };
+    Q_ENUM(Interpolation)
 
     QGfxSourceProxy(QQuickItem *parentItem = nullptr);
     ~QGfxSourceProxy();

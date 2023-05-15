@@ -422,9 +422,11 @@ void QQmlJSTypeDescriptionReader::readEnum(UiObjectDefinition *ast, const QQmlJS
             readEnumValues(script, &metaEnum);
         } else if (name == QLatin1String("scoped")) {
             metaEnum.setScoped(readBoolBinding(script));
+        } else if (name == QLatin1String("type")) {
+            metaEnum.setTypeName(readStringBinding(script));
         } else {
             addWarning(script->firstSourceLocation(),
-                       tr("Expected only name and values script bindings."));
+                       tr("Expected only name, alias, isFlag, values, scoped, or type."));
         }
     }
 
@@ -437,6 +439,7 @@ void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSM
     QString type;
     bool isConstant = false;
     bool isPointer = false;
+    bool isList = false;
 
     for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
         UiObjectMember *member = it->member;
@@ -458,16 +461,18 @@ void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSM
         } else if (id == QLatin1String("isReadonly")) {
             // ### unhandled
         } else if (id == QLatin1String("isList")) {
-            // ### unhandled
+            isList = readBoolBinding(script);
         } else {
             addWarning(script->firstSourceLocation(),
-                       tr("Expected only name and type script bindings."));
+                       tr("Expected only name, type, isPointer, isConstant, isReadonly, "
+                          "or IsList script bindings."));
         }
     }
 
     QQmlJSMetaParameter p(name, type);
     p.setTypeQualifier(isConstant ? QQmlJSMetaParameter::Const : QQmlJSMetaParameter::NonConst);
     p.setIsPointer(isPointer);
+    p.setIsList(isList);
     metaMethod->addParameter(std::move(p));
 }
 

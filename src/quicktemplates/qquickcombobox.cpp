@@ -2064,7 +2064,7 @@ void QQuickComboBox::keyReleaseEvent(QKeyEvent *event)
     if (!isEditable()) {
         const auto buttonPressKeys = QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::ButtonPressKeys).value<QList<Qt::Key>>();
         if (buttonPressKeys.contains(key)) {
-            if (!isEditable())
+            if (!isEditable() && isPressed())
                 d->togglePopup(true);
             setPressed(false);
             event->accept();

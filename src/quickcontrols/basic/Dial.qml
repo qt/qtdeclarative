@@ -20,6 +20,8 @@ T.Dial {
         color: control.visualFocus ? control.palette.highlight : control.palette.dark
         progress: control.position
         opacity: control.enabled ? 1 : 0.3
+        startAngle: control.startAngle
+        endAngle: control.endAngle
     }
 
     handle: ColorImage {

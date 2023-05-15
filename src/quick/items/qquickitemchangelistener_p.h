@@ -15,7 +15,7 @@
 // We mean it.
 //
 
-#include <QtCore/private/qglobal_p.h>
+#include <QtQuick/private/qtquickglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -81,10 +81,10 @@ private:
 
 #define QT_QUICK_NEW_GEOMETRY_CHANGED_HANDLING
 
-class QQuickItemChangeListener
+class Q_QUICK_PRIVATE_EXPORT QQuickItemChangeListener
 {
 public:
-    virtual ~QQuickItemChangeListener() {}
+    virtual ~QQuickItemChangeListener();
 
     virtual void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF & /* oldGeometry */) {}
     virtual void itemSiblingOrderChanged(QQuickItem *) {}

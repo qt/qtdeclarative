@@ -1321,6 +1321,13 @@ void QQuickDeliveryAgentPrivate::handleWindowDeactivate(QQuickWindow *win)
     }
 }
 
+void QQuickDeliveryAgentPrivate::handleWindowHidden(QQuickWindow *win)
+{
+    qCDebug(lcFocus)  << "hidden" << win->title();
+    clearHover();
+    lastMousePosition = QPointF();
+}
+
 bool QQuickDeliveryAgentPrivate::allUpdatedPointsAccepted(const QPointerEvent *ev)
 {
     for (auto &point : ev->points()) {

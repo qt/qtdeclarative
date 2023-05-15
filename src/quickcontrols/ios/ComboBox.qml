@@ -1,6 +1,8 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
@@ -26,11 +28,14 @@ T.ComboBox {
 
     delegate: MenuItem {
         width: ListView.view.width
-        text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
+        text: model[control.textRole]
         palette.text: control.palette.text
         palette.highlightedText: control.palette.highlightedText
         hoverEnabled: control.hoverEnabled
         checked: control.currentIndex === index
+
+        required property var model
+        required property int index
 
         readonly property bool isSingleItem: control.count === 1
         readonly property bool isFirstItem: !isSingleItem && index === 0

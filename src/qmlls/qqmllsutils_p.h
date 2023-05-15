@@ -38,7 +38,6 @@ public:
     static QQmlLSUtilsTextPosition textRowAndColumnFrom(const QString &code, qsizetype offset);
     static QList<QQmlLSUtilsItemLocation> itemsFromTextLocation(QQmlJS::Dom::DomItem file, int line,
                                                                 int character);
-    static QQmlJS::Dom::FileLocations::Tree textLocationFromItem(QQmlJS::Dom::DomItem qmlObject);
     static QByteArray lspUriToQmlUrl(const QByteArray &uri);
     static QByteArray qmlUrlToLspUri(const QByteArray &url);
     static QQmlJS::Dom::DomItem baseObject(QQmlJS::Dom::DomItem qmlObject);

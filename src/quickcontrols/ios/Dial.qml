@@ -64,8 +64,8 @@ T.Dial {
                     centerY: control.background.children[0].height / 2
                     radiusX: control.background.children[0].width / 2 - 2
                     radiusY: radiusX
-                    startAngle: -230
-                    sweepAngle: 140 + control.angle
+                    startAngle: control.startAngle - 90
+                    sweepAngle: control.angle - control.startAngle
                 }
             }
         }

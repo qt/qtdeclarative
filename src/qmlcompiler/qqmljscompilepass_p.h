@@ -32,6 +32,7 @@ public:
     enum RegisterShortcuts {
         InvalidRegister = -1,
         Accumulator = QV4::CallData::Accumulator,
+        This = QV4::CallData::This,
         FirstArgument = QV4::CallData::OffsetCount
     };
 
@@ -41,11 +42,13 @@ public:
     {
         QQmlJSRegisterContent content;
         bool canMove = false;
+        bool affectedBySideEffects = false;
 
     private:
         friend bool operator==(const VirtualRegister &a, const VirtualRegister &b)
         {
-            return a.content == b.content && a.canMove == b.canMove;
+            return a.content == b.content && a.canMove == b.canMove
+                && a.affectedBySideEffects == b.affectedBySideEffects;
         }
     };
 
@@ -117,7 +120,11 @@ public:
         void addReadRegister(int registerIndex, const QQmlJSRegisterContent &reg)
         {
             Q_ASSERT(isRename() || reg.isConversion());
-            m_readRegisters[registerIndex].content = reg;
+            const VirtualRegister &source = registers[registerIndex];
+            VirtualRegister &target = m_readRegisters[registerIndex];
+            target.content = reg;
+            target.canMove = source.canMove;
+            target.affectedBySideEffects = source.affectedBySideEffects;
         }
 
         void addReadAccumulator(const QQmlJSRegisterContent &reg)
@@ -143,6 +150,12 @@ public:
             return it != m_readRegisters.end() && it->second.canMove;
         }
 
+        bool isRegisterAffectedBySideEffects(int registerIndex) const
+        {
+            auto it = m_readRegisters.find(registerIndex);
+            return it != m_readRegisters.end() && it->second.affectedBySideEffects;
+        }
+
         QQmlJSRegisterContent readAccumulator() const
         {
             return readRegister(Accumulator);
@@ -154,10 +167,24 @@ public:
         }
 
         bool hasSideEffects() const { return m_hasSideEffects; }
-        void setHasSideEffects(bool hasSideEffects) { m_hasSideEffects = hasSideEffects; }
+        void setHasSideEffects(bool hasSideEffects) {
+            m_hasSideEffects = hasSideEffects;
+            if (!hasSideEffects)
+                return;
+
+            for (auto it = registers.begin(), end = registers.end(); it != end; ++it)
+                it.value().affectedBySideEffects = true;
+        }
 
         bool isRename() const { return m_isRename; }
         void setIsRename(bool isRename) { m_isRename = isRename; }
+
+        int renameSourceRegisterIndex() const
+        {
+            Q_ASSERT(m_isRename);
+            Q_ASSERT(m_readRegisters.size() == 1);
+            return m_readRegisters.begin().key();
+        }
 
     private:
         VirtualRegisters m_readRegisters;
@@ -221,6 +248,7 @@ protected:
 
         // Usually the initial accumulator type is the output of the previous instruction, but ...
         if (oldState.changedRegisterIndex() != InvalidRegister) {
+            newState.registers[oldState.changedRegisterIndex()].affectedBySideEffects = false;
             newState.registers[oldState.changedRegisterIndex()].content
                     = oldState.changedRegister();
         }

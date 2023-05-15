@@ -308,7 +308,7 @@ QFont QQuickPopupItem::defaultFont() const
 QAccessible::Role QQuickPopupItem::accessibleRole() const
 {
     Q_D(const QQuickPopupItem);
-    return d->popup->accessibleRole();
+    return d->popup->effectiveAccessibleRole();
 }
 
 void QQuickPopupItem::accessibilityActiveChanged(bool active)

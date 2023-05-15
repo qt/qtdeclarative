@@ -513,7 +513,7 @@ void tst_qquicktreeview::expandRecursivelyChild()
 
     WAIT_UNTIL_POLISHED;
 
-    const bool rowToExpandDepth = treeView->depth(rowToExpand);
+    const int rowToExpandDepth = treeView->depth(rowToExpand);
     const int effectiveMaxDepth = depth != -1 ? rowToExpandDepth + depth : model->maxDepth();
 
     // Check that none of the rows before rowToExpand are expanded

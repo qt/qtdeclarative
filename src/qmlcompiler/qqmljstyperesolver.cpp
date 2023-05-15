@@ -49,18 +49,12 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     m_varType = builtinTypes.type(u"QVariant"_s).scope;
     m_jsValueType = builtinTypes.type(u"QJSValue"_s).scope;
     m_listPropertyType = builtinTypes.type(u"QQmlListProperty<QObject>"_s).scope;
+    m_qObjectType = builtinTypes.type(u"QObject"_s).scope;
     m_qObjectListType = builtinTypes.type(u"QObjectList"_s).scope;
 
     QQmlJSScope::Ptr emptyType = QQmlJSScope::create();
     emptyType->setAccessSemantics(QQmlJSScope::AccessSemantics::None);
     m_emptyType = emptyType;
-
-    QQmlJSScope::Ptr emptyListType = QQmlJSScope::create();
-    emptyListType->setInternalName(u"void*"_s);
-    emptyListType->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
-    QQmlJSScope::resolveTypes(emptyListType, builtinTypes);
-    Q_ASSERT(!emptyListType->extensionType().scope.isNull());
-    m_emptyListType = emptyListType;
 
     QQmlJSScope::Ptr jsPrimitiveType = QQmlJSScope::create();
     jsPrimitiveType->setInternalName(u"QJSPrimitiveValue"_s);
@@ -141,8 +135,10 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::typeFromAST(QQmlJS::AST::Type *type) c
     const QString typeId = QmlIR::IRBuilder::asString(type->typeId);
     if (!type->typeArgument)
         return m_imports.type(typeId).scope;
-    if (typeId == u"list"_s)
-        return typeForName(type->typeArgument->toString())->listType();
+    if (typeId == u"list"_s) {
+        if (const QQmlJSScope::ConstPtr typeArgument = typeForName(type->typeArgument->toString()))
+            return typeArgument->listType();
+    }
     return QQmlJSScope::ConstPtr();
 }
 
@@ -519,6 +515,19 @@ bool QQmlJSTypeResolver::adjustTrackedType(
     return true;
 }
 
+void QQmlJSTypeResolver::adjustOriginalType(
+        const QQmlJSScope::ConstPtr &tracked, const QQmlJSScope::ConstPtr &conversion) const
+{
+    if (m_cloneMode == QQmlJSTypeResolver::DoNotCloneTypes)
+        return;
+
+    const auto it = m_trackedTypes->find(tracked);
+    Q_ASSERT(it != m_trackedTypes->end());
+
+    it->original = conversion;
+    *it->clone = std::move(*QQmlJSScope::clone(conversion));
+}
+
 void QQmlJSTypeResolver::generalizeType(const QQmlJSScope::ConstPtr &type) const
 {
     if (m_cloneMode == QQmlJSTypeResolver::DoNotCloneTypes)
@@ -681,10 +690,10 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
     if (auto commonBase = commonBaseType(a, b))
         return commonBase;
 
-    if (equals(a, nullType()) && b->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
+    if ((equals(a, nullType()) || equals(a, boolType())) && b->isReferenceType())
         return b;
 
-    if (equals(b, nullType()) && a->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
+    if ((equals(b, nullType()) || equals(b, boolType())) && a->isReferenceType())
         return a;
 
     return varType();
@@ -805,26 +814,18 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
     if (type->scopeType() == QQmlJSScope::EnumScope)
         return type->baseType();
 
-    if (isPrimitive(type) || equals(type, m_jsValueType) || equals(type, m_urlType)
-        || equals(type, m_dateTimeType) || equals(type, m_dateType) || equals(type, m_timeType)
-        || equals(type, m_variantListType) || equals(type, m_variantMapType)
-        || equals(type, m_varType) || equals(type, m_stringListType)
-        || equals(type, m_emptyListType) || equals(type, m_byteArrayType)) {
+    if (isPrimitive(type))
         return type;
-    }
 
-    if (type->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
-        if (const QQmlJSScope::ConstPtr valueType = type->valueType()) {
-            switch (valueType->accessSemantics()) {
-            case QQmlJSScope::AccessSemantics::Value:
-                return genericType(valueType)->listType();
-            case QQmlJSScope::AccessSemantics::Reference:
-                return m_qObjectListType;
-            default:
-                break;
-            }
-        }
-        return m_variantListType;
+    for (const QQmlJSScope::ConstPtr &builtin : {
+                 m_realType, m_floatType, m_int8Type, m_uint8Type, m_int16Type, m_uint16Type,
+                 m_int32Type, m_uint32Type, m_int64Type, m_uint64Type, m_boolType, m_stringType,
+                 m_stringListType, m_byteArrayType, m_urlType, m_dateTimeType, m_dateType,
+                 m_timeType, m_variantListType, m_variantMapType, m_varType, m_jsValueType,
+                 m_jsPrimitiveType, m_listPropertyType, m_qObjectType, m_qObjectListType,
+                 m_metaObjectType }) {
+        if (equals(type, builtin) || equals(type, builtin->listType()))
+            return type;
     }
 
     return m_varType;
@@ -1048,6 +1049,22 @@ QQmlJSMetaMethod QQmlJSTypeResolver::selectConstructor(
     return candidate;
 }
 
+bool QQmlJSTypeResolver::areEquivalentLists(
+        const QQmlJSScope::ConstPtr &a, const QQmlJSScope::ConstPtr &b) const
+{
+    const QQmlJSScope::ConstPtr equivalentLists[2][2] = {
+        { m_stringListType, m_stringType->listType() },
+        { m_variantListType, m_varType->listType() }
+    };
+
+    for (const auto eq : equivalentLists) {
+        if ((equals(a, eq[0]) && equals(b, eq[1])) || (equals(a, eq[1]) && equals(b, eq[0])))
+            return true;
+    }
+
+    return false;
+}
+
 bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
         const QQmlJSScope::ConstPtr &from, const QQmlJSScope::ConstPtr &to) const
 {
@@ -1062,13 +1079,17 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     if (isNumeric(from) && equals(to, m_boolType))
         return true;
     if (from->accessSemantics() == QQmlJSScope::AccessSemantics::Reference
-            && equals(to, m_boolType)) {
+            && (equals(to, m_boolType) || equals(to, m_stringType))) {
         return true;
     }
 
     // Yes, our String has number constructors.
     if (isNumeric(from) && equals(to, m_stringType))
         return true;
+
+    // We can convert strings to numbers, but not to enums
+    if (equals(from, m_stringType) && isNumeric(to))
+        return to->scopeType() != QQmlJSScope::ScopeType::EnumScope;
 
     // We can always convert between strings and urls.
     if ((equals(from, m_stringType) && equals(to, m_urlType))
@@ -1114,7 +1135,7 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     if (equals(to, m_jsPrimitiveType))
         return isPrimitive(from);
 
-    if (equals(from, m_emptyListType) || equals(from, m_variantListType))
+    if (equals(from, m_variantListType))
         return to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence;
 
     const bool matchByName = !to->isComposite();
@@ -1133,6 +1154,15 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     // We can convert everything to bool.
     if (equals(to, m_boolType))
         return true;
+
+    if (areEquivalentLists(from, to))
+        return true;
+
+    if (from->isListProperty()
+            && to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
+            && canConvertFromTo(from->valueType(), to->valueType())) {
+        return true;
+    }
 
     return selectConstructor(to, from, nullptr).isValid();
 }

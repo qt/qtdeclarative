@@ -14,6 +14,13 @@ static QElapsedTimer frameTimer;
 static qint64 preprocessTime;
 static qint64 updatePassTime;
 
+Q_TRACE_POINT(qtquick, QSG_preprocess_entry)
+Q_TRACE_POINT(qtquick, QSG_preprocess_exit)
+Q_TRACE_POINT(qtquick, QSG_update_entry)
+Q_TRACE_POINT(qtquick, QSG_update_exit)
+Q_TRACE_POINT(qtquick, QSG_renderScene_entry)
+Q_TRACE_POINT(qtquick, QSG_renderScene_exit)
+
 #ifndef QT_NO_DEBUG
 bool _q_sg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
 #endif

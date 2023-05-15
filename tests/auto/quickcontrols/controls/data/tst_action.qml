@@ -53,24 +53,34 @@ TestCase {
     Component {
         id: buttonAndMenu
         Item {
+            objectName: "container"
+
             property alias button: button
             property alias menu: menu
             property alias menuItem: menuItem
             property alias action: sharedAction
             property var lastSource
+
             Action {
                 id: sharedAction
+                objectName: "sharedAction"
                 text: "Shared"
                 shortcut: "Ctrl+B"
                 onTriggered: (source) => lastSource = source
             }
             Button {
                 id: button
+                objectName: "button"
                 action: sharedAction
+
                 Menu {
                     id: menu
+                    objectName: "menu"
+                    contentItem.objectName: "menuContentItem"
+
                     MenuItem {
                         id: menuItem
+                        objectName: "menuItem"
                         action: sharedAction
                     }
                 }

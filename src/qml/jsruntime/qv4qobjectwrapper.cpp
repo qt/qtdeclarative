@@ -551,14 +551,26 @@ void QObjectWrapper::setProperty(
 
     if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
         if (auto binding = QQmlPropertyPrivate::binding(object, QQmlPropertyIndex(property->coreIndex()))) {
-            Q_ASSERT(binding->kind() == QQmlAbstractBinding::QmlBinding);
-            const auto qmlBinding = static_cast<const QQmlBinding*>(binding);
             const auto stackFrame = engine->currentStackFrame;
-            qCInfo(lcBindingRemoval,
-                   "Overwriting binding on %s::%s at %s:%d that was initially bound at %s",
-                   object->metaObject()->className(), qPrintable(property->name(object)),
-                   qPrintable(stackFrame->source()), stackFrame->lineNumber(),
-                   qPrintable(qmlBinding->expressionIdentifier()));
+            switch (binding->kind()) {
+            case QQmlAbstractBinding::QmlBinding: {
+                const auto qmlBinding = static_cast<const QQmlBinding*>(binding);
+                qCInfo(lcBindingRemoval,
+                       "Overwriting binding on %s::%s at %s:%d that was initially bound at %s",
+                       object->metaObject()->className(), qPrintable(property->name(object)),
+                       qPrintable(stackFrame->source()), stackFrame->lineNumber(),
+                       qPrintable(qmlBinding->expressionIdentifier()));
+                break;
+            }
+            case QQmlAbstractBinding::ValueTypeProxy:
+            case QQmlAbstractBinding::PropertyToPropertyBinding: {
+                qCInfo(lcBindingRemoval,
+                       "Overwriting binding on %s::%s at %s:%d",
+                       object->metaObject()->className(), qPrintable(property->name(object)),
+                       qPrintable(stackFrame->source()), stackFrame->lineNumber());
+                break;
+            }
+            }
         }
     }
     QQmlPropertyPrivate::removeBinding(object, QQmlPropertyIndex(property->coreIndex()));
@@ -2135,6 +2147,11 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
                 return true;
             }
 
+            if (const QmlListWrapper *listWrapper = value.as<QmlListWrapper>()) {
+                *qlistPtr = listWrapper->d()->property().toList<QList<QObject *>>();
+                return true;
+            }
+
             qlistPtr->append(nullptr);
             return value.isNullOrUndefined();
         }
@@ -2323,14 +2340,25 @@ ReturnedValue QObjectMethod::create(
     else
         method->d()->setObject(object);
 
-    if (cloneFrom->methodCount == 1) {
+    Q_ASSERT(method->d()->methods == nullptr);
+    switch (cloneFrom->methodCount) {
+    case 0:
+        Q_ASSERT(cloneFrom->methods == nullptr);
+        break;
+    case 1:
+        Q_ASSERT(cloneFrom->methods
+                 == reinterpret_cast<QQmlPropertyData *>(&cloneFrom->_singleMethod));
         method->d()->methods = reinterpret_cast<QQmlPropertyData *>(&method->d()->_singleMethod);
         *method->d()->methods = *cloneFrom->methods;
-    } else {
+        break;
+    default:
+        Q_ASSERT(cloneFrom->methods != nullptr);
         method->d()->methods = new QQmlPropertyData[cloneFrom->methodCount];
         memcpy(method->d()->methods, cloneFrom->methods,
                cloneFrom->methodCount * sizeof(QQmlPropertyData));
+        break;
     }
+
     return method.asReturnedValue();
 }
 
@@ -2456,8 +2484,10 @@ QString Heap::QObjectMethod::name() const
 
 void Heap::QObjectMethod::ensureMethodsCache(const QMetaObject *thisMeta)
 {
-    if (methods)
+    if (methods) {
+        Q_ASSERT(methodCount > 0);
         return;
+    }
 
     const QMetaObject *mo = metaObject();
 
@@ -2494,6 +2524,8 @@ void Heap::QObjectMethod::ensureMethodsCache(const QMetaObject *thisMeta)
         *methods = resolvedMethods.at(0);
         methodCount = 1;
     }
+
+    Q_ASSERT(methodCount > 0);
 }
 
 static QObject *qObject(const Value *v)
@@ -2620,6 +2652,7 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
     };
 
     if (d()->methodCount != 1) {
+        Q_ASSERT(d()->methodCount > 0);
         method = ResolveOverloaded(object, d()->methods, d()->methodCount, v4, callData);
         if (method == nullptr)
             return Encode::undefined();

@@ -1564,11 +1564,11 @@ void tst_QQuickMouseArea::disableParentOnPress() // QTBUG-39806 and QTBUG-103788
 
     QQuickTest::pointerPress(device, &window, 0, p);
     QTRY_COMPARE(parentEnabledSpy.size(), 1);
-    QCOMPARE(root->isEnabled(), false);
-    QCOMPARE(mouseArea->isEnabled(), true); // enabled is independent, unfortunately (inverse of QTBUG-38364)
-    QCOMPARE(QQuickItemPrivate::get(mouseArea)->effectiveEnable, false);
+    QVERIFY(!root->isEnabled());
+    QVERIFY(mouseArea->isEnabled()); // enabled is independent, unfortunately (inverse of QTBUG-38364)
+    QVERIFY(!QQuickItemPrivate::get(mouseArea)->effectiveEnable);
     // bug fix: it knows it got effectively disabled, so now it's no longer pressed
-    QCOMPARE(mouseArea->isPressed(), false);
+    QVERIFY(!mouseArea->isPressed());
     QCOMPARE(canceledSpy.size(), 1); // ...because the press was canceled
     QCOMPARE(pressedChangedSpy.size(), 2); // kerchunk
     QQuickTest::pointerRelease(device, &window, 0, p);
@@ -1576,9 +1576,9 @@ void tst_QQuickMouseArea::disableParentOnPress() // QTBUG-39806 and QTBUG-103788
     // now re-enable it and try again
     root->setEnabled(true);
     QQuickTest::pointerPress(device, &window, 0, p);
-    QTRY_COMPARE(root->isEnabled(), false);
-    QCOMPARE(QQuickItemPrivate::get(mouseArea)->effectiveEnable, false);
-    QCOMPARE(mouseArea->isPressed(), false);
+    QTRY_VERIFY(!root->isEnabled());
+    QVERIFY(!QQuickItemPrivate::get(mouseArea)->effectiveEnable);
+    QVERIFY(!mouseArea->isPressed());
     QCOMPARE(canceledSpy.size(), 2);
     QCOMPARE(pressedChangedSpy.size(), 4);
     QQuickTest::pointerRelease(device, &window, 0, p);

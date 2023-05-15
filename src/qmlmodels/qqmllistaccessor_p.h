@@ -34,6 +34,7 @@ public:
 
     qsizetype count() const;
     QVariant at(qsizetype) const;
+    void set(qsizetype, const QVariant &);
 
     enum Type {
         Invalid,

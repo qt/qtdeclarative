@@ -925,6 +925,8 @@ void QQuickStackView::clear(Operation operation)
         return;
     }
 
+    const int oldDepth = d->elements.size();
+
     QScopedValueRollback<bool> modifyingElements(d->modifyingElements, true);
     QScopedValueRollback<QString> operationNameRollback(d->operation, operationName);
 #if QT_CONFIG(quick_viewtransitions)
@@ -937,7 +939,6 @@ void QQuickStackView::clear(Operation operation)
     }
 #endif
 
-    int oldDepth = d->elements.size();
     d->setCurrentItem(nullptr);
     qDeleteAll(d->elements);
     d->elements.clear();

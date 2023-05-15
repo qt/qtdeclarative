@@ -35,7 +35,6 @@ public:
         SO_CustomBase = 0xf00,
         SO_ComplexCustomBase = 0xf000000
     };
-    Q_ENUMS(OptionType)
 
     enum StyleOptionType { Type = SO_Default };
     enum StyleOptionVersion { Version = 1 };
@@ -514,6 +513,8 @@ public:
     int pageStep;
     qreal notchTarget;
     bool dialWrapping;
+    qreal startAngle;
+    qreal endAngle;
 
     QStyleOptionSlider();
     QStyleOptionSlider(const QStyleOptionSlider &other) : QStyleOptionComplex(Version, Type) { *this = other; }

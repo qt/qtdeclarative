@@ -2376,7 +2376,7 @@ bool QQuickItemPrivate::canAcceptTabFocus(QQuickItem *item)
         return true;
 
 #if QT_CONFIG(accessibility)
-    QAccessible::Role role = QQuickItemPrivate::get(item)->accessibleRole();
+    QAccessible::Role role = QQuickItemPrivate::get(item)->effectiveAccessibleRole();
     if (role == QAccessible::EditableText || role == QAccessible::Table || role == QAccessible::List) {
         return true;
     } else if (role == QAccessible::ComboBox || role == QAccessible::SpinBox) {
@@ -3349,6 +3349,22 @@ void QQuickItemPrivate::data_clear(QQmlListProperty<QObject> *property)
     children_clear(&childrenProperty);
 }
 
+void QQuickItemPrivate::data_removeLast(QQmlListProperty<QObject> *property)
+{
+    QQuickItem *item = static_cast<QQuickItem*>(property->object);
+    QQuickItemPrivate *privateItem = QQuickItemPrivate::get(item);
+
+    QQmlListProperty<QQuickItem> childrenProperty = privateItem->children();
+    if (children_count(&childrenProperty) > 0) {
+        children_removeLast(&childrenProperty);
+        return;
+    }
+
+    QQmlListProperty<QObject> resourcesProperty = privateItem->resources();
+    if (resources_count(&resourcesProperty) > 0)
+        resources_removeLast(&resourcesProperty);
+}
+
 QObject *QQuickItemPrivate::resources_at(QQmlListProperty<QObject> *prop, qsizetype index)
 {
     QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
@@ -3385,6 +3401,21 @@ void QQuickItemPrivate::resources_clear(QQmlListProperty<QObject> *prop)
     }
 }
 
+void QQuickItemPrivate::resources_removeLast(QQmlListProperty<QObject> *prop)
+{
+    QQuickItem *quickItem = static_cast<QQuickItem *>(prop->object);
+    QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(quickItem);
+    if (quickItemPrivate->extra.isAllocated()) {//If extra is not allocated resources is empty.
+        QList<QObject *> *resources = &quickItemPrivate->extra->resourcesList;
+        if (resources->isEmpty())
+            return;
+
+        qmlobject_disconnect(resources->last(), QObject, SIGNAL(destroyed(QObject*)),
+                             quickItem, QQuickItem, SLOT(_q_resourceObjectDeleted(QObject*)));
+        resources->removeLast();
+    }
+}
+
 QQuickItem *QQuickItemPrivate::children_at(QQmlListProperty<QQuickItem> *prop, qsizetype index)
 {
     QQuickItemPrivate *p = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
@@ -3418,6 +3449,14 @@ void QQuickItemPrivate::children_clear(QQmlListProperty<QQuickItem> *prop)
     QQuickItemPrivate *p = QQuickItemPrivate::get(that);
     while (!p->childItems.isEmpty())
         p->childItems.at(0)->setParentItem(nullptr);
+}
+
+void QQuickItemPrivate::children_removeLast(QQmlListProperty<QQuickItem> *prop)
+{
+    QQuickItem *that = static_cast<QQuickItem *>(prop->object);
+    QQuickItemPrivate *p = QQuickItemPrivate::get(that);
+    if (!p->childItems.isEmpty())
+        p->childItems.last()->setParentItem(nullptr);
 }
 
 qsizetype QQuickItemPrivate::visibleChildren_count(QQmlListProperty<QQuickItem> *prop)
@@ -3648,10 +3687,16 @@ void QQuickItemPrivate::siblingOrderChanged()
 
 QQmlListProperty<QObject> QQuickItemPrivate::data()
 {
-    return QQmlListProperty<QObject>(q_func(), nullptr, QQuickItemPrivate::data_append,
-                                             QQuickItemPrivate::data_count,
-                                             QQuickItemPrivate::data_at,
-                                             QQuickItemPrivate::data_clear);
+    // Do not synthesize replace().
+    // It would be extremely expensive and wouldn't work with most methods.
+    QQmlListProperty<QObject> result;
+    result.object = q_func();
+    result.append = QQuickItemPrivate::data_append;
+    result.count = QQuickItemPrivate::data_count;
+    result.at = QQuickItemPrivate::data_at;
+    result.clear = QQuickItemPrivate::data_clear;
+    result.removeLast = QQuickItemPrivate::data_removeLast;
+    return result;
 }
 
 /*!
@@ -4991,10 +5036,16 @@ void QQuickItemPrivate::dumpItemTree(int indent) const
 
 QQmlListProperty<QObject> QQuickItemPrivate::resources()
 {
-    return QQmlListProperty<QObject>(q_func(), nullptr, QQuickItemPrivate::resources_append,
-                                             QQuickItemPrivate::resources_count,
-                                             QQuickItemPrivate::resources_at,
-                                             QQuickItemPrivate::resources_clear);
+    // Do not synthesize replace().
+    // It would be extremely expensive and wouldn't work with most methods.
+    QQmlListProperty<QObject> result;
+    result.object = q_func();
+    result.append = QQuickItemPrivate::resources_append;
+    result.count = QQuickItemPrivate::resources_count;
+    result.at = QQuickItemPrivate::resources_at;
+    result.clear = QQuickItemPrivate::resources_clear;
+    result.removeLast = QQuickItemPrivate::resources_removeLast;
+    return result;
 }
 
 /*!
@@ -5016,11 +5067,16 @@ QQmlListProperty<QObject> QQuickItemPrivate::resources()
 */
 QQmlListProperty<QQuickItem> QQuickItemPrivate::children()
 {
-    return QQmlListProperty<QQuickItem>(q_func(), nullptr, QQuickItemPrivate::children_append,
-                                             QQuickItemPrivate::children_count,
-                                             QQuickItemPrivate::children_at,
-                                             QQuickItemPrivate::children_clear);
-
+    // Do not synthesize replace().
+    // It would be extremely expensive and wouldn't work with most methods.
+    QQmlListProperty<QQuickItem> result;
+    result.object = q_func();
+    result.append = QQuickItemPrivate::children_append;
+    result.count = QQuickItemPrivate::children_count;
+    result.at = QQuickItemPrivate::children_at;
+    result.clear = QQuickItemPrivate::children_clear;
+    result.removeLast = QQuickItemPrivate::children_removeLast;
+    return result;
 }
 
 /*!
@@ -6322,7 +6378,11 @@ void QQuickItem::setOpacity(qreal newOpacity)
 
     \note This property's value is only affected by changes to this property or
     the parent's \c visible property. It does not change, for example, if this
-    item moves off-screen, or if the \l opacity changes to 0.
+    item moves off-screen, or if the \l opacity changes to 0. However, for
+    historical reasons, this property is true after the item's construction, even
+    if the item hasn't been added to a scene yet. Changing or reading this
+    property of an item that has not been added to a scene might not produce
+    the expected results.
 
     \note The notification signal for this property gets emitted during destruction
     of the visual parent. C++ signal handlers cannot assume that items in the
@@ -9727,13 +9787,20 @@ QQuickItemPrivate::ExtraData::ExtraData()
 
 
 #if QT_CONFIG(accessibility)
-QAccessible::Role QQuickItemPrivate::accessibleRole() const
+QAccessible::Role QQuickItemPrivate::effectiveAccessibleRole() const
 {
     Q_Q(const QQuickItem);
-    QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, false));
-    if (accessibleAttached)
-        return accessibleAttached->role();
+    auto *attached = qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, false);
+    auto role = QAccessible::NoRole;
+    if (auto *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(attached))
+        role = accessibleAttached->role();
+    if (role == QAccessible::NoRole)
+        role = accessibleRole();
+    return role;
+}
 
+QAccessible::Role QQuickItemPrivate::accessibleRole() const
+{
     return QAccessible::NoRole;
 }
 #endif
@@ -9807,6 +9874,9 @@ QPointF QQuickItem::mapToGlobal(qreal x, qreal y) const
 //! \internal
 QPointF QQuickItem::mapFromGlobal(qreal x, qreal y) const
 { return mapFromGlobal(QPointF(x, y)); }
+
+//! \internal
+QQuickItemChangeListener::~QQuickItemChangeListener() = default;
 
 QT_END_NAMESPACE
 

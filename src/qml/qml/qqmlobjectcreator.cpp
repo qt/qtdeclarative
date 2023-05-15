@@ -38,6 +38,19 @@ Q_LOGGING_CATEGORY(lcQmlDefaultMethod, "qt.qml.defaultmethod")
 
 QT_USE_NAMESPACE
 
+Q_TRACE_PREFIX(qtqml,
+"namespace QV4 {" \
+"struct ExecutionEngine;" \
+"namespace CompiledData {" \
+"struct CompilationUnit;" \
+"struct Object;" \
+"}}" \
+"class QQmlEngine;"
+)
+
+Q_TRACE_POINT(qtqml, QQmlObjectCreator_createInstance_entry, const QV4::CompiledData::CompilationUnit *compilationUnit, const QV4::CompiledData::Object *object, const QUrl &url)
+Q_TRACE_POINT(qtqml, QQmlObjectCreator_createInstance_exit, const QString &typeName)
+
 QQmlObjectCreator::QQmlObjectCreator(
         QQmlRefPointer<QQmlContextData> parentContext,
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
@@ -889,11 +902,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
     if (_ddata->hasBindingBit(bindingProperty->coreIndex()) && allowedToRemoveBinding) {
         QQmlPropertyPrivate::removeBinding(_bindingTarget, QQmlPropertyIndex(bindingProperty->coreIndex()));
     } else if (bindingProperty->isBindable() && allowedToRemoveBinding) {
-        QList<DeferredQPropertyBinding> &pendingBindings = sharedState.data()->allQPropertyBindings;
-        auto it = std::remove_if(pendingBindings.begin(), pendingBindings.end(), [&](const DeferredQPropertyBinding &deferred) {
-            return deferred.properyIndex == bindingProperty->coreIndex() && deferred.target == _bindingTarget;
-        });
-        pendingBindings.erase(it, pendingBindings.end());
+        removePendingBinding(_bindingTarget, bindingProperty->coreIndex());
     }
 
     if (bindingType == QV4::CompiledData::Binding::Type_Script || binding->isTranslationBinding()) {

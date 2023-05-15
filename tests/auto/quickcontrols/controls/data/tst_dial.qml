@@ -228,29 +228,30 @@ TestCase {
         mousePress(dial, dial.width * 0.25, yPos, Qt.LeftButton);
         var positionAtPress = dial.position;
         mouseMove(dial, dial.width * 0.5, yPos);
-        compare(dial.position, positionAtPress);
+        verify(dial.position < positionAtPress);
         mouseMove(dial, dial.width * 0.75, yPos);
-        compare(dial.position, positionAtPress);
+        verify(dial.position < positionAtPress);
         mouseRelease(dial, dial.width * 0.75, yPos, Qt.LeftButton);
-        compare(dial.position, positionAtPress);
+        verify(dial.position < positionAtPress);
 
         // Try the same thing, but a bit higher.
         yPos = dial.height * 0.6;
         mousePress(dial, dial.width * 0.25, yPos, Qt.LeftButton);
         positionAtPress = dial.position;
         mouseMove(dial, dial.width * 0.5, yPos);
-        compare(dial.position, positionAtPress);
+        verify(dial.position < positionAtPress);
         mouseMove(dial, dial.width * 0.75, yPos);
-        compare(dial.position, positionAtPress);
+        verify(dial.position < positionAtPress);
         mouseRelease(dial, dial.width * 0.75, yPos, Qt.LeftButton);
-        compare(dial.position, positionAtPress);
+        verify(dial.position < positionAtPress);
 
         // Going from below the center of the dial to above it should work (once it gets above the center).
         mousePress(dial, dial.width * 0.25, dial.height * 0.75, Qt.LeftButton);
         positionAtPress = dial.position;
         mouseMove(dial, dial.width * 0.5, dial.height * 0.6);
-        compare(dial.position, positionAtPress);
-        mouseMove(dial, dial.width * 0.75, dial.height * 0.4);
+        verify(dial.position < positionAtPress);
+        mouseMove(dial, dial.width * 0.5, dial.height * 0.4); //move over the top
+        mouseMove(dial, dial.width * 0.75, dial.height * 0.6); //and back down again
         verify(dial.position > positionAtPress);
         mouseRelease(dial, dial.width * 0.75, dial.height * 0.3, Qt.LeftButton);
         verify(dial.position > positionAtPress);
@@ -289,7 +290,8 @@ TestCase {
         positionAtPress = dial.position;
         touch.move(0, dial, dial.width * 0.5, dial.height * 0.6).commit();
         compare(dial.position, positionAtPress);
-        touch.move(0, dial, dial.width * 0.75, dial.height * 0.4).commit();
+        touch.move(0, dial, dial.width * 0.5, dial.height * 0.4).commit(); //move over the top
+        touch.move(0, dial, dial.width * 0.75, dial.height * 0.6).commit(); //and back down again
         verify(dial.position > positionAtPress);
         touch.release(0, dial, dial.width * 0.75, dial.height * 0.3).commit();
         verify(dial.position > positionAtPress);
@@ -434,7 +436,7 @@ TestCase {
             { tag: "NoSnap", snapMode: Dial.NoSnap, from: 0, to: 2, values: [0, 0, 1], positions: [0, 0.5, 0.5] },
             { tag: "SnapAlways (0..2)", snapMode: Dial.SnapAlways, from: 0, to: 2, values: [0.0, 0.0, 1.0], positions: [0.0, 0.5, 0.5] },
             { tag: "SnapAlways (1..3)", snapMode: Dial.SnapAlways, from: 1, to: 3, values: [1.0, 1.0, 2.0], positions: [0.0, 0.5, 0.5] },
-            { tag: "SnapAlways (-1..1)", snapMode: Dial.SnapAlways, from: -1, to: 1, values: [0.0, 0.0, 0.0], positions: [0.5, 0.5, 0.5] },
+            { tag: "SnapAlways (-1..1)", snapMode: Dial.SnapAlways, from: -1, to: 1, values: [0.0, 0.0, 0.0], positions: [immediate ? 0.0 : 0.5, 0.5, 0.5] },
             { tag: "SnapAlways (1..-1)", snapMode: Dial.SnapAlways, from: 1, to: -1, values: [1.0, 1.0, 0.0], positions: [0.0, 0.5, 0.5] },
             { tag: "SnapOnRelease (0..2)", snapMode: Dial.SnapOnRelease, from: 0, to: 2, values: [0.0, 0.0, 1.0], positions: [0.0, 0.5, 0.5] },
             { tag: "SnapOnRelease (1..3)", snapMode: Dial.SnapOnRelease, from: 1, to: 3, values: [1.0, 1.0, 2.0], positions: [0.0, 0.5, 0.5] },
@@ -659,6 +661,170 @@ TestCase {
             // compare as strings to avoid a fuzzy compare; we want an exact match
             compare(""+dial.value, ""+1)
             keyClick(Qt.Key_Right)
+        }
+    }
+
+    function test_startEndAngle_data() {
+        return [
+            {
+                tag: "Default wrap", startAngle: -140, endAngle: 140, from: 0, to: 1, wrap: true,
+                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49, 0.51],
+                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99, 0.99],
+                values: [0.0, 0.5-0.32, 0.5, 0.5+0.32, 1.0, 0.0, 1.0], //140/90*0.5 = 0.32
+                angles: [-140.0, -90.0, 0.0, 90.0, 140.0, -140.0, 140.0],
+                wrapClockwise: 1,
+                wrapCounterClockwise: 1
+            },
+            {
+                tag: "-30..30 wrap", startAngle: -30, endAngle: 30, from: 0, to: 1, wrap: true,
+                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49, 0.51],
+                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99, 0.99],
+                values: [0.0, 0.0, 0.5, 1.0, 1.0, 0.0, 1.0],
+                angles: [-30.0, -30.0, 0.0, 30.0, 30.0, -30.0, 30.0],
+                wrapClockwise: 0, //no wrap if angle < 180
+                wrapCounterClockwise: 0
+            },
+            {
+                tag: "-180..180 wrap", startAngle: -180, endAngle: 180, from: 0, to: 1, wrap: true,
+                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49, 0.51],
+                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99, 0.99],
+                values: [0.0, 0.25, 0.5, 0.75, 1.0, 0.0, 1.0],
+                angles: [-180.0, -90.0, 0.0, 90.0, 180.0, -180.0, 180.0],
+                wrapClockwise: 1,
+                wrapCounterClockwise: 1
+            },
+            {
+                tag: "90..360 wrap", startAngle: 90, endAngle: 360, from: 0, to: 1, wrap: true,
+                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49, 0.5],
+                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99, 0.01],
+                values: [0.33, 0.66, 1.0, 0.0, 0.33, 0.33, 1.0],
+                angles: [180.0, 270.0, 360.0, 90.0, 180.0, 180.0, 360.0],
+                wrapClockwise: 1,
+                wrapCounterClockwise: 1
+            },
+            {
+                tag: "90..450 wrap", startAngle: 90, endAngle: 450, from: 0, to: 1, wrap: true,
+                x:      [0.49, 0.25, 0.5, 0.75, 0.75, 0.51, 0.49, 0.75, 0.75],
+                y:      [0.99, 0.5, 0.01, 0.49, 0.501, 0.99, 0.99, 0.49, 0.501],
+                values: [0.25, 0.5, 0.75, 1.0, 0.0, 0.25, 0.25, 1.0, 0.0],
+                angles: [180.0, 270.0, 360.0, 450.0, 90.0, 180.0, 180.0, 450.0, 90.0],
+                wrapClockwise: 2,
+                wrapCounterClockwise: 1
+            },
+            {
+                tag: "Default nowrap", startAngle: -140, endAngle: 140, from: 0, to: 1, wrap: false,
+                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49],
+                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99],
+                values: [0.0, 0.5-0.32, 0.5, 0.5+0.32, 1.0, 1.0], //140/90*0.5 = 0.32
+                angles: [-140.0, -90.0, 0.0, 90.0, 140.0, 140.0],
+                wrapClockwise: 0,
+                wrapCounterClockwise: 0
+            },
+            {
+                tag: "-30..30 nowrap", startAngle: -30, endAngle: 30, from: 0, to: 1, wrap: false,
+                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49],
+                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99],
+                values: [0.0, 0.0, 0.5, 1.0, 1.0, 1.0],
+                angles: [-30.0, -30.0, 0.0, 30.0, 30.0, 30.0],
+                wrapClockwise: 0,
+                wrapCounterClockwise: 0
+            },
+            {
+                tag: "-180..180 nowrap", startAngle: -180, endAngle: 180, from: 0, to: 1, wrap: false,
+                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49],
+                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99],
+                values: [0.0, 0.25, 0.5, 0.75, 1.0, 1.0],
+                angles: [-180.0, -90.0, 0.0, 90.0, 180.0, 180.0],
+                wrapClockwise: 0,
+                wrapCounterClockwise: 0
+            },
+            {
+                tag: "90..360 nowrap", startAngle: 90, endAngle: 360, from: 0, to: 1, wrap: false,
+                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49],
+                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99],
+                values: [0.33, 0.66, 1.0, 1.0, 1.0, 1.0],
+                angles: [180.0, 270.0, 360.0, 360.0, 360.0, 360.0],
+                wrapClockwise: 0,
+                wrapCounterClockwise: 0
+            }
+        ]
+    }
+
+    function test_startEndAngle(data) {
+        let dial = createTemporaryObject(dialComponent, testCase)
+        verify(dial)
+
+        dial.startAngle = data.startAngle
+        dial.endAngle = data.endAngle
+        dial.from = data.from
+        dial.to = data.to
+        //Give a defined start in case wrap = true
+        dial.value = data.values[0]
+        dial.wrap = data.wrap
+
+        compare(dial.startAngle, data.startAngle)
+        compare(dial.endAngle, data.endAngle)
+
+        var wrappedSpy = signalSpy.createObject(dial, {target: dial, signalName: "wrapped"})
+        verify(wrappedSpy.valid)
+
+        for (let i = 0; i < data.x.length; i++) {
+            mousePress(dial, dial.width * data.x[i], dial.height * 0.5 + dial.width * ( data.y[i] - 0.5))
+            fuzzyCompare(dial.angle, data.angles[i], 3.0)
+            fuzzyCompare(dial.value, data.values[i], 0.1)
+        }
+
+        let clockwiseCount = 0
+        let counterClockwiseCount = 0
+        for (let i = 0; i < wrappedSpy.count; i++) {
+            if (wrappedSpy.signalArguments[i][0] == 0)
+                clockwiseCount++;
+            else
+                counterClockwiseCount++;
+        }
+
+        compare(clockwiseCount, data.wrapClockwise)
+        compare(counterClockwiseCount, data.wrapCounterClockwise)
+
+    }
+
+    function test_startEndAngleWarnings(data) {
+        // Fail on any warning that we don't expect.
+        failOnWarning(/.?/)
+
+        let dial = createTemporaryObject(dialComponent, testCase)
+        verify(dial)
+
+        dial.startAngle = -180.
+        dial.endAngle = 180.
+
+        //provoke warning
+        ignoreWarning(new RegExp("Changing endAngle to avoid overlaps"))
+        dial.startAngle = -270.
+        dial.endAngle = 90.
+
+        compare(dial.startAngle, -270.)
+        compare(dial.endAngle, 90.)
+
+
+        dial.startAngle = -180.
+        dial.endAngle = 180.
+
+        //provoke warning
+        ignoreWarning(new RegExp("Changing startAngle to avoid overlaps"))
+        dial.endAngle = 270.
+        dial.startAngle = -90.
+
+        compare(dial.startAngle, -90.)
+        compare(dial.endAngle, 270.)
+
+        {
+            // Should not warn since we delay the setting of start and end angles to avoid
+            // binding order evaluation conflicts.
+            let dial = createTemporaryObject(dialComponent, testCase, { startAngle: -10, endAngle: 300 })
+            verify(dial)
+            compare(dial.startAngle, -10.)
+            compare(dial.endAngle, 300.)
         }
     }
 }

@@ -102,7 +102,6 @@ Creator.
         \li \l{Calendar Example}
         \li \l{tableview/gameoflife}{TableView}
         \li \l{Qt Quick Examples - Text}{Text and Fonts}
-        \li \l{Qt Quick Examples - Toggle Switch}{Custom Toggle Switch}
         \endlist
     \enddiv
     \div {class="doc-column"}

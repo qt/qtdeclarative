@@ -27,8 +27,8 @@ set_target_properties(default PROPERTIES
 )
 
 target_link_libraries(default PUBLIC
-    Qt::Core
-    Qt::Qml
+    Qt6::Core
+    Qt6::Qml
 )
 
 qt_add_qml_module(default
