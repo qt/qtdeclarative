@@ -562,6 +562,9 @@ private slots:
     void rendererInterfaceWithRenderControl_data();
     void rendererInterfaceWithRenderControl();
 
+    void visibleVsVisibility_data();
+    void visibleVsVisibility();
+
 private:
     QPointingDevice *touchDevice;
     QPointingDevice *touchDeviceWithVelocity;
@@ -4021,6 +4024,42 @@ void tst_qquickwindow::rendererInterfaceWithRenderControl()
     // Now that everything is torn down, go back to the default unspecified-api
     // state, to prevent conflicting with tests that come afterwards.
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Unknown);
+}
+
+void tst_qquickwindow::visibleVsVisibility_data()
+{
+    QTest::addColumn<QUrl>("qmlfile");
+    QTest::addColumn<bool>("expectVisible");
+    QTest::addColumn<bool>("expectConflictingPropertyWarning");
+
+    QTest::newRow("default invisible") << testFileUrl("window.qml") << false << false;
+    QTest::newRow("just visibility") << testFileUrl("maximized.qml") << true << false;
+    // In these conflicting cases, the 'visibility' property "wins" (see QQuickWindowQmlImpl::setWindowVisibility())
+    QTest::newRow("conflicting invisible") << testFileUrl("conflictingVisibleFalse.qml") << true << true;
+    QTest::newRow("conflicting visible") << testFileUrl("conflictingVisibleTrue.qml") << false << true;
+}
+
+void tst_qquickwindow::visibleVsVisibility()
+{
+    QFETCH(QUrl, qmlfile);
+    QFETCH(bool, expectVisible);
+    QFETCH(bool, expectConflictingPropertyWarning);
+
+    const QString warningMsg = qmlfile.toString() + ": Conflicting properties 'visible' and 'visibility'";
+
+    if (expectConflictingPropertyWarning)
+        QTest::ignoreMessage(QtWarningMsg, warningMsg.toUtf8().data());
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(qmlfile);
+    QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+    QVERIFY(created);
+
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
+    QVERIFY(window);
+    QCOMPARE(window->isVisible(), expectVisible);
 }
 
 QTEST_MAIN(tst_qquickwindow)
