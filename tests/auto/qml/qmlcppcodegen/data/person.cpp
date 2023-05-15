@@ -98,3 +98,16 @@ void Person::setCousins(const QList<Person *> &newCousins)
     m_cousins = newCousins;
     emit cousinsChanged();
 }
+
+QRectF Person::area() const
+{
+    return m_area;
+}
+
+void Person::setArea(const QRectF &newArea)
+{
+    if (m_area == newArea)
+        return;
+    m_area = newArea;
+    emit areaChanged();
+}

@@ -8,6 +8,7 @@
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlengine.h>
 #include <QtCore/qproperty.h>
+#include <QtCore/qrect.h>
 
 // Intentionally opaque type
 class Barzle : public QObject {};
@@ -22,6 +23,7 @@ class Person : public QObject
     Q_PROPERTY(QList<Barzle *> barzles READ barzles WRITE setBarzles NOTIFY barzlesChanged FINAL)
     Q_PROPERTY(QList<Person *> cousins READ cousins WRITE setCousins NOTIFY cousinsChanged FINAL)
     Q_PROPERTY(QByteArray data READ data WRITE setData NOTIFY dataChanged FINAL)
+    Q_PROPERTY(QRectF area READ area WRITE setArea NOTIFY areaChanged) // not FINAL
     QML_ELEMENT
 public:
     Person(QObject *parent = nullptr);
@@ -52,6 +54,9 @@ public:
     QList<Person *> cousins() const;
     void setCousins(const QList<Person *> &newCousins);
 
+    QRectF area() const;
+    void setArea(const QRectF &newArea);
+
 signals:
     void nameChanged();
     void shoeSizeChanged();
@@ -65,6 +70,8 @@ signals:
     void objectListHappened(const QList<QObject *> &);
     void variantListHappened(const QList<QVariant> &);
 
+    void areaChanged();
+
 private:
     QString m_name;
     int m_shoeSize;
@@ -72,6 +79,7 @@ private:
     QList<Barzle *> m_barzles;
     QList<Person *> m_cousins;
     QProperty<QByteArray> m_data;
+    QRectF m_area;
 };
 
 class BarzleListRegistration

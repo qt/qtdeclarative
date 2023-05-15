@@ -1186,8 +1186,13 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
     const QQmlJSRegisterContent specific = m_typeResolver->memberType(
                 callBase, m_jsUnitGenerator->lookupName(index));
 
-    // We have checked that in the type propagator.
-    Q_ASSERT(!specific.storedType().isNull());
+    if (specific.storedType().isNull()) {
+        reject(u"SetLookup. Could not find property "
+               + m_jsUnitGenerator->lookupName(index)
+               + u" on type "
+               + callBase.storedType()->internalName());
+        return;
+    }
 
     // Choose a container that can hold both, the "in" accumulator and what we actually want.
     // If the types are all the same because we can all store them as verbatim C++ types,
