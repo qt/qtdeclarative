@@ -23,15 +23,8 @@ qt6_add_qml_module(qmlimageproviderplugin
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
     CLASS_NAME ImageProviderExtensionPlugin
-)
-
-target_sources(qmlimageproviderplugin PRIVATE
-    imageprovider.cpp
-)
-
-set_target_properties(qmlimageproviderplugin PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
+    SOURCES
+        imageprovider.cpp
 )
 
 target_link_libraries(qmlimageproviderplugin PUBLIC
