@@ -257,7 +257,7 @@ protected:
                 break;
             default:
                 if (const QV4::QQmlValueTypeWrapper *vtw = result.as<const QV4::QQmlValueTypeWrapper>()) {
-                    if (vtw->d()->valueType()->metaType() == pd->propType()) {
+                    if (vtw->d()->metaType() == pd->propType()) {
                         return vtw->write(m_target.data(), pd->coreIndex());
                     }
                 }

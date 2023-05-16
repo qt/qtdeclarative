@@ -46,13 +46,13 @@ namespace QV4 {
 Heap::QQmlValueTypeWrapper *Heap::QQmlValueTypeWrapper::detached() const
 {
     return internalClass->engine->memoryManager->allocate<QV4::QQmlValueTypeWrapper>(
-                m_gadgetPtr, m_valueType, m_metaObject, nullptr, -1, NoFlag);
+        m_gadgetPtr, QMetaType(m_metaType), m_metaObject, nullptr, -1, NoFlag);
 }
 
 void Heap::QQmlValueTypeWrapper::destroy()
 {
     if (m_gadgetPtr) {
-        m_valueType->metaType().destruct(m_gadgetPtr);
+        metaType().destruct(m_gadgetPtr);
         ::operator delete(m_gadgetPtr);
     }
     ReferenceObject::destroy();
@@ -61,16 +61,16 @@ void Heap::QQmlValueTypeWrapper::destroy()
 void Heap::QQmlValueTypeWrapper::setData(const void *data)
 {
     if (auto *gadget = gadgetPtr())
-        valueType()->metaType().destruct(gadget);
+        metaType().destruct(gadget);
     if (!gadgetPtr())
-        setGadgetPtr(::operator new(valueType()->metaType().sizeOf()));
-    valueType()->metaType().construct(gadgetPtr(), data);
+        setGadgetPtr(::operator new(metaType().sizeOf()));
+    metaType().construct(gadgetPtr(), data);
 }
 
 QVariant Heap::QQmlValueTypeWrapper::toVariant() const
 {
     Q_ASSERT(gadgetPtr());
-    return QVariant(valueType()->metaType(), gadgetPtr());
+    return QVariant(metaType(), gadgetPtr());
 }
 
 bool Heap::QQmlValueTypeWrapper::setVariant(const QVariant &variant)
@@ -78,7 +78,7 @@ bool Heap::QQmlValueTypeWrapper::setVariant(const QVariant &variant)
     Q_ASSERT(isVariant());
 
     const QMetaType variantReferenceType = variant.metaType();
-    if (variantReferenceType != valueType()->metaType()) {
+    if (variantReferenceType != metaType()) {
         // This is a stale VariantReference.  That is, the variant has been
         // overwritten with a different type in the meantime.
         // We need to modify this reference to the updated value type, if
@@ -86,12 +86,12 @@ bool Heap::QQmlValueTypeWrapper::setVariant(const QVariant &variant)
         if (QQmlMetaType::isValueType(variantReferenceType)) {
             const QMetaObject *mo = QQmlMetaType::metaObjectForValueType(variantReferenceType);
             if (gadgetPtr()) {
-                valueType()->metaType().destruct(gadgetPtr());
+                metaType().destruct(gadgetPtr());
                 ::operator delete(gadgetPtr());
             }
             setGadgetPtr(nullptr);
             setMetaObject(mo);
-            setValueType(QQmlMetaType::valueType(variantReferenceType));
+            setMetaType(variantReferenceType);
             if (!mo)
                 return false;
         } else {
@@ -106,8 +106,8 @@ bool Heap::QQmlValueTypeWrapper::setVariant(const QVariant &variant)
 void *Heap::QQmlValueTypeWrapper::storagePointer()
 {
     if (!gadgetPtr()) {
-        setGadgetPtr(::operator new(valueType()->metaType().sizeOf()));
-        valueType()->metaType().construct(gadgetPtr(), nullptr);
+        setGadgetPtr(::operator new(metaType().sizeOf()));
+        metaType().construct(gadgetPtr(), nullptr);
     }
     return gadgetPtr();
 }
@@ -132,7 +132,7 @@ ReturnedValue QQmlValueTypeWrapper::create(
     // Either we're enforcing the location, then we have to read right away.
     // Or we don't then we lazy-load. In neither case we pass any data.
     Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->allocate<QQmlValueTypeWrapper>(
-                                       nullptr, cloneFrom->valueType(), cloneFrom->metaObject(),
+                                       nullptr, cloneFrom->metaType(), cloneFrom->metaObject(),
                                        object, cloneFrom->property(), cloneFrom->flags()));
     r->d()->setLocation(cloneFrom->function(), cloneFrom->statementIndex());
     if (cloneFrom->enforcesLocation())
@@ -202,15 +202,14 @@ ReturnedValue QQmlValueTypeWrapper::create(
     Scope scope(engine);
     initProto(engine);
 
-    auto valueType = QQmlMetaType::valueType(type);
-    if (!valueType) {
+    if (!type.isValid()) {
         return engine->throwTypeError(QLatin1String("Type %1 is not a value type")
                                       .arg(QString::fromUtf8(type.name())));
     }
 
     // If data is given explicitly, we assume it has just been read from the property
     Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->allocate<QQmlValueTypeWrapper>(
-                                       data, valueType, metaObject, object, property, flags));
+                                       data, type, metaObject, object, property, flags));
     if (CppStackFrame *frame = engine->currentStackFrame)
         r->d()->setLocation(frame->v4Function, frame->statementNumber());
     if (!data && r->d()->enforcesLocation())
@@ -224,15 +223,14 @@ ReturnedValue QQmlValueTypeWrapper::create(
     Scope scope(engine);
     initProto(engine);
 
-    auto valueType = QQmlMetaType::valueType(type);
-    if (!valueType) {
+    if (!type.isValid()) {
         return engine->throwTypeError(QLatin1String("Type %1 is not a value type")
                                       .arg(QString::fromUtf8(type.name())));
     }
 
     Scoped<QQmlValueTypeWrapper> r(
                 scope, engine->memoryManager->allocate<QQmlValueTypeWrapper>(
-                    data, valueType, metaObject, nullptr,  -1, Heap::ReferenceObject::NoFlag));
+                    data, type, metaObject, nullptr,  -1, Heap::ReferenceObject::NoFlag));
     return r->asReturnedValue();
 }
 
@@ -247,7 +245,7 @@ bool QQmlValueTypeWrapper::toGadget(void *data) const
 {
     if (d()->isReference() && !readReferenceValue())
         return false;
-    const QMetaType type = d()->valueType()->metaType();
+    const QMetaType type = d()->metaType();
     type.destruct(data);
     type.construct(data, d()->gadgetPtr());
     return true;
@@ -559,12 +557,12 @@ bool QQmlValueTypeWrapper::isEqual(const QVariant& value) const
 
 int QQmlValueTypeWrapper::typeId() const
 {
-    return d()->valueType()->metaType().id();
+    return d()->metaType().id();
 }
 
 QMetaType QQmlValueTypeWrapper::type() const
 {
-    return d()->valueType()->metaType();
+    return d()->metaType();
 }
 
 bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
@@ -573,9 +571,9 @@ bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
     Q_ALLOCA_DECLARE(void, gadget);
     if (d()->isReference()) {
         if (!d()->gadgetPtr()) {
-            Q_ALLOCA_ASSIGN(void, gadget, d()->valueType()->metaType().sizeOf());
+            Q_ALLOCA_ASSIGN(void, gadget, d()->metaType().sizeOf());
             d()->setGadgetPtr(gadget);
-            d()->valueType()->metaType().construct(d()->gadgetPtr(), nullptr);
+            d()->metaType().construct(d()->gadgetPtr(), nullptr);
             destructGadgetOnExit = true;
         }
         if (!readReferenceValue())
@@ -588,7 +586,7 @@ bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
     QMetaObject::metacall(target, QMetaObject::WriteProperty, propertyIndex, a);
 
     if (destructGadgetOnExit) {
-        d()->valueType()->metaType().destruct(d()->gadgetPtr());
+        d()->metaType().destruct(d()->gadgetPtr());
         d()->setGadgetPtr(nullptr);
     }
     return true;
@@ -625,9 +623,9 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(const FunctionObject *b, con
         RETURN_UNDEFINED();
 
     QString result;
-    if (!QMetaType::convert(w->d()->valueType()->metaType(), w->d()->gadgetPtr(),
+    if (!QMetaType::convert(w->d()->metaType(), w->d()->gadgetPtr(),
                             QMetaType(QMetaType::QString), &result)) {
-        result = QString::fromUtf8(w->d()->valueType()->metaType().name()) + QLatin1Char('(');
+        result = QString::fromUtf8(w->d()->metaType().name()) + QLatin1Char('(');
         const QMetaObject *mo = w->d()->metaObject();
         const int propCount = mo->propertyCount();
         for (int i = 0; i < propCount; ++i) {
