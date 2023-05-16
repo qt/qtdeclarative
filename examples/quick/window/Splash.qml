@@ -24,19 +24,20 @@ Window {
     Image {
         id: splashImage
         source: Images.qtLogo
-        MouseArea {
-            anchors.fill: parent
-            onClicked: Qt.quit()
+        TapHandler {
+            onTapped: splash.exit()
         }
     }
+
+    function exit() {
+        splash.visible = false
+        splash.timeout()
+    }
+
     //! [timer]
     Timer {
-        interval: splash.timeoutInterval; running: true; repeat: false
-        onTriggered: {
-            splash.visible = false
-            splash.timeout()
-        }
+        interval: splash.timeoutInterval; running: splash.visible; repeat: false
+        onTriggered: splash.exit()
     }
     //! [timer]
-    Component.onCompleted: visible = true
 }
