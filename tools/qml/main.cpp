@@ -446,8 +446,8 @@ int main(int argc, char *argv[])
     QCommandLineParser parser;
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
     parser.setOptionsAfterPositionalArgumentsMode(QCommandLineParser::ParseAsPositionalArguments);
-    const QCommandLineOption helpOption = parser.addHelpOption();
-    const QCommandLineOption versionOption = parser.addVersionOption();
+    parser.addHelpOption();
+    parser.addVersionOption();
 #ifdef QT_GUI_LIB
     QCommandLineOption apptypeOption(QStringList() << QStringLiteral("a") << QStringLiteral("apptype"),
         QCoreApplication::translate("main", "Select which application class to use. Default is gui."),
@@ -522,14 +522,7 @@ int main(int argc, char *argv[])
     parser.addPositionalArgument("args",
         QCoreApplication::translate("main", "Arguments after '--' are ignored, but passed through to the application.arguments variable in QML."), "[-- args...]");
 
-    if (!parser.parse(QCoreApplication::arguments())) {
-        qWarning() << parser.errorText();
-        exit(1);
-    }
-    if (parser.isSet(versionOption))
-        parser.showVersion();
-    if (parser.isSet(helpOption))
-        parser.showHelp();
+    parser.process(*app);
     if (parser.isSet(listConfOption))
         listConfFiles();
     if (applicationType == QmlApplicationTypeUnknown) {
