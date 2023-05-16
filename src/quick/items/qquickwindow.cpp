@@ -3382,6 +3382,7 @@ void QQuickWindow::endExternalCommands()
  */
 
 /*!
+    \keyword qml-window-visibility-prop
     \qmlproperty QWindow::Visibility Window::visibility
 
     The screen-occupation state of the window.
@@ -3404,6 +3405,7 @@ void QQuickWindow::endExternalCommands()
 
 /*!
     \qmlattachedproperty QWindow::Visibility Window::visibility
+    \readonly
     \since 5.4
 
     This attached property holds whether the window is currently shown
@@ -3411,7 +3413,7 @@ void QQuickWindow::endExternalCommands()
     hidden. The \c Window attached property can be attached to any Item. If the
     item is not shown in any window, the value will be \l {QWindow::}{Hidden}.
 
-    \sa visible, visibility
+    \sa visible, {qml-window-visibility-prop}{visibility}
 */
 
 /*!
