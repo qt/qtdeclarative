@@ -255,7 +255,10 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
                         auto *typeRef = objectContainer->resolvedType(obj->inheritedTypeNameIndex);
                         Q_ASSERT(typeRef);
                         QQmlPropertyCache::ConstPtr baseTypeCache = typeRef->createPropertyCache();
-                        QQmlError error = createMetaObject(context.referencingObjectIndex, obj, baseTypeCache);
+                        QQmlError error = baseTypeCache
+                            ? createMetaObject(context.referencingObjectIndex, obj, baseTypeCache)
+                            : qQmlCompileError(binding->location, QQmlPropertyCacheCreatorBase::tr(
+                                    "Type cannot be used for 'on' assignment"));
                         if (error.isValid())
                             return error;
                     }
@@ -345,7 +348,13 @@ inline QQmlPropertyCache::ConstPtr QQmlPropertyCacheCreator<ObjectContainer>::pr
             }
         }
 
-        return typeRef->createPropertyCache();
+        if (QQmlPropertyCache::ConstPtr propertyCache = typeRef->createPropertyCache())
+            return propertyCache;
+        *error = qQmlCompileError(
+            obj->location,
+            QQmlPropertyCacheCreatorBase::tr("Type '%1' cannot declare new members.")
+                .arg(stringAt(obj->inheritedTypeNameIndex)));
+        return nullptr;
     } else if (const QV4::CompiledData::Binding *binding = context.instantiatingBinding) {
         if (binding->isAttachedProperty()) {
             auto *typeRef = objectContainer->resolvedType(

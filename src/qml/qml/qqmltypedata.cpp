@@ -273,8 +273,8 @@ static bool addTypeReferenceChecksumsToHash(
         if (typeRef.typeData) {
             const auto unit = typeRef.typeData->compilationUnit()->unitData();
             hash->addData({unit->md5Checksum, sizeof(unit->md5Checksum)});
-        } else if (typeRef.type.isValid()) {
-            const auto propertyCache = QQmlMetaType::propertyCache(typeRef.type.metaObject());
+        } else if (const QMetaObject *mo = typeRef.type.metaObject()) {
+            const auto propertyCache = QQmlMetaType::propertyCache(mo);
             bool ok = false;
             hash->addData(propertyCache->checksum(checksums, &ok));
             if (!ok)
@@ -990,8 +990,12 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                 return qQmlCompileError(resolvedType->location, reason);
             }
 
-            if (qmlType.containsRevisionedAttributes())
-                ref->setTypePropertyCache(QQmlMetaType::propertyCache(qmlType, resolvedType->version));
+            if (qmlType.containsRevisionedAttributes()) {
+                // It can only have (revisioned) properties or methods if it has a metaobject
+                Q_ASSERT(qmlType.metaObject());
+                ref->setTypePropertyCache(
+                    QQmlMetaType::propertyCache(qmlType, resolvedType->version));
+            }
         }
         ref->setVersion(resolvedType->version);
         ref->doDynamicTypeCheck();

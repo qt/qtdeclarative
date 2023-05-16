@@ -137,6 +137,7 @@ QQmlPropertyCache::ConstPtr QQmlMetaTypeData::propertyCache(
     quint8 maxMinorVersion = 0;
 
     const QMetaObject *metaObject = type.metaObject();
+    Q_ASSERT(metaObject);
 
     const QTypeRevision combinedVersion = version.hasMajorVersion()
             ? version

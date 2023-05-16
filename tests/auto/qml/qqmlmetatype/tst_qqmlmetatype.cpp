@@ -53,6 +53,7 @@ private slots:
     void revertValueTypeAnimation();
 
     void clearPropertyCaches();
+    void builtins();
 };
 
 class TestType : public QObject
@@ -736,6 +737,95 @@ void tst_qqmlmetatype::clearPropertyCaches()
     qmlRegisterType<TestType>("ClearPropertyCaches", 1, 0, "B");
     QQmlPropertyCache::ConstPtr newCache = QQmlMetaType::propertyCache(&TestType::staticMetaObject);
     QVERIFY(oldCache.data() != newCache.data());
+}
+
+template<typename T>
+void checkBuiltinBaseType()
+{
+    const QQmlType type = QQmlMetaType::qmlType(QMetaType::fromType<T>());
+    QVERIFY(type.isValid());
+    QCOMPARE(type.typeId(), QMetaType::fromType<T>());
+    QCOMPARE(type.qListTypeId(), QMetaType::fromType<QList<T>>());
+}
+
+template<typename T>
+void checkBuiltinListType()
+{
+    const QQmlType listType = QQmlMetaType::qmlListType(QMetaType::fromType<QList<T>>());
+    QVERIFY(listType.isValid());
+    QVERIFY(listType.isSequentialContainer());
+    QCOMPARE(listType.typeId(), QMetaType::fromType<T>());
+    QCOMPARE(listType.qListTypeId(), QMetaType::fromType<QList<T>>());
+    QCOMPARE(listType.listMetaSequence().valueMetaType(), QMetaType::fromType<T>());
+}
+
+template<typename... T>
+void checkBuiltinTypes()
+{
+    (checkBuiltinBaseType<T>(), ...);
+    (checkBuiltinListType<T>(), ...);
+}
+
+template<typename T>
+void checkNamedBuiltin(const QString &name)
+{
+    QCOMPARE(QQmlMetaType::qmlType("QML/" + name, QTypeRevision::fromVersion(1, 0)),
+             QQmlMetaType::qmlType(QMetaType::fromType<T>()));
+}
+
+template<typename T>
+void checkObjectBuiltin(const QString &name)
+{
+    const QQmlType objectType = QQmlMetaType::qmlType(QMetaType::fromType<T *>());
+    QVERIFY(objectType.isValid());
+    QCOMPARE(objectType.typeId(), QMetaType::fromType<T *>());
+    QCOMPARE(objectType.qListTypeId(), QMetaType::fromType<QQmlListProperty<T>>());
+
+    const QQmlType listType = QQmlMetaType::qmlListType(QMetaType::fromType<QQmlListProperty<T>>());
+    QVERIFY(listType.isValid());
+    QCOMPARE(listType.typeId(), QMetaType::fromType<T *>());
+    QCOMPARE(listType.qListTypeId(), QMetaType::fromType<QQmlListProperty<T>>());
+
+    checkNamedBuiltin<T *>(name);
+}
+
+void tst_qqmlmetatype::builtins()
+{
+    qmlClearTypeRegistrations();
+    QQmlEngine engine; // registers the builtins
+
+    checkBuiltinTypes<
+        QVariant, QJSValue, qint8, quint8, short, ushort, int, uint, qlonglong, qulonglong, float,
+        double, QChar, QString, bool, QDateTime, QDate, QTime, QUrl, QByteArray>();
+
+    checkNamedBuiltin<QVariant>("var");
+    checkNamedBuiltin<QVariant>("variant");
+    checkNamedBuiltin<int>("int");
+    checkNamedBuiltin<double>("double");
+    checkNamedBuiltin<double>("real");
+    checkNamedBuiltin<QString>("string");
+    checkNamedBuiltin<bool>("bool");
+    checkNamedBuiltin<QDateTime>("date");
+    checkNamedBuiltin<QUrl>("url");
+
+#if QT_CONFIG(regularexpression)
+    checkBuiltinBaseType<QRegularExpression>();
+    checkBuiltinListType<QRegularExpression>();
+    checkNamedBuiltin<QRegularExpression>("regexp");
+#endif
+
+    // Can't retrieve this one by metatype
+    const QQmlType voidType = QQmlMetaType::qmlType("QML/void", QTypeRevision::fromVersion(1, 0));
+    QVERIFY(voidType.isValid());
+    QCOMPARE(voidType.typeId(), QMetaType());
+    QCOMPARE(voidType.qListTypeId(), QMetaType());
+
+    // No separate list types
+    checkBuiltinBaseType<std::nullptr_t>();
+    checkBuiltinBaseType<QVariantMap>();
+
+    checkObjectBuiltin<QObject>("QtObject");
+    checkObjectBuiltin<QQmlComponent>("Component");
 }
 
 QTEST_MAIN(tst_qqmlmetatype)

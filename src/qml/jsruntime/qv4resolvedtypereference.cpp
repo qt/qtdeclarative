@@ -55,8 +55,8 @@ QQmlPropertyCache::ConstPtr ResolvedTypeReference::createPropertyCache()
         const QMetaObject *metaObject = m_type.metaObject();
         if (!metaObject) // value type of non-Q_GADGET base with extension
             metaObject = m_type.extensionMetaObject();
-        Q_ASSERT(metaObject);
-        m_typePropertyCache = QQmlMetaType::propertyCache(metaObject, m_version);
+        if (metaObject)
+            m_typePropertyCache = QQmlMetaType::propertyCache(metaObject, m_version);
         return m_typePropertyCache;
     } else {
         Q_ASSERT(m_compilationUnit);
@@ -80,7 +80,10 @@ bool ResolvedTypeReference::addToHash(
 
     } else if (m_type.isValid()) {
         bool ok = false;
-        hash->addData(createPropertyCache()->checksum(checksums, &ok));
+        if (QQmlPropertyCache::ConstPtr propertyCache = createPropertyCache())
+            hash->addData(propertyCache->checksum(checksums, &ok));
+        else
+            Q_ASSERT(m_type.module() == QLatin1String("QML")); // a builtin without metaobject
         return ok;
     }
     if (!m_compilationUnit)

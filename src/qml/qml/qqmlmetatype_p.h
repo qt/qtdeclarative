@@ -213,6 +213,8 @@ public:
         }
     }
 
+    static void registerTypeAlias(int typeId, const QString &name);
+
     static int registerAutoParentFunction(const QQmlPrivate::RegisterAutoParent &autoparent);
     static void unregisterAutoParentFunction(const QQmlPrivate::AutoParentFunction &function);
 

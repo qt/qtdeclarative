@@ -320,6 +320,14 @@ void QQmlMetaType::clearTypeRegistrations()
     data->propertyCaches.clear();
 }
 
+void QQmlMetaType::registerTypeAlias(int typeIndex, const QString &name)
+{
+    QQmlMetaTypeDataPtr data;
+    const QQmlType type = data->types.value(typeIndex);
+    const QQmlTypePrivate *priv = type.priv();
+    data->nameToType.insert(name, priv);
+}
+
 int QQmlMetaType::registerAutoParentFunction(const QQmlPrivate::RegisterAutoParent &function)
 {
     if (function.structVersion > 1)
@@ -1347,9 +1355,12 @@ QQmlPropertyCache::ConstPtr QQmlMetaType::propertyCacheForType(QMetaType metaTyp
         return composite;
 
     const QQmlTypePrivate *type = data->idToType.value(metaType.id());
-    return (type && type->typeId == metaType)
-            ? data->propertyCache(QQmlType(type).metaObject(), type->version)
-            : QQmlPropertyCache::ConstPtr();
+    if (type && type->typeId == metaType) {
+        if (const QMetaObject *mo = QQmlType(type).metaObject())
+            return data->propertyCache(mo, type->version);
+    }
+
+    return QQmlPropertyCache::ConstPtr();
 }
 
 /*!
@@ -1389,8 +1400,11 @@ QQmlPropertyCache::ConstPtr QQmlMetaType::rawPropertyCacheForType(
         return QQmlPropertyCache::ConstPtr();
 
     const QQmlType type(typePriv);
-    if (type.containsRevisionedAttributes())
+    if (type.containsRevisionedAttributes()) {
+        // It can only have (revisioned) properties or methods if it has a metaobject
+        Q_ASSERT(type.metaObject());
         return data->propertyCache(type, version);
+    }
 
     if (const QMetaObject *metaObject = type.metaObject())
         return data->propertyCache(metaObject, version);
@@ -1510,7 +1524,7 @@ QList<QQmlType> QQmlMetaType::qmlTypes()
     const QQmlMetaTypeDataPtr data;
 
     QList<QQmlType> types;
-    for (QQmlTypePrivate *t : data->nameToType)
+    for (const QQmlTypePrivate *t : data->nameToType)
         types.append(QQmlType(t));
 
     return types;
