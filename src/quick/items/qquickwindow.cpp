@@ -3552,6 +3552,9 @@ void QQuickWindow::endExternalCommands()
 
     The active status of the window.
 
+    \snippet qml/windowPalette.qml declaration-and-color
+    \snippet qml/windowPalette.qml closing-brace
+
     \sa requestActivate()
  */
 
@@ -4190,9 +4193,10 @@ void QQuickWindow::setTextRenderType(QQuickWindow::TextRenderType renderType)
     palette which serves as a default for all application windows. You can also set the default palette
     for windows by passing a custom palette to QGuiApplication::setPalette(), before loading any QML.
 
-    ApplicationWindow propagates explicit palette properties to child controls. If you change a specific
-    property on the window's palette, that property propagates to all child controls in the window,
+    Window propagates explicit palette properties to child items and controls,
     overriding any system defaults for that property.
+
+    \snippet qml/windowPalette.qml entire
 
     \sa Item::palette, Popup::palette, ColorGroup, SystemPalette
     //! internal \sa QQuickAbstractPaletteProvider, QQuickPalette
