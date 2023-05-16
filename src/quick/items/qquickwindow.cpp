@@ -3299,8 +3299,10 @@ void QQuickWindow::endExternalCommands()
     whether it's a dialog, popup, or a regular window, and whether it should
     have a title bar, etc.
 
-    The flags which you read from this property might differ from the ones
+    The flags that you read from this property might differ from the ones
     that you set if the requested flags could not be fulfilled.
+
+    \snippet qml/splashWindow.qml entire
 
     \sa Qt::WindowFlags
  */
