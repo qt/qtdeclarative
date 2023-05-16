@@ -39,6 +39,8 @@ QT_BEGIN_NAMESPACE
 
     Note that the Screen type is not valid at Component.onCompleted, because
     the Item or Window has not been displayed on a screen by this time.
+
+    \sa {Qt Quick Examples - Window and Screen}
 */
 
 /*!

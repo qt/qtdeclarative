@@ -3304,7 +3304,7 @@ void QQuickWindow::endExternalCommands()
 
     \snippet qml/splashWindow.qml entire
 
-    \sa Qt::WindowFlags
+    \sa Qt::WindowFlags, {Qt Quick Examples - Window and Screen}
  */
 
 /*!
@@ -3389,10 +3389,12 @@ void QQuickWindow::endExternalCommands()
     visibility property you will always get the actual state, never
     \c AutomaticVisibility.
 
-    When a window is not visible its visibility is Hidden, and setting
+    When a window is not visible, its visibility is \c Hidden, and setting
     visibility to \l {QWindow::}{Hidden} is the same as setting \l visible to \c false.
 
-    \sa visible
+    \snippet qml/windowVisibility.qml entire
+
+    \sa visible, {Qt Quick Examples - Window and Screen}
     \since 5.1
  */
 
