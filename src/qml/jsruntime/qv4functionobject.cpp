@@ -539,13 +539,13 @@ ReturnedValue ArrowFunction::virtualCall(const QV4::FunctionObject *fo, const Va
     switch (function->kind) {
     case Function::AotCompiled:
         return QV4::convertAndCall(
-                    fo->engine(), function->typedFunction, thisObject, argv, argc,
+                    fo->engine(), function->aotCompiledFunction, thisObject, argv, argc,
                     [fo](QObject *thisObject, void **a, const QMetaType *types, int argc) {
             ArrowFunction::virtualCallWithMetaTypes(fo, thisObject, a, types, argc);
         });
     case Function::JsTyped:
         return QV4::coerceAndCall(
-                    fo->engine(), function->typedFunction, thisObject, argv, argc,
+                    fo->engine(), function->aotCompiledFunction, thisObject, argv, argc,
                     [fo](const Value *thisObject, const Value *argv, int argc) {
             return qfoDoCall(fo, thisObject, argv, argc);
         });

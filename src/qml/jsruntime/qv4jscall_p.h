@@ -98,7 +98,7 @@ void populateJSCallArguments(ExecutionEngine *v4, JSCallArguments &jsCall, int a
 
 template<typename Callable>
 ReturnedValue convertAndCall(
-        ExecutionEngine *engine, const QQmlPrivate::TypedFunction *aotFunction,
+        ExecutionEngine *engine, const QQmlPrivate::AOTCompiledFunction *aotFunction,
         const Value *thisObject, const Value *argv, int argc, Callable call)
 {
     const qsizetype numFunctionArguments = aotFunction->argumentTypes.size();
@@ -191,7 +191,7 @@ bool convertAndCall(ExecutionEngine *engine, QObject *thisObject,
 
 template<typename Callable>
 ReturnedValue coerceAndCall(
-        ExecutionEngine *engine, const QQmlPrivate::TypedFunction *typedFunction,
+        ExecutionEngine *engine, const QQmlPrivate::AOTCompiledFunction *typedFunction,
         const Value *thisObject, const Value *argv, int argc, Callable call)
 {
     Scope scope(engine);

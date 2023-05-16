@@ -178,10 +178,10 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
             = qEnvironmentVariableIsSet("QV4_FORCE_INTERPRETER")
             || !(engine->diskCacheOptions() & ExecutionEngine::DiskCache::AotNative);
 
-    const QQmlPrivate::TypedFunction *aotFunction
+    const QQmlPrivate::AOTCompiledFunction *aotFunction
             = ignoreAotCompiledFunctions ? nullptr : aotCompiledFunctions;
 
-    auto advanceAotFunction = [&](int i) -> const QQmlPrivate::TypedFunction * {
+    auto advanceAotFunction = [&](int i) -> const QQmlPrivate::AOTCompiledFunction * {
         if (aotFunction) {
             if (aotFunction->functionPtr) {
                 if (aotFunction->extraData == i)

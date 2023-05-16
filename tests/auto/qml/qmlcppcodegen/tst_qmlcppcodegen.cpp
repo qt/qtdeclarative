@@ -200,7 +200,7 @@ static QByteArray arg1()
 
 namespace QmlCacheGeneratedCode {
 namespace _qt_qml_TestTypes_failures_qml {
-extern const QQmlPrivate::TypedFunction aotBuiltFunctions[];
+extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];
 }
 }
 

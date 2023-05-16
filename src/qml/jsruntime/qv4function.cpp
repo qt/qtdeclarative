@@ -61,14 +61,14 @@ ReturnedValue Function::call(
     switch (kind) {
     case AotCompiled:
         return QV4::convertAndCall(
-                    context->engine(), typedFunction, thisObject, argv, argc,
+                    context->engine(), aotCompiledFunction, thisObject, argv, argc,
                     [this, context](
                         QObject *thisObject, void **a, const QMetaType *types, int argc) {
             call(thisObject, a, types, argc, context);
         });
     case JsTyped:
         return QV4::coerceAndCall(
-                    context->engine(), typedFunction, thisObject, argv, argc,
+                    context->engine(), aotCompiledFunction, thisObject, argv, argc,
                     [this, context](const Value *thisObject, const Value *argv, int argc) {
             return doCall(this, thisObject, argv, argc, context);
         });
@@ -81,7 +81,7 @@ ReturnedValue Function::call(
 
 Function *Function::create(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                            const CompiledData::Function *function,
-                           const QQmlPrivate::TypedFunction *aotFunction)
+                           const QQmlPrivate::AOTCompiledFunction *aotFunction)
 {
     return new Function(engine, unit, function, aotFunction);
 }
@@ -93,13 +93,13 @@ void Function::destroy()
 
 Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                    const CompiledData::Function *function,
-                   const QQmlPrivate::TypedFunction *aotFunction)
+                   const QQmlPrivate::AOTCompiledFunction *aotFunction)
     : FunctionData(unit)
     , compiledFunction(function)
     , codeData(function->code())
     , jittedCode(nullptr)
     , codeRef(nullptr)
-    , typedFunction(aotFunction)
+    , aotCompiledFunction(aotFunction)
     , kind(aotFunction ? AotCompiled : JsUntyped)
 {
     Scope scope(engine);
@@ -135,7 +135,7 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
         return;
     }
 
-    QQmlPrivate::TypedFunction *synthesized = new QQmlPrivate::TypedFunction;
+    QQmlPrivate::AOTCompiledFunction *synthesized = new QQmlPrivate::AOTCompiledFunction;
     QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine->qmlEngine());
 
     auto findMetaType = [&](const CompiledData::ParameterType &param) {
@@ -177,7 +177,7 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
         synthesized->argumentTypes.append(findMetaType(formalsIndices[i].type));
 
     synthesized->returnType = findMetaType(compiledFunction->returnType);
-    typedFunction = synthesized;
+    aotCompiledFunction = synthesized;
     kind = JsTyped;
 }
 
@@ -188,7 +188,7 @@ Function::~Function()
         delete codeRef;
     }
     if (kind == JsTyped)
-        delete typedFunction;
+        delete aotCompiledFunction;
 }
 
 void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters)

@@ -1558,7 +1558,7 @@ QList<QQmlType> QQmlMetaType::qmlSingletonTypes()
 static bool isFullyTyped(const QQmlPrivate::CachedQmlUnit *unit)
 {
     quint32 numTypedFunctions = 0;
-    for (const QQmlPrivate::TypedFunction *function = unit->aotCompiledFunctions;
+    for (const QQmlPrivate::AOTCompiledFunction *function = unit->aotCompiledFunctions;
          function; ++function) {
         if (function->functionPtr)
             ++numTypedFunctions;
