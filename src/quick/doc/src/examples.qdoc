@@ -149,16 +149,27 @@ Creator.
         \b{Scene Graph}
         \list
         \li \l{Scene Graph - Custom Material}{Custom Material}
+        \li \l{Scene Graph - RHI Under QML}{Portable QRhi-based 3D rendering as a scene underlay}
         \li \l{Scene Graph - Two Texture Providers}{Texture Providers and Materials}
         \li \l{Scene Graph - Custom Geometry}{Custom Geometry}
         \li \l{Scene Graph - Graph}{Graph}
-        \li \l{Scene Graph - OpenGL Under QML}{OpenGL Under QML}
-        \li \l{Scene Graph - Direct3D 11 Under QML}{Direct3D 11 Under QML}
-        \li \l{Scene Graph - Vulkan Under QML}{Vulkan Under QML}
-        \li \l{Scene Graph - Vulkan Texture Import}{Vulkan Texture Import}
-        \li \l{Scene Graph - Metal Under QML}{Metal Under QML}
-        \li \l{Scene Graph - Metal Texture Import}{Metal Texture Import}
+        \endlist
+    \enddiv
+\enddiv
+
+\div {class="multi-column"}
+    \div {class="doc-column"}
+        \b{Extending the Scene Graph using native 3D APIs}
+        \list
+        \li \l{Scene Graph - Vulkan Under QML}{Vulkan-based 3D rendering as a scene underlay}
+        \li \l{Scene Graph - Vulkan Texture Import}{Implementing a custom QQuickItem that displays a native Vulkan image}
+        \li \l{Scene Graph - Metal Under QML}{Metal-based 3D rendering as a scene underlay}
+        \li \l{Scene Graph - Metal Texture Import}{Implementing a custom QQuickItem that displays a native Metal texture}
+        \li \l{Scene Graph - Direct3D 11 Under QML}{Direct3D 11-based rendering as a scene underlay}
+        \li \l{Scene Graph - OpenGL Under QML}{OpenGL-based rendering as a scene underlay}
         \li \l{Scene Graph - Rendering FBOs}{Rendering to OpenGL FBOs}
+        \li \l{QQuickRenderControl OpenGL Example}{Redirecting Qt Quick rendering into an OpenGL texture}
+        \li \l{QQuickRenderControl D3D11 Example}{Redirecting Qt Quick rendering into a Direct 3D texture}
         \endlist
     \enddiv
     \div {class="doc-column"}

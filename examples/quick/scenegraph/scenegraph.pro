@@ -11,7 +11,8 @@ SUBDIRS += \
         custommaterial \
         graph \
         threadedanimation \
-        twotextureproviders
+        twotextureproviders \
+        rhiunderqml
 
 macos|ios {
     SUBDIRS += \

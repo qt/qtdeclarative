@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/scenegraph/rhiunderqml">
+        <file>main.qml</file>
+        <file alias="squircle_rhi.vert.qsb">prebuilts_for_qmake/squircle_rhi.vert.qsb</file>
+        <file alias="squircle_rhi.frag.qsb">prebuilts_for_qmake/squircle_rhi.frag.qsb</file>
+    </qresource>
+</RCC>
