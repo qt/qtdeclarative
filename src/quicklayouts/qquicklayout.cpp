@@ -841,7 +841,8 @@ void QQuickLayout::invalidate(QQuickItem * /*childItem*/)
             qCDebug(lcQuickLayouts) << "QQuickLayout::invalidate(), polish()";
             polish();
         } else {
-            qmlWarning(this) << "Qt Quick Layouts: Polish loop detected. Aborting after two iterations.";
+            qmlWarning(this).nospace() << "Layout polish loop detected for " << this
+                << ". Aborting after two iterations.";
         }
     }
 }
