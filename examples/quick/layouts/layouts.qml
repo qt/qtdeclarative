@@ -5,12 +5,14 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+pragma ComponentBehavior: Bound
+
 ApplicationWindow {
     id: appWindow
 
     visible: true
-    title: "Basic layouts"
-    property int margin: 11
+    title: qsTr("Basic layouts")
+    readonly property int margin: 11
 
     Component.onCompleted: {
         width = mainLayout.implicitWidth + 2 * margin
@@ -26,7 +28,7 @@ ApplicationWindow {
         anchors.margins: appWindow.margin
         GroupBox {
             id: rowBox
-            title: "Row layout"
+            title: qsTr("Row layout")
             Layout.fillWidth: true
             Layout.minimumWidth: rowLayout.Layout.minimumWidth + 30
 
@@ -34,18 +36,18 @@ ApplicationWindow {
                 id: rowLayout
                 anchors.fill: parent
                 TextField {
-                    placeholderText: "This wants to grow horizontally"
+                    placeholderText: qsTr("This wants to grow horizontally")
                     Layout.fillWidth: true
                 }
                 Button {
-                    text: "Button"
+                    text: qsTr("Button")
                 }
             }
         }
 
         GroupBox {
             id: gridBox
-            title: "Grid layout"
+            title: qsTr("Grid layout")
             Layout.fillWidth: true
             Layout.minimumWidth: gridLayout.Layout.minimumWidth + 30
 
@@ -55,17 +57,17 @@ ApplicationWindow {
                 flow: GridLayout.TopToBottom
                 anchors.fill: parent
 
-                Label { text: "Line 1" }
-                Label { text: "Line 2" }
-                Label { text: "Line 3" }
+                Label { text: qsTr("Line 1") }
+                Label { text: qsTr("Line 2") }
+                Label { text: qsTr("Line 3") }
 
                 TextField { }
                 TextField { }
                 TextField { }
 
                 TextArea {
-                    text: "This widget spans over three rows in the GridLayout.\n"
-                        + "All items in the GridLayout are implicitly positioned from top to bottom."
+                    text: qsTr("This widget spans over three rows in the GridLayout.\n")
+                        + qsTr("All items in the GridLayout are implicitly positioned from top to bottom.")
                     wrapMode: TextArea.WordWrap
                     Layout.rowSpan: 3
                     Layout.fillHeight: true
@@ -77,14 +79,14 @@ ApplicationWindow {
         }
         TextArea {
             id: t3
-            text: "This fills the whole cell"
+            text: qsTr("This fills the whole cell")
             Layout.minimumHeight: 30
             Layout.fillHeight: true
             Layout.fillWidth: true
         }
         GroupBox {
             id: stackBox
-            title: "Stack layout"
+            title: qsTr("Stack layout")
             implicitWidth: 200
             implicitHeight: 60
             Layout.minimumHeight: 60
@@ -104,8 +106,8 @@ ApplicationWindow {
                         color: Qt.hsla((0.5 + index) / stackRepeater.count, 0.3, 0.7, 1)
                         Button {
                             anchors.centerIn: parent
-                            text: "Page " + (parent.index + 1)
-                            onClicked: { stackLayout.advance() }
+                            text: qsTr("Page ") + (parent.index + 1)
+                            onClicked: stackLayout.advance()
                         }
                     }
                 }
