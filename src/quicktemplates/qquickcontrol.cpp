@@ -1357,11 +1357,14 @@ bool QQuickControl::isMirrored() const
     return d->isMirrored();
 }
 
+// ### Qt 7: replace with signal parameter: QTBUG-117596
 /*!
     \qmlproperty enumeration QtQuick.Controls::Control::focusReason
-    \readonly
 
     This property holds the reason of the last focus change.
+
+    The value of this property is modified by Qt whenever focus is transferred,
+    and you should never have to set this property yourself.
 
     \note This property does not indicate whether the item has \l {Item::activeFocus}
         {active focus}, but the reason why the item either gained or lost focus.
