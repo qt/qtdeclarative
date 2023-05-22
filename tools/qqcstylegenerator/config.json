@@ -11,12 +11,18 @@
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
-            {"state": "disabled", "figmaState": "disabled"},
-            {"state": "hovered", "figmaState": "hovered"},
-            {"state": "pressed", "figmaState": "pressed"},
             {"state": "checked", "figmaState": "checked"},
+            {"state": "checked-focused", "figmaState": "checkedFocused"},
+            {"state": "checked-focused-hovered", "figmaState": "checkedHoveredFocused"},
+            {"state": "checked-focused-pressed", "figmaState": "checkedPressedFocused"},
+            {"state": "checked-hovered", "figmaState": "checkedHovered"},
             {"state": "checked-pressed", "figmaState": "checkedPressed"},
-            {"state": "checked-hovered", "figmaState": "checkedHovered"}
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "focused", "figmaState": "focused"},
+            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
+            {"state": "focused-pressed", "figmaState": "pressedFocused"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "pressed", "figmaState": "pressed"}
         ]
     },
     {
@@ -33,17 +39,53 @@
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
-            {"state": "disabled", "figmaState": "disabled"},
-            {"state": "pressed", "figmaState": "pressed"},
-            {"state": "hovered", "figmaState": "hovered"},
             {"state": "checked", "figmaState": "checked"},
             {"state": "checked-disabled", "figmaState": "checkedDisabled"},
+            {"state": "checked-focused", "figmaState": "checkedFocused"},
+            {"state": "checked-focused-hovered", "figmaState": "checkedhoveredFocused"},
+            {"state": "checked-focused-pressed", "figmaState": "checkedpressedFocused"},
             {"state": "checked-hovered", "figmaState": "checkedHovered"},
             {"state": "checked-pressed", "figmaState": "checkedPressed"},
-            {"state": "partially-checked", "figmaState": "partiallyChecked"},
-            {"state": "partially-checked-disabled", "figmaState": "partiallyCheckedDisabled"},
-            {"state": "partially-checked-pressed", "figmaState": "partiallyCheckedPressed"},
-            {"state": "partially-checked-hovered", "figmaState": "partiallyCheckedHovered"}
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "disabled-partiallyChecked", "figmaState": "partiallyCheckedDisabled"},
+            {"state": "focused", "figmaState": "focused"},
+            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
+            {"state": "focused-hovered-partiallyChecked", "figmaState": "partiallycheckedhoveredFocused"},
+            {"state": "focused-partiallyChecked", "figmaState": "partiallyCheckedFocused"},
+            {"state": "focused-partiallyChecked-pressed", "figmaState": "partiallycheckedpressedFocused"},
+            {"state": "focused-pressed", "figmaState": "pressedFocused"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "hovered-partiallyChecked", "figmaState": "partiallyCheckedHovered"},
+            {"state": "partiallyChecked", "figmaState": "partiallyChecked"},
+            {"state": "partiallyChecked-pressed", "figmaState": "partiallyCheckedPressed"},
+            {"state": "pressed", "figmaState": "pressed"}
+        ]
+    },
+    {
+        "name": "RadioButton",
+        "copy": ":/RadioButton.qml",
+        "component set": "RadioButtonTemplate",
+        "contents": ["indicator", "label"],
+        "atoms": [
+            {"atom": "background", "figmaPath": "RadioButtonBackground, background"},
+            {"atom": "label", "figmaPath": "ContentItem, Label", "export": "geometry"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "indicator", "figmaPath": "RadioButtonIndicator, indicator"},
+            {"atom": "indicator-background", "figmaPath": "RadioButtonIndicator, indicatorBackground"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "checked", "figmaState": "checked"},
+            {"state": "checked-disabled", "figmaState": "checkedDisabled"},
+            {"state": "checked-focused", "figmaState": "checkedFocused"},
+            {"state": "checked-hovered", "figmaState": "checkedHovered"},
+            {"state": "checked-pressed", "figmaState": "checkedPressed"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "focused", "figmaState": "focused"},
+            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
+            {"state": "focused-pressed", "figmaState": "pressedFocused"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "pressed", "figmaState": "pressed"}
         ]
     },
     {
@@ -61,13 +103,18 @@
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
-            {"state": "disabled", "figmaState": "disabled"},
-            {"state": "pressed", "figmaState": "pressed"},
-            {"state": "hovered", "figmaState": "hovered"},
             {"state": "checked", "figmaState": "checked"},
-            {"state": "checked-disabled", "figmaState": "checkedDisabled"},
+            {"state": "checked-focused", "figmaState": "checkedFocused"},
+            {"state": "checked-focused-hovered", "figmaState": "checkedhoveredFocused"},
+            {"state": "checked-focused-pressed", "figmaState": "checkedpressedFocused"},
+            {"state": "checked-hovered", "figmaState": "checkedHovered"},
             {"state": "checked-pressed", "figmaState": "checkedPressed"},
-            {"state": "checked-hovered", "figmaState": "checkedHovered"}
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "focused", "figmaState": "focused"},
+            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
+            {"state": "focused-pressed", "figmaState": "pressedFocused"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "pressed", "figmaState": "pressed"}
         ]
     },
     {
@@ -81,9 +128,9 @@
         "states": [
             {"state": "normal", "figmaState": "normal"},
             {"state": "disabled", "figmaState": "disabled"},
-            {"state": "hovered", "figmaState": "hovered"},
             {"state": "focused", "figmaState": "focused"},
-            {"state": "focused-hovered", "figmaState": "hoveredFocused"}
+            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
+            {"state": "hovered", "figmaState": "hovered"}
         ]
     },
     {

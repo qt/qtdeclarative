@@ -14,7 +14,7 @@ T.TextField {
 
     readonly property string currentState: [
         !control.enabled && "disabled",
-        control.visualFocus && "focused",
+        control.activeFocus && "focused",
         control.enabled && !control.down && control.hovered && "hovered",
     ].filter(Boolean).join("-") || "normal"
     readonly property var config: ConfigReader.controls.textfield[currentState] || {}

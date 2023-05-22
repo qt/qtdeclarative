@@ -26,10 +26,10 @@ T.CheckBox {
 
     readonly property string currentState: [
         control.checkState === Qt.Checked && "checked",
-        control.checkState === Qt.PartiallyChecked && "partially-checked",
         !control.enabled && "disabled",
         control.visualFocus && "focused",
         control.enabled && !control.down && control.hovered && "hovered",
+        control.checkState === Qt.PartiallyChecked && "partiallyChecked",
         control.down && "pressed",
     ].filter(Boolean).join("-") || "normal"
     readonly property var config: ConfigReader.controls.checkbox[currentState] || {}

@@ -30,7 +30,7 @@ T.Switch {
         !control.enabled && "disabled",
         control.visualFocus && "focused",
         control.enabled && !control.down && control.hovered && "hovered",
-        control.down && "pressed",
+        control.down && "pressed"
     ].filter(Boolean).join("-") || "normal"
     readonly property var config: ConfigReader.controls.switch[currentState] || {}
     readonly property bool mirroredIndicator: control.mirrored !== (config.mirrored || false)
