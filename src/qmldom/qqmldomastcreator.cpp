@@ -1595,6 +1595,8 @@ void createDom(MutableDomItem qmlFile, DomCreationOptions options)
 {
     if (std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>()) {
         QQmlJSLogger logger; // TODO
+        // the logger filename is used to populate the QQmlJSScope filepath.
+        logger.setFileName(qmlFile.canonicalFilePath());
         if (options.testFlag(DomCreationOption::WithSemanticAnalysis)) {
             auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(qmlFile, &logger);
             v->enableScriptExpressions(options.testFlag(DomCreationOption::WithScriptExpressions));

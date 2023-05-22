@@ -44,6 +44,8 @@ private slots:
     void cleanupTestCase();
     void goToTypeDefinition_data();
     void goToTypeDefinition();
+    void goToDefinition_data();
+    void goToDefinition();
     void findUsages_data();
     void findUsages();
     void documentFormatting_data();

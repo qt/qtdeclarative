@@ -931,6 +931,7 @@ public:
     DomItem environment();
     DomItem universe();
     DomItem containingFile();
+    DomItem goToFile(const QString &filePath);
     DomItem goUp(int);
     DomItem directParent();
 

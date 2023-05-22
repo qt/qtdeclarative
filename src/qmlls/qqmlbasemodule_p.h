@@ -76,8 +76,11 @@ bool BaseRequest<Parameters, Response>::fillFrom(QmlLsp::OpenDocument doc, const
     m_parameters = params;
     m_response = std::move(response);
 
-    if (!doc.textDocument)
+    if (!doc.textDocument) {
+        qDebug() << "Cannot find document in qmlls's codemodel, did you open it before accessing "
+                    "it?";
         return false;
+    }
 
     {
         QMutexLocker l(doc.textDocument->mutex());

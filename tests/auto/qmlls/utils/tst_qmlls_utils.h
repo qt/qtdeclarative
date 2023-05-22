@@ -37,6 +37,9 @@ private slots:
     void findTypeDefinitionFromLocation_data();
     void findTypeDefinitionFromLocation();
 
+    void findDefinitionFromLocation_data();
+    void findDefinitionFromLocation();
+
     void findLocationOfItem_data();
     void findLocationOfItem();
 

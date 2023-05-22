@@ -1,6 +1,7 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 #include "qqmldomitem_p.h"
+#include "qqmldompath_p.h"
 #include "qqmldomtop_p.h"
 #include "qqmldomelements_p.h"
 #include "qqmldomexternalitems_p.h"
@@ -528,12 +529,31 @@ DomItem DomItem::universe()
     return DomItem(); // we should be in an empty DomItem already...
 }
 
+/*!
+   \internal
+   Shorthand to obtain the QmlFile DomItem, in which this DomItem is defined.
+   Returns an empty DomItem if the item is not defined in a QML file.
+   \sa goToFile()
+ */
 DomItem DomItem::containingFile()
 {
     if (DomItem res = filterUp([](DomType k, DomItem &) { return k == DomType::QmlFile; },
                                FilterUpOptions::ReturnOuter))
         return res;
     return DomItem();
+}
+
+/*!
+   \internal
+   Shorthand to obtain the QmlFile DomItem from a canonicalPath.
+   \sa containingFile()
+ */
+DomItem DomItem::goToFile(const QString &canonicalPath)
+{
+    Q_UNUSED(canonicalPath);
+    DomItem file =
+            top().field(Fields::qmlFileWithPath).key(canonicalPath).field(Fields::currentItem);
+    return file;
 }
 
 /*!

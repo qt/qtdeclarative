@@ -21,6 +21,7 @@ qt_internal_add_module(QmlLSPrivate
         qqmlformatting_p.h qqmlformatting.cpp
         qqmllsutils_p.h qqmllsutils.cpp
         qqmlfindusagessupport_p.h qqmlfindusagessupport.cpp
+        qqmlgotodefinitionsupport.cpp qqmlgotodefinitionsupport_p.h
 
     PUBLIC_LIBRARIES
         Qt::LanguageServerPrivate

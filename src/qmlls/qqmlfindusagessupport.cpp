@@ -7,7 +7,8 @@
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
 
-QT_USE_NAMESPACE
+QT_BEGIN_NAMESPACE
+
 using namespace Qt::StringLiterals;
 
 QQmlFindUsagesSupport::QQmlFindUsagesSupport(QmlLsp::QQmlCodeModel *codeModel)
@@ -72,3 +73,5 @@ void QQmlFindUsagesSupport::process(QQmlFindUsagesSupport::RequestPointerArgumen
         results.append(location);
     }
 }
+QT_END_NAMESPACE
+

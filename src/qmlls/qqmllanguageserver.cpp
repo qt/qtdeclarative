@@ -62,6 +62,7 @@ QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> s
       m_workspace(&m_codeModel),
       m_completionSupport(&m_codeModel),
       m_navigationSupport(&m_codeModel),
+      m_definitionSupport(&m_codeModel),
       m_referencesSupport(&m_codeModel),
       m_documentFormatting(&m_codeModel)
 {
@@ -71,6 +72,7 @@ QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> s
     m_server.addServerModule(&m_workspace);
     m_server.addServerModule(&m_completionSupport);
     m_server.addServerModule(&m_navigationSupport);
+    m_server.addServerModule(&m_definitionSupport);
     m_server.addServerModule(&m_referencesSupport);
     m_server.addServerModule(&m_documentFormatting);
     m_server.finishSetup();

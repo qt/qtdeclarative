@@ -69,12 +69,15 @@ public:
     static QQmlLSUtilsTextPosition textRowAndColumnFrom(const QString &code, qsizetype offset);
     static QList<QQmlLSUtilsItemLocation> itemsFromTextLocation(QQmlJS::Dom::DomItem file, int line,
                                                                 int character);
+    static QQmlJS::Dom::DomItem sourceLocationToDomItem(QQmlJS::Dom::DomItem file,
+                                                        const QQmlJS::SourceLocation &location);
     static QByteArray lspUriToQmlUrl(const QByteArray &uri);
     static QByteArray qmlUrlToLspUri(const QByteArray &url);
     static QLspSpecification::Range qmlLocationToLspLocation(const QString &code,
                                                              QQmlJS::SourceLocation qmlLocation);
     static QQmlJS::Dom::DomItem baseObject(QQmlJS::Dom::DomItem qmlObject);
     static QQmlJS::Dom::DomItem findTypeDefinitionOf(QQmlJS::Dom::DomItem item);
+    static std::optional<QQmlLSUtilsLocation> findDefinitionOf(QQmlJS::Dom::DomItem item);
     static QList<QQmlLSUtilsLocation> findUsagesOf(QQmlJS::Dom::DomItem item);
 
     static QQmlJSScope::ConstPtr resolveExpressionType(QQmlJS::Dom::DomItem item,

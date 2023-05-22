@@ -1,8 +1,8 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#ifndef QMLFINDUSAGESUPPORT_P_H
-#define QMLFINDUSAGESUPPORT_P_H
+#ifndef QQMLGOTODEFINITIONSUPPORT_P_H
+#define QQMLGOTODEFINITIONSUPPORT_P_H
 
 //
 //  W A R N I N G
@@ -19,17 +19,16 @@
 #include "qqmlcodemodel_p.h"
 #include "qqmlbasemodule_p.h"
 
-QT_BEGIN_NAMESPACE
-struct ReferencesRequest : public BaseRequest<QLspSpecification::ReferenceParams,
-                                              QLspSpecification::Responses::ReferenceResponseType>
+struct DefinitionRequest : public BaseRequest<QLspSpecification::DefinitionParams,
+                                              QLspSpecification::Responses::DefinitionResponseType>
 {
 };
 
-class QQmlFindUsagesSupport : public QQmlBaseModule<ReferencesRequest>
+class QmlGoToDefinitionSupport : public QQmlBaseModule<DefinitionRequest>
 {
     Q_OBJECT
 public:
-    QQmlFindUsagesSupport(QmlLsp::QQmlCodeModel *codeModel);
+    QmlGoToDefinitionSupport(QmlLsp::QQmlCodeModel *codeModel);
 
     QString name() const override;
     void registerHandlers(QLanguageServer *server, QLanguageServerProtocol *protocol) override;
@@ -39,9 +38,8 @@ public:
     void process(RequestPointerArgument request) override;
 
     void typeDefinitionRequestHandler(const QByteArray &,
-                                      const QLspSpecification::TypeDefinitionParams &params,
-                                      ReferencesRequest::Response &&response);
+                                      const QLspSpecification::DefinitionParams &params,
+                                      RequestPointerArgument response);
 };
-QT_END_NAMESPACE
 
-#endif //  QMLFINDUSAGESUPPORT_P_H
+#endif // QQMLGOTODEFINITIONSUPPORT_P_H

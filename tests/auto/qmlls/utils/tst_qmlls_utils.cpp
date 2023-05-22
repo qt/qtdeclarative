@@ -5,6 +5,7 @@
 
 // some helper constants for the tests
 const static int positionAfterOneIndent = 5;
+const static QString noResultExpected;
 // constants for resultIndex
 const static int firstResult = 0;
 const static int secondResult = 1;
@@ -305,7 +306,6 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation_data()
     const QString file1Qml = testFile(u"file1.qml"_s);
     const QString TypeQml = testFile(u"Type.qml"_s);
     // pass this as file when no result is expected, e.g. for type definition of "var".
-    const QString noResultExpected;
 
     QTest::addRow("onCProperty") << file1Qml << 11 << 16 << firstResult << outOfOne << "file1.C"
                                  << file1Qml << 7 << positionAfterOneIndent;
@@ -421,7 +421,7 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
 
     // if expectedFilePath is empty, we probably just want to make sure that it does
     // not crash
-    if (expectedFilePath.isEmpty()) {
+    if (expectedFilePath == noResultExpected) {
         QCOMPARE(type.internalKind(), QQmlJS::Dom::DomType::Empty);
         return;
     }
@@ -860,6 +860,100 @@ void tst_qmlls_utils::findUsages()
         }
     }
     QCOMPARE(usages, expectedUsages);
+}
+
+void tst_qmlls_utils::findDefinitionFromLocation_data()
+{
+    QTest::addColumn<QString>("filePath");
+    // keep in mind that line and character are starting at 1!
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+
+    QTest::addColumn<QString>("expectedFilePath");
+    // set to -1 when unchanged from above line and character. 0-based.
+    QTest::addColumn<int>("expectedLine");
+    QTest::addColumn<int>("expectedCharacter");
+    QTest::addColumn<size_t>("expectedLength");
+
+    const QString JSDefinitionsQml = testFile(u"JSDefinitions.qml"_s);
+
+    QTest::addRow("JSIdentifierX")
+            << JSDefinitionsQml << 14 << 11 << JSDefinitionsQml << 13 << 13 << strlen("x");
+    QTest::addRow("propertyI") << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << 9
+                               << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("qualifiedPropertyI") << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << 9
+                                        << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 6 << 1
+                        << strlen("Item");
+
+    QTest::addRow("parameterA") << JSDefinitionsQml << 10 << 16 << noResultExpected << -1 << -1
+                                << size_t{};
+    QTest::addRow("parameterB") << JSDefinitionsQml << 10 << 28 << noResultExpected << -1 << -1
+                                << size_t{};
+    QTest::addRow("comment") << JSDefinitionsQml << 10 << 21 << noResultExpected << -1 << -1
+                             << size_t{};
+
+    QTest::addRow("scopedX") << JSDefinitionsQml << 22 << 18 << JSDefinitionsQml << 21 << 17
+                             << strlen("scoped");
+    QTest::addRow("scopedX2") << JSDefinitionsQml << 25 << 22 << JSDefinitionsQml << 21 << 17
+                              << strlen("scoped");
+    QTest::addRow("scopedX3") << JSDefinitionsQml << 28 << 14 << JSDefinitionsQml << 19 << 13
+                              << strlen("scoped");
+
+    QTest::addRow("normalI") << JSDefinitionsQml << 22 << 23 << JSDefinitionsQml << 9
+                             << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("scopedI") << JSDefinitionsQml << 25 << 27 << JSDefinitionsQml << 24 << 32
+                             << strlen("i");
+}
+
+void tst_qmlls_utils::findDefinitionFromLocation()
+{
+    QFETCH(QString, filePath);
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QString, expectedFilePath);
+    QFETCH(int, expectedLine);
+    QFETCH(int, expectedCharacter);
+    QFETCH(size_t, expectedLength);
+
+    if (expectedLine == -1)
+        expectedLine = line;
+    if (expectedCharacter == -1)
+        expectedCharacter = character;
+
+    // they all start at 1.
+    Q_ASSERT(line > 0);
+    Q_ASSERT(character > 0);
+    Q_ASSERT(expectedLine > 0);
+    Q_ASSERT(expectedCharacter > 0);
+
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+
+    auto locations = QQmlLSUtils::itemsFromTextLocation(
+            file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
+
+    QCOMPARE(locations.size(), 1);
+
+    auto type = QQmlLSUtils::findDefinitionOf(locations.front().domItem);
+
+    // if expectedFilePath is empty, we probably just want to make sure that it does
+    // not crash
+    if (expectedFilePath == noResultExpected) {
+        QVERIFY(!type);
+        return;
+    }
+
+    QVERIFY(type);
+
+    QCOMPARE(type->filename, expectedFilePath);
+
+    QCOMPARE(type->location.startLine, quint32(expectedLine));
+    QCOMPARE(type->location.startColumn, quint32(expectedCharacter));
+    QCOMPARE(type->location.length, quint32(expectedLength));
 }
 
 QTEST_MAIN(tst_qmlls_utils)

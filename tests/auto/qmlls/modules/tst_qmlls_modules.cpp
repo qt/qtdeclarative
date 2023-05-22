@@ -82,7 +82,8 @@ void tst_qmlls_modules::initTestCase()
 
     for (const QString &filePath :
          QStringList({ u"completions/Yyy.qml"_s, u"completions/fromBuildDir.qml"_s,
-                       u"completions/SomeBase.qml"_s, u"findUsages/jsIdentifierUsages.qml"_s })) {
+                       u"completions/SomeBase.qml"_s, u"findUsages/jsIdentifierUsages.qml"_s,
+                       u"findDefinition/jsDefinitions.qml"_s })) {
         QFile file(testFile(filePath));
         QVERIFY(file.open(QIODevice::ReadOnly));
         DidOpenTextDocumentParams oParams;
@@ -523,6 +524,94 @@ void tst_qmlls_modules::goToTypeDefinition()
                 QCOMPARE(l.range.start.character, expectedStartCharacter);
                 QCOMPARE(l.range.end.line, expectedEndLine);
                 QCOMPARE(l.range.end.character, expectedEndCharacter);
+            },
+            [clean](const ResponseError &err) {
+                QScopeGuard cleanup(clean);
+                ProtocolBase::defaultResponseErrorHandler(err);
+                QVERIFY2(false, "error computing the completion");
+            });
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 30000);
+}
+
+void tst_qmlls_modules::goToDefinition_data()
+{
+    QTest::addColumn<QByteArray>("uri");
+    // keep in mind that line and character are starting at 1!
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+
+    QTest::addColumn<QByteArray>("expectedUri");
+    // set to -1 when unchanged from above line and character. 0-based.
+    QTest::addColumn<int>("expectedStartLine");
+    QTest::addColumn<int>("expectedStartCharacter");
+    QTest::addColumn<int>("expectedEndLine");
+    QTest::addColumn<size_t>("expectedEndCharacter");
+
+    const QByteArray JSDefinitionsQml =
+            testFileUrl(u"findDefinition/jsDefinitions.qml"_s).toEncoded();
+    const int positionAfterOneIndent = 5;
+    const QByteArray noResultExpected;
+
+    QTest::addRow("JSIdentifierX") << JSDefinitionsQml << 14 << 11 << JSDefinitionsQml << 13 << 13
+                                   << 13 << 13 + strlen("x");
+    QTest::addRow("propertyI") << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << 9
+                               << positionAfterOneIndent << 9
+                               << positionAfterOneIndent + strlen("property int i");
+    QTest::addRow("qualifiedPropertyI")
+            << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << 9 << positionAfterOneIndent << 9
+            << positionAfterOneIndent + strlen("property int i");
+    QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 6 << 1 << 6
+                        << 1 + strlen("Item");
+
+    QTest::addRow("parameterA") << JSDefinitionsQml << 10 << 16 << noResultExpected << -1 << -1
+                                << -1 << size_t{};
+    QTest::addRow("parameterB") << JSDefinitionsQml << 10 << 28 << noResultExpected << -1 << -1
+                                << -1 << size_t{};
+    QTest::addRow("comment") << JSDefinitionsQml << 10 << 21 << noResultExpected << -1 << -1 << -1
+                             << size_t{};
+}
+
+void tst_qmlls_modules::goToDefinition()
+{
+    QFETCH(QByteArray, uri);
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QByteArray, expectedUri);
+    QFETCH(int, expectedStartLine);
+    QFETCH(int, expectedStartCharacter);
+    QFETCH(int, expectedEndLine);
+    QFETCH(size_t, expectedEndCharacter);
+
+    QVERIFY(uri.startsWith("file://"_ba));
+
+    DefinitionParams params;
+    params.position.line = line - 1;
+    params.position.character = character - 1;
+    params.textDocument.uri = uri;
+
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    auto clean = [didFinish]() { *didFinish = true; };
+
+    m_protocol.requestDefinition(
+            params,
+            [&](auto res) {
+                QScopeGuard cleanup(clean);
+                auto *result = std::get_if<QList<Location>>(&res);
+                const QByteArray noResultExpected;
+
+                QVERIFY(result);
+                if (expectedUri == noResultExpected) {
+                    QCOMPARE(result->size(), 0);
+                } else {
+                    QCOMPARE(result->size(), 1);
+
+                    Location l = result->front();
+                    QCOMPARE(l.uri, expectedUri);
+                    QCOMPARE(l.range.start.line, expectedStartLine - 1);
+                    QCOMPARE(l.range.start.character, expectedStartCharacter - 1);
+                    QCOMPARE(l.range.end.line, expectedEndLine - 1);
+                    QCOMPARE(l.range.end.character, (int)(expectedEndCharacter - 1));
+                }
             },
             [clean](const ResponseError &err) {
                 QScopeGuard cleanup(clean);

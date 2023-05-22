@@ -1649,6 +1649,39 @@ private slots:
         }
     }
 
+    void goToFile()
+    {
+        using namespace Qt::StringLiterals;
+        const QString filePathA = baseDir + u"/nullStatements.qml"_s;
+        const QString filePathB = baseDir + u"/propertyBindings.qml"_s;
+        const QString canonicalFilePathB = QFileInfo(filePathB).canonicalFilePath();
+        QVERIFY(!canonicalFilePathB.isEmpty());
+
+        DomItem env = DomEnvironment::create(
+                qmltypeDirs,
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+        DomItem fileA;
+        DomItem fileB;
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+
+        env.loadFile(
+                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), filePathA, options),
+                [&fileA](Path, DomItem &, DomItem &newIt) { fileA = newIt.fileObject(); },
+                LoadOption::DefaultLoad);
+
+        env.loadFile(
+                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), filePathB, options),
+                [&fileB](Path, DomItem &, DomItem &newIt) { fileB = newIt.fileObject(); },
+                LoadOption::DefaultLoad);
+        env.loadPendingDependencies();
+
+        QCOMPARE(fileA.goToFile(canonicalFilePathB), fileB);
+    }
+
 private:
     static DomItem rootQmlObjectFromFile(const QString &path, const QStringList &qmltypeDirs)
     {
