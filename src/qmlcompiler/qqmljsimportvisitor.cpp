@@ -20,6 +20,8 @@
 #include "qqmljsutils_p.h"
 
 #include <algorithm>
+#include <limits>
+#include <optional>
 #include <variant>
 
 QT_BEGIN_NAMESPACE
@@ -101,7 +103,8 @@ QQmlJSImportVisitor::QQmlJSImportVisitor(
     };
 
     QQmlJSScope::JavaScriptIdentifier globalJavaScript = {
-        QQmlJSScope::JavaScriptIdentifier::LexicalScoped, QQmlJS::SourceLocation(), true
+        QQmlJSScope::JavaScriptIdentifier::LexicalScoped, QQmlJS::SourceLocation(), std::nullopt,
+        true
     };
     for (const char **globalName = QV4::Compiler::Codegen::s_globalNames; *globalName != nullptr;
          ++globalName) {
@@ -1199,9 +1202,9 @@ void QQmlJSImportVisitor::flushPendingSignalParameters()
 {
     const QQmlJSMetaSignalHandler handler = m_signalHandlers[m_pendingSignalHandler];
     for (const QString &parameter : handler.signalParameters) {
-        m_currentScope->insertJSIdentifier(
-                parameter,
-                { QQmlJSScope::JavaScriptIdentifier::Injected, m_pendingSignalHandler, false });
+        m_currentScope->insertJSIdentifier(parameter,
+                                           { QQmlJSScope::JavaScriptIdentifier::Injected,
+                                             m_pendingSignalHandler, std::nullopt, false });
     }
     m_pendingSignalHandler = QQmlJS::SourceLocation();
 }
@@ -1662,7 +1665,8 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
         if (m_currentScope->scopeType() != QQmlJSScope::QMLScope) {
             m_currentScope->insertJSIdentifier(name,
                                                { QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
-                                                 fexpr->firstSourceLocation(), false });
+                                                 fexpr->firstSourceLocation(),
+                                                 method.returnTypeName(), false });
         }
         enterEnvironment(QQmlJSScope::JSFunctionScope, name, fexpr->firstSourceLocation());
     } else {
@@ -2402,7 +2406,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::Catch *catchStatement)
     m_currentScope->insertJSIdentifier(
             catchStatement->patternElement->bindingIdentifier.toString(),
             { QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
-              catchStatement->patternElement->firstSourceLocation(),
+              catchStatement->patternElement->firstSourceLocation(), std::nullopt,
               catchStatement->patternElement->scope == QQmlJS::AST::VariableScope::Const });
     return true;
 }
@@ -2433,12 +2437,17 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::WithStatement *)
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
 {
     while (vdl) {
+        std::optional<QString> typeName;
+        if (TypeAnnotation *annotation = vdl->declaration->typeAnnotation)
+            if (Type *type = annotation->type)
+                typeName = type->toString();
+
         m_currentScope->insertJSIdentifier(
                 vdl->declaration->bindingIdentifier.toString(),
                 { (vdl->declaration->scope == QQmlJS::AST::VariableScope::Var)
                           ? QQmlJSScope::JavaScriptIdentifier::FunctionScoped
                           : QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
-                  vdl->declaration->firstSourceLocation(),
+                  vdl->declaration->firstSourceLocation(), typeName,
                   vdl->declaration->scope == QQmlJS::AST::VariableScope::Const });
         vdl = vdl->next;
     }
@@ -2448,9 +2457,14 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::FormalParameterList *fpl)
 {
     for (auto const &boundName : fpl->boundNames()) {
+
+        std::optional<QString> typeName;
+        if (TypeAnnotation *annotation = boundName.typeAnnotation.data())
+            if (Type *type = annotation->type)
+                typeName = type->toString();
         m_currentScope->insertJSIdentifier(boundName.id,
                                            { QQmlJSScope::JavaScriptIdentifier::Parameter,
-                                             fpl->firstSourceLocation(), false });
+                                             fpl->firstSourceLocation(), typeName, false });
     }
     return true;
 }
@@ -2677,12 +2691,16 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::PatternElement *element)
         QQmlJS::AST::BoundNames names;
         element->boundNames(&names);
         for (const auto &name : names) {
+            std::optional<QString> typeName;
+            if (TypeAnnotation *annotation = name.typeAnnotation.data())
+                if (Type *type = annotation->type)
+                    typeName = type->toString();
             m_currentScope->insertJSIdentifier(
                     name.id,
                     { (element->scope == QQmlJS::AST::VariableScope::Var)
                               ? QQmlJSScope::JavaScriptIdentifier::FunctionScoped
                               : QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
-                      element->firstSourceLocation(),
+                      element->firstSourceLocation(), typeName,
                       element->scope == QQmlJS::AST::VariableScope::Const });
         }
     }

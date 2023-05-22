@@ -532,6 +532,11 @@ QTypeRevision QQmlJSScope::resolveType(
         it->setParameters(parameters);
     }
 
+    for (auto it = self->m_jsIdentifiers.begin(); it != self->m_jsIdentifiers.end(); ++it) {
+        if (it->typeName)
+            it->scope = findType(it->typeName.value(), context, usedTypes).scope;
+    }
+
     return baseType.revision;
 }
 

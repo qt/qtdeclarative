@@ -25,16 +25,15 @@ std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>
 tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath,
                                               QQmlJS::Dom::DomCreationOptions options)
 {
-    if (auto entry = cache.find(filePath); entry != cache.end())
+    CacheKey cacheKey = { filePath, options };
+    if (auto entry = cache.find(cacheKey); entry != cache.end())
         return *entry;
 
     QStringList qmltypeDirs =
             QStringList({ dataDirectory(), QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
 
     QQmlJS::Dom::DomItem env = QQmlJS::Dom::DomEnvironment::create(
-            qmltypeDirs,
-            QQmlJS::Dom::DomEnvironment::Option::
-                    SingleThreaded); // | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+            qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded);
 
     QQmlJS::Dom::DomItem file;
     env.loadFile(
@@ -47,7 +46,7 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath,
     env.loadPendingDependencies();
     env.loadBuiltins();
 
-    return cache[filePath] = std::make_tuple(env, file);
+    return cache[cacheKey] = std::make_tuple(env, file);
 }
 
 void tst_qmlls_utils::textOffsetRowColumnConversions_data()
@@ -304,6 +303,7 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation_data()
     QTest::addColumn<int>("expectedCharacter");
 
     const QString file1Qml = testFile(u"file1.qml"_s);
+    const QString TypeQml = testFile(u"Type.qml"_s);
     // pass this as file when no result is expected, e.g. for type definition of "var".
     const QString noResultExpected;
 
@@ -371,6 +371,16 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation_data()
     QTest::addRow("rectangle-property")
             << file1Qml << 44 << 31 << firstResult << outOfOne << "QQuickRectangle"
             << "TODO: c++ type location" << -1 << -1;
+
+    QTest::addRow("functionParameterICUsage")
+            << file1Qml << 34 << 16 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
+
+    QTest::addRow("ICBindingUsage")
+            << file1Qml << 47 << 21 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
+    QTest::addRow("ICBindingUsage2")
+            << file1Qml << 49 << 11 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
+    QTest::addRow("ICBindingUsage3")
+            << file1Qml << 52 << 17 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
 }
 
 void tst_qmlls_utils::findTypeDefinitionFromLocation()
@@ -398,6 +408,7 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
 
     QQmlJS::Dom::DomCreationOptions options;
     options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
 
     auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
 
@@ -414,6 +425,8 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
         QCOMPARE(type.internalKind(), QQmlJS::Dom::DomType::Empty);
         return;
     }
+
+    QVERIFY(type);
 
     QQmlJS::Dom::FileLocations::Tree typeLocationToTest = QQmlJS::Dom::FileLocations::treeOf(type);
 
@@ -441,6 +454,19 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
     QCOMPARE(typeLocationToTest->info().fullRegion.startColumn, quint32(expectedCharacter));
 
     if (auto object = type.as<QQmlJS::Dom::QmlObject>()) {
+        const std::vector<QString> except = {
+            "functionParameterICUsage",
+            "ICBindingUsage",
+            "ICBindingUsage2",
+            "ICBindingUsage3",
+        };
+        for (const QString &functionName : except) {
+            QEXPECT_FAIL(
+                    functionName.toStdString().c_str(),
+                    "Types for JS-identifiers point to the type inside inline components instead "
+                    "of the inline component itself",
+                    Continue);
+        }
         QCOMPARE(object->idStr(), expectedTypeName);
     } else if (auto exported = type.as<QQmlJS::Dom::Export>()) {
         QCOMPARE(exported->typeName, expectedTypeName);

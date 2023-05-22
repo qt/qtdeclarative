@@ -280,7 +280,9 @@ public:
 
         Kind kind = FunctionScoped;
         QQmlJS::SourceLocation location;
+        std::optional<QString> typeName;
         bool isConst;
+        QQmlJSScope::ConstPtr scope = {};
     };
 
     enum BindingTargetSpecifier {

@@ -52,8 +52,9 @@ private:
     EnvironmentAndFile createEnvironmentAndLoadFile(const QString &file,
                                                     QQmlJS::Dom::DomCreationOptions options);
 
+    using CacheKey = std::pair<QString, QQmlJS::Dom::DomCreationOptions>;
     // avoid loading the same file over and over when running all the tests
-    QHash<QString, EnvironmentAndFile> cache;
+    QHash<CacheKey, EnvironmentAndFile> cache;
 };
 
 #endif // TST_QMLLS_UTILS_H

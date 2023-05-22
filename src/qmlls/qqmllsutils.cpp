@@ -340,6 +340,40 @@ DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
     case QQmlJS::Dom::DomType::MethodInfo:
         result = object.field(Fields::type).proceedToScope();
         break;
+    case QQmlJS::Dom::DomType::ScriptIdentifierExpression: {
+        auto scope =
+                QQmlLSUtils::resolveExpressionType(object, QQmlLSUtilsResolveOptions::Everything);
+        if (!scope)
+            return {};
+        QQmlJS::SourceLocation location = scope->sourceLocation();
+        auto items = QQmlLSUtils::itemsFromTextLocation(
+                object.containingFile(), location.startLine - 1, location.startColumn - 1);
+        switch (items.size()) {
+        case 0:
+        case 1:
+            return items.front().domItem;
+        case 2: {
+            // special case: because location points to the beginning of the type definition,
+            // itemsFromTextLocation might also return the type on its left, in case it is directly
+            // adjacent to it. In this case always take the right (=with the higher column-number)
+            // item.
+            auto &first = items.front();
+            auto &second = items.back();
+            Q_ASSERT_X(first.fileLocation->info().fullRegion.startLine
+                               == second.fileLocation->info().fullRegion.startLine,
+                       "QQmlLSUtils::findTypeDefinitionOf(DomItem)",
+                       "QQmlLSUtils::itemsFromTextLocation returned non-adjacent items.");
+            if (first.fileLocation->info().fullRegion.startColumn
+                > second.fileLocation->info().fullRegion.startColumn)
+                return first.domItem;
+            else
+                return second.domItem;
+        }
+        default:
+            qDebug() << "Found multiple candidates for type of scriptidentifierexpression";
+        }
+        break;
+    }
     case QQmlJS::Dom::DomType::Empty:
         break;
     default:
@@ -349,6 +383,27 @@ DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
     }
 
     return result;
+}
+
+static DomItem findJSIdentifierDefinition(DomItem item, const QString &name)
+{
+    DomItem definitionOfItem;
+    item.visitUp([&name, &definitionOfItem](DomItem &i) {
+        if (std::optional<QQmlJSScope::Ptr> scope = i.semanticScope(); scope) {
+            qCDebug(QQmlLSUtilsLog) << "Searching for definition in" << i.internalKindStr();
+            if (auto jsIdentifier = scope.value()->JSIdentifier(name)) {
+                qCDebug(QQmlLSUtilsLog) << "Found scope" << scope.value()->baseTypeName();
+                definitionOfItem = i;
+                return false;
+            }
+        }
+        // early exit: no JS definitions/usages outside the ScriptExpression DOM element.
+        if (i.internalKind() == DomType::ScriptExpression)
+            return false;
+        return true;
+    });
+
+    return definitionOfItem;
 }
 
 static void findUsagesOfPropertiesAndIds(DomItem item, const QString &name,
@@ -414,25 +469,7 @@ static void findUsagesOfPropertiesAndIds(DomItem item, const QString &name,
 static void findUsagesHelper(DomItem item, const QString &name, QList<QQmlLSUtilsLocation> &result)
 {
     qCDebug(QQmlLSUtilsLog) << "Looking for JS identifier with name" << name;
-    DomItem definitionOfItem;
-
-    item.visitUp([&name, &definitionOfItem](DomItem &i) {
-        if (std::optional<QQmlJSScope::Ptr> scope = i.semanticScope(); scope) {
-            qCDebug(QQmlLSUtilsLog) << "Searching for definition in" << i.internalKindStr();
-            if (auto jsIdentifier = scope.value()->JSIdentifier(name)) {
-                qCDebug(QQmlLSUtilsLog) << "Found scope" << scope.value()->baseTypeName();
-                definitionOfItem = i;
-                return false;
-            }
-        } else {
-            qCDebug(QQmlLSUtilsLog)
-                    << "Searching for definition in" << i.internalKindStr() << "that has no scope";
-        }
-        // early exit: no JS definitions/usages outside the ScriptExpression DOM element.
-        if (i.internalKind() == DomType::ScriptExpression)
-            return false;
-        return true;
-    });
+    DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
 
     // if there is no definition found: check if name was a property or an id instead
     if (!definitionOfItem) {
@@ -539,6 +576,12 @@ QQmlJSScope::ConstPtr QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem it
                 return {};
             }
         } else {
+            DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
+            if (definitionOfItem) {
+                auto scope = definitionOfItem.semanticScope().value()->JSIdentifier(name)->scope;
+                return scope;
+            }
+
             // check if its an (unqualified) property
             for (QQmlJSScope::Ptr current = *referrerScope; current;
                  current = current->parentScope()) {
