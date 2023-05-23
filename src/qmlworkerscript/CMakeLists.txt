@@ -57,11 +57,6 @@ qt_internal_add_qml_module(QmlWorkerScript
     GENERATE_PRIVATE_CPP_EXPORTS
 )
 
-qt_internal_extend_target(QmlWorkerScript CONDITION WIN32
-    DEFINES
-        NOMINMAX
-)
-
 qt_internal_extend_target(QmlWorkerScript CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
     DEFINES
         WTF_USE_UDIS86=1

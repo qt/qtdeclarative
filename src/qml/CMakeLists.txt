@@ -510,8 +510,6 @@ qt_internal_extend_target(Qml CONDITION WIN32
     SOURCES
         ../3rdparty/masm/wtf/OSAllocatorWin.cpp
         jsruntime/qv4compilationunitmapper_win.cpp
-    DEFINES
-        NOMINMAX
     PUBLIC_LIBRARIES
         shell32
 )
