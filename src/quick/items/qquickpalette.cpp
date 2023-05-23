@@ -98,7 +98,12 @@ static constexpr bool is_valid(QPalette::ColorGroup cg) noexcept
 
     This approach is especially convenient when you need to specify a whole
     palette with all color groups; but as with the other cases above, the
-    colors that are not specified are intialized from SystemPalette.
+    colors that are not specified are initialized from SystemPalette, or
+    potentially the \l {Styling Qt Quick Controls}{Qt Quick Controls style},
+    if one is in use.
+
+    \note Some Controls styles use some palette colors, but many styles use
+    independent colors.
 
     \sa Window::palette, Item::palette, Popup::palette, SystemPalette
 */
