@@ -5022,12 +5022,17 @@ void QQuickItemPrivate::dumpItemTree(int indent) const
 {
     Q_Q(const QQuickItem);
 
-    qDebug().nospace().noquote() << QString(indent * 4, QLatin1Char(' ')) <<
+    const auto indentStr = QString(indent * 4, QLatin1Char(' '));
+    qDebug().nospace().noquote() << indentStr <<
 #if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
                                     const_cast<QQuickItem *>(q);
 #else
                                     q;
 #endif
+    if (extra.isAllocated()) {
+        for (const auto handler : extra->pointerHandlers)
+            qDebug().nospace().noquote() << indentStr << u"  \u26ee " << handler;
+    }
     for (const QQuickItem *ch : childItems) {
         auto itemPriv = QQuickItemPrivate::get(ch);
         itemPriv->dumpItemTree(indent + 1);
