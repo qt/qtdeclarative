@@ -51,7 +51,7 @@
     \list
     \li The scene graph's render loop calls \l QRhi::beginFrame()
     \li \l QQuickWindow::beforeRendering() is emitted - the application prepares resources for its custom rendering
-    \li The scene graph calls \l QRhi::beginPass()
+    \li The scene graph calls \l QRhiCommandBuffer::beginPass()
     \li \l QQuickWindow::beforeRenderPassRecording() is emitted - the application records draw calls
     \li The scene graph records draw calls
     \endlist
@@ -171,12 +171,13 @@
     perfectly fine as well. The important thing to keep in mind is that whatever
     is recorded on the \l QRhiCommandBuffer retrieved from the window's
     \l{QRhiSwapChain}{swapchain}, it is effectively prepended before the Qt Quick
-    scene graph's own rendering within the main render pass. This means that,
-    for example, if depth buffer usage with depth testing and writing out depth
-    values is involved, then the Qt Quick content may be affected by the values
-    written to the depth buffer. See \l{Qt Quick Scene Graph Default Renderer}
-    for details on the scene graph's renderer, in particular the sections about
-    the handling of \e opaque and \e{alpha blended} primitives.
+    scene graph's own rendering within the main render pass.
+
+    \note This means that if depth buffer usage with depth testing and writing
+    out depth values is involved, then the Qt Quick content may be affected by
+    the values written to the depth buffer. See \l{Qt Quick Scene Graph Default
+    Renderer} for details on the scene graph's renderer, in particular the
+    sections about the handling of \e opaque and \e{alpha blended} primitives.
 
     To get the window size in pixels, \l QRhiRenderTarget::pixelSize() is used.
     This is convenient because this way the example does not need to calculate
