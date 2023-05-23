@@ -407,6 +407,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFontValueType
     Q_PROPERTY(QQuickFontEnums::HintingPreference hintingPreference READ hintingPreference WRITE setHintingPreference FINAL)
     Q_PROPERTY(bool kerning READ kerning WRITE setKerning FINAL)
     Q_PROPERTY(bool preferShaping READ preferShaping WRITE setPreferShaping FINAL)
+    Q_PROPERTY(QVariantMap features READ features WRITE setFeatures FINAL)
 
     QML_VALUE_TYPE(font)
     QML_FOREIGN(QFont)
@@ -466,6 +467,9 @@ public:
 
     bool preferShaping() const;
     void setPreferShaping(bool b);
+
+    QVariantMap features() const;
+    void setFeatures(const QVariantMap &features);
 
     operator QFont() const { return v; }
 };
