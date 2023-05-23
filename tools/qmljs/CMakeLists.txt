@@ -49,11 +49,6 @@ set_target_properties(qmljs PROPERTIES WIN32_EXECUTABLE FALSE)
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(qmljs CONDITION WIN32
-    DEFINES
-        NOMINMAX
-)
-
 qt_internal_extend_target(qmljs CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
     DEFINES
         WTF_USE_UDIS86=1

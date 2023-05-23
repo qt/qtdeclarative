@@ -13,11 +13,6 @@
 #include <QtTest/private/qtestlog_p.h>
 #include "qtestoptions_p.h"
 #include <QtTest/qbenchmark.h>
-// qbenchmark_p.h pulls windows.h via 3rd party; prevent it from defining
-// the min/max macros which would clash with qnumeric_p.h's usage of min()/max().
-#if defined(Q_OS_WIN32) && !defined(NOMINMAX)
-#  define NOMINMAX
-#endif
 #include <QtTest/private/qbenchmark_p.h>
 #include <QtCore/qset.h>
 #include <QtCore/qmap.h>
