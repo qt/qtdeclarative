@@ -282,7 +282,7 @@ public:
         QQmlJS::SourceLocation location;
         std::optional<QString> typeName;
         bool isConst;
-        QQmlJSScope::ConstPtr scope = {};
+        QQmlJSScope::WeakConstPtr scope = {};
     };
 
     enum BindingTargetSpecifier {

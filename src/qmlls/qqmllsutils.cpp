@@ -578,7 +578,7 @@ QQmlJSScope::ConstPtr QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem it
         } else {
             DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
             if (definitionOfItem) {
-                auto scope = definitionOfItem.semanticScope().value()->JSIdentifier(name)->scope;
+                auto scope = definitionOfItem.semanticScope().value()->JSIdentifier(name)->scope.toStrongRef();
                 return scope;
             }
 
