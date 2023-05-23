@@ -27,5 +27,6 @@ qt_add_resources(qqcstylegenerator "controls"
         templates/SpinBox.qml
         templates/Switch.qml
         templates/TextField.qml
+        templates/Slider.qml
         config.json
 )

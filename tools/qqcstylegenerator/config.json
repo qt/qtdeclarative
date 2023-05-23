@@ -118,6 +118,28 @@
         ]
     },
     {
+        "name": "Slider",
+        "copy": ":/Slider.qml",
+        "component set": "SliderTemplate",
+        "contents": ["groove", "track", "handle"],
+        "atoms": [
+            {"atom": "background", "figmaPath": "SliderBackground, background"},
+            {"atom": "groove", "figmaPath": "SliderGroove, groveBack"},
+            {"atom": "track", "figmaPath": "SliderTrack, trackBack"},
+            {"atom": "handle", "figmaPath": "SliderHandle, handleBack"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "focused", "figmaState": "focused"},
+            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
+            {"state": "focused-pressed", "figmaState": "pressedFocused"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "pressed", "figmaState": "pressed"}
+        ]
+    },
+    {
         "name": "TextField",
         "copy": ":/TextField.qml",
         "component set": "TextFieldTemplate",
