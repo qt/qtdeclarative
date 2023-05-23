@@ -87,6 +87,7 @@ void TestQmlformat::initTestCase()
     m_excludedDirs << "doc/src/snippets/qtquick1/qtbinding";
     m_excludedDirs << "doc/src/snippets/qtquick1/imports";
     m_excludedDirs << "tests/manual/v4";
+    m_excludedDirs << "tests/manual/qmllsformatter";
     m_excludedDirs << "tests/auto/qml/ecmascripttests";
     m_excludedDirs << "tests/auto/qml/qmllint";
 
