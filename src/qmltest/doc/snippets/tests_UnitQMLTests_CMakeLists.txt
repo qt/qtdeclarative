@@ -1,0 +1,30 @@
+cmake_minimum_required(VERSION 3.2)
+
+project(TestQML LANGUAGES CXX)
+
+enable_testing()
+
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS QuickTest Qml)
+find_package(Qt6 REQUIRED COMPONENTS QuickTest Qml)
+
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
+# no need to copy around qml test files for shadow builds - just set the respective define
+add_definitions(-DQUICK_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
+//! [link against library]
+add_executable(TestQML main.cpp
+               setup.cpp setup.h)
+
+add_test(NAME TestQML COMMAND TestQML)
+
+target_link_libraries(
+    TestQML
+    PRIVATE Qt6::QuickTest
+    PRIVATE Qt6::Qml
+    PRIVATE MyModule
+    PRIVATE MyModuleplugin
+)
+//! [link against library]
