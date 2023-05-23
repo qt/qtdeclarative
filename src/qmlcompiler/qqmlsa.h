@@ -217,9 +217,6 @@ public:
     AccessSemantics accessSemantics() const;
     bool isComposite() const;
 
-    Element attachedType() const;
-    QString attachedTypeName() const;
-
     bool hasProperty(const QString &propertyName) const;
     Property property(const QString &propertyName) const;
     bool isPropertyRequired(const QString &propertyName) const;
@@ -281,7 +278,9 @@ public:
                      QQmlSA::SourceLocation srcLocation, const QQmlSA::FixSuggestion &fix);
 
     Element resolveTypeInFileScope(QAnyStringView typeName);
+    Element resolveAttachedInFileScope(QAnyStringView typeName);
     Element resolveType(QAnyStringView moduleName, QAnyStringView typeName); // #### TODO: revisions
+    Element resolveAttached(QAnyStringView moduleName, QAnyStringView typeName);
     Element resolveLiteralType(const Binding &binding);
 
     Element resolveIdToElement(QAnyStringView id, const Element &context);

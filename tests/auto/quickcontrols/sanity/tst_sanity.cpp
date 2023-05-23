@@ -19,6 +19,8 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQmlCompiler/private/qqmljslinter_p.h>
+#include <QtQmlCompiler/private/qqmljstyperesolver_p.h>
+#include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
 
 Q_IMPORT_PLUGIN(QuickControlsSanityPlugin)
 

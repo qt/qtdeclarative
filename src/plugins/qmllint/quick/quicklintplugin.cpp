@@ -76,8 +76,7 @@ QString AttachedPropertyTypeValidatorPass::addWarning(TypeDescription attachType
     QVarLengthArray<QQmlSA::Element, 4> elements;
 
     const QQmlSA::Element baseType = resolveType(attachType.module, attachType.name);
-
-    QString typeName = baseType.attachedTypeName();
+    const QQmlSA::Element attachedType = resolveAttached(attachType.module, attachType.name);
 
     for (const TypeDescription &desc : allowedTypes) {
         const QQmlSA::Element type = resolveType(desc.module, desc.name);
@@ -86,10 +85,11 @@ QString AttachedPropertyTypeValidatorPass::addWarning(TypeDescription attachType
         elements.push_back(type);
     }
 
-    m_attachedTypes.insert({ std::make_pair<>(
-            typeName, Warning { elements, allowInDelegate, warning.toString() }) });
+    m_attachedTypes.insert(
+            { std::make_pair<>(attachedType.internalName(),
+                               Warning{ elements, allowInDelegate, warning.toString() }) });
 
-    return typeName;
+    return attachedType.internalName();
 }
 
 void AttachedPropertyTypeValidatorPass::checkWarnings(const QQmlSA::Element &element,
@@ -561,10 +561,10 @@ void AttachedPropertyReuse::onRead(const QQmlSA::Element &element, const QString
         return; // an actual property
 
     QQmlSA::Element type = resolveTypeInFileScope(propertyName);
-    if (!type || type.attachedTypeName().isEmpty())
+    QQmlSA::Element attached = resolveAttachedInFileScope(propertyName);
+    if (!type || !attached)
         return;
 
-    const QQmlSA::Element attached = type.attachedType();
     if (category == quickControlsAttachedPropertyReuse) {
         for (QQmlSA::Element parent = attached; parent; parent = parent.baseType()) {
             if (parent.internalName() == "QQuickAttachedPropertyPropagator"_L1) {

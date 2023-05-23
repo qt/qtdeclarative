@@ -610,22 +610,6 @@ bool QQmlSA::Element::isComposite() const
 }
 
 /*!
-    Returns this Element's attached Element.
- */
-Element Element::attachedType() const
-{
-    return QQmlJSScope::createQQmlSAElement(QQmlJSScope::scope(*this)->attachedType());
-}
-
-/*!
-    Returns the name of this Element's attached Element.
- */
-QString Element::attachedTypeName() const
-{
-    return QQmlJSScope::scope(*this)->attachedTypeName();
-}
-
-/*!
     Returns whether this Element has a property with the name \a propertyName.
  */
 bool Element::hasProperty(const QString &propertyName) const
@@ -899,6 +883,13 @@ Element GenericPass::resolveTypeInFileScope(QAnyStringView typeName)
     return QQmlJSScope::createQQmlSAElement(scope);
 }
 
+Element GenericPass::resolveAttachedInFileScope(QAnyStringView typeName)
+{
+    const auto type = resolveTypeInFileScope(typeName);
+    const auto scope = QQmlJSScope::scope(type);
+    return QQmlJSScope::createQQmlSAElement(scope->attachedType());
+}
+
 /*!
     Returns the type of \a typeName defined in module \a moduleName.
  */
@@ -909,6 +900,15 @@ Element GenericPass::resolveType(QAnyStringView moduleName, QAnyStringView typeN
     const auto module = typeImporter->importModule(moduleName.toString());
     const auto scope = module.type(typeName.toString()).scope;
     return QQmlJSScope::createQQmlSAElement(scope);
+}
+
+/*!
+    Returns the attached type of \a typeName defined in module \a moduleName.
+ */
+Element GenericPass::resolveAttached(QAnyStringView moduleName, QAnyStringView typeName)
+{
+    const auto &resolvedType = resolveType(moduleName, typeName);
+    return QQmlJSScope::createQQmlSAElement(QQmlJSScope::scope(resolvedType)->attachedType());
 }
 
 /*!

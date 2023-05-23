@@ -109,6 +109,8 @@ private Q_SLOTS:
     void qualifiedName();
     void resolvedNonUniqueScopes();
     void compilationUnitsAreCompatible();
+    void attachedTypeResolution_data();
+    void attachedTypeResolution();
 
 public:
     tst_qqmljsscope()
@@ -787,6 +789,86 @@ void tst_qqmljsscope::compilationUnitsAreCompatible()
     // qqmltypecompiler (runtime)
     for (qsizetype i = 0; i < cachegenFunctions.size(); ++i)
         QCOMPARE(uint(cachegenFunctions[i]->nameIndex), uint(componentFunctions[i]->nameIndex));
+}
+
+void tst_qqmljsscope::attachedTypeResolution_data()
+{
+    QTest::addColumn<bool>("creatable");
+    QTest::addColumn<QString>("moduleName");
+    QTest::addColumn<QString>("typeName");
+    QTest::addColumn<QString>("attachedTypeName");
+    QTest::addColumn<QString>("propertyOnSelf");
+    QTest::addColumn<QString>("propertyOnAttached");
+
+    QTest::addRow("ListView") << true
+                              << "QtQuick"
+                              << "ListView"
+                              << "QQuickListViewAttached"
+                              << "orientation"
+                              << "";
+    QTest::addRow("Keys") << false
+                          << "QtQuick"
+                          << "Keys"
+                          << "QQuickKeysAttached"
+                          << "priority"
+                          << "priority";
+}
+
+class TestPass : public QQmlSA::ElementPass
+{
+public:
+    TestPass(QQmlSA::PassManager *manager) : QQmlSA::ElementPass(manager) { }
+    bool shouldRun(const QQmlSA::Element &) override { return true; }
+    void run(const QQmlSA::Element &) override { }
+};
+
+void tst_qqmljsscope::attachedTypeResolution()
+{
+    QFETCH(bool, creatable);
+    QFETCH(QString, moduleName);
+    QFETCH(QString, typeName);
+    QFETCH(QString, attachedTypeName);
+    QFETCH(QString, propertyOnSelf);
+    QFETCH(QString, propertyOnAttached);
+
+    std::unique_ptr<QQmlJSLogger> logger = std::make_unique<QQmlJSLogger>();
+    QFile qmlFile("data/attachedTypeResolution.qml");
+    if (!qmlFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        QSKIP("Unable to open qml file");
+
+    logger->setCode(qmlFile.readAll());
+    logger->setFileName(QString(qmlFile.filesystemFileName().string().c_str()));
+    QQmlJSImporter importer{ { "data" }, nullptr, true };
+    QStringList defaultImportPaths =
+            QStringList{ QLibraryInfo::path(QLibraryInfo::QmlImportsPath) };
+    importer.setImportPaths(defaultImportPaths);
+    QQmlJSTypeResolver resolver(&importer);
+    const auto &implicitImportDirectory = QQmlJSImportVisitor::implicitImportDirectory(
+            logger->fileName(), importer.resourceFileMapper());
+    QQmlJSImportVisitor v{
+        QQmlJSScope::create(), &importer, logger.get(), implicitImportDirectory, {}
+    };
+    QQmlSA::PassManager manager{ &v, &resolver };
+    TestPass pass{ &manager };
+    const auto &resolved = pass.resolveType(moduleName, typeName);
+
+    QVERIFY(!resolved.isNull());
+    const auto &attachedType = pass.resolveAttached(moduleName, typeName);
+    QVERIFY(!attachedType.isNull());
+    QCOMPARE(attachedType.internalName(), attachedTypeName);
+
+    if (propertyOnAttached != "") {
+        QEXPECT_FAIL("Keys", "Keys and QQuickKeysAttached have the same properties", Continue);
+        QVERIFY(!resolved.hasProperty(propertyOnAttached));
+        QVERIFY(attachedType.hasProperty(propertyOnAttached));
+    }
+    if (propertyOnSelf != "") {
+        QEXPECT_FAIL("Keys", "Keys and QQuickKeysAttached have the same properties", Continue);
+        QVERIFY(!attachedType.hasProperty(propertyOnSelf));
+    }
+
+    if (creatable)
+        QVERIFY(resolved.hasProperty(propertyOnSelf));
 }
 
 QTEST_MAIN(tst_qqmljsscope)
