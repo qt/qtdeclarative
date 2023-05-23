@@ -2016,9 +2016,10 @@ function(qt6_target_qml_sources target)
         endif()
     endif()
 
-    set(non_qml_files)
-    set(output_targets)
-    set(copied_files)
+    set(non_qml_cpp_files "")
+    set(non_qml_files "")
+    set(output_targets "")
+    set(copied_files "")
 
     # We want to set source file properties in the target's own scope if we can.
     # That's the canonical place the properties will be read from.
@@ -2090,7 +2091,11 @@ function(qt6_target_qml_sources target)
         # This is to facilitate updating code that used the earlier tech preview
         # API function qt6_target_qml_files()
         if(NOT qml_file_src MATCHES "\\.(js|mjs|qml)$")
-            list(APPEND non_qml_files ${qml_file_src})
+            if(qml_file_src MATCHES "\\.(cpp|cxx|cc|c|c\\+\\+|h|hh|hxx|hpp|h\\+\\+)")
+                list(APPEND non_qml_cpp_files "${qml_file_src}")
+            else()
+                list(APPEND non_qml_files "${qml_file_src}")
+            endif()
             continue()
         endif()
 
@@ -2278,13 +2283,19 @@ function(qt6_target_qml_sources target)
         _qt_internal_collect_qml_root_paths("${target}" ${arg_QML_FILES})
     endif()
 
-    if(non_qml_files)
-        list(JOIN non_qml_files "\n  " file_list)
-        message(WARNING
-            "Only .qml, .js or .mjs files should be added with QML_FILES. "
-            "The following files should be added with RESOURCES instead:"
-            "\n  ${file_list}"
-        )
+    if(non_qml_files OR non_qml_cpp_files)
+        if(non_qml_cpp_files)
+            list(JOIN non_qml_cpp_files "\n    " file_list)
+            set(wrong_sources "\nwith SOURCES:\n    ${file_list}"
+            )
+        endif()
+        if(non_qml_files)
+            list(JOIN non_qml_files "\n    " file_list)
+            set(wrong_resources "\nwith RESOURCES:\n    ${file_list}")
+        endif()
+
+        message(WARNING "Only .qml, .js or .mjs files should be added with QML_FILES. "
+            "The following files should be added${wrong_sources}${wrong_resources}")
     endif()
 
     if(copied_files OR generated_sources_other_scope)
