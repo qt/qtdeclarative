@@ -2029,6 +2029,10 @@ void tst_QmlCppCodegen::invisibleListElementType()
 
 void tst_QmlCppCodegen::invisibleSingleton()
 {
+    // We may have seen Style.qml as singleton before, which would make the assignment pass.
+    // So let's flush the type registry.
+    qmlClearTypeRegistrations();
+
     QQmlEngine engine;
     const QUrl copy(u"qrc:/qt/qml/TestTypes/hidden/Main.qml"_s);
     QQmlComponent c(&engine, copy);

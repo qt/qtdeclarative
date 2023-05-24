@@ -69,9 +69,10 @@ public:
     static QMetaType metaTypeForPropertyType(QV4::CompiledData::CommonType type);
     static QMetaType listTypeForPropertyType(QV4::CompiledData::CommonType type);
 
+    static bool canCreateClassNameTypeByUrl(const QUrl &url);
     static QByteArray createClassNameTypeByUrl(const QUrl &url);
 
-    static QByteArray createClassNameForInlineComponent(const QUrl &baseUrl, int icId);
+    static QByteArray createClassNameForInlineComponent(const QUrl &baseUrl, const QString &name);
 
     struct IncrementalResult {
         // valid if and only if an error occurred
@@ -157,7 +158,7 @@ inline QQmlPropertyCacheCreator<ObjectContainer>::QQmlPropertyCacheCreator(QQmlP
     , typeClassName(typeClassName)
     , currentRoot(-1)
 {
-    propertyCaches->resize(objectContainer->objectCount());
+    propertyCaches->resetAndResize(objectContainer->objectCount());
 
     using namespace icutils;
 
@@ -626,35 +627,29 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
             // inline components are not necessarily valid yet
             Q_ASSERT(qmltype.isValid() || qmltype.isInlineComponentType());
             if (qmltype.isComposite() || qmltype.isInlineComponentType()) {
-                CompositeMetaTypeIds typeIds;
+                QQmlType compositeType;
                 if (qmltype.isInlineComponentType()) {
                     const QString icName = qmltype.elementName();
-                    auto containingType = qmltype.containingType();
-                    if (containingType.isValid()) {
-                        const QQmlType icType
-                            = QQmlMetaType::inlineComponentType(containingType, icName);
-                        typeIds = {icType.typeId(), icType.qListTypeId()};
-                    } else {
-                        typeIds = {};
-                    }
-                    if (!typeIds.isValid()) // type has not been registered yet, we must be in containing type
-                        typeIds = objectContainer->typeIdsForComponent(icName);
-                    Q_ASSERT(typeIds.isValid());
+                    compositeType = QQmlMetaType::inlineComponentTypeForUrl(
+                            qmltype.sourceUrl(), icName);
+                    if (!compositeType.isValid()) // type has not been registered yet, we must be in containing type
+                        compositeType = objectContainer->qmlTypeForComponent(icName);
+                    Q_ASSERT(compositeType.isValid());
                 } else if (selfReference) {
-                     typeIds = objectContainer->typeIdsForComponent();
+                     compositeType = objectContainer->qmlTypeForComponent();
                 } else {
                     QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
                     Q_ASSERT(tdata);
                     Q_ASSERT(tdata->isComplete());
 
                     auto compilationUnit = tdata->compilationUnit();
-                    typeIds = compilationUnit->typeIdsForComponent();
+                    compositeType = compilationUnit->qmlTypeForComponent();
                 }
 
                 if (p->isList()) {
-                    propertyType = typeIds.listId;
+                    propertyType = compositeType.qListTypeId();
                 } else {
-                    propertyType = typeIds.id;
+                    propertyType = compositeType.typeId();
                 }
             } else {
                 if (p->isList())
@@ -714,16 +709,16 @@ inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter
     if (!qmltype.isComposite()) {
         const QMetaType typeId = param.isList() ? qmltype.qListTypeId() : qmltype.typeId();
         if (!typeId.isValid() && qmltype.isInlineComponentType()) {
-            const auto typeIds = objectContainer->typeIdsForComponent(qmltype.elementName());
-            return param.isList() ? typeIds.listId : typeIds.id;
+            const QQmlType qmlType = objectContainer->qmlTypeForComponent(qmltype.elementName());
+            return param.isList() ? qmlType.qListTypeId() : qmlType.typeId();
         } else {
             return typeId;
         }
     }
 
     if (selfReference) {
-        const auto typeIds = objectContainer->typeIdsForComponent();
-        return param.isList() ? typeIds.listId : typeIds.id;
+        const QQmlType qmlType = objectContainer->qmlTypeForComponent();
+        return param.isList() ? qmlType.qListTypeId() : qmlType.typeId();
     }
 
     QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
@@ -732,7 +727,9 @@ inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter
 
     auto compilationUnit = tdata->compilationUnit();
 
-    return param.isList() ? compilationUnit->typeIds.listId : compilationUnit->typeIds.id;
+    return param.isList()
+               ? compilationUnit->qmlType.qListTypeId()
+               : compilationUnit->qmlType.typeId();
 }
 
 template <typename ObjectContainer>
@@ -825,11 +822,11 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         if (referencedType.isValid()) {
             *type = referencedType.typeId();
             if (!type->isValid() && referencedType.isInlineComponentType()) {
-                *type = objectContainer->typeIdsForComponent(referencedType.elementName()).id;
+                *type = objectContainer->qmlTypeForComponent(referencedType.elementName()).typeId();
                 Q_ASSERT(type->isValid());
             }
         } else {
-            *type = typeRef->compilationUnit()->typeIds.id;
+            *type = typeRef->compilationUnit()->qmlType.typeId();
         }
 
         *version = typeRef->version();

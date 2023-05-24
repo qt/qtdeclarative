@@ -163,13 +163,13 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
         if (!qmltype.isComposite()) {
             if (!qmltype.isInlineComponentType())
                 return QMetaType();
-            const CompositeMetaTypeIds typeIds = unit->typeIdsForComponent(qmltype.elementName());
-            return param.isList() ? typeIds.listId : typeIds.id;
+            const QQmlType qmlType = unit->qmlTypeForComponent(qmltype.elementName());
+            return param.isList() ? qmlType.qListTypeId() : qmlType.typeId();
         }
 
-        const CompositeMetaTypeIds typeIds = enginePrivate->typeLoader.getType(
-                    qmltype.sourceUrl())->compilationUnit()->typeIds;
-        return param.isList() ? typeIds.listId : typeIds.id;
+        const QQmlType qmlType = enginePrivate->typeLoader.getType(
+                    qmltype.sourceUrl())->compilationUnit()->qmlType;
+        return param.isList() ? qmlType.qListTypeId() : qmlType.typeId();
     };
 
     for (quint16 i = 0; i < nFormals; ++i)

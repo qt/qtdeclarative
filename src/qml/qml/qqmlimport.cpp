@@ -582,38 +582,14 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
         bool ret = uri == typeStr;
         if (ret) {
             Q_ASSERT(!type_return->isValid());
-            auto createICType = [&]() {
-                auto typePriv = new QQmlTypePrivate {QQmlType::RegistrationType::InlineComponentType};
-                const QUrl ownUrl = QUrl(url);
-                typePriv->elementName = ownUrl.fragment();
-                Q_ASSERT(!typePriv->elementName.isEmpty());
-                typePriv->extraData.id->url = ownUrl;
-                auto icType = QQmlType(typePriv);
-                typePriv->release();
-                return icType;
-            };
-            if (containingType.isValid()) {
-                // we currently cannot reference a Singleton inside itself
-                // in that case, containingType is still invalid
-                if (QQmlType ic = QQmlMetaType::inlineComponentType(containingType, typeStr);
-                        ic.isValid()) {
-                    *type_return = ic;
-                } else {
-                    auto icType = createICType();
-                    QQmlMetaType::associateInlineComponent(
-                        containingType, typeStr, CompositeMetaTypeIds {}, icType);
-                    *type_return = QQmlType(icType);
-                }
-            } else  {
-                *type_return = createICType();
-            }
+            *type_return = QQmlMetaType::inlineComponentTypeForUrl(QUrl(url));
         }
         return ret;
     }
     QQmlDirComponents::ConstIterator it = qmlDirComponents.find(typeStr), end = qmlDirComponents.end();
     if (it != end) {
         QString componentUrl;
-        bool isCompositeSingleton = false;
+        QQmlMetaType::CompositeTypeLookupMode lookupMode = QQmlMetaType::NonSingleton;
         QQmlDirComponents::ConstIterator candidate = end;
         for ( ; it != end && it.key() == typeStr; ++it) {
             const QQmlDirParser::Component &c = *it;
@@ -658,7 +634,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
 
                     // This is our best candidate so far
                     candidate = it;
-                    isCompositeSingleton = c.singleton;
+                    lookupMode = c.singleton ? QQmlMetaType::Singleton : QQmlMetaType::NonSingleton;
                 }
             }
         }
@@ -666,7 +642,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
         if (candidate != end) {
             if (!base) // ensure we have a componentUrl
                 componentUrl = resolveLocalUrl(QString(url + candidate->typeName + dotqml_string), candidate->fileName);
-            QQmlType returnType = QQmlMetaType::typeForUrl(componentUrl, type, isCompositeSingleton,
+            QQmlType returnType = QQmlMetaType::typeForUrl(componentUrl, type, lookupMode,
                                                            nullptr, candidate->version);
             if (version_return)
                 *version_return = candidate->version;
@@ -715,7 +691,10 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                 *typeRecursionDetected = recursion;
             if (recursionRestriction == QQmlImport::AllowRecursion || !recursion) {
                 QQmlType returnType = QQmlMetaType::typeForUrl(
-                        qmlUrl, type, registrationType == QQmlType::CompositeSingletonType, errors);
+                        qmlUrl, type, registrationType == QQmlType::CompositeSingletonType
+                                ? QQmlMetaType::Singleton
+                                : QQmlMetaType::NonSingleton,
+                        errors);
                 if (type_return)
                     *type_return = returnType;
                 return returnType.isValid();
@@ -747,7 +726,7 @@ bool QQmlImports::resolveType(
             *type_return = QQmlMetaType::typeForUrl(
                     resolveLocalUrl(nameSpace->imports.at(0)->url,
                                     unqualifiedtype.toString() + QLatin1String(".qml")),
-                    type, false, errors);
+                    type, QQmlMetaType::NonSingleton, errors);
             return type_return->isValid();
         }
         return false;
@@ -766,22 +745,8 @@ bool QQmlImports::resolveType(
         } else {
             if (resolveTypeInNamespace(splitName.at(0), &m_unqualifiedset, nullptr)) {
                 // either simple type + inline component
-                const QString icName = splitName.at(1).toString();
-                const QQmlType ic = QQmlMetaType::inlineComponentType(*type_return, icName);
-                if (ic.isValid()) {
-                    *type_return = ic;
-                } else {
-                    auto icTypePriv = new QQmlTypePrivate(QQmlType::RegistrationType::InlineComponentType);
-                    icTypePriv->setContainingType(type_return);
-                    icTypePriv->extraData.id->url = type_return->sourceUrl();
-                    icTypePriv->extraData.id->url.setFragment(icName);
-                    auto icType = QQmlType(icTypePriv);
-                    icTypePriv->release();
-                    QQmlMetaType::associateInlineComponent(
-                        *type_return, icName, CompositeMetaTypeIds {}, icType);
-                    *type_return = icType;
-                }
-                Q_ASSERT(type_return->containingType().isValid());
+                *type_return = QQmlMetaType::inlineComponentTypeForUrl(
+                        type_return->sourceUrl(), splitName.at(1).toString());
                 return true;
             } else {
                 // or a failure
@@ -802,21 +767,8 @@ bool QQmlImports::resolveType(
             error.setDescription(QQmlImportDatabase::tr("- %1 is not a namespace").arg(splitName.at(0).toString()));
         } else {
             if (resolveTypeInNamespace(splitName.at(1), s, nullptr)) {
-                auto const icName = splitName.at(2).toString();
-                QQmlType ic = QQmlMetaType::inlineComponentType(*type_return, icName);
-                if (ic.isValid())
-                    *type_return = ic;
-                else {
-                    auto icTypePriv = new QQmlTypePrivate(QQmlType::RegistrationType::InlineComponentType);
-                    icTypePriv->setContainingType(type_return);
-                    icTypePriv->extraData.id->url = type_return->sourceUrl();
-                    icTypePriv->extraData.id->url.setFragment(icName);
-                    auto icType = QQmlType(icTypePriv);
-                    icTypePriv->release();
-                    QQmlMetaType::associateInlineComponent(
-                        *type_return, icName, CompositeMetaTypeIds {}, icType);
-                    *type_return = icType;
-                }
+                *type_return = QQmlMetaType::inlineComponentTypeForUrl(
+                        type_return->sourceUrl(), splitName.at(2).toString());
                 return true;
             } else {
                 error.setDescription(QQmlImportDatabase::tr("- %1 is not a type").arg(splitName.at(1).toString()));
@@ -1530,13 +1482,12 @@ QTypeRevision QQmlImports::updateQmldirContent(
 /*!
  \internal
  */
-bool QQmlImports::addInlineComponentImport(QQmlImportInstance *const importInstance, const QString &name, const QUrl importUrl, QQmlType containingType)
+bool QQmlImports::addInlineComponentImport(QQmlImportInstance *const importInstance, const QString &name, const QUrl importUrl)
 {
     importInstance->url = importUrl.toString();
     importInstance->uri = name;
     importInstance->isInlineComponent = true;
     importInstance->version = QTypeRevision::zero();
-    importInstance->containingType = containingType;
     m_unqualifiedset.imports.push_back(importInstance);
     m_unqualifiedset.setNeedsSorting(true);
     return true;

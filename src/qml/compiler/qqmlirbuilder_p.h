@@ -472,6 +472,12 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT Document
 
     QV4::CompiledData::CompilationUnit javaScriptCompilationUnit;
 
+    bool isSingleton() const {
+        return std::any_of(pragmas.constBegin(), pragmas.constEnd(), [](const Pragma *pragma) {
+            return pragma->type == Pragma::Singleton;
+        });
+    }
+
     int registerString(const QString &str) { return jsGenerator.registerString(str); }
     QString stringAt(int index) const { return jsGenerator.stringForIndex(index); }
 

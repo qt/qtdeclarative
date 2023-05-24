@@ -34,15 +34,17 @@ class QQmlEnginePrivate;
 struct InlineComponentData {
 
     InlineComponentData() = default;
-    InlineComponentData(const CompositeMetaTypeIds &typeIds, int objectIndex, int nameIndex, int totalObjectCount, int totalBindingCount, int totalParserStatusCount)
-        :   typeIds(typeIds)
-          , objectIndex(objectIndex)
-          , nameIndex(nameIndex)
-          , totalObjectCount(totalObjectCount)
-          , totalBindingCount(totalBindingCount)
-          , totalParserStatusCount(totalParserStatusCount) {}
+    InlineComponentData(
+            const QQmlType &qmlType, int objectIndex, int nameIndex, int totalObjectCount,
+            int totalBindingCount, int totalParserStatusCount)
+        : qmlType(qmlType)
+        , objectIndex(objectIndex)
+        , nameIndex(nameIndex)
+        , totalObjectCount(totalObjectCount)
+        , totalBindingCount(totalBindingCount)
+        , totalParserStatusCount(totalParserStatusCount) {}
 
-    CompositeMetaTypeIds typeIds;
+    QQmlType qmlType;
     int objectIndex = -1;
     int nameIndex = -1;
     int totalObjectCount = 0;
@@ -126,7 +128,7 @@ public:
     QHash<int, IdentifierHash> namedObjectsPerComponentCache;
     inline IdentifierHash namedObjectsPerComponent(int componentObjectIndex);
 
-    void finalizeCompositeType(CompositeMetaTypeIds typeIdsForComponent);
+    void finalizeCompositeType(const QQmlType &type);
 
     int m_totalBindingsCount = 0; // Number of bindings used in this type
     int m_totalParserStatusCount = 0; // Number of instantiated types that are QQmlParserStatus subclasses
@@ -143,10 +145,9 @@ public:
 
     bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const;
 
-    CompositeMetaTypeIds typeIdsForComponent(const QString &inlineComponentName = QString()) const;
+    QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const;
 
-    CompositeMetaTypeIds typeIds;
-    bool isRegistered = false;
+    QQmlType qmlType;
 
     QHash<QString, InlineComponentData> inlineComponentData;
 

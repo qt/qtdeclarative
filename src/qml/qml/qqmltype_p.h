@@ -39,7 +39,6 @@ class QQmlPropertyCache;
 namespace QV4 {
 struct String;
 }
-struct CompositeMetaTypeIds;
 
 class Q_QML_PRIVATE_EXPORT QQmlType
 {
@@ -158,8 +157,6 @@ public:
         SequentialContainerType = 6,
         AnyRegistrationType = 255
     };
-
-    QQmlType containingType() const;
 
     void createProxy(QObject *instance) const;
 

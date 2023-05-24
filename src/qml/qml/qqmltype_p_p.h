@@ -36,7 +36,6 @@ public:
     void initEnums(QQmlEnginePrivate *engine) const;
     void insertEnums(const QMetaObject *metaObject) const;
     void insertEnumsFromPropertyCache(const QQmlPropertyCache::ConstPtr &cache) const;
-    void setContainingType(QQmlType *containingType);
 
     QUrl sourceUrl() const
     {
@@ -111,11 +110,6 @@ public:
     struct QQmlInlineTypeData
     {
         QUrl url;
-        // The containing type stores a pointer to the inline component type
-        // Using QQmlType here would create a reference cycle
-        // As the inline component type cannot outlive the containing type
-        // this should still be fine
-        QQmlTypePrivate const * containingType = nullptr;
     };
 
     using QQmlSequenceTypeData = QMetaSequence;

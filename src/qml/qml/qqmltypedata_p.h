@@ -68,7 +68,7 @@ public:
     void registerCallback(TypeDataCallback *);
     void unregisterCallback(TypeDataCallback *);
 
-    CompositeMetaTypeIds typeIds(const QString &inlineComponentName = QString()) const;
+    QQmlType qmlType(const QString &inlineComponentName = QString()) const;
     QByteArray typeClassName() const { return m_typeClassName; }
     SourceCodeData backupSourceCode() const { return m_backupSourceCode; }
 
@@ -120,8 +120,8 @@ private:
     QMap<int, TypeReference> m_resolvedTypes;
     bool m_typesResolved:1;
 
-    // Used for self-referencing types, otherwise -1.
-    CompositeMetaTypeIds m_typeIds;
+    // Used for self-referencing types, otherwise invalid.
+    QQmlType m_qmlType;
     QByteArray m_typeClassName; // used for meta-object later
 
     using ExecutableCompilationUnitPtr = QQmlRefPointer<QV4::ExecutableCompilationUnit>;

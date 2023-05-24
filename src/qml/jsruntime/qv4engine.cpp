@@ -859,8 +859,9 @@ ExecutionEngine::~ExecutionEngine()
     delete identifierTable;
     delete memoryManager;
 
+    // Take a temporary reference to the CU so that it doesn't disappear during unlinking.
     while (!compilationUnits.isEmpty())
-        (*compilationUnits.begin())->unlink();
+        QQmlRefPointer<ExecutableCompilationUnit>(*compilationUnits.begin())->unlink();
 
     delete bumperPointerAllocator;
     delete regExpCache;

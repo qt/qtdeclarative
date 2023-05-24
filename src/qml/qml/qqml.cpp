@@ -1824,7 +1824,7 @@ bool AOTCompiledContext::loadTypeLookup(uint index, void *target) const
     QMetaType metaType = typeWrapper->type().typeId();
     if (!metaType.isValid()) {
         metaType = ep->typeLoader.getType(typeWrapper->type().sourceUrl())
-                ->compilationUnit()->typeIds.id;
+                ->compilationUnit()->qmlType.typeId();
     }
 
     *static_cast<const QMetaObject **>(target)

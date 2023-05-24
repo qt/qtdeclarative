@@ -58,6 +58,11 @@ public:
 using NodeList = std::vector<Node>;
 using AdjacencyList = std::vector<std::vector<Node*>>;
 
+inline bool containedInSameType(const QQmlType &a, const QQmlType &b)
+{
+    return QQmlMetaType::equalBaseUrls(a.sourceUrl(), b.sourceUrl());
+}
+
 template<typename ObjectContainer, typename InlineComponent>
 void fillAdjacencyListForInlineComponents(ObjectContainer *objectContainer,
                                           AdjacencyList &adjacencyList, NodeList &nodes,
@@ -75,7 +80,7 @@ void fillAdjacencyListForInlineComponents(ObjectContainer *objectContainer,
             if (targetTypeRef) {
                 const auto targetType = targetTypeRef->type();
                 if (targetType.isInlineComponentType()
-                        && targetType.containingType() == currentICTypeRef->type().containingType()) {
+                        && containedInSameType(targetType, currentICTypeRef->type())) {
                     auto icIt = std::find_if(allICs.cbegin(), allICs.cend(), [&](const QV4::CompiledData::InlineComponent &icSearched){
                         return objectContainer->stringAt(icSearched.nameIndex)
                                == targetType.elementName();

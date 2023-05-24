@@ -108,7 +108,7 @@ public:
         return resolvedTypes->value(id);
     }
 
-    CompositeMetaTypeIds typeIdsForComponent(const QString &inlineComponentName = QString()) const;
+    QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const;
 
 private:
     QList<QQmlError> errors;

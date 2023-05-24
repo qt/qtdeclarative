@@ -68,6 +68,12 @@ QQmlTypePrivate::~QQmlTypePrivate()
     qDeleteAll(scopedEnums);
     for (const auto &metaObject : metaObjects)
         free(metaObject.metaObject);
+
+    if (const auto &iface = typeId.iface()) {
+        if (iface->metaObjectFn == &dynamicQmlMetaObject)
+            QQmlMetaType::unregisterInternalCompositeType(typeId, listId);
+    }
+
     switch (regType) {
     case QQmlType::CppType:
         delete extraData.cd->customParser;
@@ -402,12 +408,6 @@ void QQmlTypePrivate::insertEnumsFromPropertyCache(
         }
     }
     insertEnums(cppMetaObject);
-}
-
-void QQmlTypePrivate::setContainingType(QQmlType *containingType)
-{
-    Q_ASSERT(regType == QQmlType::InlineComponentType);
-    extraData.id->containingType = containingType->d.data();
 }
 
 void QQmlTypePrivate::setName(const QString &uri, const QString &element)
@@ -926,14 +926,6 @@ int QQmlType::refCount(const QQmlTypePrivate *priv)
     if (priv)
         return priv->count();
     return -1;
-}
-
-QQmlType QQmlType::containingType() const
-{
-    Q_ASSERT(d && d->regType == QQmlType::RegistrationType::InlineComponentType);
-    auto ret = QQmlType {d->extraData.id->containingType};
-    Q_ASSERT(!ret.isInlineComponentType());
-    return ret;
 }
 
 void QQmlType::createProxy(QObject *instance) const
