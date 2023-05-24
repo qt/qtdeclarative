@@ -20,14 +20,14 @@ Item {
     }
 
     ListView {
+        id: balloonView
         anchors.bottom: controls.top
         anchors.bottomMargin: 2
         anchors.top: parent.top
-        id: balloonView
         delegate: TextBalloon {
-            anchors.right: index % 2 == 0 ? undefined : parent.right
+            anchors.right: index % 2 != 0 ? parent?.right : undefined
             height: 60
-            rightAligned: index % 2 == 0 ? false : true
+            rightAligned: index % 2 != 0
             width: balloonWidth
         }
         model: balloonModel
@@ -50,7 +50,7 @@ Item {
 
         Text {
             anchors.centerIn: parent
-            text: "Add another balloon"
+            text: qsTr("Add another balloon")
         }
 
         MouseArea {
