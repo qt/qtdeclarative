@@ -292,7 +292,6 @@ void ExecutableCompilationUnit::unlink()
     resolvedTypes.clear();
 
     engine = nullptr;
-    qmlEngine = nullptr;
 
     delete [] runtimeLookups;
     runtimeLookups = nullptr;
@@ -358,10 +357,8 @@ IdentifierHash ExecutableCompilationUnit::createNamedObjectsPerComponent(int com
     return *namedObjectsPerComponentCache.insert(componentObjectIndex, namedObjectCache);
 }
 
-void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngine, CompositeMetaTypeIds types)
+void ExecutableCompilationUnit::finalizeCompositeType(CompositeMetaTypeIds types)
 {
-    this->qmlEngine = qmlEngine;
-
     // Add to type registry of composites
     if (propertyCaches.needsVMEMetaObject(/*root object*/0)) {
         // typeIds is only valid for types that have references to themselves.

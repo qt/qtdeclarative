@@ -486,7 +486,7 @@ void QQmlTypeData::done()
             }
         }
 
-        m_compiledData->finalizeCompositeType(enginePrivate, typeIds());
+        m_compiledData->finalizeCompositeType(typeIds());
     }
 
     {
