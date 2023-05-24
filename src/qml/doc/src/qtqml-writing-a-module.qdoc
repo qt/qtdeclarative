@@ -116,7 +116,7 @@ You can use the \l Q_IMPORT_QML_PLUGIN macro to create a reference to this symbo
 Add the following code to the main.cpp:
 
 \badcode
-#include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/QQmlExtensionPlugin>
 Q_IMPORT_QML_PLUGIN(ExtraModulePlugin)
 \endcode
 
