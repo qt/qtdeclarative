@@ -4,8 +4,6 @@
 #include <QGuiApplication>
 #include <QQuickView>
 
-#include "maskedmousearea.h"
-
 int main(int argc, char* argv[])
 {
     QGuiApplication app(argc,argv);

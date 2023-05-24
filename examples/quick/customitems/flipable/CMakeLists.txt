@@ -23,7 +23,7 @@ qt_add_executable(flipableexample
     main.cpp
 )
 
-target_link_libraries(flipableexample PUBLIC
+target_link_libraries(flipableexample PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Qml

@@ -14,7 +14,7 @@ qt_add_qml_module(qmltextballoon
         textballoon.cpp textballoon.h
 )
 
-target_link_libraries(qmltextballoon PUBLIC
+target_link_libraries(qmltextballoon PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Qml

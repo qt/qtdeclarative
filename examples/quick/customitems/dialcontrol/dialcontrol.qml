@@ -43,7 +43,7 @@ Rectangle {
                 return
             }
 
-            var desiredPercent = slider.x * 100 / (oldWidth - 32)
+            let desiredPercent = slider.x * 100 / (oldWidth - 32)
             slider.x = desiredPercent * (width - 32) / 100
             oldWidth = width
         }
