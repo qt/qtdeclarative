@@ -7,7 +7,8 @@
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
 
-QT_USE_NAMESPACE
+QT_BEGIN_NAMESPACE
+
 using namespace Qt::StringLiterals;
 
 QmlGoToDefinitionSupport::QmlGoToDefinitionSupport(QmlLsp::QQmlCodeModel *codeModel)
@@ -64,3 +65,4 @@ void QmlGoToDefinitionSupport::process(RequestPointerArgument request)
 
     results.append(l);
 }
+QT_END_NAMESPACE

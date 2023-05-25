@@ -22,6 +22,8 @@
 #include <tuple>
 #include <variant>
 
+QT_BEGIN_NAMESPACE
+
 struct QQmlLSUtilsItemLocation
 {
     QQmlJS::Dom::DomItem domItem;
@@ -83,5 +85,6 @@ public:
     static QQmlJSScope::ConstPtr resolveExpressionType(QQmlJS::Dom::DomItem item,
                                                        QQmlLSUtilsResolveOptions);
 };
+QT_END_NAMESPACE
 
 #endif // QLANGUAGESERVERUTILS_P_H

@@ -19,6 +19,8 @@
 #include "qqmlcodemodel_p.h"
 #include "qqmlbasemodule_p.h"
 
+QT_BEGIN_NAMESPACE
+
 struct TypeDefinitionRequest
     : public BaseRequest<QLspSpecification::TypeDefinitionParams,
                          QLspSpecification::Responses::TypeDefinitionResponseType>
@@ -42,5 +44,7 @@ public:
                                       const QLspSpecification::TypeDefinitionParams &params,
                                       TypeDefinitionRequest::Response &&response);
 };
+
+QT_END_NAMESPACE
 
 #endif // QMLGOTOTYPEDEFINITIONSUPPORT_P_H

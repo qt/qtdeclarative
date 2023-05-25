@@ -18,10 +18,11 @@
 #include <utility>
 #include <variant>
 
-QT_USE_NAMESPACE
 using namespace QLspSpecification;
 using namespace QQmlJS::Dom;
 using namespace Qt::StringLiterals;
+
+QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(QQmlLSUtilsLog, "qt.languageserver.utils")
 
@@ -763,3 +764,5 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
 
     Q_UNREACHABLE_RETURN(std::nullopt);
 }
+
+QT_END_NAMESPACE
