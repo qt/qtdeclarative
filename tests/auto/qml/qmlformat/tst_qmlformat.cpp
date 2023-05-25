@@ -150,8 +150,8 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon2.qml";
 
     // These files are too big
-    m_ignoreFiles << "tests/auto/qmldom/domdata/domitem/longQmlFile.qml";
-    m_ignoreFiles << "tests/auto/qmldom/domdata/domitem/deeplyNested.qml";
+    m_ignoreFiles << "tests/benchmarks/qml/qmldom/data/longQmlFile.qml";
+    m_ignoreFiles << "tests/benchmarks/qml/qmldom/data/deeplyNested.qml";
 
     // qmlformat cannot handle deconstructing arguments
     m_ignoreFiles << "tests/auto/qmldom/domdata/domitem/callExpressions.qml";

@@ -882,53 +882,6 @@ private slots:
         }
     }
 
-    void domConstructionTime_data()
-    {
-        QTest::addColumn<QString>("fileName");
-        QTest::addColumn<DomCreationOptions>("withScope");
-
-        DomCreationOptions withScope = DomCreationOption::WithSemanticAnalysis;
-        DomCreationOptions noScope = DomCreationOption::None;
-        DomCreationOptions withScopeAndScriptExpressions;
-        withScopeAndScriptExpressions.setFlag(DomCreationOption::WithSemanticAnalysis);
-        withScopeAndScriptExpressions.setFlag(DomCreationOption::WithScriptExpressions);
-
-        QTest::addRow("tiger.qml") << baseDir + u"/longQmlFile.qml"_s << noScope;
-        QTest::addRow("tiger.qml-with-scope") << baseDir + u"/longQmlFile.qml"_s << withScope;
-        QTest::addRow("tiger.qml-with-scope-and-scriptexpressions")
-                << baseDir + u"/longQmlFile.qml"_s << withScopeAndScriptExpressions;
-
-        QTest::addRow("deeplyNested.qml") << baseDir + u"/deeplyNested.qml"_s << noScope;
-        QTest::addRow("deeplyNested.qml-with-scope")
-                << baseDir + u"/deeplyNested.qml"_s << withScope;
-        QTest::addRow("deeplyNested.qml-with-scope-and-scriptexpressions")
-                << baseDir + u"/deeplyNested.qml"_s << withScopeAndScriptExpressions;
-    }
-
-    void domConstructionTime()
-    {
-        QFETCH(QString, fileName);
-        QFETCH(DomCreationOptions, withScope);
-
-        const QStringList importPaths = {
-            QLibraryInfo::path(QLibraryInfo::QmlImportsPath),
-        };
-
-        DomItem tFile;
-        QBENCHMARK {
-            DomItem env = DomEnvironment::create(
-                    importPaths,
-                    QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
-                            | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
-
-            env.loadFile(
-                    FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), fileName, withScope),
-                    [&tFile](Path, DomItem &, DomItem &newIt) { tFile = newIt.fileObject(); },
-                    LoadOption::DefaultLoad);
-            env.loadPendingDependencies();
-        }
-    }
-
     void propertyBindings()
     {
         using namespace Qt::StringLiterals;
@@ -1857,15 +1810,10 @@ private slots:
     void fileLocations_data()
     {
         QTest::addColumn<QString>("fileName");
-
-        // ignore the very big files for this
-        QSet<QString> blackList = { u"deeplyNested.qml"_s, u"longQmlFile.qml"_s };
-
         QDir dir(baseDir);
         for (const QString &file : dir.entryList(QDir::Files, QDir::Name)) {
-            if (!file.endsWith(".qml") || blackList.contains(file))
+            if (!file.endsWith(".qml"))
                 continue;
-
             QTest::addRow("%s", file.toStdString().c_str()) << baseDir + QDir::separator() + file;
         }
     }
