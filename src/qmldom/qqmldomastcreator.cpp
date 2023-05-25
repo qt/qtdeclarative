@@ -1977,6 +1977,101 @@ void QQmlDomAstCreator::endVisit(AST::SwitchStatement *exp)
     pushScriptElement(current);
 }
 
+bool QQmlDomAstCreator::visit(AST::WhileStatement *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::WhileStatement *exp)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(exp, DomType::ScriptWhileStatement);
+
+    if (exp->statement) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->insertChild(Fields::body, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    if (exp->expression) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->insertChild(Fields::expression, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::DoWhileStatement *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::DoWhileStatement *exp)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(exp, DomType::ScriptDoWhileStatement);
+
+    if (exp->expression) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->insertChild(Fields::expression, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    if (exp->statement) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->insertChild(Fields::body, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::ForEachStatement *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::ForEachStatement *exp)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(exp, DomType::ScriptForEachStatement);
+
+    if (exp->statement) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->insertChild(Fields::body, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+    if (exp->expression) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->insertChild(Fields::expression, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    if (exp->lhs) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->insertChild(Fields::bindingElement, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
 static const DomEnvironment *environmentFrom(MutableDomItem &qmlFile)
 {
     auto top = qmlFile.top();
@@ -2040,6 +2135,9 @@ QQmlJSASTClassListToVisit
         switch (topOfStack.kind) {
         case DomType::ScriptBlockStatement:
         case DomType::ScriptForStatement:
+        case DomType::ScriptForEachStatement:
+        case DomType::ScriptDoWhileStatement:
+        case DomType::ScriptWhileStatement:
         case DomType::List:
             m_domCreator.currentScriptNodeEl().setSemanticScope(scope);
             break;

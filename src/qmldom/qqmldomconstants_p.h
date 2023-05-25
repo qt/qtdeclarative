@@ -219,6 +219,9 @@ enum class DomType {
     ScriptCaseClauses,
     ScriptCaseClause,
     ScriptDefaultClause,
+    ScriptWhileStatement,
+    ScriptDoWhileStatement,
+    ScriptForEachStatement,
 
     ScriptElementStop, // marker to check if a DomType is a scriptelement or not
 };

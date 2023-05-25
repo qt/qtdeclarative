@@ -155,6 +155,7 @@ void TestQmlformat::initTestCase()
 
     // qmlformat cannot handle deconstructing arguments
     m_ignoreFiles << "tests/auto/qmldom/domdata/domitem/callExpressions.qml";
+    m_ignoreFiles << "tests/auto/qmldom/domdata/domitem/iterationStatements.qml";
 }
 
 QStringList TestQmlformat::findFiles(const QDir &d)
