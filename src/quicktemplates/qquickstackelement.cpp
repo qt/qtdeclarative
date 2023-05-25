@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickstackelement_p_p.h"
+#include "qquickstackview_p.h"
 #include "qquickstackview_p_p.h"
 
 #include <QtQml/qqmlinfo.h>
@@ -123,6 +124,31 @@ QQuickStackElement *QQuickStackElement::fromObject(QObject *object, QQuickStackV
     if (element->item)
         element->originalParent = element->item->parentItem();
 #endif
+    return element;
+}
+
+QQuickStackElement *QQuickStackElement::fromStackViewArg(QQuickStackView *view, QQuickStackViewArg arg)
+{
+    QQuickStackElement *element = new QQuickStackElement;
+#if QT_CONFIG(quick_viewtransitions)
+    element->item = arg.mItem;
+    if (element->item) {
+        element->originalParent = element->item->parentItem();
+
+        Q_ASSERT(!arg.mComponent);
+        Q_ASSERT(!arg.mUrl.isValid());
+    } else
+#endif
+    if (arg.mComponent) {
+        element->component = arg.mComponent;
+
+        Q_ASSERT(!arg.mUrl.isValid());
+    } else if (arg.mUrl.isValid()) {
+        element->component = new QQmlComponent(qmlEngine(view), arg.mUrl, view);
+        element->ownComponent = true;
+    } else {
+        qFatal("No Item, Component or URL set on arg passed to fromStrictArg");
+    }
     return element;
 }
 

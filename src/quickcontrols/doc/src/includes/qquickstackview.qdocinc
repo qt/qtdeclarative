@@ -3,3 +3,13 @@ Only items that StackView created itself (from a \l Component or \l [QML]
 url) will be destroyed when popped. See \l {Item Ownership} for more
 information.
 //! [pop-ownership]
+
+//! [operation-values]
+An \a operation can be optionally specified as the last argument. Supported
+operations:
+
+\value StackView.Immediate An immediate operation without transitions.
+\value StackView.PushTransition An operation with push transitions.
+\value StackView.ReplaceTransition An operation with replace transitions.
+\value StackView.PopTransition An operation with pop transitions.
+//! [operation-values]

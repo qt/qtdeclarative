@@ -18,6 +18,39 @@
 
 QT_BEGIN_NAMESPACE
 
+QQuickStackViewArg::QQuickStackViewArg(QQuickItem *item)
+    : mItem(item)
+{
+}
+
+QQuickStackViewArg::QQuickStackViewArg(const QUrl &url)
+    : mUrl(url)
+{
+}
+
+QQuickStackViewArg::QQuickStackViewArg(QQmlComponent *component)
+    : mComponent(component)
+{
+}
+
+QQuickStackViewArg::QQuickStackViewArg(const QVariantMap &properties)
+    : mProperties(properties)
+{
+}
+
+#ifndef QT_NO_DEBUG_STREAM
+QDebug operator<<(QDebug debug, const QQuickStackViewArg &arg)
+{
+    QDebugStateSaver saver(debug);
+    debug.nospace() << "QQuickStackViewArg("
+        << "mItem=" << arg.mItem
+        << " mComponent=" << arg.mComponent
+        << " mUrl=" << arg.mUrl
+        << ")";
+    return debug;
+}
+#endif
+
 /*!
     \qmltype StackView
     \inherits Control
@@ -525,6 +558,9 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
 
     \note Items that already exist in the stack are not pushed.
 
+    \note If you are \l {The QML script compiler}{compiling QML}, use the
+    strongly-typed \l pushItem or \l pushItems functions instead.
+
     \sa initialItem, {Pushing Items}
 */
 void QQuickStackView::push(QQmlV4Function *args)
@@ -879,6 +915,197 @@ void QQuickStackView::replace(QQmlV4Function *args)
     } else {
         args->setReturnValue(QV4::Encode::null());
     }
+}
+
+/*!
+    \qmlmethod Item QtQuick.Controls::StackView::pushItems(items, operation)
+    \since 6.7
+
+    Pushes \a items onto the stack using an optional \a operation, and
+    optionally applies a set of properties on each element. Each element can be
+    an \l Item, \l Component, or \l [QML] url. Returns the item that became
+    current (the last item).
+
+    StackView creates an instance automatically if the pushed element is a
+    \l Component or \l [QML] url, and the instance will be destroyed when it is
+    popped off the stack. See \l {Item Ownership} for more information.
+
+    The optional properties arguments come after each element, and specify a
+    map of initial property values. For dynamically created items, these values
+    are applied before the creation is finalized. This is more efficient than
+    setting property values after creation, particularly where large sets of
+    property values are defined.
+
+    \code
+    stackView.push([item, rectComponent, Qt.resolvedUrl("MyItem.qml")])
+
+    // With properties:
+    stackView.push([
+        item, { "color": "red" },
+        rectComponent, { "color": "green" },
+        Qt.resolvedUrl("MyItem.qml"), { "color": "blue" }
+    ])
+
+    // With properties for only some items:
+    stackView.push([
+        item, { "color": "yellow" },
+        rectComponent
+    ])
+    \endcode
+
+    \include qquickstackview.qdocinc operation-values
+
+    If no operation is provided, \c PushTransition will be used.
+
+    To push a single item, use the relevant \c pushItem function:
+    \list
+    \li \l {stackview-pushitem-item-overload}
+        {pushItem}(item, properties, operation)
+    \li \l {stackview-pushitem-component-overload}
+        {pushItem}(component, properties, operation)
+    \li \l {stackview-pushitem-url-overload}
+        {pushItem}(url, properties, operation)
+    \endlist
+
+    \note Items that already exist in the stack are not pushed.
+
+    \sa initialItem, pushItem, {Pushing Items}
+*/
+QQuickItem *QQuickStackView::pushItems(QList<QQuickStackViewArg> args, Operation operation)
+{
+    Q_D(QQuickStackView);
+    const QString operationName = QStringLiteral("pushItem");
+    if (d->modifyingElements) {
+        d->warnOfInterruption(operationName);
+        return nullptr;
+    }
+
+    QScopedValueRollback<bool> modifyingElements(d->modifyingElements, true);
+    QScopedValueRollback<QString> operationNameRollback(d->operation, operationName);
+
+    QList<QQuickStackElement *> stackElements;
+    for (int i = 0; i < args.size(); ++i) {
+        const QQuickStackViewArg &arg = args.at(i);
+        QVariantMap properties;
+        // Look ahead at the next arg in case it contains properties for this
+        // Item/Component/URL.
+        if (i < args.size() - 1) {
+            const QQuickStackViewArg &nextArg = args.at(i + 1);
+            // If mProperties isn't empty, the user passed properties.
+            // If it is empty, but mItem, mComponent and mUrl also are,
+            // then they passed an empty property map.
+            if (!nextArg.mProperties.isEmpty()
+                    || (!nextArg.mItem && !nextArg.mComponent && !nextArg.mUrl.isValid())) {
+                properties = nextArg.mProperties;
+                ++i;
+            }
+        }
+
+        // Remove any items that are already in the stack, as they can't be in two places at once.
+        if (d->findElement(arg.mItem))
+            continue;
+
+        // We look ahead one index for each Item/Component/URL, so if this arg is
+        // a property map, the user has passed two or more in a row.
+        if (!arg.mProperties.isEmpty()) {
+            qmlWarning(this) << "Properties must come after an Item, Component or URL";
+            return nullptr;
+        }
+
+        QQuickStackElement *element = QQuickStackElement::fromStackViewArg(this, arg);
+        QV4::ExecutionEngine *v4Engine = qmlEngine(this)->handle();
+        element->properties.set(v4Engine, v4Engine->fromVariant(properties));
+        element->qmlCallingContext.set(v4Engine, v4Engine->qmlContext());
+        stackElements.append(element);
+    }
+
+#if QT_CONFIG(quick_viewtransitions)
+    QQuickStackElement *exit = nullptr;
+    if (!d->elements.isEmpty())
+        exit = d->elements.top();
+#endif
+
+    const int oldDepth = d->elements.size();
+    if (d->pushElements(stackElements)) {
+        d->depthChange(d->elements.size(), oldDepth);
+        QQuickStackElement *enter = d->elements.top();
+#if QT_CONFIG(quick_viewtransitions)
+        d->startTransition(QQuickStackTransition::pushEnter(operation, enter, this),
+            QQuickStackTransition::pushExit(operation, exit, this),
+            operation == Immediate);
+#endif
+        d->setCurrentItem(enter);
+    }
+
+    return d->currentItem;
+}
+
+/*!
+    \qmlmethod Item QtQuick.Controls::StackView::pushItem(item, properties, operation)
+    \keyword stackview-pushitem-item-overload
+    \since 6.7
+
+    Pushes an \a item onto the stack, optionally applying a set of
+    \a properties, using the optional \a operation. Returns the item that
+    became current (the last item).
+
+    \include qquickstackview.qdocinc operation-values
+
+    If no operation is provided, \c PushTransition will be used.
+
+    To push several items onto the stack, use \l pushItems().
+
+    \sa initialItem, {Pushing Items}
+*/
+QQuickItem *QQuickStackView::pushItem(QQuickItem *item, const QVariantMap &properties, Operation operation)
+{
+    return pushItems({ item, properties }, operation);
+}
+
+/*!
+    \qmlmethod Item QtQuick.Controls::StackView::pushItem(component, properties, operation)
+    \overload pushItem()
+    \keyword stackview-pushitem-component-overload
+    \since 6.7
+
+    Pushes a \a component onto the stack, optionally applying a set of
+    \a properties, using the optional \a operation. Returns the item that
+    became current (the last item).
+
+    \include qquickstackview.qdocinc operation-values
+
+    If no operation is provided, \c PushTransition will be used.
+
+    To push several items onto the stack, use \l pushItems().
+
+    \sa initialItem, {Pushing Items}
+*/
+QQuickItem *QQuickStackView::pushItem(QQmlComponent *component, const QVariantMap &properties, Operation operation)
+{
+    return pushItems({ component, properties }, operation);
+}
+
+/*!
+    \qmlmethod Item QtQuick.Controls::StackView::pushItem(url, properties, operation)
+    \overload pushItem()
+    \keyword stackview-pushitem-url-overload
+    \since 6.7
+
+    Pushes a \a url onto the stack, optionally applying a set of
+    \a properties, using the optional \a operation. Returns the item that
+    became current (the last item).
+
+    \include qquickstackview.qdocinc operation-values
+
+    If no operation is provided, \c PushTransition will be used.
+
+    To push several items onto the stack, use \l pushItems().
+
+    \sa initialItem, {Pushing Items}
+*/
+QQuickItem *QQuickStackView::pushItem(const QUrl &url, const QVariantMap &properties, Operation operation)
+{
+    return pushItems({ url, properties }, operation);
 }
 
 /*!

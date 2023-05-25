@@ -445,6 +445,90 @@ TestCase {
         compare(item8.objectName, "true")
     }
 
+    function test_pushNew() {
+        let control = createTemporaryObject(stackViewComponent, testCase)
+        verify(control)
+
+        // Passing the wrong type to a strongly-typed function results in an exception.
+        let exceptionThrown = false
+        try {
+            ignoreWarning(/Could not convert argument 0 at/)
+            const stackTraceLineCount = 5
+            for (let i = 0; i < stackTraceLineCount; ++i)
+                ignoreWarning(/.*@.*qml/)
+            control.pushItem(Qt.createQmlObject('import QtQml; QtObject { }', control))
+        } catch (e) {
+            exceptionThrown = true
+        }
+        verify(exceptionThrown)
+        compare(control.depth, 0)
+
+        // pushItem(item)
+        let item1 = itemComponent.createObject(control, {objectName:"1"})
+        compare(control.pushItem(item1, {}, StackView.Immediate), item1)
+        compare(control.depth, 1)
+        compare(control.currentItem, item1)
+
+        // pushItems([item])
+        let item2 = itemComponent.createObject(control, {objectName:"2"})
+        compare(control.pushItems([item2], StackView.Immediate), item2)
+        compare(control.depth, 2)
+        compare(control.currentItem, item2)
+
+        // pushItems([item, component, url])
+        let item3 = itemComponent.createObject(control)
+        let actualCurrent = control.pushItems([item3, itemComponent, Qt.resolvedUrl("stackview/Rect.qml")], StackView.Immediate)
+        let expectedCurrent = control.get(control.depth - 1, StackView.DontLoad)
+        compare(actualCurrent, expectedCurrent)
+        compare(control.depth, 5)
+        compare(control.currentItem, expectedCurrent)
+
+        // pushItems([item, {properties}])
+        let item4 = itemComponent.createObject(control)
+        compare(control.pushItems([item4, {objectName:"4"}], StackView.Immediate), item4)
+        compare(item4.objectName, "4")
+        compare(control.depth, 6)
+        compare(control.currentItem, item4)
+
+        // pushItems([item, {properties}, component, {properties}, url, {properties}])
+        let item5 = itemComponent.createObject(control)
+        let item7 = control.pushItems([
+                item5, {objectName: "object5"},
+                itemComponent, {objectName: "object6"},
+                Qt.resolvedUrl("stackview/Rect.qml"), {objectName: "object7"}
+            ],
+            StackView.Immediate)
+        item5 = control.get(control.depth - 3, StackView.ForceLoad)
+        let item6 = control.get(control.depth - 2, StackView.ForceLoad)
+        compare(item7, control.get(control.depth - 1, StackView.ForceLoad))
+        compare(item5.objectName, "object5")
+        compare(item6.objectName, "object6")
+        compare(item7.objectName, "object7")
+        compare(control.depth, 9)
+        compare(control.currentItem, item7)
+
+        // pushItems([component, {binding}]) - with JS variable in binding
+        let jsVariable = false
+        let item8 = control.pushItems([itemComponent, {objectName: Qt.binding(() => {
+            return jsVariable.toString() })}], StackView.Immediate)
+        compare(item8.objectName, "false")
+        compare(control.depth, 10)
+        compare(control.currentItem, item8)
+        jsVariable = true
+        expectFailContinue("", "QTBUG-114959")
+        compare(item8.objectName, "true")
+
+        // pushItems([component, {binding}]) - with QML property in binding
+        qmlProperty = false
+        let item9 = control.pushItems([itemComponent, {objectName: Qt.binding(() => {
+            return testCase.qmlProperty.toString() })}], StackView.Immediate)
+        compare(item9.objectName, "false")
+        compare(control.depth, 11)
+        compare(control.currentItem, item9)
+        qmlProperty = true
+        compare(item9.objectName, "true")
+    }
+
      // Escape special Regexp characters with a '\' (backslash) prefix so that \a str can be
      // used as a Regexp pattern.
     function escapeRegExp(str: string) {
