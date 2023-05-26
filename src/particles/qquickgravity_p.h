@@ -22,9 +22,9 @@ QT_BEGIN_NAMESPACE
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickGravityAffector : public QQuickParticleAffector
 {
     Q_OBJECT
-    Q_PROPERTY(qreal magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
-    Q_PROPERTY(qreal acceleration READ magnitude WRITE setAcceleration NOTIFY magnitudeChanged)
-    Q_PROPERTY(qreal angle READ angle WRITE setAngle NOTIFY angleChanged)
+    Q_PROPERTY(qreal magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged FINAL)
+    Q_PROPERTY(qreal acceleration READ magnitude WRITE setAcceleration NOTIFY magnitudeChanged FINAL)
+    Q_PROPERTY(qreal angle READ angle WRITE setAngle NOTIFY angleChanged FINAL)
     QML_NAMED_ELEMENT(Gravity)
     QML_ADDED_IN_VERSION(2, 0)
 public:

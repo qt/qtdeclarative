@@ -24,8 +24,8 @@ class QQuickParticlePainter;
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickTurbulenceAffector : public QQuickParticleAffector
 {
     Q_OBJECT
-    Q_PROPERTY(qreal strength READ strength WRITE setStrength NOTIFY strengthChanged)
-    Q_PROPERTY(QUrl noiseSource READ noiseSource WRITE setNoiseSource NOTIFY noiseSourceChanged)
+    Q_PROPERTY(qreal strength READ strength WRITE setStrength NOTIFY strengthChanged FINAL)
+    Q_PROPERTY(QUrl noiseSource READ noiseSource WRITE setNoiseSource NOTIFY noiseSourceChanged FINAL)
     QML_NAMED_ELEMENT(Turbulence)
     QML_ADDED_IN_VERSION(2, 0)
 

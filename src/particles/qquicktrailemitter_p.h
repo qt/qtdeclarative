@@ -22,12 +22,12 @@ QT_BEGIN_NAMESPACE
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickTrailEmitter : public QQuickParticleEmitter
 {
     Q_OBJECT
-    Q_PROPERTY(QString follow READ follow WRITE setFollow NOTIFY followChanged)
-    Q_PROPERTY(int emitRatePerParticle READ particlesPerParticlePerSecond WRITE setParticlesPerParticlePerSecond NOTIFY particlesPerParticlePerSecondChanged)
+    Q_PROPERTY(QString follow READ follow WRITE setFollow NOTIFY followChanged FINAL)
+    Q_PROPERTY(int emitRatePerParticle READ particlesPerParticlePerSecond WRITE setParticlesPerParticlePerSecond NOTIFY particlesPerParticlePerSecondChanged FINAL)
 
-    Q_PROPERTY(QQuickParticleExtruder* emitShape READ emissonShape WRITE setEmissionShape NOTIFY emissionShapeChanged)
-    Q_PROPERTY(qreal emitHeight READ emitterYVariation WRITE setEmitterYVariation NOTIFY emitterYVariationChanged)
-    Q_PROPERTY(qreal emitWidth READ emitterXVariation WRITE setEmitterXVariation NOTIFY emitterXVariationChanged)
+    Q_PROPERTY(QQuickParticleExtruder* emitShape READ emissonShape WRITE setEmissionShape NOTIFY emissionShapeChanged FINAL)
+    Q_PROPERTY(qreal emitHeight READ emitterYVariation WRITE setEmitterYVariation NOTIFY emitterYVariationChanged FINAL)
+    Q_PROPERTY(qreal emitWidth READ emitterXVariation WRITE setEmitterXVariation NOTIFY emitterXVariationChanged FINAL)
     QML_NAMED_ELEMENT(TrailEmitter)
     QML_ADDED_IN_VERSION(2, 0)
 
