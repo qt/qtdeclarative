@@ -1440,7 +1440,7 @@ void QQmlMetaType::registerMetaObjectForType(const QMetaObject *metaobject, QQml
 
 static bool hasActiveInlineComponents(const QQmlTypePrivate *d)
 {
-    for (const QQmlType &ic : std::as_const(d->objectIdToICType)) {
+    for (const QQmlType &ic : std::as_const(d->namesToInlineComponentType)) {
         const QQmlTypePrivate *icPriv = ic.priv();
         if (icPriv && icPriv->count() > 1)
             return true;

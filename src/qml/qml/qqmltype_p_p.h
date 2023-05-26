@@ -117,7 +117,6 @@ public:
         // this should still be fine
         QQmlTypePrivate const * containingType = nullptr;
         QString inlineComponentName = QString();
-        int objectId = -1;
     };
 
     using QQmlSequenceTypeData = QMetaSequence;
@@ -153,8 +152,7 @@ public:
     mutable QList<QStringHash<int>*> scopedEnums;
 
     void setName(const QString &uri, const QString &element);
-    mutable QHash<QString, int> namesToInlineComponentObjectIndex;
-    mutable QHash<int, QQmlType> objectIdToICType;
+    mutable QHash<QString, QQmlType> namesToInlineComponentType;
 
 private:
     ~QQmlTypePrivate() override;

@@ -131,7 +131,7 @@ public:
     int m_totalBindingsCount = 0; // Number of bindings used in this type
     int m_totalParserStatusCount = 0; // Number of instantiated types that are QQmlParserStatus subclasses
     int m_totalObjectCount = 0; // Number of objects explicitly instantiated
-    int icRoot = -1;
+    std::unique_ptr<QString> icRootName;
 
     int totalBindingsCount() const;
     int totalParserStatusCount() const;
@@ -143,12 +143,12 @@ public:
 
     bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const;
 
-    CompositeMetaTypeIds typeIdsForComponent(int objectid = 0) const;
+    CompositeMetaTypeIds typeIdsForComponent(const QString &inlineComponentName = QString()) const;
 
     CompositeMetaTypeIds typeIds;
     bool isRegistered = false;
 
-    QHash<int, InlineComponentData> inlineComponentData;
+    QHash<QString, InlineComponentData> inlineComponentData;
 
     int inlineComponentId(const QString &inlineComponentName) const
     {

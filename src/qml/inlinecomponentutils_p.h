@@ -77,7 +77,8 @@ void fillAdjacencyListForInlineComponents(ObjectContainer *objectContainer,
                 if (targetType.isInlineComponentType()
                         && targetType.containingType() == currentICTypeRef->type().containingType()) {
                     auto icIt = std::find_if(allICs.cbegin(), allICs.cend(), [&](const QV4::CompiledData::InlineComponent &icSearched){
-                        return int(icSearched.objectIndex) == targetType.inlineComponentObjectId();
+                        return objectContainer->stringAt(icSearched.nameIndex)
+                               == targetType.elementName();
                     });
                     Q_ASSERT(icIt != allICs.cend());
                     Node& target = nodes[i];

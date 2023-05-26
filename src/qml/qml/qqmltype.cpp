@@ -743,24 +743,9 @@ bool QQmlType::isInlineComponentType() const {
     return d ? d->regType == QQmlType::InlineComponentType : false;
 }
 
-int QQmlType::inlineComponentId() const {
-    bool ok = false;
-    if (d->regType == QQmlType::RegistrationType::InlineComponentType) {
-        Q_ASSERT(d->extraData.id->objectId != -1);
-        return d->extraData.id->objectId;
-    }
-    int subObjectId = sourceUrl().fragment().toInt(&ok);
-    return ok ? subObjectId : -1;
-}
-
 QUrl QQmlType::sourceUrl() const
 {
-    auto url = d ? d->sourceUrl() : QUrl();
-    if (url.isValid() && d->regType == QQmlType::RegistrationType::InlineComponentType && d->extraData.id->objectId) {
-        Q_ASSERT(url.hasFragment());
-        url.setFragment(QString::number(inlineComponentId()));
-    }
-    return url;
+    return d ? d->sourceUrl() : QUrl();
 }
 
 int QQmlType::enumValue(QQmlEnginePrivate *engine, const QHashedStringRef &name, bool *ok) const
@@ -926,19 +911,6 @@ int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, QStringView scopedEnumN
     return -1;
 }
 
-int QQmlType::inlineComponentObjectId() const
-{
-    if (!isInlineComponentType())
-        return -1;
-    return d->extraData.id->objectId;
-}
-
-void QQmlType::setInlineComponentObjectId(int id) const
-{
-    Q_ASSERT(d && d->regType == QQmlType::InlineComponentType);
-    d->extraData.id->objectId = id;
-}
-
 void QQmlType::refHandle(const QQmlTypePrivate *priv)
 {
     if (priv)
@@ -958,10 +930,10 @@ int QQmlType::refCount(const QQmlTypePrivate *priv)
     return -1;
 }
 
-int QQmlType::lookupInlineComponentIdByName(const QString &name) const
+QQmlType QQmlType::lookupInlineComponentByName(const QString &name) const
 {
     Q_ASSERT(d);
-    return d->namesToInlineComponentObjectIndex.value(name, -1);
+    return d->namesToInlineComponentType.value(name);
 }
 
 QQmlType QQmlType::containingType() const
@@ -972,37 +944,20 @@ QQmlType QQmlType::containingType() const
     return ret;
 }
 
-QQmlType QQmlType::lookupInlineComponentById(int objectid) const
-{
-    Q_ASSERT(d);
-    return d->objectIdToICType.value(objectid, QQmlType(nullptr));
-}
-
-int QQmlType::generatePlaceHolderICId() const
-{
-    Q_ASSERT(d);
-    int id = -2;
-    for (auto it = d->objectIdToICType.keyBegin(); it != d->objectIdToICType.keyEnd(); ++it)
-        if (*it < id)
-                id = *it;
-    return id;
-}
-
-void QQmlType::associateInlineComponent(const QString &name, int objectID, const CompositeMetaTypeIds &metaTypeIds, QQmlType existingType)
+void QQmlType::associateInlineComponent(
+    const QString &name, const CompositeMetaTypeIds &metaTypeIds, QQmlType existingType)
 {
     bool const reuseExistingType = existingType.isValid();
     auto priv = reuseExistingType ? const_cast<QQmlTypePrivate *>(existingType.d.data()) : new QQmlTypePrivate { RegistrationType::InlineComponentType } ;
     priv->setName( QString::fromUtf8(typeName()), name);
     auto icUrl = QUrl(sourceUrl());
-    icUrl.setFragment(QString::number(objectID));
+    icUrl.setFragment(name);
     priv->extraData.id->url = icUrl;
     priv->extraData.id->containingType = d.data();
-    priv->extraData.id->objectId = objectID;
     priv->typeId = metaTypeIds.id;
     priv->listId = metaTypeIds.listId;
-    d->namesToInlineComponentObjectIndex.insert(name, objectID);
     QQmlType icType(priv);
-    d->objectIdToICType.insert(objectID, icType);
+    d->namesToInlineComponentType.insert(name, icType);
     if (!reuseExistingType)
         priv->release();
 }

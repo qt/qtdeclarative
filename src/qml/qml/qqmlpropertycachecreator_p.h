@@ -628,16 +628,16 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
             if (qmltype.isComposite() || qmltype.isInlineComponentType()) {
                 CompositeMetaTypeIds typeIds;
                 if (qmltype.isInlineComponentType()) {
-                    auto objectId = qmltype.inlineComponentId();
+                    const QString icName = qmltype.elementName();
                     auto containingType = qmltype.containingType();
                     if (containingType.isValid()) {
-                        auto icType = containingType.lookupInlineComponentById(objectId);
+                        auto icType = containingType.lookupInlineComponentByName(icName);
                         typeIds = {icType.typeId(), icType.qListTypeId()};
                     } else {
                         typeIds = {};
                     }
                     if (!typeIds.isValid()) // type has not been registered yet, we must be in containing type
-                        typeIds = objectContainer->typeIdsForComponent(objectId);
+                        typeIds = objectContainer->typeIdsForComponent(icName);
                     Q_ASSERT(typeIds.isValid());
                 } else if (selfReference) {
                      typeIds = objectContainer->typeIdsForComponent();
@@ -713,8 +713,7 @@ inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter
     if (!qmltype.isComposite()) {
         const QMetaType typeId = param.isList() ? qmltype.qListTypeId() : qmltype.typeId();
         if (!typeId.isValid() && qmltype.isInlineComponentType()) {
-            const int objectId = qmltype.inlineComponentId();
-            const auto typeIds = objectContainer->typeIdsForComponent(objectId);
+            const auto typeIds = objectContainer->typeIdsForComponent(qmltype.elementName());
             return param.isList() ? typeIds.listId : typeIds.id;
         } else {
             return typeId;
@@ -825,8 +824,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         if (referencedType.isValid()) {
             *type = referencedType.typeId();
             if (!type->isValid() && referencedType.isInlineComponentType()) {
-                int objectId = referencedType.inlineComponentId();
-                *type = objectContainer->typeIdsForComponent(objectId).id;
+                *type = objectContainer->typeIdsForComponent(referencedType.elementName()).id;
                 Q_ASSERT(type->isValid());
             }
         } else {

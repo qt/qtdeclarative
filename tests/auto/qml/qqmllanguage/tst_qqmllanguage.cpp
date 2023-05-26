@@ -6767,7 +6767,7 @@ void tst_qqmllanguage::bareInlineComponent()
         if (type.elementName() == QStringLiteral("Tab1")) {
             QVERIFY(type.module().isEmpty());
             tab1Found = true;
-            const auto ics = type.priv()->objectIdToICType;
+            const auto ics = type.priv()->namesToInlineComponentType;
             QVERIFY(ics.size() > 0);
             for (const QQmlType &ic : ics)
                 QVERIFY(ic.containingType() == type);

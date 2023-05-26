@@ -1275,11 +1275,26 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                     return nullptr;
                 }
             } else {
-                int subObjectId = type.inlineComponentId();
-                QScopedValueRollback<int> rollback {compilationUnit->icRoot, subObjectId};
+                QString subObjectName;
+                if (compilationUnit->icRootName) {
+                    subObjectName = type.elementName();
+                    std::swap(*compilationUnit->icRootName, subObjectName);
+                } else {
+                    compilationUnit->icRootName = std::make_unique<QString>(type.elementName());
+                }
+
+                const auto guard = qScopeGuard([&] {
+                    if (subObjectName.isEmpty())
+                        compilationUnit->icRootName.reset();
+                    else
+                        std::swap(*compilationUnit->icRootName, subObjectName);
+                });
+
                 QQmlObjectCreator subCreator(context, compilationUnit, sharedState.data(),
                                              isContextObject);
-                instance = subCreator.create(subObjectId, nullptr, nullptr, CreationFlags::InlineComponent);
+                instance = subCreator.create(
+                    compilationUnit->inlineComponentId(*compilationUnit->icRootName),
+                    nullptr, nullptr, CreationFlags::InlineComponent);
                 if (!instance) {
                     errors += subCreator.errors;
                     return nullptr;

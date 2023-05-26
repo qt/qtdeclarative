@@ -357,6 +357,31 @@ IdentifierHash ExecutableCompilationUnit::createNamedObjectsPerComponent(int com
     return *namedObjectsPerComponentCache.insert(componentObjectIndex, namedObjectCache);
 }
 
+template<typename F>
+void processInlinComponentType(
+    const QQmlType &type, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+    F &&populateIcData)
+{
+    if (type.isInlineComponentType()) {
+        QString icRootName;
+        if (compilationUnit->icRootName) {
+            icRootName = type.elementName();
+            std::swap(*compilationUnit->icRootName, icRootName);
+        } else {
+            compilationUnit->icRootName = std::make_unique<QString>(type.elementName());
+        }
+
+        populateIcData();
+
+        if (icRootName.isEmpty())
+            compilationUnit->icRootName.reset();
+        else
+            std::swap(*compilationUnit->icRootName, icRootName);
+    } else {
+        populateIcData();
+    }
+}
+
 void ExecutableCompilationUnit::finalizeCompositeType(CompositeMetaTypeIds types)
 {
     // Add to type registry of composites
@@ -402,7 +427,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(CompositeMetaTypeIds types
     // and in that case we need to add its object count
     for (auto nodeIt = nodesSorted.rbegin(); nodeIt != nodesSorted.rend(); ++nodeIt) {
         const auto &ic = allICs.at(nodeIt->index());
-        int lastICRoot = ic.objectIndex;
+        const int lastICRoot = ic.objectIndex;
         for (int i = ic.objectIndex; i<objectCount(); ++i) {
             const QV4::CompiledData::Object *obj = objectAt(i);
             bool leftCurrentInlineComponent
@@ -411,24 +436,24 @@ void ExecutableCompilationUnit::finalizeCompositeType(CompositeMetaTypeIds types
                         || !obj->hasFlag(QV4::CompiledData::Object::IsPartOfInlineComponent);
             if (leftCurrentInlineComponent)
                 break;
-            inlineComponentData[lastICRoot].totalBindingCount += obj->nBindings;
+            const QString lastICRootName = stringAt(ic.nameIndex);
+            inlineComponentData[lastICRootName].totalBindingCount += obj->nBindings;
 
             if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
                 const auto type = typeRef->type();
                 if (type.isValid() && type.parserStatusCast() != -1)
-                    ++inlineComponentData[lastICRoot].totalParserStatusCount;
+                    ++inlineComponentData[lastICRootName].totalParserStatusCount;
 
-                ++inlineComponentData[lastICRoot].totalObjectCount;
+                ++inlineComponentData[lastICRootName].totalObjectCount;
                 if (const auto compilationUnit = typeRef->compilationUnit()) {
                     // if the type is an inline component type, we have to extract the information from it
                     // This requires that inline components are visited in the correct order
-                    auto icRoot = compilationUnit->icRoot;
-                    if (type.isInlineComponentType())
-                        icRoot = type.inlineComponentId();
-                    QScopedValueRollback<int> rollback {compilationUnit->icRoot, icRoot};
-                    inlineComponentData[lastICRoot].totalBindingCount += compilationUnit->totalBindingsCount();
-                    inlineComponentData[lastICRoot].totalParserStatusCount += compilationUnit->totalParserStatusCount();
-                    inlineComponentData[lastICRoot].totalObjectCount += compilationUnit->totalObjectCount();
+                    processInlinComponentType(type, compilationUnit, [&]() {
+                        auto &icData = inlineComponentData[lastICRootName];
+                        icData.totalBindingCount += compilationUnit->totalBindingsCount();
+                        icData.totalParserStatusCount += compilationUnit->totalParserStatusCount();
+                        icData.totalObjectCount += compilationUnit->totalObjectCount();
+                    });
                 }
             }
         }
@@ -448,13 +473,11 @@ void ExecutableCompilationUnit::finalizeCompositeType(CompositeMetaTypeIds types
                 ++parserStatusCount;
             ++objectCount;
             if (const auto compilationUnit = typeRef->compilationUnit()) {
-                auto icRoot = compilationUnit->icRoot;
-                if (type.isInlineComponentType())
-                    icRoot = type.inlineComponentId();
-                QScopedValueRollback<int> rollback {compilationUnit->icRoot, icRoot};
-                bindingCount += compilationUnit->totalBindingsCount();
-                parserStatusCount += compilationUnit->totalParserStatusCount();
-                objectCount += compilationUnit->totalObjectCount();
+                processInlinComponentType(type, compilationUnit, [&](){
+                    bindingCount += compilationUnit->totalBindingsCount();
+                    parserStatusCount += compilationUnit->totalParserStatusCount();
+                    objectCount += compilationUnit->totalObjectCount();
+                });
             }
         }
     }
@@ -465,21 +488,21 @@ void ExecutableCompilationUnit::finalizeCompositeType(CompositeMetaTypeIds types
 }
 
 int ExecutableCompilationUnit::totalBindingsCount() const {
-    if (icRoot == -1)
+    if (!icRootName)
         return m_totalBindingsCount;
-    return inlineComponentData[icRoot].totalBindingCount;
+    return inlineComponentData[*icRootName].totalBindingCount;
 }
 
 int ExecutableCompilationUnit::totalObjectCount() const {
-    if (icRoot == -1)
+    if (!icRootName)
         return m_totalObjectCount;
-    return inlineComponentData[icRoot].totalObjectCount;
+    return inlineComponentData[*icRootName].totalObjectCount;
 }
 
 int ExecutableCompilationUnit::totalParserStatusCount() const {
-    if (icRoot == -1)
+    if (!icRootName)
         return m_totalParserStatusCount;
-    return inlineComponentData[icRoot].totalParserStatusCount;
+    return inlineComponentData[*icRootName].totalParserStatusCount;
 }
 
 bool ExecutableCompilationUnit::verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const
@@ -497,11 +520,12 @@ bool ExecutableCompilationUnit::verifyChecksum(const CompiledData::DependentType
                       sizeof(data->dependencyMD5Checksum)) == 0;
 }
 
-CompositeMetaTypeIds ExecutableCompilationUnit::typeIdsForComponent(int objectid) const
+CompositeMetaTypeIds ExecutableCompilationUnit::typeIdsForComponent(
+    const QString &inlineComponentName) const
 {
-    if (objectid == 0)
+    if (inlineComponentName.isEmpty())
         return typeIds;
-    return inlineComponentData[objectid].typeIds;
+    return inlineComponentData[inlineComponentName].typeIds;
 }
 
 QStringList ExecutableCompilationUnit::moduleRequests() const
