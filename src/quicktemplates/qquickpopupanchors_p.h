@@ -29,7 +29,7 @@ class QQuickPopup;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupAnchors : public QObject, public QQuickItemChangeListener
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickItem *centerIn READ centerIn WRITE setCenterIn RESET resetCenterIn NOTIFY centerInChanged)
+    Q_PROPERTY(QQuickItem *centerIn READ centerIn WRITE setCenterIn RESET resetCenterIn NOTIFY centerInChanged FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 5)
 
