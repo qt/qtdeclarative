@@ -152,12 +152,12 @@ class QQuickViewTransitionAttached : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(int index READ index NOTIFY indexChanged)
-    Q_PROPERTY(QQuickItem* item READ item NOTIFY itemChanged)
-    Q_PROPERTY(QPointF destination READ destination NOTIFY destinationChanged)
+    Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
+    Q_PROPERTY(QQuickItem* item READ item NOTIFY itemChanged FINAL)
+    Q_PROPERTY(QPointF destination READ destination NOTIFY destinationChanged FINAL)
 
-    Q_PROPERTY(QList<int> targetIndexes READ targetIndexes NOTIFY targetIndexesChanged)
-    Q_PROPERTY(QQmlListProperty<QObject> targetItems READ targetItems NOTIFY targetItemsChanged)
+    Q_PROPERTY(QList<int> targetIndexes READ targetIndexes NOTIFY targetIndexesChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<QObject> targetItems READ targetItems NOTIFY targetItemsChanged FINAL)
 
     QML_NAMED_ELEMENT(ViewTransition)
     QML_ADDED_IN_VERSION(2, 0)

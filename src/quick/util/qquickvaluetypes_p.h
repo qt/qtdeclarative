@@ -43,7 +43,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickColorValueType
     Q_PROPERTY(qreal hslHue READ hslHue WRITE setHslHue FINAL)
     Q_PROPERTY(qreal hslSaturation READ hslSaturation WRITE setHslSaturation FINAL)
     Q_PROPERTY(qreal hslLightness READ hslLightness WRITE setHslLightness FINAL)
-    Q_PROPERTY(bool valid READ isValid)
+    Q_PROPERTY(bool valid READ isValid FINAL)
     Q_GADGET
     QML_ADDED_IN_VERSION(2, 0)
     QML_FOREIGN(QColor)
@@ -213,10 +213,10 @@ public:
 class Q_QUICK_PRIVATE_EXPORT QQuickQuaternionValueType
 {
     QQuaternion v;
-    Q_PROPERTY(qreal scalar READ scalar WRITE setScalar)
-    Q_PROPERTY(qreal x READ x WRITE setX)
-    Q_PROPERTY(qreal y READ y WRITE setY)
-    Q_PROPERTY(qreal z READ z WRITE setZ)
+    Q_PROPERTY(qreal scalar READ scalar WRITE setScalar FINAL)
+    Q_PROPERTY(qreal x READ x WRITE setX FINAL)
+    Q_PROPERTY(qreal y READ y WRITE setY FINAL)
+    Q_PROPERTY(qreal z READ z WRITE setZ FINAL)
     Q_GADGET
     QML_ADDED_IN_VERSION(2, 0)
     QML_FOREIGN(QQuaternion)

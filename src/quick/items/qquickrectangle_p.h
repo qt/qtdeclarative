@@ -27,9 +27,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPen : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal width READ width WRITE setWidth NOTIFY widthChanged)
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
-    Q_PROPERTY(bool pixelAligned READ pixelAligned WRITE setPixelAligned NOTIFY pixelAlignedChanged)
+    Q_PROPERTY(qreal width READ width WRITE setWidth NOTIFY widthChanged FINAL)
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
+    Q_PROPERTY(bool pixelAligned READ pixelAligned WRITE setPixelAligned NOTIFY pixelAlignedChanged FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 public:
@@ -62,8 +62,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGradientStop : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal position READ position WRITE setPosition)
-    Q_PROPERTY(QColor color READ color WRITE setColor)
+    Q_PROPERTY(qreal position READ position WRITE setPosition FINAL)
+    Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
     QML_NAMED_ELEMENT(GradientStop)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -88,8 +88,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGradient : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQmlListProperty<QQuickGradientStop> stops READ stops)
-    Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged REVISION(2, 12))
+    Q_PROPERTY(QQmlListProperty<QQuickGradientStop> stops READ stops FINAL)
+    Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged REVISION(2, 12) FINAL)
     Q_CLASSINFO("DefaultProperty", "stops")
     QML_NAMED_ELEMENT(Gradient)
     QML_ADDED_IN_VERSION(2, 0)
@@ -130,9 +130,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRectangle : public QQuickItem
     Q_OBJECT
 
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
-    Q_PROPERTY(QJSValue gradient READ gradient WRITE setGradient RESET resetGradient)
-    Q_PROPERTY(QQuickPen * border READ border CONSTANT)
-    Q_PROPERTY(qreal radius READ radius WRITE setRadius NOTIFY radiusChanged)
+    Q_PROPERTY(QJSValue gradient READ gradient WRITE setGradient RESET resetGradient FINAL)
+    Q_PROPERTY(QQuickPen * border READ border CONSTANT FINAL)
+    Q_PROPERTY(qreal radius READ radius WRITE setRadius NOTIFY radiusChanged FINAL)
     QML_NAMED_ELEMENT(Rectangle)
     QML_ADDED_IN_VERSION(2, 0)
 public:

@@ -103,18 +103,18 @@ public:
 class Q_QUICK_PRIVATE_EXPORT QQuickItemLayer : public QObject, public QQuickItemChangeListener
 {
     Q_OBJECT
-    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
-    Q_PROPERTY(QSize textureSize READ size WRITE setSize NOTIFY sizeChanged)
-    Q_PROPERTY(QRectF sourceRect READ sourceRect WRITE setSourceRect NOTIFY sourceRectChanged)
-    Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged)
-    Q_PROPERTY(bool smooth READ smooth WRITE setSmooth NOTIFY smoothChanged)
-    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged REVISION(6, 5))
-    Q_PROPERTY(QQuickShaderEffectSource::WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)
-    Q_PROPERTY(QQuickShaderEffectSource::Format format READ format WRITE setFormat NOTIFY formatChanged)
-    Q_PROPERTY(QByteArray samplerName READ name WRITE setName NOTIFY nameChanged)
-    Q_PROPERTY(QQmlComponent *effect READ effect WRITE setEffect NOTIFY effectChanged)
-    Q_PROPERTY(QQuickShaderEffectSource::TextureMirroring textureMirroring READ textureMirroring WRITE setTextureMirroring NOTIFY textureMirroringChanged)
-    Q_PROPERTY(int samples READ samples WRITE setSamples NOTIFY samplesChanged)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged FINAL)
+    Q_PROPERTY(QSize textureSize READ size WRITE setSize NOTIFY sizeChanged FINAL)
+    Q_PROPERTY(QRectF sourceRect READ sourceRect WRITE setSourceRect NOTIFY sourceRectChanged FINAL)
+    Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged FINAL)
+    Q_PROPERTY(bool smooth READ smooth WRITE setSmooth NOTIFY smoothChanged FINAL)
+    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged REVISION(6, 5) FINAL)
+    Q_PROPERTY(QQuickShaderEffectSource::WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged FINAL)
+    Q_PROPERTY(QQuickShaderEffectSource::Format format READ format WRITE setFormat NOTIFY formatChanged FINAL)
+    Q_PROPERTY(QByteArray samplerName READ name WRITE setName NOTIFY nameChanged FINAL)
+    Q_PROPERTY(QQmlComponent *effect READ effect WRITE setEffect NOTIFY effectChanged FINAL)
+    Q_PROPERTY(QQuickShaderEffectSource::TextureMirroring textureMirroring READ textureMirroring WRITE setTextureMirroring NOTIFY textureMirroringChanged FINAL)
+    Q_PROPERTY(int samples READ samples WRITE setSamples NOTIFY samplesChanged FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -753,13 +753,13 @@ class Q_QUICK_PRIVATE_EXPORT QQuickKeyNavigationAttached : public QObject, publi
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickKeyNavigationAttached)
 
-    Q_PROPERTY(QQuickItem *left READ left WRITE setLeft NOTIFY leftChanged)
-    Q_PROPERTY(QQuickItem *right READ right WRITE setRight NOTIFY rightChanged)
-    Q_PROPERTY(QQuickItem *up READ up WRITE setUp NOTIFY upChanged)
-    Q_PROPERTY(QQuickItem *down READ down WRITE setDown NOTIFY downChanged)
-    Q_PROPERTY(QQuickItem *tab READ tab WRITE setTab NOTIFY tabChanged)
-    Q_PROPERTY(QQuickItem *backtab READ backtab WRITE setBacktab NOTIFY backtabChanged)
-    Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged)
+    Q_PROPERTY(QQuickItem *left READ left WRITE setLeft NOTIFY leftChanged FINAL)
+    Q_PROPERTY(QQuickItem *right READ right WRITE setRight NOTIFY rightChanged FINAL)
+    Q_PROPERTY(QQuickItem *up READ up WRITE setUp NOTIFY upChanged FINAL)
+    Q_PROPERTY(QQuickItem *down READ down WRITE setDown NOTIFY downChanged FINAL)
+    Q_PROPERTY(QQuickItem *tab READ tab WRITE setTab NOTIFY tabChanged FINAL)
+    Q_PROPERTY(QQuickItem *backtab READ backtab WRITE setBacktab NOTIFY backtabChanged FINAL)
+    Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged FINAL)
 
     QML_NAMED_ELEMENT(KeyNavigation)
     QML_ADDED_IN_VERSION(2, 0)
@@ -808,8 +808,8 @@ private:
 class QQuickLayoutMirroringAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled RESET resetEnabled NOTIFY enabledChanged)
-    Q_PROPERTY(bool childrenInherit READ childrenInherit WRITE setChildrenInherit NOTIFY childrenInheritChanged)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled RESET resetEnabled NOTIFY enabledChanged FINAL)
+    Q_PROPERTY(bool childrenInherit READ childrenInherit WRITE setChildrenInherit NOTIFY childrenInheritChanged FINAL)
 
     QML_NAMED_ELEMENT(LayoutMirroring)
     QML_ADDED_IN_VERSION(2, 0)
@@ -838,7 +838,7 @@ private:
 class QQuickEnterKeyAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(Qt::EnterKeyType type READ type WRITE setType NOTIFY typeChanged)
+    Q_PROPERTY(Qt::EnterKeyType type READ type WRITE setType NOTIFY typeChanged FINAL)
 
     QML_NAMED_ELEMENT(EnterKey)
     QML_UNCREATABLE("EnterKey is only available via attached properties")
@@ -886,9 +886,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickKeysAttached : public QObject, public QQuickI
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickKeysAttached)
 
-    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
-    Q_PROPERTY(QQmlListProperty<QQuickItem> forwardTo READ forwardTo)
-    Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickItem> forwardTo READ forwardTo FINAL)
+    Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged FINAL)
 
     QML_NAMED_ELEMENT(Keys)
     QML_ADDED_IN_VERSION(2, 0)

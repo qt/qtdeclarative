@@ -37,12 +37,12 @@ class QQuickSprite;
 class Q_QUICK_PRIVATE_EXPORT QQuickStochasticState : public QObject //Currently for internal use only - Sprite and ParticleGroup
 {
     Q_OBJECT
-    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
-    Q_PROPERTY(int durationVariation READ durationVariation WRITE setDurationVariation NOTIFY durationVariationChanged)
+    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged FINAL)
+    Q_PROPERTY(int durationVariation READ durationVariation WRITE setDurationVariation NOTIFY durationVariationChanged FINAL)
     //Note that manually advanced sprites need to query this variable and implement own behaviour for it
-    Q_PROPERTY(bool randomStart READ randomStart WRITE setRandomStart NOTIFY randomStartChanged)
-    Q_PROPERTY(QVariantMap to READ to WRITE setTo NOTIFY toChanged)
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(bool randomStart READ randomStart WRITE setRandomStart NOTIFY randomStartChanged FINAL)
+    Q_PROPERTY(QVariantMap to READ to WRITE setTo NOTIFY toChanged FINAL)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
 
 public:
     QQuickStochasticState(QObject* parent = nullptr)
@@ -151,8 +151,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStochasticEngine : public QObject
 {
     Q_OBJECT
     //TODO: Optimize single state case?
-    Q_PROPERTY(QString globalGoal READ globalGoal WRITE setGlobalGoal NOTIFY globalGoalChanged)
-    Q_PROPERTY(QQmlListProperty<QQuickStochasticState> states READ states)
+    Q_PROPERTY(QString globalGoal READ globalGoal WRITE setGlobalGoal NOTIFY globalGoalChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickStochasticState> states READ states FINAL)
 public:
     explicit QQuickStochasticEngine(QObject *parent = nullptr);
     QQuickStochasticEngine(const QList<QQuickStochasticState*> &states, QObject *parent = nullptr);
@@ -229,7 +229,7 @@ protected:
 class Q_QUICK_PRIVATE_EXPORT QQuickSpriteEngine : public QQuickStochasticEngine
 {
     Q_OBJECT
-    Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites)
+    Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites FINAL)
 public:
     explicit QQuickSpriteEngine(QObject *parent = nullptr);
     QQuickSpriteEngine(const QList<QQuickSprite*> &sprites, QObject *parent = nullptr);

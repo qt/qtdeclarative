@@ -29,9 +29,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickSmoothedAnimation : public QQuickNumberAnimat
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickSmoothedAnimation)
 
-    Q_PROPERTY(qreal velocity READ velocity WRITE setVelocity NOTIFY velocityChanged)
-    Q_PROPERTY(ReversingMode reversingMode READ reversingMode WRITE setReversingMode NOTIFY reversingModeChanged)
-    Q_PROPERTY(qreal maximumEasingTime READ maximumEasingTime WRITE setMaximumEasingTime NOTIFY maximumEasingTimeChanged)
+    Q_PROPERTY(qreal velocity READ velocity WRITE setVelocity NOTIFY velocityChanged FINAL)
+    Q_PROPERTY(ReversingMode reversingMode READ reversingMode WRITE setReversingMode NOTIFY reversingModeChanged FINAL)
+    Q_PROPERTY(qreal maximumEasingTime READ maximumEasingTime WRITE setMaximumEasingTime NOTIFY maximumEasingTimeChanged FINAL)
     QML_NAMED_ELEMENT(SmoothedAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 

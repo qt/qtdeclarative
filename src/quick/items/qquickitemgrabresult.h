@@ -23,8 +23,8 @@ class Q_QUICK_EXPORT QQuickItemGrabResult : public QObject
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickItemGrabResult)
 
-    Q_PROPERTY(QImage image READ image CONSTANT)
-    Q_PROPERTY(QUrl url READ url CONSTANT)
+    Q_PROPERTY(QImage image READ image CONSTANT FINAL)
+    Q_PROPERTY(QUrl url READ url CONSTANT FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 

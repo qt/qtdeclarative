@@ -30,25 +30,25 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal mouseX READ mouseX NOTIFY mouseXChanged)
-    Q_PROPERTY(qreal mouseY READ mouseY NOTIFY mouseYChanged)
-    Q_PROPERTY(bool containsMouse READ hovered NOTIFY hoveredChanged)
-    Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged)
-    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
-    Q_PROPERTY(bool scrollGestureEnabled READ isScrollGestureEnabled WRITE setScrollGestureEnabled NOTIFY scrollGestureEnabledChanged REVISION(2, 5))
-    Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons NOTIFY pressedButtonsChanged)
-    Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
-    Q_PROPERTY(bool hoverEnabled READ hoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged)
+    Q_PROPERTY(qreal mouseX READ mouseX NOTIFY mouseXChanged FINAL)
+    Q_PROPERTY(qreal mouseY READ mouseY NOTIFY mouseYChanged FINAL)
+    Q_PROPERTY(bool containsMouse READ hovered NOTIFY hoveredChanged FINAL)
+    Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
+    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL)
+    Q_PROPERTY(bool scrollGestureEnabled READ isScrollGestureEnabled WRITE setScrollGestureEnabled NOTIFY scrollGestureEnabledChanged REVISION(2, 5) FINAL)
+    Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons NOTIFY pressedButtonsChanged FINAL)
+    Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged FINAL)
+    Q_PROPERTY(bool hoverEnabled READ hoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged FINAL)
 #if QT_CONFIG(quick_draganddrop)
-    Q_PROPERTY(QQuickDrag *drag READ drag CONSTANT) //### add flicking to QQuickDrag or add a QQuickFlick ???
+    Q_PROPERTY(QQuickDrag *drag READ drag CONSTANT FINAL) //### add flicking to QQuickDrag or add a QQuickFlick ???
 #endif
-    Q_PROPERTY(bool preventStealing READ preventStealing WRITE setPreventStealing NOTIFY preventStealingChanged)
-    Q_PROPERTY(bool propagateComposedEvents READ propagateComposedEvents WRITE setPropagateComposedEvents NOTIFY propagateComposedEventsChanged)
+    Q_PROPERTY(bool preventStealing READ preventStealing WRITE setPreventStealing NOTIFY preventStealingChanged FINAL)
+    Q_PROPERTY(bool propagateComposedEvents READ propagateComposedEvents WRITE setPropagateComposedEvents NOTIFY propagateComposedEventsChanged FINAL)
 #if QT_CONFIG(cursor)
-    Q_PROPERTY(Qt::CursorShape cursorShape READ cursorShape WRITE setCursorShape RESET unsetCursor NOTIFY cursorShapeChanged)
+    Q_PROPERTY(Qt::CursorShape cursorShape READ cursorShape WRITE setCursorShape RESET unsetCursor NOTIFY cursorShapeChanged FINAL)
 #endif
-    Q_PROPERTY(bool containsPress READ containsPress NOTIFY containsPressChanged REVISION(2, 4))
-    Q_PROPERTY(int pressAndHoldInterval READ pressAndHoldInterval WRITE setPressAndHoldInterval NOTIFY pressAndHoldIntervalChanged RESET resetPressAndHoldInterval REVISION(2, 9))
+    Q_PROPERTY(bool containsPress READ containsPress NOTIFY containsPressChanged REVISION(2, 4) FINAL)
+    Q_PROPERTY(int pressAndHoldInterval READ pressAndHoldInterval WRITE setPressAndHoldInterval NOTIFY pressAndHoldIntervalChanged RESET resetPressAndHoldInterval REVISION(2, 9) FINAL)
     QML_NAMED_ELEMENT(MouseArea)
     QML_ADDED_IN_VERSION(2, 0)
 

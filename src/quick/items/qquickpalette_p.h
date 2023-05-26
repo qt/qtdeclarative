@@ -26,9 +26,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPalette : public QQuickColorGroup
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQuickColorGroup *active READ active WRITE setActive NOTIFY activeChanged)
-    Q_PROPERTY(QQuickColorGroup *inactive READ inactive WRITE setInactive NOTIFY inactiveChanged)
-    Q_PROPERTY(QQuickColorGroup *disabled READ disabled WRITE setDisabled NOTIFY disabledChanged)
+    Q_PROPERTY(QQuickColorGroup *active READ active WRITE setActive NOTIFY activeChanged FINAL)
+    Q_PROPERTY(QQuickColorGroup *inactive READ inactive WRITE setInactive NOTIFY inactiveChanged FINAL)
+    Q_PROPERTY(QQuickColorGroup *disabled READ disabled WRITE setDisabled NOTIFY disabledChanged FINAL)
 
     QML_NAMED_ELEMENT(Palette)
     QML_ADDED_IN_VERSION(6, 0)

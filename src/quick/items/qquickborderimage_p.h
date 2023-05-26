@@ -26,11 +26,11 @@ class Q_QUICK_PRIVATE_EXPORT QQuickBorderImage : public QQuickImageBase
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQuickScaleGrid *border READ border CONSTANT)
-    Q_PROPERTY(TileMode horizontalTileMode READ horizontalTileMode WRITE setHorizontalTileMode NOTIFY horizontalTileModeChanged)
-    Q_PROPERTY(TileMode verticalTileMode READ verticalTileMode WRITE setVerticalTileMode NOTIFY verticalTileModeChanged)
+    Q_PROPERTY(QQuickScaleGrid *border READ border CONSTANT FINAL)
+    Q_PROPERTY(TileMode horizontalTileMode READ horizontalTileMode WRITE setHorizontalTileMode NOTIFY horizontalTileModeChanged FINAL)
+    Q_PROPERTY(TileMode verticalTileMode READ verticalTileMode WRITE setVerticalTileMode NOTIFY verticalTileModeChanged FINAL)
     // read-only for BorderImage
-    Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged)
+    Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged FINAL)
     QML_NAMED_ELEMENT(BorderImage)
     QML_ADDED_IN_VERSION(2, 0)
 

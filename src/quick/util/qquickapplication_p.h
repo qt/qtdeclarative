@@ -31,14 +31,14 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_PRIVATE_EXPORT QQuickApplication : public QQmlApplication
 {
     Q_OBJECT
-    Q_PROPERTY(bool active READ active NOTIFY activeChanged) // deprecated, use 'state' instead
-    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection NOTIFY layoutDirectionChanged)
-    Q_PROPERTY(bool supportsMultipleWindows READ supportsMultipleWindows CONSTANT)
-    Q_PROPERTY(Qt::ApplicationState state READ state NOTIFY stateChanged)
-    Q_PROPERTY(QFont font READ font CONSTANT)
-    Q_PROPERTY(QString displayName READ displayName WRITE setDisplayName NOTIFY displayNameChanged)
-    Q_PROPERTY(QQmlListProperty<QQuickScreenInfo> screens READ screens NOTIFY screensChanged)
-    Q_PROPERTY(QStyleHints *styleHints READ styleHints CONSTANT)
+    Q_PROPERTY(bool active READ active NOTIFY activeChanged FINAL) // deprecated, use 'state' instead
+    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection NOTIFY layoutDirectionChanged FINAL)
+    Q_PROPERTY(bool supportsMultipleWindows READ supportsMultipleWindows CONSTANT FINAL)
+    Q_PROPERTY(Qt::ApplicationState state READ state NOTIFY stateChanged FINAL)
+    Q_PROPERTY(QFont font READ font CONSTANT FINAL)
+    Q_PROPERTY(QString displayName READ displayName WRITE setDisplayName NOTIFY displayNameChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickScreenInfo> screens READ screens NOTIFY screensChanged FINAL)
+    Q_PROPERTY(QStyleHints *styleHints READ styleHints CONSTANT FINAL)
 
     QML_NAMED_ELEMENT(Application)
     QML_SINGLETON

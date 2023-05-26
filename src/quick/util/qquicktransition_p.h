@@ -60,12 +60,12 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTransition : public QObject
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickTransition)
 
-    Q_PROPERTY(QString from READ fromState WRITE setFromState NOTIFY fromChanged)
-    Q_PROPERTY(QString to READ toState WRITE setToState NOTIFY toChanged)
-    Q_PROPERTY(bool reversible READ reversible WRITE setReversible NOTIFY reversibleChanged)
-    Q_PROPERTY(bool running READ running NOTIFY runningChanged)
-    Q_PROPERTY(QQmlListProperty<QQuickAbstractAnimation> animations READ animations)
-    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
+    Q_PROPERTY(QString from READ fromState WRITE setFromState NOTIFY fromChanged FINAL)
+    Q_PROPERTY(QString to READ toState WRITE setToState NOTIFY toChanged FINAL)
+    Q_PROPERTY(bool reversible READ reversible WRITE setReversible NOTIFY reversibleChanged FINAL)
+    Q_PROPERTY(bool running READ running NOTIFY runningChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickAbstractAnimation> animations READ animations FINAL)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "animations")
     Q_CLASSINFO("DeferredPropertyNames", "animations")
     QML_NAMED_ELEMENT(Transition)

@@ -32,15 +32,15 @@ class Q_QUICK_PRIVATE_EXPORT QQuickInputMethod : public QObject
     QML_ADDED_IN_VERSION(6, 4)
     QML_SINGLETON
 
-    Q_PROPERTY(QRectF cursorRectangle READ cursorRectangle NOTIFY cursorRectangleChanged)
-    Q_PROPERTY(QRectF anchorRectangle READ anchorRectangle NOTIFY anchorRectangleChanged)
-    Q_PROPERTY(QRectF keyboardRectangle READ keyboardRectangle NOTIFY keyboardRectangleChanged)
+    Q_PROPERTY(QRectF cursorRectangle READ cursorRectangle NOTIFY cursorRectangleChanged FINAL)
+    Q_PROPERTY(QRectF anchorRectangle READ anchorRectangle NOTIFY anchorRectangleChanged FINAL)
+    Q_PROPERTY(QRectF keyboardRectangle READ keyboardRectangle NOTIFY keyboardRectangleChanged FINAL)
     Q_PROPERTY(QRectF inputItemClipRectangle READ inputItemClipRectangle NOTIFY
-                       inputItemClipRectangleChanged)
-    Q_PROPERTY(bool visible READ isVisible NOTIFY visibleChanged)
-    Q_PROPERTY(bool animating READ isAnimating NOTIFY animatingChanged)
-    Q_PROPERTY(QLocale locale READ locale NOTIFY localeChanged)
-    Q_PROPERTY(Qt::LayoutDirection inputDirection READ inputDirection NOTIFY inputDirectionChanged)
+                       inputItemClipRectangleChanged FINAL)
+    Q_PROPERTY(bool visible READ isVisible NOTIFY visibleChanged FINAL)
+    Q_PROPERTY(bool animating READ isAnimating NOTIFY animatingChanged FINAL)
+    Q_PROPERTY(QLocale locale READ locale NOTIFY localeChanged FINAL)
+    Q_PROPERTY(Qt::LayoutDirection inputDirection READ inputDirection NOTIFY inputDirectionChanged FINAL)
 public:
     explicit QQuickInputMethod(QObject *parent = nullptr);
 
