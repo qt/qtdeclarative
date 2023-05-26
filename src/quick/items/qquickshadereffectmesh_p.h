@@ -65,7 +65,7 @@ protected:
 class Q_QUICK_PRIVATE_EXPORT QQuickGridMesh : public QQuickShaderEffectMesh
 {
     Q_OBJECT
-    Q_PROPERTY(QSize resolution READ resolution WRITE setResolution NOTIFY resolutionChanged)
+    Q_PROPERTY(QSize resolution READ resolution WRITE setResolution NOTIFY resolutionChanged FINAL)
     QML_NAMED_ELEMENT(GridMesh)
     QML_ADDED_IN_VERSION(2, 0)
 public:
@@ -91,10 +91,10 @@ class QQuickBorderImageMesh : public QQuickShaderEffectMesh
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQuickScaleGrid *border READ border CONSTANT)
-    Q_PROPERTY(QSize size READ size WRITE setSize NOTIFY sizeChanged)
-    Q_PROPERTY(TileMode horizontalTileMode READ horizontalTileMode WRITE setHorizontalTileMode NOTIFY horizontalTileModeChanged)
-    Q_PROPERTY(TileMode verticalTileMode READ verticalTileMode WRITE setVerticalTileMode NOTIFY verticalTileModeChanged)
+    Q_PROPERTY(QQuickScaleGrid *border READ border CONSTANT FINAL)
+    Q_PROPERTY(QSize size READ size WRITE setSize NOTIFY sizeChanged FINAL)
+    Q_PROPERTY(TileMode horizontalTileMode READ horizontalTileMode WRITE setHorizontalTileMode NOTIFY horizontalTileModeChanged FINAL)
+    Q_PROPERTY(TileMode verticalTileMode READ verticalTileMode WRITE setVerticalTileMode NOTIFY verticalTileModeChanged FINAL)
 
     QML_NAMED_ELEMENT(BorderImageMesh)
     QML_ADDED_IN_VERSION(2, 8)

@@ -33,23 +33,23 @@ class QQuickMultiPointTouchArea;
 class Q_QUICK_PRIVATE_EXPORT QQuickTouchPoint : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int pointId READ pointId NOTIFY pointIdChanged)
-    Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId NOTIFY uniqueIdChanged REVISION(2, 9))
-    Q_PROPERTY(bool pressed READ pressed NOTIFY pressedChanged)
-    Q_PROPERTY(qreal x READ x NOTIFY xChanged)
-    Q_PROPERTY(qreal y READ y NOTIFY yChanged)
-    Q_PROPERTY(QSizeF ellipseDiameters READ ellipseDiameters NOTIFY ellipseDiametersChanged REVISION(2, 9))
-    Q_PROPERTY(qreal pressure READ pressure NOTIFY pressureChanged)
-    Q_PROPERTY(qreal rotation READ rotation NOTIFY rotationChanged REVISION(2, 9))
-    Q_PROPERTY(QVector2D velocity READ velocity NOTIFY velocityChanged)
-    Q_PROPERTY(QRectF area READ area NOTIFY areaChanged)
+    Q_PROPERTY(int pointId READ pointId NOTIFY pointIdChanged FINAL)
+    Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId NOTIFY uniqueIdChanged REVISION(2, 9) FINAL)
+    Q_PROPERTY(bool pressed READ pressed NOTIFY pressedChanged FINAL)
+    Q_PROPERTY(qreal x READ x NOTIFY xChanged FINAL)
+    Q_PROPERTY(qreal y READ y NOTIFY yChanged FINAL)
+    Q_PROPERTY(QSizeF ellipseDiameters READ ellipseDiameters NOTIFY ellipseDiametersChanged REVISION(2, 9) FINAL)
+    Q_PROPERTY(qreal pressure READ pressure NOTIFY pressureChanged FINAL)
+    Q_PROPERTY(qreal rotation READ rotation NOTIFY rotationChanged REVISION(2, 9) FINAL)
+    Q_PROPERTY(QVector2D velocity READ velocity NOTIFY velocityChanged FINAL)
+    Q_PROPERTY(QRectF area READ area NOTIFY areaChanged FINAL)
 
-    Q_PROPERTY(qreal startX READ startX NOTIFY startXChanged)
-    Q_PROPERTY(qreal startY READ startY NOTIFY startYChanged)
-    Q_PROPERTY(qreal previousX READ previousX NOTIFY previousXChanged)
-    Q_PROPERTY(qreal previousY READ previousY NOTIFY previousYChanged)
-    Q_PROPERTY(qreal sceneX READ sceneX NOTIFY sceneXChanged)
-    Q_PROPERTY(qreal sceneY READ sceneY NOTIFY sceneYChanged)
+    Q_PROPERTY(qreal startX READ startX NOTIFY startXChanged FINAL)
+    Q_PROPERTY(qreal startY READ startY NOTIFY startYChanged FINAL)
+    Q_PROPERTY(qreal previousX READ previousX NOTIFY previousXChanged FINAL)
+    Q_PROPERTY(qreal previousY READ previousY NOTIFY previousYChanged FINAL)
+    Q_PROPERTY(qreal sceneX READ sceneX NOTIFY sceneXChanged FINAL)
+    Q_PROPERTY(qreal sceneY READ sceneY NOTIFY sceneYChanged FINAL)
     QML_NAMED_ELEMENT(TouchPoint)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -152,8 +152,8 @@ private:
 class QQuickGrabGestureEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQmlListProperty<QObject> touchPoints READ touchPoints CONSTANT)
-    Q_PROPERTY(qreal dragThreshold READ dragThreshold CONSTANT)
+    Q_PROPERTY(QQmlListProperty<QObject> touchPoints READ touchPoints CONSTANT FINAL)
+    Q_PROPERTY(qreal dragThreshold READ dragThreshold CONSTANT FINAL)
     QML_NAMED_ELEMENT(GestureEvent)
     QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("GestureEvent is only available in the context of handling the gestureStarted signal from MultiPointTouchArea.")
@@ -181,10 +181,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMultiPointTouchArea : public QQuickItem
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(QQuickMultiPointTouchArea)
 
-    Q_PROPERTY(QQmlListProperty<QQuickTouchPoint> touchPoints READ touchPoints CONSTANT)
-    Q_PROPERTY(int minimumTouchPoints READ minimumTouchPoints WRITE setMinimumTouchPoints NOTIFY minimumTouchPointsChanged)
-    Q_PROPERTY(int maximumTouchPoints READ maximumTouchPoints WRITE setMaximumTouchPoints NOTIFY maximumTouchPointsChanged)
-    Q_PROPERTY(bool mouseEnabled READ mouseEnabled WRITE setMouseEnabled NOTIFY mouseEnabledChanged)
+    Q_PROPERTY(QQmlListProperty<QQuickTouchPoint> touchPoints READ touchPoints CONSTANT FINAL)
+    Q_PROPERTY(int minimumTouchPoints READ minimumTouchPoints WRITE setMinimumTouchPoints NOTIFY minimumTouchPointsChanged FINAL)
+    Q_PROPERTY(int maximumTouchPoints READ maximumTouchPoints WRITE setMaximumTouchPoints NOTIFY maximumTouchPointsChanged FINAL)
+    Q_PROPERTY(bool mouseEnabled READ mouseEnabled WRITE setMouseEnabled NOTIFY mouseEnabledChanged FINAL)
     QML_NAMED_ELEMENT(MultiPointTouchArea)
     QML_ADDED_IN_VERSION(2, 0)
 

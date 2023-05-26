@@ -28,13 +28,13 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWindowAttached : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QWindow::Visibility visibility READ visibility NOTIFY visibilityChanged)
-    Q_PROPERTY(bool active READ isActive NOTIFY activeChanged)
-    Q_PROPERTY(QQuickItem* activeFocusItem READ activeFocusItem NOTIFY activeFocusItemChanged)
-    Q_PROPERTY(QQuickItem* contentItem READ contentItem NOTIFY contentItemChanged)
-    Q_PROPERTY(int width READ width NOTIFY widthChanged)
-    Q_PROPERTY(int height READ height NOTIFY heightChanged)
-    Q_PROPERTY(QQuickWindow *window READ window NOTIFY windowChanged)
+    Q_PROPERTY(QWindow::Visibility visibility READ visibility NOTIFY visibilityChanged FINAL)
+    Q_PROPERTY(bool active READ isActive NOTIFY activeChanged FINAL)
+    Q_PROPERTY(QQuickItem* activeFocusItem READ activeFocusItem NOTIFY activeFocusItemChanged FINAL)
+    Q_PROPERTY(QQuickItem* contentItem READ contentItem NOTIFY contentItemChanged FINAL)
+    Q_PROPERTY(int width READ width NOTIFY widthChanged FINAL)
+    Q_PROPERTY(int height READ height NOTIFY heightChanged FINAL)
+    Q_PROPERTY(QQuickWindow *window READ window NOTIFY windowChanged FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 

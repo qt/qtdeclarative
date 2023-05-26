@@ -248,10 +248,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickableVisibleArea : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal xPosition READ xPosition NOTIFY xPositionChanged)
-    Q_PROPERTY(qreal yPosition READ yPosition NOTIFY yPositionChanged)
-    Q_PROPERTY(qreal widthRatio READ widthRatio NOTIFY widthRatioChanged)
-    Q_PROPERTY(qreal heightRatio READ heightRatio NOTIFY heightRatioChanged)
+    Q_PROPERTY(qreal xPosition READ xPosition NOTIFY xPositionChanged FINAL)
+    Q_PROPERTY(qreal yPosition READ yPosition NOTIFY yPositionChanged FINAL)
+    Q_PROPERTY(qreal widthRatio READ widthRatio NOTIFY widthRatioChanged FINAL)
+    Q_PROPERTY(qreal heightRatio READ heightRatio NOTIFY heightRatioChanged FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 

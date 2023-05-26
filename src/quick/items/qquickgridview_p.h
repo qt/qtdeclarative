@@ -30,11 +30,11 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGridView : public QQuickItemView
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickGridView)
 
-    Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
-    Q_PROPERTY(qreal cellWidth READ cellWidth WRITE setCellWidth NOTIFY cellWidthChanged)
-    Q_PROPERTY(qreal cellHeight READ cellHeight WRITE setCellHeight NOTIFY cellHeightChanged)
+    Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged FINAL)
+    Q_PROPERTY(qreal cellWidth READ cellWidth WRITE setCellWidth NOTIFY cellWidthChanged FINAL)
+    Q_PROPERTY(qreal cellHeight READ cellHeight WRITE setCellHeight NOTIFY cellHeightChanged FINAL)
 
-    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
+    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL)
 
     Q_CLASSINFO("DefaultProperty", "data")
     QML_NAMED_ELEMENT(GridView)

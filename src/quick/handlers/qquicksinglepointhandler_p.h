@@ -25,7 +25,7 @@ class QQuickSinglePointHandlerPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickSinglePointHandler : public QQuickPointerDeviceHandler
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickHandlerPoint point READ point NOTIFY pointChanged)
+    Q_PROPERTY(QQuickHandlerPoint point READ point NOTIFY pointChanged FINAL)
 
 public:
     explicit QQuickSinglePointHandler(QQuickItem *parent = nullptr);

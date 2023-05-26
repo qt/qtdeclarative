@@ -42,17 +42,17 @@ class QQuickShaderEffectSourceTextureProvider;
 class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectSource : public QQuickItem, public QQuickItemChangeListener
 {
     Q_OBJECT
-    Q_PROPERTY(WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)
-    Q_PROPERTY(QQuickItem *sourceItem READ sourceItem WRITE setSourceItem NOTIFY sourceItemChanged)
-    Q_PROPERTY(QRectF sourceRect READ sourceRect WRITE setSourceRect NOTIFY sourceRectChanged)
-    Q_PROPERTY(QSize textureSize READ textureSize WRITE setTextureSize NOTIFY textureSizeChanged)
-    Q_PROPERTY(Format format READ format WRITE setFormat NOTIFY formatChanged)
-    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged)
-    Q_PROPERTY(bool hideSource READ hideSource WRITE setHideSource NOTIFY hideSourceChanged)
-    Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged)
-    Q_PROPERTY(bool recursive READ recursive WRITE setRecursive NOTIFY recursiveChanged)
-    Q_PROPERTY(TextureMirroring textureMirroring READ textureMirroring WRITE setTextureMirroring NOTIFY textureMirroringChanged REVISION(2, 6))
-    Q_PROPERTY(int samples READ samples WRITE setSamples NOTIFY samplesChanged REVISION(2, 9))
+    Q_PROPERTY(WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged FINAL)
+    Q_PROPERTY(QQuickItem *sourceItem READ sourceItem WRITE setSourceItem NOTIFY sourceItemChanged FINAL)
+    Q_PROPERTY(QRectF sourceRect READ sourceRect WRITE setSourceRect NOTIFY sourceRectChanged FINAL)
+    Q_PROPERTY(QSize textureSize READ textureSize WRITE setTextureSize NOTIFY textureSizeChanged FINAL)
+    Q_PROPERTY(Format format READ format WRITE setFormat NOTIFY formatChanged FINAL)
+    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged FINAL)
+    Q_PROPERTY(bool hideSource READ hideSource WRITE setHideSource NOTIFY hideSourceChanged FINAL)
+    Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged FINAL)
+    Q_PROPERTY(bool recursive READ recursive WRITE setRecursive NOTIFY recursiveChanged FINAL)
+    Q_PROPERTY(TextureMirroring textureMirroring READ textureMirroring WRITE setTextureMirroring NOTIFY textureMirroringChanged REVISION(2, 6) FINAL)
+    Q_PROPERTY(int samples READ samples WRITE setSamples NOTIFY samplesChanged REVISION(2, 9) FINAL)
     QML_NAMED_ELEMENT(ShaderEffectSource)
     QML_ADDED_IN_VERSION(2, 0)
 

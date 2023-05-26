@@ -19,9 +19,9 @@ class QQuickViewPrivate;
 class Q_QUICK_EXPORT QQuickView : public QQuickWindow
 {
     Q_OBJECT
-    Q_PROPERTY(ResizeMode resizeMode READ resizeMode WRITE setResizeMode)
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
-    Q_PROPERTY(QUrl source READ source WRITE setSource DESIGNABLE true)
+    Q_PROPERTY(ResizeMode resizeMode READ resizeMode WRITE setResizeMode FINAL)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged FINAL)
+    Q_PROPERTY(QUrl source READ source WRITE setSource DESIGNABLE true FINAL)
 public:
     explicit QQuickView(QWindow *parent = nullptr);
     QQuickView(QQmlEngine* engine, QWindow *parent);

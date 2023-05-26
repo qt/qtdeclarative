@@ -125,18 +125,18 @@ class Q_QUICK_PRIVATE_EXPORT QQuickDrag : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQuickItem *target READ target WRITE setTarget NOTIFY targetChanged RESET resetTarget)
-    Q_PROPERTY(Axis axis READ axis WRITE setAxis NOTIFY axisChanged)
-    Q_PROPERTY(qreal minimumX READ xmin WRITE setXmin NOTIFY minimumXChanged)
-    Q_PROPERTY(qreal maximumX READ xmax WRITE setXmax NOTIFY maximumXChanged)
-    Q_PROPERTY(qreal minimumY READ ymin WRITE setYmin NOTIFY minimumYChanged)
-    Q_PROPERTY(qreal maximumY READ ymax WRITE setYmax NOTIFY maximumYChanged)
-    Q_PROPERTY(bool active READ active NOTIFY activeChanged)
-    Q_PROPERTY(bool filterChildren READ filterChildren WRITE setFilterChildren NOTIFY filterChildrenChanged)
-    Q_PROPERTY(bool smoothed READ smoothed WRITE setSmoothed NOTIFY smoothedChanged)
+    Q_PROPERTY(QQuickItem *target READ target WRITE setTarget NOTIFY targetChanged RESET resetTarget FINAL)
+    Q_PROPERTY(Axis axis READ axis WRITE setAxis NOTIFY axisChanged FINAL)
+    Q_PROPERTY(qreal minimumX READ xmin WRITE setXmin NOTIFY minimumXChanged FINAL)
+    Q_PROPERTY(qreal maximumX READ xmax WRITE setXmax NOTIFY maximumXChanged FINAL)
+    Q_PROPERTY(qreal minimumY READ ymin WRITE setYmin NOTIFY minimumYChanged FINAL)
+    Q_PROPERTY(qreal maximumY READ ymax WRITE setYmax NOTIFY maximumYChanged FINAL)
+    Q_PROPERTY(bool active READ active NOTIFY activeChanged FINAL)
+    Q_PROPERTY(bool filterChildren READ filterChildren WRITE setFilterChildren NOTIFY filterChildrenChanged FINAL)
+    Q_PROPERTY(bool smoothed READ smoothed WRITE setSmoothed NOTIFY smoothedChanged FINAL)
     // Note, threshold was added in QtQuick 2.2 but REVISION is not supported (or needed) for grouped
     // properties See QTBUG-33179
-    Q_PROPERTY(qreal threshold READ threshold WRITE setThreshold NOTIFY thresholdChanged RESET resetThreshold)
+    Q_PROPERTY(qreal threshold READ threshold WRITE setThreshold NOTIFY thresholdChanged RESET resetThreshold FINAL)
     //### consider drag and drop
 
     QML_NAMED_ELEMENT(Drag)
@@ -216,16 +216,16 @@ class Q_QUICK_PRIVATE_EXPORT QQuickDragAttached : public QObject
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickDragAttached)
 
-    Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged)
-    Q_PROPERTY(QObject *source READ source WRITE setSource NOTIFY sourceChanged RESET resetSource)
-    Q_PROPERTY(QObject *target READ target NOTIFY targetChanged)
-    Q_PROPERTY(QPointF hotSpot READ hotSpot WRITE setHotSpot NOTIFY hotSpotChanged)
-    Q_PROPERTY(QUrl imageSource READ imageSource WRITE setImageSource NOTIFY imageSourceChanged)
-    Q_PROPERTY(QStringList keys READ keys WRITE setKeys NOTIFY keysChanged)
-    Q_PROPERTY(QVariantMap mimeData READ mimeData WRITE setMimeData NOTIFY mimeDataChanged)
-    Q_PROPERTY(Qt::DropActions supportedActions READ supportedActions WRITE setSupportedActions NOTIFY supportedActionsChanged)
-    Q_PROPERTY(Qt::DropAction proposedAction READ proposedAction WRITE setProposedAction NOTIFY proposedActionChanged)
-    Q_PROPERTY(QQuickDrag::DragType dragType READ dragType WRITE setDragType NOTIFY dragTypeChanged)
+    Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged FINAL)
+    Q_PROPERTY(QObject *source READ source WRITE setSource NOTIFY sourceChanged RESET resetSource FINAL)
+    Q_PROPERTY(QObject *target READ target NOTIFY targetChanged FINAL)
+    Q_PROPERTY(QPointF hotSpot READ hotSpot WRITE setHotSpot NOTIFY hotSpotChanged FINAL)
+    Q_PROPERTY(QUrl imageSource READ imageSource WRITE setImageSource NOTIFY imageSourceChanged FINAL)
+    Q_PROPERTY(QStringList keys READ keys WRITE setKeys NOTIFY keysChanged FINAL)
+    Q_PROPERTY(QVariantMap mimeData READ mimeData WRITE setMimeData NOTIFY mimeDataChanged FINAL)
+    Q_PROPERTY(Qt::DropActions supportedActions READ supportedActions WRITE setSupportedActions NOTIFY supportedActionsChanged FINAL)
+    Q_PROPERTY(Qt::DropAction proposedAction READ proposedAction WRITE setProposedAction NOTIFY proposedActionChanged FINAL)
+    Q_PROPERTY(QQuickDrag::DragType dragType READ dragType WRITE setDragType NOTIFY dragTypeChanged FINAL)
 
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)

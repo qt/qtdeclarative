@@ -25,17 +25,17 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPinch : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQuickItem *target READ target WRITE setTarget RESET resetTarget NOTIFY targetChanged)
-    Q_PROPERTY(qreal minimumScale READ minimumScale WRITE setMinimumScale NOTIFY minimumScaleChanged)
-    Q_PROPERTY(qreal maximumScale READ maximumScale WRITE setMaximumScale NOTIFY maximumScaleChanged)
-    Q_PROPERTY(qreal minimumRotation READ minimumRotation WRITE setMinimumRotation NOTIFY minimumRotationChanged)
-    Q_PROPERTY(qreal maximumRotation READ maximumRotation WRITE setMaximumRotation NOTIFY maximumRotationChanged)
-    Q_PROPERTY(Axis dragAxis READ axis WRITE setAxis NOTIFY dragAxisChanged)
-    Q_PROPERTY(qreal minimumX READ xmin WRITE setXmin NOTIFY minimumXChanged)
-    Q_PROPERTY(qreal maximumX READ xmax WRITE setXmax NOTIFY maximumXChanged)
-    Q_PROPERTY(qreal minimumY READ ymin WRITE setYmin NOTIFY minimumYChanged)
-    Q_PROPERTY(qreal maximumY READ ymax WRITE setYmax NOTIFY maximumYChanged)
-    Q_PROPERTY(bool active READ active NOTIFY activeChanged)
+    Q_PROPERTY(QQuickItem *target READ target WRITE setTarget RESET resetTarget NOTIFY targetChanged FINAL)
+    Q_PROPERTY(qreal minimumScale READ minimumScale WRITE setMinimumScale NOTIFY minimumScaleChanged FINAL)
+    Q_PROPERTY(qreal maximumScale READ maximumScale WRITE setMaximumScale NOTIFY maximumScaleChanged FINAL)
+    Q_PROPERTY(qreal minimumRotation READ minimumRotation WRITE setMinimumRotation NOTIFY minimumRotationChanged FINAL)
+    Q_PROPERTY(qreal maximumRotation READ maximumRotation WRITE setMaximumRotation NOTIFY maximumRotationChanged FINAL)
+    Q_PROPERTY(Axis dragAxis READ axis WRITE setAxis NOTIFY dragAxisChanged FINAL)
+    Q_PROPERTY(qreal minimumX READ xmin WRITE setXmin NOTIFY minimumXChanged FINAL)
+    Q_PROPERTY(qreal maximumX READ xmax WRITE setXmax NOTIFY maximumXChanged FINAL)
+    Q_PROPERTY(qreal minimumY READ ymin WRITE setYmin NOTIFY minimumYChanged FINAL)
+    Q_PROPERTY(qreal maximumY READ ymax WRITE setYmax NOTIFY maximumYChanged FINAL)
+    Q_PROPERTY(bool active READ active NOTIFY activeChanged FINAL)
     QML_NAMED_ELEMENT(Pinch)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -164,20 +164,20 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPinchEvent : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QPointF center READ center)
-    Q_PROPERTY(QPointF startCenter READ startCenter)
-    Q_PROPERTY(QPointF previousCenter READ previousCenter)
-    Q_PROPERTY(qreal scale READ scale)
-    Q_PROPERTY(qreal previousScale READ previousScale)
-    Q_PROPERTY(qreal angle READ angle)
-    Q_PROPERTY(qreal previousAngle READ previousAngle)
-    Q_PROPERTY(qreal rotation READ rotation)
-    Q_PROPERTY(QPointF point1 READ point1)
-    Q_PROPERTY(QPointF startPoint1 READ startPoint1)
-    Q_PROPERTY(QPointF point2 READ point2)
-    Q_PROPERTY(QPointF startPoint2 READ startPoint2)
-    Q_PROPERTY(int pointCount READ pointCount)
-    Q_PROPERTY(bool accepted READ accepted WRITE setAccepted)
+    Q_PROPERTY(QPointF center READ center FINAL)
+    Q_PROPERTY(QPointF startCenter READ startCenter FINAL)
+    Q_PROPERTY(QPointF previousCenter READ previousCenter FINAL)
+    Q_PROPERTY(qreal scale READ scale FINAL)
+    Q_PROPERTY(qreal previousScale READ previousScale FINAL)
+    Q_PROPERTY(qreal angle READ angle FINAL)
+    Q_PROPERTY(qreal previousAngle READ previousAngle FINAL)
+    Q_PROPERTY(qreal rotation READ rotation FINAL)
+    Q_PROPERTY(QPointF point1 READ point1 FINAL)
+    Q_PROPERTY(QPointF startPoint1 READ startPoint1 FINAL)
+    Q_PROPERTY(QPointF point2 READ point2 FINAL)
+    Q_PROPERTY(QPointF startPoint2 READ startPoint2 FINAL)
+    Q_PROPERTY(int pointCount READ pointCount FINAL)
+    Q_PROPERTY(bool accepted READ accepted WRITE setAccepted FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -236,8 +236,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPinchArea : public QQuickItem
 {
     Q_OBJECT
 
-    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
-    Q_PROPERTY(QQuickPinch *pinch READ pinch CONSTANT)
+    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL)
+    Q_PROPERTY(QQuickPinch *pinch READ pinch CONSTANT FINAL)
     QML_NAMED_ELEMENT(PinchArea)
     QML_ADDED_IN_VERSION(2, 0)
 

@@ -30,11 +30,11 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnimatedImage : public QQuickImage
 {
     Q_OBJECT
 
-    Q_PROPERTY(bool playing READ isPlaying WRITE setPlaying NOTIFY playingChanged)
-    Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
-    Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY frameChanged)
-    Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged)
-    Q_PROPERTY(qreal speed READ speed WRITE setSpeed NOTIFY speedChanged REVISION(2, 11))
+    Q_PROPERTY(bool playing READ isPlaying WRITE setPlaying NOTIFY playingChanged FINAL)
+    Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged FINAL)
+    Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY frameChanged FINAL)
+    Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged FINAL)
+    Q_PROPERTY(qreal speed READ speed WRITE setSpeed NOTIFY speedChanged REVISION(2, 11) FINAL)
 
     QML_NAMED_ELEMENT(AnimatedImage)
     QML_ADDED_IN_VERSION(2, 0)

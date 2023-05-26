@@ -26,8 +26,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStateChangeScript : public QQuickStateOperati
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickStateChangeScript)
 
-    Q_PROPERTY(QQmlScriptString script READ script WRITE setScript)
-    Q_PROPERTY(QString name READ name WRITE setName)
+    Q_PROPERTY(QQmlScriptString script READ script WRITE setScript FINAL)
+    Q_PROPERTY(QString name READ name WRITE setName FINAL)
     QML_NAMED_ELEMENT(StateChangeScript)
     QML_ADDED_IN_VERSION(2, 0)
 

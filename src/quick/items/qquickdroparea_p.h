@@ -29,23 +29,23 @@ class QQuickDropAreaPrivate;
 class QQuickDragEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qreal x READ x)
-    Q_PROPERTY(qreal y READ y)
-    Q_PROPERTY(QObject *source READ source)
-    Q_PROPERTY(QStringList keys READ keys)
-    Q_PROPERTY(Qt::DropActions supportedActions READ supportedActions)
-    Q_PROPERTY(Qt::DropActions proposedAction READ proposedAction)
-    Q_PROPERTY(Qt::DropAction action READ action WRITE setAction RESET resetAction)
-    Q_PROPERTY(bool accepted READ accepted WRITE setAccepted)
-    Q_PROPERTY(bool hasColor READ hasColor)
-    Q_PROPERTY(bool hasHtml READ hasHtml)
-    Q_PROPERTY(bool hasText READ hasText)
-    Q_PROPERTY(bool hasUrls READ hasUrls)
-    Q_PROPERTY(QVariant colorData READ colorData)
-    Q_PROPERTY(QString html READ html)
-    Q_PROPERTY(QString text READ text)
-    Q_PROPERTY(QList<QUrl> urls READ urls)
-    Q_PROPERTY(QStringList formats READ formats)
+    Q_PROPERTY(qreal x READ x FINAL)
+    Q_PROPERTY(qreal y READ y FINAL)
+    Q_PROPERTY(QObject *source READ source FINAL)
+    Q_PROPERTY(QStringList keys READ keys FINAL)
+    Q_PROPERTY(Qt::DropActions supportedActions READ supportedActions FINAL)
+    Q_PROPERTY(Qt::DropActions proposedAction READ proposedAction FINAL)
+    Q_PROPERTY(Qt::DropAction action READ action WRITE setAction RESET resetAction FINAL)
+    Q_PROPERTY(bool accepted READ accepted WRITE setAccepted FINAL)
+    Q_PROPERTY(bool hasColor READ hasColor FINAL)
+    Q_PROPERTY(bool hasHtml READ hasHtml FINAL)
+    Q_PROPERTY(bool hasText READ hasText FINAL)
+    Q_PROPERTY(bool hasUrls READ hasUrls FINAL)
+    Q_PROPERTY(QVariant colorData READ colorData FINAL)
+    Q_PROPERTY(QString html READ html FINAL)
+    Q_PROPERTY(QString text READ text FINAL)
+    Q_PROPERTY(QList<QUrl> urls READ urls FINAL)
+    Q_PROPERTY(QStringList formats READ formats FINAL)
     QML_NAMED_ELEMENT(DragEvent)
     QML_UNCREATABLE("DragEvent is only meant to be created by DropArea")
     QML_ADDED_IN_VERSION(2, 0)
@@ -92,9 +92,9 @@ private:
 class QQuickDropAreaDrag : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qreal x READ x NOTIFY positionChanged)
-    Q_PROPERTY(qreal y READ y NOTIFY positionChanged)
-    Q_PROPERTY(QObject *source READ source NOTIFY sourceChanged)
+    Q_PROPERTY(qreal x READ x NOTIFY positionChanged FINAL)
+    Q_PROPERTY(qreal y READ y NOTIFY positionChanged FINAL)
+    Q_PROPERTY(QObject *source READ source NOTIFY sourceChanged FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 public:
@@ -120,9 +120,9 @@ class QQuickDropAreaPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickDropArea : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(bool containsDrag READ containsDrag NOTIFY containsDragChanged)
-    Q_PROPERTY(QStringList keys READ keys WRITE setKeys NOTIFY keysChanged)
-    Q_PROPERTY(QQuickDropAreaDrag *drag READ drag CONSTANT)
+    Q_PROPERTY(bool containsDrag READ containsDrag NOTIFY containsDragChanged FINAL)
+    Q_PROPERTY(QStringList keys READ keys WRITE setKeys NOTIFY keysChanged FINAL)
+    Q_PROPERTY(QQuickDropAreaDrag *drag READ drag CONSTANT FINAL)
     QML_NAMED_ELEMENT(DropArea)
     QML_ADDED_IN_VERSION(2, 0)
 

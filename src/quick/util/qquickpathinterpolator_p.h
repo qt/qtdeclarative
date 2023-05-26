@@ -28,11 +28,11 @@ class QQuickPath;
 class Q_QUICK_PRIVATE_EXPORT QQuickPathInterpolator : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickPath *path READ path WRITE setPath NOTIFY pathChanged)
-    Q_PROPERTY(qreal progress READ progress WRITE setProgress NOTIFY progressChanged)
-    Q_PROPERTY(qreal x READ x NOTIFY xChanged)
-    Q_PROPERTY(qreal y READ y NOTIFY yChanged)
-    Q_PROPERTY(qreal angle READ angle NOTIFY angleChanged)
+    Q_PROPERTY(QQuickPath *path READ path WRITE setPath NOTIFY pathChanged FINAL)
+    Q_PROPERTY(qreal progress READ progress WRITE setProgress NOTIFY progressChanged FINAL)
+    Q_PROPERTY(qreal x READ x NOTIFY xChanged FINAL)
+    Q_PROPERTY(qreal y READ y NOTIFY yChanged FINAL)
+    Q_PROPERTY(qreal angle READ angle NOTIFY angleChanged FINAL)
     QML_NAMED_ELEMENT(PathInterpolator)
     QML_ADDED_IN_VERSION(2, 0)
 public:

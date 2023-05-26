@@ -34,28 +34,28 @@ class QSGSpriteNode;
 class Q_QUICK_PRIVATE_EXPORT QQuickAnimatedSprite : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
-    Q_PROPERTY(bool interpolate READ interpolate WRITE setInterpolate NOTIFY interpolateChanged)
+    Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged FINAL)
+    Q_PROPERTY(bool interpolate READ interpolate WRITE setInterpolate NOTIFY interpolateChanged FINAL)
     //###try to share similar spriteEngines for less overhead?
     //These properties come out of QQuickSprite, since an AnimatedSprite is a renderer for a single sprite
-    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
-    Q_PROPERTY(bool reverse READ reverse WRITE setReverse NOTIFY reverseChanged)
-    Q_PROPERTY(bool frameSync READ frameSync WRITE setFrameSync NOTIFY frameSyncChanged)
-    Q_PROPERTY(int frameCount READ frameCount WRITE setFrameCount NOTIFY frameCountChanged)
+    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged FINAL)
+    Q_PROPERTY(bool reverse READ reverse WRITE setReverse NOTIFY reverseChanged FINAL)
+    Q_PROPERTY(bool frameSync READ frameSync WRITE setFrameSync NOTIFY frameSyncChanged FINAL)
+    Q_PROPERTY(int frameCount READ frameCount WRITE setFrameCount NOTIFY frameCountChanged FINAL)
     //If frame height or width is not specified, it is assumed to be a single long row of square frames.
     //Otherwise, it can be multiple contiguous rows, when one row runs out the next will be used.
-    Q_PROPERTY(int frameHeight READ frameHeight WRITE setFrameHeight NOTIFY frameHeightChanged)
-    Q_PROPERTY(int frameWidth READ frameWidth WRITE setFrameWidth NOTIFY frameWidthChanged)
-    Q_PROPERTY(int frameX READ frameX WRITE setFrameX NOTIFY frameXChanged)
-    Q_PROPERTY(int frameY READ frameY WRITE setFrameY NOTIFY frameYChanged)
+    Q_PROPERTY(int frameHeight READ frameHeight WRITE setFrameHeight NOTIFY frameHeightChanged FINAL)
+    Q_PROPERTY(int frameWidth READ frameWidth WRITE setFrameWidth NOTIFY frameWidthChanged FINAL)
+    Q_PROPERTY(int frameX READ frameX WRITE setFrameX NOTIFY frameXChanged FINAL)
+    Q_PROPERTY(int frameY READ frameY WRITE setFrameY NOTIFY frameYChanged FINAL)
     //Precedence order: frameRate, frameDuration
-    Q_PROPERTY(qreal frameRate READ frameRate WRITE setFrameRate NOTIFY frameRateChanged RESET resetFrameRate)
-    Q_PROPERTY(int frameDuration READ frameDuration WRITE setFrameDuration NOTIFY frameDurationChanged RESET resetFrameDuration)
+    Q_PROPERTY(qreal frameRate READ frameRate WRITE setFrameRate NOTIFY frameRateChanged RESET resetFrameRate FINAL)
+    Q_PROPERTY(int frameDuration READ frameDuration WRITE setFrameDuration NOTIFY frameDurationChanged RESET resetFrameDuration FINAL)
     //Extra Simple Sprite Stuff
-    Q_PROPERTY(int loops READ loops WRITE setLoops NOTIFY loopsChanged)
-    Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
-    Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged)
-    Q_PROPERTY(FinishBehavior finishBehavior READ finishBehavior WRITE setFinishBehavior NOTIFY finishBehaviorChanged REVISION(2, 15))
+    Q_PROPERTY(int loops READ loops WRITE setLoops NOTIFY loopsChanged FINAL)
+    Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged FINAL)
+    Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged FINAL)
+    Q_PROPERTY(FinishBehavior finishBehavior READ finishBehavior WRITE setFinishBehavior NOTIFY finishBehaviorChanged REVISION(2, 15) FINAL)
     QML_NAMED_ELEMENT(AnimatedSprite)
     QML_ADDED_IN_VERSION(2, 0)
 

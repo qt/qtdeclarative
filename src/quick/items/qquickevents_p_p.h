@@ -39,13 +39,13 @@ class QQuickPointerHandler;
 class Q_QUICK_PRIVATE_EXPORT QQuickKeyEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int key READ key CONSTANT)
-    Q_PROPERTY(QString text READ text CONSTANT)
-    Q_PROPERTY(int modifiers READ modifiers CONSTANT)
-    Q_PROPERTY(bool isAutoRepeat READ isAutoRepeat CONSTANT)
-    Q_PROPERTY(int count READ count CONSTANT)
-    Q_PROPERTY(quint32 nativeScanCode READ nativeScanCode CONSTANT)
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
+    Q_PROPERTY(int key READ key CONSTANT FINAL)
+    Q_PROPERTY(QString text READ text CONSTANT FINAL)
+    Q_PROPERTY(int modifiers READ modifiers CONSTANT FINAL)
+    Q_PROPERTY(bool isAutoRepeat READ isAutoRepeat CONSTANT FINAL)
+    Q_PROPERTY(int count READ count CONSTANT FINAL)
+    Q_PROPERTY(quint32 nativeScanCode READ nativeScanCode CONSTANT FINAL)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -106,16 +106,16 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qreal x READ x CONSTANT)
-    Q_PROPERTY(qreal y READ y CONSTANT)
-    Q_PROPERTY(int button READ button CONSTANT)
-    Q_PROPERTY(int buttons READ buttons CONSTANT)
-    Q_PROPERTY(int modifiers READ modifiers CONSTANT)
-    Q_PROPERTY(int source READ source CONSTANT REVISION(2, 7))
-    Q_PROPERTY(bool wasHeld READ wasHeld CONSTANT)
-    Q_PROPERTY(bool isClick READ isClick CONSTANT)
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
-    Q_PROPERTY(int flags READ flags CONSTANT REVISION(2, 11))
+    Q_PROPERTY(qreal x READ x CONSTANT FINAL)
+    Q_PROPERTY(qreal y READ y CONSTANT FINAL)
+    Q_PROPERTY(int button READ button CONSTANT FINAL)
+    Q_PROPERTY(int buttons READ buttons CONSTANT FINAL)
+    Q_PROPERTY(int modifiers READ modifiers CONSTANT FINAL)
+    Q_PROPERTY(int source READ source CONSTANT REVISION(2, 7) FINAL)
+    Q_PROPERTY(bool wasHeld READ wasHeld CONSTANT FINAL)
+    Q_PROPERTY(bool isClick READ isClick CONSTANT FINAL)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted FINAL)
+    Q_PROPERTY(int flags READ flags CONSTANT REVISION(2, 11) FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -175,16 +175,16 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickWheelEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(const QPointingDevice *device READ pointingDevice CONSTANT)
-    Q_PROPERTY(qreal x READ x CONSTANT)
-    Q_PROPERTY(qreal y READ y CONSTANT)
-    Q_PROPERTY(QPoint angleDelta READ angleDelta CONSTANT)
-    Q_PROPERTY(QPoint pixelDelta READ pixelDelta CONSTANT)
-    Q_PROPERTY(Qt::ScrollPhase phase READ phase CONSTANT)
-    Q_PROPERTY(int buttons READ buttons CONSTANT)
-    Q_PROPERTY(int modifiers READ modifiers CONSTANT)
-    Q_PROPERTY(bool inverted READ inverted CONSTANT)
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
+    Q_PROPERTY(const QPointingDevice *device READ pointingDevice CONSTANT FINAL)
+    Q_PROPERTY(qreal x READ x CONSTANT FINAL)
+    Q_PROPERTY(qreal y READ y CONSTANT FINAL)
+    Q_PROPERTY(QPoint angleDelta READ angleDelta CONSTANT FINAL)
+    Q_PROPERTY(QPoint pixelDelta READ pixelDelta CONSTANT FINAL)
+    Q_PROPERTY(Qt::ScrollPhase phase READ phase CONSTANT FINAL)
+    Q_PROPERTY(int buttons READ buttons CONSTANT FINAL)
+    Q_PROPERTY(int modifiers READ modifiers CONSTANT FINAL)
+    Q_PROPERTY(bool inverted READ inverted CONSTANT FINAL)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -234,7 +234,7 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 
