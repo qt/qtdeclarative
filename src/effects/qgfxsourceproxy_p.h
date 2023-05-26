@@ -26,11 +26,11 @@ class QQuickShaderEffectSource;
 class QGfxSourceProxy : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickItem *input READ input WRITE setInput NOTIFY inputChanged RESET resetInput)
-    Q_PROPERTY(QQuickItem *output READ output NOTIFY outputChanged)
-    Q_PROPERTY(QRectF sourceRect READ sourceRect WRITE setSourceRect NOTIFY sourceRectChanged)
-    Q_PROPERTY(bool active READ isActive NOTIFY activeChanged)
-    Q_PROPERTY(Interpolation interpolation READ interpolation WRITE setInterpolation NOTIFY interpolationChanged)
+    Q_PROPERTY(QQuickItem *input READ input WRITE setInput NOTIFY inputChanged RESET resetInput FINAL)
+    Q_PROPERTY(QQuickItem *output READ output NOTIFY outputChanged FINAL)
+    Q_PROPERTY(QRectF sourceRect READ sourceRect WRITE setSourceRect NOTIFY sourceRectChanged FINAL)
+    Q_PROPERTY(bool active READ isActive NOTIFY activeChanged FINAL)
+    Q_PROPERTY(Interpolation interpolation READ interpolation WRITE setInterpolation NOTIFY interpolationChanged FINAL)
 
 public:
     enum class Interpolation {
