@@ -163,8 +163,6 @@ public:
     QQmlType lookupInlineComponentByName(const QString &name) const;
 
     void associateInlineComponent(const QString &name, const CompositeMetaTypeIds &metaTypeIds, QQmlType existingType);
-    void setPendingResolutionName(const QString &name);
-    QString pendingResolutionName() const;
 
     void createProxy(QObject *instance) const;
 

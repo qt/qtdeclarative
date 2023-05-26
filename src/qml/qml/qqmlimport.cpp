@@ -781,7 +781,6 @@ bool QQmlImports::resolveType(
                     *type_return = icType;
                 }
                 Q_ASSERT(type_return->containingType().isValid());
-                type_return->setPendingResolutionName(icName);
                 return true;
             } else {
                 // or a failure
@@ -816,7 +815,6 @@ bool QQmlImports::resolveType(
                     type_return->associateInlineComponent(icName, CompositeMetaTypeIds {}, icType);
                     *type_return = icType;
                 }
-                type_return->setPendingResolutionName(icName);
                 return true;
             } else {
                 error.setDescription(QQmlImportDatabase::tr("- %1 is not a type").arg(splitName.at(1).toString()));

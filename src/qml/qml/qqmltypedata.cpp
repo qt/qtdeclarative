@@ -370,15 +370,20 @@ void QQmlTypeData::done()
          ++it) {
         const TypeReference &type = *it;
         Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError() || type.type.isInlineComponentType());
-        if (type.type.isInlineComponentType() && !type.type.pendingResolutionName().isEmpty()) {
-            auto containingType = type.type.containingType();
-            auto ic = containingType.lookupInlineComponentByName(type.type.pendingResolutionName());
+        const QQmlType containingType = type.type.isInlineComponentType()
+                                            ? type.type.containingType()
+                                            : QQmlType();
+        if (containingType.isValid()) {
+            const QQmlType ic = containingType.lookupInlineComponentByName(type.type.elementName());
 
             // Only if we create the IC from an actual CU, we have valid metatypes.
             if (!ic.typeId().isValid()) {
                 const QString &typeName = stringAt(it.key());
                 int lastDot = typeName.lastIndexOf(u'.');
-                createError(type, QQmlTypeLoader::tr("Type %1 has no inline component type called %2").arg(QStringView{typeName}.left(lastDot), type.type.pendingResolutionName()));
+                createError(
+                    type,
+                    QQmlTypeLoader::tr("Type %1 has no inline component type called %2")
+                        .arg(QStringView{typeName}.left(lastDot), type.type.elementName()));
                 return;
             }
         }

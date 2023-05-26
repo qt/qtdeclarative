@@ -110,13 +110,12 @@ public:
 
     struct QQmlInlineTypeData
     {
-        QUrl url = QUrl();
+        QUrl url;
         // The containing type stores a pointer to the inline component type
         // Using QQmlType here would create a reference cycle
         // As the inline component type cannot outlive the containing type
         // this should still be fine
         QQmlTypePrivate const * containingType = nullptr;
-        QString inlineComponentName = QString();
     };
 
     using QQmlSequenceTypeData = QMetaSequence;

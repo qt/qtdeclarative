@@ -424,8 +424,6 @@ QByteArray QQmlType::typeName() const
             return d->extraData.sd->singletonInstanceInfo->typeName.toUtf8();
         else if (d->baseMetaObject)
             return d->baseMetaObject->className();
-        else if (d->regType == InlineComponentType)
-            return d->extraData.id->inlineComponentName.toUtf8();
     }
     return QByteArray();
 }
@@ -960,19 +958,6 @@ void QQmlType::associateInlineComponent(
     d->namesToInlineComponentType.insert(name, icType);
     if (!reuseExistingType)
         priv->release();
-}
-
-void QQmlType::setPendingResolutionName(const QString &name)
-{
-    Q_ASSERT(d && d->regType == QQmlType::RegistrationType::InlineComponentType);
-    Q_ASSERT(d->extraData.id->inlineComponentName == name|| d->extraData.id->inlineComponentName.isEmpty());
-    d->extraData.id->inlineComponentName = name;
-}
-
-QString QQmlType::pendingResolutionName() const
-{
-    Q_ASSERT(d && d->regType == QQmlType::RegistrationType::InlineComponentType);
-    return d->extraData.id->inlineComponentName;
 }
 
 void QQmlType::createProxy(QObject *instance) const
