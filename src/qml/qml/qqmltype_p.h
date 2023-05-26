@@ -160,9 +160,6 @@ public:
     };
 
     QQmlType containingType() const;
-    QQmlType lookupInlineComponentByName(const QString &name) const;
-
-    void associateInlineComponent(const QString &name, const CompositeMetaTypeIds &metaTypeIds, QQmlType existingType);
 
     void createProxy(QObject *instance) const;
 

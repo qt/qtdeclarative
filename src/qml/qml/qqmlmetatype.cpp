@@ -318,6 +318,7 @@ void QQmlMetaType::clearTypeRegistrations()
     data->metaObjectToType.clear();
     data->undeletableTypes.clear();
     data->propertyCaches.clear();
+    data->inlineComponentTypes.clear();
 }
 
 void QQmlMetaType::registerTypeAlias(int typeIndex, const QString &name)
@@ -1284,6 +1285,36 @@ QQmlType QQmlMetaType::qmlType(const QUrl &unNormalizedUrl, bool includeNonFileI
         return QQmlType();
 }
 
+QQmlType QQmlMetaType::inlineComponentType(const QQmlType &containingType, const QString &name)
+{
+    const QQmlMetaTypeDataPtr data;
+    return data->inlineComponentTypes[InlineComponentKey {containingType.priv(), name}];
+}
+
+void QQmlMetaType::associateInlineComponent(
+    const QQmlType &containingType, const QString &name,
+    const CompositeMetaTypeIds &metaTypeIds, QQmlType existingType)
+{
+    bool const reuseExistingType = existingType.isValid();
+    auto priv = reuseExistingType
+                    ? const_cast<QQmlTypePrivate *>(existingType.priv())
+                    : new QQmlTypePrivate { QQmlType::RegistrationType::InlineComponentType } ;
+    priv->setName( QString::fromUtf8(existingType.typeName()), name);
+    QUrl icUrl(existingType.sourceUrl());
+    icUrl.setFragment(name);
+    priv->extraData.id->url = icUrl;
+    priv->extraData.id->containingType = containingType.priv();
+    priv->typeId = metaTypeIds.id;
+    priv->listId = metaTypeIds.listId;
+    QQmlType icType(priv);
+
+    QQmlMetaTypeDataPtr data;
+    data->inlineComponentTypes.insert({containingType.priv(), name}, icType);
+
+    if (!reuseExistingType)
+        priv->release();
+}
+
 /*!
 Returns a QQmlPropertyCache for \a obj if one is available.
 
@@ -1417,6 +1448,8 @@ void QQmlMetaType::unregisterType(int typeIndex)
     QQmlMetaTypeDataPtr data;
     const QQmlType type = data->types.value(typeIndex);
     if (const QQmlTypePrivate *d = type.priv()) {
+        if (d->regType == QQmlType::CompositeType || d->regType == QQmlType::CompositeSingletonType)
+            removeFromInlineComponents(data->inlineComponentTypes, d);
         removeQQmlTypePrivate(data->idToType, d);
         removeQQmlTypePrivate(data->nameToType, d);
         removeQQmlTypePrivate(data->urlToType, d);
@@ -1438,10 +1471,14 @@ void QQmlMetaType::registerMetaObjectForType(const QMetaObject *metaobject, QQml
     data->metaObjectToType.insert(metaobject, type);
 }
 
-static bool hasActiveInlineComponents(const QQmlTypePrivate *d)
+static bool hasActiveInlineComponents(const QQmlMetaTypeData *data, const QQmlTypePrivate *d)
 {
-    for (const QQmlType &ic : std::as_const(d->namesToInlineComponentType)) {
-        const QQmlTypePrivate *icPriv = ic.priv();
+    for (auto it = data->inlineComponentTypes.begin(), end = data->inlineComponentTypes.end();
+         it != end; ++it) {
+        if (it.key().containingType != d)
+            continue;
+
+        const QQmlTypePrivate *icPriv = it->priv();
         if (icPriv && icPriv->count() > 1)
             return true;
     }
@@ -1462,9 +1499,13 @@ void QQmlMetaType::freeUnusedTypesAndCaches()
         QList<QQmlType>::Iterator it = data->types.begin();
         while (it != data->types.end()) {
             const QQmlTypePrivate *d = (*it).priv();
-            if (d && d->count() == 1 && !hasActiveInlineComponents(d)) {
+            if (d && d->count() == 1 && !hasActiveInlineComponents(data, d)) {
                 deletedAtLeastOneType = true;
 
+                if (d->regType == QQmlType::CompositeType
+                        || d->regType == QQmlType::CompositeSingletonType) {
+                    removeFromInlineComponents(data->inlineComponentTypes, d);
+                }
                 removeQQmlTypePrivate(data->idToType, d);
                 removeQQmlTypePrivate(data->nameToType, d);
                 removeQQmlTypePrivate(data->urlToType, d);

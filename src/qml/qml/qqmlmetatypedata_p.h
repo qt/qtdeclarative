@@ -25,6 +25,23 @@
 
 QT_BEGIN_NAMESPACE
 
+struct InlineComponentKey
+{
+    const QQmlTypePrivate *containingType = nullptr;
+    QString name;
+
+private:
+    friend bool operator==(const InlineComponentKey &a, const InlineComponentKey &b)
+    {
+        return a.containingType == b.containingType && a.name == b.name;
+    }
+
+    friend size_t qHash(const InlineComponentKey &byId, size_t seed = 0)
+    {
+        return qHashMulti(seed, byId.containingType, byId.name);
+    }
+};
+
 class QQmlTypePrivate;
 struct QQmlMetaTypeData
 {
@@ -50,6 +67,7 @@ struct QQmlMetaTypeData
     QVector<QHash<QTypeRevision, QQmlPropertyCache::ConstPtr>> typePropertyCaches;
     QHash<int, QQmlValueType *> metaTypeToValueType;
     QHash<const QtPrivate::QMetaTypeInterface *, QV4::ExecutableCompilationUnit *> compositeTypes;
+    QHash<InlineComponentKey, QQmlType> inlineComponentTypes;
 
     struct VersionedUri {
         VersionedUri() = default;

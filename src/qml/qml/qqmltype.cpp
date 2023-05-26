@@ -928,36 +928,12 @@ int QQmlType::refCount(const QQmlTypePrivate *priv)
     return -1;
 }
 
-QQmlType QQmlType::lookupInlineComponentByName(const QString &name) const
-{
-    Q_ASSERT(d);
-    return d->namesToInlineComponentType.value(name);
-}
-
 QQmlType QQmlType::containingType() const
 {
     Q_ASSERT(d && d->regType == QQmlType::RegistrationType::InlineComponentType);
     auto ret = QQmlType {d->extraData.id->containingType};
     Q_ASSERT(!ret.isInlineComponentType());
     return ret;
-}
-
-void QQmlType::associateInlineComponent(
-    const QString &name, const CompositeMetaTypeIds &metaTypeIds, QQmlType existingType)
-{
-    bool const reuseExistingType = existingType.isValid();
-    auto priv = reuseExistingType ? const_cast<QQmlTypePrivate *>(existingType.d.data()) : new QQmlTypePrivate { RegistrationType::InlineComponentType } ;
-    priv->setName( QString::fromUtf8(typeName()), name);
-    auto icUrl = QUrl(sourceUrl());
-    icUrl.setFragment(name);
-    priv->extraData.id->url = icUrl;
-    priv->extraData.id->containingType = d.data();
-    priv->typeId = metaTypeIds.id;
-    priv->listId = metaTypeIds.listId;
-    QQmlType icType(priv);
-    d->namesToInlineComponentType.insert(name, icType);
-    if (!reuseExistingType)
-        priv->release();
 }
 
 void QQmlType::createProxy(QObject *instance) const

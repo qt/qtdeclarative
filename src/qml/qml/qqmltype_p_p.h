@@ -151,7 +151,6 @@ public:
     mutable QList<QStringHash<int>*> scopedEnums;
 
     void setName(const QString &uri, const QString &element);
-    mutable QHash<QString, QQmlType> namesToInlineComponentType;
 
 private:
     ~QQmlTypePrivate() override;

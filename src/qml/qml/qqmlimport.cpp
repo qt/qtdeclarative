@@ -595,13 +595,13 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
             if (containingType.isValid()) {
                 // we currently cannot reference a Singleton inside itself
                 // in that case, containingType is still invalid
-                if (QQmlType icID = containingType.lookupInlineComponentByName(typeStr);
-                        icID.isValid()) {
-                    *type_return = icID;
+                if (QQmlType ic = QQmlMetaType::inlineComponentType(containingType, typeStr);
+                        ic.isValid()) {
+                    *type_return = ic;
                 } else {
                     auto icType = createICType();
-                    const_cast<QQmlImportInstance*>(this)->containingType.associateInlineComponent(
-                        typeStr, CompositeMetaTypeIds {}, icType);
+                    QQmlMetaType::associateInlineComponent(
+                        containingType, typeStr, CompositeMetaTypeIds {}, icType);
                     *type_return = QQmlType(icType);
                 }
             } else  {
@@ -766,8 +766,8 @@ bool QQmlImports::resolveType(
         } else {
             if (resolveTypeInNamespace(splitName.at(0), &m_unqualifiedset, nullptr)) {
                 // either simple type + inline component
-                auto const icName = splitName.at(1).toString();
-                auto ic = type_return->lookupInlineComponentByName(icName);
+                const QString icName = splitName.at(1).toString();
+                const QQmlType ic = QQmlMetaType::inlineComponentType(*type_return, icName);
                 if (ic.isValid()) {
                     *type_return = ic;
                 } else {
@@ -777,7 +777,8 @@ bool QQmlImports::resolveType(
                     icTypePriv->extraData.id->url.setFragment(icName);
                     auto icType = QQmlType(icTypePriv);
                     icTypePriv->release();
-                    type_return->associateInlineComponent(icName, CompositeMetaTypeIds {}, icType);
+                    QQmlMetaType::associateInlineComponent(
+                        *type_return, icName, CompositeMetaTypeIds {}, icType);
                     *type_return = icType;
                 }
                 Q_ASSERT(type_return->containingType().isValid());
@@ -802,7 +803,7 @@ bool QQmlImports::resolveType(
         } else {
             if (resolveTypeInNamespace(splitName.at(1), s, nullptr)) {
                 auto const icName = splitName.at(2).toString();
-                QQmlType ic = type_return->lookupInlineComponentByName(icName);
+                QQmlType ic = QQmlMetaType::inlineComponentType(*type_return, icName);
                 if (ic.isValid())
                     *type_return = ic;
                 else {
@@ -812,7 +813,8 @@ bool QQmlImports::resolveType(
                     icTypePriv->extraData.id->url.setFragment(icName);
                     auto icType = QQmlType(icTypePriv);
                     icTypePriv->release();
-                    type_return->associateInlineComponent(icName, CompositeMetaTypeIds {}, icType);
+                    QQmlMetaType::associateInlineComponent(
+                        *type_return, icName, CompositeMetaTypeIds {}, icType);
                     *type_return = icType;
                 }
                 return true;

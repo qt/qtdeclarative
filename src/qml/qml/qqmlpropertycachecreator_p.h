@@ -631,7 +631,8 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
                     const QString icName = qmltype.elementName();
                     auto containingType = qmltype.containingType();
                     if (containingType.isValid()) {
-                        auto icType = containingType.lookupInlineComponentByName(icName);
+                        const QQmlType icType
+                            = QQmlMetaType::inlineComponentType(containingType, icName);
                         typeIds = {icType.typeId(), icType.qListTypeId()};
                     } else {
                         typeIds = {};

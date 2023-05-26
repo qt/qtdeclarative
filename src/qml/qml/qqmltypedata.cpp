@@ -374,7 +374,8 @@ void QQmlTypeData::done()
                                             ? type.type.containingType()
                                             : QQmlType();
         if (containingType.isValid()) {
-            const QQmlType ic = containingType.lookupInlineComponentByName(type.type.elementName());
+            const QQmlType ic = QQmlMetaType::inlineComponentType(
+                containingType, type.type.elementName());
 
             // Only if we create the IC from an actual CU, we have valid metatypes.
             if (!ic.typeId().isValid()) {
@@ -541,8 +542,9 @@ void QQmlTypeData::done()
                 for (auto const &icDatum : std::as_const(m_inlineComponentData)) {
                     Q_ASSERT(icDatum.typeIds.isValid());
                     const QString icName = m_compiledData->stringAt(icDatum.nameIndex);
-                    QQmlType existingType = type.lookupInlineComponentByName(icName);
-                    type.associateInlineComponent(icName, icDatum.typeIds, existingType);
+                    QQmlType existingType = QQmlMetaType::inlineComponentType(type, icName);
+                    QQmlMetaType::associateInlineComponent(
+                        type, icName, icDatum.typeIds, existingType);
                 }
             }
         }
@@ -980,7 +982,8 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
             ref->setType(qmlType);
             if (qmlType.isValid()) {
                 // this is required for inline components in singletons
-                auto type = qmlType.lookupInlineComponentByName(qmlType.elementName()).typeId();
+                const QMetaType type
+                    = QQmlMetaType::inlineComponentType(qmlType, qmlType.elementName()).typeId();
                 auto exUnit = QQmlMetaType::obtainExecutableCompilationUnit(type);
                 if (exUnit) {
                     ref->setCompilationUnit(exUnit);

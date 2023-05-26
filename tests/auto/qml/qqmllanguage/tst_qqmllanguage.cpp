@@ -6767,10 +6767,12 @@ void tst_qqmllanguage::bareInlineComponent()
         if (type.elementName() == QStringLiteral("Tab1")) {
             QVERIFY(type.module().isEmpty());
             tab1Found = true;
-            const auto ics = type.priv()->namesToInlineComponentType;
-            QVERIFY(ics.size() > 0);
-            for (const QQmlType &ic : ics)
-                QVERIFY(ic.containingType() == type);
+
+            const QQmlType leftTab = QQmlMetaType::inlineComponentType(type, "LeftTab");
+            QCOMPARE(leftTab.containingType(), type);
+
+            const QQmlType rightTab = QQmlMetaType::inlineComponentType(type, "RightTab");
+            QCOMPARE(rightTab.containingType(), type);
         }
     }
     QVERIFY(tab1Found);
