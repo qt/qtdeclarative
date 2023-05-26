@@ -25,8 +25,8 @@ class QQuickItemParticleAttached;
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickItemParticle : public QQuickParticlePainter
 {
     Q_OBJECT
-    Q_PROPERTY(bool fade READ fade WRITE setFade NOTIFY fadeChanged)
-    Q_PROPERTY(QQmlComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    Q_PROPERTY(bool fade READ fade WRITE setFade NOTIFY fadeChanged FINAL)
+    Q_PROPERTY(QQmlComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     QML_NAMED_ELEMENT(ItemParticle)
     QML_ADDED_IN_VERSION(2, 0)
     QML_ATTACHED(QQuickItemParticleAttached)
@@ -90,7 +90,7 @@ private:
 class QQuickItemParticleAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickItemParticle* particle READ particle CONSTANT);
+    Q_PROPERTY(QQuickItemParticle* particle READ particle CONSTANT FINAL);
 public:
     QQuickItemParticleAttached(QObject* parent)
         : QObject(parent), m_mp(0), m_parentItem(nullptr)

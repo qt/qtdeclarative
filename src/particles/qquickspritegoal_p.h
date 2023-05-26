@@ -24,9 +24,9 @@ class QQuickStochasticEngine;
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickSpriteGoalAffector : public QQuickParticleAffector
 {
     Q_OBJECT
-    Q_PROPERTY(QString goalState READ goalState WRITE setGoalState NOTIFY goalStateChanged)
-    Q_PROPERTY(bool jump READ jump WRITE setJump NOTIFY jumpChanged)
-    Q_PROPERTY(bool systemStates READ systemStates WRITE setSystemStates NOTIFY systemStatesChanged)
+    Q_PROPERTY(QString goalState READ goalState WRITE setGoalState NOTIFY goalStateChanged FINAL)
+    Q_PROPERTY(bool jump READ jump WRITE setJump NOTIFY jumpChanged FINAL)
+    Q_PROPERTY(bool systemStates READ systemStates WRITE setSystemStates NOTIFY systemStatesChanged FINAL)
     QML_NAMED_ELEMENT(SpriteGoal)
     QML_ADDED_IN_VERSION(2, 0)
 public:

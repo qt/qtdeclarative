@@ -312,9 +312,9 @@ private:
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleSystem : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
-    Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
-    Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged)
+    Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged FINAL)
+    Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged FINAL)
+    Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged FINAL)
     QML_NAMED_ELEMENT(ParticleSystem)
     QML_ADDED_IN_VERSION(2, 0)
 
