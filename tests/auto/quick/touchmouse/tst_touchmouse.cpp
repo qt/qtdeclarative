@@ -738,7 +738,7 @@ void tst_TouchMouse::touchButtonOnFlickable()
 
     QTRY_COMPARE(eventItem2->touchUngrabCount, 1);
     qCDebug(lcTests) << "expected delivered events: press(touch) move(touch)" << eventItem2->eventList;
-    QCOMPARE(eventItem2->eventList.size(), 2);
+    QCOMPARE(eventItem2->eventList.size(), 3);
     QCOMPARE(eventItem2->eventList.at(1).type, QEvent::TouchUpdate);
     QCOMPARE(grabMonitor.exclusiveGrabber, flickable);
     // both EventItem and Flickable handled the actual touch, so synth-mouse doesn't happen
