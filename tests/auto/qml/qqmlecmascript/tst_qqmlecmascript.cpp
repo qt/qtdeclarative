@@ -426,6 +426,8 @@ private slots:
 
     void methodCallOnDerivedSingleton();
 
+    void proxyMetaObject();
+
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     static void verifyContextLifetime(const QQmlRefPointer<QQmlContextData> &ctxt);
@@ -10504,6 +10506,29 @@ void tst_qqmlecmascript::methodCallOnDerivedSingleton()
     auto singleton = engine.singletonInstance<SingletonBase *>("Qt.test", "SingletonInheritanceTest");
     QVERIFY(singleton);
     QVERIFY(singleton->m_okay);
+}
+
+void tst_qqmlecmascript::proxyMetaObject()
+{
+    // Verify that TypeWithCustomMetaObject, that extends another type,
+    // thereby triggering a QQmlProxyMetaObject, is still proxied the
+    // QDynamicMetaObjectData::objectDestroyed callback.
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(R"(
+        import QtQuick
+        import QtQml
+        import Qt.test
+        Rectangle {
+            TypeWithCustomMetaObject {}
+        }
+    )", QUrl("testData"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o);
+    QVERIFY(!MetaCallInterceptor::didGetObjectDestroyedCallback);
+    o.reset(nullptr);
+    QVERIFY(MetaCallInterceptor::didGetObjectDestroyedCallback);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

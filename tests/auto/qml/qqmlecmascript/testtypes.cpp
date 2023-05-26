@@ -473,6 +473,8 @@ void ListPropertyAssignment_Object::setQobjectStringList(const QStringList &newL
     m_qobjectStringList = newList;
 }
 
+bool MetaCallInterceptor::didGetObjectDestroyedCallback = false;
+
 void registerTypes()
 {
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObjectAlias");
@@ -585,6 +587,9 @@ void registerTypes()
     qmlRegisterTypesAndRevisions<ListPropertyAssignment_Object>("Qt.test", 1);
 
     qmlRegisterTypesAndRevisions<SingletonRegistrationWrapper>("Qt.test", 1);
+
+    qmlRegisterExtendedType<TypeWithCustomMetaObject, TypeToTriggerProxyMetaObject>(
+        "Qt.test", 1,0, "TypeWithCustomMetaObject");
 }
 
 #include "testtypes.moc"

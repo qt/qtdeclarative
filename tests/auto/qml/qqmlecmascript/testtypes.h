@@ -2139,6 +2139,55 @@ private:
     SingletonRegistrationWrapper() = default;
 };
 
+class MetaCallInterceptor : public QObject, public QDynamicMetaObjectData
+{
+    Q_OBJECT
+public:
+    MetaCallInterceptor()
+    {
+        didGetObjectDestroyedCallback = false;
+    }
+
+    void objectDestroyed(QObject *object) override
+    {
+        didGetObjectDestroyedCallback = true;
+
+        // Deletes this meta object
+        QDynamicMetaObjectData::objectDestroyed(object);
+    }
+
+    QMetaObject *toDynamicMetaObject(QObject *) override
+    {
+        return const_cast<QMetaObject *>(&MetaCallInterceptor::staticMetaObject);
+    }
+
+    int metaCall(QObject *o, QMetaObject::Call call, int idx, void **argv) override
+    {
+        return o->qt_metacall(call, idx, argv);
+    }
+
+    static bool didGetObjectDestroyedCallback;
+};
+
+struct TypeToTriggerProxyMetaObject
+{
+    Q_GADGET
+};
+
+class TypeWithCustomMetaObject : public QObject
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT(TypeWithCustomMetaObject)
+    QML_EXTENDED_NAMESPACE(TypeToTriggerProxyMetaObject)
+
+public:
+    TypeWithCustomMetaObject()
+    {
+        auto *p = QObjectPrivate::get(this);
+        Q_ASSERT(!p->metaObject);
+        p->metaObject = new MetaCallInterceptor;
+    }
+};
 
 void registerTypes();
 
