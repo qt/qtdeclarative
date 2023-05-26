@@ -2170,11 +2170,6 @@ void QQuickDeliveryAgentPrivate::deliverMatchingPointsToItem(QQuickItem *item, b
     if (item->acceptTouchEvents()) {
         qCDebug(lcTouch) << "considering delivering" << &touchEvent << " to " << item;
 
-        // If any parent filters the event, we're done.
-        hasFiltered.clear();
-        if (sendFilteredPointerEvent(&touchEvent, item))
-            return;
-
         // Deliver the touch event to the given item
         qCDebug(lcTouch) << "actually delivering" << &touchEvent << " to " << item;
         QCoreApplication::sendEvent(item, &touchEvent);
