@@ -150,6 +150,19 @@ public:
 
     QHash<int, InlineComponentData> inlineComponentData;
 
+    int inlineComponentId(const QString &inlineComponentName) const
+    {
+        for (int i = 0; i < objectCount(); ++i) {
+            auto *object = objectAt(i);
+            for (auto it = object->inlineComponentsBegin(), end = object->inlineComponentsEnd();
+                 it != end; ++it) {
+                if (stringAt(it->nameIndex) == inlineComponentName)
+                    return it->objectIndex;
+            }
+        }
+        return -1;
+    }
+
     std::unique_ptr<CompilationUnitMapper> backingFile;
 
     // --- interface for QQmlPropertyCacheCreator

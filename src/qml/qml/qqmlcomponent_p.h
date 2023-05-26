@@ -70,11 +70,12 @@ public:
 
     QUrl url;
     qreal progress;
+    std::unique_ptr<QString> inlineComponentName;
 
     /* points to the sub-object in a QML file that should be instantiated
-       used for inline components and to create instances of QtQml's Component type */
+       used create instances of QtQml's Component type and indirectly for inline components */
     int start;
-    bool isInlineComponent = false;
+
     bool hadTopLevelRequiredProperties() const;
     // TODO: merge compilation unit and type
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
