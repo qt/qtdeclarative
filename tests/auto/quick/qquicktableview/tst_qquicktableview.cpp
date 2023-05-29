@@ -87,6 +87,7 @@ private slots:
     void checkZeroSizedDelegate();
     void checkImplicitSizeDelegate();
     void checkZeroSizedTableView();
+    void checkZeroSizedViewPort();
     void checkColumnWidthWithoutProvider();
     void checkColumnWidthAndRowHeightFunctions();
     void checkDelegateWithAnchors();
@@ -460,6 +461,17 @@ void tst_QQuickTableView::checkZeroSizedTableView()
     QCOMPARE(tableViewPrivate->loadedItems.size(), 1);
 }
 
+void tst_QQuickTableView::checkZeroSizedViewPort()
+{
+    LOAD_TABLEVIEW("zerosizedviewport.qml");
+
+    auto model = TestModelAsVariant(20, 20);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    QVERIFY(!tableViewPrivate->loadedItems.isEmpty());
+}
 
 void tst_QQuickTableView::checkColumnWidthWithoutProvider()
 {

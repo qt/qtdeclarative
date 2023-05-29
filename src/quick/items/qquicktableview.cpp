@@ -2072,7 +2072,10 @@ void QQuickTableViewPrivate::updateContentWidth()
 
     if (loadedItems.isEmpty()) {
         QBoolBlocker fixupGuard(inUpdateContentSize, true);
-        q->QQuickFlickable::setContentWidth(0);
+        if (model && model->count() > 0 && tableModel && tableModel->delegate())
+            q->QQuickFlickable::setContentWidth(kDefaultColumnWidth);
+        else
+            q->QQuickFlickable::setContentWidth(0);
         return;
     }
 
@@ -2105,7 +2108,10 @@ void QQuickTableViewPrivate::updateContentHeight()
 
     if (loadedItems.isEmpty()) {
         QBoolBlocker fixupGuard(inUpdateContentSize, true);
-        q->QQuickFlickable::setContentHeight(0);
+        if (model && model->count() > 0 && tableModel && tableModel->delegate())
+            q->QQuickFlickable::setContentHeight(kDefaultRowHeight);
+        else
+            q->QQuickFlickable::setContentHeight(0);
         return;
     }
 
