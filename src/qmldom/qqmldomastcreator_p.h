@@ -23,6 +23,7 @@
 #include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
 
 #include <QtQml/private/qqmljsastvisitor_p.h>
+#include <memory>
 #include <type_traits>
 #include <variant>
 
@@ -83,8 +84,7 @@ class QQmlDomAstCreator final : public AST::Visitor
                 ScriptStackElement s{ ScriptElements::ScriptList::kindValue, obj };
                 return s;
             } else {
-                ScriptStackElement s{ T::element_type::kindValue,
-                                      ScriptElementVariant::fromElement(obj) };
+                ScriptStackElement s{ obj->kind(), ScriptElementVariant::fromElement(obj) };
                 return s;
             }
             Q_UNREACHABLE();
@@ -207,6 +207,28 @@ private:
 
     /*!
        \internal
+       Helper to create string literals from AST nodes.
+     */
+    template<typename AstNodeT>
+    static std::shared_ptr<ScriptElements::Literal> makeStringLiteral(QStringView value,
+                                                                      AstNodeT *ast)
+    {
+        auto myExp = std::make_shared<ScriptElements::Literal>(ast->firstSourceLocation(),
+                                                               ast->lastSourceLocation());
+        myExp->setLiteralValue(value.toString());
+        return myExp;
+    }
+
+    static std::shared_ptr<ScriptElements::Literal> makeStringLiteral(QStringView value,
+                                                                      QQmlJS::SourceLocation loc)
+    {
+        auto myExp = std::make_shared<ScriptElements::Literal>(loc);
+        myExp->setLiteralValue(value.toString());
+        return myExp;
+    }
+
+    /*!
+       \internal
        Helper to create script elements from AST nodes, as the DOM classes should be completely
        dependency-free from AST and parser classes. Using the AST classes in qqmldomastcreator is
        fine because it needs them for the construction/visit. \sa makeScriptList
@@ -227,10 +249,19 @@ private:
        \sa makeScriptElement
      */
     template<typename AstNodeT>
-    static decltype(auto) makeGenericScriptElement(AstNodeT *ast, DomType kind)
+    static std::shared_ptr<ScriptElements::GenericScriptElement>
+    makeGenericScriptElement(AstNodeT *ast, DomType kind)
     {
         auto myExp = std::make_shared<ScriptElements::GenericScriptElement>(
                 ast->firstSourceLocation(), ast->lastSourceLocation());
+        myExp->setKind(kind);
+        return myExp;
+    }
+
+    static std::shared_ptr<ScriptElements::GenericScriptElement>
+    makeGenericScriptElement(SourceLocation location, DomType kind)
+    {
+        auto myExp = std::make_shared<ScriptElements::GenericScriptElement>(location);
         myExp->setKind(kind);
         return myExp;
     }
@@ -262,6 +293,8 @@ private:
         scriptNodeStack.clear();
     }
 
+    ScriptElementVariant scriptElementForQualifiedId(AST::UiQualifiedId *expression);
+
 public:
     QQmlDomAstCreator(MutableDomItem qmlFile);
 
@@ -292,9 +325,6 @@ public:
     bool visit(AST::UiArrayBinding *el) override;
     void endVisit(AST::UiArrayBinding *) override;
 
-    bool visit(AST::UiParameterList *el) override;
-    void endVisit(AST::UiParameterList *el) override;
-
     bool visit(AST::UiQualifiedId *) override;
 
     bool visit(AST::UiEnumDeclaration *el) override;
@@ -311,11 +341,7 @@ public:
     bool visit(AST::UiAnnotation *el) override;
     void endVisit(AST::UiAnnotation *) override;
 
-
     // for Script elements:
-    bool visit(AST::StatementList *list) override;
-    void endVisit(AST::StatementList *list) override;
-
     bool visit(AST::BinaryExpression *exp) override;
     void endVisit(AST::BinaryExpression *exp) override;
 
@@ -328,11 +354,10 @@ public:
     bool visit(AST::ForStatement *forStatement) override;
     void endVisit(AST::ForStatement *forStatement) override;
 
-    bool visit(AST::VariableDeclarationList *vdl) override;
-    void endVisit(AST::VariableDeclarationList *vdl) override;
-
     bool visit(AST::PatternElement *pe) override;
     void endVisit(AST::PatternElement *pe) override;
+    void endVisitHelper(AST::PatternElement *pe,
+                        const std::shared_ptr<ScriptElements::GenericScriptElement> &element);
 
     bool visit(AST::IfStatement *) override;
     void endVisit(AST::IfStatement *) override;
@@ -346,8 +371,32 @@ public:
     bool visit(AST::CallExpression *) override;
     void endVisit(AST::CallExpression *) override;
 
-    // lists of stuff
+    bool visit(AST::ArrayPattern *) override;
+    void endVisit(AST::ArrayPattern *) override;
+
+    bool visit(AST::ObjectPattern *) override;
+    void endVisit(AST::ObjectPattern *) override;
+
+    bool visit(AST::PatternProperty *) override;
+    void endVisit(AST::PatternProperty *) override;
+
+    bool visit(AST::VariableStatement *) override;
+    void endVisit(AST::VariableStatement *) override;
+
+    bool visit(AST::Type *expression) override;
+    void endVisit(AST::Type *expression) override;
+
+    // lists of stuff whose children do not need a qqmljsscope: visitation order can be custom
     bool visit(AST::ArgumentList *) override;
+    bool visit(AST::UiParameterList *) override;
+    bool visit(AST::PatternElementList *) override;
+    bool visit(AST::PatternPropertyList *) override;
+    bool visit(AST::VariableDeclarationList *vdl) override;
+    bool visit(AST::Elision *elision) override;
+
+    // lists of stuff whose children need a qqmljsscope: visitation order cannot be custom
+    bool visit(AST::StatementList *list) override;
+    void endVisit(AST::StatementList *list) override;
 
     // literals and ids
     bool visit(AST::IdentifierExpression *expression) override;
@@ -356,6 +405,11 @@ public:
     bool visit(AST::NullExpression *expression) override;
     bool visit(AST::TrueLiteral *expression) override;
     bool visit(AST::FalseLiteral *expression) override;
+    bool visit(AST::ComputedPropertyName *expression) override;
+    bool visit(AST::IdentifierPropertyName *expression) override;
+    bool visit(AST::NumericLiteralPropertyName *expression) override;
+    bool visit(AST::StringLiteralPropertyName *expression) override;
+    bool visit(AST::TypeAnnotation *expression) override;
 
     void throwRecursionDepthError() override;
 
@@ -393,6 +447,30 @@ private:
     void setScopeInDomAfterEndvisit();
     void setScopeInDomBeforeEndvisit();
 
+    template<typename U, typename... V>
+    using IsInList = std::disjunction<std::is_same<U, V>...>;
+    template<typename U>
+    using RequiresCustomIteration = IsInList<U, AST::PatternElementList, AST::PatternPropertyList,
+                                             AST::FormalParameterList>;
+
+    template<typename T>
+    void customListIteration(T *t)
+    {
+        static_assert(RequiresCustomIteration<T>::value);
+        for (auto it = t; it; it = it->next) {
+            if constexpr (std::is_same_v<T, AST::PatternElementList>) {
+                AST::Node::accept(it->elision, this);
+                AST::Node::accept(it->element, this);
+            } else if constexpr (std::is_same_v<T, AST::PatternPropertyList>) {
+                AST::Node::accept(it->property, this);
+            } else if constexpr (std::is_same_v<T, AST::FormalParameterList>) {
+                AST::Node::accept(it->element, this);
+            } else {
+                Q_UNREACHABLE();
+            }
+        }
+    }
+
     template<typename T>
     bool visitT(T *t)
     {
@@ -411,10 +489,22 @@ private:
                 m_marker->inactiveVisitor = continueForDom ? ScopeCreator : DomCreator;
                 m_marker->count = 1;
                 m_marker->nodeKind = AST::Node::Kind(t->kind);
-                return true;
+
+                if constexpr (RequiresCustomIteration<T>::value) {
+                    customListIteration(t);
+                    return false;
+                } else {
+                    return true;
+                }
             } else {
                 Q_ASSERT(continueForDom && continueForScope);
-                return true;
+
+                if constexpr (RequiresCustomIteration<T>::value) {
+                    customListIteration(t);
+                    return false;
+                } else {
+                    return true;
+                }
             }
             Q_UNREACHABLE();
         }
@@ -423,10 +513,22 @@ private:
         switch (m_marker->inactiveVisitor) {
         case DomCreator: {
             const bool continueForScope = m_scopeCreator.visit(t);
+            if (continueForScope) {
+                if constexpr (RequiresCustomIteration<T>::value) {
+                    customListIteration(t);
+                    return false;
+                }
+            }
             return continueForScope;
         }
         case ScopeCreator: {
             const bool continueForDom = m_domCreator.visit(t);
+            if (continueForDom) {
+                if constexpr (RequiresCustomIteration<T>::value) {
+                    customListIteration(t);
+                    return false;
+                }
+            }
             return continueForDom;
         }
         };

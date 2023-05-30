@@ -328,7 +328,11 @@ public:
     { return identifierToken; }
 
     SourceLocation lastSourceLocation() const override
-    { return lastListElement(this)->identifierToken; }
+    {
+        return lastListElement(this)->lastOwnSourceLocation();
+    }
+
+    SourceLocation lastOwnSourceLocation() const { return identifierToken; }
 
     QString toString() const
     {
@@ -3330,7 +3334,12 @@ public:
     SourceLocation lastSourceLocation() const override
     {
         auto last = lastListElement(this);
-        return (last->colonToken.isValid() ? last->propertyTypeToken : last->identifierToken);
+        return last->lastOwnSourceLocation();
+    }
+
+    SourceLocation lastOwnSourceLocation() const
+    {
+        return (colonToken.isValid() ? propertyTypeToken : identifierToken);
     }
 
     inline UiParameterList *finish ()

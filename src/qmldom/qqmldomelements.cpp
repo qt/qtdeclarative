@@ -1759,6 +1759,10 @@ bool MethodInfo::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
         cont = cont && self.dvValueField(visitor, Fields::postCode, postCode(self));
         cont = cont && self.dvValueField(visitor, Fields::isConstructor, isConstructor);
     }
+    if (returnType)
+        cont = cont && self.dvItemField(visitor, Fields::returnType, [this, &self]() {
+            return self.subOwnerItem(PathEls::Field(Fields::returnType), returnType);
+        });
     if (body)
         cont = cont && self.dvItemField(visitor, Fields::body, [this, &self]() {
             return self.subOwnerItem(PathEls::Field(Fields::body), body);
@@ -1866,6 +1870,8 @@ bool MethodParameter::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor
     cont = cont && self.dvValueField(visitor, Fields::isReadonly, isReadonly);
     cont = cont && self.dvValueField(visitor, Fields::isList, isList);
     cont = cont && self.dvWrapField(visitor, Fields::defaultValue, defaultValue);
+    cont = cont && self.dvWrapField(visitor, Fields::value, value);
+
     if (!annotations.isEmpty())
         cont = cont && self.dvWrapField(visitor, Fields::annotations, annotations);
     cont = cont && self.dvWrapField(visitor, Fields::comments, comments);

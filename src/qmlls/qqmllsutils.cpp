@@ -342,6 +342,15 @@ DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
         result = object.field(Fields::type).proceedToScope();
         break;
     case QQmlJS::Dom::DomType::ScriptIdentifierExpression: {
+        if (object.directParent().internalKind() == DomType::ScriptType) {
+            DomItem type =
+                    object.filterUp([](DomType k, DomItem &) { return k == DomType::ScriptType; },
+                                    FilterUpOptions::ReturnOuter);
+
+            const QString name = type.field(Fields::typeName).value().toString();
+            result = object.path(Paths::lookupTypePath(name));
+            break;
+        }
         auto scope =
                 QQmlLSUtils::resolveExpressionType(object, QQmlLSUtilsResolveOptions::Everything);
         if (!scope)
@@ -615,7 +624,7 @@ QQmlJSScope::ConstPtr QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem it
     case DomType::QmlObject: {
         auto object = item.as<QmlObject>();
         if (object && object->semanticScope())
-            return object->semanticScope();
+            return object->semanticScope().value();
 
         return {};
     }

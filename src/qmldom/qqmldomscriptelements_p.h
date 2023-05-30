@@ -129,7 +129,10 @@ public:
     }
 
     void append(const ScriptElementVariant &statement) { m_list.push_back(statement); }
+    void append(const ScriptList &list) { m_list.append(list.m_list); }
     void reverse() { std::reverse(m_list.begin(), m_list.end()); }
+    void replaceKindForGenericChildren(DomType oldType, DomType newType);
+    const QList<ScriptElementVariant> &qList() { return std::as_const(m_list); };
 
 private:
     QList<ScriptElementVariant> m_list;
@@ -209,6 +212,11 @@ public:
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
+
+    QCborValue value() const override
+    {
+        return std::visit([](auto &&e) -> QCborValue { return e; }, m_value);
+    }
 
 private:
     VariantT m_value;

@@ -5,7 +5,9 @@
 #include "qqmldomitem_p.h"
 #include "qqmldompath_p.h"
 #include "qqmldomscriptelements_p.h"
+#include <memory>
 #include <utility>
+#include <variant>
 
 using namespace QQmlJS::Dom::ScriptElements;
 using QQmlJS::Dom::DomType;
@@ -334,4 +336,18 @@ void ReturnStatement::createFileLocations(FileLocations::Tree base)
 {
     BaseT::createFileLocations(base);
     m_expression.base()->createFileLocations(base);
+}
+
+void ScriptList::replaceKindForGenericChildren(DomType oldType, DomType newType)
+{
+    for (auto &it : m_list) {
+        if (auto current = it.data()) {
+            if (auto genericElement =
+                        std::get_if<std::shared_ptr<ScriptElements::GenericScriptElement>>(
+                                &*current)) {
+                if ((*genericElement)->kind() == oldType)
+                    (*genericElement)->setKind(newType);
+            }
+        }
+    }
 }

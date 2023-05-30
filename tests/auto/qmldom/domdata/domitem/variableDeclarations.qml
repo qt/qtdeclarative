@@ -4,6 +4,10 @@
 import QtQuick
 
 Item {
+    function count() {
+        let one = 1, two = 2, three = 3, four = 4, five = 5, six = 6
+        let testMe = 123
+    }
     // for now only numeric literal and string literal is supported
     function f() {
         let sum = 0, helloWorld = "hello"

@@ -9,7 +9,7 @@ Item {
 
     property var bindingInPropertyDefinition: 123
 
-    function return42(aa: Item = 33, bb: string = "Hello", cc = binding) {
+    function return42(aa: Item = 33, bb: string = "Hello", cc = binding): int {
         return 42
     }
     function empty(aa: Item, bb: string, cc) {}

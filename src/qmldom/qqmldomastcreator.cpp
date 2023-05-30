@@ -24,6 +24,7 @@
 #include <optional>
 #include <type_traits>
 #include <variant>
+#include <vector>
 
 static Q_LOGGING_CATEGORY(creatorLog, "qt.qmldom.astcreator", QtWarningMsg);
 
@@ -507,6 +508,14 @@ bool QQmlDomAstCreator::visit(AST::UiSourceElement *el)
                 qmlFilePtr->astComments(), ScriptExpression::ExpressionType::FunctionBody, bodyLoc,
                 0, preCode, postCode);
 
+        if (fDef->typeAnnotation) {
+            SourceLocation typeLoc = combineLocations(fDef->typeAnnotation);
+            m.returnType = std::make_shared<ScriptExpression>(
+                    code.mid(typeLoc.offset, typeLoc.length), qmlFilePtr->engine(),
+                    fDef->typeAnnotation, qmlFilePtr->astComments(),
+                    ScriptExpression::ExpressionType::ReturnType, typeLoc, 0, u"", u"");
+        }
+
         MethodInfo *mPtr;
         Path mPathFromOwner = current<QmlObject>().addMethod(m, AddOption::KeepExisting, &mPtr);
         pushEl(mPathFromOwner, *mPtr,
@@ -535,13 +544,18 @@ bool QQmlDomAstCreator::visit(AST::UiSourceElement *el)
             }
             if (args->element->initializer) {
                 SourceLocation loc = combineLocations(args->element->initializer);
-                // TODO: fill statements in endVisit for this scriptexpression
                 auto script = std::make_shared<ScriptExpression>(
                         code.mid(loc.offset, loc.length), qmlFilePtr->engine(),
                         args->element->initializer, qmlFilePtr->astComments(),
                         ScriptExpression::ExpressionType::ArgInitializer, loc);
                 param.defaultValue = script;
             }
+            SourceLocation parameterLoc = combineLocations(args->element);
+            param.value = std::make_shared<ScriptExpression>(
+                    code.mid(parameterLoc.offset, parameterLoc.length), qmlFilePtr->engine(),
+                    args->element, qmlFilePtr->astComments(),
+                    ScriptExpression::ExpressionType::ArgumentStructure, parameterLoc);
+
             index_type idx = index_type(mInfo.parameters.size());
             mInfo.parameters.append(param);
             auto argLocs = FileLocations::ensure(nodeStack.last().fileLocations,
@@ -556,6 +570,16 @@ bool QQmlDomAstCreator::visit(AST::UiSourceElement *el)
         Q_UNREACHABLE();
     }
     return true;
+}
+
+static void setFormalParameterKind(ScriptElementVariant &variant)
+{
+    if (auto data = variant.data()) {
+        if (auto genericElement =
+                    std::get_if<std::shared_ptr<ScriptElements::GenericScriptElement>>(&*data)) {
+            (*genericElement)->setKind(DomType::ScriptFormalParameter);
+        }
+    }
 }
 
 void QQmlDomAstCreator::endVisit(AST::UiSourceElement *el)
@@ -585,6 +609,46 @@ void QQmlDomAstCreator::endVisit(AST::UiSourceElement *el)
                             currentScriptNodeEl().takeVariant(), bodyPath, bodyTree));
                 }
                 removeCurrentScriptNode({});
+            }
+        }
+        if (m_enableScriptExpressions) {
+            if (fDef->typeAnnotation) {
+                auto argLoc = FileLocations::ensure(nodeStack.last().fileLocations,
+                                                    Path().field(Fields::returnType),
+                                                    AttachedInfo::PathType::Relative);
+                const Path pathToReturnType = Path().field(Fields::scriptElement);
+
+                ScriptElementVariant variant = currentScriptNodeEl().takeVariant();
+                finalizeScriptExpression(variant, pathToReturnType, argLoc);
+                m.returnType->setScriptElement(variant);
+                removeCurrentScriptNode({});
+            }
+            std::vector<FormalParameterList *> reversedInitializerExpressions;
+            for (auto it = fDef->formals; it; it = it->next) {
+                reversedInitializerExpressions.push_back(it);
+            }
+            const size_t size = reversedInitializerExpressions.size();
+            for (size_t idx = size - 1; idx < size; --idx) {
+                if (m_enableScriptExpressions && scriptNodeStack.empty()) {
+                    Q_SCRIPTELEMENT_DISABLE();
+                    break;
+                }
+                auto argLoc = FileLocations::ensure(
+                        nodeStack.last().fileLocations,
+                        Path().field(Fields::parameters).index(idx).field(Fields::value),
+                        AttachedInfo::PathType::Relative);
+                const Path pathToArgument = Path().field(Fields::scriptElement);
+
+                ScriptElementVariant variant = currentScriptNodeEl().takeVariant();
+                setFormalParameterKind(variant);
+                finalizeScriptExpression(variant, pathToArgument, argLoc);
+                m.parameters[idx].value->setScriptElement(variant);
+                removeCurrentScriptNode({});
+            }
+
+            // there should be no more uncollected script elements
+            if (m_enableScriptExpressions && !scriptNodeStack.empty()) {
+                Q_SCRIPTELEMENT_DISABLE();
             }
         }
     }
@@ -824,6 +888,11 @@ void QQmlDomAstCreator::endVisit(AST::UiScriptBinding *)
     } else {
         Q_UNREACHABLE();
     }
+
+    // there should be no more uncollected script elements
+    if (m_enableScriptExpressions && !scriptNodeStack.empty()) {
+        Q_SCRIPTELEMENT_DISABLE();
+    }
     removeCurrentNode({});
 }
 
@@ -860,19 +929,6 @@ void QQmlDomAstCreator::endVisit(AST::UiArrayBinding *)
     removeCurrentNode(DomType::Binding);
 }
 
-bool QQmlDomAstCreator::visit(AST::UiParameterList *el)
-{ // currently not used...
-    MethodParameter p{ el->name.toString(),
-                       el->type ? el->type->toString() : QString(),
-                       false,
-                       false,
-                       false,
-                       {},
-                       {},
-                       {} };
-    return true;
-}
-
 bool QQmlDomAstCreator::visit(AST::ArgumentList *list)
 {
     if (!m_enableScriptExpressions)
@@ -880,8 +936,6 @@ bool QQmlDomAstCreator::visit(AST::ArgumentList *list)
 
     auto currentList = makeScriptList(list);
 
-    // custom iteration generate all children, such that they can be collected all together in
-    // endVisit().
     for (auto it = list; it; it = it->next) {
         Node::accept(it->expression, this);
         if (!m_enableScriptExpressions)
@@ -900,13 +954,93 @@ bool QQmlDomAstCreator::visit(AST::ArgumentList *list)
     return false; // return false because we already iterated over the children using the custom
                   // iteration above
 }
-void QQmlDomAstCreator::endVisit(AST::UiParameterList *el)
+
+bool QQmlDomAstCreator::visit(AST::UiParameterList *)
 {
-    Node::accept(el->next, this); // put other args at the same level as this one...
+    return false; // do not create script node for Ui stuff
+}
+
+bool QQmlDomAstCreator::visit(AST::PatternElementList *list)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto currentList = makeScriptList(list);
+
+    for (auto it = list; it; it = it->next) {
+        if (it->elision) {
+            Node::accept(it->elision, this);
+            if (scriptNodeStack.empty()) {
+                Q_SCRIPTELEMENT_DISABLE();
+                return false;
+            }
+            currentList.append(scriptNodeStack.last().takeList());
+            scriptNodeStack.removeLast();
+        }
+        if (it->element) {
+            Node::accept(it->element, this);
+            if (scriptNodeStack.empty()) {
+                Q_SCRIPTELEMENT_DISABLE();
+                return false;
+            }
+            currentList.append(scriptNodeStack.last().takeVariant());
+            scriptNodeStack.removeLast();
+        }
+    }
+
+    pushScriptElement(currentList);
+
+    return false; // return false because we already iterated over the children using the custom
+                  // iteration above
+}
+
+bool QQmlDomAstCreator::visit(AST::PatternPropertyList *list)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto currentList = makeScriptList(list);
+
+    for (auto it = list; it; it = it->next) {
+        if (it->property) {
+            Node::accept(it->property, this);
+            if (!m_enableScriptExpressions)
+                return false;
+            if (scriptNodeStack.empty()) {
+                Q_SCRIPTELEMENT_DISABLE();
+                return false;
+            }
+            currentList.append(scriptNodeStack.last().takeVariant());
+            scriptNodeStack.removeLast();
+        }
+    }
+
+    pushScriptElement(currentList);
+
+    return false; // return false because we already iterated over the children using the custom
+                  // iteration above
+}
+
+/*!
+   \internal
+   Implementing the logic of this method in \c QQmlDomAstCreator::visit(AST::UiQualifiedId *)
+   would create scriptelements at places where there are not needed. This is mainly because
+   UiQualifiedId's appears inside and outside of script parts.
+*/
+ScriptElementVariant QQmlDomAstCreator::scriptElementForQualifiedId(AST::UiQualifiedId *expression)
+{
+    auto id = std::make_shared<ScriptElements::IdentifierExpression>(
+            expression->firstSourceLocation(), expression->lastSourceLocation());
+    id->setName(expression->toString());
+
+    return ScriptElementVariant::fromElement(id);
 }
 
 bool QQmlDomAstCreator::visit(AST::UiQualifiedId *)
 {
+    if (!m_enableScriptExpressions)
+        return false;
+
     return false;
 }
 
@@ -1160,8 +1294,16 @@ void QQmlDomAstCreator::endVisit(AST::ForStatement *forStatement)
 
     if (forStatement->declarations) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
-        current->setDeclarations(currentScriptNodeEl().takeVariant());
-        removeCurrentScriptNode(DomType::ScriptVariableDeclaration);
+        auto variableDeclaration = makeGenericScriptElement(forStatement->declarations,
+                                                            DomType::ScriptVariableDeclaration);
+
+        ScriptElements::ScriptList list = currentScriptNodeEl().takeList();
+        list.replaceKindForGenericChildren(DomType::ScriptPattern,
+                                           DomType::ScriptVariableDeclarationEntry);
+        variableDeclaration->insertChild(Fields::declarations, std::move(list));
+        removeCurrentScriptNode({});
+
+        current->setDeclarations(ScriptElementVariant::fromElement(variableDeclaration));
     }
 
     if (forStatement->initialiser) {
@@ -1199,9 +1341,7 @@ bool QQmlDomAstCreator::visit(AST::StringLiteral *expression)
     if (!m_enableScriptExpressions)
         return false;
 
-    auto current = makeScriptElement<ScriptElements::Literal>(expression);
-    current->setLiteralValue(expression->value.toString());
-    pushScriptElement(current);
+    pushScriptElement(makeStringLiteral(expression->value, expression));
     return true;
 }
 
@@ -1238,31 +1378,96 @@ bool QQmlDomAstCreator::visit(AST::FalseLiteral *expression)
     return true;
 }
 
-bool QQmlDomAstCreator::visit(AST::VariableDeclarationList *)
+bool QQmlDomAstCreator::visit(AST::IdentifierPropertyName *expression)
 {
     if (!m_enableScriptExpressions)
         return false;
 
+    auto current = makeScriptElement<ScriptElements::IdentifierExpression>(expression);
+    current->setName(expression->id);
+    pushScriptElement(current);
     return true;
 }
 
-void QQmlDomAstCreator::endVisit(AST::VariableDeclarationList *list)
+bool QQmlDomAstCreator::visit(AST::StringLiteralPropertyName *expression)
 {
     if (!m_enableScriptExpressions)
-        return;
+        return false;
 
-    auto declarationList = makeScriptList(list);
+    pushScriptElement(makeStringLiteral(expression->id, expression));
+    return true;
+}
+
+bool QQmlDomAstCreator::visit(AST::TypeAnnotation *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    // do nothing: the work is done in (end)visit(AST::Type*).
+    return true;
+}
+
+bool QQmlDomAstCreator::visit(AST::NumericLiteralPropertyName *expression)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto current = makeScriptElement<ScriptElements::Literal>(expression);
+    current->setLiteralValue(expression->id);
+    pushScriptElement(current);
+    return true;
+}
+
+bool QQmlDomAstCreator::visit(AST::ComputedPropertyName *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    // nothing to do, just forward the underlying expression without changing/wrapping it
+    return true;
+}
+
+bool QQmlDomAstCreator::visit(AST::VariableDeclarationList *list)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto currentList = makeScriptList(list);
 
     for (auto it = list; it; it = it->next) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
-        declarationList.append(scriptNodeStack.takeLast().takeVariant());
+        if (it->declaration) {
+            Node::accept(it->declaration, this);
+            if (!m_enableScriptExpressions)
+                return false;
+            if (scriptNodeStack.empty()) {
+                Q_SCRIPTELEMENT_DISABLE();
+                return false;
+            }
+            currentList.append(scriptNodeStack.last().takeVariant());
+            scriptNodeStack.removeLast();
+        }
     }
+    pushScriptElement(currentList);
 
-    declarationList.reverse();
+    return false; // return false because we already iterated over the children using the custom
+                  // iteration above
+}
 
-    auto current = makeScriptElement<ScriptElements::VariableDeclaration>(list);
-    current->setDeclarations(declarationList);
-    pushScriptElement(current);
+bool QQmlDomAstCreator::visit(AST::Elision *list)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto currentList = makeScriptList(list);
+
+    for (auto it = list; it; it = it->next) {
+        auto current = makeGenericScriptElement(it->commaToken, DomType::ScriptElision);
+        currentList.append(ScriptElementVariant::fromElement(current));
+    }
+    pushScriptElement(currentList);
+
+    return false; // return false because we already iterated over the children using the custom
+                  // iteration above
 }
 
 bool QQmlDomAstCreator::visit(AST::PatternElement *)
@@ -1273,40 +1478,50 @@ bool QQmlDomAstCreator::visit(AST::PatternElement *)
     return true;
 }
 
+/*!
+   \internal
+    Avoid code-duplication, reuse this code when doing endVisit on types inheriting from
+    AST::PatternElement.
+*/
+void QQmlDomAstCreator::endVisitHelper(
+        AST::PatternElement *pe,
+        const std::shared_ptr<ScriptElements::GenericScriptElement> &current)
+{
+    if (pe->identifierToken.isValid() && !pe->bindingIdentifier.isEmpty()) {
+        auto identifier =
+                std::make_shared<ScriptElements::IdentifierExpression>(pe->identifierToken);
+        identifier->setName(pe->bindingIdentifier);
+        current->insertChild(Fields::identifier, ScriptElementVariant::fromElement(identifier));
+    }
+    if (pe->initializer) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->insertChild(Fields::initializer, scriptNodeStack.last().takeVariant());
+        scriptNodeStack.removeLast();
+    }
+    if (pe->typeAnnotation) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->insertChild(Fields::type, scriptNodeStack.last().takeVariant());
+        scriptNodeStack.removeLast();
+    }
+    if (pe->bindingTarget) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->insertChild(Fields::bindingElement, scriptNodeStack.last().takeVariant());
+        scriptNodeStack.removeLast();
+    }
+}
+
 void QQmlDomAstCreator::endVisit(AST::PatternElement *pe)
 {
     if (!m_enableScriptExpressions)
         return;
 
-    if (pe->isVariableDeclaration()) {
-        auto variableDeclaration = makeScriptElement<ScriptElements::VariableDeclarationEntry>(pe);
-        ScriptElements::VariableDeclarationEntry::ScopeType scopeType;
-        switch (pe->scope) {
-        case QQmlJS::AST::VariableScope::Const:
-            scopeType = ScriptElements::VariableDeclarationEntry::Const;
-            break;
-        case QQmlJS::AST::VariableScope::Let:
-            scopeType = ScriptElements::VariableDeclarationEntry::Let;
-            break;
-        case QQmlJS::AST::VariableScope::Var:
-            scopeType = ScriptElements::VariableDeclarationEntry::Var;
-            break;
-        default:
-            Q_UNREACHABLE();
-        }
-        variableDeclaration->setScopeType(scopeType);
+    auto element = makeGenericScriptElement(pe, DomType::ScriptPattern);
+    endVisitHelper(pe, element);
+    // check if helper disabled scriptexpressions
+    if (!m_enableScriptExpressions)
+        return;
 
-        auto identifier =
-                std::make_shared<ScriptElements::IdentifierExpression>(pe->identifierToken);
-        identifier->setName(pe->bindingIdentifier.toString());
-        variableDeclaration->setIdentifier(ScriptElementVariant::fromElement(identifier));
-
-        if (pe->initializer) {
-            Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
-            variableDeclaration->setInitializer(scriptNodeStack.takeLast().takeVariant());
-        }
-        pushScriptElement(variableDeclaration);
-    }
+    pushScriptElement(element);
 }
 
 bool QQmlDomAstCreator::visit(AST::IfStatement *)
@@ -1462,6 +1677,153 @@ void QQmlDomAstCreator::endVisit(AST::CallExpression *exp)
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
         current->insertChild(Fields::callee, currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::ArrayPattern *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::ArrayPattern *exp)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(exp, DomType::ScriptArray);
+
+    if (exp->elements) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        ScriptElements::ScriptList list = currentScriptNodeEl().takeList();
+        list.replaceKindForGenericChildren(DomType::ScriptPattern, DomType::ScriptArrayEntry);
+        current->insertChild(Fields::elements, std::move(list));
+
+        removeCurrentScriptNode({});
+    } else {
+        // insert empty list
+        current->insertChild(Fields::elements,
+                             ScriptElements::ScriptList(exp->lbracketToken, exp->rbracketToken));
+    }
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::ObjectPattern *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::ObjectPattern *exp)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(exp, DomType::ScriptObject);
+
+    if (exp->properties) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->insertChild(Fields::properties, currentScriptNodeEl().takeList());
+        removeCurrentScriptNode({});
+    } else {
+        // insert empty list
+        current->insertChild(Fields::properties,
+                             ScriptElements::ScriptList(exp->lbraceToken, exp->rbraceToken));
+    }
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::PatternProperty *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::PatternProperty *exp)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(exp, DomType::ScriptProperty);
+
+    // handle the stuff from PatternProperty's base class PatternElement
+    endVisitHelper(static_cast<PatternElement *>(exp), current);
+
+    // check if helper disabled scriptexpressions
+    if (!m_enableScriptExpressions)
+        return;
+
+    if (exp->name) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->insertChild(Fields::name, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::VariableStatement *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::VariableStatement *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(statement, DomType::ScriptVariableDeclaration);
+
+    if (statement->declarations) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+
+        ScriptElements::ScriptList list = currentScriptNodeEl().takeList();
+        list.replaceKindForGenericChildren(DomType::ScriptPattern,
+                                           DomType::ScriptVariableDeclarationEntry);
+        current->insertChild(Fields::declarations, std::move(list));
+
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::Type *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::Type *exp)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(exp, DomType::ScriptType);
+
+    if (exp->typeArgument) {
+        auto currentChild = scriptElementForQualifiedId(exp->typeArgument);
+        current->insertChild(Fields::typeArgument, currentChild);
+    }
+
+    if (exp->typeId) {
+        auto currentChild = scriptElementForQualifiedId(exp->typeId);
+        current->insertChild(Fields::typeName, currentChild);
     }
 
     pushScriptElement(current);
