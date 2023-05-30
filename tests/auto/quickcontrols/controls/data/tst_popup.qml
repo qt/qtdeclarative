@@ -1494,6 +1494,18 @@ TestCase {
         mouseRelease(title, pressPoint.x, pressPoint.y)
         compare(title.pressedPosition, Qt.point(0, 0))
 
+
+        // Set modal as true and check for the same operation
+        popup.modal = true
+        oldPos = Qt.point(popup.x, popup.y)
+        mousePress(title, pressPoint.x, pressPoint.y)
+        fuzzyCompare(title.pressedPosition.x, pressPoint.x, 1)
+        fuzzyCompare(title.pressedPosition.y, pressPoint.y, 1)
+        mouseMove(title, pressPoint.x + 5, pressPoint.y + 5)
+        fuzzyCompare(popup.x, oldPos.x + 5, 1)
+        fuzzyCompare(popup.y, oldPos.y + 5, 1)
+        mouseRelease(title, pressPoint.x, pressPoint.y)
+        compare(title.pressedPosition, Qt.point(0, 0))
     }
 
     Component {
