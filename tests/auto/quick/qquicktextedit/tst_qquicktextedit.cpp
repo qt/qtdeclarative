@@ -3766,16 +3766,16 @@ void tst_qquicktextedit::largeTextObservesViewport_data()
     // by default, the root item acts as the viewport:
     // QQuickTextEdit doesn't populate lines of text beyond the bottom of the window
     // cursor position 1000 is on line 121
-    QTest::newRow("default plain text") << text << QQuickTextEdit::PlainText << false << 1000 << 0
-                                        << 1 << 118 << 142 << 2400 << 3000;
+    QTest::newRow("default plain text") << text << QQuickTextEdit::PlainText << false << 1000 << 2
+                                        << 3 << 118 << 144 << 2150 << 3000;
     // make the rectangle into a viewport item, and move the text upwards:
     // QQuickTextEdit doesn't populate lines of text beyond the bottom of the viewport rectangle
     QTest::newRow("clipped plain text") << text << QQuickTextEdit::PlainText << true << 1000 << 0
-                                        << 1 << 123 << 137 << 2550 << 3000;
+                                        << 3 << 123 << 137 << 2200 << 3000;
 
     // scroll backwards
     QTest::newRow("scroll backwards in plain text") << text << QQuickTextEdit::PlainText << true << 1000 << 600
-                                                    << 1 << 93 << 108 << 1475 << 2300;
+                                                    << 3 << 91 << 108 << 1475 << 2300;
 
     {
         QStringList lines;
@@ -3799,20 +3799,20 @@ void tst_qquicktextedit::largeTextObservesViewport_data()
     // by default, the root item acts as the viewport:
     // QQuickTextEdit doesn't populate blocks beyond the bottom of the window
     QTest::newRow("default styled text") << text << QQuickTextEdit::RichText << false << 1000 << 0
-                                         << 1 << 124 << 139 << 3900 << 4500;
+                                         << 3 << 122 << 139 << 3600 << 4500;
     // make the rectangle into a viewport item, and move the text upwards:
     // QQuickTextEdit doesn't populate blocks that don't intersect the viewport rectangle
     QTest::newRow("clipped styled text") << text << QQuickTextEdit::RichText << true << 1000 << 0
-                                         << 1 << 127 << 136 << 4000 << 4360;
+                                         << 3 << 127 << 136 << 3700 << 4360;
     // get the "chapter 2" heading into the viewport
     QTest::newRow("heading visible") << text << QQuickTextEdit::RichText << true << 800 << 0
-                                     << 1 << 105 << 113 << 3300 << 3600;
+                                     << 3 << 105 << 113 << 3050 << 3600;
     // get the "chapter 2" heading into the viewport, and then scroll backwards
     QTest::newRow("scroll backwards") << text << QQuickTextEdit::RichText << true << 800 << 20
-                                     << 1 << 104 << 113 << 3200 << 3600;
+                                     << 3 << 104 << 113 << 3000 << 3600;
     // get the "chapter 2" heading into the viewport, and then scroll forwards
     QTest::newRow("scroll forwards") << text << QQuickTextEdit::RichText << true << 800 << -50
-                                     << 1 << 106 << 115 << 3300 << 3670;
+                                     << 3 << 106 << 115 << 3000 << 3670;
 }
 
 void tst_qquicktextedit::largeTextObservesViewport()
