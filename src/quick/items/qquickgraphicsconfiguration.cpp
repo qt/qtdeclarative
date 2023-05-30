@@ -802,6 +802,55 @@ QString QQuickGraphicsConfiguration::pipelineCacheLoadFile() const
     return d->pipelineCacheLoadFile;
 }
 
+/*!
+    \internal
+
+    When enabled, and the platform and the underlying 3D API supports it, the
+    window will be using high/extended dynamic range rendering. This implies
+    that the display on which the window is opened has HDR output enabled in
+    the windowing system.
+
+    If the request cannot be fulfilled, it is gracefully ignored and the window
+    is created with the normal standard dynamic range.
+
+    By default the value is \c false.
+
+    \note This setting controls the window, swapchain, color buffer, and
+    related settings. It does not automatically make a Qt Quick scene with SDR
+    content suitable to be displayed in a HDR-enabled QQuickWindow.
+
+    To determine what color space and color buffer format got enabled, query
+    the \l{QQuickWindow::swapChain()}{swapchain} from the window once the
+    \l{QQuickWindow::sceneGraphInitialized()}{scene graph has initialized}, and
+    inspect its \l{QRhiSwapChain::format()}{format}.
+
+    \sa isHdrEnabled()
+ */
+void QQuickGraphicsConfiguration::setHdr(bool enable)
+{
+    if (d->flags.testFlag(QQuickGraphicsConfigurationPrivate::EnableHdr) != enable) {
+        detach();
+        d->flags.setFlag(QQuickGraphicsConfigurationPrivate::EnableHdr, enable);
+    }
+}
+
+/*!
+    \internal
+
+    \return true if HDR output was requested.
+
+    By default the value is false.
+
+    \note This says nothing about a HDR output format being actually supported;
+    a return value of \c true merely indicates the application's request.
+
+    \sa setHdr()
+ */
+bool QQuickGraphicsConfiguration::isHdrEnabled() const
+{
+    return d->flags.testFlag(QQuickGraphicsConfigurationPrivate::EnableHdr);
+}
+
 QQuickGraphicsConfigurationPrivate::QQuickGraphicsConfigurationPrivate()
     : ref(1)
 {
@@ -839,6 +888,10 @@ QQuickGraphicsConfigurationPrivate::QQuickGraphicsConfigurationPrivate()
 
     static const QString pipelineCacheLoadFileEnv = qEnvironmentVariable("QSG_RHI_PIPELINE_CACHE_LOAD");
     pipelineCacheLoadFile = pipelineCacheLoadFileEnv;
+
+    static const QByteArray hdrRequest = qgetenv("QSG_RHI_HDR");
+    if (hdrRequest == QByteArrayLiteral("auto"))
+        flags |= EnableHdr;
 }
 
 QQuickGraphicsConfigurationPrivate::QQuickGraphicsConfigurationPrivate(const QQuickGraphicsConfigurationPrivate *other)

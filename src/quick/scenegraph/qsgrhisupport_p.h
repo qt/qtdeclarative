@@ -86,8 +86,7 @@ public:
     QImage grabOffscreenForProtectedContent(QQuickWindow *window);
 #endif
 
-    QRhiSwapChain::Format swapChainFormat() const { return m_swapChainFormat; }
-    void applySwapChainFormat(QRhiSwapChain *scWithWindowSet);
+    void applySwapChainFormat(QRhiSwapChain *scWithWindowSet, QQuickWindow *window);
 
     QRhiTexture::Format toRhiTextureFormat(uint nativeFormat, QRhiTexture::Flags *flags) const;
 
@@ -103,7 +102,6 @@ private:
     } m_requested;
     bool m_settingsApplied = false;
     QRhi::Implementation m_rhiBackend = QRhi::Null;
-    QRhiSwapChain::Format m_swapChainFormat = QRhiSwapChain::SDR;
 };
 
 QT_END_NAMESPACE
