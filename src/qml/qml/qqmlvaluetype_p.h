@@ -133,6 +133,8 @@ struct Q_QML_PRIVATE_EXPORT QQmlPointValueType
     QML_STRUCTURED_VALUE
 
 public:
+    QQmlPointValueType() = default;
+    Q_INVOKABLE QQmlPointValueType(const QPointF &point) : v(point.toPoint()) {}
     Q_INVOKABLE QString toString() const;
     int x() const;
     int y() const;
@@ -175,6 +177,8 @@ struct Q_QML_PRIVATE_EXPORT QQmlSizeValueType
     QML_STRUCTURED_VALUE
 
 public:
+    QQmlSizeValueType() = default;
+    Q_INVOKABLE QQmlSizeValueType(const QSizeF &size) : v(size.toSize()) {}
     Q_INVOKABLE QString toString() const;
     int width() const;
     int height() const;
@@ -239,6 +243,8 @@ struct Q_QML_PRIVATE_EXPORT QQmlRectValueType
     QML_STRUCTURED_VALUE
 
 public:
+    QQmlRectValueType() = default;
+    Q_INVOKABLE QQmlRectValueType(const QRectF &rect) : v(rect.toRect()) {}
     Q_INVOKABLE QString toString() const;
     int x() const;
     int y() const;

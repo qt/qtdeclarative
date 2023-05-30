@@ -43,4 +43,7 @@ MyTypeObject {
 
         c4 = {foo: 11};
     }
+
+    barren: ({i: 17})
+    function changeBarren() { barren = "foos" }
 }

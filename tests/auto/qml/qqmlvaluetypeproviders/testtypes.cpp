@@ -8,4 +8,5 @@ void registerTypes()
     qmlRegisterTypesAndRevisions<ConstructibleValueType>("Test", 1);
     qmlRegisterTypesAndRevisions<ConstructibleFromQReal>("Test", 1);
     qmlRegisterTypesAndRevisions<StructuredValueType>("Test", 1);
+    qmlRegisterTypesAndRevisions<ForeignAnonymousStructuredValueType>("Test", 1);
 }
