@@ -245,7 +245,6 @@ public:
     QQuickShapeCurveNode();
 };
 
-
 class QQuickShapeCurveRenderer : public QQuickAbstractPathRenderer
 {
 public:
@@ -281,8 +280,16 @@ public:
         UniformsDirty = 2
     };
 
-    //### PathData used to be private, but I am using it in a static function. TODO: FIX ###
+    enum DebugVisualizationOption {
+        NoDebug = 0,
+        DebugCurves = 0x01,
+        DebugWireframe = 0x02
+    };
 
+    Q_QUICKSHAPES_PRIVATE_EXPORT static int debugVisualization();
+    Q_QUICKSHAPES_PRIVATE_EXPORT static void setDebugVisualization(int options);
+
+private:
     struct PathData {
 
         bool isFillVisible() const { return fillColor.alpha() > 0 || gradientType != NoGradient; }
@@ -311,21 +318,11 @@ public:
         NodeList debugNodes;
     };
 
-    enum DebugVisualizationOption {
-        NoDebug = 0,
-        DebugCurves = 0x01,
-        DebugWireframe = 0x02
-    };
-
-    Q_QUICKSHAPES_PRIVATE_EXPORT static int debugVisualization();
-    Q_QUICKSHAPES_PRIVATE_EXPORT static void setDebugVisualization(int options);
-
-private:
     void deleteAndClear(NodeList *nodeList);
 
     QVector<QSGGeometryNode *> addPathNodesBasic(const PathData &pathData, NodeList *debugNodes);
 
-    QVector<QSGGeometryNode *> addPathNodesDelauneyTest(const PathData &pathData, NodeList *debugNodes);
+    QVector<QSGGeometryNode *> addPathNodesDelaunayTest(const PathData &pathData, NodeList *debugNodes);
 
     QSGGeometryNode *addLoopBlinnNodes(const QTriangleSet &triangles,
                                        const QVarLengthArray<quint32> &extraIndices,

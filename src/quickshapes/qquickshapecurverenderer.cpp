@@ -1028,14 +1028,10 @@ void QQuickShapeCurveRenderer::endSync(bool async)
     Q_UNUSED(async);
 }
 
-
 bool QQuickShapeCurveRenderer::PathData::useFragmentShaderStroker() const
 {
-    static bool usePathStroker = qEnvironmentVariableIsSet("QT_QUICKSHAPES_STROKER")
-            && qEnvironmentVariableIntValue("QT_QUICKSHAPES_STROKER") == 0;
-    static bool newCodePath = qEnvironmentVariableIntValue("QT_QUICKSHAPES_ALTERNATIVE_CODE_PATH") != 0;
-
-    return newCodePath && !usePathStroker && pen.style() == Qt::SolidLine && isFillVisible();
+    static bool useStrokeShader = qEnvironmentVariableIntValue("QT_QUICKSHAPES_STROKER");
+    return useStrokeShader && pen.style() == Qt::SolidLine && isFillVisible();
 }
 
 void QQuickShapeCurveRenderer::updateNode()
@@ -1047,7 +1043,7 @@ void QQuickShapeCurveRenderer::updateNode()
 
     auto addNodes = [&](const PathData &pathData, NodeList *debugNodes) {
         if (codePath == 42)
-            return addPathNodesDelauneyTest(pathData, debugNodes);
+            return addPathNodesDelaunayTest(pathData, debugNodes);
         else
             return addPathNodesBasic(pathData, debugNodes);
     };
@@ -1110,7 +1106,6 @@ void QQuickShapeCurveRenderer::updateNode()
         pathData.m_dirty &= ~(GeometryDirty | UniformsDirty);
     }
 }
-
 
 QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesBasic(const PathData &pathData, NodeList *debugNodes)
 {
@@ -1498,15 +1493,6 @@ static bool isOverlap(const QuadPath &path, qsizetype e1, qsizetype e2)
     return false;
 }
 
-static bool isTooSmallOrTooStraight(const QuadPath::Element &quad)
-{
-    constexpr float epsilon = 1.0;
-    if (qFuzzyCompare(quad.startPoint(), quad.endPoint()))
-        return true;
-    float c = crossProduct(quad.controlPoint(), quad.startPoint(), quad.endPoint());
-    return abs(c) < epsilon;
-}
-
 static bool isOverlap(const QuadPath &path, qsizetype index, const QVector2D &vertex)
 {
     const QuadPath::Element &elem = path.elementAt(index);
@@ -1594,20 +1580,6 @@ static void handleOverlap(QuadPath &path, qsizetype e1, const QVector2D vertex,
     handleOverlap(path, path.indexOfChildAt(e1, 1), vertex, recursionLevel + 1);
 }
 
-static void splitMeOneMoreTime(QuadPath &path, int index)
-{
-    auto &element = path.elementAt(index);
-    if (element.childCount() > 1) {
-        int child0 = path.indexOfChildAt(index, 0);
-        int child1 = path.indexOfChildAt(index, 1);
-        splitMeOneMoreTime(path, child0);
-        splitMeOneMoreTime(path, child1);
-    } else if (!element.isLine()) {
-        if (!isTooSmallOrTooStraight(element))
-            path.splitElementAt(index);
-    }
-}
-
 void QQuickShapeCurveRenderer::solveOverlaps(QuadPath &path)
 {
     for (qsizetype i = 0; i < path.elementCount(); i++) {
@@ -1650,15 +1622,10 @@ void QQuickShapeCurveRenderer::solveOverlaps(QuadPath &path)
             }
         }
     }
-
-    // split all curves one extra time, to avoid near-overlapping triangles.
-    // (Probably cheaper than trying to detect that case)
-    for (int i = 0; i < path.elementCount(); i++)
-        splitMeOneMoreTime(path, i);
 }
 
 //#define ROUNDING
-QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesDelauneyTest(const PathData &pathData, NodeList *debugNodes)
+QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesDelaunayTest(const PathData &pathData, NodeList *debugNodes)
 {
     const QuadPath &thePath = pathData.path;
     if (thePath.elementCount() == 0)

@@ -103,6 +103,6 @@ void main()
     // TODO: support both outline and fill
 #else
     float df = fwidth(f);
-    fragColor = mix(baseColor() * clamp(0.5 + f / df, 0.0, 1.0), vec4(debugColor.rgba), debugColor.a);
+    fragColor = mix(baseColor() * clamp(0.5 + f / df, 0.0, 1.0), vec4(debugColor.rgb, 1.0), debugColor.a);
 #endif
 }
