@@ -281,7 +281,7 @@ public:
         Kind kind = FunctionScoped;
         QQmlJS::SourceLocation location;
         std::optional<QString> typeName;
-        bool isConst;
+        bool isConst = false;
         QQmlJSScope::WeakConstPtr scope = {};
     };
 
