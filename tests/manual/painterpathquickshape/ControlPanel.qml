@@ -28,7 +28,7 @@ Item {
 
     property int subShape: pickSubShape.checked ? subShapeSelector.value : -1
 
-    property real pathMargin: 150
+    property real pathMargin: marginEdit.text
 
     function setScale(x) {
         scaleSlider.value = x
@@ -114,6 +114,15 @@ Item {
             }
         }
         RowLayout {
+            Label {
+                text: "Margin:"
+                color: "white"
+            }
+            TextField {
+                id: marginEdit
+                text: "150"
+                validator: DoubleValidator{ bottom: 0.0 }
+            }
             Label {
                 text: "Scale:"
                 color: "white"
@@ -256,7 +265,7 @@ Item {
                 id: outlineWidth
                 Layout.fillWidth: true
                 from: 0.0
-                to: 30.0
+                to: 100.0
                 value: 10.0
             }
             }

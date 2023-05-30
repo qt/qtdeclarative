@@ -10,10 +10,10 @@ ControlledShape {
         // A triangle
         PathPolyline {
             id: ppl
-            path: [ Qt.point(100.0, 100.0),
+            path: [ Qt.point(150.0, 100.0),
                     Qt.point(1250.0, 150.0),
                     Qt.point(100.0, 1000.0),
-                    Qt.point(100, 100)
+                    Qt.point(150, 100)
                   ]
         },
 

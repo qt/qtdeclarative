@@ -50,7 +50,25 @@ Item {
                     continue
                 var s = pathLoader.paths[i]
                 var fillColor = pathLoader.fillColors[i]
-                var obj = Qt.createQmlObject("import QtQuick\nimport QtQuick.Shapes\n ControlledShape { fillColor: \"" + fillColor + "\"; fillRule: ShapePath.WindingFill; delegate: [ PathSvg { path: \"" + s + "\";  } ] }", topLevel, "SvgPathComponent_" + i)
+                let strokeText = "";
+                let strokeColor = pathLoader.strokeColors[i]
+                let strokeWidth = pathLoader.strokeWidths[i]
+                if (strokeColor) {
+                    if (!strokeWidth)
+                        strokeWidth = "1.0" // default value defined by SVG standard
+                    strokeText = "strokeColor: \"" + strokeColor + "\"; strokeWidth: " + strokeWidth + ";"
+                }
+                if (!fillColor) {
+                    fillColor = "#00000000"
+                }
+
+                var obj = Qt.createQmlObject("import QtQuick\nimport QtQuick.Shapes\n ControlledShape { "
+                                             + "fillColor: \"" + fillColor + "\";"
+                                             + strokeText
+                                             + "fillRule: ShapePath.WindingFill; delegate: [ PathSvg { path: \"" + s + "\";  } ] }",
+                                             topLevel, "SvgPathComponent_" + i)
+
+
                 children.push(obj)
                 if (first) {
                     topLevel.boundingRect = obj.boundingRect
