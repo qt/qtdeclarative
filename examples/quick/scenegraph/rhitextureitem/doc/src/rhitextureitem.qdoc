@@ -1,0 +1,61 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \example scenegraph/rhitextureitem
+    \title Scene Graph - RHI Texture Item
+    \ingroup qtquickexamples
+
+    \brief Shows how to implement a custom QQuickItem that displays a QRhi-rendered texture.
+
+    \image rhitextureitem-example.jpg
+
+    This example shows how to implement an item that performs cross-platform,
+    portable 3D rendering into a texture using the QRhi APIs and then displays
+    that image.
+
+    The \l{Scene Graph - RHI Under QML}{RHI Under QML} example shows how to
+    implement portable, cross-platform 3D rendering with the \l QRhi APIs in a
+    manner where the custom rendering is issued before the Qt Quick scene
+    graph's own rendering, effectively providing an "underlay". That approach
+    is efficient since now additional render targets and render passes are
+    needed, the custom rendering is injected in the main render pass before the
+    scene graph's own draw calls.
+
+    In contrast, this example involves a separate render target (a QRhiTexture,
+    the \l{QRhiTexture::pixelSize()}{dimensions} of which match the
+    QQuickItem's size in the scene) and a whole render pass that is used to
+    clear and then draw into that texture. The texture is then used with an
+    instance of a custom QQuickItem subclass that is implemented using the \l
+    QSGSimpleTextureNode helper class.
+
+    Compared to the underlay/overlay approach, this allows displaying,
+    blending, and transforming the flattened 2D image of the 3D rendering
+    anywhere in the Qt Quick scene since here we have a true QQuickItem. This
+    comes at the expense of being more expensive in terms of resources and
+    performance since it involves rendering to a texture first.
+
+    \section1 Walkthrough
+
+    \c ExampleRhiItem is the QQuickItem subclass that is exposed to QML
+    and is instantied in the scene.
+
+    \snippet scenegraph/rhitextureitem/rhitextureitem.h item
+
+    The \c angle property has a \l NumberAnimation on it, this is what drives
+    the continuous rotation of the 3D mesh.
+
+    \snippet scenegraph/rhitextureitem/main.qml 0
+
+    \c ExampleRhiItem drives from \c RhiItem, which contains the generic
+    implementation of a \l QQuickItem that maintains and displays a \l
+    QRhiTexture.
+
+    \snippet scenegraph/rhitextureitem/rhitextureitem.h itembase
+
+    The corresponding scene graph node is implemented using \l
+    QSGSimpleTextureNode.
+
+    \snippet scenegraph/rhitextureitem/rhitextureitem.h itemnode
+
+ */

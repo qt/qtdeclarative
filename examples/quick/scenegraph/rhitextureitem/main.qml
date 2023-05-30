@@ -1,8 +1,7 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-
 import SceneGraphRendering
 
 Item {
@@ -20,13 +19,22 @@ Item {
 
         property size pixelSize: Qt.size(width / tileSize, height / tileSize);
 
-        fragmentShader: "qrc:/scenegraph/fboitem/shaders/checker.frag.qsb"
+        fragmentShader: "qrc:/scenegraph/rhitextureitem/shaders/checker.frag.qsb"
     }
 
-    Renderer {
+    //! [0]
+    ExampleRhiItem {
         id: renderer
         anchors.fill: parent
         anchors.margins: 10
+
+        NumberAnimation on angle {
+            from: 0
+            to: 360
+            duration: 5000
+            loops: Animation.Infinite
+        }
+    //! [0]
 
         // The transform is just to show something interesting..
         transform: [
@@ -75,8 +83,6 @@ Item {
         anchors.right: renderer.right
         anchors.margins: 20
         wrapMode: Text.WordWrap
-        text: qsTr("The blue rectangle with the vintage 'Q' is an FBO, rendered by the application on the scene graph rendering thread. The FBO is managed and displayed using the QQuickFramebufferObject convenience class.")
+        text: qsTr("The blue rectangle with the vintage 'Q' is rendered by the application by directly using the QRhi APIs on the scene graph render thread. The custom QQuickItem then draws a quad textured with the QRhiTexture containing the custom 3D rendering.")
     }
-
-
 }
