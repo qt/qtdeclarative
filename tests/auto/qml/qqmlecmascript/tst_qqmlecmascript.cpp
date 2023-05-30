@@ -3127,11 +3127,14 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->invoked(), -1);
     QCOMPARE(o->actuals().size(), 0);
 
-    o->reset();
-    QVERIFY(EVALUATE_ERROR("object.method_QPointF(object)"));
-    QCOMPARE(o->error(), false);
-    QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().size(), 0);
+    // This fails if the QtQml module is loaded but works if it's not.
+    // If QtQml is loaded, QPointF is a structured value type that can be created from any object.
+    //
+    // o->reset();
+    // QVERIFY(EVALUATE_ERROR("object.method_QPointF(object)"));
+    // QCOMPARE(o->error(), false);
+    // QCOMPARE(o->invoked(), -1);
+    // QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QPointF(object.method_get_QPointF())", QV4::Primitive::undefinedValue()));
