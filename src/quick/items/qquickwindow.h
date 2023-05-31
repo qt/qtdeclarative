@@ -35,6 +35,7 @@ class QQuickGraphicsDevice;
 class QQuickGraphicsConfiguration;
 class QRhi;
 class QRhiSwapChain;
+class QRhiTexture;
 
 class Q_QUICK_EXPORT QQuickWindow : public QWindow
 {
@@ -117,6 +118,7 @@ public:
     // Scene graph specific functions
     QSGTexture *createTextureFromImage(const QImage &image) const;
     QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options) const;
+    QSGTexture *createTextureFromRhiTexture(QRhiTexture *texture, CreateTextureOptions options = {}) const;
 
     void setColor(const QColor &color);
     QColor color() const;

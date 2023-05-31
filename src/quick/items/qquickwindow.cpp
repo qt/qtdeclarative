@@ -2986,9 +2986,12 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
     textures will in most cases be faster to render. When this flag is not set,
     the texture will have an alpha channel based on the image's format.
 
-    When \a options contains TextureHasMipmaps, the engine will create a
-    texture which can use mipmap filtering. Mipmapped textures can not be in
-    an atlas.
+    When \a options contains TextureHasMipmaps, the engine will create a texture
+    which can use mipmap filtering. Mipmapped textures can not be in an atlas.
+
+    Setting TextureHasAlphaChannel in \a options serves no purpose for this
+    function since assuming an alpha channel and blending is the default. To opt
+    out, set TextureIsOpaque.
 
     When the scene graph uses OpenGL, the returned texture will be using \c
     GL_TEXTURE_2D as texture target and \c GL_RGBA as internal format. With
@@ -2999,12 +3002,12 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
     initialized.
 
     \warning The returned texture is not memory managed by the scene graph and
-    must be explicitly deleted by the caller on the rendering thread.
-    This is achieved by deleting the texture from a QSGNode destructor
-    or by using deleteLater() in the case where the texture already has affinity
-    to the rendering thread.
+    must be explicitly deleted by the caller on the rendering thread. This is
+    achieved by deleting the texture from a QSGNode destructor or by using
+    deleteLater() in the case where the texture already has affinity to the
+    rendering thread.
 
-    This function can be called from any thread.
+    This function can be called from both the main and the render thread.
 
     \sa sceneGraphInitialized(), QSGTexture
  */
@@ -3021,6 +3024,56 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
     return d->context->createTexture(image, flags);
 }
 
+/*!
+    Creates a new QSGTexture from the supplied \a texture.
+
+    Use \a options to customize the texture attributes. Only the
+    TextureHasAlphaChannel flag is taken into account by this function. When
+    set, the resulting QSGTexture is always treated by the scene graph renderer
+    as needing blending. For textures that are fully opaque, not setting the
+    flag can save the cost of performing alpha blending during rendering. The
+    flag has no direct correspondence to the \l{QRhiTexture::format()}{format}
+    of the QRhiTexture, i.e. not setting the flag while having a texture format
+    such as the commonly used \l QRhiTexture::RGBA8 is perfectly normal.
+
+    Mipmapping is not controlled by \a options since \a texture is already
+    created and has the presence or lack of mipmaps baked in.
+
+    The returned QSGTexture owns the QRhiTexture, meaning \a texture is
+    destroyed together with the returned QSGTexture.
+
+    If \a texture owns its underlying native graphics resources (OpenGL texture
+    object, Vulkan image, etc.), that depends on how the QRhiTexture was created
+    (\l{QRhiTexture::create()} or \l{QRhiTexture::createFrom()}), and that is
+    not controlled or changed by this function.
+
+    \note This is only functional when the scene graph has already initialized
+    and is using the default, \l{QRhi}-based \l{Scene Graph
+    Adaptations}{adaptation}. The return value is \nullptr otherwise.
+
+    \note This function can only be called on the scene graph render thread.
+
+    \since 6.6
+
+    \sa createTextureFromImage(), sceneGraphInitialized(), QSGTexture
+ */
+QSGTexture *QQuickWindow::createTextureFromRhiTexture(QRhiTexture *texture, CreateTextureOptions options) const
+{
+    Q_D(const QQuickWindow);
+    if (!d->rhi)
+        return nullptr;
+
+    QSGPlainTexture *t = new QSGPlainTexture;
+    t->setOwnsTexture(true);
+    t->setTexture(texture);
+    t->setHasAlphaChannel(options & QQuickWindow::TextureHasAlphaChannel);
+    t->setTextureSize(texture->pixelSize());
+    return t;
+}
+
+// Legacy, private alternative to createTextureFromRhiTexture() that internally
+// creates a QRhiTexture wrapping the existing native graphics resource.
+// New code should prefer using the public API.
 QSGTexture *QQuickWindowPrivate::createTextureFromNativeTexture(quint64 nativeObjectHandle,
                                                                 int nativeLayoutOrState,
                                                                 uint nativeFormat,
