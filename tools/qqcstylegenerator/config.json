@@ -89,6 +89,51 @@
         ]
     },
     {
+        "name": "Slider",
+        "copy": ":/Slider.qml",
+        "component set": "SliderTemplate",
+        "contents": ["groove", "track", "handle"],
+        "atoms": [
+            {"atom": "background", "figmaPath": "SliderBackground, background"},
+            {"atom": "groove", "figmaPath": "SliderGroove, groveBack"},
+            {"atom": "track", "figmaPath": "SliderTrack, trackBack"},
+            {"atom": "handle", "figmaPath": "SliderHandle, handleBack"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "focused", "figmaState": "focused"},
+            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
+            {"state": "focused-pressed", "figmaState": "pressedFocused"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "pressed", "figmaState": "pressed"}
+        ]
+    },
+    {
+        "name": "SpinBox",
+        "copy": ":/SpinBox.qml",
+        "component set": "SpinBoxTemplate",
+        "contents": ["indicator-down", "textInput", "indicator-up"],
+        "atoms": [
+            {"atom": "background", "figmaPath": "spinboxBackground, background"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "indicator-up", "figmaPath": "ContentItem, UpIndicator"},
+            {"atom": "indicator-down", "figmaPath": "ContentItem, DownIndicator"},
+            {"atom": "textInput", "figmaPath": "ContentItem, textInput", "export": "geometry"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "focused", "figmaState": "focused"},
+            {"state": "indicator-hovered", "figmaState": "iconHovered"},
+            {"state": "indicator-pressed", "figmaState": "iconPressed"},
+            {"state": "indicator-hovered-focused", "figmaState": "iconHoveredFocused"},
+            {"state": "indicator-pressed-focused", "figmaState": "iconPressedFocused"}
+        ]
+    },
+    {
         "name": "Switch",
         "copy": ":/Switch.qml",
         "component set": "SwitchTemplate",
@@ -118,15 +163,11 @@
         ]
     },
     {
-        "name": "Slider",
-        "copy": ":/Slider.qml",
-        "component set": "SliderTemplate",
-        "contents": ["groove", "track", "handle"],
+        "name": "TextArea",
+        "copy": ":/TextArea.qml",
+        "component set": "TextAreaTemplate",
         "atoms": [
-            {"atom": "background", "figmaPath": "SliderBackground, background"},
-            {"atom": "groove", "figmaPath": "SliderGroove, groveBack"},
-            {"atom": "track", "figmaPath": "SliderTrack, trackBack"},
-            {"atom": "handle", "figmaPath": "SliderHandle, handleBack"},
+            {"atom": "background", "figmaPath": "TextAreaBackground, background"},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
         ],
         "states": [
@@ -134,9 +175,7 @@
             {"state": "disabled", "figmaState": "disabled"},
             {"state": "focused", "figmaState": "focused"},
             {"state": "focused-hovered", "figmaState": "hoveredFocused"},
-            {"state": "focused-pressed", "figmaState": "pressedFocused"},
-            {"state": "hovered", "figmaState": "hovered"},
-            {"state": "pressed", "figmaState": "pressed"}
+            {"state": "hovered", "figmaState": "hovered"}
         ]
     },
     {
@@ -153,29 +192,6 @@
             {"state": "focused", "figmaState": "focused"},
             {"state": "focused-hovered", "figmaState": "hoveredFocused"},
             {"state": "hovered", "figmaState": "hovered"}
-        ]
-    },
-    {
-        "name": "SpinBox",
-        "copy": ":/SpinBox.qml",
-        "component set": "SpinBoxTemplate",
-        "contents": ["indicator-down", "textInput", "indicator-up"],
-        "atoms": [
-            {"atom": "background", "figmaPath": "spinboxBackground, background"},
-            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
-            {"atom": "indicator-up", "figmaPath": "ContentItem, UpIndicator"},
-            {"atom": "indicator-down", "figmaPath": "ContentItem, DownIndicator"},
-            {"atom": "textInput", "figmaPath": "ContentItem, textInput", "export": "geometry"}
-        ],
-        "states": [
-            {"state": "normal", "figmaState": "normal"},
-            {"state": "disabled", "figmaState": "disabled"},
-            {"state": "hovered", "figmaState": "hovered"},
-            {"state": "focused", "figmaState": "focused"},
-            {"state": "indicator-hovered", "figmaState": "iconHovered"},
-            {"state": "indicator-pressed", "figmaState": "iconPressed"},
-            {"state": "indicator-hovered-focused", "figmaState": "iconHoveredFocused"},
-            {"state": "indicator-pressed-focused", "figmaState": "iconPressedFocused"}
         ]
     }
     ]
