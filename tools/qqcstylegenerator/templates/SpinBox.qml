@@ -16,7 +16,7 @@ T.SpinBox {
                              up.implicitIndicatorHeight, down.implicitIndicatorHeight)
 
     property string __controlState: [
-        (down.hovered || up.hovered || down.pressed || up.pressed) && "indicator",
+        hovered && (down.hovered || up.hovered || down.pressed || up.pressed) && "indicator",
         (down.pressed || up.pressed) && "pressed",
         hovered && !(down.pressed || up.pressed) && "hovered",
         visualFocus && "focused",
@@ -24,7 +24,7 @@ T.SpinBox {
     readonly property var config: ConfigReader.controls.spinbox[__controlState] || {}
 
     property string __indicatorDownState: [
-        (down.hovered || down.pressed) && "indicator",
+        hovered && (down.hovered || down.pressed) && "indicator",
         down.pressed && "pressed",
         hovered && !down.pressed && "hovered",
         visualFocus && "focused",
@@ -32,7 +32,7 @@ T.SpinBox {
     readonly property var indicatorDownConfig: ConfigReader.controls.spinbox[__indicatorDownState] || {}
 
     property string __indicatorUpState: [
-        (up.hovered || up.pressed) && "indicator",
+        hovered && (up.hovered || up.pressed) && "indicator",
         up.pressed && "pressed",
         hovered && !up.pressed && "hovered",
         visualFocus && "focused",
