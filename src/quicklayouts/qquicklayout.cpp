@@ -85,10 +85,12 @@ QQuickLayoutAttached::QQuickLayoutAttached(QObject *parent)
       m_isMaximumWidthSet(false),
       m_isMaximumHeightSet(false),
       m_changesNotificationEnabled(true),
+      m_isMarginsSet(false),
       m_isLeftMarginSet(false),
       m_isTopMarginSet(false),
       m_isRightMarginSet(false),
       m_isBottomMarginSet(false),
+      m_isAlignmentSet(false),
       m_horizontalStretch(-1),
       m_verticalStretch(-1)
 {
@@ -403,6 +405,7 @@ void QQuickLayoutAttached::setColumn(int column)
 */
 void QQuickLayoutAttached::setAlignment(Qt::Alignment align)
 {
+    m_isAlignmentSet = true;
     if (align != m_alignment) {
         m_alignment = align;
         if (QQuickLayout *layout = parentLayout()) {
@@ -518,6 +521,7 @@ void QQuickLayoutAttached::setVerticalStretchFactor(int factor)
 */
 void QQuickLayoutAttached::setMargins(qreal m)
 {
+    m_isMarginsSet = true;
     if (m == m_defaultMargins)
         return;
 
