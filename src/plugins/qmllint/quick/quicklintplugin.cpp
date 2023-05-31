@@ -57,7 +57,7 @@ void ForbiddenChildrenPropertyValidatorPass::run(const QQmlSA::Element &element)
                 continue;
 
             const auto bindings = element.ownPropertyBindings(warning.propertyName);
-            const auto &firstBinding = bindings.constBegin().value();
+            const auto firstBinding = bindings.constBegin().value();
             emitWarning(warning.message, quickLayoutPositioning, firstBinding.sourceLocation());
         }
         break;
@@ -397,7 +397,7 @@ void ControlsSwipeDelegateValidatorPass::run(const QQmlSA::Element &element)
     if (swipe.begin() == swipe.end())
         return;
 
-    const auto &firstSwipe = swipe.begin().value();
+    const auto firstSwipe = swipe.begin().value();
     if (firstSwipe.bindingType() != QQmlSA::BindingType::GroupProperty)
         return;
 
