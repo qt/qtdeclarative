@@ -386,6 +386,21 @@ public:
     bool visit(AST::Type *expression) override;
     void endVisit(AST::Type *expression) override;
 
+    bool visit(AST::DefaultClause *) override;
+    void endVisit(AST::DefaultClause *) override;
+
+    bool visit(AST::CaseClause *) override;
+    void endVisit(AST::CaseClause *) override;
+
+    bool visit(AST::CaseClauses *) override;
+    void endVisit(AST::CaseClauses *) override;
+
+    bool visit(AST::CaseBlock *) override;
+    void endVisit(AST::CaseBlock *) override;
+
+    bool visit(AST::SwitchStatement *) override;
+    void endVisit(AST::SwitchStatement *) override;
+
     // lists of stuff whose children do not need a qqmljsscope: visitation order can be custom
     bool visit(AST::ArgumentList *) override;
     bool visit(AST::UiParameterList *) override;

@@ -1799,6 +1799,139 @@ private slots:
         }
     }
 
+    void switchStatement()
+    {
+        using namespace Qt::StringLiterals;
+        QString testFile = baseDir + u"/switchStatement.qml"_s;
+        DomItem rootQmlObject = rootQmlObjectFromFile(testFile, qmltypeDirs);
+        QVERIFY(rootQmlObject);
+
+        {
+            DomItem statements = rootQmlObject.methods()
+                                         .key(u"switchStatement")
+                                         .index(0)
+                                         .field(Fields::body)
+                                         .field(Fields::scriptElement)
+                                         .field(Fields::statements);
+            QVERIFY(statements);
+            QCOMPARE(statements.index(0).internalKind(), DomType::ScriptVariableDeclaration);
+            QCOMPARE(statements.index(1).internalKind(), DomType::ScriptVariableDeclaration);
+
+            DomItem firstSwitch = statements.index(2);
+            QVERIFY(firstSwitch);
+            QCOMPARE(firstSwitch.internalKind(), DomType::ScriptSwitchStatement);
+            QCOMPARE(firstSwitch.field(Fields::caseBlock).internalKind(), DomType::ScriptCaseBlock);
+            QCOMPARE(firstSwitch.field(Fields::expression).internalKind(),
+                     DomType::ScriptIdentifierExpression);
+            QCOMPARE(firstSwitch.field(Fields::expression)
+                             .field(Fields::identifier)
+                             .value()
+                             .toString(),
+                     u"animals");
+
+            DomItem caseClauses = firstSwitch.field(Fields::caseBlock).field(Fields::caseClauses);
+            QVERIFY(caseClauses);
+            QCOMPARE(caseClauses.index(0).internalKind(), DomType::ScriptCaseClause);
+            QCOMPARE(caseClauses.index(0).field(Fields::expression).internalKind(),
+                     DomType::ScriptLiteral);
+            QCOMPARE(caseClauses.index(0).field(Fields::expression).value().toString(), u"cat");
+
+            DomItem innerSwitch = caseClauses.index(0).field(Fields::statements).index(0);
+            QVERIFY(innerSwitch);
+            QCOMPARE(innerSwitch.internalKind(), DomType::ScriptSwitchStatement);
+            QCOMPARE(innerSwitch.field(Fields::expression).internalKind(),
+                     DomType::ScriptIdentifierExpression);
+            QCOMPARE(innerSwitch.field(Fields::expression).value().toString(), u"no");
+
+            QCOMPARE(innerSwitch.field(Fields::caseBlock)
+                             .field(Fields::caseClauses)
+                             .index(0)
+                             .internalKind(),
+                     DomType::ScriptCaseClause);
+            QCOMPARE(innerSwitch.field(Fields::caseBlock)
+                             .field(Fields::caseClauses)
+                             .index(0)
+                             .field(Fields::expression)
+                             .internalKind(),
+                     DomType::ScriptLiteral);
+            QCOMPARE(innerSwitch.field(Fields::caseBlock)
+                             .field(Fields::caseClauses)
+                             .index(0)
+                             .field(Fields::expression)
+                             .value()
+                             .toInteger(),
+                     0);
+            QCOMPARE(innerSwitch.field(Fields::caseBlock)
+                             .field(Fields::caseClauses)
+                             .index(0)
+                             .field(Fields::statements)
+                             .index(0)
+                             .field(Fields::expression)
+                             .value()
+                             .toString(),
+                     u"patron");
+            QCOMPARE(innerSwitch.field(Fields::caseBlock)
+                             .field(Fields::caseClauses)
+                             .index(1)
+                             .internalKind(),
+                     DomType::ScriptCaseClause);
+            QCOMPARE(innerSwitch.field(Fields::caseBlock)
+                             .field(Fields::caseClauses)
+                             .index(1)
+                             .field(Fields::statements)
+                             .index(0)
+                             .field(Fields::expression)
+                             .value()
+                             .toString(),
+                     u"mafik");
+            QCOMPARE(innerSwitch.field(Fields::caseBlock)
+                             .field(Fields::defaultClause)
+                             .internalKind(),
+                     DomType::ScriptDefaultClause);
+            QCOMPARE(innerSwitch.field(Fields::caseBlock)
+                             .field(Fields::defaultClause)
+                             .field(Fields::statements)
+                             .index(0)
+                             .field(Fields::expression)
+                             .value()
+                             .toString(),
+                     u"none");
+
+            // case "dog"
+            DomItem caseDogBlock = firstSwitch.field(Fields::caseBlock)
+                                           .field(Fields::caseClauses)
+                                           .index(1)
+                                           .field(Fields::statements)
+                                           .index(0);
+            QVERIFY(caseDogBlock);
+            // Check if semantic scope is correctly created for the CaseClause
+            auto blockSemanticScope = caseDogBlock.semanticScope();
+            QVERIFY(blockSemanticScope);
+            QVERIFY(*blockSemanticScope);
+            QVERIFY(blockSemanticScope.value()->JSIdentifier(u"name"_s));
+            QVERIFY(blockSemanticScope.value()->JSIdentifier(u"another"_s));
+
+            // Default clause
+            DomItem defaultClause =
+                    firstSwitch.field(Fields::caseBlock).field(Fields::defaultClause);
+            QVERIFY(defaultClause);
+            QCOMPARE(defaultClause.internalKind(), DomType::ScriptDefaultClause);
+            QCOMPARE(defaultClause.field(Fields::statements).index(0).internalKind(),
+                     DomType::ScriptReturnStatement);
+            QCOMPARE(defaultClause.field(Fields::statements)
+                             .index(0)
+                             .field(Fields::expression)
+                             .internalKind(),
+                     DomType::ScriptLiteral);
+            QCOMPARE(defaultClause.field(Fields::statements)
+                             .index(0)
+                             .field(Fields::expression)
+                             .value()
+                             .toString(),
+                     u"monster");
+        }
+    }
+
 private:
     struct DomItemWithLocation
     {

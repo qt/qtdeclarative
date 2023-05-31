@@ -214,6 +214,11 @@ enum class DomType {
     ScriptElision,
     ScriptArrayEntry,
     ScriptPattern,
+    ScriptSwitchStatement,
+    ScriptCaseBlock,
+    ScriptCaseClauses,
+    ScriptCaseClause,
+    ScriptDefaultClause,
 
     ScriptElementStop, // marker to check if a DomType is a scriptelement or not
 };
