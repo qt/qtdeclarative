@@ -101,7 +101,8 @@ BindingPrivate::BindingPrivate(Binding *interface) : q_ptr{ interface } { }
 
 Binding::Binding(const Binding &other) : d_ptr{ new BindingPrivate{ this, *other.d_func() } } { }
 
-Binding::Binding(Binding &&other) : d_ptr{ new BindingPrivate{ this, *other.d_func() } } { }
+Binding::Binding(Binding &&other) noexcept
+    : d_ptr{ new BindingPrivate{ this, *other.d_func() } } { }
 
 Binding &Binding::operator=(const Binding &other)
 {
@@ -113,7 +114,7 @@ Binding &Binding::operator=(const Binding &other)
     return *this;
 }
 
-Binding &Binding::operator=(Binding &&other)
+Binding &Binding::operator=(Binding &&other) noexcept
 {
     if (*this == other)
         return *this;
@@ -334,7 +335,10 @@ Method::Method() : d_ptr{ new MethodPrivate{ this } } { }
 
 Method::Method(const Method &other) : d_ptr{ new MethodPrivate{ this, *other.d_func() } } { }
 
-Method::Method(Method &&other) : d_ptr{ new MethodPrivate{ this, std::move(*other.d_func()) } } { }
+Method::Method(Method &&other) noexcept
+    : d_ptr{ new MethodPrivate{ this, std::move(*other.d_func()) } }
+{
+}
 
 Method &Method::operator=(const Method &other)
 {
@@ -346,7 +350,7 @@ Method &Method::operator=(const Method &other)
     return *this;
 }
 
-Method &Method::operator=(Method &&other)
+Method &Method::operator=(Method &&other) noexcept
 {
     if (*this == other)
         return *this;
@@ -455,7 +459,7 @@ Property::Property() : d_ptr{ new PropertyPrivate{ this } } { }
 Property::Property(const Property &other)
     : d_ptr{ new PropertyPrivate{ this, *other.d_func() } } { }
 
-Property::Property(Property &&other)
+Property::Property(Property &&other) noexcept
     : d_ptr{ new PropertyPrivate{ this, std::move(*other.d_func()) } }
 {
 }
@@ -470,7 +474,7 @@ Property &Property::operator=(const Property &other)
     return *this;
 }
 
-Property &Property::operator=(Property &&other)
+Property &Property::operator=(Property &&other) noexcept
 {
     if (*this == other)
         return *this;
@@ -1507,7 +1511,7 @@ FixSuggestion::FixSuggestion(const FixSuggestion &other)
 {
 }
 
-FixSuggestion::FixSuggestion(FixSuggestion &&other)
+FixSuggestion::FixSuggestion(FixSuggestion &&other) noexcept
     : d_ptr{ new FixSuggestionPrivate{ this, std::move(*other.d_func()) } }
 {
 }
@@ -1521,7 +1525,7 @@ FixSuggestion &FixSuggestion::operator=(const FixSuggestion &other)
     return *this;
 }
 
-FixSuggestion &FixSuggestion::operator=(FixSuggestion &&other)
+FixSuggestion &FixSuggestion::operator=(FixSuggestion &&other) noexcept
 {
     if (*this == other)
         return *this;

@@ -48,9 +48,9 @@ public:
     LoggerCategory(QString name, QString settingsName, QString description, QtMsgType level,
                    bool ignored = false, bool isDefault = false);
     LoggerCategory(const LoggerCategory &);
-    LoggerCategory(LoggerCategory &&);
+    LoggerCategory(LoggerCategory &&) noexcept;
     LoggerCategory &operator=(const LoggerCategory &);
-    LoggerCategory &operator=(LoggerCategory &&);
+    LoggerCategory &operator=(LoggerCategory &&) noexcept;
     ~LoggerCategory();
 
     QString name() const;

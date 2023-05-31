@@ -28,7 +28,7 @@ LoggerCategory::LoggerCategory(const LoggerCategory &other)
 {
 }
 
-LoggerCategory::LoggerCategory(LoggerCategory &&) = default;
+LoggerCategory::LoggerCategory(LoggerCategory &&) noexcept = default;
 
 LoggerCategory &LoggerCategory::operator=(const LoggerCategory &other)
 {
@@ -36,7 +36,7 @@ LoggerCategory &LoggerCategory::operator=(const LoggerCategory &other)
     return *this;
 }
 
-LoggerCategory &LoggerCategory::operator=(LoggerCategory &&) = default;
+LoggerCategory &LoggerCategory::operator=(LoggerCategory &&) noexcept = default;
 
 LoggerCategory::~LoggerCategory() = default;
 

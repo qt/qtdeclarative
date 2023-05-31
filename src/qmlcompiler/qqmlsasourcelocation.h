@@ -26,13 +26,13 @@ public:
     explicit SourceLocation(quint32 offset = 0, quint32 length = 0, quint32 line = 0,
                             quint32 column = 0);
     SourceLocation(const SourceLocation &);
-    SourceLocation(SourceLocation &&other)
+    SourceLocation(SourceLocation &&other) noexcept
     {
         memcpy(m_data, other.m_data, sizeofSourceLocation);
         memset(other.m_data, 0, sizeofSourceLocation);
     }
     SourceLocation &operator=(const SourceLocation &);
-    SourceLocation &operator=(SourceLocation &&other)
+    SourceLocation &operator=(SourceLocation &&other) noexcept
     {
         memcpy(m_data, other.m_data, sizeofSourceLocation);
         memset(other.m_data, 0, sizeofSourceLocation);
@@ -73,7 +73,7 @@ private:
     static bool operatorEqualsImpl(const SourceLocation &, const SourceLocation &);
 
     static constexpr qsizetype sizeofSourceLocation = 4 * sizeof(quint32);
-    char m_data[sizeofSourceLocation] = {};
+    alignas(int) char m_data[sizeofSourceLocation] = {};
 };
 
 } // namespace QQmlSA

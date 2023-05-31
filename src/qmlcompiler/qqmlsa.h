@@ -70,9 +70,9 @@ public:
 
     Binding();
     Binding(const Binding &);
-    Binding(Binding &&);
+    Binding(Binding &&) noexcept;
     Binding &operator=(const Binding &);
-    Binding &operator=(Binding &&);
+    Binding &operator=(Binding &&) noexcept;
     ~Binding();
 
     Element groupType() const;
@@ -130,9 +130,9 @@ public:
 
     Method();
     Method(const Method &);
-    Method(Method &&);
+    Method(Method &&) noexcept;
     Method &operator=(const Method &);
-    Method &operator=(Method &&);
+    Method &operator=(Method &&) noexcept;
     ~Method();
 
     QString methodName() const;
@@ -160,9 +160,9 @@ class Q_QMLCOMPILER_EXPORT Property
 public:
     Property();
     Property(const Property &);
-    Property(Property &&);
+    Property(Property &&) noexcept;
     Property &operator=(const Property &);
-    Property &operator=(Property &&);
+    Property &operator=(Property &&) noexcept;
     ~Property();
 
     QString typeName() const;
@@ -192,13 +192,13 @@ public:
     Element();
     explicit Element(const QString &);
     Element(const Element &);
-    Element(Element &&other)
+    Element(Element &&other) noexcept
     {
         memcpy(m_data, other.m_data, sizeofElement);
         memset(other.m_data, 0, sizeofElement);
     }
     Element &operator=(const Element &);
-    Element &operator=(Element &&other)
+    Element &operator=(Element &&other) noexcept
     {
         memcpy(m_data, other.m_data, sizeofElement);
         memset(other.m_data, 0, sizeofElement);
@@ -262,7 +262,7 @@ private:
     static qsizetype qHashImpl(const Element &key, qsizetype seed) noexcept;
 
     static constexpr qsizetype sizeofElement = 2 * sizeof(QSharedPointer<int>);
-    char m_data[sizeofElement];
+    alignas(QSharedPointer<int>) char m_data[sizeofElement];
 };
 
 class Q_QMLCOMPILER_EXPORT GenericPass
@@ -386,9 +386,9 @@ public:
     FixSuggestion(const QString &fixDescription, const QQmlSA::SourceLocation &location,
                   const QString &replacement = QString());
     FixSuggestion(const FixSuggestion &);
-    FixSuggestion(FixSuggestion &&);
+    FixSuggestion(FixSuggestion &&) noexcept;
     FixSuggestion &operator=(const FixSuggestion &);
-    FixSuggestion &operator=(FixSuggestion &&);
+    FixSuggestion &operator=(FixSuggestion &&) noexcept;
     ~FixSuggestion();
 
     QString fixDescription() const;
