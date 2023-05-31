@@ -123,6 +123,8 @@ To find out more about using the QML language, see the \l{Qt QML} module documen
     \li \l {Qt Quick QML Types}
            - a list of QML types provided by the \c{QtQuick} import
         \list
+            \li \l {Qt Quick Effects QML Types} {Effects}
+                   - provides graphical effects to apply to Qt Quick items
             \li \l {Qt Quick Local Storage QML Types} {Local Storage}
                    - a submodule containing a JavaScript interface for an SQLite
                    database

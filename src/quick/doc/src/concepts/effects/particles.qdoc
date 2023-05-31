@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
+    \keyword Qt Quick Particles
     \qmlmodule QtQuick.Particles
     \title Qt Quick Particles QML Types
     \ingroup qmlmodules

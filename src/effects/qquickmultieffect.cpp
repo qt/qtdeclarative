@@ -11,6 +11,7 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
 
 /*!
+    \keyword Qt Quick Effects
     \qmlmodule QtQuick.Effects
     \title Qt Quick Effects QML Types
     \ingroup qmlmodules
