@@ -360,10 +360,25 @@ private:
         outputConfig.insert("width", geometry.width());
         outputConfig.insert("height", geometry.height());
 
-        outputConfig.insert("leftOffset", stretch.left());
-        outputConfig.insert("topOffset", stretch.top());
-        outputConfig.insert("rightOffset", stretch.right());
-        outputConfig.insert("bottomOffset", stretch.bottom());
+        const int halfWidth = geometry.width() / 2;
+        const int halfHeight = geometry.height() / 2;
+
+        auto leftOffset = qMin(stretch.left(), halfWidth);
+        auto rightOffset = qMin(stretch.right(), halfWidth);
+        auto topOffset = qMin(stretch.top(), halfHeight);
+        auto bottomOffset = qMin(stretch.bottom(), halfHeight);
+
+        // workaround to make sure that there is at least a 1px
+        // middle area to stretch in case of fully-rounded corners
+        if ((bottomOffset + topOffset) == geometry.height())
+            bottomOffset--;
+        if ((rightOffset + leftOffset) == geometry.width())
+            rightOffset--;
+
+        outputConfig.insert("leftOffset", leftOffset);
+        outputConfig.insert("topOffset", topOffset);
+        outputConfig.insert("rightOffset", rightOffset);
+        outputConfig.insert("bottomOffset", bottomOffset);
 
         // Todo: resolve insets for rectangles with drop shadow
         // config.insert("leftInset", 0);
