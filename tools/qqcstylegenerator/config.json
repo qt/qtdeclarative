@@ -7,7 +7,8 @@
         "component set": "ButtonTemplate",
         "atoms": [
             {"atom": "background", "figmaPath": "background"},
-            {"atom": "contentItem", "figmaPath": "contentItem", "export": "layout"}
+            {"atom": "contentItem", "figmaPath": "contentItem", "export": "layout"},
+            {"atom": "label", "figmaPath": "contentItem, label", "export": "text"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -26,7 +27,7 @@
         "contents": ["indicator", "label"],
         "atoms": [
             {"atom": "background", "figmaPath": "CheckBoxBackground, background"},
-            {"atom": "label", "figmaPath": "ContentItem, Label", "export": "geometry"},
+            {"atom": "label", "figmaPath": "ContentItem, Label", "export": ["geometry", "text"]},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
             {"atom": "indicator", "figmaPath": "CheckBoxIndicator, indicator"},
             {"atom": "indicator-background", "figmaPath": "CheckBoxIndicator, indicatorBackground"}
@@ -53,7 +54,7 @@
         "contents": ["indicator", "label"],
         "atoms": [
             {"atom": "background", "figmaPath": "RadioButtonBackground, background"},
-            {"atom": "label", "figmaPath": "ContentItem, Label", "export": "geometry"},
+            {"atom": "label", "figmaPath": "ContentItem, Label", "export": ["geometry", "text"]},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
             {"atom": "indicator", "figmaPath": "RadioButtonIndicator, indicator"},
             {"atom": "indicator-background", "figmaPath": "RadioButtonIndicator, indicatorBackground"}
@@ -98,7 +99,7 @@
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
             {"atom": "indicator-up", "figmaPath": "ContentItem, UpIndicator"},
             {"atom": "indicator-down", "figmaPath": "ContentItem, DownIndicator"},
-            {"atom": "textInput", "figmaPath": "ContentItem, textInput", "export": "geometry"}
+            {"atom": "textInput", "figmaPath": "ContentItem, textInput", "export": ["geometry", "text"]}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -119,7 +120,7 @@
             {"atom": "handle", "figmaPath": "ContentItem, SwitchHandle"},
             {"atom": "handle-background", "figmaPath": "ContentItem, HandleBackground, background"},
             {"atom": "handle-contentItem", "figmaPath": "ContentItem, HandleTemplate, ContentItem", "export": "layout"},
-            {"atom": "label", "figmaPath": "ContentItem, Label", "export": "geometry"}
+            {"atom": "label", "figmaPath": "ContentItem, Label", "export": ["geometry", "text"]}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -137,7 +138,8 @@
         "component set": "TextAreaTemplate",
         "atoms": [
             {"atom": "background", "figmaPath": "TextAreaBackground, background"},
-            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "label", "figmaPath": "ContentItem, Label", "export": "text"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -153,7 +155,8 @@
         "component set": "TextFieldTemplate",
         "atoms": [
             {"atom": "background", "figmaPath": "TextFieldBackground, background"},
-            {"atom": "contentItem", "figmaPath": "contentItem", "export": "layout"}
+            {"atom": "contentItem", "figmaPath": "contentItem", "export": "layout"},
+            {"atom": "label", "figmaPath": "ContentItem, Label", "export": "text"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},

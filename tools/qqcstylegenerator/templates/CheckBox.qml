@@ -58,7 +58,8 @@ T.CheckBox {
         font: control.font
         color: control.palette.windowText
         elide: Text.ElideRight
-        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: control.config.label.textHAlignment
+        verticalAlignment: control.config.label.textVAlignment
     }
 
     background: BorderImage {

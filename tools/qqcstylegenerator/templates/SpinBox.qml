@@ -81,8 +81,8 @@ T.SpinBox {
         color: control.palette.text
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
-        horizontalAlignment: Qt.AlignHCenter
-        verticalAlignment: Qt.AlignVCenter
+        horizontalAlignment: control.config.textInput.textHAlignment
+        verticalAlignment: control.config.textInput.textVAlignment
 
         readOnly: !control.editable
         validator: control.validator

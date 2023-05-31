@@ -41,7 +41,7 @@ T.Button {
         spacing: control.spacing
         mirrored: control.mirrored
         display: control.display
-
+        alignment: control.config.label.textVAlignment | control.config.label.textHAlignment
         icon: control.icon
         text: control.text
         font: control.font

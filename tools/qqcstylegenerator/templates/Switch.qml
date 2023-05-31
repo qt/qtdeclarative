@@ -79,8 +79,8 @@ T.Switch {
         font: control.font
         color: control.palette.windowText
         elide: Text.ElideRight
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: control.mirroredIndicator ? Text.AlignRight : Text.AlingLeft
+        horizontalAlignment: control.config.label.textHAlignment
+        verticalAlignment: control.config.label.textVAlignment
     }
 
     background: BorderImage {

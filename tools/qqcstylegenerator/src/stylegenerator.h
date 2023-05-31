@@ -293,6 +293,8 @@ private:
                         exportImage(figmaAtomObj, outputAtomConfig);
                     else if (atomExport == "json")
                         exportJson(figmaAtomObj, outputAtomConfig);
+                    else if (atomExport == "text")
+                        exportText(figmaAtomObj, outputAtomConfig);
                     else
                         throw std::runtime_error("Unknown option: '" + atomExport.toStdString() + "'");
                 } catch (std::exception &e) {
@@ -414,6 +416,31 @@ private:
         const QString fileName = "json/" + name + ".json";
         debug("export json: " + m_currentAtomInfo + "; filename: " + fileName);
         createTextFileInStylefolder(fileName, QJsonDocument(atom).toJson());
+    }
+
+    void exportText(const QJsonObject &atom, QJsonObject &outputConfig)
+    {
+        const QJsonObject style = getObject("style", atom);
+        const QString figmaAlignmentH = style["textAlignHorizontal"].toString();
+        const QString figmaAlignmentV = style["textAlignVertical"].toString();
+
+        Qt::Alignment verticalAlignment = Qt::AlignVCenter;
+        Qt::Alignment horizontalAlignment = Qt::AlignHCenter;
+
+        if (figmaAlignmentH == "LEFT")
+            horizontalAlignment = Qt::AlignLeft;
+        else if (figmaAlignmentH == "RIGHT")
+            horizontalAlignment = Qt::AlignRight;
+
+        if (figmaAlignmentV == "TOP")
+            verticalAlignment = Qt::AlignTop;
+        else if (figmaAlignmentV == "BOTTOM")
+            verticalAlignment = Qt::AlignBottom;
+
+        outputConfig.insert("textHAlignment", int(horizontalAlignment));
+        outputConfig.insert("textVAlignment", int(verticalAlignment));
+        outputConfig.insert("fontFamily", style["fontFamily"]);
+        outputConfig.insert("fontSize", style["fontSize"]);
     }
 
     void exportLayout(const QJsonObject &atom , QJsonObject &outputConfig)

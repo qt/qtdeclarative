@@ -26,7 +26,8 @@ T.TextArea {
     color: control.palette.text
     selectionColor: control.palette.highlight
     selectedTextColor: control.palette.highlightedText
-    verticalAlignment: Qt.AlignVCenter
+    verticalAlignment: control.config.label.textVAlignment
+    horizontalAlignment: control.config.label.textHAlignment
     placeholderTextColor: control.palette.placeholderText
 
     readonly property string currentState: [
@@ -47,6 +48,7 @@ T.TextArea {
         font: control.font
         color: control.placeholderTextColor
         verticalAlignment: control.verticalAlignment
+        horizontalAlignment: control.horizontalAlignment
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         elide: Text.ElideRight
         renderType: control.renderType
