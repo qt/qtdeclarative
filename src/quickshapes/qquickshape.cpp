@@ -1058,7 +1058,8 @@ QSGNode *QQuickShape::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
             delete node;
             node = d->createNode();
         }
-        d->renderer->updateNode();
+        if (d->renderer)
+            d->renderer->updateNode();
     }
     return node;
 }
@@ -1126,7 +1127,7 @@ QSGNode *QQuickShapePrivate::createNode()
 {
     Q_Q(QQuickShape);
     QSGNode *node = nullptr;
-    if (!q->window())
+    if (!q->window() || !renderer)
         return node;
     QSGRendererInterface *ri = q->window()->rendererInterface();
     if (!ri)

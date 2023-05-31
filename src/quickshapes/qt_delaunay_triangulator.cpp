@@ -528,6 +528,9 @@ QList<QtPathTriangle> qtDelaunayTriangulator(const QList<QtPathVertex> &_vertice
     static bool normalizeCoordinates = qEnvironmentVariableIntValue("QT_QUICKSHAPES_NORMALIZE_COORDINATES") != 0;
     static bool validateResults = qEnvironmentVariableIntValue("QT_QUICKSHAPES_VALIDATE_RESULTS");
 
+    if (_vertices.isEmpty())
+        return {};
+
     QList<QtPathVertex> vertices;
     if (Q_UNLIKELY(normalizeCoordinates)) {
         vertices.reserve(_vertices.size());
