@@ -48,6 +48,19 @@
         ]
     },
     {
+        "name": "Frame",
+        "copy": ":/Frame.qml",
+        "component set": "FrameTemplate",
+        "atoms": [
+            {"atom": "background", "figmaPath": "FrameBackground, background"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "disabled", "figmaState": "disabled"}
+        ]
+    },
+    {
         "name": "RadioButton",
         "copy": ":/RadioButton.qml",
         "component set": "RadioButtonTemplate",
