@@ -964,7 +964,7 @@ QString GenericPass::sourceCode(QQmlSA::SourceLocation location)
  */
 
 /*!
-    Constructs a pass manager given an import visitor and a type resolver.
+    Constructs a pass manager given an import \a visitor and a type \a resolver.
  */
 QQmlSA::PassManager::PassManager(QQmlJSImportVisitor *visitor, QQmlJSTypeResolver *resolver)
     : d_ptr{ new PassManagerPrivate{ this, visitor, resolver } }
@@ -1176,7 +1176,7 @@ bool PassManager::isCategoryEnabled(QQmlJS::LoggerWarningId category) const
 }
 
 /*!
-    Sets whether the given \a category of warnings should be enabled.
+    Sets whether the given \a category of warnings should be \a enabled.
  */
 void PassManager::setCategoryEnabled(QQmlJS::LoggerWarningId category, bool enabled)
 {
@@ -1241,7 +1241,7 @@ void DebugElementPass::run(const Element &element) {
 
 /*!
     \class QQmlSA::LintPlugin
-    \inmocule QtQmlCompiler
+    \inmodule QtQmlCompiler
 
     \brief Base class for all static analysis plugins.
  */
@@ -1249,7 +1249,7 @@ void DebugElementPass::run(const Element &element) {
 /*!
     \fn void QQmlSA::LintPlugin::registerPasses(PassManager *manager, const Element &rootElement)
 
-    Adds a pass manager that will be executed on \a rootElement.
+    Adds a pass \a manager that will be executed on \a rootElement.
  */
 
 /*!
@@ -1262,12 +1262,12 @@ void DebugElementPass::run(const Element &element) {
 /*!
     \fn void QQmlSA::ElementPass::run(const Element &element)
 
-    Exeecutes if \c shouldRun() returns \c true. Performs the real computation
+    Executes if \c shouldRun() returns \c true. Performs the real computation
     of the pass on \a element.
  */
 
 /*!
-    Determines if the \c run() function should be executed on the given \a element
+    Returns \c true if the \c run() function should be executed on the given \a element.
  */
 bool ElementPass::shouldRun(const Element &element)
 {
@@ -1284,7 +1284,6 @@ bool ElementPass::shouldRun(const Element &element)
 
 
 PropertyPass::PropertyPass(PassManager *manager) : GenericPass(manager) { }
-
 /*!
     Executes whenever a property gets bound to a value.
 

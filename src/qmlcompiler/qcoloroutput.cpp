@@ -58,7 +58,7 @@ private:
     bool                        m_coloringEnabled = false;
     bool                        m_silent = false;
 
-    /*!
+    /*
      Returns true if it's suitable to send colored output to \c stderr.
      */
     inline bool isColoringPossible() const
@@ -109,18 +109,18 @@ const char *const QColorOutputPrivate::backgrounds[] =
 };
 
 /*!
-  \class ColorOutput
+  \class QColorOutput
   \nonreentrant
   \brief Outputs colored messages to \c stderr.
   \internal
 
-  ColorOutput is a convenience class for outputting messages to \c
-  stderr using color escape codes, as mandated in ECMA-48. ColorOutput
+  QColorOutput is a convenience class for outputting messages to \c
+  stderr using color escape codes, as mandated in ECMA-48. QColorOutput
   will only color output when it is detected to be suitable. For
   instance, if \c stderr is detected to be attached to a file instead
   of a TTY, no coloring will be done.
 
-  ColorOutput does its best attempt. but it is generally undefined
+  QColorOutput does its best attempt. but it is generally undefined
   what coloring or effect the various coloring flags has. It depends
   strongly on what terminal software that is being used.
 
@@ -129,14 +129,14 @@ const char *const QColorOutputPrivate::backgrounds[] =
   escaped the backslash.  That's why we below use characters with
   value 0x1B.
 
-  It can be convenient to subclass ColorOutput with a private scope,
+  It can be convenient to subclass QColorOutput with a private scope,
   such that the functions are directly available in the class using
   it.
 
   \section1 Usage
 
   To output messages, call write() or writeUncolored(). write() takes
-  as second argument an integer, which ColorOutput uses as a lookup
+  as second argument an integer, which QColorOutput uses as a lookup
   key to find the color it should color the text in. The mapping from
   keys to colors is done using insertMapping(). Typically this is used
   by having enums for the various kinds of messages, which
@@ -149,9 +149,9 @@ const char *const QColorOutputPrivate::backgrounds[] =
     Important
   };
 
-  ColorOutput output;
-  output.insertMapping(Error, ColorOutput::RedForeground);
-  output.insertMapping(Import, ColorOutput::BlueForeground);
+  QColorOutput output;
+  output.insertMapping(Error, QColorOutput::RedForeground);
+  output.insertMapping(Import, QColorOutput::BlueForeground);
 
   output.write("This is important", Important);
   output.write("Jack, I'm only the selected official!", Error);
@@ -165,7 +165,8 @@ const char *const QColorOutputPrivate::backgrounds[] =
  */
 
 /*!
-  \enum ColorOutput::ColorCodeComponent
+  \internal
+  \enum QColorOutput::ColorCodeComponent
   \value BlackForeground
   \value BlueForeground
   \value GreenForeground
@@ -190,13 +191,14 @@ const char *const QColorOutputPrivate::backgrounds[] =
   \value PurpleBackground
   \value BrownBackground
 
-  \value DefaultColor ColorOutput performs no coloring. This typically
+  \value DefaultColor QColorOutput performs no coloring. This typically
                      means black on white or white on black, depending
                      on the settings of the user's terminal.
  */
 
 /*!
-  Constructs a ColorOutput instance, ready for use.
+  \internal
+  Constructs a QColorOutput instance, ready for use.
  */
 QColorOutput::QColorOutput() : d(new QColorOutputPrivate) {}
 
@@ -207,11 +209,12 @@ bool QColorOutput::isSilent() const { return d->isSilent(); }
 void QColorOutput::setSilent(bool silent) { d->setSilent(silent); }
 
 /*!
+ \internal
  Sends \a message to \c stderr, using the color looked up in the color mapping using \a colorID.
 
  If \a color isn't available in the color mapping, result and behavior is undefined.
 
- If \a colorID is 0, which is the default value, the previously used coloring is used. ColorOutput
+ If \a colorID is 0, which is the default value, the previously used coloring is used. QColorOutput
  is initialized to not color at all.
 
  If \a message is empty, effects are undefined.
@@ -241,10 +244,11 @@ void QColorOutput::writePrefixedMessage(const QString &message, QtMsgType type,
 }
 
 /*!
+ \internal
  Writes \a message to \c stderr as if for instance
  QTextStream would have been used, and adds a line ending at the end.
 
- This function can be practical to use such that one can use ColorOutput for all forms of writing.
+ This function can be practical to use such that one can use QColorOutput for all forms of writing.
  */
 void QColorOutput::writeUncolored(const QString &message)
 {
@@ -253,6 +257,7 @@ void QColorOutput::writeUncolored(const QString &message)
 }
 
 /*!
+ \internal
  Treats \a message and \a colorID identically to write(), but instead of writing
  \a message to \c stderr, it is prepared for being written to \c stderr, but is then
  returned.
@@ -309,7 +314,8 @@ QString QColorOutput::colorify(const QStringView message, int colorID) const
 }
 
 /*!
-  Adds a color mapping from \a colorID to \a colorCode, for this ColorOutput instance.
+  \internal
+  Adds a color mapping from \a colorID to \a colorCode, for this QColorOutput instance.
  */
 void QColorOutput::insertMapping(int colorID, const ColorCode colorCode)
 {
