@@ -357,6 +357,11 @@ void tst_qqmlvaluetypeproviders::structured()
 
     QMetaObject::invokeMethod(o.data(), "changeBarren");
     QCOMPARE(o->property("barren").value<BarrenValueType>(), BarrenValueType(QString()));
+
+    QCOMPARE(o->property("fromObject").value<ConstructibleValueType>(),
+             ConstructibleValueType(nullptr));
+    QCOMPARE(o->property("aVariant").value<ConstructibleValueType>(),
+             ConstructibleValueType(nullptr));
 }
 
 void tst_qqmlvaluetypeproviders::recursive()

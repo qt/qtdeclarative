@@ -33,6 +33,7 @@ struct ConstructibleValueType
 public:
     ConstructibleValueType() = default;
     Q_INVOKABLE ConstructibleValueType(int foo) : m_foo(foo) {}
+    Q_INVOKABLE ConstructibleValueType(QObject *) : m_foo(67) {}
 
     int foo() const { return m_foo; }
 
@@ -348,6 +349,11 @@ public:
             return;
         m_barren = newBarren;
         emit barrenChanged();
+    }
+
+    Q_INVOKABLE void acceptConstructible(const ConstructibleValueType &a)
+    {
+        setAVariant(QVariant::fromValue(a));
     }
 
 signals:

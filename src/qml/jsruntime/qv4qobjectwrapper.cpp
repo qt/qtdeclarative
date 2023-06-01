@@ -2187,37 +2187,10 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
     }
 
     // Convert via QVariant through the QML engine.
-    qvariantPtr = new (&allocData) QVariant();
+    qvariantPtr = new (&allocData) QVariant(metaType);
     type = QVariantWrappedType;
 
-    QVariant v = ExecutionEngine::toVariant(value, metaType);
-
-    if (v.metaType() == metaType) {
-        *qvariantPtr = std::move(v);
-        return true;
-    }
-
-    if (v.canConvert(metaType)) {
-        *qvariantPtr = std::move(v);
-        qvariantPtr->convert(metaType);
-        return true;
-    }
-
-    const QQmlMetaObject mo = QQmlMetaType::rawMetaObjectForType(metaType);
-    if (!mo.isNull() && v.metaType().flags().testFlag(QMetaType::PointerToQObject)) {
-        QObject *obj = QQmlMetaType::toQObject(v);
-
-        if (obj != nullptr && !QQmlMetaObject::canConvert(obj, mo)) {
-            *qvariantPtr = QVariant(metaType, nullptr);
-            return false;
-        }
-
-        *qvariantPtr = QVariant(metaType, &obj);
-        return true;
-    }
-
-    *qvariantPtr = QVariant(metaType, (void *)nullptr);
-    return false;
+    return ExecutionEngine::metaTypeFromJS(value, metaType, qvariantPtr->data());
 }
 
 ReturnedValue CallArgument::toValue(ExecutionEngine *engine)
