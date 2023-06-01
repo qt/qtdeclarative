@@ -22,7 +22,10 @@ int main(int argc, char **argv){
         {{"v", "verbose"},
             QCoreApplication::translate("main", "Print everything that gets generated.")},
         {{"s", "silent"},
-            QCoreApplication::translate("main", "Don't show progress")}
+            QCoreApplication::translate("main", "Don't show progress")},
+        {{"g", "generate"},
+            QCoreApplication::translate("main", "Generate one control (for debugging)"),
+            QCoreApplication::translate("main", "The control to generate")}
     });
     parser.addPositionalArgument("figma_file_id",
         QCoreApplication::translate("main", "The figma file ID to create a style from."));
@@ -40,6 +43,7 @@ int main(int argc, char **argv){
     const QString fileId = parser.positionalArguments().first();
     const QString token = parser.value("token");
     const QString destinationPath = parser.value("directory");
+    const QString generate = parser.value("generate");
     const bool verbose = parser.isSet("verbose");
     const bool silent = parser.isSet("silent");
 
@@ -49,7 +53,7 @@ int main(int argc, char **argv){
     }
 
     try {
-        StyleGenerator generator(fileId, token, destinationPath, verbose, silent);
+        StyleGenerator generator(fileId, token, destinationPath, verbose, silent, generate);
         generator.generateStyle();
     } catch (std::exception &e) {
         qWarning() << "Error:" << e.what();

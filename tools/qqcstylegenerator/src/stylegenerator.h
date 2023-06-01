@@ -20,12 +20,13 @@ class StyleGenerator {
 
 public:
     StyleGenerator(const QString &fileId, const QString &token
-        , const QString &targetPath, bool verbose, bool silent)
+        , const QString &targetPath, bool verbose, bool silent, const QString &generate)
         : m_fileId(fileId)
         , m_token(token)
         , m_targetPath(targetPath)
         , m_verbose(verbose)
         , m_silent(silent)
+        , m_controlToGenerate(generate)
     {
     }
 
@@ -208,6 +209,9 @@ private:
         for (const auto controlValue : controlsArray) {
             const auto controlObj = controlValue.toObject();
             const QString name = getString("name", controlObj);
+            if (!m_controlToGenerate.isEmpty() && name != m_controlToGenerate)
+                continue;
+
             try {
                 generateControl(controlObj);
             } catch (std::exception &e) {
@@ -704,6 +708,7 @@ private:
     QJsonObject m_outputConfig;
     QStringList m_qmlDirControls;
     QMap<QString, QString> m_imagesToDownload;
+    QString m_controlToGenerate;
 
     QString m_currentAtomInfo;
 
