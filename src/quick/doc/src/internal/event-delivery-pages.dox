@@ -39,4 +39,5 @@
     Here are some "ideal" scenarios:
 
     - \subpage qq-ideal-pointer-event-delivery-single-drag
+    - \subpage qq-ideal-pointer-event-delivery-parallel-drags
 */

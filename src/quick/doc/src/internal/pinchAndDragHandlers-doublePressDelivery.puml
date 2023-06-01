@@ -1,0 +1,52 @@
+\startuml
+    object "QGuiApplication" as app
+    object "N-trig DuoSense" as tscr <<TouchScreen>>
+    tscr .u. app
+    object QTouchEvent
+    object "QEventPoint0" as dev17qep0
+    tscr o-u-o dev17qep0
+    QTouchEvent o-- dev17qep0
+    object "QEventPoint1" as dev17qep1
+    tscr o-u-o dev17qep1
+    QTouchEvent o-- dev17qep1
+    object "QQuickWindow" as win <<window>>
+    diamond evt
+    app -r- evt
+    evt -r- win : ① event() >
+    evt -- QTouchEvent
+    object "ℚRootItem" as llmlnfagjgpg
+
+    object "ℚRectangle" as llmlnfaggdpg
+    llmlnfagjgpg o-[#lightgrey]- llmlnfaggdpg
+
+    object "ℚPinchHandler" as ph <<handler>>
+    llmlnfaggdpg o-- ph
+    object "ℚRectangle" as nfpoeoggibig
+    llmlnfaggdpg o-[#lightgrey]- nfpoeoggibig
+
+    object "ℚDragHandler" as dh1 <<handler>>
+    nfpoeoggibig o-- dh1
+    object "ℚRectangle" as llmlnfnghajg
+    llmlnfaggdpg o-[#lightgrey]- llmlnfnghajg
+
+    object "ℚDragHandler" as dh2 <<handler>>
+    llmlnfnghajg o-- dh2
+    object "ℚRectangle" as llmlnfmoohbg
+    llmlnfaggdpg o-[#lightgrey]- llmlnfmoohbg
+
+    object "ℚDragHandler" as dh3 <<handler>>
+    llmlnfmoohbg o-- dh3
+    win o-- llmlnfagjgpg
+    object "ℚDeliveryAgent" as da
+    llmlnfagjgpg o-- da
+    win o-- da : ↓ ② event(QTouchEvent *)
+    da ..> da : ③ deliverPointerEvent()\n④ deliverPressOrReleaseEvent()\n⑤ pointerTargets()\n⑩ deliverMatchingPointsToItem()
+    da ..> ph : ⑥ <color:green>wantsEventPoint()
+    da ..> dh1 : ⑦ <color:green>wantsEventPoint()
+    da ..> dh2 : ⑧ <color:green>wantsEventPoint()
+    da ..> dh3 : ⑨ <color:red>wantsEventPoint()
+    da ..> nfpoeoggibig : ⑪ handlePointerEvent()
+    dh1 ..> dh1 : ⑫ handlePointerEventImpl()\n⑬ setPassiveGrab()
+    da ..> llmlnfnghajg : ⑭ handlePointerEvent()
+    dh2 ..> dh2 : ⑮ handlePointerEventImpl()\n⑯ setPassiveGrab()
+\enduml
