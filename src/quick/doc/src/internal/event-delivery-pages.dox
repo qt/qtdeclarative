@@ -40,4 +40,5 @@
 
     - \subpage qq-ideal-pointer-event-delivery-single-drag
     - \subpage qq-ideal-pointer-event-delivery-parallel-drags
+    - \subpage qq-ideal-pointer-event-delivery-pinch
 */

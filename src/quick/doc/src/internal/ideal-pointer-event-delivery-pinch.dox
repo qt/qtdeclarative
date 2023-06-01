@@ -1,0 +1,94 @@
+/*! \internal
+    \page qq-ideal-pointer-event-delivery-pinch Pinch on a touchscreen
+    \tableofcontents
+
+    In \ref qq-ideal-pointer-event-delivery-single-drag we began with a detailed
+    tour through the event delivery logic while one Rectangle is being dragged
+    on a touchscreen with one finger.  In \ref qq-ideal-pointer-event-delivery-parallel-drags
+    we looked at delivery of two touchpoints to drag two Rectangles. Now let's
+    look at using two touchpoints to activate a PinchHandler on a parent Rectangle.
+
+    \snippet pointerHandlers/pinchAndDragHandlers.qml entire
+
+    \image html pinchAndDragHandlers-pinch.png "pinch gesture on a touchscreen"
+
+    \section qq-ideal-pointer-event-delivery-pinch-ts Pinch gesture on touchscreen
+
+    As we saw, it's possible for the user to drag two DragHandlers with two fingers.
+    It's also possible to execute the pinch gesture with the same two fingers
+    in slightly different positions. Qt Quick acts like a distributed gesture
+    recognizer when delivering multi-touch events: each pointer handler only
+    tries to recognize one kind of gesture, but now let's look at a somewhat
+    conflicting situation to see how the gesture gets disambiguated.
+
+    Let's modify the scenario from \ref qq-ideal-pointer-event-delivery-parallel-drags :
+    First let's change the code:
+    ```
+    grabPermissions: PointerHandler.CanTakeOverFromAnything
+    ```
+    The user places one finger on one of the small Rectangles, and one on the
+    larger outer rectangle. One DragHandler and the PinchHandler each take
+    passive grabs. Now when the user begins dragging, it may happen that the
+    DragHandler is activated first; but because of the modified \c grabPermissions
+    we expect that the PinchHandler can take over the exclusive grab on both
+    touchpoints, as soon as both fingers have moved farther than the drag threshold.
+    How does this look in practice?
+
+    \startuml
+    !include pinchRatherThanDrag.puml
+    \enduml
+
+    ① A QTouchEvent arrives, holding two QEventPoints, and we have to decide
+    which items and handlers we're going to visit. QQuickWindow::event()
+    dispatches to ② QQuickDeliveryAgent::event().
+    QQuickDeliveryAgentPrivate::deliverPointerEvent() calls
+    ③ deliverPointerEvent() which calls ④ deliverUpdatedPoints() which calls
+    ⑤ deliverToPassiveGrabbers(). The two passive grabbers are the DragHandler
+    and the PinchHandler. When ⑥ handlePointerEvent() is called on the
+    PinchHandler, wantsPointerEvent() is called to precheck eligibility, and
+    returns \c true; then we proceed to ⑧ handlePointerEventImpl(), where the
+    PinchHandler figures out that it needs to take responsibility for handling
+    the now-valid pinch gesture from now on, to the exclusion of other
+    gestures. It calls ⑨ grabPoints(), which calls setExclusiveGrab(). That
+    function needs to negotiate for permission first. It calls ⑩ canGrab()
+    which calls approveGrabTransition() which actually checks the \c
+    grabPermissions on the PinchHandler and also the relevant permissions on
+    the previous grabber, if any. (In our case, the DragHandler's \c
+    grabPermissions are relevant if DragHandler already had the exclusive grab.
+    But if the grabber was an Item, it would check
+    QQuickItem::keepTouchGrab().)
+
+    The permissions on both the old grabber and the proposed grabber allow the
+    takeover, so the negotiation is a success, and the PinchHandler proceeds to
+    call QTouchEvent::setExclusiveGrabber(). That calls
+    QPointingDevice::setExclusiveGrabber() on the touchscreen device, which
+    emits the grabChanged() signal. QQuickDeliveryAgent::onGrabChanged() is
+    connected to that signal, and dispatches to the onGrabChanged() functions
+    of two handlers that are involved in the grab transition: first, the
+    DragHandler is told that it is losing its grab, so it calls
+    setActive(false) on itself. (This is an asymmetric aspect of the
+    architecture: it's useful that the base class implementation
+    QQuickPointerHandler::onGrabChanged() deactivates any handler that is
+    losing its grab, because so far it's an invariant property that it should
+    always be done, so it might as well be consistently done in one place in
+    the code. But handlers need to decide for themselves when to activate: they
+    all have different conditions that must be satisfied to become active.)
+    Then the PinchHandler is told that it is acquiring the exclusive grab.
+
+    QQuickPinchHandler::handlePointerEventImpl() calls setActive(true) on
+    itself, then setActiveScale() and setActiveRotation(). Then it manipulates
+    the target Item, which is our root Rectangle, according to what the pinch
+    gesture is indicating that the user wants: it can be scaled, rotated and
+    moved. On a touchscreen, the user is allowed to move the Rectangle by
+    dragging two fingers while also scaling and rotating it; but on a macOS
+    trackpad that's not allowed. In either case though, the Rectangle's
+    position changes anyway, because we want the end result to be the same as
+    if the QML code had set the \c scale, \c rotation, \c x and \c y properties
+    separately. Changing the \c scale and \rotation usually requires changing
+    the position to compensate.
+
+    In general, handlers should not call QQuickItem setters directly: they
+    should use QMetaProperty. This is because QML allows the use of
+    property-value interceptors such as Behavior and BoundaryRule. Those are
+    bypassed and cannot react when C++ code calls setters directly.
+*/

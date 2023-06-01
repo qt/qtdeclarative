@@ -110,5 +110,7 @@
 
     However if you drag two fingers on the root \c Rectangle, outside the
     smaller Rectangles that have DragHandlers, pinching works, because the
-    \c PinchHandler is the only candidate to handle those points.
+    \c PinchHandler is the only candidate to handle those points. This is
+    explained in the next chapter:
+    \ref qq-ideal-pointer-event-delivery-pinch
 */
