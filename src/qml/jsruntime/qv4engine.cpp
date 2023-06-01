@@ -2517,6 +2517,9 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
     case QMetaType::UChar:
         *reinterpret_cast<unsigned char*>(data) = (unsigned char)(value.toInt32());
         return true;
+    case QMetaType::SChar:
+        *reinterpret_cast<signed char*>(data) = (signed char)(value.toInt32());
+        return true;
     case QMetaType::QChar:
         if (String *s = value.stringValue()) {
             QString str = s->toQString();
