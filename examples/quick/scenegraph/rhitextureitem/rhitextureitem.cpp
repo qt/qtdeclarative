@@ -4,12 +4,14 @@
 #include "rhitextureitem.h"
 #include <QFile>
 
+//! [nodector]
 RhiItemNode::RhiItemNode(RhiItem *item)
     : m_item(item)
 {
     m_window = m_item->window();
     connect(m_window, &QQuickWindow::beforeRendering, this, &RhiItemNode::render,
             Qt::DirectConnection);
+//! [nodector]
     connect(m_window, &QQuickWindow::screenChanged, this, [this]() {
         if (m_window->effectiveDevicePixelRatio() != m_dpr)
             m_item->update();
@@ -21,6 +23,7 @@ QSGTexture *RhiItemNode::texture() const
     return m_sgTexture.get();
 }
 
+//! [nodesync]
 void RhiItemNode::sync()
 {
     if (!m_rhi) {
@@ -56,7 +59,9 @@ void RhiItemNode::sync()
 
     m_renderer->synchronize(m_item);
 }
+//! [nodesync]
 
+//! [noderender]
 void RhiItemNode::render()
 {
     // called before Qt Quick starts recording its main render pass
@@ -86,6 +91,7 @@ void RhiItemNode::render()
     markDirty(QSGNode::DirtyMaterial);
     emit textureChanged();
 }
+//! [noderender]
 
 void RhiItemNode::scheduleUpdate()
 {
@@ -213,6 +219,7 @@ static QShader getShader(const QString &name)
     return QShader();
 }
 
+//! [exampleinit]
 void ExampleRhiItemRenderer::initialize(QRhi *rhi, QRhiTexture *outputTexture)
 {
     m_rhi = rhi;
@@ -247,6 +254,7 @@ void ExampleRhiItemRenderer::initialize(QRhi *rhi, QRhiTexture *outputTexture)
         const quint32 vbufSize = vsize + nsize;
         scene.vbuf.reset(m_rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, vbufSize));
         scene.vbuf->create();
+//! [exampleinit]
 
         scene.resourceUpdates = m_rhi->nextResourceUpdateBatch();
         scene.resourceUpdates->uploadStaticBuffer(scene.vbuf.get(), 0, vsize, m_vertices.constData());
@@ -284,6 +292,7 @@ void ExampleRhiItemRenderer::initialize(QRhi *rhi, QRhiTexture *outputTexture)
     }
 }
 
+//! [examplesync]
 void ExampleRhiItemRenderer::synchronize(RhiItem *rhiItem)
 {
     // called on the render thread (if there is one), while the main (gui) thread is blocked
@@ -292,7 +301,9 @@ void ExampleRhiItemRenderer::synchronize(RhiItem *rhiItem)
     if (item->angle() != scene.logoAngle)
         scene.logoAngle = item->angle();
 }
+//! [examplesync]
 
+//! [examplerender]
 void ExampleRhiItemRenderer::render(QRhiCommandBuffer *cb)
 {
     QRhiResourceUpdateBatch *rub = scene.resourceUpdates;
@@ -320,6 +331,7 @@ void ExampleRhiItemRenderer::render(QRhiCommandBuffer *cb)
 
     cb->endPass();
 }
+//! [examplerender]
 
 void ExampleRhiItemRenderer::createGeometry()
 {

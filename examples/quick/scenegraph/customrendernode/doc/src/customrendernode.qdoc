@@ -29,4 +29,15 @@
     APIs, the application links to \c{Qt::GuiPrivate} and includes
     \c{<rhi/qrhi.h>}.
 
+    QSGRenderNode is the enabler for one of the three ways to integrate custom
+    2D/3D rendering into a Qt Quick scene. The other two options are to perform
+    the rendering \c before or \c after the Qt Quick scene's own rendering,
+    or to generate a whole separate render pass targeting a dedicated render
+    target (a texture) and then have an item in the scene display the texture.
+    The QSGRenderNode-based approach is similar to the former, in the sense
+    that no additional render passes or render targets are involved, and allows
+    injecting custom rendering commands "inline" with the Qt Quick scene's
+    own rendering.
+
+    \sa {Scene Graph - RHI Under QML}, {Scene Graph - RHI Texture Item}
 */

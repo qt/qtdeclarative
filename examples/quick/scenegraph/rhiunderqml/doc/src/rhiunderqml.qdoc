@@ -34,6 +34,20 @@
     with all the 3D APIs supported by QRhi (such as, OpenGL, Vulkan, Metal,
     Direct 3D 11 and 12).
 
+    \note This example demonstrates advanced, low-level functionality performing
+    portable, cross-platform 3D rendering, while relying on APIs with limited
+    compatibility guarantee from the Qt Gui module.  To be able to use the QRhi
+    APIs, the application links to \c{Qt::GuiPrivate} and includes
+    \c{<rhi/qrhi.h>}.
+
+    Adding custom rendering as an underlay/overlay is one of the three ways to integrate
+    custom 2D/3D rendering into a Qt Quick scene. The other two options are to perform
+    the rendering "inline" with the Qt Quick scene's own rendering using QSGRenderNode,
+    or to generate a whole separate render pass targeting a dedicated render target
+    (a texture) and then have an item in the scene display the texture.
+    Refer to the \l{Scene Graph - RHI Texture Item} and the
+    \l{Scene Graph - Custom QSGRenderNode} examples regarding those approaches.
+
     \section1 Core Concepts
 
     The beforeRendering() signal is emitted at the start of every frame, before
@@ -216,4 +230,6 @@
     normally be generated at build time, and lists them in the qrc file. This
     approach is however not recommended for new applications that use CMake as
     the build system.
+
+    \sa {Scene Graph - RHI Texture Item}, {Scene Graph - Custom QSGRenderNode}
  */

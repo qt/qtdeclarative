@@ -35,6 +35,12 @@
     comes at the expense of being more expensive in terms of resources and
     performance since it involves rendering to a texture first.
 
+    \note This example demonstrates advanced, low-level functionality performing
+    portable, cross-platform 3D rendering, while relying on APIs with limited
+    compatibility guarantee from the Qt Gui module.  To be able to use the QRhi
+    APIs, the application links to \c{Qt::GuiPrivate} and includes
+    \c{<rhi/qrhi.h>}.
+
     \section1 Walkthrough
 
     \c ExampleRhiItem is the QQuickItem subclass that is exposed to QML
@@ -49,13 +55,119 @@
 
     \c ExampleRhiItem drives from \c RhiItem, which contains the generic
     implementation of a \l QQuickItem that maintains and displays a \l
-    QRhiTexture.
+    QRhiTexture. The design is somewhat similar to the legacy \l
+    QQuickFramebufferObject and its inner Renderer class. In essence what is
+    implemented here offers the core functionality of \l
+    QQuickFramebufferObject, but without being tied to OpenGL. To support the
+    threaded rendering model of the Qt Quick scene graph, the a separate \c
+    RhiItemRenderer object is instantiated that then lives on the Qt Quick
+    render thread, if there is one. \c RhiItem, being a \l QQuickItem, lives
+    and operates on the main (gui) thread.
 
     \snippet scenegraph/rhitextureitem/rhitextureitem.h itembase
 
-    The corresponding scene graph node is implemented using \l
-    QSGSimpleTextureNode.
+    \c RhiItemRenderer has three pure virtual functions expected to be
+    reimplemented in subclasses. \c initialize() is called to let the
+    application-provided renderer to know the \l QRhi and \l QRhiTexture
+    instances to use. The example also handles the resizing of the item, which
+    leads to having to use a new texture with a size different than before.
+    This means \c initialize() may be called multiple times during the lifetime
+    of a \c RhiItemRenderer.
+
+    \c synchronize() is called from the scene graph's synchronizing phase, i.e.
+    from the \c RhiItem's \l{QQuickItem::updatePaintNode()}{updatePaintNode()}.
+    That implies that, if the threaded rendering model is used, that it is safe
+    to copy data between the main and the render thread since the main thread is
+    blocked.
+
+    \c render() is the function that is called every time the \c RhiItem's
+    texture's content needs updating. This function is expected to record a
+    render pass onto the provided \l QRhiCommandBuffer, targeting a \l
+    QRhiTextureRenderTarget associated with the \l QRhiTexture passed to \c
+    initialize().
+
+    \snippet scenegraph/rhitextureitem/rhitextureitem.h rendererbase
+
+    The scene graph node that is instantied by \c RhiItem is implemented using
+    \l QSGSimpleTextureNode.
 
     \snippet scenegraph/rhitextureitem/rhitextureitem.h itemnode
 
+    \c RhiItemNode connects to the window's
+    \l{QQuickWindow::beforeRendering()}{beforeRendering()} signal.  This signal
+    is emitted on the render thread, if there is one, every time the Qt Quick
+    scene graph has started to prepare a new frame.
+
+    \snippet scenegraph/rhitextureitem/rhitextureitem.cpp nodector
+
+    The slot connected to this signal retrieves the \l QRhiCommandBuffer used by
+    the \l QQuickWindow, while also providing an example of what to do if there
+    is no on-screen window, and so no \l QRhiSwapChain associated with the \l
+    QQuickWindow. Then the \c RhiItemRenderer's \c render() function is invoked.
+
+    \snippet scenegraph/rhitextureitem/rhitextureitem.cpp noderender
+
+    The application-provided \c initialize and \c synchronize steps are invoked
+    from the \c RhiItemNode's sync() function which in turn is called from \c
+    RhiItem's \c updatePaintNode().
+
+    Once the \l QRhi is retrieved from the \l QQuickWindow, the need for a new
+    \l QRhiTexture is examined. If there is no texture yet, or it looks like the
+    item's size (in pixels, note the multiplication with the device pixel ratio)
+    has changed, a new texture is created. The \l QRhiTexture is then wrapped in
+    a \l QSGTexture, which also involves passing ownership. The wrapping \l
+    QSGTexture is created using a \l QQuickWindow helper function,
+    \l{QQuickWindow::createTextureFromRhiTexture()}{createTextureFromRhiTexture()}. In
+    spirit this is similar to the
+    \l{QQuickWindow::createTextureFromImage()}{createTextureFromImage()}, but
+    while the traditional QImage-based function creates a new \l QRhiTexture
+    under the hood, this variant takes an existing \l QRhiTexture.
+
+    Finally, the application-provided \c synchronize() function is invoked.
+
+    \snippet scenegraph/rhitextureitem/rhitextureitem.cpp nodesync
+
+    The example's implementation makes a copy of the angle value, meaning the
+    renderer's copy of the value is updated based on the current value of the
+    property in \c ExampleRhiItem.
+
+    \snippet scenegraph/rhitextureitem/rhitextureitem.cpp examplesync
+
+    The example's implementation of the initialization step stores the \l QRhi
+    for future use.  This example does not handle the case of the \l QRhi
+    changing over the lifetime of the item.  If moving (reparenting) the item
+    between \l QQuickWindow instances is involved, then that would need to be
+    handled as well. What is handled however, is the case of the \c
+    outputTexture changing.  With the implementation of \c RhiItem and \c
+    RhiItemNode, the \l QRhiTexture is different whenever the window, and so the
+    item in the scene, is resized.
+
+    If not yet done, a \l QRhiTextureRenderTarget is created. The example also
+    demonstrates rendering with a depth buffer present. Care must be taken to
+    correctly resize this buffer whenever its size no longer matches the \c
+    outputTexture's size in the previous invocation of the function.
+
+    Finally, if not yet done, the resources needed for rendering the scene are
+    prepared: vertex buffer, uniform buffer, graphics pipeline.
+
+    The traditional Qt logo renderer, that has been ported from the OpenGL-based
+    examples of Qt 4 and 5, provides vertex positions and normals in two
+    separate chunks, hence using a non-interleaved layout for the vertex buffer.
+
+    The vertex and fragment shaders are loaded from \c{.qsb} files generated at
+    build time (if using CMake).
+
+    \snippet scenegraph/rhitextureitem/rhitextureitem.cpp exampleinit
+
+    In the \c render step, the uniform buffer is updated. Note how the
+    \l{QRhi::clipSpaceCorrMatrix()}{QRhi-provided correction matrix} is
+    multiplied in. This allows ignoring the 3D API specific differences when it
+    comes to coordinate systems, and continuing to work with OpenGL-style
+    vertices and normals.
+
+    A single render pass is recorded, containing a single draw call.
+
+    \snippet scenegraph/rhitextureitem/rhitextureitem.cpp examplerender
+
+    \sa {Scene Graph - RHI Under QML}, {Scene Graph - Custom QSGRenderNode}
  */

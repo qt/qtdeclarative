@@ -15,6 +15,7 @@ class RhiItemNode;
 
 QT_FORWARD_DECLARE_CLASS(QSGPlainTexture)
 
+//! [rendererbase]
 class RhiItemRenderer
 {
 public:
@@ -22,7 +23,7 @@ public:
     virtual void initialize(QRhi *rhi, QRhiTexture *outputTexture) = 0;
     virtual void synchronize(RhiItem *item) = 0;
     virtual void render(QRhiCommandBuffer *cb) = 0;
-
+//! [rendererbase]
     void update();
 
 private:

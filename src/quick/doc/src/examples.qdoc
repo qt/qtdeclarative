@@ -151,6 +151,7 @@ Creator.
         \li \l{Scene Graph - Custom Material}{Custom Material}
         \li \l{Scene Graph - RHI Under QML}{Portable QRhi-based 3D rendering as a scene underlay}
         \li \l{Scene Graph - RHI Texture Item}{Displaying a QRhi-rendered image in a QQuickItem}
+        \li \l{Scene Graph - Custom QSGRenderNode}{Implementing a QRhi-based QSGRenderNode}
         \li \l{Scene Graph - Two Texture Providers}{Texture Providers and Materials}
         \li \l{Scene Graph - Custom Geometry}{Custom Geometry}
         \li \l{Scene Graph - Graph}{Graph}
