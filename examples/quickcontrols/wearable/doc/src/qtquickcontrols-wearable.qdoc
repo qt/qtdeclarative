@@ -83,7 +83,7 @@
     folder in the application's resources. The \c index.theme file lists the contents
     of the icon theme:
 
-    \quotefile wearable/icons/wearable/index.theme
+    \quotefile wearable/Wearable/icons/wearable/index.theme
 
     Finally, the icon theme is selected in \c main():
 

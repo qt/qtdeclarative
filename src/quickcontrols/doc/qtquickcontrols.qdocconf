@@ -39,7 +39,7 @@ exampledirs += ../../../examples/quickcontrols \
                ../ \
                snippets
 
-examples.fileextensions += "*.conf"
+examples.fileextensions += "*.conf *.theme"
 
 examplesinstallpath = quickcontrols
 
