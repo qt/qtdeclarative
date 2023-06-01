@@ -485,8 +485,10 @@ bool QQmlJSTypeResolver::adjustTrackedType(
 
     // If we cannot convert to the new type without the help of e.g. lookupResultMetaType(),
     // we better not change the type.
-    if (!canPrimitivelyConvertFromTo(tracked, conversion))
+    if (!canPrimitivelyConvertFromTo(tracked, conversion)
+           && !selectConstructor(conversion, tracked, nullptr).isValid()) {
         return false;
+    }
 
     it->replacement = comparableType(conversion);
     *it->clone = std::move(*QQmlJSScope::clone(conversion));
@@ -508,8 +510,10 @@ bool QQmlJSTypeResolver::adjustTrackedType(
 
     // If we cannot convert to the new type without the help of e.g. lookupResultMetaType(),
     // we better not change the type.
-    if (!canPrimitivelyConvertFromTo(tracked, result))
+    if (!canPrimitivelyConvertFromTo(tracked, result)
+            && !selectConstructor(result, tracked, nullptr).isValid()) {
         return false;
+    }
 
     it->replacement = comparableType(result);
     *mutableTracked = std::move(*QQmlJSScope::clone(result));
@@ -569,7 +573,7 @@ QString QQmlJSTypeResolver::containedTypeName(const QQmlJSRegisterContent &conta
 bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
                                           const QQmlJSScope::ConstPtr &to) const
 {
-    if (canPrimitivelyConvertFromTo(from, to))
+    if (canPrimitivelyConvertFromTo(from, to) || selectConstructor(to, from, nullptr).isValid())
         return true;
 
     // ### need a generic solution for custom cpp types:
@@ -1005,7 +1009,7 @@ QQmlJSMetaMethod QQmlJSTypeResolver::selectConstructor(
 {
     // If the "from" type can hold the target type, we should not try to coerce
     // it to any constructor argument.
-    if (canHold(passedArgumentType, type))
+    if (type.isNull() || canHold(passedArgumentType, type))
         return QQmlJSMetaMethod();
 
     if (QQmlJSScope::ConstPtr extension = type->extensionType().scope) {
@@ -1041,6 +1045,8 @@ QQmlJSMetaMethod QQmlJSTypeResolver::selectConstructor(
         if (equals(passedArgumentType, methodArgumentType))
             return method;
 
+        // Do not select further ctors here. We don't want to do multi-step construction as that
+        // is confusing and easily leads to infinite recursion.
         if (!candidate.isValid()
                 && canPrimitivelyConvertFromTo(passedArgumentType, methodArgumentType)) {
             candidate = method;
@@ -1165,7 +1171,7 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
         return true;
     }
 
-    return selectConstructor(to, from, nullptr).isValid();
+    return false;
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::lengthProperty(
