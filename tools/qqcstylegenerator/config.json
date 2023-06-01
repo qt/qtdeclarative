@@ -12,15 +12,9 @@
         "states": [
             {"state": "normal", "figmaState": "normal"},
             {"state": "checked", "figmaState": "checked"},
-            {"state": "checked-focused", "figmaState": "checkedFocused"},
-            {"state": "checked-focused-hovered", "figmaState": "checkedHoveredFocused"},
-            {"state": "checked-focused-pressed", "figmaState": "checkedPressedFocused"},
             {"state": "checked-hovered", "figmaState": "checkedHovered"},
             {"state": "checked-pressed", "figmaState": "checkedPressed"},
             {"state": "disabled", "figmaState": "disabled"},
-            {"state": "focused", "figmaState": "focused"},
-            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
-            {"state": "focused-pressed", "figmaState": "pressedFocused"},
             {"state": "hovered", "figmaState": "hovered"},
             {"state": "pressed", "figmaState": "pressed"}
         ]
@@ -41,19 +35,10 @@
             {"state": "normal", "figmaState": "normal"},
             {"state": "checked", "figmaState": "checked"},
             {"state": "checked-disabled", "figmaState": "checkedDisabled"},
-            {"state": "checked-focused", "figmaState": "checkedFocused"},
-            {"state": "checked-focused-hovered", "figmaState": "checkedhoveredFocused"},
-            {"state": "checked-focused-pressed", "figmaState": "checkedpressedFocused"},
             {"state": "checked-hovered", "figmaState": "checkedHovered"},
             {"state": "checked-pressed", "figmaState": "checkedPressed"},
             {"state": "disabled", "figmaState": "disabled"},
             {"state": "disabled-partiallyChecked", "figmaState": "partiallyCheckedDisabled"},
-            {"state": "focused", "figmaState": "focused"},
-            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
-            {"state": "focused-hovered-partiallyChecked", "figmaState": "partiallycheckedhoveredFocused"},
-            {"state": "focused-partiallyChecked", "figmaState": "partiallyCheckedFocused"},
-            {"state": "focused-partiallyChecked-pressed", "figmaState": "partiallycheckedpressedFocused"},
-            {"state": "focused-pressed", "figmaState": "pressedFocused"},
             {"state": "hovered", "figmaState": "hovered"},
             {"state": "hovered-partiallyChecked", "figmaState": "partiallyCheckedHovered"},
             {"state": "partiallyChecked", "figmaState": "partiallyChecked"},
@@ -77,13 +62,9 @@
             {"state": "normal", "figmaState": "normal"},
             {"state": "checked", "figmaState": "checked"},
             {"state": "checked-disabled", "figmaState": "checkedDisabled"},
-            {"state": "checked-focused", "figmaState": "checkedFocused"},
             {"state": "checked-hovered", "figmaState": "checkedHovered"},
             {"state": "checked-pressed", "figmaState": "checkedPressed"},
             {"state": "disabled", "figmaState": "disabled"},
-            {"state": "focused", "figmaState": "focused"},
-            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
-            {"state": "focused-pressed", "figmaState": "pressedFocused"},
             {"state": "hovered", "figmaState": "hovered"},
             {"state": "pressed", "figmaState": "pressed"}
         ]
@@ -103,9 +84,6 @@
         "states": [
             {"state": "normal", "figmaState": "normal"},
             {"state": "disabled", "figmaState": "disabled"},
-            {"state": "focused", "figmaState": "focused"},
-            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
-            {"state": "focused-pressed", "figmaState": "pressedFocused"},
             {"state": "hovered", "figmaState": "hovered"},
             {"state": "pressed", "figmaState": "pressed"}
         ]
@@ -126,11 +104,8 @@
             {"state": "normal", "figmaState": "normal"},
             {"state": "disabled", "figmaState": "disabled"},
             {"state": "hovered", "figmaState": "hovered"},
-            {"state": "focused", "figmaState": "focused"},
             {"state": "indicator-hovered", "figmaState": "iconHovered"},
-            {"state": "indicator-pressed", "figmaState": "iconPressed"},
-            {"state": "indicator-hovered-focused", "figmaState": "iconHoveredFocused"},
-            {"state": "indicator-pressed-focused", "figmaState": "iconPressedFocused"}
+            {"state": "indicator-pressed", "figmaState": "iconPressed"}
         ]
     },
     {
@@ -149,15 +124,9 @@
         "states": [
             {"state": "normal", "figmaState": "normal"},
             {"state": "checked", "figmaState": "checked"},
-            {"state": "checked-focused", "figmaState": "checkedFocused"},
-            {"state": "checked-focused-hovered", "figmaState": "checkedhoveredFocused"},
-            {"state": "checked-focused-pressed", "figmaState": "checkedpressedFocused"},
             {"state": "checked-hovered", "figmaState": "checkedHovered"},
             {"state": "checked-pressed", "figmaState": "checkedPressed"},
             {"state": "disabled", "figmaState": "disabled"},
-            {"state": "focused", "figmaState": "focused"},
-            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
-            {"state": "focused-pressed", "figmaState": "pressedFocused"},
             {"state": "hovered", "figmaState": "hovered"},
             {"state": "pressed", "figmaState": "pressed"}
         ]

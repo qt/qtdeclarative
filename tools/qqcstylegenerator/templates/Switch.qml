@@ -28,7 +28,6 @@ T.Switch {
     readonly property string currentState: [
         control.checked && "checked",
         !control.enabled && "disabled",
-        control.visualFocus && "focused",
         control.enabled && !control.down && control.hovered && "hovered",
         control.down && "pressed"
     ].filter(Boolean).join("-") || "normal"

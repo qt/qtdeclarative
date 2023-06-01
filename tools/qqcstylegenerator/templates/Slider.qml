@@ -23,7 +23,6 @@ T.Slider {
 
     readonly property string currentState: [
         !control.enabled && "disabled",
-        control.visualFocus && "focused",
         control.enabled && !control.pressed && control.hovered && "hovered",
         control.pressed && "pressed"
     ].filter(Boolean).join("-") || "normal"

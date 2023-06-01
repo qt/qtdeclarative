@@ -27,7 +27,6 @@ T.CheckBox {
     readonly property string currentState: [
         control.checkState === Qt.Checked && "checked",
         !control.enabled && "disabled",
-        control.visualFocus && "focused",
         control.enabled && !control.down && control.hovered && "hovered",
         control.checkState === Qt.PartiallyChecked && "partiallyChecked",
         control.down && "pressed",
