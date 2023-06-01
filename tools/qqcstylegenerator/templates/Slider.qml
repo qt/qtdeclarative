@@ -58,6 +58,7 @@ T.Slider {
             width: control.horizontal ? background.width : background.height
             height: control.horizontal ? background.height : background.width
             rotation: control.horizontal ? 0 : -90
+            scale: control.horizontal && control.mirrored ? -1 : 1
             source: control.config.background?.export === "image"
                 ? Qt.resolvedUrl("images/" + control.config.background.name)
                 : ""
