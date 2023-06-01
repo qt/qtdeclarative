@@ -2736,7 +2736,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         *reinterpret_cast<QJSPrimitiveValue *>(data) = createPrimitive(&value);
         return true;
     } else if (!isPointer) {
-        if (QQmlValueTypeProvider::createValueType(value, metaType, data))
+        if (QQmlValueTypeProvider::createValueType(metaType, data, value))
             return true;
     }
 

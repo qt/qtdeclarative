@@ -29,6 +29,7 @@ private slots:
     void redrawUponColumnChange();
     void nestedDelegates();
     void universalModelData();
+    void typedModelData();
     void deleteRace();
 };
 
@@ -358,6 +359,92 @@ void tst_QQmlDelegateModel::universalModelData()
     }
 
 }
+
+void tst_QQmlDelegateModel::typedModelData()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("typedModelData.qml");
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QQmlDelegateModel *delegateModel = qobject_cast<QQmlDelegateModel *>(o.data());
+    QVERIFY(delegateModel);
+
+    for (int i = 0; i < 4; ++i) {
+        if (i == 0) {
+            for (int j = 0; j < 3; ++j) {
+                QTest::ignoreMessage(
+                    QtWarningMsg,
+                    "Could not find any constructor for value type QQmlPointFValueType "
+                    "to call with value QVariant(double, 11)");
+            }
+
+            QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(url.toString() + ":62:9: Unable to assign double to QPointF"));
+            QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(url.toString() + ":61:9: Unable to assign double to QPointF"));
+        }
+
+        delegateModel->setProperty("n", i);
+        QObject *delegate = delegateModel->object(0);
+        QVERIFY(delegate);
+        const QPointF modelItem = delegate->property("modelSelf").value<QPointF>();
+        switch (i) {
+        case 0: {
+            // list model with 1 role.
+            // Does not work, for the most part, because the model is singular
+            QCOMPARE(delegate->property("modelX"), 11.0);
+            QCOMPARE(delegate->property("modelDataX"), 0.0);
+            QCOMPARE(delegate->property("modelSelf"), QPointF(11.0, 0.0));
+            QCOMPARE(delegate->property("modelDataSelf"), QPointF());
+            QCOMPARE(delegate->property("modelModelData"), QPointF());
+            QCOMPARE(delegate->property("modelAnonymous"), QPointF());
+            break;
+        }
+        case 1: {
+            // list model with 2 roles
+            QCOMPARE(delegate->property("modelX"), 13.0);
+            QCOMPARE(delegate->property("modelDataX"), 13.0);
+            QCOMPARE(delegate->property("modelSelf"), QVariant::fromValue(modelItem));
+            QCOMPARE(delegate->property("modelDataSelf"), QVariant::fromValue(modelItem));
+            QCOMPARE(delegate->property("modelModelData"), QVariant::fromValue(modelItem));
+            QCOMPARE(delegate->property("modelAnonymous"), QVariant::fromValue(modelItem));
+            break;
+        }
+        case 2: {
+            // JS array of objects
+            QCOMPARE(delegate->property("modelX"), 17.0);
+            QCOMPARE(delegate->property("modelDataX"), 17.0);
+
+            const QPointF modelData = delegate->property("modelDataSelf").value<QPointF>();
+            QCOMPARE(modelData, QPointF(17, 18));
+            QCOMPARE(delegate->property("modelSelf"), QVariant::fromValue(modelData));
+            QCOMPARE(delegate->property("modelModelData").value<QPointF>(), modelData);
+            QCOMPARE(delegate->property("modelAnonymous").value<QPointF>(), modelData);
+            break;
+        }
+        case 3: {
+            // single object
+            QCOMPARE(delegate->property("modelX"), 21);
+            QCOMPARE(delegate->property("modelDataX"), 21);
+            const QPointF modelData = delegate->property("modelDataSelf").value<QPointF>();
+            QCOMPARE(modelData, QPointF(21, 22));
+            QCOMPARE(delegate->property("modelSelf"), QVariant::fromValue(modelData));
+            QCOMPARE(delegate->property("modelModelData"), QVariant::fromValue(modelData));
+            QCOMPARE(delegate->property("modelAnonymous"), QVariant::fromValue(modelData));
+            break;
+        }
+        default:
+            QFAIL("wrong model number");
+            break;
+        }
+    }
+
+}
+
 
 void tst_QQmlDelegateModel::deleteRace()
 {
