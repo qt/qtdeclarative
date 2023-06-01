@@ -26,6 +26,7 @@ private slots:
     void contextAccessedByHandler();
     void redrawUponColumnChange();
     void nestedDelegates();
+    void typedModelData();
     void deleteRace();
 };
 
@@ -206,6 +207,75 @@ void tst_QQmlDelegateModel::nestedDelegates()
         return; // loader found
     }
     QFAIL("Loader not found");
+}
+
+void tst_QQmlDelegateModel::typedModelData()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("typedModelData.qml");
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QQmlDelegateModel *delegateModel = qobject_cast<QQmlDelegateModel *>(o.data());
+    QVERIFY(delegateModel);
+
+    for (int i = 0; i < 3; ++i) {
+        if (i == 0) {
+            for (int j = 0; j < 2; ++j) {
+                QTest::ignoreMessage(
+                    QtWarningMsg,
+                    "Could not find any constructor for value type QQmlPointFValueType "
+                    "to call with value QVariant(double, 11)");
+            }
+
+            QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(url.toString() + ":48:9: Unable to assign double to QPointF"));
+        } else if (i == 1) {
+            QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(url.toString() + ":44:9: Unable to assign [undefined] to double"));
+        }
+
+        delegateModel->setProperty("n", i);
+        QObject *delegate = delegateModel->object(0);
+        QVERIFY(delegate);
+        switch (i) {
+        case 0: {
+            // list model with 1 role.
+            // Does not work, for the most part, because the model is singular
+            QCOMPARE(delegate->property("modelX"), 11.0);
+            QCOMPARE(delegate->property("modelDataX"), 0.0);
+            QCOMPARE(delegate->property("modelSelf"), QPointF(11.0, 0.0));
+            QCOMPARE(delegate->property("modelDataSelf"), QPointF());
+            QCOMPARE(delegate->property("modelModelData"), QPointF());
+            break;
+        }
+        case 1: {
+            // JS array of objects
+            QCOMPARE(delegate->property("modelDataX"), 17.0);
+            const QPointF modelData = delegate->property("modelDataSelf").value<QPointF>();
+            QCOMPARE(modelData, QPointF(17, 18));
+            QCOMPARE(delegate->property("modelModelData").value<QPointF>(), modelData);
+            break;
+        }
+        case 2: {
+            // single object
+            QCOMPARE(delegate->property("modelX"), 21);
+            QCOMPARE(delegate->property("modelDataX"), 21);
+            const QPointF modelData = delegate->property("modelDataSelf").value<QPointF>();
+            QCOMPARE(modelData, QPointF(21, 22));
+            QCOMPARE(delegate->property("modelSelf"), QVariant::fromValue(modelData));
+            QCOMPARE(delegate->property("modelModelData"), QVariant::fromValue(modelData));
+            break;
+        }
+        default:
+            QFAIL("wrong model number");
+            break;
+        }
+    }
+
 }
 
 void tst_QQmlDelegateModel::deleteRace()
