@@ -98,12 +98,11 @@ static bool fromMatchingType(
             return true;
         }
 
-        QVariant converted(parameterType);
-        if (QQmlValueTypeProvider::createValueType(s, parameterType, converted.data())) {
-            callConstructor(mo, i, converted.data(), metaType, data);
-            return true;
-        }
+        // Do not recursively try to create parameters here. This may end up in infinite recursion.
 
+        // At this point, s should be a builtin type. For builtin types
+        // the QMetaType converters are good enough.
+        QVariant converted(parameterType);
         if (QMetaType::convert(parameter.metaType(), parameter.constData(),
                                parameterType, converted.data())) {
             callConstructor(mo, i, converted.data(), metaType, data);
@@ -135,14 +134,11 @@ static bool fromMatchingType(
             return true;
         }
 
-        QVariant parameter(parameterType);
-        if (QQmlValueTypeProvider::createValueType(s, parameterType, parameter.data())) {
-            callConstructor(mo, i, parameter.data(), metaType, data);
-            return true;
-        }
+        // Do not recursively try to create parameters here. This may end up in infinite recursion.
 
         // At this point, s should be a builtin type. For builtin types
         // the QMetaType converters are good enough.
+        QVariant parameter(parameterType);
         if (QMetaType::convert(sourceMetaType, s.constData(), parameterType, parameter.data())) {
             callConstructor(mo, i, parameter.data(), metaType, data);
             return true;
