@@ -1,0 +1,22 @@
+/*! \internal
+    \mainpage Qt Quick Pointer Event Delivery
+
+    QPointerEvent instances are stack-allocated in
+    QGuiApplicationPrivate::processMouseEvent(),
+    QGuiApplicationPrivate::processTouchEvent() etc., and sent to the
+    application via QCoreApplication::sendSpontaneousEvent() (taking QWindow
+    and QEvent pointer arguments). If the window is a QQuickWindow, the QTouchEvent
+    arrives to QQuickWindow::event() which then dispatches to the
+    QQuickDeliveryAgent. QQuickDeliveryAgent contains much of the event
+    delivery code. In fact, it's quite complex, for legacy reasons such as
+    touch->mouse synthesis in three possible layers, handling events in
+    QQuickItem subclasses in C++, event compression, multiple kinds of event
+    filtering, drag-and-drop, dealing with popup menus and so on; but let's
+    start with the ideal case: no synthesis, no filtering, no popups, and all
+    events are handled in
+    <a href="https://doc.qt.io/qt-6/qtquickhandlers-index.html">Pointer Handlers</a>.
+
+    Here are some "ideal" scenarios:
+
+    - \subpage qq-ideal-pointer-event-delivery-single-drag
+*/

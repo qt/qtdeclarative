@@ -1,0 +1,30 @@
+digraph {
+    llfkmbbephlg[label="ResizeItemToWindow_QMLTYPE_1", shape="tab"]
+    llfkmbbephlg -> llfkmbbeijgg[arrowtail=odiamond, dir=back]
+
+    llfkmbbeijgg[label="ℚRootItem", shape="box"]
+
+    llfkmbbepmbg[label="ℚRectangle", shape="box"]
+    llfkmbbeijgg -> llfkmbbepmbg[arrowtail=odiamond, dir=back]
+
+    llfkmbodpifg[label="ℚPinchHandler", shape="house"]
+    llfkmbbepmbg -> llfkmbodpifg[arrowtail=odiamond, dir=back]
+    llfkmbnfping[label="ℚRectangle", shape="box"]
+    llfkmbbepmbg -> llfkmbnfping[arrowtail=odiamond, dir=back]
+
+    llfkmbbfjjgg[label="ℚDragHandler", shape="house"]
+    llfkmbnfping -> llfkmbbfjjgg[arrowtail=odiamond, dir=back]
+    llfkmbbdfibg[label="ℚRectangle", shape="box"]
+    llfkmbbepmbg -> llfkmbbdfibg[arrowtail=odiamond, dir=back]
+
+    llfkmbbfibdg[label="ℚDragHandler", shape="house"]
+    llfkmbbdfibg -> llfkmbbfibdg[arrowtail=odiamond, dir=back]
+    llfkmbodeang[label="ℚRectangle", shape="box"]
+    llfkmbbepmbg -> llfkmbodeang[arrowtail=odiamond, dir=back]
+
+    llfkmbcknglg[label="ℚDragHandler", shape="house"]
+    llfkmbodeang -> llfkmbcknglg[arrowtail=odiamond, dir=back]
+    llfkmbclplkg[label="ℚDeliveryAgent", shape="invhouse"]
+    llfkmbbeijgg -> llfkmbclplkg[arrowtail=odiamond, dir=back]
+
+}

@@ -1,0 +1,14 @@
+\startuml
+partition "deliverMatchingPointsToItem" {
+    :localizePointerEvent;
+    :QQuickItemPrivate::handlePointerEvent;
+    repeat :loop over extra->pointerHandlers;
+        :QQuickPointerHandler::handlePointerEvent;
+        :wantsPointerEvent;
+        repeat :loop over QEventPoints;
+            :wantsEventPoint;
+        repeat while (more?) is (yes)
+        :handlePointerEventImpl;
+    repeat while (more?) is (yes)
+}
+\enduml
