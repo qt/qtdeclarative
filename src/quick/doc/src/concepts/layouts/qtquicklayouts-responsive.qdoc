@@ -1,0 +1,101 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtquicklayouts-responsive.html
+    \title Qt Quick Responsive Layouts
+    \brief A guideline to make Qt Quick Layouts adaptive to screen size.
+
+    Layouts are a good technique to make resizable user interfaces. However,
+    this approach has its limitations as we cannot shrink and expand items
+    limitless without sacrificing usability and aesthetics. At some point, it
+    makes more sense to reorganize, remove or add certain elements. Adapting to
+    different devices (e.g. phones and tables) and screen orientations
+    (landscape or portrait) can be implemented similarly. This is what
+    we usually understand as responsive layouts and \l {Qt Quick Layouts}
+    provide various APIs to implement them.
+
+    \section1 Static hierarchy, adaptive layout
+
+    Layouts have a hierarchy, which is usually defined by the declarative QML
+    code. For some simple responsive layouts, it is sufficient to keep the
+    hierarchy unmodified and instead just tweak some of the properties that
+    affect layouting.
+
+    \section2 Declarative description
+
+    The simplest approach to change layouting is to modify layout properties
+    and \l {Layout} attached properties with small expressions. You can for
+    instance use ternary operators in order to modify the layout depending
+    on its width.
+    \l {Item} properties, such as \l {Item::visible}{Item.visible},
+    hiding or showing various parts of the interface, can be modified the same
+    way.
+
+    In the following snippet, this concept is used to change a two-column
+    layout into a single-column layout if the window width is smaller than a
+    certain value.
+
+    \snippet layouts/responsiveDeclarative.qml document
+
+    The resulting layouts look like this, depending on the width of the window.
+
+    \div {class="float-right"}
+    \inlineimage simpleProxy.png
+    \enddiv
+
+    Various levels of layouts and items can be nested but \l {Item}{Items} can only be moved within a their \l{Item::parent}{Item.parent}.
+
+    \section2 States
+
+    The same result can be achieved with \l {Qt Quick States}. The upside of
+    using states is that the \l {Layout} properties for a specific layout are
+    collected at a single point in the QML file (at least the changing ones).
+    The previously shown example can be implemented as follows and the result
+    looks and behaves the exact same.
+
+    \snippet layouts/responsiveStates.qml document
+
+    \section2 LayoutItemProxy
+
+    A third approach is the application of the \l {LayoutItemProxy}. The
+    implementation of the previously shown minimalistic example can be found in
+    the type documentation. In contrast to previously shown solutions, the
+    \l {LayoutItemProxy} enables the declaration of completely separate layouts
+    for various form factors. Especially with more complex layouts this might be
+    useful to improve and maintain a reasonable source code structure.
+
+    Note, that the \l{LayoutItemProxy} API is a technical preview and might
+    be subject to change or removal in future Qt versions.
+
+    \section1 Adaptive hierarchy, adaptive layout
+
+    More complex reconstructions of the layout might require changes to
+    the hierarchy. A small stand-alone button in a small layout might be
+    combined with other buttons and put into a box of a larger layout. An item
+    that is fully visible in one layout, might require a \l {Flickable} in
+    another, smaller layout. In this scenario, it is best to rely on the \l {LayoutItemProxy}. The \l {LayoutItemProxy} allows to move \l{Item}{Items} across various hierarchy levels and between different \l{Item::parent}{Item.parent}. 
+
+    The \l {Qt Quick Layouts - Responsive Layout Example} shows a case where an
+    item is moved between different hierarchy levels, put into a \l {Flickable}
+    in one case and on the top level in another layout. The two resulting
+    layouts look as follows.
+
+    \div {class="float-right"}
+    \image qtquicklayouts-example-responsivelayouts.png
+    \enddiv
+
+
+    \section1 Useful links: Consult your design guidelines
+
+    Many design guidelines offer help and tips to create responsive layouts.
+    Implementing the respective techniques is possible with the APIs mentioned
+    above. For further information we recommend the following links:
+
+    \list
+        \li \l {https://developer.apple.com/design/human-interface-guidelines/layout}{Apple human interface guidelines}
+        \li \l {https://m3.material.io/foundations/layout/applying-layout/window-size-classes}{Material3 layouts}
+        \li \l {https://learn.microsoft.com/en-us/windows/apps/design/layout/responsive-design}{Microsoft Fluent responsive design techniques}
+    \endlist
+
+*/

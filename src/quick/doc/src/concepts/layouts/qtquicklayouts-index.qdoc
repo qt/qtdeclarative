@@ -25,6 +25,7 @@
 
     \list
         \li \l {Qt Quick Layouts Overview}
+        \li \l {Qt Quick Responive Layouts}
     \endlist
 
     \section1 Examples
