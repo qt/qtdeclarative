@@ -105,6 +105,31 @@
         \li ...
     \endtable
 
+    \section2 Revisions
+
+    Due to how Qt Quick Controls are implemented, new properties that are added
+    may clash with any user-defined properties of the same name. For example,
+    the following snippet will result in an error:
+
+    \qml
+    import QtQuick.Controls 2.13
+
+    ApplicationWindow {
+        // ...
+
+        ComboBox {
+            anchors.centerIn: parent
+
+            // As currentValue was added in 2.14, the versioned import above
+            // should cause this property to be used, but instead an error is produced:
+            // "Cannot override FINAL property"
+            property int currentValue: 0
+        }
+    }
+    \endqml
+
+    These properties should be renamed to avoid the conflict.
+
     \section1 Module Evolution
 
     Qt Quick Controls was originally written with touch interfaces as the
