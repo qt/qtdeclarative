@@ -37,14 +37,14 @@ T.RadioButton {
         x: control.text ? (control.mirroredIndicator ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         source: control.config.indicator_background?.export === "image"
-            ? Qt.resolvedUrl("images/" + control.config.indicator_background.name)
+            ? Qt.resolvedUrl("images/" + control.config.indicator_background.fileName)
             : ""
 
         Image {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             source: control.config.indicator?.export === "image"
-                    ? Qt.resolvedUrl("images/" + control.config.indicator.name)
+                    ? Qt.resolvedUrl("images/" + control.config.indicator.fileName)
                     : ""
         }
     }
@@ -63,7 +63,7 @@ T.RadioButton {
 
     background: BorderImage {
         source: control.config.background?.export === "image"
-                    ? Qt.resolvedUrl("images/" + control.config.background.name)
+                    ? Qt.resolvedUrl("images/" + control.config.background.fileName)
                     : ""
         border {
             top: control.config.background?.topOffset || 0

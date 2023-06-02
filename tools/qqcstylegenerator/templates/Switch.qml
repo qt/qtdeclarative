@@ -44,7 +44,7 @@ T.Switch {
         property Image handleBackground: Image {
             parent: control.indicator
             source: control.config.handle_background?.export === "image"
-                ? Qt.resolvedUrl("images/" + control.config.handle_background.name)
+                ? Qt.resolvedUrl("images/" + control.config.handle_background.fileName)
                 : ""
 
             property Image handle: Image {
@@ -55,7 +55,7 @@ T.Switch {
                         - control.config.handle_contentItem.rightPadding))
                 y: control.config.handle_contentItem.topPadding
                 source: control.config.handle?.export === "image"
-                    ? Qt.resolvedUrl("images/" + control.config.handle.name)
+                    ? Qt.resolvedUrl("images/" + control.config.handle.fileName)
                     : ""
 
                 Behavior on x {
@@ -85,7 +85,7 @@ T.Switch {
 
     background: BorderImage {
         source: control.config.background?.export === "image"
-                    ? Qt.resolvedUrl("images/" + control.config.background.name)
+                    ? Qt.resolvedUrl("images/" + control.config.background.fileName)
                     : ""
         border {
             top: control.config.background?.topOffset || 0

@@ -1,4 +1,5 @@
 {
+    "image formats": ["png@2x"],
     "default export": ["image", "geometry"],
     "controls": [
     {

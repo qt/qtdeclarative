@@ -16,7 +16,31 @@
 
 using namespace JsonTools;
 
-class StyleGenerator {
+struct ImageFormat
+{
+    ImageFormat(const QString &name)
+        : name(name)
+    {
+        // Example names: png@2x, svg
+        const int alphaIndex = name.indexOf('@');
+        hasScale = alphaIndex != -1;
+        if (hasScale) {
+            format = name.first(alphaIndex);
+            scale = name.sliced(alphaIndex + 1).chopped(1);
+        } else {
+            format = name;
+            scale = "1";
+        }
+    }
+
+    bool hasScale;
+    QString name;
+    QString format;
+    QString scale;
+};
+
+class StyleGenerator
+{
 
 public:
     StyleGenerator(const QString &fileId, const QString &token
@@ -81,12 +105,20 @@ private:
                 + networkErrorString(reply));
     }
 
-    QJsonDocument generateImageUrls()
+    QJsonDocument generateImageUrls(const ImageFormat &imageFormat)
     {
-        newProgress("downloading image urls");
+        newProgress("downloading image urls with format " + imageFormat.name);
         QJsonDocument figmaResponsDoc;
-        const QString ids = QStringList(m_imagesToDownload.keys()).join(",");
-        const QUrl url("https://api.figma.com/v1/images/" + m_fileId + "?ids=" + ids);
+
+        const auto figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
+        const QString ids = QStringList(figmaIdToFileNameMap.keys()).join(",");
+
+        const QUrl url("https://api.figma.com/v1/images/"
+                       + m_fileId
+                       + "?ids=" + ids
+                       + "&format=" + imageFormat.format
+                       + "&scale=" + imageFormat.scale);
+
         debug("request: " + url.toString());
         QNetworkRequest request(url);
         request.setRawHeader(QByteArray("X-FIGMA-TOKEN"), m_token.toUtf8());
@@ -115,11 +147,13 @@ private:
         return figmaResponsDoc;
     }
 
-    void downloadImages(const QJsonDocument &figmaImagesResponsDoc)
+    void downloadImages(const ImageFormat &imageFormat, const QJsonDocument &figmaImagesResponsDoc)
     {
-        debug("downloading requested images...");
-        newProgress("downloading images");
+        debug("downloading requested images with format " + imageFormat.name);
+        newProgress("downloading images with format " + imageFormat.name);
+
         const auto imageUrls = getObject("images", figmaImagesResponsDoc.object());
+        const auto figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
 
         // Create image directory
         const QString imageDir = m_targetPath + "/images/";
@@ -134,31 +168,44 @@ private:
         manager->setAutoDeleteReplies(true);
         int requestCount = imageUrls.keys().count();
 
-        for (const QString &key : imageUrls.keys()) {
-            const QString imageUrl = imageUrls.value(key).toString();
+        for (const QString &figmaId : imageUrls.keys()) {
+            const QString imageUrl = imageUrls.value(figmaId).toString();
             if (imageUrl.isEmpty()) {
-                qWarning().noquote().nospace() << "No image URL generated for id: " << key << ", " << m_imagesToDownload.value(key);
+                qWarning().noquote().nospace() << "No image URL generated for id: " << figmaId << ", " << figmaIdToFileNameMap.value(figmaId);
                 requestCount--;
                 continue;
             }
+
             QNetworkReply *reply = manager->get(QNetworkRequest(imageUrl));
 
-            QObject::connect(reply, &QNetworkReply::finished, [this, key, imageUrl, imageDir, reply, &requestCount] {
+            QObject::connect(reply, &QNetworkReply::finished,
+                             [this, figmaId, imageUrl, imageDir, imageFormat,
+                             reply, &figmaIdToFileNameMap, &requestCount] {
                 requestCount--;
                 if (reply->error() != QNetworkReply::NoError) {
                     qWarning().nospace().noquote() << "Failed to download "
-                        << imageUrl << " (id: " << key << "). "
+                        << imageUrl << " (id: " << figmaId << "). "
                         << "Error code:" << networkErrorString(reply);
                     return;
                 }
 
-                const QString name = m_imagesToDownload.value(key);
-                const QString path = imageDir + name + ".png";
+                const QString fileName = figmaIdToFileNameMap.value(figmaId);
+                const QString filePath = imageDir + fileName;
 
-                QPixmap pixmap;
-                pixmap.loadFromData(reply->readAll(), "png");
-                pixmap.save(path);
-                debug("downloaded image: " + imageUrl + " (id: " + key + ")" + " to " + path);
+                if (imageFormat.format == "svg") {
+                    QFile file(filePath);
+                    file.open(QIODevice::WriteOnly);
+                    file.write(reply->readAll());
+                } else {
+                    QPixmap pixmap;
+                    if (!pixmap.loadFromData(reply->readAll(), imageFormat.format.toUtf8().constData())) {
+                        qWarning().nospace().noquote() << "Failed to create pixmap: "
+                            << filePath << " from " << imageUrl;
+                        return;
+                    }
+                    pixmap.save(filePath);
+                }
+                debug("downloaded image: " + filePath + " from " + imageUrl);
                 progress();
             });
         }
@@ -175,10 +222,13 @@ private:
             return;
         }
 
-        try {
-            downloadImages(generateImageUrls());
-        } catch (std::exception &e) {
-            qWarning().nospace().noquote() << "Could not generate images: " << e.what();
+        for (const ImageFormat imageFormat : std::as_const(m_imagesToDownload).keys()) {
+            try {
+                const QJsonDocument imageUrlDoc = generateImageUrls(imageFormat);
+                downloadImages(imageFormat, imageUrlDoc);
+            } catch (std::exception &e) {
+                qWarning().nospace().noquote() << "Could not generate images: " << e.what();
+            }
         }
     }
 
@@ -201,6 +251,10 @@ private:
         } catch (std::exception &e) {
             throw std::runtime_error("Error, could not parse " + file.fileName().toStdString() + ": " + e.what());
         }
+
+        const QJsonArray imageFormats = rootObject.value("image formats").toArray();
+        for (const QJsonValue &formatValue : imageFormats)
+            m_imageFormats.append(formatValue.toString());
 
         const QJsonArray exportArray = rootObject.value("default export").toArray();
         for (const QJsonValue &exportValue : exportArray)
@@ -290,7 +344,9 @@ private:
                     else if (atomExport == "layout")
                         exportLayout(figmaAtomObj, outputAtomConfig);
                     else if (atomExport == "image")
-                        exportImage(figmaAtomObj, outputAtomConfig);
+                        exportImage(figmaAtomObj, m_imageFormats, outputAtomConfig);
+                    else if (atomExport.startsWith("png") || atomExport.startsWith("svg"))
+                        exportImage(figmaAtomObj, {atomExport}, outputAtomConfig);
                     else if (atomExport == "json")
                         exportJson(figmaAtomObj, outputAtomConfig);
                     else if (atomExport == "text")
@@ -393,7 +449,7 @@ private:
         // config.insert("bottomInset", 0);
     }
 
-    void exportImage(const QJsonObject &atom, QJsonObject &outputConfig)
+    void exportImage(const QJsonObject &atom, const QStringList &imageFormats, QJsonObject &outputConfig)
     {
         const QString figmaId = getString("figmaId", outputConfig);
         const QString imageName = getString("name", outputConfig);
@@ -405,9 +461,19 @@ private:
             return;
         }
 
-        debug("export image: " + imageName);
-        m_imagesToDownload.insert(figmaId, imageName);
-        outputConfig.insert("export", "image");
+        for (const ImageFormat imageFormat : imageFormats) {
+            const QString fileNameForReading = imageName + "." + imageFormat.format;
+            const QString fileNameForWriting = imageFormat.hasScale
+                    ? imageName + '@' + imageFormat.scale + "x." + imageFormat.format
+                    : imageName + '.' + imageFormat.format;
+
+            auto &figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
+            figmaIdToFileNameMap.insert(figmaId, fileNameForWriting);
+
+            outputConfig.insert("export", "image");
+            outputConfig.insert("fileName", fileNameForReading);
+            debug("exporting image: " + fileNameForWriting);
+        }
     }
 
     void exportJson(const QJsonObject &atom, QJsonObject &outputConfig)
@@ -729,16 +795,22 @@ private:
     bool m_verbose = false;
     bool m_silent = false;
 
+    QStringList m_imageFormats;
     QStringList m_defaultExport;
 
     QJsonDocument m_document;
     QJsonObject m_outputConfig;
     QStringList m_qmlDirControls;
-    QMap<QString, QString> m_imagesToDownload;
     QString m_controlToGenerate;
 
-    QString m_currentAtomInfo;
+    // m_imagesToDownload contains the images to be downloaded.
+    // The outer map maps the image format (e.g "svg@2x") to the
+    // figma children that should be generated as such images.
+    // The inner map maps from figma child id to the file name
+    // that the image should be saved to once downloaded.
+    QMap<QString, QMap<QString, QString>> m_imagesToDownload;
 
+    QString m_currentAtomInfo;
     QString m_progressLabel;
     int m_progress = 0;
 };

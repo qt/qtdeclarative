@@ -50,8 +50,9 @@ T.Button {
 
     background: BorderImage {
         source: control.config.background?.export === "image"
-                    ? Qt.resolvedUrl("images/" + control.config.background.name)
-                    : ""
+                ? Qt.resolvedUrl("images/" + control.config.background.fileName)
+                : ""
+
         border {
             top: control.config.background?.topOffset || 0
             bottom: control.config.background?.bottomOffset || 0
