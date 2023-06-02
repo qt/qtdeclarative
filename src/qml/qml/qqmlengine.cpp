@@ -1549,7 +1549,8 @@ void QQmlEnginePrivate::cleanupScarceResources()
 
   The newly added \a path will be first in the importPathList().
 
-  \sa setImportPathList(), {QML Modules}, {QML Import Path}
+  \b {See also} \l setImportPathList(), \l {QML Modules},
+    and \l [QtQml] {QML Import Path}
 */
 void QQmlEngine::addImportPath(const QString& path)
 {
