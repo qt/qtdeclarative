@@ -712,7 +712,7 @@ public:
                                      QLatin1String("function foo(){\n"), QLatin1String("\n}\n"));
     }
     MethodInfo() = default;
-    std::optional<QQmlJSScope::Ptr> semanticScope() { return m_semanticScope; }
+    std::optional<QQmlJSScope::Ptr> semanticScope() const { return m_semanticScope; }
     void setSemanticScope(QQmlJSScope::Ptr scope) { m_semanticScope = scope; }
 
     // TODO: make private + add getters/setters

@@ -68,4 +68,20 @@ Item {
         let c = myNested.inner.inner.p2 + p2
         let d = myNested.inner.inner.inner.p2 + p2
     }
+
+    function recursive(n: int): int {
+        if (n > 3)
+            return 1 + recursive(recursive(x-1) + recursive(x-2) - recursive(x-3));
+        else
+            return recursive(0);
+    }
+
+    property int helloRecursive: recursive(42)
+
+    id: rootId
+    Rectangle {
+        function f() {
+            return rootId.recursive(123)
+        }
+    }
 }

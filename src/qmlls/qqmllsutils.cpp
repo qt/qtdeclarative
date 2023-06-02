@@ -391,16 +391,19 @@ static DomItem findJSIdentifierDefinition(DomItem item, const QString &name)
     return definitionOfItem;
 }
 
-static void findUsagesOfPropertiesAndIds(DomItem item, const QString &name,
+static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
                                          QList<QQmlLSUtilsLocation> &result)
 {
     QQmlJSScope::ConstPtr targetType;
     targetType = QQmlLSUtils::resolveExpressionType(item, QQmlLSUtilsResolveOptions::JustOwner);
+    if (!targetType)
+        return;
 
     auto findUsages = [&targetType, &result, &name](Path, DomItem &current, bool) -> bool {
         bool resolveType = false;
         bool continueForChildren = true;
         DomItem toBeResolved = current;
+        QString subRegion;
 
         if (auto scope = current.semanticScope()) {
             // is the current property shadowed by some JS identifier? ignore current + its children
@@ -427,6 +430,15 @@ static void findUsagesOfPropertiesAndIds(DomItem item, const QString &name,
             resolveType = true;
             break;
         }
+        case DomType::MethodInfo: {
+            const QString methodName = current.field(Fields::name).value().toString();
+            if (name != methodName)
+                return true;
+
+            subRegion = u"identifier"_s;
+            resolveType = true;
+            break;
+        }
         default:
             break;
         };
@@ -437,8 +449,19 @@ static void findUsagesOfPropertiesAndIds(DomItem item, const QString &name,
             qCDebug(QQmlLSUtilsLog) << "Will resolve type of" << toBeResolved.internalKindStr();
             if (currentType == targetType) {
                 auto tree = FileLocations::treeOf(current);
-                QQmlLSUtilsLocation location{ current.canonicalFilePath(),
-                                              tree->info().fullRegion };
+                QQmlJS::SourceLocation sourceLocation;
+
+                if (subRegion.isEmpty()) {
+                    sourceLocation = tree->info().fullRegion;
+                } else {
+                    auto regions = tree->info().regions;
+                    auto it = regions.constFind(subRegion);
+                    if (it == regions.constEnd())
+                        return continueForChildren;
+                    sourceLocation = *it;
+                }
+
+                QQmlLSUtilsLocation location{ current.canonicalFilePath(), sourceLocation };
                 result.append(location);
             }
         }
@@ -459,7 +482,7 @@ static void findUsagesHelper(DomItem item, const QString &name, QList<QQmlLSUtil
     // if there is no definition found: check if name was a property or an id instead
     if (!definitionOfItem) {
         qCDebug(QQmlLSUtilsLog) << "No defining JS-Scope found!";
-        findUsagesOfPropertiesAndIds(item, name, result);
+        findUsagesOfNonJSIdentifiers(item, name, result);
         return;
     }
 
@@ -503,7 +526,8 @@ QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
         findUsagesHelper(item, name, result);
         break;
     }
-    case DomType::PropertyDefinition: {
+    case DomType::PropertyDefinition:
+    case DomType::MethodInfo: {
         const QString name = item.field(Fields::name).value().toString();
         findUsagesHelper(item, name, result);
         break;
@@ -615,6 +639,11 @@ QQmlJSScope::ConstPtr QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem it
                 return scope;
             }
 
+            // check if its a method
+            if (QQmlJSScope::ConstPtr scope = findMethodIn(*referrerScope, name)) {
+                return scope;
+            }
+
             // check if its an (unqualified) property
             if (QQmlJSScope::ConstPtr scope = findPropertyIn(*referrerScope, name, options)) {
                 return scope;
@@ -648,6 +677,14 @@ QQmlJSScope::ConstPtr QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem it
         auto object = item.as<QmlObject>();
         if (object && object->semanticScope())
             return object->semanticScope().value();
+
+        return {};
+    }
+    case DomType::MethodInfo: {
+        auto object = item.as<MethodInfo>();
+        if (object && object->semanticScope())
+            // return the owner of the method
+            return object->semanticScope().value()->parentScope();
 
         return {};
     }

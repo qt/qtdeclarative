@@ -775,6 +775,17 @@ void tst_qmlls_utils::findUsages_data()
         sourceLocationFrom(testFileName, testFileContent, 53, 9, strlen("property int p2")),
     };
 
+    QList<QQmlLSUtilsLocation> recursiveUsages{
+        sourceLocationFrom(testFileName, testFileContent, 72, 14, strlen("recursive")),
+        sourceLocationFrom(testFileName, testFileContent, 74, 24, strlen("recursive")),
+        sourceLocationFrom(testFileName, testFileContent, 74, 34, strlen("recursive")),
+        sourceLocationFrom(testFileName, testFileContent, 74, 51, strlen("recursive")),
+        sourceLocationFrom(testFileName, testFileContent, 74, 68, strlen("recursive")),
+        sourceLocationFrom(testFileName, testFileContent, 76, 20, strlen("recursive")),
+        sourceLocationFrom(testFileName, testFileContent, 79, 34, strlen("recursive")),
+        sourceLocationFrom(testFileName, testFileContent, 84, 27, strlen("recursive")),
+    };
+
     std::sort(sumUsages.begin(), sumUsages.end());
     std::sort(iUsages.begin(), iUsages.end());
     std::sort(subItemHelloPropertyUsages.begin(), subItemHelloPropertyUsages.end());
@@ -783,6 +794,7 @@ void tst_qmlls_utils::findUsages_data()
     std::sort(nestedUsages.begin(), nestedUsages.end());
     std::sort(nestedComponent3Usages.begin(), nestedComponent3Usages.end());
     std::sort(nestedComponent3P2Usages.begin(), nestedComponent3P2Usages.end());
+    std::sort(recursiveUsages.begin(), recursiveUsages.end());
 
     QTest::addRow("findSumFromDeclaration") << testFileName << 8 << 13 << sumUsages;
     QTest::addRow("findSumFromUsage") << testFileName << 10 << 20 << sumUsages;
@@ -815,6 +827,13 @@ void tst_qmlls_utils::findUsages_data()
 
     QTest::addRow("findProperty2FromUsageInFieldMemberExpression")
             << testFileName << 68 << 39 << nestedComponent3P2Usages;
+
+    QTest::addRow("findFunctionUsage") << testFileName << 74 << 30 << recursiveUsages;
+    QTest::addRow("findFunctionUsage2") << testFileName << 76 << 24 << recursiveUsages;
+
+    QTest::addRow("findQualifiedFunctionUsage") << testFileName << 84 << 31 << recursiveUsages;
+
+    QTest::addRow("findFunctionUsageFromDefinition") << testFileName << 72 << 17 << recursiveUsages;
 }
 
 void tst_qmlls_utils::findUsages()
