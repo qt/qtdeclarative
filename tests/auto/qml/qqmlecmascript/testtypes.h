@@ -2068,6 +2068,35 @@ public:
     }
 };
 
+class ListPropertyAssignment_Gadget
+{
+    Q_GADGET
+    Q_PROPERTY(QStringList gadgetStringList READ gadgetStringList WRITE setGadgetStringList)
+    QML_VALUE_TYPE(listPropertyAssignment_Gadget)
+public:
+    ListPropertyAssignment_Gadget();
+    QStringList gadgetStringList() const;
+    void setGadgetStringList(const QStringList &list);
+
+private:
+    QStringList m_gadgetStringList;
+};
+
+class ListPropertyAssignment_Object : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(QStringList qobjectStringList READ qobjectStringList WRITE setQobjectStringList)
+public:
+    explicit ListPropertyAssignment_Object(QObject *parent = nullptr);
+
+    QStringList qobjectStringList() const { return m_qobjectStringList; }
+
+    void setQobjectStringList(const QStringList &newList);
+
+private:
+    QStringList m_qobjectStringList;
+};
 
 void registerTypes();
 

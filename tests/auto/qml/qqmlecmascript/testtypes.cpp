@@ -436,6 +436,30 @@ void ClassWithQProperty2::callback()
     // Q_UNUSED(this->value.value()); // force evaluation
 }
 
+ListPropertyAssignment_Gadget::ListPropertyAssignment_Gadget() { }
+
+QStringList ListPropertyAssignment_Gadget::gadgetStringList() const
+{
+    return m_gadgetStringList;
+}
+
+void ListPropertyAssignment_Gadget::setGadgetStringList(const QStringList &list)
+{
+    if (m_gadgetStringList == list)
+        return;
+    m_gadgetStringList = list;
+}
+
+ListPropertyAssignment_Object::ListPropertyAssignment_Object(QObject *parent)
+    : QObject{ parent } { }
+
+void ListPropertyAssignment_Object::setQobjectStringList(const QStringList &newList)
+{
+    if (m_qobjectStringList == newList)
+        return;
+    m_qobjectStringList = newList;
+}
+
 void registerTypes()
 {
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObjectAlias");
@@ -543,6 +567,9 @@ void registerTypes()
     qmlRegisterType<Sender>("Qt.test", 1,0, "Sender");
     qmlRegisterTypesAndRevisions<ReadOnlyBindable>("Qt.test", 1);
     qmlRegisterTypesAndRevisions<ResettableGadgetHolder>("Qt.test", 1);
+
+    qmlRegisterTypesAndRevisions<ListPropertyAssignment_Gadget>("Qt.test", 1);
+    qmlRegisterTypesAndRevisions<ListPropertyAssignment_Object>("Qt.test", 1);
 }
 
 #include "testtypes.moc"
