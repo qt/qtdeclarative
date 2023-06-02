@@ -62,6 +62,7 @@ qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders"
 )
 
 qt_internal_add_shaders(QuickShapesPrivate "shaders_stroke"
+    SILENT
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
@@ -77,6 +78,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_stroke"
 )
 
 qt_internal_add_shaders(QuickShapesPrivate "shaders_lg"
+    SILENT
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
@@ -92,6 +94,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_lg"
 )
 
 qt_internal_add_shaders(QuickShapesPrivate "shaders_lg_stroke"
+    SILENT
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
@@ -109,6 +112,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_lg_stroke"
 )
 
 qt_internal_add_shaders(QuickShapesPrivate "shaders_rg"
+    SILENT
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
@@ -124,6 +128,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_rg"
 )
 
 qt_internal_add_shaders(QuickShapesPrivate "shaders_rg_stroke"
+    SILENT
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
@@ -141,6 +146,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_rg_stroke"
 )
 
 qt_internal_add_shaders(QuickShapesPrivate "shaders_cg"
+    SILENT
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
@@ -157,6 +163,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_cg"
 )
 
 qt_internal_add_shaders(QuickShapesPrivate "shaders_cg_stroke"
+    SILENT
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
