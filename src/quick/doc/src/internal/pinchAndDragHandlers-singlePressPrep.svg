@@ -127,7 +127,7 @@
          x="362.66"
          y="-300.95001"
          font-family="Times, serif"
-         font-size="14px"
+         font-size="9pt"
          id="text662"
          style="stroke-width:1.00011;stroke-dasharray:none">ResizeItemToWindow_QMLTYPE_1</text>
     </g>
@@ -147,7 +147,7 @@
          x="362.66"
          y="-229.32001"
          font-family="Times, serif"
-         font-size="14px"
+         font-size="9pt"
          id="text669">ℚRootItem</text>
     </g>
     <!-- llfkmbbephlg&#45;&gt;llfkmbbeijgg -->
@@ -183,7 +183,7 @@
          x="286.66"
          y="-157.32001"
          font-family="Times, serif"
-         font-size="14px"
+         font-size="9pt"
          id="text683">ℚRectangle</text>
     </g>
     <!-- llfkmbbeijgg&#45;&gt;llfkmbbepmbg -->
@@ -219,7 +219,7 @@
          x="439.66"
          y="-157.32001"
          font-family="Times, serif"
-         font-size="14px"
+         font-size="9pt"
          id="text697">ℚDeliveryAgent</text>
     </g>
     <!-- llfkmbbeijgg&#45;&gt;llfkmbclplkg -->
@@ -255,7 +255,7 @@
          x="88.660004"
          y="-85.330002"
          font-family="Times, serif"
-         font-size="14px"
+         font-size="9pt"
          id="text711">ℚPinchHandler</text>
     </g>
     <!-- llfkmbbepmbg&#45;&gt;llfkmbodpifg -->
@@ -291,7 +291,7 @@
          x="236.66"
          y="-85.330002"
          font-family="Times, serif"
-         font-size="14px"
+         font-size="9pt"
          id="text725">ℚRectangle</text>
     </g>
     <!-- llfkmbbepmbg&#45;&gt;llfkmbnfping -->
@@ -327,7 +327,7 @@
          x="336.66"
          y="-85.330002"
          font-family="Times, serif"
-         font-size="14px"
+         font-size="9pt"
          id="text739">ℚRectangle</text>
     </g>
     <!-- llfkmbbepmbg&#45;&gt;llfkmbbdfibg -->
@@ -363,7 +363,7 @@
          x="481.66"
          y="-85.330002"
          font-family="Times, serif"
-         font-size="14px"
+         font-size="9pt"
          id="text753">ℚRectangle</text>
     </g>
     <!-- llfkmbbepmbg&#45;&gt;llfkmbodeang -->
@@ -399,7 +399,7 @@
          x="147.66"
          y="-13.33"
          font-family="Times, serif"
-         font-size="14px"
+         font-size="9pt"
          id="text767">ℚDragHandler</text>
     </g>
     <!-- llfkmbnfping&#45;&gt;llfkmbbfjjgg -->
@@ -435,7 +435,7 @@
          x="336.66"
          y="-13.33"
          font-family="Times, serif"
-         font-size="14px"
+         font-size="9pt"
          id="text781">ℚDragHandler</text>
     </g>
     <!-- llfkmbbdfibg&#45;&gt;llfkmbbfibdg -->
@@ -471,7 +471,7 @@
          x="525.65997"
          y="-13.33"
          font-family="Times, serif"
-         font-size="14px"
+         font-size="9pt"
          id="text795">ℚDragHandler</text>
     </g>
     <!-- llfkmbodeang&#45;&gt;llfkmbcknglg -->
@@ -506,13 +506,13 @@
        transform="matrix(1,0,-0.22867874,0.97350194,0,0)" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.0016px;line-height:125%;font-family:Times, serif;-inkscape-font-specification:'Times, serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9pt;line-height:125%;font-family:Times, serif;-inkscape-font-specification:'Times, serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
        x="-149.44366"
        y="-93.742676"
        id="text1897"><tspan
          sodipodi:role="line"
          id="tspan1895"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.0016px;font-family:Times, serif;-inkscape-font-specification:'Times, serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9pt;font-family:Times, serif;-inkscape-font-specification:'Times, serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.750085px"
          x="-149.44366"
          y="-93.742676">QGuiApplication</tspan></text>
   </g>
@@ -522,12 +522,12 @@
      id="path1311" />
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
      x="130.11781"
      y="17.801956"
      id="text1315"><tspan
        sodipodi:role="line"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
        x="130.11781"
        y="17.801956"
        id="tspan1317">① event(QTouchEvent*)</tspan></text>
@@ -538,13 +538,13 @@
      sodipodi:nodetypes="cc" />
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
      x="223.93822"
      y="-381.72717"
      id="text2981"
      transform="rotate(65.571486)"><tspan
        sodipodi:role="line"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
        x="223.93822"
        y="-381.72717"
        id="tspan2979">② event(QTouchEvent*)</tspan></text>
@@ -555,33 +555,33 @@
      sodipodi:nodetypes="cc" />
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
      x="540.16193"
      y="178.55621"
      id="text8573"><tspan
        sodipodi:role="line"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
        x="540.16193"
        y="178.55621"
        id="tspan8587">③ deliverPointerEvent()</tspan><tspan
        sodipodi:role="line"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
        x="540.16193"
        y="189.51059"
        id="tspan8591">④ deliverPressOrReleaseEvent()</tspan><tspan
        sodipodi:role="line"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
        x="540.16193"
        y="200.46495"
        id="tspan8595">⑤ pointerTargets()</tspan></text>
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
      x="187.83101"
      y="197.08606"
      id="text8866"><tspan
        sodipodi:role="line"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
        x="187.83101"
        y="197.08606"
        id="tspan8864">⑥ wantsEventPoint()</tspan></text>
@@ -607,34 +607,34 @@
      sodipodi:nodetypes="cc" />
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
      x="180.63849"
      y="263.64062"
      id="text9260"><tspan
        sodipodi:role="line"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
        x="162.79994"
        y="275.0322"
        id="tspan9258">⑦ wantsEventPoint()</tspan></text>
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;text-anchor:end;text-align:end"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;text-anchor:end;text-align:end"
      x="295.72836"
      y="286.02438"
      id="text9282"><tspan
        sodipodi:role="line"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;text-anchor:end;text-align:end"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;text-anchor:end;text-align:end"
        x="203.01468"
        y="286.02438"
        id="tspan9280">⑧ wantsEventPoint()</tspan></text>
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
      x="550.57092"
      y="278.21912"
      id="text9304"><tspan
        sodipodi:role="line"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.00091px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
        x="550.57092"
        y="278.21912"
        id="tspan9302">⑨ wantsEventPoint()</tspan></text>
