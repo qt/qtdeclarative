@@ -2468,7 +2468,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::FormalParameterList *fpl)
                 typeName = type->toString();
         m_currentScope->insertJSIdentifier(boundName.id,
                                            { QQmlJSScope::JavaScriptIdentifier::Parameter,
-                                             fpl->firstSourceLocation(), typeName, false });
+                                             boundName.location, typeName, false });
     }
     return true;
 }
@@ -2704,7 +2704,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::PatternElement *element)
                     { (element->scope == QQmlJS::AST::VariableScope::Var)
                               ? QQmlJSScope::JavaScriptIdentifier::FunctionScoped
                               : QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
-                      element->firstSourceLocation(), typeName,
+                      name.location, typeName,
                       element->scope == QQmlJS::AST::VariableScope::Const });
         }
     }

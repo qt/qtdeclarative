@@ -879,6 +879,8 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
 
     QTest::addRow("JSIdentifierX")
             << JSDefinitionsQml << 14 << 11 << JSDefinitionsQml << 13 << 13 << strlen("x");
+    QTest::addRow("JSIdentifierX2")
+            << JSDefinitionsQml << 15 << 11 << JSDefinitionsQml << 13 << 13 << strlen("x");
     QTest::addRow("propertyI") << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << 9
                                << positionAfterOneIndent << strlen("property int i");
     QTest::addRow("qualifiedPropertyI") << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << 9
@@ -888,8 +890,14 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
 
     QTest::addRow("parameterA") << JSDefinitionsQml << 10 << 16 << noResultExpected << -1 << -1
                                 << size_t{};
+    QTest::addRow("parameterAUsage")
+            << JSDefinitionsQml << 10 << 39 << JSDefinitionsQml << -1 << 16 << strlen("a");
+
     QTest::addRow("parameterB") << JSDefinitionsQml << 10 << 28 << noResultExpected << -1 << -1
                                 << size_t{};
+    QTest::addRow("parameterBUsage")
+            << JSDefinitionsQml << 10 << 86 << JSDefinitionsQml << -1 << 28 << strlen("b");
+
     QTest::addRow("comment") << JSDefinitionsQml << 10 << 21 << noResultExpected << -1 << -1
                              << size_t{};
 
@@ -904,6 +912,17 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
                              << positionAfterOneIndent << strlen("property int i");
     QTest::addRow("scopedI") << JSDefinitionsQml << 25 << 27 << JSDefinitionsQml << 24 << 32
                              << strlen("i");
+
+    QTest::addRow("shadowingProperty") << JSDefinitionsQml << 37 << 21 << JSDefinitionsQml << 34
+                                       << 9 << strlen("property int i");
+    QTest::addRow("shadowingQualifiedProperty") << JSDefinitionsQml << 37 << 35 << JSDefinitionsQml
+                                                << 34 << 9 << strlen("property int i");
+    QTest::addRow("shadowedProperty") << JSDefinitionsQml << 37 << 49 << JSDefinitionsQml << 9
+                                      << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("parentId") << JSDefinitionsQml << 37 << 44 << JSDefinitionsQml << 6 << 1
+                              << strlen("Item");
+    QTest::addRow("currentId") << JSDefinitionsQml << 37 << 30 << JSDefinitionsQml << 31
+                               << positionAfterOneIndent << strlen("Rectangle");
 }
 
 void tst_qmlls_utils::findDefinitionFromLocation()
@@ -938,22 +957,22 @@ void tst_qmlls_utils::findDefinitionFromLocation()
 
     QCOMPARE(locations.size(), 1);
 
-    auto type = QQmlLSUtils::findDefinitionOf(locations.front().domItem);
+    auto definition = QQmlLSUtils::findDefinitionOf(locations.front().domItem);
 
     // if expectedFilePath is empty, we probably just want to make sure that it does
     // not crash
     if (expectedFilePath == noResultExpected) {
-        QVERIFY(!type);
+        QVERIFY(!definition);
         return;
     }
 
-    QVERIFY(type);
+    QVERIFY(definition);
 
-    QCOMPARE(type->filename, expectedFilePath);
+    QCOMPARE(definition->filename, expectedFilePath);
 
-    QCOMPARE(type->location.startLine, quint32(expectedLine));
-    QCOMPARE(type->location.startColumn, quint32(expectedCharacter));
-    QCOMPARE(type->location.length, quint32(expectedLength));
+    QCOMPARE(definition->location.startLine, quint32(expectedLine));
+    QCOMPARE(definition->location.startColumn, quint32(expectedCharacter));
+    QCOMPARE(definition->location.length, quint32(expectedLength));
 }
 
 QTEST_MAIN(tst_qmlls_utils)

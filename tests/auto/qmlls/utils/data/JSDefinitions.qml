@@ -27,4 +27,15 @@ Item {
         }
         f(scoped, i);
     }
+
+    Rectangle {
+        id: nested
+
+        property int i
+
+        function f() {
+            let x = i, y = nested.i, z = rootId.i;
+        }
+
+    }
 }

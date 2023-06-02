@@ -844,9 +844,11 @@ struct QML_PARSER_EXPORT BoundName
     };
 
     QString id;
+    QQmlJS::SourceLocation location;
     QTaggedPointer<TypeAnnotation, Type> typeAnnotation;
-    BoundName(const QString &id, TypeAnnotation *typeAnnotation, Type type = Declared)
-        : id(id), typeAnnotation(typeAnnotation, type)
+    BoundName(const QString &id, const QQmlJS::SourceLocation &location,
+              TypeAnnotation *typeAnnotation, Type type = Declared)
+        : id(id), location(location), typeAnnotation(typeAnnotation, type)
     {}
     BoundName() = default;
 
