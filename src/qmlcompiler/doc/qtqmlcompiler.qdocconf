@@ -13,6 +13,12 @@ qhp.QtQmlCompiler.virtualFolder = qtqmlcompiler
 qhp.QtQmlCompiler.indexTitle    = Qt QML Compiler
 qhp.QtQmlCompiler.indexRoot     =
 
+qhp.QtQmlCompiler.subprojects = classes
+qhp.QtQmlCompiler.subprojects.classes.title = Classes
+qhp.QtQmlCompiler.subprojects.classes.indexTitle = Qt QML Compiler C++ Classes
+qhp.QtQmlCompiler.subprojects.classes.selectors = namespace class
+qhp.QtQmlCompiler.subprojects.classes.sortPages = true
+
 tagfile                 = qtqmlcompiler.tags
 
 depends += \
