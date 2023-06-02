@@ -226,16 +226,16 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     Components access names and paths via the following roles:
 
     \list
-    \li \c fileName
-    \li \c filePath
-    \li \c fileURL (since Qt 5.2; deprecated since Qt 5.15)
-    \li \c fileUrl (since Qt 5.15)
-    \li \c fileBaseName
-    \li \c fileSuffix
-    \li \c fileSize
-    \li \c fileModified
-    \li \c fileAccessed
-    \li \c fileIsDir
+    \li \c fileName (\c string)
+    \li \c filePath (\c string)
+    \li \c fileURL (\c url) (since Qt 5.2; deprecated since Qt 5.15)
+    \li \c fileUrl (\c url) (since Qt 5.15)
+    \li \c fileBaseName (\c string)
+    \li \c fileSuffix (\c string)
+    \li \c fileSize (\c qlonglong)
+    \li \c fileModified (\c date)
+    \li \c fileAccessed (\c date)
+    \li \c fileIsDir (\c bool)
     \endlist
 
     Additionally a file entry can be differentiated from a folder entry via the
@@ -369,6 +369,7 @@ QHash<int, QByteArray> QQuickFolderListModel::roleNames() const
 
 /*!
     \qmlproperty int FolderListModel::count
+    \readonly
 
     Returns the number of items in the current folder that match the
     filter criteria.
@@ -468,6 +469,7 @@ void QQuickFolderListModel::setRootFolder(const QUrl &path)
 
 /*!
     \qmlproperty url FolderListModel::parentFolder
+    \readonly
 
     Returns the URL of the parent of the current \l folder.
 */
@@ -541,11 +543,11 @@ void QQuickFolderListModel::componentComplete()
     The \a sortField property contains the field to use for sorting.
     \c sortField may be one of:
 
-    \value Unsorted no sorting is applied
-    \value Name     sort by filename
-    \value Time     sort by time modified
-    \value Size     sort by file size
-    \value Type     sort by file type (extension)
+    \value FolderListModel.Unsorted no sorting is applied
+    \value FolderListModel.Name     sort by filename (default)
+    \value FolderListModel.Time     sort by time modified
+    \value FolderListModel.Size     sort by file size
+    \value FolderListModel.Type     sort by file type/extension
 
     \sa sortReversed
 */
@@ -793,6 +795,7 @@ void QQuickFolderListModel::setCaseSensitive(bool on)
 /*!
     \qmlproperty enumeration FolderListModel::status
     \since 5.11
+    \readonly
 
     This property holds the status of folder reading.  It can be one of:
 
@@ -859,16 +862,16 @@ void QQuickFolderListModel::setSortCaseSensitive(bool on)
     are available:
 
     \list
-        \li \c fileName
-        \li \c filePath
-        \li \c fileURL (since Qt 5.2; deprecated since Qt 5.15)
-        \li \c fileUrl (since Qt 5.15)
-        \li \c fileBaseName
-        \li \c fileSuffix
-        \li \c fileSize
-        \li \c fileModified
-        \li \c fileAccessed
-        \li \c fileIsDir
+        \li \c fileName (\c string)
+        \li \c filePath (\c string)
+        \li \c fileURL (\c url) (since Qt 5.2; deprecated since Qt 5.15)
+        \li \c fileUrl (\c url) (since Qt 5.15)
+        \li \c fileBaseName (\c string)
+        \li \c fileSuffix (\c string)
+        \li \c fileSize (\c qlonglong)
+        \li \c fileModified (\c date)
+        \li \c fileAccessed (\c date)
+        \li \c fileIsDir (\c bool)
     \endlist
 */
 QVariant QQuickFolderListModel::get(int idx, const QString &property) const
