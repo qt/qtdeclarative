@@ -467,8 +467,16 @@ void QQmlTypeData::done()
             m_compiledData->resolvedTypes.clear();
             // ... but we don't want the property caches we've created for the broken CU.
             for (QV4::ResolvedTypeReference *ref: std::as_const(resolvedTypeCache)) {
-                if (ref->compilationUnit() != m_compiledData)
+                const auto compilationUnit = ref->compilationUnit();
+                if (compilationUnit.isNull()) {
+                    // Inline component references without CU belong to the surrounding CU.
+                    // We have to clear them. Inline component references to other documents
+                    // have a CU.
+                    if (!ref->type().isInlineComponentType())
+                        continue;
+                } else if (compilationUnit != m_compiledData) {
                     continue;
+                }
                 ref->setTypePropertyCache(QQmlPropertyCache::ConstPtr());
                 ref->setCompilationUnit(QQmlRefPointer<QV4::ExecutableCompilationUnit>());
             }
