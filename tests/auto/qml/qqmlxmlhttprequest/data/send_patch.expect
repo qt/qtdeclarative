@@ -15,4 +15,3 @@ Host: {{ServerHostUrl}}
 -    } else if (m_method == QLatin1String("OPTIONS")) {
 +    } else if (m_method == QLatin1String("OPTIONS") ||
 +            (m_method == QLatin1String("PATCH"))) {
-
