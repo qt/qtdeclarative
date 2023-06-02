@@ -379,6 +379,8 @@ QQmlSettings::~QQmlSettings()
     This property holds the name of the settings category.
 
     Categories can be used to group related settings together.
+
+    \sa QSettings::group
 */
 QString QQmlSettings::category() const
 {
