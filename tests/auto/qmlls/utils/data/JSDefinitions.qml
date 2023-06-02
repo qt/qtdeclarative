@@ -33,9 +33,18 @@ Item {
 
         property int i
 
-        function f() {
+        function f(n: int): int {
             let x = i, y = nested.i, z = rootId.i;
+            if (x > 3)
+                return 1 + f(f(x-1) + f(x-2) - f(x-3));
+            else
+                return f(0);
         }
-
+        function fff(n: int, m: int): int {
+            return f(n + m) / 42 + ffff()
+        }
+    }
+    function abc() {
+        return nested.f(42);
     }
 }

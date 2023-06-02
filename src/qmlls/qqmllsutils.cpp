@@ -528,6 +528,17 @@ QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
     return result;
 }
 
+static QQmlJSScope::ConstPtr findMethodIn(const QQmlJSScope::Ptr &referrerScope,
+                                          const QString &name)
+{
+    for (QQmlJSScope::Ptr current = referrerScope; current; current = current->parentScope()) {
+        if (current->hasMethod(name)) {
+            return current;
+        }
+    }
+    return {};
+}
+
 static QQmlJSScope::ConstPtr findPropertyIn(const QQmlJSScope::Ptr &referrerScope,
                                             const QString &propertyName,
                                             QQmlLSUtilsResolveOptions options)
@@ -566,6 +577,18 @@ QQmlJSScope::ConstPtr QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem it
             auto owner = QQmlLSUtils::resolveExpressionType(parent.field(Fields::left),
                                                             QQmlLSUtilsResolveOptions::Everything);
             if (owner) {
+                if (owner->hasMethod(name)) {
+                    switch (options) {
+                    case JustOwner:
+                        return owner;
+                    case Everything:
+                        // not implemented yet, but JS functions have methods and properties
+                        // see
+                        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
+                        // for the list of properties/methods of functions
+                        break;
+                    }
+                }
                 if (auto property = owner->property(name); property.isValid()) {
                     switch (options) {
                     case JustOwner:
@@ -690,7 +713,28 @@ DomItem QQmlLSUtils::sourceLocationToDomItem(DomItem file, const QQmlJS::SourceL
     return {};
 }
 
-std::optional<QQmlLSUtilsLocation>
+static std::optional<QQmlLSUtilsLocation>
+findMethodDefinitionOf(DomItem file, QQmlJS::SourceLocation location, const QString &name)
+{
+    DomItem owner = QQmlLSUtils::sourceLocationToDomItem(file, location);
+    DomItem method = owner.field(Fields::methods).key(name).index(0);
+    auto fileLocation = FileLocations::treeOf(method);
+    if (!fileLocation)
+        return {};
+
+    auto regions = fileLocation->info().regions;
+
+    if (auto it = regions.constFind(u"identifier"_s); it != regions.constEnd()) {
+        QQmlLSUtilsLocation result;
+        result.location = *it;
+        result.filename = method.canonicalFilePath();
+        return result;
+    }
+
+    return {};
+}
+
+static std::optional<QQmlLSUtilsLocation>
 findPropertyDefinitionOf(DomItem file, QQmlJS::SourceLocation propertyDefinitionLocation,
                          const QString &name)
 {
@@ -710,14 +754,19 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
 
     switch (item.internalKind()) {
     case QQmlJS::Dom::DomType::ScriptIdentifierExpression: {
-        // first check if its a JS Identifier
-
         const QString name = item.value().toString();
         if (isFieldMemberAccess(item)) {
             if (auto ownerScope = QQmlLSUtils::resolveExpressionType(
                         item, QQmlLSUtilsResolveOptions::JustOwner)) {
-                return findPropertyDefinitionOf(item.containingFile(), ownerScope->sourceLocation(),
-                                                name);
+                if (auto methodDefinition = findMethodDefinitionOf(
+                            item.containingFile(), ownerScope->sourceLocation(), name)) {
+
+                    return methodDefinition;
+                }
+                if (auto propertyDefinition = findPropertyDefinitionOf(
+                            item.containingFile(), ownerScope->sourceLocation(), name)) {
+                    return propertyDefinition;
+                }
             }
             return {};
         }
@@ -739,15 +788,21 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
             return result;
         }
 
-        // not a JS identifier, check for ids and properties
+        // not a JS identifier, check for ids and properties and methods
         auto referrerScope = item.nearestSemanticScope();
         if (!referrerScope)
             return {};
 
+        // check: is it a method name?
+        if (QQmlJSScope::ConstPtr scope = findMethodIn(*referrerScope, name)) {
+            const QString canonicalPath = scope->filePath();
+            DomItem file = item.goToFile(canonicalPath);
+            return findMethodDefinitionOf(file, scope->sourceLocation(), name);
+        }
+
         if (QQmlJSScope::ConstPtr scope =
                     findPropertyIn(*referrerScope, name, QQmlLSUtilsResolveOptions::JustOwner)) {
             const QString canonicalPath = scope->filePath();
-            qDebug() << canonicalPath;
             DomItem file = item.goToFile(canonicalPath);
             return findPropertyDefinitionOf(file, scope->sourceLocation(), name);
         }

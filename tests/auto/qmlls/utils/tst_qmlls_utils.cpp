@@ -923,6 +923,18 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
                               << strlen("Item");
     QTest::addRow("currentId") << JSDefinitionsQml << 37 << 30 << JSDefinitionsQml << 31
                                << positionAfterOneIndent << strlen("Rectangle");
+
+    QTest::addRow("recursiveFunction")
+            << JSDefinitionsQml << 39 << 28 << JSDefinitionsQml << 36 << 18 << strlen("f");
+    QTest::addRow("recursiveFunction2")
+            << JSDefinitionsQml << 39 << 39 << JSDefinitionsQml << 36 << 18 << strlen("f");
+    QTest::addRow("functionFromFunction")
+            << JSDefinitionsQml << 44 << 20 << JSDefinitionsQml << 36 << 18 << strlen("f");
+    QTest::addRow("qualifiedFunctionName")
+            << JSDefinitionsQml << 48 << 23 << JSDefinitionsQml << 36 << 18 << strlen("f");
+
+    QTest::addRow("functionInParent")
+            << JSDefinitionsQml << 44 << 37 << JSDefinitionsQml << 18 << 14 << strlen("ffff");
 }
 
 void tst_qmlls_utils::findDefinitionFromLocation()

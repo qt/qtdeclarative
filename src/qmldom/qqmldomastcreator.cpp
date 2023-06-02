@@ -521,6 +521,8 @@ bool QQmlDomAstCreator::visit(AST::UiSourceElement *el)
         pushEl(mPathFromOwner, *mPtr,
                fDef); // add at the start and use the normal recursive visit?
         FileLocations::Tree &fLoc = nodeStack.last().fileLocations;
+        if (fDef->identifierToken.isValid())
+            FileLocations::addRegion(fLoc, u"identifier"_s, fDef->identifierToken);
         auto bodyTree = FileLocations::ensure(fLoc, Path::Field(Fields::body),
                                               AttachedInfo::PathType::Relative);
         FileLocations::addRegion(bodyTree, QString(), bodyLoc);
