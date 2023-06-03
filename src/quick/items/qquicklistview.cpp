@@ -2243,6 +2243,8 @@ QQuickListView::~QQuickListView()
 
 /*!
     \qmlattachedproperty bool QtQuick::ListView::isCurrentItem
+    \readonly
+
     This attached property is true if this delegate is the current item; otherwise false.
 
     It is attached to each instance of the delegate.
@@ -2254,6 +2256,8 @@ QQuickListView::~QQuickListView()
 
 /*!
     \qmlattachedproperty ListView QtQuick::ListView::view
+    \readonly
+
     This attached property holds the view that manages this delegate instance.
 
     It is attached to each instance of the delegate and also to the header, the footer,
@@ -2262,6 +2266,8 @@ QQuickListView::~QQuickListView()
 
 /*!
     \qmlattachedproperty string QtQuick::ListView::previousSection
+    \readonly
+
     This attached property holds the section of the previous element.
 
     It is attached to each instance of the delegate.
@@ -2271,6 +2277,8 @@ QQuickListView::~QQuickListView()
 
 /*!
     \qmlattachedproperty string QtQuick::ListView::nextSection
+    \readonly
+
     This attached property holds the section of the next element.
 
     It is attached to each instance of the delegate.
@@ -2280,6 +2288,8 @@ QQuickListView::~QQuickListView()
 
 /*!
     \qmlattachedproperty string QtQuick::ListView::section
+    \readonly
+
     This attached property holds the section of this element.
 
     It is attached to each instance of the delegate.

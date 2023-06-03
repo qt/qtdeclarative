@@ -84,6 +84,7 @@ QQuickStackLayout::QQuickStackLayout(QQuickItem *parent) :
 
 /*!
     \qmlproperty int StackLayout::count
+    \readonly
 
     This property holds the number of items that belong to the layout.
 
@@ -431,6 +432,7 @@ QQuickStackLayoutAttached::QQuickStackLayoutAttached(QObject *object)
 
 /*!
     \qmlattachedproperty int StackLayout::index
+    \readonly
 
     This attached property holds the index of each child item in the
     \l StackLayout.
@@ -455,6 +457,7 @@ void QQuickStackLayoutAttached::setIndex(int index)
 
 /*!
     \qmlattachedproperty bool StackLayout::isCurrentItem
+    \readonly
 
     This attached property is \c true if this child is the current item
     in the \l StackLayout.
@@ -479,6 +482,7 @@ void QQuickStackLayoutAttached::setIsCurrentItem(bool isCurrentItem)
 
 /*!
     \qmlattachedproperty StackLayout StackLayout::layout
+    \readonly
 
     This attached property holds the \l StackLayout that manages this child
     item.

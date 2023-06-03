@@ -531,6 +531,8 @@ QQuickPathView::~QQuickPathView()
 
 /*!
     \qmlattachedproperty PathView QtQuick::PathView::view
+    \readonly
+
     This attached property holds the view that manages this delegate instance.
 
     It is attached to each instance of the delegate.
@@ -538,6 +540,8 @@ QQuickPathView::~QQuickPathView()
 
 /*!
     \qmlattachedproperty bool QtQuick::PathView::onPath
+    \readonly
+
     This attached property holds whether the item is currently on the path.
 
     If a pathItemCount has been set, it is possible that some items may
@@ -558,6 +562,8 @@ QQuickPathView::~QQuickPathView()
 
 /*!
     \qmlattachedproperty bool QtQuick::PathView::isCurrentItem
+    \readonly
+
     This attached property is true if this delegate is the current item; otherwise false.
 
     It is attached to each instance of the delegate.
