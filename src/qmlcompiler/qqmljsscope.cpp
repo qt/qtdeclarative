@@ -1264,22 +1264,20 @@ bool QQmlJSScope::isCreatable() const
 QQmlSA::Element QQmlJSScope::createQQmlSAElement(const ConstPtr &ptr)
 {
     QQmlSA::Element element;
-    auto &wrappedPtr = reinterpret_cast<QQmlJSScope::ConstPtr &>(element.m_data);
-    wrappedPtr = ptr;
+    *reinterpret_cast<QQmlJSScope::ConstPtr *>(element.m_data) = ptr;
     return element;
 }
 
 QQmlSA::Element QQmlJSScope::createQQmlSAElement(ConstPtr &&ptr)
 {
     QQmlSA::Element element;
-    auto &wrappedPtr = reinterpret_cast<QQmlJSScope::ConstPtr &>(element.m_data);
-    wrappedPtr = std::move(ptr);
+    *reinterpret_cast<QQmlJSScope::ConstPtr *>(element.m_data) = std::move(ptr);
     return element;
 }
 
 const QQmlJSScope::ConstPtr &QQmlJSScope::scope(const QQmlSA::Element &element)
 {
-    return reinterpret_cast<const QQmlJSScope::ConstPtr &>(element.m_data);
+    return *reinterpret_cast<const QQmlJSScope::ConstPtr *>(element.m_data);
 }
 
 QT_END_NAMESPACE
