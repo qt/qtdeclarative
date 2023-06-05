@@ -13,10 +13,8 @@ Window {
 
     readonly property int margin: 11
 
-    Component.onCompleted: {
-        width = layout.implicitWidth + 2 * margin
-        height = layout.implicitHeight + 2 * margin
-    }
+    width: layout.implicitWidth + 2 * margin
+    height: layout.implicitHeight + 2 * margin
 
     Rectangle {
         anchors.fill: parent
@@ -51,6 +49,7 @@ Window {
             id: layout
 
             anchors.fill: parent
+            anchors.margins: window.margin
 
             Text {
                 readonly property string statusAsString: locationPermission.status === Qt.Granted ? qsTr("Granted") :
