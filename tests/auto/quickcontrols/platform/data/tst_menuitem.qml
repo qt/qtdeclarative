@@ -4,6 +4,7 @@
 import QtQuick
 import QtTest
 import Qt.labs.platform
+import org.qtproject.Test
 
 TestCase {
     id: testCase
@@ -61,6 +62,30 @@ TestCase {
 
         object[propertyName] = data.value
         compare(spy.count, 1)
+    }
+
+    function test_shortcut() {
+        if (!TestHelper.shortcutsSupported)
+            return;
+
+        let item = createTemporaryObject(menuItem, testCase)
+        verify(item)
+        let spy = createTemporaryObject(signalSpyComponent, testCase, {
+            target: item, signalName: "triggered"
+        })
+        verify(spy)
+        verify(spy.valid)
+
+        data = [TestHelper.shortcutInt, TestHelper.shortcutString, TestHelper.shortcutKeySequence]
+        for (let i = 0; i < data.length; ++i) {
+            item.shortcut = data[i]
+
+            compare(spy.count, i)
+            keySequence("CTRL+P")
+            compare(spy.count, i + 1)
+
+            item.shortcut = {}
+        }
     }
 
     function test_role() {
