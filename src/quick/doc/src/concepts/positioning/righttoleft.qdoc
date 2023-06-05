@@ -171,6 +171,16 @@ This will append the following declaration to the translation file, where you ca
 </context>
 \endcode
 
+Next, add the following bindings to the root QML component of your application:
+\code
+LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
+LayoutMirroring.childrenInherit: true
+\endcode
+
+The first binding ensures that the UI will be mirrored appropriately when a
+right-to-left locale is set. The second binding ensures that child items of the
+root component will also respect mirroring.
+
 You can test that the layout direction works as expected by running your Qt Quick application with
 the compiled translation file:
 
