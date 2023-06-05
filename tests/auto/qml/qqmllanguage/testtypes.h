@@ -2606,4 +2606,23 @@ public slots:
     void consume(GadgetedValueBaseType) { ++gadgeted; }
 };
 
+class Greeter : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    Greeter(QObject *parent = nullptr) : QObject(parent) {}
+
+    Q_INVOKABLE void greet()
+    {
+        qDebug().noquote() << objectName() << "says hello";
+    }
+
+    Q_INVOKABLE void sum(int a, int b)
+    {
+        qDebug().noquote() << objectName() << QString("says %1 + %2 = %3").arg(a).arg(b).arg(a + b);
+    }
+};
+
 #endif // TESTTYPES_H
