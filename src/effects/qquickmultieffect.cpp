@@ -150,7 +150,7 @@ Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
 */
 
 /*!
-    \qmlsignal QtQuick::MultiEffect::shaderChanged()
+    \qmlsignal QtQuick.Effects::MultiEffect::shaderChanged()
 
     This signal is emitted when the used shader changes.
     \sa fragmentShader, vertexShader
@@ -167,7 +167,7 @@ QQuickMultiEffect::~QQuickMultiEffect()
 }
 
 /*!
-    \qmlproperty Item QtQuick::MultiEffect::source
+    \qmlproperty Item QtQuick.Effects::MultiEffect::source
 
     This property holds the item to be used as a source for the effect.
     If needed, MultiEffect will internally generate a \l ShaderEffectSource
@@ -196,7 +196,7 @@ void QQuickMultiEffect::setSource(QQuickItem *item)
 }
 
 /*!
-    \qmlproperty bool QtQuick::MultiEffect::autoPaddingEnabled
+    \qmlproperty bool QtQuick.Effects::MultiEffect::autoPaddingEnabled
 
     When blur or shadow effects are enabled and this is set to true (default),
     the item size is padded automatically based on blurMax and blurMultiplier.
@@ -223,7 +223,7 @@ void QQuickMultiEffect::setAutoPaddingEnabled(bool enabled)
 }
 
 /*!
-    \qmlproperty rect QtQuick::MultiEffect::paddingRect
+    \qmlproperty rect QtQuick.Effects::MultiEffect::paddingRect
 
     Set this to increase item size manually so that blur and/or shadows will fit.
     If autoPaddingEnabled is true and paddingRect is not set, the item is padded
@@ -255,7 +255,7 @@ void QQuickMultiEffect::setPaddingRect(const QRectF &rect)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::brightness
+    \qmlproperty real QtQuick.Effects::MultiEffect::brightness
 
     This property defines how much the source brightness is increased or
     decreased.
@@ -276,7 +276,7 @@ void QQuickMultiEffect::setBrightness(qreal brightness)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::contrast
+    \qmlproperty real QtQuick.Effects::MultiEffect::contrast
 
     This property defines how much the source contrast is increased or
     decreased.
@@ -297,7 +297,7 @@ void QQuickMultiEffect::setContrast(qreal contrast)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::saturation
+    \qmlproperty real QtQuick.Effects::MultiEffect::saturation
 
     This property defines how much the source saturation is increased or
     decreased.
@@ -318,7 +318,7 @@ void QQuickMultiEffect::setSaturation(qreal saturation)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::colorization
+    \qmlproperty real QtQuick.Effects::MultiEffect::colorization
 
     This property defines how much the source is colorized with the
     colorizationColor.
@@ -339,7 +339,7 @@ void QQuickMultiEffect::setColorization(qreal colorization)
 }
 
 /*!
-    \qmlproperty color QtQuick::MultiEffect::colorizationColor
+    \qmlproperty color QtQuick.Effects::MultiEffect::colorizationColor
 
     This property defines the RGBA color value which is used to
     colorize the source.
@@ -361,7 +361,7 @@ void QQuickMultiEffect::setColorizationColor(const QColor &color)
 }
 
 /*!
-    \qmlproperty bool QtQuick::MultiEffect::blurEnabled
+    \qmlproperty bool QtQuick.Effects::MultiEffect::blurEnabled
 
     Enables the blur effect.
 
@@ -380,7 +380,7 @@ void QQuickMultiEffect::setBlurEnabled(bool enabled)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::blur
+    \qmlproperty real QtQuick.Effects::MultiEffect::blur
 
     This property defines how much blur (radius) is applied to the source.
 
@@ -405,7 +405,7 @@ void QQuickMultiEffect::setBlur(qreal blur)
 }
 
 /*!
-    \qmlproperty int QtQuick::MultiEffect::blurMax
+    \qmlproperty int QtQuick.Effects::MultiEffect::blurMax
 
     This property defines the maximum pixel radius that blur with value
     1.0 will reach.
@@ -433,7 +433,7 @@ void QQuickMultiEffect::setBlurMax(int blurMax)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::blurMultiplier
+    \qmlproperty real QtQuick.Effects::MultiEffect::blurMultiplier
 
     This property defines a multiplier for extending the blur radius.
 
@@ -460,7 +460,7 @@ void QQuickMultiEffect::setBlurMultiplier(qreal blurMultiplier)
 }
 
 /*!
-    \qmlproperty bool QtQuick::MultiEffect::shadowEnabled
+    \qmlproperty bool QtQuick.Effects::MultiEffect::shadowEnabled
 
     Enables the shadow effect.
 
@@ -479,7 +479,7 @@ void QQuickMultiEffect::setShadowEnabled(bool enabled)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::shadowOpacity
+    \qmlproperty real QtQuick.Effects::MultiEffect::shadowOpacity
 
     This property defines the opacity of the drop shadow. This value
     is multiplied with the \c shadowColor alpha value.
@@ -500,7 +500,7 @@ void QQuickMultiEffect::setShadowOpacity(qreal shadowOpacity)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::shadowBlur
+    \qmlproperty real QtQuick.Effects::MultiEffect::shadowBlur
 
     This property defines how much blur (radius) is applied to the shadow.
 
@@ -525,7 +525,7 @@ void QQuickMultiEffect::setShadowBlur(qreal shadowBlur)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::shadowHorizontalOffset
+    \qmlproperty real QtQuick.Effects::MultiEffect::shadowHorizontalOffset
 
     This property defines the horizontal offset of the shadow from the
     item center.
@@ -550,7 +550,7 @@ void QQuickMultiEffect::setShadowHorizontalOffset(qreal offset)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::shadowVerticalOffset
+    \qmlproperty real QtQuick.Effects::MultiEffect::shadowVerticalOffset
 
     This property defines the vertical offset of the shadow from the
     item center.
@@ -575,7 +575,7 @@ void QQuickMultiEffect::setShadowVerticalOffset(qreal offset)
 }
 
 /*!
-    \qmlproperty color QtQuick::MultiEffect::shadowColor
+    \qmlproperty color QtQuick.Effects::MultiEffect::shadowColor
 
     This property defines the RGBA color value which is used for
     the shadow. It is useful for example when a shadow is used for
@@ -597,7 +597,7 @@ void QQuickMultiEffect::setShadowColor(const QColor &color)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::shadowScale
+    \qmlproperty real QtQuick.Effects::MultiEffect::shadowScale
 
     This property defines the scale of the shadow. Scaling is applied from
     the center of the item.
@@ -622,7 +622,7 @@ void QQuickMultiEffect::setShadowScale(qreal shadowScale)
 }
 
 /*!
-    \qmlproperty bool QtQuick::MultiEffect::maskEnabled
+    \qmlproperty bool QtQuick.Effects::MultiEffect::maskEnabled
 
     Enables the mask effect.
 
@@ -641,7 +641,7 @@ void QQuickMultiEffect::setMaskEnabled(bool enabled)
 }
 
 /*!
-    \qmlproperty Item QtQuick::MultiEffect::maskSource
+    \qmlproperty Item QtQuick.Effects::MultiEffect::maskSource
 
     Source item for the mask effect. Should point to ShaderEffectSource,
     item with \l {QtQuick::Item::layer.enabled} {layer.enabled} set to \c true,
@@ -661,7 +661,7 @@ void QQuickMultiEffect::setMaskSource(QQuickItem *item)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::maskThresholdMin
+    \qmlproperty real QtQuick.Effects::MultiEffect::maskThresholdMin
 
     This property defines a lower threshold value for the mask pixels.
     The mask pixels that have an alpha value below this property are used
@@ -685,7 +685,7 @@ void QQuickMultiEffect::setMaskThresholdMin(qreal threshold)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::maskSpreadAtMin
+    \qmlproperty real QtQuick.Effects::MultiEffect::maskSpreadAtMin
 
     This property defines the smoothness of the mask edges near the
     maskThresholdMin. Setting higher spread values softens the transition
@@ -708,7 +708,7 @@ void QQuickMultiEffect::setMaskSpreadAtMin(qreal spread)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::maskThresholdMax
+    \qmlproperty real QtQuick.Effects::MultiEffect::maskThresholdMax
 
     This property defines an upper threshold value for the mask pixels.
     The mask pixels that have an alpha value below this property are used
@@ -732,7 +732,7 @@ void QQuickMultiEffect::setMaskThresholdMax(qreal threshold)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::maskSpreadAtMax
+    \qmlproperty real QtQuick.Effects::MultiEffect::maskSpreadAtMax
 
     This property defines the smoothness of the mask edges near the
     maskThresholdMax. Using higher spread values softens the transition
@@ -755,7 +755,7 @@ void QQuickMultiEffect::setMaskSpreadAtMax(qreal spread)
 }
 
 /*!
-    \qmlproperty bool QtQuick::MultiEffect::maskInverted
+    \qmlproperty bool QtQuick.Effects::MultiEffect::maskInverted
 
     This property switches the mask to the opposite side; instead of
     masking away the content outside maskThresholdMin and maskThresholdMax,
@@ -776,7 +776,7 @@ void QQuickMultiEffect::setMaskInverted(bool inverted)
 }
 
 /*!
-    \qmlproperty rect QtQuick::MultiEffect::itemRect
+    \qmlproperty rect QtQuick.Effects::MultiEffect::itemRect
 
     Read-only access to effect item rectangle. This can be used e.g. to see
     the area item covers.
@@ -790,7 +790,7 @@ QRectF QQuickMultiEffect::itemRect() const
 }
 
 /*!
-    \qmlproperty string QtQuick::MultiEffect::fragmentShader
+    \qmlproperty string QtQuick.Effects::MultiEffect::fragmentShader
     \readonly
 
     Read-only access to filename of the currently used fragment shader.
@@ -802,7 +802,7 @@ QString QQuickMultiEffect::fragmentShader() const
 }
 
 /*!
-    \qmlproperty string QtQuick::MultiEffect::vertexShader
+    \qmlproperty string QtQuick.Effects::MultiEffect::vertexShader
     \readonly
 
     Read-only access to filename of the currently used vertex shader.
@@ -814,7 +814,7 @@ QString QQuickMultiEffect::vertexShader() const
 }
 
 /*!
-    \qmlproperty bool QtQuick::MultiEffect::hasProxySource
+    \qmlproperty bool QtQuick.Effects::MultiEffect::hasProxySource
     \readonly
 
     Returns true when the MultiEffect internally creates \l ShaderEffectSource
