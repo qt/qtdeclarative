@@ -1488,7 +1488,7 @@ static ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index, QMe
                 const bool is_signal =
                         object.metaObject()->method(index).methodType() == QMetaMethod::Signal;
                 if (is_signal) {
-                    qWarning() << "Passing incomatible arguments to signals is not supported.";
+                    qWarning() << "Passing incompatible arguments to signals is not supported.";
                 } else {
                     return engine->throwTypeError(
                             QLatin1String("Passing incompatible arguments to C++ functions from "
