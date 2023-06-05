@@ -60,7 +60,7 @@ private:
     QString m_name;
     QString m_settingsName;
     QString m_description;
-    QtMsgType m_level;
+    QtMsgType m_level = QtDebugMsg;
     bool m_ignored = false;
     bool m_isDefault = false; // Whether or not the category can be disabled
     bool m_changed = false;
