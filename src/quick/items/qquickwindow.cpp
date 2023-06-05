@@ -2729,19 +2729,19 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     to this signal is still important if the recording of copy type of commands
     is desired since those cannot be enqueued within a render pass.
 
-    When using OpenGL, the QOpenGLContext used for rendering by the scene graph
-    will be bound at this point.
-
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
 
-    \warning When using OpenGL, be aware that setting OpenGL 3.x or 4.x specific
-    states and leaving these enabled or set to non-default values when returning
-    from the connected slot can interfere with the scene graph's rendering.
+    \note When using OpenGL, be aware that setting OpenGL 3.x or 4.x specific
+    states and leaving these enabled or set to non-default values when
+    returning from the connected slot can interfere with the scene graph's
+    rendering. The QOpenGLContext used for rendering by the scene graph will be
+    bound when the signal is emitted.
 
-    \sa rendererInterface(), {Scene Graph - OpenGL Under QML}, {Scene Graph - Metal Under QML},
-    {Scene Graph - Vulkan Under QML}, {Scene Graph - Direct3D 11 Under QML}
+    \sa rendererInterface(), {Scene Graph - RHI Under QML}, {Scene Graph -
+    OpenGL Under QML}, {Scene Graph - Metal Under QML}, {Scene Graph - Vulkan
+    Under QML}, {Scene Graph - Direct3D 11 Under QML}
 */
 
 /*!
@@ -2764,19 +2764,19 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     and afterRenderPassRecording(), that is typically used to achieve under- or
     overlaying of the custom rendering.
 
-    When using OpenGL, the QOpenGLContext used for rendering by the scene graph
-    will be bound at this point.
-
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
 
-    \warning When using OpenGL, be aware that setting OpenGL 3.x or 4.x specific
-    states and leaving these enabled or set to non-default values when returning
-    from the connected slot can interfere with the scene graph's rendering.
+    \note When using OpenGL, be aware that setting OpenGL 3.x or 4.x specific
+    states and leaving these enabled or set to non-default values when
+    returning from the connected slot can interfere with the scene graph's
+    rendering. The QOpenGLContext used for rendering by the scene graph will be
+    bound when the signal is emitted.
 
-    \sa rendererInterface(), {Scene Graph - OpenGL Under QML}, {Scene Graph - Metal Under QML},
-    {Scene Graph - Vulkan Under QML}, {Scene Graph - Direct3D 11 Under QML}
+    \sa rendererInterface(), {Scene Graph - RHI Under QML}, {Scene Graph -
+    OpenGL Under QML}, {Scene Graph - Metal Under QML}, {Scene Graph - Vulkan
+    Under QML}, {Scene Graph - Direct3D 11 Under QML}
  */
 
 /*!
@@ -2810,6 +2810,8 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     \sa rendererInterface()
 
     \since 5.14
+
+    \sa {Scene Graph - RHI Under QML}
 */
 
 /*!
@@ -2843,6 +2845,8 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     \sa rendererInterface()
 
     \since 5.14
+
+    \sa {Scene Graph - RHI Under QML}
 */
 
 /*!
