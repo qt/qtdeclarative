@@ -183,7 +183,7 @@ void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key)
 
     if (type == QLatin1String("qreal")) {
 #ifdef QT_COORD_TYPE_STRING
-        type = QLatin1String(QT_COORD_TYPE_STRING)
+        type = QLatin1String(QT_COORD_TYPE_STRING);
 #else
         type = QLatin1String("double");
 #endif
