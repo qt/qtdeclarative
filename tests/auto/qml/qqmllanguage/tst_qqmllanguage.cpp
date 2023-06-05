@@ -411,6 +411,7 @@ private slots:
 
     void objectMethodClone();
     void unregisteredValueTypeConversion();
+    void retainThis();
 
 private:
     QQmlEngine engine;
@@ -7922,6 +7923,40 @@ void tst_qqmllanguage::unregisteredValueTypeConversion()
     Q_ASSERT(handler);
     QCOMPARE(handler->consumed, 2);
     QCOMPARE(handler->gadgeted, 1);
+}
+
+void tst_qqmllanguage::retainThis()
+{
+    QQmlEngine e;
+    const QUrl url = testFileUrl("retainThis.qml");
+    QQmlComponent c(&e, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    const QString warning = u"Calling C++ methods with 'this' objects different "
+                            "from the one they were retrieved from is broken, due to "
+                            "historical reasons. The original object is used as 'this' "
+                            "object. You can allow the given 'this' object to be used "
+                            "by setting 'pragma NativeMethodBehavior: AcceptThisObject'"_s;
+
+    // Both cases objA because we retain the thisObject.
+    for (int i = 0; i < 2; ++i) {
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(url.toString() + u":12: "_s + warning));
+        QTest::ignoreMessage(QtDebugMsg, "objA says hello");
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(url.toString() + u":13: "_s + warning));
+        QTest::ignoreMessage(QtDebugMsg, "objA says 5 + 6 = 11");
+    }
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(url.toString() + u":22: "_s + warning));
+    QTest::ignoreMessage(QtDebugMsg, "objA says hello");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(url.toString() + u":22: "_s + warning));
+    QTest::ignoreMessage(QtDebugMsg, "objB says hello");
+
+    QTest::ignoreMessage(QtDebugMsg, "objC says 7 + 7 = 14");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(url.toString() + u":32: "_s + warning));
+    QTest::ignoreMessage(QtDebugMsg, "objB says 7 + 7 = 14");
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
 }
 
 QTEST_MAIN(tst_qqmllanguage)

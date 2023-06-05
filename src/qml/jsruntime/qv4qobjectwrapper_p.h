@@ -328,14 +328,8 @@ inline ReturnedValue QObjectWrapper::lookupMethodGetterImpl(
     }
 
     if (Heap::QObjectMethod *method = lookup->qobjectMethodLookup.method) {
-        if (lookup->forCall && !method->isDetached()) {
-            method = lookup->qobjectMethodLookup.method
-                    = cloneMethod(engine, method, nullptr, nullptr);
-        } else if (!lookup->forCall && !method->isAttachedTo(qobj)) {
-            method = lookup->qobjectMethodLookup.method
-                    = cloneMethod(engine, method, This, qobj);
-        }
-        return method ? method->asReturnedValue() : revertLookup();
+        if (method->isDetached())
+            return method->asReturnedValue();
     }
 
     if (!property) // was toString() or destroy()
