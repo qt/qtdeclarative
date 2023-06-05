@@ -29,7 +29,7 @@ leo eget ipsum ultricies viverra sit amet eu orci. Praesent et tortor risus,
 viverra accumsan sapien. Sed faucibus eleifend lectus, sed euismod urna porta
 eu. Quisque vitae accumsan lectus."
 
-        onLineLaidOut: {
+        onLineLaidOut: (line) => {
             line.width = width / 2
 
             if (line.y + line.height >= height) {

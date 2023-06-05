@@ -2204,12 +2204,15 @@ void tst_qquicktext::baseUrl()
 
 void tst_qquicktext::embeddedImages_data()
 {
+    // Cancel some mess left by clipRectOutsideViewportDynamicallyChanged():
+    qmlClearTypeRegistrations();
+
     QTest::addColumn<QUrl>("qmlfile");
     QTest::addColumn<QString>("error");
     QTest::newRow("local") << testFileUrl("embeddedImagesLocal.qml") << "";
     QTest::newRow("local-error") << testFileUrl("embeddedImagesLocalError.qml")
         << testFileUrl("embeddedImagesLocalError.qml").toString()+":3:1: QML Text: Cannot open: " + testFileUrl("http/notexists.png").toString();
-    QTest::newRow("local") << testFileUrl("embeddedImagesLocalRelative.qml") << "";
+    QTest::newRow("local-relative") << testFileUrl("embeddedImagesLocalRelative.qml") << "";
     QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "";
     QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
                                   << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML Text: Error transferring {{ServerBaseUrl}}/notexists.png - server replied: Not found";
@@ -4274,7 +4277,7 @@ void tst_qquicktext::baselineOffset_data()
     QTest::newRow("customLine")
             << "hello world"
             << "hello\nworld"
-            << QByteArray("height: 200; onLineLaidOut: line.y += 16")
+            << QByteArray("height: 200; onLineLaidOut: (line) => { line.y += 16; }")
             << &expectedBaselineCustom
             << &expectedBaselineCustom;
 
@@ -4370,7 +4373,8 @@ void tst_qquicktext::baselineOffset_data()
     QTest::newRow("customLine with padding")
             << "hello world"
             << "hello\nworld"
-            << QByteArray("height: 200; topPadding: 10; bottomPadding: 20; onLineLaidOut: line.y += 16")
+            << QByteArray("height: 200; topPadding: 10; bottomPadding: 20; "
+                          "onLineLaidOut: (line) => { line.y += 16; }")
             << &expectedBaselineCustom
             << &expectedBaselineCustom;
 
