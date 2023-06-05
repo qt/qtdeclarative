@@ -1,7 +1,14 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include <qglobal.h>
+#include <private/qqmljslogger_p.h>
+#include <private/qqmlsa_p.h>
+
+#include <QtQmlCompiler/qqmljsloggingutils.h>
+
+#include <QtCore/qglobal.h>
+#include <QtCore/qfile.h>
+#include <QtCore/qfileinfo.h>
 
 // GCC 11 thinks diagMsg.fixSuggestion.fixes.d.ptr is somehow uninitialized in
 // QList::emplaceBack(), probably called from QQmlJsLogger::log()
@@ -9,15 +16,8 @@
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_GCC("-Wuninitialized")
 QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized")
-#include <qlist.h>
+#include <QtCore/qlist.h>
 QT_WARNING_POP
-
-#include "qqmljslogger_p.h"
-#include "qqmljsloggingutils.h"
-#include "qqmlsa_p.h"
-
-#include <QtCore/qfile.h>
-#include <QtCore/qfileinfo.h>
 
 QT_BEGIN_NAMESPACE
 
