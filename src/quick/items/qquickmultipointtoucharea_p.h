@@ -263,7 +263,7 @@ protected:
     bool shouldFilter(QEvent *event);
     void grabGesture(QPointingDevice *dev);
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
     void hoverEnterEvent(QHoverEvent *event) override;
     void hoverLeaveEvent(QHoverEvent *event) override;
     void setTouchEventsEnabled(bool enable);

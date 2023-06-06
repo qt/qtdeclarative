@@ -21,7 +21,7 @@ qreal QQuickLayoutStyleInfo::spacing(Qt::Orientation /*orientation*/) const
     qreal spacing = 5.0;
 #endif
 
-#ifndef Q_OS_OSX
+#ifndef Q_OS_MACOS
     // On OS X the DPI is always 72 so we should not scale it
     spacing = qRound(spacing * (qreal(qt_defaultDpiX()) / 96.0));
 #endif
