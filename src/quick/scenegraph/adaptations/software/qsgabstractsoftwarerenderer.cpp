@@ -178,8 +178,12 @@ QRegion QSGAbstractSoftwareRenderer::optimizeRenderList()
     for (auto j = m_renderableNodes.begin(); j != m_renderableNodes.end(); ++j) {
         auto node = *j;
 
-        if (!node->isOpaque() && !m_dirtyRegion.isEmpty()) {
-            // Only blended nodes need to be updated
+        if ((!node->isOpaque() || node->boundingRectMax() != node->boundingRectMin()) && !m_dirtyRegion.isEmpty()) {
+            // Blended nodes need to be updated
+            // QTBUG-113745: Also nodes with floating point boundary rectangles need to
+            // be updated. The reason is that m_obscuredRegion contains only the rounded
+            // down bounding rectangle (node->boundingRectMin()) and thus not the whole
+            // node. As a result up to 1 pixel would be overpainted when it should not.
             node->addDirtyRegion(m_dirtyRegion, true);
         }
 
