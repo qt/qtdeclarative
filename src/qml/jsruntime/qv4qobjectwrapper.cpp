@@ -1663,13 +1663,42 @@ static int MatchScore(const Value &actual, QMetaType conversionMetaType)
             });
         }
 
-        if (obj->as<QObjectWrapper>()) {
+        if (const QObjectWrapper *wrapper = obj->as<QObjectWrapper>()) {
             switch (conversionType) {
             case QMetaType::QObjectStar:
                 return 0;
             default:
-                return 10;
+                if (conversionMetaType.flags() & QMetaType::PointerToQObject) {
+                    QObject *wrapped = wrapper->object();
+                    if (!wrapped)
+                        return 0;
+                    if (QQmlMetaObject::canConvert(wrapped, conversionMetaType.metaObject()))
+                        return 0;
+                }
             }
+            return 10;
+        }
+
+        if (const QQmlTypeWrapper *wrapper = obj->as<QQmlTypeWrapper>()) {
+            const QQmlType type = wrapper->d()->type();
+            if (type.isSingleton()) {
+                const QMetaType metaType = type.typeId();
+                if (metaType == conversionMetaType)
+                    return 0;
+
+                if (conversionMetaType.flags() & QMetaType::PointerToQObject
+                    && metaType.flags() & QMetaType::PointerToQObject
+                    && type.metaObject()->inherits(conversionMetaType.metaObject())) {
+                        return 0;
+                }
+            } else if (QObject *object = wrapper->object()) {
+                if (conversionMetaType.flags() & QMetaType::PointerToQObject
+                    && QQmlMetaObject::canConvert(object, conversionMetaType.metaObject())) {
+                        return 0;
+                }
+            }
+
+            return 10;
         }
 
         if (const Sequence *sequence = obj->as<Sequence>()) {
