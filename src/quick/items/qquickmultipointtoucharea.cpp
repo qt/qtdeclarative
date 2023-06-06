@@ -626,6 +626,8 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event, RemapEventPoints 
     }
     if (numTouchPoints >= _minimumTouchPoints && numTouchPoints <= _maximumTouchPoints) {
         for (QEventPoint &p : touchPoints) {
+            QPointF oldPos = p.position();
+            auto transformBack = qScopeGuard([&] { QMutableEventPoint::setPosition(p, oldPos); });
             if (touchPointsFromEvent && remap == RemapEventPoints::ToLocal)
                 QMutableEventPoint::setPosition(p, mapFromScene(p.scenePosition()));
             QEventPoint::State touchPointState = p.state();
