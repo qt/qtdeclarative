@@ -31,6 +31,7 @@
 
 #include <private/qqmlengine_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qqmlcomponentattached_p.h>
 
 class MyQmlAttachedObject : public QObject
 {
@@ -862,6 +863,17 @@ struct NonRegisteredType
 
 struct CompletelyUnknown;
 
+class SingletonWithEnum : public QObject
+{
+    Q_OBJECT
+    Q_ENUMS(TestEnum)
+public:
+    enum TestEnum {
+        TestValue = 42,
+        TestValue_MinusOne = -1
+    };
+};
+
 class MyInvokableObject : public MyInvokableBaseObject
 {
     Q_OBJECT
@@ -955,10 +967,41 @@ public:
         invoke(40);
         m_actuals << f;
     }
+
     Q_INVOKABLE void method_qobject(QObject *o)
     {
         invoke(41);
         m_actuals << QVariant::fromValue(o);
+    }
+
+    Q_INVOKABLE QQmlComponent *someComponent() { return &m_someComponent; }
+    Q_INVOKABLE void method_component(QQmlComponent *c)
+    {
+        invoke(42);
+        m_actuals << QVariant::fromValue(c);
+    }
+
+    Q_INVOKABLE MyTypeObject *someTypeObject() { return &m_someTypeObject; }
+    Q_INVOKABLE void method_component(MyTypeObject *c)
+    {
+        invoke(43);
+        m_actuals << QVariant::fromValue(c);
+    }
+
+    Q_INVOKABLE void method_component(const QUrl &c)
+    {
+        invoke(44);
+        m_actuals << QVariant::fromValue(c);
+    }
+
+    Q_INVOKABLE void method_typeWrapper(QQmlComponentAttached *attached)
+    {
+        m_actuals << QVariant::fromValue(attached);
+    }
+
+    Q_INVOKABLE void method_typeWrapper(SingletonWithEnum *singleton)
+    {
+        m_actuals << QVariant::fromValue(singleton);
     }
 
 private:
@@ -969,6 +1012,8 @@ private:
     QVariantList m_actuals;
 
     QFont m_someFont;
+    QQmlComponent m_someComponent;
+    MyTypeObject m_someTypeObject;
 
 public:
 Q_SIGNALS:
@@ -1806,17 +1851,6 @@ public:
 
 QML_DECLARE_TYPEINFO(FallbackBindingsTypeObject, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPEINFO(FallbackBindingsTypeDerived, QML_HAS_ATTACHED_PROPERTIES)
-
-class SingletonWithEnum : public QObject
-{
-    Q_OBJECT
-    Q_ENUMS(TestEnum)
-public:
-    enum TestEnum {
-        TestValue = 42,
-        TestValue_MinusOne = -1
-    };
-};
 
 // Like QtObject, but with default property
 class QObjectContainer : public QObject
