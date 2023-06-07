@@ -415,6 +415,8 @@ private slots:
 
     void variantObjectList();
 
+    void attachedInCtor();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -7974,6 +7976,21 @@ void tst_qqmllanguage::variantObjectList()
     QCOMPARE(party->guest(0)->objectName(), "Leo Hodges");
     QCOMPARE(party->guest(1)->objectName(), "Jack Smith");
     QCOMPARE(party->guest(2)->objectName(), "Anne Brown");
+}
+
+void tst_qqmllanguage::attachedInCtor()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e);
+    c.setData(R"(
+        import Test
+        AttachedInCtor {}
+    )", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    AttachedInCtor *a = qobject_cast<AttachedInCtor *>(o.data());
+    QVERIFY(a->attached);
+    QCOMPARE(a->attached, qmlAttachedPropertiesObject<AttachedInCtor>(a, false));
 }
 
 QTEST_MAIN(tst_qqmllanguage)

@@ -18,6 +18,8 @@
 #include <QtQml/qqmlpropertyvaluesource.h>
 #include <QtQml/qqmlscriptstring.h>
 #include <QtQml/qqmlproperty.h>
+
+#include <private/qqmlcomponentattached_p.h>
 #include <private/qqmlcustomparser_p.h>
 
 QVariant myCustomVariantTypeConverter(const QString &data);
@@ -2477,6 +2479,32 @@ public:
     {
         qDebug().noquote() << objectName() << QString("says %1 + %2 = %3").arg(a).arg(b).arg(a + b);
     }
+};
+
+class Attachment : public QObject {
+    Q_OBJECT
+public:
+    Attachment(QObject *parent = nullptr) : QObject(parent) {}
+};
+
+class AttachedInCtor : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_ATTACHED(Attachment)
+
+public:
+    AttachedInCtor(QObject *parent = nullptr)
+        : QObject(parent)
+    {
+        attached = qmlAttachedPropertiesObject<AttachedInCtor>(this, true);
+    }
+
+    static Attachment *qmlAttachedProperties(QObject *object) {
+        return new Attachment(object);
+    }
+
+    QObject *attached = nullptr;
 };
 
 class BirthdayParty : public QObject

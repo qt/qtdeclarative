@@ -494,11 +494,10 @@ QObject *QQmlType::createWithQQmlData() const
     auto instance = create(&ddataMemory, sizeof(QQmlData));
     if (!instance)
         return nullptr;
-    QQmlData *ddata = new (ddataMemory) QQmlData;
-    ddata->ownMemory = false;
     QObjectPrivate* p = QObjectPrivate::get(instance);
     Q_ASSERT(!p->isDeletingChildren);
-    p->declarativeData = ddata;
+    if (!p->declarativeData)
+        p->declarativeData = new (ddataMemory) QQmlData(QQmlData::DoesNotOwnMemory);
     return instance;
 }
 
