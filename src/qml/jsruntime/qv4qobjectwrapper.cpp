@@ -2195,7 +2195,11 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
     qvariantPtr = new (&allocData) QVariant(metaType);
     type = QVariantWrappedType;
 
-    return ExecutionEngine::metaTypeFromJS(value, metaType, qvariantPtr->data());
+    if (ExecutionEngine::metaTypeFromJS(value, metaType, qvariantPtr->data()))
+        return true;
+
+    const QVariant v = ExecutionEngine::toVariant(value, metaType);
+    return QMetaType::convert(v.metaType(), v.constData(), metaType, qvariantPtr->data());
 }
 
 ReturnedValue CallArgument::toValue(ExecutionEngine *engine)
