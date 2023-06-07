@@ -149,6 +149,8 @@ void registerTypes()
     qmlRegisterTypesAndRevisions<BaseValueType>("ValueTypes", 1);
     qmlRegisterTypesAndRevisions<DerivedValueType>("ValueTypes", 1);
     qmlRegisterTypesAndRevisions<GetterObject>("Test", 1);
+
+    qmlRegisterTypesAndRevisions<UnregisteredValueTypeHandler>("Test", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)
