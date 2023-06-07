@@ -38,6 +38,7 @@ private slots:
     void specialProperties();
     void regexpBindings();
     void aliasAssignments();
+    void connections();
 
     void signalHandlers();
     void jsFunctions();
