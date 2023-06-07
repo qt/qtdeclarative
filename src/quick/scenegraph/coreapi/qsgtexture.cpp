@@ -581,8 +581,6 @@ QSGTexture::WrapMode QSGTexture::verticalWrapMode() const
     \warning This function can only be called from the rendering thread.
 
     \since 6.0
-
-    \internal
  */
 QRhiTexture *QSGTexture::rhiTexture() const
 {
@@ -603,8 +601,6 @@ QRhiTexture *QSGTexture::rhiTexture() const
     \warning This function can only be called from the rendering thread.
 
     \since 6.0
-
-    \internal
  */
 void QSGTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
 {
