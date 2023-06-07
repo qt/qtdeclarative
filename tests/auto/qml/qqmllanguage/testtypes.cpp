@@ -150,6 +150,7 @@ void registerTypes()
     qmlRegisterTypesAndRevisions<DerivedValueType>("ValueTypes", 1);
     qmlRegisterTypesAndRevisions<GetterObject>("Test", 1);
 
+    QMetaType::registerConverter<UnregisteredValueDerivedType, UnregisteredValueBaseType>();
     qmlRegisterTypesAndRevisions<UnregisteredValueTypeHandler>("Test", 1);
 }
 

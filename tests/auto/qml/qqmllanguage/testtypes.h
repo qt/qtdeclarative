@@ -2426,6 +2426,11 @@ struct UnregisteredValueBaseType
     int foo = 12;
 };
 
+struct UnregisteredValueDerivedType: public UnregisteredValueBaseType
+{
+    int bar = 13;
+};
+
 class UnregisteredValueTypeHandler: public QObject
 {
     Q_OBJECT
@@ -2435,6 +2440,7 @@ public:
 
 public slots:
     UnregisteredValueBaseType produce() { return UnregisteredValueBaseType(); }
+    UnregisteredValueDerivedType produceDerived() { return UnregisteredValueDerivedType(); }
     void consume(UnregisteredValueBaseType) { ++consumed; }
 };
 

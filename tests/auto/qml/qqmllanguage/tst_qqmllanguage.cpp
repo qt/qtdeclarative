@@ -7920,7 +7920,7 @@ void tst_qqmllanguage::unregisteredValueTypeConversion()
     QVERIFY(!o.isNull());
     UnregisteredValueTypeHandler *handler = qobject_cast<UnregisteredValueTypeHandler *>(o.data());
     Q_ASSERT(handler);
-    QCOMPARE(handler->consumed, 1);
+    QCOMPARE(handler->consumed, 2);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
