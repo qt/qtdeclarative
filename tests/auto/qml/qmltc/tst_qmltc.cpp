@@ -25,6 +25,7 @@
 #include "specialproperties.h"
 #include "regexpbindings.h"
 #include "aliasassignments.h"
+#include "connections.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -150,6 +151,7 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/qt/qml/QmltcTests/regexpBindings.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/AliasBase.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/aliasAssignments.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/Connections.qml"),
 
         QUrl("qrc:/qt/qml/QmltcTests/qtbug103956/SubComponent.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/qtbug103956/MainComponent.qml"),
@@ -888,6 +890,12 @@ void tst_qmltc::aliasAssignments()
         QCOMPARE(created.alias1(), 4);
         QCOMPARE(created.alias2(), 4);
     }
+}
+
+void tst_qmltc::connections()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(Connections) created(&e);
 }
 
 void tst_qmltc::signalHandlers()
