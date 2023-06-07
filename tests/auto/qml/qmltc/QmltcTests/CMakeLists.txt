@@ -43,6 +43,7 @@ set(qml_sources
     regexpBindings.qml
     AliasBase.qml
     aliasAssignments.qml
+    Connections.qml
 
     qtbug103956/SubComponent.qml
     qtbug103956/MainComponent.qml

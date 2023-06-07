@@ -51,6 +51,10 @@ public:
     bool ignoreUnknownSignals() const;
     void setIgnoreUnknownSignals(bool ignore);
 
+protected:
+    void classBegin() override;
+    void componentComplete() override;
+
 Q_SIGNALS:
     void targetChanged();
     Q_REVISION(2, 3) void enabledChanged();
@@ -59,9 +63,6 @@ private:
     void connectSignals();
     void connectSignalsToMethods();
     void connectSignalsToBindings();
-
-    void classBegin() override;
-    void componentComplete() override;
 };
 
 // TODO: Drop this class as soon as we can
