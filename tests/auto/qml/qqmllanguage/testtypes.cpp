@@ -154,6 +154,7 @@ void registerTypes()
     qmlRegisterTypesAndRevisions<ObjectWithEnums>("TypedEnums", 1);
     qmlRegisterTypesAndRevisions<GadgetWithEnums>("TypedEnums", 1);
 
+    QMetaType::registerConverter<UnregisteredValueDerivedType, UnregisteredValueBaseType>();
     qmlRegisterTypesAndRevisions<UnregisteredValueTypeHandler>("Test", 1);
 }
 
