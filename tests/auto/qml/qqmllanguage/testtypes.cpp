@@ -159,6 +159,7 @@ void registerTypes()
 
     qmlRegisterTypesAndRevisions<Greeter>("QmlOtherThis", 1);
     qmlRegisterTypesAndRevisions<BirthdayParty>("People", 1);
+    qmlRegisterTypesAndRevisions<AttachedInCtor>("Test", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

@@ -420,6 +420,8 @@ private slots:
     void variantObjectList();
     void jitExceptions();
 
+    void attachedInCtor();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -8068,6 +8070,21 @@ void tst_qqmllanguage::jitExceptions()
 
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_qqmllanguage::attachedInCtor()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e);
+    c.setData(R"(
+        import Test
+        AttachedInCtor {}
+    )", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    AttachedInCtor *a = qobject_cast<AttachedInCtor *>(o.data());
+    QVERIFY(a->attached);
+    QCOMPARE(a->attached, qmlAttachedPropertiesObject<AttachedInCtor>(a, false));
 }
 
 QTEST_MAIN(tst_qqmllanguage)
