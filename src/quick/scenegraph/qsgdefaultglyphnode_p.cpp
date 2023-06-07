@@ -369,7 +369,8 @@ void QSGTextMaskMaterial::updateCache(QFontEngine::GlyphFormat glyphFormat)
         qreal devicePixelRatio;
         void *cacheKey;
         Q_ASSERT(m_rhi);
-        cacheKey = m_rhi;
+        Q_ASSERT(m_rc);
+        cacheKey = m_rc;
         // Get the dpr the modern way. This value retrieved via the
         // rendercontext matches what RenderState::devicePixelRatio()
         // exposes to the material shaders later on.
