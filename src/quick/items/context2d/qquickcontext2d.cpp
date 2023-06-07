@@ -4152,9 +4152,9 @@ void QQuickContext2D::setGrabbedImage(const QImage& grab)
     m_grabbed = true;
 }
 
-QQmlRefPointer<QQuickCanvasPixmap> QQuickContext2D::createPixmap(const QUrl& url)
+QQmlRefPointer<QQuickCanvasPixmap> QQuickContext2D::createPixmap(const QUrl& url, QSizeF sourceSize)
 {
-    return m_canvas->loadedPixmap(url);
+    return m_canvas->loadedPixmap(url, sourceSize);
 }
 
 QPainterPath QQuickContext2D::createTextGlyphs(qreal x, qreal y, const QString& text)

@@ -120,7 +120,7 @@ public:
 
     Q_INVOKABLE bool save(const QString &filename, const QSizeF &imageSize = QSizeF()) const;
     Q_INVOKABLE QString toDataURL(const QString& type = QLatin1String("image/png")) const;
-    QQmlRefPointer<QQuickCanvasPixmap> loadedPixmap(const QUrl& url);
+    QQmlRefPointer<QQuickCanvasPixmap> loadedPixmap(const QUrl& url, QSizeF sourceSize = QSizeF());
 
     bool isTextureProvider() const override;
     QSGTextureProvider *textureProvider() const override;
@@ -139,7 +139,7 @@ Q_SIGNALS:
     void imageLoaded();
 
 public Q_SLOTS:
-    void loadImage(const QUrl& url);
+    void loadImage(const QUrl& url, QSizeF sourceSize = QSizeF());
     void unloadImage(const QUrl& url);
     bool isImageLoaded(const QUrl& url) const;
     bool isImageLoading(const QUrl& url) const;
