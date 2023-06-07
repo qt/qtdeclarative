@@ -108,6 +108,7 @@ set(qml_sources
     inlineComponentsFromDifferentFiles.qml
     singletons.qml
     mySignals.qml
+    stringToUrl.qml
 
     # support types:
     DefaultPropertySingleChild.qml

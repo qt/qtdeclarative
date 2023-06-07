@@ -85,6 +85,7 @@
 #include "namespacedtypes.h"
 #include "type.h"
 #include "qmltablemodel.h"
+#include "stringtourl.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -376,7 +377,7 @@ void tst_qmltc::properties()
     QCOMPARE(created.intP(), 42);
     QCOMPARE(created.realP(), 2.32);
     QCOMPARE(created.stringP(), u"hello, world"_s);
-    QCOMPARE(created.urlP(), u"https://www.qt.io/"_s);
+    QCOMPARE(created.urlP(), QUrl(u"https://www.qt.io/"_s));
     QCOMPARE(created.varP(), 42.42);
 
     QCOMPARE(created.boolP(), true);
@@ -3231,5 +3232,16 @@ void tst_qmltc::qmlTableModel()
     QCOMPARE(tableModel->property("testName").toString(), u"MyTableModel"_s);
 }
 #endif
+
+void tst_qmltc::urlToString()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(stringToUrl) createdByQmltc(&e);
+    // check that the tableModel is not default constructed
+    QUrl first = createdByQmltc.iconLoader()->source();
+    QUrl second = createdByQmltc.iconLoader2()->source();
+    QCOMPARE(first, QUrl("qrc:/qt/qml/path/to/font.ttf"));
+    QCOMPARE(second, QUrl("qrc:/qt/qml/path/to/font2.ttf"));
+}
 
 QTEST_MAIN(tst_qmltc)

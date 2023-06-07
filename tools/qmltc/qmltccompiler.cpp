@@ -1506,7 +1506,13 @@ void QmltcCompiler::compileBindingByType(QmltcType &current,
         break;
     }
     case QQmlSA::BindingType::StringLiteral: {
-        assignToProperty(metaProperty, QQmlJSUtils::toLiteral(binding.stringValue()));
+        QString value = QQmlJSUtils::toLiteral(binding.stringValue());
+        if (auto type = metaProperty.type()) {
+            if (type->internalName() == u"QUrl"_s) {
+                value = u"QUrl("_s.append(std::move(value)).append(u")"_s);
+            }
+        }
+        assignToProperty(metaProperty, value);
         break;
     }
     case QQmlSA::BindingType::RegExpLiteral: {

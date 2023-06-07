@@ -99,4 +99,5 @@ private slots:
 #if QT_CONFIG(qml_table_model)
     void qmlTableModel();
 #endif
+    void urlToString();
 };
