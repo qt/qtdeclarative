@@ -55,7 +55,9 @@ struct Binding;
 class Q_QML_PRIVATE_EXPORT QQmlData : public QAbstractDeclarativeData
 {
 public:
-    QQmlData();
+    enum Ownership { DoesNotOwnMemory, OwnsMemory };
+
+    QQmlData(Ownership ownership);
     ~QQmlData();
 
     static inline void init() {
@@ -295,7 +297,7 @@ private:
 
     Q_NEVER_INLINE BindingBitsType *growBits(QObject *obj, int bit);
 
-    Q_DISABLE_COPY(QQmlData);
+    Q_DISABLE_COPY_MOVE(QQmlData);
 };
 
 bool QQmlData::wasDeleted(const QObjectPrivate *priv)

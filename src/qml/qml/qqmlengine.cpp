@@ -255,8 +255,8 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
     }
 }
 
-QQmlData::QQmlData()
-    : ownMemory(true), indestructible(true), explicitIndestructibleSet(false),
+QQmlData::QQmlData(Ownership ownership)
+    : ownMemory(ownership == OwnsMemory), indestructible(true), explicitIndestructibleSet(false),
       hasTaintedV4Object(false), isQueuedForDeletion(false), rootObjectInCreation(false),
       hasInterceptorMetaObject(false), hasVMEMetaObject(false), hasConstWrapper(false),
       bindingBitsArraySize(InlineBindingArraySize), notifyList(nullptr),
@@ -1525,7 +1525,7 @@ QQmlData *QQmlData::createQQmlData(QObjectPrivate *priv)
 {
     Q_ASSERT(priv);
     Q_ASSERT(!priv->isDeletingChildren);
-    priv->declarativeData = new QQmlData;
+    priv->declarativeData = new QQmlData(OwnsMemory);
     return static_cast<QQmlData *>(priv->declarativeData);
 }
 

@@ -319,9 +319,12 @@ QObject *ListModel::getOrCreateModelObject(QQmlListModel *model, int elementInde
         void *memory = operator new(sizeof(QObject) + sizeof(QQmlData));
         void *ddataMemory = ((char *)memory) + sizeof(QObject);
         e->m_objectCache = new (memory) QObject;
-        QQmlData *ddata = new (ddataMemory) QQmlData;
-        ddata->ownMemory = false;
-        QObjectPrivate::get(e->m_objectCache)->declarativeData = ddata;
+
+        const QAbstractDeclarativeData *old = std::exchange(
+            QObjectPrivate::get(e->m_objectCache)->declarativeData,
+            new (ddataMemory) QQmlData(QQmlData::DoesNotOwnMemory));
+        Q_ASSERT(!old); // QObject should really not manipulate QQmlData
+
         (void)new ModelNodeMetaObject(e->m_objectCache, model, elementIndex);
     }
     return e->m_objectCache;
