@@ -92,8 +92,6 @@ public:
     bool handleRelease(const QPointF &point, ulong timestamp) override;
     void handleUngrab() override;
 
-    static void setContextProperty(QQuickItem *item, const QString &name, const QVariant &value);
-
     QString title;
     QVariant source;
     QDate pressedDate;
@@ -141,7 +139,6 @@ void QQuickMonthGridPrivate::updatePress(const QPointF &pos)
     Q_Q(QQuickMonthGrid);
     clearPress(false);
     pressedItem = cellAt(pos);
-    setContextProperty(pressedItem, QStringLiteral("pressed"), true);
     pressedDate = dateOf(pressedItem);
     if (pressedDate.isValid())
         emit q->pressed(pressedDate);
@@ -150,7 +147,6 @@ void QQuickMonthGridPrivate::updatePress(const QPointF &pos)
 void QQuickMonthGridPrivate::clearPress(bool clicked)
 {
     Q_Q(QQuickMonthGrid);
-    setContextProperty(pressedItem, QStringLiteral("pressed"), false);
     if (pressedDate.isValid()) {
         emit q->released(pressedDate);
         if (clicked)
@@ -188,16 +184,6 @@ void QQuickMonthGridPrivate::handleUngrab()
 {
     QQuickControlPrivate::handleUngrab();
     clearPress(false);
-}
-
-void QQuickMonthGridPrivate::setContextProperty(QQuickItem *item, const QString &name, const QVariant &value)
-{
-    QQmlContext *context = qmlContext(item);
-    if (context && context->isValid()) {
-        context = context->parentContext();
-        if (context && context->isValid())
-            context->setContextProperty(name, value);
-    }
 }
 
 QQuickMonthGrid::QQuickMonthGrid(QQuickItem *parent) :
@@ -357,13 +343,6 @@ void QQuickMonthGrid::componentComplete()
 {
     Q_D(QQuickMonthGrid);
     QQuickControl::componentComplete();
-    if (d->contentItem) {
-        const auto childItems = d->contentItem->childItems();
-        for (QQuickItem *child : childItems) {
-            if (!QQuickItemPrivate::get(child)->isTransparentForPositioner())
-                d->setContextProperty(child, QStringLiteral("pressed"), false);
-        }
-    }
     d->resizeItems();
 }
 
