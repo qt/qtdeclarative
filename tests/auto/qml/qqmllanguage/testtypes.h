@@ -2567,4 +2567,21 @@ Q_SIGNALS:
     void changed();
 };
 
+struct UnregisteredValueBaseType
+{
+    int foo = 12;
+};
+
+class UnregisteredValueTypeHandler: public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    int consumed = 0;
+
+public slots:
+    UnregisteredValueBaseType produce() { return UnregisteredValueBaseType(); }
+    void consume(UnregisteredValueBaseType) { ++consumed; }
+};
+
 #endif // TESTTYPES_H

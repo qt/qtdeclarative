@@ -2672,42 +2672,58 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         return true;
 
     const bool isPointer = (metaType.flags() & QMetaType::IsPointer);
-    if (value.as<QV4::VariantObject>() && isPointer) {
-        const QByteArray pointedToTypeName = QByteArray(metaType.name()).chopped(1);
-        const QMetaType valueType = QMetaType::fromName(pointedToTypeName);
-        QVariant &var = value.as<QV4::VariantObject>()->d()->data();
-        if (valueType == var.metaType()) {
-            // We have T t, T* is requested, so return &t.
-            *reinterpret_cast<void* *>(data) = var.data();
+    const QV4::VariantObject *variantObject = value.as<QV4::VariantObject>();
+    if (variantObject) {
+        // Actually a reference, because we're poking it for its data() below and we want
+        // the _original_ data, not some copy.
+        const QVariant &var = variantObject->d()->data();
+
+        if (var.metaType() == metaType) {
+            metaType.destruct(data);
+            metaType.construct(data, var.data());
             return true;
-        } else if (Object *o = value.objectValue()) {
-            // Look in the prototype chain.
-            QV4::Scope scope(o->engine());
-            QV4::ScopedObject proto(scope, o->getPrototypeOf());
-            while (proto) {
-                bool canCast = false;
-                if (QV4::VariantObject *vo = proto->as<QV4::VariantObject>()) {
-                    const QVariant &v = vo->d()->data();
-                    canCast = (metaType == v.metaType());
-                }
-                else if (proto->as<QV4::QObjectWrapper>()) {
-                    QV4::ScopedObject p(scope, proto.getPointer());
-                    if (QObject *qobject = qtObjectFromJS(p)) {
-                        if (const QMetaObject *metaObject = metaType.metaObject())
-                            canCast = metaObject->cast(qobject) != nullptr;
-                        else
-                            canCast = qobject->qt_metacast(pointedToTypeName);
+        }
+
+        if (isPointer) {
+            const QByteArray pointedToTypeName = QByteArray(metaType.name()).chopped(1);
+            const QMetaType valueType = QMetaType::fromName(pointedToTypeName);
+
+            if (valueType == var.metaType()) {
+                // ### Qt7: Remove this. Returning pointers to potentially gc'd data is crazy.
+                // We have T t, T* is requested, so return &t.
+                *reinterpret_cast<const void **>(data) = var.data();
+                return true;
+            } else if (Object *o = value.objectValue()) {
+                // Look in the prototype chain.
+                QV4::Scope scope(o->engine());
+                QV4::ScopedObject proto(scope, o->getPrototypeOf());
+                while (proto) {
+                    bool canCast = false;
+                    if (QV4::VariantObject *vo = proto->as<QV4::VariantObject>()) {
+                        const QVariant &v = vo->d()->data();
+                        canCast = (metaType == v.metaType());
                     }
+                    else if (proto->as<QV4::QObjectWrapper>()) {
+                        QV4::ScopedObject p(scope, proto.getPointer());
+                        if (QObject *qobject = qtObjectFromJS(p)) {
+                            if (const QMetaObject *metaObject = metaType.metaObject())
+                                canCast = metaObject->cast(qobject) != nullptr;
+                            else
+                                canCast = qobject->qt_metacast(pointedToTypeName);
+                        }
+                    }
+                    if (canCast) {
+                        const QMetaType varType = var.metaType();
+                        if (varType.flags() & QMetaType::IsPointer) {
+                            *reinterpret_cast<const void **>(data)
+                                = *reinterpret_cast<void *const *>(var.data());
+                        } else {
+                            *reinterpret_cast<const void **>(data) = var.data();
+                        }
+                        return true;
+                    }
+                    proto = proto->getPrototypeOf();
                 }
-                if (canCast) {
-                    const QMetaType varType = var.metaType();
-                    if (varType.flags() & QMetaType::IsPointer)
-                        *reinterpret_cast<void* *>(data) = *reinterpret_cast<void* *>(var.data());
-                    else
-                        *reinterpret_cast<void* *>(data) = var.data();
-                    return true;
-                }
-                proto = proto->getPrototypeOf();
             }
         }
     } else if (value.isNull() && isPointer) {
