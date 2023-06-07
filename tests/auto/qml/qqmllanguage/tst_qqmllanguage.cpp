@@ -414,6 +414,7 @@ private slots:
     void typedEnums();
 
     void objectMethodClone();
+    void unregisteredValueTypeConversion();
 
 private:
     QQmlEngine engine;
@@ -7986,6 +7987,18 @@ void tst_qqmllanguage::objectMethodClone()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QTRY_COMPARE(o->property("doneClicks").toInt(), 2);
+}
+
+void tst_qqmllanguage::unregisteredValueTypeConversion()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("unregisteredValueTypeConversion.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    UnregisteredValueTypeHandler *handler = qobject_cast<UnregisteredValueTypeHandler *>(o.data());
+    Q_ASSERT(handler);
+    QCOMPARE(handler->consumed, 1);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
