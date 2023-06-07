@@ -139,6 +139,11 @@ set(common_libraries
     Qt::Gui # QColor, QMatrix4x4, ...
 )
 
+if (QT_FEATURE_qml_table_model)
+    list(APPEND qml_sources QmlTableModel.qml)
+    list(APPEND common_libraries Qt::LabsQmlModelsPrivate)
+endif()
+
 set_source_files_properties(NameConflict.qml PROPERTIES
     QT_QMLTC_FILE_BASENAME ResolvedNameConflict)
 

@@ -84,6 +84,7 @@
 #include "mysignals.h"
 #include "namespacedtypes.h"
 #include "type.h"
+#include "qmltablemodel.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -3216,5 +3217,19 @@ void tst_qmltc::checkExportsAreCompiling()
     QmltcExportedTests::HelloExportedWorld w(&e);
     QCOMPARE(w.myString(), u"Hello! I should be exported by qmltc"_s);
 }
+
+#if QT_CONFIG(qml_table_model)
+void tst_qmltc::qmlTableModel()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(QmlTableModel) createdByQmltc(&e);
+    // check that the tableModel is not default constructed
+    QVariant model = createdByQmltc.model();
+    QVERIFY(model.isValid());
+    QQmlTableModel *tableModel = model.value<QQmlTableModel *>();
+    QVERIFY(tableModel);
+    QCOMPARE(tableModel->property("testName").toString(), u"MyTableModel"_s);
+}
+#endif
 
 QTEST_MAIN(tst_qmltc)
