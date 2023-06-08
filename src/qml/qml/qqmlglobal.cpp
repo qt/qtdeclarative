@@ -84,9 +84,10 @@ static void callConstructor(
     targetMetaType.destroy(gadget);
 }
 
-static bool fromMatchingType(
-        const QMetaObject *targetMetaObject, const QMetaType targetMetaType, void *target,
-        const QV4::Value &source)
+template<typename Retrieve>
+bool fromMatchingType(
+    const QMetaObject *targetMetaObject, const QMetaType targetMetaType, void *target,
+    Retrieve &&retrieve)
 {
     for (int i = 0, end = targetMetaObject->constructorCount(); i < end; ++i) {
         const QMetaMethod ctor = targetMetaObject->constructor(i);
@@ -94,10 +95,21 @@ static bool fromMatchingType(
             continue;
 
         const QMetaType parameterType = ctor.parameterMetaType(0);
-        QVariant parameter = QV4::ExecutionEngine::toVariant(source, parameterType);
-        if (parameter.metaType() == parameterType) {
-            callConstructor(targetMetaObject, i, targetMetaType, target, parameter.data());
+
+        QVariant source = retrieve(parameterType);
+        const QMetaType sourceMetaType = source.metaType();
+        if (sourceMetaType == parameterType) {
+            callConstructor(targetMetaObject, i, targetMetaType, target, source.data());
             return true;
+        }
+
+        if (const QMetaObject *parameterMetaObject = parameterType.metaObject()) {
+            if (const QMetaObject *sourceMetaObject = sourceMetaType.metaObject();
+                    sourceMetaObject && sourceMetaObject->inherits(parameterMetaObject)) {
+                // Allow construction from derived types.
+                callConstructor(targetMetaObject, i, targetMetaType, target, source.data());
+                return true;
+            }
         }
 
         // Do not recursively try to create parameters here. This may end up in infinite recursion.
@@ -105,7 +117,7 @@ static bool fromMatchingType(
         // At this point, s should be a builtin type. For builtin types
         // the QMetaType converters are good enough.
         QVariant converted(parameterType);
-        if (QMetaType::convert(parameter.metaType(), parameter.constData(),
+        if (QMetaType::convert(sourceMetaType, source.constData(),
                                parameterType, converted.data())) {
             callConstructor(targetMetaObject, i, targetMetaType, target, converted.data());
             return true;
@@ -116,41 +128,21 @@ static bool fromMatchingType(
 }
 
 static bool fromMatchingType(
-        const QMetaObject *targetMetaObject, const QMetaType targetMetaType, void *target,
+    const QMetaObject *targetMetaObject, QMetaType targetMetaType, void *target,
+    const QV4::Value &source)
+{
+    return fromMatchingType(targetMetaObject, targetMetaType, target, [&](QMetaType parameterType) {
+        return QV4::ExecutionEngine::toVariant(source, parameterType);
+    });
+}
+
+static bool fromMatchingType(
+        const QMetaObject *targetMetaObject, QMetaType targetMetaType, void *target,
         QVariant source)
 {
-    const QMetaType sourceMetaType = source.metaType();
-    if (sourceMetaType == QMetaType::fromType<QJSValue>()) {
-        QJSValue val = source.value<QJSValue>();
-        return fromMatchingType(
-            targetMetaObject, targetMetaType, target,
-            QV4::Value(QJSValuePrivate::asReturnedValue(&val)));
-    }
-
-    for (int i = 0, end = targetMetaObject->constructorCount(); i < end; ++i) {
-        const QMetaMethod ctor = targetMetaObject->constructor(i);
-        if (ctor.parameterCount() != 1)
-            continue;
-
-        const QMetaType parameterType = ctor.parameterMetaType(0);
-        if (sourceMetaType == parameterType) {
-            callConstructor(targetMetaObject, i, targetMetaType, target, source.data());
-            return true;
-        }
-
-        // Do not recursively try to create parameters here. This may end up in infinite recursion.
-
-        // At this point, s should be a builtin type. For builtin types
-        // the QMetaType converters are good enough.
-        QVariant parameter(parameterType);
-        if (QMetaType::convert(
-                sourceMetaType, source.constData(), parameterType, parameter.data())) {
-            callConstructor(targetMetaObject, i, targetMetaType, target, parameter.data());
-            return true;
-        }
-    }
-
-    return false;
+    return fromMatchingType(targetMetaObject, targetMetaType, target, [&](QMetaType) {
+        return source;
+    });
 }
 
 static bool fromString(
@@ -447,9 +439,11 @@ bool QQmlValueTypeProvider::createValueType(
 
         if (targetType.canConstructValueType()
                 && fromMatchingType(
-                    targetMetaObject, targetMetaType, target,
-                    QV4::Value(QJSValuePrivate::asReturnedValue(&source)))) {
-                return true;
+                    targetMetaObject, targetMetaType, target, [&](QMetaType parameterType) {
+                        return QV4::ExecutionEngine::toVariant(
+                            QJSValuePrivate::asReturnedValue(&source), parameterType);
+                    })) {
+            return true;
         }
     }
 
