@@ -104,9 +104,9 @@ static void fromVerifiedType(
 }
 
 
-template<typename Allocate>
+template<typename Allocate, typename Retrieve>
 static bool fromMatchingType(
-        const QMetaObject *targetMetaObject, const QV4::Value &source, Allocate &&allocate)
+        const QMetaObject *targetMetaObject, Allocate &&allocate, Retrieve &&retrieve)
 {
     for (int i = 0, end = targetMetaObject->constructorCount(); i < end; ++i) {
         const QMetaMethod ctor = targetMetaObject->constructor(i);
@@ -114,10 +114,21 @@ static bool fromMatchingType(
             continue;
 
         const QMetaType parameterType = ctor.parameterMetaType(0);
-        QVariant parameter = QV4::ExecutionEngine::toVariant(source, parameterType);
-        if (parameter.metaType() == parameterType) {
-            callConstructor(targetMetaObject, i, parameter.data(), allocate());
+
+        QVariant source = retrieve(parameterType);
+        const QMetaType sourceMetaType = source.metaType();
+        if (sourceMetaType == parameterType) {
+            callConstructor(targetMetaObject, i, source.data(), allocate());
             return true;
+        }
+
+        if (const QMetaObject *parameterMetaObject = parameterType.metaObject()) {
+            if (const QMetaObject *sourceMetaObject = sourceMetaType.metaObject();
+                    sourceMetaObject && sourceMetaObject->inherits(parameterMetaObject)) {
+                // Allow construction from derived types.
+                callConstructor(targetMetaObject, i, source.data(), allocate());
+                return true;
+            }
         }
 
         // Do not recursively try to create parameters here. This may end up in infinite recursion.
@@ -125,7 +136,7 @@ static bool fromMatchingType(
         // At this point, s should be a builtin type. For builtin types
         // the QMetaType converters are good enough.
         QVariant converted(parameterType);
-        if (QMetaType::convert(parameter.metaType(), parameter.constData(),
+        if (QMetaType::convert(sourceMetaType, source.constData(),
                                parameterType, converted.data())) {
             callConstructor(targetMetaObject, i, converted.data(), allocate());
             return true;
@@ -137,40 +148,21 @@ static bool fromMatchingType(
 
 template<typename Allocate>
 static bool fromMatchingType(
+    const QMetaObject *targetMetaObject, const QV4::Value &source, Allocate &&allocate)
+{
+    return fromMatchingType(
+            targetMetaObject, std::forward<Allocate>(allocate), [&](QMetaType parameterType) {
+        return QV4::ExecutionEngine::toVariant(source, parameterType);
+    });
+}
+
+template<typename Allocate>
+static bool fromMatchingType(
     const QMetaObject *targetMetaObject, QVariant source, Allocate &&allocate)
 {
-    const QMetaType sourceMetaType = source.metaType();
-    if (sourceMetaType == QMetaType::fromType<QJSValue>()) {
-        QJSValue val = source.value<QJSValue>();
-        return fromMatchingType(
-            targetMetaObject, QV4::Value(QJSValuePrivate::asReturnedValue(&val)),
-            std::forward<Allocate>(allocate));
-    }
-
-    for (int i = 0, end = targetMetaObject->constructorCount(); i < end; ++i) {
-        const QMetaMethod ctor = targetMetaObject->constructor(i);
-        if (ctor.parameterCount() != 1)
-            continue;
-
-        const QMetaType parameterType = ctor.parameterMetaType(0);
-        if (sourceMetaType == parameterType) {
-            callConstructor(targetMetaObject, i, source.data(), allocate());
-            return true;
-        }
-
-        // Do not recursively try to create parameters here. This may end up in infinite recursion.
-
-        // At this point, s should be a builtin type. For builtin types
-        // the QMetaType converters are good enough.
-        QVariant parameter(parameterType);
-        if (QMetaType::convert(
-                sourceMetaType, source.constData(), parameterType, parameter.data())) {
-            callConstructor(targetMetaObject, i, parameter.data(), allocate());
-            return true;
-        }
-    }
-
-    return false;
+    return fromMatchingType(targetMetaObject, std::forward<Allocate>(allocate), [&](QMetaType) {
+        return source;
+    });
 }
 
 template<typename Allocate>
