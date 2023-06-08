@@ -323,7 +323,8 @@ public:
 
     bool visit(UiPragma *el) override
     {
-        createMap(DomType::Pragma, qmlFilePtr->addPragma(Pragma(el->name.toString())), el);
+        createMap(DomType::Pragma,
+                  qmlFilePtr->addPragma(Pragma(el->name.toString(), el->value.toString())), el);
         return true;
     }
 

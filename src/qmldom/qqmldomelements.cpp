@@ -1891,6 +1891,10 @@ void Pragma::writeOut(DomItem &, OutWriter &ow) const
 {
     ow.ensureNewline();
     ow.writeRegion(u"pragma").space().writeRegion(u"name", name);
+    if (!value.isEmpty()) {
+        ow.writeRegion(u"colon", u": ");
+        ow.writeRegion(u"value", value);
+    }
     ow.ensureNewline();
 }
 
