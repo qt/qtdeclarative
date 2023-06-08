@@ -1524,6 +1524,26 @@ static ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index, QMe
     }
 }
 
+template<typename Retrieve>
+int MatchVariant(QMetaType conversionMetaType, Retrieve &&retrieve) {
+    if (conversionMetaType == QMetaType::fromType<QVariant>())
+        return 0;
+
+    const QMetaType type = retrieve();
+    if (type == conversionMetaType)
+        return 0;
+
+    if (const QMetaObject *conversionMetaObject = conversionMetaType.metaObject()) {
+        if (const QMetaObject *mo = type.metaObject(); mo && mo->inherits(conversionMetaObject))
+            return 1;
+    }
+
+    if (QMetaType::canConvert(type, conversionMetaType))
+        return 5;
+
+    return 10;
+};
+
 /*
     Returns the match score for converting \a actual to be of type \a conversionType.  A
     zero score means "perfect match" whereas a higher score is worse.
@@ -1637,13 +1657,10 @@ static int MatchScore(const Value &actual, QMetaType conversionMetaType)
         }
         }
     } else if (const Object *obj = actual.as<Object>()) {
-        if (obj->as<VariantObject>()) {
-            if (conversionType == qMetaTypeId<QVariant>())
-                return 0;
-            if (ExecutionEngine::toVariant(actual, QMetaType {}).metaType() == conversionMetaType)
-                return 0;
-            else
-                return 10;
+        if (const VariantObject *variantObject = obj->as<VariantObject>()) {
+            return MatchVariant(conversionMetaType, [variantObject]() {
+                return variantObject->d()->data().metaType();
+            });
         }
 
         if (obj->as<QObjectWrapper>()) {
@@ -1662,13 +1679,12 @@ static int MatchScore(const Value &actual, QMetaType conversionMetaType)
                 return 10;
         }
 
-        if (obj->as<QQmlValueTypeWrapper>()) {
-            const QVariant v = ExecutionEngine::toVariant(actual, QMetaType {});
-            if (v.userType() == conversionType)
-                return 0;
-            else if (v.canConvert(conversionMetaType))
-                return 5;
-            return 10;
+        if (const QQmlValueTypeWrapper *wrapper = obj->as<QQmlValueTypeWrapper>()) {
+            return MatchVariant(conversionMetaType, [wrapper]() {
+                return wrapper->d()->isVariant()
+                           ? wrapper->toVariant().metaType()
+                           : wrapper->type();
+            });
         }
 
         if (conversionType == QMetaType::QJsonObject)
