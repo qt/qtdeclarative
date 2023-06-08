@@ -1902,6 +1902,19 @@ void Pragma::writeOut(DomItem &, OutWriter &ow) const
 {
     ow.ensureNewline();
     ow.writeRegion(u"pragma").space().writeRegion(u"name", name);
+
+    bool isFirst = true;
+    for (const auto &value : values) {
+        if (isFirst) {
+            isFirst = false;
+            ow.writeRegion(u"colon", u": ");
+            ow.writeRegion(u"values", value);
+            continue;
+        }
+
+        ow.writeRegion(u"comma", u", ");
+        ow.writeRegion(u"values", value);
+    }
     ow.ensureNewline();
 }
 

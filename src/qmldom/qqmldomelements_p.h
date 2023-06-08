@@ -337,11 +337,15 @@ class QMLDOM_EXPORT Pragma
 public:
     constexpr static DomType kindValue = DomType::Pragma;
 
-    Pragma(QString pragmaName = QString()) : name(pragmaName) { }
+    Pragma(QString pragmaName = QString(), const QStringList &pragmaValues = {})
+        : name(pragmaName), values{ pragmaValues }
+    {
+    }
 
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     {
         bool cont = self.dvValueField(visitor, Fields::name, name);
+        cont = cont && self.dvValueField(visitor, Fields::values, values);
         cont = cont && self.dvWrapField(visitor, Fields::comments, comments);
         return cont;
     }
@@ -349,6 +353,7 @@ public:
     void writeOut(DomItem &self, OutWriter &ow) const;
 
     QString name;
+    QStringList values;
     RegionComments comments;
 };
 
