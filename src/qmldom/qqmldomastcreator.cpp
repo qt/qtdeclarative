@@ -311,7 +311,11 @@ void QQmlDomAstCreator::endVisit(AST::UiProgram *)
 
 bool QQmlDomAstCreator::visit(UiPragma *el)
 {
-    createMap(DomType::Pragma, qmlFilePtr->addPragma(Pragma(el->name.toString())), el);
+    QStringList valueList;
+    for (auto t = el->values; t; t = t->next)
+        valueList << t->value.toString();
+
+    createMap(DomType::Pragma, qmlFilePtr->addPragma(Pragma(el->name.toString(), valueList)), el);
     return true;
 }
 
