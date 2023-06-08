@@ -212,7 +212,7 @@ QQmlInstantiator::~QQmlInstantiator()
 }
 
 /*!
-    \qmlsignal QtQml::Instantiator::objectAdded(int index, QtObject object)
+    \qmlsignal QtQml.Models::Instantiator::objectAdded(int index, QtObject object)
 
     This signal is emitted when an object is added to the Instantiator. The \a index
     parameter holds the index which the object has been given, and the \a object
@@ -220,7 +220,7 @@ QQmlInstantiator::~QQmlInstantiator()
 */
 
 /*!
-    \qmlsignal QtQml::Instantiator::objectRemoved(int index, QtObject object)
+    \qmlsignal QtQml.Models::Instantiator::objectRemoved(int index, QtObject object)
 
     This signal is emitted when an object is removed from the Instantiator. The \a index
     parameter holds the index which the object had been given, and the \a object
@@ -230,7 +230,7 @@ QQmlInstantiator::~QQmlInstantiator()
     in these cases it will be deleted shortly after the signal is handled.
 */
 /*!
-    \qmlproperty bool QtQml::Instantiator::active
+    \qmlproperty bool QtQml.Models::Instantiator::active
 
     When active is true, and the delegate component is ready, the Instantiator will
     create objects according to the model. When active is false, no objects
@@ -255,7 +255,7 @@ void QQmlInstantiator::setActive(bool newVal)
 }
 
 /*!
-    \qmlproperty bool QtQml::Instantiator::asynchronous
+    \qmlproperty bool QtQml.Models::Instantiator::asynchronous
 
     When asynchronous is true the Instantiator will attempt to create objects
     asynchronously. This means that objects may not be available immediately,
@@ -282,7 +282,7 @@ void QQmlInstantiator::setAsync(bool newVal)
 
 
 /*!
-    \qmlproperty int QtQml::Instantiator::count
+    \qmlproperty int QtQml.Models::Instantiator::count
 
     The number of objects the Instantiator is currently managing.
 */
@@ -294,7 +294,7 @@ int QQmlInstantiator::count() const
 }
 
 /*!
-    \qmlproperty QtQml::Component QtQml::Instantiator::delegate
+    \qmlproperty QtQml::Component QtQml.Models::Instantiator::delegate
     \qmldefault
 
     The component used to create all objects.
@@ -333,7 +333,7 @@ void QQmlInstantiator::setDelegate(QQmlComponent* c)
 }
 
 /*!
-    \qmlproperty variant QtQml::Instantiator::model
+    \qmlproperty variant QtQml.Models::Instantiator::model
 
     This property can be set to any of the supported \l {qml-data-models}{data models}:
 
@@ -414,7 +414,7 @@ void QQmlInstantiator::setModel(const QVariant &v)
 }
 
 /*!
-    \qmlproperty QtObject QtQml::Instantiator::object
+    \qmlproperty QtObject QtQml.Models::Instantiator::object
 
     This is a reference to the first created object, intended as a convenience
     for the case where only one object has been created.
@@ -428,7 +428,7 @@ QObject *QQmlInstantiator::object() const
 }
 
 /*!
-    \qmlmethod QtObject QtQml::Instantiator::objectAt(int index)
+    \qmlmethod QtObject QtQml.Models::Instantiator::objectAt(int index)
 
     Returns a reference to the object with the given \a index.
 */

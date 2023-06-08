@@ -144,14 +144,14 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlattachedproperty SelectionRectangle QtQuick::SelectionRectangle::control
+    \qmlattachedproperty SelectionRectangle QtQuick.Controls::SelectionRectangle::control
 
     This attached property holds the SelectionRectangle that manages the delegate instance.
     It is attached to each handle instance.
 */
 
 /*!
-    \qmlattachedproperty bool QtQuick::SelectionRectangle::dragging
+    \qmlattachedproperty bool QtQuick.Controls::SelectionRectangle::dragging
 
     This attached property will be \c true if the user is dragging on the handle.
     It is attached to each handle instance.

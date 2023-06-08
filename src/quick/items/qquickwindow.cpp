@@ -2255,7 +2255,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::frameSwapped()
+    \qmlsignal QtQuick::Window::frameSwapped()
 
     This signal is emitted when a frame has been queued for presenting. With
     vertical synchronization enabled the signal is emitted at most once per
@@ -2271,7 +2271,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
  */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::sceneGraphInitialized()
+    \qmlsignal QtQuick::Window::sceneGraphInitialized()
     \internal
  */
 
@@ -2293,7 +2293,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
  */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::sceneGraphInvalidated()
+    \qmlsignal QtQuick::Window::sceneGraphInvalidated()
     \internal
  */
 
@@ -2313,7 +2313,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
  */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::sceneGraphError(SceneGraphError error, QString message)
+    \qmlsignal QtQuick::Window::sceneGraphError(SceneGraphError error, QString message)
 
     This signal is emitted when an \a error occurred during scene graph initialization.
 
@@ -2370,7 +2370,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::closing(CloseEvent close)
+    \qmlsignal QtQuick::Window::closing(CloseEvent close)
     \since 5.1
 
     This signal is emitted when the user tries to close the window.
@@ -2682,7 +2682,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::beforeSynchronizing()
+    \qmlsignal QtQuick::Window::beforeSynchronizing()
     \internal
 */
 
@@ -2709,7 +2709,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
  */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::afterSynchronizing()
+    \qmlsignal QtQuick::Window::afterSynchronizing()
     \internal
     \since 5.3
  */
@@ -2745,7 +2745,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::beforeRendering()
+    \qmlsignal QtQuick::Window::beforeRendering()
     \internal
 */
 
@@ -2780,7 +2780,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
  */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::afterRendering()
+    \qmlsignal QtQuick::Window::afterRendering()
     \internal
  */
 
@@ -2815,7 +2815,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::beforeRenderPassRecording()
+    \qmlsignal QtQuick::Window::beforeRenderPassRecording()
     \internal
     \since 5.14
 */
@@ -2872,7 +2872,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::beforeFrameBegin()
+    \qmlsignal QtQuick::Window::beforeFrameBegin()
     \internal
 */
 
@@ -2897,12 +2897,12 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::afterFrameEnd()
+    \qmlsignal QtQuick::Window::afterFrameEnd()
     \internal
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::afterRenderPassRecording()
+    \qmlsignal QtQuick::Window::afterRenderPassRecording()
     \internal
     \since 5.14
 */
@@ -2922,7 +2922,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
  */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::afterAnimating()
+    \qmlsignal QtQuick::Window::afterAnimating()
 
     This signal is emitted on the GUI thread before requesting the render thread to
     perform the synchronization of the scene graph.
@@ -2956,7 +2956,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
  */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::sceneGraphAboutToStop()
+    \qmlsignal QtQuick::Window::sceneGraphAboutToStop()
     \internal
     \since 5.3
  */
