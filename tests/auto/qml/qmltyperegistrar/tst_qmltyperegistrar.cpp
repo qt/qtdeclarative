@@ -398,8 +398,8 @@ void tst_qmltyperegistrar::duplicateExportWarnings()
     MetaTypesJsonProcessor processor(true);
     QVERIFY(processor.processTypes({ ":/duplicatedExports.json" }));
     processor.postProcessTypes();
-    QVector<QJsonObject> types = processor.types();
-    QVector<QJsonObject> typesforeign = processor.foreignTypes();
+    QVector<QCborMap> types = processor.types();
+    QVector<QCborMap> typesforeign = processor.foreignTypes();
     r.setTypes(types, typesforeign);
 
     auto expectWarning = [](QString message) {

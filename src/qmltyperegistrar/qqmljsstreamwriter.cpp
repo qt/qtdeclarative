@@ -2,11 +2,38 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmljsstreamwriter_p.h"
+#include "qanystringviewutils_p.h"
 
 #include <QtCore/QBuffer>
 #include <QtCore/QStringList>
 
 QT_BEGIN_NAMESPACE
+
+// TODO: All of this could be improved by using and re-using one buffer for all the writing.
+//       We don't really need to allocate any temporary byte arrays.
+
+static QByteArray enquoteByteArray(QByteArrayView string)
+{
+    const qsizetype length = string.length();
+    QByteArray buffer;
+    buffer.reserve(length + 2);
+    buffer.append(' ');
+    buffer.append(string);
+    buffer.append(' ');
+    buffer.replace('\\', "\\\\").replace('"', "\\\"");
+    buffer[0] = '"';
+    buffer[buffer.length() - 1] = '"';
+    return buffer;
+}
+
+static QByteArray enquoteAnyString(QAnyStringView string)
+{
+    return string.visit([](auto data) {
+        return QAnyStringViewUtils::processAsUtf8(data, [](QByteArrayView view) {
+            return enquoteByteArray(view);
+        });
+    });
+}
 
 QQmlJSStreamWriter::QQmlJSStreamWriter(QByteArray *array)
     : m_indentDepth(0)
@@ -25,19 +52,28 @@ void QQmlJSStreamWriter::writeEndDocument()
 {
 }
 
-void QQmlJSStreamWriter::writeLibraryImport(const QString &uri, int majorVersion, int minorVersion, const QString &as)
+void QQmlJSStreamWriter::writeLibraryImport(
+        QByteArrayView uri, int majorVersion, int minorVersion, QByteArrayView as)
 {
-    m_stream->write(QString::fromLatin1("import %1 %2.%3").arg(uri, QString::number(majorVersion), QString::number(minorVersion)).toUtf8());
-    if (!as.isEmpty())
-        m_stream->write(QString::fromLatin1(" as %1").arg(as).toUtf8());
+    m_stream->write("import ");
+    m_stream->write(uri.data(), uri.length());
+    m_stream->write(" ");
+    m_stream->write(QByteArray::number(majorVersion));
+    m_stream->write(".");
+    m_stream->write(QByteArray::number(minorVersion));
+    if (!as.isEmpty()) {
+        m_stream->write(" as ");
+        m_stream->write(as.data(), as.length());
+    }
     m_stream->write("\n");
 }
 
-void QQmlJSStreamWriter::writeStartObject(const QString &component)
+void QQmlJSStreamWriter::writeStartObject(QByteArrayView component)
 {
     flushPotentialLinesWithNewlines();
     writeIndent();
-    m_stream->write(QString::fromLatin1("%1 {").arg(component).toUtf8());
+    m_stream->write(component.data(), component.length());
+    m_stream->write(" {");
     ++m_indentDepth;
     m_maybeOneline = true;
 }
@@ -69,41 +105,64 @@ void QQmlJSStreamWriter::writeEndObject()
     }
 }
 
-void QQmlJSStreamWriter::writeScriptBinding(const QString &name, const QString &rhs)
+void QQmlJSStreamWriter::writeScriptBinding(QByteArrayView name, QByteArrayView rhs)
 {
-    writePotentialLine(QString::fromLatin1("%1: %2").arg(name, rhs).toUtf8());
+    QByteArray buffer;
+    buffer.reserve(name.length() + 2 + rhs.length());
+    buffer.append(name);
+    buffer.append(": ");
+    buffer.append(rhs);
+    writePotentialLine(buffer);
 }
 
-void QQmlJSStreamWriter::writeBooleanBinding(const QString &name, bool value)
+void QQmlJSStreamWriter::writeStringBinding(QByteArrayView name, QAnyStringView value)
 {
-    writeScriptBinding(name, value ? QLatin1String("true") : QLatin1String("false"));
+    writeScriptBinding(name, enquoteAnyString(value));
 }
 
-void QQmlJSStreamWriter::writeArrayBinding(const QString &name, const QStringList &elements)
+void QQmlJSStreamWriter::writeNumberBinding(QByteArrayView name, qint64 value)
+{
+    writeScriptBinding(name, QByteArray::number(value));
+}
+
+void QQmlJSStreamWriter::writeBooleanBinding(QByteArrayView name, bool value)
+{
+    writeScriptBinding(name, value ? "true" : "false");
+}
+
+template<typename String, typename ElementHandler>
+void QQmlJSStreamWriter::doWriteArrayBinding(
+        QByteArrayView name, const QList<String> &elements, ElementHandler &&handler)
 {
     flushPotentialLinesWithNewlines();
     writeIndent();
 
     // try to use a single line
-    QString singleLine;
-    singleLine += QString::fromLatin1("%1: [").arg(name);
+    QByteArray singleLine(name.data(), name.length());
+    singleLine += ": [";
     for (int i = 0; i < elements.size(); ++i) {
-        singleLine += elements.at(i);
+        QAnyStringViewUtils::processAsUtf8(elements.at(i), [&](QByteArrayView element) {
+            singleLine += handler(element);
+        });
         if (i != elements.size() - 1)
-            singleLine += QLatin1String(", ");
+            singleLine += ", ";
     }
-    singleLine += QLatin1String("]\n");
+    singleLine += "]\n";
     if (singleLine.size() + m_indentDepth * 4 < 80) {
-        m_stream->write(singleLine.toUtf8());
+        m_stream->write(singleLine);
         return;
     }
 
     // write multi-line
-    m_stream->write(QString::fromLatin1("%1: [\n").arg(name).toUtf8());
+    m_stream->write(name.data(), name.length());
+    m_stream->write(": [\n");
     ++m_indentDepth;
     for (int i = 0; i < elements.size(); ++i) {
         writeIndent();
-        m_stream->write(elements.at(i).toUtf8());
+        QAnyStringViewUtils::processAsUtf8(elements.at(i), [&](QByteArrayView element) {
+            const auto handled = handler(element);
+            m_stream->write(handled.data(), handled.length());
+        });
         if (i != elements.size() - 1) {
             m_stream->write(",\n");
         } else {
@@ -115,28 +174,41 @@ void QQmlJSStreamWriter::writeArrayBinding(const QString &name, const QStringLis
     m_stream->write("]\n");
 }
 
-void QQmlJSStreamWriter::write(const QString &data)
+void QQmlJSStreamWriter::writeArrayBinding(QByteArrayView name, const QByteArrayList &elements)
 {
-    flushPotentialLinesWithNewlines();
-    m_stream->write(data.toUtf8());
+    doWriteArrayBinding(name, elements, [](QByteArrayView view) { return view; });
 }
 
-void QQmlJSStreamWriter::writeScriptObjectLiteralBinding(const QString &name, const QList<QPair<QString, QString> > &keyValue)
+void QQmlJSStreamWriter::writeStringListBinding(
+        QByteArrayView name, const QList<QAnyStringView> &elements)
+{
+    doWriteArrayBinding(name, elements, enquoteByteArray);
+}
+
+void QQmlJSStreamWriter::write(QByteArrayView data)
+{
+    flushPotentialLinesWithNewlines();
+    m_stream->write(data.data(), data.length());
+}
+
+void QQmlJSStreamWriter::writeEnumObjectLiteralBinding(
+    QByteArrayView name, const QList<QPair<QAnyStringView, int> > &keyValue)
 {
     flushPotentialLinesWithNewlines();
     writeIndent();
-    m_stream->write(QString::fromLatin1("%1: {\n").arg(name).toUtf8());
+    m_stream->write(name.data(), name.length());
+    m_stream->write(": {\n");
     ++m_indentDepth;
-    for (int i = 0; i < keyValue.size(); ++i) {
-        const QString key = keyValue.at(i).first;
-        const QString value = keyValue.at(i).second;
+    for (int i = 0, end = keyValue.size(); i != end; ++i) {
         writeIndent();
-        m_stream->write(QString::fromLatin1("%1: %2").arg(key, value).toUtf8());
-        if (i != keyValue.size() - 1) {
+        const auto &entry = keyValue[i];
+        m_stream->write(enquoteAnyString(entry.first));
+        m_stream->write(": ");
+        m_stream->write(QByteArray::number(entry.second));
+        if (i != end - 1)
             m_stream->write(",\n");
-        } else {
+        else
             m_stream->write("\n");
-        }
     }
     --m_indentDepth;
     writeIndent();
@@ -145,7 +217,8 @@ void QQmlJSStreamWriter::writeScriptObjectLiteralBinding(const QString &name, co
 
 void QQmlJSStreamWriter::writeIndent()
 {
-    m_stream->write(QByteArray(m_indentDepth * 4, ' '));
+    for (int i = 0; i < m_indentDepth; ++i)
+        m_stream->write("    ");
 }
 
 void QQmlJSStreamWriter::writePotentialLine(const QByteArray &line)

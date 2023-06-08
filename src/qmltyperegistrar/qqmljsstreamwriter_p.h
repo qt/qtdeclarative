@@ -29,20 +29,33 @@ public:
 
     void writeStartDocument();
     void writeEndDocument();
-    void writeLibraryImport(const QString &uri, int majorVersion, int minorVersion, const QString &as = QString());
-    //void writeFilesystemImport(const QString &file, const QString &as = QString());
-    void writeStartObject(const QString &component);
+    void writeLibraryImport(
+        QByteArrayView uri, int majorVersion, int minorVersion, QByteArrayView as = {});
+    void writeStartObject(QByteArrayView component);
     void writeEndObject();
-    void writeScriptBinding(const QString &name, const QString &rhs);
-    void writeScriptObjectLiteralBinding(const QString &name, const QList<QPair<QString, QString> > &keyValue);
-    void writeArrayBinding(const QString &name, const QStringList &elements);
-    void write(const QString &data);
-    void writeBooleanBinding(const QString &name, bool value);
+    void writeScriptBinding(QByteArrayView name, QByteArrayView rhs);
+    void writeStringBinding(QByteArrayView name, QAnyStringView value);
+    void writeNumberBinding(QByteArrayView name, qint64 value);
+
+    // TODO: Drop this once we can drop qmlplugindump. It is substantially weird.
+    void writeEnumObjectLiteralBinding(
+        QByteArrayView name, const QList<QPair<QAnyStringView, int>> &keyValue);
+
+    // TODO: these would look better with generator functions.
+    void writeArrayBinding(QByteArrayView name, const QByteArrayList &elements);
+    void writeStringListBinding(QByteArrayView name, const QList<QAnyStringView> &elements);
+
+    void write(QByteArrayView data);
+    void writeBooleanBinding(QByteArrayView name, bool value);
 
 private:
     void writeIndent();
     void writePotentialLine(const QByteArray &line);
     void flushPotentialLinesWithNewlines();
+
+    template<typename String, typename ElementHandler>
+    void doWriteArrayBinding(
+            QByteArrayView name, const QList<String> &elements, ElementHandler &&handler);
 
     int m_indentDepth;
     QList<QByteArray> m_pendingLines;
