@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlattachedproperty string QtQuick::Package::name
+    \qmlattachedproperty string QtQml.Models::Package::name
     This attached property holds the name of an item within a Package.
 */
 
