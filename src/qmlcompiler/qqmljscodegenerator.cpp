@@ -912,15 +912,18 @@ void QQmlJSCodeGenerator::generateVariantEqualityComparison(
                                      + u" nullptr"_s)
                 + u";\n} else if ("_s + registerName
                 + u".metaType() == QMetaType::fromType<std::nullptr_t>()) {\n"_s
-                + m_state.accumulatorVariableOut + u" = "_s + (invert ? u"false"_s : u"true"_s)
+                + m_state.accumulatorVariableOut + u" = "_s
+                + conversion(m_typeResolver->boolType(), m_state.accumulatorOut(),
+                             (invert ? u"false"_s : u"true"_s))
                 + u";\n}\n"_s;
     }
 
     // fallback case (if variant contains a different type, then it is not null or undefined)
     m_body += u"else {\n"_s + m_state.accumulatorVariableOut + u" = "_s
-            + (invert ? (registerName + u".isValid() ? true : false"_s)
-                      : (registerName + u".isValid() ? false : true"_s))
-            + u";}\n"_s;
+            + conversion(m_typeResolver->boolType(), m_state.accumulatorOut(),
+                         (invert ? (registerName + u".isValid() ? true : false"_s)
+                                 : (registerName + u".isValid() ? false : true"_s)))
+            + u";\n}"_s;
 }
 
 void QQmlJSCodeGenerator::rejectIfNonQObjectOut(const QString &error)

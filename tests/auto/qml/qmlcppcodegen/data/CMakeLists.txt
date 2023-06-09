@@ -103,6 +103,7 @@ set(qml_files
     enumsUser.qml
     equalityQObjects.qml
     equalityQUrl.qml
+    equalityTestsWithNullOrUndefined.qml
     equalityVarAndNonStorable.qml
     equalsUndefined.qml
     exceptionFromInner.qml
