@@ -2220,7 +2220,7 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
 
     \sa {QML Data Models}, GridView, PathView, {Qt Quick Examples - Views}
 
-    \section 1 Variable Delegate Size and Section Labels
+    \section1 Variable Delegate Size and Section Labels
 
     Variable delegate sizes might lead to resizing and skipping of any attached
     \l Scrollbar. This is because ListView estimates its content size from
