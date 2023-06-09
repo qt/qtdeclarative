@@ -190,6 +190,7 @@ private slots:
     void variantReturn();
     void variantlist();
     void voidFunction();
+    void equalityTestsWithNullOrUndefined();
 };
 
 static QByteArray arg1()
@@ -3909,6 +3910,15 @@ void tst_QmlCppCodegen::voidFunction()
     QVERIFY(object->objectName().isEmpty());
     object->metaObject()->invokeMethod(object.data(), "doesNotReturnValue");
     QCOMPARE(object->objectName(), u"barbar"_s);
+}
+
+void tst_QmlCppCodegen::equalityTestsWithNullOrUndefined()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/equalityTestsWithNullOrUndefined.qml"_s));
+    QVERIFY2(component.isReady(), component.errorString().toUtf8());
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
