@@ -31,18 +31,12 @@ class QQuickBorderImagePrivate : public QQuickImageBasePrivate
 
 public:
     QQuickBorderImagePrivate()
-      : border(0), horizontalTileMode(QQuickBorderImage::Stretch),
-        verticalTileMode(QQuickBorderImage::Stretch), pixmapChanged(false)
-#if QT_CONFIG(qml_network)
-      , sciReply(0), redirectCount(0)
-#endif
     {
     }
 
     ~QQuickBorderImagePrivate()
     {
     }
-
 
     QQuickScaleGrid *getScaleGrid()
     {
@@ -66,15 +60,15 @@ public:
                                QRectF *innerSourceRect,
                                QRectF *subSourceRect);
 
-    QQuickScaleGrid *border;
     QUrl sciurl;
-    QQuickBorderImage::TileMode horizontalTileMode;
-    QQuickBorderImage::TileMode verticalTileMode;
-    bool pixmapChanged : 1;
+    QQuickScaleGrid *border = nullptr;
+    QQuickBorderImage::TileMode horizontalTileMode = QQuickBorderImage::Stretch;
+    QQuickBorderImage::TileMode verticalTileMode = QQuickBorderImage::Stretch;
+    bool pixmapChanged = false;
 
 #if QT_CONFIG(qml_network)
-    QNetworkReply *sciReply;
-    int redirectCount;
+    QNetworkReply *sciReply = nullptr;
+    int redirectCount = 0;
 #endif
 };
 
