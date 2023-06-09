@@ -711,6 +711,7 @@ QQuickShape::~QQuickShape()
       \li Shapes that span a large numerical range, such as a long string of text, may have
           issues. Consider splitting these shapes into multiple ones, for instance by making
           a \l PathText for each individual word.
+    \endlist
 
    Due to the fact that the \c Shape.CurveRenderer approximates cubic curves, there are certain
    shapes it will not render accurately. For instance, circular arcs are not representable using quadratic
