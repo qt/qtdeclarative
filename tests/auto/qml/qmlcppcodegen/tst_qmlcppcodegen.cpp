@@ -172,6 +172,7 @@ private slots:
     void ambiguousAs();
     void topLevelComponent();
     void variantReturn();
+    void equalityTestsWithNullOrUndefined();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3366,6 +3367,15 @@ void tst_QmlCppCodegen::variantReturn()
     QObject *b = o->property("b").value<QObject *>();
     QVERIFY(b);
     QCOMPARE(b->property("z").toInt(), 2);
+}
+
+void tst_QmlCppCodegen::equalityTestsWithNullOrUndefined()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/equalityTestsWithNullOrUndefined.qml"_s));
+    QVERIFY2(component.isReady(), component.errorString().toUtf8());
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
