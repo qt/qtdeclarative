@@ -109,6 +109,7 @@ public:
             , fixingUp(false), inOvershoot(false), inRebound(false), moving(false), flicking(false)
             , dragging(false), extentsChanged(false)
             , explicitValue(false), minExtentDirty(true), maxExtentDirty(true)
+            , contentPositionChangedExternallyDuringDrag(false)
             , unused(0)
         {}
 
@@ -169,7 +170,8 @@ public:
         bool explicitValue : 1;
         mutable bool minExtentDirty : 1;
         mutable bool maxExtentDirty : 1;
-        uint unused : 19;
+        bool contentPositionChangedExternallyDuringDrag : 1;
+        uint unused : 18;
     };
 
     bool flickX(qreal velocity);

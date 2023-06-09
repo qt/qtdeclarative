@@ -55,26 +55,38 @@
 
 namespace icutils {
 struct Node {
+private:
+    using IndexType = std::vector<QV4::CompiledData::InlineComponent>::size_type;
+    using IndexField = quint32_le_bitfield_member<0, 30, IndexType>;
+    using TemporaryMarkField = quint32_le_bitfield_member<30, 1>;
+    using PermanentMarkField = quint32_le_bitfield_member<31, 1>;
+    quint32_le_bitfield_union<IndexField, TemporaryMarkField, PermanentMarkField> m_data;
+
+public:
     Node() = default;
     Node(const Node &) = default;
     Node(Node &&) = default;
     Node& operator=(Node const &) = default;
     Node& operator=(Node &&) = default;
-    bool operator==(Node const &other) const {return index == other.index;}
+    bool operator==(Node const &other) const {return m_data.data() == other.m_data.data(); }
 
-    Node(std::vector<QV4::CompiledData::InlineComponent>::size_type s)
-        : index{0}
+    Node(IndexType s) : m_data(QSpecialIntegerBitfieldZero) { m_data.set<IndexField>(s); }
+
+    bool hasPermanentMark() const { return m_data.get<PermanentMarkField>(); }
+    bool hasTemporaryMark() const { return m_data.get<TemporaryMarkField>(); }
+
+    void setPermanentMark()
     {
-        index = quint32(s);
-        temporaryMark = 0;
-        permanentMark = 0;
+        m_data.set<TemporaryMarkField>(0);
+        m_data.set<PermanentMarkField>(1);
     }
 
-    union {
-        quint32_le_bitfield<0, 30> index;
-        quint32_le_bitfield<30, 1> temporaryMark;
-        quint32_le_bitfield<31, 1> permanentMark;
-    };
+    void setTemporaryMark()
+    {
+        m_data.set<TemporaryMarkField>(1);
+    }
+
+    IndexType index() const { return m_data.get<IndexField>(); }
 };
 
 using AdjacencyList = std::vector<std::vector<Node*>>;
@@ -109,8 +121,11 @@ void fillAdjacencyListForInlineComponents(ObjectContainer *objectContainer, Adja
         auto referencedInICObjectIndex = ic.objectIndex + 1;
         while (int(referencedInICObjectIndex) < objectContainer->objectCount()) {
             auto potentiallyReferencedInICObject = objectContainer->objectAt(referencedInICObjectIndex);
-            bool stillInIC = !(potentiallyReferencedInICObject-> flags & QV4::CompiledData::Object::IsInlineComponentRoot)
-                    && (potentiallyReferencedInICObject-> flags & QV4::CompiledData::Object::InPartOfInlineComponent);
+            bool stillInIC
+                    = !potentiallyReferencedInICObject->hasFlag(
+                              QV4::CompiledData::Object::IsInlineComponentRoot)
+                    && potentiallyReferencedInICObject->hasFlag(
+                            QV4::CompiledData::Object::InPartOfInlineComponent);
             if (!stillInIC)
                 break;
             createEdgeFromTypeRef(objectContainer->resolvedType(potentiallyReferencedInICObject->inheritedTypeNameIndex));
@@ -120,21 +135,20 @@ void fillAdjacencyListForInlineComponents(ObjectContainer *objectContainer, Adja
 };
 
 inline void topoVisit(Node *node, AdjacencyList &adjacencyList, bool &hasCycle, std::vector<Node> &nodesSorted) {
-    if (node->permanentMark)
+    if (node->hasPermanentMark())
         return;
-    if (node->temporaryMark) {
+    if (node->hasTemporaryMark()) {
         hasCycle = true;
         return;
     }
-    node->temporaryMark = 1;
+    node->setTemporaryMark();
 
-    auto const &edges = adjacencyList[node->index];
+    auto const &edges = adjacencyList[node->index()];
     for (auto edgeTarget =edges.begin(); edgeTarget != edges.end(); ++edgeTarget) {
         topoVisit(*edgeTarget, adjacencyList, hasCycle, nodesSorted);
     }
 
-    node->temporaryMark = 0;
-    node->permanentMark = 1;
+    node->setPermanentMark();
     nodesSorted.push_back(*node);
 };
 
@@ -145,7 +159,7 @@ inline std::vector<Node> topoSort(std::vector<Node> &nodes, AdjacencyList &adjac
 
     hasCycle = false;
     auto currentNodeIt = std::find_if(nodes.begin(), nodes.end(), [](const Node& node) {
-        return node.permanentMark == 0;
+        return !node.hasPermanentMark();
     });
     // Do a topological sort of all inline components
     // afterwards, nodesSorted contains the nodes for the inline components in reverse topological order
@@ -153,7 +167,7 @@ inline std::vector<Node> topoSort(std::vector<Node> &nodes, AdjacencyList &adjac
         Node& currentNode = *currentNodeIt;
         topoVisit(&currentNode, adjacencyList, hasCycle, nodesSorted);
         currentNodeIt = std::find_if(nodes.begin(), nodes.end(), [](const Node& node) {
-            return node.permanentMark == 0;
+            return !node.hasPermanentMark();
         });
     }
     return nodesSorted;

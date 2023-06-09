@@ -13,7 +13,7 @@ defineTest(qtConfTest_detectPython) {
     }
 
     # Make tests.python.location available in configure.json.
-    $${1}.location = $$shell_path($$python_path)
+    $${1}.location = $$shell_quote($$shell_path($$python_path))
     export($${1}.location)
     $${1}.cache += location
     export($${1}.cache)

@@ -97,6 +97,7 @@ private:
 
     mutable QVector<SizeHints> m_cachedItemSizeHints;
     mutable QSizeF m_cachedSizeHints[Qt::NSizeHints];
+    SizeHints &cachedItemSizeHints(int index) const;
 };
 
 class QQuickStackLayoutPrivate : public QQuickLayoutPrivate

@@ -773,7 +773,8 @@ QObject *QuickTestResult::grabImage(QQuickItem *item)
     if (item && item->window()) {
         QQuickWindow *window = item->window();
         QImage grabbed = window->grabWindow();
-        QRectF rf(item->x(), item->y(), item->width(), item->height());
+        const auto dpi = grabbed.devicePixelRatio();
+        QRectF rf(item->x() * dpi, item->y() * dpi, item->width() * dpi, item->height() * dpi);
         rf = rf.intersected(QRectF(0, 0, grabbed.width(), grabbed.height()));
         QObject *o = new QuickTestImageObject(grabbed.copy(rf.toAlignedRect()));
         QQmlEngine::setContextForObject(o, qmlContext(this));

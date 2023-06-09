@@ -44,17 +44,26 @@
 #include <private/qqmlengine_p.h>
 #include <private/qv4compileddata_p.h>
 
+#include <atomic>
 #include <cstdio>
 
 QT_REQUIRE_CONFIG(qml_debug);
 
 QT_BEGIN_NAMESPACE
 
+#if __cplusplus >= 202002L
+# define Q_ATOMIC_FLAG_INIT {}
+#else
+# define Q_ATOMIC_FLAG_INIT ATOMIC_FLAG_INIT // deprecated in C++20
+#endif
+
+static std::atomic_flag s_printedWarning = Q_ATOMIC_FLAG_INIT;
+
 QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
 {
-    if (!QQmlEnginePrivate::qml_debugging_enabled && printWarning)
+    if (printWarning && !s_printedWarning.test_and_set(std::memory_order_relaxed))
         fprintf(stderr, "QML debugging is enabled. Only use this in a safe environment.\n");
-    QQmlEnginePrivate::qml_debugging_enabled = true;
+    QQmlEnginePrivate::qml_debugging_enabled.store(true, std::memory_order_relaxed);
 }
 
 /*!

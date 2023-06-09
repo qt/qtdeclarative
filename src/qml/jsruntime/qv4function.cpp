@@ -176,7 +176,8 @@ QString Function::prettyName(const Function *function, const void *code)
 
 QQmlSourceLocation Function::sourceLocation() const
 {
-    return QQmlSourceLocation(sourceFile(), compiledFunction->location.line, compiledFunction->location.column);
+    return QQmlSourceLocation(
+            sourceFile(), compiledFunction->location.line(), compiledFunction->location.column());
 }
 
 QT_END_NAMESPACE

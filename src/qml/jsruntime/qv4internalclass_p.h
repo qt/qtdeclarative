@@ -172,7 +172,7 @@ struct SharedInternalClassDataPrivate<PropertyAttributes> {
     uint size() const { return m_size; }
     void setSize(uint s) { m_size = s; }
 
-    PropertyAttributes at(uint i) { Q_ASSERT(data && i < m_alloc); return data[i]; }
+    PropertyAttributes at(uint i) const { Q_ASSERT(data && i < m_alloc); return data[i]; }
     void set(uint i, PropertyAttributes t) { Q_ASSERT(data && i < m_alloc); data[i] = t; }
 
     void mark(MarkStack *) {}
@@ -197,7 +197,7 @@ struct SharedInternalClassDataPrivate<PropertyKey> {
     uint size() const;
     void setSize(uint s);
 
-    PropertyKey at(uint i);
+    PropertyKey at(uint i) const;
     void set(uint i, PropertyKey t);
 
     void mark(MarkStack *s);
@@ -290,24 +290,33 @@ struct InternalClassTransition
     int flags;
     enum {
         // range 0-0xff is reserved for attribute changes
-        NotExtensible = 0x100,
-        VTableChange = 0x200,
-        PrototypeChange = 0x201,
-        ProtoClass = 0x202,
-        Sealed = 0x203,
-        Frozen = 0x204
+        StructureChange = 0x100,
+        NotExtensible   = StructureChange | (1 << 0),
+        VTableChange    = StructureChange | (1 << 1),
+        PrototypeChange = StructureChange | (1 << 2),
+        ProtoClass      = StructureChange | (1 << 3),
+        Sealed          = StructureChange | (1 << 4),
+        Frozen          = StructureChange | (1 << 5),
     };
 
     bool operator==(const InternalClassTransition &other) const
     { return id == other.id && flags == other.flags; }
 
     bool operator<(const InternalClassTransition &other) const
-    { return id < other.id || (id == other.id && flags < other.flags); }
+    { return flags < other.flags || (flags == other.flags && id < other.id); }
 };
 
 namespace Heap {
 
 struct InternalClass : Base {
+    enum Flag {
+        NotExtensible = 1 << 0,
+        Sealed        = 1 << 1,
+        Frozen        = 1 << 2,
+        UsedAsProto   = 1 << 3,
+    };
+    enum { MaxRedundantTransitions = 255 };
+
     ExecutionEngine *engine;
     const VTable *vtable;
     quintptr protoId; // unique across the engine, gets changed whenever the proto chain changes
@@ -323,10 +332,13 @@ struct InternalClass : Base {
     InternalClassTransition &lookupOrInsertTransition(const InternalClassTransition &t);
 
     uint size;
-    bool extensible;
-    bool isSealed;
-    bool isFrozen;
-    bool isUsedAsProto;
+    quint8 numRedundantTransitions;
+    quint8 flags;
+
+    bool isExtensible() const { return !(flags & NotExtensible); }
+    bool isSealed() const { return flags & Sealed; }
+    bool isFrozen() const { return flags & Frozen; }
+    bool isUsedAsProto() const { return flags & UsedAsProto; }
 
     void init(ExecutionEngine *engine);
     void init(InternalClass *other);

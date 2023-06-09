@@ -346,7 +346,7 @@ void tst_qmldiskcache::regenerateAfterChange()
 
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(0);
         QCOMPARE(quint32(obj->nBindings), quint32(1));
-        QCOMPARE(quint32(obj->bindingTable()->type), quint32(QV4::CompiledData::Binding::Type_Script));
+        QCOMPARE(obj->bindingTable()->type(), QV4::CompiledData::Binding::Type_Script);
         QCOMPARE(quint32(obj->bindingTable()->value.compiledScriptIndex), quint32(0));
 
         QCOMPARE(quint32(testUnit->functionTableSize), quint32(1));
@@ -374,7 +374,7 @@ void tst_qmldiskcache::regenerateAfterChange()
 
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(0);
         QCOMPARE(quint32(obj->nBindings), quint32(2));
-        QCOMPARE(quint32(obj->bindingTable()->type), quint32(QV4::CompiledData::Binding::Type_Number));
+        QCOMPARE(obj->bindingTable()->type(), QV4::CompiledData::Binding::Type_Number);
 
         QCOMPARE(reinterpret_cast<const QV4::Value *>(testUnit->constants())
                          [obj->bindingTable()->value.constantValueIndex].doubleValue(),
@@ -419,7 +419,7 @@ void tst_qmldiskcache::registerImportForImplicitComponent()
 
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(0);
         QCOMPARE(quint32(obj->nBindings), quint32(1));
-        QCOMPARE(quint32(obj->bindingTable()->type), quint32(QV4::CompiledData::Binding::Type_Object));
+        QCOMPARE(obj->bindingTable()->type(), QV4::CompiledData::Binding::Type_Object);
 
         const QV4::CompiledData::Object *implicitComponent = qmlUnit->objectAt(obj->bindingTable()->value.objectIndex);
         QCOMPARE(testUnit->stringAtInternal(implicitComponent->inheritedTypeNameIndex), QStringLiteral("QmlInternals.") + componentType.elementName());

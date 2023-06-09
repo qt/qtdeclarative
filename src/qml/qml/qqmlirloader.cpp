@@ -94,10 +94,11 @@ QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *seriali
     object->init(pool, serializedObject->inheritedTypeNameIndex, serializedObject->idNameIndex);
 
     object->indexOfDefaultPropertyOrAlias = serializedObject->indexOfDefaultPropertyOrAlias;
-    object->defaultPropertyIsAlias = serializedObject->defaultPropertyIsAlias;
-    object->isInlineComponent = serializedObject->flags & QV4::CompiledData::Object::IsInlineComponentRoot;
-    object->flags = serializedObject->flags;
-    object->id = serializedObject->id;
+    object->defaultPropertyIsAlias = serializedObject->hasAliasAsDefaultProperty();
+    object->isInlineComponent = serializedObject->hasFlag(
+            QV4::CompiledData::Object::IsInlineComponentRoot);
+    object->flags = serializedObject->flags();
+    object->id = serializedObject->objectId();
     object->location = serializedObject->location;
     object->locationOfIdProperty = serializedObject->locationOfIdProperty;
 
@@ -108,7 +109,7 @@ QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *seriali
         QmlIR::Binding *b = pool->New<QmlIR::Binding>();
         *static_cast<QV4::CompiledData::Binding*>(b) = serializedObject->bindingTable()[i];
         object->bindings->append(b);
-        if (b->type == QV4::CompiledData::Binding::Type_Script) {
+        if (b->type() == QV4::CompiledData::Binding::Type_Script) {
             functionIndices.append(b->value.compiledScriptIndex);
             b->value.compiledScriptIndex = functionIndices.count() - 1;
 

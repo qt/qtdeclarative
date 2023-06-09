@@ -978,11 +978,14 @@ void QQuickWidget::createFramebufferObject()
     }
 
     QOpenGLContext *shareWindowContext = QWidgetPrivate::get(window())->shareContext();
+    bool nativeContextGotRecreated = false;
     if (shareWindowContext && context->shareContext() != shareWindowContext && !qGuiApp->testAttribute(Qt::AA_ShareOpenGLContexts)) {
+        d->invalidateRenderControl();
         context->setShareContext(shareWindowContext);
         context->setScreen(shareWindowContext->screen());
         if (!context->create())
             qWarning("QQuickWidget: Failed to recreate context");
+        nativeContextGotRecreated = true;
         // The screen may be different so we must recreate the offscreen surface too.
         // Unlike QOpenGLContext, QOffscreenSurface's create() does not recreate so have to destroy() first.
         d->offscreenSurface->destroy();
@@ -1042,6 +1045,10 @@ void QQuickWidget::createFramebufferObject()
     // Having one would mean create() was called and platforms that only support
     // a single native window were in trouble.
     Q_ASSERT(!d->offscreenWindow->handle());
+
+    // do this at the end it may trigger a recursive call
+    if (nativeContextGotRecreated)
+        d->renderControl->initialize(context);
 #endif
 }
 

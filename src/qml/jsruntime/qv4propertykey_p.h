@@ -51,6 +51,7 @@
 //
 
 #include <private/qv4global_p.h>
+#include <QtCore/qhashfunctions.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -145,6 +146,10 @@ public:
     bool operator ==(const PropertyKey &other) const { return val == other.val; }
     bool operator !=(const PropertyKey &other) const { return val != other.val; }
     bool operator <(const PropertyKey &other) const { return val < other.val; }
+    inline friend uint qHash(const PropertyKey &key, uint seed) noexcept
+    {
+        return QT_PREPEND_NAMESPACE(qHash)(key.val, seed);
+    }
 };
 
 }

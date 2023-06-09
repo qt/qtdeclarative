@@ -1,4 +1,5 @@
 # Test fails on qemu when bound to one core, passes on real ARM
 # QTBUG-63049
 [asyncToSync1]
+ci ubuntu-20.04 # QTBUG-106424
 b2qt

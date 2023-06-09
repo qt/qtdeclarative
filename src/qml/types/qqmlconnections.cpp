@@ -247,17 +247,20 @@ void QQmlConnectionsParser::verifyBindings(const QQmlRefPointer<QV4::ExecutableC
             return;
         }
 
-        if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
+        if (binding->type() == QV4::CompiledData::Binding::Type_Script)
+            continue;
+
+        if (binding->type() >= QV4::CompiledData::Binding::Type_Object) {
             const QV4::CompiledData::Object *target = compilationUnit->objectAt(binding->value.objectIndex);
             if (!compilationUnit->stringAt(target->inheritedTypeNameIndex).isEmpty())
                 error(binding, QQmlConnections::tr("Connections: nested objects not allowed"));
             else
                 error(binding, QQmlConnections::tr("Connections: syntax error"));
             return;
-        } if (binding->type != QV4::CompiledData::Binding::Type_Script) {
-            error(binding, QQmlConnections::tr("Connections: script expected"));
-            return;
         }
+
+        error(binding, QQmlConnections::tr("Connections: script expected"));
+        return;
     }
 }
 
@@ -352,7 +355,7 @@ void QQmlConnections::connectSignalsToBindings()
     QQmlContextData *ctxtdata = ddata ? ddata->outerContext : nullptr;
 
     for (const QV4::CompiledData::Binding *binding : qAsConst(d->bindings)) {
-        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Script);
+        Q_ASSERT(binding->type() == QV4::CompiledData::Binding::Type_Script);
         QString propName = d->compilationUnit->stringAt(binding->propertyNameIndex);
 
         QQmlProperty prop(target, propName);

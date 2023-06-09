@@ -160,10 +160,7 @@ int QV4::Compiler::JSUnitGenerator::registerGetterLookup(const QString &name)
 
 int QV4::Compiler::JSUnitGenerator::registerGetterLookup(int nameIndex)
 {
-    CompiledData::Lookup l;
-    l.type_and_flags = CompiledData::Lookup::Type_Getter;
-    l.nameIndex = nameIndex;
-    lookups << l;
+    lookups << CompiledData::Lookup(CompiledData::Lookup::Type_Getter, nameIndex);
     return lookups.size() - 1;
 }
 
@@ -174,49 +171,37 @@ int QV4::Compiler::JSUnitGenerator::registerSetterLookup(const QString &name)
 
 int QV4::Compiler::JSUnitGenerator::registerSetterLookup(int nameIndex)
 {
-    CompiledData::Lookup l;
-    l.type_and_flags = CompiledData::Lookup::Type_Setter;
-    l.nameIndex = nameIndex;
-    lookups << l;
+    lookups << CompiledData::Lookup(CompiledData::Lookup::Type_Setter, nameIndex);
     return lookups.size() - 1;
 }
 
 int QV4::Compiler::JSUnitGenerator::registerGlobalGetterLookup(int nameIndex)
 {
-    CompiledData::Lookup l;
-    l.type_and_flags = CompiledData::Lookup::Type_GlobalGetter;
-    l.nameIndex = nameIndex;
-    lookups << l;
+    lookups << CompiledData::Lookup(CompiledData::Lookup::Type_GlobalGetter, nameIndex);
     return lookups.size() - 1;
 }
 
 int QV4::Compiler::JSUnitGenerator::registerQmlContextPropertyGetterLookup(int nameIndex)
 {
-    CompiledData::Lookup l;
-    l.type_and_flags = CompiledData::Lookup::Type_QmlContextPropertyGetter;
-    l.nameIndex = nameIndex;
-    lookups << l;
+    lookups << CompiledData::Lookup(CompiledData::Lookup::Type_QmlContextPropertyGetter, nameIndex);
     return lookups.size() - 1;
 }
 
 int QV4::Compiler::JSUnitGenerator::registerRegExp(QQmlJS::AST::RegExpLiteral *regexp)
 {
-    CompiledData::RegExp re;
-    re.stringIndex = registerString(regexp->pattern.toString());
-
-    re.flags = 0;
+    quint32 flags = 0;
     if (regexp->flags & QQmlJS::Lexer::RegExp_Global)
-        re.flags |= CompiledData::RegExp::RegExp_Global;
+        flags |= CompiledData::RegExp::RegExp_Global;
     if (regexp->flags &  QQmlJS::Lexer::RegExp_IgnoreCase)
-        re.flags |= CompiledData::RegExp::RegExp_IgnoreCase;
+        flags |= CompiledData::RegExp::RegExp_IgnoreCase;
     if (regexp->flags &  QQmlJS::Lexer::RegExp_Multiline)
-        re.flags |= CompiledData::RegExp::RegExp_Multiline;
+        flags |= CompiledData::RegExp::RegExp_Multiline;
     if (regexp->flags &  QQmlJS::Lexer::RegExp_Unicode)
-        re.flags |= CompiledData::RegExp::RegExp_Unicode;
+        flags |= CompiledData::RegExp::RegExp_Unicode;
     if (regexp->flags &  QQmlJS::Lexer::RegExp_Sticky)
-        re.flags |= CompiledData::RegExp::RegExp_Sticky;
+        flags |= CompiledData::RegExp::RegExp_Sticky;
 
-    regexps.append(re);
+    regexps.append(CompiledData::RegExp(flags, registerString(regexp->pattern.toString())));
     return regexps.size() - 1;
 }
 
@@ -249,8 +234,7 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(const QStringList &members)
     CompiledData::JSClassMember *member = reinterpret_cast<CompiledData::JSClassMember*>(jsClass + 1);
 
     for (const auto &name : members) {
-        member->nameOffset = registerString(name);
-        member->isAccessor = false;
+        member->set(registerString(name), false);
         ++member;
     }
 
@@ -468,8 +452,7 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
         currentOffset += function->nLabelInfos * sizeof(quint32);
     }
 
-    function->location.line = irFunction->line;
-    function->location.column = irFunction->column;
+    function->location.set(irFunction->line, irFunction->column);
 
     function->codeOffset = currentOffset;
     function->codeSize = irFunction->code.size();

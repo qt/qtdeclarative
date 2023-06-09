@@ -57,10 +57,7 @@ using namespace QQmlJS::AST;
 
 static CompiledData::Location location(const QQmlJS::SourceLocation &astLocation)
 {
-    CompiledData::Location target;
-    target.line = astLocation.startLine;
-    target.column = astLocation.startColumn;
-    return target;
+    return CompiledData::Location(astLocation.startLine, astLocation.startColumn);
 }
 
 

@@ -155,10 +155,10 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
            data->regexpTableSize * sizeof(QV4::Value));
     for (uint i = 0; i < data->regexpTableSize; ++i) {
         const CompiledData::RegExp *re = data->regexpAt(i);
-        uint f = re->flags;
+        uint f = re->flags();
         const CompiledData::RegExp::Flags flags = static_cast<CompiledData::RegExp::Flags>(f);
         runtimeRegularExpressions[i] = QV4::RegExp::create(
-                engine, stringAt(re->stringIndex), flags);
+                engine, stringAt(re->stringIndex()), flags);
     }
 
     if (data->lookupTableSize) {
@@ -169,7 +169,7 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
             QV4::Lookup *l = runtimeLookups + i;
 
             CompiledData::Lookup::Type type
-                    = CompiledData::Lookup::Type(uint(compiledLookups[i].type_and_flags));
+                    = CompiledData::Lookup::Type(uint(compiledLookups[i].typeAndFlags()));
             if (type == CompiledData::Lookup::Type_Getter)
                 l->getter = QV4::Lookup::getterGeneric;
             else if (type == CompiledData::Lookup::Type_Setter)
@@ -178,7 +178,7 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
                 l->globalGetter = QV4::Lookup::globalGetterGeneric;
             else if (type == CompiledData::Lookup::Type_QmlContextPropertyGetter)
                 l->qmlContextPropertyGetter = QQmlContextWrapper::resolveQmlContextPropertyLookupGetter;
-            l->nameIndex = compiledLookups[i].nameIndex;
+            l->nameIndex = compiledLookups[i].nameIndex();
         }
     }
 
@@ -199,8 +199,8 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
                 runtimeClasses[i]
                         = runtimeClasses[i]->addMember(
                                 engine->identifierTable->asPropertyKey(
-                                        runtimeStrings[member->nameOffset]),
-                                member->isAccessor
+                                        runtimeStrings[member->nameOffset()]),
+                                member->isAccessor()
                                         ? QV4::Attr_Accessor
                                         : QV4::Attr_Data);
         }
@@ -368,7 +368,7 @@ IdentifierHash ExecutableCompilationUnit::createNamedObjectsPerComponent(int com
     const quint32_le *namedObjectIndexPtr = component->namedObjectsInComponentTable();
     for (quint32 i = 0; i < component->nNamedObjectsInComponent; ++i, ++namedObjectIndexPtr) {
         const CompiledData::Object *namedObject = objectAt(*namedObjectIndexPtr);
-        namedObjectCache.add(runtimeStrings[namedObject->idNameIndex], namedObject->id);
+        namedObjectCache.add(runtimeStrings[namedObject->idNameIndex], namedObject->objectId());
     }
     return *namedObjectsPerComponentCache.insert(componentObjectIndex, namedObjectCache);
 }
@@ -421,13 +421,14 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
     // We need to first iterate over all inline components, as the containing component might create instances of them
     // and in that case we need to add its object count
     for (auto nodeIt = nodesSorted.rbegin(); nodeIt != nodesSorted.rend(); ++nodeIt) {
-        const auto &ic = allICs.at(nodeIt->index);
+        const auto &ic = allICs.at(nodeIt->index());
         int lastICRoot = ic.objectIndex;
         for (int i = ic.objectIndex; i<objectCount(); ++i) {
             const QV4::CompiledData::Object *obj = objectAt(i);
-            bool leftCurrentInlineComponent =
-                       (i != lastICRoot && obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
-                    || !(obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent);
+            bool leftCurrentInlineComponent
+                    = (i != lastICRoot
+                            && obj->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot))
+                        || !obj->hasFlag(QV4::CompiledData::Object::InPartOfInlineComponent);
             if (leftCurrentInlineComponent)
                 break;
             inlineComponentData[lastICRoot].totalBindingCount += obj->nBindings;
@@ -457,9 +458,9 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
     int objectCount = 0;
     for (quint32 i = 0, count = this->objectCount(); i < count; ++i) {
         const QV4::CompiledData::Object *obj = objectAt(i);
-        if (obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent) {
+        if (obj->hasFlag(QV4::CompiledData::Object::InPartOfInlineComponent))
             continue;
-        }
+
         bindingCount += obj->nBindings;
         if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
             if (typeRef->type.isValid() && typeRef->type.parserStatusCast() != -1)
@@ -571,7 +572,9 @@ Heap::Module *ExecutableCompilationUnit::instantiate(ExecutionEngine *engine)
         if (!valuePtr) {
             QString referenceErrorMessage = QStringLiteral("Unable to resolve import reference ");
             referenceErrorMessage += importName->toQString();
-            engine->throwReferenceError(referenceErrorMessage, fileName(), entry.location.line, entry.location.column);
+            engine->throwReferenceError(
+                    referenceErrorMessage, fileName(),
+                    entry.location.line(), entry.location.column());
             return nullptr;
         }
         imports[i] = valuePtr;
@@ -587,7 +590,9 @@ Heap::Module *ExecutableCompilationUnit::instantiate(ExecutionEngine *engine)
         if (!dependentModuleUnit->resolveExport(importName)) {
             QString referenceErrorMessage = QStringLiteral("Unable to resolve re-export reference ");
             referenceErrorMessage += importName->toQString();
-            engine->throwReferenceError(referenceErrorMessage, fileName(), entry.location.line, entry.location.column);
+            engine->throwReferenceError(
+                    referenceErrorMessage, fileName(),
+                    entry.location.line(), entry.location.column());
             return nullptr;
         }
     }
@@ -858,7 +863,7 @@ bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *e
 QString ExecutableCompilationUnit::bindingValueAsString(const CompiledData::Binding *binding) const
 {
     using namespace CompiledData;
-    switch (binding->type) {
+    switch (binding->type()) {
     case Binding::Type_Script:
     case Binding::Type_String:
         return stringAt(binding->stringIndex);
@@ -906,7 +911,7 @@ QString ExecutableCompilationUnit::bindingValueAsString(const CompiledData::Bind
 QString ExecutableCompilationUnit::bindingValueAsScriptString(
         const CompiledData::Binding *binding) const
 {
-    return (binding->type == CompiledData::Binding::Type_String)
+    return (binding->type() == CompiledData::Binding::Type_String)
             ? CompiledData::Binding::escapedString(stringAt(binding->stringIndex))
             : bindingValueAsString(binding);
 }

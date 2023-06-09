@@ -50,8 +50,8 @@ FunctionLocation FunctionCall::resolveLocation() const
 {
     return FunctionLocation(m_function->name()->toQString(),
                             m_function->executableCompilationUnit()->fileName(),
-                            m_function->compiledFunction->location.line,
-                            m_function->compiledFunction->location.column);
+                            m_function->compiledFunction->location.line(),
+                            m_function->compiledFunction->location.column());
 }
 
 FunctionCallProperties FunctionCall::properties() const

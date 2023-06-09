@@ -2409,21 +2409,23 @@ void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
         goto geomChangeDone;
 
     if (!(widthChanged || widthMaximum) && !d->isLineLaidOutConnected()) { // only height has changed
-        if (newGeometry.height() > oldGeometry.height()) {
-            if (!d->heightExceeded && !qFuzzyIsNull(oldGeometry.height())) {
-                // Height is adequate and growing, and it wasn't 0 previously.
-                goto geomChangeDone;
-            }
-            if (d->lineCount == d->maximumLineCount())  // Reached maximum line and height is growing.
-                goto geomChangeDone;
-        } else if (newGeometry.height() < oldGeometry.height()) {
-            if (d->lineCount < 2 && !verticalScale && newGeometry.height() > 0)  // A single line won't be truncated until the text is 0 height.
-                goto geomChangeDone;
+        if (!verticalPositionChanged) {
+            if (newGeometry.height() > oldGeometry.height()) {
+                if (!d->heightExceeded && !qFuzzyIsNull(oldGeometry.height())) {
+                    // Height is adequate and growing, and it wasn't 0 previously.
+                    goto geomChangeDone;
+                }
+                if (d->lineCount == d->maximumLineCount())  // Reached maximum line and height is growing.
+                    goto geomChangeDone;
+            } else if (newGeometry.height() < oldGeometry.height()) {
+                if (d->lineCount < 2 && !verticalScale && newGeometry.height() > 0)  // A single line won't be truncated until the text is 0 height.
+                    goto geomChangeDone;
 
-            if (!verticalScale // no scaling, no eliding, and either unwrapped, or no maximum line count.
-                    && d->elideMode != QQuickText::ElideRight
-                    && !(d->maximumLineCountValid && d->widthExceeded)) {
-                goto geomChangeDone;
+                if (!verticalScale // no scaling, no eliding, and either unwrapped, or no maximum line count.
+                        && d->elideMode != QQuickText::ElideRight
+                        && !(d->maximumLineCountValid && d->widthExceeded)) {
+                    goto geomChangeDone;
+                }
             }
         }
     } else if (!heightChanged && widthMaximum) {

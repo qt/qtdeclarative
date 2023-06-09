@@ -3478,6 +3478,46 @@ void tst_qquicktext::fontSizeMode()
 
     myText->setElideMode(QQuickText::ElideNone);
     QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+
+    // Growing height needs to update the baselineOffset when AlignBottom is used
+    // and text is NOT wrapped
+    myText->setVAlign(QQuickText::AlignBottom);
+    myText->setFontSizeMode(QQuickText::Fit);
+    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+
+    int baselineOffset = myText->baselineOffset();
+    myText->setHeight(myText->height() * 2);
+    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+    QVERIFY(myText->baselineOffset() > baselineOffset);
+
+    // Growing height needs to update the baselineOffset when AlignBottom is used
+    // and the text is wrapped
+    myText->setVAlign(QQuickText::AlignBottom);
+    myText->setFontSizeMode(QQuickText::Fit);
+    myText->setWrapMode(QQuickText::NoWrap);
+    myText->resetMaximumLineCount();
+    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+
+    baselineOffset = myText->baselineOffset();
+    myText->setHeight(myText->height() * 2);
+    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+    QVERIFY(myText->baselineOffset() > baselineOffset);
+
+    // Check baselineOffset for the HorizontalFit case
+    myText->setVAlign(QQuickText::AlignBottom);
+    myText->setFontSizeMode(QQuickText::HorizontalFit);
+    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+    QSignalSpy baselineOffsetSpy(myText, SIGNAL(baselineOffsetChanged(qreal)));
+    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+    const qreal oldBaselineOffset = myText->baselineOffset();
+    myText->setHeight(myText->height() + 42);
+    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+    QCOMPARE(baselineOffsetSpy.count(), 1);
+    QCOMPARE(myText->baselineOffset(), oldBaselineOffset + 42);
+    myText->setHeight(myText->height() - 42);
+    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+    QCOMPARE(baselineOffsetSpy.count(), 2);
+    QCOMPARE(myText->baselineOffset(), oldBaselineOffset);
 }
 
 void tst_qquicktext::fontSizeModeMultiline_data()

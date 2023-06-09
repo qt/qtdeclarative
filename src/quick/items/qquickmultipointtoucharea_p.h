@@ -267,14 +267,15 @@ protected:
     void mouseUngrabEvent() override;
     void touchUngrabEvent() override;
 
+    enum class RemapEventPoints { No, ToLocal };
     void addTouchPrototype(QQuickTouchPoint* prototype);
-    void addTouchPoint(const QTouchEvent::TouchPoint *p);
+    void addTouchPoint(const QTouchEvent::TouchPoint *p, RemapEventPoints remap);
     void addTouchPoint(const QMouseEvent *e);
     void clearTouchLists();
 
-    void updateTouchPoint(QQuickTouchPoint*, const QTouchEvent::TouchPoint*);
+    void updateTouchPoint(QQuickTouchPoint*, const QTouchEvent::TouchPoint*, RemapEventPoints remap);
     void updateTouchPoint(QQuickTouchPoint *dtp, const QMouseEvent *e);
-    void updateTouchData(QEvent*);
+    void updateTouchData(QEvent*, RemapEventPoints remap = RemapEventPoints::No);
 
     bool sendMouseEvent(QMouseEvent *event);
     bool shouldFilter(QEvent *event);

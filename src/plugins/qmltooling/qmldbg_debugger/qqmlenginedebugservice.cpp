@@ -812,9 +812,9 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
 
     int lineNumber = 0;
     QV4::ScopedFunctionObject oldMethod(scope, vmeMetaObject->vmeMethod(prop->coreIndex()));
-    if (oldMethod && oldMethod->d()->function) {
-        lineNumber = oldMethod->d()->function->compiledFunction->location.line;
-    }
+    if (oldMethod && oldMethod->d()->function)
+        lineNumber = oldMethod->d()->function->compiledFunction->location.line();
+
     QV4::ScopedValue v(scope, QQmlJavaScriptExpression::evalFunction(contextData, object, jsfunction, contextData->urlString(), lineNumber));
     vmeMetaObject->setVmeMethod(prop->coreIndex(), v);
     return true;

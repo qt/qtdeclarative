@@ -300,6 +300,9 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     if (ok && envMaxGCStackSize > 0)
         m_maxGCStackSize = envMaxGCStackSize;
 
+    // We allocate guard pages around our stacks.
+    const size_t guardPages = 2 * WTF::pageSize();
+
     memoryManager = new QV4::MemoryManager(this);
 
     if (maxCallDepth == -1) {
@@ -327,9 +330,9 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     // reserve space for the JS stack
     // we allow it to grow to a bit more than m_maxJSStackSize, as we can overshoot due to ScopedValues
     // allocated outside of JIT'ed methods.
-    *jsStack = WTF::PageAllocation::allocate(m_maxJSStackSize + 256*1024, WTF::OSAllocator::JSVMStackPages,
-                                             /* writable */ true, /* executable */ false,
-                                             /* includesGuardPages */ true);
+    *jsStack = WTF::PageAllocation::allocate(
+                m_maxJSStackSize + 256*1024 + guardPages, WTF::OSAllocator::JSVMStackPages,
+                /* writable */ true, /* executable */ false, /* includesGuardPages */ true);
     jsStackBase = (Value *)jsStack->base();
 #ifdef V4_USE_VALGRIND
     VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, m_maxJSStackSize + 256*1024);
@@ -337,9 +340,9 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     jsStackTop = jsStackBase;
 
-    *gcStack = WTF::PageAllocation::allocate(m_maxGCStackSize, WTF::OSAllocator::JSVMStackPages,
-                                             /* writable */ true, /* executable */ false,
-                                             /* includesGuardPages */ true);
+    *gcStack = WTF::PageAllocation::allocate(
+                m_maxGCStackSize + guardPages, WTF::OSAllocator::JSVMStackPages,
+                /* writable */ true, /* executable */ false, /* includesGuardPages */ true);
 
     {
         ok = false;
@@ -2030,7 +2033,7 @@ void ExecutionEngine::setQmlEngine(QQmlEngine *engine)
 
 static void freeze_recursive(QV4::ExecutionEngine *v4, QV4::Object *object)
 {
-    if (object->as<QV4::QObjectWrapper>() || object->internalClass()->isFrozen)
+    if (object->as<QV4::QObjectWrapper>() || object->internalClass()->isFrozen())
         return;
 
     QV4::Scope scope(v4);

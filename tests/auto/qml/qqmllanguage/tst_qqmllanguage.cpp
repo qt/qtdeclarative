@@ -28,6 +28,7 @@
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlprivate.h>
 #include <QtQml/qqmlincubator.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qfile.h>
@@ -338,6 +339,8 @@ private slots:
     void hangOnWarning();
 
     void ambiguousContainingType();
+    void staticConstexprMembers();
+    void bindingAliasToComponentUrl();
 
 private:
     QQmlEngine engine;
@@ -2144,6 +2147,22 @@ void tst_qqmllanguage::aliasProperties()
         QVERIFY(!subItem.isNull());
 
         QCOMPARE(subItem->property("y").toInt(), 1);
+    }
+
+    // Nested property bindings on group properties that are actually aliases (QTBUG-94983)
+    {
+        QQmlComponent component(&engine, testFileUrl("alias.15a.qml"));
+        VERIFY_ERRORS(0);
+
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+
+        QPointer<QObject> subItem = qvariant_cast<QObject*>(object->property("symbol"));
+        QVERIFY(!subItem.isNull());
+
+        QPointer<QObject> subSubItem = qvariant_cast<QObject*>(subItem->property("layer"));
+
+        QCOMPARE(subSubItem->property("enabled").value<bool>(), true);
     }
 
     // Alias to sub-object with binding (QTBUG-57041)
@@ -5873,6 +5892,50 @@ void tst_qqmllanguage::ambiguousContainingType()
         QVERIFY2(c.isReady(), qPrintable(c.errorString()));
         QScopedPointer<QObject> o(c.create());
         QVERIFY(!o.isNull());
+    }
+}
+ void tst_qqmllanguage::staticConstexprMembers() {
+     // this tests if the symbols are correclty defined for c++11 (gcc 11 and 12), and should
+     // not have any linker errors
+     using T = QObject;
+     using T2 = QObject;
+
+     auto f1 = QQmlPrivate::Constructors<T, true>::createSingletonInstance;
+     auto f2 = QQmlPrivate::Constructors<T, false>::createSingletonInstance;
+     auto f3 = QQmlPrivate::Constructors<T, true>::createInto;
+
+     auto f4 = QQmlPrivate::ExtendedType<T, true>::createParent;
+     auto f5 = QQmlPrivate::ExtendedType<T, false>::createParent;
+     auto f6 = QQmlPrivate::ExtendedType<T, true>::staticMetaObject;
+
+     auto f7 = QQmlPrivate::QmlSingleton<T, T2>::Value;
+
+     Q_UNUSED(f1);
+     Q_UNUSED(f2);
+     Q_UNUSED(f3);
+     Q_UNUSED(f3);
+     Q_UNUSED(f4);
+     Q_UNUSED(f5);
+     Q_UNUSED(f6);
+     Q_UNUSED(f7);
+ }
+
+void tst_qqmllanguage::bindingAliasToComponentUrl()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent component(&engine, testFileUrl("bindingAliasToComponentUrl.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object);
+        QCOMPARE(object->property("accessibleNormalUrl"), object->property("urlClone"));
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("bindingAliasToComponentUrl2.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object);
+        QCOMPARE(object->property("accessibleNormalProgress"), QVariant(1.0));
     }
 }
 

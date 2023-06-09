@@ -47,7 +47,7 @@ private slots:
     void gcStats();
     void multiWrappedQObjects();
     void accessParentOnDestruction();
-    void clearICParent();
+    void cleanInternalClasses();
 };
 
 void tst_qv4mm::gcStats()
@@ -110,16 +110,41 @@ void tst_qv4mm::accessParentOnDestruction()
     QCOMPARE(obj->property("destructions").toInt(), 100);
 }
 
-void tst_qv4mm::clearICParent()
+void tst_qv4mm::cleanInternalClasses()
 {
     QV4::ExecutionEngine engine;
     QV4::Scope scope(engine.rootContext());
     QV4::ScopedObject object(scope, engine.newObject());
+    QV4::ScopedObject prototype(scope, engine.newObject());
+
+    // Set a prototype so that we get a unique IC.
+    object->setPrototypeOf(prototype);
+
+    QV4::Scoped<QV4::InternalClass> prevIC(scope, object->internalClass());
+    QVERIFY(prevIC->d()->transitions.empty());
+
+    uint prevIcChainLength = 0;
+    for (QV4::Heap::InternalClass *ic = object->internalClass(); ic; ic = ic->parent)
+        ++prevIcChainLength;
+
+    const auto checkICCHainLength = [&]() {
+        uint icChainLength = 0;
+        for (QV4::Heap::InternalClass *ic = object->internalClass(); ic; ic = ic->parent)
+            ++icChainLength;
+
+        const uint redundant = object->internalClass()->numRedundantTransitions;
+        QVERIFY(redundant <= QV4::Heap::InternalClass::MaxRedundantTransitions);
+
+        // A removal makes two transitions redundant.
+        QVERIFY(icChainLength <= prevIcChainLength + 2 * redundant);
+    };
+
+    const uint numTransitions = 16 * 1024;
 
     // Keep identifiers in a separate array so that we don't have to allocate them in the loop that
     // should test the GC on InternalClass allocations.
     QV4::ScopedArrayObject identifiers(scope, engine.newArrayObject());
-    for (uint i = 0; i < 16 * 1024; ++i) {
+    for (uint i = 0; i < numTransitions; ++i) {
         QV4::Scope scope(&engine);
         QV4::ScopedString s(scope);
         s = engine.newIdentifier(QString::fromLatin1("key%1").arg(i));
@@ -130,22 +155,60 @@ void tst_qv4mm::clearICParent()
         object->insertMember(s, v);
     }
 
-    // When allocating the InternalClass objects required for deleting properties, the GC should
-    // eventually run and remove all but the last two.
-    // If we ever manage to avoid allocating the InternalClasses in the first place we will need
-    // to change this test.
-    for (uint i = 0; i < 16 * 1024; ++i) {
+    // There is a chain of ICs originating from the original class.
+    QCOMPARE(prevIC->d()->transitions.size(), 1u);
+    QVERIFY(prevIC->d()->transitions.front().lookup != nullptr);
+
+    // When allocating the InternalClass objects required for deleting properties, eventually
+    // the IC chain gets truncated, dropping all the removed properties.
+    for (uint i = 0; i < numTransitions; ++i) {
         QV4::Scope scope(&engine);
         QV4::ScopedString s(scope, identifiers->get(i));
         QV4::Scoped<QV4::InternalClass> ic(scope, object->internalClass());
         QVERIFY(ic->d()->parent != nullptr);
-        object->deleteProperty(s->toPropertyKey());
+        QV4::ScopedValue val(scope, object->get(s->toPropertyKey()));
+        QCOMPARE(val->toNumber(), double(i));
+        QVERIFY(object->deleteProperty(s->toPropertyKey()));
+        QVERIFY(!object->hasProperty(s->toPropertyKey()));
         QVERIFY(object->internalClass() != ic->d());
-        QCOMPARE(object->internalClass()->parent, ic->d());
-        if (ic->d()->parent == nullptr)
-            return;
     }
-    QFAIL("Garbage collector was not triggered by large amount of InternalClasses");
+
+    // None of the properties we've added are left
+    for (uint i = 0; i < numTransitions; ++i) {
+        QV4::ScopedString s(scope, identifiers->get(i));
+        QVERIFY(!object->hasProperty(s->toPropertyKey()));
+    }
+
+    // Also no other properties have appeared
+    QScopedPointer<QV4::OwnPropertyKeyIterator> iterator(object->ownPropertyKeys(object));
+    QVERIFY(!iterator->next(object).isValid());
+
+    checkICCHainLength();
+
+    // Add and remove properties until it clears all remaining redundant ones
+    uint i = 0;
+    while (object->internalClass()->numRedundantTransitions > 0) {
+        i = (i + 1) % numTransitions;
+        QV4::ScopedString s(scope, identifiers->get(i));
+        QV4::ScopedValue v(scope);
+        v->setDouble(i);
+        object->insertMember(s, v);
+        QVERIFY(object->deleteProperty(s->toPropertyKey()));
+    }
+
+    // Make sure that all dangling ICs are actually gone.
+    scope.engine->memoryManager->runGC();
+
+    // Now the GC has removed the ICs we originally added by adding properties.
+    QVERIFY(prevIC->d()->transitions.empty() || prevIC->d()->transitions.front().lookup == nullptr);
+
+    // Same thing with redundant prototypes
+    for (uint i = 0; i < numTransitions; ++i) {
+        QV4::ScopedObject prototype(scope, engine.newObject());
+        object->setPrototypeOf(prototype); // Makes previous prototype redundant
+    }
+
+    checkICCHainLength();
 }
 
 QTEST_MAIN(tst_qv4mm)

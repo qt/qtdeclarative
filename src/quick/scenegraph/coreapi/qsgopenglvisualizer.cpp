@@ -130,7 +130,7 @@ void OpenGLVisualizer::visualizeBatch(Batch *b)
 
     if (b->merged) {
         shader->setUniformValue(shader->matrix, matrix);
-        const char *dataStart = m_renderer->m_context->separateIndexBuffer() ? b->ibo.data : b->vbo.data;
+        const char *dataStart = b->ibo.data;
         for (int ds=0; ds<b->drawSets.size(); ++ds) {
             const DrawSet &set = b->drawSets.at(ds);
             m_funcs->glVertexAttribPointer(a.position, 2, a.type, false, g->sizeOfVertex(),

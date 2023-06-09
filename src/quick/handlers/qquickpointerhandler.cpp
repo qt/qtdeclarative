@@ -421,6 +421,8 @@ bool QQuickPointerHandler::approveGrabTransition(QQuickEventPoint *point, QObjec
            This handler can take the exclusive grab from another handler of the same class.
     \value PointerHandler.CanTakeOverFromHandlersOfDifferentType
            This handler can take the exclusive grab from any kind of handler.
+    \value PointerHandler.CanTakeOverFromItems
+           This handler can take the exclusive grab from any type of Item.
     \value PointerHandler.CanTakeOverFromAnything
            This handler can take the exclusive grab from any type of Item or Handler.
     \value PointerHandler.ApprovesTakeOverByHandlersOfSameType

@@ -394,6 +394,10 @@ public:
     int namedObjectsInComponentCount() const { return namedObjectsInComponent.size(); }
     const quint32 *namedObjectsInComponentTable() const { return namedObjectsInComponent.begin(); }
 
+    bool hasFlag(QV4::CompiledData::Object::Flag flag) const { return flags & flag; }
+    qint32 objectId() const { return id; }
+    bool hasAliasAsDefaultProperty() const { return defaultPropertyIsAlias; }
+
 private:
     friend struct ::QQmlIRLoader;
 

@@ -309,7 +309,7 @@ private:
 
         if (!object) // Start at root of compilation unit if not enumerating a specific child
             object = compilationUnit->objectAt(0);
-        if (object->flags & Object::IsInlineComponentRoot)
+        if (object->hasFlag(Object::IsInlineComponentRoot))
             return result;
 
         if (const auto superTypeUnit = compilationUnit->resolvedTypes.value(
@@ -325,13 +325,13 @@ private:
                 // Look for override of name in this type
                 for (auto binding = object->bindingsBegin(); binding != object->bindingsEnd(); ++binding) {
                     if (compilationUnit->stringAt(binding->propertyNameIndex) == QLatin1String("name")) {
-                        if (binding->type == QV4::CompiledData::Binding::Type_String) {
+                        if (binding->type() == QV4::CompiledData::Binding::Type_String) {
                             result.testCaseName = compilationUnit->stringAt(binding->stringIndex);
                         } else {
                             QQmlError error;
                             error.setUrl(compilationUnit->url());
-                            error.setLine(binding->location.line);
-                            error.setColumn(binding->location.column);
+                            error.setLine(binding->location.line());
+                            error.setColumn(binding->location.column());
                             error.setDescription(QStringLiteral("the 'name' property of a TestCase must be a literal string"));
                             result.errors << error;
                         }
@@ -355,7 +355,7 @@ private:
         }
 
         for (auto binding = object->bindingsBegin(); binding != object->bindingsEnd(); ++binding) {
-            if (binding->type == QV4::CompiledData::Binding::Type_Object) {
+            if (binding->type() == QV4::CompiledData::Binding::Type_Object) {
                 const Object *child = compilationUnit->objectAt(binding->value.objectIndex);
                 result << enumerateTestCases(compilationUnit, child);
             }

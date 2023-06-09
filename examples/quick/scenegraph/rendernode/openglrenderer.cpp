@@ -158,6 +158,10 @@ void OpenGLRenderNode::render(const RenderState *state)
     f->glEnable(GL_BLEND);
     f->glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
+    // Regardless of flags() returning DepthAwareRendering or not,
+    // we have to test against what's in the depth buffer already.
+    f->glEnable(GL_DEPTH_TEST);
+
     // Clip support.
     if (state->scissorEnabled()) {
         f->glEnable(GL_SCISSOR_TEST);
@@ -177,7 +181,7 @@ void OpenGLRenderNode::render(const RenderState *state)
 //! [4]
 QSGRenderNode::StateFlags OpenGLRenderNode::changedStates() const
 {
-    return BlendState | ScissorState | StencilState;
+    return BlendState | ScissorState | StencilState | DepthState;
 }
 
 QSGRenderNode::RenderingFlags OpenGLRenderNode::flags() const
