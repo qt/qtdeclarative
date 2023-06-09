@@ -263,7 +263,7 @@ import "testlogger.js" as TestLogger
         \section1 Add library
     \endif
     \dots
-    \snippet modules_Mymodule_CMakeLists.txt add library
+    \snippet modules_MyModule_CMakeLists.txt add library
     \dots
     \if defined(onlinedocs)
         \endtabcontent
