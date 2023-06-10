@@ -12,10 +12,10 @@
     require explicit consent from the user before accessing these
     features.
 
-    The \l{Qt QML Core Types}{Qt QML Core} module exposes the Qt C++
-    \l [QtCore] {Application Permissions} functionality to QML via a set
-    of permission types that can be used to check or request permission
-    in a cross platform manner.
+    The \l{Qt QML Core} module exposes the Qt C++
+    \l [QtCore] {Application Permissions} functionality to QML via a set of
+    permission types that can be used to check or request permission in a cross
+    platform manner.
 
     \annotatedlist qml-permissions
 
