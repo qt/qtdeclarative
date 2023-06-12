@@ -47,4 +47,28 @@ Item {
     function abc() {
         return nested.f(42);
     }
+
+    component MyIC: Rectangle {
+        id: helloIC
+
+        property int data: 42
+        Item {
+            property int data: helloIC.data
+        }
+    }
+
+    property MyIC ic: MyIC {}
+    function icProperty() {
+        return ic.data
+    }
+    property int propertyInBinding: i
+    property int propertyInBinding2: i * 42
+    property int propertyInBinding3: abc()[rootId.i ** 42 - 7]
+
+    property BaseType bt: BaseType {}
+    property int helloProperty: 1234567890 // BaseType also has a property helloProperty
+    function helloFunction() {} // BaseType also has a method helloFunction
+    function fromDifferentFiles() {
+        let x = bt.helloProperty + bt.helloFunction()
+    }
 }

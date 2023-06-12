@@ -21,4 +21,8 @@ Item {
             }
         }
     }
+    property int helloProperty: 123
+    function helloFunction() {
+        return helloProperty
+    }
 }
