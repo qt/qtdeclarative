@@ -584,11 +584,18 @@ void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
     const QQmlJSRegisterContent in = m_state.accumulatorIn();
 
     if (!type.isValid()) {
+        handleUnqualifiedAccess(name, false);
         setError(u"Cannot find name "_s + name);
         return;
     }
 
     if (!type.isProperty()) {
+        QString message = type.isMethod() ? u"Cannot assign to method %1"_s
+                                          : u"Cannot assign to non-property %1"_s;
+        // The interpreter treats methods as read-only properties in its error messages
+        // and we lack a better fitting category. We might want to revisit this later.
+        m_logger->log(message.arg(name), qmlReadOnlyProperty,
+                      getCurrentSourceLocation());
         setError(u"Cannot assign to non-property "_s + name);
         return;
     }
