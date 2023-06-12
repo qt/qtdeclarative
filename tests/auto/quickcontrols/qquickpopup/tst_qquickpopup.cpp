@@ -9,6 +9,7 @@
 #include <QtGui/qpa/qplatformintegration.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/qquickview.h>
+#include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuick/private/qquickpalette_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
@@ -95,6 +96,7 @@ private slots:
     void mirroredCombobox();
     void rotatedCombobox();
     void focusMultiplePopup();
+    void doubleClickInMouseArea();
 
 private:
     static bool hasWindowActivation();
@@ -2195,6 +2197,26 @@ void tst_QQuickPopup::focusMultiplePopup()
     QTRY_VERIFY(!buttonPopup->isVisible());
 
     QVERIFY(rootItem->hasFocus());
+}
+
+void tst_QQuickPopup::doubleClickInMouseArea()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("doubleClickInMouseArea.qml")));
+
+    auto *ma = window.rootObject()->findChild<QQuickMouseArea *>();
+    QVERIFY(ma);
+    QSignalSpy doubleClickSpy(ma, &QQuickMouseArea::doubleClicked);
+    QSignalSpy longPressSpy(ma, &QQuickMouseArea::pressAndHold);
+    QPoint p = ma->mapToScene(ma->boundingRect().center()).toPoint();
+
+    // check with normal double click
+    QTest::mouseDClick(&window, Qt::LeftButton, Qt::NoModifier, p);
+    QCOMPARE(doubleClickSpy.count(), 1);
+
+    // wait enough time for a wrong long press to happen
+    QTest::qWait(QGuiApplication::styleHints()->mousePressAndHoldInterval() + 10);
+    QCOMPARE(longPressSpy.count(), 0);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

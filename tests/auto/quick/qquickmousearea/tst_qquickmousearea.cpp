@@ -95,6 +95,7 @@ private slots:
     void pressedCanceledOnWindowDeactivate();
     void doubleClick_data() { acceptedButton_data(); }
     void doubleClick();
+    void doubleTap();
     void clickTwice_data() { acceptedButton_data(); }
     void clickTwice();
     void invalidClick_data() { rejectedButton_data(); }
@@ -932,6 +933,61 @@ void tst_QQuickMouseArea::doubleClick()
     QCOMPARE(window.rootObject()->property("clicked").toInt(), 1);
     QCOMPARE(window.rootObject()->property("doubleClicked").toInt(), 1);
     QCOMPARE(window.rootObject()->property("released").toInt(), 2);
+}
+
+void tst_QQuickMouseArea::doubleTap() // QTBUG-112434
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("doubleclick.qml")));
+
+    QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea *>("mousearea");
+    QVERIFY(mouseArea);
+    QPoint p1 = mouseArea->mapToScene(mouseArea->boundingRect().center()).toPoint();
+
+    QTest::touchEvent(&window, device).press(0, p1);
+    QQuickTouchUtils::flush(&window);
+    QTest::touchEvent(&window, device).release(0, p1);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(window.rootObject()->property("released").toInt(), 1);
+    QCOMPARE(window.rootObject()->property("clicked").toInt(), 1);
+
+    p1 += QPoint(1, -1); // movement less than QPlatformTheme::TouchDoubleTapDistance
+    QTest::touchEvent(&window, device).press(1, p1); // touchpoint ID is different the second time
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(mouseArea->pressed(), true);
+    // at this time QQuickDeliveryAgentPrivate::deliverTouchAsMouse() synthesizes the double-click event
+    QCOMPARE(window.rootObject()->property("doubleClicked").toInt(), 1);
+
+    QTest::touchEvent(&window, device).release(1, p1);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(window.rootObject()->property("released").toInt(), 2);
+    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(window.rootObject()->property("clicked").toInt(), 1);
+
+    // now tap with two fingers simultaneously: only one of them generates synth-mouse
+    QPoint p2 = p1 + QPoint(50, 5);
+    QTest::touchEvent(&window, device).press(2, p1).press(3, p2);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(mouseArea->pressed(), true);
+    QTest::touchEvent(&window, device).release(2, p1).release(3, p2);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(window.rootObject()->property("released").toInt(), 3);
+    QCOMPARE(window.rootObject()->property("clicked").toInt(), 2);
+    QCOMPARE(window.rootObject()->property("doubleClicked").toInt(), 1);
+    QCOMPARE(mouseArea->pressed(), false);
+
+    // tap with two fingers simultaneously again: get another double-click from one point
+    p1 -= QPoint(1, -1);
+    p2 += QPoint(1, -1);
+    QTest::touchEvent(&window, device).press(4, p1).press(5, p2);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(mouseArea->pressed(), true);
+    QTest::touchEvent(&window, device).release(4, p1).release(5, p2);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(window.rootObject()->property("released").toInt(), 4);
+    QCOMPARE(window.rootObject()->property("clicked").toInt(), 2);
+    QCOMPARE(window.rootObject()->property("doubleClicked").toInt(), 2);
+    QCOMPARE(mouseArea->pressed(), false); // make sure it doesn't get stuck
 }
 
 // QTBUG-14832
