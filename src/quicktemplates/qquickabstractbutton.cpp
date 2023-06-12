@@ -1132,9 +1132,10 @@ void QQuickAbstractButton::mousePressEvent(QMouseEvent *event)
 
 void QQuickAbstractButton::mouseDoubleClickEvent(QMouseEvent *event)
 {
+    Q_UNUSED(event);
     Q_D(QQuickAbstractButton);
     if (d->isDoubleClickConnected()) {
-        QQuickControl::mouseDoubleClickEvent(event);
+        // don't call QQuickItem::mouseDoubleClickEvent(): it would ignore()
         emit doubleClicked();
         d->wasDoubleClick = true;
     }
