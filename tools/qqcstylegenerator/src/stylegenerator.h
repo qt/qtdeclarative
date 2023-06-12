@@ -454,9 +454,7 @@ private:
         const QString figmaId = getString("figmaId", outputConfig);
         const QString imageName = getString("name", outputConfig);
 
-        const QJsonValue visible = atom.value("visible");
-        if (visible != QJsonValue::Undefined && !visible.toBool()) {
-            // Figma will not generate an image for a hidden child
+        if (!atom.value("qt_visibleRecursive").toBool()) {
             debug("skipping hidden image: " + imageName);
             return;
         }

@@ -153,9 +153,19 @@ QJsonObject findChild(const QStringList &keyValueList, const QJsonObject &root)
 */
 QJsonObject findNamedChild(const QStringList &namePath, const QJsonObject &root)
 {
+    bool visibleRecursive = true;
     QJsonObject child = root;
-    for (const QString &name : namePath)
+    for (const QString &name : namePath) {
         child = findChild({"name", name}, child);
+
+        if (visibleRecursive) {
+            const QJsonValue visible = child.value("visible");
+            if (visible != QJsonValue::Undefined && !visible.toBool())
+                visibleRecursive = false;
+        }
+    }
+
+    child["qt_visibleRecursive"] = visibleRecursive;
     return child;
 }
 
