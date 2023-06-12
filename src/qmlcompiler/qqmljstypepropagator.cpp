@@ -577,7 +577,18 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
         m_attachedContext = QQmlJSScope::ConstPtr();
 }
 
-void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
+/*!
+    \internal
+    As far as type propagation is involved, StoreNameSloppy and
+    StoreNameStrict are completely the same
+    StoreNameStrict is rejecting a few writes (where the variable was not
+    defined before) that would work in a sloppy context in JS, but the
+    compiler would always reject this. And for type propagation, this does
+    not matter at all.
+    \a nameIndex is the index in the string table corresponding to
+    the name which we are storing
+ */
+void QQmlJSTypePropagator::generate_StoreNameCommon(int nameIndex)
 {
     const QString name = m_jsUnitGenerator->stringForIndex(nameIndex);
     const QQmlJSRegisterContent type = m_typeResolver->scopedType(m_function->qmlScope, name);
@@ -634,11 +645,14 @@ void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
     }
 }
 
+void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
+{
+    return generate_StoreNameCommon(nameIndex);
+}
+
 void QQmlJSTypePropagator::generate_StoreNameStrict(int name)
 {
-    m_state.setHasSideEffects(true);
-    Q_UNUSED(name)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    return generate_StoreNameCommon(name);
 }
 
 bool QQmlJSTypePropagator::checkForEnumProblems(

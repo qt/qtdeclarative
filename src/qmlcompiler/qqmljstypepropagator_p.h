@@ -56,6 +56,7 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypePropagator : public QQmlJSCompileP
     void generate_LoadName(int nameIndex) override;
     void generate_LoadGlobalLookup(int index) override;
     void generate_LoadQmlContextPropertyLookup(int index) override;
+    void generate_StoreNameCommon(int nameIndex);
     void generate_StoreNameSloppy(int nameIndex) override;
     void generate_StoreNameStrict(int name) override;
     void generate_LoadElement(int base) override;
