@@ -263,6 +263,9 @@ void TestQmllint::testUnqualified_data()
     QTest::newRow("storeSloppy")
             << QStringLiteral("UnqualifiedInStoreSloppy.qml")
             << Result{ { Message{ QStringLiteral("Unqualified access"), 9, 26} } };
+    QTest::newRow("storeStrict")
+            << QStringLiteral("UnqualifiedInStoreStrict.qml")
+            << Result{ { Message{ QStringLiteral("Unqualified access"), 9, 52} } };
 }
 
 void TestQmllint::testUnknownCausesFail()
