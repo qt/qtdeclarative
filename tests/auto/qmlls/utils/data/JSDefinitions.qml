@@ -27,4 +27,48 @@ Item {
         }
         f(scoped, i);
     }
+
+    Rectangle {
+        id: nested
+
+        property int i
+
+        function f(n: int): int {
+            let x = i, y = nested.i, z = rootId.i;
+            if (x > 3)
+                return 1 + f(f(x-1) + f(x-2) - f(x-3));
+            else
+                return f(0);
+        }
+        function fff(n: int, m: int): int {
+            return f(n + m) / 42 + ffff()
+        }
+    }
+    function abc() {
+        return nested.f(42);
+    }
+
+    component MyIC: Rectangle {
+        id: helloIC
+
+        property int data: 42
+        Item {
+            property int data: helloIC.data
+        }
+    }
+
+    property MyIC ic: MyIC {}
+    function icProperty() {
+        return ic.data
+    }
+    property int propertyInBinding: i
+    property int propertyInBinding2: i * 42
+    property int propertyInBinding3: abc()[rootId.i ** 42 - 7]
+
+    property BaseType bt: BaseType {}
+    property int helloProperty: 1234567890 // BaseType also has a property helloProperty
+    function helloFunction() {} // BaseType also has a method helloFunction
+    function fromDifferentFiles() {
+        let x = bt.helloProperty + bt.helloFunction()
+    }
 }

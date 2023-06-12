@@ -716,8 +716,12 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
         if (isFieldMemberAccess(item)) {
             if (auto ownerScope = QQmlLSUtils::resolveExpressionType(
                         item, QQmlLSUtilsResolveOptions::JustOwner)) {
-                return findPropertyDefinitionOf(item.containingFile(), ownerScope->sourceLocation(),
-                                                name);
+                const DomItem ownerFile = item.goToFile(ownerScope->filePath());
+                const QQmlJS::SourceLocation ownerLocation = ownerScope->sourceLocation();
+                if (auto propertyDefinition =
+                            findPropertyDefinitionOf(ownerFile, ownerLocation, name)) {
+                    return propertyDefinition;
+                }
             }
             return {};
         }
