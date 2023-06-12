@@ -1509,7 +1509,7 @@ void QmltcCompiler::compileBindingByType(QmltcType &current,
         QString value = QQmlJSUtils::toLiteral(binding.stringValue());
         if (auto type = metaProperty.type()) {
             if (type->internalName() == u"QUrl"_s) {
-                value = u"QUrl("_s.append(std::move(value)).append(u")"_s);
+                value = u"QUrl(%1)"_s.arg(value);
             }
         }
         assignToProperty(metaProperty, value);
