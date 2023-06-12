@@ -260,6 +260,9 @@ void TestQmllint::testUnqualified_data()
                           Message {
                                   QStringLiteral("index is implicitly injected into this delegate. "
                                                  "Add a required property instead.") } } };
+    QTest::newRow("storeSloppy")
+            << QStringLiteral("UnqualifiedInStoreSloppy.qml")
+            << Result{ { Message{ QStringLiteral("Unqualified access"), 9, 26} } };
 }
 
 void TestQmllint::testUnknownCausesFail()
@@ -1058,6 +1061,10 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                        {},
                        { Message{ QStringLiteral("Hours") } },
                        Result::ExitsNormally };
+
+    QTest::newRow("StoreNameMethod")
+            << QStringLiteral("storeNameMethod.qml")
+            << Result { { Message { QStringLiteral("Cannot assign to method foo") } } };
 }
 
 void TestQmllint::dirtyQmlCode()
