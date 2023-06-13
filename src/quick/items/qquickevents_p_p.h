@@ -102,7 +102,6 @@ private:
     bool m_autoRepeat = false;
 };
 
-// used in Qt Location
 class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
 {
     Q_OBJECT
@@ -111,7 +110,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
     Q_PROPERTY(int button READ button CONSTANT FINAL)
     Q_PROPERTY(int buttons READ buttons CONSTANT FINAL)
     Q_PROPERTY(int modifiers READ modifiers CONSTANT FINAL)
+#if QT_DEPRECATED_SINCE(6, 6)
     Q_PROPERTY(int source READ source CONSTANT REVISION(2, 7) FINAL)
+#endif
     Q_PROPERTY(bool wasHeld READ wasHeld CONSTANT FINAL)
     Q_PROPERTY(bool isClick READ isClick CONSTANT FINAL)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted FINAL)
@@ -145,7 +146,9 @@ public:
     int button() const { return _button; }
     int buttons() const { return _buttons; }
     int modifiers() const { return _modifiers; }
+#if QT_DEPRECATED_SINCE(6, 6)
     int source() const { return _source; }
+#endif
     bool wasHeld() const { return _wasHeld; }
     bool isClick() const { return _isClick; }
 
@@ -153,7 +156,9 @@ public:
     void setX(qreal x) { _x = x; }
     void setY(qreal y) { _y = y; }
     void setPosition(const QPointF &point) { _x = point.x(); _y = point.y(); }
+#if QT_DEPRECATED_SINCE(6, 6)
     void setSource(Qt::MouseEventSource s) { _source = s; }
+#endif
 
     bool isAccepted() { return _accepted; }
     void setAccepted(bool accepted) { _accepted = accepted; }
