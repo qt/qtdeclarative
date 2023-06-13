@@ -49,7 +49,6 @@ public:
 
 #if QT_CONFIG(qml_network)
     QNetworkReply *reply = nullptr;
-    int redirectCount = 0;
 #endif
 
     bool playing : 1;
