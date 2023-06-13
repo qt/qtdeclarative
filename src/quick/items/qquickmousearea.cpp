@@ -743,7 +743,9 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
 
     QQuickMouseEvent &me = d->quickMouseEvent;
     me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress, event->flags());
+#if QT_DEPRECATED_SINCE(6, 6)
     me.setSource(event->source());
+#endif
     emit mouseXChanged(&me);
     me.setPosition(d->lastPos);
     emit mouseYChanged(&me);
@@ -788,7 +790,9 @@ void QQuickMouseArea::mouseDoubleClickEvent(QMouseEvent *event)
         QQuickMouseEvent &me = d->quickMouseEvent;
         me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, true,
                  false, event->flags());
+#if QT_DEPRECATED_SINCE(6, 6)
         me.setSource(event->source());
+#endif
         me.setAccepted(d->isDoubleClickConnected());
         emit this->doubleClicked(&me);
         if (!me.isAccepted())
@@ -1017,7 +1021,9 @@ void QQuickMouseArea::timerEvent(QTimerEvent *event)
             d->longPress = true;
             QQuickMouseEvent &me = d->quickMouseEvent;
             me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress, d->lastFlags);
+#if QT_DEPRECATED_SINCE(6, 6)
             me.setSource(Qt::MouseEventSynthesizedByQt);
+#endif
             me.setAccepted(d->isPressAndHoldConnected());
             emit pressAndHold(&me);
             if (!me.isAccepted())
@@ -1236,7 +1242,9 @@ bool QQuickMouseArea::setPressed(Qt::MouseButton button, bool p, Qt::MouseEventS
     if (wasPressed != p) {
         QQuickMouseEvent &me = d->quickMouseEvent;
         me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, isclick, d->longPress, d->lastFlags);
+#if QT_DEPRECATED_SINCE(6, 6)
         me.setSource(source);
+#endif
         if (p) {
             d->pressed |= button;
             if (!d->doubleClick)

@@ -230,7 +230,6 @@ private:
 };
 
 
-class QQuickMouseEvent;
 class QQuickPinchAreaPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickPinchArea : public QQuickItem
 {
