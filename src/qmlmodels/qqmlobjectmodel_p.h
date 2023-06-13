@@ -32,7 +32,7 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlInstanceModel : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -138,7 +138,7 @@ public:
         attachedProperties.remove(parent());
     }
 
-    Q_PROPERTY(int index READ index NOTIFY indexChanged)
+    Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
     int index() const { return m_index; }
     void setIndex(int idx) {
         if (m_index != idx) {
