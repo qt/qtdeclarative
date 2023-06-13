@@ -2564,28 +2564,6 @@ function(_qt_internal_qml_type_registration target)
         message(FATAL_ERROR "Need target metatypes.json file")
     endif()
 
-    cmake_policy(PUSH)
-
-    _qt_internal_check_depfile_support(has_depfile_support)
-    set(registration_cpp_file_dep_args)
-    if(has_depfile_support)
-        if(POLICY CMP0116)
-            # Without explicitly setting this policy to NEW, we get a warning
-            # even though we ensure there's actually no problem here.
-            # See https://gitlab.kitware.com/cmake/cmake/-/issues/21959
-            cmake_policy(SET CMP0116 NEW)
-            set(relative_to_dir ${CMAKE_CURRENT_BINARY_DIR})
-        else()
-            set(relative_to_dir ${CMAKE_BINARY_DIR})
-        endif()
-        set(dependency_file_cpp "${target_binary_dir}/qmltypes/${type_registration_cpp_file_name}.d")
-        set(registration_cpp_file_dep_args DEPFILE ${dependency_file_cpp})
-        file(RELATIVE_PATH cpp_file_name "${relative_to_dir}" "${type_registration_cpp_file}")
-        file(GENERATE OUTPUT "${dependency_file_cpp}"
-            CONTENT "${cpp_file_name}: $<IF:$<BOOL:${genex_list}>,\\\n$<JOIN:${genex_list}, \\\n>, \\\n>"
-        )
-    endif()
-
     _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
     add_custom_command(
         OUTPUT
@@ -2606,12 +2584,9 @@ function(_qt_internal_qml_type_registration target)
             ${CMAKE_COMMAND} -E make_directory "${generated_marker_dir}"
         COMMAND
             ${CMAKE_COMMAND} -E touch "${generated_marker_file}"
-        ${registration_cpp_file_dep_args}
         COMMENT "Automatic QML type registration for target ${target}"
         VERBATIM
     )
-
-    cmake_policy(POP)
 
     # The ${target}_qmllint targets need to depend on the generation of all
     # *.qmltypes files in the build. We have no way of reliably working out
