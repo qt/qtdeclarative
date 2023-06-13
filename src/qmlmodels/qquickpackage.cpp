@@ -38,11 +38,11 @@ QT_BEGIN_NAMESPACE
     \note Package is part of QtQml.Models since version 2.14 and part of QtQuick since version 2.0.
     Importing Package via QtQuick is deprecated since Qt 5.14.
 
-    \sa {Qt Quick Examples - Views}, {Qt Quick Demo - Photo Viewer}, {Qt QML}
+    \sa {Qt Quick Examples - Views}, {Qt QML}
 */
 
 /*!
-    \qmlattachedproperty string QtQuick::Package::name
+    \qmlattachedproperty string QtQml.Models::Package::name
     This attached property holds the name of an item within a Package.
 */
 

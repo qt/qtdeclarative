@@ -33,6 +33,9 @@ class QQuickPalette;
 class QQuickRenderTarget;
 class QQuickGraphicsDevice;
 class QQuickGraphicsConfiguration;
+class QRhi;
+class QRhiSwapChain;
+class QRhiTexture;
 
 class Q_QUICK_EXPORT QQuickWindow : public QWindow
 {
@@ -40,7 +43,7 @@ class Q_QUICK_EXPORT QQuickWindow : public QWindow
     Q_PRIVATE_PROPERTY(QQuickWindow::d_func(), QQmlListProperty<QObject> data READ data DESIGNABLE false)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
     Q_PROPERTY(QQuickItem* contentItem READ contentItem CONSTANT)
-    Q_PROPERTY(QQuickItem* activeFocusItem READ activeFocusItem NOTIFY activeFocusItemChanged REVISION(2, 1))
+    Q_PROPERTY(QQuickItem* activeFocusItem READ activeFocusItem NOTIFY activeFocusItemChanged REVISION(2, 1) FINAL)
     Q_PRIVATE_PROPERTY(QQuickWindow::d_func(), QQuickPalette *palette READ palette WRITE setPalette
         RESET resetPalette NOTIFY paletteChanged REVISION(6, 2))
     QDOC_PROPERTY(QWindow* transientParent READ transientParent WRITE setTransientParent NOTIFY transientParentChanged)
@@ -115,6 +118,7 @@ public:
     // Scene graph specific functions
     QSGTexture *createTextureFromImage(const QImage &image) const;
     QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options) const;
+    QSGTexture *createTextureFromRhiTexture(QRhiTexture *texture, CreateTextureOptions options = {}) const;
 
     void setColor(const QColor &color);
     QColor color() const;
@@ -154,6 +158,9 @@ public:
 
     static TextRenderType textRenderType();
     static void setTextRenderType(TextRenderType renderType);
+
+    QRhi *rhi() const;
+    QRhiSwapChain *swapChain() const;
 
 Q_SIGNALS:
     void frameSwapped();

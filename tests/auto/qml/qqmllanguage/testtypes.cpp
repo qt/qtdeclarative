@@ -153,6 +153,11 @@ void registerTypes()
     qmlRegisterNamespaceAndRevisions(&TypedEnums::staticMetaObject, "TypedEnums", 1);
     qmlRegisterTypesAndRevisions<ObjectWithEnums>("TypedEnums", 1);
     qmlRegisterTypesAndRevisions<GadgetWithEnums>("TypedEnums", 1);
+
+    QMetaType::registerConverter<UnregisteredValueDerivedType, UnregisteredValueBaseType>();
+    qmlRegisterTypesAndRevisions<UnregisteredValueTypeHandler>("Test", 1);
+
+    qmlRegisterTypesAndRevisions<Greeter>("QmlOtherThis", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

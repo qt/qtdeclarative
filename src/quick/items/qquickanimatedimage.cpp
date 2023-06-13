@@ -287,10 +287,7 @@ void QQuickAnimatedImage::load()
     Q_D(QQuickAnimatedImage);
 
     if (d->url.isEmpty()) {
-        if (d->progress != 0) {
-            d->progress = 0;
-            emit progressChanged(d->progress);
-        }
+        d->setProgress(0);
 
         d->setImage(QImage());
         if (sourceSize() != d->oldSourceSize) {
@@ -298,9 +295,7 @@ void QQuickAnimatedImage::load()
             emit sourceSizeChanged();
         }
 
-        d->status = Null;
-        emit statusChanged(d->status);
-
+        d->setStatus(Null);
         if (isPlaying() != d->oldPlaying)
             emit playingChanged();
     } else {
@@ -313,19 +308,15 @@ void QQuickAnimatedImage::load()
         resolve2xLocalFile(resolvedUrl, targetDevicePixelRatio, &loadUrl, &d->devicePixelRatio);
         QString lf = QQmlFile::urlToLocalFileOrQrc(loadUrl);
 
+        d->status = Null; // reset status, no emit
+
         if (!lf.isEmpty()) {
             d->setMovie(new QMovie(lf));
             movieRequestFinished();
         } else {
 #if QT_CONFIG(qml_network)
-            if (d->status != Loading) {
-                d->status = Loading;
-                emit statusChanged(d->status);
-            }
-            if (d->progress != 0) {
-                d->progress = 0;
-                emit progressChanged(d->progress);
-            }
+            d->setStatus(Loading);
+            d->setProgress(0);
             QNetworkRequest req(d->url);
             req.setAttribute(QNetworkRequest::HttpPipeliningAllowedAttribute, true);
 
@@ -373,13 +364,8 @@ void QQuickAnimatedImage::movieRequestFinished()
             emit sourceSizeChanged();
         }
 
-        if (d->progress != 0) {
-            d->progress = 0;
-            emit progressChanged(d->progress);
-        }
-
-        d->status = Error;
-        emit statusChanged(d->status);
+        d->setProgress(0);
+        d->setStatus(Error);
 
         if (isPlaying() != d->oldPlaying)
             emit playingChanged();
@@ -392,10 +378,7 @@ void QQuickAnimatedImage::movieRequestFinished()
         d->movie->setCacheMode(QMovie::CacheAll);
     d->movie->setSpeed(qRound(d->speed * 100.0));
 
-    if (d->progress != 1.0) {
-        d->progress = 1.0;
-        emit progressChanged(d->progress);
-    }
+    d->setProgress(1);
 
     bool pausedAtStart = d->paused;
     if (d->movie && d->playing)
@@ -416,8 +399,7 @@ void QQuickAnimatedImage::movieRequestFinished()
         }
     }
 
-    d->status = Ready;
-    emit statusChanged(d->status);
+    d->setStatus(Ready);
 
     if (isPlaying() != d->oldPlaying)
         emit playingChanged();

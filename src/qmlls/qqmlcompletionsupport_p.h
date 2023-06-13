@@ -22,6 +22,7 @@
 #include <QtCore/qmutex.h>
 #include <QtCore/qhash.h>
 
+QT_BEGIN_NAMESPACE
 struct CompletionRequest
     : BaseRequest<QLspSpecification::CompletionParams,
                   QLspSpecification::LSPPartialResponse<
@@ -49,5 +50,6 @@ public:
                            QLspSpecification::InitializeResult &) override;
     void process(RequestPointerArgument req) override;
 };
+QT_END_NAMESPACE
 
 #endif // QMLCOMPLETIONSUPPORT_P_H

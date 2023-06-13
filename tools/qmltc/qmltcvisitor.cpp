@@ -133,8 +133,9 @@ void QmltcVisitor::findCppIncludes()
         Q_ASSERT(type);
 
         const auto scopeType = type->scopeType();
-        if (scopeType != QQmlJSScope::QMLScope && scopeType != QQmlJSScope::GroupedPropertyScope
-            && scopeType != QQmlJSScope::AttachedPropertyScope) {
+        if (scopeType != QQmlSA::ScopeType::QMLScope
+            && scopeType != QQmlSA::ScopeType::GroupedPropertyScope
+            && scopeType != QQmlSA::ScopeType::AttachedPropertyScope) {
             continue;
         }
 
@@ -174,7 +175,7 @@ void QmltcVisitor::findCppIncludes()
 
 static void addCleanQmlTypeName(QStringList *names, const QQmlJSScope::ConstPtr &scope)
 {
-    Q_ASSERT(scope->scopeType() == QQmlJSScope::QMLScope);
+    Q_ASSERT(scope->scopeType() == QQmlSA::ScopeType::QMLScope);
     Q_ASSERT(!scope->isArrayScope());
     Q_ASSERT(!scope->baseTypeName().isEmpty());
     // the scope is guaranteed to be a new QML type, so any prefixes (separated
@@ -197,7 +198,7 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
     }
 
     // we're not interested in non-QML scopes
-    if (m_currentScope->scopeType() != QQmlJSScope::QMLScope)
+    if (m_currentScope->scopeType() != QQmlSA::ScopeType::QMLScope)
         return true;
 
     if (m_currentScope->isInlineComponent()) {
@@ -216,7 +217,7 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
 
 void QmltcVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *object)
 {
-    if (m_currentScope->scopeType() == QQmlJSScope::QMLScope)
+    if (m_currentScope->scopeType() == QQmlSA::ScopeType::QMLScope)
         m_qmlTypeNames.removeLast();
     QQmlJSImportVisitor::endVisit(object);
 }
@@ -280,7 +281,7 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
                         u"internal error: %1 found for property '%2'"_s.arg(errorString, name),
                         qmlCompiler, publicMember->identifierToken);
                 return false;
-            } else if (methods[0].methodType() != QQmlJSMetaMethod::Signal) {
+            } else if (methods[0].methodType() != QQmlJSMetaMethodType::Signal) {
                 m_logger->log(u"internal error: method %1 of property %2 must be a signal"_s.arg(
                                       notifyName, name),
                               qmlCompiler, publicMember->identifierToken);
@@ -342,11 +343,11 @@ void QmltcVisitor::endVisit(QQmlJS::AST::UiProgram *program)
 QQmlJSScope::ConstPtr fetchType(const QQmlJSMetaPropertyBinding &binding)
 {
     switch (binding.bindingType()) {
-    case QQmlJSMetaPropertyBinding::Object:
+    case QQmlSA::BindingType::Object:
         return binding.objectType();
-    case QQmlJSMetaPropertyBinding::Interceptor:
+    case QQmlSA::BindingType::Interceptor:
         return binding.interceptorType();
-    case QQmlJSMetaPropertyBinding::ValueSource:
+    case QQmlSA::BindingType::ValueSource:
         return binding.valueSourceType();
     // TODO: AttachedProperty and GroupProperty are not supported yet,
     // but have to also be acknowledged here
@@ -435,7 +436,7 @@ void QmltcVisitor::postVisitResolve(
     // match scopes to indices of QmlIR::Object from QmlIR::Document
     qsizetype count = 0;
     const auto setIndex = [&](const QQmlJSScope::Ptr &current) {
-        if (current->scopeType() != QQmlJSScope::QMLScope || current->isArrayScope())
+        if (current->scopeType() != QQmlSA::ScopeType::QMLScope || current->isArrayScope())
             return;
         Q_ASSERT(!m_qmlIrObjectIndices.contains(current));
         m_qmlIrObjectIndices[current] = count;
@@ -547,9 +548,9 @@ void QmltcVisitor::postVisitResolve(
         if (scope->isArrayScope()) // special kind of QQmlJSScope::QMLScope
             return;
         switch (scope->scopeType()) {
-        case QQmlJSScope::QMLScope:
-        case QQmlJSScope::GroupedPropertyScope:
-        case QQmlJSScope::AttachedPropertyScope: {
+        case QQmlSA::ScopeType::QMLScope:
+        case QQmlSA::ScopeType::GroupedPropertyScope:
+        case QQmlSA::ScopeType::AttachedPropertyScope: {
             ++qmlScopeCount[scope->enclosingInlineComponentName()];
             break;
         }

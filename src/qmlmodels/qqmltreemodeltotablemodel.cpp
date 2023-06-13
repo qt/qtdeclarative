@@ -69,6 +69,9 @@ void QQmlTreeModelToTableModel::setModel(QAbstractItemModel *arg)
         clearModelData();
         m_model = arg;
 
+        if (m_rootIndex.isValid() && m_rootIndex.model() != m_model)
+            m_rootIndex = QModelIndex();
+
         if (m_model) {
             for (const Cx *c = &connections[0]; c->signal; c++)
                 connect(m_model, c->signal, this, c->slot);

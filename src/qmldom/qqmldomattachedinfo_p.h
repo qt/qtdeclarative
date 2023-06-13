@@ -244,7 +244,8 @@ public:
     void ensureCommentLocations(QList<QString> keys);
 
     static Tree createTree(Path basePath);
-    static Tree ensure(Tree base, Path basePath, AttachedInfo::PathType pType);
+    static Tree ensure(Tree base, Path basePath,
+                       AttachedInfo::PathType pType = AttachedInfo::PathType::Relative);
     static Tree find(Tree self, Path p,
                      AttachedInfo::PathType pType = AttachedInfo::PathType::Relative)
     {

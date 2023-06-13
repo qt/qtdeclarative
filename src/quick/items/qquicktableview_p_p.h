@@ -359,6 +359,7 @@ public:
 
     QPointer<QItemSelectionModel> selectionModel;
     QQuickTableView::SelectionBehavior selectionBehavior = QQuickTableView::SelectCells;
+    QQuickTableView::SelectionMode selectionMode = QQuickTableView::ExtendedSelection;
 
     int assignedPositionViewAtRowAfterRebuild = 0;
     int assignedPositionViewAtColumnAfterRebuild = 0;

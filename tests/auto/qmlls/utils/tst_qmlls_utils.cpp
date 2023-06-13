@@ -5,6 +5,7 @@
 
 // some helper constants for the tests
 const static int positionAfterOneIndent = 5;
+const static QString noResultExpected;
 // constants for resultIndex
 const static int firstResult = 0;
 const static int secondResult = 1;
@@ -22,23 +23,23 @@ static QString printSet(const QSet<QString> &s)
 }
 
 std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>
-tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
+tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath,
+                                              QQmlJS::Dom::DomCreationOptions options)
 {
-    if (auto entry = cache.find(filePath); entry != cache.end())
+    CacheKey cacheKey = { filePath, options };
+    if (auto entry = cache.find(cacheKey); entry != cache.end())
         return *entry;
 
     QStringList qmltypeDirs =
             QStringList({ dataDirectory(), QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
 
     QQmlJS::Dom::DomItem env = QQmlJS::Dom::DomEnvironment::create(
-            qmltypeDirs,
-            QQmlJS::Dom::DomEnvironment::Option::
-                    SingleThreaded); // | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+            qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded);
 
     QQmlJS::Dom::DomItem file;
     env.loadFile(
             QQmlJS::Dom::FileToLoad::fromFileSystem(env.ownerAs<QQmlJS::Dom::DomEnvironment>(),
-                                                    filePath, QQmlJS::Dom::WithSemanticAnalysis),
+                                                    filePath, options),
             [&file](QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &,
                     const QQmlJS::Dom::DomItem &newIt) { file = newIt; },
             QQmlJS::Dom::LoadOption::DefaultLoad);
@@ -46,7 +47,7 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
     env.loadPendingDependencies();
     env.loadBuiltins();
 
-    return cache[filePath] = std::make_tuple(env, file);
+    return cache[cacheKey] = std::make_tuple(env, file);
 }
 
 void tst_qmlls_utils::textOffsetRowColumnConversions_data()
@@ -260,7 +261,10 @@ void tst_qmlls_utils::findItemFromLocation()
     Q_ASSERT(expectedLine > 0);
     Q_ASSERT(expectedCharacter > 0);
 
-    auto [env, file] = createEnvironmentAndLoadFile(filePath);
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
 
     auto locations = QQmlLSUtils::itemsFromTextLocation(
             file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
@@ -300,8 +304,8 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation_data()
     QTest::addColumn<int>("expectedCharacter");
 
     const QString file1Qml = testFile(u"file1.qml"_s);
+    const QString TypeQml = testFile(u"Type.qml"_s);
     // pass this as file when no result is expected, e.g. for type definition of "var".
-    const QString noResultExpected;
 
     QTest::addRow("onCProperty") << file1Qml << 11 << 16 << firstResult << outOfOne << "file1.C"
                                  << file1Qml << 7 << positionAfterOneIndent;
@@ -367,6 +371,16 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation_data()
     QTest::addRow("rectangle-property")
             << file1Qml << 44 << 31 << firstResult << outOfOne << "QQuickRectangle"
             << "TODO: c++ type location" << -1 << -1;
+
+    QTest::addRow("functionParameterICUsage")
+            << file1Qml << 34 << 16 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
+
+    QTest::addRow("ICBindingUsage")
+            << file1Qml << 47 << 21 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
+    QTest::addRow("ICBindingUsage2")
+            << file1Qml << 49 << 11 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
+    QTest::addRow("ICBindingUsage3")
+            << file1Qml << 52 << 17 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
 }
 
 void tst_qmlls_utils::findTypeDefinitionFromLocation()
@@ -392,7 +406,11 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
     Q_ASSERT(expectedLine > 0);
     Q_ASSERT(expectedCharacter > 0);
 
-    auto [env, file] = createEnvironmentAndLoadFile(filePath);
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
 
     auto locations = QQmlLSUtils::itemsFromTextLocation(
             file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
@@ -403,10 +421,12 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
 
     // if expectedFilePath is empty, we probably just want to make sure that it does
     // not crash
-    if (expectedFilePath.isEmpty()) {
+    if (expectedFilePath == noResultExpected) {
         QCOMPARE(type.internalKind(), QQmlJS::Dom::DomType::Empty);
         return;
     }
+
+    QVERIFY(type);
 
     QQmlJS::Dom::FileLocations::Tree typeLocationToTest = QQmlJS::Dom::FileLocations::treeOf(type);
 
@@ -434,6 +454,19 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
     QCOMPARE(typeLocationToTest->info().fullRegion.startColumn, quint32(expectedCharacter));
 
     if (auto object = type.as<QQmlJS::Dom::QmlObject>()) {
+        const std::vector<QString> except = {
+            "functionParameterICUsage",
+            "ICBindingUsage",
+            "ICBindingUsage2",
+            "ICBindingUsage3",
+        };
+        for (const QString &functionName : except) {
+            QEXPECT_FAIL(
+                    functionName.toStdString().c_str(),
+                    "Types for JS-identifiers point to the type inside inline components instead "
+                    "of the inline component itself",
+                    Continue);
+        }
         QCOMPARE(object->idStr(), expectedTypeName);
     } else if (auto exported = type.as<QQmlJS::Dom::Export>()) {
         QCOMPARE(exported->typeName, expectedTypeName);
@@ -488,7 +521,10 @@ void tst_qmlls_utils::findLocationOfItem()
     Q_ASSERT(expectedLine > 0);
     Q_ASSERT(expectedCharacter > 0);
 
-    auto [env, file] = createEnvironmentAndLoadFile(filePath);
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
 
     // grab item using already tested QQmlLSUtils::findLastItemsContaining
     auto locations = QQmlLSUtils::itemsFromTextLocation(
@@ -596,7 +632,10 @@ void tst_qmlls_utils::findBaseObject()
     Q_ASSERT(line > 0);
     Q_ASSERT(character > 0);
 
-    auto [env, file] = createEnvironmentAndLoadFile(filePath);
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
 
     // grab item using already tested QQmlLSUtils::findLastItemsContaining
     auto locations = QQmlLSUtils::itemsFromTextLocation(
@@ -638,6 +677,333 @@ void tst_qmlls_utils::findBaseObject()
              u"Incorrect baseType found: it has an unexpected marker properties: "_s
                      .append(printSet(unExpectedPropertyName))
                      .toLatin1());
+}
+
+using QQmlJS::SourceLocation;
+
+static QQmlLSUtilsLocation sourceLocationFrom(const QString fileName, const QString &code,
+                                              quint32 startLine, quint32 startCharacter,
+                                              quint32 length)
+{
+    quint32 offset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
+
+    QQmlLSUtilsLocation location{
+        fileName, QQmlJS::SourceLocation{ offset, length, startLine, startCharacter }
+    };
+    return location;
+}
+
+void tst_qmlls_utils::findUsages_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+    QTest::addColumn<QList<QQmlLSUtilsLocation>>("expectedUsages");
+
+    const QString testFileName = testFile(u"JSUsages.qml"_s);
+    QString testFileContent;
+    {
+        QFile file(testFileName);
+        QVERIFY(file.open(QIODeviceBase::ReadOnly));
+        testFileContent = QString::fromUtf8(file.readAll());
+    }
+
+    QList<QQmlLSUtilsLocation> sumUsages{
+        sourceLocationFrom(testFileName, testFileContent, 8, 13, strlen("sum")),
+        sourceLocationFrom(testFileName, testFileContent, 10, 13, strlen("sum")),
+        sourceLocationFrom(testFileName, testFileContent, 10, 19, strlen("sum")),
+    };
+
+    QList<QQmlLSUtilsLocation> iUsages{
+        sourceLocationFrom(testFileName, testFileContent, 9, 17, strlen("i")),
+        sourceLocationFrom(testFileName, testFileContent, 9, 24, strlen("i")),
+        sourceLocationFrom(testFileName, testFileContent, 9, 32, strlen("i")),
+        sourceLocationFrom(testFileName, testFileContent, 9, 36, strlen("i")),
+        sourceLocationFrom(testFileName, testFileContent, 10, 25, strlen("i")),
+    };
+
+    QList<QQmlLSUtilsLocation> helloPropertyUsages{
+        sourceLocationFrom(testFileName, testFileContent, 17, 5,
+                           strlen("property int helloProperty: 0")),
+        sourceLocationFrom(testFileName, testFileContent, 24, 13, strlen("helloProperty")),
+        sourceLocationFrom(testFileName, testFileContent, 24, 29, strlen("helloProperty")),
+        sourceLocationFrom(testFileName, testFileContent, 65, 60, strlen("helloProperty")),
+    };
+
+    QList<QQmlLSUtilsLocation> subItemHelloPropertyUsages{
+        sourceLocationFrom(testFileName, testFileContent, 32, 20, strlen("helloProperty")),
+        sourceLocationFrom(testFileName, testFileContent, 34, 9,
+                           strlen("property string helloProperty")),
+    };
+
+    QList<QQmlLSUtilsLocation> ICHelloPropertyUsages{
+        sourceLocationFrom(testFileName, testFileContent, 37, 9,
+                           strlen("property var helloProperty")),
+        sourceLocationFrom(testFileName, testFileContent, 39, 20, strlen("helloProperty")),
+    };
+
+    QList<QQmlLSUtilsLocation> p2Usages{
+        sourceLocationFrom(testFileName, testFileContent, 18, 5, strlen("property int p2: 1")),
+        sourceLocationFrom(testFileName, testFileContent, 24, 55, strlen("p2")),
+        sourceLocationFrom(testFileName, testFileContent, 32, 36, strlen("p2")),
+        sourceLocationFrom(testFileName, testFileContent, 39, 36, strlen("p2")),
+        sourceLocationFrom(testFileName, testFileContent, 66, 31, strlen("p2")),
+        sourceLocationFrom(testFileName, testFileContent, 67, 37, strlen("p2")),
+        sourceLocationFrom(testFileName, testFileContent, 68, 43, strlen("p2")),
+        sourceLocationFrom(testFileName, testFileContent, 69, 49, strlen("p2")),
+    };
+
+    QList<QQmlLSUtilsLocation> nestedUsages{
+        sourceLocationFrom(testFileName, testFileContent, 62, 13, strlen("myNested")),
+        sourceLocationFrom(testFileName, testFileContent, 65, 17, strlen("myNested")),
+        sourceLocationFrom(testFileName, testFileContent, 66, 17, strlen("myNested")),
+        sourceLocationFrom(testFileName, testFileContent, 67, 17, strlen("myNested")),
+        sourceLocationFrom(testFileName, testFileContent, 68, 17, strlen("myNested")),
+        sourceLocationFrom(testFileName, testFileContent, 69, 17, strlen("myNested")),
+    };
+
+    QList<QQmlLSUtilsLocation> nestedComponent3Usages{
+        sourceLocationFrom(testFileName, testFileContent, 47, 9,
+                           strlen("property NestedComponent3 inner")),
+        sourceLocationFrom(testFileName, testFileContent, 65, 32, strlen("inner")),
+        sourceLocationFrom(testFileName, testFileContent, 68, 32, strlen("inner")),
+        sourceLocationFrom(testFileName, testFileContent, 69, 32, strlen("inner")),
+    };
+
+    QList<QQmlLSUtilsLocation> nestedComponent3P2Usages{
+        sourceLocationFrom(testFileName, testFileContent, 68, 38, strlen("p2")),
+        sourceLocationFrom(testFileName, testFileContent, 53, 9, strlen("property int p2")),
+    };
+
+    QList<QQmlLSUtilsLocation> recursiveUsages{
+        sourceLocationFrom(testFileName, testFileContent, 72, 14, strlen("recursive")),
+        sourceLocationFrom(testFileName, testFileContent, 74, 24, strlen("recursive")),
+        sourceLocationFrom(testFileName, testFileContent, 74, 34, strlen("recursive")),
+        sourceLocationFrom(testFileName, testFileContent, 74, 51, strlen("recursive")),
+        sourceLocationFrom(testFileName, testFileContent, 74, 68, strlen("recursive")),
+        sourceLocationFrom(testFileName, testFileContent, 76, 20, strlen("recursive")),
+        sourceLocationFrom(testFileName, testFileContent, 79, 34, strlen("recursive")),
+        sourceLocationFrom(testFileName, testFileContent, 84, 27, strlen("recursive")),
+    };
+
+    std::sort(sumUsages.begin(), sumUsages.end());
+    std::sort(iUsages.begin(), iUsages.end());
+    std::sort(subItemHelloPropertyUsages.begin(), subItemHelloPropertyUsages.end());
+    std::sort(ICHelloPropertyUsages.begin(), ICHelloPropertyUsages.end());
+    std::sort(p2Usages.begin(), p2Usages.end());
+    std::sort(nestedUsages.begin(), nestedUsages.end());
+    std::sort(nestedComponent3Usages.begin(), nestedComponent3Usages.end());
+    std::sort(nestedComponent3P2Usages.begin(), nestedComponent3P2Usages.end());
+    std::sort(recursiveUsages.begin(), recursiveUsages.end());
+
+    QTest::addRow("findSumFromDeclaration") << testFileName << 8 << 13 << sumUsages;
+    QTest::addRow("findSumFromUsage") << testFileName << 10 << 20 << sumUsages;
+
+    QTest::addRow("findIFromDeclaration") << testFileName << 9 << 17 << iUsages;
+    QTest::addRow("findIFromUsage") << testFileName << 9 << 24 << iUsages;
+    QTest::addRow("findIFromUsage2") << testFileName << 10 << 25 << iUsages;
+
+    QTest::addRow("findPropertyFromDeclaration") << testFileName << 17 << 18 << helloPropertyUsages;
+    QTest::addRow("findPropertyFromDeclaration2") << testFileName << 18 << 18 << p2Usages;
+    QTest::addRow("findPropertyFromDeclarationInSubItem")
+            << testFileName << 34 << 29 << subItemHelloPropertyUsages;
+    QTest::addRow("findPropertyFromDeclarationInIC")
+            << testFileName << 37 << 22 << ICHelloPropertyUsages;
+
+    QTest::addRow("findPropertyFromUsage") << testFileName << 24 << 13 << helloPropertyUsages;
+    QTest::addRow("findPropertyFromUsage2") << testFileName << 24 << 36 << helloPropertyUsages;
+    QTest::addRow("findPropertyFromUsageInSubItem")
+            << testFileName << 32 << 26 << subItemHelloPropertyUsages;
+    QTest::addRow("findPropertyFromUsageInIC") << testFileName << 39 << 20 << ICHelloPropertyUsages;
+
+    QTest::addRow("findIdFromUsage") << testFileName << 67 << 20 << nestedUsages;
+    QTest::addRow("findIdFromDefinition") << testFileName << 62 << 17 << nestedUsages;
+
+    QTest::addRow("findPropertyFromUsageInFieldMemberExpression")
+            << testFileName << 69 << 34 << nestedComponent3Usages;
+
+    QTest::addRow("findFieldMemberExpressionUsageFromPropertyDefinition")
+            << testFileName << 47 << 38 << nestedComponent3Usages;
+
+    QTest::addRow("findProperty2FromUsageInFieldMemberExpression")
+            << testFileName << 68 << 39 << nestedComponent3P2Usages;
+
+    QTest::addRow("findFunctionUsage") << testFileName << 74 << 30 << recursiveUsages;
+    QTest::addRow("findFunctionUsage2") << testFileName << 76 << 24 << recursiveUsages;
+
+    QTest::addRow("findQualifiedFunctionUsage") << testFileName << 84 << 31 << recursiveUsages;
+
+    QTest::addRow("findFunctionUsageFromDefinition") << testFileName << 72 << 17 << recursiveUsages;
+}
+
+void tst_qmlls_utils::findUsages()
+{
+    QFETCH(QString, filePath);
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QList<QQmlLSUtilsLocation>, expectedUsages);
+
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+
+    auto locations = QQmlLSUtils::itemsFromTextLocation(
+            file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
+
+    if constexpr (enable_debug_output) {
+        if (locations.size() > 1) {
+            for (auto &x : locations)
+                qDebug() << x.domItem.toString();
+        }
+    }
+    QCOMPARE(locations.size(), 1);
+
+    auto usages = QQmlLSUtils::findUsagesOf(locations.front().domItem);
+
+    if constexpr (enable_debug_output) {
+        if (usages != expectedUsages) {
+            qDebug() << "Got:\n";
+            for (auto &x : usages) {
+                qDebug() << x.filename << "(" << x.location.startLine << ", "
+                         << x.location.startColumn << "), " << x.location.offset << "+"
+                         << x.location.length;
+            }
+            qDebug() << "But expected: \n";
+            for (auto &x : expectedUsages) {
+                qDebug() << x.filename << "(" << x.location.startLine << ", "
+                         << x.location.startColumn << "), " << x.location.offset << "+"
+                         << x.location.length;
+            }
+        }
+    }
+    QCOMPARE(usages, expectedUsages);
+}
+
+void tst_qmlls_utils::findDefinitionFromLocation_data()
+{
+    QTest::addColumn<QString>("filePath");
+    // keep in mind that line and character are starting at 1!
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+
+    QTest::addColumn<QString>("expectedFilePath");
+    // set to -1 when unchanged from above line and character. 0-based.
+    QTest::addColumn<int>("expectedLine");
+    QTest::addColumn<int>("expectedCharacter");
+    QTest::addColumn<size_t>("expectedLength");
+
+    const QString JSDefinitionsQml = testFile(u"JSDefinitions.qml"_s);
+
+    QTest::addRow("JSIdentifierX")
+            << JSDefinitionsQml << 14 << 11 << JSDefinitionsQml << 13 << 13 << strlen("x");
+    QTest::addRow("JSIdentifierX2")
+            << JSDefinitionsQml << 15 << 11 << JSDefinitionsQml << 13 << 13 << strlen("x");
+    QTest::addRow("propertyI") << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << 9
+                               << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("qualifiedPropertyI") << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << 9
+                                        << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 6 << 1
+                        << strlen("Item");
+
+    QTest::addRow("parameterA") << JSDefinitionsQml << 10 << 16 << noResultExpected << -1 << -1
+                                << size_t{};
+    QTest::addRow("parameterAUsage")
+            << JSDefinitionsQml << 10 << 39 << JSDefinitionsQml << -1 << 16 << strlen("a");
+
+    QTest::addRow("parameterB") << JSDefinitionsQml << 10 << 28 << noResultExpected << -1 << -1
+                                << size_t{};
+    QTest::addRow("parameterBUsage")
+            << JSDefinitionsQml << 10 << 86 << JSDefinitionsQml << -1 << 28 << strlen("b");
+
+    QTest::addRow("comment") << JSDefinitionsQml << 10 << 21 << noResultExpected << -1 << -1
+                             << size_t{};
+
+    QTest::addRow("scopedX") << JSDefinitionsQml << 22 << 18 << JSDefinitionsQml << 21 << 17
+                             << strlen("scoped");
+    QTest::addRow("scopedX2") << JSDefinitionsQml << 25 << 22 << JSDefinitionsQml << 21 << 17
+                              << strlen("scoped");
+    QTest::addRow("scopedX3") << JSDefinitionsQml << 28 << 14 << JSDefinitionsQml << 19 << 13
+                              << strlen("scoped");
+
+    QTest::addRow("normalI") << JSDefinitionsQml << 22 << 23 << JSDefinitionsQml << 9
+                             << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("scopedI") << JSDefinitionsQml << 25 << 27 << JSDefinitionsQml << 24 << 32
+                             << strlen("i");
+
+    QTest::addRow("shadowingProperty") << JSDefinitionsQml << 37 << 21 << JSDefinitionsQml << 34
+                                       << 9 << strlen("property int i");
+    QTest::addRow("shadowingQualifiedProperty") << JSDefinitionsQml << 37 << 35 << JSDefinitionsQml
+                                                << 34 << 9 << strlen("property int i");
+    QTest::addRow("shadowedProperty") << JSDefinitionsQml << 37 << 49 << JSDefinitionsQml << 9
+                                      << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("parentId") << JSDefinitionsQml << 37 << 44 << JSDefinitionsQml << 6 << 1
+                              << strlen("Item");
+    QTest::addRow("currentId") << JSDefinitionsQml << 37 << 30 << JSDefinitionsQml << 31
+                               << positionAfterOneIndent << strlen("Rectangle");
+
+    QTest::addRow("recursiveFunction")
+            << JSDefinitionsQml << 39 << 28 << JSDefinitionsQml << 36 << 18 << strlen("f");
+    QTest::addRow("recursiveFunction2")
+            << JSDefinitionsQml << 39 << 39 << JSDefinitionsQml << 36 << 18 << strlen("f");
+    QTest::addRow("functionFromFunction")
+            << JSDefinitionsQml << 44 << 20 << JSDefinitionsQml << 36 << 18 << strlen("f");
+    QTest::addRow("qualifiedFunctionName")
+            << JSDefinitionsQml << 48 << 23 << JSDefinitionsQml << 36 << 18 << strlen("f");
+
+    QTest::addRow("functionInParent")
+            << JSDefinitionsQml << 44 << 37 << JSDefinitionsQml << 18 << 14 << strlen("ffff");
+}
+
+void tst_qmlls_utils::findDefinitionFromLocation()
+{
+    QFETCH(QString, filePath);
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QString, expectedFilePath);
+    QFETCH(int, expectedLine);
+    QFETCH(int, expectedCharacter);
+    QFETCH(size_t, expectedLength);
+
+    if (expectedLine == -1)
+        expectedLine = line;
+    if (expectedCharacter == -1)
+        expectedCharacter = character;
+
+    // they all start at 1.
+    Q_ASSERT(line > 0);
+    Q_ASSERT(character > 0);
+    Q_ASSERT(expectedLine > 0);
+    Q_ASSERT(expectedCharacter > 0);
+
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+
+    auto locations = QQmlLSUtils::itemsFromTextLocation(
+            file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
+
+    QCOMPARE(locations.size(), 1);
+
+    auto definition = QQmlLSUtils::findDefinitionOf(locations.front().domItem);
+
+    // if expectedFilePath is empty, we probably just want to make sure that it does
+    // not crash
+    if (expectedFilePath == noResultExpected) {
+        QVERIFY(!definition);
+        return;
+    }
+
+    QVERIFY(definition);
+
+    QCOMPARE(definition->filename, expectedFilePath);
+
+    QCOMPARE(definition->location.startLine, quint32(expectedLine));
+    QCOMPARE(definition->location.startColumn, quint32(expectedCharacter));
+    QCOMPARE(definition->location.length, quint32(expectedLength));
 }
 
 QTEST_MAIN(tst_qmlls_utils)

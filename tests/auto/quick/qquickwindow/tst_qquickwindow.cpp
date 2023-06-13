@@ -27,13 +27,12 @@
 #include <QOperatingSystemVersion>
 #include <functional>
 #include <QtGui/private/qeventpoint_p.h>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 #if QT_CONFIG(opengl)
 #include <QOpenGLContext>
 #endif
 #if QT_CONFIG(vulkan)
 #include <QVulkanInstance>
-#include <QtGui/private/qrhivulkan_p.h>
 #endif
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
@@ -546,6 +545,9 @@ private slots:
     void rendererInterfaceWithRenderControl();
 
     void graphicsConfiguration();
+
+    void visibleVsVisibility_data();
+    void visibleVsVisibility();
 
 private:
     QPointingDevice *touchDevice; // TODO make const after fixing QTBUG-107864
@@ -4081,6 +4083,43 @@ void tst_qquickwindow::graphicsConfiguration()
 #if QT_CONFIG(vulkan)
     QCOMPARE(QQuickGraphicsConfiguration::preferredInstanceExtensions(), QRhiVulkanInitParams::preferredInstanceExtensions());
 #endif
+}
+
+void tst_qquickwindow::visibleVsVisibility_data()
+{
+    QTest::addColumn<QUrl>("qmlfile");
+    QTest::addColumn<bool>("expectVisible");
+    QTest::addColumn<bool>("expectConflictingPropertyWarning");
+
+    QTest::newRow("default invisible") << testFileUrl("window.qml") << false << false;
+    QTest::newRow("just visibility") << testFileUrl("maximized.qml") << true << false;
+    // In these conflicting cases, the 'visibility' property "wins" (see QQuickWindowQmlImpl::setWindowVisibility())
+    QTest::newRow("conflicting invisible") << testFileUrl("conflictingVisibleFalse.qml") << true << true;
+    QTest::newRow("conflicting visible") << testFileUrl("conflictingVisibleTrue.qml") << false << true;
+}
+
+void tst_qquickwindow::visibleVsVisibility()
+{
+    QFETCH(QUrl, qmlfile);
+    QFETCH(bool, expectVisible);
+    QFETCH(bool, expectConflictingPropertyWarning);
+
+    const QString warningMsg = qmlfile.toString() + ": Conflicting properties 'visible' and 'visibility'";
+
+    QTest::failOnWarning(QRegularExpression(".*"));
+    if (expectConflictingPropertyWarning)
+        QTest::ignoreMessage(QtWarningMsg, warningMsg.toUtf8().data());
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(qmlfile);
+    QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+    QVERIFY(created);
+
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
+    QVERIFY(window);
+    QCOMPARE(window->isVisible(), expectVisible);
 }
 
 QTEST_MAIN(tst_qquickwindow)

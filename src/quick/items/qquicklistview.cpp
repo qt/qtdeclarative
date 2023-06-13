@@ -15,7 +15,6 @@
 
 #include <private/qquicksmoothedanimation_p_p.h>
 #include <private/qqmlcomponent_p.h>
-#include "qplatformdefs.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -108,7 +107,7 @@ public:
     void fixupPosition() override;
     void fixup(AxisData &data, qreal minExtent, qreal maxExtent) override;
     bool flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
-               QQuickTimeLineCallback::Callback fixupCallback, qreal velocity) override;
+               QQuickTimeLineCallback::Callback fixupCallback, QEvent::Type eventType, qreal velocity) override;
 
     QQuickItemViewAttached *getAttachedObject(const QObject *object) const override;
 
@@ -1849,13 +1848,13 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
 }
 
 bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
-                                        QQuickTimeLineCallback::Callback fixupCallback, qreal velocity)
+                                        QQuickTimeLineCallback::Callback fixupCallback, QEvent::Type eventType, qreal velocity)
 {
     data.fixingUp = false;
     moveReason = Mouse;
     if ((!haveHighlightRange || highlightRange != QQuickListView::StrictlyEnforceRange) && snapMode == QQuickListView::NoSnap) {
         correctFlick = true;
-        return QQuickItemViewPrivate::flick(data, minExtent, maxExtent, vSize, fixupCallback, velocity);
+        return QQuickItemViewPrivate::flick(data, minExtent, maxExtent, vSize, fixupCallback, eventType, velocity);
     }
     qreal maxDistance = 0;
     const qreal dataValue =
@@ -1911,7 +1910,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
         }
         if (!hData.flicking && !vData.flicking) {
             // the initial flick - estimate boundary
-            qreal accel = deceleration;
+            qreal accel = eventType == QEvent::Wheel ? wheelDeceleration : deceleration;
             qreal v2 = v * v;
             overshootDist = 0.0;
             // + averageSize/4 to encourage moving at least one item in the flick direction
@@ -2185,7 +2184,7 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     of type \l [QML] {real}, so it is possible to set fractional
     values like \c 0.1.
 
-    \section1 Reusing items
+    \section1 Reusing Items
 
     Since 5.15, ListView can be configured to recycle items instead of instantiating
     from the \l delegate whenever new rows are flicked into view. This approach improves
@@ -2219,6 +2218,18 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     \snippet qml/listview/ReusableDelegate.qml 0
 
     \sa {QML Data Models}, GridView, PathView, {Qt Quick Examples - Views}
+
+    \section1 Variable Delegate Size and Section Labels
+
+    Variable delegate sizes might lead to resizing and skipping of any attached
+    \l Scrollbar. This is because ListView estimates its content size from
+    allocated items (usually only the visible items, the rest is assumed to be of
+    similar size), and variable delegate sizes prevent an accurate estimation. To
+    reduce this effect, \l ItemView::cacheBuffer can be set to higher values,
+    effectively creating more items and improving the size estimate of unallocated
+    items, at the expense of additional memory usage. Sections have the same effect
+    because they attach and elongate the section label to the first item within
+    the section.
 */
 QQuickListView::QQuickListView(QQuickItem *parent)
     : QQuickItemView(*(new QQuickListViewPrivate), parent)
@@ -2231,6 +2242,8 @@ QQuickListView::~QQuickListView()
 
 /*!
     \qmlattachedproperty bool QtQuick::ListView::isCurrentItem
+    \readonly
+
     This attached property is true if this delegate is the current item; otherwise false.
 
     It is attached to each instance of the delegate.
@@ -2242,6 +2255,8 @@ QQuickListView::~QQuickListView()
 
 /*!
     \qmlattachedproperty ListView QtQuick::ListView::view
+    \readonly
+
     This attached property holds the view that manages this delegate instance.
 
     It is attached to each instance of the delegate and also to the header, the footer,
@@ -2250,6 +2265,8 @@ QQuickListView::~QQuickListView()
 
 /*!
     \qmlattachedproperty string QtQuick::ListView::previousSection
+    \readonly
+
     This attached property holds the section of the previous element.
 
     It is attached to each instance of the delegate.
@@ -2259,6 +2276,8 @@ QQuickListView::~QQuickListView()
 
 /*!
     \qmlattachedproperty string QtQuick::ListView::nextSection
+    \readonly
+
     This attached property holds the section of the next element.
 
     It is attached to each instance of the delegate.
@@ -2268,6 +2287,8 @@ QQuickListView::~QQuickListView()
 
 /*!
     \qmlattachedproperty string QtQuick::ListView::section
+    \readonly
+
     This attached property holds the section of this element.
 
     It is attached to each instance of the delegate.
@@ -3449,12 +3470,12 @@ void QQuickListView::viewportMoved(Qt::Orientations orient)
                 const qreal minY = minYExtent();
                 if ((minY - d->vData.move.value() < height()/2 || d->vData.flickTarget - d->vData.move.value() < height()/2)
                     && minY != d->vData.flickTarget)
-                    d->flickY(-d->vData.smoothVelocity.value());
+                    d->flickY(QEvent::TouchUpdate, -d->vData.smoothVelocity.value());
             } else if (d->vData.velocity < 0) {
                 const qreal maxY = maxYExtent();
                 if ((d->vData.move.value() - maxY < height()/2 || d->vData.move.value() - d->vData.flickTarget < height()/2)
                     && maxY != d->vData.flickTarget)
-                    d->flickY(-d->vData.smoothVelocity.value());
+                    d->flickY(QEvent::TouchUpdate, -d->vData.smoothVelocity.value());
             }
         }
 
@@ -3463,12 +3484,12 @@ void QQuickListView::viewportMoved(Qt::Orientations orient)
                 const qreal minX = minXExtent();
                 if ((minX - d->hData.move.value() < width()/2 || d->hData.flickTarget - d->hData.move.value() < width()/2)
                     && minX != d->hData.flickTarget)
-                    d->flickX(-d->hData.smoothVelocity.value());
+                    d->flickX(QEvent::TouchUpdate, -d->hData.smoothVelocity.value());
             } else if (d->hData.velocity < 0) {
                 const qreal maxX = maxXExtent();
                 if ((d->hData.move.value() - maxX < width()/2 || d->hData.move.value() - d->hData.flickTarget < width()/2)
                     && maxX != d->hData.flickTarget)
-                    d->flickX(-d->hData.smoothVelocity.value());
+                    d->flickX(QEvent::TouchUpdate, -d->hData.smoothVelocity.value());
             }
         }
         d->inFlickCorrection = false;

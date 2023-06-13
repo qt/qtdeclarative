@@ -2,24 +2,27 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qv4globalobject_p.h"
-#include <private/qv4mm_p.h>
-#include "qv4value_p.h"
-#include "qv4context_p.h"
-#include "qv4function_p.h"
-#include "qv4script_p.h"
-#include "qv4scopedvalue_p.h"
-#include "qv4string_p.h"
 
-#include <private/qv4codegen_p.h>
 #include <private/qv4alloca_p.h>
-#include "private/qlocale_tools_p.h"
-#include "private/qtools_p.h"
-
-#include <QtCore/QDebug>
-#include <QtCore/QString>
-#include <iostream>
+#include <private/qv4codegen_p.h>
+#include <private/qv4context_p.h>
+#include <private/qv4function_p.h>
+#include <private/qv4mm_p.h>
+#include <private/qv4scopedvalue_p.h>
+#include <private/qv4script_p.h>
+#include <private/qv4stackframe_p.h>
+#include <private/qv4string_p.h>
+#include <private/qv4value_p.h>
 
 #include <wtf/MathExtras.h>
+
+#include <QtCore/private/qlocale_tools_p.h>
+#include <QtCore/private/qtools_p.h>
+
+#include <QtCore/qdebug.h>
+#include <QtCore/qstring.h>
+
+#include <iostream>
 
 using namespace QV4;
 using QtMiscUtils::toHexUpper;

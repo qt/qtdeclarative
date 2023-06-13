@@ -159,48 +159,54 @@ protected:
 class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickLayoutAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qreal minimumWidth READ minimumWidth WRITE setMinimumWidth NOTIFY minimumWidthChanged)
-    Q_PROPERTY(qreal minimumHeight READ minimumHeight WRITE setMinimumHeight NOTIFY minimumHeightChanged)
-    Q_PROPERTY(qreal preferredWidth READ preferredWidth WRITE setPreferredWidth NOTIFY preferredWidthChanged)
-    Q_PROPERTY(qreal preferredHeight READ preferredHeight WRITE setPreferredHeight NOTIFY preferredHeightChanged)
-    Q_PROPERTY(qreal maximumWidth READ maximumWidth WRITE setMaximumWidth NOTIFY maximumWidthChanged)
-    Q_PROPERTY(qreal maximumHeight READ maximumHeight WRITE setMaximumHeight NOTIFY maximumHeightChanged)
-    Q_PROPERTY(bool fillHeight READ fillHeight WRITE setFillHeight NOTIFY fillHeightChanged)
-    Q_PROPERTY(bool fillWidth READ fillWidth WRITE setFillWidth NOTIFY fillWidthChanged)
-    Q_PROPERTY(int row READ row WRITE setRow NOTIFY rowChanged)
-    Q_PROPERTY(int column READ column WRITE setColumn NOTIFY columnChanged)
-    Q_PROPERTY(int rowSpan READ rowSpan WRITE setRowSpan NOTIFY rowSpanChanged)
-    Q_PROPERTY(int columnSpan READ columnSpan WRITE setColumnSpan NOTIFY columnSpanChanged)
-    Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment NOTIFY alignmentChanged)
-    Q_PROPERTY(int horizontalStretchFactor READ horizontalStretchFactor WRITE setHorizontalStretchFactor NOTIFY horizontalStretchFactorChanged)
-    Q_PROPERTY(int verticalStretchFactor READ verticalStretchFactor WRITE setVerticalStretchFactor NOTIFY verticalStretchFactorChanged)
+    Q_PROPERTY(qreal minimumWidth READ minimumWidth WRITE setMinimumWidth NOTIFY minimumWidthChanged FINAL)
+    Q_PROPERTY(qreal minimumHeight READ minimumHeight WRITE setMinimumHeight NOTIFY minimumHeightChanged FINAL)
+    Q_PROPERTY(qreal preferredWidth READ preferredWidth WRITE setPreferredWidth NOTIFY preferredWidthChanged FINAL)
+    Q_PROPERTY(qreal preferredHeight READ preferredHeight WRITE setPreferredHeight NOTIFY preferredHeightChanged FINAL)
+    Q_PROPERTY(qreal maximumWidth READ maximumWidth WRITE setMaximumWidth NOTIFY maximumWidthChanged FINAL)
+    Q_PROPERTY(qreal maximumHeight READ maximumHeight WRITE setMaximumHeight NOTIFY maximumHeightChanged FINAL)
+    Q_PROPERTY(bool fillHeight READ fillHeight WRITE setFillHeight NOTIFY fillHeightChanged FINAL)
+    Q_PROPERTY(bool fillWidth READ fillWidth WRITE setFillWidth NOTIFY fillWidthChanged FINAL)
+    Q_PROPERTY(int row READ row WRITE setRow NOTIFY rowChanged FINAL)
+    Q_PROPERTY(int column READ column WRITE setColumn NOTIFY columnChanged FINAL)
+    Q_PROPERTY(int rowSpan READ rowSpan WRITE setRowSpan NOTIFY rowSpanChanged FINAL)
+    Q_PROPERTY(int columnSpan READ columnSpan WRITE setColumnSpan NOTIFY columnSpanChanged FINAL)
+    Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment NOTIFY alignmentChanged FINAL)
+    Q_PROPERTY(int horizontalStretchFactor READ horizontalStretchFactor WRITE setHorizontalStretchFactor NOTIFY horizontalStretchFactorChanged FINAL)
+    Q_PROPERTY(int verticalStretchFactor READ verticalStretchFactor WRITE setVerticalStretchFactor NOTIFY verticalStretchFactorChanged FINAL)
 
-    Q_PROPERTY(qreal margins READ margins WRITE setMargins NOTIFY marginsChanged)
-    Q_PROPERTY(qreal leftMargin READ leftMargin WRITE setLeftMargin RESET resetLeftMargin NOTIFY leftMarginChanged)
-    Q_PROPERTY(qreal topMargin READ topMargin WRITE setTopMargin RESET resetTopMargin NOTIFY topMarginChanged)
-    Q_PROPERTY(qreal rightMargin READ rightMargin WRITE setRightMargin RESET resetRightMargin NOTIFY rightMarginChanged)
-    Q_PROPERTY(qreal bottomMargin READ bottomMargin WRITE setBottomMargin RESET resetBottomMargin NOTIFY bottomMarginChanged)
+    Q_PROPERTY(qreal margins READ margins WRITE setMargins NOTIFY marginsChanged FINAL)
+    Q_PROPERTY(qreal leftMargin READ leftMargin WRITE setLeftMargin RESET resetLeftMargin NOTIFY leftMarginChanged FINAL)
+    Q_PROPERTY(qreal topMargin READ topMargin WRITE setTopMargin RESET resetTopMargin NOTIFY topMarginChanged FINAL)
+    Q_PROPERTY(qreal rightMargin READ rightMargin WRITE setRightMargin RESET resetRightMargin NOTIFY rightMarginChanged FINAL)
+    Q_PROPERTY(qreal bottomMargin READ bottomMargin WRITE setBottomMargin RESET resetBottomMargin NOTIFY bottomMarginChanged FINAL)
 
 public:
     QQuickLayoutAttached(QObject *object);
 
     qreal minimumWidth() const { return !m_isMinimumWidthSet ? sizeHint(Qt::MinimumSize, Qt::Horizontal) : m_minimumWidth; }
     void setMinimumWidth(qreal width);
+    bool isMinimumWidthSet() const {return m_isMinimumWidthSet; }
 
     qreal minimumHeight() const { return !m_isMinimumHeightSet ? sizeHint(Qt::MinimumSize, Qt::Vertical) : m_minimumHeight; }
     void setMinimumHeight(qreal height);
+    bool isMinimumHeightSet() const {return m_isMinimumHeightSet; }
 
     qreal preferredWidth() const { return m_preferredWidth; }
     void setPreferredWidth(qreal width);
+    bool isPreferredWidthSet() const {return m_preferredWidth > -1; }
 
     qreal preferredHeight() const { return m_preferredHeight; }
     void setPreferredHeight(qreal width);
+    bool isPreferredHeightSet() const {return m_preferredHeight > -1; }
 
     qreal maximumWidth() const { return !m_isMaximumWidthSet ? sizeHint(Qt::MaximumSize, Qt::Horizontal) : m_maximumWidth; }
     void setMaximumWidth(qreal width);
+    bool isMaximumWidthSet() const {return m_isMaximumWidthSet; }
 
     qreal maximumHeight() const { return !m_isMaximumHeightSet ? sizeHint(Qt::MaximumSize, Qt::Vertical) : m_maximumHeight; }
     void setMaximumHeight(qreal height);
+    bool isMaximumHeightSet() const {return m_isMaximumHeightSet; }
 
     void setMinimumImplicitSize(const QSizeF &sz);
     void setMaximumImplicitSize(const QSizeF &sz);
@@ -227,30 +233,38 @@ public:
 
     Qt::Alignment alignment() const { return m_alignment; }
     void setAlignment(Qt::Alignment align);
+    bool isAlignmentSet() const {return m_isAlignmentSet; }
 
     int horizontalStretchFactor() const { return m_horizontalStretch; }
     void setHorizontalStretchFactor(int stretchFactor);
+    bool isHorizontalStretchFactorSet() const { return m_horizontalStretch > -1; }
     int verticalStretchFactor() const { return m_verticalStretch; }
     void setVerticalStretchFactor(int stretchFactor);
+    bool isVerticalStretchFactorSet() const { return m_verticalStretch > -1; }
 
     qreal margins() const { return m_defaultMargins; }
     void setMargins(qreal m);
+    bool isMarginsSet() const { return m_isMarginsSet; }
 
     qreal leftMargin() const { return m_isLeftMarginSet ? m_margins.left() : m_defaultMargins; }
     void setLeftMargin(qreal m);
     void resetLeftMargin();
+    bool isLeftMarginSet() const { return m_isLeftMarginSet; }
 
     qreal topMargin() const { return m_isTopMarginSet ? m_margins.top() : m_defaultMargins; }
     void setTopMargin(qreal m);
     void resetTopMargin();
+    bool isTopMarginSet() const {return m_isTopMarginSet; }
 
     qreal rightMargin() const { return m_isRightMarginSet ? m_margins.right() : m_defaultMargins; }
     void setRightMargin(qreal m);
     void resetRightMargin();
+    bool isRightMarginSet() const { return m_isRightMarginSet; }
 
     qreal bottomMargin() const { return m_isBottomMarginSet ? m_margins.bottom() : m_defaultMargins; }
     void setBottomMargin(qreal m);
     void resetBottomMargin();
+    bool isBottomMarginSet() const { return m_isBottomMarginSet; }
 
     QMarginsF qMargins() const {
         return QMarginsF(leftMargin(), topMargin(), rightMargin(), bottomMargin());
@@ -346,10 +360,12 @@ private:
     unsigned m_isMaximumWidthSet : 1;
     unsigned m_isMaximumHeightSet : 1;
     unsigned m_changesNotificationEnabled : 1;
+    unsigned m_isMarginsSet : 1;
     unsigned m_isLeftMarginSet : 1;
     unsigned m_isTopMarginSet : 1;
     unsigned m_isRightMarginSet : 1;
     unsigned m_isBottomMarginSet : 1;
+    unsigned m_isAlignmentSet : 1;
     Qt::Alignment m_alignment;
     int m_horizontalStretch;
     int m_verticalStretch;

@@ -204,9 +204,9 @@ inline void QQml_setParent_noEvent(QObject *object, QObject *parent)
 class QQmlValueTypeProvider
 {
 public:
-    static bool createValueType(const QV4::Value &, QMetaType, void *);
+    static bool createValueType(QMetaType targetMetaType, void *target, const QV4::Value &source);
     static QVariant constructValueType(
-            QMetaType resultMetaType, const QMetaObject *resultMetaObject,
+            QMetaType targetMetaType, const QMetaObject *targetMetaObject,
             int ctorIndex, void *ctorArg);
 
     static QVariant createValueType(const QJSValue &, QMetaType);

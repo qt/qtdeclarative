@@ -441,7 +441,7 @@ QQuickMultiPointTouchArea::QQuickMultiPointTouchArea(QQuickItem *parent)
         setFlag(QQuickItem::ItemHasContents);
     }
     setAcceptTouchEvents(true);
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
     setAcceptHoverEvents(true); // needed to enable touch events on mouse hover.
 #endif
 }
@@ -626,6 +626,8 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event, RemapEventPoints 
     }
     if (numTouchPoints >= _minimumTouchPoints && numTouchPoints <= _maximumTouchPoints) {
         for (QEventPoint &p : touchPoints) {
+            QPointF oldPos = p.position();
+            auto transformBack = qScopeGuard([&] { QMutableEventPoint::setPosition(p, oldPos); });
             if (touchPointsFromEvent && remap == RemapEventPoints::ToLocal)
                 QMutableEventPoint::setPosition(p, mapFromScene(p.scenePosition()));
             QEventPoint::State touchPointState = p.state();
@@ -745,7 +747,7 @@ void QQuickMultiPointTouchArea::addTouchPoint(const QMouseEvent *e)
     _mouseTouchPoint = dtp;
 }
 
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
 void QQuickMultiPointTouchArea::hoverEnterEvent(QHoverEvent *event)
 {
     setTouchEventsEnabled(isEnabled());
@@ -776,7 +778,7 @@ void QQuickMultiPointTouchArea::itemChange(ItemChange change, const ItemChangeDa
         setAcceptHoverEvents(data.boolValue);
     QQuickItem::itemChange(change, data);
 }
-#endif // Q_OS_OSX
+#endif // Q_OS_MACOS
 
 void QQuickMultiPointTouchArea::addTouchPrototype(QQuickTouchPoint *prototype)
 {

@@ -2567,4 +2567,62 @@ Q_SIGNALS:
     void changed();
 };
 
+struct UnregisteredValueBaseType
+{
+    int foo = 12;
+};
+
+struct UnregisteredValueDerivedType: public UnregisteredValueBaseType
+{
+    int bar = 13;
+};
+
+struct GadgetedValueBaseType
+{
+    Q_GADGET
+    int foo = 12;
+};
+
+struct GadgetedValueDerivedType: public GadgetedValueBaseType
+{
+    Q_GADGET
+    int bar = 13;
+};
+
+class UnregisteredValueTypeHandler: public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    int consumed = 0;
+    int gadgeted = 0;
+
+public slots:
+    UnregisteredValueBaseType produce() { return UnregisteredValueBaseType(); }
+    UnregisteredValueDerivedType produceDerived() { return UnregisteredValueDerivedType(); }
+    void consume(UnregisteredValueBaseType) { ++consumed; }
+
+    GadgetedValueDerivedType produceGadgeted() { return GadgetedValueDerivedType(); }
+    void consume(GadgetedValueBaseType) { ++gadgeted; }
+};
+
+class Greeter : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    Greeter(QObject *parent = nullptr) : QObject(parent) {}
+
+    Q_INVOKABLE void greet()
+    {
+        qDebug().noquote() << objectName() << "says hello";
+    }
+
+    Q_INVOKABLE void sum(int a, int b)
+    {
+        qDebug().noquote() << objectName() << QString("says %1 + %2 = %3").arg(a).arg(b).arg(a + b);
+    }
+};
+
 #endif // TESTTYPES_H

@@ -227,7 +227,7 @@ struct Parameter : public QV4::CompiledData::Parameter
         return initType(type, annotationString, idGenerator(annotationString), Flag::NoFlag);
     }
 
-    static QV4::CompiledData::BuiltinType stringToBuiltinType(const QString &typeName);
+    static QV4::CompiledData::CommonType stringToBuiltinType(const QString &typeName);
 
 private:
     static bool initType(

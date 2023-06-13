@@ -30,14 +30,14 @@ class Q_QUICK_PRIVATE_EXPORT QQuickParentChange : public QQuickStateOperation, p
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickParentChange)
 
-    Q_PROPERTY(QQuickItem *target READ object WRITE setObject)
-    Q_PROPERTY(QQuickItem *parent READ parent WRITE setParent)
-    Q_PROPERTY(QQmlScriptString x READ x WRITE setX)
-    Q_PROPERTY(QQmlScriptString y READ y WRITE setY)
-    Q_PROPERTY(QQmlScriptString width READ width WRITE setWidth)
-    Q_PROPERTY(QQmlScriptString height READ height WRITE setHeight)
-    Q_PROPERTY(QQmlScriptString scale READ scale WRITE setScale)
-    Q_PROPERTY(QQmlScriptString rotation READ rotation WRITE setRotation)
+    Q_PROPERTY(QQuickItem *target READ object WRITE setObject FINAL)
+    Q_PROPERTY(QQuickItem *parent READ parent WRITE setParent FINAL)
+    Q_PROPERTY(QQmlScriptString x READ x WRITE setX FINAL)
+    Q_PROPERTY(QQmlScriptString y READ y WRITE setY FINAL)
+    Q_PROPERTY(QQmlScriptString width READ width WRITE setWidth FINAL)
+    Q_PROPERTY(QQmlScriptString height READ height WRITE setHeight FINAL)
+    Q_PROPERTY(QQmlScriptString scale READ scale WRITE setScale FINAL)
+    Q_PROPERTY(QQmlScriptString rotation READ rotation WRITE setRotation FINAL)
     Q_CLASSINFO("ParentProperty", "parent")
     QML_NAMED_ELEMENT(ParentChange)
     QML_ADDED_IN_VERSION(2, 0)
@@ -95,13 +95,13 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnchorSet : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQmlScriptString left READ left WRITE setLeft RESET resetLeft)
-    Q_PROPERTY(QQmlScriptString right READ right WRITE setRight RESET resetRight)
-    Q_PROPERTY(QQmlScriptString horizontalCenter READ horizontalCenter WRITE setHorizontalCenter RESET resetHorizontalCenter)
-    Q_PROPERTY(QQmlScriptString top READ top WRITE setTop RESET resetTop)
-    Q_PROPERTY(QQmlScriptString bottom READ bottom WRITE setBottom RESET resetBottom)
-    Q_PROPERTY(QQmlScriptString verticalCenter READ verticalCenter WRITE setVerticalCenter RESET resetVerticalCenter)
-    Q_PROPERTY(QQmlScriptString baseline READ baseline WRITE setBaseline RESET resetBaseline)
+    Q_PROPERTY(QQmlScriptString left READ left WRITE setLeft RESET resetLeft FINAL)
+    Q_PROPERTY(QQmlScriptString right READ right WRITE setRight RESET resetRight FINAL)
+    Q_PROPERTY(QQmlScriptString horizontalCenter READ horizontalCenter WRITE setHorizontalCenter RESET resetHorizontalCenter FINAL)
+    Q_PROPERTY(QQmlScriptString top READ top WRITE setTop RESET resetTop FINAL)
+    Q_PROPERTY(QQmlScriptString bottom READ bottom WRITE setBottom RESET resetBottom FINAL)
+    Q_PROPERTY(QQmlScriptString verticalCenter READ verticalCenter WRITE setVerticalCenter RESET resetVerticalCenter FINAL)
+    Q_PROPERTY(QQmlScriptString baseline READ baseline WRITE setBaseline RESET resetBaseline FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -151,8 +151,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnchorChanges : public QQuickStateOperation, 
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnchorChanges)
 
-    Q_PROPERTY(QQuickItem *target READ object WRITE setObject)
-    Q_PROPERTY(QQuickAnchorSet *anchors READ anchors CONSTANT)
+    Q_PROPERTY(QQuickItem *target READ object WRITE setObject FINAL)
+    Q_PROPERTY(QQuickAnchorSet *anchors READ anchors CONSTANT FINAL)
     QML_NAMED_ELEMENT(AnchorChanges)
     QML_ADDED_IN_VERSION(2, 0)
 

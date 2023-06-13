@@ -25,6 +25,7 @@
 #include "specialproperties.h"
 #include "regexpbindings.h"
 #include "aliasassignments.h"
+#include "connections.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -84,6 +85,8 @@
 #include "mysignals.h"
 #include "namespacedtypes.h"
 #include "type.h"
+#include "qmltablemodel.h"
+#include "stringtourl.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -148,6 +151,7 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/qt/qml/QmltcTests/regexpBindings.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/AliasBase.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/aliasAssignments.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/Connections.qml"),
 
         QUrl("qrc:/qt/qml/QmltcTests/qtbug103956/SubComponent.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/qtbug103956/MainComponent.qml"),
@@ -375,7 +379,7 @@ void tst_qmltc::properties()
     QCOMPARE(created.intP(), 42);
     QCOMPARE(created.realP(), 2.32);
     QCOMPARE(created.stringP(), u"hello, world"_s);
-    QCOMPARE(created.urlP(), u"https://www.qt.io/"_s);
+    QCOMPARE(created.urlP(), QUrl(u"https://www.qt.io/"_s));
     QCOMPARE(created.varP(), 42.42);
 
     QCOMPARE(created.boolP(), true);
@@ -886,6 +890,12 @@ void tst_qmltc::aliasAssignments()
         QCOMPARE(created.alias1(), 4);
         QCOMPARE(created.alias2(), 4);
     }
+}
+
+void tst_qmltc::connections()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(Connections) created(&e);
 }
 
 void tst_qmltc::signalHandlers()
@@ -3215,6 +3225,31 @@ void tst_qmltc::checkExportsAreCompiling()
     QQmlEngine e;
     QmltcExportedTests::HelloExportedWorld w(&e);
     QCOMPARE(w.myString(), u"Hello! I should be exported by qmltc"_s);
+}
+
+#if QT_CONFIG(qml_table_model)
+void tst_qmltc::qmlTableModel()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(QmlTableModel) createdByQmltc(&e);
+    // check that the tableModel is not default constructed
+    QVariant model = createdByQmltc.model();
+    QVERIFY(model.isValid());
+    QQmlTableModel *tableModel = model.value<QQmlTableModel *>();
+    QVERIFY(tableModel);
+    QCOMPARE(tableModel->property("testName").toString(), u"MyTableModel"_s);
+}
+#endif
+
+void tst_qmltc::urlToString()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(stringToUrl) createdByQmltc(&e);
+    // check that the tableModel is not default constructed
+    QUrl first = createdByQmltc.iconLoader()->source();
+    QUrl second = createdByQmltc.iconLoader2()->source();
+    QCOMPARE(first, QUrl("qrc:/qt/qml/path/to/font.ttf"));
+    QCOMPARE(second, QUrl("qrc:/qt/qml/path/to/font2.ttf"));
 }
 
 QTEST_MAIN(tst_qmltc)

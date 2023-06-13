@@ -29,10 +29,7 @@
 
 #include <algorithm>
 
-#include <QtGui/private/qrhi_p.h>
-#if QT_CONFIG(opengl)
-#  include <QtGui/private/qrhigles2_p.h>
-#endif
+#include <rhi/qrhi.h>
 
 QT_BEGIN_NAMESPACE
 

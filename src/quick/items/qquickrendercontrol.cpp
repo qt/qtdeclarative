@@ -26,7 +26,7 @@
 #include <QtCore/private/qobject_p.h>
 
 #include <QtQuick/private/qquickwindow_p.h>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -562,6 +562,39 @@ QQuickWindow *QQuickRenderControl::window() const
 {
     Q_D(const QQuickRenderControl);
     return d->window;
+}
+
+/*!
+    \return the QRhi this QQuickRenderControl is associated with.
+
+    \note The QRhi exists only when initialize() has successfully completed.
+    Before that the return value is null.
+
+    \since 6.6
+ */
+QRhi *QQuickRenderControl::rhi() const
+{
+    Q_D(const QQuickRenderControl);
+    return d->rhi;
+}
+
+/*!
+    \return the current command buffer.
+
+    Once beginFrame() is called, a QRhiCommandBuffer is set up automatically.
+    That is the command buffer Qt Quick scenegraph uses, but in some cases
+    applications may also want to query it, for example to issue resource
+    updates (for example, a texture readback).
+
+    The command buffer is only valid for use between beginFrame() and
+    endFrame().
+
+    \since 6.6
+ */
+QRhiCommandBuffer *QQuickRenderControl::commandBuffer() const
+{
+    Q_D(const QQuickRenderControl);
+    return d->cb;
 }
 
 /*!

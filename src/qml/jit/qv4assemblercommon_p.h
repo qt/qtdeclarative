@@ -16,11 +16,14 @@
 //
 
 #include <private/qv4engine_p.h>
-#include <private/qv4global_p.h>
 #include <private/qv4function_p.h>
-#include <QHash>
+#include <private/qv4global_p.h>
+#include <private/qv4stackframe_p.h>
+
 #include <wtf/Vector.h>
 #include <assembler/MacroAssembler.h>
+
+#include <QtCore/qhash.h>
 
 #if QT_CONFIG(qml_jit)
 

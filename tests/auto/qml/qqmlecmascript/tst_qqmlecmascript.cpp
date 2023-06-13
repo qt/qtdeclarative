@@ -3129,11 +3129,14 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->invoked(), -1);
     QCOMPARE(o->actuals().size(), 0);
 
-    o->reset();
-    QVERIFY(EVALUATE_ERROR("object.method_QPointF(object)"));
-    QCOMPARE(o->error(), false);
-    QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().size(), 0);
+    // This fails if the QtQml module is loaded but works if it's not.
+    // If QtQml is loaded, QPointF is a structured value type that can be created from any object.
+    //
+    // o->reset();
+    // QVERIFY(EVALUATE_ERROR("object.method_QPointF(object)"));
+    // QCOMPARE(o->error(), false);
+    // QCOMPARE(o->invoked(), -1);
+    // QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QPointF(object.method_get_QPointF())", QV4::Primitive::undefinedValue()));
@@ -3186,6 +3189,17 @@ void tst_qqmlecmascript::callQtInvokables()
         QVERIFY(root);
         QCOMPARE(o->error(), false);
         QCOMPARE(o->invoked(), -1); // no function got called due to incompatible arguments
+    }
+
+    {
+        o->reset();
+        QQmlComponent comp(&qmlengine, testFileUrl("qmlTypeWrapperArgs3.qml"));
+        QScopedPointer<QObject> root {comp.createWithInitialProperties({{"invokableObject", QVariant::fromValue(o)}}) };
+        QVERIFY(root);
+        QCOMPARE(o->error(), false);
+        QCOMPARE(o->actuals().size(), 2);
+        QCOMPARE(o->actuals().at(0).metaType(), QMetaType::fromType<QQmlComponentAttached *>());
+        QCOMPARE(o->actuals().at(1).metaType(), QMetaType::fromType<SingletonWithEnum *>());
     }
 
     o->reset();
@@ -3519,6 +3533,27 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
     QCOMPARE(o->actuals(), QVariantList());
+
+    o->reset();
+    QVERIFY(EVALUATE_VALUE("object.method_component(object.someComponent())",
+                           QV4::Primitive::undefinedValue()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 42);
+    QCOMPARE(o->actuals(), QVariantList() << QVariant::fromValue(o->someComponent()));
+
+    o->reset();
+    QVERIFY(EVALUATE_VALUE("object.method_component(object.someTypeObject())",
+                           QV4::Primitive::undefinedValue()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 43);
+    QCOMPARE(o->actuals(), QVariantList() << QVariant::fromValue(o->someTypeObject()));
+
+    o->reset();
+    QVERIFY(EVALUATE_VALUE("object.method_component('qrc:/somewhere/else')",
+                           QV4::Primitive::undefinedValue()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 44);
+    QCOMPARE(o->actuals(), QVariantList() << QVariant::fromValue(QUrl("qrc:/somewhere/else")));
 }
 
 void tst_qqmlecmascript::resolveClashingProperties()

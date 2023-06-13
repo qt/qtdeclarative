@@ -31,7 +31,7 @@ class Q_LABSQMLMODELS_PRIVATE_EXPORT QQmlTableModelColumn : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QJSValue display READ display WRITE setDisplay NOTIFY displayChanged FINAL)
-    Q_PROPERTY(QJSValue setDisplay READ getSetDisplay WRITE setSetDisplay NOTIFY setDisplayChanged)
+    Q_PROPERTY(QJSValue setDisplay READ getSetDisplay WRITE setSetDisplay NOTIFY setDisplayChanged FINAL)
     Q_PROPERTY(QJSValue decoration READ decoration WRITE setDecoration NOTIFY decorationChanged FINAL)
     Q_PROPERTY(QJSValue setDecoration READ getSetDecoration WRITE setSetDecoration NOTIFY setDecorationChanged FINAL)
     Q_PROPERTY(QJSValue edit READ edit WRITE setEdit NOTIFY editChanged FINAL)

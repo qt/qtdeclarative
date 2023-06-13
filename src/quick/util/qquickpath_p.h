@@ -55,8 +55,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathAttribute : public QQuickPathElement
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
-    Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
+    Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged FINAL)
     QML_NAMED_ELEMENT(PathAttribute)
     QML_ADDED_IN_VERSION(2, 0)
 public:
@@ -82,10 +82,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickCurve : public QQuickPathElement
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged)
-    Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged)
-    Q_PROPERTY(qreal relativeX READ relativeX WRITE setRelativeX NOTIFY relativeXChanged)
-    Q_PROPERTY(qreal relativeY READ relativeY WRITE setRelativeY NOTIFY relativeYChanged)
+    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged FINAL)
+    Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged FINAL)
+    Q_PROPERTY(qreal relativeX READ relativeX WRITE setRelativeX NOTIFY relativeXChanged FINAL)
+    Q_PROPERTY(qreal relativeY READ relativeY WRITE setRelativeY NOTIFY relativeYChanged FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 public:
@@ -148,10 +148,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathQuad : public QQuickCurve
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal controlX READ controlX WRITE setControlX NOTIFY controlXChanged)
-    Q_PROPERTY(qreal controlY READ controlY WRITE setControlY NOTIFY controlYChanged)
-    Q_PROPERTY(qreal relativeControlX READ relativeControlX WRITE setRelativeControlX NOTIFY relativeControlXChanged)
-    Q_PROPERTY(qreal relativeControlY READ relativeControlY WRITE setRelativeControlY NOTIFY relativeControlYChanged)
+    Q_PROPERTY(qreal controlX READ controlX WRITE setControlX NOTIFY controlXChanged FINAL)
+    Q_PROPERTY(qreal controlY READ controlY WRITE setControlY NOTIFY controlYChanged FINAL)
+    Q_PROPERTY(qreal relativeControlX READ relativeControlX WRITE setRelativeControlX NOTIFY relativeControlXChanged FINAL)
+    Q_PROPERTY(qreal relativeControlY READ relativeControlY WRITE setRelativeControlY NOTIFY relativeControlYChanged FINAL)
 
     QML_NAMED_ELEMENT(PathQuad)
     QML_ADDED_IN_VERSION(2, 0)
@@ -191,14 +191,14 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathCubic : public QQuickCurve
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal control1X READ control1X WRITE setControl1X NOTIFY control1XChanged)
-    Q_PROPERTY(qreal control1Y READ control1Y WRITE setControl1Y NOTIFY control1YChanged)
-    Q_PROPERTY(qreal control2X READ control2X WRITE setControl2X NOTIFY control2XChanged)
-    Q_PROPERTY(qreal control2Y READ control2Y WRITE setControl2Y NOTIFY control2YChanged)
-    Q_PROPERTY(qreal relativeControl1X READ relativeControl1X WRITE setRelativeControl1X NOTIFY relativeControl1XChanged)
-    Q_PROPERTY(qreal relativeControl1Y READ relativeControl1Y WRITE setRelativeControl1Y NOTIFY relativeControl1YChanged)
-    Q_PROPERTY(qreal relativeControl2X READ relativeControl2X WRITE setRelativeControl2X NOTIFY relativeControl2XChanged)
-    Q_PROPERTY(qreal relativeControl2Y READ relativeControl2Y WRITE setRelativeControl2Y NOTIFY relativeControl2YChanged)
+    Q_PROPERTY(qreal control1X READ control1X WRITE setControl1X NOTIFY control1XChanged FINAL)
+    Q_PROPERTY(qreal control1Y READ control1Y WRITE setControl1Y NOTIFY control1YChanged FINAL)
+    Q_PROPERTY(qreal control2X READ control2X WRITE setControl2X NOTIFY control2XChanged FINAL)
+    Q_PROPERTY(qreal control2Y READ control2Y WRITE setControl2Y NOTIFY control2YChanged FINAL)
+    Q_PROPERTY(qreal relativeControl1X READ relativeControl1X WRITE setRelativeControl1X NOTIFY relativeControl1XChanged FINAL)
+    Q_PROPERTY(qreal relativeControl1Y READ relativeControl1Y WRITE setRelativeControl1Y NOTIFY relativeControl1YChanged FINAL)
+    Q_PROPERTY(qreal relativeControl2X READ relativeControl2X WRITE setRelativeControl2X NOTIFY relativeControl2XChanged FINAL)
+    Q_PROPERTY(qreal relativeControl2Y READ relativeControl2Y WRITE setRelativeControl2Y NOTIFY relativeControl2YChanged FINAL)
     QML_NAMED_ELEMENT(PathCubic)
     QML_ADDED_IN_VERSION(2, 0)
 public:
@@ -269,11 +269,11 @@ public:
 class Q_QUICK_PRIVATE_EXPORT QQuickPathArc : public QQuickCurve
 {
     Q_OBJECT
-    Q_PROPERTY(qreal radiusX READ radiusX WRITE setRadiusX NOTIFY radiusXChanged)
-    Q_PROPERTY(qreal radiusY READ radiusY WRITE setRadiusY NOTIFY radiusYChanged)
-    Q_PROPERTY(bool useLargeArc READ useLargeArc WRITE setUseLargeArc NOTIFY useLargeArcChanged)
-    Q_PROPERTY(ArcDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
-    Q_PROPERTY(qreal xAxisRotation READ xAxisRotation WRITE setXAxisRotation NOTIFY xAxisRotationChanged REVISION(2, 9))
+    Q_PROPERTY(qreal radiusX READ radiusX WRITE setRadiusX NOTIFY radiusXChanged FINAL)
+    Q_PROPERTY(qreal radiusY READ radiusY WRITE setRadiusY NOTIFY radiusYChanged FINAL)
+    Q_PROPERTY(bool useLargeArc READ useLargeArc WRITE setUseLargeArc NOTIFY useLargeArcChanged FINAL)
+    Q_PROPERTY(ArcDirection direction READ direction WRITE setDirection NOTIFY directionChanged FINAL)
+    Q_PROPERTY(qreal xAxisRotation READ xAxisRotation WRITE setXAxisRotation NOTIFY xAxisRotationChanged REVISION(2, 9) FINAL)
     QML_NAMED_ELEMENT(PathArc)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -319,13 +319,13 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickPathAngleArc : public QQuickCurve
 {
     Q_OBJECT
-    Q_PROPERTY(qreal centerX READ centerX WRITE setCenterX NOTIFY centerXChanged)
-    Q_PROPERTY(qreal centerY READ centerY WRITE setCenterY NOTIFY centerYChanged)
-    Q_PROPERTY(qreal radiusX READ radiusX WRITE setRadiusX NOTIFY radiusXChanged)
-    Q_PROPERTY(qreal radiusY READ radiusY WRITE setRadiusY NOTIFY radiusYChanged)
-    Q_PROPERTY(qreal startAngle READ startAngle WRITE setStartAngle NOTIFY startAngleChanged)
-    Q_PROPERTY(qreal sweepAngle READ sweepAngle WRITE setSweepAngle NOTIFY sweepAngleChanged)
-    Q_PROPERTY(bool moveToStart READ moveToStart WRITE setMoveToStart NOTIFY moveToStartChanged)
+    Q_PROPERTY(qreal centerX READ centerX WRITE setCenterX NOTIFY centerXChanged FINAL)
+    Q_PROPERTY(qreal centerY READ centerY WRITE setCenterY NOTIFY centerYChanged FINAL)
+    Q_PROPERTY(qreal radiusX READ radiusX WRITE setRadiusX NOTIFY radiusXChanged FINAL)
+    Q_PROPERTY(qreal radiusY READ radiusY WRITE setRadiusY NOTIFY radiusYChanged FINAL)
+    Q_PROPERTY(qreal startAngle READ startAngle WRITE setStartAngle NOTIFY startAngleChanged FINAL)
+    Q_PROPERTY(qreal sweepAngle READ sweepAngle WRITE setSweepAngle NOTIFY sweepAngleChanged FINAL)
+    Q_PROPERTY(bool moveToStart READ moveToStart WRITE setMoveToStart NOTIFY moveToStartChanged FINAL)
 
     QML_NAMED_ELEMENT(PathAngleArc)
     QML_ADDED_IN_VERSION(2, 11)
@@ -379,7 +379,7 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickPathSvg : public QQuickCurve
 {
     Q_OBJECT
-    Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged)
+    Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged FINAL)
     QML_NAMED_ELEMENT(PathSvg)
     QML_ADDED_IN_VERSION(2, 0)
 public:
@@ -400,7 +400,7 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickPathPercent : public QQuickPathElement
 {
     Q_OBJECT
-    Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged)
+    Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged FINAL)
     QML_NAMED_ELEMENT(PathPercent)
     QML_ADDED_IN_VERSION(2, 0)
 public:
@@ -419,8 +419,8 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickPathPolyline : public QQuickCurve
 {
     Q_OBJECT
-    Q_PROPERTY(QPointF start READ start NOTIFY startChanged)
-    Q_PROPERTY(QVariant path READ path WRITE setPath NOTIFY pathChanged)
+    Q_PROPERTY(QPointF start READ start NOTIFY startChanged FINAL)
+    Q_PROPERTY(QVariant path READ path WRITE setPath NOTIFY pathChanged FINAL)
     QML_NAMED_ELEMENT(PathPolyline)
     QML_ADDED_IN_VERSION(2, 14)
 public:
@@ -443,8 +443,8 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickPathMultiline : public QQuickCurve
 {
     Q_OBJECT
-    Q_PROPERTY(QPointF start READ start NOTIFY startChanged)
-    Q_PROPERTY(QVariant paths READ paths WRITE setPaths NOTIFY pathsChanged)
+    Q_PROPERTY(QPointF start READ start NOTIFY startChanged FINAL)
+    Q_PROPERTY(QVariant paths READ paths WRITE setPaths NOTIFY pathsChanged FINAL)
     QML_NAMED_ELEMENT(PathMultiline)
     QML_ADDED_IN_VERSION(2, 14)
 public:
@@ -483,10 +483,11 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPath : public QObject, public QQmlParserStatu
     Q_OBJECT
 
     Q_INTERFACES(QQmlParserStatus)
-    Q_PROPERTY(QQmlListProperty<QQuickPathElement> pathElements READ pathElements)
-    Q_PROPERTY(qreal startX READ startX WRITE setStartX NOTIFY startXChanged)
-    Q_PROPERTY(qreal startY READ startY WRITE setStartY NOTIFY startYChanged)
-    Q_PROPERTY(bool closed READ isClosed NOTIFY changed)
+    Q_PROPERTY(QQmlListProperty<QQuickPathElement> pathElements READ pathElements FINAL)
+    Q_PROPERTY(qreal startX READ startX WRITE setStartX NOTIFY startXChanged FINAL)
+    Q_PROPERTY(qreal startY READ startY WRITE setStartY NOTIFY startYChanged FINAL)
+    Q_PROPERTY(bool closed READ isClosed NOTIFY changed FINAL)
+    Q_PROPERTY(bool simplified READ simplified WRITE setSimplified NOTIFY simplifiedChanged REVISION(6, 6) FINAL)
     Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged REVISION(2, 14))
     Q_CLASSINFO("DefaultProperty", "pathElements")
     QML_NAMED_ELEMENT(Path)
@@ -517,10 +518,14 @@ public:
     QSizeF scale() const;
     void setScale(const QSizeF &scale);
 
+    bool simplified() const;
+    void setSimplified(bool simplified);
+
 Q_SIGNALS:
     void changed();
     void startXChanged();
     void startYChanged();
+    Q_REVISION(6, 6) void simplifiedChanged();
     Q_REVISION(2, 14) void scaleChanged();
 
 protected:
@@ -577,12 +582,12 @@ public:
 class Q_QUICK_PRIVATE_EXPORT QQuickPathText : public QQuickPathElement
 {
     Q_OBJECT
-    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged)
-    Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged)
-    Q_PROPERTY(qreal width READ width NOTIFY changed)
-    Q_PROPERTY(qreal height READ height NOTIFY changed)
-    Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
-    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
+    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged FINAL)
+    Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged FINAL)
+    Q_PROPERTY(qreal width READ width NOTIFY changed FINAL)
+    Q_PROPERTY(qreal height READ height NOTIFY changed FINAL)
+    Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
+    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
     QML_NAMED_ELEMENT(PathText)
     QML_ADDED_IN_VERSION(2, 15)
 public:

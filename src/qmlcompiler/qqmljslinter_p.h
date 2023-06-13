@@ -65,7 +65,7 @@ public:
         const QString &description() const { return m_description; }
         const QString &version() const { return m_version; }
         const QString &author() const { return m_author; }
-        const QList<QQmlJSLogger::Category> categories() const
+        const QList<QQmlJS::LoggerCategory> categories() const
         {
             return m_categories;
         }
@@ -95,7 +95,7 @@ public:
         QString m_version;
         QString m_author;
 
-        QList<QQmlJSLogger::Category> m_categories;
+        QList<QQmlJS::LoggerCategory> m_categories;
         QQmlSA::LintPlugin *m_instance;
         std::unique_ptr<QPluginLoader> m_loader;
         bool m_isBuiltin;
@@ -111,7 +111,7 @@ public:
     LintResult lintFile(const QString &filename, const QString *fileContents, const bool silent,
                         QJsonArray *json, const QStringList &qmlImportPaths,
                         const QStringList &qmldirFiles, const QStringList &resourceFiles,
-                        const QList<QQmlJSLogger::Category> &categories);
+                        const QList<QQmlJS::LoggerCategory> &categories);
 
     LintResult lintModule(const QString &uri, const bool silent, QJsonArray *json,
                           const QStringList &qmlImportPaths, const QStringList &resourceFiles);

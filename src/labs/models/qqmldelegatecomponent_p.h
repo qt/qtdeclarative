@@ -28,11 +28,11 @@ QT_BEGIN_NAMESPACE
 class Q_LABSQMLMODELS_PRIVATE_EXPORT QQmlDelegateChoice : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QVariant roleValue READ roleValue WRITE setRoleValue NOTIFY roleValueChanged)
-    Q_PROPERTY(int row READ row WRITE setRow NOTIFY rowChanged)
-    Q_PROPERTY(int index READ row WRITE setRow NOTIFY indexChanged)
-    Q_PROPERTY(int column READ column WRITE setColumn NOTIFY columnChanged)
-    Q_PROPERTY(QQmlComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    Q_PROPERTY(QVariant roleValue READ roleValue WRITE setRoleValue NOTIFY roleValueChanged FINAL)
+    Q_PROPERTY(int row READ row WRITE setRow NOTIFY rowChanged FINAL)
+    Q_PROPERTY(int index READ row WRITE setRow NOTIFY indexChanged FINAL)
+    Q_PROPERTY(int column READ column WRITE setColumn NOTIFY columnChanged FINAL)
+    Q_PROPERTY(QQmlComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "delegate")
     QML_NAMED_ELEMENT(DelegateChoice)
     QML_ADDED_IN_VERSION(1, 0)
@@ -70,8 +70,8 @@ private:
 class Q_LABSQMLMODELS_PRIVATE_EXPORT QQmlDelegateChooser : public QQmlAbstractDelegateComponent
 {
     Q_OBJECT
-    Q_PROPERTY(QString role READ role WRITE setRole NOTIFY roleChanged)
-    Q_PROPERTY(QQmlListProperty<QQmlDelegateChoice> choices READ choices CONSTANT)
+    Q_PROPERTY(QString role READ role WRITE setRole NOTIFY roleChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<QQmlDelegateChoice> choices READ choices CONSTANT FINAL)
     Q_CLASSINFO("DefaultProperty", "choices")
     QML_NAMED_ELEMENT(DelegateChooser)
     QML_ADDED_IN_VERSION(1, 0)

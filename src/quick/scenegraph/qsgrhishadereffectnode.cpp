@@ -7,7 +7,7 @@
 #include <qsgmaterialshader.h>
 #include <qsgtextureprovider.h>
 #include <private/qsgplaintexture_p.h>
-#include <QtGui/private/qshaderdescription_p.h>
+#include <rhi/qshaderdescription.h>
 #include <QQmlFile>
 #include <QFile>
 #include <QFileSelector>

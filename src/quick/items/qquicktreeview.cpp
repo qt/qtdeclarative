@@ -91,6 +91,16 @@
 */
 
 /*!
+    \qmlproperty QModelIndex QtQuick::TreeView::rootIndex
+    \since 6.6
+
+    This property holds the model index of the root item in the tree.
+    By default, this is the same as the root index in the model, but you can
+    set it to be a child index instead, to show only a branch of the tree.
+    Set it to \c undefined to show the whole model.
+*/
+
+/*!
     \qmlmethod int QtQuick::TreeView::depth(row)
 
     Returns the depth (the number of parents up to the root) of the given \a row.
@@ -403,6 +413,8 @@ QQuickTreeView::QQuickTreeView(QQuickItem *parent)
     d->QQuickTableViewPrivate::setModelImpl(modelAsVariant);
     QObjectPrivate::connect(&d->m_treeModelToTableModel, &QAbstractItemModel::dataChanged,
                             d, &QQuickTreeViewPrivate::dataChangedCallback);
+    QObject::connect(&d->m_treeModelToTableModel, &QQmlTreeModelToTableModel::rootIndexChanged,
+                     this, &QQuickTreeView::rootIndexChanged);
 
     auto tapHandler = new QQuickTapHandler(this);
     tapHandler->setAcceptedModifiers(Qt::NoModifier);
@@ -419,6 +431,25 @@ QQuickTreeView::QQuickTreeView(QQuickItem *parent)
 
 QQuickTreeView::~QQuickTreeView()
 {
+}
+
+QModelIndex QQuickTreeView::rootIndex() const
+{
+    return d_func()->m_treeModelToTableModel.rootIndex();
+}
+
+void QQuickTreeView::setRootIndex(const QModelIndex &index)
+{
+    Q_D(QQuickTreeView);
+    d->m_treeModelToTableModel.setRootIndex(index);
+    positionViewAtCell({0, 0}, QQuickTableView::AlignTop | QQuickTableView::AlignLeft);
+}
+
+void QQuickTreeView::resetRootIndex()
+{
+    Q_D(QQuickTreeView);
+    d->m_treeModelToTableModel.resetRootIndex();
+    positionViewAtCell({0, 0}, QQuickTableView::AlignTop | QQuickTableView::AlignLeft);
 }
 
 int QQuickTreeView::depth(int row) const

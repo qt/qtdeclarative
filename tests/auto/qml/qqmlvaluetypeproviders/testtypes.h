@@ -33,6 +33,7 @@ struct ConstructibleValueType
 public:
     ConstructibleValueType() = default;
     Q_INVOKABLE ConstructibleValueType(int foo) : m_foo(foo) {}
+    Q_INVOKABLE ConstructibleValueType(QObject *) : m_foo(67) {}
 
     int foo() const { return m_foo; }
 
@@ -109,6 +110,35 @@ private:
     QList<QSizeF> m_sizes = { QSizeF(1, 1), QSizeF(2, 2) };
 };
 
+struct BarrenValueType
+{
+    Q_GADGET
+    Q_PROPERTY(int i READ i WRITE setI)
+
+public:
+    BarrenValueType() = default;
+    Q_INVOKABLE BarrenValueType(const QString &) : m_i(25) {}
+
+    int i() const { return m_i; }
+    void setI(int newI) { m_i = newI; }
+
+private:
+    friend bool operator==(const BarrenValueType &a, const BarrenValueType &b)
+    {
+        return a.m_i == b.m_i;
+    }
+
+    int m_i = 0;
+};
+
+struct ForeignAnonymousStructuredValueType
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(BarrenValueType)
+    QML_STRUCTURED_VALUE
+};
+
 class MyTypeObject : public QObject
 {
     Q_OBJECT
@@ -133,6 +163,7 @@ class MyTypeObject : public QObject
     Q_PROPERTY(QVariant variant READ variant NOTIFY changed)
     Q_PROPERTY(ConstructibleValueType constructible READ constructible WRITE setConstructible NOTIFY constructibleChanged)
     Q_PROPERTY(StructuredValueType structured READ structured WRITE setStructured NOTIFY structuredChanged)
+    Q_PROPERTY(BarrenValueType barren READ barren WRITE setBarren NOTIFY barrenChanged)
 
     Q_PROPERTY(QDateTime aDateTime READ aDateTime WRITE setADateTime NOTIFY aDateTimeChanged)
     Q_PROPERTY(QDate aDate READ aDate WRITE setADate NOTIFY aDateChanged)
@@ -307,6 +338,24 @@ public:
         emit aVariantChanged();
     }
 
+    BarrenValueType barren() const
+    {
+        return m_barren;
+    }
+
+    void setBarren(const BarrenValueType &newBarren)
+    {
+        if (m_barren == newBarren)
+            return;
+        m_barren = newBarren;
+        emit barrenChanged();
+    }
+
+    Q_INVOKABLE void acceptConstructible(const ConstructibleValueType &a)
+    {
+        setAVariant(QVariant::fromValue(a));
+    }
+
 signals:
     void changed();
     void runScript();
@@ -319,6 +368,8 @@ signals:
     void aTimeChanged();
     void aVariantChanged();
 
+    void barrenChanged();
+
 public slots:
     QSize method() { return QSize(13, 14); }
 private:
@@ -329,6 +380,7 @@ private:
     QDate m_aDate;
     QTime m_aTime;
     QVariant m_aVariant;
+    BarrenValueType m_barren;
 };
 
 class Padding

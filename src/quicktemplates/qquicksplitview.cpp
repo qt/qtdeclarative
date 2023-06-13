@@ -1129,13 +1129,19 @@ void QQuickSplitView::setOrientation(Qt::Orientation orientation)
         return;
 
     d->m_orientation = orientation;
-    d->resizeHandles();
+
 #if QT_CONFIG(cursor)
     for (QQuickItem *handleItem : d->m_handleItems)
         d->updateCursorHandle(handleItem);
 #endif
-    d->requestLayout();
     emit orientationChanged();
+
+    // Do this after emitting orientationChanged so that the bindings in QML
+    // update the implicit size in time.
+    d->resizeHandles();
+    // This is queued (via polish) anyway, but to make our intentions clear,
+    // do it afterwards too.
+    d->requestLayout();
 }
 
 /*!

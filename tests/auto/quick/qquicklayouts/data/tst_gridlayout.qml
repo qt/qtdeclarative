@@ -4,6 +4,7 @@
 import QtQuick 2.6
 import QtTest 1.0
 import QtQuick.Layouts 1.1
+import "LayoutHelperLibrary.js" as LayoutHelpers
 
 Item {
     id: container
@@ -1255,5 +1256,126 @@ Item {
             }
             verify(layout.implicitHeight > initialImplicitHeight)
         }
+
+        function test_uniformCellSizes_data()
+        {
+            return [
+                {
+                  tag: "hor 9/3",
+                  layout: {
+                    type: "GridLayout",
+                    columns: 3,
+                    items: [
+                        {minimumWidth:  1, preferredWidth: 10, maximumWidth: 20, fillWidth: true},
+                        {minimumWidth:  1, preferredWidth:  4, maximumWidth: 10, fillWidth: true},
+                        {minimumWidth:  1, preferredWidth: 50, maximumWidth: 99, fillWidth: true}
+                    ]
+                  },
+                  layoutWidth:     9,
+                  expectedWidths: [3, 3, 3],
+                  expectedPositions: [0, 3, 6]
+                },
+                {
+                  tag: "hor 30/3",
+                  layout: {
+                    type: "GridLayout",
+                    columns: 3,
+                    items: [
+                        {minimumWidth:  1, preferredWidth: 10, maximumWidth: 20, fillWidth: true},
+                        {minimumWidth:  1, preferredWidth:  4, maximumWidth: 10, fillWidth: true},
+                        {minimumWidth:  1, preferredWidth: 50, maximumWidth: 99, fillWidth: true}
+                    ]
+                  },
+                  layoutWidth:     30,
+                  expectedWidths: [10, 10, 10]
+                },
+                {
+                  tag: "hor 60/3",
+                  layout: {
+                    type: "GridLayout",
+                    columns: 3,
+                    items: [
+                        {minimumWidth:  1, preferredWidth: 10, maximumWidth: 20, fillWidth: true},
+                        {minimumWidth:  1, preferredWidth:  4, maximumWidth: 10, fillWidth: true},
+                        {minimumWidth:  1, preferredWidth: 50, maximumWidth: 99, fillWidth: true}
+                    ]
+                  },
+                  layoutWidth:     60,
+                  expectedWidths: [20, 10, 20],     // We are beyond the maximumWidth. of the middle item,
+                  expectedPositions: [0, 20, 40]    // check that *cellSize* is still uniform
+                                                    // (middle item will be left-aligned in the cell by default)
+                },
+                {
+                  tag: "hor 66/3",
+                  layout: {
+                    type: "GridLayout",
+                    columns: 3,
+                    items: [
+                        {minimumWidth:  1, preferredWidth: 10, maximumWidth: 20, fillWidth: true},
+                        {minimumWidth:  1, preferredWidth:  4, maximumWidth: 10, fillWidth: true},
+                        {minimumWidth:  1, preferredWidth: 50, maximumWidth: 99, fillWidth: true}
+                    ]
+                  },
+                  layoutWidth:     66,
+                  expectedWidths: [20, 10, 22],
+                  expectedPositions: [0, 22, 44]
+                },
+                {
+                  tag: "ver 66/3",
+                  layout: {
+                    type: "GridLayout",
+                    columns: 1,
+                    items: [
+                        {minimumHeight:  1, preferredHeight: 10, maximumHeight: 20, fillHeight: true},
+                        {minimumHeight:  1, preferredHeight:  4, maximumHeight: 10, fillHeight: true},
+                        {minimumHeight:  1, preferredHeight: 50, maximumHeight: 99, fillHeight: true}
+                    ]
+                  },
+                  layoutHeight:     66,
+                  expectedHeights: [20, 10, 22],
+                    // If items are too small to fit the cell, they have a default alignment of
+                    // Qt::AlignLeft | Qt::AlignVCenter
+                  expectedPositions: [1, 22+6, 44]
+                }
+            ];
+        }
+
+        function test_uniformCellSizes(data)
+        {
+            let layout = LayoutHelpers.buildLayout(data.layout, testCase)
+            let isHorizontal = data.hasOwnProperty("expectedWidths")
+            layout.rowSpacing = 0
+            layout.columnSpacing = 0
+            layout.uniformCellWidths = true
+            layout.uniformCellHeights = true
+            waitForPolish(layout)
+            if (data.hasOwnProperty('layoutWidth')) {
+                layout.width = data.layoutWidth
+            }
+            if (data.hasOwnProperty('layoutHeight')) {
+                layout.height = data.layoutHeight
+            }
+
+            let expectedSizes = isHorizontal ? data.expectedWidths : data.expectedHeights
+            let actualSizes = []
+            let i = 0
+            for (i = 0; i < layout.children.length; i++) {
+                let item = layout.children[i]
+                actualSizes.push(isHorizontal ? item.width : item.height)
+            }
+            compare(actualSizes, expectedSizes)
+
+            if (data.hasOwnProperty('expectedPositions')) {
+                let actualPositions = []
+                // If items are too small to fit the cell, they have a default alignment of
+                // Qt::AlignLeft | Qt::AlignVCenter
+                for (i = 0; i < layout.children.length; i++) {
+                    let item = layout.children[i]
+                    actualPositions.push(isHorizontal ? item.x : item.y)
+                }
+                compare(actualPositions, data.expectedPositions)
+            }
+        }
+
     }
 }

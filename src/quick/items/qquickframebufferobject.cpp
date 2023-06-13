@@ -8,7 +8,7 @@
 #include <private/qquickitem_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <qsgtextureprovider.h>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 #include <QSGSimpleTextureNode>
 #include <QSGRendererInterface>

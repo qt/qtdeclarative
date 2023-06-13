@@ -27,11 +27,11 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnimator : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnimator)
-    Q_PROPERTY(QQuickItem *target READ targetItem WRITE setTargetItem NOTIFY targetItemChanged)
-    Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged)
-    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
-    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged)
-    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged)
+    Q_PROPERTY(QQuickItem *target READ targetItem WRITE setTargetItem NOTIFY targetItemChanged FINAL)
+    Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged FINAL)
+    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged FINAL)
+    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged FINAL)
+    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
 
     QML_NAMED_ELEMENT(Animator)
     QML_ADDED_IN_VERSION(2, 2)
@@ -126,7 +126,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimator : public QQuickAnimator
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickRotationAnimator)
-    Q_PROPERTY(RotationDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
+    Q_PROPERTY(RotationDirection direction READ direction WRITE setDirection NOTIFY directionChanged FINAL)
     QML_NAMED_ELEMENT(RotationAnimator)
     QML_ADDED_IN_VERSION(2, 2)
 
@@ -153,7 +153,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimator : public QQuickAnimator
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickUniformAnimator)
-    Q_PROPERTY(QString uniform READ uniform WRITE setUniform NOTIFY uniformChanged)
+    Q_PROPERTY(QString uniform READ uniform WRITE setUniform NOTIFY uniformChanged FINAL)
     QML_NAMED_ELEMENT(UniformAnimator)
     QML_ADDED_IN_VERSION(2, 2)
 

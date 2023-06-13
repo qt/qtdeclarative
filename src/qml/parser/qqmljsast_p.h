@@ -328,7 +328,11 @@ public:
     { return identifierToken; }
 
     SourceLocation lastSourceLocation() const override
-    { return lastListElement(this)->identifierToken; }
+    {
+        return lastListElement(this)->lastOwnSourceLocation();
+    }
+
+    SourceLocation lastOwnSourceLocation() const { return identifierToken; }
 
     QString toString() const
     {
@@ -840,9 +844,11 @@ struct QML_PARSER_EXPORT BoundName
     };
 
     QString id;
+    QQmlJS::SourceLocation location;
     QTaggedPointer<TypeAnnotation, Type> typeAnnotation;
-    BoundName(const QString &id, TypeAnnotation *typeAnnotation, Type type = Declared)
-        : id(id), typeAnnotation(typeAnnotation, type)
+    BoundName(const QString &id, const QQmlJS::SourceLocation &location,
+              TypeAnnotation *typeAnnotation, Type type = Declared)
+        : id(id), location(location), typeAnnotation(typeAnnotation, type)
     {}
     BoundName() = default;
 
@@ -3330,7 +3336,12 @@ public:
     SourceLocation lastSourceLocation() const override
     {
         auto last = lastListElement(this);
-        return (last->colonToken.isValid() ? last->propertyTypeToken : last->identifierToken);
+        return last->lastOwnSourceLocation();
+    }
+
+    SourceLocation lastOwnSourceLocation() const
+    {
+        return (colonToken.isValid() ? propertyTypeToken : identifierToken);
     }
 
     inline UiParameterList *finish ()

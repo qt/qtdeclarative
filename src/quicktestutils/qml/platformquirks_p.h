@@ -17,7 +17,7 @@
 
 #include <private/qglobal_p.h>
 
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
 #include <Carbon/Carbon.h>
 #endif
 
@@ -29,7 +29,7 @@ struct PlatformQuirks
     {
 #if !QT_CONFIG(clipboard)
         return false;
-#elif defined(Q_OS_OSX)
+#elif defined(Q_OS_MACOS)
         PasteboardRef pasteboard;
         OSStatus status = PasteboardCreate(0, &pasteboard);
         if (status == noErr)

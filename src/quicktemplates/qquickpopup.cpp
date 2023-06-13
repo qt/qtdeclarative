@@ -371,7 +371,7 @@ bool QQuickPopupPrivate::blockInput(QQuickItem *item, const QPointF &point) cons
     // a) outside a non-modal popup,
     // b) to popup children/content, or
     // b) outside a modal popups's background dimming
-    return modal && !popupItem->isAncestorOf(item) && (!dimmer || dimmer->contains(dimmer->mapFromScene(point)));
+    return modal && ((popupItem != item) && !popupItem->isAncestorOf(item)) && (!dimmer || dimmer->contains(dimmer->mapFromScene(point)));
 }
 
 bool QQuickPopupPrivate::handlePress(QQuickItem *item, const QPointF &point, ulong timestamp)
@@ -520,6 +520,10 @@ bool QQuickPopupPrivate::prepareEnterTransition()
         getPositioner()->setParentItem(parentItem);
         emit q->visibleChanged();
 
+        auto *overlayPrivate = QQuickOverlayPrivate::get(overlay);
+        if (overlayPrivate->lastActiveFocusItem.isNull())
+            overlayPrivate->lastActiveFocusItem = window->activeFocusItem();
+
         if (focus)
             popupItem->setFocus(true, Qt::PopupFocusReason);
     }
@@ -587,11 +591,17 @@ void QQuickPopupPrivate::finalizeExitTransition()
         if (nextFocusPopup) {
             nextFocusPopup->forceActiveFocus(Qt::PopupFocusReason);
         } else {
-            QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
-            if (applicationWindow)
-                applicationWindow->contentItem()->setFocus(true, Qt::PopupFocusReason);
-            else
-                window->contentItem()->setFocus(true, Qt::PopupFocusReason);
+            auto *appWindow = qobject_cast<QQuickApplicationWindow*>(window);
+            auto *contentItem = appWindow ? appWindow->contentItem() : window->contentItem();
+            auto *overlay = QQuickOverlay::overlay(window);
+            auto *overlayPrivate = QQuickOverlayPrivate::get(overlay);
+            if (!contentItem->scopedFocusItem()
+                && !overlayPrivate->lastActiveFocusItem.isNull()) {
+                overlayPrivate->lastActiveFocusItem->setFocus(true, Qt::OtherFocusReason);
+            } else {
+                contentItem->setFocus(true, Qt::PopupFocusReason);
+            }
+            overlayPrivate->lastActiveFocusItem = nullptr;
         }
     }
 
@@ -940,6 +950,13 @@ QQuickPopup::~QQuickPopup()
 {
     Q_D(QQuickPopup);
     d->inDestructor = true;
+
+    QQuickItem *currentContentItem = d->popupItem->d_func()->contentItem.data();
+    if (currentContentItem) {
+        disconnect(currentContentItem, &QQuickItem::childrenChanged,
+                   this, &QQuickPopup::contentChildrenChanged);
+    }
+
     setParentItem(nullptr);
 
     // If the popup is destroyed before the exit transition finishes,
@@ -1792,7 +1809,17 @@ void QQuickPopup::setContentItem(QQuickItem *item)
     Q_D(QQuickPopup);
     // See comment in setBackground for why we do this.
     QQuickControlPrivate::warnIfCustomizationNotSupported(this, item, QStringLiteral("background"));
+    QQuickItem *oldContentItem = d->complete ? d->popupItem->d_func()->contentItem.data()
+                                             : nullptr;
+    if (oldContentItem)
+        disconnect(oldContentItem, &QQuickItem::childrenChanged, this, &QQuickPopup::contentChildrenChanged);
     d->popupItem->setContentItem(item);
+    if (d->complete) {
+        QQuickItem *newContentItem = d->popupItem->d_func()->contentItem.data();
+        connect(newContentItem, &QQuickItem::childrenChanged, this, &QQuickPopup::contentChildrenChanged);
+        if (oldContentItem != newContentItem)
+            emit contentChildrenChanged();
+    }
 }
 
 /*!
@@ -2545,6 +2572,11 @@ void QQuickPopup::componentComplete()
 
     d->complete = true;
     d->popupItem->componentComplete();
+
+    if (auto currentContentItem = d->popupItem->d_func()->contentItem.data()) {
+        connect(currentContentItem, &QQuickItem::childrenChanged,
+            this, &QQuickPopup::contentChildrenChanged);
+    }
 }
 
 bool QQuickPopup::isComponentComplete() const

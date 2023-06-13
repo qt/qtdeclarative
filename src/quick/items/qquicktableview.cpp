@@ -687,7 +687,7 @@
     \qmlproperty enumeration QtQuick::TableView::selectionBehavior
     \since 6.4
 
-    This property holds whether the user can select single cells, rows or columns.
+    This property holds whether the user can select cells, rows or columns.
 
     \list
     \li TableView.SelectionDisabled - the user cannot perform selections.
@@ -696,7 +696,33 @@
     \li TableView.SelectColumns - the user can only select columns.
     \endlist
 
-    \sa {Selecting items}, selectionModel, keyNavigationEnabled
+    \sa {Selecting items}, selectionMode, selectionModel, keyNavigationEnabled
+*/
+
+/*!
+    \qmlproperty enumeration QtQuick::TableView::selectionMode
+    \since 6.6
+
+    If \l selectionBehavior is set to \l {TableView.SelectCells}, this property holds
+    whether the user can select one cell at a time, or multiple cells.
+    If \l selectionBehavior is set to \l {TableView.SelectRows}, this property holds
+    whether the user can select one row at a time, or multiple rows.
+    If \l selectionBehavior is set to \l {TableView.SelectColumns}, this property holds
+    whether the user can select one column at a time, or multiple columns.
+
+    The following modes are available:
+    \list
+    \li TableView.SingleSelection - the user can select a single cell, row or column.
+    \li TableView.ContiguousSelection - the user can select a single contiguous block of cells.
+        An existing selection can be made bigger or smaller by holding down the \c Shift
+        modifier while selecting.
+    \li TableView.ExtendedSelection (default) - the user can select multiple individual
+        blocks of cells. An existing selection can be made bigger or smaller by holding
+        down the \c Shift modifier while selecting. A new selection block can be started without
+        clearing the current selection by holding down the \c Control modifier while selecting.
+    \endlist
+
+    \sa {Selecting items}, selectionBehavior, selectionModel, keyNavigationEnabled
 */
 
 /*!
@@ -1595,6 +1621,11 @@ bool QQuickTableViewPrivate::startSelection(const QPointF &pos)
     if (resizeHandler->state() != QQuickTableViewResizeHandler::Listening)
         return false;
 
+    // For SingleSelection and ContiguousSelection, we should only allow one selection at a time
+    if (selectionMode == QQuickTableView::SingleSelection
+            || selectionMode == QQuickTableView::ContiguousSelection)
+        clearSelection();
+
     selectionStartCell = QPoint(-1, -1);
     selectionEndCell = QPoint(-1, -1);
     q->closeEditor();
@@ -1614,6 +1645,11 @@ void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
     const QAbstractItemModel *qaim = selectionModel->model();
     if (!qaim)
         return;
+
+    if (selectionMode == QQuickTableView::SingleSelection
+            && cellIsValid(selectionStartCell)) {
+        return;
+    }
 
     const QRect prevSelection = selection();
     const QPoint clampedCell = clampedCellAtPos(pos);
@@ -1658,9 +1694,15 @@ void QQuickTableViewPrivate::setSelectionEndPos(const QPointF &pos)
         return;
 
     const QRect prevSelection = selection();
-    const QPoint clampedCell = clampedCellAtPos(pos);
-    if (!cellIsValid(clampedCell))
-        return;
+
+    QPoint clampedCell;
+    if (selectionMode == QQuickTableView::SingleSelection) {
+        clampedCell = selectionStartCell;
+    } else {
+        clampedCell = clampedCellAtPos(pos);
+        if (!cellIsValid(clampedCell))
+            return;
+    }
 
     setCurrentIndex(clampedCell);
 
@@ -2072,7 +2114,10 @@ void QQuickTableViewPrivate::updateContentWidth()
 
     if (loadedItems.isEmpty()) {
         QBoolBlocker fixupGuard(inUpdateContentSize, true);
-        q->QQuickFlickable::setContentWidth(0);
+        if (model && model->count() > 0 && tableModel && tableModel->delegate())
+            q->QQuickFlickable::setContentWidth(kDefaultColumnWidth);
+        else
+            q->QQuickFlickable::setContentWidth(0);
         return;
     }
 
@@ -2105,7 +2150,10 @@ void QQuickTableViewPrivate::updateContentHeight()
 
     if (loadedItems.isEmpty()) {
         QBoolBlocker fixupGuard(inUpdateContentSize, true);
-        q->QQuickFlickable::setContentHeight(0);
+        if (model && model->count() > 0 && tableModel && tableModel->delegate())
+            q->QQuickFlickable::setContentHeight(kDefaultRowHeight);
+        else
+            q->QQuickFlickable::setContentHeight(0);
         return;
     }
 
@@ -6413,6 +6461,21 @@ void QQuickTableView::setSelectionBehavior(SelectionBehavior selectionBehavior)
 
     d->selectionBehavior = selectionBehavior;
     emit selectionBehaviorChanged();
+}
+
+QQuickTableView::SelectionMode QQuickTableView::selectionMode() const
+{
+    return d_func()->selectionMode;
+}
+
+void QQuickTableView::setSelectionMode(SelectionMode selectionMode)
+{
+    Q_D(QQuickTableView);
+    if (d->selectionMode == selectionMode)
+        return;
+
+    d->selectionMode = selectionMode;
+    emit selectionModeChanged();
 }
 
 bool QQuickTableView::resizableColumns() const

@@ -68,7 +68,7 @@ public:
     void registerCallback(TypeDataCallback *);
     void unregisterCallback(TypeDataCallback *);
 
-    CompositeMetaTypeIds typeIds(int objectId = 0) const;
+    CompositeMetaTypeIds typeIds(const QString &inlineComponentName = QString()) const;
     QByteArray typeClassName() const { return m_typeClassName; }
     SourceCodeData backupSourceCode() const { return m_backupSourceCode; }
 
@@ -126,7 +126,7 @@ private:
 
     using ExecutableCompilationUnitPtr = QQmlRefPointer<QV4::ExecutableCompilationUnit>;
 
-    QHash<int, InlineComponentData> m_inlineComponentData;
+    QHash<QString, InlineComponentData> m_inlineComponentData;
 
     ExecutableCompilationUnitPtr m_compiledData;
 

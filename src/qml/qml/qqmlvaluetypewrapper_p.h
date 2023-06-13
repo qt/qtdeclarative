@@ -41,11 +41,12 @@ namespace Heap {
 DECLARE_HEAP_OBJECT(QQmlValueTypeWrapper, ReferenceObject) {
     DECLARE_MARKOBJECTS(QQmlValueTypeWrapper);
 
-    void init(const void *data, QQmlValueType *valueType, const QMetaObject *metaObject,
-              Object *object, int property, Flags flags)
+    void init(
+        const void *data, QMetaType metaType, const QMetaObject *metaObject,
+        Object *object, int property, Flags flags)
     {
         ReferenceObject::init(object, property, flags);
-        setValueType(valueType);
+        setMetaType(metaType);
         setMetaObject(metaObject);
         if (data)
             setData(data);
@@ -55,10 +56,10 @@ DECLARE_HEAP_OBJECT(QQmlValueTypeWrapper, ReferenceObject) {
 
     void destroy();
 
-    QQmlValueType *valueType() const
+    QMetaType metaType() const
     {
-        Q_ASSERT(m_valueType != nullptr);
-        return m_valueType;
+        Q_ASSERT(m_metaType != nullptr);
+        return QMetaType(m_metaType);
     }
 
     void setGadgetPtr(void *gadgetPtr) { m_gadgetPtr = gadgetPtr; }
@@ -77,14 +78,14 @@ DECLARE_HEAP_OBJECT(QQmlValueTypeWrapper, ReferenceObject) {
 
 private:
     void setMetaObject(const QMetaObject *metaObject) { m_metaObject = metaObject; }
-    void setValueType(QQmlValueType *valueType)
+    void setMetaType(QMetaType metaType)
     {
-        Q_ASSERT(valueType != nullptr);
-        m_valueType = valueType;
+        Q_ASSERT(metaType.isValid());
+        m_metaType = metaType.iface();
     }
 
     void *m_gadgetPtr;
-    QQmlValueType *m_valueType;
+    const QtPrivate::QMetaTypeInterface *m_metaType;
     const QMetaObject *m_metaObject;
 };
 

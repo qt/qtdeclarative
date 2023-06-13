@@ -792,7 +792,7 @@
         Key1,
         Key2,
     };
-    Q_ENUMS(MyEnum)
+    Q_ENUM(MyEnum)
   }
 
   //...

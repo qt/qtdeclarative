@@ -19,6 +19,8 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQmlCompiler/private/qqmljslinter_p.h>
+#include <QtQmlCompiler/private/qqmljstyperesolver_p.h>
+#include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
 
 Q_IMPORT_PLUGIN(QuickControlsSanityPlugin)
 
@@ -48,7 +50,7 @@ private:
     QStringList m_importPaths;
 
     QQmlJSLinter m_linter;
-    QList<QQmlJSLogger::Category> m_categories;
+    QList<QQmlJS::LoggerCategory> m_categories;
 };
 
 tst_Sanity::tst_Sanity()
@@ -65,9 +67,11 @@ tst_Sanity::tst_Sanity()
 
     for (auto &category : m_categories) {
         if (category == qmlDeferredPropertyId || category == qmlAttachedPropertyReuse) {
-            category.setLevel(u"warning"_s);
+            category.setLevel(QtWarningMsg);
+            category.setIgnored(false);
         } else {
-            category.setLevel(u"disable"_s);
+            category.setLevel(QtCriticalMsg);
+            category.setIgnored(true);
         }
     }
 }

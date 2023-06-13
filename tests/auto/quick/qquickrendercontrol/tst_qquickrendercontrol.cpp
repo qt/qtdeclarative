@@ -19,8 +19,7 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
 
-#include <QtGui/private/qrhi_p.h>
-#include <QtQuick/private/qquickrendercontrol_p.h>
+#include <rhi/qrhi.h>
 
 #if QT_CONFIG(vulkan)
 #include <QVulkanInstance>
@@ -193,13 +192,7 @@ void tst_RenderControl::renderAndReadBackWithRhi()
 
     QCOMPARE(quickWindow->rendererInterface()->graphicsApi(), api);
 
-    // What comes now is technically cheating - as long as QRhi is not a public
-    // API this is not something applications can follow doing. However, it
-    // allows us to test out the pipeline without having to write 4 different
-    // native (Vulkan, Metal, D3D11, OpenGL) implementations of all what's below.
-
-    QQuickRenderControlPrivate *rd = QQuickRenderControlPrivate::get(renderControl.data());
-    QRhi *rhi = rd->rhi;
+    QRhi *rhi = renderControl->rhi();
     Q_ASSERT(rhi);
 
     const QSize size = rootItem->size().toSize();
@@ -302,7 +295,7 @@ void tst_RenderControl::renderAndReadBackWithRhi()
         };
         QRhiResourceUpdateBatch *readbackBatch = rhi->nextResourceUpdateBatch();
         readbackBatch->readBackTexture(tex.data(), &readResult);
-        rd->cb->resourceUpdate(readbackBatch);
+        renderControl->commandBuffer()->resourceUpdate(readbackBatch);
 
         // our frame is done, submit
         renderControl->endFrame();

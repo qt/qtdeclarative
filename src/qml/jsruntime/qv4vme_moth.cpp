@@ -405,21 +405,21 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
     ExecutionEngineCallDepthRecorder executionEngineCallDepthRecorder(engine);
 
     Function *function = frame->v4Function;
-    Q_ASSERT(function->typedFunction);
+    Q_ASSERT(function->aotCompiledFunction);
     Q_TRACE_SCOPE(QQmlV4_function_call, engine, function->name()->toQString(),
                   function->executableCompilationUnit()->fileName(),
                   function->compiledFunction->location.line(),
                   function->compiledFunction->location.column());
     Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
 
-    const qsizetype numFunctionArguments = function->typedFunction->argumentTypes.size();
+    const qsizetype numFunctionArguments = function->aotCompiledFunction->argumentTypes.size();
 
     Q_ALLOCA_DECLARE(void *, transformedArguments);
     for (qsizetype i = 0; i < numFunctionArguments; ++i) {
         const bool isValid = frame->argc() > i;
         const QMetaType frameType = isValid ? frame->argTypes()[i] : QMetaType();
 
-        const QMetaType argumentType = function->typedFunction->argumentTypes[i];
+        const QMetaType argumentType = function->aotCompiledFunction->argumentTypes[i];
         if (isValid && argumentType == frameType)
             continue;
 
@@ -473,7 +473,7 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
         transformedArguments[i] = arg;
     }
 
-    const QMetaType returnType = function->typedFunction->returnType;
+    const QMetaType returnType = function->aotCompiledFunction->returnType;
     const QMetaType frameReturn = frame->returnType();
     bool returnsQVariantWrapper = false;
     Q_ALLOCA_DECLARE(void, transformedResult);
@@ -500,7 +500,7 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
     aotContext.engine = engine->jsEngine();
     aotContext.compilationUnit = function->executableCompilationUnit();
 
-    function->typedFunction->functionPtr(
+    function->aotCompiledFunction->functionPtr(
                 &aotContext, transformedResult ? transformedResult : frame->returnValue(),
                 transformedArguments ? transformedArguments : frame->argv());
 
@@ -539,7 +539,7 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
             if (arg == nullptr)
                 continue;
             if (i >= frame->argc() || arg != frame->argv()[i])
-                function->typedFunction->argumentTypes[i].destruct(arg);
+                function->aotCompiledFunction->argumentTypes[i].destruct(arg);
         }
     }
 }

@@ -351,6 +351,18 @@ void tst_qqmlvaluetypeproviders::structured()
              ConstructibleFromQReal(-112.5));
     QCOMPARE(o->property("cr7").value<ConstructibleFromQReal>(),
              ConstructibleFromQReal(50));
+
+    BarrenValueType barren;
+    barren.setI(17);
+    QCOMPARE(o->property("barren").value<BarrenValueType>(), barren);
+
+    QMetaObject::invokeMethod(o.data(), "changeBarren");
+    QCOMPARE(o->property("barren").value<BarrenValueType>(), BarrenValueType(QString()));
+
+    QCOMPARE(o->property("fromObject").value<ConstructibleValueType>(),
+             ConstructibleValueType(nullptr));
+    QCOMPARE(o->property("aVariant").value<ConstructibleValueType>(),
+             ConstructibleValueType(nullptr));
 }
 
 void tst_qqmlvaluetypeproviders::recursive()

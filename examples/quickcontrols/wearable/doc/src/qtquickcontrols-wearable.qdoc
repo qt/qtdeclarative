@@ -19,8 +19,8 @@
     The main .qml file, \c wearable.qml, consists of an ApplicationWindow, a StackView
     for a stack-based navigation model, and buttons for interactive navigation.
 
-    \quotefromfile wearable/wearable.qml
-    \skipuntil import "qml/Style"
+    \quotefromfile wearable/Wearable/Main.qml
+    \skipuntil import WearableStyle
     \printuntil id: window
     \dots
     \skipto header
@@ -44,10 +44,10 @@
     singleton type for various styling attributes, such as fonts and colors.
 
     \list
-        \li \c qml/Style/PageIndicator.qml
-        \li \c qml/Style/Slider.qml
-        \li \c qml/Style/Switch.qml
-        \li \c qml/Style/UIStyle.qml
+        \li \c WearableStyle/PageIndicator.qml
+        \li \c WearableStyle/Slider.qml
+        \li \c WearableStyle/Switch.qml
+        \li \c WearableStyle/UIStyle.qml
     \endlist
 
     The style is applied in \c main() in \c wearable.cpp:
@@ -62,13 +62,13 @@
     \section1 Custom Type
 
     The demo application contains a custom button type implemented in
-    \c qml/NaviButton.qml. The navigation button is used as a home and back
+    \c Wearable/NaviButton.qml. The navigation button is used as a home and back
     button in \c wearable.qml. \c NaviButton extends the AbstractButton type
     with properties that control the slide in and slide out transitions and
     the button image.
 
-    \quotefromfile wearable/qml/NaviButton.qml
-    \skipuntil import "Style"
+    \quotefromfile wearable/Wearable/NaviButton.qml
+    \skipuntil import WearableStyle
     \printuntil id: image
     \dots 8
     \skipuntil }
@@ -79,11 +79,11 @@
 
     \section1 Icons
 
-    The demo ships a custom icon theme. The icons are bundled into the \c :/icons
+    The demo ships a custom icon theme. The icons are bundled into the \c :/Wearable/icons
     folder in the application's resources. The \c index.theme file lists the contents
     of the icon theme:
 
-    \quotefile wearable/icons/wearable/index.theme
+    \quotefile wearable/Wearable/icons/wearable/index.theme
 
     Finally, the icon theme is selected in \c main():
 
@@ -98,7 +98,7 @@
     \c LauncherPage.qml. Each application is in a separate .qml file,
     which is added to the ListModel on the launcher page.
 
-    \quotefromfile wearable/qml/LauncherPage.qml
+    \quotefromfile wearable/Wearable/LauncherPage.qml
     \skipto PathView
     \printuntil signal launched
     \dots

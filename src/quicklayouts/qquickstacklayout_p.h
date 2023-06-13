@@ -26,8 +26,8 @@ class QQuickStackLayoutAttached;
 class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickStackLayout : public QQuickLayout
 {
     Q_OBJECT
-    Q_PROPERTY(int count READ count NOTIFY countChanged)
-    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
+    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
+    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
     QML_NAMED_ELEMENT(StackLayout)
     QML_ADDED_IN_VERSION(1, 3)
     QML_ATTACHED(QQuickStackLayoutAttached)
@@ -102,9 +102,9 @@ private:
 class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickStackLayoutAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int index READ index NOTIFY indexChanged)
-    Q_PROPERTY(bool isCurrentItem READ isCurrentItem NOTIFY isCurrentItemChanged)
-    Q_PROPERTY(QQuickStackLayout *layout READ layout NOTIFY layoutChanged)
+    Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
+    Q_PROPERTY(bool isCurrentItem READ isCurrentItem NOTIFY isCurrentItemChanged FINAL)
+    Q_PROPERTY(QQuickStackLayout *layout READ layout NOTIFY layoutChanged FINAL)
 
 public:
     QQuickStackLayoutAttached(QObject *object);

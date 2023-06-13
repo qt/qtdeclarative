@@ -110,7 +110,7 @@ void QSGDefaultRenderContext::invalidate()
     // sequence. (see qsgdefaultglyphnode_p.cpp's init())
     for (QSet<QFontEngine *>::const_iterator it = m_fontEnginesToClean.constBegin(),
          end = m_fontEnginesToClean.constEnd(); it != end; ++it) {
-        (*it)->clearGlyphCache(m_rhi);
+        (*it)->clearGlyphCache(this);
         if (!(*it)->ref.deref())
             delete *it;
     }

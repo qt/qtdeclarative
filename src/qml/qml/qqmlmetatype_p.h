@@ -143,6 +143,8 @@ public:
     static QQmlType qmlListType(QMetaType metaType);
 
     static QQmlType qmlType(const QUrl &unNormalizedUrl, bool includeNonFileImports = false);
+    static QQmlType inlineComponentType(const QQmlType &containingType, const QString &name);
+    static void associateInlineComponent(const QQmlType &containingType, const QString &name, const CompositeMetaTypeIds &metaTypeIds, QQmlType existingType);
 
     static QQmlPropertyCache::ConstPtr propertyCache(
             QObject *object, QTypeRevision version = QTypeRevision());
@@ -212,6 +214,20 @@ public:
                 ++it;
         }
     }
+
+    template <typename InlineComponentContainer>
+    static void removeFromInlineComponents(
+        InlineComponentContainer &container, const QQmlTypePrivate *reference)
+    {
+        for (auto it = container.begin(), end = container.end(); it != end;) {
+            if (it.key().containingType == reference)
+                it = container.erase(it);
+            else
+                ++it;
+        }
+    }
+
+    static void registerTypeAlias(int typeId, const QString &name);
 
     static int registerAutoParentFunction(const QQmlPrivate::RegisterAutoParent &autoparent);
     static void unregisterAutoParentFunction(const QQmlPrivate::AutoParentFunction &function);

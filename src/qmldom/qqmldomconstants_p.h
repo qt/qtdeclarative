@@ -201,6 +201,19 @@ enum class DomType {
     ScriptVariableDeclaration,
     ScriptVariableDeclarationEntry,
     ScriptReturnStatement,
+    ScriptGenericElement,
+    ScriptCallExpression,
+    ScriptParameter,
+    ScriptFormalParameter,
+    ScriptArray,
+    ScriptObject,
+    ScriptProperty,
+    ScriptType,
+    ScriptQualifiedIdentifierExpression,
+    ScriptQualifiedIdentifierBit,
+    ScriptElision,
+    ScriptArrayEntry,
+    ScriptPattern,
 
     ScriptElementStop, // marker to check if a DomType is a scriptelement or not
 };

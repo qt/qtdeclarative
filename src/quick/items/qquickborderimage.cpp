@@ -280,16 +280,13 @@ void QQuickBorderImage::load()
                 setGridScaledImage(QQuickGridScaledImage(&file));
             } else {
 #if QT_CONFIG(qml_network)
-                if (d->progress != 0.0) {
-                    d->progress = 0.0;
-                    emit progressChanged(d->progress);
-                }
-                d->status = Loading;
+                d->setProgress(0);
+                d->setStatus(Loading);
+
                 QNetworkRequest req(d->url);
                 d->sciReply = qmlEngine(this)->networkAccessManager()->get(req);
                 qmlobject_connect(d->sciReply, QNetworkReply, SIGNAL(finished()),
                                   this, QQuickBorderImage, SLOT(sciRequestFinished()));
-                emit statusChanged(d->status);
 #endif
             }
         } else {
@@ -382,8 +379,7 @@ void QQuickBorderImage::setGridScaledImage(const QQuickGridScaledImage& sci)
 {
     Q_D(QQuickBorderImage);
     if (!sci.isValid()) {
-        d->status = Error;
-        emit statusChanged(d->status);
+        d->setStatus(Error);
     } else {
         QQuickScaleGrid *sg = border();
         sg->setTop(sci.gridTop());
@@ -404,22 +400,16 @@ void QQuickBorderImage::requestFinished()
 
     QSize impsize = d->pix.implicitSize();
     if (d->pix.isError()) {
-        d->status = Error;
         qmlWarning(this) << d->pix.error();
-        if (d->progress != 0) {
-            d->progress = 0;
-            emit progressChanged(d->progress);
-        }
+        d->setStatus(Error);
+        d->setProgress(0);
     } else {
-        d->status = Ready;
-        if (d->progress != 1.0) {
-            d->progress = 1.0;
-            emit progressChanged(d->progress);
-        }
+        d->setStatus(Ready);
+        d->setProgress(1);
     }
 
     setImplicitSize(impsize.width() / d->devicePixelRatio, impsize.height() / d->devicePixelRatio);
-    emit statusChanged(d->status);
+
     if (sourceSize() != d->oldSourceSize) {
         d->oldSourceSize = sourceSize();
         emit sourceSizeChanged();
@@ -451,10 +441,9 @@ void QQuickBorderImage::sciRequestFinished()
     d->redirectCount=0;
 
     if (d->sciReply->error() != QNetworkReply::NoError) {
-        d->status = Error;
+        d->setStatus(Error);
         d->sciReply->deleteLater();
         d->sciReply = nullptr;
-        emit statusChanged(d->status);
     } else {
         QQuickGridScaledImage sci(d->sciReply);
         d->sciReply->deleteLater();

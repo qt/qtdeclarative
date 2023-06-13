@@ -17,8 +17,12 @@
 
 #include "qqmldomitem_p.h"
 #include "qqmldomattachedinfo_p.h"
+#include "qqmldompath_p.h"
 #include <algorithm>
+#include <limits>
 #include <type_traits>
+#include <utility>
+#include <variant>
 
 QT_BEGIN_NAMESPACE
 
@@ -46,7 +50,8 @@ public:
     DomType kind() const override { return type; }
     DomKind domKind() const override { return domKindValue; }
 
-    void createFileLocations(FileLocations::Tree base) override {
+    void createFileLocations(FileLocations::Tree base) override
+    {
         FileLocations::Tree res = FileLocations::ensure(base, pathFromOwner(), AttachedInfo::PathType::Relative);
         FileLocations::addRegion(res, QString(), m_combinedLocation);
     }
@@ -84,6 +89,8 @@ protected:
 class ScriptList : public ScriptElementBase<DomType::List>
 {
 public:
+    using typename ScriptElementBase<DomType::List>::BaseT;
+
     using BaseT::BaseT;
 
     // minimal required overload for this to be wrapped as DomItem:
@@ -122,17 +129,48 @@ public:
     }
 
     void append(const ScriptElementVariant &statement) { m_list.push_back(statement); }
+    void append(const ScriptList &list) { m_list.append(list.m_list); }
     void reverse() { std::reverse(m_list.begin(), m_list.end()); }
+    void replaceKindForGenericChildren(DomType oldType, DomType newType);
+    const QList<ScriptElementVariant> &qList() { return std::as_const(m_list); };
 
 private:
     QList<ScriptElementVariant> m_list;
+};
+
+class GenericScriptElement : public ScriptElementBase<DomType::ScriptGenericElement>
+{
+public:
+    using BaseT::BaseT;
+    using VariantT = std::variant<ScriptElementVariant, ScriptList>;
+
+    bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
+    void updatePathFromOwner(Path p) override;
+    void createFileLocations(FileLocations::Tree base) override;
+
+    DomType kind() const override { return m_kind; }
+    void setKind(DomType kind) { m_kind = kind; }
+
+    decltype(auto) insertChild(QStringView name, VariantT v)
+    {
+        return m_children.insert(std::make_pair(name, v));
+    }
+
+private:
+    /*!
+       \internal
+       The DomItem interface will use iterateDirectSubpaths for all kinds of operations on the
+       GenericScriptElement. Therefore, to avoid bad surprises when using the DomItem interface, use
+       a sorted map to always iterate the children in the same order.
+     */
+    std::map<QQmlJS::Dom::FieldType, VariantT> m_children;
+    DomType m_kind;
 };
 
 class BlockStatement : public ScriptElementBase<DomType::ScriptBlockStatement>
 {
 public:
     using BaseT::BaseT;
-    ~BlockStatement() override{};
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
@@ -150,12 +188,13 @@ class IdentifierExpression : public ScriptElementBase<DomType::ScriptIdentifierE
 {
 public:
     using BaseT::BaseT;
-    ~IdentifierExpression() override{};
     void setName(QStringView name) { m_name = name.toString(); }
     QString name() { return m_name; }
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
+
+    QCborValue value() const override { return QCborValue(m_name); }
 
 private:
     QString m_name;
@@ -165,7 +204,6 @@ class Literal : public ScriptElementBase<DomType::ScriptLiteral>
 {
 public:
     using BaseT::BaseT;
-    ~Literal() override{};
 
     using VariantT = std::variant<QString, double, bool, std::nullptr_t>;
 
@@ -174,6 +212,11 @@ public:
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
+
+    QCborValue value() const override
+    {
+        return std::visit([](auto &&e) -> QCborValue { return e; }, m_value);
+    }
 
 private:
     VariantT m_value;
@@ -184,7 +227,6 @@ class ForStatement : public ScriptElementBase<DomType::ScriptForStatement>
 {
 public:
     using BaseT::BaseT;
-    ~ForStatement() override{};
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
@@ -221,7 +263,6 @@ class IfStatement : public ScriptElementBase<DomType::ScriptIfStatement>
 {
 public:
     using BaseT::BaseT;
-    ~IfStatement() override{};
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
@@ -245,7 +286,6 @@ class ReturnStatement : public ScriptElementBase<DomType::ScriptReturnStatement>
 {
 public:
     using BaseT::BaseT;
-    ~ReturnStatement() override{};
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
@@ -263,7 +303,12 @@ class BinaryExpression : public ScriptElementBase<DomType::ScriptBinaryExpressio
 {
 public:
     using BaseT::BaseT;
-    ~BinaryExpression() override{};
+
+    enum Operator : char {
+        FieldMemberAccess,
+        ArrayMemberAccess,
+        TO_BE_IMPLEMENTED = std::numeric_limits<char>::max(), // not required by qmlls
+    };
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
@@ -275,27 +320,26 @@ public:
     ScriptElementVariant right() const { return m_right; }
     void setRight(const ScriptElementVariant &newRight) { m_right = newRight; }
     int op() const { return m_operator; }
-    void setOp(int op) { m_operator = op; }
+    void setOp(Operator op) { m_operator = op; }
 
 private:
     ScriptElementVariant m_left;
     ScriptElementVariant m_right;
-    int m_operator; // TODO: Do an enum out of it?
+    Operator m_operator = TO_BE_IMPLEMENTED;
 };
 
 class VariableDeclarationEntry : public ScriptElementBase<DomType::ScriptVariableDeclarationEntry>
 {
 public:
     using BaseT::BaseT;
-    ~VariableDeclarationEntry() override{};
 
     enum ScopeType { Var, Let, Const };
 
     ScopeType scopeType() const { return m_scopeType; }
     void setScopeType(ScopeType scopeType) { m_scopeType = scopeType; }
 
-    QString identifier() const { return m_identifier; }
-    void setIdentifier(const QString &identifier) { m_identifier = identifier; }
+    ScriptElementVariant identifier() const { return m_identifier; }
+    void setIdentifier(const ScriptElementVariant &identifier) { m_identifier = identifier; }
 
     ScriptElementVariant initializer() const { return m_initializer; }
     void setInitializer(const ScriptElementVariant &initializer) { m_initializer = initializer; }
@@ -306,7 +350,7 @@ public:
 
 private:
     ScopeType m_scopeType;
-    QString m_identifier;
+    ScriptElementVariant m_identifier;
     ScriptElementVariant m_initializer;
 };
 
@@ -314,7 +358,6 @@ class VariableDeclaration : public ScriptElementBase<DomType::ScriptVariableDecl
 {
 public:
     using BaseT::BaseT;
-    ~VariableDeclaration() override{};
 
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;

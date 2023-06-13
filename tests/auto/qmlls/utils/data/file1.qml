@@ -44,4 +44,12 @@ Item {
     property Rectangle foo: Rectangle{ height: 200 }
 
     c: C{}
+    property C ccc: c
+    property C cccc
+    cccc: c
+
+    function fff(a: int, b: Item, c: C) : C {
+        let x = c.children;
+        return x;
+    }
 }

@@ -81,6 +81,10 @@ Q_SIGNALS:
     void rowCountChanged();
     void rowsChanged();
 
+protected:
+    void classBegin() override;
+    void componentComplete() override;
+
 private:
     class ColumnRoleMetadata
     {
@@ -121,9 +125,6 @@ private:
     bool validateRowIndex(const char *functionName, const char *argumentName, int rowIndex) const;
 
     void doInsert(int rowIndex, const QVariant &row);
-
-    void classBegin() override;
-    void componentComplete() override;
 
     bool componentCompleted = false;
     QVariantList mRows;

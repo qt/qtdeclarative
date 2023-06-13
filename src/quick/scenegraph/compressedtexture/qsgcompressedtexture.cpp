@@ -6,7 +6,7 @@
 #include <QDebug>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 QT_BEGIN_NAMESPACE
 

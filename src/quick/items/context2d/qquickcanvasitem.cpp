@@ -958,12 +958,12 @@ bool QQuickCanvasItem::save(const QString &filename, const QSizeF &imageSize) co
     return toImage(QRectF(QPointF(0, 0), imageSize)).save(url.toLocalFile());
 }
 
-QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& url)
+QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& url, QSizeF sourceSize)
 {
     Q_D(QQuickCanvasItem);
     QUrl fullPathUrl = d->baseUrl.resolved(url);
     if (!d->pixmaps.contains(fullPathUrl)) {
-        loadImage(url);
+        loadImage(url, sourceSize);
     }
     return d->pixmaps.value(fullPathUrl);
 }
@@ -977,7 +977,7 @@ QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& ur
 */
 
 /*!
-    \qmlmethod QtQuick::Canvas::loadImage(url image)
+    \qmlmethod QtQuick::Canvas::loadImage(url image, size sourceSize = undefined)
 
     Loads the given \a image asynchronously.
 
@@ -986,10 +986,14 @@ QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& ur
 
     \note Only loaded images can be painted on the Canvas item.
 
+    If \a sourceSize is specified, the image will be scaled to that size during loading. This is
+    useful for loading scalable (vector) images (eg. SVGs) at their intended display size. This
+    parameter was introduced in Qt 6.7.
+
     \sa unloadImage(), imageLoaded(), isImageLoaded(),
         Context2D::createImageData(), Context2D::drawImage()
 */
-void QQuickCanvasItem::loadImage(const QUrl& url)
+void QQuickCanvasItem::loadImage(const QUrl& url, QSizeF sourceSize)
 {
     Q_D(QQuickCanvasItem);
     QUrl fullPathUrl = d->baseUrl.resolved(url);
@@ -1001,6 +1005,8 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
 
         pix->load(qmlEngine(this)
                 , fullPathUrl
+                , QRect()
+                , sourceSize.toSize()
                 , QQuickPixmap::Cache | QQuickPixmap::Asynchronous);
         if (pix->isLoading())
             pix->connectFinished(this, SIGNAL(imageLoaded()));

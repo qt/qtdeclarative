@@ -1,0 +1,22 @@
+1. FONTLOG for Graziano
+
+   This file provides detailed information on the Graziano
+   Font Software. This information should be distributed along with
+   the Graziano font and any derivative works.
+
+2. Basic Font Information
+
+   A font based on my left-handed handwriting.
+   To take notes with Block and lowercase letters on plain
+   white paper without any guideline (with a large-tipped pen)
+   is a good training ground for writing.
+
+3. ChangeLog
+
+   28 May 2011 (Graziano Capelli) Graziano version 1.0.
+   - Initial release
+
+4  Acknowledgements
+
+   None yet. Feature requests, bug reports and contributions should be
+   sent to Graziano Capelli (air at shweb dot it; femtosoft at libero dot it)

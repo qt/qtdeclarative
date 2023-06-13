@@ -66,7 +66,7 @@ public:
     QSizeF m_scrollSpeed = QSizeF(1, 1);
 
     QQuickSelectionRectangle::SelectionMode m_selectionMode = QQuickSelectionRectangle::Auto;
-    bool m_alwaysAcceptPressAndHold = false;
+    QQuickSelectionRectangle::SelectionMode m_effectiveSelectionMode = QQuickSelectionRectangle::Drag;
 
     bool m_enabled = true;
     bool m_active = false;

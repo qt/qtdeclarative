@@ -36,7 +36,7 @@ class QQuickLabsPlatformFileDialog : public QQuickLabsPlatformDialog
     Q_PROPERTY(QUrl folder READ folder WRITE setFolder NOTIFY folderChanged FINAL)
     Q_PROPERTY(QFileDialogOptions::FileDialogOptions options READ options WRITE setOptions RESET resetOptions NOTIFY optionsChanged FINAL)
     Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters RESET resetNameFilters NOTIFY nameFiltersChanged FINAL)
-    Q_PROPERTY(QQuickLabsPlatformFileNameFilter *selectedNameFilter READ selectedNameFilter CONSTANT)
+    Q_PROPERTY(QQuickLabsPlatformFileNameFilter *selectedNameFilter READ selectedNameFilter CONSTANT FINAL)
     Q_PROPERTY(QString defaultSuffix READ defaultSuffix WRITE setDefaultSuffix RESET resetDefaultSuffix NOTIFY defaultSuffixChanged FINAL)
     Q_PROPERTY(QString acceptLabel READ acceptLabel WRITE setAcceptLabel RESET resetAcceptLabel NOTIFY acceptLabelChanged FINAL)
     Q_PROPERTY(QString rejectLabel READ rejectLabel WRITE setRejectLabel RESET resetRejectLabel NOTIFY rejectLabelChanged FINAL)

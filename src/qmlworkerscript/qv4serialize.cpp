@@ -3,12 +3,13 @@
 
 #include "qv4serialize_p.h"
 
-#include <private/qv4value_p.h>
 #include <private/qv4dateobject_p.h>
-#include <private/qv4regexpobject_p.h>
-#include <private/qv4sequenceobject_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4regexp_p.h>
+#include <private/qv4regexpobject_p.h>
+#include <private/qv4sequenceobject_p.h>
+#include <private/qv4value_p.h>
 
 QT_BEGIN_NAMESPACE
 

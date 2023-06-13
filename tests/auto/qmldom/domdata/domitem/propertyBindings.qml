@@ -8,4 +8,6 @@ Item {
     property int b
 
     b: a
+
+    id: root
 }

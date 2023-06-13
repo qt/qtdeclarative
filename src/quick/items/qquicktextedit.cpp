@@ -350,6 +350,71 @@ QString QQuickTextEdit::text() const
 */
 
 /*!
+    \qmlproperty object QtQuick::TextEdit::font.features
+    \since 6.6
+
+    Applies integer values to specific OpenType features when shaping the text based on the contents
+    in \a features. This provides advanced access to the font shaping process, and can be used
+    to support font features that are otherwise not covered in the API.
+
+    The font features are represented by a map from four-letter tags to integer values. This integer
+    value passed along with the tag in most cases represents a boolean value: A zero value means the
+    feature is disabled, and a non-zero value means it is enabled. For certain font features,
+    however, it may have other intepretations. For example, when applied to the \c salt feature, the
+    value is an index that specifies the stylistic alternative to use.
+
+    For example, the \c frac font feature will convert diagonal fractions separated with a slash
+    (such as \c 1/2) with a different representation. Typically this will involve baking the full
+    fraction into a single character width (such as \c ½).
+
+    If a font supports the \c frac feature, then it can be enabled in the shaper as in the following
+    code:
+
+    {code}
+    TextEdit {
+        text: "One divided by two is 1/2"
+        font.family: "MyFractionFont"
+        font.features: { "frac": 1 }
+    }
+    {code}
+
+    Multiple features can be assigned values in the same mapping. For instance, if we would like
+    to also disable kerning for the font, we can explicitly disable this as follows:
+
+    {code}
+    TextEdit {
+        text: "One divided by two is 1/2"
+        font.family: "MyFractionFont"
+        font.features: { "frac": 1, "kern": 0 }
+    }
+    {code}
+
+    You can also collect the font properties in an object:
+
+    {code}
+    TextEdit {
+        text: "One divided by two is 1/2"
+        font: {
+            family: "MyFractionFont"
+            features: { "frac": 1, "kern": 0 }
+        }
+    }
+    {code}
+
+    \note By default, Qt will enable and disable certain font features based on other font
+    properties. In particular, the \c kern feature will be enabled/disabled depending on the
+    \l font.kerning property of the QFont. In addition, all ligature features (\c liga, \c clig,
+    \c dlig, \c hlig) will be disabled if a \l font.letterSpacing is set, but only for writing
+    systems where the use of ligature is cosmetic. For writing systems where ligatures are required,
+    the features will remain in their default state. The values set using \c font.features will
+    override the default behavior. If, for instance, \c{"kern"} is set to 1, then kerning will
+    always be enabled, egardless of whether the \l font.kerning property is set to false. Similarly,
+    if it is set to 0, then it will always be disabled.
+
+    \sa QFont::setFeatures()
+*/
+
+/*!
     \qmlproperty string QtQuick::TextEdit::text
 
     The text to display.  If the text format is AutoText the text edit will
@@ -2107,6 +2172,10 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
     RootNode *rootNode = static_cast<RootNode *>(oldNode);
     TextNodeIterator nodeIterator = d->textNodeMap.begin();
+    std::optional<int> firstPosAcrossAllNodes;
+    if (nodeIterator != d->textNodeMap.end())
+        firstPosAcrossAllNodes = nodeIterator->startPos();
+
     while (nodeIterator != d->textNodeMap.end() && !nodeIterator->dirty())
         ++nodeIterator;
 
@@ -2225,7 +2294,8 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                             coveredRegion = block.layout()->boundingRect().adjusted(nodeOffset.x(), nodeOffset.y(), nodeOffset.x(), nodeOffset.y());
                             inView = coveredRegion.bottom() > viewport.top();
                         }
-                        if (d->firstBlockInViewport < 0 && inView) {
+                        const bool potentiallyScrollingBackwards = firstPosAcrossAllNodes && *firstPosAcrossAllNodes == firstDirtyPos;
+                        if (d->firstBlockInViewport < 0 && inView && potentiallyScrollingBackwards) {
                             // During backward scrolling, we need to iterate backwards from textNodeMap.begin() to fill the top of the viewport.
                             if (coveredRegion.top() > viewport.top() + 1) {
                                 qCDebug(lcVP) << "checking backwards from block" << block.blockNumber() << "@" << nodeOffset.y() << coveredRegion;
@@ -2653,9 +2723,6 @@ void QQuickTextEdit::updateSize()
         return;
     }
 
-    qreal naturalWidth = d->implicitWidth - leftPadding() - rightPadding();
-
-    qreal newWidth = d->document->idealWidth();
     // ### assumes that if the width is set, the text will fill to edges
     // ### (unless wrap is false, then clipping will occur)
     if (widthValid()) {
@@ -2667,8 +2734,7 @@ void QQuickTextEdit::updateSize()
         }
         if (d->requireImplicitWidth) {
             d->document->setTextWidth(-1);
-            naturalWidth = d->document->idealWidth();
-
+            const qreal naturalWidth = d->document->idealWidth();
             const bool wasInLayout = d->inLayout;
             d->inLayout = true;
             if (d->isImplicitResizeEnabled())
@@ -2678,19 +2744,22 @@ void QQuickTextEdit::updateSize()
                 return;         // get this far we'll get a warning to that effect.
         }
         const qreal newTextWidth = width() - leftPadding() - rightPadding();
-        if (d->document->textWidth() != newTextWidth) {
+        if (d->document->textWidth() != newTextWidth)
             d->document->setTextWidth(newTextWidth);
-            newWidth = d->document->idealWidth();
-        }
-        //### need to confirm cost of always setting these
-    } else if (d->wrapMode == NoWrap && d->document->textWidth() != newWidth) {
-        d->document->setTextWidth(newWidth); // ### Text does not align if width is not set or the idealWidth exceeds the textWidth (QTextDoc bug)
+    } else if (d->wrapMode == NoWrap) {
+        // normally, if explicit width is not set, we should call setTextWidth(-1) here,
+        // as we don't need to fit the text to any fixed width. But because of some bug
+        // in QTextDocument it also breaks RTL text alignment, so we use "idealWidth" instead.
+        const qreal newTextWidth = d->document->idealWidth();
+        if (d->document->textWidth() != newTextWidth)
+            d->document->setTextWidth(newTextWidth);
     } else {
         d->document->setTextWidth(-1);
     }
 
     QFontMetricsF fm(d->font);
-    qreal newHeight = d->document->isEmpty() ? qCeil(fm.height()) : d->document->size().height();
+    const qreal newHeight = d->document->isEmpty() ? qCeil(fm.height()) : d->document->size().height();
+    const qreal newWidth = d->document->idealWidth();
 
     if (d->isImplicitResizeEnabled()) {
         // ### Setting the implicitWidth triggers another updateSize(), and unless there are bindings nothing has changed.
@@ -2707,7 +2776,12 @@ void QQuickTextEdit::updateSize()
     QSizeF size(newWidth, newHeight);
     if (d->contentSize != size) {
         d->contentSize = size;
-        emit contentSizeChanged();
+        // Note: inResize is a bitfield so QScopedValueRollback can't be used here
+        const bool wasInResize = d->inResize;
+        d->inResize = true;
+        if (!wasInResize)
+            emit contentSizeChanged();
+        d->inResize = wasInResize;
         updateTotalLines();
     }
 }

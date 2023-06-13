@@ -5,11 +5,10 @@
 #include <QSGTextureProvider>
 #include <QSGRenderNode>
 #include <QSGTransformNode>
-#include <QSGRendererInterface>
 #include <QQuickWindow>
 #include <QFile>
-#include <private/qrhi_p.h>
-#include <private/qsgrendernode_p.h>
+
+#include <rhi/qrhi.h>
 
 class CustomRenderNode : public QSGRenderNode
 {
@@ -114,11 +113,8 @@ QSGRenderNode::StateFlags CustomRenderNode::changedStates() const
 
 void CustomRenderNode::prepare()
 {
-    QSGRendererInterface *renderInterface = m_window->rendererInterface();
-    QRhiSwapChain *swapChain = static_cast<QRhiSwapChain *>(
-            renderInterface->getResource(m_window, QSGRendererInterface::RhiSwapchainResource));
-    QRhi *rhi = static_cast<QRhi *>(
-            renderInterface->getResource(m_window, QSGRendererInterface::RhiResource));
+    QRhiSwapChain *swapChain = m_window->swapChain();
+    QRhi *rhi = m_window->rhi();
     Q_ASSERT(swapChain);
     Q_ASSERT(rhi);
 
@@ -163,7 +159,7 @@ void CustomRenderNode::prepare()
         // RHI backends with isYUpInFrameBuffer == false. We swap the triangle winding
         // order to work around this.
         //
-        m_pipeLine->setFrontFace(QSGRenderNodePrivate::get(this)->m_rt.rt->resourceType() == QRhiResource::TextureRenderTarget
+        m_pipeLine->setFrontFace(renderTarget()->resourceType() == QRhiResource::TextureRenderTarget
                                                  && rhi->isYUpInFramebuffer()
                                          ? QRhiGraphicsPipeline::CW
                                          : QRhiGraphicsPipeline::CCW);
@@ -179,7 +175,7 @@ void CustomRenderNode::prepare()
         inputLayout.setBindings({ { 2 * sizeof(float) } });
         inputLayout.setAttributes({ { 0, 0, QRhiVertexInputAttribute::Float2, 0 } });
         m_pipeLine->setVertexInputLayout(inputLayout);
-        m_pipeLine->setRenderPassDescriptor(QSGRenderNodePrivate::get(this)->m_rt.rpDesc);
+        m_pipeLine->setRenderPassDescriptor(renderTarget()->renderPassDescriptor());
         m_pipeLine->create();
     }
 
@@ -195,16 +191,14 @@ void CustomRenderNode::prepare()
 void CustomRenderNode::render(const RenderState *state)
 {
 
-    QSGRendererInterface *renderInterface = m_window->rendererInterface();
-    QRhiSwapChain *swapChain = static_cast<QRhiSwapChain *>(
-            renderInterface->getResource(m_window, QSGRendererInterface::RhiSwapchainResource));
+    QRhiSwapChain *swapChain = m_window->swapChain();
     Q_ASSERT(swapChain);
 
     QRhiCommandBuffer *cb = swapChain->currentFrameCommandBuffer();
     Q_ASSERT(cb);
 
     cb->setGraphicsPipeline(m_pipeLine);
-    QSize renderTargetSize = QSGRenderNodePrivate::get(this)->m_rt.rt->pixelSize();
+    QSize renderTargetSize = renderTarget()->pixelSize();
     cb->setViewport(QRhiViewport(0, 0, renderTargetSize.width(), renderTargetSize.height()));
     cb->setShaderResources();
     QRhiCommandBuffer::VertexInput vertexBindings[] = { { m_vertexBuffer, 0 } };

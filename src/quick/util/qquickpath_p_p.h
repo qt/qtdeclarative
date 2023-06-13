@@ -53,6 +53,7 @@ public:
     bool closed = false;
     bool componentComplete = true;
     bool isShapePath = false;
+    bool simplified = false;
 };
 
 QT_END_NAMESPACE

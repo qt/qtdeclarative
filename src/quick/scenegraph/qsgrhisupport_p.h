@@ -18,26 +18,7 @@
 #include "qsgrenderloop_p.h"
 #include "qsgrendererinterface.h"
 
-#include <QtGui/private/qrhi_p.h>
-
-#include <QtGui/private/qrhinull_p.h>
-
-#if QT_CONFIG(opengl)
-#include <QtGui/private/qrhigles2_p.h>
-#endif
-
-#if QT_CONFIG(vulkan)
-#include <QtGui/private/qrhivulkan_p.h>
-#endif
-
-#ifdef Q_OS_WIN
-#include <QtGui/private/qrhid3d11_p.h>
-#include <QtGui/private/qrhid3d12_p.h>
-#endif
-
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
-#include <QtGui/private/qrhimetal_p.h>
-#endif
+#include <rhi/qrhi.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -105,8 +86,7 @@ public:
     QImage grabOffscreenForProtectedContent(QQuickWindow *window);
 #endif
 
-    QRhiSwapChain::Format swapChainFormat() const { return m_swapChainFormat; }
-    void applySwapChainFormat(QRhiSwapChain *scWithWindowSet);
+    void applySwapChainFormat(QRhiSwapChain *scWithWindowSet, QQuickWindow *window);
 
     QRhiTexture::Format toRhiTextureFormat(uint nativeFormat, QRhiTexture::Flags *flags) const;
 
@@ -122,7 +102,6 @@ private:
     } m_requested;
     bool m_settingsApplied = false;
     QRhi::Implementation m_rhiBackend = QRhi::Null;
-    QRhiSwapChain::Format m_swapChainFormat = QRhiSwapChain::SDR;
 };
 
 QT_END_NAMESPACE

@@ -14,6 +14,8 @@ class QQuickWindow;
 class QOpenGLContext;
 class QQuickRenderControlPrivate;
 class QThread;
+class QRhi;
+class QRhiCommandBuffer;
 
 class Q_QUICK_EXPORT QQuickRenderControl : public QObject
 {
@@ -43,6 +45,9 @@ public:
     virtual QWindow *renderWindow(QPoint *offset) { Q_UNUSED(offset); return nullptr; }
 
     QQuickWindow *window() const;
+
+    QRhi *rhi() const;
+    QRhiCommandBuffer *commandBuffer() const;
 
 protected:
     explicit QQuickRenderControl(QQuickRenderControlPrivate &dd, QObject *parent = nullptr);

@@ -424,8 +424,6 @@ QByteArray QQmlType::typeName() const
             return d->extraData.sd->singletonInstanceInfo->typeName.toUtf8();
         else if (d->baseMetaObject)
             return d->baseMetaObject->className();
-        else if (d->regType == InlineComponentType)
-            return d->extraData.id->inlineComponentName.toUtf8();
     }
     return QByteArray();
 }
@@ -743,24 +741,9 @@ bool QQmlType::isInlineComponentType() const {
     return d ? d->regType == QQmlType::InlineComponentType : false;
 }
 
-int QQmlType::inlineComponentId() const {
-    bool ok = false;
-    if (d->regType == QQmlType::RegistrationType::InlineComponentType) {
-        Q_ASSERT(d->extraData.id->objectId != -1);
-        return d->extraData.id->objectId;
-    }
-    int subObjectId = sourceUrl().fragment().toInt(&ok);
-    return ok ? subObjectId : -1;
-}
-
 QUrl QQmlType::sourceUrl() const
 {
-    auto url = d ? d->sourceUrl() : QUrl();
-    if (url.isValid() && d->regType == QQmlType::RegistrationType::InlineComponentType && d->extraData.id->objectId) {
-        Q_ASSERT(url.hasFragment());
-        url.setFragment(QString::number(inlineComponentId()));
-    }
-    return url;
+    return d ? d->sourceUrl() : QUrl();
 }
 
 int QQmlType::enumValue(QQmlEnginePrivate *engine, const QHashedStringRef &name, bool *ok) const
@@ -926,19 +909,6 @@ int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, QStringView scopedEnumN
     return -1;
 }
 
-int QQmlType::inlineComponentObjectId() const
-{
-    if (!isInlineComponentType())
-        return -1;
-    return d->extraData.id->objectId;
-}
-
-void QQmlType::setInlineComponentObjectId(int id) const
-{
-    Q_ASSERT(d && d->regType == QQmlType::InlineComponentType);
-    d->extraData.id->objectId = id;
-}
-
 void QQmlType::refHandle(const QQmlTypePrivate *priv)
 {
     if (priv)
@@ -958,66 +928,12 @@ int QQmlType::refCount(const QQmlTypePrivate *priv)
     return -1;
 }
 
-int QQmlType::lookupInlineComponentIdByName(const QString &name) const
-{
-    Q_ASSERT(d);
-    return d->namesToInlineComponentObjectIndex.value(name, -1);
-}
-
 QQmlType QQmlType::containingType() const
 {
     Q_ASSERT(d && d->regType == QQmlType::RegistrationType::InlineComponentType);
     auto ret = QQmlType {d->extraData.id->containingType};
     Q_ASSERT(!ret.isInlineComponentType());
     return ret;
-}
-
-QQmlType QQmlType::lookupInlineComponentById(int objectid) const
-{
-    Q_ASSERT(d);
-    return d->objectIdToICType.value(objectid, QQmlType(nullptr));
-}
-
-int QQmlType::generatePlaceHolderICId() const
-{
-    Q_ASSERT(d);
-    int id = -2;
-    for (auto it = d->objectIdToICType.keyBegin(); it != d->objectIdToICType.keyEnd(); ++it)
-        if (*it < id)
-                id = *it;
-    return id;
-}
-
-void QQmlType::associateInlineComponent(const QString &name, int objectID, const CompositeMetaTypeIds &metaTypeIds, QQmlType existingType)
-{
-    bool const reuseExistingType = existingType.isValid();
-    auto priv = reuseExistingType ? const_cast<QQmlTypePrivate *>(existingType.d.data()) : new QQmlTypePrivate { RegistrationType::InlineComponentType } ;
-    priv->setName( QString::fromUtf8(typeName()), name);
-    auto icUrl = QUrl(sourceUrl());
-    icUrl.setFragment(QString::number(objectID));
-    priv->extraData.id->url = icUrl;
-    priv->extraData.id->containingType = d.data();
-    priv->extraData.id->objectId = objectID;
-    priv->typeId = metaTypeIds.id;
-    priv->listId = metaTypeIds.listId;
-    d->namesToInlineComponentObjectIndex.insert(name, objectID);
-    QQmlType icType(priv);
-    d->objectIdToICType.insert(objectID, icType);
-    if (!reuseExistingType)
-        priv->release();
-}
-
-void QQmlType::setPendingResolutionName(const QString &name)
-{
-    Q_ASSERT(d && d->regType == QQmlType::RegistrationType::InlineComponentType);
-    Q_ASSERT(d->extraData.id->inlineComponentName == name|| d->extraData.id->inlineComponentName.isEmpty());
-    d->extraData.id->inlineComponentName = name;
-}
-
-QString QQmlType::pendingResolutionName() const
-{
-    Q_ASSERT(d && d->regType == QQmlType::RegistrationType::InlineComponentType);
-    return d->extraData.id->inlineComponentName;
 }
 
 void QQmlType::createProxy(QObject *instance) const

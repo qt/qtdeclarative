@@ -11,7 +11,7 @@
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
 
-QT_USE_NAMESPACE
+QT_BEGIN_NAMESPACE
 using namespace QLspSpecification;
 using namespace QQmlJS::Dom;
 using namespace Qt::StringLiterals;
@@ -534,3 +534,4 @@ QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapsho
     res += reachableSymbols(context, ctx, typeCompletionType, methodCompletion);
     return res;
 }
+QT_END_NAMESPACE

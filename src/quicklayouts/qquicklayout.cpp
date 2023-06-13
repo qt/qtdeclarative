@@ -85,10 +85,12 @@ QQuickLayoutAttached::QQuickLayoutAttached(QObject *parent)
       m_isMaximumWidthSet(false),
       m_isMaximumHeightSet(false),
       m_changesNotificationEnabled(true),
+      m_isMarginsSet(false),
       m_isLeftMarginSet(false),
       m_isTopMarginSet(false),
       m_isRightMarginSet(false),
       m_isBottomMarginSet(false),
+      m_isAlignmentSet(false),
       m_horizontalStretch(-1),
       m_verticalStretch(-1)
 {
@@ -403,6 +405,7 @@ void QQuickLayoutAttached::setColumn(int column)
 */
 void QQuickLayoutAttached::setAlignment(Qt::Alignment align)
 {
+    m_isAlignmentSet = true;
     if (align != m_alignment) {
         m_alignment = align;
         if (QQuickLayout *layout = parentLayout()) {
@@ -433,6 +436,8 @@ void QQuickLayoutAttached::setAlignment(Qt::Alignment align)
     The default value is \c -1, which means that no stretch factor is applied.
 
     \note This requires that Layout::fillWidth is set to true
+
+    \since Qt 6.5
 
     \sa verticalStretchFactor
 */
@@ -468,6 +473,8 @@ void QQuickLayoutAttached::setHorizontalStretchFactor(int factor)
     The default value is \c -1, which means that no stretch factor is applied.
 
     \note This requires that Layout::fillHeight is set to true
+
+    \since Qt 6.5
 
     \sa horizontalStretchFactor
 */
@@ -514,6 +521,7 @@ void QQuickLayoutAttached::setVerticalStretchFactor(int factor)
 */
 void QQuickLayoutAttached::setMargins(qreal m)
 {
+    m_isMarginsSet = true;
     if (m == m_defaultMargins)
         return;
 
@@ -837,7 +845,8 @@ void QQuickLayout::invalidate(QQuickItem * /*childItem*/)
             qCDebug(lcQuickLayouts) << "QQuickLayout::invalidate(), polish()";
             polish();
         } else {
-            qmlWarning(this) << "Qt Quick Layouts: Polish loop detected. Aborting after two iterations.";
+            qmlWarning(this).nospace() << "Layout polish loop detected for " << this
+                << ". Aborting after two iterations.";
         }
     }
 }

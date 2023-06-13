@@ -7,7 +7,7 @@
 #include <private/qsgtexturematerial_p.h>
 #include <qopenglfunctions.h>
 #include <QtCore/qmath.h>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 QT_BEGIN_NAMESPACE
 

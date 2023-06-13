@@ -1,0 +1,8 @@
+# This file only exists for qmake.
+
+module WearableStyle
+prefer :/qt/qml/WearableStyle/
+PageIndicator 254.0 PageIndicator.qml
+Slider 254.0 Slider.qml
+Switch 254.0 Switch.qml
+singleton UIStyle 254.0 UIStyle.qml

@@ -23,9 +23,11 @@
 #include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljsengine_p.h>
 #include <QtQml/private/qqmldirparser_p.h>
+#include <QtQmlCompiler/private/qqmljstyperesolver_p.h>
 #include <QtCore/QMetaType>
 
 #include <limits>
+#include <memory>
 
 Q_DECLARE_METATYPE(QQmlDirParser::Plugin)
 
@@ -322,6 +324,15 @@ public:
     ImportScope &importScope() { return m_importScope; }
     const ImportScope &importScope() const { return m_importScope; }
 
+    std::optional<std::shared_ptr<QQmlJSTypeResolver>> typeResolver() const
+    {
+        return m_typeResolver;
+    }
+    void setTypeResolver(const std::shared_ptr<QQmlJSTypeResolver> &typeResolver)
+    {
+        m_typeResolver = typeResolver;
+    }
+
 private:
     friend class QQmlDomAstCreator;
     std::shared_ptr<Engine> m_engine;
@@ -333,6 +344,7 @@ private:
     QList<Pragma> m_pragmas;
     QList<Import> m_imports;
     ImportScope m_importScope;
+    std::optional<std::shared_ptr<QQmlJSTypeResolver>> m_typeResolver;
 };
 
 class QMLDOM_EXPORT QmltypesFile final : public ExternalOwningItem

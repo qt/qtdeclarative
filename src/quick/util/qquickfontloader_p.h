@@ -30,10 +30,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFontLoader : public QObject
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickFontLoader)
 
-    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
-    Q_PROPERTY(QString name READ name NOTIFY nameChanged)
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
-    Q_PROPERTY(QFont font READ font NOTIFY fontChanged)
+    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged FINAL)
+    Q_PROPERTY(QString name READ name NOTIFY nameChanged FINAL)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged FINAL)
+    Q_PROPERTY(QFont font READ font NOTIFY fontChanged FINAL)
     QML_NAMED_ELEMENT(FontLoader)
     QML_ADDED_IN_VERSION(2, 0)
 

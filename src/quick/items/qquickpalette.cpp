@@ -50,8 +50,8 @@ static constexpr bool is_valid(QPalette::ColorGroup cg) noexcept
     \ingroup qtquick-visual
     \brief Contains color groups for each QML item state.
 
-    A palette consists of three color groups: Active, Disabled, and Inactive.
-    Active color group is the default group, its colors are used for other groups
+    A palette consists of three color groups: \c active, \c disabled, and \c inactive.
+    The \c active color group is the default group: its colors are used for other groups
     if colors of these groups aren't explicitly specified.
 
     In the following example, color is applied for all color groups:
@@ -93,18 +93,19 @@ static constexpr bool is_valid(QPalette::ColorGroup cg) noexcept
     \endcode
 
     It is also possible to specify colors like this:
-    \code
-    palette {
-        buttonText: "azure"
-        button: "khaki"
 
-        disabled {
-            buttonText: "lavender"
-            button: "coral"
-        }
-    }
-    \endcode
-    This approach is convenient when you need to specify a whole palette with all color groups.
+    \snippet qtquickcontrols-custom-palette-buttons.qml palette
+
+    This approach is especially convenient when you need to specify a whole
+    palette with all color groups; but as with the other cases above, the
+    colors that are not specified are initialized from SystemPalette, or
+    potentially the \l {Styling Qt Quick Controls}{Qt Quick Controls style},
+    if one is in use.
+
+    \note Some Controls styles use some palette colors, but many styles use
+    independent colors.
+
+    \sa Window::palette, Item::palette, Popup::palette, SystemPalette
 */
 
 /*!

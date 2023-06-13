@@ -181,8 +181,11 @@ void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
         if (indexCancelled())
             return;
         QString fPath = dir.filePath(file);
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
         FileToLoad fileToLoad =
-                FileToLoad::fromFileSystem(newCurrent.ownerAs<DomEnvironment>(), fPath);
+                FileToLoad::fromFileSystem(newCurrent.ownerAs<DomEnvironment>(), fPath, options);
         if (!fileToLoad.canonicalPath().isEmpty()) {
             newCurrent.loadBuiltins();
             newCurrent.loadFile(fileToLoad, [](Path, DomItem &, DomItem &) {}, {});
@@ -419,9 +422,11 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
     }
     QString fPath = url2Path(url, UrlLookup::ForceLookup);
     Path p;
+    DomCreationOptions options;
+    options.setFlag(DomCreationOption::WithScriptExpressions);
+    options.setFlag(DomCreationOption::WithSemanticAnalysis);
     newCurrent.loadFile(
-            FileToLoad::fromMemory(newCurrent.ownerAs<DomEnvironment>(), fPath, docText,
-                                   DomCreationOption::WithSemanticAnalysis),
+            FileToLoad::fromMemory(newCurrent.ownerAs<DomEnvironment>(), fPath, docText, options),
             [&p](Path, DomItem &, DomItem &newValue) { p = newValue.fileObject().canonicalPath(); },
             {});
     newCurrent.loadPendingDependencies();

@@ -24,10 +24,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerDeviceHandler : public QQuickPointerHa
 {
     Q_OBJECT
     Q_PROPERTY(QInputDevice::DeviceTypes acceptedDevices READ acceptedDevices WRITE
-                       setAcceptedDevices NOTIFY acceptedDevicesChanged)
-    Q_PROPERTY(QPointingDevice::PointerTypes acceptedPointerTypes READ acceptedPointerTypes WRITE setAcceptedPointerTypes NOTIFY acceptedPointerTypesChanged)
-    Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
-    Q_PROPERTY(Qt::KeyboardModifiers acceptedModifiers READ acceptedModifiers WRITE setAcceptedModifiers NOTIFY acceptedModifiersChanged)
+                       setAcceptedDevices NOTIFY acceptedDevicesChanged FINAL)
+    Q_PROPERTY(QPointingDevice::PointerTypes acceptedPointerTypes READ acceptedPointerTypes WRITE setAcceptedPointerTypes NOTIFY acceptedPointerTypesChanged FINAL)
+    Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged FINAL)
+    Q_PROPERTY(Qt::KeyboardModifiers acceptedModifiers READ acceptedModifiers WRITE setAcceptedModifiers NOTIFY acceptedModifiersChanged FINAL)
 
 public:
     explicit QQuickPointerDeviceHandler(QQuickItem *parent = nullptr);

@@ -912,15 +912,18 @@ void QQmlJSCodeGenerator::generateVariantEqualityComparison(
                                      + u" nullptr"_s)
                 + u";\n} else if ("_s + registerName
                 + u".metaType() == QMetaType::fromType<std::nullptr_t>()) {\n"_s
-                + m_state.accumulatorVariableOut + u" = "_s + (invert ? u"false"_s : u"true"_s)
+                + m_state.accumulatorVariableOut + u" = "_s
+                + conversion(m_typeResolver->boolType(), m_state.accumulatorOut(),
+                             (invert ? u"false"_s : u"true"_s))
                 + u";\n}\n"_s;
     }
 
     // fallback case (if variant contains a different type, then it is not null or undefined)
     m_body += u"else {\n"_s + m_state.accumulatorVariableOut + u" = "_s
-            + (invert ? (registerName + u".isValid() ? true : false"_s)
-                      : (registerName + u".isValid() ? false : true"_s))
-            + u";}\n"_s;
+            + conversion(m_typeResolver->boolType(), m_state.accumulatorOut(),
+                         (invert ? (registerName + u".isValid() ? true : false"_s)
+                                 : (registerName + u".isValid() ? false : true"_s)))
+            + u";\n}"_s;
 }
 
 void QQmlJSCodeGenerator::rejectIfNonQObjectOut(const QString &error)
@@ -1186,8 +1189,13 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
     const QQmlJSRegisterContent specific = m_typeResolver->memberType(
                 callBase, m_jsUnitGenerator->lookupName(index));
 
-    // We have checked that in the type propagator.
-    Q_ASSERT(!specific.storedType().isNull());
+    if (specific.storedType().isNull()) {
+        reject(u"SetLookup. Could not find property "
+               + m_jsUnitGenerator->lookupName(index)
+               + u" on type "
+               + callBase.storedType()->internalName());
+        return;
+    }
 
     // Choose a container that can hold both, the "in" accumulator and what we actually want.
     // If the types are all the same because we can all store them as verbatim C++ types,
@@ -2345,7 +2353,7 @@ QString QQmlJSCodeGenerator::contentPointer(const QQmlJSRegisterContent &content
         return u'&' + var;
 
     if (m_typeResolver->isNumeric(content.storedType())
-             && m_typeResolver->containedType(content)->scopeType() == QQmlJSScope::EnumScope) {
+        && m_typeResolver->containedType(content)->scopeType() == QQmlSA::ScopeType::EnumScope) {
         return u'&' + var;
     }
 
@@ -2372,7 +2380,7 @@ QString QQmlJSCodeGenerator::contentType(const QQmlJSRegisterContent &content, c
     if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
         return metaTypeFromName(contained);
 
-    if (m_typeResolver->isNumeric(stored) && contained->scopeType() == QQmlJSScope::EnumScope)
+    if (m_typeResolver->isNumeric(stored) && contained->scopeType() == QQmlSA::ScopeType::EnumScope)
         return metaTypeFromType(contained->baseType());
 
     if (stored->isListProperty() && m_typeResolver->containedType(content)->isListProperty())
@@ -3212,7 +3220,7 @@ QString QQmlJSCodeGenerator::convertStored(
     const auto isBoolOrNumber = [&](const QQmlJSScope::ConstPtr &type) {
         return m_typeResolver->isNumeric(m_typeResolver->globalType(type))
                 || m_typeResolver->equals(type, m_typeResolver->boolType())
-                || type->scopeType() ==  QQmlJSScope::EnumScope;
+                || type->scopeType() == QQmlSA::ScopeType::EnumScope;
     };
 
     if (m_typeResolver->equals(from, m_typeResolver->realType())

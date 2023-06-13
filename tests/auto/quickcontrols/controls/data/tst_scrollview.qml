@@ -188,6 +188,18 @@ TestCase {
         horizontal.increase()
         verify(horizontal.position > 0)
         compare(control.contentItem.visibleArea.xPosition, horizontal.position)
+
+        vertical.policy = ScrollBar.AlwaysOn
+        horizontal.policy = ScrollBar.AlwaysOn
+
+        verify(control.effectiveScrollBarWidth > 0)
+        verify(control.effectiveScrollBarHeight > 0)
+
+        vertical.policy = ScrollBar.AlwaysOff
+        horizontal.policy = ScrollBar.AlwaysOff
+
+        compare(control.effectiveScrollBarWidth, 0)
+        compare(control.effectiveScrollBarHeight, 0)
     }
 
     function test_oneChild_data() {

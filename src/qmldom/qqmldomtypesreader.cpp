@@ -59,11 +59,11 @@ void QmltypesReader::insertSignalOrMethod(const QQmlJSMetaMethod &metaMethod,
     MethodInfo methodInfo;
     // ### confusion between Method and Slot. Method should be removed.
     switch (metaMethod.methodType()) {
-    case QQmlJSMetaMethod::Method:
-    case QQmlJSMetaMethod::Slot:
+    case QQmlJSMetaMethodType::Method:
+    case QQmlJSMetaMethodType::Slot:
         methodInfo.methodType = MethodInfo::MethodType::Method;
         break;
-    case QQmlJSMetaMethod::Signal:
+    case QQmlJSMetaMethodType::Signal:
         methodInfo.methodType = MethodInfo::MethodType::Signal;
         break;
     default:

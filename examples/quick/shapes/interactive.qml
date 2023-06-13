@@ -56,7 +56,7 @@ Rectangle {
                 property Component shapeType: Component {
                     ShapePath {
                         id: quadShapePath
-                        strokeColor: root.palette.windowText
+                        strokeColor: strokeSwitch.checked ? root.palette.windowText : "transparent"
                         strokeWidth: widthSlider.value
                         fillColor: fillSwitch.checked ? "green" : "transparent"
                         PathQuad {
@@ -83,7 +83,7 @@ Rectangle {
                 property Component shapeType: Component {
                     ShapePath {
                         id: cubicShapePath
-                        strokeColor: root.palette.windowText
+                        strokeColor: strokeSwitch.checked ? root.palette.windowText : "transparent"
                         strokeWidth: widthSlider.value
                         fillColor: fillSwitch.checked ? "green" : "transparent"
                         PathCubic {
@@ -109,6 +109,15 @@ Rectangle {
                     }
                 }
             }
+            ToolButton {
+                id: modifyButton
+                text: qsTr("Modify")
+                checkable: true
+                onCheckedChanged: {
+                    if (checked)
+                        showHandlesSwitch.checked = true;
+                }
+            }
         }
 
         Label {
@@ -130,6 +139,12 @@ Rectangle {
             id: fillSwitch
             text: qsTr("Fill")
         }
+
+        Switch {
+            id: strokeSwitch
+            text: qsTr("Stroke")
+            checked: true
+        }
     }
 
     Component {
@@ -144,9 +159,11 @@ Rectangle {
 
             width: 20
             height: width
+            radius: halfWidth
             visible: showHandlesSwitch.checked
             color: hh.hovered  ? "yellow" : idleColor
             border.color: "grey"
+            opacity: 0.75
 
             property real halfWidth: width / 2
             property bool complete: false
@@ -203,14 +220,16 @@ Rectangle {
             property ShapePath activePath: null
             onActiveChanged: {
                 const tool = toolButtons.checkedButton;
-                if (active) {
-                    activePath = tool.shapeType.createObject(root, {
-                        startX: centroid.position.x, startY: centroid.position.y
-                    });
-                    shape.data.push(activePath);
-                } else {
-                    activePath.finishCreation();
-                    activePath = null;
+                if (tool != modifyButton) {
+                    if (active) {
+                        activePath = tool.shapeType.createObject(root, {
+                            startX: centroid.position.x, startY: centroid.position.y
+                        });
+                        shape.data.push(activePath);
+                    } else {
+                        activePath.finishCreation();
+                        activePath = null;
+                    }
                 }
             }
             onCentroidChanged: if (activePath) {

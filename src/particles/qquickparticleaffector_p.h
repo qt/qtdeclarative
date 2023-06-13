@@ -26,12 +26,12 @@ QT_BEGIN_NAMESPACE
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleAffector : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
-    Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged)
-    Q_PROPERTY(QStringList whenCollidingWith READ whenCollidingWith WRITE setWhenCollidingWith NOTIFY whenCollidingWithChanged)
-    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
-    Q_PROPERTY(bool once READ onceOff WRITE setOnceOff NOTIFY onceChanged)
-    Q_PROPERTY(QQuickParticleExtruder* shape READ shape WRITE setShape NOTIFY shapeChanged)
+    Q_PROPERTY(QQuickParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged FINAL)
+    Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged FINAL)
+    Q_PROPERTY(QStringList whenCollidingWith READ whenCollidingWith WRITE setWhenCollidingWith NOTIFY whenCollidingWithChanged FINAL)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged FINAL)
+    Q_PROPERTY(bool once READ onceOff WRITE setOnceOff NOTIFY onceChanged FINAL)
+    Q_PROPERTY(QQuickParticleExtruder* shape READ shape WRITE setShape NOTIFY shapeChanged FINAL)
 
     QML_NAMED_ELEMENT(ParticleAffector)
     QML_ADDED_IN_VERSION(2, 0)

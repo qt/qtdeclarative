@@ -89,6 +89,7 @@ class IfStatement;
 class BinaryExpression;
 class VariableDeclaration;
 class VariableDeclarationEntry;
+class GenericScriptElement;
 // TODO: add new script classes here, as qqmldomitem_p.h cannot include qqmldomscriptelements_p.h
 // without creating circular dependencies
 class ReturnStatement;

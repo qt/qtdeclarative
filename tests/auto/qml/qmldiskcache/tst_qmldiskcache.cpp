@@ -1046,7 +1046,7 @@ static QString writeTempFile(
 void tst_qmldiskcache::invalidateSaveLoadCache()
 {
     qmlRegisterType<AParent>("Base", 1, 0, "Parent");
-    QQmlEngine e;
+    std::unique_ptr<QQmlEngine> e = std::make_unique<QQmlEngine>();
 
     // If you store a CU to a .qmlc file at run time, the .qmlc file will contain
     // alias entries with the encodedMetaPropertyIndex pre-resolved. That's in
@@ -1054,14 +1054,32 @@ void tst_qmldiskcache::invalidateSaveLoadCache()
     // a need to recompile the file.
 
     QTemporaryDir tempDir;
+    writeTempFile(
+        tempDir, QLatin1String("B.qml"),
+        R"(
+            import QML
+            QtObject {
+                component C: QtObject {}
+            }
+        )");
+
     const QString fileName = writeTempFile(
-                tempDir, QLatin1String("a.qml"),
-                "import Base\nParent { id: self; property alias z: self.x }");
+        tempDir, QLatin1String("a.qml"),
+        R"(
+            import Base
+            Parent {
+                id: self
+                property alias z: self.x
+                component C: Parent {}
+                property C c: C {}
+                property B.C d: B.C {}
+            }
+        )");
     const QUrl url = QUrl::fromLocalFile(fileName);
     waitForFileSystem();
 
     {
-        QQmlComponent a(&e, url);
+        QQmlComponent a(e.get(), url);
         QVERIFY2(a.isReady(), qPrintable(a.errorString()));
         QScopedPointer<QObject> ao(a.create());
         QVERIFY(!ao.isNull());
@@ -1075,12 +1093,13 @@ void tst_qmldiskcache::invalidateSaveLoadCache()
     QVERIFY2(oldUnit->loadFromDisk(url, QFileInfo(fileName).lastModified(), &errorString), qPrintable(errorString));
 
     // Produce a checksum mismatch.
-    e.clearComponentCache();
+    e->clearComponentCache();
     qmlClearTypeRegistrations();
     qmlRegisterType<BParent>("Base", 1, 0, "Parent");
+    e = std::make_unique<QQmlEngine>();
 
     {
-        QQmlComponent b(&e, url);
+        QQmlComponent b(e.get(), url);
         QVERIFY2(b.isReady(), qPrintable(b.errorString()));
         QScopedPointer<QObject> bo(b.create());
         QVERIFY(!bo.isNull());
@@ -1092,7 +1111,7 @@ void tst_qmldiskcache::invalidateSaveLoadCache()
     // the above test will not test the save/load cache anymore. Therefore, in order to make really
     // sure that we get a new CU that invalidates the save/load cache, modify the file in place.
 
-    e.clearComponentCache();
+    e->clearComponentCache();
     {
         QFile file(fileName);
         file.open(QIODevice::WriteOnly | QIODevice::Append);
@@ -1101,7 +1120,7 @@ void tst_qmldiskcache::invalidateSaveLoadCache()
     waitForFileSystem();
 
     {
-        QQmlComponent b(&e, url);
+        QQmlComponent b(e.get(), url);
         QVERIFY2(b.isReady(), qPrintable(b.errorString()));
         QScopedPointer<QObject> bo(b.create());
         QVERIFY(!bo.isNull());

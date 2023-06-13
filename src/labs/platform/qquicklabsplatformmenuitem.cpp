@@ -152,6 +152,8 @@ void QQuickLabsPlatformMenuItem::sync()
     QKeySequence sequence;
     if (m_shortcut.metaType().id() == QMetaType::Int)
         sequence = QKeySequence(static_cast<QKeySequence::StandardKey>(m_shortcut.toInt()));
+    else if (m_shortcut.metaType().id() == QMetaType::QKeySequence)
+        sequence = m_shortcut.value<QKeySequence>();
     else
         sequence = QKeySequence::fromString(m_shortcut.toString());
     m_handle->setShortcut(sequence.toString());
@@ -586,6 +588,8 @@ void QQuickLabsPlatformMenuItem::addShortcut()
     QKeySequence sequence;
     if (m_shortcut.metaType().id() == QMetaType::Int)
         sequence = QKeySequence(static_cast<QKeySequence::StandardKey>(m_shortcut.toInt()));
+    else if (m_shortcut.metaType().id() == QMetaType::QKeySequence)
+        sequence = m_shortcut.value<QKeySequence>();
     else
         sequence = QKeySequence::fromString(m_shortcut.toString());
     if (!sequence.isEmpty() && m_enabled) {
@@ -606,6 +610,8 @@ void QQuickLabsPlatformMenuItem::removeShortcut()
     QKeySequence sequence;
     if (m_shortcut.metaType().id() == QMetaType::Int)
         sequence = QKeySequence(static_cast<QKeySequence::StandardKey>(m_shortcut.toInt()));
+    else if (m_shortcut.metaType().id() == QMetaType::QKeySequence)
+        sequence = m_shortcut.value<QKeySequence>();
     else
         sequence = QKeySequence::fromString(m_shortcut.toString());
     QGuiApplicationPrivate::instance()->shortcutMap.removeShortcut(m_shortcutId, this, sequence);

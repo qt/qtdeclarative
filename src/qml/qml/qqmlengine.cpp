@@ -441,34 +441,126 @@ void QQmlData::flushPendingBinding(int coreIndex)
 QQmlData::DeferredData::DeferredData() = default;
 QQmlData::DeferredData::~DeferredData() = default;
 
+template<>
+int qmlRegisterType<void>(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
+{
+    QQmlPrivate::RegisterType type = {
+        QQmlPrivate::RegisterType::CurrentVersion,
+        QMetaType(),
+        QMetaType(),
+        0, nullptr, nullptr,
+        QString(),
+        nullptr,
+        uri,
+        QTypeRevision::fromVersion(versionMajor, versionMinor),
+        qmlName,
+        nullptr,
+        nullptr,
+        nullptr,
+        -1,
+        -1,
+        -1,
+        nullptr,
+        nullptr,
+        nullptr,
+        QTypeRevision::zero(),
+        -1,
+        QQmlPrivate::ValueTypeCreationMethod::None,
+    };
+
+    return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
+}
+
 bool QQmlEnginePrivate::baseModulesUninitialized = true;
 void QQmlEnginePrivate::init()
 {
     Q_Q(QQmlEngine);
 
     if (baseModulesUninitialized) {
+        // Named builtins
+        qmlRegisterType<void>("QML", 1, 0, "void");
 
-        // required for the Compiler.
+        const int varId = qmlRegisterType<QVariant>("QML", 1, 0, "var");
+        QQmlMetaType::registerTypeAlias(varId, QLatin1String("variant"));
+        qmlRegisterAnonymousSequentialContainer<QList<QVariant>>("QML", 1);
+
         qmlRegisterType<QObject>("QML", 1, 0, "QtObject");
         qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component");
-        qmlRegisterAnonymousSequentialContainer<QList<QVariant>>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<bool>>("QML", 1);
+
+        qmlRegisterType<int>("QML", 1, 0, "int");
         qmlRegisterAnonymousSequentialContainer<QList<int>>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<float>>("QML", 1);
+
+        const int realId = qmlRegisterType<double>("QML", 1, 0, "real");
+        QQmlMetaType::registerTypeAlias(realId, QLatin1String("double"));
         qmlRegisterAnonymousSequentialContainer<QList<double>>("QML", 1);
+
+        qmlRegisterType<QString>("QML", 1, 0, "string");
         qmlRegisterAnonymousSequentialContainer<QList<QString>>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<QUrl>>("QML", 1);
+
+        qmlRegisterType<bool>("QML", 1, 0, "bool");
+        qmlRegisterAnonymousSequentialContainer<QList<bool>>("QML", 1);
+
+        qmlRegisterType<QDateTime>("QML", 1, 0, "date");
         qmlRegisterAnonymousSequentialContainer<QList<QDateTime>>("QML", 1);
+
+        qmlRegisterType<QUrl>("QML", 1, 0, "url");
+        qmlRegisterAnonymousSequentialContainer<QList<QUrl>>("QML", 1);
+
+#if QT_CONFIG(regularexpression)
+        qmlRegisterType<QRegularExpression>("QML", 1, 0, "regexp");
         qmlRegisterAnonymousSequentialContainer<QList<QRegularExpression>>("QML", 1);
+#else
+        qmlRegisterType<void>("QML", 1, 0, "regexp");
+#endif
+
+        // Anonymous builtins
+        qmlRegisterAnonymousType<std::nullptr_t>("QML", 1);
+        qmlRegisterAnonymousType<QVariantMap>("QML", 1);
+
+        qmlRegisterAnonymousType<QJSValue>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<QJSValue>>("QML", 1);
+
+        qmlRegisterAnonymousType<qint8>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<qint8>>("QML", 1);
+
+        qmlRegisterAnonymousType<quint8>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<quint8>>("QML", 1);
+
+        qmlRegisterAnonymousType<short>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<short>>("QML", 1);
+
+        qmlRegisterAnonymousType<ushort>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<ushort>>("QML", 1);
+
+        qmlRegisterAnonymousType<uint>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<uint>>("QML", 1);
+
+        qmlRegisterAnonymousType<qlonglong>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<qlonglong>>("QML", 1);
+
+        qmlRegisterAnonymousType<qulonglong>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<qulonglong>>("QML", 1);
+
+        qmlRegisterAnonymousType<float>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<float>>("QML", 1);
+
+        qmlRegisterAnonymousType<QChar>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<QChar>>("QML", 1);
+
+        qmlRegisterAnonymousType<QDate>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<QDate>>("QML", 1);
+
+        qmlRegisterAnonymousType<QTime>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<QTime>>("QML", 1);
+
+        qmlRegisterAnonymousType<QByteArray>("QML", 1);
         qmlRegisterAnonymousSequentialContainer<QList<QByteArray>>("QML", 1);
 
         // No need to specifically register those.
         static_assert(std::is_same_v<QStringList, QList<QString>>);
         static_assert(std::is_same_v<QVariantList, QList<QVariant>>);
 
-        qRegisterMetaType<QVariant>();
         qRegisterMetaType<QQmlScriptString>();
-        qRegisterMetaType<QJSValue>();
         qRegisterMetaType<QQmlComponent::Status>();
         qRegisterMetaType<QList<QObject*> >();
         qRegisterMetaType<QQmlBinding*>();
@@ -1588,7 +1680,8 @@ void QQmlEnginePrivate::cleanupScarceResources()
 
   The newly added \a path will be first in the importPathList().
 
-  \sa setImportPathList(), {QML Modules}, {QML Import Path}
+  \b {See also} \l setImportPathList(), \l {QML Modules},
+    and \l [QtQml] {QML Import Path}
 */
 void QQmlEngine::addImportPath(const QString& path)
 {

@@ -68,22 +68,30 @@ void TextDocument::setPlainText(const QString &text)
     m_content = text;
     m_blocks.clear();
 
-    int blockStart = 0;
-    int blockNumber = 0;
-    while (blockStart < text.size()) {
+    const auto appendToBlocks = [this](int blockNumber, int start, int length) {
         Block block;
-        block.textBlock.setBlockNumber(blockNumber++);
-        block.textBlock.setPosition(blockStart);
+        block.textBlock.setBlockNumber(blockNumber);
+        block.textBlock.setPosition(start);
         block.textBlock.setDocument(this);
+        block.textBlock.setLength(length);
+        m_blocks.append(block);
+    };
 
+    int blockStart = 0;
+    int blockNumber = -1;
+    while (blockStart < text.size()) {
         int blockEnd = text.indexOf(u'\n', blockStart) + 1;
         if (blockEnd == 0)
             blockEnd = text.size();
-
-        block.textBlock.setLength(blockEnd - blockStart);
-        m_blocks.append(block);
+        appendToBlocks(++blockNumber, blockStart, blockEnd - blockStart);
         blockStart = blockEnd;
     }
+    // Add an empty block if the text ends with \n. This is required for retrieving
+    // the actual line of the text editor if requested, for example, in findBlockByNumber.
+    // Consider a case with text aa\nbb\n\n. You are on 4th line of the text editor and even
+    // if it is an empty line, we introduce a text block for it to maybe use later.
+    if (text.endsWith(u'\n'))
+        appendToBlocks(++blockNumber, blockStart, 0);
 }
 
 bool TextDocument::isModified() const

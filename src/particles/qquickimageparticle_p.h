@@ -149,42 +149,42 @@ public:
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickImageParticle : public QQuickParticlePainter
 {
     Q_OBJECT
-    Q_PROPERTY(QUrl source READ image WRITE setImage NOTIFY imageChanged)
-    Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites)
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    Q_PROPERTY(QUrl source READ image WRITE setImage NOTIFY imageChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites FINAL)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged FINAL)
     //### Is it worth having progress like Image has?
     //Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
 
-    Q_PROPERTY(QUrl colorTable READ colortable WRITE setColortable NOTIFY colortableChanged)
-    Q_PROPERTY(QUrl sizeTable READ sizetable WRITE setSizetable NOTIFY sizetableChanged)
-    Q_PROPERTY(QUrl opacityTable READ opacitytable WRITE setOpacitytable NOTIFY opacitytableChanged)
+    Q_PROPERTY(QUrl colorTable READ colortable WRITE setColortable NOTIFY colortableChanged FINAL)
+    Q_PROPERTY(QUrl sizeTable READ sizetable WRITE setSizetable NOTIFY sizetableChanged FINAL)
+    Q_PROPERTY(QUrl opacityTable READ opacitytable WRITE setOpacitytable NOTIFY opacitytableChanged FINAL)
 
     //###Now just colorize - add a flag for 'solid' color particles(where the img is just a mask?)?
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged RESET resetColor)
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged RESET resetColor FINAL)
     //Stacks (added) with individual colorVariations
-    Q_PROPERTY(qreal colorVariation READ colorVariation WRITE setColorVariation NOTIFY colorVariationChanged RESET resetColor)
-    Q_PROPERTY(qreal redVariation READ redVariation WRITE setRedVariation NOTIFY redVariationChanged RESET resetColor)
-    Q_PROPERTY(qreal greenVariation READ greenVariation WRITE setGreenVariation NOTIFY greenVariationChanged RESET resetColor)
-    Q_PROPERTY(qreal blueVariation READ blueVariation WRITE setBlueVariation NOTIFY blueVariationChanged RESET resetColor)
+    Q_PROPERTY(qreal colorVariation READ colorVariation WRITE setColorVariation NOTIFY colorVariationChanged RESET resetColor FINAL)
+    Q_PROPERTY(qreal redVariation READ redVariation WRITE setRedVariation NOTIFY redVariationChanged RESET resetColor FINAL)
+    Q_PROPERTY(qreal greenVariation READ greenVariation WRITE setGreenVariation NOTIFY greenVariationChanged RESET resetColor FINAL)
+    Q_PROPERTY(qreal blueVariation READ blueVariation WRITE setBlueVariation NOTIFY blueVariationChanged RESET resetColor FINAL)
     //Stacks (multiplies) with the Alpha in the color, mostly here so you can use svg color names (which have full alpha)
-    Q_PROPERTY(qreal alpha READ alpha WRITE setAlpha NOTIFY alphaChanged RESET resetColor)
-    Q_PROPERTY(qreal alphaVariation READ alphaVariation WRITE setAlphaVariation NOTIFY alphaVariationChanged RESET resetColor)
+    Q_PROPERTY(qreal alpha READ alpha WRITE setAlpha NOTIFY alphaChanged RESET resetColor FINAL)
+    Q_PROPERTY(qreal alphaVariation READ alphaVariation WRITE setAlphaVariation NOTIFY alphaVariationChanged RESET resetColor FINAL)
 
     Q_PROPERTY(qreal rotation READ rotation WRITE setRotation NOTIFY rotationChanged RESET resetRotation)
-    Q_PROPERTY(qreal rotationVariation READ rotationVariation WRITE setRotationVariation NOTIFY rotationVariationChanged RESET resetRotation)
-    Q_PROPERTY(qreal rotationVelocity READ rotationVelocity WRITE setRotationVelocity NOTIFY rotationVelocityChanged RESET resetRotation)
-    Q_PROPERTY(qreal rotationVelocityVariation READ rotationVelocityVariation WRITE setRotationVelocityVariation NOTIFY rotationVelocityVariationChanged RESET resetRotation)
+    Q_PROPERTY(qreal rotationVariation READ rotationVariation WRITE setRotationVariation NOTIFY rotationVariationChanged RESET resetRotation FINAL)
+    Q_PROPERTY(qreal rotationVelocity READ rotationVelocity WRITE setRotationVelocity NOTIFY rotationVelocityChanged RESET resetRotation FINAL)
+    Q_PROPERTY(qreal rotationVelocityVariation READ rotationVelocityVariation WRITE setRotationVelocityVariation NOTIFY rotationVelocityVariationChanged RESET resetRotation FINAL)
     //If true, then will face the direction of motion. Stacks with rotation, e.g. setting rotation
     //to 180 will lead to facing away from the direction of motion
-    Q_PROPERTY(bool autoRotation READ autoRotation WRITE setAutoRotation NOTIFY autoRotationChanged RESET resetRotation)
+    Q_PROPERTY(bool autoRotation READ autoRotation WRITE setAutoRotation NOTIFY autoRotationChanged RESET resetRotation FINAL)
 
     //xVector is the vector from the top-left point to the top-right point, and is multiplied by current size
-    Q_PROPERTY(QQuickDirection* xVector READ xVector WRITE setXVector NOTIFY xVectorChanged RESET resetDeformation)
+    Q_PROPERTY(QQuickDirection* xVector READ xVector WRITE setXVector NOTIFY xVectorChanged RESET resetDeformation FINAL)
     //yVector is the same, but top-left to bottom-left. The particle is always a parallelogram.
-    Q_PROPERTY(QQuickDirection* yVector READ yVector WRITE setYVector NOTIFY yVectorChanged RESET resetDeformation)
-    Q_PROPERTY(bool spritesInterpolate READ spritesInterpolate WRITE setSpritesInterpolate NOTIFY spritesInterpolateChanged)
+    Q_PROPERTY(QQuickDirection* yVector READ yVector WRITE setYVector NOTIFY yVectorChanged RESET resetDeformation FINAL)
+    Q_PROPERTY(bool spritesInterpolate READ spritesInterpolate WRITE setSpritesInterpolate NOTIFY spritesInterpolateChanged FINAL)
 
-    Q_PROPERTY(EntryEffect entryEffect READ entryEffect WRITE setEntryEffect NOTIFY entryEffectChanged)
+    Q_PROPERTY(EntryEffect entryEffect READ entryEffect WRITE setEntryEffect NOTIFY entryEffectChanged FINAL)
     QML_NAMED_ELEMENT(ImageParticle)
     QML_ADDED_IN_VERSION(2, 0)
 public:

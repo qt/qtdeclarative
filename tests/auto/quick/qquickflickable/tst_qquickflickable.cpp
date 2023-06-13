@@ -8,6 +8,7 @@
 #include <QtGui/QStyleHints>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <private/qguiapplication_p.h>
 #include <private/qquickflickable_p.h>
 #include <private/qquickflickable_p_p.h>
 #include <private/qquickmousearea_p.h>
@@ -15,6 +16,7 @@
 #include <private/qqmlvaluetype_p.h>
 #include <private/qquicktaphandler_p.h>
 #include <math.h>
+#include <QtGui/qpa/qplatformintegration.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/geometrytestutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
@@ -224,6 +226,7 @@ private slots:
     void setContentPositionWhileDragging();
     void coalescedMove();
     void onlyOneMove();
+    void proportionalWheelScrolling();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -3234,6 +3237,75 @@ void tst_qquickflickable::onlyOneMove()
     QCOMPARE(flickStartedSpy.size(), 1);
     QCOMPARE(movementEndedSpy.size(), 1);
     QCOMPARE(flickEndedSpy.size(), 1);
+}
+
+void tst_qquickflickable::proportionalWheelScrolling() // QTBUG-106338 etc.
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("wheel.qml")));
+    QQuickViewTestUtils::centerOnScreen(&window);
+    QVERIFY(window.isVisible());
+    QQuickItem *rootItem = window.rootObject();
+    QVERIFY(rootItem);
+    QQuickFlickable *flickable = rootItem->findChild<QQuickFlickable *>();
+    QVERIFY(flickable);
+
+    QVERIFY(!flickable->property("ended").value<bool>());
+
+    QPointF pos(flickable->x() + flickable->width() / 2, flickable->y() + flickable->height() / 2);
+    QPoint angleDelta(0, -120);
+    QWheelEvent wheelEvent(pos, window.mapToGlobal(pos), QPoint(), angleDelta,
+                               Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
+
+    QGuiApplication::sendEvent(&window, &wheelEvent);
+    qApp->processEvents();
+
+    // Verify that scrolling is proportional to the wheel delta
+    QVERIFY(flickable->isMovingVertically());
+    QTRY_VERIFY(!flickable->isMovingVertically());
+
+    // The current movement formula being used is: delta / 120 * wheelScrollLines * 24
+    const int defaultWheelDecel = 15000;
+    bool wheelDecelerationEnvSet = false;
+    const int wheelDecelerationEnv = qEnvironmentVariableIntValue("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", &wheelDecelerationEnvSet);
+    const qreal wheelDecel = wheelDecelerationEnvSet ? wheelDecelerationEnv : defaultWheelDecel;
+    const bool proportionalWheel = wheelDecel >= 15000;
+    qCDebug(lcTests) << "platform wheel decel" << defaultWheelDecel
+                     << "env wheel decel" << wheelDecelerationEnv
+                     << "expect proportional scrolling?" << proportionalWheel;
+    const qreal expectedMovementFromWheelClick = qAbs(angleDelta.y()) / 120 * qApp->styleHints()->wheelScrollLines() * 24;
+
+    if (proportionalWheel)
+        QCOMPARE(flickable->contentY(), expectedMovementFromWheelClick);
+
+    QVERIFY(flickable->property("ended").value<bool>());
+    QCOMPARE(flickable->property("movementsAfterEnd").value<int>(), 0);
+
+    flickable->setProperty("ended", QVariant::fromValue(false));
+    flickable->setContentY(0);
+
+    // Verify that multiple wheel events in a row won't accumulate the scroll distance, before the timeline completes
+    wheelEvent.setTimestamp(wheelEvent.timestamp() + 2000);
+    QGuiApplication::sendEvent(&window, &wheelEvent);
+
+    wheelEvent.setTimestamp(wheelEvent.timestamp() + 10);
+    QGuiApplication::sendEvent(&window, &wheelEvent);
+
+    wheelEvent.setTimestamp(wheelEvent.timestamp() + 10);
+    QGuiApplication::sendEvent(&window, &wheelEvent);
+
+    qApp->processEvents();
+
+    QVERIFY(flickable->isMovingVertically());
+    QTRY_VERIFY(!flickable->isMovingVertically());
+
+    if (proportionalWheel) {
+        QVERIFY2(flickable->contentY() >= expectedMovementFromWheelClick, "The contentItem moved shorter than expected from a wheelEvent");
+        QCOMPARE_LT(flickable->contentY(), expectedMovementFromWheelClick * 3);
+    }
+
+    QVERIFY(flickable->property("ended").value<bool>());
+    QCOMPARE(flickable->property("movementsAfterEnd").value<int>(), 0);
 }
 
 QTEST_MAIN(tst_qquickflickable)

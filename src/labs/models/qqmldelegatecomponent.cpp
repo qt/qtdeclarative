@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty variant QtQml.Models::DelegateChoice::roleValue
+    \qmlproperty variant Qt.labs.qmlmodels::DelegateChoice::roleValue
     This property holds the value used to match the role data for the role provided by \l DelegateChooser::role.
 */
 QVariant QQmlDelegateChoice::roleValue() const
@@ -39,7 +39,7 @@ void QQmlDelegateChoice::setRoleValue(const QVariant &value)
 }
 
 /*!
-    \qmlproperty int QtQml.Models::DelegateChoice::row
+    \qmlproperty int Qt.labs.qmlmodels::DelegateChoice::row
     This property holds the value used to match the row value of model elements.
     With models that have only the index property (and thus only one column), this property
     should be intended as an index, and set to the desired index value.
@@ -51,7 +51,7 @@ void QQmlDelegateChoice::setRoleValue(const QVariant &value)
 */
 
 /*!
-    \qmlproperty int QtQml.Models::DelegateChoice::index
+    \qmlproperty int Qt.labs.qmlmodels::DelegateChoice::index
     This property holds the value used to match the index value of model elements.
     This is effectively an alias for \l row.
 
@@ -73,7 +73,7 @@ void QQmlDelegateChoice::setRow(int r)
 }
 
 /*!
-    \qmlproperty int QtQml.Models::DelegateChoice::column
+    \qmlproperty int Qt.labs.qmlmodels::DelegateChoice::column
     This property holds the value used to match the column value of model elements.
 */
 int QQmlDelegateChoice::column() const
@@ -96,7 +96,7 @@ QQmlComponent *QQmlDelegateChoice::delegate() const
 }
 
 /*!
-    \qmlproperty Component QtQml.Models::DelegateChoice::delegate
+    \qmlproperty Component Qt.labs.qmlmodels::DelegateChoice::delegate
     This property holds the delegate to use if this choice matches the model item.
 */
 void QQmlDelegateChoice::setDelegate(QQmlComponent *delegate)
@@ -190,7 +190,7 @@ bool QQmlDelegateChoice::match(int row, int column, const QVariant &value) const
 */
 
 /*!
-    \qmlproperty string QtQml.Models::DelegateChooser::role
+    \qmlproperty string Qt.labs.qmlmodels::DelegateChooser::role
     This property holds the role or the property name used to determine the delegate for a given model item.
 
     \sa DelegateChoice
@@ -204,7 +204,7 @@ void QQmlDelegateChooser::setRole(const QString &role)
 }
 
 /*!
-    \qmlproperty list<DelegateChoice> QtQml.Models::DelegateChooser::choices
+    \qmlproperty list<DelegateChoice> Qt.labs.qmlmodels::DelegateChooser::choices
     \qmldefault
 
     The list of DelegateChoices for the chooser.

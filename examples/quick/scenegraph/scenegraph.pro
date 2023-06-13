@@ -2,8 +2,7 @@ TEMPLATE = subdirs
 
 qtConfig(opengl(es1|es2)?) {
     SUBDIRS += \
-            fboitem \
-            openglunderqml \
+            openglunderqml
 }
 
 SUBDIRS += \
@@ -11,7 +10,9 @@ SUBDIRS += \
         custommaterial \
         graph \
         threadedanimation \
-        twotextureproviders
+        twotextureproviders \
+        rhiunderqml \
+        rhitextureitem
 
 macos|ios {
     SUBDIRS += \

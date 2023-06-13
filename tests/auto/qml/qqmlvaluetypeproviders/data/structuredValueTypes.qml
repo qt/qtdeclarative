@@ -40,7 +40,13 @@ MyTypeObject {
         r2 = {x: 9, y: 10, width: 11, height: 12};
         c3 = 99;
         b2 = {i: 11, c: 15, p: {x: 4} }
-
+        acceptConstructible(object)
         c4 = {foo: 11};
     }
+
+    barren: ({i: 17})
+    function changeBarren() { barren = "foos" }
+
+    property QtObject object: QtObject {}
+    property constructible fromObject: object
 }

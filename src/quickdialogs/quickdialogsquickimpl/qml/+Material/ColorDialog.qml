@@ -80,10 +80,10 @@ ColorDialogImpl {
         SaturationLightnessPicker {
             id: colorPicker
             objectName: "colorPicker"
-            implicitHeight: width
             color: control.color
 
             Layout.fillWidth: true
+            Layout.fillHeight: true
         }
 
         Slider {

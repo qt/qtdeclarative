@@ -10,6 +10,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
+  \internal
   Changes all the paths in resource file \a input so that they are relative to
   location \a output and writes the result to resource file \a output.
  */

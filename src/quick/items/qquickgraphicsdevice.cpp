@@ -212,12 +212,14 @@ QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceObjects(VkPhysicalDevice ph
 #endif
 
 /*!
-    \internal
+    \return a new QQuickGraphicsDevice referencing an existing \a rhi object.
 
     \note Similarly to fromOpenGLContext(), the caller must be careful to only
     share a QRhi (and so the underlying graphics context or device) between
     QQuickWindows that are known to be compatible, not breaking the underlying
     graphics API's rules when it comes to threading, pixel formats, etc.
+
+    \since 6.6
 */
 QQuickGraphicsDevice QQuickGraphicsDevice::fromRhi(QRhi *rhi)
 {

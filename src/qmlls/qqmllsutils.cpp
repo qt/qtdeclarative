@@ -9,11 +9,48 @@
 #include <QtCore/QRegularExpression>
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
+#include <QtQmlDom/private/qqmldomscriptelements_p.h>
+#include <QtQmlDom/private/qqmldom_utils_p.h>
+#include <memory>
+#include <optional>
+#include <stack>
+#include <type_traits>
+#include <utility>
+#include <variant>
 
-QT_USE_NAMESPACE
 using namespace QLspSpecification;
 using namespace QQmlJS::Dom;
 using namespace Qt::StringLiterals;
+
+QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(QQmlLSUtilsLog, "qt.languageserver.utils")
+
+/*!
+   \internal
+    Helper to check if item is a Field Member Expression \c {<someExpression>.propertyName}.
+*/
+static bool isFieldMemberExpression(DomItem &item)
+{
+    return item.internalKind() == DomType::ScriptBinaryExpression
+            && item.field(Fields::operation).value().toInteger()
+            == ScriptElements::BinaryExpression::FieldMemberAccess;
+}
+
+/*!
+   \internal
+    Helper to check if item is a Field Member Access \c memberAccess in
+    \c {<someExpression>.memberAccess}.
+*/
+static bool isFieldMemberAccess(DomItem &item)
+{
+    auto parent = item.directParent();
+    if (!isFieldMemberExpression(parent))
+        return false;
+
+    DomItem rightHandSide = parent.field(Fields::right);
+    return item == rightHandSide;
+}
 
 /*!
    \internal
@@ -37,6 +74,29 @@ QByteArray QQmlLSUtils::lspUriToQmlUrl(const QByteArray &uri)
 QByteArray QQmlLSUtils::qmlUrlToLspUri(const QByteArray &url)
 {
     return url;
+}
+
+/*!
+   \internal
+   \brief Converts a QQmlJS::SourceLocation to a LSP Range.
+
+   QQmlJS::SourceLocation starts counting lines and rows at 1, but the LSP Range starts at 0.
+   Also, the QQmlJS::SourceLocation contains startLine, startColumn and length while the LSP Range
+   contains startLine, startColumn, endLine and endColumn, which must be computed from the actual
+   qml code.
+ */
+QLspSpecification::Range QQmlLSUtils::qmlLocationToLspLocation(const QString &code,
+                                                               QQmlJS::SourceLocation qmlLocation)
+{
+    Range range;
+
+    range.start.line = qmlLocation.startLine - 1;
+    range.start.character = qmlLocation.startColumn - 1;
+
+    auto end = QQmlLSUtils::textRowAndColumnFrom(code, qmlLocation.end());
+    range.end.line = end.line;
+    range.end.character = end.character;
+    return range;
 }
 
 /*!
@@ -153,6 +213,12 @@ QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(DomItem file, 
             if (containsTarget(subLoc->info().fullRegion)) {
                 QQmlLSUtilsItemLocation subItem;
                 subItem.domItem = iLoc.domItem.path(it.key());
+                if (!subItem.domItem) {
+                    qCDebug(QQmlLSUtilsLog)
+                            << "A DomItem child is missing or the FileLocationsTree structure does "
+                               "not follow the DomItem Structure.";
+                    continue;
+                }
                 subItem.fileLocation = subLoc;
                 toDo.append(subItem);
                 inParentButOutsideChildren = false;
@@ -275,13 +341,529 @@ DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
     case QQmlJS::Dom::DomType::MethodInfo:
         result = object.field(Fields::type).proceedToScope();
         break;
+    case QQmlJS::Dom::DomType::ScriptIdentifierExpression: {
+        if (object.directParent().internalKind() == DomType::ScriptType) {
+            DomItem type =
+                    object.filterUp([](DomType k, DomItem &) { return k == DomType::ScriptType; },
+                                    FilterUpOptions::ReturnOuter);
+
+            const QString name = type.field(Fields::typeName).value().toString();
+            result = object.path(Paths::lookupTypePath(name));
+            break;
+        }
+        auto scope =
+                QQmlLSUtils::resolveExpressionType(object, QQmlLSUtilsResolveOptions::Everything);
+        if (!scope)
+            return {};
+
+        return QQmlLSUtils::sourceLocationToDomItem(object.containingFile(),
+                                                    scope->sourceLocation());
+    }
     case QQmlJS::Dom::DomType::Empty:
         break;
     default:
-        qDebug() << "Found unimplemented Type" << object.internalKindStr() << "in"
-                 << object.toString();
+        qDebug() << "QQmlLSUtils::findTypeDefinitionOf: Found unimplemented Type"
+                 << object.internalKindStr();
         result = {};
     }
 
     return result;
 }
+
+static DomItem findJSIdentifierDefinition(DomItem item, const QString &name)
+{
+    DomItem definitionOfItem;
+    item.visitUp([&name, &definitionOfItem](DomItem &i) {
+        if (std::optional<QQmlJSScope::Ptr> scope = i.semanticScope(); scope) {
+            qCDebug(QQmlLSUtilsLog) << "Searching for definition in" << i.internalKindStr();
+            if (auto jsIdentifier = scope.value()->JSIdentifier(name)) {
+                qCDebug(QQmlLSUtilsLog) << "Found scope" << scope.value()->baseTypeName();
+                definitionOfItem = i;
+                return false;
+            }
+        }
+        // early exit: no JS definitions/usages outside the ScriptExpression DOM element.
+        if (i.internalKind() == DomType::ScriptExpression)
+            return false;
+        return true;
+    });
+
+    return definitionOfItem;
+}
+
+static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
+                                         QList<QQmlLSUtilsLocation> &result)
+{
+    QQmlJSScope::ConstPtr targetType;
+    targetType = QQmlLSUtils::resolveExpressionType(item, QQmlLSUtilsResolveOptions::JustOwner);
+    if (!targetType)
+        return;
+
+    auto findUsages = [&targetType, &result, &name](Path, DomItem &current, bool) -> bool {
+        bool resolveType = false;
+        bool continueForChildren = true;
+        DomItem toBeResolved = current;
+        QString subRegion;
+
+        if (auto scope = current.semanticScope()) {
+            // is the current property shadowed by some JS identifier? ignore current + its children
+            if (scope.value()->JSIdentifier(name)) {
+                return false;
+            }
+        }
+
+        switch (current.internalKind()) {
+        case DomType::PropertyDefinition: {
+            const QString propertyName = current.field(Fields::name).value().toString();
+            if (name == propertyName) {
+                resolveType = true;
+            } else {
+                return true;
+            }
+            break;
+        }
+        case DomType::ScriptIdentifierExpression: {
+            const QString propertyName = current.field(Fields::identifier).value().toString();
+            if (name != propertyName)
+                return true;
+
+            resolveType = true;
+            break;
+        }
+        case DomType::MethodInfo: {
+            const QString methodName = current.field(Fields::name).value().toString();
+            if (name != methodName)
+                return true;
+
+            subRegion = u"identifier"_s;
+            resolveType = true;
+            break;
+        }
+        default:
+            break;
+        };
+
+        if (resolveType) {
+            auto currentType = QQmlLSUtils::resolveExpressionType(
+                    toBeResolved, QQmlLSUtilsResolveOptions::JustOwner);
+            qCDebug(QQmlLSUtilsLog) << "Will resolve type of" << toBeResolved.internalKindStr();
+            if (currentType == targetType) {
+                auto tree = FileLocations::treeOf(current);
+                QQmlJS::SourceLocation sourceLocation;
+
+                if (subRegion.isEmpty()) {
+                    sourceLocation = tree->info().fullRegion;
+                } else {
+                    auto regions = tree->info().regions;
+                    auto it = regions.constFind(subRegion);
+                    if (it == regions.constEnd())
+                        return continueForChildren;
+                    sourceLocation = *it;
+                }
+
+                QQmlLSUtilsLocation location{ current.canonicalFilePath(), sourceLocation };
+                result.append(location);
+            }
+        }
+        return continueForChildren;
+    };
+
+    item.containingFile()
+            .field(Fields::components)
+            .visitTree(Path(), emptyChildrenVisitor, VisitOption::Recurse | VisitOption::VisitSelf,
+                       findUsages);
+}
+
+static void findUsagesHelper(DomItem item, const QString &name, QList<QQmlLSUtilsLocation> &result)
+{
+    qCDebug(QQmlLSUtilsLog) << "Looking for JS identifier with name" << name;
+    DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
+
+    // if there is no definition found: check if name was a property or an id instead
+    if (!definitionOfItem) {
+        qCDebug(QQmlLSUtilsLog) << "No defining JS-Scope found!";
+        findUsagesOfNonJSIdentifiers(item, name, result);
+        return;
+    }
+
+    definitionOfItem.visitTree(
+            Path(), emptyChildrenVisitor, VisitOption::VisitAdopted | VisitOption::Recurse,
+            [&name, &result](Path, DomItem &item, bool) -> bool {
+                qCDebug(QQmlLSUtilsLog) << "Visiting a " << item.internalKindStr();
+                if (item.internalKind() == DomType::ScriptIdentifierExpression
+                    && item.field(Fields::identifier).value().toString() == name) {
+                    // add this usage
+                    auto fileLocation = FileLocations::treeOf(item);
+                    if (!fileLocation) {
+                        qCWarning(QQmlLSUtilsLog) << "Failed finding filelocation of found usage";
+                        return true;
+                    }
+                    const QQmlJS::SourceLocation location = fileLocation->info().fullRegion;
+                    const QString fileName = item.canonicalFilePath();
+                    result.append({ fileName, location });
+                    return true;
+                } else if (std::optional<QQmlJSScope::Ptr> scope = item.semanticScope();
+                           scope && scope.value()->JSIdentifier(name)) {
+                    // current JS identifier has been redefined, do not visit children
+                    return false;
+                }
+                return true;
+            });
+}
+
+QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
+{
+    QList<QQmlLSUtilsLocation> result;
+
+    switch (item.internalKind()) {
+    case DomType::ScriptIdentifierExpression: {
+        const QString name = item.field(Fields::identifier).value().toString();
+        findUsagesHelper(item, name, result);
+        break;
+    }
+    case DomType::ScriptVariableDeclarationEntry: {
+        const QString name = item.field(Fields::identifier).value().toString();
+        findUsagesHelper(item, name, result);
+        break;
+    }
+    case DomType::PropertyDefinition:
+    case DomType::MethodInfo: {
+        const QString name = item.field(Fields::name).value().toString();
+        findUsagesHelper(item, name, result);
+        break;
+    }
+    default:
+        qCDebug(QQmlLSUtilsLog) << item.internalKindStr()
+                                << "was not implemented for QQmlLSUtils::findUsagesOf";
+        return result;
+    }
+
+    std::sort(result.begin(), result.end());
+
+    if (QQmlLSUtilsLog().isDebugEnabled()) {
+        qCDebug(QQmlLSUtilsLog) << "Found following usages:";
+        for (auto r : result) {
+            qCDebug(QQmlLSUtilsLog)
+                    << r.filename << " @ " << r.location.startLine << ":" << r.location.startColumn
+                    << " with length " << r.location.length;
+        }
+    }
+
+    return result;
+}
+
+static QQmlJSScope::ConstPtr findMethodIn(const QQmlJSScope::Ptr &referrerScope,
+                                          const QString &name)
+{
+    for (QQmlJSScope::Ptr current = referrerScope; current; current = current->parentScope()) {
+        if (current->hasMethod(name)) {
+            return current;
+        }
+    }
+    return {};
+}
+
+static QQmlJSScope::ConstPtr findPropertyIn(const QQmlJSScope::Ptr &referrerScope,
+                                            const QString &propertyName,
+                                            QQmlLSUtilsResolveOptions options)
+{
+    for (QQmlJSScope::Ptr current = referrerScope; current; current = current->parentScope()) {
+        if (auto property = current->property(propertyName); property.isValid()) {
+            switch (options) {
+            case JustOwner:
+                return current;
+            case Everything:
+                return property.type();
+            }
+        }
+    }
+    return {};
+}
+
+/*!
+   \internal
+    Resolves the type of the given DomItem, when possible (e.g., when there are enough type
+    annotations).
+*/
+QQmlJSScope::ConstPtr QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem item,
+                                                         QQmlLSUtilsResolveOptions options)
+{
+    switch (item.internalKind()) {
+    case DomType::ScriptIdentifierExpression: {
+        auto referrerScope = item.nearestSemanticScope();
+        if (!referrerScope)
+            return {};
+
+        const QString name = item.field(Fields::identifier).value().toString();
+
+        if (isFieldMemberAccess(item)) {
+            DomItem parent = item.directParent();
+            auto owner = QQmlLSUtils::resolveExpressionType(parent.field(Fields::left),
+                                                            QQmlLSUtilsResolveOptions::Everything);
+            if (owner) {
+                if (owner->hasMethod(name)) {
+                    switch (options) {
+                    case JustOwner:
+                        return owner;
+                    case Everything:
+                        // not implemented yet, but JS functions have methods and properties
+                        // see
+                        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
+                        // for the list of properties/methods of functions
+                        break;
+                    }
+                }
+                if (auto property = owner->property(name); property.isValid()) {
+                    switch (options) {
+                    case JustOwner:
+                        return owner;
+                    case Everything:
+                        return property.type();
+                    }
+                }
+            } else {
+                return {};
+            }
+        } else {
+            DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
+            if (definitionOfItem) {
+                Q_ASSERT_X(definitionOfItem.semanticScope().has_value()
+                                   && definitionOfItem.semanticScope()
+                                              .value()
+                                              ->JSIdentifier(name)
+                                              .has_value(),
+                           "QQmlLSUtils::findDefinitionOf",
+                           "JS definition does not actually define the JS identifer. "
+                           "It should be empty.");
+                auto scope = definitionOfItem.semanticScope().value()->JSIdentifier(name)->scope.toStrongRef();;
+                return scope;
+            }
+
+            // check if its a method
+            if (QQmlJSScope::ConstPtr scope = findMethodIn(*referrerScope, name)) {
+                return scope;
+            }
+
+            // check if its an (unqualified) property
+            if (QQmlJSScope::ConstPtr scope = findPropertyIn(*referrerScope, name, options)) {
+                return scope;
+            }
+        }
+
+        // check if its an id
+        auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
+        if (!resolver)
+            return {};
+        QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope.value());
+        if (fromId)
+            return fromId;
+
+        return {};
+    }
+    case DomType::PropertyDefinition: {
+        auto propertyDefinition = item.as<PropertyDefinition>();
+        if (propertyDefinition && propertyDefinition->scope) {
+            switch (options) {
+            case JustOwner:
+                return propertyDefinition->scope.value();
+            case Everything:
+                return propertyDefinition->scope.value()->property(propertyDefinition->name).type();
+            }
+        }
+
+        return {};
+    }
+    case DomType::QmlObject: {
+        auto object = item.as<QmlObject>();
+        if (object && object->semanticScope())
+            return object->semanticScope().value();
+
+        return {};
+    }
+    case DomType::MethodInfo: {
+        auto object = item.as<MethodInfo>();
+        if (object && object->semanticScope())
+            // return the owner of the method
+            return object->semanticScope().value()->parentScope();
+
+        return {};
+    }
+    case DomType::ScriptBinaryExpression: {
+        if (isFieldMemberExpression(item)) {
+            DomItem owner = item.field(Fields::left);
+            QString propertyName =
+                    item.field(Fields::right).field(Fields::identifier).value().toString();
+            auto ownerType = QQmlLSUtils::resolveExpressionType(
+                    owner, QQmlLSUtilsResolveOptions::Everything);
+            if (!ownerType)
+                return ownerType;
+            switch (options) {
+            case JustOwner:
+                return ownerType;
+            case Everything:
+                return ownerType->property(propertyName).type();
+            }
+        }
+        return {};
+    }
+    default: {
+        qCDebug(QQmlLSUtilsLog) << "Type" << item.internalKindStr()
+                                << "is unimplemented in QQmlLSUtils::resolveExpressionType";
+        return {};
+    }
+    }
+    Q_UNREACHABLE();
+}
+
+DomItem QQmlLSUtils::sourceLocationToDomItem(DomItem file, const QQmlJS::SourceLocation &location)
+{
+    // QQmlJS::SourceLocation starts counting at 1 but the utils and the LSP start at 0.
+    auto items = QQmlLSUtils::itemsFromTextLocation(file, location.startLine - 1,
+                                                    location.startColumn - 1);
+    switch (items.size()) {
+    case 0:
+        return {};
+    case 1:
+        return items.front().domItem;
+    case 2: {
+        // special case: because location points to the beginning of the type definition,
+        // itemsFromTextLocation might also return the type on its left, in case it is directly
+        // adjacent to it. In this case always take the right (=with the higher column-number)
+        // item.
+        auto &first = items.front();
+        auto &second = items.back();
+        Q_ASSERT_X(first.fileLocation->info().fullRegion.startLine
+                           == second.fileLocation->info().fullRegion.startLine,
+                   "QQmlLSUtils::findTypeDefinitionOf(DomItem)",
+                   "QQmlLSUtils::itemsFromTextLocation returned non-adjacent items.");
+        if (first.fileLocation->info().fullRegion.startColumn
+            > second.fileLocation->info().fullRegion.startColumn)
+            return first.domItem;
+        else
+            return second.domItem;
+        break;
+    }
+    default:
+        qDebug() << "Found multiple candidates for type of scriptidentifierexpression";
+        break;
+    }
+    return {};
+}
+
+static std::optional<QQmlLSUtilsLocation>
+findMethodDefinitionOf(DomItem file, QQmlJS::SourceLocation location, const QString &name)
+{
+    DomItem owner = QQmlLSUtils::sourceLocationToDomItem(file, location);
+    DomItem method = owner.field(Fields::methods).key(name).index(0);
+    auto fileLocation = FileLocations::treeOf(method);
+    if (!fileLocation)
+        return {};
+
+    auto regions = fileLocation->info().regions;
+
+    if (auto it = regions.constFind(u"identifier"_s); it != regions.constEnd()) {
+        QQmlLSUtilsLocation result;
+        result.location = *it;
+        result.filename = method.canonicalFilePath();
+        return result;
+    }
+
+    return {};
+}
+
+static std::optional<QQmlLSUtilsLocation>
+findPropertyDefinitionOf(DomItem file, QQmlJS::SourceLocation propertyDefinitionLocation,
+                         const QString &name)
+{
+    DomItem propertyOwner = QQmlLSUtils::sourceLocationToDomItem(file, propertyDefinitionLocation);
+    DomItem propertyDefinition = propertyOwner.field(Fields::propertyDefs).key(name).index(0);
+    if (!propertyDefinition)
+        return {};
+
+    QQmlLSUtilsLocation result;
+    result.location = FileLocations::treeOf(propertyDefinition)->info().fullRegion;
+    result.filename = propertyDefinition.canonicalFilePath();
+    return result;
+}
+
+std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
+{
+
+    switch (item.internalKind()) {
+    case QQmlJS::Dom::DomType::ScriptIdentifierExpression: {
+        const QString name = item.value().toString();
+        if (isFieldMemberAccess(item)) {
+            if (auto ownerScope = QQmlLSUtils::resolveExpressionType(
+                        item, QQmlLSUtilsResolveOptions::JustOwner)) {
+                if (auto methodDefinition = findMethodDefinitionOf(
+                            item.containingFile(), ownerScope->sourceLocation(), name)) {
+
+                    return methodDefinition;
+                }
+                if (auto propertyDefinition = findPropertyDefinitionOf(
+                            item.containingFile(), ownerScope->sourceLocation(), name)) {
+                    return propertyDefinition;
+                }
+            }
+            return {};
+        }
+
+        // check: is it a JS identifier?
+        if (DomItem definitionOfItem = findJSIdentifierDefinition(item, name)) {
+            Q_ASSERT_X(definitionOfItem.semanticScope().has_value()
+                               && definitionOfItem.semanticScope()
+                                          .value()
+                                          ->JSIdentifier(name)
+                                          .has_value(),
+                       "QQmlLSUtils::findDefinitionOf",
+                       "JS definition does not actually define the JS identifer. "
+                       "It should be empty.");
+            QQmlJS::SourceLocation location =
+                    definitionOfItem.semanticScope().value()->JSIdentifier(name).value().location;
+
+            QQmlLSUtilsLocation result = { definitionOfItem.canonicalFilePath(), location };
+            return result;
+        }
+
+        // not a JS identifier, check for ids and properties and methods
+        auto referrerScope = item.nearestSemanticScope();
+        if (!referrerScope)
+            return {};
+
+        // check: is it a method name?
+        if (QQmlJSScope::ConstPtr scope = findMethodIn(*referrerScope, name)) {
+            const QString canonicalPath = scope->filePath();
+            DomItem file = item.goToFile(canonicalPath);
+            return findMethodDefinitionOf(file, scope->sourceLocation(), name);
+        }
+
+        if (QQmlJSScope::ConstPtr scope =
+                    findPropertyIn(*referrerScope, name, QQmlLSUtilsResolveOptions::JustOwner)) {
+            const QString canonicalPath = scope->filePath();
+            DomItem file = item.goToFile(canonicalPath);
+            return findPropertyDefinitionOf(file, scope->sourceLocation(), name);
+        }
+
+        // check if its an id
+        auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
+        if (!resolver)
+            return {};
+        QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope.value());
+        if (fromId) {
+            QQmlLSUtilsLocation result;
+            result.location = fromId->sourceLocation();
+            result.filename = item.canonicalFilePath();
+            return result;
+        }
+        return {};
+    }
+    default:
+        qDebug() << "QQmlLSUtils::findDefinitionOf: Found unimplemented Type "
+                 << item.internalKindStr();
+        return {};
+    }
+
+    Q_UNREACHABLE_RETURN(std::nullopt);
+}
+
+QT_END_NAMESPACE

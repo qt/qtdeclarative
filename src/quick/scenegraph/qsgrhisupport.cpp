@@ -116,17 +116,6 @@ void QSGRhiSupport::applySettings()
     // (QQuickWindow) may depend on the graphics API as well (surfaceType
     // f.ex.), and all that is based on what we report from here. So further
     // adjustments are not possible (or, at minimum, not safe and portable).
-
-    QByteArray hdrRequest = qgetenv("QSG_RHI_HDR");
-    if (!hdrRequest.isEmpty()) {
-        hdrRequest = hdrRequest.toLower();
-        if (hdrRequest == QByteArrayLiteral("scrgb") || hdrRequest == QByteArrayLiteral("extendedsrgblinear"))
-            m_swapChainFormat = QRhiSwapChain::HDRExtendedSrgbLinear;
-        else if (hdrRequest == QByteArrayLiteral("hdr10"))
-            m_swapChainFormat = QRhiSwapChain::HDR10;
-        else
-            qWarning("Unknown HDR mode '%s'", hdrRequest.constData());
-    }
 }
 
 void QSGRhiSupport::adjustToPlatformQuirks()
@@ -1519,10 +1508,29 @@ QImage QSGRhiSupport::grabOffscreenForProtectedContent(QQuickWindow *window)
 }
 #endif
 
-void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet)
+void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet, QQuickWindow *window)
 {
+    Q_ASSERT(scWithWindowSet->window() == window);
+
+    QRhiSwapChain::Format swapChainFormat = QRhiSwapChain::SDR;
+
+    if (window->graphicsConfiguration().isHdrEnabled()) {
+        const QRhiSwapChain::Format autoFormat = QRhiSwapChain::HDRExtendedSrgbLinear;
+        if (scWithWindowSet->isFormatSupported(autoFormat))
+            swapChainFormat = autoFormat;
+    }
+
+    QByteArray hdrRequest = qgetenv("QSG_RHI_HDR");
+    if (!hdrRequest.isEmpty()) {
+        hdrRequest = hdrRequest.toLower();
+        if (hdrRequest == QByteArrayLiteral("scrgb") || hdrRequest == QByteArrayLiteral("extendedsrgblinear"))
+            swapChainFormat = QRhiSwapChain::HDRExtendedSrgbLinear;
+        else if (hdrRequest == QByteArrayLiteral("hdr10"))
+            swapChainFormat = QRhiSwapChain::HDR10;
+    }
+
     const char *fmtStr = "unknown";
-    switch (m_swapChainFormat) {
+    switch (swapChainFormat) {
     case QRhiSwapChain::SDR:
         fmtStr = "SDR";
         break;
@@ -1536,8 +1544,8 @@ void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet)
         break;
     }
 
-    if (!scWithWindowSet->isFormatSupported(m_swapChainFormat)) {
-        if (m_swapChainFormat != QRhiSwapChain::SDR) {
+    if (!scWithWindowSet->isFormatSupported(swapChainFormat)) {
+        if (swapChainFormat != QRhiSwapChain::SDR) {
             qCDebug(QSG_LOG_INFO, "Requested a %s swapchain but it is reported to be unsupported with the current display(s). "
                                   "In multi-screen configurations make sure the window is located on a HDR-enabled screen. "
                                   "Request ignored, using SDR swapchain.", fmtStr);
@@ -1545,9 +1553,9 @@ void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet)
         return;
     }
 
-    scWithWindowSet->setFormat(m_swapChainFormat);
+    scWithWindowSet->setFormat(swapChainFormat);
 
-    if (m_swapChainFormat != QRhiSwapChain::SDR) {
+    if (swapChainFormat != QRhiSwapChain::SDR) {
         qCDebug(QSG_LOG_INFO, "Creating %s swapchain", fmtStr);
         qCDebug(QSG_LOG_INFO) << "HDR output info:" << scWithWindowSet->hdrInfo();
     }

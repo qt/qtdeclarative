@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include <qtest.h>
+#include <private/qtqmlmodelsglobal_p.h>
 
 using namespace Qt::StringLiterals;
 
@@ -38,6 +39,7 @@ private slots:
     void specialProperties();
     void regexpBindings();
     void aliasAssignments();
+    void connections();
 
     void signalHandlers();
     void jsFunctions();
@@ -94,4 +96,9 @@ private slots:
     void cppNamespaces();
     void namespacedName();
     void checkExportsAreCompiling();
+
+#if QT_CONFIG(qml_table_model)
+    void qmlTableModel();
+#endif
+    void urlToString();
 };

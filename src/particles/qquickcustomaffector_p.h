@@ -27,10 +27,10 @@ QT_BEGIN_NAMESPACE
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickCustomAffector : public QQuickParticleAffector
 {
     Q_OBJECT
-    Q_PROPERTY(bool relative READ relative WRITE setRelative NOTIFY relativeChanged)
-    Q_PROPERTY(QQuickDirection *position READ position WRITE setPosition NOTIFY positionChanged RESET positionReset)
-    Q_PROPERTY(QQuickDirection *velocity READ velocity WRITE setVelocity NOTIFY velocityChanged RESET velocityReset)
-    Q_PROPERTY(QQuickDirection *acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged RESET accelerationReset)
+    Q_PROPERTY(bool relative READ relative WRITE setRelative NOTIFY relativeChanged FINAL)
+    Q_PROPERTY(QQuickDirection *position READ position WRITE setPosition NOTIFY positionChanged RESET positionReset FINAL)
+    Q_PROPERTY(QQuickDirection *velocity READ velocity WRITE setVelocity NOTIFY velocityChanged RESET velocityReset FINAL)
+    Q_PROPERTY(QQuickDirection *acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged RESET accelerationReset FINAL)
     QML_NAMED_ELEMENT(Affector)
     QML_ADDED_IN_VERSION(2, 0)
 

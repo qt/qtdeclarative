@@ -8,7 +8,7 @@
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <qsgtextureprovider.h>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 #include <qmath.h>
 

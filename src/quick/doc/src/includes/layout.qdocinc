@@ -14,5 +14,7 @@
 \li \l{Layout::rightMargin}{Layout.rightMargin}
 \li \l{Layout::topMargin}{Layout.topMargin}
 \li \l{Layout::bottomMargin}{Layout.bottomMargin}
+\li \l{Layout::horizontalStretchFactor}{Layout.horizontalStretchFactor}
+\li \l{Layout::verticalStretchFactor}{Layout.verticalStretchFactor}
 
 //! [attached-properties]

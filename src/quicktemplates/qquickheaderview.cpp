@@ -83,7 +83,7 @@
 */
 
 /*!
-    \qmlproperty TableView QtQuick::HorizontalHeaderView::syncView
+    \qmlproperty TableView QtQuick.Controls::HorizontalHeaderView::syncView
 
     This property holds the TableView to synchronize with.
 
@@ -98,7 +98,7 @@
 */
 
 /*!
-    \qmlproperty TableView QtQuick::VerticalHeaderView::syncView
+    \qmlproperty TableView QtQuick.Controls::VerticalHeaderView::syncView
 
     This property holds the TableView to synchronize with.
 
@@ -113,7 +113,7 @@
 */
 
 /*!
-    \qmlproperty QVariant QtQuick::HorizontalHeaderView::model
+    \qmlproperty QVariant QtQuick.Controls::HorizontalHeaderView::model
 
     This property holds the model providing data for the horizontal header view.
 
@@ -132,7 +132,7 @@
 */
 
 /*!
-    \qmlproperty QVariant QtQuick::VerticalHeaderView::model
+    \qmlproperty QVariant QtQuick.Controls::VerticalHeaderView::model
 
     This property holds the model providing data for the vertical header view.
 
@@ -151,7 +151,7 @@
 */
 
 /*!
-    \qmlproperty QString QtQuick::HorizontalHeaderView::textRole
+    \qmlproperty QString QtQuick.Controls::HorizontalHeaderView::textRole
 
     This property holds the model role used to display text in each header cell.
 
@@ -165,7 +165,7 @@
 */
 
 /*!
-    \qmlproperty QString QtQuick::VerticalHeaderView::textRole
+    \qmlproperty QString QtQuick.Controls::VerticalHeaderView::textRole
 
     This property holds the model role used to display text in each header cell.
 

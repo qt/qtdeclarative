@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickrendertarget_p.h"
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qsgrhisupport_p.h>
@@ -592,7 +592,7 @@ QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLay
 /*!
     \overload
 
-    \return a new QQuickRenderTarget referencing n Vulkan image object specified
+    \return a new QQuickRenderTarget referencing a Vulkan image object specified
     by \a image. The image is assumed to have a format of
     VK_FORMAT_R8G8B8A8_UNORM.
 
@@ -621,8 +621,21 @@ QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLay
 #endif
 
 /*!
-    \internal
- */
+    \return a new QQuickRenderTarget referencing an existing \a renderTarget.
+
+    \a renderTarget will in most cases be a QRhiTextureRenderTarget, which
+    allows directing the Qt Quick scene's rendering into a QRhiTexture.
+
+    \note the resulting QQuickRenderTarget does not own \a renderTarget and any
+    underlying native resources, it merely contains references and the
+    associated metadata of the size and sample count. It is the caller's
+    responsibility to ensure that the referenced resources exists as long as
+    necessary.
+
+    \since 6.6
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
+*/
 QQuickRenderTarget QQuickRenderTarget::fromRhiRenderTarget(QRhiRenderTarget *renderTarget)
 {
     QQuickRenderTarget rt;

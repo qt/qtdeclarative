@@ -83,6 +83,11 @@ QtObject {
         return a;
     }
 
+    property Person shadowable
+    function setLookupOnShadowable() {
+        shadowable.area.width = 16
+    }
+
     // TODO: Drop these once we can manipulate QVariant-wrapped lists.
     property list<withLength> withLengths
     property int l: withLengths.length

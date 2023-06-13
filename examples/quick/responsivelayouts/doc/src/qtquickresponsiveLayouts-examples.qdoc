@@ -1,0 +1,66 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+/*!
+    \title Qt Quick Layouts - Responsive Layout Example
+    \example responsivelayouts
+    \brief Demonstrates how to use LayoutItemProxy to make a responsive UI.
+    \ingroup qtquickexamples
+
+    This example shows how to use LayoutProxyItems in combination with
+    \l{Qt Quick Layouts}{layouts} to create responsive layouts.
+
+    \include examples-run.qdocinc
+
+    \section1 Creating items
+
+    The \l {LayoutItemProxy} type allows to use the same item in different
+    layouts, although only one layout can be visible at the same time. This
+    can be used to create responsive layouts that adapt to the window or
+    screen size.
+
+    \image qtquicklayouts-example-responsivelayouts.png
+
+
+    First we need to define all items that should appear in or UI at some point.
+    We use a AnnotatedRect, which is a simple Rectangle with some added text.
+
+    \snippet responsivelayouts/responsivelayouts.qml item definition
+
+    \section1 Creating layouts
+
+    We can now declare various layouts using \l {LayoutItemProxy}{LayoutItemProxies},
+    targeting the previously declare items. A single layout can be defined as follows.
+
+    \snippet responsivelayouts/responsivelayouts.qml first layout
+
+    This snippet shows multiple ways to use the \l {LayoutItemProxy}.
+    The simplest method is to add  \l {LayoutItemProxy}{LayoutItemProxies}
+    to a Layout like the RowLayout here. In addition we set an additional
+    \l {Layout} attached property to the LayoutProxyItem that will affect
+    the target item only in this particular layout. Further, we see that the
+    item \c {d} is not used in the first layout. Then it is automatically
+    hidden by the \l {LayoutItemProxy} in the second layout.
+    Another way of using it is shown by setting a \l {LayoutItemProxy} as
+    the content of a \l {Flickable}.
+
+    Another layout is declared as follows.
+
+    \snippet responsivelayouts/responsivelayouts.qml second layout
+
+    Here we show that \l {LayoutItemProxy}{LayoutItemProxies} can be used
+    together with real \l {Item}{Items} on the same hierarchy level. Generally,
+    the \l {LayoutItemProxy} is flexible and allows nested structures of
+    items and layouts.
+
+    \section1 Setting the layout
+
+    After two layouts, \c {smallLayout} and \c {largeLayout} are defined,
+    we can continue with setting the layout that fits to the current size of
+    the application. We define a new function for this code that we call
+    when the window is initialized and whenever the width changes:
+
+    \snippet responsivelayouts/responsivelayouts.qml setting the layout
+
+    Alternatively to calling this function after initialization we can hide all
+    but the correct layout for the initial size in the declarative code.
+*/

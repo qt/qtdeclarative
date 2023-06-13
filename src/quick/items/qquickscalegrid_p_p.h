@@ -29,10 +29,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickScaleGrid : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(int left READ left WRITE setLeft NOTIFY leftBorderChanged)
-    Q_PROPERTY(int top READ top WRITE setTop NOTIFY topBorderChanged)
-    Q_PROPERTY(int right READ right WRITE setRight NOTIFY rightBorderChanged)
-    Q_PROPERTY(int bottom READ bottom WRITE setBottom NOTIFY bottomBorderChanged)
+    Q_PROPERTY(int left READ left WRITE setLeft NOTIFY leftBorderChanged FINAL)
+    Q_PROPERTY(int top READ top WRITE setTop NOTIFY topBorderChanged FINAL)
+    Q_PROPERTY(int right READ right WRITE setRight NOTIFY rightBorderChanged FINAL)
+    Q_PROPERTY(int bottom READ bottom WRITE setBottom NOTIFY bottomBorderChanged FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 

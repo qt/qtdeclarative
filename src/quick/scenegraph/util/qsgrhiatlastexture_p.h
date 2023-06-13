@@ -19,7 +19,7 @@
 #include <QtQuick/private/qsgplaintexture_p.h>
 #include <QtQuick/private/qsgareaallocator_p.h>
 #include <QtGui/QSurface>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 QT_BEGIN_NAMESPACE
 

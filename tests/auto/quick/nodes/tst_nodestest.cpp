@@ -18,28 +18,23 @@
 #include <QtGui/qpa/qplatformintegration.h>
 #include <QtGui/qoffscreensurface.h>
 
-#include <QtGui/private/qrhi_p.h>
-#include <QtGui/private/qrhinull_p.h>
+#include <rhi/qrhi.h>
 
 #if QT_CONFIG(opengl)
 # include <QOpenGLContext>
-# include <QtGui/private/qrhigles2_p.h>
 # define TST_GL
 #endif
 
 #if QT_CONFIG(vulkan)
 # include <QVulkanInstance>
-# include <QtGui/private/qrhivulkan_p.h>
 # define TST_VK
 #endif
 
 #ifdef Q_OS_WIN
-#include <QtGui/private/qrhid3d11_p.h>
 # define TST_D3D11
 #endif
 
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
-# include <QtGui/private/qrhimetal_p.h>
 # define TST_MTL
 #endif
 

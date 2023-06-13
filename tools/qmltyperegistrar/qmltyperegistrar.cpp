@@ -3,6 +3,7 @@
 
 #include <QCoreApplication>
 #include <QCommandLineParser>
+#include <QDir>
 #include <QFile>
 #include <QScopedPointer>
 
@@ -142,7 +143,9 @@ int main(int argc, char **argv)
         QString outputName = parser.value(outputOption);
         QFile file(outputName);
         if (!file.open(QIODeviceBase::WriteOnly)) {
-            fprintf(stderr, "Error: Cannot open %s for writing\n", qPrintable(outputName));
+            fprintf(stderr, "Error: Cannot open \"%s\" for writing: %s\n",
+                    qPrintable(QDir::toNativeSeparators(outputName)),
+                    qPrintable(file.errorString()));
             return EXIT_FAILURE;
         }
         QTextStream output(&file);

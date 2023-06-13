@@ -24,20 +24,20 @@ class QQuickSinglePointHandler;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickHandlerPoint {
     Q_GADGET
-    Q_PROPERTY(int id READ id)
-    Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId)
-    Q_PROPERTY(QPointF position READ position)
-    Q_PROPERTY(QPointF scenePosition READ scenePosition)
-    Q_PROPERTY(QPointF pressPosition READ pressPosition)
-    Q_PROPERTY(QPointF scenePressPosition READ scenePressPosition)
-    Q_PROPERTY(QPointF sceneGrabPosition READ sceneGrabPosition)
-    Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons)
-    Q_PROPERTY(Qt::KeyboardModifiers modifiers READ modifiers)
-    Q_PROPERTY(QVector2D velocity READ velocity)
-    Q_PROPERTY(qreal rotation READ rotation)
-    Q_PROPERTY(qreal pressure READ pressure)
-    Q_PROPERTY(QSizeF ellipseDiameters READ ellipseDiameters)
-    Q_PROPERTY(QPointingDevice *device READ device)
+    Q_PROPERTY(int id READ id FINAL)
+    Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId FINAL)
+    Q_PROPERTY(QPointF position READ position FINAL)
+    Q_PROPERTY(QPointF scenePosition READ scenePosition FINAL)
+    Q_PROPERTY(QPointF pressPosition READ pressPosition FINAL)
+    Q_PROPERTY(QPointF scenePressPosition READ scenePressPosition FINAL)
+    Q_PROPERTY(QPointF sceneGrabPosition READ sceneGrabPosition FINAL)
+    Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons FINAL)
+    Q_PROPERTY(Qt::KeyboardModifiers modifiers READ modifiers FINAL)
+    Q_PROPERTY(QVector2D velocity READ velocity FINAL)
+    Q_PROPERTY(qreal rotation READ rotation FINAL)
+    Q_PROPERTY(qreal pressure READ pressure FINAL)
+    Q_PROPERTY(QSizeF ellipseDiameters READ ellipseDiameters FINAL)
+    Q_PROPERTY(QPointingDevice *device READ device FINAL)
     QML_ANONYMOUS
 
 public:

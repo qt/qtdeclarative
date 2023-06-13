@@ -87,6 +87,7 @@ void TestQmlformat::initTestCase()
     m_excludedDirs << "doc/src/snippets/qtquick1/qtbinding";
     m_excludedDirs << "doc/src/snippets/qtquick1/imports";
     m_excludedDirs << "tests/manual/v4";
+    m_excludedDirs << "tests/manual/qmllsformatter";
     m_excludedDirs << "tests/auto/qml/ecmascripttests";
     m_excludedDirs << "tests/auto/qml/qmllint";
 
@@ -151,6 +152,9 @@ void TestQmlformat::initTestCase()
     // These files are too big
     m_ignoreFiles << "tests/auto/qmldom/domdata/domitem/longQmlFile.qml";
     m_ignoreFiles << "tests/auto/qmldom/domdata/domitem/deeplyNested.qml";
+
+    // qmlformat cannot handle deconstructing arguments
+    m_ignoreFiles << "tests/auto/qmldom/domdata/domitem/callExpressions.qml";
 }
 
 QStringList TestQmlformat::findFiles(const QDir &d)

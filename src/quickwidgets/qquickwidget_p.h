@@ -17,7 +17,7 @@
 
 #include "qquickwidget.h"
 #include <private/qwidget_p.h>
-#include <private/qrhi_p.h>
+#include <rhi/qrhi.h>
 #include <private/qbackingstorerhisupport_p.h>
 
 #include <QtCore/qurl.h>

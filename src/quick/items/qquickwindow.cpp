@@ -49,7 +49,7 @@
 #include <private/qdebug_p.h>
 #endif
 
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -1542,8 +1542,10 @@ bool QQuickWindow::event(QEvent *event)
         d->inheritPalette(QGuiApplication::palette());
         if (d->contentItem)
             QCoreApplication::sendEvent(d->contentItem, event);
+        break;
     case QEvent::DevicePixelRatioChange:
         physicalDpiChanged();
+        break;
     default:
         break;
     }
@@ -2253,7 +2255,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::frameSwapped()
+    \qmlsignal QtQuick::Window::frameSwapped()
 
     This signal is emitted when a frame has been queued for presenting. With
     vertical synchronization enabled the signal is emitted at most once per
@@ -2269,7 +2271,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
  */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::sceneGraphInitialized()
+    \qmlsignal QtQuick::Window::sceneGraphInitialized()
     \internal
  */
 
@@ -2291,7 +2293,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
  */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::sceneGraphInvalidated()
+    \qmlsignal QtQuick::Window::sceneGraphInvalidated()
     \internal
  */
 
@@ -2311,7 +2313,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
  */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::sceneGraphError(SceneGraphError error, QString message)
+    \qmlsignal QtQuick::Window::sceneGraphError(SceneGraphError error, QString message)
 
     This signal is emitted when an \a error occurred during scene graph initialization.
 
@@ -2368,7 +2370,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::closing(CloseEvent close)
+    \qmlsignal QtQuick::Window::closing(CloseEvent close)
     \since 5.1
 
     This signal is emitted when the user tries to close the window.
@@ -2680,7 +2682,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::beforeSynchronizing()
+    \qmlsignal QtQuick::Window::beforeSynchronizing()
     \internal
 */
 
@@ -2707,7 +2709,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
  */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::afterSynchronizing()
+    \qmlsignal QtQuick::Window::afterSynchronizing()
     \internal
     \since 5.3
  */
@@ -2727,23 +2729,23 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     to this signal is still important if the recording of copy type of commands
     is desired since those cannot be enqueued within a render pass.
 
-    When using OpenGL, the QOpenGLContext used for rendering by the scene graph
-    will be bound at this point.
-
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
 
-    \warning When using OpenGL, be aware that setting OpenGL 3.x or 4.x specific
-    states and leaving these enabled or set to non-default values when returning
-    from the connected slot can interfere with the scene graph's rendering.
+    \note When using OpenGL, be aware that setting OpenGL 3.x or 4.x specific
+    states and leaving these enabled or set to non-default values when
+    returning from the connected slot can interfere with the scene graph's
+    rendering. The QOpenGLContext used for rendering by the scene graph will be
+    bound when the signal is emitted.
 
-    \sa rendererInterface(), {Scene Graph - OpenGL Under QML}, {Scene Graph - Metal Under QML},
-    {Scene Graph - Vulkan Under QML}, {Scene Graph - Direct3D 11 Under QML}
+    \sa rendererInterface(), {Scene Graph - RHI Under QML}, {Scene Graph -
+    OpenGL Under QML}, {Scene Graph - Metal Under QML}, {Scene Graph - Vulkan
+    Under QML}, {Scene Graph - Direct3D 11 Under QML}
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::beforeRendering()
+    \qmlsignal QtQuick::Window::beforeRendering()
     \internal
 */
 
@@ -2762,23 +2764,23 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     and afterRenderPassRecording(), that is typically used to achieve under- or
     overlaying of the custom rendering.
 
-    When using OpenGL, the QOpenGLContext used for rendering by the scene graph
-    will be bound at this point.
-
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
 
-    \warning When using OpenGL, be aware that setting OpenGL 3.x or 4.x specific
-    states and leaving these enabled or set to non-default values when returning
-    from the connected slot can interfere with the scene graph's rendering.
+    \note When using OpenGL, be aware that setting OpenGL 3.x or 4.x specific
+    states and leaving these enabled or set to non-default values when
+    returning from the connected slot can interfere with the scene graph's
+    rendering. The QOpenGLContext used for rendering by the scene graph will be
+    bound when the signal is emitted.
 
-    \sa rendererInterface(), {Scene Graph - OpenGL Under QML}, {Scene Graph - Metal Under QML},
-    {Scene Graph - Vulkan Under QML}, {Scene Graph - Direct3D 11 Under QML}
+    \sa rendererInterface(), {Scene Graph - RHI Under QML}, {Scene Graph -
+    OpenGL Under QML}, {Scene Graph - Metal Under QML}, {Scene Graph - Vulkan
+    Under QML}, {Scene Graph - Direct3D 11 Under QML}
  */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::afterRendering()
+    \qmlsignal QtQuick::Window::afterRendering()
     \internal
  */
 
@@ -2808,10 +2810,12 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     \sa rendererInterface()
 
     \since 5.14
+
+    \sa {Scene Graph - RHI Under QML}
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::beforeRenderPassRecording()
+    \qmlsignal QtQuick::Window::beforeRenderPassRecording()
     \internal
     \since 5.14
 */
@@ -2841,6 +2845,8 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     \sa rendererInterface()
 
     \since 5.14
+
+    \sa {Scene Graph - RHI Under QML}
 */
 
 /*!
@@ -2866,7 +2872,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::beforeFrameBegin()
+    \qmlsignal QtQuick::Window::beforeFrameBegin()
     \internal
 */
 
@@ -2891,12 +2897,12 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::afterFrameEnd()
+    \qmlsignal QtQuick::Window::afterFrameEnd()
     \internal
 */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::afterRenderPassRecording()
+    \qmlsignal QtQuick::Window::afterRenderPassRecording()
     \internal
     \since 5.14
 */
@@ -2916,7 +2922,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
  */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::afterAnimating()
+    \qmlsignal QtQuick::Window::afterAnimating()
 
     This signal is emitted on the GUI thread before requesting the render thread to
     perform the synchronization of the scene graph.
@@ -2950,7 +2956,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
  */
 
 /*!
-    \qmlsignal QtQuick.Window::Window::sceneGraphAboutToStop()
+    \qmlsignal QtQuick::Window::sceneGraphAboutToStop()
     \internal
     \since 5.3
  */
@@ -2984,9 +2990,12 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
     textures will in most cases be faster to render. When this flag is not set,
     the texture will have an alpha channel based on the image's format.
 
-    When \a options contains TextureHasMipmaps, the engine will create a
-    texture which can use mipmap filtering. Mipmapped textures can not be in
-    an atlas.
+    When \a options contains TextureHasMipmaps, the engine will create a texture
+    which can use mipmap filtering. Mipmapped textures can not be in an atlas.
+
+    Setting TextureHasAlphaChannel in \a options serves no purpose for this
+    function since assuming an alpha channel and blending is the default. To opt
+    out, set TextureIsOpaque.
 
     When the scene graph uses OpenGL, the returned texture will be using \c
     GL_TEXTURE_2D as texture target and \c GL_RGBA as internal format. With
@@ -2997,12 +3006,12 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
     initialized.
 
     \warning The returned texture is not memory managed by the scene graph and
-    must be explicitly deleted by the caller on the rendering thread.
-    This is achieved by deleting the texture from a QSGNode destructor
-    or by using deleteLater() in the case where the texture already has affinity
-    to the rendering thread.
+    must be explicitly deleted by the caller on the rendering thread. This is
+    achieved by deleting the texture from a QSGNode destructor or by using
+    deleteLater() in the case where the texture already has affinity to the
+    rendering thread.
 
-    This function can be called from any thread.
+    This function can be called from both the main and the render thread.
 
     \sa sceneGraphInitialized(), QSGTexture
  */
@@ -3019,6 +3028,56 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
     return d->context->createTexture(image, flags);
 }
 
+/*!
+    Creates a new QSGTexture from the supplied \a texture.
+
+    Use \a options to customize the texture attributes. Only the
+    TextureHasAlphaChannel flag is taken into account by this function. When
+    set, the resulting QSGTexture is always treated by the scene graph renderer
+    as needing blending. For textures that are fully opaque, not setting the
+    flag can save the cost of performing alpha blending during rendering. The
+    flag has no direct correspondence to the \l{QRhiTexture::format()}{format}
+    of the QRhiTexture, i.e. not setting the flag while having a texture format
+    such as the commonly used \l QRhiTexture::RGBA8 is perfectly normal.
+
+    Mipmapping is not controlled by \a options since \a texture is already
+    created and has the presence or lack of mipmaps baked in.
+
+    The returned QSGTexture owns the QRhiTexture, meaning \a texture is
+    destroyed together with the returned QSGTexture.
+
+    If \a texture owns its underlying native graphics resources (OpenGL texture
+    object, Vulkan image, etc.), that depends on how the QRhiTexture was created
+    (\l{QRhiTexture::create()} or \l{QRhiTexture::createFrom()}), and that is
+    not controlled or changed by this function.
+
+    \note This is only functional when the scene graph has already initialized
+    and is using the default, \l{QRhi}-based \l{Scene Graph
+    Adaptations}{adaptation}. The return value is \nullptr otherwise.
+
+    \note This function can only be called on the scene graph render thread.
+
+    \since 6.6
+
+    \sa createTextureFromImage(), sceneGraphInitialized(), QSGTexture
+ */
+QSGTexture *QQuickWindow::createTextureFromRhiTexture(QRhiTexture *texture, CreateTextureOptions options) const
+{
+    Q_D(const QQuickWindow);
+    if (!d->rhi)
+        return nullptr;
+
+    QSGPlainTexture *t = new QSGPlainTexture;
+    t->setOwnsTexture(true);
+    t->setTexture(texture);
+    t->setHasAlphaChannel(options & QQuickWindow::TextureHasAlphaChannel);
+    t->setTextureSize(texture->pixelSize());
+    return t;
+}
+
+// Legacy, private alternative to createTextureFromRhiTexture() that internally
+// creates a QRhiTexture wrapping the existing native graphics resource.
+// New code should prefer using the public API.
 QSGTexture *QQuickWindowPrivate::createTextureFromNativeTexture(quint64 nativeObjectHandle,
                                                                 int nativeLayoutOrState,
                                                                 uint nativeFormat,
@@ -3297,10 +3356,12 @@ void QQuickWindow::endExternalCommands()
     whether it's a dialog, popup, or a regular window, and whether it should
     have a title bar, etc.
 
-    The flags which you read from this property might differ from the ones
+    The flags that you read from this property might differ from the ones
     that you set if the requested flags could not be fulfilled.
 
-    \sa Qt::WindowFlags
+    \snippet qml/splashWindow.qml entire
+
+    \sa Qt::WindowFlags, {Qt Quick Examples - Window and Screen}
  */
 
 /*!
@@ -3371,6 +3432,7 @@ void QQuickWindow::endExternalCommands()
  */
 
 /*!
+    \keyword qml-window-visibility-prop
     \qmlproperty QWindow::Visibility Window::visibility
 
     The screen-occupation state of the window.
@@ -3384,15 +3446,18 @@ void QQuickWindow::endExternalCommands()
     visibility property you will always get the actual state, never
     \c AutomaticVisibility.
 
-    When a window is not visible its visibility is Hidden, and setting
+    When a window is not visible, its visibility is \c Hidden, and setting
     visibility to \l {QWindow::}{Hidden} is the same as setting \l visible to \c false.
 
-    \sa visible
+    \snippet qml/windowVisibility.qml entire
+
+    \sa visible, {Qt Quick Examples - Window and Screen}
     \since 5.1
  */
 
 /*!
     \qmlattachedproperty QWindow::Visibility Window::visibility
+    \readonly
     \since 5.4
 
     This attached property holds whether the window is currently shown
@@ -3400,7 +3465,7 @@ void QQuickWindow::endExternalCommands()
     hidden. The \c Window attached property can be attached to any Item. If the
     item is not shown in any window, the value will be \l {QWindow::}{Hidden}.
 
-    \sa visible, visibility
+    \sa visible, {qml-window-visibility-prop}{visibility}
 */
 
 /*!
@@ -3492,17 +3557,8 @@ void QQuickWindow::endExternalCommands()
     Item or Window within which it was declared, you can remove that
     relationship by setting \c transientParent to \c null:
 
-    \qml
-    import QtQuick.Window 2.13
-
-    Window {
-        // visible is false by default
-        Window {
-            transientParent: null
-            visible: true
-        }
-    }
-    \endqml
+    \snippet qml/nestedWindowTransientParent.qml 0
+    \snippet qml/nestedWindowTransientParent.qml 1
 
     In order to cause the window to be centered above its transient parent by
     default, depending on the window manager, it may also be necessary to set
@@ -3548,6 +3604,9 @@ void QQuickWindow::endExternalCommands()
 
     The active status of the window.
 
+    \snippet qml/windowPalette.qml declaration-and-color
+    \snippet qml/windowPalette.qml closing-brace
+
     \sa requestActivate()
  */
 
@@ -3561,14 +3620,7 @@ void QQuickWindow::endExternalCommands()
     Here is an example which changes a label to show the active state of the
     window in which it is shown:
 
-    \qml
-    import QtQuick 2.4
-    import QtQuick.Window 2.2
-
-    Text {
-        text: Window.active ? "active" : "inactive"
-    }
-    \endqml
+    \snippet qml/windowActiveAttached.qml entire
 */
 
 /*!
@@ -3830,6 +3882,48 @@ QSGRendererInterface *QQuickWindow::rendererInterface() const
     // use)
 
     return d->context->sceneGraphContext()->rendererInterface(d->context);
+}
+
+/*!
+    \return the QRhi object used by this window for rendering.
+
+    Available only when the window is using Qt's 3D API and shading language
+    abstractions, meaning the result is always null when using the \c software
+    adaptation.
+
+    The result is valid only when rendering has been initialized, which is
+    indicated by the emission of the sceneGraphInitialized() signal. Before
+    that point, the returned value is null. With a regular, on-screen
+    QQuickWindow scenegraph initialization typically happens when the native
+    window gets exposed (shown) the first time. When using QQuickRenderControl,
+    initialization is done in the explicit
+    \l{QQuickRenderControl::initialize()}{initialize()} call.
+
+    In practice this function is a shortcut to querying the QRhi via the
+    QSGRendererInterface.
+
+    \since 6.6
+ */
+QRhi *QQuickWindow::rhi() const
+{
+    Q_D(const QQuickWindow);
+    return d->rhi;
+}
+
+/*!
+    \return the QRhiSwapChain used by this window, if there is one.
+
+    \note Only on-screen windows backed by one of the standard render loops
+    (such as, \c basic or \c threaded) will have a swapchain. Otherwise the
+    returned value is null. For example, the result is always null when the
+    window is used with QQuickRenderControl.
+
+    \since 6.6
+ */
+QRhiSwapChain *QQuickWindow::swapChain() const
+{
+    Q_D(const QQuickWindow);
+    return d->swapchain;
 }
 
 /*!
@@ -4186,9 +4280,10 @@ void QQuickWindow::setTextRenderType(QQuickWindow::TextRenderType renderType)
     palette which serves as a default for all application windows. You can also set the default palette
     for windows by passing a custom palette to QGuiApplication::setPalette(), before loading any QML.
 
-    ApplicationWindow propagates explicit palette properties to child controls. If you change a specific
-    property on the window's palette, that property propagates to all child controls in the window,
+    Window propagates explicit palette properties to child items and controls,
     overriding any system defaults for that property.
+
+    \snippet qml/windowPalette.qml entire
 
     \sa Item::palette, Popup::palette, ColorGroup, SystemPalette
     //! internal \sa QQuickAbstractPaletteProvider, QQuickPalette

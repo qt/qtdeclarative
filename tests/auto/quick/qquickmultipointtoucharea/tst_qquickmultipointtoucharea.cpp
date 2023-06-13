@@ -36,6 +36,7 @@ private slots:
     void reuse();
     void nonOverlapping();
     void nested();
+    void nestedTouchPosCheck();
     void inFlickable();
     void inFlickable2();
     void inFlickableWithPressDelay();
@@ -558,6 +559,30 @@ void tst_QQuickMultiPointTouchArea::nested()
 
     sequence.release(0, p1).release(1, p2).release(2, p3).commit();
     QQuickTouchUtils::flush(window.data());
+}
+
+
+void tst_QQuickMultiPointTouchArea::nestedTouchPosCheck()
+{
+    QScopedPointer<QQuickView> window(createAndShowView("nestedTouchPosCheck.qml"));
+    QVERIFY(window->rootObject() != nullptr);
+
+    auto *bottomMPTA = window->rootObject()->findChild<QQuickMultiPointTouchArea *>("bottomMPTA");
+    QVERIFY(bottomMPTA != nullptr);
+
+    QTest::QTouchEventSequence sequence = QTest::touchEvent(window.data(), device);
+
+    sequence.press(0, QPoint(10, 110)).commit();
+    QQuickTouchUtils::flush(window.data());
+
+    sequence.release(0, QPoint(10, 110)).commit();
+    QQuickTouchUtils::flush(window.data());
+
+    QCOMPARE(bottomMPTA->property("xPressed").toInt(), 10);
+    QCOMPARE(bottomMPTA->property("yPressed").toInt(), 10);
+    QCOMPARE(bottomMPTA->property("xReleased").toInt(), 10);
+    QCOMPARE(bottomMPTA->property("yReleased").toInt(), 10);
+
 }
 
 void tst_QQuickMultiPointTouchArea::inFlickable()

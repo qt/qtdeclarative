@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-static constexpr LoggerWarningId qmlControlsSanity{ "QuickControlsSanity.controls-sanity" };
+static constexpr QQmlJS::LoggerWarningId qmlControlsSanity{ "QuickControlsSanity.controls-sanity" };
 
 AnchorsElementPass::AnchorsElementPass(QQmlSA::PassManager *manager)
     : QQmlSA::ElementPass(manager), m_item(resolveType("QtQuick"_L1, "Item"_L1))
@@ -19,14 +19,14 @@ AnchorsElementPass::AnchorsElementPass(QQmlSA::PassManager *manager)
 
 bool AnchorsElementPass::shouldRun(const QQmlSA::Element &element)
 {
-    return !m_item.isNull() && element->inherits(m_item)
-            && element->hasOwnPropertyBindings("anchors"_L1);
+    return !m_item.isNull() && element.inherits(m_item)
+            && element.hasOwnPropertyBindings("anchors"_L1);
 }
 
 void AnchorsElementPass::run(const QQmlSA::Element &element)
 {
-    const auto anchorBindings = element->propertyBindings("anchors"_L1);
-    for (auto &&anchors : anchorBindings) {
+    const auto anchorBindings = element.propertyBindings("anchors"_L1);
+    for (const auto &anchors : anchorBindings) {
         emitWarning(u"Using anchors here"_s, qmlControlsSanity, anchors.sourceLocation());
     }
 }
@@ -38,17 +38,19 @@ SignalHandlerPass::SignalHandlerPass(QQmlSA::PassManager *manager)
 
 bool SignalHandlerPass::shouldRun(const QQmlSA::Element &element)
 {
-    return !m_qtobject.isNull() && element->inherits(m_qtobject);
+    return !m_qtobject.isNull() && element.inherits(m_qtobject);
 }
 
 void SignalHandlerPass::run(const QQmlSA::Element &element)
 {
-    for (auto &&[propertyName, propertyBinding] :
-         element->ownPropertyBindings().asKeyValueRange()) {
+    const auto &ownBindings = element.ownPropertyBindings();
+    for (auto it = ownBindings.constBegin(); it != ownBindings.constEnd(); ++it) {
+        const auto &propertyName = it.key();
+        const auto &propertyBinding = it.value();
 
         // Already script binding, check if the script kind is signal handler
-        if (propertyBinding.bindingType() == QQmlJSMetaPropertyBinding::Script) {
-            if (propertyBinding.scriptKind() == QQmlJSMetaPropertyBinding::Script_SignalHandler) {
+        if (propertyBinding.bindingType() == QQmlSA::BindingType::Script) {
+            if (propertyBinding.scriptKind() == QQmlSA::ScriptBindingKind::Script_SignalHandler) {
                 emitWarning(u"Declared signal handler \"%1\""_s.arg(propertyName),
                             qmlControlsSanity, propertyBinding.sourceLocation());
             }
@@ -56,11 +58,11 @@ void SignalHandlerPass::run(const QQmlSA::Element &element)
         }
 
         // Current property is attached property, recursively go through attaching type
-        if (propertyBinding.bindingType() == QQmlJSMetaPropertyBinding::AttachedProperty) {
-            const auto scope = propertyBinding.attachingType();
+        if (propertyBinding.bindingType() == QQmlSA::BindingType::AttachedProperty) {
+            const auto scope = QQmlSA::Element{ propertyBinding.attachingType() };
             run(scope);
         }
-    };
+    }
 }
 
 FunctionDeclarationPass::FunctionDeclarationPass(QQmlSA::PassManager *manager)
@@ -76,12 +78,12 @@ bool FunctionDeclarationPass::shouldRun(const QQmlSA::Element &element)
 
 void FunctionDeclarationPass::run(const QQmlSA::Element &element)
 {
-    for (auto &&method : element->ownMethods()) {
-        if (method.methodType() != QQmlJSMetaMethod::Method)
+    for (const auto &method : element.ownMethods()) {
+        if (method.methodType() != QQmlSA::MethodType::Method)
             continue;
 
         emitWarning(u"Declared function \"%1\""_s.arg(method.methodName()), qmlControlsSanity,
-                    element->sourceLocation());
+                    element.sourceLocation());
     }
 }
 

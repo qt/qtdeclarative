@@ -466,23 +466,53 @@ presentation rate simply because there is no presenting of the frame happening.
 This is optional, by default animations will advance based on the system timer.
 
 
-\section2 Mixing Scene Graph and the native graphics API
+\section2 Extending the Scene Graph with QRhi-based and native 3D rendering
 
-The scene graph offers two methods for integrating application-provided
-graphics commands: by issuing OpenGL, Vulkan, Metal, etc. commands directly,
-and by creating a textured node in the scene graph.
+The scene graph offers three methods for integrating application-provided
+graphics commands:
+
+\list
+
+\li Issuing either \l{QRhi}-based or OpenGL, Vulkan, Metal, Direct3D commands
+directly before or after the scene graph's own rendering. This in effect
+prepends or appends a set of draw calls into the main render pass. No additional
+render target is used.
+
+\li Rendering to a texture and creating a textured node in the scene graph. This
+involves an additional render pass and render target.
+
+\li Issuing draw calls inline with the scene graph's own rendering by
+instantiating a QSGRenderNode subclass in the scene graph. This is similar to
+the first approach but the custom draw calls are effectively injected into the
+scene graph's command stream.
+
+\endlist
+
+\section3 Underlay/overlay mode
 
 By connecting to the \l QQuickWindow::beforeRendering() and \l
-QQuickWindow::afterRendering() signals, applications can make OpenGL calls
-directly into the same context as the scene graph is rendering to. With APIs
-like Vulkan or Metal, applications can query native objects, such as, the scene
-graph's command buffer, via QSGRendererInterface, and record commands to it as
-they see fit. As the signal names indicate, the user can then render content
-either under a Qt Quick scene or over it. The benefit of integrating in this
-manner is that no extra framebuffer nor memory is needed to perform the
-rendering, and a possibly expensive texturing step is eliminated. The downside
-is that Qt Quick decides when to call the signals and this is the only time the
-OpenGL application is allowed to draw.
+QQuickWindow::afterRendering() signals, applications can make \l QRhi or native
+3D API calls directly into the same context as the scene graph is rendering to.
+With APIs like Vulkan or Metal, applications can query native objects, such as,
+the scene graph's command buffer, via QSGRendererInterface, and record commands
+to it as they see fit. As the signal names indicate, the user can then render
+content either under a Qt Quick scene or over it. The benefit of integrating in
+this manner is that no extra render targets are needed to perform the rendering,
+and a possibly expensive texturing step is eliminated. The downside is that the
+custom rendering can only be issued either at the beginning or at the end of Qt
+Quick's own rendering. Using QSGRenderNode instead of the QQuickWindow signals
+can lift that restriction somewhat, but in either case care must be taken when
+it comes to 3D content and depth buffer usage since relying on depth testing and
+rendering with depth write enabled can easily create situations where the custom
+content and the Qt Quick content's depth buffer usage conflict with each other.
+
+From Qt 6.6 the \l QRhi APIs are considered semi-public, i.e. offered to the
+applications and documented, albeit with a limited compatibility guarantee. This
+allows creating portable, cross-platform 2D/3D rendering code by using the same
+graphics and shader abstractions the scene graph itself uses.
+
+The \l {Scene Graph - RHI Under QML} example gives an example on how to
+implement the underlay/overlay approach using \l QRhi.
 
 The \l {Scene Graph - OpenGL Under QML} example gives an example on
 how to use these signals using OpenGL.
@@ -496,36 +526,58 @@ how to use these signals using Metal.
 The \l {Scene Graph - Vulkan Under QML} example gives an example on
 how to use these signals using Vulkan.
 
-The other alternative, only available for OpenGL currently, is to create a
-QQuickFramebufferObject, render into it, and let it be displayed in the scene
-graph as a texture. The \l {Scene Graph - Rendering FBOs} example shows how
-this can be done.
-
-Graphics APIs other than OpenGL can also follow this approach, even though
-QQuickFramebufferObject does not currently support them. Creating and rendering
-to a texture directly with the underlying API, followed by wrapping and using
-this resource in a Qt Quick scene in a custom QQuickItem, is demonstrated in
-the \l {Scene Graph - Metal Texture Import} example. That example uses Metal,
-the concepts however apply to all other graphics APIs as well.
-
-\warning Starting with Qt 6.0, direct usage of the underlying graphics API must
-be enclosed by a call to \l QQuickWindow::beginExternalCommands() and \l
+Starting with Qt 6.0, direct usage of the underlying graphics API must be
+enclosed by a call to \l QQuickWindow::beginExternalCommands() and \l
 QQuickWindow::endExternalCommands(). This concept may be familiar from \l
 QPainter::beginNativePainting(), and serves a similar purpose: it allows the Qt
 Quick Scene Graph to recognize that any cached state and assumptions about the
 state within the currently recorded render pass, if there is one, are now
 invalid, because the application code may have altered it by working directly
-with the underlying graphics API.
+with the underlying graphics API. This is not applicable and necessary when
+using \l QRhi.
 
-\warning When mixing OpenGL content with scene graph rendering, it is
-important the application does not leave the OpenGL context in a state
-with buffers bound, attributes enabled, special values in the z-buffer
-or stencil-buffer or similar. Doing so can result in unpredictable
-behavior.
+When mixing custom OpenGL rendering with the scene graph, it is important the
+application does not leave the OpenGL context in a state with buffers bound,
+attributes enabled, special values in the z-buffer or stencil-buffer or similar.
+Doing so can result in unpredictable behavior.
 
-\warning The custom rendering code must be thread aware in the sense that it
-should not assume being executed on the GUI (main) thread of the application.
+The custom rendering code must be thread aware in the sense that it should not
+assume being executed on the GUI (main) thread of the application. When
+connecting to the \l QQuickWindow signals, the application should use
+Qt::DirectConnection and understand that the connected slots are invoked on the
+scene graph's dedicated render thread, if there is one.
 
+\section3 The texture-based approach
+
+The texture-based alternative is the most flexible approach when the application
+needs to have a "flattened", 2D image of some custom 3D rendering within the Qt
+Quick scene. This also allows using a dedicated depth/stencil buffer that is
+independent of the buffers used by the main render pass.
+
+When using OpenGL, the legacy convenience class QQuickFramebufferObject can be
+used to achieve this. QRhi-based custom renderers and graphics APIs other than
+OpenGL can also follow this approach, even though QQuickFramebufferObject does
+not currently support them. Creating and rendering to a texture directly with
+the underlying API, followed by wrapping and using this resource in a Qt Quick
+scene in a custom QQuickItem, is demonstrated in the following examples:
+
+\l {Scene Graph - RHI Texture Item} example.
+
+\l {Scene Graph - Vulkan Texture Import} example.
+
+\l {Scene Graph - Metal Texture Import} example.
+
+\section3 The inline approach
+
+Using \l QSGRenderNode the custom draw calls are injected not at the beginning
+or the end of the recording of the scene graph's render pass, but rather during
+the scene graph's rendering process. This is achieved by creating a custom \l
+QQuickItem based by an instance of \l QSGRenderNode, a scene graph node that
+exists specifically to allow issuing graphics commands either via \l QRhi or a
+native 3D API such as OpenGL, Vulkan, Metal, or Direct 3D.
+
+The \l {Scene Graph - Custom QSGRenderNode} example gives a demonstration of
+this approach.
 
 \section2 Custom Items using QPainter
 

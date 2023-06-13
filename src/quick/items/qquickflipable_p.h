@@ -32,9 +32,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlipable : public QQuickItem
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQuickItem *front READ front WRITE setFront NOTIFY frontChanged)
-    Q_PROPERTY(QQuickItem *back READ back WRITE setBack NOTIFY backChanged)
-    Q_PROPERTY(Side side READ side NOTIFY sideChanged)
+    Q_PROPERTY(QQuickItem *front READ front WRITE setFront NOTIFY frontChanged FINAL)
+    Q_PROPERTY(QQuickItem *back READ back WRITE setBack NOTIFY backChanged FINAL)
+    Q_PROPERTY(Side side READ side NOTIFY sideChanged FINAL)
     QML_NAMED_ELEMENT(Flipable)
     QML_ADDED_IN_VERSION(2, 0)
     //### flipAxis

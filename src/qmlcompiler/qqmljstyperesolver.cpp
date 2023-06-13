@@ -20,8 +20,8 @@ using namespace Qt::StringLiterals;
 Q_LOGGING_CATEGORY(lcTypeResolver, "qt.qml.compiler.typeresolver", QtInfoMsg);
 
 QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
-    : m_imports(importer->builtinInternalNames())
-    , m_trackedTypes(std::make_unique<QHash<QQmlJSScope::ConstPtr, TrackedType>>())
+    : m_imports(importer->builtinInternalNames()),
+      m_trackedTypes(std::make_unique<QHash<QQmlJSScope::ConstPtr, TrackedType>>())
 {
     const QQmlJSImporter::ImportedTypes &builtinTypes = m_imports;
     m_voidType = builtinTypes.type(u"void"_s).scope;
@@ -90,7 +90,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     \internal
 
     Initializes the type resolver. As part of that initialization, makes \a
-    visitor traverse the program.
+    visitor traverse the program when given.
 */
 void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *program)
 {
@@ -101,7 +101,8 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *p
     m_imports.clearTypes();
     m_signalHandlers.clear();
 
-    program->accept(visitor);
+    if (program)
+        program->accept(visitor);
 
     m_objectsById = visitor->addressableScopes();
     m_objectsByLocation = visitor->scopesBylocation();
@@ -484,8 +485,10 @@ bool QQmlJSTypeResolver::adjustTrackedType(
 
     // If we cannot convert to the new type without the help of e.g. lookupResultMetaType(),
     // we better not change the type.
-    if (!canPrimitivelyConvertFromTo(tracked, conversion))
+    if (!canPrimitivelyConvertFromTo(tracked, conversion)
+           && !selectConstructor(conversion, tracked, nullptr).isValid()) {
         return false;
+    }
 
     it->replacement = comparableType(conversion);
     *it->clone = std::move(*QQmlJSScope::clone(conversion));
@@ -507,8 +510,10 @@ bool QQmlJSTypeResolver::adjustTrackedType(
 
     // If we cannot convert to the new type without the help of e.g. lookupResultMetaType(),
     // we better not change the type.
-    if (!canPrimitivelyConvertFromTo(tracked, result))
+    if (!canPrimitivelyConvertFromTo(tracked, result)
+            && !selectConstructor(result, tracked, nullptr).isValid()) {
         return false;
+    }
 
     it->replacement = comparableType(result);
     *mutableTracked = std::move(*QQmlJSScope::clone(result));
@@ -568,7 +573,7 @@ QString QQmlJSTypeResolver::containedTypeName(const QQmlJSRegisterContent &conta
 bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
                                           const QQmlJSScope::ConstPtr &to) const
 {
-    if (canPrimitivelyConvertFromTo(from, to))
+    if (canPrimitivelyConvertFromTo(from, to) || selectConstructor(to, from, nullptr).isValid())
         return true;
 
     // ### need a generic solution for custom cpp types:
@@ -811,7 +816,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
     if (type->isListProperty())
         return m_listPropertyType;
 
-    if (type->scopeType() == QQmlJSScope::EnumScope)
+    if (type->scopeType() == QQmlSA::ScopeType::EnumScope)
         return type->baseType();
 
     if (isPrimitive(type))
@@ -886,7 +891,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
         const QList<QQmlJSMetaPropertyBinding> defaultPropBindings =
                 parent->propertyBindings(defaultPropertyName);
         for (const QQmlJSMetaPropertyBinding &binding : defaultPropBindings) {
-            if (binding.bindingType() == QQmlJSMetaPropertyBinding::Object
+            if (binding.bindingType() == QQmlSA::BindingType::Object
                 && equals(binding.objectType(), child)) {
                 return true;
             }
@@ -1004,7 +1009,7 @@ QQmlJSMetaMethod QQmlJSTypeResolver::selectConstructor(
 {
     // If the "from" type can hold the target type, we should not try to coerce
     // it to any constructor argument.
-    if (canHold(passedArgumentType, type))
+    if (type.isNull() || canHold(passedArgumentType, type))
         return QQmlJSMetaMethod();
 
     if (QQmlJSScope::ConstPtr extension = type->extensionType().scope) {
@@ -1040,6 +1045,8 @@ QQmlJSMetaMethod QQmlJSTypeResolver::selectConstructor(
         if (equals(passedArgumentType, methodArgumentType))
             return method;
 
+        // Do not select further ctors here. We don't want to do multi-step construction as that
+        // is confusing and easily leads to infinite recursion.
         if (!candidate.isValid()
                 && canPrimitivelyConvertFromTo(passedArgumentType, methodArgumentType)) {
             candidate = method;
@@ -1164,7 +1171,7 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
         return true;
     }
 
-    return selectConstructor(to, from, nullptr).isValid();
+    return false;
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::lengthProperty(

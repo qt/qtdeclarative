@@ -28,10 +28,10 @@ class QWavefrontMeshPrivate;
 class Q_LABSWAVEFRONTMESH_PRIVATE_EXPORT QWavefrontMesh : public QQuickShaderEffectMesh
 {
     Q_OBJECT
-    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
-    Q_PROPERTY(Error lastError READ lastError NOTIFY lastErrorChanged)
-    Q_PROPERTY(QVector3D projectionPlaneV READ projectionPlaneV WRITE setProjectionPlaneV NOTIFY projectionPlaneVChanged)
-    Q_PROPERTY(QVector3D projectionPlaneW READ projectionPlaneW WRITE setProjectionPlaneW NOTIFY projectionPlaneWChanged)
+    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged FINAL)
+    Q_PROPERTY(Error lastError READ lastError NOTIFY lastErrorChanged FINAL)
+    Q_PROPERTY(QVector3D projectionPlaneV READ projectionPlaneV WRITE setProjectionPlaneV NOTIFY projectionPlaneVChanged FINAL)
+    Q_PROPERTY(QVector3D projectionPlaneW READ projectionPlaneW WRITE setProjectionPlaneW NOTIFY projectionPlaneWChanged FINAL)
     QML_NAMED_ELEMENT(WavefrontMesh)
     QML_ADDED_IN_VERSION(1, 0)
 

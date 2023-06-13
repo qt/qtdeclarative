@@ -8,7 +8,7 @@
 #include <private/qqmlglobal_p.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qplatformnativeinterface.h>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 #include <QtQuick/private/qsgrhisupport_p.h>
 
 #include <qtquick_tracepoints_p.h>

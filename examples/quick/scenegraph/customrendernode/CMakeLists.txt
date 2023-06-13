@@ -23,7 +23,7 @@ target_link_libraries(customrendernode PRIVATE
     Qt6::Core
     Qt6::GuiPrivate
     Qt6::Qml
-    Qt6::QuickPrivate
+    Qt6::Quick
 )
 
 qt_add_qml_module(customrendernode

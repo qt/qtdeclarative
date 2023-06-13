@@ -11,7 +11,7 @@ The QML type compiler, \c qmltc, is a tool shipped with Qt to translate QML
 types into C++ types that are \e{ahead-of-time} compiled as part of the user
 code. Using qmltc can lead to better run-time performance due to more
 optimization opportunities available to the compiler compared to a
-QQmlComponent-based object creation. The qmltc is part of the Qt Quick Compiler
+QQmlComponent-based object creation. The qmltc is part of the \l{Qt Quick Compiler}
 toolchain.
 
 By design, qmltc outputs user-facing code. That code is supposed to be utilized

@@ -30,6 +30,10 @@ Q_LOGGING_CATEGORY(lcPane, "qt.quick.controls.pane")
     Pane's \l[QtQuickControls2]{Control::}{contentItem}. Items created
     dynamically need to be explicitly parented to the \c contentItem.
 
+    As mentioned in \l {Event Handling}, Pane does not let click and touch
+    events through to items beneath it. If \l wheelEnabled is \c true, the
+    same applies to mouse wheel events.
+
     \section1 Content Sizing
 
     If only a single item is used within a Pane, it will resize to fit the

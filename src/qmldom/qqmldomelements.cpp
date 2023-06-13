@@ -336,6 +336,7 @@ bool Id::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     cont = cont && self.dvReferenceField(visitor, Fields::referredObject, referredObjectPath);
     cont = cont && self.dvWrapField(visitor, Fields::comments, comments);
     cont = cont && self.dvWrapField(visitor, Fields::annotations, annotations);
+    cont = cont && self.dvWrapField(visitor, Fields::value, value);
     return cont;
 }
 
@@ -1758,8 +1759,14 @@ bool MethodInfo::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
         cont = cont && self.dvValueField(visitor, Fields::postCode, postCode(self));
         cont = cont && self.dvValueField(visitor, Fields::isConstructor, isConstructor);
     }
+    if (returnType)
+        cont = cont && self.dvItemField(visitor, Fields::returnType, [this, &self]() {
+            return self.subOwnerItem(PathEls::Field(Fields::returnType), returnType);
+        });
     if (body)
-        cont = cont && self.dvWrapField(visitor, Fields::body, body);
+        cont = cont && self.dvItemField(visitor, Fields::body, [this, &self]() {
+            return self.subOwnerItem(PathEls::Field(Fields::body), body);
+        });
     return cont;
 }
 
@@ -1863,6 +1870,8 @@ bool MethodParameter::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor
     cont = cont && self.dvValueField(visitor, Fields::isReadonly, isReadonly);
     cont = cont && self.dvValueField(visitor, Fields::isList, isList);
     cont = cont && self.dvWrapField(visitor, Fields::defaultValue, defaultValue);
+    cont = cont && self.dvWrapField(visitor, Fields::value, value);
+
     if (!annotations.isEmpty())
         cont = cont && self.dvWrapField(visitor, Fields::annotations, annotations);
     cont = cont && self.dvWrapField(visitor, Fields::comments, comments);
@@ -1893,6 +1902,19 @@ void Pragma::writeOut(DomItem &, OutWriter &ow) const
 {
     ow.ensureNewline();
     ow.writeRegion(u"pragma").space().writeRegion(u"name", name);
+
+    bool isFirst = true;
+    for (const auto &value : values) {
+        if (isFirst) {
+            isFirst = false;
+            ow.writeRegion(u"colon", u": ");
+            ow.writeRegion(u"values", value);
+            continue;
+        }
+
+        ow.writeRegion(u"comma", u", ");
+        ow.writeRegion(u"values", value);
+    }
     ow.ensureNewline();
 }
 

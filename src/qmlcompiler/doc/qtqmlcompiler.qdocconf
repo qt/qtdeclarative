@@ -1,0 +1,47 @@
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
+include($QT_INSTALL_DOCS/config/exampleurl-qtdeclarative.qdocconf)
+
+project                 = QtQmlCompiler
+description             = Qt QML Compiler Reference Documentation
+version                 = $QT_VERSION
+
+qhp.projects            = QtQmlCompiler
+
+qhp.QtQmlCompiler.file          = qtqmlcompiler.qhp
+qhp.QtQmlCompiler.namespace     = org.qt-project.qtqmlcompiler.$QT_VERSION_TAG
+qhp.QtQmlCompiler.virtualFolder = qtqmlcompiler
+qhp.QtQmlCompiler.indexTitle    = Qt QML Compiler
+qhp.QtQmlCompiler.indexRoot     =
+
+qhp.QtQmlCompiler.subprojects = classes
+qhp.QtQmlCompiler.subprojects.classes.title = Classes
+qhp.QtQmlCompiler.subprojects.classes.indexTitle = Qt QML Compiler C++ Classes
+qhp.QtQmlCompiler.subprojects.classes.selectors = namespace class
+qhp.QtQmlCompiler.subprojects.classes.sortPages = true
+
+tagfile                 = qtqmlcompiler.tags
+
+depends += \
+    qtcore \
+    qtnetwork \
+    qtqmlmodels \
+    qtqmlworkerscript \
+    qtgui \
+    qtquick \
+    qtdoc \
+    qtlinguist \
+    qtwidgets \
+    qtquickcontrols \
+    qmake \
+    qtcmake \
+    qtqml
+
+headerdirs  += ..
+
+sourcedirs  += ..
+
+navigation.landingpage = "Qt QML Compiler"
+navigation.cppclassespage = "Qt QML Compiler C++ Classes"
+
+# Fail the documentation build if there are more warnings than the limit
+warninglimit = 0

@@ -14,14 +14,11 @@
 // We mean it.
 //
 
-#include "qv4object_p.h"
-#include "qv4function_p.h"
-#include "qv4functionobject_p.h"
-#include "qv4context_p.h"
-#include "qv4scopedvalue_p.h"
-#include "qv4stackframe_p.h"
-#include "qv4qobjectwrapper_p.h"
 #include <private/qv4alloca_p.h>
+#include <private/qv4functionobject_p.h>
+#include <private/qv4object_p.h>
+#include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -99,33 +96,9 @@ ReturnedValue FunctionObject::call(const JSCallData &data) const
 void populateJSCallArguments(ExecutionEngine *v4, JSCallArguments &jsCall, int argc,
                              void **args, const QMetaType *types);
 
-struct ScopedStackFrame
-{
-    ScopedStackFrame(const Scope &scope, ExecutionContext *context)
-        : engine(scope.engine)
-    {
-        if (auto currentFrame = engine->currentStackFrame) {
-            frame.init(currentFrame->v4Function, nullptr, context, nullptr, nullptr, 0);
-            frame.instructionPointer = currentFrame->instructionPointer;
-        } else {
-            frame.init(nullptr, nullptr, context, nullptr, nullptr, 0);
-        }
-        frame.push(engine);
-    }
-
-    ~ScopedStackFrame()
-    {
-        frame.pop(engine);
-    }
-
-private:
-    ExecutionEngine *engine = nullptr;
-    MetaTypesStackFrame frame;
-};
-
 template<typename Callable>
 ReturnedValue convertAndCall(
-        ExecutionEngine *engine, const QQmlPrivate::TypedFunction *aotFunction,
+        ExecutionEngine *engine, const QQmlPrivate::AOTCompiledFunction *aotFunction,
         const Value *thisObject, const Value *argv, int argc, Callable call)
 {
     const qsizetype numFunctionArguments = aotFunction->argumentTypes.size();
@@ -218,7 +191,7 @@ bool convertAndCall(ExecutionEngine *engine, QObject *thisObject,
 
 template<typename Callable>
 ReturnedValue coerceAndCall(
-        ExecutionEngine *engine, const QQmlPrivate::TypedFunction *typedFunction,
+        ExecutionEngine *engine, const QQmlPrivate::AOTCompiledFunction *typedFunction,
         const Value *thisObject, const Value *argv, int argc, Callable call)
 {
     Scope scope(engine);

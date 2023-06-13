@@ -37,19 +37,27 @@ private slots:
     void findTypeDefinitionFromLocation_data();
     void findTypeDefinitionFromLocation();
 
+    void findDefinitionFromLocation_data();
+    void findDefinitionFromLocation();
+
     void findLocationOfItem_data();
     void findLocationOfItem();
 
     void findBaseObject();
     void findBaseObject_data();
 
+    void findUsages();
+    void findUsages_data();
+
 private:
     using EnvironmentAndFile = std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>;
 
-    EnvironmentAndFile createEnvironmentAndLoadFile(const QString &file);
+    EnvironmentAndFile createEnvironmentAndLoadFile(const QString &file,
+                                                    QQmlJS::Dom::DomCreationOptions options);
 
+    using CacheKey = std::pair<QString, QQmlJS::Dom::DomCreationOptions>;
     // avoid loading the same file over and over when running all the tests
-    QHash<QString, EnvironmentAndFile> cache;
+    QHash<CacheKey, EnvironmentAndFile> cache;
 };
 
 #endif // TST_QMLLS_UTILS_H

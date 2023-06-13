@@ -212,7 +212,7 @@ public:
     bool isPointInPath(qreal x, qreal y) const;
 
     QPainterPath createTextGlyphs(qreal x, qreal y, const QString& text);
-    QQmlRefPointer<QQuickCanvasPixmap> createPixmap(const QUrl& url);
+    QQmlRefPointer<QQuickCanvasPixmap> createPixmap(const QUrl& url, QSizeF sourceSize = QSizeF());
 
     QSurface *surface() const { return m_surface.data(); }
     void setGrabbedImage(const QImage& grab);

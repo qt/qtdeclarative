@@ -12,15 +12,32 @@
 
     \image customrendernode-example.gif
 
-    QSGRenderNode allows direct access to the Render Hardware Interface (RHI) within the
-    scenegraph. This example demonstrates how to create QSGRenderNode based render node
-    and manage it with a custom item. The render node creates an RHI pipeline, updates
-    vertex and uniform buffers, and renders into the RHI command buffer.
+    QSGRenderNode allows direct access to the Render Hardware Interface (RHI)
+    within the scenegraph. This example demonstrates how to create QSGRenderNode
+    based render node and manage it with a custom item. The render node creates
+    an RHI pipeline, updates vertex and uniform buffers, and renders into the
+    RHI command buffer.
 
-    \warning This example demonstrates advanced, low-level functionality
-    performing portable, cross-platform 3D rendering, while relying on private
-    APIs from the Qt Gui and Qt Quick modules. Developers are encouraged to
-    carefully evaluate the potential lack of source and binary compatibility
-    guarantees before using these APIs in their applications.
+    In practice this is a portable, cross-platform approach to perform custom
+    rendering inline with the scenegraph's own rendering, without resorting to a
+    native 3D API such as OpenGL, Metal, or Vulkan. Rather, the application uses
+    Qt's graphics and shader abstraction layer.
 
- */
+    \note This example demonstrates advanced, low-level functionality performing
+    portable, cross-platform 3D rendering, while relying on APIs with limited
+    compatibility guarantee from the Qt Gui module.  To be able to use the QRhi
+    APIs, the application links to \c{Qt::GuiPrivate} and includes
+    \c{<rhi/qrhi.h>}.
+
+    QSGRenderNode is the enabler for one of the three ways to integrate custom
+    2D/3D rendering into a Qt Quick scene. The other two options are to perform
+    the rendering \c before or \c after the Qt Quick scene's own rendering,
+    or to generate a whole separate render pass targeting a dedicated render
+    target (a texture) and then have an item in the scene display the texture.
+    The QSGRenderNode-based approach is similar to the former, in the sense
+    that no additional render passes or render targets are involved, and allows
+    injecting custom rendering commands "inline" with the Qt Quick scene's
+    own rendering.
+
+    \sa {Scene Graph - RHI Under QML}, {Scene Graph - RHI Texture Item}
+*/

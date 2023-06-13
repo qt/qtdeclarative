@@ -320,7 +320,7 @@ void QQmlComponentPrivate::clear()
 
     compilationUnit.reset();
     loadedType = {};
-    isInlineComponent = false;
+    inlineComponentName.reset();
 }
 
 QObject *QQmlComponentPrivate::doBeginCreate(QQmlComponent *q, QQmlContext *context)
@@ -1066,7 +1066,18 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
     if (!loadedType.isValid()) {
         enginePriv->referenceScarceResources();
         state.initCreator(std::move(context), compilationUnit, creationContext);
-        rv = state.creator()->create(start, nullptr, nullptr, isInlineComponent ? QQmlObjectCreator::InlineComponent : QQmlObjectCreator::NormalObject);
+
+        QQmlObjectCreator::CreationFlags flags;
+        if (const QString *icName = inlineComponentName.get()) {
+            flags = QQmlObjectCreator::InlineComponent;
+            if (start == -1)
+                start = compilationUnit->inlineComponentId(*icName);
+            Q_ASSERT(start > 0);
+        } else {
+            flags = QQmlObjectCreator::NormalObject;
+        }
+
+        rv = state.creator()->create(start, nullptr, nullptr, flags);
         if (!rv)
             state.appendCreatorErrors();
         enginePriv->dereferenceScarceResources();
@@ -1336,14 +1347,10 @@ void QQmlComponent::loadFromModule(QAnyStringView uri, QAnyStringView typeName,
     } else if (type.isInlineComponentType()) {
         auto baseUrl = type.sourceUrl();
         baseUrl.setFragment(QString());
-        // if the outer type has not been resolved yet, we need to load the outer type synchronously
-        // in order to get the correct object id
-        mode = type.inlineComponentObjectId() > 0 ? mode : QQmlComponent::CompilationMode::PreferSynchronous;
         loadUrl(baseUrl, mode);
         if (!isError()) {
-            d->isInlineComponent = true;
-            d->start = type.inlineComponentObjectId();
-            Q_ASSERT(d->start >= 0);
+            d->inlineComponentName = std::make_unique<QString>(type.elementName());
+            Q_ASSERT(!d->inlineComponentName->isEmpty());
         }
     } else if (type.isSingleton() || type.isCompositeSingleton()) {
         reportError(QLatin1String(R"(%1 is a singleton, and cannot be loaded)")
@@ -1461,6 +1468,13 @@ void QQmlComponentPrivate::incubateObject(
     incubatorPriv->compilationUnit = componentPriv->compilationUnit;
     incubatorPriv->enginePriv = enginePriv;
     incubatorPriv->creator.reset(new QQmlObjectCreator(context, componentPriv->compilationUnit, componentPriv->creationContext));
+
+    if (start == -1) {
+        if (const QString *icName = componentPriv->inlineComponentName.get()) {
+            start = compilationUnit->inlineComponentId(*icName);
+            Q_ASSERT(start > 0);
+        }
+    }
     incubatorPriv->subComponentToCreate = componentPriv->start;
 
     enginePriv->incubate(*incubationTask, forContext);

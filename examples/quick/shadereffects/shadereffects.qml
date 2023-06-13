@@ -78,7 +78,7 @@ Rectangle {
             property variant source: theSource
             property real amplitude: 0.04 * wobbleSlider.value
             property real frequency: 20
-            property real time: 0
+            property real time
             NumberAnimation on time { loops: Animation.Infinite; from: 0; to: Math.PI * 2; duration: 600 }
             //! [fragment]
             fragmentShader: "content/shaders/wobble.frag.qsb"
@@ -114,7 +114,7 @@ Rectangle {
                     fragmentShader: "content/shaders/blur.frag.qsb"
                 }
             }
-            property real angle: 0
+            property real angle
             property variant offset: Qt.point(15.0 * Math.cos(angle), 15.0 * Math.sin(angle))
             NumberAnimation on angle { loops: Animation.Infinite; from: 0; to: Math.PI * 2; duration: 6000 }
             property variant delta: Qt.size(offset.x / width, offset.y / height)
@@ -158,8 +158,8 @@ Rectangle {
             height: 160
             //! [properties]
             property variant source: theSource
-            property real bend: 0
-            property real minimize: 0
+            property real bend
+            property real minimize
             property real side: genieSlider.value
             SequentialAnimation on bend {
                 loops: Animation.Infinite

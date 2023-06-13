@@ -730,7 +730,7 @@ public:
             VariantOfPointer<ScriptElements::BlockStatement, ScriptElements::IdentifierExpression,
                              ScriptElements::ForStatement, ScriptElements::BinaryExpression,
                              ScriptElements::VariableDeclarationEntry, ScriptElements::Literal,
-                             ScriptElements::IfStatement,
+                             ScriptElements::IfStatement, ScriptElements::GenericScriptElement,
                              ScriptElements::VariableDeclaration, ScriptElements::ReturnStatement>;
 
     template<typename T>
@@ -778,7 +778,8 @@ public:
         if (m_data)
             std::visit(visitor, *m_data);
     }
-    std::optional<ScriptElementT> data() const { return m_data; }
+    std::optional<ScriptElementT> data() { return m_data; }
+    void setData(ScriptElementT data) { m_data = data; }
 
 private:
     std::optional<ScriptElementT> m_data;
@@ -931,6 +932,9 @@ public:
     DomItem environment();
     DomItem universe();
     DomItem containingFile();
+    DomItem goToFile(const QString &filePath);
+    DomItem goUp(int);
+    DomItem directParent();
 
     DomItem qmlObject(GoTo option = GoTo::Strict,
                       FilterUpOptions options = FilterUpOptions::ReturnOuter);

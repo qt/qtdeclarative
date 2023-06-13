@@ -16,6 +16,7 @@
 //
 
 #include <private/qv4object_p.h>
+#include <private/qv4stackframe_p.h>
 
 QT_BEGIN_NAMESPACE
 

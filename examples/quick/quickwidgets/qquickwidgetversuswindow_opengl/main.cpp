@@ -9,8 +9,6 @@
 
 int main(int argc, char **argv)
 {
-    qputenv("QML_BAD_GUI_RENDER_LOOP", "1"); // QTBUG-39507
-
     QApplication app(argc, argv);
 
     // this example and QQuickWidget are only functional when rendering with OpenGL

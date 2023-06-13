@@ -42,14 +42,14 @@ static QString getFunctionCategory(const QmltcMethod &method)
 {
     QString category = getFunctionCategory(static_cast<const QmltcMethodBase &>(method));
     switch (method.type) {
-    case QQmlJSMetaMethod::Signal:
+    case QQmlJSMetaMethodType::Signal:
         category = u"Q_SIGNALS"_s;
         break;
-    case QQmlJSMetaMethod::Slot:
+    case QQmlJSMetaMethodType::Slot:
         category += u" Q_SLOTS"_s;
         break;
-    case QQmlJSMetaMethod::Method:
-    case QQmlJSMetaMethod::StaticMethod:
+    case QQmlJSMetaMethodType::Method:
+    case QQmlJSMetaMethodType::StaticMethod:
         break;
     }
     return category;
@@ -396,14 +396,14 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcMethod &method)
 {
     const auto [hSignature, cppSignature] = functionSignatures(method);
     // Note: augment return type with preambles in declaration
-    code.rawAppendToHeader((method.type == QQmlJSMetaMethod::StaticMethod
+    code.rawAppendToHeader((method.type == QQmlJSMetaMethodType::StaticMethod
                                     ? u"static " + functionReturnType(method)
                                     : functionReturnType(method))
                            + u" " + hSignature + u";");
 
     // do not generate method implementation if it is a signal
     const auto methodType = method.type;
-    if (methodType != QQmlJSMetaMethod::Signal) {
+    if (methodType != QQmlJSMetaMethodType::Signal) {
         code.rawAppendToCpp(u""_s); // blank line
         if (method.comments.size() > 0) {
             code.rawAppendToCpp(u"/*! \\internal"_s);

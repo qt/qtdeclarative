@@ -437,6 +437,13 @@ public:
 
 #define QMLDOM_USTRING(s) u##s
 #define QMLDOM_FIELD(name) inline constexpr const auto name = QMLDOM_USTRING(#name)
+/*!
+   \internal
+   In an ideal world, the Fields namespace would be an enum, not strings.
+   Use FieldType whenever you expect a static String from the Fields namespace instead of an
+   arbitrary QStringView.
+ */
+using FieldType = QStringView;
 // namespace, so it cam be reopened to add more entries
 namespace Fields{
 QMLDOM_FIELD(access);
@@ -444,6 +451,7 @@ QMLDOM_FIELD(accessSemantics);
 QMLDOM_FIELD(allSources);
 QMLDOM_FIELD(alternative);
 QMLDOM_FIELD(annotations);
+QMLDOM_FIELD(arguments);
 QMLDOM_FIELD(astComments);
 QMLDOM_FIELD(astRelocatableDump);
 QMLDOM_FIELD(attachedType);
@@ -452,10 +460,12 @@ QMLDOM_FIELD(autoExports);
 QMLDOM_FIELD(base);
 QMLDOM_FIELD(binaryExpression);
 QMLDOM_FIELD(bindable);
+QMLDOM_FIELD(bindingElement);
 QMLDOM_FIELD(bindingType);
 QMLDOM_FIELD(bindings);
 QMLDOM_FIELD(block);
 QMLDOM_FIELD(body);
+QMLDOM_FIELD(callee);
 QMLDOM_FIELD(canonicalFilePath);
 QMLDOM_FIELD(canonicalPath);
 QMLDOM_FIELD(children);
@@ -478,6 +488,7 @@ QMLDOM_FIELD(defaultPropertyName);
 QMLDOM_FIELD(defaultValue);
 QMLDOM_FIELD(designerSupported);
 QMLDOM_FIELD(elLocation);
+QMLDOM_FIELD(elements);
 QMLDOM_FIELD(elementCanonicalPath);
 QMLDOM_FIELD(enumerations);
 QMLDOM_FIELD(errors);
@@ -572,6 +583,7 @@ QMLDOM_FIELD(pragmas);
 QMLDOM_FIELD(preCode);
 QMLDOM_FIELD(preCommentLocations);
 QMLDOM_FIELD(preComments);
+QMLDOM_FIELD(properties);
 QMLDOM_FIELD(propertyDef);
 QMLDOM_FIELD(propertyDefRef);
 QMLDOM_FIELD(propertyDefs);
@@ -614,6 +626,7 @@ QMLDOM_FIELD(target);
 QMLDOM_FIELD(targetPropertyName);
 QMLDOM_FIELD(text);
 QMLDOM_FIELD(type);
+QMLDOM_FIELD(typeArgument);
 QMLDOM_FIELD(typeName);
 QMLDOM_FIELD(types);
 QMLDOM_FIELD(universe);

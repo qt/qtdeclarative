@@ -21,8 +21,8 @@ QT_BEGIN_NAMESPACE
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickFrictionAffector : public QQuickParticleAffector
 {
     Q_OBJECT
-    Q_PROPERTY(qreal factor READ factor WRITE setFactor NOTIFY factorChanged)
-    Q_PROPERTY(qreal threshold READ threshold WRITE setThreshold NOTIFY thresholdChanged)
+    Q_PROPERTY(qreal factor READ factor WRITE setFactor NOTIFY factorChanged FINAL)
+    Q_PROPERTY(qreal threshold READ threshold WRITE setThreshold NOTIFY thresholdChanged FINAL)
     QML_NAMED_ELEMENT(Friction)
     QML_ADDED_IN_VERSION(2, 0)
 public:

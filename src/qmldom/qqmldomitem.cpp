@@ -1,6 +1,7 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 #include "qqmldomitem_p.h"
+#include "qqmldompath_p.h"
 #include "qqmldomtop_p.h"
 #include "qqmldomelements_p.h"
 #include "qqmldomexternalitems_p.h"
@@ -528,12 +529,50 @@ DomItem DomItem::universe()
     return DomItem(); // we should be in an empty DomItem already...
 }
 
+/*!
+   \internal
+   Shorthand to obtain the QmlFile DomItem, in which this DomItem is defined.
+   Returns an empty DomItem if the item is not defined in a QML file.
+   \sa goToFile()
+ */
 DomItem DomItem::containingFile()
 {
     if (DomItem res = filterUp([](DomType k, DomItem &) { return k == DomType::QmlFile; },
                                FilterUpOptions::ReturnOuter))
         return res;
     return DomItem();
+}
+
+/*!
+   \internal
+   Shorthand to obtain the QmlFile DomItem from a canonicalPath.
+   \sa containingFile()
+ */
+DomItem DomItem::goToFile(const QString &canonicalPath)
+{
+    Q_UNUSED(canonicalPath);
+    DomItem file =
+            top().field(Fields::qmlFileWithPath).key(canonicalPath).field(Fields::currentItem);
+    return file;
+}
+
+/*!
+   \internal
+   In the DomItem hierarchy, go \c n levels up.
+ */
+DomItem DomItem::goUp(int n)
+{
+    DomItem parent = owner().path(pathFromOwner().dropTail(n));
+    return parent;
+}
+
+/*!
+   \internal
+   In the DomItem hierarchy, go 1 level up to get the direct parent.
+ */
+DomItem DomItem::directParent()
+{
+    return goUp(1);
 }
 
 DomItem DomItem::filterUp(function_ref<bool(DomType k, DomItem &)> filter, FilterUpOptions options)
@@ -618,6 +657,8 @@ std::optional<QQmlJSScope::Ptr> DomItem::semanticScope()
             [](auto &&e) -> std::optional<QQmlJSScope::Ptr> {
                 using T = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
                 if constexpr (std::is_same_v<T, QmlObject *>) {
+                    return e->semanticScope();
+                } else if constexpr (std::is_same_v<T, QmlComponent *>) {
                     return e->semanticScope();
                 } else if constexpr (std::is_same_v<T, ScriptElementDomWrapper>) {
                     return e.element().base()->semanticScope();
@@ -1400,10 +1441,13 @@ bool DomItem::visitTree(Path basePath, DomItem::ChildrenVisitor visitor, VisitOp
         return true;
     if (options & VisitOption::VisitSelf && !visitor(basePath, *this, true))
         return false;
-    if (!openingVisitor(basePath, *this, true))
+    if (options & VisitOption::VisitSelf && !openingVisitor(basePath, *this, true))
         return true;
-    auto atEnd = qScopeGuard(
-            [closingVisitor, basePath, this]() { closingVisitor(basePath, *this, true); });
+    auto atEnd = qScopeGuard([closingVisitor, basePath, this, options]() {
+        if (options & VisitOption::VisitSelf) {
+            closingVisitor(basePath, *this, true);
+        }
+    });
     return visitEl([this, basePath, visitor, openingVisitor, closingVisitor, options](auto &&el) {
         return el->iterateDirectSubpathsConst(
                 *this,
@@ -2312,9 +2356,7 @@ DomItem DomItem::operator[](Path p)
 
 QCborValue DomItem::value()
 {
-    if (internalKind() == DomType::ConstantData)
-        return std::get<ConstantData>(m_element).value();
-    return QCborValue();
+    return base()->value();
 }
 
 void DomItem::dumpPtr(Sink sink)

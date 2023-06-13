@@ -50,7 +50,7 @@ public:
     static bool isComplexBinding(const QQmlJSMetaPropertyBinding &binding)
     {
         // TODO: translation bindings (once supported) are also complex?
-        return binding.bindingType() == QQmlJSMetaPropertyBinding::Script;
+        return binding.bindingType() == QQmlSA::BindingType::Script;
     }
 
 private:
@@ -187,14 +187,14 @@ private:
 
     bool hasErrors() const { return m_logger->hasErrors(); }
     void recordError(const QQmlJS::SourceLocation &location, const QString &message,
-                     LoggerWarningId id = qmlCompiler)
+                     QQmlJS::LoggerWarningId id = qmlCompiler)
     {
         // pretty much any compiler error is a critical error (we cannot
         // generate code - compilation fails)
         m_logger->log(message, id, location);
     }
     void recordError(const QV4::CompiledData::Location &location, const QString &message,
-                     LoggerWarningId id = qmlCompiler)
+                     QQmlJS::LoggerWarningId id = qmlCompiler)
     {
         recordError(QQmlJS::SourceLocation { 0, 0, location.line(), location.column() }, message,
                     id);

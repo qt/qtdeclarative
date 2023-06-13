@@ -265,8 +265,6 @@ private slots:
                 LoadOption::DefaultLoad);
         env.loadPendingDependencies();
 
-        MutableDomItem myFile = tFile.field(Fields::currentItem);
-
         QString resultStr;
         QTextStream res(&resultStr);
         LineWriter lw([&res](QStringView s) { res << s; }, QLatin1String("*testStream*"), options);

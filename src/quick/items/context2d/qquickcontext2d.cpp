@@ -2369,8 +2369,8 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_strokeRect(const QV4::Func
 
     \image qml-item-canvas-startAngle.png
 
-    The \a anticlockwise parameter is \c true for each arc in the figure above
-    because they are all drawn in the anticlockwise direction.
+    The \a anticlockwise parameter is \c false for each arc in the figure above
+    because they are all drawn in the clockwise direction.
 
     \sa arcTo, {http://www.w3.org/TR/2dcontext/#dom-context-2d-arc}{W3C's 2D
     Context Standard for arc()}
@@ -4152,9 +4152,9 @@ void QQuickContext2D::setGrabbedImage(const QImage& grab)
     m_grabbed = true;
 }
 
-QQmlRefPointer<QQuickCanvasPixmap> QQuickContext2D::createPixmap(const QUrl& url)
+QQmlRefPointer<QQuickCanvasPixmap> QQuickContext2D::createPixmap(const QUrl& url, QSizeF sourceSize)
 {
-    return m_canvas->loadedPixmap(url);
+    return m_canvas->loadedPixmap(url, sourceSize);
 }
 
 QPainterPath QQuickContext2D::createTextGlyphs(qreal x, qreal y, const QString& text)

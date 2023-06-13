@@ -775,6 +775,75 @@ TestCase {
         compare(item2.height, testCase.height - item2.y)
     }
 
+    Component {
+        id: threeSizedItemsComponentWithDefaultHandle
+
+        SplitView {
+            anchors.fill: parent
+
+            Rectangle {
+                objectName: "salmon"
+                color: objectName
+                implicitWidth: 25
+                implicitHeight: 25
+            }
+            Rectangle {
+                objectName: "navajowhite"
+                color: objectName
+                implicitWidth: 100
+                implicitHeight: 100
+            }
+            Rectangle {
+                objectName: "steelblue"
+                color: objectName
+                implicitWidth: 200
+                implicitHeight: 200
+            }
+        }
+    }
+
+    function test_orientationWithDefaultHandle() {
+        const control = createTemporaryObject(threeSizedItemsComponentWithDefaultHandle, testCase)
+        verify(control)
+
+        const item0 = control.itemAt(0)
+        compare(item0.x, 0)
+        compare(item0.y, 0)
+        compare(item0.width, item0.implicitWidth)
+        compare(item0.height, testCase.height)
+
+        const item1 = control.itemAt(1)
+        let handleDefaultWidth = item1.x - item0.width // Find default handle width
+        compare(item1.x, item0.width + handleDefaultWidth)
+        compare(item1.y, 0)
+        compare(item1.width, item1.implicitWidth)
+        compare(item1.height, testCase.height)
+
+        const item2 = control.itemAt(2)
+        compare(item2.x, item0.width + item1.width + handleDefaultWidth * 2)
+        compare(item2.y, 0)
+        compare(item2.width, testCase.width - item2.x)
+        compare(item2.height, testCase.height)
+
+        control.orientation = Qt.Vertical
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
+        compare(item0.x, 0)
+        compare(item0.y, 0)
+        compare(item0.width, testCase.width)
+        compare(item0.height, item0.implicitHeight)
+
+        compare(item1.x, 0)
+        compare(item1.y, item0.height + handleDefaultWidth)
+        compare(item1.width, testCase.width)
+        compare(item1.height, item1.implicitHeight)
+
+        compare(item2.x, 0)
+        compare(item2.y, item0.height + item1.height + handleDefaultWidth * 2)
+        compare(item2.width, testCase.width)
+        compare(item2.height, testCase.height - item2.y)
+    }
+
     readonly property int splitViewMargins: 50
 
     Component {

@@ -66,8 +66,8 @@ struct QQmlPropertyCacheCreatorBase
 public:
     static QAtomicInt Q_AUTOTEST_EXPORT classIndexCounter;
 
-    static QMetaType metaTypeForPropertyType(QV4::CompiledData::BuiltinType type);
-    static QMetaType listTypeForPropertyType(QV4::CompiledData::BuiltinType type);
+    static QMetaType metaTypeForPropertyType(QV4::CompiledData::CommonType type);
+    static QMetaType listTypeForPropertyType(QV4::CompiledData::CommonType type);
 
     static QByteArray createClassNameTypeByUrl(const QUrl &url);
 
@@ -255,7 +255,10 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
                         auto *typeRef = objectContainer->resolvedType(obj->inheritedTypeNameIndex);
                         Q_ASSERT(typeRef);
                         QQmlPropertyCache::ConstPtr baseTypeCache = typeRef->createPropertyCache();
-                        QQmlError error = createMetaObject(context.referencingObjectIndex, obj, baseTypeCache);
+                        QQmlError error = baseTypeCache
+                            ? createMetaObject(context.referencingObjectIndex, obj, baseTypeCache)
+                            : qQmlCompileError(binding->location, QQmlPropertyCacheCreatorBase::tr(
+                                    "Type cannot be used for 'on' assignment"));
                         if (error.isValid())
                             return error;
                     }
@@ -345,7 +348,13 @@ inline QQmlPropertyCache::ConstPtr QQmlPropertyCacheCreator<ObjectContainer>::pr
             }
         }
 
-        return typeRef->createPropertyCache();
+        if (QQmlPropertyCache::ConstPtr propertyCache = typeRef->createPropertyCache())
+            return propertyCache;
+        *error = qQmlCompileError(
+            obj->location,
+            QQmlPropertyCacheCreatorBase::tr("Type '%1' cannot declare new members.")
+                .arg(stringAt(obj->inheritedTypeNameIndex)));
+        return nullptr;
     } else if (const QV4::CompiledData::Binding *binding = context.instantiatingBinding) {
         if (binding->isAttachedProperty()) {
             auto *typeRef = objectContainer->resolvedType(
@@ -592,24 +601,25 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
         QTypeRevision propertyTypeVersion = QTypeRevision::zero();
         QQmlPropertyData::Flags propertyFlags;
 
-        const QV4::CompiledData::BuiltinType type = p->builtinType();
+        const QV4::CompiledData::CommonType type = p->commonType();
 
         if (p->isList())
             propertyFlags.type = QQmlPropertyData::Flags::QListType;
-        else if (type == QV4::CompiledData::BuiltinType::Var)
+        else if (type == QV4::CompiledData::CommonType::Var)
             propertyFlags.type = QQmlPropertyData::Flags::VarPropertyType;
 
-        if (type != QV4::CompiledData::BuiltinType::InvalidBuiltin) {
+        if (type != QV4::CompiledData::CommonType::Invalid) {
             propertyType = p->isList()
                     ? listTypeForPropertyType(type)
                     : metaTypeForPropertyType(type);
         } else {
-            Q_ASSERT(!p->isBuiltinType());
+            Q_ASSERT(!p->isCommonType());
 
             QQmlType qmltype;
             bool selfReference = false;
-            if (!imports->resolveType(stringAt(p->builtinTypeOrTypeNameIndex()), &qmltype, nullptr, nullptr,
-                                      nullptr, QQmlType::AnyRegistrationType, &selfReference)) {
+            if (!imports->resolveType(
+                    stringAt(p->commonTypeOrTypeNameIndex()), &qmltype, nullptr, nullptr,
+                    nullptr, QQmlType::AnyRegistrationType, &selfReference)) {
                 return qQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Invalid property type"));
             }
 
@@ -618,16 +628,17 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
             if (qmltype.isComposite() || qmltype.isInlineComponentType()) {
                 CompositeMetaTypeIds typeIds;
                 if (qmltype.isInlineComponentType()) {
-                    auto objectId = qmltype.inlineComponentId();
+                    const QString icName = qmltype.elementName();
                     auto containingType = qmltype.containingType();
                     if (containingType.isValid()) {
-                        auto icType = containingType.lookupInlineComponentById(objectId);
+                        const QQmlType icType
+                            = QQmlMetaType::inlineComponentType(containingType, icName);
                         typeIds = {icType.typeId(), icType.qListTypeId()};
                     } else {
                         typeIds = {};
                     }
                     if (!typeIds.isValid()) // type has not been registered yet, we must be in containing type
-                        typeIds = objectContainer->typeIdsForComponent(objectId);
+                        typeIds = objectContainer->typeIdsForComponent(icName);
                     Q_ASSERT(typeIds.isValid());
                 } else if (selfReference) {
                      typeIds = objectContainer->typeIdsForComponent();
@@ -679,19 +690,19 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
 }
 
 template <typename ObjectContainer>
-inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(const QV4::CompiledData::ParameterType &param,
-                                                                           QString *customTypeName)
+inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(
+    const QV4::CompiledData::ParameterType &param, QString *customTypeName)
 {
-    const quint32 typeId = param.typeNameIndexOrBuiltinType();
-    if (param.indexIsBuiltinType()) {
+    const quint32 typeId = param.typeNameIndexOrCommonType();
+    if (param.indexIsCommonType()) {
         // built-in type
         if (param.isList())
-            return listTypeForPropertyType(QV4::CompiledData::BuiltinType(typeId));
-        return metaTypeForPropertyType(QV4::CompiledData::BuiltinType(typeId));
+            return listTypeForPropertyType(QV4::CompiledData::CommonType(typeId));
+        return metaTypeForPropertyType(QV4::CompiledData::CommonType(typeId));
     }
 
     // lazily resolved type
-    const QString typeName = stringAt(param.typeNameIndexOrBuiltinType());
+    const QString typeName = stringAt(param.typeNameIndexOrCommonType());
     if (customTypeName)
         *customTypeName = typeName;
     QQmlType qmltype;
@@ -703,8 +714,7 @@ inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter
     if (!qmltype.isComposite()) {
         const QMetaType typeId = param.isList() ? qmltype.qListTypeId() : qmltype.typeId();
         if (!typeId.isValid() && qmltype.isInlineComponentType()) {
-            const int objectId = qmltype.inlineComponentId();
-            const auto typeIds = objectContainer->typeIdsForComponent(objectId);
+            const auto typeIds = objectContainer->typeIdsForComponent(qmltype.elementName());
             return param.isList() ? typeIds.listId : typeIds.id;
         } else {
             return typeId;
@@ -815,8 +825,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         if (referencedType.isValid()) {
             *type = referencedType.typeId();
             if (!type->isValid() && referencedType.isInlineComponentType()) {
-                int objectId = referencedType.inlineComponentId();
-                *type = objectContainer->typeIdsForComponent(objectId).id;
+                *type = objectContainer->typeIdsForComponent(referencedType.elementName()).id;
                 Q_ASSERT(type->isValid());
             }
         } else {

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "tst_qmlls_modules.h"
+#include "QtQmlLS/private/qqmllsutils_p.h"
 
 // Check if QTest already has a QTEST_CHECKED macro
 #ifndef QTEST_CHECKED
@@ -17,6 +18,7 @@ QT_USE_NAMESPACE
 using namespace Qt::StringLiterals;
 using namespace QLspSpecification;
 
+static constexpr bool enable_debug_output = true;
 
 tst_qmlls_modules::tst_qmlls_modules()
     : QQmlDataTest(QT_QMLTEST_DATADIR),
@@ -79,9 +81,9 @@ void tst_qmlls_modules::initTestCase()
     QTRY_COMPARE_WITH_TIMEOUT(didInit, true, 10000);
 
     for (const QString &filePath :
-         QStringList({ u"completions/Yyy.qml"_s,
-                     u"completions/fromBuildDir.qml"_s,
-                     u"completions/SomeBase.qml"_s })) {
+         QStringList({ u"completions/Yyy.qml"_s, u"completions/fromBuildDir.qml"_s,
+                       u"completions/SomeBase.qml"_s, u"findUsages/jsIdentifierUsages.qml"_s,
+                       u"findDefinition/jsDefinitions.qml"_s })) {
         QFile file(testFile(filePath));
         QVERIFY(file.open(QIODevice::ReadOnly));
         DidOpenTextDocumentParams oParams;
@@ -495,6 +497,8 @@ void tst_qmlls_modules::goToTypeDefinition()
     QFETCH(int, expectedEndLine);
     QFETCH(int, expectedEndCharacter);
 
+    QVERIFY(uri.startsWith("file://"_ba));
+
     // TODO
     TypeDefinitionParams params;
     params.position.line = line;
@@ -527,6 +531,330 @@ void tst_qmlls_modules::goToTypeDefinition()
                 QVERIFY2(false, "error computing the completion");
             });
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 30000);
+}
+
+void tst_qmlls_modules::goToDefinition_data()
+{
+    QTest::addColumn<QByteArray>("uri");
+    // keep in mind that line and character are starting at 1!
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+
+    QTest::addColumn<QByteArray>("expectedUri");
+    // set to -1 when unchanged from above line and character. 0-based.
+    QTest::addColumn<int>("expectedStartLine");
+    QTest::addColumn<int>("expectedStartCharacter");
+    QTest::addColumn<int>("expectedEndLine");
+    QTest::addColumn<size_t>("expectedEndCharacter");
+
+    const QByteArray JSDefinitionsQml =
+            testFileUrl(u"findDefinition/jsDefinitions.qml"_s).toEncoded();
+    const int positionAfterOneIndent = 5;
+    const QByteArray noResultExpected;
+
+    QTest::addRow("JSIdentifierX") << JSDefinitionsQml << 14 << 11 << JSDefinitionsQml << 13 << 13
+                                   << 13 << 13 + strlen("x");
+    QTest::addRow("propertyI") << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << 9
+                               << positionAfterOneIndent << 9
+                               << positionAfterOneIndent + strlen("property int i");
+    QTest::addRow("qualifiedPropertyI")
+            << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << 9 << positionAfterOneIndent << 9
+            << positionAfterOneIndent + strlen("property int i");
+    QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 6 << 1 << 6
+                        << 1 + strlen("Item");
+
+    QTest::addRow("parameterA") << JSDefinitionsQml << 10 << 16 << noResultExpected << -1 << -1
+                                << -1 << size_t{};
+    QTest::addRow("parameterB") << JSDefinitionsQml << 10 << 28 << noResultExpected << -1 << -1
+                                << -1 << size_t{};
+    QTest::addRow("comment") << JSDefinitionsQml << 10 << 21 << noResultExpected << -1 << -1 << -1
+                             << size_t{};
+}
+
+void tst_qmlls_modules::goToDefinition()
+{
+    QFETCH(QByteArray, uri);
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QByteArray, expectedUri);
+    QFETCH(int, expectedStartLine);
+    QFETCH(int, expectedStartCharacter);
+    QFETCH(int, expectedEndLine);
+    QFETCH(size_t, expectedEndCharacter);
+
+    QVERIFY(uri.startsWith("file://"_ba));
+
+    DefinitionParams params;
+    params.position.line = line - 1;
+    params.position.character = character - 1;
+    params.textDocument.uri = uri;
+
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    auto clean = [didFinish]() { *didFinish = true; };
+
+    m_protocol.requestDefinition(
+            params,
+            [&](auto res) {
+                QScopeGuard cleanup(clean);
+                auto *result = std::get_if<QList<Location>>(&res);
+                const QByteArray noResultExpected;
+
+                QVERIFY(result);
+                if (expectedUri == noResultExpected) {
+                    QCOMPARE(result->size(), 0);
+                } else {
+                    QCOMPARE(result->size(), 1);
+
+                    Location l = result->front();
+                    QCOMPARE(l.uri, expectedUri);
+                    QCOMPARE(l.range.start.line, expectedStartLine - 1);
+                    QCOMPARE(l.range.start.character, expectedStartCharacter - 1);
+                    QCOMPARE(l.range.end.line, expectedEndLine - 1);
+                    QCOMPARE(l.range.end.character, (int)(expectedEndCharacter - 1));
+                }
+            },
+            [clean](const ResponseError &err) {
+                QScopeGuard cleanup(clean);
+                ProtocolBase::defaultResponseErrorHandler(err);
+                QVERIFY2(false, "error computing the completion");
+            });
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 30000);
+}
+
+// startLine and startCharacter start at 1, not 0
+static QLspSpecification::Location locationFrom(const QByteArray fileName, const QString &code,
+                                                quint32 startLine, quint32 startCharacter,
+                                                quint32 length)
+{
+    QLspSpecification::Location location;
+    location.uri = QQmlLSUtils::qmlUrlToLspUri(fileName);
+    // the LSP works with lines and characters starting at 0
+    location.range.start.line = startLine - 1;
+    location.range.start.character = startCharacter - 1;
+
+    quint32 startOffset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
+    auto end = QQmlLSUtils::textRowAndColumnFrom(code, startOffset + length);
+    location.range.end.line = end.line;
+    location.range.end.character = end.character;
+
+    return location;
+}
+
+void tst_qmlls_modules::findUsages_data()
+{
+    QTest::addColumn<QByteArray>("uri");
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+    QTest::addColumn<QList<QLspSpecification::Location>>("expectedUsages");
+
+    QByteArray jsIdentifierUsagesUri = testFileUrl("findUsages/jsIdentifierUsages.qml").toEncoded();
+
+    QString jsIdentifierUsagesContent;
+    {
+        QFile file(testFile("findUsages/jsIdentifierUsages.qml").toUtf8());
+        QVERIFY(file.open(QIODeviceBase::ReadOnly));
+        jsIdentifierUsagesContent = QString::fromUtf8(file.readAll());
+    }
+
+    // line and character start at 1!
+    const QList<QLspSpecification::Location> sumUsages = {
+        locationFrom(jsIdentifierUsagesUri, jsIdentifierUsagesContent, 8, 13, strlen("sum")),
+        locationFrom(jsIdentifierUsagesUri, jsIdentifierUsagesContent, 10, 13, strlen("sum")),
+        locationFrom(jsIdentifierUsagesUri, jsIdentifierUsagesContent, 10, 19, strlen("sum")),
+    };
+    QVERIFY(sumUsages.front().uri.startsWith("file://"_ba));
+
+    // line and character start at 1!
+    QTest::addRow("sumUsagesFromUsage") << jsIdentifierUsagesUri << 10 << 14 << sumUsages;
+    QTest::addRow("sumUsagesFromUsage2") << jsIdentifierUsagesUri << 10 << 20 << sumUsages;
+    QTest::addRow("sumUsagesFromDefinition") << jsIdentifierUsagesUri << 8 << 14 << sumUsages;
+}
+
+static bool operator==(const QLspSpecification::Location &a, const QLspSpecification::Location &b)
+{
+    return std::tie(a.uri, a.range.start.character, a.range.start.line, a.range.end.character,
+                    a.range.end.line)
+            == std::tie(b.uri, b.range.start.character, b.range.start.line, b.range.end.character,
+                        b.range.end.line);
+}
+
+static bool locationListsAreEqual(const QList<QLspSpecification::Location> &a,
+                                  const QList<QLspSpecification::Location> &b)
+{
+    return std::equal(
+            a.cbegin(), a.cend(), b.cbegin(), b.cend(),
+            [](const QLspSpecification::Location &a, const QLspSpecification::Location &b) {
+                return a == b; // as else std::equal will not find the above implementation of
+                               // operator==
+            });
+}
+
+static QString locationToString(const QLspSpecification::Location &l)
+{
+    QString s = u"%1: (%2, %3) - (%4, %5)"_s.arg(l.uri)
+                        .arg(l.range.start.line)
+                        .arg(l.range.start.character)
+                        .arg(l.range.end.line)
+                        .arg(l.range.end.character);
+    return s;
+}
+
+void tst_qmlls_modules::findUsages()
+{
+    QFETCH(QByteArray, uri);
+    // line and character start at 1!
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QList<QLspSpecification::Location>, expectedUsages);
+
+    QVERIFY(uri.startsWith("file://"_ba));
+
+    ReferenceParams params;
+    params.position.line = line - 1;
+    params.position.character = character - 1;
+    params.textDocument.uri = uri;
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    auto clean = [didFinish]() { *didFinish = true; };
+    m_protocol.requestReference(
+            params,
+            [&](auto res) {
+                QScopeGuard cleanup(clean);
+                auto *result = std::get_if<QList<Location>>(&res);
+
+                QVERIFY(result);
+                if constexpr (enable_debug_output) {
+                    if (!locationListsAreEqual(*result, expectedUsages)) {
+                        qDebug() << "Got following locations:";
+                        for (auto &x : *result) {
+                            qDebug() << locationToString(x);
+                        }
+                        qDebug() << "But expected:";
+                        for (auto &x : expectedUsages) {
+                            qDebug() << locationToString(x);
+                        }
+                    }
+                }
+
+                QVERIFY(locationListsAreEqual(*result, expectedUsages));
+            },
+            [clean](const ResponseError &err) {
+                QScopeGuard cleanup(clean);
+                ProtocolBase::defaultResponseErrorHandler(err);
+                QVERIFY2(false, "error computing the completion");
+            });
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 3000);
+}
+
+void tst_qmlls_modules::documentFormatting_data()
+{
+    QTest::addColumn<QString>("originalFile");
+    QTest::addColumn<QString>("expectedFile");
+
+    QDir directory(QT_QMLFORMATTEST_DATADIR);
+
+    // Exclude some test files which require options support
+    QStringList excludedFiles;
+    excludedFiles << "tests/auto/qml/qmlformat/data/checkIdsNewline.qml";
+    excludedFiles << "tests/auto/qml/qmlformat/data/normalizedFunctionsSpacing.qml";
+    excludedFiles << "tests/auto/qml/qmlformat/data/normalizedObjectsSpacing.qml";
+
+    const auto shouldSkip = [&excludedFiles](const QString &fileName) {
+        for (const QString &file : excludedFiles) {
+            if (fileName.endsWith(file))
+                return true;
+        }
+        return false;
+    };
+
+    // TODO: move into a separate member function
+    const auto registerFile = [this](const QString &filePath) {
+        QFile testFile(filePath);
+        QVERIFY(testFile.open(QIODevice::ReadOnly));
+        const auto fileUri = QUrl::fromLocalFile(filePath).toEncoded();
+        DidOpenTextDocumentParams oParams;
+        oParams.textDocument = TextDocumentItem{ fileUri, testFile.readAll() };
+        m_protocol.notifyDidOpenTextDocument(oParams);
+        m_uriToClose.append(fileUri);
+    };
+
+    // Filter to include files contain .formatted.
+    const auto formattedFilesInfo =
+            directory.entryInfoList(QStringList{ { "*.formatted.qml" } }, QDir::Files);
+    for (const auto &formattedFileInfo : formattedFilesInfo) {
+        const QFileInfo unformattedFileInfo(directory, formattedFileInfo.fileName().remove(".formatted"));
+        const auto unformattedFilePath = unformattedFileInfo.canonicalFilePath();
+        if (shouldSkip(unformattedFilePath))
+            continue;
+
+        registerFile(unformattedFilePath);
+        QTest::newRow(qPrintable(unformattedFileInfo.fileName()))
+                << unformattedFilePath << formattedFileInfo.canonicalFilePath();
+    }
+
+    // Extra tests
+    const QString blanklinesPath = testFile("formatting/blanklines.qml");
+    registerFile(blanklinesPath);
+    QTest::newRow("leading-and-trailing-blanklines")
+            << testFile("formatting/blanklines.qml")
+            << testFile("formatting/blanklines.formatted.qml");
+}
+
+void tst_qmlls_modules::documentFormatting()
+{
+    QFETCH(QString, originalFile);
+    QFETCH(QString, expectedFile);
+
+    DocumentFormattingParams params;
+    params.textDocument.uri = QUrl::fromLocalFile(originalFile).toEncoded();
+
+    const auto lineCount = [](const QString &filePath) {
+        QFile file(filePath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            qWarning() << "Error while opening the file " << filePath;
+            return -1;
+        }
+        int lineCount = 0;
+        QString line;
+        while (!file.atEnd()) {
+            line = file.readLine();
+            ++lineCount;
+        }
+        if (line.endsWith('\n'))
+            ++lineCount;
+        return lineCount;
+    };
+
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    auto clean = [didFinish]() { *didFinish = true; };
+    auto &&responseHandler = [&](auto response) {
+        QScopeGuard cleanup(clean);
+        if (std::holds_alternative<QList<TextEdit>>(response)) {
+            const auto results = std::get<QList<TextEdit>>(response);
+            QVERIFY(results.size() == 1);
+            QFile file(expectedFile);
+            if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                qWarning() << "Error while opening the file " << expectedFile;
+                return;
+            }
+
+            const auto &textEdit = results.first();
+            QCOMPARE(textEdit.range.start.line, 0);
+            QCOMPARE(textEdit.range.start.character, 0);
+            QCOMPARE(textEdit.range.end.line, lineCount(originalFile));
+            QCOMPARE(textEdit.range.end.character, 0);
+            QCOMPARE(textEdit.newText, file.readAll());
+        }
+    };
+
+    auto &&errorHandler = [&clean](const ResponseError &err) {
+        QScopeGuard cleanup(clean);
+        ProtocolBase::defaultResponseErrorHandler(err);
+        QVERIFY2(false, "error computing the completion");
+    };
+    m_protocol.requestDocumentFormatting(params, std::move(responseHandler),
+                                         std::move(errorHandler));
+
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 50000);
 }
 
 QTEST_MAIN(tst_qmlls_modules)

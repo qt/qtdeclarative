@@ -27,9 +27,14 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollView : public QQuickPane
     Q_OBJECT
     QML_NAMED_ELEMENT(ScrollView)
     QML_ADDED_IN_VERSION(2, 2)
+    Q_PROPERTY(qreal effectiveScrollBarWidth READ effectiveScrollBarWidth NOTIFY effectiveScrollBarWidthChanged FINAL REVISION(6, 6))
+    Q_PROPERTY(qreal effectiveScrollBarHeight READ effectiveScrollBarHeight NOTIFY effectiveScrollBarHeightChanged FINAL REVISION(6, 6))
 
 public:
     explicit QQuickScrollView(QQuickItem *parent = nullptr);
+    ~QQuickScrollView();
+    qreal effectiveScrollBarWidth();
+    qreal effectiveScrollBarHeight();
 
 protected:
     bool childMouseEventFilter(QQuickItem *item, QEvent *event) override;
@@ -43,6 +48,10 @@ protected:
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif
+
+Q_SIGNALS:
+    Q_REVISION(6, 6) void effectiveScrollBarWidthChanged();
+    Q_REVISION(6, 6) void effectiveScrollBarHeightChanged();
 
 private:
     Q_DISABLE_COPY(QQuickScrollView)

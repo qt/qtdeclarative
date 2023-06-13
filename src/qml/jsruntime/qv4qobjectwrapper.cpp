@@ -1488,7 +1488,7 @@ static ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index, QMe
                 const bool is_signal =
                         object.metaObject()->method(index).methodType() == QMetaMethod::Signal;
                 if (is_signal) {
-                    qWarning() << "Passing incomatible arguments to signals is not supported.";
+                    qWarning() << "Passing incompatible arguments to signals is not supported.";
                 } else {
                     return engine->throwTypeError(
                             QLatin1String("Passing incompatible arguments to C++ functions from "
@@ -1523,6 +1523,26 @@ static ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index, QMe
 
     }
 }
+
+template<typename Retrieve>
+int MatchVariant(QMetaType conversionMetaType, Retrieve &&retrieve) {
+    if (conversionMetaType == QMetaType::fromType<QVariant>())
+        return 0;
+
+    const QMetaType type = retrieve();
+    if (type == conversionMetaType)
+        return 0;
+
+    if (const QMetaObject *conversionMetaObject = conversionMetaType.metaObject()) {
+        if (const QMetaObject *mo = type.metaObject(); mo && mo->inherits(conversionMetaObject))
+            return 1;
+    }
+
+    if (QMetaType::canConvert(type, conversionMetaType))
+        return 5;
+
+    return 10;
+};
 
 /*
     Returns the match score for converting \a actual to be of type \a conversionType.  A
@@ -1637,22 +1657,48 @@ static int MatchScore(const Value &actual, QMetaType conversionMetaType)
         }
         }
     } else if (const Object *obj = actual.as<Object>()) {
-        if (obj->as<VariantObject>()) {
-            if (conversionType == qMetaTypeId<QVariant>())
-                return 0;
-            if (ExecutionEngine::toVariant(actual, QMetaType {}).metaType() == conversionMetaType)
-                return 0;
-            else
-                return 10;
+        if (const VariantObject *variantObject = obj->as<VariantObject>()) {
+            return MatchVariant(conversionMetaType, [variantObject]() {
+                return variantObject->d()->data().metaType();
+            });
         }
 
-        if (obj->as<QObjectWrapper>()) {
+        if (const QObjectWrapper *wrapper = obj->as<QObjectWrapper>()) {
             switch (conversionType) {
             case QMetaType::QObjectStar:
                 return 0;
             default:
-                return 10;
+                if (conversionMetaType.flags() & QMetaType::PointerToQObject) {
+                    QObject *wrapped = wrapper->object();
+                    if (!wrapped)
+                        return 0;
+                    if (qmlobject_can_cast(wrapped, conversionMetaType.metaObject()))
+                        return 0;
+                }
             }
+            return 10;
+        }
+
+        if (const QQmlTypeWrapper *wrapper = obj->as<QQmlTypeWrapper>()) {
+            const QQmlType type = wrapper->d()->type();
+            if (type.isSingleton()) {
+                const QMetaType metaType = type.typeId();
+                if (metaType == conversionMetaType)
+                    return 0;
+
+                if (conversionMetaType.flags() & QMetaType::PointerToQObject
+                    && metaType.flags() & QMetaType::PointerToQObject
+                    && type.metaObject()->inherits(conversionMetaType.metaObject())) {
+                        return 0;
+                }
+            } else if (QObject *object = wrapper->object()) {
+                if (conversionMetaType.flags() & QMetaType::PointerToQObject
+                    && qmlobject_can_cast(object, conversionMetaType.metaObject())) {
+                        return 0;
+                }
+            }
+
+            return 10;
         }
 
         if (const Sequence *sequence = obj->as<Sequence>()) {
@@ -1662,13 +1708,12 @@ static int MatchScore(const Value &actual, QMetaType conversionMetaType)
                 return 10;
         }
 
-        if (obj->as<QQmlValueTypeWrapper>()) {
-            const QVariant v = ExecutionEngine::toVariant(actual, QMetaType {});
-            if (v.userType() == conversionType)
-                return 0;
-            else if (v.canConvert(conversionMetaType))
-                return 5;
-            return 10;
+        if (const QQmlValueTypeWrapper *wrapper = obj->as<QQmlValueTypeWrapper>()) {
+            return MatchVariant(conversionMetaType, [wrapper]() {
+                return wrapper->d()->isVariant()
+                           ? wrapper->toVariant().metaType()
+                           : wrapper->type();
+            });
         }
 
         if (conversionType == QMetaType::QJsonObject)
@@ -2192,37 +2237,14 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
     }
 
     // Convert via QVariant through the QML engine.
-    qvariantPtr = new (&allocData) QVariant();
+    qvariantPtr = new (&allocData) QVariant(metaType);
     type = QVariantWrappedType;
 
-    QVariant v = ExecutionEngine::toVariant(value, metaType);
-
-    if (v.metaType() == metaType) {
-        *qvariantPtr = std::move(v);
+    if (ExecutionEngine::metaTypeFromJS(value, metaType, qvariantPtr->data()))
         return true;
-    }
 
-    if (v.canConvert(metaType)) {
-        *qvariantPtr = std::move(v);
-        qvariantPtr->convert(metaType);
-        return true;
-    }
-
-    const QQmlMetaObject mo = QQmlMetaType::rawMetaObjectForType(metaType);
-    if (!mo.isNull() && v.metaType().flags().testFlag(QMetaType::PointerToQObject)) {
-        QObject *obj = QQmlMetaType::toQObject(v);
-
-        if (obj != nullptr && !QQmlMetaObject::canConvert(obj, mo)) {
-            *qvariantPtr = QVariant(metaType, nullptr);
-            return false;
-        }
-
-        *qvariantPtr = QVariant(metaType, &obj);
-        return true;
-    }
-
-    *qvariantPtr = QVariant(metaType, (void *)nullptr);
-    return false;
+    const QVariant v = ExecutionEngine::toVariant(value, metaType);
+    return QMetaType::convert(v.metaType(), v.constData(), metaType, qvariantPtr->data());
 }
 
 ReturnedValue CallArgument::toValue(ExecutionEngine *engine)

@@ -1,0 +1,193 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qml-application-permissions.html
+    \title QML Application Permissions
+    \brief Managing application permissions via QML
+
+    Many features of today's devices and operating systems can have
+    significant privacy, security, and performance implications if
+    misused. It's therefore increasingly common for platforms to
+    require explicit consent from the user before accessing these
+    features.
+
+    The \l{Qt QML Core} module exposes the Qt C++
+    \l [QtCore] {Application Permissions} functionality to QML via a set of
+    permission types that can be used to check or request permission in a cross
+    platform manner.
+
+    \annotatedlist qml-permissions
+
+    \section1 Usage
+
+    To check and request a specific permission in your application,
+    include an instance of the appropriate permission type, and set
+    any of its properties if needed:
+
+    \qml
+        CalendarPermission {
+            id: calendarPermission
+            accessMode: CalendarPermission.ReadWrite
+        }
+    \endqml
+
+    The type can be used to check the current state of the
+    permissions, for example to drive a state based UI:
+
+    \qml
+        states: [
+            State {
+                name: "waitingForPermission"
+                when: calendarPermission.status == Qt.PermissionStatus.Undetermined
+                PropertyChanges { target: permissionRequestItem; visible: true }
+            },
+            State {
+                name: "permissionDenied"
+                when: calendarPermission.status == Qt.PermissionStatus.Denied
+                PropertyChanges { target: permissionDeniedItem; visible: true }
+            }
+        ]
+    \endqml
+
+    In the example above, two permission specific items will be overlaid if the
+    permission status is not granted. The request UI could perhaps look like:
+
+    \qml
+        Rectangle {
+            id: permissionRequestItem
+            anchors.fill: parent
+            visible: false
+
+            Text {
+                anchors.centerIn: parent
+                text: qsTr("We need your permission to access the calendar."
+                    + "Please tap this screen to request permission.")
+
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: calendarPermission.request()
+            }
+        }
+    \endqml
+
+    With a corresponding denied UI:
+
+    \qml
+        Rectangle {
+            id: permissionDeniedItem
+            anchors.fill: parent
+            color: "red"
+            visible: false
+            Text {
+                anchors.centerIn: parent
+                text: qsTr("We need your permission to access the calendar,"
+                    + "but permission was not granted. Please resolve.")
+            }
+        }
+    \endqml
+
+    \section2 Changing permission properties
+
+    The properties of a permission can be changed, even after
+    a request has been initiated by calling `request()`. This
+    will update the status, if it changes a result of the new
+    property values, but will not result in an automatic request
+    using the new set of properties.
+
+    For example, if upgrading an already granted calendar permission
+    for access mode \c Qt.CalendarPermission.ReadOnly to
+    \c Qt.CalendarPermission.ReadWrite, the platform will
+    respond in one of three ways:
+
+        \list
+        \li By implicitly granting the extended permission, for example
+            because the platform doesn't distinguish between the two
+            access modes, which will result in no state change.
+        \li By moving the status back to \ Undetermined, so that
+            the user can be consulted again for access to the now
+            extended permission.
+        \li By moving the status to \c Denied, for example if permissions
+            can not be upgraded once initially requested.
+        \endlist
+
+    All these states should then move the application's UI into
+    the appropriate state, where the user is informed of the
+    new state, with the possibility of requesting the new
+    permission if possible, or reverting to a less extensive
+    permission.
+
+    \section2 Interaction between permission items
+
+    Although the permission state is ultimately tied to the
+    underlying application, each permission item reports its own
+    status independently of all other items, and needs to be
+    independently requested if needed.
+
+    For example, requesting calendar access for one item will
+    not update the status of another CalendarPermission item,
+    even if these have the exact same properties.
+*/
+
+/*!
+    \include qmlpermissions.qdocinc {type-docs} {CalendarPermission} {QCalendarPermission} {calendar}
+    \since 6.6
+*/
+/*!
+    \include qmlpermissions.qdocinc {status-docs} {CalendarPermission}
+*/
+/*!
+    \include qmlpermissions.qdocinc {request-docs} {CalendarPermission}
+*/
+/*!
+    \include qmlpermissions.qdocinc {type-docs} {ContactsPermission} {QContactsPermission} {contacts}
+    \since 6.6
+*/
+/*!
+    \include qmlpermissions.qdocinc {status-docs} {ContactsPermission}
+*/
+/*!
+    \include qmlpermissions.qdocinc {request-docs} {ContactsPermission}
+*/
+/*!
+    \include qmlpermissions.qdocinc {type-docs} {CameraPermission} {QCameraPermission} {camera}
+    \since 6.6
+*/
+/*!
+    \include qmlpermissions.qdocinc {status-docs} {CameraPermission}
+*/
+/*!
+    \include qmlpermissions.qdocinc {request-docs} {CameraPermission}
+*/
+/*!
+    \include qmlpermissions.qdocinc {type-docs} {MicrophonePermission} {QMicrophonePermission} {microphone}
+    \since 6.6
+*/
+/*!
+    \include qmlpermissions.qdocinc {status-docs} {MicrophonePermission}
+*/
+/*!
+    \include qmlpermissions.qdocinc {request-docs} {MicrophonePermission}
+*/
+/*!
+    \include qmlpermissions.qdocinc {type-docs} {BluetoothPermission} {QBluetoothPermission} {Bluetooth peripherals}
+    \since 6.6
+*/
+/*!
+    \include qmlpermissions.qdocinc {status-docs} {BluetoothPermission}
+*/
+/*!
+    \include qmlpermissions.qdocinc {request-docs} {BluetoothPermission}
+*/
+/*!
+    \include qmlpermissions.qdocinc {type-docs} {LocationPermission} {QLocationPermission} {location}
+    \since 6.6
+*/
+/*!
+    \include qmlpermissions.qdocinc {status-docs} {LocationPermission}
+*/
+/*!
+    \include qmlpermissions.qdocinc {request-docs} {LocationPermission}
+*/

@@ -30,7 +30,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSplitView : public QQuickContainer
 {
     Q_OBJECT
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
-    Q_PROPERTY(bool resizing READ isResizing NOTIFY resizingChanged)
+    Q_PROPERTY(bool resizing READ isResizing NOTIFY resizingChanged FINAL)
     Q_PROPERTY(QQmlComponent *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
     QML_NAMED_ELEMENT(SplitView)
     QML_ATTACHED(QQuickSplitViewAttached)

@@ -17,11 +17,14 @@
 
 #include "qlanguageserver_p.h"
 #include "qqmlcodemodel_p.h"
+#include "qqmlfindusagessupport_p.h"
 #include "qtextsynchronization_p.h"
 #include "qqmllintsuggestions_p.h"
 #include "qworkspace_p.h"
 #include "qqmlcompletionsupport_p.h"
 #include "qqmlgototypedefinitionsupport_p.h"
+#include "qqmlformatting_p.h"
+#include "qqmlgotodefinitionsupport_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -61,6 +64,9 @@ private:
     WorkspaceHandlers m_workspace;
     QmlCompletionSupport m_completionSupport;
     QmlGoToTypeDefinitionSupport m_navigationSupport;
+    QmlGoToDefinitionSupport m_definitionSupport;
+    QQmlFindUsagesSupport m_referencesSupport;
+    QQmlDocumentFormatting m_documentFormatting;
     int m_returnValue = 1;
 };
 

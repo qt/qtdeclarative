@@ -909,7 +909,7 @@ void QSGRenderThread::ensureRhi()
         }
         cd->swapchain->setWindow(window);
         cd->swapchain->setProxyData(scProxyData);
-        QSGRhiSupport::instance()->applySwapChainFormat(cd->swapchain);
+        QSGRhiSupport::instance()->applySwapChainFormat(cd->swapchain, window);
         qCDebug(QSG_LOG_INFO, "MSAA sample count for the swapchain is %d. Alpha channel requested = %s.",
                 rhiSampleCount, alpha ? "yes" : "no");
         cd->swapchain->setSampleCount(rhiSampleCount);

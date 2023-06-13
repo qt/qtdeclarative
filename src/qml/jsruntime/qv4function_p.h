@@ -47,7 +47,7 @@ Q_STATIC_ASSERT(std::is_standard_layout< FunctionData >::value);
 struct Q_QML_EXPORT Function : public FunctionData {
 protected:
     Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
-             const CompiledData::Function *function, const QQmlPrivate::TypedFunction *aotFunction);
+             const CompiledData::Function *function, const QQmlPrivate::AOTCompiledFunction *aotFunction);
     ~Function();
 
 public:
@@ -74,7 +74,7 @@ public:
     typedef ReturnedValue (*JittedCode)(CppStackFrame *, ExecutionEngine *);
     JittedCode jittedCode;
     JSC::MacroAssemblerCodeRef *codeRef;
-    const QQmlPrivate::TypedFunction *typedFunction = nullptr;
+    const QQmlPrivate::AOTCompiledFunction *aotCompiledFunction = nullptr;
 
     // first nArguments names in internalClass are the actual arguments
     Heap::InternalClass *internalClass;
@@ -86,7 +86,7 @@ public:
 
     static Function *create(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                             const CompiledData::Function *function,
-                            const QQmlPrivate::TypedFunction *aotFunction);
+                            const QQmlPrivate::AOTCompiledFunction *aotFunction);
     void destroy();
 
     // used when dynamically assigning signal handlers (QQmlConnection)
