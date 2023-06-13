@@ -163,7 +163,7 @@ public:
         }
     }
 
-    explicit QJSPrimitiveValue(const QMetaType type) noexcept
+    explicit QJSPrimitiveValue(QMetaType type) noexcept
     {
         switch (type.id()) {
         case QMetaType::UnknownType:
