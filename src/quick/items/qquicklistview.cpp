@@ -2539,17 +2539,11 @@ void QQuickListView::setSpacing(qreal spacing)
     Possible values:
 
     \value ListView.Horizontal  Items are laid out horizontally
+    \br
+    \inlineimage ListViewHorizontal.png
     \value ListView.Vertical    (default) Items are laid out vertically
-
-    \table
-    \row
-    \li Horizontal orientation:
-    \image ListViewHorizontal.png
-
-    \row
-    \li Vertical orientation:
-    \image listview-highlight.png
-    \endtable
+    \br
+    \inlineimage listview-highlight.png
 
     \sa {Flickable Direction}
 */
