@@ -542,7 +542,7 @@ void AttachedPropertyReuse::onRead(const QQmlSA::Element &element, const QString
                                                            attachedLocation.startLine(),
                                                            attachedLocation.startColumn() };
             QQmlSA::FixSuggestion suggestion{ "Reference it by id instead:"_L1, idInsertLocation,
-                                              id.isEmpty() ? "<id>."_L1 : (id + '.'_L1) };
+                                              id.isEmpty() ? u"<id>."_s : (id + '.'_L1) };
 
             if (id.isEmpty())
                 suggestion.setHint("You first have to give the element an id"_L1);
