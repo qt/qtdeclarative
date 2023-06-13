@@ -42,7 +42,6 @@ qt_add_qml_module(textexample
         "imgtag/imgtag.qml"
         "styledtext-layout.qml"
         "text.qml"
-        "textselection/textselection.qml"
     RESOURCES
         "fonts/content/fonts/tarzeau_ocr_a.ttf"
         "imgtag/images/face-sad.png"
@@ -51,10 +50,6 @@ qt_add_qml_module(textexample
         "imgtag/images/heart200.png"
         "imgtag/images/qtlogo.png"
         "imgtag/images/starfish_2.png"
-        "textselection/pics/endHandle.png"
-        "textselection/pics/endHandle.sci"
-        "textselection/pics/startHandle.png"
-        "textselection/pics/startHandle.sci"
 )
 
 install(TARGETS textexample
