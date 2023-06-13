@@ -147,6 +147,44 @@
         ]
     },
     {
+        "name": "TabBar",
+        "copy": ":/TabBar.qml",
+        "component set": "TabBarTemplate",
+        "contents": ["tabButton1", "tabButton2"],
+        "atoms": [
+            {"atom": "background", "figmaPath": "TabBarBackground, background"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "tabButton1", "figmaPath": "ContentItem, TabButton1", "export": "geometry"},
+            {"atom": "tabButton2", "figmaPath": "ContentItem, TabButton2", "export": "geometry"}
+        ],
+        "states": [
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "disabled-footer", "figmaState": "disabledFooter"},
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "normal-footer", "figmaState": "normalFooter"}
+        ]
+    },
+    {
+        "name": "TabButton",
+        "copy": ":/TabButton.qml",
+        "component set": "TabButtonTemplate",
+        "atoms": [
+            {"atom": "background", "figmaPath": "TabButtonBackground, background"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "label", "figmaPath": "ContentItem, label", "export": "text"}
+        ],
+        "states": [
+            {"state": "checked", "figmaState": "checked"},
+            {"state": "checked-disabled", "figmaState": "checkedDisabled"},
+            {"state": "checked-hovered", "figmaState": "checkedHovered"},
+            {"state": "checked-pressed", "figmaState": "checkedPressed"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "pressed", "figmaState": "pressed"}
+        ]
+    },
+    {
         "name": "TextArea",
         "copy": ":/TextArea.qml",
         "component set": "TextAreaTemplate",

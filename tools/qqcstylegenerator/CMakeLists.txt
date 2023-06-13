@@ -28,6 +28,8 @@ qt_add_resources(qqcstylegenerator "controls"
         templates/Slider.qml
         templates/SpinBox.qml
         templates/Switch.qml
+        templates/TabBar.qml
+        templates/TabButton.qml
         templates/TextArea.qml
         templates/TextField.qml
         config.json
