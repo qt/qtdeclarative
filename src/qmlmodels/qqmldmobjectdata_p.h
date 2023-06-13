@@ -25,7 +25,7 @@ class VDMObjectDelegateDataType;
 class QQmlDMObjectData : public QQmlDelegateModelItem, public QQmlAdaptorModelProxyInterface
 {
     Q_OBJECT
-    Q_PROPERTY(QObject *modelData READ modelData NOTIFY modelDataChanged)
+    Q_PROPERTY(QObject *modelData READ modelData NOTIFY modelDataChanged FINAL)
     QT_ANONYMOUS_PROPERTY(QObject * READ modelData NOTIFY modelDataChanged)
     Q_INTERFACES(QQmlAdaptorModelProxyInterface)
 public:

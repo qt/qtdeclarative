@@ -29,8 +29,8 @@ class QAbstractItemModel;
 class Q_QMLMODELS_PRIVATE_EXPORT QQmlTreeModelToTableModel : public QAbstractItemModel
 {
     Q_OBJECT
-    Q_PROPERTY(QAbstractItemModel *model READ model WRITE setModel NOTIFY modelChanged)
-    Q_PROPERTY(QModelIndex rootIndex READ rootIndex WRITE setRootIndex RESET resetRootIndex NOTIFY rootIndexChanged)
+    Q_PROPERTY(QAbstractItemModel *model READ model WRITE setModel NOTIFY modelChanged FINAL)
+    Q_PROPERTY(QModelIndex rootIndex READ rootIndex WRITE setRootIndex RESET resetRootIndex NOTIFY rootIndexChanged FINAL)
 
     struct TreeItem;
 
