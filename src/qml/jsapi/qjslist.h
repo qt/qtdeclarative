@@ -12,6 +12,18 @@
 
 #include <algorithm>
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API. It exists purely as an
+// implementation detail. This header file may change from version to
+// version. It will be kept compatible with the intended usage by
+// code generated using qmlcachegen.
+//
+// We mean it.
+//
+
 QT_BEGIN_NAMESPACE
 
 struct QJSListIndexClamp
