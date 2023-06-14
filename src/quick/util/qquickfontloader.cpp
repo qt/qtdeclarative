@@ -28,8 +28,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#define FONTLOADER_MAXIMUM_REDIRECT_RECURSION 16
-
 class QQuickFontObject : public QObject
 {
 Q_OBJECT
@@ -44,7 +42,6 @@ Q_SIGNALS:
     void fontDownloaded(int id);
 
 private:
-    int redirectCount = 0;
     QNetworkReply *reply = nullptr;
 
 private Q_SLOTS:
@@ -74,20 +71,6 @@ void QQuickFontObject::download(const QUrl &url, QNetworkAccessManager *manager)
 void QQuickFontObject::replyFinished()
 {
     if (reply) {
-        redirectCount++;
-        if (redirectCount < FONTLOADER_MAXIMUM_REDIRECT_RECURSION) {
-            QVariant redirect = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
-            if (redirect.isValid()) {
-                QUrl url = reply->url().resolved(redirect.toUrl());
-                QNetworkAccessManager *manager = reply->manager();
-                reply->deleteLater();
-                reply = nullptr;
-                download(url, manager);
-                return;
-            }
-        }
-        redirectCount = 0;
-
         if (!reply->error()) {
             id = QFontDatabase::addApplicationFontFromData(reply->readAll());
             emit fontDownloaded(id);
