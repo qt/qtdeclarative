@@ -417,6 +417,8 @@ private slots:
     void unregisteredValueTypeConversion();
     void retainThis();
 
+    void variantObjectList();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -8035,6 +8037,21 @@ void tst_qqmllanguage::retainThis()
 
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_qqmllanguage::variantObjectList()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("variantObjectList.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    BirthdayParty *party = o->property("q").value<BirthdayParty *>();
+    QCOMPARE(party->guestCount(), 3);
+    QCOMPARE(party->guest(0)->objectName(), "Leo Hodges");
+    QCOMPARE(party->guest(1)->objectName(), "Jack Smith");
+    QCOMPARE(party->guest(2)->objectName(), "Anne Brown");
 }
 
 QTEST_MAIN(tst_qqmllanguage)
