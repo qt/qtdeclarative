@@ -2685,6 +2685,8 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
                     proto = proto->getPrototypeOf();
                 }
             }
+        } else if (QQmlValueTypeProvider::createValueType(var, metaType, data)) {
+            return true;
         }
     } else if (value.isNull() && isPointer) {
         *reinterpret_cast<void* *>(data) = nullptr;
