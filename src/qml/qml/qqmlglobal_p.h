@@ -191,6 +191,7 @@ public:
     static bool createValueType(const QJSValue &, QMetaType, void *);
     static bool createValueType(const QV4::Value &, QMetaType, void *);
     static bool createValueType(const QVariant &, QMetaType, void *);
+    static bool createValueType(QMetaType, void *, QMetaType, void *);
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlColorProvider

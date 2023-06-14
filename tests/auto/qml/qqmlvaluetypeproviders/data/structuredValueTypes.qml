@@ -53,4 +53,9 @@ MyTypeObject {
 
     property var insanity: ({})
     property structured fromInsanity: acceptStructured(insanity)
+
+    property rect newItemPadding
+    function updatePadding() {
+        setEffectPadding(newItemPadding);
+    }
 }
