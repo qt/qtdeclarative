@@ -1575,6 +1575,11 @@ bool QQmlPropertyPrivate::write(
                 const QList<QObject *> &list = qvariant_cast<QList<QObject *> >(value);
                 for (qsizetype ii = 0; ii < list.size(); ++ii)
                     doAppend(list.at(ii));
+            } else if (variantMetaType == QMetaType::fromType<QList<QVariant>>()) {
+                const QList<QVariant> &list
+                    = *static_cast<const QList<QVariant> *>(value.constData());
+                for (const QVariant &entry : list)
+                    doAppend(QQmlMetaType::toQObject(entry));
             } else if (!iterateQObjectContainer(variantMetaType, value.data(), doAppend)) {
                 doAppend(QQmlMetaType::toQObject(value));
             }

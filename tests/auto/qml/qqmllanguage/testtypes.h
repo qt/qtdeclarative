@@ -2479,4 +2479,21 @@ public:
     }
 };
 
+class BirthdayParty : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QQmlListProperty<QObject> guests READ guests)
+    Q_CLASSINFO("DefaultProperty", "guests")
+    QML_ELEMENT
+
+public:
+    using QObject::QObject;
+    QQmlListProperty<QObject> guests() { return {this, &m_guests}; }
+    qsizetype guestCount() const { return m_guests.count(); }
+    QObject *guest(qsizetype i) const { return m_guests.at(i); }
+
+private:
+    QList<QObject *> m_guests;
+};
+
 #endif // TESTTYPES_H
