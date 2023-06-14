@@ -507,15 +507,25 @@ private:
         outputConfig.insert("fontSize", style["fontSize"]);
     }
 
-    void exportLayout(const QJsonObject &atom , QJsonObject &outputConfig)
+    void exportLayout(const QJsonObject &atom, QJsonObject &outputConfig)
     {
+        const auto leftPadding = atom["paddingLeft"];
+        const auto topPadding = atom["paddingTop"];
+        const auto rightPadding = atom["paddingRight"];
+        const auto bottomPadding = atom["paddingBottom"];
+        const auto spacing = atom["spacing"];
+
+        // If padding are left unmodified in Figma (all values are zero)
+        // the the following keys will be missing in the atom. When that's
+        // the case, we just set them to zero.
+        outputConfig.insert("leftPadding", leftPadding.isUndefined() ? 0 : leftPadding);
+        outputConfig.insert("topPadding", topPadding.isUndefined() ? 0 : topPadding);
+        outputConfig.insert("rightPadding", rightPadding.isUndefined() ? 0 : rightPadding);
+        outputConfig.insert("bottomPadding", bottomPadding.isUndefined() ? 0 : bottomPadding);
+        outputConfig.insert("spacing", spacing.isUndefined() ? 0 : spacing);
+
         outputConfig.insert("layoutMode", atom["layoutMode"]);
-        outputConfig.insert("leftPadding", atom["paddingLeft"]);
-        outputConfig.insert("topPadding", atom["paddingTop"]);
-        outputConfig.insert("rightPadding", atom["paddingRight"]);
-        outputConfig.insert("bottomPadding", atom["paddingBottom"]);
         outputConfig.insert("alignItems", atom["primaryAxisAlignItems"]);
-        outputConfig.insert("spacing", atom["itemSpacing"]);
     }
 
     void generateTransitions(const QJsonObject &component, QJsonObject &outputConfig, const QJsonArray &statesArray)
