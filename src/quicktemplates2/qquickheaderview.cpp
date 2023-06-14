@@ -47,16 +47,9 @@
     \inherits TableView
     \brief Provides a horizontal header view to accompany a \l TableView.
 
-    A HorizontalHeaderView provides labeling of the columns of a \l TableView.
-    To add a horizontal header to a TableView, bind the
-    \l {HorizontalHeaderView::syncView} {syncView} property to the TableView:
+    \include qquickheaderview.qdocinc {detailed-description} {HorizontalHeaderView}
 
-    \snippet qtquickcontrols2-headerview-simple.qml horizontal
-
-    The header displays data from the {syncView}'s model by default, but can
-    also have its own model. If the model is a QAbstractTableModel, then
-    the header will display the model's horizontal headerData(); otherwise,
-    the model's data().
+    \sa VerticalHeaderView
 */
 
 /*!
@@ -66,112 +59,45 @@
     \inherits TableView
     \brief Provides a vertical header view to accompany a \l TableView.
 
-    A VerticalHeaderView provides labeling of the rows of a \l TableView.
-    To add a vertical header to a TableView, bind the
-    \l {VerticalHeaderView::syncView} {syncView} property to the TableView:
+    \include qquickheaderview.qdocinc {detailed-description} {VerticalHeaderView}
 
-    \snippet qtquickcontrols2-headerview-simple.qml vertical
-
-    The header displays data from the {syncView}'s model by default, but can
-    also have its own model. If the model is a QAbstractTableModel, then
-    the header will display the model's vertical headerData(); otherwise,
-    the model's data().
+    \sa HorizontalHeaderView
 */
 
 /*!
     \qmlproperty TableView QtQuick::HorizontalHeaderView::syncView
 
-    This property holds the TableView to synchronize with.
-
-    Once this property is bound to another TableView, both header and table
-    will synchronize with regard to column widths, column spacing, and flicking
-    horizontally.
-
-    If the \l model is not explicitly set, then the header will use the syncView's
-    model to label the columns.
-
-    \sa model TableView
+    \include qquickheaderview.qdocinc {syncView} {horizontally}
 */
 
 /*!
     \qmlproperty TableView QtQuick::VerticalHeaderView::syncView
 
-    This property holds the TableView to synchronize with.
-
-    Once this property is bound to another TableView, both header and table
-    will synchronize with regard to row heights, row spacing, and flicking
-    vertically.
-
-    If the \l model is not explicitly set, then the header will use the syncView's
-    model to label the rows.
-
-    \sa model TableView
+    \include qquickheaderview.qdocinc {syncView} {vertically}
 */
 
 /*!
     \qmlproperty QVariant QtQuick::HorizontalHeaderView::model
 
-    This property holds the model providing data for the horizontal header view.
-
-    When model is not explicitly set, the header will use the syncView's
-    model once syncView is set.
-
-    If model is a QAbstractTableModel, its horizontal headerData() will
-    be accessed.
-
-    If model is a QAbstractItemModel other than QAbstractTableModel, model's data()
-    will be accessed.
-
-    Otherwise, the behavior is same as setting TableView::model.
-
-    \sa TableView {TableView::model} {model} QAbstractTableModel
+    \include qquickheaderview.qdocinc {model} {horizontal}
 */
 
 /*!
     \qmlproperty QVariant QtQuick::VerticalHeaderView::model
 
-    This property holds the model providing data for the vertical header view.
-
-    When model is not explicitly set, it will be synchronized with syncView's model
-    once syncView is set.
-
-    If model is a QAbstractTableModel, its vertical headerData() will
-    be accessed.
-
-    If model is a QAbstractItemModel other than QAbstractTableModel, model's data()
-    will be accessed.
-
-    Otherwise, the behavior is same as setting TableView::model.
-
-    \sa TableView {TableView::model} {model} QAbstractTableModel
+    \include qquickheaderview.qdocinc {model} {vertical}
 */
 
 /*!
     \qmlproperty QString QtQuick::HorizontalHeaderView::textRole
 
-    This property holds the model role used to display text in each header cell.
-
-    When the model has multiple roles, textRole can be set to determine which
-    role should be displayed.
-
-    If model is a QAbstractItemModel then it will default to "display"; otherwise
-    it is empty.
-
-    \sa QAbstractItemModel::roleNames()
+    \include qquickheaderview.qdocinc {textRole}
 */
 
 /*!
     \qmlproperty QString QtQuick::VerticalHeaderView::textRole
 
-    This property holds the model role used to display text in each header cell.
-
-    When the model has multiple roles, textRole can be set to determine which
-    role should be displayed.
-
-    If model is a QAbstractItemModel then it will default to "display"; otherwise
-    it is empty.
-
-    \sa QAbstractItemModel::roleNames()
+    \include qquickheaderview.qdocinc {textRole}
 */
 
 QT_BEGIN_NAMESPACE
