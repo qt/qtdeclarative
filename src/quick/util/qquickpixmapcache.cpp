@@ -37,7 +37,6 @@
 #endif
 
 #define IMAGEREQUEST_MAX_NETWORK_REQUEST_COUNT 8
-#define IMAGEREQUEST_MAX_REDIRECT_RECURSION 16
 #define CACHE_EXPIRE_TIME 30
 #define CACHE_REMOVAL_FRACTION 4
 
@@ -144,7 +143,6 @@ public:
 
     bool loading;
     QQuickImageProviderOptions providerOptions;
-    int redirectCount;
 
     class Event : public QEvent {
     public:
@@ -653,28 +651,6 @@ void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
     QQuickPixmapReply *job = networkJobs.take(reply);
 
     if (job) {
-        job->redirectCount++;
-        if (job->redirectCount < IMAGEREQUEST_MAX_REDIRECT_RECURSION) {
-            QVariant redirect = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
-            if (redirect.isValid()) {
-                QUrl url = reply->url().resolved(redirect.toUrl());
-                QNetworkRequest req(url);
-                req.setAttribute(QNetworkRequest::HttpPipeliningAllowedAttribute, true);
-
-                reply->deleteLater();
-                reply = networkAccessManager()->get(req);
-
-                QMetaObject::connect(reply, replyDownloadProgressMethodIndex, job,
-                                     downloadProgressMethodIndex);
-                QMetaObject::connect(reply, replyFinishedMethodIndex,
-                                     readerThreadExecutionEnforcer(),
-                                     threadNetworkRequestDoneMethodIndex);
-
-                networkJobs.insert(reply, job);
-                return;
-            }
-        }
-
         QImage image;
         QQuickPixmapReply::ReadError error = QQuickPixmapReply::NoError;
         QString errorString;
@@ -1358,7 +1334,7 @@ void QQuickPixmap::purgeCache()
 
 QQuickPixmapReply::QQuickPixmapReply(QQuickPixmapData *d)
   : data(d), engineForReader(nullptr), requestRegion(d->requestRegion), requestSize(d->requestSize),
-    url(d->url), loading(false), providerOptions(d->providerOptions), redirectCount(0)
+    url(d->url), loading(false), providerOptions(d->providerOptions)
 {
     if (finishedMethodIndex == -1) {
         finishedMethodIndex = QMetaMethod::fromSignal(&QQuickPixmapReply::finished).methodIndex();
