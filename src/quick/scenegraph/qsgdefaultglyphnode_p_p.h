@@ -69,6 +69,7 @@ private:
     QSGPlainTexture *m_texture;
     QExplicitlySharedDataPointer<QFontEngineGlyphCache> m_glyphCache;
     QRawFont m_font;
+    QFontEngine *m_retainedFontEngine = nullptr;
     QRhi *m_rhi;
     QVector4D m_color;
     QSize m_size;

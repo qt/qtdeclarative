@@ -361,6 +361,8 @@ QSGTextMaskMaterial::QSGTextMaskMaterial(QSGRenderContext *rc, const QVector4D &
 
 QSGTextMaskMaterial::~QSGTextMaskMaterial()
 {
+    if (m_retainedFontEngine != nullptr)
+        m_rc->unregisterFontengineForCleanup(m_retainedFontEngine);
     delete m_texture;
 }
 
@@ -424,6 +426,12 @@ void QSGTextMaskMaterial::updateCache(QFontEngine::GlyphFormat glyphFormat)
         if (!m_glyphCache || int(m_glyphCache->glyphFormat()) != glyphFormat) {
             m_glyphCache = new QSGRhiTextureGlyphCache(m_rc, glyphFormat, glyphCacheTransform, color);
             fontEngine->setGlyphCache(cacheKey, m_glyphCache.data());
+            if (m_retainedFontEngine != nullptr)
+                m_rc->unregisterFontengineForCleanup(m_retainedFontEngine);
+
+            // Note: This is reference counted by the render context, so it will stay alive until
+            // we release that reference
+            m_retainedFontEngine = fontEngine;
             m_rc->registerFontengineForCleanup(fontEngine);
         }
     }
