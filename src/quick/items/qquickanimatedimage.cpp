@@ -106,6 +106,26 @@ void QQuickAnimatedImagePrivate::clearCache()
     with QQuickImageProvider.
 */
 
+/*!
+    \qmlproperty size QtQuick::AnimatedImage::sourceSize
+
+    This property holds the scaled width and height of the full-frame image.
+
+    Unlike the \l {Item::}{width} and \l {Item::}{height} properties, which scale
+    the painting of the image, this property sets the maximum number of pixels
+    stored for cached frames so that large animations do not use more
+    memory than necessary.
+
+    If the original size is larger than \c sourceSize, the image is scaled down.
+
+    The natural size of the image can be restored by setting this property to
+    \c undefined.
+
+    \note \e {Changing this property dynamically causes the image source to be reloaded,
+    potentially even from the network, if it is not in the disk cache.}
+
+    \sa Image::sourceSize
+*/
 QQuickAnimatedImage::QQuickAnimatedImage(QQuickItem *parent)
     : QQuickImage(*(new QQuickAnimatedImagePrivate), parent)
 {
