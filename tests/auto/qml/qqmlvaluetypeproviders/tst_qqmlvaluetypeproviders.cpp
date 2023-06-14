@@ -447,6 +447,16 @@ void tst_qqmlvaluetypeproviders::structured()
     fromObject.setP(QPointF(3, 4));
 
     QCOMPARE(o->property("fromInsanity").value<StructuredValueType>(), fromObject);
+
+    const MyTypeObject *m = static_cast<const MyTypeObject *>(po);
+    QVERIFY(!m->hasEffectPadding());
+    QMetaObject::invokeMethod(po, "updatePadding");
+    QVERIFY(m->hasEffectPadding());
+    QCOMPARE(m->effectPadding(), QRectF());
+    po->setProperty("newItemPadding", QRectF(1, 2, 3, 4));
+    QMetaObject::invokeMethod(po, "updatePadding");
+    QVERIFY(m->hasEffectPadding());
+    QCOMPARE(m->effectPadding(), QRectF(1, 2, 3, 4));
 }
 
 void tst_qqmlvaluetypeproviders::recursive()

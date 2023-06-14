@@ -2662,8 +2662,23 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         const QMetaType valueType = vtw->type();
         if (valueType == metaType)
             return vtw->toGadget(data);
-        if (QMetaType::canConvert(valueType, metaType))
-            return QMetaType::convert(valueType, vtw->d()->gadgetPtr(), metaType, data);
+
+        Heap::QQmlValueTypeWrapper *d = vtw->d();
+        if (d->isReference())
+            d->readReference();
+
+        if (void *gadgetPtr = d->gadgetPtr()) {
+            if (QQmlValueTypeProvider::createValueType(metaType, data, valueType, gadgetPtr))
+                return true;
+            if (QMetaType::canConvert(valueType, metaType))
+                return QMetaType::convert(valueType, gadgetPtr, metaType, data);
+        } else {
+            QVariant empty(valueType);
+            if (QQmlValueTypeProvider::createValueType(metaType, data, valueType, empty.data()))
+                return true;
+            if (QMetaType::canConvert(valueType, metaType))
+                return QMetaType::convert(valueType, empty.data(), metaType, data);
+        }
     }
 
     // Try to use magic; for compatibility with qjsvalue_cast.
@@ -2676,7 +2691,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
     if (variantObject) {
         // Actually a reference, because we're poking it for its data() below and we want
         // the _original_ data, not some copy.
-        const QVariant &var = variantObject->d()->data();
+        QVariant &var = variantObject->d()->data();
 
         if (var.metaType() == metaType) {
             metaType.destruct(data);
@@ -2725,7 +2740,8 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
                     proto = proto->getPrototypeOf();
                 }
             }
-        } else if (QQmlValueTypeProvider::createValueType(metaType, data, var)) {
+        } else if (QQmlValueTypeProvider::createValueType(
+                       metaType, data, var.metaType(), var.data())) {
             return true;
         }
     } else if (value.isNull() && isPointer) {

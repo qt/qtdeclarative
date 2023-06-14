@@ -371,6 +371,15 @@ public:
         return a;
     }
 
+    Q_INVOKABLE void setEffectPadding(const QRect &r)
+    {
+        m_hasEffectPadding = true;
+        m_effectPadding = r;
+    }
+
+    bool hasEffectPadding() const { return m_hasEffectPadding; }
+    QRectF effectPadding() const { return m_effectPadding; }
+
 signals:
     void changed();
     void runScript();
@@ -396,6 +405,8 @@ private:
     QTime m_aTime;
     QVariant m_aVariant;
     BarrenValueType m_barren;
+    QRectF m_effectPadding;
+    bool m_hasEffectPadding = false;
 };
 
 class Padding
