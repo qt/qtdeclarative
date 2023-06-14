@@ -3,7 +3,9 @@
 
 #include "qquickiostheme_p.h"
 
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
 #include <QtGui/private/qcoregraphics_p.h>
+#endif
 
 #ifdef Q_OS_IOS
 #include <UIKit/UIInterface.h>
