@@ -4,6 +4,15 @@
 #ifndef QQMLSA_H
 #define QQMLSA_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is part of the qmllint plugin API, with limited compatibility guarantees.
+// Usage of this API may make your code source and binary incompatible with
+// future versions of Qt.
+//
+
 #include "qqmlsaconstants.h"
 #include "qqmljsloggingutils.h"
 
