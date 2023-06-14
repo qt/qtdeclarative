@@ -34,6 +34,7 @@ public:
     ConstructibleValueType() = default;
     Q_INVOKABLE ConstructibleValueType(int foo) : m_foo(foo) {}
     Q_INVOKABLE ConstructibleValueType(QObject *) : m_foo(67) {}
+    Q_INVOKABLE ConstructibleValueType(const QUrl &) : m_foo(68) {}
 
     int foo() const { return m_foo; }
 
@@ -354,6 +355,20 @@ public:
     Q_INVOKABLE void acceptConstructible(const ConstructibleValueType &a)
     {
         setAVariant(QVariant::fromValue(a));
+    }
+
+    Q_INVOKABLE int acceptConstructibles(const QList<ConstructibleValueType> &constructibles)
+    {
+        int result = 0;
+        for (const auto &c: constructibles) {
+            result += c.foo();
+        }
+        return result;
+    }
+
+    Q_INVOKABLE StructuredValueType acceptStructured(const StructuredValueType &a)
+    {
+        return a;
     }
 
 signals:
