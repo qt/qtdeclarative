@@ -716,7 +716,7 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
                 if (originalType != valueMetaType) {
                     QVariant converted(valueMetaType);
                     if (QQmlValueTypeProvider::createValueType(
-                                variant, valueMetaType, converted.data())) {
+                            originalType, variant.data(), valueMetaType, converted.data())) {
                         variant = converted;
                     } else if (!variant.convert(valueMetaType)) {
                         qWarning().noquote()
