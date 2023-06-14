@@ -19,8 +19,6 @@
 Supports file:// and qrc:/ uris and whatever QNetworkAccessManager supports.
 */
 
-#define QQMLFILE_MAX_REDIRECT_RECURSION 16
-
 QT_BEGIN_NAMESPACE
 
 static char qrc_string[] = "qrc";
@@ -64,7 +62,6 @@ private:
     QQmlEngine *m_engine;
     QQmlFilePrivate *m_p;
 
-    int m_redirectCount;
     QNetworkReply *m_reply;
 };
 #endif
@@ -99,7 +96,7 @@ int QQmlFileNetworkReply::replyFinishedIndex = -1;
 int QQmlFileNetworkReply::replyDownloadProgressIndex = -1;
 
 QQmlFileNetworkReply::QQmlFileNetworkReply(QQmlEngine *e, QQmlFilePrivate *p, const QUrl &url)
-: m_engine(e), m_p(p), m_redirectCount(0), m_reply(nullptr)
+: m_engine(e), m_p(p), m_reply(nullptr)
 {
     if (finishedIndex == -1) {
         finishedIndex = QMetaMethod::fromSignal(&QQmlFileNetworkReply::finished).methodIndex();
@@ -133,27 +130,6 @@ QQmlFileNetworkReply::~QQmlFileNetworkReply()
 
 void QQmlFileNetworkReply::networkFinished()
 {
-    ++m_redirectCount;
-    if (m_redirectCount < QQMLFILE_MAX_REDIRECT_RECURSION) {
-        QVariant redirect = m_reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
-        if (redirect.isValid()) {
-            QUrl url = m_reply->url().resolved(redirect.toUrl());
-
-            QNetworkRequest req(url);
-            req.setAttribute(QNetworkRequest::HttpPipeliningAllowedAttribute, true);
-
-            m_reply->deleteLater();
-            m_reply = m_engine->networkAccessManager()->get(req);
-
-            QMetaObject::connect(m_reply, replyFinishedIndex,
-                                 this, networkFinishedIndex);
-            QMetaObject::connect(m_reply, replyDownloadProgressIndex,
-                                 this, networkDownloadProgressIndex);
-
-            return;
-        }
-    }
-
     if (m_reply->error()) {
         m_p->errorString = m_reply->errorString();
         m_p->error = QQmlFilePrivate::Network;
