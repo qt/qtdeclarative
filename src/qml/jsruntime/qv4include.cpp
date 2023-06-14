@@ -26,7 +26,7 @@ QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine,
     : QObject(engine->jsEngine())
     , v4(engine), m_url(url)
 #if QT_CONFIG(qml_network)
-    , m_redirectCount(0), m_network(nullptr) , m_reply(nullptr)
+    , m_network(nullptr) , m_reply(nullptr)
 #endif
 {
     if (qmlContext)
@@ -104,27 +104,9 @@ QV4::ReturnedValue QV4Include::result()
     return m_resultObject.value();
 }
 
-#define INCLUDE_MAXIMUM_REDIRECT_RECURSION 15
 void QV4Include::finished()
 {
 #if QT_CONFIG(qml_network)
-    m_redirectCount++;
-
-    if (m_redirectCount < INCLUDE_MAXIMUM_REDIRECT_RECURSION) {
-        QVariant redirect = m_reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
-        if (redirect.isValid()) {
-            m_url = m_url.resolved(redirect.toUrl());
-            delete m_reply;
-
-            QNetworkRequest request;
-            request.setUrl(m_url);
-
-            m_reply = m_network->get(request);
-            QObject::connect(m_reply, SIGNAL(finished()), this, SLOT(finished()));
-            return;
-        }
-    }
-
     QV4::Scope scope(v4);
     QV4::ScopedObject resultObj(scope, m_resultObject.value());
     QV4::ScopedString status(scope, v4->newString(QStringLiteral("status")));
