@@ -15,6 +15,10 @@ QAbstractItemModel, its header data will be used. Otherwise the data in
 the model will be used directly (for example, if you assign a model that
 is simply an array of strings).
 
+By default, \l textRole is set to \c "display", meaning that data from the
+model's \l {Qt::ItemDataRole}{Qt::DisplayRole} will be used. You can set
+this to another role name in order to have that data displayed instead.
+
 The application is responsible for placing the header at the
 correct location in the scene. You can add as many headers as you
 want to a single TableView, which can be useful if you for example want
