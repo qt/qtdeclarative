@@ -25,6 +25,7 @@ qt_add_resources(qqcstylegenerator "controls"
         templates/CheckBox.qml
         templates/Frame.qml
         templates/RadioButton.qml
+        templates/RangeSlider.qml
         templates/Slider.qml
         templates/SpinBox.qml
         templates/Switch.qml

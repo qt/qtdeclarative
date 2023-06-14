@@ -85,6 +85,29 @@
         ]
     },
     {
+        "name": "RangeSlider",
+        "copy": ":/RangeSlider.qml",
+        "component set": "RangeSliderTemplate",
+        "contents": ["groove", "track", "handle"],
+        "atoms": [
+            {"atom": "background", "figmaPath": "RangeSliderBackground, background"},
+            {"atom": "groove", "figmaPath": "RangeSliderGroove, groveBack"},
+            {"atom": "track", "figmaPath": "RangeSliderTrack, trackBack"},
+            {"atom": "first-handle", "figmaPath": "RangeSliderHandleFirst, handleBack"},
+            {"atom": "second-handle", "figmaPath": "RangeSliderHandleSecond, handleBack"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "focused", "figmaState": "focused"},
+            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "handle-pressed", "figmaState": "handlePressed"},
+            {"state": "handle-pressed-focused", "figmaState": "pressedFocused"}
+        ]
+    },
+    {
         "name": "Slider",
         "copy": ":/Slider.qml",
         "component set": "SliderTemplate",
