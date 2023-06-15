@@ -157,13 +157,8 @@ ApplicationWindow {
                         stepSize: 1
 
                         Layout.alignment: Qt.AlignHCenter
-                        Layout.minimumWidth: 64
-                        Layout.minimumHeight: 64
                         Layout.preferredWidth: 128
                         Layout.preferredHeight: 128
-                        Layout.maximumWidth: 128
-                        Layout.maximumHeight: 128
-                        Layout.fillHeight: true
 
                         Label {
                             text: volumeDial.value.toFixed(0)
