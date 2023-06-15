@@ -2217,14 +2217,14 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     \section1 Variable Delegate Size and Section Labels
 
     Variable delegate sizes might lead to resizing and skipping of any attached
-    \l Scrollbar. This is because ListView estimates its content size from
-    allocated items (usually only the visible items, the rest is assumed to be of
+    \l {ScrollBar}. This is because ListView estimates its content size from
+    allocated items (usually only the visible items, the rest are assumed to be of
     similar size), and variable delegate sizes prevent an accurate estimation. To
-    reduce this effect, \l ItemView::cacheBuffer can be set to higher values,
+    reduce this effect, \l {ListView::}{cacheBuffer} can be set to higher values,
     effectively creating more items and improving the size estimate of unallocated
-    items, at the expense of additional memory usage. Sections have the same effect
-    because they attach and elongate the section label to the first item within
-    the section.
+    items, at the expense of additional memory usage. \l{ListView::section}{Sections}
+    have the same effect because they attach and elongate the section label to the
+    first item within the section.
 */
 QQuickListView::QQuickListView(QQuickItem *parent)
     : QQuickItemView(*(new QQuickListViewPrivate), parent)
