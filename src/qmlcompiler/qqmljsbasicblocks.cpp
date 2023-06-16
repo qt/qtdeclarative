@@ -142,7 +142,7 @@ void QQmlJSBasicBlocks::processJump(int offset, JumpMode mode)
     if (mode == Unconditional)
         m_skipUntilNextLabel = true;
     else
-        m_basicBlocks[nextInstructionOffset()].jumpOrigins.append(currentInstructionOffset());
+        m_basicBlocks.insert(nextInstructionOffset(), BasicBlock());
 }
 
 template<typename ContainerA, typename ContainerB>
