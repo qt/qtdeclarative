@@ -304,6 +304,8 @@ private slots:
     void callWithSpreadOnElement();
     void spreadNoOverflow();
 
+    void symbolToVariant();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -6081,6 +6083,19 @@ void tst_QJSEngine::spreadNoOverflow()
     const QJSValue result = engine.evaluate(program);
     QVERIFY(result.isError());
     QCOMPARE(result.errorType(), QJSValue::RangeError);
+}
+
+void tst_QJSEngine::symbolToVariant()
+{
+    QJSEngine engine;
+    const QJSValue val = engine.newSymbol("asymbol");
+    QCOMPARE(val.toVariant(), QStringLiteral("Symbol(asymbol)"));
+
+    const QVariant retained = val.toVariant(QJSValue::RetainJSObjects);
+    QCOMPARE(retained.metaType(), QMetaType::fromType<QJSValue>());
+    QVERIFY(retained.value<QJSValue>().strictlyEquals(val));
+
+    QCOMPARE(val.toVariant(QJSValue::ConvertJSObjects), QStringLiteral("Symbol(asymbol)"));
 }
 
 QTEST_MAIN(tst_QJSEngine)
