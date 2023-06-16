@@ -350,19 +350,35 @@ void QQmlPropertyCapture::captureProperty(
     captureNonBindableProperty(o, propertyData->notifyIndex(), propertyData->coreIndex(), doNotify);
 }
 
+bool QQmlJavaScriptExpression::needsPropertyChangeTrigger(QObject *target, int propertyIndex)
+{
+    TriggerList **prev = &qpropertyChangeTriggers;
+    TriggerList *current = qpropertyChangeTriggers;
+    while (current) {
+        if (!current->target) {
+            *prev = current->next;
+            QRecyclePool<TriggerList>::Delete(current);
+            current = *prev;
+        } else if (current->target == target && current->propertyIndex == propertyIndex) {
+            return false; // already installed
+        } else {
+            prev = &current->next;
+            current = current->next;
+        }
+    }
+
+    return true;
+}
+
 void QQmlPropertyCapture::captureTranslation()
 {
     // use a unique invalid index to avoid needlessly querying the metaobject for
     // the correct index of of the  translationLanguage property
     int const invalidIndex = -2;
-    for (auto trigger = expression->qpropertyChangeTriggers; trigger;
-         trigger = trigger->next) {
-        if (trigger->target == engine && trigger->propertyIndex == invalidIndex)
-            return; // already installed
+    if (expression->needsPropertyChangeTrigger(engine, invalidIndex)) {
+        auto trigger = expression->allocatePropertyChangeTrigger(engine, invalidIndex);
+        trigger->setSource(QQmlEnginePrivate::get(engine)->translationLanguage);
     }
-    auto trigger = expression->allocatePropertyChangeTrigger(engine, invalidIndex);
-
-    trigger->setSource(QQmlEnginePrivate::get(engine)->translationLanguage);
 }
 
 void QQmlPropertyCapture::captureBindableProperty(
@@ -372,16 +388,14 @@ void QQmlPropertyCapture::captureBindableProperty(
     // the automatic capturing process already takes care of everything
     if (!expression->mustCaptureBindableProperty())
         return;
-    for (auto trigger = expression->qpropertyChangeTriggers; trigger;
-         trigger = trigger->next) {
-        if (trigger->target == o && trigger->propertyIndex == c)
-            return; // already installed
+
+    if (expression->needsPropertyChangeTrigger(o, c)) {
+        auto trigger = expression->allocatePropertyChangeTrigger(o, c);
+        QUntypedBindable bindable;
+        void *argv[] = { &bindable };
+        metaObjectForBindable->metacall(o, QMetaObject::BindableProperty, c, argv);
+        bindable.observe(trigger);
     }
-    auto trigger = expression->allocatePropertyChangeTrigger(o, c);
-    QUntypedBindable bindable;
-    void *argv[] = { &bindable };
-    metaObjectForBindable->metacall(o, QMetaObject::BindableProperty, c, argv);
-    bindable.observe(trigger);
 }
 
 void QQmlPropertyCapture::captureNonBindableProperty(QObject *o, int n, int c, bool doNotify)

@@ -132,6 +132,8 @@ public:
 
     QQmlEngine *engine() const { return m_context ? m_context->engine() : nullptr; }
     bool hasUnresolvedNames() const { return m_context && m_context->hasUnresolvedNames(); }
+
+    bool needsPropertyChangeTrigger(QObject *target, int propertyIndex);
     QPropertyChangeTrigger *allocatePropertyChangeTrigger(QObject *target, int propertyIndex);
 
 protected:
