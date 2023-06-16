@@ -98,10 +98,11 @@ graphics. For more details, see
 \page qtquick-visualcanvas-adaptations-software.html
 
 The Software adaptation is an alternative renderer for \l {Qt Quick} 2 that uses the Raster paint
-engine to render the contents of the scene graph, instead of OpenGL. Consequently, some features
-and optimizations are not available. Most Qt Quick 2 applications can run without any modification,
-but any attempts to use unsupported features are ignored. By using the Software adaptation, it is
-possible to run Qt Quick 2 applications on hardware and platforms that do not have OpenGL support.
+engine to render the contents of the scene graph, instead of a hardware-accelerated 3D graphics API.
+Consequently, some features and optimizations are not available. Most Qt Quick 2 applications can run
+without any modification, but any attempts to use unsupported features are ignored.
+By using the Software adaptation, it is possible to run Qt Quick 2 applications on hardware and
+platforms that do not have \l{topics-graphics}{hardware-accelerated 3D graphics API} support.
 
 The Software adaptation was previously known as the Qt Quick 2D Renderer. However, unlike the 2D
 Renderer, this new, integrated version supports partial updates. This means that a full update
@@ -121,14 +122,9 @@ even though they are not visible.
 \section2 Rendering Text
 
 The text rendering with the Software adaptation is based on software rasterization and does not
-respond as well to transformations such as scaling, compared to when using OpenGL. The quality is
-similar to choosing \l [QML] {Text::renderType}{Text.NativeRendering} with \l [QML] {Text} items.
-
-\section2 Qt Multimedia VideoOutput
-
-The Qt Multimedia module's VideoOutput item is not supported with the Software adaptation. This
-is because VideoOutput uses the QVideoRendererControl item which requires custom QSGGeometryNode
-behavior, which is only present in the default OpenGL adaptation.
+respond as well to transformations such as scaling, compared to when using a hardware-accelerated
+3D graphics API. The quality is similar to choosing \l [QML] {Text::renderType}{Text.NativeRendering}
+with \l [QML] {Text} items.
 */
 
 
