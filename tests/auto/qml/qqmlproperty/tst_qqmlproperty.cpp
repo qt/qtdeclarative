@@ -206,6 +206,8 @@ private slots:
 
     void bindToNonQObjectTarget();
 
+    void invalidateQPropertyChangeTriggers();
+
 private:
     QQmlEngine engine;
 };
@@ -2374,6 +2376,33 @@ void tst_qqmlproperty::bindToNonQObjectTarget()
                          qPrintable(url.toString() + ":14:7: Unable to assign QFont to QObject*"));
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_qqmlproperty::invalidateQPropertyChangeTriggers()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("invalidateQPropertyChangeTriggers.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+
+    QStringList names;
+    QObject::connect(root.data(), &QObject::objectNameChanged, [&](const QString &name) {
+        if (names.length() == 10)
+            root->setProperty("running", false);
+        else
+            names.append(name);
+    });
+
+    root->setProperty("running", true);
+    QTRY_VERIFY(!root->property("running").toBool());
+
+    QCOMPARE(names, (QStringList {
+        u""_qs, u"1300"_qs, u"Create Object"_qs,
+        u""_qs, u"1300"_qs, u"Create Object"_qs,
+        u""_qs, u"1300"_qs, u"Create Object"_qs,
+        u""_qs
+    }));
 }
 
 QTEST_MAIN(tst_qqmlproperty)
