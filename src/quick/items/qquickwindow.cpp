@@ -81,8 +81,8 @@ public:
 
         QAnimationDriver *animationDriver = m_renderLoop->animationDriver();
         if (animationDriver) {
-            connect(animationDriver, SIGNAL(stopped()), this, SLOT(animationStopped()));
-            connect(m_renderLoop, SIGNAL(timeToIncubate()), this, SLOT(incubate()));
+            connect(animationDriver, &QAnimationDriver::stopped, this, &QQuickWindowIncubationController::animationStopped);
+            connect(m_renderLoop, &QSGRenderLoop::timeToIncubate, this, &QQuickWindowIncubationController::incubate);
         }
     }
 
@@ -761,15 +761,14 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 
     animationController.reset(new QQuickAnimatorController(q));
 
-    QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
-    QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
-    QObject::connect(context, SIGNAL(invalidated()), q, SLOT(cleanupSceneGraph()), Qt::DirectConnection);
+    QObject::connect(context, &QSGRenderContext::initialized, q, &QQuickWindow::sceneGraphInitialized, Qt::DirectConnection);
+    QObject::connect(context, &QSGRenderContext::invalidated, q, &QQuickWindow::sceneGraphInvalidated, Qt::DirectConnection);
+    QObject::connect(context, &QSGRenderContext::invalidated, q, &QQuickWindow::cleanupSceneGraph, Qt::DirectConnection);
 
-    QObject::connect(q, SIGNAL(focusObjectChanged(QObject*)), q, SIGNAL(activeFocusItemChanged()));
-    QObject::connect(q, SIGNAL(screenChanged(QScreen*)), q, SLOT(handleScreenChanged(QScreen*)));
-    QObject::connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
-                     q, SLOT(handleApplicationStateChanged(Qt::ApplicationState)));
-    QObject::connect(q, SIGNAL(frameSwapped()), q, SLOT(runJobsAfterSwap()), Qt::DirectConnection);
+    QObject::connect(q, &QQuickWindow::focusObjectChanged, q, &QQuickWindow::activeFocusItemChanged);
+    QObject::connect(q, &QQuickWindow::screenChanged, q, &QQuickWindow::handleScreenChanged);
+    QObject::connect(qApp, &QGuiApplication::applicationStateChanged, q, &QQuickWindow::handleApplicationStateChanged);
+    QObject::connect(q, &QQuickWindow::frameSwapped, q, &QQuickWindow::runJobsAfterSwap, Qt::DirectConnection);
 
     if (QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>())
         service->addWindow(q);
