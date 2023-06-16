@@ -403,7 +403,7 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
                                   QStringLiteral("jsroot.qmltypes") };
     const auto importBuiltins = [&](const QStringList &imports) {
         for (auto const &dir : imports) {
-            QDirIterator it { dir, qmltypesFiles, QDir::NoFilter, QDirIterator::Subdirectories };
+            QDirIterator it { dir, qmltypesFiles, QDir::NoFilter };
             while (it.hasNext() && !qmltypesFiles.isEmpty()) {
                 readQmltypes(it.next(), &result.objects, &result.dependencies);
                 qmltypesFiles.removeOne(it.fileName());
