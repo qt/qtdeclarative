@@ -284,6 +284,8 @@ private slots:
     void thisInConstructor();
     void forOfAndGc();
 
+    void symbolToVariant();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -5587,6 +5589,19 @@ void tst_QJSEngine::forOfAndGc()
     QScopedPointer<QObject> o(c.create());
 
     QTRY_VERIFY(o->property("count").toInt() > 32768);
+}
+
+void tst_QJSEngine::symbolToVariant()
+{
+    QJSEngine engine;
+    const QJSValue val = engine.newSymbol("asymbol");
+    QCOMPARE(val.toVariant(), QStringLiteral("Symbol(asymbol)"));
+
+    const QVariant retained = val.toVariant(QJSValue::RetainJSObjects);
+    QCOMPARE(retained.metaType(), QMetaType::fromType<QJSValue>());
+    QVERIFY(retained.value<QJSValue>().strictlyEquals(val));
+
+    QCOMPARE(val.toVariant(QJSValue::ConvertJSObjects), QStringLiteral("Symbol(asymbol)"));
 }
 
 QTEST_MAIN(tst_QJSEngine)

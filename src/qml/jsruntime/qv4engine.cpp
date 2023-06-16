@@ -1506,7 +1506,9 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError()
 // Variant conversion code
 
 typedef QSet<QV4::Heap::Object *> V4ObjectSet;
-static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMetaType typeHint, bool createJSValueForObjects, V4ObjectSet *visitedObjects);
+static QVariant toVariant(
+        QV4::ExecutionEngine *e, const QV4::Value &value, QMetaType typeHint,
+        bool createJSValueForObjectsAndSymbols, V4ObjectSet *visitedObjects);
 static QObject *qtObjectFromJS(const QV4::Value &value);
 static QVariant objectToVariant(QV4::ExecutionEngine *e, const QV4::Object *o, V4ObjectSet *visitedObjects = nullptr);
 static bool convertToNativeQObject(const QV4::Value &value, QMetaType targetType, void **result);
@@ -1518,7 +1520,9 @@ static QV4::ReturnedValue variantToJS(QV4::ExecutionEngine *v4, const QVariant &
     return v4->metaTypeToJS(value.metaType(), value.constData());
 }
 
-static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMetaType metaType, bool createJSValueForObjects, V4ObjectSet *visitedObjects)
+static QVariant toVariant(
+        QV4::ExecutionEngine *e, const QV4::Value &value, QMetaType metaType,
+        bool createJSValueForObjectsAndSymbols, V4ObjectSet *visitedObjects)
 {
     Q_ASSERT (!value.isEmpty());
     QV4::Scope scope(e);
@@ -1657,6 +1661,9 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
         return *ld->d()->locale;
 #endif
     if (const QV4::DateObject *d = value.as<DateObject>()) {
+        // NOTE: since we convert QTime to JS Date,
+        //       round trip will change the variant type (to QDateTime)!
+
         auto dt = d->toQDateTime();
         // See ExecutionEngine::metaTypeFromJS()'s handling of QMetaType::Date:
         if (typeHint == QMetaType::QDate) {
@@ -1670,7 +1677,11 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
         return d->toQUrl();
     if (const ArrayBuffer *d = value.as<ArrayBuffer>())
         return d->asByteArray();
-    // NOTE: since we convert QTime to JS Date, round trip will change the variant type (to QDateTime)!
+    if (const Symbol *symbol = value.as<Symbol>()) {
+        return createJSValueForObjectsAndSymbols
+            ? QVariant::fromValue(QJSValuePrivate::fromReturnedValue(symbol->asReturnedValue()))
+            : symbol->descriptiveString();
+    }
 
     QV4::ScopedObject o(scope, value);
     Q_ASSERT(o);
@@ -1680,16 +1691,17 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
         return re->toQRegularExpression();
 #endif
 
-    if (createJSValueForObjects)
+    if (createJSValueForObjectsAndSymbols)
         return QVariant::fromValue(QJSValuePrivate::fromReturnedValue(o->asReturnedValue()));
 
     return objectToVariant(e, o, visitedObjects);
 }
 
 
-QVariant ExecutionEngine::toVariant(const Value &value, QMetaType typeHint, bool createJSValueForObjects)
+QVariant ExecutionEngine::toVariant(
+    const Value &value, QMetaType typeHint, bool createJSValueForObjectsAndSymbols)
 {
-    return ::toVariant(this, value, typeHint, createJSValueForObjects, nullptr);
+    return ::toVariant(this, value, typeHint, createJSValueForObjectsAndSymbols, nullptr);
 }
 
 static QVariant objectToVariant(QV4::ExecutionEngine *e, const QV4::Object *o, V4ObjectSet *visitedObjects)
@@ -1720,7 +1732,8 @@ static QVariant objectToVariant(QV4::ExecutionEngine *e, const QV4::Object *o, V
         int length = a->getLength();
         for (int ii = 0; ii < length; ++ii) {
             v = a->get(ii);
-            list << ::toVariant(e, v, QMetaType {}, /*createJSValueForObjects*/false, visitedObjects);
+            list << ::toVariant(
+                    e, v, QMetaType {}, /*createJSValueForObjectsAndSymbols*/false, visitedObjects);
         }
 
         result = list;
@@ -1736,7 +1749,9 @@ static QVariant objectToVariant(QV4::ExecutionEngine *e, const QV4::Object *o, V
                 break;
 
             QString key = name->toQStringNoThrow();
-            map.insert(key, ::toVariant(e, val, /*type hint*/ QMetaType {}, /*createJSValueForObjects*/false, visitedObjects));
+            map.insert(key, ::toVariant(
+                                    e, val, /*type hint*/ QMetaType {},
+                                    /*createJSValueForObjectsAndSymbols*/false, visitedObjects));
         }
 
         result = map;
@@ -2428,7 +2443,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         const QV4::ArrayObject *a = value.as<QV4::ArrayObject>();
         if (a) {
             *reinterpret_cast<QVariantList *>(data) = a->engine()->toVariant(
-                        *a, /*typeHint*/QMetaType{}, /*createJSValueForObjects*/false).toList();
+                *a, /*typeHint*/QMetaType{}, /*createJSValueForObjectsAndSymbols*/false).toList();
             return true;
         }
         break;
@@ -2442,18 +2457,20 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         break;
     }
     case QMetaType::QVariant:
-        if (const QV4::Managed *m = value.as<QV4::Managed>())
-            *reinterpret_cast<QVariant*>(data) = m->engine()->toVariant(value, /*typeHint*/QMetaType{}, /*createJSValueForObjects*/false);
-        else if (value.isNull())
+        if (const QV4::Managed *m = value.as<QV4::Managed>()) {
+            *reinterpret_cast<QVariant*>(data) = m->engine()->toVariant(
+                    value, /*typeHint*/QMetaType{}, /*createJSValueForObjectsAndSymbols*/false);
+        } else if (value.isNull()) {
             *reinterpret_cast<QVariant*>(data) = QVariant::fromValue(nullptr);
-        else if (value.isUndefined())
+        } else if (value.isUndefined()) {
             *reinterpret_cast<QVariant*>(data) = QVariant();
-        else if (value.isBoolean())
+        } else if (value.isBoolean()) {
             *reinterpret_cast<QVariant*>(data) = QVariant(value.booleanValue());
-        else if (value.isInteger())
+        } else if (value.isInteger()) {
             *reinterpret_cast<QVariant*>(data) = QVariant(value.integerValue());
-        else if (value.isDouble())
+        } else if (value.isDouble()) {
             *reinterpret_cast<QVariant*>(data) = QVariant(value.doubleValue());
+        }
         return true;
     case QMetaType::QJsonValue:
         *reinterpret_cast<QJsonValue *>(data) = QV4::JsonObject::toJsonValue(value);

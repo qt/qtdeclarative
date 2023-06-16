@@ -682,7 +682,9 @@ public:
     QQmlError catchExceptionAsQmlError();
 
     // variant conversions
-    QVariant toVariant(const QV4::Value &value, QMetaType typeHint, bool createJSValueForObjects = true);
+    QVariant toVariant(
+            const QV4::Value &value, QMetaType typeHint,
+            bool createJSValueForObjectsAndSymbols = true);
     QV4::ReturnedValue fromVariant(const QVariant &);
 
     QVariantMap variantMapFromJS(const QV4::Object *o);
