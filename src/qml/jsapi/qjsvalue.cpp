@@ -163,10 +163,11 @@
 /*!
     \enum QJSValue::ObjectConversionBehavior
 
-    This enum is used to specify how JavaScript objects without an equivalent
+    This enum is used to specify how JavaScript objects and symbols without an equivalent
     native Qt type should be treated when converting to QVariant.
 
     \value ConvertJSObjects A best-effort, possibly lossy, conversion is attempted.
+           Symbols are converted to QString.
 
     \value RetainJSObjects The value is retained as QJSValue wrapped in QVariant.
 */
