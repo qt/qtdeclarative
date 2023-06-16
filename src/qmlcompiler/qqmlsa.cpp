@@ -1042,9 +1042,10 @@ bool PassManagerPrivate::registerPropertyPass(std::shared_ptr<PropertyPass> pass
                                               QAnyStringView moduleName, QAnyStringView typeName,
                                               QAnyStringView propertyName, bool allowInheritance)
 {
-    if (moduleName.isEmpty() || typeName.isEmpty())
+    if (moduleName.isEmpty() != typeName.isEmpty()) {
         qWarning() << "Both the moduleName and the typeName must be specified "
-                      "for the pass to be registered.";
+                      "for the pass to be registered for a specific element.";
+    }
 
     QString name;
     if (!moduleName.isEmpty() && !typeName.isEmpty()) {
