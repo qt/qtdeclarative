@@ -23,10 +23,9 @@ T.TabBar {
     leftInset: -config.leftInset || 0
     rightInset: -config.rightInset || 0
 
-    readonly property string currentState: [
-        !enabled && "disabled",
-        position === TabBar.Footer && "footer"
-    ].filter(Boolean).join("-") || "normal"
+    readonly property string currentState: position === TabBar.Header
+        ? (enabled ? "normal" : "disabled")
+        : (enabled ? "normal-footer" : "disabled-footer")
     readonly property var config: ConfigReader.controls.tabbar[currentState] || {}
 
     contentItem: ListView {
