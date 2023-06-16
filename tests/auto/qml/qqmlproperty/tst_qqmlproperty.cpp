@@ -217,6 +217,9 @@ private slots:
 
     void bindToNonQObjectTarget();
     void assignVariantList();
+
+    void invalidateQPropertyChangeTriggers();
+
 private:
     QQmlEngine engine;
 };
@@ -2542,6 +2545,33 @@ void tst_qqmlproperty::assignVariantList()
     ListHolder *holder = qobject_cast<ListHolder *>(o.data());
     const QList<double> doubleList = {1.1, 2.2, 3.3, 11, 5.25, 11};
     QCOMPARE(holder->doubleList(), doubleList);
+}
+
+void tst_qqmlproperty::invalidateQPropertyChangeTriggers()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("invalidateQPropertyChangeTriggers.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+
+    QStringList names;
+    QObject::connect(root.data(), &QObject::objectNameChanged, [&](const QString &name) {
+        if (names.length() == 10)
+            root->setProperty("running", false);
+        else
+            names.append(name);
+    });
+
+    root->setProperty("running", true);
+    QTRY_VERIFY(!root->property("running").toBool());
+
+    QCOMPARE(names, (QStringList {
+        u""_s, u"1300"_s, u"Create Object"_s,
+        u""_s, u"1300"_s, u"Create Object"_s,
+        u""_s, u"1300"_s, u"Create Object"_s,
+        u""_s
+    }));
 }
 
 QTEST_MAIN(tst_qqmlproperty)
