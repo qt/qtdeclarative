@@ -185,9 +185,8 @@ void QSGSoftwareInternalRectangleNode::update()
     }
 
     if (!m_stops.isEmpty()) {
-        QLinearGradient gradient(QPoint(0,0), QPoint(m_vertical ? 0 : 1, m_vertical ? 1 : 0));
+        QLinearGradient gradient(QPoint(0,0), QPoint(m_vertical ? 0 : m_rect.width(), m_vertical ? m_rect.height() : 0));
         gradient.setStops(m_stops);
-        gradient.setCoordinateMode(QGradient::ObjectBoundingMode);
         m_brush = QBrush(gradient);
     } else {
         m_brush = QBrush(m_color);
