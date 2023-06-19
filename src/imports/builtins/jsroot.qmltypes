@@ -1356,6 +1356,7 @@ Module {
         Method { name: "formatTime" }
         Method { name: "formatDateTime" }
         Method { name: "locale" }
+        Method { name: "url" }
         Method { name: "resolvedUrl" }
         Method { name: "openUrlExternally" }
         Method { name: "font" }
