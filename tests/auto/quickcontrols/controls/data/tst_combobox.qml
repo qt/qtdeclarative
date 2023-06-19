@@ -1710,7 +1710,7 @@ TestCase {
         ComboBox {
             editable: true
             property bool gotit: false
-            Keys.onPressed: {
+            Keys.onPressed: function (event) {
                 if (!gotit && event.key === Qt.Key_B) {
                     gotit = true
                     event.accepted = true
