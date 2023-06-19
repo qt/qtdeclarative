@@ -225,6 +225,7 @@ QQuickApplication::QQuickApplication(QObject *parent)
         connect(guiApp, &QGuiApplication::applicationDisplayNameChanged,
                 this, &QQuickApplication::displayNameChanged);
 
+        connect(guiApp, &QGuiApplication::primaryScreenChanged, this, &QQuickApplication::updateScreens);
         connect(guiApp, &QGuiApplication::screenAdded, this, &QQuickApplication::updateScreens);
         connect(guiApp, &QGuiApplication::screenRemoved, this, &QQuickApplication::updateScreens);
         updateScreens();
