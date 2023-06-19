@@ -8,21 +8,33 @@
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qdir.h>
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
 #include <QtQml/qqmlengine.h>
 
 #include <QtQuickControls2/qquickstyle.h>
+
+#include <QtQuickControls2/private/qquickstyle_p.h>
 
 QT_BEGIN_NAMESPACE
 
 QQuickFigmaConfigReader::QQuickFigmaConfigReader(QObject *parent)
     : QObject(parent)
 {
+    resolveConfigPath();
+    connect(qGuiApp->styleHints(), &QStyleHints::colorSchemeChanged, this, &QQuickFigmaConfigReader::resolveConfigPath);
+}
+
+void QQuickFigmaConfigReader::resolveConfigPath()
+{
     const QStringList importPaths = QQmlEngine().importPathList();
     const QString styleName = QQuickStyle::name();
     for (const QString &importPath : importPaths) {
         QDir importDir(importPath);
         if (importDir.cd(styleName)) {
-            setConfigPath(importDir.absolutePath() + QLatin1String("/config.json"));
+            const QString themeDir = qGuiApp->styleHints()->colorScheme() == Qt::ColorScheme::Dark
+                    ? QStringLiteral("/dark") : QStringLiteral("/light");
+            setConfigPath(importDir.absolutePath() + themeDir + QLatin1String("/config.json"));
             break;
         }
     }
@@ -35,11 +47,14 @@ QString QQuickFigmaConfigReader::configPath() const
 
 void QQuickFigmaConfigReader::setConfigPath(const QString &path)
 {
-    if (m_configPath != path) {
-        m_configPath = path;
-        configPathChanged();
-        parseConfig();
-    }
+    if (m_configPath == path)
+        return;
+
+    m_configPath = path;
+    parseConfig();
+
+    emit controlsChanged();
+    emit configPathChanged();
 }
 
 QVariantMap QQuickFigmaConfigReader::controls() const

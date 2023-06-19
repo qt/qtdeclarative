@@ -96,7 +96,7 @@ T.SpinBox {
         y: (config?.topPadding || 0)
             + (control.height - (config ? config.topPadding + config.bottomPadding : 0) - height) / 2
         source: control.indicatorUpConfig.indicator_up?.export === "image"
-            ? Qt.resolvedUrl("images/" + control.indicatorUpConfig.indicator_up.fileName)
+            ? Qt.resolvedUrl(control.indicatorUpConfig.indicator_up.filePath)
             : ""
     }
 
@@ -107,13 +107,13 @@ T.SpinBox {
         y: (config?.topPadding || 0)
             + (control.height - (config ? config.topPadding + config.bottomPadding : 0) - height) / 2
         source: control.indicatorDownConfig.indicator_down?.export === "image"
-            ? Qt.resolvedUrl("images/" + control.indicatorDownConfig.indicator_down.fileName)
+            ? Qt.resolvedUrl(control.indicatorDownConfig.indicator_down.filePath)
             : ""
     }
 
     background: BorderImage {
         source: control.config.background?.export === "image"
-            ? Qt.resolvedUrl("images/" + control.config.background.fileName)
+            ? Qt.resolvedUrl(control.config.background.filePath)
             : ""
 
         border {

@@ -26,7 +26,7 @@ class QQuickFigmaConfigReader : public QObject
     Q_OBJECT
     QML_SINGLETON
     Q_PROPERTY(QString configPath READ configPath NOTIFY configPathChanged FINAL)
-    Q_PROPERTY(QVariantMap controls READ controls CONSTANT FINAL)
+    Q_PROPERTY(QVariantMap controls READ controls NOTIFY controlsChanged FINAL)
     QML_NAMED_ELEMENT(ConfigReader)
     QML_ADDED_IN_VERSION(6, 6)
 
@@ -40,10 +40,12 @@ public:
 
 Q_SIGNALS:
     void configPathChanged();
+    void controlsChanged();
 
 private:
     Q_DISABLE_COPY(QQuickFigmaConfigReader)
 
+    void resolveConfigPath();
     void updateConfigPath(const QString &path);
     void parseConfig();
 

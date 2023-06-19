@@ -44,7 +44,7 @@ T.TabButton {
 
     background: BorderImage {
         source: control.config.background?.export === "image"
-                ? Qt.resolvedUrl("images/" + control.config.background.fileName)
+                ? Qt.resolvedUrl(control.config.background.filePath)
                 : ""
 
         border {

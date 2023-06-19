@@ -48,7 +48,7 @@ T.RangeSlider {
         x: Math.round(control.leftPadding + (control.horizontal ? control.first.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2))
         y: Math.round(control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.first.visualPosition * (control.availableHeight - height)))
         source: control.firstHandleConfig.first_handle?.export === "image"
-                    ? Qt.resolvedUrl("images/" + control.firstHandleConfig.first_handle.fileName)
+                    ? Qt.resolvedUrl(control.firstHandleConfig.first_handle.filePath)
                     : ""
         border {
             top: control.firstHandleConfig.first_handle?.topOffset || 0
@@ -62,7 +62,7 @@ T.RangeSlider {
         x: control.leftPadding + (control.horizontal ? control.second.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.second.visualPosition * (control.availableHeight - height))
         source: control.secondHandleConfig.second_handle?.export === "image"
-                    ? Qt.resolvedUrl("images/" + control.secondHandleConfig.second_handle.fileName)
+                    ? Qt.resolvedUrl(control.secondHandleConfig.second_handle.filePath)
                     : ""
         border {
             top: control.secondHandleConfig.second_handle?.topOffset || 0
@@ -85,7 +85,7 @@ T.RangeSlider {
             rotation: control.horizontal ? 0 : -90
             scale: control.horizontal && control.mirrored ? -1 : 1
             source: control.config.background?.export === "image"
-                ? Qt.resolvedUrl("images/" + control.config.background.fileName)
+                ? Qt.resolvedUrl(control.config.background.filePath)
                 : ""
             border {
                 top: control.config.background?.topOffset || 0
@@ -101,7 +101,7 @@ T.RangeSlider {
                 width: control.horizontal ? control.availableWidth : control.availableHeight
                 height: implicitHeight
                 source: control.config.groove?.export === "image"
-                    ? Qt.resolvedUrl("images/" + control.config.groove.fileName)
+                    ? Qt.resolvedUrl(control.config.groove.filePath)
                     : ""
                 border {
                     top: control.config.groove?.topOffset || 0
@@ -117,7 +117,7 @@ T.RangeSlider {
                     width: control.second.position * (parent.width - control.first.handle.width) - control.first.position * (parent.width - control.first.handle.width)
                     height: parent.height
                     source: control.config.track?.export === "image"
-                        ? Qt.resolvedUrl("images/" + control.config.track.fileName)
+                        ? Qt.resolvedUrl(control.config.background.filePath)
                         : ""
                     border {
                         top: control.config.track?.topOffset || 0

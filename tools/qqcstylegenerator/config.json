@@ -1,11 +1,12 @@
 {
+    "themes": ["Light", "Dark"],
     "image formats": ["png@2x"],
     "default export": ["image", "geometry"],
     "controls": [
     {
         "name": "Button",
         "copy": ":/Button.qml",
-        "component set": "ButtonTemplate",
+        "component set": "ButtonTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "background"},
             {"atom": "contentItem", "figmaPath": "contentItem", "export": "layout"},
@@ -24,7 +25,7 @@
     {
         "name": "CheckBox",
         "copy": ":/CheckBox.qml",
-        "component set": "CheckBoxTemplate",
+        "component set": "CheckBoxTemplate${Theme}",
         "contents": ["indicator", "label"],
         "atoms": [
             {"atom": "background", "figmaPath": "CheckBoxBackground, background"},
@@ -51,7 +52,7 @@
     {
         "name": "Frame",
         "copy": ":/Frame.qml",
-        "component set": "FrameTemplate",
+        "component set": "FrameTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "FrameBackground, background"},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
@@ -64,7 +65,7 @@
     {
         "name": "RadioButton",
         "copy": ":/RadioButton.qml",
-        "component set": "RadioButtonTemplate",
+        "component set": "RadioButtonTemplate${Theme}",
         "contents": ["indicator", "label"],
         "atoms": [
             {"atom": "background", "figmaPath": "RadioButtonBackground, background"},
@@ -87,7 +88,7 @@
     {
         "name": "RangeSlider",
         "copy": ":/RangeSlider.qml",
-        "component set": "RangeSliderTemplate",
+        "component set": "RangeSliderTemplate${Theme}",
         "contents": ["groove", "track", "handle"],
         "atoms": [
             {"atom": "background", "figmaPath": "RangeSliderBackground, background"},
@@ -110,7 +111,7 @@
     {
         "name": "Slider",
         "copy": ":/Slider.qml",
-        "component set": "SliderTemplate",
+        "component set": "SliderTemplate${Theme}",
         "contents": ["groove", "track", "handle"],
         "atoms": [
             {"atom": "background", "figmaPath": "SliderBackground, background"},
@@ -129,7 +130,7 @@
     {
         "name": "SpinBox",
         "copy": ":/SpinBox.qml",
-        "component set": "SpinBoxTemplate",
+        "component set": "SpinBoxTemplate${Theme}",
         "contents": ["indicator-down", "textInput", "indicator-up"],
         "atoms": [
             {"atom": "background", "figmaPath": "spinboxBackground, background"},
@@ -149,7 +150,7 @@
     {
         "name": "Switch",
         "copy": ":/Switch.qml",
-        "component set": "SwitchTemplate",
+        "component set": "SwitchTemplate${Theme}",
         "contents": ["handle-background", "label"],
         "atoms": [
             {"atom": "background", "figmaPath": "SwitchBackground, background"},
@@ -172,7 +173,7 @@
     {
         "name": "TabBar",
         "copy": ":/TabBar.qml",
-        "component set": "TabBarTemplate",
+        "component set": "TabBarTemplate${Theme}",
         "contents": ["tabButton1", "tabButton2"],
         "atoms": [
             {"atom": "background", "figmaPath": "TabBarBackground, background"},
@@ -190,7 +191,7 @@
     {
         "name": "TabButton",
         "copy": ":/TabButton.qml",
-        "component set": "TabButtonTemplate",
+        "component set": "TabButtonTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "TabButtonBackground, background"},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
@@ -210,7 +211,7 @@
     {
         "name": "TextArea",
         "copy": ":/TextArea.qml",
-        "component set": "TextAreaTemplate",
+        "component set": "TextAreaTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "TextAreaBackground, background"},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
@@ -227,7 +228,7 @@
     {
         "name": "TextField",
         "copy": ":/TextField.qml",
-        "component set": "TextFieldTemplate",
+        "component set": "TextFieldTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "TextFieldBackground, background"},
             {"atom": "contentItem", "figmaPath": "contentItem", "export": "layout"},

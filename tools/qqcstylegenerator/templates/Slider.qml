@@ -33,7 +33,7 @@ T.Slider {
         y: Math.round(control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.visualPosition * (control.availableHeight - height)))
 
         source: control.config.handle?.export === "image"
-                    ? Qt.resolvedUrl("images/" + control.config.handle.fileName)
+                    ? Qt.resolvedUrl(control.config.handle.filePath)
                     : ""
         border {
             top: control.config.handle?.topOffset || 0
@@ -56,7 +56,7 @@ T.Slider {
             rotation: control.horizontal ? 0 : -90
             scale: control.horizontal && control.mirrored ? -1 : 1
             source: control.config.background?.export === "image"
-                ? Qt.resolvedUrl("images/" + control.config.background.fileName)
+                ? Qt.resolvedUrl(control.config.background.filePath)
                 : ""
             border {
                 top: control.config.background?.topOffset || 0
@@ -72,7 +72,7 @@ T.Slider {
                 width: control.horizontal ? control.availableWidth : control.availableHeight
                 height: implicitHeight
                 source: control.config.groove?.export === "image"
-                    ? Qt.resolvedUrl("images/" + control.config.groove.fileName)
+                    ? Qt.resolvedUrl(control.config.groove.filePath)
                     : ""
                 border {
                     top: control.config.groove?.topOffset || 0
@@ -86,7 +86,7 @@ T.Slider {
                     width: control.position * parent.width
                     height: parent.height
                     source: control.config.track?.export === "image"
-                        ? Qt.resolvedUrl("images/" + control.config.track.fileName)
+                        ? Qt.resolvedUrl(control.config.background.filePath)
                         : ""
                     border {
                         top: control.config.track?.topOffset || 0

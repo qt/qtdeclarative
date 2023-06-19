@@ -55,7 +55,7 @@ T.TextField {
 
     background: BorderImage {
         source: control.config.background?.export === "image"
-                    ? Qt.resolvedUrl("images/" + control.config.background.fileName)
+                    ? Qt.resolvedUrl(control.config.background.filePath)
                     : ""
         border {
             top: control.config.background?.topOffset || 0

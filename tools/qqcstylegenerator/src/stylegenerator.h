@@ -58,6 +58,7 @@ public:
     {
         debug("Generate style: " + m_targetPath);
 
+        readInputConfig();
         downloadFigmaDocument();
         generateControls();
         downloadImages();
@@ -155,15 +156,6 @@ private:
         const auto imageUrls = getObject("images", figmaImagesResponsDoc.object());
         const auto figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
 
-        // Create image directory
-        const QString imageDir = m_targetPath + "/images/";
-        QFileInfo fileInfo(imageDir);
-        const QDir targetDir = fileInfo.absoluteDir();
-        if (!targetDir.exists()) {
-            if (!QDir().mkpath(targetDir.path()))
-                throw std::runtime_error("Could not create image directory: " + imageDir.toStdString());
-        }
-
         QScopedPointer<QNetworkAccessManager> manager(new QNetworkAccessManager);
         manager->setAutoDeleteReplies(true);
         int requestCount = imageUrls.keys().count();
@@ -179,7 +171,7 @@ private:
             QNetworkReply *reply = manager->get(QNetworkRequest(imageUrl));
 
             QObject::connect(reply, &QNetworkReply::finished,
-                             [this, figmaId, imageUrl, imageDir, imageFormat,
+                             [this, figmaId, imageUrl, imageFormat,
                              reply, &figmaIdToFileNameMap, &requestCount] {
                 requestCount--;
                 if (reply->error() != QNetworkReply::NoError) {
@@ -189,8 +181,10 @@ private:
                     return;
                 }
 
-                const QString fileName = figmaIdToFileNameMap.value(figmaId);
-                const QString filePath = imageDir + fileName;
+                const QString filePath = m_targetPath + "/" + figmaIdToFileNameMap.value(figmaId);
+                const QString targetDir = QFileInfo(filePath).absoluteDir().path();
+                if (!QDir().mkpath(targetDir))
+                    throw std::runtime_error("Could not create image directory: " + targetDir.toStdString());
 
                 if (imageFormat.format == "svg") {
                     QFile file(filePath);
@@ -203,7 +197,11 @@ private:
                             << filePath << " from " << imageUrl;
                         return;
                     }
-                    pixmap.save(filePath);
+                    if (!pixmap.save(filePath)) {
+                        qWarning().nospace().noquote() << "Failed to save pixmap: "
+                            << filePath << " from " << imageUrl;
+                        return;
+                    }
                 }
                 debug("downloaded image: " + filePath + " from " + imageUrl);
                 progress();
@@ -232,7 +230,7 @@ private:
         }
     }
 
-    void generateControls()
+    void readInputConfig()
     {
         QFile file(":/config.json");
         if (!file.open(QIODevice::ReadOnly))
@@ -244,19 +242,24 @@ private:
             throw std::runtime_error(QString("Could not parse " + file.fileName()
                 + ": " + parseError.errorString()).toStdString());
 
-        const auto rootObject = configDoc.object();
-        QJsonArray controlsArray;
-        try {
-            controlsArray = getArray("controls", rootObject);
-        } catch (std::exception &e) {
-            throw std::runtime_error("Error, could not parse " + file.fileName().toStdString() + ": " + e.what());
-        }
+        m_inputConfig = configDoc.object();
+    }
 
-        const QJsonArray imageFormats = rootObject.value("image formats").toArray();
+    void generateControls()
+    {
+        QJsonArray controlsArray = getArray("controls", m_inputConfig);
+
+        const QJsonArray themesArray = m_inputConfig.value("themes").toArray();
+        if (themesArray.isEmpty())
+            throw std::runtime_error("The input config needs to list at least one theme!");
+        for (const QJsonValue &themeValue : themesArray)
+            m_themes.append(themeValue.toString());
+
+        const QJsonArray imageFormats = m_inputConfig.value("image formats").toArray();
         for (const QJsonValue &formatValue : imageFormats)
             m_imageFormats.append(formatValue.toString());
 
-        const QJsonArray exportArray = rootObject.value("default export").toArray();
+        const QJsonArray exportArray = m_inputConfig.value("default export").toArray();
         for (const QJsonValue &exportValue : exportArray)
             m_defaultExport.append(exportValue.toString());
 
@@ -274,20 +277,10 @@ private:
         }
     }
 
-    void generateControl(const QJsonObject controlObj)
+    void generateControl(const QJsonObject &controlObj)
     {
         const QString controlName = getString("name", controlObj);
         debugHeader(controlName);
-
-        QJsonObject outputControlConfig;
-
-        // Get the description about the control from the input config document
-        const auto configAtoms = getArray("atoms", controlObj);
-        const auto componentSetName = getString("component set", controlObj);
-
-        // Get the json object that describes the control in the Figma file
-        const auto documentRoot = getObject("document", m_document.object());
-        const auto componentSet = findChild({"type", "COMPONENT_SET", "name", componentSetName}, documentRoot);
 
         // Copy files (typically the QML control) into the style folder
         QStringList files = getStringList("copy", controlObj, false);
@@ -297,30 +290,58 @@ private:
         // Add this control to the list of controls that goes into the qmldir file
         m_qmlDirControls.append(controlName);
 
+        // Export the requested atoms. We do that once for each theme, and
+        // put the exported assets into a dedicated theme folder.
+        for (const QString &theme : m_themes) try {
+            m_currentTheme = theme;
+            m_themeVars.clear();
+            m_themeVars.insert("Theme", theme);
+            exportAssets(controlObj);
+        } catch (std::exception &e) {
+            qWarning().nospace().noquote() << "Warning, failed exporting assets for theme: "
+                                           << m_themeVars["Theme"] << "; " << e.what();
+        }
+    }
+
+    void exportAssets(const QJsonObject &controlObj)
+    {
+        debug("\nexporting assets for '" + m_currentTheme + "' theme");
+        QJsonObject outputControlConfig;
+
+        // Get the description about the control from the input config document
+        const auto configAtoms = getArray("atoms", controlObj);
+
+        // Get the json object that describes the control in the Figma file
+        const auto controlName = getString("name", controlObj);
+        const auto componentSetName = getThemeString("component set", controlObj);
+        const auto documentRoot = getObject("document", m_document.object());
+        const auto componentSet = findChild({"type", "COMPONENT_SET", "name", componentSetName}, documentRoot);
         const auto configStatesArray = getArray("states", controlObj);
+
         for (const QJsonValue &configStateValue : configStatesArray) try {
             QJsonObject outputStateConfig;
 
             // Resolve all atoms for the given state
-            m_currentAtomInfo = "control: " + controlName;
+            m_currentAtomInfo = "control: " + controlName + "; theme: " + m_currentTheme;
             const QJsonObject configStateObj = configStateValue.toObject();
-            const QString controlState = getString("state", configStateObj);
-            const QString figmaState = getString("figmaState", configStateObj);
+            const QString controlState = getThemeString("state", configStateObj);
+            const QString figmaState = getThemeString("figmaState", configStateObj);
 
             for (const QJsonValue &atomConfigValue : configAtoms) try {
                 QJsonObject outputAtomConfig;
-                m_currentAtomInfo = "control: " + controlName + "; state: " + controlState;
+                m_currentAtomInfo = "control: " + controlName
+                        + "; theme: " + m_currentTheme + "; state: " + controlState;
                 const QJsonObject atomConfigObj = atomConfigValue.toObject();
 
                 // Resolve the atom name. The atomConfigName cannot contain any
                 // '-', since it will also be used as property name from QML.
-                const QString atomName = getString("atom", atomConfigObj);
+                const QString atomName = getThemeString("atom", atomConfigObj);
                 m_currentAtomInfo += "; atom: " + atomName;
                 QString atomConfigName = atomName;
                 atomConfigName.replace('-', '_');
 
                 // Resolve the path to the node in Figma
-                const auto figmaPath = getString("figmaPath", atomConfigObj);
+                const auto figmaPath = getThemeString("figmaPath", atomConfigObj);
                 m_currentAtomInfo += "; figma path: " + figmaPath;
 
                 // Find the json object in the Figma document that describes the atom
@@ -370,7 +391,7 @@ private:
                 QStringList contentAtoms;
                 const auto contentAtomsArray = controlObj["contents"].toArray();
                 for (const QJsonValue &atomValue : contentAtomsArray) {
-                    QString atomConfigName = atomValue.toString();
+                    QString atomConfigName = themeVarsResolved(atomValue.toString());
                     atomConfigName.replace('-', '_');
                     contentAtoms.append(atomConfigName);
                 }
@@ -393,7 +414,7 @@ private:
         }
 
         // Add the control configuration to the global configuration document
-        m_outputConfig.insert(controlName.toLower(), outputControlConfig);
+        m_outputConfig[m_currentTheme].insert(controlName.toLower(), outputControlConfig);
     }
 
     QJsonObject findAtomObject(const QString &path, const QString &figmaState, const QJsonObject &componentSet)
@@ -459,17 +480,19 @@ private:
             return;
         }
 
+        const QString imageFolder = m_currentTheme.toLower() + "/images/";
         for (const ImageFormat imageFormat : imageFormats) {
-            const QString fileNameForReading = imageName + "." + imageFormat.format;
-            const QString fileNameForWriting = imageFormat.hasScale
+            const QString fileNameForReading = imageFolder + imageName + "." + imageFormat.format;
+            const QString fileNameForWriting =  imageFolder
+                    + (imageFormat.hasScale
                     ? imageName + '@' + imageFormat.scale + "x." + imageFormat.format
-                    : imageName + '.' + imageFormat.format;
+                    : imageName + '.' + imageFormat.format);
 
             auto &figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
             figmaIdToFileNameMap.insert(figmaId, fileNameForWriting);
 
             outputConfig.insert("export", "image");
-            outputConfig.insert("fileName", fileNameForReading);
+            outputConfig.insert("filePath", fileNameForReading);
             debug("exporting image: " + fileNameForWriting);
         }
     }
@@ -477,7 +500,7 @@ private:
     void exportJson(const QJsonObject &atom, QJsonObject &outputConfig)
     {
         const QString name = getString("name", outputConfig);
-        const QString fileName = "json/" + name + ".json";
+        const QString fileName = m_currentTheme.toLower() + "/json/" + name + ".json";
         debug("export json: " + m_currentAtomInfo + "; filename: " + fileName);
         createTextFileInStylefolder(fileName, QJsonDocument(atom).toJson());
     }
@@ -626,11 +649,14 @@ private:
 
     void generateConfiguration()
     {
-        QJsonObject root;
-        root.insert("version", "1.0");
-        root.insert("controls", m_outputConfig);
-        debug("generating config.json");
-        createTextFileInStylefolder("config.json", QJsonDocument(root).toJson());
+        for (const QString &theme : std::as_const(m_outputConfig).keys()) {
+            QJsonObject root;
+            root.insert("version", "1.0");
+            root.insert("controls", m_outputConfig[theme]);
+            const QString fileName = theme.toLower() + "/config.json";
+            debug("generating " + fileName);
+            createTextFileInStylefolder(fileName, QJsonDocument(root).toJson());
+        }
     }
 
     void generateQmlDir()
@@ -754,6 +780,32 @@ private:
         return QMargins(left, top, right, bottom);
     }
 
+    QString themeVarsResolved(const QString &str)
+    {
+        const int first = str.indexOf("${");
+        if (first == -1)
+            return str;
+        const int last = str.indexOf('}', first);
+        if (last == -1)
+            return str;
+        const int themeVarFirst = first + 2;
+        const QString themeVar = str.sliced(themeVarFirst, last - themeVarFirst);
+        if (!m_themeVars.contains(themeVar)) {
+            qWarning().nospace().noquote() << "Theme variable not set: '" << themeVar << "' (" << str << ")";
+            return str;
+        }
+        const QString substitute = m_themeVars[themeVar];
+        return str.first(first) + substitute + str.mid(last + 1);
+    }
+
+    QString getThemeString(const QString &key, const QJsonObject object)
+    {
+        // This function is the same as JsonTools::getString(), except that
+        // ${Theme} strings inside the return value are substituted with the
+        // name of the theme that is currently being processed.
+        return themeVarsResolved(getString(key, object));
+    }
+
     QString networkErrorString(QNetworkReply *reply)
     {
         return QMetaEnum::fromType<QNetworkReply::NetworkError>().valueToKey(reply->error());
@@ -805,9 +857,11 @@ private:
 
     QStringList m_imageFormats;
     QStringList m_defaultExport;
+    QStringList m_themes;
 
     QJsonDocument m_document;
-    QJsonObject m_outputConfig;
+    QJsonObject m_inputConfig;
+    QMap<QString, QJsonObject> m_outputConfig;
     QStringList m_qmlDirControls;
     QString m_controlToGenerate;
 
@@ -817,6 +871,9 @@ private:
     // The inner map maps from figma child id to the file name
     // that the image should be saved to once downloaded.
     QMap<QString, QMap<QString, QString>> m_imagesToDownload;
+
+    QString m_currentTheme;
+    QMap<QString, QString> m_themeVars;
 
     QString m_currentAtomInfo;
     QString m_progressLabel;
