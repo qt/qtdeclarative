@@ -37,10 +37,11 @@ struct Q_QML_PRIVATE_EXPORT SequencePrototype : public QV4::Object
     static ReturnedValue method_sort(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static ReturnedValue newSequence(
-            QV4::ExecutionEngine *engine, QMetaType sequenceType, const void *data,
-            Heap::Object *object, int propertyIndex, Heap::ReferenceObject::Flags flags);
+        QV4::ExecutionEngine *engine, QMetaType type, QMetaSequence metaSequence, const void *data,
+        Heap::Object *object, int propertyIndex, Heap::ReferenceObject::Flags flags);
     static ReturnedValue fromVariant(QV4::ExecutionEngine *engine, const QVariant &vd);
-    static ReturnedValue fromData(QV4::ExecutionEngine *engine, QMetaType type, const void *data);
+    static ReturnedValue fromData(
+        QV4::ExecutionEngine *engine, QMetaType type, QMetaSequence metaSequence, const void *data);
 
     static QMetaType metaTypeForSequence(const Sequence *object);
     static QVariant toVariant(const Sequence *object);
@@ -52,8 +53,8 @@ namespace Heap {
 
 struct Sequence : ReferenceObject
 {
-    void init(const QQmlType &qmlType, const void *container);
-    void init(const QQmlType &qmlType, const void *container,
+    void init(QMetaType listType, QMetaSequence metaSequence, const void *container);
+    void init(QMetaType listType, QMetaSequence metaSequence, const void *container,
               Object *object, int propertyIndex, Heap::ReferenceObject::Flags flags);
 
     Sequence *detached() const;
@@ -68,11 +69,16 @@ struct Sequence : ReferenceObject
     bool setVariant(const QVariant &variant);
     QVariant toVariant() const;
 
-    const QQmlTypePrivate *typePrivate() const { return m_typePrivate; }
+    QMetaType listType() const { return QMetaType(m_listType); }
+    QMetaType valueMetaType() const { return QMetaType(m_metaSequence->valueMetaType); }
+    QMetaSequence metaSequence() const { return QMetaSequence(m_metaSequence); }
 
 private:
+    void initTypes(QMetaType listType, QMetaSequence metaSequence);
+
     void *m_container;
-    const QQmlTypePrivate *m_typePrivate;
+    const QtPrivate::QMetaTypeInterface *m_listType;
+    const QtMetaContainerPrivate::QMetaSequenceInterface *m_metaSequence;
 };
 
 }
@@ -84,7 +90,6 @@ struct Q_QML_PRIVATE_EXPORT Sequence : public QV4::ReferenceObject
     V4_PROTOTYPE(sequencePrototype)
     V4_NEEDS_DESTROY
 public:
-    static const QMetaType valueMetaType(const Heap::Sequence *p);
     static QV4::ReturnedValue virtualGet(
             const QV4::Managed *that, PropertyKey id, const Value *receiver, bool *hasProperty);
     static qint64 virtualGetLength(const Managed *m);

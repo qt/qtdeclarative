@@ -450,6 +450,18 @@ void ListPropertyAssignment_Gadget::setGadgetStringList(const QStringList &list)
     m_gadgetStringList = list;
 }
 
+QVariantList ListPropertyAssignment_Gadget::gadgetVariantList() const
+{
+    return m_gadgetVariantList;
+}
+
+void ListPropertyAssignment_Gadget::setGadgetVariantList(const QVariantList &list)
+{
+    if (m_gadgetVariantList == list)
+        return;
+    m_gadgetVariantList = list;
+}
+
 ListPropertyAssignment_Object::ListPropertyAssignment_Object(QObject *parent)
     : QObject{ parent } { }
 

@@ -233,9 +233,17 @@ inline ReturnedValue coerceListType(
     ExecutionEngine *engine, const Value &value, const QQmlType &qmlType)
 {
     QMetaType type = qmlType.qListTypeId();
+    const auto metaSequence = [&]() {
+        // TODO: We should really add the metasequence to the same QQmlType that holds
+        //       all the other type information. Then we can get rid of the extra
+        //       QQmlMetaType::qmlListType() here.
+        return qmlType.isSequentialContainer()
+                ? qmlType.listMetaSequence()
+                : QQmlMetaType::qmlListType(type).listMetaSequence();
+    };
+
     if (const QV4::Sequence *sequence = value.as<QV4::Sequence>()) {
-        const QQmlTypePrivate *typePrivate = sequence->d()->typePrivate();
-        if (typePrivate->listId == type)
+        if (sequence->d()->listType() == type)
             return value.asReturnedValue();
     }
 
@@ -256,7 +264,7 @@ inline ReturnedValue coerceListType(
     if (!array) {
         return (listValueType.flags() & QMetaType::PointerToQObject)
                    ? QmlListWrapper::create(engine, listValueType)
-                   : SequencePrototype::fromData(engine, type, nullptr);
+                   : SequencePrototype::fromData(engine, type, metaSequence(), nullptr);
     }
 
     if (listValueType.flags() & QMetaType::PointerToQObject) {
@@ -273,7 +281,8 @@ inline ReturnedValue coerceListType(
         return newList->asReturnedValue();
     }
 
-    QV4::Scoped<Sequence> sequence(scope, SequencePrototype::fromData(engine, type, nullptr));
+    QV4::Scoped<Sequence> sequence(
+            scope, SequencePrototype::fromData(engine, type, metaSequence(), nullptr));
     const qsizetype length = array->getLength();
     for (qsizetype i = 0; i < length; ++i)
         sequence->containerPutIndexed(i, array->get(i));

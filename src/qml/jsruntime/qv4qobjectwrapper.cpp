@@ -205,12 +205,12 @@ static ReturnedValue loadProperty(
 
     // See if it's a sequence type.
     // Pass nullptr as data. It's lazy-loaded.
-    QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(
-                              v4, propMetaType, nullptr,
-                              wrapper, property.coreIndex(),
-                              referenceFlags(scope.engine, property)));
-    if (!retn->isUndefined())
-        return retn->asReturnedValue();
+    const QQmlType qmlType = QQmlMetaType::qmlListType(propMetaType);
+    if (qmlType.isSequentialContainer()) {
+        return QV4::SequencePrototype::newSequence(
+                v4, propMetaType, qmlType.listMetaSequence(), nullptr,
+                wrapper, property.coreIndex(), referenceFlags(scope.engine, property));
+    }
 
     QVariant v(propMetaType);
     property.readProperty(object, v.data());

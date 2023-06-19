@@ -2072,14 +2072,19 @@ class ListPropertyAssignment_Gadget
 {
     Q_GADGET
     Q_PROPERTY(QStringList gadgetStringList READ gadgetStringList WRITE setGadgetStringList)
+    Q_PROPERTY(QVariantList gadgetVariantList READ gadgetVariantList WRITE setGadgetVariantList)
     QML_VALUE_TYPE(listPropertyAssignment_Gadget)
 public:
     ListPropertyAssignment_Gadget();
     QStringList gadgetStringList() const;
     void setGadgetStringList(const QStringList &list);
 
+    QVariantList gadgetVariantList() const;
+    void setGadgetVariantList(const QVariantList &list);
+
 private:
     QStringList m_gadgetStringList;
+    QVariantList m_gadgetVariantList;
 };
 
 class ListPropertyAssignment_Object : public QObject

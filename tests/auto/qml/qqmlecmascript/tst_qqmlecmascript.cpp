@@ -10452,9 +10452,15 @@ void tst_qqmlecmascript::assignListPropertyByIndexOnGadget()
     QVERIFY(object);
 
     QStringList expected{ "Completely new Element", "Element2", "Element3" };
+    QVariantList variants {
+        u"Completely new Element"_s,
+        u"foo"_s,
+        QVariant::fromValue<std::nullptr_t>(nullptr),
+        QVariant::fromValue<bool>(true)
+    };
 
-    QEXPECT_FAIL("", "Assigning to an index of a list property on a gadget doesn't work.", Continue);
     QCOMPARE(gadget.gadgetStringList(), expected);
+    QCOMPARE(gadget.gadgetVariantList(), variants);
     QCOMPARE(object->qobjectStringList(), expected);
 }
 
