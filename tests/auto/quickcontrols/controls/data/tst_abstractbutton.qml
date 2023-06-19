@@ -215,8 +215,8 @@ TestCase {
         Item {
             property int lastKeyPress: -1
             property int lastKeyRelease: -1
-            Keys.onPressed: lastKeyPress = event.key
-            Keys.onReleased: lastKeyRelease = event.key
+            Keys.onPressed: function (event) { lastKeyPress = event.key }
+            Keys.onReleased: function (event) { lastKeyRelease = event.key }
         }
     }
 
