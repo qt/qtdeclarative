@@ -1156,5 +1156,11 @@ TestCase {
         // However, if a background color is explicitly specified, it should be respected.
         button.Material.background = "#ff6347"
         compare(button.background.color, "#ff6347")
+
+        // The text should be legible when it's highlighted.
+        button.Material.background = undefined
+        button.highlighted = true
+        compare(button.background.color.a, 0.25)
+        compare(button.contentItem.color.a, 1)
     }
 }
