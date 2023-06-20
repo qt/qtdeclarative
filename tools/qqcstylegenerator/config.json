@@ -240,6 +240,50 @@
             {"state": "focused-hovered", "figmaState": "hoveredFocused"},
             {"state": "hovered", "figmaState": "hovered"}
         ]
+    },
+    {
+        "name": "ToolBar",
+        "copy": ":/ToolBar.qml",
+        "component set": "ToolBarTemplate",
+        "contents": ["toolButton1", "toolButton2"],
+        "atoms": [
+            {"atom": "background", "figmaPath": "ToolBarBackground, background"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "toolButton1", "figmaPath": "ContentItem, ToolButton1", "export": "geometry"},
+            {"atom": "toolButton2", "figmaPath": "ContentItem, ToolButton2", "export": "geometry"}
+        ],
+        "states": [
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "disabled-footer", "figmaState": "disabledFooter"},
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "normal-footer", "figmaState": "normalFooter"}
+        ]
+    },
+    {
+        "name": "ToolButton",
+        "copy": ":/ToolButton.qml",
+        "component set": "ToolButtonTemplate",
+        "atoms": [
+            {"atom": "background", "figmaPath": "ToolButtonBackground, background"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "label", "figmaPath": "ContentItem, label", "export": "text"}
+        ],
+        "states": [
+            {"state": "checked", "figmaState": "checked"},
+            {"state": "checked-disabled", "figmaState": "checkedDisabled"},
+            {"state": "checked-hovered", "figmaState": "checkedHovered"},
+            {"state": "checked-pressed", "figmaState": "checkedPressed"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "focused", "figmaState": "focused"},
+            {"state": "focused-checked", "figmaState": "checkedFocused"},
+            {"state": "focused-checked-hovered", "figmaState": "checkedHoveredFocused"},
+            {"state": "focused-checked-pressed", "figmaState": "checkedPressedFocused"},
+            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
+            {"state": "focused-pressed", "figmaState": "pressedFocused"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "pressed", "figmaState": "pressed"}
+        ]
     }
     ]
 }

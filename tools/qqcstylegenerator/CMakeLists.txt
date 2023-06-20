@@ -33,5 +33,7 @@ qt_add_resources(qqcstylegenerator "controls"
         templates/TabButton.qml
         templates/TextArea.qml
         templates/TextField.qml
+        templates/ToolBar.qml
+        templates/ToolButton.qml
         config.json
 )
