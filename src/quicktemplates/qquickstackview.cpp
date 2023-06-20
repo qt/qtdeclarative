@@ -671,6 +671,10 @@ void QQuickStackView::push(QQmlV4Function *args)
     stackView.pop(null)
     \endcode
 
+    \note If you are \l {The QML script compiler}{compiling QML}, use the
+    strongly-typed \l popToItem, \l popToIndex or \l popCurrentItem functions
+    instead.
+
     \sa clear(), {Popping Items}, {Unwinding Items via Pop}
 */
 void QQuickStackView::pop(QQmlV4Function *args)
@@ -709,7 +713,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
             enter = d->findElement(item);
             if (!enter) {
                 if (item != d->currentItem)
-                    d->warn(QStringLiteral("unknown argument: ") + value->toQString()); // TODO: safe?
+                    d->warn(QStringLiteral("can't find item to pop: ") + value->toQString());
                 args->setReturnValue(QV4::Encode::null());
                 d->elements.push(exit); // restore
                 return;
@@ -1106,6 +1110,102 @@ QQuickItem *QQuickStackView::pushItem(QQmlComponent *component, const QVariantMa
 QQuickItem *QQuickStackView::pushItem(const QUrl &url, const QVariantMap &properties, Operation operation)
 {
     return pushItems({ url, properties }, operation);
+}
+
+/*!
+    \qmlmethod Item QtQuick.Controls::StackView::popToItem(item, operation)
+    \since 6.7
+
+    Pops all items down to (but not including) \a item. Returns the last item
+    removed from the stack.
+
+    If \a item is \c null, a warning is produced and \c null is returned.
+
+    \include qquickstackview.qdocinc pop-ownership
+
+    \include qquickstackview.qdocinc operation-values
+
+    If no operation is provided, \c PopTransition will be used.
+
+    \code
+    stackView.popToItem(someItem, StackView.Immediate)
+    \endcode
+
+    \sa clear(), {Popping Items}, {Unwinding Items via Pop}
+*/
+QQuickItem *QQuickStackView::popToItem(QQuickItem *item, Operation operation)
+{
+    Q_D(QQuickStackView);
+    return d->popToItem(item, operation, QQuickStackViewPrivate::CurrentItemPolicy::DoNotPop);
+}
+
+/*!
+    \qmlmethod Item QtQuick.Controls::StackView::popToIndex(index, operation)
+    \since 6.7
+
+    Pops all items down to (but not including) \a index. Returns the last item
+    removed from the stack.
+
+    If \a index is out of bounds, a warning is produced and \c null is
+    returned.
+
+    \include qquickstackview.qdocinc pop-ownership
+
+    \include qquickstackview.qdocinc operation-values
+
+    If no operation is provided, \c PopTransition will be used.
+
+    \code
+    stackView.popToIndex(stackView.depth - 2, StackView.Immediate)
+    \endcode
+
+    \sa clear(), {Popping Items}, {Unwinding Items via Pop}
+*/
+QQuickItem *QQuickStackView::popToIndex(int index, Operation operation)
+{
+    Q_D(QQuickStackView);
+    if (index < 0 || index >= d->elements.size()) {
+        d->warn(QString::fromLatin1("popToIndex: index %1 is out of bounds (%2 item(s))")
+            .arg(index).arg(d->elements.size()));
+        return nullptr;
+    }
+
+    if (index == d->elements.size() - 1) {
+        // This would pop down to the current item, which is a no-op.
+        return nullptr;
+    }
+
+    QQuickStackElement *element = d->elements.at(index);
+    element->load(this);
+    return d->popToItem(element->item, operation, QQuickStackViewPrivate::CurrentItemPolicy::Pop);
+}
+
+/*!
+    \qmlmethod Item QtQuick.Controls::StackView::popCurrentItem(operation)
+    \since 6.7
+
+    Pops \l currentItem from the stack. Returns the last item removed from the
+    stack, or \c null if \l depth was \c 1.
+
+    \include qquickstackview.qdocinc pop-ownership
+
+    \include qquickstackview.qdocinc operation-values
+
+    If no operation is provided, \c PopTransition will be used.
+
+    This function is equivalent to \c popToIndex(stackView.currentIndex - 1).
+
+    \sa clear(), {Popping Items}, {Unwinding Items via Pop}
+*/
+QQuickItem *QQuickStackView::popCurrentItem(Operation operation)
+{
+    Q_D(QQuickStackView);
+    if (d->elements.size() == 1) {
+        auto lastItemRemoved = d->elements.last()->item;
+        clear(operation);
+        return lastItemRemoved;
+    }
+    return d->popToItem(d->currentItem, operation, QQuickStackViewPrivate::CurrentItemPolicy::Pop);
 }
 
 /*!

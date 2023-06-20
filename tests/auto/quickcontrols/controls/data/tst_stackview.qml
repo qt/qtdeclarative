@@ -11,6 +11,7 @@ import Qt.test.controls
 
 TestCase {
     id: testCase
+    objectName: name
     width: 200
     height: 200
     visible: true
@@ -570,7 +571,7 @@ TestCase {
         compare(control.currentItem, items[2])
 
         // don't pop non-existent item
-        ignoreWarning(new RegExp(".*QML StackView: pop: unknown argument: " + escapeRegExp(testCase.toString())))
+        ignoreWarning(new RegExp(".*QML StackView: pop: can't find item to pop: " + escapeRegExp(testCase.toString())))
         compare(control.pop(testCase, StackView.Immediate), null)
         compare(control.depth, 3)
         compare(control.currentItem, items[2])
@@ -579,6 +580,73 @@ TestCase {
         control.pop(null, StackView.Immediate)
         compare(control.depth, 1)
         compare(control.currentItem, items[0])
+    }
+
+    function test_popNew() {
+        let control = createTemporaryObject(stackViewComponent, testCase)
+        verify(control)
+
+        let items = []
+        for (let i = 0; i < 7; ++i)
+            items.push(itemComponent.createObject(control, {objectName:i}))
+
+        compare(control.pushItems(items, StackView.Immediate), items[6])
+        compare(control.depth, 7)
+
+        // pop the top most item
+        compare(control.popCurrentItem(StackView.Immediate), items[6])
+        compare(control.depth, 6)
+        compare(control.currentItem, items[5])
+
+        // pop down to the current item (does nothing as it's already the top-most item)
+        compare(control.popToItem(control.currentItem, StackView.Immediate), null)
+        compare(control.depth, 6)
+        compare(control.currentItem, items[5])
+
+        // pop down to (but not including) the Nth item
+        compare(control.popToItem(items[3], StackView.Immediate), items[5])
+        compare(control.depth, 4)
+        compare(control.currentItem, items[3])
+
+        // pop the top most item
+        compare(control.popCurrentItem(StackView.Immediate), items[3])
+        compare(control.depth, 3)
+        compare(control.currentItem, items[2])
+
+        // don't pop non-existent item
+        ignoreWarning(new RegExp(".*QML StackView: pop: can't find item to pop: TestCase.*"))
+        compare(control.popToItem(testCase, StackView.Immediate), null)
+        compare(control.depth, 3)
+        compare(control.currentItem, items[2])
+
+        // The new functions don't support passing null.
+        ignoreWarning(new RegExp(".*QML StackView: pop: item cannot be null"))
+        compare(control.popToItem(null, StackView.Immediate), null)
+        compare(control.depth, 3)
+        compare(control.currentItem, items[2])
+
+        // Test that popToIndex pops down to an Nth item.
+        control.clear()
+        compare(control.depth, 0)
+
+        items = []
+        for (let i = 0; i < 3; ++i)
+            items.push(itemComponent.createObject(control, { objectName: i }))
+        compare(control.pushItems(items, StackView.Immediate), items[2])
+        compare(control.depth, 3)
+
+        compare(control.popToIndex(1, StackView.Immediate), items[2])
+        compare(control.depth, 2)
+
+        compare(control.popToIndex(0, StackView.Immediate), items[1])
+        compare(control.depth, 1)
+
+        // Also check that popCurrentItem still pops when depth is 1,
+        // because pop() doesn't, and we don't want that behavior with the new function.
+        compare(control.popCurrentItem(StackView.Immediate), items[0])
+
+        ignoreWarning(new RegExp(".*QML StackView: pop: no items to pop"))
+        compare(control.popCurrentItem(StackView.Immediate), null)
     }
 
     function test_replace() {

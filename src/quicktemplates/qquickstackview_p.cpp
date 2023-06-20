@@ -7,6 +7,7 @@
 #include "qquickstacktransition_p_p.h"
 #endif
 
+#include <QtCore/qscopedvaluerollback.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmllist.h>
 #include <QtQml/private/qv4qmlcontext_p.h>
@@ -204,6 +205,77 @@ bool QQuickStackViewPrivate::replaceElements(QQuickStackElement *target, const Q
         }
     }
     return pushElements(elems);
+}
+
+QQuickItem *QQuickStackViewPrivate::popToItem(QQuickItem *item, QQuickStackView::Operation operation, CurrentItemPolicy currentItemPolicy)
+{
+    Q_Q(QQuickStackView);
+    const QString operationName = QStringLiteral("pop");
+    if (modifyingElements) {
+        warnOfInterruption(operationName);
+        return nullptr;
+    }
+
+    QScopedValueRollback<bool> modifyingElementsRollback(modifyingElements, true);
+    QScopedValueRollback<QString> operationNameRollback(this->operation, operationName);
+    if (elements.isEmpty()) {
+        warn(QStringLiteral("no items to pop"));
+        return nullptr;
+    }
+
+    if (!item) {
+        warn(QStringLiteral("item cannot be null"));
+        return nullptr;
+    }
+
+    const int oldDepth = elements.size();
+    QQuickStackElement *exit = elements.pop();
+    // top() here will be the item below the previously current item, since we just popped above.
+    QQuickStackElement *enter = elements.top();
+
+    bool nothingToDo = false;
+    if (item != currentItem) {
+        if (!item) {
+            // Popping down to the first item.
+            enter = elements.value(0);
+        } else {
+            // Popping down to an arbitrary item.
+            enter = findElement(item);
+            if (!enter) {
+                warn(QStringLiteral("can't find item to pop: ") + QDebug::toString(item));
+                nothingToDo = true;
+            }
+        }
+    } else {
+        if (currentItemPolicy == CurrentItemPolicy::DoNotPop) {
+            // popToItem was called with the currentItem, which means there are no items
+            // to pop because it's already at the top.
+            nothingToDo = true;
+        }
+        // else: popToItem was called by popCurrentItem, and so we _should_ pop.
+    }
+    if (nothingToDo) {
+        // Restore the element we popped earlier.
+        elements.push(exit);
+        return nullptr;
+    }
+
+    QQuickItem *previousItem = nullptr;
+    if (popElements(enter)) {
+        if (exit) {
+            exit->removal = true;
+            removing.insert(exit);
+            previousItem = exit->item;
+        }
+        depthChange(elements.size(), oldDepth);
+#if QT_CONFIG(quick_viewtransitions)
+        startTransition(QQuickStackTransition::popExit(operation, exit, q),
+            QQuickStackTransition::popEnter(operation, enter, q),
+            operation == QQuickStackView::Immediate);
+#endif
+        setCurrentItem(enter);
+    }
+    return previousItem;
 }
 
 #if QT_CONFIG(quick_viewtransitions)

@@ -155,6 +155,10 @@ public:
     Q_REVISION(6, 7) Q_INVOKABLE QQuickItem *pushItem(const QUrl &url, const QVariantMap &properties = {},
         Operation operation = Immediate);
 
+    Q_REVISION(6, 7) Q_INVOKABLE QQuickItem *popToItem(QQuickItem *item, Operation operation = PopTransition);
+    Q_REVISION(6, 7) Q_INVOKABLE QQuickItem *popToIndex(int index, Operation operation = PopTransition);
+    Q_REVISION(6, 7) Q_INVOKABLE QQuickItem *popCurrentItem(Operation operation = PopTransition);
+
     // 2.3 (Qt 5.10)
     bool isEmpty() const;
 

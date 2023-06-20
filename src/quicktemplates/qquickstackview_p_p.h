@@ -58,6 +58,12 @@ public:
     bool popElements(QQuickStackElement *element);
     bool replaceElements(QQuickStackElement *element, const QList<QQuickStackElement *> &elements);
 
+    enum class CurrentItemPolicy {
+        DoNotPop,
+        Pop
+    };
+    QQuickItem *popToItem(QQuickItem *item, QQuickStackView::Operation operation, CurrentItemPolicy currentItemPolicy);
+
 #if QT_CONFIG(quick_viewtransitions)
     void ensureTransitioner();
     void startTransition(const QQuickStackTransition &first, const QQuickStackTransition &second, bool immediate);
