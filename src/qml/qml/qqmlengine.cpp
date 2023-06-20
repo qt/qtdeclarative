@@ -633,7 +633,7 @@ QQmlEngine::QQmlEngine(QQmlEnginePrivate &dd, QObject *parent)
   invalidated, but not destroyed (unless they are parented to the
   QQmlEngine object).
 
-  See QJSEngine docs for details on cleaning up the JS engine.
+  See ~QJSEngine() for details on cleaning up the JS engine.
 */
 QQmlEngine::~QQmlEngine()
 {
