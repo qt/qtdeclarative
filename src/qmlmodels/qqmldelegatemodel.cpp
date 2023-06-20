@@ -1617,7 +1617,7 @@ void QQmlDelegateModelPrivate::itemsRemoved(
                         emitDestroyingItem(object);
                     cacheItem->scriptRef -= 1;
                 }
-                if (!cacheItem->isReferenced()) {
+                if (!cacheItem->isReferenced() && !remove.inGroup(Compositor::Persisted)) {
                     m_compositor.clearFlags(Compositor::Cache, cacheIndex, 1, Compositor::CacheFlag);
                     m_cache.removeAt(cacheIndex);
                     delete cacheItem;
