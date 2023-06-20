@@ -21,7 +21,6 @@ qt_internal_add_qml_module(QuickShapesPrivate
         qquickshapegenericrenderer.cpp qquickshapegenericrenderer_p.h
         qquickshapesglobal.h qquickshapesglobal_p.h
         qquickshapecurverenderer.cpp qquickshapecurverenderer_p.h qquickshapecurverenderer_p_p.h
-        qt_delaunay_triangulator.cpp
         qt_quadratic_bezier.cpp
         qquickshapesoftwarerenderer.cpp qquickshapesoftwarerenderer_p.h
     PUBLIC_LIBRARIES

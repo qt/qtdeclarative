@@ -40,19 +40,24 @@ Item {
             children = []
 
             let first = true
-            let pickOne = controlPanel.subShape
-            if (pickOne < 0)
-                console.debug("Creating " + pathLoader.paths.length + " SVG items")
+            let pickShape = controlPanel.subShape
+            let pickOne = pickShape >= 0 && !controlPanel.subShapeGreaterThan
+            let pickGreater = pickShape >= 0 && controlPanel.subShapeGreaterThan
+            if (pickOne)
+                console.log("Creating SVG item", pickShape, "out of", pathLoader.paths.length)
+            else if (pickGreater)
+                console.debug("Creating " + (pathLoader.paths.length - pickShape) + " SVG items")
             else
-                console.log("Creating SVG item", pickOne, "out of", pathLoader.paths.length)
+                console.debug("Creating " + pathLoader.paths.length + " SVG items")
             for (var i = 0; i < pathLoader.paths.length; ++i) {
-                if (pickOne >= 0 && pickOne !== i)
+                if ((pickOne && pickShape !== i ) || (pickGreater && i < pickShape))
                     continue
                 var s = pathLoader.paths[i]
                 var fillColor = pathLoader.fillColors[i]
                 let strokeText = "";
                 let strokeColor = pathLoader.strokeColors[i]
                 let strokeWidth = pathLoader.strokeWidths[i]
+                let transform = pathLoader.transforms[i]
                 if (strokeColor) {
                     if (!strokeWidth)
                         strokeWidth = "1.0" // default value defined by SVG standard
@@ -62,10 +67,11 @@ Item {
                     fillColor = "#00000000"
                 }
 
-                var obj = Qt.createQmlObject("import QtQuick\nimport QtQuick.Shapes\n ControlledShape { "
-                                             + "fillColor: \"" + fillColor + "\";"
-                                             + strokeText
-                                             + "fillRule: ShapePath.WindingFill; delegate: [ PathSvg { path: \"" + s + "\";  } ] }",
+                var obj = Qt.createQmlObject("import QtQuick\nimport QtQuick.Shapes\n ControlledShape { \n"
+                                             + "fillColor: \"" + fillColor + "\";\n"
+                                             + "shapeTransform: Matrix4x4 { matrix: Qt.matrix4x4(" + transform + "); }\n"
+                                             + strokeText + "\n"
+                                             + "fillRule: ShapePath.WindingFill; delegate: [ PathSvg { path: \"" + s + "\";  } ] }\n",
                                              topLevel, "SvgPathComponent_" + i)
 
 

@@ -14,7 +14,6 @@ qt_internal_add_manual_test(painterPathQuickShape
         Qt::Quick
         Qt::QuickPrivate
         Qt::QuickShapesPrivate
-        Qt::SvgPrivate
 )
 
 
@@ -29,6 +28,7 @@ set(qml_resource_files
         "SmallPolygon.qml"
         "Squircle.qml"
         "ControlledShape.qml"
+        "Mussel.qml"
         "Graziano.ttf"
         "CubicShape.qml"
         "hand-print.svg"

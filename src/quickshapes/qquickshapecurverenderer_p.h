@@ -59,6 +59,7 @@ public:
     static QuadPath fromPainterPath(const QPainterPath &path);
     QPainterPath toPainterPath() const;
     QuadPath subPathsClosed() const;
+    QuadPath flattened() const;
 
     class Element
     {
@@ -130,6 +131,8 @@ public:
             const QVector2D tan = tangentAtFraction(t);
             return QVector2D(-tan.y(), tan.x());
         }
+
+        float extent() const;
 
     private:
         int intersectionsAtY(float y, float *fractions) const;
@@ -306,6 +309,7 @@ private:
         QPainterPath fillPath;
         QPainterPath originalPath;
         QuadPath path;
+        QuadPath qPath; // TODO: better name
         QColor fillColor;
         Qt::FillRule fillRule = Qt::OddEvenFill;
         QPen pen;
@@ -321,8 +325,9 @@ private:
     void deleteAndClear(NodeList *nodeList);
 
     QVector<QSGGeometryNode *> addPathNodesBasic(const PathData &pathData, NodeList *debugNodes);
-
-    QVector<QSGGeometryNode *> addPathNodesDelaunayTest(const PathData &pathData, NodeList *debugNodes);
+    QVector<QSGGeometryNode *> addPathNodesLineShader(const PathData &pathData, NodeList *debugNodes);
+    QVector<QSGGeometryNode *> addStrokeNodes(const PathData &pathData, NodeList *debugNodes);
+    QVector<QSGGeometryNode *> addNodesStrokeShader(const PathData &pathData, NodeList *debugNodes);
 
     QSGGeometryNode *addLoopBlinnNodes(const QTriangleSet &triangles,
                                        const QVarLengthArray<quint32> &extraIndices,

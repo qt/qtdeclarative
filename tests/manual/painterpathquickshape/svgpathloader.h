@@ -17,6 +17,7 @@ class SvgPathLoader : public QObject
     Q_PROPERTY(QStringList fillColors READ fillColors NOTIFY pathsChanged)
     Q_PROPERTY(QStringList strokeColors READ strokeColors NOTIFY pathsChanged)
     Q_PROPERTY(QStringList strokeWidths READ strokeWidths NOTIFY pathsChanged)
+    Q_PROPERTY(QStringList transforms READ transforms NOTIFY pathsChanged)
 public:
     SvgPathLoader();
 
@@ -53,6 +54,11 @@ public:
         return m_strokeWidths;
     }
 
+    QStringList transforms() const
+    {
+        return m_transforms;
+    }
+
 private slots:
     void loadPaths();
 
@@ -66,6 +72,7 @@ private:
     QStringList m_fillColors;
     QStringList m_strokeColors;
     QStringList m_strokeWidths;
+    QStringList m_transforms;
 };
 
 #endif // SVGPATHLOADER_H
