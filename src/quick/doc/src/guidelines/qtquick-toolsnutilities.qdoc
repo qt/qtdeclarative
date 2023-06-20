@@ -107,4 +107,10 @@ The Qt Quick Compiler consist of two components:
     \li \l {QML type compiler}
     \li \l {QML script compiler}
 \endlist
+
+\section1 QML Language Server
+
+\l{QML Language Server} is a tool shipped with Qt that helps you edit
+QML code in your favorite (LSP-compatible) editor.
+
 */
