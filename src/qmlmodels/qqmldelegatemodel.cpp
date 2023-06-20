@@ -1612,8 +1612,8 @@ void QQmlDelegateModelPrivate::itemsRemoved(
 
         if (movedItems && remove.isMove()) {
             movedItems->insert(remove.moveId, m_cache.mid(remove.cacheIndex(), remove.count));
-            QList<QQmlDelegateModelItem *>::iterator begin = m_cache.begin() + remove.cacheIndex();
-            QList<QQmlDelegateModelItem *>::iterator end = begin + remove.count;
+            QList<QQmlDelegateModelItem *>::const_iterator begin = m_cache.constBegin() + remove.cacheIndex();
+            QList<QQmlDelegateModelItem *>::const_iterator end = begin + remove.count;
             m_cache.erase(begin, end);
         } else {
             for (; cacheIndex < remove.cacheIndex() + remove.count - removedCache; ++cacheIndex) {
