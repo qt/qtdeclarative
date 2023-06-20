@@ -7,8 +7,7 @@ SUBDIRS += \
     sidepanel \
     swipetoremove \
     wearable \
-    imagine/automotive \
-    imagine/musicplayer
+    imagine/automotive
 
 qtHaveModule(sql): SUBDIRS += eventcalendar
 qtHaveModule(widgets): SUBDIRS += flatstyle
