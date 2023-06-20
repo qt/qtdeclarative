@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
     \inmodule QtQml
 
     Contexts hold the objects identified by \e id in a QML document. You
-    can use \{nameForObject()} and \l{objectForName()} to retrieve them.
+    can use \l{nameForObject()} and \l{objectForName()} to retrieve them.
 
     \note It is the responsibility of the creator to delete any QQmlContext it
     constructs. If a QQmlContext is no longer needed, it must be destroyed
