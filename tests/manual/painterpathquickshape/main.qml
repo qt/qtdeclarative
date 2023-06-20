@@ -42,6 +42,10 @@ Window {
             source: "CubicShape.qml"
         }
         ListElement {
+            text: "Mussel"
+            source: "Mussel.qml"
+        }
+        ListElement {
             text: "Arc Direction"
             source: "arcDirection.qml"
         }
@@ -138,6 +142,11 @@ Window {
         source: "qrc:/background.png"
         smooth: true
     }
+    Rectangle {
+        id: solidBackground
+        anchors.fill: flickable
+        color: controlPanel.backgroundColor
+    }
 
     Flickable {
         id: flickable
@@ -152,10 +161,9 @@ Window {
         WheelHandler {
             onWheel: (event)=> {
                          let scale = controlPanel.scale
-                         let posX = event.x
-                         let posY = event.y
-                         let xOff = posX - flickable.contentX
-                         let yOff = posY - flickable.contentY
+                         // position in scaled path:
+                         let posX = event.x - controlPanel.pathMargin
+                         let posY = event.y - controlPanel.pathMargin
 
                          let pathX = posX / scale
                          let pathY = posY / scale
@@ -166,8 +174,12 @@ Window {
                              scale = scale / 1.1
                          controlPanel.setScale(scale)
 
-                         flickable.contentX = pathX * controlPanel.scale - xOff
-                         flickable.contentY = pathY * controlPanel.scale - yOff
+                         scale = controlPanel.scale
+                         let scaledPosX = pathX * scale
+                         let scaledPosY = pathY * scale
+
+                         flickable.contentX += scaledPosX - posX
+                         flickable.contentY += scaledPosY - posY
                          flickable.returnToBounds()
                      }
         }
