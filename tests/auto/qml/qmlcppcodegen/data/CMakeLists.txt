@@ -66,6 +66,7 @@ set(qml_files
     asCast.qml
     attachedBaseEnum.qml
     badSequence.qml
+    basicBlocksWithBackJump.qml
     bindToValueType.qml
     blockComments.qml
     boundComponents.qml

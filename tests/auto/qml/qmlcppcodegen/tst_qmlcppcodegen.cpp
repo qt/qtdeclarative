@@ -173,6 +173,7 @@ private slots:
     void topLevelComponent();
     void variantReturn();
     void equalityTestsWithNullOrUndefined();
+    void basicBlocksWithBackJump();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3376,6 +3377,35 @@ void tst_QmlCppCodegen::equalityTestsWithNullOrUndefined()
     QVERIFY2(component.isReady(), component.errorString().toUtf8());
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o);
+}
+
+static bool expectingMessage = false;
+static void handler(QtMsgType type, const QMessageLogContext &, const QString &message)
+{
+    QVERIFY(expectingMessage);
+    QCOMPARE(type, QtDebugMsg);
+    QCOMPARE(message, u"false");
+    expectingMessage = false;
+}
+void tst_QmlCppCodegen::basicBlocksWithBackJump()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/basicBlocksWithBackJump.qml"_s));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    const auto oldHandler = qInstallMessageHandler(&handler);
+    const auto guard = qScopeGuard([oldHandler]() { qInstallMessageHandler(oldHandler); });
+    // t1 does not log anything
+    QMetaObject::invokeMethod(o.data(), "t1");
+    // t2 logs "false" exactly once
+    expectingMessage = true;
+    QMetaObject::invokeMethod(o.data(), "t2");
+    QVERIFY(!expectingMessage);
+    // t3 logs "false" exactly once
+    expectingMessage = true;
+    QMetaObject::invokeMethod(o.data(), "t3");
+    QVERIFY(!expectingMessage);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

@@ -49,6 +49,8 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSBasicBlocks::run(
             it->second.jumpIsUnconditional = false;
         }
 
+        m_skipUntilNextLabel = false;
+
         reset();
         decode(byteCode.constData(), static_cast<uint>(byteCode.size()));
         for (auto it = m_basicBlocks.begin(), end = m_basicBlocks.end(); it != end; ++it)
