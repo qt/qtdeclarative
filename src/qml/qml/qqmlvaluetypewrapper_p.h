@@ -67,7 +67,19 @@ DECLARE_HEAP_OBJECT(QQmlValueTypeWrapper, ReferenceObject) {
 
     const QMetaObject *metaObject() const { return m_metaObject; }
 
-    void setData(const void *data);
+    void setData(const void *data)
+    {
+        const QMetaType type = metaType();
+        void *gadget = gadgetPtr();
+        if (gadget) {
+            type.destruct(gadget);
+        } else {
+            gadget = ::operator new(type.sizeOf());
+            setGadgetPtr(gadget);
+        }
+        type.construct(gadget, data);
+    }
+
     QVariant toVariant() const;
 
     void *storagePointer();
