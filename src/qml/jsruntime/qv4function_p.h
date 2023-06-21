@@ -51,6 +51,11 @@ protected:
     ~Function();
 
 public:
+    struct JSTypedFunction {
+        QList<QQmlType> argumentTypes;
+        QQmlType returnType;
+    };
+
     const CompiledData::Function *compiledFunction;
 
     QV4::ExecutableCompilationUnit *executableCompilationUnit() const
@@ -74,7 +79,10 @@ public:
     typedef ReturnedValue (*JittedCode)(CppStackFrame *, ExecutionEngine *);
     JittedCode jittedCode;
     JSC::MacroAssemblerCodeRef *codeRef;
-    const QQmlPrivate::AOTCompiledFunction *aotCompiledFunction = nullptr;
+    union {
+        const QQmlPrivate::AOTCompiledFunction *aotCompiledFunction = nullptr;
+        const JSTypedFunction *jsTypedFunction;
+    };
 
     // first nArguments names in internalClass are the actual arguments
     Heap::InternalClass *internalClass;

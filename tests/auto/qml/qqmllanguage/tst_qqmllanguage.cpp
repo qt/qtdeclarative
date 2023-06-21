@@ -7735,12 +7735,20 @@ void tst_qqmllanguage::functionSignatureEnforcement()
     QCOMPARE(ignored->property("m").toInt(), 77);
     QCOMPARE(ignored->property("n").toInt(), 67);
 
-    QQmlComponent c2(&engine, testFileUrl("signatureEnforced.qml"));
+    const QUrl url2 = testFileUrl("signatureEnforced.qml");
+    QQmlComponent c2(&engine, url2);
     QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+
+    QTest::ignoreMessage(
+            QtCriticalMsg,
+            qPrintable(url2.toString() + u":36: 15 should be coerced to void because the function "
+                                          "called is insufficiently annotated. The original value "
+                                          "is retained. "
+                                          "This will change in a future version of Qt."_s));
 
     QScopedPointer<QObject> enforced(c2.create());
     QCOMPARE(enforced->property("l").toInt(), 2); // strlen("no")
-    QCOMPARE(enforced->property("m").toInt(), 12);
+    QCOMPARE(enforced->property("m").toInt(), 77);
     QCOMPARE(enforced->property("n").toInt(), 99);
     QCOMPARE(enforced->property("o").toInt(), 77);
 }

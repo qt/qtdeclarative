@@ -545,8 +545,9 @@ ReturnedValue ArrowFunction::virtualCall(const QV4::FunctionObject *fo, const Va
         });
     case Function::JsTyped:
         return QV4::coerceAndCall(
-                    fo->engine(), function->aotCompiledFunction, thisObject, argv, argc,
-                    [fo](const Value *thisObject, const Value *argv, int argc) {
+                fo->engine(), function->jsTypedFunction, function->compiledFunction,
+                thisObject, argv, argc,
+                [fo](const Value *thisObject, const Value *argv, int argc) {
             return qfoDoCall(fo, thisObject, argv, argc);
         });
     default:
