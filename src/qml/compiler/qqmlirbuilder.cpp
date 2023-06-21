@@ -1717,10 +1717,9 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
             case Pragma::FunctionSignatureBehavior:
                 switch (p->functionSignatureBehavior) {
                 case Pragma::Enforced:
-                    createdUnit->flags |= Unit::FunctionSignaturesEnforced;
                     break;
                 case Pragma::Ignored:
-                    //this is the default;
+                    createdUnit->flags |= Unit::FunctionSignaturesIgnored;
                     break;
                 }
                 break;

@@ -117,7 +117,7 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
         ic = ic->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
 
     const CompiledData::Parameter *formalsIndices = compiledFunction->formalsTable();
-    bool enforceJsTypes = !aotFunction && unit->enforcesFunctionSignature();
+    bool enforceJsTypes = !aotFunction && !unit->ignoresFunctionSignature();
 
     for (quint32 i = 0; i < compiledFunction->nFormals; ++i) {
         ic = ic->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[formalsIndices[i].nameIndex]), Attr_NotConfigurable);

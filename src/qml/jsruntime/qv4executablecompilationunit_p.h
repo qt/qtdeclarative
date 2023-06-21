@@ -194,9 +194,9 @@ public:
         return ListPropertyAssignBehavior::Append;
     }
 
-    bool enforcesFunctionSignature() const
+    bool ignoresFunctionSignature() const
     {
-        return data->flags & CompiledData::Unit::FunctionSignaturesEnforced;
+        return data->flags & CompiledData::Unit::FunctionSignaturesIgnored;
     }
 
     bool nativeMethodsAcceptThisObjects() const

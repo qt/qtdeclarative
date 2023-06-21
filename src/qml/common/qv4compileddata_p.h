@@ -1200,7 +1200,7 @@ struct Unit
         ListPropertyAssignReplace
                 = ListPropertyAssignReplaceIfDefault | ListPropertyAssignReplaceIfNotDefault,
         ComponentsBound = 0x200,
-        FunctionSignaturesEnforced = 0x400,
+        FunctionSignaturesIgnored = 0x400,
         NativeMethodsAcceptThisObject = 0x800,
         ValueTypesCopied = 0x1000,
         ValueTypesAddressable = 0x2000,
