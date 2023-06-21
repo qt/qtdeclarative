@@ -2681,13 +2681,13 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
             d->readReference();
 
         if (void *gadgetPtr = d->gadgetPtr()) {
-            if (QQmlValueTypeProvider::createValueType(metaType, data, valueType, gadgetPtr))
+            if (QQmlValueTypeProvider::populateValueType(metaType, data, valueType, gadgetPtr))
                 return true;
             if (QMetaType::canConvert(valueType, metaType))
                 return QMetaType::convert(valueType, gadgetPtr, metaType, data);
         } else {
             QVariant empty(valueType);
-            if (QQmlValueTypeProvider::createValueType(metaType, data, valueType, empty.data()))
+            if (QQmlValueTypeProvider::populateValueType(metaType, data, valueType, empty.data()))
                 return true;
             if (QMetaType::canConvert(valueType, metaType))
                 return QMetaType::convert(valueType, empty.data(), metaType, data);
@@ -2753,8 +2753,8 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
                     proto = proto->getPrototypeOf();
                 }
             }
-        } else if (QQmlValueTypeProvider::createValueType(
-                       metaType, data, var.metaType(), var.data())) {
+        } else if (QQmlValueTypeProvider::populateValueType(
+                           metaType, data, var.metaType(), var.data())) {
             return true;
         }
     } else if (value.isNull() && isPointer) {
@@ -2767,7 +2767,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         *reinterpret_cast<QJSPrimitiveValue *>(data) = createPrimitive(&value);
         return true;
     } else if (!isPointer) {
-        if (QQmlValueTypeProvider::createValueType(metaType, data, value))
+        if (QQmlValueTypeProvider::populateValueType(metaType, data, value))
             return true;
     }
 

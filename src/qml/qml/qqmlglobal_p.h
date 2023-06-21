@@ -16,8 +16,9 @@
 //
 
 #include <private/qmetaobject_p.h>
-#include <private/qtqmlglobal_p.h>
 #include <private/qqmlmetaobject_p.h>
+#include <private/qqmltype_p.h>
+#include <private/qtqmlglobal_p.h>
 
 #include <QtQml/qqml.h>
 #include <QtCore/qobject.h>
@@ -205,10 +206,13 @@ inline void QQml_setParent_noEvent(QObject *object, QObject *parent)
 class QQmlValueTypeProvider
 {
 public:
-    static bool createValueType(QMetaType targetMetaType, void *target, const QV4::Value &source);
-    static bool createValueType(
-        QMetaType targetMetaType, void *target, QMetaType sourceMetaType, void *source);
+    static bool populateValueType(
+            QMetaType targetMetaType, void *target, const QV4::Value &source);
+    static bool populateValueType(
+            QMetaType targetMetaType, void *target, QMetaType sourceMetaType, void *source);
 
+    static Q_QML_PRIVATE_EXPORT void *heapCreateValueType(
+            const QQmlType &targetType, const QV4::Value &source);
     static QVariant constructValueType(
             QMetaType targetMetaType, const QMetaObject *targetMetaObject,
             int ctorIndex, void *ctorArg);
