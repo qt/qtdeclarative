@@ -122,7 +122,8 @@ do { \
     QMetaObject::disconnect(sender, signalIdx, receiver, methodIdx); \
 } while (0)
 
-Q_QML_PRIVATE_EXPORT bool qmlobject_can_cast(QObject *object, const QMetaObject *mo);
+Q_QML_PRIVATE_EXPORT bool qmlobject_can_cpp_cast(QObject *object, const QMetaObject *mo);
+Q_QML_PRIVATE_EXPORT bool qmlobject_can_qml_cast(QObject *object, const QMetaObject *mo);
 
 /*!
     This method is identical to qobject_cast<T>() except that it does not require lazy
@@ -141,7 +142,7 @@ T qmlobject_cast(QObject *object)
 {
     if (!object)
         return nullptr;
-    if (qmlobject_can_cast(object, &(std::remove_pointer_t<T>::staticMetaObject)))
+    if (qmlobject_can_cpp_cast(object, &(std::remove_pointer_t<T>::staticMetaObject)))
         return static_cast<T>(object);
     else
         return nullptr;

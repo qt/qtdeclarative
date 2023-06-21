@@ -850,14 +850,27 @@ void QQmlApplication::setDomain(const QString &arg)
     QCoreApplication::instance()->setOrganizationDomain(arg);
 }
 
-bool qmlobject_can_cast(QObject *object, const QMetaObject *mo)
+static const QQmlData *ddata_for_cast(QObject *object)
 {
     Q_ASSERT(object);
-    Q_ASSERT(mo);
     auto ddata = QQmlData::get(object, false);
-    if (!ddata || ! ddata->propertyCache)
-        return object->metaObject()->inherits(mo);
-   return ddata->propertyCache->firstCppMetaObject()->inherits(mo);
+    return (ddata && ddata->propertyCache) ? ddata : nullptr;
+}
+
+bool qmlobject_can_cpp_cast(QObject *object, const QMetaObject *mo)
+{
+    Q_ASSERT(mo);
+    if (const QQmlData *ddata = ddata_for_cast(object))
+        return ddata->propertyCache->firstCppMetaObject()->inherits(mo);
+    return object->metaObject()->inherits(mo);
+}
+
+bool qmlobject_can_qml_cast(QObject *object, const QMetaObject *mo)
+{
+    Q_ASSERT(mo);
+    if (const QQmlData *ddata = ddata_for_cast(object))
+        return ddata->propertyCache->metaObject()->inherits(mo);
+    return object->metaObject()->inherits(mo);
 }
 
 QT_END_NAMESPACE

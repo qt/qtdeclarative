@@ -1672,7 +1672,7 @@ static int MatchScore(const Value &actual, QMetaType conversionMetaType)
                     QObject *wrapped = wrapper->object();
                     if (!wrapped)
                         return 0;
-                    if (qmlobject_can_cast(wrapped, conversionMetaType.metaObject()))
+                    if (qmlobject_can_cpp_cast(wrapped, conversionMetaType.metaObject()))
                         return 0;
                 }
             }
@@ -1693,7 +1693,7 @@ static int MatchScore(const Value &actual, QMetaType conversionMetaType)
                 }
             } else if (QObject *object = wrapper->object()) {
                 if (conversionMetaType.flags() & QMetaType::PointerToQObject
-                    && qmlobject_can_cast(object, conversionMetaType.metaObject())) {
+                    && qmlobject_can_cpp_cast(object, conversionMetaType.metaObject())) {
                         return 0;
                 }
             }
