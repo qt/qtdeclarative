@@ -35,7 +35,7 @@ class QQmlMetaObject;
 class QQmlAbstractBinding;
 class QQmlBoundSignalExpression;
 
-class Q_QML_PRIVATE_EXPORT QQmlPropertyPrivate : public QQmlRefCount
+class Q_QML_PRIVATE_EXPORT QQmlPropertyPrivate : public QQmlRefCounted<QQmlPropertyPrivate>
 {
 public:
     enum class InitFlag {

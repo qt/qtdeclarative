@@ -105,7 +105,7 @@ private:
         Shared = 1
     };
 
-    struct SharedHolder : public QQmlRefCount
+    struct SharedHolder : public QQmlRefCounted<SharedHolder>
     {
         Q_DISABLE_COPY_MOVE(SharedHolder)
         SharedHolder(QMetaObject *shared) : metaObject(shared) {}
@@ -116,7 +116,8 @@ private:
     mutable QBasicAtomicInteger<quintptr> d = 0;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount
+class Q_QML_PRIVATE_EXPORT QQmlPropertyCache
+    : public QQmlRefCounted<QQmlPropertyCache>
 {
 public:
     using Ptr = QQmlRefPointer<QQmlPropertyCache>;

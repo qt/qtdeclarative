@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE
 class QQmlTypeNameCache;
 class QQmlContextData;
 
-class Q_AUTOTEST_EXPORT QQmlScriptData : public QQmlRefCount
+class Q_AUTOTEST_EXPORT QQmlScriptData : public QQmlRefCounted<QQmlScriptData>
 {
 private:
     friend class QQmlTypeLoader;

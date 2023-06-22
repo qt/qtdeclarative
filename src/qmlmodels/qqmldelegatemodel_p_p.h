@@ -37,7 +37,8 @@ typedef QQmlListCompositor Compositor;
 class QQmlDelegateModelAttachedMetaObject;
 class QQmlAbstractDelegateComponent;
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModelItemMetaType : public QQmlRefCount
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModelItemMetaType
+    : public QQmlRefCounted<QQmlDelegateModelItemMetaType>
 {
 public:
     QQmlDelegateModelItemMetaType(QV4::ExecutionEngine *engine, QQmlDelegateModel *model, const QStringList &groupNames);
@@ -419,7 +420,9 @@ public:
     QList<QQmlPartsModel *> models;
 };
 
-class QQmlDelegateModelAttachedMetaObject : public QAbstractDynamicMetaObject, public QQmlRefCount
+class QQmlDelegateModelAttachedMetaObject
+    : public QAbstractDynamicMetaObject,
+      public QQmlRefCounted<QQmlDelegateModelAttachedMetaObject>
 {
 public:
     QQmlDelegateModelAttachedMetaObject(

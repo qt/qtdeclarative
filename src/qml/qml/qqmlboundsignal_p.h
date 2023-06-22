@@ -24,8 +24,11 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpression : public QQmlJavaScriptExpression, public QQmlRefCount
+class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpression
+    : public QQmlJavaScriptExpression,
+      public QQmlRefCounted<QQmlBoundSignalExpression>
 {
+    friend class QQmlRefCounted<QQmlBoundSignalExpression>;
 public:
     QQmlBoundSignalExpression(
             const QObject *target, int index, const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scope,

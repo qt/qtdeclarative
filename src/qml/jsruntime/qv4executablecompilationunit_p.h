@@ -63,8 +63,9 @@ struct ResolvedTypeReferenceMap: public QHash<int, ResolvedTypeReference*>
     bool addToHash(QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums) const;
 };
 
-class Q_QML_PRIVATE_EXPORT ExecutableCompilationUnit final: public CompiledData::CompilationUnit,
-                                                            public QQmlRefCount
+class Q_QML_PRIVATE_EXPORT ExecutableCompilationUnit final
+    : public CompiledData::CompilationUnit,
+      public QQmlRefCounted<ExecutableCompilationUnit>
 {
     Q_DISABLE_COPY_MOVE(ExecutableCompilationUnit)
 public:

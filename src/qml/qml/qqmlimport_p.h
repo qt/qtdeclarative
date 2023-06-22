@@ -116,7 +116,7 @@ public:
     }
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlImports : public QQmlRefCount
+class Q_QML_PRIVATE_EXPORT QQmlImports : public QQmlRefCounted<QQmlImports>
 {
     Q_DISABLE_COPY_MOVE(QQmlImports)
 public:

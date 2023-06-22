@@ -73,7 +73,7 @@ private:
 };
 
 class VDMAbstractItemModelDataType
-        : public QQmlRefCount
+        : public QQmlRefCounted<VDMAbstractItemModelDataType>
         , public QQmlAdaptorModel::Accessors
         , public QAbstractDynamicMetaObject
 {
