@@ -83,6 +83,7 @@ public:
         bool isSignalHandler = false;
         bool isQPropertyBinding = false;
         bool isProperty = false;
+        bool isFullyTyped = false;
     };
 
     struct State

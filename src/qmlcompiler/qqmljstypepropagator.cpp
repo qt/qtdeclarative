@@ -86,8 +86,15 @@ void QQmlJSTypePropagator::generate_Ret()
     } else if (!m_returnType.isValid() && m_state.accumulatorIn().isValid()
                && !m_typeResolver->registerContains(
                    m_state.accumulatorIn(), m_typeResolver->voidType())) {
-        setError(u"function without type annotation returns %1"_s
+        setError(u"function without return type annotation returns %1"_s
                          .arg(m_state.accumulatorIn().descriptiveName()));
+
+        if (m_function->isFullyTyped) {
+            // Do not complain if the function didn't have a valid annotation in the first place.
+            m_logger->log(u"Function without return type annotation returns %1"_s.arg(
+                                  m_typeResolver->containedTypeName(m_state.accumulatorIn(), true)),
+                          qmlIncompatibleType, getCurrentBindingSourceLocation());
+        }
         return;
     } else if (!canConvertFromTo(m_state.accumulatorIn(), m_returnType)) {
         setError(u"cannot convert from %1 to %2"_s

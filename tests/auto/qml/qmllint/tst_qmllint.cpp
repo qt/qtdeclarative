@@ -1068,6 +1068,12 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("StoreNameMethod")
             << QStringLiteral("storeNameMethod.qml")
             << Result { { Message { QStringLiteral("Cannot assign to method foo") } } };
+
+    QTest::newRow("CoerceToVoid")
+            << QStringLiteral("coercetovoid.qml")
+            << Result { { Message {
+                    QStringLiteral("Function without return type annotation returns double")
+               } } };
 }
 
 void TestQmllint::dirtyQmlCode()
