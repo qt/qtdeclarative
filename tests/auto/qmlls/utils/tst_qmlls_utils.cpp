@@ -1027,4 +1027,98 @@ void tst_qmlls_utils::findDefinitionFromLocation()
     QCOMPARE(definition->location.length, quint32(expectedLength));
 }
 
+void tst_qmlls_utils::resolveExpressionType_data()
+{
+    QTest::addColumn<QString>("filePath");
+    // keep in mind that line and character are starting at 1!
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+    QTest::addColumn<QString>("expectedFile");
+    // startline of the owners definition
+    QTest::addColumn<int>("expectedLine");
+
+    {
+        const QString JSDefinitionsQml = testFile(u"JSDefinitions.qml"_s);
+        const int parentLine = 6;
+        const int childLine = 31;
+
+        QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << parentLine;
+        QTest::addRow("childIddInChild")
+                << JSDefinitionsQml << 37 << 30 << JSDefinitionsQml << childLine;
+        QTest::addRow("parentIdInChild")
+                << JSDefinitionsQml << 37 << 43 << JSDefinitionsQml << parentLine;
+
+        QTest::addRow("propertyI")
+                << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << parentLine;
+        QTest::addRow("qualifiedPropertyI")
+                << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << parentLine;
+        QTest::addRow("propertyIInChild")
+                << JSDefinitionsQml << 37 << 21 << JSDefinitionsQml << childLine;
+        QTest::addRow("qualifiedChildPropertyIInChild")
+                << JSDefinitionsQml << 37 << 35 << JSDefinitionsQml << childLine;
+        QTest::addRow("qualifiedParentPropertyIInChild")
+                << JSDefinitionsQml << 37 << 49 << JSDefinitionsQml << parentLine;
+
+        QTest::addRow("childMethod")
+                << JSDefinitionsQml << 48 << 23 << JSDefinitionsQml << childLine;
+        QTest::addRow("childMethod2")
+                << JSDefinitionsQml << 44 << 20 << JSDefinitionsQml << childLine;
+        QTest::addRow("parentMethod")
+                << JSDefinitionsQml << 14 << 9 << JSDefinitionsQml << parentLine;
+    }
+
+    {
+        const QString JSUsagesQml = testFile(u"JSUsages.qml"_s);
+        const int rootLine = 6;
+        const int nestedComponent2Line = 46;
+        const int nestedComponent3Line = 51;
+        const int nestedComponent4Line = 57;
+        QTest::addRow("propertyAccess:inner.inner")
+                << JSUsagesQml << 68 << 34 << JSUsagesQml << nestedComponent2Line;
+        QTest::addRow("propertyAccess:inner.inner2")
+                << JSUsagesQml << 69 << 34 << JSUsagesQml << nestedComponent2Line;
+        QTest::addRow("propertyAccess:inner.inner.inner")
+                << JSUsagesQml << 69 << 40 << JSUsagesQml << nestedComponent3Line;
+        QTest::addRow("propertyAccess:inner.inner.inner.p2")
+                << JSUsagesQml << 69 << 44 << JSUsagesQml << nestedComponent4Line;
+
+        QTest::addRow("propertyAccess:helloProperty")
+                << JSUsagesQml << 65 << 68 << JSUsagesQml << rootLine;
+        QTest::addRow("propertyAccess:nestedHelloProperty")
+                << JSUsagesQml << 65 << 46 << JSUsagesQml << nestedComponent4Line;
+    }
+}
+
+void tst_qmlls_utils::resolveExpressionType()
+{
+    QFETCH(QString, filePath);
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QString, expectedFile);
+    QFETCH(int, expectedLine);
+
+    // they all start at 1.
+    Q_ASSERT(line > 0);
+    Q_ASSERT(character > 0);
+
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+
+    auto locations = QQmlLSUtils::itemsFromTextLocation(
+            file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
+
+    QCOMPARE(locations.size(), 1);
+
+    QQmlJSScope::ConstPtr definition = QQmlLSUtils::resolveExpressionType(
+            locations.front().domItem, QQmlLSUtilsResolveOptions::JustOwner);
+
+    QVERIFY(definition);
+    QCOMPARE(definition->filePath(), expectedFile);
+    QQmlJS::SourceLocation location = definition->sourceLocation();
+    QCOMPARE((int)location.startLine, expectedLine);
+}
+
 QTEST_MAIN(tst_qmlls_utils)
