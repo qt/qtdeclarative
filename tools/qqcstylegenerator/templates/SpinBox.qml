@@ -13,40 +13,14 @@ T.SpinBox {
                              up.implicitIndicatorHeight, down.implicitIndicatorHeight)
 
     property string __controlState: [
-        hovered && (down.hovered || up.hovered || down.pressed || up.pressed) && "indicator",
-        (down.pressed || up.pressed) && "pressed",
-        hovered && !(down.pressed || up.pressed) && "hovered",
-        visualFocus && "focused",
+        enabled && hovered && (down.hovered || down.pressed) && "down",
+        enabled && hovered && (up.hovered || up.pressed) && "up",
+        enabled && (down.pressed || up.pressed) && "pressed",
+        enabled && hovered && !(down.pressed || up.pressed) && "hovered"
     ].filter(Boolean).join("-") || "normal"
     readonly property var config: ConfigReader.controls.spinbox[__controlState] || {}
-
-    property string __indicatorDownState: [
-        hovered && (down.hovered || down.pressed) && "indicator",
-        down.pressed && "pressed",
-        hovered && !down.pressed && "hovered",
-        visualFocus && "focused",
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var indicatorDownConfig: ConfigReader.controls.spinbox[__indicatorDownState] || {}
-
-    property string __indicatorUpState: [
-        hovered && (up.hovered || up.pressed) && "indicator",
-        up.pressed && "pressed",
-        hovered && !up.pressed && "hovered",
-        visualFocus && "focused",
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var indicatorUpConfig: ConfigReader.controls.spinbox[__indicatorUpState] || {}
-
-    states: [
-        State {
-            when: !control.enabled
-            PropertyChanges {
-                target: control
-                __controlState: "disabled"
-                __indicatorDownState: "disabled"
-                __indicatorUpState: "disabled"
-            }
-        }
-    ]
+    readonly property var downConfig: value == from ? ConfigReader.controls.spinbox["atlimit"] : config
+    readonly property var upConfig: value == to ? ConfigReader.controls.spinbox["atlimit"] : config
 
     readonly property bool mirroredIndicators: control.mirrored !== (config.mirrored || false)
 
@@ -91,20 +65,20 @@ T.SpinBox {
 
     up.indicator: Image {
         x: control.mirroredIndicators
-            ? (config?.leftPadding || 0)
-            : control.width - width - (config?.rightPadding || 0)
-        y: (config?.topPadding || 0)
-            + (control.height - (config ? config.topPadding + config.bottomPadding : 0) - height) / 2
-        source: Qt.resolvedUrl(control.indicatorUpConfig.indicator_up.filePath)
+            ? (control.upConfig?.leftPadding || 0)
+            : control.width - width - (control.upConfig?.rightPadding || 0)
+        y: (control.upConfig?.topPadding || 0)
+            + (control.height - (control.upConfig ? control.upConfig.topPadding + control.upConfig.bottomPadding : 0) - height) / 2
+        source: Qt.resolvedUrl(control.upConfig.indicator_up.filePath)
     }
 
     down.indicator: Image {
         x: control.mirroredIndicators
-            ? control.width - width - (config?.rightPadding || 0)
-            : (config?.leftPadding || 0)
-        y: (config?.topPadding || 0)
-            + (control.height - (config ? config.topPadding + config.bottomPadding : 0) - height) / 2
-        source: Qt.resolvedUrl(control.indicatorDownConfig.indicator_down.filePath)
+            ? control.width - width - (control.downConfig?.rightPadding || 0)
+            : (control.downConfig?.leftPadding || 0)
+        y: (control.downConfig?.topPadding || 0)
+            + (control.height - (control.downConfig ? control.downConfig.topPadding + control.downConfig.bottomPadding : 0) - height) / 2
+        source: Qt.resolvedUrl(control.downConfig.indicator_down.filePath)
     }
 
     background: BorderImage {

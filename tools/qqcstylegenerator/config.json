@@ -140,11 +140,14 @@
             {"atom": "textInput", "figmaPath": "ContentItem, textInput", "export": ["geometry", "text"]}
         ],
         "states": [
-            {"state": "normal", "figmaState": "normal"},
+            {"state": "atlimit", "figmaState": "upDownAtLimit"},
             {"state": "disabled", "figmaState": "disabled"},
+            {"state": "down-hovered", "figmaState": "downHovered"},
+            {"state": "down-pressed", "figmaState": "downPressed"},
             {"state": "hovered", "figmaState": "hovered"},
-            {"state": "indicator-hovered", "figmaState": "iconHovered"},
-            {"state": "indicator-pressed", "figmaState": "iconPressed"}
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "up-hovered", "figmaState": "upHovered"},
+            {"state": "up-pressed", "figmaState": "upPressed"}
         ]
     },
     {
