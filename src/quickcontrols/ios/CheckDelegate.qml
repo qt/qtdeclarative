@@ -20,7 +20,7 @@ T.CheckDelegate {
 
     icon.width: 29
     icon.height: 29
-    icon.color: control.enabled ? control.palette.text : control.palette.mid
+    icon.color: control.palette.text
 
     indicator: Image {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
@@ -50,7 +50,7 @@ T.CheckDelegate {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.enabled ? control.palette.text : control.palette.mid
+        color: control.palette.text
     }
 
     background: Rectangle {

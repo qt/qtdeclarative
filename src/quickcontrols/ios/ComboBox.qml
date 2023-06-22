@@ -65,9 +65,8 @@ T.ComboBox {
         opacity: (control.enabled || control.popupButtonStyle) ? 1 : 0.5
 
         source: IOS.url + (control.popupButtonStyle ? "arrow-updown-indicator" : "arrow-indicator")
-        color: control.popupButtonStyle ? (control.enabled ? (control.down ? control.palette.highlight : control.palette.button)
-                                               : control.palette.mid)
-                            : defaultColor
+        color: control.popupButtonStyle ? (control.down ? control.palette.highlight : control.palette.button)
+                                        : defaultColor
         ImageSelector on source {
             states: [
                 {"light": Qt.styleHints.colorScheme === Qt.Light},
@@ -91,9 +90,8 @@ T.ComboBox {
         validator: control.validator
         selectByMouse: control.selectTextByMouse
 
-        color: control.popupButtonStyle ? (control.enabled ? (control.down ? control.palette.highlight : control.palette.button)
-                                               : control.palette.mid)
-                            : control.palette.text
+        color: control.popupButtonStyle ? (control.down ? control.palette.highlight : control.palette.button)
+                                        : control.palette.text
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
         verticalAlignment: Text.AlignVCenter
