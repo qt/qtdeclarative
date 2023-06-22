@@ -20,9 +20,7 @@ T.DelayButton {
 
     icon.width: 17
     icon.height: 17
-    icon.color: control.flat ? (control.enabled ? (control.down ? control.palette.highlight : control.palette.button)
-                                                : control.palette.mid)
-                             : control.palette.buttonText
+    icon.color: control.down ? control.palette.highlight : control.palette.button
 
     transition: Transition {
         NumberAnimation {

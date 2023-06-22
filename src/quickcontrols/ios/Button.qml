@@ -20,8 +20,7 @@ T.Button {
 
     icon.width: 17
     icon.height: 17
-    icon.color: control.flat ? (control.enabled ? (control.down ? control.palette.highlight : control.palette.button)
-                                                : control.palette.mid)
+    icon.color: control.flat ? (control.down ? control.palette.highlight : control.palette.button)
                              : control.palette.buttonText
 
     contentItem: IconLabel {
@@ -32,8 +31,7 @@ T.Button {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.flat ? (control.enabled ? (control.down ? control.palette.highlight : control.palette.button)
-                                               : control.palette.mid)
+        color: control.flat ? (control.down ? control.palette.highlight : control.palette.button)
                             : control.palette.buttonText
     }
 
