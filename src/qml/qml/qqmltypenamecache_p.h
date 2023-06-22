@@ -45,7 +45,7 @@ struct QQmlImportRef {
 
 class QQmlType;
 class QQmlEngine;
-class Q_QML_PRIVATE_EXPORT QQmlTypeNameCache : public QQmlRefCount
+class Q_QML_PRIVATE_EXPORT QQmlTypeNameCache : public QQmlRefCounted<QQmlTypeNameCache>
 {
 public:
     QQmlTypeNameCache(const QQmlRefPointer<QQmlImports> &imports) : m_imports(imports) {}

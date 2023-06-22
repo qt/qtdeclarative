@@ -116,8 +116,9 @@ public:
     QList<NodeImpl *> attributes;
 };
 
-class DocumentImpl : public QQmlRefCount, public NodeImpl
+class DocumentImpl : public QQmlRefCounted<DocumentImpl>, public NodeImpl
 {
+    using Base1 = QQmlRefCounted<DocumentImpl>;
 public:
     DocumentImpl() : root(nullptr) { type = Document; }
     ~DocumentImpl() override {
@@ -130,8 +131,8 @@ public:
 
     NodeImpl *root;
 
-    void addref() { QQmlRefCount::addref(); }
-    void release() { QQmlRefCount::release(); }
+    void addref() { Base1::addref(); }
+    void release() { Base1::release(); }
 };
 
 namespace Heap {

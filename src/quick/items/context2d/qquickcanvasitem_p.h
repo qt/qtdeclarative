@@ -33,7 +33,7 @@ class QQuickCanvasItemPrivate;
 class QQuickPixmap;
 class QQmlV4Function;
 
-class QQuickCanvasPixmap : public QQmlRefCount
+class QQuickCanvasPixmap : public QQmlRefCounted<QQuickCanvasPixmap>
 {
 public:
     QQuickCanvasPixmap(const QImage& image);

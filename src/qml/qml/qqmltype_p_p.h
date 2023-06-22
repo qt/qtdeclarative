@@ -26,7 +26,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlTypePrivate : public QQmlRefCount
+class QQmlTypePrivate : public QQmlRefCounted<QQmlTypePrivate>
 {
     Q_DISABLE_COPY_MOVE(QQmlTypePrivate)
 public:

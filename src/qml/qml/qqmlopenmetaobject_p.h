@@ -28,7 +28,8 @@ QT_BEGIN_NAMESPACE
 class QQmlEngine;
 class QMetaPropertyBuilder;
 class QQmlOpenMetaObjectTypePrivate;
-class Q_QML_PRIVATE_EXPORT QQmlOpenMetaObjectType : public QQmlRefCount
+class Q_QML_PRIVATE_EXPORT QQmlOpenMetaObjectType
+    : public QQmlRefCounted<QQmlOpenMetaObjectType>
 {
 public:
     QQmlOpenMetaObjectType(const QMetaObject *base);
