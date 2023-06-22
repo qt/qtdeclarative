@@ -45,17 +45,17 @@ template <> struct QFlagPointerAlignment<void>
 template<typename T, typename T2>
 class QBiPointer {
 public:
-    constexpr QBiPointer() noexcept = default;
+    Q_NODISCARD_CTOR constexpr QBiPointer() noexcept = default;
     ~QBiPointer() noexcept = default;
-    QBiPointer(const QBiPointer &o) noexcept = default;
-    QBiPointer(QBiPointer &&o) noexcept = default;
+    Q_NODISCARD_CTOR QBiPointer(const QBiPointer &o) noexcept = default;
+    Q_NODISCARD_CTOR QBiPointer(QBiPointer &&o) noexcept = default;
     QBiPointer<T, T2> &operator=(const QBiPointer<T, T2> &o) noexcept = default;
     QBiPointer<T, T2> &operator=(QBiPointer<T, T2> &&o) noexcept = default;
 
     void swap(QBiPointer &other) noexcept { std::swap(ptr_value, other.ptr_value); }
 
-    inline QBiPointer(T *);
-    inline QBiPointer(T2 *);
+    Q_NODISCARD_CTOR inline QBiPointer(T *);
+    Q_NODISCARD_CTOR inline QBiPointer(T2 *);
 
     inline bool isNull() const;
     inline bool isT1() const;
