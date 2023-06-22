@@ -19,8 +19,7 @@ QT_BEGIN_NAMESPACE
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
     : regType(type), iid(nullptr), revision(QTypeRevision::zero()),
     containsRevisionedAttributes(false), baseMetaObject(nullptr),
-    index(-1), isSetup(false), isEnumFromCacheSetup(false), isEnumFromBaseSetup(false),
-    haveSuperType(false)
+    index(-1), isSetup(false), isEnumFromCacheSetup(false), isEnumFromBaseSetup(false)
 {
     switch (type) {
     case QQmlType::CppType:

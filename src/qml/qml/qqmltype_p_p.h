@@ -131,14 +131,12 @@ public:
     QTypeRevision version;
     QTypeRevision revision;
     mutable bool containsRevisionedAttributes;
-    mutable QQmlType superType;
     const QMetaObject *baseMetaObject;
 
     int index;
     mutable QAtomicInteger<bool> isSetup;
     mutable QAtomicInteger<bool> isEnumFromCacheSetup;
     mutable QAtomicInteger<bool> isEnumFromBaseSetup;
-    mutable bool haveSuperType;
     mutable QList<QQmlProxyMetaObject::ProxyData> metaObjects;
     mutable QStringHash<int> enums;
     mutable QStringHash<int> scopedEnumIndex; // maps from enum name to index in scopedEnums
