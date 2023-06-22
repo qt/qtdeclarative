@@ -32,9 +32,7 @@ T.Slider {
         x: Math.round(control.leftPadding + (control.horizontal ? control.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2))
         y: Math.round(control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.visualPosition * (control.availableHeight - height)))
 
-        source: control.config.handle?.export === "image"
-                    ? Qt.resolvedUrl(control.config.handle.filePath)
-                    : ""
+        source: Qt.resolvedUrl(control.config.handle.filePath)
         border {
             top: control.config.handle?.topOffset || 0
             bottom: control.config.handle?.bottomOffset || 0
@@ -55,9 +53,7 @@ T.Slider {
             height: control.horizontal ? background.height : background.width
             rotation: control.horizontal ? 0 : -90
             scale: control.horizontal && control.mirrored ? -1 : 1
-            source: control.config.background?.export === "image"
-                ? Qt.resolvedUrl(control.config.background.filePath)
-                : ""
+            source: Qt.resolvedUrl(control.config.background.filePath)
             border {
                 top: control.config.background?.topOffset || 0
                 bottom: control.config.background?.bottomOffset || 0
@@ -71,9 +67,7 @@ T.Slider {
                 y: (control.horizontal ? control.topPadding : control.rightPadding) + ((control.horizontal ? control.availableHeight : control.availableWidth) - height) / 2
                 width: control.horizontal ? control.availableWidth : control.availableHeight
                 height: implicitHeight
-                source: control.config.groove?.export === "image"
-                    ? Qt.resolvedUrl(control.config.groove.filePath)
-                    : ""
+                source: Qt.resolvedUrl(control.config.groove.filePath)
                 border {
                     top: control.config.groove?.topOffset || 0
                     bottom: control.config.groove?.bottomOffset || 0
@@ -85,9 +79,7 @@ T.Slider {
                     parent: control.background._background.groove
                     width: control.position * parent.width
                     height: parent.height
-                    source: control.config.track?.export === "image"
-                        ? Qt.resolvedUrl(control.config.background.filePath)
-                        : ""
+                    source: Qt.resolvedUrl(control.config.background.filePath)
                     border {
                         top: control.config.track?.topOffset || 0
                         bottom: control.config.track?.bottomOffset || 0

@@ -476,6 +476,7 @@ private:
         const QString imageName = getString("name", outputConfig);
 
         if (!atom.value("qt_visibleRecursive").toBool()) {
+            outputConfig.insert("filePath", "");
             debug("skipping hidden image: " + imageName);
             return;
         }

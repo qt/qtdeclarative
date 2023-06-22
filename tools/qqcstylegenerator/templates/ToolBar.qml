@@ -29,10 +29,7 @@ T.ToolBar {
     readonly property var config: ConfigReader.controls.toolbar[currentState] || {}
 
     background: BorderImage {
-        source: control.config.background?.export === "image"
-                ? Qt.resolvedUrl("images/" + control.config.background.filePath)
-                : ""
-
+        source: Qt.resolvedUrl(control.config.background.filePath)
         border {
             top: control.config.background?.topOffset || 0
             bottom: control.config.background?.bottomOffset || 0
