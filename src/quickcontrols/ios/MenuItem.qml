@@ -23,7 +23,7 @@ T.MenuItem {
 
     icon.width: 19
     icon.height: 19
-    icon.color: control.palette.windowText
+    icon.color: control.palette.text
 
     readonly property bool isSingleItem: control.menu && control.menu.count === 1
     readonly property bool isFirstItem: !isSingleItem && control.menu && control.menu.itemAt(0) === control ? true : false
@@ -43,7 +43,7 @@ T.MenuItem {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.palette.windowText
+        color: control.palette.text
     }
 
     arrow: ColorImage {
@@ -56,7 +56,7 @@ T.MenuItem {
         visible: control.subMenu
         opacity: control.enabled ? 1 : 0.5
         mirror: control.mirrored
-        color: control.palette.windowText
+        color: control.palette.text
         source: control.subMenu ? IOS.url + "arrow-indicator-light.png" : ""
 
         Behavior on rotation { RotationAnimation { duration: 100 } }
@@ -69,7 +69,7 @@ T.MenuItem {
 
         visible: control.checked
         source: control.checked ? IOS.url + "radiodelegate-indicator-light.png" : ""
-        color: control.palette.windowText
+        color: control.palette.text
     }
 
     background: Item {

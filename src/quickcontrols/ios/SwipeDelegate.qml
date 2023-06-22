@@ -21,7 +21,7 @@ T.SwipeDelegate {
 
     icon.width: 29
     icon.height: 29
-    icon.color: control.enabled ? control.palette.text : control.palette.mid
+    icon.color: control.palette.text
 
     swipe.transition: Transition { SmoothedAnimation { velocity: 3; easing.type: Easing.InOutCubic } }
 
@@ -34,7 +34,7 @@ T.SwipeDelegate {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.enabled ? control.palette.text : control.palette.mid
+        color: control.palette.text
     }
 
     background: Rectangle {

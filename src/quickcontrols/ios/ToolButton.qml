@@ -18,8 +18,7 @@ T.ToolButton {
 
     icon.width: 25
     icon.height: 25
-    icon.color: control.enabled ? (control.down ? control.palette.highlight : control.palette.button)
-                                : control.palette.mid
+    icon.color: control.down ? control.palette.highlight : control.palette.button
 
     contentItem: IconLabel {
         spacing: control.spacing
@@ -29,8 +28,7 @@ T.ToolButton {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.enabled ? (control.down ? control.palette.highlight : control.palette.button)
-                               : control.palette.mid
+        color: control.down ? control.palette.highlight : control.palette.button
     }
 
     background: Item {
