@@ -8,7 +8,7 @@
         "copy": ":/Button.qml",
         "component set": "ButtonTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "background"},
+            {"atom": "background", "figmaPath": "ButtonBackground, background"},
             {"atom": "contentItem", "figmaPath": "contentItem", "export": "layout"},
             {"atom": "label", "figmaPath": "contentItem, label", "export": "text"}
         ],
