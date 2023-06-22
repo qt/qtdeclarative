@@ -53,7 +53,7 @@ public:
 #endif
 
 private:
-    friend class QQuickStackView;
+    friend class QQuickStackViewPrivate;
     friend class QQuickStackElement;
 
     QQuickItem *mItem = nullptr;
@@ -158,6 +158,15 @@ public:
     Q_REVISION(6, 7) Q_INVOKABLE QQuickItem *popToItem(QQuickItem *item, Operation operation = PopTransition);
     Q_REVISION(6, 7) Q_INVOKABLE QQuickItem *popToIndex(int index, Operation operation = PopTransition);
     Q_REVISION(6, 7) Q_INVOKABLE QQuickItem *popCurrentItem(Operation operation = PopTransition);
+
+    Q_REVISION(6, 7) Q_INVOKABLE QQuickItem *replaceCurrentItem(const QList<QQuickStackViewArg> &args,
+        Operation operation = ReplaceTransition);
+    Q_REVISION(6, 7) Q_INVOKABLE QQuickItem *replaceCurrentItem(QQuickItem *item,
+        const QVariantMap &properties = {}, Operation operation = ReplaceTransition);
+    Q_REVISION(6, 7) Q_INVOKABLE QQuickItem *replaceCurrentItem(QQmlComponent *component,
+        const QVariantMap &properties = {}, Operation operation = ReplaceTransition);
+    Q_REVISION(6, 7) Q_INVOKABLE QQuickItem *replaceCurrentItem(const QUrl &url,
+        const QVariantMap &properties = {}, Operation operation = ReplaceTransition);
 
     // 2.3 (Qt 5.10)
     bool isEmpty() const;

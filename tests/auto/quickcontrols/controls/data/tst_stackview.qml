@@ -720,6 +720,51 @@ TestCase {
         compare(control.currentItem, item8)
     }
 
+    function test_replaceNew() {
+        let control = createTemporaryObject(stackViewComponent, testCase)
+        verify(control)
+
+        // replace(item) - replace currentItem
+        let item1 = itemComponent.createObject(control, {objectName:"1"})
+        compare(control.replaceCurrentItem(item1, {}, StackView.Immediate), item1)
+        compare(control.depth, 1)
+        compare(control.currentItem, item1)
+
+        // replace([item]) - replace currentItem
+        let item2 = itemComponent.createObject(control, {objectName:"2"})
+        compare(control.replaceCurrentItem(item2, {}, StackView.Immediate), item2)
+        compare(control.depth, 1)
+        compare(control.currentItem, item2)
+
+        // replace(item, {properties}) - replace currentItem
+        let item3 = itemComponent.createObject(control)
+        compare(control.replaceCurrentItem(item3, {objectName:"3"}, StackView.Immediate), item3)
+        compare(item3.objectName, "3")
+        compare(control.depth, 1)
+        compare(control.currentItem, item3)
+
+        // replace([item, {properties}]) - replace currentItem
+        let item4 = itemComponent.createObject(control)
+        compare(control.replaceCurrentItem([item4, {objectName:"4"}], StackView.Immediate), item4)
+        compare(item4.objectName, "4")
+        compare(control.depth, 1)
+        compare(control.currentItem, item4)
+
+        // replace(component, {properties}) - replace currentItem
+        let item5 = control.replaceCurrentItem(itemComponent, {objectName:"5"}, StackView.Immediate)
+        compare(control.currentItem, item5)
+        compare(item5.objectName, "5")
+        compare(control.depth, 1)
+        compare(control.currentItem, item5)
+
+        // replace([component, {properties}]) - replace currentItem
+        let item6 = control.replaceCurrentItem([itemComponent, {objectName:"6"}], StackView.Immediate)
+        compare(control.currentItem, item6)
+        compare(item6.objectName, "6")
+        compare(control.depth, 1)
+        compare(control.currentItem, item6)
+    }
+
     function test_clear() {
         var control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)

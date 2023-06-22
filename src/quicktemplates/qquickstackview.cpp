@@ -843,6 +843,9 @@ void QQuickStackView::pop(QQmlV4Function *args)
     }
     \endcode
 
+    \note If you are \l {The QML script compiler}{compiling QML}, use the
+    strongly-typed \l replaceCurrentItem functions instead.
+
     \sa push(), {Replacing Items}
 */
 void QQuickStackView::replace(QQmlV4Function *args)
@@ -934,11 +937,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
     \l Component or \l [QML] url, and the instance will be destroyed when it is
     popped off the stack. See \l {Item Ownership} for more information.
 
-    The optional properties arguments come after each element, and specify a
-    map of initial property values. For dynamically created items, these values
-    are applied before the creation is finalized. This is more efficient than
-    setting property values after creation, particularly where large sets of
-    property values are defined.
+    \include qquickstackview.qdocinc optional-properties-after-each-item
 
     \code
     stackView.push([item, rectComponent, Qt.resolvedUrl("MyItem.qml")])
@@ -987,41 +986,7 @@ QQuickItem *QQuickStackView::pushItems(QList<QQuickStackViewArg> args, Operation
     QScopedValueRollback<bool> modifyingElements(d->modifyingElements, true);
     QScopedValueRollback<QString> operationNameRollback(d->operation, operationName);
 
-    QList<QQuickStackElement *> stackElements;
-    for (int i = 0; i < args.size(); ++i) {
-        const QQuickStackViewArg &arg = args.at(i);
-        QVariantMap properties;
-        // Look ahead at the next arg in case it contains properties for this
-        // Item/Component/URL.
-        if (i < args.size() - 1) {
-            const QQuickStackViewArg &nextArg = args.at(i + 1);
-            // If mProperties isn't empty, the user passed properties.
-            // If it is empty, but mItem, mComponent and mUrl also are,
-            // then they passed an empty property map.
-            if (!nextArg.mProperties.isEmpty()
-                    || (!nextArg.mItem && !nextArg.mComponent && !nextArg.mUrl.isValid())) {
-                properties = nextArg.mProperties;
-                ++i;
-            }
-        }
-
-        // Remove any items that are already in the stack, as they can't be in two places at once.
-        if (d->findElement(arg.mItem))
-            continue;
-
-        // We look ahead one index for each Item/Component/URL, so if this arg is
-        // a property map, the user has passed two or more in a row.
-        if (!arg.mProperties.isEmpty()) {
-            qmlWarning(this) << "Properties must come after an Item, Component or URL";
-            return nullptr;
-        }
-
-        QQuickStackElement *element = QQuickStackElement::fromStackViewArg(this, arg);
-        QV4::ExecutionEngine *v4Engine = qmlEngine(this)->handle();
-        element->properties.set(v4Engine, v4Engine->fromVariant(properties));
-        element->qmlCallingContext.set(v4Engine, v4Engine->qmlContext());
-        stackElements.append(element);
-    }
+    const QList<QQuickStackElement *> stackElements = d->parseElements(args);
 
 #if QT_CONFIG(quick_viewtransitions)
     QQuickStackElement *exit = nullptr;
@@ -1206,6 +1171,171 @@ QQuickItem *QQuickStackView::popCurrentItem(Operation operation)
         return lastItemRemoved;
     }
     return d->popToItem(d->currentItem, operation, QQuickStackViewPrivate::CurrentItemPolicy::Pop);
+}
+
+/*!
+    \qmlmethod Item QtQuick.Controls::StackView::replaceCurrentItem(items, operation)
+    \keyword stackview-replacecurrentitem-items-overload
+    \since 6.7
+
+    Pops \l currentItem from the stack and pushes \a items. If the optional
+    \a operation is specified, the relevant transition will be used. Each item
+    can be followed by an optional set of properties that will be applied to
+    that item. Returns the item that became current.
+
+    \include qquickstackview.qdocinc optional-properties-after-each-item
+
+    \include qquickstackview.qdocinc pop-ownership
+
+    \include qquickstackview.qdocinc operation-values
+
+    If no operation is provided, \c ReplaceTransition will be used.
+
+    \code
+    stackView.replaceCurrentItem([item, rectComponent, Qt.resolvedUrl("MyItem.qml")])
+
+    // With properties:
+    stackView.replaceCurrentItem([
+        item, { "color": "red" },
+        rectComponent, { "color": "green" },
+        Qt.resolvedUrl("MyItem.qml"), { "color": "blue" }
+    ])
+    \endcode
+
+    To push a single item, use the relevant overload:
+    \list
+    \li \l {stackview-replacecurrentitem-item-overload}
+        {replaceCurrentItem}(item, properties, operation)
+    \li \l {stackview-replacecurrentitem-component-overload}
+        {replaceCurrentItem}(component, properties, operation)
+    \li \l {stackview-replacecurrentitem-url-overload}
+        {replaceCurrentItem}(url, properties, operation)
+    \endlist
+
+    \sa push(), {Replacing Items}
+*/
+QQuickItem *QQuickStackView::replaceCurrentItem(const QList<QQuickStackViewArg> &args,
+    Operation operation)
+{
+    Q_D(QQuickStackView);
+    const QString operationName = QStringLiteral("replace");
+    if (d->modifyingElements) {
+        d->warnOfInterruption(operationName);
+        return nullptr;
+    }
+
+    QScopedValueRollback<bool> modifyingElements(d->modifyingElements, true);
+    QScopedValueRollback<QString> operationNameRollback(d->operation, operationName);
+
+    QQuickStackElement *currentElement = !d->elements.isEmpty() ? d->elements.top() : nullptr;
+
+    const QList<QQuickStackElement *> stackElements = d->parseElements(args);
+
+    int oldDepth = d->elements.size();
+    QQuickStackElement* exit = nullptr;
+    if (!d->elements.isEmpty())
+        exit = d->elements.pop();
+
+    const bool successfullyReplaced = exit != currentElement
+        ? d->replaceElements(currentElement, stackElements)
+        : d->pushElements(stackElements);
+    if (successfullyReplaced) {
+        d->depthChange(d->elements.size(), oldDepth);
+        if (exit) {
+            exit->removal = true;
+            d->removing.insert(exit);
+        }
+        QQuickStackElement *enter = d->elements.top();
+#if QT_CONFIG(quick_viewtransitions)
+        d->startTransition(QQuickStackTransition::replaceExit(operation, exit, this),
+            QQuickStackTransition::replaceEnter(operation, enter, this),
+            operation == Immediate);
+#endif
+        d->setCurrentItem(enter);
+    }
+
+    return d->currentItem;
+}
+
+/*!
+    \qmlmethod Item QtQuick.Controls::StackView::replaceCurrentItem(item, properties, operation)
+    \overload replaceCurrentItem()
+    \keyword stackview-replacecurrentitem-item-overload
+    \since 6.7
+
+    \include qquickstackview.qdocinc {replaceCurrentItem} {item}
+
+    \include qquickstackview.qdocinc pop-ownership
+
+    \include qquickstackview.qdocinc operation-values
+
+    If no operation is provided, \c ReplaceTransition will be used.
+
+    To push several items onto the stack, use
+    \l {stackview-replacecurrentitem-items-overload}
+    {replaceCurrentItem}(items, operation).
+
+    \sa {Replacing Items}
+*/
+QQuickItem *QQuickStackView::replaceCurrentItem(QQuickItem *item, const QVariantMap &properties,
+    Operation operation)
+{
+    const QList<QQuickStackViewArg> args = { QQuickStackViewArg(item), QQuickStackViewArg(properties) };
+    return replaceCurrentItem(args, operation);
+}
+
+/*!
+    \qmlmethod Item QtQuick.Controls::StackView::replaceCurrentItem(component, properties, operation)
+    \overload replaceCurrentItem()
+    \keyword stackview-replacecurrentitem-component-overload
+    \since 6.7
+
+    \include qquickstackview.qdocinc {replaceCurrentItem} {component}
+
+    \include qquickstackview.qdocinc pop-ownership
+
+    \include qquickstackview.qdocinc operation-values
+
+    If no operation is provided, \c ReplaceTransition will be used.
+
+    To push several items onto the stack, use
+    \l {stackview-replacecurrentitem-items-overload}
+    {replaceCurrentItem}(items, operation).
+
+    \sa {Replacing Items}
+*/
+QQuickItem *QQuickStackView::replaceCurrentItem(QQmlComponent *component, const QVariantMap &properties,
+    Operation operation)
+{
+    const QList<QQuickStackViewArg> args = { QQuickStackViewArg(component), QQuickStackViewArg(properties) };
+    return replaceCurrentItem(args, operation);
+}
+
+/*!
+    \qmlmethod Item QtQuick.Controls::StackView::replaceCurrentItem(url, properties, operation)
+    \keyword stackview-replacecurrentitem-url-overload
+    \overload replaceCurrentItem()
+    \since 6.7
+
+    \include qquickstackview.qdocinc {replaceCurrentItem} {url}
+
+    \include qquickstackview.qdocinc pop-ownership
+
+    \include qquickstackview.qdocinc operation-values
+
+    If no operation is provided, \c ReplaceTransition will be used.
+
+    To push several items onto the stack, use
+    \l {stackview-replacecurrentitem-items-overload}
+    {replaceCurrentItem}(items, operation).
+
+    \sa {Replacing Items}
+*/
+QQuickItem *QQuickStackView::replaceCurrentItem(const QUrl &url, const QVariantMap &properties,
+    Operation operation)
+{
+    const QList<QQuickStackViewArg> args = { QQuickStackViewArg(url), QQuickStackViewArg(properties) };
+    return replaceCurrentItem(args, operation);
 }
 
 /*!

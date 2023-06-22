@@ -109,6 +109,47 @@ QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(int from, QQml
     return elements;
 }
 
+QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(const QList<QQuickStackViewArg> &args)
+{
+    Q_Q(QQuickStackView);
+    QList<QQuickStackElement *> stackElements;
+    for (int i = 0; i < args.size(); ++i) {
+        const QQuickStackViewArg &arg = args.at(i);
+        QVariantMap properties;
+        // Look ahead at the next arg in case it contains properties for this
+        // Item/Component/URL.
+        if (i < args.size() - 1) {
+            const QQuickStackViewArg &nextArg = args.at(i + 1);
+            // If mProperties isn't empty, the user passed properties.
+            // If it is empty, but mItem, mComponent and mUrl also are,
+            // then they passed an empty property map.
+            if (!nextArg.mProperties.isEmpty()
+                    || (!nextArg.mItem && !nextArg.mComponent && !nextArg.mUrl.isValid())) {
+                properties = nextArg.mProperties;
+                ++i;
+            }
+        }
+
+        // Remove any items that are already in the stack, as they can't be in two places at once.
+        if (findElement(arg.mItem))
+            continue;
+
+        // We look ahead one index for each Item/Component/URL, so if this arg is
+        // a property map, the user has passed two or more in a row.
+        if (!arg.mProperties.isEmpty()) {
+            qmlWarning(q) << "Properties must come after an Item, Component or URL";
+            return {};
+        }
+
+        QQuickStackElement *element = QQuickStackElement::fromStackViewArg(q, arg);
+        QV4::ExecutionEngine *v4Engine = qmlEngine(q)->handle();
+        element->properties.set(v4Engine, v4Engine->fromVariant(properties));
+        element->qmlCallingContext.set(v4Engine, v4Engine->qmlContext());
+        stackElements.append(element);
+    }
+    return stackElements;
+}
+
 QQuickStackElement *QQuickStackViewPrivate::findElement(QQuickItem *item) const
 {
     if (item) {
