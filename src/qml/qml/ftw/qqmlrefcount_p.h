@@ -46,10 +46,10 @@ public:
         AddRef,
         Adopt
     };
-    inline QQmlRefPointer();
-    inline QQmlRefPointer(T *, Mode m = AddRef);
-    inline QQmlRefPointer(const QQmlRefPointer<T> &);
-    inline QQmlRefPointer(QQmlRefPointer<T> &&);
+    Q_NODISCARD_CTOR inline QQmlRefPointer();
+    Q_NODISCARD_CTOR inline QQmlRefPointer(T *, Mode m = AddRef);
+    Q_NODISCARD_CTOR inline QQmlRefPointer(const QQmlRefPointer &);
+    Q_NODISCARD_CTOR inline QQmlRefPointer(QQmlRefPointer &&);
     inline ~QQmlRefPointer();
 
     void swap(QQmlRefPointer &other) noexcept { qt_ptr_swap(o, other.o); }
