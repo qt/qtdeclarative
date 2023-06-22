@@ -924,12 +924,45 @@ bool qmlobject_can_cpp_cast(QObject *object, const QMetaObject *mo)
     return object->metaObject()->inherits(mo);
 }
 
-bool qmlobject_can_qml_cast(QObject *object, const QMetaObject *mo)
+bool qmlobject_can_qml_cast(QObject *object, const QQmlType &type)
 {
-    Q_ASSERT(mo);
-    if (const QQmlData *ddata = ddata_for_cast(object))
-        return ddata->propertyCache->metaObject()->inherits(mo);
-    return object->metaObject()->inherits(mo);
+    Q_ASSERT(type.isValid());
+
+    // A non-composite type will always have a metaobject.
+    const QMetaObject *typeMetaObject = type.metaObject();
+    const QQmlPropertyCache::ConstPtr typePropertyCache = typeMetaObject
+            ? QQmlPropertyCache::ConstPtr()
+            : QQmlMetaType::findPropertyCacheInCompositeTypes(type.typeId());
+
+    if (const QQmlData *ddata = ddata_for_cast(object)) {
+        for (const QQmlPropertyCache *propertyCache = ddata->propertyCache.data(); propertyCache;
+             propertyCache = propertyCache->parent().data()) {
+
+            if (typeMetaObject) {
+                // Prefer the metaobject inheritance mechanism, since it is more accurate.
+                //
+                // Assume the object can be casted to the type. Then, if we have a type metaobject,
+                // the object's property cache inheritance has to contain it. Otherwise we would
+                // end up with diverging metaobject hierarchies if we created the object's
+                // metaobject. This would be a disaster.
+                if (const QMetaObject *objectMetaObject = propertyCache->metaObject())
+                    return objectMetaObject->inherits(typeMetaObject);
+            } else {
+                // This is a best effort attempt. There are a number of ways for the
+                // property caches to be unrelated but the types still convertible.
+                // Multiple property caches can hold the same metaobject, for example for
+                // versions of non-composite types.
+                if (propertyCache == typePropertyCache.data())
+                    return true;
+            }
+        }
+    }
+
+    // If nothing else works, we have to create the metaobjects.
+
+    return object->metaObject()->inherits(typeMetaObject
+            ? typeMetaObject
+            : (typePropertyCache ? typePropertyCache->createMetaObject() : nullptr));
 }
 
 QT_END_NAMESPACE

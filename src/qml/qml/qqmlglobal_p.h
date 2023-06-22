@@ -124,7 +124,7 @@ do { \
 } while (0)
 
 Q_QML_PRIVATE_EXPORT bool qmlobject_can_cpp_cast(QObject *object, const QMetaObject *mo);
-Q_QML_PRIVATE_EXPORT bool qmlobject_can_qml_cast(QObject *object, const QMetaObject *mo);
+Q_QML_PRIVATE_EXPORT bool qmlobject_can_qml_cast(QObject *object, const QQmlType &type);
 
 /*!
     This method is identical to qobject_cast<T>() except that it does not require lazy
