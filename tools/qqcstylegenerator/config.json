@@ -245,7 +245,7 @@
     {
         "name": "ToolBar",
         "copy": ":/ToolBar.qml",
-        "component set": "ToolBarTemplate",
+        "component set": "ToolBarTemplate${Theme}",
         "contents": ["toolButton1", "toolButton2"],
         "atoms": [
             {"atom": "background", "figmaPath": "ToolBarBackground, background"},
@@ -263,7 +263,7 @@
     {
         "name": "ToolButton",
         "copy": ":/ToolButton.qml",
-        "component set": "ToolButtonTemplate",
+        "component set": "ToolButtonTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ToolButtonBackground, background"},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
