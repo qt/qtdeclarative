@@ -69,9 +69,7 @@ public:
     }
 
     VDMObjectDelegateDataType(const VDMObjectDelegateDataType &type)
-        : QQmlRefCount()
-        , QQmlAdaptorModel::Accessors()
-        , propertyOffset(type.propertyOffset)
+        : propertyOffset(type.propertyOffset)
         , signalOffset(type.signalOffset)
         , shared(false)
         , builder(type.metaObject.data(), QMetaObjectBuilder::Properties

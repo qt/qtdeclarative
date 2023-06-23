@@ -93,9 +93,7 @@ class VDMListDelegateDataType
 {
 public:
     VDMListDelegateDataType(QQmlAdaptorModel *model)
-        : QQmlRefCount()
-        , QQmlAdaptorModel::Accessors()
-        , model(model)
+        : model(model)
     {
         QQmlAdaptorModelEngineData::setModelDataType<QQmlDMListAccessorData>(&builder, this);
         metaObject.reset(builder.toMetaObject());
