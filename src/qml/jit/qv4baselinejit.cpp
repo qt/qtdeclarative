@@ -173,6 +173,7 @@ void BaselineJIT::generate_LoadName(int name)
 
 void BaselineJIT::generate_LoadGlobalLookup(int index)
 {
+    STORE_IP();
     as->prepareCallWithArgCount(3);
     as->passInt32AsArg(index, 2);
     as->passFunctionAsArg(1);
@@ -182,6 +183,7 @@ void BaselineJIT::generate_LoadGlobalLookup(int index)
 
 void BaselineJIT::generate_LoadQmlContextPropertyLookup(int index)
 {
+    STORE_IP();
     as->prepareCallWithArgCount(2);
     as->passInt32AsArg(index, 1);
     as->passEngineAsArg(0);

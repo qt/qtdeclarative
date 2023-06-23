@@ -418,6 +418,7 @@ private slots:
     void retainThis();
 
     void variantObjectList();
+    void jitExceptions();
 
 private:
     QQmlEngine engine;
@@ -8058,6 +8059,21 @@ void tst_qqmllanguage::variantObjectList()
     QCOMPARE(party->guest(0)->objectName(), "Leo Hodges");
     QCOMPARE(party->guest(1)->objectName(), "Jack Smith");
     QCOMPARE(party->guest(2)->objectName(), "Anne Brown");
+}
+
+void tst_qqmllanguage::jitExceptions()
+{
+    QQmlEngine e;
+    const QUrl url = testFileUrl("jitExceptions.qml");
+    QQmlComponent c(&e, testFileUrl("jitExceptions.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url.toString() + u":5: ReferenceError: control is not defined"_s));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
 }
 
 QTEST_MAIN(tst_qqmllanguage)
