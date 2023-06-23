@@ -4,12 +4,14 @@
 #include "visualtestutils_p.h"
 
 #include <QtCore/QCoreApplication>
+#include <QtCore/private/qvariantanimation_p.h>
 #include <QtCore/QDebug>
 #include <QtQuick/QQuickItem>
 #if QT_CONFIG(quick_itemview)
 #include <QtQuick/private/qquickitemview_p.h>
 #endif
 #include <QtQuickTest/QtQuickTest>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,6 +61,55 @@ void QQuickVisualTestUtils::centerOnScreen(QQuickWindow *window)
     const QPoint offset = QPoint(window->width() / 2, window->height() / 2);
     window->setFramePosition(screenGeometry.center() - offset);
 }
+
+QPoint QQuickVisualTestUtils::lerpPoints(const QPoint &point1, const QPoint &point2, qreal t)
+{
+    return QPoint(_q_interpolate(point1.x(), point2.x(), t), _q_interpolate(point1.y(), point2.y(), t));
+};
+
+/*!
+    \internal
+
+    Convenience class to linearly interpolate between two pointer move points.
+
+    \code
+    PointLerper pointLerper(window);
+    // Lerps from {0, 0} to {15, 15}.
+    pointLerper.move(15, 15);
+    QVERIFY(parentButton->isHovered());
+
+    // Lerps from {15, 15} to {25, 25}.
+    pointLerper.move(25, 25);
+    QVERIFY(childButton->isHovered());
+    \endcode
+*/
+QQuickVisualTestUtils::PointLerper::PointLerper(QQuickWindow *window, const QPointingDevice *pointingDevice)
+    : mWindow(window)
+    , mPointingDevice(pointingDevice)
+{
+}
+
+/*!
+    \internal
+
+    Moves from the last pos (or {0, 0} if there have been no calls
+    to this function yet) to \a pos using linear interpolation
+    over 10 (default value) steps with 1 ms (default value) delays
+    between each step.
+*/
+void QQuickVisualTestUtils::PointLerper::move(const QPoint &pos, int steps, int delayInMilliseconds)
+{
+    forEachStep(steps, [&](qreal progress) {
+        QQuickTest::pointerMove(mPointingDevice, mWindow, 0, lerpPoints(mFrom, pos, progress));
+        QTest::qWait(delayInMilliseconds);
+    });
+    mFrom = pos;
+};
+
+void QQuickVisualTestUtils::PointLerper::move(int x, int y, int steps, int delayInMilliseconds)
+{
+    move(QPoint(x, y), steps, delayInMilliseconds);
+};
 
 bool QQuickVisualTestUtils::delegateVisible(QQuickItem *item)
 {
