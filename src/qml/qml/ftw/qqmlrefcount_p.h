@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 template <typename T>
 class QQmlRefCounted;
 
-class Q_QML_PRIVATE_EXPORT QQmlRefCount
+class QQmlRefCount
 {
     Q_DISABLE_COPY_MOVE(QQmlRefCount)
 public:
