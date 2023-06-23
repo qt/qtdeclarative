@@ -15,6 +15,9 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+
+using namespace QQuickVisualTestUtils;
 
 class tst_QQuickPinchArea: public QQmlDataTest
 {
@@ -622,20 +625,6 @@ void tst_QQuickPinchArea::dragTransformedPinchArea() // QTBUG-63673
     QCOMPARE(pinchArea->pinch()->active(), false);
 }
 
-template<typename F>
-void forEachLerpStep(int steps, F &&func)
-{
-    for (int i = 0; i < steps; ++i) {
-        const qreal t = qreal(i) / steps;
-        func(t);
-    }
-}
-
-QPoint lerpPoints(const QPoint &point1, const QPoint &point2, qreal t)
-{
-    return QPoint(_q_interpolate(point1.x(), point2.x(), t), _q_interpolate(point1.y(), point2.y(), t));
-};
-
 // QTBUG-105058
 void tst_QQuickPinchArea::pinchAreaKeepsDragInView()
 {
@@ -666,9 +655,10 @@ void tst_QQuickPinchArea::pinchAreaKeepsDragInView()
     const int steps = 30;
     QPoint point1End = point1Start + QPoint(-dragThreshold, dragThreshold);
     QPoint point2End = point2Start + QPoint(dragThreshold, -dragThreshold);
-    forEachLerpStep(steps, [&](qreal t) {
-        pinchSequence.move(1, lerpPoints(point1Start, point1End, t), &view)
-                     .move(2, lerpPoints(point2Start, point2End, t), &view).commit();
+
+    forEachStep(steps, [&](qreal progress) {
+        pinchSequence.move(1, lerpPoints(point1Start, point1End, progress), &view)
+                     .move(2, lerpPoints(point2Start, point2End, progress), &view).commit();
         QQuickTouchUtils::flush(&view);
         QTest::qWait(5);
     });
@@ -691,9 +681,9 @@ void tst_QQuickPinchArea::pinchAreaKeepsDragInView()
     point2Start = point2End;
     point1End = point1Start + QPoint(100, 0);
     point2End = point2Start + QPoint(100, 0);
-    forEachLerpStep(steps, [&](qreal t) {
-        pinchSequence.move(1, lerpPoints(point1Start, point1End, t), &view)
-                     .move(2, lerpPoints(point2Start, point2End, t), &view).commit();
+    forEachStep(steps, [&](qreal progress) {
+        pinchSequence.move(1, lerpPoints(point1Start, point1End, progress), &view)
+                     .move(2, lerpPoints(point2Start, point2End, progress), &view).commit();
         QQuickTouchUtils::flush(&view);
         QTest::qWait(5);
     });
