@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/qt/qml/workerscript">
+        <file>Spinner.qml</file>
+        <file>workerscript.mjs</file>
+        <file>workerscript.qml</file>
+    </qresource>
+</RCC>

@@ -136,7 +136,6 @@ Creator.
     \div {class="doc-column"}
         \b{System and Events}
         \list
-        \li \l{Qt Quick Examples - Threading}{Threading}
         \li \l{Qt Quick Examples - Accessibility}{Accessibility}
         \li \l{Qt Quick Examples - Drag and Drop}{Drag and Drop}
         \li \l{Qt Quick Examples - Item Variable Refresh Rate}{Item Variable Refresh Rate}

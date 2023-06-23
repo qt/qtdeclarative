@@ -1981,7 +1981,7 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
 
     \section1 Using Threaded List Models with WorkerScript
 
-    ListModel can be used together with WorkerScript access a list model
+    ListModel can be used together with WorkerScript to access a list model
     from multiple threads. This is useful if list modifications are
     synchronous and take some time: the list operations can be moved to a
     different thread to avoid blocking of the main GUI thread.
@@ -1989,11 +1989,11 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
     Here is an example that uses WorkerScript to periodically append the
     current time to a list model:
 
-    \snippet ../../examples/quick/threading/threadedlistmodel/timedisplay.qml 0
+    \snippet qml/listmodel/WorkerScript.qml 0
 
     The included file, \tt dataloader.mjs, looks like this:
 
-    \snippet ../../examples/quick/threading/threadedlistmodel/dataloader.mjs 0
+    \snippet qml/listmodel/dataloader.mjs 0
 
     The timer in the main example sends messages to the worker script by calling
     \l WorkerScript::sendMessage(). When this message is received,
@@ -2004,7 +2004,7 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
     You must call sync() or else the changes made to the list from that
     thread will not be reflected in the list model in the main thread.
 
-    \sa {qml-data-models}{Data Models}, {Qt Quick Examples - Threading}, {Qt QML}
+    \sa {qml-data-models}{Data Models}, {Qt QML}
 */
 
 QQmlListModel::QQmlListModel(QObject *parent)

@@ -17,7 +17,6 @@ SUBDIRS =   quick-accessibility \
             scenegraph \
             shadereffects \
             text \
-            threading \
             tutorials \
             customitems \
             imageprovider \

@@ -4,7 +4,6 @@
 "quick/models/abstractitemmodel Example", "examples/quick/models/abstractitemmodel", "abstractitemmodel", 0, -1
 "quick/customitems/maskedmousearea Example", "examples/quick/customitems/maskedmousearea", "maskedmousearea", 0, -1
 "quick/imageelements Example", "examples/quick/imageelements", "imageelements", 0, -1
-"quick/threading Example", "examples/quick/threading", "threading", 0, -1
 "quick/scenegraph/openglunderqml Example", "examples/quick/scenegraph/openglunderqml", "openglunderqml", 0, -1
 "quick/scenegraph/threadedanimation Example", "examples/quick/scenegraph/threadedanimation", "threadedanimation", 0, -1
 "quick/scenegraph/twotextureproviders Example", "examples/quick/scenegraph/twotextureproviders", "twotextureproviders", 0, -1
