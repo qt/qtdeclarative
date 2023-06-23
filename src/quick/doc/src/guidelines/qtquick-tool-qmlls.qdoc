@@ -56,7 +56,8 @@ and QML object id's.
 \section1 Setting up the QML Language Server in Your Editor
 
 \note You can find the QML Language Server binary under
-\c{<Qt installation folder>/bin/qmlls}.
+\c{<Qt installation folder>/bin/qmlls} in installations of Qt
+made with the official Maintenance Tool.
 
 QML Language Server also needs to know the location of your build
 folder. You can pass it the following ways:
