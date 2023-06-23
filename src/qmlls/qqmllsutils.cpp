@@ -11,6 +11,7 @@
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include <QtQmlDom/private/qqmldomscriptelements_p.h>
 #include <QtQmlDom/private/qqmldom_utils_p.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 #include <memory>
 #include <optional>
 #include <stack>
@@ -399,7 +400,30 @@ static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
     if (!targetType)
         return;
 
-    auto findUsages = [&targetType, &result, &name](Path, DomItem &current, bool) -> bool {
+    QStringList namesToCheck = { name };
+
+    // for a signal, also find bindings to its onSignalHandler.
+    if (auto methods = targetType->methods(name); !methods.isEmpty()) {
+        if (methods.front().methodType() == QQmlJSMetaMethodType::Signal) {
+            namesToCheck.append(QQmlSignalNames::signalNameToHandlerName(name));
+        }
+    }
+
+    // for a signal handler, also find the usages of the signal it handles
+    if (const auto signalName = QQmlSignalNames::handlerNameToSignalName(name)) {
+        if (auto methods = targetType->methods(*signalName); !methods.isEmpty()) {
+            if (methods.front().methodType() == QQmlJSMetaMethodType::Signal) {
+                namesToCheck.append(*signalName);
+            }
+        }
+    }
+
+    auto checkName = [&namesToCheck](const QString &nameToCheck) -> bool {
+        return namesToCheck.contains(nameToCheck);
+    };
+
+    auto findUsages = [&targetType, &result, &name, &checkName](Path, DomItem &current,
+                                                                bool) -> bool {
         bool resolveType = false;
         bool continueForChildren = true;
         DomItem toBeResolved = current;
@@ -413,18 +437,19 @@ static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
         }
 
         switch (current.internalKind()) {
+        case DomType::Binding:
         case DomType::PropertyDefinition: {
             const QString propertyName = current.field(Fields::name).value().toString();
-            if (name == propertyName) {
-                resolveType = true;
-            } else {
+            if (!checkName(propertyName))
                 return true;
-            }
+
+            subRegion = u"identifier"_s;
+            resolveType = true;
             break;
         }
         case DomType::ScriptIdentifierExpression: {
-            const QString propertyName = current.field(Fields::identifier).value().toString();
-            if (name != propertyName)
+            const QString identifierName = current.field(Fields::identifier).value().toString();
+            if (!checkName(identifierName))
                 return true;
 
             resolveType = true;
@@ -432,7 +457,7 @@ static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
         }
         case DomType::MethodInfo: {
             const QString methodName = current.field(Fields::name).value().toString();
-            if (name != methodName)
+            if (!checkName(methodName))
                 return true;
 
             subRegion = u"identifier"_s;
@@ -527,6 +552,7 @@ QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
         break;
     }
     case DomType::PropertyDefinition:
+    case DomType::Binding:
     case DomType::MethodInfo: {
         const QString name = item.field(Fields::name).value().toString();
         findUsagesHelper(item, name, result);
@@ -556,7 +582,11 @@ static QQmlJSScope::ConstPtr findMethodIn(const QQmlJSScope::Ptr &referrerScope,
                                           const QString &name)
 {
     for (QQmlJSScope::Ptr current = referrerScope; current; current = current->parentScope()) {
-        if (current->hasMethod(name)) {
+        if (current->hasMethod(name))
+            return current;
+
+        if (const auto signalName = QQmlSignalNames::handlerNameToSignalName(name);
+            signalName && current->hasMethod(*signalName)) {
             return current;
         }
     }
@@ -610,6 +640,7 @@ QQmlJSScope::ConstPtr QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem it
                         // see
                         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
                         // for the list of properties/methods of functions
+                        // see also code below for non-qualified method access
                         break;
                     }
                 }
@@ -673,6 +704,22 @@ QQmlJSScope::ConstPtr QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem it
 
         return {};
     }
+    case DomType::Binding: {
+        auto binding = item.as<Binding>();
+        if (binding) {
+            std::optional<QQmlJSScope::ConstPtr> owner = item.qmlObject().semanticScope();
+            if (!owner)
+                return {};
+            switch (options) {
+            case JustOwner:
+                return owner.value();
+            case Everything:
+                return owner.value()->property(binding->name()).type();
+            }
+        }
+
+        return {};
+    }
     case DomType::QmlObject: {
         auto object = item.as<QmlObject>();
         if (object && object->semanticScope())
@@ -682,9 +729,31 @@ QQmlJSScope::ConstPtr QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem it
     }
     case DomType::MethodInfo: {
         auto object = item.as<MethodInfo>();
-        if (object && object->semanticScope())
-            // return the owner of the method
-            return object->semanticScope().value()->parentScope();
+        if (object && object->semanticScope()) {
+            auto scope = object->semanticScope();
+            if (!scope)
+                return {};
+
+            switch (options) {
+            case JustOwner: {
+                if (scope.value()->scopeType() == QQmlJSScope::ScopeType::JSFunctionScope) {
+                    return scope.value()->parentScope();
+                } else {
+                    // signals already return their parent's semanticScope in semanticScope()
+                    // because they do not have their own semantic scope.
+                    return scope.value();
+                }
+            }
+            case Everything: {
+                // not implemented yet, but JS functions have methods and properties
+                // see
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
+                // for the list of properties/methods of functions
+                // see comment above for qualified method access
+                return {};
+            }
+            }
+        }
 
         return {};
     }

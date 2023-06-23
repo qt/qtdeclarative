@@ -84,4 +84,40 @@ Item {
             return rootId.recursive(123)
         }
     }
+
+    signal helloSignal()
+
+    function callSignals() {
+        helloSignal()
+        if (false) {
+            helloSignal()
+        } else {
+        // helloSignal() // not a usage btw
+            if (true)
+                helloSignal()
+        }
+    }
+    function callSignals2() {
+        helloSignal()
+        if (false) {
+            widthChanged()
+        } else {
+        // helloSignal() // not a usage btw
+            if (true)
+                widthChanged()
+            rootId.widthChanged()
+        }
+    }
+    Item {
+        function callSignalsInChild() {
+            widthChanged()
+            rootId.widthChanged()
+        }
+    }
+
+    function myHelloHandler() { let x = 32; }
+    onHelloSignal: myHelloHandler
+
+    property int helloPropertyBinding
+    helloPropertyBinding: 123
 }

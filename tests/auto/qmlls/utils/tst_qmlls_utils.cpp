@@ -723,8 +723,7 @@ void tst_qmlls_utils::findUsages_data()
     };
 
     QList<QQmlLSUtilsLocation> helloPropertyUsages{
-        sourceLocationFrom(testFileName, testFileContent, 17, 5,
-                           strlen("property int helloProperty: 0")),
+        sourceLocationFrom(testFileName, testFileContent, 17, 18, strlen("helloProperty")),
         sourceLocationFrom(testFileName, testFileContent, 24, 13, strlen("helloProperty")),
         sourceLocationFrom(testFileName, testFileContent, 24, 29, strlen("helloProperty")),
         sourceLocationFrom(testFileName, testFileContent, 65, 60, strlen("helloProperty")),
@@ -732,18 +731,16 @@ void tst_qmlls_utils::findUsages_data()
 
     QList<QQmlLSUtilsLocation> subItemHelloPropertyUsages{
         sourceLocationFrom(testFileName, testFileContent, 32, 20, strlen("helloProperty")),
-        sourceLocationFrom(testFileName, testFileContent, 34, 9,
-                           strlen("property string helloProperty")),
+        sourceLocationFrom(testFileName, testFileContent, 34, 25, strlen("helloProperty")),
     };
 
     QList<QQmlLSUtilsLocation> ICHelloPropertyUsages{
-        sourceLocationFrom(testFileName, testFileContent, 37, 9,
-                           strlen("property var helloProperty")),
+        sourceLocationFrom(testFileName, testFileContent, 37, 22, strlen("helloProperty")),
         sourceLocationFrom(testFileName, testFileContent, 39, 20, strlen("helloProperty")),
     };
 
     QList<QQmlLSUtilsLocation> p2Usages{
-        sourceLocationFrom(testFileName, testFileContent, 18, 5, strlen("property int p2: 1")),
+        sourceLocationFrom(testFileName, testFileContent, 18, 18, strlen("p2")),
         sourceLocationFrom(testFileName, testFileContent, 24, 55, strlen("p2")),
         sourceLocationFrom(testFileName, testFileContent, 32, 36, strlen("p2")),
         sourceLocationFrom(testFileName, testFileContent, 39, 36, strlen("p2")),
@@ -762,9 +759,15 @@ void tst_qmlls_utils::findUsages_data()
         sourceLocationFrom(testFileName, testFileContent, 69, 17, strlen("myNested")),
     };
 
+    QList<QQmlLSUtilsLocation> rootIdUsages{
+        sourceLocationFrom(testFileName, testFileContent, 81, 9, strlen("rootId")),
+        sourceLocationFrom(testFileName, testFileContent, 84, 20, strlen("rootId")),
+        sourceLocationFrom(testFileName, testFileContent, 108, 13, strlen("rootId")),
+        sourceLocationFrom(testFileName, testFileContent, 114, 13, strlen("rootId")),
+    };
+
     QList<QQmlLSUtilsLocation> nestedComponent3Usages{
-        sourceLocationFrom(testFileName, testFileContent, 47, 9,
-                           strlen("property NestedComponent3 inner")),
+        sourceLocationFrom(testFileName, testFileContent, 47, 35, strlen("inner")),
         sourceLocationFrom(testFileName, testFileContent, 65, 32, strlen("inner")),
         sourceLocationFrom(testFileName, testFileContent, 68, 32, strlen("inner")),
         sourceLocationFrom(testFileName, testFileContent, 69, 32, strlen("inner")),
@@ -772,7 +775,7 @@ void tst_qmlls_utils::findUsages_data()
 
     QList<QQmlLSUtilsLocation> nestedComponent3P2Usages{
         sourceLocationFrom(testFileName, testFileContent, 68, 38, strlen("p2")),
-        sourceLocationFrom(testFileName, testFileContent, 53, 9, strlen("property int p2")),
+        sourceLocationFrom(testFileName, testFileContent, 53, 22, strlen("p2")),
     };
 
     QList<QQmlLSUtilsLocation> recursiveUsages{
@@ -786,6 +789,32 @@ void tst_qmlls_utils::findUsages_data()
         sourceLocationFrom(testFileName, testFileContent, 84, 27, strlen("recursive")),
     };
 
+    QList<QQmlLSUtilsLocation> helloSignalUsages{
+        sourceLocationFrom(testFileName, testFileContent, 88, 12, strlen("helloSignal")),
+        sourceLocationFrom(testFileName, testFileContent, 91, 9, strlen("helloSignal")),
+        sourceLocationFrom(testFileName, testFileContent, 93, 13, strlen("helloSignal")),
+        sourceLocationFrom(testFileName, testFileContent, 97, 17, strlen("helloSignal")),
+        sourceLocationFrom(testFileName, testFileContent, 101, 9, strlen("helloSignal")),
+        sourceLocationFrom(testFileName, testFileContent, 119, 5, strlen("onHelloSignal")),
+    };
+
+    QList<QQmlLSUtilsLocation> widthChangedUsages{
+        sourceLocationFrom(testFileName, testFileContent, 103, 13, strlen("widthChanged")),
+        sourceLocationFrom(testFileName, testFileContent, 107, 17, strlen("widthChanged")),
+        sourceLocationFrom(testFileName, testFileContent, 108, 20, strlen("widthChanged")),
+        sourceLocationFrom(testFileName, testFileContent, 114, 20, strlen("widthChanged")),
+    };
+
+    QList<QQmlLSUtilsLocation> helloPropertyBindingUsages{
+        sourceLocationFrom(testFileName, testFileContent, 121, 18, strlen("helloPropertyBinding")),
+        sourceLocationFrom(testFileName, testFileContent, 122, 5, strlen("helloPropertyBinding")),
+    };
+
+    QList<QQmlLSUtilsLocation> myHelloHandlerUsages{
+        sourceLocationFrom(testFileName, testFileContent, 118, 14, strlen("myHelloHandler")),
+        sourceLocationFrom(testFileName, testFileContent, 119, 20, strlen("myHelloHandler")),
+    };
+
     std::sort(sumUsages.begin(), sumUsages.end());
     std::sort(iUsages.begin(), iUsages.end());
     std::sort(subItemHelloPropertyUsages.begin(), subItemHelloPropertyUsages.end());
@@ -795,6 +824,10 @@ void tst_qmlls_utils::findUsages_data()
     std::sort(nestedComponent3Usages.begin(), nestedComponent3Usages.end());
     std::sort(nestedComponent3P2Usages.begin(), nestedComponent3P2Usages.end());
     std::sort(recursiveUsages.begin(), recursiveUsages.end());
+    std::sort(helloSignalUsages.begin(), helloSignalUsages.end());
+    std::sort(widthChangedUsages.begin(), widthChangedUsages.end());
+    std::sort(helloPropertyBindingUsages.begin(), helloPropertyBindingUsages.end());
+    std::sort(myHelloHandlerUsages.begin(), myHelloHandlerUsages.end());
 
     QTest::addRow("findSumFromDeclaration") << testFileName << 8 << 13 << sumUsages;
     QTest::addRow("findSumFromUsage") << testFileName << 10 << 20 << sumUsages;
@@ -818,6 +851,7 @@ void tst_qmlls_utils::findUsages_data()
 
     QTest::addRow("findIdFromUsage") << testFileName << 67 << 20 << nestedUsages;
     QTest::addRow("findIdFromDefinition") << testFileName << 62 << 17 << nestedUsages;
+    QTest::addRow("findIdFromUsageInChild") << testFileName << 84 << 22 << rootIdUsages;
 
     QTest::addRow("findPropertyFromUsageInFieldMemberExpression")
             << testFileName << 69 << 34 << nestedComponent3Usages;
@@ -830,10 +864,31 @@ void tst_qmlls_utils::findUsages_data()
 
     QTest::addRow("findFunctionUsage") << testFileName << 74 << 30 << recursiveUsages;
     QTest::addRow("findFunctionUsage2") << testFileName << 76 << 24 << recursiveUsages;
-
     QTest::addRow("findQualifiedFunctionUsage") << testFileName << 84 << 31 << recursiveUsages;
-
     QTest::addRow("findFunctionUsageFromDefinition") << testFileName << 72 << 17 << recursiveUsages;
+    QTest::addRow("findJSMethodFromUsageInBinding")
+            << testFileName << 119 << 27 << myHelloHandlerUsages;
+    QTest::addRow("findJSMethodFromDefinition")
+            << testFileName << 118 << 22 << myHelloHandlerUsages;
+    QTest::addRow("findJSMethodFromDefinition2")
+            << testFileName << 118 << 9 << myHelloHandlerUsages;
+
+    QTest::addRow("findQmlSignalUsageFromDefinition")
+            << testFileName << 88 << 17 << helloSignalUsages;
+    QTest::addRow("findQmlSignalUsageFromUsage") << testFileName << 93 << 17 << helloSignalUsages;
+    QTest::addRow("findQmlSignalUsageFromHandler")
+            << testFileName << 119 << 11 << helloSignalUsages;
+
+    QTest::addRow("findCppSignalUsageFromUsage") << testFileName << 107 << 23 << widthChangedUsages;
+    QTest::addRow("findCppSignalUsageFromQualifiedUsage")
+            << testFileName << 108 << 23 << widthChangedUsages;
+    QTest::addRow("findCppSignalUsageFromQualifiedUsage2")
+            << testFileName << 114 << 24 << widthChangedUsages;
+
+    QTest::addRow("findBindingUsagesFromDefinition")
+            << testFileName << 121 << 21 << helloPropertyBindingUsages;
+    QTest::addRow("findBindingUsagesFromBinding")
+            << testFileName << 122 << 19 << helloPropertyBindingUsages;
 }
 
 void tst_qmlls_utils::findUsages()

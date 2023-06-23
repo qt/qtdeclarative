@@ -1579,6 +1579,8 @@ private slots:
             QCOMPARE(functionFs.indexes(), 1);
             DomItem functionF = functionFs.index(0);
 
+            QVERIFY(functionF.semanticScope().has_value());
+            QVERIFY(functionF.semanticScope().value()->JSIdentifier("helloF").has_value());
             DomItem parameters = functionF.field(Fields::parameters);
             std::vector<QString> parameterNames = {
                 u"q"_s, u"w"_s, u"e"_s, u"r"_s, u"t"_s, u"y"_s
@@ -1597,6 +1599,9 @@ private slots:
                     rootQmlObject.field(Fields::methods).key(u"fWithDefault");
             QCOMPARE(functionFWithDefaults.indexes(), 1);
             DomItem functionFWithDefault = functionFWithDefaults.index(0);
+            QVERIFY(functionFWithDefault.semanticScope().has_value());
+            QVERIFY(functionFWithDefault.semanticScope().value()->JSIdentifier(
+                    u"helloFWithDefault"_s));
             DomItem parameters = functionFWithDefault.field(Fields::parameters);
 
             const std::vector<QString> parameterNames = { u"q"_s, u"w"_s, u"e"_s,
@@ -1626,6 +1631,8 @@ private slots:
             // note: no need to check the inside of ScriptObject and ScriptArray as those are
             // already tested in deconstruction().
             DomItem method = rootQmlObject.field(Fields::methods).key(u"evil"_s).index(0);
+            QVERIFY(method.semanticScope().has_value());
+            QVERIFY(method.semanticScope().value()->JSIdentifier("helloEvil").has_value());
             DomItem parameters = method.field(Fields::parameters);
             QCOMPARE(parameters.indexes(), 3);
 
@@ -1666,6 +1673,8 @@ private slots:
         }
         {
             DomItem method = rootQmlObject.field(Fields::methods).key(u"marmelade"_s).index(0);
+            QVERIFY(method.semanticScope().has_value());
+            QVERIFY(method.semanticScope().value()->JSIdentifier(u"helloMarmelade"_s));
             DomItem parameters = method.field(Fields::parameters);
             QCOMPARE(parameters.indexes(), 1);
             {
@@ -1677,6 +1686,8 @@ private slots:
         }
         {
             DomItem method = rootQmlObject.field(Fields::methods).key(u"marmelade2"_s).index(0);
+            QVERIFY(method.semanticScope().has_value());
+            QVERIFY(method.semanticScope().value()->JSIdentifier(u"helloMarmelade2"_s));
             DomItem parameters = method.field(Fields::parameters);
             QCOMPARE(parameters.indexes(), 3);
             {
@@ -1688,6 +1699,9 @@ private slots:
         }
         {
             DomItem method = rootQmlObject.field(Fields::methods).key(u"withTypes"_s).index(0);
+            QVERIFY(method.semanticScope().has_value());
+            QCOMPARE(method.semanticScope().value()->scopeType(),
+                     QQmlJSScope::ScopeType::JSFunctionScope);
             DomItem parameters = method.field(Fields::parameters);
             QCOMPARE(parameters.indexes(), 2);
             QCOMPARE(parameters.index(0)
@@ -1706,6 +1720,18 @@ private slots:
                              .value()
                              .toString(),
                      "MyType");
+        }
+        {
+            DomItem method = rootQmlObject.field(Fields::methods).key(u"empty"_s).index(0);
+            QVERIFY(method.semanticScope().has_value());
+            QCOMPARE(method.semanticScope().value()->scopeType(),
+                     QQmlJSScope::ScopeType::JSFunctionScope);
+        }
+        {
+            DomItem method = rootQmlObject.field(Fields::methods).key(u"mySignal"_s).index(0);
+            // signals contain the scope of the QML object owning them
+            QVERIFY(method.semanticScope().has_value());
+            QCOMPARE(method.semanticScope().value()->scopeType(), QQmlJSScope::ScopeType::QMLScope);
         }
     }
 

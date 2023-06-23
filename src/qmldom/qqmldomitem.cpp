@@ -660,6 +660,10 @@ std::optional<QQmlJSScope::Ptr> DomItem::semanticScope()
                     return e->semanticScope();
                 } else if constexpr (std::is_same_v<T, QmlComponent *>) {
                     return e->semanticScope();
+                } else if constexpr (std::is_same_v<T, SimpleObjectWrap>) {
+                    if (const MethodInfo *mi = e->template as<MethodInfo>()) {
+                        return mi->semanticScope();
+                    }
                 } else if constexpr (std::is_same_v<T, ScriptElementDomWrapper>) {
                     return e.element().base()->semanticScope();
                 }
@@ -1527,7 +1531,8 @@ static bool visitPrototypeIndex(QList<DomItem> &toDo, DomItem &current,
                 if (!(options & VisitPrototypesOption::ManualProceedToScope))
                     proto = proto.proceedToScope(h, visitedRefs);
                 toDo.append(proto);
-            } else if (proto.internalKind() == DomType::QmlObject) {
+            } else if (proto.internalKind() == DomType::QmlObject
+                       || proto.internalKind() == DomType::QmlComponent) {
                 toDo.append(proto);
             } else {
                 derivedFromPrototype.myErrors()
