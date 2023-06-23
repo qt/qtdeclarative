@@ -42,6 +42,7 @@ private slots:
     void attachedType();
     void badSequence();
     void basicBlocksWithBackJump();
+    void basicDTZ();
     void bindToValueType();
     void bindingExpression();
     void blockComments();
@@ -733,6 +734,23 @@ void tst_QmlCppCodegen::basicBlocksWithBackJump()
     expectingMessage = true;
     QMetaObject::invokeMethod(o.data(), "t3");
     QVERIFY(!expectingMessage);
+}
+
+void tst_QmlCppCodegen::basicDTZ()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/basicDTZ.qml"_s));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("title").toString(), u"none");
+
+    QMetaObject::invokeMethod(o.data(), "t1");
+    QMetaObject::invokeMethod(o.data(), "t2");
+    QMetaObject::invokeMethod(o.data(), "t3");
+
+    QCOMPARE(o->property("title").toString(), u"Baz 41");
 }
 
 void tst_QmlCppCodegen::bindToValueType()
