@@ -2193,7 +2193,7 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
             }
 
             if (const QmlListWrapper *listWrapper = value.as<QmlListWrapper>()) {
-                *qlistPtr = listWrapper->d()->property().toList<QList<QObject *>>();
+                *qlistPtr = listWrapper->d()->property()->toList<QList<QObject *>>();
                 return true;
             }
 

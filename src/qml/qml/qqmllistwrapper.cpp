@@ -20,50 +20,58 @@ using namespace Qt::StringLiterals;
 
 DEFINE_OBJECT_VTABLE(QmlListWrapper);
 
-void Heap::QmlListWrapper::init()
+static void setCustomArrayData(Heap::QmlListWrapper *d)
+{
+    QV4::Scope scope(d->internalClass->engine);
+    QV4::ScopedObject o(scope, d);
+    o->setArrayType(Heap::ArrayData::Custom);
+}
+
+void Heap::QmlListWrapper::init(QObject *object, int propertyId, QMetaType propertyType)
 {
     Object::init();
-    object.init();
-    QV4::Scope scope(internalClass->engine);
-    QV4::ScopedObject o(scope, this);
-    o->setArrayType(Heap::ArrayData::Custom);
+    m_object.init(object);
+    m_propertyType = propertyType.iface();
+    void *args[] = { property(), nullptr };
+    QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyId, args);
+    setCustomArrayData(this);
+}
+
+void Heap::QmlListWrapper::init(
+        QObject *object, const QQmlListProperty<QObject> &list, QMetaType propertyType)
+{
+    Object::init();
+    m_object.init(object);
+    m_propertyType = propertyType.iface();
+    *property() = list;
+    setCustomArrayData(this);
 }
 
 void Heap::QmlListWrapper::destroy()
 {
-    object.destroy();
+    m_object.destroy();
     Object::destroy();
 }
 
-ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, QObject *object, int propId, QMetaType propType)
+ReturnedValue QmlListWrapper::create(
+        ExecutionEngine *engine, QObject *object, int propId, QMetaType propType)
 {
     if (!object || propId == -1)
         return Encode::null();
-
-    Scope scope(engine);
-
-    Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocate<QmlListWrapper>());
-    r->d()->object = object;
-    r->d()->propertyType = propType.iface();
-    void *args[] = { &r->d()->property(), nullptr };
-    QMetaObject::metacall(object, QMetaObject::ReadProperty, propId, args);
-    return r.asReturnedValue();
+    return engine->memoryManager->allocate<QmlListWrapper>(object, propId, propType)
+            ->asReturnedValue();
 }
 
-ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, const QQmlListProperty<QObject> &prop, QMetaType propType)
+ReturnedValue QmlListWrapper::create(
+        ExecutionEngine *engine, const QQmlListProperty<QObject> &prop, QMetaType propType)
 {
-    Scope scope(engine);
-
-    Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocate<QmlListWrapper>());
-    r->d()->object = prop.object;
-    r->d()->property() = prop;
-    r->d()->propertyType = propType.iface();
-    return r.asReturnedValue();
+    return engine->memoryManager->allocate<QmlListWrapper>(prop.object, prop, propType)
+            ->asReturnedValue();
 }
 
 QVariant QmlListWrapper::toVariant() const
 {
-    if (!d()->object)
+    if (!d()->object())
         return QVariant();
 
     return QVariant::fromValue(toListReference());
@@ -71,10 +79,9 @@ QVariant QmlListWrapper::toVariant() const
 
 QQmlListReference QmlListWrapper::toListReference() const
 {
-    Heap::QmlListWrapper *wrapper = d();
-    return QQmlListReferencePrivate::init(wrapper->property(), QMetaType(wrapper->propertyType));
+    const Heap::QmlListWrapper *wrapper = d();
+    return QQmlListReferencePrivate::init(*wrapper->property(), wrapper->propertyType());
 }
-
 
 ReturnedValue QmlListWrapper::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
@@ -83,12 +90,14 @@ ReturnedValue QmlListWrapper::virtualGet(const Managed *m, PropertyKey id, const
     QV4::ExecutionEngine *v4 = w->engine();
 
     if (id.isArrayIndex()) {
-        uint index = id.asArrayIndex();
-        quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
-        if (index < count && w->d()->property().at) {
+        const uint index = id.asArrayIndex();
+        const quint32 count = w->d()->property()->count
+                ? w->d()->property()->count(w->d()->property())
+                : 0;
+        if (index < count && w->d()->property()->at) {
             if (hasProperty)
                 *hasProperty = true;
-            return QV4::QObjectWrapper::wrap(v4, w->d()->property().at(&w->d()->property(), index));
+            return QV4::QObjectWrapper::wrap(v4, w->d()->property()->at(w->d()->property(), index));
         }
 
         if (hasProperty)
@@ -113,7 +122,7 @@ bool QmlListWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, 
     const auto *w = static_cast<const QmlListWrapper *>(m);
     QV4::ExecutionEngine *v4 = w->engine();
 
-    QQmlListProperty<QObject> *prop = &(w->d()->property());
+    QQmlListProperty<QObject> *prop = w->d()->property();
 
     if (id.isArrayIndex()) {
         if (!prop->count || !prop->replace)
@@ -153,14 +162,16 @@ PropertyKey QmlListWrapperOwnPropertyKeyIterator::next(const Object *o, Property
 {
     const QmlListWrapper *w = static_cast<const QmlListWrapper *>(o);
 
-    quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
+    quint32 count = w->d()->property()->count ? w->d()->property()->count(w->d()->property()) : 0;
     if (arrayIndex < count) {
         uint index = arrayIndex;
         ++arrayIndex;
         if (attrs)
             *attrs = QV4::Attr_Data;
-        if (pd)
-            pd->value = QV4::QObjectWrapper::wrap(w->engine(), w->d()->property().at(&w->d()->property(), index));
+        if (pd) {
+            pd->value = QV4::QObjectWrapper::wrap(
+                    w->engine(), w->d()->property()->at(w->d()->property(), index));
+        }
         return PropertyKey::fromArrayIndex(index);
     } else if (memberIndex == 0) {
         ++memberIndex;
@@ -201,7 +212,7 @@ ReturnedValue PropertyListPrototype::method_pop(const FunctionObject *b, const V
     if (!w)
         RETURN_UNDEFINED();
 
-    QQmlListProperty<QObject> *property = &w->d()->property();
+    QQmlListProperty<QObject> *property = w->d()->property();
 
     if (!property->count)
         return scope.engine->throwTypeError(u"List doesn't define a Count function"_s);
@@ -231,7 +242,7 @@ ReturnedValue PropertyListPrototype::method_push(const FunctionObject *b, const 
     if (!w)
         RETURN_UNDEFINED();
 
-    QQmlListProperty<QObject> *property = &w->d()->property();
+    QQmlListProperty<QObject> *property = w->d()->property();
     if (!property->append)
         return scope.engine->throwTypeError(u"List doesn't define an Append function"_s);
     if (!property->count)
@@ -267,7 +278,7 @@ ReturnedValue PropertyListPrototype::method_shift(const FunctionObject *b, const
     if (!w)
         RETURN_UNDEFINED();
 
-    QQmlListProperty<QObject> *property = &w->d()->property();
+    QQmlListProperty<QObject> *property = w->d()->property();
 
     if (!property->count)
         return scope.engine->throwTypeError(u"List doesn't define a Count function"_s);
@@ -301,7 +312,7 @@ ReturnedValue PropertyListPrototype::method_splice(const FunctionObject *b, cons
     if (!w)
         RETURN_UNDEFINED();
 
-    QQmlListProperty<QObject> *property = &w->d()->property();
+    QQmlListProperty<QObject> *property = w->d()->property();
 
     if (!property->count)
         return scope.engine->throwTypeError(u"List doesn't define a Count function"_s);
@@ -393,7 +404,7 @@ ReturnedValue PropertyListPrototype::method_unshift(const FunctionObject *b, con
     if (!w)
         RETURN_UNDEFINED();
 
-    QQmlListProperty<QObject> *property = &w->d()->property();
+    QQmlListProperty<QObject> *property = w->d()->property();
 
     if (!property->count)
         return scope.engine->throwTypeError(u"List doesn't define a Count function"_s);
@@ -453,7 +464,7 @@ ReturnedValue firstOrLastIndexOf(const FunctionObject *b, const Value *thisObjec
     if (!w)
         RETURN_UNDEFINED();
 
-    QQmlListProperty<QObject> *property = &w->d()->property();
+    QQmlListProperty<QObject> *property = w->d()->property();
 
     if (!property->count)
         return scope.engine->throwTypeError(u"List doesn't define a Count function"_s);
@@ -539,7 +550,7 @@ ReturnedValue PropertyListPrototype::method_sort(const FunctionObject *b, const 
     if (!w)
         RETURN_UNDEFINED();
 
-    QQmlListProperty<QObject> *property = &w->d()->property();
+    QQmlListProperty<QObject> *property = w->d()->property();
 
     if (!property->count)
         return scope.engine->throwTypeError(u"List doesn't define a Count function"_s);
@@ -575,7 +586,7 @@ ReturnedValue PropertyListPrototype::method_get_length(const FunctionObject *b, 
     if (!w)
         RETURN_UNDEFINED();
 
-    QQmlListProperty<QObject> *property = &w->d()->property();
+    QQmlListProperty<QObject> *property = w->d()->property();
     if (!property->count)
         return scope.engine->throwTypeError(u"List doesn't define a Count function"_s);
 
@@ -597,7 +608,7 @@ ReturnedValue PropertyListPrototype::method_set_length(const FunctionObject *b, 
     if (!w)
         RETURN_UNDEFINED();
 
-    QQmlListProperty<QObject> *property = &w->d()->property();
+    QQmlListProperty<QObject> *property = w->d()->property();
 
     bool ok = false;
     const uint newLength = argc ? argv[0].asArrayLength(&ok) : 0;

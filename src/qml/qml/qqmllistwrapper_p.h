@@ -30,19 +30,30 @@ namespace QV4 {
 namespace Heap {
 
 struct QmlListWrapper : Object {
-    void init();
+    void init(QObject *object, int propertyId, QMetaType propertyType);
+    void init(QObject *object, const QQmlListProperty<QObject> &list, QMetaType propertyType);
     void destroy();
-    QV4QPointer<QObject> object;
 
-    QQmlListProperty<QObject> &property() {
-        return *reinterpret_cast<QQmlListProperty<QObject>*>(propertyData);
+    QObject *object() const { return m_object.data(); }
+    QMetaType propertyType() const { return QMetaType(m_propertyType); }
+
+    const QQmlListProperty<QObject> *property() const
+    {
+        return reinterpret_cast<const QQmlListProperty<QObject>*>(m_propertyData);
     }
 
-    // interface instead of QMetaType to keep class a POD
-    const QtPrivate::QMetaTypeInterface *propertyType;
+    QQmlListProperty<QObject> *property()
+    {
+        return reinterpret_cast<QQmlListProperty<QObject>*>(m_propertyData);
+    }
 
 private:
-    void *propertyData[sizeof(QQmlListProperty<QObject>)/sizeof(void*)];
+    void *m_propertyData[sizeof(QQmlListProperty<QObject>)/sizeof(void*)];
+
+    QV4QPointer<QObject> m_object;
+
+    // interface instead of QMetaType to keep class a POD
+    const QtPrivate::QMetaTypeInterface *m_propertyType;
 };
 
 }
