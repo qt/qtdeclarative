@@ -68,7 +68,7 @@ void tst_toolsupport::offsets_data()
     {
         QTestData &data = QTest::newRow("sizeof(QQmlRefCount)")
                 << sizeof(QQmlRefCount);
-        data << 8 << 16;
+        data << 4 << 4;
     }
 
 #if RUN_MEMBER_OFFSET_TEST

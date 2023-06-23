@@ -86,7 +86,7 @@ private:
 };
 
 
-class VDMListDelegateDataType
+class VDMListDelegateDataType final
     : public QQmlRefCounted<VDMListDelegateDataType>
     , public QQmlAdaptorModel::Accessors
     , public QAbstractDynamicMetaObject

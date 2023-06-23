@@ -105,7 +105,7 @@ private:
         Shared = 1
     };
 
-    struct SharedHolder : public QQmlRefCounted<SharedHolder>
+    struct SharedHolder final : public QQmlRefCounted<SharedHolder>
     {
         Q_DISABLE_COPY_MOVE(SharedHolder)
         SharedHolder(QMetaObject *shared) : metaObject(shared) {}
@@ -116,7 +116,7 @@ private:
     mutable QBasicAtomicInteger<quintptr> d = 0;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlPropertyCache
+class Q_QML_PRIVATE_EXPORT QQmlPropertyCache final
     : public QQmlRefCounted<QQmlPropertyCache>
 {
 public:
@@ -136,7 +136,7 @@ public:
             const QMetaObject *, QTypeRevision metaObjectRevision = QTypeRevision::zero());
 
     QQmlPropertyCache() = default;
-    ~QQmlPropertyCache() override;
+    ~QQmlPropertyCache();
 
     void update(const QMetaObject *);
     void invalidate(const QMetaObject *);

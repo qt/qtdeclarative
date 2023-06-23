@@ -26,7 +26,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlTypePrivate : public QQmlRefCounted<QQmlTypePrivate>
+class QQmlTypePrivate final : public QQmlRefCounted<QQmlTypePrivate>
 {
     Q_DISABLE_COPY_MOVE(QQmlTypePrivate)
 public:
@@ -145,7 +145,8 @@ public:
     void setName(const QString &uri, const QString &element);
 
 private:
-    ~QQmlTypePrivate() override;
+    ~QQmlTypePrivate();
+    friend class QQmlRefCounted<QQmlTypePrivate>;
 
     struct EnumInfo {
         QStringList path;

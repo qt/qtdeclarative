@@ -56,7 +56,7 @@ public:
     };
 
     QQmlDataBlob(const QUrl &, Type, QQmlTypeLoader* manager);
-    ~QQmlDataBlob() override;
+    virtual ~QQmlDataBlob();
 
     void startLoading();
 

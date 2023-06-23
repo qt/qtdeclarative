@@ -53,7 +53,7 @@ Q_SIGNALS:
     void modelDataChanged();
 };
 
-class VDMObjectDelegateDataType
+class VDMObjectDelegateDataType final
     : public QQmlRefCounted<VDMObjectDelegateDataType>,
       public QQmlAdaptorModel::Accessors
 {

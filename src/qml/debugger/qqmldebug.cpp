@@ -175,7 +175,7 @@ quintptr Q_QML_EXPORT qtDeclarativeHookData[] = {
     // TypeInformationVersion, an integral value, bumped whenever private
     // object sizes or member offsets that are used in Qt Creator's
     // data structure "pretty printing" change.
-    3,
+    4,
 
     // Version of the cache data.
     QV4_DATA_STRUCTURE_VERSION

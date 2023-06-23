@@ -72,7 +72,7 @@ private:
     QVector<QVariant> m_cachedData;
 };
 
-class VDMAbstractItemModelDataType
+class VDMAbstractItemModelDataType final
         : public QQmlRefCounted<VDMAbstractItemModelDataType>
         , public QQmlAdaptorModel::Accessors
         , public QAbstractDynamicMetaObject

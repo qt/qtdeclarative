@@ -84,7 +84,7 @@ struct DeferredQPropertyBinding {
     QUntypedPropertyBinding binding;
 };
 
-struct QQmlObjectCreatorSharedState : QQmlRefCounted<QQmlObjectCreatorSharedState>
+struct QQmlObjectCreatorSharedState final : QQmlRefCounted<QQmlObjectCreatorSharedState>
 {
     QQmlRefPointer<QQmlContextData> rootContext;
     QQmlRefPointer<QQmlContextData> creationContext;

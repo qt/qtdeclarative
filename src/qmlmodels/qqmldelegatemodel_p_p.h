@@ -37,7 +37,7 @@ typedef QQmlListCompositor Compositor;
 class QQmlDelegateModelAttachedMetaObject;
 class QQmlAbstractDelegateComponent;
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModelItemMetaType
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModelItemMetaType final
     : public QQmlRefCounted<QQmlDelegateModelItemMetaType>
 {
 public:
@@ -420,7 +420,7 @@ public:
     QList<QQmlPartsModel *> models;
 };
 
-class QQmlDelegateModelAttachedMetaObject
+class QQmlDelegateModelAttachedMetaObject final
     : public QAbstractDynamicMetaObject,
       public QQmlRefCounted<QQmlDelegateModelAttachedMetaObject>
 {

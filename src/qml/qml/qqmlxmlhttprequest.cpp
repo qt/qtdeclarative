@@ -116,7 +116,7 @@ public:
     QList<NodeImpl *> attributes;
 };
 
-class DocumentImpl : public QQmlRefCounted<DocumentImpl>, public NodeImpl
+class DocumentImpl final : public QQmlRefCounted<DocumentImpl>, public NodeImpl
 {
     using Base1 = QQmlRefCounted<DocumentImpl>;
 public:

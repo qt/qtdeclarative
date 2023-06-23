@@ -71,6 +71,7 @@ class Q_QML_PRIVATE_EXPORT ExecutableCompilationUnit final
 {
     Q_DISABLE_COPY_MOVE(ExecutableCompilationUnit)
 public:
+    friend class QQmlRefCounted<ExecutableCompilationUnit>;
     friend class QQmlRefPointer<ExecutableCompilationUnit>;
 
     static QQmlRefPointer<ExecutableCompilationUnit> create(

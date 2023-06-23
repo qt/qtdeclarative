@@ -30,11 +30,10 @@ class Q_QML_PRIVATE_EXPORT QQmlRefCount
 public:
     inline QQmlRefCount();
     inline void addref() const;
-    inline void release() const;
     inline int count() const;
 
 private:
-    inline virtual ~QQmlRefCount();
+    inline ~QQmlRefCount();
     template <typename T> friend class QQmlRefCounted;
 
 private:
@@ -44,8 +43,10 @@ private:
 template <typename T>
 class QQmlRefCounted : public QQmlRefCount
 {
+public:
+    inline void release() const;
 protected:
-    ~QQmlRefCounted() = default;
+    inline ~QQmlRefCounted();
 };
 
 template<class T>
@@ -130,11 +131,22 @@ void QQmlRefCount::addref() const
     refCount.ref();
 }
 
-void QQmlRefCount::release() const
+template <typename T>
+void QQmlRefCounted<T>::release() const
 {
+    static_assert(std::is_base_of_v<QQmlRefCounted, T>,
+                  "QQmlRefCounted<T> must be a base of T (CRTP)");
     Q_ASSERT(refCount.loadRelaxed() > 0);
     if (!refCount.deref())
-        delete this;
+        delete static_cast<const T *>(this);
+}
+
+template <typename T>
+QQmlRefCounted<T>::~QQmlRefCounted()
+{
+    static_assert(std::is_final_v<T> || std::has_virtual_destructor_v<T>,
+                  "T must either be marked final or have a virtual dtor, "
+                  "lest release() runs into UB.");
 }
 
 int QQmlRefCount::count() const

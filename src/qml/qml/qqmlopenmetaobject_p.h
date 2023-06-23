@@ -28,12 +28,12 @@ QT_BEGIN_NAMESPACE
 class QQmlEngine;
 class QMetaPropertyBuilder;
 class QQmlOpenMetaObjectTypePrivate;
-class Q_QML_PRIVATE_EXPORT QQmlOpenMetaObjectType
+class Q_QML_PRIVATE_EXPORT QQmlOpenMetaObjectType final
     : public QQmlRefCounted<QQmlOpenMetaObjectType>
 {
 public:
     QQmlOpenMetaObjectType(const QMetaObject *base);
-    ~QQmlOpenMetaObjectType() override;
+    ~QQmlOpenMetaObjectType();
 
     void createProperties(const QVector<QByteArray> &names);
     int createProperty(const QByteArray &name);
