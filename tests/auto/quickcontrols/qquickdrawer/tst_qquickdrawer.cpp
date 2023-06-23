@@ -826,6 +826,13 @@ void tst_QQuickDrawer::multiple()
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - rightDrawer->width() / 2, window->height() / 2));
     QTRY_COMPARE(rightDrawer->position(), 1.0);
     QCOMPARE(leftDrawer->position(), 0.0);
+
+    // Hide the window, so it receives no more stray events
+    window->hide();
+    QVERIFY(QTest::qWaitFor([window](){ return !window->isVisible(); }));
+
+    // Remove posted events, before the window goes out of scope
+    QGuiApplication::removePostedEvents(window);
 }
 
 void tst_QQuickDrawer::touch_data()
