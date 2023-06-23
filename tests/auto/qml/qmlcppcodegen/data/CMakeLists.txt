@@ -67,6 +67,7 @@ set(qml_files
     attachedBaseEnum.qml
     badSequence.qml
     basicBlocksWithBackJump.qml
+    basicDTZ.qml
     bindToValueType.qml
     blockComments.qml
     boolCoercions.qml
