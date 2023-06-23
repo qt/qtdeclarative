@@ -17,7 +17,6 @@ QT_BEGIN_NAMESPACE
 
 class QString;
 class QQmlEngine;
-class QQmlRefCount;
 class QQmlContextPrivate;
 class QQmlCompositeTypeData;
 class QQmlContextData;
