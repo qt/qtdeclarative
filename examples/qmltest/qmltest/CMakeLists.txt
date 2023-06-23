@@ -27,18 +27,8 @@ set_target_properties(tst_qmltestexample PROPERTIES
 target_link_libraries(tst_qmltestexample PUBLIC
     Qt6::Core
     Qt6::Gui
-
     Qt6::QuickTest
-
 )
-
-# This line get added, but does not make sense
-#if(QT_BUILDING_QT)
-#    target_link_libraries(tst_qmltestexample PUBLIC
-#        Qt6::Qml
-#        Qt6::QuickTest
-#    )
-#endif()
 
 if(MACOS AND QT_BUILDING_QT)
     set_target_properties(tst_qmltestexample PROPERTIES
