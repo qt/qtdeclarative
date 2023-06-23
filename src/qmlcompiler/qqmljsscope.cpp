@@ -618,6 +618,29 @@ void QQmlJSScope::resolveNonEnumTypes(
     resolveTypesInternal(resolveType, updateChildScope, self, contextualTypes, usedTypes);
 }
 
+static QString flagStorage(const QString &underlyingType)
+{
+    // All numeric types are builtins. Therefore we can exhaustively check the internal names.
+
+    if (underlyingType == u"uint"
+        || underlyingType == u"quint8"
+        || underlyingType == u"ushort"
+        || underlyingType == u"ulonglong") {
+        return u"uint"_s;
+    }
+
+    if (underlyingType == u"int"
+        || underlyingType == u"qint8"
+        || underlyingType == u"short"
+        || underlyingType == u"longlong") {
+        return u"int"_s;
+    }
+
+    // Will fail to resolve and produce an error on usage.
+    // It's harmless if you never use the enum.
+    return QString();
+}
+
 /*!
     \internal
     Resolves all enums of self.
@@ -645,6 +668,8 @@ void QQmlJSScope::resolveEnums(
         QString typeName = it->typeName();
         if (typeName.isEmpty())
             typeName = QStringLiteral("int");
+        else if (it->isFlag())
+            typeName = flagStorage(typeName);
         enumScope->setBaseTypeName(typeName);
         const auto type = findType(typeName, contextualTypes, usedTypes);
         enumScope->m_baseType = { type.scope, type.revision };

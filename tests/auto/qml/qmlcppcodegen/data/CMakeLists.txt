@@ -114,6 +114,7 @@ set(qml_files
     failures.qml
     fallbacklookups.qml
     fileDialog.qml
+    flagEnum.qml
     fromBoolValue.qml
     funcWithParams.qml
     functionLookup.qml
