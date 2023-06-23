@@ -27,11 +27,22 @@ static void setCustomArrayData(Heap::QmlListWrapper *d)
     o->setArrayType(Heap::ArrayData::Custom);
 }
 
+void Heap::QmlListWrapper::init(QMetaType propertyType)
+{
+    Object::init();
+    m_object.init();
+    m_propertyType = propertyType.iface();
+    m_ownData = new QObjectList;
+    *property() = QQmlListProperty<QObject>(nullptr, m_ownData);
+    setCustomArrayData(this);
+}
+
 void Heap::QmlListWrapper::init(QObject *object, int propertyId, QMetaType propertyType)
 {
     Object::init();
     m_object.init(object);
     m_propertyType = propertyType.iface();
+    m_ownData = nullptr;
     void *args[] = { property(), nullptr };
     QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyId, args);
     setCustomArrayData(this);
@@ -43,6 +54,7 @@ void Heap::QmlListWrapper::init(
     Object::init();
     m_object.init(object);
     m_propertyType = propertyType.iface();
+    m_ownData = nullptr;
     *property() = list;
     setCustomArrayData(this);
 }
@@ -50,6 +62,7 @@ void Heap::QmlListWrapper::init(
 void Heap::QmlListWrapper::destroy()
 {
     m_object.destroy();
+    delete m_ownData;
     Object::destroy();
 }
 
@@ -67,6 +80,11 @@ ReturnedValue QmlListWrapper::create(
 {
     return engine->memoryManager->allocate<QmlListWrapper>(prop.object, prop, propType)
             ->asReturnedValue();
+}
+
+ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, QMetaType propType)
+{
+    return engine->memoryManager->allocate<QmlListWrapper>(propType)->asReturnedValue();
 }
 
 QVariant QmlListWrapper::toVariant() const

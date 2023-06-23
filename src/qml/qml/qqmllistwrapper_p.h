@@ -30,6 +30,7 @@ namespace QV4 {
 namespace Heap {
 
 struct QmlListWrapper : Object {
+    void init(QMetaType propertyType);
     void init(QObject *object, int propertyId, QMetaType propertyType);
     void init(QObject *object, const QQmlListProperty<QObject> &list, QMetaType propertyType);
     void destroy();
@@ -54,6 +55,8 @@ private:
 
     // interface instead of QMetaType to keep class a POD
     const QtPrivate::QMetaTypeInterface *m_propertyType;
+
+    QObjectList *m_ownData;
 };
 
 }
@@ -67,6 +70,7 @@ struct Q_QML_EXPORT QmlListWrapper : Object
 
     static ReturnedValue create(ExecutionEngine *engine, QObject *object, int propId, QMetaType propType);
     static ReturnedValue create(ExecutionEngine *engine, const QQmlListProperty<QObject> &prop, QMetaType propType);
+    static ReturnedValue create(ExecutionEngine *engine, QMetaType propType);
 
     QVariant toVariant() const;
     QQmlListReference toListReference() const;
