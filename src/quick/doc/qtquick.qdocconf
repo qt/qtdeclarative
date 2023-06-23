@@ -92,8 +92,7 @@ imagedirs += images
 excludefiles += ../util/qquickpropertychanges_p.h
 examples.fileextensions += "*.qm"
 
-manifestmeta.thumbnail.names += "QtQuick/Threaded ListModel Example" \
-                                "QtQuick/QML Dynamic View Ordering Tutorial*"
+manifestmeta.thumbnail.names += "QtQuick/QML Dynamic View Ordering Tutorial*"
 
 manifestmeta.highlighted.names = "QtQuick/Qt Quick Demo - Same Game"
 
