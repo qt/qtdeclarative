@@ -120,7 +120,7 @@ class DocumentImpl : public QQmlRefCount, public NodeImpl
 {
 public:
     DocumentImpl() : root(nullptr) { type = Document; }
-    virtual ~DocumentImpl() {
+    ~DocumentImpl() override {
         delete root;
     }
 
