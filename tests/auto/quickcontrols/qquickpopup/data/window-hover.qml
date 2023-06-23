@@ -16,21 +16,24 @@ Window {
     Button {
         id: parentButton
         text: "Parent"
+        palette.buttonText: hovered ? "tomato" : "black"
         anchors.fill: parent
+        anchors.margins: 10
 
         Popup {
             id: popup
-            x: 1
-            y: 1
-            topPadding: 1
-            bottomPadding: 1
-            leftPadding: 1
-            rightPadding: 1
+            x: 10
+            y: 10
+            leftPadding: 10
+            rightPadding: 10
+            topPadding: 10
+            bottomPadding: 10
 
             Button {
                 anchors.centerIn: parent
                 id: childButton
                 text: "Child"
+                palette.buttonText: hovered ? "tomato" : "black"
             }
         }
     }
