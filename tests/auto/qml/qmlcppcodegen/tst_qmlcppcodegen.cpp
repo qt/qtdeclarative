@@ -137,6 +137,7 @@ private slots:
     void argumentConversion();
     void badSequence();
     void enumLookup();
+    void enumMarkedAsFlag();
     void trivialSignalHandler();
     void stringToByteArray();
     void listPropertyAsModel();
@@ -2584,6 +2585,17 @@ void tst_QmlCppCodegen::trivialSignalHandler()
     QCOMPARE(o->property("a").toString(), u"yes"_s);
     QCOMPARE(o->property("b").toInt(), 5);
     QCOMPARE(o->property("c").toDouble(), 2.5);
+}
+
+void tst_QmlCppCodegen::enumMarkedAsFlag()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/enumMarkedAsFlag.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QCOMPARE(o->property("flagValue").toInt(), 3);
 }
 
 void tst_QmlCppCodegen::stringToByteArray()

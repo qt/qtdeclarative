@@ -5,6 +5,7 @@
 #define ENUMPROBLEMS_H
 
 #include <QObject>
+#include <QtCore/qflags.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlregistration.h>
 
@@ -48,6 +49,22 @@ class FooFactory : public QObject {
 
 public:
     Q_INVOKABLE Foo* get(Foo::Type type) const { return new Foo(type); }
+};
+
+class ControlFlags : public QObject {
+    Q_OBJECT
+    QML_ELEMENT
+    QML_UNCREATABLE("Flag Container Class")
+public:
+
+    enum Option {
+        ControlA = 0x1,
+        ControlB = 0x2,
+        Both = ControlA | ControlB
+    };
+
+    Q_DECLARE_FLAGS(Options, Option)
+    Q_FLAG(Option)
 };
 
 #endif // ENUMPROBLEMS_H

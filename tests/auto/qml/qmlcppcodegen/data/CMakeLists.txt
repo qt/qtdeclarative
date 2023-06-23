@@ -95,6 +95,7 @@ set(qml_files
     enumFromBadSingleton.qml
     enumInvalid.qml
     enumLookup.qml
+    enumMarkedAsFlag.qml
     enumProblems.qml
     enumScope.qml
     enumsInOtherObject.qml
