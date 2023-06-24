@@ -1180,6 +1180,7 @@ QStringList ArrayObject::toQStringList() const
     ScopedValue v(scope);
 
     uint length = getLength();
+    result.reserve(length);
     for (uint i = 0; i < length; ++i) {
         v = const_cast<ArrayObject *>(this)->get(i);
         result.append(v->toQStringNoThrow());
