@@ -67,7 +67,7 @@ public:
     inline QRecyclePool();
     inline ~QRecyclePool();
 
-    inline T *New();
+    inline T *New() = delete;
     template<typename T1>
     inline T *New(const T1 &);
     template<typename T1>
@@ -90,13 +90,6 @@ QRecyclePool<T, Step>::~QRecyclePool()
 {
     d->recyclePoolHold = false;
     d->releaseIfPossible();
-}
-
-template<typename T, int Step>
-T *QRecyclePool<T, Step>::New()
-{
-    T *rv = d->allocate();
-    return new (rv) T;
 }
 
 template<typename T, int Step>
