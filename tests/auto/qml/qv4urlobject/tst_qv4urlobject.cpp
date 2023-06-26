@@ -89,9 +89,10 @@ void tst_urlobject::urlObject_search_data()
                "url.search"
             << "";
     QTest::newRow("Question mark")
-            << "var url = new URL(\"http://www.google.com/search??=?\");"
+            // the embedded ""'s break trigraph sequences:
+            << "var url = new URL(\"http://www.google.com/search?""?=?\");"
                "url.search"
-            << "??=?";
+            << "?""?=?";
     QTest::newRow("equal sign")
             << "var url = new URL(\"http://www.google.com/search?a==&b=!\");"
                "url.search"
