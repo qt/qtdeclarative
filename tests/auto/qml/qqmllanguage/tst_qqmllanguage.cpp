@@ -7934,7 +7934,9 @@ void tst_qqmllanguage::asValueType()
     QQmlComponent c(&engine, url);
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
 
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(url.toString() + ":6:5: Unable to assign [undefined] to QRectF"_L1));
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url.toString() + ":7:5: Unable to assign [undefined] to QRectF"_L1));
     QScopedPointer<QObject> o(c.create());
 
     QCOMPARE(o->property("a"), QVariant());
@@ -7950,6 +7952,9 @@ void tst_qqmllanguage::asValueType()
     const QPointF point = o->property("e").value<QPointF>();
     QCOMPARE(point.x(), 10.0);
     QCOMPARE(point.y(), 20.0);
+
+    const ValueTypeWithString withString = o->property("f").value<ValueTypeWithString>();
+    QCOMPARE(withString.toString(), u"red");
 }
 
 void tst_qqmllanguage::typedEnums_data()

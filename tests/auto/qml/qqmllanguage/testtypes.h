@@ -2407,6 +2407,20 @@ private:
     int m_length = 19;
 };
 
+struct ValueTypeWithString
+{
+    Q_GADGET
+    QML_VALUE_TYPE(withString)
+    QML_CONSTRUCTIBLE_VALUE
+
+public:
+    Q_INVOKABLE ValueTypeWithString(const QString &v = QString()) : m_string(v) {}
+    QString toString() const { return m_string; }
+
+private:
+    QString m_string;
+};
+
 class GetterObject : public QObject {
     Q_OBJECT
     QML_ELEMENT
