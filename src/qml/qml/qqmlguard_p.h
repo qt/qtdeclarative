@@ -50,10 +50,10 @@ class QQmlGuard : protected QQmlGuardImpl
 {
     friend class QQmlData;
 public:
-    inline QQmlGuard();
-    inline QQmlGuard(ObjectDestroyedFn objectDestroyed, T *);
-    inline QQmlGuard(T *);
-    inline QQmlGuard(const QQmlGuard<T> &);
+    Q_NODISCARD_CTOR inline QQmlGuard();
+    Q_NODISCARD_CTOR inline QQmlGuard(ObjectDestroyedFn objectDestroyed, T *);
+    Q_NODISCARD_CTOR inline QQmlGuard(T *);
+    Q_NODISCARD_CTOR inline QQmlGuard(const QQmlGuard<T> &);
 
     inline QQmlGuard<T> &operator=(const QQmlGuard<T> &o);
     inline QQmlGuard<T> &operator=(T *);
