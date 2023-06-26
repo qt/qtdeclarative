@@ -1823,6 +1823,10 @@ QQmlJSImportVisitor::parseBindingExpression(const QString &name,
         } else {
             binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
                                      QQmlSA::ScriptBindingKind::Script_PropertyBinding);
+            for (QQmlJS::AST::TemplateLiteral *l = templateLit; l; l = l->next) {
+                if (QQmlJS::AST::ExpressionNode *expression = l->expression)
+                    expression->accept(this);
+            }
         }
         break;
     }
