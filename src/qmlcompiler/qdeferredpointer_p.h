@@ -47,17 +47,17 @@ class QDeferredSharedPointer
 public:
     using Factory = QDeferredFactory<std::remove_const_t<T>>;
 
-    QDeferredSharedPointer() = default;
+    Q_NODISCARD_CTOR QDeferredSharedPointer() = default;
 
-    QDeferredSharedPointer(QSharedPointer<T> data)
+    Q_NODISCARD_CTOR QDeferredSharedPointer(QSharedPointer<T> data)
         : m_data(std::move(data))
     {}
 
-    QDeferredSharedPointer(QWeakPointer<T> data)
+    Q_NODISCARD_CTOR QDeferredSharedPointer(QWeakPointer<T> data)
         : m_data(std::move(data))
     {}
 
-    QDeferredSharedPointer(QSharedPointer<T> data, QSharedPointer<Factory> factory)
+    Q_NODISCARD_CTOR QDeferredSharedPointer(QSharedPointer<T> data, QSharedPointer<Factory> factory)
         : m_data(std::move(data)), m_factory(std::move(factory))
     {
         // You have to provide a valid pointer if you provide a factory. We cannot allocate the
@@ -177,14 +177,14 @@ class QDeferredWeakPointer
 public:
     using Factory = QDeferredFactory<std::remove_const_t<T>>;
 
-    QDeferredWeakPointer() = default;
+    Q_NODISCARD_CTOR QDeferredWeakPointer() = default;
 
-    QDeferredWeakPointer(const QDeferredSharedPointer<T> &strong)
+    Q_NODISCARD_CTOR QDeferredWeakPointer(const QDeferredSharedPointer<T> &strong)
         : m_data(strong.m_data), m_factory(strong.m_factory)
     {
     }
 
-    QDeferredWeakPointer(QWeakPointer<T> data, QWeakPointer<Factory> factory)
+    Q_NODISCARD_CTOR QDeferredWeakPointer(QWeakPointer<T> data, QWeakPointer<Factory> factory)
         : m_data(data), m_factory(factory)
     {}
 
