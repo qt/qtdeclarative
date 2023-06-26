@@ -1234,6 +1234,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("VariantMapGetPropertyLookup") << QStringLiteral("variantMapLookup.qml");
     QTest::newRow("StringToDateTime") << QStringLiteral("stringToDateTime.qml");
     QTest::newRow("ScriptInTemplate") << QStringLiteral("scriptInTemplate.qml");
+    QTest::newRow("AddressableValue") << QStringLiteral("addressableValue.qml");
 }
 
 void TestQmllint::cleanQmlCode()

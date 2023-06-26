@@ -2685,7 +2685,7 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMemb
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
 {
     const QString name = idexp->name.toString();
-    if (name.front().isUpper() && m_importTypeLocationMap.contains(name)) {
+    if (m_importTypeLocationMap.contains(name)) {
         m_usedTypes.insert(name);
     }
 
