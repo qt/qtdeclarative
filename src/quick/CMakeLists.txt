@@ -262,6 +262,7 @@ qt_internal_add_shaders(Quick "scenegraph_shaders"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     PREFIX
         "/qt-project.org"
     FILES
@@ -325,6 +326,7 @@ qt_internal_add_shaders(Quick "scenegraph_curve_shaders"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     PREFIX
         "/qt-project.org"
     FILES
@@ -339,6 +341,7 @@ qt_internal_add_shaders(Quick "scenegraph_curve_shaders_derivatives"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     DEFINES "USE_DERIVATIVES"
     PREFIX
         "/qt-project.org"
@@ -355,6 +358,7 @@ qt_internal_add_shaders(Quick "scenegraph_curve_shaders_lg"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     DEFINES
         "LINEARGRADIENT"
     PREFIX
@@ -372,6 +376,7 @@ qt_internal_add_shaders(Quick "scenegraph_curve_shaders_lg_derivatives"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     DEFINES
         "LINEARGRADIENT"
         "USE_DERIVATIVES"
@@ -390,6 +395,7 @@ qt_internal_add_shaders(Quick "scenegraph_curve_shaders_rg"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     DEFINES
         "RADIALGRADIENT"
     PREFIX
@@ -407,6 +413,7 @@ qt_internal_add_shaders(Quick "scenegraph_curve_shaders_rg_derivatives"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     DEFINES
         "RADIALGRADIENT"
         "USE_DERIVATIVES"
@@ -425,6 +432,7 @@ qt_internal_add_shaders(Quick "scenegraph_curve_shaders_cg"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     DEFINES
         "CONICALGRADIENT"
     PREFIX
@@ -442,6 +450,7 @@ qt_internal_add_shaders(Quick "scenegraph_curve_shaders_cg_derivatives"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     DEFINES
         "CONICALGRADIENT"
         "USE_DERIVATIVES"

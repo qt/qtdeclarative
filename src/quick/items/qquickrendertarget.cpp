@@ -810,7 +810,37 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
         dst->renderTarget = u.rhiRt;
         dst->rpDesc = u.rhiRt->renderPassDescriptor(); // just for QQuickWindowRenderTarget::reset()
         dst->owns = false;
+        if (dst->renderTarget->resourceType() == QRhiResource::TextureRenderTarget) {
+            auto texRt = static_cast<QRhiTextureRenderTarget *>(dst->renderTarget);
+            const QRhiTextureRenderTargetDescription desc = texRt->description();
+            bool first = true;
+            for (auto it = desc.cbeginColorAttachments(), end = desc.cendColorAttachments(); it != end; ++it) {
+                if (it->multiViewCount() <= 1)
+                    continue;
+                if (first || dst->multiViewCount == it->multiViewCount()) {
+                    first = false;
+                    if (it->texture() && it->texture()->flags().testFlag(QRhiTexture::TextureArray)) {
+                        if (it->texture()->arraySize() >= it->layer() + it->multiViewCount()) {
+                            dst->multiViewCount = it->multiViewCount();
+                        } else {
+                            qWarning("Invalid QQuickRenderTarget; needs at least %d elements in texture array, got %d",
+                                     it->layer() + it->multiViewCount(),
+                                     it->texture()->arraySize());
+                            return false;
+                        }
+                    } else {
+                        qWarning("Invalid QQuickRenderTarget; multiview requires a texture array");
+                        return false;
+                    }
+                } else {
+                    qWarning("Inconsistent multiViewCount in QQuickRenderTarget (was %d, now found an attachment with %d)",
+                             dst->multiViewCount, it->multiViewCount());
+                    return false;
+                }
+            }
+        }
         return true;
+
     case Type::PaintDevice:
         dst->paintDevice = u.paintDevice;
         dst->owns = false;
@@ -819,6 +849,7 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
     default:
         break;
     }
+
     return false;
 }
 

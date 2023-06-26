@@ -21,6 +21,10 @@ public:
         RequiresFullMatrix  = 0x0008 | RequiresFullMatrixExceptTranslate,
         NoBatching          = 0x0010,
 
+        MultiView2          = 0x10000,
+        MultiView3          = 0x20000,
+        MultiView4          = 0x40000,
+
 #if QT_DEPRECATED_SINCE(6, 3)
         CustomCompileStep Q_DECL_ENUMERATOR_DEPRECATED_X(
             "Qt 6 does not have custom shader compilation support. If the intention is to just disable batching, use NoBatching instead."
@@ -39,6 +43,8 @@ public:
 
     QSGMaterial::Flags flags() const { return m_flags; }
     void setFlag(Flags flags, bool on = true);
+
+    int viewCount() const;
 
 private:
     Flags m_flags;

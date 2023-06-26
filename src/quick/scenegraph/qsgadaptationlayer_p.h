@@ -271,7 +271,6 @@ public:
         QShader rhiShader;
         Type type;
         QVector<Variable> variables;
-        uint constantDataSize;
 
         // Vertex inputs are not tracked here as QSGGeometry::AttributeSet
         // hardwires that anyways so it is up to the shader to provide
@@ -341,6 +340,7 @@ public:
         ShaderSyncData vertex;
         ShaderSyncData fragment;
         void *materialTypeCacheKey;
+        qint8 viewCount;
     };
 
     // Each ShaderEffect item has one node (render thread) and one manager (gui thread).

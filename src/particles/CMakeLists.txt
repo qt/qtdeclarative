@@ -86,6 +86,7 @@ qt_internal_add_shaders(QuickParticlesPrivate "particles_shaders1"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     GLSL
         "150,120,100es,300es"
     PREFIX
@@ -105,6 +106,7 @@ qt_internal_add_shaders(QuickParticlesPrivate "particles_shaders2"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     GLSL
         "150,120,100es,300es"
     PREFIX
@@ -125,6 +127,7 @@ qt_internal_add_shaders(QuickParticlesPrivate "particles_shaders3"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     GLSL
         "150,120,100es,300es"
     PREFIX
@@ -164,6 +167,7 @@ qt_internal_add_shaders(QuickParticlesPrivate "particles_shaders5"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     GLSL
         "150,120,100es,300es"
     PREFIX
@@ -185,6 +189,7 @@ qt_internal_add_shaders(QuickParticlesPrivate "particles_shaders6"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     GLSL
         "150,120,100es,300es"
     PREFIX

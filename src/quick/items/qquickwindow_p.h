@@ -83,6 +83,7 @@ public:
     QRhiRenderBuffer *depthStencil = nullptr;
     QPaintDevice *paintDevice = nullptr;
     bool owns = false;
+    int multiViewCount = 1;
 };
 
 class Q_QUICK_EXPORT QQuickWindowPrivate
@@ -184,6 +185,8 @@ public:
     void clearGrabbers(QPointerEvent *event);
 
     void updateChildWindowStackingOrder(QQuickItem *item = nullptr);
+
+    int multiViewCount();
 
     QSGRenderContext *context;
     QSGRenderer *renderer;

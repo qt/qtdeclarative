@@ -496,6 +496,7 @@ void QQuickWindowRenderTarget::reset(QRhi *rhi)
     depthStencil = nullptr;
     paintDevice = nullptr;
     owns = false;
+    multiViewCount = 1;
 }
 
 void QQuickWindowPrivate::invalidateFontData(QQuickItem *item)
@@ -599,6 +600,21 @@ void QQuickWindowPrivate::emitAfterRenderPassRecording(void *ud)
     emit w->afterRenderPassRecording();
 }
 
+int QQuickWindowPrivate::multiViewCount()
+{
+    if (rhi) {
+        ensureCustomRenderTarget();
+        if (redirect.rt.renderTarget)
+            return redirect.rt.multiViewCount;
+    }
+
+    // Note that on QRhi level 0 and 1 are often used interchangeably, as both mean
+    // no-multiview. Here in Qt Quick let's always use 1 as the default
+    // (no-multiview), so that higher layers (effects, materials) do not need to
+    // handle both 0 and 1, only 1.
+    return 1;
+}
+
 void QQuickWindowPrivate::renderSceneGraph()
 {
     Q_Q(QQuickWindow);
@@ -634,6 +650,7 @@ void QQuickWindowPrivate::renderSceneGraph()
             cb = swapchain->currentFrameCommandBuffer();
         }
         sgRenderTarget = QSGRenderTarget(rt, rp, cb);
+        sgRenderTarget.multiViewCount = multiViewCount();
     } else {
         sgRenderTarget = QSGRenderTarget(redirect.rt.paintDevice);
     }

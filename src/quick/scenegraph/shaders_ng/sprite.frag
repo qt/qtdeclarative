@@ -11,15 +11,19 @@ layout(location = 0) out vec4 fragColor;
 layout(binding = 1) uniform sampler2D tex;
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 matrix;
+#endif
     vec4 animPos;
     vec3 animData;
     float opacity;
-} ubuf;
+};
 
 void main()
 {
     fragColor = mix(texture(tex, fTexS.xy),
                     texture(tex, fTexS.zw),
-                    progress) * ubuf.opacity;
+                    progress) * opacity;
 }

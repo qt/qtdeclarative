@@ -330,7 +330,7 @@ void RhiVisualizer::ChangeVis::gather(Node *n)
         const QColor color = QColor::fromHsvF((visualizer->m_randomGenerator.generate() & 1023) / 1023.0f, 0.3f, 1.0f).toRgb();
         const float alpha = 0.5f;
 
-        QMatrix4x4 matrix = visualizer->m_renderer->m_current_projection_matrix;
+        QMatrix4x4 matrix = visualizer->m_renderer->m_current_projection_matrix[0];
         if (n->element()->batch->root)
             matrix = matrix * qsg_matrixForRoot(n->element()->batch->root);
 
@@ -445,7 +445,7 @@ void RhiVisualizer::BatchVis::gather(Batch *b)
     if (b->positionAttribute != 0)
         return;
 
-    QMatrix4x4 matrix(visualizer->m_renderer->m_current_projection_matrix);
+    QMatrix4x4 matrix(visualizer->m_renderer->m_current_projection_matrix[0]);
     if (b->root)
         matrix = matrix * qsg_matrixForRoot(b->root);
 
@@ -575,7 +575,7 @@ void RhiVisualizer::ClipVis::gather(QSGNode *node)
 {
     if (node->type() == QSGNode::ClipNodeType) {
         QSGClipNode *clipNode = static_cast<QSGClipNode *>(node);
-        QMatrix4x4 matrix = visualizer->m_renderer->m_current_projection_matrix;
+        QMatrix4x4 matrix = visualizer->m_renderer->m_current_projection_matrix[0];
         if (clipNode->matrix())
             matrix = matrix * *clipNode->matrix();
 
@@ -674,7 +674,7 @@ void RhiVisualizer::ClipVis::render(QRhiCommandBuffer *cb)
 void RhiVisualizer::OverdrawVis::gather(Node *n)
 {
     if (n->type() == QSGNode::GeometryNodeType && n->element()->batch) {
-        QMatrix4x4 matrix = visualizer->m_renderer->m_current_projection_matrix;
+        QMatrix4x4 matrix = visualizer->m_renderer->m_current_projection_matrix[0];
         matrix(2, 2) = visualizer->m_renderer->m_zRange;
         matrix(2, 3) = 1.0f - n->element()->order * visualizer->m_renderer->m_zRange;
 

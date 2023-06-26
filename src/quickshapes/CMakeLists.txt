@@ -42,6 +42,7 @@ qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     PREFIX
         "/qt-project.org/shapes"
     FILES

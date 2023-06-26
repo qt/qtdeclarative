@@ -49,6 +49,8 @@ QSGAbstractRendererPrivate::QSGAbstractRendererPrivate()
     : m_root_node(nullptr)
     , m_clear_color(Qt::transparent)
 {
+    m_projection_matrix.resize(1);
+    m_projection_matrix_native_ndc.resize(1);
 }
 
 /*!
@@ -231,7 +233,7 @@ void QSGAbstractRenderer::setProjectionMatrixToRect(const QRectF &rect, MatrixTr
 
     QMatrix4x4 matrix;
     matrix.ortho(left, right, bottom, top, 1, -1);
-    setProjectionMatrix(matrix);
+    setProjectionMatrix(matrix, 0);
 
     if (nativeNDCFlipY) {
         std::swap(top, bottom);
@@ -239,7 +241,7 @@ void QSGAbstractRenderer::setProjectionMatrixToRect(const QRectF &rect, MatrixTr
         matrix.setToIdentity();
         matrix.ortho(left, right, bottom, top, 1, -1);
     }
-    setProjectionMatrixWithNativeNDC(matrix);
+    setProjectionMatrixWithNativeNDC(matrix, 0);
 }
 
 /*!
@@ -247,19 +249,23 @@ void QSGAbstractRenderer::setProjectionMatrixToRect(const QRectF &rect, MatrixTr
 
     \sa projectionMatrix(), setProjectionMatrixToRect()
  */
-void QSGAbstractRenderer::setProjectionMatrix(const QMatrix4x4 &matrix)
+void QSGAbstractRenderer::setProjectionMatrix(const QMatrix4x4 &matrix, int index)
 {
     Q_D(QSGAbstractRenderer);
-    d->m_projection_matrix = matrix;
+    if (d->m_projection_matrix.count() <= index)
+        d->m_projection_matrix.resize(index + 1);
+    d->m_projection_matrix[index] = matrix;
 }
 
 /*!
     \internal
  */
-void QSGAbstractRenderer::setProjectionMatrixWithNativeNDC(const QMatrix4x4 &matrix)
+void QSGAbstractRenderer::setProjectionMatrixWithNativeNDC(const QMatrix4x4 &matrix, int index)
 {
     Q_D(QSGAbstractRenderer);
-    d->m_projection_matrix_native_ndc = matrix;
+    if (d->m_projection_matrix_native_ndc.count() <= index)
+        d->m_projection_matrix_native_ndc.resize(index + 1);
+    d->m_projection_matrix_native_ndc[index] = matrix;
 }
 
 /*!
@@ -267,19 +273,31 @@ void QSGAbstractRenderer::setProjectionMatrixWithNativeNDC(const QMatrix4x4 &mat
 
     \sa setProjectionMatrix(), setProjectionMatrixToRect()
  */
-QMatrix4x4 QSGAbstractRenderer::projectionMatrix() const
+QMatrix4x4 QSGAbstractRenderer::projectionMatrix(int index) const
 {
     Q_D(const QSGAbstractRenderer);
-    return d->m_projection_matrix;
+    return d->m_projection_matrix[index];
+}
+
+int QSGAbstractRenderer::projectionMatrixCount() const
+{
+    Q_D(const QSGAbstractRenderer);
+    return d->m_projection_matrix.count();
+}
+
+int QSGAbstractRenderer::projectionMatrixWithNativeNDCCount() const
+{
+    Q_D(const QSGAbstractRenderer);
+    return d->m_projection_matrix_native_ndc.count();
 }
 
 /*!
     \internal
  */
-QMatrix4x4 QSGAbstractRenderer::projectionMatrixWithNativeNDC() const
+QMatrix4x4 QSGAbstractRenderer::projectionMatrixWithNativeNDC(int index) const
 {
     Q_D(const QSGAbstractRenderer);
-    return d->m_projection_matrix_native_ndc;
+    return d->m_projection_matrix_native_ndc[index];
 }
 
 /*!

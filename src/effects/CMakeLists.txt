@@ -53,6 +53,7 @@ set(EFFECT_SHADER_ARGS
         SILENT
         PRECOMPILE
         OPTIMIZED
+        MULTIVIEW
         PREFIX
             "/"
 )

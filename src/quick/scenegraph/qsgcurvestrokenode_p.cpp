@@ -11,6 +11,7 @@ bool QSGCurveStrokeMaterialShader::updateUniformData(RenderState &state, QSGMate
     bool changed = false;
     QByteArray *buf = state.uniformData();
     Q_ASSERT(buf->size() >= 64);
+    const int matrixCount = qMin(state.projectionMatrixCount(), newEffect->viewCount());
 
     auto *newMaterial = static_cast<QSGCurveStrokeMaterial *>(newEffect);
     auto *oldMaterial = static_cast<QSGCurveStrokeMaterial *>(oldEffect);
@@ -19,23 +20,24 @@ bool QSGCurveStrokeMaterialShader::updateUniformData(RenderState &state, QSGMate
     auto *oldNode = oldMaterial != nullptr ? oldMaterial->node() : nullptr;
 
     if (state.isMatrixDirty()) {
-        QMatrix4x4 m = state.combinedMatrix();
         float localScale = newNode != nullptr ? newNode->localScale() : 1.0f;
-        m.scale(localScale);
-        memcpy(buf->data(), m.constData(), 64);
-
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            QMatrix4x4 m = state.combinedMatrix(viewIndex);
+            m.scale(localScale);
+            memcpy(buf->data() + viewIndex * 64, m.constData(), 64);
+        }
         float matrixScale = qSqrt(qAbs(state.determinant())) * state.devicePixelRatio() * localScale;
-        memcpy(buf->data()+64, &matrixScale, 4);
+        memcpy(buf->data() + matrixCount * 64, &matrixScale, 4);
         changed = true;
     }
 
     if (state.isOpacityDirty()) {
         const float opacity = state.opacity();
-        memcpy(buf->data() + 64 + 4, &opacity, 4);
+        memcpy(buf->data() + matrixCount * 64 + 4, &opacity, 4);
         changed = true;
     }
 
-    int offset = 64+16;
+    int offset = matrixCount * 64 + 16;
     if (newNode == nullptr)
         return changed;
 

@@ -40,8 +40,8 @@ public:
     QRect m_device_rect;
     QRect m_viewport_rect;
 
-    QMatrix4x4 m_projection_matrix;
-    QMatrix4x4 m_projection_matrix_native_ndc;
+    QVarLengthArray<QMatrix4x4, 1> m_projection_matrix;
+    QVarLengthArray<QMatrix4x4, 1> m_projection_matrix_native_ndc;
     uint m_mirrored : 1;
 };
 

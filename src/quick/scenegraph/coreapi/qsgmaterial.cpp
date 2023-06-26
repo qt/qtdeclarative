@@ -163,6 +163,10 @@ QSGMaterial::~QSGMaterial()
 
     \value CustomCompileStep In Qt 6 this flag is identical to NoBatching. Prefer using
     NoBatching instead.
+
+    \omitvalue MultiView2
+    \omitvalue MultiView3
+    \omitvalue MultiView4
  */
 
 /*!
@@ -246,5 +250,181 @@ int QSGMaterial::compare(const QSGMaterial *other) const
     antialiasing in a way that needs to account for perspective transformations when
     RenderMode3D is in use.
 */
+
+/*!
+    \return The number of views in case of the material is used in multiview
+    rendering.
+
+    \note The return value is valid only when called from createShader(), and
+    afterwards. The value is not necessarily up-to-date before createShader()
+    is invokved by the scene graph.
+
+    Normally the return value is \c 1. A view count greater than 2 implies a
+    \e{multiview render pass}. Materials that support multiview are expected to
+    query viewCount() in createShader(), or in their QSGMaterialShader
+    constructor, and ensure the appropriate shaders are picked. The vertex
+    shader is then expected to use
+    \c{gl_ViewIndex} to index the modelview-projection matrix array as there
+    are multiple matrices in multiview mode. (one for each view)
+
+    As an example, take the following simple vertex shader:
+
+    \badcode
+    #version 440
+
+    layout(location = 0) in vec4 vertexCoord;
+    layout(location = 1) in vec4 vertexColor;
+
+    layout(location = 0) out vec4 color;
+
+    layout(std140, binding = 0) uniform buf {
+        mat4 matrix[2];
+        float opacity;
+    };
+
+    void main()
+    {
+        gl_Position = matrix[gl_ViewIndex] * vertexCoord;
+        color = vertexColor * opacity;
+    }
+    \endcode
+
+    This shader is prepared to handle 2 views, and 2 views only. It is not
+    compatible with other view counts. When conditioning the shader, the \c qsb
+    tool has to be invoked with \c{--view-count 2} or, if using the CMake
+    integration,
+    \c{VIEW_COUNT 2} must be specified in the \c{qt_add_shaders()} command.
+
+    \note A line with \c{#extension GL_EXT_multiview : require} is injected
+    automatically by \c qsb whenever a view count of 2 or greater is set.
+
+    Developers are encouraged to use the automatically injected preprocessor
+    variable \c{QSHADER_VIEW_COUNT} to simplify the handling of the different
+    number of views. For example, if there is a need to support both
+    non-multiview and multiview with a view count of 2 in the same source file,
+    the following could be done:
+
+    \badcode
+    #version 440
+
+    layout(location = 0) in vec4 vertexCoord;
+    layout(location = 1) in vec4 vertexColor;
+
+    layout(location = 0) out vec4 color;
+
+    layout(std140, binding = 0) uniform buf {
+    #if QSHADER_VIEW_COUNT >= 2
+        mat4 matrix[QSHADER_VIEW_COUNT];
+    #else
+        mat4 matrix;
+    #endif
+        float opacity;
+    };
+
+    void main()
+    {
+    #if QSHADER_VIEW_COUNT >= 2
+        gl_Position = matrix[gl_ViewIndex] * vertexCoord;
+    #else
+        gl_Position = matrix * vertexCoord;
+    #endif
+        color = vertexColor * opacity;
+    }
+    \endcode
+
+    The same source file can now be run through \c qsb or \c{qt_add_shaders()}
+    twice, once without specify the view count, and once with the view count
+    set to 2. The material can then pick the appropriate .qsb file based on
+    viewCount() at run time.
+
+    With CMake, this could looks similar to the following. With this example
+    the corresponding QSGMaterialShader is expected to choose between
+    \c{:/shaders/example.vert.qsb} and \c{:/shaders/multiview/example.vert.qsb}
+    based on the value of viewCount(). (same goes for the fragment shader)
+
+    \badcode
+    qt_add_shaders(application "application_shaders"
+        PREFIX
+            /
+        FILES
+            shaders/example.vert
+            shaders/example.frag
+    )
+
+    qt_add_shaders(application "application_multiview_shaders"
+        GLSL
+            330,300es
+        HLSL
+            61
+        MSL
+            12
+        VIEW_COUNT
+            2
+        PREFIX
+            /
+        FILES
+            shaders/example.vert
+            shaders/example.frag
+        OUTPUTS
+            shaders/multiview/example.vert
+            shaders/multiview/example.frag
+    )
+    \endcode
+
+    \note The fragment shader should be treated the same way the vertex shader
+    is, even when the fragment shader code has no dependency on the view count.
+    This is because mixing different shader versions within the same graphics
+    pipeline can be problematic, depending on the underlying graphics API. With
+    D3D12 for example, mixing HLSL shaders for shader model 5.0 and 6.1 would
+    generate an error.
+
+    \note For OpenGL the minimum GLSL version for vertex shaders relying on
+    \c{gl_ViewIndex} is \c 330. Lower versions may be accepted at build time,
+    but may lead to an error at run time, depending on the OpenGL implementation.
+
+    As a convenience, there is also a \c MULTIVIEW option for qt_add_shaders().
+    This first runs the \c qsb tool normally, then overrides \c VIEW_COUNT to
+    \c 2, sets \c GLSL, \c HLSL, \c MSL to some suitable defaults, and runs \c
+    qsb again, this time outputting .qsb files with a suffix added. The material
+    implementation can then use the \l QSGMaterialShader::setShaderFileName()
+    overload taking a \c viewCount argument, that automatically picks the
+    correct .qsb file.
+
+    The following is therefore mostly equivalent to the example call shown
+    above, except that no manually managed output files need to be specified.
+    Note that there can be cases when the automatically chosen shading language
+    versions are not sufficient, in which case applications should continue
+    specify everything explicitly.
+
+    \badcode
+    qt_add_shaders(application "application_multiview_shaders"
+        MULTIVIEW
+        PREFIX
+            /
+        FILES
+            shaders/example.vert
+            shaders/example.frag
+    )
+    \endcode
+
+    See \l QRhi::MultiView, \l QRhiColorAttachment::setMultiViewCount(), and \l
+    QRhiGraphicsPipeline::setMultiViewCount() for further, lower-level details
+    on multiview support in Qt. The Qt Quick scene graph renderer is prepared
+    to recognize multiview render targets, when specified via
+    \l QQuickRenderTarget::fromRhiRenderTarget(), and propagate the view count to
+    graphics pipelines and the materials.
+
+    \since 6.8
+ */
+int QSGMaterial::viewCount() const
+{
+    if (m_flags.testFlag(MultiView4))
+        return 4;
+    if (m_flags.testFlag(MultiView3))
+        return 3;
+    if (m_flags.testFlag(MultiView2))
+        return 2;
+    return 1;
+}
 
 QT_END_NAMESPACE

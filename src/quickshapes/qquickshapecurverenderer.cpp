@@ -29,25 +29,27 @@ namespace {
 class QQuickShapeWireFrameMaterialShader : public QSGMaterialShader
 {
 public:
-    QQuickShapeWireFrameMaterialShader()
+    QQuickShapeWireFrameMaterialShader(int viewCount)
     {
         setShaderFileName(VertexStage,
-                          QStringLiteral(":/qt-project.org/shapes/shaders_ng/wireframe.vert.qsb"));
+                          QStringLiteral(":/qt-project.org/shapes/shaders_ng/wireframe.vert.qsb"), viewCount);
         setShaderFileName(FragmentStage,
-                          QStringLiteral(":/qt-project.org/shapes/shaders_ng/wireframe.frag.qsb"));
+                          QStringLiteral(":/qt-project.org/shapes/shaders_ng/wireframe.frag.qsb"), viewCount);
     }
 
-    bool updateUniformData(RenderState &state, QSGMaterial *, QSGMaterial *) override
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *) override
     {
         bool changed = false;
         QByteArray *buf = state.uniformData();
         Q_ASSERT(buf->size() >= 64);
+        const int matrixCount = qMin(state.projectionMatrixCount(), newMaterial->viewCount());
 
-        if (state.isMatrixDirty()) {
-            const QMatrix4x4 m = state.combinedMatrix();
-
-            memcpy(buf->data(), m.constData(), 64);
-            changed = true;
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            if (state.isMatrixDirty()) {
+                const QMatrix4x4 m = state.combinedMatrix(viewIndex);
+                memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+                changed = true;
+            }
         }
 
         return changed;
@@ -75,7 +77,7 @@ protected:
     }
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode) const override
     {
-        return new QQuickShapeWireFrameMaterialShader;
+        return new QQuickShapeWireFrameMaterialShader(viewCount());
     }
 
 };
