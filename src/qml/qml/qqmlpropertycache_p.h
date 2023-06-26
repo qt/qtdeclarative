@@ -40,9 +40,9 @@ class QQmlVMEMetaObject;
 class QQmlMetaObjectPointer
 {
 public:
-    QQmlMetaObjectPointer() = default;
+    Q_NODISCARD_CTOR QQmlMetaObjectPointer() = default;
 
-    QQmlMetaObjectPointer(const QMetaObject *staticMetaObject)
+    Q_NODISCARD_CTOR QQmlMetaObjectPointer(const QMetaObject *staticMetaObject)
         : d(quintptr(staticMetaObject))
     {
         Q_ASSERT((d.loadRelaxed() & Shared) == 0);
@@ -57,7 +57,7 @@ public:
 
 private:
     friend class QQmlPropertyCache;
-    QQmlMetaObjectPointer(const QQmlMetaObjectPointer &other)
+    Q_NODISCARD_CTOR QQmlMetaObjectPointer(const QQmlMetaObjectPointer &other)
         : d(other.d.loadRelaxed())
     {
         // other has to survive until this ctor is done. So d cannot disappear before.

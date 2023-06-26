@@ -23,7 +23,8 @@ struct QuitLockDisabler
 {
     const bool quitLockEnabled;
 
-    QuitLockDisabler() : quitLockEnabled(QCoreApplication::isQuitLockEnabled())
+    Q_NODISCARD_CTOR QuitLockDisabler()
+        : quitLockEnabled(QCoreApplication::isQuitLockEnabled())
     {
         QCoreApplication::setQuitLockEnabled(false);
     }
