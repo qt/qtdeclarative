@@ -31,6 +31,7 @@ qt_add_qml_module(draganddropexample
         "tiles/tiles.qml"
         "views/Icon.qml"
         "views/gridview.qml"
+        "external/externaldraganddrop.qml"
 )
 
 target_link_libraries(draganddropexample PRIVATE

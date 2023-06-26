@@ -2,7 +2,6 @@ TEMPLATE = subdirs
 SUBDIRS =   quick-accessibility \
             animation \
             draganddrop \
-            externaldraganddrop \
             canvas \
             imageelements \
             keyinteraction \

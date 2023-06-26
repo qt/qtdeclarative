@@ -4,7 +4,6 @@
 qt_internal_add_example(quick-accessibility)
 qt_internal_add_example(animation)
 qt_internal_add_example(draganddrop)
-qt_internal_add_example(externaldraganddrop)
 qt_internal_add_example(canvas)
 qt_internal_add_example(imageelements)
 qt_internal_add_example(keyinteraction)
