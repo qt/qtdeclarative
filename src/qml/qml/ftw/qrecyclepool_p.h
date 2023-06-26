@@ -132,8 +132,7 @@ template<typename T, int Step>
 T *QRecyclePool<T, Step>::New()
 {
     T *rv = d->allocate();
-    new (rv) T;
-    return rv;
+    return new (rv) T;
 }
 
 template<typename T, int Step>
@@ -141,8 +140,7 @@ template<typename T1>
 T *QRecyclePool<T, Step>::New(const T1 &a)
 {
     T *rv = d->allocate();
-    new (rv) T(a);
-    return rv;
+    return new (rv) T(a);
 }
 
 template<typename T, int Step>
@@ -150,8 +148,7 @@ template<typename T1>
 T *QRecyclePool<T, Step>::New(T1 &a)
 {
     T *rv = d->allocate();
-    new (rv) T(a);
-    return rv;
+    return new (rv) T(a);
 }
 
 template<typename T, int Step>
