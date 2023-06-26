@@ -2,11 +2,17 @@
 
 # QTBUG-114718 (begin)
 [overlay]
+macos
 [invisibleToolTipOpen]
+macos
 [cursorShape]
+macos
 [hover]
+macos
 [doubleClickInMouseArea]
+macos
 [focusMultiplePopup]
+macos
 # QTBUG-114718 (end)
 
 [overlay]
