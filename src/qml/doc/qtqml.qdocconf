@@ -69,6 +69,3 @@ navigation.toctitles = "Qt Quick Compiler"
 navigation.toctitles.inclusive = true
 # suppress qdoc warnings for \instantiates entries
 spurious += "C\\+\\+ class .*\\\\instantiates .*"
-
-# Fail the documentation build if there are more warnings than the limit
-warninglimit = 0

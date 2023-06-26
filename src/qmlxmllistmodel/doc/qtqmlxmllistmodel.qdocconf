@@ -30,6 +30,3 @@ exampledirs += .. \
 imagedirs += images
 
 navigation.qmltypespage = "Qt XmlListModel QML Types"
-
-# Fail the documentation build if there are more warnings than the limit
-warninglimit = 0

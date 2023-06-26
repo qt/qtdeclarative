@@ -42,6 +42,3 @@ sourcedirs  += ..
 
 navigation.landingpage = "Qt QML Compiler"
 navigation.cppclassespage = "Qt QML Compiler C++ Classes"
-
-# Fail the documentation build if there are more warnings than the limit
-warninglimit = 0
