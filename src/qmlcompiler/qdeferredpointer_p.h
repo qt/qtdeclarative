@@ -66,7 +66,7 @@ public:
         Q_ASSERT(!m_data.isNull() || m_factory.isNull());
     }
 
-    operator QSharedPointer<T>() const
+    [[nodiscard]] operator QSharedPointer<T>() const
     {
         lazyLoad();
         return m_data;
@@ -74,8 +74,8 @@ public:
 
     operator QDeferredSharedPointer<const T>() const { return { m_data, m_factory }; }
 
-    T &operator*() const { return QSharedPointer<T>(*this).operator*(); }
-    T *operator->() const { return QSharedPointer<T>(*this).operator->(); }
+    [[nodiscard]] T &operator*() const { return QSharedPointer<T>(*this).operator*(); }
+    [[nodiscard]] T *operator->() const { return QSharedPointer<T>(*this).operator->(); }
 
     bool isNull() const
     {
@@ -85,8 +85,8 @@ public:
     explicit operator bool() const noexcept { return !isNull(); }
     bool operator !() const noexcept { return isNull(); }
 
-    T *data() const { return QSharedPointer<T>(*this).data(); }
-    T *get() const { return data(); }
+    [[nodiscard]] T *data() const { return QSharedPointer<T>(*this).data(); }
+    [[nodiscard]] T *get() const { return data(); }
 
     friend size_t qHash(const QDeferredSharedPointer &ptr, size_t seed = 0)
     {
@@ -188,20 +188,20 @@ public:
         : m_data(data), m_factory(factory)
     {}
 
-    operator QWeakPointer<T>() const
+    [[nodiscard]] operator QWeakPointer<T>() const
     {
         lazyLoad();
         return m_data;
     }
 
-    operator QDeferredSharedPointer<T>() const
+    [[nodiscard]] operator QDeferredSharedPointer<T>() const
     {
         return QDeferredSharedPointer<T>(m_data.toStrongRef(), m_factory.toStrongRef());
     }
 
     operator QDeferredWeakPointer<const T>() const { return {m_data, m_factory}; }
 
-    QSharedPointer<T> toStrongRef() const
+    [[nodiscard]] QSharedPointer<T> toStrongRef() const
     {
         return QWeakPointer<T>(*this).toStrongRef();
     }
