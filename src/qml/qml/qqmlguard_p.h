@@ -28,8 +28,10 @@ public:
     inline QQmlGuardImpl();
     inline QQmlGuardImpl(QObject *);
     inline QQmlGuardImpl(const QQmlGuardImpl &);
+protected:
     inline ~QQmlGuardImpl();
 
+public: // ### make so it can be private
     QObject *o = nullptr;
     QQmlGuardImpl  *next = nullptr;
     QQmlGuardImpl **prev = nullptr;
@@ -75,7 +77,7 @@ public:
 void Q_QML_PRIVATE_EXPORT hasJsOwnershipIndicator(QQmlGuardImpl *);
 
 template <typename T>
-class QQmlStrongJSQObjectReference : protected QQmlGuardImpl
+class QQmlStrongJSQObjectReference final : protected QQmlGuardImpl
 {
 public:
     T *object() const noexcept { return static_cast<T *>(o); }
