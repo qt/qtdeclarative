@@ -83,11 +83,17 @@ QStringList getStringList(const QString &key, const QJsonObject object, bool req
     }
 }
 
-void findChildrenImpl(const QStringList &keyValueList, const QJsonObject &root, bool firstOnly, QList<QJsonObject> &result)
+void findChildrenImpl(const QStringList &keyValueList
+    , const QJsonObject &root
+    , bool firstOnly
+    , QStringList &currentPath
+    , QList<QJsonObject> &result)
 {
     // Assert that the key-value list comes in pairs:
     Q_ASSERT(keyValueList.length() % 2 == 0);
     const auto children = root.value("children").toArray();
+
+    currentPath.append(root["name"].toString());
 
     for (auto it = children.constBegin(); it != children.constEnd(); ++it) {
         const auto value = *it;
@@ -95,7 +101,7 @@ void findChildrenImpl(const QStringList &keyValueList, const QJsonObject &root, 
             throw NoChildFoundException(QStringLiteral("expected only objects in array, but found ")
                 + QString::number(value.type()) + ". Searched for: " + keyValueList.join(","));
 
-        const auto object = value.toObject();
+        auto object = value.toObject();
         for (int i = 0; i < keyValueList.length(); i += 2) {
             const auto key = keyValueList[i];
             const auto value = keyValueList[i + 1];
@@ -109,22 +115,30 @@ void findChildrenImpl(const QStringList &keyValueList, const QJsonObject &root, 
             if (i == keyValueList.length() - 2) {
                 // All key-value pairs were matched, so add the object to
                 // the container. If firstOnly is set, we're done searching.
+                object["qt_path"] = currentPath.join(", ") + ", " + object["name"].toString();
                 result.append(object);
                 if (firstOnly)
                     return;
             }
         }
 
-        findChildrenImpl(keyValueList, object, firstOnly, result);
-        if (firstOnly && result.length() == 1)
+        findChildrenImpl(keyValueList, object, firstOnly, currentPath, result);
+        if (firstOnly && result.size() == 1)
             return;
     }
+
+    currentPath.removeLast();
 }
 
+/**
+ * Search for all json objects recursively inside root with the given key
+ * value pairs.
+*/
 QList<QJsonObject> findChildren(const QStringList &keyValueList, const QJsonObject &root)
 {
     QList<QJsonObject> result;
-    findChildrenImpl(keyValueList, root, false, result);
+    QStringList currentPath;
+    findChildrenImpl(keyValueList, root, false, currentPath, result);
     return result;
 }
 
@@ -135,7 +149,8 @@ QList<QJsonObject> findChildren(const QStringList &keyValueList, const QJsonObje
 QJsonObject findChild(const QStringList &keyValueList, const QJsonObject &root)
 {
     QList<QJsonObject> result;
-    findChildrenImpl(keyValueList, root, true, result);
+    QStringList currentPath;
+    findChildrenImpl(keyValueList, root, true, currentPath, result);
     if (result.isEmpty()) {
         Q_ASSERT(keyValueList.length() % 2 == 0);
         QStringList msg;
@@ -143,7 +158,7 @@ QJsonObject findChild(const QStringList &keyValueList, const QJsonObject &root)
             msg << "'" + keyValueList[i] + ":" + keyValueList[i + 1] + "'";
         throw NoChildFoundException(QStringLiteral("could not find Figma child: ") + msg.join(","));
     }
-    return result.value(0);
+    return result.first();
 }
 
 /**

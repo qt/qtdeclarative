@@ -24,7 +24,7 @@ QJsonValue getValue(const QString &key, const QJsonObject object);
 QString getString(const QString &key, const QJsonObject object);
 QStringList getStringList(const QString &key, const QJsonObject object, bool required = true);
 
-QList<QJsonObject>  findChildren(const QStringList &keyValueList, const QJsonObject &root);
+QList<QJsonObject> findChildren(const QStringList &keyValueList, const QJsonObject &root);
 QJsonObject findChild(const QStringList &keyValueList, const QJsonObject &root);
 QJsonObject findNamedChild(const QStringList &namePath, const QJsonObject &root);
 

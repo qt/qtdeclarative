@@ -44,12 +44,13 @@ class StyleGenerator
 
 public:
     StyleGenerator(const QString &fileId, const QString &token
-        , const QString &targetPath, bool verbose, bool silent, const QString &generate)
+        , const QString &targetPath, bool verbose, bool silent, bool sanity, const QString &generate)
         : m_fileId(fileId)
         , m_token(token)
         , m_targetPath(targetPath)
         , m_verbose(verbose)
         , m_silent(silent)
+        , m_sanity(sanity)
         , m_controlToGenerate(generate)
     {
     }
@@ -315,8 +316,20 @@ private:
         const auto controlName = getString("name", controlObj);
         const auto componentSetName = getThemeString("component set", controlObj);
         const auto documentRoot = getObject("document", m_document.object());
-        const auto componentSet = findChild({"type", "COMPONENT_SET", "name", componentSetName}, documentRoot);
         const auto configStatesArray = getArray("states", controlObj);
+
+        QJsonObject componentSet;
+        if (m_sanity) {
+            const auto componentSets = findChildren({"type", "COMPONENT_SET", "name", componentSetName}, documentRoot);
+            componentSet = componentSets.first();
+            if (componentSets.count() > 1) {
+                qWarning().nospace().noquote() << "Warning, found more than one component set with name '" + componentSetName + "'.";
+                for (const auto &obj : componentSets)
+                    qWarning().nospace().noquote() << "Found path: " + obj["qt_path"].toString();
+            }
+        } else {
+            componentSet = findChild({"type", "COMPONENT_SET", "name", componentSetName}, documentRoot);
+        }
 
         for (const QJsonValue &configStateValue : configStatesArray) try {
             QJsonObject outputStateConfig;
@@ -855,6 +868,7 @@ private:
     QString m_targetPath;
     bool m_verbose = false;
     bool m_silent = false;
+    bool m_sanity = false;
 
     QStringList m_imageFormats;
     QStringList m_defaultExport;

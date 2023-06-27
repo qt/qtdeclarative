@@ -23,6 +23,8 @@ int main(int argc, char **argv){
             QCoreApplication::translate("main", "Print everything that gets generated.")},
         {{"s", "silent"},
             QCoreApplication::translate("main", "Don't show progress")},
+        {"sanity",
+            QCoreApplication::translate("main", "Run extra sanity checks on the Figma file")},
         {{"g", "generate"},
             QCoreApplication::translate("main", "Generate one control (for debugging)"),
             QCoreApplication::translate("main", "The control to generate")}
@@ -46,6 +48,7 @@ int main(int argc, char **argv){
     const QString generate = parser.value("generate");
     const bool verbose = parser.isSet("verbose");
     const bool silent = parser.isSet("silent");
+    const bool sanity = parser.isSet("sanity");
 
     if (token.isEmpty()) {
         qWarning() << "You need to specify a Figma generated token using '--token'";
@@ -53,7 +56,7 @@ int main(int argc, char **argv){
     }
 
     try {
-        StyleGenerator generator(fileId, token, destinationPath, verbose, silent, generate);
+        StyleGenerator generator(fileId, token, destinationPath, verbose, silent, sanity, generate);
         generator.generateStyle();
     } catch (std::exception &e) {
         qWarning() << "Error:" << e.what();
