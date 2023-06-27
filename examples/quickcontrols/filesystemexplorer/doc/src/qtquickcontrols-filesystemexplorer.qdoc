@@ -4,70 +4,87 @@
     \example filesystemexplorer
     \examplecategory {Application Examples}
     \meta tags {quickcontrols, layout, styling, treeview}
-    \title Modern File System Explorer
+    \title File System Explorer
     \ingroup qtquickcontrols-examples
-    \brief A QML app utilizing customized Qt Quick Controls to display text files from a filesystem.
+    \brief A QML app utilizing customized Qt Quick Controls to display text
+    files from a filesystem.
 
-    In this example, a modern layout is used that consists of three major components. There is an
-    icon-based \e {Sidebar} to the left, followed by a resizable TreeView displaying the file system
-    from a QFileSystemModel, and finally the TextArea displaying the selected text files.
-    There is a common look and feel across all operating systems. We accomplish this by using
-    customized quick controls and frameless windows, with our own window decorations.
+    In this example, a modern layout is used that consists of three major
+    components. There is an icon-based \e {Sidebar} to the left, followed by a
+    resizable TreeView displaying the file system from a QFileSystemModel, and
+    finally the TextArea displaying the selected text files. There is a common
+    look and feel across all operating systems. We accomplish this by using
+    customized quick controls and frameless windows, with our own window
+    decorations. When launching this application from the command-line, you
+    have the option to provide an initial directory as a parameter. This
+    initial directory will be used by the TreeView to set the starting point
+    for displaying the directory structure.
 
-    \image qtquickcontrols-filesystemexplorer.jpg
+    \image qtquickcontrols-filesystemexplorer.webp
 
     \include examples-run.qdocinc
 
-    \section1 Modern layout and colors
+    \section1 Modern layout and structure
 
-    To begin with, we are providing the colors throughout a singleton QML object. In this way,
-    we can provide more structured control over the appearance of the application.
+    To begin with, we are providing the colors throughout a singleton QML
+    object. In this way, we can provide more structured control over the
+    appearance of the application.
 
     \quotefromfile filesystemexplorer/qml/Colors.qml
     \skipto pragma
     \printuntil }
 
-    Since we do not want to rely on the operating system's window decoration and instead want to
-    provide our own, we use the \c FramelessWindowHint flag inside the ApplicationWindow.
-    In order to achieve an equivalent interaction with the window, we override the \c background
-    property of our customized MenuBar and display some information text as well as interaction
-    possibilities for dragging or closing the application. \l {Inline Components} have been used
-    to simplify this process.
+    Since we do not want to rely on the operating system's window decoration
+    and instead want to provide our own, we use the \c FramelessWindowHint flag
+    inside the ApplicationWindow. In order to achieve an equivalent interaction
+    with the window, we override the \c contentItem property of our customized
+    MenuBar and display some information text as well as interaction
+    possibilities for dragging or closing the application. \l {Inline
+    Components} have been used to simplify this process.
 
     \quotefromfile filesystemexplorer/qml/MyMenuBar.qml
-    \skipto /^\s{4}background: Rectangle {$/
-    \printto InteractionButton {
+    \skipto component InteractionButton
+    \printuntil id: maximize
+    \dots
 
-    The \e {Sidebar} on the left includes checkable navigation buttons on top and one-shot buttons on
-    the bottom. A ButtonGroup and a Container are used to ensure that only one entry is active at
-    any given time. It is then possible to provide different views using a property alias for the
-    current position, along with a StackLayout.
+    The \e {Sidebar} on the left includes checkable navigation buttons on top
+    and one-shot buttons on the bottom. A ButtonGroup and a Container are used
+    to ensure that only one entry is active at any given time. It is then
+    possible to provide different views using a property alias for the current
+    position, along with a StackLayout.
 
-    This technique allows us to simply extend the functionality by adding another button and the
-    corresponding element inside the StackLayout.
+    This technique allows us to simply extend the functionality by adding
+    another button and the corresponding element inside the StackLayout.
 
     \quotefromfile filesystemexplorer/Main.qml
     \skipto StackLayout {
-    \printuntil /^\s{20}\}$/
+    \printuntil /^\s{16}\}$/
 
-    The StackLayout includes, besides some simple information text, the \e {FileSystemView}. This
-    custom component displays files and folders and populates it with data from a
-    \l {Using C++ Models with Qt Quick Views}{C++ model}. We can then select the files and
-    read them accordingly.
+    The StackLayout includes, besides some information text, the \e
+    {FileSystemView}. This custom component displays files and folders and
+    populates it with data from a \l {Using C++ Models with Qt Quick Views}{C++
+    model}. We can then select the files and read them accordingly.
 
     \quotefromfile filesystemexplorer/filesystemmodel.cpp
     \skipto readFile
     \printuntil /^\s{0}\}$/
 
-    By using a SplitView, we are able to dynamically share the space between the StackLayout and
-    the ScrollView. Our ScrollView contains an embedded TextArea that displays the opened file. Using
-    this method, we can resize the view vertically and enable scrolling within the TextArea.
+    By right-clicking on a folder in the TreeView, a popup Menu is opened,
+    which allows control over the \c rootIndex property of the TreeView.
+
+    \quotefromfile filesystemexplorer/qml/FileSystemView.qml
+    \skipto MyMenu
+    \printuntil /^\s{8}\}$/
+
+    By using a SplitView, we are able to dynamically share the space between
+    the StackLayout and the Editor. Our Editor contains the TextArea that
+    displays the opened file and provides us with all the functionality needed
+    to edit text files. Additionally, we provide a visualization of the line
+    numbers, which can be toggled on and off in the Menu.
 
     \quotefromfile filesystemexplorer/Main.qml
-    \skipuntil SplitView
-    \dots
-    \skipto ScrollView {
-    \printuntil /^\s{16}\}$/
+    \skipto Editor {
+    \printuntil /^\s{12}\}$/
 
     \section1 Custom components
 
@@ -75,17 +92,32 @@
     \l {Customizing a Control} {this} article first. We are using reusable and
     customized components throughout this example.
 
-    For example, the \e {MyMenu} component customizes Menu's \c background property
-    as well as its delegates' \c contentItem and \c background properties.
+    For instance, the \e {MyMenu} component customizes Menu's \c background
+    property as well as its delegates' \c contentItem and \c background
+    properties.
 
     \quotefile filesystemexplorer/qml/MyMenu.qml
 
-    Another example is the customization of the ScrollIndicator inside
-    the \e {FileSystemView}, which additionally uses customized animations. Here we
+    Another example is the customization of the ScrollIndicator inside the \e
+    {FileSystemView}, which additionally uses customized animations. Here we
     also override the \c contentItem.
 
     \quotefromfile filesystemexplorer/qml/FileSystemView.qml
     \skipto ScrollIndicator.vertical
     \printuntil /^\s{8}\}$/
 
+    \section1 Python version
+
+    If you're interested in the Python version of this example, you can find it
+    \l{https://doc.qt.io/qtforpython-6/examples/example_quickcontrols_filesystemexplorer.html}
+    {here}. This showcases the usage of Qt for Python and demonstrates how it
+    can be used to create the same application.
+
+    Additionally, there is a detailed
+    \l {https://doc.qt.io/qtforpython-6/tutorials/extendedexplorer/extendedexplorer.html}
+    {tutorial} available that provides step-by-step instructions on how to
+    extend this example with additional features. This tutorial can be helpful
+    if you want to explore and learn more about building upon the existing
+      functionality of the filesystem explorer.
 */
+
