@@ -365,6 +365,7 @@ src/qml/qml_compile_hash_p.h
 /build*
 CMakeFiles
 CTestTestfile.cmake
+CMakeUserPresets.json
 cmake_install.cmake
 *_autogen
 tst_*.xml
