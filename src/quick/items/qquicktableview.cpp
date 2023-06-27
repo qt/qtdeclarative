@@ -44,6 +44,12 @@
     using the \l HorizontalHeaderView and \l VerticalHeaderView from
     Qt Quick Controls.
 
+    \note TableView will only \l {isRowLoaded()}{load} as many delegate items as
+    needed to fill up the view. There is no guarantee that items outside the view
+    will be loaded, although TableView will sometimes pre-load items for
+    optimization reasons. Hence, a TableView with zero width or height might not
+    load any delegate items at all.
+
     \section1 Example Usage
 
     \section2 C++ Models
@@ -5682,7 +5688,7 @@ int QQuickTableView::currentColumn() const
 void QQuickTableView::positionViewAtRow(int row, PositionMode mode, qreal offset, const QRectF &subRect)
 {
     Q_D(QQuickTableView);
-    if (row < 0 || row >= rows())
+    if (row < 0 || row >= rows() || d->loadedRows.isEmpty())
         return;
 
     // Note: PositionMode::Contain is from here on translated to (Qt::AlignTop | Qt::AlignBottom).
@@ -5748,7 +5754,7 @@ void QQuickTableView::positionViewAtRow(int row, PositionMode mode, qreal offset
 void QQuickTableView::positionViewAtColumn(int column, PositionMode mode, qreal offset, const QRectF &subRect)
 {
     Q_D(QQuickTableView);
-    if (column < 0 || column >= columns())
+    if (column < 0 || column >= columns() || d->loadedColumns.isEmpty())
         return;
 
     // Note: PositionMode::Contain is from here on translated to (Qt::AlignLeft | Qt::AlignRight).

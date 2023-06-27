@@ -15,6 +15,14 @@ Item {
         width: 0
         height: 0
         delegate: tableViewDelegate
+
+        Component.onCompleted: {
+            positionViewAtCell(
+                Qt.point(0,0),
+                TableView.AlignHCenter,
+                Qt.point(-5,-5)
+            );
+        }
     }
 
     Component {
