@@ -2292,7 +2292,7 @@ void QWindowsStyle::refreshPalette()
     QPalette pal;
     using QWindowsApplication = QNativeInterface::Private::QWindowsApplication;
     if (auto nativeWindowsApp = dynamic_cast<QWindowsApplication *>(QGuiApplicationPrivate::platformIntegration()))
-        nativeWindowsApp->lightSystemPalette(pal);
+        nativeWindowsApp->populateLightSystemPalette(pal);
     QQuickTheme::instance()->setPalette(QQuickTheme::System, pal);
 }
 
