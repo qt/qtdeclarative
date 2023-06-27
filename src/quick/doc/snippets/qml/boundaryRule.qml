@@ -1,8 +1,8 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 //![0]
-import QtQuick 2.14
-import Qt.labs.animation 1.0
+import QtQuick
+import Qt.labs.animation
 
 Rectangle {
     id: root

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 //![0]
-import QtQuick 2.0
+import QtQuick
 
 Canvas {
     width: 400; height: 200

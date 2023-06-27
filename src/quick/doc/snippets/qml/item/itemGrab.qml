@@ -1,7 +1,7 @@
 // Copyright (C) 2014 Jolla Ltd, author: <gunnar.sletta@jollamobile.com>
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-import QtQuick 2.4
+import QtQuick
 
 Item {
     width: 320
