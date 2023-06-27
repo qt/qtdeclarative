@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 //! [document]
 //contents of focusbutton.qml
-import QtQuick 2.0
+import QtQuick
 
 //! [parent begin]
 FocusScope {

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 //![0]
-import QtQuick 2.14
-import Qt.labs.qmlmodels 1.0
+import QtQuick
+import Qt.labs.qmlmodels
 
 TableView {
     anchors.fill: parent

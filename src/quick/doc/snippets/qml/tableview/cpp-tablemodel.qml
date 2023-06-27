@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 //![0]
-import QtQuick 2.12
+import QtQuick
 import TableModel 0.1
 
 TableView {

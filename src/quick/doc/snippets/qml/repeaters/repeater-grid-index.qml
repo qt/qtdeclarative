@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 //! [document]
-import QtQuick 2.0
+import QtQuick
 
 Rectangle {
     width: 400; height: 400; color: "black"

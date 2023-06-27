@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 //! [document]
 // Images.qml
-import QtQuick 2.15
+import QtQuick
 
 Item {
     component LabeledImage: Column {

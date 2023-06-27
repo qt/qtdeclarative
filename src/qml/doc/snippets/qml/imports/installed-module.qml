@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 //! [imports]
-import QtQuick 2.0
+import QtQuick
 import com.nokia.qml.mymodule 1.0
 //! [imports]
 

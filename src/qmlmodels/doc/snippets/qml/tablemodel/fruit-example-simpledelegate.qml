@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 //![file]
-import QtQuick 2.12
-import QtQuick.Window 2.12
-import Qt.labs.qmlmodels 1.0
+import QtQuick
+import QtQuick.Window
+import Qt.labs.qmlmodels
 
 Window {
     width: 400

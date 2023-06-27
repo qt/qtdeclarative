@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 //![0]
 // MyItem.qml
-import QtQuick 2.0
+import QtQuick
 
 Item {
     function myQmlFunction(msg: string) : string {
