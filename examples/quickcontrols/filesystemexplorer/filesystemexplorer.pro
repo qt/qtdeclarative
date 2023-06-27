@@ -1,7 +1,7 @@
 # Copyright (C) 2023 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
-QT += quick quickcontrols2
+QT += quick
 
 CONFIG += qmltypes
 
@@ -15,16 +15,18 @@ TEMPLATE = app
 SOURCES += \
     main.cpp \
     filesystemmodel.cpp \
+    linenumbermodel.cpp \
 
 HEADERS += \
-    filesystemmodel.h
+    filesystemmodel.h \
+    linenumbermodel.h \
 
 qml_resources.files = \
     qmldir \
     Main.qml \
-    qml/Icon.qml \
     qml/About.qml \
     qml/Colors.qml \
+    qml/Editor.qml \
     qml/MyMenu.qml \
     qml/Sidebar.qml \
     qml/MyMenuBar.qml \
@@ -44,6 +46,7 @@ theme_resources.files = \
     icons/read.svg \
     icons/resize.svg \
     icons/qt_logo.svg \
+    icons/app_icon.svg
 
 theme_resources.prefix = /qt/qml/FileSystemModule
 
