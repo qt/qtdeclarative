@@ -1,7 +1,7 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-import QtQuick 2.0
+import QtQuick
 
 Rectangle {
     id: parentItem
@@ -12,7 +12,7 @@ Rectangle {
     function createIt() {
 //![0]
 const newObject = Qt.createQmlObject(`
-    import QtQuick 2.0
+    import QtQuick
 
     Rectangle {
         color: "red"

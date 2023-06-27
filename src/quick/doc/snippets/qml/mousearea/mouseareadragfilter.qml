@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 //! [dragfilter]
-import QtQuick 2.0
+import QtQuick
 
 Rectangle {
     width: 480

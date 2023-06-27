@@ -1,8 +1,8 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-import QtQml 2.12
-import QtQuick 2.12
+import QtQml
+import QtQuick
 
 //![0]
 Rectangle {

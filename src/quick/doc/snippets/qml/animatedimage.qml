@@ -5,7 +5,7 @@
 // examples/quick/imageelements/animatedimage
 
 //! [document]
-import QtQuick 2.0
+import QtQuick
 
 Rectangle {
     width: animation.width; height: animation.height + 8
