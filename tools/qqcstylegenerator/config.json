@@ -31,8 +31,7 @@
             {"atom": "background", "figmaPath": "CheckBoxBackground, background"},
             {"atom": "label", "figmaPath": "ContentItem, Label", "export": ["geometry", "text"]},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
-            {"atom": "indicator", "figmaPath": "CheckBoxIndicator, indicator"},
-            {"atom": "indicator-background", "figmaPath": "CheckBoxIndicator, indicatorBackground"}
+            {"atom": "indicator", "figmaPath": "ContentItem, CheckBoxIndicatorBox"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
