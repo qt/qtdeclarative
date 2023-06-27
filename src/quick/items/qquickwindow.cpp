@@ -2901,6 +2901,14 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     if (itemPrivate->wasDeleted)
         return;
 #endif
+    // QTBUG-114475 - handlers shouldn't get events if their item was taken out of the scene
+    // by a previous event-handling mechanism.
+    if (item->window() != q) {
+        qCDebug(DBG_TOUCH) << "Not delivering " << pointerEvent << " to " << item
+                           << "- item has been parented away";
+        return;
+    }
+
     pointerEvent->localize(item);
 
     // Let the Item's handlers (if any) have the event first.
