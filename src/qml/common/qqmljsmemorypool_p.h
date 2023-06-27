@@ -43,13 +43,12 @@ public:
 
             free(_blocks);
         }
-        qDeleteAll(strings);
     }
 
     inline void *allocate(size_t size)
     {
         size = (size + 7) & ~size_t(7);
-        if (Q_LIKELY(_ptr && (_ptr + size < _end))) {
+        if (Q_LIKELY(_ptr && size < size_t(_end - _ptr))) {
             void *addr = _ptr;
             _ptr += size;
             return addr;
@@ -67,9 +66,8 @@ public:
     template <typename Tp, typename... Ta> Tp *New(Ta... args)
     { return new (this->allocate(sizeof(Tp))) Tp(args...); }
 
-    QStringView newString(const QString &string) {
-        strings.append(new QString(string));
-        return QStringView(*strings.last());
+    QStringView newString(QString string) {
+        return strings.emplace_back(std::move(string));
     }
 
 private:
@@ -113,7 +111,7 @@ private:
     int _blockCount = -1;
     char *_ptr = nullptr;
     char *_end = nullptr;
-    QVector<QString*> strings;
+    QStringList strings;
 
     enum
     {
