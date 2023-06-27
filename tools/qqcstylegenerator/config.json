@@ -70,8 +70,7 @@
             {"atom": "background", "figmaPath": "RadioButtonBackground, background"},
             {"atom": "label", "figmaPath": "ContentItem, Label", "export": ["geometry", "text"]},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
-            {"atom": "indicator", "figmaPath": "RadioButtonIndicator, indicator"},
-            {"atom": "indicator-background", "figmaPath": "RadioButtonIndicator, indicatorBackground"}
+            {"atom": "indicator", "figmaPath": "ContentItem, RadioButtonIndicator"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
