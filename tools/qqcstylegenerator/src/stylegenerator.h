@@ -107,46 +107,74 @@ private:
                 + networkErrorString(reply));
     }
 
-    QJsonDocument generateImageUrls(const ImageFormat &imageFormat)
+    QList<QJsonDocument> generateImageUrls(const ImageFormat &imageFormat)
     {
         newProgress("downloading image urls with format " + imageFormat.name);
-        QJsonDocument figmaResponsDoc;
 
         const auto figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
-        const QString ids = QStringList(figmaIdToFileNameMap.keys()).join(",");
-
-        const QUrl url("https://api.figma.com/v1/images/"
-                       + m_fileId
-                       + "?ids=" + ids
-                       + "&format=" + imageFormat.format
-                       + "&scale=" + imageFormat.scale);
-
-        debug("request: " + url.toString());
-        QNetworkRequest request(url);
-        request.setRawHeader(QByteArray("X-FIGMA-TOKEN"), m_token.toUtf8());
+        const QStringList idsList = figmaIdToFileNameMap.keys();
+        const QString format = imageFormat.format;
+        const QString scale = imageFormat.scale;
 
         QScopedPointer<QNetworkAccessManager> manager(new QNetworkAccessManager);
         manager->setAutoDeleteReplies(true);
 
-        QNetworkReply *reply = manager->get(request);
+        QNetworkRequest request;
+        request.setRawHeader(QByteArray("X-FIGMA-TOKEN"), m_token.toUtf8());
 
-        QObject::connect(reply, &QNetworkReply::finished, [reply, &figmaResponsDoc]{
-            if (reply->error() == QNetworkReply::NoError)
-                figmaResponsDoc = QJsonDocument::fromJson(reply->readAll());
-        });
+        QList<QString> requestIds;
+        QString currentIds;
+        QString partialUrl = "https://api.figma.com/v1/images/" + m_fileId +
+                             "?format=" + format + "&scale=" + scale + "&ids=";
 
-        QObject::connect(reply, &QNetworkReply::downloadProgress, [this]{
-            progress();
-        });
+        // REST API supports urls of up to 6000 chars so we need to split
+        // into multiple requests if the total character length exceeds it
+        const int maxIdsLength = 6000 - partialUrl.length();
+        for (const QString& id : idsList) {
+            if (currentIds.isEmpty()) {
+                currentIds = id;
+            } else if (currentIds.length() + id.length() + 1 <= maxIdsLength) {
+                currentIds += "," + id;
+            } else {
+                requestIds.append(currentIds);
+                currentIds = id;
+            }
+        }
 
-        while (reply->isRunning())
-            qApp->processEvents();
+        if (!currentIds.isEmpty())
+            requestIds.append(currentIds);
 
-        if (reply->error() != QNetworkReply::NoError)
-            throw RestCallException(QStringLiteral("Could not download images from Figma: ")
-                + networkErrorString(reply));
+        QList<QJsonDocument> responseDocuments;
 
-        return figmaResponsDoc;
+        // Send network requests for each set of IDs
+        for (const QString& ids : requestIds) {
+            QUrl url(partialUrl + ids);
+            debug("request: " + url.toString());
+            request.setUrl(url);
+
+            QNetworkReply* reply = manager->get(request);
+
+            QObject::connect(reply, &QNetworkReply::finished, [reply, &responseDocuments] {
+                if (reply->error() == QNetworkReply::NoError) {
+                    QJsonDocument responseDoc = QJsonDocument::fromJson(reply->readAll());
+                    responseDocuments.append(responseDoc);
+                }
+            });
+
+            QObject::connect(reply, &QNetworkReply::downloadProgress, [this] {
+                progress();
+            });
+
+            while (reply->isRunning())
+                qApp->processEvents();
+
+            if (reply->error() != QNetworkReply::NoError)
+                throw RestCallException(QStringLiteral("Could not download images from Figma: ") + networkErrorString(reply));
+
+            reply->deleteLater();
+        }
+
+        return responseDocuments;
     }
 
     void downloadImages(const ImageFormat &imageFormat, const QJsonDocument &figmaImagesResponsDoc)
@@ -223,8 +251,9 @@ private:
 
         for (const ImageFormat imageFormat : std::as_const(m_imagesToDownload).keys()) {
             try {
-                const QJsonDocument imageUrlDoc = generateImageUrls(imageFormat);
-                downloadImages(imageFormat, imageUrlDoc);
+                const QList<QJsonDocument> imageUrlDocs = generateImageUrls(imageFormat);
+                for (const QJsonDocument &imageUrlDoc : imageUrlDocs)
+                    downloadImages(imageFormat, imageUrlDoc);
             } catch (std::exception &e) {
                 qWarning().nospace().noquote() << "Could not generate images: " << e.what();
             }
