@@ -1049,7 +1049,7 @@ void QQuickFontValueType::setPreferShaping(bool enable)
 
 void QQuickFontValueType::setFeatures(const QVariantMap &features)
 {
-    QHash<quint32, quint32> ff;
+    v.clearFeatures();
     for (auto it = features.constBegin(); it != features.constEnd(); ++it) {
         QString featureName = it.key();
         quint32 tag = QFont::stringToTag(featureName.toUtf8());
@@ -1065,20 +1065,17 @@ void QQuickFontValueType::setFeatures(const QVariantMap &features)
             continue;
         }
 
-        ff.insert(tag, value);
+        v.setFeature(tag, value);
     }
-
-    v.setFeatures(ff);
 }
 
 QVariantMap QQuickFontValueType::features() const
 {
-    const QHash<quint32, quint32> ff = v.features();
     QVariantMap ret;
-    for (auto it = ff.constBegin(); it != ff.constEnd(); ++it) {
-        QString featureName = QString::fromUtf8(QFont::tagToString(it.key()));
+    for (quint32 tag : v.featureTags()) {
+        QString featureName = QString::fromUtf8(QFont::tagToString(tag));
 
-        ret.insert(featureName, it.value());
+        ret.insert(featureName, v.featureValue(tag));
     }
 
     return ret;
