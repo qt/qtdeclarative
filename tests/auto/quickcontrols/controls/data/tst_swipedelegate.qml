@@ -691,27 +691,45 @@ TestCase {
         }
     }
 
+    function test_removableDelegates_data() {
+        return [
+            { tag: "mouse", touch: false },
+            { tag: "touch", touch: true }
+        ]
+    }
+
     function test_removableDelegates() {
         var listView = createTemporaryObject(removableDelegatesComponent, testCase);
         verify(listView);
         compare(listView.count, 3);
 
+        let touch = data.touch ? touchEvent(listView) : null
+
         // Expose the remove button.
         var firstItem = listView.itemAt(0, 0);
-        mousePress(listView, firstItem.width / 2, firstItem.height / 2);
+        if (data.touch)
+            touch.press(0, listView, firstItem.width / 2, firstItem.height / 2).commit()
+        else
+            mousePress(listView, firstItem.width / 2, firstItem.height / 2);
         verify(firstItem.pressed);
         compare(firstItem.swipe.position, 0.0);
         verify(!firstItem.swipe.complete);
         verify(!firstItem.swipe.leftItem);
 
-        mouseMove(listView, firstItem.width * 1.1, firstItem.height / 2);
+        if (data.touch)
+            touch.move(0, listView, firstItem.width * 1.1, firstItem.height / 2).commit()
+        else
+            mouseMove(listView, firstItem.width * 1.1, firstItem.height / 2);
         verify(firstItem.pressed);
         compare(firstItem.swipe.position, 0.6);
         verify(!firstItem.swipe.complete);
         verify(firstItem.swipe.leftItem);
         verify(!firstItem.swipe.leftItem.SwipeDelegate.pressed);
 
-        mouseRelease(listView, firstItem.width / 2, firstItem.height / 2);
+        if (data.touch)
+            touch.release(0, listView, firstItem.width / 2, firstItem.height / 2).commit()
+        else
+            mouseRelease(listView, firstItem.width / 2, firstItem.height / 2);
         verify(!firstItem.pressed);
         tryCompare(firstItem.swipe, "position", 1.0);
         tryCompare(firstItem.swipe, "complete", true);
@@ -727,12 +745,25 @@ TestCase {
 
         // Click the left item to remove the delegate from the list.
         var contentItemX = firstItem.contentItem.x;
-        mousePress(listView, firstItem.width / 2, firstItem.height / 2);
+        // press
+        if (data.touch)
+            touch.press(0, listView, firstItem.width / 2, firstItem.height / 2).commit()
+        else
+            mousePress(listView, firstItem.width / 2, firstItem.height / 2);
         verify(firstItem.swipe.leftItem.SwipeDelegate.pressed);
         compare(leftClickedSpy.count, 0);
         verify(firstItem.pressed);
 
-        mouseRelease(listView, firstItem.width / 2, firstItem.height / 2);
+        // simulate inadvertent movement which can easily happen
+        if (data.touch)
+            touch.move(0, listView, firstItem.width / 2 + 1, firstItem.height / 2).commit()
+        else
+            mouseMove(listView, firstItem.width / 2 + 1, firstItem.height / 2);
+        // release
+        if (data.touch)
+            touch.release(0, listView, firstItem.width / 2, firstItem.height / 2).commit()
+        else
+            mouseRelease(listView, firstItem.width / 2, firstItem.height / 2);
         verify(!firstItem.swipe.leftItem.SwipeDelegate.pressed);
         compare(leftClickedSpy.count, 1);
         verify(!firstItem.pressed);
