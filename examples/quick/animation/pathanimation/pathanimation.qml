@@ -15,7 +15,7 @@ Rectangle {
         antialiasing: true
 
         onPaint: {
-            var context = canvas.getContext("2d")
+            let context = canvas.getContext("2d")
             context.clearRect(0, 0, width, height)
             context.strokeStyle = "black"
             context.path = pathAnim.path
@@ -65,7 +65,7 @@ Rectangle {
 
         Text {
             anchors.centerIn: parent
-            text: "Box"
+            text: qsTr("Box")
         }
     }
 }

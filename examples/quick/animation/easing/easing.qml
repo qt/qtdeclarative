@@ -5,6 +5,8 @@ import QtQml
 import QtQml.Models
 import QtQuick
 
+pragma ComponentBehavior: Bound
+
 Rectangle {
     id: window
     width: 320; height: 480; color: "#232323"
@@ -90,7 +92,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
 
                 MouseArea {
-                    onClicked: if (rect.state == '') rect.state = "right"; else rect.state = ''
+                    onClicked: if (rect.state === '') rect.state = "right"; else rect.state = ''
                     anchors.fill: parent
                     anchors.margins: -5 // Make MouseArea bigger than the rectangle, itself
                 }

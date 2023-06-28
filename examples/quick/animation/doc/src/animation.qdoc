@@ -53,7 +53,6 @@
     \e{Tv Tennis} uses complex behaviors to make the paddles follow a ball to
     simulate an infinite tennis game. Again, a binding which depends on other
     values is applied to the position and a behavior provided the animation.
-    \snippet animation/behaviors/tvtennis.qml 0
 
     \section1 Easing Curves
 

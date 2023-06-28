@@ -4,26 +4,28 @@
 import QtQml
 import QtQuick
 
+pragma ComponentBehavior: Bound
+
 Rectangle {
     id: container
 
-    property string text: "Drag me!"
+    property string text: qsTr("Drag me!")
     property bool animated: true
 
     width: 320; height: 480; color: "#474747"; focus: true
 
     Keys.onPressed: (event) => {
-        if (event.key == Qt.Key_Delete || event.key == Qt.Key_Backspace)
+        if (event.key === Qt.Key_Delete || event.key === Qt.Key_Backspace)
             container.remove()
-        else if (event.text != "") {
+        else if (event.text !== "") {
             container.append(event.text)
         }
     }
 
     function append(text) {
         container.animated = false
-        var lastLetter = container.children[container.children.length - 1]
-        var newLetter = letterComponent.createObject(container)
+        const lastLetter = container.children[container.children.length - 1]
+        let newLetter = letterComponent.createObject(container)
         newLetter.text = text
         newLetter.follow = lastLetter
         container.animated = true
@@ -36,8 +38,8 @@ Rectangle {
 
     function doLayout() {
         var follow = null
-        for (var i = 0; i < container.text.length; ++i) {
-            var newLetter = letterComponent.createObject(container)
+        for (let i = 0; i < container.text.length; ++i) {
+            let newLetter = letterComponent.createObject(container)
             newLetter.text = container.text[i]
             newLetter.follow = follow
             follow = newLetter
