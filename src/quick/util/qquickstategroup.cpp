@@ -96,8 +96,10 @@ QQuickStateGroup::QQuickStateGroup(QObject *parent)
 QQuickStateGroup::~QQuickStateGroup()
 {
     Q_D(const QQuickStateGroup);
-    for (int i = 0; i < d->states.size(); ++i)
-        d->states.at(i)->setStateGroup(nullptr);
+    for (int i = 0; i < d->states.size(); ++i) {
+        if (d->states.at(i))
+            d->states.at(i)->setStateGroup(nullptr);
+    }
     if (d->nullState)
         d->nullState->setStateGroup(nullptr);
 }
@@ -143,11 +145,9 @@ QQmlListProperty<QQuickState> QQuickStateGroup::statesProperty()
 void QQuickStateGroupPrivate::append_state(QQmlListProperty<QQuickState> *list, QQuickState *state)
 {
     QQuickStateGroup *_this = static_cast<QQuickStateGroup *>(list->object);
-    if (state) {
-        _this->d_func()->states.append(state);
+    _this->d_func()->states.append(state);
+    if (state)
         state->setStateGroup(_this);
-    }
-
 }
 
 qsizetype QQuickStateGroupPrivate::count_state(QQmlListProperty<QQuickState> *list)
@@ -167,7 +167,8 @@ void QQuickStateGroupPrivate::clear_states(QQmlListProperty<QQuickState> *list)
     QQuickStateGroup *_this = static_cast<QQuickStateGroup *>(list->object);
     _this->d_func()->setCurrentStateInternal(QString(), true);
     for (qsizetype i = 0; i < _this->d_func()->states.size(); ++i) {
-        _this->d_func()->states.at(i)->setStateGroup(nullptr);
+        if (_this->d_func()->states.at(i))
+            _this->d_func()->states.at(i)->setStateGroup(nullptr);
     }
     _this->d_func()->states.clear();
 }
@@ -178,10 +179,11 @@ void QQuickStateGroupPrivate::replace_states(QQmlListProperty<QQuickState> *list
     auto *d = self->d_func();
     auto *oldState = d->states.at(index);
     if (oldState != state) {
-        oldState->setStateGroup(nullptr);
+        if (oldState)
+            oldState->setStateGroup(nullptr);
         state->setStateGroup(self);
         d->states.replace(index, state);
-        if (d->currentState == oldState->name())
+        if (!oldState || d->currentState == oldState->name())
             d->setCurrentStateInternal(state->name(), true);
     }
 }
