@@ -4,7 +4,8 @@
 import QtQuick
 
 Rectangle {
-    width: 300; height: 400
+    width: 300
+    height: 400
     color: "white"
 
     ListModel {
@@ -20,26 +21,36 @@ Rectangle {
 //! [0]
     GridView {
         anchors.fill: parent
-        cellWidth: 100; cellHeight: 100
+        cellWidth: 100
+        cellHeight: 100
         focus: true
         model: appModel
 
-        highlight: Rectangle { width: 80; height: 80; color: "lightsteelblue" }
+        highlight: Rectangle {
+            width: 80
+            height: 80
+            color: "lightsteelblue"
+        }
 
         delegate: Item {
             required property string icon
             required property string name
             required property int index
 
-            width: 100; height: 100
+            width: 100
+            height: 100
 
             Image {
                 id: myIcon
-                y: 20; anchors.horizontalCenter: parent.horizontalCenter
+                y: 20
+                anchors.horizontalCenter: parent.horizontalCenter
                 source: parent.icon
             }
             Text {
-                anchors { top: myIcon.bottom; horizontalCenter: parent.horizontalCenter }
+                anchors {
+                    top: myIcon.bottom
+                    horizontalCenter: parent.horizontalCenter
+                }
                 text: parent.name
             }
             MouseArea {

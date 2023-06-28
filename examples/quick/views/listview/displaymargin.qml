@@ -34,7 +34,8 @@ Item {
 
     Rectangle {
         id: header
-        width: parent.width; height: 40
+        width: parent.width
+        height: 40
         color: "#AAFF0000"
 
         Text {
@@ -47,7 +48,8 @@ Item {
     Rectangle {
         id: footer
         anchors.bottom: parent.bottom
-        width: parent.width; height: 40
+        width: parent.width
+        height: 40
         color: "#AAFF0000"
 
         Text {
