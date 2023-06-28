@@ -1099,6 +1099,31 @@ bool QQmlJSTypeResolver::areEquivalentLists(
     return false;
 }
 
+bool QQmlJSTypeResolver::isTriviallyCopyable(const QQmlJSScope::ConstPtr &type) const
+{
+    // pointers are trivially copyable
+    if (type->isReferenceType())
+        return true;
+
+    // Enum values are trivially copyable
+    if (type->scopeType() == QQmlSA::ScopeType::EnumScope)
+        return true;
+
+    for (const QQmlJSScope::ConstPtr &trivial : {
+            m_nullType, m_voidType,
+            m_boolType, m_metaObjectType,
+            m_realType, m_floatType,
+            m_int8Type, m_uint8Type,
+            m_int16Type, m_uint16Type,
+            m_int32Type, m_uint32Type,
+            m_int64Type, m_uint64Type }) {
+        if (equals(type, trivial))
+            return true;
+    }
+
+    return false;
+}
+
 bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
         const QQmlJSScope::ConstPtr &from, const QQmlJSScope::ConstPtr &to) const
 {

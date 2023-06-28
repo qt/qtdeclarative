@@ -3058,14 +3058,14 @@ QString QQmlJSCodeGenerator::registerVariable(int index) const
 QString QQmlJSCodeGenerator::consumedRegisterVariable(int index) const
 {
     const QString var = registerVariable(index);
-    if (var.isEmpty() || !m_state.canMoveReadRegister(index))
+    if (var.isEmpty() || !shouldMoveRegister(index))
         return var;
     return u"std::move(" + var + u")";
 }
 
 QString QQmlJSCodeGenerator::consumedAccumulatorVariableIn() const
 {
-    return m_state.canMoveReadRegister(Accumulator)
+    return shouldMoveRegister(Accumulator)
             ? u"std::move(" + m_state.accumulatorVariableIn + u")"
             : m_state.accumulatorVariableIn;
 }
@@ -3083,6 +3083,12 @@ QQmlJSRegisterContent QQmlJSCodeGenerator::registerType(int index) const
         return it.value().content;
 
     return QQmlJSRegisterContent();
+}
+
+bool QQmlJSCodeGenerator::shouldMoveRegister(int index) const
+{
+    return m_state.canMoveReadRegister(index)
+            && !m_typeResolver->isTriviallyCopyable(m_state.readRegister(index).storedType());
 }
 
 QString QQmlJSCodeGenerator::conversion(
