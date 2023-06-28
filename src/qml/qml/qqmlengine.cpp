@@ -2169,10 +2169,10 @@ LoadHelper::LoadHelper(QQmlTypeLoader *loader, QAnyStringView uri)
 
 {
     auto import = std::make_shared<PendingImport>();
-    import->uri = uri.toString();
+    import->uri = m_uri;
     QList<QQmlError> errorList;
     if (!Blob::addImport(import, &errorList))
-        m_uri = QString(); // reset m_uri to remember the failure
+        m_uri.clear(); // reset m_uri to remember the failure
 }
 
 LoadHelper::ResolveTypeResult LoadHelper::resolveType(QAnyStringView typeName)
