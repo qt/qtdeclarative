@@ -2040,8 +2040,10 @@ LoadHelper::LoadHelper(QQmlTypeLoader *loader, QAnyStringView uri)
     auto import = std::make_shared<PendingImport>();
     import->uri = m_uri;
     QList<QQmlError> errorList;
-    if (!Blob::addImport(import, &errorList))
+    if (!Blob::addImport(import, &errorList)) {
+        qCDebug(lcQmlImport) << "LoadHelper: Errors loading " << m_uri << errorList;
         m_uri.clear(); // reset m_uri to remember the failure
+    }
 }
 
 LoadHelper::ResolveTypeResult LoadHelper::resolveType(QAnyStringView typeName)
