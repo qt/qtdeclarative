@@ -19,12 +19,9 @@ qt_standard_project_setup(REQUIRES 6.5)
 add_subdirectory("../shared" "shared")
 
 qt_add_executable(viewsexample
+    WIN32
+    MACOSX_BUNDLE
     main.cpp
-)
-
-set_target_properties(viewsexample PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
 )
 
 target_link_libraries(viewsexample PRIVATE

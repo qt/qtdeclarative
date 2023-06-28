@@ -8,7 +8,7 @@ Image {
 
     property int repeatDelay: 300
     property int repeatDuration: 75
-    property bool pressed: false
+    property bool pressed
 
     signal clicked
 
