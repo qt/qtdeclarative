@@ -459,13 +459,13 @@ bool createOrConstructValueType(
                 return true;
             }
             if (targetType.canConstructValueType()) {
-                if (fromMatchingType(targetMetaObject, source, std::forward<Allocate>(allocate)))
+                if (fromMatchingType(targetMetaObject, source, allocate))
                     return true;
                 warn();
 
             }
         } else if (targetType.canConstructValueType()) {
-            if (fromMatchingType(targetMetaObject, source, std::forward<Allocate>(allocate)))
+            if (fromMatchingType(targetMetaObject, source, allocate))
                 return true;
             warn();
         }
