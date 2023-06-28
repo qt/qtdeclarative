@@ -2080,6 +2080,7 @@ function(qt6_target_qml_sources target)
                     DEPENDS ${file_absolute}
                     WORKING_DIRECTORY $<TARGET_PROPERTY:${target},SOURCE_DIR>
                     VERBATIM
+                    COMMENT "Copying ${file_src} to ${file_out}"
                 )
                 list(APPEND copied_files ${file_out})
             endif()
