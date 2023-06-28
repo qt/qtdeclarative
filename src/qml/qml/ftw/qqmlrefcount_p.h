@@ -57,16 +57,16 @@ public:
         AddRef,
         Adopt
     };
-    Q_NODISCARD_CTOR inline QQmlRefPointer();
+    Q_NODISCARD_CTOR inline QQmlRefPointer() noexcept;
     Q_NODISCARD_CTOR inline QQmlRefPointer(T *, Mode m = AddRef);
     Q_NODISCARD_CTOR inline QQmlRefPointer(const QQmlRefPointer &);
-    Q_NODISCARD_CTOR inline QQmlRefPointer(QQmlRefPointer &&);
+    Q_NODISCARD_CTOR inline QQmlRefPointer(QQmlRefPointer &&) noexcept;
     inline ~QQmlRefPointer();
 
     void swap(QQmlRefPointer &other) noexcept { qt_ptr_swap(o, other.o); }
 
     inline QQmlRefPointer<T> &operator=(const QQmlRefPointer<T> &o);
-    inline QQmlRefPointer<T> &operator=(QQmlRefPointer<T> &&o);
+    inline QQmlRefPointer<T> &operator=(QQmlRefPointer<T> &&o) noexcept;
 
     inline bool isNull() const { return !o; }
 
@@ -155,7 +155,7 @@ int QQmlRefCount::count() const
 }
 
 template<class T>
-QQmlRefPointer<T>::QQmlRefPointer()
+QQmlRefPointer<T>::QQmlRefPointer() noexcept
 : o(nullptr)
 {
 }
@@ -176,7 +176,7 @@ QQmlRefPointer<T>::QQmlRefPointer(const QQmlRefPointer<T> &other)
 }
 
 template <class T>
-QQmlRefPointer<T>::QQmlRefPointer(QQmlRefPointer<T> &&other)
+QQmlRefPointer<T>::QQmlRefPointer(QQmlRefPointer<T> &&other) noexcept
     : o(other.take())
 {
 }
@@ -201,7 +201,7 @@ QQmlRefPointer<T> &QQmlRefPointer<T>::operator=(const QQmlRefPointer<T> &other)
 }
 
 template <class T>
-QQmlRefPointer<T> &QQmlRefPointer<T>::operator=(QQmlRefPointer<T> &&other)
+QQmlRefPointer<T> &QQmlRefPointer<T>::operator=(QQmlRefPointer<T> &&other) noexcept
 {
     QQmlRefPointer<T> m(std::move(other));
     swap(m);
