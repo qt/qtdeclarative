@@ -604,7 +604,7 @@ bool QQmlValueTypeProvider::populateValueType(
 void *QQmlValueTypeProvider::heapCreateValueType(
         const QQmlType &targetType, const QV4::Value &source)
 {
-    void *target;
+    void *target = nullptr;
     if (createOrConstructValueType(
         targetType, source, [&]() {
             const QMetaType metaType = targetType.typeId();
@@ -617,10 +617,10 @@ void *QQmlValueTypeProvider::heapCreateValueType(
             target = targetType.typeId().create();
             return target;
         })) {
-        return target;
+        Q_ASSERT(target != nullptr);
     }
 
-    return nullptr;
+    return target;
 }
 
 QVariant QQmlValueTypeProvider::constructValueType(
