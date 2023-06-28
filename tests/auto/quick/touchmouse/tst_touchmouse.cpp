@@ -1440,6 +1440,7 @@ void tst_TouchMouse::hoverEnabled() // QTBUG-40856
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("hoverMouseAreas.qml")));
     QQuickItem *root = window.rootObject();
+    auto deliveryAgent = QQuickWindowPrivate::get(&window)->deliveryAgentPrivate();
 
     QQuickMouseArea *mouseArea1 = root->findChild<QQuickMouseArea*>("mouseArea1");
     QVERIFY(mouseArea1 != nullptr);
@@ -1467,6 +1468,7 @@ void tst_TouchMouse::hoverEnabled() // QTBUG-40856
 
     // ------------------------- Touch click on mouseArea1
     QTest::touchEvent(&window, device).press(0, p1, &window);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
 
     QCOMPARE(enterSpy1.size(), 1);
     QCOMPARE(enterSpy2.size(), 0);
@@ -1475,37 +1477,42 @@ void tst_TouchMouse::hoverEnabled() // QTBUG-40856
     QVERIFY(!mouseArea2->hovered());
 
     QTest::touchEvent(&window, device).release(0, p1, &window);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
     QVERIFY(clickSpy1.size() == 1);
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea2->hovered());
 
     // ------------------------- Touch click on mouseArea2
     QTest::touchEvent(&window, device).press(0, p2, &window);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
 
-    QVERIFY(mouseArea1->hovered());
+    QVERIFY(!mouseArea1->hovered());
     QVERIFY(mouseArea2->hovered());
     QVERIFY(mouseArea2->pressed());
     QCOMPARE(enterSpy1.size(), 1);
     QCOMPARE(enterSpy2.size(), 1);
 
     QTest::touchEvent(&window, device).release(0, p2, &window);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
 
     QVERIFY(clickSpy2.size() == 1);
-    QVERIFY(mouseArea1->hovered());
+    QVERIFY(!mouseArea1->hovered());
     QVERIFY(!mouseArea2->hovered());
-    QCOMPARE(exitSpy1.size(), 0);
+    QCOMPARE(exitSpy1.size(), 1);
     QCOMPARE(exitSpy2.size(), 1);
 
     // ------------------------- Another touch click on mouseArea1
     QTest::touchEvent(&window, device).press(0, p1, &window);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
 
-    QCOMPARE(enterSpy1.size(), 1);
+    QCOMPARE(enterSpy1.size(), 2);
     QCOMPARE(enterSpy2.size(), 1);
     QVERIFY(mouseArea1->pressed());
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea2->hovered());
 
     QTest::touchEvent(&window, device).release(0, p1, &window);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
     QCOMPARE(clickSpy1.size(), 2);
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea1->pressed());

@@ -905,6 +905,7 @@ void QQuickMouseArea::ungrabMouse()
         emit pressedButtonsChanged();
 
         if (d->hovered && !isUnderMouse()) {
+            qCDebug(lcHoverTrace) << "losing hover: not under the mouse";
             d->hovered = false;
             emit hoveredChanged();
         }
@@ -969,6 +970,7 @@ bool QQuickMouseArea::sendMouseEvent(QMouseEvent *event)
                 emit pressedChanged();
                 emit containsPressChanged();
                 if (d->hovered) {
+                    qCDebug(lcHoverTrace) << "losing hover: button released";
                     d->hovered = false;
                     emit hoveredChanged();
                 }
