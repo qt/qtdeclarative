@@ -49,6 +49,44 @@
         ]
     },
     {
+        "name": "ComboBox",
+        "copy": ":/ComboBox.qml",
+        "component set": "ComboBoxTemplate${Theme}",
+        "atoms": [
+            {"atom": "background", "figmaPath": "ComboBoxBackground, comboControlBackground"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "indicator", "figmaPath": "ComboBoxHandle"},
+            {"atom": "label", "figmaPath": "ContentItem, Label", "export": "text"}
+        ],
+        "states": [
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "hovered-open", "figmaState": "openedHovered"},
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "open", "figmaState": "opened"},
+            {"state": "open-pressed", "figmaState": "openedPressed"},
+            {"state": "pressed", "figmaState": "pressed"}
+        ]
+    },
+    {
+        "name": "ComboBoxPopup",
+        "copy": ":/impl/ComboBoxPopup.qml",
+        "component set": "ComboBoxTemplate${Theme}",
+        "atoms": [
+            {"atom": "background", "figmaPath": "ComboBoxPopup, background"},
+            {"atom": "contentItem", "figmaPath": "PopupLayout, ContentItem",  "export": "layout"}
+        ],
+        "states": [
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "hovered-open", "figmaState": "openedHovered"},
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "open", "figmaState": "opened"},
+            {"state": "open-pressed", "figmaState": "openedPressed"},
+            {"state": "pressed", "figmaState": "pressed"}
+        ]
+    },
+    {
         "name": "Frame",
         "copy": ":/Frame.qml",
         "component set": "FrameTemplate${Theme}",
@@ -59,6 +97,25 @@
         "states": [
             {"state": "normal", "figmaState": "normal"},
             {"state": "disabled", "figmaState": "disabled"}
+        ]
+    },
+    {
+        "name": "ItemDelegate",
+        "copy": ":/ItemDelegate.qml",
+        "component set": "ItemDelegateTemplate${Theme}",
+        "atoms": [
+            {"atom": "background", "figmaPath": "ItemDelegateBackground, background"},
+            {"atom": "contentItem", "figmaPath": "ContentItem",  "export": "layout"},
+            {"atom": "label", "figmaPath": "ContentItem, Label", "export": "text"}
+        ],
+        "states": [
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "highlighted", "figmaState": "highlighted"},
+            {"state": "highlighted-hovered", "figmaState": "highlightedHovered"},
+            {"state": "highlighted-pressed", "figmaState": "highlightedPressed"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "pressed", "figmaState": "pressed"}
         ]
     },
     {

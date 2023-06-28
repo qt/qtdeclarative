@@ -579,7 +579,7 @@ private:
         const auto topPadding = atom["paddingTop"];
         const auto rightPadding = atom["paddingRight"];
         const auto bottomPadding = atom["paddingBottom"];
-        const auto spacing = atom["spacing"];
+        const auto spacing = atom["itemSpacing"];
 
         // If padding are left unmodified in Figma (all values are zero)
         // the the following keys will be missing in the atom. When that's

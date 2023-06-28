@@ -23,7 +23,9 @@ qt_add_resources(qqcstylegenerator "controls"
     FILES
         templates/Button.qml
         templates/CheckBox.qml
+        templates/ComboBox.qml
         templates/Frame.qml
+        templates/ItemDelegate.qml
         templates/RadioButton.qml
         templates/RangeSlider.qml
         templates/Slider.qml
@@ -35,5 +37,6 @@ qt_add_resources(qqcstylegenerator "controls"
         templates/TextField.qml
         templates/ToolBar.qml
         templates/ToolButton.qml
+        templates/impl/ComboBoxPopup.qml
         config.json
 )
