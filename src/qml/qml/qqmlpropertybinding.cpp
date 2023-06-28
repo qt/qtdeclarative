@@ -251,8 +251,10 @@ void QQmlPropertyBinding::handleUndefinedAssignment(QQmlEnginePrivate *ep, void 
         // reset might have changed observers (?), so refresh firstObserver
         firstObserver = bindingDataPointer.firstObserver();
         bindingData->d_ref() = reinterpret_cast<quintptr>(this) | QtPrivate::QPropertyBindingData::BindingBit;
-        if (firstObserver)
+        if (firstObserver) {
             bindingDataPointer.setObservers(firstObserver.ptr);
+            prependObserver(firstObserver);
+        }
     } else {
         QQmlError qmlError;
         auto location = jsExpression()->sourceLocation();
