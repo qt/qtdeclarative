@@ -174,7 +174,7 @@ void QQuickStateGroupPrivate::clear_states(QQmlListProperty<QQuickState> *list)
 
 void QQuickStateGroupPrivate::replace_states(QQmlListProperty<QQuickState> *list, qsizetype index, QQuickState *state)
 {
-    auto *self = qobject_cast<QQuickStateGroup *>(list->object);
+    auto *self = static_cast<QQuickStateGroup *>(list->object);
     auto *d = self->d_func();
     auto *oldState = d->states.at(index);
     if (oldState != state) {
@@ -188,7 +188,7 @@ void QQuickStateGroupPrivate::replace_states(QQmlListProperty<QQuickState> *list
 
 void QQuickStateGroupPrivate::removeLast_states(QQmlListProperty<QQuickState> *list)
 {
-    auto *d = qobject_cast<QQuickStateGroup *>(list->object)->d_func();
+    auto *d = static_cast<QQuickStateGroup *>(list->object)->d_func();
     if (d->currentState == d->states.last()->name())
         d->setCurrentStateInternal(d->states.size() > 1 ? d->states.first()->name() : QString(), true);
     d->states.last()->setStateGroup(nullptr);
