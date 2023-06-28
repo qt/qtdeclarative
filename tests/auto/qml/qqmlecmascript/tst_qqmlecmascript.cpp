@@ -393,6 +393,7 @@ private slots:
     void qpropertyBindingHandlesUndefinedCorrectly();
     void qpropertyBindingHandlesUndefinedWithoutResetCorrectly_data();
     void qpropertyBindingHandlesUndefinedWithoutResetCorrectly();
+    void qpropertyBindingRestoresObserverAfterReset();
     void hugeRegexpQuantifiers();
     void singletonTypeWrapperLookup();
     void getThisObject();
@@ -9193,6 +9194,17 @@ void tst_qqmlecmascript::qpropertyBindingHandlesUndefinedWithoutResetCorrectly()
     root->setProperty("anotherValue", 2);
     root->setProperty("toggle", false);
     QCOMPARE(root->property("value2").toInt(), 2);
+}
+
+void tst_qqmlecmascript::qpropertyBindingRestoresObserverAfterReset()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("restoreObserverAfterReset.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QTRY_COMPARE(o->property("height").toDouble(), 60.0);
+    QVERIFY(o->property("steps").toInt() > 3);
 }
 
 void tst_qqmlecmascript::hugeRegexpQuantifiers()
