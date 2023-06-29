@@ -151,9 +151,10 @@ void QQmlPrivate::qmlRegistrationWarning(
 {
     switch (warning) {
     case UnconstructibleType:
-        qWarning()
+        qWarning().nospace()
                 << metaType.name()
-                << "is neither a QObject, nor default- and copy-constructible, nor uncreatable."
+                << " is neither a default constructible QObject, nor a default- "
+                << "and copy-constructible Q_GADGET, nor marked as uncreatable.\n"
                 << "You should not use it as a QML type.";
         break;
     case UnconstructibleSingleton:

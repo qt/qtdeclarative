@@ -536,13 +536,15 @@ void tst_qmltyperegistrar::uncreatable()
 #if QT_DEPRECATED_SINCE(6, 4)
     QTest::ignoreMessage(
                 QtWarningMsg,
-                "BadUncreatable is neither a QObject, nor default- and copy-constructible, "
-                "nor uncreatable. You should not use it as a QML type.");
+                "BadUncreatable is neither a default constructible QObject, nor a default- "
+                "and copy-constructible Q_GADGET, nor marked as uncreatable.\n"
+                "You should not use it as a QML type.");
     qmlRegisterTypesAndRevisions<BadUncreatable>("A", 1);
     QTest::ignoreMessage(
                 QtWarningMsg,
-                "BadUncreatableExtended is neither a QObject, nor default- and copy-constructible, "
-                "nor uncreatable. You should not use it as a QML type.");
+                "BadUncreatableExtended is neither a default constructible QObject, nor a default- "
+                "and copy-constructible Q_GADGET, nor marked as uncreatable.\n"
+                "You should not use it as a QML type.");
     qmlRegisterTypesAndRevisions<BadUncreatableExtended>("A", 1);
 #endif
 
