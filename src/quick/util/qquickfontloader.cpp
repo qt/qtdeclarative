@@ -312,7 +312,7 @@ void QQuickFontLoader::updateFontInfo(int id)
             text: "Fancy font"
             font.family: webFont.font.family
             font.weight: webFont.font.weight
-            font.style: webFont.font.style
+            font.styleName: webFont.font.styleName
             font.pixelSize: 24
         }
     }
