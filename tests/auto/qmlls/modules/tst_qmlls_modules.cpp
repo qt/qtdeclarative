@@ -3,6 +3,9 @@
 
 #include "tst_qmlls_modules.h"
 #include "QtQmlLS/private/qqmllsutils_p.h"
+#include <optional>
+#include <type_traits>
+#include <variant>
 
 // Check if QTest already has a QTEST_CHECKED macro
 #ifndef QTEST_CHECKED
@@ -622,21 +625,31 @@ void tst_qmlls_modules::goToDefinition()
 }
 
 // startLine and startCharacter start at 1, not 0
+static QLspSpecification::Range rangeFrom(const QString &code, quint32 startLine,
+                                          quint32 startCharacter, quint32 length)
+{
+    QLspSpecification::Range range;
+
+    // the LSP works with lines and characters starting at 0
+    range.start.line = startLine - 1;
+    range.start.character = startCharacter - 1;
+
+    quint32 startOffset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
+    auto end = QQmlLSUtils::textRowAndColumnFrom(code, startOffset + length);
+    range.end.line = end.line;
+    range.end.character = end.character;
+
+    return range;
+}
+
+// startLine and startCharacter start at 1, not 0
 static QLspSpecification::Location locationFrom(const QByteArray fileName, const QString &code,
                                                 quint32 startLine, quint32 startCharacter,
                                                 quint32 length)
 {
     QLspSpecification::Location location;
     location.uri = QQmlLSUtils::qmlUrlToLspUri(fileName);
-    // the LSP works with lines and characters starting at 0
-    location.range.start.line = startLine - 1;
-    location.range.start.character = startCharacter - 1;
-
-    quint32 startOffset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
-    auto end = QQmlLSUtils::textRowAndColumnFrom(code, startOffset + length);
-    location.range.end.line = end.line;
-    location.range.end.character = end.character;
-
+    location.range = rangeFrom(code, startLine, startCharacter, length);
     return location;
 }
 
@@ -855,6 +868,150 @@ void tst_qmlls_modules::documentFormatting()
                                          std::move(errorHandler));
 
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 50000);
+}
+
+void tst_qmlls_modules::renameUsages_data()
+{
+    QTest::addColumn<QByteArray>("uri");
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+    QTest::addColumn<QString>("newName");
+    QTest::addColumn<QLspSpecification::WorkspaceEdit>("expectedEdit");
+
+    QByteArray jsIdentifierUsagesUri = testFileUrl("findUsages/jsIdentifierUsages.qml").toEncoded();
+
+    QString jsIdentifierUsagesContent;
+    {
+        QFile file(testFile("findUsages/jsIdentifierUsages.qml").toUtf8());
+        QVERIFY(file.open(QIODeviceBase::ReadOnly));
+        jsIdentifierUsagesContent = QString::fromUtf8(file.readAll());
+    }
+
+    // TODO: create workspace edit for the tests
+    QLspSpecification::WorkspaceEdit sumRenames{
+        std::nullopt, // TODO
+        QList<TextDocumentEdit>{
+                TextDocumentEdit{
+                        OptionalVersionedTextDocumentIdentifier{ { jsIdentifierUsagesUri } },
+                        {
+                                TextEdit{
+                                        rangeFrom(jsIdentifierUsagesContent, 8, 13, strlen("sum")),
+                                        "specialSum" },
+                                TextEdit{
+                                        rangeFrom(jsIdentifierUsagesContent, 10, 13, strlen("sum")),
+                                        "specialSum" },
+                                TextEdit{
+                                        rangeFrom(jsIdentifierUsagesContent, 10, 19, strlen("sum")),
+                                        "specialSum" },
+                        } },
+        }
+    };
+
+    // line and character start at 1!
+    QTest::addRow("sumUsagesFromUsage")
+            << jsIdentifierUsagesUri << 10 << 14 << u"specialSum"_s << sumRenames;
+    QTest::addRow("sumUsagesFromUsage2")
+            << jsIdentifierUsagesUri << 10 << 20 << u"specialSum"_s << sumRenames;
+    QTest::addRow("sumUsagesFromDefinition")
+            << jsIdentifierUsagesUri << 8 << 14 << u"specialSum"_s << sumRenames;
+}
+
+void tst_qmlls_modules::renameUsages()
+{
+    QFETCH(QByteArray, uri);
+    // line and character start at 1!
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QString, newName);
+    QFETCH(QLspSpecification::WorkspaceEdit, expectedEdit);
+
+    QVERIFY(uri.startsWith("file://"_ba));
+
+    RenameParams params;
+    params.position.line = line - 1;
+    params.position.character = character - 1;
+    params.textDocument.uri = uri;
+    params.newName = newName.toUtf8();
+
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    auto clean = [didFinish]() { *didFinish = true; };
+    m_protocol.requestRename(
+            params,
+            [&](auto res) {
+                QScopeGuard cleanup(clean);
+                auto *result = std::get_if<QLspSpecification::WorkspaceEdit>(&res);
+
+                QVERIFY(result);
+                QCOMPARE(result->changes.has_value(), expectedEdit.changes.has_value());
+                QCOMPARE(result->changeAnnotations.has_value(),
+                         expectedEdit.changeAnnotations.has_value());
+                QCOMPARE(result->documentChanges.has_value(),
+                         expectedEdit.documentChanges.has_value());
+
+                std::visit(
+                        [](auto &&documentChanges, auto &&expectedDocumentChanges) {
+                            QCOMPARE(documentChanges.size(), expectedDocumentChanges.size());
+                            using U = std::decay_t<decltype(documentChanges)>;
+                            using V = std::decay_t<decltype(expectedDocumentChanges)>;
+
+                            if constexpr (std::conjunction_v<
+                                                  std::is_same<U, V>,
+                                                  std::is_same<U, QList<TextDocumentEdit>>>) {
+                                for (qsizetype i = 0; i < expectedDocumentChanges.size(); ++i) {
+                                    QCOMPARE(documentChanges[i].textDocument.uri,
+                                             expectedDocumentChanges[i].textDocument.uri);
+                                    QVERIFY(documentChanges[i].textDocument.uri.startsWith(
+                                            "file://"));
+                                    QCOMPARE(documentChanges[i].textDocument.version,
+                                             expectedDocumentChanges[i].textDocument.version);
+                                    QCOMPARE(documentChanges[i].edits.size(),
+                                             expectedDocumentChanges[i].edits.size());
+
+                                    for (qsizetype j = 0; j < documentChanges[i].edits.size();
+                                         ++j) {
+                                        std::visit(
+                                                [](auto &&textEdit, auto &&expectedTextEdit) {
+                                                    using U = std::decay_t<decltype(textEdit)>;
+                                                    using V = std::decay_t<
+                                                            decltype(expectedTextEdit)>;
+
+                                                    if constexpr (std::conjunction_v<
+                                                                          std::is_same<U, V>,
+                                                                          std::is_same<U,
+                                                                                       TextEdit>>) {
+                                                        QCOMPARE(textEdit.range.start.line,
+                                                                 expectedTextEdit.range.start.line);
+                                                        QCOMPARE(textEdit.range.start.character,
+                                                                 expectedTextEdit.range.start
+                                                                         .character);
+                                                        QCOMPARE(textEdit.range.end.line,
+                                                                 expectedTextEdit.range.end.line);
+                                                        QCOMPARE(textEdit.range.end.character,
+                                                                 expectedTextEdit.range.end
+                                                                         .character);
+                                                        QCOMPARE(textEdit.newText,
+                                                                 expectedTextEdit.newText);
+                                                    } else {
+                                                        QFAIL("Comparison not implemented");
+                                                    }
+                                                },
+                                                documentChanges[i].edits[j],
+                                                expectedDocumentChanges[i].edits[j]);
+                                    }
+                                }
+
+                            } else {
+                                QFAIL("Comparison not implemented");
+                            }
+                        },
+                        result->documentChanges.value(), expectedEdit.documentChanges.value());
+            },
+            [clean](const ResponseError &err) {
+                QScopeGuard cleanup(clean);
+                ProtocolBase::defaultResponseErrorHandler(err);
+                QVERIFY2(false, "error computing the completion");
+            });
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 3000);
 }
 
 QTEST_MAIN(tst_qmlls_modules)

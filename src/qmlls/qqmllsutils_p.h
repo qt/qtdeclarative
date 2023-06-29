@@ -44,20 +44,49 @@ enum QQmlLSUtilsIdentifierType : char {
     SignalHandlerIdentifier,
 };
 
+struct QQmlLSUtilsErrorMessage
+{
+    int code;
+    QString message;
+};
+
 struct QQmlLSUtilsLocation
 {
     QString filename;
-    QQmlJS::SourceLocation location;
+    QQmlJS::SourceLocation sourceLocation;
+
+    static QQmlLSUtilsLocation from(const QString &fileName, const QString &code, quint32 startLine,
+                                    quint32 startCharacter, quint32 length);
 
     friend bool operator<(const QQmlLSUtilsLocation &a, const QQmlLSUtilsLocation &b)
     {
-        return std::make_tuple(a.filename, a.location.begin(), a.location.end())
-                < std::make_tuple(b.filename, b.location.begin(), b.location.end());
+        return std::make_tuple(a.filename, a.sourceLocation.begin(), a.sourceLocation.end())
+                < std::make_tuple(b.filename, b.sourceLocation.begin(), b.sourceLocation.end());
     }
     friend bool operator==(const QQmlLSUtilsLocation &a, const QQmlLSUtilsLocation &b)
     {
-        return std::make_tuple(a.filename, a.location.begin(), a.location.end())
-                == std::make_tuple(b.filename, b.location.begin(), b.location.end());
+        return std::make_tuple(a.filename, a.sourceLocation.begin(), a.sourceLocation.end())
+                == std::make_tuple(b.filename, b.sourceLocation.begin(), b.sourceLocation.end());
+    }
+};
+
+struct QQmlLSUtilsEdit
+{
+    QQmlLSUtilsLocation location;
+    QString replacement;
+
+    static QQmlLSUtilsEdit from(const QString &fileName, const QString &code, quint32 startLine,
+                                quint32 startCharacter, quint32 length, const QString &newName);
+
+    friend bool operator<(const QQmlLSUtilsEdit &a, const QQmlLSUtilsEdit &b)
+    {
+        return std::make_tuple(a.location, a.replacement)
+                < std::make_tuple(b.location, b.replacement);
+    }
+    friend bool operator==(const QQmlLSUtilsEdit &a, const QQmlLSUtilsEdit &b)
+    {
+        return std::make_tuple(a.location, a.replacement)
+                == std::make_tuple(b.location, b.replacement);
     }
 };
 
@@ -89,6 +118,10 @@ public:
     static QQmlJS::Dom::DomItem findTypeDefinitionOf(QQmlJS::Dom::DomItem item);
     static std::optional<QQmlLSUtilsLocation> findDefinitionOf(QQmlJS::Dom::DomItem item);
     static QList<QQmlLSUtilsLocation> findUsagesOf(QQmlJS::Dom::DomItem item);
+
+    static std::optional<QQmlLSUtilsErrorMessage> checkNameForRename(QQmlJS::Dom::DomItem item,
+                                                                     const QString &newName);
+    static QList<QQmlLSUtilsEdit> renameUsagesOf(QQmlJS::Dom::DomItem item, const QString &newName);
 
     static QQmlJSScope::ConstPtr resolveExpressionType(QQmlJS::Dom::DomItem item,
                                                        QQmlLSUtilsResolveOptions);

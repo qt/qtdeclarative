@@ -50,6 +50,8 @@ private slots:
     void findUsages();
     void documentFormatting_data();
     void documentFormatting();
+    void renameUsages_data();
+    void renameUsages();
 
 private:
     QProcess m_server;

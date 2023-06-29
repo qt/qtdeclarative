@@ -139,4 +139,17 @@ Item {
         ______42Changed()
         _123aChanged()
     }
+
+    TapHandler {
+        onTapped: myHelloHandler
+        function f() {
+            tapped()
+        }
+    }
+
+    function anotherF() {
+        helloPropertyChanged()
+    }
+    onHelloPropertyChanged: myHelloHandler
+    Type {}
 }

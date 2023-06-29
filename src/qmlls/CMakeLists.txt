@@ -22,6 +22,7 @@ qt_internal_add_module(QmlLSPrivate
         qqmllsutils_p.h qqmllsutils.cpp
         qqmlfindusagessupport_p.h qqmlfindusagessupport.cpp
         qqmlgotodefinitionsupport.cpp qqmlgotodefinitionsupport_p.h
+        qqmlrenamesymbolsupport_p.h qqmlrenamesymbolsupport.cpp
 
     PUBLIC_LIBRARIES
         Qt::LanguageServerPrivate

@@ -675,8 +675,8 @@ QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
         qCDebug(QQmlLSUtilsLog) << "Found following usages:";
         for (auto r : result) {
             qCDebug(QQmlLSUtilsLog)
-                    << r.filename << " @ " << r.location.startLine << ":" << r.location.startColumn
-                    << " with length " << r.location.length;
+                    << r.filename << " @ " << r.sourceLocation.startLine << ":"
+                    << r.sourceLocation.startColumn << " with length " << r.sourceLocation.length;
         }
     }
 
@@ -771,7 +771,11 @@ QQmlJSScope::ConstPtr QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem it
                            "QQmlLSUtils::findDefinitionOf",
                            "JS definition does not actually define the JS identifer. "
                            "It should be empty.");
-                auto scope = definitionOfItem.semanticScope().value()->JSIdentifier(name)->scope.toStrongRef();;
+                auto scope = definitionOfItem.semanticScope()
+                                     .value()
+                                     ->JSIdentifier(name)
+                                     ->scope.toStrongRef();
+                ;
                 return scope;
             }
 
@@ -937,7 +941,7 @@ findMethodDefinitionOf(DomItem file, QQmlJS::SourceLocation location, const QStr
 
     if (auto it = regions.constFind(u"identifier"_s); it != regions.constEnd()) {
         QQmlLSUtilsLocation result;
-        result.location = *it;
+        result.sourceLocation = *it;
         result.filename = method.canonicalFilePath();
         return result;
     }
@@ -955,7 +959,7 @@ findPropertyDefinitionOf(DomItem file, QQmlJS::SourceLocation propertyDefinition
         return {};
 
     QQmlLSUtilsLocation result;
-    result.location = FileLocations::treeOf(propertyDefinition)->info().fullRegion;
+    result.sourceLocation = FileLocations::treeOf(propertyDefinition)->info().fullRegion;
     result.filename = propertyDefinition.canonicalFilePath();
     return result;
 }
@@ -1026,7 +1030,7 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
         QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope.value());
         if (fromId) {
             QQmlLSUtilsLocation result;
-            result.location = fromId->sourceLocation();
+            result.sourceLocation = fromId->sourceLocation();
             result.filename = item.canonicalFilePath();
             return result;
         }
@@ -1039,6 +1043,167 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
     }
 
     Q_UNREACHABLE_RETURN(std::nullopt);
+}
+
+std::optional<QQmlLSUtilsErrorMessage> QQmlLSUtils::checkNameForRename(DomItem item,
+                                                                       const QString &newName)
+{
+    // TODO
+    Q_UNUSED(item);
+    Q_UNUSED(newName);
+    return {};
+}
+
+static std::optional<QString> oldNameFrom(DomItem item)
+{
+    switch (item.internalKind()) {
+    case DomType::ScriptIdentifierExpression: {
+        return item.field(Fields::identifier).value().toString();
+    }
+    case DomType::ScriptVariableDeclarationEntry: {
+        return item.field(Fields::identifier).value().toString();
+    }
+    case DomType::PropertyDefinition:
+    case DomType::Binding:
+    case DomType::MethodInfo: {
+        return item.field(Fields::name).value().toString();
+    }
+    default:
+        qCDebug(QQmlLSUtilsLog) << item.internalKindStr()
+                                << "was not implemented for QQmlLSUtils::renameUsagesOf";
+        return std::nullopt;
+    }
+    Q_UNREACHABLE_RETURN(std::nullopt);
+}
+
+static std::optional<QString> newNameFrom(const QString &dirtyNewName,
+                                          QQmlLSUtilsIdentifierType alternative)
+{
+    // When renaming signal/property changed handlers and property changed signals:
+    // Get the actual corresponding signal name (for signal handlers) or property name (for
+    // property changed signal + handlers) that will be used for the renaming.
+    switch (alternative) {
+    case SignalHandlerIdentifier: {
+        return QQmlSignalNames::handlerNameToSignalName(dirtyNewName);
+    }
+    case PropertyChangedHandlerIdentifier: {
+        return QQmlSignalNames::changedHandlerNameToPropertyName(dirtyNewName);
+    }
+    case PropertyChangedSignalIdentifier: {
+        return QQmlSignalNames::changedSignalNameToPropertyName(dirtyNewName);
+    }
+    case SignalIdentifier:
+    case PropertyIdentifier:
+    default:
+        return std::nullopt;
+    }
+    Q_UNREACHABLE_RETURN(std::nullopt);
+}
+
+/*!
+\internal
+\brief Rename the appearance of item to newName.
+
+Special cases:
+\list
+    \li Renaming a property changed signal or property changed handler does the same as renaming
+    the underlying property, except that newName gets
+    \list
+        \li its "on"-prefix and "Changed"-suffix chopped of if item is a property changed handlers
+        \li its "Changed"-suffix chopped of if item is a property changed signals
+    \endlist
+    \li Renaming a signal handler does the same as renaming a signal, but the "on"-prefix in newName
+    is chopped of.
+
+    All of the chopping operations are done using the static helpers from QQmlSignalNames.
+\endlist
+*/
+QList<QQmlLSUtilsEdit> QQmlLSUtils::renameUsagesOf(DomItem item, const QString &dirtyNewName)
+{
+    QList<QQmlLSUtilsEdit> results;
+    const QList<QQmlLSUtilsLocation> locations = findUsagesOf(item);
+    if (locations.isEmpty())
+        return results;
+
+    auto oldName = oldNameFrom(item);
+    if (!oldName)
+        return results;
+
+    QQmlJSScope::ConstPtr targetType =
+            QQmlLSUtils::resolveExpressionType(item, QQmlLSUtilsResolveOptions::JustOwner);
+
+    QString newName;
+    if (const auto resolved = resolveNameInQmlScope(*oldName, targetType)) {
+        newName = newNameFrom(dirtyNewName, resolved->type).value_or(dirtyNewName);
+        oldName = resolved->name;
+    } else {
+        newName = dirtyNewName;
+    }
+
+    const qsizetype oldNameLength = oldName->length();
+    const qsizetype oldHandlerNameLength =
+            QQmlSignalNames::signalNameToHandlerName(*oldName).length();
+    const qsizetype oldChangedSignalNameLength =
+            QQmlSignalNames::propertyNameToChangedSignalName(*oldName).length();
+    const qsizetype oldChangedHandlerNameLength =
+            QQmlSignalNames::propertyNameToChangedHandlerName(*oldName).length();
+
+    const QString newHandlerName = QQmlSignalNames::signalNameToHandlerName(newName);
+    const QString newChangedSignalName = QQmlSignalNames::propertyNameToChangedSignalName(newName);
+    const QString newChangedHandlerName =
+            QQmlSignalNames::propertyNameToChangedHandlerName(newName);
+
+    // set the new name at the found usages, but add "on"-prefix and "Changed"-suffix if needed
+    for (const auto &location : locations) {
+        const qsizetype currentLength = location.sourceLocation.length;
+        QQmlLSUtilsEdit edit;
+        edit.location = location;
+        if (oldNameLength == currentLength) {
+            // normal case, nothing to do
+            edit.replacement = newName;
+
+        } else if (oldHandlerNameLength == currentLength) {
+            // signal handler location
+            edit.replacement = newHandlerName;
+
+        } else if (oldChangedSignalNameLength == currentLength) {
+            // property changed signal location
+            edit.replacement = newChangedSignalName;
+
+        } else if (oldChangedHandlerNameLength == currentLength) {
+            // property changed handler location
+            edit.replacement = newChangedHandlerName;
+
+        } else {
+            qCDebug(QQmlLSUtilsLog) << "Found usage with wrong identifier length, ignoring...";
+            continue;
+        }
+        results.append(edit);
+    }
+
+    return results;
+}
+
+QQmlLSUtilsLocation QQmlLSUtilsLocation::from(const QString &fileName, const QString &code,
+                                              quint32 startLine, quint32 startCharacter,
+                                              quint32 length)
+{
+    quint32 offset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
+
+    QQmlLSUtilsLocation location{
+        fileName, QQmlJS::SourceLocation{ offset, length, startLine, startCharacter }
+    };
+    return location;
+}
+
+QQmlLSUtilsEdit QQmlLSUtilsEdit::from(const QString &fileName, const QString &code,
+                                      quint32 startLine, quint32 startCharacter, quint32 length,
+                                      const QString &newName)
+{
+    QQmlLSUtilsEdit rename;
+    rename.location = QQmlLSUtilsLocation::from(fileName, code, startLine, startCharacter, length);
+    rename.replacement = newName;
+    return rename;
 }
 
 QT_END_NAMESPACE

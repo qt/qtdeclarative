@@ -61,7 +61,7 @@ void QmlGoToDefinitionSupport::process(RequestPointerArgument request)
         return;
     }
     const QString qmlCode = fileOfBasePtr->code();
-    l.range = QQmlLSUtils::qmlLocationToLspLocation(qmlCode, location->location);
+    l.range = QQmlLSUtils::qmlLocationToLspLocation(qmlCode, location->sourceLocation);
 
     results.append(l);
 }

@@ -49,6 +49,9 @@ private slots:
     void findUsages();
     void findUsages_data();
 
+    void renameUsages();
+    void renameUsages_data();
+
     void resolveExpressionType();
     void resolveExpressionType_data();
 
