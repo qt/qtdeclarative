@@ -58,6 +58,8 @@ private slots:
     void jsArrayMethods();
     void jsArrayMethodsWithParams_data();
     void jsArrayMethodsWithParams();
+    void listIgnoresNull_data() { modeData(); }
+    void listIgnoresNull();
 };
 
 class TestType : public QObject
@@ -73,10 +75,16 @@ public:
         SyntheticClearAndReplace,
         SyntheticRemoveLast,
         SyntheticRemoveLastAndReplace,
-        AutomaticPointer
+        AutomaticPointer,
+        IgnoreNullValues,
     };
 
     static void append(QQmlListProperty<TestType> *p, TestType *v) {
+        reinterpret_cast<QList<TestType *> *>(p->data)->append(v);
+    }
+    static void appendNoNullValues(QQmlListProperty<TestType> *p, TestType *v) {
+        if (!v)
+            return;
         reinterpret_cast<QList<TestType *> *>(p->data)->append(v);
     }
     static qsizetype count(QQmlListProperty<TestType> *p) {
@@ -121,6 +129,10 @@ public:
         case AutomaticPointer:
             property = QQmlListProperty<TestType>(this, &data);
             break;
+        case IgnoreNullValues:
+            property = QQmlListProperty<TestType>(this, &data, appendNoNullValues, count, at, clear,
+                                                  replace, removeLast);
+            break;
         }
     }
 
@@ -142,6 +154,7 @@ void tst_qqmllistreference::modeData()
     QTest::addRow("SyntheticClearAndReplace") << TestType::SyntheticClearAndReplace;
     QTest::addRow("SyntheticRemoveLast") << TestType::SyntheticRemoveLast;
     QTest::addRow("SyntheticRemoveLastAndReplace") << TestType::SyntheticRemoveLastAndReplace;
+    QTest::addRow("IgnoreNullValues") << TestType::IgnoreNullValues;
 }
 
 void tst_qqmllistreference::initTestCase()
@@ -1034,6 +1047,39 @@ void tst_qqmllistreference::jsArrayMethodsWithParams()
 
     QCOMPARE(object->property("listPropertyIndexOf"), object->property("jsArrayIndexOf"));
     QCOMPARE(object->property("listPropertyLastIndexOf"), object->property("jsArrayLastIndexOf"));
+}
+
+/*!
+    Some of our list implementations ignore attempts to append a null object.
+    This should result in warnings or type errors, and not crash our wrapper
+    code.
+*/
+void tst_qqmllistreference::listIgnoresNull()
+{
+    QFETCH(const TestType::Mode, mode);
+    static TestType::Mode globalMode;
+    globalMode = mode;
+    struct TestItem : public TestType
+    {
+        TestItem() : TestType(globalMode) {}
+    };
+
+    const auto id = qmlRegisterType<TestItem>("Test", 1, 0, "TestItem");
+    const auto unregister = qScopeGuard([id]{
+        QQmlPrivate::qmlunregister(QQmlPrivate::TypeRegistration, id);
+    });
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("listIgnoresNull.qml"));
+
+    // For lists that don't append null values, creating the component shouldn't crash
+    // in the onCompleted handler, but generate type errors and warnings.
+    if (mode == TestType::IgnoreNullValues) {
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".* QML TestItem: List didn't append all objects$"));
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".* TypeError: List doesn't append null objects$"));
+    }
+    QScopedPointer<QObject> object( component.create() );
+    QVERIFY(object != nullptr);
 }
 
 QTEST_MAIN(tst_qqmllistreference)
