@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "tst_qmlls_utils.h"
+#include <algorithm>
+#include <optional>
 
 // some helper constants for the tests
 const static int positionAfterOneIndent = 5;
@@ -14,7 +16,7 @@ const static int outOfOne = 1;
 const static int outOfTwo = 2;
 
 // enable/disable additional debug output
-constexpr static bool enable_debug_output = false;
+constexpr static bool enable_debug_output = true;
 
 static QString printSet(const QSet<QString> &s)
 {
@@ -681,7 +683,7 @@ void tst_qmlls_utils::findBaseObject()
 
 using QQmlJS::SourceLocation;
 
-static QQmlLSUtilsLocation sourceLocationFrom(const QString fileName, const QString &code,
+static QQmlLSUtilsLocation sourceLocationFrom(const QString &fileName, const QString &code,
                                               quint32 startLine, quint32 startCharacter,
                                               quint32 length)
 {
@@ -813,6 +815,37 @@ void tst_qmlls_utils::findUsages_data()
     QList<QQmlLSUtilsLocation> myHelloHandlerUsages{
         sourceLocationFrom(testFileName, testFileContent, 118, 14, strlen("myHelloHandler")),
         sourceLocationFrom(testFileName, testFileContent, 119, 20, strlen("myHelloHandler")),
+        sourceLocationFrom(testFileName, testFileContent, 125, 29, strlen("myHelloHandler")),
+        sourceLocationFrom(testFileName, testFileContent, 126, 24, strlen("myHelloHandler")),
+        sourceLocationFrom(testFileName, testFileContent, 134, 17, strlen("myHelloHandler")),
+        sourceLocationFrom(testFileName, testFileContent, 135, 24, strlen("myHelloHandler")),
+        sourceLocationFrom(testFileName, testFileContent, 136, 21, strlen("myHelloHandler")),
+    };
+
+    QList<QQmlLSUtilsLocation> checkHandlersUsages{
+        sourceLocationFrom(testFileName, testFileContent, 124, 18, strlen("checkHandlers")),
+        sourceLocationFrom(testFileName, testFileContent, 125, 5, strlen("onCheckHandlersChanged")),
+        sourceLocationFrom(testFileName, testFileContent, 128, 9, strlen("checkHandlersChanged")),
+    };
+
+    QList<QQmlLSUtilsLocation> checkCppHandlersUsages{
+        sourceLocationFrom(testFileName, testFileContent, 126, 5, strlen("onChildrenChanged")),
+        sourceLocationFrom(testFileName, testFileContent, 129, 9, strlen("childrenChanged")),
+    };
+    QList<QQmlLSUtilsLocation> checkHandlersUsages2{
+        sourceLocationFrom(testFileName, testFileContent, 131, 18, strlen("_")),
+        sourceLocationFrom(testFileName, testFileContent, 134, 5, strlen("on_Changed")),
+        sourceLocationFrom(testFileName, testFileContent, 138, 9, strlen("_Changed")),
+    };
+    QList<QQmlLSUtilsLocation> checkHandlersUsages3{
+        sourceLocationFrom(testFileName, testFileContent, 132, 18, strlen("______42")),
+        sourceLocationFrom(testFileName, testFileContent, 135, 5, strlen("on______42Changed")),
+        sourceLocationFrom(testFileName, testFileContent, 139, 9, strlen("______42Changed")),
+    };
+    QList<QQmlLSUtilsLocation> checkHandlersUsages4{
+        sourceLocationFrom(testFileName, testFileContent, 133, 18, strlen("_123a")),
+        sourceLocationFrom(testFileName, testFileContent, 136, 5, strlen("on_123AChanged")),
+        sourceLocationFrom(testFileName, testFileContent, 140, 9, strlen("_123AChanged")),
     };
 
     std::sort(sumUsages.begin(), sumUsages.end());
@@ -828,6 +861,11 @@ void tst_qmlls_utils::findUsages_data()
     std::sort(widthChangedUsages.begin(), widthChangedUsages.end());
     std::sort(helloPropertyBindingUsages.begin(), helloPropertyBindingUsages.end());
     std::sort(myHelloHandlerUsages.begin(), myHelloHandlerUsages.end());
+    std::sort(checkHandlersUsages.begin(), checkHandlersUsages.end());
+    std::sort(checkCppHandlersUsages.begin(), checkCppHandlersUsages.end());
+    std::sort(checkHandlersUsages2.begin(), checkHandlersUsages2.end());
+    std::sort(checkHandlersUsages3.begin(), checkHandlersUsages3.end());
+    std::sort(checkHandlersUsages4.begin(), checkHandlersUsages4.end());
 
     QTest::addRow("findSumFromDeclaration") << testFileName << 8 << 13 << sumUsages;
     QTest::addRow("findSumFromUsage") << testFileName << 10 << 20 << sumUsages;
@@ -889,6 +927,25 @@ void tst_qmlls_utils::findUsages_data()
             << testFileName << 121 << 21 << helloPropertyBindingUsages;
     QTest::addRow("findBindingUsagesFromBinding")
             << testFileName << 122 << 19 << helloPropertyBindingUsages;
+
+    QTest::addRow("findQmlPropertyHandlerFromDefinition")
+            << testFileName << 124 << 18 << checkHandlersUsages;
+    QTest::addRow("findQmlPropertyHandlerFromHandler")
+            << testFileName << 125 << 5 << checkHandlersUsages;
+    QTest::addRow("findQmlPropertyHandlerFromSignalCall")
+            << testFileName << 128 << 9 << checkHandlersUsages;
+
+    QTest::addRow("findCppPropertyHandlerFromHandler")
+            << testFileName << 126 << 5 << checkCppHandlersUsages;
+    QTest::addRow("findCppPropertyHandlerFromSignalCall")
+            << testFileName << 129 << 9 << checkCppHandlersUsages;
+
+    QTest::addRow("findQmlPropertyHandler2FromDefinition")
+            << testFileName << 131 << 18 << checkHandlersUsages2;
+    QTest::addRow("findQmlPropertyHandler3FromDefinition")
+            << testFileName << 132 << 18 << checkHandlersUsages3;
+    QTest::addRow("findQmlPropertyHandler4FromDefinition")
+            << testFileName << 133 << 18 << checkHandlersUsages4;
 }
 
 void tst_qmlls_utils::findUsages()
@@ -897,6 +954,7 @@ void tst_qmlls_utils::findUsages()
     QFETCH(int, line);
     QFETCH(int, character);
     QFETCH(QList<QQmlLSUtilsLocation>, expectedUsages);
+    QVERIFY(std::is_sorted(expectedUsages.begin(), expectedUsages.end()));
 
     QQmlJS::Dom::DomCreationOptions options;
     options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);

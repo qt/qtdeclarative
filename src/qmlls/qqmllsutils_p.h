@@ -36,6 +36,14 @@ struct QQmlLSUtilsTextPosition
     int character;
 };
 
+enum QQmlLSUtilsIdentifierType : char {
+    PropertyIdentifier,
+    PropertyChangedHandlerIdentifier,
+    PropertyChangedSignalIdentifier,
+    SignalIdentifier,
+    SignalHandlerIdentifier,
+};
+
 struct QQmlLSUtilsLocation
 {
     QString filename;

@@ -392,6 +392,127 @@ static DomItem findJSIdentifierDefinition(DomItem item, const QString &name)
     return definitionOfItem;
 }
 
+/*!
+\internal
+Represents a signal, signal handler, property, property changed signal or a property changed
+handler.
+ */
+struct SignalOrProperty
+{
+    /*!
+    \internal The name of the signal or property, independent of whether this is a changed signal
+    or handler.
+     */
+    QString name;
+    QQmlLSUtilsIdentifierType type;
+};
+
+/*!
+\internal
+\brief Find out if \c{name} is a signal, signal handler, property, property changed signal, or a
+property changed handler in the given QQmlJSScope.
+
+Heuristic to find if name is a property, property changed signal, .... because those can appear
+under different names, for example \c{mySignal} and \c{onMySignal} for a signal.
+This will give incorrect results as soon as properties/signals/methods are called \c{onMySignal},
+\c{on<some already existing property>Changed}, ..., but the good news is that the engine also
+will act weird in these cases (e.g. one cannot bind to a property called like an already existing
+signal or a property changed handler).
+For future reference: you can always add additional checks to check the existence of those buggy
+properties/signals/methods by looking if they exist in the QQmlJSScope.
+*/
+static std::optional<SignalOrProperty> resolveNameInQmlScope(const QString &name,
+                                                             const QQmlJSScope::ConstPtr &owner)
+{
+    if (owner->hasProperty(name)) {
+        return SignalOrProperty{ name, PropertyIdentifier };
+    }
+
+    if (const auto propertyName = QQmlSignalNames::changedHandlerNameToPropertyName(name)) {
+        if (owner->hasProperty(*propertyName)) {
+            return SignalOrProperty{ *propertyName, PropertyChangedHandlerIdentifier };
+        }
+    }
+
+    if (const auto signalName = QQmlSignalNames::handlerNameToSignalName(name)) {
+        if (auto methods = owner->methods(*signalName); !methods.isEmpty()) {
+            if (methods.front().methodType() == QQmlJSMetaMethodType::Signal) {
+                return SignalOrProperty{ *signalName, SignalHandlerIdentifier };
+            }
+        }
+    }
+
+    if (const auto propertyName = QQmlSignalNames::changedSignalNameToPropertyName(name)) {
+        if (owner->hasProperty(*propertyName)) {
+            return SignalOrProperty{ *propertyName, PropertyChangedSignalIdentifier };
+        }
+    }
+
+    if (auto methods = owner->methods(name); !methods.isEmpty()) {
+        if (methods.front().methodType() == QQmlJSMetaMethodType::Signal) {
+            return SignalOrProperty{ name, SignalIdentifier };
+        }
+    }
+    return std::nullopt;
+}
+
+/*!
+\internal
+Returns a list of names, that when belonging to the same targetType, should be considered equal.
+This is used to find signal handlers as usages of their corresponding signals, for example.
+*/
+static QStringList namesOfPossibleUsages(const QString &name,
+                                         const QQmlJSScope::ConstPtr &targetType)
+{
+    QStringList namesToCheck = { name };
+
+    auto namings = resolveNameInQmlScope(name, targetType);
+    if (!namings)
+        return namesToCheck;
+    switch (namings->type) {
+    case PropertyIdentifier: {
+        // for a property, also find bindings to its onPropertyChanged handler + propertyChanged
+        // signal
+        const QString propertyChangedHandler =
+                QQmlSignalNames::propertyNameToChangedHandlerName(namings->name);
+        namesToCheck.append(propertyChangedHandler);
+
+        const QString propertyChangedSignal =
+                QQmlSignalNames::propertyNameToChangedSignalName(namings->name);
+        namesToCheck.append(propertyChangedSignal);
+        break;
+    }
+    case PropertyChangedHandlerIdentifier: {
+        // for a property changed handler, also find the usages of its property + propertyChanged
+        // signal
+        namesToCheck.append(namings->name);
+        namesToCheck.append(QQmlSignalNames::propertyNameToChangedSignalName(namings->name));
+        break;
+    }
+    case PropertyChangedSignalIdentifier: {
+        // for a property changed signal, also find the usages of its property + onPropertyChanged
+        // handlers
+        namesToCheck.append(namings->name);
+        namesToCheck.append(QQmlSignalNames::propertyNameToChangedHandlerName(namings->name));
+        break;
+    }
+    case SignalIdentifier: {
+        // for a signal, also find bindings to its onSignalHandler.
+        namesToCheck.append(QQmlSignalNames::signalNameToHandlerName(namings->name));
+        break;
+    }
+    case SignalHandlerIdentifier: {
+        // for a signal handler, also find the usages of the signal it handles
+        namesToCheck.append(namings->name);
+        break;
+    }
+    default: {
+        break;
+    }
+    }
+    return namesToCheck;
+}
+
 static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
                                          QList<QQmlLSUtilsLocation> &result)
 {
@@ -400,23 +521,7 @@ static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
     if (!targetType)
         return;
 
-    QStringList namesToCheck = { name };
-
-    // for a signal, also find bindings to its onSignalHandler.
-    if (auto methods = targetType->methods(name); !methods.isEmpty()) {
-        if (methods.front().methodType() == QQmlJSMetaMethodType::Signal) {
-            namesToCheck.append(QQmlSignalNames::signalNameToHandlerName(name));
-        }
-    }
-
-    // for a signal handler, also find the usages of the signal it handles
-    if (const auto signalName = QQmlSignalNames::handlerNameToSignalName(name)) {
-        if (auto methods = targetType->methods(*signalName); !methods.isEmpty()) {
-            if (methods.front().methodType() == QQmlJSMetaMethodType::Signal) {
-                namesToCheck.append(*signalName);
-            }
-        }
-    }
+    const QStringList namesToCheck = namesOfPossibleUsages(name, targetType);
 
     auto checkName = [&namesToCheck](const QString &nameToCheck) -> bool {
         return namesToCheck.contains(nameToCheck);

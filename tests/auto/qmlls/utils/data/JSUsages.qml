@@ -120,4 +120,23 @@ Item {
 
     property int helloPropertyBinding
     helloPropertyBinding: 123
+
+    property int checkHandlers
+    onCheckHandlersChanged: myHelloHandler
+    onChildrenChanged: myHelloHandler
+    function callChanged() {
+        checkHandlersChanged()
+        childrenChanged()
+    }
+    property int _: 48
+    property int ______42: 48
+    property int _123a: 48
+    on_Changed: myHelloHandler
+    on______42Changed: myHelloHandler
+    on_123AChanged: myHelloHandler
+    function weirdPropertynames() {
+        _Changed()
+        ______42Changed()
+        _123aChanged()
+    }
 }
