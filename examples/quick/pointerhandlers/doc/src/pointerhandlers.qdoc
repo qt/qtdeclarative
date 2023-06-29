@@ -3,7 +3,7 @@
 
 /*!
     \example pointerhandlers
-    \title Pointer Handlers Example
+    \title Qt Quick Examples - Pointer Handlers
     \ingroup qtquickexamples
     \meta tags {quick, input handlers}
     \brief Shows how to use \l {Qt Quick Input Handlers} in interactive components.

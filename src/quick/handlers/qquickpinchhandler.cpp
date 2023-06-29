@@ -56,7 +56,7 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
     but if it's a disallowed number, it does not scale or rotate
     its \l target, and the \l active property remains \c false.
 
-    \sa PinchArea, QPointerEvent::pointCount(), QNativeGestureEvent::fingerCount(), {Pointer Handlers Example}
+    \sa PinchArea, QPointerEvent::pointCount(), QNativeGestureEvent::fingerCount(), {Qt Quick Examples - Pointer Handlers}
 */
 
 QQuickPinchHandler::QQuickPinchHandler(QQuickItem *parent)
