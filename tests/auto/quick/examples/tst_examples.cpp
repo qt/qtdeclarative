@@ -71,8 +71,7 @@ tst_examples::tst_examples()
     excludedFiles << "examples/qml/dynamicscene/dynamicscene.qml";
     excludedFiles << "examples/quick/animation/basics/color-animation.qml";
     excludedFiles << "examples/quick/particles/affectors/content/age.qml";
-    excludedFiles << "examples/quick/touchinteraction/multipointtouch/bearwhack.qml";
-    excludedFiles << "examples/quick/touchinteraction/multipointtouch/multiflame.qml";
+    excludedFiles << "examples/quick/pointerhandlers/multiflame.qml";
     excludedDirs << "examples/quick/particles";
     // No Support for ShaderEffect
     excludedFiles << "src/quick/doc/snippets/qml/animators.qml";

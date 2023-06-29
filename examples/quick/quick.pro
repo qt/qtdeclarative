@@ -13,13 +13,13 @@ SUBDIRS =   quick-accessibility \
             views \
             tableview \
             mousearea \
+            pointerhandlers \
             positioners \
             righttoleft \
             scenegraph \
             shadereffects \
             text \
             threading \
-            touchinteraction \
             tutorials \
             customitems \
             imageprovider \

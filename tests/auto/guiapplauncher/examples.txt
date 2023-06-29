@@ -30,7 +30,6 @@
 "quick/positioners Example", "examples/quick/positioners", "positioners", 0, -1
 "quick/shadereffects Example", "examples/quick/shadereffects", "shadereffects", 0, -1
 "quick/mousearea Example", "examples/quick/mousearea", "mousearea", 0, -1
-"quick/touchinteraction Example", "examples/quick/touchinteraction", "touchinteraction", 0, -1
 "quick/canvas Example", "examples/quick/canvas", "canvas", 0, -1
 "quick/text Example", "examples/quick/text", "text", 0, -1
 "quick/quickwidgets/qquickviewcomparison Example", "examples/quick/quickwidgets/qquickviewcomparison", "qquickviewcomparison", 0, -1
