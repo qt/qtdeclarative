@@ -21,7 +21,6 @@ add_subdirectory(scenegraph)
 qt_internal_add_example(shadereffects)
 qt_internal_add_example(text)
 qt_internal_add_example(threading)
-qt_internal_add_example(touchinteraction)
 add_subdirectory(tutorials)
 add_subdirectory(customitems)
 qt_internal_add_example(imageprovider)
@@ -52,7 +51,6 @@ set(reused_dir_targets
     righttoleft_shared
     text_shared
     threading_shared
-    touchinteraction_shared
     window_shared
     shapes_shared
     imageelements_shared

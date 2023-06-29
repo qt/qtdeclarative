@@ -1,11 +1,13 @@
 <RCC>
-    <qresource prefix="/pointerhandlers">
+    <qresource prefix="/qt/qml/pointerhandlers">
+        <file>corkboards.qml</file>
         <file>flingAnimation.qml</file>
         <file>fakeFlickable.qml</file>
         <file>joystick.qml</file>
         <file>map.qml</file>
         <file>mixer.qml</file>
         <file>multibuttons.qml</file>
+        <file>multiflame.qml</file>
         <file>pieMenu.qml</file>
         <file>pinchHandler.qml</file>
         <file>pointerhandlers.qml</file>
@@ -15,6 +17,7 @@
         <file>tapHandler.qml</file>
         <file>components/Button.qml</file>
         <file>components/CheckBox.qml</file>
+        <file>components/CorkPanel.qml</file>
         <file>components/FakeFlickable.qml</file>
         <file>components/FlashAnimation.qml</file>
         <file>components/LeftDrawer.qml</file>
@@ -27,6 +30,10 @@
         <file>images/arrowhead.png</file>
         <file>images/balloon.png</file>
         <file>components/images/checkmark.png</file>
+        <file>components/images/cork.jpg</file>
+        <file>components/images/note-yellow.png</file>
+        <file>components/images/tack.png</file>
+        <file>images/blur-circle.png</file>
         <file>images/cursor-airbrush.png</file>
         <file>images/cursor-eraser.png</file>
         <file>images/cursor-felt-marker.png</file>

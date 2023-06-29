@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
+import "components"
 
 Rectangle {
     width: 320; height: 480
@@ -44,8 +45,7 @@ Rectangle {
         orientation: ListView.Horizontal
         snapMode: ListView.SnapOneItem
         model: list
-        delegate: Panel {
-            horizontalVelocity: flickable.horizontalVelocity
-        }
+        delegate: CorkPanel { objectName: name }
     }
 }
+
