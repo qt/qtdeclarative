@@ -367,6 +367,8 @@ TestCase {
         verify(control.get(2, StackView.ForceLoad))
     }
 
+    property bool qmlProperty
+
     function test_push() {
         var control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
@@ -420,6 +422,27 @@ TestCase {
         compare(item6.objectName, "6")
         compare(control.depth, 6)
         compare(control.currentItem, item6)
+
+        // push([component, {binding}]) - with JS variable in binding
+        var jsVariable = false
+        var item7 = control.push([itemComponent, {objectName: Qt.binding(() => {
+            return jsVariable.toString() })}], StackView.Immediate)
+        compare(item7.objectName, "false")
+        compare(control.depth, 7)
+        compare(control.currentItem, item7)
+        jsVariable = true
+        expectFailContinue("", "QTBUG-114959")
+        compare(item7.objectName, "true")
+
+        // push([component, {binding}]) - with QML property in binding
+        qmlProperty = false
+        var item8 = control.push([itemComponent, {objectName: Qt.binding(() => {
+            return testCase.qmlProperty.toString() })}], StackView.Immediate)
+        compare(item8.objectName, "false")
+        compare(control.depth, 8)
+        compare(control.currentItem, item8)
+        qmlProperty = true
+        compare(item8.objectName, "true")
     }
 
      // Escape special Regexp characters with a '\' (backslash) prefix so that \a str can be
