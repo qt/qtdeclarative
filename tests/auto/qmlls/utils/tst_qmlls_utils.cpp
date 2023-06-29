@@ -846,6 +846,23 @@ void tst_qmlls_utils::findUsages_data()
         QQmlLSUtilsLocation::from(testFileName, testFileContent, 140, 9, strlen("_123aChanged")),
     };
 
+    QList<QQmlLSUtilsLocation> mouseArea1ClickedUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 159, 9, strlen("onClicked")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 167, 23, strlen("clicked")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 183, 15, strlen("clicked")),
+    };
+
+    QList<QQmlLSUtilsLocation> mouseArea2ClickedUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 166, 22, strlen("onClicked")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 184, 15, strlen("clicked")),
+    };
+
+    QList<QQmlLSUtilsLocation> mouseArea3ClickedUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 168, 23, strlen("clicked")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 178, 9, strlen("onClicked")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 185, 15, strlen("clicked")),
+    };
+
     std::sort(sumUsages.begin(), sumUsages.end());
     std::sort(iUsages.begin(), iUsages.end());
     std::sort(subItemHelloPropertyUsages.begin(), subItemHelloPropertyUsages.end());
@@ -864,6 +881,9 @@ void tst_qmlls_utils::findUsages_data()
     std::sort(checkHandlersUsages2.begin(), checkHandlersUsages2.end());
     std::sort(checkHandlersUsages3.begin(), checkHandlersUsages3.end());
     std::sort(checkHandlersUsages4.begin(), checkHandlersUsages4.end());
+    std::sort(mouseArea1ClickedUsages.begin(), mouseArea1ClickedUsages.end());
+    std::sort(mouseArea2ClickedUsages.begin(), mouseArea2ClickedUsages.end());
+    std::sort(mouseArea3ClickedUsages.begin(), mouseArea3ClickedUsages.end());
 
     QTest::addRow("findSumFromDeclaration") << testFileName << 8 << 13 << sumUsages;
     QTest::addRow("findSumFromUsage") << testFileName << 10 << 20 << sumUsages;
@@ -944,6 +964,13 @@ void tst_qmlls_utils::findUsages_data()
             << testFileName << 132 << 18 << checkHandlersUsages3;
     QTest::addRow("findQmlPropertyHandler4FromDefinition")
             << testFileName << 133 << 18 << checkHandlersUsages4;
+
+    QTest::addRow("findSignalsInConnectionObject")
+            << testFileName << 183 << 15 << mouseArea1ClickedUsages;
+    QTest::addRow("findSignalsInConnectionObjectWithNoTarget")
+            << testFileName << 184 << 15 << mouseArea2ClickedUsages;
+    QTest::addRow("findSignalsInConnectionObjectWithTarget")
+            << testFileName << 185 << 15 << mouseArea3ClickedUsages;
 }
 
 void tst_qmlls_utils::findUsages()

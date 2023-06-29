@@ -742,6 +742,39 @@ propertyFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QStr
     return {};
 }
 
+static QQmlJSScope::ConstPtr findScopeInConnections(QQmlJSScope::ConstPtr scope, DomItem &item)
+{
+    if (!scope || (scope->baseType() && scope->baseType()->internalName() != u"QQmlConnections"_s))
+        return {};
+
+    // Perform target name search if there is binding to property "target"
+    QString targetName;
+    if (scope->hasOwnPropertyBindings(u"target"_s)) {
+        DomItem current = item.qmlObject();
+        auto target = current.bindings().key(u"target"_s).index(0);
+        if (target) {
+            targetName = target.field(Fields::value)
+                                 .field(Fields::scriptElement)
+                                 .field(Fields::identifier)
+                                 .value()
+                                 .toString();
+        }
+    }
+
+    if (!targetName.isEmpty()) {
+        // look for the scope of target
+        auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
+        if (!resolver)
+            return {};
+        return resolver.value()->scopeForId(targetName, scope);
+    } else {
+        // No binding to target property, return the container object's scope
+        return scope->parentScope();
+    }
+
+    return {};
+}
+
 static std::optional<QQmlLSUtilsExpressionType>
 resolveIdentifierExpressionType(DomItem item, QQmlLSUtilsResolveOptions options)
 {
@@ -858,6 +891,10 @@ QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolve
             if (name == u"id")
                 return QQmlLSUtilsExpressionType{ name, owner.value(), QmlObjectIdIdentifier };
 
+            if (QQmlJSScope::ConstPtr targetScope = findScopeInConnections(owner.value(), item)) {
+                return QQmlLSUtilsExpressionType{ name, targetScope,
+                                                  resolveNameInQmlScope(name, targetScope)->type };
+            }
             auto signalOrProperty = resolveNameInQmlScope(name, owner.value());
             if (signalOrProperty)
                 return QQmlLSUtilsExpressionType{ name, owner.value(), signalOrProperty->type };
@@ -879,9 +916,17 @@ QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolve
     case DomType::MethodInfo: {
         auto object = item.as<MethodInfo>();
         if (object && object->semanticScope()) {
-            auto scope = object->semanticScope();
+            std::optional<QQmlJSScope::ConstPtr> scope = object->semanticScope();
             if (!scope)
                 return {};
+
+            if (QQmlJSScope::ConstPtr targetScope =
+                        findScopeInConnections(scope.value()->parentScope(), item)) {
+                return QQmlLSUtilsExpressionType{
+                    object->name, targetScope,
+                    resolveNameInQmlScope(object->name, targetScope)->type
+                };
+            }
 
             // in case scope is the semantic scope for the function bodies: grab the owner's scope
             // this happens for all methods but not for signals (they do not have a body)
