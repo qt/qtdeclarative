@@ -3,6 +3,7 @@
 
 #include "qquickabstractbutton_p.h"
 #include "qquickabstractbutton_p_p.h"
+#include "qquickactiongroup_p.h"
 #include "qquickbuttongroup_p.h"
 #include "qquickaction_p.h"
 #include "qquickaction_p_p.h"
@@ -1200,8 +1201,21 @@ void QQuickAbstractButton::buttonChange(ButtonChange change)
 void QQuickAbstractButton::nextCheckState()
 {
     Q_D(QQuickAbstractButton);
-    if (d->checkable && (!d->checked || d->findCheckedButton() != this))
-        d->toggle(!d->checked);
+    if (!d->checkable)
+        return;
+
+    if (d->checked) {
+        if (d->findCheckedButton() == this)
+            return;
+        if (d->action) {
+            // For non-exclusive groups checkedAction is null
+            if (const auto group = QQuickActionPrivate::get(d->action)->group)
+                if (group->checkedAction() == d->action)
+                    return;
+        }
+    }
+
+    d->toggle(!d->checked);
 }
 
 #if QT_CONFIG(accessibility)
