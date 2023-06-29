@@ -418,7 +418,7 @@ QQuickAbstractButton *QQuickAbstractButtonPrivate::findCheckedButton() const
 {
     Q_Q(const QQuickAbstractButton);
     if (group)
-        return qobject_cast<QQuickAbstractButton *>(group->checkedButton());
+        return group->checkedButton();
 
     const QList<QQuickAbstractButton *> buttons = findExclusiveButtons();
     // TODO: A singular QRadioButton can be unchecked, which seems logical,
