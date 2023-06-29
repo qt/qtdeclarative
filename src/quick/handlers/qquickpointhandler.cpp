@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
     want to react to all the touchpoints but do not require the smooth
     native-gesture experience.
 
-    \sa MultiPointTouchArea, HoverHandler, {Pointer Handlers Example}
+    \sa MultiPointTouchArea, HoverHandler, {Qt Quick Examples - Pointer Handlers}
 */
 
 QQuickPointHandler::QQuickPointHandler(QQuickItem *parent)
@@ -170,7 +170,7 @@ QVector2D QQuickPointHandler::translation() const
 
     \snippet pointerHandlers/pointHandlerCanvasDrawing.qml 0
 
-    The \l {Pointer Handlers Example} includes a more complex example for
+    The \l {Qt Quick Examples - Pointer Handlers} includes a more complex example for
     drawing on a Canvas with a graphics tablet.
 */
 
