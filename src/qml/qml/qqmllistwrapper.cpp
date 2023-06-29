@@ -3,6 +3,8 @@
 
 #include "qqmllistwrapper_p.h"
 
+#include <QtQml/qqmlinfo.h>
+
 #include <private/qqmllist_p.h>
 
 #include <private/qv4arrayiterator_p.h>
@@ -247,7 +249,11 @@ ReturnedValue PropertyListPrototype::method_push(const FunctionObject *b, const 
             property->append(property, argv[i].as<QV4::QObjectWrapper>()->object());
     }
 
-    return Encode(uint(length + argc));
+    const auto actualLength = property->count(property);
+    if (actualLength != length + argc)
+        qmlWarning(property->object) << "List didn't append all objects";
+
+    return Encode(uint(actualLength));
 }
 
 ReturnedValue PropertyListPrototype::method_shift(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -408,12 +414,16 @@ ReturnedValue PropertyListPrototype::method_unshift(const FunctionObject *b, con
 
     for (int i = 0; i < argc; ++i)
         property->append(property, nullptr);
+    if (property->count(property) != argc + len)
+        return scope.engine->throwTypeError(u"List doesn't append null objects"_s);
 
     for (qsizetype k = len; k > 0; --k)
         property->replace(property, k + argc - 1, property->at(property, k - 1));
 
-    for (int i = 0; i < argc; ++i)
-        property->replace(property, i, argv[i].as<QObjectWrapper>()->object());
+    for (int i = 0; i < argc; ++i) {
+        const auto *wrapper = argv[i].as<QObjectWrapper>();
+        property->replace(property, i, wrapper ? wrapper->object() : nullptr);
+    }
 
     return Encode(uint(len + argc));
 }
@@ -620,10 +630,17 @@ ReturnedValue PropertyListPrototype::method_set_length(const FunctionObject *b, 
     }
 
     if (!property->append)
-            return scope.engine->throwTypeError(u"List doesn't define an Append function"_s);
+        return scope.engine->throwTypeError(u"List doesn't define an Append function"_s);
 
     for (uint i = count; i < newLength; ++i)
         property->append(property, nullptr);
+
+    count = property->count(property);
+    if (!qIsAtMostUintLimit(count))
+        return scope.engine->throwRangeError(QString::fromLatin1("List length out of range."));
+
+    if (uint(count) != newLength)
+        return scope.engine->throwTypeError(u"List doesn't append null objects"_s);
 
     return true;
 
