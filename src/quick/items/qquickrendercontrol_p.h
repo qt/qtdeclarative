@@ -44,7 +44,7 @@ public:
     }
 
     static bool isRenderWindowFor(QQuickWindow *quickWin, const QWindow *renderWin);
-    virtual bool isRenderWindow(const QWindow *w) { Q_UNUSED(w); return false; }
+    virtual bool isRenderWindow(const QWindow *w);
 
     static void cleanup();
 

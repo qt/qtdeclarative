@@ -549,6 +549,16 @@ bool QQuickRenderControlPrivate::isRenderWindowFor(QQuickWindow *quickWin, const
     return false;
 }
 
+bool QQuickRenderControlPrivate::isRenderWindow(const QWindow *w)
+{
+    Q_Q(QQuickRenderControl);
+
+    if (window && w)
+        return q->renderWindowFor(window, nullptr) == w;
+
+    return false;
+}
+
 /*!
     \return the QQuickWindow this QQuickRenderControl is associated with.
 
