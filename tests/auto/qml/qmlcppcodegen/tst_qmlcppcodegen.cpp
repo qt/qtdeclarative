@@ -1,12 +1,13 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 
-#include "data/druggeljug.h"
-#include "data/enumProperty.h"
-#include "data/withlength.h"
 #include <data/birthdayparty.h>
 #include <data/cppbaseclass.h>
+#include <data/druggeljug.h>
+#include <data/enumProperty.h>
 #include <data/enumproblems.h>
 #include <data/objectwithmethod.h>
+#include <data/weathermoduleurl.h>
+#include <data/withlength.h>
 
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQml/private/qqmlpropertycachecreator_p.h>
@@ -171,6 +172,7 @@ private slots:
     void stringArg();
     void stringLength();
     void stringToByteArray();
+    void structuredValueType();
     void testIsnan();
     void thisObject();
     void throwObjectName();
@@ -3543,6 +3545,23 @@ void tst_QmlCppCodegen::stringToByteArray()
 
     QCOMPARE(person->dataBindable().value(), QByteArray("some data"));
     QCOMPARE(person->name(), u"some data"_s);
+}
+
+void tst_QmlCppCodegen::structuredValueType()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/structuredValueType.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("r").value<QRectF>(), QRectF(1, 2, 3, 4));
+    QCOMPARE(o->property("r2").value<QRectF>(), QRectF(42, 0, 0, 0));
+
+    WeatherModelUrl w;
+    w.setStrings(QStringList({"one", "two", "three"}));
+
+    QCOMPARE(o->property("w").value<WeatherModelUrl>(), w);
 }
 
 void tst_QmlCppCodegen::testIsnan()

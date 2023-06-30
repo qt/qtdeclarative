@@ -1901,12 +1901,32 @@ void QQmlJSTypePropagator::generate_DefineArray(int argc, int args)
 
 void QQmlJSTypePropagator::generate_DefineObjectLiteral(int internalClassId, int argc, int args)
 {
-    // TODO: computed property names, getters, and setters are unsupported. How do we catch them?
+    const int classSize = m_jsUnitGenerator->jsClassSize(internalClassId);
+    Q_ASSERT(argc >= classSize);
 
-    Q_UNUSED(internalClassId)
-    Q_UNUSED(argc)
-    Q_UNUSED(args)
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
+    // Track each element as separate type
+    for (int i = 0; i < classSize; ++i) {
+        addReadRegister(
+                args + i,
+                m_typeResolver->tracked(m_typeResolver->globalType(m_typeResolver->varType())));
+    }
+
+    for (int i = classSize; i < argc; i += 3) {
+        // layout for remaining members is:
+        // 0: ObjectLiteralArgument - Value|Method|Getter|Setter
+
+        // 1: name of argument
+        addReadRegister(
+                args + i + 1,
+                m_typeResolver->tracked(m_typeResolver->globalType(m_typeResolver->stringType())));
+
+        // 2: value of argument
+        addReadRegister(
+                args + i + 2,
+                m_typeResolver->tracked(m_typeResolver->globalType(m_typeResolver->varType())));
+    }
+
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->variantMapType()));
 }
 
 void QQmlJSTypePropagator::generate_CreateClass(int classIndex, int heritage, int computedNames)

@@ -205,6 +205,7 @@ set(qml_files
     stringArg.qml
     stringLength.qml
     stringToByteArray.qml
+    structuredValueType.qml
     testlogger.js
     text.qml
     themerbad.qml

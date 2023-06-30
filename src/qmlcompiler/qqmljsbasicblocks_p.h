@@ -52,6 +52,16 @@ private:
         int trackedRegister;
     };
 
+    struct ObjectOrArrayDefinition
+    {
+        static constexpr int arrayClassId = -1;
+
+        int instructionOffset = -1;
+        int internalClassId = -1;
+        int argc = 0;
+        int argv = -1;
+    };
+
     QV4::Moth::ByteCodeHandler::Verdict startInstruction(QV4::Moth::Instr::Type type) override;
     void endInstruction(QV4::Moth::Instr::Type type) override;
 
@@ -65,6 +75,7 @@ private:
     void generate_ThrowException() override;
 
     void generate_DefineArray(int argc, int argv) override;
+    void generate_DefineObjectLiteral(int internalClassId, int argc, int args) override;
 
     enum JumpMode { Unconditional, Conditional };
     void processJump(int offset, JumpMode mode);
@@ -76,7 +87,7 @@ private:
     InstructionAnnotations m_annotations;
     QFlatMap<int, BasicBlock> m_basicBlocks;
     QHash<int, RegisterAccess> m_readerLocations;
-    QList<int> m_arrayDefinitions;
+    QList<ObjectOrArrayDefinition> m_objectAndArrayDefinitions;
     bool m_skipUntilNextLabel = false;
     bool m_hadBackJumps = false;
 };

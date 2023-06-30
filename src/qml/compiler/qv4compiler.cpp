@@ -197,6 +197,10 @@ QV4::ReturnedValue QV4::Compiler::JSUnitGenerator::constant(int idx) const
     return constants.at(idx);
 }
 
+// The JSClass object and its members are stored contiguously in the jsClassData.
+// In order to get to the members you have to skip over the JSClass, therefore +1.
+static constexpr qsizetype jsClassMembersOffset = 1;
+
 int QV4::Compiler::JSUnitGenerator::registerJSClass(const QStringList &members)
 {
     // ### re-use existing class definitions.
@@ -209,7 +213,8 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(const QStringList &members)
 
     CompiledData::JSClass *jsClass = reinterpret_cast<CompiledData::JSClass*>(jsClassData.data() + oldSize);
     jsClass->nMembers = members.size();
-    CompiledData::JSClassMember *member = reinterpret_cast<CompiledData::JSClassMember*>(jsClass + 1);
+    CompiledData::JSClassMember *member
+            = reinterpret_cast<CompiledData::JSClassMember*>(jsClass + jsClassMembersOffset);
 
     for (const auto &name : members) {
         member->set(registerString(name), false);
@@ -217,6 +222,25 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(const QStringList &members)
     }
 
     return jsClassOffsets.size() - 1;
+}
+
+int QV4::Compiler::JSUnitGenerator::jsClassSize(int jsClassId) const
+{
+    const CompiledData::JSClass *jsClass
+            = reinterpret_cast<const CompiledData::JSClass*>(
+            jsClassData.data() + jsClassOffsets[jsClassId]);
+    return jsClass->nMembers;
+}
+
+QString QV4::Compiler::JSUnitGenerator::jsClassMember(int jsClassId, int member) const
+{
+    const CompiledData::JSClass *jsClass = reinterpret_cast<const CompiledData::JSClass*>(
+            jsClassData.data() + jsClassOffsets[jsClassId]);
+    Q_ASSERT(member >= 0);
+    Q_ASSERT(uint(member) < jsClass->nMembers);
+    const CompiledData::JSClassMember *members
+            = reinterpret_cast<const CompiledData::JSClassMember*>(jsClass + jsClassMembersOffset);
+    return stringForIndex(members[member].nameOffset());
 }
 
 int QV4::Compiler::JSUnitGenerator::registerTranslation(const QV4::CompiledData::TranslationData &translation)

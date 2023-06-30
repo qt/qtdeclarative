@@ -504,6 +504,7 @@ bool QQmlJSTypeResolver::adjustTrackedType(
     // If we cannot convert to the new type without the help of e.g. lookupResultMetaType(),
     // we better not change the type.
     if (!canPrimitivelyConvertFromTo(tracked, conversion)
+           && !canPopulate(conversion, tracked, nullptr)
            && !selectConstructor(conversion, tracked, nullptr).isValid()) {
         return false;
     }
@@ -529,6 +530,7 @@ bool QQmlJSTypeResolver::adjustTrackedType(
     // If we cannot convert to the new type without the help of e.g. lookupResultMetaType(),
     // we better not change the type.
     if (!canPrimitivelyConvertFromTo(tracked, result)
+            && !canPopulate(result, tracked, nullptr)
             && !selectConstructor(result, tracked, nullptr).isValid()) {
         return false;
     }
@@ -591,8 +593,11 @@ QString QQmlJSTypeResolver::containedTypeName(const QQmlJSRegisterContent &conta
 bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
                                           const QQmlJSScope::ConstPtr &to) const
 {
-    if (canPrimitivelyConvertFromTo(from, to) || selectConstructor(to, from, nullptr).isValid())
+    if (canPrimitivelyConvertFromTo(from, to)
+            || canPopulate(to, from, nullptr)
+            || selectConstructor(to, from, nullptr).isValid()) {
         return true;
+    }
 
     // ### need a generic solution for custom cpp types:
     // if (from->m_hasBoolOverload && equals(to, boolType))
@@ -1022,16 +1027,73 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
     return false;
 }
 
+bool QQmlJSTypeResolver::canPopulate(
+        const QQmlJSScope::ConstPtr &type, const QQmlJSScope::ConstPtr &passedArgumentType,
+        bool *isExtension) const
+{
+    // TODO: We could allow QVariantMap and QVariantHash to be populated, but that needs extra
+    //       code in the code generator.
+
+    if (type.isNull()
+            || canHold(passedArgumentType, type)
+            || isPrimitive(passedArgumentType)
+            || type->accessSemantics() != QQmlJSScope::AccessSemantics::Value
+            || !type->isStructured()) {
+        return false;
+    }
+
+    if (isExtension)
+        *isExtension = !type->extensionType().scope.isNull();
+
+    return true;
+}
+
 QQmlJSMetaMethod QQmlJSTypeResolver::selectConstructor(
-        const QQmlJSScope::ConstPtr &type, const QQmlJSScope::ConstPtr &passedArgumentType, bool *isExtension) const
+        const QQmlJSScope::ConstPtr &type, const QQmlJSScope::ConstPtr &passedArgumentType,
+        bool *isExtension) const
 {
     // If the "from" type can hold the target type, we should not try to coerce
     // it to any constructor argument.
-    if (type.isNull() || canHold(passedArgumentType, type))
+    if (type.isNull()
+            || canHold(passedArgumentType, type)
+            || type->accessSemantics() != QQmlJSScope::AccessSemantics::Value
+            || !type->isCreatable()) {
         return QQmlJSMetaMethod();
+    }
+
+    auto doSelectConstructor = [&](const QQmlJSScope::ConstPtr &type) {
+        QQmlJSMetaMethod candidate;
+
+        const auto ownMethods = type->ownMethods();
+        for (const QQmlJSMetaMethod &method : ownMethods) {
+            if (!method.isConstructor())
+                continue;
+
+            const auto index = method.constructorIndex();
+            Q_ASSERT(index != QQmlJSMetaMethod::RelativeFunctionIndex::Invalid);
+
+            const auto methodArguments = method.parameters();
+            if (methodArguments.size() != 1)
+                continue;
+
+            const QQmlJSScope::ConstPtr methodArgumentType = methodArguments[0].type();
+
+            if (equals(passedArgumentType, methodArgumentType))
+                return method;
+
+            // Do not select further ctors here. We don't want to do multi-step construction as that
+            // is confusing and easily leads to infinite recursion.
+            if (!candidate.isValid()
+                && canPrimitivelyConvertFromTo(passedArgumentType, methodArgumentType)) {
+                candidate = method;
+            }
+        }
+
+        return candidate;
+    };
 
     if (QQmlJSScope::ConstPtr extension = type->extensionType().scope) {
-        const QQmlJSMetaMethod ctor = selectConstructor(extension, passedArgumentType, nullptr);
+        const QQmlJSMetaMethod ctor = doSelectConstructor(extension);
         if (ctor.isValid()) {
             if (isExtension)
                 *isExtension = true;
@@ -1042,36 +1104,7 @@ QQmlJSMetaMethod QQmlJSTypeResolver::selectConstructor(
     if (isExtension)
         *isExtension = false;
 
-    QQmlJSMetaMethod candidate;
-    if (!type->isCreatable() || type->accessSemantics() != QQmlJSScope::AccessSemantics::Value)
-        return candidate;
-
-    const auto ownMethods = type->ownMethods();
-    for (const QQmlJSMetaMethod &method : ownMethods) {
-        if (!method.isConstructor())
-            continue;
-
-        const auto index = method.constructorIndex();
-        Q_ASSERT(index != QQmlJSMetaMethod::RelativeFunctionIndex::Invalid);
-
-        const auto methodArguments = method.parameters();
-        if (methodArguments.size() != 1)
-            continue;
-
-        const QQmlJSScope::ConstPtr methodArgumentType = methodArguments[0].type();
-
-        if (equals(passedArgumentType, methodArgumentType))
-            return method;
-
-        // Do not select further ctors here. We don't want to do multi-step construction as that
-        // is confusing and easily leads to infinite recursion.
-        if (!candidate.isValid()
-                && canPrimitivelyConvertFromTo(passedArgumentType, methodArgumentType)) {
-            candidate = method;
-        }
-    }
-
-    return candidate;
+    return doSelectConstructor(type);
 }
 
 bool QQmlJSTypeResolver::areEquivalentLists(

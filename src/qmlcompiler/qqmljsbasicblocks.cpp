@@ -121,12 +121,22 @@ void QQmlJSBasicBlocks::generate_ThrowException()
     m_skipUntilNextLabel = true;
 }
 
-void QQmlJSBasicBlocks::generate_DefineArray(int argc, int)
+void QQmlJSBasicBlocks::generate_DefineArray(int argc, int argv)
 {
     if (argc == 0)
         return; // empty array/list, nothing to do
 
-    m_arrayDefinitions.append(currentInstructionOffset());
+    m_objectAndArrayDefinitions.append({
+        currentInstructionOffset(), ObjectOrArrayDefinition::arrayClassId, argc, argv
+    });
+}
+
+void QQmlJSBasicBlocks::generate_DefineObjectLiteral(int internalClassId, int argc, int argv)
+{
+    if (argc == 0)
+        return;
+
+    m_objectAndArrayDefinitions.append({ currentInstructionOffset(), internalClassId, argc, argv });
 }
 
 void QQmlJSBasicBlocks::processJump(int offset, JumpMode mode)
@@ -440,12 +450,19 @@ void QQmlJSBasicBlocks::adjustTypes()
         }
     };
 
+    const auto transformRegister = [&](const QQmlJSRegisterContent &content) {
+        const QQmlJSScope::ConstPtr conversion
+                = m_typeResolver->storedType(m_typeResolver->containedType(content));
+        if (!m_typeResolver->adjustTrackedType(content.storedType(), conversion))
+            setError(adjustErrorMessage(content.storedType(), conversion));
+    };
+
     // Handle the array definitions first.
     // Changing the array type changes the expected element types.
-    for (int instructionOffset : m_arrayDefinitions) {
+    auto adjustArray = [&](int instructionOffset) {
         auto it = m_readerLocations.find(instructionOffset);
         if (it == m_readerLocations.end())
-            continue;
+            return;
 
         const InstructionAnnotation &annotation = m_annotations[instructionOffset];
 
@@ -460,15 +477,80 @@ void QQmlJSBasicBlocks::adjustTypes()
         // can do this because we've tracked the read type when we defined the array in
         // QQmlJSTypePropagator.
         if (QQmlJSScope::ConstPtr valueType = it->trackedTypes[0]->valueType()) {
-            const QQmlJSScope::ConstPtr contained
-                    = m_typeResolver->containedType(
-                        annotation.readRegisters.begin().value().content);
+            const QQmlJSRegisterContent content = annotation.readRegisters.begin().value().content;
+            const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(content);
             if (!m_typeResolver->adjustTrackedType(contained, valueType))
                 setError(adjustErrorMessage(contained, valueType));
+
+            // We still need to adjust the stored type, too.
+            transformRegister(content);
         }
 
         handleRegisterReadersAndConversions(it);
         m_readerLocations.erase(it);
+    };
+
+    // Handle the object definitions.
+    // Changing the object type changes the expected property types.
+    const auto adjustObject = [&](const ObjectOrArrayDefinition &object) {
+        auto it = m_readerLocations.find(object.instructionOffset);
+        if (it == m_readerLocations.end())
+            return;
+
+        const InstructionAnnotation &annotation = m_annotations[object.instructionOffset];
+
+        Q_ASSERT(it->trackedTypes.size() == 1);
+        Q_ASSERT(it->trackedTypes[0] == m_typeResolver->containedType(annotation.changedRegister));
+        Q_ASSERT(!annotation.readRegisters.isEmpty());
+
+        if (!m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->typeReaders.values()))
+            setError(adjustErrorMessage(it->trackedTypes[0], it->typeReaders.values()));
+
+        QQmlJSScope::ConstPtr resultType = it->trackedTypes[0];
+
+        const int classSize = m_jsUnitGenerator->jsClassSize(object.internalClassId);
+        Q_ASSERT(object.argc >= classSize);
+
+        for (int i = 0; i < classSize; ++i) {
+            // Now we don't adjust the type we store, but rather the types we expect to read. We
+            // can do this because we've tracked the read types when we defined the object in
+            // QQmlJSTypePropagator.
+
+            const QString propName = m_jsUnitGenerator->jsClassMember(object.internalClassId, i);
+            const QQmlJSMetaProperty property = resultType->property(propName);
+            if (!property.isValid()) {
+                setError(
+                        resultType->internalName()
+                        + QLatin1String(" has no property called ")
+                        + propName);
+                continue;
+            }
+            const QQmlJSScope::ConstPtr propType = property.type();
+            if (propType.isNull()) {
+                setError(QLatin1String("Cannot resolve type of property ") + propName);
+                continue;
+            }
+            const QQmlJSRegisterContent content = annotation.readRegisters[object.argv + i].content;
+            const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(content);
+            if (!m_typeResolver->adjustTrackedType(contained, propType))
+                setError(adjustErrorMessage(contained, propType));
+
+            // We still need to adjust the stored type, too.
+            transformRegister(content);
+        }
+
+        // The others cannot be adjusted. We don't know their names, yet.
+        // But we might still be able to use the variants.
+    };
+
+    // Iterate in reverse so that we can have nested lists and objects and the types are propagated
+    // from the outer lists/objects to the inner ones.
+    for (auto it = m_objectAndArrayDefinitions.crbegin(), end = m_objectAndArrayDefinitions.crend();
+         it != end; ++it) {
+        if (it->internalClassId != -1)
+            adjustObject(*it);
+        else
+            adjustArray(it->instructionOffset);
     }
 
     for (auto it = m_readerLocations.begin(), end = m_readerLocations.end(); it != end; ++it) {
@@ -483,12 +565,7 @@ void QQmlJSBasicBlocks::adjustTypes()
             setError(adjustErrorMessage(it->trackedTypes[0], it->typeReaders.values()));
     }
 
-    const auto transformRegister = [&](QQmlJSRegisterContent &content) {
-        const QQmlJSScope::ConstPtr conversion
-                = m_typeResolver->storedType(m_typeResolver->containedType(content));
-        if (!m_typeResolver->adjustTrackedType(content.storedType(), conversion))
-            setError(adjustErrorMessage(content.storedType(), conversion));
-    };
+
 
     NewVirtualRegisters newRegisters;
     for (auto i = m_annotations.begin(), iEnd = m_annotations.end(); i != iEnd; ++i) {

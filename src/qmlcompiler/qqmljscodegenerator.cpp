@@ -2168,10 +2168,92 @@ void QQmlJSCodeGenerator::generate_DefineArray(int argc, int args)
 
 void QQmlJSCodeGenerator::generate_DefineObjectLiteral(int internalClassId, int argc, int args)
 {
-    Q_UNUSED(internalClassId)
-    Q_UNUSED(argc)
-    Q_UNUSED(args)
-    reject(u"DefineObjectLiteral"_s);
+    INJECT_TRACE_INFO(generate_DefineObjectLiteral);
+
+    const QQmlJSScope::ConstPtr stored = m_state.accumulatorOut().storedType();
+    if (stored->accessSemantics() != QQmlJSScope::AccessSemantics::Value) {
+        reject(u"storing an object literal in a non-value type"_s);
+        return;
+    }
+
+    const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(m_state.accumulatorOut());
+
+    m_body += m_state.accumulatorVariableOut + u" = "_s + stored->augmentedInternalName();
+    const bool isVariantOrPrimitive = m_typeResolver->equals(stored, m_typeResolver->varType())
+            || m_typeResolver->equals(stored, m_typeResolver->jsPrimitiveType());
+
+    if (m_typeResolver->registerContains(m_state.accumulatorOut(), stored)) {
+        m_body += u"()";
+    } else if (isVariantOrPrimitive) {
+        m_body += u'(' + metaType(m_typeResolver->containedType(m_state.accumulatorOut())) + u')';
+    } else {
+        reject(u"storing an object literal in an unsupported container %1"_s
+                       .arg(stored->internalName()));
+    }
+    m_body += u";\n";
+
+    bool isExtension = false;
+    if (!m_typeResolver->canPopulate(contained, m_typeResolver->variantMapType(), &isExtension)) {
+        reject(u"storing an object literal in a non-structured value type"_s);
+    }
+
+    const QQmlJSScope::ConstPtr accessor = isExtension
+            ? contained->extensionType().scope
+            : contained;
+
+    const int classSize = m_jsUnitGenerator->jsClassSize(internalClassId);
+    Q_ASSERT(argc >= classSize);
+    if (argc == 0)
+        return;
+
+    m_body += u"{\n";
+    m_body += u"    const QMetaObject *meta = ";
+    if (!isExtension && isVariantOrPrimitive)
+        m_body += m_state.accumulatorVariableOut + u".metaType().metaObject()";
+    else
+        m_body += metaObject(accessor);
+    m_body += u";\n";
+
+    for (int i = 0; i < classSize; ++i) {
+        m_body += u"    {\n";
+        const QString propName = m_jsUnitGenerator->jsClassMember(internalClassId, i);
+        const int currentArg = args + i;
+        const QQmlJSRegisterContent propType = m_state.readRegister(currentArg);
+        const QQmlJSRegisterContent argType = registerType(currentArg);
+        const QQmlJSMetaProperty property = contained->property(propName);
+        const QString consumedArg = consumedRegisterVariable(currentArg);
+        QString argument = conversion(argType, propType, consumedArg);
+
+        if (argument == consumedArg) {
+            argument = registerVariable(currentArg);
+        } else {
+            m_body += u"        auto arg = "_s + argument + u";\n";
+            argument = u"arg"_s;
+        }
+
+        int index = property.index();
+        if (index == -1)
+            continue;
+
+        m_body += u"        void *argv[] = { %1, nullptr };\n"_s
+                          .arg(contentPointer(propType, argument));
+        m_body += u"        meta->d.static_metacall(reinterpret_cast<QObject *>(";
+        m_body += contentPointer(m_state.accumulatorOut(), m_state.accumulatorVariableOut);
+        m_body += u"), QMetaObject::WriteProperty, ";
+        m_body += QString::number(index) + u", argv);\n";
+        m_body += u"    }\n";
+    }
+
+    // This is not implemented because we cannot statically determine the type of the value and we
+    // don't want to rely on QVariant::convert() since that may give different results than
+    // the JavaScript coercion. We might still make it work by querying the QMetaProperty
+    // for its type at run time and runtime coercing to that, but we don't know whether that
+    // still pays off.
+    if (argc > classSize)
+        reject(u"non-literal keys of object literals"_s);
+
+    m_body += u"}\n";
+
 }
 
 void QQmlJSCodeGenerator::generate_CreateClass(int classIndex, int heritage, int computedNames)
@@ -3399,7 +3481,10 @@ QString QQmlJSCodeGenerator::convertStored(
     }
 
     bool isExtension = false;
-    if (const auto ctor = m_typeResolver->selectConstructor(to, from, &isExtension); ctor.isValid()) {
+    if (m_typeResolver->canPopulate(to, from, &isExtension)) {
+        reject(u"populating "_s + to->internalName() + u" from "_s + from->internalName());
+    } else if (const auto ctor = m_typeResolver->selectConstructor(to, from, &isExtension);
+               ctor.isValid()) {
         const auto argumentTypes = ctor.parameters();
         return (isExtension ? to->extensionType().scope->internalName() : to->internalName())
                 + u"("_s + convertStored(from, argumentTypes[0].type(), variable) + u")"_s;
@@ -3428,7 +3513,10 @@ QString QQmlJSCodeGenerator::convertContained(const QQmlJSRegisterContent &from,
     }
 
     bool isExtension = false;
-    if (const auto ctor = m_typeResolver->selectConstructor(
+    if (m_typeResolver->canPopulate(containedTo, containedFrom, &isExtension)) {
+        reject(u"populating "_s + containedTo->internalName()
+               + u" from "_s + containedFrom->internalName());
+    } else if (const auto ctor = m_typeResolver->selectConstructor(
                 containedTo, containedFrom, &isExtension); ctor.isValid()) {
         const auto argumentTypes = ctor.parameters();
         const QQmlJSScope::ConstPtr argumentType = argumentTypes[0].type();
