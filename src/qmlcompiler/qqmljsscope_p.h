@@ -131,6 +131,7 @@ public:
         HasBaseTypeError = 0x100,
         HasExtensionNamespace = 0x200,
         IsListProperty = 0x400,
+        Structured = 0x800,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
@@ -531,8 +532,13 @@ QT_WARNING_POP
     }
 
     bool isSingleton() const { return m_flags & Singleton; }
+
     bool isCreatable() const;
     bool hasCreatableFlag() const { return m_flags & Creatable; }
+
+    bool isStructured() const;
+    bool hasStructuredFlag() const { return m_flags & Structured; }
+
     /*!
      * \internal
      *
@@ -547,6 +553,7 @@ QT_WARNING_POP
     bool extensionIsNamespace() const { return m_flags & HasExtensionNamespace; }
     void setIsSingleton(bool v) { m_flags.setFlag(Singleton, v); }
     void setCreatableFlag(bool v) { m_flags.setFlag(Creatable, v); }
+    void setStructuredFlag(bool v) { m_flags.setFlag(Structured, v); }
     void setIsComposite(bool v) { m_flags.setFlag(Composite, v); }
     void setIsScript(bool v) { m_flags.setFlag(Script, v); }
     void setHasCustomParser(bool v)

@@ -1286,6 +1286,15 @@ bool QQmlJSScope::isCreatable() const
     return false;
 }
 
+bool QQmlJSScope::isStructured() const
+{
+    for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().get()) {
+        if (!scope->isComposite())
+            return scope->hasStructuredFlag();
+    }
+    return false;
+}
+
 QQmlSA::Element QQmlJSScope::createQQmlSAElement(const ConstPtr &ptr)
 {
     QQmlSA::Element element;

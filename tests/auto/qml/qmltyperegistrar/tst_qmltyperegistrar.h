@@ -513,6 +513,17 @@ private:
     int m_i;
 };
 
+class Structured
+{
+    Q_GADGET
+    QML_VALUE_TYPE(structured)
+    QML_STRUCTURED_VALUE
+    Q_PROPERTY(int i MEMBER m_i FINAL)
+
+private:
+    int m_i;
+};
+
 class AnonymousAndUncreatable : public QObject
 {
      Q_OBJECT
@@ -615,6 +626,7 @@ private slots:
     void clonedSignal();
     void baseVersionInQmltypes();
     void constructibleValueType();
+    void structuredValueType();
     void anonymousAndUncreatable();
     void omitInvisible();
     void typedEnum();

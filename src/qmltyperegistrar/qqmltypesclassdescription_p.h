@@ -43,6 +43,7 @@ struct QmlTypesClassDescription
     QTypeRevision addedInRevision;
     QTypeRevision removedInRevision;
     bool isCreatable = true;
+    bool isStructured = false;
     bool isSingleton = false;
     bool hasCustomParser = false;
     bool omitFromQmlTypes = false;

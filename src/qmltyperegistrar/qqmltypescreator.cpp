@@ -115,6 +115,9 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
     if (!collector.isCreatable || collector.isSingleton)
         m_qml.writeBooleanBinding(S_IS_CREATABLE, false);
 
+    if (collector.isStructured)
+        m_qml.writeScriptBinding(QLatin1String("isStructured"), QLatin1String("true"));
+
     if (collector.isSingleton)
         m_qml.writeBooleanBinding(S_IS_SINGLETON, true);
 

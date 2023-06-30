@@ -88,6 +88,7 @@ static constexpr QLatin1StringView S_CLASSES                      { "classes" };
 static constexpr QLatin1StringView S_CLASS_INFOS                  { "classInfos" };
 static constexpr QLatin1StringView S_CLASS_NAME                   { "className" };
 static constexpr QLatin1StringView S_CONSTANT                     { "constant" };
+static constexpr QLatin1StringView S_CONSTRUCT                    { "construct" };
 static constexpr QLatin1StringView S_CONSTRUCTORS                 { "constructors" };
 static constexpr QLatin1StringView S_DEFAULT_PROPERTY             { "DefaultProperty" };
 static constexpr QLatin1StringView S_DEFERRED_PROPERTY_NAMES      { "DeferredPropertyNames" };
@@ -123,6 +124,7 @@ static constexpr QLatin1StringView S_RETURN_TYPE                  { "returnType"
 static constexpr QLatin1StringView S_REVISION                     { "revision" };
 static constexpr QLatin1StringView S_SIGNALS                      { "signals" };
 static constexpr QLatin1StringView S_SLOTS                        { "slots" };
+static constexpr QLatin1StringView S_STRUCTURED                   { "structured" };
 static constexpr QLatin1StringView S_SUPER_CLASSES                { "superClasses" };
 static constexpr QLatin1StringView S_TRUE                         { "true" };
 static constexpr QLatin1StringView S_TYPE                         { "type" };
@@ -135,6 +137,7 @@ namespace Qml {
 static constexpr QLatin1StringView S_ADDED_IN_VERSION             { "QML.AddedInVersion" };
 static constexpr QLatin1StringView S_ATTACHED                     { "QML.Attached" };
 static constexpr QLatin1StringView S_CREATABLE                    { "QML.Creatable" };
+static constexpr QLatin1StringView S_CREATION_METHOD              { "QML.CreationMethod" };
 static constexpr QLatin1StringView S_ELEMENT                      { "QML.Element" };
 static constexpr QLatin1StringView S_EXTENDED                     { "QML.Extended" };
 static constexpr QLatin1StringView S_EXTENSION_IS_NAMESPACE       { "QML.ExtensionIsNamespace" };

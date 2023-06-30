@@ -593,6 +593,20 @@ void tst_qmltyperegistrar::constructibleValueType()
     })"));
 }
 
+void tst_qmltyperegistrar::structuredValueType()
+{
+    QVERIFY(qmltypesData.contains(
+    R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "Structured"
+        accessSemantics: "value"
+        exports: ["QmlTypeRegistrarTest/structured 1.0"]
+        isStructured: true
+        exportMetaObjectRevisions: [256]
+        Property { name: "i"; type: "int"; index: 0; isFinal: true }
+    })"));
+}
+
 void tst_qmltyperegistrar::anonymousAndUncreatable()
 {
     QVERIFY(qmltypesData.contains(

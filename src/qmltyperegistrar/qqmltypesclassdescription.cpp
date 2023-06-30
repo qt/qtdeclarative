@@ -116,7 +116,7 @@ void QmlTypesClassDescription::collect(
     const auto classInfos = classDef->value(S_CLASS_INFOS).toArray();
     const QAnyStringView classDefName = toStringView(*classDef, S_CLASS_NAME);
     QAnyStringView foreignTypeName;
-    bool explicitCreatable = false;
+    bool isConstructible = false;
     for (const QCborValue classInfo : classInfos) {
         const QCborMap obj = classInfo.toMap();
         const QAnyStringView name = toStringView(obj, S_NAME);
@@ -151,7 +151,9 @@ void QmlTypesClassDescription::collect(
             removedInRevision = QTypeRevision::fromEncodedVersion(toInt(value));
         } else if (name == S_CREATABLE) {
             isCreatable = (value != S_FALSE);
-            explicitCreatable = true;
+        } else if (name == S_CREATION_METHOD) {
+            isStructured = (value == S_STRUCTURED);
+            isConstructible = isStructured || (value == S_CONSTRUCT);
         } else if (name == S_ATTACHED) {
             attachedType = value;
             collectRelated(value, types, foreign, defaultRevision);
@@ -270,8 +272,7 @@ void QmlTypesClassDescription::collect(
     } else if (classDef && classDef->value(S_OBJECT).toBool()) {
         accessSemantics = DotQmltypes::S_REFERENCE;
     } else {
-        if (!explicitCreatable)
-            isCreatable = false;
+        isCreatable = isConstructible;
 
         if (!classDef) {
             if (elementName.isEmpty() || elementName.front().isLower()) {
