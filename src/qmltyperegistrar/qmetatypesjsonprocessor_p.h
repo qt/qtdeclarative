@@ -24,6 +24,8 @@ QT_BEGIN_NAMESPACE
 class MetaTypesJsonProcessor
 {
 public:
+    static QList<QAnyStringView> namespaces(const QCborMap &classDef);
+
     MetaTypesJsonProcessor(bool privateIncludes) : m_privateIncludes(privateIncludes) {}
 
     bool processTypes(const QStringList &files);

@@ -121,7 +121,7 @@ auto processAsUtf8(StringView string, Handler &&handler)
     Q_UNREACHABLE();
 }
 
-inline QList<QAnyStringView> split(QAnyStringView source, QChar sep)
+inline QList<QAnyStringView> split(QAnyStringView source, QAnyStringView sep)
 {
     QList<QAnyStringView> list;
     if (source.isEmpty()) {
@@ -133,9 +133,9 @@ inline QList<QAnyStringView> split(QAnyStringView source, QChar sep)
     qsizetype end = source.length();
 
     for (qsizetype current = 0; current < end; ++current) {
-        if (source.mid(current, 1).front() == sep) {
+        if (source.mid(current, sep.length()) == sep) {
             list.append(source.mid(start, current - start));
-            start = current + 1;
+            start = current + sep.length();
         }
     }
 

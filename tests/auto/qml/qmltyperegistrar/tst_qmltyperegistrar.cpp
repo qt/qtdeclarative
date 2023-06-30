@@ -673,4 +673,51 @@ void tst_qmltyperegistrar::listSignal()
     })"));
 }
 
+void tst_qmltyperegistrar::withNamespace()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "Bar"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property {
+            name: "outerBarProp"
+            type: "int"
+            read: "bar"
+            index: 0
+            isReadonly: true
+            isConstant: true
+        }
+    })"));
+
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "Testing::Bar"
+        accessSemantics: "reference"
+        prototype: "Testing::Foo"
+        exports: ["QmlTypeRegistrarTest/Bar 1.0"]
+        exportMetaObjectRevisions: [256]
+        Property { name: "barProp"; type: "int"; read: "bar"; index: 0; isReadonly: true; isConstant: true }
+    })"));
+
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "Testing::Foo"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property { name: "fooProp"; type: "int"; read: "foo"; index: 0; isReadonly: true; isConstant: true }
+    })"));
+
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "Testing::Inner::Baz"
+        accessSemantics: "reference"
+        prototype: "Testing::Bar"
+        extension: "Bar"
+        exports: ["QmlTypeRegistrarTest/Baz 1.0"]
+        exportMetaObjectRevisions: [256]
+        attachedType: "Testing::Foo"
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

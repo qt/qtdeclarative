@@ -31,6 +31,21 @@ static QCborValue fromJson(const QByteArray &json, QJsonParseError *error)
     return QCborValue();
 }
 
+QList<QAnyStringView> MetaTypesJsonProcessor::namespaces(const QCborMap &classDef)
+{
+    const QAnyStringView unqualified = toStringView(classDef, S_CLASS_NAME);
+    const QAnyStringView qualified = toStringView(classDef, S_QUALIFIED_CLASS_NAME);
+
+    QList<QAnyStringView> namespaces;
+    if (qualified != unqualified) {
+        namespaces = split(qualified, "::"_L1);
+        Q_ASSERT(namespaces.last() == unqualified);
+        namespaces.pop_back();
+    }
+
+    return namespaces;
+}
+
 bool MetaTypesJsonProcessor::processTypes(const QStringList &files)
 {
     for (const QString &source: files) {
@@ -228,6 +243,14 @@ void MetaTypesJsonProcessor::addRelatedTypes()
     QQueue<QCborMap> typeQueue;
     typeQueue.append(m_types);
 
+    const auto addRelatedName
+            = [&](QAnyStringView relatedName, const QList<QAnyStringView> &namespaces) {
+        if (const QCborMap *related = QmlTypesClassDescription::findType(
+                    m_types, m_foreignTypes, relatedName, namespaces)) {
+            processedRelatedNames.insert(toStringView(*related, S_QUALIFIED_CLASS_NAME));
+        }
+    };
+
     // First mark all classes registered from this module as already processed.
     for (const QCborMap &type : m_types) {
         processedRelatedNames.insert(toStringView(type, S_QUALIFIED_CLASS_NAME));
@@ -235,7 +258,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
         for (const QCborValue &classInfo : classInfos) {
             const QCborMap obj = classInfo.toMap();
             if (obj.value(S_NAME) == S_FOREIGN) {
-                processedRelatedNames.insert(toStringView(obj, S_VALUE));
+                addRelatedName(toStringView(obj, S_VALUE), namespaces(type));
                 break;
             }
         }
@@ -255,28 +278,34 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                 seenQmlPrefix = true;
             }
             if (name == S_FOREIGN) {
-                processedRelatedNames.insert(toStringView(obj, S_VALUE));
+                addRelatedName(toStringView(obj, S_VALUE), namespaces(foreignType));
                 break;
             }
         }
     }
 
-    auto addType = [&](QAnyStringView typeName) {
-        m_referencedTypes.append(typeName);
-        if (processedRelatedNames.contains(typeName))
-            return;
-        processedRelatedNames.insert(typeName);
-        if (const QCborMap *other
-                = QmlTypesClassDescription::findType(m_foreignTypes, typeName)) {
-            m_types.append(*other);
-            typeQueue.enqueue(*other);
+    auto addType = [&](QAnyStringView typeName, const QList<QAnyStringView> &namespaces) {
+        if (const QCborMap *other = QmlTypesClassDescription::findType(
+                    m_types, m_foreignTypes, typeName, namespaces)) {
+            QAnyStringView qualifiedName = toStringView(*other, S_QUALIFIED_CLASS_NAME);
+            m_referencedTypes.append(qualifiedName);
+            if (!processedRelatedNames.contains(qualifiedName)) {
+                processedRelatedNames.insert(qualifiedName);
+                m_types.append(*other);
+                typeQueue.enqueue(*other);
+            }
+            return true;
         }
+
+        processedRelatedNames.insert(typeName);
+        return false;
     };
 
     // Then recursively iterate the super types and attached types, marking the
     // ones we are interested in as related.
     while (!typeQueue.isEmpty()) {
         const QCborMap classDef = typeQueue.dequeue();
+        const QList<QAnyStringView> namespaces = MetaTypesJsonProcessor::namespaces(classDef);
 
         const auto classInfos = classDef.value(S_CLASS_INFOS).toArray();
         for (const QCborValue &classInfo : classInfos) {
@@ -284,16 +313,18 @@ void MetaTypesJsonProcessor::addRelatedTypes()
             const QAnyStringView objNameValue = toStringView(obj, S_NAME);
             if (objNameValue == S_ATTACHED || objNameValue == S_SEQUENCE
                     || objNameValue == S_EXTENDED) {
-                addType(toStringView(obj, S_VALUE));
+                addType(toStringView(obj, S_VALUE), namespaces);
             } else if (objNameValue == S_FOREIGN) {
                 const QAnyStringView foreignClassName = toStringView(obj, S_VALUE);
                 if (const QCborMap *other = QmlTypesClassDescription::findType(
-                            m_foreignTypes, foreignClassName)) {
+                            m_foreignTypes, {}, foreignClassName, namespaces)) {
                     const auto otherSupers = other->value(S_SUPER_CLASSES).toArray();
+                    const QList<QAnyStringView> otherNamespaces
+                            = MetaTypesJsonProcessor::namespaces(*other);
                     if (!otherSupers.isEmpty()) {
                         const QCborMap otherSuperObject = otherSupers.first().toMap();
                         if (otherSuperObject.value(S_ACCESS) == S_PUBLIC)
-                            addType(toStringView(otherSuperObject, S_NAME));
+                            addType(toStringView(otherSuperObject, S_NAME), otherNamespaces);
                     }
 
                     const auto otherClassInfos = other->value(S_CLASS_INFOS).toArray();
@@ -302,7 +333,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                         const QAnyStringView objNameValue = toStringView(obj, S_NAME);
                         if (objNameValue == S_ATTACHED || objNameValue == S_SEQUENCE
                                 || objNameValue == S_EXTENDED) {
-                            addType(toStringView(obj, S_VALUE));
+                            addType(toStringView(obj, S_VALUE), otherNamespaces);
                             break;
                         }
                         // No, you cannot chain S_FOREIGN declarations. Sorry.
@@ -312,10 +343,10 @@ void MetaTypesJsonProcessor::addRelatedTypes()
         }
 
         const auto supers = classDef.value(S_SUPER_CLASSES).toArray();
-        if (!supers.isEmpty()) {
-            const QCborMap superObject = supers.first().toMap();
+        for (const QCborValue &super : supers) {
+            const QCborMap superObject = super.toMap();
             if (superObject.value(S_ACCESS) == S_PUBLIC)
-                addType(toStringView(superObject, S_NAME));
+                addType(toStringView(superObject, S_NAME), namespaces);
         }
     }
 }
