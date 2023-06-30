@@ -3822,6 +3822,8 @@ void Renderer::recordRenderPass(RenderPassContext *ctx)
     cb->debugMarkBegin(QByteArrayLiteral("Qt Quick scene render"));
 
     for (int i = 0, ie = ctx->opaqueRenderBatches.size(); i != ie; ++i) {
+        if (i == 0)
+            cb->debugMarkMsg(QByteArrayLiteral("Qt Quick opaque batches"));
         PreparedRenderBatch *renderBatch = &ctx->opaqueRenderBatches[i];
         if (renderBatch->batch->merged)
             renderMergedBatch(renderBatch);
@@ -3830,6 +3832,12 @@ void Renderer::recordRenderPass(RenderPassContext *ctx)
     }
 
     for (int i = 0, ie = ctx->alphaRenderBatches.size(); i != ie; ++i) {
+        if (i == 0) {
+            if (m_renderMode == QSGRendererInterface::RenderMode3D)
+                cb->debugMarkMsg(QByteArrayLiteral("Qt Quick 2D-in-3D batches"));
+            else
+                cb->debugMarkMsg(QByteArrayLiteral("Qt Quick alpha batches"));
+        }
         PreparedRenderBatch *renderBatch = &ctx->alphaRenderBatches[i];
         if (renderBatch->batch->merged)
             renderMergedBatch(renderBatch);
@@ -3840,8 +3848,15 @@ void Renderer::recordRenderPass(RenderPassContext *ctx)
     }
 
     if (m_renderMode == QSGRendererInterface::RenderMode3D) {
-        // depth post-pass
+        // Depth post-pass to fill up the depth buffer in a way that it
+        // corresponds to what got rendered to the color buffer in the previous
+        // (alpha) pass. The previous pass cannot enable depth write due to Z
+        // fighting. Rather, do it separately in a dedicated color-write-off,
+        // depth-write-on pass. This enables the 3D content drawn afterwards to
+        // depth test against the 2D items' rendering.
         for (int i = 0, ie = ctx->alphaRenderBatches.size(); i != ie; ++i) {
+            if (i == 0)
+                cb->debugMarkMsg(QByteArrayLiteral("Qt Quick 2D-in-3D depth post-pass"));
             PreparedRenderBatch *renderBatch = &ctx->alphaRenderBatches[i];
             if (renderBatch->batch->merged)
                 renderMergedBatch(renderBatch, true);
