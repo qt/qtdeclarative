@@ -351,7 +351,22 @@ private:
         const auto documentRoot = getObject("document", m_document.object());
         const auto configStatesArray = getArray("states", controlObj);
 
-        QJsonObject componentSet = findChild({"type", "COMPONENT_SET", "name", componentSetName}, documentRoot, m_sanity);
+        // Each control in the config file can optionally specify a page
+        // where the component set should be found. If not set, we
+        // search the whole document.
+        QJsonObject searchRoot;
+        const auto pageName = controlObj["page"].toString();
+        if (!pageName.isEmpty() && pageName == m_cachedPageName) {
+            searchRoot = m_cachedPage;
+        } else if (!pageName.isEmpty()) {
+            m_cachedPageName = pageName;
+            m_cachedPage = findChild({"type", "CANVAS", "name", pageName}, documentRoot, m_sanity);
+            searchRoot = m_cachedPage;
+        } else {
+            searchRoot = documentRoot;
+        }
+
+        const QJsonObject componentSet = findChild({"type", "COMPONENT_SET", "name", componentSetName}, searchRoot, m_sanity);
 
         for (const QJsonValue &configStateValue : configStatesArray) try {
             QJsonObject outputStateConfig;
@@ -909,6 +924,9 @@ private:
     QMap<QString, QJsonObject> m_outputConfig;
     QStringList m_qmlDirControls;
     QString m_controlToGenerate;
+
+    QString m_cachedPageName;
+    QJsonObject m_cachedPage;
 
     // m_imagesToDownload contains the images to be downloaded.
     // The outer map maps the image format (e.g "svg@2x") to the
