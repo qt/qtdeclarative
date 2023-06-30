@@ -2,11 +2,18 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmltypesclassdescription_p.h"
+
 #include "qqmltypescreator_p.h"
+#include "qmetatypesjsonprocessor_p.h"
 
 #include <QtCore/qjsonarray.h>
 
 QT_BEGIN_NAMESPACE
+
+static QString qualifiedClassName(const QJsonObject &classDef)
+{
+    return classDef.value(QLatin1String("qualifiedClassName")).toString();
+}
 
 static void collectExtraVersions(const QJsonObject *component, const QString &key,
                                  QList<QTypeRevision> &extraVersions)
@@ -23,22 +30,42 @@ static void collectExtraVersions(const QJsonObject *component, const QString &ke
     }
 }
 
-const QJsonObject *QmlTypesClassDescription::findType(const QVector<QJsonObject> &types,
-                                                      const QString &name)
+const QJsonObject *QmlTypesClassDescription::findType(
+        const QVector<QJsonObject> &types, const QVector<QJsonObject> &foreign,
+        const QString &name, const QStringList &namespaces)
 {
-    static const QLatin1String qualifiedClassNameKey("qualifiedClassName");
-    auto it = std::lower_bound(types.begin(), types.end(), name,
-                               [&](const QJsonObject &type, const QString &typeName) {
-        return type.value(qualifiedClassNameKey).toString() < typeName;
-    });
-
-    return (it != types.end() && it->value(qualifiedClassNameKey) == name) ? &(*it) : nullptr;
+    const auto compare = [](const QJsonObject &type, const QString &typeName) {
+        return qualifiedClassName(type) < typeName;
+    };
+    const auto tryFindType = [&](const QString &qualifiedName) -> const QJsonObject * {
+        for (const QVector<QJsonObject> &t : {types, foreign}) {
+            const auto it = std::lower_bound(t.begin(), t.end(), qualifiedName, compare);
+            if (it != t.end() && qualifiedClassName(*it) == qualifiedName)
+                return &(*it);
+        }
+        return nullptr;
+    };
+    if (name.startsWith(QLatin1String("::")))
+        return tryFindType(name.mid(2));
+    QString qualified;
+    for (int i = 0, end = namespaces.length(); i != end; ++i) {
+        for (int j = 0; j < end - i; ++j) {
+            qualified.append(namespaces[j]);
+            qualified.append(QLatin1String("::"));
+        }
+        qualified.append(name);
+        if (const QJsonObject *found = tryFindType(qualified))
+            return found;
+        qualified.truncate(0);
+    }
+    return tryFindType(name);
 }
 
 void QmlTypesClassDescription::collectSuperClasses(
         const QJsonObject *classDef, const QVector<QJsonObject> &types,
         const QVector<QJsonObject> &foreign, CollectMode mode,  QTypeRevision defaultRevision)
 {
+    const QStringList namespaces = MetaTypesJsonProcessor::namespaces(*classDef);
     const auto supers = classDef->value(QLatin1String("superClasses")).toArray();
     for (const QJsonValue superValue : supers) {
         const QJsonObject superObject = superValue.toObject();
@@ -46,15 +73,13 @@ void QmlTypesClassDescription::collectSuperClasses(
             const QString superName = superObject[QLatin1String("name")].toString();
 
             const CollectMode superMode = (mode == TopLevel) ? SuperClass : RelatedType;
-            if (const QJsonObject *other = findType(types, superName))
+            if (const QJsonObject *other = findType(types, foreign, superName, namespaces)) {
                 collect(other, types, foreign, superMode, defaultRevision);
-            else if (const QJsonObject *other = findType(foreign, superName))
-                collect(other, types, foreign, superMode, defaultRevision);
-            else // If we cannot locate a type for it, there is no point in recording the superClass
-                continue;
+                if (mode == TopLevel && superClass.isEmpty())
+                    superClass = qualifiedClassName(*other);
+            }
 
-            if (mode == TopLevel && superClass.isEmpty())
-                superClass = superName;
+            // If we cannot locate a type for it, there is no point in recording the superClass
         }
     }
 }
@@ -77,7 +102,7 @@ void QmlTypesClassDescription::collectLocalAnonymous(
     file = classDef->value(QLatin1String("inputFile")).toString();
 
     resolvedClass = classDef;
-    className = classDef->value(QLatin1String("qualifiedClassName")).toString();
+    className = qualifiedClassName(*classDef);
 
     if (classDef->value(QStringLiteral("object")).toBool())
         accessSemantics = QStringLiteral("reference");
@@ -108,6 +133,7 @@ void QmlTypesClassDescription::collect(
 
     const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
     const QString classDefName = classDef->value(QLatin1String("className")).toString();
+    const QStringList namespaces = MetaTypesJsonProcessor::namespaces(*classDef);
     QString foreignTypeName;
     bool explicitCreatable = false;
     for (const QJsonValue classInfo : classInfos) {
@@ -146,17 +172,23 @@ void QmlTypesClassDescription::collect(
             isCreatable = (value != QLatin1String("false"));
             explicitCreatable = true;
         } else if (name == QLatin1String("QML.Attached")) {
-            attachedType = value;
-            collectRelated(value, types, foreign, defaultRevision);
+            if (const QJsonObject *attached = collectRelated(
+                        value, types, foreign, defaultRevision, namespaces)) {
+                attachedType = qualifiedClassName(*attached);
+            }
         } else if (name == QLatin1String("QML.Extended")) {
-            extensionType = value;
-            collectRelated(value, types, foreign, defaultRevision);
+            if (const QJsonObject *extension = collectRelated(
+                        value, types, foreign, defaultRevision, namespaces)) {
+                extensionType = qualifiedClassName(*extension);
+            }
         } else if (name == QLatin1String("QML.ExtensionIsNamespace")) {
             if (value == QLatin1String("true"))
                 extensionIsNamespace = true;
         } else if (name == QLatin1String("QML.Sequence")) {
-            sequenceValueType = value;
-            collectRelated(value, types, foreign, defaultRevision);
+            if (const QJsonObject *element = collectRelated(
+                        value, types, foreign, defaultRevision, namespaces)) {
+                sequenceValueType = qualifiedClassName(*element);
+            }
         } else if (name == QLatin1String("QML.Singleton")) {
             if (value == QLatin1String("true"))
                 isSingleton = true;
@@ -180,13 +212,8 @@ void QmlTypesClassDescription::collect(
     const bool isNamespace = classDef->value(QLatin1String("namespace")).toBool();
 
     if (!foreignTypeName.isEmpty()) {
-        const QJsonObject *other = findType(foreign, foreignTypeName);
-
-        // We can re-use a type with own QML_* macros as target of QML_FOREIGN
-        if (!other)
-            other = findType(types, foreignTypeName);
-
-        if (other) {
+        // We can re-use a type with own QML.* macros as target of QML.Foreign
+        if (const QJsonObject *other = findType(foreign, types, foreignTypeName, namespaces)) {
             classDef = other;
 
             // Default properties are always local.
@@ -203,17 +230,23 @@ void QmlTypesClassDescription::collect(
                 } else if (parentProp.isEmpty() && foreignName == QLatin1String("ParentProperty")) {
                     parentProp = foreignValue;
                 } else if (foreignName == QLatin1String("QML.Attached")) {
-                    attachedType = foreignValue;
-                    collectRelated(foreignValue, types, foreign, defaultRevision);
+                    if (const QJsonObject *attached = collectRelated(
+                                foreignValue, types, foreign, defaultRevision, namespaces)) {
+                        attachedType = qualifiedClassName(*attached);
+                    }
                 } else if (foreignName == QLatin1String("QML.Extended")) {
-                    extensionType = foreignValue;
-                    collectRelated(foreignValue, types, foreign, defaultRevision);
+                    if (const QJsonObject *extension = collectRelated(
+                                foreignValue, types, foreign, defaultRevision, namespaces)) {
+                        extensionType = qualifiedClassName(*extension);
+                    }
                 } else if (foreignName == QLatin1String("QML.ExtensionIsNamespace")) {
                     if (foreignValue == QLatin1String("true"))
                         extensionIsNamespace = true;
                 } else if (foreignName == QLatin1String("QML.Sequence")) {
-                    sequenceValueType = foreignValue;
-                    collectRelated(foreignValue, types, foreign, defaultRevision);
+                    if (const QJsonObject *element = collectRelated(
+                                foreignValue, types, foreign, defaultRevision, namespaces)) {
+                        sequenceValueType = qualifiedClassName(*element);
+                    }
                 }
             }
         } else {
@@ -252,7 +285,7 @@ void QmlTypesClassDescription::collect(
 
     resolvedClass = classDef;
     if (className.isEmpty() && classDef)
-        className = classDef->value(QLatin1String("qualifiedClassName")).toString();
+        className = qualifiedClassName(*classDef);
 
     if (!sequenceValueType.isEmpty()) {
         isCreatable = false;
@@ -293,15 +326,17 @@ void QmlTypesClassDescription::collect(
     }
 }
 
-void QmlTypesClassDescription::collectRelated(const QString &related,
-                                               const QVector<QJsonObject> &types,
-                                               const QVector<QJsonObject> &foreign,
-                                               QTypeRevision defaultRevision)
+const QJsonObject *QmlTypesClassDescription::collectRelated(
+        const QString &related, const QVector<QJsonObject> &types,
+        const QVector<QJsonObject> &foreign, QTypeRevision defaultRevision,
+        const QStringList &namespaces)
 {
-    if (const QJsonObject *other = findType(types, related))
+    if (const QJsonObject *other = findType(types, foreign, related, namespaces)) {
         collect(other, types, foreign, RelatedType, defaultRevision);
-    else if (const QJsonObject *other = findType(foreign, related))
-        collect(other, types, foreign, RelatedType, defaultRevision);
+        return other;
+    }
+    return nullptr;
 }
+
 
 QT_END_NAMESPACE

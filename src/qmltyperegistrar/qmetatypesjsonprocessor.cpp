@@ -12,6 +12,19 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
+QStringList MetaTypesJsonProcessor::namespaces(const QJsonObject &classDef)
+{
+    const QString unqualified = classDef.value("className"_L1).toString();
+    const QString qualified = classDef.value("qualifiedClassName"_L1).toString();
+    QStringList namespaces;
+    if (qualified != unqualified) {
+        namespaces = qualified.split("::"_L1);
+        Q_ASSERT(namespaces.last() == unqualified);
+        namespaces.pop_back();
+    }
+    return namespaces;
+}
+
 bool MetaTypesJsonProcessor::processTypes(const QStringList &files)
 {
     for (const QString &source: files) {
@@ -206,6 +219,13 @@ void MetaTypesJsonProcessor::addRelatedTypes()
     QQueue<QJsonObject> typeQueue;
     typeQueue.append(m_types);
 
+    const auto addRelatedName = [&](const QString &relatedName, const QStringList &namespaces) {
+        if (const QJsonObject *related = QmlTypesClassDescription::findType(
+                    m_types, m_foreignTypes, relatedName, namespaces)) {
+            processedRelatedNames.insert(related->value(qualifiedClassNameKey).toString());
+        }
+    };
+
     // First mark all classes registered from this module as already processed.
     for (const QJsonObject &type : m_types) {
         processedRelatedNames.insert(type.value(qualifiedClassNameKey).toString());
@@ -213,7 +233,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
         for (const QJsonValue classInfo : classInfos) {
             const QJsonObject obj = classInfo.toObject();
             if (obj.value(nameKey).toString() == qmlForeignName) {
-                processedRelatedNames.insert(obj.value(valueKey).toString());
+                addRelatedName(obj.value(valueKey).toString(), namespaces(type));
                 break;
             }
         }
@@ -232,28 +252,33 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                 seenQmlPrefix = true;
             }
             if (name == qmlForeignName) {
-                processedRelatedNames.insert(obj.value(valueKey).toString());
+                addRelatedName(obj.value(valueKey).toString(), namespaces(foreignType));
                 break;
             }
         }
     }
 
-    auto addType = [&](const QString &typeName) {
-        m_referencedTypes.append(typeName);
-        if (processedRelatedNames.contains(typeName))
-            return;
-        processedRelatedNames.insert(typeName);
-        if (const QJsonObject *other
-                = QmlTypesClassDescription::findType(m_foreignTypes, typeName)) {
-            m_types.append(*other);
-            typeQueue.enqueue(*other);
+    auto addType = [&](const QString &typeName, const QStringList &namespaces) {
+        if (const QJsonObject *other = QmlTypesClassDescription::findType(
+                    m_types, m_foreignTypes, typeName, namespaces)) {
+            const QString qualifiedName = other->value(qualifiedClassNameKey).toString();
+            m_referencedTypes.append(qualifiedName);
+            if (!processedRelatedNames.contains(qualifiedName)) {
+                processedRelatedNames.insert(qualifiedName);
+                m_types.append(*other);
+                typeQueue.enqueue(*other);
+            }
+            return true;
         }
+        processedRelatedNames.insert(typeName);
+        return false;
     };
 
     // Then recursively iterate the super types and attached types, marking the
     // ones we are interested in as related.
     while (!typeQueue.isEmpty()) {
         const QJsonObject classDef = typeQueue.dequeue();
+        const QStringList namespaces = MetaTypesJsonProcessor::namespaces(classDef);
 
         const auto classInfos = classDef.value(classInfosKey).toArray();
         for (const QJsonValue classInfo : classInfos) {
@@ -261,16 +286,17 @@ void MetaTypesJsonProcessor::addRelatedTypes()
             const QString objNameValue = obj.value(nameKey).toString();
             if (objNameValue == qmlAttachedName || objNameValue == qmlSequenceName
                     || objNameValue == qmlExtendedName) {
-                addType(obj.value(valueKey).toString());
+                addType(obj.value(valueKey).toString(), namespaces);
             } else if (objNameValue == qmlForeignName) {
                 const QString foreignClassName = obj.value(valueKey).toString();
                 if (const QJsonObject *other = QmlTypesClassDescription::findType(
-                            m_foreignTypes, foreignClassName)) {
+                            m_foreignTypes, {}, foreignClassName, namespaces)) {
                     const auto otherSupers = other->value(superClassesKey).toArray();
+                    const QStringList otherNamespaces = MetaTypesJsonProcessor::namespaces(*other);
                     if (!otherSupers.isEmpty()) {
                         const QJsonObject otherSuperObject = otherSupers.first().toObject();
                         if (otherSuperObject.value(accessKey).toString() == publicAccess)
-                            addType(otherSuperObject.value(nameKey).toString());
+                            addType(otherSuperObject.value(nameKey).toString(), otherNamespaces);
                     }
 
                     const auto otherClassInfos = other->value(classInfosKey).toArray();
@@ -279,7 +305,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                         const QString objNameValue = obj.value(nameKey).toString();
                         if (objNameValue == qmlAttachedName || objNameValue == qmlSequenceName
                                 || objNameValue == qmlExtendedName) {
-                            addType(obj.value(valueKey).toString());
+                            addType(obj.value(valueKey).toString(), otherNamespaces);
                             break;
                         }
                         // No, you cannot chain QML_FOREIGN declarations. Sorry.
@@ -289,10 +315,10 @@ void MetaTypesJsonProcessor::addRelatedTypes()
         }
 
         const auto supers = classDef.value(superClassesKey).toArray();
-        if (!supers.isEmpty()) {
-            const QJsonObject superObject = supers.first().toObject();
+        for (const QJsonValue super : supers) {
+            const QJsonObject superObject = super.toObject();
             if (superObject.value(accessKey).toString() == publicAccess)
-                addType(superObject.value(nameKey).toString());
+                addType(superObject.value(nameKey).toString(), namespaces);
         }
     }
 }

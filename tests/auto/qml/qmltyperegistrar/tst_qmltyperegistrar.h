@@ -566,6 +566,53 @@ Q_SIGNALS:
     void objectListHappened(const QList<QObject *> &);
 };
 
+class Bar : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int outerBarProp READ bar CONSTANT)
+public:
+    Bar(QObject *parent = nullptr) : QObject(parent) {}
+    int bar() const { return 44; }
+};
+
+namespace Testing {
+
+class Foo : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int fooProp READ foo CONSTANT)
+
+public:
+    int foo() const { return 42; }
+};
+
+class Bar : public Foo
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int barProp READ bar CONSTANT)
+
+public:
+    int bar() const { return 43; }
+};
+
+namespace Inner {
+
+class Baz : public Bar
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+    QML_EXTENDED(::Bar)
+    QML_ATTACHED(Foo)
+
+public:
+    static Foo *qmlAttachedProperties(QObject *) { return new Foo; }
+};
+
+} // namespace Inner
+} // namespace Testing
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -619,6 +666,7 @@ private slots:
     void omitInvisible();
     void typedEnum();
     void listSignal();
+    void withNamespace();
 
 private:
     QByteArray qmltypesData;

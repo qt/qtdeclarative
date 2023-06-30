@@ -57,10 +57,13 @@ struct QmlTypesClassDescription
     void collect(const QJsonObject *classDef, const QVector<QJsonObject> &types,
                  const QVector<QJsonObject> &foreign, CollectMode mode,
                  QTypeRevision defaultRevision);
-    void collectRelated(const QString &related, const QVector<QJsonObject> &types,
-                        const QVector<QJsonObject> &foreign, QTypeRevision defaultRevision);
-
-    static const QJsonObject *findType(const QVector<QJsonObject> &types, const QString &name);
+    const QJsonObject *collectRelated(
+            const QString &related, const QVector<QJsonObject> &types,
+            const QVector<QJsonObject> &foreign, QTypeRevision defaultRevision,
+            const QStringList &namespaces);
+    static const QJsonObject *findType(
+            const QVector<QJsonObject> &types, const QVector<QJsonObject> &foreign,
+            const QString &name, const QStringList &namespaces);
 
     void collectLocalAnonymous(const QJsonObject *classDef,const QVector<QJsonObject> &types,
                       const QVector<QJsonObject> &foreign, QTypeRevision defaultRevision);
