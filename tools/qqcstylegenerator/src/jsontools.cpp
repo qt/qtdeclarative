@@ -146,11 +146,14 @@ QList<QJsonObject> findChildren(const QStringList &keyValueList, const QJsonObje
  * Search for a json object recursively inside root with the given key
  * value pairs.
 */
-QJsonObject findChild(const QStringList &keyValueList, const QJsonObject &root)
+QJsonObject findChild(const QStringList &keyValueList, const QJsonObject &root, bool warnOnDuplicates)
 {
     QList<QJsonObject> result;
     QStringList currentPath;
-    findChildrenImpl(keyValueList, root, true, currentPath, result);
+    const bool firstOnly = !warnOnDuplicates;
+
+    findChildrenImpl(keyValueList, root, firstOnly, currentPath, result);
+
     if (result.isEmpty()) {
         Q_ASSERT(keyValueList.length() % 2 == 0);
         QStringList msg;
@@ -158,6 +161,18 @@ QJsonObject findChild(const QStringList &keyValueList, const QJsonObject &root)
             msg << "'" + keyValueList[i] + ":" + keyValueList[i + 1] + "'";
         throw NoChildFoundException(QStringLiteral("could not find Figma child: ") + msg.join(","));
     }
+
+    if (warnOnDuplicates && result.count() > 1) {
+        QStringList msg;
+        for (int i = 0; i < keyValueList.count(); i += 2)
+            msg << "'" + keyValueList[i] + ":" + keyValueList[i + 1] + "'";
+        qWarning().nospace().noquote() << "Warning, found duplicates for: " + msg.join(",");
+        for (int i = 0; i < result.count(); ++i) {
+            qWarning().nospace().noquote() << "Duplicate " << QString::number(i) << ": "
+                << result[i]["qt_path"].toString() << (i == 0 ? " [used]" : "");
+        }
+    }
+
     return result.first();
 }
 
@@ -166,12 +181,12 @@ QJsonObject findChild(const QStringList &keyValueList, const QJsonObject &root)
  * name path. There can be other objects in-between for each node in the
  * name path.
 */
-QJsonObject findNamedChild(const QStringList &namePath, const QJsonObject &root)
+QJsonObject findNamedChild(const QStringList &namePath, const QJsonObject &root, bool warnOnDuplicates)
 {
     bool visibleRecursive = true;
     QJsonObject child = root;
     for (const QString &name : namePath) {
-        child = findChild({"name", name}, child);
+        child = findChild({"name", name}, child, warnOnDuplicates);
 
         if (visibleRecursive) {
             const QJsonValue visible = child.value("visible");

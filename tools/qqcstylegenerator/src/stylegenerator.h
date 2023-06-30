@@ -347,18 +347,7 @@ private:
         const auto documentRoot = getObject("document", m_document.object());
         const auto configStatesArray = getArray("states", controlObj);
 
-        QJsonObject componentSet;
-        if (m_sanity) {
-            const auto componentSets = findChildren({"type", "COMPONENT_SET", "name", componentSetName}, documentRoot);
-            componentSet = componentSets.first();
-            if (componentSets.count() > 1) {
-                qWarning().nospace().noquote() << "Warning, found more than one component set with name '" + componentSetName + "'.";
-                for (const auto &obj : componentSets)
-                    qWarning().nospace().noquote() << "Found path: " + obj["qt_path"].toString();
-            }
-        } else {
-            componentSet = findChild({"type", "COMPONENT_SET", "name", componentSetName}, documentRoot);
-        }
+        QJsonObject componentSet = findChild({"type", "COMPONENT_SET", "name", componentSetName}, documentRoot, m_sanity);
 
         for (const QJsonValue &configStateValue : configStatesArray) try {
             QJsonObject outputStateConfig;
@@ -442,7 +431,7 @@ private:
                 generateSpacing(contentAtoms, outputStateConfig);
                 generatePadding(outputStateConfig);
 
-                const auto stateComponent = findChild({"type", "COMPONENT", "name", "state=" + figmaState}, componentSet);
+                const auto stateComponent = findChild({"type", "COMPONENT", "name", "state=" + figmaState}, componentSet, m_sanity);
                 generateTransitions(stateComponent, outputStateConfig, configStatesArray);
 
             } catch (std::exception &e) {
@@ -472,7 +461,7 @@ private:
         for (const QString &child : atomPath)
             jsonPath += child.trimmed();
 
-        return findNamedChild(jsonPath, componentSet);
+        return findNamedChild(jsonPath, componentSet, false);
     }
 
     void exportGeometry(const QJsonObject &atom, QJsonObject &outputConfig)
