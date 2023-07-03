@@ -11,61 +11,57 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector
-    \brief For attracting particles towards a specific point.
+    \brief Attracts particles towards a specific point.
 
-    Note that the size and position of this element affects which particles it affects.
-    The size of the point attracted to is always 0x0, and the location of that point
-    is specified by the pointX and pointY properties.
+    Like other affectors, Attractor has the standard properties x, y, width,
+    and height that represent the affected area. The size and position of the
+    Attractor item determine the affected particles.
 
-    Note that Attractor has the standard Item x,y,width and height properties.
-    Like other affectors, these represent the affected area. They
-    do not represent the 0x0 point which is the target of the attraction.
+    The size of the attracting point is always 0x0, and its location is
+    specified by \l pointX and \l pointY properties.
 */
 
 
 /*!
-    \qmlproperty real QtQuick.Particles::PointAttractor::pointX
+    \qmlproperty real QtQuick.Particles::Attractor::pointX
 
-    The x coordinate of the attracting point. This is relative
-    to the x coordinate of the Attractor.
+    The x coordinate of the attracting point, relative
+    to the x coordinate of the Attractor item.
 */
 /*!
-    \qmlproperty real QtQuick.Particles::PointAttractor::pointY
+    \qmlproperty real QtQuick.Particles::Attractor::pointY
 
-    The y coordinate of the attracting point. This is relative
-    to the y coordinate of the Attractor.
+    The y coordinate of the attracting point, relative
+    to the y coordinate of the Attractor item.
 */
 /*!
-    \qmlproperty real QtQuick.Particles::PointAttractor::strength
+    \qmlproperty real QtQuick.Particles::Attractor::strength
 
     The pull, in units per second, to be exerted on an item one pixel away.
 
-    Depending on how the attraction is proportionalToDistance this may have to
-    be very high or very low to have a reasonable effect on particles at a
-    distance.
+    Strength, together with the value of \l proportionalToDistance property,
+    determine the exact amount of pull exerted on particles at a distance.
 */
 /*!
-    \qmlproperty AffectableParameter QtQuick.Particles::Attractor::affectedParameter
+    \qmlproperty enumeration QtQuick.Particles::Attractor::affectedParameter
 
-    What attribute of particles is directly affected.
-    \list
-    \li Attractor.Position
-    \li Attractor.Velocity
-    \li Attractor.Acceleration
-    \endlist
+    The attribute of particles that is directly affected.
+
+    \value Attractor.Position Position
+    \value Attractor.Velocity Velocity
+    \value Attractor.Acceleration Acceleration
 */
 /*!
-    \qmlproperty Proportion QtQuick.Particles::Attractor::proportionalToDistance
+    \qmlproperty enumeration QtQuick.Particles::Attractor::proportionalToDistance
 
-    How the distance from the particle to the point affects the strength of the attraction.
+    The relation between the \l strength of the attraction and the distance from
+    the particle to the attracting point.
 
-    \list
-    \li Attractor.Constant
-    \li Attractor.Linear
-    \li Attractor.InverseLinear
-    \li Attractor.Quadratic
-    \li Attractor.InverseQuadratic
-    \endlist
+    \value Attractor.Constant Constant
+    \value Attractor.Linear Linear
+    \value Attractor.InverseLinear Inverse linear
+    \value Attractor.Quadratic Quadratic
+    \value Attractor.InverseQuadratic Inverse quadratic
 */
 
 
