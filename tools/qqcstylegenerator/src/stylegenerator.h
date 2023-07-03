@@ -530,12 +530,13 @@ private:
 
     void exportImage(const QJsonObject &atom, const QStringList &imageFormats, QJsonObject &outputConfig)
     {
+        Q_UNUSED(atom);
         const QString figmaId = getString("figmaId", outputConfig);
         const QString imageName = getString("name", outputConfig);
 
-        if (!atom.value("qt_visibleRecursive").toBool()) {
+        if (resolvedHidden(figmaId)) {
             outputConfig.insert("filePath", "");
-            debug("skipping hidden image: " + imageName);
+            debug("skipping hidden image: " + imageName + (m_sanity ? ", path: " + resolvedPath(figmaId) : ""));
             return;
         }
 
