@@ -244,7 +244,7 @@ public:
     explicit operator bool() const;
     bool operator!() const;
 
-    static QString prettyName(QAnyStringView);
+    QString name() const;
 
     friend inline bool operator==(const QQmlSA::Element &lhs, const QQmlSA::Element &rhs)
     {
