@@ -656,7 +656,17 @@ void QQuickScrollBar::resetInteractive()
 
     The following example keeps the vertical scroll bar always visible:
 
-    \snippet qtquickcontrols-scrollbar-policy.qml 1
+    \snippet qtquickcontrols-scrollbar-policy-alwayson.qml 1
+
+    Styles may use this property in combination with the \l active property
+    in order to implement transient scroll bars. Transient scroll bars are
+    hidden shortly after the last interaction event (hover or press). This
+    is typically done by animating the opacity of the scroll bar. To override
+    this behavior, set the policy to \c ScrollBar.AlwaysOn or
+    \c ScrollBar.AlwaysOff, depending on the size of the content compared to
+    its view. For example, for a vertical \l ListView:
+
+    \snippet qtquickcontrols-scrollbar-policy-alwayson-when-needed.qml 1
 */
 QQuickScrollBar::Policy QQuickScrollBar::policy() const
 {
