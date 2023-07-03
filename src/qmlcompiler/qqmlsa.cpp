@@ -584,7 +584,10 @@ bool Element::isNull() const
     return QQmlJSScope::scope(*this).isNull();
 }
 
-QString Element::internalName() const
+/*!
+    \internal
+ */
+QString Element::internalId() const
 {
     return QQmlJSScope::scope(*this)->internalName();
 }
