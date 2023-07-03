@@ -99,7 +99,6 @@ Creator.
         \b{QML Types and Controls}
         \list
         \li \l{Qt Quick Controls - Gallery}{Controls Gallery}
-        \li \l{Calendar Example}
         \li \l{tableview/gameoflife}{TableView}
         \li \l{Qt Quick Examples - Text}{Text and Fonts}
         \endlist
