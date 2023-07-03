@@ -131,7 +131,7 @@ Creator.
         \b{Keyboard, Focus, and Touch}
         \list
         \li \l{Qt Quick Examples - Key Interaction}{Key Interaction}
-        \li \l{Qt Quick Examples - MouseArea}{MouseArea}
+        \li \l{Qt Quick Examples - Pointer Handlers}{Pointer Handlers}
         \endlist
     \enddiv
     \div {class="doc-column"}
