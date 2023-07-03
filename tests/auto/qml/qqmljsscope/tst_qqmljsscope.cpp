@@ -857,7 +857,7 @@ void tst_qqmljsscope::attachedTypeResolution()
     QVERIFY(!resolved.isNull());
     const auto &attachedType = pass.resolveAttached(moduleName, typeName);
     QVERIFY(!attachedType.isNull());
-    QCOMPARE(attachedType.internalName(), attachedTypeName);
+    QCOMPARE(attachedType.name(), attachedTypeName);
 
     if (propertyOnAttached != "") {
         QEXPECT_FAIL("Keys", "Keys and QQuickKeysAttached have the same properties", Continue);

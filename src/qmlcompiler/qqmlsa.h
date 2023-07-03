@@ -216,7 +216,7 @@ public:
     bool inherits(const Element &) const;
 
     bool isNull() const;
-    QString internalName() const;
+    QString internalId() const;
     AccessSemantics accessSemantics() const;
     bool isComposite() const;
 
