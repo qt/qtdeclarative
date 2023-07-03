@@ -487,13 +487,13 @@ void VarBindingTypeValidatorPass::onBinding(const QQmlSA::Element &element,
              */
             return;
         }
-        const QString bindingTypeName = QQmlSA::Element::prettyName(
-                bindingTypeIsComposite ? bindingType.baseType().internalName()
-                                       : bindingType.internalName());
+        const QString bindingTypeName =
+                bindingTypeIsComposite ? bindingType.baseType().name()
+                                       : bindingType.name();
         QStringList expectedTypeNames;
 
         for (auto it = range.first; it != range.second; it++)
-            expectedTypeNames << QQmlSA::Element::prettyName(it.value().internalName());
+            expectedTypeNames << it.value().name();
 
         emitWarning(u"Unexpected type for property \"%1\" expected %2 got %3"_s.arg(
                             propertyName, expectedTypeNames.join(u", "_s), bindingTypeName),

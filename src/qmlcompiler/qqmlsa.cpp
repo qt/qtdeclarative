@@ -560,7 +560,7 @@ Element Element::baseType() const
  */
 QString Element::baseTypeName() const
 {
-    return QQmlJSScope::scope(*this)->baseTypeName();
+    return QQmlJSScope::prettyName(QQmlJSScope::scope(*this)->baseTypeName());
 }
 
 /*!
@@ -785,9 +785,14 @@ bool Element::operator!() const
     return !QQmlJSScope::scope(*this);
 }
 
-QString Element::prettyName(QAnyStringView name)
+/*!
+    Returns the name of this Element.
+ */
+QString Element::name() const
 {
-    return QQmlJSScope::prettyName(name);
+    if (isNull())
+        return {};
+    return QQmlJSScope::prettyName(QQmlJSScope::scope(*this)->internalName());
 }
 
 bool Element::operatorEqualsImpl(const Element &lhs, const Element &rhs)
