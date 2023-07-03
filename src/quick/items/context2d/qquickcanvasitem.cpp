@@ -252,7 +252,7 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     QPainter instead of the more expensive and likely less performing
     JavaScript and Context2D approach.
 
-    \sa Context2D, QQuickPaintedItem, {Pointer Handlers Example}
+    \sa Context2D, QQuickPaintedItem, {Qt Quick Examples - Pointer Handlers}
 */
 
 QQuickCanvasItem::QQuickCanvasItem(QQuickItem *parent)

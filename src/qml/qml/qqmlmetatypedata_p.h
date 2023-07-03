@@ -25,23 +25,6 @@
 
 QT_BEGIN_NAMESPACE
 
-struct InlineComponentKey
-{
-    const QQmlTypePrivate *containingType = nullptr;
-    QString name;
-
-private:
-    friend bool operator==(const InlineComponentKey &a, const InlineComponentKey &b)
-    {
-        return a.containingType == b.containingType && a.name == b.name;
-    }
-
-    friend size_t qHash(const InlineComponentKey &byId, size_t seed = 0)
-    {
-        return qHashMulti(seed, byId.containingType, byId.name);
-    }
-};
-
 class QQmlTypePrivate;
 struct QQmlMetaTypeData
 {
@@ -56,7 +39,7 @@ struct QQmlMetaTypeData
     using Names = QMultiHash<QHashedString, const QQmlTypePrivate *>;
     Names nameToType;
 
-    typedef QHash<QUrl, QQmlTypePrivate *> Files; //For file imported composite types only
+    typedef QHash<QUrl, const QQmlTypePrivate *> Files; //For file imported composite types only
     Files urlToType;
     Files urlToNonFileImportType; // For non-file imported composite and composite
             // singleton types. This way we can locate any
@@ -66,8 +49,11 @@ struct QQmlMetaTypeData
     MetaObjects metaObjectToType;
     QVector<QHash<QTypeRevision, QQmlPropertyCache::ConstPtr>> typePropertyCaches;
     QHash<int, QQmlValueType *> metaTypeToValueType;
-    QHash<const QtPrivate::QMetaTypeInterface *, QV4::ExecutableCompilationUnit *> compositeTypes;
-    QHash<InlineComponentKey, QQmlType> inlineComponentTypes;
+
+    using CompositeTypes = QHash<const QtPrivate::QMetaTypeInterface *,
+                                 QQmlRefPointer<QV4::ExecutableCompilationUnit>>;
+    CompositeTypes compositeTypes;
+    QHash<QUrl, QQmlType> inlineComponentTypes;
 
     struct VersionedUri {
         VersionedUri() = default;

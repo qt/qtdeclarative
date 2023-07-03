@@ -379,11 +379,13 @@ static ReturnedValue instanceOfQObject(const QV4::QQmlTypeWrapper *typeWrapper, 
         QQmlEnginePrivate *qenginepriv = QQmlEnginePrivate::get(engine->qmlEngine());
         QQmlRefPointer<QQmlTypeData> td = qenginepriv->typeLoader.getType(typeWrapper->d()->type().sourceUrl());
         if (ExecutableCompilationUnit *cu = td->compilationUnit())
-            myQmlType = QQmlMetaType::metaObjectForType(cu->typeIds.id);
+            myQmlType = QQmlMetaType::metaObjectForType(cu->qmlType.typeId());
         else
             return Encode(false); // It seems myQmlType has some errors, so we could not compile it.
     } else {
         myQmlType = QQmlMetaType::metaObjectForType(myTypeId);
+        if (myQmlType.isNull())
+            return Encode(false);
     }
 
     const QMetaObject *theirType = wrapperObject->metaObject();

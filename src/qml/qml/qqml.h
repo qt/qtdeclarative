@@ -826,8 +826,8 @@ struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false, false, fals
         }
 #else
         static_assert(QQmlPrivate::QmlMetaType<Resolved>::hasAcceptableCtors(),
-                      "This type is neither a QObject, nor default- and copy-constructible, nor"
-                      "uncreatable.\n"
+                      "This type is neither a default constructible QObject, nor a default- "
+                      "and copy-constructible Q_GADGET, nor marked as uncreatable.\n"
                       "You should not use it as a QML type.");
         static_assert(std::is_base_of_v<QObject, Resolved>
                 || !QQmlTypeInfo<Resolved>::hasAttachedProperties);

@@ -3,19 +3,38 @@
 
 #include "qmetatypesjsonprocessor_p.h"
 
+#include "qanystringviewutils_p.h"
+#include "qqmltyperegistrarconstants_p.h"
+#include "qqmltypesclassdescription_p.h"
+
+#include <QtCore/qcborarray.h>
+#include <QtCore/qcbormap.h>
 #include <QtCore/qfile.h>
-#include <QtCore/qjsonarray.h>
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qqueue.h>
 
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
+using namespace Constants;
+using namespace Constants::MetatypesDotJson;
+using namespace Constants::MetatypesDotJson::Qml;
+using namespace QAnyStringViewUtils;
+
+static QCborValue fromJson(const QByteArray &json, QJsonParseError *error)
+{
+    const QJsonDocument jsonValue = QJsonDocument::fromJson(json, error);
+    if (jsonValue.isArray())
+        return QCborValue::fromJsonValue(jsonValue.array());
+    if (jsonValue.isObject())
+        return QCborValue::fromJsonValue(jsonValue.object());
+    return QCborValue();
+}
 
 bool MetaTypesJsonProcessor::processTypes(const QStringList &files)
 {
     for (const QString &source: files) {
-        QJsonDocument metaObjects;
+        QCborValue metaObjects;
         {
             QFile f(source);
             if (!f.open(QIODevice::ReadOnly)) {
@@ -23,7 +42,7 @@ bool MetaTypesJsonProcessor::processTypes(const QStringList &files)
                 return false;
             }
             QJsonParseError error = {0, QJsonParseError::NoError};
-            metaObjects = QJsonDocument::fromJson(f.readAll(), &error);
+            metaObjects = fromJson(f.readAll(), &error);
             if (error.error != QJsonParseError::NoError) {
                 fprintf(stderr, "Error %d while parsing %s: %s\n", error.error, qPrintable(source),
                         qPrintable(error.errorString()));
@@ -32,18 +51,18 @@ bool MetaTypesJsonProcessor::processTypes(const QStringList &files)
         }
 
         if (metaObjects.isArray()) {
-            const QJsonArray metaObjectsArray = metaObjects.array();
-            for (const QJsonValue metaObject : metaObjectsArray) {
-                if (!metaObject.isObject()) {
+            const QCborArray metaObjectsArray = metaObjects.toArray();
+            for (const QCborValue &metaObject : metaObjectsArray) {
+                if (!metaObject.isMap()) {
                     fprintf(stderr, "Error parsing %s: JSON is not an object\n",
                             qPrintable(source));
                     return false;
                 }
 
-                processTypes(metaObject.toObject());
+                processTypes(metaObject.toMap());
             }
-        } else if (metaObjects.isObject()) {
-            processTypes(metaObjects.object());
+        } else if (metaObjects.isMap()) {
+            processTypes(metaObjects.toMap());
         } else {
             fprintf(stderr, "Error parsing %s: JSON is not an object or an array\n",
                     qPrintable(source));
@@ -67,7 +86,7 @@ bool MetaTypesJsonProcessor::processForeignTypes(const QStringList &foreignTypes
         }
 
         QJsonParseError error = {0, QJsonParseError::NoError};
-        QJsonDocument foreignMetaObjects = QJsonDocument::fromJson(typesFile.readAll(), &error);
+        QCborValue foreignMetaObjects = fromJson(typesFile.readAll(), &error);
         if (error.error != QJsonParseError::NoError) {
             fprintf(stderr, "Error %d while parsing %s: %s\n", error.error, qPrintable(types),
                     qPrintable(error.errorString()));
@@ -75,26 +94,27 @@ bool MetaTypesJsonProcessor::processForeignTypes(const QStringList &foreignTypes
             continue;
         }
 
-        const QJsonArray foreignObjectsArray = foreignMetaObjects.array();
-        for (const QJsonValue metaObject : foreignObjectsArray) {
-            if (!metaObject.isObject()) {
+        const QCborArray foreignObjectsArray = foreignMetaObjects.toArray();
+        for (const QCborValue &metaObject : foreignObjectsArray) {
+            if (!metaObject.isMap()) {
                 fprintf(stderr, "Error parsing %s: JSON is not an object\n",
                         qPrintable(types));
                 success = false;
                 continue;
             }
 
-            processForeignTypes(metaObject.toObject());
+            processForeignTypes(metaObject.toMap());
         }
     }
     return success;
 }
 
-static void sortStringList(QStringList *list)
+template<typename String>
+static void sortStringList(QList<String> *list)
 {
     std::sort(list->begin(), list->end());
     const auto newEnd = std::unique(list->begin(), list->end());
-    list->erase(QStringList::const_iterator(newEnd), list->constEnd());
+    list->erase(typename QList<String>::const_iterator(newEnd), list->constEnd());
 }
 
 void MetaTypesJsonProcessor::postProcessTypes()
@@ -115,32 +135,33 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
 {
     QString registrationHelper;
     for (const auto &obj: m_types) {
-        const QString className = obj[u"className"].toString();
-        const QString foreignClassName = className+ u"Foreign";
-        const auto classInfos = obj[u"classInfos"].toArray();
+        const QString className = obj[S_CLASS_NAME].toString();
+        const QString foreignClassName = className + u"Foreign";
+        const auto classInfos = obj[S_CLASS_INFOS].toArray();
         QString qmlElement;
         QString qmlUncreatable;
         QString qmlAttached;
         bool isSingleton = false;
         bool isExplicitlyUncreatable = false;
-        for (QJsonValue entry: classInfos) {
-            const auto name = entry[u"name"].toString();
-            const auto value = entry[u"value"].toString();
-            if (name == u"QML.Element") {
-                if (value == u"auto") {
+        for (const QCborValue &info: classInfos) {
+            const QCborMap entry = info.toMap();
+            const auto name = toStringView(entry, S_NAME);
+            const auto value = toStringView(entry, S_VALUE);
+            if (name == S_ELEMENT) {
+                if (value == S_AUTO) {
                     qmlElement = u"QML_NAMED_ELEMENT("_s + className + u")"_s;
-                } else if (value == u"anonymous") {
+                } else if (value == S_ANONYMOUS) {
                     qmlElement = u"QML_ANONYMOUS"_s;
                 } else {
-                    qmlElement = u"QML_NAMED_ELEMENT(" + value + u")";
+                    qmlElement = u"QML_NAMED_ELEMENT("_s + value.toString() + u")";
                 }
-            } else if (name == u"QML.Creatable" && value == u"false") {
+            } else if (name == S_CREATABLE && value == S_FALSE) {
                 isExplicitlyUncreatable = true;
-            } else if (name == u"QML.UncreatableReason") {
-                qmlUncreatable = u"QML_UNCREATABLE(\"" + value + u"\")";
-            } else if (name == u"QML.Attached") {
-                qmlAttached = u"QML_ATTACHED("_s + value + u")";
-            } else if (name == u"QML.Singleton") {
+            } else if (name == S_UNCREATABLE_REASON) {
+                qmlUncreatable = u"QML_UNCREATABLE(\""_s + value.toString() + u"\")";
+            } else if (name == S_ATTACHED) {
+                qmlAttached = u"QML_ATTACHED("_s + value.toString() + u")";
+            } else if (name == S_SINGLETON) {
                 isSingleton = true;
             }
         }
@@ -166,54 +187,55 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
 }
 
 MetaTypesJsonProcessor::RegistrationMode MetaTypesJsonProcessor::qmlTypeRegistrationMode(
-        const QJsonObject &classDef)
+        const QCborMap &classDef)
 {
-    const QJsonArray classInfos = classDef[QLatin1String("classInfos")].toArray();
-    for (const QJsonValue info : classInfos) {
-        const QString name = info[QLatin1String("name")].toString();
-        if (name == QLatin1String("QML.Element")) {
-            if (classDef[QLatin1String("object")].toBool())
+    const QCborArray classInfos = classDef[S_CLASS_INFOS].toArray();
+    for (const QCborValue &info : classInfos) {
+        const QCborMap entry = info.toMap();
+        const QAnyStringView name = toStringView(entry, S_NAME);
+        if (name == S_ELEMENT) {
+            if (classDef[S_OBJECT].toBool())
                 return ObjectRegistration;
-            if (classDef[QLatin1String("gadget")].toBool())
+            if (classDef[S_GADGET].toBool())
                 return GadgetRegistration;
-            if (classDef[QLatin1String("namespace")].toBool())
+            if (classDef[S_NAMESPACE].toBool())
                 return NamespaceRegistration;
             qWarning() << "Not registering classInfo which is neither an object, "
                           "nor a gadget, nor a namespace:"
-                       << name;
+                       << name.toString();
             break;
         }
     }
     return NoRegistration;
 }
 
+// TODO: Remove this when QAnyStringView gets a proper qHash()
+static size_t qHash(QAnyStringView string, size_t seed = 0)
+{
+    return string.visit([seed](auto view) {
+        if constexpr (std::is_same_v<decltype(view), QStringView>)
+            return qHash(view, seed);
+        if constexpr (std::is_same_v<decltype(view), QLatin1StringView>)
+            return qHash(view, seed);
+        if constexpr (std::is_same_v<decltype(view), QUtf8StringView>)
+            return qHash(QByteArrayView(view.data(), view.length()), seed);
+    });
+}
+
 void MetaTypesJsonProcessor::addRelatedTypes()
 {
-    const QLatin1String classInfosKey("classInfos");
-    const QLatin1String nameKey("name");
-    const QLatin1String qualifiedClassNameKey("qualifiedClassName");
-    const QLatin1String qmlNamePrefix("QML.");
-    const QLatin1String qmlForeignName("QML.Foreign");
-    const QLatin1String qmlExtendedName("QML.Extended");
-    const QLatin1String qmlAttachedName("QML.Attached");
-    const QLatin1String qmlSequenceName("QML.Sequence");
-    const QLatin1String valueKey("value");
-    const QLatin1String superClassesKey("superClasses");
-    const QLatin1String accessKey("access");
-    const QLatin1String publicAccess("public");
-
-    QSet<QString> processedRelatedNames;
-    QQueue<QJsonObject> typeQueue;
+    QSet<QAnyStringView> processedRelatedNames;
+    QQueue<QCborMap> typeQueue;
     typeQueue.append(m_types);
 
     // First mark all classes registered from this module as already processed.
-    for (const QJsonObject &type : m_types) {
-        processedRelatedNames.insert(type.value(qualifiedClassNameKey).toString());
-        const auto classInfos = type.value(classInfosKey).toArray();
-        for (const QJsonValue classInfo : classInfos) {
-            const QJsonObject obj = classInfo.toObject();
-            if (obj.value(nameKey).toString() == qmlForeignName) {
-                processedRelatedNames.insert(obj.value(valueKey).toString());
+    for (const QCborMap &type : m_types) {
+        processedRelatedNames.insert(toStringView(type, S_QUALIFIED_CLASS_NAME));
+        const auto classInfos = type.value(S_CLASS_INFOS).toArray();
+        for (const QCborValue &classInfo : classInfos) {
+            const QCborMap obj = classInfo.toMap();
+            if (obj.value(S_NAME) == S_FOREIGN) {
+                processedRelatedNames.insert(toStringView(obj, S_VALUE));
                 break;
             }
         }
@@ -221,29 +243,30 @@ void MetaTypesJsonProcessor::addRelatedTypes()
 
     // Then mark all classes registered from other modules as already processed.
     // We don't want to generate them again for this module.
-    for (const QJsonObject &foreignType : m_foreignTypes) {
-        const auto classInfos = foreignType.value(classInfosKey).toArray();
+    for (const QCborMap &foreignType : m_foreignTypes) {
+        const auto classInfos = foreignType.value(S_CLASS_INFOS).toArray();
         bool seenQmlPrefix = false;
-        for (const QJsonValue classInfo : classInfos) {
-            const QJsonObject obj = classInfo.toObject();
-            const QString name = obj.value(nameKey).toString();
-            if (!seenQmlPrefix && name.startsWith(qmlNamePrefix)) {
-                processedRelatedNames.insert(foreignType.value(qualifiedClassNameKey).toString());
+        for (const QCborValue &classInfo : classInfos) {
+            const QCborMap obj = classInfo.toMap();
+            const QAnyStringView name = toStringView(obj, S_NAME);
+            if (!seenQmlPrefix && startsWith(name, "QML."_L1)) {
+                processedRelatedNames.insert(
+                        toStringView(foreignType, S_QUALIFIED_CLASS_NAME));
                 seenQmlPrefix = true;
             }
-            if (name == qmlForeignName) {
-                processedRelatedNames.insert(obj.value(valueKey).toString());
+            if (name == S_FOREIGN) {
+                processedRelatedNames.insert(toStringView(obj, S_VALUE));
                 break;
             }
         }
     }
 
-    auto addType = [&](const QString &typeName) {
+    auto addType = [&](QAnyStringView typeName) {
         m_referencedTypes.append(typeName);
         if (processedRelatedNames.contains(typeName))
             return;
         processedRelatedNames.insert(typeName);
-        if (const QJsonObject *other
+        if (const QCborMap *other
                 = QmlTypesClassDescription::findType(m_foreignTypes, typeName)) {
             m_types.append(*other);
             typeQueue.enqueue(*other);
@@ -253,89 +276,87 @@ void MetaTypesJsonProcessor::addRelatedTypes()
     // Then recursively iterate the super types and attached types, marking the
     // ones we are interested in as related.
     while (!typeQueue.isEmpty()) {
-        const QJsonObject classDef = typeQueue.dequeue();
+        const QCborMap classDef = typeQueue.dequeue();
 
-        const auto classInfos = classDef.value(classInfosKey).toArray();
-        for (const QJsonValue classInfo : classInfos) {
-            const QJsonObject obj = classInfo.toObject();
-            const QString objNameValue = obj.value(nameKey).toString();
-            if (objNameValue == qmlAttachedName || objNameValue == qmlSequenceName
-                    || objNameValue == qmlExtendedName) {
-                addType(obj.value(valueKey).toString());
-            } else if (objNameValue == qmlForeignName) {
-                const QString foreignClassName = obj.value(valueKey).toString();
-                if (const QJsonObject *other = QmlTypesClassDescription::findType(
+        const auto classInfos = classDef.value(S_CLASS_INFOS).toArray();
+        for (const QCborValue &classInfo : classInfos) {
+            const QCborMap obj = classInfo.toMap();
+            const QAnyStringView objNameValue = toStringView(obj, S_NAME);
+            if (objNameValue == S_ATTACHED || objNameValue == S_SEQUENCE
+                    || objNameValue == S_EXTENDED) {
+                addType(toStringView(obj, S_VALUE));
+            } else if (objNameValue == S_FOREIGN) {
+                const QAnyStringView foreignClassName = toStringView(obj, S_VALUE);
+                if (const QCborMap *other = QmlTypesClassDescription::findType(
                             m_foreignTypes, foreignClassName)) {
-                    const auto otherSupers = other->value(superClassesKey).toArray();
+                    const auto otherSupers = other->value(S_SUPER_CLASSES).toArray();
                     if (!otherSupers.isEmpty()) {
-                        const QJsonObject otherSuperObject = otherSupers.first().toObject();
-                        if (otherSuperObject.value(accessKey).toString() == publicAccess)
-                            addType(otherSuperObject.value(nameKey).toString());
+                        const QCborMap otherSuperObject = otherSupers.first().toMap();
+                        if (otherSuperObject.value(S_ACCESS) == S_PUBLIC)
+                            addType(toStringView(otherSuperObject, S_NAME));
                     }
 
-                    const auto otherClassInfos = other->value(classInfosKey).toArray();
-                    for (const QJsonValue otherClassInfo : otherClassInfos) {
-                        const QJsonObject obj = otherClassInfo.toObject();
-                        const QString objNameValue = obj.value(nameKey).toString();
-                        if (objNameValue == qmlAttachedName || objNameValue == qmlSequenceName
-                                || objNameValue == qmlExtendedName) {
-                            addType(obj.value(valueKey).toString());
+                    const auto otherClassInfos = other->value(S_CLASS_INFOS).toArray();
+                    for (const QCborValue &otherClassInfo : otherClassInfos) {
+                        const QCborMap obj = otherClassInfo.toMap();
+                        const QAnyStringView objNameValue = toStringView(obj, S_NAME);
+                        if (objNameValue == S_ATTACHED || objNameValue == S_SEQUENCE
+                                || objNameValue == S_EXTENDED) {
+                            addType(toStringView(obj, S_VALUE));
                             break;
                         }
-                        // No, you cannot chain QML_FOREIGN declarations. Sorry.
+                        // No, you cannot chain S_FOREIGN declarations. Sorry.
                     }
                 }
             }
         }
 
-        const auto supers = classDef.value(superClassesKey).toArray();
+        const auto supers = classDef.value(S_SUPER_CLASSES).toArray();
         if (!supers.isEmpty()) {
-            const QJsonObject superObject = supers.first().toObject();
-            if (superObject.value(accessKey).toString() == publicAccess)
-                addType(superObject.value(nameKey).toString());
+            const QCborMap superObject = supers.first().toMap();
+            if (superObject.value(S_ACCESS) == S_PUBLIC)
+                addType(toStringView(superObject, S_NAME));
         }
     }
 }
 
-void MetaTypesJsonProcessor::sortTypes(QVector<QJsonObject> &types)
+void MetaTypesJsonProcessor::sortTypes(QVector<QCborMap> &types)
 {
-    const QLatin1String qualifiedClassNameKey("qualifiedClassName");
-    std::sort(types.begin(), types.end(), [&](const QJsonObject &a, const QJsonObject &b) {
-        return a.value(qualifiedClassNameKey).toString() <
-                b.value(qualifiedClassNameKey).toString();
+    std::sort(types.begin(), types.end(), [&](const QCborMap &a, const QCborMap &b) {
+        return toStringView(a, S_QUALIFIED_CLASS_NAME) <
+               toStringView(b, S_QUALIFIED_CLASS_NAME);
     });
 }
 
-QString MetaTypesJsonProcessor::resolvedInclude(const QString &include)
+QString MetaTypesJsonProcessor::resolvedInclude(QAnyStringView include)
 {
-    return (m_privateIncludes && include.endsWith(QLatin1String("_p.h")))
-            ? QLatin1String("private/") + include
-            : include;
+    return (m_privateIncludes && endsWith(include, "_p.h"_L1))
+            ? QLatin1String("private/") + include.toString()
+            : include.toString();
 }
 
-void MetaTypesJsonProcessor::processTypes(const QJsonObject &types)
+void MetaTypesJsonProcessor::processTypes(const QCborMap &types)
 {
-    const QString include = resolvedInclude(types[QLatin1String("inputFile")].toString());
-    const QJsonArray classes = types[QLatin1String("classes")].toArray();
-    for (const QJsonValue cls : classes) {
-        QJsonObject classDef = cls.toObject();
-        classDef.insert(QLatin1String("inputFile"), include);
+    const QString include = resolvedInclude(toStringView(types, S_INPUT_FILE));
+    const QCborArray classes = types[S_CLASSES].toArray();
+    for (const QCborValue &cls : classes) {
+        QCborMap classDef = cls.toMap();
+        classDef.insert(S_INPUT_FILE, include);
 
         switch (qmlTypeRegistrationMode(classDef)) {
         case NamespaceRegistration:
         case GadgetRegistration:
         case ObjectRegistration: {
-            if (!include.endsWith(QLatin1String(".h"))
-                    && !include.endsWith(QLatin1String(".hpp"))
-                    && !include.endsWith(QLatin1String(".hxx"))
-                    && !include.endsWith(QLatin1String(".hh"))
-                    && !include.endsWith(u".py")
-                    && include.contains(QLatin1Char('.'))) {
+            if (!endsWith(include, QLatin1String(".h"))
+                    && !endsWith(include, QLatin1String(".hpp"))
+                    && !endsWith(include, QLatin1String(".hxx"))
+                    && !endsWith(include, QLatin1String(".hh"))
+                    && !endsWith(include, QLatin1String(".py"))
+                    && contains(include, QLatin1Char('.'))) {
                 fprintf(stderr,
                         "Class %s is declared in %s, which appears not to be a header.\n"
                         "The compilation of its registration to QML may fail.\n",
-                        qPrintable(classDef.value(QLatin1String("qualifiedClassName"))
-                                   .toString()),
+                        qPrintable(classDef.value(S_QUALIFIED_CLASS_NAME).toString()),
                         qPrintable(include));
             }
             m_includes.append(include);
@@ -349,13 +370,13 @@ void MetaTypesJsonProcessor::processTypes(const QJsonObject &types)
     }
 }
 
-void MetaTypesJsonProcessor::processForeignTypes(const QJsonObject &types)
+void MetaTypesJsonProcessor::processForeignTypes(const QCborMap &types)
 {
-    const QString include = resolvedInclude(types[QLatin1String("inputFile")].toString());
-    const QJsonArray classes = types[QLatin1String("classes")].toArray();
-    for (const QJsonValue cls : classes) {
-        QJsonObject classDef = cls.toObject();
-        classDef.insert(QLatin1String("inputFile"), include);
+    const QString include = resolvedInclude(toStringView(types, S_INPUT_FILE));
+    const QCborArray classes = types[S_CLASSES].toArray();
+    for (const QCborValue &cls : classes) {
+        QCborMap classDef = cls.toMap();
+        classDef.insert(S_INPUT_FILE, include);
         m_foreignTypes.append(classDef);
     }
 }

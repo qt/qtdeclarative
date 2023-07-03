@@ -34,15 +34,17 @@ class QQmlEnginePrivate;
 struct InlineComponentData {
 
     InlineComponentData() = default;
-    InlineComponentData(const CompositeMetaTypeIds &typeIds, int objectIndex, int nameIndex, int totalObjectCount, int totalBindingCount, int totalParserStatusCount)
-        :   typeIds(typeIds)
-          , objectIndex(objectIndex)
-          , nameIndex(nameIndex)
-          , totalObjectCount(totalObjectCount)
-          , totalBindingCount(totalBindingCount)
-          , totalParserStatusCount(totalParserStatusCount) {}
+    InlineComponentData(
+            const QQmlType &qmlType, int objectIndex, int nameIndex, int totalObjectCount,
+            int totalBindingCount, int totalParserStatusCount)
+        : qmlType(qmlType)
+        , objectIndex(objectIndex)
+        , nameIndex(nameIndex)
+        , totalObjectCount(totalObjectCount)
+        , totalBindingCount(totalBindingCount)
+        , totalParserStatusCount(totalParserStatusCount) {}
 
-    CompositeMetaTypeIds typeIds;
+    QQmlType qmlType;
     int objectIndex = -1;
     int nameIndex = -1;
     int totalObjectCount = 0;
@@ -63,11 +65,13 @@ struct ResolvedTypeReferenceMap: public QHash<int, ResolvedTypeReference*>
     bool addToHash(QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums) const;
 };
 
-class Q_QML_PRIVATE_EXPORT ExecutableCompilationUnit final: public CompiledData::CompilationUnit,
-                                                            public QQmlRefCount
+class Q_QML_PRIVATE_EXPORT ExecutableCompilationUnit final
+    : public CompiledData::CompilationUnit,
+      public QQmlRefCounted<ExecutableCompilationUnit>
 {
     Q_DISABLE_COPY_MOVE(ExecutableCompilationUnit)
 public:
+    friend class QQmlRefCounted<ExecutableCompilationUnit>;
     friend class QQmlRefPointer<ExecutableCompilationUnit>;
 
     static QQmlRefPointer<ExecutableCompilationUnit> create(
@@ -126,7 +130,7 @@ public:
     QHash<int, IdentifierHash> namedObjectsPerComponentCache;
     inline IdentifierHash namedObjectsPerComponent(int componentObjectIndex);
 
-    void finalizeCompositeType(CompositeMetaTypeIds typeIdsForComponent);
+    void finalizeCompositeType(const QQmlType &type);
 
     int m_totalBindingsCount = 0; // Number of bindings used in this type
     int m_totalParserStatusCount = 0; // Number of instantiated types that are QQmlParserStatus subclasses
@@ -143,10 +147,9 @@ public:
 
     bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const;
 
-    CompositeMetaTypeIds typeIdsForComponent(const QString &inlineComponentName = QString()) const;
+    QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const;
 
-    CompositeMetaTypeIds typeIds;
-    bool isRegistered = false;
+    QQmlType qmlType;
 
     QHash<QString, InlineComponentData> inlineComponentData;
 
@@ -191,9 +194,9 @@ public:
         return ListPropertyAssignBehavior::Append;
     }
 
-    bool enforcesFunctionSignature() const
+    bool ignoresFunctionSignature() const
     {
-        return data->flags & CompiledData::Unit::FunctionSignaturesEnforced;
+        return data->flags & CompiledData::Unit::FunctionSignaturesIgnored;
     }
 
     bool nativeMethodsAcceptThisObjects() const

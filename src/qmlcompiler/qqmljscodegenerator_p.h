@@ -265,6 +265,7 @@ protected:
 
     QString changedRegisterVariable() const;
     QQmlJSRegisterContent registerType(int index) const;
+    bool shouldMoveRegister(int index) const;
 
     QString m_body;
     CodegenState m_state;

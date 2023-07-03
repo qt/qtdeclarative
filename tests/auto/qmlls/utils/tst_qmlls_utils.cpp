@@ -895,6 +895,7 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
     QTest::addColumn<size_t>("expectedLength");
 
     const QString JSDefinitionsQml = testFile(u"JSDefinitions.qml"_s);
+    const QString BaseTypeQml = testFile(u"BaseType.qml"_s);
 
     QTest::addRow("JSIdentifierX")
             << JSDefinitionsQml << 14 << 11 << JSDefinitionsQml << 13 << 13 << strlen("x");
@@ -904,8 +905,8 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
                                << positionAfterOneIndent << strlen("property int i");
     QTest::addRow("qualifiedPropertyI") << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << 9
                                         << positionAfterOneIndent << strlen("property int i");
-    QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 6 << 1
-                        << strlen("Item");
+    QTest::addRow("inlineComponentProperty") << JSDefinitionsQml << 62 << 21 << JSDefinitionsQml
+                                             << 54 << 9 << strlen("property int data: 42");
 
     QTest::addRow("parameterA") << JSDefinitionsQml << 10 << 16 << noResultExpected << -1 << -1
                                 << size_t{};
@@ -938,10 +939,28 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
                                                 << 34 << 9 << strlen("property int i");
     QTest::addRow("shadowedProperty") << JSDefinitionsQml << 37 << 49 << JSDefinitionsQml << 9
                                       << positionAfterOneIndent << strlen("property int i");
+
+    QTest::addRow("propertyInBinding") << JSDefinitionsQml << 64 << 37 << JSDefinitionsQml << 9
+                                       << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("propertyInBinding2") << JSDefinitionsQml << 65 << 38 << JSDefinitionsQml << 9
+                                        << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("propertyInBinding3") << JSDefinitionsQml << 66 << 51 << JSDefinitionsQml << 9
+                                        << positionAfterOneIndent << strlen("property int i");
+
+    QTest::addRow("propertyFromDifferentFile")
+            << JSDefinitionsQml << 72 << 20 << BaseTypeQml << 24 << positionAfterOneIndent
+            << strlen("property int helloProperty: 123");
+
+    QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 6 << 1
+                        << strlen("Item");
+    QTest::addRow("onId") << JSDefinitionsQml << 32 << 16 << JSDefinitionsQml << 31
+                          << positionAfterOneIndent << strlen("Rectangle");
     QTest::addRow("parentId") << JSDefinitionsQml << 37 << 44 << JSDefinitionsQml << 6 << 1
                               << strlen("Item");
     QTest::addRow("currentId") << JSDefinitionsQml << 37 << 30 << JSDefinitionsQml << 31
                                << positionAfterOneIndent << strlen("Rectangle");
+    QTest::addRow("inlineComponentId")
+            << JSDefinitionsQml << 56 << 35 << JSDefinitionsQml << 51 << 21 << strlen("Rectangle");
 
     QTest::addRow("recursiveFunction")
             << JSDefinitionsQml << 39 << 28 << JSDefinitionsQml << 36 << 18 << strlen("f");
@@ -954,6 +973,8 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
 
     QTest::addRow("functionInParent")
             << JSDefinitionsQml << 44 << 37 << JSDefinitionsQml << 18 << 14 << strlen("ffff");
+    QTest::addRow("functionFromDifferentFile")
+            << JSDefinitionsQml << 72 << 47 << BaseTypeQml << 25 << 14 << strlen("helloFunction");
 }
 
 void tst_qmlls_utils::findDefinitionFromLocation()
@@ -1004,6 +1025,100 @@ void tst_qmlls_utils::findDefinitionFromLocation()
     QCOMPARE(definition->location.startLine, quint32(expectedLine));
     QCOMPARE(definition->location.startColumn, quint32(expectedCharacter));
     QCOMPARE(definition->location.length, quint32(expectedLength));
+}
+
+void tst_qmlls_utils::resolveExpressionType_data()
+{
+    QTest::addColumn<QString>("filePath");
+    // keep in mind that line and character are starting at 1!
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+    QTest::addColumn<QString>("expectedFile");
+    // startline of the owners definition
+    QTest::addColumn<int>("expectedLine");
+
+    {
+        const QString JSDefinitionsQml = testFile(u"JSDefinitions.qml"_s);
+        const int parentLine = 6;
+        const int childLine = 31;
+
+        QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << parentLine;
+        QTest::addRow("childIddInChild")
+                << JSDefinitionsQml << 37 << 30 << JSDefinitionsQml << childLine;
+        QTest::addRow("parentIdInChild")
+                << JSDefinitionsQml << 37 << 43 << JSDefinitionsQml << parentLine;
+
+        QTest::addRow("propertyI")
+                << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << parentLine;
+        QTest::addRow("qualifiedPropertyI")
+                << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << parentLine;
+        QTest::addRow("propertyIInChild")
+                << JSDefinitionsQml << 37 << 21 << JSDefinitionsQml << childLine;
+        QTest::addRow("qualifiedChildPropertyIInChild")
+                << JSDefinitionsQml << 37 << 35 << JSDefinitionsQml << childLine;
+        QTest::addRow("qualifiedParentPropertyIInChild")
+                << JSDefinitionsQml << 37 << 49 << JSDefinitionsQml << parentLine;
+
+        QTest::addRow("childMethod")
+                << JSDefinitionsQml << 48 << 23 << JSDefinitionsQml << childLine;
+        QTest::addRow("childMethod2")
+                << JSDefinitionsQml << 44 << 20 << JSDefinitionsQml << childLine;
+        QTest::addRow("parentMethod")
+                << JSDefinitionsQml << 14 << 9 << JSDefinitionsQml << parentLine;
+    }
+
+    {
+        const QString JSUsagesQml = testFile(u"JSUsages.qml"_s);
+        const int rootLine = 6;
+        const int nestedComponent2Line = 46;
+        const int nestedComponent3Line = 51;
+        const int nestedComponent4Line = 57;
+        QTest::addRow("propertyAccess:inner.inner")
+                << JSUsagesQml << 68 << 34 << JSUsagesQml << nestedComponent2Line;
+        QTest::addRow("propertyAccess:inner.inner2")
+                << JSUsagesQml << 69 << 34 << JSUsagesQml << nestedComponent2Line;
+        QTest::addRow("propertyAccess:inner.inner.inner")
+                << JSUsagesQml << 69 << 40 << JSUsagesQml << nestedComponent3Line;
+        QTest::addRow("propertyAccess:inner.inner.inner.p2")
+                << JSUsagesQml << 69 << 44 << JSUsagesQml << nestedComponent4Line;
+
+        QTest::addRow("propertyAccess:helloProperty")
+                << JSUsagesQml << 65 << 68 << JSUsagesQml << rootLine;
+        QTest::addRow("propertyAccess:nestedHelloProperty")
+                << JSUsagesQml << 65 << 46 << JSUsagesQml << nestedComponent4Line;
+    }
+}
+
+void tst_qmlls_utils::resolveExpressionType()
+{
+    QFETCH(QString, filePath);
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QString, expectedFile);
+    QFETCH(int, expectedLine);
+
+    // they all start at 1.
+    Q_ASSERT(line > 0);
+    Q_ASSERT(character > 0);
+
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+
+    auto locations = QQmlLSUtils::itemsFromTextLocation(
+            file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
+
+    QCOMPARE(locations.size(), 1);
+
+    QQmlJSScope::ConstPtr definition = QQmlLSUtils::resolveExpressionType(
+            locations.front().domItem, QQmlLSUtilsResolveOptions::JustOwner);
+
+    QVERIFY(definition);
+    QCOMPARE(definition->filePath(), expectedFile);
+    QQmlJS::SourceLocation location = definition->sourceLocation();
+    QCOMPARE((int)location.startLine, expectedLine);
 }
 
 QTEST_MAIN(tst_qmlls_utils)

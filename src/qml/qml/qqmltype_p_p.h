@@ -26,7 +26,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlTypePrivate : public QQmlRefCount
+class QQmlTypePrivate final : public QQmlRefCounted<QQmlTypePrivate>
 {
     Q_DISABLE_COPY_MOVE(QQmlTypePrivate)
 public:
@@ -36,7 +36,6 @@ public:
     void initEnums(QQmlEnginePrivate *engine) const;
     void insertEnums(const QMetaObject *metaObject) const;
     void insertEnumsFromPropertyCache(const QQmlPropertyCache::ConstPtr &cache) const;
-    void setContainingType(QQmlType *containingType);
 
     QUrl sourceUrl() const
     {
@@ -111,11 +110,6 @@ public:
     struct QQmlInlineTypeData
     {
         QUrl url;
-        // The containing type stores a pointer to the inline component type
-        // Using QQmlType here would create a reference cycle
-        // As the inline component type cannot outlive the containing type
-        // this should still be fine
-        QQmlTypePrivate const * containingType = nullptr;
     };
 
     using QQmlSequenceTypeData = QMetaSequence;
@@ -137,14 +131,12 @@ public:
     QTypeRevision version;
     QTypeRevision revision;
     mutable bool containsRevisionedAttributes;
-    mutable QQmlType superType;
     const QMetaObject *baseMetaObject;
 
     int index;
     mutable QAtomicInteger<bool> isSetup;
     mutable QAtomicInteger<bool> isEnumFromCacheSetup;
     mutable QAtomicInteger<bool> isEnumFromBaseSetup;
-    mutable bool haveSuperType;
     mutable QList<QQmlProxyMetaObject::ProxyData> metaObjects;
     mutable QStringHash<int> enums;
     mutable QStringHash<int> scopedEnumIndex; // maps from enum name to index in scopedEnums
@@ -153,7 +145,8 @@ public:
     void setName(const QString &uri, const QString &element);
 
 private:
-    ~QQmlTypePrivate() override;
+    ~QQmlTypePrivate();
+    friend class QQmlRefCounted<QQmlTypePrivate>;
 
     struct EnumInfo {
         QStringList path;

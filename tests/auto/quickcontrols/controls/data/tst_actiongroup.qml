@@ -352,4 +352,130 @@ TestCase {
         compare(action2Spy.count, 2)
         compare(action2Spy.signalArguments[1][0], true)
     }
+
+    Component {
+        id: checkBoxes
+        Item {
+            property ActionGroup group: ActionGroup { id: group }
+            property CheckBox control1: CheckBox { action: Action { ActionGroup.group: group } }
+            property CheckBox control2: CheckBox { action: Action { ActionGroup.group: group } }
+            property CheckBox control3: CheckBox { action: Action { ActionGroup.group: group } }
+        }
+    }
+
+    Component {
+        id: radioButtons
+        Item {
+            property ActionGroup group: ActionGroup { id: group }
+            property RadioButton control1: RadioButton { action: Action { ActionGroup.group: group } }
+            property RadioButton control2: RadioButton { action: Action { ActionGroup.group: group } }
+            property RadioButton control3: RadioButton { action: Action { ActionGroup.group: group } }
+        }
+    }
+
+    Component {
+        id: switches
+        Item {
+            property ActionGroup group: ActionGroup { id: group }
+            property Switch control1: Switch { action: Action { ActionGroup.group: group } }
+            property Switch control2: Switch { action: Action { ActionGroup.group: group } }
+            property Switch control3: Switch { action: Action { ActionGroup.group: group } }
+        }
+    }
+
+    function test_controls_data() {
+        return [
+            { tag: "CheckBox", component: checkBoxes },
+            { tag: "RadioButton", component: radioButtons },
+            { tag: "Switch", component: switches },
+        ]
+    }
+
+    function test_controls(data) {
+        var container = createTemporaryObject(data.component, testCase)
+        verify(container)
+
+        verify(!container.group.checkedAction)
+
+        container.control1.checked = true
+        compare(container.group.checkedAction, container.control1.action)
+        compare(container.control1.checked, true)
+        compare(container.control2.checked, false)
+        compare(container.control3.checked, false)
+
+        container.control2.checked = true
+        compare(container.group.checkedAction, container.control2.action)
+        compare(container.control1.checked, false)
+        compare(container.control2.checked, true)
+        compare(container.control3.checked, false)
+
+        container.control3.checked = true
+        compare(container.group.checkedAction, container.control3.action)
+        compare(container.control1.checked, false)
+        compare(container.control2.checked, false)
+        compare(container.control3.checked, true)
+    }
+
+    Component {
+        id: exclusiveMenus
+        Column {
+            property ActionGroup group: ActionGroup { id: group }
+            property alias control1: control1
+            property alias control2: control2
+            property alias control3: control3
+            MenuItem {
+                id: control1
+                action: Action {
+                    checkable: true
+                    ActionGroup.group: group
+                }
+            }
+            MenuItem {
+                id: control2
+                action: Action {
+                    checkable: true
+                    ActionGroup.group: group
+                }
+            }
+            MenuItem {
+                id: control3
+                action: Action {
+                    checkable: true
+                    ActionGroup.group: group
+                }
+            }
+        }
+    }
+
+    function test_exclusiveActionButtons() {
+        const container = createTemporaryObject(exclusiveMenus, testCase)
+        verify(container)
+
+        verify(!container.group.checkedAction)
+
+        mouseClick(container.control1)
+        compare(container.group.checkedAction, container.control1.action)
+        compare(container.control1.checked, true)
+        compare(container.control2.checked, false)
+        compare(container.control3.checked, false)
+
+        mouseClick(container.control2)
+        compare(container.group.checkedAction, container.control2.action)
+        compare(container.control1.checked, false)
+        compare(container.control2.checked, true)
+        compare(container.control3.checked, false)
+
+        mouseClick(container.control3)
+        compare(container.group.checkedAction, container.control3.action)
+        compare(container.control1.checked, false)
+        compare(container.control2.checked, false)
+        compare(container.control3.checked, true)
+
+        // here comes the tricky part: clicking on checked control must not uncheck it
+        mouseClick(container.control3)
+        compare(container.group.checkedAction, container.control3.action)
+        compare(container.control1.checked, false)
+        compare(container.control2.checked, false)
+        compare(container.control3.checked, true)
+    }
 }

@@ -15,11 +15,9 @@
 // We mean it.
 //
 
-#include "qqmltypesclassdescription_p.h"
-
 #include <QtCore/qstring.h>
 #include <QtCore/qvector.h>
-#include <QtCore/qjsonobject.h>
+#include <QtCore/qcbormap.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -34,10 +32,10 @@ public:
     void postProcessTypes();
     void postProcessForeignTypes();
 
-    QVector<QJsonObject> types() const { return m_types; }
-    QVector<QJsonObject> foreignTypes() const { return m_foreignTypes; }
-    QStringList referencedTypes() const { return m_referencedTypes; }
-    QStringList includes() const { return m_includes; }
+    QVector<QCborMap> types() const { return m_types; }
+    QVector<QCborMap> foreignTypes() const { return m_foreignTypes; }
+    QList<QAnyStringView> referencedTypes() const { return m_referencedTypes; }
+    QList<QString> includes() const { return m_includes; }
 
     QString extractRegisteredTypes() const;
 
@@ -49,20 +47,21 @@ private:
         NamespaceRegistration
     };
 
-    static RegistrationMode qmlTypeRegistrationMode(const QJsonObject &classDef);
+    static RegistrationMode qmlTypeRegistrationMode(const QCborMap &classDef);
     void addRelatedTypes();
 
-    void sortTypes(QVector<QJsonObject> &types);
-    QString resolvedInclude(const QString &include);
-    void processTypes(const QJsonObject &types);
-    void processForeignTypes(const QJsonObject &types);
+    void sortTypes(QVector<QCborMap> &types);
+    QString resolvedInclude(QAnyStringView include);
+    void processTypes(const QCborMap &types);
+    void processForeignTypes(const QCborMap &types);
 
-    QStringList m_includes;
-    QStringList m_referencedTypes;
-    QVector<QJsonObject> m_types;
-    QVector<QJsonObject> m_foreignTypes;
+    QList<QString> m_includes;
+    QList<QAnyStringView> m_referencedTypes;
+    QVector<QCborMap> m_types;
+    QVector<QCborMap> m_foreignTypes;
     bool m_privateIncludes = false;
 };
+
 QT_END_NAMESPACE
 
 #endif // METATYPESJSONPROCESSOR_P_H

@@ -680,23 +680,9 @@ void QQmlXmlListModel::reload()
     }
 }
 
-#define XMLLISTMODEL_MAX_REDIRECT 16
-
 #if QT_CONFIG(qml_network)
 void QQmlXmlListModel::requestFinished()
 {
-    m_redirectCount++;
-    if (m_redirectCount < XMLLISTMODEL_MAX_REDIRECT) {
-        QVariant redirect = m_reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
-        if (redirect.isValid()) {
-            QUrl url = m_reply->url().resolved(redirect.toUrl());
-            deleteReply();
-            setSource(url);
-            return;
-        }
-    }
-    m_redirectCount = 0;
-
     if (m_reply->error() != QNetworkReply::NoError) {
         m_errorString = m_reply->errorString();
         deleteReply();

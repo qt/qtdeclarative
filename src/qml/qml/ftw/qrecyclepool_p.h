@@ -17,6 +17,8 @@
 
 #include <QtCore/private/qglobal_p.h>
 
+#include <QtCore/q20memory.h>
+
 QT_BEGIN_NAMESPACE
 
 #define QRECYCLEPOOLCOOKIE 0x33218ADF
@@ -67,11 +69,8 @@ public:
     inline QRecyclePool();
     inline ~QRecyclePool();
 
-    inline T *New();
-    template<typename T1>
-    inline T *New(const T1 &);
-    template<typename T1>
-    inline T *New(T1 &);
+    template<typename...Args>
+    [[nodiscard]] inline T *New(Args&&...args);
 
     static inline void Delete(T *);
 
@@ -93,29 +92,10 @@ QRecyclePool<T, Step>::~QRecyclePool()
 }
 
 template<typename T, int Step>
-T *QRecyclePool<T, Step>::New()
+template<typename...Args>
+T *QRecyclePool<T, Step>::New(Args&&...args)
 {
-    T *rv = d->allocate();
-    new (rv) T;
-    return rv;
-}
-
-template<typename T, int Step>
-template<typename T1>
-T *QRecyclePool<T, Step>::New(const T1 &a)
-{
-    T *rv = d->allocate();
-    new (rv) T(a);
-    return rv;
-}
-
-template<typename T, int Step>
-template<typename T1>
-T *QRecyclePool<T, Step>::New(T1 &a)
-{
-    T *rv = d->allocate();
-    new (rv) T(a);
-    return rv;
+    return q20::construct_at(d->allocate(), std::forward<Args>(args)...);
 }
 
 template<typename T, int Step>

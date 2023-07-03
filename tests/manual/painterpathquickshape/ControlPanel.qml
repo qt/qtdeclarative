@@ -9,10 +9,13 @@ import QtQuick.Dialogs
 
 Item {
     property real scale: +scaleSlider.value.toFixed(4)
-    property color outlineColor: enableOutline.checked ? Qt.rgba(outlineColor.color.r, outlineColor.color.g, outlineColor.color.b, pathAlpha) : Qt.rgba(0,0,0,0)
+    property color backgroundColor: setBackground.checked ? Qt.rgba(bgColor.color.r, bgColor.color.g, bgColor.color.b, 1.0) : Qt.rgba(0,0,0,0)
+
+    property color outlineColor: enableOutline.checked ? Qt.rgba(outlineColor.color.r, outlineColor.color.g, outlineColor.color.b, outlineAlpha) : Qt.rgba(0,0,0,0)
     property color fillColor: Qt.rgba(fillColor.color.r, fillColor.color.g, fillColor.color.b, pathAlpha)
     property alias pathAlpha: alphaSlider.value
-    property alias outlineWidth: outlineWidth.value
+    property alias outlineAlpha: outlineAlphaSlider.value
+    property real outlineWidth: cosmeticPen.checked ? outlineWidth.value / scale : outlineWidth.value ** 2
     property alias outlineStyle: outlineStyle.currentValue
     property alias capStyle: capStyle.currentValue
     property alias joinStyle: joinStyle.currentValue
@@ -27,6 +30,7 @@ Item {
     property alias preferCurve: rendererLabel.preferCurve
 
     property int subShape: pickSubShape.checked ? subShapeSelector.value : -1
+    property bool subShapeGreaterThan : pickSubShapeGreaterThan.checked
 
     property real pathMargin: marginEdit.text
 
@@ -100,10 +104,10 @@ Item {
                 text: "Alpha"
                 color: "white"
             }
-            CheckBox { id: pickSubShape }
-            Label {
+            CheckBox {
                 text: "Pick SVG sub-shape"
-                color: "white"
+                id: pickSubShape
+                palette.windowText: "white"
             }
             SpinBox {
                 id: subShapeSelector
@@ -111,6 +115,35 @@ Item {
                 value: 0
                 to: 999
                 editable: true
+            }
+            CheckBox {
+                id: pickSubShapeGreaterThan
+                visible: pickSubShape.checked
+                text: "show greater than"
+                palette.windowText: "white"
+            }
+            CheckBox {
+                id: setBackground
+                text: "Solid background"
+                palette.windowText: "white"
+            }
+            RowLayout {
+                visible: setBackground.checked
+                Rectangle {
+                    id: bgColor
+                    property color selectedColor: "#a9a9a9"
+                    color: selectedColor
+                    border.color: "black"
+                    border.width: 2
+                    width: 21
+                    height: 21
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            bgColorDialog.open()
+                        }
+                    }
+                }
             }
         }
         RowLayout {
@@ -256,7 +289,6 @@ Item {
                     }
                 }
             }
-
             Label {
                 text: "Outline width"
                 color: "white"
@@ -265,12 +297,33 @@ Item {
                 id: outlineWidth
                 Layout.fillWidth: true
                 from: 0.0
-                to: 100.0
-                value: 10.0
+                to: 10.0
+                value: Math.sqrt(10)
+            }
+            CheckBox {
+                id: cosmeticPen
+                text: "Cosmetic pen"
+                palette.windowText: "white"
+            }
+            Label {
+                text: "Outline alpha"
+                color: "white"
+            }
+            Slider {
+                id: outlineAlphaSlider
+                Layout.fillWidth: true
+                from: 0.0
+                to: 1.0
+                value: 1.0
             }
             }
         }
 
+    }
+    ColorDialog {
+        id: bgColorDialog
+        selectedColor: bgColor.selectedColor
+        onAccepted: bgColor.selectedColor = selectedColor
     }
     ColorDialog {
         id: outlineColorDialog

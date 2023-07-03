@@ -1,0 +1,122 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtquick-tool-qmlls.html
+\title QML Language Server
+\brief Overview of the QML Language Server (qmlls).
+
+QML Language Server is a tool shipped with Qt that helps you write code
+in your favorite (LSP-supporting) editor.
+See \l{https://microsoft.github.io/language-server-protocol/}{Language Server Protocol}
+for more information.
+
+Currently, it enables your editor to:
+\list
+    \li Autocomplete your code
+    \li Display qmllint warnings
+    \li Navigate to definitions in QML files
+    \li Find usages of JavaScript variables and QML objects
+    \li Format QML files
+\endlist
+
+\note qmlls is currently in development, see \l{Known Limitations} for
+more details.
+
+\section1 Supported Features
+
+\section2 Linting
+
+QML Language Server can automatically lint opened QML files
+and display warnings or errors straight in the editor. See
+\l{qmllint} for more information about the linting process.
+
+\section2 Formatting
+
+QML Language Server can format entire files from inside
+the editor. See \l{qmlformat} for more information about the
+formatting process.
+
+
+\section2 Finding Definitions
+
+QML Language Server can find definitions of JavaScript variables,
+functions, QML object id's and QML properties from their usages.
+
+QML Language Server can also find the definition of types used in
+type annotations for JavaScript functions, QML object properties,
+and QML object instantiation.
+
+\section2 Finding Usages
+
+QML Language Server can find usages of JavaScript variables,
+QML object properties, JavaScript functions, QML object methods,
+and QML object id's.
+
+\section1 Setting up the QML Language Server in Your Editor
+
+\note You can find the QML Language Server binary under
+\c{<Qt installation folder>/bin/qmlls} in installations of Qt
+made with the official Maintenance Tool.
+
+QML Language Server also needs to know the location of your build
+folder. You can pass it the following ways:
+\list
+    \li The \c{--build-dir} command line option. In this case
+your editor should invoke \c{qmlls} as following:
+\badcode
+<path/to/qmlls> --build-dir <path/to/build-directory>
+\endcode
+    \li The \c{QMLLS_BUILD_DIRS} environment variable.
+    \li The \c{.qmlls.ini} settings file, see \l {Configuration File}.
+\endlist
+
+\note When the build directory is specified in multiple ways, the
+command line option takes preference over the environment variable
+that takes precedence over the setting file.
+
+\section1 Configuration File
+
+QML Language Server can be configured via a configuration file \c{.qmlls.ini}.
+This file should be in the root source directory of the project.
+It should be a text file in the ini-format.
+
+The configuration file should look like this:
+\code
+// .qmlls.ini
+[General]
+buildDir=<path/to/build-directory>
+\endcode
+
+Currently, the configuration file can only be used to set the build
+directory of the current project.
+
+\note QML Language Server can create default configuration files
+using the \c{--write-defaults} option. This will overwrite an
+already existing .qmlls.ini file in the current directory.
+
+\section1 Known Limitations
+
+QML Language Server might emit false positive warnings on projects
+that were not built, as it needs the build information to find
+QML modules defined in the same project, for example.
+
+Despite covering many common QML features,
+the QML Language Server is still in development with some features
+yet to be supported:
+
+\list
+    \li Renaming symbols (JavaScript variables, QML object id's, QML
+object properties, and so on).
+    \li Formatting only parts of a document.
+    \li Formatting using a configurable set of rules.
+    \li Navigating to definitions of objects defined in C++.
+\endlist
+
+The QML code model in the QML Language Server does not yet
+support all of the JavaScript language constructs, which means that
+some features like navigating to definition and finding usages might not
+work on these language constructs.
+
+
+*/

@@ -26,7 +26,7 @@ class VDMListDelegateDataType;
 class QQmlDMListAccessorData : public QQmlDelegateModelItem
 {
     Q_OBJECT
-    Q_PROPERTY(QVariant modelData READ modelData WRITE setModelData NOTIFY modelDataChanged)
+    Q_PROPERTY(QVariant modelData READ modelData WRITE setModelData NOTIFY modelDataChanged FINAL)
     QT_ANONYMOUS_PROPERTY(QVariant READ modelData WRITE setModelData NOTIFY modelDataChanged)
 public:
     QQmlDMListAccessorData(const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
@@ -86,16 +86,14 @@ private:
 };
 
 
-class VDMListDelegateDataType
-    : public QQmlRefCount
+class VDMListDelegateDataType final
+    : public QQmlRefCounted<VDMListDelegateDataType>
     , public QQmlAdaptorModel::Accessors
     , public QAbstractDynamicMetaObject
 {
 public:
     VDMListDelegateDataType(QQmlAdaptorModel *model)
-        : QQmlRefCount()
-        , QQmlAdaptorModel::Accessors()
-        , model(model)
+        : model(model)
     {
         QQmlAdaptorModelEngineData::setModelDataType<QQmlDMListAccessorData>(&builder, this);
         metaObject.reset(builder.toMetaObject());

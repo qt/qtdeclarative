@@ -6,9 +6,12 @@ import "content"
 // This example shows how items can be dynamically added to and removed from
 // a ListModel, and how these list modifications can be animated.
 
+pragma ComponentBehavior: Bound
+
 Rectangle {
     id: container
-    width: 500; height: 400
+    width: 500
+    height: 400
     color: "#343434"
 
     // The model:
@@ -16,30 +19,48 @@ Rectangle {
         id: fruitModel
 
         ListElement {
-            name: "Apple"; cost: 2.45
+            name: "Apple"
+            cost: 2.45
             attributes: [
-                ListElement { description: "Core" },
-                ListElement { description: "Deciduous" }
+                ListElement {
+                    description: "Core"
+                },
+                ListElement {
+                    description: "Deciduous"
+                }
             ]
         }
         ListElement {
-            name: "Banana"; cost: 1.95
+            name: "Banana"
+            cost: 1.95
             attributes: [
-                ListElement { description: "Tropical" },
-                ListElement { description: "Seedless" }
+                ListElement {
+                    description: "Tropical"
+                },
+                ListElement {
+                    description: "Seedless"
+                }
             ]
         }
         ListElement {
-            name: "Cumquat"; cost: 3.25
+            name: "Cumquat"
+            cost: 3.25
             attributes: [
-                ListElement { description: "Citrus" }
+                ListElement {
+                    description: "Citrus"
+                }
             ]
         }
         ListElement {
-            name: "Durian"; cost: 9.95
+            name: "Durian"
+            cost: 9.95
             attributes: [
-                ListElement { description: "Tropical" },
-                ListElement { description: "Smelly" }
+                ListElement {
+                    description: "Tropical"
+                },
+                ListElement {
+                    description: "Smelly"
+                }
             ]
         }
     }
@@ -51,7 +72,8 @@ Rectangle {
         Item {
 //! [0]
             id: delegateItem
-            width: listView.width; height: 80
+            width: listView.width
+            height: 80
             clip: true
 
             required property int index
@@ -83,7 +105,7 @@ Rectangle {
             Column {
                 anchors {
                     left: arrows.right
-                    horizontalCenter: parent.horizontalCenter;
+                    horizontalCenter: parent.horizontalCenter
                     bottom: parent.verticalCenter
                 }
 
@@ -155,18 +177,42 @@ Rectangle {
 //! [1]
             SequentialAnimation {
                 id: addAnimation
-                PropertyAction { target: delegateItem; property: "height"; value: 0 }
-                NumberAnimation { target: delegateItem; property: "height"; to: 80; duration: 250; easing.type: Easing.InOutQuad }
+                PropertyAction {
+                    target: delegateItem
+                    property: "height"
+                    value: 0
+                }
+                NumberAnimation {
+                    target: delegateItem
+                    property: "height"
+                    to: 80
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
             }
             ListView.onAdd: addAnimation.start()
 
             SequentialAnimation {
                 id: removeAnimation
-                PropertyAction { target: delegateItem; property: "ListView.delayRemove"; value: true }
-                NumberAnimation { target: delegateItem; property: "height"; to: 0; duration: 250; easing.type: Easing.InOutQuad }
+                PropertyAction {
+                    target: delegateItem
+                    property: "ListView.delayRemove"
+                    value: true
+                }
+                NumberAnimation {
+                    target: delegateItem
+                    property: "height"
+                    to: 0
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
 
                 // Make sure delayRemove is set back to false so that the item can be destroyed
-                PropertyAction { target: delegateItem; property: "ListView.delayRemove"; value: false }
+                PropertyAction {
+                    target: delegateItem
+                    property: "ListView.delayRemove"
+                    value: false
+                }
             }
             ListView.onRemove: removeAnimation.start()
         }
@@ -177,8 +223,10 @@ Rectangle {
     ListView {
         id: listView
         anchors {
-            left: parent.left; top: parent.top;
-            right: parent.right; bottom: buttons.top;
+            left: parent.left
+            top: parent.top
+            right: parent.right
+            bottom: buttons.top
             margins: 20
         }
         model: fruitModel
@@ -187,11 +235,15 @@ Rectangle {
 
     Row {
         id: buttons
-        anchors { left: parent.left; bottom: parent.bottom; margins: 20 }
+        anchors {
+            left: parent.left
+            bottom: parent.bottom
+            margins: 20
+        }
         spacing: 10
 
         TextButton {
-            text: "Add an item"
+            text: qsTr("Add an item")
             onClicked: {
                 fruitModel.append({
                     "name": "Pizza Margarita",
@@ -202,7 +254,7 @@ Rectangle {
         }
 
         TextButton {
-            text: "Remove all items"
+            text: qsTr("Remove all items")
             onClicked: fruitModel.clear()
         }
     }

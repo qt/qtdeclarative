@@ -187,6 +187,8 @@ public:
 
     bool areEquivalentLists(const QQmlJSScope::ConstPtr &a, const QQmlJSScope::ConstPtr &b) const;
 
+    bool isTriviallyCopyable(const QQmlJSScope::ConstPtr &type) const;
+
 protected:
 
     QQmlJSRegisterContent memberType(const QQmlJSScope::ConstPtr &type, const QString &name) const;

@@ -58,15 +58,6 @@ void Heap::QQmlValueTypeWrapper::destroy()
     ReferenceObject::destroy();
 }
 
-void Heap::QQmlValueTypeWrapper::setData(const void *data)
-{
-    if (auto *gadget = gadgetPtr())
-        metaType().destruct(gadget);
-    if (!gadgetPtr())
-        setGadgetPtr(::operator new(metaType().sizeOf()));
-    metaType().construct(gadgetPtr(), data);
-}
-
 QVariant Heap::QQmlValueTypeWrapper::toVariant() const
 {
     Q_ASSERT(gadgetPtr());

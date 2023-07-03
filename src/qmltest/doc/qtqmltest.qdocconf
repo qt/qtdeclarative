@@ -36,6 +36,3 @@ exampledirs += snippets
 navigation.landingpage = "Qt Quick Test"
 navigation.cppclassespage = "Qt Quick Test C++ API"
 navigation.qmltypespage = "Qt Quick Test QML Types"
-
-# Fail the documentation build if there are more warnings than the limit
-warninglimit = 0

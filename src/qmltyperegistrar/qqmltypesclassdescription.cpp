@@ -2,53 +2,60 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmltypesclassdescription_p.h"
-#include "qqmltypescreator_p.h"
+#include "qqmltyperegistrarconstants_p.h"
+#include "qanystringviewutils_p.h"
 
-#include <QtCore/qjsonarray.h>
-
+#include <QtCore/qcborarray.h>
+#include <QtCore/qcbormap.h>
 QT_BEGIN_NAMESPACE
 
-static void collectExtraVersions(const QJsonObject *component, const QString &key,
+using namespace Constants;
+using namespace Constants::MetatypesDotJson;
+using namespace Constants::MetatypesDotJson::Qml;
+using namespace QAnyStringViewUtils;
+
+static void collectExtraVersions(const QCborMap *component, QLatin1StringView key,
                                  QList<QTypeRevision> &extraVersions)
 {
-    const QJsonArray &items = component->value(key).toArray();
-    for (const QJsonValue item : items) {
-        const QJsonObject obj = item.toObject();
-        const auto revision = obj.find(QLatin1String("revision"));
+    const QCborArray &items = component->value(key).toArray();
+    for (const QCborValue item : items) {
+        const QCborMap obj = item.toMap();
+        const auto revision = obj.find(S_REVISION);
         if (revision != obj.end()) {
-            const auto extraVersion = QTypeRevision::fromEncodedVersion(revision.value().toInt());
+            const auto extraVersion = QTypeRevision::fromEncodedVersion(revision.value().toInteger());
             if (!extraVersions.contains(extraVersion))
                 extraVersions.append(extraVersion);
         }
     }
 }
 
-const QJsonObject *QmlTypesClassDescription::findType(const QVector<QJsonObject> &types,
-                                                      const QString &name)
+const QCborMap *QmlTypesClassDescription::findType(
+        const QVector<QCborMap> &types, const QAnyStringView &name)
 {
-    static const QLatin1String qualifiedClassNameKey("qualifiedClassName");
     auto it = std::lower_bound(types.begin(), types.end(), name,
-                               [&](const QJsonObject &type, const QString &typeName) {
-        return type.value(qualifiedClassNameKey).toString() < typeName;
+                               [&](const QCborMap &type, const QAnyStringView &typeName) {
+                                   return toStringView(type, S_QUALIFIED_CLASS_NAME) < typeName;
     });
 
-    return (it != types.end() && it->value(qualifiedClassNameKey) == name) ? &(*it) : nullptr;
+    return (it != types.end() && toStringView(*it, S_QUALIFIED_CLASS_NAME) == name)
+            ? &(*it)
+            : nullptr;
 }
 
 void QmlTypesClassDescription::collectSuperClasses(
-        const QJsonObject *classDef, const QVector<QJsonObject> &types,
-        const QVector<QJsonObject> &foreign, CollectMode mode,  QTypeRevision defaultRevision)
+        const QCborMap *classDef, const QVector<QCborMap> &types,
+        const QVector<QCborMap> &foreign, CollectMode mode,  QTypeRevision defaultRevision)
 {
-    const auto supers = classDef->value(QLatin1String("superClasses")).toArray();
-    for (const QJsonValue superValue : supers) {
-        const QJsonObject superObject = superValue.toObject();
-        if (superObject[QLatin1String("access")].toString() == QLatin1String("public")) {
-            const QString superName = superObject[QLatin1String("name")].toString();
+    const auto supers = classDef->value(S_SUPER_CLASSES).toArray();
+    for (const QCborValue superValue : supers) {
+        const QCborMap superObject = superValue.toMap();
+        if (toStringView(superObject, S_ACCESS) == S_PUBLIC) {
+            const QAnyStringView superName = toStringView(superObject, S_NAME);
 
             const CollectMode superMode = (mode == TopLevel) ? SuperClass : RelatedType;
-            if (const QJsonObject *other = findType(types, superName))
+            if (const QCborMap *other = findType(types, superName))
                 collect(other, types, foreign, superMode, defaultRevision);
-            else if (const QJsonObject *other = findType(foreign, superName))
+            else if (const QCborMap *other = findType(foreign, superName))
                 collect(other, types, foreign, superMode, defaultRevision);
             else // If we cannot locate a type for it, there is no point in recording the superClass
                 continue;
@@ -59,40 +66,40 @@ void QmlTypesClassDescription::collectSuperClasses(
     }
 }
 
-void QmlTypesClassDescription::collectInterfaces(const QJsonObject *classDef)
+void QmlTypesClassDescription::collectInterfaces(const QCborMap *classDef)
 {
-    if (classDef->contains(QLatin1String("interfaces"))) {
-        const QJsonArray array = classDef->value(QLatin1String("interfaces")).toArray();
-        for (const QJsonValue value : array) {
-            auto object = value.toArray()[0].toObject();
-            implementsInterfaces << object[QLatin1String("className")].toString();
+    if (classDef->contains(S_INTERFACES)) {
+        const QCborArray array = classDef->value(S_INTERFACES).toArray();
+        for (const QCborValue value : array) {
+            auto object = value.toArray()[0].toMap();
+            implementsInterfaces << toStringView(object, S_CLASS_NAME);
         }
     }
 }
 
 void QmlTypesClassDescription::collectLocalAnonymous(
-        const QJsonObject *classDef, const QVector<QJsonObject> &types,
-        const QVector<QJsonObject> &foreign, QTypeRevision defaultRevision)
+        const QCborMap *classDef, const QVector<QCborMap> &types,
+        const QVector<QCborMap> &foreign, QTypeRevision defaultRevision)
 {
-    file = classDef->value(QLatin1String("inputFile")).toString();
+    file = toStringView(*classDef, S_INPUT_FILE);
 
     resolvedClass = classDef;
-    className = classDef->value(QLatin1String("qualifiedClassName")).toString();
+    className = toStringView(*classDef, S_QUALIFIED_CLASS_NAME);
 
-    if (classDef->value(QStringLiteral("object")).toBool())
-        accessSemantics = QStringLiteral("reference");
-    else if (classDef->value(QStringLiteral("gadget")).toBool())
-        accessSemantics = QStringLiteral("value");
+    if (classDef->value(S_OBJECT).toBool())
+        accessSemantics = DotQmltypes::S_REFERENCE;
+    else if (classDef->value(S_GADGET).toBool())
+        accessSemantics = DotQmltypes::S_VALUE;
     else
-        accessSemantics = QStringLiteral("none");
+        accessSemantics = DotQmltypes::S_NONE;
 
-    const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
-    for (const QJsonValue classInfo : classInfos) {
-        const QJsonObject obj = classInfo.toObject();
-        if (obj[QStringLiteral("name")].toString() == QStringLiteral("DefaultProperty"))
-            defaultProp = obj[QStringLiteral("value")].toString();
-        if (obj[QStringLiteral("name")].toString() == QStringLiteral("ParentProperty"))
-            parentProp = obj[QStringLiteral("value")].toString();
+    const auto classInfos = classDef->value(S_CLASS_INFOS).toArray();
+    for (const QCborValue classInfo : classInfos) {
+        const QCborMap obj = classInfo.toMap();
+        if (obj[S_NAME] == S_DEFAULT_PROPERTY)
+            defaultProp = toStringView(obj, S_VALUE);
+        if (obj[S_NAME] == S_PARENT_PROPERTY)
+            parentProp = toStringView(obj, S_VALUE);
     }
 
     collectInterfaces(classDef);
@@ -100,29 +107,29 @@ void QmlTypesClassDescription::collectLocalAnonymous(
 }
 
 void QmlTypesClassDescription::collect(
-        const QJsonObject *classDef, const QVector<QJsonObject> &types,
-        const QVector<QJsonObject> &foreign, CollectMode mode, QTypeRevision defaultRevision)
+        const QCborMap *classDef, const QVector<QCborMap> &types,
+        const QVector<QCborMap> &foreign, CollectMode mode, QTypeRevision defaultRevision)
 {
     if (file.isEmpty())
-        file = classDef->value(QLatin1String("inputFile")).toString();
+        file = toStringView(*classDef, S_INPUT_FILE);
 
-    const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
-    const QString classDefName = classDef->value(QLatin1String("className")).toString();
-    QString foreignTypeName;
+    const auto classInfos = classDef->value(S_CLASS_INFOS).toArray();
+    const QAnyStringView classDefName = toStringView(*classDef, S_CLASS_NAME);
+    QAnyStringView foreignTypeName;
     bool explicitCreatable = false;
-    for (const QJsonValue classInfo : classInfos) {
-        const QJsonObject obj = classInfo.toObject();
-        const QString name = obj[QLatin1String("name")].toString();
-        const QString value = obj[QLatin1String("value")].toString();
+    for (const QCborValue classInfo : classInfos) {
+        const QCborMap obj = classInfo.toMap();
+        const QAnyStringView name = toStringView(obj, S_NAME);
+        const QAnyStringView value = toStringView(obj, S_VALUE);
 
-        if (name == QLatin1String("DefaultProperty")) {
+        if (name == S_DEFAULT_PROPERTY) {
             if (mode != RelatedType && defaultProp.isEmpty())
                 defaultProp = value;
-        } else if (name == QLatin1String("ParentProperty")) {
+        } else if (name == S_PARENT_PROPERTY) {
             if (mode != RelatedType && parentProp.isEmpty())
                 parentProp = value;
-        } else if (name == QLatin1String("QML.AddedInVersion")) {
-            const QTypeRevision revision = QTypeRevision::fromEncodedVersion(value.toInt());
+        } else if (name == S_ADDED_IN_VERSION) {
+            const QTypeRevision revision = QTypeRevision::fromEncodedVersion(toInt(value));
             if (mode == TopLevel) {
                 addedInRevision = revision;
                 revisions.append(revision);
@@ -135,54 +142,54 @@ void QmlTypesClassDescription::collect(
             continue;
 
         // These only apply to the original class
-        if (name == QLatin1String("QML.Element")) {
-            if (value == QLatin1String("auto"))
+        if (name == S_ELEMENT) {
+            if (value == S_AUTO)
                 elementName = classDefName;
-            else if (value != QLatin1String("anonymous"))
+            else if (value != S_ANONYMOUS)
                 elementName = value;
-        } else if (name == QLatin1String("QML.RemovedInVersion")) {
-            removedInRevision = QTypeRevision::fromEncodedVersion(value.toInt());
-        } else if (name == QLatin1String("QML.Creatable")) {
-            isCreatable = (value != QLatin1String("false"));
+        } else if (name == S_REMOVED_IN_VERSION) {
+            removedInRevision = QTypeRevision::fromEncodedVersion(toInt(value));
+        } else if (name == S_CREATABLE) {
+            isCreatable = (value != S_FALSE);
             explicitCreatable = true;
-        } else if (name == QLatin1String("QML.Attached")) {
+        } else if (name == S_ATTACHED) {
             attachedType = value;
             collectRelated(value, types, foreign, defaultRevision);
-        } else if (name == QLatin1String("QML.Extended")) {
+        } else if (name == S_EXTENDED) {
             extensionType = value;
             collectRelated(value, types, foreign, defaultRevision);
-        } else if (name == QLatin1String("QML.ExtensionIsNamespace")) {
-            if (value == QLatin1String("true"))
+        } else if (name == S_EXTENSION_IS_NAMESPACE) {
+            if (value == S_TRUE)
                 extensionIsNamespace = true;
-        } else if (name == QLatin1String("QML.Sequence")) {
+        } else if (name == S_SEQUENCE) {
             sequenceValueType = value;
             collectRelated(value, types, foreign, defaultRevision);
-        } else if (name == QLatin1String("QML.Singleton")) {
-            if (value == QLatin1String("true"))
+        } else if (name == S_SINGLETON) {
+            if (value == S_TRUE)
                 isSingleton = true;
-        } else if (name == QLatin1String("QML.Foreign")) {
+        } else if (name == S_FOREIGN) {
             foreignTypeName = value;
-        } else if (name == QLatin1String("QML.OmitFromQmlTypes")) {
-            if (value == QLatin1String("true"))
+        } else if (name == S_OMIT_FROM_QML_TYPES) {
+            if (value == S_TRUE)
                 omitFromQmlTypes = true;
-        } else if (name == QLatin1String("QML.HasCustomParser")) {
-            if (value == QLatin1String("true"))
+        } else if (name == S_HAS_CUSTOM_PARSER) {
+            if (value == S_TRUE)
                 hasCustomParser = true;
-        } else if (name == QLatin1String("DeferredPropertyNames")) {
-            deferredNames = value.split(u',');
-        } else if (name == QLatin1String("ImmediatePropertyNames")) {
-            immediateNames = value.split(u',');
+        } else if (name == S_DEFERRED_PROPERTY_NAMES) {
+            deferredNames = split(value, QLatin1Char(','));
+        } else if (name == S_IMMEDIATE_PROPERTY_NAMES) {
+            immediateNames = split(value, QLatin1Char(','));
         }
     }
 
     // If the local type is a namespace the result can only be a namespace,
     // no matter what the foreign type is.
-    const bool isNamespace = classDef->value(QLatin1String("namespace")).toBool();
+    const bool isNamespace = classDef->value(S_NAMESPACE).toBool();
 
     if (!foreignTypeName.isEmpty()) {
-        const QJsonObject *other = findType(foreign, foreignTypeName);
+        const QCborMap *other = findType(foreign, foreignTypeName);
 
-        // We can re-use a type with own QML_* macros as target of QML_FOREIGN
+        // We can re-use a type with own S_* macros as target of S_FOREIGN
         if (!other)
             other = findType(types, foreignTypeName);
 
@@ -190,28 +197,28 @@ void QmlTypesClassDescription::collect(
             classDef = other;
 
             // Default properties are always local.
-            defaultProp.clear();
+            defaultProp = {};
 
             // Foreign type can have a default property or an attached types
-            const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
-            for (const QJsonValue classInfo : classInfos) {
-                const QJsonObject obj = classInfo.toObject();
-                const QString foreignName = obj[QLatin1String("name")].toString();
-                const QString foreignValue = obj[QLatin1String("value")].toString();
-                if (defaultProp.isEmpty() && foreignName == QLatin1String("DefaultProperty")) {
+            const auto classInfos = classDef->value(S_CLASS_INFOS).toArray();
+            for (const QCborValue classInfo : classInfos) {
+                const QCborMap obj = classInfo.toMap();
+                const QAnyStringView foreignName = toStringView(obj, S_NAME);
+                const QAnyStringView foreignValue = toStringView(obj, S_VALUE);
+                if (defaultProp.isEmpty() && foreignName == S_DEFAULT_PROPERTY) {
                     defaultProp = foreignValue;
-                } else if (parentProp.isEmpty() && foreignName == QLatin1String("ParentProperty")) {
+                } else if (parentProp.isEmpty() && foreignName == S_PARENT_PROPERTY) {
                     parentProp = foreignValue;
-                } else if (foreignName == QLatin1String("QML.Attached")) {
+                } else if (foreignName == S_ATTACHED) {
                     attachedType = foreignValue;
                     collectRelated(foreignValue, types, foreign, defaultRevision);
-                } else if (foreignName == QLatin1String("QML.Extended")) {
+                } else if (foreignName == S_EXTENDED) {
                     extensionType = foreignValue;
                     collectRelated(foreignValue, types, foreign, defaultRevision);
-                } else if (foreignName == QLatin1String("QML.ExtensionIsNamespace")) {
-                    if (foreignValue == QLatin1String("true"))
+                } else if (foreignName == S_EXTENSION_IS_NAMESPACE) {
+                    if (foreignValue == S_TRUE)
                         extensionIsNamespace = true;
-                } else if (foreignName == QLatin1String("QML.Sequence")) {
+                } else if (foreignName == S_SEQUENCE) {
                     sequenceValueType = foreignValue;
                     collectRelated(foreignValue, types, foreign, defaultRevision);
                 }
@@ -224,10 +231,10 @@ void QmlTypesClassDescription::collect(
 
     if (classDef) {
         if (mode == RelatedType || !elementName.isEmpty()) {
-            collectExtraVersions(classDef, QString::fromLatin1("properties"), revisions);
-            collectExtraVersions(classDef, QString::fromLatin1("slots"), revisions);
-            collectExtraVersions(classDef, QString::fromLatin1("methods"), revisions);
-            collectExtraVersions(classDef, QString::fromLatin1("signals"), revisions);
+            collectExtraVersions(classDef, S_PROPERTIES, revisions);
+            collectExtraVersions(classDef, S_SLOTS, revisions);
+            collectExtraVersions(classDef, S_METHODS, revisions);
+            collectExtraVersions(classDef, S_SIGNALS, revisions);
         }
 
         collectSuperClasses(classDef, types, foreign, mode, defaultRevision);
@@ -252,25 +259,25 @@ void QmlTypesClassDescription::collect(
 
     resolvedClass = classDef;
     if (className.isEmpty() && classDef)
-        className = classDef->value(QLatin1String("qualifiedClassName")).toString();
+        className = toStringView(*classDef, S_QUALIFIED_CLASS_NAME);
 
     if (!sequenceValueType.isEmpty()) {
         isCreatable = false;
-        accessSemantics = QLatin1String("sequence");
+        accessSemantics = DotQmltypes::S_SEQUENCE;
     } else if (isNamespace) {
         isCreatable = false;
-        accessSemantics = QLatin1String("none");
-    } else if (classDef && classDef->value(QLatin1String("object")).toBool()) {
-        accessSemantics = QLatin1String("reference");
+        accessSemantics = DotQmltypes::S_NONE;
+    } else if (classDef && classDef->value(S_OBJECT).toBool()) {
+        accessSemantics = DotQmltypes::S_REFERENCE;
     } else {
         if (!explicitCreatable)
             isCreatable = false;
 
         if (!classDef) {
-            if (elementName.isEmpty() || elementName[0].isLower()) {
+            if (elementName.isEmpty() || elementName.front().isLower()) {
                 // If no classDef, we generally assume it's a value type defined by the
                 // foreign/extended trick.
-                accessSemantics = QLatin1String("value");
+                accessSemantics = DotQmltypes::S_VALUE;
             } else {
                 // Objects and namespaces always have metaobjects and therefore classDefs.
                 // However, we may not be able to resolve the metaobject at compile time. See
@@ -278,29 +285,28 @@ void QmlTypesClassDescription::collect(
                 // access semantics.
 
                 qWarning() << "Warning: Refusing to generate non-lowercase name"
-                           << elementName << "for unknown foreign type";
-                elementName.clear();
+                           << elementName.toString() << "for unknown foreign type";
+                elementName = {};
 
                 // Make it completely inaccessible.
                 // We cannot get enums from anonymous types after all.
-                accessSemantics = QLatin1String("none");
+                accessSemantics = DotQmltypes::S_NONE;
             }
-        } else if (classDef->value(QLatin1String("gadget")).toBool()) {
-            accessSemantics = QLatin1String("value");
+        } else if (classDef->value(S_GADGET).toBool()) {
+            accessSemantics = DotQmltypes::S_VALUE;
         } else {
-            accessSemantics = QLatin1String("none");
+            accessSemantics = DotQmltypes::S_NONE;
         }
     }
 }
 
-void QmlTypesClassDescription::collectRelated(const QString &related,
-                                               const QVector<QJsonObject> &types,
-                                               const QVector<QJsonObject> &foreign,
-                                               QTypeRevision defaultRevision)
+void QmlTypesClassDescription::collectRelated(
+        QAnyStringView related, const QVector<QCborMap> &types, const QVector<QCborMap> &foreign,
+        QTypeRevision defaultRevision)
 {
-    if (const QJsonObject *other = findType(types, related))
+    if (const QCborMap *other = findType(types, related))
         collect(other, types, foreign, RelatedType, defaultRevision);
-    else if (const QJsonObject *other = findType(foreign, related))
+    else if (const QCborMap *other = findType(foreign, related))
         collect(other, types, foreign, RelatedType, defaultRevision);
 }
 

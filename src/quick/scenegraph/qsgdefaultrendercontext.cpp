@@ -59,13 +59,29 @@ void QSGDefaultRenderContext::initialize(const QSGRenderContext::InitParams *par
 
 void QSGDefaultRenderContext::invalidateGlyphCaches()
 {
-    auto it = m_glyphCaches.begin();
-    while (it != m_glyphCaches.end()) {
-        if (!(*it)->isActive()) {
-            delete *it;
-            it = m_glyphCaches.erase(it);
-        } else {
-            ++it;
+    {
+        auto it = m_glyphCaches.begin();
+        while (it != m_glyphCaches.end()) {
+            if (!(*it)->isActive()) {
+                delete *it;
+                it = m_glyphCaches.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    {
+        auto it = m_fontEnginesToClean.begin();
+        while (it != m_fontEnginesToClean.end()) {
+            if (it.value() == 0) {
+                it.key()->clearGlyphCache(this);
+                if (!it.key()->ref.deref())
+                    delete it.key();
+                it = m_fontEnginesToClean.erase(it);
+            } else {
+                ++it;
+            }
         }
     }
 }
@@ -108,11 +124,10 @@ void QSGDefaultRenderContext::invalidate()
     // code is only called from QQuickWindow's shutdown which is called
     // only when the GUI is blocked, and multiple threads will call it in
     // sequence. (see qsgdefaultglyphnode_p.cpp's init())
-    for (QSet<QFontEngine *>::const_iterator it = m_fontEnginesToClean.constBegin(),
-         end = m_fontEnginesToClean.constEnd(); it != end; ++it) {
-        (*it)->clearGlyphCache(this);
-        if (!(*it)->ref.deref())
-            delete *it;
+    for (auto it = m_fontEnginesToClean.constBegin(); it != m_fontEnginesToClean.constEnd(); ++it) {
+        it.key()->clearGlyphCache(this);
+        if (!it.key()->ref.deref())
+            delete it.key();
     }
     m_fontEnginesToClean.clear();
 

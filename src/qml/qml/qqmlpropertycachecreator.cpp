@@ -66,29 +66,55 @@ QMetaType QQmlPropertyCacheCreatorBase::listTypeForPropertyType(QV4::CompiledDat
     return QMetaType {};
 }
 
-QByteArray QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(const QUrl &url)
+template<typename BaseNameHandler, typename FailHandler>
+auto processUrlForClassName(
+    const QUrl &url, BaseNameHandler &&baseNameHandler, FailHandler &&failHandler)
 {
     const QString path = url.path();
-    int lastSlash = path.lastIndexOf(QLatin1Char('/'));
+
     // Not a reusable type if we don't have an absolute Url
+    const qsizetype lastSlash = path.lastIndexOf(QLatin1Char('/'));
     if (lastSlash <= -1)
-        return QByteArray();
+        return failHandler();
+
     // ### this might not be correct for .ui.qml files
-    const QStringView nameBase = QStringView{path}.mid(lastSlash + 1, path.size() - lastSlash - 5);
+    const QStringView baseName = QStringView{path}.mid(lastSlash + 1, path.size() - lastSlash - 5);
+
     // Not a reusable type if it doesn't start with a upper case letter.
-    if (nameBase.isEmpty() || !nameBase.at(0).isUpper())
-        return QByteArray();
-    return nameBase.toUtf8() + "_QMLTYPE_" +
-            QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1));
+    return (!baseName.isEmpty() && baseName.at(0).isUpper())
+        ? baseNameHandler(baseName)
+        : failHandler();
 }
 
-QByteArray QQmlPropertyCacheCreatorBase::createClassNameForInlineComponent(const QUrl &baseUrl, int icId)
+bool QQmlPropertyCacheCreatorBase::canCreateClassNameTypeByUrl(const QUrl &url)
 {
-    QByteArray baseName = createClassNameTypeByUrl(baseUrl);
-    if (baseName.isEmpty())
-        baseName = QByteArray("ANON_QML_IC_") + QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1));
-    baseName += "_" + QByteArray::number(icId);
-    return baseName;
+    return processUrlForClassName(url, [](QStringView) {
+        return true;
+    }, []() {
+        return false;
+    });
+}
+
+QByteArray QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(const QUrl &url)
+{
+    return processUrlForClassName(url, [](QStringView nameBase) {
+        return QByteArray(nameBase.toUtf8() + "_QMLTYPE_"
+                + QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1)));
+    }, []() {
+        return QByteArray();
+    });
+}
+
+QByteArray QQmlPropertyCacheCreatorBase::createClassNameForInlineComponent(
+    const QUrl &baseUrl, const QString &name)
+{
+    QByteArray baseName = processUrlForClassName(baseUrl, [](QStringView nameBase) {
+        return QByteArray(nameBase.toUtf8() + "_QMLTYPE_");
+    }, []() {
+        return QByteArray("ANON_QML_IC_");
+    });
+    return baseName + name.toUtf8() + '_'
+            + QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1));
 }
 
 QQmlBindingInstantiationContext::QQmlBindingInstantiationContext(

@@ -7,6 +7,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlapplicationengine.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
+#include <QtQmlModels/private/qqmllistmodel_p.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
@@ -31,6 +32,7 @@ private slots:
     void universalModelData();
     void typedModelData();
     void deleteRace();
+    void persistedItemsStayInCache();
 };
 
 class AbstractItemModel : public QAbstractItemModel
@@ -455,6 +457,21 @@ void tst_QQmlDelegateModel::deleteRace()
     QVERIFY(!o.isNull());
     QTRY_COMPARE(o->property("count").toInt(), 2);
     QTRY_COMPARE(o->property("count").toInt(), 0);
+}
+
+void tst_QQmlDelegateModel::persistedItemsStayInCache()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("persistedItemsCache.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
+    const QVariant properyListModel = object->property("testListModel");
+    QQmlListModel *listModel = qvariant_cast<QQmlListModel *>(properyListModel);
+    QVERIFY(listModel);
+    QTRY_COMPARE(object->property("createCount").toInt(), 3);
+    listModel->clear();
+    QTRY_COMPARE(object->property("destroyCount").toInt(), 3);
 }
 
 QTEST_MAIN(tst_QQmlDelegateModel)

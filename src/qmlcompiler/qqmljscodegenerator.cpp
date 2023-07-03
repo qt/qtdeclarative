@@ -808,6 +808,12 @@ void QQmlJSCodeGenerator::generateEnumLookup(int index)
     Q_ASSERT(!scopeType->isComposite());
 
     const QString enumName = metaEnum.isFlag() ? metaEnum.alias() : metaEnum.name();
+    if (enumName.isEmpty()) {
+        if (metaEnum.isFlag() && !metaEnum.name().isEmpty())
+            reject(u"qmltypes misses name entry for flag; did you pass the enum type to Q_FLAG instead of the QFlag type?"
+                   "\nType is %1, enum name is %2"_s.arg(scopeType->internalName(), metaEnum.name()));
+        reject(u"qmltypes misses name entry for enum"_s);
+    }
     const QString lookup = u"aotContext->getEnumLookup("_s + QString::number(index)
             + u", &"_s + m_state.accumulatorVariableOut + u')';
     const QString initialization = u"aotContext->initGetEnumLookup("_s
@@ -3058,14 +3064,14 @@ QString QQmlJSCodeGenerator::registerVariable(int index) const
 QString QQmlJSCodeGenerator::consumedRegisterVariable(int index) const
 {
     const QString var = registerVariable(index);
-    if (var.isEmpty() || !m_state.canMoveReadRegister(index))
+    if (var.isEmpty() || !shouldMoveRegister(index))
         return var;
     return u"std::move(" + var + u")";
 }
 
 QString QQmlJSCodeGenerator::consumedAccumulatorVariableIn() const
 {
-    return m_state.canMoveReadRegister(Accumulator)
+    return shouldMoveRegister(Accumulator)
             ? u"std::move(" + m_state.accumulatorVariableIn + u")"
             : m_state.accumulatorVariableIn;
 }
@@ -3083,6 +3089,12 @@ QQmlJSRegisterContent QQmlJSCodeGenerator::registerType(int index) const
         return it.value().content;
 
     return QQmlJSRegisterContent();
+}
+
+bool QQmlJSCodeGenerator::shouldMoveRegister(int index) const
+{
+    return m_state.canMoveReadRegister(index)
+            && !m_typeResolver->isTriviallyCopyable(m_state.readRegister(index).storedType());
 }
 
 QString QQmlJSCodeGenerator::conversion(

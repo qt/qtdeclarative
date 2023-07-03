@@ -225,6 +225,9 @@ Q_LOGGING_CATEGORY(qlcQQuickSplitView, "qt.quick.controls.splitview")
 Q_LOGGING_CATEGORY(qlcQQuickSplitViewPointer, "qt.quick.controls.splitview.pointer")
 Q_LOGGING_CATEGORY(qlcQQuickSplitViewState, "qt.quick.controls.splitview.state")
 
+/*
+    Updates m_fillIndex to be between 0 .. (item count - 1).
+*/
 void QQuickSplitViewPrivate::updateFillIndex()
 {
     const int count = contentModel->count();
@@ -232,10 +235,9 @@ void QQuickSplitViewPrivate::updateFillIndex()
 
     qCDebug(qlcQQuickSplitView) << "looking for fillWidth/Height item amongst" << count << "items";
 
-    m_fillIndex = -1;
-    int i = 0;
+    int fillIndex = -1;
     int lastVisibleIndex = -1;
-    for (; i < count; ++i) {
+    for (int i = 0; i < count; ++i) {
         QQuickItem *item = qobject_cast<QQuickItem*>(contentModel->object(i));
         if (!item->isVisible())
             continue;
@@ -248,19 +250,21 @@ void QQuickSplitViewPrivate::updateFillIndex()
             continue;
 
         if ((horizontal && attached->fillWidth()) || (!horizontal && attached->fillHeight())) {
-            m_fillIndex = i;
-            qCDebug(qlcQQuickSplitView) << "found fillWidth/Height item at index" << m_fillIndex;
+            fillIndex = i;
+            qCDebug(qlcQQuickSplitView) << "found fillWidth/Height item at index" << fillIndex;
             break;
         }
     }
 
-    if (m_fillIndex == -1) {
-        // If there was no item with fillWidth/fillHeight set, m_fillIndex will be -1,
-        // and we'll set it to the last visible item.
+    if (fillIndex == -1) {
+        // If there was no item with fillWidth/fillHeight set, fillIndex will be -1,
+        // and we'll set m_fillIndex to the last visible item.
         // If there was an item with fillWidth/fillHeight set, we were already done and this will be skipped.
-        m_fillIndex = lastVisibleIndex != -1 ? lastVisibleIndex : count - 1;
-        qCDebug(qlcQQuickSplitView) << "found no fillWidth/Height item; using last item at index" << m_fillIndex;
+        fillIndex = lastVisibleIndex != -1 ? lastVisibleIndex : count - 1;
+        qCDebug(qlcQQuickSplitView) << "found no fillWidth/Height item; using last item at index" << fillIndex;
     }
+    // Take new fillIndex into use.
+    m_fillIndex = fillIndex;
 }
 
 /*
@@ -344,35 +348,9 @@ void QQuickSplitViewPrivate::layoutResizeSplitItems(qreal &usedWidth, qreal &use
                 const qreal newHandlePos = qBound(leftStop, pressedHandlePos, rightStop);
                 const qreal newItemSize = newHandlePos - leftEdge;
 
-                // Modify the preferredWidth, otherwise the original implicitWidth/preferredWidth
-                // will be used on the next layout (when it's no longer being resized).
-                if (!attached) {
-                    // Force the attached object to be created since we rely on it.
-                    attached = qobject_cast<QQuickSplitViewAttached*>(
-                        qmlAttachedPropertiesObject<QQuickSplitView>(item, true));
-                }
-
-                /*
-                    Users could conceivably respond to size changes in items by setting attached
-                    SplitView properties:
-
-                        onWidthChanged: if (width < 10) secondItem.SplitView.preferredWidth = 100
-
-                    We handle this by doing another layout after the current layout if the
-                    attached/implicit size properties are set during this layout. However, we also
-                    need to set preferredWidth/Height here (for reasons mentioned in the comment above),
-                    but we don't want this to count as a request for a delayed layout, so we guard against it.
-                */
-                m_ignoreNextLayoutRequest = true;
-
-                if (horizontal)
-                    attached->setPreferredWidth(newItemSize);
-                else
-                    attached->setPreferredHeight(newItemSize);
-
-                // We still need to use requestedWidth in the setWidth() call below,
+                // We still need to use requestedSize in the width/height call below,
                 // because sizeData has already been calculated and now contains an old
-                // effectivePreferredWidth value.
+                // effectivePreferredWidth/Height value.
                 requestedSize = newItemSize;
 
                 qCDebug(qlcQQuickSplitView).nospace() << "  - " << index << ": resized (dragged) " << item
@@ -405,22 +383,7 @@ void QQuickSplitViewPrivate::layoutResizeSplitItems(qreal &usedWidth, qreal &use
                 const qreal newHandlePos = qBound(leftStop, pressedHandlePos, rightStop);
                 const qreal newItemSize = rightEdge - (newHandlePos + pressedHandleSize);
 
-                // Modify the preferredWidth, otherwise the original implicitWidth/preferredWidth
-                // will be used on the next layout (when it's no longer being resized).
-                if (!attached) {
-                    // Force the attached object to be created since we rely on it.
-                    attached = qobject_cast<QQuickSplitViewAttached*>(
-                        qmlAttachedPropertiesObject<QQuickSplitView>(item, true));
-                }
-
-                m_ignoreNextLayoutRequest = true;
-
-                if (horizontal)
-                    attached->setPreferredWidth(newItemSize);
-                else
-                    attached->setPreferredHeight(newItemSize);
-
-                // We still need to use requestedSize in the setWidth()/setHeight() call below,
+                // We still need to use requestedSize in the width/height call below,
                 // because sizeData has already been calculated and now contains an old
                 // effectivePreferredWidth/Height value.
                 requestedSize = newItemSize;
@@ -443,19 +406,27 @@ void QQuickSplitViewPrivate::layoutResizeSplitItems(qreal &usedWidth, qreal &use
         }
 
         if (index != m_fillIndex) {
+            LayoutData layoutData;
             if (horizontal) {
-                item->setWidth(qBound(
-                    sizeData.effectiveMinimumWidth,
-                    requestedSize,
-                    sizeData.effectiveMaximumWidth));
-                item->setHeight(height);
+                layoutData.width = qBound(
+                        sizeData.effectiveMinimumWidth,
+                        requestedSize,
+                        sizeData.effectiveMaximumWidth);
+                layoutData.height = height;
             } else {
-                item->setWidth(width);
-                item->setHeight(qBound(
-                    sizeData.effectiveMinimumHeight,
-                    requestedSize,
-                    sizeData.effectiveMaximumHeight));
+                layoutData.width = width;
+                layoutData.height = qBound(
+                        sizeData.effectiveMinimumHeight,
+                        requestedSize,
+                        sizeData.effectiveMaximumHeight);
             }
+
+            // Mark that this item has been manually resized. After this
+            // we can override the preferredWidth & preferredHeight
+            if (isBeingResized)
+                layoutData.wasResizedByHandle = true;
+
+            m_layoutData.insert(item, layoutData);
 
             qCDebug(qlcQQuickSplitView).nospace() << "  - " << index << ": resized split item " << item
                 << " (effective"
@@ -468,9 +439,9 @@ void QQuickSplitViewPrivate::layoutResizeSplitItems(qreal &usedWidth, qreal &use
 
             // Keep track of how much space has been used so far.
             if (horizontal)
-                usedWidth += item->width();
+                usedWidth += layoutData.width;
             else
-                usedHeight += item->height();
+                usedHeight += layoutData.height;
         } else if (indexBeingResizedDueToDrag != m_fillIndex) {
             // The fill item is resized afterwards, outside of the loop.
             qCDebug(qlcQQuickSplitView).nospace() << "  - " << index << ": skipping fill item as we resize it last";
@@ -526,19 +497,25 @@ void QQuickSplitViewPrivate::layoutResizeFillItem(QQuickItem *fillItem,
     const QQuickSplitViewAttached *attached = qobject_cast<QQuickSplitViewAttached*>(
         qmlAttachedPropertiesObject<QQuickSplitView>(fillItem, false));
     const auto fillSizeData = effectiveSizeData(fillItemPrivate, attached);
+
+    LayoutData layoutData;
     if (isHorizontal()) {
-        fillItem->setWidth(qBound(
-            fillSizeData.effectiveMinimumWidth,
-            width - usedWidth,
-            fillSizeData.effectiveMaximumWidth));
-        fillItem->setHeight(height);
+        layoutData.width = qBound(
+                fillSizeData.effectiveMinimumWidth,
+                width - usedWidth,
+                fillSizeData.effectiveMaximumWidth);
+        layoutData.height = height;
+        usedWidth += layoutData.width;
     } else {
-        fillItem->setWidth(width);
-        fillItem->setHeight(qBound(
-            fillSizeData.effectiveMinimumHeight,
-            height - usedHeight,
-            fillSizeData.effectiveMaximumHeight));
+        layoutData.width = width;
+        layoutData.height = qBound(
+                fillSizeData.effectiveMinimumHeight,
+                height - usedHeight,
+                fillSizeData.effectiveMaximumHeight);
+        usedHeight += layoutData.height;
     }
+
+    m_layoutData.insert(fillItem, layoutData);
 
     qCDebug(qlcQQuickSplitView).nospace() << "  - " << m_fillIndex
         << ": resized split fill item " << fillItem << " (effective"
@@ -546,6 +523,91 @@ void QQuickSplitViewPrivate::layoutResizeFillItem(QQuickItem *fillItem,
         << ", minH=" << fillSizeData.effectiveMinimumHeight
         << ", maxW=" << fillSizeData.effectiveMaximumWidth
         << ", maxH=" << fillSizeData.effectiveMaximumHeight << ")";
+}
+
+/*
+    Limit the sizes if needed and apply them into items.
+*/
+void QQuickSplitViewPrivate::limitAndApplySizes(qreal usedWidth, qreal usedHeight)
+{
+    const int count = contentModel->count();
+    const bool horizontal = isHorizontal();
+
+    const qreal maxSize = horizontal ? width : height;
+    const qreal usedSize = horizontal ? usedWidth : usedHeight;
+    if (usedSize > maxSize) {
+        // If items don't fit, reduce the size of non-filled items from
+        // right to left / bottom to top. At this point filled item is
+        // already at its minimum size or usedSize wouldn't be > maxSize.
+        qreal delta = usedSize - maxSize;
+        for (int index = count - 1; index >= 0; --index) {
+            if (index == m_fillIndex)
+                continue;
+            QQuickItem *item = qobject_cast<QQuickItem*>(contentModel->object(index));
+            if (!item->isVisible())
+                continue;
+
+            const QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+            QQuickSplitViewAttached *attached = qobject_cast<QQuickSplitViewAttached*>(
+                qmlAttachedPropertiesObject<QQuickSplitView>(item, false));
+            const auto sizeData = effectiveSizeData(itemPrivate, attached);
+            const qreal maxReduce = horizontal ?
+                    m_layoutData[item].width - sizeData.effectiveMinimumWidth :
+                    m_layoutData[item].height - sizeData.effectiveMinimumHeight;
+
+            const qreal reduce = std::min(maxReduce, delta);
+            if (horizontal)
+                m_layoutData[item].width -= reduce;
+            else
+                m_layoutData[item].height -= reduce;
+
+            delta -= reduce;
+            if (delta <= 0) {
+                // Now all the items fit, so continue
+                break;
+            }
+        }
+    }
+
+    // Apply the new sizes into items
+    for (int index = 0; index < count; ++index) {
+        QQuickItem *item = qobject_cast<QQuickItem*>(contentModel->object(index));
+        if (!item->isVisible())
+            continue;
+
+        QQuickSplitViewAttached *attached = qobject_cast<QQuickSplitViewAttached*>(
+            qmlAttachedPropertiesObject<QQuickSplitView>(item, false));
+        LayoutData layoutData = m_layoutData.value(item);
+        if (layoutData.wasResizedByHandle) {
+            // Modify the preferredWidth/Height, otherwise the original implicit/preferred size
+            // will be used on the next layout (when it's no longer being resized).
+            if (!attached) {
+                // Force the attached object to be created since we rely on it.
+                attached = qobject_cast<QQuickSplitViewAttached*>(
+                        qmlAttachedPropertiesObject<QQuickSplitView>(item, true));
+            }
+            /*
+                Users could conceivably respond to size changes in items by setting attached
+                SplitView properties:
+
+                    onWidthChanged: if (width < 10) secondItem.SplitView.preferredWidth = 100
+
+                We handle this by doing another layout after the current layout if the
+                attached/implicit size properties are set during this layout. However, we also
+                need to set preferredWidth/Height here, otherwise the original implicit/preferred sizes
+                will be used on the next layout (when it's no longer being resized).
+                But we don't want this to count as a request for a delayed layout, so we guard against it.
+            */
+            m_ignoreNextLayoutRequest = true;
+            if (horizontal)
+                attached->setPreferredWidth(layoutData.width);
+            else
+                attached->setPreferredHeight(layoutData.height);
+        }
+
+        item->setWidth(layoutData.width);
+        item->setHeight(layoutData.height);
+    }
 }
 
 /*
@@ -621,6 +683,19 @@ void QQuickSplitViewPrivate::requestLayout()
     q->polish();
 }
 
+/*
+    Layout steps are (horizontal SplitView as an example):
+    1) layoutResizeSplitItems: Gives each non-filled item its preferredWidth
+       or if not set, implicitWidth. Sizes are kept between effectiveMinimumWidth
+       and effectiveMaximumWidth and stored into layoutData for now.
+    2) layoutResizeFillItem: Gives filled item all the remaining space. Size is
+       kept between effectiveMinimumWidth and effectiveMaximumWidth and stored
+       into layoutData for now.
+    3) limitAndApplySizes: If we have used more space than SplitView item has,
+       start reducing non-filled item sizes from right-to-left. Reduce them up
+       to minimumWidth or until SplitView item width is reached. Finally set the
+       new item sizes from layoutData.
+*/
 void QQuickSplitViewPrivate::layout()
 {
     if (!componentComplete)
@@ -648,13 +723,15 @@ void QQuickSplitViewPrivate::layout()
     qCDebug(qlcQQuickSplitView) << "laying out" << count << "split items"
         << (horizontal ? "horizontally" : "vertically") << "in SplitView" << q_func();
 
+    // Total sizes of items used during the layout operation.
     qreal usedWidth = 0;
     qreal usedHeight = 0;
     int indexBeingResizedDueToDrag = -1;
+    m_layoutData.clear();
 
     qCDebug(qlcQQuickSplitView) << "  resizing:";
 
-    // First, resize the items. We need to do this first because otherwise fill
+    // First, resize the non-filled items. We need to do this first because otherwise fill
     // items would take up all of the remaining space as soon as they are encountered.
     layoutResizeSplitItems(usedWidth, usedHeight, indexBeingResizedDueToDrag);
 
@@ -665,6 +742,9 @@ void QQuickSplitViewPrivate::layout()
     // Give the fill item the remaining space.
     QQuickItem *fillItem = qobject_cast<QQuickItem*>(contentModel->object(m_fillIndex));
     layoutResizeFillItem(fillItem, usedWidth, usedHeight, indexBeingResizedDueToDrag);
+
+    // Reduce the sizes still if needed and apply them into items.
+    limitAndApplySizes(usedWidth, usedHeight);
 
     qCDebug(qlcQQuickSplitView) << "  positioning:";
 
@@ -1365,7 +1445,6 @@ void QQuickSplitView::componentComplete()
 {
     Q_D(QQuickSplitView);
     QQuickControl::componentComplete();
-    d->resizeHandles();
     d->updateFillIndex();
     d->updatePolish();
 }
@@ -1918,9 +1997,10 @@ void QQuickSplitViewAttached::resetMaximumHeight()
     This attached property controls whether the item takes the remaining space
     in the split view after all other items have been laid out.
 
-    By default, the last visible child of the split view will have this set,
+    By default, the last visible child of the split view will fill the view,
     but it can be changed by explicitly setting \c fillWidth to \c true on
-    another item.
+    another item. If multiple items have \c fillWidth set to \c true, the
+    left-most item will fill the view.
 
     The width of a split item with \c fillWidth set to \c true is still
     restricted within its \l minimumWidth and \l maximumWidth.
@@ -1953,9 +2033,10 @@ void QQuickSplitViewAttached::setFillWidth(bool fill)
     This attached property controls whether the item takes the remaining space
     in the split view after all other items have been laid out.
 
-    By default, the last visible child of the split view will have this set,
+    By default, the last visible child of the split view will fill the view,
     but it can be changed by explicitly setting \c fillHeight to \c true on
-    another item.
+    another item. If multiple items have \c fillHeight set to \c true, the
+    top-most item will fill the view.
 
     The height of a split item with \c fillHeight set to \c true is still
     restricted within its \l minimumHeight and \l maximumHeight.

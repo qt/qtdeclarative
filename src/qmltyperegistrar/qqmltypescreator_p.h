@@ -30,26 +30,26 @@ public:
 
     bool generate(const QString &outFileName);
 
-    void setOwnTypes(QVector<QJsonObject> ownTypes) { m_ownTypes = std::move(ownTypes); }
-    void setForeignTypes(QVector<QJsonObject> foreignTypes) { m_foreignTypes = std::move(foreignTypes); }
-    void setReferencedTypes(QStringList referencedTypes) { m_referencedTypes = std::move(referencedTypes); }
-    void setModule(QString module) { m_module = std::move(module); }
+    void setOwnTypes(QVector<QCborMap> ownTypes) { m_ownTypes = std::move(ownTypes); }
+    void setForeignTypes(QVector<QCborMap> foreignTypes) { m_foreignTypes = std::move(foreignTypes); }
+    void setReferencedTypes(QList<QAnyStringView> referencedTypes) { m_referencedTypes = std::move(referencedTypes); }
+    void setModule(QByteArray module) { m_module = std::move(module); }
     void setVersion(QTypeRevision version) { m_version = version; }
 
 private:
     void writeClassProperties(const QmlTypesClassDescription &collector);
-    void writeType(const QJsonObject &property, const QString &key);
-    void writeProperties(const QJsonArray &properties);
-    void writeMethods(const QJsonArray &methods, const QString &type);
-    void writeEnums(const QJsonArray &enums);
+    void writeType(const QCborMap &property, QLatin1StringView key);
+    void writeProperties(const QCborArray &properties);
+    void writeMethods(const QCborArray &methods, QLatin1StringView type);
+    void writeEnums(const QCborArray &enums);
     void writeComponents();
 
     QByteArray m_output;
     QQmlJSStreamWriter m_qml;
-    QVector<QJsonObject> m_ownTypes;
-    QVector<QJsonObject> m_foreignTypes;
-    QStringList m_referencedTypes;
-    QString m_module;
+    QVector<QCborMap> m_ownTypes;
+    QVector<QCborMap> m_foreignTypes;
+    QList<QAnyStringView> m_referencedTypes;
+    QByteArray m_module;
     QTypeRevision m_version = QTypeRevision::zero();
 };
 

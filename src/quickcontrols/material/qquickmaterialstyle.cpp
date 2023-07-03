@@ -971,6 +971,10 @@ QColor QQuickMaterialStyle::buttonColor(Theme theme, const QVariant &background,
             // A highlighted + checked button should become darker.
             color = accentColor(checked ? Shade100 : shade);
         }
+        // Flat, highlighted buttons need to have a semi-transparent background,
+        // otherwise the text won't be visible.
+        if (flat)
+            color.setAlphaF(0.25);
     } else if (!flat) {
         // Even if the elevation is zero, it should still have a background if it's not flat.
         color = QColor::fromRgba(m_theme == Light ? raisedButtonColorLight

@@ -1,6 +1,7 @@
 // Copyright (C) 2017 Crimson AS <info@crimson.no>
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 #include <QtTest/QtTest>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlengine.h>
@@ -27,6 +28,7 @@
 #include <private/qqmlabstractbinding_p.h>
 #include <private/qqmlvaluetypeproxybinding_p.h>
 #include <QtCore/private/qproperty_p.h>
+#include <QtQuick/qquickwindow.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 
@@ -376,6 +378,7 @@ private slots:
     void qpropertyBindingHandlesUndefinedCorrectly();
     void qpropertyBindingHandlesUndefinedWithoutResetCorrectly_data();
     void qpropertyBindingHandlesUndefinedWithoutResetCorrectly();
+    void qpropertyBindingRestoresObserverAfterReset();
     void hugeRegexpQuantifiers();
     void singletonTypeWrapperLookup();
     void getThisObject();
@@ -416,7 +419,8 @@ private slots:
 
     void doNotCrashOnReadOnlyBindable();
 
-    void resetGadet();
+    void resetGadget();
+    void assignListPropertyByIndexOnGadget();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -9426,6 +9430,17 @@ void tst_qqmlecmascript::qpropertyBindingHandlesUndefinedWithoutResetCorrectly()
     QCOMPARE(root->property("value2").toInt(), 2);
 }
 
+void tst_qqmlecmascript::qpropertyBindingRestoresObserverAfterReset()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("restoreObserverAfterReset.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QTRY_COMPARE(o->property("height").toDouble(), 60.0);
+    QVERIFY(o->property("steps").toInt() > 3);
+}
+
 void tst_qqmlecmascript::hugeRegexpQuantifiers()
 {
     QJSEngine engine;
@@ -10410,7 +10425,7 @@ void tst_qqmlecmascript::doNotCrashOnReadOnlyBindable()
     QCOMPARE(o->property("x").toInt(), 7);
 }
 
-void tst_qqmlecmascript::resetGadet()
+void tst_qqmlecmascript::resetGadget()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("resetGadget.qml"));
@@ -10422,6 +10437,31 @@ void tst_qqmlecmascript::resetGadet()
     QCOMPARE(resettableGadgetHolder->g().value(), 0);
     resettableGadgetHolder->setProperty("trigger", QVariant::fromValue(true));
     QCOMPARE(resettableGadgetHolder->g().value(), 42);
+}
+
+void tst_qqmlecmascript::assignListPropertyByIndexOnGadget()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFile("AssignListPropertyByIndexOnGadget.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    const auto &gadget = o->property("gadget").value<ListPropertyAssignment_Gadget>();
+    const auto *object = o->property("object").value<ListPropertyAssignment_Object *>();
+    QVERIFY(object);
+
+    QStringList expected{ "Completely new Element", "Element2", "Element3" };
+    QVariantList variants {
+        u"Completely new Element"_s,
+        u"foo"_s,
+        QVariant::fromValue<std::nullptr_t>(nullptr),
+        QVariant::fromValue<bool>(true)
+    };
+
+    QCOMPARE(gadget.gadgetStringList(), expected);
+    QCOMPARE(gadget.gadgetVariantList(), variants);
+    QCOMPARE(object->qobjectStringList(), expected);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

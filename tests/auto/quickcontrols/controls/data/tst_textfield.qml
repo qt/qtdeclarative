@@ -346,8 +346,8 @@ TestCase {
             property bool ignorePress: false
             property bool ignoreRelease: false
 
-            onPressed: if (ignorePress) event.accepted = false
-            onReleased: if (ignoreRelease) event.accepted = false
+            onPressed: function (event) { if (ignorePress) event.accepted = false }
+            onReleased: function (event) { if (ignoreRelease) event.accepted = false }
         }
     }
 

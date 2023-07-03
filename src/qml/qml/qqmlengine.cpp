@@ -255,8 +255,8 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
     }
 }
 
-QQmlData::QQmlData()
-    : ownMemory(true), indestructible(true), explicitIndestructibleSet(false),
+QQmlData::QQmlData(Ownership ownership)
+    : ownMemory(ownership == OwnsMemory), indestructible(true), explicitIndestructibleSet(false),
       hasTaintedV4Object(false), isQueuedForDeletion(false), rootObjectInCreation(false),
       hasInterceptorMetaObject(false), hasVMEMetaObject(false), hasConstWrapper(false),
       bindingBitsArraySize(InlineBindingArraySize), notifyList(nullptr),
@@ -633,7 +633,7 @@ QQmlEngine::QQmlEngine(QQmlEnginePrivate &dd, QObject *parent)
   invalidated, but not destroyed (unless they are parented to the
   QQmlEngine object).
 
-  See QJSEngine docs for details on cleaning up the JS engine.
+  See ~QJSEngine() for details on cleaning up the JS engine.
 */
 QQmlEngine::~QQmlEngine()
 {
@@ -1525,7 +1525,7 @@ QQmlData *QQmlData::createQQmlData(QObjectPrivate *priv)
 {
     Q_ASSERT(priv);
     Q_ASSERT(!priv->isDeletingChildren);
-    priv->declarativeData = new QQmlData;
+    priv->declarativeData = new QQmlData(OwnsMemory);
     return static_cast<QQmlData *>(priv->declarativeData);
 }
 
@@ -2169,10 +2169,12 @@ LoadHelper::LoadHelper(QQmlTypeLoader *loader, QAnyStringView uri)
 
 {
     auto import = std::make_shared<PendingImport>();
-    import->uri = uri.toString();
+    import->uri = m_uri;
     QList<QQmlError> errorList;
-    if (!Blob::addImport(import, &errorList))
-        m_uri = QString(); // reset m_uri to remember the failure
+    if (!Blob::addImport(import, &errorList)) {
+        qCDebug(lcQmlImport) << "LoadHelper: Errors loading " << m_uri << errorList;
+        m_uri.clear(); // reset m_uri to remember the failure
+    }
 }
 
 LoadHelper::ResolveTypeResult LoadHelper::resolveType(QAnyStringView typeName)

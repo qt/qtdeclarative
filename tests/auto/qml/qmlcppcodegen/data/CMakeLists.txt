@@ -66,6 +66,8 @@ set(qml_files
     asCast.qml
     attachedBaseEnum.qml
     badSequence.qml
+    basicBlocksWithBackJump.qml
+    basicDTZ.qml
     bindToValueType.qml
     blockComments.qml
     boolCoercions.qml
@@ -97,6 +99,7 @@ set(qml_files
     enumFromBadSingleton.qml
     enumInvalid.qml
     enumLookup.qml
+    enumMarkedAsFlag.qml
     enumProblems.qml
     enumScope.qml
     enumsInOtherObject.qml
@@ -112,6 +115,7 @@ set(qml_files
     failures.qml
     fallbacklookups.qml
     fileDialog.qml
+    flagEnum.qml
     fromBoolValue.qml
     funcWithParams.qml
     functionLookup.qml

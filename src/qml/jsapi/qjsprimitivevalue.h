@@ -163,7 +163,7 @@ public:
         }
     }
 
-    explicit QJSPrimitiveValue(const QMetaType type) noexcept
+    explicit QJSPrimitiveValue(QMetaType type) noexcept
     {
         switch (type.id()) {
         case QMetaType::UnknownType:
@@ -799,7 +799,12 @@ private:
             else if constexpr (std::is_same_v<T, QString>)
                 return getString();
 
-            Q_UNREACHABLE_RETURN(T());
+            // GCC 8.x does not treat __builtin_unreachable() as constexpr
+        #if !defined(Q_CC_GNU_ONLY) || (Q_CC_GNU >= 900)
+            // NOLINTNEXTLINE(qt-use-unreachable-return): Triggers on Clang, breaking GCC 8
+            Q_UNREACHABLE();
+        #endif
+            return T();
         }
 
         constexpr QMetaType metaType() const noexcept {
@@ -818,7 +823,12 @@ private:
                 return QMetaType::fromType<QString>();
             }
 
-            Q_UNREACHABLE_RETURN(QMetaType());
+            // GCC 8.x does not treat __builtin_unreachable() as constexpr
+        #if !defined(Q_CC_GNU_ONLY) || (Q_CC_GNU >= 900)
+            // NOLINTNEXTLINE(qt-use-unreachable-return): Triggers on Clang, breaking GCC 8
+            Q_UNREACHABLE();
+        #endif
+            return QMetaType();
         }
 
         constexpr void *data() noexcept {
@@ -836,7 +846,12 @@ private:
                 return &m_string;
             }
 
-            Q_UNREACHABLE_RETURN(nullptr);
+            // GCC 8.x does not treat __builtin_unreachable() as constexpr
+        #if !defined(Q_CC_GNU_ONLY) || (Q_CC_GNU >= 900)
+            // NOLINTNEXTLINE(qt-use-unreachable-return): Triggers on Clang, breaking GCC 8
+            Q_UNREACHABLE();
+        #endif
+            return nullptr;
         }
 
         constexpr const void *data() const noexcept {
@@ -854,7 +869,12 @@ private:
                 return &m_string;
             }
 
-            Q_UNREACHABLE_RETURN(nullptr);
+            // GCC 8.x does not treat __builtin_unreachable() as constexpr
+        #if !defined(Q_CC_GNU_ONLY) || (Q_CC_GNU >= 900)
+            // NOLINTNEXTLINE(qt-use-unreachable-return): Triggers on Clang, breaking GCC 8
+            Q_UNREACHABLE();
+        #endif
+            return nullptr;
         }
 
     private:

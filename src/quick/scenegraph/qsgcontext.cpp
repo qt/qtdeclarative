@@ -475,7 +475,13 @@ void QSGRenderContext::invalidateGlyphCaches()
 void QSGRenderContext::registerFontengineForCleanup(QFontEngine *engine)
 {
     engine->ref.ref();
-    m_fontEnginesToClean << engine;
+    m_fontEnginesToClean[engine]++;
+}
+
+void QSGRenderContext::unregisterFontengineForCleanup(QFontEngine *engine)
+{
+    m_fontEnginesToClean[engine]--;
+    Q_ASSERT(m_fontEnginesToClean.value(engine) >= 0);
 }
 
 QRhi *QSGRenderContext::rhi() const

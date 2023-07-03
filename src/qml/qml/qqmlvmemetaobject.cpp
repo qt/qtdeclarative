@@ -21,6 +21,8 @@
 #include <private/qqmlpropertycachemethodarguments_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
 
+#include <QtCore/qsequentialiterable.h>
+
 #include <climits> // for CHAR_BIT
 
 QT_BEGIN_NAMESPACE
@@ -864,8 +866,20 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                                     needActivate = true;
                                 }
                             } else {
-                                QV4::ScopedValue sequence(scope, QV4::SequencePrototype::fromData(
-                                                              engine, propType, a[0]));
+                                if (const QQmlType type = QQmlMetaType::qmlListType(propType);
+                                        type.isSequentialContainer()) {
+                                    sequence = QV4::SequencePrototype::fromData(
+                                        engine, propType, type.listMetaSequence(), a[0]);
+                                } else if (QSequentialIterable iterable;
+                                        QMetaType::convert(
+                                               propType, a[0],
+                                               QMetaType::fromType<QSequentialIterable>(),
+                                               &iterable)) {
+                                    sequence = QV4::SequencePrototype::fromData(
+                                        engine, propType, iterable.metaContainer(), a[0]);
+                                } else {
+                                    sequence = QV4::Encode::undefined();
+                                }
                                 md->set(engine, id, sequence);
                                 if (sequence->isUndefined()) {
                                     qmlWarning(object)

@@ -113,8 +113,7 @@ void QSGSoftwareRenderContext::invalidate()
     qDeleteAll(m_textures);
     m_textures.clear();
 
-    qDeleteAll(m_fontEnginesToClean);
-    m_fontEnginesToClean.clear();
+    Q_ASSERT(m_fontEnginesToClean.isEmpty());
 
     qDeleteAll(m_glyphCaches);
     m_glyphCaches.clear();

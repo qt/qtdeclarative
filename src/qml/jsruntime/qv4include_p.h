@@ -63,7 +63,6 @@ private:
     QUrl m_url;
 
 #if QT_CONFIG(qml_network)
-    int m_redirectCount;
     QNetworkAccessManager *m_network;
     QPointer<QNetworkReply> m_reply;
 #endif

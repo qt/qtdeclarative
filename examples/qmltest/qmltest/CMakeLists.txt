@@ -10,8 +10,7 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}")
-set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples)
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qmltest/qmltest")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui QuickTest)
 
@@ -27,24 +26,19 @@ set_target_properties(tst_qmltestexample PROPERTIES
 target_link_libraries(tst_qmltestexample PUBLIC
     Qt6::Core
     Qt6::Gui
-
     Qt6::QuickTest
-
 )
-
-# This line get added, but does not make sense
-#if(QT_BUILDING_QT)
-#    target_link_libraries(tst_qmltestexample PUBLIC
-#        Qt6::Qml
-#        Qt6::QuickTest
-#    )
-#endif()
 
 if(MACOS AND QT_BUILDING_QT)
     set_target_properties(tst_qmltestexample PROPERTIES
         MACOSX_BUNDLE FALSE
     )
 endif()
+
+set(tst_files tst_basic.qml tst_item.qml)
+
+install(FILES ${tst_files}
+        DESTINATION "${INSTALL_EXAMPLEDIR}")
 
 install(TARGETS tst_qmltestexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

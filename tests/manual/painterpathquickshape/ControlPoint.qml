@@ -19,16 +19,17 @@ Rectangle {
     property point pt: Qt.point(cx, cy)
 
     DragHandler {
+        id: handler
         xAxis.minimum: -controlPanel.pathMargin
         yAxis.minimum: -controlPanel.pathMargin
-    }
-    onXChanged: {
-        cx = (x + width/2) / controlPanel.scale
-        controlPanel.updatePath()
-    }
-    onYChanged: {
-        cy = (y + height/2) / controlPanel.scale
-        controlPanel.updatePath()
+        xAxis.onActiveValueChanged: {
+            cx = (x + width/2) / controlPanel.scale
+            controlPanel.updatePath()
+        }
+        yAxis.onActiveValueChanged: {
+            cy = (y + height/2) / controlPanel.scale
+            controlPanel.updatePath()
+        }
     }
 
     Component.onCompleted: {
@@ -43,5 +44,4 @@ Rectangle {
             y = cy * controlPanel.scale - height/2
         }
     }
-
 }

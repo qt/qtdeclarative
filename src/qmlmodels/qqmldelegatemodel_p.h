@@ -40,14 +40,14 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModel : public QQmlInstanceModel, p
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlDelegateModel)
 
-    Q_PROPERTY(QVariant model READ model WRITE setModel)
-    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
-    Q_PROPERTY(QString filterOnGroup READ filterGroup WRITE setFilterGroup NOTIFY filterGroupChanged RESET resetFilterGroup)
-    Q_PROPERTY(QQmlDelegateModelGroup *items READ items CONSTANT) //TODO : worth renaming?
-    Q_PROPERTY(QQmlDelegateModelGroup *persistedItems READ persistedItems CONSTANT)
-    Q_PROPERTY(QQmlListProperty<QQmlDelegateModelGroup> groups READ groups CONSTANT)
-    Q_PROPERTY(QObject *parts READ parts CONSTANT)
-    Q_PROPERTY(QVariant rootIndex READ rootIndex WRITE setRootIndex NOTIFY rootIndexChanged)
+    Q_PROPERTY(QVariant model READ model WRITE setModel FINAL)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
+    Q_PROPERTY(QString filterOnGroup READ filterGroup WRITE setFilterGroup NOTIFY filterGroupChanged RESET resetFilterGroup FINAL)
+    Q_PROPERTY(QQmlDelegateModelGroup *items READ items CONSTANT FINAL) //TODO : worth renaming?
+    Q_PROPERTY(QQmlDelegateModelGroup *persistedItems READ persistedItems CONSTANT FINAL)
+    Q_PROPERTY(QQmlListProperty<QQmlDelegateModelGroup> groups READ groups CONSTANT FINAL)
+    Q_PROPERTY(QObject *parts READ parts CONSTANT FINAL)
+    Q_PROPERTY(QVariant rootIndex READ rootIndex WRITE setRootIndex NOTIFY rootIndexChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "delegate")
     QML_NAMED_ELEMENT(DelegateModel)
     QML_ADDED_IN_VERSION(2, 1)
@@ -136,9 +136,9 @@ class QQmlDelegateModelGroupPrivate;
 class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModelGroup : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int count READ count NOTIFY countChanged)
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
-    Q_PROPERTY(bool includeByDefault READ defaultInclude WRITE setDefaultInclude NOTIFY defaultIncludeChanged)
+    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
+    Q_PROPERTY(bool includeByDefault READ defaultInclude WRITE setDefaultInclude NOTIFY defaultIncludeChanged FINAL)
     QML_NAMED_ELEMENT(DelegateModelGroup)
     QML_ADDED_IN_VERSION(2, 1)
 public:
@@ -180,13 +180,13 @@ class QQmlDelegateModelAttachedMetaObject;
 class QQmlDelegateModelAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQmlDelegateModel *model READ model CONSTANT)
-    Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged)
-    Q_PROPERTY(bool isUnresolved READ isUnresolved NOTIFY unresolvedChanged)
-    Q_PROPERTY(bool inPersistedItems READ inPersistedItems WRITE setInPersistedItems NOTIFY groupsChanged)
-    Q_PROPERTY(bool inItems READ inItems WRITE setInItems NOTIFY groupsChanged)
-    Q_PROPERTY(int persistedItemsIndex READ persistedItemsIndex NOTIFY groupsChanged)
-    Q_PROPERTY(int itemsIndex READ itemsIndex NOTIFY groupsChanged)
+    Q_PROPERTY(QQmlDelegateModel *model READ model CONSTANT FINAL)
+    Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged FINAL)
+    Q_PROPERTY(bool isUnresolved READ isUnresolved NOTIFY unresolvedChanged FINAL)
+    Q_PROPERTY(bool inPersistedItems READ inPersistedItems WRITE setInPersistedItems NOTIFY groupsChanged FINAL)
+    Q_PROPERTY(bool inItems READ inItems WRITE setInItems NOTIFY groupsChanged FINAL)
+    Q_PROPERTY(int persistedItemsIndex READ persistedItemsIndex NOTIFY groupsChanged FINAL)
+    Q_PROPERTY(int itemsIndex READ itemsIndex NOTIFY groupsChanged FINAL)
 
 public:
     QQmlDelegateModelAttached(QObject *parent);

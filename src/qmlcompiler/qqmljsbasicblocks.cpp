@@ -51,6 +51,8 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSBasicBlocks::run(
             it->second.jumpIsUnconditional = false;
         }
 
+        m_skipUntilNextLabel = false;
+
         reset();
         decode(byteCode.constData(), static_cast<uint>(byteCode.size()));
         for (auto it = m_basicBlocks.begin(), end = m_basicBlocks.end(); it != end; ++it)
@@ -142,7 +144,7 @@ void QQmlJSBasicBlocks::processJump(int offset, JumpMode mode)
     if (mode == Unconditional)
         m_skipUntilNextLabel = true;
     else
-        m_basicBlocks[nextInstructionOffset()].jumpOrigins.append(currentInstructionOffset());
+        m_basicBlocks.insert(nextInstructionOffset(), BasicBlock());
 }
 
 template<typename ContainerA, typename ContainerB>

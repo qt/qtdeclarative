@@ -4,6 +4,6 @@
 import QtQuick
 
 Text {
-    font.pixelSize: 12
+    font.pointSize: 9
 }
 

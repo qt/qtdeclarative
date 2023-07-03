@@ -11,26 +11,50 @@ Package {
     required property int index
     required property string display
 
-    Text { id: listDelegate; width: parent.width; height: 25; text: 'Empty'; Package.name: 'list' }
-    Text { id: gridDelegate; width: parent.width / 2; height: 50; text: 'Empty'; Package.name: 'grid' }
+    Text {
+        id: listDelegate
+        width: parent.width
+        height: 25
+        text: 'Empty'
+        Package.name: 'list'
+    }
+
+    Text {
+        id: gridDelegate
+        width: parent.width / 2
+        height: 50
+        text: 'Empty'
+        Package.name: 'grid'
+    }
 
     Rectangle {
         id: wrapper
-        width: parent.width; height: 25
+        width: parent?.width ?? 0
+        height: 25
         color: 'lightsteelblue'
 
-        Text { text: delegate.display; anchors.centerIn: parent }
+        Text {
+            text: delegate.display
+            anchors.centerIn: parent
+        }
         state: delegate.upTo > delegate.index ? 'inGrid' : 'inList'
         states: [
             State {
                 name: 'inList'
-                ParentChange { target: wrapper; parent: listDelegate }
+                ParentChange {
+                    target: wrapper
+                    parent: listDelegate
+                }
             },
             State {
                 name: 'inGrid'
                 ParentChange {
-                    target: wrapper; parent: gridDelegate
-                    x: 0; y: 0; width: gridDelegate.width; height: gridDelegate.height
+                    target: wrapper
+                    parent: gridDelegate
+                    x: 0
+                    y: 0
+                    width: gridDelegate.width
+                    height: gridDelegate.height
                 }
             }
         ]
@@ -38,7 +62,10 @@ Package {
         transitions: [
             Transition {
                 ParentAnimation {
-                    NumberAnimation { properties: 'x,y,width,height'; duration: 300 }
+                    NumberAnimation {
+                        properties: 'x,y,width,height'
+                        duration: 300
+                    }
                 }
             }
         ]

@@ -49,7 +49,7 @@ public:
 class QQuickPackageAttached : public QObject
 {
 Q_OBJECT
-Q_PROPERTY(QString name READ name WRITE setName)
+Q_PROPERTY(QString name READ name WRITE setName FINAL)
 public:
     QQuickPackageAttached(QObject *parent);
     virtual ~QQuickPackageAttached();

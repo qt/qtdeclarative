@@ -40,9 +40,9 @@ class QQmlVMEMetaObject;
 class QQmlMetaObjectPointer
 {
 public:
-    QQmlMetaObjectPointer() = default;
+    Q_NODISCARD_CTOR QQmlMetaObjectPointer() = default;
 
-    QQmlMetaObjectPointer(const QMetaObject *staticMetaObject)
+    Q_NODISCARD_CTOR QQmlMetaObjectPointer(const QMetaObject *staticMetaObject)
         : d(quintptr(staticMetaObject))
     {
         Q_ASSERT((d.loadRelaxed() & Shared) == 0);
@@ -57,7 +57,7 @@ public:
 
 private:
     friend class QQmlPropertyCache;
-    QQmlMetaObjectPointer(const QQmlMetaObjectPointer &other)
+    Q_NODISCARD_CTOR QQmlMetaObjectPointer(const QQmlMetaObjectPointer &other)
         : d(other.d.loadRelaxed())
     {
         // other has to survive until this ctor is done. So d cannot disappear before.
@@ -105,7 +105,7 @@ private:
         Shared = 1
     };
 
-    struct SharedHolder : public QQmlRefCount
+    struct SharedHolder final : public QQmlRefCounted<SharedHolder>
     {
         Q_DISABLE_COPY_MOVE(SharedHolder)
         SharedHolder(QMetaObject *shared) : metaObject(shared) {}
@@ -116,7 +116,8 @@ private:
     mutable QBasicAtomicInteger<quintptr> d = 0;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount
+class Q_QML_PRIVATE_EXPORT QQmlPropertyCache final
+    : public QQmlRefCounted<QQmlPropertyCache>
 {
 public:
     using Ptr = QQmlRefPointer<QQmlPropertyCache>;
@@ -135,7 +136,7 @@ public:
             const QMetaObject *, QTypeRevision metaObjectRevision = QTypeRevision::zero());
 
     QQmlPropertyCache() = default;
-    ~QQmlPropertyCache() override;
+    ~QQmlPropertyCache();
 
     void update(const QMetaObject *);
     void invalidate(const QMetaObject *);

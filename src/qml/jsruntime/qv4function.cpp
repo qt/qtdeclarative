@@ -68,7 +68,7 @@ ReturnedValue Function::call(
         });
     case JsTyped:
         return QV4::coerceAndCall(
-                    context->engine(), aotCompiledFunction, thisObject, argv, argc,
+                    context->engine(), jsTypedFunction, compiledFunction, thisObject, argv, argc,
                     [this, context](const Value *thisObject, const Value *argv, int argc) {
             return doCall(this, thisObject, argv, argc, context);
         });
@@ -91,6 +91,12 @@ void Function::destroy()
     delete this;
 }
 
+static bool isSpecificType(const CompiledData::ParameterType &type)
+{
+    return type.typeNameIndexOrCommonType()
+           != (type.indexIsCommonType() ? quint32(CompiledData::CommonType::Invalid) : 0);
+}
+
 Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                    const CompiledData::Function *function,
                    const QQmlPrivate::AOTCompiledFunction *aotFunction)
@@ -111,72 +117,55 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
         ic = ic->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
 
     const CompiledData::Parameter *formalsIndices = compiledFunction->formalsTable();
-    const bool enforcesSignature = !aotFunction && unit->enforcesFunctionSignature();
-    bool hasTypes = false;
+    bool enforceJsTypes = !aotFunction && !unit->ignoresFunctionSignature();
+
     for (quint32 i = 0; i < compiledFunction->nFormals; ++i) {
         ic = ic->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[formalsIndices[i].nameIndex]), Attr_NotConfigurable);
-        if (enforcesSignature
-                && !hasTypes
-                && formalsIndices[i].type.typeNameIndexOrCommonType()
-                   != quint32(QV4::CompiledData::CommonType::Invalid)) {
-            hasTypes = true;
-        }
+        if (enforceJsTypes && !isSpecificType(formalsIndices[i].type))
+            enforceJsTypes = false;
     }
     internalClass = ic->d();
 
     nFormals = compiledFunction->nFormals;
 
-    if (!enforcesSignature)
+    // If a function has any typed arguments, but an untyped return value, the return value is void.
+    // If it doesn't have any arguments at all and the return value is untyped, the function is
+    // untyped. Users can specifically set the return type to "void" to have it enforced.
+    if (!enforceJsTypes || (nFormals == 0 && !isSpecificType(compiledFunction->returnType)))
         return;
 
-    if (!hasTypes
-            && compiledFunction->returnType.typeNameIndexOrCommonType()
-               == quint32(QV4::CompiledData::CommonType::Invalid)) {
-        return;
-    }
+    JSTypedFunction *synthesized = new JSTypedFunction;
 
-    QQmlPrivate::AOTCompiledFunction *synthesized = new QQmlPrivate::AOTCompiledFunction;
     QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine->qmlEngine());
-
-    auto findMetaType = [&](const CompiledData::ParameterType &param) {
+    auto findQmlType = [&](const CompiledData::ParameterType &param) {
         const quint32 type = param.typeNameIndexOrCommonType();
         if (param.indexIsCommonType()) {
-            if (param.isList()) {
-                return QQmlPropertyCacheCreatorBase::listTypeForPropertyType(
-                    QV4::CompiledData::CommonType(type));
-            }
-            return QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(
-                QV4::CompiledData::CommonType(type));
+            return QQmlMetaType::qmlType(QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(
+                QV4::CompiledData::CommonType(type)));
         }
 
         if (type == 0)
-            return QMetaType();
+            return QQmlType();
 
-        const QQmlType qmltype = unit->typeNameCache->query(unit->stringAt(type)).type;
-        if (!qmltype.isValid())
-            return QMetaType();
-
-        const QMetaType metaType = param.isList() ? qmltype.qListTypeId() : qmltype.typeId();
-        if (metaType.isValid())
-            return metaType;
+        const QQmlType qmltype = unit->typeNameCache->query<QQmlImport::AllowRecursion>(
+                                                            unit->stringAt(type)).type;
+        if (!qmltype.isValid() || qmltype.typeId().isValid())
+            return qmltype;
 
         if (!qmltype.isComposite()) {
-            if (!qmltype.isInlineComponentType())
-                return QMetaType();
-            const CompositeMetaTypeIds typeIds = unit->typeIdsForComponent(qmltype.elementName());
-            return param.isList() ? typeIds.listId : typeIds.id;
+            return qmltype.isInlineComponentType()
+                ? unit->qmlTypeForComponent(qmltype.elementName())
+                : QQmlType();
         }
 
-        const CompositeMetaTypeIds typeIds = enginePrivate->typeLoader.getType(
-                    qmltype.sourceUrl())->compilationUnit()->typeIds;
-        return param.isList() ? typeIds.listId : typeIds.id;
+        return enginePrivate->typeLoader.getType(qmltype.sourceUrl())->compilationUnit()->qmlType;
     };
 
     for (quint16 i = 0; i < nFormals; ++i)
-        synthesized->argumentTypes.append(findMetaType(formalsIndices[i].type));
+        synthesized->argumentTypes.append(findQmlType(formalsIndices[i].type));
 
-    synthesized->returnType = findMetaType(compiledFunction->returnType);
-    aotCompiledFunction = synthesized;
+    synthesized->returnType = findQmlType(compiledFunction->returnType);
+    jsTypedFunction = synthesized;
     kind = JsTyped;
 }
 
@@ -187,7 +176,7 @@ Function::~Function()
         delete codeRef;
     }
     if (kind == JsTyped)
-        delete aotCompiledFunction;
+        delete jsTypedFunction;
 }
 
 void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters)

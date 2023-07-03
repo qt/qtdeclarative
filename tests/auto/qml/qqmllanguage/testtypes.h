@@ -18,6 +18,8 @@
 #include <QtQml/qqmlpropertyvaluesource.h>
 #include <QtQml/qqmlscriptstring.h>
 #include <QtQml/qqmlproperty.h>
+
+#include <private/qqmlcomponentattached_p.h>
 #include <private/qqmlcustomparser_p.h>
 
 QVariant myCustomVariantTypeConverter(const QString &data);
@@ -2405,6 +2407,20 @@ private:
     int m_length = 19;
 };
 
+struct ValueTypeWithString
+{
+    Q_GADGET
+    QML_VALUE_TYPE(withString)
+    QML_CONSTRUCTIBLE_VALUE
+
+public:
+    Q_INVOKABLE ValueTypeWithString(const QString &v = QString()) : m_string(v) {}
+    QString toString() const { return m_string; }
+
+private:
+    QString m_string;
+};
+
 class GetterObject : public QObject {
     Q_OBJECT
     QML_ELEMENT
@@ -2623,6 +2639,49 @@ public:
     {
         qDebug().noquote() << objectName() << QString("says %1 + %2 = %3").arg(a).arg(b).arg(a + b);
     }
+};
+
+class Attachment : public QObject {
+    Q_OBJECT
+public:
+    Attachment(QObject *parent = nullptr) : QObject(parent) {}
+};
+
+class AttachedInCtor : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_ATTACHED(Attachment)
+
+public:
+    AttachedInCtor(QObject *parent = nullptr)
+        : QObject(parent)
+    {
+        attached = qmlAttachedPropertiesObject<AttachedInCtor>(this, true);
+    }
+
+    static Attachment *qmlAttachedProperties(QObject *object) {
+        return new Attachment(object);
+    }
+
+    QObject *attached = nullptr;
+};
+
+class BirthdayParty : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QQmlListProperty<QObject> guests READ guests)
+    Q_CLASSINFO("DefaultProperty", "guests")
+    QML_ELEMENT
+
+public:
+    using QObject::QObject;
+    QQmlListProperty<QObject> guests() { return {this, &m_guests}; }
+    qsizetype guestCount() const { return m_guests.count(); }
+    QObject *guest(qsizetype i) const { return m_guests.at(i); }
+
+private:
+    QList<QObject *> m_guests;
 };
 
 #endif // TESTTYPES_H

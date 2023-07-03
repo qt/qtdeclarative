@@ -74,8 +74,8 @@ void QQmlIRLoader::load()
     if (unit->flags & QV4::CompiledData::Unit::ComponentsBound)
         createComponentPragma(Pragma::ComponentBehavior, Pragma::Bound);
 
-    if (unit->flags & QV4::CompiledData::Unit::FunctionSignaturesEnforced)
-        createFunctionSignaturePragma(Pragma::FunctionSignatureBehavior, Pragma::Enforced);
+    if (unit->flags & QV4::CompiledData::Unit::FunctionSignaturesIgnored)
+        createFunctionSignaturePragma(Pragma::FunctionSignatureBehavior, Pragma::Ignored);
 
     if (unit->flags & QV4::CompiledData::Unit::NativeMethodsAcceptThisObject)
         createNativeMethodPragma(Pragma::NativeMethodBehavior, Pragma::AcceptThisObject);

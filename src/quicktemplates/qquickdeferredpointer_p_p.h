@@ -113,10 +113,10 @@ class QQuickDeferredPointer : public QQuickUntypedDeferredPointer
 {
     Q_DISABLE_COPY_MOVE(QQuickDeferredPointer)
 public:
-    QQuickDeferredPointer() = default;
+    Q_NODISCARD_CTOR QQuickDeferredPointer() = default;
     ~QQuickDeferredPointer() = default;
 
-    QQuickDeferredPointer(T *v) : QQuickUntypedDeferredPointer(v) {}
+    Q_NODISCARD_CTOR QQuickDeferredPointer(T *v) : QQuickUntypedDeferredPointer(v) {}
     QQuickDeferredPointer<T> &operator=(T *o) {
         QQuickUntypedDeferredPointer::operator=(o);
         return *this;

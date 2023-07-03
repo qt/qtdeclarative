@@ -131,6 +131,13 @@ ColumnLayout {
 
                         readonly property int colorOption: checked ? ColorDialog.NoButtons : 0
                     }
+
+                    CheckBox {
+                        id: noEyeDropperButton
+                        text: qsTr("NoEyeDropperButton")
+
+                        readonly property int colorOption: checked ? ColorDialog.NoEyeDropperButton : 0
+                    }
                 }
             }
         }
@@ -139,7 +146,7 @@ ColumnLayout {
             id: colorDialog
             modality: modalityButtonGroup.checkedButton.modality
             title: titleTextField.text
-            options: showAlphaChannel.colorOption | noButtons.colorOption
+            options: showAlphaChannel.colorOption | noButtons.colorOption | noEyeDropperButton.colorOption
         }
     }
 }

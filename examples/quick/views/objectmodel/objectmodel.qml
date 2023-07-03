@@ -7,6 +7,8 @@
 import QtQuick
 import QtQml.Models
 
+pragma ComponentBehavior: Bound
+
 Rectangle {
     id: root
     color: "lightgray"
@@ -19,23 +21,41 @@ Rectangle {
         id: itemModel
 
         Rectangle {
-            width: view.width; height: view.height
+            width: view.width
+            height: view.height
             color: "#FFFEF0"
-            Text { text: "Page 1"; font.bold: true; anchors.centerIn: parent }
+
+            Text {
+                anchors.centerIn: parent
+                text: qsTr("Page 1")
+                font.bold: true
+            }
 
             Component.onDestruction: if (root.printDestruction) print("destroyed 1")
         }
         Rectangle {
-            width: view.width; height: view.height
+            width: view.width
+            height: view.height
             color: "#F0FFF7"
-            Text { text: "Page 2"; font.bold: true; anchors.centerIn: parent }
+
+            Text {
+                anchors.centerIn: parent
+                text: qsTr("Page 2")
+                font.bold: true
+            }
 
             Component.onDestruction: if (root.printDestruction) print("destroyed 2")
         }
         Rectangle {
-            width: view.width; height: view.height
+            width: view.width
+            height: view.height
             color: "#F4F0FF"
-            Text { text: "Page 3"; font.bold: true; anchors.centerIn: parent }
+
+            Text {
+                anchors.centerIn: parent
+                text: qsTr("Page 3")
+                font.bold: true
+            }
 
             Component.onDestruction: if (root.printDestruction) print("destroyed 3")
         }
@@ -43,18 +63,27 @@ Rectangle {
 
     ListView {
         id: view
-        anchors { fill: parent; bottomMargin: 30 }
+        anchors {
+            fill: parent
+            bottomMargin: 30
+        }
         model: itemModel
-        preferredHighlightBegin: 0; preferredHighlightEnd: 0
+        preferredHighlightBegin: 0
+        preferredHighlightEnd: 0
         highlightRangeMode: ListView.StrictlyEnforceRange
         orientation: ListView.Horizontal
-        snapMode: ListView.SnapOneItem; flickDeceleration: 2000
+        snapMode: ListView.SnapOneItem
+        flickDeceleration: 2000
         cacheBuffer: 200
     }
 //! [0]
     Rectangle {
-        width: root.width; height: 30
-        anchors { top: view.bottom; bottom: parent.bottom }
+        width: root.width
+        height: 30
+        anchors {
+            top: view.bottom
+            bottom: parent.bottom
+        }
         color: "gray"
 
         Row {
@@ -63,17 +92,18 @@ Rectangle {
 
             Repeater {
                 model: itemModel.count
-
-                Rectangle {
+                delegate: Rectangle {
                     required property int index
 
-                    width: 5; height: 5
+                    width: 5
+                    height: 5
                     radius: 3
-                    color: view.currentIndex == index ? "blue" : "white"
+                    color: view.currentIndex === index ? "blue" : "white"
 
                     MouseArea {
-                        width: 20; height: 20
                         anchors.centerIn: parent
+                        width: 20
+                        height: 20
                         onClicked: view.currentIndex = parent.index
                     }
                 }

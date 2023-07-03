@@ -11,7 +11,7 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/imageresponseprovider/ImageResponseProviderCore")
-set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/quick/imageresponseprovider)
+set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/examples/quick/imageresponseprovider)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 

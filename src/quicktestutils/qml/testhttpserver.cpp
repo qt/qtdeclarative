@@ -158,12 +158,10 @@ bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &bod
     bool headers_done = false;
     while (!(line = expectFile.readLine()).isEmpty()) {
         line.replace('\r', "");
-        if (line.at(0) == '\n') {
-            headers_done = true;
-            continue;
-        }
         if (headers_done) {
             m_waitData.body.append(line);
+        } else if (line.at(0) == '\n') {
+            headers_done = true;
         } else if (line.endsWith("{{Ignore}}\n")) {
             m_waitData.headerPrefixes.append(line.left(line.size() - strlen("{{Ignore}}\n")));
         } else {

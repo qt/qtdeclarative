@@ -1659,29 +1659,63 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         // no pixel delta (physical mouse wheel, or "dumb" touchpad), so use angleDelta
         int xDelta = event->angleDelta().x();
         int yDelta = event->angleDelta().y();
-        qreal wheelScroll = - qApp->styleHints()->wheelScrollLines() * 24;
 
         if (d->wheelDeceleration > _q_MaximumWheelDeceleration) {
+            const qreal wheelScroll = -qApp->styleHints()->wheelScrollLines() * 24;
             // If wheelDeceleration is very large, i.e. the user or the platform does not want to have any mouse wheel
             // acceleration behavior, we want to move a distance proportional to QStyleHints::wheelScrollLines()
             if (yflick() && yDelta != 0) {
                 d->moveReason = QQuickFlickablePrivate::Mouse; // ItemViews will set fixupMode to Immediate in fixup() without this.
-                d->resetTimeline(d->vData);
                 d->vMoved = true;
-                movementStarting();
-                d->timeline.moveBy(d->vData.move, -yDelta / 120.0 * wheelScroll, QEasingCurve(QEasingCurve::OutExpo), 3*d->fixupDuration/4);
-                d->vData.fixingUp = true;
-                d->timeline.callback(QQuickTimeLineCallback(&d->vData.move, QQuickFlickablePrivate::fixupY_callback, d));
+                qreal scrollPixel = (-yDelta / 120.0 * wheelScroll);
+                if (d->boundsBehavior == QQuickFlickable::StopAtBounds) {
+                    const qreal estContentPos = scrollPixel + d->vData.move.value();
+                    if (scrollPixel > 0) { // Forward direction (away from user)
+                        if (d->vData.move.value() >= minYExtent())
+                            d->vMoved = false;
+                        else if (estContentPos > minYExtent())
+                            scrollPixel = minYExtent() - d->vData.move.value();
+                    } else { // Backward direction (towards user)
+                        if (d->vData.move.value() <= maxYExtent())
+                            d->vMoved = false;
+                        else if (estContentPos < maxYExtent())
+                            scrollPixel = maxYExtent() - d->vData.move.value();
+                    }
+                }
+                if (d->vMoved) {
+                    d->resetTimeline(d->vData);
+                    movementStarting();
+                    d->timeline.moveBy(d->vData.move, scrollPixel, QEasingCurve(QEasingCurve::OutExpo), 3*d->fixupDuration/4);
+                    d->vData.fixingUp = true;
+                    d->timeline.callback(QQuickTimeLineCallback(&d->vData.move, QQuickFlickablePrivate::fixupY_callback, d));
+                }
                 event->accept();
             }
             if (xflick() && xDelta != 0) {
                 d->moveReason = QQuickFlickablePrivate::Mouse; // ItemViews will set fixupMode to Immediate in fixup() without this.
-                d->resetTimeline(d->hData);
                 d->hMoved = true;
-                movementStarting();
-                d->timeline.moveBy(d->hData.move, -xDelta / 120.0 * wheelScroll, QEasingCurve(QEasingCurve::OutExpo), 3*d->fixupDuration/4);
-                d->hData.fixingUp = true;
-                d->timeline.callback(QQuickTimeLineCallback(&d->hData.move, QQuickFlickablePrivate::fixupX_callback, d));
+                qreal scrollPixel = (-xDelta / 120.0 * wheelScroll);
+                if (d->boundsBehavior == QQuickFlickable::StopAtBounds) {
+                    const qreal estContentPos = scrollPixel + d->hData.move.value();
+                    if (scrollPixel > 0) { // Forward direction (away from user)
+                        if (d->hData.move.value() >= minXExtent())
+                            d->hMoved = false;
+                        else if (estContentPos > minXExtent())
+                            scrollPixel = minXExtent() - d->hData.move.value();
+                    } else { // Backward direction (towards user)
+                        if (d->hData.move.value() <= maxXExtent())
+                            d->hMoved = false;
+                        else if (estContentPos < maxXExtent())
+                            scrollPixel = maxXExtent() - d->hData.move.value();
+                    }
+                }
+                if (d->hMoved) {
+                    d->resetTimeline(d->hData);
+                    movementStarting();
+                    d->timeline.moveBy(d->hData.move, scrollPixel, QEasingCurve(QEasingCurve::OutExpo), 3*d->fixupDuration/4);
+                    d->hData.fixingUp = true;
+                    d->timeline.callback(QQuickTimeLineCallback(&d->hData.move, QQuickFlickablePrivate::fixupX_callback, d));
+                }
                 event->accept();
             }
         } else {

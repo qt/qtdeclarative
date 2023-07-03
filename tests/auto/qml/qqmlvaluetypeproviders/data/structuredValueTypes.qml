@@ -49,4 +49,13 @@ MyTypeObject {
 
     property QtObject object: QtObject {}
     property constructible fromObject: object
+    property int listResult: acceptConstructibles([Qt.resolvedUrl("foo/bar.baz"), fromObject, 12])
+
+    property var insanity: ({})
+    property structured fromInsanity: acceptStructured(insanity)
+
+    property rect newItemPadding
+    function updatePadding() {
+        setEffectPadding(newItemPadding);
+    }
 }

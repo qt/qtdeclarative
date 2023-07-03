@@ -34,11 +34,7 @@ class QQuickAnimatedImagePrivate : public QQuickImagePrivate
 
 public:
     QQuickAnimatedImagePrivate()
-      : playing(true), paused(false), oldPlaying(false), padding(0)
-      , presetCurrentFrame(0), speed(1.0), movie(nullptr)
-#if QT_CONFIG(qml_network)
-      , reply(nullptr), redirectCount(0)
-#endif
+      : playing(true), paused(false), oldPlaying(false)
     {
     }
 
@@ -46,18 +42,18 @@ public:
     void setMovie(QMovie *movie);
     void clearCache();
 
+    qreal speed = 1;
+    QMovie *movie = nullptr;
+    int presetCurrentFrame = 0;
+    QMap<int, QQuickPixmap *> frameMap;
+
+#if QT_CONFIG(qml_network)
+    QNetworkReply *reply = nullptr;
+#endif
+
     bool playing : 1;
     bool paused : 1;
     bool oldPlaying : 1;
-    unsigned padding: 29;
-    int presetCurrentFrame;
-    qreal speed;
-    QMovie *movie;
-#if QT_CONFIG(qml_network)
-    QNetworkReply *reply;
-    int redirectCount;
-#endif
-    QMap<int, QQuickPixmap *> frameMap;
 };
 
 QT_END_NAMESPACE

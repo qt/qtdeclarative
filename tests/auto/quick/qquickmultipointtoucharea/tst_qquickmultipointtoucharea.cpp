@@ -723,11 +723,15 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
 // test that dragging out of a Flickable containing a MPTA doesn't harm Flickable's state.
 void tst_QQuickMultiPointTouchArea::inFlickable2()
 {
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
     QScopedPointer<QQuickView> window(createAndShowView("inFlickable2.qml"));
     QVERIFY(window->rootObject() != nullptr);
 
     QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>("flickable");
     QVERIFY(flickable != nullptr);
+
+    QQuickMultiPointTouchArea *mpta = window->rootObject()->findChild<QQuickMultiPointTouchArea*>();
+    QVERIFY(mpta);
 
     QQuickTouchPoint *point11 = window->rootObject()->findChild<QQuickTouchPoint*>("point1");
     QVERIFY(point11);
@@ -741,25 +745,12 @@ void tst_QQuickMultiPointTouchArea::inFlickable2()
     QQuickTouchUtils::flush(window.data());
     QTest::mousePress(window.data(), Qt::LeftButton, Qt::NoModifier, p1);
 
-    p1 += QPoint(15,0);
-    QTest::touchEvent(window.data(), device).move(0, p1);
-    QQuickTouchUtils::flush(window.data());
-    QTest::mouseMove(window.data(), p1);
-
-    p1 += QPoint(15,0);
-    QTest::touchEvent(window.data(), device).move(0, p1);
-    QQuickTouchUtils::flush(window.data());
-    QTest::mouseMove(window.data(), p1);
-
-    p1 += QPoint(15,0);
-    QTest::touchEvent(window.data(), device).move(0, p1);
-    QQuickTouchUtils::flush(window.data());
-    QTest::mouseMove(window.data(), p1);
-
-    p1 += QPoint(15,0);
-    QTest::touchEvent(window.data(), device).move(0, p1);
-    QQuickTouchUtils::flush(window.data());
-    QTest::mouseMove(window.data(), p1);
+    for (int i = 0; i < 4; ++i) {
+        p1 += QPoint(dragThreshold, 0);
+        QTest::touchEvent(window.data(), device).move(0, p1);
+        QQuickTouchUtils::flush(window.data());
+        QTest::mouseMove(window.data(), p1);
+    }
 
     QVERIFY(!flickable->isMoving());
     QVERIFY(point11->pressed());
@@ -772,27 +763,21 @@ void tst_QQuickMultiPointTouchArea::inFlickable2()
     QTRY_VERIFY(!flickable->isMoving());
 
     // Check that we can still move the Flickable
+    QSignalSpy gestureStartedSpy(mpta, &QQuickMultiPointTouchArea::gestureStarted);
     p1 = QPoint(50,100);
     QTest::touchEvent(window.data(), device).press(0, p1);
     QQuickTouchUtils::flush(window.data());
 
     QCOMPARE(point11->pressed(), true);
 
-    p1 += QPoint(0,15);
-    QTest::touchEvent(window.data(), device).move(0, p1);
-    QQuickTouchUtils::flush(window.data());
-
-    p1 += QPoint(0,15);
-    QTest::touchEvent(window.data(), device).move(0, p1);
-    QQuickTouchUtils::flush(window.data());
-
-    p1 += QPoint(0,15);
-    QTest::touchEvent(window.data(), device).move(0, p1);
-    QQuickTouchUtils::flush(window.data());
-
-    p1 += QPoint(0,15);
-    QTest::touchEvent(window.data(), device).move(0, p1);
-    QQuickTouchUtils::flush(window.data());
+    for (int i = 0; i < 4; ++i) {
+        p1 += QPoint(0, dragThreshold);
+        QTest::touchEvent(window.data(), device).move(0, p1);
+        QQuickTouchUtils::flush(window.data());
+        // QTBUG-113653: gestureStarted is emitted when touch delta exceeds drag threshold,
+        // regardless of the filtering Flickable parent
+        QCOMPARE(gestureStartedSpy.size(), i > 0 ? 1 : 0);
+    }
 
     QVERIFY(flickable->contentY() < 0);
     QVERIFY(flickable->isMoving());

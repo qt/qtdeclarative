@@ -556,22 +556,32 @@ QStringList QQmlCodeModel::buildPathsForFileUrl(const QByteArray &url)
         }
     }
     QString path = url2Path(url);
+
+    // fallback to the empty root, if is has an entry.
+    // This is the buildPath that is passed to qmlls via --build-dir.
+    if (buildPaths.isEmpty()) {
+        buildPaths += buildPathsForRootUrl(QByteArray());
+    }
+
+    // look in the QMLLS_BUILD_DIRS environment variable
+    if (buildPaths.isEmpty()) {
+        QStringList envPaths = qEnvironmentVariable("QMLLS_BUILD_DIRS")
+                                       .split(QDir::listSeparator(), Qt::SkipEmptyParts);
+        buildPaths += envPaths;
+    }
+
+    // look in the settings.
+    // This is the one that is passed via the .qmlls.ini file.
     if (buildPaths.isEmpty() && m_settings) {
-        // look in the settings
         m_settings->search(path);
         QString buildDir = QStringLiteral(u"buildDir");
         if (m_settings->isSet(buildDir))
-            buildPaths += m_settings->value(buildDir).toString().split(u',', Qt::SkipEmptyParts);
+            buildPaths += m_settings->value(buildDir).toString().split(QDir::listSeparator(),
+                                                                       Qt::SkipEmptyParts);
     }
+
+    // heuristic to find build directory
     if (buildPaths.isEmpty()) {
-        // default values
-        buildPaths += buildPathsForRootUrl(QByteArray());
-    }
-    // env variable
-    QStringList envPaths = qEnvironmentVariable("QMLLS_BUILD_DIRS").split(u',', Qt::SkipEmptyParts);
-    buildPaths += envPaths;
-    if (buildPaths.isEmpty()) {
-        // heuristic to find build dir
         QDir d(path);
         d.setNameFilters(QStringList({ u"build*"_s }));
         const int maxDirDepth = 8;

@@ -47,17 +47,17 @@ class QDeferredSharedPointer
 public:
     using Factory = QDeferredFactory<std::remove_const_t<T>>;
 
-    QDeferredSharedPointer() = default;
+    Q_NODISCARD_CTOR QDeferredSharedPointer() = default;
 
-    QDeferredSharedPointer(QSharedPointer<T> data)
+    Q_NODISCARD_CTOR QDeferredSharedPointer(QSharedPointer<T> data)
         : m_data(std::move(data))
     {}
 
-    QDeferredSharedPointer(QWeakPointer<T> data)
+    Q_NODISCARD_CTOR QDeferredSharedPointer(QWeakPointer<T> data)
         : m_data(std::move(data))
     {}
 
-    QDeferredSharedPointer(QSharedPointer<T> data, QSharedPointer<Factory> factory)
+    Q_NODISCARD_CTOR QDeferredSharedPointer(QSharedPointer<T> data, QSharedPointer<Factory> factory)
         : m_data(std::move(data)), m_factory(std::move(factory))
     {
         // You have to provide a valid pointer if you provide a factory. We cannot allocate the
@@ -66,7 +66,7 @@ public:
         Q_ASSERT(!m_data.isNull() || m_factory.isNull());
     }
 
-    operator QSharedPointer<T>() const
+    [[nodiscard]] operator QSharedPointer<T>() const
     {
         lazyLoad();
         return m_data;
@@ -74,8 +74,8 @@ public:
 
     operator QDeferredSharedPointer<const T>() const { return { m_data, m_factory }; }
 
-    T &operator*() const { return QSharedPointer<T>(*this).operator*(); }
-    T *operator->() const { return QSharedPointer<T>(*this).operator->(); }
+    [[nodiscard]] T &operator*() const { return QSharedPointer<T>(*this).operator*(); }
+    [[nodiscard]] T *operator->() const { return QSharedPointer<T>(*this).operator->(); }
 
     bool isNull() const
     {
@@ -85,8 +85,8 @@ public:
     explicit operator bool() const noexcept { return !isNull(); }
     bool operator !() const noexcept { return isNull(); }
 
-    T *data() const { return QSharedPointer<T>(*this).data(); }
-    T *get() const { return data(); }
+    [[nodiscard]] T *data() const { return QSharedPointer<T>(*this).data(); }
+    [[nodiscard]] T *get() const { return data(); }
 
     friend size_t qHash(const QDeferredSharedPointer &ptr, size_t seed = 0)
     {
@@ -177,31 +177,31 @@ class QDeferredWeakPointer
 public:
     using Factory = QDeferredFactory<std::remove_const_t<T>>;
 
-    QDeferredWeakPointer() = default;
+    Q_NODISCARD_CTOR QDeferredWeakPointer() = default;
 
-    QDeferredWeakPointer(const QDeferredSharedPointer<T> &strong)
+    Q_NODISCARD_CTOR QDeferredWeakPointer(const QDeferredSharedPointer<T> &strong)
         : m_data(strong.m_data), m_factory(strong.m_factory)
     {
     }
 
-    QDeferredWeakPointer(QWeakPointer<T> data, QWeakPointer<Factory> factory)
+    Q_NODISCARD_CTOR QDeferredWeakPointer(QWeakPointer<T> data, QWeakPointer<Factory> factory)
         : m_data(data), m_factory(factory)
     {}
 
-    operator QWeakPointer<T>() const
+    [[nodiscard]] operator QWeakPointer<T>() const
     {
         lazyLoad();
         return m_data;
     }
 
-    operator QDeferredSharedPointer<T>() const
+    [[nodiscard]] operator QDeferredSharedPointer<T>() const
     {
         return QDeferredSharedPointer<T>(m_data.toStrongRef(), m_factory.toStrongRef());
     }
 
     operator QDeferredWeakPointer<const T>() const { return {m_data, m_factory}; }
 
-    QSharedPointer<T> toStrongRef() const
+    [[nodiscard]] QSharedPointer<T> toStrongRef() const
     {
         return QWeakPointer<T>(*this).toStrongRef();
     }

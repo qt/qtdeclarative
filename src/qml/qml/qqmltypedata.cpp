@@ -74,11 +74,11 @@ void QQmlTypeData::unregisterCallback(TypeDataCallback *callback)
     Q_ASSERT(!m_callbacks.contains(callback));
 }
 
-CompositeMetaTypeIds QQmlTypeData::typeIds(const QString &inlineComponentName) const
+QQmlType QQmlTypeData::qmlType(const QString &inlineComponentName) const
 {
     if (inlineComponentName.isEmpty())
-        return m_typeIds;
-    return m_inlineComponentData[inlineComponentName].typeIds;
+        return m_qmlType;
+    return m_inlineComponentData[inlineComponentName].qmlType;
 }
 
 bool QQmlTypeData::tryLoadFromDiskCache()
@@ -168,7 +168,7 @@ bool QQmlTypeData::tryLoadFromDiskCache()
         auto importUrl = finalUrl();
         importUrl.setFragment(nameString);
         auto import = new QQmlImportInstance();
-        m_importCache->addInlineComponentImport(import, nameString, importUrl, QQmlType());
+        m_importCache->addInlineComponentImport(import, nameString, importUrl);
     }
 
     return true;
@@ -289,13 +289,18 @@ namespace  {
 template<typename ObjectContainer>
 void setupICs(
         const ObjectContainer &container, QHash<QString, InlineComponentData> *icData,
-        const QUrl &finalUrl) {
+        const QUrl &baseUrl, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit) {
     Q_ASSERT(icData->empty());
     for (int i = 0; i != container->objectCount(); ++i) {
         auto root = container->objectAt(i);
         for (auto it = root->inlineComponentsBegin(); it != root->inlineComponentsEnd(); ++it) {
-            const QByteArray &className = QQmlPropertyCacheCreatorBase::createClassNameForInlineComponent(finalUrl, it->objectIndex);
-            InlineComponentData icDatum(CompositeMetaTypeIds::fromCompositeName(className), int(it->objectIndex), int(it->nameIndex), 0, 0, 0);
+            // We cannot re-use a previously finalized inline component type here. We need our own.
+            // We can and should re-use speculative type references, though.
+            InlineComponentData icDatum(
+                    QQmlMetaType::findInlineComponentType(
+                            baseUrl, container->stringAt(it->nameIndex), compilationUnit),
+                int(it->objectIndex), int(it->nameIndex), 0, 0, 0);
+
             icData->insert(container->stringAt(it->nameIndex), icDatum);
         }
     }
@@ -370,15 +375,11 @@ void QQmlTypeData::done()
          ++it) {
         const TypeReference &type = *it;
         Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError() || type.type.isInlineComponentType());
-        const QQmlType containingType = type.type.isInlineComponentType()
-                                            ? type.type.containingType()
-                                            : QQmlType();
-        if (containingType.isValid()) {
-            const QQmlType ic = QQmlMetaType::inlineComponentType(
-                containingType, type.type.elementName());
 
-            // Only if we create the IC from an actual CU, we have valid metatypes.
-            if (!ic.typeId().isValid()) {
+        if (type.type.isInlineComponentType()) {
+            const QUrl url = type.type.sourceUrl();
+            if (!QQmlMetaType::equalBaseUrls(url, finalUrl())
+                    && !QQmlMetaType::obtainExecutableCompilationUnit(type.type.typeId())) {
                 const QString &typeName = stringAt(it.key());
                 int lastDot = typeName.lastIndexOf(u'.');
                 createError(
@@ -407,15 +408,21 @@ void QQmlTypeData::done()
         }
     }
 
-    m_typeClassName = QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(finalUrl());
-    if (!m_typeClassName.isEmpty())
-        m_typeIds = CompositeMetaTypeIds::fromCompositeName(m_typeClassName);
-
-    if (m_document) {
-        setupICs(m_document, &m_inlineComponentData, finalUrl());
-    } else {
-        setupICs(m_compiledData, &m_inlineComponentData, finalUrl());
+    if (QQmlPropertyCacheCreatorBase::canCreateClassNameTypeByUrl(finalUrl())) {
+        const bool isSingleton = m_document
+            ? m_document.data()->isSingleton()
+            : (m_compiledData->unitData()->flags & QV4::CompiledData::Unit::IsSingleton);
+        m_qmlType = QQmlMetaType::findCompositeType(
+                finalUrl(), m_compiledData, isSingleton
+                        ? QQmlMetaType::Singleton
+                        : QQmlMetaType::NonSingleton);
+        m_typeClassName = QByteArray(m_qmlType.typeId().name()).chopped(1);
     }
+
+    if (m_document)
+        setupICs(m_document, &m_inlineComponentData, finalUrl(), m_compiledData);
+    else
+        setupICs(m_compiledData, &m_inlineComponentData, finalUrl(), m_compiledData);
 
     QV4::ResolvedTypeReferenceMap resolvedTypeCache;
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
@@ -502,7 +509,7 @@ void QQmlTypeData::done()
             }
         }
 
-        m_compiledData->finalizeCompositeType(typeIds());
+        m_compiledData->finalizeCompositeType(qmlType());
     }
 
     {
@@ -526,34 +533,6 @@ void QQmlTypeData::done()
                 QString typeName = type.qmlTypeName();
                 setError(QQmlTypeLoader::tr("qmldir defines type as singleton, but no pragma Singleton found in type %1.").arg(typeName));
                 return;
-            }
-        }
-    }
-
-    // associate inline components to root component
-    {
-        auto fileName = finalUrl().fileName();
-        QStringView typeName = [&]() {
-            // extract base name (QFileInfo::baseName would require constructing a QFileInfo)
-            auto dotIndex = fileName.indexOf(u'.');
-            if (dotIndex < 0)
-                return QStringView();
-            return QStringView(fileName).first(dotIndex);
-        }();
-        // typeName can be empty if a QQmlComponent was constructed with an empty QUrl parameter
-        if (!typeName.isEmpty() && typeName.at(0).isUpper() && !m_inlineComponentData.isEmpty()) {
-            QHashedStringRef const hashedStringRef { typeName };
-            QList<QQmlError> errors;
-            auto type = QQmlMetaType::typeForUrl(finalUrlString(), hashedStringRef, false, &errors);
-            Q_ASSERT(errors.empty());
-            if (type.isValid()) {
-                for (auto const &icDatum : std::as_const(m_inlineComponentData)) {
-                    Q_ASSERT(icDatum.typeIds.isValid());
-                    const QString icName = m_compiledData->stringAt(icDatum.nameIndex);
-                    QQmlType existingType = QQmlMetaType::inlineComponentType(type, icName);
-                    QQmlMetaType::associateInlineComponent(
-                        type, icName, icDatum.typeIds, existingType);
-                }
             }
         }
     }
@@ -706,18 +685,13 @@ void QQmlTypeData::restoreIR(QV4::CompiledData::CompilationUnit &&unit)
 
 void QQmlTypeData::continueLoadFromIR()
 {
-    QQmlType containingType;
-    auto containingTypeName = finalUrl().fileName().split(QLatin1Char('.')).first();
-    QTypeRevision version;
-    QQmlImportNamespace *ns = nullptr;
-    m_importCache->resolveType(containingTypeName, &containingType, &version, &ns);
     for (auto const& object: m_document->objects) {
         for (auto it = object->inlineComponentsBegin(); it != object->inlineComponentsEnd(); ++it) {
             QString const nameString = m_document->stringAt(it->nameIndex);
             auto importUrl = finalUrl();
             importUrl.setFragment(nameString);
             auto import = new QQmlImportInstance(); // Note: The cache takes ownership of the QQmlImportInstance
-            m_importCache->addInlineComponentImport(import, nameString, importUrl, containingType);
+            m_importCache->addInlineComponentImport(import, nameString, importUrl);
         }
     }
 
@@ -925,11 +899,11 @@ void QQmlTypeData::resolveTypes()
             addDependency(ref.typeData.data());
         }
         if (ref.type.isInlineComponentType()) {
-            auto containingType = ref.type.containingType();
-            if (containingType.isValid()) {
-                auto const url = containingType.sourceUrl();
-                if (url.isValid()) {
-                    auto typeData = typeLoader()->getType(url);
+            QUrl containingTypeUrl = ref.type.sourceUrl();
+            containingTypeUrl.setFragment(QString());
+            if (!containingTypeUrl.isEmpty()) {
+                auto typeData = typeLoader()->getType(containingTypeUrl);
+                if (typeData.data() != this) {
                     ref.typeData = typeData;
                     addDependency(typeData.data());
                 }
@@ -972,11 +946,7 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
             ref->setCompilationUnit(resolvedType->typeData->compilationUnit());
             if (resolvedType->type.isInlineComponentType()) {
                 // Inline component which is part of an already resolved type
-                QString icName;
-                if (qmlType.containingType().isValid())
-                    icName = qmlType.elementName();
-                else
-                    icName = resolvedType->type.elementName();
+                QString icName = qmlType.elementName();
                 Q_ASSERT(!icName.isEmpty());
 
                 const auto compilationUnit = resolvedType->typeData->compilationUnit();
@@ -986,14 +956,17 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                 Q_ASSERT(ref->type().isInlineComponentType());
             }
         } else if (resolvedType->type.isInlineComponentType()) {
-            // Inline component, defined in the file we are currently compiling
             ref->setType(qmlType);
-            if (qmlType.isValid()) {
+
+            // Inline component
+            // If it's defined in the same file we're currently compiling, we don't want to use it.
+            // We're going to fill in the property caches later after all.
+            if (qmlType.isValid()
+                    && !QQmlMetaType::equalBaseUrls(finalUrl(), qmlType.sourceUrl())) {
+
                 // this is required for inline components in singletons
-                const QMetaType type
-                    = QQmlMetaType::inlineComponentType(qmlType, qmlType.elementName()).typeId();
-                auto exUnit = QQmlMetaType::obtainExecutableCompilationUnit(type);
-                if (exUnit) {
+                const QMetaType type = qmlType.typeId();
+                if (auto exUnit = QQmlMetaType::obtainExecutableCompilationUnit(type)) {
                     ref->setCompilationUnit(exUnit);
                     ref->setTypePropertyCache(QQmlMetaType::propertyCacheForType(type));
                 }

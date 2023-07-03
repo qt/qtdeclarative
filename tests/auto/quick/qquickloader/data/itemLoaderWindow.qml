@@ -14,7 +14,7 @@ Item {
             color: "red"
             title: "red"
             flags: Qt.Dialog
-            onVisibilityChanged: console.log("visibility " + visibility)
+            onVisibilityChanged: (visibility) => console.log("visibility " + visibility)
             onVisibleChanged: console.log("visible " + visible)
         }
     }

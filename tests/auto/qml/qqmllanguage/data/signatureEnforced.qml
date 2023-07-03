@@ -8,7 +8,7 @@ QtObject {
     property withLength withLength: 5
 
     function a(r: rect) {
-        r.x = 77 // does not write back
+        r.x = 77 // does write back, but this is an evil thing to do.
     }
 
     function b(s: string) : int {
@@ -28,8 +28,11 @@ QtObject {
     property int n: c(99) // creates a withLength
     property int o: rect.y
 
+    function bad(b: int) { return b }
+
     Component.onCompleted: {
         a(rect)
         d(rect)
+        bad(15)
     }
 }

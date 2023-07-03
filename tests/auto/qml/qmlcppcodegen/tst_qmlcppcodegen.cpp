@@ -41,6 +41,8 @@ private slots:
     void attachedSelf();
     void attachedType();
     void badSequence();
+    void basicBlocksWithBackJump();
+    void basicDTZ();
     void bindToValueType();
     void bindingExpression();
     void blockComments();
@@ -66,6 +68,7 @@ private slots:
     void enumConversion();
     void enumFromBadSingleton();
     void enumLookup();
+    void enumMarkedAsFlag();
     void enumProblems();
     void enumScope();
     void enums();
@@ -80,6 +83,7 @@ private slots:
     void failures();
     void fallbackLookups();
     void fileImportsContainCxxTypes();
+    void flagEnum();
     void flushBeforeCapture();
     void fromBoolValue();
     void funcWithParams();
@@ -700,6 +704,57 @@ void tst_QmlCppCodegen::badSequence()
     QCOMPARE(dadsCousins.at(&dadsCousins, 0), other);
 }
 
+static bool expectingMessage = false;
+static void handler(QtMsgType type, const QMessageLogContext &, const QString &message)
+{
+    QVERIFY(expectingMessage);
+    QCOMPARE(type, QtDebugMsg);
+    QCOMPARE(message, u"false");
+    expectingMessage = false;
+}
+
+void tst_QmlCppCodegen::basicBlocksWithBackJump()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/basicBlocksWithBackJump.qml"_s));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    const auto oldHandler = qInstallMessageHandler(&handler);
+    const auto guard = qScopeGuard([oldHandler]() { qInstallMessageHandler(oldHandler); });
+
+    // t1 does not log anything
+    QMetaObject::invokeMethod(o.data(), "t1");
+
+    // t2 logs "false" exactly once
+    expectingMessage = true;
+    QMetaObject::invokeMethod(o.data(), "t2");
+    QVERIFY(!expectingMessage);
+
+    // t3 logs "false" exactly once
+    expectingMessage = true;
+    QMetaObject::invokeMethod(o.data(), "t3");
+    QVERIFY(!expectingMessage);
+}
+
+void tst_QmlCppCodegen::basicDTZ()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/basicDTZ.qml"_s));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("title").toString(), u"none");
+
+    QMetaObject::invokeMethod(o.data(), "t1");
+    QMetaObject::invokeMethod(o.data(), "t2");
+    QMetaObject::invokeMethod(o.data(), "t3");
+
+    QCOMPARE(o->property("title").toString(), u"Baz 41");
+}
+
 void tst_QmlCppCodegen::bindToValueType()
 {
     QQmlEngine engine;
@@ -1237,6 +1292,17 @@ void tst_QmlCppCodegen::enumLookup()
     QCOMPARE(o->property("ready").toBool(), true);
 }
 
+void tst_QmlCppCodegen::enumMarkedAsFlag()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/enumMarkedAsFlag.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QCOMPARE(o->property("flagValue").toInt(), 3);
+}
+
 void tst_QmlCppCodegen::enumProblems()
 {
     QQmlEngine engine;
@@ -1511,6 +1577,18 @@ void tst_QmlCppCodegen::fileImportsContainCxxTypes()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->objectName(), u"horst guenther"_s);
+}
+
+void tst_QmlCppCodegen::flagEnum()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/flagEnum.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QQmlCommunicationPermission *p = qobject_cast<QQmlCommunicationPermission *>(o.data());
+    QCOMPARE(p->communicationModes(), CommunicationPermission::Access);
 }
 
 void tst_QmlCppCodegen::flushBeforeCapture()
@@ -1994,6 +2072,10 @@ void tst_QmlCppCodegen::invisibleListElementType()
 
 void tst_QmlCppCodegen::invisibleSingleton()
 {
+    // We may have seen Style.qml as singleton before, which would make the assignment pass.
+    // So let's flush the type registry.
+    qmlClearTypeRegistrations();
+
     QQmlEngine engine;
     const QUrl copy(u"qrc:/qt/qml/TestTypes/hidden/Main.qml"_s);
     QQmlComponent c(&engine, copy);

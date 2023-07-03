@@ -59,6 +59,7 @@ void QQmlJSFunctionInitializer::populateSignature(
         error->type = QtWarningMsg;
         error->loc = ast->firstSourceLocation();
         error->message = message;
+        function->isFullyTyped = false;
     };
 
     if (!m_typeResolver->canCallJSFunctions()) {
@@ -70,6 +71,11 @@ void QQmlJSFunctionInitializer::populateSignature(
     QQmlJS::AST::BoundNames arguments;
     if (ast->formals)
         arguments = ast->formals->formals();
+
+    // If the function has no arguments and no return type annotation we assume it's untyped.
+    // You can annotate it to return void to make it typed.
+    // Otherwise we first assume it's typed and reset the flag if we detect a problem.
+    function->isFullyTyped = !arguments.isEmpty() || ast->typeAnnotation;
 
     if (function->argumentTypes.isEmpty()) {
         for (const QQmlJS::AST::BoundName &argument : std::as_const(arguments)) {

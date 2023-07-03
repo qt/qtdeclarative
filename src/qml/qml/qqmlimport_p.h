@@ -56,7 +56,6 @@ struct QQmlImportInstance
 
     QString uri; // e.g. QtQuick
     QString url; // the base path of the import
-    QQmlType containingType; // points to the containing type for inline components
     QTypeRevision version; // the version imported
 
     bool isLibrary; // true means that this is not a file import
@@ -116,7 +115,7 @@ public:
     }
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlImports : public QQmlRefCount
+class Q_QML_PRIVATE_EXPORT QQmlImports final : public QQmlRefCounted<QQmlImports>
 {
     Q_DISABLE_COPY_MOVE(QQmlImports)
 public:
@@ -158,8 +157,7 @@ public:
     }
 
     bool addInlineComponentImport(
-            QQmlImportInstance  *const importInstance, const QString &name, const QUrl importUrl,
-            QQmlType containingType);
+            QQmlImportInstance  *const importInstance, const QString &name, const QUrl importUrl);
 
     QTypeRevision addFileImport(
             QQmlImportDatabase *importDb, const QString &uri, const QString &prefix,

@@ -205,12 +205,12 @@ static ReturnedValue loadProperty(
 
     // See if it's a sequence type.
     // Pass nullptr as data. It's lazy-loaded.
-    QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(
-                              v4, propMetaType, nullptr,
-                              wrapper, property.coreIndex(),
-                              referenceFlags(scope.engine, property)));
-    if (!retn->isUndefined())
-        return retn->asReturnedValue();
+    const QQmlType qmlType = QQmlMetaType::qmlListType(propMetaType);
+    if (qmlType.isSequentialContainer()) {
+        return QV4::SequencePrototype::newSequence(
+                v4, propMetaType, qmlType.listMetaSequence(), nullptr,
+                wrapper, property.coreIndex(), referenceFlags(scope.engine, property));
+    }
 
     QVariant v(propMetaType);
     property.readProperty(object, v.data());
@@ -1672,7 +1672,7 @@ static int MatchScore(const Value &actual, QMetaType conversionMetaType)
                     QObject *wrapped = wrapper->object();
                     if (!wrapped)
                         return 0;
-                    if (qmlobject_can_cast(wrapped, conversionMetaType.metaObject()))
+                    if (qmlobject_can_cpp_cast(wrapped, conversionMetaType.metaObject()))
                         return 0;
                 }
             }
@@ -1693,7 +1693,7 @@ static int MatchScore(const Value &actual, QMetaType conversionMetaType)
                 }
             } else if (QObject *object = wrapper->object()) {
                 if (conversionMetaType.flags() & QMetaType::PointerToQObject
-                    && qmlobject_can_cast(object, conversionMetaType.metaObject())) {
+                    && qmlobject_can_cpp_cast(object, conversionMetaType.metaObject())) {
                         return 0;
                 }
             }
@@ -1846,12 +1846,12 @@ static const QQmlPropertyData *ResolveOverloaded(
     for (int i = 0; i < methodCount; ++i) {
         const QQmlPropertyData *attempt = methods + i;
 
-        if (lcOverloadResolution().isInfoEnabled()) {
+        if (lcOverloadResolution().isDebugEnabled()) {
             const QQmlPropertyData &candidate = methods[i];
             const QMetaMethod m = candidate.isConstructor()
                                   ? object.metaObject()->constructor(candidate.coreIndex())
                                   : object.metaObject()->method(candidate.coreIndex());
-            qCInfo(lcOverloadResolution) << "::: considering signature" << m.methodSignature();
+            qCDebug(lcOverloadResolution) << "::: considering signature" << m.methodSignature();
         }
 
         // QQmlV4Function overrides anything that doesn't provide the exact number of arguments
@@ -1867,12 +1867,12 @@ static const QQmlPropertyData *ResolveOverloaded(
             if (attempt->hasArguments()) {
                 if (attempt->isConstructor()) {
                     if (!object.constructorParameterTypes(attempt->coreIndex(), &storage, nullptr)) {
-                        qCInfo(lcOverloadResolution, "rejected, could not get ctor argument types");
+                        qCDebug(lcOverloadResolution, "rejected, could not get ctor argument types");
                         continue;
                     }
                 } else {
                     if (!object.methodParameterTypes(attempt->coreIndex(), &storage, nullptr)) {
-                        qCInfo(lcOverloadResolution, "rejected, could not get ctor argument types");
+                        qCDebug(lcOverloadResolution, "rejected, could not get ctor argument types");
                         continue;
                     }
                 }
@@ -1880,7 +1880,7 @@ static const QQmlPropertyData *ResolveOverloaded(
             }
 
             if (methodArgumentCount > argumentCount) {
-                qCInfo(lcOverloadResolution, "rejected, insufficient arguments");
+                qCDebug(lcOverloadResolution, "rejected, insufficient arguments");
                 continue; // We don't have sufficient arguments to call this method
             }
 
@@ -1888,7 +1888,7 @@ static const QQmlPropertyData *ResolveOverloaded(
                     ? 0
                     : (definedArgumentCount - methodArgumentCount + 1);
             if (methodParameterScore > bestParameterScore) {
-                qCInfo(lcOverloadResolution) << "rejected, score too bad. own" << methodParameterScore << "vs best:" << bestParameterScore;
+                qCDebug(lcOverloadResolution) << "rejected, score too bad. own" << methodParameterScore << "vs best:" << bestParameterScore;
                 continue; // We already have a better option
             }
 
@@ -1910,21 +1910,21 @@ static const QQmlPropertyData *ResolveOverloaded(
             bestParameterScore = methodParameterScore;
             bestMaxMatchScore = maxMethodMatchScore;
             bestSumMatchScore = sumMethodMatchScore;
-            qCInfo(lcOverloadResolution) << "updated best" << "bestParameterScore" << bestParameterScore  << "\n"
-                                         << "bestMaxMatchScore" << bestMaxMatchScore  << "\n"
-                                         << "bestSumMatchScore" << bestSumMatchScore  << "\n";
+            qCDebug(lcOverloadResolution) << "updated best" << "bestParameterScore" << bestParameterScore  << "\n"
+                                          << "bestMaxMatchScore" << bestMaxMatchScore  << "\n"
+                                          << "bestSumMatchScore" << bestSumMatchScore  << "\n";
         } else {
-            qCInfo(lcOverloadResolution) << "did not update best\n"
-                                         << "bestParameterScore" << bestParameterScore << "\t"
-                                         << "methodParameterScore" << methodParameterScore << "\n"
-                                         << "bestMaxMatchScore" << bestMaxMatchScore << "\t"
-                                         << "maxMethodMatchScore" << maxMethodMatchScore << "\n"
-                                         << "bestSumMatchScore" << bestSumMatchScore << "\t"
-                                         << "sumMethodMatchScore" << sumMethodMatchScore << "\n";
+            qCDebug(lcOverloadResolution) << "did not update best\n"
+                                          << "bestParameterScore" << bestParameterScore << "\t"
+                                          << "methodParameterScore" << methodParameterScore << "\n"
+                                          << "bestMaxMatchScore" << bestMaxMatchScore << "\t"
+                                          << "maxMethodMatchScore" << maxMethodMatchScore << "\n"
+                                          << "bestSumMatchScore" << bestSumMatchScore << "\t"
+                                          << "sumMethodMatchScore" << sumMethodMatchScore << "\n";
         }
 
         if (bestParameterScore == 0 && bestMaxMatchScore == 0) {
-            qCInfo(lcOverloadResolution, "perfect match");
+            qCDebug(lcOverloadResolution, "perfect match");
             break; // We can't get better than that
         }
 
@@ -2193,7 +2193,7 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
             }
 
             if (const QmlListWrapper *listWrapper = value.as<QmlListWrapper>()) {
-                *qlistPtr = listWrapper->d()->property().toList<QList<QObject *>>();
+                *qlistPtr = listWrapper->d()->property()->toList<QList<QObject *>>();
                 return true;
             }
 

@@ -254,8 +254,8 @@ void ControlsNativeValidatorPass::run(const QQmlSA::Element &element)
 
 AnchorsValidatorPass::AnchorsValidatorPass(QQmlSA::PassManager *manager)
     : QQmlSA::ElementPass(manager)
+    , m_item(resolveType("QtQuick", "Item"))
 {
-    m_item = resolveType("QtQuick", "Item");
 }
 
 bool AnchorsValidatorPass::shouldRun(const QQmlSA::Element &element)
@@ -350,8 +350,8 @@ void AnchorsValidatorPass::run(const QQmlSA::Element &element)
 
 ControlsSwipeDelegateValidatorPass::ControlsSwipeDelegateValidatorPass(QQmlSA::PassManager *manager)
     : QQmlSA::ElementPass(manager)
+    , m_swipeDelegate(resolveType("QtQuick.Controls", "SwipeDelegate"))
 {
-    m_swipeDelegate = resolveType("QtQuick.Controls", "SwipeDelegate");
 }
 
 bool ControlsSwipeDelegateValidatorPass::shouldRun(const QQmlSA::Element &element)
@@ -429,17 +429,11 @@ VarBindingTypeValidatorPass::VarBindingTypeValidatorPass(
     QMultiHash<QString, QQmlSA::Element> propertyTypes;
 
     for (const auto pair : expectedPropertyTypes.asKeyValueRange()) {
-        QQmlSA::Element propType;
-
-        if (!pair.second.module.isEmpty()) {
-            propType = resolveType(pair.second.module, pair.second.name);
-            if (propType.isNull())
-                continue;
-        } else {
-            propType = QQmlSA::Element{ pair.second.name };
-        }
-
-        propertyTypes.insert(pair.first, propType);
+        const QQmlSA::Element propType = pair.second.module.isEmpty()
+                ? QQmlSA::Element(pair.second.name)
+                : resolveType(pair.second.module, pair.second.name);
+        if (!propType.isNull())
+            propertyTypes.insert(pair.first, propType);
     }
 
     m_expectedPropertyTypes = propertyTypes;
@@ -542,7 +536,7 @@ void AttachedPropertyReuse::onRead(const QQmlSA::Element &element, const QString
                                                            attachedLocation.startLine(),
                                                            attachedLocation.startColumn() };
             QQmlSA::FixSuggestion suggestion{ "Reference it by id instead:"_L1, idInsertLocation,
-                                              id.isEmpty() ? "<id>."_L1 : (id + '.'_L1) };
+                                              id.isEmpty() ? u"<id>."_s : (id + '.'_L1) };
 
             if (id.isEmpty())
                 suggestion.setHint("You first have to give the element an id"_L1);
@@ -733,8 +727,8 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
 
 PropertyChangesValidatorPass::PropertyChangesValidatorPass(QQmlSA::PassManager *manager)
     : QQmlSA::ElementPass(manager)
+    , m_propertyChanges(resolveType("QtQuick", "PropertyChanges"))
 {
-    m_propertyChanges = resolveType("QtQuick", "PropertyChanges");
 }
 
 bool PropertyChangesValidatorPass::shouldRun(const QQmlSA::Element &element)

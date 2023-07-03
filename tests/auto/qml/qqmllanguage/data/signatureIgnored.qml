@@ -1,6 +1,6 @@
+pragma FunctionSignatureBehavior: Ignored
 import StaticTest
 import QtQml
-
 QtObject {
     property rect rect: ({ x: 12, y: 13 })
     property withLength withLength: 5

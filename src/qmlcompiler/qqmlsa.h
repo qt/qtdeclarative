@@ -4,6 +4,15 @@
 #ifndef QQMLSA_H
 #define QQMLSA_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is part of the qmllint plugin API, with limited compatibility guarantees.
+// Usage of this API may make your code source and binary incompatible with
+// future versions of Qt.
+//
+
 #include "qqmlsaconstants.h"
 #include "qqmljsloggingutils.h"
 
@@ -198,12 +207,7 @@ public:
         memset(other.m_data, 0, sizeofElement);
     }
     Element &operator=(const Element &);
-    Element &operator=(Element &&other) noexcept
-    {
-        memcpy(m_data, other.m_data, sizeofElement);
-        memset(other.m_data, 0, sizeofElement);
-        return *this;
-    }
+    QT_MOVE_ASSIGNMENT_OPERATOR_IMPL_VIA_MOVE_AND_SWAP(Element)
     ~Element();
 
     ScopeType scopeType() const;
@@ -260,6 +264,15 @@ private:
 
     static constexpr qsizetype sizeofElement = 2 * sizeof(QSharedPointer<int>);
     alignas(QSharedPointer<int>) char m_data[sizeofElement];
+
+    void swap(Element &other) noexcept
+    {
+        char t[sizeofElement];
+        memcpy(t, m_data, sizeofElement);
+        memcpy(m_data, other.m_data, sizeofElement);
+        memcpy(other.m_data, t, sizeofElement);
+    }
+    friend void swap(Element &lhs, Element &rhs) noexcept { lhs.swap(rhs); }
 };
 
 class Q_QMLCOMPILER_EXPORT GenericPass

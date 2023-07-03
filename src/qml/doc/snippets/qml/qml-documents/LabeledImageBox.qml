@@ -3,7 +3,7 @@
 
 //! [document]
 // LabeledImageBox.qml
-import QtQuick 2.15
+import QtQuick
 
 Rectangle {
     property alias caption: image.caption

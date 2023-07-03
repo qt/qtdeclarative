@@ -363,6 +363,100 @@ void tst_qqmlvaluetypeproviders::structured()
              ConstructibleValueType(nullptr));
     QCOMPARE(o->property("aVariant").value<ConstructibleValueType>(),
              ConstructibleValueType(nullptr));
+
+    QCOMPARE(o->property("listResult").toInt(), 12 + 67 + 68);
+
+
+    // You can store all kinds of insanity in a VariantObject, but we generally don't.
+    // Since we cannot rule out the possibility of there being such VariantObjects, we need to test
+    // their conversions.
+
+
+    QCOMPARE(o->property("fromInsanity").value<StructuredValueType>(), StructuredValueType());
+
+    QV4::Scope scope(e.handle());
+    QV4::ScopedString name(scope, scope.engine->newString("insanity"));
+
+    QObject *po = o.data();
+    QV4::ScopedObject js(
+        scope, scope.engine->metaTypeToJS(QMetaType::fromType<MyTypeObject *>(), &po));
+
+    const QVariantHash hash {
+        {"i", 12},
+        {"c", QUrl("http://example.com")},
+        {"p", QVariantMap {
+                  {"x", 17},
+                  {"y", 18}
+              }}
+    };
+    QV4::ScopedValue hashValue(
+        scope, e.handle()->newVariantObject(QMetaType::fromType<QVariantHash>(), &hash));
+
+    js->put(name, hashValue);
+
+    StructuredValueType fromHash;
+    fromHash.setI(12);
+    fromHash.setC(ConstructibleValueType(QUrl()));
+    fromHash.setP(QPointF(17, 18));
+
+    QCOMPARE(o->property("fromInsanity").value<StructuredValueType>(), fromHash);
+
+    const QVariantMap map {
+        {"i", 13},
+        {"c", QVariant::fromValue(po) },
+        {"p", QVariantMap {
+                  {"x", 19},
+                  {"y", 20}
+              }}
+    };
+    QV4::ScopedValue mapValue(
+        scope, e.handle()->newVariantObject(QMetaType::fromType<QVariantMap>(), &map));
+    js->put(name, mapValue);
+
+    StructuredValueType fromMap;
+    fromMap.setI(13);
+    fromMap.setC(ConstructibleValueType(po));
+    fromMap.setP(QPointF(19, 20));
+
+    QCOMPARE(o->property("fromInsanity").value<StructuredValueType>(), fromMap);
+
+    BarrenValueType immediate;
+    immediate.setI(14);
+    QV4::ScopedValue immediateValue(
+        scope, e.handle()->newVariantObject(QMetaType::fromType<BarrenValueType>(), &immediate));
+    js->put(name, immediateValue);
+
+    StructuredValueType fromImmediate;
+    fromImmediate.setI(14);
+
+    QCOMPARE(o->property("fromInsanity").value<StructuredValueType>(), fromImmediate);
+
+    QQmlComponent c2(&e);
+    c2.setData(
+        "import QtQml; QtObject { property int i: 99; property point p: ({x: 3, y: 4}) }", QUrl());
+    QVERIFY(c2.isReady());
+    QScopedPointer<QObject> o2(c2.create());
+    QVERIFY(!o2.isNull());
+    QObject *object = o2.data();
+    QV4::ScopedValue objectValue(
+        scope, e.handle()->newVariantObject(QMetaType::fromType<QObject *>(), &object));
+    js->put(name, objectValue);
+
+    StructuredValueType fromObject;
+    fromObject.setI(99);
+    fromObject.setP(QPointF(3, 4));
+
+    QCOMPARE(o->property("fromInsanity").value<StructuredValueType>(), fromObject);
+
+    const MyTypeObject *m = static_cast<const MyTypeObject *>(po);
+    QVERIFY(!m->hasEffectPadding());
+    QMetaObject::invokeMethod(po, "updatePadding");
+    QVERIFY(m->hasEffectPadding());
+    QCOMPARE(m->effectPadding(), QRectF());
+    po->setProperty("newItemPadding", QRectF(1, 2, 3, 4));
+    QMetaObject::invokeMethod(po, "updatePadding");
+    QVERIFY(m->hasEffectPadding());
+    QCOMPARE(m->effectPadding(), QRectF(1, 2, 3, 4));
 }
 
 void tst_qqmlvaluetypeproviders::recursive()

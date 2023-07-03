@@ -643,7 +643,7 @@ bool QQmlPropertyValidator::canCoerce(QMetaType to, QQmlPropertyCache::ConstPtr 
         // only occurs after the whole file has been validated
         // Therefore we need to check the ICs here
         for (const auto& icDatum : compilationUnit->inlineComponentData) {
-            if (icDatum.typeIds.id == to) {
+            if (icDatum.qmlType.typeId() == to) {
                 toMo = compilationUnit->propertyCaches.at(icDatum.objectIndex);
                 break;
             }
@@ -753,7 +753,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(const QQmlPropertyData *p
             // only occurs after the whole file has been validated
             // Therefore we need to check the ICs here
             for (const auto& icDatum: compilationUnit->inlineComponentData) {
-                if (icDatum.typeIds.id == property->propType()) {
+                if (icDatum.qmlType.typeId() == property->propType()) {
                     propertyMetaObject = compilationUnit->propertyCaches.at(icDatum.objectIndex);
                     break;
                 }

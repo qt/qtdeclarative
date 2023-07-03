@@ -259,9 +259,9 @@ void QQmlTypeCompiler::addImport(const QString &module, const QString &qualifier
     document->imports.append(import);
 }
 
-CompositeMetaTypeIds QQmlTypeCompiler::typeIdsForComponent(const QString &inlineComponentName) const
+QQmlType QQmlTypeCompiler::qmlTypeForComponent(const QString &inlineComponentName) const
 {
-    return typeData->typeIds(inlineComponentName);
+    return typeData->qmlType(inlineComponentName);
 }
 
 QQmlCompilePass::QQmlCompilePass(QQmlTypeCompiler *typeCompiler)

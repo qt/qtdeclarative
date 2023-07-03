@@ -29,12 +29,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImageBasePrivate : public QQuickImplicitSizeI
 
 public:
     QQuickImageBasePrivate()
-      : status(QQuickImageBase::Null),
-        progress(0.0),
-        devicePixelRatio(1.0),
-        currentFrame(0),
-        frameCount(0),
-        async(false),
+      : async(false),
         cache(true),
         mirrorHorizontally(false),
         mirrorVertically(false),
@@ -47,18 +42,20 @@ public:
     void setStatus(QQuickImageBase::Status value);
     void setProgress(qreal value);
 
-    QQuickPixmap pix;
-    QQuickImageBase::Status status;
     QUrl url;
-    qreal progress;
+    QQuickPixmap pix;
     QSize sourcesize;
     QSize oldSourceSize;
-    qreal devicePixelRatio;
     QRectF sourceClipRect;
     QQuickImageProviderOptions providerOptions;
     QColorSpace colorSpace;
-    int currentFrame;
-    int frameCount;
+
+    int currentFrame = 0;
+    int frameCount = 0;
+    qreal progress = 0;
+    qreal devicePixelRatio = 1;
+    QQuickImageBase::Status status = QQuickImageBase::Null;
+
     bool async : 1;
     bool cache : 1;
     bool mirrorHorizontally: 1;

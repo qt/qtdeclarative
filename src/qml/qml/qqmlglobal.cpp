@@ -115,30 +115,33 @@ static bool fromMatchingType(
 
         const QMetaType parameterType = ctor.parameterMetaType(0);
 
-        QVariant source = retrieve(parameterType);
-        const QMetaType sourceMetaType = source.metaType();
-        if (sourceMetaType == parameterType) {
-            callConstructor(targetMetaObject, i, source.data(), allocate());
-            return true;
-        }
-
-        if (const QMetaObject *parameterMetaObject = parameterType.metaObject()) {
-            if (const QMetaObject *sourceMetaObject = sourceMetaType.metaObject();
-                    sourceMetaObject && sourceMetaObject->inherits(parameterMetaObject)) {
-                // Allow construction from derived types.
-                callConstructor(targetMetaObject, i, source.data(), allocate());
+        if (retrieve(parameterType, [&](QMetaType sourceMetaType, void *sourceData) {
+            if (sourceMetaType == parameterType) {
+                callConstructor(targetMetaObject, i, sourceData, allocate());
                 return true;
             }
-        }
 
-        // Do not recursively try to create parameters here. This may end up in infinite recursion.
+            if (const QMetaObject *parameterMetaObject = parameterType.metaObject()) {
+                if (const QMetaObject *sourceMetaObject = sourceMetaType.metaObject();
+                        sourceMetaObject && sourceMetaObject->inherits(parameterMetaObject)) {
+                    // Allow construction from derived types.
+                    callConstructor(targetMetaObject, i, sourceData, allocate());
+                    return true;
+                }
+            }
 
-        // At this point, s should be a builtin type. For builtin types
-        // the QMetaType converters are good enough.
-        QVariant converted(parameterType);
-        if (QMetaType::convert(sourceMetaType, source.constData(),
-                               parameterType, converted.data())) {
-            callConstructor(targetMetaObject, i, converted.data(), allocate());
+            // Do not recursively try to create parameters here. This may end up in infinite recursion.
+
+            // At this point, s should be a builtin type. For builtin types
+            // the QMetaType converters are good enough.
+            QVariant converted(parameterType);
+            if (QMetaType::convert(sourceMetaType, sourceData, parameterType, converted.data())) {
+                callConstructor(targetMetaObject, i, converted.data(), allocate());
+                return true;
+            }
+
+            return false;
+        })) {
             return true;
         }
     }
@@ -151,8 +154,10 @@ static bool fromMatchingType(
     const QMetaObject *targetMetaObject, const QV4::Value &source, Allocate &&allocate)
 {
     return fromMatchingType(
-            targetMetaObject, std::forward<Allocate>(allocate), [&](QMetaType parameterType) {
-        return QV4::ExecutionEngine::toVariant(source, parameterType);
+            targetMetaObject, std::forward<Allocate>(allocate),
+            [&](QMetaType parameterType, auto callback) {
+        QVariant variant = QV4::ExecutionEngine::toVariant(source, parameterType);
+        return callback(variant.metaType(), variant.data());
     });
 }
 
@@ -160,8 +165,9 @@ template<typename Allocate>
 static bool fromMatchingType(
     const QMetaObject *targetMetaObject, QVariant source, Allocate &&allocate)
 {
-    return fromMatchingType(targetMetaObject, std::forward<Allocate>(allocate), [&](QMetaType) {
-        return source;
+    return fromMatchingType(targetMetaObject, std::forward<Allocate>(allocate),
+                            [&](QMetaType, auto callback) {
+        return callback(source.metaType(), source.data());
     });
 }
 
@@ -434,55 +440,43 @@ static QVariant byProperties(
     return QVariant();
 }
 
-/*!
- * \internal
- * Specialization that creates the value type in place at \a target, which is expected to be
- * already initialized. This is more efficient if we can do byProperties() since it can use a
- * pre-constructed object. It also avoids the creation of a QVariant in most cases. It is less
- * efficient if you're going to create a QVariant anyway.
- */
-bool QQmlValueTypeProvider::createValueType(
-    QMetaType targetMetaType, void *target, const QV4::Value &source)
+template<typename Allocate, typename DefaultConstruct>
+bool createOrConstructValueType(
+        const QQmlType &targetType, const QV4::Value &source,
+        Allocate &&allocate, DefaultConstruct &&defaultConstruct)
 {
-    if (!isConstructibleMetaType(targetMetaType))
-        return false;
-
-    auto destruct = [targetMetaType, target]() {
-        targetMetaType.destruct(target);
-        return target;
-    };
-
-    const QQmlType type = QQmlMetaType::qmlType(targetMetaType);
-    if (const QMetaObject *targetMeta = QQmlMetaType::metaObjectForValueType(type)) {
+    if (const QMetaObject *targetMetaObject = QQmlMetaType::metaObjectForValueType(targetType)) {
         const auto warn = [&]() {
             qWarning().noquote()
                     << "Could not find any constructor for value type"
-                    << targetMeta->className() << "to call with value" << source.toQStringNoThrow();
+                    << targetMetaObject->className() << "to call with value"
+                    << source.toQStringNoThrow();
         };
 
-        if (type.canPopulateValueType()) {
-            if (source.isObject() && targetMeta) {
-                doWriteProperties(targetMeta, target, source);
+        if (targetType.canPopulateValueType()) {
+            if (source.isObject() && targetMetaObject) {
+                doWriteProperties(targetMetaObject, defaultConstruct(), source);
                 return true;
             }
-            if (type.canConstructValueType()) {
-                if (fromMatchingType(targetMeta, source, destruct))
+            if (targetType.canConstructValueType()) {
+                if (fromMatchingType(targetMetaObject, source, allocate))
                     return true;
                 warn();
 
             }
-        } else if (type.canConstructValueType()) {
-            if (fromMatchingType(targetMeta, source, destruct))
+        } else if (targetType.canConstructValueType()) {
+            if (fromMatchingType(targetMetaObject, source, allocate))
                 return true;
             warn();
         }
     }
 
-    if (const auto valueTypeFunction = type.createValueTypeFunction()) {
+    if (const auto valueTypeFunction = targetType.createValueTypeFunction()) {
         const QVariant result
-                = valueTypeFunction(QJSValuePrivate::fromReturnedValue(source.asReturnedValue()));
-        if (result.metaType() == targetMetaType) {
-            targetMetaType.construct(destruct(), result.constData());
+            = valueTypeFunction(QJSValuePrivate::fromReturnedValue(source.asReturnedValue()));
+        const QMetaType resultType = result.metaType();
+        if (resultType == targetType.typeId()) {
+            resultType.construct(allocate(), result.constData());
             return true;
         }
     }
@@ -490,13 +484,152 @@ bool QQmlValueTypeProvider::createValueType(
     return false;
 }
 
+template<typename Allocate, typename DefaultConstruct>
+bool createOrConstructValueType(
+        const QQmlType &targetType, QMetaType sourceMetaType, void *source,
+        Allocate &&allocate, DefaultConstruct &&defaultConstruct)
+{
+    if (const QMetaObject *targetMetaObject = QQmlMetaType::metaObjectForValueType(targetType)) {
+        const auto warn = [&]() {
+            qWarning().noquote()
+                << "Could not find any constructor for value type"
+                << targetMetaObject->className() << "to call with value" << source;
+        };
+
+        if (targetType.canPopulateValueType()) {
+
+            if (const QMetaObject *sourceMetaObject
+                    = QQmlMetaType::metaObjectForValueType(sourceMetaType)) {
+                doWriteProperties(
+                    targetMetaObject, defaultConstruct(), sourceMetaObject,
+                    [&source](const QMetaObject *sourceMetaObject, int sourceProperty) {
+                        return sourceMetaObject->property(sourceProperty).readOnGadget(source);
+                    });
+                return true;
+            }
+
+            if (sourceMetaType == QMetaType::fromType<QVariantMap>()) {
+                doWriteProperties(
+                        targetMetaObject, defaultConstruct(),
+                        *static_cast<const QVariantMap *>(source));
+                return true;
+            }
+
+            if (sourceMetaType == QMetaType::fromType<QVariantHash>()) {
+                doWriteProperties(
+                        targetMetaObject, defaultConstruct(),
+                        *static_cast<const QVariantHash *>(source));
+                return true;
+            }
+
+            if (sourceMetaType.flags() & QMetaType::PointerToQObject) {
+                doWriteProperties(
+                        targetMetaObject, defaultConstruct(),
+                        *static_cast<QObject *const *>(source));
+                return true;
+            }
+        }
+
+        if (targetType.canConstructValueType()) {
+            if (fromMatchingType(targetMetaObject, std::forward<Allocate>(allocate),
+                                 [&](QMetaType, auto callback) {
+                    return callback(sourceMetaType, source);
+                })) {
+                return true;
+            }
+            warn();
+        }
+    }
+
+    return false;
+}
+
+/*!
+ * \internal
+ * Populate the value type in place at \a target, which is expected to be
+ * allocated and default-constructed, for example the result of a QVariant(QMetaType).
+ * This is efficient if we can do byProperties() since it can use the pre-constructed object.
+ * It also avoids the creation of a QVariant in most cases. It is not
+ * efficient if you're going to create a QVariant anyway.
+ */
+bool QQmlValueTypeProvider::populateValueType(
+    QMetaType targetMetaType, void *target, QMetaType sourceMetaType, void *source)
+{
+    if (sourceMetaType == QMetaType::fromType<QJSValue>()) {
+        const QJSValue *val = static_cast<const QJSValue *>(source);
+        return populateValueType(
+            targetMetaType, target, QV4::Value(QJSValuePrivate::asReturnedValue(val)));
+    }
+
+    if (!isConstructibleMetaType(targetMetaType))
+        return false;
+
+    return createOrConstructValueType(
+            QQmlMetaType::qmlType(targetMetaType), sourceMetaType, source,
+            [targetMetaType, target]() {
+                targetMetaType.destruct(target);
+                return target;
+            }, [target]() {
+                return target;
+            });
+}
+
+/*!
+ * \internal
+ * Populate the value type in place at \a target, which is expected to be
+ * allocated and default-constructed, for example the result of a QVariant(QMetaType).
+ * This is efficient if we can do byProperties() since it can use the pre-constructed object.
+ * It also avoids the creation of a QVariant in most cases. It is not
+ * efficient if you're going to create a QVariant anyway.
+ */
+bool QQmlValueTypeProvider::populateValueType(
+        QMetaType targetMetaType, void *target, const QV4::Value &source)
+{
+    if (!isConstructibleMetaType(targetMetaType))
+        return false;
+
+    return createOrConstructValueType(
+        QQmlMetaType::qmlType(targetMetaType), source, [targetMetaType, target]() {
+            targetMetaType.destruct(target);
+            return target;
+        }, [target]() {
+            return target;
+        });
+}
+
+/*!
+ * \internal
+ * Specialization that constructs the value type on the heap using new and returns a pointer to it.
+ */
+void *QQmlValueTypeProvider::heapCreateValueType(
+        const QQmlType &targetType, const QV4::Value &source)
+{
+    void *target = nullptr;
+    if (createOrConstructValueType(
+        targetType, source, [&]() {
+            const QMetaType metaType = targetType.typeId();
+            const ushort align = metaType.alignOf();
+            target = align > __STDCPP_DEFAULT_NEW_ALIGNMENT__
+                     ? operator new(metaType.sizeOf(), std::align_val_t(align))
+                     : operator new(metaType.sizeOf());
+            return target;
+        }, [&]() {
+            target = targetType.typeId().create();
+            return target;
+        })) {
+        Q_ASSERT(target != nullptr);
+    }
+
+    return target;
+}
+
 QVariant QQmlValueTypeProvider::constructValueType(
-        QMetaType resultMetaType, const QMetaObject *resultMetaObject,
+        QMetaType targetMetaType, const QMetaObject *targetMetaObject,
         int ctorIndex, void *ctorArg)
 {
     QVariant result;
-    fromVerifiedType(resultMetaObject, ctorIndex, ctorArg,
-                     [&]() { return createVariantData(resultMetaType, &result); });
+    fromVerifiedType(targetMetaObject, ctorIndex, ctorArg,
+                     [&]() { return createVariantData(targetMetaType, &result); });
     return result;
 }
 
@@ -776,14 +909,60 @@ void QQmlApplication::setDomain(const QString &arg)
     QCoreApplication::instance()->setOrganizationDomain(arg);
 }
 
-bool qmlobject_can_cast(QObject *object, const QMetaObject *mo)
+static const QQmlData *ddata_for_cast(QObject *object)
 {
     Q_ASSERT(object);
-    Q_ASSERT(mo);
     auto ddata = QQmlData::get(object, false);
-    if (!ddata || ! ddata->propertyCache)
-        return object->metaObject()->inherits(mo);
-   return ddata->propertyCache->firstCppMetaObject()->inherits(mo);
+    return (ddata && ddata->propertyCache) ? ddata : nullptr;
+}
+
+bool qmlobject_can_cpp_cast(QObject *object, const QMetaObject *mo)
+{
+    Q_ASSERT(mo);
+    if (const QQmlData *ddata = ddata_for_cast(object))
+        return ddata->propertyCache->firstCppMetaObject()->inherits(mo);
+    return object->metaObject()->inherits(mo);
+}
+
+bool qmlobject_can_qml_cast(QObject *object, const QQmlType &type)
+{
+    Q_ASSERT(type.isValid());
+
+    // A non-composite type will always have a metaobject.
+    const QMetaObject *typeMetaObject = type.metaObject();
+    const QQmlPropertyCache::ConstPtr typePropertyCache = typeMetaObject
+            ? QQmlPropertyCache::ConstPtr()
+            : QQmlMetaType::findPropertyCacheInCompositeTypes(type.typeId());
+
+    if (const QQmlData *ddata = ddata_for_cast(object)) {
+        for (const QQmlPropertyCache *propertyCache = ddata->propertyCache.data(); propertyCache;
+             propertyCache = propertyCache->parent().data()) {
+
+            if (typeMetaObject) {
+                // Prefer the metaobject inheritance mechanism, since it is more accurate.
+                //
+                // Assume the object can be casted to the type. Then, if we have a type metaobject,
+                // the object's property cache inheritance has to contain it. Otherwise we would
+                // end up with diverging metaobject hierarchies if we created the object's
+                // metaobject. This would be a disaster.
+                if (const QMetaObject *objectMetaObject = propertyCache->metaObject())
+                    return objectMetaObject->inherits(typeMetaObject);
+            } else {
+                // This is a best effort attempt. There are a number of ways for the
+                // property caches to be unrelated but the types still convertible.
+                // Multiple property caches can hold the same metaobject, for example for
+                // versions of non-composite types.
+                if (propertyCache == typePropertyCache.data())
+                    return true;
+            }
+        }
+    }
+
+    // If nothing else works, we have to create the metaobjects.
+
+    return object->metaObject()->inherits(typeMetaObject
+            ? typeMetaObject
+            : (typePropertyCache ? typePropertyCache->createMetaObject() : nullptr));
 }
 
 QT_END_NAMESPACE

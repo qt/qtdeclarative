@@ -152,10 +152,10 @@ void tst_qmlplugindump::plugin()
     QVERIFY2(dumper.waitForStarted(), qPrintable(dumper.errorString()));
     QVERIFY2(dumper.waitForFinished(), qPrintable(dumper.errorString()));
 
-    const QString &result = dumper.readAllStandardOutput();
+    const QByteArray result = dumper.readAllStandardOutput();
     QFile expectedFile(expectedPath);
     QVERIFY2(expectedFile.open(QIODevice::ReadOnly), qPrintable(expectedFile.errorString()));
-    const QString expected = expectedFile.readAll();
+    const QByteArray expected = expectedFile.readAll();
     QCOMPARE(result, expected);
 }
 

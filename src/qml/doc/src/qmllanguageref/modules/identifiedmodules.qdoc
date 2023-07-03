@@ -153,7 +153,6 @@ An identified module has several restrictions upon it:
 \li the module must register its types into the module identifier type
     namespace
 \li the module may not register types into any other module's namespace
-\li clients must specify a version when importing the module
 \endlist
 
 For example, if an identified module is installed into
@@ -170,10 +169,9 @@ module com.example.CustomUi
 \endcode
 
 Clients will then be able to import the above module with the following import
-statement (assuming that the module registers types into version 1.0 of its
-namespace):
+statement:
 \qml
-import com.example.CustomUi 1.0
+import com.example.CustomUi
 \endqml
 
 */

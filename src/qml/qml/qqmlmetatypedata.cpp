@@ -15,8 +15,12 @@ QQmlMetaTypeData::QQmlMetaTypeData()
 
 QQmlMetaTypeData::~QQmlMetaTypeData()
 {
-    for (auto iter = compositeTypes.cbegin(), end = compositeTypes.cend(); iter != end; ++iter)
-        iter.value()->isRegistered = false;
+    {
+        // Unregister all remaining composite types.
+        // Avoid deletion recursion (via QQmlTypePrivate dtor) by moving them out of the way first.
+        CompositeTypes emptyComposites;
+        emptyComposites.swap(compositeTypes);
+    }
 
     propertyCaches.clear();
     // Do this before the attached properties disappear.
@@ -237,13 +241,11 @@ QQmlPropertyCache::ConstPtr QQmlMetaTypeData::propertyCache(
 }
 
 static QQmlPropertyCache::ConstPtr propertyCacheForPotentialInlineComponentType(
-        QMetaType t,
-        const QHash<const QtPrivate::QMetaTypeInterface *,
-                    QV4::ExecutableCompilationUnit *>::const_iterator &iter) {
-    if (t != (*iter)->typeIds.id) {
+        QMetaType t, const QQmlMetaTypeData::CompositeTypes::const_iterator &iter) {
+    if (t != (*iter)->qmlType.typeId()) {
         // this is an inline component, and what we have in the iterator is currently the parent compilation unit
         for (auto &&icDatum: (*iter)->inlineComponentData)
-            if (icDatum.typeIds.id == t)
+            if (icDatum.qmlType.typeId() == t)
                 return (*iter)->propertyCaches.at(icDatum.objectIndex);
     }
     return (*iter)->rootPropertyCache();

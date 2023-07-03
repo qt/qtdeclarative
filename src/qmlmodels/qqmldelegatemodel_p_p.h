@@ -37,7 +37,8 @@ typedef QQmlListCompositor Compositor;
 class QQmlDelegateModelAttachedMetaObject;
 class QQmlAbstractDelegateComponent;
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModelItemMetaType : public QQmlRefCount
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModelItemMetaType final
+    : public QQmlRefCounted<QQmlDelegateModelItemMetaType>
 {
 public:
     QQmlDelegateModelItemMetaType(QV4::ExecutionEngine *engine, QQmlDelegateModel *model, const QStringList &groupNames);
@@ -64,9 +65,9 @@ class QQmlDelegateModelItem : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ modelIndex NOTIFY modelIndexChanged)
-    Q_PROPERTY(int row READ modelRow NOTIFY rowChanged REVISION(2, 12))
-    Q_PROPERTY(int column READ modelColumn NOTIFY columnChanged REVISION(2, 12))
-    Q_PROPERTY(QObject *model READ modelObject CONSTANT)
+    Q_PROPERTY(int row READ modelRow NOTIFY rowChanged REVISION(2, 12) FINAL)
+    Q_PROPERTY(int column READ modelColumn NOTIFY columnChanged REVISION(2, 12) FINAL)
+    Q_PROPERTY(QObject *model READ modelObject CONSTANT FINAL)
 public:
     QQmlDelegateModelItem(const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
                           QQmlAdaptorModel::Accessors *accessor, int modelIndex,
@@ -354,7 +355,7 @@ public:
 class QQmlPartsModel : public QQmlInstanceModel, public QQmlDelegateModelGroupEmitter
 {
     Q_OBJECT
-    Q_PROPERTY(QString filterOnGroup READ filterGroup WRITE setFilterGroup NOTIFY filterGroupChanged RESET resetFilterGroup)
+    Q_PROPERTY(QString filterOnGroup READ filterGroup WRITE setFilterGroup NOTIFY filterGroupChanged RESET resetFilterGroup FINAL)
 public:
     QQmlPartsModel(QQmlDelegateModel *model, const QString &part, QObject *parent = nullptr);
     ~QQmlPartsModel();
@@ -419,7 +420,9 @@ public:
     QList<QQmlPartsModel *> models;
 };
 
-class QQmlDelegateModelAttachedMetaObject : public QAbstractDynamicMetaObject, public QQmlRefCount
+class QQmlDelegateModelAttachedMetaObject final
+    : public QAbstractDynamicMetaObject,
+      public QQmlRefCounted<QQmlDelegateModelAttachedMetaObject>
 {
 public:
     QQmlDelegateModelAttachedMetaObject(

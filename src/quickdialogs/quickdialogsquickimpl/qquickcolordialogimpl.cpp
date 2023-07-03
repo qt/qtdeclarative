@@ -425,7 +425,8 @@ void QQuickColorDialogImpl::setOptions(const QSharedPointer<QColorDialogOptions>
     if (attached) {
         const bool screenGrabbingAllowed = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ScreenWindowGrabbing);
         const bool offscreen = qgetenv("QT_QPA_PLATFORM").compare(QLatin1String("offscreen"), Qt::CaseInsensitive) == 0;
-        attached->eyeDropperButton()->setVisible(screenGrabbingAllowed && !offscreen);
+        const bool noEyeDropperButton = (d->options && d->options->options() & QColorDialogOptions::NoEyeDropperButton);
+        attached->eyeDropperButton()->setVisible(!noEyeDropperButton && screenGrabbingAllowed && !offscreen);
 
         if (d->options) {
             attached->buttonBox()->setVisible(

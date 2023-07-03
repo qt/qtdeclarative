@@ -26,8 +26,7 @@ Button {
         spacing: delegate.spacing
         color: delegate.DialogButtonBox.buttonRole === DialogButtonBox.DestructiveRole
                 ? redColor
-                : delegate.enabled ? (delegate.down ? delegate.palette.highlight : delegate.palette.button)
-                                   : delegate.palette.mid
+                : (delegate.down ? delegate.palette.highlight : delegate.palette.button)
     }
 
     background: Item {

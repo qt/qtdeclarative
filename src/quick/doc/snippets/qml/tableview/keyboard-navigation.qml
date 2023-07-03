@@ -3,7 +3,7 @@
 
 import QtQuick
 import QtQuick.Controls
-import Qt.labs.qmlmodels 1.0
+import Qt.labs.qmlmodels
 
 //![0]
 ApplicationWindow {

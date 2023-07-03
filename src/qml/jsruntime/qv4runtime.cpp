@@ -381,12 +381,8 @@ QV4::ReturnedValue Runtime::As::call(ExecutionEngine *engine, const Value &lval,
         return Encode::null();
 
     // Try to convert the value type
-    if (Scoped<QQmlTypeWrapper> typeWrapper(scope, rval); typeWrapper) {
-        const QMetaType metaType = typeWrapper->d()->type().typeId();
-        const QVariant result = engine->toVariant(lval, metaType);
-        if (result.metaType() == metaType)
-            return engine->metaTypeToJS(metaType, result.constData());
-    }
+    if (Scoped<QQmlTypeWrapper> typeWrapper(scope, rval); typeWrapper)
+        return coerce(engine, lval, typeWrapper->d()->type(), false);
 
     return Encode::undefined();
 }

@@ -25,32 +25,59 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
 {
     const QQmlJSImporter::ImportedTypes &builtinTypes = m_imports;
     m_voidType = builtinTypes.type(u"void"_s).scope;
+    Q_ASSERT(m_voidType);
     m_nullType = builtinTypes.type(u"std::nullptr_t"_s).scope;
+    Q_ASSERT(m_nullType);
     m_realType = builtinTypes.type(u"double"_s).scope;
+    Q_ASSERT(m_realType);
     m_floatType = builtinTypes.type(u"float"_s).scope;
+    Q_ASSERT(m_floatType);
     m_int8Type = builtinTypes.type(u"qint8"_s).scope;
+    Q_ASSERT(m_int8Type);
     m_uint8Type = builtinTypes.type(u"quint8"_s).scope;
+    Q_ASSERT(m_uint8Type);
     m_int16Type = builtinTypes.type(u"short"_s).scope;
+    Q_ASSERT(m_int16Type);
     m_uint16Type = builtinTypes.type(u"ushort"_s).scope;
+    Q_ASSERT(m_uint16Type);
     m_int32Type = builtinTypes.type(u"int"_s).scope;
+    Q_ASSERT(m_int32Type);
     m_uint32Type = builtinTypes.type(u"uint"_s).scope;
+    Q_ASSERT(m_uint32Type);
     m_int64Type = builtinTypes.type(u"qlonglong"_s).scope;
+    Q_ASSERT(m_int64Type);
     m_uint64Type = builtinTypes.type(u"qulonglong"_s).scope;
+    Q_ASSERT(m_uint64Type);
     m_boolType = builtinTypes.type(u"bool"_s).scope;
+    Q_ASSERT(m_boolType);
     m_stringType = builtinTypes.type(u"QString"_s).scope;
+    Q_ASSERT(m_stringType);
     m_stringListType = builtinTypes.type(u"QStringList"_s).scope;
+    Q_ASSERT(m_stringListType);
     m_byteArrayType = builtinTypes.type(u"QByteArray"_s).scope;
+    Q_ASSERT(m_byteArrayType);
     m_urlType = builtinTypes.type(u"QUrl"_s).scope;
+    Q_ASSERT(m_urlType);
     m_dateTimeType = builtinTypes.type(u"QDateTime"_s).scope;
+    Q_ASSERT(m_dateTimeType);
     m_dateType = builtinTypes.type(u"QDate"_s).scope;
+    Q_ASSERT(m_dateType);
     m_timeType = builtinTypes.type(u"QTime"_s).scope;
+    Q_ASSERT(m_timeType);
     m_variantListType = builtinTypes.type(u"QVariantList"_s).scope;
+    Q_ASSERT(m_variantListType);
     m_variantMapType = builtinTypes.type(u"QVariantMap"_s).scope;
+    Q_ASSERT(m_variantMapType);
     m_varType = builtinTypes.type(u"QVariant"_s).scope;
+    Q_ASSERT(m_varType);
     m_jsValueType = builtinTypes.type(u"QJSValue"_s).scope;
+    Q_ASSERT(m_jsValueType);
     m_listPropertyType = builtinTypes.type(u"QQmlListProperty<QObject>"_s).scope;
+    Q_ASSERT(m_listPropertyType);
     m_qObjectType = builtinTypes.type(u"QObject"_s).scope;
+    Q_ASSERT(m_qObjectType);
     m_qObjectListType = builtinTypes.type(u"QObjectList"_s).scope;
+    Q_ASSERT(m_qObjectListType);
 
     QQmlJSScope::Ptr emptyType = QQmlJSScope::create();
     emptyType->setAccessSemantics(QQmlJSScope::AccessSemantics::None);
@@ -1066,6 +1093,31 @@ bool QQmlJSTypeResolver::areEquivalentLists(
 
     for (const auto eq : equivalentLists) {
         if ((equals(a, eq[0]) && equals(b, eq[1])) || (equals(a, eq[1]) && equals(b, eq[0])))
+            return true;
+    }
+
+    return false;
+}
+
+bool QQmlJSTypeResolver::isTriviallyCopyable(const QQmlJSScope::ConstPtr &type) const
+{
+    // pointers are trivially copyable
+    if (type->isReferenceType())
+        return true;
+
+    // Enum values are trivially copyable
+    if (type->scopeType() == QQmlSA::ScopeType::EnumScope)
+        return true;
+
+    for (const QQmlJSScope::ConstPtr &trivial : {
+            m_nullType, m_voidType,
+            m_boolType, m_metaObjectType,
+            m_realType, m_floatType,
+            m_int8Type, m_uint8Type,
+            m_int16Type, m_uint16Type,
+            m_int32Type, m_uint32Type,
+            m_int64Type, m_uint64Type }) {
+        if (equals(type, trivial))
             return true;
     }
 

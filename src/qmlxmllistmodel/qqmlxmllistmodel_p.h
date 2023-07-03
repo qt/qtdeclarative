@@ -188,7 +188,6 @@ private:
     qreal m_progress = 0;
     int m_queryId = -1;
     int m_nextQueryIdGenerator = -1;
-    int m_redirectCount = 0;
     int m_highestRole = Qt::UserRole;
     using ResultFutureWatcher = QFutureWatcher<QQmlXmlListModelQueryResult>;
     QFlatMap<int, ResultFutureWatcher *> m_watchers;

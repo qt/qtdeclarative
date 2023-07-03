@@ -13,11 +13,6 @@
         <file>imgtag/images/heart200.png</file>
         <file>imgtag/images/qtlogo.png</file>
         <file>imgtag/images/starfish_2.png</file>
-        <file>textselection/textselection.qml</file>
-        <file>textselection/pics/endHandle.png</file>
-        <file>textselection/pics/endHandle.sci</file>
-        <file>textselection/pics/startHandle.png</file>
-        <file>textselection/pics/startHandle.sci</file>
         <file>styledtext-layout.qml</file>
         <file>imgtag/TextWithImage.qml</file>
     </qresource>

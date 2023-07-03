@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 //![0]
 // exampleFour.qml
-import QtQuick 2.0
-import Qt.example 1.0
+import QtQuick
+import Qt.example
 import "exampleFour.js" as ExampleFourJs
 
 QtObject {

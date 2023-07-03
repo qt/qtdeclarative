@@ -4,6 +4,8 @@
 import QtQuick
 import "content"
 
+pragma ComponentBehavior: Bound
+
 //! [0]
 Rectangle {
     id: root
@@ -30,17 +32,26 @@ Rectangle {
                     }
         }
 
-        PauseAnimation { duration: 500 }
+        PauseAnimation {
+            duration: 500
+        }
     }
 //! [0]
-    MouseArea{
+    MouseArea {
         id: ma
         z: 1
         anchors.fill: parent
-        onClicked: { z = 1 - z; if (anim.running) anim.stop(); else anim.restart();}
+        onClicked: function () {
+            z = 1 - z;
+            if (anim.running)
+                anim.stop();
+            else
+                anim.restart();
+        }
     }
 
-    width: 320; height: 480
+    width: 320
+    height: 480
 
     // This example shows the same model in three different ListView items,
     // with different highlight ranges. The highlight ranges are set by the
@@ -68,12 +79,16 @@ Rectangle {
 //! [1]
     ListView {
         id: list1
-        height: 50; width: parent.width
-        model: PetsModel {id: aModel}
+        height: 50
+        width: parent.width
+        model: PetsModel {
+            id: aModel
+        }
         delegate: petDelegate
         orientation: ListView.Horizontal
-
-        highlight: Rectangle { color: "lightsteelblue" }
+        highlight: Rectangle {
+            color: "lightsteelblue"
+        }
         currentIndex: root.current
         onCurrentIndexChanged: root.current = currentIndex
         focus: true
@@ -82,29 +97,33 @@ Rectangle {
     ListView {
         id: list2
         y: 160
-        height: 50; width: parent.width
-        model: PetsModel {}
+        height: 50
+        width: parent.width
+        model: PetsModel { }
         delegate: petDelegate
         orientation: ListView.Horizontal
-
-        highlight: Rectangle { color: "yellow" }
+        highlight: Rectangle {
+            color: "yellow"
+        }
         currentIndex: root.current
-        preferredHighlightBegin: 80; preferredHighlightEnd: 220
+        preferredHighlightBegin: 80
+        preferredHighlightEnd: 220
         highlightRangeMode: ListView.ApplyRange
     }
 
     ListView {
         id: list3
         y: 320
-        height: 50; width: parent.width
+        height: 50
+        width: parent.width
         model: PetsModel {}
         delegate: petDelegate
         orientation: ListView.Horizontal
-
         highlight: Rectangle { color: "yellow" }
         currentIndex: root.current
         onCurrentIndexChanged: root.current = currentIndex
-        preferredHighlightBegin: 125; preferredHighlightEnd: 125
+        preferredHighlightBegin: 125
+        preferredHighlightEnd: 125
         highlightRangeMode: ListView.StrictlyEnforceRange
     }
 //! [1]
@@ -123,9 +142,15 @@ Rectangle {
 
             Column {
                 id: column
-                Text { text: 'Name: ' + petDelegateItem.name }
-                Text { text: 'Type: ' + petDelegateItem.type }
-                Text { text: 'Age: ' + petDelegateItem.age }
+                Text {
+                    text: 'Name: ' + petDelegateItem.name
+                }
+                Text {
+                    text: 'Type: ' + petDelegateItem.type
+                }
+                Text {
+                    text: 'Age: ' + petDelegateItem.age
+                }
             }
 
             MouseArea {

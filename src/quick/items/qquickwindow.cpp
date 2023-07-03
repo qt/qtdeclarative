@@ -81,8 +81,8 @@ public:
 
         QAnimationDriver *animationDriver = m_renderLoop->animationDriver();
         if (animationDriver) {
-            connect(animationDriver, SIGNAL(stopped()), this, SLOT(animationStopped()));
-            connect(m_renderLoop, SIGNAL(timeToIncubate()), this, SLOT(incubate()));
+            connect(animationDriver, &QAnimationDriver::stopped, this, &QQuickWindowIncubationController::animationStopped);
+            connect(m_renderLoop, &QSGRenderLoop::timeToIncubate, this, &QQuickWindowIncubationController::incubate);
         }
     }
 
@@ -761,15 +761,14 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 
     animationController.reset(new QQuickAnimatorController(q));
 
-    QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
-    QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
-    QObject::connect(context, SIGNAL(invalidated()), q, SLOT(cleanupSceneGraph()), Qt::DirectConnection);
+    QObject::connect(context, &QSGRenderContext::initialized, q, &QQuickWindow::sceneGraphInitialized, Qt::DirectConnection);
+    QObject::connect(context, &QSGRenderContext::invalidated, q, &QQuickWindow::sceneGraphInvalidated, Qt::DirectConnection);
+    QObject::connect(context, &QSGRenderContext::invalidated, q, &QQuickWindow::cleanupSceneGraph, Qt::DirectConnection);
 
-    QObject::connect(q, SIGNAL(focusObjectChanged(QObject*)), q, SIGNAL(activeFocusItemChanged()));
-    QObject::connect(q, SIGNAL(screenChanged(QScreen*)), q, SLOT(handleScreenChanged(QScreen*)));
-    QObject::connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
-                     q, SLOT(handleApplicationStateChanged(Qt::ApplicationState)));
-    QObject::connect(q, SIGNAL(frameSwapped()), q, SLOT(runJobsAfterSwap()), Qt::DirectConnection);
+    QObject::connect(q, &QQuickWindow::focusObjectChanged, q, &QQuickWindow::activeFocusItemChanged);
+    QObject::connect(q, &QQuickWindow::screenChanged, q, &QQuickWindow::handleScreenChanged);
+    QObject::connect(qApp, &QGuiApplication::applicationStateChanged, q, &QQuickWindow::handleApplicationStateChanged);
+    QObject::connect(q, &QQuickWindow::frameSwapped, q, &QQuickWindow::runJobsAfterSwap, Qt::DirectConnection);
 
     if (QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>())
         service->addWindow(q);
@@ -1325,6 +1324,41 @@ QObject *QQuickWindow::focusObject() const
     return const_cast<QQuickWindow*>(this);
 }
 
+/*!
+    \internal
+
+    Clears all exclusive and passive grabs for the points in \a pointerEvent.
+
+    We never allow any kind of grab to persist after release, unless we're waiting
+    for a synth event from QtGui (as with most tablet events), so for points that
+    are fully released, the grab is cleared.
+
+    Called when QQuickWindow::event dispatches events, or when the QQuickOverlay
+    has filtered an event so that it bypasses normal delivery.
+*/
+void QQuickWindowPrivate::clearGrabbers(QPointerEvent *pointerEvent)
+{
+    if (pointerEvent->isEndEvent()
+        && !(QQuickDeliveryAgentPrivate::isTabletEvent(pointerEvent)
+             && (qApp->testAttribute(Qt::AA_SynthesizeMouseForUnhandledTabletEvents)
+                 || QWindowSystemInterfacePrivate::TabletEvent::platformSynthesizesMouse))) {
+        if (pointerEvent->isSinglePointEvent()) {
+            if (static_cast<QSinglePointEvent *>(pointerEvent)->buttons() == Qt::NoButton) {
+                auto &firstPt = pointerEvent->point(0);
+                pointerEvent->setExclusiveGrabber(firstPt, nullptr);
+                pointerEvent->clearPassiveGrabbers(firstPt);
+            }
+        } else {
+            for (auto &point : pointerEvent->points()) {
+                if (point.state() == QEventPoint::State::Released) {
+                    pointerEvent->setExclusiveGrabber(point, nullptr);
+                    pointerEvent->clearPassiveGrabbers(point);
+                }
+            }
+        }
+    }
+}
+
 /*! \reimp */
 bool QQuickWindow::event(QEvent *event)
 {
@@ -1467,26 +1501,7 @@ bool QQuickWindow::event(QEvent *event)
         // or fix QTBUG-90851 so that the event always has points?
         bool ret = (da && da->event(event));
 
-        // failsafe: never allow any kind of grab to persist after release,
-        // unless we're waiting for a synth event from QtGui (as with most tablet events)
-        if (pe->isEndEvent() && !(QQuickDeliveryAgentPrivate::isTabletEvent(pe) &&
-                                  (qApp->testAttribute(Qt::AA_SynthesizeMouseForUnhandledTabletEvents) ||
-                                   QWindowSystemInterfacePrivate::TabletEvent::platformSynthesizesMouse))) {
-            if (pe->isSinglePointEvent()) {
-                if (static_cast<QSinglePointEvent *>(pe)->buttons() == Qt::NoButton) {
-                    auto &firstPt = pe->point(0);
-                    pe->setExclusiveGrabber(firstPt, nullptr);
-                    pe->clearPassiveGrabbers(firstPt);
-                }
-            } else {
-                for (auto &point : pe->points()) {
-                    if (point.state() == QEventPoint::State::Released) {
-                        pe->setExclusiveGrabber(point, nullptr);
-                        pe->clearPassiveGrabbers(point);
-                    }
-                }
-            }
-        }
+        d->clearGrabbers(pe);
 
         if (ret)
             return true;

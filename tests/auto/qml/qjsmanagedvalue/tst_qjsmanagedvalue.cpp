@@ -542,7 +542,7 @@ void tst_QJSManagedValue::toVariant()
     }
 
 
-    // array
+    // variant list
     {
         auto handler = qInstallMessageHandler([](QtMsgType type, const QMessageLogContext &, const QString &) {
             if (type == QtMsgType::QtWarningMsg)
@@ -553,12 +553,10 @@ void tst_QJSManagedValue::toVariant()
         QVariantList listIn;
         listIn << 123 << QStringLiteral("hello");
         QJSManagedValue array(eng.toManagedValue(listIn));
-        QVERIFY(array.isArray());
         QCOMPARE(array.property(QStringLiteral("length")).toInt(), 2);
 
         QVariant retained = array.toVariant();
-        QCOMPARE(retained.metaType(), QMetaType::fromType<QJSValue>());
-        QVERIFY(QJSManagedValue(retained.value<QJSValue>(), &eng).strictlyEquals(array));
+        QCOMPARE(retained.metaType(), QMetaType::fromType<QVariantList>());
 
         QVariantList listOut = retained.toList();
         QCOMPARE(listOut.size(), listIn.size());
@@ -566,7 +564,6 @@ void tst_QJSManagedValue::toVariant()
             QCOMPARE(listOut.at(i), listIn.at(i));
         // round-trip conversion
         QJSManagedValue array2(eng.toManagedValue(retained));
-        QVERIFY(array2.isArray());
         QCOMPARE(array2.property(QStringLiteral("length")).toInt(), array.property(QStringLiteral("length")).toInt());
         for (int i = 0; i < array.property(QStringLiteral("length")).toInt(); ++i)
             QVERIFY(array2.property(i).strictlyEquals(array.property(i)));
@@ -1525,8 +1522,6 @@ void tst_QJSManagedValue::strictlyEquals()
     {
         QJSManagedValue var1(eng.toManagedValue(QVariant(QStringList() << QStringLiteral("a"))));
         QJSManagedValue var2(eng.toManagedValue(QVariant(QStringList() << QStringLiteral("a"))));
-        QVERIFY(var1.isArray());
-        QVERIFY(var2.isArray());
         QVERIFY(!var1.strictlyEquals(var2));
     }
     {

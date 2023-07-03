@@ -260,6 +260,12 @@ void TestQmllint::testUnqualified_data()
                           Message {
                                   QStringLiteral("index is implicitly injected into this delegate. "
                                                  "Add a required property instead.") } } };
+    QTest::newRow("storeSloppy")
+            << QStringLiteral("UnqualifiedInStoreSloppy.qml")
+            << Result{ { Message{ QStringLiteral("Unqualified access"), 9, 26} } };
+    QTest::newRow("storeStrict")
+            << QStringLiteral("UnqualifiedInStoreStrict.qml")
+            << Result{ { Message{ QStringLiteral("Unqualified access"), 9, 52} } };
 }
 
 void TestQmllint::testUnknownCausesFail()
@@ -1058,6 +1064,16 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                        {},
                        { Message{ QStringLiteral("Hours") } },
                        Result::ExitsNormally };
+
+    QTest::newRow("StoreNameMethod")
+            << QStringLiteral("storeNameMethod.qml")
+            << Result { { Message { QStringLiteral("Cannot assign to method foo") } } };
+
+    QTest::newRow("CoerceToVoid")
+            << QStringLiteral("coercetovoid.qml")
+            << Result { { Message {
+                    QStringLiteral("Function without return type annotation returns double")
+               } } };
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -1233,6 +1249,8 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("attachedImportUse") << QStringLiteral("attachedImportUse.qml");
     QTest::newRow("VariantMapGetPropertyLookup") << QStringLiteral("variantMapLookup.qml");
     QTest::newRow("StringToDateTime") << QStringLiteral("stringToDateTime.qml");
+    QTest::newRow("ScriptInTemplate") << QStringLiteral("scriptInTemplate.qml");
+    QTest::newRow("AddressableValue") << QStringLiteral("addressableValue.qml");
 }
 
 void TestQmllint::cleanQmlCode()

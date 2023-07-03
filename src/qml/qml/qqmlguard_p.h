@@ -28,8 +28,10 @@ public:
     inline QQmlGuardImpl();
     inline QQmlGuardImpl(QObject *);
     inline QQmlGuardImpl(const QQmlGuardImpl &);
+protected:
     inline ~QQmlGuardImpl();
 
+public: // ### make so it can be private
     QObject *o = nullptr;
     QQmlGuardImpl  *next = nullptr;
     QQmlGuardImpl **prev = nullptr;
@@ -48,10 +50,10 @@ class QQmlGuard : protected QQmlGuardImpl
 {
     friend class QQmlData;
 public:
-    inline QQmlGuard();
-    inline QQmlGuard(ObjectDestroyedFn objectDestroyed, T *);
-    inline QQmlGuard(T *);
-    inline QQmlGuard(const QQmlGuard<T> &);
+    Q_NODISCARD_CTOR inline QQmlGuard();
+    Q_NODISCARD_CTOR inline QQmlGuard(ObjectDestroyedFn objectDestroyed, T *);
+    Q_NODISCARD_CTOR inline QQmlGuard(T *);
+    Q_NODISCARD_CTOR inline QQmlGuard(const QQmlGuard<T> &);
 
     inline QQmlGuard<T> &operator=(const QQmlGuard<T> &o);
     inline QQmlGuard<T> &operator=(T *);
@@ -75,7 +77,7 @@ public:
 void Q_QML_PRIVATE_EXPORT hasJsOwnershipIndicator(QQmlGuardImpl *);
 
 template <typename T>
-class QQmlStrongJSQObjectReference : protected QQmlGuardImpl
+class QQmlStrongJSQObjectReference final : protected QQmlGuardImpl
 {
 public:
     T *object() const noexcept { return static_cast<T *>(o); }

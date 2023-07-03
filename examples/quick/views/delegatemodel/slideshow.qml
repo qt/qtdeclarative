@@ -5,12 +5,15 @@ import QtQuick
 import QtQml.Models
 import shared as Shared
 
+pragma ComponentBehavior: Bound
+
 Rectangle {
     id: root
 
     property Item displayItem: null
 
-    width: 300; height: 400
+    width: 300
+    height: 400
 
     color: "black"
 
@@ -25,13 +28,17 @@ Rectangle {
         delegate: Item {
             id: delegateItem
 
-            width: 76; height: 76
+            width: 76
+            height: 76
 
             required property string thumbnail
 
             Rectangle {
                 id: image
-                x: 0; y: 0; width: 76; height: 76
+                x: 0
+                y: 0
+                width: 76
+                height: 76
                 border.width: 1
                 border.color: "white"
                 color: "black"
@@ -56,7 +63,14 @@ Rectangle {
                     State {
                         when: root.displayItem === delegateItem
                         name: "inDisplay";
-                        ParentChange { target: image; parent: imageContainer; x: 75; y: 75; width: 150; height: 150 }
+                        ParentChange {
+                            target: image
+                            parent: imageContainer
+                            x: 75
+                            y: 75
+                            width: 150
+                            height: 150
+                        }
                         PropertyChanges {
                             image.z: 2
                             delegateItem.DelegateModel.inItems: false
@@ -65,7 +79,14 @@ Rectangle {
                     State {
                         when: root.displayItem !== delegateItem
                         name: "inList";
-                        ParentChange { target: image; parent: delegateItem; x: 2; y: 2; width: 75; height: 75 }
+                        ParentChange {
+                            target: image
+                            parent: delegateItem
+                            x: 2
+                            y: 2
+                            width: 75
+                            height: 75
+                        }
                         PropertyChanges {
                             image.z: 1
                             delegateItem.DelegateModel.inItems: true
@@ -77,11 +98,19 @@ Rectangle {
                     Transition {
                         from: "inList"
                         SequentialAnimation {
-                            PropertyAction { target: delegateItem; property: "DelegateModel.inPersistedItems"; value: true }
+                            PropertyAction {
+                                target: delegateItem
+                                property: "DelegateModel.inPersistedItems"
+                                value: true
+                            }
                             ParentAnimation {
                                 target: image;
                                 via: root
-                                NumberAnimation { target: image; properties: "x,y,width,height"; duration: 1000 }
+                                NumberAnimation {
+                                    target: image
+                                    properties: "x,y,width,height"
+                                    duration: 1000
+                                }
                             }
                         }
                     }, Transition {
@@ -89,9 +118,17 @@ Rectangle {
                         SequentialAnimation {
                             ParentAnimation {
                                 target: image
-                                NumberAnimation { target: image; properties: "x,y,width,height"; duration: 1000 }
+                                NumberAnimation {
+                                    target: image
+                                    properties: "x,y,width,height"
+                                    duration: 1000
+                                }
                             }
-                            PropertyAction { target: delegateItem; property: "DelegateModel.inPersistedItems"; value: false }
+                            PropertyAction {
+                                target: delegateItem
+                                property: "DelegateModel.inPersistedItems"
+                                value: false
+                            }
                         }
                     }
                 ]

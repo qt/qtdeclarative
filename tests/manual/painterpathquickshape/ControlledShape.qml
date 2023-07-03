@@ -13,6 +13,7 @@ Item {
     property alias strokeColor: shapePath.strokeColor
     property alias strokeWidth: shapePath.strokeWidth
     property alias fillRule: shapePath.fillRule
+    property alias shapeTransform: shape.transform
 
     property alias startX: shapePath.startX
     property alias startY: shapePath.startY
@@ -58,48 +59,48 @@ Item {
 
     property var gradients: [ null, linearGradient, radialGradient, conicalGradient ]
 
-    Shape {
-        id: shape
-        x: 0
-        y: 0
-        preferredRendererType: controlPanel.preferCurve ? Shape.CurveRenderer : Shape.UnknownRenderer
-        onRendererTypeChanged: {
-            controlPanel.rendererName = rendererType == Shape.SoftwareRenderer ? "Software" :
-                                        rendererType == Shape.GeometryRenderer ? "Geometry" :
-                                        rendererType == Shape.CurveRenderer ? "Curve" : "Unknown";
-        }
-
+    Item {
         transform: [
             Scale {
-               xScale: controlPanel.scale
-               yScale: controlPanel.scale
-               origin.x: shape.implicitWidth / 2
-               origin.y: shape.implicitHeight / 2
-           }
-       ]
+                xScale: controlPanel.scale
+                yScale: controlPanel.scale
+                origin.x: shape.implicitWidth / 2
+                origin.y: shape.implicitHeight / 2
+            }
+        ]
+        Shape {
+            id: shape
+            x: 0
+            y: 0
+            preferredRendererType: controlPanel.preferCurve ? Shape.CurveRenderer : Shape.UnknownRenderer
+            onRendererTypeChanged: {
+                controlPanel.rendererName = rendererType == Shape.SoftwareRenderer ? "Software" :
+                                                                                     rendererType == Shape.GeometryRenderer ? "Geometry" :
+                                                                                                                              rendererType == Shape.CurveRenderer ? "Curve" : "Unknown";
+            }
 
-        ShapePath {
-            id: shapePath
-            fillRule: ShapePath.WindingFill
-            fillGradient: gradients[controlPanel.gradientType]
-            strokeColor: controlPanel.outlineColor
-            fillColor: controlPanel.fillColor
-            strokeWidth: controlPanel.outlineWidth
-            strokeStyle: controlPanel.outlineStyle
-            joinStyle: controlPanel.joinStyle
-            capStyle: controlPanel.capStyle
-        }
+            ShapePath {
+                id: shapePath
+                fillRule: ShapePath.WindingFill
+                fillGradient: gradients[controlPanel.gradientType]
+                strokeColor: controlPanel.outlineColor
+                fillColor: controlPanel.fillColor
+                strokeWidth: controlPanel.outlineWidth
+                strokeStyle: controlPanel.outlineStyle
+                joinStyle: controlPanel.joinStyle
+                capStyle: controlPanel.capStyle
+            }
 
-        Repeater {
-            model: topLevel.delegate
-            onModelChanged: {
-                shapePath.pathElements = []
-                for (var i = 0; i < model.length; ++i)
-                    shapePath.pathElements.push(model[i])
+            Repeater {
+                model: topLevel.delegate
+                onModelChanged: {
+                    shapePath.pathElements = []
+                    for (var i = 0; i < model.length; ++i)
+                        shapePath.pathElements.push(model[i])
+                }
             }
         }
     }
-
     Connections {
         target: controlPanel
         function onPathChanged() {

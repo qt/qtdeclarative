@@ -16,8 +16,9 @@
 //
 
 #include <private/qmetaobject_p.h>
-#include <private/qtqmlglobal_p.h>
 #include <private/qqmlmetaobject_p.h>
+#include <private/qqmltype_p.h>
+#include <private/qtqmlglobal_p.h>
 
 #include <QtQml/qqml.h>
 #include <QtCore/qobject.h>
@@ -122,7 +123,8 @@ do { \
     QMetaObject::disconnect(sender, signalIdx, receiver, methodIdx); \
 } while (0)
 
-Q_QML_PRIVATE_EXPORT bool qmlobject_can_cast(QObject *object, const QMetaObject *mo);
+Q_QML_PRIVATE_EXPORT bool qmlobject_can_cpp_cast(QObject *object, const QMetaObject *mo);
+Q_QML_PRIVATE_EXPORT bool qmlobject_can_qml_cast(QObject *object, const QQmlType &type);
 
 /*!
     This method is identical to qobject_cast<T>() except that it does not require lazy
@@ -141,7 +143,7 @@ T qmlobject_cast(QObject *object)
 {
     if (!object)
         return nullptr;
-    if (qmlobject_can_cast(object, &(std::remove_pointer_t<T>::staticMetaObject)))
+    if (qmlobject_can_cpp_cast(object, &(std::remove_pointer_t<T>::staticMetaObject)))
         return static_cast<T>(object);
     else
         return nullptr;
@@ -204,7 +206,13 @@ inline void QQml_setParent_noEvent(QObject *object, QObject *parent)
 class QQmlValueTypeProvider
 {
 public:
-    static bool createValueType(QMetaType targetMetaType, void *target, const QV4::Value &source);
+    static bool populateValueType(
+            QMetaType targetMetaType, void *target, const QV4::Value &source);
+    static bool populateValueType(
+            QMetaType targetMetaType, void *target, QMetaType sourceMetaType, void *source);
+
+    static Q_QML_PRIVATE_EXPORT void *heapCreateValueType(
+            const QQmlType &targetType, const QV4::Value &source);
     static QVariant constructValueType(
             QMetaType targetMetaType, const QMetaObject *targetMetaObject,
             int ctorIndex, void *ctorArg);

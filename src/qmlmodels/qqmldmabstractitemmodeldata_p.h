@@ -25,8 +25,8 @@ class VDMAbstractItemModelDataType;
 class QQmlDMAbstractItemModelData : public QQmlDelegateModelItem
 {
     Q_OBJECT
-    Q_PROPERTY(bool hasModelChildren READ hasModelChildren CONSTANT)
-    Q_PROPERTY(QVariant modelData READ modelData WRITE setModelData NOTIFY modelDataChanged)
+    Q_PROPERTY(bool hasModelChildren READ hasModelChildren CONSTANT FINAL)
+    Q_PROPERTY(QVariant modelData READ modelData WRITE setModelData NOTIFY modelDataChanged FINAL)
     QT_ANONYMOUS_PROPERTY(QVariant READ modelData NOTIFY modelDataChanged)
 
 public:
@@ -72,8 +72,8 @@ private:
     QVector<QVariant> m_cachedData;
 };
 
-class VDMAbstractItemModelDataType
-        : public QQmlRefCount
+class VDMAbstractItemModelDataType final
+        : public QQmlRefCounted<VDMAbstractItemModelDataType>
         , public QQmlAdaptorModel::Accessors
         , public QAbstractDynamicMetaObject
 {

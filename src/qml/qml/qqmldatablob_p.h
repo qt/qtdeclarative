@@ -35,7 +35,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlTypeLoader;
-class Q_QML_PRIVATE_EXPORT QQmlDataBlob : public QQmlRefCount
+class Q_QML_PRIVATE_EXPORT QQmlDataBlob : public QQmlRefCounted<QQmlDataBlob>
 {
 public:
     using Ptr = QQmlRefPointer<QQmlDataBlob>;
@@ -56,7 +56,7 @@ public:
     };
 
     QQmlDataBlob(const QUrl &, Type, QQmlTypeLoader* manager);
-    ~QQmlDataBlob() override;
+    virtual ~QQmlDataBlob();
 
     void startLoading();
 

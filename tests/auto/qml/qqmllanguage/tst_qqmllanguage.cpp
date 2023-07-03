@@ -417,6 +417,11 @@ private slots:
     void unregisteredValueTypeConversion();
     void retainThis();
 
+    void variantObjectList();
+    void jitExceptions();
+
+    void attachedInCtor();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -5760,7 +5765,7 @@ void tst_qqmllanguage::selfReference()
 
     const QMetaObject *metaObject = o->metaObject();
     QMetaProperty selfProperty = metaObject->property(metaObject->indexOfProperty("self"));
-    QCOMPARE(selfProperty.metaType().id(), compilationUnit->typeIds.id.id());
+    QCOMPARE(selfProperty.metaType().id(), compilationUnit->qmlType.typeId().id());
 
     QByteArray typeName = selfProperty.typeName();
     QVERIFY(typeName.endsWith('*'));
@@ -5769,7 +5774,7 @@ void tst_qqmllanguage::selfReference()
 
     QMetaMethod selfFunction = metaObject->method(metaObject->indexOfMethod("returnSelf()"));
     QVERIFY(selfFunction.isValid());
-    QCOMPARE(selfFunction.returnType(), compilationUnit->typeIds.id.id());
+    QCOMPARE(selfFunction.returnType(), compilationUnit->qmlType.typeId().id());
 
     QMetaMethod selfSignal;
 
@@ -5783,7 +5788,7 @@ void tst_qqmllanguage::selfReference()
 
     QVERIFY(selfSignal.isValid());
     QCOMPARE(selfSignal.parameterCount(), 1);
-    QCOMPARE(selfSignal.parameterType(0), compilationUnit->typeIds.id.id());
+    QCOMPARE(selfSignal.parameterType(0), compilationUnit->qmlType.typeId().id());
 }
 
 void tst_qqmllanguage::selfReferencingSingleton()
@@ -6770,11 +6775,17 @@ void tst_qqmllanguage::bareInlineComponent()
             QVERIFY(type.module().isEmpty());
             tab1Found = true;
 
-            const QQmlType leftTab = QQmlMetaType::inlineComponentType(type, "LeftTab");
-            QCOMPARE(leftTab.containingType(), type);
+            const QQmlType leftTab = QQmlMetaType::inlineComponentTypeForUrl(
+                    type.sourceUrl(), "LeftTab");
+            QUrl leftUrl = leftTab.sourceUrl();
+            leftUrl.setFragment(QString());
+            QCOMPARE(leftUrl, type.sourceUrl());
 
-            const QQmlType rightTab = QQmlMetaType::inlineComponentType(type, "RightTab");
-            QCOMPARE(rightTab.containingType(), type);
+            const QQmlType rightTab = QQmlMetaType::inlineComponentTypeForUrl(
+                    type.sourceUrl(), "RightTab");
+            QUrl rightUrl = rightTab.sourceUrl();
+            rightUrl.setFragment(QString());
+            QCOMPARE(rightUrl, type.sourceUrl());
         }
     }
     QVERIFY(tab1Found);
@@ -7724,12 +7735,20 @@ void tst_qqmllanguage::functionSignatureEnforcement()
     QCOMPARE(ignored->property("m").toInt(), 77);
     QCOMPARE(ignored->property("n").toInt(), 67);
 
-    QQmlComponent c2(&engine, testFileUrl("signatureEnforced.qml"));
+    const QUrl url2 = testFileUrl("signatureEnforced.qml");
+    QQmlComponent c2(&engine, url2);
     QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+
+    QTest::ignoreMessage(
+            QtCriticalMsg,
+            qPrintable(url2.toString() + u":36: 15 should be coerced to void because the function "
+                                          "called is insufficiently annotated. The original value "
+                                          "is retained. "
+                                          "This will change in a future version of Qt."_s));
 
     QScopedPointer<QObject> enforced(c2.create());
     QCOMPARE(enforced->property("l").toInt(), 2); // strlen("no")
-    QCOMPARE(enforced->property("m").toInt(), 12);
+    QCOMPARE(enforced->property("m").toInt(), 77);
     QCOMPARE(enforced->property("n").toInt(), 99);
     QCOMPARE(enforced->property("o").toInt(), 77);
 }
@@ -7915,7 +7934,9 @@ void tst_qqmllanguage::asValueType()
     QQmlComponent c(&engine, url);
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
 
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(url.toString() + ":6:5: Unable to assign [undefined] to QRectF"_L1));
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url.toString() + ":7:5: Unable to assign [undefined] to QRectF"_L1));
     QScopedPointer<QObject> o(c.create());
 
     QCOMPARE(o->property("a"), QVariant());
@@ -7931,6 +7952,9 @@ void tst_qqmllanguage::asValueType()
     const QPointF point = o->property("e").value<QPointF>();
     QCOMPARE(point.x(), 10.0);
     QCOMPARE(point.y(), 20.0);
+
+    const ValueTypeWithString withString = o->property("f").value<ValueTypeWithString>();
+    QCOMPARE(withString.toString(), u"red");
 }
 
 void tst_qqmllanguage::typedEnums_data()
@@ -8035,6 +8059,51 @@ void tst_qqmllanguage::retainThis()
 
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_qqmllanguage::variantObjectList()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("variantObjectList.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    BirthdayParty *party = o->property("q").value<BirthdayParty *>();
+    QCOMPARE(party->guestCount(), 3);
+    QCOMPARE(party->guest(0)->objectName(), "Leo Hodges");
+    QCOMPARE(party->guest(1)->objectName(), "Jack Smith");
+    QCOMPARE(party->guest(2)->objectName(), "Anne Brown");
+}
+
+void tst_qqmllanguage::jitExceptions()
+{
+    QQmlEngine e;
+    const QUrl url = testFileUrl("jitExceptions.qml");
+    QQmlComponent c(&e, testFileUrl("jitExceptions.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url.toString() + u":5: ReferenceError: control is not defined"_s));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+}
+
+void tst_qqmllanguage::attachedInCtor()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e);
+    c.setData(R"(
+        import Test
+        AttachedInCtor {}
+    )", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    AttachedInCtor *a = qobject_cast<AttachedInCtor *>(o.data());
+    QVERIFY(a->attached);
+    QCOMPARE(a->attached, qmlAttachedPropertiesObject<AttachedInCtor>(a, false));
 }
 
 QTEST_MAIN(tst_qqmllanguage)

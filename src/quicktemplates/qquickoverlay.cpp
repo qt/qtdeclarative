@@ -522,6 +522,12 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
         // Make sure to accept the touch event in order to receive the consequent
         // touch events, to be able to close non-modal popups on release outside.
         event->accept();
+        // Since we eat the event, QQuickWindow::event never sees it to clean up the
+        // grabber states. So we have to do so explicitly.
+        if (QQuickWindow *window = parentItem() ? parentItem()->window() : nullptr) {
+            QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
+            d->clearGrabbers(static_cast<QPointerEvent *>(event));
+        }
         return true;
 #endif
 

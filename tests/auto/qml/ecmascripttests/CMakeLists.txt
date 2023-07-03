@@ -10,6 +10,7 @@ file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     test262/*)
 list(APPEND test_data ${test_data_glob})
+list(FILTER test_data EXCLUDE REGEX ".git")
 
 qt_internal_add_test(tst_ecmascripttests
     SOURCES
