@@ -3072,6 +3072,10 @@ QSGTexture *QQuickWindowPrivate::createTextureFromNativeTexture(quint64 nativeOb
     The background color for the window.
 
     Setting this property is more efficient than using a separate Rectangle.
+
+    \note If you set the color to \c "transparent" or to a color with alpha translucency,
+    you should also set suitable \l flags such as \c {flags: Qt.FramelessWindowHint}.
+    Otherwise, window translucency may not be enabled consistently on all platforms.
 */
 
 /*!
