@@ -31,7 +31,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
     Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged FINAL)
     Q_PROPERTY(bool cache READ cache WRITE setCache NOTIFY cacheChanged FINAL)
-    Q_PROPERTY(QSize sourceSize READ sourceSize WRITE setSourceSize RESET resetSourceSize NOTIFY sourceSizeChanged FINAL)
     Q_PROPERTY(bool mirror READ mirror WRITE setMirror NOTIFY mirrorChanged FINAL)
     Q_PROPERTY(bool mirrorVertically READ mirrorVertically WRITE setMirrorVertically NOTIFY mirrorVerticallyChanged REVISION(6, 2) FINAL)
     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged REVISION(2, 14))
