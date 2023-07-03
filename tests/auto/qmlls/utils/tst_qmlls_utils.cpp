@@ -1409,12 +1409,12 @@ void tst_qmlls_utils::resolveExpressionType()
 
     QCOMPARE(locations.size(), 1);
 
-    QQmlJSScope::ConstPtr definition = QQmlLSUtils::resolveExpressionType(
-            locations.front().domItem, QQmlLSUtilsResolveOptions::JustOwner);
+    auto definition = QQmlLSUtils::resolveExpressionType(
+            locations.front().domItem, QQmlLSUtilsResolveOptions::ResolveOwnerType);
 
     QVERIFY(definition);
-    QCOMPARE(definition->filePath(), expectedFile);
-    QQmlJS::SourceLocation location = definition->sourceLocation();
+    QCOMPARE(definition->semanticScope->filePath(), expectedFile);
+    QQmlJS::SourceLocation location = definition->semanticScope->sourceLocation();
     QCOMPARE((int)location.startLine, expectedLine);
 }
 

@@ -37,17 +37,27 @@ struct QQmlLSUtilsTextPosition
 };
 
 enum QQmlLSUtilsIdentifierType : char {
+    JavaScriptIdentifier,
     PropertyIdentifier,
-    PropertyChangedHandlerIdentifier,
     PropertyChangedSignalIdentifier,
+    PropertyChangedHandlerIdentifier,
     SignalIdentifier,
     SignalHandlerIdentifier,
+    MethodIdentifier,
+    QmlObjectIdIdentifier,
+    QmlObjectIdentifier
 };
 
 struct QQmlLSUtilsErrorMessage
 {
     int code;
     QString message;
+};
+
+struct QQmlLSUtilsExpressionType
+{
+    QQmlJSScope::ConstPtr semanticScope;
+    QQmlLSUtilsIdentifierType type;
 };
 
 struct QQmlLSUtilsLocation
@@ -92,13 +102,12 @@ struct QQmlLSUtilsEdit
 
 /*!
    \internal
-    Choose whether to resolve the entire type (useful for QmlObjects, Inline Components) or just
-    the owner type (useful for properties, which are only unique given an ownerType and their
-    property name).
+    Choose whether to resolve the owner type or the entire type (the latter is only required to
+    resolve the types of qualified names and property accesses).
  */
 enum QQmlLSUtilsResolveOptions {
-    JustOwner,
-    Everything,
+    ResolveOwnerType,
+    ResolveActualTypeForFieldMemberExpression,
 };
 
 class QQmlLSUtils
@@ -123,8 +132,8 @@ public:
                                                                      const QString &newName);
     static QList<QQmlLSUtilsEdit> renameUsagesOf(QQmlJS::Dom::DomItem item, const QString &newName);
 
-    static QQmlJSScope::ConstPtr resolveExpressionType(QQmlJS::Dom::DomItem item,
-                                                       QQmlLSUtilsResolveOptions);
+    static std::optional<QQmlLSUtilsExpressionType>
+    resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolveOptions);
 };
 QT_END_NAMESPACE
 
