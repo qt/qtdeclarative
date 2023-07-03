@@ -30,6 +30,8 @@ static_assert(QQmlJSScope::sizeofQQmlSAElement() == sizeof(Element));
     \inmodule QtQmlCompiler
 
     \brief Provides tools for static analysis on QML programs.
+
+    \modulestate Technical Preview
  */
 
 /*!
