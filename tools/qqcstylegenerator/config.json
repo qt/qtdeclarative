@@ -1,7 +1,13 @@
 {
     "themes": ["Light", "Dark"],
     "image formats": ["png@2x"],
-    "default export": ["image", "geometry"],
+    "default export": [
+        {"atom": "default", "export": ["image", "geometry"]},
+        {"atom": "background", "export": ["image", "geometry"]},
+        {"atom": "contentItem", "export": ["layout"]},
+        {"atom": "indicator", "export": ["image", "geometry"]},
+        {"atom": "label", "export": ["text", "geometry"]}
+    ],
     "controls": [
     {
         "name": "Button",
@@ -9,8 +15,8 @@
         "component set": "ButtonTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ButtonBackground, background"},
-            {"atom": "contentItem", "figmaPath": "contentItem", "export": "layout"},
-            {"atom": "label", "figmaPath": "contentItem, label", "export": "text"}
+            {"atom": "contentItem", "figmaPath": "contentItem"},
+            {"atom": "label", "figmaPath": "contentItem, label"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -29,8 +35,8 @@
         "contents": ["indicator", "label"],
         "atoms": [
             {"atom": "background", "figmaPath": "CheckBoxBackground, background"},
-            {"atom": "label", "figmaPath": "ContentItem, Label", "export": ["geometry", "text"]},
-            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "label", "figmaPath": "ContentItem, Label"},
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "indicator", "figmaPath": "ContentItem, CheckBoxIndicatorBox"}
         ],
         "states": [
@@ -54,9 +60,9 @@
         "component set": "ComboBoxTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ComboBoxBackground, comboControlBackground"},
-            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "indicator", "figmaPath": "ComboBoxHandle"},
-            {"atom": "label", "figmaPath": "ContentItem, Label", "export": "text"}
+            {"atom": "label", "figmaPath": "ContentItem, Label"}
         ],
         "states": [
             {"state": "disabled", "figmaState": "disabled"},
@@ -74,7 +80,7 @@
         "component set": "ComboBoxTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ComboBoxPopup, background"},
-            {"atom": "contentItem", "figmaPath": "PopupLayout, ContentItem",  "export": "layout"}
+            {"atom": "contentItem", "figmaPath": "PopupLayout, ContentItem"}
         ],
         "states": [
             {"state": "disabled", "figmaState": "disabled"},
@@ -92,7 +98,7 @@
         "component set": "FrameTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "FrameBackground, background"},
-            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
+            {"atom": "contentItem", "figmaPath": "ContentItem"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -105,8 +111,8 @@
         "component set": "ItemDelegateTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ItemDelegateBackground, background"},
-            {"atom": "contentItem", "figmaPath": "ContentItem",  "export": "layout"},
-            {"atom": "label", "figmaPath": "ContentItem, Label", "export": "text"}
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
+            {"atom": "label", "figmaPath": "ContentItem, Label"}
         ],
         "states": [
             {"state": "disabled", "figmaState": "disabled"},
@@ -125,8 +131,8 @@
         "contents": ["indicator", "label"],
         "atoms": [
             {"atom": "background", "figmaPath": "RadioButtonBackground, background"},
-            {"atom": "label", "figmaPath": "ContentItem, Label", "export": ["geometry", "text"]},
-            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "label", "figmaPath": "ContentItem, Label"},
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "indicator", "figmaPath": "ContentItem, RadioButtonIndicator"}
         ],
         "states": [
@@ -173,7 +179,7 @@
             {"atom": "groove", "figmaPath": "SliderGroove, groveBack"},
             {"atom": "track", "figmaPath": "SliderTrack, trackBack"},
             {"atom": "handle", "figmaPath": "SliderHandle, handleBack"},
-            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
+            {"atom": "contentItem", "figmaPath": "ContentItem"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -189,7 +195,7 @@
         "contents": ["indicator-down", "textInput", "indicator-up"],
         "atoms": [
             {"atom": "background", "figmaPath": "spinboxBackground, background"},
-            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "indicator-up", "figmaPath": "ContentItem, UpIndicator"},
             {"atom": "indicator-down", "figmaPath": "ContentItem, DownIndicator"},
             {"atom": "textInput", "figmaPath": "ContentItem, textInput", "export": ["geometry", "text"]}
@@ -212,11 +218,11 @@
         "contents": ["handle-background", "label"],
         "atoms": [
             {"atom": "background", "figmaPath": "SwitchBackground, background"},
-            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "handle", "figmaPath": "ContentItem, SwitchHandle"},
             {"atom": "handle-background", "figmaPath": "ContentItem, HandleBackground, background"},
             {"atom": "handle-contentItem", "figmaPath": "ContentItem, HandleTemplate, ContentItem", "export": "layout"},
-            {"atom": "label", "figmaPath": "ContentItem, Label", "export": ["geometry", "text"]}
+            {"atom": "label", "figmaPath": "ContentItem, Label"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -235,7 +241,7 @@
         "contents": ["tabButton1", "tabButton2"],
         "atoms": [
             {"atom": "background", "figmaPath": "TabBarBackground, background"},
-            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "tabButton1", "figmaPath": "ContentItem, TabButton1", "export": "geometry"},
             {"atom": "tabButton2", "figmaPath": "ContentItem, TabButton2", "export": "geometry"}
         ],
@@ -252,8 +258,8 @@
         "component set": "TabButtonTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "TabButtonBackground, background"},
-            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
-            {"atom": "label", "figmaPath": "ContentItem, label", "export": "text"}
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
+            {"atom": "label", "figmaPath": "ContentItem, label"}
         ],
         "states": [
             {"state": "checked", "figmaState": "checked"},
@@ -272,8 +278,8 @@
         "component set": "TextAreaTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "TextAreaBackground, background"},
-            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
-            {"atom": "label", "figmaPath": "ContentItem, Label", "export": "text"}
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
+            {"atom": "label", "figmaPath": "ContentItem, Label"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -289,8 +295,8 @@
         "component set": "TextFieldTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "TextFieldBackground, background"},
-            {"atom": "contentItem", "figmaPath": "contentItem", "export": "layout"},
-            {"atom": "label", "figmaPath": "ContentItem, Label", "export": "text"}
+            {"atom": "contentItem", "figmaPath": "contentItem"},
+            {"atom": "label", "figmaPath": "ContentItem, Label"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -307,7 +313,7 @@
         "contents": ["toolButton1", "toolButton2"],
         "atoms": [
             {"atom": "background", "figmaPath": "ToolBarBackground, background"},
-            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "toolButton1", "figmaPath": "ContentItem, ToolButton1", "export": "geometry"},
             {"atom": "toolButton2", "figmaPath": "ContentItem, ToolButton2", "export": "geometry"}
         ],
@@ -324,8 +330,8 @@
         "component set": "ToolButtonTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ToolButtonBackground, background"},
-            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
-            {"atom": "label", "figmaPath": "ContentItem, label", "export": "text"}
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
+            {"atom": "label", "figmaPath": "ContentItem, label"}
         ],
         "states": [
             {"state": "checked", "figmaState": "checked"},

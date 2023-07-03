@@ -290,8 +290,12 @@ private:
             m_imageFormats.append(formatValue.toString());
 
         const QJsonArray exportArray = m_inputConfig.value("default export").toArray();
-        for (const QJsonValue &exportValue : exportArray)
-            m_defaultExport.append(exportValue.toString());
+        for (const QJsonValue &exportValue : exportArray) {
+            const QJsonObject exportObj = exportValue.toObject();
+            const QString atom = getString("atom", exportObj);
+            const QStringList exportList = getStringList("export", exportObj, true);
+            m_defaultExport[atom] = exportList;
+        }
 
         for (const auto controlValue : controlsArray) {
             const auto controlObj = controlValue.toObject();
@@ -387,27 +391,12 @@ private:
                 outputAtomConfig.insert("name", atomCombinedName);
 
                 // Export the atom
-                QStringList customExportList = getStringList("export", atomConfigObj, false);
-                const auto atomExportList = customExportList.isEmpty() ? m_defaultExport : customExportList;
-
-                for (const QString &atomExport : atomExportList) try {
-                    if (atomExport == "geometry")
-                        exportGeometry(figmaAtomObj, outputAtomConfig);
-                    else if (atomExport == "layout")
-                        exportLayout(figmaAtomObj, outputAtomConfig);
-                    else if (atomExport == "image")
-                        exportImage(figmaAtomObj, m_imageFormats, outputAtomConfig);
-                    else if (atomExport.startsWith("png") || atomExport.startsWith("svg"))
-                        exportImage(figmaAtomObj, {atomExport}, outputAtomConfig);
-                    else if (atomExport == "json")
-                        exportJson(figmaAtomObj, outputAtomConfig);
-                    else if (atomExport == "text")
-                        exportText(figmaAtomObj, outputAtomConfig);
-                    else
-                        throw std::runtime_error("Unknown option: '" + atomExport.toStdString() + "'");
-                } catch (std::exception &e) {
-                    qWarning().nospace().noquote() << "Warning, export atom: " << e.what() << "; " << m_currentAtomInfo;
+                QStringList atomExportList = getStringList("export", atomConfigObj, false);
+                if (atomExportList.isEmpty()) {
+                    atomExportList = m_defaultExport.contains(atomName)
+                            ? m_defaultExport[atomName] : m_defaultExport["default"];
                 }
+                exportFigmaObject(figmaAtomObj, atomExportList, outputAtomConfig);
 
                 // Add the exported atom configuration to the state configuration
                 outputStateConfig.insert(atomConfigName, outputAtomConfig);
@@ -462,6 +451,29 @@ private:
             jsonPath += child.trimmed();
 
         return findNamedChild(jsonPath, componentSet, false);
+    }
+
+    void exportFigmaObject(const QJsonObject &obj, const QStringList &atomExportList,
+        QJsonObject &atomConfig)
+    {
+        for (const QString &atomExport : atomExportList) try {
+            if (atomExport == "geometry")
+                exportGeometry(obj, atomConfig);
+            else if (atomExport == "layout")
+                exportLayout(obj, atomConfig);
+            else if (atomExport == "image")
+                exportImage(obj, m_imageFormats, atomConfig);
+            else if (atomExport.startsWith("png") || atomExport.startsWith("svg"))
+                exportImage(obj, {atomExport}, atomConfig);
+            else if (atomExport == "json")
+                exportJson(obj, atomConfig);
+            else if (atomExport == "text")
+                exportText(obj, atomConfig);
+            else
+                throw std::runtime_error("Unknown option: '" + atomExport.toStdString() + "'");
+        } catch (std::exception &e) {
+            qWarning().nospace().noquote() << "Warning, export atom: " << e.what() << "; " << m_currentAtomInfo;
+        }
     }
 
     void exportGeometry(const QJsonObject &atom, QJsonObject &outputConfig)
@@ -889,7 +901,7 @@ private:
     bool m_sanity = false;
 
     QStringList m_imageFormats;
-    QStringList m_defaultExport;
+    QMap<QString, QStringList> m_defaultExport;
     QStringList m_themes;
 
     QJsonDocument m_document;
