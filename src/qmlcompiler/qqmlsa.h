@@ -199,7 +199,6 @@ class Q_QMLCOMPILER_EXPORT Element
 
 public:
     Element();
-    explicit Element(const QString &);
     Element(const Element &);
     Element(Element &&other) noexcept
     {
@@ -293,6 +292,7 @@ public:
     Element resolveTypeInFileScope(QAnyStringView typeName);
     Element resolveAttachedInFileScope(QAnyStringView typeName);
     Element resolveType(QAnyStringView moduleName, QAnyStringView typeName); // #### TODO: revisions
+    Element resolveBuiltinType(QAnyStringView typeName) const;
     Element resolveAttached(QAnyStringView moduleName, QAnyStringView typeName);
     Element resolveLiteralType(const Binding &binding);
 

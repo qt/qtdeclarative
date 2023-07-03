@@ -520,11 +520,6 @@ Element::Element()
     new (m_data) QQmlJSScope::ConstPtr();
 }
 
-Element::Element(const QString &internalName)
-{
-    new (m_data) QQmlJSScope::ConstPtr(std::move(QQmlJSScope::create(internalName)));
-}
-
 Element::Element(const Element &other)
 {
     new (m_data) QQmlJSScope::ConstPtr(QQmlJSScope::scope(other));
@@ -901,6 +896,28 @@ Element GenericPass::resolveType(QAnyStringView moduleName, QAnyStringView typeN
     QQmlJSImporter *typeImporter = PassManagerPrivate::visitor(*d->m_manager)->importer();
     const auto module = typeImporter->importModule(moduleName.toString());
     const auto scope = module.type(typeName.toString()).scope;
+    return QQmlJSScope::createQQmlSAElement(scope);
+}
+
+/*!
+    Returns the type of the built-in type identified by \a typeName.
+    Built-in types encompasses \c{C++} types which the  QML engine can handle
+    without any imports (e.g. \l QDateTime and \l QString), global EcmaScript
+    objects like \c Number, as well as the \l{global Qt object}
+    {QML Global Object}.
+ */
+Element GenericPass::resolveBuiltinType(QAnyStringView typeName) const
+{
+    Q_D(const GenericPass);
+    QQmlJSImporter *typeImporter = PassManagerPrivate::visitor(*d->m_manager)->importer();
+    auto typeNameString = typeName.toString();
+    // we have to check both cpp names
+    auto scope = typeImporter->builtinInternalNames().type(typeNameString).scope;
+    if (!scope) {
+        // and qml names (e.g. for bool) - builtinImportHelper is private, so we can't do it in one call
+        auto builtins = typeImporter->importBuiltins();
+        scope = builtins.type(typeNameString).scope;
+    }
     return QQmlJSScope::createQQmlSAElement(scope);
 }
 

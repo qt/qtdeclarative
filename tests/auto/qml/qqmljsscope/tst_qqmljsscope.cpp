@@ -111,6 +111,8 @@ private Q_SLOTS:
     void compilationUnitsAreCompatible();
     void attachedTypeResolution_data();
     void attachedTypeResolution();
+    void builtinTypeResolution_data();
+    void builtinTypeResolution();
 
 public:
     tst_qqmljsscope()
@@ -869,6 +871,43 @@ void tst_qqmljsscope::attachedTypeResolution()
 
     if (creatable)
         QVERIFY(resolved.hasProperty(propertyOnSelf));
+}
+
+
+
+void tst_qqmljsscope::builtinTypeResolution_data()
+{
+    QTest::addColumn<bool>("valid");
+    QTest::addColumn<QString>("typeName");
+
+    QTest::addRow("global_QtObject") << true  << "Qt";
+    QTest::addRow("function")        << true  << "function";
+    QTest::addRow("Array")           << true  << "Array";
+    QTest::addRow("invalid")         << false << "foobar";
+    QTest::addRow("Number")          << true  << "Number";
+    QTest::addRow("bool")            << true  << "bool";
+    QTest::addRow("QString")         << true  << "QString";
+}
+
+void tst_qqmljsscope::builtinTypeResolution()
+{
+    QFETCH(bool, valid);
+    QFETCH(QString, typeName);
+
+    QQmlJSImporter importer{ { "data" }, nullptr, true };
+    QStringList defaultImportPaths =
+            QStringList{ QLibraryInfo::path(QLibraryInfo::QmlImportsPath) };
+    importer.setImportPaths(defaultImportPaths);
+    QQmlJSTypeResolver resolver(&importer);
+    const auto &implicitImportDirectory = QQmlJSImportVisitor::implicitImportDirectory({}, nullptr);
+    QQmlJSLogger logger;
+    QQmlJSImportVisitor v{
+        QQmlJSScope::create(), &importer, &logger, implicitImportDirectory, {}
+    };
+    QQmlSA::PassManager manager{ &v, &resolver };
+    TestPass pass{ &manager };
+    auto element = pass.resolveBuiltinType(typeName);
+    QCOMPARE(element.isNull(), !valid);
 }
 
 QTEST_MAIN(tst_qqmljsscope)

@@ -430,7 +430,7 @@ VarBindingTypeValidatorPass::VarBindingTypeValidatorPass(
 
     for (const auto pair : expectedPropertyTypes.asKeyValueRange()) {
         const QQmlSA::Element propType = pair.second.module.isEmpty()
-                ? QQmlSA::Element(pair.second.name)
+                ? resolveBuiltinType(pair.second.name)
                 : resolveType(pair.second.module, pair.second.name);
         if (!propType.isNull())
             propertyTypes.insert(pair.first, propType);
