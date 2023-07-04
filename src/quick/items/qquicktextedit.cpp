@@ -363,7 +363,12 @@ QString QQuickTextEdit::text() const
     remarkably better performance for modifying especially large rich text
     content.
 
-    \sa clear(), textFormat
+    Note that some keyboards use a predictive function. In this case,
+    the text being composed by the input method is not part of this property.
+    The part of the text related to the predictions is underlined and stored in
+    the \l preeditText property.
+
+    \sa clear(), preeditText, textFormat
 */
 void QQuickTextEdit::setText(const QString &text)
 {
@@ -413,6 +418,11 @@ void QQuickTextEdit::q_invalidate()
     \since 5.7
 
     This property contains partial text input from an input method.
+
+    To turn off partial text that results from predictions, set the \c Qt.ImhNoPredictiveText
+    flag in inputMethodHints.
+
+    \sa inputMethodHints
 */
 QString QQuickTextEdit::preeditText() const
 {

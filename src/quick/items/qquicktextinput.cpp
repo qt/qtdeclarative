@@ -90,7 +90,13 @@ void QQuickTextInput::componentComplete()
 
     The text in the TextInput.
 
-    \sa clear()
+    Note that some keyboards use a predictive function. In this case,
+    the text being composed by the input method is not part of this property.
+    The part of the text related to the predictions is underlined and stored in
+    the \l preeditText property. To get whole text displayed in the TextInput
+    use \l displayText property.
+
+    \sa clear(), displayText, preeditText
 */
 QString QQuickTextInput::text() const
 {
@@ -2403,7 +2409,10 @@ QString QQuickTextInput::displayText() const
 
     This property contains partial text input from an input method.
 
-    \sa displayText
+    To turn off partial text that results from predictions, set the \c Qt.ImhNoPredictiveText
+    flag in inputMethodHints.
+
+    \sa displayText, inputMethodHints
 */
 QString QQuickTextInput::preeditText() const
 {
