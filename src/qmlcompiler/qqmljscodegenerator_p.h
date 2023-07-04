@@ -312,11 +312,6 @@ private:
         return m_typeResolver->jsGlobalObject()->property(u"console"_s).type();
     }
 
-    QQmlJSScope::ConstPtr arrayPrototype() const
-    {
-        return m_typeResolver->arrayType()->baseType();
-    }
-
     QString resolveValueTypeContentPointer(
             const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
             const QString &variable, const QString &errorMessage);

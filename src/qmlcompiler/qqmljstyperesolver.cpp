@@ -78,6 +78,12 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     Q_ASSERT(m_qObjectType);
     m_qObjectListType = builtinTypes.type(u"QObjectList"_s).scope;
     Q_ASSERT(m_qObjectListType);
+    m_functionType = builtinTypes.type(u"function"_s).scope;
+    Q_ASSERT(m_functionType);
+    m_numberPrototype = builtinTypes.type(u"NumberPrototype"_s).scope;
+    Q_ASSERT(m_numberPrototype);
+    m_arrayPrototype = builtinTypes.type(u"ArrayPrototype"_s).scope;
+    Q_ASSERT(m_arrayPrototype);
 
     QQmlJSScope::Ptr emptyType = QQmlJSScope::create();
     emptyType->setAccessSemantics(QQmlJSScope::AccessSemantics::None);
@@ -95,22 +101,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     metaObjectType->setAccessSemantics(QQmlJSScope::AccessSemantics::Reference);
     m_metaObjectType = metaObjectType;
 
-    QQmlJSScope::Ptr functionType = QQmlJSScope::create();
-    functionType->setInternalName(u"function"_s);
-    functionType->setAccessSemantics(QQmlJSScope::AccessSemantics::Value);
-    m_functionType = functionType;
-
     m_jsGlobalObject = importer->jsGlobalObject();
-    auto numberMethods = m_jsGlobalObject->methods(u"Number"_s);
-    Q_ASSERT(numberMethods.size() == 1);
-    m_numberPrototype = numberMethods[0].returnType()->baseType();
-    Q_ASSERT(m_numberPrototype);
-    Q_ASSERT(m_numberPrototype->internalName() == u"NumberPrototype"_s);
-
-    auto arrayMethods = m_jsGlobalObject->methods(u"Array"_s);
-    Q_ASSERT(arrayMethods.size() == 1);
-    m_arrayType = arrayMethods[0].returnType();
-    Q_ASSERT(m_arrayType);
 }
 
 /*!

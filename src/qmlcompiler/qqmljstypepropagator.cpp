@@ -1135,9 +1135,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
     }
 
     if (baseType->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
-            && m_typeResolver->equals(
-                member.scopeType(),
-                m_typeResolver->arrayType()->baseType())
+            && m_typeResolver->equals(member.scopeType(), m_typeResolver->arrayPrototype())
             && propagateArrayMethod(propertyName, argc, argv, callBase)) {
         return;
     }
