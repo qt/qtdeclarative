@@ -44,6 +44,7 @@ public:
     static std::optional<QString> handlerNameToSignalName(QStringView handler);
 
     static bool isChangedHandlerName(QStringView signalName);
+    static bool isChangedSignalName(QStringView signalName);
     static bool isHandlerName(QStringView signalName);
 
     static QString addPrefixToPropertyName(QStringView prefix, QStringView propertyName);

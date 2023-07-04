@@ -1,6 +1,7 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
+#include "qqmllsutils_p.h"
 #include "qqmlrenamesymbolsupport_p.h"
 #include <utility>
 
@@ -47,14 +48,28 @@ void QQmlRenameSymbolSupport::process(QQmlRenameSymbolSupport::RequestPointerArg
         return;
     }
 
-    // TODO: sanity checks: check for errors
+    const QString newName = QString::fromUtf8(request->m_parameters.newName);
+    auto expressionType =
+            QQmlLSUtils::resolveExpressionType(itemsFound->front().domItem, ResolveOwnerType);
+
+    if (!expressionType) {
+        error = QQmlLSUtilsErrorMessage{ 0, u"Cannot rename the requested object"_s };
+        return;
+    }
+
+    if (auto renameImpossible = QQmlLSUtils::checkNameForRename(itemsFound->front().domItem,
+                                                                newName, expressionType)) {
+        error = renameImpossible;
+        return;
+    }
 
     QList<QLspSpecification::TextDocumentEdit> editsByFileForResult;
     // The QLspSpecification::WorkspaceEdit requires the changes to be grouped by files, so
     // collect them into editsByFileUris.
     QMap<QUrl, QList<QLspSpecification::TextEdit>> editsByFileUris;
-    auto renames = QQmlLSUtils::renameUsagesOf(itemsFound->front().domItem,
-                                               QString::fromUtf8(request->m_parameters.newName));
+
+    auto renames =
+            QQmlLSUtils::renameUsagesOf(itemsFound->front().domItem, newName, expressionType);
 
     QQmlJS::Dom::DomItem files =
             itemsFound->front().domItem.top().field(QQmlJS::Dom::Fields::qmlFileWithPath);

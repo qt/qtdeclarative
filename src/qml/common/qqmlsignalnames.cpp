@@ -174,6 +174,18 @@ std::optional<QString> QQmlSignalNames::handlerNameToSignalName(QStringView hand
     return signalName;
 }
 
+bool QQmlSignalNames::isChangedSignalName(QStringView signalName)
+{
+    const qsizetype smallestAllowedSize = strlen("XChanged");
+    if (signalName.size() < smallestAllowedSize || !signalName.endsWith(u"Changed"_s))
+        return false;
+
+    if (auto letter = firstLetter(signalName, 0, strlen("Changed")))
+        return letter->isLower();
+
+    return true;
+}
+
 bool QQmlSignalNames::isChangedHandlerName(QStringView signalName)
 {
     const qsizetype smallestAllowedSize = strlen("onXChanged");

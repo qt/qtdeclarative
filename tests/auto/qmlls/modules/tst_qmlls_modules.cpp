@@ -880,6 +880,9 @@ void tst_qmlls_modules::renameUsages_data()
     QTest::addColumn<int>("character");
     QTest::addColumn<QString>("newName");
     QTest::addColumn<QLspSpecification::WorkspaceEdit>("expectedEdit");
+    QTest::addColumn<QLspSpecification::ResponseError>("expectedError");
+
+    QLspSpecification::ResponseError noError;
 
     QByteArray jsIdentifierUsagesUri = testFileUrl("findUsages/jsIdentifierUsages.qml").toEncoded();
 
@@ -911,12 +914,19 @@ void tst_qmlls_modules::renameUsages_data()
     };
 
     // line and character start at 1!
-    QTest::addRow("sumUsagesFromUsage")
-            << jsIdentifierUsagesUri << 10 << 14 << u"specialSum"_s << sumRenames;
-    QTest::addRow("sumUsagesFromUsage2")
-            << jsIdentifierUsagesUri << 10 << 20 << u"specialSum"_s << sumRenames;
-    QTest::addRow("sumUsagesFromDefinition")
-            << jsIdentifierUsagesUri << 8 << 14 << u"specialSum"_s << sumRenames;
+    QTest::addRow("sumRenameFromUsage")
+            << jsIdentifierUsagesUri << 10 << 14 << u"specialSum"_s << sumRenames << noError;
+    QTest::addRow("sumRenameFromUsage2")
+            << jsIdentifierUsagesUri << 10 << 20 << u"specialSum"_s << sumRenames << noError;
+    QTest::addRow("sumRenameFromDefinition")
+            << jsIdentifierUsagesUri << 8 << 14 << u"specialSum"_s << sumRenames << noError;
+    QTest::addRow("invalidSumRenameFromDefinition")
+            << jsIdentifierUsagesUri << 8 << 14 << u"function"_s << sumRenames
+            << QLspSpecification::ResponseError{
+                   0,
+                   "Invalid EcmaScript identifier!",
+                   std::nullopt,
+               };
 }
 
 void tst_qmlls_modules::renameUsages()
@@ -927,6 +937,7 @@ void tst_qmlls_modules::renameUsages()
     QFETCH(int, character);
     QFETCH(QString, newName);
     QFETCH(QLspSpecification::WorkspaceEdit, expectedEdit);
+    QFETCH(QLspSpecification::ResponseError, expectedError);
 
     QVERIFY(uri.startsWith("file://"_ba));
 
@@ -952,7 +963,10 @@ void tst_qmlls_modules::renameUsages()
                          expectedEdit.documentChanges.has_value());
 
                 std::visit(
-                        [](auto &&documentChanges, auto &&expectedDocumentChanges) {
+                        [&expectedError](auto &&documentChanges, auto &&expectedDocumentChanges) {
+                            if (!expectedError.message.isEmpty())
+                                QVERIFY2(false, "No expected error was thrown.");
+
                             QCOMPARE(documentChanges.size(), expectedDocumentChanges.size());
                             using U = std::decay_t<decltype(documentChanges)>;
                             using V = std::decay_t<decltype(expectedDocumentChanges)>;
@@ -1009,10 +1023,13 @@ void tst_qmlls_modules::renameUsages()
                         },
                         result->documentChanges.value(), expectedEdit.documentChanges.value());
             },
-            [clean](const ResponseError &err) {
+            [clean, &expectedError](const ResponseError &err) {
                 QScopeGuard cleanup(clean);
                 ProtocolBase::defaultResponseErrorHandler(err);
-                QVERIFY2(false, "error computing the completion");
+                if (expectedError.message.isEmpty())
+                    QVERIFY2(false, "unexpected error computing the completion");
+                QCOMPARE(err.code, expectedError.code);
+                QCOMPARE(err.message, expectedError.message);
             });
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 3000);
 }

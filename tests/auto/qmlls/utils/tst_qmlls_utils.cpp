@@ -999,7 +999,7 @@ void tst_qmlls_utils::renameUsages_data()
     QTest::addColumn<int>("character");
     QTest::addColumn<QString>("newName");
     QTest::addColumn<QList<QQmlLSUtilsEdit>>("expectedRenames");
-    QTest::addColumn<std::optional<QQmlLSUtilsErrorMessage>>("expectedError");
+    QTest::addColumn<QString>("expectedError");
 
     const QString testFileName = testFile(u"JSUsages.qml"_s);
     QString testFileContent;
@@ -1009,7 +1009,8 @@ void tst_qmlls_utils::renameUsages_data()
         testFileContent = QString::fromUtf8(file.readAll());
     }
 
-    const std::optional<QQmlLSUtilsErrorMessage> noError;
+    const QString noError;
+    const QList<QQmlLSUtilsEdit> noRenames;
 
     QList<QQmlLSUtilsEdit> methodFRename{
         QQmlLSUtilsEdit::from(testFileName, testFileContent, 72, 14, strlen("recursive"),
@@ -1099,6 +1100,8 @@ void tst_qmlls_utils::renameUsages_data()
     std::sort(nestedComponentRename.begin(), nestedComponentRename.end());
     std::sort(myNestedIdRename.begin(), myNestedIdRename.end());
 
+    const QString parserError = u"Invalid EcmaScript identifier!"_s;
+
     QTest::addRow("renameMethod") << testFileName << 72 << 19 << u"newNameNewMe"_s << methodFRename
                                   << noError;
     QTest::addRow("renameJSIdentifier")
@@ -1120,7 +1123,44 @@ void tst_qmlls_utils::renameUsages_data()
     QTest::addRow("renameQmlObjectId") << testFileName << 65 << 21 << u"freshNewIdForMyNested"_s
                                        << myNestedIdRename << noError;
 
-    return;
+    // rename forbidden stuff
+    QTest::addRow("renameCPPDefinedItem") << testFileName << 144 << 13 << u"onHelloWorld"_s
+                                          << noRenames << u"defined in non-QML files."_s;
+    QTest::addRow("renameFunctionKeyword") << testFileName << 8 << 10 << u"HelloWorld"_s
+                                           << noRenames << "Requested item cannot be renamed";
+    QTest::addRow("invalidCharactersInIdentifier")
+            << testFileName << 12 << 22 << u"\""_s << noRenames << parserError;
+    QTest::addRow("invalidCharactersInIdentifier2")
+            << testFileName << 12 << 22 << u"hello world"_s << noRenames << parserError;
+    QTest::addRow("invalidCharactersInIdentifier3")
+            << testFileName << 12 << 22 << u"sum.sum.sum"_s << noRenames << parserError;
+    QTest::addRow("emptyIdentifier")
+            << testFileName << 12 << 22 << QString() << noRenames << parserError;
+    QTest::addRow("usingKeywordAsIdentifier")
+            << testFileName << 12 << 22 << u"function"_s << noRenames << parserError;
+
+    QTest::addRow("changedSignalHandlerMissingOnChanged")
+            << testFileName << 134 << 9 << u"___"_s << noRenames
+            << u"Invalid name for a property changed handler identifier"_s;
+    QTest::addRow("changedSignalHandlerMissingChanged")
+            << testFileName << 134 << 9 << u"on___"_s << noRenames
+            << u"Invalid name for a property changed handler identifier"_s;
+    QTest::addRow("changedSignalHandlerMissingOn")
+            << testFileName << 134 << 9 << u"___Changed"_s << noRenames
+            << u"Invalid name for a property changed handler identifier"_s;
+    QTest::addRow("changedSignalHandlerTypoInChanged")
+            << testFileName << 134 << 9 << u"on___Chänged"_s << noRenames
+            << u"Invalid name for a property changed handler identifier"_s;
+
+    QTest::addRow("signalHandlerMissingOn")
+            << testFileName << 119 << 10 << u"helloSuperSignal"_s << noRenames
+            << u"Invalid name for a signal handler identifier"_s;
+    QTest::addRow("signalHandlerMissingCapitalization")
+            << testFileName << 119 << 10 << u"onhelloSuperSignal"_s << noRenames
+            << u"Invalid name for a signal handler identifier"_s;
+
+    QTest::addRow("JSIdentifierStartsWithNumber")
+            << testFileName << 67 << 13 << u"123"_s << noRenames << parserError;
 }
 
 void tst_qmlls_utils::renameUsages()
@@ -1132,7 +1172,7 @@ void tst_qmlls_utils::renameUsages()
     QFETCH(int, character);
     QFETCH(QString, newName);
     QFETCH(QList<QQmlLSUtilsEdit>, expectedRenames);
-    QFETCH(std::optional<QQmlLSUtilsErrorMessage>, expectedError);
+    QFETCH(QString, expectedError);
 
     QVERIFY(std::is_sorted(expectedRenames.begin(), expectedRenames.end()));
 
@@ -1153,6 +1193,17 @@ void tst_qmlls_utils::renameUsages()
     }
     QCOMPARE(locations.size(), 1);
 
+    if (auto errors = QQmlLSUtils::checkNameForRename(locations.front().domItem, newName)) {
+        if constexpr (enable_debug_output) {
+            if (expectedError.isEmpty())
+                qDebug() << "Expected no error but got" << errors->message;
+            if (!errors->message.contains(expectedError))
+                qDebug() << "Cannot find" << expectedError << "in" << errors->message;
+        }
+        QVERIFY(!expectedError.isEmpty());
+        QVERIFY(errors->message.contains(expectedError));
+        return;
+    }
     auto edits = QQmlLSUtils::renameUsagesOf(locations.front().domItem, newName);
 
     if constexpr (enable_debug_output) {
@@ -1415,6 +1466,27 @@ void tst_qmlls_utils::resolveExpressionType()
     QCOMPARE(definition->semanticScope->filePath(), expectedFile);
     QQmlJS::SourceLocation location = definition->semanticScope->sourceLocation();
     QCOMPARE((int)location.startLine, expectedLine);
+}
+
+void tst_qmlls_utils::isValidEcmaScriptIdentifier_data()
+{
+    QTest::addColumn<QString>("identifier");
+    QTest::addColumn<bool>("isValid");
+
+    QTest::addRow("f") << u"f"_s << true;
+    QTest::addRow("f-unicode") << u"\\u0046"_s << true;
+    QTest::addRow("starts-with-digit") << u"8helloWorld"_s << false;
+    QTest::addRow("starts-with-unicode-digit") << u"\\u0038helloWorld"_s << false; // \u0038 == '8'
+    QTest::addRow("keyword") << u"return"_s << false;
+    QTest::addRow("not-keyword") << u"returny"_s << true;
+}
+
+void tst_qmlls_utils::isValidEcmaScriptIdentifier()
+{
+    QFETCH(QString, identifier);
+    QFETCH(bool, isValid);
+
+    QCOMPARE(QQmlLSUtils::isValidEcmaScriptIdentifier(identifier), isValid);
 }
 
 QTEST_MAIN(tst_qmlls_utils)

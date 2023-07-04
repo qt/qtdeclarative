@@ -19,6 +19,7 @@
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include <algorithm>
+#include <optional>
 #include <tuple>
 #include <variant>
 
@@ -56,6 +57,7 @@ struct QQmlLSUtilsErrorMessage
 
 struct QQmlLSUtilsExpressionType
 {
+    std::optional<QString> name;
     QQmlJSScope::ConstPtr semanticScope;
     QQmlLSUtilsIdentifierType type;
 };
@@ -128,12 +130,16 @@ public:
     static std::optional<QQmlLSUtilsLocation> findDefinitionOf(QQmlJS::Dom::DomItem item);
     static QList<QQmlLSUtilsLocation> findUsagesOf(QQmlJS::Dom::DomItem item);
 
-    static std::optional<QQmlLSUtilsErrorMessage> checkNameForRename(QQmlJS::Dom::DomItem item,
-                                                                     const QString &newName);
-    static QList<QQmlLSUtilsEdit> renameUsagesOf(QQmlJS::Dom::DomItem item, const QString &newName);
+    static std::optional<QQmlLSUtilsErrorMessage>
+    checkNameForRename(QQmlJS::Dom::DomItem item, const QString &newName,
+                       std::optional<QQmlLSUtilsExpressionType> targetType = std::nullopt);
+    static QList<QQmlLSUtilsEdit>
+    renameUsagesOf(QQmlJS::Dom::DomItem item, const QString &newName,
+                   std::optional<QQmlLSUtilsExpressionType> targetType = std::nullopt);
 
     static std::optional<QQmlLSUtilsExpressionType>
     resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolveOptions);
+    static bool isValidEcmaScriptIdentifier(QStringView view);
 };
 QT_END_NAMESPACE
 

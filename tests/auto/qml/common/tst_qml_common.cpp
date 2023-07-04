@@ -19,6 +19,7 @@ void tst_qml_common::tst_propertyNameToChangedSignalName()
     QFETCH(QString, property);
     QFETCH(QString, expected);
 
+    QVERIFY(QQmlSignalNames::isChangedSignalName(expected));
     QCOMPARE(QQmlSignalNames::propertyNameToChangedSignalName(property), expected);
     QCOMPARE(QQmlSignalNames::changedSignalNameToPropertyName(expected).value(), property);
 }
@@ -42,6 +43,7 @@ void tst_qml_common::tst_propertyNameToChangedHandlerName()
     QFETCH(QString, property);
     QFETCH(QString, expected);
 
+    QVERIFY(QQmlSignalNames::isChangedHandlerName(expected));
     QCOMPARE(QQmlSignalNames::propertyNameToChangedHandlerName(property), expected);
     auto reverse = QQmlSignalNames::changedHandlerNameToPropertyName(expected);
     QVERIFY(reverse);
@@ -72,6 +74,7 @@ void tst_qml_common::tst_signalNameToHandlerName()
     QFETCH(QString, signalName);
     QFETCH(QString, expected);
 
+    QVERIFY(QQmlSignalNames::isHandlerName(expected));
     QCOMPARE(QQmlSignalNames::signalNameToHandlerName(signalName), expected);
 
     auto result = QQmlSignalNames::handlerNameToSignalName(expected);
