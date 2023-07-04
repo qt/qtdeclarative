@@ -1624,6 +1624,7 @@ QQuickText::~QQuickText()
     \qmlproperty object QtQuick::Text::font.features
     \since 6.6
 
+//! [qml-font-features]
     Applies integer values to specific OpenType features when shaping the text based on the contents
     in \a features. This provides advanced access to the font shaping process, and can be used
     to support font features that are otherwise not covered in the API.
@@ -1641,28 +1642,28 @@ QQuickText::~QQuickText()
     If a font supports the \c frac feature, then it can be enabled in the shaper as in the following
     code:
 
-    {code}
+    \qml
     Text {
         text: "One divided by two is 1/2"
         font.family: "MyFractionFont"
         font.features: { "frac": 1 }
     }
-    {code}
+    \endqml
 
     Multiple features can be assigned values in the same mapping. For instance, if we would like
     to also disable kerning for the font, we can explicitly disable this as follows:
 
-    {code}
+    \qml
     Text {
         text: "One divided by two is 1/2"
         font.family: "MyFractionFont"
         font.features: { "frac": 1, "kern": 0 }
     }
-    {code}
+    \endqml
 
     You can also collect the font properties in an object:
 
-    {code}
+    \qml
     Text {
         text: "One divided by two is 1/2"
         font: {
@@ -1670,7 +1671,7 @@ QQuickText::~QQuickText()
             features: { "frac": 1, "kern": 0 }
         }
     }
-    {code}
+    \endqml
 
     \note By default, Qt will enable and disable certain font features based on other font
     properties. In particular, the \c kern feature will be enabled/disabled depending on the
@@ -1682,7 +1683,8 @@ QQuickText::~QQuickText()
     always be enabled, egardless of whether the \l font.kerning property is set to false. Similarly,
     if it is set to 0, then it will always be disabled.
 
-    \sa QFont::setFeatures()
+    \sa QFont::setFeature()
+//! [qml-font-features]
 */
 QFont QQuickText::font() const
 {
