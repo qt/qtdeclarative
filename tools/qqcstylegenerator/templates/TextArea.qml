@@ -31,9 +31,9 @@ T.TextArea {
     placeholderTextColor: control.palette.placeholderText
 
     readonly property string currentState: [
-        !control.enabled && "disabled",
-        control.activeFocus && "focused",
-        control.enabled && control.hovered && "hovered",
+        !enabled && "disabled",
+        activeFocus && "focused",
+        enabled && !activeFocus && hovered && "hovered",
     ].filter(Boolean).join("-") || "normal"
     readonly property var config: ConfigReader.controls.textarea[currentState] || {}
 

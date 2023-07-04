@@ -211,7 +211,7 @@
             {"atom": "textInput", "figmaPath": "ContentItem, textInput", "export": ["geometry", "text"]}
         ],
         "states": [
-            {"state": "atlimit", "figmaState": "upDownAtLimit"},
+            {"state": "atlimit", "figmaState": "atLimit"},
             {"state": "disabled", "figmaState": "disabled"},
             {"state": "down-hovered", "figmaState": "downHovered"},
             {"state": "down-pressed", "figmaState": "downPressed"},
@@ -258,9 +258,9 @@
             {"atom": "tabButton2", "figmaPath": "ContentItem, TabButton2", "export": "geometry"}
         ],
         "states": [
-            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "disabled", "figmaState": "disabledHeader"},
             {"state": "disabled-footer", "figmaState": "disabledFooter"},
-            {"state": "normal", "figmaState": "normal"},
+            {"state": "normal", "figmaState": "normalHeader"},
             {"state": "normal-footer", "figmaState": "normalFooter"}
         ]
     },
@@ -299,7 +299,6 @@
             {"state": "normal", "figmaState": "normal"},
             {"state": "disabled", "figmaState": "disabled"},
             {"state": "focused", "figmaState": "focused"},
-            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
             {"state": "hovered", "figmaState": "hovered"}
         ]
     },
@@ -317,7 +316,6 @@
             {"state": "normal", "figmaState": "normal"},
             {"state": "disabled", "figmaState": "disabled"},
             {"state": "focused", "figmaState": "focused"},
-            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
             {"state": "hovered", "figmaState": "hovered"}
         ]
     },
