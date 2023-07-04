@@ -784,7 +784,7 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
     if (error->isValid())
         return compileError();
 
-    QQmlJSBasicBlocks basicBlocks(m_unitGenerator, &m_typeResolver, m_logger);
+    QQmlJSBasicBlocks basicBlocks(context, m_unitGenerator, &m_typeResolver, m_logger);
     typePropagationResult = basicBlocks.run(function, typePropagationResult, error);
     if (error->isValid())
         return compileError();

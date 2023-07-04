@@ -3,7 +3,104 @@
 
 #include "qqmljsbasicblocks_p.h"
 
+#include <QtQml/private/qv4instr_moth_p.h>
+
 QT_BEGIN_NAMESPACE
+
+using namespace Qt::Literals::StringLiterals;
+
+DEFINE_BOOL_CONFIG_OPTION(qv4DumpBasicBlocks, QV4_DUMP_BASIC_BLOCKS)
+
+void QQmlJSBasicBlocks::dumpBasicBlocks()
+{
+    qDebug().noquote() << "=== Basic Blocks for \"%1\""_L1.arg(m_context->name);
+    for (const auto &[blockOffset, block] : m_basicBlocks) {
+        QDebug debug = qDebug().nospace();
+        debug << "Block " << blockOffset << ":\n";
+        debug << "  jumpOrigins[" << block.jumpOrigins.size() << "]: ";
+        for (auto origin : block.jumpOrigins) {
+            debug << origin << ", ";
+        }
+        debug << "\n  readRegisters[" << block.readRegisters.size() << "]: ";
+        for (auto reg : block.readRegisters) {
+            debug << reg << ", ";
+        }
+        debug << "\n  readTypes[" << block.readTypes.size() << "]: ";
+        for (auto type : block.readTypes) {
+            debug << type->augmentedInternalName() << ", ";
+        }
+        debug << "\n  jumpTarget: " << block.jumpTarget;
+        debug << "\n  jumpIsUnConditional: " << block.jumpIsUnconditional;
+    }
+    qDebug() << "\n";
+}
+
+void QQmlJSBasicBlocks::dumpDOTGraph()
+{
+    auto isBackEdge = [](const BasicBlock &originBlock, int originOffset, int destinationOffset) {
+        return originOffset > destinationOffset && originBlock.jumpIsUnconditional;
+    };
+
+    QString output;
+    QTextStream s{ &output };
+    s << "=== Basic Blocks Graph in DOT format for \"%1\" (spaces are encoded as"
+         " &#160; to preserve formatting)\n"_L1.arg(m_context->name);
+    s << "digraph BasicBlocks {\n"_L1;
+
+    std::map<int, BasicBlock> blocks{ m_basicBlocks.begin(), m_basicBlocks.end() };
+    for (const auto &[blockOffset, block] : blocks) {
+        for (int originOffset : block.jumpOrigins) {
+            int originBlockOffset;
+            auto originBlockIt = blocks.find(originOffset);
+            if (originBlockIt != blocks.end())
+                originBlockOffset = originOffset;
+            else
+                originBlockOffset = std::prev(blocks.lower_bound(originOffset))->first;
+            s << "    %1 -> %2%3\n"_L1.arg(QString::number(originBlockOffset))
+                            .arg(QString::number(blockOffset))
+                            .arg(isBackEdge(originBlockIt->second, originOffset, blockOffset)
+                                         ? " [color=blue]"_L1
+                                         : ""_L1);
+        }
+    }
+
+    for (const auto &[blockOffset, block] : blocks) {
+        int beginOffset = std::max(0, blockOffset);
+        auto nextBlockIt = blocks.lower_bound(blockOffset + 1);
+        int nextBlockOffset = nextBlockIt == blocks.end() ? m_context->code.size() : nextBlockIt->first;
+        QString dump = QV4::Moth::dumpBytecode(
+                m_context->code.constData(), m_context->code.size(), m_context->locals.size(),
+                m_context->formals->length(), beginOffset, nextBlockOffset - 1,
+                m_context->lineAndStatementNumberMapping);
+        dump = dump.replace(" "_L1, "&#160;"_L1); // prevent collapse of extra whitespace for formatting
+        dump = dump.replace("\n"_L1, "\\l"_L1); // new line + left aligned
+        s << "    %1 [shape=record, fontname=\"Monospace\", label=\"{Block %1: | %2}\"]\n"_L1
+                        .arg(QString::number(blockOffset))
+                        .arg(dump);
+    }
+    s << "}\n"_L1;
+
+    // Have unique names to prevent overwriting of functions with the same name (eg. anonymous functions).
+    static int functionCount = 0;
+    static const auto dumpFolderPath = qEnvironmentVariable("QV4_DUMP_BASIC_BLOCKS");
+
+    QString expressionName = m_context->name == ""_L1
+            ? "anonymous"_L1
+            : QString(m_context->name).replace(" "_L1, "_"_L1);
+    QString fileName = "function"_L1 + QString::number(functionCount++) + "_"_L1 + expressionName + ".gv"_L1;
+    QFile dumpFile(dumpFolderPath + (dumpFolderPath.endsWith("/"_L1) ? ""_L1 : "/"_L1) + fileName);
+
+    if (dumpFolderPath == "-"_L1 || dumpFolderPath == "1"_L1 || dumpFolderPath == "true"_L1) {
+        qDebug().noquote() << output;
+    } else {
+        if (!dumpFile.open(QIODeviceBase::Truncate | QIODevice::WriteOnly)) {
+            qDebug() << "Error: Could not open file to dump the basic blocks into";
+        } else {
+            dumpFile.write(("//"_L1 + output).toLatin1().toStdString().c_str());
+            dumpFile.close();
+        }
+    }
+}
 
 template<typename Container>
 void deduplicate(Container &container)
@@ -62,6 +159,12 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSBasicBlocks::run(
     populateBasicBlocks();
     populateReaderLocations();
     adjustTypes();
+
+    if (qv4DumpBasicBlocks()) {
+        dumpBasicBlocks();
+        dumpDOTGraph();
+    }
+
     return std::move(m_annotations);
 }
 

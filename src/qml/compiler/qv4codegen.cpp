@@ -3414,8 +3414,9 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
         if (showCode) {
             qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
                      << "register count" << _context->registerCountInFunction << "implicit return" << requiresReturnValue;
-            QV4::Moth::dumpBytecode(_context->code, _context->locals.size(), _context->arguments.size(),
-                                    _context->line, _context->lineAndStatementNumberMapping);
+            qDebug().noquote() << QV4::Moth::dumpBytecode(
+                    _context->code, _context->locals.size(), _context->arguments.size(),
+                    _context->line, _context->lineAndStatementNumberMapping);
             qDebug();
         }
     }

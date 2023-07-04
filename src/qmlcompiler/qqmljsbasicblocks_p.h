@@ -31,9 +31,10 @@ public:
         bool jumpIsUnconditional = false;
     };
 
-    QQmlJSBasicBlocks(const QV4::Compiler::JSUnitGenerator *unitGenerator,
+    QQmlJSBasicBlocks(const QV4::Compiler::Context *context,
+                      const QV4::Compiler::JSUnitGenerator *unitGenerator,
                       const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger)
-        : QQmlJSCompilePass(unitGenerator, typeResolver, logger)
+        : QQmlJSCompilePass(unitGenerator, typeResolver, logger), m_context{ context }
     {
     }
 
@@ -84,6 +85,10 @@ private:
     void adjustTypes();
     bool canMove(int instructionOffset, const RegisterAccess &access) const;
 
+    void dumpBasicBlocks();
+    void dumpDOTGraph();
+
+    const QV4::Compiler::Context *m_context;
     InstructionAnnotations m_annotations;
     QFlatMap<int, BasicBlock> m_basicBlocks;
     QHash<int, RegisterAccess> m_readerLocations;
