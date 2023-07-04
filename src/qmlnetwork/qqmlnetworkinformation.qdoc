@@ -1,0 +1,70 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \qmltype NetworkInformation
+    \inqmlmodule QtNetwork
+    \instantiates QNetworkInformation
+    \brief  Provides a cross-platform interface to network-related information.
+
+    NetworkInformation provides a cross-platform interface to network-related information.
+
+    NetworkInformation is a singleton.
+
+    \sa QNetworkInformation
+*/
+
+/*!
+    \qmlproperty enumeration NetworkInformation::reachability
+    \readonly
+
+    Holds the current state of the system's network connectivity.
+
+    \value NetworkInformation.Reachability.Unknown
+       Connection may be established but the OS has yet to confirm full
+       connectivity, or this feature is not supported.
+    \value NetworkInformation.Reachability.Disconnected
+       The system may not have connectivity at all.
+    \value NetworkInformation.Reachability.Local
+       The system is connected to a network, but might only be able to
+       access devices on the local network.
+    \value NetworkInformation.Reachability.Site
+       The system is connected to a network, but might only be able to
+       access devices on the local subnet or an intranet.
+    \value NetworkInformation.Reachability.Online
+       The system is connected to a network and able to access the Internet.
+*/
+
+/*!
+    \qmlproperty bool NetworkInformation::isBehindCaptivePortal
+    \readonly
+
+    Indicates if the user's device is currently known to be behind a captive portal.
+*/
+
+/*!
+    \qmlproperty enumeration NetworkInformation::transportMedium
+    \readonly
+
+    Holds the currently active transport medium for the application.
+
+    \value NetworkInformation.TransportMedium.Unknown
+       If the OS reports no active medium, the active medium is not recognized by Qt,
+       or the TransportMedium feature is not supported.
+    \value NetworkInformation.TransportMedium.Ethernet
+       The currently active connection is using Ethernet. Note: This value may also be
+       returned when Windows is connected to a Bluetooth personal area network.
+    \value NetworkInformation.TransportMedium.Cellular
+       The currently active connection is using a cellular network.
+    \value NetworkInformation.TransportMedium.WiFi
+       The currently active connection is using Wi-Fi.
+    \value NetworkInformation.TransportMedium.Bluetooth
+       The currently active connection is connected using Bluetooth.
+*/
+
+/*!
+    \qmlproperty bool NetworkInformation::isMetered
+    \readonly
+
+    Returns whether the current connection is (known to be) metered or not.
+*/
