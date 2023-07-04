@@ -1501,7 +1501,7 @@ QQuickItem *QQuickPathView::itemAt(qreal x, qreal y) const
 }
 
 /*!
-    \qmlmethod Item QtQuick::QQuickPathView::itemAtIndex(int index)
+    \qmlmethod Item QtQuick::PathView::itemAtIndex(int index)
 
     Returns the item for \a index. If there is no item for that index, for example
     because it has not been created yet, or because it has been panned out of
