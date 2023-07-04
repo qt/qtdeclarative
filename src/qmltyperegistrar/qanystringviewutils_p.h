@@ -113,9 +113,19 @@ auto processAsUtf8(StringView string, Handler &&handler)
     if constexpr (std::is_same_v<StringView, QByteArray>)
         return handler(QByteArrayView(string));
     if constexpr (std::is_same_v<StringView, QAnyStringView>) {
-        return string.visit([handler](auto view) {
+
+        // Handler is:
+        // * a reference if an lvalue ref is passed
+        // * a value otherwise
+        // We conserve its nature for passing to the lambda below.
+        // This is necessary because we need to decide on the nature of
+        // the lambda capture as part of the syntax (prefix '&' or not).
+        // So we always pass a reference-conserving wrapper as value.
+        struct Wrapper { Handler handler; };
+
+        return string.visit([w = Wrapper { std::forward<Handler>(handler) }](auto view) mutable {
             static_assert(!(std::is_same_v<decltype(view), QAnyStringView>));
-            return processAsUtf8(std::move(view), std::move(handler));
+            return processAsUtf8(std::move(view), std::forward<Handler>(w.handler));
         });
     }
     Q_UNREACHABLE();
