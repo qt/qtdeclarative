@@ -695,12 +695,14 @@
 
     This property holds whether the user can select cells, rows or columns.
 
-    \list
-    \li TableView.SelectionDisabled - the user cannot perform selections.
-    \li TableView.SelectCells (default) - the user can select individual cells.
-    \li TableView.SelectRows - the user can only select rows.
-    \li TableView.SelectColumns - the user can only select columns.
-    \endlist
+    \value TableView.SelectionDisabled
+           The user cannot perform selections
+    \value TableView.SelectCells
+           (Default value) The user can select individual cells
+    \value TableView.SelectRows
+           The user can only select rows
+    \value TableView.SelectColumns
+           The user can only select columns
 
     \sa {Selecting items}, selectionMode, selectionModel, keyNavigationEnabled
 */
@@ -709,24 +711,27 @@
     \qmlproperty enumeration QtQuick::TableView::selectionMode
     \since 6.6
 
-    If \l selectionBehavior is set to \l {TableView.SelectCells}, this property holds
+    If \l selectionBehavior is set to \c {TableView.SelectCells}, this property holds
     whether the user can select one cell at a time, or multiple cells.
-    If \l selectionBehavior is set to \l {TableView.SelectRows}, this property holds
+    If \l selectionBehavior is set to \c {TableView.SelectRows}, this property holds
     whether the user can select one row at a time, or multiple rows.
-    If \l selectionBehavior is set to \l {TableView.SelectColumns}, this property holds
+    If \l selectionBehavior is set to \c {TableView.SelectColumns}, this property holds
     whether the user can select one column at a time, or multiple columns.
 
     The following modes are available:
-    \list
-    \li TableView.SingleSelection - the user can select a single cell, row or column.
-    \li TableView.ContiguousSelection - the user can select a single contiguous block of cells.
-        An existing selection can be made bigger or smaller by holding down the \c Shift
-        modifier while selecting.
-    \li TableView.ExtendedSelection (default) - the user can select multiple individual
-        blocks of cells. An existing selection can be made bigger or smaller by holding
-        down the \c Shift modifier while selecting. A new selection block can be started without
-        clearing the current selection by holding down the \c Control modifier while selecting.
-    \endlist
+
+    \value TableView.SingleSelection
+           The user can select a single cell, row or column.
+    \value TableView.ContiguousSelection
+           The user can select a single contiguous block of cells.
+           An existing selection can be made bigger or smaller by holding down
+           the \c Shift modifier while selecting.
+    \value TableView.ExtendedSelection
+           (Default value) The user can select multiple individual blocks of
+           cells. An existing selection can be made bigger or smaller by
+           holding down the \c Shift modifier while selecting. A new selection
+           block can be started without clearing the current selection by
+           holding down the \c Control modifier while selecting.
 
     \sa {Selecting items}, selectionBehavior, selectionModel, keyNavigationEnabled
 */

@@ -25,14 +25,14 @@
     future versions of Qt.
 
     The LayoutItemProxy will try to take control of the \l{target} item if it
-    is is \l{visible}. Taking control will position and resize the \l{target}
-    item to match the position and size of the LayoutItemProxy. Further, the
-    LayoutItemProxy will set itself as the parent of the
+    is \l [QML] {Item::}{visible}. Taking control will position and resize the
+    \l{target} item to match the position and size of the LayoutItemProxy.
+    Further, the LayoutItemProxy will set itself as the parent of the
     \l{target} (to ensure event delivery and useful drawing order) and set the
     visibility to \c true. Multiple LayoutItemProxies can \l{target} the same
     item, but only one LayoutItemProxy can control an item at a time. Therefore
-    only one of the proxies targeting the same item should be \l visible at a
-    time. If multiple proxies target the same item but \l visible is set to
+    only one of the proxies targeting the same item should be visible at a
+    time. If multiple proxies target the same item but \e visible is set to
     false for each proxy, the item will also be invisible.
 
     All \l{Layout} attached properties of the \l {target}, as well as the

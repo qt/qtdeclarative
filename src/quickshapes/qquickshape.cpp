@@ -706,8 +706,8 @@ QQuickShape::~QQuickShape()
           optional in OpenGL ES 2).
       \li Only quadratic curves are supported (cubic curves will be approximated by quadratic
           curves).
-      \li Shapes where elements intersect are not supported. Use the \l Path.simplified
-          property to remove self-intersections from such shapes.
+      \li Shapes where elements intersect are not supported. Use the \l [QML] {Path::simplified}
+          {Path.simplified} property to remove self-intersections from such shapes.
       \li Shapes that span a large numerical range, such as a long string of text, may have
           issues. Consider splitting these shapes into multiple ones, for instance by making
           a \l PathText for each individual word.
@@ -733,13 +733,13 @@ QQuickShape::RendererType QQuickShape::rendererType() const
     \since 6.6
 
     Requests a specific backend to use for rendering the shape. The possible values are the same as
-    for \l rendererType. The default is Shape.UnknownRenderer, indicating no particular preference.
+    for \l rendererType. The default is \c Shape.UnknownRenderer, indicating no particular preference.
 
     If the requested renderer type is not supported for the current Qt Quick backend, the default
     renderer for that backend will be used instead. This will be reflected in the \l rendererType
     when the backend is initialized.
 
-    \l Shape.SoftwareRenderer can currently not be selected without running the scenegraph with
+    \c Shape.SoftwareRenderer can currently not be selected without running the scenegraph with
     the \c software backend, in which case it will be selected regardless of the
     \c preferredRendererType.
 
