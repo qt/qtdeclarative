@@ -1043,6 +1043,17 @@ private:
     int m_called = 1;
 };
 
+class TestQMetaObject2 : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE TestQMetaObject2(int a) : m_called(a) {}
+    int called() const { return m_called; }
+
+private:
+    int m_called = 1;
+};
+
 void tst_QJSEngine::newQObjectPropertyCache()
 {
     QScopedPointer<QObject> obj(new QObject);
@@ -1118,6 +1129,18 @@ void tst_QJSEngine::newQMetaObject() {
         QCOMPARE(metaObject.property("C").toInt(), 2);
     }
 
+    {
+        QJSEngine engine;
+        const QJSValue metaObject = engine.newQMetaObject(&TestQMetaObject2::staticMetaObject);
+        engine.globalObject().setProperty("Example"_L1, metaObject);
+
+        const QJSValue invalid = engine.evaluate("new Example()"_L1);
+        QVERIFY(invalid.isError());
+        QCOMPARE(invalid.toString(), "Error: Insufficient arguments"_L1);
+
+        const QJSValue valid = engine.evaluate("new Example(123)"_L1);
+        QCOMPARE(qjsvalue_cast<TestQMetaObject2 *>(valid)->called(), 123);
+    }
 }
 
 void tst_QJSEngine::exceptionInSlot()
