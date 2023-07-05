@@ -24,6 +24,7 @@ QJsonValue getValue(const QString &key, const QJsonObject object);
 QString getString(const QString &key, const QJsonObject object);
 QStringList getStringList(const QString &key, const QJsonObject object, bool required = true);
 
+void clearCache();
 QString resolvedPath(const QString &figmaId);
 bool resolvedHidden(const QString &figmaId);
 

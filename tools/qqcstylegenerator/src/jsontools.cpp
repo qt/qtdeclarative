@@ -102,6 +102,11 @@ bool resolvedHidden(const QString &figmaId)
     return resolvedPath(figmaId).contains("[hidden]");
 }
 
+void clearCache()
+{
+    g_idToPathMap.clear();
+}
+
 void findChildrenImpl(const QStringList &keyValueList
     , const QJsonObject &root
     , bool firstOnly

@@ -11,8 +11,10 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QDir>
+#include <QPixmap>
 
 #include "jsontools.h"
+#include "bridge.h"
 
 using namespace JsonTools;
 
@@ -39,48 +41,53 @@ struct ImageFormat
     QString scale;
 };
 
-class StyleGenerator
+class StyleGenerator : public QObject
 {
+    Q_OBJECT
 
 public:
-    StyleGenerator(const QString &fileId, const QString &token
-        , const QString &targetPath, bool verbose, bool silent, bool sanity, const QString &generate)
-        : m_fileId(fileId)
-        , m_token(token)
-        , m_targetPath(targetPath)
-        , m_verbose(verbose)
-        , m_silent(silent)
-        , m_sanity(sanity)
-        , m_controlToGenerate(generate)
+    StyleGenerator(Bridge *bridge)
+        : QObject(nullptr)
+        , m_bridge(bridge)
     {
     }
 
-    void generateStyle()
+    Q_INVOKABLE void generateStyle()
     {
-        debug("Generate style: " + m_targetPath);
+        try {
+            progressTo(0);
+            JsonTools::clearCache();
+            if (!m_abort)
+                readInputConfig();
+            if (!m_abort)
+                downloadFigmaDocument();
+            if (!m_abort)
+                generateControls();
+            if (!m_abort)
+                downloadImages();
+            if (!m_abort)
+                generateQmlDir();
+            if (!m_abort)
+                generateConfiguration();
+        } catch (std::exception &e) {
+            warning(e.what());
+        }
 
-        readInputConfig();
-        downloadFigmaDocument();
-        generateControls();
-        downloadImages();
-        debugHeader("Generating config files");
-        generateQmlDir();
-        generateConfiguration();
+        QThread::currentThread()->quit();
     }
 
 private:
 
     void downloadFigmaDocument()
     {
-        debug("downloading figma file");
-        newProgress("downloading figma file");
+        progressLabel("Downloading figma file: " + m_bridge->m_fileId);
         QJsonDocument figmaResponsDoc;
-        const QUrl url("https://api.figma.com/v1/files/" + m_fileId);
+        const QUrl url("https://api.figma.com/v1/files/" + m_bridge->m_fileId);
         debug("requesting: " + url.toString());
 
         QNetworkRequest request(url);
-        request.setRawHeader(QByteArray("X-FIGMA-TOKEN"), m_token.toUtf8());
-        debug("using token: " + m_token.toUtf8());
+        request.setRawHeader(QByteArray("X-FIGMA-TOKEN"), m_bridge->m_figmaToken.toUtf8());
+        debug("using token: " + m_bridge->m_figmaToken.toUtf8());
 
         QScopedPointer<QNetworkAccessManager> manager(new QNetworkAccessManager);
         manager->setAutoDeleteReplies(true);
@@ -99,8 +106,9 @@ private:
             progress();
         });
 
-        while (reply->isRunning())
-            qApp->processEvents();
+        auto dispatcher = QThread::currentThread()->eventDispatcher();
+        while (reply->isRunning() && !m_abort)
+            dispatcher->processEvents(QEventLoop::AllEvents | QEventLoop::WaitForMoreEvents);
 
         if (reply->error() != QNetworkReply::NoError)
             throw RestCallException(QStringLiteral("Could not download design file from Figma: ")
@@ -109,22 +117,22 @@ private:
 
     QList<QJsonDocument> generateImageUrls(const ImageFormat &imageFormat)
     {
-        newProgress("downloading image urls with format " + imageFormat.name);
-
         const auto figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
         const QStringList idsList = figmaIdToFileNameMap.keys();
         const QString format = imageFormat.format;
         const QString scale = imageFormat.scale;
 
+        progressLabel("Downloading image urls with format " + imageFormat.name);
+
         QScopedPointer<QNetworkAccessManager> manager(new QNetworkAccessManager);
         manager->setAutoDeleteReplies(true);
 
         QNetworkRequest request;
-        request.setRawHeader(QByteArray("X-FIGMA-TOKEN"), m_token.toUtf8());
+        request.setRawHeader(QByteArray("X-FIGMA-TOKEN"), m_bridge->m_figmaToken.toUtf8());
 
         QList<QString> requestIds;
         QString currentIds;
-        QString partialUrl = "https://api.figma.com/v1/images/" + m_fileId +
+        QString partialUrl = "https://api.figma.com/v1/images/" + m_bridge->m_fileId +
                              "?format=" + format + "&scale=" + scale + "&ids=";
 
         // REST API supports urls of up to 6000 chars so we need to split
@@ -165,8 +173,9 @@ private:
                 progress();
             });
 
-            while (reply->isRunning())
-                qApp->processEvents();
+            auto dispatcher = QThread::currentThread()->eventDispatcher();
+            while (reply->isRunning() && !m_abort)
+                dispatcher->processEvents(QEventLoop::AllEvents | QEventLoop::WaitForMoreEvents);
 
             if (reply->error() != QNetworkReply::NoError)
                 throw RestCallException(QStringLiteral("Could not download images from Figma: ") + networkErrorString(reply));
@@ -179,11 +188,10 @@ private:
 
     void downloadImages(const ImageFormat &imageFormat, const QJsonDocument &figmaImagesResponsDoc)
     {
-        debug("downloading requested images with format " + imageFormat.name);
-        newProgress("downloading images with format " + imageFormat.name);
-
         const auto imageUrls = getObject("images", figmaImagesResponsDoc.object());
         const auto figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
+
+        progressLabel("Downloading image urls with format " + imageFormat.name);
 
         QScopedPointer<QNetworkAccessManager> manager(new QNetworkAccessManager);
         manager->setAutoDeleteReplies(true);
@@ -192,7 +200,7 @@ private:
         for (const QString &figmaId : imageUrls.keys()) {
             const QString imageUrl = imageUrls.value(figmaId).toString();
             if (imageUrl.isEmpty()) {
-                qWarning().noquote().nospace() << "No image URL generated for id: " << figmaId << ", " << figmaIdToFileNameMap.value(figmaId);
+                warning("No image URL generated for id: " + figmaId + ", " + figmaIdToFileNameMap.value(figmaId));
                 requestCount--;
                 continue;
             }
@@ -204,13 +212,13 @@ private:
                              reply, &figmaIdToFileNameMap, &requestCount] {
                 requestCount--;
                 if (reply->error() != QNetworkReply::NoError) {
-                    qWarning().nospace().noquote() << "Failed to download "
-                        << imageUrl << " (id: " << figmaId << "). "
-                        << "Error code:" << networkErrorString(reply);
+                    warning("Failed to download "
+                        + imageUrl + " (id: " + figmaId + "). "
+                        + "Error code:" + networkErrorString(reply));
                     return;
                 }
 
-                const QString filePath = m_targetPath + "/" + figmaIdToFileNameMap.value(figmaId);
+                const QString filePath = m_bridge->m_targetDirectory + "/" + figmaIdToFileNameMap.value(figmaId);
                 const QString targetDir = QFileInfo(filePath).absoluteDir().path();
                 if (!QDir().mkpath(targetDir))
                     throw std::runtime_error("Could not create image directory: " + targetDir.toStdString());
@@ -222,13 +230,13 @@ private:
                 } else {
                     QPixmap pixmap;
                     if (!pixmap.loadFromData(reply->readAll(), imageFormat.format.toUtf8().constData())) {
-                        qWarning().nospace().noquote() << "Failed to create pixmap: "
-                            << filePath << " from " << imageUrl;
+                        warning("Failed to create pixmap: "
+                            + filePath + " from " + imageUrl);
                         return;
                     }
                     if (!pixmap.save(filePath)) {
-                        qWarning().nospace().noquote() << "Failed to save pixmap: "
-                            << filePath << " from " << imageUrl;
+                        warning("Failed to save pixmap: "
+                            + filePath + " from " + imageUrl);
                         return;
                     }
                 }
@@ -237,17 +245,20 @@ private:
             });
         }
 
-        while (requestCount > 0)
-            qApp->processEvents();
+        auto dispatcher = QThread::currentThread()->eventDispatcher();
+        while (requestCount > 0 && !m_abort)
+            dispatcher->processEvents(QEventLoop::AllEvents | QEventLoop::WaitForMoreEvents);
     }
 
     void downloadImages()
     {
-        debugHeader("Downloading images from Figma");
         if (m_imagesToDownload.isEmpty()) {
             debug("No images to download!");
             return;
         }
+
+        progressTo(m_imageCount);
+        progressLabel("Downloading images");
 
         for (const ImageFormat imageFormat : std::as_const(m_imagesToDownload).keys()) {
             try {
@@ -255,7 +266,7 @@ private:
                 for (const QJsonDocument &imageUrlDoc : imageUrlDocs)
                     downloadImages(imageFormat, imageUrlDoc);
             } catch (std::exception &e) {
-                qWarning().nospace().noquote() << "Could not generate images: " << e.what();
+                warning("Could not generate images: " + QString(e.what()));
             }
         }
     }
@@ -278,6 +289,7 @@ private:
     void generateControls()
     {
         QJsonArray controlsArray = getArray("controls", m_inputConfig);
+        progressTo(controlsArray.count());
 
         const QJsonArray themesArray = m_inputConfig.value("themes").toArray();
         if (themesArray.isEmpty())
@@ -298,15 +310,16 @@ private:
         }
 
         for (const auto controlValue : controlsArray) {
+            progress();
             const auto controlObj = controlValue.toObject();
             const QString name = getString("name", controlObj);
-            if (!m_controlToGenerate.isEmpty() && name != m_controlToGenerate)
+            if (!m_bridge->m_controlToGenerate.isEmpty() && name != m_bridge->m_controlToGenerate)
                 continue;
 
             try {
                 generateControl(controlObj);
             } catch (std::exception &e) {
-                qWarning().nospace().noquote() << "Warning, could not generate " << name << ": " << e.what();
+                warning("could not generate " + name + ": " + e.what());
             }
         }
     }
@@ -314,12 +327,12 @@ private:
     void generateControl(const QJsonObject &controlObj)
     {
         const QString controlName = getString("name", controlObj);
-        debugHeader(controlName);
+        progressLabel("Generating " + controlName);
 
         // Copy files (typically the QML control) into the style folder
         QStringList files = getStringList("copy", controlObj, false);
         for (const QString &file : files)
-            copyFileToStyleFolder(file, false);
+            copyFileToStyleFolder(file, m_bridge->m_overwriteQml);
 
         // Add this control to the list of controls that goes into the qmldir file
         m_qmlDirControls.append(controlName);
@@ -332,14 +345,14 @@ private:
             m_themeVars.insert("Theme", theme);
             exportAssets(controlObj);
         } catch (std::exception &e) {
-            qWarning().nospace().noquote() << "Warning, failed exporting assets for theme: "
-                                           << m_themeVars["Theme"] << "; " << e.what();
+            warning("failed exporting assets for theme: "
+                + m_themeVars["Theme"] + "; " + e.what());
         }
     }
 
     void exportAssets(const QJsonObject &controlObj)
     {
-        debug("\nexporting assets for '" + m_currentTheme + "' theme");
+        debug("exporting assets for '" + m_currentTheme + "' theme");
         QJsonObject outputControlConfig;
 
         // Get the description about the control from the input config document
@@ -360,13 +373,13 @@ private:
             searchRoot = m_cachedPage;
         } else if (!pageName.isEmpty()) {
             m_cachedPageName = pageName;
-            m_cachedPage = findChild({"type", "CANVAS", "name", pageName}, documentRoot, m_sanity);
+            m_cachedPage = JsonTools::findChild({"type", "CANVAS", "name", pageName}, documentRoot, m_bridge->m_sanity);
             searchRoot = m_cachedPage;
         } else {
             searchRoot = documentRoot;
         }
 
-        const QJsonObject componentSet = findChild({"type", "COMPONENT_SET", "name", componentSetName}, searchRoot, m_sanity);
+        const QJsonObject componentSet = JsonTools::findChild({"type", "COMPONENT_SET", "name", componentSetName}, searchRoot, m_bridge->m_sanity);
 
         for (const QJsonValue &configStateValue : configStatesArray) try {
             QJsonObject outputStateConfig;
@@ -416,7 +429,7 @@ private:
                 // Add the exported atom configuration to the state configuration
                 outputStateConfig.insert(atomConfigName, outputAtomConfig);
             } catch (std::exception &e) {
-                qWarning().nospace().noquote() << "Warning, generate atom: " << e.what() << "; " << m_currentAtomInfo;
+                warning("generate atom: " + QString(e.what()) + "; " + m_currentAtomInfo);
             }
 
             try {
@@ -435,17 +448,17 @@ private:
                 generateSpacing(contentAtoms, outputStateConfig);
                 generatePadding(outputStateConfig);
 
-                const auto stateComponent = findChild({"type", "COMPONENT", "name", "state=" + figmaState}, componentSet, m_sanity);
+                const auto stateComponent = JsonTools::findChild({"type", "COMPONENT", "name", "state=" + figmaState}, componentSet, m_bridge->m_sanity);
                 generateTransitions(stateComponent, outputStateConfig, configStatesArray);
 
             } catch (std::exception &e) {
-                qWarning().nospace().noquote() << "Warning, generate control: " << e.what() << "; " << m_currentAtomInfo;
+                warning("generate control: " + QString(e.what()) + "; " + m_currentAtomInfo);
             }
 
             // Add the exported atom configuration to the state configuration
             outputControlConfig.insert(controlState, outputStateConfig);
         } catch (std::exception &e) {
-            qWarning().nospace().noquote() << "Warning, generate control: " << e.what() << " " << m_currentAtomInfo;
+            warning("generate control: " + QString(e.what()) + " " + m_currentAtomInfo);
         }
 
         // Add the control configuration to the global configuration document
@@ -487,7 +500,7 @@ private:
             else
                 throw std::runtime_error("Unknown option: '" + atomExport.toStdString() + "'");
         } catch (std::exception &e) {
-            qWarning().nospace().noquote() << "Warning, export atom: " << e.what() << "; " << m_currentAtomInfo;
+            warning("export atom: " + QString(e.what()) + "; " + m_currentAtomInfo);
         }
     }
 
@@ -536,7 +549,7 @@ private:
 
         if (resolvedHidden(figmaId)) {
             outputConfig.insert("filePath", "");
-            debug("skipping hidden image: " + imageName + (m_sanity ? ", path: " + resolvedPath(figmaId) : ""));
+            debug("skipping hidden image: " + imageName + (m_bridge->m_sanity ? ", path: " + resolvedPath(figmaId) : ""));
             return;
         }
 
@@ -550,6 +563,7 @@ private:
 
             auto &figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
             figmaIdToFileNameMap.insert(figmaId, fileNameForWriting);
+            m_imageCount++;
 
             outputConfig.insert("export", "image");
             outputConfig.insert("filePath", fileNameForReading);
@@ -643,7 +657,7 @@ private:
         }
 
         if (stateValue.isEmpty()) {
-            qWarning().noquote().nospace() << "No corresponding state found for figma state: " << figmaStateName.toString();
+            warning("No corresponding state found for figma state: " + figmaStateName.toString());
             return;
         }
 
@@ -709,6 +723,7 @@ private:
 
     void generateConfiguration()
     {
+        debug("Generating config.json");
         for (const QString &theme : std::as_const(m_outputConfig).keys()) {
             QJsonObject root;
             root.insert("version", "1.0");
@@ -721,7 +736,8 @@ private:
 
     void generateQmlDir()
     {
-        const QString styleName = QFileInfo(m_targetPath).fileName();
+        debug("Generating qmldir");
+        const QString styleName = QFileInfo(m_bridge->m_targetDirectory).fileName();
         const QString version(" 1.0 ");
 
         QString qmldir;
@@ -756,7 +772,7 @@ private:
         if (destPath.isEmpty())
             destPath = QFileInfo(srcFile).fileName();
 
-        QString targetPath = m_targetPath + "/" + destPath;
+        QString targetPath = m_bridge->m_targetDirectory + "/" + destPath;
         mkTargetPath(targetPath);
         if (!overwrite && QFileInfo(targetPath).exists()) {
             debug(targetPath + " exists, skipping overwrite");
@@ -774,7 +790,7 @@ private:
 
     void createTextFileInStylefolder(const QString &fileName, const QString &contents) const
     {
-        const QString targetPath = m_targetPath + "/" + fileName;
+        const QString targetPath = m_bridge->m_targetDirectory + "/" + fileName;
         mkTargetPath(targetPath);
         QFile file(targetPath);
         if (!file.open(QIODevice::WriteOnly))
@@ -851,7 +867,7 @@ private:
         const int themeVarFirst = first + 2;
         const QString themeVar = str.sliced(themeVarFirst, last - themeVarFirst);
         if (!m_themeVars.contains(themeVar)) {
-            qWarning().nospace().noquote() << "Theme variable not set: '" << themeVar << "' (" << str << ")";
+            warning("Theme variable not set: '" + themeVar + "' (" + str + ")");
             return str;
         }
         const QString substitute = m_themeVars[themeVar];
@@ -871,50 +887,24 @@ private:
         return QMetaEnum::fromType<QNetworkReply::NetworkError>().valueToKey(reply->error());
     }
 
-    void newProgress(const QString &label)
-    {
-        if (m_verbose || m_silent)
-            return;
-        m_progressLabel = label;
-        m_progress = 0;
-        printf("\33[2K%s: 0\r", qPrintable(m_progressLabel));
-        fflush(stdout);
-    }
-
-    void progress()
-    {
-        if (m_verbose || m_silent)
-            return;
-        printf("\33[2K%s: %i\r", qPrintable(m_progressLabel), ++m_progress);
-        fflush(stdout);
-    }
-
-    void debug(const QString &msg) const
-    {
-        if (!m_verbose)
-            return;
-        qDebug().noquote() << msg;
-    }
-
-    void debugHeader(const QString &msg) const
-    {
-        debug("");
-        debug("*** " + msg + " ***");
-    }
-
     void saveForDebug(const QJsonObject &object, const QString &name = "debug.json") const
     {
         debug("saving json for debug: " + name);
         createTextFileInStylefolder(name, QJsonDocument(object).toJson());
     }
 
+    void debug(const QString &msg) const { emit m_bridge->debug(msg); }
+    void warning(const QString &msg) const { emit m_bridge->warning(msg); }
+    void error(const QString &msg) const { emit m_bridge->error(msg); }
+    void progressTo(int to) const { emit m_bridge->progressToChanged(to); }
+    void progressLabel(const QString &label) const { emit m_bridge->progressLabelChanged(label); }
+    void progress() const { emit m_bridge->progress(); }
+
+public:
+    bool m_abort = false;
+
 private:
-    QString m_fileId;
-    QString m_token;
-    QString m_targetPath;
-    bool m_verbose = false;
-    bool m_silent = false;
-    bool m_sanity = false;
+    Bridge *m_bridge = nullptr;
 
     QStringList m_imageFormats;
     QMap<QString, QStringList> m_defaultExport;
@@ -924,7 +914,6 @@ private:
     QJsonObject m_inputConfig;
     QMap<QString, QJsonObject> m_outputConfig;
     QStringList m_qmlDirControls;
-    QString m_controlToGenerate;
 
     QString m_cachedPageName;
     QJsonObject m_cachedPage;
@@ -935,13 +924,12 @@ private:
     // The inner map maps from figma child id to the file name
     // that the image should be saved to once downloaded.
     QMap<QString, QMap<QString, QString>> m_imagesToDownload;
+    int m_imageCount = 0;
 
     QString m_currentTheme;
     QMap<QString, QString> m_themeVars;
 
     QString m_currentAtomInfo;
-    QString m_progressLabel;
-    int m_progress = 0;
 };
 
 #endif // QSTYLEREADER_H

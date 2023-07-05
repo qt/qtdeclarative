@@ -12,15 +12,19 @@ qt_internal_add_app(qqcstylegenerator
         src/main.cpp
         src/stylegenerator.h
         src/jsontools.h src/jsontools.cpp
+        src/bridge.h src/bridge.cpp
     LIBRARIES
         Qt::GuiPrivate
         Qt::Network
+        Qt::Quick
+        Qt::QuickControls2
 )
 
 qt_add_resources(qqcstylegenerator "controls"
     PREFIX "/"
-    BASE templates/controls
+    BASE templates
     FILES
+        main.qml
         templates/Button.qml
         templates/CheckBox.qml
         templates/ComboBox.qml
@@ -42,4 +46,8 @@ qt_add_resources(qqcstylegenerator "controls"
         templates/ToolButton.qml
         templates/impl/ComboBoxPopup.qml
         config.json
+        figma_and_qt@2x.png
+        background.png
 )
+
+target_include_directories(qqcstylegenerator PUBLIC src)

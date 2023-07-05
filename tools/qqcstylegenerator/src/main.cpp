@@ -2,11 +2,16 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include <QtGui>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
 
-#include "stylegenerator.h"
+#include "bridge.h"
 
 int main(int argc, char **argv){
     QGuiApplication app(argc, argv);
+    QGuiApplication::setOrganizationName("QtProject");
+    QGuiApplication::setOrganizationDomain("www.qt-project.org");
+    QGuiApplication::setApplicationName("StyleGenerator");
 
     QCommandLineParser parser;
     parser.setApplicationDescription("Creates a Qt Quick Controls style from a .qtbridge file.");
@@ -37,31 +42,50 @@ int main(int argc, char **argv){
         return -1;
     }
 
-    if (parser.positionalArguments().length() != 1) {
-        parser.showHelp();
-        return -1;
+    Bridge bridge;
+    // Use the same options (as stored with QSettings) from the
+    // last session, unless overridden from the command line
+    if (parser.isSet("generate"))
+        bridge.m_controlToGenerate = parser.value("generate");
+    if (parser.isSet("verbose"))
+        bridge.m_verbose = parser.isSet("verbose");
+    if (parser.isSet("sanity"))
+        bridge.m_sanity = parser.isSet("sanity");
+    if (parser.isSet("token"))
+        bridge.m_figmaToken = parser.value("token");
+    if (parser.isSet("directory"))
+        bridge.m_targetDirectory = parser.value("directory");
+    if (!parser.positionalArguments().isEmpty())
+        bridge.m_figmaUrlOrId = parser.positionalArguments().first();
+
+    if (parser.positionalArguments().isEmpty()) {
+        // GUI mode
+        QQmlApplicationEngine engine;
+        engine.rootContext()->setContextProperty("bridge", &bridge);
+        const QUrl url(QStringLiteral("qrc:/main.qml"));
+        QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
+                         &app, [url](QObject *obj, const QUrl &objUrl) {
+            if (!obj && url == objUrl)
+                QCoreApplication::exit(-1);
+        }, Qt::QueuedConnection);
+        engine.load(url);
+        return app.exec();
+    } else {
+        // Command line tool mode
+        QObject::connect(&bridge, &Bridge::finished, &app, &QCoreApplication::quit);
+        QObject::connect(&bridge, &Bridge::error, &bridge, [](const QString &msg){ qDebug().noquote() << "Failed:" << msg; });
+        if (!parser.isSet("silent")) {
+            QObject::connect(&bridge, &Bridge::warning, &bridge,
+                             [](const QString &msg){ qDebug().noquote() << "Warning:" << msg; });
+            QObject::connect(&bridge, &Bridge::progressLabelChanged, &bridge,
+                             [](const QString &label){ qDebug().noquote() << "*" << label; });
+            QObject::connect(&bridge, &Bridge::finished, &app,
+                             []{ qDebug().noquote() << "* Finished!"; });
+            if (parser.isSet("verbose"))
+                QObject::connect(&bridge, &Bridge::debug, &bridge,
+                                 [](const QString &msg){ qDebug().noquote() << msg; });
+        }
+        bridge.generate();
+        return app.exec();
     }
-
-    const QString fileId = parser.positionalArguments().first();
-    const QString token = parser.value("token");
-    const QString destinationPath = parser.value("directory");
-    const QString generate = parser.value("generate");
-    const bool verbose = parser.isSet("verbose");
-    const bool silent = parser.isSet("silent");
-    const bool sanity = parser.isSet("sanity");
-
-    if (token.isEmpty()) {
-        qWarning() << "You need to specify a Figma generated token using '--token'";
-        return -1;
-    }
-
-    try {
-        StyleGenerator generator(fileId, token, destinationPath, verbose, silent, sanity, generate);
-        generator.generateStyle();
-    } catch (std::exception &e) {
-        qWarning() << "Error:" << e.what();
-        return -1;
-    }
-
-    return 0;
 }
