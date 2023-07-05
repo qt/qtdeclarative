@@ -2786,9 +2786,11 @@ ReturnedValue QMetaObjectWrapper::constructInternal(const Value *argv, int argc)
                     objectOrGadget, d()->constructors, d()->constructorCount, v4, callData)) {
         object = CallPrecise(objectOrGadget, *ctor, v4, callData, QMetaObject::CreateInstance);
     }
-    Scoped<QMetaObjectWrapper> metaObject(scope, this);
-    object->defineDefaultProperty(v4->id_constructor(), metaObject);
-    object->setPrototypeOf(const_cast<QMetaObjectWrapper*>(this));
+    if (object) {
+        Scoped<QMetaObjectWrapper> metaObject(scope, this);
+        object->defineDefaultProperty(v4->id_constructor(), metaObject);
+        object->setPrototypeOf(const_cast<QMetaObjectWrapper*>(this));
+    }
     return object.asReturnedValue();
 
 }
