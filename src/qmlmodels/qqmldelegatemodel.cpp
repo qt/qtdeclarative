@@ -1295,7 +1295,9 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
     if (cacheItem->object && (!cacheItem->incubationTask || isDoneIncubating(cacheItem->incubationTask->status())))
         return cacheItem->object;
 
-    cacheItem->releaseObject();
+    if (cacheItem->objectRef > 0)
+        cacheItem->releaseObject();
+
     if (!cacheItem->isReferenced()) {
         removeCacheItem(cacheItem);
         delete cacheItem;

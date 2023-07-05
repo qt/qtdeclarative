@@ -37,6 +37,7 @@ private slots:
     void deleteRace();
     void persistedItemsStayInCache();
     void unknownContainersAsModel();
+    void doNotUnrefObjectUnderConstruction();
 };
 
 class AbstractItemModel : public QAbstractItemModel
@@ -520,6 +521,16 @@ void tst_QQmlDelegateModel::unknownContainersAsModel()
     QVERIFY(obj);
     QCOMPARE(delegateModel->count(), 3);
     QCOMPARE(delegateModel->model().metaType(), QMetaType::fromType<QVariantList>());
+}
+
+void tst_QQmlDelegateModel::doNotUnrefObjectUnderConstruction()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("modifyObjectUnderConstruction.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
+    QTRY_COMPARE(object->property("testModel").toInt(), 0);
 }
 
 QTEST_MAIN(tst_QQmlDelegateModel)
