@@ -13,6 +13,11 @@ set(CMAKE_AUTOMOC ON)
 # Simplify finding the backing targets' DLLs on Windows
 if(WIN32)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+else()
+    add_compile_options (
+        -Werror  # Treat all warnings as errors
+        -Wshadow # Warn on shadowing
+    )
 endif()
 
 add_subdirectory(duck/tick)
