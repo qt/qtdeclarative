@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include <QtTest/qtest.h>
+#include <QtCore/qjsonobject.h>
 #include <QtCore/QConcatenateTablesProxyModel>
 #include <QtGui/QStandardItemModel>
 #include <QtQml/qqmlcomponent.h>
@@ -12,6 +13,8 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtTest/QSignalSpy>
+
+#include <forward_list>
 
 class tst_QQmlDelegateModel : public QQmlDataTest
 {
@@ -33,6 +36,7 @@ private slots:
     void typedModelData();
     void deleteRace();
     void persistedItemsStayInCache();
+    void unknownContainersAsModel();
 };
 
 class AbstractItemModel : public QAbstractItemModel
@@ -472,6 +476,50 @@ void tst_QQmlDelegateModel::persistedItemsStayInCache()
     QTRY_COMPARE(object->property("createCount").toInt(), 3);
     listModel->clear();
     QTRY_COMPARE(object->property("destroyCount").toInt(), 3);
+}
+
+Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::forward_list)
+void tst_QQmlDelegateModel::unknownContainersAsModel()
+{
+    QQmlEngine engine;
+
+    QQmlComponent modelComponent(&engine);
+    modelComponent.setData("import QtQml.Models\nDelegateModel {}\n", QUrl());
+    QCOMPARE(modelComponent.status(), QQmlComponent::Ready);
+
+    QScopedPointer<QObject> o(modelComponent.create());
+    QQmlDelegateModel *delegateModel = qobject_cast<QQmlDelegateModel*>(o.data());
+    QVERIFY(delegateModel);
+
+    QQmlComponent delegateComponent(&engine);
+    delegateComponent.setData("import QtQml\nQtObject { objectName: modelData }\n", QUrl());
+    QCOMPARE(delegateComponent.status(), QQmlComponent::Ready);
+
+    delegateModel->setDelegate(&delegateComponent);
+
+    QList<QJsonObject> json;
+    for (int i = 0; i < 10; ++i)
+        json.append(QJsonObject({{"foo", i}}));
+
+    // Recognized as list
+    delegateModel->setModel(QVariant::fromValue(json));
+    QObject *obj = delegateModel->object(0, QQmlIncubator::Synchronous);
+    QVERIFY(obj);
+    QCOMPARE(delegateModel->count(), 10);
+    QCOMPARE(delegateModel->model().metaType(), QMetaType::fromType<QList<QJsonObject>>());
+
+    QVERIFY(qMetaTypeId<std::forward_list<int>>() > 0);
+    std::forward_list<int> mess;
+    mess.push_front(4);
+    mess.push_front(5);
+    mess.push_front(6);
+
+    // Converted into QVariantList
+    delegateModel->setModel(QVariant::fromValue(mess));
+    obj = delegateModel->object(0, QQmlIncubator::Synchronous);
+    QVERIFY(obj);
+    QCOMPARE(delegateModel->count(), 3);
+    QCOMPARE(delegateModel->model().metaType(), QMetaType::fromType<QVariantList>());
 }
 
 QTEST_MAIN(tst_QQmlDelegateModel)
