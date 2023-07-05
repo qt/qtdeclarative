@@ -477,8 +477,8 @@ void wrapCall(const QQmlPrivate::AOTCompiledContext *aotContext, void *dataPtr, 
 )";
 
 static const char *funcHeaderCode = R"(
-    [](const QQmlPrivate::AOTCompiledContext *aotContext, void *dataPtr, void **argumentsPtr) {
-        wrapCall(aotContext, dataPtr, argumentsPtr, [](const QQmlPrivate::AOTCompiledContext *aotContext, void **argumentsPtr) {
+    [](const QQmlPrivate::AOTCompiledContext *context, void *data, void **argv) {
+        wrapCall(context, data, argv, [](const QQmlPrivate::AOTCompiledContext *aotContext, void **argumentsPtr) {
 Q_UNUSED(aotContext)
 Q_UNUSED(argumentsPtr)
 )";
