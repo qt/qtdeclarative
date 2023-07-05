@@ -128,6 +128,7 @@ qt_internal_add_qml_module(Qml
         common/qv4staticvalue_p.h
         common/qv4stringtoarrayindex_p.h
         common/qqmltranslation.cpp common/qqmltranslation_p.h
+        common/qqmlsignalnames_p.h common/qqmlsignalnames.cpp
         compat/removed_api.cpp
         compiler/qqmlirbuilder.cpp compiler/qqmlirbuilder_p.h
         compiler/qv4bytecodegenerator.cpp compiler/qv4bytecodegenerator_p.h

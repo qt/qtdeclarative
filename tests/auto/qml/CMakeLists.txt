@@ -17,8 +17,9 @@ add_subdirectory(qjsonbinding)
 add_subdirectory(qqmlfile)
 
 if(NOT INTEGRITY)
-    # The INTEGRITY linker tends to crash on tst_qqmlfileselector
+    # The INTEGRITY linker tends to crash on tst_qqmlfileselector and tst_qml_common
     add_subdirectory(qqmlfileselector)
+    add_subdirectory(common)
 endif()
 
 # Limit set of tests to run for static Qt builds.
