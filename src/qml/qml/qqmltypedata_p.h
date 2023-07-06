@@ -103,7 +103,9 @@ private:
                      QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
                      bool *typeRecursionDetected = nullptr);
 
-    void scriptImported(const QQmlRefPointer<QQmlScriptBlob> &blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace) override;
+    void scriptImported(
+            const QQmlRefPointer<QQmlScriptBlob> &blob, const QV4::CompiledData::Location &location,
+            const QString &nameSpace, const QString &qualifier) override;
 
     SourceCodeData m_backupSourceCode; // used when cache verification fails.
     QScopedPointer<QmlIR::Document> m_document;
