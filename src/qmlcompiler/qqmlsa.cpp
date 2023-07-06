@@ -1188,7 +1188,19 @@ void PassManagerPrivate::analyzeBinding(const Element &element, const QQmlSA::El
 
 /*!
     Returns \c true if the module named \a module has been imported by the
-    import visitor, \c false otherwise.
+    QML to be analyzed, \c false otherwise.
+
+    This can be used to skip registering a pass which is specific to a specific
+    module.
+
+    \code
+    if (passManager->hasImportedModule("QtPositioning"))
+        passManager->registerElementPass(
+           std::make_unique<PositioningPass>(passManager)
+        );
+    \endcode
+
+    \sa registerPropertyPass(), registerElementPass()
  */
 bool PassManager::hasImportedModule(QAnyStringView module) const
 {
