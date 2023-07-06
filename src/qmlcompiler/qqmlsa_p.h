@@ -199,9 +199,6 @@ public:
 
     bool hasImportedModule(QAnyStringView name) const;
 
-    bool isCategoryEnabled(QQmlJS::LoggerWarningId category) const;
-    void setCategoryEnabled(QQmlJS::LoggerWarningId category, bool enabled = true);
-
     static QQmlJSImportVisitor *visitor(const QQmlSA::PassManager &);
     static QQmlJSTypeResolver *resolver(const QQmlSA::PassManager &);
 

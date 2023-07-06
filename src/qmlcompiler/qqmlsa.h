@@ -324,7 +324,6 @@ public:
     bool hasImportedModule(QAnyStringView name) const;
 
     bool isCategoryEnabled(QQmlJS::LoggerWarningId category) const;
-    void setCategoryEnabled(QQmlJS::LoggerWarningId category, bool enabled = true);
 
     std::vector<std::shared_ptr<ElementPass>> elementPasses() const;
     std::multimap<QString, PropertyPassInfo> propertyPasses() const;
