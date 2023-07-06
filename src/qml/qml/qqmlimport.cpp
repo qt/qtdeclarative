@@ -1365,6 +1365,15 @@ QTypeRevision QQmlImports::addFileImport(
 
     // The url for the path containing files for this import
     QString url = resolveLocalUrl(m_base, uri);
+    if (url.isEmpty()) {
+        QQmlError error;
+        error.setDescription(
+                QQmlImportDatabase::tr("Cannot resolve URL for import \"%1\"").arg(uri));
+        error.setUrl(m_baseUrl);
+        errors->prepend(error);
+        return QTypeRevision();
+    }
+
     if (!url.endsWith(Slash) && !url.endsWith(Backslash))
         url += Slash;
 
