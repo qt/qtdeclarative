@@ -1051,11 +1051,25 @@ static QString lookupName(const QQmlSA::Element &element, LookupMode mode = Look
     Setting \a allowInheritance to \c true means that the filtering on the type
     also accepts types deriving from \a typeName.
 
+    \a pass is passed as a \c{std::shared_ptr} to allow reusing the same pass
+    on multiple elements:
+    \code
+    auto titleValiadorPass = std::make_shared<TitleValidatorPass>(manager);
+    manager->registerPropertyPass(titleValidatorPass,
+                                  "QtQuick", "Window", "title");
+    manager->registerPropertyPass(titleValidatorPass,
+                                  "QtQuick.Controls", "Dialog", "title");
+    \endcode
+
     \note Running analysis passes on too many items can be expensive. This is
     why it is generally good to filter down the set of properties of a pass
     using the \a moduleName, \a typeName and \a propertyName.
 
     Returns \c true if the pass was successfully added, \c false otherwise.
+    Adding a pass fails when the \l{QQmlSA::Element}{Element} specified by
+    \a moduleName and \a typeName does not exist.
+
+    \sa PropertyPass
 */
 bool PassManager::registerPropertyPass(std::shared_ptr<PropertyPass> pass,
                                        QAnyStringView moduleName, QAnyStringView typeName,
