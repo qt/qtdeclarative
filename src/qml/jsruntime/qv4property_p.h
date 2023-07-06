@@ -173,8 +173,6 @@ struct PropertyIndex {
 
 }
 
-Q_DECLARE_TYPEINFO(QV4::Property, Q_RELOCATABLE_TYPE);
-
 QT_END_NAMESPACE
 
 #endif
