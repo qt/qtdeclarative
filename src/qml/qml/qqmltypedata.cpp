@@ -1080,12 +1080,14 @@ bool QQmlTypeData::resolveType(const QString &typeName, QTypeRevision &version,
     return true;
 }
 
-void QQmlTypeData::scriptImported(const QQmlRefPointer<QQmlScriptBlob> &blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &/*nameSpace*/)
+void QQmlTypeData::scriptImported(
+        const QQmlRefPointer<QQmlScriptBlob> &blob, const QV4::CompiledData::Location &location,
+        const QString &nameSpace, const QString &qualifier)
 {
     ScriptReference ref;
     ref.script = blob;
     ref.location = location;
-    ref.qualifier = qualifier;
+    ref.qualifier = qualifier.isEmpty() ? nameSpace : qualifier + QLatin1Char('.') + nameSpace;
 
     m_scripts << ref;
 }
