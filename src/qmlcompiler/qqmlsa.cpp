@@ -812,8 +812,12 @@ qsizetype Element::qHashImpl(const Element &key, qsizetype seed) noexcept
     \class QQmlSA::GenericPass
     \inmodule QtQmlCompiler
 
-    \brief Represents a generic static analysis pass. This class should be extended to
-    implement custom behavior.
+    \brief The base class for static analysis passes.
+
+    This class contains common functionality used by more specific passses.
+    Custom passes should not directly derive from it, but rather from one of
+    its subclasses.
+    \sa ElementPass, PropertyPass
  */
 
 class GenericPassPrivate {
@@ -832,16 +836,16 @@ private:
     GenericPass *q_ptr;
 };
 
+GenericPass::~GenericPass() = default;
+
 /*!
     Creates a generic pass.
  */
-GenericPass::~GenericPass() = default;
-
 GenericPass::GenericPass(PassManager *manager)
     : d_ptr{ new GenericPassPrivate{ this, manager } } { }
 
 /*!
-    Emits a warning message \a diagnostic about an issue of tyep \a id.
+    Emits a warning message \a diagnostic about an issue of type \a id.
  */
 void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id)
 {
@@ -849,7 +853,7 @@ void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId
 }
 
 /*!
-    Emits a warning message \a diagnostic about an issue of tyep \a id located at
+    Emits warning message \a diagnostic about an issue of type \a id located at
     \a srcLocation.
  */
 void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id,
@@ -863,7 +867,7 @@ void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId
 }
 
 /*!
-    Emits a warning message \a diagnostic about an issue of tyep \a id located at
+    Emits a warning message \a diagnostic about an issue of type \a id located at
     \a srcLocation and with suggested fix \a fix.
  */
 void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id,
@@ -878,7 +882,8 @@ void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId
 }
 
 /*!
-    Returns the type of \a typeName.
+    Returns the type corresponding to \a typeName inside the
+    currently analysed file.
  */
 Element GenericPass::resolveTypeInFileScope(QAnyStringView typeName)
 {
@@ -888,6 +893,10 @@ Element GenericPass::resolveTypeInFileScope(QAnyStringView typeName)
     return QQmlJSScope::createQQmlSAElement(scope);
 }
 
+/*!
+    Returns the attached type corresponding to \a typeName used inside
+    the currently analysed file.
+ */
 Element GenericPass::resolveAttachedInFileScope(QAnyStringView typeName)
 {
     const auto type = resolveTypeInFileScope(typeName);
@@ -897,6 +906,10 @@ Element GenericPass::resolveAttachedInFileScope(QAnyStringView typeName)
 
 /*!
     Returns the type of \a typeName defined in module \a moduleName.
+    If an attached type and and a non-attached type share the same
+    name (e.g. \c ListView), the \l Element corresponding to the
+    non-attached type is returned.
+    To obtain the attached type, use \l resolveAttached.
  */
 Element GenericPass::resolveType(QAnyStringView moduleName, QAnyStringView typeName)
 {
@@ -1010,7 +1023,8 @@ void PassManager::registerElementPass(std::unique_ptr<ElementPass> pass)
 }
 
 /*!
- * \brief PassManager::registerElementPass registers ElementPass
+   \internal
+   \brief PassManager::registerElementPass registers ElementPass
           with the pass manager.
    \param pass The registered pass. Ownership is transferred to the pass manager.
  */
