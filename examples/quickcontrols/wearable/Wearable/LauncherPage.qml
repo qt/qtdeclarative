@@ -65,11 +65,13 @@ PathView {
         icon.width: 36
         icon.height: 36
         icon.name: model.icon
+        icon.color: UIStyle.colorQtGray1
         opacity: PathView.itemOpacity
         padding: 12
 
         background: Rectangle {
             radius: width / 2
+            color: UIStyle.colorQtGray10
             border.width: 3
             border.color: parent.PathView.isCurrentItem ? UIStyle.colorQtPrimGreen : UIStyle.themeColorQtGray4
         }
