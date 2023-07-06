@@ -134,29 +134,21 @@ template<class T>
 class QQuickTimeLineValueProxy : public QQuickTimeLineValue
 {
 public:
-    QQuickTimeLineValueProxy(T *cls, void (T::*func)(qreal), qreal v = 0.)
-    : QQuickTimeLineValue(v), _class(cls), _setFunctionReal(func), _setFunctionInt(nullptr)
+    QQuickTimeLineValueProxy(T *object, void (T::*func)(qreal), qreal v = 0.)
+    : QQuickTimeLineValue(v), object(object), setter(func)
     {
-        Q_ASSERT(_class);
-    }
-
-    QQuickTimeLineValueProxy(T *cls, void (T::*func)(int), qreal v = 0.)
-    : QQuickTimeLineValue(v), _class(cls), _setFunctionReal(nullptr), _setFunctionInt(func)
-    {
-        Q_ASSERT(_class);
+        Q_ASSERT(object);
     }
 
     void setValue(qreal v) override
     {
         QQuickTimeLineValue::setValue(v);
-        if (_setFunctionReal) (_class->*_setFunctionReal)(v);
-        else if (_setFunctionInt) (_class->*_setFunctionInt)((int)v);
+        (object->*setter)(v);
     }
 
 private:
-    T *_class;
-    void (T::*_setFunctionReal)(qreal);
-    void (T::*_setFunctionInt)(int);
+    T *object;
+    void (T::*setter)(qreal);
 };
 
 QT_END_NAMESPACE
