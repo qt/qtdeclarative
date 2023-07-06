@@ -3,7 +3,7 @@
 /*!
     \title Qt Quick Examples - Local Storage
     \example localstorage
-    \examplecategory {Input/Output}
+    \examplecategory {Data Processing & I/O}
     \brief A collection of QML local storage examples.
     \borderedimage qml-localstorage-example.png
 
