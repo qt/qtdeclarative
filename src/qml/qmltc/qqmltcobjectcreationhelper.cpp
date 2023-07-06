@@ -26,23 +26,23 @@ void qmltcCreateDynamicMetaObject(QObject *object, const QmltcTypeData &data)
 
     // initialize QQmlType::QQmlCppTypeData
     Q_ASSERT(data.regType == QQmlType::CppType);
-    qmlTypePrivate->extraData.cd->allocationSize = data.allocationSize;
-    qmlTypePrivate->extraData.cd->newFunc = nullptr;
-    qmlTypePrivate->extraData.cd->userdata = nullptr;
-    qmlTypePrivate->extraData.cd->noCreationReason =
+    qmlTypePrivate->extraData.cppTypeData->allocationSize = data.allocationSize;
+    qmlTypePrivate->extraData.cppTypeData->newFunc = nullptr;
+    qmlTypePrivate->extraData.cppTypeData->userdata = nullptr;
+    qmlTypePrivate->extraData.cppTypeData->noCreationReason =
             QStringLiteral("Qmltc-compiled type is not creatable via QQmlType");
-    qmlTypePrivate->extraData.cd->createValueTypeFunc = nullptr;
-    qmlTypePrivate->extraData.cd->parserStatusCast = -1;
-    qmlTypePrivate->extraData.cd->extFunc = nullptr;
-    qmlTypePrivate->extraData.cd->extMetaObject = nullptr;
-    qmlTypePrivate->extraData.cd->customParser = nullptr;
-    qmlTypePrivate->extraData.cd->attachedPropertiesFunc = nullptr;
-    qmlTypePrivate->extraData.cd->attachedPropertiesType = nullptr;
-    qmlTypePrivate->extraData.cd->propertyValueSourceCast = -1;
-    qmlTypePrivate->extraData.cd->propertyValueInterceptorCast = -1;
-    qmlTypePrivate->extraData.cd->finalizerCast = -1;
-    qmlTypePrivate->extraData.cd->registerEnumClassesUnscoped = false;
-    qmlTypePrivate->extraData.cd->registerEnumsFromRelatedTypes = false;
+    qmlTypePrivate->extraData.cppTypeData->createValueTypeFunc = nullptr;
+    qmlTypePrivate->extraData.cppTypeData->parserStatusCast = -1;
+    qmlTypePrivate->extraData.cppTypeData->extFunc = nullptr;
+    qmlTypePrivate->extraData.cppTypeData->extMetaObject = nullptr;
+    qmlTypePrivate->extraData.cppTypeData->customParser = nullptr;
+    qmlTypePrivate->extraData.cppTypeData->attachedPropertiesFunc = nullptr;
+    qmlTypePrivate->extraData.cppTypeData->attachedPropertiesType = nullptr;
+    qmlTypePrivate->extraData.cppTypeData->propertyValueSourceCast = -1;
+    qmlTypePrivate->extraData.cppTypeData->propertyValueInterceptorCast = -1;
+    qmlTypePrivate->extraData.cppTypeData->finalizerCast = -1;
+    qmlTypePrivate->extraData.cppTypeData->registerEnumClassesUnscoped = false;
+    qmlTypePrivate->extraData.cppTypeData->registerEnumsFromRelatedTypes = false;
 
     qmlTypePrivate->baseMetaObject = data.metaObject;
     qmlTypePrivate->init();

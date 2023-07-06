@@ -41,11 +41,11 @@ public:
     {
         switch (regType) {
         case QQmlType::CompositeType:
-            return extraData.fd->url;
+            return extraData.compositeTypeData;
         case QQmlType::CompositeSingletonType:
-            return extraData.sd->singletonInstanceInfo->url;
+            return extraData.singletonTypeData->singletonInstanceInfo->url;
         case QQmlType::InlineComponentType:
-            return extraData.id->url;
+            return extraData.inlineComponentTypeData;
         default:
             return QUrl();
         }
@@ -55,7 +55,7 @@ public:
     {
         for (const QQmlTypePrivate *d = this; d; d = d->resolveCompositeBaseType(engine).d.data()) {
             if (d->regType == QQmlType::CppType)
-                return d->extraData.cd->attachedPropertiesType ? d : nullptr;
+                return d->extraData.cppTypeData->attachedPropertiesType ? d : nullptr;
 
             if (d->regType != QQmlType::CompositeType)
                 return nullptr;
@@ -70,8 +70,6 @@ public:
 
     QQmlType resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
     QQmlPropertyCache::ConstPtr compositePropertyCache(QQmlEnginePrivate *engine) const;
-
-    QQmlType::RegistrationType regType;
 
     struct QQmlCppTypeData
     {
@@ -102,38 +100,31 @@ public:
         const QMetaObject *extMetaObject;
     };
 
-    struct QQmlCompositeTypeData
-    {
-        QUrl url;
-    };
-
-    struct QQmlInlineTypeData
-    {
-        QUrl url;
-    };
-
-    using QQmlSequenceTypeData = QMetaSequence;
-
     union extraData {
-        QQmlCppTypeData* cd;
-        QQmlSingletonTypeData* sd;
-        QQmlCompositeTypeData* fd;
-        QQmlInlineTypeData* id;
-        QQmlSequenceTypeData* ld;
-    } extraData;
+        extraData() {}  // QQmlTypePrivate() does the actual construction.
+        ~extraData() {} // ~QQmlTypePrivate() does the actual destruction.
 
-    const char *iid;
+        QQmlCppTypeData *cppTypeData;
+        QQmlSingletonTypeData *singletonTypeData;
+        QUrl compositeTypeData;
+        QUrl inlineComponentTypeData;
+        QMetaSequence sequentialContainerTypeData;
+        const char *interfaceTypeData;
+    } extraData;
+    static_assert(sizeof(extraData) == sizeof(void *));
+
     QHashedString module;
     QString name;
     QString elementName;
     QMetaType typeId;
     QMetaType listId;
+    QQmlType::RegistrationType regType;
     QTypeRevision version;
     QTypeRevision revision;
-    mutable bool containsRevisionedAttributes;
     const QMetaObject *baseMetaObject;
 
     int index;
+    mutable bool containsRevisionedAttributes;
     mutable QAtomicInteger<bool> isSetup;
     mutable QAtomicInteger<bool> isEnumFromCacheSetup;
     mutable QAtomicInteger<bool> isEnumFromBaseSetup;

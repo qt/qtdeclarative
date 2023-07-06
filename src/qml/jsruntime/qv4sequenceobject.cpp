@@ -694,7 +694,7 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
     const QQmlType type = QQmlMetaType::qmlListType(typeHint);
     if (type.isSequentialContainer()) {
         const QQmlTypePrivate *priv = type.priv();
-        const QMetaSequence *meta = priv->extraData.ld;
+        const QMetaSequence *meta = &priv->extraData.sequentialContainerTypeData;
         const QMetaType containerMetaType(priv->listId);
         QVariant result(containerMetaType);
         qint64 length = a->getLength();

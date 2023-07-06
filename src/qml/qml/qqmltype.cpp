@@ -17,46 +17,51 @@
 QT_BEGIN_NAMESPACE
 
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
-    : regType(type), iid(nullptr), revision(QTypeRevision::zero()),
-    containsRevisionedAttributes(false), baseMetaObject(nullptr),
-    index(-1), isSetup(false), isEnumFromCacheSetup(false), isEnumFromBaseSetup(false)
+    : regType(type)
+    , revision(QTypeRevision::zero())
+    , baseMetaObject(nullptr)
+    , index(-1)
+    , containsRevisionedAttributes(false)
+    , isSetup(false)
+    , isEnumFromCacheSetup(false)
+    , isEnumFromBaseSetup(false)
 {
     switch (type) {
     case QQmlType::CppType:
-        extraData.cd = new QQmlCppTypeData;
-        extraData.cd->allocationSize = 0;
-        extraData.cd->newFunc = nullptr;
-        extraData.cd->createValueTypeFunc = nullptr;
-        extraData.cd->parserStatusCast = -1;
-        extraData.cd->extFunc = nullptr;
-        extraData.cd->extMetaObject = nullptr;
-        extraData.cd->customParser = nullptr;
-        extraData.cd->attachedPropertiesFunc = nullptr;
-        extraData.cd->attachedPropertiesType = nullptr;
-        extraData.cd->propertyValueSourceCast = -1;
-        extraData.cd->propertyValueInterceptorCast = -1;
-        extraData.cd->finalizerCast = -1;
-        extraData.cd->registerEnumClassesUnscoped = true;
-        extraData.cd->registerEnumsFromRelatedTypes = true;
+        extraData.cppTypeData = new QQmlCppTypeData;
+        extraData.cppTypeData->allocationSize = 0;
+        extraData.cppTypeData->newFunc = nullptr;
+        extraData.cppTypeData->createValueTypeFunc = nullptr;
+        extraData.cppTypeData->parserStatusCast = -1;
+        extraData.cppTypeData->extFunc = nullptr;
+        extraData.cppTypeData->extMetaObject = nullptr;
+        extraData.cppTypeData->customParser = nullptr;
+        extraData.cppTypeData->attachedPropertiesFunc = nullptr;
+        extraData.cppTypeData->attachedPropertiesType = nullptr;
+        extraData.cppTypeData->propertyValueSourceCast = -1;
+        extraData.cppTypeData->propertyValueInterceptorCast = -1;
+        extraData.cppTypeData->finalizerCast = -1;
+        extraData.cppTypeData->registerEnumClassesUnscoped = true;
+        extraData.cppTypeData->registerEnumsFromRelatedTypes = true;
         break;
     case QQmlType::SingletonType:
     case QQmlType::CompositeSingletonType:
-        extraData.sd = new QQmlSingletonTypeData;
-        extraData.sd->singletonInstanceInfo = nullptr;
-        extraData.sd->extFunc = nullptr;
-        extraData.sd->extMetaObject = nullptr;
+        extraData.singletonTypeData = new QQmlSingletonTypeData;
+        extraData.singletonTypeData->singletonInstanceInfo = nullptr;
+        extraData.singletonTypeData->extFunc = nullptr;
+        extraData.singletonTypeData->extMetaObject = nullptr;
         break;
     case QQmlType::InterfaceType:
-        extraData.cd = nullptr;
+        extraData.interfaceTypeData = nullptr;
         break;
     case QQmlType::CompositeType:
-        extraData.fd = new QQmlCompositeTypeData;
+        new (&extraData.compositeTypeData) QUrl();
         break;
     case QQmlType::InlineComponentType:
-        extraData.id = new QQmlInlineTypeData;
+        new (&extraData.inlineComponentTypeData) QUrl();
         break;
     case QQmlType::SequentialContainerType:
-        extraData.ld = new QQmlSequenceTypeData;
+        new (&extraData.sequentialContainerTypeData) QMetaSequence();
         break;
     default: qFatal("QQmlTypePrivate Internal Error.");
     }
@@ -75,22 +80,22 @@ QQmlTypePrivate::~QQmlTypePrivate()
 
     switch (regType) {
     case QQmlType::CppType:
-        delete extraData.cd->customParser;
-        delete extraData.cd;
+        delete extraData.cppTypeData->customParser;
+        delete extraData.cppTypeData;
         break;
     case QQmlType::SingletonType:
     case QQmlType::CompositeSingletonType:
-        delete extraData.sd->singletonInstanceInfo;
-        delete extraData.sd;
+        delete extraData.singletonTypeData->singletonInstanceInfo;
+        delete extraData.singletonTypeData;
         break;
     case QQmlType::CompositeType:
-        delete extraData.fd;
+        extraData.compositeTypeData.~QUrl();
         break;
     case QQmlType::InlineComponentType:
-        delete  extraData.id;
+        extraData.inlineComponentTypeData.~QUrl();
         break;
     case QQmlType::SequentialContainerType:
-        delete extraData.ld;
+        extraData.sequentialContainerTypeData.~QMetaSequence();
         break;
     default: //Also InterfaceType, because it has no extra data
         break;
@@ -205,9 +210,9 @@ void QQmlTypePrivate::init() const
     };
 
     if (regType == QQmlType::SingletonType)
-        setupExtendedMetaObject(extraData.sd->extMetaObject, extraData.sd->extFunc);
+        setupExtendedMetaObject(extraData.singletonTypeData->extMetaObject, extraData.singletonTypeData->extFunc);
     else if (regType == QQmlType::CppType)
-        setupExtendedMetaObject(extraData.cd->extMetaObject, extraData.cd->extFunc);
+        setupExtendedMetaObject(extraData.cppTypeData->extMetaObject, extraData.cppTypeData->extFunc);
 
     metaObjects.append(QQmlMetaType::proxyData(
             mo, baseMetaObject, metaObjects.isEmpty() ? nullptr
@@ -275,7 +280,7 @@ void QQmlTypePrivate::initEnums(QQmlEnginePrivate *engine) const
 void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
 {
     // Add any enum values defined by 'related' classes
-    if (regType != QQmlType::CppType || extraData.cd->registerEnumsFromRelatedTypes) {
+    if (regType != QQmlType::CppType || extraData.cppTypeData->registerEnumsFromRelatedTypes) {
         if (const auto *related = metaObject->d.relatedMetaObjects) {
             while (const QMetaObject *relatedMetaObject = *related) {
                 insertEnums(relatedMetaObject);
@@ -307,7 +312,7 @@ void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
         for (int jj = 0; jj < e.keyCount(); ++jj) {
             const QString key = QString::fromUtf8(e.key(jj));
             const int value = e.value(jj);
-            if (!isScoped || (regType == QQmlType::CppType && extraData.cd->registerEnumClassesUnscoped)) {
+            if (!isScoped || (regType == QQmlType::CppType && extraData.cppTypeData->registerEnumClassesUnscoped)) {
                 if (localEnums.contains(key)) {
                     auto existingEntry = enums.find(key);
                     if (existingEntry != enums.end() && existingEntry.value() != value) {
@@ -420,7 +425,7 @@ QByteArray QQmlType::typeName() const
 {
     if (d) {
         if (d->regType == SingletonType || d->regType == CompositeSingletonType)
-            return d->extraData.sd->singletonInstanceInfo->typeName.toUtf8();
+            return d->extraData.singletonTypeData->singletonInstanceInfo->typeName.toUtf8();
         else if (d->baseMetaObject)
             return d->baseMetaObject->className();
     }
@@ -472,11 +477,11 @@ QObject *QQmlType::create(void **memory, size_t additionalMemory) const
 
     d->init();
 
-    QObject *rv = (QObject *)operator new(d->extraData.cd->allocationSize + additionalMemory);
-    d->extraData.cd->newFunc(rv, d->extraData.cd->userdata);
+    QObject *rv = (QObject *)operator new(d->extraData.cppTypeData->allocationSize + additionalMemory);
+    d->extraData.cppTypeData->newFunc(rv, d->extraData.cppTypeData->userdata);
 
     createProxy(rv);
-    *memory = ((char *)rv) + d->extraData.cd->allocationSize;
+    *memory = ((char *)rv) + d->extraData.cppTypeData->allocationSize;
     return rv;
 }
 
@@ -504,7 +509,7 @@ QQmlType::SingletonInstanceInfo *QQmlType::singletonInstanceInfo() const
         return nullptr;
     if (d->regType != SingletonType && d->regType != CompositeSingletonType)
         return nullptr;
-    return d->extraData.sd->singletonInstanceInfo;
+    return d->extraData.singletonTypeData->singletonInstanceInfo;
 }
 
 QQmlCustomParser *QQmlType::customParser() const
@@ -513,47 +518,47 @@ QQmlCustomParser *QQmlType::customParser() const
         return nullptr;
     if (d->regType != CppType)
         return nullptr;
-    return d->extraData.cd->customParser;
+    return d->extraData.cppTypeData->customParser;
 }
 
 QQmlType::CreateValueTypeFunc QQmlType::createValueTypeFunction() const
 {
     if (!d || d->regType != CppType)
         return nullptr;
-    return d->extraData.cd->createValueTypeFunc;
+    return d->extraData.cppTypeData->createValueTypeFunc;
 }
 
 bool QQmlType::canConstructValueType() const
 {
     if (!d || d->regType != CppType)
         return false;
-    return d->extraData.cd->constructValueType;
+    return d->extraData.cppTypeData->constructValueType;
 }
 
 bool QQmlType::canPopulateValueType() const
 {
     if (!d || d->regType != CppType)
         return false;
-    return d->extraData.cd->populateValueType;
+    return d->extraData.cppTypeData->populateValueType;
 }
 
 QQmlType::CreateFunc QQmlType::createFunction() const
 {
     if (!d || d->regType != CppType)
         return nullptr;
-    return d->extraData.cd->newFunc;
+    return d->extraData.cppTypeData->newFunc;
 }
 
 QString QQmlType::noCreationReason() const
 {
     if (!d || d->regType != CppType)
         return QString();
-    return d->extraData.cd->noCreationReason;
+    return d->extraData.cppTypeData->noCreationReason;
 }
 
 bool QQmlType::isCreatable() const
 {
-    return d && d->regType == CppType && d->extraData.cd->newFunc;
+    return d && d->regType == CppType && d->extraData.cppTypeData->newFunc;
 }
 
 QQmlType::ExtensionFunc QQmlType::extensionFunction() const
@@ -563,9 +568,9 @@ QQmlType::ExtensionFunc QQmlType::extensionFunction() const
 
     switch (d->regType) {
     case CppType:
-        return d->extraData.cd->extFunc;
+        return d->extraData.cppTypeData->extFunc;
     case SingletonType:
-        return d->extraData.sd->extFunc;
+        return d->extraData.singletonTypeData->extFunc;
     default:
         return nullptr;
     }
@@ -578,9 +583,9 @@ const QMetaObject *QQmlType::extensionMetaObject() const
 
     switch (d->regType) {
     case CppType:
-        return d->extraData.cd->extMetaObject;
+        return d->extraData.cppTypeData->extMetaObject;
     case SingletonType:
-        return d->extraData.sd->extMetaObject;
+        return d->extraData.singletonTypeData->extMetaObject;
     default:
         return nullptr;
     }
@@ -621,12 +626,12 @@ bool QQmlType::isCompositeSingleton() const
 
 bool QQmlType::isQObjectSingleton() const
 {
-    return d && d->regType == SingletonType && d->extraData.sd->singletonInstanceInfo->qobjectCallback;
+    return d && d->regType == SingletonType && d->extraData.singletonTypeData->singletonInstanceInfo->qobjectCallback;
 }
 
 bool QQmlType::isQJSValueSingleton() const
 {
-    return d && d->regType == SingletonType && d->extraData.sd->singletonInstanceInfo->scriptCallback;
+    return d && d->regType == SingletonType && d->extraData.singletonTypeData->singletonInstanceInfo->scriptCallback;
 }
 
 bool QQmlType::isSequentialContainer() const
@@ -646,7 +651,7 @@ QMetaType QQmlType::qListTypeId() const
 
 QMetaSequence QQmlType::listMetaSequence() const
 {
-    return isSequentialContainer() ? *d->extraData.ld : QMetaSequence();
+    return isSequentialContainer() ? d->extraData.sequentialContainerTypeData : QMetaSequence();
 }
 
 const QMetaObject *QQmlType::metaObject() const
@@ -684,14 +689,14 @@ QTypeRevision QQmlType::metaObjectRevision() const
 QQmlAttachedPropertiesFunc QQmlType::attachedPropertiesFunction(QQmlEnginePrivate *engine) const
 {
     if (const QQmlTypePrivate *base = d ? d->attachedPropertiesBase(engine) : nullptr)
-        return base->extraData.cd->attachedPropertiesFunc;
+        return base->extraData.cppTypeData->attachedPropertiesFunc;
     return nullptr;
 }
 
 const QMetaObject *QQmlType::attachedPropertiesType(QQmlEnginePrivate *engine) const
 {
     if (const QQmlTypePrivate *base = d ? d->attachedPropertiesBase(engine) : nullptr)
-        return base->extraData.cd->attachedPropertiesType;
+        return base->extraData.cppTypeData->attachedPropertiesType;
     return nullptr;
 }
 
@@ -699,35 +704,35 @@ int QQmlType::parserStatusCast() const
 {
     if (!d || d->regType != CppType)
         return -1;
-    return d->extraData.cd->parserStatusCast;
+    return d->extraData.cppTypeData->parserStatusCast;
 }
 
 int QQmlType::propertyValueSourceCast() const
 {
     if (!d || d->regType != CppType)
         return -1;
-    return d->extraData.cd->propertyValueSourceCast;
+    return d->extraData.cppTypeData->propertyValueSourceCast;
 }
 
 int QQmlType::propertyValueInterceptorCast() const
 {
     if (!d || d->regType != CppType)
         return -1;
-    return d->extraData.cd->propertyValueInterceptorCast;
+    return d->extraData.cppTypeData->propertyValueInterceptorCast;
 }
 
 int QQmlType::finalizerCast() const
 {
     if (!d || d->regType != CppType)
         return -1;
-    return d->extraData.cd->finalizerCast;
+    return d->extraData.cppTypeData->finalizerCast;
 }
 
 const char *QQmlType::interfaceIId() const
 {
     if (!d || d->regType != InterfaceType)
         return nullptr;
-    return d->iid;
+    return d->extraData.interfaceTypeData;
 }
 
 int QQmlType::index() const
