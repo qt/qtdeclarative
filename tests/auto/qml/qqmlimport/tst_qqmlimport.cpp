@@ -61,6 +61,7 @@ private slots:
     void preferResourcePath();
     void invalidFileImport_data();
     void invalidFileImport();
+    void invalidImportUrl();
 };
 
 void tst_QQmlImport::cleanup()
@@ -134,6 +135,18 @@ void tst_QQmlImport::invalidFileImport()
                 QStringLiteral("\"%1\" is not a valid import URL. "
                                "You can pass relative paths or URLs with schema, "
                                "but not absolute paths or resource paths.").arg(import)));
+}
+
+void tst_QQmlImport::invalidImportUrl()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("fileDotSlashImport.qml");
+    QQmlComponent component(&engine, url);
+    QVERIFY(component.isError());
+    QCOMPARE(
+            component.errorString(),
+            url.toString() + QLatin1String(
+                    ":2 Cannot resolve URL for import \"file://./MyModuleName\"\n"));
 }
 
 void tst_QQmlImport::testDesignerSupported()
