@@ -1203,14 +1203,6 @@ bool PassManager::isCategoryEnabled(QQmlJS::LoggerWarningId category) const
     return !PassManagerPrivate::visitor(*this)->logger()->isCategoryIgnored(category);
 }
 
-/*!
-    Sets whether the given \a category of warnings should be \a enabled.
- */
-void PassManager::setCategoryEnabled(QQmlJS::LoggerWarningId category, bool enabled)
-{
-    PassManagerPrivate::visitor(*this)->logger()->setCategoryIgnored(category, !enabled);
-}
-
 QQmlJSImportVisitor *QQmlSA::PassManagerPrivate::visitor(const QQmlSA::PassManager &manager)
 {
     return manager.d_func()->m_visitor;
