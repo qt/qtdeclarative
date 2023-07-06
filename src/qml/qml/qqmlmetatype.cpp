@@ -64,7 +64,6 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data,
     d->extraData.interfaceTypeData = type.iid;
     d->typeId = type.typeId;
     d->listId = type.listId;
-    d->isSetup.storeRelease(true);
     d->module = QString::fromUtf8(type.uri);
     d->version = type.version;
     data->registerType(d);
@@ -1029,11 +1028,6 @@ QQmlType QQmlMetaType::typeForUrl(const QString &urlString,
         data, url, qualifiedType, mode, errors, version);
     data->urlToType.insert(url, type.priv());
     return type;
-}
-
-QRecursiveMutex *QQmlMetaType::typeRegistrationLock()
-{
-    return metaTypeDataLock();
 }
 
 /*

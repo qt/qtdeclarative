@@ -30,12 +30,33 @@ class QQmlTypePrivate final : public QQmlRefCounted<QQmlTypePrivate>
 {
     Q_DISABLE_COPY_MOVE(QQmlTypePrivate)
 public:
+    struct ProxyMetaObjects
+    {
+        ~ProxyMetaObjects()
+        {
+            for (const QQmlProxyMetaObject::ProxyData &metaObject : data)
+                free(metaObject.metaObject);
+        }
+
+        QList<QQmlProxyMetaObject::ProxyData> data;
+        bool containsRevisionedAttributes = false;
+    };
+
+    struct Enums
+    {
+        ~Enums() { qDeleteAll(scopedEnums); }
+
+        QStringHash<int> enums;
+        QStringHash<int> scopedEnumIndex; // maps from enum name to index in scopedEnums
+        QList<QStringHash<int> *> scopedEnums;
+    };
+
     QQmlTypePrivate(QQmlType::RegistrationType type);
 
-    void init() const;
-    void initEnums(QQmlEnginePrivate *engine) const;
-    void insertEnums(const QMetaObject *metaObject) const;
-    void insertEnumsFromPropertyCache(const QQmlPropertyCache::ConstPtr &cache) const;
+    const ProxyMetaObjects *init() const;
+    const Enums *initEnums(QQmlEnginePrivate *engine) const;
+    void insertEnums(Enums *enums, const QMetaObject *metaObject) const;
+    void insertEnumsFromPropertyCache(Enums *enums, const QQmlPropertyCache::ConstPtr &cache) const;
 
     QUrl sourceUrl() const
     {
@@ -100,6 +121,8 @@ public:
         const QMetaObject *extMetaObject;
     };
 
+    int index = -1;
+
     union extraData {
         extraData() {}  // QQmlTypePrivate() does the actual construction.
         ~extraData() {} // ~QQmlTypePrivate() does the actual destruction.
@@ -120,22 +143,15 @@ public:
     QMetaType listId;
     QQmlType::RegistrationType regType;
     QTypeRevision version;
-    QTypeRevision revision;
-    const QMetaObject *baseMetaObject;
-
-    int index;
-    mutable bool containsRevisionedAttributes;
-    mutable QAtomicInteger<bool> isSetup;
-    mutable QAtomicInteger<bool> isEnumFromCacheSetup;
-    mutable QAtomicInteger<bool> isEnumFromBaseSetup;
-    mutable QList<QQmlProxyMetaObject::ProxyData> metaObjects;
-    mutable QStringHash<int> enums;
-    mutable QStringHash<int> scopedEnumIndex; // maps from enum name to index in scopedEnums
-    mutable QList<QStringHash<int>*> scopedEnums;
+    QTypeRevision revision = QTypeRevision::zero();
+    const QMetaObject *baseMetaObject = nullptr;
 
     void setName(const QString &uri, const QString &element);
 
 private:
+    mutable QAtomicPointer<const ProxyMetaObjects> proxyMetaObjects;
+    mutable QAtomicPointer<const Enums> enums;
+
     ~QQmlTypePrivate();
     friend class QQmlRefCounted<QQmlTypePrivate>;
 

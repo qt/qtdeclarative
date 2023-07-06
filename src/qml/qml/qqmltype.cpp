@@ -18,13 +18,6 @@ QT_BEGIN_NAMESPACE
 
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
     : regType(type)
-    , revision(QTypeRevision::zero())
-    , baseMetaObject(nullptr)
-    , index(-1)
-    , containsRevisionedAttributes(false)
-    , isSetup(false)
-    , isEnumFromCacheSetup(false)
-    , isEnumFromBaseSetup(false)
 {
     switch (type) {
     case QQmlType::CppType:
@@ -69,9 +62,8 @@ QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
 
 QQmlTypePrivate::~QQmlTypePrivate()
 {
-    qDeleteAll(scopedEnums);
-    for (const auto &metaObject : metaObjects)
-        free(metaObject.metaObject);
+    delete enums.fetchAndStoreAcquire(nullptr);
+    delete proxyMetaObjects.fetchAndStoreAcquire(nullptr);
 
     if (const auto &iface = typeId.iface()) {
         if (iface->metaObjectFn == &dynamicQmlMetaObject)
@@ -178,20 +170,28 @@ static bool isPropertyRevisioned(const QMetaObject *mo, int index)
     return mo->property(index).revision();
 }
 
-void QQmlTypePrivate::init() const
+const QQmlTypePrivate::ProxyMetaObjects *QQmlTypePrivate::init() const
 {
-    if (isSetup.loadAcquire())
-        return;
+    if (const ProxyMetaObjects *result = proxyMetaObjects.loadRelaxed())
+        return result;
 
-    QMutexLocker lock(QQmlMetaType::typeRegistrationLock());
-    if (isSetup.loadAcquire())
-        return;
+    ProxyMetaObjects *proxies = new ProxyMetaObjects;
+    auto finalize = [this, proxies]() -> const ProxyMetaObjects *{
+        const ProxyMetaObjects *concurrentModification;
+        if (proxyMetaObjects.testAndSetOrdered(nullptr, proxies, concurrentModification))
+            return proxies;
+
+        delete proxies;
+        return concurrentModification;
+    };
 
     const QMetaObject *mo = baseMetaObject;
     if (!mo) {
         // version 0 singleton type without metaobject information
-        return;
+        return finalize();
     }
+
+    QList<QQmlProxyMetaObject::ProxyData> metaObjects;
 
     auto setupExtendedMetaObject = [&](const QMetaObject *extMetaObject,
                                        QObject *(*extFunc)(QObject *)) {
@@ -225,6 +225,8 @@ void QQmlTypePrivate::init() const
                 metaObjects.at(ii).metaObject->methodOffset();
     }
 
+    bool containsRevisionedAttributes = false;
+
     // Check for revisioned details
     {
         const QMetaObject *mo = nullptr;
@@ -244,46 +246,50 @@ void QQmlTypePrivate::init() const
         }
     }
 
-    isSetup.storeRelease(true);
-    lock.unlock();
+    proxies->data = std::move(metaObjects);
+    proxies->containsRevisionedAttributes = containsRevisionedAttributes;
+
+    return finalize();
 }
 
-void QQmlTypePrivate::initEnums(QQmlEnginePrivate *engine) const
+const QQmlTypePrivate::Enums *QQmlTypePrivate::initEnums(QQmlEnginePrivate *engine) const
 {
-    QQmlPropertyCache::ConstPtr cache = (!isEnumFromCacheSetup.loadAcquire() && isComposite())
-            ? compositePropertyCache(engine)
-            : QQmlPropertyCache::ConstPtr();
+    if (const Enums *result = enums.loadRelaxed())
+        return result;
+
+    Enums *newEnums = new Enums;
 
     // beware: It could be a singleton type without metaobject
-    const QMetaObject *metaObject = !isEnumFromBaseSetup.loadAcquire()
-            ? baseMetaObject
-            : nullptr;
 
-    if (!cache && !metaObject)
-        return;
-
-    init(); // init() can add to the metaObjects list. Therefore, check metaObjects only below
-
-    QMutexLocker lock(QQmlMetaType::typeRegistrationLock());
-
-    if (cache) {
-        insertEnumsFromPropertyCache(cache);
-        isEnumFromCacheSetup.storeRelease(true);
+    if (QQmlPropertyCache::ConstPtr cache = isComposite()
+                ? compositePropertyCache(engine)
+                : QQmlPropertyCache::ConstPtr()) {
+        insertEnumsFromPropertyCache(newEnums, cache);
     }
 
-    if (metaObject) {
-        insertEnums(metaObjects.isEmpty() ? baseMetaObject : metaObjects.constFirst().metaObject);
-        isEnumFromBaseSetup.storeRelease(true);
+    if (baseMetaObject) {
+        // init() can add to the metaObjects list. Therefore, check proxies->data only below
+        const ProxyMetaObjects *proxies = init();
+        insertEnums(
+                newEnums,
+                proxies->data.isEmpty() ? baseMetaObject : proxies->data.constFirst().metaObject);
     }
+
+    const Enums *concurrentModification;
+    if (enums.testAndSetOrdered(nullptr, newEnums, concurrentModification))
+        return newEnums;
+
+    delete newEnums;
+    return concurrentModification;
 }
 
-void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
+void QQmlTypePrivate::insertEnums(Enums *enums, const QMetaObject *metaObject) const
 {
     // Add any enum values defined by 'related' classes
     if (regType != QQmlType::CppType || extraData.cppTypeData->registerEnumsFromRelatedTypes) {
         if (const auto *related = metaObject->d.relatedMetaObjects) {
             while (const QMetaObject *relatedMetaObject = *related) {
-                insertEnums(relatedMetaObject);
+                insertEnums(enums, relatedMetaObject);
                 ++related;
             }
         }
@@ -312,25 +318,26 @@ void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
         for (int jj = 0; jj < e.keyCount(); ++jj) {
             const QString key = QString::fromUtf8(e.key(jj));
             const int value = e.value(jj);
-            if (!isScoped || (regType == QQmlType::CppType && extraData.cppTypeData->registerEnumClassesUnscoped)) {
+            if (!isScoped || (regType == QQmlType::CppType
+                              && extraData.cppTypeData->registerEnumClassesUnscoped)) {
                 if (localEnums.contains(key)) {
-                    auto existingEntry = enums.find(key);
-                    if (existingEntry != enums.end() && existingEntry.value() != value) {
+                    auto existingEntry = enums->enums.find(key);
+                    if (existingEntry != enums->enums.end() && existingEntry.value() != value) {
                         qWarning("Previously registered enum will be overwritten due to name clash: %s.%s", metaObject->className(), key.toUtf8().constData());
                         createEnumConflictReport(metaObject, key);
                     }
                 } else {
                     localEnums.insert(key);
                 }
-                enums.insert(key, value);
+                enums->enums.insert(key, value);
             }
             if (isScoped)
                 scoped->insert(key, value);
         }
 
         if (isScoped) {
-            scopedEnums << scoped;
-            scopedEnumIndex.insert(QString::fromUtf8(e.name()), scopedEnums.size()-1);
+            enums->scopedEnums << scoped;
+            enums->scopedEnumIndex.insert(QString::fromUtf8(e.name()), enums->scopedEnums.size()-1);
         }
     }
 }
@@ -389,7 +396,7 @@ void QQmlTypePrivate::createEnumConflictReport(const QMetaObject *metaObject, co
 }
 
 void QQmlTypePrivate::insertEnumsFromPropertyCache(
-        const QQmlPropertyCache::ConstPtr &cache) const
+        Enums *enums, const QQmlPropertyCache::ConstPtr &cache) const
 {
     const QMetaObject *cppMetaObject = cache->firstCppMetaObject();
 
@@ -404,14 +411,14 @@ void QQmlTypePrivate::insertEnumsFromPropertyCache(
 
             for (int jj = 0; jj < enumData->values.size(); ++jj) {
                 const QQmlEnumValue &value = enumData->values.at(jj);
-                enums.insert(value.namedValue, value.value);
+                enums->enums.insert(value.namedValue, value.value);
                 scoped->insert(value.namedValue, value.value);
             }
-            scopedEnums << scoped;
-            scopedEnumIndex.insert(enumData->name, scopedEnums.size()-1);
+            enums->scopedEnums << scoped;
+            enums->scopedEnumIndex.insert(enumData->name, enums->scopedEnums.size()-1);
         }
     }
-    insertEnums(cppMetaObject);
+    insertEnums(enums, cppMetaObject);
 }
 
 void QQmlTypePrivate::setName(const QString &uri, const QString &element)
@@ -474,8 +481,6 @@ QObject *QQmlType::create(void **memory, size_t additionalMemory) const
 {
     if (!d || !isCreatable())
         return nullptr;
-
-    d->init();
 
     QObject *rv = (QObject *)operator new(d->extraData.cppTypeData->allocationSize + additionalMemory);
     d->extraData.cppTypeData->newFunc(rv, d->extraData.cppTypeData->userdata);
@@ -593,11 +598,7 @@ const QMetaObject *QQmlType::extensionMetaObject() const
 
 bool QQmlType::isExtendedType() const
 {
-    if (!d)
-        return false;
-    d->init();
-
-    return !d->metaObjects.isEmpty();
+    return d && !d->init()->data.isEmpty();
 }
 
 bool QQmlType::isSingleton() const
@@ -658,13 +659,12 @@ const QMetaObject *QQmlType::metaObject() const
 {
     if (!d)
         return nullptr;
-    d->init();
+    const QQmlTypePrivate::ProxyMetaObjects *proxies = d->init();
 
-    if (d->metaObjects.isEmpty())
+    if (proxies->data.isEmpty())
         return d->baseMetaObject;
     else
-        return d->metaObjects.constFirst().metaObject;
-
+        return proxies->data.constFirst().metaObject;
 }
 
 const QMetaObject *QQmlType::baseMetaObject() const
@@ -674,11 +674,7 @@ const QMetaObject *QQmlType::baseMetaObject() const
 
 bool QQmlType::containsRevisionedAttributes() const
 {
-    if (!d)
-        return false;
-    d->init();
-
-    return d->containsRevisionedAttributes;
+    return d && d->init()->containsRevisionedAttributes;
 }
 
 QTypeRevision QQmlType::metaObjectRevision() const
@@ -755,10 +751,7 @@ int QQmlType::enumValue(QQmlEnginePrivate *engine, const QHashedStringRef &name,
     if (d) {
         *ok = true;
 
-        d->initEnums(engine);
-
-        int *rv = d->enums.value(name);
-        if (rv)
+        if (int *rv = d->initEnums(engine)->enums.value(name))
             return *rv;
     }
 
@@ -772,10 +765,7 @@ int QQmlType::enumValue(QQmlEnginePrivate *engine, const QHashedCStringRef &name
     if (d) {
         *ok = true;
 
-        d->initEnums(engine);
-
-        int *rv = d->enums.value(name);
-        if (rv)
+        if (int *rv = d->initEnums(engine)->enums.value(name))
             return *rv;
     }
 
@@ -789,10 +779,7 @@ int QQmlType::enumValue(QQmlEnginePrivate *engine, const QV4::String *name, bool
     if (d) {
         *ok = true;
 
-        d->initEnums(engine);
-
-        int *rv = d->enums.value(name);
-        if (rv)
+        if (int *rv = d->initEnums(engine)->enums.value(name))
             return *rv;
     }
 
@@ -806,10 +793,7 @@ int QQmlType::scopedEnumIndex(QQmlEnginePrivate *engine, const QV4::String *name
     if (d) {
         *ok = true;
 
-        d->initEnums(engine);
-
-        int *rv = d->scopedEnumIndex.value(name);
-        if (rv)
+        if (int *rv = d->initEnums(engine)->scopedEnumIndex.value(name))
             return *rv;
     }
 
@@ -823,10 +807,7 @@ int QQmlType::scopedEnumIndex(QQmlEnginePrivate *engine, const QString &name, bo
     if (d) {
         *ok = true;
 
-        d->initEnums(engine);
-
-        int *rv = d->scopedEnumIndex.value(name);
-        if (rv)
+        if (int *rv = d->initEnums(engine)->scopedEnumIndex.value(name))
             return *rv;
     }
 
@@ -836,14 +817,13 @@ int QQmlType::scopedEnumIndex(QQmlEnginePrivate *engine, const QString &name, bo
 
 int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::String *name, bool *ok) const
 {
-    Q_UNUSED(engine);
     Q_ASSERT(ok);
     *ok = true;
 
     if (d) {
-        Q_ASSERT(index > -1 && index < d->scopedEnums.size());
-        int *rv = d->scopedEnums.at(index)->value(name);
-        if (rv)
+        const QQmlTypePrivate::Enums *enums = d->initEnums(engine);
+        Q_ASSERT(index > -1 && index < enums->scopedEnums.size());
+        if (int *rv = enums->scopedEnums.at(index)->value(name))
             return *rv;
     }
 
@@ -853,14 +833,13 @@ int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::S
 
 int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &name, bool *ok) const
 {
-    Q_UNUSED(engine);
     Q_ASSERT(ok);
     *ok = true;
 
     if (d) {
-        Q_ASSERT(index > -1 && index < d->scopedEnums.size());
-        int *rv = d->scopedEnums.at(index)->value(name);
-        if (rv)
+        const QQmlTypePrivate::Enums *enums = d->initEnums(engine);
+        Q_ASSERT(index > -1 && index < enums->scopedEnums.size());
+        if (int *rv = enums->scopedEnums.at(index)->value(name))
             return *rv;
     }
 
@@ -874,13 +853,14 @@ int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &scope
     if (d) {
         *ok = true;
 
-        d->initEnums(engine);
+        const QQmlTypePrivate::Enums *enums = d->initEnums(engine);
 
-        int *rv = d->scopedEnumIndex.value(QHashedCStringRef(scopedEnumName.constData(), scopedEnumName.size()));
-        if (rv) {
-            int index = *rv;
-            Q_ASSERT(index > -1 && index < d->scopedEnums.size());
-            rv = d->scopedEnums.at(index)->value(QHashedCStringRef(name.constData(), name.size()));
+        if (int *rv = enums->scopedEnumIndex.value(
+                    QHashedCStringRef(scopedEnumName.constData(), scopedEnumName.size()))) {
+            const int index = *rv;
+            Q_ASSERT(index > -1 && index < enums->scopedEnums.size());
+            rv = enums->scopedEnums.at(index)->value(
+                    QHashedCStringRef(name.constData(), name.size()));
             if (rv)
                 return *rv;
         }
@@ -896,13 +876,12 @@ int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, QStringView scopedEnumN
     if (d) {
         *ok = true;
 
-        d->initEnums(engine);
+        const QQmlTypePrivate::Enums *enums = d->initEnums(engine);
 
-        int *rv = d->scopedEnumIndex.value(QHashedStringRef(scopedEnumName));
-        if (rv) {
-            int index = *rv;
-            Q_ASSERT(index > -1 && index < d->scopedEnums.size());
-            rv = d->scopedEnums.at(index)->value(QHashedStringRef(name));
+        if (int *rv = enums->scopedEnumIndex.value(QHashedStringRef(scopedEnumName))) {
+            const int index = *rv;
+            Q_ASSERT(index > -1 && index < enums->scopedEnums.size());
+            rv = enums->scopedEnums.at(index)->value(QHashedStringRef(name));
             if (rv)
                 return *rv;
         }
@@ -933,8 +912,9 @@ int QQmlType::refCount(const QQmlTypePrivate *priv)
 
 void QQmlType::createProxy(QObject *instance) const
 {
-    if (!d->metaObjects.isEmpty())
-        (void)new QQmlProxyMetaObject(instance, &d->metaObjects);
+    const QQmlTypePrivate::ProxyMetaObjects *proxies = d->init();
+    if (!proxies->data.isEmpty())
+        (void)new QQmlProxyMetaObject(instance, &proxies->data);
 }
 
 QT_END_NAMESPACE

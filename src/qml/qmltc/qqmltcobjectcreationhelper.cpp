@@ -45,7 +45,6 @@ void qmltcCreateDynamicMetaObject(QObject *object, const QmltcTypeData &data)
     qmlTypePrivate->extraData.cppTypeData->registerEnumsFromRelatedTypes = false;
 
     qmlTypePrivate->baseMetaObject = data.metaObject;
-    qmlTypePrivate->init();
 
     QQmlType qmlType(qmlTypePrivate);
     Q_ASSERT(qmlType.isValid());
