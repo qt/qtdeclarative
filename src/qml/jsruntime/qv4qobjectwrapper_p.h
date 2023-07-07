@@ -61,23 +61,21 @@ private:
 };
 
 #define QObjectMethodMembers(class, Member) \
-    Member(class, Pointer, QQmlValueTypeWrapper *, valueTypeWrapper)
+    Member(class, Pointer, Object *, wrapper) \
 
 DECLARE_EXPORTED_HEAP_OBJECT(QObjectMethod, FunctionObject) {
     DECLARE_MARKOBJECTS(QObjectMethod)
 
-    QV4QPointer<QObject> qObj;
     QQmlPropertyData *methods;
     alignas(alignof(QQmlPropertyData)) std::byte _singleMethod[sizeof(QQmlPropertyData)];
     int methodCount;
     int index;
 
-    void init(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope, Object *wrapper, int index);
     void destroy()
     {
         if (methods != reinterpret_cast<const QQmlPropertyData *>(&_singleMethod))
             delete[] methods;
-        qObj.destroy();
         FunctionObject::destroy();
     }
 
@@ -85,8 +83,7 @@ DECLARE_EXPORTED_HEAP_OBJECT(QObjectMethod, FunctionObject) {
     QString name() const;
 
     const QMetaObject *metaObject() const;
-    QObject *object() const { return qObj.data(); }
-    void setObject(QObject *o) { qObj = o; }
+    QObject *object() const;
 
     bool isDetached() const;
     bool isAttachedTo(QObject *o) const;
@@ -143,6 +140,13 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     Q_DECLARE_FLAGS(Flags, Flag);
 
     static void initializeBindings(ExecutionEngine *engine);
+
+    const QMetaObject *metaObject() const
+    {
+        if (QObject *o = object())
+            return o->metaObject();
+        return nullptr;
+    }
 
     QObject *object() const { return d()->object(); }
 
@@ -220,10 +224,6 @@ protected:
 private:
     Q_NEVER_INLINE static ReturnedValue wrap_slowPath(ExecutionEngine *engine, QObject *object);
     Q_NEVER_INLINE static ReturnedValue wrapConst_slowPath(ExecutionEngine *engine, QObject *object);
-
-    static Heap::QObjectMethod *cloneMethod(
-            ExecutionEngine *engine, Heap::QObjectMethod *cloneFrom,
-            Heap::Object *wrapper, QObject *object);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QObjectWrapper::Flags)
@@ -354,13 +354,11 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 
     enum { DestroyMethod = -1, ToStringMethod = -2 };
 
-    static ReturnedValue create(
-            QV4::ExecutionContext *scope, QObject *object, int index);
+    static ReturnedValue create(QV4::ExecutionContext *scope, Heap::Object *wrapper, int index);
     static ReturnedValue create(
             QV4::ExecutionContext *scope, Heap::QQmlValueTypeWrapper *valueType, int index);
-    static ReturnedValue create(
-            QV4::ExecutionEngine *engine, Heap::QObjectMethod *cloneFrom,
-            Heap::Object *wrapper, QObject *object);
+    static ReturnedValue create(QV4::ExecutionEngine *engine, Heap::QObjectMethod *cloneFrom,
+            Heap::Object *wrapper, Heap::Object *object);
 
     int methodIndex() const { return d()->index; }
     QObject *object() const { return d()->object(); }

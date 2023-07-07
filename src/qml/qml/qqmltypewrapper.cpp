@@ -50,19 +50,31 @@ bool QQmlTypeWrapper::isSingleton() const
     return d()->type().isSingleton();
 }
 
+const QMetaObject *QQmlTypeWrapper::metaObject() const
+{
+    const QQmlType type = d()->type();
+    if (!type.isValid())
+        return nullptr;
+
+    if (type.isSingleton())
+        return type.metaObject();
+
+    return type.attachedPropertiesType(QQmlEnginePrivate::get(engine()->qmlEngine()));
+}
+
 QObject *QQmlTypeWrapper::object() const
 {
     const QQmlType type = d()->type();
     if (!type.isValid())
         return nullptr;
 
-    QQmlEngine *qmlEngine = engine()->qmlEngine();
+    QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(engine()->qmlEngine());
     if (type.isSingleton())
-        return QQmlEnginePrivate::get(qmlEngine)->singletonInstance<QObject *>(type);
+        return qmlEngine->singletonInstance<QObject *>(type);
 
     return qmlAttachedPropertiesObject(
             d()->object,
-            type.attachedPropertiesFunction(QQmlEnginePrivate::get(qmlEngine)));
+            type.attachedPropertiesFunction(qmlEngine));
 }
 
 QObject* QQmlTypeWrapper::singletonObject() const
