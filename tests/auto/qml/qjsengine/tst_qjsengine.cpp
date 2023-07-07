@@ -107,6 +107,7 @@ private slots:
     void collectGarbageNestedWrappersTwoEngines();
     void gcWithNestedDataStructure();
     void stacktrace();
+    void unshiftAndSort();
     void numberParsing_data();
     void numberParsing();
     void automaticSemicolonInsertion();
@@ -2083,6 +2084,47 @@ void tst_QJSEngine::stacktrace()
         QString stackTrace = stack.toString();
         QVERIFY(!stackTrace.contains(QStringLiteral("indirectlyThrow")));
         QVERIFY(stackTrace.contains(QStringLiteral("elide")));
+    }
+}
+
+void tst_QJSEngine::unshiftAndSort()
+{
+    QJSEngine engine;
+    QJSValue func = engine.evaluate(R"""(
+
+    (function (objectArr, currIdx) {
+
+        objectArr.unshift({"sortIndex": currIdx});
+        objectArr.sort(function(a, b) {
+            if(a.sortIndex > b.sortIndex) {
+                return 1
+            }
+            if(a.sortIndex < b.sortIndex) {
+                return -1;
+            }
+            return 0;
+        });
+
+        ++currIdx;
+    return objectArr;
+    })
+    )""");
+    QVERIFY(func.isCallable());
+    QJSValue objectArr = engine.newArray();
+
+    for (int i = 0; i < 5; ++i) {
+        objectArr = func.call({objectArr, i});
+        QVERIFY2(!objectArr.isError(), qPrintable(objectArr.toString()));
+        const int length = objectArr.property("length").toInt();
+        bool isAnyUndefined = false;
+        for (int x = 0; x < length; ++x) {
+            if (objectArr.property(x).isUndefined()) {
+                isAnyUndefined = true;
+            }
+        }
+        if (i == 4)
+            QEXPECT_FAIL("", "QTBUG-58718: entry becomes undefined", Continue);
+        QVERIFY(!isAnyUndefined);
     }
 }
 
