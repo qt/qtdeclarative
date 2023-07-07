@@ -96,6 +96,14 @@ bool QQuickDeliveryAgentPrivate::checkIfDoubleTapped(ulong newPressEventTimestam
     return doubleClicked;
 }
 
+/*! \internal
+    \deprecated events are handled by methods in which the event is an argument
+
+    Accessor for use by legacy methods such as QQuickItem::grabMouse(),
+    QQuickItem::ungrabMouse(), and QQuickItem::grabTouchPoints() which
+    are not given sufficient context to do the grabbing.
+    We should remove eventsInDelivery in Qt 7.
+*/
 QPointerEvent *QQuickDeliveryAgentPrivate::eventInDelivery() const
 {
     if (eventsInDelivery.isEmpty())
@@ -657,6 +665,10 @@ QQuickDeliveryAgent::Transform::~Transform()
 {
 }
 
+/*! \internal
+    Get the QQuickRootItem or subscene root item on behalf of which
+    this delivery agent was constructed to handle events.
+*/
 QQuickItem *QQuickDeliveryAgent::rootItem() const
 {
     Q_D(const QQuickDeliveryAgent);
@@ -690,6 +702,13 @@ void QQuickDeliveryAgent::setSceneTransform(QQuickDeliveryAgent::Transform *tran
     d->sceneTransform = transform;
 }
 
+/*!
+    Handle \a ev on behalf of this delivery agent's window or subscene.
+
+    This is the usual main entry point for every incoming event:
+    QQuickWindow::event() and QQuick3DViewport::forwardEventToSubscenes()
+    both call this function.
+*/
 bool QQuickDeliveryAgent::event(QEvent *ev)
 {
     Q_D(QQuickDeliveryAgent);
@@ -1602,6 +1621,9 @@ void QQuickDeliveryAgentPrivate::handleTouchEvent(QTouchEvent *event)
     }
 }
 
+/*!
+    Handle \a event on behalf of this delivery agent's window or subscene.
+*/
 void QQuickDeliveryAgentPrivate::handleMouseEvent(QMouseEvent *event)
 {
     Q_Q(QQuickDeliveryAgent);
@@ -1658,6 +1680,19 @@ void QQuickDeliveryAgentPrivate::handleMouseEvent(QMouseEvent *event)
     }
 }
 
+/*! \internal
+    Flush events before a frame is rendered in \a win.
+
+    This is here because of compressTouchEvent(): we need to ensure that
+    coalesced touch events are actually delivered in time to cause the desired
+    reactions of items and their handlers. And then since it was introduced
+    because of that, we started using this function for once-per-frame hover
+    events too, to take care of changing hover state when an item animates
+    under the mouse cursor at a time that the mouse cursor is not moving.
+
+    This is done before QQuickItem::updatePolish() is called on all the items
+    that requested polishing.
+*/
 void QQuickDeliveryAgentPrivate::flushFrameSynchronousEvents(QQuickWindow *win)
 {
     Q_Q(QQuickDeliveryAgent);
@@ -1698,6 +1733,14 @@ void QQuickDeliveryAgentPrivate::flushFrameSynchronousEvents(QQuickWindow *win)
     QQuickDeliveryAgentPrivate::currentEventDeliveryAgent = deliveringAgent;
 }
 
+/*! \internal
+    React to the fact that \a grabber underwent a grab \a transition
+    while an item or handler was handling \a point from \a event.
+    I.e. handle the QPointingDevice::grabChanged() signal.
+
+    This notifies the relevant items and/or pointer handlers, and
+    does cleanup when grabs are lost or relinquished.
+*/
 void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice::GrabTransition transition,
                                                const QPointerEvent *event, const QEventPoint &point)
 {
@@ -1794,6 +1837,15 @@ void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice
     }
 }
 
+/*! \internal
+    Called when a QPointingDevice is detected, to ensure that the
+    QPointingDevice::grabChanged() signal is connected to
+    QQuickDeliveryAgentPrivate::onGrabChanged().
+
+    \c knownPointingDevices is maintained only to track signal connections, and
+    should not be used for other purposes. The usual place to get a list of all
+    devices is QInputDevice::devices().
+*/
 void QQuickDeliveryAgentPrivate::ensureDeviceConnected(const QPointingDevice *dev)
 {
     Q_Q(QQuickDeliveryAgent);
@@ -1804,6 +1856,13 @@ void QQuickDeliveryAgentPrivate::ensureDeviceConnected(const QPointingDevice *de
     QObject::connect(dev, &QObject::destroyed, q, [this, dev] {this->knownPointingDevices.removeAll(dev);});
 }
 
+/*! \internal
+    The entry point for delivery of \a event after determining that it \e is a
+    pointer event, and either does not need to be coalesced in
+    compressTouchEvent(), or already has been.
+
+    When it returns, event delivery is done.
+*/
 void QQuickDeliveryAgentPrivate::deliverPointerEvent(QPointerEvent *event)
 {
     Q_Q(QQuickDeliveryAgent);
@@ -1873,11 +1932,30 @@ void QQuickDeliveryAgentPrivate::deliverPointerEvent(QPointerEvent *event)
     lastUngrabbed = nullptr;
 }
 
-// check if item or any of its child items contain the point, or if any pointer handler "wants" the point
+/*! \internal
+    Returns a list of all items that are spatially relevant to receive \a event
+    occurring at \a point, starting with \a item and recursively checking all
+    the children.
+    \li If an item has pointer handlers, call QQuickPointerHandler::wantsEventPoint()
+        on every handler to decide whether the item is eligible.
+    \li otherwise, if \a checkMouseButtons is \c true, it means we are finding
+        targets for a mouse event, so no item for which acceptedMouseButtons() is
+        NoButton will be added.
+    \li Otherwise, if \a checkAcceptsTouch is \c true, it means we are finding
+        targets for a touch event, so either acceptTouchEvents() must return true
+        \e or it must accept a synthesized mouse event. I.e. if acceptTouchEvents()
+        returns false, it gets added only if acceptedMouseButtons() is true.
+    \li If QQuickItem::clip() is \c true \e and the \a point is outside of
+        QQuickItem::clipRect(), its children are also omitted (we stop the recursion,
+        because any clipped-off portions of children under \a point are invisible)
+    \li Ignore any item in a subscene that "belongs to" a different DeliveryAgent
+        (this only happens in 2D scenes in Qt Quick 3D so far, in practice).
+
+    The list returned from this function is the list of items that will be
+    "visited" when delivering any event for which QPointerEvent::isBeginEvent()
+    is \c true.
+*/
 // FIXME: should this be iterative instead of recursive?
-// If checkMouseButtons is true, it means we are finding targets for a mouse event, so no item for which acceptedMouseButtons() is NoButton will be added.
-// If checkAcceptsTouch is true, it means we are finding targets for a touch event, so either acceptTouchEvents() must return true OR
-// it must accept a synth. mouse event, thus if acceptTouchEvents() returns false but acceptedMouseButtons() is true, gets added; if not, it doesn't.
 QVector<QQuickItem *> QQuickDeliveryAgentPrivate::pointerTargets(QQuickItem *item, const QPointerEvent *event, const QEventPoint &point,
                                                           bool checkMouseButtons, bool checkAcceptsTouch) const
 {
@@ -1927,8 +2005,10 @@ QVector<QQuickItem *> QQuickDeliveryAgentPrivate::pointerTargets(QQuickItem *ite
     return targets;
 }
 
-// return the joined lists
-// list1 has priority, common items come last
+/*! \internal
+    Returns a joined list consisting of the items in \a list1 and \a list2.
+    \a list1 has priority; common items come last.
+*/
 QVector<QQuickItem *> QQuickDeliveryAgentPrivate::mergePointerTargets(const QVector<QQuickItem *> &list1, const QVector<QQuickItem *> &list2) const
 {
     QVector<QQuickItem *> targets = list1;
@@ -2030,7 +2110,45 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
     }
 }
 
-// Deliver an event containing newly pressed or released touch points
+/*! \internal
+    Deliver a pointer \a event containing newly pressed or released QEventPoints.
+    If \a handlersOnly is \c true, skip the items and just deliver to Pointer Handlers
+    (via QQuickItemPrivate::handlePointerEvent()).
+
+    For the sake of determinism, this function first builds the list
+    \c targetItems by calling pointerTargets() on the root item. That is, the
+    list of items to "visit" is determined at the beginning, and will not be
+    affected if items reparent, hide, or otherwise try to make themselves
+    eligible or ineligible during delivery. (Avoid bugs due to ugly
+    just-in-time tricks in JS event handlers, filters etc.)
+
+    Whenever a touch gesture is in progress, and another touchpoint is pressed,
+    or an existing touchpoint is released, we "start over" with delivery:
+    that's why this function is called whenever the event \e contains newly
+    pressed or released points. It's not necessary for a handler or an item to
+    greedily grab all touchpoints just in case a valid gesture might start.
+    QQuickMultiPointHandler::wantsPointerEvent() can calmly return \c false if
+    the number of points is less than QQuickMultiPointHandler::minimumPointCount(),
+    because it knows it will be asked again if the number of points increases.
+
+    When \a handlersOnly is \c false, \a event visits the items in \c targetItems
+    via QQuickItem::event(). We have to call sendFilteredPointerEvent()
+    before visiting each item, just in case a Flickable (or some other
+    parent-filter) will decide to intercept the event. But we also have to be
+    very careful never to let the same Flickable filter the same event twice,
+    because when Flickable decides to intercept, it lets the child item have
+    that event, and then grabs the next event. That allows you to drag a
+    Slider, DragHandler or whatever inside a ListView delegate: if you're
+    dragging in the correct direction for the draggable child, it can use
+    QQuickItem::setKeepMouseGrab(), QQuickItem::setKeepTouchGrab() or
+    QQuickPointerHandler::grabPermissions() to prevent Flickable from
+    intercepting during filtering, only if it actually \e has the exclusive
+    grab already when Flickable attempts to take it. Typically, both the
+    Flickable and the child are checking the same drag threshold, so the
+    child must have a chance to grab and \e keep the grab before Flickable
+    gets a chance to steal it, even though Flickable actually sees the
+    event first during filtering.
+*/
 bool QQuickDeliveryAgentPrivate::deliverPressOrReleaseEvent(QPointerEvent *event, bool handlersOnly)
 {
     QVector<QQuickItem *> targetItems;
@@ -2092,6 +2210,14 @@ bool QQuickDeliveryAgentPrivate::deliverPressOrReleaseEvent(QPointerEvent *event
     return event->allPointsAccepted();
 }
 
+/*! \internal
+    Deliver \a pointerEvent to \a item and its handlers, if any.
+    If \a handlersOnly is \c true, skip QQuickItem::event() and just visit its
+    handlers via QQuickItemPrivate::handlePointerEvent().
+
+    This function exists just to de-duplicate the common code between
+    deliverPressOrReleaseEvent() and deliverUpdatedPoints().
+*/
 void QQuickDeliveryAgentPrivate::deliverMatchingPointsToItem(QQuickItem *item, bool isGrabber, QPointerEvent *pointerEvent, bool handlersOnly)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
@@ -2125,6 +2251,7 @@ void QQuickDeliveryAgentPrivate::deliverMatchingPointsToItem(QQuickItem *item, b
         return;
 
     // TODO: unite this mouse point delivery with the synthetic mouse event below
+    // TODO: remove isGrabber then?
     if (isMouse) {
         auto button = static_cast<QSinglePointEvent *>(pointerEvent)->button();
         if ((isGrabber && button == Qt::NoButton) || item->acceptedMouseButtons().testFlag(button)) {
@@ -2394,11 +2521,22 @@ bool QQuickDeliveryAgentPrivate::deliverDragEvent(
 }
 #endif // quick_draganddrop
 
+/*! \internal
+    Allow \a filteringParent to filter \a event on behalf of \a receiver, via
+    QQuickItem::childMouseEventFilter(). This happens right \e before we would
+    send \a event to \a receiver.
+
+    Returns \c true only if \a event has been intercepted (by \a filteringParent
+    or some other filtering ancestor) and should \e not be sent to \a receiver.
+*/
 bool QQuickDeliveryAgentPrivate::sendFilteredPointerEvent(QPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent)
 {
     return sendFilteredPointerEventImpl(event, receiver, filteringParent ? filteringParent : receiver->parentItem());
 }
 
+/*! \internal
+    The recursive implementation of sendFilteredPointerEvent().
+*/
 bool QQuickDeliveryAgentPrivate::sendFilteredPointerEventImpl(QPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent)
 {
     if (!allowChildEventFiltering)
@@ -2521,6 +2659,17 @@ bool QQuickDeliveryAgentPrivate::sendFilteredPointerEventImpl(QPointerEvent *eve
     return sendFilteredPointerEventImpl(event, receiver, filteringParent->parentItem()) || filtered;
 }
 
+/*! \internal
+    Allow \a filteringParent to filter \a event on behalf of \a receiver, via
+    QQuickItem::childMouseEventFilter(). This happens right \e before we would
+    send \a event to \a receiver.
+
+    Returns \c true only if \a event has been intercepted (by \a filteringParent
+    or some other filtering ancestor) and should \e not be sent to \a receiver.
+
+    Unlike sendFilteredPointerEvent(), this version does not synthesize a
+    mouse event from touch (presumably it's already an actual mouse event).
+*/
 bool QQuickDeliveryAgentPrivate::sendFilteredMouseEvent(QEvent *event, QQuickItem *receiver, QQuickItem *filteringParent)
 {
     if (!filteringParent)
@@ -2543,6 +2692,13 @@ bool QQuickDeliveryAgentPrivate::sendFilteredMouseEvent(QEvent *event, QQuickIte
     return sendFilteredMouseEvent(event, receiver, filteringParent->parentItem()) || filtered;
 }
 
+/*! \internal
+    Returns \c true if the movement delta \a d in pixels along the \a axis
+    exceeds \a startDragThreshold if it is set, or QStyleHints::startDragDistance();
+    \e or, if QEventPoint::velocity() of \a event exceeds QStyleHints::startDragVelocity().
+
+    \sa QQuickPointerHandlerPrivate::dragOverThreshold()
+*/
 bool QQuickDeliveryAgentPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold)
 {
     QStyleHints *styleHints = QGuiApplication::styleHints();
@@ -2557,6 +2713,13 @@ bool QQuickDeliveryAgentPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMous
     return overThreshold;
 }
 
+/*! \internal
+    Returns \c true if the movement delta \a d in pixels along the \a axis
+    exceeds \a startDragThreshold if it is set, or QStyleHints::startDragDistance();
+    \e or, if QEventPoint::velocity() of \a tp exceeds QStyleHints::startDragVelocity().
+
+    \sa QQuickPointerHandlerPrivate::dragOverThreshold()
+*/
 bool QQuickDeliveryAgentPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const QEventPoint &tp, int startDragThreshold)
 {
     QStyleHints *styleHints = qApp->styleHints();
@@ -2569,6 +2732,11 @@ bool QQuickDeliveryAgentPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const
     return overThreshold;
 }
 
+/*! \internal
+    Returns \c true if the movement \a delta in pixels exceeds QStyleHints::startDragDistance().
+
+    \sa QQuickDeliveryAgentPrivate::dragOverThreshold()
+*/
 bool QQuickDeliveryAgentPrivate::dragOverThreshold(QVector2D delta)
 {
     int threshold = qApp->styleHints()->startDragDistance();
