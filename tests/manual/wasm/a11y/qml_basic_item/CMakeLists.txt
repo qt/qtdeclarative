@@ -21,6 +21,8 @@ qt_internal_add_manual_test(qml_basic_item
 # Resources:
 set(qmake_immediate_resource_files
     "main.qml"
+    "WasmMenu.qml"
+    "WasmToolBar.qml"
 )
 
 qt6_import_qml_plugins(qml_basic_item INCLUDE Qt::QtQuick2Plugin)
