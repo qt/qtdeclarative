@@ -7865,6 +7865,15 @@ void tst_qqmllanguage::objectAndGadgetMethodCallsAcceptThisObject()
     QQmlComponent c(&engine, testFileUrl("objectAndGadgetMethodCallsAcceptThisObject.qml"));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
 
+    // Explicitly retrieve the metaobject for the Qt singleton so that the proxy data is created.
+    // This way the inheritance analysis we do when figuring out what toString() means is somewhat
+    // more interesting. Also, we get a deterministic result for Qt.toString().
+    const QQmlType qtType = QQmlMetaType::qmlType(QStringLiteral("Qt"), QString(), QTypeRevision());
+    QVERIFY(qtType.isValid());
+    const QMetaObject *qtMeta = qtType.metaObject();
+    QVERIFY(qtMeta);
+    QCOMPARE(QString::fromUtf8(qtMeta->className()), QLatin1String("Qt"));
+
     QTest::ignoreMessage(
                 QtWarningMsg, QRegularExpression(
                     "objectAndGadgetMethodCallsAcceptThisObject.qml:16: Error: "
@@ -7895,7 +7904,7 @@ void tst_qqmllanguage::objectAndGadgetMethodCallsAcceptThisObject()
     QCOMPARE(o->property("goodString2"), QStringLiteral("27"));
     QCOMPARE(o->property("goodString3"), QStringLiteral("28"));
 
-    QVERIFY(o->property("goodString4").value<QString>().startsWith("QtObject"_L1));
+    QVERIFY(o->property("goodString4").value<QString>().startsWith("Qt("_L1));
     QCOMPARE(o->property("badString2"), QString());
 
     QCOMPARE(o->property("badInt"), 0);
