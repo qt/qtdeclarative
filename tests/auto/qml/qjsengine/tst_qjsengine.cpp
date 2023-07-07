@@ -307,6 +307,7 @@ private slots:
 
     void symbolToVariant();
 
+    void garbageCollectedObjectMethodBase();
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -6161,6 +6162,97 @@ void tst_QJSEngine::symbolToVariant()
     QVERIFY(retained.value<QJSValue>().strictlyEquals(val));
 
     QCOMPARE(val.toVariant(QJSValue::ConvertJSObjects), QStringLiteral("Symbol(asymbol)"));
+}
+
+class PACHelper : public QObject {
+    Q_OBJECT
+public:
+    Q_INVOKABLE bool shExpMatch(const QString &, const QString &) { return false; }
+    Q_INVOKABLE QString dnsResolve(const QString &) { return QString{}; }
+};
+
+class ProxyAutoConf {
+public:
+    void exposeQObjectMethodsAsGlobal(QJSEngine *engine, QObject *object)
+    {
+        QJSValue helper = engine->newQObject(object);
+        QJSValue g = engine->globalObject();
+        QJSValueIterator it(helper);
+        while (it.hasNext()) {
+            it.next();
+            if (!it.value().isCallable())
+                continue;
+            g.setProperty(it.name(), it.value());
+        }
+    }
+
+    bool parse(const QString & pacBytes)
+    {
+        jsFindProxyForURL = QJSValue();
+        engine = std::make_unique<QJSEngine>();
+        exposeQObjectMethodsAsGlobal(engine.get(), new PACHelper);
+        engine->evaluate(pacBytes);
+        jsFindProxyForURL = engine->globalObject().property(QStringLiteral("FindProxyForURL"));
+        return true;
+    }
+
+    QString findProxyForUrl(const QString &url, const QString &host)
+    {
+        QJSValueList args;
+        args << url << host;
+        engine->collectGarbage();
+        QJSValue callResult = jsFindProxyForURL.call(args);
+        return callResult.toString().trimmed();
+    }
+
+private:
+    std::unique_ptr<QJSEngine> engine;
+    QJSValue jsFindProxyForURL;
+};
+
+QString const pacstring = R"js(
+function FindProxyForURL(host) {
+    list_split_all = Array(
+        "oneoneoneoneo.oneo.oneo.oneoneo.one",
+        "twotwotwotwotw.otwo.twot.wotwotw.otw",
+        "threethreethr.eeth.reet.hreethr.eet",
+        "fourfourfourfo.urfo.urfo.urfourf.our",
+        "fivefivefivef.ivef.ivef.ivefive.fiv",
+        "sixsixsixsixsi.xsix.sixs.ixsixsi.xsi",
+        "sevensevenseve.nsev.ense.venseve.nse",
+        "eight.eighteigh.tei",
+        "*.nin.eninen.ine"
+    )
+    list_myip_direct =
+        "10.254.0.0/255.255.0.0"
+    for (i = 0; i < list_split_all.length; ++i)
+        for (j = 0; j < list_myip_direct.length; ++j)
+            shExpMatch(host, list_split_all)
+        shExpMatch()
+    dnsResolve()}
+)js";
+
+void tst_QJSEngine::garbageCollectedObjectMethodBase()
+{
+    ProxyAutoConf proxyConf;
+    bool pac_read = false;
+
+    const auto processUrl = [&](QString const &url, QString const &host)
+    {
+        if (!pac_read) {
+            proxyConf.parse(pacstring);
+            pac_read = true;
+        }
+        return proxyConf.findProxyForUrl(url, host);
+    };
+
+    const QString url = QStringLiteral("https://servername.domain.test");
+    const QString host = QStringLiteral("servername.domain.test");
+
+    for (size_t i = 0; i < 5; ++i) {
+        auto future = std::async(processUrl, url, host);
+        QCOMPARE(future.get(), QLatin1String("Error: Insufficient arguments"));
+    }
 }
 
 QTEST_MAIN(tst_QJSEngine)
