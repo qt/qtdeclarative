@@ -2029,6 +2029,11 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     ListView are laid out horizontally or vertically. List views are inherently
     flickable because ListView inherits from \l Flickable.
 
+    \note ListView will only load as many delegate items as needed to fill up the view.
+    Items outside of the view will not be loaded unless a sufficient \l cacheBuffer has
+    been set. Hence, a ListView with zero width or height might not load any delegate
+    items at all.
+
     \section1 Example Usage
 
     The following example shows the definition of a simple list model defined
