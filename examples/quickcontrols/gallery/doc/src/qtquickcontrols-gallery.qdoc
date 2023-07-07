@@ -46,5 +46,8 @@
 
     \snippet gallery/gallery.qml orientation
 
+    As this example supports all built-in Qt Quick Controls styles, it uses
+    \l {Run-Time Style Selection}{runtime style selection}.
+
     \include examples-run.qdocinc
 */
