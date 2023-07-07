@@ -2455,6 +2455,10 @@ Heap::QObjectMethod::ThisObjectMode Heap::QObjectMethod::checkThisObject(
             return Included;
         }
 
+        // destroy() and toString() can be called on all QObjects, but not on gadgets.
+        if (index < 0)
+            return thisMeta->inherits(&QObject::staticMetaObject) ? Explicit : Invalid;
+
         // Find the base type the method belongs to.
         int methodOffset = included->methodOffset();
         while (true) {
@@ -2464,9 +2468,9 @@ Heap::QObjectMethod::ThisObjectMode Heap::QObjectMethod::checkThisObject(
             if (methodOffset <= index)
                 return thisMeta->inherits(included) ? Explicit : Invalid;
 
-            methodOffset -= QMetaObjectPrivate::get(included)->methodCount;
             included = included->superClass();
             Q_ASSERT(included);
+            methodOffset -= QMetaObjectPrivate::get(included)->methodCount;
         };
 
         Q_UNREACHABLE_RETURN(Invalid);
