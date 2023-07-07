@@ -102,6 +102,7 @@ struct Q_QML_EXPORT QQmlTypeWrapper : Object
     V4_NEEDS_DESTROY
 
     bool isSingleton() const;
+    const QMetaObject *metaObject() const;
     QObject *object() const;
     QObject *singletonObject() const;
 
