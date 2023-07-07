@@ -6522,6 +6522,7 @@ QQuickTableViewResizeHandler::QQuickTableViewResizeHandler(QQuickTableView *view
     // Set a grab permission that stops the flickable, as well as
     // any drag handler inside the delegate, from stealing the drag.
     setGrabPermissions(QQuickPointerHandler::CanTakeOverFromAnything);
+    setObjectName("tableViewResizeHandler");
 }
 
 void QQuickTableViewResizeHandler::onGrabChanged(QQuickPointerHandler *grabber
@@ -6550,8 +6551,9 @@ void QQuickTableViewResizeHandler::onGrabChanged(QQuickPointerHandler *grabber
 
 bool QQuickTableViewResizeHandler::wantsEventPoint(const QPointerEvent *event, const QEventPoint &point)
 {
-    Q_UNUSED(event);
-    Q_UNUSED(point);
+    if (!QQuickSinglePointHandler::wantsEventPoint(event, point))
+        return false;
+
     // When the user is flicking, we disable resizing, so that
     // he doesn't start to resize by accident.
     auto tableView = static_cast<QQuickTableView *>(parentItem()->parent());
@@ -6657,6 +6659,7 @@ void QQuickTableViewResizeHandler::updateDrag(QPointerEvent *event, QEventPoint 
 QQuickTableViewTapHandler::QQuickTableViewTapHandler(QQuickTableView *view)
     : QQuickTapHandler(view->contentItem())
 {
+    setObjectName("tableViewTapHandler");
 }
 
 bool QQuickTableViewTapHandler::wantsEventPoint(const QPointerEvent *event, const QEventPoint &point)

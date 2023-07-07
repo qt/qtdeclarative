@@ -8,12 +8,16 @@
 #include <QAbstractItemModelTester>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
-#include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuick/private/qquicktext_p.h>
+#include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickheaderview_p.h>
 #include <private/qquickheaderview_p_p.h>
+
+using namespace QQuickVisualTestUtils;
 
 class TestTableModel : public QAbstractTableModel {
     Q_OBJECT
@@ -196,6 +200,8 @@ private slots:
     void testModel();
     void listModel();
 
+    void resizableHandlerBlockingEvents();
+
 private:
     QQmlEngine *engine;
     QString errorString;
@@ -374,6 +380,21 @@ void tst_QQuickHeaderView::listModel()
                         childAt(0, vhvCell1->height() + 5)->findChild<QQuickText *>();
     QVERIFY(vhvCell2);
     QCOMPARE(vhvCell2->property("text"), "222");
+}
+
+// A header shouldn't block events outside of itself.
+void tst_QQuickHeaderView::resizableHandlerBlockingEvents()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("resizableHandlerBlockingEvents.qml"));
+    QVERIFY2(helper.errorMessage.isEmpty(), helper.errorMessage);
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto mouseArea = window->findChild<QQuickMouseArea *>("mouseArea");
+    QVERIFY(mouseArea);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(mouseArea));
+    QVERIFY(mouseArea->pressed());
 }
 
 QTEST_MAIN(tst_QQuickHeaderView)
