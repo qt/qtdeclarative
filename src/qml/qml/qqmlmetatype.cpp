@@ -1752,7 +1752,8 @@ QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(const QMetaObject 
     QList<QQmlProxyMetaObject::ProxyData> metaObjects;
     mo = mo->d.superdata;
 
-    const QQmlMetaTypeDataPtr data;
+    if (!mo)
+        return metaObjects;
 
     auto createProxyMetaObject = [&](QQmlTypePrivate *This,
                                      const QMetaObject *superdataBaseMetaObject,
@@ -1775,19 +1776,25 @@ QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(const QMetaObject 
         registerMetaObjectForType(mmo, This);
     };
 
-    while (mo) {
-        QQmlTypePrivate *t = data->metaObjectToType.value(mo);
-        if (t) {
+    for (const QQmlMetaTypeDataPtr data; mo; mo = mo->d.superdata) {
+        // TODO: There can in fact be multiple QQmlTypePrivate* for a single QMetaObject*.
+        //       This algorithm only accounts for the most recently inserted one. That's pretty
+        //       random. However, the availability of types depends on what documents you have
+        //       loaded before. Just adding all possible extensions would also be pretty random.
+        //       The right way to do this would be to take the relations between the QML modules
+        //       into account. For this we would need proper module dependency information.
+        if (QQmlTypePrivate *t = data->metaObjectToType.value(mo)) {
             if (t->regType == QQmlType::CppType) {
-                createProxyMetaObject(t, t->baseMetaObject, t->extraData.cppTypeData->extMetaObject,
-                                      t->extraData.cppTypeData->extFunc);
+                createProxyMetaObject(
+                        t, t->baseMetaObject, t->extraData.cppTypeData->extMetaObject,
+                        t->extraData.cppTypeData->extFunc);
             } else if (t->regType == QQmlType::SingletonType) {
-                createProxyMetaObject(t, t->baseMetaObject, t->extraData.singletonTypeData->extMetaObject,
-                                      t->extraData.singletonTypeData->extFunc);
+                createProxyMetaObject(
+                        t, t->baseMetaObject, t->extraData.singletonTypeData->extMetaObject,
+                        t->extraData.singletonTypeData->extFunc);
             }
         }
-        mo = mo->d.superdata;
-    }
+    };
 
     return metaObjects;
 }
