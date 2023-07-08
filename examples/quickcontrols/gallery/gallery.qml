@@ -18,7 +18,7 @@ ApplicationWindow {
     title: qsTr("Qt Quick Controls")
 
     //! [orientation]
-    readonly property bool portraitMode: window.width < window.height
+    readonly property bool portraitMode: !orientationCheckBox.checked || window.width < window.height
     //! [orientation]
 
     function help() {
@@ -271,6 +271,13 @@ ApplicationWindow {
                     }
                     Layout.fillWidth: true
                 }
+            }
+
+            CheckBox {
+                id: orientationCheckBox
+                text: qsTr("Enable Landscape")
+                checked: false
+                Layout.fillWidth: true
             }
 
             Label {
