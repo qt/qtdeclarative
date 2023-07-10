@@ -23,8 +23,13 @@ set(qmake_immediate_resource_files
     "main.qml"
     "WasmMenu.qml"
     "WasmToolBar.qml"
+    "MeetingTabs.qml"
+    "MeetingInviteesPage.qml"
+    "MeetingSchedulerPage.qml"
+    "MeetingSummary.qml"
 )
 
+set(CMAKE_CXX_FLAGS_DEBUG "-g0 -O3")
 qt6_import_qml_plugins(qml_basic_item INCLUDE Qt::QtQuick2Plugin)
 qt_internal_add_resource (qml_basic_item "qmake_immediate"
     PREFIX
