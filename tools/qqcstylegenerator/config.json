@@ -131,6 +131,19 @@
         ]
     },
     {
+        "name": "Popup",
+        "copy": ":/Popup.qml",
+        "component set": "PopupTemplate${Theme}",
+        "atoms": [
+            {"atom": "background", "figmaPath": "PopupBackground, background"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
+        ],
+        "states": [
+            {"state": "modal", "figmaState": "modal"},
+            {"state": "normal", "figmaState": "normal"}
+        ]
+    },
+    {
         "name": "RadioButton",
         "copy": ":/RadioButton.qml",
         "page": "Library",
