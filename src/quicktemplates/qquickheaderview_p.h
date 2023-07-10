@@ -85,14 +85,6 @@ private:
     Q_DISABLE_COPY(QQuickVerticalHeaderView)
 };
 
-struct QQuickTableViewForeign
-{
-    Q_GADGET
-    QML_ANONYMOUS
-    QML_FOREIGN(QQuickTableView)
-    QML_ADDED_IN_VERSION(2, 14)
-};
-
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickHorizontalHeaderView)
