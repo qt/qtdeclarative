@@ -135,7 +135,7 @@ public:
     private:
         void layout(QQmlNotifierEndpoint*);
     };
-    NotifyList *notifyList;
+    NotifyList *notifyList = nullptr;
 
     inline QQmlNotifierEndpoint *notify(int index);
     void addNotify(int index, QQmlNotifierEndpoint *);
@@ -149,13 +149,13 @@ public:
     QQmlContextData *outerContext = nullptr;
     QQmlRefPointer<QQmlContextData> ownContext;
 
-    QQmlAbstractBinding *bindings;
-    QQmlBoundSignal *signalHandlers;
+    QQmlAbstractBinding *bindings = nullptr;
+    QQmlBoundSignal *signalHandlers = nullptr;
     std::vector<QQmlPropertyObserver> propertyObservers;
 
     // Linked list for QQmlContext::contextObjects
-    QQmlData *nextContextObject;
-    QQmlData**prevContextObject;
+    QQmlData *nextContextObject = nullptr;
+    QQmlData**prevContextObject = nullptr;
 
     inline bool hasBindingBit(int) const;
     inline void setBindingBit(QObject *obj, int);
@@ -165,10 +165,10 @@ public:
     inline void setPendingBindingBit(QObject *obj, int);
     inline void clearPendingBindingBit(int);
 
-    quint16 lineNumber;
-    quint16 columnNumber;
+    quint16 lineNumber = 0;
+    quint16 columnNumber = 0;
 
-    quint32 jsEngineId; // id of the engine that created the jsWrapper
+    quint32 jsEngineId = 0; // id of the engine that created the jsWrapper
 
     struct DeferredData {
         DeferredData();
@@ -194,7 +194,7 @@ public:
 
     QQmlPropertyCache::ConstPtr propertyCache;
 
-    QQmlGuardImpl *guards;
+    QQmlGuardImpl *guards = 0;
 
     static QQmlData *get(QObjectPrivate *priv, bool create) {
         // If QObjectData::isDeletingChildren is set then access to QObjectPrivate::declarativeData has
@@ -262,7 +262,7 @@ public:
 
 private:
     // For attachedProperties
-    mutable QQmlDataExtended *extendedData;
+    mutable QQmlDataExtended *extendedData = nullptr;
 
     Q_NEVER_INLINE static QQmlData *createQQmlData(QObjectPrivate *priv);
     Q_NEVER_INLINE static QQmlPropertyCache::ConstPtr createPropertyCache(QObject *object);
