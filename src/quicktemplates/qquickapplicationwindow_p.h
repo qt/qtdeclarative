@@ -133,30 +133,6 @@ private:
     Q_DECLARE_PRIVATE(QQuickApplicationWindowAttached)
 };
 
-struct QWindowForeign2
-{
-    Q_GADGET
-    QML_ANONYMOUS
-    QML_FOREIGN(QWindow)
-    QML_ADDED_IN_VERSION(2, 0)
-};
-
-struct QQuickWindowForeign
-{
-    Q_GADGET
-    QML_ANONYMOUS
-    QML_FOREIGN(QQuickWindow)
-    QML_ADDED_IN_VERSION(2, 0)
-};
-
-struct QQuickWindowQmlImplForeign
-{
-    Q_GADGET
-    QML_ANONYMOUS
-    QML_FOREIGN(QQuickWindowQmlImpl)
-    QML_ADDED_IN_VERSION(2, 2)
-};
-
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickApplicationWindow)

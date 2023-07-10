@@ -174,14 +174,6 @@ private:
     Q_DECLARE_PRIVATE(QQuickTextAreaAttached)
 };
 
-struct QQuickTextEditForeign
-{
-    Q_GADGET
-    QML_ANONYMOUS
-    QML_FOREIGN(QQuickTextEdit)
-    QML_ADDED_IN_VERSION(2, 3)
-};
-
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickTextArea)

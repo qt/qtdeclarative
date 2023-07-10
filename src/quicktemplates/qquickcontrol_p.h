@@ -256,30 +256,6 @@ private:
     Q_DECLARE_PRIVATE(QQuickControl)
 };
 
-struct QQuickItemForeign
-{
-    Q_GADGET
-    QML_ANONYMOUS
-    QML_FOREIGN(QQuickItem)
-    QML_ADDED_IN_VERSION(2, 3)
-};
-
-struct QQuickColorGroupForeign
-{
-    Q_GADGET
-    QML_ANONYMOUS
-    QML_FOREIGN(QQuickColorGroup)
-    QML_ADDED_IN_VERSION(6, 0)
-};
-
-struct QQuickPaletteForeign
-{
-    Q_GADGET
-    QML_ANONYMOUS
-    QML_FOREIGN(QQuickPalette)
-    QML_ADDED_IN_VERSION(6, 0)
-};
-
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickControl)
