@@ -116,7 +116,7 @@ For cases where the QML module needs a custom plugin class implementation, the
 will be needed.
 
 \note
-When using static linking, it migt be necessary to use
+When using static linking, it might be necessary to use
 \c Q_IMPORT_QML_PLUGIN to ensure that the QML plugin is correctly linked.
 
 \section3 Plugin target with no backing target
