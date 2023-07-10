@@ -56,6 +56,8 @@ private slots:
     void sectionGeometryChange();
     void areaZeroviewDoesNotNeedlesslyPopulateWholeModel();
 
+    void delegateContextHandling();
+
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -1020,6 +1022,22 @@ void tst_QQuickListView2::areaZeroviewDoesNotNeedlesslyPopulateWholeModel()
     // that's to give the test some leniency in case the ListView implementation
     // changes in the future to instantiate a few more items outside of the viewport
     QVERIFY(delegateCreationCounter() < 100);
+}
+
+void tst_QQuickListView2::delegateContextHandling()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("delegateContextHandling.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o(c.create());
+    QVERIFY(o);
+
+    for (int i = 0; i < 10; ++i) {
+        QQuickItem *delegate = nullptr;
+        QMetaObject::invokeMethod(o.get(), "toggle", Q_RETURN_ARG(QQuickItem *, delegate));
+        QVERIFY(delegate);
+    }
+
 }
 
 QTEST_MAIN(tst_QQuickListView2)
