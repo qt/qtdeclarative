@@ -374,7 +374,7 @@ void QQmlDebugTranslationServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
 void QQmlDebugTranslationServiceImpl::foundTranslationBinding(const TranslationBindingInformation &translationBindingInformation)
 {
     QObject *scopeObject = translationBindingInformation.scopeObject;
-    connect(scopeObject, &QObject::destroyed, [this, scopeObject] () {
+    connect(scopeObject, &QObject::destroyed, this, [this, scopeObject] () {
         this->d->objectTranslationBindingMultiMap.remove(scopeObject);
     });
 

@@ -56,7 +56,7 @@ QQmlPreviewPosition::QQmlPreviewPosition()
 {
     m_savePositionTimer.setSingleShot(true);
     m_savePositionTimer.setInterval(500);
-    QObject::connect(&m_savePositionTimer, &QTimer::timeout, [this]() {
+    QObject::connect(&m_savePositionTimer, &QTimer::timeout, &m_savePositionTimer, [this]() {
         saveWindowPosition();
     });
 }

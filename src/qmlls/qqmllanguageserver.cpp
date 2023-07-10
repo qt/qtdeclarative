@@ -90,7 +90,7 @@ void QQmlLanguageServer::registerHandlers(QLanguageServer *server,
     QObject::connect(server, &QLanguageServer::lifecycleError, this,
                      &QQmlLanguageServer::errorExit);
     QObject::connect(server, &QLanguageServer::exit, this, &QQmlLanguageServer::exit);
-    QObject::connect(server, &QLanguageServer::runStatusChanged, [](QLanguageServer::RunStatus r) {
+    QObject::connect(server, &QLanguageServer::runStatusChanged, this, [](QLanguageServer::RunStatus r) {
         qCDebug(lspServerLog) << "runStatus" << int(r);
     });
     protocol->typedRpc()->registerNotificationHandler<Notifications::AddBuildDirsParams>(

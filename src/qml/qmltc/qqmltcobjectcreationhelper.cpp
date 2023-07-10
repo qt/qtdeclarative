@@ -21,8 +21,9 @@ void qmltcCreateDynamicMetaObject(QObject *object, const QmltcTypeData &data)
 
     // tie qmlTypePrivate destruction to objects's destruction. the type's
     // content is not needed once the associated object is deleted
-    QObject::connect(object, &QObject::destroyed,
-                     [qmlTypePrivate](QObject *) { qmlTypePrivate->release(); });
+    QObject::connect(object, &QObject::destroyed, object,
+                     [qmlTypePrivate](QObject *) { qmlTypePrivate->release(); },
+                     Qt::DirectConnection);
 
     // initialize QQmlType::QQmlCppTypeData
     Q_ASSERT(data.regType == QQmlType::CppType);
