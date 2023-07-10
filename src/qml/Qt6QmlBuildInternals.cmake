@@ -391,6 +391,25 @@ function(qt_internal_add_qml_module target)
             FILES ${arg_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:${target},QT_QML_MODULE_TYPEINFO>
             DESTINATION "${arg_INSTALL_DIRECTORY}"
         )
+
+        # Assign the install time metatypes file of the backing library to the plugin.
+        # Only do it if the backing library is different from the plugin and we do generate
+        # qml types.
+        # The install time metatypes only apply to Qt's own qml plugins, not to user project
+        # qml plugins.
+        if(arg_PLUGIN_TARGET AND
+                TARGET "${arg_PLUGIN_TARGET}" AND NOT target STREQUAL arg_PLUGIN_TARGET)
+            _qt_internal_get_metatypes_install_dir(
+                ""
+                "${INSTALL_ARCHDATADIR}"
+                install_dir
+            )
+
+            _qt_internal_assign_install_metatypes_files_and_properties(
+                "${arg_PLUGIN_TARGET}"
+                INSTALL_DIR "${install_dir}"
+            )
+        endif()
     endif()
 
     if(NOT arg_NO_GENERATE_QMLDIR)
