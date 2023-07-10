@@ -32,7 +32,7 @@ void QQmlTreeModelToTableModel::setModel(QAbstractItemModel *arg)
         const char *signal;
         const char *slot;
     };
-    static const Cx connections[] = {
+    const Cx connections[] = {
         { SIGNAL(destroyed(QObject*)),
           SLOT(modelHasBeenDestroyed()) },
         { SIGNAL(modelReset()),
