@@ -1089,7 +1089,8 @@ QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
             } else if (!reuseExistingContext) {
                 context->setContextProperty(QLatin1String("section"), section);
             }
-            QQml_setParent_noEvent(context, nobj);
+            if (!reuseExistingContext)
+                QQml_setParent_noEvent(context, nobj);
             sectionItem = qobject_cast<QQuickItem *>(nobj);
             if (!sectionItem) {
                 delete nobj;
