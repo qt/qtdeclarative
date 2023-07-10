@@ -16,17 +16,17 @@ QWidgetPlatformFileDialog::QWidgetPlatformFileDialog(QObject *parent)
     connect(m_dialog.data(), &QDialog::accepted, this, &QPlatformDialogHelper::accept);
     connect(m_dialog.data(), &QDialog::rejected, this, &QPlatformDialogHelper::reject);
 
-    connect(m_dialog.data(), &QFileDialog::fileSelected, [this](const QString &file) {
+    connect(m_dialog.data(), &QFileDialog::fileSelected, this, [this](const QString &file) {
         emit fileSelected(QUrl::fromLocalFile(file));
     });
-    connect(m_dialog.data(), &QFileDialog::filesSelected, [this](const QList<QString> &files) {
+    connect(m_dialog.data(), &QFileDialog::filesSelected, this, [this](const QList<QString> &files) {
         QList<QUrl> urls;
         urls.reserve(files.size());
         for (const QString &file : files)
             urls += QUrl::fromLocalFile(file);
         emit filesSelected(urls);
     });
-    connect(m_dialog.data(), &QFileDialog::currentChanged, [this](const QString &path) {
+    connect(m_dialog.data(), &QFileDialog::currentChanged, this, [this](const QString &path) {
         emit currentChanged(QUrl::fromLocalFile(path));
     });
     connect(m_dialog.data(), &QFileDialog::directoryEntered, this, &QWidgetPlatformFileDialog::directoryEntered);

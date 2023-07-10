@@ -14,7 +14,7 @@ QWidgetPlatformSystemTrayIcon::QWidgetPlatformSystemTrayIcon(QObject *parent)
     setParent(parent);
 
     connect(m_systray.data(), &QSystemTrayIcon::messageClicked, this, &QPlatformSystemTrayIcon::messageClicked);
-    connect(m_systray.data(), &QSystemTrayIcon::activated, [this](QSystemTrayIcon::ActivationReason reason) {
+    connect(m_systray.data(), &QSystemTrayIcon::activated, this, [this](QSystemTrayIcon::ActivationReason reason) {
         emit activated(static_cast<ActivationReason>(reason));
     });
 }
