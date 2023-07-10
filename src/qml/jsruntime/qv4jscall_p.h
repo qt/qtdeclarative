@@ -345,9 +345,9 @@ inline ReturnedValue coerce(
                        : engine->newUrlObject()->asReturnedValue();
         }
         // Since URL properties are stored as string, we need to support the string conversion here.
-        return value.isString()
-            ? engine->newUrlObject(QUrl(value.stringValue()->toQString()))->asReturnedValue()
-            : engine->newUrlObject()->asReturnedValue();
+        if (const String *string = value.stringValue())
+            return engine->newUrlObject(QUrl(string->toQString()))->asReturnedValue();
+        return engine->newUrlObject()->asReturnedValue();
 #if QT_CONFIG(regularexpression)
     case QMetaType::QRegularExpression:
         if (value.as<RegExpObject>())
