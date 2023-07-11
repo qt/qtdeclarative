@@ -1977,7 +1977,7 @@ bool QQuickPixmap::connectDownloadProgress(QObject *object, const char *method)
         return false;
     }
 
-    return QObject::connect(d->reply, SIGNAL(downloadProgress(qint64, qint64)), object,
+    return QObject::connect(d->reply, SIGNAL(downloadProgress(qint64,qint64)), object,
                             method);
 }
 

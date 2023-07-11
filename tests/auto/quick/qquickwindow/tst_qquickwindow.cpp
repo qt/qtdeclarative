@@ -2926,8 +2926,8 @@ void tst_qquickwindow::test_circleMapItem()
     mat->setObjectName("Top Item/MouseArea");
     mat->setSize(QSizeF(40, 40));
 
-    QSignalSpy bottomSpy(mab, SIGNAL(clicked(QQuickMouseEvent *)));
-    QSignalSpy topSpy(mat, SIGNAL(clicked(QQuickMouseEvent *)));
+    QSignalSpy bottomSpy(mab, SIGNAL(clicked(QQuickMouseEvent*)));
+    QSignalSpy topSpy(mat, SIGNAL(clicked(QQuickMouseEvent*)));
 
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));

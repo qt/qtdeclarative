@@ -435,8 +435,8 @@ void tst_QQmlXmlListModel::reload()
     QVERIFY(model != nullptr);
     QTRY_COMPARE(model->rowCount(), 9);
 
-    QSignalSpy spyInsert(model.get(), SIGNAL(rowsInserted(QModelIndex, int, int)));
-    QSignalSpy spyRemove(model.get(), SIGNAL(rowsRemoved(QModelIndex, int, int)));
+    QSignalSpy spyInsert(model.get(), SIGNAL(rowsInserted(QModelIndex,int,int)));
+    QSignalSpy spyRemove(model.get(), SIGNAL(rowsRemoved(QModelIndex,int,int)));
     QSignalSpy spyCount(model.get(), SIGNAL(countChanged()));
     // reload multiple times to test the xml query aborting
     QMetaObject::invokeMethod(model.get(), "reload");

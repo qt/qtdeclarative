@@ -382,7 +382,7 @@ void tst_QJSEngine::callQObjectSlot()
     }
 
     {
-        QSignalSpy spy(&dummy, SIGNAL(slotWithArgumentsCalled(QString, QString, QString)));
+        QSignalSpy spy(&dummy, SIGNAL(slotWithArgumentsCalled(QString,QString,QString)));
         eng.evaluate("dummy.slotToCall('arg', 'arg2');");
         QCOMPARE(spy.size(), 1);
 
@@ -393,7 +393,7 @@ void tst_QJSEngine::callQObjectSlot()
     }
 
     {
-        QSignalSpy spy(&dummy, SIGNAL(slotWithArgumentsCalled(QString, QString, QString)));
+        QSignalSpy spy(&dummy, SIGNAL(slotWithArgumentsCalled(QString,QString,QString)));
         eng.evaluate("dummy.slotToCall('arg', 'arg2', 'arg3');");
         QCOMPARE(spy.size(), 1);
 
@@ -404,7 +404,7 @@ void tst_QJSEngine::callQObjectSlot()
     }
 
     {
-        QSignalSpy spy(&dummy, SIGNAL(slotWithOverloadedArgumentsCalled(QString, Qt::KeyboardModifier, Qt::KeyboardModifiers)));
+        QSignalSpy spy(&dummy, SIGNAL(slotWithOverloadedArgumentsCalled(QString,Qt::KeyboardModifier,Qt::KeyboardModifiers)));
         eng.evaluate(QStringLiteral("dummy.slotToCall('arg', %1);").arg(QString::number(Qt::ControlModifier)));
         QCOMPARE(spy.size(), 1);
 
@@ -416,7 +416,7 @@ void tst_QJSEngine::callQObjectSlot()
     }
 
     {
-        QSignalSpy spy(&dummy, SIGNAL(slotWithTwoOverloadedArgumentsCalled(QString, Qt::KeyboardModifiers, Qt::KeyboardModifier)));
+        QSignalSpy spy(&dummy, SIGNAL(slotWithTwoOverloadedArgumentsCalled(QString,Qt::KeyboardModifiers,Qt::KeyboardModifier)));
         QJSValue v = eng.evaluate(QStringLiteral("dummy.slotToCallTwoDefault('arg', %1);").arg(QString::number(Qt::MetaModifier | Qt::KeypadModifier)));
         QCOMPARE(spy.size(), 1);
 
@@ -437,7 +437,7 @@ void tst_QJSEngine::callQObjectSlot()
     eng.globalObject().setProperty(QStringLiteral("Qt"), value);
 
     {
-        QSignalSpy spy(&dummy, SIGNAL(slotWithOverloadedArgumentsCalled(QString, Qt::KeyboardModifier, Qt::KeyboardModifiers)));
+        QSignalSpy spy(&dummy, SIGNAL(slotWithOverloadedArgumentsCalled(QString,Qt::KeyboardModifier,Qt::KeyboardModifiers)));
         QJSValue v = eng.evaluate(QStringLiteral("dummy.slotToCall('arg', Qt.ControlModifier);"));
         QCOMPARE(spy.size(), 1);
 
@@ -448,7 +448,7 @@ void tst_QJSEngine::callQObjectSlot()
     }
 
     {
-        QSignalSpy spy(&dummy, SIGNAL(slotWithTwoOverloadedArgumentsCalled(QString, Qt::KeyboardModifiers, Qt::KeyboardModifier)));
+        QSignalSpy spy(&dummy, SIGNAL(slotWithTwoOverloadedArgumentsCalled(QString,Qt::KeyboardModifiers,Qt::KeyboardModifier)));
         QJSValue v = eng.evaluate(QStringLiteral("dummy.slotToCallTwoDefault('arg', Qt.MetaModifier | Qt.KeypadModifier);"));
         QCOMPARE(spy.size(), 1);
 

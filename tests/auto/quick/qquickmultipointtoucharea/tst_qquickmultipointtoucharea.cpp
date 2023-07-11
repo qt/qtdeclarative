@@ -1277,7 +1277,7 @@ void tst_QQuickMultiPointTouchArea::mouseGestureStarted() // QTBUG-70258
     area->setProperty("grabGesture", grabGesture);
     QQuickTouchPoint *point1 = view->rootObject()->findChild<QQuickTouchPoint*>("point1");
     QCOMPARE(point1->pressed(), false);
-    QSignalSpy gestureStartedSpy(area, SIGNAL(gestureStarted(QQuickGrabGestureEvent *)));
+    QSignalSpy gestureStartedSpy(area, SIGNAL(gestureStarted(QQuickGrabGestureEvent*)));
 
     QPoint p1 = QPoint(distanceFromOrigin, distanceFromOrigin);
     QTest::mousePress(view.data(), Qt::LeftButton, Qt::NoModifier, p1);

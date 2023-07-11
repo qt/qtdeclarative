@@ -789,7 +789,7 @@ void tst_qqmllistmodel::get()
     RUNEXPR("model.append({roleC: {} })");
     RUNEXPR("model.append({roleD: [ { a:1, b:2 }, { c: 3 } ] })");
 
-    QSignalSpy spy(model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)));
+    QSignalSpy spy(model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QList<int>)));
     QQmlExpression expr(engine.rootContext(), model, expression);
     expr.evaluate();
     QVERIFY(!expr.hasError());
@@ -917,7 +917,7 @@ void tst_qqmllistmodel::get_nested()
         QString extendedExpression = QString("get(%1).%2.%3").arg(outerListIndex).arg(outerListRoleName).arg(expression);
         QQmlExpression expr(engine.rootContext(), model, extendedExpression);
 
-        QSignalSpy spy(childModel, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)));
+        QSignalSpy spy(childModel, SIGNAL(dataChanged(QModelIndex,QModelIndex,QList<int>)));
         expr.evaluate();
         QVERIFY(!expr.hasError());
 
@@ -1112,7 +1112,7 @@ void tst_qqmllistmodel::property_changes()
     QObject *connectionsObject = component.create();
     QVERIFY2(component.errorString().isEmpty(), qPrintable(component.errorString()));
 
-    QSignalSpy spyItemsChanged(&model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)));
+    QSignalSpy spyItemsChanged(&model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QList<int>)));
 
     expr.setExpression(script_change);
     expr.evaluate();
