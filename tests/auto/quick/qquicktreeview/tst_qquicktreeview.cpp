@@ -141,7 +141,7 @@ void tst_qquicktreeview::expandAndCollapseRoot()
     // Check that the view only has one row loaded so far (the root of the tree)
     QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
 
-    QSignalSpy expandedSpy(treeView, SIGNAL(expanded(int, int)));
+    QSignalSpy expandedSpy(treeView, SIGNAL(expanded(int,int)));
 
     // Expand the root
     treeView->expand(0);
@@ -186,7 +186,7 @@ void tst_qquicktreeview::expandAndCollapseChildren()
     LOAD_TREEVIEW("normaltreeview.qml");
 
     const int childCount = 4;
-    QSignalSpy expandedSpy(treeView, SIGNAL(expanded(int, int)));
+    QSignalSpy expandedSpy(treeView, SIGNAL(expanded(int,int)));
 
     // Expand the last child of a parent recursively four times
     for (int level = 0; level < 4; ++level) {
@@ -436,7 +436,7 @@ void tst_qquicktreeview::expandRecursivelyRoot()
     QFETCH(int, depth);
 
     LOAD_TREEVIEW("normaltreeview.qml");
-    QSignalSpy spy(treeView, SIGNAL(expanded(int, int)));
+    QSignalSpy spy(treeView, SIGNAL(expanded(int,int)));
 
     treeView->expandRecursively(rowToExpand, depth);
 
@@ -493,7 +493,7 @@ void tst_qquicktreeview::expandRecursivelyChild()
     QFETCH(int, depth);
 
     LOAD_TREEVIEW("normaltreeview.qml");
-    QSignalSpy spy(treeView, SIGNAL(expanded(int, int)));
+    QSignalSpy spy(treeView, SIGNAL(expanded(int,int)));
 
     treeView->expand(0);
 
@@ -545,7 +545,7 @@ void tst_qquicktreeview::expandRecursivelyWholeTree()
 {
     // Check that we expand the whole tree recursively by passing -1, -1
     LOAD_TREEVIEW("normaltreeview.qml");
-    QSignalSpy spy(treeView, SIGNAL(expanded(int, int)));
+    QSignalSpy spy(treeView, SIGNAL(expanded(int,int)));
     treeView->expandRecursively(-1, -1);
 
     QCOMPARE(spy.size(), 1);
@@ -577,7 +577,7 @@ void tst_qquicktreeview::collapseRecursivelyRoot()
     const int expectedRowCount = 1 + (model->maxDepth() * 8) - 4;
     QCOMPARE(treeView->rows(), expectedRowCount);
 
-    QSignalSpy spy(treeView, SIGNAL(collapsed(int, bool)));
+    QSignalSpy spy(treeView, SIGNAL(collapsed(int,bool)));
 
     // Collapse the whole tree again. This time, only the root should end up visible
     treeView->collapseRecursively();
@@ -624,7 +624,7 @@ void tst_qquicktreeview::collapseRecursivelyChild()
     const int expectedRowCount = 1 + (model->maxDepth() * 8) - 4;
     QCOMPARE(treeView->rows(), expectedRowCount);
 
-    QSignalSpy spy(treeView, SIGNAL(collapsed(int, bool)));
+    QSignalSpy spy(treeView, SIGNAL(collapsed(int,bool)));
 
     // Collapse the 8th child recursive
     const int rowToCollapse = 8;
@@ -671,7 +671,7 @@ void tst_qquicktreeview::collapseRecursivelyWholeTree()
 {
     // Check that we collapse the whole tree recursively by passing -1
     LOAD_TREEVIEW("normaltreeview.qml");
-    QSignalSpy spy(treeView, SIGNAL(collapsed(int, bool)));
+    QSignalSpy spy(treeView, SIGNAL(collapsed(int,bool)));
     treeView->expandRecursively();
     treeView->collapseRecursively();
 
@@ -690,7 +690,7 @@ void tst_qquicktreeview::expandToIndex()
     // Check that expandToIndex(index) expands the tree so
     // that index becomes visible in the view
     LOAD_TREEVIEW("normaltreeview.qml");
-    QSignalSpy spy(treeView, SIGNAL(expanded(int, int)));
+    QSignalSpy spy(treeView, SIGNAL(expanded(int,int)));
 
     const QModelIndex root = model->index(0, 0);
     const QModelIndex child1 = model->index(3, 0, root);

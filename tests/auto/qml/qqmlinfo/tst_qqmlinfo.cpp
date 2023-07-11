@@ -213,7 +213,7 @@ void tst_qqmlinfo::attachedObject()
 {
     QQmlComponent component(&engine, testFileUrl("AttachedObject.qml"));
 
-    QSignalSpy warningSpy(&engine, SIGNAL(warnings(const QList<QQmlError> &)));
+    QSignalSpy warningSpy(&engine, SIGNAL(warnings(QList<QQmlError>)));
     QVERIFY(warningSpy.isValid());
 
     const QString qmlBindingLoopMessage = "QML Rectangle: Binding loop detected for property \"width\"";

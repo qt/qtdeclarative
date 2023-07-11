@@ -2878,7 +2878,7 @@ void tst_qquickflickable::receiveTapOutsideContentItem()
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QQuickTapHandler tapHandler(&flickable);
-    QSignalSpy clickedSpy(&tapHandler, SIGNAL(tapped(QEventPoint, Qt::MouseButton)));
+    QSignalSpy clickedSpy(&tapHandler, SIGNAL(tapped(QEventPoint,Qt::MouseButton)));
 
     // Tap outside the content item in the top-left corner
     QTest::mouseClick(&window, Qt::LeftButton, {}, QPoint(5, 5));

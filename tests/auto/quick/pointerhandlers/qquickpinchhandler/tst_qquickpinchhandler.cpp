@@ -232,7 +232,7 @@ void tst_QQuickPinchHandler::scale()
     QVERIFY(pinchHandler != nullptr);
     QQuickItem *blackRect = (hasTarget ? pinchHandler->target() : pinchHandler->parentItem());
     QVERIFY(blackRect != nullptr);
-    QSignalSpy grabChangedSpy(pinchHandler, SIGNAL(grabChanged(QPointingDevice::GrabTransition, QEventPoint)));
+    QSignalSpy grabChangedSpy(pinchHandler, SIGNAL(grabChanged(QPointingDevice::GrabTransition,QEventPoint)));
     QSignalSpy scaleChangedSpy(pinchHandler, &QQuickPinchHandler::scaleChanged);
     if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
 

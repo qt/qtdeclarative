@@ -42,7 +42,7 @@ void tst_QQuickViewExtra::qtbug_87228()
         auto children = contentItem->childItems();
         QVERIFY(children.size() > 0);
         // for the sake of this test, any child would be suitable, so pick first
-        deletionSpy.reset(new QSignalSpy(children[0], SIGNAL(destroyed(QObject *))));
+        deletionSpy.reset(new QSignalSpy(children[0], SIGNAL(destroyed(QObject*))));
     }
     QCOMPARE(deletionSpy->size(), 1);
 }
