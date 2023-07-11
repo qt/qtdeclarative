@@ -7,7 +7,7 @@ import QtQuick.Controls
 ApplicationWindow {
     visible: true
     width: 640
-    height: 480
+    height: 600
 
     WasmMenu {
         id: wasmMenu
@@ -31,7 +31,7 @@ ApplicationWindow {
    Rectangle {
 
        width: 600
-       height: 480
+       height: 550
        border.color: "black"
        border.width: 1
        anchors {
@@ -50,7 +50,6 @@ ApplicationWindow {
                topMargin: 5
            }
         width: 550
-        height: 480
     }
    }
 }

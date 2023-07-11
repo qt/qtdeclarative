@@ -37,7 +37,7 @@ Item {
     }
 
     StackLayout {
-        width: 500
+        width: 550
         currentIndex: meetingTabs.currentIndex
         anchors {
             left: parent.left
@@ -48,7 +48,7 @@ Item {
 
         MeetingInviteesPage {
             id: invitees
-            width: 500
+
             nextButton.Accessible.onPressAction: {
                 meetingTabs.currentIndex = MeetingTabs.Types.Scheduler
             }

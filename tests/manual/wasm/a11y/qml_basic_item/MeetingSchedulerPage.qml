@@ -12,7 +12,7 @@ GroupBox {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 20
+        spacing: 10
         Row {
             spacing: 10
             RadioButton {
@@ -59,6 +59,97 @@ GroupBox {
                     checkState = Qt.Checked
             }
         }
+
+        Row {
+            spacing: 10
+
+            Label {
+                text: "Select Meeting room"
+                height: 50
+                verticalAlignment: Text.AlignVCenter
+                Accessible.role: Accessible.StaticText
+                Accessible.name: text
+                Accessible.description: "Select a meeting room"
+            }
+
+            SpinBox {
+                from: 1
+                to: 10
+                value: 5
+
+                Accessible.role: Accessible.SpinBox
+                Accessible.name: "Room number"
+                Accessible.description: "Select a room for the meeting"
+
+                Accessible.onDecreaseAction: {
+                    decrease()
+                }
+                Accessible.onIncreaseAction:  {
+                    increase()
+                }
+            }
+        }
+
+        Row {
+            spacing: 10
+
+            Label {
+                text: "Calendar Week"
+                height: 50
+                verticalAlignment: Text.AlignVCenter
+                Accessible.role: Accessible.StaticText
+                Accessible.name: text
+                Accessible.description: "Select the calendar week"
+            }
+
+            Slider {
+                from: 1
+                to: 52
+
+                Accessible.role: Accessible.Slider
+                Accessible.name: "Calendar number"
+                Accessible.description: "Select the week"
+                Accessible.onDecreaseAction: {
+                    decrease()
+                }
+                Accessible.onIncreaseAction:  {
+                    increase()
+                }
+            }
+        }
+
+        Label {
+            text: "Meeting Description"
+            height: 50
+            verticalAlignment: Text.AlignVCenter
+            Accessible.role: Accessible.StaticText
+            Accessible.name: text
+            Accessible.description: "Meeting Description"
+        }
+
+        Rectangle {
+            Layout.preferredHeight: 100
+            Layout.preferredWidth: 310
+            border.color: "black"
+            border.width: 1
+
+
+            TextEdit {
+                id: control
+                anchors {
+                    fill: parent
+                    leftMargin: 5
+                }
+
+                wrapMode: TextEdit.Wrap
+                Accessible.role: Accessible.EditableText
+                Accessible.editable: true
+                Accessible.name: "Enter descriptiom"
+                Accessible.description: "Describe in short "
+            }
+
+        }
+
 
         Button {
             id: nextButton
