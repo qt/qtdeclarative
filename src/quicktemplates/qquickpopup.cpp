@@ -937,6 +937,8 @@ QQuickPopup::QQuickPopup(QObject *parent)
 {
     Q_D(QQuickPopup);
     d->init();
+    // By default, allow popup to move beyond window edges
+    d->relaxEdgeConstraint = true;
 }
 
 QQuickPopup::QQuickPopup(QQuickPopupPrivate &dd, QObject *parent)
