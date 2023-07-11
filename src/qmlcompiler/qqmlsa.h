@@ -393,7 +393,6 @@ class Q_QMLCOMPILER_EXPORT FixSuggestion
     Q_DECLARE_PRIVATE(FixSuggestion)
 
 public:
-    FixSuggestion();
     FixSuggestion(const QString &fixDescription, const QQmlSA::SourceLocation &location,
                   const QString &replacement = QString());
     FixSuggestion(const FixSuggestion &);
