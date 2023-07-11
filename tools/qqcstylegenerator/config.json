@@ -188,6 +188,38 @@
         ]
     },
     {
+        "name": "ScrollBar",
+        "copy": ":/ScrollBar.qml",
+        "page": "Library",
+        "component set": "ScrollBarTemplate${Theme}",
+        "atoms": [
+            {"atom": "background", "figmaPath": "ScrollbarBackground, background"},
+            {"atom": "handle", "figmaPath": "ScrollbarHandle, handle"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
+        ],
+        "states": [
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "pressed", "figmaState": "pressed"}
+        ]
+    },
+    {
+        "name": "ScrollIndicator",
+        "copy": ":/ScrollIndicator.qml",
+        "page": "Library",
+        "component set": "ScrollIndicatorTemplate${Theme}",
+        "atoms": [
+            {"atom": "background", "figmaPath": "ScrollIndicatorBackground, background"},
+            {"atom": "handle", "figmaPath": "ScrollIndicatorHandle, handle"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
+        ],
+        "states": [
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "normal", "figmaState": "normal"}
+        ]
+    },
+    {
         "name": "Slider",
         "copy": ":/Slider.qml",
         "page": "Library",

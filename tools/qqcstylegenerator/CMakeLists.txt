@@ -29,6 +29,8 @@ qt_add_resources(qqcstylegenerator "controls"
         templates/Popup.qml
         templates/RadioButton.qml
         templates/RangeSlider.qml
+        templates/ScrollBar.qml
+        templates/ScrollIndicator.qml
         templates/Slider.qml
         templates/SpinBox.qml
         templates/Switch.qml
