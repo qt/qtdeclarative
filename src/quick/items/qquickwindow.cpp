@@ -2665,7 +2665,7 @@ QVector<QQuickItem *> QQuickWindowPrivate::pointerTargets(QQuickItem *item, QQui
     QPointF itemPos = item->mapFromScene(point->scenePosition());
     // if the item clips, we can potentially return early
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
-        if (!item->contains(itemPos))
+        if (!item->clipRect().contains(itemPos))
             return targets;
     }
 
