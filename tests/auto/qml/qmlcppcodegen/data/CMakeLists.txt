@@ -283,3 +283,77 @@ qt6_add_qml_module(codegen_test_module
 add_dependencies(codegen_test_module Qt::Quick Qt::QuickTemplates2 Qt::QuickShapesPrivate)
 
 qt_autogen_tools_initial_setup(codegen_test_moduleplugin)
+
+
+qt_add_library(codegen_test_module_verify STATIC)
+qt_autogen_tools_initial_setup(codegen_test_module_verify)
+
+set_target_properties(codegen_test_module_verify PROPERTIES
+    # We really want qmlcachegen here, even if qmlsc is available
+    QT_QMLCACHEGEN_EXECUTABLE qmlcachegen
+)
+
+
+qt6_add_qml_module(codegen_test_module_verify
+    VERSION 1.5
+    URI TestTypes
+    IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/"
+    DEPENDENCIES
+        QtQuick
+        QtQuick.Templates
+        QtQuick.Shapes
+    SOURCES
+        ${cpp_sources}
+    QML_FILES
+        ${qml_files}
+    RESOURCES
+        ${resource_files}
+    OUTPUT_DIRECTORY verify/TestTypes # Make sure tst_qmlcachegen doesn't see our output
+    TARGET_PATH verify/TestTypes      # Different target path to avoid resource file name clashes
+)
+
+add_dependencies(codegen_test_module_verify Qt::Quick Qt::QuickTemplates2 Qt::QuickShapesPrivate)
+
+qt_autogen_tools_initial_setup(codegen_test_module_verifyplugin)
+
+
+qt_internal_add_test(tst_qmlcppcodegen_verify
+    SOURCES
+        tst_qmlcppcodegen_verify.cpp
+)
+
+add_dependencies(tst_qmlcppcodegen_verify codegen_test_module codegen_test_module_verify)
+
+set(a_files "")
+set(b_files "")
+
+foreach(qml_file IN LISTS qml_files)
+    string(REGEX REPLACE "\\.(js|mjs|qml)$" "_\\1" compiled_file ${qml_file})
+    string(REGEX REPLACE "[$#?]+" "_" compiled_file ${compiled_file})
+
+    list(APPEND
+        a_files
+        "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/codegen_test_module_${compiled_file}.cpp")
+
+    list(APPEND
+        b_files
+        "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/codegen_test_module_verify_${compiled_file}.cpp")
+endforeach()
+
+qt_add_resources(tst_qmlcppcodegen_verify "a"
+    PREFIX
+        "/a"
+    FILES
+        ${a_files}
+    BASE
+        "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/"
+)
+
+qt_add_resources(tst_qmlcppcodegen_verify "b"
+    PREFIX
+        "/b"
+    FILES
+        ${b_files}
+    BASE
+        "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/"
+)
