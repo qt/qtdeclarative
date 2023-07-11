@@ -93,9 +93,10 @@ QString QQmlJSCodeGenerator::metaType(const QQmlJSScope::ConstPtr &type)
             : metaTypeFromName(type);
 }
 
-QQmlJSAotFunction QQmlJSCodeGenerator::run(
-        const Function *function, const InstructionAnnotations *annotations,
-        QQmlJS::DiagnosticMessage *error)
+QQmlJSAotFunction QQmlJSCodeGenerator::run(const Function *function,
+                                           const InstructionAnnotations *annotations,
+                                           QQmlJS::DiagnosticMessage *error,
+                                           bool basicBlocksValidationFailed)
 {
     m_annotations = annotations;
     m_function = function;
@@ -149,6 +150,11 @@ QT_WARNING_POP
 
     QQmlJSAotFunction result;
     result.includes.swap(m_includes);
+
+    if (basicBlocksValidationFailed) {
+        result.code += "// QV4_BASIC_BLOCK_VALIDATION_FAILED: This file failed compilation "_L1
+                       "with basic blocks validation but compiled without it.\n"_L1;
+    }
 
     result.code += u"// %1 at line %2, column %3\n"_s
             .arg(m_context->name).arg(m_context->line).arg(m_context->column);

@@ -763,7 +763,6 @@ QQmlJSAotFunction QQmlJSAotCompiler::globalCode() const
     return global;
 }
 
-
 QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
         const QV4::Compiler::Context *context, QQmlJSCompilePass::Function *function,
         QQmlJS::DiagnosticMessage *error)
@@ -784,8 +783,9 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
     if (error->isValid())
         return compileError();
 
+    bool basicBlocksValidationFailed = false;
     QQmlJSBasicBlocks basicBlocks(context, m_unitGenerator, &m_typeResolver, m_logger);
-    typePropagationResult = basicBlocks.run(function, typePropagationResult, error);
+    typePropagationResult = basicBlocks.run(function, typePropagationResult, error, m_flags, basicBlocksValidationFailed);
     if (error->isValid())
         return compileError();
 
@@ -798,7 +798,7 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
 
     QQmlJSCodeGenerator codegen(
                 context, m_unitGenerator, &m_typeResolver, m_logger);
-    QQmlJSAotFunction result = codegen.run(function, &typePropagationResult, error);
+    QQmlJSAotFunction result = codegen.run(function, &typePropagationResult, error, basicBlocksValidationFailed);
     return error->isValid() ? compileError() : result;
 }
 

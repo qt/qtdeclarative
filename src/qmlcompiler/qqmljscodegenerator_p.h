@@ -37,7 +37,7 @@ public:
     ~QQmlJSCodeGenerator() = default;
 
     QQmlJSAotFunction run(const Function *function, const InstructionAnnotations *annotations,
-                          QQmlJS::DiagnosticMessage *error);
+                          QQmlJS::DiagnosticMessage *error, bool basicBlocksValidationFailed);
 
 protected:
     struct CodegenState : public State

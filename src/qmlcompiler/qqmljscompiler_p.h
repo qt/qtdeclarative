@@ -56,6 +56,12 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSAotFunction
 class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSAotCompiler
 {
 public:
+    enum Flag {
+        NoFlags = 0x0,
+        ValidateBasicBlocks = 0x1,
+    };
+    Q_DECLARE_FLAGS(Flags, Flag)
+
     QQmlJSAotCompiler(QQmlJSImporter *importer, const QString &resourcePath,
                       const QStringList &qmldirFiles, QQmlJSLogger *logger);
 
@@ -70,6 +76,8 @@ public:
             const QV4::Compiler::Context *context, const QString &name, QQmlJS::AST::Node *astNode);
 
     virtual QQmlJSAotFunction globalCode() const;
+
+    Flags m_flags;
 
 protected:
     virtual QQmlJS::DiagnosticMessage diagnose(
@@ -94,6 +102,7 @@ private:
             QQmlJS::DiagnosticMessage *error);
 };
 
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlJSAotCompiler::Flags);
 
 using QQmlJSAotFunctionMap = QMap<int, QQmlJSAotFunction>;
 using QQmlJSSaveFunction

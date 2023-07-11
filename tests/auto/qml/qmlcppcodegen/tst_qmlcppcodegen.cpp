@@ -30,6 +30,7 @@ class tst_QmlCppCodegen : public QObject
     Q_OBJECT
 private slots:
     void initTestCase();
+    void cleanupTestCase();
     void accessModelMethodFromOutSide();
     void aliasLookup();
     void ambiguousAs();
@@ -43,6 +44,7 @@ private slots:
     void attachedType();
     void badSequence();
     void basicBlocksWithBackJump();
+    void basicBlocksWithBackJump_infinite();
     void basicDTZ();
     void bindToValueType();
     void bindingExpression();
@@ -458,6 +460,34 @@ void tst_QmlCppCodegen::initTestCase()
 #endif
 }
 
+void tst_QmlCppCodegen::cleanupTestCase()
+{
+    // This code checks for basic blocks validation failures in the tests
+    QStringList expectedFailures = {
+        "codegen_test_module_basicBlocksWithBackJump_infinite_qml.cpp",
+        "codegen_test_module_verify_basicBlocksWithBackJump_infinite_qml.cpp",
+    };
+
+    QString generatedCppFolder = GENERATED_CPP_FOLDER;
+    QDirIterator dirIterator(generatedCppFolder, { "*.cpp" }, QDir::Files);
+    while (dirIterator.hasNext()) {
+        QFile file(dirIterator.next());
+        if (!file.open(QIODeviceBase::ReadOnly | QIODeviceBase::Text)) {
+            qDebug() << "Couldn't open generated file";
+            continue;
+        }
+
+        const auto content = file.readAll();
+        if (bool validationFailed = content.contains("// QV4_BASIC_BLOCK_VALIDATION_FAILED:"_L1)) {
+            if (expectedFailures.contains(dirIterator.fileInfo().fileName())) {
+                QEXPECT_FAIL("", "Expected failure", Continue);
+            }
+            const auto message = file.fileName() + ": Basic blocks validation failed.";
+            QVERIFY2(!validationFailed, message.toStdString().c_str());
+        }
+    }
+}
+
 void tst_QmlCppCodegen::accessModelMethodFromOutSide()
 {
     QQmlEngine engine;
@@ -742,6 +772,15 @@ void tst_QmlCppCodegen::basicBlocksWithBackJump()
     expectingMessage = true;
     QMetaObject::invokeMethod(o.data(), "t3");
     QVERIFY(!expectingMessage);
+}
+
+void tst_QmlCppCodegen::basicBlocksWithBackJump_infinite()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/basicBlocksWithBackJump_infinite.qml"_s));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
 }
 
 void tst_QmlCppCodegen::basicDTZ()

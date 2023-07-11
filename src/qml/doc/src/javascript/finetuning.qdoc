@@ -90,6 +90,11 @@ Running JavaScript code can be influenced by a few environment variables, partic
             \c {QV4_DUMP_BASIC_BLOCKS} is used as the path to the folder where the DOT files should
             be generated. If the path is any of ["-", "1", "true"] or if files can't be opened,
             the graphs are dumped to stdout instead.
+    \row
+        \li \c{QV4_VALIDATE_BASIC_BLOCKS}
+        \li Performs checks on the basic blocks of a function compiled ahead of time to validate
+            its structure and coherence. If the validation fails, an error message is printed to
+            the console.
 \endtable
 
 \l{The QML Disk Cache} accepts further environment variables that allow fine tuning its behavior.

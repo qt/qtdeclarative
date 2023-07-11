@@ -24,12 +24,14 @@
 
 #include <algorithm>
 
+using namespace Qt::Literals::StringLiterals;
+
 static bool argumentsFromCommandLineAndFile(QStringList& allArguments, const QStringList &arguments)
 {
     allArguments.reserve(arguments.size());
     for (const QString &argument : arguments) {
         // "@file" doesn't start with a '-' so we can't use QCommandLineParser for it
-        if (argument.startsWith(QLatin1Char('@'))) {
+        if (argument.startsWith(u'@')) {
             QString optionsFile = argument;
             optionsFile.remove(0, 1);
             if (optionsFile.isEmpty()) {
@@ -59,55 +61,43 @@ int main(int argc, char **argv)
     QHashSeed::setDeterministicGlobalSeed();
 
     QCoreApplication app(argc, argv);
-    QCoreApplication::setApplicationName(QStringLiteral("qmlcachegen"));
+    QCoreApplication::setApplicationName("qmlcachegen"_L1);
     QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
 
     QCommandLineParser parser;
     parser.addHelpOption();
     parser.addVersionOption();
 
-    QCommandLineOption bareOption(QStringLiteral("bare"), QCoreApplication::translate("main", "Do not include default import directories. This may be used to run qmlcachegen on a project using a different Qt version."));
+    QCommandLineOption bareOption("bare"_L1, QCoreApplication::translate("main", "Do not include default import directories. This may be used to run qmlcachegen on a project using a different Qt version."));
     parser.addOption(bareOption);
-    QCommandLineOption filterResourceFileOption(QStringLiteral("filter-resource-file"), QCoreApplication::translate("main", "Filter out QML/JS files from a resource file that can be cached ahead of time instead"));
+    QCommandLineOption filterResourceFileOption("filter-resource-file"_L1, QCoreApplication::translate("main", "Filter out QML/JS files from a resource file that can be cached ahead of time instead"));
     parser.addOption(filterResourceFileOption);
-    QCommandLineOption resourceFileMappingOption(QStringLiteral("resource-file-mapping"), QCoreApplication::translate("main", "Path from original resource file to new one"), QCoreApplication::translate("main", "old-name=new-name"));
+    QCommandLineOption resourceFileMappingOption("resource-file-mapping"_L1, QCoreApplication::translate("main", "Path from original resource file to new one"), QCoreApplication::translate("main", "old-name=new-name"));
     parser.addOption(resourceFileMappingOption);
-    QCommandLineOption resourceOption(QStringLiteral("resource"), QCoreApplication::translate("main", "Qt resource file that might later contain one of the compiled files"), QCoreApplication::translate("main", "resource-file-name"));
+    QCommandLineOption resourceOption("resource"_L1, QCoreApplication::translate("main", "Qt resource file that might later contain one of the compiled files"), QCoreApplication::translate("main", "resource-file-name"));
     parser.addOption(resourceOption);
-    QCommandLineOption resourcePathOption(QStringLiteral("resource-path"), QCoreApplication::translate("main", "Qt resource file path corresponding to the file being compiled"), QCoreApplication::translate("main", "resource-path"));
+    QCommandLineOption resourcePathOption("resource-path"_L1, QCoreApplication::translate("main", "Qt resource file path corresponding to the file being compiled"), QCoreApplication::translate("main", "resource-path"));
     parser.addOption(resourcePathOption);
-    QCommandLineOption resourceNameOption(QStringLiteral("resource-name"),
-                                                QCoreApplication::translate("main", "Required to generate qmlcache_loader without qrc files. This is the name of the Qt resource the input files belong to."),
-                                                QCoreApplication::translate("main", "compiled-file-list"));
+    QCommandLineOption resourceNameOption("resource-name"_L1, QCoreApplication::translate("main", "Required to generate qmlcache_loader without qrc files. This is the name of the Qt resource the input files belong to."), QCoreApplication::translate("main", "compiled-file-list"));
     parser.addOption(resourceNameOption);
-    QCommandLineOption directCallsOption(QStringLiteral("direct-calls"), QCoreApplication::translate("main", "This option is ignored."));
+    QCommandLineOption directCallsOption("direct-calls"_L1, QCoreApplication::translate("main", "This option is ignored."));
     directCallsOption.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(directCallsOption);
-    QCommandLineOption importsOption(
-                QStringLiteral("i"),
-                QCoreApplication::translate("main", "Import extra qmldir"),
-                QCoreApplication::translate("main", "qmldir file"));
+    QCommandLineOption importsOption("i"_L1, QCoreApplication::translate("main", "Import extra qmldir"), QCoreApplication::translate("main", "qmldir file"));
     parser.addOption(importsOption);
-    QCommandLineOption importPathOption(
-                QStringLiteral("I"),
-                QCoreApplication::translate("main", "Look for QML modules in specified directory"),
-                QCoreApplication::translate("main", "import directory"));
+    QCommandLineOption importPathOption("I"_L1, QCoreApplication::translate("main", "Look for QML modules in specified directory"), QCoreApplication::translate("main", "import directory"));
     parser.addOption(importPathOption);
-    QCommandLineOption onlyBytecode(
-                QStringLiteral("only-bytecode"),
-                QCoreApplication::translate(
-                    "main", "Generate only byte code for bindings and functions, no C++ code"));
+    QCommandLineOption onlyBytecode("only-bytecode"_L1, QCoreApplication::translate("main", "Generate only byte code for bindings and functions, no C++ code"));
     parser.addOption(onlyBytecode);
-    QCommandLineOption verboseOption(
-            QStringLiteral("verbose"),
-            QCoreApplication::translate("main", "Output compile warnings"));
+    QCommandLineOption verboseOption("verbose"_L1, QCoreApplication::translate("main", "Output compile warnings"));
     parser.addOption(verboseOption);
+    QCommandLineOption validateBasicBlocksOption("validate-basic-blocks"_L1, QCoreApplication::translate("main", "Performs checks on the basic blocks of a function compiled ahead of time to validate its structure and coherence"));
+    parser.addOption(validateBasicBlocksOption);
 
-    QCommandLineOption outputFileOption(QStringLiteral("o"), QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
+    QCommandLineOption outputFileOption("o"_L1, QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
     parser.addOption(outputFileOption);
 
-    parser.addPositionalArgument(QStringLiteral("[qml file]"),
-            QStringLiteral("QML source file to generate cache for."));
+    parser.addPositionalArgument("[qml file]"_L1, "QML source file to generate cache for."_L1);
 
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
 
@@ -129,9 +119,9 @@ int main(int argc, char **argv)
     if (parser.isSet(outputFileOption))
         outputFileName = parser.value(outputFileOption);
 
-    if (outputFileName.endsWith(QLatin1String(".cpp"))) {
+    if (outputFileName.endsWith(".cpp"_L1)) {
         target = GenerateCpp;
-        if (outputFileName.endsWith(QLatin1String("qmlcache_loader.cpp")))
+        if (outputFileName.endsWith("qmlcache_loader.cpp"_L1))
             target = GenerateLoader;
     }
 
@@ -142,13 +132,13 @@ int main(int argc, char **argv)
     if (sources.isEmpty()){
         parser.showHelp();
     } else if (sources.size() > 1 && (target != GenerateLoader && target != GenerateLoaderStandAlone)) {
-        fprintf(stderr, "%s\n", qPrintable(QStringLiteral("Too many input files specified: '") + sources.join(QStringLiteral("' '")) + QLatin1Char('\'')));
+        fprintf(stderr, "%s\n", qPrintable("Too many input files specified: '"_L1 + sources.join("' '"_L1) + u'\''));
         return EXIT_FAILURE;
     }
 
     const QString inputFile = !sources.isEmpty() ? sources.first() : QString();
     if (outputFileName.isEmpty())
-        outputFileName = inputFile + QLatin1Char('c');
+        outputFileName = inputFile + u'c';
 
     if (parser.isSet(filterResourceFileOption))
         return qRelocateResourceFile(inputFile, outputFileName);
@@ -160,7 +150,7 @@ int main(int argc, char **argv)
         if (!qQmlJSGenerateLoader(
                     mapper.resourcePaths(QQmlJSResourceFileMapper::allQmlJSFilter()),
                     outputFileName, parser.values(resourceFileMappingOption), &error.message)) {
-            error.augment(QLatin1String("Error generating loader stub: ")).print();
+            error.augment("Error generating loader stub: "_L1).print();
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
@@ -170,7 +160,7 @@ int main(int argc, char **argv)
         QQmlJSCompileError error;
         if (!qQmlJSGenerateLoader(sources, outputFileName,
                                   parser.values(resourceNameOption), &error.message)) {
-            error.augment(QLatin1String("Error generating loader stub: ")).print();
+            error.augment("Error generating loader stub: "_L1).print();
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
@@ -205,13 +195,12 @@ int main(int argc, char **argv)
     }
 
     if (target == GenerateCpp) {
-        inputFileUrl = QStringLiteral("qrc://") + inputResourcePath;
+        inputFileUrl = "qrc://"_L1 + inputResourcePath;
         saveFunction = [inputResourcePath, outputFileName](
                                const QV4::CompiledData::SaveableUnitPointer &unit,
                                const QQmlJSAotFunctionMap &aotFunctions,
                                QString *errorString) {
-            return qSaveQmlJSUnitAsCpp(inputResourcePath, outputFileName, unit, aotFunctions,
-                                       errorString);
+            return qSaveQmlJSUnitAsCpp(inputResourcePath, outputFileName, unit, aotFunctions, errorString);
         };
 
     } else {
@@ -227,20 +216,20 @@ int main(int argc, char **argv)
         };
     }
 
-    if (inputFile.endsWith(QLatin1String(".qml"))) {
+    if (inputFile.endsWith(".qml"_L1)) {
         QQmlJSCompileError error;
         if (target != GenerateCpp || inputResourcePath.isEmpty() || parser.isSet(onlyBytecode)) {
             if (!qCompileQmlFile(inputFile, saveFunction, nullptr, &error,
                                  /* storeSourceLocation */ false)) {
-                error.augment(QStringLiteral("Error compiling qml file: ")).print();
+                error.augment("Error compiling qml file: "_L1).print();
                 return EXIT_FAILURE;
             }
         } else {
             QStringList importPaths;
 
             if (parser.isSet(resourceOption)) {
-                importPaths.append(QLatin1String(":/qt-project.org/imports"));
-                importPaths.append(QLatin1String(":/qt/qml"));
+                importPaths.append("qt-project.org/imports"_L1);
+                importPaths.append("qt/qml"_L1);
             };
 
             if (parser.isSet(importPathOption))
@@ -264,24 +253,27 @@ int main(int argc, char **argv)
             QQmlJSAotCompiler cppCodeGen(
                         &importer, u':' + inputResourcePath, parser.values(importsOption), &logger);
 
+            if (parser.isSet(validateBasicBlocksOption))
+                cppCodeGen.m_flags.setFlag(QQmlJSAotCompiler::ValidateBasicBlocks);
+
             if (!qCompileQmlFile(inputFile, saveFunction, &cppCodeGen, &error,
                                  /* storeSourceLocation */ true)) {
-                error.augment(QStringLiteral("Error compiling qml file: ")).print();
+                error.augment("Error compiling qml file: "_L1).print();
                 return EXIT_FAILURE;
             }
 
             QList<QQmlJS::DiagnosticMessage> warnings = importer.takeGlobalWarnings();
 
             if (!warnings.isEmpty()) {
-                logger.log(QStringLiteral("Type warnings occurred while compiling file:"),
+                logger.log("Type warnings occurred while compiling file:"_L1,
                            qmlImport, QQmlJS::SourceLocation());
                 logger.processMessages(warnings, qmlImport);
             }
         }
-    } else if (inputFile.endsWith(QLatin1String(".js")) || inputFile.endsWith(QLatin1String(".mjs"))) {
+    } else if (inputFile.endsWith(".js"_L1) || inputFile.endsWith(".mjs"_L1)) {
         QQmlJSCompileError error;
         if (!qCompileJSFile(inputFile, inputFileUrl, saveFunction, &error)) {
-            error.augment(QLatin1String("Error compiling js file: ")).print();
+            error.augment("Error compiling js file: "_L1).print();
             return EXIT_FAILURE;
         }
     } else {

@@ -15,8 +15,9 @@
 // We mean it.
 
 
-#include <private/qqmljscompilepass_p.h>
 #include <private/qflatmap_p.h>
+#include <private/qqmljscompilepass_p.h>
+#include <private/qqmljscompiler_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -29,6 +30,8 @@ public:
         QList<QQmlJSScope::ConstPtr> readTypes;
         int jumpTarget = -1;
         bool jumpIsUnconditional = false;
+        bool isReturnBlock = false;
+        bool isThrowBlock = false;
     };
 
     QQmlJSBasicBlocks(const QV4::Compiler::Context *context,
@@ -40,9 +43,12 @@ public:
 
     ~QQmlJSBasicBlocks() = default;
 
-    InstructionAnnotations run(
-            const Function *function, const InstructionAnnotations &annotations,
-            QQmlJS::DiagnosticMessage *error);
+    InstructionAnnotations run(const Function *function, const InstructionAnnotations &annotations,
+                               QQmlJS::DiagnosticMessage *error, QQmlJSAotCompiler::Flags,
+                               bool &basicBlocksValidationFailed);
+
+    struct BasicBlocksValidationResult { bool success = true; QString errorMessage; };
+    BasicBlocksValidationResult basicBlocksValidation();
 
 private:
     struct RegisterAccess
@@ -84,6 +90,11 @@ private:
     void populateReaderLocations();
     void adjustTypes();
     bool canMove(int instructionOffset, const RegisterAccess &access) const;
+
+    QFlatMap<int, BasicBlock>::iterator
+    basicBlockForInstruction(QFlatMap<int, BasicBlock> &container, int instructionOffset);
+    QFlatMap<int, BasicBlock>::const_iterator
+    basicBlockForInstruction(const QFlatMap<int, BasicBlock> &container, int instructionOffset) const;
 
     void dumpBasicBlocks();
     void dumpDOTGraph();

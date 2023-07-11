@@ -2,15 +2,6 @@ pragma Strict
 import QtQml
 
 QtObject {
-    function infinite() {
-        let foo = false
-        if (true) {
-            while (true) {}
-        } else {
-            console.log(foo)
-        }
-    }
-
     function t1() {
         let i = 0
         let foo = false

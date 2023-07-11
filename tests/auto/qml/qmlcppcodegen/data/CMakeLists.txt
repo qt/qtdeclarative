@@ -67,6 +67,7 @@ set(qml_files
     attachedBaseEnum.qml
     badSequence.qml
     basicBlocksWithBackJump.qml
+    basicBlocksWithBackJump_infinite.qml
     basicDTZ.qml
     bindToValueType.qml
     blockComments.qml
@@ -262,9 +263,14 @@ qt_autogen_tools_initial_setup(codegen_test_module)
 set_target_properties(codegen_test_module PROPERTIES
     # We really want qmlcachegen here, even if qmlsc is available
     QT_QMLCACHEGEN_EXECUTABLE qmlcachegen
+    QT_QMLCACHEGEN_ARGUMENTS --validate-basic-blocks
 )
 
 qt_policy(SET QTP0001 NEW)
+
+target_compile_definitions(codegen_test_module PUBLIC
+    -DGENERATED_CPP_FOLDER="${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache"
+)
 
 qt6_add_qml_module(codegen_test_module
     VERSION 1.5
@@ -294,6 +300,7 @@ qt_autogen_tools_initial_setup(codegen_test_module_verify)
 set_target_properties(codegen_test_module_verify PROPERTIES
     # We really want qmlcachegen here, even if qmlsc is available
     QT_QMLCACHEGEN_EXECUTABLE qmlcachegen
+    QT_QMLCACHEGEN_ARGUMENTS --validate-basic-blocks
 )
 
 
