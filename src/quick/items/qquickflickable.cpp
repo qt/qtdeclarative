@@ -40,21 +40,6 @@ Q_LOGGING_CATEGORY(lcVel, "qt.quick.flickable.velocity")
 // will ensure the Flickable retains the grab on consecutive flicks.
 static const int RetainGrabVelocity = 100;
 
-// Currently std::round can't be used on Android when using ndk g++, so
-// use C version instead. We could just define two versions of Round, one
-// for float and one for double, but then only one of them would be used
-// and compiler would trigger a warning about unused function.
-//
-// See https://code.google.com/p/android/issues/detail?id=54418
-template<typename T>
-static T Round(T t) {
-    return round(t);
-}
-template<>
-Q_DECL_UNUSED float Round<float>(float f) {
-    return roundf(f);
-}
-
 static qreal EaseOvershoot(qreal t) {
     return qAtan(t);
 }
@@ -101,7 +86,7 @@ void QQuickFlickableVisibleArea::updateVisible()
     qreal pagePos = 0;
     qreal pageSize = 0;
     if (!qFuzzyIsNull(maxYBounds)) {
-        qreal y = p->pixelAligned ? Round(p->vData.move.value()) : p->vData.move.value();
+        qreal y = p->pixelAligned ? std::round(p->vData.move.value()) : p->vData.move.value();
         pagePos = (-y + flickable->minYExtent()) / maxYBounds;
         pageSize = viewheight / maxYBounds;
     }
@@ -120,7 +105,7 @@ void QQuickFlickableVisibleArea::updateVisible()
     const qreal maxxextent = -flickable->maxXExtent() + flickable->minXExtent();
     const qreal maxXBounds = maxxextent + viewwidth;
     if (!qFuzzyIsNull(maxXBounds)) {
-        qreal x = p->pixelAligned ? Round(p->hData.move.value()) : p->hData.move.value();
+        qreal x = p->pixelAligned ? std::round(p->hData.move.value()) : p->hData.move.value();
         pagePos = (-x + flickable->minXExtent()) / maxXBounds;
         pageSize = viewwidth / maxXBounds;
     } else {
@@ -386,7 +371,7 @@ bool QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
         qreal dist = v2 / (accel * 2.0);
         if (v > 0)
             dist = -dist;
-        qreal target = -Round(-(data.move.value() - dist));
+        qreal target = -std::round(-(data.move.value() - dist));
         dist = -target + data.move.value();
         accel = v2 / (2.0f * qAbs(dist));
 
@@ -508,18 +493,18 @@ void QQuickFlickablePrivate::fixup(AxisData &data, qreal minExtent, qreal maxExt
     } else if (data.move.value() <= maxExtent) {
         resetTimeline(data);
         adjustContentPos(data, maxExtent);
-    } else if (-Round(-data.move.value()) != data.move.value()) {
+    } else if (-std::round(-data.move.value()) != data.move.value()) {
         // We could animate, but since it is less than 0.5 pixel it's probably not worthwhile.
         resetTimeline(data);
         qreal val = data.move.value();
-        if (std::abs(-Round(-val) - val) < 0.25) // round small differences
-            val = -Round(-val);
+        if (qAbs(-std::round(-val) - val) < 0.25) // round small differences
+            val = -std::round(-val);
         else if (data.smoothVelocity.value() > 0) // continue direction of motion for larger
-            val = -std::floor(-val);
+            val = -qFloor(-val);
         else if (data.smoothVelocity.value() < 0)
-            val = -std::ceil(-val);
+            val = -qCeil(-val);
         else // otherwise round
-            val = -Round(-val);
+            val = -std::round(-val);
         timeline.set(data.move, val);
     }
     data.inOvershoot = false;
@@ -1890,7 +1875,7 @@ void QQuickFlickablePrivate::replayDelayedPress()
 void QQuickFlickablePrivate::setViewportX(qreal x)
 {
     Q_Q(QQuickFlickable);
-    qreal effectiveX = pixelAligned ? -Round(-x) : x;
+    qreal effectiveX = pixelAligned ? -std::round(-x) : x;
 
     const qreal maxX = q->maxXExtent();
     const qreal minX = q->minXExtent();
@@ -1925,7 +1910,7 @@ void QQuickFlickablePrivate::setViewportX(qreal x)
 void QQuickFlickablePrivate::setViewportY(qreal y)
 {
     Q_Q(QQuickFlickable);
-    qreal effectiveY = pixelAligned ? -Round(-y) : y;
+    qreal effectiveY = pixelAligned ? -std::round(-y) : y;
 
     const qreal maxY = q->maxYExtent();
     const qreal minY = q->minYExtent();
