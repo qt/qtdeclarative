@@ -219,8 +219,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material,
     shader->inputLayout = calculateVertexInputLayout(s, geometry, true);
     QSGMaterialShaderPrivate *sD = QSGMaterialShaderPrivate::get(s);
     shader->stages = {
-        { QRhiGraphicsShaderStage::Vertex, sD->shader(QShader::VertexStage), QShader::BatchableVertexShader },
-        { QRhiGraphicsShaderStage::Fragment, sD->shader(QShader::FragmentStage) }
+        { QRhiShaderStage::Vertex, sD->shader(QShader::VertexStage), QShader::BatchableVertexShader },
+        { QRhiShaderStage::Fragment, sD->shader(QShader::FragmentStage) }
     };
 
     shader->lastOpacity = 0;
@@ -247,8 +247,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     shader->inputLayout = calculateVertexInputLayout(s, geometry, false);
     QSGMaterialShaderPrivate *sD = QSGMaterialShaderPrivate::get(s);
     shader->stages = {
-        { QRhiGraphicsShaderStage::Vertex, sD->shader(QShader::VertexStage) },
-        { QRhiGraphicsShaderStage::Fragment, sD->shader(QShader::FragmentStage) }
+        { QRhiShaderStage::Vertex, sD->shader(QShader::VertexStage) },
+        { QRhiShaderStage::Fragment, sD->shader(QShader::FragmentStage) }
     };
 
     shader->lastOpacity = 0;
@@ -2245,8 +2245,8 @@ QRhiGraphicsPipeline *Renderer::buildStencilPipeline(const Batch *batch, bool fi
 
     ps->setTopology(m_stencilClipCommon.topology);
 
-    ps->setShaderStages({ QRhiGraphicsShaderStage(QRhiGraphicsShaderStage::Vertex, m_stencilClipCommon.vs),
-                          QRhiGraphicsShaderStage(QRhiGraphicsShaderStage::Fragment, m_stencilClipCommon.fs) });
+    ps->setShaderStages({ QRhiShaderStage(QRhiShaderStage::Vertex, m_stencilClipCommon.vs),
+                          QRhiShaderStage(QRhiShaderStage::Fragment, m_stencilClipCommon.fs) });
     ps->setVertexInputLayout(m_stencilClipCommon.inputLayout);
     ps->setShaderResourceBindings(batch->stencilClipState.srb); // use something, it just needs to be layout-compatible
     ps->setRenderPassDescriptor(renderTarget().rpDesc);
