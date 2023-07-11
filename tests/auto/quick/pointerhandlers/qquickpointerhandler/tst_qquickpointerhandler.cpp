@@ -252,6 +252,7 @@ private slots:
     void handlerInWindow();
     void dynamicCreationInWindow();
     void cppConstruction();
+    void clip();
 
 protected:
     bool eventFilter(QObject *, QEvent *event) override
@@ -732,6 +733,63 @@ void tst_PointerHandlers::cppConstruction()
 
     // wait to avoid getting a double click event
     QTest::qWait(qApp->styleHints()->mouseDoubleClickInterval() + 10);
+}
+
+void tst_PointerHandlers::clip()
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "clip.qml");
+    QQuickView * window = windowPtr.data();
+    QVERIFY(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    EventHandler *handler = window->contentItem()->findChild<EventHandler*>("eventHandler");
+    EventHandler *circleHandler = window->contentItem()->findChild<EventHandler*>("circle eventHandler");
+
+    QCOMPARE(handler->pressEventCount, 0);
+    QCOMPARE(circleHandler->pressEventCount, 0);
+    QCOMPARE(handler->releaseEventCount, 0);
+    QCOMPARE(circleHandler->releaseEventCount, 0);
+
+    const QPoint rectPt = QPoint(1, 1);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, rectPt);
+    QCOMPARE(handler->pressEventCount, 1);
+    QCOMPARE(circleHandler->pressEventCount, 0);
+
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, rectPt);
+    QCOMPARE(handler->releaseEventCount, 1);
+    QCOMPARE(circleHandler->releaseEventCount, 0);
+
+
+    handler->pressEventCount = 0;
+    circleHandler->pressEventCount = 0;
+    handler->releaseEventCount = 0;
+    circleHandler->releaseEventCount = 0;
+
+    const QPoint rectAndCirclePt = QPoint(49 ,49);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, rectAndCirclePt);
+    QCOMPARE(handler->pressEventCount, 1);
+    QCOMPARE(circleHandler->pressEventCount, 1);
+
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, rectAndCirclePt);
+    QCOMPARE(handler->releaseEventCount, 1);
+    QCOMPARE(circleHandler->releaseEventCount, 1);
+
+
+    handler->pressEventCount = 0;
+    circleHandler->pressEventCount = 0;
+    handler->releaseEventCount = 0;
+    circleHandler->releaseEventCount = 0;
+
+    const QPoint circlePt = QPoint(51 ,51);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, circlePt);
+    QCOMPARE(handler->pressEventCount, 0);
+    QCOMPARE(circleHandler->pressEventCount, 1);
+
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, circlePt);
+    QCOMPARE(handler->releaseEventCount, 0);
+    QCOMPARE(circleHandler->releaseEventCount, 1);
 }
 
 QTEST_MAIN(tst_PointerHandlers)
