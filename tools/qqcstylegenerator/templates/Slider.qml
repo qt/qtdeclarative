@@ -42,8 +42,8 @@ T.Slider {
     }
 
     background: Item {
-        implicitWidth: control.horizontal ? _background.implicitWidth : _background.implicitHeight
-        implicitHeight: control.horizontal ? _background.implicitHeight : _background.implicitWidth
+        implicitWidth: control.horizontal ? (_background.implicitWidth || _background.groove.implicitWidth) : (_background.implicitHeight || _background.groove.implicitHeight)
+        implicitHeight: control.horizontal ? (_background.implicitHeight || _background.groove.implicitHeight) : (_background.implicitWidth || _background.groove.implicitWidth)
 
         property BorderImage _background: BorderImage {
             parent: control.background
@@ -79,7 +79,7 @@ T.Slider {
                     parent: control.background._background.groove
                     width: control.position * parent.width
                     height: parent.height
-                    source: Qt.resolvedUrl(control.config.background.filePath)
+                    source: Qt.resolvedUrl(control.config.track.filePath)
                     border {
                         top: control.config.track?.topOffset || 0
                         bottom: control.config.track?.bottomOffset || 0
