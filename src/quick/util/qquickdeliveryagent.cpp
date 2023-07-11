@@ -1889,7 +1889,7 @@ QVector<QQuickItem *> QQuickDeliveryAgentPrivate::pointerTargets(QQuickItem *ite
     qCDebug(lcPtrLoc) << q << "point" << point.id() << point.scenePosition() << "->" << itemPos << ": relevant?" << relevant << "to" << item << point;
     // if the item clips, we can potentially return early
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
-        if (!relevant)
+        if (!item->clipRect().contains(itemPos))
             return targets;
     }
 
