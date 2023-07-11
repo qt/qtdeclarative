@@ -108,7 +108,7 @@ T.RangeSlider {
                     y: (parent.height - height) / 2
                     width: control.second.position * (parent.width - control.first.handle.width) - control.first.position * (parent.width - control.first.handle.width)
                     height: parent.height
-                    source: Qt.resolvedUrl(control.config.background.filePath)
+                    source: Qt.resolvedUrl(control.config.track.filePath)
                     border {
                         top: control.config.track?.topOffset || 0
                         bottom: control.config.track?.bottomOffset || 0

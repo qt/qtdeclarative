@@ -170,11 +170,8 @@
         "states": [
             {"state": "normal", "figmaState": "normal"},
             {"state": "disabled", "figmaState": "disabled"},
-            {"state": "focused", "figmaState": "focused"},
-            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
             {"state": "hovered", "figmaState": "hovered"},
-            {"state": "handle-pressed", "figmaState": "handlePressed"},
-            {"state": "handle-pressed-focused", "figmaState": "pressedFocused"}
+            {"state": "handle-pressed", "figmaState": "handlePressed"}
         ]
     },
     {
@@ -332,9 +329,9 @@
             {"atom": "toolButton2", "figmaPath": "ContentItem, ToolButton2", "export": "geometry"}
         ],
         "states": [
-            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "disabled", "figmaState": "disabledHeader"},
             {"state": "disabled-footer", "figmaState": "disabledFooter"},
-            {"state": "normal", "figmaState": "normal"},
+            {"state": "normal", "figmaState": "normalHeader"},
             {"state": "normal-footer", "figmaState": "normalFooter"}
         ]
     },
@@ -354,12 +351,6 @@
             {"state": "checked-hovered", "figmaState": "checkedHovered"},
             {"state": "checked-pressed", "figmaState": "checkedPressed"},
             {"state": "disabled", "figmaState": "disabled"},
-            {"state": "focused", "figmaState": "focused"},
-            {"state": "focused-checked", "figmaState": "checkedFocused"},
-            {"state": "focused-checked-hovered", "figmaState": "checkedHoveredFocused"},
-            {"state": "focused-checked-pressed", "figmaState": "checkedPressedFocused"},
-            {"state": "focused-hovered", "figmaState": "hoveredFocused"},
-            {"state": "focused-pressed", "figmaState": "pressedFocused"},
             {"state": "hovered", "figmaState": "hovered"},
             {"state": "normal", "figmaState": "normal"},
             {"state": "pressed", "figmaState": "pressed"}
