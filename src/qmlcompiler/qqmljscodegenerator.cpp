@@ -101,21 +101,25 @@ QQmlJSAotFunction QQmlJSCodeGenerator::run(
     m_function = function;
     m_error = error;
 
-    QHash<int, QHash<QQmlJSScope::ConstPtr, QString>> registerNames;
+    QHash<int, int> numRegisterVariablesPerIndex;
 
     auto addVariable = [&](int registerIndex, const QQmlJSScope::ConstPtr &seenType) {
         // Don't generate any variables for registers that are initialized with undefined.
         if (registerIndex == InvalidRegister || !isTypeStorable(m_typeResolver, seenType))
             return;
 
-        auto &typesForRegisters = m_registerVariables[registerIndex];
-        if (!typesForRegisters.contains(seenType)) {
-            auto &currentRegisterNames = registerNames[registerIndex];
-            QString &name = currentRegisterNames[m_typeResolver->comparableType(seenType)];
-            if (name.isEmpty())
-                name = u"r%1_%2"_s.arg(registerIndex).arg(currentRegisterNames.size());
-            typesForRegisters[seenType] = name;
+        const RegisterVariablesKey key = { seenType->internalName(), registerIndex };
+
+
+        const auto oldSize = m_registerVariables.size();
+        auto &e = m_registerVariables[key];
+        if (m_registerVariables.size() != oldSize) {
+            e.variableName = u"r%1_%2"_s
+                                     .arg(registerIndex)
+                                     .arg(numRegisterVariablesPerIndex[registerIndex]++);
+            e.storedType = m_typeResolver->comparableType(seenType);
         }
+        ++e.numTracked;
     };
 
 QT_WARNING_PUSH
@@ -149,72 +153,62 @@ QT_WARNING_POP
     result.code += u"// %1 at line %2, column %3\n"_s
             .arg(m_context->name).arg(m_context->line).arg(m_context->column);
 
-    QDuplicateTracker<QString> generatedVariables;
     for (auto registerIt = m_registerVariables.cbegin(), registerEnd = m_registerVariables.cend();
          registerIt != registerEnd; ++registerIt) {
-        const auto &registerTypes = *registerIt;
-        const int registerIndex = registerIt.key();
 
+        const int registerIndex = registerIt.key().registerIndex;
         const bool registerIsArgument = isArgument(registerIndex);
 
-        for (auto registerTypeIt = registerTypes.constBegin(), end = registerTypes.constEnd();
-             registerTypeIt != end; ++registerTypeIt) {
+        result.code += registerIt.key().internalName;
 
-            const QQmlJSScope::ConstPtr storedType = registerTypeIt.key();
+        const QQmlJSScope::ConstPtr storedType = registerIt->storedType;
+        const bool isPointer
+                = (storedType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference);
+        if (isPointer)
+            result.code += u" *"_s;
+        else
+            result.code += u' ';
 
-            if (generatedVariables.hasSeen(registerTypeIt.value()))
-                continue;
+        if (!registerIsArgument
+                && registerIndex != Accumulator
+                && registerIndex != This
+                && !m_typeResolver->registerIsStoredIn(
+                    function->registerTypes[registerIndex - firstRegisterIndex()],
+                    m_typeResolver->voidType())) {
+            result.code += registerIt->variableName + u" = "_s;
+            result.code += convertStored(m_typeResolver->voidType(), storedType, QString());
+        } else if (registerIsArgument && m_typeResolver->registerIsStoredIn(
+                       argumentType(registerIndex), storedType)) {
+            const int argumentIndex = registerIndex - FirstArgument;
+            const QQmlJSRegisterContent argument
+                    = m_function->argumentTypes[argumentIndex];
+            const QQmlJSRegisterContent original
+                    = m_typeResolver->original(argument);
 
-            result.code += storedType->internalName();
-
-            const bool isPointer
-                    = (storedType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference);
-            if (isPointer)
-                result.code += u" *"_s;
-            else
-                result.code += u' ';
-
-            if (!registerIsArgument
-                    && registerIndex != Accumulator
-                    && registerIndex != This
-                    && !m_typeResolver->registerIsStoredIn(
-                        function->registerTypes[registerIndex - firstRegisterIndex()],
-                        m_typeResolver->voidType())) {
-                result.code += registerTypeIt.value() + u" = "_s;
-                result.code += convertStored(m_typeResolver->voidType(), storedType, QString());
-            } else if (registerIsArgument && m_typeResolver->registerIsStoredIn(
-                           argumentType(registerIndex), storedType)) {
-                const int argumentIndex = registerIndex - FirstArgument;
-                const QQmlJSRegisterContent argument
-                        = m_function->argumentTypes[argumentIndex];
-                const QQmlJSRegisterContent original
-                        = m_typeResolver->original(argument);
-
-                const bool needsConversion = argument != original;
-                if (!isPointer && registerTypes.size() == 1 && !needsConversion) {
-                    // Not a pointer, never written to, and doesn't need any initial conversion.
-                    // This is a readonly argument.
-                    //
-                    // We would like to make the variable a const ref if it's a readonly argument,
-                    // but due to the various call interfaces accepting non-const values, we can't.
-                    // We rely on those calls to still not modify their arguments in place.
-                    result.code += u'&';
-                }
-
-                result.code += registerTypeIt.value() + u" = "_s;
-
-                const QString originalValue = u"*static_cast<"_s + castTargetName(original.storedType())
-                        + u"*>(argumentsPtr["_s + QString::number(argumentIndex) + u"])"_s;
-
-                if (needsConversion)
-                    result.code += conversion(original, argument, originalValue);
-                else
-                    result.code += originalValue;
-            } else {
-                result.code += registerTypeIt.value();
+            const bool needsConversion = argument != original;
+            if (!isPointer && registerIt->numTracked == 1 && !needsConversion) {
+                // Not a pointer, never written to, and doesn't need any initial conversion.
+                // This is a readonly argument.
+                //
+                // We would like to make the variable a const ref if it's a readonly argument,
+                // but due to the various call interfaces accepting non-const values, we can't.
+                // We rely on those calls to still not modify their arguments in place.
+                result.code += u'&';
             }
-            result.code += u";\n"_s;
+
+            result.code += registerIt->variableName + u" = "_s;
+
+            const QString originalValue = u"*static_cast<"_s + castTargetName(original.storedType())
+                    + u"*>(argumentsPtr["_s + QString::number(argumentIndex) + u"])"_s;
+
+            if (needsConversion)
+                result.code += conversion(original, argument, originalValue);
+            else
+                result.code += originalValue;
+        } else {
+            result.code += registerIt->variableName;
         }
+        result.code += u";\n"_s;
     }
 
     result.code += m_body;
@@ -2725,8 +2719,10 @@ QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(
     const auto accumulatorIn = m_state.registers.find(Accumulator);
     if (accumulatorIn != m_state.registers.end()
             && isTypeStorable(m_typeResolver, accumulatorIn.value().content.storedType())) {
-        m_state.accumulatorVariableIn = m_registerVariables.value(Accumulator)
-                .value(accumulatorIn.value().content.storedType());
+        m_state.accumulatorVariableIn = m_registerVariables.value(RegisterVariablesKey {
+            accumulatorIn.value().content.storedType()->internalName(),
+            Accumulator
+        }).variableName;
         Q_ASSERT(!m_state.accumulatorVariableIn.isEmpty());
     } else {
         m_state.accumulatorVariableIn.clear();
@@ -3019,13 +3015,14 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset
                 continue;
             }
 
-            Q_ASSERT(m_registerVariables.contains(registerIndex));
-            const auto &currentRegisterVariables = m_registerVariables[registerIndex];
-            const auto variable = currentRegisterVariables.constFind(targetType.storedType());
-            if (variable == currentRegisterVariables.end() || *variable == currentVariable)
+            const auto variable = m_registerVariables.constFind(RegisterVariablesKey {
+                    targetType.storedType()->internalName(),
+                    registerIndex
+            });
+            if (variable == m_registerVariables.end() || variable->variableName == currentVariable)
                 continue;
 
-            conversionCode += *variable;
+            conversionCode += variable->variableName;
             conversionCode += u" = "_s;
             conversionCode += conversion(currentType, targetType, currentVariable);
             conversionCode += u";\n"_s;
@@ -3045,12 +3042,12 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset
 
 QString QQmlJSCodeGenerator::registerVariable(int index) const
 {
-    auto it = m_registerVariables.find(index);
-    if (it != m_registerVariables.end()) {
-        const QString variable = it->value(registerType(index).storedType());
-        if (!variable.isEmpty())
-            return variable;
-    }
+    const auto it = m_registerVariables.constFind(RegisterVariablesKey {
+        registerType(index).storedType()->internalName(),
+        index
+    });
+    if (it != m_registerVariables.constEnd())
+        return it->variableName;
 
     return QString();
 }
@@ -3072,8 +3069,14 @@ QString QQmlJSCodeGenerator::consumedAccumulatorVariableIn() const
 
 QString QQmlJSCodeGenerator::changedRegisterVariable() const
 {
-    return m_registerVariables.value(m_state.changedRegisterIndex()).value(
-                m_state.changedRegister().storedType());
+    const QQmlJSScope::ConstPtr storedType = m_state.changedRegister().storedType();
+    if (storedType.isNull())
+        return QString();
+
+    return m_registerVariables.value(RegisterVariablesKey {
+        storedType->internalName(),
+        m_state.changedRegisterIndex()
+    }).variableName;
 }
 
 QQmlJSRegisterContent QQmlJSCodeGenerator::registerType(int index) const
