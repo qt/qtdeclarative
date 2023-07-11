@@ -1557,7 +1557,6 @@ const QQmlJSFixSuggestion &FixSuggestionPrivate::fixSuggestion(const FixSuggesti
     \brief Represents a suggested fix for an issue in the source code.
  */
 
-FixSuggestion::FixSuggestion() : d_ptr{ new FixSuggestionPrivate{ this } } { }
 
 FixSuggestion::FixSuggestion(const QString &fixDescription, const QQmlSA::SourceLocation &location,
                              const QString &replacement)
