@@ -109,11 +109,18 @@
     import QtQuick.Controls.Basic auto
     \endcode
 
-    The benefit of compile-time style selection is that the QtQuick.Controls plugin
-    is not used and therefore does not need to be deployed with the application.
+    The benefit of compile-time style selection is that the
+    \l {The QML script compiler}{QML compiler} knows which specific style
+    is in use and can generate C++ code for bindings.
+
+    Another benefit is that the QtQuick.Controls plugin is not used and
+    therefore does not need to be deployed with the application.
 
     Explicit imports are also necessary if your application is built
     \l {Static Builds}{statically}.
+
+    A disadvantage of compile-time style selection is that one executable
+    cannot support multiple styles, as each style requires its own.
 
     \section2 Run-Time Style Selection
 
@@ -141,6 +148,12 @@
     The benefit of run-time style selection is that a single application binary
     can support multiple styles, meaning that the end user can choose which
     style to run the application with.
+
+    A disadvantage of this approach is that \l {The QML script compiler}
+    {QML compiler} can't know which specific style is in use and therefore
+    cannot generate C++ code for bindings on properties of Qt Quick Controls
+    types. This does not affect the QML compiler's abilities to generate C++
+    for bindings on types from other modules.
 
     \section3 Using QQuickStyle in C++
 
