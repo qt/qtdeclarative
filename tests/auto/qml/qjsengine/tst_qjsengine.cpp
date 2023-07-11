@@ -108,6 +108,7 @@ private slots:
     void gcWithNestedDataStructure();
     void stacktrace();
     void unshiftAndSort();
+    void unshiftAndPushAndSort();
     void numberParsing_data();
     void numberParsing();
     void automaticSemicolonInsertion();
@@ -2092,22 +2093,16 @@ void tst_QJSEngine::unshiftAndSort()
 {
     QJSEngine engine;
     QJSValue func = engine.evaluate(R"""(
-
     (function (objectArr, currIdx) {
-
         objectArr.unshift({"sortIndex": currIdx});
         objectArr.sort(function(a, b) {
-            if(a.sortIndex > b.sortIndex) {
-                return 1
-            }
-            if(a.sortIndex < b.sortIndex) {
+            if (a.sortIndex > b.sortIndex)
+                return 1;
+            if (a.sortIndex < b.sortIndex)
                 return -1;
-            }
             return 0;
         });
-
-        ++currIdx;
-    return objectArr;
+        return objectArr;
     })
     )""");
     QVERIFY(func.isCallable());
@@ -2117,15 +2112,55 @@ void tst_QJSEngine::unshiftAndSort()
         objectArr = func.call({objectArr, i});
         QVERIFY2(!objectArr.isError(), qPrintable(objectArr.toString()));
         const int length = objectArr.property("length").toInt();
-        bool isAnyUndefined = false;
+
+        // It did add one element
+        QCOMPARE(length, i + 1);
+
         for (int x = 0; x < length; ++x) {
-            if (objectArr.property(x).isUndefined()) {
-                isAnyUndefined = true;
-            }
+            // We didn't sort cruft into the array.
+            QVERIFY(!objectArr.property(x).isUndefined());
+
+            // The array is actually sorted.
+            QCOMPARE(objectArr.property(x).property("sortIndex").toInt(), x);
         }
-        if (i == 4)
-            QEXPECT_FAIL("", "QTBUG-58718: entry becomes undefined", Continue);
-        QVERIFY(!isAnyUndefined);
+    }
+}
+
+void tst_QJSEngine::unshiftAndPushAndSort()
+{
+    QJSEngine engine;
+    QJSValue func = engine.evaluate(R"""(
+    (function (objectArr, currIdx) {
+        objectArr.unshift({"sortIndex": currIdx});
+        objectArr.push({"sortIndex": currIdx + 1});
+        objectArr.sort(function(a, b) {
+            if (a.sortIndex > b.sortIndex)
+                return 1;
+            if (a.sortIndex < b.sortIndex)
+                return -1;
+            return 0;
+        });
+        return objectArr;
+    })
+    )""");
+    QVERIFY(func.isCallable());
+    QJSValue objectArr = engine.newArray();
+
+    for (int i = 0; i < 20; i += 2) {
+        objectArr = func.call({objectArr, i});
+        QVERIFY2(!objectArr.isError(), qPrintable(objectArr.toString()));
+        const int length = objectArr.property("length").toInt();
+
+        // It did add 2 elements
+        QCOMPARE(length, i + 2);
+
+        for (int x = 0; x < length; ++x) {
+            // We didn't sort cruft into the array.
+            QVERIFY(!objectArr.property(x).isUndefined());
+
+            // The array is actually sorted.
+            QCOMPARE(objectArr.property(x).property("sortIndex").toInt(), x);
+        }
     }
 }
 
