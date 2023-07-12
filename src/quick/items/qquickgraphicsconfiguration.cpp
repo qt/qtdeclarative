@@ -181,7 +181,8 @@ QT_BEGIN_NAMESPACE
     - With pipeline cache saving enabled, Qt stores all render and compute
     pipelines encountered into an MTLBinaryArchive. Saving the pipeline cache
     stores the blob retrieved from the archive, with additional metadata to
-    identify the device.
+    identify the device. \b{Note:} currently MTLBinaryArchive usage is disabled
+    on macOS and iOS due to various issues on some hardware and OS versions.
 
     \li OpenGL - There is no native concept of pipelines, the "pipeline cache"
     stores a collection of program binaries retrieved via
