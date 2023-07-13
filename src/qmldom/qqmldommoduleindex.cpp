@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 #include "qqmldomtop_p.h"
 #include "qqmldomelements_p.h"
+#include "qqmldom_utils_p.h"
 
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
@@ -355,10 +356,15 @@ QList<Path> ModuleIndex::qmldirsToLoad(DomItem &self)
             + QLatin1String("/qmldir");
     QString dirPath;
     if (majorVersion() >= 0) {
+        qCDebug(QQmlJSDomImporting)
+                << "ModuleIndex::qmldirsToLoad: Searching versioned module" << subPath
+                << majorVersion() << "in" << envPtr->loadPaths().join(u", ");
         for (QString path : envPtr->loadPaths()) {
             QDir dir(path);
             QFileInfo fInfo(dir.filePath(subPathV));
             if (fInfo.isFile()) {
+                qCDebug(QQmlJSDomImporting)
+                        << "Found versioned module in " << fInfo.canonicalFilePath();
                 logicalPath = subPathV;
                 dirPath = fInfo.canonicalFilePath();
                 break;
@@ -366,10 +372,14 @@ QList<Path> ModuleIndex::qmldirsToLoad(DomItem &self)
         }
     }
     if (dirPath.isEmpty()) {
+        qCDebug(QQmlJSDomImporting) << "ModuleIndex::qmldirsToLoad: Searching unversioned module"
+                                    << subPath << "in" << envPtr->loadPaths().join(u", ");
         for (QString path : envPtr->loadPaths()) {
             QDir dir(path);
             QFileInfo fInfo(dir.filePath(subPath + QLatin1String("/qmldir")));
             if (fInfo.isFile()) {
+                qCDebug(QQmlJSDomImporting)
+                        << "Found unversioned module in " << fInfo.canonicalFilePath();
                 logicalPath = subPath + QLatin1String("/qmldir");
                 dirPath = fInfo.canonicalFilePath();
                 break;
@@ -380,10 +390,14 @@ QList<Path> ModuleIndex::qmldirsToLoad(DomItem &self)
         QMutexLocker l(mutex());
         m_qmldirPaths = QList<Path>({ Paths::qmldirFilePath(dirPath) });
     } else if (uri() != u"QML") {
-        addErrorLocal(myExportErrors()
-                              .warning(tr("Failed to find main qmldir file for %1 %2")
-                                               .arg(uri(), QString::number(majorVersion())))
-                              .handle());
+        const QString loadPaths = envPtr->loadPaths().join(u", "_s);
+        qCDebug(QQmlJSDomImporting) << "ModuleIndex::qmldirsToLoad: qmldir at"
+                                    << (uri() + u"/qmldir"_s) << " was not found in " << loadPaths;
+        addErrorLocal(
+                myExportErrors()
+                        .warning(tr("Failed to find main qmldir file for %1 %2 in %3.")
+                                         .arg(uri(), QString::number(majorVersion()), loadPaths))
+                        .handle());
     }
     return qmldirPaths();
 }

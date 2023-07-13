@@ -1388,6 +1388,9 @@ void DomEnvironment::loadModuleDependency(DomItem &self, QString uri, Version v,
         QRegularExpression vRe(QRegularExpression::anchoredPattern(
                 QRegularExpression::escape(lastComponent) + QStringLiteral(u"\\.([0-9]*)")));
         const auto lPaths = loadPaths();
+        qCDebug(QQmlJSDomImporting) << "DomEnvironment::loadModuleDependency: Searching module with"
+                                       " uri"
+                                    << uri;
         for (const QString &path : lPaths) {
             QDir dir(path + (subPathV.isEmpty() ? QStringLiteral(u"") : QStringLiteral(u"/"))
                      + subPathV);
@@ -1399,15 +1402,21 @@ void DomEnvironment::loadModuleDependency(DomItem &self, QString uri, Version v,
                     if (majorV > maxV) {
                         QFileInfo fInfo(dir.canonicalPath() + QChar(u'/') + dirNow
                                         + QStringLiteral(u"/qmldir"));
-                        if (fInfo.isFile())
+                        if (fInfo.isFile()) {
+                            qCDebug(QQmlJSDomImporting)
+                                    << "Found qmldir in " << fInfo.canonicalFilePath();
                             maxV = majorV;
+                        }
                     }
                 }
                 if (!commonV && dirNow == lastComponent) {
                     QFileInfo fInfo(dir.canonicalPath() + QChar(u'/') + dirNow
                                     + QStringLiteral(u"/qmldir"));
-                    if (fInfo.isFile())
+                    if (fInfo.isFile()) {
+                        qCDebug(QQmlJSDomImporting)
+                                << "Found qmldir in " << fInfo.canonicalFilePath();
                         commonV = true;
+                    }
                 }
             }
         }
@@ -1425,10 +1434,15 @@ void DomEnvironment::loadModuleDependency(DomItem &self, QString uri, Version v,
                                  loadCallback2, nullptr);
         else if (maxV < 0) {
             if (uri != u"QML") {
-                addErrorLocal(myErrors()
-                                      .warning(tr("Failed to find main qmldir file for %1 %2")
-                                                       .arg(uri, v.stringValue()))
-                                      .handle());
+                const QString loadPaths = lPaths.join(u", "_s);
+                qCDebug(QQmlJSDomImporting)
+                        << "DomEnvironment::loadModuleDependency: qmldir at" << (uri + u"/qmldir"_s)
+                        << "was not found in " << loadPaths;
+                addErrorLocal(
+                        myErrors()
+                                .warning(tr("Failed to find main qmldir file for %1 %2 in %3.")
+                                                 .arg(uri, v.stringValue(), loadPaths))
+                                .handle());
             }
             if (loadCallback)
                 loadCallback(p, DomItem::empty, DomItem::empty);
