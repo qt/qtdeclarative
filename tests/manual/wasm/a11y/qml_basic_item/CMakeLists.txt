@@ -27,6 +27,8 @@ set(qmake_immediate_resource_files
     "MeetingInviteesPage.qml"
     "MeetingSchedulerPage.qml"
     "MeetingSummary.qml"
+    "WasmListView.qml"
+    "MeetingInviteesModel.qml"
 )
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g0 -O3")
