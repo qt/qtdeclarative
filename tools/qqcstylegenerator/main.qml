@@ -30,22 +30,24 @@ ApplicationWindow {
         id: outputModel
     }
 
+    ListModel {
+        id: filteredModel
+    }
+
     Connections {
         target: bridge
 
         function onDebug(msg) {
-            verboseOutput(msg)
+            output(msg)
         }
 
         function onWarning(msg) {
-            if (stopping)
-                return
+            showLogCheckbox.checked = true
             output("Warning: " + msg)
         }
 
         function onError(msg) {
-            if (stopping)
-                return
+            showLogCheckbox.checked = true
             output("Error: " + msg)
         }
 
@@ -57,7 +59,7 @@ ApplicationWindow {
             progressBar.value = 0
             progressBar.indeterminate = false
             statusLabel.text = stopping ? "Stopped!" : "Finished!"
-            verboseOutput(stopping ? "Stopped!" : "Finished!")
+            output(stopping ? "Stopped!" : "Finished!")
             stopping = false
             generating = false
             if (closeRequested)
@@ -76,7 +78,7 @@ ApplicationWindow {
             if (stopping)
                 return
             statusLabel.text = label
-            verboseOutput(label)
+            output(label)
         }
 
         function onProgress() {
@@ -84,16 +86,12 @@ ApplicationWindow {
         }
     }
 
-    function verboseOutput(msg)
-    {
-        if (!bridge.verbose || stopping)
-            return
-        output(msg)
-    }
-
     function output(msg)
     {
         outputModel.append({"msg": msg})
+        const regex = new RegExp(searchFilter.text, "i");
+        if (regex.test(msg))
+            filteredModel.append({"msg" : msg})
     }
 
     function stop()
@@ -183,6 +181,16 @@ ApplicationWindow {
                 checked: bridge.overwriteQml
                 onCheckedChanged: bridge.overwriteQml = checked
             }
+
+            Label {
+                text: "Show log"
+            }
+
+            CheckBox {
+                id: showLogCheckbox
+                checked: false
+                onCheckedChanged: outputScrollView.visible = checked
+            }
         }
 
         ColumnLayout {
@@ -219,20 +227,39 @@ ApplicationWindow {
 
         ScrollView {
             id: outputScrollView
-            visible: outputModel.count > 0
+            visible: showLogCheckbox.checked
             Layout.preferredWidth: parent.width
             Layout.preferredHeight: 200
             TableView {
                 id: outputView
                 clip: true
                 reuseItems: false
-                model: outputModel
+                model: filteredModel
                 delegate: Text {
                     text: msg
                     Component.onCompleted: {
                         if (implicitWidth > outputView.contentWidth)
                             outputView.contentWidth = implicitWidth
                     }
+                }
+            }
+        }
+
+        TextField {
+            id: searchFilter
+            placeholderText: "Filter (regexp)"
+            Layout.preferredWidth: outputScrollView.width
+            visible: outputScrollView.visible
+            text: "(warning|error)"
+            onAccepted: {
+                filteredModel.clear()
+                const regex = new RegExp(text, "i");
+                let rows = outputModel.rowCount()
+                for (let row = 0; row < rows; ++row) {
+                    let index = outputModel.index(row, 0)
+                    let msg = outputModel.data(index)
+                    if (regex.test(msg))
+                        filteredModel.append({"msg" : msg})
                 }
             }
         }
