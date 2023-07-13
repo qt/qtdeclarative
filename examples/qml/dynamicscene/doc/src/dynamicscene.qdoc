@@ -3,6 +3,7 @@
 /*!
     \title QML Example - Dynamic Scene
     \example dynamicscene
+    \examplecategory {Graphics & Multimedia}
     \brief This example demonstrates creating components dynamically.
     \image qml-dynamicscene-example.png
 */

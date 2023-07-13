@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-\example tutorials/extending-qml-advanced
+\page qtqml-tutorials-extending-qml-advanced-example.html
 \meta tags{qml,extensions,advanced}
 
 \title Writing advanced QML Extensions with C++
