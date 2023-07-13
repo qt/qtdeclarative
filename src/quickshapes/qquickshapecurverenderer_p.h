@@ -54,12 +54,14 @@ public:
 
     void reserve(qsizetype size) { m_elements.reserve(size); }
     qsizetype elementCount() const { return m_elements.size(); }
+    bool isEmpty() const { return m_elements.size() == 0; }
     qsizetype elementCountRecursive() const;
 
     static QuadPath fromPainterPath(const QPainterPath &path);
     QPainterPath toPainterPath() const;
     QuadPath subPathsClosed() const;
     QuadPath flattened() const;
+    QuadPath dashed(qreal lineWidth, const QList<qreal> &dashPattern, qreal dashOffset = 0) const;
 
     class Element
     {
@@ -111,6 +113,10 @@ public:
 
         QVector3D uvForPoint(QVector2D p) const;
 
+        std::array<QVector2D, 3> ABC() const;
+
+        QVector3D HGForPoint(QVector2D p) const;
+
         qsizetype childCount() const { return m_numChildren; }
 
         qsizetype indexOfChild(qsizetype childNumber) const
@@ -133,6 +139,15 @@ public:
         }
 
         float extent() const;
+
+        void setAsConvex(bool isConvex)
+        {
+            if (isConvex)
+                m_curvatureFlags = Element::CurvatureFlags(m_curvatureFlags | Element::Convex);
+            else
+                m_curvatureFlags = Element::CurvatureFlags(m_curvatureFlags & ~Element::Convex);
+
+        }
 
     private:
         int intersectionsAtY(float y, float *fractions) const;
@@ -242,12 +257,6 @@ private:
 QDebug operator<<(QDebug, const QuadPath::Element &);
 QDebug operator<<(QDebug, const QuadPath &);
 
-class QQuickShapeCurveNode : public QSGNode
-{
-public:
-    QQuickShapeCurveNode();
-};
-
 class QQuickShapeCurveRenderer : public QQuickAbstractPathRenderer
 {
 public:
@@ -273,14 +282,16 @@ public:
 
     void updateNode() override;
 
-    void setRootNode(QQuickShapeCurveNode *node);
+    void setRootNode(QSGNode *node);
 
     using NodeList = QVector<QSGGeometryNode *>;
 
     enum DirtyFlag
     {
-        GeometryDirty = 1,
-        UniformsDirty = 2
+        PathDirty = 0x01,
+        FillDirty = 0x02,
+        StrokeDirty = 0x04,
+        UniformsDirty = 0x08
     };
 
     enum DebugVisualizationOption {
@@ -302,14 +313,12 @@ private:
             return validPenWidth && pen.color().alpha() > 0 && pen.style() != Qt::NoPen;
         }
 
-        bool useFragmentShaderStroker() const;
-
         FillGradientType gradientType = NoGradient;
         GradientDesc gradient;
-        QPainterPath fillPath;
         QPainterPath originalPath;
         QuadPath path;
-        QuadPath qPath; // TODO: better name
+        QuadPath fillPath;
+        QuadPath strokePath;
         QColor fillColor;
         Qt::FillRule fillRule = Qt::OddEvenFill;
         QPen pen;
@@ -318,26 +327,20 @@ private:
         bool convexConcaveResolved = false;
 
         NodeList fillNodes;
+        NodeList fillDebugNodes;
         NodeList strokeNodes;
-        NodeList debugNodes;
+        NodeList strokeDebugNodes;
     };
 
     void deleteAndClear(NodeList *nodeList);
 
-    QVector<QSGGeometryNode *> addPathNodesBasic(const PathData &pathData, NodeList *debugNodes);
-    QVector<QSGGeometryNode *> addPathNodesLineShader(const PathData &pathData, NodeList *debugNodes);
-    QVector<QSGGeometryNode *> addStrokeNodes(const PathData &pathData, NodeList *debugNodes);
-    QVector<QSGGeometryNode *> addNodesStrokeShader(const PathData &pathData, NodeList *debugNodes);
-
-    QSGGeometryNode *addLoopBlinnNodes(const QTriangleSet &triangles,
-                                       const QVarLengthArray<quint32> &extraIndices,
-                                       int startConcaveCurves,
-                                       const PathData &pathData,
-                                       NodeList *debugNodes);
+    QVector<QSGGeometryNode *> addFillNodes(const PathData &pathData, NodeList *debugNodes);
+    QVector<QSGGeometryNode *> addTriangulatingStrokerNodes(const PathData &pathData, NodeList *debugNodes);
+    QVector<QSGGeometryNode *> addCurveStrokeNodes(const PathData &pathData, NodeList *debugNodes);
 
     void solveOverlaps(QuadPath &path);
 
-    QQuickShapeCurveNode *m_rootNode;
+    QSGNode *m_rootNode;
     QVector<PathData> m_paths;
     static int debugVisualizationFlags;
 };

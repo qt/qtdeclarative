@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Shapes
 import QtQuick.Dialogs
+import QtCore
 
 Item {
     property real scale: +scaleSlider.value.toFixed(4)
@@ -15,7 +16,7 @@ Item {
     property color fillColor: Qt.rgba(fillColor.color.r, fillColor.color.g, fillColor.color.b, pathAlpha)
     property alias pathAlpha: alphaSlider.value
     property alias outlineAlpha: outlineAlphaSlider.value
-    property real outlineWidth: cosmeticPen.checked ? outlineWidth.value / scale : outlineWidth.value ** 2
+    property real outlineWidth: cosmeticPen.checked ? outlineWidthEdit.text / scale : outlineWidthEdit.text
     property alias outlineStyle: outlineStyle.currentValue
     property alias capStyle: capStyle.currentValue
     property alias joinStyle: joinStyle.currentValue
@@ -33,6 +34,23 @@ Item {
     property bool subShapeGreaterThan : pickSubShapeGreaterThan.checked
 
     property real pathMargin: marginEdit.text
+
+    Settings {
+        property alias enableOutline: enableOutline.checked
+        property alias outlineColor: outlineColor.color
+        property alias outlineWidth: outlineWidthEdit.text
+        property alias outlineAlpha: outlineAlphaSlider.value
+        property alias outlineStyle: outlineStyle.currentIndex
+        property alias joinStyle: joinStyle.currentIndex
+        property alias capStyle: capStyle.currentIndex
+        property alias cosmeticPen: cosmeticPen.checked
+
+        property alias pathAlpha: alphaSlider.value
+        property alias fillColor: fillColor.color
+
+        property alias setBackground: setBackground.checked
+        property alias backgroundColor: bgColor.color
+    }
 
     function setScale(x) {
         scaleSlider.value = x
@@ -200,7 +218,7 @@ Item {
                 model: [ "NoGradient", "LinearGradient", "RadialGradient", "ConicalGradient" ]
             }
             Label {
-                text: "Path alpha:"
+                text: "Fill alpha(" + Math.round(alphaSlider.value*100)/100 + "):"
                 color: "white"
             }
             Slider {
@@ -290,11 +308,24 @@ Item {
                 }
             }
             Label {
-                text: "Outline width"
+                text: "Outline width:"
                 color: "white"
             }
+            TextField {
+                id: outlineWidthEdit
+                text: (cosmeticPen.checked ? outlineWidthSlider.value: outlineWidthSlider.value ** 2).toFixed(2)
+                onEditingFinished: {
+                    let val = +text
+                    if (val > 0) {
+                        if (cosmeticPen.checked)
+                            outlineWidth.value = val * scale
+                        else
+                            outlineWidth.value = Math.sqrt(val)
+                    }
+                }
+            }
             Slider {
-                id: outlineWidth
+                id: outlineWidthSlider
                 Layout.fillWidth: true
                 from: 0.0
                 to: 10.0
@@ -306,7 +337,7 @@ Item {
                 palette.windowText: "white"
             }
             Label {
-                text: "Outline alpha"
+                text: "Outline alpha (" + Math.round(outlineAlphaSlider.value*100)/100 + "):"
                 color: "white"
             }
             Slider {
