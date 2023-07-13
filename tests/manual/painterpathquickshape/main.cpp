@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
     QGuiApplication app(argc, argv);
+    app.setOrganizationName("QtProject");
 
     qmlRegisterType<DebugPaintItem>("io.qt", 1, 0, "DebugPaintItem");
     qmlRegisterType<SvgPathLoader>("io.qt", 1, 0, "SvgPathLoader");

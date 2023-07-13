@@ -1,25 +1,35 @@
 #version 440
 
-layout(location = 0) in vec3 qt_TexCoord;
+layout(location = 0) in vec4 qt_TexCoord;
 layout(location = 1) in vec4 debugColor;
 
 #if defined(LINEARGRADIENT)
 layout(location = 2) in float gradTabIndex;
+#  define NEXT_LOCATION 3
 #elif defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
 layout(location = 2) in vec2 coord;
+#  define NEXT_LOCATION 3
+#else
+#  define NEXT_LOCATION 2
 #endif
+
+layout(location = NEXT_LOCATION) in vec4 gradient;
 
 layout(location = 0) out vec4 fragColor;
 
 layout(std140, binding = 0) uniform buf {
     mat4 qt_Matrix;
+    float matrixScale;
+    float opacity;
+    float reserved2;
+    float reserved3;
 
 #if defined(STROKE)
     vec4 strokeColor;
     float strokeWidth;
-    float reserved1;
-    float reserved2;
-    float reserved3;
+    float reserved4;
+    float reserved5;
+    float reserved6;
 #endif
 
 #if defined(LINEARGRADIENT)
@@ -80,10 +90,50 @@ void main()
     float f = qt_TexCoord.z * (qt_TexCoord.x * qt_TexCoord.x - qt_TexCoord.y) // curve
               + (1.0 - abs(qt_TexCoord.z)) * (qt_TexCoord.x - qt_TexCoord.y); // line
 
-#if defined(STROKE)
+#if defined(USE_DERIVATIVES)
     float _ddx = dFdx(f);
     float _ddy = dFdy(f);
     float df = length(vec2(_ddx, _ddy));
+#else
+    // We calculate the partial derivatives for f'(x, y) based on knowing the partial derivatives
+    // for the texture coordinates (u, v).
+    // So for curves:
+    //     f(x,y) = u(x, y) * u(x, y) - v(x, y)
+    //     f(x,y) = p(u(x,y)) - v(x, y) where p(u) = u^2
+    // So  f'(x, y) = p'(u(x, y)) * u'(x, y) - v'(x, y)
+    // (by chain rule and sum rule)
+    // f'(x, y) = 2 * u(x, y) * u'(x, y) - v'(x, y)
+    // And so:
+    // df/dx = 2 * u(x, y) * du/dx - dv/dx
+    // df/dy = 2 * u(x, y) * du/dy - dv/dy
+    //
+    // and similarly for straight lines:
+    // f(x, y) = u(x, y) - v(x, y)
+    // f'(x, y) = dudx - dvdx
+
+    float dudx = gradient.x;
+    float dvdx = gradient.y;
+    float dudy = gradient.z;
+    float dvdy = gradient.w;
+
+    // Test with analytic derivatives
+//    dudx = dFdx(qt_TexCoord.x);
+//    dvdx = dFdx(qt_TexCoord.y);
+//    dudy = dFdy(qt_TexCoord.x);
+//    dvdy = dFdy(qt_TexCoord.y);
+
+    float dfx_curve = 2.0f * qt_TexCoord.x * dudx - dvdx;
+    float dfy_curve = 2.0f * qt_TexCoord.x * dudy - dvdy;
+
+    float dfx_line = dudx - dvdx;
+    float dfy_line = dudy - dvdy;
+
+    float dfx = qt_TexCoord.z * dfx_curve + (1.0 - abs(qt_TexCoord.z)) * dfx_line;
+    float dfy = qt_TexCoord.z * dfy_curve + (1.0 - abs(qt_TexCoord.z)) * dfy_line;
+    float df = length(vec2(dfx, dfy));
+#endif
+
+#if defined(STROKE)
     float distance = (f / df); // distance from centre of fragment to line
 
     float halfStrokeWidth = ubuf.strokeWidth / 2.0;
@@ -98,11 +148,8 @@ void main()
     vec4 combined = fill * (1.0 - stroke.a) +  stroke * stroke.a;
 
     // finally mix in debug
-    fragColor = mix(combined, vec4(debugColor.rgb, 1.0), debugColor.a);
-
-    // TODO: support both outline and fill
+    fragColor = mix(combined, vec4(debugColor.rgb, 1.0), debugColor.a) * ubuf.opacity;
 #else
-    float df = fwidth(f);
-    fragColor = mix(baseColor() * clamp(0.5 + f / df, 0.0, 1.0), vec4(debugColor.rgb, 1.0), debugColor.a);
+    fragColor = mix(baseColor() * clamp(0.5 + f / df, 0.0, 1.0), vec4(debugColor.rgb, 1.0), debugColor.a) * ubuf.opacity;
 #endif
 }

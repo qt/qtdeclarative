@@ -3,9 +3,11 @@
 
 #include "qquickshapecurverenderer_p.h"
 #include "qquickshapecurverenderer_p_p.h"
-#include "qquickshapegenericrenderer_p.h"
+#include "qquickshapecurvenode_p.h"
+#include "qquickshapestrokenode_p.h"
 
 #include <QtGui/qvector2d.h>
+#include <QtGui/qvector4d.h>
 #include <QtGui/private/qtriangulator_p.h>
 #include <QtGui/private/qtriangulatingstroker_p.h>
 #include <QtGui/private/qrhi_p.h>
@@ -22,208 +24,22 @@ Q_LOGGING_CATEGORY(lcShapeCurveRenderer, "qt.shape.curverenderer");
 #  define QQUICKSHAPECURVERENDERER_CONVEX_CHECK_ERROR_MARGIN (1.0f / 32.0f)
 #endif
 
-#define QQUICKSHAPECURVERENDERER_GRADIENTS
-
 namespace {
 
-    class QQuickShapeWireFrameMaterialShader : public QSGMaterialShader
+
+
+class QQuickShapeWireFrameMaterialShader : public QSGMaterialShader
+{
+public:
+    QQuickShapeWireFrameMaterialShader()
     {
-    public:
-        QQuickShapeWireFrameMaterialShader()
-        {
-            setShaderFileName(VertexStage,
-                              QStringLiteral(":/qt-project.org/shapes/shaders_ng/wireframe.vert.qsb"));
-            setShaderFileName(FragmentStage,
-                              QStringLiteral(":/qt-project.org/shapes/shaders_ng/wireframe.frag.qsb"));
-        }
-
-        bool updateUniformData(RenderState &state, QSGMaterial *, QSGMaterial *) override
-        {
-            bool changed = false;
-            QByteArray *buf = state.uniformData();
-            Q_ASSERT(buf->size() >= 64);
-
-            if (state.isMatrixDirty()) {
-                const QMatrix4x4 m = state.combinedMatrix();
-
-                memcpy(buf->data(), m.constData(), 64);
-                changed = true;
-            }
-
-            return changed;
-        }
-    };
-
-    class QQuickShapeWireFrameMaterial : public QSGMaterial
-    {
-    public:
-        QQuickShapeWireFrameMaterial()
-        {
-            setFlag(Blending, true);
-        }
-
-        int compare(const QSGMaterial *other) const override
-        {
-            return (type() - other->type());
-        }
-
-    protected:
-        QSGMaterialType *type() const override
-        {
-            static QSGMaterialType t;
-            return &t;
-        }
-        QSGMaterialShader *createShader(QSGRendererInterface::RenderMode) const override
-        {
-            return new QQuickShapeWireFrameMaterialShader;
-        }
-
-    };
-
-    class QQuickShapeWireFrameNode : public QSGGeometryNode
-    {
-    public:
-        struct WireFrameVertex
-        {
-            float x, y, u, v, w;
-        };
-
-        QQuickShapeWireFrameNode()
-        {
-            setFlag(OwnsGeometry, true);
-            setGeometry(new QSGGeometry(attributes(), 0, 0));
-            activateMaterial();
-        }
-
-        void activateMaterial()
-        {
-            m_material.reset(new QQuickShapeWireFrameMaterial);
-            setMaterial(m_material.data());
-        }
-
-        static const QSGGeometry::AttributeSet &attributes()
-        {
-            static QSGGeometry::Attribute data[] = {
-                QSGGeometry::Attribute::createWithAttributeType(0, 2, QSGGeometry::FloatType, QSGGeometry::PositionAttribute),
-                QSGGeometry::Attribute::createWithAttributeType(1, 3, QSGGeometry::FloatType, QSGGeometry::TexCoordAttribute),
-            };
-            static QSGGeometry::AttributeSet attrs = { 2, sizeof(WireFrameVertex), data };
-            return attrs;
-        }
-
-    protected:
-        QScopedPointer<QQuickShapeWireFrameMaterial> m_material;
-    };
-
-    class QQuickShapeLoopBlinnNode;
-    class QQuickShapeLoopBlinnMaterial : public QSGMaterial
-    {
-    public:
-        QQuickShapeLoopBlinnMaterial(QQuickShapeLoopBlinnNode *node,
-                                     QQuickAbstractPathRenderer::FillGradientType gradientType)
-            : m_node(node)
-            , m_gradientType(gradientType)
-        {
-            setFlag(Blending, true);
-        }
-        int compare(const QSGMaterial *other) const override;
-
-        QQuickShapeLoopBlinnNode *node() const
-        {
-            return m_node;
-        }
-
-    protected:
-        QSGMaterialType *type() const override;
-        QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
-
-        QQuickShapeLoopBlinnNode *m_node;
-        QQuickAbstractPathRenderer::FillGradientType m_gradientType;
-    };
-
-    class QQuickShapeLoopBlinnNode : public QSGGeometryNode
-    {
-    public:
-        QQuickShapeLoopBlinnNode(QQuickAbstractPathRenderer::FillGradientType gradientType);
-
-        struct LoopBlinnVertex
-        {
-            float x, y, u, v, w;
-            float r, g, b, a; // Debug color, mixed in proportion to a
-        };
-        static const QSGGeometry::AttributeSet &attributes()
-        {
-            static QSGGeometry::Attribute data[] = {
-                QSGGeometry::Attribute::createWithAttributeType(0, 2, QSGGeometry::FloatType, QSGGeometry::PositionAttribute),
-                QSGGeometry::Attribute::createWithAttributeType(1, 3, QSGGeometry::FloatType, QSGGeometry::TexCoordAttribute),
-                QSGGeometry::Attribute::createWithAttributeType(2, 4, QSGGeometry::FloatType, QSGGeometry::ColorAttribute),
-            };
-            static QSGGeometry::AttributeSet attrs = { 3, sizeof(LoopBlinnVertex), data };
-            return attrs;
-        }
-
-        QColor color;
-        QColor strokeColor = Qt::transparent;
-        float strokeWidth = 0.0f;
-        QQuickAbstractPathRenderer::GradientDesc fillGradient;
-
-    protected:
-        void activateMaterial(QQuickAbstractPathRenderer::FillGradientType gradientType);
-
-        QScopedPointer<QSGMaterial> m_material;
-    };
-
-    class QQuickShapeLoopBlinnMaterialShader : public QSGMaterialShader
-    {
-    public:
-        QQuickShapeLoopBlinnMaterialShader(QQuickAbstractPathRenderer::FillGradientType gradientType,
-                                           bool includeStroke);
-
-        bool updateUniformData(RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
-        void updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
-                                QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
-
-    private:
-        QQuickAbstractPathRenderer::FillGradientType m_gradientType;
-    };
-
-    QQuickShapeLoopBlinnMaterialShader::QQuickShapeLoopBlinnMaterialShader(QQuickAbstractPathRenderer::FillGradientType gradientType,
-                                                                           bool includeStroke)
-        : m_gradientType(gradientType)
-    {
-        QString baseName = QStringLiteral(":/qt-project.org/shapes/shaders_ng/shapecurve");
-
-        if (gradientType == QQuickAbstractPathRenderer::LinearGradient) {
-            baseName += QStringLiteral("_lg");
-        } else if (gradientType == QQuickAbstractPathRenderer::RadialGradient) {
-            baseName += QStringLiteral("_rg");
-        } else if (gradientType == QQuickAbstractPathRenderer::ConicalGradient) {
-            baseName += QStringLiteral("_cg");
-        }
-
-        if (includeStroke)
-            baseName += QStringLiteral("_stroke");
-
-        setShaderFileName(VertexStage, baseName + QStringLiteral(".vert.qsb"));
-        setShaderFileName(FragmentStage, baseName + QStringLiteral(".frag.qsb"));
+        setShaderFileName(VertexStage,
+                          QStringLiteral(":/qt-project.org/shapes/shaders_ng/wireframe.vert.qsb"));
+        setShaderFileName(FragmentStage,
+                          QStringLiteral(":/qt-project.org/shapes/shaders_ng/wireframe.frag.qsb"));
     }
 
-    void QQuickShapeLoopBlinnMaterialShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
-                                                                QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
-    {
-        Q_UNUSED(oldMaterial);
-        if (binding != 1 || m_gradientType == QQuickAbstractPathRenderer::NoGradient)
-            return;
-
-        QQuickShapeLoopBlinnMaterial *m = static_cast<QQuickShapeLoopBlinnMaterial *>(newMaterial);
-        QQuickShapeLoopBlinnNode *node = m->node();
-        const QQuickShapeGradientCacheKey cacheKey(node->fillGradient.stops, node->fillGradient.spread);
-        QSGTexture *t = QQuickShapeGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
-        t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
-        *texture = t;
-    }
-
-    bool QQuickShapeLoopBlinnMaterialShader::updateUniformData(RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
+    bool updateUniformData(RenderState &state, QSGMaterial *, QSGMaterial *) override
     {
         bool changed = false;
         QByteArray *buf = state.uniformData();
@@ -235,249 +51,71 @@ namespace {
             memcpy(buf->data(), m.constData(), 64);
             changed = true;
         }
-        int offset = 64;
-
-        QQuickShapeLoopBlinnMaterial *newMaterial = static_cast<QQuickShapeLoopBlinnMaterial *>(newEffect);
-        QQuickShapeLoopBlinnMaterial *oldMaterial = static_cast<QQuickShapeLoopBlinnMaterial *>(oldEffect);
-
-        QQuickShapeLoopBlinnNode *newNode = newMaterial != nullptr ? newMaterial->node() : nullptr;
-        QQuickShapeLoopBlinnNode *oldNode = oldMaterial != nullptr ? oldMaterial->node() : nullptr;
-
-        if (newNode == nullptr)
-            return changed;
-
-        if (newNode->strokeColor.alpha() > 0 && newNode->strokeWidth > 0.0f) {
-            QVector4D newStrokeColor(newNode->strokeColor.redF(),
-                                     newNode->strokeColor.greenF(),
-                                     newNode->strokeColor.blueF(),
-                                     newNode->strokeColor.alphaF());
-            QVector4D oldStrokeColor = oldNode != nullptr
-                    ? QVector4D(oldNode->strokeColor.redF(),
-                                oldNode->strokeColor.greenF(),
-                                oldNode->strokeColor.blueF(),
-                                oldNode->strokeColor.alphaF())
-                    : QVector4D{};
-
-            if (oldNode == nullptr || oldStrokeColor != newStrokeColor) {
-                memcpy(buf->data() + offset, &newStrokeColor, 16);
-                changed = true;
-            }
-            offset += 16;
-
-            if (oldNode == nullptr || !qFuzzyCompare(newNode->strokeWidth, oldNode->strokeWidth || (state.isMatrixDirty() && newNode->strokeWidth > 0 ))) {
-                float matrixScale = qSqrt(qAbs(state.determinant())) * state.devicePixelRatio();
-                float w = newNode->strokeWidth * matrixScale;
-                memcpy(buf->data() + offset, &w, 4);
-                changed = true;
-            }
-            offset += 16;
-        }
-
-        if (m_gradientType == QQuickAbstractPathRenderer::NoGradient) {
-            Q_ASSERT(buf->size() >= offset + 16);
-
-            QVector4D newColor = QVector4D(newNode->color.redF(),
-                                           newNode->color.greenF(),
-                                           newNode->color.blueF(),
-                                           newNode->color.alphaF());
-            QVector4D oldColor = oldNode != nullptr
-                    ? QVector4D(oldNode->color.redF(),
-                                oldNode->color.greenF(),
-                                oldNode->color.blueF(),
-                                oldNode->color.alphaF())
-                    : QVector4D{};
-
-            if (oldColor != newColor) {
-                memcpy(buf->data() + offset, &newColor, 16);
-                changed = true;
-            }
-
-            offset += 16;
-        } else if (m_gradientType == QQuickAbstractPathRenderer::LinearGradient) {
-            Q_ASSERT(buf->size() >= offset + 8 + 8);
-
-            QVector2D newGradientStart = QVector2D(newNode->fillGradient.a);
-            QVector2D oldGradientStart = oldNode != nullptr
-                    ? QVector2D(oldNode->fillGradient.a)
-                    : QVector2D{};
-
-            if (newGradientStart != oldGradientStart || oldEffect == nullptr) {
-                memcpy(buf->data() + offset, &newGradientStart, 8);
-                changed = true;
-            }
-            offset += 8;
-
-            QVector2D newGradientEnd = QVector2D(newNode->fillGradient.b);
-            QVector2D oldGradientEnd = oldNode!= nullptr
-                    ? QVector2D(oldNode->fillGradient.b)
-                    : QVector2D{};
-
-            if (newGradientEnd != oldGradientEnd || oldEffect == nullptr) {
-                memcpy(buf->data() + offset, &newGradientEnd, 8);
-                changed = true;
-            }
-
-            offset += 8;
-        } else if (newNode != nullptr && m_gradientType == QQuickAbstractPathRenderer::RadialGradient) {
-            Q_ASSERT(buf->size() >= offset + 8 + 8 + 4 + 4);
-
-            QVector2D newFocalPoint = QVector2D(newNode->fillGradient.b);
-            QVector2D oldFocalPoint = oldNode != nullptr
-                    ? QVector2D(oldNode->fillGradient.b)
-                    : QVector2D{};
-            if (oldNode == nullptr || newFocalPoint != oldFocalPoint) {
-                memcpy(buf->data() + offset, &newFocalPoint, 8);
-                changed = true;
-            }
-            offset += 8;
-
-            QVector2D newCenterPoint = QVector2D(newNode->fillGradient.a);
-            QVector2D oldCenterPoint = oldNode != nullptr
-                    ? QVector2D(oldNode->fillGradient.a)
-                    : QVector2D{};
-
-            QVector2D newCenterToFocal = newCenterPoint - newFocalPoint;
-            QVector2D oldCenterToFocal = oldCenterPoint - oldFocalPoint;
-            if (oldNode == nullptr || newCenterToFocal != oldCenterToFocal) {
-                memcpy(buf->data() + offset, &newCenterToFocal, 8);
-                changed = true;
-            }
-            offset += 8;
-
-            float newCenterRadius = newNode->fillGradient.v0;
-            float oldCenterRadius = oldNode != nullptr
-                    ? oldNode->fillGradient.v0
-                    : 0.0f;
-            if (oldNode == nullptr || !qFuzzyCompare(newCenterRadius, oldCenterRadius)) {
-                memcpy(buf->data() + offset, &newCenterRadius, 4);
-                changed = true;
-            }
-            offset += 4;
-
-            float newFocalRadius = newNode->fillGradient.v1;
-            float oldFocalRadius = oldNode != nullptr
-                    ? oldNode->fillGradient.v1
-                    : 0.0f;
-            if (oldNode == nullptr || !qFuzzyCompare(newFocalRadius, oldFocalRadius)) {
-                memcpy(buf->data() + offset, &newFocalRadius, 4);
-                changed = true;
-            }
-            offset += 4;
-
-        } else if (m_gradientType == QQuickAbstractPathRenderer::ConicalGradient) {
-            Q_ASSERT(buf->size() >= offset + 8 + 4);
-
-            QVector2D newFocalPoint = QVector2D(newNode->fillGradient.a);
-            QVector2D oldFocalPoint = oldNode != nullptr
-                    ? QVector2D(oldNode->fillGradient.a)
-                    : QVector2D{};
-            if (oldNode == nullptr || newFocalPoint != oldFocalPoint) {
-                memcpy(buf->data() + offset, &newFocalPoint, 8);
-                changed = true;
-            }
-            offset += 8;
-
-            float newAngle = newNode->fillGradient.v0;
-            float oldAngle = oldNode != nullptr
-                    ? oldNode->fillGradient.v0
-                    : 0.0f;
-            if (oldNode == nullptr || !qFuzzyCompare(newAngle, oldAngle)) {
-                newAngle = -qDegreesToRadians(newAngle);
-                memcpy(buf->data() + offset, &newAngle, 4);
-                changed = true;
-            }
-            offset += 4;
-        }
 
         return changed;
     }
+};
 
-    int QQuickShapeLoopBlinnMaterial::compare(const QSGMaterial *other) const
+class QQuickShapeWireFrameMaterial : public QSGMaterial
+{
+public:
+    QQuickShapeWireFrameMaterial()
     {
-        if (other->type() != type())
-            return (type() - other->type());
-
-        const QQuickShapeLoopBlinnMaterial *otherMaterial =
-                static_cast<const QQuickShapeLoopBlinnMaterial *>(other);
-
-        QQuickShapeLoopBlinnNode *a = node();
-        QQuickShapeLoopBlinnNode *b = otherMaterial->node();
-        if (a == b)
-            return 0;
-
-        if (int d = a->strokeColor.rgba() - b->strokeColor.rgba())
-            return d;
-
-        if (m_gradientType == QQuickAbstractPathRenderer::NoGradient) {
-            if (int d = a->color.red() - b->color.red())
-                return d;
-            if (int d = a->color.green() - b->color.green())
-                return d;
-            if (int d = a->color.blue() - b->color.blue())
-                return d;
-            if (int d = a->color.alpha() - b->color.alpha())
-                return d;
-        } else {
-            const QQuickAbstractPathRenderer::GradientDesc &ga = a->fillGradient;
-            const QQuickAbstractPathRenderer::GradientDesc &gb = b->fillGradient;
-
-            if (int d = ga.a.x() - gb.a.x())
-                return d;
-            if (int d = ga.a.y() - gb.a.y())
-                return d;
-            if (int d = ga.b.x() - gb.b.x())
-                return d;
-            if (int d = ga.b.y() - gb.b.y())
-                return d;
-
-            if (int d = ga.v0 - gb.v0)
-                return d;
-            if (int d = ga.v1 - gb.v1)
-                return d;
-
-            if (int d = ga.spread - gb.spread)
-                return d;
-
-            if (int d = ga.stops.size() - gb.stops.size())
-                return d;
-
-            for (int i = 0; i < ga.stops.size(); ++i) {
-                if (int d = ga.stops[i].first - gb.stops[i].first)
-                    return d;
-                if (int d = ga.stops[i].second.rgba() - gb.stops[i].second.rgba())
-                    return d;
-            }
-        }
-
-        return 0;
+        setFlag(Blending, true);
     }
 
-    QSGMaterialType *QQuickShapeLoopBlinnMaterial::type() const
+    int compare(const QSGMaterial *other) const override
     {
-        static QSGMaterialType type[8];
-        return &type[m_gradientType + (node()->strokeColor.alpha() > 0 ? 4 : 0)];
+        return (type() - other->type());
     }
 
-    QSGMaterialShader *QQuickShapeLoopBlinnMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
+protected:
+    QSGMaterialType *type() const override
     {
-        Q_UNUSED(renderMode);
-        return new QQuickShapeLoopBlinnMaterialShader(m_gradientType,
-                                                      node()->strokeColor.alpha() > 0);
+        static QSGMaterialType t;
+        return &t;
+    }
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode) const override
+    {
+        return new QQuickShapeWireFrameMaterialShader;
     }
 
-    QQuickShapeLoopBlinnNode::QQuickShapeLoopBlinnNode(QQuickAbstractPathRenderer::FillGradientType gradientType)
+};
+
+class QQuickShapeWireFrameNode : public QSGGeometryNode
+{
+public:
+    struct WireFrameVertex
+    {
+        float x, y, u, v, w;
+    };
+
+    QQuickShapeWireFrameNode()
     {
         setFlag(OwnsGeometry, true);
         setGeometry(new QSGGeometry(attributes(), 0, 0));
-
-        activateMaterial(gradientType);
+        activateMaterial();
     }
 
-    void QQuickShapeLoopBlinnNode::activateMaterial(QQuickAbstractPathRenderer::FillGradientType gradientType)
+    void activateMaterial()
     {
-        m_material.reset(new QQuickShapeLoopBlinnMaterial(this, gradientType));
+        m_material.reset(new QQuickShapeWireFrameMaterial);
         setMaterial(m_material.data());
     }
+
+    static const QSGGeometry::AttributeSet &attributes()
+    {
+        static QSGGeometry::Attribute data[] = {
+            QSGGeometry::Attribute::createWithAttributeType(0, 2, QSGGeometry::FloatType, QSGGeometry::PositionAttribute),
+            QSGGeometry::Attribute::createWithAttributeType(1, 3, QSGGeometry::FloatType, QSGGeometry::TexCoordAttribute),
+        };
+        static QSGGeometry::AttributeSet attrs = { 2, sizeof(WireFrameVertex), data };
+        return attrs;
+    }
+
+protected:
+    QScopedPointer<QQuickShapeWireFrameMaterial> m_material;
+};
 }
 
 QVector2D QuadPath::Element::pointAtFraction(float t) const
@@ -550,10 +188,17 @@ bool QuadPath::isPointOnLine(const QVector2D &p, const QVector2D &sp, const QVec
     return qFuzzyIsNull(crossProduct(p, sp, ep));
 }
 
+// Assumes sp != ep
 bool QuadPath::isPointNearLine(const QVector2D &p, const QVector2D &sp, const QVector2D &ep)
 {
-    constexpr float epsilon = 1.0f;
-    return qAbs(crossProduct(p, sp, ep)) < epsilon;
+    // epsilon is max length of p-to-baseline relative to length of baseline. So 0.01 means that
+    // the distance from p to the baseline must be less than 1% of the length of the baseline.
+    constexpr float epsilon = 0.01f;
+    QVector2D bv = ep - sp;
+    float bl2 = QVector2D::dotProduct(bv, bv);
+    float t = QVector2D::dotProduct(p - sp, bv) / bl2;
+    QVector2D pv = p - (sp + t * bv);
+    return (QVector2D::dotProduct(pv, pv) / bl2) < (epsilon * epsilon);
 }
 
 bool QuadPath::isControlPointOnLeft(const QuadPath::Element &element)
@@ -717,6 +362,7 @@ void QuadPath::addCurvatureData()
                 qDebug() << "Curvature anomaly detected:" << element
                          << "Subpath fill on right:" << (flags & Element::FillOnRight)
                          << "Element fill on right:" << (newFlags & Element::FillOnRight);
+                flags = newFlags;
             }
         }
 
@@ -846,6 +492,173 @@ QuadPath QuadPath::flattened() const
     return res;
 }
 
+class ElementCutter
+{
+public:
+    ElementCutter(const QuadPath::Element &element)
+        : m_element(element)
+    {
+        m_currentPoint = m_element.startPoint();
+        if (m_element.isLine())
+            m_lineLength = (m_element.endPoint() - m_element.startPoint()).length();
+        else
+            fillLUT();
+    }
+
+    bool consume(float length)
+    {
+        m_lastT = m_currentT;
+        m_lastPoint = m_currentPoint;
+        float nextBreak = m_consumed + length;
+        float breakT = m_element.isLine() ? nextBreak / m_lineLength : tForLength(nextBreak);
+        if (breakT < 1) {
+            m_currentT = breakT;
+            m_currentPoint = m_element.pointAtFraction(m_currentT);
+            m_consumed = nextBreak;
+            return true;
+        } else {
+            m_currentT = 1;
+            m_currentPoint = m_element.endPoint();
+            return false;
+        }
+    }
+
+    QVector2D currentCutPoint()
+    {
+        return m_currentPoint;
+    }
+
+    QVector2D currentControlPoint()
+    {
+        Q_ASSERT(!m_element.isLine());
+        // Split curve right at lastT, yields { lastPoint, rcp, endPoint } quad segment
+        QVector2D rcp = (1 - m_lastT) * m_element.controlPoint() + m_lastT * m_element.endPoint();
+        // Split that left at currentT, yields  { lastPoint, lcp, currentPoint } quad segment
+        float segmentT = (m_currentT - m_lastT) / (1 - m_lastT);
+        QVector2D lcp = (1 - segmentT) * m_lastPoint + segmentT * rcp;
+        return lcp;
+    }
+
+    float lastLength()
+    {
+        float elemLength = m_element.isLine() ? m_lineLength : m_lut.last();
+        return elemLength - m_consumed;
+    }
+
+private:
+    void fillLUT()
+    {
+        Q_ASSERT(!m_element.isLine());
+        QVector2D ap = m_element.startPoint() - 2 * m_element.controlPoint() + m_element.endPoint();
+        QVector2D bp = 2 * m_element.controlPoint() - 2 * m_element.startPoint();
+        float A = 4 * QVector2D::dotProduct(ap, ap);
+        float B = 4 * QVector2D::dotProduct(ap, bp);
+        float C = QVector2D::dotProduct(bp, bp);
+        float b = B / (2 * A);
+        float c = C / A;
+        float k = c - (b * b);
+        float l2 = b * std::sqrt(b * b + k);
+        float lnom = b + std::sqrt(b * b + k);
+        float l0 = 0.5f * std::sqrt(A);
+
+        m_lut.resize(LUTSize, 0);
+        for (int i = 1; i < LUTSize; i++) {
+            float t = float(i) / (LUTSize - 1);
+            float u = t + b;
+            float w = std::sqrt(u * u + k);
+            float l1 = u * w;
+            float lden = u + w;
+            float l3 = k * std::log(std::fabs(lden / lnom));
+            float res = l0 * (l1 - l2 + l3);
+            m_lut[i] = res;
+        }
+    }
+
+    float tForLength(float length)
+    {
+        Q_ASSERT(!m_element.isLine());
+        Q_ASSERT(!m_lut.isEmpty());
+
+        float res = 2; // I.e. invalid, outside [0, 1] range
+        auto it = std::upper_bound(m_lut.cbegin(), m_lut.cend(), length);
+        if (it != m_lut.cend()) {
+            float nextLength = *it--;
+            float prevLength = *it;
+            int prevIndex = std::distance(m_lut.cbegin(), it);
+            float fraction = (length - prevLength) / (nextLength - prevLength);
+            res = (prevIndex + fraction) / (LUTSize - 1);
+        }
+        return res;
+    }
+
+    const QuadPath::Element &m_element;
+    float m_lastT = 0;
+    float m_currentT = 0;
+    QVector2D m_lastPoint;
+    QVector2D m_currentPoint;
+    float m_consumed = 0;
+    // For line elements:
+    float m_lineLength;
+    // For quadratic curve elements:
+    static constexpr int LUTSize = 21;
+    QVarLengthArray<float, LUTSize> m_lut;
+};
+
+QuadPath QuadPath::dashed(qreal lineWidth, const QList<qreal> &dashPattern, qreal dashOffset) const
+{
+    QVarLengthArray<float, 16> pattern;
+    float patternLength = 0;
+    for (int i = 0; i < 2 * (dashPattern.length() / 2); i++) {
+        float dashLength = qMax(lineWidth * dashPattern[i], qreal(0));
+        pattern.append(dashLength);
+        patternLength += dashLength;
+    }
+    if (patternLength == 0)
+        return {};
+
+    int startIndex = 0;
+    float startOffset = std::fmod(lineWidth * dashOffset, patternLength);
+    if (startOffset < 0)
+        startOffset += patternLength;
+    for (float dashLength : pattern) {
+        if (dashLength > startOffset)
+            break;
+        startIndex++;
+        startOffset -= dashLength;
+    }
+
+    int dashIndex = startIndex;
+    float offset = startOffset;
+    QuadPath res;
+    for (int i = 0; i < elementCount(); i++) {
+        const Element &element = elementAt(i);
+        if (element.isSubpathStart()) {
+            res.moveTo(element.startPoint());
+            dashIndex = startIndex;
+            offset = startOffset;
+        }
+        ElementCutter cutter(element);
+        while (true) {
+            bool gotAll = cutter.consume(pattern.at(dashIndex) - offset);
+            QVector2D nextPoint = cutter.currentCutPoint();
+            if (dashIndex & 1)
+                res.moveTo(nextPoint); // gap
+            else if (element.isLine())
+                res.lineTo(nextPoint); // dash in line
+            else
+                res.quadTo(cutter.currentControlPoint(), nextPoint); // dash in curve
+            if (gotAll) {
+                offset = 0;
+                dashIndex = (dashIndex + 1) % pattern.size();
+            } else {
+                offset += cutter.lastLength();
+                break;
+            }
+        }
+    }
+    return res;
+}
+
 void QuadPath::splitElementAt(qsizetype index)
 {
     const qsizetype newChildIndex = m_childElements.size();
@@ -917,8 +730,6 @@ QDebug operator<<(QDebug stream, const QuadPath &path)
     return stream;
 }
 
-QQuickShapeCurveNode::QQuickShapeCurveNode() { }
-
 QQuickShapeCurveRenderer::~QQuickShapeCurveRenderer() { }
 
 void QQuickShapeCurveRenderer::beginSync(int totalCount, bool *countChanged)
@@ -932,8 +743,7 @@ void QQuickShapeCurveRenderer::setPath(int index, const QQuickPath *path)
 {
     auto &pathData = m_paths[index];
     pathData.originalPath = path->path();
-    pathData.m_dirty |= GeometryDirty;
-
+    pathData.m_dirty |= PathDirty;
 }
 
 void QQuickShapeCurveRenderer::setStrokeColor(int index, const QColor &color)
@@ -942,7 +752,7 @@ void QQuickShapeCurveRenderer::setStrokeColor(int index, const QColor &color)
     const bool wasVisible = pathData.isStrokeVisible();
     pathData.pen.setColor(color);
     if (pathData.isStrokeVisible() != wasVisible)
-        pathData.m_dirty |= GeometryDirty;
+        pathData.m_dirty |= StrokeDirty;
     else
         pathData.m_dirty |= UniformsDirty;
 }
@@ -956,7 +766,7 @@ void QQuickShapeCurveRenderer::setStrokeWidth(int index, qreal w)
     } else {
         pathData.validPenWidth = false;
     }
-    pathData.m_dirty |= GeometryDirty;
+    pathData.m_dirty |= StrokeDirty;
 }
 
 void QQuickShapeCurveRenderer::setFillColor(int index, const QColor &color)
@@ -965,7 +775,7 @@ void QQuickShapeCurveRenderer::setFillColor(int index, const QColor &color)
     const bool wasVisible = pathData.isFillVisible();
     pathData.fillColor = color;
     if (pathData.isFillVisible() != wasVisible)
-        pathData.m_dirty |= GeometryDirty;
+        pathData.m_dirty |= FillDirty;
     else
         pathData.m_dirty |= UniformsDirty;
 }
@@ -974,7 +784,7 @@ void QQuickShapeCurveRenderer::setFillRule(int index, QQuickShapePath::FillRule 
 {
     auto &pathData = m_paths[index];
     pathData.fillRule = Qt::FillRule(fillRule);
-    pathData.m_dirty |= GeometryDirty;
+    pathData.m_dirty |= PathDirty;
 }
 
 void QQuickShapeCurveRenderer::setJoinStyle(int index,
@@ -984,14 +794,14 @@ void QQuickShapeCurveRenderer::setJoinStyle(int index,
     auto &pathData = m_paths[index];
     pathData.pen.setJoinStyle(Qt::PenJoinStyle(joinStyle));
     pathData.pen.setMiterLimit(miterLimit);
-    pathData.m_dirty |= GeometryDirty;
+    pathData.m_dirty |= StrokeDirty;
 }
 
 void QQuickShapeCurveRenderer::setCapStyle(int index, QQuickShapePath::CapStyle capStyle)
 {
     auto &pathData = m_paths[index];
     pathData.pen.setCapStyle(Qt::PenCapStyle(capStyle));
-    pathData.m_dirty |= GeometryDirty;
+    pathData.m_dirty |= StrokeDirty;
 }
 
 void QQuickShapeCurveRenderer::setStrokeStyle(int index,
@@ -1005,12 +815,11 @@ void QQuickShapeCurveRenderer::setStrokeStyle(int index,
         pathData.pen.setDashPattern(dashPattern);
         pathData.pen.setDashOffset(dashOffset);
     }
-    pathData.m_dirty |= GeometryDirty;
+    pathData.m_dirty |= StrokeDirty;
 }
 
 void QQuickShapeCurveRenderer::setFillGradient(int index, QQuickShapeGradient *gradient)
 {
-#if defined(QQUICKSHAPECURVERENDERER_GRADIENTS)
     PathData &pd(m_paths[index]);
     pd.gradientType = NoGradient;
     if (QQuickShapeLinearGradient *g  = qobject_cast<QQuickShapeLinearGradient *>(gradient)) {
@@ -1030,7 +839,6 @@ void QQuickShapeCurveRenderer::setFillGradient(int index, QQuickShapeGradient *g
         pd.gradient.a = QPointF(g->centerX(), g->centerY());
         pd.gradient.v0 = g->angle();
     } else
-#endif
     if (gradient != nullptr) {
         static bool warned = false;
         if (!warned) {
@@ -1044,7 +852,7 @@ void QQuickShapeCurveRenderer::setFillGradient(int index, QQuickShapeGradient *g
         pd.gradient.spread = gradient->spread();
     }
 
-    pd.m_dirty |= GeometryDirty;
+    pd.m_dirty |= FillDirty;
 }
 
 void QQuickShapeCurveRenderer::setAsyncCallback(void (*callback)(void *), void *data)
@@ -1059,312 +867,72 @@ void QQuickShapeCurveRenderer::endSync(bool async)
     Q_UNUSED(async);
 }
 
-bool QQuickShapeCurveRenderer::PathData::useFragmentShaderStroker() const
-{
-    static bool useStrokeShader = qEnvironmentVariableIntValue("QT_QUICKSHAPES_STROKER");
-    return useStrokeShader && pen.style() == Qt::SolidLine && isFillVisible();
-}
-
 void QQuickShapeCurveRenderer::updateNode()
 {
     if (!m_rootNode)
         return;
-    static const int codePath = qEnvironmentVariableIntValue("QT_QUICKSHAPES_ALTERNATIVE_CODE_PATH");
-    static const int overlapSolving = !qEnvironmentVariableIntValue("QT_QUICKSHAPES_DISABLE_OVERLAP_SOLVER");
-    static bool newStrokeShader = qEnvironmentVariableIntValue("QT_QUICKSHAPES_EXPERIMENTAL_STROKER");
-
-    auto addNodes = [&](const PathData &pathData, NodeList *debugNodes) {
-        if (codePath == 1)
-            return addPathNodesBasic(pathData, debugNodes);
-        else
-            return addPathNodesLineShader(pathData, debugNodes);
-    };
+    static const bool doOverlapSolving = !qEnvironmentVariableIntValue("QT_QUICKSHAPES_DISABLE_OVERLAP_SOLVER");
+    static const bool useTriangulatingStroker = qEnvironmentVariableIntValue("QT_QUICKSHAPES_TRIANGULATING_STROKER");
+    static const bool simplifyPath = qEnvironmentVariableIntValue("QT_QUICKSHAPES_SIMPLIFY_PATHS");
 
     for (PathData &pathData : m_paths) {
-        if (pathData.m_dirty & GeometryDirty) {
-            deleteAndClear(&pathData.strokeNodes);
-            deleteAndClear(&pathData.fillNodes);
-            deleteAndClear(&pathData.debugNodes);
+        int dirtyFlags = pathData.m_dirty;
 
-            static bool useTriangulatingStroker = !qEnvironmentVariableIntValue("QT_QUICKSHAPES_PAINTERPATH_STROKER");
-            bool createStrokePath = pathData.isStrokeVisible() && !pathData.useFragmentShaderStroker();
-
-            static bool simplifyPath = qEnvironmentVariableIntValue("QT_QUICKSHAPES_SIMPLIFY_PATHS") != 0;
-            pathData.path = simplifyPath ? QuadPath::fromPainterPath(pathData.originalPath.simplified()) : QuadPath::fromPainterPath(pathData.originalPath);
+        if (dirtyFlags & PathDirty) {
+            if (simplifyPath)
+                pathData.path = QuadPath::fromPainterPath(pathData.originalPath.simplified());
+            else
+                pathData.path = QuadPath::fromPainterPath(pathData.originalPath);
             pathData.path.setFillRule(pathData.fillRule);
+            pathData.fillPath = {};
+            dirtyFlags |= (FillDirty | StrokeDirty);
+        }
 
-            bool solidStroke = pathData.pen.style() == Qt::SolidLine && pathData.pen.isSolid();
-            if (newStrokeShader && solidStroke) {
-                pathData.qPath = pathData.path;
-                pathData.qPath.addCurvatureData(); // ### Can we unify with fill below?
-            } else if (createStrokePath) {
-                pathData.fillPath = pathData.path.toPainterPath(); // Without subpath closing etc.
-            }
-
+        if (dirtyFlags & FillDirty) {
+            deleteAndClear(&pathData.fillNodes);
+            deleteAndClear(&pathData.fillDebugNodes);
             if (pathData.isFillVisible()) {
-                pathData.path = pathData.path.subPathsClosed();
-                pathData.path.addCurvatureData();
-                if (overlapSolving)
-                    solveOverlaps(pathData.path);
-                pathData.fillNodes = addNodes(pathData, &pathData.debugNodes);
-            }
-
-            if (createStrokePath) {
-                if (newStrokeShader && solidStroke) {
-                    pathData.strokeNodes = addNodesStrokeShader(pathData, &pathData.debugNodes);
-                } else if (useTriangulatingStroker && solidStroke) {
-                    pathData.strokeNodes = addStrokeNodes(pathData, &pathData.debugNodes);
-                } else {
-                    QPainterPathStroker stroker(pathData.pen);
-                    QPainterPath strokePath = stroker.createStroke(pathData.fillPath);
-
-                    // Solid strokes are sometimes created with self-overlaps in the joins,
-                    // causing the overlap detection to freak out. So while this is expensive
-                    // we have to make sure the overlaps are removed first.
-                    static bool simplifyStroke = qEnvironmentVariableIntValue("QT_QUICKSHAPES_DISABLE_SIMPLIFY_STROKE") == 0;
-                    if (pathData.pen.style() == Qt::SolidLine && simplifyStroke)
-                        strokePath = strokePath.simplified();
-                    QuadPath strokeQuadPath = QuadPath::fromPainterPath(strokePath);
-                    strokeQuadPath.addCurvatureData();
-                    strokePath = strokeQuadPath.toPainterPath();
-                    if (overlapSolving)
-                        solveOverlaps(strokeQuadPath);
-
-                    PathData strokeData = pathData;
-                    strokeData.path = strokeQuadPath;
-                    strokeData.fillPath = strokePath;
-                    strokeData.gradientType = NoGradient;
-                    strokeData.fillColor = pathData.pen.color();
-                    pathData.strokeNodes = addNodes(strokeData, &pathData.debugNodes);
+                if (pathData.fillPath.isEmpty()) {
+                    pathData.fillPath = pathData.path.subPathsClosed();
+                    pathData.fillPath.addCurvatureData();
+                    if (doOverlapSolving)
+                        solveOverlaps(pathData.fillPath);
                 }
+                pathData.fillNodes = addFillNodes(pathData, &pathData.fillDebugNodes);
+                dirtyFlags |= StrokeDirty;
             }
-        } else if (pathData.m_dirty & UniformsDirty) {
-            for (auto &pathNode : std::as_const(pathData.fillNodes))
-                static_cast<QQuickShapeLoopBlinnNode *>(pathNode)->color = pathData.fillColor;
+        }
 
-            if (pathData.pen.style() != Qt::NoPen && pathData.pen.color().alpha() > 0) {
+        if (dirtyFlags & StrokeDirty) {
+            deleteAndClear(&pathData.strokeNodes);
+            deleteAndClear(&pathData.strokeDebugNodes);
+            if (pathData.isStrokeVisible()) {
+                const QPen &pen = pathData.pen;
+                if (pen.style() == Qt::SolidLine)
+                    pathData.strokePath = pathData.path;
+                else
+                    pathData.strokePath = pathData.path.dashed(pen.widthF(), pen.dashPattern(), pen.dashOffset());
+
+                if (useTriangulatingStroker)
+                    pathData.strokeNodes = addTriangulatingStrokerNodes(pathData, &pathData.strokeDebugNodes);
+                else
+                    pathData.strokeNodes = addCurveStrokeNodes(pathData, &pathData.strokeDebugNodes);
+            }
+        }
+
+        if (dirtyFlags & UniformsDirty) {
+            if (!(dirtyFlags & FillDirty)) {
+                for (auto &pathNode : std::as_const(pathData.fillNodes))
+                    static_cast<QQuickShapeCurveNode *>(pathNode)->setColor(pathData.fillColor);
+            }
+            if (!(dirtyFlags & StrokeDirty)) {
                 for (auto &strokeNode : std::as_const(pathData.strokeNodes))
-                    if (newStrokeShader) // #### Remove this when we have a dedicated stroke shader
-                        static_cast<QQuickShapeLoopBlinnNode *>(strokeNode)->strokeColor = pathData.pen.color();
-                    else
-                        static_cast<QQuickShapeLoopBlinnNode *>(strokeNode)->color = pathData.pen.color();
+                    static_cast<QQuickShapeCurveNode *>(strokeNode)->setColor(pathData.pen.color());
             }
         }
-        pathData.m_dirty &= ~(GeometryDirty | UniformsDirty);
+
+        pathData.m_dirty &= ~(PathDirty | FillDirty | StrokeDirty | UniformsDirty);
     }
-}
-
-QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesBasic(const PathData &pathData, NodeList *debugNodes)
-{
-    QVector<QSGGeometryNode *> ret;
-
-    QList<QPolygonF> quadraticCurvesConvex;
-    QList<QPolygonF> quadraticCurvesConcave;
-    QList<QLineF> lineSegments;
-    QPainterPath internalHull;
-    internalHull.setFillRule(pathData.path.fillRule());
-
-    pathData.path.iterateElements([&](const QuadPath::Element &element){
-        QPointF sp(element.startPoint().toPointF());
-        QPointF cp(element.controlPoint().toPointF());
-        QPointF ep(element.endPoint().toPointF());
-        if (element.isSubpathStart())
-            internalHull.moveTo(sp);
-        if (element.isLine()) {
-            internalHull.lineTo(ep);
-            lineSegments.append(QLineF(sp, ep));
-        } else if (element.isConvex()) {
-            internalHull.lineTo(ep);
-            quadraticCurvesConvex.append(QPolygonF() << sp << cp << ep);
-        } else {
-            internalHull.lineTo(cp);
-            internalHull.lineTo(ep);
-            quadraticCurvesConcave.append(QPolygonF() << sp << cp << ep);
-        }
-    });
-
-    QTriangleSet triangles = qTriangulate(internalHull);
-
-    // Add triangles for curves. Note: These have to be adapted to 1/32 grid, since this
-    // is the resolution of the triangulation
-    QVarLengthArray<quint32> extraIndices;
-    for (const QPolygonF &quadraticCurve : quadraticCurvesConvex) {
-        QPointF v1 = quadraticCurve.at(0);
-        QPointF v2 = quadraticCurve.at(1);
-        QPointF v3 = quadraticCurve.at(2);
-
-        extraIndices.append(triangles.vertices.size() / 2);
-        triangles.vertices.append(qRound(v1.x() * 32.0) / 32.0);
-        triangles.vertices.append(qRound(v1.y() * 32.0) / 32.0);
-
-        extraIndices.append(triangles.vertices.size() / 2);
-        triangles.vertices.append(qRound(v2.x() * 32.0) / 32.0);
-        triangles.vertices.append(qRound(v2.y() * 32.0) / 32.0);
-
-        extraIndices.append(triangles.vertices.size() / 2);
-        triangles.vertices.append(qRound(v3.x() * 32.0) / 32.0);
-        triangles.vertices.append(qRound(v3.y() * 32.0) / 32.0);
-    }
-
-    int startConcaveCurves = triangles.vertices.size() / 2;
-    for (const QPolygonF &quadraticCurve : quadraticCurvesConcave) {
-        QPointF v1 = quadraticCurve.at(0);
-        QPointF v2 = quadraticCurve.at(1);
-        QPointF v3 = quadraticCurve.at(2);
-
-        extraIndices.append(triangles.vertices.size() / 2);
-        triangles.vertices.append(qRound(v1.x() * 32.0) / 32.0);
-        triangles.vertices.append(qRound(v1.y() * 32.0) / 32.0);
-
-        extraIndices.append(triangles.vertices.size() / 2);
-        triangles.vertices.append(qRound(v2.x() * 32.0) / 32.0);
-        triangles.vertices.append(qRound(v2.y() * 32.0) / 32.0);
-
-        extraIndices.append(triangles.vertices.size() / 2);
-        triangles.vertices.append(qRound(v3.x() * 32.0) / 32.0);
-        triangles.vertices.append(qRound(v3.y() * 32.0) / 32.0);
-    }
-
-    ret.append(addLoopBlinnNodes(triangles,
-                                 extraIndices,
-                                 startConcaveCurves,
-                                 pathData,
-                                 debugNodes));
-    return ret;
-}
-
-QSGGeometryNode *QQuickShapeCurveRenderer::addLoopBlinnNodes(const QTriangleSet &triangles,
-                                                           const QVarLengthArray<quint32> &extraIndices,
-                                                           int startConcaveCurves,
-                                                           const PathData &pathData, NodeList *debugNodes)
-{
-    const QColor &color = pathData.fillColor;
-
-    // Basically we here need a way to determine if each triangle is:
-    // 1. A convex curve
-    // 2. A concave curve
-    // 3. A filled triangle
-    //
-    // For filled triangles, we make all texture coordinates (1.0, 0.0)
-    // For curves, we use (0, 0), (0.5, 0), (1, 1)
-    // We use a third texture coordinate for curves: 0 means convex curve and 1 means concave
-
-    QQuickShapeLoopBlinnNode *node = new QQuickShapeLoopBlinnNode(pathData.gradientType);
-    node->fillGradient = pathData.gradient;
-    node->color = color;
-
-    if (pathData.isStrokeVisible() && pathData.useFragmentShaderStroker()) {
-        node->strokeColor = pathData.pen.color();
-        node->strokeWidth = pathData.pen.widthF();
-    }
-
-    QSGGeometry *g = node->geometry();
-
-    QSGGeometry::Type indexType = triangles.indices.type() == QVertexIndexVector::UnsignedInt
-            ? QSGGeometry::UnsignedIntType
-            : QSGGeometry::UnsignedShortType;
-    Q_ASSERT(indexType == QSGGeometry::UnsignedIntType); // Needs some code to support shorts
-                                                         // since extraIndices is int32
-
-    QVector<QQuickShapeLoopBlinnNode::LoopBlinnVertex> vertices;
-    for (int i = 0; i < triangles.vertices.size(); i += 2) {
-        QVector2D v(triangles.vertices.at(i), triangles.vertices.at(i + 1));
-        QVector3D uv(0.0f, 1.0f, -1.0f);
-        bool visualizeDebug = debugVisualization() & DebugCurves;
-        vertices.append( { v.x(), v.y(), uv.x(), uv.y(), uv.z(), 0.0f, 1.0f, 0.0f, visualizeDebug ? 0.5f : 0.0f });
-    }
-
-    for (int i = 0; i < extraIndices.size(); ++i) {
-        int idx = extraIndices.at(i);
-
-        QVector2D uv;
-        switch (i % 3) {
-        case 0:
-            uv = QVector2D(0.0f, 0.0f);
-            break;
-        case 1:
-            uv = QVector2D(0.5f, 0.0f);
-            break;
-        case 2:
-            uv = QVector2D(1.0f, 1.0f);
-            break;
-        }
-
-        vertices[idx].u = uv.x();
-        vertices[idx].v = uv.y();
-        vertices[idx].w = idx >= startConcaveCurves ? 1.0f : -1.0f;
-        vertices[idx].r = idx >= startConcaveCurves ? 0.0f : 1.0f;
-        vertices[idx].g = 0.0f;
-        vertices[idx].b = idx >= startConcaveCurves ? 1.0f : 0.0f;
-    }
-
-    if (g->indexType() != indexType) {
-        g = new QSGGeometry(QQuickShapeLoopBlinnNode::attributes(),
-                            vertices.size(),
-                            triangles.indices.size() + extraIndices.size(),
-                            indexType);
-        node->setGeometry(g);
-    } else {
-        g->allocate(vertices.size(), triangles.indices.size() + extraIndices.size());
-    }
-
-    g->setDrawingMode(QSGGeometry::DrawTriangles);
-    memcpy(g->vertexData(),
-           vertices.data(),
-           g->vertexCount() * g->sizeOfVertex());
-    memcpy(g->indexData(),
-           triangles.indices.data(),
-           triangles.indices.size() * g->sizeOfIndex());
-    memcpy((uchar*)g->indexData() + triangles.indices.size() * g->sizeOfIndex(),
-           extraIndices.data(),
-           extraIndices.size() * g->sizeOfIndex());
-
-    m_rootNode->appendChildNode(node);
-
-    if (debugVisualization() & DebugWireframe) {
-        QQuickShapeWireFrameNode *wfNode = new QQuickShapeWireFrameNode;
-        QSGGeometry *wfg = wfNode->geometry();
-
-        QVarLengthArray<quint32> indices;
-        QVarLengthArray<QQuickShapeWireFrameNode::WireFrameVertex> wfVertices;
-        for (int i = 0; i < triangles.indices.size() + extraIndices.size(); ++i) {
-            quint32 index = i < triangles.indices.size()
-                    ? ((quint32*)triangles.indices.data())[i]
-                    : extraIndices[i - triangles.indices.size()];
-
-            const QQuickShapeLoopBlinnNode::LoopBlinnVertex &vertex = vertices.at(index);
-
-            float u = i % 3 == 0 ? 1.0f : 0.0f;
-            float v = i % 3 == 1 ? 1.0f : 0.0f;
-            float w = i % 3 == 2 ? 1.0f : 0.0f;
-
-            indices.append(i);
-            wfVertices.append({ vertex.x, vertex.y, u, v, w });
-        }
-
-        if (wfg->indexType() != indexType) {
-            wfg = new QSGGeometry(QQuickShapeWireFrameNode::attributes(),
-                                  wfVertices.size(),
-                                  indices.size(),
-                                  indexType);
-            wfNode->setGeometry(wfg);
-        } else {
-            wfg->allocate(wfVertices.size(), indices.size());
-        }
-
-        wfg->setDrawingMode(QSGGeometry::DrawTriangles);
-        memcpy(wfg->indexData(),
-               indices.data(),
-               indices.size() * g->sizeOfIndex());
-        memcpy(wfg->vertexData(),
-               wfVertices.data(),
-               wfg->vertexCount() * wfg->sizeOfVertex());
-
-        m_rootNode->appendChildNode(wfNode);
-        debugNodes->append(wfNode);
-    }
-
-    return node;
 }
 
 // Input coordinate space is pre-mapped so that (0, 0) maps to [0, 0] in uv space.
@@ -1421,19 +989,18 @@ void iteratePath(const QuadPath &path, int index, Func &&lambda)
             iteratePath(path, element.indexOfChild(i), lambda);
     }
 }
-QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesLineShader(const PathData &pathData, NodeList *debugNodes)
+QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addFillNodes(const PathData &pathData, NodeList *debugNodes)
 {
     //qDebug() << "========= STARTING ===========" << pathData.path;
-
+    auto *node = new QQuickShapeCurveNode;
+    node->setGradientType(pathData.gradientType);
 
     QVector<QSGGeometryNode *> ret;
     const QColor &color = pathData.fillColor;
     QPainterPath internalHull;
-    internalHull.setFillRule(pathData.path.fillRule());
+    internalHull.setFillRule(pathData.fillPath.fillRule());
 
 
-    QVector<QQuickShapeLoopBlinnNode::LoopBlinnVertex> vertexBuffer;
-    QVector<quint32> indices;
     bool visualizeDebug = debugVisualization() & DebugCurves;
     const float dbg = visualizeDebug  ? 0.5f : 0.0f;
     QVector<QQuickShapeWireFrameNode::WireFrameVertex> wfVertices;
@@ -1455,9 +1022,7 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesLineShader(cons
         return { qRound(p.x() * 32.0f) / 32.0f, qRound(p.y() * 32.0f) / 32.0f };
     };
 
-    auto addVertexDataForPoint = [&vertexBuffer, dbg](const QuadPath::Element &element, const QVector2D &p) {
-        auto uv = element.uvForPoint(p);
-
+    auto addCurveTriangle = [&](const QuadPath::Element &element, const QVector2D &sp, const QVector2D &ep, const QVector2D &cp) {
         float r = 0.0f, g = 0.0f, b = 0.0f;
         if (element.isLine()) {
             g = b = 1.0f;
@@ -1467,15 +1032,12 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesLineShader(cons
             b = 1.0;
         }
 
-        vertexBuffer.append({p.x(), p.y(), uv.x(), uv.y(), uv.z(), r, g, b, dbg});
-    };
+        QVector4D dbgColor(r, g, b, dbg);
 
-    auto addCurveTriangle = [&](const QuadPath::Element &element, const QVector2D &sp, const QVector2D &ep, const QVector2D &cp){
-        int currentVertex = vertexBuffer.count();
-        addVertexDataForPoint(element, sp);
-        addVertexDataForPoint(element, cp);
-        addVertexDataForPoint(element, ep);
-        indices << currentVertex << currentVertex + 1 << currentVertex + 2;
+        node->appendTriangle(sp, cp, ep,
+                             [&element](QVector2D v) { return element.uvForPoint(v); },
+                             dbgColor, dbgColor, dbgColor);
+
         wfVertices.append({sp.x(), sp.y(), 1.0f, 0.0f, 0.0f}); // 0
         wfVertices.append({cp.x(), cp.y(), 0.0f, 1.0f, 0.0f}); // 1
         wfVertices.append({ep.x(), ep.y(), 0.0f, 0.0f, 1.0f}); // 2
@@ -1495,38 +1057,27 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesLineShader(cons
     };
 
     auto addLineTriangle = [&](const QuadPath::Element &element, const QVector2D &sp, const QVector2D &ep, const QVector2D &cp){
-        int currentVertex = vertexBuffer.count();
         addCurveTriangle(element, sp, ep, cp);
         // Add a triangle on the outer side of the line to get some more AA
-        // The new point replaces cp (currentVertex+1)
+        // The new point replaces cp
         QVector2D op = findPointOtherSide(sp, ep, cp); //sp - (cp - ep);
-        wfVertices.append({op.x(), op.y(), 0.0f, 1.0f, 0.0f}); // replacing cp (1)
-        auto uv = element.uvForPoint(op);
-        vertexBuffer.append({op.x(), op.y(), uv.x(), uv.y(), uv.z(), 0.0f, 1.0f, 1.0f, dbg});
-        indices << currentVertex << currentVertex + 3 << currentVertex + 2;
+        addCurveTriangle(element, sp, op, ep);
     };
 
     auto addConvexTriangle = [&](const QuadPath::Element &element, const QVector2D &sp, const QVector2D &ep, const QVector2D &cp){
-        int currentVertex = vertexBuffer.count();
         addCurveTriangle(element, sp, ep, cp);
         // Add two triangles on the outer side to get some more AA
 
-        // First triangle on the line sp-cp, replacing ep (currentVertex+2)
+        // First triangle on the line sp-cp, replacing ep
         {
-        QVector2D op = findPointOtherSide(sp, cp, ep); //sp - (ep - cp);
-        wfVertices.append({op.x(), op.y(), 0.0f, 0.0f, 1.0f}); // replacing ep (2)
-        auto uv = element.uvForPoint(op);
-        vertexBuffer.append({op.x(), op.y(), uv.x(), uv.y(), uv.z(), 0.0f, 1.0f, 1.0f, dbg});
-        indices << currentVertex << currentVertex + 1 << currentVertex + 3;
+            QVector2D op = findPointOtherSide(sp, cp, ep); //sp - (ep - cp);
+            addCurveTriangle(element, sp, cp, op);
         }
 
-        // Second triangle on the line ep-cp, replacing sp (currentVertex+0)
+        // Second triangle on the line ep-cp, replacing sp
         {
-        QVector2D op = findPointOtherSide(ep, cp, sp); //ep - (sp - cp);
-        wfVertices.append({op.x(), op.y(), 1.0f, 0.0f, 0.0f}); // replacing sp (0)
-        auto uv = element.uvForPoint(op);
-        vertexBuffer.append({op.x(), op.y(), uv.x(), uv.y(), uv.z(), 0.0f, 1.0f, 1.0f, dbg});
-        indices << currentVertex + 4 << currentVertex + 1 << currentVertex + 2;
+            QVector2D op = findPointOtherSide(ep, cp, sp); //ep - (sp - cp);
+            addCurveTriangle(element, op, cp, ep);
         }
 
     };
@@ -1541,24 +1092,20 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesLineShader(cons
 
     // Identical to addLineTriangle, except for how op is calculated
     auto addConcaveTriangle = [&](const QuadPath::Element &element, const QVector2D &sp, const QVector2D &ep, const QVector2D &cp){
-        int currentVertex = vertexBuffer.count();
         addCurveTriangle(element, sp, ep, cp);
         // Add an outer triangle to give extra AA for very flat curves
         QVector2D op = oppositePoint(sp, ep, cp);
-        // The new point replaces cp (currentVertex+1)
-        wfVertices.append({op.x(), op.y(), 0.0f, 1.0f, 0.0f}); // replacing cp (1)
-        auto uv = element.uvForPoint(op);
-        vertexBuffer.append({op.x(), op.y(), uv.x(), uv.y(), uv.z(), 0.0f, 1.0f, 1.0f, dbg});
-        indices << currentVertex << currentVertex + 3 << currentVertex + 2;
+        // The new point replaces cp
+        addCurveTriangle(element, sp, op, ep);
     };
 
     auto addFillTriangle = [&](const QVector2D &p1, const QVector2D &p2, const QVector2D &p3){
-        int currentVertex = vertexBuffer.count();
-         constexpr QVector3D uv(0.0, 1.0, -1.0);
-        vertexBuffer.append({p1.x(), p1.y(), uv.x(), uv.y(), uv.z(), 0.0f, 1.0f, 0.0f, dbg});
-        vertexBuffer.append({p2.x(), p2.y(), uv.x(), uv.y(), uv.z(), 0.0f, 1.0f, 0.0f, dbg});
-        vertexBuffer.append({p3.x(), p3.y(), uv.x(), uv.y(), uv.z(), 0.0f, 1.0f, 0.0f, dbg});
-        indices << currentVertex << currentVertex + 1 << currentVertex + 2;
+        constexpr QVector3D uv(0.0, 1.0, -1.0);
+        QVector4D dbgColor(0.0f, 1.0f, 0.0f, dbg);
+        node->appendTriangle(p1, p2, p3,
+                             [&uv](QVector2D) { return uv; },
+                             dbgColor, dbgColor, dbgColor);
+
         wfVertices.append({p1.x(), p1.y(), 1.0f, 0.0f, 0.0f}); // 0
         wfVertices.append({p3.x(), p3.y(), 0.0f, 1.0f, 0.0f}); // 1
         wfVertices.append({p2.x(), p2.y(), 0.0f, 0.0f, 1.0f}); // 2
@@ -1566,8 +1113,8 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesLineShader(cons
 
 
 
-    for (int i = 0; i < pathData.path.elementCount(); ++i)
-        iteratePath(pathData.path, i, [&](const QuadPath::Element &element, int index){
+    for (int i = 0; i < pathData.fillPath.elementCount(); ++i)
+        iteratePath(pathData.fillPath, i, [&](const QuadPath::Element &element, int index){
             QPointF sp(element.startPoint().toPointF());  //### to much conversion to and from pointF
             QPointF cp(element.controlPoint().toPointF());
             QPointF ep(element.endPoint().toPointF());
@@ -1632,7 +1179,7 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesLineShader(cons
         for (int i = 0; i < 3; ++i) {
             if (auto found = linePointHash.constFind(makeHashable(p[i])); found != linePointHash.constEnd()) {
                 // check if this triangle is on a line, i.e. if one point is the sp and another is the ep of the same path element
-                const auto &element = pathData.path.elementAt(*found);
+                const auto &element = pathData.fillPath.elementAt(*found);
                 //qDebug() << "    " << element;
                 for (int j = 0; j < 3; ++j) {
                     if (i != j && roundVec2D(element.endPoint()) == p[j]) {
@@ -1649,7 +1196,7 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesLineShader(cons
                 // check if this triangle is on the tangent line of a concave curve,
                 // i.e if one point is the cp, and the other is sp or ep
                 // TODO: clean up duplicated code (almost the same as the lineElement path above)
-                const auto &element = pathData.path.elementAt(*found);
+                const auto &element = pathData.fillPath.elementAt(*found);
                 for (int j = 0; j < 3; ++j) {
                     if (i == j)
                         continue;
@@ -1666,7 +1213,7 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesLineShader(cons
                 }
             } else if (auto found = convexPointHash.constFind(makeHashable(p[i])); found != convexPointHash.constEnd()) {
                 // check if this triangle is on a curve, i.e. if one point is the sp and another is the ep of the same path element
-                const auto &element = pathData.path.elementAt(*found);
+                const auto &element = pathData.fillPath.elementAt(*found);
                 for (int j = 0; j < 3; ++j) {
                     if (i != j && roundVec2D(element.endPoint()) == p[j]) {
                         if (foundElement)
@@ -1682,13 +1229,13 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesLineShader(cons
         }
         if (lineElementIndex != -1) {
             int ci = (6 - si - ei) % 3; // 1+2+3 is 6, so missing number is 6-n1-n2
-            addLineTriangle(pathData.path.elementAt(lineElementIndex), p[si], p[ei], p[ci]);
+            addLineTriangle(pathData.fillPath.elementAt(lineElementIndex), p[si], p[ei], p[ci]);
         } else if (concaveElementIndex != -1) {
-            addCurveTriangle(pathData.path.elementAt(concaveElementIndex), p[0], p[1], p[2]);
+            addCurveTriangle(pathData.fillPath.elementAt(concaveElementIndex), p[0], p[1], p[2]);
         } else if (convexElementIndex != -1) {
             int oi = (6 - si - ei) % 3;
             const auto &otherPoint = p[oi];
-            const auto &element = pathData.path.elementAt(convexElementIndex);
+            const auto &element = pathData.fillPath.elementAt(convexElementIndex);
             // We have to test whether the triangle can cross the line TODO: use the toplevel element's safe space
             bool safeSpace = pointInSafeSpace(otherPoint, element);
             if (safeSpace) {
@@ -1747,34 +1294,18 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesLineShader(cons
         }
     }
 
+    QVector<quint32> indices = node->uncookedIndexes();
     if (indices.size() > 0) {
-        auto *node = new QQuickShapeLoopBlinnNode(pathData.gradientType);
-        node->color = color;
-        node->fillGradient = pathData.gradient;
+        node->setColor(color);
+        node->setFillGradient(pathData.gradient);
 
-        if (pathData.useFragmentShaderStroker() && pathData.isStrokeVisible() && pathData.pen.isSolid()) {
-            node->strokeColor = pathData.pen.color();
-            node->strokeWidth = pathData.pen.widthF();
-        }
-
-        QSGGeometry *g = new QSGGeometry(QQuickShapeLoopBlinnNode::attributes(),
-                                         vertexBuffer.size(), indices.size(), QSGGeometry::UnsignedIntType);
-        node->setGeometry(g);
-        g->setDrawingMode(QSGGeometry::DrawTriangles);
-
-        //qDebug() << "gvc" << g->vertexCount();
-
-        memcpy(g->vertexData(),
-               vertexBuffer.data(),
-               g->vertexCount() * g->sizeOfVertex());
-        memcpy(g->indexData(),
-               indices.data(),
-               indices.size() * g->sizeOfIndex());
-
+        node->cookGeometry();
         m_rootNode->appendChildNode(node);
         ret.append(node);
     }
-     const bool wireFrame = debugVisualization() & DebugWireframe;
+
+
+    const bool wireFrame = debugVisualization() & DebugWireframe;
     if (wireFrame) {
         QQuickShapeWireFrameNode *wfNode = new QQuickShapeWireFrameNode;
 
@@ -1801,21 +1332,23 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addPathNodesLineShader(cons
     return ret;
 }
 
-QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addStrokeNodes(const PathData &pathData, NodeList *debugNodes)
+QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addTriangulatingStrokerNodes(const PathData &pathData, NodeList *debugNodes)
 {
     QVector<QSGGeometryNode *> ret;
     const QColor &color = pathData.pen.color();
 
-    QVector<QQuickShapeLoopBlinnNode::LoopBlinnVertex> vertexBuffer;
-    QVector<quint32> indices;
     bool visualizeDebug = debugVisualization() & DebugCurves;
     const float dbg = visualizeDebug  ? 0.5f : 0.0f;
     QVector<QQuickShapeWireFrameNode::WireFrameVertex> wfVertices;
 
     QTriangulatingStroker stroker;
-    const QVectorPath &vp = qtVectorPathForPath(pathData.fillPath);
+    const auto painterPath = pathData.strokePath.toPainterPath();
+    const QVectorPath &vp = qtVectorPathForPath(painterPath);
     QPen pen = pathData.pen;
     stroker.process(vp, pen, {}, {});
+
+    auto *node = new QQuickShapeCurveNode;
+    node->setGradientType(pathData.gradientType);
 
     auto findPointOtherSide = [](const QVector2D &startPoint, const QVector2D &endPoint, const QVector2D &referencePoint){
 
@@ -1832,7 +1365,6 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addStrokeNodes(const PathDa
     static bool disableExtraTriangles = qEnvironmentVariableIntValue("QT_QUICKSHAPES_WIP_DISABLE_EXTRA_STROKE_TRIANGLES");
 
     auto addStrokeTriangle = [&](const QVector2D &p1, const QVector2D &p2, const QVector2D &p3, bool){
-        int currentVertex = vertexBuffer.count();
         //constexpr QVector3D uv(0.0, 1.0, -1.0);
 
 
@@ -1841,11 +1373,18 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addStrokeNodes(const PathDa
             return;
         }
 
+        auto uvForPoint = [&p1, &p2, &p3](QVector2D p) {
+            auto uv = curveUv(p1, p2, p3, p);
+            return QVector3D(uv.x(), uv.y(), 0.0f); // Line
+        };
 
-        vertexBuffer.append({p1.x(), p1.y(), 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, dbg}); // edge start
-        vertexBuffer.append({p2.x(), p2.y(), 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, dbg}); // inner
-        vertexBuffer.append({p3.x(), p3.y(), 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, dbg}); // edge end
-        indices << currentVertex << currentVertex + 1 << currentVertex + 2;
+        node->appendTriangle(p1, p2, p3,
+                             uvForPoint,
+                             QVector4D(1.0f, 0.0, 0.0, dbg),
+                             QVector4D(0.0f, 1.0, 0.0, dbg),
+                             QVector4D(0.0f, 0.0, 1.0, dbg));
+
+
         wfVertices.append({p1.x(), p1.y(), 1.0f, 0.0f, 0.0f}); // 0
         wfVertices.append({p2.x(), p2.y(), 0.0f, 0.1f, 0.0f}); // 1
         wfVertices.append({p3.x(), p3.y(), 0.0f, 0.0f, 1.0f}); // 2
@@ -1854,9 +1393,15 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addStrokeNodes(const PathDa
             // Add a triangle on the outer side of the line to get some more AA
             // The new point replaces p2 (currentVertex+1)
             QVector2D op = findPointOtherSide(p1, p3, p2);
+            node->appendTriangle(p1, op, p3,
+                                 uvForPoint,
+                                 QVector4D(1.0f, 0.0, 0.0, dbg),
+                                 QVector4D(1.0f, 1.0, 0.0, dbg),
+                                 QVector4D(0.0f, 0.0, 1.0, dbg));
+
+            wfVertices.append({p1.x(), p1.y(), 1.0f, 0.0f, 0.0f});
             wfVertices.append({op.x(), op.y(), 0.0f, 1.0f, 0.0f}); // replacing p2
-            vertexBuffer.append({op.x(), op.y(), 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, dbg});
-            indices << currentVertex << currentVertex + 3 << currentVertex + 2;
+            wfVertices.append({p3.x(), p3.y(), 0.0f, 0.0f, 1.0f});
         }
     };
 
@@ -1871,30 +1416,12 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addStrokeNodes(const PathDa
         addStrokeTriangle(p[0], p[1], p[2], isOdd);
     }
 
+    QVector<quint32> indices = node->uncookedIndexes();
     if (indices.size() > 0) {
-        auto *node = new QQuickShapeLoopBlinnNode(pathData.gradientType);
-        node->color = color;
-        node->fillGradient = pathData.gradient;
+        node->setColor(color);
+        node->setFillGradient(pathData.gradient);
 
-        if (pathData.useFragmentShaderStroker() && pathData.isStrokeVisible() && pathData.pen.isSolid()) {
-            node->strokeColor = pathData.pen.color();
-            node->strokeWidth = pathData.pen.widthF();
-        }
-
-        QSGGeometry *g = new QSGGeometry(QQuickShapeLoopBlinnNode::attributes(),
-                                         vertexBuffer.size(), indices.size(), QSGGeometry::UnsignedIntType);
-        node->setGeometry(g);
-        g->setDrawingMode(QSGGeometry::DrawTriangles);
-
-        //qDebug() << "gvc" << g->vertexCount();
-
-        memcpy(g->vertexData(),
-               vertexBuffer.data(),
-               g->vertexCount() * g->sizeOfVertex());
-        memcpy(g->indexData(),
-               indices.data(),
-               indices.size() * g->sizeOfIndex());
-
+        node->cookGeometry();
         m_rootNode->appendChildNode(node);
         ret.append(node);
     }
@@ -1925,7 +1452,7 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addStrokeNodes(const PathDa
     return ret;
 }
 
-void QQuickShapeCurveRenderer::setRootNode(QQuickShapeCurveNode *node)
+void QQuickShapeCurveRenderer::setRootNode(QSGNode *node)
 {
     m_rootNode = node;
 }
@@ -1964,7 +1491,7 @@ namespace {
   triangles are colliding.
 */
 
-// The sign of the determinant tells the winding order
+// The sign of the determinant tells the winding order: positive means counter-clockwise
 static inline double determinant(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3)
 {
     return p1.x() * (p2.y() - p3.y())
@@ -2081,15 +1608,18 @@ struct TriangleData
     QVector2D points[3];
     int pathElementIndex;
     QVector3D debugColor;
-    bool specialDebug = false;
+    bool specialDebug = false; // Quick way of debugging special cases without having to change debugColor
 };
 
+// Returns a vector that is normal to baseLine, pointing to the right
 QVector2D normalVector(QVector2D baseLine)
 {
     QVector2D normal = QVector2D(-baseLine.y(), baseLine.x()).normalized();
     return normal;
 }
 
+// Returns a vector that is normal to the path and pointing to the right. If endSide is false
+// the vector is normal to the start point, otherwise to the end point
 QVector2D normalVector(const QuadPath::Element &element, bool endSide = false)
 {
     if (element.isLine())
@@ -2100,10 +1630,29 @@ QVector2D normalVector(const QuadPath::Element &element, bool endSide = false)
         return normalVector(element.endPoint() - element.controlPoint());
 }
 
-QVector2D angleBisector(const QuadPath::Element &element1, const QuadPath::Element &element2, float strokeMargin)
+// Returns a vector that is parallel to the path. If endSide is false
+// the vector starts at the start point and points forward,
+// otherwise it starts at the end point and points backward
+QVector2D tangentVector(const QuadPath::Element &element, bool endSide = false)
+{
+    if (element.isLine()) {
+        if (!endSide)
+            return element.endPoint() - element.startPoint();
+        else
+            return element.startPoint() - element.endPoint();
+    } else {
+        if (!endSide)
+            return element.controlPoint() - element.startPoint();
+        else
+            return element.controlPoint() - element.endPoint();
+    }
+}
+
+
+QVector2D miterBisector(const QuadPath::Element &element1, const QuadPath::Element &element2, float strokeMargin, float inverseMiterLimit,
+                   bool *ok = nullptr, bool *pointingRight = nullptr)
 {
     Q_ASSERT(element1.endPoint() == element2.startPoint());
-
 
     const auto p1 = element1.isLine() ? element1.startPoint() : element1.controlPoint();
     const auto p2 = element1.endPoint();
@@ -2118,6 +1667,10 @@ QVector2D angleBisector(const QuadPath::Element &element1, const QuadPath::Eleme
         // angle bisector formula will give an almost null vector: use normal of bisector of normals instead
         QVector2D n1(-v1.y(), v1.x());
         QVector2D n2(-v2.y(), v2.x());
+        if (ok)
+            *ok = true;
+        if (pointingRight)
+            *pointingRight = true;
         return (n2 - n1).normalized() * strokeMargin;
     } else {
         // We need to increase the length, so that the result covers the whole miter
@@ -2128,460 +1681,351 @@ QVector2D angleBisector(const QuadPath::Element &element1, const QuadPath::Eleme
         float cos2x = QVector2D::dotProduct(v1, v2);
         cos2x = qMin(1.0f, cos2x); // Allow for float inaccuracy
         float sine = sqrt((1.0f - cos2x) / 2);
-        sine = qMax(sine, 0.1f); // Avoid divide by zero
-
+        if (ok)
+            *ok = sine >= inverseMiterLimit / 2.0f;
+        if (pointingRight)
+            *pointingRight = determinant(p1, p2, p3) > 0;
+        sine = qMax(sine, 0.01f); // Avoid divide by zero
         return bisector.normalized() * strokeMargin / sine;
-        // TODO: Make a proper bevel at that point
-        // ### This is *not* the right place to do a miter limit: The inner join needs to be as long as
-        // it needs to be, independent of the miter on the other side. (We still need to avoid a divide
-        // by zero, of course.)
     }
 }
 
-// Returns true if p and q are on the same side of the line AB
-bool onSameSideOfLine(const QVector2D &a, const QVector2D &b, const QVector2D &p, const QVector2D &q)
+// Really simplistic O(n^2) triangulator - only intended for five points
+QList<TriangleData> simplePointTriangulator(const QList<QVector2D> &pts, int elementIndex)
 {
-    auto baseLine = a - b;
-    QVector2D n(-baseLine.y(), baseLine.x());
-    float pSide = testSideOfLineByNormal(a, n, p);
-    float qSide = testSideOfLineByNormal(a, n, q);
-    return pSide * qSide >= 0;
-}
-
-// Returns true if the entire curve triangle is on the same side of the line p1-p2
-bool controlPointInsideLine(const QuadPath::Element &element, const QVector2D &p1, const QVector2D &p2)
-{
-    bool s1 = determinant(p1, p2, element.startPoint()) < 0;
-    auto s2 = determinant(p1, p2, element.endPoint()) < 0;
-    auto s3 = determinant(p1, p2, element.controlPoint()) < 0;
-    // If all determinants have the same sign, all the points are on the same side
-    return (s1 == s2 && s2 == s3);
-}
-
-inline bool lineIntersects(const QVector2D &v1_, const QVector2D &v2_,
-                           const QVector2D &u1_, const QVector2D &u2_)
-{
-#if 1
-    QPointF v1 = v1_.toPointF();
-    QPointF v2 = v2_.toPointF();
-    QPointF u1 = u1_.toPointF();
-    QPointF u2 = u2_.toPointF();
-
-    if ( (v1.x() < u1.x() && v1.x() < u2.x() && v2.x() < u1.x() && v2.x() < u2.x())
-        || (v1.x() > u1.x() && v1.x() > u2.x() && v2.x() > u1.x() && v2.x() > u2.x())
-        || (v1.y() < u1.y() && v1.y() < u2.y() && v2.y() < u1.y() && v2.y() < u2.y())
-        || (v1.y() > u1.y() && v1.y() > u2.y() && v2.y() > u1.y() && v2.y() > u2.y())) {
-        return false;
-    }
-
-    // Copied from QLineF::intersects() with some changes to ordering to speed
-    // up for our use case
-    const QPointF a = v2 - v1;
-    const QPointF b = u1 - u2;
-    const QPointF c = v1 - u1;
-
-    const qreal denominator = a.y() * b.x() - a.x() * b.y();
-    if (denominator == 0.0 || !qt_is_finite(denominator))
-        return false;
-
-    const qreal reciprocal = 1.0 / denominator;
-    qreal na = (b.y() * c.x() - b.x() * c.y()) * reciprocal;
-    if (na < 0.0 || na > 1.0)
-        return false;
-
-    qreal nb = (a.x() * c.y() - a.y() * c.x()) * reciprocal;
-    if (nb < 0.0 || nb > 1.0)
-        return false;
-
-    const QPointF intersectionPoint = v1 + a * na;
-    return intersectionPoint != v1 && intersectionPoint != v2 && intersectionPoint != u1 && intersectionPoint != u2;
-    return true;
-#else
-    QLineF v(v1.toPointF(), v2.toPointF());
-    QLineF u(u1.toPointF(), u2.toPointF());
-
-    QPointF intersectionPoint;
-    if (v.intersects(u, &intersectionPoint) == QLineF::BoundedIntersection) {
-        return (intersectionPoint != v.p1() && intersectionPoint != v.p2()
-                && intersectionPoint != u.p1() && intersectionPoint != u.p2());
-    }
-
-    return false;
-#endif
-}
-
-
-static QList<TriangleData> customTriangulator(const QuadPath &path, float margin, bool miterJoin)
-{
+    int count = pts.size();
+    Q_ASSERT(count >= 3);
     QList<TriangleData> ret;
 
-    // TODO: We repeat the same calculations for each side of each join: try to remember the values from the previous
-    // element. (The difficult part is path closures)
+    ret.append({{pts[0], pts[1], pts[2]}, elementIndex, {1, 0, 0}});
 
-    auto handleElement = [&ret, margin, miterJoin](const QuadPath::Element *prev, const QuadPath::Element *current, const QuadPath::Element *next, const int elementIndex) {
-        QVector2D p1, p2, p3, p4;
-
-
-        auto startNormal = normalVector(*current) * margin;
-        auto endNormal = normalVector(*current, true) * margin;
-        auto startBisector = prev ? angleBisector(*prev, *current, margin) : startNormal;
-        auto endBisector = next ? angleBisector(*current, *next, margin) : endNormal;
-
-        const auto &sp = current->startPoint();
-        const auto &ep = current->endPoint();
-
-        // p1: bisect on the "inside" of the join, p2: normal on the "outside"
-        // guess which side is which: (TODO: we should be able to know this)
-        bool bevelPointReversed = false;
-
-        if (prev) {
-            const auto &prevPoint = prev->isLine() ? prev->startPoint() : prev->controlPoint();
-            const auto &lineStart = current->startPoint();
-            const auto &lineEnd = current->isLine() ? current->endPoint() : current->controlPoint();
-            if (miterJoin) {
-                p1 = sp + startBisector;
-                p2 = sp - startBisector;
-            } else {
-                p1 = sp - startBisector;
-                p2 = sp - startNormal;
-                // p1 should be on the same side as the start point of the previous element
-                if (!onSameSideOfLine(lineStart, lineEnd, p1, prevPoint)) {
-                    p1 = sp + startBisector;
-                }
-                // p2 should be on the opposite side ### TODO: optimize test, reusing intermediates from test above
-                if (onSameSideOfLine(lineStart, lineEnd, p2, prevPoint)) {
-                    p2 = sp + startNormal;
-                    bevelPointReversed = true;
-                }
-            }
-        } else {
-            p1 = sp + startNormal;
-            p2 = sp - startNormal;
+    // hull is always in positive determinant winding order
+    QList<QVector2D> hull;
+    float det1 = determinant(pts[0], pts[1], pts[2]);
+    if (det1 > 0)
+        hull << pts[0] << pts[1] << pts[2];
+    else
+        hull << pts[2] << pts[1] << pts[0];
+    auto connectableInHull = [&](const QVector2D &pt) -> QList<int> {
+        QList<int> r;
+        const int n = hull.size();
+        for (int i = 0; i < n; ++i) {
+            const auto &p1 = hull.at(i);
+            const auto &p2 = hull.at((i+1) % n);
+            if (determinant(p1, p2, pt) < 0.0f)
+                r << i;
         }
-        auto bevelPoint = p2; // This is one corner of the "gap" triangle
-
-        // p3: bisect on the "inside" of the join, p4: normal on the "outside"
-        // For curves, we use the tangent line of the next element
-        if (next) {
-            const auto &lineStart = current->isLine() ? current->startPoint() : current->controlPoint();
-            const auto &lineEnd = current->endPoint();
-            const auto &nextPoint = next->isLine() ? next->endPoint() : next->controlPoint();
-            if (miterJoin) {
-                p3 = ep + endBisector;
-                p4 = ep - endBisector;
-            } else {
-                p3 = ep - endBisector;
-                p4 = ep - endNormal;
-                // p3 should be on the same side of our line as the end point of the next element
-                if (!onSameSideOfLine(lineStart, lineEnd, p3, nextPoint)) {
-                    p3 = ep + endBisector;
-                }
-                // p4 should be on the opposite side ### TODO: optimize test, reusing intermediates from test above
-                if (onSameSideOfLine(lineStart, lineEnd, p4, nextPoint)) {
-                    p4 = ep + endNormal;
-                }
-            }
-        } else {
-            p3 = ep + endNormal;
-            p4 = ep - endNormal;
-        }
-
-        //bool intersect = lineIntersects(p1, p2, p3, p4); // Check if our quadrilateral is self-intersecting
-        //### Not enough! It's also wrong if p1-p2 is completely on the wrong side of p3-p4
-        //bool ok = onSameSideOfLine(p1, p2, p3, p4) && onSameSideOfLine(p1, p2, p3, current->endPoint());
-        //### And that's still not enough, since the line can turn almost 180 degrees
-
-        // New attempt: see if the bisector intersects the normal...
-        bool notOK = lineIntersects(sp + startNormal, sp - startNormal, ep + endBisector, ep - endBisector)
-                     || lineIntersects(sp + startBisector, sp - startBisector, ep + endNormal, ep - endNormal);
-
-        // TESTING: Avoid the inner bisector extending past the stroke. We need to move the points around,
-        // but for now, just accept overpainting. Only implemented for BevelJoin
-        if (notOK && !miterJoin) {
-            p1 = current->startPoint() + startNormal;
-            p2 = current->startPoint() - startNormal;
-            p3 = current->endPoint() + endNormal;
-            p4 = current->endPoint() - endNormal;
-        }
-
-        if (current->isLine()) {
-            // Rearrange so p1, p3 is on the same side of the path, and p2, p4 is on the other side
-            if (!onSameSideOfLine(current->startPoint(), current->endPoint(), p1, p3))
-                qSwap(p3, p4);
-        } else {
-            // Rearrange so that p1 and p3 are on the outside of the curve triangle, i.e. p2 and p4 are on the same side
-            // of the respective tangent line as the path
-
-
-            // p1 should be on the outside of sp-cp
-            if (onSameSideOfLine(current->startPoint(), current->controlPoint(), p1, current->endPoint()))
-                qSwap(p1, p2);
-            // p3 should be on the outside of ep-cp
-            if (onSameSideOfLine(current->endPoint(), current->controlPoint(), p3, current->startPoint()))
-                qSwap(p3, p4);
-        }
-
-
-        bool special = notOK;
-
-        /*
-                         p
-            p1                           p3
-
-            sp                           ep
-
-            p2                           p4
-
-        */
-
-        //Note: p1-sp-p2 is no longer guaranteed to be on a line, so we need to add extra triangles
-
-        if (current->isLine() || controlPointInsideLine(*current, p1, p3)) {
-            float r = current->isLine() ? 0.0f : 0.5f;
-            ret.append({{p1, p2, p3}, elementIndex, {r, 1.0f, 0.0f}, special});
-            ret.append({{p2, p3, p4}, elementIndex, {r, 0.0f, 1.0f}, special});
-            if (!miterJoin) { // TODO: handle bevel for overlong miter
-                ret.append({{p1, sp, p2}, elementIndex, {r, 0.5f, 1.0f}, special});
-                ret.append({{p3, ep, p4}, elementIndex, {r, 0.5f, 1.0f}, special});
-            }
-            //qDebug() << "adding triangles" << p1 << p2 << p3 << "and" << p2 << p3 << p4;
-        } else {
-
-            const auto &p = current->controlPoint();
-            ret.append({{p1, p2, p}, elementIndex, {1.0f, 0.0f, 0.0f}, special});
-            ret.append({{p, p2, p4}, elementIndex, {1.0f, 1.0f, 0.0f}, special});
-            ret.append({{p, p3, p4}, elementIndex, {1.0f, 0.0f, 1.0f}, special});
-            if (!miterJoin) { // TODO: handle bevel for overlong miter
-                ret.append({{p1, sp, p2}, elementIndex, {0.5f, 1.0f, 0.0f}, special});
-                ret.append({{p3, ep, p4}, elementIndex, {0.5f, 1.0f, 0.0f}, special});
-            }
-            //qDebug() << "adding triangle1" << p1 << p2 << p << "triangle2" << p << p2 << p4 << "triangle3" << p << p3 << p4 ;
-
-
-            //            qDebug() << "Curve element" << p1 << p2 << p << p3 << p4;
-        }
-
-        if (prev && !miterJoin) {
-            // Try to do the bevel triangle: prev bevelpoint - sp - bevelPoint
-            auto prevNormal = normalVector(*prev, true) * margin; // Do we have normals in different directions???
-            auto pbp = bevelPointReversed ? sp + prevNormal : sp - prevNormal;
-            //qDebug() << "bevel triangle" << pbp << sp << bevelPoint;
-            ret.append({{pbp, sp, bevelPoint}, -1, {}, true});
-        }
+        return r;
     };
-
-
-    /*
-        Iterate through the path. Each start element has to be postponed until the end of the sub-path.
-        At that point, we have to process both the start and the end elements.
-
-        If the end element's end point is equal to the start element's start point, we treat them as connected,
-        otherwise we add null pointers
-    */
-
-    const QuadPath::Element *startElement = nullptr;
-    int startElementIndex = -1;
-    const QuadPath::Element *prevElement = nullptr;
-    //### For now, we know that this path has not been split
-    for (int i = 0; i < path.elementCount(); ++i) {
-        const auto *element = &path.elementAt(i);
-        // ### isSubPathEnd() doesn't work unless subPathsClosed() has been called
-        bool isSubPathEnd = i == path.elementCount() - 1 || path.elementAt(i + 1).isSubpathStart();
-        bool isSubPathStart = element->isSubpathStart() || i == 0; // 0 should always be subPathStart, but just to be sure
-        if (isSubPathStart) {
-            if (isSubPathEnd) {
-                // If the element is both start and end, it's a standalone
-                handleElement(nullptr, element, nullptr, i);
-                startElement = nullptr; // These should be ignored, but reset just in case
-                prevElement = nullptr;
-            } else {
-                // this element will be handled later, when we know whether the sub-path is closed
-                startElement = element;
-                startElementIndex = i;
-                prevElement = element;
-            }
+    for (int i = 3; i < count; ++i) {
+        const auto &p = pts[i];
+        auto visible = connectableInHull(p);
+        if (visible.isEmpty())
             continue;
+        int visCount = visible.count();
+        int hullCount = hull.count();
+        // Find where the visible part of the hull starts. (This is the part we need to triangulate to,
+        // and the part we're going to replace. "visible" contains the start point of the line segments that are visible from p.
+        int boundaryStart = visible[0];
+        for (int j = 0; j < visCount - 1; ++j) {
+            if ((visible[j] + 1) % hullCount != visible[j+1]) {
+                boundaryStart = visible[j + 1];
+                break;
+            }
         }
-
-        const QuadPath::Element *nextElement = nullptr;
-        if (i != 0 && !element->isSubpathStart())
-            prevElement = &path.elementAt(i - 1);
-
-        if (isSubPathEnd) {
-            //handle the previous start element: check if it is connected to this element
-            Q_ASSERT(startElement);
-            bool subPathClosed = element->endPoint() == startElement->startPoint();
-            handleElement(subPathClosed ? element : nullptr, startElement, &path.elementAt(startElementIndex + 1), startElementIndex);
-            if (subPathClosed)
-                nextElement = startElement;
-            startElement = nullptr;
-         } else {
-            nextElement = &path.elementAt(i + 1);
-         }
-         handleElement(prevElement, element, nextElement, i);
-         prevElement = isSubPathEnd ? nullptr : element;
+        // Now add those triangles
+        for (int j = 0; j < visCount; ++j) {
+            const auto &p1 = hull.at((boundaryStart + j) % hullCount);
+            const auto &p2 = hull.at((boundaryStart + j+1) % hullCount);
+            ret.append({{p1, p2, p}, elementIndex, {1,1,0}});
+        }
+        // Finally replace the points that are now inside the hull
+        // We insert p after boundaryStart, and before boundaryStart + visCount (modulo...)
+        // and remove the points inbetween
+        int pointsToKeep = hullCount - visCount + 1;
+        QList<QVector2D> newHull;
+        newHull << p;
+        for (int j = 0; j < pointsToKeep; ++j) {
+            newHull << hull.at((j + boundaryStart + visCount) % hullCount);
+        }
+        hull = newHull;
     }
-    Q_ASSERT(!startElement); // Should have been handled in the loop
+    return ret;
+}
 
+
+static QList<TriangleData> customTriangulator2(const QuadPath &path, float penWidth, Qt::PenJoinStyle joinStyle, Qt::PenCapStyle capStyle, float miterLimit)
+{
+    const bool bevelJoin = joinStyle == Qt::BevelJoin;
+    const bool roundJoin = joinStyle == Qt::RoundJoin;
+    const bool miterJoin = !bevelJoin && !roundJoin;
+
+    const bool roundCap = capStyle == Qt::RoundCap;
+    const bool squareCap = capStyle == Qt::SquareCap;
+
+    Q_ASSERT(miterLimit > 0 || !miterJoin);
+    float inverseMiterLimit = miterJoin ? 1.0f / miterLimit : 1.0;
+
+
+    static const int additionalSpace = qEnvironmentVariableIntValue("QT_QUICKSHAPES_EXTRA_SPACE");
+
+    const float extraFactor = roundJoin && additionalSpace ? (penWidth + additionalSpace) / penWidth : 2.0;
+
+    QList<TriangleData> ret;
+    int count = path.elementCount();
+    int subStart = 0;
+    while (subStart < count) {
+         int subEnd = subStart;
+         for (int i = subStart + 1; i < count; ++i) {
+            const auto &e = path.elementAt(i);
+            if (e.isSubpathStart()) {
+                subEnd = i - 1;
+                break;
+            }
+            if (i == count - 1) {
+                subEnd = i;
+                break;
+            }
+         }
+         bool closed = path.elementAt(subStart).startPoint() == path.elementAt(subEnd).endPoint();
+         const int subCount = subEnd - subStart + 1;
+
+         auto elementAt = [&](int idx, int delta) -> const QuadPath::Element * {
+             int subIdx = idx - subStart;
+             if (closed) {
+                 subIdx = (subIdx + subCount + delta) % subCount;
+                 return &path.elementAt(subStart + subIdx);
+             }
+             subIdx += delta;
+             if (subIdx >= 0 && subIdx < subCount)
+                 return &path.elementAt(subStart + subIdx);
+             return nullptr;
+         };
+
+         for (int i = subStart; i <= subEnd; ++i) {
+            const auto &element = path.elementAt(i);
+            const auto *nextElement = elementAt(i, +1);
+            const auto *prevElement = elementAt(i, -1);
+
+            const auto &s = element.startPoint();
+            const auto &c = element.controlPoint();
+            const auto &e = element.endPoint();
+
+            // Normals point to the right
+            QVector2D startNormal = normalVector(element).normalized() * (penWidth / 2);
+            QVector2D endNormal = normalVector(element, true).normalized() * (penWidth / 2);
+
+            // Bisectors point to the inside of the curve: make them point the same way as normals
+            bool startBisectorPointsRight = true;
+            bool startBisectorWithinMiterLimit = true;
+            QVector2D startBisector = prevElement ? miterBisector(*prevElement, element, penWidth / 2, inverseMiterLimit, &startBisectorWithinMiterLimit, &startBisectorPointsRight) : startNormal;
+            if (!startBisectorPointsRight)
+                startBisector = -startBisector;
+
+            bool endBisectorPointsRight = true;
+            bool endBisectorWithinMiterLimit = true;
+            QVector2D endBisector = nextElement ? miterBisector(element, *nextElement, penWidth / 2, inverseMiterLimit, &endBisectorWithinMiterLimit, &endBisectorPointsRight) : endNormal;
+            if (!endBisectorPointsRight)
+                endBisector = -endBisector;
+
+            // We can't use the simple miter for miter joins, since the shader currently only supports round joins
+            bool simpleMiter = joinStyle == Qt::RoundJoin;
+
+            // TODO: miterLimit
+            bool startMiter = simpleMiter && startBisectorWithinMiterLimit;
+            bool endMiter = simpleMiter && endBisectorWithinMiterLimit;
+
+            QVector2D p1, p2, p3, p4;
+            if (startMiter) {
+                //### bisector on inside can extend further than element: must limit it somehow
+                p1 = s + startBisector * extraFactor;
+                p2 = s - startBisector * extraFactor;
+            } else {
+                // TODO: remove the overdraw by using the intersection point on the inside (for lines, this is the bisector, but
+                // it's more complex for non-smooth curve joins)
+
+                // For now, simple bevel: just use normals and live with overdraw
+                p1 = s + startNormal * extraFactor;
+                p2 = s - startNormal * extraFactor;
+            }
+            // repeat logic above for the other end:
+            if (endMiter) {
+                p3 = e + endBisector * extraFactor;
+                p4 = e - endBisector * extraFactor;
+            } else {
+                p3 = e + endNormal * extraFactor;
+                p4 = e - endNormal * extraFactor;
+            }
+
+            // End caps
+
+            if (!prevElement) {
+                QVector2D capSpace = tangentVector(element).normalized() * -penWidth;
+                if (roundCap) {
+                    p1 += capSpace;
+                    p2 += capSpace;
+                } else if (squareCap) {
+                    QVector2D c1 = p1 + capSpace;
+                    QVector2D c2 = p2 + capSpace;
+                    ret.append({{p1, s, c1}, -1, {1, 1, 0}, true});
+                    ret.append({{c1, s, c2}, -1, {1, 1, 0}, true});
+                    ret.append({{p2, s, c2}, -1, {1, 1, 0}, true});
+                }
+            }
+            if (!nextElement) {
+                QVector2D capSpace = tangentVector(element, true).normalized() * -penWidth;
+                if (roundCap) {
+                    p3 += capSpace;
+                    p4 += capSpace;
+                } else if (squareCap) {
+                    QVector2D c3 = p3 + capSpace;
+                    QVector2D c4 = p4 + capSpace;
+                    ret.append({{p3, e, c3}, -1, {1, 1, 0}, true});
+                    ret.append({{c3, e, c4}, -1, {1, 1, 0}, true});
+                    ret.append({{p4, e, c4}, -1, {1, 1, 0}, true});
+                }
+            }
+
+            if (element.isLine()) {
+                ret.append({{p1, p2, p3}, i, {0,1,0}, false});
+                ret.append({{p2, p3, p4}, i, {0.5,1,0}, false});
+            } else {
+                bool controlPointOnRight = determinant(s, c, e) > 0;
+                QVector2D controlPointOffset = (startNormal + endNormal).normalized() * penWidth;
+                QVector2D p5 = controlPointOnRight ? c - controlPointOffset : c + controlPointOffset;
+                ret.append(simplePointTriangulator({p1, p2, p5, p3, p4}, i));
+            }
+
+            if (!endMiter && nextElement) {
+                // inside of join (opposite of bevel) is defined by
+                // triangle s, e, next.e
+                QVector2D outer1, outer2;
+                const auto &np = nextElement->isLine() ? nextElement->endPoint() : nextElement->controlPoint();
+                bool innerOnRight = endBisectorPointsRight;
+                auto nextNormal = calcNormalVector(e, np).normalized() * penWidth / 2;
+
+                if (innerOnRight) {
+                    outer1 = e - 2 * endNormal;
+                    outer2 = e + 2 * nextNormal;
+                } else {
+                    outer1 = e + 2 * endNormal;
+                    outer2 = e - 2 * nextNormal;
+                }
+
+                if (bevelJoin || (miterJoin && !endBisectorWithinMiterLimit)) {
+                    ret.append({{outer1, e, outer2}, -1, {1,1,0}, false});
+                } else if (roundJoin) {
+                    ret.append({{outer1, e, outer2}, i, {1,1,0}, false});
+                    QVector2D nn = calcNormalVector(outer1, outer2).normalized() * penWidth / 2;
+                    if (!innerOnRight)
+                        nn = -nn;
+                    ret.append({{outer1, outer1 + nn, outer2}, i, {1,1,0}, false});
+                    ret.append({{outer1 + nn, outer2, outer2 + nn}, i, {1,1,0}, false});
+
+                } else if (miterJoin) {
+                    QVector2D outer = innerOnRight ? e - endBisector * 2 : e + endBisector * 2;
+                    ret.append({{outer1, e, outer}, -2, {1,1,0}, false});
+                    ret.append({{outer, e, outer2}, -2, {1,1,0}, false});
+                }
+            }
+         }
+         subStart = subEnd + 1;
+    }
     return ret;
 }
 
 };
 
-QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addNodesStrokeShader(const PathData &pathData, NodeList *debugNodes)
+QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addCurveStrokeNodes(const PathData &pathData, NodeList *debugNodes)
 {
     QVector<QSGGeometryNode *> ret;
-
-    Q_UNUSED(debugNodes);
-
     const QColor &color = pathData.pen.color();
-    Q_UNUSED(color)
 
-    QVector<QQuickShapeLoopBlinnNode::LoopBlinnVertex> vertexBuffer;
-    QVector<quint32> indices;
-    bool visualizeDebug = debugVisualization() & DebugCurves;
-    const float dbg = visualizeDebug  ? 0.5f : 0.0f;
+    auto *node = new QQuickShapeStrokeNode;
+
     QVector<QQuickShapeWireFrameNode::WireFrameVertex> wfVertices;
 
-    const auto &thePath = pathData.qPath;
+    float miterLimit = pathData.pen.miterLimit();
+    float penWidth = pathData.pen.widthF();
 
-   // qDebug() << "Stroking" << thePath;
+    auto thePath = pathData.strokePath;
+    auto triangles = customTriangulator2(thePath, penWidth, pathData.pen.joinStyle(), pathData.pen.capStyle(), miterLimit);
 
+    auto addCurveTriangle = [&](const QuadPath::Element &element, const QVector2D &p0, const QVector2D &p1, const QVector2D &p2){
 
-    // TODO: calculate margin correctly for narrow angles. If it's too big we'll get into unsafe space more often
-    auto triangles = customTriangulator(thePath, float(pathData.pen.widthF()) * 1, pathData.pen.joinStyle() == Qt::MiterJoin); //### SvgMiterJoin ???
-
-    //### TODO: reduce code duplication
-    auto addVertexDataForPoint = [&vertexBuffer, &wfVertices, dbg](const QuadPath::Element &element, const QVector2D &p, const QVector3D &color, int wfIndex) {
-        auto uv = element.uvForPoint(p);
-
-        float r = color.x(), g = color.y(), b = color.z();
-
-        vertexBuffer.append({p.x(), p.y(), uv.x(), uv.y(), uv.z(), r, g, b, dbg});
-        switch (wfIndex % 3) {
-        case 0:
-            wfVertices.append({p.x(), p.y(), 1.0f, 0.0f, 0.0f});
-            break;
-        case 1:
-            wfVertices.append({p.x(), p.y(), 0.0f, 1.0f, 0.0f});
-            break;
-        case 2:
-            wfVertices.append({p.x(), p.y(), 0.0f, 0.0f, 1.0f});
-            break;
+        if (element.isLine()) {
+            node->appendTriangle(p0, p1, p2,
+                                 element.startPoint(), element.endPoint());
+        } else {
+            node->appendTriangle(p0, p1, p2,
+                                 element.startPoint(), element.controlPoint(), element.endPoint());
         }
-    };
-
-    auto addCurveTriangle = [&](const QuadPath::Element &element, const QVector2D &sp, const QVector2D &ep, const QVector2D &cp, const QVector3D &color){
-        int currentVertex = vertexBuffer.count();
-        addVertexDataForPoint(element, sp, color, 0);
-        addVertexDataForPoint(element, cp, color, 1);
-        addVertexDataForPoint(element, ep, color, 2);
-        indices << currentVertex << currentVertex + 1 << currentVertex + 2;
+        wfVertices.append({p0.x(), p0.y(), 1.0f, 0.0f, 0.0f});
+        wfVertices.append({p1.x(), p1.y(), 0.0f, 1.0f, 0.0f});
+        wfVertices.append({p2.x(), p2.y(), 0.0f, 0.0f, 1.0f});
     };
 
     // TESTING
-    auto addBevelTriangle = [&](const QVector2D &p1, const QVector2D &p2, const QVector2D &p3)
+    auto addBevelTriangle = [&](const QVector2D &p0, const QVector2D &p1, const QVector2D &p2)
     {
-        float r = 0.0f;
-        float g = 1.0f;
-        float b = 0.5f;
+        QVector2D fp1 = p1 + (p0 - p1) / 2;
+        QVector2D fp2 = p1 + (p2 - p1) / 2;
+        QVector2D fcp = p1; // does not matter for line
 
+        // That describes a path that passes through those points. We want the stroke
+        // edge, so we need to shift everything down by the stroke offset
 
-        // MEGA HACK!!! Invent a curve based on the triangle, since we know that:
-        // p2 is the path join point
-        // the stroke passes through the mid points of p2-p1 and p2-p3
+        QVector2D nn = calcNormalVector(p0, p2);
+        if (determinant(p0, p1, p2) < 0)
+            nn = -nn;
+        float delta = penWidth / 2;
 
-        // we have static inline QVector2D curveUv(QVector2D p0, QVector2D p1, QVector2D p2, QVector2D p)
-        // which finds uv coordinates for the point p, for a quadratic curve from p0 to p2 with control point p1
+        QVector2D offset = nn.normalized() * delta;
+        fp1 += offset;
+        fp2 += offset;
+        fcp += offset;
 
-        QVector2D fp1 = p2 + (p3 - p1);
-        QVector2D fp2 = p2 - (p3 - p1);
-        QVector2D fcp = (p1 + 3 * p2 + p3) / 5; // does not matter for line
+        node->appendTriangle(p0, p1, p2, fp1, fp2);
 
-        // The bevel is not strokeWidth/2 wide, it's half this triangle's height
-        // We need to shift everything down by the difference (definitely hackish)
-
-        QVector2D vh = ((p1 - p2) + (p3 - p2)) / 2;
-        float triangleHeight = vh.length();
-        float delta = (pathData.pen.widthF() - triangleHeight) / 2;
-
-        QVector2D offset = vh.normalized() * delta;
-        fp1 -= offset;
-        fp2 -= offset;
-        fcp -= offset;
-
-
-        const auto uv1 = curveUv(fp1, fcp, fp2, p1);
-        const auto uv2 = curveUv(fp1, fcp, fp2, p2);
-        const auto uv3 = curveUv(fp1, fcp, fp2, p3);
-
-        const int currentVertex = vertexBuffer.count();
-        vertexBuffer.append({p1.x(), p1.y(), uv1.x(), uv1.y(), 0.0f, r, g, b, dbg});
-        vertexBuffer.append({p2.x(), p2.y(), uv2.x(), uv2.y(), 0.0f, r, g, b, dbg});
-        vertexBuffer.append({p3.x(), p3.y(), uv3.x(), uv3.y(), 0.0f, r, g, b, dbg});
-        indices << currentVertex << currentVertex + 1 << currentVertex + 2;
-        wfVertices.append({p1.x(), p1.y(), 1.0f, 0.0f, 0.0f});
-        wfVertices.append({p2.x(), p2.y(), 0.0f, 1.0f, 0.0f});
-        wfVertices.append({p3.x(), p3.y(), 0.0f, 0.0f, 1.0f});
+        wfVertices.append({p0.x(), p0.y(), 1.0f, 0.0f, 0.0f});
+        wfVertices.append({p1.x(), p1.y(), 0.0f, 1.0f, 0.0f});
+        wfVertices.append({p2.x(), p2.y(), 0.0f, 0.0f, 1.0f});
         //qDebug() << "bev" << p1 << p2 << p3;
     };
 
-    static constexpr QVector3D specialDebug{0.0f, 1.0f, 1.0f};
-
     for (const auto &triangle : triangles) {
          if (triangle.pathElementIndex < 0) {
-            //TESTING
+            // TODO: improve bevel logic
             addBevelTriangle(triangle.points[0], triangle.points[1], triangle.points[2]);
             continue;
          }
         const auto &element = thePath.elementAt(triangle.pathElementIndex);
-        addCurveTriangle(element, triangle.points[0], triangle.points[1], triangle.points[2],
-                         triangle.specialDebug ? specialDebug : triangle.debugColor);
+        addCurveTriangle(element, triangle.points[0], triangle.points[1], triangle.points[2]);
     }
 
+    auto indexCopy = node->uncookedIndexes(); // uncookedIndexes get delete on cooking
+
+    node->setColor(color);
+    node->setStrokeWidth(pathData.pen.widthF());
+    node->cookGeometry();
+    m_rootNode->appendChildNode(node);
+    ret.append(node);
 
 
-    if (indices.size() > 0) {
-        auto *node = new QQuickShapeLoopBlinnNode(NoGradient); // TODO: dedicated node
-        node->color = Qt::transparent;
-        //node->fillGradient = pathData.gradient;
-
-        node->strokeColor = pathData.pen.color(); // this is all you need to use the stroke shader
-        node->strokeWidth = pathData.pen.widthF();
-
-        QSGGeometry *g = new QSGGeometry(QQuickShapeLoopBlinnNode::attributes(),
-                                         vertexBuffer.size(), indices.size(), QSGGeometry::UnsignedIntType);
-        node->setGeometry(g);
-        g->setDrawingMode(QSGGeometry::DrawTriangles);
-
-        //qDebug() << "gvc" << g->vertexCount();
-
-        memcpy(g->vertexData(),
-               vertexBuffer.data(),
-               g->vertexCount() * g->sizeOfVertex());
-        memcpy(g->indexData(),
-               indices.data(),
-               indices.size() * g->sizeOfIndex());
-
-        m_rootNode->appendChildNode(node);
-        ret.append(node);
-    }
     const bool wireFrame = debugVisualization() & DebugWireframe;
     if (wireFrame) {
         QQuickShapeWireFrameNode *wfNode = new QQuickShapeWireFrameNode;
 
-        //QVarLengthArray<quint32> indices;
-
         QSGGeometry *wfg = new QSGGeometry(QQuickShapeWireFrameNode::attributes(),
                                            wfVertices.size(),
-                                           indices.size(),
+                                           indexCopy.size(),
                                            QSGGeometry::UnsignedIntType);
         wfNode->setGeometry(wfg);
 
         wfg->setDrawingMode(QSGGeometry::DrawTriangles);
         memcpy(wfg->indexData(),
-               indices.data(),
-               indices.size() * wfg->sizeOfIndex());
+               indexCopy.data(),
+               indexCopy.size() * wfg->sizeOfIndex());
         memcpy(wfg->vertexData(),
                wfVertices.data(),
                wfg->vertexCount() * wfg->sizeOfVertex());
@@ -2589,6 +2033,8 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addNodesStrokeShader(const 
         m_rootNode->appendChildNode(wfNode);
         debugNodes->append(wfNode);
     }
+
+
     return ret;
 }
 

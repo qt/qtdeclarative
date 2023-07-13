@@ -1143,9 +1143,8 @@ QSGNode *QQuickShapePrivate::createNode()
     default:
         if (QSGRendererInterface::isApiRhiBased(ri->graphicsApi())) {
             if (rendererType == QQuickShape::CurveRenderer) {
-                node = new QQuickShapeCurveNode;
-                static_cast<QQuickShapeCurveRenderer *>(renderer)->setRootNode(
-                    static_cast<QQuickShapeCurveNode *>(node));
+                node = new QSGNode;
+                static_cast<QQuickShapeCurveRenderer *>(renderer)->setRootNode(node);
             } else {
                 node = new QQuickShapeGenericNode;
                 static_cast<QQuickShapeGenericRenderer *>(renderer)->setRootNode(

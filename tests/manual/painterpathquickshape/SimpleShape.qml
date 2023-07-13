@@ -11,12 +11,11 @@ ControlledShape {
         PathPolyline {
             id: ppl
             path: [ Qt.point(150.0, 100.0),
-                    Qt.point(1250.0, 150.0),
-                    Qt.point(100.0, 1000.0),
-                    Qt.point(150, 100)
-                  ]
+                Qt.point(1250.0, 150.0),
+                Qt.point(100.0, 1000.0),
+                Qt.point(150, 100)
+            ]
         },
-
         // A very narrow shape with one convex and one concave curve
         PathMove { x: 600; y: 1200},
         PathQuad { x: 800; y: 1200; controlX: 700; controlY: 600 },
