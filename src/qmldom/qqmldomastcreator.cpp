@@ -39,12 +39,12 @@ static Q_LOGGING_CATEGORY(creatorLog, "qt.qmldom.astcreator", QtWarningMsg);
         disableScriptElements();                                                       \
     } while (false)
 
-#define Q_SCRIPTELEMENT_EXIT_IF(check)            \
-    do {                                          \
-        if (m_enableScriptExpressions && check) { \
-            Q_SCRIPTELEMENT_DISABLE();            \
-            return;                               \
-        }                                         \
+#define Q_SCRIPTELEMENT_EXIT_IF(check)              \
+    do {                                            \
+        if (m_enableScriptExpressions && (check)) { \
+            Q_SCRIPTELEMENT_DISABLE();              \
+            return;                                 \
+        }                                           \
     } while (false)
 
 QT_BEGIN_NAMESPACE
@@ -1279,25 +1279,25 @@ void QQmlDomAstCreator::endVisit(AST::ForStatement *forStatement)
     auto current = makeScriptElement<ScriptElements::ForStatement>(forStatement);
 
     if (forStatement->statement) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->setBody(currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode(std::nullopt);
     }
 
     if (forStatement->expression) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->setExpression(currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode(std::nullopt);
     }
 
     if (forStatement->condition) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->setCondition(currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode(std::nullopt);
     }
 
     if (forStatement->declarations) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || !scriptNodeStack.last().isList());
         auto variableDeclaration = makeGenericScriptElement(forStatement->declarations,
                                                             DomType::ScriptVariableDeclaration);
 
@@ -1311,7 +1311,7 @@ void QQmlDomAstCreator::endVisit(AST::ForStatement *forStatement)
     }
 
     if (forStatement->initialiser) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->setInitializer(currentScriptNodeEl().takeVariant());
         removeCurrentScriptNode(std::nullopt);
     }
