@@ -100,8 +100,8 @@ private:
     Member(class, NoMark, QV4QPointer<QObject>, qObj) \
     Member(class, NoMark, int, index)
 
-DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
-    DECLARE_MARKOBJECTS(QObjectMethod);
+DECLARE_EXPORTED_HEAP_OBJECT(QObjectMethod, FunctionObject) {
+    DECLARE_MARKOBJECTS(QObjectMethod)
 
     QQmlPropertyData *methods;
     int methodCount;
