@@ -63,7 +63,7 @@ private:
 #define QObjectMethodMembers(class, Member) \
     Member(class, Pointer, Object *, wrapper) \
 
-DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
+DECLARE_EXPORTED_HEAP_OBJECT(QObjectMethod, FunctionObject) {
     DECLARE_MARKOBJECTS(QObjectMethod)
 
     QQmlPropertyData *methods;
