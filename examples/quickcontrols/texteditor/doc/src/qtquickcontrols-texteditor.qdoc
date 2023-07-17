@@ -6,6 +6,7 @@
     \title Qt Quick Controls - Text Editor
     \keyword Qt Quick Controls 2 - Text Editor
     \ingroup qtquickcontrols-examples
+    \examplecategory {Graphics & Multimedia}
     \brief A QML app using Qt Quick Controls and a C++ class to
     provide a fully-functional rich-text editor application.
 
