@@ -9,6 +9,11 @@ import QtQuick.Layouts
 GroupBox {
     title: "Meeting Scheduler"
     property alias nextButton: nextButton
+    property string meetingOccurrence: radioOnce.checked ? "Once" : "Weekly"
+    property string onlineOfflineStatus: onlineMeeting.checked ? "Online" : "Offline"
+    property int roomNumber: room.value
+    property int calendarWeek: calendar.value
+    property string meetingDescription: description.text
 
     ColumnLayout {
         anchors.fill: parent
@@ -16,20 +21,20 @@ GroupBox {
         Row {
             spacing: 10
             RadioButton {
+                id: radioOnce
                 text: qsTr("Once")
+                checked: true
                 Accessible.role: Accessible.RadioButton
                 Accessible.name: text
                 Accessible.description: "Select this option if you want meeting once a week"
                 Accessible.checkable: true
 
                 Accessible.onToggleAction: {
-                    if (checkState === Qt.Checked)
-                        checkState = Qt.Unchecked
-                    else
-                        checkState = Qt.Checked
+                    toggle()
                 }
             }
             RadioButton {
+                id: radioWeekly
                 text: qsTr("Weekly")
                 Accessible.role: Accessible.RadioButton
                 Accessible.name: text
@@ -37,15 +42,13 @@ GroupBox {
                 Accessible.checkable: true
 
                 Accessible.onToggleAction: {
-                    if (checkState === Qt.Checked)
-                        checkState = Qt.Unchecked
-                    else
-                        checkState = Qt.Checked
+                    toggle()
                 }
             }
-
         }
+
         CheckBox {
+            id: onlineMeeting
             text: "Select if meeting will be online"
             Accessible.role: Accessible.CheckBox
             Accessible.name: text
@@ -53,15 +56,13 @@ GroupBox {
             Accessible.checkable: true
 
             Accessible.onToggleAction: {
-                if (checkState === Qt.Checked)
-                    checkState = Qt.Unchecked
-                else
-                    checkState = Qt.Checked
+                toggle()
             }
         }
 
         Row {
             spacing: 10
+            enabled: onlineMeeting.checkState === Qt.Unchecked
 
             Label {
                 text: "Select Meeting room"
@@ -73,13 +74,14 @@ GroupBox {
             }
 
             SpinBox {
-                from: 1
+                id: room
+                from: 0
                 to: 10
-                value: 5
-
+                value: 0
                 Accessible.role: Accessible.SpinBox
                 Accessible.name: "Room number"
                 Accessible.description: "Select a room for the meeting"
+                Accessible.editable: true
 
                 Accessible.onDecreaseAction: {
                     decrease()
@@ -103,11 +105,11 @@ GroupBox {
             }
 
             Slider {
+                id: calendar
                 from: 1
                 to: 52
-
                 Accessible.role: Accessible.Slider
-                Accessible.name: "Calendar number"
+                Accessible.name: "Calendar Week"
                 Accessible.description: "Select the week"
                 Accessible.onDecreaseAction: {
                     decrease()
@@ -133,23 +135,21 @@ GroupBox {
             border.color: "black"
             border.width: 1
 
-
             TextEdit {
-                id: control
+                id: description
                 anchors {
                     fill: parent
                     leftMargin: 5
                 }
-
                 wrapMode: TextEdit.Wrap
                 Accessible.role: Accessible.EditableText
                 Accessible.editable: true
                 Accessible.name: "Enter descriptiom"
                 Accessible.description: "Describe in short "
+                Accessible.multiLine: true
             }
 
         }
-
 
         Button {
             id: nextButton

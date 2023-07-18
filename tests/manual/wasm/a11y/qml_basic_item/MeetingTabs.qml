@@ -5,7 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 Item {
-
+id: root
      enum Types {Invitees, Scheduler, Summary}
 
     TabBar {
@@ -48,7 +48,6 @@ Item {
 
         MeetingInviteesPage {
             id: invitees
-
             nextButton.Accessible.onPressAction: {
                 meetingTabs.currentIndex = MeetingTabs.Types.Scheduler
             }
@@ -59,7 +58,6 @@ Item {
 
         MeetingSchedulerPage {
             id: scheduler
-
             nextButton.Accessible.onPressAction: {
                 meetingTabs.currentIndex = MeetingTabs.Types.Summary
             }
@@ -70,6 +68,11 @@ Item {
 
         MeetingSummary {
             id: activityTab
+            meetingOccurrence: scheduler.meetingOccurrence
+            onlineOfflineStatus: scheduler.onlineOfflineStatus
+            roomNumber: scheduler.roomNumber
+            calendarWeek: scheduler.calendarWeek
+            meetingDescription: scheduler.meetingDescription
         }
     }
 }

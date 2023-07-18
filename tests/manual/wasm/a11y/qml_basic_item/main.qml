@@ -28,28 +28,28 @@ ApplicationWindow {
         }
     }
 
-   Rectangle {
+    Rectangle {
 
-       width: 600
-       height: 550
-       border.color: "black"
-       border.width: 1
-       anchors {
-           left: parent.left
-           leftMargin: 20
-           top: wasmToolbar.bottom
-           topMargin: 10
-       }
+        width: 600
+        height: 550
+        border.color: "black"
+        border.width: 1
+        anchors {
+            left: parent.left
+            leftMargin: 20
+            top: wasmToolbar.bottom
+            topMargin: 10
+        }
 
-       MeetingTabs {
+        MeetingTabs {
 
-           anchors {
-               left: parent.left
-               leftMargin: 5
-               top: parent.top
-               topMargin: 5
-           }
-        width: 550
+            anchors {
+                left: parent.left
+                leftMargin: 5
+                top: parent.top
+                topMargin: 5
+            }
+            width: 550
+        }
     }
-   }
 }
