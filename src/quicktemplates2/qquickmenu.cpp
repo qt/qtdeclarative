@@ -745,6 +745,12 @@ QQuickMenu::~QQuickMenu()
     // been destroyed before that is called.
     while (d->contentModel->count() > 0)
         d->removeItem(0, d->itemAt(0));
+
+    if (d->contentItem) {
+        const auto children = d->contentItem->childItems();
+        for (QQuickItem *child : std::as_const(children))
+            QQuickItemPrivate::get(child)->removeItemChangeListener(d, QQuickItemPrivate::SiblingOrder);
+    }
 }
 
 /*!
