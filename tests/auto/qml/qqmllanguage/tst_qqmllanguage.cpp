@@ -508,11 +508,11 @@ void tst_qqmllanguage::insertedSemicolon()
 
     QQmlComponent component(&engine, testFileUrl(file));
 
-    QScopedPointer<QObject> object;
+    std::unique_ptr<QObject> object;
 
     if(create) {
         object.reset(component.create());
-        QVERIFY(object.isNull());
+        QVERIFY(object.get());
     }
 
     VERIFY_ERRORS(errorFile.toLatin1().constData());
