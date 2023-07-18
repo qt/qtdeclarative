@@ -5,12 +5,11 @@ import QtCore
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtQuick.Controls.Styles
 
 ApplicationWindow {
     id: window
 
-    width: 640
+    width: 800
     height: 480
     visible: true
 
@@ -37,7 +36,7 @@ ApplicationWindow {
         property alias stickyNextSection: snsItem.checked
     }
 
-    toolBar: GridLayout {
+    header: GridLayout {
         rows: 3
         flow: GridLayout.TopToBottom
 
@@ -84,7 +83,7 @@ ApplicationWindow {
         ListElement { name: "PullBack"; value: ListView.PullBackFooter }
     }
 
-    statusBar: RowLayout {
+    footer: RowLayout {
         anchors.margins: window.hspacing
         anchors.left: parent.left
         anchors.right: parent.right
