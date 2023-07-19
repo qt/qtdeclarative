@@ -18,8 +18,10 @@
 #include "qlanguageserver_p.h"
 #include "qqmlcodemodel_p.h"
 #include "qqmllsutils_p.h"
+#include <QtQmlDom/private/qqmldom_utils_p.h>
 
 #include <QObject>
+#include <type_traits>
 #include <unordered_map>
 
 template<typename ParametersT, typename ResponseT>
@@ -41,6 +43,72 @@ struct BaseRequest
     bool fillFrom(QmlLsp::OpenDocument doc, const Parameters &params, Response &&response);
 };
 
+/*!
+\internal
+\brief This class sends a result or an error when going out of scope.
+
+It has a helper method \c setErrorFrom that sets an error from variant and optionals.
+*/
+
+template<typename Result, typename ResponseCallback>
+struct ResponseScopeGuard
+{
+    Q_DISABLE_COPY_MOVE(ResponseScopeGuard)
+
+    std::variant<Result *, QQmlLSUtilsErrorMessage> m_response;
+    ResponseCallback &m_callback;
+
+    ResponseScopeGuard(Result &results, ResponseCallback &callback)
+        : m_response(&results), m_callback(callback)
+    {
+    }
+
+    // note: discards the current result or error message, if there is any
+    void setError(const QQmlLSUtilsErrorMessage &error) { m_response = error; }
+
+    template<typename... T>
+    bool setErrorFrom(const std::variant<T...> &variant)
+    {
+        static_assert(std::disjunction_v<std::is_same<T, QQmlLSUtilsErrorMessage>...>,
+                      "ResponseScopeGuard::setErrorFrom was passed a variant that never contains"
+                      " an error message.");
+        if (auto x = std::get_if<QQmlLSUtilsErrorMessage>(&variant)) {
+            setError(*x);
+            return true;
+        }
+        return false;
+    }
+
+    /*!
+        \internal
+        Note: use it as follows:
+        \badcode
+        if (scopeGuard.setErrorFrom(xxx)) {
+            // do early exit
+        }
+        // xxx was not an error, continue
+        \endcode
+    */
+    bool setErrorFrom(const std::optional<QQmlLSUtilsErrorMessage> &error)
+    {
+        if (error) {
+            setError(*error);
+            return true;
+        }
+        return false;
+    }
+
+    ~ResponseScopeGuard()
+    {
+        std::visit(qOverloadedVisitor{ [this](Result *result) { m_callback.sendResponse(*result); },
+                                       [this](const QQmlLSUtilsErrorMessage &error) {
+                                           m_callback.sendErrorResponse(error.code,
+                                                                        error.message.toUtf8());
+                                       } },
+                   m_response);
+    }
+};
+
 template<typename RequestType>
 struct QQmlBaseModule : public QLanguageServerModule
 {
@@ -57,7 +125,8 @@ struct QQmlBaseModule : public QLanguageServerModule
     decltype(auto) getRequestHandler();
     // processes a request in a different thread.
     virtual void process(RequestPointerArgument toBeProcessed) = 0;
-    std::optional<QList<QQmlLSUtilsItemLocation>> itemsForRequest(const RequestPointer &request);
+    std::variant<QList<QQmlLSUtilsItemLocation>, QQmlLSUtilsErrorMessage>
+    itemsForRequest(const RequestPointer &request);
 
 public Q_SLOTS:
     void updatedSnapshot(const QByteArray &uri);
@@ -159,29 +228,38 @@ void QQmlBaseModule<RequestType>::updatedSnapshot(const QByteArray &url)
 }
 
 template<typename RequestType>
-std::optional<QList<QQmlLSUtilsItemLocation>>
+std::variant<QList<QQmlLSUtilsItemLocation>, QQmlLSUtilsErrorMessage>
 QQmlBaseModule<RequestType>::itemsForRequest(const RequestPointer &request)
 {
 
     QmlLsp::OpenDocument doc = m_codeModel->openDocumentByUrl(
             QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
 
+    if (!doc.snapshot.validDocVersion || doc.snapshot.validDocVersion != doc.snapshot.docVersion) {
+        return QQmlLSUtilsErrorMessage{ 0,
+                                        u"Cannot proceed: current QML document is invalid! Fix"
+                                        u" all the errors in your QML code and try again."_s };
+    }
+
     QQmlJS::Dom::DomItem file = doc.snapshot.validDoc.fileObject(QQmlJS::Dom::GoTo::MostLikely);
     // clear reference cache to resolve latest versions (use a local env instead?)
     if (auto envPtr = file.environment().ownerAs<QQmlJS::Dom::DomEnvironment>())
         envPtr->clearReferenceCache();
     if (!file) {
-        qWarning() << u"Could not find file in Dom Environment from Codemodel :"_s
-                   << doc.snapshot.doc.toString();
-        return {};
+        return QQmlLSUtilsErrorMessage{
+            0,
+            u"Could not find file %1 in project."_s.arg(doc.snapshot.doc.toString()),
+        };
     }
 
     auto itemsFound = QQmlLSUtils::itemsFromTextLocation(file, request->m_parameters.position.line,
                                                          request->m_parameters.position.character);
 
     if (itemsFound.isEmpty()) {
-        qWarning() << u"Could not find any items at given text location."_s;
-        return {};
+        return QQmlLSUtilsErrorMessage{
+            0,
+            u"Could not find any items at given text location."_s,
+        };
     }
     return itemsFound;
 }

@@ -40,29 +40,30 @@ void QmlGoToTypeDefinitionSupport::registerHandlers(QLanguageServer *,
 void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
 {
     QList<QLspSpecification::Location> results;
-    QScopeGuard onExit([&results, &request]() { request->m_response.sendResponse(results); });
+    ResponseScopeGuard guard(results, request->m_response);
 
     auto itemsFound = itemsForRequest(request);
-    if (!itemsFound) {
+    if (guard.setErrorFrom(itemsFound))
         return;
-    }
 
-    QQmlJS::Dom::DomItem base = QQmlLSUtils::findTypeDefinitionOf(itemsFound->first().domItem);
+    QQmlLSUtilsItemLocation &front = std::get<QList<QQmlLSUtilsItemLocation>>(itemsFound).front();
+
+    QQmlJS::Dom::DomItem base = QQmlLSUtils::findTypeDefinitionOf(front.domItem);
     if (base.domKind() == QQmlJS::Dom::DomKind::Empty) {
         qWarning() << u"Could not obtain the type definition, was the type correctly resolved?"_s
                    << u"\n Obtained type was:\n"_s << base.toString()
                    << u"\nbut selected item was:\n"
-                   << itemsFound->first().domItem.toString();
+                   << front.domItem.toString();
         return;
     }
 
     if (base.domKind() == QQmlJS::Dom::DomKind::Empty) {
-        qWarning() << u"Could not obtain the base from the item"_s;
+        qDebug() << u"Could not obtain the base from the item"_s;
         return;
     }
     auto locationInfo = QQmlJS::Dom::FileLocations::fileLocationsOf(base);
     if (!locationInfo) {
-        qWarning()
+        qDebug()
                 << u"Could not obtain the text location from the base item, was it correctly resolved?\nBase was "_s
                 << base.toString();
         return;
@@ -71,7 +72,7 @@ void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
     QQmlJS::Dom::DomItem fileOfBase = base.containingFile();
     auto fileOfBasePtr = fileOfBase.ownerAs<QQmlJS::Dom::QmlFile>();
     if (!fileOfBasePtr) {
-        qWarning() << u"Could not obtain the file of the base."_s;
+        qDebug() << u"Could not obtain the file of the base."_s;
         return;
     }
 
