@@ -970,13 +970,20 @@ findPropertyDefinitionOf(DomItem file, QQmlJS::SourceLocation propertyDefinition
 {
     DomItem propertyOwner = QQmlLSUtils::sourceLocationToDomItem(file, propertyDefinitionLocation);
     DomItem propertyDefinition = propertyOwner.field(Fields::propertyDefs).key(name).index(0);
-    if (!propertyDefinition)
+    auto fileLocation = FileLocations::treeOf(propertyDefinition);
+    if (!fileLocation)
         return {};
 
-    QQmlLSUtilsLocation result;
-    result.sourceLocation = FileLocations::treeOf(propertyDefinition)->info().fullRegion;
-    result.filename = propertyDefinition.canonicalFilePath();
-    return result;
+    auto regions = fileLocation->info().regions;
+
+    if (auto it = regions.constFind(u"identifier"_s); it != regions.constEnd()) {
+        QQmlLSUtilsLocation result;
+        result.sourceLocation = *it;
+        result.filename = propertyDefinition.canonicalFilePath();
+        return result;
+    }
+
+    return {};
 }
 
 std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)

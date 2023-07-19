@@ -557,12 +557,10 @@ void tst_qmlls_modules::goToDefinition_data()
 
     QTest::addRow("JSIdentifierX") << JSDefinitionsQml << 14 << 11 << JSDefinitionsQml << 13 << 13
                                    << 13 << 13 + strlen("x");
-    QTest::addRow("propertyI") << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << 9
-                               << positionAfterOneIndent << 9
-                               << positionAfterOneIndent + strlen("property int i");
+    QTest::addRow("propertyI") << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << 9 << 18 << 9
+                               << 18 + strlen("i");
     QTest::addRow("qualifiedPropertyI")
-            << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << 9 << positionAfterOneIndent << 9
-            << positionAfterOneIndent + strlen("property int i");
+            << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << 9 << 18 << 9 << 18 + strlen("i");
     QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 6 << 1 << 6
                         << 1 + strlen("Item");
 

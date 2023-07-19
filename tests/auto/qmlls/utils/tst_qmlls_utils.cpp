@@ -1198,12 +1198,12 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
             << JSDefinitionsQml << 14 << 11 << JSDefinitionsQml << 13 << 13 << strlen("x");
     QTest::addRow("JSIdentifierX2")
             << JSDefinitionsQml << 15 << 11 << JSDefinitionsQml << 13 << 13 << strlen("x");
-    QTest::addRow("propertyI") << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << 9
-                               << positionAfterOneIndent << strlen("property int i");
-    QTest::addRow("qualifiedPropertyI") << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << 9
-                                        << positionAfterOneIndent << strlen("property int i");
-    QTest::addRow("inlineComponentProperty") << JSDefinitionsQml << 62 << 21 << JSDefinitionsQml
-                                             << 54 << 9 << strlen("property int data: 42");
+    QTest::addRow("propertyI") << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << 9 << 18
+                               << strlen("i");
+    QTest::addRow("qualifiedPropertyI")
+            << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << 9 << 18 << strlen("i");
+    QTest::addRow("inlineComponentProperty")
+            << JSDefinitionsQml << 62 << 21 << JSDefinitionsQml << 54 << 22 << strlen("data");
 
     QTest::addRow("parameterA") << JSDefinitionsQml << 10 << 16 << noResultExpected << -1 << -1
                                 << size_t{};
@@ -1225,28 +1225,27 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
     QTest::addRow("scopedX3") << JSDefinitionsQml << 28 << 14 << JSDefinitionsQml << 19 << 13
                               << strlen("scoped");
 
-    QTest::addRow("normalI") << JSDefinitionsQml << 22 << 23 << JSDefinitionsQml << 9
-                             << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("normalI") << JSDefinitionsQml << 22 << 23 << JSDefinitionsQml << 9 << 18
+                             << strlen("i");
     QTest::addRow("scopedI") << JSDefinitionsQml << 25 << 27 << JSDefinitionsQml << 24 << 32
                              << strlen("i");
 
-    QTest::addRow("shadowingProperty") << JSDefinitionsQml << 37 << 21 << JSDefinitionsQml << 34
-                                       << 9 << strlen("property int i");
-    QTest::addRow("shadowingQualifiedProperty") << JSDefinitionsQml << 37 << 35 << JSDefinitionsQml
-                                                << 34 << 9 << strlen("property int i");
-    QTest::addRow("shadowedProperty") << JSDefinitionsQml << 37 << 49 << JSDefinitionsQml << 9
-                                      << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("shadowingProperty")
+            << JSDefinitionsQml << 37 << 21 << JSDefinitionsQml << 34 << 22 << strlen("i");
+    QTest::addRow("shadowingQualifiedProperty")
+            << JSDefinitionsQml << 37 << 35 << JSDefinitionsQml << 34 << 22 << strlen("i");
+    QTest::addRow("shadowedProperty")
+            << JSDefinitionsQml << 37 << 49 << JSDefinitionsQml << 9 << 18 << strlen("i");
 
-    QTest::addRow("propertyInBinding") << JSDefinitionsQml << 64 << 37 << JSDefinitionsQml << 9
-                                       << positionAfterOneIndent << strlen("property int i");
-    QTest::addRow("propertyInBinding2") << JSDefinitionsQml << 65 << 38 << JSDefinitionsQml << 9
-                                        << positionAfterOneIndent << strlen("property int i");
-    QTest::addRow("propertyInBinding3") << JSDefinitionsQml << 66 << 51 << JSDefinitionsQml << 9
-                                        << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("propertyInBinding")
+            << JSDefinitionsQml << 64 << 37 << JSDefinitionsQml << 9 << 18 << strlen("i");
+    QTest::addRow("propertyInBinding2")
+            << JSDefinitionsQml << 65 << 38 << JSDefinitionsQml << 9 << 18 << strlen("i");
+    QTest::addRow("propertyInBinding3")
+            << JSDefinitionsQml << 66 << 51 << JSDefinitionsQml << 9 << 18 << strlen("i");
 
     QTest::addRow("propertyFromDifferentFile")
-            << JSDefinitionsQml << 72 << 20 << BaseTypeQml << 24 << positionAfterOneIndent
-            << strlen("property int helloProperty: 123");
+            << JSDefinitionsQml << 72 << 20 << BaseTypeQml << 24 << 18 << strlen("helloProperty");
 
     QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 6 << 1
                         << strlen("Item");
