@@ -26,7 +26,7 @@
 #include <QtCore/qproperty.h>
 #include <QtCore/qglobal.h>
 
-#include <QtGui/qguiapplication.h>
+#include <QtCore/qcoreapplication.h>
 
 QT_BEGIN_NAMESPACE
 
