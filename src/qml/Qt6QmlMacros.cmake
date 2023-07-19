@@ -1053,7 +1053,7 @@ function(qt6_add_qml_plugin target)
 
     if(NOT arg_CLASS_NAME)
         if(NOT "${arg_BACKING_TARGET}" STREQUAL "")
-            get_target_property(arg_CLASS_NAME ${target} QT_QML_MODULE_CLASS_NAME)
+            get_target_property(arg_CLASS_NAME ${arg_BACKING_TARGET} QT_QML_MODULE_CLASS_NAME)
         endif()
         if(NOT arg_CLASS_NAME)
             _qt_internal_compute_qml_plugin_class_name_from_uri("${arg_URI}" arg_CLASS_NAME)
