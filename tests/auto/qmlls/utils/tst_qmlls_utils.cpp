@@ -1247,16 +1247,16 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
     QTest::addRow("propertyFromDifferentFile")
             << JSDefinitionsQml << 72 << 20 << BaseTypeQml << 24 << 18 << strlen("helloProperty");
 
-    QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 6 << 1
-                        << strlen("Item");
-    QTest::addRow("onId") << JSDefinitionsQml << 32 << 16 << JSDefinitionsQml << 31
-                          << positionAfterOneIndent << strlen("Rectangle");
-    QTest::addRow("parentId") << JSDefinitionsQml << 37 << 44 << JSDefinitionsQml << 6 << 1
-                              << strlen("Item");
-    QTest::addRow("currentId") << JSDefinitionsQml << 37 << 30 << JSDefinitionsQml << 31
-                               << positionAfterOneIndent << strlen("Rectangle");
+    QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 7 << 9
+                        << strlen("rootId");
+    QTest::addRow("onId") << JSDefinitionsQml << 32 << 16 << JSDefinitionsQml << 32 << 13
+                          << strlen("nested");
+    QTest::addRow("parentId") << JSDefinitionsQml << 37 << 44 << JSDefinitionsQml << 7 << 9
+                              << strlen("rootId");
+    QTest::addRow("currentId") << JSDefinitionsQml << 37 << 30 << JSDefinitionsQml << 32 << 13
+                               << strlen("nested");
     QTest::addRow("inlineComponentId")
-            << JSDefinitionsQml << 56 << 35 << JSDefinitionsQml << 51 << 21 << strlen("Rectangle");
+            << JSDefinitionsQml << 56 << 35 << JSDefinitionsQml << 52 << 13 << strlen("helloIC");
 
     QTest::addRow("recursiveFunction")
             << JSDefinitionsQml << 39 << 28 << JSDefinitionsQml << 36 << 18 << strlen("f");

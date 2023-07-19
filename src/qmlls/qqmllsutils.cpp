@@ -1052,16 +1052,30 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
             return {};
         QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope.value());
         if (fromId) {
+            DomItem qmlObject = QQmlLSUtils::sourceLocationToDomItem(item.containingFile(),
+                                                                     fromId->sourceLocation());
+            // in the Dom, the id is saved in a QMultiHash inside the Component of an QmlObject.
+            DomItem domId = qmlObject.component()
+                                    .field(Fields::ids)
+                                    .key(name)
+                                    .index(0)
+                                    .field(Fields::value);
+            if (!domId) {
+                qCDebug(QQmlLSUtilsLog)
+                        << "QmlComponent in Dom structure has no id, was it misconstructed?";
+                return {};
+            }
+
             QQmlLSUtilsLocation result;
-            result.sourceLocation = fromId->sourceLocation();
-            result.filename = item.canonicalFilePath();
+            result.sourceLocation = FileLocations::treeOf(domId)->info().fullRegion;
+            result.filename = domId.canonicalFilePath();
             return result;
         }
         return {};
     }
     default:
-        qDebug() << "QQmlLSUtils::findDefinitionOf: Found unimplemented Type "
-                 << item.internalKindStr();
+        qCDebug(QQmlLSUtilsLog) << "QQmlLSUtils::findDefinitionOf: Found unimplemented Type "
+                                << item.internalKindStr();
         return {};
     }
 

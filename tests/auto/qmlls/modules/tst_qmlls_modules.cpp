@@ -558,7 +558,6 @@ void tst_qmlls_modules::goToDefinition_data()
 
     const QByteArray JSDefinitionsQml =
             testFileUrl(u"findDefinition/jsDefinitions.qml"_s).toEncoded();
-    const int positionAfterOneIndent = 5;
     const QByteArray noResultExpected;
 
     QTest::addRow("JSIdentifierX") << JSDefinitionsQml << 14 << 11 << JSDefinitionsQml << 13 << 13
@@ -567,8 +566,8 @@ void tst_qmlls_modules::goToDefinition_data()
                                << 18 + strlen("i");
     QTest::addRow("qualifiedPropertyI")
             << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << 9 << 18 << 9 << 18 + strlen("i");
-    QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 6 << 1 << 6
-                        << 1 + strlen("Item");
+    QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 7 << 9 << 7
+                        << 9 + strlen("rootId");
 
     QTest::addRow("parameterA") << JSDefinitionsQml << 10 << 16 << noResultExpected << -1 << -1
                                 << -1 << size_t{};

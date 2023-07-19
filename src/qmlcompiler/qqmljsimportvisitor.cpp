@@ -1929,7 +1929,6 @@ void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scri
         m_logger->log(u"Failed to parse id"_s, qmlSyntax,
                       statement->expression->firstSourceLocation());
         return QString();
-
     }();
     if (m_scopesById.existsAnywhereInDocument(name)) {
         // ### TODO: find an alternative to breakInhertianceCycles here
