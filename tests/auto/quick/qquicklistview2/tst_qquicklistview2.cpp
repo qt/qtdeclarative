@@ -57,6 +57,8 @@ private slots:
     void areaZeroviewDoesNotNeedlesslyPopulateWholeModel();
 
     void delegateContextHandling();
+    void fetchMore_data();
+    void fetchMore();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -1040,6 +1042,80 @@ void tst_QQuickListView2::delegateContextHandling()
 
 }
 
+class TestFetchMoreModel : public QAbstractListModel
+{
+    Q_OBJECT
+
+public:
+    QVariant data(const QModelIndex& index, int role) const override
+    {
+        if (role == Qt::DisplayRole)
+            return QString::number(index.row());
+        return {};
+    }
+
+    int columnCount(const QModelIndex&) const override { return 1; }
+
+    int rowCount(const QModelIndex& parent) const override
+    {
+        return parent.isValid() ? 0 : m_lines;
+    }
+
+    QModelIndex parent(const QModelIndex&) const override { return {}; }
+
+    bool canFetchMore(const QModelIndex &) const override { return true; }
+
+    void fetchMore(const QModelIndex & parent) override
+    {
+        if (Q_UNLIKELY(parent.isValid()))
+            return;
+        beginInsertRows(parent, m_lines, m_lines);
+        m_lines++;
+        endInsertRows();
+    }
+
+    int m_lines = 3;
+};
+
+void tst_QQuickListView2::fetchMore_data()
+{
+    QTest::addColumn<bool>("reuseItems");
+    QTest::addColumn<int>("cacheBuffer");
+
+    QTest::newRow("no reuseItems, default buffer") << false << -1;
+    QTest::newRow("reuseItems, default buffer") << true << -1;
+    QTest::newRow("no reuseItems, no buffer") << false << 0;
+    QTest::newRow("reuseItems, no buffer") << true << 0;
+    QTest::newRow("no reuseItems, buffer 100 px") << false << 100;
+    QTest::newRow("reuseItems, buffer 100 px") << true << 100;
+}
+
+void tst_QQuickListView2::fetchMore() // QTBUG-95107
+{
+    QFETCH(bool, reuseItems);
+    QFETCH(int, cacheBuffer);
+
+    TestFetchMoreModel model;
+    qmlRegisterSingletonInstance("org.qtproject.Test", 1, 0, "FetchMoreModel", &model);
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("fetchMore.qml")));
+    auto *listView = qobject_cast<QQuickListView*>(window.rootObject());
+    QVERIFY(listView);
+    listView->setReuseItems(reuseItems);
+    if (cacheBuffer >= 0)
+        listView->setCacheBuffer(cacheBuffer);
+
+    for (int i = 0; i < 3; ++i) {
+        const int rowCount = listView->count();
+        if (lcTests().isDebugEnabled()) QTest::qWait(1000);
+        listView->flick(0, -5000);
+        QTRY_VERIFY(!listView->isMoving());
+        qCDebug(lcTests) << "after flick: contentY" << listView->contentY()
+                         << "rows" << rowCount << "->" << listView->count();
+        QCOMPARE_GT(listView->count(), rowCount);
+        QCOMPARE_GE(model.m_lines, listView->count()); // fetchMore() was called
+    }
+}
 QTEST_MAIN(tst_QQuickListView2)
 
 #include "tst_qquicklistview2.moc"
