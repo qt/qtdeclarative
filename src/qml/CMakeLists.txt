@@ -362,6 +362,31 @@ qt_internal_add_qml_module(Qml
         qmltc/supportlibrary/qqmlcpponassignment_p.h
         qmltc/supportlibrary/qqmlcpponassignment.cpp
         qmltc/supportlibrary/qqmlcpptypehelpers_p.h
+    NO_UNITY_BUILD_SOURCES
+        jsapi/qjsvalue.cpp            # \.
+        jsruntime/qv4engine.cpp       #  > WTF::String vs. QV4::String, dto. Object
+        jsruntime/qv4jsonobject.cpp   # |
+        jsruntime/qv4object.cpp       # |
+        jsruntime/qv4proxy.cpp        # |
+        jsruntime/qv4qmlcontext.cpp   # |
+        jsruntime/qv4reflect.cpp      # |
+        jsruntime/qv4regexpobject.cpp # |
+        jsruntime/qv4script.cpp       # | ((also?) Function)
+        jsruntime/qv4string.cpp       # |
+        jsruntime/qv4stringobject.cpp # | ((also?) Property)
+        jsruntime/qv4typedarray.cpp   # |
+        jsruntime/qv4urlobject.cpp    # | ((also?) Property)
+        qml/qqmlbuiltinfunctions.cpp  # |
+        qml/qqmllistwrapper.cpp       # |
+        qml/qqmllocale.cpp            # |
+        qml/qqmltypecompiler.cpp      # | (also Binding)
+        qml/qqmltypewrapper.cpp       # |
+        qml/qqmlxmlhttprequest.cpp    # / (also Document)
+        jsruntime/qv4managed.cpp      # QQmlJS::Managed vs. QV4::Managed
+        jsruntime/qv4module.cpp       # QV4::Compiler::Module vs. QV4::Module
+        jsruntime/qv4vme_moth.cpp     # 'MOTH_BEGIN_INSTR' macro redefined (from qv4instr_moth.cpp)
+        qml/qqmltypecompiler.cpp      # 'COMPILE_EXCEPTION' macro redefined (from qqmlirbuilder.cpp)
+        qml/qqmlmetamoduleregistration.cpp # declares 'registration' clashing with qml_* files
     DEFINES
         BUILDING_QT__
         ENABLE_ASSEMBLER_WX_EXCLUSIVE=1
