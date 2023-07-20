@@ -14,6 +14,8 @@ qt_internal_add_module(QmlTypeRegistrarPrivate
         qqmltyperegistrar.cpp qqmltyperegistrar_p.h
         qqmltypesclassdescription.cpp qqmltypesclassdescription_p.h
         qqmltypescreator.cpp qqmltypescreator_p.h
+    NO_UNITY_BUILD_SOURCES
+        qqmltypescreator.cpp # S_NAME etc clash
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
