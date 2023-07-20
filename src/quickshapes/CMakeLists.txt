@@ -98,6 +98,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_lg"
 )
 
 qt_internal_add_shaders(QuickShapesPrivate "shaders_lg_derivatives"
+    SILENT
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
@@ -132,6 +133,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_rg"
 )
 
 qt_internal_add_shaders(QuickShapesPrivate "shaders_rg_derivatives"
+    SILENT
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
@@ -166,6 +168,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_cg"
 )
 
 qt_internal_add_shaders(QuickShapesPrivate "shaders_cg_derivatives"
+    SILENT
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
