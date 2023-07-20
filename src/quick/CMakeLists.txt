@@ -207,6 +207,11 @@ qt_internal_add_qml_module(Quick
         util/qquickvalidator.cpp util/qquickvalidator_p.h
         util/qquickvaluetypes.cpp util/qquickvaluetypes_p.h
         util/qquickframeanimation.cpp util/qquickframeanimation_p.h
+    NO_UNITY_BUILD_SOURCES
+        scenegraph/qsgdefaultcontext.cpp # redefinition of 'qmlDisableDistanceField' (from qquicktextinput.cpp)
+        scenegraph/util/qsgtexturematerial.cpp # redefinition of 'isPowerOfTwo' (from qsgdefaultinternalimagenode.cpp)
+        util/qquickvalidator.cpp # expl. spec. of 'QMetaTypeId<QValidator *>' after inst.
+        quick_qmltyperegistrations.cpp # qquickvalidator_p.h: error: explicit specialization of 'QMetaTypeId<QValidator *>' after instantiation
     DEFINES
         QT_NO_FOREACH
         QT_NO_INTEGER_EVENT_COORDINATES
@@ -473,6 +478,8 @@ qt_internal_extend_target(Quick CONDITION QT_FEATURE_quick_positioners
     SOURCES
         items/qquickpositioners.cpp items/qquickpositioners_p.h
         items/qquickpositioners_p_p.h
+    NO_UNITY_BUILD_SOURCES
+        items/qquickpositioners.cpp # redefinition of 'watchedChanges' (from qquickloader.cpp)
 )
 
 qt_internal_extend_target(Quick CONDITION QT_FEATURE_quick_flipable
