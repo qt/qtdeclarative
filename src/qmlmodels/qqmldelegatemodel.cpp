@@ -1259,6 +1259,9 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
                 addCacheItem(cacheItem, it);
                 reuseItem(cacheItem, index, flags);
                 cacheItem->referenceObject();
+
+                if (index == m_compositor.count(group) - 1)
+                    requestMoreIfNecessary();
                 return cacheItem->object;
             }
 
