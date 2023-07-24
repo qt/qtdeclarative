@@ -263,15 +263,6 @@ PropertyKey IdentifierTable::asPropertyKey(const QString &s,
     return resolveStringEntry(s, hash, subtype)->identifier;
 }
 
-PropertyKey IdentifierTable::asPropertyKey(const char *s, int len)
-{
-    uint subtype;
-    uint hash = String::createHashValue(s, len, &subtype);
-    if (subtype == Heap::String::StringType_ArrayIndex)
-        return PropertyKey::fromArrayIndex(hash);
-    return resolveStringEntry(QString::fromLatin1(s, len), hash, subtype)->identifier;
-}
-
 }
 
 QT_END_NAMESPACE

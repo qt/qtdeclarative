@@ -57,7 +57,6 @@ public:
 
     enum KeyConversionBehavior { Default, ForceConversionToId };
     PropertyKey asPropertyKey(const QString &s, KeyConversionBehavior conversionBehavior = Default);
-    PropertyKey asPropertyKey(const char *s, int len);
 
     PropertyKey asPropertyKeyImpl(const Heap::String *str);
 
