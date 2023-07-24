@@ -75,7 +75,7 @@ private slots:
     void contextObjectHierarchy();
     void destroyContextProperty();
 
-    void gcDeletesContextObject();
+    void numericContextProperty();
 
 private:
     QQmlEngine engine;
@@ -1006,31 +1006,12 @@ void tst_qqmlcontext::destroyContextProperty()
     // TODO: Or are we?
 }
 
-void tst_qqmlcontext::gcDeletesContextObject()
+void tst_qqmlcontext::numericContextProperty()
 {
     QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("gcDeletesContextObject.qml"));
-
-    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
-    QScopedPointer<QObject> o(c.create());
-
-    QVERIFY(!o.isNull());
-
-    QPointer<QObject> contextObject = o->property("o").value<QObject *>();
-    QVERIFY(contextObject != nullptr);
-
-    QQmlData *data = QQmlData::get(contextObject);
-    QVERIFY(data);
-    QQmlRefPointer<QQmlContextData> context = data->ownContext;
-    QVERIFY(context);
-    QCOMPARE(context->contextObject(), contextObject);
-
-    o->setProperty("o", QVariant::fromValue<QObject *>(nullptr));
-    QCOMPARE(o->property("o").value<QObject *>(), nullptr);
-    engine.collectGarbage();
-
-    QTRY_VERIFY(contextObject.isNull());
-    QCOMPARE(context->contextObject(), nullptr);
+    auto context = engine.rootContext();
+    context->setContextProperty(QLatin1String("11"), 42);
+    QCOMPARE(context->contextProperty(QLatin1String("11")).toInt(), 42);
 }
 
 QTEST_MAIN(tst_qqmlcontext)

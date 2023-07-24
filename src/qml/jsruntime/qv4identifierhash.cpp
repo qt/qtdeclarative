@@ -127,7 +127,7 @@ const IdentifierHashEntry *IdentifierHash::lookup(const QString &str) const
     if (!d)
         return nullptr;
 
-    PropertyKey id = d->identifierTable->asPropertyKey(str);
+    PropertyKey id = d->identifierTable->asPropertyKey(str, IdentifierTable::ForceConversionToId);
     return lookup(id);
 }
 
@@ -146,7 +146,7 @@ inline
 const PropertyKey IdentifierHash::toIdentifier(const QString &str) const
 {
     Q_ASSERT(d);
-    return d->identifierTable->asPropertyKey(str);
+    return d->identifierTable->asPropertyKey(str, IdentifierTable::ForceConversionToId);
 }
 
 inline
