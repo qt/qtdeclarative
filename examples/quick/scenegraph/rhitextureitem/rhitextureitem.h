@@ -13,8 +13,6 @@ class LogoRenderer;
 class RhiItem;
 class RhiItemNode;
 
-QT_FORWARD_DECLARE_CLASS(QSGPlainTexture)
-
 //! [rendererbase]
 class RhiItemRenderer
 {
