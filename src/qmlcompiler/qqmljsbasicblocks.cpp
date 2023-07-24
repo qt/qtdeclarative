@@ -26,7 +26,7 @@ void QQmlJSBasicBlocks::dumpBasicBlocks()
             debug << reg << ", ";
         }
         debug << "\n  readTypes[" << block.readTypes.size() << "]: ";
-        for (auto type : block.readTypes) {
+        for (const auto &type : block.readTypes) {
             debug << type->augmentedInternalName() << ", ";
         }
         debug << "\n  jumpTarget: " << block.jumpTarget;
