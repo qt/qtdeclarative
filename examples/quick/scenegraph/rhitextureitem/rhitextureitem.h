@@ -71,7 +71,6 @@ public:
     void scheduleUpdate();
     bool hasRenderer() const { return m_renderer != nullptr; }
     void setRenderer(RhiItemRenderer *r) { m_renderer.reset(r); }
-    void setMirrorVertically(bool b);
 
 private slots:
     void render();
