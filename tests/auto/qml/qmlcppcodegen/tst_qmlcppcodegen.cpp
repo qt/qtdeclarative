@@ -145,6 +145,7 @@ private slots:
     void objectInVar();
     void objectLookupOnListElement();
     void objectToString();
+    void objectWithStringListMethod();
     void onAssignment();
     void outOfBoundsArray();
     void overriddenProperty();
@@ -3037,6 +3038,16 @@ void tst_QmlCppCodegen::objectToString()
 
     QCOMPARE(o->property("yes").toString(), u"yes yes"_s);
     QCOMPARE(o->property("no").toString(), u" no"_s); // throws, but that is ignored
+}
+
+void tst_QmlCppCodegen::objectWithStringListMethod()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/objectWithStringListMethod.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QTest::ignoreMessage(QtDebugMsg, "2");
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
 }
 
 void tst_QmlCppCodegen::onAssignment()

@@ -61,4 +61,40 @@ private:
     QProperty<QString> m_objectName;
 };
 
+class ObjectWithStringListMethod : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    explicit ObjectWithStringListMethod(QObject *parent = nullptr) : QObject(parent)
+    {
+        m_names.append("One");
+        m_names.append("Two");
+    }
+
+    Q_INVOKABLE QStringList names() const { return m_names; }
+
+private:
+    QStringList m_names;
+};
+
+class ObjectFactory : public QObject {
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+
+public:
+    explicit ObjectFactory(QObject *parent = nullptr) : QObject(parent) {}
+    Q_INVOKABLE ObjectWithStringListMethod *getFoo()
+    {
+        if (!m_foo)
+            m_foo = new ObjectWithStringListMethod(this);
+        return m_foo;
+    }
+
+private:
+    ObjectWithStringListMethod *m_foo = nullptr;
+};
+
 #endif // OBJECTWITHMETHOD_H
