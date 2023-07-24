@@ -985,6 +985,7 @@ void tst_qqmlcontext::numericContextProperty()
 {
     QQmlEngine engine;
     auto context = engine.rootContext();
+    QTest::ignoreMessage(QtWarningMsg, "QQmlContext: Using numbers as context properties will be disallowed in a future Qt version.");
     context->setContextProperty(QLatin1String("11"), 42);
     QCOMPARE(context->contextProperty(QLatin1String("11")).toInt(), 42);
 }

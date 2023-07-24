@@ -228,6 +228,11 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
         return;
     }
 
+    if (bool isNumber = false; name.toUInt(&isNumber), isNumber) {
+        qWarning("QQmlContext: Using numbers as context properties will be disallowed in a future Qt version.");
+        QT7_ONLY(return;)
+    }
+
     int idx = data->propertyIndex(name);
     if (idx == -1) {
         data->addPropertyNameAndIndex(name, data->numIdValues() + d->numPropertyValues());
