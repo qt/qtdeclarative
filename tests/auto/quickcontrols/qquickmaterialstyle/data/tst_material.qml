@@ -97,6 +97,7 @@ TestCase {
             property alias label2: labelInstance2
             Popup {
                 id: popupInstance
+                objectName: "popupQObject"
                 Label {
                     id: labelInstance
                     text: "test"
@@ -549,14 +550,16 @@ TestCase {
         window.combo.forceActiveFocus()
         verify(window.combo.activeFocus)
         keyClick(Qt.Key_Space)
-        verify(window.combo.popup.visible)
-        let listView = window.combo.popup.contentItem
+        let comboPopup = window.combo.popup
+        verify(comboPopup.visible)
+        let listView = comboPopup.contentItem
         verify(listView)
         let child = listView.contentItem.children[0]
         verify(child)
         compare(window.Material.theme, Material.Light)
         compare(window.combo.Material.theme, Material.Dark)
         compare(child.Material.theme, Material.Dark)
+        compare(comboPopup.background.color, comboPopup.Material.dialogColor)
         compare(window.Material.primary, Material.color(Material.Blue))
         compare(window.combo.Material.primary, Material.color(Material.Blue))
         compare(child.Material.primary, Material.color(Material.Blue))
@@ -1162,5 +1165,39 @@ TestCase {
         button.highlighted = true
         compare(button.background.color.a, 0.25)
         compare(button.contentItem.color.a, 1)
+    }
+
+    Component {
+        id: itemPropagationToComboBoxPopup
+
+        Rectangle {
+            id: rectangle
+            objectName: "rectangle"
+            anchors.fill: parent
+            color: "#444"
+
+            property alias comboBox: comboBox
+
+            Material.theme: Material.Dark
+
+            ComboBox {
+                id: comboBox
+                objectName: "comboBox"
+                model: 3
+                popup.background.objectName: "comboBoxPopupBackground"
+                popup.contentItem.objectName: "comboBoxPopupContentItem"
+            }
+        }
+    }
+
+    function test_itemPropagationToComboBoxPopup() {
+        let rect = createTemporaryObject(itemPropagationToComboBoxPopup, testCase)
+        verify(rect)
+
+        let comboBox = rect.comboBox
+        mouseClick(comboBox)
+        let comboBoxPopup = comboBox.popup
+        tryCompare(comboBoxPopup, "opened", true)
+        compare(comboBoxPopup.background.color, comboBoxPopup.Material.dialogColor)
     }
 }

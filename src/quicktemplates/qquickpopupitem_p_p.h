@@ -81,6 +81,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupItemPrivate : public QQuickPag
 public:
     QQuickPopupItemPrivate(QQuickPopup *popup);
 
+    static QQuickPopupItemPrivate *get(QQuickPopupItem *popupItem);
+
     void implicitWidthChanged() override;
     void implicitHeightChanged() override;
 
