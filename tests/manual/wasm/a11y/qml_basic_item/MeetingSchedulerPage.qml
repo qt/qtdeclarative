@@ -1,6 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
-
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -14,7 +13,6 @@ GroupBox {
     property int roomNumber: room.value
     property int calendarWeek: calendar.value
     property string meetingDescription: description.text
-
     ColumnLayout {
         anchors.fill: parent
         spacing: 10

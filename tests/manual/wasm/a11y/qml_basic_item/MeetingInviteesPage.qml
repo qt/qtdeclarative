@@ -9,14 +9,15 @@ GroupBox {
     title: "Add Invitees"
 
     property alias nextButton: nextButton
+    property alias dateAndTime: dateAndTime
     ColumnLayout {
+        id: columnLayout
         anchors.fill: parent
         anchors.rightMargin: 10
         anchors.leftMargin: 10
         spacing: 10
-
         Text {
-            id: dateTime
+            id: dateAndTime
             width: 500
             height: 50
             text: "Select Date & Time from Chrono Menu"
@@ -25,6 +26,7 @@ GroupBox {
             Accessible.name: text
             Accessible.description: "This is time and date label"
         }
+
         RowLayout {
             id: rLayout
             spacing: 6
@@ -48,7 +50,7 @@ GroupBox {
                 Layout.preferredWidth: 200
                 Layout.maximumWidth: 300
                 TextEdit {
-                    id: txtEdit
+                    id: textEdit
                     clip: true
                     anchors.fill: parent
                     anchors.leftMargin: 6
@@ -76,7 +78,7 @@ GroupBox {
                 Layout.preferredWidth: 200
                 Layout.maximumWidth: 300
                 TextEdit {
-                    id: txtEmail
+                    id: textEmail
                     clip: true
                     width: 250
                     height: 20
@@ -98,22 +100,24 @@ GroupBox {
             Accessible.name: text
             Accessible.description: "Press Button to add invitee's in the list"
             onClicked: {
-                var name = txtEdit.text
-                var email = txtEmail.text
-                meetingInvModel.append({
+                var name = textEdit.text
+                var email = textEmail.text
+                meetingInviteesModel.append({
                                            "name": name,
                                            "email": email
                                        })
+                textEdit.text = ""
+                textEmail.text = ""
             }
         }
         MeetingInviteesModel {
-            id: meetingInvModel
+            id: meetingInviteesModel
         }
 
         WasmListView {
             Layout.fillWidth: true
             height: 200
-            listModel: meetingInvModel
+            listModel: meetingInviteesModel
         }
 
         Button {

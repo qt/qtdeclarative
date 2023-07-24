@@ -6,6 +6,10 @@ import QtQuick.Layouts
 
 MenuBar {
     Accessible.role: Accessible.MenuBar
+
+    signal showTime
+    signal showDate
+    signal showAboutDialog
     Menu {
         title: "&Chrono"
         MenuItem {
@@ -13,12 +17,18 @@ MenuBar {
             Accessible.role: Accessible.MenuItem
             Accessible.name: text
             Accessible.description: text
+            onTriggered: {
+                showDate()
+            }
         }
         MenuItem {
             text: "&Time"
             Accessible.role: Accessible.MenuItem
             Accessible.name: text
             Accessible.description: text
+            onTriggered: {
+                showTime()
+            }
         }
     }
     Menu {
@@ -29,6 +39,9 @@ MenuBar {
             Accessible.role: Accessible.MenuItem
             Accessible.name: text
             Accessible.description: text
+            onTriggered: {
+                showAboutDialog()
+            }
         }
     }
 }

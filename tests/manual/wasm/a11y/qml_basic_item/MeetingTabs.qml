@@ -1,13 +1,18 @@
+
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
-
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-Item {
-id: root
-     enum Types {Invitees, Scheduler, Summary}
 
+Item {
+    id: root
+    enum Types {
+        Invitees,
+        Scheduler,
+        Summary
+    }
+    property alias setTime: invitees.dateAndTime
     TabBar {
         id: meetingTabs
         width: parent.width
@@ -33,7 +38,6 @@ id: root
         Accessible.role: Accessible.PageTabList
         Accessible.name: "Meetings Tab Bar"
         Accessible.description: "A Tab list of tabs to setup a meeting"
-
     }
 
     StackLayout {
