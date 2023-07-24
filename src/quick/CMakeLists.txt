@@ -75,6 +75,7 @@ qt_internal_add_qml_module(Quick
         items/qquickrectangle_p_p.h
         items/qquickrendercontrol.cpp items/qquickrendercontrol.h items/qquickrendercontrol_p.h
         items/qquickrendertarget.cpp items/qquickrendertarget.h items/qquickrendertarget_p.h
+        items/qquickrhiitem.cpp items/qquickrhiitem.h items/qquickrhiitem_p.h
         items/qquickscalegrid.cpp
         items/qquickscalegrid_p_p.h
         items/qquickscreen.cpp items/qquickscreen_p.h

@@ -54,8 +54,10 @@ QT_BEGIN_NAMESPACE
     Vulkan, or graphics APIs where the concept is applicable. Where some
     concepts are not applicable, the related settings are simply ignored.
 
-    Examples of functions in this category are preferredInstanceExtensions()
-    and setDeviceExtensions().
+    Examples of functions in this category are setDeviceExtensions() and
+    preferredInstanceExtensions(). The latter is useful when the application
+    manages its own \l QVulkanInstance which is then associated with the
+    QQuickWindow via \l QWindow::setVulkanInstance().
 
     \section1 Qt Quick Scene Graph Renderer Configuration
 

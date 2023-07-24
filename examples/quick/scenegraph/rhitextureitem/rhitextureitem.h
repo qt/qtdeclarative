@@ -4,137 +4,54 @@
 #ifndef RHITEXTUREITEM_H
 #define RHITEXTUREITEM_H
 
-#include <QQuickItem>
-#include <QSGSimpleTextureNode>
-#include <QSGTextureProvider>
+#include <QQuickRhiItem>
 #include <rhi/qrhi.h>
 
-class LogoRenderer;
-class RhiItem;
-class RhiItemNode;
-
-//! [rendererbase]
-class RhiItemRenderer
+class ExampleRhiItemRenderer : public QQuickRhiItemRenderer
 {
 public:
-    virtual ~RhiItemRenderer() { }
-    virtual void initialize(QRhi *rhi, QRhiTexture *outputTexture) = 0;
-    virtual void synchronize(RhiItem *item) = 0;
-    virtual void render(QRhiCommandBuffer *cb) = 0;
-//! [rendererbase]
-    void update();
-
-private:
-    void *data;
-    friend class RhiItem;
-};
-
-//! [itembase]
-class RhiItem : public QQuickItem
-{
-    Q_OBJECT
-public:
-    RhiItem(QQuickItem *parent = nullptr);
-
-    virtual RhiItemRenderer *createRenderer() = 0;
-
-protected:
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
-    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
-    void releaseResources() override;
-    bool isTextureProvider() const override;
-    QSGTextureProvider *textureProvider() const override;
-
-private Q_SLOTS:
-    void invalidateSceneGraph();
-
-private:
-    mutable RhiItemNode *node = nullptr;
-};
-//! [itembase]
-
-//! [itemnode]
-class RhiItemNode : public QSGTextureProvider, public QSGSimpleTextureNode
-//! [itemnode]
-{
-    Q_OBJECT
-
-public:
-    RhiItemNode(RhiItem *item);
-
-    QSGTexture *texture() const override;
-
-    void sync();
-    bool isValid() const { return m_rhi && m_sgTexture; }
-    void scheduleUpdate();
-    bool hasRenderer() const { return m_renderer != nullptr; }
-    void setRenderer(RhiItemRenderer *r) { m_renderer.reset(r); }
-
-private slots:
-    void render();
-
-private:
-    RhiItem *m_item;
-    QQuickWindow *m_window;
-    QSize m_pixelSize;
-    qreal m_dpr = 0.0f;
-    QRhi *m_rhi = nullptr;
-    bool m_renderPending = true;
-    std::unique_ptr<QSGTexture> m_sgTexture;
-    std::unique_ptr<RhiItemRenderer> m_renderer;
-};
-
-//! [item]
-class ExampleRhiItem : public RhiItem
-{
-    Q_OBJECT
-    QML_NAMED_ELEMENT(ExampleRhiItem)
-    Q_PROPERTY(float angle READ angle WRITE setAngle NOTIFY angleChanged)
-
-public:
-    float angle() const { return m_angle; }
-    void setAngle(float a);
-
-    RhiItemRenderer *createRenderer() override;
-
-signals:
-    void angleChanged();
-
-private:
-    float m_angle = 0.0f;
-};
-//! [item]
-
-class ExampleRhiItemRenderer : public RhiItemRenderer
-{
-public:
-    void initialize(QRhi *rhi, QRhiTexture *outputTexture) override;
-    void synchronize(RhiItem *item) override;
+    void initialize(QRhiCommandBuffer *cb) override;
+    void synchronize(QQuickRhiItem *item) override;
     void render(QRhiCommandBuffer *cb) override;
 
 private:
     QRhi *m_rhi = nullptr;
-    QRhiTexture *m_output = nullptr;
-    std::unique_ptr<QRhiRenderBuffer> m_ds;
-    std::unique_ptr<QRhiTextureRenderTarget> m_rt;
-    std::unique_ptr<QRhiRenderPassDescriptor> m_rp;
+    int m_sampleCount = 1;
+    QRhiTexture::Format m_textureFormat = QRhiTexture::RGBA8;
 
-    struct {
-        QRhiResourceUpdateBatch *resourceUpdates = nullptr;
-        std::unique_ptr<QRhiBuffer> vbuf;
-        std::unique_ptr<QRhiBuffer> ubuf;
-        std::unique_ptr<QRhiShaderResourceBindings> srb;
-        std::unique_ptr<QRhiGraphicsPipeline> ps;
-        float logoAngle = 0.0f;
-    } scene;
+    std::unique_ptr<QRhiBuffer> m_vbuf;
+    std::unique_ptr<QRhiBuffer> m_ubuf;
+    std::unique_ptr<QRhiShaderResourceBindings> m_srb;
+    std::unique_ptr<QRhiGraphicsPipeline> m_pipeline;
 
-    void createGeometry();
-    void quad(qreal x1, qreal y1, qreal x2, qreal y2, qreal x3, qreal y3, qreal x4, qreal y4);
-    void extrude(qreal x1, qreal y1, qreal x2, qreal y2);
-    QMatrix4x4 calculateModelViewMatrix() const;
+    QMatrix4x4 m_viewProjection;
+    float m_angle = 0.0f;
+    float m_alpha = 1.0f;
+};
 
-    QList<QVector3D> m_vertices;
-    QList<QVector3D> m_normals;
+class ExampleRhiItem : public QQuickRhiItem
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT(ExampleRhiItem)
+    Q_PROPERTY(float angle READ angle WRITE setAngle NOTIFY angleChanged)
+    Q_PROPERTY(float backgroundAlpha READ backgroundAlpha WRITE setBackgroundAlpha NOTIFY backgroundAlphaChanged)
+
+public:
+    QQuickRhiItemRenderer *createRenderer() override;
+
+    float angle() const { return m_angle; }
+    void setAngle(float a);
+
+    float backgroundAlpha() const { return m_alpha; }
+    void setBackgroundAlpha(float a);
+
+signals:
+    void angleChanged();
+    void backgroundAlphaChanged();
+
+private:
+    float m_angle = 0.0f;
+    float m_alpha = 1.0f;
 };
 
 #endif

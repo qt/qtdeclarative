@@ -1,10 +1,46 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-#include "rhitextureitem.h"
-#include <QFile>
+#include <QtQuick/QQuickRhiItem>
+#include <rhi/qrhi.h>
 
 //![0]
+class ExampleRhiItemRenderer : public QQuickRhiItemRenderer
+{
+public:
+    void initialize(QRhiCommandBuffer *cb) override;
+    void synchronize(QQuickRhiItem *item) override;
+    void render(QRhiCommandBuffer *cb) override;
+
+private:
+    QRhi *m_rhi = nullptr;
+    std::unique_ptr<QRhiBuffer> m_vbuf;
+    std::unique_ptr<QRhiBuffer> m_ubuf;
+    std::unique_ptr<QRhiShaderResourceBindings> m_srb;
+    std::unique_ptr<QRhiGraphicsPipeline> m_pipeline;
+    QMatrix4x4 m_viewProjection;
+    float m_angle = 0.0f;
+};
+
+class ExampleRhiItem : public QQuickRhiItem
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT(ExampleRhiItem)
+    Q_PROPERTY(float angle READ angle WRITE setAngle NOTIFY angleChanged)
+
+public:
+    QQuickRhiItemRenderer *createRenderer() override;
+
+    float angle() const { return m_angle; }
+    void setAngle(float a);
+
+signals:
+    void angleChanged();
+
+private:
+    float m_angle = 0.0f;
+};
+
 QQuickRhiItemRenderer *ExampleRhiItem::createRenderer()
 {
     return new ExampleRhiItemRenderer;
@@ -20,25 +56,12 @@ void ExampleRhiItem::setAngle(float a)
     update();
 }
 
-void ExampleRhiItem::setBackgroundAlpha(float a)
-{
-    if (m_alpha == a)
-        return;
-
-    m_alpha = a;
-    emit backgroundAlphaChanged();
-    update();
-}
-
 void ExampleRhiItemRenderer::synchronize(QQuickRhiItem *rhiItem)
 {
     ExampleRhiItem *item = static_cast<ExampleRhiItem *>(rhiItem);
     if (item->angle() != m_angle)
         m_angle = item->angle();
-    if (item->backgroundAlpha() != m_alpha)
-        m_alpha = item->backgroundAlpha();
 }
-//![0]
 
 static QShader getShader(const QString &name)
 {
@@ -52,26 +75,13 @@ static float vertexData[] = {
     0.5f,  -0.5f,   0.0f, 0.0f, 1.0f,
 };
 
-//![1]
 void ExampleRhiItemRenderer::initialize(QRhiCommandBuffer *cb)
 {
     if (m_rhi != rhi()) {
+        m_pipeline.reset();
         m_rhi = rhi();
-        m_pipeline.reset();
     }
 
-    if (m_sampleCount != renderTarget()->sampleCount()) {
-        m_sampleCount = renderTarget()->sampleCount();
-        m_pipeline.reset();
-    }
-
-    QRhiTexture *finalTex = m_sampleCount > 1 ? resolveTexture() : colorTexture();
-    if (m_textureFormat != finalTex->format()) {
-        m_textureFormat = finalTex->format();
-        m_pipeline.reset();
-    }
-//![1]
-//![2]
     if (!m_pipeline) {
         m_vbuf.reset(m_rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, sizeof(vertexData)));
         m_vbuf->create();
@@ -87,8 +97,8 @@ void ExampleRhiItemRenderer::initialize(QRhiCommandBuffer *cb)
 
         m_pipeline.reset(m_rhi->newGraphicsPipeline());
         m_pipeline->setShaderStages({
-           { QRhiShaderStage::Vertex, getShader(QLatin1String(":/scenegraph/rhitextureitem/shaders/color.vert.qsb")) },
-           { QRhiShaderStage::Fragment, getShader(QLatin1String(":/scenegraph/rhitextureitem/shaders/color.frag.qsb")) }
+            { QRhiShaderStage::Vertex, getShader(QLatin1String(":/shaders/color.vert.qsb")) },
+            { QRhiShaderStage::Fragment, getShader(QLatin1String(":/shaders/color.frag.qsb")) }
         });
         QRhiVertexInputLayout inputLayout;
         inputLayout.setBindings({
@@ -98,7 +108,6 @@ void ExampleRhiItemRenderer::initialize(QRhiCommandBuffer *cb)
             { 0, 0, QRhiVertexInputAttribute::Float2, 0 },
             { 0, 1, QRhiVertexInputAttribute::Float3, 2 * sizeof(float) }
         });
-        m_pipeline->setSampleCount(m_sampleCount);
         m_pipeline->setVertexInputLayout(inputLayout);
         m_pipeline->setShaderResourceBindings(m_srb.get());
         m_pipeline->setRenderPassDescriptor(renderTarget()->renderPassDescriptor());
@@ -113,10 +122,8 @@ void ExampleRhiItemRenderer::initialize(QRhiCommandBuffer *cb)
     m_viewProjection = m_rhi->clipSpaceCorrMatrix();
     m_viewProjection.perspective(45.0f, outputSize.width() / (float) outputSize.height(), 0.01f, 1000.0f);
     m_viewProjection.translate(0, 0, -4);
-//![2]
 }
 
-//![3]
 void ExampleRhiItemRenderer::render(QRhiCommandBuffer *cb)
 {
     QRhiResourceUpdateBatch *resourceUpdates = m_rhi->nextResourceUpdateBatch();
@@ -124,8 +131,7 @@ void ExampleRhiItemRenderer::render(QRhiCommandBuffer *cb)
     modelViewProjection.rotate(m_angle, 0, 1, 0);
     resourceUpdates->updateDynamicBuffer(m_ubuf.get(), 0, 64, modelViewProjection.constData());
 
-    // Qt Quick expects premultiplied alpha
-    const QColor clearColor = QColor::fromRgbF(0.5f * m_alpha, 0.5f * m_alpha, 0.7f * m_alpha, m_alpha);
+    const QColor clearColor = QColor::fromRgbF(0.4f, 0.7f, 0.0f, 1.0f);
     cb->beginPass(renderTarget(), clearColor, { 1.0f, 0 }, resourceUpdates);
 
     cb->setGraphicsPipeline(m_pipeline.get());
@@ -138,4 +144,4 @@ void ExampleRhiItemRenderer::render(QRhiCommandBuffer *cb)
 
     cb->endPass();
 }
-//![3]
+//![0]

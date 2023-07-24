@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 import QtQuick
-import TestQquickitemrhiintegration
+import Testqquickrhiitem
 
 Item {
     width: 640
@@ -14,13 +14,15 @@ Item {
         font.pixelSize: 16
         property int api: GraphicsInfo.api
         text: {
-            if (GraphicsInfo.api === GraphicsInfo.OpenGLRhi)
+            if (GraphicsInfo.api === GraphicsInfo.OpenGL)
                 "OpenGL on QRhi";
-            else if (GraphicsInfo.api === GraphicsInfo.Direct3D11Rhi)
+            else if (GraphicsInfo.api === GraphicsInfo.Direct3D11)
                 "D3D11 on QRhi";
-            else if (GraphicsInfo.api === GraphicsInfo.VulkanRhi)
+            else if (GraphicsInfo.api === GraphicsInfo.Direct3D12)
+                "D3D12 on QRhi";
+            else if (GraphicsInfo.api === GraphicsInfo.Vulkan)
                 "Vulkan on QRhi";
-            else if (GraphicsInfo.api === GraphicsInfo.MetalRhi)
+            else if (GraphicsInfo.api === GraphicsInfo.Metal)
                 "Metal on QRhi";
             else if (GraphicsInfo.api === GraphicsInfo.Null)
                 "Null on QRhi";
@@ -34,5 +36,6 @@ Item {
         width: 400
         height: 400
         color: "red"
+        objectName: "rhiitem"
     }
 }
