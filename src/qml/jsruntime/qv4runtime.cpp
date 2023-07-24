@@ -1608,7 +1608,7 @@ ReturnedValue Runtime::TailCall::call(JSTypesStackFrame *frame, ExecutionEngine 
         return checkedResult(engine, fo.call(&thisObject, argv, argc));
     }
 
-    memcpy(frame->jsFrame->args, argv, argc * sizeof(Value));
+    memmove(frame->jsFrame->args, argv, argc * sizeof(Value));
     frame->init(fo.function(), frame->jsFrame->argValues<Value>(), argc,
                 frame->callerCanHandleTailCall());
     frame->setupJSFrame(frame->framePointer(), fo, fo.scope(), thisObject,
