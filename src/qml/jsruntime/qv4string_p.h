@@ -195,6 +195,12 @@ struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
         return calculateHashValue(ch, end, subtype);
     }
 
+    static uint createHashValueDisallowingArrayIndex(const QChar *ch, int length, uint *subtype)
+    {
+        const QChar *end = ch + length;
+        return calculateHashValue<String::DisallowArrayIndex>(ch, end, subtype);
+    }
+
     static uint createHashValue(const char *ch, int length, uint *subtype)
     {
         const char *end = ch + length;
@@ -208,15 +214,19 @@ protected:
     static qint64 virtualGetLength(const Managed *m);
 
 public:
-    template <typename T>
+    enum IndicesBehavior {Default, DisallowArrayIndex};
+    template <IndicesBehavior Behavior = Default, typename T>
     static inline uint calculateHashValue(const T *ch, const T* end, uint *subtype)
     {
         // array indices get their number as hash value
-        uint h = stringToArrayIndex(ch, end);
-        if (h != UINT_MAX) {
-            if (subtype)
-                *subtype = Heap::StringOrSymbol::StringType_ArrayIndex;
-            return h;
+        uint h = UINT_MAX;
+        if constexpr (Behavior != DisallowArrayIndex) {
+            h = stringToArrayIndex(ch, end);
+            if (h != UINT_MAX) {
+                if (subtype)
+                    *subtype = Heap::StringOrSymbol::StringType_ArrayIndex;
+                return h;
+            }
         }
 
         while (ch < end) {
