@@ -177,6 +177,7 @@ set(qml_files
     numbersInJsPrimitive.qml
     objectInVar.qml
     objectLookupOnListElement.qml
+    objectWithStringListMethod.qml
     outOfBounds.qml
     overriddenMember.qml
     ownProperty.qml

@@ -1096,8 +1096,8 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
         const QString preparation = getLookupPreparation(
                     m_state.accumulatorOut(), m_state.accumulatorVariableOut, index);
         generateLookup(lookup, initialization, preparation);
-    } else if ((accumulatorIn.isList()
-                || m_typeResolver->registerContains(accumulatorIn, m_typeResolver->stringType()))
+    } else if ((scope->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
+                || m_typeResolver->equals(scope, m_typeResolver->stringType()))
                && m_jsUnitGenerator->lookupName(index) == u"length"_s) {
         const QQmlJSScope::ConstPtr stored = accumulatorIn.storedType();
         if (stored->isListProperty()) {
