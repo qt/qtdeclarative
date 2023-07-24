@@ -37,10 +37,6 @@ void QQmlJSBasicBlocks::dumpBasicBlocks()
 
 void QQmlJSBasicBlocks::dumpDOTGraph()
 {
-    auto isBackEdge = [](const BasicBlock &originBlock, int originOffset, int destinationOffset) {
-        return originOffset > destinationOffset && originBlock.jumpIsUnconditional;
-    };
-
     QString output;
     QTextStream s{ &output };
     s << "=== Basic Blocks Graph in DOT format for \"%1\" (spaces are encoded as"
@@ -52,15 +48,17 @@ void QQmlJSBasicBlocks::dumpDOTGraph()
         for (int originOffset : block.jumpOrigins) {
             int originBlockOffset;
             auto originBlockIt = blocks.find(originOffset);
-            if (originBlockIt != blocks.end())
+            bool isBackEdge = false;
+            if (originBlockIt != blocks.end()) {
                 originBlockOffset = originOffset;
-            else
+                isBackEdge = originOffset > blockOffset
+                        && originBlockIt->second.jumpIsUnconditional;
+            } else {
                 originBlockOffset = std::prev(blocks.lower_bound(originOffset))->first;
+            }
             s << "    %1 -> %2%3\n"_L1.arg(QString::number(originBlockOffset))
                             .arg(QString::number(blockOffset))
-                            .arg(isBackEdge(originBlockIt->second, originOffset, blockOffset)
-                                         ? " [color=blue]"_L1
-                                         : ""_L1);
+                            .arg(isBackEdge ? " [color=blue]"_L1 : ""_L1);
         }
     }
 
