@@ -146,7 +146,6 @@ void QQuickPinchHandler::setActiveScale(qreal scale)
 */
 
 /*!
-    \readonly
     \qmlproperty real QtQuick::PinchHandler::persistentScale
 
     The scale factor that will automatically be set on the \l target if it is not null.
@@ -248,7 +247,6 @@ void QQuickPinchHandler::setActiveRotation(qreal rot)
 }
 
 /*!
-    \readonly
     \qmlproperty real QtQuick::PinchHandler::persistentRotation
 
     The rotation to be applied to the \l target if it is not null.
@@ -488,7 +486,7 @@ void QQuickPinchHandler::onActiveChanged()
         m_startDistance = averageTouchPointDistance(centroid().sceneGrabPosition());
         m_startTargetPos = target() ? target()->position() : QPointF();
         qCDebug(lcPinchHandler) << "activated with starting scale" << m_scaleAxis.m_startValue
-                                << "target scale" << m_scaleAxis.m_startValue << "rotation" << m_rotationAxis.m_startValue
+                                << "rotation" << m_rotationAxis.m_startValue
                                 << "target pos" << m_startTargetPos;
     } else {
         m_startTargetPos = QPointF();
