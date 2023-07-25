@@ -1328,9 +1328,37 @@ void Heap::QObjectWrapper::markObjects(Heap::Base *that, MarkStack *markStack)
     QObjectWrapper *This = static_cast<QObjectWrapper *>(that);
 
     if (QObject *o = This->object()) {
-        QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
-        if (vme)
-            vme->mark(markStack);
+        if (QQmlData *ddata = QQmlData::get(o)) {
+            if (ddata->hasVMEMetaObject) {
+                if (QQmlVMEMetaObject *vme
+                        = static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(o)->metaObject)) {
+                    vme->mark(markStack);
+                }
+            }
+
+            if (ddata->hasConstWrapper) {
+                Scope scope(that->internalClass->engine);
+                Q_ASSERT(scope.engine->m_multiplyWrappedQObjects);
+
+                Scoped<QV4::QObjectWrapper> constWrapper(
+                        scope,
+                        scope.engine->m_multiplyWrappedQObjects->value(
+                                static_cast<const QObject *>(o)));
+
+                Q_ASSERT(constWrapper);
+
+                if (This == constWrapper->d()) {
+                    // We've got the const wrapper. Also mark the non-const one
+                    if (ddata->jsEngineId == scope.engine->m_engineId)
+                        ddata->jsWrapper.markOnce(markStack);
+                    else
+                        scope.engine->m_multiplyWrappedQObjects->mark(o, markStack);
+                } else {
+                    // We've got the non-const wrapper. Also mark the const one.
+                    constWrapper->mark(markStack);
+                }
+            }
+        }
 
         // Children usually don't need to be marked, the gc keeps them alive.
         // But in the rare case of a "floating" QObject without a parent that
