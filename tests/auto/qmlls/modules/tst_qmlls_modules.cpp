@@ -92,7 +92,8 @@ void tst_qmlls_modules::initTestCase()
     for (const QString &filePath :
          QStringList({ u"completions/Yyy.qml"_s, u"completions/fromBuildDir.qml"_s,
                        u"completions/SomeBase.qml"_s, u"findUsages/jsIdentifierUsages.qml"_s,
-                       u"findDefinition/jsDefinitions.qml"_s, u"linting/SimpleItem.qml"_s })) {
+                       u"findDefinition/jsDefinitions.qml"_s, u"linting/SimpleItem.qml"_s,
+                       u"formatting/rangeFormatting.qml"_s})) {
         QFile file(testFile(filePath));
         QVERIFY(file.open(QIODevice::ReadOnly));
         DidOpenTextDocumentParams oParams;
@@ -1168,6 +1169,93 @@ void tst_qmlls_modules::linting()
         QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 5000);
         diagnosticOk = false;
     }
+}
+
+void tst_qmlls_modules::rangeFormatting_data()
+{
+    QTest::addColumn<QByteArray>("uri");
+    QTest::addColumn<QLspSpecification::Range>("selectedRange");
+    QTest::addColumn<QLspSpecification::Range>("expectedRange");
+    QTest::addColumn<QString>("expectedAfterFormat");
+
+    const QByteArray filePath = testFileUrl("formatting/rangeFormatting.qml").toEncoded();
+
+    {
+        QLspSpecification::Range selectedRange = { { 5, 0 }, { 9, 0 } };
+        QLspSpecification::Range expectedRange = { { 0, 0 }, { 24, 0 } };
+        QTest::addRow("selectRegion1") << filePath << selectedRange << expectedRange
+                                       << testFile("formatting/rangeFormatting.formatted1.qml");
+    }
+
+    {
+        QLspSpecification::Range selectedRange = { { 10, 25 }, { 23, 0 } };
+        QLspSpecification::Range expectedRange = { { 0, 0 }, { 24, 0 } };
+        QTest::addRow("selecteRegion2") << filePath << selectedRange << expectedRange
+                                        << testFile("formatting/rangeFormatting.formatted2.qml");
+    }
+
+    {
+        QLspSpecification::Range selectedRange = { { 14, 36 }, { 14, 45 } };
+        QLspSpecification::Range expectedRange = { { 0, 0 }, { 24, 0 } };
+        QTest::addRow("selectSingleLine") << filePath << selectedRange << expectedRange
+                                          << testFile("formatting/rangeFormatting.formatted3.qml");
+    }
+
+    {
+        QLspSpecification::Range selectedRange = { { 0, 0 }, { 24, 0 } };
+        QLspSpecification::Range expectedRange = { { 0, 0 }, { 24, 0 } };
+        QTest::addRow("selecteEntireFile") << filePath << selectedRange << expectedRange
+                                           << testFile("formatting/rangeFormatting.formatted4.qml");
+    }
+
+    {
+        QLspSpecification::Range selectedRange = { { 10, 3 }, { 20, 4 } };
+        QLspSpecification::Range expectedRange = { { 0, 0 }, { 24, 0 } };
+        QTest::addRow("selectUnbalanced") << filePath << selectedRange << expectedRange
+                                          << testFile("formatting/rangeFormatting.formatted5.qml");
+    }
+}
+
+void tst_qmlls_modules::rangeFormatting()
+{
+    QFETCH(QByteArray, uri);
+    QFETCH(QLspSpecification::Range, selectedRange);
+    QFETCH(QLspSpecification::Range, expectedRange);
+    QFETCH(QString, expectedAfterFormat);
+
+    QLspSpecification::DocumentRangeFormattingParams params;
+    params.textDocument.uri = uri;
+    params.range = selectedRange;
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    const auto clean = [didFinish]() { *didFinish = true; };
+
+    auto &&responseHandler = [&](auto res) {
+        Q_UNUSED(res);
+        QScopeGuard cleanup(clean);
+        auto result = std::get_if<QList<TextEdit>>(&res);
+        QVERIFY(result);
+
+        QFile file(expectedAfterFormat);
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+            QFAIL("Error while opening the file ");
+
+        const auto text = result->first();
+        QCOMPARE(text.range.start.line, expectedRange.start.line);
+        QCOMPARE(text.range.start.character, expectedRange.start.character);
+        QCOMPARE(text.range.end.line, expectedRange.end.line);
+        QCOMPARE(text.range.end.character, expectedRange.end.character);
+        QCOMPARE(text.newText, file.readAll());
+    };
+
+    auto &&errorHandler = [&clean](auto &error) {
+        QScopeGuard cleanup(clean);
+        ProtocolBase::defaultResponseErrorHandler(error);
+        QVERIFY2(false, "error occurred while range formatting");
+    };
+
+    m_protocol.requestDocumentRangeFormatting(params, std::move(responseHandler),
+                                              std::move(errorHandler));
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
 }
 
 QTEST_MAIN(tst_qmlls_modules)

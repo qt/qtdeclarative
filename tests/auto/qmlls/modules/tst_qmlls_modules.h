@@ -54,6 +54,8 @@ private slots:
     void renameUsages();
     void linting_data();
     void linting();
+    void rangeFormatting_data();
+    void rangeFormatting();
 
 private:
     QProcess m_server;

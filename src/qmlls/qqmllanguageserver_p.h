@@ -24,6 +24,7 @@
 #include "qqmlcompletionsupport_p.h"
 #include "qqmlgototypedefinitionsupport_p.h"
 #include "qqmlformatting_p.h"
+#include "qqmlrangeformatting_p.h"
 #include "qqmlgotodefinitionsupport_p.h"
 #include "qqmlrenamesymbolsupport_p.h"
 
@@ -69,6 +70,7 @@ private:
     QQmlFindUsagesSupport m_referencesSupport;
     QQmlDocumentFormatting m_documentFormatting;
     QQmlRenameSymbolSupport m_renameSupport;
+    QQmlRangeFormatting m_rangeFormatting;
     int m_returnValue = 1;
 };
 

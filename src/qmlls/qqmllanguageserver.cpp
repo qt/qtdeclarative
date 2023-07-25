@@ -65,7 +65,8 @@ QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> s
       m_definitionSupport(&m_codeModel),
       m_referencesSupport(&m_codeModel),
       m_documentFormatting(&m_codeModel),
-      m_renameSupport(&m_codeModel)
+      m_renameSupport(&m_codeModel),
+      m_rangeFormatting(&m_codeModel)
 {
     m_server.addServerModule(this);
     m_server.addServerModule(&m_textSynchronization);
@@ -77,6 +78,7 @@ QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> s
     m_server.addServerModule(&m_referencesSupport);
     m_server.addServerModule(&m_documentFormatting);
     m_server.addServerModule(&m_renameSupport);
+    m_server.addServerModule(&m_rangeFormatting);
     m_server.finishSetup();
     qCWarning(lspServerLog) << "Did Setup";
 }
