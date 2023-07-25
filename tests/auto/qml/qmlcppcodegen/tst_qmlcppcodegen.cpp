@@ -73,6 +73,7 @@ private slots:
     void enumProblems();
     void enumScope();
     void enums();
+    void enumsInOtherObject();
     void equalityQObjects();
     void equalityQUrl();
     void equalityVarAndNonStorable();
@@ -1343,43 +1344,45 @@ void tst_QmlCppCodegen::enumScope()
 void tst_QmlCppCodegen::enums()
 {
     QQmlEngine engine;
-    {
-        QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/Enums.qml"_s));
-        QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/Enums.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
 
-        QTest::ignoreMessage(QtWarningMsg, "qrc:/qt/qml/TestTypes/Enums.qml:4:1: "
-                                           "QML Enums: Layout must be attached to Item elements");
-        QScopedPointer<QObject> object(component.create());
+    QTest::ignoreMessage(QtWarningMsg, "qrc:/qt/qml/TestTypes/Enums.qml:4:1: "
+                                       "QML Enums: Layout must be attached to Item elements");
+    QScopedPointer<QObject> object(component.create());
 
-        QVERIFY(!object.isNull());
-        bool ok = false;
-        QCOMPARE(object->property("appState").toInt(&ok), 2);
-        QVERIFY(ok);
-        QCOMPARE(object->property("color").toString(), u"blue"_s);
+    QVERIFY(!object.isNull());
+    bool ok = false;
+    QCOMPARE(object->property("appState").toInt(&ok), 2);
+    QVERIFY(ok);
+    QCOMPARE(object->property("color").toString(), u"blue"_s);
 
-        QTRY_COMPARE(object->property("appState").toInt(&ok), 1);
-        QVERIFY(ok);
-        QCOMPARE(object->property("color").toString(), u"green"_s);
+    QTRY_COMPARE(object->property("appState").toInt(&ok), 1);
+    QVERIFY(ok);
+    QCOMPARE(object->property("color").toString(), u"green"_s);
 
-        const auto func = qmlAttachedPropertiesFunction(
-                    object.data(), QMetaType::fromName("QQuickLayout*").metaObject());
+    const auto func = qmlAttachedPropertiesFunction(
+            object.data(), QMetaType::fromName("QQuickLayout*").metaObject());
 
-        QTest::ignoreMessage(QtWarningMsg, "qrc:/qt/qml/TestTypes/enumsInOtherObject.qml:4:25: "
-                                           "QML Enums: Layout must be attached to Item elements");
-        QObject *attached = qmlAttachedPropertiesObject(object.data(), func);
+    QObject *attached = qmlAttachedPropertiesObject(object.data(), func);
 
-        const QVariant prop = attached->property("alignment");
-        QVERIFY(prop.isValid());
-        QCOMPARE(qvariant_cast<Qt::Alignment>(prop), Qt::AlignCenter);
-    }
-    {
-        QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/enumsInOtherObject.qml"_s));
-        QVERIFY2(!component.isError(), component.errorString().toUtf8());
-        QScopedPointer<QObject> object(component.create());
-        QVERIFY(!object.isNull());
-        QCOMPARE(object->property("color").toString(), u"blue"_s);
-        QTRY_COMPARE(object->property("color").toString(), u"green"_s);
-    }
+    const QVariant prop = attached->property("alignment");
+    QVERIFY(prop.isValid());
+    QCOMPARE(qvariant_cast<Qt::Alignment>(prop), Qt::AlignCenter);
+
+}
+
+void tst_QmlCppCodegen::enumsInOtherObject()
+{
+    QQmlEngine engine;
+    QTest::ignoreMessage(QtWarningMsg, "qrc:/qt/qml/TestTypes/enumsInOtherObject.qml:4:25: "
+                                       "QML Enums: Layout must be attached to Item elements");
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/enumsInOtherObject.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QCOMPARE(object->property("color").toString(), u"blue"_s);
+    QTRY_COMPARE(object->property("color").toString(), u"green"_s);
 }
 
 void tst_QmlCppCodegen::equalityQObjects()
