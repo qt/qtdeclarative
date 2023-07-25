@@ -10079,6 +10079,9 @@ public:
 
     Q_INVOKABLE void triggerSignal() { emit fooMember2Emitted(&m_fooMember2); }
 
+    Q_INVOKABLE const FrozenFoo *getConst() { return createFloating(); }
+    Q_INVOKABLE FrozenFoo *getNonConst() { return createFloating(); }
+
     FrozenFoo *fooMember() { return &m_fooMember; }
     FrozenFoo *fooMember2() { return &m_fooMember2; }
 
@@ -10088,6 +10091,16 @@ signals:
 private:
     const FrozenFoo *fooMemberConst() const { return &m_fooMember; }
 
+    FrozenFoo *createFloating()
+    {
+        if (!m_floating) {
+            m_floating = new FrozenFoo;
+            m_floating->setObjectName(objectName());
+        }
+        return m_floating;
+    }
+
+    FrozenFoo *m_floating = nullptr;
     FrozenFoo m_fooMember;
     FrozenFoo m_fooMember2;
 };
@@ -10110,6 +10123,17 @@ void tst_qqmlecmascript::frozenQObject()
     QVERIFY(frozenObjects->property("caughtSignal").toBool());
     QCOMPARE(frozenObjects->fooMember()->name(), QStringLiteral("Jane"));
     QCOMPARE(frozenObjects->fooMember2()->name(), QStringLiteral("Jane"));
+
+    QQmlComponent component3(&engine, testFileUrl("frozenQObject3.qml"));
+    QScopedPointer<QObject> root3(component3.create());
+    QCOMPARE(root3->objectName(), QLatin1String("a/b"));
+    QVERIFY(root3->property("objConst").value<QObject *>());
+    QVERIFY(root3->property("objNonConst").value<QObject *>());
+
+    QTRY_VERIFY(root3->property("gcs").toInt() > 8);
+
+    QVERIFY(root3->property("objConst").value<QObject *>());
+    QVERIFY(root3->property("objNonConst").value<QObject *>());
 }
 
 struct ConstPointer : QObject
