@@ -34,7 +34,7 @@ public:
     void setEventDatabase(SqlEventDatabase *eventDatabase);
 
     QDate date() const;
-    void setDate(const QDate &date);
+    void setDate(QDate date);
 
     int rowCount(const QModelIndex & = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
