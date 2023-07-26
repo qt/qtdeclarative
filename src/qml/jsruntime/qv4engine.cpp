@@ -1689,6 +1689,26 @@ QVariant ExecutionEngine::toVariant(
     return ::toVariant(value, typeHint, createJSValueForObjectsAndSymbols, nullptr);
 }
 
+static QVariantMap objectToVariantMap(const QV4::Object *o, V4ObjectSet *visitedObjects)
+{
+    QVariantMap map;
+    QV4::Scope scope(o->engine());
+    QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly);
+    QV4::ScopedValue name(scope);
+    QV4::ScopedValue val(scope);
+    while (1) {
+        name = it.nextPropertyNameAsString(val);
+        if (name->isNull())
+            break;
+
+        QString key = name->toQStringNoThrow();
+        map.insert(key, ::toVariant(
+                                val, /*type hint*/ QMetaType {},
+                                /*createJSValueForObjectsAndSymbols*/false, visitedObjects));
+    }
+    return map;
+}
+
 static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObjects)
 {
     Q_ASSERT(o);
@@ -1723,23 +1743,7 @@ static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObject
 
         result = list;
     } else if (o->getPrototypeOf() == o->engine()->objectPrototype()->d()) {
-        QVariantMap map;
-        QV4::Scope scope(o->engine());
-        QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly);
-        QV4::ScopedValue name(scope);
-        QV4::ScopedValue val(scope);
-        while (1) {
-            name = it.nextPropertyNameAsString(val);
-            if (name->isNull())
-                break;
-
-            QString key = name->toQStringNoThrow();
-            map.insert(key, ::toVariant(
-                           val, /*type hint*/ QMetaType {},
-                           /*createJSValueForObjectsAndSymbols*/false, visitedObjects));
-        }
-
-        result = map;
+        result = objectToVariantMap(o, visitedObjects);
     } else {
         // If it's not a plain object, we can only save it as QJSValue.
         result = QVariant::fromValue(QJSValuePrivate::fromReturnedValue(o->asReturnedValue()));
@@ -1966,7 +1970,10 @@ ReturnedValue ExecutionEngine::fromVariant(
 
 QVariantMap ExecutionEngine::variantMapFromJS(const Object *o)
 {
-    return objectToVariant(o).toMap();
+    Q_ASSERT(o);
+    V4ObjectSet visitedObjects;
+    visitedObjects.insert(o->d());
+    return objectToVariantMap(o, &visitedObjects);
 }
 
 
