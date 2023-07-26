@@ -138,7 +138,7 @@ QDate QQuickMonthModel::dateAt(int index) const
     return d->dates.value(index);
 }
 
-int QQuickMonthModel::indexOf(const QDate &date) const
+int QQuickMonthModel::indexOf(QDate date) const
 {
     Q_D(const QQuickMonthModel);
     if (date < d->dates.first() || date > d->dates.last())
