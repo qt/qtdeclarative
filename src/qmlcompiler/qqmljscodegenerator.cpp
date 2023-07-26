@@ -695,9 +695,7 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
 
     if (m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->listPropertyType())) {
         // Our QQmlListProperty only keeps plain QObject*.
-        const auto valueType = m_typeResolver->valueType(baseType);
-        const auto elementType = m_typeResolver->globalType(
-                    m_typeResolver->genericType(m_typeResolver->containedType(valueType)));
+        const auto elementType = m_typeResolver->globalType(m_typeResolver->qObjectType());
 
         m_body += u"if ("_s + indexName + u" < "_s + baseName
                 + u".count(&"_s + baseName + u"))\n"_s;

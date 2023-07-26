@@ -123,6 +123,7 @@ private slots:
     void listConversion();
     void listIndices();
     void listLength();
+    void listOfInvisible();
     void listPropertyAsModel();
     void lotsOfRegisters();
     void math();
@@ -2398,6 +2399,16 @@ void tst_QmlCppCodegen::listLength()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
     QCOMPARE(object->property("l").toInt(), 2);
+}
+
+void tst_QmlCppCodegen::listOfInvisible()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/listOfInvisible.qml"_s));
+    QVERIFY2(component.isReady(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QCOMPARE(object->property("width").toDouble(), 27.0);
 }
 
 void tst_QmlCppCodegen::listPropertyAsModel()
