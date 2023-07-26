@@ -85,17 +85,17 @@ public:
     Q_INVOKABLE QVariant alpha(const QJSValue &baseColor, double value) const;
     Q_INVOKABLE QVariant tint(const QJSValue &baseColor, const QJSValue &tintColor) const;
 
-    Q_INVOKABLE QString formatDate(const QDate &date, const QString &format) const;
+    Q_INVOKABLE QString formatDate(QDate date, const QString &format) const;
     Q_INVOKABLE QString formatDate(const QDateTime &dateTime, const QString &format) const;
     Q_INVOKABLE QString formatDate(const QString &string, const QString &format) const;
-    Q_INVOKABLE QString formatDate(const QDate &date, Qt::DateFormat format) const;
+    Q_INVOKABLE QString formatDate(QDate date, Qt::DateFormat format) const;
     Q_INVOKABLE QString formatDate(const QDateTime &dateTime, Qt::DateFormat format) const;
     Q_INVOKABLE QString formatDate(const QString &string, Qt::DateFormat format) const;
 
-    Q_INVOKABLE QString formatTime(const QTime &time, const QString &format) const;
+    Q_INVOKABLE QString formatTime(QTime time, const QString &format) const;
     Q_INVOKABLE QString formatTime(const QDateTime &dateTime, const QString &format) const;
     Q_INVOKABLE QString formatTime(const QString &time, const QString &format) const;
-    Q_INVOKABLE QString formatTime(const QTime &time, Qt::DateFormat format) const;
+    Q_INVOKABLE QString formatTime(QTime time, Qt::DateFormat format) const;
     Q_INVOKABLE QString formatTime(const QDateTime &dateTime, Qt::DateFormat format) const;
     Q_INVOKABLE QString formatTime(const QString &time, Qt::DateFormat format) const;
 
@@ -105,13 +105,13 @@ public:
     Q_INVOKABLE QString formatDateTime(const QString &string, Qt::DateFormat format) const;
 
 #if QT_CONFIG(qml_locale)
-    Q_INVOKABLE QString formatDate(const QDate &date, const QLocale &locale = QLocale(),
+    Q_INVOKABLE QString formatDate(QDate date, const QLocale &locale = QLocale(),
                                    QLocale::FormatType formatType = QLocale::ShortFormat) const;
     Q_INVOKABLE QString formatDate(const QDateTime &dateTime, const QLocale &locale = QLocale(),
                                    QLocale::FormatType formatType = QLocale::ShortFormat) const;
     Q_INVOKABLE QString formatDate(const QString &string, const QLocale &locale = QLocale(),
                                    QLocale::FormatType formatType = QLocale::ShortFormat) const;
-    Q_INVOKABLE QString formatTime(const QTime &time, const QLocale &locale = QLocale(),
+    Q_INVOKABLE QString formatTime(QTime time, const QLocale &locale = QLocale(),
                                    QLocale::FormatType formatType = QLocale::ShortFormat) const;
     Q_INVOKABLE QString formatTime(const QDateTime &dateTime, const QLocale &locale = QLocale(),
                                    QLocale::FormatType formatType = QLocale::ShortFormat) const;
