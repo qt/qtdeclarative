@@ -1822,36 +1822,35 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
     if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::JavaScriptReturnValue)
         reject(u"call to untyped JavaScript function"_s);
 
+    const QQmlJSScope::ConstPtr scope = m_state.accumulatorOut().scopeType();
+
     AccumulatorConverter registers(this);
 
     const QQmlJSRegisterContent baseType = registerType(base);
-    if (baseType.storedType()->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
-        const QString name = m_jsUnitGenerator->stringForIndex(
-                    m_jsUnitGenerator->lookupNameIndex(index));
-        if (m_typeResolver->equals(m_typeResolver->originalContainedType(baseType), mathObject())) {
-            if (inlineMathMethod(name, argc, argv))
-                return;
-        }
+    const QString name = m_jsUnitGenerator->lookupName(index);
 
-        if (m_typeResolver->equals(m_typeResolver->originalContainedType(baseType), consoleObject())) {
-            if (inlineConsoleMethod(name, argc, argv))
-                return;
-        }
+    if (m_typeResolver->equals(scope, mathObject())) {
+        if (inlineMathMethod(name, argc, argv))
+            return;
+    } else if (m_typeResolver->equals(scope, consoleObject())) {
+        if (inlineConsoleMethod(name, argc, argv))
+            return;
+    } else if (m_typeResolver->equals(scope, m_typeResolver->stringType())) {
+        if (inlineStringMethod(name, base, argc, argv))
+            return;
+    } else if (baseType.storedType()->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
+        if (inlineArrayMethod(name, base, argc, argv))
+            return;
+    }
 
-        if (m_typeResolver->equals(m_typeResolver->originalContainedType(baseType),
-                                   m_typeResolver->stringType())) {
-            if (inlineStringMethod(name, base, argc, argv))
-                return;
-        }
-
-        if (baseType.storedType()->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
-            if (inlineArrayMethod(name, base, argc, argv))
-                return;
-        }
-
+    if (!scope->isReferenceType()) {
         // This is possible, once we establish the right kind of lookup for it
         reject(u"call to property '%1' of %2"_s.arg(name, baseType.descriptiveName()));
     }
+
+    const QString inputPointer = resolveQObjectPointer(
+            scope, baseType, registerVariable(base),
+            u"Cannot call method '%1' of %2"_s.arg(name));
 
     const QString indexString = QString::number(index);
 
@@ -1860,7 +1859,7 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
     QString outVar;
     m_body += argumentsList(argc, argv, &outVar);
     const QString lookup = u"aotContext->callObjectPropertyLookup("_s + indexString
-            + u", "_s + registerVariable(base)
+            + u", "_s + inputPointer
             + u", args, types, "_s + QString::number(argc) + u')';
     const QString initialization = u"aotContext->initCallObjectPropertyLookup("_s
             + indexString + u')';

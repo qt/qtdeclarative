@@ -161,6 +161,7 @@ set(qml_files
     mathOperations.qml
     mergedObjectRead.qml
     mergedObjectWrite.qml
+    methodOnListLookup.qml
     methods.qml
     modulePrefix.qml
     moveRegVoid.qml

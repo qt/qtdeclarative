@@ -133,6 +133,7 @@ private slots:
     void mathMinMax();
     void mathOperations();
     void mergedObjectReadWrite();
+    void methodOnListLookup();
     void methods();
     void modulePrefix();
     void multiForeign();
@@ -2664,6 +2665,25 @@ void tst_QmlCppCodegen::mergedObjectReadWrite()
         QScopedPointer<QObject> o(c.create());
         QVERIFY(!o.isNull());
     }
+}
+
+void tst_QmlCppCodegen::methodOnListLookup()
+{
+    QQmlEngine engine;
+    const QUrl url(u"qrc:/qt/qml/TestTypes/methodOnListLookup.qml"_s);
+    QQmlComponent component(&engine, url);
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->objectName(), u"no one");
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url.toString()
+                       + ":14: TypeError: Cannot call method 'getName' of undefined"_L1));
+    QMetaObject::invokeMethod(o.data(), "boom");
 }
 
 void tst_QmlCppCodegen::methods()
