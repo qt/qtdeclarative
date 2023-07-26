@@ -1468,7 +1468,7 @@ void tst_qqmlcomponent::complexObjectArgument()
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
-    QCOMPARE(o->objectName(), QStringLiteral("26"));
+    QCOMPARE(o->objectName(), QStringLiteral("26 - 25"));
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
