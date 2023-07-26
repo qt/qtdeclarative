@@ -6,6 +6,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtQmlIntegration/qqmlintegration.h>
+#include <QtQml/qqmllist.h>
 
 class Invisible : public QObject
 {
@@ -45,6 +46,39 @@ class DerivedFromInvisible : public Invisible
 {
     Q_OBJECT
     QML_ELEMENT
+    Q_PROPERTY(double implicitWidth MEMBER m_implicitWidth NOTIFY implicitWidthChanged FINAL)
+public:
+    DerivedFromInvisible(QObject *parent = nullptr) : Invisible(parent) {}
+
+signals:
+    void implicitWidthChanged();
+
+private:
+    double m_implicitWidth = 27;
+};
+
+class WithListPropertyOfDerivedFromInvisible : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(QQmlListProperty<DerivedFromInvisible> children READ children NOTIFY childrenChanged FINAL)
+
+public:
+    WithListPropertyOfDerivedFromInvisible(QObject *parent = nullptr) : QObject(parent)
+    {
+        m_children.append(new DerivedFromInvisible(this));
+    }
+
+    QQmlListProperty<DerivedFromInvisible> children()
+    {
+        return QQmlListProperty<DerivedFromInvisible>(this, &m_children);
+    }
+
+signals:
+    void childrenChanged();
+
+private:
+    QList<DerivedFromInvisible *> m_children;
 };
 
 #endif // INVISIBLE_H

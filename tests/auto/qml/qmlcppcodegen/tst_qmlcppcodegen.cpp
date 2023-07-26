@@ -174,6 +174,7 @@ private slots:
     void variantReturn();
     void equalityTestsWithNullOrUndefined();
     void basicBlocksWithBackJump();
+    void listOfInvisible();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2597,6 +2598,16 @@ void tst_QmlCppCodegen::stringToByteArray()
 
     QCOMPARE(person->dataBindable().value(), QByteArray("some data"));
     QCOMPARE(person->name(), u"some data"_s);
+}
+
+void tst_QmlCppCodegen::listOfInvisible()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/listOfInvisible.qml"_s));
+    QVERIFY2(component.isReady(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QCOMPARE(object->property("width").toDouble(), 27.0);
 }
 
 void tst_QmlCppCodegen::listPropertyAsModel()

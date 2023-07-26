@@ -140,6 +140,7 @@ set(qml_files
     letAndConst.qml
     listAsArgument.qml
     listIndices.qml
+    listOfInvisible.qml
     listPropertyAsModel.qml
     listlength.qml
     math.qml

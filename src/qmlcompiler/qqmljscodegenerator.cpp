@@ -694,6 +694,8 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
         const auto valueType = m_typeResolver->valueType(baseType);
         const auto elementType = m_typeResolver->globalType(
                     m_typeResolver->genericType(m_typeResolver->containedType(valueType)));
+        if (!elementType.storedType()->isReferenceType())
+            reject(u"LoadElement with bad element type"_s);
 
         m_body += u"if ("_s + indexName + u" >= 0 && "_s + indexName
                 + u" < "_s + baseName + u".count(&"_s + baseName
