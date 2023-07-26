@@ -153,6 +153,7 @@ set(qml_files
     listAsArgument.qml
     listConversion.qml
     listIndices.qml
+    listOfInvisible.qml
     listPropertyAsModel.qml
     listlength.qml
     math.qml
