@@ -998,6 +998,33 @@ QPalette QQuickSwipeDelegatePrivate::defaultPalette() const
     return QQuickTheme::palette(QQuickTheme::ListView);
 }
 
+/*! \internal
+    Recursively search right and/or left item tree of swipe delegate for any item that
+    contains the \a event position.
+
+    Returns the first such item found, otherwise \c nullptr.
+*/
+QQuickItem *QQuickSwipeDelegatePrivate::getPressedItem(QQuickItem *childItem, QMouseEvent *event) const
+{
+    if (!childItem || !event)
+        return nullptr;
+
+    QQuickItem *item = nullptr;
+
+    if (childItem->acceptedMouseButtons() &&
+            childItem->contains(childItem->mapFromScene(event->scenePosition()))) {
+        item = childItem;
+    } else {
+        const auto &childItems = childItem->childItems();
+        for (const auto &child: childItems) {
+            if ((item = getPressedItem(child, event)))
+                break;
+        }
+    }
+
+    return item;
+}
+
 QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent)
     : QQuickItemDelegate(*(new QQuickSwipeDelegatePrivate(this)), parent)
 {
@@ -1240,17 +1267,11 @@ void QQuickSwipeDelegate::mousePressEvent(QMouseEvent *event)
     swipePrivate->velocityCalculator.startMeasuring(event->position().toPoint(), event->timestamp());
 
     if (swipePrivate->complete) {
-        auto item = d->swipe.rightItem();
-        if (item && item->contains(item->mapFromScene(event->scenePosition()))) {
-            d->pressedItem = item;
-            d->handleMousePressEvent(item, event);
-        } else {
-            item = d->swipe.leftItem();
-            if (item && item->contains(item->mapFromScene(event->scenePosition()))) {
-                d->pressedItem = item;
-                d->handleMousePressEvent(item, event);
-            }
-        }
+        d->pressedItem = d->getPressedItem(d->swipe.rightItem(), event);
+        if (!d->pressedItem)
+            d->pressedItem = d->getPressedItem(d->swipe.leftItem(), event);
+        if (d->pressedItem)
+            d->handleMousePressEvent(d->pressedItem, event);
     }
 }
 
