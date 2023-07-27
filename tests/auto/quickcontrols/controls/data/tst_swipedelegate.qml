@@ -1778,4 +1778,47 @@ TestCase {
         swipe(control, 0, -1.0)
         compare(control.swipe.rightItem.color, Qt.color("tomato"))
     }
+
+
+    Component {
+        id: swipeDelegate
+
+        SwipeDelegate {
+          anchors.centerIn: parent
+          width: 100
+          height: 50
+          contentItem: Rectangle {
+              color: "red"
+          }
+          swipe.right: Row {
+              height: parent.height
+              anchors.right: parent.right
+              property alias buttonItem: button
+              Button {
+                  id: button
+                  width: 50
+                  height: parent.height
+                  text: "Button"
+              }
+          }
+       }
+    }
+
+    function test_mouseEventOnNonVisualItem() {
+        let control = createTemporaryObject(swipeDelegate, testCase)
+        verify(control)
+
+        swipe(control, 0, -1.0)
+        verify(control.swipe.rightItem.visible)
+
+        let rightItem = control.swipe.rightItem
+        let rightClickSpy = signalSpyComponent.createObject(control,
+                    { target: rightItem.buttonItem, signalName: "clicked" })
+        verify(rightClickSpy)
+        verify(rightClickSpy.valid)
+
+        mouseClick(rightItem)
+
+        compare(rightClickSpy.count, 1)
+    }
 }
