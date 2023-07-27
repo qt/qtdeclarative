@@ -957,11 +957,11 @@ void tst_QJSEngine::newQObject_ownership()
         delete ptr;
     }
     {
-        QObject *parent = new QObject();
-        QObject *child = new QObject(parent);
+        std::unique_ptr<QObject> parent = std::make_unique<QObject>();
+        QObject *child = new QObject(parent.get());
         QJSValue v = eng.newQObject(child);
         QCOMPARE(v.toQObject(), child);
-        delete parent;
+        parent.reset();
         QCOMPARE(v.toQObject(), (QObject *)nullptr);
     }
     {
@@ -977,8 +977,8 @@ void tst_QJSEngine::newQObject_ownership()
         QVERIFY(ptr.isNull());
     }
     {
-        QObject *parent = new QObject();
-        QPointer<QObject> child = new QObject(parent);
+        std::unique_ptr<QObject> parent = std::make_unique<QObject>();
+        QPointer<QObject> child = new QObject(parent.get());
         QVERIFY(child != nullptr);
         {
             QJSValue v = eng.newQObject(child);
@@ -986,7 +986,6 @@ void tst_QJSEngine::newQObject_ownership()
         eng.collectGarbage();
         // has parent, so it should be like QtOwnership
         QVERIFY(child != nullptr);
-        delete parent;
     }
     {
         QPointer<QObject> ptr = new QObject();
