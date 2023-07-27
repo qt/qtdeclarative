@@ -594,6 +594,13 @@ bool Lookup::setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, c
 bool Lookup::setterFallbackAsVariant(
         Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
+    if (&Lookup::setterFallback == &Lookup::setterFallbackAsVariant) {
+        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
+        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
+        // decides how to retrieve the property.
+        qFatal("Your C++ compiler is broken.");
+    }
+
     // This setter just marks the presence of a fallback lookup with QVariant conversion.
     // It only does anything with it when running AOT-compiled code.
     return setterFallback(l, engine, object, value);
@@ -659,15 +666,22 @@ bool Lookup::setterQObject(Lookup *l, ExecutionEngine *engine, Value &object, co
 {
     // This setter just marks the presence of a qobjectlookup. It only does anything with it when
     // running AOT-compiled code, though.
-    return QV4::Lookup::setterFallback(l, engine, object, v);
+    return setterFallback(l, engine, object, v);
 }
 
 bool Lookup::setterQObjectAsVariant(
         Lookup *l, ExecutionEngine *engine, Value &object, const Value &v)
 {
+    if (&Lookup::setterQObject == &Lookup::setterQObjectAsVariant) {
+        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
+        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
+        // decides how to retrieve the property.
+        qFatal("Your C++ compiler is broken.");
+    }
+
     // This setter marks the presence of a qobjectlookup with QVariant conversion.
     // It only does anything with it when running AOT-compiled code.
-    return QV4::Lookup::setterFallback(l, engine, object, v);
+    return setterQObject(l, engine, object, v);
 }
 
 

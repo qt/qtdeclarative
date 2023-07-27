@@ -193,6 +193,7 @@ set(qml_files
     script.js
     script.mjs
     sequenceToIterable.qml
+    setLookupConversion.qml
     shadowedMethod.qml
     shared/Slider.qml
     shifts.qml

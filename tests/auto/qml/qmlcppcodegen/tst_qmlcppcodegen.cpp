@@ -161,6 +161,7 @@ private slots:
     void scopeObjectDestruction();
     void scopeVsObject();
     void sequenceToIterable();
+    void setLookupConversion();
     void shadowedMethod();
     void shifts();
     void signalHandler();
@@ -3378,6 +3379,18 @@ void tst_QmlCppCodegen::sequenceToIterable()
         QVERIFY(match.hasMatch());
         QCOMPARE(match.captured(1), QString::number(i));
     }
+}
+
+void tst_QmlCppCodegen::setLookupConversion()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/setLookupConversion.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QVERIFY(o->objectName().isEmpty());
+    QMetaObject::invokeMethod(o.data(), "t");
+    QCOMPARE(o->objectName(), u"a"_s);
 }
 
 void tst_QmlCppCodegen::shadowedMethod()
