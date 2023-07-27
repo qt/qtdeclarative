@@ -540,7 +540,7 @@ void QQuickFlickablePrivate::updateBeginningEnd()
     // Vertical
     const qreal maxyextent = -q->maxYExtent();
     const qreal minyextent = -q->minYExtent();
-    const qreal ypos = -vData.move.value();
+    const qreal ypos = pixelAligned ? -std::round(vData.move.value()) : -vData.move.value();
     bool atBeginning = fuzzyLessThanOrEqualTo(ypos, std::ceil(minyextent));
     bool atEnd = fuzzyLessThanOrEqualTo(std::floor(maxyextent), ypos);
 
@@ -560,7 +560,7 @@ void QQuickFlickablePrivate::updateBeginningEnd()
     // Horizontal
     const qreal maxxextent = -q->maxXExtent();
     const qreal minxextent = -q->minXExtent();
-    const qreal xpos = -hData.move.value();
+    const qreal xpos = pixelAligned ? -std::round(hData.move.value()) : -hData.move.value();
     atBeginning = fuzzyLessThanOrEqualTo(xpos, std::ceil(minxextent));
     atEnd = fuzzyLessThanOrEqualTo(std::floor(maxxextent), xpos);
 
