@@ -1717,12 +1717,39 @@ void QQmlJSTypePropagator::generate_TailCall(int func, int thisObject, int argc,
 
 void QQmlJSTypePropagator::generate_Construct(int func, int argc, int argv)
 {
+    const QQmlJSRegisterContent type = m_state.registers[func].content;
+    if (type.isMethod() && type.method() == m_typeResolver->jsGlobalObject()->methods(u"Date"_s)) {
+        setAccumulator(m_typeResolver->globalType(m_typeResolver->dateTimeType()));
+
+        if (argc == 1) {
+            const QQmlJSRegisterContent argType = m_state.registers[argv].content;
+            if (m_typeResolver->isNumeric(argType)) {
+                addReadRegister(
+                        argv, m_typeResolver->globalType(m_typeResolver->realType()));
+            } else if (m_typeResolver->registerContains(argType, m_typeResolver->stringType())) {
+                addReadRegister(
+                        argv, m_typeResolver->globalType(m_typeResolver->stringType()));
+            } else if (m_typeResolver->registerContains(argType, m_typeResolver->dateTimeType())
+                       || m_typeResolver->registerContains(argType, m_typeResolver->dateType())
+                       || m_typeResolver->registerContains(argType, m_typeResolver->timeType())) {
+                addReadRegister(
+                        argv, m_typeResolver->globalType(m_typeResolver->dateTimeType()));
+            } else {
+                addReadRegister(
+                        argv, m_typeResolver->globalType(m_typeResolver->jsPrimitiveType()));
+            }
+        } else {
+            constexpr int maxArgc = 7; // year, month, day, hours, minutes, seconds, milliseconds
+            for (int i = 0; i < std::min(argc, maxArgc); ++i) {
+                addReadRegister(
+                        argv + i, m_typeResolver->globalType(m_typeResolver->realType()));
+            }
+        }
+
+        return;
+    }
+
     m_state.setHasSideEffects(true);
-    Q_UNUSED(func)
-    Q_UNUSED(argv)
-
-    Q_UNUSED(argc)
-
     setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
 }
 

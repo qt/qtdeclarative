@@ -6,21 +6,22 @@
 #include <QtQml/qqmlprivate.h>
 
 #include <private/qjsvalue_p.h>
+#include <private/qqmlbuiltinfunctions_p.h>
+#include <private/qqmlcomponent_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qqmlfinalizer_p.h>
+#include <private/qqmlloggingcategory_p.h>
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlmetatypedata_p.h>
 #include <private/qqmltype_p_p.h>
 #include <private/qqmltypemodule_p.h>
-#include <private/qqmlcomponent_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
+#include <private/qv4dateobject_p.h>
+#include <private/qv4errorobject_p.h>
+#include <private/qv4identifiertable_p.h>
 #include <private/qv4lookup_p.h>
 #include <private/qv4qobjectwrapper_p.h>
-#include <private/qv4identifiertable_p.h>
-#include <private/qv4errorobject_p.h>
-#include <private/qqmlbuiltinfunctions_p.h>
-#include <private/qqmlfinalizer_p.h>
-#include <private/qqmlloggingcategory_p.h>
 
 #include <QtCore/qmutex.h>
 
@@ -1500,7 +1501,25 @@ QVariant AOTCompiledContext::constructValueType(
         int ctorIndex, void *ctorArg) const
 {
     return QQmlValueTypeProvider::constructValueType(
-                resultMetaType, resultMetaObject, ctorIndex, ctorArg);
+            resultMetaType, resultMetaObject, ctorIndex, ctorArg);
+}
+
+QDateTime AOTCompiledContext::constructDateTime(double timestamp) const
+{
+    return QV4::DateObject::timestampToDateTime(timestamp);
+}
+
+QDateTime AOTCompiledContext::constructDateTime(const QString &string) const
+{
+    return QV4::DateObject::stringToDateTime(string, engine->handle());
+}
+
+QDateTime AOTCompiledContext::constructDateTime(
+        double year, double month, double day, double hours,
+        double minutes, double seconds, double msecs) const
+{
+    return constructDateTime(QV4::DateObject::componentsToTimestamp(
+            year, month, day, hours, minutes, seconds, msecs, engine->handle()));
 }
 
 bool AOTCompiledContext::callQmlContextPropertyLookup(

@@ -1946,9 +1946,44 @@ void QQmlJSCodeGenerator::generate_TailCall(int func, int thisObject, int argc, 
 
 void QQmlJSCodeGenerator::generate_Construct(int func, int argc, int argv)
 {
+    INJECT_TRACE_INFO(generate_Construct);
     Q_UNUSED(func);
-    Q_UNUSED(argc);
-    Q_UNUSED(argv);
+
+    const auto original = m_typeResolver->original(m_state.accumulatorOut());
+
+    if (m_typeResolver->registerContains(original, m_typeResolver->dateTimeType())) {
+        m_body += m_state.accumulatorVariableOut + u" = ";
+        if (argc == 0) {
+            m_body += conversion(
+                    m_typeResolver->dateTimeType(), m_state.accumulatorOut(),
+                    u"QDateTime::currentDateTime()"_s) + u";\n";
+            return;
+        }
+
+        if (argc == 1
+            && m_typeResolver->registerContains(
+                    m_state.readRegister(argv), m_typeResolver->dateTimeType())) {
+            m_body += conversion(
+                        registerType(argv), m_state.readRegister(argv), registerVariable(argv))
+                    + u";\n";
+            return;
+        }
+
+        QString ctorArgs;
+        constexpr int maxArgc = 7; // year, month, day, hours, minutes, seconds, milliseconds
+        for (int i = 0; i < std::min(argc, maxArgc); ++i) {
+            if (i > 0)
+                ctorArgs += u", ";
+            ctorArgs += conversion(
+                    registerType(argv + i), m_state.readRegister(argv + i),
+                    registerVariable(argv + i));
+        }
+        m_body += conversion(
+                m_typeResolver->dateTimeType(), m_state.accumulatorOut(),
+                u"aotContext->constructDateTime("_s + ctorArgs + u')') + u";\n";
+        return;
+    }
+
     reject(u"Construct"_s);
 }
 

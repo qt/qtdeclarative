@@ -66,6 +66,7 @@ private slots:
     void conversionDecrement();
     void conversions();
     void cppValueTypeList();
+    void dateConstruction();
     void dateConversions();
     void deadShoeSize();
     void dialogButtonBox();
@@ -1241,6 +1242,44 @@ void tst_QmlCppCodegen::cppValueTypeList()
     QCOMPARE(object->property("b").toDouble(), 0.25);
     QMetaObject::invokeMethod(object.data(), "incB");
     QCOMPARE(object->property("b").toDouble(), 13.5);
+}
+
+void tst_QmlCppCodegen::dateConstruction()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/dateConstruction.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QDateTime now = QDateTime::currentDateTime();
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QVERIFY(o->property("now").value<QDateTime>().toMSecsSinceEpoch() >= now.toMSecsSinceEpoch());
+    QCOMPARE(o->property("now2"), o->property("now"));
+    QCOMPARE(o->property("fromString").value<QDateTime>(),
+             QDateTime(QDate(1995, 12, 17), QTime(3, 24), QTimeZone::LocalTime));
+    QCOMPARE(o->property("fromNumber").value<QDateTime>().toMSecsSinceEpoch(), 777);
+    QCOMPARE(o->property("fromPrimitive").value<QDateTime>().toMSecsSinceEpoch(), 57);
+    o->setObjectName("foo"_L1);
+    QCOMPARE(o->property("fromPrimitive").value<QDateTime>(),
+             QDateTime(QDate(1997, 2, 13), QTime(13, 4, 12), QTimeZone::LocalTime));
+
+    QCOMPARE(o->property("from2").value<QDateTime>(),
+             QDateTime(QDate(1996, 2, 1), QTime(), QTimeZone::LocalTime));
+    QCOMPARE(o->property("from3").value<QDateTime>(),
+             QDateTime(QDate(1996, 3, 3), QTime(), QTimeZone::LocalTime));
+    QCOMPARE(o->property("from4").value<QDateTime>(),
+             QDateTime(QDate(1996, 4, 4), QTime(5, 0), QTimeZone::LocalTime));
+    QCOMPARE(o->property("from5").value<QDateTime>(),
+             QDateTime(QDate(1996, 5, 5), QTime(6, 7), QTimeZone::LocalTime));
+    QCOMPARE(o->property("from6").value<QDateTime>(),
+             QDateTime(QDate(1996, 6, 6), QTime(7, 8, 9), QTimeZone::LocalTime));
+    QCOMPARE(o->property("from7").value<QDateTime>(),
+             QDateTime(QDate(1996, 7, 7), QTime(8, 9, 10, 11), QTimeZone::LocalTime));
+    QCOMPARE(o->property("from8").value<QDateTime>(),
+             QDateTime(QDate(1996, 8, 8), QTime(9, 10, 11, 12), QTimeZone::LocalTime));
+
+    QCOMPARE(o->property("withUnderflow").value<QDateTime>(),
+             QDateTime(QDate(-6, 7, 24), QTime(16, 51, 50, 990), QTimeZone::LocalTime));
+    QCOMPARE(o->property("invalid").value<QDateTime>(), QDateTime());
 }
 
 void tst_QmlCppCodegen::dateConversions()
