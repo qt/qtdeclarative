@@ -401,6 +401,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::transformed(
         return QQmlJSRegisterContent::create(
                     (this->*op)(origin.storedType()), origin.conversionOrigins(),
                     (this->*op)(origin.conversionResult()),
+                    (this->*op)(origin.conversionResultScope()),
                     origin.variant(), (this->*op)(origin.scopeType()));
     }
 
@@ -638,15 +639,24 @@ QQmlJSRegisterContent QQmlJSTypeResolver::merge(const QQmlJSRegisterContent &a,
         return a;
 
     QList<QQmlJSScope::ConstPtr> origins;
-    if (a.isConversion())
-        origins.append(a.conversionOrigins());
-    else
-        origins.append(containedType(a));
 
-    if (b.isConversion())
+    QQmlJSScope::ConstPtr aResultScope;
+    if (a.isConversion()) {
+        origins.append(a.conversionOrigins());
+        aResultScope = a.conversionResultScope();
+    } else {
+        origins.append(containedType(a));
+        aResultScope = a.scopeType();
+    }
+
+    QQmlJSScope::ConstPtr bResultScope;
+    if (b.isConversion()) {
         origins.append(b.conversionOrigins());
-    else
+        bResultScope = b.conversionResultScope();
+    } else {
         origins.append(containedType(b));
+        bResultScope = b.scopeType();
+    }
 
     std::sort(origins.begin(), origins.end());
     const auto erase = std::unique(origins.begin(), origins.end());
@@ -656,6 +666,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::merge(const QQmlJSRegisterContent &a,
                 merge(a.storedType(), b.storedType()),
                 origins,
                 merge(containedType(a), containedType(b)),
+                merge(aResultScope, bResultScope),
                 mergeVariants(a.variant(), b.variant()),
                 merge(a.scopeType(), b.scopeType()));
 }
@@ -1557,13 +1568,14 @@ QQmlJSRegisterContent QQmlJSTypeResolver::convert(
 {
     if (from.isConversion()) {
         return QQmlJSRegisterContent::create(
-                    to.storedType(), from.conversionOrigins(), containedType(to), from.variant(),
-                    from.scopeType());
+                to.storedType(), from.conversionOrigins(), containedType(to),
+                to.scopeType() ? to.scopeType() : from.conversionResultScope(),
+                from.variant(), from.scopeType());
     }
 
     return QQmlJSRegisterContent::create(
-                to.storedType(), QList<QQmlJSScope::ConstPtr>{containedType(from)},
-                containedType(to), from.variant(), from.scopeType());
+            to.storedType(), QList<QQmlJSScope::ConstPtr>{containedType(from)},
+            containedType(to), to.scopeType(), from.variant(), from.scopeType());
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::comparableType(const QQmlJSScope::ConstPtr &type) const

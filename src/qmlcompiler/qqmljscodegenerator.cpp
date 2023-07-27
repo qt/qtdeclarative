@@ -1190,8 +1190,9 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
     const QString indexString = QString::number(index);
     const QQmlJSScope::ConstPtr valueType = m_state.accumulatorIn().storedType();
     const QQmlJSRegisterContent callBase = m_typeResolver->original(registerType(baseReg));
-    const QQmlJSRegisterContent specific = m_typeResolver->memberType(
-                callBase, m_jsUnitGenerator->lookupName(index));
+    const QQmlJSRegisterContent specific = m_state.readAccumulator();
+    Q_ASSERT(specific.isConversion());
+    const QQmlJSScope::ConstPtr conversionResultScope = specific.conversionResultScope();
 
     if (specific.storedType().isNull()) {
         reject(u"SetLookup. Could not find property "
@@ -1231,10 +1232,10 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
         argType = variableInType;
     }
 
-    switch (property.scopeType()->accessSemantics()) {
+    switch (conversionResultScope->accessSemantics()) {
     case QQmlJSScope::AccessSemantics::Reference: {
         const QString basePointer = resolveQObjectPointer(
-                    property.scopeType(), registerType(baseReg), object,
+                    conversionResultScope, registerType(baseReg), object,
                     u"TypeError: Value is %1 and could not be converted to an object"_s);
 
         const QString lookup = u"aotContext->setObjectLookup("_s + indexString
@@ -1251,7 +1252,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
             break;
         }
 
-        if (!callBase.storedType()->isListProperty()) {
+        if (!conversionResultScope->isListProperty()) {
             reject(u"resizing sequence types (because of missing write-back)"_s);
             break;
         }
@@ -1269,20 +1270,15 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
         break;
     }
     case QQmlJSScope::AccessSemantics::Value: {
-        const QString propertyName = m_jsUnitGenerator->lookupName(index);
-        Q_ASSERT(specific.isProperty());
-        const QQmlJSRegisterContent property = specific.storedIn(
-                    m_typeResolver->genericType(specific.storedType()));
-
         const QString baseContentPointer = resolveValueTypeContentPointer(
-                    property.scopeType(), registerType(baseReg), object,
+                    conversionResultScope, registerType(baseReg), object,
                     u"TypeError: Value is %1 and could not be converted to an object"_s);
 
         const QString lookup = u"aotContext->setValueLookup("_s + indexString
                 + u", "_s + baseContentPointer
                 + u", "_s + variableIn + u')';
         const QString initialization = u"aotContext->initSetValueLookup("_s
-                + indexString + u", "_s + metaObject(property.scopeType())
+                + indexString + u", "_s + metaObject(conversionResultScope)
                 + u", "_s + argType + u')';
 
         generateLookup(lookup, initialization, preparation);

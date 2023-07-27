@@ -107,6 +107,11 @@ public:
         return std::get<ConvertedTypes>(m_content).result;
     }
 
+    QQmlJSScope::ConstPtr conversionResultScope() const
+    {
+        return std::get<ConvertedTypes>(m_content).resultScope;
+    }
+
     QList<QQmlJSScope::ConstPtr> conversionOrigins() const
     {
         return std::get<ConvertedTypes>(m_content).origins;
@@ -162,6 +167,7 @@ public:
     static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
                                         const QList<QQmlJSScope::ConstPtr> origins,
                                         const QQmlJSScope::ConstPtr &conversion,
+                                        const QQmlJSScope::ConstPtr &conversionScope,
                                         ContentVariant variant,
                                         const QQmlJSScope::ConstPtr &scope = {});
 
@@ -179,15 +185,16 @@ private:
     {
         QList<QQmlJSScope::ConstPtr> origins;
         QQmlJSScope::ConstPtr result;
+        QQmlJSScope::ConstPtr resultScope;
 
         friend size_t qHash(const ConvertedTypes &types, size_t seed = 0)
         {
-            return qHashMulti(seed, types.origins, types.result);
+            return qHashMulti(seed, types.origins, types.result, types.resultScope);
         }
 
         friend bool operator==(const ConvertedTypes &a, const ConvertedTypes &b)
         {
-            return a.origins == b.origins && a.result == b.result;
+            return a.origins == b.origins && a.result == b.result && a.resultScope == b.resultScope;
         }
 
         friend bool operator!=(const ConvertedTypes &a, const ConvertedTypes &b)
