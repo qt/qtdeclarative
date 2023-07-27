@@ -110,7 +110,7 @@ public:
     {
         states << newState;
         if (beEvil) {
-            delete job->group();
+            delete job->group(); //manual delete intentional
             groupDeleted = true;
         }
     }
@@ -1090,8 +1090,8 @@ void tst_QSequentialAnimationGroupJob::deleteChildrenWithRunningGroup()
     // test if children can be activated when their group is stopped
     QSequentialAnimationGroupJob group;
 
-    TestAnimation *anim1 = new TestAnimation(200);
-    group.appendAnimation(anim1);
+    std::unique_ptr<TestAnimation> anim1 = std::make_unique<TestAnimation>(200);
+    group.appendAnimation(anim1.get());
 
     QCOMPARE(group.duration(), anim1->duration());
 
@@ -1102,7 +1102,7 @@ void tst_QSequentialAnimationGroupJob::deleteChildrenWithRunningGroup()
     QTest::qWait(100);
     QTRY_VERIFY(group.currentLoopTime() > 0);
 
-    delete anim1;
+    anim1.reset();
     QVERIFY(group.children()->isEmpty());
     QCOMPARE(group.duration(), 0);
     QCOMPARE(group.state(), QAnimationGroupJob::Stopped);
