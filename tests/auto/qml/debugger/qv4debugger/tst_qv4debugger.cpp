@@ -330,27 +330,27 @@ private:
     }
     void evaluateJavaScript(const QString &script, const QString &fileName, int lineNumber = 1)
     {
-        QMetaObject::invokeMethod(m_engine, "evaluate", Qt::QueuedConnection,
+        QMetaObject::invokeMethod(m_engine.get(), "evaluate", Qt::QueuedConnection,
                                   Q_ARG(QString, script), Q_ARG(QString, fileName),
                                   Q_ARG(int, lineNumber));
-        waitForSignal(m_engine, SIGNAL(evaluateFinished()), /*timeout*/0);
+        waitForSignal(m_engine.get(), SIGNAL(evaluateFinished()), /*timeout*/0);
     }
 
-    TestEngine *m_engine;
+    std::unique_ptr<TestEngine> m_engine;
     QV4::ExecutionEngine *m_v4;
-    TestAgent *m_debuggerAgent;
-    QThread *m_javaScriptThread;
+    std::unique_ptr<TestAgent> m_debuggerAgent;
+    std::unique_ptr<QThread> m_javaScriptThread;
 };
 
 void tst_qv4debugger::init()
 {
-    m_javaScriptThread = new QThread;
-    m_engine = new TestEngine;
+    m_javaScriptThread = std::make_unique<QThread>();
+    m_engine = std::make_unique<TestEngine>();
     m_v4 = m_engine->v4Engine();
     m_v4->setDebugger(new QV4Debugger(m_v4));
-    m_engine->moveToThread(m_javaScriptThread);
+    m_engine->moveToThread(m_javaScriptThread.get());
     m_javaScriptThread->start();
-    m_debuggerAgent = new TestAgent(m_v4);
+    m_debuggerAgent = std::make_unique<TestAgent>(m_v4);
     m_debuggerAgent->addDebugger(debugger());
 }
 
@@ -358,11 +358,11 @@ void tst_qv4debugger::cleanup()
 {
     m_javaScriptThread->exit();
     m_javaScriptThread->wait();
-    delete m_engine;
-    delete m_javaScriptThread;
+    m_engine.reset();
+    m_javaScriptThread.reset();
     m_engine = nullptr;
     m_v4 = nullptr;
-    delete m_debuggerAgent;
+    m_debuggerAgent.reset();
     m_debuggerAgent = nullptr;
 }
 
@@ -454,7 +454,7 @@ void tst_qv4debugger::removeBreakPointForNextInstruction()
             "someCall();\n"
             "var i = 42;";
 
-    QMetaObject::invokeMethod(m_engine, "injectFunction", Qt::BlockingQueuedConnection,
+    QMetaObject::invokeMethod(m_engine.get(), "injectFunction", Qt::BlockingQueuedConnection,
                               Q_ARG(QString, "someCall"), Q_ARG(InjectedFunction, someCall));
 
     debugger()->addBreakPoint("removeBreakPointForNextInstruction", 2);
