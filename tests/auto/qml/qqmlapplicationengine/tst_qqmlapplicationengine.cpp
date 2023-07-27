@@ -144,7 +144,7 @@ void tst_qqmlapplicationengine::application()
 
 #if QT_CONFIG(process)
     QDir::setCurrent(buildDir);
-    QProcess *testProcess = new QProcess(this);
+    std::unique_ptr<QProcess> testProcess = std::make_unique<QProcess>(this);
 #ifdef Q_OS_QNX
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert("QT_FORCE_STDERR_LOGGING", "1"); // QTBUG-76546
@@ -164,7 +164,7 @@ void tst_qqmlapplicationengine::application()
     QVERIFY2(QString(testStdErr).endsWith(QString(expectedStdErr)),
              QByteArray("\nExpected ending:\n") + expectedStdErr
              + QByteArray("\nActual output:\n") + testStdErr);
-    delete testProcess;
+    testProcess.reset();
     QDir::setCurrent(srcDir);
 #else // process
     QSKIP("No process support");
@@ -191,7 +191,7 @@ void tst_qqmlapplicationengine::applicationProperties()
     QCoreApplication::setOrganizationName(firstOrganization);
     QCoreApplication::setOrganizationDomain(firstDomain);
 
-    QQmlApplicationEngine *test = new QQmlApplicationEngine(testFileUrl("applicationTest.qml"));
+    std::unique_ptr<QQmlApplicationEngine> test = std::make_unique<QQmlApplicationEngine>(testFileUrl("applicationTest.qml"));
     QObject* root = test->rootObjects().at(0);
     QVERIFY(root);
     QCOMPARE(root->property("originalName").toString(), firstName);
@@ -223,8 +223,6 @@ void tst_qqmlapplicationengine::applicationProperties()
     QCOMPARE(versionChanged.size(), 1);
     QCOMPARE(organizationChanged.size(), 1);
     QCOMPARE(domainChanged.size(), 1);
-
-    delete test;
 }
 
 void tst_qqmlapplicationengine::removeObjectsWhenDestroyed()
