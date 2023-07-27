@@ -51,7 +51,7 @@ public:
         DoubleTap = 1 << 1
     };
     Q_DECLARE_FLAGS(ExclusiveSignals, ExclusiveSignal)
-    Q_FLAG(ExclusiveSignal)
+    Q_FLAG(ExclusiveSignals)
 
     explicit QQuickTapHandler(QQuickItem *parent = nullptr);
 
