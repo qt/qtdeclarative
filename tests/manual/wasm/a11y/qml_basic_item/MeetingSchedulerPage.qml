@@ -132,23 +132,24 @@ GroupBox {
             Layout.preferredWidth: 310
             border.color: "black"
             border.width: 1
-
-            TextEdit {
-                id: description
-                anchors {
-                    fill: parent
-                    leftMargin: 5
-                }
+            ScrollView {
+                id: view
+                anchors.fill: parent
                 clip: true
-                wrapMode: TextEdit.Wrap
-                Accessible.role: Accessible.EditableText
-                Accessible.editable: true
-                Accessible.name: "Enter descriptiom"
-                Accessible.description: "Describe in short "
-                Accessible.multiLine: true
+
+                TextArea {
+                    id: description
+                    wrapMode: TextEdit.Wrap
+                    readOnly: false
+                    font.pixelSize: 16
+                    Accessible.role: Accessible.EditableText
+                    Accessible.editable: true
+                    Accessible.name: "Enter description"
+                    Accessible.description: "Describe in short "
+                    Accessible.multiLine: true
+                }
             }
         }
-
         Button {
             id: nextButton
             text: "Next"
