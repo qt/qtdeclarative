@@ -61,10 +61,13 @@ private:
 
     struct ObjectOrArrayDefinition
     {
-        static constexpr int arrayClassId = -1;
+        enum {
+            ArrayClassId = -1,
+            ArrayConstruct1ArgId = -2,
+        };
 
         int instructionOffset = -1;
-        int internalClassId = -1;
+        int internalClassId = ArrayClassId;
         int argc = 0;
         int argv = -1;
     };
@@ -83,6 +86,7 @@ private:
 
     void generate_DefineArray(int argc, int argv) override;
     void generate_DefineObjectLiteral(int internalClassId, int argc, int args) override;
+    void generate_Construct(int func, int argc, int argv) override;
 
     enum JumpMode { Unconditional, Conditional };
     void processJump(int offset, JumpMode mode);

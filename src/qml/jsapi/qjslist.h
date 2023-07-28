@@ -43,6 +43,11 @@ struct QJSList : private QJSListIndexClamp
 
     QJSList(List *list, QJSEngine *engine) : m_list(list), m_engine(engine) {}
 
+    void resize(int size)
+    {
+        m_list->resize(size);
+    }
+
     bool includes(const Value &value) const
     {
         return std::find(m_list->cbegin(), m_list->cend(), value) != m_list->cend();
@@ -151,6 +156,20 @@ struct QJSList<QQmlListProperty<QObject>, QObject *>  : private QJSListIndexClam
     Q_DISABLE_COPY_MOVE(QJSList)
 
     QJSList(QQmlListProperty<QObject> *list, QJSEngine *engine) : m_list(list), m_engine(engine) {}
+
+    void resize(int size)
+    {
+        qsizetype current = m_list->count(m_list);
+        if (current < size && m_list->append) {
+            do {
+                m_list->append(m_list, nullptr);
+            } while (++current < size);
+        } else if (current > size && m_list->removeLast) {
+            do {
+                m_list->removeLast(m_list);
+            } while (--current > size);
+        }
+    }
 
     bool includes(const QObject *value) const
     {

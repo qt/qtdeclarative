@@ -1718,7 +1718,13 @@ void QQmlJSTypePropagator::generate_TailCall(int func, int thisObject, int argc,
 void QQmlJSTypePropagator::generate_Construct(int func, int argc, int argv)
 {
     const QQmlJSRegisterContent type = m_state.registers[func].content;
-    if (type.isMethod() && type.method() == m_typeResolver->jsGlobalObject()->methods(u"Date"_s)) {
+    if (!type.isMethod()) {
+        m_state.setHasSideEffects(true);
+        setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
+        return;
+    }
+
+    if (type.method() == m_typeResolver->jsGlobalObject()->methods(u"Date"_s)) {
         setAccumulator(m_typeResolver->globalType(m_typeResolver->dateTimeType()));
 
         if (argc == 1) {
@@ -1744,6 +1750,22 @@ void QQmlJSTypePropagator::generate_Construct(int func, int argc, int argv)
                 addReadRegister(
                         argv + i, m_typeResolver->globalType(m_typeResolver->realType()));
             }
+        }
+
+        return;
+    }
+
+    if (type.method() == m_typeResolver->jsGlobalObject()->methods(u"Array"_s)) {
+        if (argc == 1) {
+            if (m_typeResolver->isNumeric(m_state.registers[argv].content)) {
+                setAccumulator(m_typeResolver->globalType(m_typeResolver->variantListType()));
+                addReadRegister(
+                        argv, m_typeResolver->globalType(m_typeResolver->realType()));
+            } else {
+                generate_DefineArray(argc, argv);
+            }
+        } else {
+            generate_DefineArray(argc, argv);
         }
 
         return;

@@ -288,7 +288,10 @@ private:
     void generateTypeLookup(int index);
     void generateVariantEqualityComparison(const QQmlJSRegisterContent &nonStorable,
                                            const QString &registerName, bool invert);
+    void generateArrayInitializer(int argc, int argv);
     void rejectIfNonQObjectOut(const QString &error);
+    void rejectIfBadArray();
+
 
     QString eqIntExpression(int lhsConst);
     QString argumentsList(int argc, int argv, QString *outVar);

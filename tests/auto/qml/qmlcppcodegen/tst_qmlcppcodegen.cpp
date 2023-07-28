@@ -39,6 +39,7 @@ private slots:
     void anchorsFill();
     void argumentConversion();
     void array();
+    void arrayCtor();
     void asCast();
     void attachedBaseEnum();
     void attachedSelf();
@@ -611,6 +612,22 @@ void tst_QmlCppCodegen::array()
     const QJSValue value2 = object->property("values2").value<QJSValue>();
     QVERIFY(value2.isArray());
     QCOMPARE(value2.property(u"length"_s).toInt(), 0);
+}
+
+void tst_QmlCppCodegen::arrayCtor()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/arrayCtor.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QCOMPARE(object->property("defaultCtor"), QVariant::fromValue(QList<int>()));
+    QCOMPARE(object->property("oneArgCtor"), QVariant::fromValue(QList<int>(5)));
+    QCOMPARE(object->property("multiArgCtor"), QVariant::fromValue(QList<int>({2, 3, 3, 4})));
+    QCOMPARE(object->property("arrayTrue"), QVariant::fromValue(QList<bool>({true})));
+    QCOMPARE(object->property("arrayFalse"), QVariant::fromValue(QList<bool>({false})));
+    QCOMPARE(object->property("arrayNegative"), QVariant::fromValue(QList<double>()));
 }
 
 void tst_QmlCppCodegen::asCast()

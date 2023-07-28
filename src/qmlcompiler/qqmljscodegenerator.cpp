@@ -930,11 +930,51 @@ void QQmlJSCodeGenerator::generateVariantEqualityComparison(
             + u";\n}"_s;
 }
 
+void QQmlJSCodeGenerator::generateArrayInitializer(int argc, int argv)
+{
+    const QQmlJSScope::ConstPtr stored = m_state.accumulatorOut().storedType();
+    const QQmlJSScope::ConstPtr value = stored->valueType();
+    Q_ASSERT(value);
+
+    QStringList initializer;
+    for (int i = 0; i < argc; ++i) {
+        initializer += convertStored(
+                registerType(argv + i).storedType(), value,
+                consumedRegisterVariable(argv + i));
+    }
+
+    m_body += m_state.accumulatorVariableOut + u" = "_s + stored->internalName() + u'{';
+    m_body += initializer.join(u", "_s);
+    m_body += u"};\n";
+}
+
 void QQmlJSCodeGenerator::rejectIfNonQObjectOut(const QString &error)
 {
     if (m_state.accumulatorOut().storedType()->accessSemantics()
         != QQmlJSScope::AccessSemantics::Reference) {
         reject(error);
+    }
+}
+
+void QQmlJSCodeGenerator::rejectIfBadArray()
+{
+    const QQmlJSScope::ConstPtr stored = m_state.accumulatorOut().storedType();
+    if (stored->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence) {
+        // This rejects any attempt to store the list into a QVariant.
+        // Therefore, we don't have to adjust the contained type below.
+
+        reject(u"storing an array in a non-sequence type"_s);
+    } else if (stored->isListProperty()) {
+        // We can, technically, generate code for this. But it's dangerous:
+        //
+        // const QString storage = m_state.accumulatorVariableOut + u"_storage"_s;
+        // m_body += stored->internalName() + u"::ListType " + storage
+        //         + u" = {"_s + initializer.join(u", "_s) + u"};\n"_s;
+        // m_body += m_state.accumulatorVariableOut
+        //         + u" = " + stored->internalName() + u"(nullptr, &"_s + storage + u");\n"_s;
+
+        reject(u"creating a QQmlListProperty not backed by a property"_s);
+
     }
 }
 
@@ -1984,6 +2024,45 @@ void QQmlJSCodeGenerator::generate_Construct(int func, int argc, int argv)
         return;
     }
 
+    if (m_typeResolver->registerContains(original, m_typeResolver->variantListType())) {
+        rejectIfBadArray();
+
+        if (argc == 1
+                && m_typeResolver->registerContains(
+                    m_state.readRegister(argv), m_typeResolver->realType())) {
+            addInclude(u"qjslist.h"_s);
+
+            const QString error = u"    aotContext->engine->throwError(QJSValue::RangeError, "_s
+                    + u"QLatin1String(\"Invalid array length\"));\n"_s
+                    + u"    return "_s + errorReturnValue() + u";\n"_s;
+
+            const QString indexName = registerVariable(argv);
+            const auto indexType = registerType(argv);
+            if (!m_typeResolver->isIntegral(indexType)) {
+                m_body += u"if (!QJSNumberCoercion::isArrayIndex("_s + indexName + u")) {\n"_s
+                        + error
+                        + u"}\n"_s;
+            } else if (!m_typeResolver->isUnsignedInteger(
+                               m_typeResolver->containedType(indexType))) {
+                m_body += u"if ("_s + indexName + u" < 0) {\n"_s
+                        + error
+                        + u"}\n"_s;
+            }
+
+            m_body += m_state.accumulatorVariableOut + u" = "_s
+                    + m_state.accumulatorOut().storedType()->internalName() + u"();\n"_s;
+            m_body += u"QJSList(&"_s + m_state.accumulatorVariableOut
+                    + u", aotContext->engine).resize("_s
+                    + convertStored(
+                              registerType(argv).storedType(), m_typeResolver->int32Type(),
+                              consumedRegisterVariable(argv))
+                    + u");\n"_s;
+        } else if (!m_error->isValid()) {
+            generateArrayInitializer(argc, argv);
+        }
+        return;
+    }
+
     reject(u"Construct"_s);
 }
 
@@ -2159,39 +2238,9 @@ void QQmlJSCodeGenerator::generate_DefineArray(int argc, int args)
 {
     INJECT_TRACE_INFO(generate_DefineArray);
 
-    const QQmlJSScope::ConstPtr stored = m_state.accumulatorOut().storedType();
-    if (stored->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence) {
-        // This rejects any attempt to store the list into a QVariant.
-        // Therefore, we don't have to adjust the contained type below.
-        reject(u"storing an array in a non-sequence type"_s);
-        return;
-    }
-
-    const QQmlJSScope::ConstPtr value = stored->valueType();
-    Q_ASSERT(value);
-
-    QStringList initializer;
-    for (int i = 0; i < argc; ++i) {
-        initializer += convertStored(
-                    registerType(args + i).storedType(), value,
-                    consumedRegisterVariable(args + i));
-    }
-
-    if (stored->isListProperty()) {
-        reject(u"creating a QQmlListProperty not backed by a property"_s);
-
-        // We can, technically, generate code for this. But it's dangerous:
-        //
-        // const QString storage = m_state.accumulatorVariableOut + u"_storage"_s;
-        // m_body += stored->internalName() + u"::ListType " + storage
-        //         + u" = {"_s + initializer.join(u", "_s) + u"};\n"_s;
-        // m_body += m_state.accumulatorVariableOut
-        //         + u" = " + stored->internalName() + u"(nullptr, &"_s + storage + u");\n"_s;
-    } else {
-        m_body += m_state.accumulatorVariableOut + u" = "_s + stored->internalName() + u'{';
-        m_body += initializer.join(u", "_s);
-        m_body += u"};\n";
-    }
+    rejectIfBadArray();
+    if (!m_error->isValid())
+        generateArrayInitializer(argc, args);
 }
 
 void QQmlJSCodeGenerator::generate_DefineObjectLiteral(int internalClassId, int argc, int args)

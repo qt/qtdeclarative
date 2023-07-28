@@ -63,6 +63,7 @@ set(qml_files
     anchorsFill.qml
     argumentConversion.qml
     array.qml
+    arrayCtor.qml
     asCast.qml
     attachedBaseEnum.qml
     badSequence.qml
