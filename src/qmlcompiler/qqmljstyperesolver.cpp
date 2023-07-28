@@ -719,14 +719,6 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
     if (isNumeric(a) && isNumeric(b))
         return realType();
 
-    const auto isStringCompatible = [&](const QQmlJSScope::ConstPtr &type) {
-        // TODO: We can losslessly coerce more types to string. Should we?
-        return isIntegral(type) || equals(type, stringType());
-    };
-
-    if (isStringCompatible(a) && isStringCompatible(b))
-        return stringType();
-
     if (isPrimitive(a) && isPrimitive(b))
         return jsPrimitiveType();
 
