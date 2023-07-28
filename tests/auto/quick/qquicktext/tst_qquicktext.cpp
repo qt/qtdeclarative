@@ -3066,11 +3066,11 @@ void tst_qquicktext::lineLaidOut()
 
     for (int i = 0; i < textPrivate->layout.lineCount(); ++i) {
         QRectF r = textPrivate->layout.lineAt(i).rect();
-        QVERIFY(r.width() == i * 15);
+        QCOMPARE(r.width(), i * 15);
         if (i >= 30)
-            QVERIFY(r.x() == r.width() + 30);
+            QCOMPARE(r.x(), r.width() + 30);
         if (i >= 60) {
-            QVERIFY(r.x() == r.width() * 2 + 60);
+            QCOMPARE(r.x(), r.width() * 2 + 60);
             QCOMPARE(r.height(), qreal(20));
         }
     }
