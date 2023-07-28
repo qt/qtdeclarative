@@ -899,6 +899,10 @@ Element GenericPass::resolveAttachedInFileScope(QAnyStringView typeName)
 {
     const auto type = resolveTypeInFileScope(typeName);
     const auto scope = QQmlJSScope::scope(type);
+
+    if (scope.isNull())
+        return QQmlJSScope::createQQmlSAElement(QQmlJSScope::ConstPtr(nullptr));
+
     return QQmlJSScope::createQQmlSAElement(scope->attachedType());
 }
 

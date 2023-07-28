@@ -4625,7 +4625,7 @@ QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty str
             StaticValue p = StaticValue::fromReturnedValue(constant);
             if (p.isNumber()) {
                 double d = p.asDouble();
-                int i = static_cast<int>(d);
+                int i = QJSNumberCoercion::toInteger(d);
                 if (d == i && (d != 0 || !std::signbit(d))) {
                     if (!i) {
                         Instruction::LoadZero load;

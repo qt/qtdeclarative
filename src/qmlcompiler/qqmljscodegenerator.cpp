@@ -681,7 +681,7 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
                        m_state.accumulatorOut(), QString()) + u";\n"_s;
 
     if (!m_typeResolver->isIntegral(m_state.accumulatorIn())) {
-        m_body += u"if (!QJSNumberCoercion::isInteger("_s + indexName + u"))\n"_s
+        m_body += u"if (!QJSNumberCoercion::isArrayIndex("_s + indexName + u"))\n"_s
                 + voidAssignment
                 + u"else "_s;
     }
@@ -753,7 +753,7 @@ void QQmlJSCodeGenerator::generate_StoreElement(int base, int index)
 
     m_body += u"if ("_s;
     if (!m_typeResolver->isIntegral(indexType))
-        m_body += u"QJSNumberCoercion::isInteger("_s + indexName + u") && "_s;
+        m_body += u"QJSNumberCoercion::isArrayIndex("_s + indexName + u") && "_s;
     if (!m_typeResolver->isUnsignedInteger(m_typeResolver->containedType(indexType)))
         m_body += indexName + u" >= 0 && "_s;
     m_body += indexName + u" < "_s + baseName + u".count(&"_s + baseName

@@ -14,6 +14,20 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
+  \fn bool QJSNumberCoercion::isInteger(double d)
+  \internal
+  \deprecated 6.7
+ */
+
+/*!
+  \fn bool QJSNumberCoercion::isArrayIndex(double d)
+  \internal
+
+  Checks whether \a d contains a value that can serve as an index into an array.
+  For that, \a d must be a non-negative value representable as an int.
+ */
+
+/*!
   \fn int QJSNumberCoercion::toInteger(double d)
   \internal
 

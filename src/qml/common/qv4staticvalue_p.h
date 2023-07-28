@@ -393,7 +393,7 @@ struct StaticValue
     }
 
     QV4_NEARLY_ALWAYS_INLINE static bool isInt32(double d) {
-        int i = int(d);
+        int i = QJSNumberCoercion::toInteger(d);
         return (i == d && !(d == 0 && std::signbit(d)));
     }
 
