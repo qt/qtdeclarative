@@ -12,17 +12,43 @@ QT_BEGIN_NAMESPACE
 class QJSNumberCoercion
 {
 public:
-    static constexpr bool isInteger(double d) {
-        return equals(d, d) && equals(static_cast<int>(d), d);
+
+#if QT_DEPRECATED_SINCE(6, 7)
+
+    QT_DEPRECATED_VERSION_6_7
+    static constexpr bool isInteger(double d)
+    {
+        // Comparing d with itself checks for NaN and comparing d with the min and max values
+        // for int also covers infinities.
+        if (!equals(d, d) || d < std::numeric_limits<int>::min()
+            || d > std::numeric_limits<int>::max()) {
+            return false;
+        }
+
+        return equals(static_cast<int>(d), d);
+    }
+
+#endif
+
+    static constexpr bool isArrayIndex(double d)
+    {
+        if (d < 0 || !equals(d, d) || d > std::numeric_limits<int>::max()) {
+            return false;
+        }
+
+        return equals(static_cast<int>(d), d);
     }
 
     static constexpr int toInteger(double d) {
+        // Check for NaN
         if (!equals(d, d))
             return 0;
 
-        const int i = static_cast<int>(d);
-        if (equals(i, d))
-            return i;
+        if (d >= std::numeric_limits<int>::min() && d <= std::numeric_limits<int>::max()) {
+            const int i = static_cast<int>(d);
+            if (equals(i, d))
+                return i;
+        }
 
         return QJSNumberCoercion(d).toInteger();
     }
