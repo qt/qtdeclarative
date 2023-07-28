@@ -679,14 +679,17 @@ void QQmlJSBasicBlocks::adjustTypes()
             if (!liveConversions[i.key()].contains(conversion.key()))
                 continue;
 
-            QQmlJSScope::ConstPtr conversionResult = conversion->second.content.conversionResult();
-            const auto conversionOrigins = conversion->second.content.conversionOrigins();
             QQmlJSScope::ConstPtr newResult;
-            for (const auto &origin : conversionOrigins)
-                newResult = m_typeResolver->merge(newResult, origin);
-            if (!m_typeResolver->adjustTrackedType(conversionResult, newResult))
-                setError(adjustErrorMessage(conversionResult, newResult));
-            transformRegister(conversion->second.content);
+            const auto content = conversion->second.content;
+            if (content.isConversion()) {
+                QQmlJSScope::ConstPtr conversionResult = content.conversionResult();
+                const auto conversionOrigins = content.conversionOrigins();
+                for (const auto &origin : conversionOrigins)
+                    newResult = m_typeResolver->merge(newResult, origin);
+                if (!m_typeResolver->adjustTrackedType(conversionResult, newResult))
+                    setError(adjustErrorMessage(conversionResult, newResult));
+            }
+            transformRegister(content);
             newRegisters.appendOrdered(conversion);
         }
         i->second.typeConversions = newRegisters.take();

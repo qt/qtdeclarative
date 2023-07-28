@@ -634,6 +634,9 @@ static QQmlJSRegisterContent::ContentVariant mergeVariants(QQmlJSRegisterContent
 QQmlJSRegisterContent QQmlJSTypeResolver::merge(const QQmlJSRegisterContent &a,
                                                 const QQmlJSRegisterContent &b) const
 {
+    if (a == b)
+        return a;
+
     QList<QQmlJSScope::ConstPtr> origins;
     if (a.isConversion())
         origins.append(a.conversionOrigins());

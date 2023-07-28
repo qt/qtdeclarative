@@ -1237,9 +1237,14 @@ void QQmlJSTypePropagator::mergeRegister(
             int index, const QQmlJSRegisterContent &a, const QQmlJSRegisterContent &b)
 {
     auto merged = m_typeResolver->merge(a, b);
-
     Q_ASSERT(merged.isValid());
-    Q_ASSERT(merged.isConversion());
+
+    if (!merged.isConversion()) {
+        // The registers were the same. We're already tracking them.
+        m_state.annotations[currentInstructionOffset()].typeConversions[index].content = merged;
+        m_state.registers[index].content = merged;
+        return;
+    }
 
     auto tryPrevStateConversion = [this](int index, const QQmlJSRegisterContent &merged) -> bool {
         auto it = m_prevStateAnnotations.find(currentInstructionOffset());
@@ -1253,7 +1258,8 @@ void QQmlJSTypePropagator::mergeRegister(
         const VirtualRegister &lastTry = conversion.value();
 
         Q_ASSERT(lastTry.content.isValid());
-        Q_ASSERT(lastTry.content.isConversion());
+        if (!lastTry.content.isConversion())
+            return false;
 
         if (!m_typeResolver->equals(lastTry.content.conversionResult(), merged.conversionResult())
                 || lastTry.content.conversionOrigins() != merged.conversionOrigins()) {
