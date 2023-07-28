@@ -35,13 +35,11 @@ public slots:
 void tst_qqmlcpputils::fastConnect()
 {
     {
-        MyObject *obj = new MyObject;
-        qmlobject_connect(obj, MyObject, SIGNAL(signal1()), obj, MyObject, SLOT(slot1()));
+        std::unique_ptr<MyObject> obj = std::make_unique<MyObject>();
+        qmlobject_connect(obj.get(), MyObject, SIGNAL(signal1()), obj.get(), MyObject, SLOT(slot1()));
 
         obj->signal1();
         QCOMPARE(obj->slotCount, 1);
-
-        delete obj;
     }
 
     {
@@ -53,27 +51,24 @@ void tst_qqmlcpputils::fastConnect()
     }
 
     {
-        MyObject *obj = new MyObject;
-        QSignalSpy spy(obj, SIGNAL(signal2()));
-        qmlobject_connect(obj, MyObject, SIGNAL(signal1()), obj, MyObject, SIGNAL(signal2()));
+        std::unique_ptr<MyObject> obj = std::make_unique<MyObject>();
+        QSignalSpy spy(obj.get(), SIGNAL(signal2()));
+        qmlobject_connect(obj.get(), MyObject, SIGNAL(signal1()), obj.get(), MyObject, SIGNAL(signal2()));
 
         obj->signal1();
         QCOMPARE(spy.size(), 1);
-
-        delete obj;
     }
 }
 
 void tst_qqmlcpputils::fastCast()
 {
     {
-        QObject *myObj = new MyObject;
-        MyObject *obj = qmlobject_cast<MyObject*>(myObj);
+        std::unique_ptr<QObject> myObj = std::make_unique<MyObject>();
+        MyObject *obj = qmlobject_cast<MyObject*>(myObj.get());
         QVERIFY(obj);
         QCOMPARE(obj->metaObject(), myObj->metaObject());
         obj->slot1();
         QCOMPARE(obj->slotCount, 1);
-        delete myObj;
     }
 
     {
