@@ -58,8 +58,11 @@ QQuickItemDelegate::QQuickItemDelegate(QQuickItemDelegatePrivate &dd, QQuickItem
         id: listView
         model: 10
         delegate: ItemDelegate {
-            text: modelData
+            text: index
             highlighted: ListView.isCurrentItem
+
+            required property int index
+
             onClicked: listView.currentIndex = index
         }
     }
