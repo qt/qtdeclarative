@@ -2005,7 +2005,6 @@ PropertyDefinition: IdentifierReference;
         AST::IdentifierExpression *expr = new (pool) AST::IdentifierExpression(stringRef(1));
         expr->identifierToken = loc(1);
         AST::PatternProperty *node = new (pool) AST::PatternProperty(name, expr);
-        node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
 ./
@@ -2028,7 +2027,6 @@ CoverInitializedName: IdentifierReference Initializer_In;
         AST::BinaryExpression *assignment = new (pool) AST::BinaryExpression(left, QSOperator::Assign, sym(2).Expression);
         assignment->operatorToken = loc(2);
         AST::PatternProperty *node = new (pool) AST::PatternProperty(name, assignment);
-        node->colonToken = loc(1);
         sym(1).Node = node;
 
     } break;
@@ -3338,7 +3336,8 @@ BindingProperty: BindingIdentifier InitializerOpt_In;
             f->name = stringRef(1);
         if (auto *c = asAnonymousClassDefinition(sym(2).Expression))
             c->name = stringRef(1);
-        sym(1).Node = new (pool) AST::PatternProperty(name, stringRef(1), sym(2).Expression);
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(name, stringRef(1), sym(2).Expression);
+        sym(1).Node = node;
     } break;
 ./
 
@@ -3346,6 +3345,7 @@ BindingProperty: PropertyName T_COLON BindingIdentifier InitializerOpt_In;
 /.
     case $rule_number: {
         AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(1).PropertyName, stringRef(3), sym(4).Expression);
+        node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
 ./
@@ -3354,6 +3354,7 @@ BindingProperty: PropertyName T_COLON BindingPattern InitializerOpt_In;
 /.
     case $rule_number: {
         AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(1).PropertyName, sym(3).Pattern, sym(4).Expression);
+        node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
 ./
@@ -4112,7 +4113,6 @@ MethodDefinition: T_STAR PropertyName GeneratorLParen StrictFormalParameters T_R
         f->rbraceToken = loc(9);
         f->isGenerator = true;
         AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(2).PropertyName, f, AST::PatternProperty::Method);
-        node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
 ./
@@ -4130,7 +4130,6 @@ MethodDefinition: T_GET PropertyName T_LPAREN T_RPAREN TypeAnnotationOpt Functio
         f->lbraceToken = loc(6);
         f->rbraceToken = loc(8);
         AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(2).PropertyName, f, AST::PatternProperty::Getter);
-        node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
 ./
@@ -4147,7 +4146,6 @@ MethodDefinition: T_SET PropertyName T_LPAREN PropertySetParameterList T_RPAREN 
         f->lbraceToken = loc(7);
         f->rbraceToken = loc(9);
         AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(2).PropertyName, f, AST::PatternProperty::Setter);
-        node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
 ./

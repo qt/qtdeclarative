@@ -334,6 +334,9 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("pragmaValueList")
             << "pragma.qml"
             << "pragma.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("objectDestructuring")
+            << "objectDestructuring.qml"
+            << "objectDestructuring.formatted.qml" << QStringList{} << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()
