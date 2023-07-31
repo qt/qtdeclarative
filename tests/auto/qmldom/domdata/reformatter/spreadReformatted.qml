@@ -4,7 +4,7 @@ Item {
     function foo() {
         iterableObj = [1, 2];
         obj = {
-            "a": 42
+            a: 42
         };
         let x = (console.log("bla\n"), 3);
         myFunction(...iterableObj); // pass all elements of iterableObj as arguments to function myFunction
