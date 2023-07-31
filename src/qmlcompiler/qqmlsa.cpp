@@ -1319,6 +1319,48 @@ void DebugElementPass::run(const Element &element) {
     \inmodule QtQmlCompiler
 
     \brief Base class for all static analysis passes on elements.
+
+    ElementPass is the simpler of the two analysis passes. It will consider every element in
+    a file. The \l shouldRun() method can be used to filter out irrelevant elements, and the
+    \l run() method is doing the initial work.
+
+    Common tasks suitable for an ElementPass are
+    \list
+    \li checking that properties of an Element are not combined in a nonsensical way
+    \li validating property values (e.g. that a property takes only certain enum values)
+    \li checking behavior dependent on an Element's parent (e.g. not using \l {Item::width}
+        when the parent element is a \c Layout).
+    \endlist
+
+    As shown in the snippet below, it is recommended to do necessary type resolution in the
+    constructor of the ElementPass and cache it in local members, and to implement some
+    filtering via \l shouldRun() to keep the static analysis performant.
+
+    \code
+    using namespace QQmlSA;
+    class MyElementPass : public ElementPass
+    {
+        Element myType;
+        public:
+            MyElementPass(QQmlSA::PassManager *manager)
+            : myType(resolveType("MyModule", "MyType")) {}
+
+            bool shouldRun(const Element &element) override
+            {
+                return element.inherits(myType);
+            }
+            void run(const Element &element) override
+            {
+                // actual pass logic
+            }
+    }
+    \endcode
+
+    ElementPasses have limited insight into how an element's properties are used. If you need
+    that information, consider using a \l PropertyPass instead.
+
+    \note ElementPass will only ever consider instantiable types. Therefore, it is unsuitable
+    to analyze attached types and singletons. Those need to be handled via a PropertyPass.
  */
 
 /*!
@@ -1326,10 +1368,16 @@ void DebugElementPass::run(const Element &element) {
 
     Executes if \c shouldRun() returns \c true. Performs the real computation
     of the pass on \a element.
+    This method is meant to be overridden. Calling the base method is not
+    necessary.
  */
 
 /*!
-    Returns \c true if the \c run() function should be executed on the given \a element.
+    Controls whether the \c run() function should be executed on the given \a element.
+    Subclasses can override this method to improve performance of the analysis by
+    filtering out elements which are not relevant.
+
+    The default implementation unconditionally returns \c true.
  */
 bool ElementPass::shouldRun(const Element &element)
 {
