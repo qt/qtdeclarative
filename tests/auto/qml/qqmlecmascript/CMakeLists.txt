@@ -21,6 +21,7 @@ qt_internal_add_test(tst_qqmlecmascript
         Qt::Network
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
+        Qt::QuickPrivate
     TESTDATA ${test_data}
 )
 

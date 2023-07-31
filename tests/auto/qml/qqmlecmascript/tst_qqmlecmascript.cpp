@@ -52,6 +52,8 @@
 #include <private/qqmlabstractbinding_p.h>
 #include <private/qqmlvaluetypeproxybinding_p.h>
 #include <QtCore/private/qproperty_p.h>
+#include <QtQuick/qquickwindow.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 
@@ -394,6 +396,7 @@ private slots:
     void qpropertyBindingHandlesUndefinedWithoutResetCorrectly_data();
     void qpropertyBindingHandlesUndefinedWithoutResetCorrectly();
     void qpropertyBindingRestoresObserverAfterReset();
+    void qpropertyBindingObserverCorrectlyLinkedAfterReset();
     void hugeRegexpQuantifiers();
     void singletonTypeWrapperLookup();
     void getThisObject();
@@ -9205,6 +9208,21 @@ void tst_qqmlecmascript::qpropertyBindingRestoresObserverAfterReset()
     QVERIFY(!o.isNull());
     QTRY_COMPARE(o->property("height").toDouble(), 60.0);
     QVERIFY(o->property("steps").toInt() > 3);
+}
+
+void tst_qqmlecmascript::qpropertyBindingObserverCorrectlyLinkedAfterReset()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("qpropertyResetCorrectlyLinked.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("width"), 200);
+    auto item = qobject_cast<QQuickItem *>(o.get());
+    auto itemPriv = QQuickItemPrivate::get(item);
+    QBindingStorage *storage = qGetBindingStorage(itemPriv);
+    QPropertyBindingDataPointer ptr { storage->bindingData(&itemPriv->width) };
+    QCOMPARE(ptr.observerCount(), 1);
 }
 
 void tst_qqmlecmascript::hugeRegexpQuantifiers()
