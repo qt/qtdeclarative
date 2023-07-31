@@ -32,4 +32,8 @@ qt_internal_extend_target(tst_qmlls CONDITION ANDROID OR IOS
         QT_QMLTEST_DATADIR=":/domdata"
 )
 
-add_dependencies(tst_qmlls qmlls)
+if (TARGET qmlls)
+    # in a standalone build, the qmlls target won't exist
+    # but we assume that it is available if you manually set up the test
+    add_dependencies(tst_qmlls qmlls)
+endif()
