@@ -10,6 +10,7 @@ GroupBox {
 
     property alias nextButton: nextButton
     property alias dateAndTime: dateAndTime
+    property string inviteesNameEmail
     ColumnLayout {
         id: columnLayout
         anchors.fill: parent
@@ -102,10 +103,16 @@ GroupBox {
             onClicked: {
                 var name = textEdit.text
                 var email = textEmail.text
+                if (inviteesNameEmail == "") {
+                    inviteesNameEmail += name + "&lt;" + email + "&gt;"
+                } else {
+                    inviteesNameEmail += ", " + name + "&lt;" + email + "&gt;"
+                }
+
                 meetingInviteesModel.append({
-                                           "name": name,
-                                           "email": email
-                                       })
+                                                "name": name,
+                                                "email": email
+                                            })
                 textEdit.text = ""
                 textEmail.text = ""
             }

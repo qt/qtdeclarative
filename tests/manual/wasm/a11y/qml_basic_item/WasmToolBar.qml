@@ -5,29 +5,34 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 ToolBar {
-
+    id:mainTooBar
+    signal cancelThisMeeting
+    signal requestReadReceipt
+    property bool cancelMeeting: false
     RowLayout {
 
         spacing: 10
         Accessible.role: Accessible.ToolBar
+        ToolButton {
+            id:cancelButton
+            text: qsTr("Clear")
+            Accessible.role: Accessible.Button
+            Accessible.name: text
+            Accessible.description: text
+            onClicked: {
+                cancelThisMeeting()
+            }
+        }
+        ToolButton {
+            id:readRequestButton
+            text: qsTr("Request receipt")
+            Accessible.role: Accessible.Button
+            Accessible.name: text
+            Accessible.description: text
+            onClicked: {
+                requestReadReceipt()
+            }
+        }
 
-        ToolButton {
-            text: qsTr("C&opy")
-            Accessible.role: Accessible.Button
-            Accessible.name: text
-            Accessible.description: text
-        }
-        ToolButton {
-            text: qsTr("C&ut")
-            Accessible.role: Accessible.Button
-            Accessible.name: text
-            Accessible.description: text
-        }
-        ToolButton {
-            text: qsTr("&Paste")
-            Accessible.role: Accessible.Button
-            Accessible.name: text
-            Accessible.description: text
-        }
     }
 }

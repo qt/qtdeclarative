@@ -1,4 +1,3 @@
-
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 import QtQuick
@@ -15,7 +14,7 @@ Dialog {
     Accessible.description: "About DialogBox."
     modal: true
     Label {
-        id: lblInfo
+        id: labelInfo
         anchors.centerIn: parent
         text: "Accessibility Demo sample application developed in QML."
         Accessible.role: Accessible.StaticText
@@ -27,7 +26,7 @@ Dialog {
         id: closeButton
         text: "Close"
         anchors {
-            top: lblInfo.bottom
+            top: labelInfo.bottom
             topMargin: 10
             horizontalCenter: parent.horizontalCenter
         }

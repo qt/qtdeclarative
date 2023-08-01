@@ -64,6 +64,7 @@ ApplicationWindow {
             top: wasmMenu.bottom
             topMargin: 3
         }
+        enabled: meetingTabs.currentIndex === MeetingTabs.Types.Summary ? true : false
     }
 
     Rectangle {

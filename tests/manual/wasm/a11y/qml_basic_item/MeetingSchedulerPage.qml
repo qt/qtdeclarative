@@ -4,7 +4,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-
 GroupBox {
     title: "Meeting Scheduler"
     property alias nextButton: nextButton
@@ -13,6 +12,7 @@ GroupBox {
     property int roomNumber: room.value
     property int calendarWeek: calendar.value
     property string meetingDescription: description.text
+    property alias description: description
     ColumnLayout {
         anchors.fill: parent
         spacing: 10
@@ -84,7 +84,7 @@ GroupBox {
                 Accessible.onDecreaseAction: {
                     decrease()
                 }
-                Accessible.onIncreaseAction:  {
+                Accessible.onIncreaseAction: {
                     increase()
                 }
             }
@@ -112,7 +112,7 @@ GroupBox {
                 Accessible.onDecreaseAction: {
                     decrease()
                 }
-                Accessible.onIncreaseAction:  {
+                Accessible.onIncreaseAction: {
                     increase()
                 }
             }
@@ -139,6 +139,7 @@ GroupBox {
                     fill: parent
                     leftMargin: 5
                 }
+                clip: true
                 wrapMode: TextEdit.Wrap
                 Accessible.role: Accessible.EditableText
                 Accessible.editable: true
@@ -146,7 +147,6 @@ GroupBox {
                 Accessible.description: "Describe in short "
                 Accessible.multiLine: true
             }
-
         }
 
         Button {

@@ -13,6 +13,8 @@ Item {
         Summary
     }
     property alias setTime: invitees.dateAndTime
+    property alias textSummary: scheduler.description
+    property alias currentIndex: meetingTabs.currentIndex
     TabBar {
         id: meetingTabs
         width: parent.width
@@ -77,6 +79,7 @@ Item {
             roomNumber: scheduler.roomNumber
             calendarWeek: scheduler.calendarWeek
             meetingDescription: scheduler.meetingDescription
+            inviteesNameEmail: invitees.inviteesNameEmail
         }
     }
 }
