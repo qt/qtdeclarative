@@ -1808,7 +1808,7 @@ void QQuickPopup::setContentItem(QQuickItem *item)
 {
     Q_D(QQuickPopup);
     // See comment in setBackground for why we do this.
-    QQuickControlPrivate::warnIfCustomizationNotSupported(this, item, QStringLiteral("background"));
+    QQuickControlPrivate::warnIfCustomizationNotSupported(this, item, QStringLiteral("contentItem"));
     QQuickItem *oldContentItem = d->complete ? d->popupItem->d_func()->contentItem.data()
                                              : nullptr;
     if (oldContentItem)
