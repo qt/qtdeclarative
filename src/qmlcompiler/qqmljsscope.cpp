@@ -1192,21 +1192,6 @@ bool QQmlJSScope::isFullyResolved() const
     return baseResolved;
 }
 
-QQmlJSScope::Import::Import(QString prefix, QString name, QTypeRevision version, bool isFile,
-                            bool isDependency) :
-    m_prefix(std::move(prefix)),
-    m_name(std::move(name)),
-    m_version(version),
-    m_isFile(isFile),
-    m_isDependency(isDependency)
-{
-}
-
-bool QQmlJSScope::Import::isValid() const
-{
-    return !m_name.isEmpty();
-}
-
 QQmlJSScope::Export::Export(
         QString package, QString type, QTypeRevision version, QTypeRevision revision)
     : m_package(std::move(package))

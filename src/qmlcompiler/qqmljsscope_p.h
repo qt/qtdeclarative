@@ -92,40 +92,6 @@ private:
     ConstPtr m_pointer;
 };
 
-class Import
-{
-public:
-    Import() = default;
-    Import(QString prefix, QString name, QTypeRevision version, bool isFile, bool isDependency);
-
-    bool isValid() const;
-
-    QString prefix() const { return m_prefix; }
-    QString name() const { return m_name; }
-    QTypeRevision version() const { return m_version; }
-    bool isFile() const { return m_isFile; }
-    bool isDependency() const { return m_isDependency; }
-
-private:
-    QString m_prefix;
-    QString m_name;
-    QTypeRevision m_version;
-    bool m_isFile = false;
-    bool m_isDependency = false;
-
-    friend inline size_t qHash(const Import &key, size_t seed = 0) noexcept
-    {
-        return qHashMulti(seed, key.m_prefix, key.m_name, key.m_version,
-                          key.m_isFile, key.m_isDependency);
-    }
-
-    friend inline bool operator==(const Import &a, const Import &b)
-    {
-        return a.m_prefix == b.m_prefix && a.m_name == b.m_name && a.m_version == b.m_version
-                && a.m_isFile == b.m_isFile && a.m_isDependency == b.m_isDependency;
-    }
-};
-
 class Export {
 public:
     Export() = default;
@@ -203,7 +169,6 @@ public:
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
 
-    using Import = QQmlJS::Import;
     using Export = QQmlJS::Export;
     template <typename Pointer>
     using ImportedScope = QQmlJS::ImportedScope<Pointer>;
