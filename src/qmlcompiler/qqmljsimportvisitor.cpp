@@ -366,7 +366,7 @@ void QQmlJSImportVisitor::importBaseModules()
     // Pulling in the modules and neighboring qml files of the qmltypes we're trying to lint is not
     // something we need to do.
     if (!m_logger->fileName().endsWith(u".qmltypes"_s)) {
-        QQmlJSScope::ContextualTypes fromDirectory =
+        QQmlJS::ContextualTypes fromDirectory =
                 m_importer->importDirectory(m_implicitImportDirectory);
         m_rootScopeImports.addTypes(std::move(fromDirectory));
 

@@ -16,6 +16,7 @@
 
 #include <private/qtqmlcompilerexports_p.h>
 
+#include "qqmljscontextualtypes_p.h"
 #include "qqmljsscope_p.h"
 #include "qqmljsresourcefilemapper_p.h"
 #include <QtQml/private/qqmldirparser_p.h>
@@ -29,7 +30,7 @@ class QQmlJSLogger;
 class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSImporter
 {
 public:
-    using ImportedTypes = QQmlJSScope::ContextualTypes;
+    using ImportedTypes = QQmlJS::ContextualTypes;
 
     QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper,
                    bool useOptionalImports = false);
@@ -92,7 +93,7 @@ private:
     {
         AvailableTypes(ImportedTypes builtins)
             : cppNames(std::move(builtins))
-            , qmlNames(QQmlJSScope::ContextualTypes::QML, {}, cppNames.arrayType())
+            , qmlNames(QQmlJS::ContextualTypes::QML, {}, cppNames.arrayType())
         {
         }
 

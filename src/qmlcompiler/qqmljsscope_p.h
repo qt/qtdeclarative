@@ -157,6 +157,8 @@ struct ImportedScope {
     QTypeRevision revision;
 };
 
+struct ContextualTypes;
+
 } // namespace QQmlJS
 
 class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSScope
@@ -207,70 +209,6 @@ public:
     using ImportedScope = QQmlJS::ImportedScope<Pointer>;
     template <typename Pointer>
     using ExportedScope = QQmlJS::ExportedScope<Pointer>;
-
-    /*! \internal
-     *  Maps type names to types and the compile context of the types. The context can be
-     *  INTERNAl (for c++ and synthetic jsrootgen types) or QML (for qml types).
-     */
-    struct ContextualTypes
-    {
-        enum CompileContext { INTERNAL, QML };
-
-        ContextualTypes(
-                CompileContext context,
-                const QHash<QString, ImportedScope<ConstPtr>> types,
-                const QQmlJSScope::ConstPtr &arrayType)
-            : m_types(types)
-            , m_context(context)
-            , m_arrayType(arrayType)
-        {}
-
-        CompileContext context() const { return m_context; }
-        ConstPtr arrayType() const { return m_arrayType; }
-
-        bool hasType(const QString &name) const { return m_types.contains(name); }
-        ImportedScope<ConstPtr> type(const QString &name) const { return m_types[name]; }
-        void setType(const QString &name, const ImportedScope<ConstPtr> &type)
-        {
-            m_types.insert(name, type);
-        }
-        void clearType(const QString &name)
-        {
-            m_types[name].scope = QQmlJSScope::ConstPtr();
-        }
-
-        bool isNullType(const QString &name) const
-        {
-            const auto it = m_types.constFind(name);
-            return it != m_types.constEnd() && it->scope.isNull();
-        }
-
-        void addTypes(ContextualTypes &&types)
-        {
-            Q_ASSERT(types.m_context == m_context);
-            m_types.insert(std::move(types.m_types));
-        }
-
-        void addTypes(const ContextualTypes &types)
-        {
-            Q_ASSERT(types.m_context == m_context);
-            m_types.insert(types.m_types);
-        }
-
-        const QHash<QString, ImportedScope<ConstPtr>> &types() const { return m_types; }
-
-        void clearTypes() { m_types.clear(); }
-
-    private:
-        QHash<QString, ImportedScope<ConstPtr>> m_types;
-        CompileContext m_context;
-
-        // For resolving enums
-        QQmlJSScope::ConstPtr m_intType;
-
-        // For resolving sequence types
-        QQmlJSScope::ConstPtr m_arrayType;
-    };
 
     struct JavaScriptIdentifier
     {
@@ -516,19 +454,19 @@ public:
     QVector<QQmlJSScope::ConstPtr> childScopes() const;
 
     static QTypeRevision resolveTypes(
-            const Ptr &self, const QQmlJSScope::ContextualTypes &contextualTypes,
+            const Ptr &self, const QQmlJS::ContextualTypes &contextualTypes,
             QSet<QString> *usedTypes = nullptr);
     static void resolveNonEnumTypes(
-            const QQmlJSScope::Ptr &self, const QQmlJSScope::ContextualTypes &contextualTypes,
+            const QQmlJSScope::Ptr &self, const QQmlJS::ContextualTypes &contextualTypes,
             QSet<QString> *usedTypes = nullptr);
     static void resolveEnums(
-            const QQmlJSScope::Ptr &self, const QQmlJSScope::ContextualTypes &contextualTypes,
+            const QQmlJSScope::Ptr &self, const QQmlJS::ContextualTypes &contextualTypes,
             QSet<QString> *usedTypes = nullptr);
     static void resolveList(
             const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &arrayType);
     static void resolveGeneralizedGroup(
             const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &baseType,
-            const QQmlJSScope::ContextualTypes &contextualTypes,
+            const QQmlJS::ContextualTypes &contextualTypes,
             QSet<QString> *usedTypes = nullptr);
 
     void setSourceLocation(const QQmlJS::SourceLocation &sourceLocation);
@@ -562,7 +500,7 @@ public:
     };
 
     static ImportedScope<QQmlJSScope::ConstPtr> findType(const QString &name,
-                                                         const ContextualTypes &contextualTypes,
+                                                         const QQmlJS::ContextualTypes &contextualTypes,
                                                          QSet<QString> *usedTypes = nullptr);
 
     static QQmlSA::Element createQQmlSAElement(const ConstPtr &);
@@ -575,11 +513,11 @@ private:
     QQmlJSScope(const QQmlJSScope &) = default;
     QQmlJSScope &operator=(const QQmlJSScope &) = default;
     static QTypeRevision resolveType(
-            const QQmlJSScope::Ptr &self, const ContextualTypes &contextualTypes,
+            const QQmlJSScope::Ptr &self, const QQmlJS::ContextualTypes &contextualTypes,
             QSet<QString> *usedTypes);
     static void updateChildScope(
             const QQmlJSScope::Ptr &childScope, const QQmlJSScope::Ptr &self,
-            const QQmlJSScope::ContextualTypes &contextualTypes, QSet<QString> *usedTypes);
+            const QQmlJS::ContextualTypes &contextualTypes, QSet<QString> *usedTypes);
 
     void addOwnPropertyBindingInQmlIROrder(const QQmlJSMetaPropertyBinding &binding,
                                            BindingTargetSpecifier specifier);

@@ -1,6 +1,7 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
+#include "qqmljscontextualtypes_p.h"
 #include "qqmljsscope_p.h"
 #include "qqmljstypereader_p.h"
 #include "qqmljsimporter_p.h"
@@ -379,7 +380,7 @@ std::optional<QQmlJSScope::JavaScriptIdentifier> QQmlJSScope::JSIdentifier(const
 }
 
 static QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr>
-qFindInlineComponents(QStringView typeName, const QQmlJSScope::ContextualTypes &contextualTypes)
+qFindInlineComponents(QStringView typeName, const QQmlJS::ContextualTypes &contextualTypes)
 {
     const int separatorIndex = typeName.lastIndexOf(u'.');
     // do not crash in typeName.sliced() when it starts or ends with an '.'.
@@ -424,7 +425,7 @@ qFindInlineComponents(QStringView typeName, const QQmlJSScope::ContextualTypes &
  *  ("qmlFileName.IC" is correctly resolved from qmlFileName).
  */
 QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr> QQmlJSScope::findType(
-        const QString &name, const QQmlJSScope::ContextualTypes &contextualTypes,
+        const QString &name, const QQmlJS::ContextualTypes &contextualTypes,
         QSet<QString> *usedTypes)
 {
     const auto useType = [&]() {
@@ -457,7 +458,7 @@ QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr> QQmlJSScope::findType(
     };
 
     switch (contextualTypes.context()) {
-    case ContextualTypes::INTERNAL: {
+    case QQmlJS::ContextualTypes::INTERNAL: {
         if (const auto listType = findListType(u"QList<"_s, u">"_s);
                 listType.scope && !listType.scope->isReferenceType()) {
             return listType;
@@ -487,7 +488,7 @@ QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr> QQmlJSScope::findType(
 
         break;
     }
-    case ContextualTypes::QML: {
+    case QQmlJS::ContextualTypes::QML: {
         // look after inline components
         const auto inlineComponent = qFindInlineComponents(name, contextualTypes);
         if (inlineComponent.scope) {
@@ -505,7 +506,7 @@ QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr> QQmlJSScope::findType(
 }
 
 QTypeRevision QQmlJSScope::resolveType(
-        const QQmlJSScope::Ptr &self, const QQmlJSScope::ContextualTypes &context,
+        const QQmlJSScope::Ptr &self, const QQmlJS::ContextualTypes &context,
         QSet<QString> *usedTypes)
 {
     if (self->accessSemantics() == AccessSemantics::Sequence
@@ -593,7 +594,7 @@ QTypeRevision QQmlJSScope::resolveType(
 
 void QQmlJSScope::updateChildScope(
         const QQmlJSScope::Ptr &childScope, const QQmlJSScope::Ptr &self,
-        const QQmlJSScope::ContextualTypes &contextualTypes, QSet<QString> *usedTypes)
+        const QQmlJS::ContextualTypes &contextualTypes, QSet<QString> *usedTypes)
 {
     switch (childScope->scopeType()) {
     case QQmlSA::ScopeType::GroupedPropertyScope:
@@ -627,7 +628,7 @@ void QQmlJSScope::updateChildScope(
 template<typename Resolver, typename ChildScopeUpdater>
 static QTypeRevision resolveTypesInternal(
         Resolver resolve, ChildScopeUpdater update, const QQmlJSScope::Ptr &self,
-        const QQmlJSScope::ContextualTypes &contextualTypes, QSet<QString> *usedTypes)
+        const QQmlJS::ContextualTypes &contextualTypes, QSet<QString> *usedTypes)
 {
     const QTypeRevision revision = resolve(self, contextualTypes, usedTypes);
     // NB: constness ensures no detach
@@ -641,11 +642,11 @@ static QTypeRevision resolveTypesInternal(
 }
 
 QTypeRevision QQmlJSScope::resolveTypes(
-        const QQmlJSScope::Ptr &self, const QQmlJSScope::ContextualTypes &contextualTypes,
+        const QQmlJSScope::Ptr &self, const QQmlJS::ContextualTypes &contextualTypes,
         QSet<QString> *usedTypes)
 {
     const auto resolveAll = [](const QQmlJSScope::Ptr &self,
-                               const QQmlJSScope::ContextualTypes &contextualTypes,
+                               const QQmlJS::ContextualTypes &contextualTypes,
                                QSet<QString> *usedTypes) {
         resolveEnums(self, contextualTypes, usedTypes);
         resolveList(self, contextualTypes.arrayType());
@@ -655,7 +656,7 @@ QTypeRevision QQmlJSScope::resolveTypes(
 }
 
 void QQmlJSScope::resolveNonEnumTypes(
-        const QQmlJSScope::Ptr &self, const QQmlJSScope::ContextualTypes &contextualTypes,
+        const QQmlJSScope::Ptr &self, const QQmlJS::ContextualTypes &contextualTypes,
         QSet<QString> *usedTypes)
 {
     resolveTypesInternal(resolveType, updateChildScope, self, contextualTypes, usedTypes);
@@ -696,7 +697,7 @@ static QString flagStorage(const QString &underlyingType)
    does not have an enum called like the alias.
  */
 void QQmlJSScope::resolveEnums(
-        const QQmlJSScope::Ptr &self, const QQmlJSScope::ContextualTypes &contextualTypes,
+        const QQmlJSScope::Ptr &self, const QQmlJS::ContextualTypes &contextualTypes,
         QSet<QString> *usedTypes)
 {
     // temporary hash to avoid messing up m_enumerations while iterators are active on it
@@ -758,8 +759,8 @@ void QQmlJSScope::resolveList(const QQmlJSScope::Ptr &self, const QQmlJSScope::C
 
     const QQmlJSImportedScope element = {self, QTypeRevision()};
     const QQmlJSImportedScope array = {arrayType, QTypeRevision()};
-    QQmlJSScope::ContextualTypes contextualTypes(
-                QQmlJSScope::ContextualTypes::INTERNAL, { { self->internalName(), element }, },
+    QQmlJS::ContextualTypes contextualTypes(
+                QQmlJS::ContextualTypes::INTERNAL, { { self->internalName(), element }, },
                 arrayType);
     QQmlJSScope::resolveTypes(listType, contextualTypes);
 
@@ -769,7 +770,7 @@ void QQmlJSScope::resolveList(const QQmlJSScope::Ptr &self, const QQmlJSScope::C
 
 void QQmlJSScope::resolveGeneralizedGroup(
         const Ptr &self, const ConstPtr &baseType,
-        const QQmlJSScope::ContextualTypes &contextualTypes, QSet<QString> *usedTypes)
+        const QQmlJS::ContextualTypes &contextualTypes, QSet<QString> *usedTypes)
 {
     Q_ASSERT(baseType);
     // Generalized group properties are always composite,

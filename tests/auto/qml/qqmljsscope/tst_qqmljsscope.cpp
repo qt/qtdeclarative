@@ -208,7 +208,7 @@ void tst_qqmljsscope::allTypesAvailable()
 
         QQmlJSImporter importer { importPaths, /* resource file mapper */ nullptr };
         const auto imported = importer.importModule(u"QtQml"_s);
-        QCOMPARE(imported.context(), QQmlJSScope::ContextualTypes::QML);
+        QCOMPARE(imported.context(), QQmlJS::ContextualTypes::QML);
         const auto types = imported.types();
         QVERIFY(types.contains(u"$internal$.QObject"_s));
         QVERIFY(types.contains(u"QtObject"_s));
