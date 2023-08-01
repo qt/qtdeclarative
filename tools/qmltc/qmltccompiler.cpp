@@ -186,7 +186,8 @@ void QmltcCompiler::compileType(
         // make document root a friend to allow it to access init and endInit
         const QString rootInternalName =
                 m_visitor->inlineComponent(type->enclosingInlineComponentName())->internalName();
-        current.otherCode << u"friend class %1;"_s.arg(rootInternalName);
+        if (rootInternalName != current.cppType) // avoid GCC13 warning on self-befriending
+            current.otherCode << "friend class %1;"_L1.arg(rootInternalName);
     }
     if (documentRoot || inlineComponent) {
         auto name = type->inlineComponentName()
