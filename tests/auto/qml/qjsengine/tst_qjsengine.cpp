@@ -4654,7 +4654,6 @@ void tst_QJSEngine::privateMethods()
     }
 
     QVERIFY(privateMethods.contains("myPrivateMethod"));
-    QVERIFY(privateMethods.contains("_q_reregisterTimers"));
     privateMethods << QStringLiteral("deleteLater") << QStringLiteral("destroyed");
 
     QJSValueIterator it(jsWrapper);
