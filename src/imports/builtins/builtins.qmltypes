@@ -59,10 +59,6 @@ Module {
             name: "objectNameChanged"
             Parameter { name: "objectName"; type: "QString" }
         }
-        Method {
-            name: "_q_reregisterTimers"
-            Parameter { type: "void"; isPointer: true }
-        }
         Method { name: "toString"; type: "string" }
         Method { name: "destroy" }
         Method {
