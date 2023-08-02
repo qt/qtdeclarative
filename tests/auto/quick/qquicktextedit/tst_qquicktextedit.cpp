@@ -207,6 +207,8 @@ private slots:
     void touchscreenDoesNotSelect();
     void touchscreenSetsFocusAndMovesCursor();
 
+    void longPressInputMethod();
+
     void rtlAlignmentInColumnLayout_QTBUG_112858();
 
 private:
@@ -6522,6 +6524,39 @@ void tst_qquicktextedit::touchscreenSetsFocusAndMovesCursor()
     QQuickTouchUtils::flush(&window);
     QCOMPARE(qApp->focusObject(), top);
     QVERIFY(top->selectedText().isEmpty());
+}
+
+void tst_qquicktextedit::longPressInputMethod() // QTBUG-115004
+{
+    QQuickView window;
+    window.setMinimumWidth(200);
+    window.setMinimumHeight(100);
+    QVERIFY(QQuickTest::showView(window, testFileUrl("positionAt.qml")));
+    QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(window.rootObject());
+    QVERIFY(edit);
+
+    // Realistically there are touch events. But QQuickTextEdit doesn't handle them yet;
+    // so we only test the synth-mouse events for now.
+    QPoint pos = edit->positionToRectangle(20).center().toPoint(); // in the word "pi|ece"
+    QTest::mousePress(&window, Qt::LeftButton, {}, pos);
+
+    // Simulate input method events as seen on Android during long-press
+    {
+        QInputMethodEvent imEvent({}, QList<QInputMethodEvent::Attribute>()
+                                          << QInputMethodEvent::Attribute(QInputMethodEvent::Selection, 20, 0, {}));
+        QCoreApplication::sendEvent(edit, &imEvent);
+    }
+    {
+        QInputMethodEvent imEvent({}, QList<QInputMethodEvent::Attribute>()
+                                          << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, 0, {})
+                                          << QInputMethodEvent::Attribute(QInputMethodEvent::Selection, 13, -5, {}));
+        QCoreApplication::sendEvent(edit, &imEvent);
+    }
+
+    // Release later => long press
+    QTest::mouseRelease(&window, Qt::LeftButton, {}, pos, 1500);
+
+    QTRY_COMPARE(edit->selectedText(), "piece");
 }
 
 void tst_qquicktextedit::rtlAlignmentInColumnLayout_QTBUG_112858()

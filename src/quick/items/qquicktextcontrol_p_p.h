@@ -131,6 +131,7 @@ public:
     bool cursorRectangleChanged : 1;
     bool hoveredMarker: 1;
     bool selectByTouchDrag: 1;
+    bool imSelectionAfterPress: 1;
 
     int lastSelectionStart;
     int lastSelectionEnd;

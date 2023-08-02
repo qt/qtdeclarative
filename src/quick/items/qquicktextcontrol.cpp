@@ -81,6 +81,7 @@ QQuickTextControlPrivate::QQuickTextControlPrivate()
       cursorRectangleChanged(false),
       hoveredMarker(false),
       selectByTouchDrag(false),
+      imSelectionAfterPress(false),
       lastSelectionStart(-1),
       lastSelectionEnd(-1)
 {}
@@ -992,6 +993,7 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
 
     mousePressed = (interactionFlags & Qt::TextSelectableByMouse) && (e->button() & Qt::LeftButton);
     mousePressPos = pos.toPoint();
+    imSelectionAfterPress = false;
 
     if (sendMouseEventToInputContext(e, pos))
         return;
@@ -1177,7 +1179,7 @@ void QQuickTextControlPrivate::mouseReleaseEvent(QMouseEvent *e, const QPointF &
             q->insertFromMimeData(md);
 #endif
     }
-    if (!isMouse && !selectByTouchDrag && interactionFlags.testFlag(Qt::TextEditable))
+    if (!isMouse && !selectByTouchDrag && !imSelectionAfterPress && interactionFlags.testFlag(Qt::TextEditable))
         setCursorPosition(pos);
 
     repaintOldAndNewSelection(oldSelection);
@@ -1322,6 +1324,8 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
         for (int i = 0; i < e->attributes().size(); ++i) {
             const QInputMethodEvent::Attribute &a = e->attributes().at(i);
             if (a.type == QInputMethodEvent::Selection) {
+                if (mousePressed)
+                    imSelectionAfterPress = true;
                 QTextCursor oldCursor = cursor;
                 int blockStart = a.start + cursor.block().position();
                 cursor.setPosition(blockStart, QTextCursor::MoveAnchor);
