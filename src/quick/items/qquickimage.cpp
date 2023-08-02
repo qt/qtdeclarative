@@ -286,6 +286,7 @@ void QQuickImagePrivate::setPixmap(const QQuickPixmap &pixmap)
     \value Image.TileVertically     the image is stretched horizontally and tiled vertically
     \value Image.TileHorizontally   the image is stretched vertically and tiled horizontally
     \value Image.Pad                the image is not transformed
+    \br
 
     \table
 
