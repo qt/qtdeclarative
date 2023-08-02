@@ -1430,6 +1430,7 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
     }
 
     bool success = lintResult == QQmlJSLinter::LintSuccess;
+    QEXPECT_FAIL("qtquickdialog", "Will fail until QTBUG-104091 is implemented", Abort);
     QVERIFY2(success == shouldSucceed, QJsonDocument(jsonOutput).toJson());
 
     if (warnings) {
