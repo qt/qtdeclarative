@@ -95,20 +95,25 @@ void tst_qquickninepatchimage::ninePatch()
 
     // Generate an image to compare against the actual 9-patch image.
     QImage generatedImage(size * dpr, ninePatchImageGrab.format());
+    generatedImage.setDevicePixelRatio(dpr);
     generatedImage.fill(Qt::red);
 
     QImage blueRect(4 * dpr, 4 * dpr, ninePatchImageGrab.format());
+    blueRect.setDevicePixelRatio(dpr);
     blueRect.fill(Qt::blue);
+
+    const QSizeF generatedPaintedSize = generatedImage.deviceIndependentSize();
+    const QSizeF blueRectPaintedSize = blueRect.deviceIndependentSize();
 
     QPainter painter(&generatedImage);
     // Top-left
     painter.drawImage(0, 0, blueRect);
     // Top-right
-    painter.drawImage(generatedImage.width() - blueRect.width(), 0, blueRect);
+    painter.drawImage(generatedPaintedSize.width() - blueRectPaintedSize.width(), 0, blueRect);
     // Bottom-right
-    painter.drawImage(generatedImage.width() - blueRect.width(), generatedImage.height() - blueRect.height(), blueRect);
+    painter.drawImage(generatedPaintedSize.width() - blueRectPaintedSize.width(), generatedPaintedSize.height() - blueRectPaintedSize.height(), blueRect);
     // Bottom-left
-    painter.drawImage(0, generatedImage.height() - blueRect.height(), blueRect);
+    painter.drawImage(0, generatedPaintedSize.height() - blueRectPaintedSize.height(), blueRect);
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))

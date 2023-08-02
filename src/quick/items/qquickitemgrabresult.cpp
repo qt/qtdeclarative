@@ -32,6 +32,7 @@ public:
         : cacheEntry(nullptr)
         , qmlEngine(nullptr)
         , texture(nullptr)
+        , devicePixelRatio(1.0)
     {
     }
 
@@ -65,6 +66,7 @@ public:
     QSGLayer *texture;
     QSizeF itemSize;
     QSize textureSize;
+    qreal devicePixelRatio;
 };
 
 /*!
@@ -237,7 +239,9 @@ void QQuickItemGrabResult::setup()
     }
 
     QSGRenderContext *rc = QQuickWindowPrivate::get(d->window.data())->context;
+    d->devicePixelRatio = d->window->effectiveDevicePixelRatio();
     d->texture = rc->sceneGraphContext()->createLayer(rc);
+    d->texture->setDevicePixelRatio(d->devicePixelRatio);
     d->texture->setItem(QQuickItemPrivate::get(d->item)->itemNode());
     d->itemSize = QSizeF(d->item->width(), d->item->height());
 }
@@ -250,11 +254,13 @@ void QQuickItemGrabResult::render()
 
     d->texture->setRect(QRectF(0, d->itemSize.height(), d->itemSize.width(), -d->itemSize.height()));
     const QSize minSize = QQuickWindowPrivate::get(d->window.data())->context->sceneGraphContext()->minimumFBOSize();
-    d->texture->setSize(QSize(qMax(minSize.width(), d->textureSize.width()),
-                              qMax(minSize.height(), d->textureSize.height())));
+    const QSize effectiveTextureSize = d->textureSize * d->devicePixelRatio;
+    d->texture->setSize(QSize(qMax(minSize.width(), effectiveTextureSize.width()),
+                              qMax(minSize.height(), effectiveTextureSize.height())));
     d->texture->scheduleUpdate();
     d->texture->updateTexture();
-    d->image =  d->texture->toImage();
+    d->image = d->texture->toImage();
+    d->image.setDevicePixelRatio(d->devicePixelRatio);
 
     delete d->texture;
     d->texture = nullptr;
