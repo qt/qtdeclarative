@@ -251,6 +251,50 @@ Q_LOGGING_CATEGORY(lcPopup, "qt.quick.controls.popup")
     \endlist
 
     \sa {Popup Controls}, {Customizing Popup}, ApplicationWindow
+
+    \section1 Property Propagation
+
+    Popup inherits fonts, palettes and attached properties through its parent
+    window, not its \l {Visual Parent}{object or visual parent}:
+
+    \snippet qtquickcontrols-popup-property-propagation.qml file
+
+    \image qtquickcontrols-basic-popup-property-propagation.png
+
+    In addition, popups do not propagate their properties to child popups. This
+    behavior is modelled on Qt Widgets, where a \c Qt::Popup widget is a
+    top-level window. Top-level windows do not propagate their properties to
+    child windows.
+
+    Certain derived types like ComboBox are typically implemented in such a way
+    that the popup is considered an integral part of the control, and as such,
+    may inherit things like attached properties. For example, in the
+    \l {Material Style}{Material style} ComboBox, the theme and other attached
+    properties are explicitly inherited by the Popup from the ComboBox itself:
+
+    \code
+    popup: T.Popup {
+        // ...
+
+        Material.theme: control.Material.theme
+        Material.accent: control.Material.accent
+        Material.primary: control.Material.primary
+    }
+    \endcode
+
+    So, to ensure that a child popup has the same property values as its parent
+    popup, explicitly set those properties:
+
+    \code
+    Popup {
+        id: parentPopup
+        // ...
+
+        Popup {
+            palette: parentPopup.palette
+        }
+    }
+    \endcode
 */
 
 /*!
