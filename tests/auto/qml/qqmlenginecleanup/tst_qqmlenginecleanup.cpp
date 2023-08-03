@@ -47,8 +47,8 @@ public:
 void tst_qqmlenginecleanup::test_qmlClearTypeRegistrations()
 {
     //Test for preventing memory leaks is in tests/manual/qmltypememory
-    QQmlEngine* engine;
-    CleanlyLoadingComponent* component;
+    std::unique_ptr<QQmlEngine> engine;
+    std::unique_ptr<CleanlyLoadingComponent> component;
     QUrl testFile = testFileUrl("types.qml");
 
     const auto qmlTypeForTestType = []() {
@@ -60,12 +60,12 @@ void tst_qqmlenginecleanup::test_qmlClearTypeRegistrations()
     qmlRegisterType<QObject>("Test", 2, 0, "TestTypeCpp");
     QVERIFY(qmlTypeForTestType().isValid());
 
-    engine = new QQmlEngine;
-    component = new CleanlyLoadingComponent(engine, testFile);
+    engine = std::make_unique<QQmlEngine>();
+    component = std::make_unique<CleanlyLoadingComponent>(engine.get(), testFile);
     QVERIFY(component->isReady());
 
-    delete component;
-    delete engine;
+    component.reset();
+    engine.reset();
 
     {
         auto cppType = qmlTypeForTestType();
@@ -81,24 +81,21 @@ void tst_qqmlenginecleanup::test_qmlClearTypeRegistrations()
     //2nd run verifies that types can reload after a qmlClearTypeRegistrations
     qmlRegisterType<QObject>("Test", 2, 0, "TestTypeCpp");
     QVERIFY(qmlTypeForTestType().isValid());
-    engine = new QQmlEngine;
-    component = new CleanlyLoadingComponent(engine, testFile);
+    engine = std::make_unique<QQmlEngine>();
+    component = std::make_unique<CleanlyLoadingComponent>(engine.get(), testFile);
     QVERIFY(component->isReady());
 
-    delete component;
-    delete engine;
+    component.reset();
+    engine.reset();
     qmlClearTypeRegistrations();
     QVERIFY(!qmlTypeForTestType().isValid());
 
     //3nd run verifies that TestTypeCpp is no longer registered
-    engine = new QQmlEngine;
-    component = new CleanlyLoadingComponent(engine, testFile);
+    engine = std::make_unique<QQmlEngine>();
+    component = std::make_unique<CleanlyLoadingComponent>(engine.get(), testFile);
     QVERIFY(component->isError());
     QCOMPARE(component->errorString(),
             testFile.toString() +":8 module \"Test\" is not installed\n");
-
-    delete component;
-    delete engine;
 }
 
 static void cleanState(QQmlEngine **e)
