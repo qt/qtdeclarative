@@ -152,7 +152,7 @@ void tst_QQmlImport::invalidImportUrl()
 
 void tst_QQmlImport::testDesignerSupported()
 {
-    QQuickView *window = new QQuickView();
+    std::unique_ptr<QQuickView> window = std::make_unique<QQuickView>();
     window->engine()->addImportPath(directory());
 
     window->setSource(testFileUrl("testfile_supported.qml"));
@@ -164,8 +164,7 @@ void tst_QQmlImport::testDesignerSupported()
     QQmlImports::setDesignerSupportRequired(true);
 
     //imports are cached so we create a new window
-    delete window;
-    window = new QQuickView();
+    window = std::make_unique<QQuickView>();
 
     window->engine()->addImportPath(directory());
     window->engine()->clearComponentCache();
@@ -181,21 +180,19 @@ void tst_QQmlImport::testDesignerSupported()
     QTest::ignoreMessage(QtWarningMsg, warningString.toLocal8Bit());
     window->setSource(testFileUrl("testfile_unsupported.qml"));
     QVERIFY(!window->errors().isEmpty());
-
-    delete window;
 }
 
 void tst_QQmlImport::uiFormatLoading()
 {
     int size = 0;
 
-    QQmlApplicationEngine *test = new QQmlApplicationEngine(testFileUrl("TestForm.ui.qml"));
+    std::unique_ptr<QQmlApplicationEngine> test = std::make_unique<QQmlApplicationEngine>(testFileUrl("TestForm.ui.qml"));
     test->addImportPath(directory());
     QCOMPARE(test->rootObjects().size(), ++size);
     QVERIFY(test->rootObjects()[size -1]);
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
 
-    QSignalSpy objectCreated(test, SIGNAL(objectCreated(QObject*,QUrl)));
+    QSignalSpy objectCreated(test.get(), SIGNAL(objectCreated(QObject*,QUrl)));
     test->load(testFileUrl("TestForm.ui.qml"));
     QCOMPARE(objectCreated.size(), size);//one less than rootObjects().size() because we missed the first one
     QCOMPARE(test->rootObjects().size(), ++size);
@@ -220,8 +217,6 @@ void tst_QQmlImport::uiFormatLoading()
     QCOMPARE(test->rootObjects().size(), ++size);
     QVERIFY(test->rootObjects()[size -1]);
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
-
-    delete test;
 }
 
 tst_QQmlImport::tst_QQmlImport()
