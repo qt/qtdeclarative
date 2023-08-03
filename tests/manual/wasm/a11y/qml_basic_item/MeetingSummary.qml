@@ -64,7 +64,7 @@ GroupBox {
                 }
             }
         }
-        Text {
+        TextEdit {
             id: textSummary
             anchors {
                 left: parent.left
@@ -74,7 +74,7 @@ GroupBox {
             }
             width: 300
             font.pixelSize: 16
-            textFormat: Text.StyledText
+            textFormat: TextEdit.RichText
             text: qsTr((" Occurrence:<b> %1 </b> <br>
                           Meeting to be held: <b>%2</b> <br>
                           Invitees:<b> %3 </b> <br>
@@ -89,10 +89,11 @@ GroupBox {
                        .arg(meetingDescription))
 
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            readOnly: true
             clip: true
-            Accessible.readOnly: true
+            Accessible.readOnly: readOnly
             Accessible.role: Accessible.StaticText
-            Accessible.name: text
+            Accessible.name: textSummary.getText(0, textSummary.length)
             Accessible.description: "A short summary of the meeting details"
             onVisibleChanged: {
                 textSummary.text = qsTr((" Occurrence:<b> %1 </b> <br>
