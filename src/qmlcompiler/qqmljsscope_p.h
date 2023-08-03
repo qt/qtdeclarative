@@ -200,17 +200,14 @@ public:
     static QQmlJSScope::Ptr create() { return QSharedPointer<QQmlJSScope>(new QQmlJSScope); }
     static QQmlJSScope::Ptr create(const QString &internalName);
     static QQmlJSScope::Ptr clone(const QQmlJSScope::ConstPtr &origin);
+
     static QQmlJSScope::ConstPtr findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope);
 
     QQmlJSScope::Ptr parentScope();
-
     QQmlJSScope::ConstPtr parentScope() const;
-
     static void reparent(const QQmlJSScope::Ptr &parentScope, const QQmlJSScope::Ptr &childScope);
 
     void insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier);
-
-    // inserts property as qml identifier as well as the corresponding
     void insertPropertyIdentifier(const QQmlJSMetaProperty &prop);
 
     ScopeType scopeType() const { return m_scopeType; }
@@ -352,11 +349,6 @@ public:
     QQmlJSMetaMethod::AbsoluteFunctionIndex
     ownRuntimeFunctionIndex(QQmlJSMetaMethod::RelativeFunctionIndex index) const;
 
-    bool isSingleton() const { return m_flags & Singleton; }
-
-    bool isCreatable() const;
-
-    bool isStructured() const;
 
     /*!
      * \internal
@@ -370,6 +362,14 @@ public:
     bool isInlineComponent() const { return m_flags & InlineComponent; }
     bool isWrappedInImplicitComponent() const { return m_flags & WrappedInImplicitComponent; }
     bool extensionIsNamespace() const { return m_flags & HasExtensionNamespace; }
+    bool isListProperty() const { return m_flags.testFlag(IsListProperty); }
+    void setIsListProperty(bool v) { m_flags.setFlag(IsListProperty, v); }
+    bool isSingleton() const { return m_flags & Singleton; }
+    bool isCreatable() const;
+    bool isStructured() const;
+    bool isReferenceType() const { return m_semantics == QQmlJSScope::AccessSemantics::Reference; }
+    bool isValueType() const { return m_semantics == QQmlJSScope::AccessSemantics::Value; }
+
     void setIsSingleton(bool v) { m_flags.setFlag(Singleton, v); }
     void setCreatableFlag(bool v) { m_flags.setFlag(Creatable, v); }
     void setStructuredFlag(bool v) { m_flags.setFlag(Structured, v); }
@@ -381,13 +381,9 @@ public:
     void setIsWrappedInImplicitComponent(bool v) { m_flags.setFlag(WrappedInImplicitComponent, v); }
     void setExtensionIsNamespace(bool v) { m_flags.setFlag(HasExtensionNamespace, v); }
 
-    bool isListProperty() const { return m_flags.testFlag(IsListProperty); }
-    void setIsListProperty(bool v) { m_flags.setFlag(IsListProperty, v); }
 
     void setAccessSemantics(AccessSemantics semantics) { m_semantics = semantics; }
     AccessSemantics accessSemantics() const { return m_semantics; }
-    bool isReferenceType() const { return m_semantics == QQmlJSScope::AccessSemantics::Reference; }
-    bool isValueType() const { return m_semantics == QQmlJSScope::AccessSemantics::Value; }
 
     std::optional<JavaScriptIdentifier> findJSIdentifier(const QString &id) const;
     std::optional<JavaScriptIdentifier> JSIdentifier(const QString &id) const;
