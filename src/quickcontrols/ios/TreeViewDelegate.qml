@@ -86,7 +86,7 @@ T.TreeViewDelegate {
 
         readonly property int __role: {
             let model = control.treeView.model
-            let index = control.treeView.modelIndex(column, row)
+            let index = control.treeView.index(row, column)
             let editText = model.data(index, Qt.EditRole)
             return editText !== undefined ? Qt.EditRole : Qt.DisplayRole
         }
@@ -96,12 +96,12 @@ T.TreeViewDelegate {
             x: control.contentItem.x
             y: (parent.height - height) / 2
             width: control.contentItem.width
-            text: control.treeView.model.data(control.treeView.modelIndex(column, row), __role)
+            text: control.treeView.model.data(control.treeView.index(row, column), __role)
             focus: true
         }
 
         TableView.onCommit: {
-            let index = TableView.view.modelIndex(column, row)
+            let index = TableView.view.index(row, column)
             TableView.view.model.setData(index, textField.text, __role)
         }
 
