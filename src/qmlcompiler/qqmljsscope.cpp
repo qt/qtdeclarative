@@ -259,47 +259,6 @@ QString QQmlJSScope::prettyName(QAnyStringView name)
 }
 
 /*!
-    Returns if assigning \a assignedType to \a property would require an
-    implicit component wrapping.
- */
-bool QQmlJSScope::causesImplicitComponentWrapping(const QQmlJSMetaProperty &property,
-                                                  const QQmlJSScope::ConstPtr &assignedType)
-{
-    // See QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents()
-    // for the logic in qqmltypecompiler
-
-    // Note: unlike findAndRegisterImplicitComponents() we do not check whether
-    // the property type is *derived* from QQmlComponent at some point because
-    // this is actually meaningless (and in the case of QQmlComponent::create()
-    // gets rejected in QQmlPropertyValidator): if the type is not a
-    // QQmlComponent, we have a type mismatch because of assigning a Component
-    // object to a non-Component property
-    const bool propertyVerdict = property.type()->internalName() == u"QQmlComponent";
-
-    const bool assignedTypeVerdict = [&assignedType]() {
-        // Note: nonCompositeBaseType covers the case when assignedType itself
-        // is non-composite
-        auto cppBase = nonCompositeBaseType(assignedType);
-        Q_ASSERT(cppBase); // any QML type has (or must have) a C++ base type
-
-        // See isUsableComponent() in qqmltypecompiler.cpp: along with checking
-        // whether a type has a QQmlComponent static meta object (which we
-        // substitute here with checking the first non-composite base for being
-        // a QQmlComponent), it also excludes QQmlAbstractDelegateComponent
-        // subclasses from implicit wrapping
-        if (cppBase->internalName() == u"QQmlComponent")
-            return false;
-        for (; cppBase; cppBase = cppBase->baseType()) {
-            if (cppBase->internalName() == u"QQmlAbstractDelegateComponent")
-                return false;
-        }
-        return true;
-    }();
-
-    return propertyVerdict && assignedTypeVerdict;
-}
-
-/*!
     \internal
     Returns true if the scope is the outermost element of a separate Component
     Either because it has been implicitly wrapped, e.g. due to an assignment to
