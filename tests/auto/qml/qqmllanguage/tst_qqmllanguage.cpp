@@ -2056,7 +2056,7 @@ void tst_qqmllanguage::aliasProperties()
         MyQmlObject *o = qvariant_cast<MyQmlObject*>(v);
         QCOMPARE(o->value(), 10);
 
-        delete o;
+        delete o; //intentional delete
 
         v = object->property("otherAlias");
         QCOMPARE(v.typeId(), qMetaTypeId<MyQmlObject *>());
@@ -2091,7 +2091,7 @@ void tst_qqmllanguage::aliasProperties()
         QObject *alias = qvariant_cast<QObject *>(object->property("aliasedObject"));
         QCOMPARE(alias, object2);
 
-        delete object1;
+        delete object1; //intentional delete
 
         QObject *alias2 = object.data(); // "Random" start value
         int status = -1;
@@ -4229,7 +4229,8 @@ void tst_qqmllanguage::lowercaseEnumRuntime()
 
     QQmlComponent component(&engine, testFileUrl(file));
     VERIFY_ERRORS(0);
-    delete component.create();
+    std::unique_ptr<QObject> root { component.create() };
+    QVERIFY(root);
 }
 
 void tst_qqmllanguage::lowercaseEnumCompileTime_data()
@@ -4246,7 +4247,8 @@ void tst_qqmllanguage::lowercaseEnumCompileTime()
 
     QQmlComponent component(&engine, testFileUrl(file));
     VERIFY_ERRORS(0);
-    delete component.create();
+    std::unique_ptr<QObject> root { component.create() };
+    QVERIFY(root);
 }
 
 void tst_qqmllanguage::scopedEnum()
@@ -5825,10 +5827,10 @@ void tst_qqmllanguage::listContainingDeletedObject()
     QVERIFY(root);
 
     auto cmp = root->property("a").value<QQmlComponent*>();
-    auto o = cmp->create();
+    std::unique_ptr<QObject> o { cmp->create() };
 
-    QMetaObject::invokeMethod(root.get(), "doAssign", Q_ARG(QVariant, QVariant::fromValue(o)));
-    delete o;
+    QMetaObject::invokeMethod(root.get(), "doAssign", Q_ARG(QVariant, QVariant::fromValue(o.get())));
+    o.reset();
     QMetaObject::invokeMethod(root.get(), "use");
 
 }
