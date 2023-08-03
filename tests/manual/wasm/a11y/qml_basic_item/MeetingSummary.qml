@@ -5,22 +5,43 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 GroupBox {
+    id: root
     title: "Summary"
     property string meetingOccurrence: "Once"
     property string onlineOfflineStatus: "offline"
     property int roomNumber: 0
     property int calendarWeek: 1
     property string meetingDescription: "No Description"
+
     property string inviteesNameEmail: ""
     property bool addedReadRequest: false
+    clip: true
 
-    ColumnLayout {
-        id: columnLayout
+    Flickable {
+        id: flickable
         width: 500
-        height: 200
-        spacing: 2
+        height: 450
+        contentHeight: meetingHeader.contentHeight + textSummary.contentHeight + 50
+        contentWidth: 500
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
+
+        ScrollBar.vertical: ScrollBar {
+            policy: ScrollBar.AlwaysOn
+            Accessible.role: Accessible.ScrollBar
+            Accessible.name: "Vertical ScrollBar"
+            Accessible.description: "Use this to scroll summary page"
+            Accessible.onDecreaseAction: {
+                decrease()
+            }
+            Accessible.onIncreaseAction: {
+                increase()
+            }
+        }
+
         Label {
-            Layout.preferredHeight: 30
+            id: meetingHeader
+            height: 30
             text: "Meeting Details"
             font.bold: true
             font.pixelSize: 24
@@ -45,9 +66,13 @@ GroupBox {
         }
         Text {
             id: textSummary
-            Layout.alignment: Qt.AlignLeft
-            Layout.leftMargin: 10
-            Layout.preferredWidth: 300
+            anchors {
+                left: parent.left
+                top: meetingHeader.bottom
+                topMargin: 10
+                leftMargin: 10
+            }
+            width: 300
             font.pixelSize: 16
             textFormat: Text.StyledText
             text: qsTr((" Occurrence:<b> %1 </b> <br>
