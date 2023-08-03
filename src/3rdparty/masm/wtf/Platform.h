@@ -443,6 +443,11 @@
 #define WTF_OS_RTEMS 1
 #endif
 
+/* OS(VXWORKS) - VXWORKS */
+#if defined(__vxworks)
+#define WTF_OS_VXWORKS 1
+#endif
+
 #define WTF_OS_WIN ERROR "USE WINDOWS WITH OS NOT WIN"
 #define WTF_OS_MAC ERROR "USE MAC_OS_X WITH OS NOT MAC"
 
@@ -458,6 +463,7 @@
     || OS(QNX)              \
     || OS(RTEMS)            \
     || OS(SOLARIS)          \
+    || OS(VXWORKS)          \
     || defined(unix)        \
     || defined(__unix)      \
     || defined(__unix__)
