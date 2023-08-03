@@ -213,8 +213,6 @@ public:
     // inserts property as qml identifier as well as the corresponding
     void insertPropertyIdentifier(const QQmlJSMetaProperty &prop);
 
-    bool isIdInCurrentScope(const QString &id) const;
-
     ScopeType scopeType() const { return m_scopeType; }
     void setScopeType(ScopeType type) { m_scopeType = type; }
 
@@ -399,10 +397,6 @@ public:
     AccessSemantics accessSemantics() const { return m_semantics; }
     bool isReferenceType() const { return m_semantics == QQmlJSScope::AccessSemantics::Reference; }
     bool isValueType() const { return m_semantics == QQmlJSScope::AccessSemantics::Value; }
-
-    bool isIdInCurrentQmlScopes(const QString &id) const;
-    bool isIdInCurrentJSScopes(const QString &id) const;
-    bool isIdInjectedFromSignal(const QString &id) const;
 
     std::optional<JavaScriptIdentifier> findJSIdentifier(const QString &id) const;
     std::optional<JavaScriptIdentifier> JSIdentifier(const QString &id) const;

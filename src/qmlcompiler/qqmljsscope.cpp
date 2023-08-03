@@ -90,11 +90,6 @@ void QQmlJSScope::insertPropertyIdentifier(const QQmlJSMetaProperty &property)
     addOwnMethod(method);
 }
 
-bool QQmlJSScope::isIdInCurrentScope(const QString &id) const
-{
-    return isIdInCurrentQmlScopes(id) || isIdInCurrentJSScopes(id);
-}
-
 bool QQmlJSScope::hasMethod(const QString &name) const
 {
     return QQmlJSUtils::searchBaseAndExtensionTypes(
@@ -322,37 +317,6 @@ bool QQmlJSScope::isComponentRootElement() const {
     if (!base)
         return false;
     return base->internalName() == u"QQmlComponent";
-}
-
-bool QQmlJSScope::isIdInCurrentQmlScopes(const QString &id) const
-{
-    if (m_scopeType == QQmlSA::ScopeType::QMLScope)
-        return m_properties.contains(id) || m_methods.contains(id) || m_enumerations.contains(id);
-
-    const auto qmlScope = findCurrentQMLScope(parentScope());
-    return qmlScope->m_properties.contains(id)
-            || qmlScope->m_methods.contains(id)
-            || qmlScope->m_enumerations.contains(id);
-}
-
-bool QQmlJSScope::isIdInCurrentJSScopes(const QString &id) const
-{
-    if (m_scopeType != QQmlSA::ScopeType::QMLScope && m_jsIdentifiers.contains(id))
-        return true;
-
-    for (auto jsScope = parentScope(); jsScope; jsScope = jsScope->parentScope()) {
-        if (jsScope->m_scopeType != QQmlSA::ScopeType::QMLScope
-            && jsScope->m_jsIdentifiers.contains(id))
-            return true;
-    }
-
-    return false;
-}
-
-bool QQmlJSScope::isIdInjectedFromSignal(const QString &id) const
-{
-    const auto found = findJSIdentifier(id);
-    return found.has_value() && found->kind == JavaScriptIdentifier::Injected;
 }
 
 std::optional<QQmlJSScope::JavaScriptIdentifier>
