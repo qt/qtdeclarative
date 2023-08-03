@@ -867,15 +867,9 @@ void QQmlJSImporter::setQualifiedNamesOn(const Import &import)
     for (auto &object : import.objects) {
         if (object.exports.isEmpty())
             continue;
-        const QString qualifiedName = QQmlJSScope::qualifiedNameFrom(
-                    import.name, object.exports.first().type(),
-                    object.exports.first().revision(),
-                    object.exports.last().revision());
         if (auto *factory = object.scope.factory()) {
-            factory->setQualifiedName(qualifiedName);
             factory->setModuleName(import.name);
         } else {
-            object.scope->setQualifiedName(qualifiedName);
             object.scope->setModuleName(import.name);
         }
     }

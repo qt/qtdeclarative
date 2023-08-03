@@ -29,9 +29,6 @@ QT_BEGIN_NAMESPACE
     Multiple QQmlJSScope objects might be created for the same conceptual type, except when reused
     due to extensive caching. Two QQmlJSScope objects are considered equal when they are backed
     by the same implementation, that is, they have the same internalName.
-    The qualifiedName of the QQmlJSScope for a type imported from multiple modules will contain the
-    name of one of the modules that imported it, which is not unique and might change depending
-    on the caching in .
 */
 
 using namespace Qt::StringLiterals;
@@ -983,22 +980,6 @@ bool QQmlJSScope::isNameDeferred(const QString &name) const
     return isDeferred;
 }
 
-QString QQmlJSScope::qualifiedNameFrom(const QString &moduleName, const QString &typeName,
-                                       const QTypeRevision &firstRevision,
-                                       const QTypeRevision &lastRevision)
-{
-    QString qualifiedName =
-            u"%1/%2 %3.%4"_s.arg(moduleName, typeName)
-                    .arg(firstRevision.hasMajorVersion() ? firstRevision.majorVersion() : 0)
-                    .arg(firstRevision.hasMinorVersion() ? firstRevision.minorVersion() : 0);
-    if (firstRevision != lastRevision) {
-        qualifiedName += u"-%1.%2"_s
-                .arg(lastRevision.hasMajorVersion() ? lastRevision.majorVersion() : 0)
-                .arg(lastRevision.hasMinorVersion() ? lastRevision.minorVersion() : 0);
-    }
-    return qualifiedName;
-}
-
 void QQmlJSScope::setBaseTypeName(const QString &baseTypeName)
 {
     m_flags.setFlag(HasBaseTypeError, false);
@@ -1131,7 +1112,6 @@ bool QQmlJSScope::Export::isValid() const
 
 void QDeferredFactory<QQmlJSScope>::populate(const QSharedPointer<QQmlJSScope> &scope) const
 {
-    scope->setQualifiedName(m_qualifiedName);
     scope->setModuleName(m_moduleName);
     QQmlJSTypeReader typeReader(m_importer, m_filePath);
     typeReader(scope);

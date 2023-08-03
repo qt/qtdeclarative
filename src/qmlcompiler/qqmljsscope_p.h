@@ -274,11 +274,6 @@ public:
     QQmlJSScope::ConstPtr baseType() const { return m_baseType.scope; }
     QTypeRevision baseTypeRevision() const { return m_baseType.revision; }
 
-    QString qualifiedName() const { return m_qualifiedName; }
-    void setQualifiedName(const QString &qualifiedName) { m_qualifiedName = qualifiedName; };
-    static QString qualifiedNameFrom(const QString &moduleName, const QString &typeName,
-                                     const QTypeRevision &firstRevision,
-                                     const QTypeRevision &lastRevision);
     QString moduleName() const { return m_moduleName; }
     void setModuleName(const QString &moduleName) { m_moduleName = moduleName; }
 
@@ -544,7 +539,6 @@ private:
 
     QQmlJS::SourceLocation m_sourceLocation;
 
-    QString m_qualifiedName;
     QString m_moduleName;
 
     std::optional<QString> m_inlineComponentName;
@@ -650,7 +644,6 @@ public:
         m_isSingleton = isSingleton;
     }
 
-    void setQualifiedName(const QString &qualifiedName) { m_qualifiedName = qualifiedName; }
     void setModuleName(const QString &moduleName) { m_moduleName = moduleName; }
 
 private:
@@ -665,7 +658,6 @@ private:
     QString m_filePath;
     QQmlJSImporter *m_importer = nullptr;
     bool m_isSingleton = false;
-    QString m_qualifiedName;
     QString m_moduleName;
 };
 

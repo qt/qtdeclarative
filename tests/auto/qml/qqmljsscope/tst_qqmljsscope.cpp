@@ -106,7 +106,6 @@ private Q_SLOTS:
     void scriptIndices();
     void extensions();
     void emptyBlockBinding();
-    void qualifiedName();
     void resolvedNonUniqueScopes();
     void compilationUnitsAreCompatible();
     void attachedTypeResolution_data();
@@ -674,30 +673,6 @@ void tst_qqmljsscope::emptyBlockBinding()
     QVERIFY(root);
     QVERIFY(root->hasOwnPropertyBindings(u"x"_s));
     QVERIFY(root->hasOwnPropertyBindings(u"y"_s));
-}
-
-void tst_qqmljsscope::qualifiedName()
-{
-    QQmlJSScope::ConstPtr root = run(u"qualifiedName.qml"_s);
-    QVERIFY(root);
-
-    auto qualifiedNameOf = [](const QQmlJSScope::ConstPtr &ptr) -> QString {
-        if (ptr->baseType())
-            return ptr->baseType()->qualifiedName();
-        else
-            return u""_s;
-    };
-
-    QCOMPARE(root->childScopes().size(), 4);
-    QQmlJSScope::ConstPtr b = root->childScopes()[0];
-    QQmlJSScope::ConstPtr d = root->childScopes()[1];
-    QQmlJSScope::ConstPtr qualifiedA = root->childScopes()[2];
-    QQmlJSScope::ConstPtr qualifiedB = root->childScopes()[3];
-
-    QCOMPARE(qualifiedNameOf(b), "QualifiedNamesTests/B 5.0-6.0");
-    QCOMPARE(qualifiedNameOf(d), "QualifiedNamesTests/D 6.0");
-    QCOMPARE(qualifiedNameOf(qualifiedA), "QualifiedNamesTests/A 5.0");
-    QCOMPARE(qualifiedNameOf(qualifiedB), "QualifiedNamesTests/B 5.0-6.0");
 }
 
 void tst_qqmljsscope::resolvedNonUniqueScopes()
