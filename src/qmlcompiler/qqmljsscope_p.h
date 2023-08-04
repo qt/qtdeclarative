@@ -355,10 +355,8 @@ public:
     bool isSingleton() const { return m_flags & Singleton; }
 
     bool isCreatable() const;
-    bool hasCreatableFlag() const { return m_flags & Creatable; }
 
     bool isStructured() const;
-    bool hasStructuredFlag() const { return m_flags & Structured; }
 
     /*!
      * \internal
@@ -473,6 +471,8 @@ private:
 
     void addOwnPropertyBindingInQmlIROrder(const QQmlJSMetaPropertyBinding &binding,
                                            BindingTargetSpecifier specifier);
+    bool hasCreatableFlag() const { return m_flags & Creatable; }
+    bool hasStructuredFlag() const { return m_flags & Structured; }
 
     QHash<QString, JavaScriptIdentifier> m_jsIdentifiers;
 
