@@ -829,9 +829,6 @@ void QQmlJSScope::addOwnPropertyBinding(const QQmlJSMetaPropertyBinding &binding
     Q_ASSERT(m_propertyBindings.size() == m_propertyBindingsArray.size());
 }
 
-static_assert(QTypeInfo<QQmlJSScope::QmlIRCompatibilityBindingData>::isRelocatable,
-              "We really want T to be relocatable as it improves QList<T> performance");
-
 void QQmlJSScope::addOwnPropertyBindingInQmlIROrder(const QQmlJSMetaPropertyBinding &binding,
                                                     BindingTargetSpecifier specifier)
 {
@@ -841,6 +838,9 @@ void QQmlJSScope::addOwnPropertyBindingInQmlIROrder(const QQmlJSMetaPropertyBind
     //   prepended "in bulk"
     // * bindings to default properties (which are not explicitly mentioned in
     //   binding expression) are inserted by source location's offset
+
+    static_assert(QTypeInfo<QQmlJSScope::QmlIRCompatibilityBindingData>::isRelocatable,
+                  "We really want T to be relocatable as it improves QList<T> performance");
 
     switch (specifier) {
     case BindingTargetSpecifier::SimplePropertyTarget: {

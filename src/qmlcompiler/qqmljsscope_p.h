@@ -429,21 +429,6 @@ public:
 
     bool isInCustomParserParent() const;
 
-    /*! \internal
-
-        Minimal information about a QQmlJSMetaPropertyBinding that allows it to
-        be manipulated similarly to QmlIR::Binding.
-    */
-    struct QmlIRCompatibilityBindingData
-    {
-        QmlIRCompatibilityBindingData() = default;
-        QmlIRCompatibilityBindingData(const QString &name, quint32 offset)
-            : propertyName(name), sourceLocationOffset(offset)
-        {
-        }
-        QString propertyName; // bound property name
-        quint32 sourceLocationOffset = 0; // binding's source location offset
-    };
 
     static ImportedScope<QQmlJSScope::ConstPtr> findType(const QString &name,
                                                          const QQmlJS::ContextualTypes &contextualTypes,
@@ -455,6 +440,24 @@ public:
     static constexpr qsizetype sizeofQQmlSAElement() { return QQmlSA::Element::sizeofElement; }
 
 private:
+    /*! \internal
+
+         Minimal information about a QQmlJSMetaPropertyBinding that allows it to
+         be manipulated similarly to QmlIR::Binding.
+     */
+    template <typename T>
+    friend class QTypeInfo; // so that we can Q_DECLARE_TYPEINFO QmlIRCompatibilityBindingData
+    struct QmlIRCompatibilityBindingData
+    {
+        QmlIRCompatibilityBindingData() = default;
+        QmlIRCompatibilityBindingData(const QString &name, quint32 offset)
+            : propertyName(name), sourceLocationOffset(offset)
+        {
+        }
+        QString propertyName; // bound property name
+        quint32 sourceLocationOffset = 0; // binding's source location offset
+    };
+
     QQmlJSScope() = default;
     QQmlJSScope(const QQmlJSScope &) = default;
     QQmlJSScope &operator=(const QQmlJSScope &) = default;
