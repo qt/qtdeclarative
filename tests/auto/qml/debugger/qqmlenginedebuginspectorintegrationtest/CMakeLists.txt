@@ -24,6 +24,8 @@ qt_internal_add_test(tst_qqmlenginedebuginspectorintegration
         ../shared/debugutil.cpp ../shared/debugutil_p.h
         ../shared/qqmldebugprocess.cpp ../shared/qqmldebugprocess_p.h
         tst_qqmlenginedebuginspectorintegration.cpp
+    NO_PCH_SOURCES
+        tst_qqmlenginedebuginspectorintegration.cpp # undef QT_NO_FOREACH
     INCLUDE_DIRECTORIES
         ../shared
     LIBRARIES

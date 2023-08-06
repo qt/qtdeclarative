@@ -23,6 +23,9 @@ qt_internal_add_test(tst_qqmllanguage
     SOURCES
         testtypes.cpp testtypes.h
         tst_qqmllanguage.cpp
+    NO_PCH_SOURCES
+        testtypes.cpp # undef QT_NO_FOREACH
+        tst_qqmllanguage.cpp # undef QT_NO_FOREACH
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui

@@ -23,6 +23,8 @@ qt_internal_add_test(tst_qqmlecmascript
     SOURCES
         testtypes.cpp testtypes.h
         tst_qqmlecmascript.cpp
+    NO_PCH_SOURCES
+        testtypes.cpp # undef QT_NO_FOREACH
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui

@@ -24,6 +24,8 @@ qt_internal_add_test(tst_qqmlprofilerservice
         ../shared/debugutil.cpp ../shared/debugutil_p.h
         ../shared/qqmldebugprocess.cpp ../shared/qqmldebugprocess_p.h
         tst_qqmlprofilerservice.cpp
+    NO_PCH_SOURCES
+        tst_qqmlprofilerservice.cpp # undef QT_NO_FOREACH
     INCLUDE_DIRECTORIES
         ../shared
     LIBRARIES

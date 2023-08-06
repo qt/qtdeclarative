@@ -19,6 +19,8 @@ qt_internal_add_test(tst_qqmldebugclient
         ../shared/qqmldebugprocess.cpp ../shared/qqmldebugprocess_p.h
         ../shared/qqmldebugtestservice.cpp ../shared/qqmldebugtestservice.h
         tst_qqmldebugclient.cpp
+    NO_PCH_SOURCES
+        tst_qqmldebugclient.cpp # undef QT_NO_FOREACH
     DEFINES
         QT_QML_DEBUG
         QT_QML_DEBUG_NO_WARNING

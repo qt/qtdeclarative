@@ -41,6 +41,8 @@ qt_internal_add_module(QmlDomPrivate
         qqmldomtop.cpp qqmldomtop_p.h
         qqmldomtypesreader.cpp qqmldomtypesreader_p.h
         qqmldomscriptelements_p.h qqmldomscriptelements.cpp
+    NO_PCH_SOURCES
+        qqmldomcodeformatter.cpp # undef QT_NO_FOREACH
     DEFINES
         QMLDOM_LIBRARY
     PUBLIC_LIBRARIES

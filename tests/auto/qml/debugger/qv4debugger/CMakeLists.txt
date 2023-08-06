@@ -39,6 +39,8 @@ qt_internal_add_test(tst_qv4debugger
         ../../../../../src/plugins/qmltooling/qmldbg_debugger/qv4debugger.cpp ../../../../../src/plugins/qmltooling/qmldbg_debugger/qv4debugger.h
         ../../../../../src/plugins/qmltooling/qmldbg_debugger/qv4debugjob.cpp ../../../../../src/plugins/qmltooling/qmldbg_debugger/qv4debugjob.h
         tst_qv4debugger.cpp
+    NO_PCH_SOURCES
+        tst_qv4debugger.cpp
     INCLUDE_DIRECTORIES
         ../../../../../src/plugins/qmltooling/qmldbg_debugger
     LIBRARIES

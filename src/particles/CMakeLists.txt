@@ -56,7 +56,6 @@ qt_internal_add_qml_module(QuickParticlesPrivate
         qquickturbulence.cpp
         # end undef QT_NO_FOREACH
     DEFINES
-        QT_NO_FOREACH
         QT_NO_INTEGER_EVENT_COORDINATES
         QT_NO_URL_CAST_FROM_STRING
     PUBLIC_LIBRARIES

@@ -18,6 +18,8 @@ qt_internal_add_test(tst_qqmldebuggingenabler
         ../../shared/debugutil.cpp ../../shared/debugutil_p.h
         ../../shared/qqmldebugprocess.cpp ../../shared/qqmldebugprocess_p.h
         tst_qqmldebuggingenabler.cpp
+    NO_PCH_SOURCES
+        tst_qqmldebuggingenabler.cpp # undef QT_NO_FOREACH
     INCLUDE_DIRECTORIES
         ../../shared
     LIBRARIES
