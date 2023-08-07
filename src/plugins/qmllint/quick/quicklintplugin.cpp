@@ -181,7 +181,6 @@ ControlsNativeValidatorPass::ControlsNativeValidatorPass(QQmlSA::PassManager *ma
                 QStringList { "background", "contentItem", "header", "footer", "menuBar" } },
         ControlElement { "ComboBox", QStringList { "indicator" } },
         ControlElement { "Dial", QStringList { "handle" } },
-        ControlElement { "Dialog", QStringList { "header", "footer" } },
         ControlElement { "GroupBox", QStringList { "label" } },
         ControlElement { "$internal$.QQuickIndicatorButton", QStringList { "indicator" }, false },
         ControlElement { "Label", QStringList { "background" } },

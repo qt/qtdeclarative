@@ -23,14 +23,10 @@ T.Dialog {
 
     padding: 6
 
-    readonly property bool __notCustomizable: true
-
     background: Rectangle {
         color: control.palette.window
         border.color: control.palette.mid
         radius: 2
-
-        readonly property bool __ignoreNotCustomizable: true
 
         Rectangle {
             x: 1
@@ -51,8 +47,6 @@ T.Dialog {
         font.bold: true
         padding: 6
 
-        readonly property bool __ignoreNotCustomizable: true
-
         background: Rectangle {
             x: 1
             y: 1
@@ -65,8 +59,6 @@ T.Dialog {
 
     footer: DialogButtonBox {
         visible: count > 0
-
-        readonly property bool __ignoreNotCustomizable: true
     }
 
     T.Overlay.modal: Rectangle {
