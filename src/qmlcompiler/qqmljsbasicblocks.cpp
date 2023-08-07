@@ -778,7 +778,7 @@ QQmlJSBasicBlocks::BasicBlocksValidationResult QQmlJSBasicBlocks::basicBlocksVal
     }
 
     // 1. Return blocks and throw blocks must not have a jump target
-    for (const auto it : returnOrThrowBlocks) {
+    for (const auto &it : returnOrThrowBlocks) {
         if (it.value().jumpTarget != -1)
             return { false, "Return or throw block jumps to somewhere"_L1 };
     }
