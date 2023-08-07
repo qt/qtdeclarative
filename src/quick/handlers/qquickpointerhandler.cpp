@@ -706,6 +706,18 @@ void QQuickPointerHandler::setActive(bool active)
     }
 }
 
+/*!
+    This function can be overridden to implement whatever behavior a specific
+    subclass is intended to have:
+    \list
+        \li Handle all the event's QPointerEvent::points() for which
+        wantsEventPoint() already returned \c true.
+        \li Call setPassiveGrab() setExclusiveGrab() or cancelAllGrabs() as
+        necessary.
+        \li Call QEvent::accept() to stop propagation, or ignore() to allow it
+        to keep going.
+    \endlist
+*/
 void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *)
 {
 }
