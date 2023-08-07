@@ -48,7 +48,8 @@ void QV4DebuggerAgent::debuggerPaused(QV4Debugger *debugger, QV4Debugger::PauseR
 //        if (frame->column > 0)
 //            body.insert(QStringLiteral("sourceColumn"), frame->column);
         QJsonArray breakPoints;
-        foreach (int breakPointId, breakPointIds(frame->source(), frame->lineNumber()))
+        const QList<int> ids = breakPointIds(frame->source(), frame->lineNumber());
+        for (int breakPointId : ids)
             breakPoints.push_back(breakPointId);
         body.insert(QStringLiteral("breakpoints"), breakPoints);
         script.insert(QStringLiteral("name"), frame->source());

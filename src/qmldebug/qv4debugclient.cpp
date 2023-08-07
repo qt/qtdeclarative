@@ -526,7 +526,7 @@ void QV4DebugClientPrivate::sendMessage(const QByteArray &command, const QJsonOb
 
 void QV4DebugClientPrivate::flushSendBuffer()
 {
-    foreach (const QByteArray &msg, sendBuffer)
+    for (const QByteArray &msg : std::as_const(sendBuffer))
         sendMessage(msg);
     sendBuffer.clear();
 }
