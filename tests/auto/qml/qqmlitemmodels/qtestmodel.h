@@ -251,6 +251,8 @@ public:
     mutable bool wrongIndex;
 
     struct Node {
+        Q_DISABLE_COPY_MOVE(Node)
+
         Node *parent;
         QVector<Node *> children;
 
