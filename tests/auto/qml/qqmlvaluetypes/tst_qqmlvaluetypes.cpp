@@ -1,8 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include <qtest.h>
 #include <QQmlEngine>
 #include <QQmlComponent>
@@ -277,9 +275,9 @@ void tst_qqmlvaluetypes::locale()
         QCOMPARE(object->property("textDirection").toInt(), int(locale.textDirection()));
         QCOMPARE(object->property("uiLanguages").toStringList(), locale.uiLanguages());
         QList<Qt::DayOfWeek> weekDays;
-        foreach (const QVariant &weekDay, object->property("weekDays").toList()) {
+        const QVariantList weekDaysProperty = object->property("weekDays").toList();
+        for (const QVariant &weekDay : weekDaysProperty)
             weekDays.append(Qt::DayOfWeek(weekDay.toInt()));
-        }
         QCOMPARE(weekDays, locale.weekdays());
         QCOMPARE(object->property("zeroDigit").toString().at(0), locale.zeroDigit());
 #endif // im

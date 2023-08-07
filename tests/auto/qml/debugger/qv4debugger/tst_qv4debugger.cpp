@@ -1,8 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtTest/QtTest>
 
@@ -170,7 +168,7 @@ public slots:
             m_thrownValue = job.exceptionValue();
         }
 
-        foreach (const TestBreakPoint &bp, m_breakPointsToAddWhenPaused)
+        for (const TestBreakPoint &bp : std::as_const(m_breakPointsToAddWhenPaused))
             debugger->addBreakPoint(bp.fileName, bp.lineNumber);
         m_breakPointsToAddWhenPaused.clear();
 

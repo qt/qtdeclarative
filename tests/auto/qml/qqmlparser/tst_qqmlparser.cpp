@@ -1,8 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljslexer_p.h>
@@ -245,15 +243,13 @@ QStringList tst_qqmlparser::findFiles(const QDir &d)
 
     QStringList rv;
 
-    QStringList files = d.entryList(QStringList() << QLatin1String("*.qml") << QLatin1String("*.js"),
-                                    QDir::Files);
-    foreach (const QString &file, files) {
+    const QStringList files = d.entryList(
+            QStringList() << QLatin1String("*.qml") << QLatin1String("*.js"), QDir::Files);
+    for (const QString &file : files)
         rv << d.absoluteFilePath(file);
-    }
 
-    QStringList dirs = d.entryList(QDir::Dirs | QDir::NoDotAndDotDot |
-                                   QDir::NoSymLinks);
-    foreach (const QString &dir, dirs) {
+    const QStringList dirs = d.entryList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks);
+    for (const QString &dir : dirs) {
         QDir sub = d;
         sub.cd(dir);
         rv << findFiles(sub);
@@ -279,7 +275,7 @@ void tst_qqmlparser::qmlParser_data()
     files << findFiles(QDir(examples));
     files << findFiles(QDir(tests));
 
-    foreach (const QString &file, files)
+    for (const QString &file : std::as_const(files))
         QTest::newRow(qPrintable(file)) << file;
 }
 #endif

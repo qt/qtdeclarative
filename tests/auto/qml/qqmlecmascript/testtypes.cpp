@@ -1,8 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include "testtypes.h"
 #ifndef QT_NO_WIDGETS
 # include <QWidget>
@@ -415,7 +413,7 @@ QObject *QObjectContainer::children_at(QQmlListProperty<QObject> *prop, qsizetyp
 void QObjectContainer::children_clear(QQmlListProperty<QObject> *prop)
 {
     QObjectContainer *that = static_cast<QObjectContainer*>(prop->object);
-    foreach (QObject *c, that->dataChildren)
+    for (QObject *c : std::as_const(that->dataChildren))
         QObject::disconnect(c, SIGNAL(destroyed(QObject*)), that, SLOT(childDestroyed(QObject*)));
     that->dataChildren.clear();
 }

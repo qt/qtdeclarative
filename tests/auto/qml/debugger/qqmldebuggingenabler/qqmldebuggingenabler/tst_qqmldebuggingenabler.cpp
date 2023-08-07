@@ -1,8 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include "debugutil_p.h"
 #include "qqmldebugprocess_p.h"
 #include <QtQuickTestUtils/private/qmlutils_p.h>
@@ -43,14 +41,14 @@ void tst_QQmlDebuggingEnabler::data()
     QTest::addColumn<bool>("blockMode");
     QTest::addColumn<QStringList>("services");
 
-    QStringList connectors({
+    const QStringList connectors({
         QLatin1String("QQmlDebugServer"),
         QLatin1String("QQmlNativeDebugConnector")
     });
 
-    QList<bool> blockModes({ true, false });
+    const QList<bool> blockModes({ true, false });
 
-    QList<QStringList> serviceLists({
+    const QList<QStringList> serviceLists({
         QStringList(),
         QQmlDebuggingEnabler::nativeDebuggerServices(),
         QQmlDebuggingEnabler::debuggerServices(),
@@ -59,9 +57,9 @@ void tst_QQmlDebuggingEnabler::data()
         QQmlDebuggingEnabler::debuggerServices() + QQmlDebuggingEnabler::inspectorServices()
     });
 
-    foreach (const QString &connector, connectors) {
-        foreach (bool blockMode, blockModes) {
-            foreach (const QStringList &serviceList, serviceLists) {
+    for (const QString &connector : connectors) {
+        for (bool blockMode : blockModes) {
+            for (const QStringList &serviceList : serviceLists) {
                 QString name = connector + QLatin1Char(',')
                         + QLatin1String(blockMode ? "block" : "noblock") + QLatin1Char(',')
                         + serviceList.join(QLatin1Char('-'));
@@ -105,7 +103,7 @@ void tst_QQmlDebuggingEnabler::qmlscene()
         m_clients = QQmlDebugTest::createOtherClients(m_connection);
         m_connection->connectToHost("127.0.0.1", m_process->debugPort());
         QVERIFY(m_connection->waitForConnected());
-        foreach (QQmlDebugClient *client, m_clients)
+        for (QQmlDebugClient *client : std::as_const(m_clients))
             QCOMPARE(client->state(), (services.isEmpty() || services.contains(client->name())) ?
                          QQmlDebugClient::Enabled : QQmlDebugClient::Unavailable);
     }

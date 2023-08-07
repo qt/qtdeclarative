@@ -1,8 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include <qtest.h>
 #include <QObject>
 #include <QQmlEngine>
@@ -62,7 +60,7 @@ namespace {
     {
         QStringList rv;
 
-        foreach (const QQmlDirParser::Plugin &p, plugins)
+        for (const QQmlDirParser::Plugin &p : plugins)
             rv.append(toString(p));
 
         return rv;
@@ -88,7 +86,8 @@ namespace {
     {
         QStringList rv;
 
-        foreach (const QQmlDirParser::Component &c, components.values())
+        const auto values = components.values();
+        for (const QQmlDirParser::Component &c : values)
             rv.append(toString(c));
 
         std::sort(rv.begin(), rv.end());
@@ -99,7 +98,7 @@ namespace {
     {
         QStringList rv;
 
-        foreach (const QQmlDirParser::Import &c, components)
+        for (const QQmlDirParser::Import &c : components)
             rv.append(toString(c));
 
         std::sort(rv.begin(), rv.end());
@@ -117,7 +116,7 @@ namespace {
     {
         QStringList rv;
 
-        foreach (const QQmlDirParser::Script &s, scripts)
+        for (const QQmlDirParser::Script &s : scripts)
             rv.append(toString(s));
 
         return rv;

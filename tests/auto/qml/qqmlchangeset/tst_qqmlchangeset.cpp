@@ -1,8 +1,6 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include <qtest.h>
 #include <qrandom.h>
 #include <private/qqmlchangeset_p.h>
@@ -97,7 +95,7 @@ public:
 
     bool applyChanges(QVector<int> &list, const QVector<QVector<Signal> > &changes)
     {
-        foreach (const SignalList &sl, changes) {
+        for (const SignalList &sl : changes) {
             if (!applyChanges(list, sl))
                 return false;
         }
@@ -107,7 +105,7 @@ public:
     bool applyChanges(QVector<int> &list, const QVector<Signal> &changes)
     {
         QHash<QQmlChangeSet::MoveKey, int> removedValues;
-        foreach (const Signal &signal, changes) {
+        for (const Signal &signal : changes) {
             if (signal.isInsert()) {
                 if (signal.index < 0 || signal.index > list.size()) {
                     qDebug() << "insert out of range" << signal.index << list.size();
@@ -1136,7 +1134,7 @@ void tst_qqmlchangeset::sequence()
 
     QQmlChangeSet set;
 
-    foreach (const Signal &signal, input) {
+    for (const Signal &signal : std::as_const(input)) {
         if (signal.isRemove())
             set.remove(signal.index, signal.count);
         else if (signal.isInsert())
@@ -1148,11 +1146,11 @@ void tst_qqmlchangeset::sequence()
     }
 
     SignalList changes;
-    foreach (const QQmlChangeSet::Change &remove, set.removes())
+    for (const QQmlChangeSet::Change &remove : set.removes())
         changes << Remove(remove.index, remove.count, remove.moveId, remove.offset);
-    foreach (const QQmlChangeSet::Change &insert, set.inserts())
+    for (const QQmlChangeSet::Change &insert : set.inserts())
         changes << Insert(insert.index, insert.count, insert.moveId, insert.offset);
-    foreach (const QQmlChangeSet::Change &change, set.changes())
+    for (const QQmlChangeSet::Change &change : set.changes())
         changes << Change(change.index, change.count);
 
     VERIFY_EXPECTED_OUTPUT
@@ -1270,9 +1268,9 @@ void tst_qqmlchangeset::apply()
     QQmlChangeSet set;
     QQmlChangeSet linearSet;
 
-    foreach (const SignalList &list, input) {
+    for (const SignalList &list : std::as_const(input)) {
         QQmlChangeSet intermediateSet;
-        foreach (const Signal &signal, list) {
+        for (const Signal &signal : list) {
             if (signal.isRemove()) {
                 intermediateSet.remove(signal.index, signal.count);
                 linearSet.remove(signal.index, signal.count);
@@ -1288,15 +1286,15 @@ void tst_qqmlchangeset::apply()
     }
 
     SignalList changes;
-    foreach (const QQmlChangeSet::Change &remove, set.removes())
+    for (const QQmlChangeSet::Change &remove : set.removes())
         changes << Remove(remove.index, remove.count, remove.moveId, remove.offset);
-    foreach (const QQmlChangeSet::Change &insert, set.inserts())
+    for (const QQmlChangeSet::Change &insert : set.inserts())
         changes << Insert(insert.index, insert.count, insert.moveId, insert.offset);
 
     SignalList linearChanges;
-    foreach (const QQmlChangeSet::Change &remove, linearSet.removes())
+    for (const QQmlChangeSet::Change &remove : linearSet.removes())
         linearChanges << Remove(remove.index, remove.count, remove.moveId, remove.offset);
-    foreach (const QQmlChangeSet::Change &insert, linearSet.inserts())
+    for (const QQmlChangeSet::Change &insert : linearSet.inserts())
         linearChanges << Insert(insert.index, insert.count, insert.moveId, insert.offset);
 
     // The output in the failing tests isn't incorrect, merely sub-optimal.
@@ -1331,7 +1329,7 @@ void tst_qqmlchangeset::removeConsecutive()
     QFETCH(SignalList, output);
 
     QVector<QQmlChangeSet::Change> removes;
-    foreach (const Signal &signal, input) {
+    for (const Signal &signal : std::as_const(input)) {
         QVERIFY(signal.isRemove());
         removes.append(QQmlChangeSet::Change(signal.index, signal.count, signal.moveId, signal.offset));
     }
@@ -1340,7 +1338,7 @@ void tst_qqmlchangeset::removeConsecutive()
     set.remove(removes);
 
     SignalList changes;
-    foreach (const QQmlChangeSet::Change &remove, set.removes())
+    for (const QQmlChangeSet::Change &remove : set.removes())
         changes << Remove(remove.index, remove.count, remove.moveId, remove.offset);
     QVERIFY(set.inserts().isEmpty());
     QVERIFY(set.changes().isEmpty());
@@ -1371,7 +1369,7 @@ void tst_qqmlchangeset::insertConsecutive()
     QFETCH(SignalList, output);
 
     QVector<QQmlChangeSet::Change> inserts;
-    foreach (const Signal &signal, input) {
+    for (const Signal &signal : std::as_const(input)) {
         QVERIFY(signal.isInsert());
         inserts.append(QQmlChangeSet::Change(signal.index, signal.count, signal.moveId, signal.offset));
     }
@@ -1380,7 +1378,7 @@ void tst_qqmlchangeset::insertConsecutive()
     set.insert(inserts);
 
     SignalList changes;
-    foreach (const QQmlChangeSet::Change &insert, set.inserts())
+    for (const QQmlChangeSet::Change &insert : set.inserts())
         changes << Insert(insert.index, insert.count, insert.moveId, insert.offset);
     QVERIFY(set.removes().isEmpty());
     QVERIFY(set.changes().isEmpty());
@@ -1499,9 +1497,9 @@ void tst_qqmlchangeset::random()
         }
 
         SignalList output;
-        foreach (const QQmlChangeSet::Change &remove, accumulatedSet.removes())
+        for (const QQmlChangeSet::Change &remove : accumulatedSet.removes())
             output << Remove(remove.index, remove.count, remove.moveId, remove.offset);
-        foreach (const QQmlChangeSet::Change &insert, accumulatedSet.inserts())
+        for (const QQmlChangeSet::Change &insert : accumulatedSet.inserts())
             output << Insert(insert.index, insert.count, insert.moveId, insert.offset);
 
         QVector<int> inputList;

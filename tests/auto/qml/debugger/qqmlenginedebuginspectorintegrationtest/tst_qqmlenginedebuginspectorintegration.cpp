@@ -1,8 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include "../shared/debugutil_p.h"
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -106,7 +104,7 @@ void tst_QQmlEngineDebugInspectorIntegration::objectLocationLookup()
     QCOMPARE(init(true), ConnectSuccess);
 
     bool success = false;
-    QQmlEngineDebugObjectReference rootObject = findRootObject();
+    const QQmlEngineDebugObjectReference rootObject = findRootObject();
     QVERIFY(rootObject.debugId != -1);
     const QString fileName = QFileInfo(rootObject.source.url.toString()).fileName();
     int lineNumber = rootObject.source.lineNumber;
@@ -116,7 +114,7 @@ void tst_QQmlEngineDebugInspectorIntegration::objectLocationLookup()
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_engineDebugClient, SIGNAL(result())));
 
-    foreach (QQmlEngineDebugObjectReference child, rootObject.children) {
+    for (const QQmlEngineDebugObjectReference &child : rootObject.children) {
         success = false;
         lineNumber = child.source.lineNumber;
         columnNumber = child.source.columnNumber;
@@ -131,10 +129,10 @@ void tst_QQmlEngineDebugInspectorIntegration::select()
 {
     QCOMPARE(init(true), ConnectSuccess);
 
-    QQmlEngineDebugObjectReference rootObject = findRootObject();
+    const QQmlEngineDebugObjectReference rootObject = findRootObject();
     QList<int> childIds;
     int requestId = 0;
-    foreach (const QQmlEngineDebugObjectReference &child, rootObject.children) {
+    for (const QQmlEngineDebugObjectReference &child : rootObject.children) {
         requestId = m_inspectorClient->select(QList<int>() << child.debugId);
         QTRY_COMPARE(m_recipient->lastResponseId, requestId);
         QVERIFY(m_recipient->lastResult);

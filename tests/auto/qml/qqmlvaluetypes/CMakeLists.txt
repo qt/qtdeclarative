@@ -23,8 +23,6 @@ qt_internal_add_test(tst_qqmlvaluetypes
     SOURCES
         testtypes.cpp testtypes.h
         tst_qqmlvaluetypes.cpp
-    NO_PCH_SOURCES
-        tst_qqmlvaluetypes.cpp # undef QT_NO_FOREACH
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui

@@ -1,8 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -1734,8 +1732,8 @@ void tst_qqmllanguage::propertyValueSource()
     QVERIFY(object != nullptr);
 
     QList<QObject *> valueSources;
-    QObjectList allChildren = object->findChildren<QObject*>();
-    foreach (QObject *child, allChildren) {
+    const QObjectList allChildren = object->findChildren<QObject*>();
+    for (QObject *child : allChildren) {
         if (qobject_cast<QQmlPropertyValueSource *>(child))
             valueSources.append(child);
     }
@@ -1755,8 +1753,8 @@ void tst_qqmllanguage::propertyValueSource()
     QVERIFY(object != nullptr);
 
     QList<QObject *> valueSources;
-    QObjectList allChildren = object->findChildren<QObject*>();
-    foreach (QObject *child, allChildren) {
+    const QObjectList allChildren = object->findChildren<QObject*>();
+    for (QObject *child : allChildren) {
         if (qobject_cast<QQmlPropertyValueSource *>(child))
             valueSources.append(child);
     }
@@ -2890,7 +2888,8 @@ void tst_qqmllanguage::testType(const QString& qml, const QString& type, const Q
     if (type.isEmpty()) {
         QVERIFY(component.isError());
         QString actualerror;
-        foreach (const QQmlError e, component.errors()) {
+        const auto errors = component.errors();
+        for (const QQmlError &e : errors) {
             if (!actualerror.isEmpty())
                 actualerror.append("; ");
             actualerror.append(e.description());

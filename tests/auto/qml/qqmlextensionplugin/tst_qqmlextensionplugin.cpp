@@ -1,8 +1,6 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include <QtCore>
 #include <QtTest>
 #include <QtQml>
@@ -77,7 +75,7 @@ void tst_qqmlextensionplugin::iidCheck_data()
     files = removeDuplicates(std::move(files));
 
     QTest::addColumn<QString>("filePath");
-    foreach (const QString &file, files) {
+    for (const QString &file: std::as_const(files)) {
         QFileInfo fileInfo(file);
         QTest::newRow(fileInfo.baseName().toLatin1().data()) << fileInfo.absoluteFilePath();
     }

@@ -1,8 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QNetworkAccessManager>
@@ -495,22 +493,25 @@ void tst_qqmlengine::trimComponentCache_data()
     // empty apart from their inherited elements, and those that define new properties.
     // For each there are five types of composition: extension, aggregation,
     // aggregation via component, property and object-created-via-transient-component.
-    foreach (const QString &test, (QStringList() << "EmptyComponent"
-                                                 << "VMEComponent"
-                                                 << "EmptyExtendEmptyComponent"
-                                                 << "VMEExtendEmptyComponent"
-                                                 << "EmptyExtendVMEComponent"
-                                                 << "VMEExtendVMEComponent"
-                                                 << "EmptyAggregateEmptyComponent"
-                                                 << "VMEAggregateEmptyComponent"
-                                                 << "EmptyAggregateVMEComponent"
-                                                 << "VMEAggregateVMEComponent"
-                                                 << "EmptyPropertyEmptyComponent"
-                                                 << "VMEPropertyEmptyComponent"
-                                                 << "EmptyPropertyVMEComponent"
-                                                 << "VMEPropertyVMEComponent"
-                                                 << "VMETransientEmptyComponent"
-                                                 << "VMETransientVMEComponent")) {
+    const QStringList components = {
+        "EmptyComponent",
+        "VMEComponent",
+        "EmptyExtendEmptyComponent",
+        "VMEExtendEmptyComponent",
+        "EmptyExtendVMEComponent",
+        "VMEExtendVMEComponent",
+        "EmptyAggregateEmptyComponent",
+        "VMEAggregateEmptyComponent",
+        "EmptyAggregateVMEComponent",
+        "VMEAggregateVMEComponent",
+        "EmptyPropertyEmptyComponent",
+        "VMEPropertyEmptyComponent",
+        "EmptyPropertyVMEComponent",
+        "VMEPropertyVMEComponent",
+        "VMETransientEmptyComponent",
+        "VMETransientVMEComponent",
+    };
+    for (const QString &test : components) {
         // For these cases, we first test that the component instance keeps the components
         // referenced, and then that the instantiated object keeps the components referenced
         for (int i = 1; i <= 2; ++i) {
@@ -902,7 +903,7 @@ void tst_qqmlengine::qtqmlModule()
     QFETCH(QString, expectedError);
     QFETCH(QStringList, expectedWarnings);
 
-    foreach (const QString &w, expectedWarnings)
+    for (const QString &w : std::as_const(expectedWarnings))
         QTest::ignoreMessage(QtWarningMsg, qPrintable(w));
 
     QQmlEngine e;
