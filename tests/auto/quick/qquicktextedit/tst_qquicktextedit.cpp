@@ -715,9 +715,9 @@ void tst_qquicktextedit::lineCount_data()
 
 void tst_qquicktextedit::lineCount()
 {
-    QFETCH(QStringList, texts);
+    QFETCH(const QStringList, texts);
 
-    foreach (const QString& text, texts) {
+    for (const QString& text : texts) {
         QQmlComponent component(&engine);
         component.setData("import QtQuick 2.0\nTextEdit { }", QUrl());
 
