@@ -14,6 +14,9 @@ Window {
     Rectangle {
         anchors.fill: parent
 
+        Behavior on opacity {
+        }
+
         ListView {
             width: parent.width
             model: {

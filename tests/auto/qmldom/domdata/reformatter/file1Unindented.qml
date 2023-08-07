@@ -14,6 +14,8 @@ property var arrTrailingComma: [1,2,3,]
 Rectangle {
 anchors.fill: parent
 
+Behavior on opacity {}
+
 ListView {
 width: parent.width
 model: {
