@@ -17,8 +17,6 @@ T.DialogButtonBox {
     padding: 6
     alignment: Qt.AlignRight
 
-    readonly property bool __notCustomizable: true
-
     delegate: Button { }
 
     contentItem: ListView {
@@ -28,8 +26,6 @@ T.DialogButtonBox {
         orientation: ListView.Horizontal
         boundsBehavior: Flickable.StopAtBounds
         snapMode: ListView.SnapToItem
-
-        readonly property bool __ignoreNotCustomizable: true
     }
 
     background: Rectangle {
@@ -40,7 +36,5 @@ T.DialogButtonBox {
         height: parent.height - 2
         color: control.palette.window
         radius: 2
-
-        readonly property bool __ignoreNotCustomizable: true
     }
 }
