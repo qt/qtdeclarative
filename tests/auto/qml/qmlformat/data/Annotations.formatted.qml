@@ -91,7 +91,7 @@ Item {
         @BindingAnn {
             bType: 4
         }
-        Animation on val  {
+        Animation on val {
             duration: 34
         }
     }
