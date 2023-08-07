@@ -1269,6 +1269,8 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     This attached property is true if this delegate is the current item; otherwise false.
 
     It is attached to each instance of the delegate.
+
+    \snippet qml/gridview/gridview.qml isCurrentItem
 */
 
 /*!
@@ -1277,8 +1279,6 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
     It is attached to each instance of the delegate and also to the header, the footer
     and the highlight delegates.
-
-    \snippet qml/gridview/gridview.qml isCurrentItem
 */
 
 /*!
