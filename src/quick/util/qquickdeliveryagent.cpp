@@ -1873,11 +1873,36 @@ void QQuickDeliveryAgentPrivate::deliverPointerEvent(QPointerEvent *event)
     lastUngrabbed = nullptr;
 }
 
-// check if item or any of its child items contain the point, or if any pointer handler "wants" the point
+/*! \internal
+    Returns a list of all items that are spatially relevant to receive \a event
+    occurring at \a point, starting with \a item and recursively checking all
+    the children.
+    \list
+        \li If an item has pointer handlers, call
+        QQuickPointerHandler::wantsEventPoint()
+        on every handler to decide whether the item is eligible.
+        \li Otherwise, if \a checkMouseButtons is \c true, it means we are
+        finding targets for a mouse event, so no item for which
+        acceptedMouseButtons() is NoButton will be added.
+        \li Otherwise, if \a checkAcceptsTouch is \c true, it means we are
+        finding targets for a touch event, so either acceptTouchEvents() must
+        return true \e or it must accept a synthesized mouse event. I.e. if
+        acceptTouchEvents() returns false, it gets added only if
+        acceptedMouseButtons() is true.
+        \li If QQuickItem::clip() is \c true \e and the \a point is outside of
+        QQuickItem::clipRect(), its children are also omitted. (We stop the
+        recursion, because any clipped-off portions of children under \a point
+        are invisible.)
+        \li Ignore any item in a subscene that "belongs to" a different
+        DeliveryAgent. (In current practice, this only happens in 2D scenes in
+        Qt Quick 3D.)
+    \endlist
+
+    The list returned from this function is the list of items that will be
+    "visited" when delivering any event for which QPointerEvent::isBeginEvent()
+    is \c true.
+*/
 // FIXME: should this be iterative instead of recursive?
-// If checkMouseButtons is true, it means we are finding targets for a mouse event, so no item for which acceptedMouseButtons() is NoButton will be added.
-// If checkAcceptsTouch is true, it means we are finding targets for a touch event, so either acceptTouchEvents() must return true OR
-// it must accept a synth. mouse event, thus if acceptTouchEvents() returns false but acceptedMouseButtons() is true, gets added; if not, it doesn't.
 QVector<QQuickItem *> QQuickDeliveryAgentPrivate::pointerTargets(QQuickItem *item, const QPointerEvent *event, const QEventPoint &point,
                                                           bool checkMouseButtons, bool checkAcceptsTouch) const
 {
