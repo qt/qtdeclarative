@@ -71,6 +71,7 @@ public:
     void setModelImpl(const QVariant &newModel) override;
     void syncModel() override;
     void syncSyncView() override;
+    QAbstractItemModel *selectionSourceModel() override;
 
 protected:
     QHeaderDataProxyModel m_headerDataProxyModel;

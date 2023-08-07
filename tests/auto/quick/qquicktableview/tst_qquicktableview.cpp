@@ -4394,7 +4394,7 @@ void tst_QQuickTableView::warnOnWrongModelInSelectionModel()
     selectionModel.setModel(&model2);
 
     // And change currentIndex. This will produce a warning.
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*model differs.*"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*TableView.selectionModel.model.*"));
     selectionModel.setCurrentIndex(model2.index(0, 0), QItemSelectionModel::NoUpdate);
 }
 
