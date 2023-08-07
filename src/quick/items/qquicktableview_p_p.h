@@ -519,6 +519,7 @@ public:
     virtual void syncModel();
     virtual void syncSyncView();
     virtual void syncPositionView();
+    virtual QAbstractItemModel *selectionSourceModel();
     inline void syncRebuildOptions();
 
     void connectToModel();
@@ -548,7 +549,6 @@ public:
     void selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected);
     void updateSelectedOnAllDelegateItems();
     void setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select);
-    void syncSourceModelInSelectionModel();
 
     bool currentInSelectionModel(const QPoint &cell) const;
     void currentChangedInSelectionModel(const QModelIndex &current, const QModelIndex &previous);
