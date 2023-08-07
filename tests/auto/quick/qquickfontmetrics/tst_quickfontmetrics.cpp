@@ -30,10 +30,10 @@ tst_QuickFontMetrics::tst_QuickFontMetrics()
 
 void tst_QuickFontMetrics::properties()
 {
-    QStringList families = QFontDatabase::families().mid(0, 10);
+    const QStringList families = QFontDatabase::families().mid(0, 10);
     QQuickFontMetrics metrics;
 
-    foreach (const QString &family, families) {
+    for (const QString &family : families) {
         QFont font(family);
         QFontMetricsF expected(font);
 

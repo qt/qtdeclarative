@@ -161,7 +161,7 @@ private slots:
 
     void testPathSplit()
     {
-        QList<Path> paths({Path(),
+        const QList<Path> paths({Path(),
             Path::Root(PathRoot::Env).field(u"pippo").key(u"pluto").index(4),
             Path::Root(PathRoot::Env).field(u"pippo").key(u"pluto"),
             Path::Root(PathRoot::Env).field(u"pippo"),
@@ -175,7 +175,7 @@ private slots:
             Path::Index(4),
             Path::Key(u"zz")
             });
-        foreach (Path p, paths) {
+        for (Path p : paths) {
             Source s = p.split();
             QCOMPARE(p, s.pathToSource.path(s.pathFromSource));
             if (!s.pathFromSource)
