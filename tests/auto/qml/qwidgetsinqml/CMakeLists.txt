@@ -21,6 +21,7 @@ qt_internal_add_test(tst_qwidgetsinqml
         Qt::GuiPrivate
         Qt::Qml
         Qt::Widgets
+    TESTDATA "dummy_imports.qml"
 )
 
 ## Scopes:
