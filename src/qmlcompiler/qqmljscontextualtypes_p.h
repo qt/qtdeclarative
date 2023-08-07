@@ -78,10 +78,7 @@ private:
     QHash<QString, ImportedScope<QQmlJSScope::ConstPtr>> m_types;
     CompileContext m_context;
 
-    // For resolving enums
-    QQmlJSScope::ConstPtr m_intType;
-
-           // For resolving sequence types
+    // For resolving sequence types
     QQmlJSScope::ConstPtr m_arrayType;
 };
 }
