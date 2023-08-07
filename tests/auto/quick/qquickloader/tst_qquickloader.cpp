@@ -1,8 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include <qtest.h>
 
 #include <QSignalSpy>
@@ -708,7 +706,7 @@ void tst_QQuickLoader::initialPropertyValues()
 
     ThreadedTestHTTPServer server(dataDirectory());
 
-    foreach (const QString &warning, expectedWarnings)
+    for (const QString &warning : std::as_const(expectedWarnings))
         QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning.toLatin1().constData()));
 
     QQmlEngine engine;
@@ -767,7 +765,7 @@ void tst_QQuickLoader::initialPropertyValuesError()
     QFETCH(QUrl, qmlFile);
     QFETCH(QStringList, expectedWarnings);
 
-    foreach (const QString &warning, expectedWarnings)
+    for (const QString &warning : std::as_const(expectedWarnings))
         QTest::ignoreMessage(QtWarningMsg, warning.toUtf8().constData());
 
     QQmlEngine engine;
@@ -922,7 +920,7 @@ void tst_QQuickLoader::asynchronous()
     QQuickLoader *loader = root->findChild<QQuickLoader*>("loader");
     QVERIFY(loader);
 
-    foreach (const QString &warning, expectedWarnings)
+    for (const QString &warning : std::as_const(expectedWarnings))
         QTest::ignoreMessage(QtWarningMsg, warning.toUtf8().constData());
 
     QVERIFY(!loader->item());

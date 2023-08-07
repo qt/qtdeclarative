@@ -1,8 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include <qtest.h>
 #include <QSignalSpy>
 #include <private/qquickitem_p.h>
@@ -146,15 +144,16 @@ void tst_qquickanchors::basicAnchorsRTL()
     qApp->processEvents();
 
     QQuickItem* rootItem = qobject_cast<QQuickItem*>(view->rootObject());
-    foreach (QObject *child, rootItem->children()) {
+    const QObjectList children = rootItem->children();
+    for (QObject *child : children) {
         bool mirrored = QQuickItemPrivate::get(qobject_cast<QQuickItem*>(child))->anchors()->mirrored();
         QCOMPARE(mirrored, false);
     }
 
-    foreach (QObject *child, rootItem->children())
+    for (QObject *child : children)
         mirrorAnchors(qobject_cast<QQuickItem*>(child));
 
-    foreach (QObject *child, rootItem->children()) {
+    for (QObject *child : children) {
         bool mirrored = QQuickItemPrivate::get(qobject_cast<QQuickItem*>(child))->anchors()->mirrored();
         QCOMPARE(mirrored, true);
     }
@@ -276,7 +275,8 @@ void tst_qquickanchors::illegalSets_data()
         << "Rectangle { id: rect; Rectangle { anchors.left: rect.left; anchors.right: rect.right; anchors.horizontalCenter: rect.horizontalCenter } }"
         << "<Unknown File>:2:23: QML Rectangle: Cannot specify left, right, and horizontalCenter anchors at the same time.";
 
-    foreach (const QString &side, QStringList() << "left" << "right") {
+    const QStringList leftRight = {"left", "right"};
+    for (const QString &side : leftRight) {
         QTest::newRow("H - anchor to V")
             << QString("Rectangle { Rectangle { anchors.%1: parent.top } }").arg(side)
             << "<Unknown File>:2:13: QML Rectangle: Cannot anchor a horizontal edge to a vertical edge.";
@@ -299,7 +299,8 @@ void tst_qquickanchors::illegalSets_data()
         << "Rectangle { Text { id: text1; text: \"Hello\" } Text { anchors.baseline: text1.baseline; anchors.top: text1.top; } }"
         << "<Unknown File>:2:47: QML Text: Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors.";
 
-    foreach (const QString &side, QStringList() << "top" << "bottom" << "baseline") {
+    const QStringList topBottomBaseline = {"top", "bottom", "baseline"};
+    for (const QString &side : topBottomBaseline) {
 
         QTest::newRow("V - anchor to H")
             << QString("Rectangle { Rectangle { anchors.%1: parent.left } }").arg(side)

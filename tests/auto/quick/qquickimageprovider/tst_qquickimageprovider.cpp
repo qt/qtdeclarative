@@ -1,8 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include <qtest.h>
 #include <QtTest/QtTest>
 #include <QtQml/qqmlengine.h>
@@ -425,21 +423,19 @@ void tst_qquickimageprovider::threadTest()
     QObject *obj = component.create();
     //MUST not deadlock
     QVERIFY(obj != nullptr);
-    QList<QQuickImage *> images = obj->findChildren<QQuickImage *>();
+    const QList<QQuickImage *> images = obj->findChildren<QQuickImage *>();
     QCOMPARE(images.size(), 4);
     QTest::qWait(100);
-    foreach (QQuickImage *img, images) {
+    for (QQuickImage *img : images)
         QCOMPARE(img->status(), QQuickImage::Loading);
-    }
     {
         QMutexLocker lock(&provider->mutex);
         provider->ok = true;
         provider->cond.wakeAll();
     }
     QTest::qWait(250);
-    foreach (QQuickImage *img, images) {
+    for (QQuickImage *img : images)
         QTRY_COMPARE(img->status(), QQuickImage::Ready);
-    }
 }
 
 class TestImageResponseRunner : public QObject, public QRunnable {
@@ -544,21 +540,19 @@ void tst_qquickimageprovider::asyncTextureTest()
     QObject *obj = component.create();
     //MUST not deadlock
     QVERIFY(obj != nullptr);
-    QList<QQuickImage *> images = obj->findChildren<QQuickImage *>();
+    const QList<QQuickImage *> images = obj->findChildren<QQuickImage *>();
     QCOMPARE(images.size(), 4);
 
     QTRY_COMPARE(provider->pool.activeThreadCount(), 4);
-    foreach (QQuickImage *img, images) {
+    for (QQuickImage *img : images)
         QTRY_COMPARE(img->status(), QQuickImage::Loading);
-    }
     {
         QMutexLocker lock(&provider->lock);
         provider->ok = true;
         provider->condition.wakeAll();
     }
-    foreach (QQuickImage *img, images) {
+    for (QQuickImage *img : images)
         QTRY_COMPARE(img->status(), QQuickImage::Ready);
-    }
 }
 
 class InstantAsyncImageResponse : public QQuickImageResponse

@@ -1,8 +1,6 @@
 // Copyright (C) 2018 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
@@ -62,7 +60,7 @@ public:
 
     struct Branch {
         Branch(Branch *parent = nullptr) : parent(parent) {}
-        ~Branch() { foreach (const Node &child, children) delete child.branch; }
+        ~Branch() { for (const Node &child : std::as_const(children)) delete child.branch; }
         int indexOf(Branch *branch) const {
             for (int i = 0; i < children.size(); ++i) {
                 if (children.at(i).branch == branch)
@@ -78,7 +76,7 @@ public:
     SingleRoleModel(const QStringList &list = QStringList(), const QByteArray &role = "name", QObject *parent = nullptr)
         : QAbstractItemModel(parent), m_role(role)
     {
-        foreach (const QString &string, list)
+        for (const QString &string : list)
             trunk.children.append(Node(string));
     }
     ~SingleRoleModel() {}
@@ -185,7 +183,7 @@ public:
 
     QStringList getList() const {
         QStringList list;
-        foreach (const Node &node, trunk.children)
+        for (const Node &node : trunk.children)
             list.append(node.display);
         return list;
     }
@@ -193,13 +191,13 @@ public:
     void setList(const QStringList &l) {
         if (trunk.children.size() > 0) {
             beginRemoveRows(QModelIndex(), 0, trunk.children.size() - 1);
-            foreach (const Node &child, trunk.children) delete child.branch;
+            for (const Node &child : std::as_const(trunk.children)) delete child.branch;
             trunk.children.clear();
             endRemoveRows();
         }
         if (l.size() > 0) {
             beginInsertRows(QModelIndex(), 0, l.size() -1);
-            foreach (const QString &string, l)
+            for (const QString &string : l)
                 trunk.children.append(Node(string));
             endInsertRows();
         }
@@ -2262,7 +2260,7 @@ void tst_qquickvisualdatamodel::onChanged()
 
     evaluate<void>(object.data(), expression);
 
-    foreach (const QString &test, tests) {
+    for (const QString &test : std::as_const(tests)) {
         bool passed = evaluate<bool>(object.data(), test);
         if (!passed)
             qWarning() << test;

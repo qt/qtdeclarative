@@ -1,8 +1,6 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include <qtest.h>
 #include <QLibraryInfo>
 #include <QDir>
@@ -109,21 +107,19 @@ void tst_examples::namingConvention(const QDir &d)
             return;
     }
 
-    QStringList files = d.entryList(QStringList() << QLatin1String("*.qml"),
-                                    QDir::Files);
+    const QStringList files = d.entryList(QStringList() << QLatin1String("*.qml"), QDir::Files);
 
     bool seenQml = !files.isEmpty();
     bool seenLowercase = false;
 
-    foreach (const QString &file, files) {
+    for (const QString &file : files) {
         if (file.at(0).isLower())
             seenLowercase = true;
     }
 
     if (!seenQml) {
-        QStringList dirs = d.entryList(QDir::Dirs | QDir::NoDotAndDotDot |
-                QDir::NoSymLinks);
-        foreach (const QString &dir, dirs) {
+        const QStringList dirs = d.entryList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks);
+        for (const QString &dir : dirs) {
             QDir sub = d;
             sub.cd(dir);
             namingConvention(sub);
@@ -144,11 +140,12 @@ void tst_examples::namingConvention(const QDir &d)
 
 void tst_examples::namingConvention()
 {
-    QStringList examplesLocations;
-    examplesLocations << QLibraryInfo::path(QLibraryInfo::ExamplesPath) + QLatin1String("/qml");
-    examplesLocations << QLibraryInfo::path(QLibraryInfo::ExamplesPath) + QLatin1String("/quick");
+    const QStringList examplesLocations = {
+        QLibraryInfo::path(QLibraryInfo::ExamplesPath) + QLatin1String("/qml"),
+        QLibraryInfo::path(QLibraryInfo::ExamplesPath) + QLatin1String("/quick")
+    };
 
-    foreach(const QString &examples, examplesLocations) {
+    for (const QString &examples : examplesLocations) {
         QDir d(examples);
         if (d.exists())
             namingConvention(d);
@@ -167,9 +164,8 @@ QStringList tst_examples::findQmlFiles(const QDir &d)
 
     QStringList cppfiles = d.entryList(QStringList() << QLatin1String("*.cpp"), QDir::Files);
     if (cppfiles.isEmpty()) {
-        QStringList files = d.entryList(QStringList() << QLatin1String("*.qml"),
-                                        QDir::Files);
-        foreach (const QString &file, files) {
+        const QStringList files = d.entryList(QStringList() << QLatin1String("*.qml"), QDir::Files);
+        for (const QString &file : files) {
             if (file.at(0).isLower()) {
                 bool superContinue = false;
                 for (int ii = 0; ii < excludedFiles.size(); ++ii) {
@@ -187,9 +183,8 @@ QStringList tst_examples::findQmlFiles(const QDir &d)
     }
 
 
-    QStringList dirs = d.entryList(QDir::Dirs | QDir::NoDotAndDotDot |
-                                   QDir::NoSymLinks);
-    foreach (const QString &dir, dirs) {
+    const QStringList dirs = d.entryList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks);
+    for (const QString &dir : dirs) {
         QDir sub = d;
         sub.cd(dir);
         rv << findQmlFiles(sub);

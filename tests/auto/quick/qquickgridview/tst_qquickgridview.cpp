@@ -1,8 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
-
 #include <QtTest/QtTest>
 #include <QtCore/qstringlistmodel.h>
 #include <QtQuick/qquickview.h>
@@ -2717,14 +2715,14 @@ void tst_QQuickGridView::mirroring()
     QCOMPARE(gridviewA->layoutDirection(), gridviewA->effectiveLayoutDirection());
 
     // LTR != RTL
-    foreach (const QString objectName, objectNames)
+    for (const QString &objectName : std::as_const(objectNames))
         QVERIFY(findItem<QQuickItem>(gridviewA, objectName)->x() != findItem<QQuickItem>(gridviewB, objectName)->x());
 
     gridviewA->setProperty("layoutDirection", Qt::LeftToRight);
     gridviewB->setProperty("layoutDirection", Qt::LeftToRight);
 
     // LTR == LTR
-    foreach (const QString objectName, objectNames)
+    for (const QString &objectName : std::as_const(objectNames))
         QCOMPARE(findItem<QQuickItem>(gridviewA, objectName)->x(), findItem<QQuickItem>(gridviewB, objectName)->x());
 
     QCOMPARE(gridviewB->layoutDirection(), gridviewB->effectiveLayoutDirection());
@@ -2732,25 +2730,25 @@ void tst_QQuickGridView::mirroring()
     QVERIFY(gridviewB->layoutDirection() != gridviewB->effectiveLayoutDirection());
 
     // LTR != LTR+mirror
-    foreach (const QString objectName, objectNames)
+    for (const QString &objectName : std::as_const(objectNames))
         QVERIFY(findItem<QQuickItem>(gridviewA, objectName)->x() != findItem<QQuickItem>(gridviewB, objectName)->x());
 
     gridviewA->setProperty("layoutDirection", Qt::RightToLeft);
 
     // RTL == LTR+mirror
-    foreach (const QString objectName, objectNames)
+    for (const QString &objectName : std::as_const(objectNames))
         QCOMPARE(findItem<QQuickItem>(gridviewA, objectName)->x(), findItem<QQuickItem>(gridviewB, objectName)->x());
 
     gridviewB->setProperty("layoutDirection", Qt::RightToLeft);
 
     // RTL != RTL+mirror
-    foreach (const QString objectName, objectNames)
+    for (const QString &objectName : std::as_const(objectNames))
         QVERIFY(findItem<QQuickItem>(gridviewA, objectName)->x() != findItem<QQuickItem>(gridviewB, objectName)->x());
 
     gridviewA->setProperty("layoutDirection", Qt::LeftToRight);
 
     // LTR == RTL+mirror
-    foreach (const QString objectName, objectNames)
+    for (const QString &objectName : std::as_const(objectNames))
         QCOMPARE(findItem<QQuickItem>(gridviewA, objectName)->x(), findItem<QQuickItem>(gridviewB, objectName)->x());
 
     delete windowA;
@@ -5792,7 +5790,8 @@ void tst_QQuickGridView::multipleDisplaced()
     QTRY_VERIFY(gridview->property("displaceTransitionsDone").toBool());
 
     QVariantMap transitionsStarted = gridview->property("displaceTransitionsStarted").toMap();
-    foreach (const QString &name, transitionsStarted.keys()) {
+    const QStringList keys = transitionsStarted.keys();
+    for (const QString &name : keys) {
         QVERIFY2(transitionsStarted[name] == 1,
                  QTest::toString(QString("%1 was displaced %2 times").arg(name).arg(transitionsStarted[name].toInt())));
     }

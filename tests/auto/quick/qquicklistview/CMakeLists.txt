@@ -26,8 +26,6 @@ qt_internal_add_test(tst_qquicklistview
         randomsortmodel.cpp randomsortmodel.h
         reusemodel.h
         tst_qquicklistview.cpp
-    NO_PCH_SOURCES
-        tst_qquicklistview.cpp # undef QT_NO_FOREACH
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui
