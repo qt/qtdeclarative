@@ -129,6 +129,46 @@ TestCase {
     }
 
     Component {
+        id: headerviewComp
+        HorizontalHeaderView {
+            id: headerView
+            clip: true
+            anchors.fill: parent
+
+            model: TableModel {
+                TableModelColumn { display: "c1" }
+                TableModelColumn { display: "c2" }
+                TableModelColumn { display: "c3" }
+                TableModelColumn { display: "c4" }
+                TableModelColumn { display: "c5" }
+                TableModelColumn { display: "c6" }
+                TableModelColumn { display: "c7" }
+                TableModelColumn { display: "c8" }
+                rows: [
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" }
+                ]
+            }
+
+            delegate: Rectangle {
+                required property bool selected
+                implicitWidth: cellWidth
+                implicitHeight: cellHeight
+                color: selected ? "lightblue" : "gray"
+                Text { text: row + "," + column }
+            }
+
+            selectionModel: ItemSelectionModel { }
+
+            property alias selectionRectangle: selectionRectangle
+            SelectionRectangle {
+                id: selectionRectangle
+                target: headerView
+            }
+        }
+
+    }
+
+    Component {
         id: signalSpy
         SignalSpy { }
     }
@@ -195,13 +235,15 @@ TestCase {
 
     function test_drag_data() {
         return [
-            { tag: "resize enabled", resizeEnabled: true },
-            { tag: "resize disabled", resizeEnabled: false },
+            { tag: "resize enabled (tableview)", resizeEnabled: true, viewComp: tableviewComp },
+            { tag: "resize disabled (tableview)", resizeEnabled: false, viewComp: tableviewComp },
+            { tag: "resize enabled (headerview)", resizeEnabled: true, viewComp: headerviewComp },
+            { tag: "resize disabled (headerview)", resizeEnabled: false, viewComp: headerviewComp },
         ]
     }
 
     function test_drag(data) {
-        let tableView = createTemporaryObject(tableviewComp, testCase)
+        let tableView = createTemporaryObject(data.viewComp, testCase)
         verify(tableView)
         let selectionRectangle = tableView.selectionRectangle
         verify(selectionRectangle)
@@ -222,8 +264,8 @@ TestCase {
         mouseDrag(tableView, 1, 1, (cellWidth * 2) - 2, 1, Qt.LeftButton)
         verify(tableView.selectionModel.hasSelection)
         compare(tableView.selectionModel.selectedIndexes.length, 2)
-        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
-        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 1)))
+        verify(tableView.selectionModel.isSelected(tableView.selectionModel.model.index(0, 0)))
+        verify(tableView.selectionModel.isSelected(tableView.selectionModel.model.index(0, 1)))
 
         compare(activeSpy.count, 1)
         compare(draggingSpy.count, 2)

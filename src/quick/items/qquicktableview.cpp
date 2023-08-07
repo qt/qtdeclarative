@@ -4022,12 +4022,37 @@ void QQuickTableViewPrivate::selectionChangedInSelectionModel(const QItemSelecti
 
 void QQuickTableViewPrivate::setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select)
 {
+    if (modelIndex.isValid() && modelIndex.model() != selectionSourceModel()) {
+        qmlWarning(q_func())
+                << "Cannot select cells: TableView.selectionModel.model is not "
+                << "compatible with the model displayed in the view";
+        return;
+    }
+
     const int cellIndex = modelIndexToCellIndex(modelIndex);
     if (!loadedItems.contains(cellIndex))
         return;
     const QPoint cell = cellAtModelIndex(cellIndex);
     QQuickItem *item = loadedTableItem(cell)->item;
     setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(select), cellIndex, item, false);
+}
+
+QAbstractItemModel *QQuickTableViewPrivate::selectionSourceModel()
+{
+    // TableView.selectionModel.model should always be the same as TableView.model.
+    // After all, when the user selects an index in the view, the same index should
+    // be selected in the selection model. We therefore set the model in
+    // selectionModel.model automatically.
+    // But it's not always the case that the model shown in the view is the same
+    // as TableView.model. Subclasses with a proxy model will instead show the
+    // proxy model (e.g TreeView and HeaderView). And then it's no longer clear if
+    // we should use the proxy model or the TableView.model as source model in
+    // TableView.selectionModel. It's up to the subclass. But in short, if the proxy
+    // model shares the same model items as TableView.model (just with e.g a filter
+    // applied, or sorted etc), then TableView.model should be used. If the proxy
+    // model is a completely different model that shares no model items with
+    // TableView.model, then the proxy model should be used (e.g HeaderView).
+    return qaim(modelImpl());
 }
 
 QAbstractItemModel *QQuickTableViewPrivate::qaim(QVariant modelAsVariant) const
@@ -4057,11 +4082,12 @@ void QQuickTableViewPrivate::updateSelectedOnAllDelegateItems()
 
 void QQuickTableViewPrivate::currentChangedInSelectionModel(const QModelIndex &current, const QModelIndex &previous)
 {
-    // Warn if the source models are not the same
-    const QAbstractItemModel *qaimInSelection = selectionModel ? selectionModel->model() : nullptr;
-    const QAbstractItemModel *qaimInTableView = qaim(modelImpl());
-    if (qaimInSelection && qaimInSelection != qaimInTableView)
-        qmlWarning(q_func()) << "TableView.selectionModel.model differs from TableView.model";
+    if (current.isValid() && current.model() != selectionSourceModel()) {
+        qmlWarning(q_func())
+                << "Cannot change current index: TableView.selectionModel.model is not "
+                << "compatible with the model displayed in the view";
+        return;
+    }
 
     updateCurrentRowAndColumn();
     setCurrentOnDelegateItem(previous, false);
@@ -5376,9 +5402,8 @@ void QQuickTableView::setModel(const QVariant &newModel)
 
     closeEditor();
     d->setModelImpl(newModel);
-
     if (d->selectionModel)
-        d->selectionModel->setModel(d->qaim(newModel));
+        d->selectionModel->setModel(d->selectionSourceModel());
 }
 
 QQmlComponent *QQuickTableView::delegate() const
@@ -5545,7 +5570,7 @@ void QQuickTableView::setSelectionModel(QItemSelectionModel *selectionModel)
     d->selectionModel = selectionModel;
 
     if (d->selectionModel) {
-        d->selectionModel->setModel(d->qaim(d->modelImpl()));
+        d->selectionModel->setModel(d->selectionSourceModel());
         QQuickTableViewPrivate::connect(d->selectionModel, &QItemSelectionModel::selectionChanged,
                                         d, &QQuickTableViewPrivate::selectionChangedInSelectionModel);
         QQuickTableViewPrivate::connect(d->selectionModel, &QItemSelectionModel::currentChanged,
