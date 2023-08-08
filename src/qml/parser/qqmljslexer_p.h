@@ -102,17 +102,6 @@ public:
 public:
     Lexer(Engine *engine, LexMode lexMode = LexMode::WholeCode);
 
-    int parseModeFlags() const {
-        int flags = 0;
-        if (qmlMode())
-            flags |= QmlMode|StaticIsKeyword;
-        if (yieldIsKeyWord())
-            flags |= YieldIsKeyword;
-        if (_staticIsKeyword)
-            flags |= StaticIsKeyword;
-        return flags;
-    }
-
     bool qmlMode() const;
     bool yieldIsKeyWord() const { return _state.generatorLevel != 0; }
     void setStaticIsKeyword(bool b) { _staticIsKeyword = b; }
@@ -144,8 +133,6 @@ public:
     Error errorCode() const;
     QString errorMessage() const;
 
-    bool prevTerminator() const;
-    bool followsClosingBrace() const;
     bool canInsertAutomaticSemicolon(int token) const;
 
     enum ParenthesesState {
@@ -245,6 +232,9 @@ protected:
     static int classify(const QChar *s, int n, int parseModeFlags);
 
 private:
+    int parseModeFlags() const;
+    bool prevTerminator() const;
+    bool followsClosingBrace() const;
     inline void scanChar();
     inline QChar peekChar();
     int scanToken();

@@ -1802,6 +1802,17 @@ void Lexer::setState(const Lexer::State &state)
     _state = state;
 }
 
+int Lexer::parseModeFlags() const {
+    int flags = 0;
+    if (qmlMode())
+        flags |= QmlMode|StaticIsKeyword;
+    if (yieldIsKeyWord())
+        flags |= YieldIsKeyword;
+    if (_staticIsKeyword)
+        flags |= StaticIsKeyword;
+    return flags;
+}
+
 namespace QQmlJS {
 QDebug operator<<(QDebug dbg, const Lexer::State &s)
 {
