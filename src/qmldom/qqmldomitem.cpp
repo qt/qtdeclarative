@@ -1234,6 +1234,120 @@ void DomItem::writeOutPost(OutWriter &ow)
     ow.itemEnd(*this);
 }
 
+DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(DomItem &original, DomItem &reformatted,
+                                                            OutWriter &ow,
+                                                            WriteOutChecks extraChecks)
+{
+    QStringList dumped;
+    auto maybeDump = [&ow, extraChecks, &dumped](DomItem &obj, QStringView objName) {
+        QString objDumpPath;
+        if (extraChecks & WriteOutCheck::DumpOnFailure) {
+            objDumpPath = QDir(QDir::tempPath())
+                                  .filePath(objName.toString()
+                                            + QFileInfo(ow.lineWriter.fileName()).baseName()
+                                            + QLatin1String(".dump.json"));
+            obj.dump(objDumpPath);
+            dumped.append(objDumpPath);
+        }
+        return objDumpPath;
+    };
+    auto dumpedDumper = [&dumped](Sink s) {
+        if (dumped.isEmpty())
+            return;
+        s(u"\ndump: ");
+        for (auto dumpPath : dumped) {
+            s(u" ");
+            sinkEscaped(s, dumpPath);
+        }
+    };
+    auto compare = [&maybeDump, &dumpedDumper, this](DomItem &obj1, QStringView obj1Name,
+                                                     DomItem &obj2, QStringView obj2Name,
+                                                     const FieldFilter &filter) {
+        const auto diffList = domCompareStrList(obj1, obj2, filter, DomCompareStrList::AllDiffs);
+        if (!diffList.isEmpty()) {
+            maybeDump(obj1, obj1Name);
+            maybeDump(obj2, obj2Name);
+            qCWarning(writeOutLog).noquote().nospace()
+                    << obj2Name << " writeOut of " << this->canonicalFilePath() << " has changes:\n"
+                    << diffList.join(QString()) << dumpedDumper;
+            return false;
+        }
+        return true;
+    };
+    auto checkStability = [&maybeDump, &dumpedDumper, &dumped, &ow,
+                           this](QString expected, DomItem &obj, QStringView objName) {
+        LineWriter lw2([](QStringView) {}, ow.lineWriter.fileName(), ow.lineWriter.options());
+        OutWriter ow2(lw2);
+        ow2.indentNextlines = true;
+        obj.writeOut(ow2);
+        ow2.eof();
+        if (ow2.writtenStr != expected) {
+            DomItem fObj = this->fileObject();
+            maybeDump(fObj, u"initial");
+            maybeDump(obj, objName);
+            qCWarning(writeOutLog).noquote().nospace()
+                    << objName << " non stable writeOut of " << this->canonicalFilePath() << ":"
+                    << lineDiff(ow2.writtenStr, expected, 2) << dumpedDumper;
+            dumped.clear();
+            return false;
+        }
+        return true;
+    };
+
+    if ((extraChecks & WriteOutCheck::UpdatedDomCompare)
+        && !compare(original, u"initial", reformatted, u"reformatted",
+                    FieldFilter::noLocationFilter()))
+        return WriteOutCheckResult::Failed;
+
+    if (extraChecks & WriteOutCheck::UpdatedDomStable) {
+        checkStability(ow.writtenStr, reformatted, u"reformatted");
+    }
+
+    if (extraChecks
+        & (WriteOutCheck::Reparse | WriteOutCheck::ReparseCompare | WriteOutCheck::ReparseStable)) {
+        DomItem newEnv = environment().makeCopy().item();
+        std::shared_ptr<DomEnvironment> newEnvPtr = newEnv.ownerAs<DomEnvironment>();
+        if (!newEnvPtr)
+            return WriteOutCheckResult::Failed;
+
+        auto newFilePtr = std::make_shared<QmlFile>(canonicalFilePath(), ow.writtenStr);
+        if (!newFilePtr)
+            return WriteOutCheckResult::Failed;
+        newEnvPtr->addQmlFile(newFilePtr, AddOption::Overwrite);
+
+        DomItem newFile = newEnv.copy(newFilePtr, Path());
+        if (newFilePtr->isValid()) {
+            if (extraChecks & (WriteOutCheck::ReparseCompare | WriteOutCheck::ReparseStable)) {
+                MutableDomItem newFileMutable(newFile);
+                createDom(newFileMutable);
+                if ((extraChecks & WriteOutCheck::ReparseCompare)
+                    && !compare(reformatted, u"reformatted", newFile, u"reparsed",
+                                FieldFilter::compareNoCommentsFilter()))
+                    return WriteOutCheckResult::Failed;
+                if ((extraChecks & WriteOutCheck::ReparseStable))
+                    checkStability(ow.writtenStr, newFile, u"reparsed");
+            }
+        } else {
+            const auto iterateErrors = [&newFile](Sink s) {
+                newFile.iterateErrors(
+                        [s](DomItem, ErrorMessage msg) {
+                            s(u"\n  ");
+                            msg.dump(s);
+                            return true;
+                        },
+                        true);
+                s(u"\n"); // extra empty line at the end...
+            };
+            qCWarning(writeOutLog).noquote().nospace()
+                    << "writeOut of " << canonicalFilePath()
+                    << " created invalid code:\n----------\n"
+                    << ow.writtenStr << "\n----------" << iterateErrors;
+            return WriteOutCheckResult::Failed;
+        }
+    }
+    return WriteOutCheckResult::Success;
+}
+
 DomItem DomItem::writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks)
 {
     ow.indentNextlines = true;
@@ -1241,110 +1355,10 @@ DomItem DomItem::writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks)
     ow.eof();
     DomItem fObj = fileObject();
     DomItem copy = ow.updatedFile(fObj);
-    if (extraChecks & WriteOutCheck::All) {
-        QStringList dumped;
-        auto maybeDump = [&ow, extraChecks, &dumped](DomItem &obj, QStringView objName) {
-            QString objDumpPath;
-            if (extraChecks & WriteOutCheck::DumpOnFailure) {
-                objDumpPath = QDir(QDir::tempPath())
-                                      .filePath(objName.toString()
-                                                + QFileInfo(ow.lineWriter.fileName()).baseName()
-                                                + QLatin1String(".dump.json"));
-                obj.dump(objDumpPath);
-                dumped.append(objDumpPath);
-            }
-            return objDumpPath;
-        };
-        auto dumpedDumper = [&dumped](Sink s) {
-            if (dumped.isEmpty())
-                return;
-            s(u"\ndump: ");
-            for (auto dumpPath : dumped) {
-                s(u" ");
-                sinkEscaped(s, dumpPath);
-            }
-        };
-        auto compare = [&maybeDump, &dumpedDumper, this](DomItem &obj1, QStringView obj1Name,
-                                                         DomItem &obj2, QStringView obj2Name,
-                                                         const FieldFilter &filter) {
-            if (!domCompareStrList(obj1, obj2, filter).isEmpty()) {
-                maybeDump(obj1, obj1Name);
-                maybeDump(obj2, obj2Name);
-                qCWarning(writeOutLog).noquote().nospace()
-                        << obj2Name << " writeOut of " << this->canonicalFilePath()
-                        << " has changes:\n"
-                        << domCompareStrList(obj1, obj2, filter, DomCompareStrList::AllDiffs)
-                                   .join(QString())
-                        << dumpedDumper;
-                return false;
-            }
-            return true;
-        };
-        auto checkStability = [&maybeDump, &dumpedDumper, &dumped, &ow,
-                               this](QString expected, DomItem &obj, QStringView objName) {
-            LineWriter lw2([](QStringView) {}, ow.lineWriter.fileName(), ow.lineWriter.options());
-            OutWriter ow2(lw2);
-            ow2.indentNextlines = true;
-            obj.writeOut(ow2);
-            ow2.eof();
-            if (ow2.writtenStr != expected) {
-                DomItem fObj = this->fileObject();
-                maybeDump(fObj, u"initial");
-                maybeDump(obj, objName);
-                qCWarning(writeOutLog).noquote().nospace()
-                        << objName << " non stable writeOut of " << this->canonicalFilePath() << ":"
-                        << lineDiff(ow2.writtenStr, expected, 2) << dumpedDumper;
-                dumped.clear();
-                return false;
-            }
-            return true;
-        };
-        if ((extraChecks & WriteOutCheck::UpdatedDomCompare)
-            && !compare(fObj, u"initial", copy, u"reformatted", FieldFilter::noLocationFilter()))
-            return DomItem();
-        if (extraChecks & WriteOutCheck::UpdatedDomStable)
-            checkStability(ow.writtenStr, copy, u"reformatted");
-        if (extraChecks
-            & (WriteOutCheck::Reparse | WriteOutCheck::ReparseCompare
-               | WriteOutCheck::ReparseStable)) {
-            DomItem newEnv = environment().makeCopy().item();
-            if (std::shared_ptr<DomEnvironment> newEnvPtr = newEnv.ownerAs<DomEnvironment>()) {
-                auto newFilePtr = std::make_shared<QmlFile>(
-                        canonicalFilePath(), ow.writtenStr);
-                newEnvPtr->addQmlFile(newFilePtr, AddOption::Overwrite);
-                DomItem newFile = newEnv.copy(newFilePtr, Path());
-                if (newFilePtr->isValid()) {
-                    if (extraChecks
-                        & (WriteOutCheck::ReparseCompare | WriteOutCheck::ReparseStable)) {
-                        MutableDomItem newFileMutable(newFile);
-                        createDom(newFileMutable);
-                        if ((extraChecks & WriteOutCheck::ReparseCompare)
-                            && !compare(copy, u"reformatted", newFile, u"reparsed",
-                                        FieldFilter::compareNoCommentsFilter()))
-                            return DomItem();
-                        if ((extraChecks & WriteOutCheck::ReparseStable))
-                            checkStability(ow.writtenStr, newFile, u"reparsed");
-                    }
-                } else {
-                    qCWarning(writeOutLog).noquote().nospace()
-                            << "writeOut of " << canonicalFilePath()
-                            << " created invalid code:\n----------\n"
-                            << ow.writtenStr << "\n----------" << [&newFile](Sink s) {
-                                   newFile.iterateErrors(
-                                           [s](DomItem, ErrorMessage msg) {
-                                               s(u"\n  ");
-                                               msg.dump(s);
-                                               return true;
-                                           },
-                                           true);
-                                   s(u"\n"); // extra empty line at the end...
-                               };
-                    return DomItem();
-                }
-            }
-        }
-    }
-    return copy;
+    WriteOutCheckResult result = WriteOutCheckResult::Success;
+    if (extraChecks & WriteOutCheck::All)
+        result = performWriteOutChecks(fObj, copy, ow, extraChecks);
+    return result == WriteOutCheckResult::Success ? copy : DomItem{};
 }
 
 DomItem DomItem::writeOut(QString path, int nBackups, const LineWriterOptions &options,

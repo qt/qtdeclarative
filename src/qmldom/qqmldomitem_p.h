@@ -1278,6 +1278,8 @@ public:
     }
 
 private:
+    enum class WriteOutCheckResult { Success, Failed };
+    WriteOutCheckResult performWriteOutChecks(DomItem &, DomItem &, OutWriter &, WriteOutChecks);
     DomBase const *base();
     template <typename T, typename std::enable_if<std::is_base_of<DomBase, T>::value, bool>::type = true>
     T *mutableAs() {
