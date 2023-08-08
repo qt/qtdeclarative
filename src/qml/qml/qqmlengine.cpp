@@ -529,7 +529,7 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
         // Disconnect the notifiers now - during object destruction this would be too late, since
         // the disconnect call wouldn't be able to call disconnectNotify(), as it isn't possible to
         // get the metaobject anymore.
-        d->disconnectNotifiers();
+        d->disconnectNotifiers(QQmlData::DeleteNotifyList::No);
     }
 }
 
@@ -590,7 +590,10 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
     // QQmlEngine to emit signals from a different thread.  These signals are then automatically
     // marshalled back onto the QObject's thread and handled by QML from there.  This is tested
     // by the qqmlecmascript::threadSignal() autotest.
-    if (!ddata->notifyList)
+
+    // Relaxed semantics here. If we're on a different thread we might schedule a useless event,
+    // but that should be rare.
+    if (!ddata->notifyList.loadRelaxed())
         return;
 
     auto objectThreadData = QObjectPrivate::get(object)->threadData.loadRelaxed();
@@ -1447,49 +1450,73 @@ void QQmlData::releaseDeferredData()
 
 void QQmlData::addNotify(int index, QQmlNotifierEndpoint *endpoint)
 {
-    if (!notifyList) {
-        notifyList = (NotifyList *)malloc(sizeof(NotifyList));
-        notifyList->connectionMask = 0;
-        notifyList->maximumTodoIndex = 0;
-        notifyList->notifiesSize = 0;
-        notifyList->todo = nullptr;
-        notifyList->notifies = nullptr;
+    // Can only happen on "home" thread. We apply relaxed semantics when loading the atomics.
+
+    NotifyList *list = notifyList.loadRelaxed();
+
+    if (!list) {
+        list = new NotifyList;
+        // We don't really care when this change takes effect on other threads. The notifyList can
+        // only become non-null once in the life time of a QQmlData. It becomes null again when the
+        // underlying QObject is deleted. At that point any interaction with the QQmlData is UB
+        // anyway. So, for all intents and purposese, the list becomes non-null once and then stays
+        // non-null "forever". We can apply relaxed semantics.
+        notifyList.storeRelaxed(list);
     }
 
     Q_ASSERT(!endpoint->isConnected());
 
     index = qMin(index, 0xFFFF - 1);
-    notifyList->connectionMask |= (1ULL << quint64(index % 64));
 
-    if (index < notifyList->notifiesSize) {
+    // Likewise, we don't really care _when_ the change in the connectionMask is propagated to other
+    // threads. Cross-thread event ordering is inherently nondeterministic. Therefore, when querying
+    // the conenctionMask in the presence of concurrent modification, any result is correct.
+    list->connectionMask.storeRelaxed(
+            list->connectionMask.loadRelaxed() | (1ULL << quint64(index % 64)));
 
-        endpoint->next = notifyList->notifies[index];
+    if (index < list->notifiesSize) {
+        endpoint->next = list->notifies[index];
         if (endpoint->next) endpoint->next->prev = &endpoint->next;
-        endpoint->prev = &notifyList->notifies[index];
-        notifyList->notifies[index] = endpoint;
-
+        endpoint->prev = &list->notifies[index];
+        list->notifies[index] = endpoint;
     } else {
-        notifyList->maximumTodoIndex = qMax(int(notifyList->maximumTodoIndex), index);
+        list->maximumTodoIndex = qMax(int(list->maximumTodoIndex), index);
 
-        endpoint->next = notifyList->todo;
+        endpoint->next = list->todo;
         if (endpoint->next) endpoint->next->prev = &endpoint->next;
-        endpoint->prev = &notifyList->todo;
-        notifyList->todo = endpoint;
+        endpoint->prev = &list->todo;
+        list->todo = endpoint;
     }
 }
 
-void QQmlData::disconnectNotifiers()
+void QQmlData::disconnectNotifiers(QQmlData::DeleteNotifyList doDelete)
 {
-    if (notifyList) {
-        while (notifyList->todo)
-            notifyList->todo->disconnect();
-        for (int ii = 0; ii < notifyList->notifiesSize; ++ii) {
-            while (QQmlNotifierEndpoint *ep = notifyList->notifies[ii])
+    // Can only happen on "home" thread. We apply relaxed semantics when loading  the atomics.
+    if (NotifyList *list = notifyList.loadRelaxed()) {
+        while (QQmlNotifierEndpoint *todo = list->todo)
+            todo->disconnect();
+        for (int ii = 0; ii < list->notifiesSize; ++ii) {
+            while (QQmlNotifierEndpoint *ep = list->notifies[ii])
                 ep->disconnect();
         }
-        free(notifyList->notifies);
-        free(notifyList);
-        notifyList = nullptr;
+        free(list->notifies);
+
+        if (doDelete == DeleteNotifyList::Yes) {
+            // We can only get here from QQmlData::destroyed(), and that can only come from the
+            // the QObject dtor. If you're still sending signals at that point you have UB already
+            // without any threads. Therefore, it's enough to apply relaxed semantics.
+            notifyList.storeRelaxed(nullptr);
+            delete list;
+        } else {
+            // We can use relaxed semantics here. The worst thing that can happen is that some
+            // signal is falsely reported as connected. Signal connectedness across threads
+            // is not quite deterministic anyway.
+            list->connectionMask.storeRelaxed(0);
+            list->maximumTodoIndex = 0;
+            list->notifiesSize = 0;
+            list->notifies = nullptr;
+
+        }
     }
 }
 
@@ -1573,7 +1600,7 @@ void QQmlData::destroyed(QObject *object)
         guard->objectDestroyed(object);
     }
 
-    disconnectNotifiers();
+    disconnectNotifiers(DeleteNotifyList::Yes);
 
     if (extendedData)
         delete extendedData;
