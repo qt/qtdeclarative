@@ -75,7 +75,7 @@ void QQmlDocumentFormatting::process(RequestPointerArgument request)
     QLspSpecification::TextEdit formattedText;
     LineWriter lw([&formattedText](QStringView s) {formattedText.newText += s.toUtf8(); }, QString(), options);
     OutWriter ow(lw);
-    MutableDomItem result = file.writeOutForFile(ow, WriteOutCheck::Default);
+    MutableDomItem result = file.writeOutForFile(ow, WriteOutCheck::None);
     ow.flush();
 
     const auto &code = qmlFile->code();
