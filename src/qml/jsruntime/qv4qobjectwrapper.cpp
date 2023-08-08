@@ -1388,7 +1388,7 @@ void QObjectWrapper::destroyObject(bool lastCall)
                 }
                 // This object is notionally destroyed now
                 ddata->isQueuedForDeletion = true;
-                ddata->disconnectNotifiers();
+                ddata->disconnectNotifiers(QQmlData::DeleteNotifyList::No);
                 if (lastCall)
                     delete o;
                 else
