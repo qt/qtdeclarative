@@ -52,6 +52,8 @@ private slots:
     void documentFormatting();
     void renameUsages_data();
     void renameUsages();
+    void linting_data();
+    void linting();
 
 private:
     QProcess m_server;

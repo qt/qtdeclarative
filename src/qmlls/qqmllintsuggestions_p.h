@@ -18,6 +18,7 @@
 #include "qlanguageserver_p.h"
 #include "qqmlcodemodel_p.h"
 
+#include <chrono>
 #include <optional>
 
 QT_BEGIN_NAMESPACE
@@ -25,7 +26,7 @@ namespace QmlLsp {
 struct LastLintUpdate
 {
     std::optional<int> version;
-    std::optional<QDateTime> invalidUpdatesSince;
+    std::optional<std::chrono::steady_clock::time_point> invalidUpdatesSince;
 };
 
 class QmlLintSuggestions : public QLanguageServerModule
@@ -42,6 +43,25 @@ public Q_SLOTS:
                            QLspSpecification::InitializeResult &) override;
 
 private:
+    struct VersionedDocument
+    {
+        std::optional<int> version;
+        QQmlJS::Dom::DomItem item;
+    };
+    struct TryAgainLater
+    {
+        std::chrono::milliseconds time;
+    };
+    struct NoDocumentAvailable
+    {
+    };
+
+    using VersionToDiagnose = std::variant<VersionedDocument, TryAgainLater, NoDocumentAvailable>;
+
+    VersionToDiagnose chooseVersionToDiagnose(const QByteArray &url);
+    VersionToDiagnose chooseVersionToDiagnoseHelper(const QByteArray &url);
+    void diagnoseHelper(const QByteArray &uri, const VersionedDocument &document);
+
     QMutex m_mutex;
     QHash<QByteArray, LastLintUpdate> m_lastUpdate;
     QLanguageServer *m_server;

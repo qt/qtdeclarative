@@ -4,6 +4,7 @@
 #include "tst_qmlls_modules.h"
 #include "QtQmlLS/private/qqmllsutils_p.h"
 #include <optional>
+#include <string>
 #include <type_traits>
 #include <variant>
 
@@ -49,11 +50,16 @@ tst_qmlls_modules::tst_qmlls_modules()
     // allow overriding of the executable, to be able to use a qmlEcho script (as described in
     // qmllanguageservertool.cpp)
     m_qmllsPath = qEnvironmentVariable("QMLLS", m_qmllsPath);
+    // qputenv("QT_LOGGING_RULES",
+    // "qt.languageserver.codemodel.debug=true;qt.languageserver.codemodel.warning=true"); // helps
+    // when using EditingRecorder
     m_server.setProgram(m_qmllsPath);
     // m_server.setArguments(QStringList() << u"-v"_s << u"-w"_s << u"8"_s);
+    /*
     m_protocol.registerPublishDiagnosticsNotificationHandler([](const QByteArray &, auto) {
         // ignoring qmlint notifications
     });
+    */
 }
 
 void tst_qmlls_modules::initTestCase()
@@ -86,7 +92,7 @@ void tst_qmlls_modules::initTestCase()
     for (const QString &filePath :
          QStringList({ u"completions/Yyy.qml"_s, u"completions/fromBuildDir.qml"_s,
                        u"completions/SomeBase.qml"_s, u"findUsages/jsIdentifierUsages.qml"_s,
-                       u"findDefinition/jsDefinitions.qml"_s })) {
+                       u"findDefinition/jsDefinitions.qml"_s, u"linting/SimpleItem.qml"_s })) {
         QFile file(testFile(filePath));
         QVERIFY(file.open(QIODevice::ReadOnly));
         DidOpenTextDocumentParams oParams;
@@ -1010,6 +1016,142 @@ void tst_qmlls_modules::renameUsages()
                 QVERIFY2(false, "error computing the completion");
             });
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 3000);
+}
+
+struct EditingRecorder
+{
+    QList<DidChangeTextDocumentParams> actions;
+    QHash<int, QString> diagnosticsPerFileVersions;
+
+    /*!
+    All the indexes passed here must start at 1!
+
+    If you want to make sure that your own written changes make sense, use
+    \code
+    qputenv("QT_LOGGING_RULES",
+    "qt.languageserver.codemodel.debug=true;qt.languageserver.codemodel.warning=true"); \endcode
+    before starting qmlls. It will print the differences between the different versions, and helps
+    when some indices are off.
+    */
+    void changeText(int startLine, int startCharacter, int endLine, int endCharacter,
+                    QString newText)
+    {
+        // The LSP starts at 0
+        QVERIFY(startLine > 0);
+        QVERIFY(startCharacter > 0);
+        QVERIFY(endLine > 0);
+        QVERIFY(endCharacter > 0);
+
+        --startLine;
+        --startCharacter;
+        --endLine;
+        --endCharacter;
+
+        DidChangeTextDocumentParams params;
+        params.textDocument =
+                VersionedTextDocumentIdentifier{ { lastFileUri.toUtf8() }, ++version };
+        params.contentChanges.append({
+                Range{ Position{ startLine, startCharacter }, Position{ endLine, endCharacter } },
+                std::nullopt, // deprecated range length
+                newText.toUtf8(),
+        });
+        actions.append(params);
+    }
+
+    void setFile(const QString &uri) { lastFileUri = uri; }
+
+    void setCurrentExpectedDiagnostic(const QString &diagnostic)
+    {
+        Q_ASSERT(diagnosticsPerFileVersions.find(version) == diagnosticsPerFileVersions.end());
+        diagnosticsPerFileVersions[version] = diagnostic;
+    }
+
+    QString lastFileUri;
+    int version = 0;
+};
+
+static constexpr int characterAfter(const char *line)
+{
+    return std::char_traits<char>::length(line) + 1;
+}
+
+static EditingRecorder propertyTypoScenario(const QString &uri)
+{
+    EditingRecorder propertyTypo;
+    propertyTypo.setFile(uri);
+
+    propertyTypo.changeText(5, 1, 5, 1, u"    property int t"_s);
+
+    // replace property by propertyt and expect a complaint from the parser
+    propertyTypo.changeText(5, characterAfter("    property"), 5, characterAfter("    property"),
+                            u"t"_s);
+    propertyTypo.setCurrentExpectedDiagnostic(u"Expected token"_s);
+
+    // replace propertyt back to property and expect no complaint from the parser
+    propertyTypo.changeText(5, characterAfter("    property"), 5, characterAfter("    propertyt"),
+                            u""_s);
+
+    // replace property by propertyt and expect a complaint from the parser
+    propertyTypo.changeText(5, characterAfter("    property"), 5, characterAfter("    property"),
+                            u"t"_s);
+    propertyTypo.setCurrentExpectedDiagnostic(u"Expected token"_s);
+
+    // now, simulate some slow typing and expect the previous warning to not disappear
+    const QString data = u"Item {}\n"_s;
+    for (int i = 0; i < data.size(); ++i) {
+        propertyTypo.changeText(6, i + 1, 6, i + 1, data[i]);
+        propertyTypo.setCurrentExpectedDiagnostic(u"Expected token"_s);
+    }
+
+    // replace propertyt back to property and expect no complaint from the parser
+    propertyTypo.changeText(5, characterAfter("    property"), 5, characterAfter("    propertyt"),
+                            u""_s);
+
+    return propertyTypo;
+}
+
+void tst_qmlls_modules::linting_data()
+{
+    QTest::addColumn<EditingRecorder>("recorder");
+
+    QTest::addRow("property-typo")
+            << propertyTypoScenario(testFileUrl(u"linting/SimpleItem.qml"_s).toEncoded());
+}
+
+void tst_qmlls_modules::linting()
+{
+    QFETCH(EditingRecorder, recorder);
+    bool diagnosticOk = false;
+    m_protocol.registerPublishDiagnosticsNotificationHandler(
+            [&recorder, &diagnosticOk](const QByteArray &, const PublishDiagnosticsParams &p) {
+                if (p.uri != recorder.lastFileUri || !p.version)
+                    return;
+                auto expectedMessage = recorder.diagnosticsPerFileVersions.find(*p.version);
+                if (expectedMessage == recorder.diagnosticsPerFileVersions.end()) {
+                    if constexpr (enable_debug_output) {
+                        if (p.diagnostics.size() > 0)
+                            qDebug() << "Did not expect message" << p.diagnostics.front().message;
+                    }
+
+                    QVERIFY(p.diagnostics.size() == 0);
+                    diagnosticOk = true;
+                    return;
+                }
+                QVERIFY(p.diagnostics.size() > 0);
+                if constexpr (enable_debug_output) {
+                    if (!p.diagnostics.front().message.contains(expectedMessage->toUtf8())) {
+                        qDebug() << "expected a message with" << *expectedMessage << "but got"
+                                 << p.diagnostics.front().message;
+                    }
+                }
+                QVERIFY(p.diagnostics.front().message.contains(expectedMessage->toUtf8()));
+                diagnosticOk = true;
+            });
+    for (const auto &action : recorder.actions) {
+        m_protocol.notifyDidChangeTextDocument(action);
+        QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 5000);
+        diagnosticOk = false;
+    }
 }
 
 QTEST_MAIN(tst_qmlls_modules)
