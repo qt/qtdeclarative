@@ -2670,4 +2670,18 @@ private:
     QList<QObject *> m_guests;
 };
 
+class ByteArrayReceiver : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    QList<QByteArray> byteArrays;
+
+    Q_INVOKABLE void byteArrayTest(const QByteArray &ba)
+    {
+        byteArrays.push_back(ba);
+    }
+};
+
 #endif // TESTTYPES_H
