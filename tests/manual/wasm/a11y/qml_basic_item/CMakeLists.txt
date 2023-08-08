@@ -32,6 +32,14 @@ set(qmake_immediate_resource_files
     "AboutDialog.qml"
 )
 
+add_custom_command(
+    TARGET qml_basic_item PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_CURRENT_SOURCE_DIR}/basic_items.html
+            ${CMAKE_CURRENT_BINARY_DIR}/basic_items.html
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/basic_items.html
+)
+
 set(CMAKE_CXX_FLAGS_DEBUG "-g0 -O3")
 qt6_import_qml_plugins(qml_basic_item INCLUDE Qt::QtQuick2Plugin)
 qt_internal_add_resource (qml_basic_item "qmake_immediate"
