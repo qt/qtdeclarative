@@ -126,7 +126,7 @@ public:
     static QLspSpecification::Range qmlLocationToLspLocation(const QString &code,
                                                              QQmlJS::SourceLocation qmlLocation);
     static QQmlJS::Dom::DomItem baseObject(QQmlJS::Dom::DomItem qmlObject);
-    static QQmlJS::Dom::DomItem findTypeDefinitionOf(QQmlJS::Dom::DomItem item);
+    static std::optional<QQmlLSUtilsLocation> findTypeDefinitionOf(QQmlJS::Dom::DomItem item);
     static std::optional<QQmlLSUtilsLocation> findDefinitionOf(QQmlJS::Dom::DomItem item);
     static QList<QQmlLSUtilsLocation> findUsagesOf(QQmlJS::Dom::DomItem item);
 

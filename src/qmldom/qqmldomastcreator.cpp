@@ -1111,6 +1111,7 @@ bool QQmlDomAstCreator::visit(AST::UiInlineComponent *el)
     Path p = qmlFilePtr->addComponent(QmlComponent(cName), AddOption::KeepExisting, &compPtr);
     pushEl(p, *compPtr, el);
     FileLocations::addRegion(nodeStack.last().fileLocations, u"component", el->componentToken);
+    FileLocations::addRegion(nodeStack.last().fileLocations, u"identifier", el->identifierToken);
     loadAnnotations(el);
     return true;
 }

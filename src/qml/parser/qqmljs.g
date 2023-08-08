@@ -1494,6 +1494,7 @@ UiObjectMember: T_COMPONENT T_IDENTIFIER T_COLON UiObjectDefinition;
         }
         auto inlineComponent = new (pool) AST::UiInlineComponent(stringRef(2), sym(4).UiObjectDefinition);
         inlineComponent->componentToken = loc(1);
+        inlineComponent->identifierToken = loc(2);
         sym(1).Node = inlineComponent;
     } break;
 ./

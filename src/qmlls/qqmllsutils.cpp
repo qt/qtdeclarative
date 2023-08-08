@@ -289,29 +289,48 @@ DomItem QQmlLSUtils::baseObject(DomItem object)
     return base;
 }
 
+static std::optional<QQmlLSUtilsLocation> locationFromDomItem(DomItem &item,
+                                                              const QString &regionName = QString())
+{
+    QQmlLSUtilsLocation location;
+    location.filename = item.canonicalFilePath();
+
+    auto tree = FileLocations::treeOf(item);
+    // tree is null for C++ defined types, for example
+    if (!tree)
+        return {};
+
+    auto info = tree->info();
+    if (!regionName.isEmpty() && info.regions.contains(regionName)) {
+        location.sourceLocation = info.regions[regionName];
+    } else {
+        location.sourceLocation = info.fullRegion;
+    }
+    return location;
+}
+
 /*!
    \internal
-   \brief Extracts the QML object type of an \l DomItem.
+   \brief Returns the location of the type definition pointed by object.
 
-   For a \c PropertyDefinition, return the type of the property.
-   For a \c Binding, return the bound item's type if an QmlObject is bound, and otherwise the type
-   of the property.
-   For a \c QmlObject, do nothing and return it.
-   For an \c Id, return the object to
-   which the id resolves.
-   For a \c Methodparameter, return the type of the parameter. =
-   Otherwise, return an empty item.
+   For a \c PropertyDefinition, return the location of the type of the property.
+   For a \c Binding, return the bound item's type location if an QmlObject is bound, and otherwise
+   the type of the property.
+   For a \c QmlObject, return the location of the QmlObject's base.
+   For an \c Id, return the location of the object to which the id resolves.
+   For a \c Methodparameter, return the location of the type of the parameter.
+   Otherwise, return std::nullopt.
  */
-DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
+std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(DomItem object)
 {
-    DomItem result;
+    DomItem typeDefinition;
 
     switch (object.internalKind()) {
     case QQmlJS::Dom::DomType::QmlComponent:
-        result = object.field(Fields::objects).index(0);
+        typeDefinition = object.field(Fields::objects).index(0);
         break;
     case QQmlJS::Dom::DomType::QmlObject:
-        result = baseObject(object);
+        typeDefinition = baseObject(object);
         break;
     case QQmlJS::Dom::DomType::Binding: {
         auto binding = object.as<Binding>();
@@ -319,7 +338,8 @@ DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
 
         // try to grab the type from the bound object
         if (binding->valueKind() == BindingValueKind::Object) {
-            result = baseObject(object.field(Fields::value));
+            typeDefinition = baseObject(object.field(Fields::value));
+            break;
         } else {
             // use the type of the property it is bound on for scriptexpression etc.
             DomItem propertyDefinition;
@@ -334,17 +354,18 @@ DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
                         return true;
                     },
                     LookupType::PropertyDef);
-            result = propertyDefinition.field(Fields::type).proceedToScope();
+            typeDefinition = propertyDefinition.field(Fields::type).proceedToScope();
+            break;
         }
-        break;
+        Q_UNREACHABLE();
     }
     case QQmlJS::Dom::DomType::Id:
-        result = object.field(Fields::referredObject).proceedToScope();
+        typeDefinition = object.field(Fields::referredObject).proceedToScope();
         break;
     case QQmlJS::Dom::DomType::PropertyDefinition:
     case QQmlJS::Dom::DomType::MethodParameter:
     case QQmlJS::Dom::DomType::MethodInfo:
-        result = object.field(Fields::type).proceedToScope();
+        typeDefinition = object.field(Fields::type).proceedToScope();
         break;
     case QQmlJS::Dom::DomType::ScriptIdentifierExpression: {
         if (object.directParent().internalKind() == DomType::ScriptType) {
@@ -353,26 +374,34 @@ DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
                                     FilterUpOptions::ReturnOuter);
 
             const QString name = type.field(Fields::typeName).value().toString();
-            result = object.path(Paths::lookupTypePath(name));
+            typeDefinition = object.path(Paths::lookupTypePath(name));
             break;
         }
+
         auto scope = QQmlLSUtils::resolveExpressionType(
                 object, QQmlLSUtilsResolveOptions::ResolveActualTypeForFieldMemberExpression);
         if (!scope)
             return {};
 
-        return QQmlLSUtils::sourceLocationToDomItem(object.containingFile(),
-                                                    scope->semanticScope->sourceLocation());
+        typeDefinition = QQmlLSUtils::sourceLocationToDomItem(
+                object.containingFile(), scope->semanticScope->sourceLocation());
+
+        switch (scope->type) {
+        case QmlObjectIdIdentifier:
+            break;
+        default:
+            typeDefinition = typeDefinition.component();
+        }
+
+        return locationFromDomItem(typeDefinition, u"identifier"_s);
     }
-    case QQmlJS::Dom::DomType::Empty:
-        break;
     default:
         qDebug() << "QQmlLSUtils::findTypeDefinitionOf: Found unimplemented Type"
                  << object.internalKindStr();
-        result = {};
+        return {};
     }
 
-    return result;
+    return locationFromDomItem(typeDefinition);
 }
 
 static DomItem findJSIdentifierDefinition(DomItem item, const QString &name)

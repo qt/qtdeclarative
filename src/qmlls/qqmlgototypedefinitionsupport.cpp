@@ -48,28 +48,14 @@ void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
 
     QQmlLSUtilsItemLocation &front = std::get<QList<QQmlLSUtilsItemLocation>>(itemsFound).front();
 
-    QQmlJS::Dom::DomItem base = QQmlLSUtils::findTypeDefinitionOf(front.domItem);
-    if (base.domKind() == QQmlJS::Dom::DomKind::Empty) {
-        qWarning() << u"Could not obtain the type definition, was the type correctly resolved?"_s
-                   << u"\n Obtained type was:\n"_s << base.toString()
-                   << u"\nbut selected item was:\n"
-                   << front.domItem.toString();
-        return;
-    }
+    auto base = QQmlLSUtils::findTypeDefinitionOf(front.domItem);
 
-    if (base.domKind() == QQmlJS::Dom::DomKind::Empty) {
+    if (!base) {
         qDebug() << u"Could not obtain the base from the item"_s;
         return;
     }
-    auto locationInfo = QQmlJS::Dom::FileLocations::fileLocationsOf(base);
-    if (!locationInfo) {
-        qDebug()
-                << u"Could not obtain the text location from the base item, was it correctly resolved?\nBase was "_s
-                << base.toString();
-        return;
-    }
 
-    QQmlJS::Dom::DomItem fileOfBase = base.containingFile();
+    QQmlJS::Dom::DomItem fileOfBase = front.domItem.goToFile(base->filename);
     auto fileOfBasePtr = fileOfBase.ownerAs<QQmlJS::Dom::QmlFile>();
     if (!fileOfBasePtr) {
         qDebug() << u"Could not obtain the file of the base."_s;
@@ -80,7 +66,7 @@ void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
     l.uri = QUrl::fromLocalFile(fileOfBasePtr->canonicalFilePath()).toEncoded();
 
     const QString qmlCode = fileOfBasePtr->code();
-    l.range = QQmlLSUtils::qmlLocationToLspLocation(qmlCode, locationInfo->fullRegion);
+    l.range = QQmlLSUtils::qmlLocationToLspLocation(qmlCode, base->sourceLocation);
 
     results.append(l);
 }

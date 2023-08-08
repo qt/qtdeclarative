@@ -3538,6 +3538,7 @@ public:
     QStringView name;
     UiObjectDefinition* component;
     SourceLocation componentToken;
+    SourceLocation identifierToken;
 };
 
 class QML_PARSER_EXPORT UiSourceElement: public UiObjectMember

@@ -299,7 +299,6 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation_data()
     // item to be checked against
     QTest::addColumn<int>("resultIndex");
     QTest::addColumn<int>("expectedItemsCount");
-    QTest::addColumn<QString>("expectedTypeName");
     QTest::addColumn<QString>("expectedFilePath");
     // set to -1 when unchanged from above line and character. 0-based.
     QTest::addColumn<int>("expectedLine");
@@ -309,80 +308,74 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation_data()
     const QString TypeQml = testFile(u"Type.qml"_s);
     // pass this as file when no result is expected, e.g. for type definition of "var".
 
-    QTest::addRow("onCProperty") << file1Qml << 11 << 16 << firstResult << outOfOne << "file1.C"
-                                 << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("onCProperty") << file1Qml << 11 << 16 << firstResult << outOfOne << file1Qml << 7
+                                 << positionAfterOneIndent;
 
-    QTest::addRow("onCProperty2") << file1Qml << 28 << 37 << firstResult << outOfOne << "file1.C"
-                                  << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("onCProperty2") << file1Qml << 28 << 37 << firstResult << outOfOne << file1Qml
+                                  << 7 << positionAfterOneIndent;
 
-    QTest::addRow("onCProperty3") << file1Qml << 28 << 35 << firstResult << outOfOne << "file1.C"
-                                  << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("onCProperty3") << file1Qml << 28 << 35 << firstResult << outOfOne << file1Qml
+                                  << 7 << positionAfterOneIndent;
 
-    QTest::addRow("onCBinding") << file1Qml << 46 << 8 << firstResult << outOfOne << "file1.C"
-                                << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("onCBinding") << file1Qml << 46 << 8 << firstResult << outOfOne << file1Qml << 7
+                                << positionAfterOneIndent;
 
-    QTest::addRow("onDefaultBinding")
-            << file1Qml << 16 << positionAfterOneIndent << firstResult << outOfOne << "file1.C"
-            << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("onDefaultBinding") << file1Qml << 16 << positionAfterOneIndent << firstResult
+                                      << outOfOne << file1Qml << 7 << positionAfterOneIndent;
 
     QTest::addRow("onDefaultBindingId")
-            << file1Qml << 16 << 28 << firstResult << outOfOne << "firstD" << file1Qml << 16 << 20;
+            << file1Qml << 16 << 28 << firstResult << outOfOne << file1Qml << 16 << 20;
 
-    QTest::addRow("findIntProperty") << file1Qml << 9 << 18 << firstResult << outOfOne << u"int"_s
-                                     << file1Qml << -1 << positionAfterOneIndent;
-
-    QTest::addRow("colorBinding") << file1Qml << 39 << 8 << firstResult << outOfOne << u"QColor"_s
-                                  << file1Qml << -1 << positionAfterOneIndent;
+    QTest::addRow("findIntProperty") << file1Qml << 9 << 18 << firstResult << outOfOne << file1Qml
+                                     << -1 << positionAfterOneIndent;
+    QTest::addRow("colorBinding") << file1Qml << 39 << 8 << firstResult << outOfOne << file1Qml
+                                  << -1 << positionAfterOneIndent;
 
     // check what happens between items (it should not crash)
 
-    QTest::addRow("onWhitespaceBeforeC") << file1Qml << 16 << 1 << firstResult << outOfOne
-                                         << noResultExpected << noResultExpected << -1 << -1;
+    QTest::addRow("onWhitespaceBeforeC")
+            << file1Qml << 16 << 1 << firstResult << outOfOne << noResultExpected << -1 << -1;
 
-    QTest::addRow("onWhitespaceAfterC") << file1Qml << 17 << 23 << firstResult << outOfOne
-                                        << noResultExpected << noResultExpected << -1 << -1;
+    QTest::addRow("onWhitespaceAfterC")
+            << file1Qml << 17 << 23 << firstResult << outOfOne << noResultExpected << -1 << -1;
 
-    QTest::addRow("onWhitespaceBetweenCAndD") << file1Qml << 17 << 24 << firstResult << outOfOne
-                                              << noResultExpected << noResultExpected << -1 << -1;
+    QTest::addRow("onWhitespaceBetweenCAndD")
+            << file1Qml << 17 << 24 << firstResult << outOfOne << noResultExpected << -1 << -1;
 
-    QTest::addRow("ic") << file1Qml << 15 << 15 << firstResult << outOfOne << u"icid"_s << file1Qml
-                        << -1 << 18;
-    QTest::addRow("icBase") << file1Qml << 15 << 20 << firstResult << outOfOne << u"QQuickItem"_s
+    QTest::addRow("ic") << file1Qml << 15 << 15 << firstResult << outOfOne << file1Qml << -1 << 18;
+    QTest::addRow("icBase") << file1Qml << 15 << 20 << firstResult << outOfOne
                             << u"TODO: file location for C++ defined types?"_s << -1 << -1;
-    QTest::addRow("ic3") << file1Qml << 15 << 33 << firstResult << outOfOne << u"icid"_s << file1Qml
-                         << -1 << 18;
+    QTest::addRow("ic3") << file1Qml << 15 << 33 << firstResult << outOfOne << file1Qml << -1 << 18;
 
     // TODO: type definition of function = type definition of return type?
     // if not, this might need fixing:
     // currently, asking the type definition of the "function" keyword returns
     // the type definitin of the return type (when available).
-    QTest::addRow("function-keyword") << file1Qml << 33 << 5 << firstResult << outOfOne
-                                      << u"file1.C"_s << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("function-keyword") << file1Qml << 33 << 5 << firstResult << outOfOne << file1Qml
+                                      << 7 << positionAfterOneIndent;
     QTest::addRow("function-parameter-builtin")
-            << file1Qml << 33 << 20 << firstResult << outOfOne << "a" << file1Qml << -1 << -1;
-    QTest::addRow("function-parameter-item")
-            << file1Qml << 33 << 36 << firstResult << outOfOne << "file1.C" << file1Qml << 7
-            << positionAfterOneIndent;
+            << file1Qml << 33 << 20 << firstResult << outOfOne << file1Qml << -1 << -1;
+    QTest::addRow("function-parameter-item") << file1Qml << 33 << 36 << firstResult << outOfOne
+                                             << file1Qml << 7 << positionAfterOneIndent;
 
-    QTest::addRow("function-return") << file1Qml << 33 << 41 << firstResult << outOfOne << "file1.C"
-                                     << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("function-return") << file1Qml << 33 << 41 << firstResult << outOfOne << file1Qml
+                                     << 7 << positionAfterOneIndent;
 
-    QTest::addRow("void-function") << file1Qml << 36 << 17 << firstResult << outOfOne << "void"
-                                   << noResultExpected << -1 << -1;
+    QTest::addRow("void-function")
+            << file1Qml << 36 << 17 << firstResult << outOfOne << noResultExpected << -1 << -1;
 
-    QTest::addRow("rectangle-property")
-            << file1Qml << 44 << 31 << firstResult << outOfOne << "QQuickRectangle"
-            << "TODO: c++ type location" << -1 << -1;
+    QTest::addRow("rectangle-property") << file1Qml << 44 << 31 << firstResult << outOfOne
+                                        << "TODO: c++ type location" << -1 << -1;
 
     QTest::addRow("functionParameterICUsage")
-            << file1Qml << 34 << 16 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
+            << file1Qml << 34 << 16 << firstResult << outOfOne << file1Qml << 7 << 15;
 
     QTest::addRow("ICBindingUsage")
-            << file1Qml << 47 << 21 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
+            << file1Qml << 47 << 21 << firstResult << outOfOne << file1Qml << 7 << 15;
     QTest::addRow("ICBindingUsage2")
-            << file1Qml << 49 << 11 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
+            << file1Qml << 49 << 11 << firstResult << outOfOne << file1Qml << 7 << 15;
     QTest::addRow("ICBindingUsage3")
-            << file1Qml << 52 << 17 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
+            << file1Qml << 52 << 17 << firstResult << outOfOne << file1Qml << 7 << 15;
 }
 
 void tst_qmlls_utils::findTypeDefinitionFromLocation()
@@ -392,7 +385,6 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
     QFETCH(int, character);
     QFETCH(int, resultIndex);
     QFETCH(int, expectedItemsCount);
-    QFETCH(QString, expectedTypeName);
     QFETCH(QString, expectedFilePath);
     QFETCH(int, expectedLine);
     QFETCH(int, expectedCharacter);
@@ -419,18 +411,14 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
 
     QCOMPARE(locations.size(), expectedItemsCount);
 
-    QQmlJS::Dom::DomItem type = QQmlLSUtils::findTypeDefinitionOf(locations[resultIndex].domItem);
+    auto base = QQmlLSUtils::findTypeDefinitionOf(locations[resultIndex].domItem);
 
     // if expectedFilePath is empty, we probably just want to make sure that it does
     // not crash
     if (expectedFilePath == noResultExpected) {
-        QCOMPARE(type.internalKind(), QQmlJS::Dom::DomType::Empty);
+        QVERIFY(!base);
         return;
     }
-
-    QVERIFY(type);
-
-    QQmlJS::Dom::FileLocations::Tree typeLocationToTest = QQmlJS::Dom::FileLocations::treeOf(type);
 
     QEXPECT_FAIL("findIntProperty", "Builtins not supported yet", Abort);
     QEXPECT_FAIL("function-parameter-builtin", "Base types defined in C++ are not supported yet",
@@ -438,48 +426,24 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
     QEXPECT_FAIL("colorBinding", "Types from C++ bases not supported yet", Abort);
     QEXPECT_FAIL("rectangle-property", "Types from C++ bases not supported yet", Abort);
     QEXPECT_FAIL("icBase", "Base types defined in C++ are not supported yet", Abort);
+    QVERIFY(base);
 
-    auto fileObject = type.containingFile().as<QQmlJS::Dom::QmlFile>();
+    auto fileObject =
+            locations[resultIndex].domItem.goToFile(base->filename).as<QQmlJS::Dom::QmlFile>();
 
     // print some debug message when failing, instead of using QVERIFY2
     // (printing the type every time takes a lot of time).
     if constexpr (enable_debug_output) {
         if (!fileObject)
-            qDebug() << "This has no file: " << type.containingFile() << " for type "
-                     << type.field(QQmlJS::Dom::Fields::type).get().component();
+            qDebug() << "Could not find the file" << base->filename << "in the Dom.";
     }
 
     QVERIFY(fileObject);
+    QCOMPARE(base->filename, expectedFilePath);
     QCOMPARE(fileObject->canonicalFilePath(), expectedFilePath);
 
-    QCOMPARE(typeLocationToTest->info().fullRegion.startLine, quint32(expectedLine));
-    QCOMPARE(typeLocationToTest->info().fullRegion.startColumn, quint32(expectedCharacter));
-
-    if (auto object = type.as<QQmlJS::Dom::QmlObject>()) {
-        const std::vector<QString> except = {
-            "functionParameterICUsage",
-            "ICBindingUsage",
-            "ICBindingUsage2",
-            "ICBindingUsage3",
-        };
-        for (const QString &functionName : except) {
-            QEXPECT_FAIL(
-                    functionName.toStdString().c_str(),
-                    "Types for JS-identifiers point to the type inside inline components instead "
-                    "of the inline component itself",
-                    Continue);
-        }
-        QCOMPARE(object->idStr(), expectedTypeName);
-    } else if (auto exported = type.as<QQmlJS::Dom::Export>()) {
-        QCOMPARE(exported->typeName, expectedTypeName);
-    } else {
-        if constexpr (enable_debug_output) {
-            if (type.name() != expectedTypeName)
-                qDebug() << " has not the unexpected name " << type.name()
-                         << " instead of expected " << expectedTypeName << " in " << type;
-        }
-        QCOMPARE(type.name(), expectedTypeName);
-    }
+    QCOMPARE(base->sourceLocation.startLine, quint32(expectedLine));
+    QCOMPARE(base->sourceLocation.startColumn, quint32(expectedCharacter));
 }
 
 void tst_qmlls_utils::findLocationOfItem_data()
@@ -624,6 +588,9 @@ void tst_qmlls_utils::findBaseObject_data()
 
 void tst_qmlls_utils::findBaseObject()
 {
+    const QByteArray failOnInlineComponentsMessage =
+            "The Dom cannot resolve inline components from the basetype yet.";
+
     QFETCH(QString, filePath);
     QFETCH(int, line);
     QFETCH(int, character);
@@ -650,15 +617,17 @@ void tst_qmlls_utils::findBaseObject()
     }
     QCOMPARE(locations.size(), 1);
 
-    auto type = QQmlLSUtils::findTypeDefinitionOf(locations.front().domItem);
-    auto base = QQmlLSUtils::baseObject(type);
-    QByteArray failOnInlineComponentsMessage =
-            "The Dom cannot resolve inline components from the basetype yet.";
-
+    auto typeLocation = QQmlLSUtils::findTypeDefinitionOf(locations.front().domItem);
     QEXPECT_FAIL("inline-ic", failOnInlineComponentsMessage, Abort);
-    QEXPECT_FAIL("inline-ic-from-id", failOnInlineComponentsMessage, Abort);
     QEXPECT_FAIL("inline-ic2", failOnInlineComponentsMessage, Abort);
     QEXPECT_FAIL("inline-ic2-from-id", failOnInlineComponentsMessage, Abort);
+    QVERIFY(typeLocation);
+    QQmlJS::Dom::DomItem type = QQmlLSUtils::sourceLocationToDomItem(
+            locations.front().domItem.goToFile(typeLocation->filename),
+            typeLocation->sourceLocation);
+    auto base = QQmlLSUtils::baseObject(type);
+
+    QEXPECT_FAIL("inline-ic-from-id", failOnInlineComponentsMessage, Abort);
 
     if constexpr (enable_debug_output) {
         if (!base)
