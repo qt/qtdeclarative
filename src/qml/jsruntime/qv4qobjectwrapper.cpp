@@ -2134,6 +2134,10 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
         else
             qstringPtr = new (&allocData) QString(value.toQStringNoThrow());
         return true;
+    case QMetaType::QByteArray:
+        qbyteArrayPtr = new (&allocData) QByteArray();
+        ExecutionEngine::metaTypeFromJS(value, metaType, qbyteArrayPtr);
+        return true;
     case QMetaType::QObjectStar:
         if (const QObjectWrapper *qobjectWrapper = value.as<QObjectWrapper>()) {
             qobjectPtr = qobjectWrapper->object();

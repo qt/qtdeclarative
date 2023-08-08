@@ -2475,12 +2475,24 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
             *reinterpret_cast<QString*>(data) = value.toQString();
         return true;
     case QMetaType::QByteArray:
-        if (const ArrayBuffer *ab = value.as<ArrayBuffer>())
+        if (const ArrayBuffer *ab = value.as<ArrayBuffer>()) {
             *reinterpret_cast<QByteArray*>(data) = ab->asByteArray();
-        else if (const String *string = value.as<String>())
+        } else if (const String *string = value.as<String>()) {
             *reinterpret_cast<QByteArray*>(data) = string->toQString().toUtf8();
-        else
+        } else if (const ArrayObject *ao = value.as<ArrayObject>()) {
+            // Since QByteArray is sequentially iterable, we have to construct it from a JS Array.
+            QByteArray result;
+            const qint64 length = ao->getLength();
+            result.reserve(length);
+            for (qint64 i = 0; i < length; ++i) {
+                char value = 0;
+                ExecutionEngine::metaTypeFromJS(ao->get(i), QMetaType::fromType<char>(), &value);
+                result.push_back(value);
+            }
+            *reinterpret_cast<QByteArray*>(data) = std::move(result);
+        } else {
             *reinterpret_cast<QByteArray*>(data) = QByteArray();
+        }
         return true;
     case QMetaType::Float:
         *reinterpret_cast<float*>(data) = value.toNumber();

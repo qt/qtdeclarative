@@ -421,6 +421,7 @@ private slots:
     void jitExceptions();
 
     void attachedInCtor();
+    void byteArrayConversion();
 
 private:
     QQmlEngine engine;
@@ -8112,6 +8113,30 @@ void tst_qqmllanguage::attachedInCtor()
     AttachedInCtor *a = qobject_cast<AttachedInCtor *>(o.data());
     QVERIFY(a->attached);
     QCOMPARE(a->attached, qmlAttachedPropertiesObject<AttachedInCtor>(a, false));
+}
+
+void tst_qqmllanguage::byteArrayConversion()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e);
+    c.setData(R"(
+        import Test
+        import QtQml
+        ByteArrayReceiver {
+            Component.onCompleted: {
+                byteArrayTest([1, 2, 3]);
+                byteArrayTest(Array.from('456'));
+            }
+        }
+    )", QUrl());
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    ByteArrayReceiver *receiver = qobject_cast<ByteArrayReceiver *>(o.data());
+    QVERIFY(receiver);
+    QCOMPARE(receiver->byteArrays.length(), 2);
+    QCOMPARE(receiver->byteArrays[0], QByteArray("\1\2\3"));
+    QCOMPARE(receiver->byteArrays[1], QByteArray("\4\5\6"));
 }
 
 QTEST_MAIN(tst_qqmllanguage)
