@@ -34,7 +34,7 @@ void QQuickWindowQmlImpl::setVisible(bool visible)
     Q_D(QQuickWindowQmlImpl);
     d->visible = visible;
     d->visibleExplicitlySet = true;
-    if (d->complete && (!transientParent() || transientParentVisible()))
+    if (d->componentComplete && (!transientParent() || transientParentVisible()))
         QQuickWindow::setVisible(visible);
 }
 
@@ -42,7 +42,7 @@ void QQuickWindowQmlImpl::setVisibility(Visibility visibility)
 {
     Q_D(QQuickWindowQmlImpl);
     d->visibility = visibility;
-    if (d->complete)
+    if (d->componentComplete)
         QQuickWindow::setVisibility(visibility);
 }
 
@@ -54,6 +54,7 @@ QQuickWindowAttached *QQuickWindowQmlImpl::qmlAttachedProperties(QObject *object
 void QQuickWindowQmlImpl::classBegin()
 {
     Q_D(QQuickWindowQmlImpl);
+    d->componentComplete = false;
     QQmlEngine* e = qmlEngine(this);
 
     QQmlEngine::setContextForObject(contentItem(), e->rootContext());
@@ -74,7 +75,8 @@ void QQuickWindowQmlImpl::classBegin()
 void QQuickWindowQmlImpl::componentComplete()
 {
     Q_D(QQuickWindowQmlImpl);
-    d->complete = true;
+    d->componentComplete = true;
+
     QQuickItem *itemParent = qmlobject_cast<QQuickItem *>(QObject::parent());
     const bool transientParentAlreadySet = QQuickWindowPrivate::get(this)->transientParentPropertySet;
     if (!transientParentAlreadySet && itemParent && !itemParent->window()) {
