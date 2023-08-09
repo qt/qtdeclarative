@@ -94,11 +94,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindowPrivate
     Q_DECLARE_PUBLIC(QQuickApplicationWindow)
 
 public:
-    QQuickApplicationWindowPrivate()
-    {
-        complete = true;
-    }
-
     static QQuickApplicationWindowPrivate *get(QQuickApplicationWindow *window)
     {
         return window->d_func();
@@ -168,7 +163,7 @@ static void layoutItem(QQuickItem *item, qreal y, qreal width)
 void QQuickApplicationWindowPrivate::relayout()
 {
     Q_Q(QQuickApplicationWindow);
-    if (!complete || insideRelayout)
+    if (!componentComplete || insideRelayout)
         return;
 
     QScopedValueRollback<bool> guard(insideRelayout, true);
@@ -684,13 +679,13 @@ void QQuickApplicationWindow::setMenuBar(QQuickItem *menuBar)
 bool QQuickApplicationWindow::isComponentComplete() const
 {
     Q_D(const QQuickApplicationWindow);
-    return d->complete;
+    return d->componentComplete;
 }
 
 void QQuickApplicationWindow::classBegin()
 {
     Q_D(QQuickApplicationWindow);
-    d->complete = false;
+    d->componentComplete = false;
     QQuickWindowQmlImpl::classBegin();
     d->resolveFont();
 }
@@ -698,7 +693,7 @@ void QQuickApplicationWindow::classBegin()
 void QQuickApplicationWindow::componentComplete()
 {
     Q_D(QQuickApplicationWindow);
-    d->complete = true;
+    d->componentComplete = true;
     d->executeBackground(true);
     QQuickWindowQmlImpl::componentComplete();
     d->relayout();
