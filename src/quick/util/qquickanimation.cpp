@@ -175,7 +175,7 @@ void QQuickAbstractAnimationPrivate::animationGroupDirty()
     if (animGroupPriv->running && !animGroupPriv->animationDirty) {
         animGroupPriv->animationDirty = true;
 
-        if (group->currentTime() == 0) {
+        if (animGroupPriv->animationInstance && group->currentTime() == 0) {
             // restart if the animation didn't proceed yet.
             animGroupPriv->restartFromCurrentLoop();
         }
