@@ -376,6 +376,129 @@ bool QQmlDirParser::parse(const QString &source)
     return hasError();
 }
 
+/* removes all file selector occurrences in path
+   firstPlus is the position of the initial '+' in the path
+   which we always have as we check for '+' to decide whether
+   we need to do some work at all
+*/
+static QString pathWithoutFileSelectors(QString path, // we want a copy of path
+                                        qsizetype firstPlus)
+{
+    do {
+        Q_ASSERT(path.at(firstPlus) == u'+');
+        const auto eos = path.size();
+        qsizetype terminatingSlashPos = firstPlus + 1;
+        while (terminatingSlashPos != eos && path.at(terminatingSlashPos) != u'/')
+            ++terminatingSlashPos;
+        path.remove(firstPlus, terminatingSlashPos - firstPlus + 1);
+        firstPlus = path.indexOf(u'+', firstPlus);
+    } while (firstPlus != -1);
+    return path;
+}
+
+static bool canDisambiguate(
+        const QString &fileName1, const QString &fileName2, QString *correctedFileName)
+{
+    // If the entries are exactly the same we can delete one without losing anything.
+    if (fileName1 == fileName2)
+        return true;
+
+    // If we detect conflicting paths, we check if they agree when we remove anything
+    // looking like a file selector.
+
+    // ugly heuristic to deal with file selectors
+    const qsizetype file2PotentialFileSelectorPos = fileName2.indexOf(u'+');
+    const bool file2MightHaveFileSelector = file2PotentialFileSelectorPos != -1;
+
+    if (const qsizetype fileSelectorPos1 = fileName1.indexOf(u'+'); fileSelectorPos1 != -1) {
+        // existing entry was file selector entry, fix it up
+        // it could also be the case that _both_ are using file selectors
+        const QString baseName = file2MightHaveFileSelector
+                ? pathWithoutFileSelectors(fileName2, file2PotentialFileSelectorPos)
+                : fileName2;
+
+        if (pathWithoutFileSelectors(fileName1, fileSelectorPos1) != baseName)
+            return false;
+
+        *correctedFileName = baseName;
+        return true;
+    }
+
+    // new entry contains file selector (and we know that fileName1 did not)
+    if (file2MightHaveFileSelector
+            && pathWithoutFileSelectors(fileName2, file2PotentialFileSelectorPos) == fileName1) {
+        *correctedFileName = fileName1;
+        return true;
+    }
+
+    return false;
+}
+
+static void disambiguateFileSelectedComponents(QQmlDirComponents *components)
+{
+    using ConstIterator = QQmlDirComponents::const_iterator;
+
+    // end iterator may get invalidated by the erasing below.
+    // Therefore, refetch it on each iteration.
+    for (ConstIterator cit = components->constBegin(); cit != components->constEnd();) {
+
+        // We can erase and re-assign cit if we immediately forget cit2.
+        // But we cannot erase cit2 without potentially invalidating cit.
+
+        bool doErase = false;
+        const ConstIterator cend = components->constEnd();
+        for (ConstIterator cit2 = ++ConstIterator(cit); cit2 != cend; ++cit2) {
+            if (cit2.key() != cit.key())
+                break;
+
+            Q_ASSERT(cit2->typeName == cit->typeName);
+
+            if (cit2->version != cit->version
+                || cit2->internal != cit->internal
+                || cit2->singleton != cit->singleton) {
+                continue;
+            }
+
+            // The two components may differ only by fileName now.
+
+            if (canDisambiguate(cit->fileName, cit2->fileName, &(cit2->fileName))) {
+                doErase = true;
+                break;
+            }
+        }
+
+        if (doErase)
+            cit = components->erase(cit);
+        else
+            ++cit;
+    }
+}
+
+static void disambiguateFileSelectedScripts(QQmlDirScripts *scripts)
+{
+    using Iterator = QQmlDirScripts::iterator;
+
+    Iterator send = scripts->end();
+
+    for (Iterator sit = scripts->begin(); sit != send; ++sit) {
+        send = std::remove_if(++Iterator(sit), send, [sit](const QQmlDirParser::Script &script2) {
+            if (sit->nameSpace != script2.nameSpace || sit->version != script2.version)
+                return false;
+
+            // The two scripts may differ only by fileName now.
+            return canDisambiguate(sit->fileName, script2.fileName, &(sit->fileName));
+        });
+    }
+
+    scripts->erase(send, scripts->end());
+}
+
+void QQmlDirParser::disambiguateFileSelectors()
+{
+    disambiguateFileSelectedComponents(&_components);
+    disambiguateFileSelectedScripts(&_scripts);
+}
+
 void QQmlDirParser::reportError(quint16 line, quint16 column, const QString &description)
 {
     QQmlJS::DiagnosticMessage error;

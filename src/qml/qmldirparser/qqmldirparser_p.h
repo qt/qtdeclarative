@@ -30,6 +30,7 @@ class Q_QML_COMPILER_PRIVATE_EXPORT QQmlDirParser
 public:
     void clear();
     bool parse(const QString &source);
+    void disambiguateFileSelectors();
 
     bool hasError() const { return !_errors.isEmpty(); }
     void setError(const QQmlJS::DiagnosticMessage &);

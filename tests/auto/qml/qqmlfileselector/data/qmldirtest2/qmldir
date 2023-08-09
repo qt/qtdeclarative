@@ -1,0 +1,5 @@
+module qmldirtest2
+MyButton 1.0 +foo/MyButton.qml
+MyButton 1.0 MyButton.qml
+MyButton 1.0 +bar/MyButton.qml
+Name 1.0 Name.js

@@ -2,4 +2,7 @@ module qmldirtest
 MyButton 1.0 qml/MyButton.qml
 MyButton 1.0 qml/+linux/MyButton.qml
 MyButton 1.0 qml/+macos/MyButton.qml
+Name 1.0 qml/Name.js
+Name 1.0 qml/+linux/Name.js
+Name 1.0 qml/+macos/Name.js
 
