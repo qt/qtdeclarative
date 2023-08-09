@@ -29,6 +29,7 @@ void QQmlTypeLoaderQmldirContent::setContent(const QString &location, const QStr
     m_hasContent = true;
     m_location = location;
     m_parser.parse(content);
+    m_parser.disambiguateFileSelectors();
 }
 
 void QQmlTypeLoaderQmldirContent::setError(const QQmlError &error)
