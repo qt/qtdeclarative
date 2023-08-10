@@ -1430,17 +1430,17 @@ void PropertyPass::onRead(const Element &element, const QString &propertyName,
     Executes whenever a property is written to.
 
     The property \a propertyName of \a element is written to by an instruction
-    within \a writeScope defined at \a location. The property is written the
-    value \a value.
+    within \a writeScope defined at \a location. The type of the expression
+    written to \a propertyName is \a expressionType.
  */
 void PropertyPass::onWrite(const Element &element, const QString &propertyName,
-                           const Element &value, const Element &writeScope,
+                           const Element &expressionType, const Element &writeScope,
                            QQmlSA::SourceLocation location)
 {
     Q_UNUSED(element);
     Q_UNUSED(propertyName);
     Q_UNUSED(writeScope);
-    Q_UNUSED(value);
+    Q_UNUSED(expressionType);
     Q_UNUSED(location);
 }
 
