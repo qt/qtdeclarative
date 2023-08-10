@@ -203,6 +203,7 @@ public:
     virtual ~DomBase() = default;
 
     DomBase *domBase() { return static_cast<DomBase *>(this); }
+    const DomBase *domBase() const { return this; }
 
     // minimal overload set:
     virtual DomType kind() const = 0;
@@ -904,7 +905,7 @@ public:
         return std::visit(f, this->m_element);
     }
     template<typename F>
-    auto visitEl(F f)
+    auto visitEl(F f) const
     {
         return std::visit(f, this->m_element);
     }
@@ -1280,7 +1281,7 @@ public:
 private:
     enum class WriteOutCheckResult { Success, Failed };
     WriteOutCheckResult performWriteOutChecks(DomItem &, DomItem &, OutWriter &, WriteOutChecks);
-    DomBase const *base();
+    DomBase const *base() const;
     template <typename T, typename std::enable_if<std::is_base_of<DomBase, T>::value, bool>::type = true>
     T *mutableAs() {
         if (m_kind == T::kindValue) {

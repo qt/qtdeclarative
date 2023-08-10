@@ -2566,9 +2566,9 @@ shared_ptr<OwningItem> DomItem::owningItemPtr()
    \internal
    Returns a pointer to the virtual base pointer to a DomBase.
 */
-const DomBase *DomItem::base()
+const DomBase *DomItem::base() const
 {
-    return visitEl([](auto &&el) -> DomBase * { return el->domBase(); });
+    return visitEl([](auto &&el) -> const DomBase * { return el->domBase(); });
 }
 
 /*!
