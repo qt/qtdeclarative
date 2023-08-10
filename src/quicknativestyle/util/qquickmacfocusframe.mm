@@ -124,11 +124,12 @@ QQuickFocusFrameDescription QQuickMacFocusFrame::getDescriptionForItem(QQuickIte
         return { target, QQuickStyleMargins(styleItem->layoutMargins()), styleItem->focusFrameRadius() };
 
     // Some controls don't have a QQuickStyleItem. But if the __focusFrameStyleItem
-    // has a "__isDefaultDelegate" property set, we show a default focus frame instead.
-    if (item->property("__isDefaultDelegate").toBool() == true) {
-        qCDebug(lcFocusFrame) << "'__isDefaultDelegate' property found, showing a default focus frame";
+    // has a "__focusFrameRadius" property set, we show a default focus frame using the specified radius instead.
+    const QVariant focusFrameRadiusVariant = item->property("__focusFrameRadius");
+    if (focusFrameRadiusVariant.isValid()) {
+        qCDebug(lcFocusFrame) << "'focusFrameRadius' property found, showing a default focus frame";
         const QStyleOption opt;
-        const qreal radius = QQuickNativeStyle::style()->pixelMetric(QStyle::PM_TextFieldFocusFrameRadius, &opt);
+        const qreal radius = qMax(0.0, focusFrameRadiusVariant.toReal());
         return { target, QQuickStyleMargins(), radius };
     }
 

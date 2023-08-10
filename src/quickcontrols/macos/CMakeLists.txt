@@ -8,22 +8,23 @@
 set(qml_files
     "BusyIndicator.qml"
     "Button.qml"
-    "Slider.qml"
-    "GroupBox.qml"
     "CheckBox.qml"
-    "RadioButton.qml"
-    "SelectionRectangle.qml"
-    "SpinBox.qml"
-    "TextField.qml"
-    "Frame.qml"
-    "TextArea.qml"
     "ComboBox.qml"
-    "ScrollView.qml"
-    "ScrollBar.qml"
-    "ProgressBar.qml"
     "Dial.qml"
     "Dialog.qml"
     "DialogButtonBox.qml"
+    "Frame.qml"
+    "GroupBox.qml"
+    "ProgressBar.qml"
+    "RadioButton.qml"
+    "ScrollBar.qml"
+    "ScrollView.qml"
+    "SelectionRectangle.qml"
+    "Slider.qml"
+    "SpinBox.qml"
+    "Switch.qml"
+    "TextArea.qml"
+    "TextField.qml"
 )
 
 if (QT_FEATURE_quick_treeview)
@@ -64,6 +65,8 @@ qt_internal_add_qml_module(qtquickcontrols2macosstyleplugin
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
 )
+
+add_subdirectory(impl)
 
 # Native style is a dependency of the macOS style.
 _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2macosstyleplugin
