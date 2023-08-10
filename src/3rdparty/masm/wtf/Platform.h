@@ -45,6 +45,9 @@
 /* ==== Platform adaptation macros: these describe properties of the target environment. ==== */
 
 /* CPU() - the target CPU architecture */
+#ifdef Q_OS_VXWORKS
+#undef CPU
+#endif // Q_OS_VXWORKS
 #define CPU(WTF_FEATURE) WTF_CPU_##WTF_FEATURE
 /* HAVE() - specific system features (headers, functions or similar) that are present or not */
 #define HAVE(WTF_FEATURE) HAVE_##WTF_FEATURE
