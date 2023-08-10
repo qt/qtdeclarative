@@ -122,6 +122,9 @@ if(TARGET Qt::Quick)
                 BINARY cmake_test
             )
         endif()
+        if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.19")
+            _qt_internal_test_expect_pass(test_generate_qmlls_ini BINARY tst_generate_qmlls_ini)
+        endif()
     endif()
     if(NOT QT6_IS_SHARED_LIBS_BUILD)
         _qt_internal_test_expect_pass(test_import_static_shapes_plugin_resources

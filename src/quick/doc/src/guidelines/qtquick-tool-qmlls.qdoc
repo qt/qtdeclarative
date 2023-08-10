@@ -82,6 +82,9 @@ QML Language Server can be configured via a configuration file \c{.qmlls.ini}.
 This file should be in the root source directory of the project.
 It should be a text file in the ini-format.
 
+\note \c{.qmlls.ini} files can be generated automatically via
+\l{QT_QML_GENERATE_QMLLS_INI}.
+
 The configuration file should look like this:
 \code
 // .qmlls.ini

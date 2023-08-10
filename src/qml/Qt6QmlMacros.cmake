@@ -712,6 +712,51 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         endif()
     endforeach()
 
+    if(${QT_QML_GENERATE_QMLLS_INI})
+        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0")
+            # collect all build dirs obtained from all the qt_add_qml_module calls and
+            # write the .qmlls.ini file in a deferred call
+
+            if(NOT "${arg_OUTPUT_DIRECTORY}" STREQUAL "")
+                set(output_folder "${arg_OUTPUT_DIRECTORY}")
+            else()
+                set(output_folder "${CMAKE_CURRENT_BINARY_DIR}")
+            endif()
+            get_filename_component(build_folder "${output_folder}" DIRECTORY)
+            get_directory_property(_qmlls_ini_build_folders _qmlls_ini_build_folders)
+            list(APPEND _qmlls_ini_build_folders "${build_folder}")
+            set_directory_properties(PROPERTIES _qmlls_ini_build_folders "${_qmlls_ini_build_folders}")
+
+            # if no call with id 'qmlls_ini_generation_id' was deferred for this directory, do it now
+            cmake_language(DEFER GET_CALL qmlls_ini_generation_id call)
+            if("${call}" STREQUAL "")
+                cmake_language(EVAL CODE
+                    "cmake_language(DEFER ID qmlls_ini_generation_id CALL _qt_internal_write_deferred_qmlls_ini_file)"
+                )
+            endif()
+        else()
+            get_property(__qt_internal_generate_qmlls_ini_warning GLOBAL PROPERTY __qt_internal_generate_qmlls_ini_warning)
+            if (NOT "${__qt_internal_generate_qmlls_ini_warning}")
+                message(WARNING "QT_QML_GENERATE_QMLLS_INI is not supported on CMake versions < 3.19, disabling...")
+                set_property(GLOBAL PROPERTY __qt_internal_generate_qmlls_ini_warning ON)
+            endif()
+        endif()
+    endif()
+endfunction()
+
+function(_qt_internal_write_deferred_qmlls_ini_file)
+    set(qmlls_ini_file "${CMAKE_CURRENT_SOURCE_DIR}/.qmlls.ini")
+    get_directory_property(_qmlls_ini_build_folders _qmlls_ini_build_folders)
+    list(REMOVE_DUPLICATES _qmlls_ini_build_folders)
+    if(NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+        # replace cmake list separator ';' with unix path separator ':'
+        string(REPLACE ";" ":" concatenated_build_dirs "${_qmlls_ini_build_folders}")
+    else()
+        # cmake list separator and windows path separator are both ';', so no replacement needed
+        set(concatenated_build_dirs "${_qmlls_ini_build_folders}")
+    endif()
+    set(file_content "[General]\nbuildDir=${concatenated_build_dirs}\n")
+    file(CONFIGURE OUTPUT "${qmlls_ini_file}" CONTENT "${file_content}")
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
