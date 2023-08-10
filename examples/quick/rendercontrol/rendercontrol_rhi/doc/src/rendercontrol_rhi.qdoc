@@ -1,0 +1,129 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \title QQuickRenderControl RHI Example
+    \example rendercontrol/rendercontrol_rhi
+    \brief Shows how to render a Qt Quick scene into a QRhiTexture.
+    \image rendercontrol-rhi-example.jpg
+
+    This example demonstrates how to set up a Qt Quick scene that has its
+    rendering redirected into a \l QRhiTexture. The application is then free to
+    do whatever it wants with the resulting texture from each frame.
+    This example is a QWidget-based application that performs a readback of the
+    image data, and then displays the collected per-frame renders with CPU and
+    GPU-based timing information for each.
+
+    By using Qt's 3D graphics API abstraction, this example is not tied to any
+    particular graphics API. At startup, a dialog is shown with the platforms'
+    potentially supported 3D APIs.
+
+    \snippet rendercontrol/rendercontrol_rhi/main.cpp apiselect
+
+    \note It is not guaranteed that all selections will be functional on a given
+    platform.
+
+    Once a selection is made, a QML file is loaded. However, we will not simply
+    create a \l QQuickView instance and \l{QQuickView::show()}{show()} it.
+    Rather, the \l QQuickWindow that manages the Qt Quick scene is never shown
+    on-screen. Instead, the application takes control over when and to where
+    render, via \l QQuickRenderControl.
+
+    \snippet rendercontrol/rendercontrol_rhi/main.cpp load-1
+
+    Once the object tree is instantiated, the root item (a \l Rectangle) is
+    queried, its size is ensured to be valid and then propagated.
+
+    \note Scenes that use the \l Window element within the object tree are not
+    supported.
+
+    \snippet rendercontrol/rendercontrol_rhi/main.cpp load-instantiate
+
+    At this point there are no rendering resources initialized, i.e., nothing has
+    been done with the native 3D graphics API yet. A \l QRhi is instantiated
+    only in the next step, and that is what triggers setting up the Vulkan,
+    Metal, Direct 3D, etc. rendering system under the hood.
+
+    \snippet rendercontrol/rendercontrol_rhi/main.cpp load-graphicsinit
+
+    \note This application uses a model where Qt creates an instance of QRhi.
+    This is not the only possible approach: if the application maintains its own
+    QRhi (and so OpenGL context, Vulkan device, etc.), then Qt Quick can be
+    requested to adopt and use that existing QRhi. That is done via passing a \l
+    QQuickGraphicsDevice created by \l{QQuickGraphicsDevice::fromRhi()} to
+    \l QQuickWindow, similarly to how \l QQuickGraphicsConfiguration is set in
+    the snippet above. Consider for example the case of wanting to use the Qt
+    Quick rendered textures in a QRhiWidget: in that case the QRhiWidget's QRhi
+    will need to passed on to Qt Quick, instead of letting Qt Quick create its
+    own.
+
+    Once \l QQuickRenderControl::initialize() succeeds, the renderer is live and
+    ready to go. For that, we need a color buffer to render into.
+
+    \l QQuickRenderTarget is a lightweight implicitly-shared class that carries
+    (but those not own) various sets of native or QRhi objects that describe
+    textures, render targets, or similar. Calling
+    \l{QQuickWindow::setRenderTarget()}{setRenderTarget()} on the \l
+    QQuickWindow (remember that we have a QQuickWindow that is not visible
+    on-screen) is what triggers redirecting the Qt Quick scene graph's rendering
+    into the texture provided by the application. When working with \l QRhi (and
+    not with native 3D API objects such as OpenGL texture IDs or VkImage
+    objects), the application should set up a \l QRhiTextureRenderTarget and
+    then pass it to Qt Quick via \l QQuickRenderTarget::fromRhiRenderTarget().
+
+    \snippet rendercontrol/rendercontrol_rhi/main.cpp texture-setup
+
+    \note Always provide a depth-stencil buffer for Qt Quick since both of these
+    buffers and the depth and stencil test may get utilized by the Qt Quick
+    scenegraph when rendering.
+
+    The main render loop is the following. This also shows how to perform
+    GPU->CPU readbacks of images. Once a QImage is available, the \l
+    QWidget-based user interface updates accordingly. We will omit diving
+    into the details for that here.
+
+    The example also demonstrates a simple way of measuring the cost of
+    rendering a frame on the CPU and the GPU. Offscreen-rendered frames are well
+    suited for this due to certain internal QRhi behavior, which implies that
+    operations that otherwise are asynchronous (in the sense that they complete
+    only when rendering a subsequent frame), are guaranteed to be ready once \l
+    QRhi::endOffscreenFrame() (i.e., QQuickRenderControl::endFrame()) returns.
+    We use this knowledge when reading back the texture, and it applies also to
+    GPU timestamps as well. That is why the application can display the GPU time
+    for each frame, while guaranteeing that the time actually refers to that
+    particular frame (not an earlier one). See
+    \l{QRhiCommandBuffer::lastCompletedGpuTime()}{lastCompletedGpuTime()} for
+    details around GPU timings. The CPU side timings are taken using
+    \l QElapsedTimer.
+
+    \snippet rendercontrol/rendercontrol_rhi/main.cpp render-core
+
+    One important piece is the stepping of Qt Quick animations. As we do not
+    have an on-screen window that can drive the animation system either via
+    measuring elapsed time, an ordinary timer, or presentation rate-based
+    throttling, redirecting the Qt Quick rendering often implies that the
+    driving of animations needs to be taken over by the application. Otherwise,
+    animations function based on a plain system timer, but the actual elapsed
+    time will often have nothing to do with what the offscreen-rendered scene is
+    expected to perceive. Consider rendering 5 frames in a row, in a tight loop.
+    How the animations in those 5 frames move depends on the speed with which
+    the CPU executes the loop iterations. That is almost never ideal. To ensure
+    consistent animations, install a custom \l QAnimationDriver. While this is
+    an undocumented (but public) API meant for advanced users, the example here
+    provides a simple example of using it.
+
+    \snippet rendercontrol/rendercontrol_rhi/main.cpp anim-driver
+
+    The application has a \l QSlider that can be used to change the animation
+    step value from the default 16 milliseconds to something else. Note the call
+    to the setStep() function of our QAnimationDriver subclass.
+
+    \snippet rendercontrol/rendercontrol_rhi/main.cpp anim-slider
+
+    Advancing the animations is done before each frame (i.e., before the
+    QQuickRenderControl::beginFrame() call) by simply calling advance():
+
+    \snippet rendercontrol/rendercontrol_rhi/main.cpp anim-step
+
+    \sa QRhi, QQuickRenderControl, QQuickWindow
+*/
