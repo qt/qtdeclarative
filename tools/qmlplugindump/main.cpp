@@ -30,6 +30,7 @@
 #include <QtCore/private/qobject_p.h>
 #include <QtCore/private/qmetaobject_p.h>
 #include <QtQmlTypeRegistrar/private/qqmljsstreamwriter_p.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 
 #include <QRegularExpression>
 #include <iostream>
@@ -690,10 +691,13 @@ private:
         for (int index = meta->propertyOffset(); index < meta->propertyCount(); ++index) {
             const QMetaProperty &property = meta->property(index);
             dump(property, metaRevision, knownAttributes);
+            const QByteArray changedSignalName =
+                    QQmlSignalNames::propertyNameToChangedSignalName(property.name());
             if (knownAttributes)
-                knownAttributes->knownMethod(QByteArray(property.name()).append("Changed"),
-                                             0, QTypeRevision::fromEncodedVersion(property.revision()));
-            implicitSignals.insert(QString("%1Changed").arg(QString::fromUtf8(property.name())));
+                knownAttributes->knownMethod(
+                        changedSignalName, 0,
+                        QTypeRevision::fromEncodedVersion(property.revision()));
+            implicitSignals.insert(changedSignalName);
         }
         return implicitSignals;
     }

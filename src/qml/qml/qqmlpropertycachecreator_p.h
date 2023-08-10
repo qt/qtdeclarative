@@ -21,6 +21,7 @@
 #include <private/qqmltypedata_p.h>
 #include <private/inlinecomponentutils_p.h>
 #include <private/qqmlsourcecoordinate_p.h>
+#include <private/qqmlsignalnames_p.h>
 
 #include <QScopedValueRollback>
 #include <vector>
@@ -486,7 +487,8 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
     for (  ; p != pend; ++p) {
         auto flags = QQmlPropertyData::defaultSignalFlags();
 
-        QString changedSigName = stringAt(p->nameIndex) + QLatin1String("Changed");
+        const QString changedSigName =
+                QQmlSignalNames::propertyNameToChangedSignalName(stringAt(p->nameIndex));
         seenSignals.insert(changedSigName);
 
         cache->appendSignal(changedSigName, flags, effectiveMethodIndex++);
@@ -497,7 +499,8 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
     for ( ; a != aend; ++a) {
         auto flags = QQmlPropertyData::defaultSignalFlags();
 
-        QString changedSigName = stringAt(a->nameIndex()) + QLatin1String("Changed");
+        const QString changedSigName =
+                QQmlSignalNames::propertyNameToChangedSignalName(stringAt(a->nameIndex()));
         seenSignals.insert(changedSigName);
 
         cache->appendSignal(changedSigName, flags, effectiveMethodIndex++);

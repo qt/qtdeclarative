@@ -19,6 +19,8 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qloggingcategory.h>
 
+#include <QtQml/private/qqmlsignalnames_p.h>
+
 #include <limits>
 
 QT_BEGIN_NAMESPACE
@@ -123,9 +125,7 @@ static bool checkArgumentsObjectUseInSignalHandlers(const QmlIR::Document &doc,
             if (binding->type() != QV4::CompiledData::Binding::Type_Script)
                 continue;
             const QString propName =  doc.stringAt(binding->propertyNameIndex);
-            if (!propName.startsWith(QLatin1String("on"))
-                || propName.size() < 3
-                || !propName.at(2).isUpper())
+            if (!QQmlSignalNames::isHandlerName(propName))
                 continue;
             auto compiledFunction = doc.jsModule.functions.value(object->runtimeFunctionIndices.at(binding->value.compiledScriptIndex));
             if (!compiledFunction)

@@ -10,6 +10,7 @@
 #include <private/qmetaobject_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <private/qqmlpropertycachemethodarguments_p.h>
+#include <private/qqmlsignalnames_p.h>
 
 #include <private/qv4value_p.h>
 
@@ -249,8 +250,7 @@ void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flag
     int signalHandlerIndex = signalHandlerIndexCache.size();
     signalHandlerIndexCache.append(handler);
 
-    QString handlerName = QLatin1String("on") + name;
-    handlerName[2] = handlerName.at(2).toUpper();
+    const QString handlerName = QQmlSignalNames::signalNameToHandlerName(name);
 
     setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex);
     setNamedProperty(handlerName, signalHandlerIndex + signalOffset(),
@@ -449,7 +449,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
             setNamedProperty(methodName, ii, data);
 
             if (data->isSignal()) {
-                QHashedString on(QLatin1String("on") % methodName.at(0).toUpper() % QStringView{methodName}.mid(1));
+                QHashedString on(QQmlSignalNames::signalNameToHandlerName(methodName));
                 setNamedProperty(on, ii, sigdata);
                 ++signalHandlerIndex;
             }
@@ -462,17 +462,8 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
             setNamedProperty(methodName, ii, data);
 
             if (data->isSignal()) {
-                int length = methodName.length();
-
-                QVarLengthArray<char, 128> str(length+3);
-                str[0] = 'o';
-                str[1] = 'n';
-                str[2] = QtMiscUtils::toAsciiUpper(rawName[0]);
-                if (length > 1)
-                    memcpy(&str[3], &rawName[1], length - 1);
-                str[length + 2] = '\0';
-
-                QHashedString on(QString::fromLatin1(str.data()));
+                QHashedString on(QQmlSignalNames::signalNameToHandlerName(
+                        QLatin1StringView{ methodName.constData(), methodName.length() }));
                 setNamedProperty(on, ii, data);
                 ++signalHandlerIndex;
             }

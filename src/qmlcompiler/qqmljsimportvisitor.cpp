@@ -13,6 +13,7 @@
 #include <QtCore/qrect.h>
 #include <QtCore/qsize.h>
 
+#include <QtQml/private/qqmlsignalnames_p.h>
 #include <QtQml/private/qv4codegen_p.h>
 #include <QtQml/private/qqmlstringconverters_p.h>
 #include <QtQml/private/qqmlirbuilder_p.h>
@@ -963,7 +964,7 @@ void QQmlJSImportVisitor::checkSignal(
         const QQmlJSScope::ConstPtr &signalScope, const QQmlJS::SourceLocation &location,
         const QString &handlerName, const QStringList &handlerParameters)
 {
-    const auto signal = QQmlJSUtils::signalName(handlerName);
+    const auto signal = QQmlSignalNames::handlerNameToSignalName(handlerName);
 
     std::optional<QQmlJSMetaMethod> signalMethod;
     const auto setSignalMethod = [&](const QQmlJSScope::ConstPtr &scope, const QString &name) {
@@ -975,8 +976,7 @@ void QQmlJSImportVisitor::checkSignal(
     if (signal.has_value()) {
         if (signalScope->hasMethod(*signal)) {
             setSignalMethod(signalScope, *signal);
-        } else if (auto p = QQmlJSUtils::changeHandlerProperty(signalScope, *signal);
-                   p.has_value()) {
+        } else if (auto p = QQmlJSUtils::propertyFromChangedHandler(signalScope, handlerName)) {
             // we have a change handler of the form "onXChanged" where 'X'
             // is a property name
 
@@ -2025,11 +2025,11 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
         prefix.clear();
     }
 
-    auto name = group->name.toString();
+    const auto name = group->name.toString();
 
     // This is a preliminary check.
     // Even if the name starts with "on", it might later turn out not to be a signal.
-    const auto signal = QQmlJSUtils::signalName(name);
+    const auto signal = QQmlSignalNames::handlerNameToSignalName(name);
 
     if (!signal.has_value() || m_currentScope->hasProperty(name)) {
         m_propertyBindings[m_currentScope].append(
@@ -2079,7 +2079,7 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
             if (!methods.isEmpty()) {
                 kind = QQmlSA::ScriptBindingKind::Script_SignalHandler;
                 checkSignal(scope, groupLocation, name, signalParameters);
-            } else if (QQmlJSUtils::changeHandlerProperty(scope, signalName).has_value()) {
+            } else if (QQmlJSUtils::propertyFromChangedHandler(scope, name).has_value()) {
                 kind = QQmlSA::ScriptBindingKind::Script_ChangeHandler;
                 checkSignal(scope, groupLocation, name, signalParameters);
             } else if (scope->hasProperty(name)) {

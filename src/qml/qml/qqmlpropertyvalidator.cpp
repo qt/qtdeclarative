@@ -9,6 +9,7 @@
 #include <private/qqmlpropertycachecreator_p.h>
 #include <private/qqmlpropertyresolver_p.h>
 #include <private/qqmlstringconverters_p.h>
+#include <private/qqmlsignalnames_p.h>
 
 #include <QtCore/qdatetime.h>
 
@@ -140,7 +141,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
                     customBindings << binding;
                     continue;
                 }
-            } else if (QmlIR::IRBuilder::isSignalPropertyName(name)
+            } else if (QQmlSignalNames::isHandlerName(name)
                        && !(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers)) {
                 customBindings << binding;
                 continue;

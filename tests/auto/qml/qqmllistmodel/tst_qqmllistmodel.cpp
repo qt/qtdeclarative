@@ -8,6 +8,7 @@
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQmlModels/private/qqmllistmodel_p.h>
 #include <QtQml/private/qqmlexpression_p.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 #include <QQmlComponent>
 
 #include <QtCore/qtimer.h>
@@ -1098,12 +1099,12 @@ void tst_qqmllistmodel::property_changes()
     expr.evaluate();
     QVERIFY2(!expr.hasError(), qPrintable(expr.error().toString()));
 
-    QString signalHandler = "on" + QString(roleName[0].toUpper()) + roleName.mid(1, roleName.size()) + "Changed:";
+    QString signalHandler = QQmlSignalNames::propertyNameToChangedHandlerName(roleName);
     QString qml = "import QtQuick 2.0\n"
                   "Connections {\n"
                         "property bool gotSignal: false\n"
                         "target: model.get(" + QString::number(listIndex) + ")\n"
-                        + signalHandler + " gotSignal = true\n"
+                        + signalHandler + ": gotSignal = true\n"
                   "}\n";
 
     QQmlComponent component(&engine);

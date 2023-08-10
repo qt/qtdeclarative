@@ -37,6 +37,8 @@ void tst_qml_common::tst_propertyNameToChangedHandlerName_data()
     QTest::addRow("___123aProperty") << u"___123a"_s << u"on___123AChanged"_s;
     QTest::addRow("___123Property") << u"___123"_s << u"on___123Changed"_s;
     QTest::addRow("AProperty") << u"A"_s << u"onAChanged"_s;
+    QTest::addRow("_Property") << u"_"_s << u"on_Changed"_s;
+    QTest::addRow("$Property") << u"$"_s << u"on$Changed"_s;
 }
 void tst_qml_common::tst_propertyNameToChangedHandlerName()
 {
@@ -67,6 +69,8 @@ void tst_qml_common::tst_signalNameToHandlerName_data()
     QTest::addRow("___123aProperty") << u"___123a"_s << u"on___123A"_s;
     QTest::addRow("___123Property") << u"___123"_s << u"on___123"_s;
     QTest::addRow("AProperty") << u"A"_s << u"onA"_s;
+    QTest::addRow("_Property") << u"_"_s << u"on_"_s;
+    QTest::addRow("$Property") << u"$"_s << u"on$"_s;
 }
 
 void tst_qml_common::tst_signalNameToHandlerName()
@@ -150,6 +154,8 @@ void tst_qml_common::tst_isChangedHandlerName_data()
     QTest::addRow("empty") << u""_s << false;
     QTest::addRow("empty2") << u"onChanged"_s << false;
     QTest::addRow("on") << u"on"_s << false;
+    QTest::addRow("on_Changed") << u"on_Changed"_s << true;
+    QTest::addRow("on$Changed") << u"on$Changed"_s << true;
 }
 void tst_qml_common::tst_isChangedHandlerName()
 {

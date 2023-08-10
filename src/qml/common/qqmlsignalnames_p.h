@@ -42,6 +42,7 @@ public:
     static std::optional<QByteArray> changedHandlerNameToPropertyName(QUtf8StringView handler);
 
     static std::optional<QString> handlerNameToSignalName(QStringView handler);
+    static std::optional<QString> changedHandlerNameToSignalName(QStringView changedHandler);
 
     static bool isChangedHandlerName(QStringView signalName);
     static bool isChangedSignalName(QStringView signalName);

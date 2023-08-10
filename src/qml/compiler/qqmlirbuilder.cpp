@@ -442,38 +442,6 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
     return errors.isEmpty();
 }
 
-bool IRBuilder::isSignalPropertyName(const QString &name)
-{
-    if (name.size() < 3) return false;
-    if (!name.startsWith(QLatin1String("on"))) return false;
-    int ns = name.size();
-    for (int i = 2; i < ns; ++i) {
-        const QChar curr = name.at(i);
-        if (curr.unicode() == '_') continue;
-        if (curr.isUpper()) return true;
-        return false;
-    }
-    return false; // consists solely of underscores - invalid.
-}
-
-QString IRBuilder::signalNameFromSignalPropertyName(const QString &signalPropertyName)
-{
-    Q_ASSERT(signalPropertyName.startsWith(QLatin1String("on")));
-    QString signalNameCandidate = signalPropertyName;
-    signalNameCandidate.remove(0, 2);
-
-    // Note that the property name could start with any alpha or '_' or '$' character,
-    // so we need to do the lower-casing of the first alpha character.
-    for (int firstAlphaIndex = 0; firstAlphaIndex < signalNameCandidate.size(); ++firstAlphaIndex) {
-        if (signalNameCandidate.at(firstAlphaIndex).isUpper()) {
-            signalNameCandidate[firstAlphaIndex] = signalNameCandidate.at(firstAlphaIndex).toLower();
-            return signalNameCandidate;
-        }
-    }
-
-    Q_UNREACHABLE_RETURN(QString());
-}
-
 bool IRBuilder::visit(QQmlJS::AST::UiArrayMemberList *ast)
 {
     return QQmlJS::AST::Visitor::visit(ast);

@@ -14,10 +14,10 @@ using namespace Qt::Literals;
 static std::optional<qsizetype> firstLetterIdx(QStringView name, qsizetype removePrefix = 0,
                                                qsizetype removeSuffix = 0)
 {
-    auto result = std::find_if(std::next(name.cbegin(), removePrefix),
-                               std::prev(name.cend(), removeSuffix),
+    auto end = std::prev(name.cend(), removeSuffix);
+    auto result = std::find_if(std::next(name.cbegin(), removePrefix), end,
                                [](const QChar &c) { return c.isLetter(); });
-    if (result != name.cend())
+    if (result != end)
         return std::distance(name.begin(), result);
 
     return {};
@@ -157,21 +157,39 @@ QString QQmlSignalNames::signalNameToHandlerName(QAnyStringView signal)
     return handlerName;
 }
 
-/*!
-\internal
-Returns a signal name from \a handlerName string.
-*/
-std::optional<QString> QQmlSignalNames::handlerNameToSignalName(QStringView handler)
+enum HandlerType { ChangedHandler, Handler };
+
+static std::optional<QString> handlerNameToSignalNameHelper(QStringView handler, HandlerType type)
 {
-    if (!isHandlerName(handler))
+    if (!QQmlSignalNames::isHandlerName(handler))
         return {};
 
     QString signalName = handler.sliced(strlen("on")).toString();
     if (signalName.isEmpty())
         return {};
 
-    changeCaseOfFirstLetter(signalName, ToLower);
+    changeCaseOfFirstLetter(signalName, ToLower, 0, type == ChangedHandler ? strlen("Changed") : 0);
     return signalName;
+}
+
+/*!
+\internal
+Returns a signal name from \a handlerName string. Do not use it on changed handlers, see
+changedHandlerNameToSignalName for that!
+*/
+std::optional<QString> QQmlSignalNames::handlerNameToSignalName(QStringView handler)
+{
+    return handlerNameToSignalNameHelper(handler, Handler);
+}
+
+/*!
+\internal
+Returns a signal name from \a changedHandlerName string. Makes sure not to lowercase the 'C' from
+Changed.
+*/
+std::optional<QString> QQmlSignalNames::changedHandlerNameToSignalName(QStringView handler)
+{
+    return handlerNameToSignalNameHelper(handler, ChangedHandler);
 }
 
 bool QQmlSignalNames::isChangedSignalName(QStringView signalName)

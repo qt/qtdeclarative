@@ -5300,6 +5300,7 @@ void tst_qqmlecmascript::propertyChangeSlots()
     QQmlComponent component(&engine, testFileUrl("changeslots/propertyChangeSlots.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(object, qPrintable(component.errorString()));
+    QCOMPARE(object->property("changeCount"), 15);
 
     // ensure that invalid property names fail properly.
     QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
@@ -5314,20 +5315,6 @@ void tst_qqmlecmascript::propertyChangeSlots()
     expectedErrorString = e2.url().toString() + QLatin1String(":9:5: Cannot assign to non-existent property \"on____nameWithUnderscoresChanged\"");
     QCOMPARE(e2.errors().at(0).toString(), expectedErrorString);
     object.reset(e2.create());
-    QVERIFY(!object);
-
-    QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
-    QQmlComponent e3(&engine, testFileUrl("changeslots/propertyChangeSlotErrors.3.qml"));
-    expectedErrorString = e3.url().toString() + QLatin1String(":9:5: Cannot assign to non-existent property \"on$NameWithDollarsignChanged\"");
-    QCOMPARE(e3.errors().at(0).toString(), expectedErrorString);
-    object.reset(e3.create());
-    QVERIFY(!object);
-
-    QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
-    QQmlComponent e4(&engine, testFileUrl("changeslots/propertyChangeSlotErrors.4.qml"));
-    expectedErrorString = e4.url().toString() + QLatin1String(":9:5: Cannot assign to non-existent property \"on_6NameWithUnderscoreNumberChanged\"");
-    QCOMPARE(e4.errors().at(0).toString(), expectedErrorString);
-    object.reset(e4.create());
     QVERIFY(!object);
 }
 

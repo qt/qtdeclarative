@@ -20,6 +20,7 @@
 #include <private/qqmlirbuilder_p.h>
 
 #include <QtCore/qdebug.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 
 #include <private/qobject_p.h>
 
@@ -267,7 +268,7 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
         break;
     }
 
-    if (binding->isSignalHandler() || QmlIR::IRBuilder::isSignalPropertyName(propertyName)) {
+    if (binding->isSignalHandler() || QQmlSignalNames::isHandlerName(propertyName)) {
         QQmlProperty prop = property(propertyName);
         if (prop.isSignalProperty()) {
             QQuickReplaceSignalHandler *handler = new QQuickReplaceSignalHandler;

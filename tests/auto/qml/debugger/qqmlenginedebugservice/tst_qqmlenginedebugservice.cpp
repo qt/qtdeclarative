@@ -22,6 +22,7 @@
 #include <QtQml/qqmlproperty.h>
 #include <QtQml/qqmlincubator.h>
 #include <QtQml/qqmlapplicationengine.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 #include <QtQuick/qquickitem.h>
 
 #include <QtNetwork/qhostaddress.h>
@@ -244,7 +245,7 @@ void tst_QQmlEngineDebugService::recursiveObjectTest(
         QCOMPARE(p.objectDebugId, QQmlDebugService::idForObject(o));
 
         // signal properties are fake - they are generated from QQmlAbstractBoundSignal children
-        if (p.name.startsWith("on") && p.name.size() > 2 && p.name[2].isUpper()) {
+        if (QQmlSignalNames::isHandlerName(p.name)) {
             QString signal = p.value.toString();
             QQmlBoundSignalExpression *expr = QQmlPropertyPrivate::signalExpression(QQmlProperty(o, p.name));
             QVERIFY(expr && expr->expression() == signal);

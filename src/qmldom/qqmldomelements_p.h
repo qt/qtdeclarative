@@ -22,6 +22,7 @@
 
 #include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljsengine_p.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 
 #include <QtCore/QCborValue>
 #include <QtCore/QCborMap>
@@ -554,9 +555,7 @@ public:
     bool isSignalHandler() const
     {
         QString baseName = m_name.split(QLatin1Char('.')).last();
-        if (baseName.startsWith(u"on") && baseName.size() > 2 && baseName.at(2).isUpper())
-            return true;
-        return false;
+        return QQmlSignalNames::isHandlerName(baseName);
     }
     static QString preCodeForName(QStringView n)
     {

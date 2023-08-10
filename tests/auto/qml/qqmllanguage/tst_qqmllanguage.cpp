@@ -422,6 +422,10 @@ private slots:
 
     void attachedInCtor();
     void byteArrayConversion();
+    void propertySignalNames_data();
+    void propertySignalNames();
+    void signalNames_data();
+    void signalNames();
 
 private:
     QQmlEngine engine;
@@ -8139,6 +8143,99 @@ void tst_qqmllanguage::byteArrayConversion()
     QCOMPARE(receiver->byteArrays.length(), 2);
     QCOMPARE(receiver->byteArrays[0], QByteArray("\1\2\3"));
     QCOMPARE(receiver->byteArrays[1], QByteArray("\4\5\6"));
+}
+void tst_qqmllanguage::propertySignalNames_data()
+{
+    QTest::addColumn<QString>("propertyName");
+    QTest::addColumn<QString>("propertyChangedSignal");
+    QTest::addColumn<QString>("propertyChangedHandler");
+    QTest::addRow("helloWorld") << u"helloWorld"_s << u"helloWorldChanged"_s
+                                << u"onHelloWorldChanged"_s;
+    QTest::addRow("$helloWorld") << u"$helloWorld"_s << u"$helloWorldChanged"_s
+                                 << u"on$HelloWorldChanged"_s;
+    QTest::addRow("_helloWorld") << u"_helloWorld"_s << u"_helloWorldChanged"_s
+                                 << u"on_HelloWorldChanged"_s;
+    QTest::addRow("_") << u"_"_s << u"_Changed"_s << u"on_Changed"_s;
+    QTest::addRow("$") << u"$"_s << u"$Changed"_s << u"on$Changed"_s;
+    QTest::addRow("ä") << u"ä"_s << u"äChanged"_s << u"onÄChanged"_s;
+    QTest::addRow("___123a") << u"___123a"_s << u"___123aChanged"_s << u"on___123AChanged"_s;
+}
+void tst_qqmllanguage::propertySignalNames()
+{
+    QFETCH(QString, propertyName);
+    QFETCH(QString, propertyChangedSignal);
+    QFETCH(QString, propertyChangedHandler);
+    QQmlEngine e;
+    QQmlComponent c(&e);
+    c.setData(uR"(
+import QtQuick
+Item {
+    property int %1: 456
+    property bool success: false
+    function f() { %1 = 123; }
+    function g() { %2(); }
+    %3: success = true
+})"_s.arg(propertyName, propertyChangedSignal, propertyChangedHandler)
+                      .toUtf8(),
+              QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o != nullptr);
+    const QMetaObject *metaObject = o->metaObject();
+    auto signalIndex =
+            metaObject->indexOfSignal(propertyChangedSignal.append("()").toStdString().c_str());
+    QVERIFY(signalIndex > -1);
+    auto signal = metaObject->method(signalIndex);
+    QVERIFY(signal.isValid());
+    QSignalSpy changeSignal(o.data(), signal);
+    QMetaObject::invokeMethod(o.data(), "f");
+    QCOMPARE(o->property(propertyName.toStdString().c_str()), 123);
+    QVERIFY(changeSignal.size() == 1);
+    QCOMPARE(o->property("success"), true);
+    QMetaObject::invokeMethod(o.data(), "g");
+    QVERIFY(changeSignal.size() == 2);
+}
+void tst_qqmllanguage::signalNames_data()
+{
+    QTest::addColumn<QString>("signalName");
+    QTest::addColumn<QString>("handlerName");
+    QTest::addRow("helloWorld") << u"helloWorld"_s << u"onHelloWorld"_s;
+    QTest::addRow("$helloWorld") << u"$helloWorld"_s << u"on$HelloWorld"_s;
+    QTest::addRow("_helloWorld") << u"_helloWorld"_s << u"on_HelloWorld"_s;
+    QTest::addRow("_") << u"_"_s << u"on_"_s;
+    QTest::addRow("aUmlaut") << u"ä"_s << u"onÄ"_s;
+    QTest::addRow("___123a") << u"___123a"_s << u"on___123A"_s;
+}
+void tst_qqmllanguage::signalNames()
+{
+    QFETCH(QString, signalName);
+    QFETCH(QString, handlerName);
+    QQmlEngine e;
+    QQmlComponent c(&e);
+    c.setData(uR"(
+import QtQuick
+Item {
+    signal %1()
+    property bool success: false
+    function f() { %1(); }
+    %2: success = true
+})"_s.arg(signalName, handlerName)
+                      .toUtf8(),
+              QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o != nullptr);
+    const QMetaObject *metaObject = o->metaObject();
+    auto signalIndex = metaObject->indexOfSignal(signalName.append("()").toStdString().c_str());
+    QVERIFY(signalIndex > -1);
+    auto signal = metaObject->method(signalIndex);
+    QVERIFY(signal.isValid());
+    QSignalSpy changeSignal(o.data(), signal);
+    signal.invoke(o.data());
+    QVERIFY(changeSignal.size() == 1);
+    QCOMPARE(o->property("success"), true);
+    QMetaObject::invokeMethod(o.data(), "f");
+    QVERIFY(changeSignal.size() == 2);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
