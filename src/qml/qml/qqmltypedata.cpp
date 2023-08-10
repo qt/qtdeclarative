@@ -838,6 +838,10 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
 
 void QQmlTypeData::resolveTypes()
 {
+    // Load the implicit import since it may have additional scripts.
+    if (!m_implicitImportLoaded && !loadImplicitImport())
+        return;
+
     // Add any imported scripts to our resolved set
     const auto resolvedScripts = m_importCache->resolvedScripts();
     for (const QQmlImports::ScriptReference &script : resolvedScripts) {

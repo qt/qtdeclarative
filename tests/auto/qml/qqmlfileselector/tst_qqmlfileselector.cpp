@@ -100,8 +100,6 @@ void tst_qqmlfileselector::qmldirCompatibility()
         QVERIFY(!engine.rootObjects().isEmpty());
         QObject *object = engine.rootObjects().at(0);
         QCOMPARE(object->property("color").value<QColor>(), QColorConstants::Svg::green);
-
-        QEXPECT_FAIL("", "scripts in implicit import are not resolved", Continue);
         QCOMPARE(object->objectName(), "base");
     }
 }
