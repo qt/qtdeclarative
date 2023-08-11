@@ -152,10 +152,16 @@ void QmlTypesClassDescription::collect(
         if (name == S_DEFAULT_PROPERTY) {
             if (mode != RelatedType && defaultProp.isEmpty())
                 defaultProp = value;
-        } else if (name == S_PARENT_PROPERTY) {
+            continue;
+        }
+
+        if (name == S_PARENT_PROPERTY) {
             if (mode != RelatedType && parentProp.isEmpty())
                 parentProp = value;
-        } else if (name == S_ADDED_IN_VERSION) {
+            continue;
+        }
+
+        if (name == S_ADDED_IN_VERSION) {
             const QTypeRevision revision = QTypeRevision::fromEncodedVersion(toInt(value));
             if (mode == TopLevel) {
                 addedInRevision = revision;
@@ -163,6 +169,7 @@ void QmlTypesClassDescription::collect(
             } else if (!elementName.isEmpty()) {
                 revisions.append(revision);
             }
+            continue;
         }
 
         if (mode != TopLevel)
