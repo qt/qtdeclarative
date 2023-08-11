@@ -703,17 +703,26 @@ TestCase {
         const control = createTemporaryObject(translucentPages, testCase, {width: 320, height: 200})
         verify(control)
         compare(control.orientation, Qt.Horizontal)
-        for (var i = 0; i < control.count; ++i) {
+        for (let i = 0; i < control.count; ++i) {
             const page = control.itemAt(i)
             // control.contentItem.width + control.spacing == 310; except Imagine style has contentItem.width == 320
             compare(page.x, i * 310)
             compare(page.y, 0)
         }
         control.orientation = Qt.Vertical
-        for (var i = 0; i < control.count; ++i) {
+        for (let i = 0; i < control.count; ++i) {
             const page = control.itemAt(i)
             compare(page.y, i * (control.contentItem.height + control.spacing))
             compare(page.x, 0)
         }
+
+        // QTBUG-115468: add a page after startup and check that that works too.
+        control.orientation = Qt.Horizontal
+        let page4 = page.createObject(control, { text: "page 4", "font.pointSize": 40 })
+        control.insertItem(control.count, page4)
+        compare(page4.x, (control.count - 1) * 310)
+        compare(page4.y, 0)
+        compare(page4.width, control.contentItem.width)
+        compare(page4.height, control.contentItem.height)
     }
 }
