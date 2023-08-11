@@ -714,4 +714,20 @@ void tst_qmltyperegistrar::sequenceRegistration()
     })"));
 }
 
+void tst_qmltyperegistrar::valueTypeSelfReference()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "QPersistentModelIndex"
+        accessSemantics: "value"
+        extension: "QPersistentModelIndexValueType"
+    })"));
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "QPersistentModelIndexValueType"
+        accessSemantics: "value"
+        Property { name: "row"; type: "int"; read: "row"; index: 0; isReadonly: true; isFinal: true }
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

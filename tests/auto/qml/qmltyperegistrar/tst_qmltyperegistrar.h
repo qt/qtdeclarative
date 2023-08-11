@@ -7,17 +7,20 @@
 #include "foreign.h"
 #include "foreign_p.h"
 
-#include <QtQml/qqml.h>
-#include <QtQml/qqmlcomponent.h>
-#include <QtCore/qproperty.h>
-#include <QtCore/qtimeline.h>
-#include <QtCore/qrect.h>
 #include <QtQmlTypeRegistrar/private/qqmltyperegistrar_p.h>
-#include <QtCore/qtemporaryfile.h>
 
 #ifdef QT_QUICK_LIB
 #    include <QtQuick/qquickitem.h>
 #endif
+
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlcomponent.h>
+
+#include <QtCore/qabstractitemmodel.h>
+#include <QtCore/qproperty.h>
+#include <QtCore/qrect.h>
+#include <QtCore/qtemporaryfile.h>
+#include <QtCore/qtimeline.h>
 
 class Interface {};
 class Interface2 {};
@@ -621,6 +624,20 @@ struct QByteArrayStdVectorForeign
     QML_FOREIGN(std::vector<QByteArray>)
 };
 
+// Anonymous value type for an unknown foreign type
+struct QPersistentModelIndexValueType
+{
+    QPersistentModelIndex v;
+    Q_PROPERTY(int row READ row FINAL)
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_EXTENDED(QPersistentModelIndexValueType)
+    QML_FOREIGN(QPersistentModelIndex)
+
+public:
+    inline int row() const { return v.row(); }
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -676,6 +693,7 @@ private slots:
     void listSignal();
     void withNamespace();
     void sequenceRegistration();
+    void valueTypeSelfReference();
 
 private:
     QByteArray qmltypesData;

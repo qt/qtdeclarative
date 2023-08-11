@@ -121,7 +121,6 @@ void MetaTypesJsonProcessor::postProcessForeignTypes()
     sortTypes(m_foreignTypes);
     addRelatedTypes();
     sortStringList(&m_referencedTypes);
-    sortTypes(m_types);
 }
 
 QString MetaTypesJsonProcessor::extractRegisteredTypes() const
@@ -200,6 +199,13 @@ MetaTypesJsonProcessor::RegistrationMode MetaTypesJsonProcessor::qmlTypeRegistra
     return NoRegistration;
 }
 
+static bool qualifiedClassNameLessThan(const QJsonObject &a, const QJsonObject &b)
+{
+    const QLatin1String qualifiedClassNameKey("qualifiedClassName");
+    return a.value(qualifiedClassNameKey).toString() <
+            b.value(qualifiedClassNameKey).toString();
+}
+
 void MetaTypesJsonProcessor::addRelatedTypes()
 {
     const QLatin1String classInfosKey("classInfos");
@@ -265,7 +271,10 @@ void MetaTypesJsonProcessor::addRelatedTypes()
             m_referencedTypes.append(qualifiedName);
             if (!processedRelatedNames.contains(qualifiedName)) {
                 processedRelatedNames.insert(qualifiedName);
-                m_types.append(*other);
+                m_types.insert(
+                        std::lower_bound(
+                                m_types.begin(), m_types.end(), *other, qualifiedClassNameLessThan),
+                        *other);
                 typeQueue.enqueue(*other);
             }
             return true;
@@ -325,11 +334,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
 
 void MetaTypesJsonProcessor::sortTypes(QVector<QJsonObject> &types)
 {
-    const QLatin1String qualifiedClassNameKey("qualifiedClassName");
-    std::sort(types.begin(), types.end(), [&](const QJsonObject &a, const QJsonObject &b) {
-        return a.value(qualifiedClassNameKey).toString() <
-                b.value(qualifiedClassNameKey).toString();
-    });
+    std::sort(types.begin(), types.end(), qualifiedClassNameLessThan);
 }
 
 QString MetaTypesJsonProcessor::resolvedInclude(const QString &include)
