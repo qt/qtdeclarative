@@ -1198,6 +1198,7 @@ QQmlLSUtils::checkNameForRename(DomItem item, const QString &dirtyNewName,
         if (!QQmlSignalNames::isHandlerName(dirtyNewName)) {
             return QQmlLSUtilsErrorMessage{ 0, u"Invalid name for a signal handler identifier."_s };
         }
+        break;
     }
     // TODO: any other specificities?
     case QmlObjectIdIdentifier:
