@@ -198,6 +198,9 @@ void QmlTypesClassDescription::collect(
             if (const QCborMap *element = collectRelated(
                         value, types, foreign, defaultRevision, namespaces)) {
                 sequenceValueType = toStringView(*element, S_QUALIFIED_CLASS_NAME);
+            } else {
+                // TODO: get rid of this once we have JSON data for the builtins.
+                sequenceValueType = value;
             }
         } else if (name == S_SINGLETON) {
             if (value == S_TRUE)

@@ -720,4 +720,14 @@ void tst_qmltyperegistrar::withNamespace()
     })"));
 }
 
+void tst_qmltyperegistrar::sequenceRegistration()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "std::vector<QByteArray>"
+        accessSemantics: "sequence"
+        valueType: "QByteArray"
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)
