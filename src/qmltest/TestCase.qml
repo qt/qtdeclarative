@@ -1943,7 +1943,11 @@ Item {
         if (!when || completed || running || !qtest_componentCompleted)
             return;
 
-        verify(TestLogger.log_can_start_test(qtest_testId))
+        if (!TestLogger.log_can_start_test(qtest_testId)) {
+            console.error("Interleaved test execution detected. This shouldn't happen")
+            return;
+        }
+
         if (TestLogger.log_start_test(qtest_testId)) {
             qtest_results.reset()
             qtest_results.testCaseName = name
