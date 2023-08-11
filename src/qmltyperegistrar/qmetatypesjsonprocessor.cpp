@@ -143,7 +143,6 @@ void MetaTypesJsonProcessor::postProcessForeignTypes()
     sortTypes(m_foreignTypes);
     addRelatedTypes();
     sortStringList(&m_referencedTypes);
-    sortTypes(m_types);
 }
 
 QString MetaTypesJsonProcessor::extractRegisteredTypes() const
@@ -237,6 +236,12 @@ static size_t qHash(QAnyStringView string, size_t seed = 0)
     });
 }
 
+static bool qualifiedClassNameLessThan(const QCborMap &a, const QCborMap &b)
+{
+    return toStringView(a, S_QUALIFIED_CLASS_NAME) <
+            toStringView(b, S_QUALIFIED_CLASS_NAME);
+}
+
 void MetaTypesJsonProcessor::addRelatedTypes()
 {
     QSet<QAnyStringView> processedRelatedNames;
@@ -291,7 +296,10 @@ void MetaTypesJsonProcessor::addRelatedTypes()
             m_referencedTypes.append(qualifiedName);
             if (!processedRelatedNames.contains(qualifiedName)) {
                 processedRelatedNames.insert(qualifiedName);
-                m_types.append(*other);
+                m_types.insert(
+                        std::lower_bound(
+                                m_types.begin(), m_types.end(), *other, qualifiedClassNameLessThan),
+                        *other);
                 typeQueue.enqueue(*other);
             }
             return true;
@@ -353,10 +361,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
 
 void MetaTypesJsonProcessor::sortTypes(QVector<QCborMap> &types)
 {
-    std::sort(types.begin(), types.end(), [&](const QCborMap &a, const QCborMap &b) {
-        return toStringView(a, S_QUALIFIED_CLASS_NAME) <
-               toStringView(b, S_QUALIFIED_CLASS_NAME);
-    });
+    std::sort(types.begin(), types.end(), qualifiedClassNameLessThan);
 }
 
 QString MetaTypesJsonProcessor::resolvedInclude(QAnyStringView include)
