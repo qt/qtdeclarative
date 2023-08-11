@@ -31,7 +31,7 @@
         property int currentIndex
 
         Shortcut {
-            sequences: StandardKey.NextChild
+            sequences: [StandardKey.NextChild]
             onActivated: view.currentIndex++
         }
     }
