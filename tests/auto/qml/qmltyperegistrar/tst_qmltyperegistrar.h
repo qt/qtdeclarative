@@ -613,6 +613,14 @@ public:
 } // namespace Inner
 } // namespace Testing
 
+struct QByteArrayStdVectorForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_SEQUENTIAL_CONTAINER(QByteArray)
+    QML_FOREIGN(std::vector<QByteArray>)
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -667,6 +675,7 @@ private slots:
     void typedEnum();
     void listSignal();
     void withNamespace();
+    void sequenceRegistration();
 
 private:
     QByteArray qmltypesData;

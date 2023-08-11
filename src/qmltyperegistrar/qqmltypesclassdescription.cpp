@@ -188,6 +188,9 @@ void QmlTypesClassDescription::collect(
             if (const QJsonObject *element = collectRelated(
                         value, types, foreign, defaultRevision, namespaces)) {
                 sequenceValueType = qualifiedClassName(*element);
+            } else {
+                // TODO: get rid of this once we have JSON data for the builtins.
+                sequenceValueType = value;
             }
         } else if (name == QLatin1String("QML.Singleton")) {
             if (value == QLatin1String("true"))
