@@ -310,7 +310,7 @@ private:
 Q_DECLARE_MIXED_ENUM_OPERATORS_SYMMETRIC(int, QQuickText::HAlignment, QQuickText::VAlignment)
 
 class QTextLine;
-class QQuickTextLine : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickTextLine : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int number READ number)
