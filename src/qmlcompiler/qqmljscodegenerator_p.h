@@ -260,11 +260,13 @@ protected:
     void generateEnumLookup(int index);
 
     QString registerVariable(int index) const;
+    QString lookupVariable(int lookupIndex) const;
     QString consumedRegisterVariable(int index) const;
     QString consumedAccumulatorVariableIn() const;
 
     QString changedRegisterVariable() const;
     QQmlJSRegisterContent registerType(int index) const;
+    QQmlJSRegisterContent lookupType(int lookupIndex) const;
     bool shouldMoveRegister(int index) const;
 
     QString m_body;
@@ -339,17 +341,20 @@ private:
     {
         QString internalName;
         int registerIndex = -1;
+        int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex;
 
     private:
         friend size_t qHash(const RegisterVariablesKey &key, size_t seed = 0) noexcept
         {
-            return qHashMulti(seed, key.internalName, key.registerIndex);
+            return qHashMulti(seed, key.internalName, key.registerIndex, key.lookupIndex);
         }
 
         friend bool operator==(
                 const RegisterVariablesKey &lhs, const RegisterVariablesKey &rhs) noexcept
         {
-            return lhs.registerIndex == rhs.registerIndex && lhs.internalName == rhs.internalName;
+            return lhs.registerIndex == rhs.registerIndex
+                    && lhs.lookupIndex == rhs.lookupIndex
+                    && lhs.internalName == rhs.internalName;
         }
 
         friend bool operator!=(

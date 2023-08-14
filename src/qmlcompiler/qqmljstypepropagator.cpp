@@ -548,7 +548,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
     const int nameIndex = m_jsUnitGenerator->lookupNameIndex(index);
     const QString name = m_jsUnitGenerator->stringForIndex(nameIndex);
 
-    setAccumulator(m_typeResolver->scopedType(m_function->qmlScope, name));
+    setAccumulator(m_typeResolver->scopedType(m_function->qmlScope, name, index));
 
     if (!m_state.accumulatorOut().isValid() && m_typeResolver->isPrefix(name)) {
         const QQmlJSRegisterContent inType = m_typeResolver->globalType(m_function->qmlScope);
@@ -764,7 +764,7 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
     m_state.setHasSideEffects(true);
 }
 
-void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
+void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, int lookupIndex)
 {
     setAccumulator(
             m_typeResolver->memberType(
@@ -772,7 +772,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
                 m_state.accumulatorIn().isImportNamespace()
                     ? m_jsUnitGenerator->stringForIndex(m_state.accumulatorIn().importNamespace())
                       + u'.' + propertyName
-                    : propertyName));
+                    : propertyName, lookupIndex));
 
     if (!m_state.accumulatorOut().isValid()) {
         if (m_typeResolver->isPrefix(propertyName)) {
@@ -909,7 +909,7 @@ void QQmlJSTypePropagator::generate_LoadOptionalProperty(int name, int offset)
 
 void QQmlJSTypePropagator::generate_GetLookup(int index)
 {
-    propagatePropertyLookup(m_jsUnitGenerator->lookupName(index));
+    propagatePropertyLookup(m_jsUnitGenerator->lookupName(index), index);
 }
 
 void QQmlJSTypePropagator::generate_GetOptionalLookup(int index, int offset)
@@ -1489,10 +1489,6 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
     const auto valueContained = baseContained->valueType();
     const auto valueType = m_typeResolver->globalType(valueContained);
 
-    // TODO: We should remember whether a register content can be written back when
-    //       converting and merging. Also, we need a way to detect the "only in same statement"
-    //       write back case. To do this, we should store the statementNumber(s) in
-    //       Property and Conversion RegisterContents.
     const bool canHaveSideEffects = (baseType.isProperty() && baseType.isWritable())
             || baseType.isConversion();
 

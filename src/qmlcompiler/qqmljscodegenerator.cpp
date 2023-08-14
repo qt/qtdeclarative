@@ -104,12 +104,13 @@ QQmlJSAotFunction QQmlJSCodeGenerator::run(const Function *function,
 
     QHash<int, int> numRegisterVariablesPerIndex;
 
-    auto addVariable = [&](int registerIndex, const QQmlJSScope::ConstPtr &seenType) {
+    const auto addVariable
+            = [&](int registerIndex, int lookupIndex, const QQmlJSScope::ConstPtr &seenType) {
         // Don't generate any variables for registers that are initialized with undefined.
         if (registerIndex == InvalidRegister || !isTypeStorable(m_typeResolver, seenType))
             return;
 
-        const RegisterVariablesKey key = { seenType->internalName(), registerIndex };
+        const RegisterVariablesKey key = { seenType->internalName(), registerIndex, lookupIndex };
 
 
         const auto oldSize = m_registerVariables.size();
@@ -127,11 +128,14 @@ QT_WARNING_PUSH
 QT_WARNING_DISABLE_CLANG("-Wrange-loop-analysis")
     for (const auto &annotation : *m_annotations) {
         addVariable(annotation.second.changedRegisterIndex,
+                    annotation.second.changedRegister.resultLookupIndex(),
                     annotation.second.changedRegister.storedType());
         for (auto it = annotation.second.typeConversions.begin(),
              end = annotation.second.typeConversions.end();
              it != end; ++it) {
-            addVariable(it.key(), it.value().content.storedType());
+            addVariable(
+                    it.key(), it.value().content.resultLookupIndex(),
+                    it.value().content.storedType());
         }
     }
 QT_WARNING_POP
@@ -2890,9 +2894,11 @@ QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(
     const auto accumulatorIn = m_state.registers.find(Accumulator);
     if (accumulatorIn != m_state.registers.end()
             && isTypeStorable(m_typeResolver, accumulatorIn.value().content.storedType())) {
+        const QQmlJSRegisterContent &content = accumulatorIn.value().content;
         m_state.accumulatorVariableIn = m_registerVariables.value(RegisterVariablesKey {
-            accumulatorIn.value().content.storedType()->internalName(),
-            Accumulator
+            content.storedType()->internalName(),
+            Accumulator,
+            content.resultLookupIndex()
         }).variableName;
         Q_ASSERT(!m_state.accumulatorVariableIn.isEmpty());
     } else {
@@ -3188,7 +3194,8 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset
 
             const auto variable = m_registerVariables.constFind(RegisterVariablesKey {
                     targetType.storedType()->internalName(),
-                    registerIndex
+                    registerIndex,
+                    targetType.resultLookupIndex()
             });
             if (variable == m_registerVariables.end() || variable->variableName == currentVariable)
                 continue;
@@ -3213,13 +3220,24 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset
 
 QString QQmlJSCodeGenerator::registerVariable(int index) const
 {
+    const QQmlJSRegisterContent &content = registerType(index);
     const auto it = m_registerVariables.constFind(RegisterVariablesKey {
-        registerType(index).storedType()->internalName(),
-        index
+        content.storedType()->internalName(),
+        index,
+        content.resultLookupIndex()
     });
     if (it != m_registerVariables.constEnd())
         return it->variableName;
 
+    return QString();
+}
+
+QString QQmlJSCodeGenerator::lookupVariable(int lookupIndex) const
+{
+    for (auto it = m_registerVariables.constBegin(), end = m_registerVariables.constEnd(); it != end; ++it) {
+        if (it.key().lookupIndex == lookupIndex)
+            return it->variableName;
+    }
     return QString();
 }
 
@@ -3240,13 +3258,16 @@ QString QQmlJSCodeGenerator::consumedAccumulatorVariableIn() const
 
 QString QQmlJSCodeGenerator::changedRegisterVariable() const
 {
-    const QQmlJSScope::ConstPtr storedType = m_state.changedRegister().storedType();
+    const QQmlJSRegisterContent &changedRegister = m_state.changedRegister();
+
+    const QQmlJSScope::ConstPtr storedType = changedRegister.storedType();
     if (storedType.isNull())
         return QString();
 
     return m_registerVariables.value(RegisterVariablesKey {
         storedType->internalName(),
-        m_state.changedRegisterIndex()
+        m_state.changedRegisterIndex(),
+        changedRegister.resultLookupIndex()
     }).variableName;
 }
 
@@ -3254,6 +3275,15 @@ QQmlJSRegisterContent QQmlJSCodeGenerator::registerType(int index) const
 {
     auto it = m_state.registers.find(index);
     if (it != m_state.registers.end())
+        return it.value().content;
+
+    return QQmlJSRegisterContent();
+}
+
+QQmlJSRegisterContent QQmlJSCodeGenerator::lookupType(int lookupIndex) const
+{
+    auto it = m_state.lookups.find(lookupIndex);
+    if (it != m_state.lookups.end())
         return it.value().content;
 
     return QQmlJSRegisterContent();

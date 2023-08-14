@@ -215,7 +215,8 @@ private:
     bool propagateTranslationMethod(const QList<QQmlJSMetaMethod> &methods, int argc, int argv);
     void propagateStringArgCall(int argv);
     bool propagateArrayMethod(const QString &name, int argc, int argv, const QQmlJSRegisterContent &valueType);
-    void propagatePropertyLookup(const QString &name);
+    void propagatePropertyLookup(
+            const QString &name, int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex);
     void propagateScopeLookupCall(const QString &functionName, int argc, int argv);
     void saveRegisterStateForJump(int offset);
     bool canConvertFromTo(const QQmlJSRegisterContent &from, const QQmlJSRegisterContent &to);

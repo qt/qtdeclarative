@@ -114,8 +114,12 @@ public:
 
     QQmlJSRegisterContent builtinType(const QQmlJSScope::ConstPtr &type) const;
     QQmlJSRegisterContent globalType(const QQmlJSScope::ConstPtr &type) const;
-    QQmlJSRegisterContent scopedType(const QQmlJSScope::ConstPtr &scope, const QString &name) const;
-    QQmlJSRegisterContent memberType(const QQmlJSRegisterContent &type, const QString &name) const;
+    QQmlJSRegisterContent scopedType(
+            const QQmlJSScope::ConstPtr &scope, const QString &name,
+            int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex) const;
+    QQmlJSRegisterContent memberType(
+            const QQmlJSRegisterContent &type, const QString &name,
+            int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex) const;
     QQmlJSRegisterContent valueType(const QQmlJSRegisterContent &list) const;
     QQmlJSRegisterContent returnType(
             const QQmlJSScope::ConstPtr &type, QQmlJSRegisterContent::ContentVariant variant,
@@ -195,7 +199,9 @@ public:
 
 protected:
 
-    QQmlJSRegisterContent memberType(const QQmlJSScope::ConstPtr &type, const QString &name) const;
+    QQmlJSRegisterContent memberType(
+            const QQmlJSScope::ConstPtr &type, const QString &name,
+            int baseLookupIndex, int resultLookupIndex) const;
     QQmlJSRegisterContent memberEnumType(const QQmlJSScope::ConstPtr &type,
                                          const QString &name) const;
     bool isPrimitive(const QQmlJSScope::ConstPtr &type) const;

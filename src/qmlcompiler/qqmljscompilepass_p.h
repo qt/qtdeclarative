@@ -89,6 +89,7 @@ public:
     struct State
     {
         VirtualRegisters registers;
+        VirtualRegisters lookups;
 
         const QQmlJSRegisterContent &accumulatorIn() const
         {
@@ -105,6 +106,10 @@ public:
 
         void setRegister(int registerIndex, QQmlJSRegisterContent content)
         {
+            const int lookupIndex = content.resultLookupIndex();
+            if (lookupIndex != QQmlJSRegisterContent::InvalidLookupIndex)
+                lookups[lookupIndex] = { content, false, false };
+
             m_changedRegister = std::move(content);
             m_changedRegisterIndex = registerIndex;
         }
@@ -176,6 +181,9 @@ public:
                 return;
 
             for (auto it = registers.begin(), end = registers.end(); it != end; ++it)
+                it.value().affectedBySideEffects = true;
+
+            for (auto it = lookups.begin(), end = lookups.end(); it != end; ++it)
                 it.value().affectedBySideEffects = true;
         }
 
@@ -253,6 +261,7 @@ protected:
 
         const auto instruction = annotations.find(currentInstructionOffset());
         newState.registers = oldState.registers;
+        newState.lookups = oldState.lookups;
 
         // Usually the initial accumulator type is the output of the previous instruction, but ...
         if (oldState.changedRegisterIndex() != InvalidRegister) {

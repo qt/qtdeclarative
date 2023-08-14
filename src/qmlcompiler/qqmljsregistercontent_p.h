@@ -60,6 +60,8 @@ public:
         Unknown,
     };
 
+    enum { InvalidLookupIndex = -1 };
+
     QQmlJSRegisterContent() = default;
     bool isValid() const { return !m_storedType.isNull(); }
 
@@ -89,8 +91,29 @@ public:
     QQmlJSScope::ConstPtr storedType() const { return m_storedType; }
     QQmlJSScope::ConstPtr scopeType() const { return m_scope; }
 
-    QQmlJSScope::ConstPtr type() const { return std::get<QQmlJSScope::ConstPtr>(m_content); }
-    QQmlJSMetaProperty property() const { return std::get<QQmlJSMetaProperty>(m_content); }
+    QQmlJSScope::ConstPtr type() const
+    {
+        return std::get<std::pair<QQmlJSScope::ConstPtr, int>>(m_content).first;
+    }
+    QQmlJSMetaProperty property() const
+    {
+        return std::get<PropertyLookup>(m_content).property;
+    }
+    int baseLookupIndex() const
+    {
+        return std::get<PropertyLookup>(m_content).baseLookupIndex;
+    }
+    int resultLookupIndex() const
+    {
+        switch (m_content.index()) {
+        case Type:
+            return std::get<std::pair<QQmlJSScope::ConstPtr, int>>(m_content).second;
+        case Property:
+            return std::get<PropertyLookup>(m_content).resultLookupIndex;
+        default:
+            return InvalidLookupIndex;
+        }
+    }
     QQmlJSMetaEnum enumeration() const
     {
         return std::get<std::pair<QQmlJSMetaEnum, QString>>(m_content).first;
@@ -125,9 +148,10 @@ public:
                           registerContent.m_scope, registerContent.m_variant);
         switch (registerContent.m_content.index()) {
         case Type:
-            return qHash(std::get<QQmlJSScope::ConstPtr>(registerContent.m_content), seed);
+            return qHash(std::get<std::pair<QQmlJSScope::ConstPtr, int>>(registerContent.m_content),
+                         seed);
         case Property:
-            return qHash(std::get<QQmlJSMetaProperty>(registerContent.m_content), seed);
+            return qHash(std::get<PropertyLookup>(registerContent.m_content), seed);
         case Enum:
             return qHash(std::get<std::pair<QQmlJSMetaEnum, QString>>(registerContent.m_content),
                          seed);
@@ -143,11 +167,14 @@ public:
     }
 
     static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
-                                        const QQmlJSScope::ConstPtr &type, ContentVariant variant,
+                                        const QQmlJSScope::ConstPtr &type,
+                                        int resultLookupIndex, ContentVariant variant,
                                         const QQmlJSScope::ConstPtr &scope = {});
 
     static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
-                                        const QQmlJSMetaProperty &property, ContentVariant variant,
+                                        const QQmlJSMetaProperty &property,
+                                        int baseLookupIndex, int resultLookupIndex,
+                                        ContentVariant variant,
                                         const QQmlJSScope::ConstPtr &scope);
 
     static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
@@ -203,9 +230,34 @@ private:
         }
     };
 
+    struct PropertyLookup
+    {
+        QQmlJSMetaProperty property;
+        int baseLookupIndex = InvalidLookupIndex;
+        int resultLookupIndex = InvalidLookupIndex;
+
+        friend size_t qHash(const PropertyLookup &property, size_t seed = 0)
+        {
+            return qHashMulti(
+                    seed, property.property, property.baseLookupIndex, property.resultLookupIndex);
+        }
+
+        friend bool operator==(const PropertyLookup &a, const PropertyLookup &b)
+        {
+            return a.baseLookupIndex == b.baseLookupIndex
+                    && a.resultLookupIndex == b.resultLookupIndex
+                    && a.property == b.property;
+        }
+
+        friend bool operator!=(const PropertyLookup &a, const PropertyLookup &b)
+        {
+            return !(a == b);
+        }
+    };
+
     using Content = std::variant<
-        QQmlJSScope::ConstPtr,
-        QQmlJSMetaProperty,
+        std::pair<QQmlJSScope::ConstPtr, int>,
+        PropertyLookup,
         std::pair<QQmlJSMetaEnum, QString>,
         QList<QQmlJSMetaMethod>,
         uint,
