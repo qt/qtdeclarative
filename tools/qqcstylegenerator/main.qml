@@ -43,13 +43,19 @@ ApplicationWindow {
         }
 
         function onWarning(msg) {
-            showLogCheckbox.checked = true
+            if (!outputScrollView.visible)
+                outputFilter.text = "(warning|error)"
+            updateOutputFilter();
             output("Warning: " + msg)
+            showLogCheckbox.checked = true
         }
 
         function onError(msg) {
-            showLogCheckbox.checked = true
+            if (!outputScrollView.visible)
+                outputFilter.text = "(warning|error)"
+            updateOutputFilter();
             output("Error: " + msg)
+            showLogCheckbox.checked = true
         }
 
         function onStarted() {
@@ -95,9 +101,21 @@ ApplicationWindow {
     function output(msg)
     {
         outputModel.append({"msg": msg})
-        const regex = new RegExp(searchFilter.text, "i");
+        const regex = new RegExp(outputFilter.text, "i");
         if (regex.test(msg))
             filteredModel.append({"msg" : msg})
+    }
+
+    function updateOutputFilter() {
+        filteredModel.clear()
+        const regex = new RegExp(outputFilter.text, "i");
+        let rows = outputModel.rowCount()
+        for (let row = 0; row < rows; ++row) {
+            let index = outputModel.index(row, 0)
+            let msg = outputModel.data(index)
+            if (regex.test(msg))
+                filteredModel.append({"msg" : msg})
+        }
     }
 
     function stop()
@@ -259,22 +277,11 @@ ApplicationWindow {
         }
 
         TextField {
-            id: searchFilter
+            id: outputFilter
             placeholderText: "Filter (regexp)"
             Layout.preferredWidth: outputScrollView.width
             visible: outputScrollView.visible
-            text: "(warning|error)"
-            onAccepted: {
-                filteredModel.clear()
-                const regex = new RegExp(text, "i");
-                let rows = outputModel.rowCount()
-                for (let row = 0; row < rows; ++row) {
-                    let index = outputModel.index(row, 0)
-                    let msg = outputModel.data(index)
-                    if (regex.test(msg))
-                        filteredModel.append({"msg" : msg})
-                }
-            }
+            onAccepted: updateOutputFilter()
         }
 
     }
