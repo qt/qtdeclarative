@@ -1300,6 +1300,31 @@ int QQuickMaterialStyle::menuItemVerticalPadding() const
     return globalVariant == Dense ? 8 : 12;
 }
 
+int QQuickMaterialStyle::switchIndicatorWidth() const
+{
+    return globalVariant == Dense ? 40 : 52;
+}
+
+int QQuickMaterialStyle::switchIndicatorHeight() const
+{
+    return globalVariant == Dense ? 22 : 32;
+}
+
+int QQuickMaterialStyle::switchNormalHandleHeight() const
+{
+    return globalVariant == Dense ? 10 : 16;
+}
+
+int QQuickMaterialStyle::switchCheckedHandleHeight() const
+{
+    return globalVariant == Dense ? 16 : 24;
+}
+
+int QQuickMaterialStyle::switchLargestHandleHeight() const
+{
+    return globalVariant == Dense ? 18 : 28;
+}
+
 int QQuickMaterialStyle::switchDelegateVerticalPadding() const
 {
     // SwitchDelegate's indicator is much larger than the others due to the shadow,

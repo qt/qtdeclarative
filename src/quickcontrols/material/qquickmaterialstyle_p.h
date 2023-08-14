@@ -82,6 +82,11 @@ class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
     Q_PROPERTY(int frameVerticalPadding READ frameVerticalPadding CONSTANT FINAL)
     Q_PROPERTY(int menuItemHeight READ menuItemHeight CONSTANT FINAL)
     Q_PROPERTY(int menuItemVerticalPadding READ menuItemVerticalPadding CONSTANT FINAL)
+    Q_PROPERTY(int switchIndicatorWidth READ switchIndicatorWidth CONSTANT FINAL)
+    Q_PROPERTY(int switchIndicatorHeight READ switchIndicatorHeight CONSTANT FINAL)
+    Q_PROPERTY(int switchNormalHandleHeight READ switchNormalHandleHeight CONSTANT FINAL)
+    Q_PROPERTY(int switchCheckedHandleHeight READ switchCheckedHandleHeight CONSTANT FINAL)
+    Q_PROPERTY(int switchLargestHandleHeight READ switchLargestHandleHeight CONSTANT FINAL)
     Q_PROPERTY(int switchDelegateVerticalPadding READ switchDelegateVerticalPadding CONSTANT FINAL)
     Q_PROPERTY(int textFieldHeight READ textFieldHeight CONSTANT FINAL)
     Q_PROPERTY(int textFieldHorizontalPadding READ textFieldHorizontalPadding CONSTANT FINAL)
@@ -270,6 +275,11 @@ public:
     int frameVerticalPadding() const;
     int menuItemHeight() const;
     int menuItemVerticalPadding() const;
+    int switchIndicatorWidth() const;
+    int switchIndicatorHeight() const;
+    int switchNormalHandleHeight() const;
+    int switchCheckedHandleHeight() const;
+    int switchLargestHandleHeight() const;
     int switchDelegateVerticalPadding() const;
     int textFieldHeight() const;
     int textFieldHorizontalPadding() const;
