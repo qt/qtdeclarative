@@ -176,8 +176,8 @@
             {"atom": "background", "figmaPath": "RangeSliderBackground, background"},
             {"atom": "groove", "figmaPath": "RangeSliderGroove, groveBack"},
             {"atom": "track", "figmaPath": "RangeSliderTrack, trackBack"},
-            {"atom": "first-handle", "figmaPath": "RangeSliderHandleFirst, handleBack"},
-            {"atom": "second-handle", "figmaPath": "RangeSliderHandleSecond, handleBack"},
+            {"atom": "first-handle", "figmaPath": "RangeSliderHandleFirst"},
+            {"atom": "second-handle", "figmaPath": "RangeSliderHandleSecond"},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
         ],
         "states": [
@@ -194,7 +194,7 @@
         "component set": "ScrollBarTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ScrollbarBackground, background"},
-            {"atom": "handle", "figmaPath": "ScrollbarHandle, handle"},
+            {"atom": "handle", "figmaPath": "ScrollbarHandle"},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
         ],
         "states": [
@@ -211,7 +211,7 @@
         "component set": "ScrollIndicatorTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ScrollIndicatorBackground, background"},
-            {"atom": "handle", "figmaPath": "ScrollIndicatorHandle, handle"},
+            {"atom": "handle", "figmaPath": "ScrollIndicatorHandle"},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
         ],
         "states": [
@@ -229,7 +229,7 @@
             {"atom": "background", "figmaPath": "SliderBackground, background"},
             {"atom": "groove", "figmaPath": "SliderGroove, groveBack"},
             {"atom": "track", "figmaPath": "SliderTrack, trackBack"},
-            {"atom": "handle", "figmaPath": "SliderHandle, handleBack"},
+            {"atom": "handle", "figmaPath": "SliderHandle"},
             {"atom": "contentItem", "figmaPath": "ContentItem"}
         ],
         "states": [
