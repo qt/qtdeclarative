@@ -701,6 +701,7 @@ namespace QQmlPrivate
         void initLoadGlobalLookup(uint index) const;
 
         bool loadScopeObjectPropertyLookup(uint index, void *target) const;
+        bool writeBackScopeObjectPropertyLookup(uint index, void *source) const;
         void initLoadScopeObjectPropertyLookup(uint index, QMetaType type) const;
 
         bool loadSingletonLookup(uint index, void *target) const;
@@ -713,9 +714,11 @@ namespace QQmlPrivate
         void initLoadTypeLookup(uint index, uint importNamespace) const;
 
         bool getObjectLookup(uint index, QObject *object, void *target) const;
+        bool writeBackObjectLookup(uint index, QObject *object, void *source) const;
         void initGetObjectLookup(uint index, QObject *object, QMetaType type) const;
 
         bool getValueLookup(uint index, void *value, void *target) const;
+        bool writeBackValueLookup(uint index, void *value, void *source) const;
         void initGetValueLookup(uint index, const QMetaObject *metaObject, QMetaType type) const;
 
         bool getEnumLookup(uint index, void *target) const;
