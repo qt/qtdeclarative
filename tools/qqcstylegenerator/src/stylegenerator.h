@@ -310,11 +310,12 @@ private:
             m_defaultExport[atom] = exportList;
         }
 
+        QRegularExpression re(m_bridge->m_controlToGenerate);
         for (const auto controlValue : controlsArray) {
             progress();
             const auto controlObj = controlValue.toObject();
             const QString name = getString("name", controlObj);
-            if (!m_bridge->m_controlToGenerate.isEmpty() && name != m_bridge->m_controlToGenerate)
+            if (!re.match(name).hasMatch())
                 continue;
 
             try {

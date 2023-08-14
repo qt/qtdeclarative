@@ -31,16 +31,13 @@ int main(int argc, char **argv){
         {"sanity",
             QCoreApplication::translate("main", "Run extra sanity checks on the Figma file")},
         {{"g", "generate"},
-            QCoreApplication::translate("main", "Generate one control (for debugging)"),
-            QCoreApplication::translate("main", "The control to generate")}
+            QCoreApplication::translate("main", "Generate only a subset of the controls"),
+            QCoreApplication::translate("main", "A regexp telling which controls to generate")}
     });
     parser.addPositionalArgument("figma_file_id",
         QCoreApplication::translate("main", "The figma file ID to create a style from."));
 
-    if (!parser.parse(QCoreApplication::arguments())) {
-        qWarning() << parser.errorText();
-        return -1;
-    }
+    parser.process(app);
 
     Bridge bridge;
     // Use the same options (as stored with QSettings) from the
