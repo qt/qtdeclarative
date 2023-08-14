@@ -578,6 +578,9 @@ These additional targets are generated internally by \c{qt_add_qml_module()}
 and are referenced by the backing target's linking requirements as part of
 ensuring that resources are set up and loaded correctly.
 
+\note Since Qt 6.8, it is possible to pass a target name to IMPORTS and
+DEPENDENCIES. See \l{QTP0005} for more details.
+
 \target PLUGIN_TARGET
 \section2 Targets and plugin targets
 

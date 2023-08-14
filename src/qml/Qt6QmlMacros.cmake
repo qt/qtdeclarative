@@ -13,6 +13,76 @@ set(__qt_qml_macros_module_base_dir "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "
 include(GNUInstallDirs)
 _qt_internal_add_deploy_support("${CMAKE_CURRENT_LIST_DIR}/Qt6QmlDeploySupport.cmake")
 
+function(_qt_internal_parse_qml_module_dependency dependency was_marked_as_target)
+    set(args_option "")
+    set(args_single OUTPUT_URI OUTPUT_VERSION OUTPUT_MODULE_LOCATION)
+    set(args_multi QML_FILES IMPORT_PATHS)
+
+    cmake_parse_arguments(PARSE_ARGV 2 arg
+        "${args_option}" "${args_single}" "${args_multi}"
+    )
+    if(arg_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unknown/unexpected arguments: ${arg_UNPARSED_ARGUMENTS}")
+    endif()
+
+    if(NOT arg_OUTPUT_URI)
+        message(FATAL_ERROR "Missing output URI variable")
+    endif()
+    if(NOT arg_OUTPUT_VERSION)
+        message(FATAL_ERROR "Missing output version variable")
+    endif()
+
+    set(dep_version "")
+    set(dep_target_or_uri "")
+    string(FIND "${dependency}" "/" slash_position REVERSE)
+    if(slash_position EQUAL -1)
+        set(dep_target_or_uri "${dependency}")
+    else()
+        string(SUBSTRING "${dependency}" 0 ${slash_position} dep_module)
+        math(EXPR slash_position "${slash_position} + 1")
+        string(SUBSTRING "${dependency}" ${slash_position} -1 dep_version)
+        if(NOT dep_version MATCHES "^([0-9]+(\\.[0-9]+)?|auto)$")
+            message(FATAL_ERROR
+                "Invalid module dependency version number. "
+                "Expected 'VersionMajor', 'VersionMajor.VersionMinor' or 'auto'."
+            )
+        endif()
+        set(dep_target_or_uri "${dep_module}")
+    endif()
+    if("${was_marked_as_target}" AND NOT TARGET ${dep_target_or_uri})
+        message(FATAL_ERROR "Argument ${dep_target_or_uri} is not a target!")
+    endif()
+    if("${was_marked_as_target}")
+        qt6_query_qml_module(${dep_target_or_uri}
+            URI dependency_uri
+            QMLDIR qmldir_location
+        )
+        set(dep_module ${dependency_uri})
+    else()
+        set(dep_module "${dep_target_or_uri}")
+    endif()
+    set(${arg_OUTPUT_URI} ${dep_module} PARENT_SCOPE)
+    set(${arg_OUTPUT_VERSION} ${dep_version} PARENT_SCOPE)
+    if(arg_OUTPUT_MODULE_LOCATION)
+        if(was_marked_as_target)
+            if(NOT qmldir_location)
+                message(FATAL_ERROR "module has no qmldir! Given target was ${dep_target_or_uri}")
+            endif()
+            set(module_location "${qmldir_location}")
+            string(REGEX MATCHALL "\\." matches "${dependency_uri}")
+            list(LENGTH matches go_up_count)
+            # inclusive, which is what we want here: go up once for the qmldir,
+            # and then once per separated component
+            foreach(i RANGE ${go_up_count})
+                get_filename_component(module_location "${module_location}" DIRECTORY)
+            endforeach()
+            set(${arg_OUTPUT_MODULE_LOCATION} "${module_location}" PARENT_SCOPE)
+        else()
+            set(${arg_OUTPUT_MODULE_LOCATION} "NOTFOUND" PARENT_SCOPE)
+        endif()
+    endif()
+endfunction()
+
 function(qt6_add_qml_module target)
     set(args_option
         STATIC
@@ -391,52 +461,72 @@ function(qt6_add_qml_module target)
         set(arg_TYPEINFO ${target}.qmltypes)
     endif()
 
+    set(original_no_show_policy_value "${QT_NO_SHOW_OLD_POLICY_WARNINGS}")
+    # silent by default, we only warn if someone uses TARGET as a URI
+    set(QT_NO_SHOW_OLD_POLICY_WARNINGS TRUE)
+    __qt_internal_setup_policy(QTP0005 "6.8.0"
+    "" # intentionally empty as we silence the warning anyway
+    )
+    qt6_policy(GET QTP0005 allow_targets_for_dependencies_policy)
+    set(QT_NO_SHOW_OLD_POLICY_WARNINGS "${original_no_show_policy_value}")
+    string(COMPARE EQUAL "${allow_targets_for_dependencies_policy}" "NEW" target_is_keyword)
+
+
+    set(target_keyword_was_set FALSE)
     foreach(import_set IN ITEMS IMPORTS OPTIONAL_IMPORTS DEFAULT_IMPORTS)
         foreach(import IN LISTS arg_${import_set})
-            string(FIND ${import} "/" slash_position REVERSE)
-            if (slash_position EQUAL -1)
-                set_property(TARGET ${target} APPEND PROPERTY
-                    QT_QML_MODULE_${import_set} "${import}"
-                )
-            else()
-                string(SUBSTRING ${import} 0 ${slash_position} import_module)
-                math(EXPR slash_position "${slash_position} + 1")
-                string(SUBSTRING ${import} ${slash_position} -1 import_version)
-                if (import_version MATCHES "^([0-9]+(\\.[0-9]+)?|auto)$")
-                    set_property(TARGET ${target} APPEND PROPERTY
-                        QT_QML_MODULE_${import_set} "${import_module} ${import_version}"
-                    )
+            if (import STREQUAL "TARGET")
+                if (target_is_keyword)
+                    set(target_keyword_was_set TRUE)
+                    continue()
                 else()
-                    message(FATAL_ERROR
-                        "Invalid module ${import} version number. "
-                        "Expected 'VersionMajor', 'VersionMajor.VersionMinor' or 'auto'."
-                    )
+                    message(AUTHOR_WARNING "TARGET is treated as a URI because QTP0005 is set to OLD. This is deprecated behavior. Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0005.html for policy details.")
+                    set(target_keyword_was_set FALSE)
                 endif()
             endif()
+            _qt_internal_parse_qml_module_dependency(${import} ${target_keyword_was_set}
+                OUTPUT_URI import_uri
+                OUTPUT_VERSION import_version
+                OUTPUT_MODULE_LOCATION module_location # TODO: actually use it
+            )
+            if (NOT "${import_version}" STREQUAL "")
+                set_property(TARGET ${target} APPEND PROPERTY
+                    QT_QML_MODULE_${import_set} "${import_uri} ${import_version}"
+                )
+            else()
+                set_property(TARGET ${target} APPEND PROPERTY
+                    QT_QML_MODULE_${import_set} "${import_uri}"
+                )
+            endif()
+            set(target_keyword_was_set FALSE)
         endforeach()
     endforeach()
 
     foreach(dependency IN LISTS arg_DEPENDENCIES)
-        string(FIND ${dependency} "/" slash_position REVERSE)
-        if (slash_position EQUAL -1)
-            set_property(TARGET ${target} APPEND PROPERTY
-                QT_QML_MODULE_DEPENDENCIES "${dependency}"
-            )
-        else()
-            string(SUBSTRING ${dependency} 0 ${slash_position} dep_module_uri)
-            math(EXPR slash_position "${slash_position} + 1")
-            string(SUBSTRING ${dependency} ${slash_position} -1 dep_version)
-            if (dep_version MATCHES "^([0-9]+(\\.[0-9]+)?|auto)$")
-                set_property(TARGET ${target} APPEND PROPERTY
-                    QT_QML_MODULE_DEPENDENCIES "${dep_module_uri} ${dep_version}"
-                )
+
+        if (dependency STREQUAL "TARGET")
+            if (target_is_keyword)
+                set(target_keyword_was_set TRUE)
+                continue()
             else()
-                message(FATAL_ERROR
-                    "Invalid module dependency version number. "
-                    "Expected 'VersionMajor', 'VersionMajor.VersionMinor' or 'auto'."
-                )
+                message(AUTHOR_WARNING "TARGET is treated as a URI because QTP0005 is set to OLD. This is deprecated behavior. Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0005.html for policy details.")
+                set(target_keyword_was_set FALSE)
             endif()
         endif()
+        _qt_internal_parse_qml_module_dependency(${dependency} ${target_keyword_was_set}
+            OUTPUT_URI dep_uri
+            OUTPUT_VERSION dep_version
+        )
+        if (NOT "${dep_version}" STREQUAL "")
+            set_property(TARGET ${target} APPEND PROPERTY
+                QT_QML_MODULE_DEPENDENCIES "${dep_uri} ${dep_version}"
+            )
+        else()
+            set_property(TARGET ${target} APPEND PROPERTY
+                QT_QML_MODULE_DEPENDENCIES "${dep_uri}"
+            )
+        endif()
+        set(target_keyword_was_set FALSE)
     endforeach()
     _qt_internal_collect_qml_module_dependencies(${target})
 

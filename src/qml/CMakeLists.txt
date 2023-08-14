@@ -505,6 +505,7 @@ qt_internal_add_qml_module(Qml
     POLICIES
         QTP0001
         QTP0004
+        QTP0005
 )
 
 _qt_internal_add_qml_deploy_info_finalizer(Qml)
