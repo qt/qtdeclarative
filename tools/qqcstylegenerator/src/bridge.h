@@ -44,6 +44,8 @@ signals:
     void started() const;
     void finished() const;
 
+    void figmaFileNameChanged(const QString &name) const;
+
 public:
     std::unique_ptr<QThread> m_generatorThread;
     std::unique_ptr<StyleGenerator> m_generator;

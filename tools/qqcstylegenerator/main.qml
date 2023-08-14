@@ -17,6 +17,7 @@ ApplicationWindow {
     property bool closeRequested: false
     property bool generating: false
     property bool stopping: false
+    property string figmaFileName: ""
 
     onClosing: (closeEvent) => {
         if (generating) {
@@ -83,6 +84,11 @@ ApplicationWindow {
 
         function onProgress() {
             progressBar.value++
+        }
+
+        function onFigmaFileNameChanged(name) {
+            figmaFileName = name
+            output("Figma name: " + name)
         }
     }
 
@@ -196,6 +202,12 @@ ApplicationWindow {
         ColumnLayout {
             Layout.preferredWidth: parent.width
             Layout.preferredHeight: childrenRect.height
+
+            Label {
+                text: figmaFileName
+                visible: figmaFileName !== ""
+            }
+
             Label {
                 id: statusLabel
             }
@@ -219,6 +231,7 @@ ApplicationWindow {
                     stop()
                 } else {
                     outputModel.clear()
+                    figmaFileName = ""
                     bridge.generate()
                 }
             }

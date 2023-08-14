@@ -98,6 +98,7 @@ private:
             if (reply->error() == QNetworkReply::NoError)
                 m_document = QJsonDocument::fromJson(reply->readAll());
 
+            setFigmaFileName(getString("name", m_document.object()));
             if (qgetenv("QSTYLEGENERATOR_SAVEDOC") == "true")
                 saveForDebug(m_document.object(), "figmastyle.json");
         });
@@ -899,6 +900,7 @@ private:
     void progressTo(int to) const { emit m_bridge->progressToChanged(to); }
     void progressLabel(const QString &label) const { emit m_bridge->progressLabelChanged(label); }
     void progress() const { emit m_bridge->progress(); }
+    void setFigmaFileName(const QString &name) const { emit m_bridge->figmaFileNameChanged(name); }
 
 public:
     bool m_abort = false;

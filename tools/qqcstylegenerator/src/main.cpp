@@ -81,6 +81,8 @@ int main(int argc, char **argv){
                              [](const QString &label){ qDebug().noquote() << "*" << label; });
             QObject::connect(&bridge, &Bridge::finished, &app,
                              []{ qDebug().noquote() << "* Finished!"; });
+            QObject::connect(&bridge, &Bridge::figmaFileNameChanged, &app,
+                             [](const QString &name){ qDebug().noquote() << "* Figma name: " + name; });
             if (parser.isSet("verbose"))
                 QObject::connect(&bridge, &Bridge::debug, &bridge,
                                  [](const QString &msg){ qDebug().noquote() << msg; });
