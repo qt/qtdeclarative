@@ -208,6 +208,7 @@ private slots:
     void variantlist();
     void voidConversion();
     void voidFunction();
+    void writeBack();
 };
 
 static QByteArray arg1()
@@ -4217,6 +4218,24 @@ void tst_QmlCppCodegen::voidFunction()
     QVERIFY(object->objectName().isEmpty());
     object->metaObject()->invokeMethod(object.data(), "doesNotReturnValue");
     QCOMPARE(object->objectName(), u"barbar"_s);
+}
+
+void tst_QmlCppCodegen::writeBack()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/writeback.qml"_s));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    Person *person = qobject_cast<Person *>(object.data());
+    QVERIFY(person);
+    QCOMPARE(person->area(), QRectF(4, 5, 16, 17));
+    QCOMPARE(person->property("inner").toInt(), 99);
+
+    Person *shadowable = person->property("shadowable").value<Person *>();
+    QVERIFY(shadowable);
+    QCOMPARE(shadowable->area(), QRectF(40, 50, 16, 17));
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

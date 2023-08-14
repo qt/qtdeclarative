@@ -1314,8 +1314,9 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
         break;
     }
     case QQmlJSScope::AccessSemantics::Value: {
+        const QQmlJSRegisterContent base = registerType(baseReg);
         const QString baseContentPointer = resolveValueTypeContentPointer(
-                    conversionResultScope, registerType(baseReg), object,
+                    conversionResultScope, base, object,
                     u"TypeError: Value is %1 and could not be converted to an object"_s);
 
         const QString lookup = u"aotContext->setValueLookup("_s + indexString
@@ -1326,7 +1327,98 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
                 + u", "_s + argType + u')';
 
         generateLookup(lookup, initialization, preparation);
-        reject(u"SetLookup on value types (because of missing write-back)"_s);
+
+        QString writeBackRegister = object;
+        bool writeBackAffectedBySideEffects = m_state.isRegisterAffectedBySideEffects(baseReg);
+        for (QQmlJSRegisterContent writeBack = base; !writeBack.storedType()->isReferenceType();) {
+            if (writeBackAffectedBySideEffects)
+                reject(u"write-back of value affected by side effects"_s);
+
+            if (writeBack.isConversion())
+                reject(u"write-back of converted value"_s);
+
+            const int lookupIndex = writeBack.resultLookupIndex();
+            if (lookupIndex == -1) {
+                reject(u"write-back of non-lookup"_s);
+                break;
+            }
+
+            const QString writeBackIndexString = QString::number(lookupIndex);
+
+            const QQmlJSRegisterContent::ContentVariant variant = writeBack.variant();
+            if (variant == QQmlJSRegisterContent::ScopeProperty
+                    || variant == QQmlJSRegisterContent::ExtensionScopeProperty) {
+                const QString lookup = u"aotContext->writeBackScopeObjectPropertyLookup("_s
+                        + writeBackIndexString
+                        + u", "_s + contentPointer(writeBack, writeBackRegister) + u')';
+                const QString initialization
+                        = u"aotContext->initLoadScopeObjectPropertyLookup("_s
+                        + writeBackIndexString
+                        + u", "_s + contentType(writeBack, writeBackRegister) + u')';
+                generateLookup(lookup, initialization);
+                break;
+            }
+
+
+            QQmlJSRegisterContent outerContent;
+            QString outerRegister;
+            bool outerAffectedBySideEffects = false;
+            for (auto it = m_state.lookups.constBegin(), end = m_state.lookups.constEnd();
+                 it != end; ++it) {
+                if (it.value().content.resultLookupIndex() == writeBack.baseLookupIndex()) {
+                    outerContent = it.value().content;
+                    outerRegister = lookupVariable(outerContent.resultLookupIndex());
+                    outerAffectedBySideEffects = it.value().affectedBySideEffects;
+                    break;
+                }
+            }
+
+            if (!outerContent.isValid()) {
+                // If the lookup doesn't exist, it was killed by state merge.
+                reject(u"write-back of lookup across jumps or merges."_s);
+                break;
+            }
+
+            Q_ASSERT(!outerRegister.isEmpty());
+
+            switch (writeBack.variant()) {
+            case QQmlJSRegisterContent::ScopeProperty:
+            case QQmlJSRegisterContent::ExtensionScopeProperty:
+                Q_UNREACHABLE();
+            case QQmlJSRegisterContent::ObjectProperty:
+            case QQmlJSRegisterContent::ExtensionObjectProperty:
+                if (writeBack.scopeType()->isReferenceType()) {
+                    const QString lookup = u"aotContext->writeBackObjectLookup("_s
+                            + writeBackIndexString
+                            + u", "_s + outerRegister
+                            + u", "_s + contentPointer(writeBack, writeBackRegister) + u')';
+                    const QString initialization = u"aotContext->initGetObjectLookup("_s
+                            + writeBackIndexString
+                            + u", "_s + outerRegister
+                            + u", "_s + contentType(writeBack, writeBackRegister) + u')';
+                    generateLookup(lookup, initialization);
+                } else {
+                    const QString valuePointer = contentPointer(outerContent, outerRegister);
+                    const QString lookup = u"aotContext->writeBackValueLookup("_s
+                            + writeBackIndexString
+                            + u", "_s + valuePointer
+                            + u", "_s + contentPointer(writeBack, writeBackRegister) + u')';
+                    const QString initialization = u"aotContext->initGetValueLookup("_s
+                            + writeBackIndexString
+                            + u", "_s + metaObject(writeBack.scopeType())
+                            + u", "_s + contentType(writeBack, writeBackRegister) + u')';
+                    generateLookup(lookup, initialization);
+                }
+                break;
+            default:
+                reject(u"SetLookup on value types (because of missing write-back)"_s);
+            }
+
+            writeBackRegister = outerRegister;
+            writeBack = outerContent;
+            writeBackAffectedBySideEffects = outerAffectedBySideEffects;
+        }
+
         break;
     }
     case QQmlJSScope::AccessSemantics::None:
