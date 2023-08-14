@@ -34,7 +34,8 @@ T.Switch {
         Ripple {
             x: parent.handle.x + parent.handle.width / 2 - width / 2
             y: parent.handle.y + parent.handle.height / 2 - height / 2
-            width: 28; height: 28
+            width: 28
+            height: 28
             pressed: control.pressed
             active: enabled && (control.down || control.visualFocus || control.hovered)
             color: control.checked ? control.Material.highlightedRippleColor : control.Material.rippleColor
