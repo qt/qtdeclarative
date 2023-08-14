@@ -62,7 +62,7 @@
         "page": "Library",
         "component set": "ComboBoxTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "ComboBoxBackground, comboControlBackground"},
+            {"atom": "background", "figmaPath": "ComboBoxBackground, background"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "indicator", "figmaPath": "ComboBoxHandle"},
             {"atom": "label", "figmaPath": "ContentItem, Label"}
