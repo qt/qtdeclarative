@@ -993,7 +993,8 @@ void tst_QmlCppCodegen::compositeTypeMethod()
 void tst_QmlCppCodegen::consoleObject()
 {
     QQmlEngine engine;
-    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/consoleObject.qml"_s));
+    static const QString urlString = u"qrc:/qt/qml/TestTypes/consoleObject.qml"_s;
+    QQmlComponent c(&engine, QUrl(urlString));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
 
     QTest::ignoreMessage(QtDebugMsg, "b 4.55");
@@ -1026,6 +1027,17 @@ void tst_QmlCppCodegen::consoleObject()
 
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+
+    auto oldHandler = qInstallMessageHandler(
+            [](QtMsgType, const QMessageLogContext &ctxt, const QString &) {
+        QCOMPARE(ctxt.file, urlString.toUtf8());
+        QCOMPARE(ctxt.function, QByteArray("expression for onCompleted"));
+        QVERIFY(ctxt.line > 0);
+    });
+    const auto guard = qScopeGuard([oldHandler]() { qInstallMessageHandler(oldHandler); });
+
+    QScopedPointer<QObject> p(c.create());
+    QVERIFY(!p.isNull());
 }
 
 void tst_QmlCppCodegen::construct()

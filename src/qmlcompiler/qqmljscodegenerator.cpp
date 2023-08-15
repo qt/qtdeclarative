@@ -1730,8 +1730,8 @@ bool QQmlJSCodeGenerator::inlineConsoleMethod(const QString &name, int argc, int
     } else {
         m_body += u"QString()";
     }
-    m_body += u";\n";
-
+    m_body += u";\n        ";
+    generateSetInstructionPointer();
     m_body += u"        aotContext->writeToConsole(" + type + u", message, category);\n";
     m_body += u"    }\n";
     m_body += u"}\n";

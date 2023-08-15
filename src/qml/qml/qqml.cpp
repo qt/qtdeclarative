@@ -1472,8 +1472,10 @@ void AOTCompiledContext::writeToConsole(
     const QV4::CppStackFrame *frame = engine->handle()->currentStackFrame;
     Q_ASSERT(frame);
 
-    QMessageLogger logger(qUtf8Printable(frame->source()), frame->lineNumber(),
-                          qUtf8Printable(frame->function()), loggingCategory->categoryName());
+    const QByteArray source(frame->source().toUtf8());
+    const QByteArray function(frame->function().toUtf8());
+    QMessageLogger logger(source.constData(), frame->lineNumber(),
+                          function.constData(), loggingCategory->categoryName());
 
     switch (type) {
     case QtDebugMsg:
