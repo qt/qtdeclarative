@@ -129,7 +129,9 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa QQuickRhiItemRenderer, QRhi, {Scene Graph and Rendering}
+    See \l{Scene Graph - RHI Texture Item} for a more complex example.
+
+    \sa QQuickRhiItemRenderer, {Scene Graph - RHI Texture Item}, QRhi, {Scene Graph and Rendering}
  */
 
 /*!
