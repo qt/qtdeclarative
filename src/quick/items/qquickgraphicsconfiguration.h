@@ -49,9 +49,6 @@ public:
     void setPipelineCacheLoadFile(const QString &filename);
     QString pipelineCacheLoadFile() const;
 
-    void setHdr(bool enable);
-    bool isHdrEnabled() const;
-
 private:
     void detach();
     QQuickGraphicsConfigurationPrivate *d;
