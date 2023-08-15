@@ -1514,12 +1514,6 @@ void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet, QQuickW
 
     QRhiSwapChain::Format swapChainFormat = QRhiSwapChain::SDR;
 
-    if (window->graphicsConfiguration().isHdrEnabled()) {
-        const QRhiSwapChain::Format autoFormat = QRhiSwapChain::HDRExtendedSrgbLinear;
-        if (scWithWindowSet->isFormatSupported(autoFormat))
-            swapChainFormat = autoFormat;
-    }
-
     QByteArray hdrRequest = qgetenv("QSG_RHI_HDR");
     if (!hdrRequest.isEmpty()) {
         hdrRequest = hdrRequest.toLower();
