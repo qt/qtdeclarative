@@ -290,6 +290,16 @@ void QQmlObjectCreator::populateDeferredBinding(const QQmlProperty &qmlProperty,
     }
 }
 
+void QQmlObjectCreator::populateDeferredInstance(
+        QObject *outerObject, int deferredIndex, int index, QObject *instance,
+        QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty,
+        const QV4::CompiledData::Binding *binding)
+{
+    doPopulateDeferred(outerObject, deferredIndex, [&]() {
+        populateInstance(index, instance, bindingTarget, valueTypeProperty, binding);
+    });
+}
+
 void QQmlObjectCreator::finalizePopulateDeferred()
 {
     phase = ObjectsCreated;
