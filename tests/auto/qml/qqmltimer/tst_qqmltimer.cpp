@@ -91,12 +91,12 @@ void tst_qqmltimer::notRepeatingStart()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 100 }"), QUrl::fromLocalFile(""));
-    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
-    QVERIFY(timer != nullptr);
+    std::unique_ptr<QQmlTimer> timer { qobject_cast<QQmlTimer*>(component.create()) };
+    QVERIFY(timer.get());
     QVERIFY(!timer->isRunning());
 
     TimerHelper helper;
-    connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
+    connect(timer.get(), SIGNAL(triggered()), &helper, SLOT(timeout()));
 
     consistentWait(200);
     QCOMPARE(helper.count, 0);
@@ -107,8 +107,6 @@ void tst_qqmltimer::notRepeatingStart()
     consistentWait(200);
     QCOMPARE(helper.count, 1);
     QVERIFY(!timer->isRunning());
-
-    delete timer;
 }
 
 void tst_qqmltimer::repeat()
@@ -116,11 +114,11 @@ void tst_qqmltimer::repeat()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 100; repeat: true; running: true }"), QUrl::fromLocalFile(""));
-    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
-    QVERIFY(timer != nullptr);
+    std::unique_ptr<QQmlTimer> timer { qobject_cast<QQmlTimer*>(component.create()) };
+    QVERIFY(timer);
 
     TimerHelper helper;
-    connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
+    connect(timer.get(), SIGNAL(triggered()), &helper, SLOT(timeout()));
     QCOMPARE(helper.count, 0);
 
     consistentWait(200);
@@ -138,7 +136,7 @@ void tst_qqmltimer::repeat()
     QCOMPARE(helper.count, oldCount);
     QVERIFY(!timer->isRunning());
 
-    QSignalSpy spy(timer, SIGNAL(repeatChanged()));
+    QSignalSpy spy(timer.get(), SIGNAL(repeatChanged()));
 
     timer->setRepeating(false);
     QVERIFY(!timer->isRepeating());
@@ -149,8 +147,6 @@ void tst_qqmltimer::repeat()
 
     timer->setRepeating(true);
     QCOMPARE(spy.size(),2);
-
-    delete timer;
 }
 
 void tst_qqmltimer::triggeredOnStart()
@@ -158,12 +154,12 @@ void tst_qqmltimer::triggeredOnStart()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 100; running: true; triggeredOnStart: true }"), QUrl::fromLocalFile(""));
-    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
-    QVERIFY(timer != nullptr);
+    std::unique_ptr<QQmlTimer> timer { qobject_cast<QQmlTimer*>(component.create()) };
+    QVERIFY(timer);
     QVERIFY(timer->triggeredOnStart());
 
     TimerHelper helper;
-    connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
+    connect(timer.get(), SIGNAL(triggered()), &helper, SLOT(timeout()));
     consistentWait(1);
     QCOMPARE(helper.count, 1);
     consistentWait(200);
@@ -172,7 +168,7 @@ void tst_qqmltimer::triggeredOnStart()
     QCOMPARE(helper.count, 2);
     QVERIFY(!timer->isRunning());
 
-    QSignalSpy spy(timer, SIGNAL(triggeredOnStartChanged()));
+    QSignalSpy spy(timer.get(), SIGNAL(triggeredOnStartChanged()));
 
     timer->setTriggeredOnStart(false);
     QVERIFY(!timer->triggeredOnStart());
@@ -183,8 +179,6 @@ void tst_qqmltimer::triggeredOnStart()
 
     timer->setTriggeredOnStart(true);
     QCOMPARE(spy.size(),2);
-
-    delete timer;
 }
 
 void tst_qqmltimer::triggeredOnStartRepeat()
@@ -192,11 +186,11 @@ void tst_qqmltimer::triggeredOnStartRepeat()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 100; running: true; triggeredOnStart: true; repeat: true }"), QUrl::fromLocalFile(""));
-    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
-    QVERIFY(timer != nullptr);
+    std::unique_ptr<QQmlTimer> timer { qobject_cast<QQmlTimer*>(component.create()) };
+    QVERIFY(timer);
 
     TimerHelper helper;
-    connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
+    connect(timer.get(), SIGNAL(triggered()), &helper, SLOT(timeout()));
     consistentWait(1);
     QCOMPARE(helper.count, 1);
 
@@ -206,8 +200,6 @@ void tst_qqmltimer::triggeredOnStartRepeat()
     consistentWait(200);
     QVERIFY(helper.count > oldCount);
     QVERIFY(timer->isRunning());
-
-    delete timer;
 }
 
 void tst_qqmltimer::noTriggerIfNotRunning()
@@ -221,12 +213,10 @@ void tst_qqmltimer::noTriggerIfNotRunning()
             "property Timer timer2: Timer { interval: 10; running: true; onTriggered: t1.running=false }"
         "}"
     ), QUrl::fromLocalFile(""));
-    QObject *item = component.create();
-    QVERIFY(item != nullptr);
+    std::unique_ptr<QObject> item { component.create() };
+    QVERIFY(item);
     consistentWait(200);
     QCOMPARE(item->property("ok").toBool(), true);
-
-    delete item;
 }
 
 void tst_qqmltimer::changeDuration()
@@ -234,11 +224,11 @@ void tst_qqmltimer::changeDuration()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 200; repeat: true; running: true }"), QUrl::fromLocalFile(""));
-    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
-    QVERIFY(timer != nullptr);
+    std::unique_ptr<QQmlTimer> timer { qobject_cast<QQmlTimer*>(component.create()) };
+    QVERIFY(timer);
 
     TimerHelper helper;
-    connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
+    connect(timer.get(), SIGNAL(triggered()), &helper, SLOT(timeout()));
     QCOMPARE(helper.count, 0);
 
     consistentWait(500);
@@ -250,7 +240,7 @@ void tst_qqmltimer::changeDuration()
     QCOMPARE(helper.count, 3);
     QVERIFY(timer->isRunning());
 
-    QSignalSpy spy(timer, SIGNAL(intervalChanged()));
+    QSignalSpy spy(timer.get(), SIGNAL(intervalChanged()));
 
     timer->setInterval(200);
     QCOMPARE(timer->interval(), 200);
@@ -261,8 +251,6 @@ void tst_qqmltimer::changeDuration()
 
     timer->setInterval(300);
     QCOMPARE(spy.size(),2);
-
-    delete timer;
 }
 
 void tst_qqmltimer::restart()
@@ -270,11 +258,11 @@ void tst_qqmltimer::restart()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 1000; repeat: true; running: true }"), QUrl::fromLocalFile(""));
-    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
-    QVERIFY(timer != nullptr);
+    std::unique_ptr<QQmlTimer> timer { qobject_cast<QQmlTimer*>(component.create()) };
+    QVERIFY(timer);
 
     TimerHelper helper;
-    connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
+    connect(timer.get(), SIGNAL(triggered()), &helper, SLOT(timeout()));
     QCOMPARE(helper.count, 0);
 
     consistentWait(1200);
@@ -290,8 +278,6 @@ void tst_qqmltimer::restart()
 
     QCOMPARE(helper.count, 2);
     QVERIFY(timer->isRunning());
-
-    delete timer;
 }
 
 void tst_qqmltimer::restartFromTriggered()
@@ -356,14 +342,12 @@ void tst_qqmltimer::parentProperty()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQuick 2.0\nItem { Timer { objectName: \"timer\"; running: parent.visible } }"), QUrl::fromLocalFile(""));
-    QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
-    QVERIFY(item != nullptr);
+    std::unique_ptr<QQuickItem> item { qobject_cast<QQuickItem*>(component.create()) };
+    QVERIFY(item);
     QQmlTimer *timer = item->findChild<QQmlTimer*>("timer");
     QVERIFY(timer != nullptr);
 
     QVERIFY(timer->isRunning());
-
-    delete timer;
 }
 
 void tst_qqmltimer::stopWhenEventPosted()
