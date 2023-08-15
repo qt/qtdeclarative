@@ -168,13 +168,20 @@ public:
         }
 
         bool hasSideEffects() const { return m_hasSideEffects; }
-        void setHasSideEffects(bool hasSideEffects) {
-            m_hasSideEffects = hasSideEffects;
+
+        void markSideEffects(bool hasSideEffects) { m_hasSideEffects = hasSideEffects; }
+        void applySideEffects(bool hasSideEffects)
+        {
             if (!hasSideEffects)
                 return;
 
             for (auto it = registers.begin(), end = registers.end(); it != end; ++it)
                 it.value().affectedBySideEffects = true;
+        }
+
+        void setHasSideEffects(bool hasSideEffects) {
+            markSideEffects(hasSideEffects);
+            applySideEffects(hasSideEffects);
         }
 
         bool isRename() const { return m_isRename; }
@@ -254,10 +261,14 @@ protected:
                     = oldState.changedRegister();
         }
 
+        // Side effects are applied at the end of an instruction: An instruction with side
+        // effects can still read its registers before the side effects happen.
+        newState.applySideEffects(oldState.hasSideEffects());
+
         if (instruction == annotations.constEnd())
             return newState;
 
-        newState.setHasSideEffects(instruction->second.hasSideEffects);
+        newState.markSideEffects(instruction->second.hasSideEffects);
         newState.setReadRegisters(instruction->second.readRegisters);
         newState.setIsRename(instruction->second.isRename);
 

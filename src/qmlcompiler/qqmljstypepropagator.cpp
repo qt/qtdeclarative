@@ -651,7 +651,6 @@ void QQmlJSTypePropagator::generate_StoreNameCommon(int nameIndex)
                         getCurrentBindingSourceLocation()));
     }
 
-    m_state.setHasSideEffects(true);
 
     if (m_typeResolver->canHoldUndefined(in) && !m_typeResolver->canHoldUndefined(type)) {
         if (type.property().reset().isEmpty())
@@ -663,6 +662,8 @@ void QQmlJSTypePropagator::generate_StoreNameCommon(int nameIndex)
     } else {
         addReadAccumulator(type);
     }
+
+    m_state.setHasSideEffects(true);
 }
 
 void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
@@ -959,9 +960,9 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
                         getCurrentBindingSourceLocation()));
     }
 
-    m_state.setHasSideEffects(true);
     addReadAccumulator(property);
     addReadRegister(base, callBase);
+    m_state.setHasSideEffects(true);
 }
 
 void QQmlJSTypePropagator::generate_SetLookup(int index, int base)
@@ -1092,10 +1093,10 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
             addReadRegister(base, jsValueType);
             for (int i = 0; i < argc; ++i)
                 addReadRegister(argv + i, jsValueType);
+            m_state.setHasSideEffects(true);
             setAccumulator(m_typeResolver->returnType(
                     m_typeResolver->jsValueType(), QQmlJSRegisterContent::JavaScriptReturnValue,
                     m_typeResolver->jsValueType()));
-            m_state.setHasSideEffects(true);
             return;
         }
 
@@ -1315,7 +1316,6 @@ void QQmlJSTypePropagator::propagateCall(
     if (!m_state.accumulatorOut().isValid())
         setError(u"Cannot store return type of method %1()."_s.arg(match.methodName()));
 
-    m_state.setHasSideEffects(true);
     const auto types = match.parameters();
     for (int i = 0; i < argc; ++i) {
         if (i < types.size()) {
@@ -1329,6 +1329,7 @@ void QQmlJSTypePropagator::propagateCall(
         }
         addReadRegister(argv + i, m_typeResolver->globalType(m_typeResolver->jsValueType()));
     }
+    m_state.setHasSideEffects(true);
 }
 
 bool QQmlJSTypePropagator::propagateTranslationMethod(
@@ -1509,8 +1510,8 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
         for (int i = 0; i < argc; ++i)
             addReadRegister(argv + i, intType);
 
-        setReturnType(baseContained);
         m_state.setHasSideEffects(canHaveSideEffects);
+        setReturnType(baseContained);
         return true;
     }
 
@@ -1528,8 +1529,8 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
         for (int i = 1; i < argc; ++i)
             addReadRegister(argv + i, intType);
 
-        setReturnType(baseContained);
         m_state.setHasSideEffects(canHaveSideEffects);
+        setReturnType(baseContained);
         return true;
     }
 
@@ -1560,8 +1561,8 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
     }
 
     if ((name == u"pop" || name == u"shift") && argc == 0) {
-        setReturnType(valueContained);
         m_state.setHasSideEffects(canHaveSideEffects);
+        setReturnType(valueContained);
         return true;
     }
 
@@ -1574,14 +1575,14 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
         for (int i = 0; i < argc; ++i)
             addReadRegister(argv + i, valueType);
 
-        setReturnType(m_typeResolver->int32Type());
         m_state.setHasSideEffects(canHaveSideEffects);
+        setReturnType(m_typeResolver->int32Type());
         return true;
     }
 
     if (name == u"reverse" && argc == 0) {
-        setReturnType(baseContained);
         m_state.setHasSideEffects(canHaveSideEffects);
+        setReturnType(baseContained);
         return true;
     }
 
@@ -1617,8 +1618,8 @@ bool QQmlJSTypePropagator::propagateArrayMethod(
         for (int i = 2; i < argc; ++i)
             addReadRegister(argv + i, valueType);
 
-        setReturnType(baseContained);
         m_state.setHasSideEffects(canHaveSideEffects);
+        setReturnType(baseContained);
         return true;
     }
 
@@ -2052,8 +2053,8 @@ void QQmlJSTypePropagator::generate_JumpTrue(int offset)
         return;
     }
     saveRegisterStateForJump(offset);
-    m_state.setHasSideEffects(true);
     addReadAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
+    m_state.setHasSideEffects(true);
 }
 
 void QQmlJSTypePropagator::generate_JumpFalse(int offset)
@@ -2065,8 +2066,8 @@ void QQmlJSTypePropagator::generate_JumpFalse(int offset)
         return;
     }
     saveRegisterStateForJump(offset);
-    m_state.setHasSideEffects(true);
     addReadAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
+    m_state.setHasSideEffects(true);
 }
 
 void QQmlJSTypePropagator::generate_JumpNoException(int offset)
