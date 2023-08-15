@@ -553,9 +553,14 @@ private:
 
     void exportGeometry(const QJsonObject &atom, QJsonObject &outputConfig)
     {
-        const auto geometry = getGeometry(atom);
+        const auto geometry = getFigmaBoundingBox(atom);
+        const auto geometryIncludingShadow = getFigmaRenderBounds(atom);
         const auto stretch = getStretch(atom);
 
+        // Note that the geometry we insert into the config file is
+        // the geometry of atom/shape without shadows. This means that
+        // if we export an image of the atom, the image size would be
+        // equal to geometry + shadows.
         outputConfig.insert("x", geometry.x());
         outputConfig.insert("y", geometry.y());
         outputConfig.insert("width", geometry.width());
@@ -581,11 +586,23 @@ private:
         outputConfig.insert("rightOffset", rightOffset);
         outputConfig.insert("bottomOffset", bottomOffset);
 
-        // Todo: resolve insets for rectangles with drop shadow
-        // config.insert("leftInset", 0);
-        // config.insert("topInset", 0);
-        // config.insert("rightInset", 0);
-        // config.insert("bottomInset", 0);
+        // Report the margins around the image that contains drop shadows (and
+        // possibly other effects). This is quite similar to insets, except that
+        // insets is already a term in Quick Controls with a slightly different
+        // meaning (it tells the offset of a control's background delegate, which
+        // can also be negative).
+        // For unknown reasons, Figma sometimes report that the render bounds
+        // (geometryIncludingShadow) is smaller than the bouding box (geometry).
+        // Hence the need for qMin and qMax until this weirdness is resolved
+        // (which might also be a bug in Figma).
+        const qreal leftShadow = geometry.x() - geometryIncludingShadow.x();
+        const qreal topShadow =  geometry.y() - geometryIncludingShadow.y();
+        const qreal rightShadow = geometryIncludingShadow.width() - geometry.width() - leftShadow;
+        const qreal bottomShadow = geometryIncludingShadow.height() - geometry.height() - topShadow;
+        outputConfig.insert("leftShadow", qMax(0., leftShadow));
+        outputConfig.insert("topShadow", qMax(0., topShadow));
+        outputConfig.insert("rightShadow", qMax(0., rightShadow));
+        outputConfig.insert("bottomShadow", qMax(0., bottomShadow));
     }
 
     void exportImage(const QJsonObject &atom, const QStringList &imageFormats, QJsonObject &outputConfig)
@@ -848,9 +865,23 @@ private:
         out << contents;
     }
 
-    QRectF getGeometry(const QJsonObject figmaObject) const
+    QRectF getFigmaBoundingBox(const QJsonObject figmaObject) const
     {
+        // Figma bounding box is the bounds of the item / image
+        // in scene coordinates, excluding drop shadow and other effects.
         const auto bb = getObject("absoluteBoundingBox", figmaObject);
+        const auto x = getValue("x", bb).toDouble();
+        const auto y = getValue("y", bb).toDouble();
+        const auto width = getValue("width", bb).toDouble();
+        const auto height = getValue("height", bb).toDouble();
+        return QRectF(x, y, width, height);
+    }
+
+    QRectF getFigmaRenderBounds(const QJsonObject figmaObject) const
+    {
+        // Figma render bounds is the bounds of the whole item / image
+        // in scene coordinates, including drop shadow and other effects.
+        const auto bb = getObject("absoluteRenderBounds", figmaObject);
         const auto x = getValue("x", bb).toDouble();
         const auto y = getValue("y", bb).toDouble();
         const auto width = getValue("width", bb).toDouble();
