@@ -120,6 +120,10 @@ public:
     void beginPopulateDeferred(const QQmlRefPointer<QQmlContextData> &context);
     void populateDeferredBinding(const QQmlProperty &qmlProperty, int deferredIndex,
                                  const QV4::CompiledData::Binding *binding);
+    void populateDeferredInstance(QObject *outerObject, int deferredIndex,
+                                  int index, QObject *instance, QObject *bindingTarget,
+                                  const QQmlPropertyData *valueTypeProperty,
+                                  const QV4::CompiledData::Binding *binding = nullptr);
     void finalizePopulateDeferred();
 
     bool finalize(QQmlInstantiationInterrupt &interrupt);

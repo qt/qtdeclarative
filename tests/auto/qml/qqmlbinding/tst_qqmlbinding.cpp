@@ -39,6 +39,7 @@ private slots:
     void generalizedGroupedProperties();
     void localSignalHandler();
     void whenEvaluatedEarlyEnough();
+    void propertiesAttachedToBindingItself();
 
 private:
     QQmlEngine engine;
@@ -614,6 +615,18 @@ void tst_qqmlbinding::whenEvaluatedEarlyEnough()
     QTest::ignoreMessage(QtMsgType::QtWarningMsg,
                          QRegularExpression(".*QML Binding: Property 'i' does not exist on Item.*"));
     root->setProperty("forceEnable", true);
+}
+
+void tst_qqmlbinding::propertiesAttachedToBindingItself()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("propertiesAttachedToBindingItself.qml"));
+    QTest::failOnWarning(QRegularExpression(".*"));
+    std::unique_ptr<QObject> root { c.create() };
+    QVERIFY2(root, qPrintable(c.errorString()));
+    // 0 => everything broken; 1 => normal attached properties broken;
+    // 2 => Component.onCompleted broken, 3 => everything works
+    QTRY_COMPARE(root->property("check").toInt(), 3);
 }
 
 QTEST_MAIN(tst_qqmlbinding)

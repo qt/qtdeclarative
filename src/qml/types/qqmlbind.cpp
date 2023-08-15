@@ -3,28 +3,29 @@
 
 #include "qqmlbind_p.h"
 
+#include <private/qqmlanybinding_p.h>
+#include <private/qqmlbinding_p.h>
+#include <private/qqmlcomponent_p.h>
+#include <private/qqmlmetatype_p.h>
 #include <private/qqmlnullablevalue_p.h>
 #include <private/qqmlproperty_p.h>
-#include <private/qqmlbinding_p.h>
-#include <private/qqmlmetatype_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qv4persistent_p.h>
-
-#include <qqmlengine.h>
-#include <qqmlcontext.h>
-#include <qqmlproperty.h>
-#include <qqmlpropertymap.h>
-#include <qqmlinfo.h>
-
-#include <QtCore/qfile.h>
-#include <QtCore/qdebug.h>
-#include <QtCore/qtimer.h>
-#include <QtCore/qloggingcategory.h>
-#include <private/qqmlanybinding_p.h>
 #include <private/qv4qmlcontext_p.h>
-#include <private/qqmlcomponent_p.h>
+#include <private/qv4resolvedtypereference_p.h>
 
-#include <private/qobject_p.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlinfo.h>
+#include <QtQml/qqmlproperty.h>
+#include <QtQml/qqmlpropertymap.h>
+
+#include <QtCore/private/qobject_p.h>
+
+#include <QtCore/qdebug.h>
+#include <QtCore/qfile.h>
+#include <QtCore/qloggingcategory.h>
+#include <QtCore/qtimer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -736,6 +737,20 @@ static QQmlAnyBinding createBinding(
     return QQmlAnyBinding();
 }
 
+static void initCreator(
+        QQmlData::DeferredData *deferredData,
+        const QQmlRefPointer<QQmlContextData> &contextData,
+        QQmlComponentPrivate::ConstructionState  *immediateState)
+{
+    if (!immediateState->hasCreator()) {
+        immediateState->setCompletePending(true);
+        immediateState->initCreator(
+                deferredData->context->parent(), deferredData->compilationUnit,
+                contextData);
+        immediateState->creator()->beginPopulateDeferred(deferredData->context);
+    }
+}
+
 void QQmlBindPrivate::decodeBinding(
         QQmlBind *q, const QString &propertyPrefix,
         QQmlData::DeferredData *deferredData,
@@ -744,12 +759,54 @@ void QQmlBindPrivate::decodeBinding(
 {
     const QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit
             = deferredData->compilationUnit;
-    const QString propertyName = propertyPrefix
-            + compilationUnit->stringAt(binding->propertyNameIndex);
+    const QString propertySuffix = compilationUnit->stringAt(binding->propertyNameIndex);
+    const QString propertyName = propertyPrefix + propertySuffix;
 
     switch (binding->type()) {
-    case QV4::CompiledData::Binding::Type_GroupProperty:
-    case QV4::CompiledData::Binding::Type_AttachedProperty: {
+    case QV4::CompiledData::Binding::Type_AttachedProperty:
+        if (propertyPrefix.isEmpty()) {
+            // Top-level attached properties cannot be generalized grouped properties.
+            // Treat them as regular properties.
+            // ... unless we're not supposed to handle regular properties. Then ignore them.
+            if (!immediateState)
+                return;
+
+            Q_ASSERT(compilationUnit->stringAt(compilationUnit->objectAt(binding->value.objectIndex)
+                                                       ->inheritedTypeNameIndex).isEmpty());
+
+            const QV4::ResolvedTypeReference *typeReference
+                    = compilationUnit->resolvedType(binding->propertyNameIndex);
+            Q_ASSERT(typeReference);
+            QQmlType attachedType = typeReference->type();
+            if (!attachedType.isValid()) {
+                const QQmlTypeNameCache::Result result
+                        = deferredData->context->imports()->query(propertySuffix);
+                if (!result.isValid()) {
+                    qmlWarning(q).nospace()
+                            << "Unknown name " << propertySuffix << ". The binding is ignored.";
+                    return;
+                }
+                attachedType = result.type;
+            }
+
+            QQmlContext *context = qmlContext(q);
+            QObject *attachedObject = qmlAttachedPropertiesObject(
+                    q, attachedType.attachedPropertiesFunction(
+                               QQmlEnginePrivate::get(context->engine())));
+            if (!attachedObject) {
+                qmlWarning(q).nospace() <<"Could not create attached properties object '"
+                                        << attachedType.typeName() << "'";
+                return;
+            }
+
+            initCreator(deferredData, QQmlContextData::get(context), immediateState);
+            immediateState->creator()->populateDeferredInstance(
+                    q, deferredData->deferredIdx, binding->value.objectIndex, attachedObject,
+                    attachedObject, /*value type property*/ nullptr, binding);
+            return;
+        }
+        Q_FALLTHROUGH();
+    case QV4::CompiledData::Binding::Type_GroupProperty: {
         const QString pre = propertyName + u'.';
         const QV4::CompiledData::Object *subObj
                 = compilationUnit->objectAt(binding->value.objectIndex);
@@ -776,13 +833,7 @@ void QQmlBindPrivate::decodeBinding(
         QQmlProperty property = QQmlPropertyPrivate::create(
                     q, propertyName, contextData, QQmlPropertyPrivate::InitFlag::AllowSignal);
         if (property.isValid()) {
-            if (!immediateState->hasCreator()) {
-                immediateState->setCompletePending(true);
-                immediateState->initCreator(
-                            deferredData->context->parent(), deferredData->compilationUnit,
-                            contextData);
-                immediateState->creator()->beginPopulateDeferred(deferredData->context);
-            }
+            initCreator(deferredData, contextData, immediateState);
             immediateState->creator()->populateDeferredBinding(
                         property, deferredData->deferredIdx, binding);
         } else {
