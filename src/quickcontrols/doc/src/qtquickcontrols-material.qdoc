@@ -50,24 +50,37 @@
 
     \section2 Customization
 
-    The Material style allows customizing five attributes, \l {material-theme-attached-prop}{theme},
-    \l {material-primary-attached-prop}{primary}, \l {material-accent-attached-prop}{accent},
-    \l {material-foreground-attached-prop}{foreground}, and \l {material-background-attached-prop}{background}.
+    The Material style supports several customizable attributes. Some of these
+    attributes \l {QQuickAttachedPropertyPropagator}{propagate} to children in
+    the same manner as \l {Control::font}{fonts}:
+
+    \list
+    \li \l {material-theme-attached-prop}{theme}
+    \li \l {material-primary-attached-prop}{primary}
+    \li \l {material-accent-attached-prop}{accent}
+    \li \l {material-foreground-attached-prop}{foreground}
+    \li \l {material-background-attached-prop}{background}
+    \endlist
 
     \image qtquickcontrols-material-attributes.png
 
-    All attributes can be specified for any window or item, and they automatically
-    propagate to children in the same manner as \l {Control::font}{fonts}. In the
-    following example, the window and all three radio buttons appear in the dark
-    theme using a purple accent color:
+    The remaining attributes do not propagate to children:
+    \list
+    \li \l {material-elevation-attached-prop}{elevation}
+    \li \l {material-roundedScale-attached-prop}{roundedScale}
+    \li \l {material-containerStyle-attached-prop}{containerStyle}
+    \endlist
+
+    In the following example, the window and all three radio buttons appear in
+    the dark theme using a purple accent color:
 
     \table
         \row
             \li
                 \qml
-                import QtQuick 2.12
-                import QtQuick.Controls 2.12
-                import QtQuick.Controls.Material 2.12
+                import QtQuick
+                import QtQuick.Controls
+                import QtQuick.Controls.Material
 
                 ApplicationWindow {
                     visible: true
@@ -78,9 +91,16 @@
                     Column {
                         anchors.centerIn: parent
 
-                        RadioButton { text: qsTr("Small") }
-                        RadioButton { text: qsTr("Medium");  checked: true }
-                        RadioButton { text: qsTr("Large") }
+                        RadioButton {
+                            text: qsTr("Small")
+                        }
+                        RadioButton {
+                            text: qsTr("Medium")
+                            checked: true
+                        }
+                        RadioButton {
+                            text: qsTr("Large")
+                        }
                     }
                 }
                 \endqml
@@ -89,8 +109,8 @@
     \endtable
 
     In addition to specifying the attributes in QML, it is also possible to
-    specify them via environment variables or in a configuration file. Attributes
-    specified in QML take precedence over all other methods.
+    specify some of them via environment variables or in a configuration file.
+    Attributes specified in QML take precedence over all other methods.
 
     \section3 Configuration File
 
@@ -292,7 +312,8 @@
     \target material-elevation-attached-prop
     This attached property holds the elevation of the control. The higher the
     elevation, the deeper the shadow. The property can be attached to any control,
-    but not all controls visualize elevation.
+    but not all controls visualize elevation. The value is not propagated to
+    children.
 
     The default value is control-specific.
 
@@ -376,7 +397,8 @@
     \target material-roundedScale-attached-prop
     This attached property holds the radius of rounded corners used on the
     target control. The property can be attached to any window or item, but
-    only some controls support it.
+    only some controls support it. The value is not propagated to
+    children.
 
     The default value is control-specific.
 
@@ -399,7 +421,8 @@
     \target material-containerStyle-attached-prop
     This attached property holds the style of the container used by the
     target control. The property can be attached to any window or item, but
-    only TextField and TextArea support it by default.
+    only TextField and TextArea support it by default. The value is not
+    propagated to children.
 
     The default value is control-specific.
 
