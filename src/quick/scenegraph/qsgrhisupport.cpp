@@ -1521,6 +1521,8 @@ void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet, QQuickW
             swapChainFormat = QRhiSwapChain::HDRExtendedSrgbLinear;
         else if (hdrRequest == QByteArrayLiteral("hdr10"))
             swapChainFormat = QRhiSwapChain::HDR10;
+        else if (hdrRequest == QByteArrayLiteral("p3"))
+            swapChainFormat = QRhiSwapChain::HDRExtendedDisplayP3Linear;
     }
 
     const char *fmtStr = "unknown";
@@ -1533,6 +1535,9 @@ void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet, QQuickW
         break;
     case QRhiSwapChain::HDR10:
         fmtStr = "HDR10";
+        break;
+    case QRhiSwapChain::HDRExtendedDisplayP3Linear:
+        fmtStr = "Extended Linear Display P3";
         break;
     default:
         break;
