@@ -20,7 +20,7 @@ static QPalette::ColorGroup adjustCg(QPalette::ColorGroup group)
 static constexpr QPalette::ResolveMask colorRoleOffset(QPalette::ColorGroup colorGroup)
 {
     Q_ASSERT(colorGroup < QPalette::NColorGroups);
-    // Exclude NoRole; that bit is used for AccentColor
+    // Exclude NoRole; that bit is used for Accent
     return (qToUnderlying(QPalette::NColorRoles) - 1) * qToUnderlying(colorGroup);
 }
 
@@ -28,8 +28,8 @@ static constexpr QPalette::ResolveMask colorRoleOffset(QPalette::ColorGroup colo
 static constexpr QPalette::ResolveMask bitPosition(QPalette::ColorGroup colorGroup,
                                                    QPalette::ColorRole colorRole)
 {
-    // Map AccentColor into NoRole for resolving purposes
-    if (colorRole == QPalette::AccentColor)
+    // Map Accent into NoRole for resolving purposes
+    if (colorRole == QPalette::Accent)
         colorRole = QPalette::NoRole;
 
     return colorRole + colorRoleOffset(colorGroup);
