@@ -5,6 +5,7 @@
 \page qtquick-positioning-topic.html
 \title Important Concepts In Qt Quick - Positioning
 \brief Overview of positioning concepts
+\ingroup explanations-programminglanguages
 
 Visual items in QML can be positioned in a variety of ways.  The most important
 positioning-related concept is that of anchoring, a form of relative

@@ -4,6 +4,7 @@
 \page qtqml-documents-scope.html
 \title Scope and Naming Resolution
 \brief overview of scope and naming resolution
+\ingroup explanations-programminglanguages
 
 QML property bindings, inline functions, and imported JavaScript files all
 run in a JavaScript scope.  Scope controls which variables an expression can
