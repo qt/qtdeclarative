@@ -3,7 +3,7 @@ Content-Length: 192
 Connection: Keep-Alive{{Ignore}}
 HTTP2-Settings: {{Ignore}}
 Accept-Encoding: {{Ignore}}
-Accept-Language: en-US,*
+Accept-Language: {{Ignore}}
 Content-type: text/xml; charset="utf-8"
 User-Agent: Mozilla/5.0
 Host: {{ServerHostUrl}}

@@ -13,14 +13,15 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlsignal QtQuick.Particles::Affector::affectParticles(Array particles, real dt)
 
-    This signal is emitted when particles are selected to be affected. particles contains
-    an array of particle objects which can be directly manipulated.
+    This signal is emitted when particles are selected to be affected.
+    \a particles is an array of particle objects which can be directly
+    manipulated.
 
-    dt is the time since the last time it was affected. Use dt to normalize
-    trajectory manipulations to real time.
+    \a dt is the time since the last time it was affected. Use \a dt to
+    normalize trajectory manipulations to real time.
 
-    Note that JavaScript is slower to execute, so it is not recommended to use this in
-    high-volume particle systems.
+    \note JavaScript is slower to execute, so it is not recommended to use
+    this in high-volume particle systems.
 */
 
 /*!

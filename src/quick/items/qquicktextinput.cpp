@@ -90,7 +90,13 @@ void QQuickTextInput::componentComplete()
 
     The text in the TextInput.
 
-    \sa clear()
+    Note that some keyboards use a predictive function. In this case,
+    the text being composed by the input method is not part of this property.
+    The part of the text related to the predictions is underlined and stored in
+    the \l preeditText property. To get whole text displayed in the TextInput
+    use \l displayText property.
+
+    \sa clear(), displayText, preeditText
 */
 QString QQuickTextInput::text() const
 {
@@ -380,65 +386,7 @@ QString QQuickTextInputPrivate::realText() const
     \qmlproperty object QtQuick::TextInput::font.features
     \since 6.6
 
-    Applies integer values to specific OpenType features when shaping the text based on the contents
-    in \a features. This provides advanced access to the font shaping process, and can be used
-    to support font features that are otherwise not covered in the API.
-
-    The font features are represented by a map from four-letter tags to integer values. This integer
-    value passed along with the tag in most cases represents a boolean value: A zero value means the
-    feature is disabled, and a non-zero value means it is enabled. For certain font features,
-    however, it may have other intepretations. For example, when applied to the \c salt feature, the
-    value is an index that specifies the stylistic alternative to use.
-
-    For example, the \c frac font feature will convert diagonal fractions separated with a slash
-    (such as \c 1/2) with a different representation. Typically this will involve baking the full
-    fraction into a single character width (such as \c ½).
-
-    If a font supports the \c frac feature, then it can be enabled in the shaper as in the following
-    code:
-
-    {code}
-    TextInput {
-        text: "One divided by two is 1/2"
-        font.family: "MyFractionFont"
-        font.features: { "frac": 1 }
-    }
-    {code}
-
-    Multiple features can be assigned values in the same mapping. For instance, if we would like
-    to also disable kerning for the font, we can explicitly disable this as follows:
-
-    {code}
-    TextInput {
-        text: "One divided by two is 1/2"
-        font.family: "MyFractionFont"
-        font.features: { "frac": 1, "kern": 0 }
-    }
-    {code}
-
-    You can also collect the font properties in an object:
-
-    {code}
-    TextInput {
-        text: "One divided by two is 1/2"
-        font: {
-            family: "MyFractionFont"
-            features: { "frac": 1, "kern": 0 }
-        }
-    }
-    {code}
-
-    \note By default, Qt will enable and disable certain font features based on other font
-    properties. In particular, the \c kern feature will be enabled/disabled depending on the
-    \l font.kerning property of the QFont. In addition, all ligature features (\c liga, \c clig,
-    \c dlig, \c hlig) will be disabled if a \l font.letterSpacing is set, but only for writing
-    systems where the use of ligature is cosmetic. For writing systems where ligatures are required,
-    the features will remain in their default state. The values set using \c font.features will
-    override the default behavior. If, for instance, \c{"kern"} is set to 1, then kerning will
-    always be enabled, egardless of whether the \l font.kerning property is set to false. Similarly,
-    if it is set to 0, then it will always be disabled.
-
-    \sa QFont::setFeatures()
+    \include qquicktext.cpp qml-font-features
 */
 QFont QQuickTextInput::font() const
 {
@@ -2468,7 +2416,10 @@ QString QQuickTextInput::displayText() const
 
     This property contains partial text input from an input method.
 
-    \sa displayText
+    To turn off partial text that results from predictions, set the \c Qt.ImhNoPredictiveText
+    flag in inputMethodHints.
+
+    \sa displayText, inputMethodHints
 */
 QString QQuickTextInput::preeditText() const
 {

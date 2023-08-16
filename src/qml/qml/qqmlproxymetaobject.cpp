@@ -6,8 +6,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlProxyMetaObject::QQmlProxyMetaObject(QObject *obj, QList<ProxyData> *mList)
-: metaObjects(mList), proxies(nullptr), parent(nullptr), object(obj)
+QQmlProxyMetaObject::QQmlProxyMetaObject(QObject *obj, const QList<ProxyData> *mList)
+    : metaObjects(mList), proxies(nullptr), parent(nullptr), object(obj)
 {
     metaObject = metaObjects->constFirst().metaObject;
 

@@ -309,26 +309,51 @@ protected:
             PatternProperty *assignment = AST::cast<PatternProperty *>(it->property);
             if (assignment) {
                 preVisit(assignment);
-                bool isStringLike = AST::cast<StringLiteralPropertyName *>(assignment->name)
-                        || cast<IdentifierPropertyName *>(assignment->name);
+                const bool isStringLike = [this](const SourceLocation &loc) {
+                    const auto name = loc2Str(loc);
+                    if (name.first() == name.last()) {
+                        if (name.first() == QStringLiteral("\'")
+                            || name.first() == QStringLiteral("\""))
+                            return true;
+                    }
+                    return false;
+                }(assignment->name->propertyNameToken);
+
                 if (isStringLike)
                     out("\"");
+
                 accept(assignment->name);
                 if (isStringLike)
                     out("\"");
-                out(": "); // assignment->colonToken
-                if (it->next)
-                    postOps[assignment->initializer].append([this] {
-                        out(","); // always invalid?
-                    });
-                accept(assignment->initializer);
-                if (it->next)
+
+                bool useInitializer = false;
+                const bool bindingIdentifierExist = !assignment->bindingIdentifier.isEmpty();
+                if (assignment->colonToken.length > 0) {
+                    out(": ");
+                    useInitializer = true;
+                    if (bindingIdentifierExist)
+                        out(assignment->bindingIdentifier);
+                }
+
+                if (assignment->initializer) {
+                    if (bindingIdentifierExist) {
+                        out(" = ");
+                        useInitializer = true;
+                    }
+                    if (useInitializer)
+                        accept(assignment->initializer);
+                }
+
+                if (it->next) {
+                    out(",");
                     newLine();
+                }
                 postVisit(assignment);
                 continue;
             }
+
             PatternPropertyList *getterSetter = AST::cast<PatternPropertyList *>(it->next);
-            if (getterSetter->property) {
+            if (getterSetter && getterSetter->property) {
                 switch (getterSetter->property->type) {
                 case PatternElement::Getter:
                     out("get");
@@ -583,7 +608,6 @@ protected:
         if (ast->isForDeclaration) {
             outputScope(ast->scope);
         }
-        accept(ast->bindingTarget);
         switch (ast->type) {
         case PatternElement::Literal:
         case PatternElement::Method:
@@ -599,9 +623,12 @@ protected:
             out("...");
             break;
         }
-        out(ast->identifierToken);
+
+        accept(ast->bindingTarget);
+        if (!ast->destructuringPattern())
+            out(ast->identifierToken);
         if (ast->initializer) {
-            if (ast->isVariableDeclaration())
+            if (ast->isVariableDeclaration() || ast->type == AST::PatternElement::Binding)
                 out(" = ");
             accept(ast->initializer);
         }

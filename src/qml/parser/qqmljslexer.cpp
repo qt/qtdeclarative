@@ -368,7 +368,8 @@ uint Lexer::decodeUnicodeEscapeCharacter(bool *ok)
 {
     Q_ASSERT(_state.currentChar == u'u');
     scanChar(); // skip u
-    if (_codePtr + 4 <= _endPtr && isHexDigit(_state.currentChar)) {
+    constexpr int distanceFromFirstHexToLastHex = 3;
+    if (_codePtr + distanceFromFirstHexToLastHex <= _endPtr && isHexDigit(_state.currentChar)) {
         uint codePoint = 0;
         for (int i = 0; i < 4; ++i) {
             int digit = hexDigit(_state.currentChar);
@@ -1800,6 +1801,17 @@ const Lexer::State &Lexer::state() const
 void Lexer::setState(const Lexer::State &state)
 {
     _state = state;
+}
+
+int Lexer::parseModeFlags() const {
+    int flags = 0;
+    if (qmlMode())
+        flags |= QmlMode|StaticIsKeyword;
+    if (yieldIsKeyWord())
+        flags |= YieldIsKeyword;
+    if (_staticIsKeyword)
+        flags |= StaticIsKeyword;
+    return flags;
 }
 
 namespace QQmlJS {

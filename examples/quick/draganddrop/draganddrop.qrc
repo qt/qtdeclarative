@@ -6,5 +6,6 @@
         <file>tiles/tiles.qml</file>
         <file>views/gridview.qml</file>
         <file>views/Icon.qml</file>
+        <file>external/externaldraganddrop.qml</file>
     </qresource>
 </RCC>

@@ -16,7 +16,6 @@ class tst_QJSValue : public QObject
 
 public:
     tst_QJSValue();
-    virtual ~tst_QJSValue();
 
 private slots:
     void ctor_invalid();
@@ -129,11 +128,9 @@ private slots:
 private:
     void newEngine()
     {
-        if (engine)
-            delete engine;
-        engine = new QJSEngine();
+        engine = std::make_unique<QJSEngine>();
     }
-    QJSEngine *engine;
+    std::unique_ptr<QJSEngine> engine;
 };
 
 #endif

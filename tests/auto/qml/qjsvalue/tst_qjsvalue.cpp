@@ -19,11 +19,6 @@ tst_QJSValue::tst_QJSValue()
 {
 }
 
-tst_QJSValue::~tst_QJSValue()
-{
-    delete engine;
-}
-
 void tst_QJSValue::ctor_invalid()
 {
     QJSEngine eng;
@@ -2578,7 +2573,7 @@ void tst_QJSValue::prettyPrinter()
 
 void tst_QJSValue::engineDeleted()
 {
-    QJSEngine *eng = new QJSEngine;
+    std::unique_ptr<QJSEngine> eng = std::make_unique<QJSEngine>();
     QObject *temp = new QObject(); // Owned by JS engine, as newQObject() sets JS ownership explicitly
     QJSValue v1 = eng->toScriptValue(123);
     QVERIFY(v1.isNumber());
@@ -2591,7 +2586,7 @@ void tst_QJSValue::engineDeleted()
     QJSValue v5 = "Hello";
     QVERIFY(v2.isString());
 
-    delete eng;
+    eng.reset();
 
     QVERIFY(!v1.isUndefined()); // Primitive value is stored inline
     QVERIFY(v2.isUndefined());

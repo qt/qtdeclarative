@@ -9,6 +9,7 @@
 #include <private/qqmlpropertycachecreator_p.h>
 #include <private/qqmlpropertyresolver_p.h>
 #include <private/qqmlstringconverters_p.h>
+#include <private/qqmlsignalnames_p.h>
 
 #include <QtCore/qdatetime.h>
 
@@ -140,7 +141,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
                     customBindings << binding;
                     continue;
                 }
-            } else if (QmlIR::IRBuilder::isSignalPropertyName(name)
+            } else if (QQmlSignalNames::isHandlerName(name)
                        && !(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers)) {
                 customBindings << binding;
                 continue;
@@ -379,19 +380,6 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(
     }
 
     auto warnOrError = [&](const QString &error) {
-        if (binding->type() == QV4::CompiledData::Binding::Type_Null) {
-            QQmlError warning;
-            warning.setUrl(compilationUnit->url());
-            warning.setLine(qmlConvertSourceCoordinate<quint32, int>(
-                    binding->valueLocation.line()));
-            warning.setColumn(qmlConvertSourceCoordinate<quint32, int>(
-                    binding->valueLocation.column()));
-            warning.setDescription(error + tr(" - Assigning null to incompatible properties in QML "
-                                              "is deprecated. This will become a compile error in "
-                                              "future versions of Qt."));
-            enginePrivate->warning(warning);
-            return noError;
-        }
         return qQmlCompileError(binding->valueLocation, error);
     };
 

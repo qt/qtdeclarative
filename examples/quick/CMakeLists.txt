@@ -4,7 +4,6 @@
 qt_internal_add_example(quick-accessibility)
 qt_internal_add_example(animation)
 qt_internal_add_example(draganddrop)
-qt_internal_add_example(externaldraganddrop)
 qt_internal_add_example(canvas)
 qt_internal_add_example(imageelements)
 qt_internal_add_example(keyinteraction)
@@ -16,11 +15,9 @@ qt_internal_add_example(views)
 add_subdirectory(tableview)
 qt_internal_add_example(mousearea)
 qt_internal_add_example(positioners)
-qt_internal_add_example(righttoleft)
 add_subdirectory(scenegraph)
 qt_internal_add_example(shadereffects)
 qt_internal_add_example(text)
-qt_internal_add_example(threading)
 add_subdirectory(tutorials)
 add_subdirectory(customitems)
 qt_internal_add_example(imageprovider)
@@ -48,9 +45,7 @@ set(reused_dir_targets
     canvas_shared
     views_shared
     positioners_shared
-    righttoleft_shared
     text_shared
-    threading_shared
     window_shared
     shapes_shared
     imageelements_shared

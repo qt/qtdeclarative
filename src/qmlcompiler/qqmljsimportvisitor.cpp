@@ -13,6 +13,7 @@
 #include <QtCore/qrect.h>
 #include <QtCore/qsize.h>
 
+#include <QtQml/private/qqmlsignalnames_p.h>
 #include <QtQml/private/qv4codegen_p.h>
 #include <QtQml/private/qqmlstringconverters_p.h>
 #include <QtQml/private/qqmlirbuilder_p.h>
@@ -31,6 +32,47 @@ QT_BEGIN_NAMESPACE
 using namespace Qt::StringLiterals;
 
 using namespace QQmlJS::AST;
+
+/*!
+    Returns if assigning \a assignedType to \a property would require an
+    implicit component wrapping.
+ */
+static bool causesImplicitComponentWrapping(const QQmlJSMetaProperty &property,
+                                                  const QQmlJSScope::ConstPtr &assignedType)
+{
+    // See QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents()
+    // for the logic in qqmltypecompiler
+
+    // Note: unlike findAndRegisterImplicitComponents() we do not check whether
+    // the property type is *derived* from QQmlComponent at some point because
+    // this is actually meaningless (and in the case of QQmlComponent::create()
+    // gets rejected in QQmlPropertyValidator): if the type is not a
+    // QQmlComponent, we have a type mismatch because of assigning a Component
+    // object to a non-Component property
+    const bool propertyVerdict = property.type()->internalName() == u"QQmlComponent";
+
+    const bool assignedTypeVerdict = [&assignedType]() {
+        // Note: nonCompositeBaseType covers the case when assignedType itself
+        // is non-composite
+        auto cppBase = QQmlJSScope::nonCompositeBaseType(assignedType);
+        Q_ASSERT(cppBase); // any QML type has (or must have) a C++ base type
+
+        // See isUsableComponent() in qqmltypecompiler.cpp: along with checking
+        // whether a type has a QQmlComponent static meta object (which we
+        // substitute here with checking the first non-composite base for being
+        // a QQmlComponent), it also excludes QQmlAbstractDelegateComponent
+        // subclasses from implicit wrapping
+        if (cppBase->internalName() == u"QQmlComponent")
+            return false;
+        for (; cppBase; cppBase = cppBase->baseType()) {
+            if (cppBase->internalName() == u"QQmlAbstractDelegateComponent")
+                return false;
+        }
+        return true;
+    }();
+
+    return propertyVerdict && assignedTypeVerdict;
+}
 
 /*!
   \internal
@@ -366,7 +408,7 @@ void QQmlJSImportVisitor::importBaseModules()
     // Pulling in the modules and neighboring qml files of the qmltypes we're trying to lint is not
     // something we need to do.
     if (!m_logger->fileName().endsWith(u".qmltypes"_s)) {
-        QQmlJSScope::ContextualTypes fromDirectory =
+        QQmlJS::ContextualTypes fromDirectory =
                 m_importer->importDirectory(m_implicitImportDirectory);
         m_rootScopeImports.addTypes(std::move(fromDirectory));
 
@@ -593,7 +635,7 @@ void QQmlJSImportVisitor::processDefaultProperties()
             // Check whether the property can be assigned the scope
             if (propType->canAssign(scope)) {
                 scope->setIsWrappedInImplicitComponent(
-                        QQmlJSScope::causesImplicitComponentWrapping(defaultProp, scope));
+                        causesImplicitComponentWrapping(defaultProp, scope));
                 continue;
             }
 
@@ -701,7 +743,7 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
         }
 
         objectBinding.childScope->setIsWrappedInImplicitComponent(
-                QQmlJSScope::causesImplicitComponentWrapping(property, childScope));
+                causesImplicitComponentWrapping(property, childScope));
 
         // unique because it's per-scope and per-property
         const auto uniqueBindingId = qMakePair(objectBinding.scope, objectBinding.name);
@@ -922,7 +964,7 @@ void QQmlJSImportVisitor::checkSignal(
         const QQmlJSScope::ConstPtr &signalScope, const QQmlJS::SourceLocation &location,
         const QString &handlerName, const QStringList &handlerParameters)
 {
-    const auto signal = QQmlJSUtils::signalName(handlerName);
+    const auto signal = QQmlSignalNames::handlerNameToSignalName(handlerName);
 
     std::optional<QQmlJSMetaMethod> signalMethod;
     const auto setSignalMethod = [&](const QQmlJSScope::ConstPtr &scope, const QString &name) {
@@ -934,8 +976,7 @@ void QQmlJSImportVisitor::checkSignal(
     if (signal.has_value()) {
         if (signalScope->hasMethod(*signal)) {
             setSignalMethod(signalScope, *signal);
-        } else if (auto p = QQmlJSUtils::changeHandlerProperty(signalScope, *signal);
-                   p.has_value()) {
+        } else if (auto p = QQmlJSUtils::propertyFromChangedHandler(signalScope, handlerName)) {
             // we have a change handler of the form "onXChanged" where 'X'
             // is a property name
 
@@ -1888,7 +1929,6 @@ void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scri
         m_logger->log(u"Failed to parse id"_s, qmlSyntax,
                       statement->expression->firstSourceLocation());
         return QString();
-
     }();
     if (m_scopesById.existsAnywhereInDocument(name)) {
         // ### TODO: find an alternative to breakInhertianceCycles here
@@ -1985,11 +2025,11 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
         prefix.clear();
     }
 
-    auto name = group->name.toString();
+    const auto name = group->name.toString();
 
     // This is a preliminary check.
     // Even if the name starts with "on", it might later turn out not to be a signal.
-    const auto signal = QQmlJSUtils::signalName(name);
+    const auto signal = QQmlSignalNames::handlerNameToSignalName(name);
 
     if (!signal.has_value() || m_currentScope->hasProperty(name)) {
         m_propertyBindings[m_currentScope].append(
@@ -2039,7 +2079,7 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
             if (!methods.isEmpty()) {
                 kind = QQmlSA::ScriptBindingKind::Script_SignalHandler;
                 checkSignal(scope, groupLocation, name, signalParameters);
-            } else if (QQmlJSUtils::changeHandlerProperty(scope, signalName).has_value()) {
+            } else if (QQmlJSUtils::propertyFromChangedHandler(scope, name).has_value()) {
                 kind = QQmlSA::ScriptBindingKind::Script_ChangeHandler;
                 checkSignal(scope, groupLocation, name, signalParameters);
             } else if (scope->hasProperty(name)) {

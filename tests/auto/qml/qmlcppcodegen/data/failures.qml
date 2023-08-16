@@ -92,4 +92,9 @@ QtObject {
     property list<withLength> withLengths
     property int l: withLengths.length
     property withLength w: withLengths[10]
+
+    property unconstructibleWithLength uwl: 12 + 1
+
+    // Cannot generate code for getters
+    property rect r3: ({ get x() { return 42; }, y: 4 })
 }

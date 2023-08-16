@@ -19,6 +19,7 @@
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include <algorithm>
+#include <optional>
 #include <tuple>
 #include <variant>
 
@@ -36,32 +37,79 @@ struct QQmlLSUtilsTextPosition
     int character;
 };
 
+enum QQmlLSUtilsIdentifierType : char {
+    JavaScriptIdentifier,
+    PropertyIdentifier,
+    PropertyChangedSignalIdentifier,
+    PropertyChangedHandlerIdentifier,
+    SignalIdentifier,
+    SignalHandlerIdentifier,
+    MethodIdentifier,
+    QmlObjectIdIdentifier,
+    QmlObjectIdentifier
+};
+
+struct QQmlLSUtilsErrorMessage
+{
+    int code;
+    QString message;
+};
+
+struct QQmlLSUtilsExpressionType
+{
+    std::optional<QString> name;
+    QQmlJSScope::ConstPtr semanticScope;
+    QQmlLSUtilsIdentifierType type;
+};
+
 struct QQmlLSUtilsLocation
 {
     QString filename;
-    QQmlJS::SourceLocation location;
+    QQmlJS::SourceLocation sourceLocation;
+
+    static QQmlLSUtilsLocation from(const QString &fileName, const QString &code, quint32 startLine,
+                                    quint32 startCharacter, quint32 length);
 
     friend bool operator<(const QQmlLSUtilsLocation &a, const QQmlLSUtilsLocation &b)
     {
-        return std::make_tuple(a.filename, a.location.begin(), a.location.end())
-                < std::make_tuple(b.filename, b.location.begin(), b.location.end());
+        return std::make_tuple(a.filename, a.sourceLocation.begin(), a.sourceLocation.end())
+                < std::make_tuple(b.filename, b.sourceLocation.begin(), b.sourceLocation.end());
     }
     friend bool operator==(const QQmlLSUtilsLocation &a, const QQmlLSUtilsLocation &b)
     {
-        return std::make_tuple(a.filename, a.location.begin(), a.location.end())
-                == std::make_tuple(b.filename, b.location.begin(), b.location.end());
+        return std::make_tuple(a.filename, a.sourceLocation.begin(), a.sourceLocation.end())
+                == std::make_tuple(b.filename, b.sourceLocation.begin(), b.sourceLocation.end());
+    }
+};
+
+struct QQmlLSUtilsEdit
+{
+    QQmlLSUtilsLocation location;
+    QString replacement;
+
+    static QQmlLSUtilsEdit from(const QString &fileName, const QString &code, quint32 startLine,
+                                quint32 startCharacter, quint32 length, const QString &newName);
+
+    friend bool operator<(const QQmlLSUtilsEdit &a, const QQmlLSUtilsEdit &b)
+    {
+        return std::make_tuple(a.location, a.replacement)
+                < std::make_tuple(b.location, b.replacement);
+    }
+    friend bool operator==(const QQmlLSUtilsEdit &a, const QQmlLSUtilsEdit &b)
+    {
+        return std::make_tuple(a.location, a.replacement)
+                == std::make_tuple(b.location, b.replacement);
     }
 };
 
 /*!
    \internal
-    Choose whether to resolve the entire type (useful for QmlObjects, Inline Components) or just
-    the owner type (useful for properties, which are only unique given an ownerType and their
-    property name).
+    Choose whether to resolve the owner type or the entire type (the latter is only required to
+    resolve the types of qualified names and property accesses).
  */
 enum QQmlLSUtilsResolveOptions {
-    JustOwner,
-    Everything,
+    ResolveOwnerType,
+    ResolveActualTypeForFieldMemberExpression,
 };
 
 class QQmlLSUtils
@@ -82,8 +130,16 @@ public:
     static std::optional<QQmlLSUtilsLocation> findDefinitionOf(QQmlJS::Dom::DomItem item);
     static QList<QQmlLSUtilsLocation> findUsagesOf(QQmlJS::Dom::DomItem item);
 
-    static QQmlJSScope::ConstPtr resolveExpressionType(QQmlJS::Dom::DomItem item,
-                                                       QQmlLSUtilsResolveOptions);
+    static std::optional<QQmlLSUtilsErrorMessage>
+    checkNameForRename(QQmlJS::Dom::DomItem item, const QString &newName,
+                       std::optional<QQmlLSUtilsExpressionType> targetType = std::nullopt);
+    static QList<QQmlLSUtilsEdit>
+    renameUsagesOf(QQmlJS::Dom::DomItem item, const QString &newName,
+                   std::optional<QQmlLSUtilsExpressionType> targetType = std::nullopt);
+
+    static std::optional<QQmlLSUtilsExpressionType>
+    resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolveOptions);
+    static bool isValidEcmaScriptIdentifier(QStringView view);
 };
 QT_END_NAMESPACE
 

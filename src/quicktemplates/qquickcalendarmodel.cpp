@@ -104,7 +104,7 @@ QDate QQuickCalendarModel::from() const
     return d->from;
 }
 
-void QQuickCalendarModel::setFrom(const QDate &from)
+void QQuickCalendarModel::setFrom(QDate from)
 {
     Q_D(QQuickCalendarModel);
     if (d->from != from) {
@@ -126,7 +126,7 @@ QDate QQuickCalendarModel::to() const
     return d->to;
 }
 
-void QQuickCalendarModel::setTo(const QDate &to)
+void QQuickCalendarModel::setTo(QDate to)
 {
     Q_D(QQuickCalendarModel);
     if (d->to != to) {
@@ -164,7 +164,7 @@ int QQuickCalendarModel::yearAt(int index) const
 
     Returns the model index of the specified \a date.
 */
-int QQuickCalendarModel::indexOf(const QDate &date) const
+int QQuickCalendarModel::indexOf(QDate date) const
 {
     Q_D(const QQuickCalendarModel);
     return d->getCount(d->from, date) - 1;

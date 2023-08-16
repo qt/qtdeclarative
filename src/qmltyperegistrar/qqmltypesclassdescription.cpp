@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmltypesclassdescription_p.h"
-#include "qqmltyperegistrarconstants_p.h"
+
 #include "qanystringviewutils_p.h"
+#include "qmetatypesjsonprocessor_p.h"
+#include "qqmltyperegistrarconstants_p.h"
 
 #include <QtCore/qcborarray.h>
 #include <QtCore/qcbormap.h>
@@ -18,7 +20,7 @@ static void collectExtraVersions(const QCborMap *component, QLatin1StringView ke
                                  QList<QTypeRevision> &extraVersions)
 {
     const QCborArray &items = component->value(key).toArray();
-    for (const QCborValue item : items) {
+    for (const QCborValue &item : items) {
         const QCborMap obj = item.toMap();
         const auto revision = obj.find(S_REVISION);
         if (revision != obj.end()) {
@@ -30,38 +32,61 @@ static void collectExtraVersions(const QCborMap *component, QLatin1StringView ke
 }
 
 const QCborMap *QmlTypesClassDescription::findType(
-        const QVector<QCborMap> &types, const QAnyStringView &name)
+        const QVector<QCborMap> &types, const QVector<QCborMap> &foreign,
+        const QAnyStringView &name, const QList<QAnyStringView> &namespaces)
 {
-    auto it = std::lower_bound(types.begin(), types.end(), name,
-                               [&](const QCborMap &type, const QAnyStringView &typeName) {
-                                   return toStringView(type, S_QUALIFIED_CLASS_NAME) < typeName;
-    });
+    const auto compare = [](const QCborMap &type, const QAnyStringView &typeName) {
+        return toStringView(type, S_QUALIFIED_CLASS_NAME) < typeName;
+    };
 
-    return (it != types.end() && toStringView(*it, S_QUALIFIED_CLASS_NAME) == name)
-            ? &(*it)
-            : nullptr;
+    const auto tryFindType = [&](QAnyStringView qualifiedName) -> const QCborMap * {
+        for (const QVector<QCborMap> &t : {types, foreign}) {
+            const auto it = std::lower_bound(t.begin(), t.end(), qualifiedName, compare);
+            if (it != t.end() && toStringView(*it, S_QUALIFIED_CLASS_NAME) == qualifiedName)
+                return &(*it);
+        }
+
+        return nullptr;
+    };
+
+    if (startsWith(name, QLatin1String("::")))
+        return tryFindType(name.mid(2));
+
+    QString qualified;
+    for (int i = 0, end = namespaces.length(); i != end; ++i) {
+        for (int j = 0; j < end - i; ++j) {
+            namespaces[j].visit([&](auto data) { qualified.append(data); });
+            qualified.append(QLatin1String("::"));
+        }
+        name.visit([&](auto data) { qualified.append(data); });
+        if (const QCborMap *found = tryFindType(qualified))
+            return found;
+
+        qualified.truncate(0);
+    }
+
+    return tryFindType(name);
 }
 
 void QmlTypesClassDescription::collectSuperClasses(
         const QCborMap *classDef, const QVector<QCborMap> &types,
         const QVector<QCborMap> &foreign, CollectMode mode,  QTypeRevision defaultRevision)
 {
+    const QList<QAnyStringView> namespaces = MetaTypesJsonProcessor::namespaces(*classDef);
     const auto supers = classDef->value(S_SUPER_CLASSES).toArray();
-    for (const QCborValue superValue : supers) {
+    for (const QCborValue &superValue : supers) {
         const QCborMap superObject = superValue.toMap();
         if (toStringView(superObject, S_ACCESS) == S_PUBLIC) {
             const QAnyStringView superName = toStringView(superObject, S_NAME);
 
             const CollectMode superMode = (mode == TopLevel) ? SuperClass : RelatedType;
-            if (const QCborMap *other = findType(types, superName))
+            if (const QCborMap *other = findType(types, foreign, superName, namespaces)) {
                 collect(other, types, foreign, superMode, defaultRevision);
-            else if (const QCborMap *other = findType(foreign, superName))
-                collect(other, types, foreign, superMode, defaultRevision);
-            else // If we cannot locate a type for it, there is no point in recording the superClass
-                continue;
+                if (mode == TopLevel && superClass.isEmpty())
+                    superClass = toStringView(*other, S_QUALIFIED_CLASS_NAME);
+            }
 
-            if (mode == TopLevel && superClass.isEmpty())
-                superClass = superName;
+            // If we cannot locate a type for it, there is no point in recording the superClass
         }
     }
 }
@@ -70,7 +95,7 @@ void QmlTypesClassDescription::collectInterfaces(const QCborMap *classDef)
 {
     if (classDef->contains(S_INTERFACES)) {
         const QCborArray array = classDef->value(S_INTERFACES).toArray();
-        for (const QCborValue value : array) {
+        for (const QCborValue &value : array) {
             auto object = value.toArray()[0].toMap();
             implementsInterfaces << toStringView(object, S_CLASS_NAME);
         }
@@ -94,7 +119,7 @@ void QmlTypesClassDescription::collectLocalAnonymous(
         accessSemantics = DotQmltypes::S_NONE;
 
     const auto classInfos = classDef->value(S_CLASS_INFOS).toArray();
-    for (const QCborValue classInfo : classInfos) {
+    for (const QCborValue &classInfo : classInfos) {
         const QCborMap obj = classInfo.toMap();
         if (obj[S_NAME] == S_DEFAULT_PROPERTY)
             defaultProp = toStringView(obj, S_VALUE);
@@ -115,9 +140,11 @@ void QmlTypesClassDescription::collect(
 
     const auto classInfos = classDef->value(S_CLASS_INFOS).toArray();
     const QAnyStringView classDefName = toStringView(*classDef, S_CLASS_NAME);
+    const QList<QAnyStringView> namespaces = MetaTypesJsonProcessor::namespaces(*classDef);
+
     QAnyStringView foreignTypeName;
-    bool explicitCreatable = false;
-    for (const QCborValue classInfo : classInfos) {
+    bool isConstructible = false;
+    for (const QCborValue &classInfo : classInfos) {
         const QCborMap obj = classInfo.toMap();
         const QAnyStringView name = toStringView(obj, S_NAME);
         const QAnyStringView value = toStringView(obj, S_VALUE);
@@ -125,10 +152,16 @@ void QmlTypesClassDescription::collect(
         if (name == S_DEFAULT_PROPERTY) {
             if (mode != RelatedType && defaultProp.isEmpty())
                 defaultProp = value;
-        } else if (name == S_PARENT_PROPERTY) {
+            continue;
+        }
+
+        if (name == S_PARENT_PROPERTY) {
             if (mode != RelatedType && parentProp.isEmpty())
                 parentProp = value;
-        } else if (name == S_ADDED_IN_VERSION) {
+            continue;
+        }
+
+        if (name == S_ADDED_IN_VERSION) {
             const QTypeRevision revision = QTypeRevision::fromEncodedVersion(toInt(value));
             if (mode == TopLevel) {
                 addedInRevision = revision;
@@ -136,6 +169,7 @@ void QmlTypesClassDescription::collect(
             } else if (!elementName.isEmpty()) {
                 revisions.append(revision);
             }
+            continue;
         }
 
         if (mode != TopLevel)
@@ -151,19 +185,30 @@ void QmlTypesClassDescription::collect(
             removedInRevision = QTypeRevision::fromEncodedVersion(toInt(value));
         } else if (name == S_CREATABLE) {
             isCreatable = (value != S_FALSE);
-            explicitCreatable = true;
+        } else if (name == S_CREATION_METHOD) {
+            isStructured = (value == S_STRUCTURED);
+            isConstructible = isStructured || (value == S_CONSTRUCT);
         } else if (name == S_ATTACHED) {
-            attachedType = value;
-            collectRelated(value, types, foreign, defaultRevision);
+            if (const QCborMap *attached = collectRelated(
+                        value, types, foreign, defaultRevision, namespaces)) {
+                attachedType = toStringView(*attached, S_QUALIFIED_CLASS_NAME);
+            }
         } else if (name == S_EXTENDED) {
-            extensionType = value;
-            collectRelated(value, types, foreign, defaultRevision);
+            if (const QCborMap *extension = collectRelated(
+                        value, types, foreign, defaultRevision, namespaces)) {
+                extensionType = toStringView(*extension, S_QUALIFIED_CLASS_NAME);
+            }
         } else if (name == S_EXTENSION_IS_NAMESPACE) {
             if (value == S_TRUE)
                 extensionIsNamespace = true;
         } else if (name == S_SEQUENCE) {
-            sequenceValueType = value;
-            collectRelated(value, types, foreign, defaultRevision);
+            if (const QCborMap *element = collectRelated(
+                        value, types, foreign, defaultRevision, namespaces)) {
+                sequenceValueType = toStringView(*element, S_QUALIFIED_CLASS_NAME);
+            } else {
+                // TODO: get rid of this once we have JSON data for the builtins.
+                sequenceValueType = value;
+            }
         } else if (name == S_SINGLETON) {
             if (value == S_TRUE)
                 isSingleton = true;
@@ -176,9 +221,9 @@ void QmlTypesClassDescription::collect(
             if (value == S_TRUE)
                 hasCustomParser = true;
         } else if (name == S_DEFERRED_PROPERTY_NAMES) {
-            deferredNames = split(value, QLatin1Char(','));
+            deferredNames = split(value, ',');
         } else if (name == S_IMMEDIATE_PROPERTY_NAMES) {
-            immediateNames = split(value, QLatin1Char(','));
+            immediateNames = split(value, ',');
         }
     }
 
@@ -187,13 +232,8 @@ void QmlTypesClassDescription::collect(
     const bool isNamespace = classDef->value(S_NAMESPACE).toBool();
 
     if (!foreignTypeName.isEmpty()) {
-        const QCborMap *other = findType(foreign, foreignTypeName);
-
-        // We can re-use a type with own S_* macros as target of S_FOREIGN
-        if (!other)
-            other = findType(types, foreignTypeName);
-
-        if (other) {
+        // We can re-use a type with own QML.* macros as target of QML.Foreign
+        if (const QCborMap *other = findType(foreign, types, foreignTypeName, namespaces)) {
             classDef = other;
 
             // Default properties are always local.
@@ -201,7 +241,7 @@ void QmlTypesClassDescription::collect(
 
             // Foreign type can have a default property or an attached types
             const auto classInfos = classDef->value(S_CLASS_INFOS).toArray();
-            for (const QCborValue classInfo : classInfos) {
+            for (const QCborValue &classInfo : classInfos) {
                 const QCborMap obj = classInfo.toMap();
                 const QAnyStringView foreignName = toStringView(obj, S_NAME);
                 const QAnyStringView foreignValue = toStringView(obj, S_VALUE);
@@ -210,17 +250,23 @@ void QmlTypesClassDescription::collect(
                 } else if (parentProp.isEmpty() && foreignName == S_PARENT_PROPERTY) {
                     parentProp = foreignValue;
                 } else if (foreignName == S_ATTACHED) {
-                    attachedType = foreignValue;
-                    collectRelated(foreignValue, types, foreign, defaultRevision);
+                    if (const QCborMap *attached = collectRelated(
+                                foreignValue, types, foreign, defaultRevision, namespaces)) {
+                        attachedType = toStringView(*attached, S_QUALIFIED_CLASS_NAME);
+                    }
                 } else if (foreignName == S_EXTENDED) {
-                    extensionType = foreignValue;
-                    collectRelated(foreignValue, types, foreign, defaultRevision);
+                    if (const QCborMap *extension = collectRelated(
+                                foreignValue, types, foreign, defaultRevision, namespaces)) {
+                        extensionType = toStringView(*extension, S_QUALIFIED_CLASS_NAME);
+                    }
                 } else if (foreignName == S_EXTENSION_IS_NAMESPACE) {
                     if (foreignValue == S_TRUE)
                         extensionIsNamespace = true;
                 } else if (foreignName == S_SEQUENCE) {
-                    sequenceValueType = foreignValue;
-                    collectRelated(foreignValue, types, foreign, defaultRevision);
+                    if (const QCborMap *element = collectRelated(
+                                foreignValue, types, foreign, defaultRevision, namespaces)) {
+                        sequenceValueType = toStringView(*element, S_QUALIFIED_CLASS_NAME);
+                    }
                 }
             }
         } else {
@@ -270,8 +316,7 @@ void QmlTypesClassDescription::collect(
     } else if (classDef && classDef->value(S_OBJECT).toBool()) {
         accessSemantics = DotQmltypes::S_REFERENCE;
     } else {
-        if (!explicitCreatable)
-            isCreatable = false;
+        isCreatable = isConstructible;
 
         if (!classDef) {
             if (elementName.isEmpty() || elementName.front().isLower()) {
@@ -300,14 +345,15 @@ void QmlTypesClassDescription::collect(
     }
 }
 
-void QmlTypesClassDescription::collectRelated(
+const QCborMap *QmlTypesClassDescription::collectRelated(
         QAnyStringView related, const QVector<QCborMap> &types, const QVector<QCborMap> &foreign,
-        QTypeRevision defaultRevision)
+        QTypeRevision defaultRevision, const QList<QAnyStringView> &namespaces)
 {
-    if (const QCborMap *other = findType(types, related))
+    if (const QCborMap *other = findType(types, foreign, related, namespaces)) {
         collect(other, types, foreign, RelatedType, defaultRevision);
-    else if (const QCborMap *other = findType(foreign, related))
-        collect(other, types, foreign, RelatedType, defaultRevision);
+        return other;
+    }
+    return nullptr;
 }
 
 QT_END_NAMESPACE

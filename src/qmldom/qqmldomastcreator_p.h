@@ -308,6 +308,9 @@ public:
     bool visit(AST::UiPublicMember *el) override;
     void endVisit(AST::UiPublicMember *el) override;
 
+    bool visit(AST::FunctionDeclaration *el) override;
+    void endVisit(AST::FunctionDeclaration *) override;
+
     bool visit(AST::UiSourceElement *el) override;
     void endVisit(AST::UiSourceElement *) override;
 

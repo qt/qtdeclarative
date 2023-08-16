@@ -19,7 +19,7 @@ class SqlEventDatabase : public QObject
 public:
     SqlEventDatabase();
 
-    QVector<Event> eventsForDate(const QDate &date);
+    QVector<Event> eventsForDate(QDate date);
 
 private:
     static void createConnection();

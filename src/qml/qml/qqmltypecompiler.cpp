@@ -9,6 +9,7 @@
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlpropertyresolver_p.h>
 #include <private/qqmlcomponentandaliasresolver_p.h>
+#include <private/qqmlsignalnames_p.h>
 
 #define COMPILE_EXCEPTION(token, desc) \
     { \
@@ -325,17 +326,20 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(
             continue;
         }
 
-        if (!QmlIR::IRBuilder::isSignalPropertyName(bindingPropertyName))
+        QString qPropertyName;
+        QString signalName;
+        if (auto propertyName =
+                    QQmlSignalNames::changedHandlerNameToPropertyName(bindingPropertyName)) {
+            qPropertyName = *propertyName;
+            signalName = *QQmlSignalNames::changedHandlerNameToSignalName(bindingPropertyName);
+        } else {
+            signalName = QQmlSignalNames::handlerNameToSignalName(bindingPropertyName)
+                                 .value_or(QString());
+        }
+        if (signalName.isEmpty())
             continue;
 
         QQmlPropertyResolver resolver(propertyCache);
-
-        const QString signalName = QmlIR::IRBuilder::signalNameFromSignalPropertyName(
-                    bindingPropertyName);
-
-        QString qPropertyName;
-        if (signalName.endsWith(QLatin1String("Changed")))
-            qPropertyName = signalName.mid(0, signalName.size() - static_cast<int>(strlen("Changed")));
 
         bool notInRevision = false;
         const QQmlPropertyData * const signal = resolver.signal(signalName, &notInRevision);
@@ -1045,7 +1049,7 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(
                     obj->flags |= Object::HasCustomParserBindings;
                     continue;
                 }
-            } else if (QmlIR::IRBuilder::isSignalPropertyName(name)
+            } else if (QQmlSignalNames::isHandlerName(name)
                        && !(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers)) {
                 obj->flags |= Object::HasCustomParserBindings;
                 binding->setFlag(Binding::IsCustomParserBinding);

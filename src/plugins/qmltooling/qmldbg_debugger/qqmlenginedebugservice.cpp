@@ -15,6 +15,7 @@
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlexpression_p.h>
+#include <private/qqmlsignalnames_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qmetaobject.h>
@@ -119,22 +120,14 @@ QDataStream &operator>>(QDataStream &ds,
     return ds;
 }
 
-static inline bool isSignalPropertyName(const QString &signalName)
-{
-    // see QmlCompiler::isSignalPropertyName
-    return signalName.size() >= 3 && signalName.startsWith(QLatin1String("on")) &&
-            signalName.at(2).isLetter() && signalName.at(2).isUpper();
-}
-
 static bool hasValidSignal(QObject *object, const QString &propertyName)
 {
-    if (!isSignalPropertyName(propertyName))
+    auto signalName = QQmlSignalNames::handlerNameToSignalName(propertyName);
+    if (!signalName)
         return false;
 
-    QString signalName = propertyName.mid(2);
-    signalName[0] = signalName.at(0).toLower();
-
-    int sigIdx = QQmlPropertyPrivate::findSignalByName(object->metaObject(), signalName.toLatin1()).methodIndex();
+    int sigIdx = QQmlPropertyPrivate::findSignalByName(object->metaObject(), signalName->toLatin1())
+                         .methodIndex();
 
     if (sigIdx == -1)
         return false;
@@ -305,10 +298,8 @@ void QQmlEngineDebugServiceImpl::buildObjectDump(QDataStream &message,
                 if (scope) {
                     const QByteArray methodName = QMetaObjectPrivate::signal(scope->metaObject(),
                                                                              signalHandler->signalIndex()).name();
-                    const QLatin1String methodNameStr(methodName);
-                    if (methodNameStr.size() != 0) {
-                        prop.name = QLatin1String("on") + QChar(methodNameStr.at(0)).toUpper()
-                                + methodNameStr.mid(1);
+                    if (!methodName.isEmpty()) {
+                        prop.name = QQmlSignalNames::signalNameToHandlerName(methodName);
                     }
                 }
             }

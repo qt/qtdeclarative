@@ -21,14 +21,10 @@ QtObject {
             readyState = true;
 
         x.open("PUT", url);
-        x.setRequestHeader("Accept-Language", "en-US");
-
         x.abort();
 
         x.open("GET", url);
-        x.setRequestHeader("Accept-Language", "en-US");
-
-        if (x.readyState  == XMLHttpRequest.OPENED)
+        if (x.readyState == XMLHttpRequest.OPENED)
             openedState = true;
 
         try {

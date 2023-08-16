@@ -22,6 +22,7 @@
 #include <QtQml/qqmlproperty.h>
 #include <QtQml/qqmlincubator.h>
 #include <QtQml/qqmlapplicationengine.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 #include <QtQuick/qquickitem.h>
 
 #include <QtNetwork/qhostaddress.h>
@@ -244,7 +245,7 @@ void tst_QQmlEngineDebugService::recursiveObjectTest(
         QCOMPARE(p.objectDebugId, QQmlDebugService::idForObject(o));
 
         // signal properties are fake - they are generated from QQmlAbstractBoundSignal children
-        if (p.name.startsWith("on") && p.name.size() > 2 && p.name[2].isUpper()) {
+        if (QQmlSignalNames::isHandlerName(p.name)) {
             QString signal = p.value.toString();
             QQmlBoundSignalExpression *expr = QQmlPropertyPrivate::signalExpression(QQmlProperty(o, p.name));
             QVERIFY(expr && expr->expression() == signal);
@@ -414,10 +415,10 @@ void tst_QQmlEngineDebugService::watch_property()
 
     bool success;
 
-    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(nullptr);
+    std::unique_ptr<QQmlEngineDebugClient> unconnected = std::make_unique<QQmlEngineDebugClient>(nullptr);
     unconnected->addWatch(prop, &success);
     QVERIFY(!success);
-    delete unconnected;
+    unconnected.reset();
 
     m_dbg->addWatch(QQmlEngineDebugPropertyReference(), &success);
     QVERIFY(success);
@@ -458,10 +459,10 @@ void tst_QQmlEngineDebugService::watch_object()
 
     bool success;
 
-    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(nullptr);
+    std::unique_ptr<QQmlEngineDebugClient> unconnected = std::make_unique<QQmlEngineDebugClient>(nullptr);
     unconnected->addWatch(obj, &success);
     QVERIFY(!success);
-    delete unconnected;
+    unconnected.reset();
 
     m_dbg->addWatch(QQmlEngineDebugObjectReference(), &success);
     QVERIFY(success);
@@ -525,10 +526,10 @@ void tst_QQmlEngineDebugService::watch_expression()
 
     bool success;
 
-    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(nullptr);
+    std::unique_ptr<QQmlEngineDebugClient> unconnected = std::make_unique<QQmlEngineDebugClient>(nullptr);
     unconnected->addWatch(obj, expr, &success);
     QVERIFY(!success);
-    delete unconnected;
+    unconnected.reset();
 
     m_dbg->addWatch(QQmlEngineDebugObjectReference(), expr, &success);
     QVERIFY(success);
@@ -600,10 +601,10 @@ void tst_QQmlEngineDebugService::queryAvailableEngines()
 {
     bool success;
 
-    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(nullptr);
+    std::unique_ptr<QQmlEngineDebugClient> unconnected = std::make_unique<QQmlEngineDebugClient>(nullptr);
     unconnected->queryAvailableEngines(&success);
     QVERIFY(!success);
-    delete unconnected;
+    unconnected.reset();
 
     m_dbg->queryAvailableEngines(&success);
     QVERIFY(success);
@@ -628,10 +629,10 @@ void tst_QQmlEngineDebugService::queryRootContexts()
     QVERIFY(m_dbg->engines().size());
     const QQmlEngineDebugEngineReference engine =  m_dbg->engines()[0];
 
-    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(nullptr);
+    std::unique_ptr<QQmlEngineDebugClient> unconnected = std::make_unique<QQmlEngineDebugClient>(nullptr);
     unconnected->queryRootContexts(engine, &success);
     QVERIFY(!success);
-    delete unconnected;
+    unconnected.reset();
 
     m_dbg->queryRootContexts(engine, &success);
     QVERIFY(success);
@@ -659,10 +660,10 @@ void tst_QQmlEngineDebugService::queryObject()
     QQmlEngineDebugObjectReference rootObject = findRootObject();
     QVERIFY(!rootObject.className.isEmpty());
 
-    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(nullptr);
+    std::unique_ptr<QQmlEngineDebugClient> unconnected = std::make_unique<QQmlEngineDebugClient>(nullptr);
     recursive ? unconnected->queryObjectRecursive(rootObject, &success) : unconnected->queryObject(rootObject, &success);
     QVERIFY(!success);
-    delete unconnected;
+    unconnected.reset();
 
     recursive ? m_dbg->queryObjectRecursive(rootObject, &success) : m_dbg->queryObject(rootObject, &success);
     QVERIFY(success);
@@ -731,13 +732,13 @@ void tst_QQmlEngineDebugService::queryObjectsForLocation()
     int lineNumber = rootObject.source.lineNumber;
     int columnNumber = rootObject.source.columnNumber;
 
-    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(nullptr);
+    std::unique_ptr<QQmlEngineDebugClient> unconnected = std::make_unique<QQmlEngineDebugClient>(nullptr);
     recursive ? unconnected->queryObjectsForLocationRecursive(fileName, lineNumber,
                                                               columnNumber, &success)
               : unconnected->queryObjectsForLocation(fileName, lineNumber,
                                                      columnNumber, &success);
     QVERIFY(!success);
-    delete unconnected;
+    unconnected.reset();
 
     recursive ? m_dbg->queryObjectsForLocationRecursive(fileName, lineNumber,
                                                       columnNumber, &success)
@@ -813,9 +814,9 @@ void tst_QQmlEngineDebugService::regression_QTCREATORBUG_7451()
                "text: \"test\"\n"
                "}");
     component.setData(content, rootObject.source.url);
-    QObject *object = component.create(context);
+    std::unique_ptr<QObject> object { component.create(context) };
     QVERIFY(object);
-    int idNew = QQmlDebugService::idForObject(object);
+    int idNew = QQmlDebugService::idForObject(object.get());
     QVERIFY(idNew >= 0);
 
     const QString fileName = QFileInfo(rootObject.source.url.toString()).fileName();
@@ -839,7 +840,7 @@ void tst_QQmlEngineDebugService::regression_QTCREATORBUG_7451()
         QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
     }
 
-    delete object;
+    object.reset();
     QObject *deleted = QQmlDebugService::objectForId(idNew);
     QVERIFY(!deleted);
 
@@ -870,10 +871,10 @@ void tst_QQmlEngineDebugService::queryObjectWithNonStreamableTypes()
     QQmlEngineDebugObjectReference rootObject = findRootObject(4, true);
     QVERIFY(!rootObject.className.isEmpty());
 
-    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(nullptr);
+    std::unique_ptr<QQmlEngineDebugClient> unconnected = std::make_unique<QQmlEngineDebugClient>(nullptr);
     unconnected->queryObject(rootObject, &success);
     QVERIFY(!success);
-    delete unconnected;
+    unconnected.reset();
 
     m_dbg->queryObject(rootObject, &success);
     QVERIFY(success);
@@ -914,10 +915,10 @@ void tst_QQmlEngineDebugService::queryExpressionResult()
 
     bool success;
 
-    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(nullptr);
+    std::unique_ptr<QQmlEngineDebugClient> unconnected = std::make_unique<QQmlEngineDebugClient>(nullptr);
     unconnected->queryExpressionResult(objectId, expr, &success);
     QVERIFY(!success);
-    delete unconnected;
+    unconnected.reset();
 
     m_dbg->queryExpressionResult(objectId, expr, &success);
     QVERIFY(success);
@@ -967,10 +968,10 @@ void tst_QQmlEngineDebugService::queryExpressionResultBC()
 
     bool success;
 
-    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(nullptr);
+    std::unique_ptr<QQmlEngineDebugClient> unconnected = std::make_unique<QQmlEngineDebugClient>(nullptr);
     unconnected->queryExpressionResultBC(objectId, expr, &success);
     QVERIFY(!success);
-    delete unconnected;
+    unconnected.reset();
 
     m_dbg->queryExpressionResultBC(objectId, expr, &success);
     QVERIFY(success);

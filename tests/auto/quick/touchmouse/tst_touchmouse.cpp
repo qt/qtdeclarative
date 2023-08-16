@@ -1450,11 +1450,11 @@ void tst_TouchMouse::hoverEnabled() // QTBUG-40856
 
     QSignalSpy enterSpy1(mouseArea1, SIGNAL(entered()));
     QSignalSpy exitSpy1(mouseArea1, SIGNAL(exited()));
-    QSignalSpy clickSpy1(mouseArea1, SIGNAL(clicked(QQuickMouseEvent *)));
+    QSignalSpy clickSpy1(mouseArea1, SIGNAL(clicked(QQuickMouseEvent*)));
 
     QSignalSpy enterSpy2(mouseArea2, SIGNAL(entered()));
     QSignalSpy exitSpy2(mouseArea2, SIGNAL(exited()));
-    QSignalSpy clickSpy2(mouseArea2, SIGNAL(clicked(QQuickMouseEvent *)));
+    QSignalSpy clickSpy2(mouseArea2, SIGNAL(clicked(QQuickMouseEvent*)));
 
     QPoint p1(150, 150);
     QPoint p2(150, 250);

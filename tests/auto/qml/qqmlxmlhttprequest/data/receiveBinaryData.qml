@@ -4,6 +4,7 @@ QtObject {
     property string url
     property int readSize: 0
     property int status: 0
+    id: object
 
     Component.onCompleted: {
 
@@ -13,7 +14,7 @@ QtObject {
 
         request.onreadystatechange = function() {
             if (request.readyState == XMLHttpRequest.DONE) {
-                status = request.status;
+                object.status = request.status;
                 var arrayBuffer = request.response;
                 if (arrayBuffer) {
                     var byteArray = new Uint8Array(arrayBuffer);

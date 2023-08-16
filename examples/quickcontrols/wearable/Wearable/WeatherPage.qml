@@ -59,7 +59,7 @@ Item {
                                && wDataCntr.weatherData.main.temp_max) ?
                                   qsTr("Max: ")
                                   + String(wDataCntr.weatherData.main.temp_max)
-                                  + " °F " : "N/A"
+                                  + " °F" : "N/A"
                         font.pixelSize: UIStyle.fontSizeM
                         font.letterSpacing: 1
                         color: UIStyle.themeColorQtGray1

@@ -3,7 +3,103 @@
 
 #include "qqmljsbasicblocks_p.h"
 
+#include <QtQml/private/qv4instr_moth_p.h>
+
 QT_BEGIN_NAMESPACE
+
+using namespace Qt::Literals::StringLiterals;
+
+DEFINE_BOOL_CONFIG_OPTION(qv4DumpBasicBlocks, QV4_DUMP_BASIC_BLOCKS)
+DEFINE_BOOL_CONFIG_OPTION(qv4ValidateBasicBlocks, QV4_VALIDATE_BASIC_BLOCKS)
+
+void QQmlJSBasicBlocks::dumpBasicBlocks()
+{
+    qDebug().noquote() << "=== Basic Blocks for \"%1\""_L1.arg(m_context->name);
+    for (const auto &[blockOffset, block] : m_basicBlocks) {
+        QDebug debug = qDebug().nospace();
+        debug << "Block " << (blockOffset < 0 ? "Function prolog"_L1 : QString::number(blockOffset))
+              << ":\n";
+        debug << "  jumpOrigins[" << block.jumpOrigins.size() << "]: ";
+        for (auto origin : block.jumpOrigins) {
+            debug << origin << ", ";
+        }
+        debug << "\n  readRegisters[" << block.readRegisters.size() << "]: ";
+        for (auto reg : block.readRegisters) {
+            debug << reg << ", ";
+        }
+        debug << "\n  readTypes[" << block.readTypes.size() << "]: ";
+        for (const auto &type : block.readTypes) {
+            debug << type->augmentedInternalName() << ", ";
+        }
+        debug << "\n  jumpTarget: " << block.jumpTarget;
+        debug << "\n  jumpIsUnConditional: " << block.jumpIsUnconditional;
+        debug << "\n  isReturnBlock: " << block.isReturnBlock;
+        debug << "\n  isThrowBlock: " << block.isThrowBlock;
+    }
+    qDebug() << "\n";
+}
+
+void QQmlJSBasicBlocks::dumpDOTGraph()
+{
+    QString output;
+    QTextStream s{ &output };
+    s << "=== Basic Blocks Graph in DOT format for \"%1\" (spaces are encoded as"
+         " &#160; to preserve formatting)\n"_L1.arg(m_context->name);
+    s << "digraph BasicBlocks {\n"_L1;
+
+    QFlatMap<int, BasicBlock> blocks{ m_basicBlocks };
+    for (const auto &[blockOffset, block] : blocks) {
+        for (int originOffset : block.jumpOrigins) {
+            const auto originBlockIt = basicBlockForInstruction(blocks, originOffset);
+            const auto isBackEdge = originOffset > blockOffset && originBlockIt->second.jumpIsUnconditional;
+            s << "    %1 -> %2%3\n"_L1.arg(QString::number(originBlockIt.key()))
+                            .arg(QString::number(blockOffset))
+                            .arg(isBackEdge ? " [color=blue]"_L1 : ""_L1);
+        }
+    }
+
+    for (const auto &[blockOffset, block] : blocks) {
+        if (blockOffset < 0) {
+            s << "    %1 [shape=record, fontname=\"Monospace\", label=\"Function Prolog\"]\n"_L1
+                            .arg(QString::number(blockOffset));
+            continue;
+        }
+
+        auto nextBlockIt = blocks.lower_bound(blockOffset + 1);
+        int nextBlockOffset = nextBlockIt == blocks.end() ? m_context->code.size() : nextBlockIt->first;
+        QString dump = QV4::Moth::dumpBytecode(
+                m_context->code.constData(), m_context->code.size(), m_context->locals.size(),
+                m_context->formals->length(), blockOffset, nextBlockOffset - 1,
+                m_context->lineAndStatementNumberMapping);
+        dump = dump.replace(" "_L1, "&#160;"_L1); // prevent collapse of extra whitespace for formatting
+        dump = dump.replace("\n"_L1, "\\l"_L1); // new line + left aligned
+        s << "    %1 [shape=record, fontname=\"Monospace\", label=\"{Block %1: | %2}\"]\n"_L1
+                        .arg(QString::number(blockOffset))
+                        .arg(dump);
+    }
+    s << "}\n"_L1;
+
+    // Have unique names to prevent overwriting of functions with the same name (eg. anonymous functions).
+    static int functionCount = 0;
+    static const auto dumpFolderPath = qEnvironmentVariable("QV4_DUMP_BASIC_BLOCKS");
+
+    QString expressionName = m_context->name == ""_L1
+            ? "anonymous"_L1
+            : QString(m_context->name).replace(" "_L1, "_"_L1);
+    QString fileName = "function"_L1 + QString::number(functionCount++) + "_"_L1 + expressionName + ".gv"_L1;
+    QFile dumpFile(dumpFolderPath + (dumpFolderPath.endsWith("/"_L1) ? ""_L1 : "/"_L1) + fileName);
+
+    if (dumpFolderPath == "-"_L1 || dumpFolderPath == "1"_L1 || dumpFolderPath == "true"_L1) {
+        qDebug().noquote() << output;
+    } else {
+        if (!dumpFile.open(QIODeviceBase::Truncate | QIODevice::WriteOnly)) {
+            qDebug() << "Error: Could not open file to dump the basic blocks into";
+        } else {
+            dumpFile.write(("//"_L1 + output).toLatin1().toStdString().c_str());
+            dumpFile.close();
+        }
+    }
+}
 
 template<typename Container>
 void deduplicate(Container &container)
@@ -13,14 +109,15 @@ void deduplicate(Container &container)
     container.erase(erase, container.end());
 }
 
-QQmlJSCompilePass::InstructionAnnotations QQmlJSBasicBlocks::run(
-        const Function *function,
-        const InstructionAnnotations &annotations,
-        QQmlJS::DiagnosticMessage *error)
+QQmlJSCompilePass::InstructionAnnotations
+QQmlJSBasicBlocks::run(const Function *function, const InstructionAnnotations &annotations,
+                       QQmlJS::DiagnosticMessage *error, QQmlJSAotCompiler::Flags compileFlags,
+                       bool &basicBlocksValidationFailed)
 {
     m_function = function;
     m_annotations = annotations;
     m_error = error;
+    basicBlocksValidationFailed = false;
 
     for (int i = 0, end = function->argumentTypes.size(); i != end; ++i) {
         InstructionAnnotation annotation;
@@ -36,7 +133,11 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSBasicBlocks::run(
         m_annotations[-annotation.changedRegisterIndex] = annotation;
     }
 
+    // Insert the function prolog block followed by the first "real" block.
     m_basicBlocks.insert_or_assign(m_annotations.begin().key(), BasicBlock());
+    BasicBlock zeroBlock;
+    zeroBlock.jumpOrigins.append(m_basicBlocks.begin().key());
+    m_basicBlocks.insert(0, zeroBlock);
 
     const QByteArray byteCode = function->code;
     decode(byteCode.constData(), static_cast<uint>(byteCode.size()));
@@ -59,9 +160,22 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSBasicBlocks::run(
             deduplicate(it->second.jumpOrigins);
     }
 
+    if (compileFlags.testFlag(QQmlJSAotCompiler::ValidateBasicBlocks) || qv4ValidateBasicBlocks()) {
+        if (auto validationResult = basicBlocksValidation(); !validationResult.success) {
+            qDebug() << "Basic blocks validation failed: %1."_L1.arg(validationResult.errorMessage);
+            basicBlocksValidationFailed = true;
+        }
+    }
+
     populateBasicBlocks();
     populateReaderLocations();
     adjustTypes();
+
+    if (qv4DumpBasicBlocks()) {
+        dumpBasicBlocks();
+        dumpDOTGraph();
+    }
+
     return std::move(m_annotations);
 }
 
@@ -113,20 +227,34 @@ void QQmlJSBasicBlocks::generate_JumpNotUndefined(int offset)
 
 void QQmlJSBasicBlocks::generate_Ret()
 {
+    auto currentBlock = basicBlockForInstruction(m_basicBlocks, currentInstructionOffset());
+    currentBlock.value().isReturnBlock = true;
     m_skipUntilNextLabel = true;
 }
 
 void QQmlJSBasicBlocks::generate_ThrowException()
 {
+    auto currentBlock = basicBlockForInstruction(m_basicBlocks, currentInstructionOffset());
+    currentBlock.value().isThrowBlock = true;
     m_skipUntilNextLabel = true;
 }
 
-void QQmlJSBasicBlocks::generate_DefineArray(int argc, int)
+void QQmlJSBasicBlocks::generate_DefineArray(int argc, int argv)
 {
     if (argc == 0)
         return; // empty array/list, nothing to do
 
-    m_arrayDefinitions.append(currentInstructionOffset());
+    m_objectAndArrayDefinitions.append({
+        currentInstructionOffset(), ObjectOrArrayDefinition::arrayClassId, argc, argv
+    });
+}
+
+void QQmlJSBasicBlocks::generate_DefineObjectLiteral(int internalClassId, int argc, int argv)
+{
+    if (argc == 0)
+        return;
+
+    m_objectAndArrayDefinitions.append({ currentInstructionOffset(), internalClassId, argc, argv });
 }
 
 void QQmlJSBasicBlocks::processJump(int offset, JumpMode mode)
@@ -135,9 +263,7 @@ void QQmlJSBasicBlocks::processJump(int offset, JumpMode mode)
         m_hadBackJumps = true;
     const int jumpTarget = absoluteOffset(offset);
     Q_ASSERT(!m_basicBlocks.isEmpty());
-    auto currentBlock = m_basicBlocks.lower_bound(currentInstructionOffset());
-    if (currentBlock == m_basicBlocks.end() || currentBlock->first != currentInstructionOffset())
-        --currentBlock;
+    auto currentBlock = basicBlockForInstruction(m_basicBlocks, currentInstructionOffset());
     currentBlock->second.jumpTarget = jumpTarget;
     currentBlock->second.jumpIsUnconditional = (mode == Unconditional);
     m_basicBlocks[jumpTarget].jumpOrigins.append(currentInstructionOffset());
@@ -264,10 +390,7 @@ void QQmlJSBasicBlocks::populateReaderLocations()
                     m_typeResolver->trackedContainedType(writeIt->second.changedRegister));
         }
 
-        auto blockIt = m_basicBlocks.lower_bound(writeIt.key());
-        if (blockIt == m_basicBlocks.end() || blockIt->first != writeIt.key())
-            --blockIt;
-
+        auto blockIt = basicBlockForInstruction(m_basicBlocks, writeIt.key());
         QList<PendingBlock> blocks = { { {}, blockIt->first, true } };
         QHash<int, PendingBlock> processedBlocks;
         bool isFirstBlock = true;
@@ -383,21 +506,31 @@ void QQmlJSBasicBlocks::populateReaderLocations()
     }
 }
 
+QFlatMap<int, QQmlJSBasicBlocks::BasicBlock>::iterator
+QQmlJSBasicBlocks::basicBlockForInstruction(QFlatMap<int, BasicBlock> &container,
+                                            int instructionOffset)
+{
+    auto block = container.lower_bound(instructionOffset);
+    if (block == container.end() || block->first != instructionOffset)
+        --block;
+    return block;
+}
+
+QFlatMap<int, QQmlJSBasicBlocks::BasicBlock>::const_iterator
+QQmlJSBasicBlocks::basicBlockForInstruction(const QFlatMap<int, BasicBlock> &container,
+                                            int instructionOffset) const
+{
+    auto *nonConstThis = const_cast<QQmlJSBasicBlocks *>(this);
+    return nonConstThis->basicBlockForInstruction(
+            const_cast<QFlatMap<int, BasicBlock> &>(container), instructionOffset);
+}
+
 bool QQmlJSBasicBlocks::canMove(int instructionOffset, const RegisterAccess &access) const
 {
     if (access.registerReadersAndConversions.size() != 1)
         return false;
-    const auto basicBlockForInstruction = [this](int instruction) {
-        auto block = m_basicBlocks.lower_bound(instruction);
-        if (block == m_basicBlocks.end() || block.key() == instruction)
-            return block;
-        Q_ASSERT(block.key() > instruction);
-        if (block == m_basicBlocks.begin())
-            return m_basicBlocks.end();
-        return --block;
-    };
-    return basicBlockForInstruction(instructionOffset)
-            == basicBlockForInstruction(access.registerReadersAndConversions.begin().key());
+    return basicBlockForInstruction(m_basicBlocks, instructionOffset)
+            == basicBlockForInstruction(m_basicBlocks, access.registerReadersAndConversions.begin().key());
 }
 
 static QString adjustErrorMessage(
@@ -440,12 +573,19 @@ void QQmlJSBasicBlocks::adjustTypes()
         }
     };
 
+    const auto transformRegister = [&](const QQmlJSRegisterContent &content) {
+        const QQmlJSScope::ConstPtr conversion
+                = m_typeResolver->storedType(m_typeResolver->containedType(content));
+        if (!m_typeResolver->adjustTrackedType(content.storedType(), conversion))
+            setError(adjustErrorMessage(content.storedType(), conversion));
+    };
+
     // Handle the array definitions first.
     // Changing the array type changes the expected element types.
-    for (int instructionOffset : m_arrayDefinitions) {
+    auto adjustArray = [&](int instructionOffset) {
         auto it = m_readerLocations.find(instructionOffset);
         if (it == m_readerLocations.end())
-            continue;
+            return;
 
         const InstructionAnnotation &annotation = m_annotations[instructionOffset];
 
@@ -460,15 +600,80 @@ void QQmlJSBasicBlocks::adjustTypes()
         // can do this because we've tracked the read type when we defined the array in
         // QQmlJSTypePropagator.
         if (QQmlJSScope::ConstPtr valueType = it->trackedTypes[0]->valueType()) {
-            const QQmlJSScope::ConstPtr contained
-                    = m_typeResolver->containedType(
-                        annotation.readRegisters.begin().value().content);
+            const QQmlJSRegisterContent content = annotation.readRegisters.begin().value().content;
+            const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(content);
             if (!m_typeResolver->adjustTrackedType(contained, valueType))
                 setError(adjustErrorMessage(contained, valueType));
+
+            // We still need to adjust the stored type, too.
+            transformRegister(content);
         }
 
         handleRegisterReadersAndConversions(it);
         m_readerLocations.erase(it);
+    };
+
+    // Handle the object definitions.
+    // Changing the object type changes the expected property types.
+    const auto adjustObject = [&](const ObjectOrArrayDefinition &object) {
+        auto it = m_readerLocations.find(object.instructionOffset);
+        if (it == m_readerLocations.end())
+            return;
+
+        const InstructionAnnotation &annotation = m_annotations[object.instructionOffset];
+
+        Q_ASSERT(it->trackedTypes.size() == 1);
+        Q_ASSERT(it->trackedTypes[0] == m_typeResolver->containedType(annotation.changedRegister));
+        Q_ASSERT(!annotation.readRegisters.isEmpty());
+
+        if (!m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->typeReaders.values()))
+            setError(adjustErrorMessage(it->trackedTypes[0], it->typeReaders.values()));
+
+        QQmlJSScope::ConstPtr resultType = it->trackedTypes[0];
+
+        const int classSize = m_jsUnitGenerator->jsClassSize(object.internalClassId);
+        Q_ASSERT(object.argc >= classSize);
+
+        for (int i = 0; i < classSize; ++i) {
+            // Now we don't adjust the type we store, but rather the types we expect to read. We
+            // can do this because we've tracked the read types when we defined the object in
+            // QQmlJSTypePropagator.
+
+            const QString propName = m_jsUnitGenerator->jsClassMember(object.internalClassId, i);
+            const QQmlJSMetaProperty property = resultType->property(propName);
+            if (!property.isValid()) {
+                setError(
+                        resultType->internalName()
+                        + QLatin1String(" has no property called ")
+                        + propName);
+                continue;
+            }
+            const QQmlJSScope::ConstPtr propType = property.type();
+            if (propType.isNull()) {
+                setError(QLatin1String("Cannot resolve type of property ") + propName);
+                continue;
+            }
+            const QQmlJSRegisterContent content = annotation.readRegisters[object.argv + i].content;
+            const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(content);
+            if (!m_typeResolver->adjustTrackedType(contained, propType))
+                setError(adjustErrorMessage(contained, propType));
+
+            // We still need to adjust the stored type, too.
+            transformRegister(content);
+        }
+
+        // The others cannot be adjusted. We don't know their names, yet.
+        // But we might still be able to use the variants.
+    };
+
+    // Iterate in reverse so that we can have nested lists and objects and the types are propagated
+    // from the outer lists/objects to the inner ones.
+    for (auto it = m_objectAndArrayDefinitions.crbegin(), end = m_objectAndArrayDefinitions.crend();
+         it != end; ++it) {
+        if (it->internalClassId != -1)
+            adjustObject(*it);
+        else
+            adjustArray(it->instructionOffset);
     }
 
     for (auto it = m_readerLocations.begin(), end = m_readerLocations.end(); it != end; ++it) {
@@ -483,12 +688,7 @@ void QQmlJSBasicBlocks::adjustTypes()
             setError(adjustErrorMessage(it->trackedTypes[0], it->typeReaders.values()));
     }
 
-    const auto transformRegister = [&](QQmlJSRegisterContent &content) {
-        const QQmlJSScope::ConstPtr conversion
-                = m_typeResolver->storedType(m_typeResolver->containedType(content));
-        if (!m_typeResolver->adjustTrackedType(content.storedType(), conversion))
-            setError(adjustErrorMessage(content.storedType(), conversion));
-    };
+
 
     NewVirtualRegisters newRegisters;
     for (auto i = m_annotations.begin(), iEnd = m_annotations.end(); i != iEnd; ++i) {
@@ -501,14 +701,17 @@ void QQmlJSBasicBlocks::adjustTypes()
             if (!liveConversions[i.key()].contains(conversion.key()))
                 continue;
 
-            QQmlJSScope::ConstPtr conversionResult = conversion->second.content.conversionResult();
-            const auto conversionOrigins = conversion->second.content.conversionOrigins();
             QQmlJSScope::ConstPtr newResult;
-            for (const auto &origin : conversionOrigins)
-                newResult = m_typeResolver->merge(newResult, origin);
-            if (!m_typeResolver->adjustTrackedType(conversionResult, newResult))
-                setError(adjustErrorMessage(conversionResult, newResult));
-            transformRegister(conversion->second.content);
+            const auto content = conversion->second.content;
+            if (content.isConversion()) {
+                QQmlJSScope::ConstPtr conversionResult = content.conversionResult();
+                const auto conversionOrigins = content.conversionOrigins();
+                for (const auto &origin : conversionOrigins)
+                    newResult = m_typeResolver->merge(newResult, origin);
+                if (!m_typeResolver->adjustTrackedType(conversionResult, newResult))
+                    setError(adjustErrorMessage(conversionResult, newResult));
+            }
+            transformRegister(content);
             newRegisters.appendOrdered(conversion);
         }
         i->second.typeConversions = newRegisters.take();
@@ -560,6 +763,53 @@ void QQmlJSBasicBlocks::populateBasicBlocks()
         deduplicate(block.readTypes);
         deduplicate(block.readRegisters);
     }
+}
+
+QQmlJSBasicBlocks::BasicBlocksValidationResult QQmlJSBasicBlocks::basicBlocksValidation()
+{
+    if (m_basicBlocks.empty())
+        return {};
+
+    const QFlatMap<int, BasicBlock> blocks{ m_basicBlocks };
+    QList<QFlatMap<int, BasicBlock>::const_iterator> returnOrThrowBlocks;
+    for (auto it = blocks.cbegin(); it != blocks.cend(); ++it) {
+        if (it.value().isReturnBlock || it.value().isThrowBlock)
+            returnOrThrowBlocks.append(it);
+    }
+
+    // 1. Return blocks and throw blocks must not have a jump target
+    for (const auto &it : returnOrThrowBlocks) {
+        if (it.value().jumpTarget != -1)
+            return { false, "Return or throw block jumps to somewhere"_L1 };
+    }
+
+    // 2. The basic blocks graph must be connected.
+    QSet<int> visitedBlockOffsets;
+    QList<QFlatMap<int, BasicBlock>::const_iterator> toVisit;
+    toVisit.append(returnOrThrowBlocks);
+
+    while (!toVisit.empty()) {
+        const auto &[offset, block] = *toVisit.takeLast();
+        visitedBlockOffsets.insert(offset);
+        for (int originOffset : block.jumpOrigins) {
+            const auto originBlock = basicBlockForInstruction(blocks, originOffset);
+            if (visitedBlockOffsets.find(originBlock.key()) == visitedBlockOffsets.end()
+                && !toVisit.contains(originBlock))
+                toVisit.append(originBlock);
+        }
+    }
+
+    if (visitedBlockOffsets.size() != blocks.size())
+        return { false, "Basic blocks graph is not fully connected"_L1 };
+
+    // 3. A block's jump target must be the first offset of a block.
+    for (const auto &[blockOffset, block] : blocks) {
+        auto target = block.jumpTarget;
+        if (target != -1 && blocks.find(target) == blocks.end())
+            return { false, "Invalid jump; target is not the start of a block"_L1 };
+    }
+
+    return {};
 }
 
 QT_END_NAMESPACE

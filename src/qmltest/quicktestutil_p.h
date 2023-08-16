@@ -19,6 +19,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtQml/qqml.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 #include <QtQml/qjsvalue.h>
 
 QT_BEGIN_NAMESPACE
@@ -50,6 +51,13 @@ public Q_SLOTS:
 
     QJSValue callerFile(int frameIndex = 0) const;
     int callerLine(int frameIndex = 0) const;
+
+    QString signalHandlerName(const QString &signalName)
+    {
+        if (QQmlSignalNames::isHandlerName(signalName))
+            return signalName;
+        return QQmlSignalNames::signalNameToHandlerName(signalName);
+    }
 };
 
 QT_END_NAMESPACE

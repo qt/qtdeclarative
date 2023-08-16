@@ -808,12 +808,12 @@ static std::optional<QDate> dateFromString(const QString &string, QV4::Execution
     return std::nullopt;
 }
 
-QString QtObject::formatDate(const QDate &date, const QString &format) const
+QString QtObject::formatDate(QDate date, const QString &format) const
 {
     return date.toString(format);
 }
 
-QString QtObject::formatDate(const QDate &date, Qt::DateFormat format) const
+QString QtObject::formatDate(QDate date, Qt::DateFormat format) const
 {
     return formatDateTimeObjectUsingDateFormat(date, format);
 }
@@ -845,7 +845,7 @@ QString QtObject::formatDate(const QString &string, Qt::DateFormat format) const
 }
 
 #if QT_CONFIG(qml_locale)
-QString QtObject::formatDate(const QDate &date, const QLocale &locale,
+QString QtObject::formatDate(QDate date, const QLocale &locale,
                              QLocale::FormatType formatType) const
 {
     return locale.toString(date, formatType);
@@ -913,7 +913,7 @@ static std::optional<QTime> timeFromString(const QString &string, QV4::Execution
     return std::nullopt;
 }
 
-QString QtObject::formatTime(const QTime &time, const QString &format) const
+QString QtObject::formatTime(QTime time, const QString &format) const
 {
     return time.toString(format);
 }
@@ -932,7 +932,7 @@ QString QtObject::formatTime(const QString &time, const QString &format) const
     return QString();
 }
 
-QString QtObject::formatTime(const QTime &time, Qt::DateFormat format) const
+QString QtObject::formatTime(QTime time, Qt::DateFormat format) const
 {
     return formatDateTimeObjectUsingDateFormat(time, format);
 }
@@ -951,7 +951,7 @@ QString QtObject::formatTime(const QString &time, Qt::DateFormat format) const
 }
 
 #if QT_CONFIG(qml_locale)
-QString QtObject::formatTime(const QTime &time, const QLocale &locale,
+QString QtObject::formatTime(QTime time, const QLocale &locale,
                              QLocale::FormatType formatType) const
 {
     return locale.toString(time, formatType);

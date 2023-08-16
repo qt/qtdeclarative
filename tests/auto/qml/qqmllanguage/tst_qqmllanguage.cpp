@@ -421,6 +421,11 @@ private slots:
     void jitExceptions();
 
     void attachedInCtor();
+    void byteArrayConversion();
+    void propertySignalNames_data();
+    void propertySignalNames();
+    void signalNames_data();
+    void signalNames();
 
 private:
     QQmlEngine engine;
@@ -508,11 +513,11 @@ void tst_qqmllanguage::insertedSemicolon()
 
     QQmlComponent component(&engine, testFileUrl(file));
 
-    QScopedPointer<QObject> object;
+    std::unique_ptr<QObject> object;
 
     if(create) {
         object.reset(component.create());
-        QVERIFY(object.isNull());
+        QVERIFY(object.get());
     }
 
     VERIFY_ERRORS(errorFile.toLatin1().constData());
@@ -2055,7 +2060,7 @@ void tst_qqmllanguage::aliasProperties()
         MyQmlObject *o = qvariant_cast<MyQmlObject*>(v);
         QCOMPARE(o->value(), 10);
 
-        delete o;
+        delete o; //intentional delete
 
         v = object->property("otherAlias");
         QCOMPARE(v.typeId(), qMetaTypeId<MyQmlObject *>());
@@ -2090,7 +2095,7 @@ void tst_qqmllanguage::aliasProperties()
         QObject *alias = qvariant_cast<QObject *>(object->property("aliasedObject"));
         QCOMPARE(alias, object2);
 
-        delete object1;
+        delete object1; //intentional delete
 
         QObject *alias2 = object.data(); // "Random" start value
         int status = -1;
@@ -4228,7 +4233,8 @@ void tst_qqmllanguage::lowercaseEnumRuntime()
 
     QQmlComponent component(&engine, testFileUrl(file));
     VERIFY_ERRORS(0);
-    delete component.create();
+    std::unique_ptr<QObject> root { component.create() };
+    QVERIFY(root);
 }
 
 void tst_qqmllanguage::lowercaseEnumCompileTime_data()
@@ -4245,7 +4251,8 @@ void tst_qqmllanguage::lowercaseEnumCompileTime()
 
     QQmlComponent component(&engine, testFileUrl(file));
     VERIFY_ERRORS(0);
-    delete component.create();
+    std::unique_ptr<QObject> root { component.create() };
+    QVERIFY(root);
 }
 
 void tst_qqmllanguage::scopedEnum()
@@ -4489,7 +4496,6 @@ void tst_qqmllanguage::groupAssignmentFailure()
 {
     auto ep = std::make_unique<QQmlEngine>();
     QTest::failOnWarning("QQmlComponent: Component destroyed while completion pending");
-    QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression(".*Invalid property assignment: url expected - Assigning null to incompatible properties in QML is deprecated. This will become a compile error in future versions of Qt..*"));
     QQmlComponent component(ep.get(), testFileUrl("groupFailure.qml"));
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o);
@@ -5825,10 +5831,10 @@ void tst_qqmllanguage::listContainingDeletedObject()
     QVERIFY(root);
 
     auto cmp = root->property("a").value<QQmlComponent*>();
-    auto o = cmp->create();
+    std::unique_ptr<QObject> o { cmp->create() };
 
-    QMetaObject::invokeMethod(root.get(), "doAssign", Q_ARG(QVariant, QVariant::fromValue(o)));
-    delete o;
+    QMetaObject::invokeMethod(root.get(), "doAssign", Q_ARG(QVariant, QVariant::fromValue(o.get())));
+    o.reset();
     QMetaObject::invokeMethod(root.get(), "use");
 
 }
@@ -7866,6 +7872,15 @@ void tst_qqmllanguage::objectAndGadgetMethodCallsAcceptThisObject()
     QQmlComponent c(&engine, testFileUrl("objectAndGadgetMethodCallsAcceptThisObject.qml"));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
 
+    // Explicitly retrieve the metaobject for the Qt singleton so that the proxy data is created.
+    // This way the inheritance analysis we do when figuring out what toString() means is somewhat
+    // more interesting. Also, we get a deterministic result for Qt.toString().
+    const QQmlType qtType = QQmlMetaType::qmlType(QStringLiteral("Qt"), QString(), QTypeRevision());
+    QVERIFY(qtType.isValid());
+    const QMetaObject *qtMeta = qtType.metaObject();
+    QVERIFY(qtMeta);
+    QCOMPARE(QString::fromUtf8(qtMeta->className()), QLatin1String("Qt"));
+
     QTest::ignoreMessage(
                 QtWarningMsg, QRegularExpression(
                     "objectAndGadgetMethodCallsAcceptThisObject.qml:16: Error: "
@@ -7896,7 +7911,7 @@ void tst_qqmllanguage::objectAndGadgetMethodCallsAcceptThisObject()
     QCOMPARE(o->property("goodString2"), QStringLiteral("27"));
     QCOMPARE(o->property("goodString3"), QStringLiteral("28"));
 
-    QVERIFY(o->property("goodString4").value<QString>().startsWith("QtObject"_L1));
+    QVERIFY(o->property("goodString4").value<QString>().startsWith("Qt("_L1));
     QCOMPARE(o->property("badString2"), QString());
 
     QCOMPARE(o->property("badInt"), 0);
@@ -8104,6 +8119,123 @@ void tst_qqmllanguage::attachedInCtor()
     AttachedInCtor *a = qobject_cast<AttachedInCtor *>(o.data());
     QVERIFY(a->attached);
     QCOMPARE(a->attached, qmlAttachedPropertiesObject<AttachedInCtor>(a, false));
+}
+
+void tst_qqmllanguage::byteArrayConversion()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e);
+    c.setData(R"(
+        import Test
+        import QtQml
+        ByteArrayReceiver {
+            Component.onCompleted: {
+                byteArrayTest([1, 2, 3]);
+                byteArrayTest(Array.from('456'));
+            }
+        }
+    )", QUrl());
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    ByteArrayReceiver *receiver = qobject_cast<ByteArrayReceiver *>(o.data());
+    QVERIFY(receiver);
+    QCOMPARE(receiver->byteArrays.length(), 2);
+    QCOMPARE(receiver->byteArrays[0], QByteArray("\1\2\3"));
+    QCOMPARE(receiver->byteArrays[1], QByteArray("\4\5\6"));
+}
+void tst_qqmllanguage::propertySignalNames_data()
+{
+    QTest::addColumn<QString>("propertyName");
+    QTest::addColumn<QString>("propertyChangedSignal");
+    QTest::addColumn<QString>("propertyChangedHandler");
+    QTest::addRow("helloWorld") << u"helloWorld"_s << u"helloWorldChanged"_s
+                                << u"onHelloWorldChanged"_s;
+    QTest::addRow("$helloWorld") << u"$helloWorld"_s << u"$helloWorldChanged"_s
+                                 << u"on$HelloWorldChanged"_s;
+    QTest::addRow("_helloWorld") << u"_helloWorld"_s << u"_helloWorldChanged"_s
+                                 << u"on_HelloWorldChanged"_s;
+    QTest::addRow("_") << u"_"_s << u"_Changed"_s << u"on_Changed"_s;
+    QTest::addRow("$") << u"$"_s << u"$Changed"_s << u"on$Changed"_s;
+    QTest::addRow("ä") << u"ä"_s << u"äChanged"_s << u"onÄChanged"_s;
+    QTest::addRow("___123a") << u"___123a"_s << u"___123aChanged"_s << u"on___123AChanged"_s;
+}
+void tst_qqmllanguage::propertySignalNames()
+{
+    QFETCH(QString, propertyName);
+    QFETCH(QString, propertyChangedSignal);
+    QFETCH(QString, propertyChangedHandler);
+    QQmlEngine e;
+    QQmlComponent c(&e);
+    c.setData(uR"(
+import QtQuick
+Item {
+    property int %1: 456
+    property bool success: false
+    function f() { %1 = 123; }
+    function g() { %2(); }
+    %3: success = true
+})"_s.arg(propertyName, propertyChangedSignal, propertyChangedHandler)
+                      .toUtf8(),
+              QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o != nullptr);
+    const QMetaObject *metaObject = o->metaObject();
+    auto signalIndex =
+            metaObject->indexOfSignal(propertyChangedSignal.append("()").toStdString().c_str());
+    QVERIFY(signalIndex > -1);
+    auto signal = metaObject->method(signalIndex);
+    QVERIFY(signal.isValid());
+    QSignalSpy changeSignal(o.data(), signal);
+    QMetaObject::invokeMethod(o.data(), "f");
+    QCOMPARE(o->property(propertyName.toStdString().c_str()), 123);
+    QVERIFY(changeSignal.size() == 1);
+    QCOMPARE(o->property("success"), true);
+    QMetaObject::invokeMethod(o.data(), "g");
+    QVERIFY(changeSignal.size() == 2);
+}
+void tst_qqmllanguage::signalNames_data()
+{
+    QTest::addColumn<QString>("signalName");
+    QTest::addColumn<QString>("handlerName");
+    QTest::addRow("helloWorld") << u"helloWorld"_s << u"onHelloWorld"_s;
+    QTest::addRow("$helloWorld") << u"$helloWorld"_s << u"on$HelloWorld"_s;
+    QTest::addRow("_helloWorld") << u"_helloWorld"_s << u"on_HelloWorld"_s;
+    QTest::addRow("_") << u"_"_s << u"on_"_s;
+    QTest::addRow("aUmlaut") << u"ä"_s << u"onÄ"_s;
+    QTest::addRow("___123a") << u"___123a"_s << u"on___123A"_s;
+}
+void tst_qqmllanguage::signalNames()
+{
+    QFETCH(QString, signalName);
+    QFETCH(QString, handlerName);
+    QQmlEngine e;
+    QQmlComponent c(&e);
+    c.setData(uR"(
+import QtQuick
+Item {
+    signal %1()
+    property bool success: false
+    function f() { %1(); }
+    %2: success = true
+})"_s.arg(signalName, handlerName)
+                      .toUtf8(),
+              QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o != nullptr);
+    const QMetaObject *metaObject = o->metaObject();
+    auto signalIndex = metaObject->indexOfSignal(signalName.append("()").toStdString().c_str());
+    QVERIFY(signalIndex > -1);
+    auto signal = metaObject->method(signalIndex);
+    QVERIFY(signal.isValid());
+    QSignalSpy changeSignal(o.data(), signal);
+    signal.invoke(o.data());
+    QVERIFY(changeSignal.size() == 1);
+    QCOMPARE(o->property("success"), true);
+    QMetaObject::invokeMethod(o.data(), "f");
+    QVERIFY(changeSignal.size() == 2);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

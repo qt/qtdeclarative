@@ -149,7 +149,7 @@ Item {
         }
     ]
     // This comment is related to the property animation
-    PropertyAnimation on x  {
+    PropertyAnimation on x {
         id: foo2
         x: 3
         y: x + 3

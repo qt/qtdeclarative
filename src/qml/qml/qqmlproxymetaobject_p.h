@@ -36,7 +36,7 @@ public:
         int methodOffset;
     };
 
-    QQmlProxyMetaObject(QObject *, QList<ProxyData> *);
+    QQmlProxyMetaObject(QObject *, const QList<ProxyData> *);
     ~QQmlProxyMetaObject();
 
     static constexpr int extensionObjectId(int id) noexcept
@@ -53,7 +53,7 @@ protected:
 private:
     QObject *getProxy(int index);
 
-    QList<ProxyData> *metaObjects;
+    const QList<ProxyData> *metaObjects;
     QObject **proxies;
 
     QDynamicMetaObjectData *parent;

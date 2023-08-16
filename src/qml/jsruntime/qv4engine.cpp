@@ -1688,6 +1688,26 @@ QVariant ExecutionEngine::toVariant(
     return ::toVariant(value, typeHint, createJSValueForObjectsAndSymbols, nullptr);
 }
 
+static QVariantMap objectToVariantMap(const QV4::Object *o, V4ObjectSet *visitedObjects)
+{
+    QVariantMap map;
+    QV4::Scope scope(o->engine());
+    QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly);
+    QV4::ScopedValue name(scope);
+    QV4::ScopedValue val(scope);
+    while (1) {
+        name = it.nextPropertyNameAsString(val);
+        if (name->isNull())
+            break;
+
+        QString key = name->toQStringNoThrow();
+        map.insert(key, ::toVariant(
+                                val, /*type hint*/ QMetaType {},
+                                /*createJSValueForObjectsAndSymbols*/false, visitedObjects));
+    }
+    return map;
+}
+
 static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObjects)
 {
     Q_ASSERT(o);
@@ -1722,23 +1742,7 @@ static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObject
 
         result = list;
     } else if (o->getPrototypeOf() == o->engine()->objectPrototype()->d()) {
-        QVariantMap map;
-        QV4::Scope scope(o->engine());
-        QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly);
-        QV4::ScopedValue name(scope);
-        QV4::ScopedValue val(scope);
-        while (1) {
-            name = it.nextPropertyNameAsString(val);
-            if (name->isNull())
-                break;
-
-            QString key = name->toQStringNoThrow();
-            map.insert(key, ::toVariant(
-                           val, /*type hint*/ QMetaType {},
-                           /*createJSValueForObjectsAndSymbols*/false, visitedObjects));
-        }
-
-        result = map;
+        result = objectToVariantMap(o, visitedObjects);
     } else {
         // If it's not a plain object, we can only save it as QJSValue.
         result = QVariant::fromValue(QJSValuePrivate::fromReturnedValue(o->asReturnedValue()));
@@ -1961,7 +1965,10 @@ ReturnedValue ExecutionEngine::fromVariant(
 
 QVariantMap ExecutionEngine::variantMapFromJS(const Object *o)
 {
-    return objectToVariant(o).toMap();
+    Q_ASSERT(o);
+    V4ObjectSet visitedObjects;
+    visitedObjects.insert(o->d());
+    return objectToVariantMap(o, &visitedObjects);
 }
 
 // Converts a QVariantMap to JS.
@@ -2468,12 +2475,24 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
             *reinterpret_cast<QString*>(data) = value.toQString();
         return true;
     case QMetaType::QByteArray:
-        if (const ArrayBuffer *ab = value.as<ArrayBuffer>())
+        if (const ArrayBuffer *ab = value.as<ArrayBuffer>()) {
             *reinterpret_cast<QByteArray*>(data) = ab->asByteArray();
-        else if (const String *string = value.as<String>())
+        } else if (const String *string = value.as<String>()) {
             *reinterpret_cast<QByteArray*>(data) = string->toQString().toUtf8();
-        else
+        } else if (const ArrayObject *ao = value.as<ArrayObject>()) {
+            // Since QByteArray is sequentially iterable, we have to construct it from a JS Array.
+            QByteArray result;
+            const qint64 length = ao->getLength();
+            result.reserve(length);
+            for (qint64 i = 0; i < length; ++i) {
+                char value = 0;
+                ExecutionEngine::metaTypeFromJS(ao->get(i), QMetaType::fromType<char>(), &value);
+                result.push_back(value);
+            }
+            *reinterpret_cast<QByteArray*>(data) = std::move(result);
+        } else {
             *reinterpret_cast<QByteArray*>(data) = QByteArray();
+        }
         return true;
     case QMetaType::Float:
         *reinterpret_cast<float*>(data) = value.toNumber();

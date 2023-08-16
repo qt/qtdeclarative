@@ -88,6 +88,16 @@ private:
     QSharedDataPointer<QQuickImageProviderOptionsPrivate> d;
 };
 
+/*! \internal
+    A class that encapsulates the action of fetching a pixmap, as well as the
+    pixmap itself (indirectly via QQuickPixmapData::textureFactory) and the
+    responsibility of canceling outstanding requests. Rather than relying on
+    QPixmapCache which doesn't cache all the information Qt Quick needs,
+    QQuickPixmap implements its own cache, that correctly degrades over time.
+    (QQuickPixmapData::release() marks it as being not-currently-used, and
+    QQuickPixmapStore::shrinkCache() sweeps away the least-recently-released
+    instances until the remaining bytes are less than cache_limit.)
+*/
 class Q_QUICK_PRIVATE_EXPORT QQuickPixmap
 {
     Q_DECLARE_TR_FUNCTIONS(QQuickPixmap)

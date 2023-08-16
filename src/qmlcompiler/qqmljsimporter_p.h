@@ -16,6 +16,7 @@
 
 #include <private/qtqmlcompilerexports_p.h>
 
+#include "qqmljscontextualtypes_p.h"
 #include "qqmljsscope_p.h"
 #include "qqmljsresourcefilemapper_p.h"
 #include <QtQml/private/qqmldirparser_p.h>
@@ -24,12 +25,48 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QQmlJS {
+class Import
+{
+public:
+    Import() = default;
+    Import(QString prefix, QString name, QTypeRevision version, bool isFile, bool isDependency);
+
+    bool isValid() const;
+
+    QString prefix() const { return m_prefix; }
+    QString name() const { return m_name; }
+    QTypeRevision version() const { return m_version; }
+    bool isFile() const { return m_isFile; }
+    bool isDependency() const { return m_isDependency; }
+
+private:
+    QString m_prefix;
+    QString m_name;
+    QTypeRevision m_version;
+    bool m_isFile = false;
+    bool m_isDependency = false;
+
+    friend inline size_t qHash(const Import &key, size_t seed = 0) noexcept
+    {
+        return qHashMulti(seed, key.m_prefix, key.m_name, key.m_version,
+                          key.m_isFile, key.m_isDependency);
+    }
+
+    friend inline bool operator==(const Import &a, const Import &b)
+    {
+        return a.m_prefix == b.m_prefix && a.m_name == b.m_name && a.m_version == b.m_version
+                && a.m_isFile == b.m_isFile && a.m_isDependency == b.m_isDependency;
+    }
+};
+}
+
 class QQmlJSImportVisitor;
 class QQmlJSLogger;
 class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSImporter
 {
 public:
-    using ImportedTypes = QQmlJSScope::ContextualTypes;
+    using ImportedTypes = QQmlJS::ContextualTypes;
 
     QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper,
                    bool useOptionalImports = false);
@@ -92,7 +129,7 @@ private:
     {
         AvailableTypes(ImportedTypes builtins)
             : cppNames(std::move(builtins))
-            , qmlNames(QQmlJSScope::ContextualTypes::QML, {}, cppNames.arrayType())
+            , qmlNames(QQmlJS::ContextualTypes::QML, {}, cppNames.arrayType())
         {
         }
 
@@ -124,7 +161,7 @@ private:
     bool importHelper(const QString &module, AvailableTypes *types,
                       const QString &prefix = QString(), QTypeRevision version = QTypeRevision(),
                       bool isDependency = false, bool isFile = false);
-    void processImport(const QQmlJSScope::Import &importDescription, const Import &import,
+    void processImport(const QQmlJS::Import &importDescription, const Import &import,
                        AvailableTypes *types);
     void importDependencies(const QQmlJSImporter::Import &import, AvailableTypes *types,
                             const QString &prefix = QString(),
@@ -140,7 +177,7 @@ private:
     QStringList m_importPaths;
 
     QHash<QPair<QString, QTypeRevision>, QString> m_seenImports;
-    QHash<QQmlJSScope::Import, QSharedPointer<AvailableTypes>> m_cachedImportTypes;
+    QHash<QQmlJS::Import, QSharedPointer<AvailableTypes>> m_cachedImportTypes;
     QHash<QString, Import> m_seenQmldirFiles;
 
     QHash<QString, QQmlJSScope::Ptr> m_importedFiles;

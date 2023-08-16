@@ -62,6 +62,10 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 
     \snippet qtquickcontrols-spinbox-double.qml 1
 
+    A prefix and suffix can be added using regular expressions:
+
+    \snippet qtquickcontrols-spinbox-prefix.qml 1
+
     \sa Tumbler, {Customizing SpinBox}, {Focus Management in Qt Quick Controls}
 */
 

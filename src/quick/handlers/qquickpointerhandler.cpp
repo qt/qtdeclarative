@@ -27,6 +27,19 @@ Q_DECLARE_LOGGING_CATEGORY(lcHandlerParent)
     events from any kind of pointing device (touch, mouse or graphics tablet).
 */
 
+/*! \internal
+    So far we only offer public QML API for Pointer Handlers, but we expect
+    in some future version of Qt to have public C++ API as well. This will open
+    up the possibility to instantiate handlers in custom items (which we should
+    begin doing in Qt Quick Controls in the near future), and to subclass to make
+    custom handlers (as TableView is already doing).
+
+    To make a custom Pointer Handler, first try to choose the parent class
+    according to your needs. If the gesture that you want to recognize could
+    involve multiple touchpoints (even if it could start with only one point),
+    subclass QQuickMultiPointHandler. If you are sure that you never want to
+    handle more than one QEventPoint, subclass QQuickSinglePointHandler.
+*/
 QQuickPointerHandler::QQuickPointerHandler(QQuickItem *parent)
   : QQuickPointerHandler(*(new QQuickPointerHandlerPrivate), parent)
 {
@@ -437,10 +450,17 @@ void QQuickPointerHandler::setGrabPermissions(GrabPermissions grabPermission)
     emit grabPermissionChanged();
 }
 
+/*!
+    Overridden only because QQmlParserStatus requires it.
+*/
 void QQuickPointerHandler::classBegin()
 {
 }
 
+/*!
+    Overridden from QQmlParserStatus to ensure that parentItem() sets its
+    cursor if this handler's \l cursorShape property has been set.
+*/
 void QQuickPointerHandler::componentComplete()
 {
     Q_D(const QQuickPointerHandler);
@@ -453,6 +473,12 @@ void QQuickPointerHandler::componentComplete()
     }
 }
 
+/*! \internal
+    \deprecated You should handle the event during delivery by overriding
+    handlePointerEventImpl() or QQuickSinglePointHandler::handleEventPoint().
+    Therefore currentEvent() should not be needed. It is here only because
+    onActiveChanged() does not take the event as an argument.
+*/
 QPointerEvent *QQuickPointerHandler::currentEvent()
 {
     Q_D(const QQuickPointerHandler);
@@ -507,11 +533,25 @@ QPointF QQuickPointerHandler::eventPos(const QEventPoint &point) const
     return (target() ? target()->mapFromScene(point.scenePosition()) : point.scenePosition());
 }
 
+/*!
+    Returns \c true if margin() > 0 and \a point is within the margin beyond
+    QQuickItem::boundingRect(), or else returns QQuickItem::contains()
+    QEventPoint::position() effectively (because parentContains(scenePosition)
+    calls QQuickItem::mapFromScene()).
+*/
 bool QQuickPointerHandler::parentContains(const QEventPoint &point) const
 {
     return parentContains(point.scenePosition());
 }
 
+/*!
+    Returns \c true if \a scenePosition is within the margin() beyond
+    QQuickItem::boundingRect() (if margin > 0), or parentItem() contains
+    \a scenePosition according to QQuickItem::contains(). (So if the \l margin
+    property is set, that overrides the bounds-check, and QQuickItem::contains()
+    is not called.) As a precheck, it's also required that the window contains
+    \a scenePosition mapped to global coordinates, if parentItem() is in a window.
+*/
 bool QQuickPointerHandler::parentContains(const QPointF &scenePosition) const
 {
     if (QQuickItem *par = parentItem()) {
@@ -560,12 +600,6 @@ void QQuickPointerHandler::setEnabled(bool enabled)
     emit enabledChanged();
 }
 
-bool QQuickPointerHandler::active() const
-{
-    Q_D(const QQuickPointerHandler);
-    return d->active;
-}
-
 /*!
     \qmlproperty Item QtQuick::PointerHandler::target
 
@@ -577,6 +611,14 @@ bool QQuickPointerHandler::active() const
     but manipulate another; or to \c null, to disable the default behavior
     and do something else instead.
 */
+QQuickItem *QQuickPointerHandler::target() const
+{
+    Q_D(const QQuickPointerHandler);
+    if (!d->targetExplicitlySet)
+        return parentItem();
+    return d->target;
+}
+
 void QQuickPointerHandler::setTarget(QQuickItem *target)
 {
     Q_D(QQuickPointerHandler);
@@ -590,6 +632,27 @@ void QQuickPointerHandler::setTarget(QQuickItem *target)
     emit targetChanged();
 }
 
+/*!
+    \qmlproperty Item QtQuick::PointerHandler::parent
+
+    The \l Item which is the scope of the handler; the Item in which it was
+    declared. The handler will handle events on behalf of this Item, which
+    means a pointer event is relevant if at least one of its
+    \l {eventPoint}{eventPoints} occurs within the Item's interior. Initially
+    \l [QML] {target} {target()} is the same, but it can be reassigned.
+
+    \sa {target}, QObject::parent()
+*/
+/*! \internal
+    We still haven't shipped official support for declaring handlers in
+    QtQuick3D.Model objects. Many prerequisites are in place for that, so we
+    should try to keep it working; but there are issues with getting
+    DragHandler to drag its target intuitively in 3D space, for example.
+    TapHandler would work well enough.
+
+    \note When a handler is declared in a \l [QtQuick3D] {Model}{QtQuick3D.Model}
+        object, the parent is not an Item, therefore this property is \c null.
+*/
 QQuickItem *QQuickPointerHandler::parentItem() const
 {
     return qmlobject_cast<QQuickItem *>(QObject::parent());
@@ -610,14 +673,6 @@ void QQuickPointerHandler::setParentItem(QQuickItem *p)
         QQuickItemPrivate::get(p)->addPointerHandler(this);
     d->onParentChanged(oldParent, p);
     emit parentChanged();
-}
-
-QQuickItem *QQuickPointerHandler::target() const
-{
-    Q_D(const QQuickPointerHandler);
-    if (!d->targetExplicitlySet)
-        return parentItem();
-    return d->target;
 }
 
 /*! \internal
@@ -642,6 +697,11 @@ bool QQuickPointerHandler::event(QEvent *e)
     }
 }
 
+/*! \internal
+    The entry point to handle the \a event: it's called from
+    QQuickItemPrivate::handlePointerEvent(), begins with wantsPointerEvent(),
+    and calls handlePointerEventImpl() if that returns \c true.
+*/
 void QQuickPointerHandler::handlePointerEvent(QPointerEvent *event)
 {
     Q_D(QQuickPointerHandler);
@@ -668,6 +728,28 @@ void QQuickPointerHandler::handlePointerEvent(QPointerEvent *event)
     QQuickPointerHandlerPrivate::deviceDeliveryTargets(event->device()).append(this);
 }
 
+/*!
+    It is the responsibility of this function to decide whether the \a event
+    could be relevant at all to this handler, as a preliminary check.
+
+    Returns \c true if this handler would like handlePointerEventImpl() to be called.
+    If it returns \c false, the handler will be deactivated: \c setActive(false)
+    will be called, and any remaining exclusive grab will be relinquished,
+    as a fail-safe.
+
+    If you override this function, you should call the immediate parent class
+    implementation (and return \c false if it returns \c false); that in turn
+    calls its parent class implementation, and so on.
+    QQuickSinglePointHandler::wantsPointerEvent() and
+    QQuickMultiPointHandler::wantsPointerEvent() call wantsEventPoint(), which
+    is also virtual. You usually can get the behavior you want by subclassing
+    the appropriate handler type, overriding
+    QQuickSinglePointHandler::handleEventPoint() or handlePointerEventImpl(),
+    and perhaps overriding wantsEventPoint() if needed.
+
+    \sa wantsEventPoint(), QQuickPointerDeviceHandler::wantsPointerEvent(),
+        QQuickMultiPointHandler::wantsPointerEvent(), QQuickSinglePointHandler::wantsPointerEvent()
+ */
 bool QQuickPointerHandler::wantsPointerEvent(QPointerEvent *event)
 {
     Q_D(const QQuickPointerHandler);
@@ -675,6 +757,27 @@ bool QQuickPointerHandler::wantsPointerEvent(QPointerEvent *event)
     return d->enabled;
 }
 
+/*!
+    Returns \c true if the given \a point (as part of \a event) could be
+    relevant at all to this handler, as a preliminary check.
+
+    If you override this function, you should call the immediate parent class
+    implementation (and return \c false if it returns \c false); that in turn
+    calls its parent class implementation, and so on.
+
+    In particular, the bounds checking is done here: the base class
+    QQuickPointerHandler::wantsEventPoint() calls parentContains(point)
+    (which allows the flexibility promised by margin(), QQuickItem::contains()
+    and QQuickItem::containmentMask()). Pointer Handlers can receive
+    QEventPoints that are outside the parent item's bounds: this allows some
+    flexibility for dealing with multi-point gestures in which one or more
+    fingers have strayed outside the bounds, and yet the gesture is still
+    unambiguously intended for the target() item.
+
+    You should not generally react to the \a event or \a point here, but it's
+    ok to set state to remember what needs to be done in your overridden
+    handlePointerEventImpl() or QQuickSinglePointHandler::handleEventPoint().
+*/
 bool QQuickPointerHandler::wantsEventPoint(const QPointerEvent *event, const QEventPoint &point)
 {
     Q_UNUSED(event);
@@ -689,12 +792,18 @@ bool QQuickPointerHandler::wantsEventPoint(const QPointerEvent *event, const QEv
     \readonly
     \qmlproperty bool QtQuick::PointerHandler::active
 
-    This holds true whenever this Input Handler has taken sole responsibility
+    This holds \c true whenever this Input Handler has taken sole responsibility
     for handing one or more \l {eventPoint}{eventPoints}, by successfully taking an
     exclusive grab of those points. This means that it is keeping its properties
     up-to-date according to the movements of those eventPoints and actively
     manipulating its \l target (if any).
 */
+bool QQuickPointerHandler::active() const
+{
+    Q_D(const QQuickPointerHandler);
+    return d->active;
+}
+
 void QQuickPointerHandler::setActive(bool active)
 {
     Q_D(QQuickPointerHandler);
@@ -706,24 +815,22 @@ void QQuickPointerHandler::setActive(bool active)
     }
 }
 
-void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *)
-{
-}
-
 /*!
-    \qmlproperty Item QtQuick::PointerHandler::parent
-
-    The \l Item which is the scope of the handler; the Item in which it was declared.
-    The handler will handle events on behalf of this Item, which means a
-    pointer event is relevant if at least one of its \l {eventPoint}{eventPoints} occurs within
-    the Item's interior.  Initially \l [QML] {target} {target()} is the same, but it
-    can be reassigned.
-
-    \note When a handler is declared in a \l [QtQuick3D] {Model}{QtQuick3D.Model}
-          object, the parent is not an Item, therefore this property is \c null.
-
-    \sa {target}, QObject::parent()
+    This function can be overridden to implement whatever behavior a specific
+    subclass is intended to have:
+    \list
+        \li Handle all the event's QPointerEvent::points() for which
+        wantsEventPoint() already returned \c true.
+        \li Call setPassiveGrab() setExclusiveGrab() or cancelAllGrabs() as
+        necessary.
+        \li Call QEvent::accept() to stop propagation, or ignore() to allow it
+        to keep going.
+    \endlist
 */
+void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *event)
+{
+    Q_UNUSED(event);
+}
 
 /*!
     \qmlsignal QtQuick::PointerHandler::grabChanged(PointerDevice::GrabTransition transition, eventPoint point)
@@ -771,6 +878,13 @@ QQuickPointerHandlerPrivate::QQuickPointerHandlerPrivate()
 {
 }
 
+/*!
+    Returns \c true if the movement delta \a d in pixels along the \a axis
+    exceeds QQuickPointerHandler::dragThreshold() \e or QEventPoint::velocity()
+    exceeds QStyleHints::startDragVelocity().
+
+    \sa QQuickDeliveryAgentPrivate::dragOverThreshold()
+*/
 template <typename TEventPoint>
 bool QQuickPointerHandlerPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const TEventPoint &p) const
 {
@@ -785,6 +899,12 @@ bool QQuickPointerHandlerPrivate::dragOverThreshold(qreal d, Qt::Axis axis, cons
     return overThreshold;
 }
 
+/*!
+    Returns \c true if the movement \a delta in pixels exceeds
+    QQuickPointerHandler::dragThreshold().
+
+    \sa QQuickDeliveryAgentPrivate::dragOverThreshold()
+*/
 bool QQuickPointerHandlerPrivate::dragOverThreshold(QVector2D delta) const
 {
     Q_Q(const QQuickPointerHandler);
@@ -792,6 +912,13 @@ bool QQuickPointerHandlerPrivate::dragOverThreshold(QVector2D delta) const
     return qAbs(delta.x()) > threshold || qAbs(delta.y()) > threshold;
 }
 
+/*!
+    Returns \c true if the movement delta of \a point in pixels
+    (calculated as QEventPoint::scenePosition() - QEventPoint::scenePressPosition())
+    exceeds QQuickPointerHandler::dragThreshold().
+
+    \sa QQuickDeliveryAgentPrivate::dragOverThreshold()
+*/
 bool QQuickPointerHandlerPrivate::dragOverThreshold(const QEventPoint &point) const
 {
     QPointF delta = point.scenePosition() - point.scenePressPosition();

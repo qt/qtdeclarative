@@ -39,14 +39,14 @@ public:
     explicit QQuickCalendarModel(QObject *parent = nullptr);
 
     QDate from() const;
-    void setFrom(const QDate &from);
+    void setFrom(QDate from);
 
     QDate to() const;
-    void setTo(const QDate &to);
+    void setTo(QDate to);
 
     Q_INVOKABLE int monthAt(int index) const;
     Q_INVOKABLE int yearAt(int index) const;
-    Q_INVOKABLE int indexOf(const QDate &date) const;
+    Q_INVOKABLE int indexOf(QDate date) const;
     Q_INVOKABLE int indexOf(int year, int month) const;
 
     enum {

@@ -1,6 +1,8 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -49,10 +51,10 @@ Pane {
                 id: itemDelegateComponent
 
                 ItemDelegate {
-                    // qmllint disable unqualified
                     text: value
-                    // qmllint enable unqualified
-                    width: parent.width
+                    width: ListView.view.width
+
+                    required property string value
                 }
             }
 
@@ -61,10 +63,13 @@ Pane {
 
                 SwipeDelegate {
                     id: swipeDelegate
-                    // qmllint disable unqualified
                     text: value
-                    // qmllint enable unqualified
-                    width: parent.width
+                    width: ListView.view.width
+
+                    required property string value
+                    required property Loader delegateItem
+                    required property ListView view
+                    required property int ourIndex
 
                     Component {
                         id: removeComponent
@@ -75,16 +80,10 @@ Pane {
                             height: parent.height
                             clip: true
 
-                            SwipeDelegate.onClicked: {
-                                // qmllint disable unqualified
-                                view.model.remove(ourIndex)
-                                // qmllint enable unqualified
-                            }
+                            SwipeDelegate.onClicked: swipeDelegate.view.model.remove(swipeDelegate.ourIndex)
 
                             Label {
-                                // qmllint disable unqualified
                                 font.pixelSize: swipeDelegate.font.pixelSize
-                                // qmllint enable unqualified
                                 text: qsTr("Remove")
                                 color: "white"
                                 anchors.centerIn: parent
@@ -96,24 +95,18 @@ Pane {
                         id: removeAnimation
 
                         PropertyAction {
-                            // qmllint disable unqualified
-                            target: delegateItem
-                            // qmllint enable unqualified
+                            target: swipeDelegate.delegateItem
                             property: "ListView.delayRemove"
                             value: true
                         }
                         NumberAnimation {
-                            // qmllint disable unqualified
-                            target: delegateItem.item
-                            // qmllint enable unqualified
+                            target: swipeDelegate
                             property: "height"
                             to: 0
                             easing.type: Easing.InOutQuad
                         }
                         PropertyAction {
-                            // qmllint disable unqualified
-                            target: delegateItem
-                            // qmllint enable unqualified
+                            target: swipeDelegate.delegateItem
                             property: "ListView.delayRemove"
                             value: false
                         }
@@ -129,9 +122,9 @@ Pane {
                 id: checkDelegateComponent
 
                 CheckDelegate {
-                    // qmllint disable unqualified
                     text: value
-                    // qmllint enable unqualified
+
+                    required property string value
                 }
             }
 
@@ -143,10 +136,11 @@ Pane {
                 id: radioDelegateComponent
 
                 RadioDelegate {
-                    // qmllint disable unqualified
                     text: value
+
+                    required property string value
+
                     ButtonGroup.group: radioButtonGroup
-                    // qmllint enable unqualified
                 }
             }
 
@@ -154,9 +148,9 @@ Pane {
                 id: switchDelegateComponent
 
                 SwitchDelegate {
-                    // qmllint disable unqualified
                     text: value
-                    // qmllint enable unqualified
+
+                    required property string value
                 }
             }
 
@@ -181,9 +175,7 @@ Pane {
             delegate: Loader {
                 id: delegateLoader
                 width: ListView.view.width
-                // qmllint disable unqualified
                 sourceComponent: listView.delegateComponentMap[type]
-                // qmllint enable unqualified
 
                 required property string value
                 required property string type
@@ -191,9 +183,7 @@ Pane {
                 required property int index
 
                 property Loader delegateItem: delegateLoader
-                // qmllint disable unqualified
                 property ListView view: listView
-                // qmllint enable unqualified
                 property int ourIndex: index
             }
         }

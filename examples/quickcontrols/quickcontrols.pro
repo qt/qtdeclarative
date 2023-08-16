@@ -6,8 +6,7 @@ SUBDIRS += \
     contactlist \
     wearable \
     filesystemexplorer \
-    imagine/automotive \
-    imagine/musicplayer
+    imagine/automotive
 
 qtHaveModule(sql): SUBDIRS += eventcalendar
 qtHaveModule(widgets): SUBDIRS += flatstyle

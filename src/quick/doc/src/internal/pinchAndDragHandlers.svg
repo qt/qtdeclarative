@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Pages: 1 -->
+<svg width="619pt" height="332pt"
+ viewBox="0.00 0.00 619.07 332.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 328)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-328 615.07,-328 615.07,4 -4,4"/>
+<!-- llfkmbbephlg -->
+<g id="node1" class="node">
+<title>llfkmbbephlg</title>
+<polygon fill="none" stroke="black" points="474.53,-324 262.78,-324 262.78,-328 250.78,-328 250.78,-288 474.53,-288 474.53,-324"/>
+<polyline fill="none" stroke="black" points="250.78,-324 262.78,-324"/>
+<text text-anchor="middle" x="362.66" y="-300.95" font-family="Times,serif" font-size="9pt">ResizeItemToWindow_QMLTYPE_1</text>
+</g>
+<!-- llfkmbbeijgg -->
+<g id="node2" class="node">
+<title>llfkmbbeijgg</title>
+<polygon fill="none" stroke="black" points="402.53,-252 322.78,-252 322.78,-216 402.53,-216 402.53,-252"/>
+<text text-anchor="middle" x="362.66" y="-229.32" font-family="Times,serif" font-size="9pt">ℚRootItem</text>
+</g>
+<!-- llfkmbbephlg&#45;&gt;llfkmbbeijgg -->
+<g id="edge1" class="edge">
+<title>llfkmbbephlg&#45;&gt;llfkmbbeijgg</title>
+<path fill="none" stroke="black" d="M362.66,-274.81C362.66,-267.04 362.66,-258.95 362.66,-252.1"/>
+<polygon fill="none" stroke="black" points="362.66,-274.8 366.66,-280.8 362.66,-286.8 358.66,-280.8 362.66,-274.8"/>
+</g>
+<!-- llfkmbbepmbg -->
+<g id="node3" class="node">
+<title>llfkmbbepmbg</title>
+<polygon fill="none" stroke="black" points="327.66,-180 245.66,-180 245.66,-144 327.66,-144 327.66,-180"/>
+<text text-anchor="middle" x="286.66" y="-157.32" font-family="Times,serif" font-size="9pt">ℚRectangle</text>
+</g>
+<!-- llfkmbbeijgg&#45;&gt;llfkmbbepmbg -->
+<g id="edge2" class="edge">
+<title>llfkmbbeijgg&#45;&gt;llfkmbbepmbg</title>
+<path fill="none" stroke="black" d="M334.28,-206.87C324.67,-198.01 314.18,-188.35 305.49,-180.35"/>
+<polygon fill="none" stroke="black" points="334.38,-206.96 341.51,-208.08 343.21,-215.09 336.09,-213.96 334.38,-206.96"/>
+</g>
+<!-- llfkmbclplkg -->
+<g id="node11" class="node">
+<title>llfkmbclplkg</title>
+<polygon fill="none" stroke="black" points="345.8,-156.44 439.66,-144 533.52,-156.44 533.43,-176.56 345.89,-176.56 345.8,-156.44"/>
+<text text-anchor="middle" x="439.66" y="-157.32" font-family="Times,serif" font-size="9pt">ℚDeliveryAgent</text>
+</g>
+<!-- llfkmbbeijgg&#45;&gt;llfkmbclplkg -->
+<g id="edge10" class="edge">
+<title>llfkmbbeijgg&#45;&gt;llfkmbclplkg</title>
+<path fill="none" stroke="black" d="M391.18,-207.07C402.46,-196.82 414.97,-185.45 424.45,-176.82"/>
+<polygon fill="none" stroke="black" points="391.24,-207.02 389.49,-214.01 382.36,-215.09 384.11,-208.09 391.24,-207.02"/>
+</g>
+<!-- llfkmbodpifg -->
+<g id="node4" class="node">
+<title>llfkmbodpifg</title>
+<polygon fill="none" stroke="black" points="177.32,-95.56 88.66,-108 0,-95.56 0.08,-75.44 177.23,-75.44 177.32,-95.56"/>
+<text text-anchor="middle" x="88.66" y="-85.33" font-family="Times,serif" font-size="9pt">ℚPinchHandler</text>
+</g>
+<!-- llfkmbbepmbg&#45;&gt;llfkmbodpifg -->
+<g id="edge3" class="edge">
+<title>llfkmbbepmbg&#45;&gt;llfkmbodpifg</title>
+<path fill="none" stroke="black" d="M233.33,-142.15C198.64,-129.88 154.38,-114.23 124,-103.49"/>
+<polygon fill="none" stroke="black" points="233.47,-142.2 240.46,-140.42 244.78,-146.2 237.79,-147.97 233.47,-142.2"/>
+</g>
+<!-- llfkmbnfping -->
+<g id="node5" class="node">
+<title>llfkmbnfping</title>
+<polygon fill="none" stroke="black" points="277.66,-108 195.66,-108 195.66,-72 277.66,-72 277.66,-108"/>
+<text text-anchor="middle" x="236.66" y="-85.33" font-family="Times,serif" font-size="9pt">ℚRectangle</text>
+</g>
+<!-- llfkmbbepmbg&#45;&gt;llfkmbnfping -->
+<g id="edge4" class="edge">
+<title>llfkmbbepmbg&#45;&gt;llfkmbnfping</title>
+<path fill="none" stroke="black" d="M266.73,-133.1C260.69,-124.65 254.25,-115.62 248.88,-108.1"/>
+<polygon fill="none" stroke="black" points="266.8,-133.2 273.54,-135.76 273.78,-142.96 267.03,-140.41 266.8,-133.2"/>
+</g>
+<!-- llfkmbbdfibg -->
+<g id="node7" class="node">
+<title>llfkmbbdfibg</title>
+<polygon fill="none" stroke="black" points="377.66,-108 295.66,-108 295.66,-72 377.66,-72 377.66,-108"/>
+<text text-anchor="middle" x="336.66" y="-85.33" font-family="Times,serif" font-size="9pt">ℚRectangle</text>
+</g>
+<!-- llfkmbbepmbg&#45;&gt;llfkmbbdfibg -->
+<g id="edge6" class="edge">
+<title>llfkmbbepmbg&#45;&gt;llfkmbbdfibg</title>
+<path fill="none" stroke="black" d="M306.59,-133.1C312.62,-124.65 319.07,-115.62 324.44,-108.1"/>
+<polygon fill="none" stroke="black" points="306.52,-133.2 306.28,-140.41 299.54,-142.96 299.77,-135.76 306.52,-133.2"/>
+</g>
+<!-- llfkmbodeang -->
+<g id="node9" class="node">
+<title>llfkmbodeang</title>
+<polygon fill="none" stroke="black" points="522.66,-108 440.66,-108 440.66,-72 522.66,-72 522.66,-108"/>
+<text text-anchor="middle" x="481.66" y="-85.33" font-family="Times,serif" font-size="9pt">ℚRectangle</text>
+</g>
+<!-- llfkmbbepmbg&#45;&gt;llfkmbodeang -->
+<g id="edge8" class="edge">
+<title>llfkmbbepmbg&#45;&gt;llfkmbodeang</title>
+<path fill="none" stroke="black" d="M340.14,-141.8C371.75,-130.45 411.16,-116.31 440.36,-105.82"/>
+<polygon fill="none" stroke="black" points="340.16,-141.8 335.86,-147.59 328.86,-145.85 333.16,-140.06 340.16,-141.8"/>
+</g>
+<!-- llfkmbbfjjgg -->
+<g id="node6" class="node">
+<title>llfkmbbfjjgg</title>
+<polygon fill="none" stroke="black" points="233.07,-23.56 147.66,-36 62.25,-23.56 62.33,-3.44 232.99,-3.44 233.07,-23.56"/>
+<text text-anchor="middle" x="147.66" y="-13.33" font-family="Times,serif" font-size="9pt">ℚDragHandler</text>
+</g>
+<!-- llfkmbnfping&#45;&gt;llfkmbbfjjgg -->
+<g id="edge5" class="edge">
+<title>llfkmbnfping&#45;&gt;llfkmbbfjjgg</title>
+<path fill="none" stroke="black" d="M204.77,-63.92C191.91,-53.8 177.52,-42.48 166.4,-33.74"/>
+<polygon fill="none" stroke="black" points="204.52,-63.72 211.71,-64.29 213.95,-71.14 206.76,-70.57 204.52,-63.72"/>
+</g>
+<!-- llfkmbbfibdg -->
+<g id="node8" class="node">
+<title>llfkmbbfibdg</title>
+<polygon fill="none" stroke="black" points="422.07,-23.56 336.66,-36 251.25,-23.56 251.33,-3.44 421.99,-3.44 422.07,-23.56"/>
+<text text-anchor="middle" x="336.66" y="-13.33" font-family="Times,serif" font-size="9pt">ℚDragHandler</text>
+</g>
+<!-- llfkmbbdfibg&#45;&gt;llfkmbbfibdg -->
+<g id="edge7" class="edge">
+<title>llfkmbbdfibg&#45;&gt;llfkmbbfibdg</title>
+<path fill="none" stroke="black" d="M336.66,-58.81C336.66,-51.04 336.66,-42.95 336.66,-36.1"/>
+<polygon fill="none" stroke="black" points="336.66,-58.8 340.66,-64.8 336.66,-70.8 332.66,-64.8 336.66,-58.8"/>
+</g>
+<!-- llfkmbcknglg -->
+<g id="node10" class="node">
+<title>llfkmbcknglg</title>
+<polygon fill="none" stroke="black" points="611.07,-23.56 525.66,-36 440.25,-23.56 440.33,-3.44 610.99,-3.44 611.07,-23.56"/>
+<text text-anchor="middle" x="525.66" y="-13.33" font-family="Times,serif" font-size="9pt">ℚDragHandler</text>
+</g>
+<!-- llfkmbodeang&#45;&gt;llfkmbcknglg -->
+<g id="edge9" class="edge">
+<title>llfkmbodeang&#45;&gt;llfkmbcknglg</title>
+<path fill="none" stroke="black" d="M499.32,-60.9C504.94,-51.96 510.95,-42.4 515.81,-34.67"/>
+<polygon fill="none" stroke="black" points="499.4,-60.77 499.59,-67.98 493.01,-70.93 492.82,-63.72 499.4,-60.77"/>
+</g>
+</g>
+</svg>

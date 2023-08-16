@@ -19,6 +19,8 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qloggingcategory.h>
 
+#include <QtQml/private/qqmlsignalnames_p.h>
+
 #include <limits>
 
 QT_BEGIN_NAMESPACE
@@ -123,9 +125,7 @@ static bool checkArgumentsObjectUseInSignalHandlers(const QmlIR::Document &doc,
             if (binding->type() != QV4::CompiledData::Binding::Type_Script)
                 continue;
             const QString propName =  doc.stringAt(binding->propertyNameIndex);
-            if (!propName.startsWith(QLatin1String("on"))
-                || propName.size() < 3
-                || !propName.at(2).isUpper())
+            if (!QQmlSignalNames::isHandlerName(propName))
                 continue;
             auto compiledFunction = doc.jsModule.functions.value(object->runtimeFunctionIndices.at(binding->value.compiledScriptIndex));
             if (!compiledFunction)
@@ -477,8 +477,8 @@ void wrapCall(const QQmlPrivate::AOTCompiledContext *aotContext, void *dataPtr, 
 )";
 
 static const char *funcHeaderCode = R"(
-    [](const QQmlPrivate::AOTCompiledContext *aotContext, void *dataPtr, void **argumentsPtr) {
-        wrapCall(aotContext, dataPtr, argumentsPtr, [](const QQmlPrivate::AOTCompiledContext *aotContext, void **argumentsPtr) {
+    [](const QQmlPrivate::AOTCompiledContext *context, void *data, void **argv) {
+        wrapCall(context, data, argv, [](const QQmlPrivate::AOTCompiledContext *aotContext, void **argumentsPtr) {
 Q_UNUSED(aotContext)
 Q_UNUSED(argumentsPtr)
 )";
@@ -763,7 +763,6 @@ QQmlJSAotFunction QQmlJSAotCompiler::globalCode() const
     return global;
 }
 
-
 QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
         const QV4::Compiler::Context *context, QQmlJSCompilePass::Function *function,
         QQmlJS::DiagnosticMessage *error)
@@ -784,8 +783,9 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
     if (error->isValid())
         return compileError();
 
-    QQmlJSBasicBlocks basicBlocks(m_unitGenerator, &m_typeResolver, m_logger);
-    typePropagationResult = basicBlocks.run(function, typePropagationResult, error);
+    bool basicBlocksValidationFailed = false;
+    QQmlJSBasicBlocks basicBlocks(context, m_unitGenerator, &m_typeResolver, m_logger);
+    typePropagationResult = basicBlocks.run(function, typePropagationResult, error, m_flags, basicBlocksValidationFailed);
     if (error->isValid())
         return compileError();
 
@@ -798,7 +798,7 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
 
     QQmlJSCodeGenerator codegen(
                 context, m_unitGenerator, &m_typeResolver, m_logger);
-    QQmlJSAotFunction result = codegen.run(function, &typePropagationResult, error);
+    QQmlJSAotFunction result = codegen.run(function, &typePropagationResult, error, basicBlocksValidationFailed);
     return error->isValid() ? compileError() : result;
 }
 

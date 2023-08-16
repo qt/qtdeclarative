@@ -50,6 +50,7 @@ public:
     void setCurrentItem(QQuickStackElement *element);
 
     QList<QQuickStackElement *> parseElements(int from, QQmlV4Function *args, QStringList *errors);
+    QList<QQuickStackElement *> parseElements(const QList<QQuickStackViewArg> &args);
     QQuickStackElement *findElement(QQuickItem *item) const;
     QQuickStackElement *findElement(const QV4::Value &value) const;
     QQuickStackElement *createElement(const QV4::Value &value, const QQmlRefPointer<QQmlContextData> &context, QString *error);
@@ -57,6 +58,12 @@ public:
     bool pushElement(QQuickStackElement *element);
     bool popElements(QQuickStackElement *element);
     bool replaceElements(QQuickStackElement *element, const QList<QQuickStackElement *> &elements);
+
+    enum class CurrentItemPolicy {
+        DoNotPop,
+        Pop
+    };
+    QQuickItem *popToItem(QQuickItem *item, QQuickStackView::Operation operation, CurrentItemPolicy currentItemPolicy);
 
 #if QT_CONFIG(quick_viewtransitions)
     void ensureTransitioner();

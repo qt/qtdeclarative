@@ -93,14 +93,6 @@ private:
     Q_DECLARE_PRIVATE(QQuickLabel)
 };
 
-struct QQuickTemplatesTextForeign
-{
-    Q_GADGET
-    QML_ANONYMOUS
-    QML_FOREIGN(QQuickText)
-    QML_ADDED_IN_VERSION(2, 3)
-};
-
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickLabel)

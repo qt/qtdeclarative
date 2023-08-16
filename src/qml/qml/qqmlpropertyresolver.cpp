@@ -3,6 +3,7 @@
 
 #include "qqmlpropertyresolver_p.h"
 #include <private/qqmlcontextdata_p.h>
+#include <private/qqmlsignalnames_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -43,10 +44,8 @@ const QQmlPropertyData *QQmlPropertyResolver::signal(const QString &name, bool *
         return d;
     }
 
-    if (name.endsWith(QLatin1String("Changed"))) {
-        QString propName = name.mid(0, name.size() - static_cast<int>(strlen("Changed")));
-
-        d = property(propName, notInRevision);
+    if (auto propName = QQmlSignalNames::changedSignalNameToPropertyName(name)) {
+        d = property(*propName, notInRevision);
         if (d)
             return cache->signal(d->notifyIndex());
     }

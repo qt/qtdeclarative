@@ -37,7 +37,7 @@ public:
     ~QQmlJSCodeGenerator() = default;
 
     QQmlJSAotFunction run(const Function *function, const InstructionAnnotations *annotations,
-                          QQmlJS::DiagnosticMessage *error);
+                          QQmlJS::DiagnosticMessage *error, bool basicBlocksValidationFailed);
 
 protected:
     struct CodegenState : public State
@@ -312,11 +312,6 @@ private:
         return m_typeResolver->jsGlobalObject()->property(u"console"_s).type();
     }
 
-    QQmlJSScope::ConstPtr arrayPrototype() const
-    {
-        return m_typeResolver->arrayType()->baseType();
-    }
-
     QString resolveValueTypeContentPointer(
             const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
             const QString &variable, const QString &errorMessage);
@@ -336,7 +331,39 @@ private:
     bool m_skipUntilNextLabel = false;
 
     QStringList m_includes;
-    QHash<int, QHash<QQmlJSScope::ConstPtr, QString>> m_registerVariables;
+
+    struct RegisterVariablesKey
+    {
+        QString internalName;
+        int registerIndex = -1;
+
+    private:
+        friend size_t qHash(const RegisterVariablesKey &key, size_t seed = 0) noexcept
+        {
+            return qHashMulti(seed, key.internalName, key.registerIndex);
+        }
+
+        friend bool operator==(
+                const RegisterVariablesKey &lhs, const RegisterVariablesKey &rhs) noexcept
+        {
+            return lhs.registerIndex == rhs.registerIndex && lhs.internalName == rhs.internalName;
+        }
+
+        friend bool operator!=(
+                const RegisterVariablesKey &lhs, const RegisterVariablesKey &rhs) noexcept
+        {
+            return !(lhs == rhs);
+        }
+    };
+
+    struct RegisterVariablesValue
+    {
+        QString variableName;
+        QQmlJSScope::ConstPtr storedType;
+        int numTracked = 0;
+    };
+
+    QHash<RegisterVariablesKey, RegisterVariablesValue> m_registerVariables;
 };
 
 QT_END_NAMESPACE

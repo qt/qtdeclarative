@@ -146,14 +146,6 @@ private:
     Q_DECLARE_PRIVATE(QQuickTextField)
 };
 
-struct QQuickTextFieldForeign
-{
-    Q_GADGET
-    QML_ANONYMOUS
-    QML_FOREIGN(QQuickTextInput)
-    QML_ADDED_IN_VERSION(2, 2)
-};
-
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickTextField)

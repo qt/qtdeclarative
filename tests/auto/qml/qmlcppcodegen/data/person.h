@@ -57,6 +57,8 @@ public:
     QRectF area() const;
     void setArea(const QRectF &newArea);
 
+    Q_INVOKABLE QString getName() const { return m_name; }
+
 signals:
     void nameChanged();
     void shoeSizeChanged();

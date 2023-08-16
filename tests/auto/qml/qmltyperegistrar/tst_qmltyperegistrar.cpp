@@ -593,6 +593,20 @@ void tst_qmltyperegistrar::constructibleValueType()
     })"));
 }
 
+void tst_qmltyperegistrar::structuredValueType()
+{
+    QVERIFY(qmltypesData.contains(
+    R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "Structured"
+        accessSemantics: "value"
+        exports: ["QmlTypeRegistrarTest/structured 1.0"]
+        isStructured: true
+        exportMetaObjectRevisions: [256]
+        Property { name: "i"; type: "int"; index: 0; isFinal: true }
+    })"));
+}
+
 void tst_qmltyperegistrar::anonymousAndUncreatable()
 {
     QVERIFY(qmltypesData.contains(
@@ -656,6 +670,79 @@ void tst_qmltyperegistrar::listSignal()
             name: "objectListHappened"
             Parameter { type: "QObjectList" }
         }
+    })"));
+}
+
+void tst_qmltyperegistrar::withNamespace()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "Bar"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property {
+            name: "outerBarProp"
+            type: "int"
+            read: "bar"
+            index: 0
+            isReadonly: true
+            isConstant: true
+        }
+    })"));
+
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "Testing::Bar"
+        accessSemantics: "reference"
+        prototype: "Testing::Foo"
+        exports: ["QmlTypeRegistrarTest/Bar 1.0"]
+        exportMetaObjectRevisions: [256]
+        Property { name: "barProp"; type: "int"; read: "bar"; index: 0; isReadonly: true; isConstant: true }
+    })"));
+
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "Testing::Foo"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property { name: "fooProp"; type: "int"; read: "foo"; index: 0; isReadonly: true; isConstant: true }
+    })"));
+
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "Testing::Inner::Baz"
+        accessSemantics: "reference"
+        prototype: "Testing::Bar"
+        extension: "Bar"
+        exports: ["QmlTypeRegistrarTest/Baz 1.0"]
+        exportMetaObjectRevisions: [256]
+        attachedType: "Testing::Foo"
+    })"));
+}
+
+void tst_qmltyperegistrar::sequenceRegistration()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "std::vector<QByteArray>"
+        accessSemantics: "sequence"
+        valueType: "QByteArray"
+    })"));
+}
+
+void tst_qmltyperegistrar::valueTypeSelfReference()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "QPersistentModelIndex"
+        accessSemantics: "value"
+        extension: "QPersistentModelIndexValueType"
+    })"));
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "QPersistentModelIndexValueType"
+        accessSemantics: "value"
+        Property { name: "row"; type: "int"; read: "row"; index: 0; isReadonly: true; isFinal: true }
     })"));
 }
 

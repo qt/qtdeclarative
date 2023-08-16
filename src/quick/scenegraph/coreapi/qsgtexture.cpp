@@ -244,8 +244,6 @@ static void qt_debug_remove_texture(QSGTexture* texture)
 
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
-
-    \sa {Scene Graph - Rendering FBOs}
  */
 
 /*!

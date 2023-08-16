@@ -259,9 +259,11 @@ void QmlTypeRegistrar::write(QTextStream &output)
                 if (className == targetName)
                     return true;
 
-                const QCborMap *target = QmlTypesClassDescription::findType(m_types, targetName);
-                if (!target)
-                    target = QmlTypesClassDescription::findType(m_foreignTypes, targetName);
+                const QList<QAnyStringView> namespaces
+                        = MetaTypesJsonProcessor::namespaces(classDef);
+
+                const QCborMap *target = QmlTypesClassDescription::findType(
+                        m_types, m_foreignTypes, targetName, namespaces);
 
                 if (!target)
                     return false;

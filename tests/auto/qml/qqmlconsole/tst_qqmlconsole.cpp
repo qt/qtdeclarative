@@ -95,7 +95,7 @@ void tst_qqmlconsole::categorized_logging()
     QVERIFY(testCategory.isCriticalEnabled());
 
     QQmlComponent component(&engine, testUrl);
-    QObject *object = component.create();
+    std::unique_ptr<QObject> object { component.create() };
     QVERIFY2(object != nullptr, component.errorString().toUtf8());
 
     QVERIFY(messageHandler.messages().contains("qt.test: console.info"));
@@ -131,8 +131,6 @@ void tst_qqmlconsole::categorized_logging()
     QString useEmptyCategory = "default: " + QString::fromLatin1("%1:%2: ").arg(testUrl.toString()).arg(42) +
                             "Error: A QmlLoggingCatgory was provided without a valid name";
     QVERIFY(messageHandler.messages().contains(useEmptyCategory));
-
-    delete object;
 }
 
 void tst_qqmlconsole::tracing()
@@ -147,9 +145,8 @@ void tst_qqmlconsole::tracing()
     QTest::ignoreMessage(QtDebugMsg, qPrintable(traceText));
 
     QQmlComponent component(&engine, testUrl);
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
-    delete object;
+    std::unique_ptr<QObject> object { component.create() };
+    QVERIFY(object.get() != nullptr);
 }
 
 void tst_qqmlconsole::profiling()
@@ -161,9 +158,8 @@ void tst_qqmlconsole::profiling()
     QTest::ignoreMessage(QtWarningMsg, "Ignoring console.profileEnd(): the debug service is disabled.");
 
     QQmlComponent component(&engine, testUrl);
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
-    delete object;
+    std::unique_ptr<QObject> object { component.create() };
+    QVERIFY(object.get() != nullptr);
 }
 
 void tst_qqmlconsole::testAssert()
@@ -186,9 +182,8 @@ void tst_qqmlconsole::testAssert()
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(assert2));
 
     QQmlComponent component(&engine, testUrl);
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
-    delete object;
+    std::unique_ptr<QObject> object { component.create() };
+    QVERIFY(object.get() != nullptr);
 }
 
 void tst_qqmlconsole::exception()
@@ -211,9 +206,8 @@ void tst_qqmlconsole::exception()
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(exception2));
 
     QQmlComponent component(&engine, testUrl);
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
-    delete object;
+    std::unique_ptr<QObject> object { component.create() };
+    QVERIFY(object.get() != nullptr);
 }
 
 QTEST_MAIN(tst_qqmlconsole)

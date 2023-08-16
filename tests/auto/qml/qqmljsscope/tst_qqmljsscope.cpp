@@ -106,11 +106,12 @@ private Q_SLOTS:
     void scriptIndices();
     void extensions();
     void emptyBlockBinding();
-    void qualifiedName();
     void resolvedNonUniqueScopes();
     void compilationUnitsAreCompatible();
     void attachedTypeResolution_data();
     void attachedTypeResolution();
+    void builtinTypeResolution_data();
+    void builtinTypeResolution();
 
 public:
     tst_qqmljsscope()
@@ -206,7 +207,7 @@ void tst_qqmljsscope::allTypesAvailable()
 
         QQmlJSImporter importer { importPaths, /* resource file mapper */ nullptr };
         const auto imported = importer.importModule(u"QtQml"_s);
-        QCOMPARE(imported.context(), QQmlJSScope::ContextualTypes::QML);
+        QCOMPARE(imported.context(), QQmlJS::ContextualTypes::QML);
         const auto types = imported.types();
         QVERIFY(types.contains(u"$internal$.QObject"_s));
         QVERIFY(types.contains(u"QtObject"_s));
@@ -674,30 +675,6 @@ void tst_qqmljsscope::emptyBlockBinding()
     QVERIFY(root->hasOwnPropertyBindings(u"y"_s));
 }
 
-void tst_qqmljsscope::qualifiedName()
-{
-    QQmlJSScope::ConstPtr root = run(u"qualifiedName.qml"_s);
-    QVERIFY(root);
-
-    auto qualifiedNameOf = [](const QQmlJSScope::ConstPtr &ptr) -> QString {
-        if (ptr->baseType())
-            return ptr->baseType()->qualifiedName();
-        else
-            return u""_s;
-    };
-
-    QCOMPARE(root->childScopes().size(), 4);
-    QQmlJSScope::ConstPtr b = root->childScopes()[0];
-    QQmlJSScope::ConstPtr d = root->childScopes()[1];
-    QQmlJSScope::ConstPtr qualifiedA = root->childScopes()[2];
-    QQmlJSScope::ConstPtr qualifiedB = root->childScopes()[3];
-
-    QCOMPARE(qualifiedNameOf(b), "QualifiedNamesTests/B 5.0-6.0");
-    QCOMPARE(qualifiedNameOf(d), "QualifiedNamesTests/D 6.0");
-    QCOMPARE(qualifiedNameOf(qualifiedA), "QualifiedNamesTests/A 5.0");
-    QCOMPARE(qualifiedNameOf(qualifiedB), "QualifiedNamesTests/B 5.0-6.0");
-}
-
 void tst_qqmljsscope::resolvedNonUniqueScopes()
 {
     QQmlJSScope::ConstPtr root = run(u"resolvedNonUniqueScope.qml"_s);
@@ -855,7 +832,7 @@ void tst_qqmljsscope::attachedTypeResolution()
     QVERIFY(!resolved.isNull());
     const auto &attachedType = pass.resolveAttached(moduleName, typeName);
     QVERIFY(!attachedType.isNull());
-    QCOMPARE(attachedType.internalName(), attachedTypeName);
+    QCOMPARE(attachedType.name(), attachedTypeName);
 
     if (propertyOnAttached != "") {
         QEXPECT_FAIL("Keys", "Keys and QQuickKeysAttached have the same properties", Continue);
@@ -869,6 +846,43 @@ void tst_qqmljsscope::attachedTypeResolution()
 
     if (creatable)
         QVERIFY(resolved.hasProperty(propertyOnSelf));
+}
+
+
+
+void tst_qqmljsscope::builtinTypeResolution_data()
+{
+    QTest::addColumn<bool>("valid");
+    QTest::addColumn<QString>("typeName");
+
+    QTest::addRow("global_QtObject") << true  << "Qt";
+    QTest::addRow("function")        << true  << "function";
+    QTest::addRow("Array")           << true  << "Array";
+    QTest::addRow("invalid")         << false << "foobar";
+    QTest::addRow("Number")          << true  << "Number";
+    QTest::addRow("bool")            << true  << "bool";
+    QTest::addRow("QString")         << true  << "QString";
+}
+
+void tst_qqmljsscope::builtinTypeResolution()
+{
+    QFETCH(bool, valid);
+    QFETCH(QString, typeName);
+
+    QQmlJSImporter importer{ { "data" }, nullptr, true };
+    QStringList defaultImportPaths =
+            QStringList{ QLibraryInfo::path(QLibraryInfo::QmlImportsPath) };
+    importer.setImportPaths(defaultImportPaths);
+    QQmlJSTypeResolver resolver(&importer);
+    const auto &implicitImportDirectory = QQmlJSImportVisitor::implicitImportDirectory({}, nullptr);
+    QQmlJSLogger logger;
+    QQmlJSImportVisitor v{
+        QQmlJSScope::create(), &importer, &logger, implicitImportDirectory, {}
+    };
+    QQmlSA::PassManager manager{ &v, &resolver };
+    TestPass pass{ &manager };
+    auto element = pass.resolveBuiltinType(typeName);
+    QCOMPARE(element.isNull(), !valid);
 }
 
 QTEST_MAIN(tst_qqmljsscope)

@@ -71,7 +71,7 @@ public:
     QQmlJSScope::ConstPtr jsGlobalObject() const { return m_jsGlobalObject; }
     QQmlJSScope::ConstPtr qObjectType() const { return m_qObjectType; }
     QQmlJSScope::ConstPtr qObjectListType() const { return m_qObjectListType; }
-    QQmlJSScope::ConstPtr arrayType() const { return m_arrayType; }
+    QQmlJSScope::ConstPtr arrayPrototype() const { return m_arrayPrototype; }
 
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
     QQmlJSScope::ConstPtr scopeForId(
@@ -181,6 +181,10 @@ public:
     bool canHold(const QQmlJSScope::ConstPtr &container,
                  const QQmlJSScope::ConstPtr &contained) const;
 
+    bool canPopulate(
+            const QQmlJSScope::ConstPtr &type, const QQmlJSScope::ConstPtr &argument,
+            bool *isExtension) const;
+
     QQmlJSMetaMethod selectConstructor(
             const QQmlJSScope::ConstPtr &type, const QQmlJSScope::ConstPtr &argument,
             bool *isExtension) const;
@@ -214,7 +218,7 @@ protected:
     QQmlJSScope::ConstPtr m_emptyType;
     QQmlJSScope::ConstPtr m_nullType;
     QQmlJSScope::ConstPtr m_numberPrototype;
-    QQmlJSScope::ConstPtr m_arrayType;
+    QQmlJSScope::ConstPtr m_arrayPrototype;
     QQmlJSScope::ConstPtr m_realType;
     QQmlJSScope::ConstPtr m_floatType;
     QQmlJSScope::ConstPtr m_int8Type;

@@ -8,6 +8,7 @@
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQmlModels/private/qqmllistmodel_p.h>
 #include <QtQml/private/qqmlexpression_p.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 #include <QQmlComponent>
 
 #include <QtCore/qtimer.h>
@@ -789,7 +790,7 @@ void tst_qqmllistmodel::get()
     RUNEXPR("model.append({roleC: {} })");
     RUNEXPR("model.append({roleD: [ { a:1, b:2 }, { c: 3 } ] })");
 
-    QSignalSpy spy(model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)));
+    QSignalSpy spy(model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QList<int>)));
     QQmlExpression expr(engine.rootContext(), model, expression);
     expr.evaluate();
     QVERIFY(!expr.hasError());
@@ -917,7 +918,7 @@ void tst_qqmllistmodel::get_nested()
         QString extendedExpression = QString("get(%1).%2.%3").arg(outerListIndex).arg(outerListRoleName).arg(expression);
         QQmlExpression expr(engine.rootContext(), model, extendedExpression);
 
-        QSignalSpy spy(childModel, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)));
+        QSignalSpy spy(childModel, SIGNAL(dataChanged(QModelIndex,QModelIndex,QList<int>)));
         expr.evaluate();
         QVERIFY(!expr.hasError());
 
@@ -1098,12 +1099,12 @@ void tst_qqmllistmodel::property_changes()
     expr.evaluate();
     QVERIFY2(!expr.hasError(), qPrintable(expr.error().toString()));
 
-    QString signalHandler = "on" + QString(roleName[0].toUpper()) + roleName.mid(1, roleName.size()) + "Changed:";
+    QString signalHandler = QQmlSignalNames::propertyNameToChangedHandlerName(roleName);
     QString qml = "import QtQuick 2.0\n"
                   "Connections {\n"
                         "property bool gotSignal: false\n"
                         "target: model.get(" + QString::number(listIndex) + ")\n"
-                        + signalHandler + " gotSignal = true\n"
+                        + signalHandler + ": gotSignal = true\n"
                   "}\n";
 
     QQmlComponent component(&engine);
@@ -1112,7 +1113,7 @@ void tst_qqmllistmodel::property_changes()
     QObject *connectionsObject = component.create();
     QVERIFY2(component.errorString().isEmpty(), qPrintable(component.errorString()));
 
-    QSignalSpy spyItemsChanged(&model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)));
+    QSignalSpy spyItemsChanged(&model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QList<int>)));
 
     expr.setExpression(script_change);
     expr.evaluate();

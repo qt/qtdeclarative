@@ -59,10 +59,6 @@ Module {
             name: "objectNameChanged"
             Parameter { name: "objectName"; type: "QString" }
         }
-        Method {
-            name: "_q_reregisterTimers"
-            Parameter { type: "void"; isPointer: true }
-        }
         Method { name: "toString"; type: "string" }
         Method { name: "destroy" }
         Method {
@@ -280,7 +276,7 @@ Module {
 
     Component {
         name: "QUrl"
-        extension: "Url"
+        extension: "URL"
         exports: ["QML/url 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"

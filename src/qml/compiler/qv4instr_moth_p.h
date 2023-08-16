@@ -497,14 +497,22 @@ inline bool operator!=(const StackSlot &l, const StackSlot &r) { return l.stackS
 
 // When making changes to the instructions, make sure to bump QV4_DATA_STRUCTURE_VERSION in qv4compileddata_p.h
 
-void dumpBytecode(const char *bytecode, int len, int nLocals, int nFormals, int startLine = 1,
-                  const QVector<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping
-                        = QVector<CompiledData::CodeOffsetToLineAndStatement>());
-inline void dumpBytecode(const QByteArray &bytecode, int nLocals, int nFormals, int startLine = 1,
-                         const QVector<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping
-                            = QVector<CompiledData::CodeOffsetToLineAndStatement>()) {
-    dumpBytecode(bytecode.constData(), bytecode.size(), nLocals, nFormals, startLine,
-                 lineAndStatementNumberMapping);
+Q_QML_PRIVATE_EXPORT
+QString dumpBytecode(
+        const char *bytecode, int len, int nLocals, int nFormals, int beginOffset, int endOffset,
+        const QVector<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping =
+                QVector<CompiledData::CodeOffsetToLineAndStatement>());
+QString dumpBytecode(
+        const char *bytecode, int len, int nLocals, int nFormals, int startLine = 1,
+        const QVector<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping =
+                QVector<CompiledData::CodeOffsetToLineAndStatement>());
+inline QString dumpBytecode(
+        const QByteArray &bytecode, int nLocals, int nFormals, int startLine = 1,
+        const QVector<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping =
+                QVector<CompiledData::CodeOffsetToLineAndStatement>())
+{
+    return dumpBytecode(bytecode.constData(), bytecode.size(), nLocals, nFormals, startLine,
+                        lineAndStatementNumberMapping);
 }
 
 union Instr

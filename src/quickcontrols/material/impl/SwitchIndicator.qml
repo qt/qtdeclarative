@@ -9,8 +9,8 @@ import QtQuick.Controls.Material.impl
 
 Rectangle {
     id: indicator
-    width: 52
-    height: 32
+    width: control.Material.switchIndicatorWidth
+    height: control.Material.switchIndicatorHeight
     radius: height / 2
     y: parent.height / 2 - height / 2
     color: control.enabled
@@ -62,9 +62,9 @@ Rectangle {
         scale: indicator.control.down ? 1 : (indicator.control.checked ? checkedSize / largestSize : normalSize / largestSize)
 
         readonly property int offset: 2
-        readonly property real normalSize: !hasIcon ? 16 : checkedSize
-        readonly property real checkedSize: 24
-        readonly property real largestSize: 28
+        readonly property real normalSize: !hasIcon ? indicator.control.Material.switchNormalHandleHeight : checkedSize
+        readonly property real checkedSize: indicator.control.Material.switchCheckedHandleHeight
+        readonly property real largestSize: indicator.control.Material.switchLargestHandleHeight
         readonly property real largestScale: largestSize / normalSize
         readonly property bool hasIcon: indicator.control.icon.name.length > 0
             || indicator.control.icon.source.toString().length > 0

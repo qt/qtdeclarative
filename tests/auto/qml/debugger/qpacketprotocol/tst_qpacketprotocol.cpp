@@ -18,9 +18,9 @@ class tst_QPacketProtocol : public QObject
     Q_OBJECT
 
 private:
-    QTcpServer *m_server;
-    QTcpSocket *m_client;
-    QTcpSocket *m_serverConn;
+    std::unique_ptr<QTcpServer> m_server;
+    std::unique_ptr<QTcpSocket> m_client;
+    std::unique_ptr<QTcpSocket> m_serverConn;
 
 private slots:
     void init();
@@ -34,34 +34,34 @@ private slots:
 
 void tst_QPacketProtocol::init()
 {
-    m_server = new QTcpServer(this);
+    m_server = std::make_unique<QTcpServer>(this);
     m_serverConn = nullptr;
     QVERIFY(m_server->listen(QHostAddress("127.0.0.1")));
 
-    m_client = new QTcpSocket(this);
+    m_client = std::make_unique<QTcpSocket>(this);
 
-    QSignalSpy serverSpy(m_server, SIGNAL(newConnection()));
-    QSignalSpy clientSpy(m_client, SIGNAL(connected()));
+    QSignalSpy serverSpy(m_server.get(), SIGNAL(newConnection()));
+    QSignalSpy clientSpy(m_client.get(), SIGNAL(connected()));
 
     m_client->connectToHost(m_server->serverAddress(), m_server->serverPort());
 
     QVERIFY(clientSpy.size() > 0 || clientSpy.wait());
     QVERIFY(serverSpy.size() > 0 || serverSpy.wait());
 
-    m_serverConn = m_server->nextPendingConnection();
+    m_serverConn.reset(m_server->nextPendingConnection());
 }
 
 void tst_QPacketProtocol::cleanup()
 {
-    delete m_client;
-    delete m_serverConn;
-    delete m_server;
+    m_client.reset();
+    m_serverConn.reset();
+    m_server.reset();
 }
 
 void tst_QPacketProtocol::send()
 {
-    QPacketProtocol in(m_client);
-    QPacketProtocol out(m_serverConn);
+    QPacketProtocol in(m_client.get());
+    QPacketProtocol out(m_serverConn.get());
 
     QByteArray ba;
     int num;
@@ -82,8 +82,8 @@ void tst_QPacketProtocol::packetsAvailable()
 {
     QFETCH(int, packetCount);
 
-    QPacketProtocol out(m_client);
-    QPacketProtocol in(m_serverConn);
+    QPacketProtocol out(m_client.get());
+    QPacketProtocol in(m_serverConn.get());
 
     QCOMPARE(out.packetsAvailable(), qint64(0));
     QCOMPARE(in.packetsAvailable(), qint64(0));
@@ -109,8 +109,8 @@ void tst_QPacketProtocol::packetsAvailable_data()
 
 void tst_QPacketProtocol::read()
 {
-    QPacketProtocol in(m_client);
-    QPacketProtocol out(m_serverConn);
+    QPacketProtocol in(m_client.get());
+    QPacketProtocol out(m_serverConn.get());
 
     QVERIFY(in.read().isEmpty());
 

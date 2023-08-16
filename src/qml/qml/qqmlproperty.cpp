@@ -20,6 +20,7 @@
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmlirbuilder_p.h>
 #include <QtQml/private/qqmllist_p.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 
 #include <QStringList>
 #include <QVector>
@@ -363,11 +364,10 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
     };
 
     QQmlData *ddata = QQmlData::get(currentObject, false);
-    auto findChangeSignal = [&](QStringView signalName) {
-        const QString changed = QStringLiteral("Changed");
-        if (signalName.endsWith(changed)) {
-            const QStringView propName = signalName.first(signalName.size() - changed.size());
-            const QQmlPropertyData *d = ddata->propertyCache->property(propName, currentObject, context);
+    auto findChangeSignal = [&](QStringView changedHandlerName) {
+        if (auto propName = QQmlSignalNames::changedHandlerNameToPropertyName(changedHandlerName)) {
+            const QQmlPropertyData *d =
+                    ddata->propertyCache->property(*propName, currentObject, context);
             while (d && d->isFunction())
                 d = ddata->propertyCache->overrideData(d);
 
@@ -381,19 +381,11 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
     };
 
     const QString terminalString = terminal.toString();
-    if (QmlIR::IRBuilder::isSignalPropertyName(terminalString)) {
-        QString signalName = terminalString.mid(2);
-        int firstNon_;
-        int length = signalName.size();
-        for (firstNon_ = 0; firstNon_ < length; ++firstNon_)
-            if (signalName.at(firstNon_) != u'_')
-                break;
-        signalName[firstNon_] = signalName.at(firstNon_).toLower();
-
+    if (auto signalName = QQmlSignalNames::handlerNameToSignalName(terminalString)) {
         if (ddata && ddata->propertyCache) {
             // Try method
-            const QQmlPropertyData *d = ddata->propertyCache->property(
-                        signalName, currentObject, context);
+            const QQmlPropertyData *d =
+                    ddata->propertyCache->property(*signalName, currentObject, context);
 
             // ### Qt7: This code treats methods as signals. It should use d->isSignal().
             //          That would be a change in behavior, though. Right now you can construct a
@@ -407,9 +399,9 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
                 return;
             }
 
-            if (findChangeSignal(signalName))
+            if (findChangeSignal(terminalString))
                 return;
-        } else if (findSignalInMetaObject(signalName.toUtf8())) {
+        } else if (findSignalInMetaObject(signalName->toUtf8())) {
             return;
         }
     }
@@ -744,15 +736,7 @@ QString QQmlProperty::name() const
             d->nameCache = d->core.name(d->object) + QLatin1Char('.') + QString::fromUtf8(vtName);
         } else if (type() & SignalProperty) {
             // ### Qt7: Return the original signal name here. Do not prepend "on"
-            QString name = QStringLiteral("on") + d->core.name(d->object);
-            for (int i = 2, end = name.size(); i != end; ++i) {
-                const QChar c = name.at(i);
-                if (c != u'_') {
-                    name[i] = c.toUpper();
-                    break;
-                }
-            }
-            d->nameCache = name;
+            d->nameCache = QQmlSignalNames::signalNameToHandlerName(d->core.name(d->object));
         } else {
             d->nameCache = d->core.name(d->object);
         }
@@ -1956,9 +1940,8 @@ QMetaMethod QQmlPropertyPrivate::findSignalByName(const QMetaObject *mo, const Q
 
     // If no signal is found, but the signal is of the form "onBlahChanged",
     // return the notify signal for the property "Blah"
-    if (name.endsWith("Changed")) {
-        QByteArray propName = name.mid(0, name.size() - 7);
-        int propIdx = mo->indexOfProperty(propName.constData());
+    if (auto propName = QQmlSignalNames::changedSignalNameToPropertyName(name)) {
+        int propIdx = mo->indexOfProperty(propName->constData());
         if (propIdx >= 0) {
             QMetaProperty prop = mo->property(propIdx);
             if (prop.hasNotifySignal())

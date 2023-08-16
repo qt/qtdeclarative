@@ -22,6 +22,11 @@ QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup)
     isTabFence = true;
 }
 
+QQuickPopupItemPrivate *QQuickPopupItemPrivate::get(QQuickPopupItem *popupItem)
+{
+    return popupItem->d_func();
+}
+
 void QQuickPopupItemPrivate::implicitWidthChanged()
 {
     qCDebug(lcPopupItem).nospace() << "implicitWidthChanged called on " << q_func() << "; new implicitWidth is " << implicitWidth;

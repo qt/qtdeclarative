@@ -231,6 +231,9 @@ private slots:
     void dynamicCreationInWindow();
     void cppConstruction();
     void reparenting();
+    void grabberSceneChange_data();
+    void grabberSceneChange();
+    void clip();
 
 protected:
     bool eventFilter(QObject *, QEvent *event) override
@@ -747,6 +750,112 @@ void tst_PointerHandlers::reparenting()
         QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, pt);
         QTRY_COMPARE(handler->releaseEventCount, i);
     }
+}
+
+/*!
+    Verify that removing an item that has a grabbing handler from the scene
+    does not result in crashes in our event dispatching code. The item's window()
+    pointer will be nullptr, so the handler must have released the grab, or never
+    gotten the grab, depending on when the item gets removed.
+
+    See QTBUG-114475.
+*/
+void tst_PointerHandlers::grabberSceneChange_data()
+{
+    QTest::addColumn<bool>("useTimer");
+    QTest::addColumn<int>("grabChangedCount");
+
+    QTest::addRow("Immediately") << false << 0;
+    QTest::addRow("Delayed") << true << 2;
+}
+
+void tst_PointerHandlers::grabberSceneChange()
+{
+    QFETCH(const bool, useTimer);
+    QFETCH(const int, grabChangedCount);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("grabberSceneChange.qml"));
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(component.create());
+    QScopedPointer<QQuickWindow> cleanup(window);
+    QVERIFY(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    window->setProperty("useTimer", useTimer);
+
+    QQuickItem *container = window->findChild<QQuickItem *>("container");
+
+    QPoint p1 = QPoint(window->width() / 2, window->height() / 2);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    // The container gets removed from this window, either immediately on
+    // press, or through a timer.
+    QTRY_COMPARE(container->parentItem(), nullptr);
+
+    QEXPECT_FAIL("Delayed",
+                 "PointerHandlers don't release their grab when item is removed", Continue);
+    QCOMPARE(window->property("grabChangedCounter").toInt(), grabChangedCount);
+
+    // this should not crash
+    QTest::mouseMove(window, p1 + QPoint(5, 5));
+}
+
+void tst_PointerHandlers::clip()
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "clip.qml");
+    QQuickView * window = windowPtr.data();
+    QVERIFY(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    EventHandler *handler = window->contentItem()->findChild<EventHandler*>("eventHandler");
+    EventHandler *circleHandler = window->contentItem()->findChild<EventHandler*>("circle eventHandler");
+
+    QCOMPARE(handler->pressEventCount, 0);
+    QCOMPARE(circleHandler->pressEventCount, 0);
+    QCOMPARE(handler->releaseEventCount, 0);
+    QCOMPARE(circleHandler->releaseEventCount, 0);
+
+    const QPoint rectPt = QPoint(1, 1);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, rectPt);
+    QCOMPARE(handler->pressEventCount, 1);
+    QCOMPARE(circleHandler->pressEventCount, 0);
+
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, rectPt);
+    QCOMPARE(handler->releaseEventCount, 1);
+    QCOMPARE(circleHandler->releaseEventCount, 0);
+
+
+    handler->pressEventCount = 0;
+    circleHandler->pressEventCount = 0;
+    handler->releaseEventCount = 0;
+    circleHandler->releaseEventCount = 0;
+
+    const QPoint rectAndCirclePt = QPoint(49 ,49);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, rectAndCirclePt);
+    QCOMPARE(handler->pressEventCount, 1);
+    QCOMPARE(circleHandler->pressEventCount, 1);
+
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, rectAndCirclePt);
+    QCOMPARE(handler->releaseEventCount, 1);
+    QCOMPARE(circleHandler->releaseEventCount, 1);
+
+
+    handler->pressEventCount = 0;
+    circleHandler->pressEventCount = 0;
+    handler->releaseEventCount = 0;
+    circleHandler->releaseEventCount = 0;
+
+    const QPoint circlePt = QPoint(51 ,51);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, circlePt);
+    QCOMPARE(handler->pressEventCount, 0);
+    QCOMPARE(circleHandler->pressEventCount, 1);
+
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, circlePt);
+    QCOMPARE(handler->releaseEventCount, 0);
+    QCOMPARE(circleHandler->releaseEventCount, 1);
 }
 
 QTEST_MAIN(tst_PointerHandlers)

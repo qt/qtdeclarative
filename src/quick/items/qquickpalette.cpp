@@ -153,6 +153,24 @@ QQuickColorGroup *QQuickPalette::disabled() const
     return colorGroup(QPalette::Disabled);
 }
 
+void QQuickPalette::resetActive()
+{
+    if (colorProvider().resetColor(QPalette::Active))
+        Q_EMIT changed();
+}
+
+void QQuickPalette::resetInactive()
+{
+    if (colorProvider().resetColor(QPalette::Inactive))
+        Q_EMIT changed();
+}
+
+void QQuickPalette::resetDisabled()
+{
+    if (colorProvider().resetColor(QPalette::Disabled))
+        Q_EMIT changed();
+}
+
 /*!
     \internal
 

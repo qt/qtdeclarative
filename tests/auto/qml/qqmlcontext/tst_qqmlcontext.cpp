@@ -50,6 +50,8 @@ private slots:
     void contextObjectHierarchy();
     void destroyContextProperty();
 
+    void numericContextProperty();
+
 private:
     QQmlEngine engine;
 };
@@ -92,13 +94,13 @@ void tst_qqmlcontext::resolvedUrl()
 
     // Relative to a deleted parent
     {
-        QQmlContext *ctxt = new QQmlContext(&engine);
+        std::unique_ptr<QQmlContext> ctxt = std::make_unique<QQmlContext>(&engine);
         ctxt->setBaseUrl(QUrl("http://www.qt-project.org/"));
 
-        QQmlContext ctxt2(ctxt);
+        QQmlContext ctxt2(ctxt.get());
         QCOMPARE(ctxt2.resolvedUrl(QUrl("main2.qml")), QUrl("http://www.qt-project.org/main2.qml"));
 
-        delete ctxt; ctxt = nullptr;
+        ctxt.reset();
 
         QCOMPARE(ctxt2.resolvedUrl(QUrl("main2.qml")), QUrl());
     }
@@ -114,58 +116,58 @@ void tst_qqmlcontext::resolvedUrl()
 
 void tst_qqmlcontext::engineMethod()
 {
-    QQmlEngine *engine = new QQmlEngine;
+    std::unique_ptr<QQmlEngine> engine = std::make_unique<QQmlEngine>();
 
-    QQmlContext ctxt(engine);
+    QQmlContext ctxt(engine.get());
     QQmlContext ctxt2(&ctxt);
     QQmlContext ctxt3(&ctxt2);
     QQmlContext ctxt4(&ctxt2);
 
-    QCOMPARE(ctxt.engine(), engine);
-    QCOMPARE(ctxt2.engine(), engine);
-    QCOMPARE(ctxt3.engine(), engine);
-    QCOMPARE(ctxt4.engine(), engine);
+    QCOMPARE(ctxt.engine(), engine.get());
+    QCOMPARE(ctxt2.engine(), engine.get());
+    QCOMPARE(ctxt3.engine(), engine.get());
+    QCOMPARE(ctxt4.engine(), engine.get());
 
-    delete engine; engine = nullptr;
+    engine.reset();
 
-    QCOMPARE(ctxt.engine(), engine);
-    QCOMPARE(ctxt2.engine(), engine);
-    QCOMPARE(ctxt3.engine(), engine);
-    QCOMPARE(ctxt4.engine(), engine);
+    QCOMPARE(ctxt.engine(), engine.get());
+    QCOMPARE(ctxt2.engine(), engine.get());
+    QCOMPARE(ctxt3.engine(), engine.get());
+    QCOMPARE(ctxt4.engine(), engine.get());
 }
 
 void tst_qqmlcontext::parentContext()
 {
-    QQmlEngine *engine = new QQmlEngine;
+    std::unique_ptr<QQmlEngine> engine = std::make_unique<QQmlEngine>();
 
     QCOMPARE(engine->rootContext()->parentContext(), (QQmlContext *)nullptr);
 
-    QQmlContext *ctxt = new QQmlContext(engine);
-    QQmlContext *ctxt2 = new QQmlContext(ctxt);
-    QQmlContext *ctxt3 = new QQmlContext(ctxt2);
-    QQmlContext *ctxt4 = new QQmlContext(ctxt2);
-    QQmlContext *ctxt5 = new QQmlContext(ctxt);
-    QQmlContext *ctxt6 = new QQmlContext(engine);
-    QQmlContext *ctxt7 = new QQmlContext(engine->rootContext());
+    std::unique_ptr<QQmlContext> ctxt = std::make_unique<QQmlContext>(engine.get());
+    std::unique_ptr<QQmlContext> ctxt2 = std::make_unique<QQmlContext>(ctxt.get());
+    std::unique_ptr<QQmlContext> ctxt3 = std::make_unique<QQmlContext>(ctxt2.get());
+    std::unique_ptr<QQmlContext> ctxt4 = std::make_unique<QQmlContext>(ctxt2.get());
+    std::unique_ptr<QQmlContext> ctxt5 = std::make_unique<QQmlContext>(ctxt.get());
+    std::unique_ptr<QQmlContext> ctxt6 = std::make_unique<QQmlContext>(engine.get());
+    std::unique_ptr<QQmlContext> ctxt7 = std::make_unique<QQmlContext>(engine->rootContext());
 
     QCOMPARE(ctxt->parentContext(), engine->rootContext());
-    QCOMPARE(ctxt2->parentContext(), ctxt);
-    QCOMPARE(ctxt3->parentContext(), ctxt2);
-    QCOMPARE(ctxt4->parentContext(), ctxt2);
-    QCOMPARE(ctxt5->parentContext(), ctxt);
+    QCOMPARE(ctxt2->parentContext(), ctxt.get());
+    QCOMPARE(ctxt3->parentContext(), ctxt2.get());
+    QCOMPARE(ctxt4->parentContext(), ctxt2.get());
+    QCOMPARE(ctxt5->parentContext(), ctxt.get());
     QCOMPARE(ctxt6->parentContext(), engine->rootContext());
     QCOMPARE(ctxt7->parentContext(), engine->rootContext());
 
-    delete ctxt2; ctxt2 = nullptr;
+    ctxt2.reset();
 
     QCOMPARE(ctxt->parentContext(), engine->rootContext());
     QCOMPARE(ctxt3->parentContext(), (QQmlContext *)nullptr);
     QCOMPARE(ctxt4->parentContext(), (QQmlContext *)nullptr);
-    QCOMPARE(ctxt5->parentContext(), ctxt);
+    QCOMPARE(ctxt5->parentContext(), ctxt.get());
     QCOMPARE(ctxt6->parentContext(), engine->rootContext());
     QCOMPARE(ctxt7->parentContext(), engine->rootContext());
 
-    delete engine; engine = nullptr;
+    engine.reset();
 
     QCOMPARE(ctxt->parentContext(), (QQmlContext *)nullptr);
     QCOMPARE(ctxt3->parentContext(), (QQmlContext *)nullptr);
@@ -173,13 +175,6 @@ void tst_qqmlcontext::parentContext()
     QCOMPARE(ctxt5->parentContext(), (QQmlContext *)nullptr);
     QCOMPARE(ctxt6->parentContext(), (QQmlContext *)nullptr);
     QCOMPARE(ctxt7->parentContext(), (QQmlContext *)nullptr);
-
-    delete ctxt7;
-    delete ctxt6;
-    delete ctxt5;
-    delete ctxt4;
-    delete ctxt3;
-    delete ctxt;
 }
 
 class TestObject : public QObject
@@ -229,11 +224,9 @@ private:
     QQmlComponent component(&engine); \
     component.setData("import QtQuick 2.0; QtObject { property variant test: " #name " }", QUrl()); \
 \
-    QObject *obj = component.create(ctxt); \
+    std::unique_ptr<QObject> obj { component.create(ctxt) }; \
 \
     QCOMPARE(obj->property("test"), value); \
-\
-    delete obj; \
 }
 
 void tst_qqmlcontext::setContextProperty()
@@ -279,39 +272,33 @@ void tst_qqmlcontext::setContextProperty()
         QQmlComponent component(&engine);
         component.setData("import QtQuick 2.0; QtObject { property variant test: a }", QUrl());
 
-        QObject *obj = component.create(&ctxt2);
+        std::unique_ptr<QObject> obj { component.create(&ctxt2) };
 
         QCOMPARE(obj->property("test"), QVariant(13));
         ctxt.setContextProperty("a", QVariant(19));
         QCOMPARE(obj->property("test"), QVariant(19));
-
-        delete obj;
     }
     {
         QQmlComponent component(&engine);
         component.setData("import QtQuick 2.0; QtObject { property variant test: b }", QUrl());
 
-        QObject *obj = component.create(&ctxt2);
+        std::unique_ptr<QObject> obj { component.create(&ctxt2) };
 
         QCOMPARE(obj->property("test"), QVariant(8));
         ctxt.setContextProperty("b", QVariant(5));
         QCOMPARE(obj->property("test"), QVariant(8));
         ctxt2.setContextProperty("b", QVariant(1912));
         QCOMPARE(obj->property("test"), QVariant(1912));
-
-        delete obj;
     }
     {
         QQmlComponent component(&engine);
         component.setData("import QtQuick 2.0; QtObject { property variant test: e.a }", QUrl());
 
-        QObject *obj = component.create(&ctxt2);
+        std::unique_ptr<QObject> obj { component.create(&ctxt2) };
 
         QCOMPARE(obj->property("test"), QVariant(12));
         obj1.setA(13);
         QCOMPARE(obj->property("test"), QVariant(13));
-
-        delete obj;
     }
 
     // New context properties
@@ -319,13 +306,11 @@ void tst_qqmlcontext::setContextProperty()
         QQmlComponent component(&engine);
         component.setData("import QtQuick 2.0; QtObject { property variant test: a }", QUrl());
 
-        QObject *obj = component.create(&ctxt2);
+        std::unique_ptr<QObject> obj { component.create(&ctxt2) };
 
         QCOMPARE(obj->property("test"), QVariant(19));
         ctxt2.setContextProperty("a", QVariant(1945));
         QCOMPARE(obj->property("test"), QVariant(1945));
-
-        delete obj;
     }
 
     // Setting an object-variant context property
@@ -337,15 +322,13 @@ void tst_qqmlcontext::setContextProperty()
         ctxt.setContextProperty("ctxtProp", QVariant());
 
         QTest::ignoreMessage(QtWarningMsg, "<Unknown File>:1: TypeError: Cannot read property 'a' of undefined");
-        QObject *obj = component.create(&ctxt);
+        std::unique_ptr<QObject> obj { component.create(&ctxt) };
 
         QVariant v = obj->property("obj");
 
         ctxt.setContextProperty("ctxtProp", v);
 
         QCOMPARE(obj->property("test"), QVariant(10));
-
-        delete obj;
     }
 }
 
@@ -407,13 +390,11 @@ void tst_qqmlcontext::setContextObject()
         QQmlComponent component(&engine);
         component.setData("import QtQuick 2.0; QtObject { property variant test: a }", QUrl());
 
-        QObject *obj = component.create(&ctxt);
+        std::unique_ptr<QObject> obj { component.create(&ctxt) };
 
         QCOMPARE(obj->property("test"), QVariant(12));
         to.setA(14);
         QCOMPARE(obj->property("test"), QVariant(14));
-
-        delete obj;
     }
 
     // Change of context object
@@ -431,19 +412,19 @@ void tst_qqmlcontext::setContextObject()
 
 void tst_qqmlcontext::destruction()
 {
-    QQmlContext *ctxt = new QQmlContext(&engine);
+    std::unique_ptr<QQmlContext> ctxt = std::make_unique<QQmlContext>(&engine);
 
     QObject obj;
-    QQmlEngine::setContextForObject(&obj, ctxt);
-    QQmlExpression expr(ctxt, nullptr, "a");
+    QQmlEngine::setContextForObject(&obj, ctxt.get());
+    QQmlExpression expr(ctxt.get(), nullptr, "a");
 
-    QCOMPARE(ctxt, QQmlEngine::contextForObject(&obj));
-    QCOMPARE(ctxt, expr.context());
+    QCOMPARE(ctxt.get(), QQmlEngine::contextForObject(&obj));
+    QCOMPARE(ctxt.get(), expr.context());
 
-    delete ctxt; ctxt = nullptr;
+    ctxt.reset();
 
-    QCOMPARE(ctxt, QQmlEngine::contextForObject(&obj));
-    QCOMPARE(ctxt, expr.context());
+    QCOMPARE(ctxt.get(), QQmlEngine::contextForObject(&obj));
+    QCOMPARE(ctxt.get(), expr.context());
 }
 
 void tst_qqmlcontext::idAsContextProperty()
@@ -451,18 +432,16 @@ void tst_qqmlcontext::idAsContextProperty()
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0; QtObject { property variant a; a: QtObject { id: myObject } }", QUrl());
 
-    QObject *obj = component.create();
-    QVERIFY(obj);
+    std::unique_ptr<QObject> obj { component.create() };
+    QVERIFY(obj.get());
 
     QVariant a = obj->property("a");
     QCOMPARE(a.userType(), int(QMetaType::QObjectStar));
 
-    QVariant ctxt = qmlContext(obj)->contextProperty("myObject");
+    QVariant ctxt = qmlContext(obj.get())->contextProperty("myObject");
     QCOMPARE(ctxt.userType(), int(QMetaType::QObjectStar));
 
     QCOMPARE(a, ctxt);
-
-    delete obj;
 }
 
 // Internal contexts should be read-only
@@ -471,28 +450,26 @@ void tst_qqmlcontext::readOnlyContexts()
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0; QtObject { id: me }", QUrl());
 
-    QObject *obj = component.create();
-    QVERIFY(obj);
+    std::unique_ptr<QObject> obj { component.create() };
+    QVERIFY(obj.get());
 
-    QQmlContext *context = qmlContext(obj);
+    QQmlContext *context = qmlContext(obj.get());
     QVERIFY(context);
 
-    QCOMPARE(qvariant_cast<QObject*>(context->contextProperty("me")), obj);
-    QCOMPARE(context->contextObject(), obj);
+    QCOMPARE(qvariant_cast<QObject*>(context->contextProperty("me")), obj.get());
+    QCOMPARE(context->contextObject(), obj.get());
 
     QTest::ignoreMessage(QtWarningMsg, "QQmlContext: Cannot set property on internal context.");
     context->setContextProperty("hello", 12);
     QCOMPARE(context->contextProperty("hello"), QVariant());
 
     QTest::ignoreMessage(QtWarningMsg, "QQmlContext: Cannot set property on internal context.");
-    context->setContextProperty("hello", obj);
+    context->setContextProperty("hello", obj.get());
     QCOMPARE(context->contextProperty("hello"), QVariant());
 
     QTest::ignoreMessage(QtWarningMsg, "QQmlContext: Cannot set context object for internal context.");
     context->setContextObject(nullptr);
-    QCOMPARE(context->contextObject(), obj);
-
-    delete obj;
+    QCOMPARE(context->contextObject(), obj.get());
 }
 
 void tst_qqmlcontext::objectsAndNames()
@@ -624,14 +601,12 @@ void tst_qqmlcontext::refreshExpressionsCrash()
     component.setData("import QtQuick 2.0; QtObject { property var binding: deleteCommand.doCommand() }", QUrl());
     QVERIFY(component.isReady());
 
-    QObject *o1 = component.create(&ctxt);
+    std::unique_ptr<QObject> o1 { component.create(&ctxt) };
     QObject *o2 = component.create(&ctxt);
 
     command.object = o2;
 
     QQmlContextData::get(&ctxt)->refreshExpressions();
-
-    delete o1;
     }
     {
     QQmlEngine engine;
@@ -647,13 +622,11 @@ void tst_qqmlcontext::refreshExpressionsCrash()
     QVERIFY(component.isReady());
 
     QObject *o1 = component.create(&ctxt);
-    QObject *o2 = component.create(&ctxt);
+    std::unique_ptr<QObject> o2 { component.create(&ctxt) };
 
     command.object = o1;
 
     QQmlContextData::get(&ctxt)->refreshExpressions();
-
-    delete o2;
     }
 }
 
@@ -685,19 +658,15 @@ void tst_qqmlcontext::refreshExpressions()
     QQmlContext context(engine.rootContext());
     QQmlContext context2(&context);
 
-    QObject *o1 = component.create(&context);
-    QObject *o2 = component.create(&context2);
-    QObject *o3 = component2.create(&context);
+    std::unique_ptr<QObject> o1 { component.create(&context) };
+    std::unique_ptr<QObject> o2 { component.create(&context2) };
+    std::unique_ptr<QObject> o3 { component2.create(&context) };
 
     QCOMPARE(command.count, 5);
 
     QQmlContextData::get(&context)->refreshExpressions();
 
     QCOMPARE(command.count, 10);
-
-    delete o3;
-    delete o2;
-    delete o1;
 }
 
 // Test that updating the root context, only causes expressions in contexts with an
@@ -717,10 +686,10 @@ void tst_qqmlcontext::refreshExpressionsRootContext()
 
     QString warning = component2.url().toString() + QLatin1String(":4: ReferenceError: unresolvedName is not defined");
 
-    QObject *o1 = component.create(&context);
+    std::unique_ptr<QObject> o1 { component.create(&context) };
 
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
-    QObject *o2 = component2.create(&context2);
+    std::unique_ptr<QObject> o2 { component2.create(&context2) };
 
     QCOMPARE(command.count, 3);
 
@@ -728,9 +697,6 @@ void tst_qqmlcontext::refreshExpressionsRootContext()
     QQmlContextData::get(engine.rootContext())->refreshExpressions();
 
     QCOMPARE(command.count, 4);
-
-    delete o2;
-    delete o1;
 }
 
 void tst_qqmlcontext::skipExpressionRefresh_qtbug_53431()
@@ -752,10 +718,9 @@ void tst_qqmlcontext::qtbug_22535()
     QQmlComponent component(&engine, testFileUrl("qtbug_22535.qml"));
     QQmlContext context(engine.rootContext());
 
-    QObject *o = component.create(&context);
+    std::unique_ptr<QObject> o { component.create(&context) };
 
     // Don't crash!
-    delete o;
 }
 
 void tst_qqmlcontext::evalAfterInvalidate()
@@ -977,6 +942,15 @@ void tst_qqmlcontext::destroyContextProperty()
 
     // We're not allowed to call context->contextProperty("b") anymore.
     // TODO: Or are we?
+}
+
+void tst_qqmlcontext::numericContextProperty()
+{
+    QQmlEngine engine;
+    auto context = engine.rootContext();
+    QTest::ignoreMessage(QtWarningMsg, "QQmlContext: Using numbers as context properties will be disallowed in a future Qt version.");
+    context->setContextProperty(QLatin1String("11"), 42);
+    QCOMPARE(context->contextProperty(QLatin1String("11")).toInt(), 42);
 }
 
 QTEST_MAIN(tst_qqmlcontext)

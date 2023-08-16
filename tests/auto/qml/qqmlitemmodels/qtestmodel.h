@@ -251,6 +251,8 @@ public:
     mutable bool wrongIndex;
 
     struct Node {
+        Q_DISABLE_COPY_MOVE(Node)
+
         Node *parent;
         QVector<Node *> children;
 
@@ -261,8 +263,7 @@ public:
 
         ~Node()
         {
-            foreach (Node *n, children)
-               delete n;
+            qDeleteAll(children);
         }
 
         void addRows(int row, int count)

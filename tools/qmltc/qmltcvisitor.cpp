@@ -8,6 +8,7 @@
 #include <QtCore/qstack.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qloggingcategory.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 
 #include <private/qqmljsutils_p.h>
 
@@ -269,7 +270,7 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
             owner->addOwnProperty(property);
         }
 
-        const QString notifyName = name + u"Changed"_s;
+        const QString notifyName = QQmlSignalNames::propertyNameToChangedSignalName(name);
         // also check that notify is already a method of the scope
         {
             auto owningScope = m_savedBindingOuterScope ? m_savedBindingOuterScope : m_currentScope;

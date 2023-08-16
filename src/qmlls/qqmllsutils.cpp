@@ -11,8 +11,13 @@
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include <QtQmlDom/private/qqmldomscriptelements_p.h>
 #include <QtQmlDom/private/qqmldom_utils_p.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
+#include <QtQml/private/qqmljslexer_p.h>
+
+#include <iterator>
 #include <memory>
 #include <optional>
+#include <set>
 #include <stack>
 #include <type_traits>
 #include <utility>
@@ -351,13 +356,13 @@ DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
             result = object.path(Paths::lookupTypePath(name));
             break;
         }
-        auto scope =
-                QQmlLSUtils::resolveExpressionType(object, QQmlLSUtilsResolveOptions::Everything);
+        auto scope = QQmlLSUtils::resolveExpressionType(
+                object, QQmlLSUtilsResolveOptions::ResolveActualTypeForFieldMemberExpression);
         if (!scope)
             return {};
 
         return QQmlLSUtils::sourceLocationToDomItem(object.containingFile(),
-                                                    scope->sourceLocation());
+                                                    scope->semanticScope->sourceLocation());
     }
     case QQmlJS::Dom::DomType::Empty:
         break;
@@ -391,15 +396,144 @@ static DomItem findJSIdentifierDefinition(DomItem item, const QString &name)
     return definitionOfItem;
 }
 
+/*!
+\internal
+Represents a signal, signal handler, property, property changed signal or a property changed
+handler.
+ */
+struct SignalOrProperty
+{
+    /*!
+    \internal The name of the signal or property, independent of whether this is a changed signal
+    or handler.
+     */
+    QString name;
+    QQmlLSUtilsIdentifierType type;
+};
+
+/*!
+\internal
+\brief Find out if \c{name} is a signal, signal handler, property, property changed signal, or a
+property changed handler in the given QQmlJSScope.
+
+Heuristic to find if name is a property, property changed signal, .... because those can appear
+under different names, for example \c{mySignal} and \c{onMySignal} for a signal.
+This will give incorrect results as soon as properties/signals/methods are called \c{onMySignal},
+\c{on<some already existing property>Changed}, ..., but the good news is that the engine also
+will act weird in these cases (e.g. one cannot bind to a property called like an already existing
+signal or a property changed handler).
+For future reference: you can always add additional checks to check the existence of those buggy
+properties/signals/methods by looking if they exist in the QQmlJSScope.
+*/
+static std::optional<SignalOrProperty> resolveNameInQmlScope(const QString &name,
+                                                             const QQmlJSScope::ConstPtr &owner)
+{
+    if (owner->hasProperty(name)) {
+        return SignalOrProperty{ name, PropertyIdentifier };
+    }
+
+    if (const auto propertyName = QQmlSignalNames::changedHandlerNameToPropertyName(name)) {
+        if (owner->hasProperty(*propertyName)) {
+            return SignalOrProperty{ *propertyName, PropertyChangedHandlerIdentifier };
+        }
+    }
+
+    if (const auto signalName = QQmlSignalNames::handlerNameToSignalName(name)) {
+        if (auto methods = owner->methods(*signalName); !methods.isEmpty()) {
+            if (methods.front().methodType() == QQmlJSMetaMethodType::Signal) {
+                return SignalOrProperty{ *signalName, SignalHandlerIdentifier };
+            }
+        }
+    }
+
+    if (const auto propertyName = QQmlSignalNames::changedSignalNameToPropertyName(name)) {
+        if (owner->hasProperty(*propertyName)) {
+            return SignalOrProperty{ *propertyName, PropertyChangedSignalIdentifier };
+        }
+    }
+
+    if (auto methods = owner->methods(name); !methods.isEmpty()) {
+        if (methods.front().methodType() == QQmlJSMetaMethodType::Signal) {
+            return SignalOrProperty{ name, SignalIdentifier };
+        }
+    }
+    return std::nullopt;
+}
+
+/*!
+\internal
+Returns a list of names, that when belonging to the same targetType, should be considered equal.
+This is used to find signal handlers as usages of their corresponding signals, for example.
+*/
+static QStringList namesOfPossibleUsages(const QString &name,
+                                         const QQmlJSScope::ConstPtr &targetType)
+{
+    QStringList namesToCheck = { name };
+
+    auto namings = resolveNameInQmlScope(name, targetType);
+    if (!namings)
+        return namesToCheck;
+    switch (namings->type) {
+    case PropertyIdentifier: {
+        // for a property, also find bindings to its onPropertyChanged handler + propertyChanged
+        // signal
+        const QString propertyChangedHandler =
+                QQmlSignalNames::propertyNameToChangedHandlerName(namings->name);
+        namesToCheck.append(propertyChangedHandler);
+
+        const QString propertyChangedSignal =
+                QQmlSignalNames::propertyNameToChangedSignalName(namings->name);
+        namesToCheck.append(propertyChangedSignal);
+        break;
+    }
+    case PropertyChangedHandlerIdentifier: {
+        // for a property changed handler, also find the usages of its property + propertyChanged
+        // signal
+        namesToCheck.append(namings->name);
+        namesToCheck.append(QQmlSignalNames::propertyNameToChangedSignalName(namings->name));
+        break;
+    }
+    case PropertyChangedSignalIdentifier: {
+        // for a property changed signal, also find the usages of its property + onPropertyChanged
+        // handlers
+        namesToCheck.append(namings->name);
+        namesToCheck.append(QQmlSignalNames::propertyNameToChangedHandlerName(namings->name));
+        break;
+    }
+    case SignalIdentifier: {
+        // for a signal, also find bindings to its onSignalHandler.
+        namesToCheck.append(QQmlSignalNames::signalNameToHandlerName(namings->name));
+        break;
+    }
+    case SignalHandlerIdentifier: {
+        // for a signal handler, also find the usages of the signal it handles
+        namesToCheck.append(namings->name);
+        break;
+    }
+    default: {
+        break;
+    }
+    }
+    return namesToCheck;
+}
+
 static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
                                          QList<QQmlLSUtilsLocation> &result)
 {
-    QQmlJSScope::ConstPtr targetType;
-    targetType = QQmlLSUtils::resolveExpressionType(item, QQmlLSUtilsResolveOptions::JustOwner);
-    if (!targetType)
+    auto expressionType =
+            QQmlLSUtils::resolveExpressionType(item, QQmlLSUtilsResolveOptions::ResolveOwnerType);
+    if (!expressionType)
         return;
+    QQmlJSScope::ConstPtr targetType = expressionType->semanticScope;
 
-    auto findUsages = [&targetType, &result, &name](Path, DomItem &current, bool) -> bool {
+    const QStringList namesToCheck = namesOfPossibleUsages(name, targetType);
+
+    auto checkName = [&namesToCheck](const QString &nameToCheck) -> bool {
+        return namesToCheck.contains(nameToCheck);
+    };
+
+    auto findUsages = [&targetType, &result, &name, &checkName](Path, DomItem &current,
+                                                                bool) -> bool {
         bool resolveType = false;
         bool continueForChildren = true;
         DomItem toBeResolved = current;
@@ -413,18 +547,19 @@ static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
         }
 
         switch (current.internalKind()) {
+        case DomType::Binding:
         case DomType::PropertyDefinition: {
             const QString propertyName = current.field(Fields::name).value().toString();
-            if (name == propertyName) {
-                resolveType = true;
-            } else {
+            if (!checkName(propertyName))
                 return true;
-            }
+
+            subRegion = u"identifier"_s;
+            resolveType = true;
             break;
         }
         case DomType::ScriptIdentifierExpression: {
-            const QString propertyName = current.field(Fields::identifier).value().toString();
-            if (name != propertyName)
+            const QString identifierName = current.field(Fields::identifier).value().toString();
+            if (!checkName(identifierName))
                 return true;
 
             resolveType = true;
@@ -432,7 +567,7 @@ static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
         }
         case DomType::MethodInfo: {
             const QString methodName = current.field(Fields::name).value().toString();
-            if (name != methodName)
+            if (!checkName(methodName))
                 return true;
 
             subRegion = u"identifier"_s;
@@ -445,9 +580,12 @@ static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
 
         if (resolveType) {
             auto currentType = QQmlLSUtils::resolveExpressionType(
-                    toBeResolved, QQmlLSUtilsResolveOptions::JustOwner);
+                    toBeResolved, QQmlLSUtilsResolveOptions::ResolveOwnerType);
+            if (!currentType)
+                return continueForChildren;
+
             qCDebug(QQmlLSUtilsLog) << "Will resolve type of" << toBeResolved.internalKindStr();
-            if (currentType == targetType) {
+            if (currentType->semanticScope == targetType) {
                 auto tree = FileLocations::treeOf(current);
                 QQmlJS::SourceLocation sourceLocation;
 
@@ -527,6 +665,7 @@ QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
         break;
     }
     case DomType::PropertyDefinition:
+    case DomType::Binding:
     case DomType::MethodInfo: {
         const QString name = item.field(Fields::name).value().toString();
         findUsagesHelper(item, name, result);
@@ -544,131 +683,187 @@ QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
         qCDebug(QQmlLSUtilsLog) << "Found following usages:";
         for (auto r : result) {
             qCDebug(QQmlLSUtilsLog)
-                    << r.filename << " @ " << r.location.startLine << ":" << r.location.startColumn
-                    << " with length " << r.location.length;
+                    << r.filename << " @ " << r.sourceLocation.startLine << ":"
+                    << r.sourceLocation.startColumn << " with length " << r.sourceLocation.length;
         }
     }
 
     return result;
 }
 
-static QQmlJSScope::ConstPtr findMethodIn(const QQmlJSScope::Ptr &referrerScope,
-                                          const QString &name)
+static std::optional<QQmlLSUtilsIdentifierType>
+hasMethodOrSignal(const QQmlJSScope::ConstPtr &scope, const QString &name)
 {
-    for (QQmlJSScope::Ptr current = referrerScope; current; current = current->parentScope()) {
-        if (current->hasMethod(name)) {
-            return current;
-        }
-    }
-    return {};
+    auto methods = scope->methods(name);
+    if (methods.isEmpty())
+        return {};
+
+    const bool isSignal = methods.front().methodType() == QQmlJSMetaMethodType::Signal;
+    QQmlLSUtilsIdentifierType type = isSignal ? QQmlLSUtilsIdentifierType::SignalIdentifier
+                                              : QQmlLSUtilsIdentifierType::MethodIdentifier;
+    return type;
 }
 
-static QQmlJSScope::ConstPtr findPropertyIn(const QQmlJSScope::Ptr &referrerScope,
-                                            const QString &propertyName,
-                                            QQmlLSUtilsResolveOptions options)
+// note: ignores the QQmlLSUtilsResolveOptions because function properties/prototypes are not
+// implemented
+static std::optional<QQmlLSUtilsExpressionType>
+methodFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QString &name,
+                        QQmlLSUtilsResolveOptions = ResolveOwnerType)
 {
-    for (QQmlJSScope::Ptr current = referrerScope; current; current = current->parentScope()) {
-        if (auto property = current->property(propertyName); property.isValid()) {
-            switch (options) {
-            case JustOwner:
-                return current;
-            case Everything:
-                return property.type();
+    for (QQmlJSScope::ConstPtr current = referrerScope; current; current = current->parentScope()) {
+        if (auto methodType = hasMethodOrSignal(current, name))
+            return QQmlLSUtilsExpressionType{ name, current, *methodType };
+
+        if (const auto signalName = QQmlSignalNames::handlerNameToSignalName(name)) {
+            if (auto methodType = hasMethodOrSignal(current, *signalName)) {
+                return QQmlLSUtilsExpressionType{ name, current, *methodType };
             }
         }
     }
     return {};
 }
 
+static std::optional<QQmlLSUtilsExpressionType>
+propertyFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QString &propertyName,
+                          QQmlLSUtilsResolveOptions options)
+{
+    for (QQmlJSScope::ConstPtr current = referrerScope; current; current = current->parentScope()) {
+        if (auto property = current->property(propertyName); property.isValid()) {
+            switch (options) {
+            case ResolveOwnerType:
+                return QQmlLSUtilsExpressionType{ propertyName, current,
+                                                  QQmlLSUtilsIdentifierType::PropertyIdentifier };
+            case ResolveActualTypeForFieldMemberExpression:
+                return QQmlLSUtilsExpressionType{ propertyName, property.type(),
+                                                  QQmlLSUtilsIdentifierType::PropertyIdentifier };
+            }
+        }
+    }
+    return {};
+}
+
+static std::optional<QQmlLSUtilsExpressionType>
+resolveIdentifierExpressionType(DomItem item, QQmlLSUtilsResolveOptions options)
+{
+    auto referrerScope = item.nearestSemanticScope();
+    if (!referrerScope)
+        return {};
+
+    const QString name = item.field(Fields::identifier).value().toString();
+
+    if (isFieldMemberAccess(item)) {
+        DomItem parent = item.directParent();
+        auto owner = QQmlLSUtils::resolveExpressionType(
+                parent.field(Fields::left),
+                QQmlLSUtilsResolveOptions::ResolveActualTypeForFieldMemberExpression);
+        if (!owner)
+            return {};
+
+        if (auto methods = owner.value().semanticScope->methods(name); !methods.isEmpty()) {
+            switch (options) {
+            case ResolveOwnerType: {
+                const bool isSignal = methods.front().methodType() == QQmlJSMetaMethodType::Signal;
+                QQmlLSUtilsIdentifierType type = isSignal
+                        ? QQmlLSUtilsIdentifierType::SignalIdentifier
+                        : QQmlLSUtilsIdentifierType::MethodIdentifier;
+                return QQmlLSUtilsExpressionType{ name, owner->semanticScope, type };
+            }
+            case ResolveActualTypeForFieldMemberExpression:
+                // not implemented, but JS functions have methods and properties
+                // see
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
+                // for the list of properties/methods of functions
+                // see also code below for non-qualified method access
+                break;
+            }
+        }
+        if (auto property = owner->semanticScope->property(name); property.isValid()) {
+            switch (options) {
+            case ResolveOwnerType:
+                return QQmlLSUtilsExpressionType{ name, owner->semanticScope,
+                                                  QQmlLSUtilsIdentifierType::PropertyIdentifier };
+            case ResolveActualTypeForFieldMemberExpression:
+                return QQmlLSUtilsExpressionType{ name, property.type(),
+                                                  QQmlLSUtilsIdentifierType::PropertyIdentifier };
+            }
+        }
+    } else {
+        DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
+        if (definitionOfItem) {
+            Q_ASSERT_X(definitionOfItem.semanticScope().has_value()
+                               && definitionOfItem.semanticScope().value()->JSIdentifier(name),
+                       "QQmlLSUtils::findDefinitionOf",
+                       "JS definition does not actually define the JS identifer. "
+                       "It should be empty.");
+            auto scope = definitionOfItem.semanticScope().value();
+            auto jsIdentifier = scope->JSIdentifier(name);
+            if (jsIdentifier->scope) {
+                return QQmlLSUtilsExpressionType{ name, jsIdentifier->scope.toStrongRef(),
+                                                  QQmlLSUtilsIdentifierType::JavaScriptIdentifier };
+            } else {
+                return QQmlLSUtilsExpressionType{ name, scope,
+                                                  QQmlLSUtilsIdentifierType::JavaScriptIdentifier };
+            }
+        }
+
+        // check if its a method
+        if (auto scope = methodFromReferrerScope(*referrerScope, name, options)) {
+            return *scope;
+        }
+
+        // check if its an (unqualified) property
+        if (auto scope = propertyFromReferrerScope(*referrerScope, name, options)) {
+            return *scope;
+        }
+    }
+
+    // check if its an id
+    auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
+    if (!resolver)
+        return {};
+    QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope.value());
+    if (fromId)
+        return QQmlLSUtilsExpressionType{ name, fromId, QmlObjectIdIdentifier };
+
+    return {};
+}
 /*!
    \internal
     Resolves the type of the given DomItem, when possible (e.g., when there are enough type
     annotations).
 */
-QQmlJSScope::ConstPtr QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem item,
-                                                         QQmlLSUtilsResolveOptions options)
+std::optional<QQmlLSUtilsExpressionType>
+QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolveOptions options)
 {
     switch (item.internalKind()) {
     case DomType::ScriptIdentifierExpression: {
-        auto referrerScope = item.nearestSemanticScope();
-        if (!referrerScope)
-            return {};
-
-        const QString name = item.field(Fields::identifier).value().toString();
-
-        if (isFieldMemberAccess(item)) {
-            DomItem parent = item.directParent();
-            auto owner = QQmlLSUtils::resolveExpressionType(parent.field(Fields::left),
-                                                            QQmlLSUtilsResolveOptions::Everything);
-            if (owner) {
-                if (owner->hasMethod(name)) {
-                    switch (options) {
-                    case JustOwner:
-                        return owner;
-                    case Everything:
-                        // not implemented yet, but JS functions have methods and properties
-                        // see
-                        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
-                        // for the list of properties/methods of functions
-                        break;
-                    }
-                }
-                if (auto property = owner->property(name); property.isValid()) {
-                    switch (options) {
-                    case JustOwner:
-                        return owner;
-                    case Everything:
-                        return property.type();
-                    }
-                }
-            } else {
-                return {};
-            }
-        } else {
-            DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
-            if (definitionOfItem) {
-                Q_ASSERT_X(definitionOfItem.semanticScope().has_value()
-                                   && definitionOfItem.semanticScope()
-                                              .value()
-                                              ->JSIdentifier(name)
-                                              .has_value(),
-                           "QQmlLSUtils::findDefinitionOf",
-                           "JS definition does not actually define the JS identifer. "
-                           "It should be empty.");
-                auto scope = definitionOfItem.semanticScope().value()->JSIdentifier(name)->scope.toStrongRef();;
-                return scope;
-            }
-
-            // check if its a method
-            if (QQmlJSScope::ConstPtr scope = findMethodIn(*referrerScope, name)) {
-                return scope;
-            }
-
-            // check if its an (unqualified) property
-            if (QQmlJSScope::ConstPtr scope = findPropertyIn(*referrerScope, name, options)) {
-                return scope;
-            }
-        }
-
-        // check if its an id
-        auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
-        if (!resolver)
-            return {};
-        QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope.value());
-        if (fromId)
-            return fromId;
-
-        return {};
+        return resolveIdentifierExpressionType(item, options);
     }
     case DomType::PropertyDefinition: {
         auto propertyDefinition = item.as<PropertyDefinition>();
         if (propertyDefinition && propertyDefinition->scope) {
-            switch (options) {
-            case JustOwner:
-                return propertyDefinition->scope.value();
-            case Everything:
-                return propertyDefinition->scope.value()->property(propertyDefinition->name).type();
-            }
+            auto &scope = propertyDefinition->scope.value();
+            return QQmlLSUtilsExpressionType{ propertyDefinition->name, scope, PropertyIdentifier };
+        }
+        return {};
+    }
+    case DomType::Binding: {
+        auto binding = item.as<Binding>();
+        if (binding) {
+            std::optional<QQmlJSScope::ConstPtr> owner = item.qmlObject().semanticScope();
+            if (!owner)
+                return {};
+            const QString name = binding->name();
+
+            if (name == u"id")
+                return QQmlLSUtilsExpressionType{ name, owner.value(), QmlObjectIdIdentifier };
+
+            auto signalOrProperty = resolveNameInQmlScope(name, owner.value());
+            if (signalOrProperty)
+                return QQmlLSUtilsExpressionType{ name, owner.value(), signalOrProperty->type };
+
+            qDebug(QQmlLSUtilsLog) << "QQmlLSUtils::resolveExpressionType() could not resolve the"
+                                      "type of a Binding.";
         }
 
         return {};
@@ -676,33 +871,35 @@ QQmlJSScope::ConstPtr QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem it
     case DomType::QmlObject: {
         auto object = item.as<QmlObject>();
         if (object && object->semanticScope())
-            return object->semanticScope().value();
+            return QQmlLSUtilsExpressionType{ std::nullopt, object->semanticScope().value(),
+                                              QmlObjectIdentifier };
 
         return {};
     }
     case DomType::MethodInfo: {
         auto object = item.as<MethodInfo>();
-        if (object && object->semanticScope())
-            // return the owner of the method
-            return object->semanticScope().value()->parentScope();
+        if (object && object->semanticScope()) {
+            auto scope = object->semanticScope();
+            if (!scope)
+                return {};
+
+            // in case scope is the semantic scope for the function bodies: grab the owner's scope
+            // this happens for all methods but not for signals (they do not have a body)
+            if (scope.value()->scopeType() == QQmlJSScope::ScopeType::JSFunctionScope)
+                scope = scope.value()->parentScope();
+
+            if (auto type = hasMethodOrSignal(scope.value(), object->name))
+                return QQmlLSUtilsExpressionType{ object->name, scope.value(), type.value() };
+
+            qDebug(QQmlLSUtilsLog) << "QQmlLSUtils::resolveExpressionType() could not resolve the"
+                                      "type of a MethodInfo.";
+        }
 
         return {};
     }
     case DomType::ScriptBinaryExpression: {
         if (isFieldMemberExpression(item)) {
-            DomItem owner = item.field(Fields::left);
-            QString propertyName =
-                    item.field(Fields::right).field(Fields::identifier).value().toString();
-            auto ownerType = QQmlLSUtils::resolveExpressionType(
-                    owner, QQmlLSUtilsResolveOptions::Everything);
-            if (!ownerType)
-                return ownerType;
-            switch (options) {
-            case JustOwner:
-                return ownerType;
-            case Everything:
-                return ownerType->property(propertyName).type();
-            }
+            return resolveExpressionType(item.field(Fields::right), options);
         }
         return {};
     }
@@ -763,7 +960,7 @@ findMethodDefinitionOf(DomItem file, QQmlJS::SourceLocation location, const QStr
 
     if (auto it = regions.constFind(u"identifier"_s); it != regions.constEnd()) {
         QQmlLSUtilsLocation result;
-        result.location = *it;
+        result.sourceLocation = *it;
         result.filename = method.canonicalFilePath();
         return result;
     }
@@ -777,13 +974,20 @@ findPropertyDefinitionOf(DomItem file, QQmlJS::SourceLocation propertyDefinition
 {
     DomItem propertyOwner = QQmlLSUtils::sourceLocationToDomItem(file, propertyDefinitionLocation);
     DomItem propertyDefinition = propertyOwner.field(Fields::propertyDefs).key(name).index(0);
-    if (!propertyDefinition)
+    auto fileLocation = FileLocations::treeOf(propertyDefinition);
+    if (!fileLocation)
         return {};
 
-    QQmlLSUtilsLocation result;
-    result.location = FileLocations::treeOf(propertyDefinition)->info().fullRegion;
-    result.filename = propertyDefinition.canonicalFilePath();
-    return result;
+    auto regions = fileLocation->info().regions;
+
+    if (auto it = regions.constFind(u"identifier"_s); it != regions.constEnd()) {
+        QQmlLSUtilsLocation result;
+        result.sourceLocation = *it;
+        result.filename = propertyDefinition.canonicalFilePath();
+        return result;
+    }
+
+    return {};
 }
 
 std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
@@ -794,9 +998,10 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
         const QString name = item.value().toString();
         if (isFieldMemberAccess(item)) {
             if (auto ownerScope = QQmlLSUtils::resolveExpressionType(
-                        item, QQmlLSUtilsResolveOptions::JustOwner)) {
-                const DomItem ownerFile = item.goToFile(ownerScope->filePath());
-                const QQmlJS::SourceLocation ownerLocation = ownerScope->sourceLocation();
+                        item, QQmlLSUtilsResolveOptions::ResolveOwnerType)) {
+                const DomItem ownerFile = item.goToFile(ownerScope->semanticScope->filePath());
+                const QQmlJS::SourceLocation ownerLocation =
+                        ownerScope->semanticScope->sourceLocation();
                 if (auto methodDefinition =
                             findMethodDefinitionOf(ownerFile, ownerLocation, name)) {
                     return methodDefinition;
@@ -832,17 +1037,17 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
             return {};
 
         // check: is it a method name?
-        if (QQmlJSScope::ConstPtr scope = findMethodIn(*referrerScope, name)) {
-            const QString canonicalPath = scope->filePath();
+        if (auto scope = methodFromReferrerScope(*referrerScope, name)) {
+            const QString canonicalPath = scope->semanticScope->filePath();
             DomItem file = item.goToFile(canonicalPath);
-            return findMethodDefinitionOf(file, scope->sourceLocation(), name);
+            return findMethodDefinitionOf(file, scope->semanticScope->sourceLocation(), name);
         }
 
-        if (QQmlJSScope::ConstPtr scope =
-                    findPropertyIn(*referrerScope, name, QQmlLSUtilsResolveOptions::JustOwner)) {
-            const QString canonicalPath = scope->filePath();
+        if (auto scope = propertyFromReferrerScope(*referrerScope, name,
+                                                   QQmlLSUtilsResolveOptions::ResolveOwnerType)) {
+            const QString canonicalPath = scope->semanticScope->filePath();
             DomItem file = item.goToFile(canonicalPath);
-            return findPropertyDefinitionOf(file, scope->sourceLocation(), name);
+            return findPropertyDefinitionOf(file, scope->semanticScope->sourceLocation(), name);
         }
 
         // check if its an id
@@ -851,20 +1056,363 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
             return {};
         QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope.value());
         if (fromId) {
+            DomItem qmlObject = QQmlLSUtils::sourceLocationToDomItem(item.containingFile(),
+                                                                     fromId->sourceLocation());
+            // in the Dom, the id is saved in a QMultiHash inside the Component of an QmlObject.
+            DomItem domId = qmlObject.component()
+                                    .field(Fields::ids)
+                                    .key(name)
+                                    .index(0)
+                                    .field(Fields::value);
+            if (!domId) {
+                qCDebug(QQmlLSUtilsLog)
+                        << "QmlComponent in Dom structure has no id, was it misconstructed?";
+                return {};
+            }
+
             QQmlLSUtilsLocation result;
-            result.location = fromId->sourceLocation();
-            result.filename = item.canonicalFilePath();
+            result.sourceLocation = FileLocations::treeOf(domId)->info().fullRegion;
+            result.filename = domId.canonicalFilePath();
             return result;
         }
         return {};
     }
     default:
-        qDebug() << "QQmlLSUtils::findDefinitionOf: Found unimplemented Type "
-                 << item.internalKindStr();
+        qCDebug(QQmlLSUtilsLog) << "QQmlLSUtils::findDefinitionOf: Found unimplemented Type "
+                                << item.internalKindStr();
         return {};
     }
 
     Q_UNREACHABLE_RETURN(std::nullopt);
+}
+
+static std::optional<QQmlJSScope::ConstPtr> propertyOwnerFrom(const QQmlJSScope::ConstPtr &type,
+                                                              const std::optional<QString> &name)
+{
+    if (!name) {
+        qCDebug(QQmlLSUtilsLog) << "QQmlLSUtils::checkNameForRename cannot find property name,"
+                                   " ignoring.";
+        return {};
+    }
+
+    QQmlJSScope::ConstPtr typeWithDefinition = type;
+    while (!typeWithDefinition->hasOwnProperty(*name)) {
+        typeWithDefinition = type->baseType();
+        if (!typeWithDefinition) {
+            qCDebug(QQmlLSUtilsLog)
+                    << "QQmlLSUtils::checkNameForRename cannot find property definition,"
+                       " ignoring.";
+            return {};
+        }
+    }
+    return typeWithDefinition;
+}
+
+static std::optional<QQmlJSScope::ConstPtr> methodOwnerFrom(const QQmlJSScope::ConstPtr &type,
+                                                            const std::optional<QString> &name)
+{
+    if (!name) {
+        qCDebug(QQmlLSUtilsLog) << "QQmlLSUtils::checkNameForRename cannot find method name,"
+                                   " ignoring.";
+        return {};
+    }
+
+    QQmlJSScope::ConstPtr typeWithDefinition = type;
+    while (!typeWithDefinition->hasOwnMethod(*name)) {
+        typeWithDefinition = type->baseType();
+        if (!typeWithDefinition) {
+            qCDebug(QQmlLSUtilsLog)
+                    << "QQmlLSUtils::checkNameForRename cannot find method definition,"
+                       " ignoring.";
+            return {};
+        }
+    }
+    return typeWithDefinition;
+}
+
+static std::optional<QQmlJSScope::ConstPtr>
+expressionTypeWithDefinition(const QQmlLSUtilsExpressionType &ownerType)
+{
+    switch (ownerType.type) {
+    case PropertyIdentifier:
+        return propertyOwnerFrom(ownerType.semanticScope, ownerType.name);
+    case PropertyChangedHandlerIdentifier: {
+        const auto propertyName =
+                QQmlSignalNames::changedHandlerNameToPropertyName(*ownerType.name);
+        return propertyOwnerFrom(ownerType.semanticScope, propertyName);
+        break;
+    }
+    case PropertyChangedSignalIdentifier: {
+        const auto propertyName = QQmlSignalNames::changedSignalNameToPropertyName(*ownerType.name);
+        return propertyOwnerFrom(ownerType.semanticScope, propertyName);
+    }
+    case MethodIdentifier:
+    case SignalIdentifier:
+        return methodOwnerFrom(ownerType.semanticScope, ownerType.name);
+    case SignalHandlerIdentifier: {
+        const auto signalName = QQmlSignalNames::handlerNameToSignalName(*ownerType.name);
+        return methodOwnerFrom(ownerType.semanticScope, signalName);
+    }
+    case JavaScriptIdentifier:
+    case QmlObjectIdIdentifier:
+    case QmlObjectIdentifier:
+        return ownerType.semanticScope;
+    }
+    return {};
+}
+
+std::optional<QQmlLSUtilsErrorMessage>
+QQmlLSUtils::checkNameForRename(DomItem item, const QString &dirtyNewName,
+                                std::optional<QQmlLSUtilsExpressionType> ownerType)
+{
+    // general checks for ECMAscript identifiers
+    if (!isValidEcmaScriptIdentifier(dirtyNewName))
+        return QQmlLSUtilsErrorMessage{ 0, u"Invalid EcmaScript identifier!"_s };
+
+    if (!ownerType)
+        ownerType = QQmlLSUtils::resolveExpressionType(item, ResolveOwnerType);
+
+    const auto userSemanticScope = item.nearestSemanticScope();
+
+    if (!ownerType || !userSemanticScope) {
+        return QQmlLSUtilsErrorMessage{ 0, u"Requested item cannot be renamed"_s };
+    }
+
+    // type specific checks
+    switch (ownerType->type) {
+    case PropertyChangedSignalIdentifier: {
+        if (!QQmlSignalNames::isChangedSignalName(dirtyNewName)) {
+            return QQmlLSUtilsErrorMessage{ 0, u"Invalid name for a property changed signal."_s };
+        }
+        break;
+    }
+    case PropertyChangedHandlerIdentifier: {
+        if (!QQmlSignalNames::isChangedHandlerName(dirtyNewName)) {
+            return QQmlLSUtilsErrorMessage{
+                0, u"Invalid name for a property changed handler identifier."_s
+            };
+        }
+        break;
+    }
+    case SignalHandlerIdentifier: {
+        if (!QQmlSignalNames::isHandlerName(dirtyNewName)) {
+            return QQmlLSUtilsErrorMessage{ 0, u"Invalid name for a signal handler identifier."_s };
+        }
+        break;
+    }
+    // TODO: any other specificities?
+    case QmlObjectIdIdentifier:
+        if (dirtyNewName.front().isLetter() && !dirtyNewName.front().isLower()) {
+            return QQmlLSUtilsErrorMessage{
+                0, u"Object id names cannot start with an upper case letter."_s
+            };
+        }
+        break;
+    case JavaScriptIdentifier:
+    case PropertyIdentifier:
+    case SignalIdentifier:
+    case MethodIdentifier:
+    case QmlObjectIdentifier:
+    default:
+        break;
+    };
+
+    auto typeWithDefinition = expressionTypeWithDefinition(*ownerType);
+
+    if (!typeWithDefinition) {
+        return QQmlLSUtilsErrorMessage{
+            0,
+            u"Renaming has not been implemented for the requested item."_s,
+        };
+    }
+
+    // is it not defined in QML?
+    if (!typeWithDefinition.value()->isComposite()) {
+        return QQmlLSUtilsErrorMessage{ 0, u"Cannot rename items defined in non-QML files."_s };
+    }
+
+    // is it defined in the current module?
+    const QString moduleOfDefinition = ownerType->semanticScope->moduleName();
+    const QString moduleOfCurrentItem = userSemanticScope.value()->moduleName();
+    if (moduleOfDefinition != moduleOfCurrentItem) {
+        return QQmlLSUtilsErrorMessage{
+            0,
+            u"Cannot rename items defined in the %1 module fromits usage in the %2 module."_s
+                    .arg(moduleOfDefinition, moduleOfCurrentItem),
+        };
+    }
+
+    return {};
+}
+
+static std::optional<QString> oldNameFrom(DomItem item)
+{
+    switch (item.internalKind()) {
+    case DomType::ScriptIdentifierExpression: {
+        return item.field(Fields::identifier).value().toString();
+    }
+    case DomType::ScriptVariableDeclarationEntry: {
+        return item.field(Fields::identifier).value().toString();
+    }
+    case DomType::PropertyDefinition:
+    case DomType::Binding:
+    case DomType::MethodInfo: {
+        return item.field(Fields::name).value().toString();
+    }
+    default:
+        qCDebug(QQmlLSUtilsLog) << item.internalKindStr()
+                                << "was not implemented for QQmlLSUtils::renameUsagesOf";
+        return std::nullopt;
+    }
+    Q_UNREACHABLE_RETURN(std::nullopt);
+}
+
+static std::optional<QString> newNameFrom(const QString &dirtyNewName,
+                                          QQmlLSUtilsIdentifierType alternative)
+{
+    // When renaming signal/property changed handlers and property changed signals:
+    // Get the actual corresponding signal name (for signal handlers) or property name (for
+    // property changed signal + handlers) that will be used for the renaming.
+    switch (alternative) {
+    case SignalHandlerIdentifier: {
+        return QQmlSignalNames::handlerNameToSignalName(dirtyNewName);
+    }
+    case PropertyChangedHandlerIdentifier: {
+        return QQmlSignalNames::changedHandlerNameToPropertyName(dirtyNewName);
+    }
+    case PropertyChangedSignalIdentifier: {
+        return QQmlSignalNames::changedSignalNameToPropertyName(dirtyNewName);
+    }
+    case SignalIdentifier:
+    case PropertyIdentifier:
+    default:
+        return std::nullopt;
+    }
+    Q_UNREACHABLE_RETURN(std::nullopt);
+}
+
+/*!
+\internal
+\brief Rename the appearance of item to newName.
+
+Special cases:
+\list
+    \li Renaming a property changed signal or property changed handler does the same as renaming
+    the underlying property, except that newName gets
+    \list
+        \li its "on"-prefix and "Changed"-suffix chopped of if item is a property changed handlers
+        \li its "Changed"-suffix chopped of if item is a property changed signals
+    \endlist
+    \li Renaming a signal handler does the same as renaming a signal, but the "on"-prefix in newName
+    is chopped of.
+
+    All of the chopping operations are done using the static helpers from QQmlSignalNames.
+\endlist
+*/
+QList<QQmlLSUtilsEdit>
+QQmlLSUtils::renameUsagesOf(DomItem item, const QString &dirtyNewName,
+                            std::optional<QQmlLSUtilsExpressionType> targetType)
+{
+    QList<QQmlLSUtilsEdit> results;
+    const QList<QQmlLSUtilsLocation> locations = findUsagesOf(item);
+    if (locations.isEmpty())
+        return results;
+
+    auto oldName = oldNameFrom(item);
+    if (!oldName)
+        return results;
+
+    if (!targetType)
+        targetType = QQmlLSUtils::resolveExpressionType(
+                item, QQmlLSUtilsResolveOptions::ResolveOwnerType);
+
+    if (!targetType)
+        return results;
+
+    QString newName;
+    if (const auto resolved = resolveNameInQmlScope(*oldName, targetType->semanticScope)) {
+        newName = newNameFrom(dirtyNewName, resolved->type).value_or(dirtyNewName);
+        oldName = resolved->name;
+    } else {
+        newName = dirtyNewName;
+    }
+
+    const qsizetype oldNameLength = oldName->length();
+    const qsizetype oldHandlerNameLength =
+            QQmlSignalNames::signalNameToHandlerName(*oldName).length();
+    const qsizetype oldChangedSignalNameLength =
+            QQmlSignalNames::propertyNameToChangedSignalName(*oldName).length();
+    const qsizetype oldChangedHandlerNameLength =
+            QQmlSignalNames::propertyNameToChangedHandlerName(*oldName).length();
+
+    const QString newHandlerName = QQmlSignalNames::signalNameToHandlerName(newName);
+    const QString newChangedSignalName = QQmlSignalNames::propertyNameToChangedSignalName(newName);
+    const QString newChangedHandlerName =
+            QQmlSignalNames::propertyNameToChangedHandlerName(newName);
+
+    // set the new name at the found usages, but add "on"-prefix and "Changed"-suffix if needed
+    for (const auto &location : locations) {
+        const qsizetype currentLength = location.sourceLocation.length;
+        QQmlLSUtilsEdit edit;
+        edit.location = location;
+        if (oldNameLength == currentLength) {
+            // normal case, nothing to do
+            edit.replacement = newName;
+
+        } else if (oldHandlerNameLength == currentLength) {
+            // signal handler location
+            edit.replacement = newHandlerName;
+
+        } else if (oldChangedSignalNameLength == currentLength) {
+            // property changed signal location
+            edit.replacement = newChangedSignalName;
+
+        } else if (oldChangedHandlerNameLength == currentLength) {
+            // property changed handler location
+            edit.replacement = newChangedHandlerName;
+
+        } else {
+            qCDebug(QQmlLSUtilsLog) << "Found usage with wrong identifier length, ignoring...";
+            continue;
+        }
+        results.append(edit);
+    }
+
+    return results;
+}
+
+QQmlLSUtilsLocation QQmlLSUtilsLocation::from(const QString &fileName, const QString &code,
+                                              quint32 startLine, quint32 startCharacter,
+                                              quint32 length)
+{
+    quint32 offset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
+
+    QQmlLSUtilsLocation location{
+        fileName, QQmlJS::SourceLocation{ offset, length, startLine, startCharacter }
+    };
+    return location;
+}
+
+QQmlLSUtilsEdit QQmlLSUtilsEdit::from(const QString &fileName, const QString &code,
+                                      quint32 startLine, quint32 startCharacter, quint32 length,
+                                      const QString &newName)
+{
+    QQmlLSUtilsEdit rename;
+    rename.location = QQmlLSUtilsLocation::from(fileName, code, startLine, startCharacter, length);
+    rename.replacement = newName;
+    return rename;
+}
+
+bool QQmlLSUtils::isValidEcmaScriptIdentifier(QStringView identifier)
+{
+    QQmlJS::Lexer lexer(nullptr);
+    lexer.setCode(identifier.toString(), 0);
+    const int token = lexer.lex();
+    if (token != static_cast<int>(QQmlJS::Lexer::T_IDENTIFIER))
+        return false;
+    // make sure there is nothing following the lexed identifier
+    const int eofToken = lexer.lex();
+    return eofToken == static_cast<int>(QQmlJS::Lexer::EOF_SYMBOL);
 }
 
 QT_END_NAMESPACE

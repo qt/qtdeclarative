@@ -141,7 +141,7 @@ public:
     }
 
     QQuickTimeLineValueProxy(T *cls, void (T::*func)(int), qreal v = 0.)
-    : QQuickTimeLineValue(v), _class(cls), _setFunctionReal(0), _setFunctionInt(func)
+    : QQuickTimeLineValue(v), _class(cls), _setFunctionReal(nullptr), _setFunctionInt(func)
     {
         Q_ASSERT(_class);
     }

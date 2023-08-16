@@ -55,8 +55,8 @@ public:
                             .arg(element.baseTypeName(), propertyName,
                                  value.isNull()
                                          ? u"NULL"_s
-                                         : (value.internalName().isNull() ? value.baseTypeName()
-                                                                          : value.baseTypeName()))
+                                         : (value.name().isNull() ? value.baseTypeName()
+                                                                  : value.name()))
                             .arg(binding.bindingType())
                             .arg(bindingScope.baseTypeName()),
                     plugin, bindingScope.sourceLocation());
@@ -76,8 +76,8 @@ public:
     {
         emitWarning(u"Saw write on %1 property %2 with value %3 in scope %4"_s.arg(
                             element.baseTypeName(), propertyName,
-                            (value.internalName().isNull() ? value.baseTypeName()
-                                                           : value.internalName()),
+                            (value.name().isNull() ? value.baseTypeName()
+                                                   : value.name()),
                             writeScope.baseTypeName()),
                     plugin, location);
     }

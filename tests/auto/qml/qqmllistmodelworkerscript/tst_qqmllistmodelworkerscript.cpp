@@ -453,7 +453,7 @@ void tst_qqmllistmodelworkerscript::get_worker()
     int role = roleFromName(&model, roleName);
     QVERIFY(role >= 0);
 
-    QSignalSpy spy(&model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)));
+    QSignalSpy spy(&model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QList<int>)));
 
     // in the worker thread, change the model data and call sync()
     QVERIFY(QMetaObject::invokeMethod(item, "evalExpressionViaWorker",
@@ -577,7 +577,7 @@ void tst_qqmllistmodelworkerscript::property_changes_worker()
     expr.evaluate();
     QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
 
-    QSignalSpy spyItemsChanged(&model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)));
+    QSignalSpy spyItemsChanged(&model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QList<int>)));
 
     QVERIFY(QMetaObject::invokeMethod(item, "evalExpressionViaWorker",
             Q_ARG(QVariant, QStringList(script_change))));

@@ -224,9 +224,8 @@ void FormatPartialStatus::dump() const
 {
     qCDebug(formatterLog) << "Current token index" << tokenIndex;
     qCDebug(formatterLog) << "Current state:";
-    foreach (const State &s, currentStatus.states) {
+    for (const State &s : currentStatus.states)
         qCDebug(formatterLog) << FormatTextStatus::stateToString(s.type) << s.savedIndentDepth;
-    }
     qCDebug(formatterLog) << "Current lexerState:" << currentStatus.lexerState.state;
     qCDebug(formatterLog) << "Current indent:" << currentIndent;
 }

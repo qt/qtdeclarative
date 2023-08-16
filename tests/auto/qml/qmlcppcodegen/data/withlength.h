@@ -7,7 +7,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qpoint.h>
 #include <QtCore/qrect.h>
-#include <QtQmlIntegration/qqmlintegration.h>
+#include <QtQml/qqml.h>
 
 struct ValueTypeWithLength
 {
@@ -28,6 +28,26 @@ public:
 
 private:
     int m_length = 19;
+};
+
+struct InnerWithLength {
+    int m_length;
+};
+
+struct UnconstructibleWithLength
+{
+    Q_GADGET
+    QML_VALUE_TYPE(unconstructibleWithLength)
+
+    QML_FOREIGN(InnerWithLength)
+    QML_EXTENDED(UnconstructibleWithLength)
+
+public:
+    UnconstructibleWithLength() = default;
+    Q_INVOKABLE UnconstructibleWithLength(int length) : v{length} {}
+
+private:
+    InnerWithLength v;
 };
 
 #endif // WITHLENGTH_H

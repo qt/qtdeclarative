@@ -3,6 +3,7 @@
 
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
+#include <QtQuickTest/quicktest.h>
 
 #include <QtCore/qoperatingsystemversion.h>
 #include <QtGui/qpa/qwindowsysteminterface.h>
@@ -27,7 +28,9 @@
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 #include <QtQuickTemplates2/private/qquicktooltip_p.h>
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
+#include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktextedit_p.h>
+#include <QtQuick/private/qquickdroparea_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 
@@ -69,6 +72,7 @@ private slots:
     void parentDestroyed();
     void nested();
     void nestedWheel();
+    void nestedWheelWithOverlayParent();
     void modelessOnModalOnModeless();
     void grabber();
     void cursorShape();
@@ -983,18 +987,19 @@ void tst_QQuickPopup::hover()
     QVERIFY(openedSpy.size() == 1 || openedSpy.wait());
     QTRY_VERIFY(popup->width() > 10); // somehow this can take a short time with macOS style
 
-    // hover the parent button outside the popup
-    QTest::mouseMove(window, QPoint(window->width() - 1, window->height() - 1));
+    // Hover the parent button outside the popup. It has 10 pixel anchor margins around the window.
+    PointLerper pointLerper(window);
+    pointLerper.move(15, 15);
     QCOMPARE(parentButton->isHovered(), !modal);
     QVERIFY(!childButton->isHovered());
 
-    // hover the popup background
-    QTest::mouseMove(window, QPoint(1, 1));
+    // Hover the popup background. Its top-left is 10 pixels in from its parent.
+    pointLerper.move(25, 25);
     QVERIFY(!parentButton->isHovered());
     QVERIFY(!childButton->isHovered());
 
-    // hover the child button in a popup
-    QTest::mouseMove(window, QPoint(popup->x() + popup->width() / 2, popup->y() + popup->height() / 2));
+    // Hover the child button in a popup.
+    pointLerper.move(mapCenterToWindow(childButton));
     QVERIFY(!parentButton->isHovered());
     QVERIFY(childButton->isHovered());
 
@@ -1187,6 +1192,41 @@ void tst_QQuickPopup::nestedWheel()
     // wheel over the list view, verify that it scrolls
     sendWheelEvent(listView, -30);
     QTRY_COMPARE_GT(vbar->property("position").toDouble(), startPosition);
+}
+
+void tst_QQuickPopup::nestedWheelWithOverlayParent()
+{
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("nested-wheel-overlay-parent.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *drawer= window->property("_drawer").value<QQuickDrawer *>();
+    QVERIFY(drawer);
+
+    auto *dropArea = window->property("_dropArea").value<QQuickDropArea *>();
+    QVERIFY(dropArea);
+
+    drawer->open();
+    QCOMPARE(drawer->isVisible(), true);
+    QTRY_COMPARE(drawer->isOpened(), true);
+
+    QQuickListView *listView = window->property("_listView").value<QQuickListView *>();
+    QTRY_VERIFY(listView != nullptr);
+    QQuickItem *contentItem = listView->contentItem();
+    QTRY_VERIFY(contentItem != nullptr);
+
+    // Check parent is set as overlay
+    QTRY_COMPARE(dropArea->parentItem(), QQuickOverlay::overlay(window));
+    // Consider the center point of the control as event position to trigger wheel event
+    QVERIFY(sendWheelEvent(listView, -15));
+
+    if (QQuickTest::qIsPolishScheduled(listView))
+        QVERIFY(QQuickTest::qWaitForPolish(listView));
+
+    // Wheel over the list view, verify that it scrolls
+    QTRY_COMPARE(listView->contentY(), 72.);
 }
 
 void tst_QQuickPopup::modelessOnModalOnModeless()

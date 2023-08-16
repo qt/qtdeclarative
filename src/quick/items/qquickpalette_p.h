@@ -26,10 +26,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPalette : public QQuickColorGroup
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQuickColorGroup *active READ active WRITE setActive NOTIFY activeChanged FINAL)
-    Q_PROPERTY(QQuickColorGroup *inactive READ inactive WRITE setInactive NOTIFY inactiveChanged FINAL)
-    Q_PROPERTY(QQuickColorGroup *disabled READ disabled WRITE setDisabled NOTIFY disabledChanged FINAL)
-
+    Q_PROPERTY(QQuickColorGroup *active READ active WRITE setActive RESET resetActive NOTIFY activeChanged FINAL)
+    Q_PROPERTY(QQuickColorGroup *inactive READ inactive WRITE setInactive RESET resetInactive NOTIFY inactiveChanged FINAL)
+    Q_PROPERTY(QQuickColorGroup *disabled READ disabled WRITE setDisabled RESET resetDisabled NOTIFY disabledChanged FINAL)
     QML_NAMED_ELEMENT(Palette)
     QML_ADDED_IN_VERSION(6, 0)
 
@@ -43,6 +42,9 @@ public:
     QQuickColorGroup *active() const;
     QQuickColorGroup *inactive() const;
     QQuickColorGroup *disabled() const;
+    void resetActive();
+    void resetInactive();
+    void resetDisabled();
 
     QPalette::ColorGroup currentColorGroup() const override;
     void setCurrentGroup(QPalette::ColorGroup currentGroup);
@@ -71,6 +73,7 @@ private:
     void setColorGroup(QPalette::ColorGroup groupTag,
                        const QQuickColorGroup::GroupPtr &group,
                        void (QQuickPalette::*notifier)());
+
     QQuickColorGroup::GroupPtr colorGroup(QPalette::ColorGroup groupTag) const;
     QQuickColorGroup::GroupPtr findColorGroup(QPalette::ColorGroup groupTag) const;
 

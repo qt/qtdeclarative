@@ -166,21 +166,19 @@ public:
 
 void tst_qqmlengine::networkAccessManager()
 {
-    QQmlEngine *engine = new QQmlEngine;
+    std::unique_ptr<QQmlEngine> engine = std::make_unique<QQmlEngine>();
 
     // Test QQmlEngine created manager
     QPointer<QNetworkAccessManager> manager = engine->networkAccessManager();
     QVERIFY(manager != nullptr);
-    delete engine;
 
     // Test factory created manager
-    engine = new QQmlEngine;
+    engine.reset(new QQmlEngine);
     NetworkAccessManagerFactory factory;
     engine->setNetworkAccessManagerFactory(&factory);
     QCOMPARE(engine->networkAccessManagerFactory(), &factory);
     QNetworkAccessManager *engineNam = engine->networkAccessManager(); // calls NetworkAccessManagerFactory::create()
     QCOMPARE(engineNam, factory.manager);
-    delete engine;
 }
 
 class ImmediateReply : public QNetworkReply {
@@ -269,7 +267,7 @@ void tst_qqmlengine::baseUrl()
 
 void tst_qqmlengine::contextForObject()
 {
-    QQmlEngine *engine = new QQmlEngine;
+    std::unique_ptr<QQmlEngine> engine = std::make_unique<QQmlEngine>();
 
     // Test null-object
     QVERIFY(!QQmlEngine::contextForObject(nullptr));
@@ -296,7 +294,7 @@ void tst_qqmlengine::contextForObject()
     QCOMPARE(QQmlEngine::contextForObject(&object), engine->rootContext());
 
     // Delete context
-    delete engine; engine = nullptr;
+    engine.reset();
     QVERIFY(!QQmlEngine::contextForObject(&object));
 }
 
@@ -374,10 +372,9 @@ void tst_qqmlengine::clearComponentCache()
     // Test "test" property
     {
         QQmlComponent component(&engine, fileUrl);
-        QObject *obj = component.create();
-        QVERIFY(obj != nullptr);
+        std::unique_ptr<QObject> obj { component.create() };
+        QVERIFY(obj.get() != nullptr);
         QCOMPARE(obj->property("test").toInt(), 10);
-        delete obj;
     }
 
     // Modify qml file
@@ -397,10 +394,9 @@ void tst_qqmlengine::clearComponentCache()
     // Test cache hit
     {
         QQmlComponent component(&engine, fileUrl);
-        QObject *obj = component.create();
-        QVERIFY(obj != nullptr);
+        std::unique_ptr<QObject> obj { component.create() };
+        QVERIFY(obj.get() != nullptr);
         QCOMPARE(obj->property("test").toInt(), 10);
-        delete obj;
     }
 
     // Clear cache
@@ -409,10 +405,9 @@ void tst_qqmlengine::clearComponentCache()
     // Test cache refresh
     {
         QQmlComponent component(&engine, fileUrl);
-        QObject *obj = component.create();
-        QVERIFY(obj != nullptr);
+        std::unique_ptr<QObject> obj { component.create() };
+        QVERIFY(obj.get() != nullptr);
         QCOMPARE(obj->property("test").toInt(), 11);
-        delete obj;
     }
 
     // Regular Synchronous loading will leave us with an event posted
@@ -1274,9 +1269,9 @@ void tst_qqmlengine::singletonInstance()
 
     {
         // deleted object
-        auto dayfly = new Dayfly{};
-        auto id = qmlRegisterSingletonInstance("Vanity", 1, 0, "Dayfly", dayfly);
-        delete dayfly;
+        auto dayfly = std::make_unique<Dayfly>();
+        auto id = qmlRegisterSingletonInstance("Vanity", 1, 0, "Dayfly", dayfly.get());
+        dayfly.reset();
         QTest::ignoreMessage(QtMsgType::QtWarningMsg, "<Unknown File>: The registered singleton has already been deleted. Ensure that it outlives the engine.");
         QObject *instance = engine.singletonInstance<QObject*>(id);
         QVERIFY(!instance);

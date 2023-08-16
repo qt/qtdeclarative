@@ -68,7 +68,6 @@ public:
 
 #if QT_CONFIG(qml_network)
     QNetworkReply *sciReply = nullptr;
-    int redirectCount = 0;
 #endif
 };
 

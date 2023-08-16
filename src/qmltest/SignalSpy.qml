@@ -232,8 +232,6 @@ Item {
 
     /*! \internal */
     function qtest_signalHandlerName(sn) {
-        if (sn.substr(0, 2) === "on" && sn[2] === sn[2].toUpperCase())
-            return sn
-        return "on" + sn.substr(0, 1).toUpperCase() + sn.substr(1)
+        return util.signalHandlerName(sn)
     }
 }

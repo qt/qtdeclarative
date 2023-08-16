@@ -711,8 +711,36 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
 
     ArrayElementLessThan lessThan(engine, comparefn);
 
-    Value *begin = thisObject->arrayData()->values.values;
-    sortHelper(begin, begin + len, lessThan);
+    const auto thisArrayData = thisObject->arrayData();
+    uint startIndex = thisArrayData->mappedIndex(0);
+    uint endIndex = thisArrayData->mappedIndex(len - 1) + 1;
+    if (startIndex < endIndex) {
+        // Values are contiguous. Sort right away.
+        sortHelper(
+                thisArrayData->values.values + startIndex,
+                thisArrayData->values.values + endIndex,
+                lessThan);
+    } else {
+        // Values wrap around the end of the allocation. Close the gap to form a contiguous array.
+        // We're going to sort anyway. So we don't need to care about order.
+
+        // ArrayElementLessThan sorts empty and undefined to the end of the array anyway, but we
+        // probably shouldn't rely on the unused slots to be actually undefined or empty.
+
+        const uint gap = startIndex - endIndex;
+        const uint allocEnd = thisArrayData->values.alloc - 1;
+        for (uint i = 0; i < gap; ++i) {
+            const uint from = allocEnd - i;
+            const uint to = endIndex + i;
+            if (from < startIndex)
+                break;
+
+            std::swap(thisArrayData->values.values[from], thisArrayData->values.values[to]);
+        }
+
+        thisArrayData->offset = 0;
+        sortHelper(thisArrayData->values.values, thisArrayData->values.values + len, lessThan);
+    }
 
 #ifdef CHECK_SPARSE_ARRAYS
     thisObject->initSparseArray();

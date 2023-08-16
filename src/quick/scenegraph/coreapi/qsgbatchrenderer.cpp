@@ -219,8 +219,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material,
     shader->inputLayout = calculateVertexInputLayout(s, geometry, true);
     QSGMaterialShaderPrivate *sD = QSGMaterialShaderPrivate::get(s);
     shader->stages = {
-        { QRhiGraphicsShaderStage::Vertex, sD->shader(QShader::VertexStage), QShader::BatchableVertexShader },
-        { QRhiGraphicsShaderStage::Fragment, sD->shader(QShader::FragmentStage) }
+        { QRhiShaderStage::Vertex, sD->shader(QShader::VertexStage), QShader::BatchableVertexShader },
+        { QRhiShaderStage::Fragment, sD->shader(QShader::FragmentStage) }
     };
 
     shader->lastOpacity = 0;
@@ -247,8 +247,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     shader->inputLayout = calculateVertexInputLayout(s, geometry, false);
     QSGMaterialShaderPrivate *sD = QSGMaterialShaderPrivate::get(s);
     shader->stages = {
-        { QRhiGraphicsShaderStage::Vertex, sD->shader(QShader::VertexStage) },
-        { QRhiGraphicsShaderStage::Fragment, sD->shader(QShader::FragmentStage) }
+        { QRhiShaderStage::Vertex, sD->shader(QShader::VertexStage) },
+        { QRhiShaderStage::Fragment, sD->shader(QShader::FragmentStage) }
     };
 
     shader->lastOpacity = 0;
@@ -2245,8 +2245,8 @@ QRhiGraphicsPipeline *Renderer::buildStencilPipeline(const Batch *batch, bool fi
 
     ps->setTopology(m_stencilClipCommon.topology);
 
-    ps->setShaderStages({ QRhiGraphicsShaderStage(QRhiGraphicsShaderStage::Vertex, m_stencilClipCommon.vs),
-                          QRhiGraphicsShaderStage(QRhiGraphicsShaderStage::Fragment, m_stencilClipCommon.fs) });
+    ps->setShaderStages({ QRhiShaderStage(QRhiShaderStage::Vertex, m_stencilClipCommon.vs),
+                          QRhiShaderStage(QRhiShaderStage::Fragment, m_stencilClipCommon.fs) });
     ps->setVertexInputLayout(m_stencilClipCommon.inputLayout);
     ps->setShaderResourceBindings(batch->stencilClipState.srb); // use something, it just needs to be layout-compatible
     ps->setRenderPassDescriptor(renderTarget().rpDesc);
@@ -3268,7 +3268,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
     // unmerged batch since the material (and so the shaders) is the same.
     QSGGeometry *g = gn->geometry();
     QSGMaterial *material = gn->activeMaterial();
-    ShaderManager::Shader *sms = m_shaderManager->prepareMaterialNoRewrite(material, g);
+    ShaderManager::Shader *sms = m_shaderManager->prepareMaterialNoRewrite(material, g, m_renderMode);
     if (!sms)
         return false;
 
@@ -3822,6 +3822,8 @@ void Renderer::recordRenderPass(RenderPassContext *ctx)
     cb->debugMarkBegin(QByteArrayLiteral("Qt Quick scene render"));
 
     for (int i = 0, ie = ctx->opaqueRenderBatches.size(); i != ie; ++i) {
+        if (i == 0)
+            cb->debugMarkMsg(QByteArrayLiteral("Qt Quick opaque batches"));
         PreparedRenderBatch *renderBatch = &ctx->opaqueRenderBatches[i];
         if (renderBatch->batch->merged)
             renderMergedBatch(renderBatch);
@@ -3830,6 +3832,12 @@ void Renderer::recordRenderPass(RenderPassContext *ctx)
     }
 
     for (int i = 0, ie = ctx->alphaRenderBatches.size(); i != ie; ++i) {
+        if (i == 0) {
+            if (m_renderMode == QSGRendererInterface::RenderMode3D)
+                cb->debugMarkMsg(QByteArrayLiteral("Qt Quick 2D-in-3D batches"));
+            else
+                cb->debugMarkMsg(QByteArrayLiteral("Qt Quick alpha batches"));
+        }
         PreparedRenderBatch *renderBatch = &ctx->alphaRenderBatches[i];
         if (renderBatch->batch->merged)
             renderMergedBatch(renderBatch);
@@ -3840,8 +3848,15 @@ void Renderer::recordRenderPass(RenderPassContext *ctx)
     }
 
     if (m_renderMode == QSGRendererInterface::RenderMode3D) {
-        // depth post-pass
+        // Depth post-pass to fill up the depth buffer in a way that it
+        // corresponds to what got rendered to the color buffer in the previous
+        // (alpha) pass. The previous pass cannot enable depth write due to Z
+        // fighting. Rather, do it separately in a dedicated color-write-off,
+        // depth-write-on pass. This enables the 3D content drawn afterwards to
+        // depth test against the 2D items' rendering.
         for (int i = 0, ie = ctx->alphaRenderBatches.size(); i != ie; ++i) {
+            if (i == 0)
+                cb->debugMarkMsg(QByteArrayLiteral("Qt Quick 2D-in-3D depth post-pass"));
             PreparedRenderBatch *renderBatch = &ctx->alphaRenderBatches[i];
             if (renderBatch->batch->merged)
                 renderMergedBatch(renderBatch, true);

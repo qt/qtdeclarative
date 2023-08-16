@@ -7,17 +7,20 @@
 #include "foreign.h"
 #include "foreign_p.h"
 
-#include <QtQml/qqml.h>
-#include <QtQml/qqmlcomponent.h>
-#include <QtCore/qproperty.h>
-#include <QtCore/qtimeline.h>
-#include <QtCore/qrect.h>
 #include <QtQmlTypeRegistrar/private/qqmltyperegistrar_p.h>
-#include <QtCore/qtemporaryfile.h>
 
 #ifdef QT_QUICK_LIB
 #    include <QtQuick/qquickitem.h>
 #endif
+
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlcomponent.h>
+
+#include <QtCore/qabstractitemmodel.h>
+#include <QtCore/qproperty.h>
+#include <QtCore/qrect.h>
+#include <QtCore/qtemporaryfile.h>
+#include <QtCore/qtimeline.h>
 
 class Interface {};
 class Interface2 {};
@@ -513,6 +516,17 @@ private:
     int m_i;
 };
 
+class Structured
+{
+    Q_GADGET
+    QML_VALUE_TYPE(structured)
+    QML_STRUCTURED_VALUE
+    Q_PROPERTY(int i MEMBER m_i FINAL)
+
+private:
+    int m_i;
+};
+
 class AnonymousAndUncreatable : public QObject
 {
      Q_OBJECT
@@ -566,6 +580,75 @@ Q_SIGNALS:
     void objectListHappened(const QList<QObject *> &);
 };
 
+class Bar : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int outerBarProp READ bar CONSTANT)
+public:
+    Bar(QObject *parent = nullptr) : QObject(parent) {}
+    int bar() const { return 44; }
+};
+
+namespace Testing {
+
+class Foo : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int fooProp READ foo CONSTANT)
+
+public:
+    int foo() const { return 42; }
+};
+
+class Bar : public Foo
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int barProp READ bar CONSTANT)
+
+public:
+    int bar() const { return 43; }
+};
+
+namespace Inner {
+
+class Baz : public Bar
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+    QML_EXTENDED(::Bar)
+    QML_ATTACHED(Foo)
+
+public:
+    static Foo *qmlAttachedProperties(QObject *) { return new Foo; }
+};
+
+} // namespace Inner
+} // namespace Testing
+
+struct QByteArrayStdVectorForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_SEQUENTIAL_CONTAINER(QByteArray)
+    QML_FOREIGN(std::vector<QByteArray>)
+};
+
+// Anonymous value type for an unknown foreign type
+struct QPersistentModelIndexValueType
+{
+    QPersistentModelIndex v;
+    Q_PROPERTY(int row READ row FINAL)
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_EXTENDED(QPersistentModelIndexValueType)
+    QML_FOREIGN(QPersistentModelIndex)
+
+public:
+    inline int row() const { return v.row(); }
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -615,10 +698,14 @@ private slots:
     void clonedSignal();
     void baseVersionInQmltypes();
     void constructibleValueType();
+    void structuredValueType();
     void anonymousAndUncreatable();
     void omitInvisible();
     void typedEnum();
     void listSignal();
+    void withNamespace();
+    void sequenceRegistration();
+    void valueTypeSelfReference();
 
 private:
     QByteArray qmltypesData;

@@ -63,12 +63,13 @@ Item {
                         strokeWidth = "1.0" // default value defined by SVG standard
                     strokeText = "strokeColor: \"" + strokeColor + "\"; strokeWidth: " + strokeWidth + ";"
                 }
-                if (!fillColor) {
-                    fillColor = "#00000000"
-                }
+
+                let fillText = "";
+                if (fillColor)
+                    fillText = "fillColor: \"" + fillColor + "\";\n";
 
                 var obj = Qt.createQmlObject("import QtQuick\nimport QtQuick.Shapes\n ControlledShape { \n"
-                                             + "fillColor: \"" + fillColor + "\";\n"
+                                             + fillText
                                              + "shapeTransform: Matrix4x4 { matrix: Qt.matrix4x4(" + transform + "); }\n"
                                              + strokeText + "\n"
                                              + "fillRule: ShapePath.WindingFill; delegate: [ PathSvg { path: \"" + s + "\";  } ] }\n",

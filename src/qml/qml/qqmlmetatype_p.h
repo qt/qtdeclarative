@@ -184,8 +184,6 @@ public:
     static void prependCachedUnitLookupFunction(QQmlPrivate::QmlUnitCacheLookupFunction handler);
     static void removeCachedUnitLookupFunction(QQmlPrivate::QmlUnitCacheLookupFunction handler);
 
-    static QRecursiveMutex *typeRegistrationLock();
-
     static QString prettyTypeName(const QObject *object);
 
     template <typename QQmlTypeContainer>

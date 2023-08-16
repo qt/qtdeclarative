@@ -1,0 +1,648 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Pages: 1 -->
+
+<svg
+   width="695.15735pt"
+   height="331.96246pt"
+   viewBox="0 0 695.23596 331.96246"
+   version="1.1"
+   id="svg806"
+   sodipodi:docname="pinchAndDragHandlers-singlePressPrep.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs810">
+    <marker
+       style="overflow:visible"
+       id="Arrow5"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Arrow5"
+       markerWidth="5.8874264"
+       markerHeight="6.6094756"
+       viewBox="0 0 5.8874262 6.6094758"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="m 6,0 c -3,1 -7,3 -9,5 0,0 0,-4 2,-5 -2,-1 -2,-5 -2,-5 2,2 6,4 9,5 z"
+         id="path8893" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker1576"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Arrow5"
+       markerWidth="5.8874259"
+       markerHeight="6.6094756"
+       viewBox="0 0 5.8874262 6.6094758"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="m 6,0 c -3,1 -7,3 -9,5 0,0 0,-4 2,-5 -2,-1 -2,-5 -2,-5 2,2 6,4 9,5 z"
+         id="path1574" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker1576-4"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Arrow5"
+       markerWidth="5.8874259"
+       markerHeight="6.6094756"
+       viewBox="0 0 5.8874262 6.6094758"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="m 6,0 c -3,1 -7,3 -9,5 0,0 0,-4 2,-5 -2,-1 -2,-5 -2,-5 2,2 6,4 9,5 z"
+         id="path1574-4" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="namedview808"
+     pagecolor="#ffffff"
+     bordercolor="#111111"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="pt"
+     showgrid="false"
+     inkscape:zoom="2.6661199"
+     inkscape:cx="434.33906"
+     inkscape:cy="270.61799"
+     inkscape:window-width="3840"
+     inkscape:window-height="2139"
+     inkscape:window-x="3840"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg806" />
+  <g
+     id="graph0"
+     class="graph"
+     transform="translate(3.9999998,327.9812)">
+    <polygon
+       fill="#ffffff"
+       stroke="none"
+       points="615.07,-328 615.07,4 -4,4 -4,-328 "
+       id="polygon654"
+       transform="matrix(1.1230329,0,0,1,0.4921318,0)" />
+    <!-- llfkmbbephlg -->
+    <g
+       id="node1"
+       class="node"
+       style="stroke-width:1.00011;stroke-dasharray:none">
+      <title
+         id="title656">llfkmbbephlg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="250.78,-288 474.53,-288 474.53,-324 262.78,-324 262.78,-328 250.78,-328 "
+         id="polygon658"
+         style="stroke-width:1.00011;stroke-dasharray:none" />
+      <polyline
+         fill="none"
+         stroke="#000000"
+         points="250.78,-324 262.78,-324"
+         id="polyline660"
+         style="stroke-width:1.00011;stroke-dasharray:none" />
+      <text
+         text-anchor="middle"
+         x="362.66"
+         y="-300.95001"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text662"
+         style="stroke-width:1.00011;stroke-dasharray:none">ResizeItemToWindow_QMLTYPE_1</text>
+    </g>
+    <!-- llfkmbbeijgg -->
+    <g
+       id="node2"
+       class="node">
+      <title
+         id="title665">llfkmbbeijgg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="402.53,-252 322.78,-252 322.78,-216 402.53,-216 "
+         id="polygon667" />
+      <text
+         text-anchor="middle"
+         x="362.66"
+         y="-229.32001"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text669">ℚRootItem</text>
+    </g>
+    <!-- llfkmbbephlg&#45;&gt;llfkmbbeijgg -->
+    <g
+       id="edge1"
+       class="edge">
+      <title
+         id="title672">llfkmbbephlg-&gt;llfkmbbeijgg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 362.66,-274.81 c 0,7.77 0,15.86 0,22.71"
+         id="path674" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="362.66,-274.8 366.66,-280.8 362.66,-286.8 358.66,-280.8 "
+         id="polygon676" />
+    </g>
+    <!-- llfkmbbepmbg -->
+    <g
+       id="node3"
+       class="node">
+      <title
+         id="title679">llfkmbbepmbg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="327.66,-180 245.66,-180 245.66,-144 327.66,-144 "
+         id="polygon681" />
+      <text
+         text-anchor="middle"
+         x="286.66"
+         y="-157.32001"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text683">ℚRectangle</text>
+    </g>
+    <!-- llfkmbbeijgg&#45;&gt;llfkmbbepmbg -->
+    <g
+       id="edge2"
+       class="edge">
+      <title
+         id="title686">llfkmbbeijgg-&gt;llfkmbbepmbg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 334.28,-206.87 c -9.61,8.86 -20.1,18.52 -28.79,26.52"
+         id="path688" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="334.38,-206.96 341.51,-208.08 343.21,-215.09 336.09,-213.96 "
+         id="polygon690" />
+    </g>
+    <!-- llfkmbclplkg -->
+    <g
+       id="node11"
+       class="node">
+      <title
+         id="title693">llfkmbclplkg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="345.89,-176.56 345.8,-156.44 439.66,-144 533.52,-156.44 533.43,-176.56 "
+         id="polygon695" />
+      <text
+         text-anchor="middle"
+         x="439.66"
+         y="-157.32001"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text697">ℚDeliveryAgent</text>
+    </g>
+    <!-- llfkmbbeijgg&#45;&gt;llfkmbclplkg -->
+    <g
+       id="edge10"
+       class="edge">
+      <title
+         id="title700">llfkmbbeijgg-&gt;llfkmbclplkg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 391.18,-207.07 c 11.28,10.25 23.79,21.62 33.27,30.25"
+         id="path702" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="391.24,-207.02 389.49,-214.01 382.36,-215.09 384.11,-208.09 "
+         id="polygon704" />
+    </g>
+    <!-- llfkmbodpifg -->
+    <g
+       id="node4"
+       class="node">
+      <title
+         id="title707">llfkmbodpifg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="177.23,-75.44 177.32,-95.56 88.66,-108 0,-95.56 0.08,-75.44 "
+         id="polygon709" />
+      <text
+         text-anchor="middle"
+         x="88.660004"
+         y="-85.330002"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text711">ℚPinchHandler</text>
+    </g>
+    <!-- llfkmbbepmbg&#45;&gt;llfkmbodpifg -->
+    <g
+       id="edge3"
+       class="edge">
+      <title
+         id="title714">llfkmbbepmbg-&gt;llfkmbodpifg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 233.33,-142.15 c -34.69,12.27 -78.95,27.92 -109.33,38.66"
+         id="path716" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="233.47,-142.2 240.46,-140.42 244.78,-146.2 237.79,-147.97 "
+         id="polygon718" />
+    </g>
+    <!-- llfkmbnfping -->
+    <g
+       id="node5"
+       class="node">
+      <title
+         id="title721">llfkmbnfping</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="277.66,-108 195.66,-108 195.66,-72 277.66,-72 "
+         id="polygon723" />
+      <text
+         text-anchor="middle"
+         x="236.66"
+         y="-85.330002"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text725">ℚRectangle</text>
+    </g>
+    <!-- llfkmbbepmbg&#45;&gt;llfkmbnfping -->
+    <g
+       id="edge4"
+       class="edge">
+      <title
+         id="title728">llfkmbbepmbg-&gt;llfkmbnfping</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 266.73,-133.1 c -6.04,8.45 -12.48,17.48 -17.85,25"
+         id="path730" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="266.8,-133.2 273.54,-135.76 273.78,-142.96 267.03,-140.41 "
+         id="polygon732" />
+    </g>
+    <!-- llfkmbbdfibg -->
+    <g
+       id="node7"
+       class="node">
+      <title
+         id="title735">llfkmbbdfibg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="377.66,-108 295.66,-108 295.66,-72 377.66,-72 "
+         id="polygon737" />
+      <text
+         text-anchor="middle"
+         x="336.66"
+         y="-85.330002"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text739">ℚRectangle</text>
+    </g>
+    <!-- llfkmbbepmbg&#45;&gt;llfkmbbdfibg -->
+    <g
+       id="edge6"
+       class="edge">
+      <title
+         id="title742">llfkmbbepmbg-&gt;llfkmbbdfibg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 306.59,-133.1 c 6.03,8.45 12.48,17.48 17.85,25"
+         id="path744" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="306.52,-133.2 306.28,-140.41 299.54,-142.96 299.77,-135.76 "
+         id="polygon746" />
+    </g>
+    <!-- llfkmbodeang -->
+    <g
+       id="node9"
+       class="node">
+      <title
+         id="title749">llfkmbodeang</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="522.66,-108 440.66,-108 440.66,-72 522.66,-72 "
+         id="polygon751" />
+      <text
+         text-anchor="middle"
+         x="481.66"
+         y="-85.330002"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text753">ℚRectangle</text>
+    </g>
+    <!-- llfkmbbepmbg&#45;&gt;llfkmbodeang -->
+    <g
+       id="edge8"
+       class="edge">
+      <title
+         id="title756">llfkmbbepmbg-&gt;llfkmbodeang</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 340.14,-141.8 c 31.61,11.35 71.02,25.49 100.22,35.98"
+         id="path758" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="340.16,-141.8 335.86,-147.59 328.86,-145.85 333.16,-140.06 "
+         id="polygon760" />
+    </g>
+    <!-- llfkmbbfjjgg -->
+    <g
+       id="node6"
+       class="node">
+      <title
+         id="title763">llfkmbbfjjgg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="232.99,-3.44 233.07,-23.56 147.66,-36 62.25,-23.56 62.33,-3.44 "
+         id="polygon765" />
+      <text
+         text-anchor="middle"
+         x="147.66"
+         y="-13.33"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text767">ℚDragHandler</text>
+    </g>
+    <!-- llfkmbnfping&#45;&gt;llfkmbbfjjgg -->
+    <g
+       id="edge5"
+       class="edge">
+      <title
+         id="title770">llfkmbnfping-&gt;llfkmbbfjjgg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 204.77,-63.92 c -12.86,10.12 -27.25,21.44 -38.37,30.18"
+         id="path772" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="204.52,-63.72 211.71,-64.29 213.95,-71.14 206.76,-70.57 "
+         id="polygon774" />
+    </g>
+    <!-- llfkmbbfibdg -->
+    <g
+       id="node8"
+       class="node">
+      <title
+         id="title777">llfkmbbfibdg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="421.99,-3.44 422.07,-23.56 336.66,-36 251.25,-23.56 251.33,-3.44 "
+         id="polygon779" />
+      <text
+         text-anchor="middle"
+         x="336.66"
+         y="-13.33"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text781">ℚDragHandler</text>
+    </g>
+    <!-- llfkmbbdfibg&#45;&gt;llfkmbbfibdg -->
+    <g
+       id="edge7"
+       class="edge">
+      <title
+         id="title784">llfkmbbdfibg-&gt;llfkmbbfibdg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 336.66,-58.81 c 0,7.77 0,15.86 0,22.71"
+         id="path786" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="336.66,-58.8 340.66,-64.8 336.66,-70.8 332.66,-64.8 "
+         id="polygon788" />
+    </g>
+    <!-- llfkmbcknglg -->
+    <g
+       id="node10"
+       class="node">
+      <title
+         id="title791">llfkmbcknglg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="610.99,-3.44 611.07,-23.56 525.66,-36 440.25,-23.56 440.33,-3.44 "
+         id="polygon793" />
+      <text
+         text-anchor="middle"
+         x="525.65997"
+         y="-13.33"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text795">ℚDragHandler</text>
+    </g>
+    <!-- llfkmbodeang&#45;&gt;llfkmbcknglg -->
+    <g
+       id="edge9"
+       class="edge">
+      <title
+         id="title798">llfkmbodeang-&gt;llfkmbcknglg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 499.32,-60.9 c 5.62,8.94 11.63,18.5 16.49,26.23"
+         id="path800" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="499.4,-60.77 499.59,-67.98 493.01,-70.93 492.82,-63.72 "
+         id="polygon802" />
+    </g>
+  </g>
+  <g
+     id="g2388"
+     transform="translate(166.85425,117.65225)">
+    <rect
+       style="fill:#ffffff;stroke:#000000;stroke-width:0.869398;stroke-linecap:square;stroke-dasharray:0.869398, 0.869398;stroke-opacity:1"
+       id="rect981"
+       width="115.87793"
+       height="32.582088"
+       x="-181.46954"
+       y="-115.9365"
+       ry="0"
+       transform="matrix(1,0,-0.22867874,0.97350194,0,0)" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9pt;line-height:125%;font-family:Times, serif;-inkscape-font-specification:'Times, serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       x="-149.44366"
+       y="-93.742676"
+       id="text1897"><tspan
+         sodipodi:role="line"
+         id="tspan1895"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9pt;font-family:Times, serif;-inkscape-font-specification:'Times, serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+         x="-149.44366"
+         y="-93.742676">QGuiApplication</tspan></text>
+  </g>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.03579;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.03579, 1.03579;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#Arrow5)"
+     d="M 250.09544,22.1843 H 126.58276"
+     id="path1311" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="130.11781"
+     y="17.801956"
+     id="text1315"><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="130.11781"
+       y="17.801956"
+       id="tspan1317">① event(QTouchEvent*)</tspan></text>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.03579;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.03579, 1.03579;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#Arrow5)"
+     d="M 480.8984,145.14539 434.78238,41.639225"
+     id="path2865"
+     sodipodi:nodetypes="cc" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="223.93822"
+     y="-381.72717"
+     id="text2981"
+     transform="rotate(65.571486)"><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="223.93822"
+       y="-381.72717"
+       id="tspan2979">② event(QTouchEvent*)</tspan></text>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.00011;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.00011, 1.00011;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker1576)"
+     d="m 534.3515,175.55292 c 8.9308,13.96865 -25.72468,19.46301 -18.49471,5.27481"
+     id="path2661"
+     sodipodi:nodetypes="cc" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="540.16193"
+     y="178.55621"
+     id="text8573"><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="540.16193"
+       y="178.55621"
+       id="tspan8587">③ deliverPointerEvent()</tspan><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="540.16193"
+       y="189.51059"
+       id="tspan8591">④ deliverPressOrReleaseEvent()</tspan><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="540.16193"
+       y="200.46495"
+       id="tspan8595">⑤ pointerTargets()</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="187.83101"
+     y="197.08606"
+     id="text8866"><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="187.83101"
+       y="197.08606"
+       id="tspan8864">⑥ wantsEventPoint()</tspan></text>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.00011;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.00011, 1.00011;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker1576-4)"
+     d="m 414.44327,180.9263 c -120.51412,44.28613 -305.07714,2.24598 -311.48331,34.81006"
+     id="path2625"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.00011;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.00011, 1.00011;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker1576-4)"
+     d="M 414.44327,180.9263 C 293.92915,225.21243 166.6048,254.80236 160.19863,287.36644"
+     id="path9198"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.00011;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.00011, 1.00011;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker1576-4)"
+     d="M 414.44327,180.9263 C 293.92915,225.21243 303.3422,259.49798 296.93603,292.06206"
+     id="path9218"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.00011;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.00011, 1.00011;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker1576-4)"
+     d="m 414.44327,180.9263 c 8.69611,26.1658 156.27171,32.20621 129.77896,107.75829"
+     id="path9238"
+     sodipodi:nodetypes="cc" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="180.63849"
+     y="263.64062"
+     id="text9260"><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="162.79994"
+       y="275.0322"
+       id="tspan9258">⑦ wantsEventPoint()</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;text-anchor:end;text-align:end"
+     x="295.72836"
+     y="286.02438"
+     id="text9282"><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;text-anchor:end;text-align:end"
+       x="203.01468"
+       y="286.02438"
+       id="tspan9280">⑧ wantsEventPoint()</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="550.57092"
+     y="278.21912"
+     id="text9304"><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="550.57092"
+       y="278.21912"
+       id="tspan9302">⑨ wantsEventPoint()</tspan></text>
+  <g
+     id="node34"
+     class="node"
+     transform="matrix(0.68180684,0,0,0.68180684,-606.60021,386.57842)">
+    <title
+       id="title12335">llncgjfhndpg</title>
+  </g>
+</svg>

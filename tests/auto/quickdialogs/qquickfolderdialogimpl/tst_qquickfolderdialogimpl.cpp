@@ -185,9 +185,9 @@ class FolderDialogSignalHelper
 public:
     FolderDialogSignalHelper(const FolderDialogTestHelper &dialogTestHelper) :
         dialogSelectedFolderChangedSpy(dialogTestHelper.dialog, SIGNAL(selectedFolderChanged())),
-        quickDialogSelectedFolderChangedSpy(dialogTestHelper.quickDialog, SIGNAL(selectedFolderChanged(const QUrl &))),
+        quickDialogSelectedFolderChangedSpy(dialogTestHelper.quickDialog, SIGNAL(selectedFolderChanged(QUrl))),
         dialogCurrentFolderChangedSpy(dialogTestHelper.dialog, SIGNAL(currentFolderChanged())),
-        quickDialogCurrentFolderChangedSpy(dialogTestHelper.quickDialog, SIGNAL(currentFolderChanged(const QUrl &)))
+        quickDialogCurrentFolderChangedSpy(dialogTestHelper.quickDialog, SIGNAL(currentFolderChanged(QUrl)))
     {
         if (!dialogSelectedFolderChangedSpy.isValid())
             errorMessage = "selectedFolderChanged signal of dialog is not valid";

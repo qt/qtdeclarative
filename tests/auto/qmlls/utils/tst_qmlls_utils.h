@@ -49,8 +49,14 @@ private slots:
     void findUsages();
     void findUsages_data();
 
+    void renameUsages();
+    void renameUsages_data();
+
     void resolveExpressionType();
     void resolveExpressionType_data();
+
+    void isValidEcmaScriptIdentifier();
+    void isValidEcmaScriptIdentifier_data();
 
 private:
     using EnvironmentAndFile = std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>;

@@ -61,10 +61,9 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data,
                                        const QQmlPrivate::RegisterInterface &type)
 {
     auto *d = new QQmlTypePrivate(QQmlType::InterfaceType);
-    d->iid = type.iid;
+    d->extraData.interfaceTypeData = type.iid;
     d->typeId = type.typeId;
     d->listId = type.listId;
-    d->isSetup.storeRelease(true);
     d->module = QString::fromUtf8(type.uri);
     d->version = type.version;
     data->registerType(d);
@@ -86,14 +85,14 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
         d->revision = type.revision;
     }
 
-    d->extraData.sd->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
-    d->extraData.sd->singletonInstanceInfo->scriptCallback = type.scriptApi;
-    d->extraData.sd->singletonInstanceInfo->qobjectCallback = type.qObjectApi;
-    d->extraData.sd->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
-    d->extraData.sd->singletonInstanceInfo->instanceMetaObject
+    d->extraData.singletonTypeData->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
+    d->extraData.singletonTypeData->singletonInstanceInfo->scriptCallback = type.scriptApi;
+    d->extraData.singletonTypeData->singletonInstanceInfo->qobjectCallback = type.qObjectApi;
+    d->extraData.singletonTypeData->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
+    d->extraData.singletonTypeData->singletonInstanceInfo->instanceMetaObject
             = type.qObjectApi ? type.instanceMetaObject : nullptr;
-    d->extraData.sd->extFunc = type.extensionObjectCreate;
-    d->extraData.sd->extMetaObject = type.extensionMetaObject;
+    d->extraData.singletonTypeData->extFunc = type.extensionObjectCreate;
+    d->extraData.singletonTypeData->extMetaObject = type.extensionMetaObject;
 
     return d;
 }
@@ -109,44 +108,44 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->revision = type.revision;
     d->typeId = type.typeId;
     d->listId = type.listId;
-    d->extraData.cd->allocationSize = type.objectSize;
-    d->extraData.cd->userdata = type.userdata;
-    d->extraData.cd->newFunc = type.create;
-    d->extraData.cd->noCreationReason = type.noCreationReason;
-    d->extraData.cd->createValueTypeFunc = type.createValueType;
+    d->extraData.cppTypeData->allocationSize = type.objectSize;
+    d->extraData.cppTypeData->userdata = type.userdata;
+    d->extraData.cppTypeData->newFunc = type.create;
+    d->extraData.cppTypeData->noCreationReason = type.noCreationReason;
+    d->extraData.cppTypeData->createValueTypeFunc = type.createValueType;
     d->baseMetaObject = type.metaObject;
-    d->extraData.cd->attachedPropertiesFunc = type.attachedPropertiesFunction;
-    d->extraData.cd->attachedPropertiesType = type.attachedPropertiesMetaObject;
-    d->extraData.cd->parserStatusCast = type.parserStatusCast;
-    d->extraData.cd->propertyValueSourceCast = type.valueSourceCast;
-    d->extraData.cd->propertyValueInterceptorCast = type.valueInterceptorCast;
-    d->extraData.cd->finalizerCast = type.has(QQmlPrivate::RegisterType::FinalizerCast)
+    d->extraData.cppTypeData->attachedPropertiesFunc = type.attachedPropertiesFunction;
+    d->extraData.cppTypeData->attachedPropertiesType = type.attachedPropertiesMetaObject;
+    d->extraData.cppTypeData->parserStatusCast = type.parserStatusCast;
+    d->extraData.cppTypeData->propertyValueSourceCast = type.valueSourceCast;
+    d->extraData.cppTypeData->propertyValueInterceptorCast = type.valueInterceptorCast;
+    d->extraData.cppTypeData->finalizerCast = type.has(QQmlPrivate::RegisterType::FinalizerCast)
             ? type.finalizerCast
             : -1;
-    d->extraData.cd->extFunc = type.extensionObjectCreate;
-    d->extraData.cd->customParser = reinterpret_cast<QQmlCustomParser *>(type.customParser);
-    d->extraData.cd->registerEnumClassesUnscoped = true;
-    d->extraData.cd->registerEnumsFromRelatedTypes = true;
-    d->extraData.cd->constructValueType = type.has(QQmlPrivate::RegisterType::CreationMethod)
+    d->extraData.cppTypeData->extFunc = type.extensionObjectCreate;
+    d->extraData.cppTypeData->customParser = reinterpret_cast<QQmlCustomParser *>(type.customParser);
+    d->extraData.cppTypeData->registerEnumClassesUnscoped = true;
+    d->extraData.cppTypeData->registerEnumsFromRelatedTypes = true;
+    d->extraData.cppTypeData->constructValueType = type.has(QQmlPrivate::RegisterType::CreationMethod)
             && type.creationMethod != QQmlPrivate::ValueTypeCreationMethod::None;
-    d->extraData.cd->populateValueType = type.has(QQmlPrivate::RegisterType::CreationMethod)
+    d->extraData.cppTypeData->populateValueType = type.has(QQmlPrivate::RegisterType::CreationMethod)
             && type.creationMethod == QQmlPrivate::ValueTypeCreationMethod::Structured;
 
     if (type.extensionMetaObject)
-        d->extraData.cd->extMetaObject = type.extensionMetaObject;
+        d->extraData.cppTypeData->extMetaObject = type.extensionMetaObject;
 
     // Check if the user wants only scoped enum classes
     if (d->baseMetaObject) {
         auto indexOfUnscoped = d->baseMetaObject->indexOfClassInfo("RegisterEnumClassesUnscoped");
         if (indexOfUnscoped != -1
                 && qstrcmp(d->baseMetaObject->classInfo(indexOfUnscoped).value(), "false") == 0) {
-            d->extraData.cd->registerEnumClassesUnscoped = false;
+            d->extraData.cppTypeData->registerEnumClassesUnscoped = false;
         }
 
         auto indexOfRelated = d->baseMetaObject->indexOfClassInfo("RegisterEnumsFromRelatedTypes");
         if (indexOfRelated != -1
                 && qstrcmp(d->baseMetaObject->classInfo(indexOfRelated).value(), "false") == 0) {
-            d->extraData.cd->registerEnumsFromRelatedTypes = false;
+            d->extraData.cppTypeData->registerEnumsFromRelatedTypes = false;
         }
     }
 
@@ -178,7 +177,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->version = type.version;
 
     const QUrl normalized = QQmlTypeLoader::normalize(type.url);
-    d->extraData.fd->url = normalized;
+    d->extraData.compositeTypeData = normalized;
     addQQmlMetaTypeInterfaces(
         d, QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(normalized));
     return d;
@@ -194,9 +193,9 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->version = type.version;
 
     const QUrl normalized = QQmlTypeLoader::normalize(type.url);
-    d->extraData.sd->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
-    d->extraData.sd->singletonInstanceInfo->url = normalized;
-    d->extraData.sd->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
+    d->extraData.singletonTypeData->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
+    d->extraData.singletonTypeData->singletonInstanceInfo->url = normalized;
+    d->extraData.singletonTypeData->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
     addQQmlMetaTypeInterfaces(
         d, QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(normalized));
     return d;
@@ -630,11 +629,11 @@ static QQmlType createTypeForUrl(
         priv->version = version;
 
         if (mode == QQmlMetaType::Singleton) {
-            priv->extraData.sd->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
-            priv->extraData.sd->singletonInstanceInfo->url = url;
-            priv->extraData.sd->singletonInstanceInfo->typeName = typeName;
+            priv->extraData.singletonTypeData->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
+            priv->extraData.singletonTypeData->singletonInstanceInfo->url = url;
+            priv->extraData.singletonTypeData->singletonInstanceInfo->typeName = typeName;
         } else {
-            priv->extraData.fd->url = url;
+            priv->extraData.compositeTypeData = url;
         }
 
         data->registerType(priv);
@@ -690,7 +689,7 @@ static QQmlType doRegisterInlineComponentType(QQmlMetaTypeData *data, const QUrl
     QQmlTypePrivate *priv = new QQmlTypePrivate(QQmlType::InlineComponentType);
     priv->setName(QString(), url.fragment());
 
-    priv->extraData.id->url = url;
+    priv->extraData.inlineComponentTypeData = url;
 
     const QByteArray className
             = QQmlPropertyCacheCreatorBase::createClassNameForInlineComponent(url, url.fragment());
@@ -774,7 +773,7 @@ QQmlType QQmlMetaType::registerSequentialContainer(
     priv->revision = container.revision;
     priv->typeId = container.metaSequence.valueMetaType();
     priv->listId = container.typeId;
-    *priv->extraData.ld = container.metaSequence;
+    priv->extraData.sequentialContainerTypeData = container.metaSequence;
 
     addTypeToData(priv, data);
 
@@ -1029,11 +1028,6 @@ QQmlType QQmlMetaType::typeForUrl(const QString &urlString,
         data, url, qualifiedType, mode, errors, version);
     data->urlToType.insert(url, type.priv());
     return type;
-}
-
-QRecursiveMutex *QQmlMetaType::typeRegistrationLock()
-{
-    return metaTypeDataLock();
 }
 
 /*
@@ -1758,7 +1752,8 @@ QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(const QMetaObject 
     QList<QQmlProxyMetaObject::ProxyData> metaObjects;
     mo = mo->d.superdata;
 
-    const QQmlMetaTypeDataPtr data;
+    if (!mo)
+        return metaObjects;
 
     auto createProxyMetaObject = [&](QQmlTypePrivate *This,
                                      const QMetaObject *superdataBaseMetaObject,
@@ -1781,19 +1776,25 @@ QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(const QMetaObject 
         registerMetaObjectForType(mmo, This);
     };
 
-    while (mo) {
-        QQmlTypePrivate *t = data->metaObjectToType.value(mo);
-        if (t) {
+    for (const QQmlMetaTypeDataPtr data; mo; mo = mo->d.superdata) {
+        // TODO: There can in fact be multiple QQmlTypePrivate* for a single QMetaObject*.
+        //       This algorithm only accounts for the most recently inserted one. That's pretty
+        //       random. However, the availability of types depends on what documents you have
+        //       loaded before. Just adding all possible extensions would also be pretty random.
+        //       The right way to do this would be to take the relations between the QML modules
+        //       into account. For this we would need proper module dependency information.
+        if (QQmlTypePrivate *t = data->metaObjectToType.value(mo)) {
             if (t->regType == QQmlType::CppType) {
-                createProxyMetaObject(t, t->baseMetaObject, t->extraData.cd->extMetaObject,
-                                      t->extraData.cd->extFunc);
+                createProxyMetaObject(
+                        t, t->baseMetaObject, t->extraData.cppTypeData->extMetaObject,
+                        t->extraData.cppTypeData->extFunc);
             } else if (t->regType == QQmlType::SingletonType) {
-                createProxyMetaObject(t, t->baseMetaObject, t->extraData.sd->extMetaObject,
-                                      t->extraData.sd->extFunc);
+                createProxyMetaObject(
+                        t, t->baseMetaObject, t->extraData.singletonTypeData->extMetaObject,
+                        t->extraData.singletonTypeData->extFunc);
             }
         }
-        mo = mo->d.superdata;
-    }
+    };
 
     return metaObjects;
 }

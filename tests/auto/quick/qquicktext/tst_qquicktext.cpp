@@ -384,9 +384,9 @@ void tst_qquicktext::wrap()
         QQmlComponent textComponent(&engine);
         textComponent.setData("import QtQuick 2.0\nText { text: \"Hello\"; wrapMode: Text.WordWrap; width: 300 }", QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
         textHeight = textObject->height();
 
-        QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->wrapMode(), QQuickText::WordWrap);
         QCOMPARE(textObject->width(), 300.);
 
@@ -513,6 +513,7 @@ void tst_qquicktext::elide()
             QQmlComponent textComponent(&engine);
             textComponent.setData(("import QtQuick 2.0\nText { text: \"\"; "+elide+" width: 100 }").toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
             QCOMPARE(textObject->elideMode(), m);
             QCOMPARE(textObject->width(), 100.);
@@ -526,6 +527,7 @@ void tst_qquicktext::elide()
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
             QCOMPARE(textObject->elideMode(), m);
             QCOMPARE(textObject->width(), 100.);
@@ -542,6 +544,7 @@ void tst_qquicktext::elide()
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
             QCOMPARE(textObject->elideMode(), m);
             QCOMPARE(textObject->width(), 100.);
@@ -700,6 +703,7 @@ void tst_qquicktext::implicitElide()
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
+    QVERIFY2(textObject, qPrintable(textComponent.errorString()));
     QVERIFY(textObject->contentWidth() <= textObject->width());
 
     textObject->setText("the quick brown fox jumped over");
@@ -863,6 +867,7 @@ void tst_qquicktext::horizontalAlignment()
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
             QCOMPARE((int)textObject->hAlign(), (int)horizontalAlignmentments.at(j));
 
@@ -878,6 +883,7 @@ void tst_qquicktext::horizontalAlignment()
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
             QCOMPARE((int)textObject->hAlign(), (int)horizontalAlignmentments.at(j));
 
@@ -999,6 +1005,7 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+    QVERIFY2(textObject, qPrintable(textComponent.errorString()));
     QCOMPARE(textObject->hAlign(), qApp->inputMethod()->inputDirection() == Qt::LeftToRight ?
                                   QQuickText::AlignLeft : QQuickText::AlignRight);
     delete textObject;
@@ -1134,6 +1141,7 @@ void tst_qquicktext::font()
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->font().pointSize(), 40);
         QCOMPARE(textObject->font().bold(), false);
@@ -1147,6 +1155,7 @@ void tst_qquicktext::font()
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->font().pixelSize(), 40);
         QCOMPARE(textObject->font().bold(), false);
@@ -1160,6 +1169,7 @@ void tst_qquicktext::font()
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->font().bold(), true);
         QCOMPARE(textObject->font().italic(), false);
@@ -1172,6 +1182,7 @@ void tst_qquicktext::font()
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->font().italic(), true);
         QCOMPARE(textObject->font().bold(), false);
@@ -1184,6 +1195,7 @@ void tst_qquicktext::font()
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->font().family(), QString("Helvetica"));
         QCOMPARE(textObject->font().bold(), false);
@@ -1197,6 +1209,7 @@ void tst_qquicktext::font()
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->font().family(), QString(""));
 
@@ -1213,6 +1226,7 @@ void tst_qquicktext::style()
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE((int)textObject->style(), (int)styles.at(i));
         QCOMPARE(textObject->styleColor(), QColor("white"));
@@ -1223,6 +1237,7 @@ void tst_qquicktext::style()
     QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+    QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
     QRectF brPre = textObject->boundingRect();
     textObject->setStyle(QQuickText::Outline);
@@ -1243,6 +1258,7 @@ void tst_qquicktext::color()
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->color(), QColor(colorStrings.at(i)));
         QCOMPARE(textObject->styleColor(), QColor("black"));
@@ -1257,6 +1273,7 @@ void tst_qquicktext::color()
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->styleColor(), QColor(colorStrings.at(i)));
         // default color to black?
@@ -1297,6 +1314,7 @@ void tst_qquicktext::color()
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->styleColor(), QColor("black"));
         QCOMPARE(textObject->color(), QColor("black"));
@@ -1317,6 +1335,7 @@ void tst_qquicktext::color()
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
             QCOMPARE(textObject->color(), QColor(colorStrings.at(i)));
             QCOMPARE(textObject->styleColor(), QColor(colorStrings.at(j)));
@@ -1334,6 +1353,7 @@ void tst_qquicktext::color()
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->color(), testColor);
 
@@ -1347,6 +1367,7 @@ void tst_qquicktext::color()
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QScopedPointer<QObject> object(textComponent.create());
         QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QSignalSpy spy(textObject, SIGNAL(colorChanged()));
 
@@ -1368,6 +1389,7 @@ void tst_qquicktext::color()
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QScopedPointer<QObject> object(textComponent.create());
         QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QSignalSpy spy(textObject, SIGNAL(styleColorChanged()));
 
@@ -1389,6 +1411,7 @@ void tst_qquicktext::color()
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QScopedPointer<QObject> object(textComponent.create());
         QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
+        QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QSignalSpy spy(textObject, SIGNAL(linkColorChanged()));
 
@@ -1413,6 +1436,7 @@ void tst_qquicktext::smooth()
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
             QCOMPARE(textObject->smooth(), false);
 
             delete textObject;
@@ -1422,6 +1446,7 @@ void tst_qquicktext::smooth()
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
             QCOMPARE(textObject->smooth(), true);
 
             delete textObject;
@@ -1434,6 +1459,7 @@ void tst_qquicktext::smooth()
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
             QCOMPARE(textObject->smooth(), false);
 
             delete textObject;
@@ -1443,6 +1469,7 @@ void tst_qquicktext::smooth()
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
             QCOMPARE(textObject->smooth(), true);
 
             delete textObject;
@@ -2154,6 +2181,7 @@ void tst_qquicktext::baseUrl()
     QQmlComponent textComponent(&engine);
     textComponent.setData("import QtQuick 2.0\n Text {}", localUrl);
     QQuickText *textObject = qobject_cast<QQuickText *>(textComponent.create());
+    QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
     QCOMPARE(textObject->baseUrl(), localUrl);
 
@@ -2381,6 +2409,7 @@ void tst_qquicktext::implicitSize()
     QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+    QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
     QVERIFY(textObject->width() < textObject->implicitWidth());
     QCOMPARE(textObject->height(), textObject->implicitHeight());
@@ -2470,6 +2499,7 @@ void tst_qquicktext::contentSize()
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QScopedPointer<QObject> object(textComponent.create());
     QQuickText *textObject = qobject_cast<QQuickText *>(object.data());
+    QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
     QSignalSpy spySize(textObject, SIGNAL(contentSizeChanged()));
     QSignalSpy spyWidth(textObject, SIGNAL(contentWidthChanged(qreal)));
@@ -2527,6 +2557,7 @@ void tst_qquicktext::geometryChanged()
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QScopedPointer<QObject> object(textComponent.create());
     QQuickText *textObject = qobject_cast<QQuickText *>(object.data());
+    QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
     const qreal implicitHeight = textObject->implicitHeight();
 
@@ -2786,6 +2817,7 @@ void tst_qquicktext::implicitSizeBinding()
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QScopedPointer<QObject> object(textComponent.create());
     QQuickText *textObject = qobject_cast<QQuickText *>(object.data());
+    QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
     QCOMPARE(textObject->width(), textObject->implicitWidth());
     QCOMPARE(textObject->height(), textObject->implicitHeight());
@@ -3066,11 +3098,11 @@ void tst_qquicktext::lineLaidOut()
 
     for (int i = 0; i < textPrivate->layout.lineCount(); ++i) {
         QRectF r = textPrivate->layout.lineAt(i).rect();
-        QVERIFY(r.width() == i * 15);
+        QCOMPARE(r.width(), i * 15);
         if (i >= 30)
-            QVERIFY(r.x() == r.width() + 30);
+            QCOMPARE(r.x(), r.width() + 30);
         if (i >= 60) {
-            QVERIFY(r.x() == r.width() * 2 + 60);
+            QCOMPARE(r.x(), r.width() * 2 + 60);
             QCOMPARE(r.height(), qreal(20));
         }
     }
@@ -4733,6 +4765,7 @@ void tst_qquicktext::fontInfo()
 
     QScopedPointer<QObject> object(component.create());
     QObject *root = object.data();
+    QVERIFY2(root, qPrintable(component.errorString()));
 
     QQuickText *main = root->findChild<QQuickText *>("main");
     QVERIFY(main);

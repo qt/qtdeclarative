@@ -5,12 +5,10 @@
 
 #include <private/qqmlmetatype_p.h>
 
-#include <QtCore/qstringlist.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/qsequentialiterable.h>
+#include <QtCore/qstringlist.h>
 #include <QtCore/qurl.h>
-
-// ### Remove me
-#include <private/qqmlengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -42,22 +40,46 @@ void QQmlListAccessor::setList(const QVariant &v)
 
     if (!d.isValid()) {
         m_type = Invalid;
-    } else if (variantsType == QMetaType::fromType<QStringList>()) {
+        return;
+    }
+
+    if (variantsType == QMetaType::fromType<QStringList>()) {
         m_type = StringList;
-    } else if (variantsType == QMetaType::fromType<QList<QUrl>>()) {
+        return;
+    }
+
+    if (variantsType == QMetaType::fromType<QList<QUrl>>()) {
         m_type = UrlList;
-    } else if (variantsType == QMetaType::fromType<QVariantList>()) {
+        return;
+    }
+
+    if (variantsType == QMetaType::fromType<QVariantList>()) {
         m_type = VariantList;
-    } else if (variantsType == QMetaType::fromType<QList<QObject *>>()) {
+        return;
+    }
+
+    if (variantsType == QMetaType::fromType<QList<QObject *>>()) {
         m_type = ObjectList;
-    } else if (variantsType.flags() & QMetaType::IsQmlList) {
+        return;
+    }
+
+    if (variantsType.flags() & QMetaType::IsQmlList) {
         d = QVariant::fromValue(QQmlListReference(d));
         m_type = ListProperty;
-    } else if (variantsType == QMetaType::fromType<QQmlListReference>()) {
+        return;
+    }
+
+    if (variantsType == QMetaType::fromType<QQmlListReference>()) {
         m_type = ListProperty;
-    } else if (variantsType.flags() & QMetaType::PointerToQObject) {
+        return;
+    }
+
+    if (variantsType.flags() & QMetaType::PointerToQObject) {
         m_type = Instance;
-    } else if (int i = 0; [&](){bool ok = false; i = v.toInt(&ok); return ok;}()) {
+        return;
+    }
+
+    if (int i = 0; [&](){bool ok = false; i = v.toInt(&ok); return ok;}()) {
         // Here we have to check for an upper limit, because down the line code might (well, will)
         // allocate memory depending on the number of elements. The upper limit cannot be INT_MAX:
         //      QVector<QPointer<QQuickItem>> something;
@@ -71,22 +93,54 @@ void QQmlListAccessor::setList(const QVariant &v)
         if (i < 0) {
             qWarning("Model size of %d is less than 0", i);
             m_type = Invalid;
-        } else if (i > upperLimit) {
+            return;
+        }
+
+        if (i > upperLimit) {
             qWarning("Model size of %d is bigger than the upper limit %d", i, upperLimit);
             m_type = Invalid;
-        } else {
-            m_type = Integer;
-            d = i;
+            return;
         }
-    } else {
-        const QQmlType type = QQmlMetaType::qmlListType(v.metaType());
-        if (type.isSequentialContainer()) {
-            m_metaSequence = type.listMetaSequence();
+
+        m_type = Integer;
+        d = i;
+        return;
+    }
+
+    const QQmlType type = QQmlMetaType::qmlListType(variantsType);
+    if (type.isSequentialContainer()) {
+        m_metaSequence = type.listMetaSequence();
+        m_type = Sequence;
+        return;
+    }
+
+    QSequentialIterable iterable;
+    if (QMetaType::convert(
+                variantsType, d.constData(),
+                QMetaType::fromType<QSequentialIterable>(), &iterable)) {
+        const QMetaSequence sequence = iterable.metaContainer();
+
+        if (sequence.hasSize() && sequence.canGetValueAtIndex()) {
+            // If the resulting iterable is useful for anything, use it.
+            m_metaSequence = sequence;
             m_type = Sequence;
-        } else {
-            m_type = Instance;
+            return;
+        }
+
+        if (sequence.hasConstIterator() && sequence.canGetValueAtConstIterator()) {
+            // As a last resort, try to read the contents of the container via an iterator
+            // and build a QVariantList from them.
+            QVariantList variantList;
+            for (auto it = iterable.constBegin(), end = iterable.constEnd(); it != end; ++it)
+                variantList.push_back(*it);
+            d = std::move(variantList);
+            m_type = VariantList;
+            return;
         }
     }
+
+    m_type = Instance;
+    return;
 }
 
 qsizetype QQmlListAccessor::count() const

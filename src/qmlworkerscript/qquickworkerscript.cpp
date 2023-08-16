@@ -508,9 +508,6 @@ void QQuickWorkerScriptEngine::run()
 
     Worker scripts that are plain JavaScript sources can not use \l {qtqml-javascript-imports.html}{.import} syntax.
     Scripts that are ECMAScript modules can freely use import and export statements.
-
-    \sa {Qt Quick Examples - Threading},
-        {Threaded ListModel Example}
 */
 QQuickWorkerScript::QQuickWorkerScript(QObject *parent)
 : QObject(parent), m_engine(nullptr), m_scriptId(-1), m_componentComplete(true)

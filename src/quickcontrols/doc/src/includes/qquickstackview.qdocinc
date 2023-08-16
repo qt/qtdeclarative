@@ -3,3 +3,29 @@ Only items that StackView created itself (from a \l Component or \l [QML]
 url) will be destroyed when popped. See \l {Item Ownership} for more
 information.
 //! [pop-ownership]
+
+//! [operation-values]
+An \a operation can be optionally specified as the last argument. Supported
+operations:
+
+\value StackView.Immediate An immediate operation without transitions.
+\value StackView.PushTransition An operation with push transitions.
+\value StackView.ReplaceTransition An operation with replace transitions.
+\value StackView.PopTransition An operation with pop transitions.
+//! [operation-values]
+
+//! [optional-properties-after-each-item]
+The optional properties arguments come after each item, and specify a
+map of initial property values. For dynamically created items, these values
+are applied before the creation is finalized. This is more efficient than
+setting property values after creation, particularly where large sets of
+property values are defined, and also allows property bindings to be set
+up (using \l{Qt::binding}{Qt.binding()}) before the item is created.
+//! [optional-properties-after-each-item]
+
+//! [replaceCurrentItem]
+Pops \l currentItem from the stack and pushes \a \1. If the optional
+\a operation is specified, the relevant transition will be used. If the
+optional \a properties are specified, they will be applied to the item.
+Returns the item that became current.
+//! [replaceCurrentItem]

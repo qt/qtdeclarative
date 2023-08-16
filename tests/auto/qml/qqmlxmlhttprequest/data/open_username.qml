@@ -21,7 +21,7 @@ QtObject {
 
         x.open("GET", url, true, "sampleusername", "password");
 
-        if (x.readyState  == XMLHttpRequest.OPENED)
+        if (x.readyState == XMLHttpRequest.OPENED)
             openedState = true;
 
         try {

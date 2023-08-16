@@ -18,7 +18,8 @@ QtObject {
     property string valueType
     property string extension
     property bool isSingleton: false
-    property bool isCreatable: name.length > 0
+    property bool isCreatable: accessSemantics === "reference" && name.length > 0
+    property bool isStructured: false
     property bool isComposite: false
     property bool hasCustomParser: false
     property bool extensionIsNamespace: false

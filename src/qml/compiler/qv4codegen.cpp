@@ -3414,8 +3414,9 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
         if (showCode) {
             qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
                      << "register count" << _context->registerCountInFunction << "implicit return" << requiresReturnValue;
-            QV4::Moth::dumpBytecode(_context->code, _context->locals.size(), _context->arguments.size(),
-                                    _context->line, _context->lineAndStatementNumberMapping);
+            qDebug().noquote() << QV4::Moth::dumpBytecode(
+                    _context->code, _context->locals.size(), _context->arguments.size(),
+                    _context->line, _context->lineAndStatementNumberMapping);
             qDebug();
         }
     }
@@ -4624,7 +4625,7 @@ QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty str
             StaticValue p = StaticValue::fromReturnedValue(constant);
             if (p.isNumber()) {
                 double d = p.asDouble();
-                int i = static_cast<int>(d);
+                int i = QJSNumberCoercion::toInteger(d);
                 if (d == i && (d != 0 || !std::signbit(d))) {
                     if (!i) {
                         Instruction::LoadZero load;

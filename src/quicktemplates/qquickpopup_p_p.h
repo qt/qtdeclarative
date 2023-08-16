@@ -154,6 +154,7 @@ public:
     bool outsidePressed = false;
     bool outsideParentPressed = false;
     bool inDestructor = false;
+    bool relaxEdgeConstraint = false;
     int touchId = -1;
     qreal x = 0;
     qreal y = 0;

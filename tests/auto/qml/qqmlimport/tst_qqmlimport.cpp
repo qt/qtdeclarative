@@ -38,6 +38,8 @@ private slots:
     void invalidFileImport_data();
     void invalidFileImport();
     void implicitWithDependencies();
+    void qualifiedScriptImport();
+    void invalidImportUrl();
 };
 
 void tst_QQmlImport::cleanup()
@@ -121,6 +123,31 @@ void tst_QQmlImport::implicitWithDependencies()
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->objectName(), QStringLiteral("notARectangle"));
+}
+
+void tst_QQmlImport::qualifiedScriptImport()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("qualifiedScriptImport.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("a"), QVariant::fromValue<double>(12));
+    QCOMPARE(o->property("b"), QVariant::fromValue<int>(3));
+    QCOMPARE(o->property("c"), QVariant());
+}
+
+void tst_QQmlImport::invalidImportUrl()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("fileDotSlashImport.qml");
+    QQmlComponent component(&engine, url);
+    QVERIFY(component.isError());
+    QCOMPARE(
+            component.errorString(),
+            url.toString() + QLatin1String(
+                    ":2 Cannot resolve URL for import \"file://./MyModuleName\"\n"));
 }
 
 void tst_QQmlImport::testDesignerSupported()

@@ -19,6 +19,22 @@ using namespace Qt::StringLiterals;
 static const QLatin1String SlashQmldir             = QLatin1String("/qmldir");
 static const QLatin1String SlashPluginsDotQmltypes = QLatin1String("/plugins.qmltypes");
 
+
+QQmlJS::Import::Import(QString prefix, QString name, QTypeRevision version, bool isFile,
+                       bool isDependency) :
+      m_prefix(std::move(prefix)),
+      m_name(std::move(name)),
+      m_version(version),
+      m_isFile(isFile),
+      m_isDependency(isDependency)
+{
+}
+
+bool QQmlJS::Import::isValid() const
+{
+    return !m_name.isEmpty();
+}
+
 static const QString prefixedName(const QString &prefix, const QString &name)
 {
     Q_ASSERT(!prefix.endsWith(u'.'));
@@ -308,7 +324,7 @@ void QQmlJSImporter::importDependencies(const QQmlJSImporter::Import &import,
 }
 
 static bool isVersionAllowed(const QQmlJSScope::Export &exportEntry,
-                             const QQmlJSScope::Import &importDescription)
+                             const QQmlJS::Import &importDescription)
 {
     const QTypeRevision importVersion = importDescription.version();
     const QTypeRevision exportVersion = exportEntry.version();
@@ -320,7 +336,7 @@ static bool isVersionAllowed(const QQmlJSScope::Export &exportEntry,
             || exportVersion.minorVersion() <= importVersion.minorVersion();
 }
 
-void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
+void QQmlJSImporter::processImport(const QQmlJS::Import &importDescription,
                                    const QQmlJSImporter::Import &import,
                                    QQmlJSImporter::AvailableTypes *types)
 {
@@ -557,7 +573,7 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
 
     // Process them together since there they have interdependencies that wouldn't get resolved
     // otherwise
-    const QQmlJSScope::Import builtinImport(
+    const QQmlJS::Import builtinImport(
                 QString(), QStringLiteral("QML"), QTypeRevision::fromVersion(1, 0), false, true);
 
     QQmlJSScope::ConstPtr intType;
@@ -671,7 +687,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
     if (isDependency)
         Q_ASSERT(prefix.isEmpty());
 
-    const QQmlJSScope::Import cacheKey(prefix, moduleCacheName, version, isFile, isDependency);
+    const QQmlJS::Import cacheKey(prefix, moduleCacheName, version, isFile, isDependency);
 
     auto getTypesFromCache = [&]() -> bool {
         if (!m_cachedImportTypes.contains(cacheKey))
@@ -851,15 +867,9 @@ void QQmlJSImporter::setQualifiedNamesOn(const Import &import)
     for (auto &object : import.objects) {
         if (object.exports.isEmpty())
             continue;
-        const QString qualifiedName = QQmlJSScope::qualifiedNameFrom(
-                    import.name, object.exports.first().type(),
-                    object.exports.first().revision(),
-                    object.exports.last().revision());
         if (auto *factory = object.scope.factory()) {
-            factory->setQualifiedName(qualifiedName);
             factory->setModuleName(import.name);
         } else {
-            object.scope->setQualifiedName(qualifiedName);
             object.scope->setModuleName(import.name);
         }
     }

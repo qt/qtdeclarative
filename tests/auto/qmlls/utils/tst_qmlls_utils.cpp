@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "tst_qmlls_utils.h"
+#include <algorithm>
+#include <optional>
 
 // some helper constants for the tests
 const static int positionAfterOneIndent = 5;
@@ -679,20 +681,6 @@ void tst_qmlls_utils::findBaseObject()
                      .toLatin1());
 }
 
-using QQmlJS::SourceLocation;
-
-static QQmlLSUtilsLocation sourceLocationFrom(const QString fileName, const QString &code,
-                                              quint32 startLine, quint32 startCharacter,
-                                              quint32 length)
-{
-    quint32 offset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
-
-    QQmlLSUtilsLocation location{
-        fileName, QQmlJS::SourceLocation{ offset, length, startLine, startCharacter }
-    };
-    return location;
-}
-
 void tst_qmlls_utils::findUsages_data()
 {
     QTest::addColumn<QString>("filePath");
@@ -709,81 +697,153 @@ void tst_qmlls_utils::findUsages_data()
     }
 
     QList<QQmlLSUtilsLocation> sumUsages{
-        sourceLocationFrom(testFileName, testFileContent, 8, 13, strlen("sum")),
-        sourceLocationFrom(testFileName, testFileContent, 10, 13, strlen("sum")),
-        sourceLocationFrom(testFileName, testFileContent, 10, 19, strlen("sum")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 13, strlen("sum")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 13, strlen("sum")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 19, strlen("sum")),
     };
 
     QList<QQmlLSUtilsLocation> iUsages{
-        sourceLocationFrom(testFileName, testFileContent, 9, 17, strlen("i")),
-        sourceLocationFrom(testFileName, testFileContent, 9, 24, strlen("i")),
-        sourceLocationFrom(testFileName, testFileContent, 9, 32, strlen("i")),
-        sourceLocationFrom(testFileName, testFileContent, 9, 36, strlen("i")),
-        sourceLocationFrom(testFileName, testFileContent, 10, 25, strlen("i")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 17, strlen("i")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 24, strlen("i")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 32, strlen("i")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 36, strlen("i")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 25, strlen("i")),
     };
 
     QList<QQmlLSUtilsLocation> helloPropertyUsages{
-        sourceLocationFrom(testFileName, testFileContent, 17, 5,
-                           strlen("property int helloProperty: 0")),
-        sourceLocationFrom(testFileName, testFileContent, 24, 13, strlen("helloProperty")),
-        sourceLocationFrom(testFileName, testFileContent, 24, 29, strlen("helloProperty")),
-        sourceLocationFrom(testFileName, testFileContent, 65, 60, strlen("helloProperty")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 17, 18, strlen("helloProperty")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 24, 13, strlen("helloProperty")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 24, 29, strlen("helloProperty")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 65, 60, strlen("helloProperty")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 151, 9,
+                                  strlen("helloPropertyChanged")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 153, 5,
+                                  strlen("onHelloPropertyChanged")),
     };
 
     QList<QQmlLSUtilsLocation> subItemHelloPropertyUsages{
-        sourceLocationFrom(testFileName, testFileContent, 32, 20, strlen("helloProperty")),
-        sourceLocationFrom(testFileName, testFileContent, 34, 9,
-                           strlen("property string helloProperty")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 32, 20, strlen("helloProperty")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 34, 25, strlen("helloProperty")),
     };
 
     QList<QQmlLSUtilsLocation> ICHelloPropertyUsages{
-        sourceLocationFrom(testFileName, testFileContent, 37, 9,
-                           strlen("property var helloProperty")),
-        sourceLocationFrom(testFileName, testFileContent, 39, 20, strlen("helloProperty")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 37, 22, strlen("helloProperty")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 39, 20, strlen("helloProperty")),
     };
 
     QList<QQmlLSUtilsLocation> p2Usages{
-        sourceLocationFrom(testFileName, testFileContent, 18, 5, strlen("property int p2: 1")),
-        sourceLocationFrom(testFileName, testFileContent, 24, 55, strlen("p2")),
-        sourceLocationFrom(testFileName, testFileContent, 32, 36, strlen("p2")),
-        sourceLocationFrom(testFileName, testFileContent, 39, 36, strlen("p2")),
-        sourceLocationFrom(testFileName, testFileContent, 66, 31, strlen("p2")),
-        sourceLocationFrom(testFileName, testFileContent, 67, 37, strlen("p2")),
-        sourceLocationFrom(testFileName, testFileContent, 68, 43, strlen("p2")),
-        sourceLocationFrom(testFileName, testFileContent, 69, 49, strlen("p2")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 18, 18, strlen("p2")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 24, 55, strlen("p2")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 32, 36, strlen("p2")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 39, 36, strlen("p2")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 66, 31, strlen("p2")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 67, 37, strlen("p2")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 68, 43, strlen("p2")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 69, 49, strlen("p2")),
     };
 
     QList<QQmlLSUtilsLocation> nestedUsages{
-        sourceLocationFrom(testFileName, testFileContent, 62, 13, strlen("myNested")),
-        sourceLocationFrom(testFileName, testFileContent, 65, 17, strlen("myNested")),
-        sourceLocationFrom(testFileName, testFileContent, 66, 17, strlen("myNested")),
-        sourceLocationFrom(testFileName, testFileContent, 67, 17, strlen("myNested")),
-        sourceLocationFrom(testFileName, testFileContent, 68, 17, strlen("myNested")),
-        sourceLocationFrom(testFileName, testFileContent, 69, 17, strlen("myNested")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 62, 13, strlen("myNested")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 65, 17, strlen("myNested")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 66, 17, strlen("myNested")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 67, 17, strlen("myNested")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 68, 17, strlen("myNested")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 69, 17, strlen("myNested")),
+    };
+
+    QList<QQmlLSUtilsLocation> rootIdUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 81, 9, strlen("rootId")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 84, 20, strlen("rootId")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 108, 13, strlen("rootId")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 114, 13, strlen("rootId")),
     };
 
     QList<QQmlLSUtilsLocation> nestedComponent3Usages{
-        sourceLocationFrom(testFileName, testFileContent, 47, 9,
-                           strlen("property NestedComponent3 inner")),
-        sourceLocationFrom(testFileName, testFileContent, 65, 32, strlen("inner")),
-        sourceLocationFrom(testFileName, testFileContent, 68, 32, strlen("inner")),
-        sourceLocationFrom(testFileName, testFileContent, 69, 32, strlen("inner")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 47, 35, strlen("inner")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 65, 32, strlen("inner")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 68, 32, strlen("inner")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 69, 32, strlen("inner")),
     };
 
     QList<QQmlLSUtilsLocation> nestedComponent3P2Usages{
-        sourceLocationFrom(testFileName, testFileContent, 68, 38, strlen("p2")),
-        sourceLocationFrom(testFileName, testFileContent, 53, 9, strlen("property int p2")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 68, 38, strlen("p2")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 53, 22, strlen("p2")),
     };
 
     QList<QQmlLSUtilsLocation> recursiveUsages{
-        sourceLocationFrom(testFileName, testFileContent, 72, 14, strlen("recursive")),
-        sourceLocationFrom(testFileName, testFileContent, 74, 24, strlen("recursive")),
-        sourceLocationFrom(testFileName, testFileContent, 74, 34, strlen("recursive")),
-        sourceLocationFrom(testFileName, testFileContent, 74, 51, strlen("recursive")),
-        sourceLocationFrom(testFileName, testFileContent, 74, 68, strlen("recursive")),
-        sourceLocationFrom(testFileName, testFileContent, 76, 20, strlen("recursive")),
-        sourceLocationFrom(testFileName, testFileContent, 79, 34, strlen("recursive")),
-        sourceLocationFrom(testFileName, testFileContent, 84, 27, strlen("recursive")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 72, 14, strlen("recursive")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 74, 24, strlen("recursive")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 74, 34, strlen("recursive")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 74, 51, strlen("recursive")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 74, 68, strlen("recursive")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 76, 20, strlen("recursive")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 79, 34, strlen("recursive")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 84, 27, strlen("recursive")),
+    };
+
+    QList<QQmlLSUtilsLocation> helloSignalUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 88, 12, strlen("helloSignal")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 91, 9, strlen("helloSignal")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 93, 13, strlen("helloSignal")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 97, 17, strlen("helloSignal")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 101, 9, strlen("helloSignal")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 119, 5, strlen("onHelloSignal")),
+    };
+
+    QList<QQmlLSUtilsLocation> widthChangedUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 103, 13, strlen("widthChanged")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 107, 17, strlen("widthChanged")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 108, 20, strlen("widthChanged")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 114, 20, strlen("widthChanged")),
+    };
+
+    QList<QQmlLSUtilsLocation> helloPropertyBindingUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 121, 18,
+                                  strlen("helloPropertyBinding")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 122, 5,
+                                  strlen("helloPropertyBinding")),
+    };
+
+    QList<QQmlLSUtilsLocation> myHelloHandlerUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 118, 14, strlen("myHelloHandler")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 119, 20, strlen("myHelloHandler")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 125, 29, strlen("myHelloHandler")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 126, 24, strlen("myHelloHandler")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 134, 17, strlen("myHelloHandler")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 135, 24, strlen("myHelloHandler")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 136, 21, strlen("myHelloHandler")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 144, 19, strlen("myHelloHandler")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 153, 29, strlen("myHelloHandler")),
+    };
+
+    QList<QQmlLSUtilsLocation> checkHandlersUsages {
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 124, 18, strlen("checkHandlers")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 125, 5,
+                                  strlen("onCheckHandlersChanged")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 128, 9,
+                                  strlen("checkHandlersChanged")),
+    };
+
+    QList<QQmlLSUtilsLocation> checkCppHandlersUsages {
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 126, 5,
+                                  strlen("onChildrenChanged")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 129, 9, strlen("childrenChanged")),
+    };
+    QList<QQmlLSUtilsLocation> checkHandlersUsages2 {
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 131, 18, strlen("_")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 134, 5, strlen("on_Changed")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 138, 9, strlen("_Changed")),
+    };
+    QList<QQmlLSUtilsLocation> checkHandlersUsages3 {
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 132, 18, strlen("______42")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 135, 5,
+                                  strlen("on______42Changed")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 139, 9, strlen("______42Changed")),
+    };
+    QList<QQmlLSUtilsLocation> checkHandlersUsages4 {
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 133, 18, strlen("_123a")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 136, 5,  strlen("on_123AChanged")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 140, 9, strlen("_123aChanged")),
     };
 
     std::sort(sumUsages.begin(), sumUsages.end());
@@ -795,6 +855,15 @@ void tst_qmlls_utils::findUsages_data()
     std::sort(nestedComponent3Usages.begin(), nestedComponent3Usages.end());
     std::sort(nestedComponent3P2Usages.begin(), nestedComponent3P2Usages.end());
     std::sort(recursiveUsages.begin(), recursiveUsages.end());
+    std::sort(helloSignalUsages.begin(), helloSignalUsages.end());
+    std::sort(widthChangedUsages.begin(), widthChangedUsages.end());
+    std::sort(helloPropertyBindingUsages.begin(), helloPropertyBindingUsages.end());
+    std::sort(myHelloHandlerUsages.begin(), myHelloHandlerUsages.end());
+    std::sort(checkHandlersUsages.begin(), checkHandlersUsages.end());
+    std::sort(checkCppHandlersUsages.begin(), checkCppHandlersUsages.end());
+    std::sort(checkHandlersUsages2.begin(), checkHandlersUsages2.end());
+    std::sort(checkHandlersUsages3.begin(), checkHandlersUsages3.end());
+    std::sort(checkHandlersUsages4.begin(), checkHandlersUsages4.end());
 
     QTest::addRow("findSumFromDeclaration") << testFileName << 8 << 13 << sumUsages;
     QTest::addRow("findSumFromUsage") << testFileName << 10 << 20 << sumUsages;
@@ -818,6 +887,7 @@ void tst_qmlls_utils::findUsages_data()
 
     QTest::addRow("findIdFromUsage") << testFileName << 67 << 20 << nestedUsages;
     QTest::addRow("findIdFromDefinition") << testFileName << 62 << 17 << nestedUsages;
+    QTest::addRow("findIdFromUsageInChild") << testFileName << 84 << 22 << rootIdUsages;
 
     QTest::addRow("findPropertyFromUsageInFieldMemberExpression")
             << testFileName << 69 << 34 << nestedComponent3Usages;
@@ -830,10 +900,50 @@ void tst_qmlls_utils::findUsages_data()
 
     QTest::addRow("findFunctionUsage") << testFileName << 74 << 30 << recursiveUsages;
     QTest::addRow("findFunctionUsage2") << testFileName << 76 << 24 << recursiveUsages;
-
     QTest::addRow("findQualifiedFunctionUsage") << testFileName << 84 << 31 << recursiveUsages;
-
     QTest::addRow("findFunctionUsageFromDefinition") << testFileName << 72 << 17 << recursiveUsages;
+    QTest::addRow("findJSMethodFromUsageInBinding")
+            << testFileName << 119 << 27 << myHelloHandlerUsages;
+    QTest::addRow("findJSMethodFromDefinition")
+            << testFileName << 118 << 22 << myHelloHandlerUsages;
+    QTest::addRow("findJSMethodFromDefinition2")
+            << testFileName << 118 << 9 << myHelloHandlerUsages;
+
+    QTest::addRow("findQmlSignalUsageFromDefinition")
+            << testFileName << 88 << 17 << helloSignalUsages;
+    QTest::addRow("findQmlSignalUsageFromUsage") << testFileName << 93 << 17 << helloSignalUsages;
+    QTest::addRow("findQmlSignalUsageFromHandler")
+            << testFileName << 119 << 11 << helloSignalUsages;
+
+    QTest::addRow("findCppSignalUsageFromUsage") << testFileName << 107 << 23 << widthChangedUsages;
+    QTest::addRow("findCppSignalUsageFromQualifiedUsage")
+            << testFileName << 108 << 23 << widthChangedUsages;
+    QTest::addRow("findCppSignalUsageFromQualifiedUsage2")
+            << testFileName << 114 << 24 << widthChangedUsages;
+
+    QTest::addRow("findBindingUsagesFromDefinition")
+            << testFileName << 121 << 21 << helloPropertyBindingUsages;
+    QTest::addRow("findBindingUsagesFromBinding")
+            << testFileName << 122 << 19 << helloPropertyBindingUsages;
+
+    QTest::addRow("findQmlPropertyHandlerFromDefinition")
+            << testFileName << 124 << 18 << checkHandlersUsages;
+    QTest::addRow("findQmlPropertyHandlerFromHandler")
+            << testFileName << 125 << 5 << checkHandlersUsages;
+    QTest::addRow("findQmlPropertyHandlerFromSignalCall")
+            << testFileName << 128 << 9 << checkHandlersUsages;
+
+    QTest::addRow("findCppPropertyHandlerFromHandler")
+            << testFileName << 126 << 5 << checkCppHandlersUsages;
+    QTest::addRow("findCppPropertyHandlerFromSignalCall")
+            << testFileName << 129 << 9 << checkCppHandlersUsages;
+
+    QTest::addRow("findQmlPropertyHandler2FromDefinition")
+            << testFileName << 131 << 18 << checkHandlersUsages2;
+    QTest::addRow("findQmlPropertyHandler3FromDefinition")
+            << testFileName << 132 << 18 << checkHandlersUsages3;
+    QTest::addRow("findQmlPropertyHandler4FromDefinition")
+            << testFileName << 133 << 18 << checkHandlersUsages4;
 }
 
 void tst_qmlls_utils::findUsages()
@@ -842,6 +952,7 @@ void tst_qmlls_utils::findUsages()
     QFETCH(int, line);
     QFETCH(int, character);
     QFETCH(QList<QQmlLSUtilsLocation>, expectedUsages);
+    QVERIFY(std::is_sorted(expectedUsages.begin(), expectedUsages.end()));
 
     QQmlJS::Dom::DomCreationOptions options;
     options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
@@ -866,19 +977,256 @@ void tst_qmlls_utils::findUsages()
         if (usages != expectedUsages) {
             qDebug() << "Got:\n";
             for (auto &x : usages) {
-                qDebug() << x.filename << "(" << x.location.startLine << ", "
-                         << x.location.startColumn << "), " << x.location.offset << "+"
-                         << x.location.length;
+                qDebug() << x.filename << "(" << x.sourceLocation.startLine << ", "
+                         << x.sourceLocation.startColumn << "), " << x.sourceLocation.offset << "+"
+                         << x.sourceLocation.length;
             }
             qDebug() << "But expected: \n";
             for (auto &x : expectedUsages) {
-                qDebug() << x.filename << "(" << x.location.startLine << ", "
-                         << x.location.startColumn << "), " << x.location.offset << "+"
-                         << x.location.length;
+                qDebug() << x.filename << "(" << x.sourceLocation.startLine << ", "
+                         << x.sourceLocation.startColumn << "), " << x.sourceLocation.offset << "+"
+                         << x.sourceLocation.length;
             }
         }
     }
     QCOMPARE(usages, expectedUsages);
+}
+
+void tst_qmlls_utils::renameUsages_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+    QTest::addColumn<QString>("newName");
+    QTest::addColumn<QList<QQmlLSUtilsEdit>>("expectedRenames");
+    QTest::addColumn<QString>("expectedError");
+
+    const QString testFileName = testFile(u"JSUsages.qml"_s);
+    QString testFileContent;
+    {
+        QFile file(testFileName);
+        QVERIFY(file.open(QIODeviceBase::ReadOnly));
+        testFileContent = QString::fromUtf8(file.readAll());
+    }
+
+    const QString noError;
+    const QList<QQmlLSUtilsEdit> noRenames;
+
+    QList<QQmlLSUtilsEdit> methodFRename{
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 72, 14, strlen("recursive"),
+                              u"newNameNewMe"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 74, 24, strlen("recursive"),
+                              u"newNameNewMe"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 74, 34, strlen("recursive"),
+                              u"newNameNewMe"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 74, 51, strlen("recursive"),
+                              u"newNameNewMe"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 74, 68, strlen("recursive"),
+                              u"newNameNewMe"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 76, 20, strlen("recursive"),
+                              u"newNameNewMe"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 79, 34, strlen("recursive"),
+                              u"newNameNewMe"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 84, 27, strlen("recursive"),
+                              u"newNameNewMe"_s),
+    };
+
+    QList<QQmlLSUtilsEdit> JSIdentifierSumRename{
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 8, 13, strlen("sum"),
+                              u"sumsumsum123"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 10, 13, strlen("sum"),
+                              u"sumsumsum123"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 10, 19, strlen("sum"),
+                              u"sumsumsum123"_s),
+    };
+
+    QList<QQmlLSUtilsEdit> qmlSignalRename{
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 88, 12, strlen("helloSignal"),
+                              u"finalSignal"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 91, 9, strlen("helloSignal"),
+                              u"finalSignal"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 93, 13, strlen("helloSignal"),
+                              u"finalSignal"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 97, 17, strlen("helloSignal"),
+                              u"finalSignal"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 101, 9, strlen("helloSignal"),
+                              u"finalSignal"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 119, 5, strlen("onHelloSignal"),
+                              u"onFinalSignal"_s),
+    };
+
+    QList<QQmlLSUtilsEdit> helloPropertyRename{
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 17, 18, strlen("helloProperty"),
+                              u"freshPropertyName"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 24, 13, strlen("helloProperty"),
+                              u"freshPropertyName"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 24, 29, strlen("helloProperty"),
+                              u"freshPropertyName"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 65, 60, strlen("helloProperty"),
+                              u"freshPropertyName"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 151, 9, strlen("helloPropertyChanged"),
+                              u"freshPropertyNameChanged"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 153, 5,
+                              strlen("onHelloPropertyChanged"), u"onFreshPropertyNameChanged"_s),
+    };
+
+    QList<QQmlLSUtilsEdit> nestedComponentRename{
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 42, 15, strlen("NestedComponent"),
+                              u"SuperInlineComponent"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 61, 5, strlen("NestedComponent"),
+                              u"SuperInlineComponent"_s),
+    };
+
+    QList<QQmlLSUtilsEdit> myNestedIdRename{
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 62, 13, strlen("myNested"),
+                              u"freshNewIdForMyNested"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 65, 17, strlen("myNested"),
+                              u"freshNewIdForMyNested"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 66, 17, strlen("myNested"),
+                              u"freshNewIdForMyNested"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 67, 17, strlen("myNested"),
+                              u"freshNewIdForMyNested"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 68, 17, strlen("myNested"),
+                              u"freshNewIdForMyNested"_s),
+        QQmlLSUtilsEdit::from(testFileName, testFileContent, 69, 17, strlen("myNested"),
+                              u"freshNewIdForMyNested"_s),
+    };
+
+    std::sort(methodFRename.begin(), methodFRename.end());
+    std::sort(JSIdentifierSumRename.begin(), JSIdentifierSumRename.end());
+    std::sort(qmlSignalRename.begin(), qmlSignalRename.end());
+    std::sort(helloPropertyRename.begin(), helloPropertyRename.end());
+    std::sort(helloPropertyRename.begin(), helloPropertyRename.end());
+    std::sort(nestedComponentRename.begin(), nestedComponentRename.end());
+    std::sort(myNestedIdRename.begin(), myNestedIdRename.end());
+
+    const QString parserError = u"Invalid EcmaScript identifier!"_s;
+
+    QTest::addRow("renameMethod") << testFileName << 72 << 19 << u"newNameNewMe"_s << methodFRename
+                                  << noError;
+    QTest::addRow("renameJSIdentifier")
+            << testFileName << 10 << 19 << u"sumsumsum123"_s << JSIdentifierSumRename << noError;
+    QTest::addRow("renameQmlSignal")
+            << testFileName << 93 << 19 << u"finalSignal"_s << qmlSignalRename << noError;
+    QTest::addRow("renameQmlSignalHandler")
+            << testFileName << 119 << 10 << u"onFinalSignal"_s << qmlSignalRename << noError;
+
+    QTest::addRow("renameQmlProperty")
+            << testFileName << 17 << 20 << u"freshPropertyName"_s << helloPropertyRename << noError;
+    QTest::addRow("renameQmlPropertyChanged")
+            << testFileName << 151 << 18 << u"freshPropertyNameChanged"_s << helloPropertyRename
+            << noError;
+    QTest::addRow("renameQmlPropertyChangedHandler")
+            << testFileName << 153 << 22 << u"onFreshPropertyNameChanged"_s << helloPropertyRename
+            << noError;
+
+    QTest::addRow("renameQmlObjectId") << testFileName << 65 << 21 << u"freshNewIdForMyNested"_s
+                                       << myNestedIdRename << noError;
+
+    // rename forbidden stuff
+    QTest::addRow("renameCPPDefinedItem") << testFileName << 144 << 13 << u"onHelloWorld"_s
+                                          << noRenames << u"defined in non-QML files."_s;
+    QTest::addRow("renameFunctionKeyword") << testFileName << 8 << 10 << u"HelloWorld"_s
+                                           << noRenames << "Requested item cannot be renamed";
+    QTest::addRow("invalidCharactersInIdentifier")
+            << testFileName << 12 << 22 << u"\""_s << noRenames << parserError;
+    QTest::addRow("invalidCharactersInIdentifier2")
+            << testFileName << 12 << 22 << u"hello world"_s << noRenames << parserError;
+    QTest::addRow("invalidCharactersInIdentifier3")
+            << testFileName << 12 << 22 << u"sum.sum.sum"_s << noRenames << parserError;
+    QTest::addRow("emptyIdentifier")
+            << testFileName << 12 << 22 << QString() << noRenames << parserError;
+    QTest::addRow("usingKeywordAsIdentifier")
+            << testFileName << 12 << 22 << u"function"_s << noRenames << parserError;
+
+    QTest::addRow("changedSignalHandlerMissingOnChanged")
+            << testFileName << 134 << 9 << u"___"_s << noRenames
+            << u"Invalid name for a property changed handler identifier"_s;
+    QTest::addRow("changedSignalHandlerMissingChanged")
+            << testFileName << 134 << 9 << u"on___"_s << noRenames
+            << u"Invalid name for a property changed handler identifier"_s;
+    QTest::addRow("changedSignalHandlerMissingOn")
+            << testFileName << 134 << 9 << u"___Changed"_s << noRenames
+            << u"Invalid name for a property changed handler identifier"_s;
+    QTest::addRow("changedSignalHandlerTypoInChanged")
+            << testFileName << 134 << 9 << u"on___Chänged"_s << noRenames
+            << u"Invalid name for a property changed handler identifier"_s;
+
+    QTest::addRow("signalHandlerMissingOn")
+            << testFileName << 119 << 10 << u"helloSuperSignal"_s << noRenames
+            << u"Invalid name for a signal handler identifier"_s;
+    QTest::addRow("signalHandlerMissingCapitalization")
+            << testFileName << 119 << 10 << u"onhelloSuperSignal"_s << noRenames
+            << u"Invalid name for a signal handler identifier"_s;
+
+    QTest::addRow("JSIdentifierStartsWithNumber")
+            << testFileName << 67 << 13 << u"123"_s << noRenames << parserError;
+}
+
+void tst_qmlls_utils::renameUsages()
+{
+    // findAndRenameUsages() already tests if all usages will be renamed
+    // now test that the new name is correctly passed
+    QFETCH(QString, filePath);
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QString, newName);
+    QFETCH(QList<QQmlLSUtilsEdit>, expectedRenames);
+    QFETCH(QString, expectedError);
+
+    QVERIFY(std::is_sorted(expectedRenames.begin(), expectedRenames.end()));
+
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+
+    auto locations = QQmlLSUtils::itemsFromTextLocation(
+            file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
+
+    if constexpr (enable_debug_output) {
+        if (locations.size() > 1) {
+            for (auto &x : locations)
+                qDebug() << x.domItem.toString();
+        }
+    }
+    QCOMPARE(locations.size(), 1);
+
+    if (auto errors = QQmlLSUtils::checkNameForRename(locations.front().domItem, newName)) {
+        if constexpr (enable_debug_output) {
+            if (expectedError.isEmpty())
+                qDebug() << "Expected no error but got" << errors->message;
+            if (!errors->message.contains(expectedError))
+                qDebug() << "Cannot find" << expectedError << "in" << errors->message;
+        }
+        QVERIFY(!expectedError.isEmpty());
+        QVERIFY(errors->message.contains(expectedError));
+        return;
+    }
+    auto edits = QQmlLSUtils::renameUsagesOf(locations.front().domItem, newName);
+
+    if constexpr (enable_debug_output) {
+        if (edits != expectedRenames) {
+            qDebug() << "Got:\n";
+            for (auto &x : edits) {
+                qDebug() << x.replacement << x.location.filename << "("
+                         << x.location.sourceLocation.startLine << ", "
+                         << x.location.sourceLocation.startColumn << "), "
+                         << x.location.sourceLocation.offset << "+"
+                         << x.location.sourceLocation.length;
+            }
+            qDebug() << "But expected: \n";
+            for (auto &x : expectedRenames) {
+                qDebug() << x.replacement << x.location.filename << "("
+                         << x.location.sourceLocation.startLine << ", "
+                         << x.location.sourceLocation.startColumn << "), "
+                         << x.location.sourceLocation.offset << "+"
+                         << x.location.sourceLocation.length;
+            }
+        }
+    }
+    QCOMPARE(edits, expectedRenames);
 }
 
 void tst_qmlls_utils::findDefinitionFromLocation_data()
@@ -901,12 +1249,12 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
             << JSDefinitionsQml << 14 << 11 << JSDefinitionsQml << 13 << 13 << strlen("x");
     QTest::addRow("JSIdentifierX2")
             << JSDefinitionsQml << 15 << 11 << JSDefinitionsQml << 13 << 13 << strlen("x");
-    QTest::addRow("propertyI") << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << 9
-                               << positionAfterOneIndent << strlen("property int i");
-    QTest::addRow("qualifiedPropertyI") << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << 9
-                                        << positionAfterOneIndent << strlen("property int i");
-    QTest::addRow("inlineComponentProperty") << JSDefinitionsQml << 62 << 21 << JSDefinitionsQml
-                                             << 54 << 9 << strlen("property int data: 42");
+    QTest::addRow("propertyI") << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << 9 << 18
+                               << strlen("i");
+    QTest::addRow("qualifiedPropertyI")
+            << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << 9 << 18 << strlen("i");
+    QTest::addRow("inlineComponentProperty")
+            << JSDefinitionsQml << 62 << 21 << JSDefinitionsQml << 54 << 22 << strlen("data");
 
     QTest::addRow("parameterA") << JSDefinitionsQml << 10 << 16 << noResultExpected << -1 << -1
                                 << size_t{};
@@ -928,39 +1276,38 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
     QTest::addRow("scopedX3") << JSDefinitionsQml << 28 << 14 << JSDefinitionsQml << 19 << 13
                               << strlen("scoped");
 
-    QTest::addRow("normalI") << JSDefinitionsQml << 22 << 23 << JSDefinitionsQml << 9
-                             << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("normalI") << JSDefinitionsQml << 22 << 23 << JSDefinitionsQml << 9 << 18
+                             << strlen("i");
     QTest::addRow("scopedI") << JSDefinitionsQml << 25 << 27 << JSDefinitionsQml << 24 << 32
                              << strlen("i");
 
-    QTest::addRow("shadowingProperty") << JSDefinitionsQml << 37 << 21 << JSDefinitionsQml << 34
-                                       << 9 << strlen("property int i");
-    QTest::addRow("shadowingQualifiedProperty") << JSDefinitionsQml << 37 << 35 << JSDefinitionsQml
-                                                << 34 << 9 << strlen("property int i");
-    QTest::addRow("shadowedProperty") << JSDefinitionsQml << 37 << 49 << JSDefinitionsQml << 9
-                                      << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("shadowingProperty")
+            << JSDefinitionsQml << 37 << 21 << JSDefinitionsQml << 34 << 22 << strlen("i");
+    QTest::addRow("shadowingQualifiedProperty")
+            << JSDefinitionsQml << 37 << 35 << JSDefinitionsQml << 34 << 22 << strlen("i");
+    QTest::addRow("shadowedProperty")
+            << JSDefinitionsQml << 37 << 49 << JSDefinitionsQml << 9 << 18 << strlen("i");
 
-    QTest::addRow("propertyInBinding") << JSDefinitionsQml << 64 << 37 << JSDefinitionsQml << 9
-                                       << positionAfterOneIndent << strlen("property int i");
-    QTest::addRow("propertyInBinding2") << JSDefinitionsQml << 65 << 38 << JSDefinitionsQml << 9
-                                        << positionAfterOneIndent << strlen("property int i");
-    QTest::addRow("propertyInBinding3") << JSDefinitionsQml << 66 << 51 << JSDefinitionsQml << 9
-                                        << positionAfterOneIndent << strlen("property int i");
+    QTest::addRow("propertyInBinding")
+            << JSDefinitionsQml << 64 << 37 << JSDefinitionsQml << 9 << 18 << strlen("i");
+    QTest::addRow("propertyInBinding2")
+            << JSDefinitionsQml << 65 << 38 << JSDefinitionsQml << 9 << 18 << strlen("i");
+    QTest::addRow("propertyInBinding3")
+            << JSDefinitionsQml << 66 << 51 << JSDefinitionsQml << 9 << 18 << strlen("i");
 
     QTest::addRow("propertyFromDifferentFile")
-            << JSDefinitionsQml << 72 << 20 << BaseTypeQml << 24 << positionAfterOneIndent
-            << strlen("property int helloProperty: 123");
+            << JSDefinitionsQml << 72 << 20 << BaseTypeQml << 24 << 18 << strlen("helloProperty");
 
-    QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 6 << 1
-                        << strlen("Item");
-    QTest::addRow("onId") << JSDefinitionsQml << 32 << 16 << JSDefinitionsQml << 31
-                          << positionAfterOneIndent << strlen("Rectangle");
-    QTest::addRow("parentId") << JSDefinitionsQml << 37 << 44 << JSDefinitionsQml << 6 << 1
-                              << strlen("Item");
-    QTest::addRow("currentId") << JSDefinitionsQml << 37 << 30 << JSDefinitionsQml << 31
-                               << positionAfterOneIndent << strlen("Rectangle");
+    QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 7 << 9
+                        << strlen("rootId");
+    QTest::addRow("onId") << JSDefinitionsQml << 32 << 16 << JSDefinitionsQml << 32 << 13
+                          << strlen("nested");
+    QTest::addRow("parentId") << JSDefinitionsQml << 37 << 44 << JSDefinitionsQml << 7 << 9
+                              << strlen("rootId");
+    QTest::addRow("currentId") << JSDefinitionsQml << 37 << 30 << JSDefinitionsQml << 32 << 13
+                               << strlen("nested");
     QTest::addRow("inlineComponentId")
-            << JSDefinitionsQml << 56 << 35 << JSDefinitionsQml << 51 << 21 << strlen("Rectangle");
+            << JSDefinitionsQml << 56 << 35 << JSDefinitionsQml << 52 << 13 << strlen("helloIC");
 
     QTest::addRow("recursiveFunction")
             << JSDefinitionsQml << 39 << 28 << JSDefinitionsQml << 36 << 18 << strlen("f");
@@ -1022,9 +1369,9 @@ void tst_qmlls_utils::findDefinitionFromLocation()
 
     QCOMPARE(definition->filename, expectedFilePath);
 
-    QCOMPARE(definition->location.startLine, quint32(expectedLine));
-    QCOMPARE(definition->location.startColumn, quint32(expectedCharacter));
-    QCOMPARE(definition->location.length, quint32(expectedLength));
+    QCOMPARE(definition->sourceLocation.startLine, quint32(expectedLine));
+    QCOMPARE(definition->sourceLocation.startColumn, quint32(expectedCharacter));
+    QCOMPARE(definition->sourceLocation.length, quint32(expectedLength));
 }
 
 void tst_qmlls_utils::resolveExpressionType_data()
@@ -1112,13 +1459,34 @@ void tst_qmlls_utils::resolveExpressionType()
 
     QCOMPARE(locations.size(), 1);
 
-    QQmlJSScope::ConstPtr definition = QQmlLSUtils::resolveExpressionType(
-            locations.front().domItem, QQmlLSUtilsResolveOptions::JustOwner);
+    auto definition = QQmlLSUtils::resolveExpressionType(
+            locations.front().domItem, QQmlLSUtilsResolveOptions::ResolveOwnerType);
 
     QVERIFY(definition);
-    QCOMPARE(definition->filePath(), expectedFile);
-    QQmlJS::SourceLocation location = definition->sourceLocation();
+    QCOMPARE(definition->semanticScope->filePath(), expectedFile);
+    QQmlJS::SourceLocation location = definition->semanticScope->sourceLocation();
     QCOMPARE((int)location.startLine, expectedLine);
+}
+
+void tst_qmlls_utils::isValidEcmaScriptIdentifier_data()
+{
+    QTest::addColumn<QString>("identifier");
+    QTest::addColumn<bool>("isValid");
+
+    QTest::addRow("f") << u"f"_s << true;
+    QTest::addRow("f-unicode") << u"\\u0046"_s << true;
+    QTest::addRow("starts-with-digit") << u"8helloWorld"_s << false;
+    QTest::addRow("starts-with-unicode-digit") << u"\\u0038helloWorld"_s << false; // \u0038 == '8'
+    QTest::addRow("keyword") << u"return"_s << false;
+    QTest::addRow("not-keyword") << u"returny"_s << true;
+}
+
+void tst_qmlls_utils::isValidEcmaScriptIdentifier()
+{
+    QFETCH(QString, identifier);
+    QFETCH(bool, isValid);
+
+    QCOMPARE(QQmlLSUtils::isValidEcmaScriptIdentifier(identifier), isValid);
 }
 
 QTEST_MAIN(tst_qmlls_utils)

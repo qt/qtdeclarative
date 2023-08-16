@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
     \inmodule QtQml
 
     Contexts hold the objects identified by \e id in a QML document. You
-    can use \{nameForObject()} and \l{objectForName()} to retrieve them.
+    can use \l{nameForObject()} and \l{objectForName()} to retrieve them.
 
     \note It is the responsibility of the creator to delete any QQmlContext it
     constructs. If a QQmlContext is no longer needed, it must be destroyed
@@ -226,6 +226,11 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
     if (!data->isValid()) {
         qWarning("QQmlContext: Cannot set property on invalid context.");
         return;
+    }
+
+    if (bool isNumber = false; name.toUInt(&isNumber), isNumber) {
+        qWarning("QQmlContext: Using numbers as context properties will be disallowed in a future Qt version.");
+        QT7_ONLY(return;)
     }
 
     int idx = data->propertyIndex(name);

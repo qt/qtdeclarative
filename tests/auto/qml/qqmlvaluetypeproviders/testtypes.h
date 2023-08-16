@@ -307,7 +307,7 @@ public:
     {
         return m_aDate;
     }
-    void setADate(const QDate &newADate)
+    void setADate(QDate newADate)
     {
         if (m_aDate == newADate)
             return;
@@ -319,7 +319,7 @@ public:
     {
         return m_aTime;
     }
-    void setATime(const QTime &newATime)
+    void setATime(QTime newATime)
     {
         if (m_aTime == newATime)
             return;

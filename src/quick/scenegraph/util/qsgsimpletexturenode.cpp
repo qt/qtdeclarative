@@ -256,7 +256,7 @@ void QSGSimpleTextureNode::setTextureCoordinatesTransform(QSGSimpleTextureNode::
         return;
     d->texCoordMode = mode;
     qsgsimpletexturenode_update(&m_geometry, texture(), m_rect, d->sourceRect, d->texCoordMode);
-    markDirty(DirtyMaterial);
+    markDirty(DirtyGeometry | DirtyMaterial);
 }
 
 /*!

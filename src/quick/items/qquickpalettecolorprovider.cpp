@@ -16,6 +16,31 @@ static QPalette::ColorGroup adjustCg(QPalette::ColorGroup group)
     return group == QPalette::All ? QPalette::Active : group;
 }
 
+// Begin copy from qpalette.cpp
+static constexpr QPalette::ResolveMask colorRoleOffset(QPalette::ColorGroup colorGroup)
+{
+    Q_ASSERT(colorGroup < QPalette::NColorGroups);
+    // Exclude NoRole; that bit is used for AccentColor
+    return (qToUnderlying(QPalette::NColorRoles) - 1) * qToUnderlying(colorGroup);
+}
+
+// TODO: Share the function by private interface in qtbase
+static constexpr QPalette::ResolveMask bitPosition(QPalette::ColorGroup colorGroup,
+                                                   QPalette::ColorRole colorRole)
+{
+    // Map AccentColor into NoRole for resolving purposes
+    if (colorRole == QPalette::AccentColor)
+        colorRole = QPalette::NoRole;
+
+    return colorRole + colorRoleOffset(colorGroup);
+}
+
+static_assert(bitPosition(QPalette::ColorGroup(QPalette::NColorGroups - 1),
+                          QPalette::ColorRole(QPalette::NColorRoles - 1))
+                  < sizeof(QPalette::ResolveMask) * CHAR_BIT,
+              "The resolve mask type is not wide enough to fit the entire bit mask.");
+// End copy from qpalette.cpp
+
 class DefaultPalettesProvider : public QQuickAbstractPaletteProvider
 {
 public:
@@ -44,10 +69,55 @@ bool QQuickPaletteColorProvider::setColor(QPalette::ColorGroup g, QPalette::Colo
 
 bool QQuickPaletteColorProvider::resetColor(QPalette::ColorGroup group, QPalette::ColorRole role)
 {
-    const auto &defaultPalette = paletteProvider()->defaultPalette() ;
-    const auto &defaultColor = defaultPalette.color(adjustCg(group), role);
+    if (!m_requestedPalette.isAllocated())
+        return false;
 
-    return setColor(group, role, defaultColor);
+    QPalette::ResolveMask unsetResolveMask = 0;
+
+    if (group == QPalette::Current)
+        group = m_requestedPalette->currentColorGroup();
+
+    if (group == QPalette::All) {
+        for (int g = QPalette::Active; g < QPalette::NColorGroups; ++g)
+            unsetResolveMask |= (QPalette::ResolveMask(1) << bitPosition(QPalette::ColorGroup(g), role));
+    } else {
+        unsetResolveMask = (QPalette::ResolveMask(1) << bitPosition(group, role));
+    }
+
+    m_requestedPalette->setResolveMask(m_requestedPalette->resolveMask() & ~unsetResolveMask);
+
+    return updateInheritedPalette();
+}
+
+bool QQuickPaletteColorProvider::resetColor(QPalette::ColorGroup group)
+{
+    if (!m_requestedPalette.isAllocated())
+        return false;
+
+    QPalette::ResolveMask unsetResolveMask = 0;
+
+    auto getResolveMask = [] (QPalette::ColorGroup group) {
+        QPalette::ResolveMask mask = 0;
+        for (int roleIndex = QPalette::WindowText; roleIndex < QPalette::NColorRoles; ++roleIndex) {
+            const auto cr = QPalette::ColorRole(roleIndex);
+            mask |= (QPalette::ResolveMask(1) << bitPosition(group, cr));
+        }
+        return mask;
+    };
+
+    if (group == QPalette::Current)
+        group = m_requestedPalette->currentColorGroup();
+
+    if (group == QPalette::All) {
+        for (int g = QPalette::Active; g < QPalette::NColorGroups; ++g)
+            unsetResolveMask |= getResolveMask(QPalette::ColorGroup(g));
+    } else {
+        unsetResolveMask = getResolveMask(group);
+    }
+
+    m_requestedPalette->setResolveMask(m_requestedPalette->resolveMask() & ~unsetResolveMask);
+
+    return updateInheritedPalette();
 }
 
 bool QQuickPaletteColorProvider::fromQPalette(QPalette p)

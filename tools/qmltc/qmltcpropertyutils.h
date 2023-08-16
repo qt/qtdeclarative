@@ -6,6 +6,7 @@
 
 #include <private/qqmljsmetatypes_p.h>
 #include <private/qqmljsscope_p.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -35,13 +36,11 @@ struct QmltcPropertyData
 
     QmltcPropertyData(const QString &propertyName)
     {
-        const QString nameWithUppercase = propertyName[0].toUpper() + propertyName.sliced(1);
-
         read = propertyName;
-        write = u"set" + nameWithUppercase;
-        bindable = u"bindable" + nameWithUppercase;
-        notify = propertyName + u"Changed";
-        reset = u"reset" + nameWithUppercase;
+        write = QQmlSignalNames::addPrefixToPropertyName(u"set", propertyName);
+        bindable = QQmlSignalNames::addPrefixToPropertyName(u"bindable", propertyName);
+        notify = QQmlSignalNames::propertyNameToChangedSignalName(propertyName);
+        reset = QQmlSignalNames::addPrefixToPropertyName(u"reset", propertyName);
     }
 
     QString read;

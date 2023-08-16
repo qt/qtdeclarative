@@ -1,6 +1,12 @@
 # Copyright (C) 2022 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
+if(NOT QT_BUILD_STANDALONE_TESTS AND NOT QT_BUILDING_QT)
+    cmake_minimum_required(VERSION 3.16)
+    project(tst_qmlls LANGUAGES CXX)
+    find_package(Qt6BuildInternals REQUIRED COMPONENTS STANDALONE_TEST)
+endif()
+
 file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     data)
@@ -26,4 +32,8 @@ qt_internal_extend_target(tst_qmlls CONDITION ANDROID OR IOS
         QT_QMLTEST_DATADIR=":/domdata"
 )
 
-add_dependencies(tst_qmlls qmlls)
+if (TARGET qmlls)
+    # in a standalone build, the qmlls target won't exist
+    # but we assume that it is available if you manually set up the test
+    add_dependencies(tst_qmlls qmlls)
+endif()

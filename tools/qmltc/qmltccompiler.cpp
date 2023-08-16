@@ -8,6 +8,7 @@
 #include "qmltccompilerpieces.h"
 
 #include <QtCore/qloggingcategory.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 #include <private/qqmljsutils_p.h>
 
 #include <algorithm>
@@ -189,7 +190,8 @@ void QmltcCompiler::compileType(
         // make document root a friend to allow it to access init and endInit
         const QString rootInternalName =
                 m_visitor->inlineComponent(type->enclosingInlineComponentName())->internalName();
-        current.otherCode << u"friend class %1;"_s.arg(rootInternalName);
+        if (rootInternalName != current.cppType) // avoid GCC13 warning on self-befriending
+            current.otherCode << "friend class %1;"_L1.arg(rootInternalName);
     }
     if (documentRoot || inlineComponent) {
         auto name = type->inlineComponentName()
@@ -1733,7 +1735,7 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
         break;
     }
     case QQmlSA::ScriptBindingKind::Script_SignalHandler: {
-        const auto name = QQmlJSUtils::signalName(propertyName);
+        const auto name = QQmlSignalNames::handlerNameToSignalName(propertyName);
         Q_ASSERT(name.has_value());
         compileScriptSignal(*name);
         break;
@@ -1742,9 +1744,10 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
         const QString objectClassName = objectType->internalName();
         const QString bindingFunctorName = newSymbol(bindingSymbolName + u"Functor");
 
-        const auto signalName = QQmlJSUtils::signalName(propertyName);
+        const auto signalName = QQmlSignalNames::handlerNameToSignalName(propertyName);
         Q_ASSERT(signalName.has_value()); // an error somewhere else
-        const auto actualProperty = QQmlJSUtils::changeHandlerProperty(objectType, *signalName);
+        const auto actualProperty =
+                QQmlJSUtils::propertyFromChangedHandler(objectType, propertyName);
         Q_ASSERT(actualProperty.has_value()); // an error somewhere else
         const auto actualPropertyType = actualProperty->type();
         if (!actualPropertyType) {

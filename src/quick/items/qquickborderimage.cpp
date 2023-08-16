@@ -423,22 +423,9 @@ void QQuickBorderImage::requestFinished()
 }
 
 #if QT_CONFIG(qml_network)
-#define BORDERIMAGE_MAX_REDIRECT 16
-
 void QQuickBorderImage::sciRequestFinished()
 {
     Q_D(QQuickBorderImage);
-
-    d->redirectCount++;
-    if (d->redirectCount < BORDERIMAGE_MAX_REDIRECT) {
-        QVariant redirect = d->sciReply->attribute(QNetworkRequest::RedirectionTargetAttribute);
-        if (redirect.isValid()) {
-            QUrl url = d->sciReply->url().resolved(redirect.toUrl());
-            setSource(url);
-            return;
-        }
-    }
-    d->redirectCount=0;
 
     if (d->sciReply->error() != QNetworkReply::NoError) {
         d->setStatus(Error);

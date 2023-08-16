@@ -6433,7 +6433,7 @@ void tst_qquicktextinput::setInputMask()
     // inputMaskChanged signal
     QString unescapedMask = mask;   // mask is escaped, because '\' is also escape in a JS string
     unescapedMask.replace(QLatin1String("\\\\"), QLatin1String("\\"));  // simple unescape
-    QSignalSpy spy(textInput, SIGNAL(inputMaskChanged(const QString &)));
+    QSignalSpy spy(textInput, SIGNAL(inputMaskChanged(QString)));
     textInput->setInputMask(unescapedMask);
     QCOMPARE(spy.size(), 0);
 

@@ -1,27 +1,38 @@
 #version 440
 
 layout(location = 0) in vec4 vertexCoord;
-layout(location = 1) in vec3 vertexTexCoord;
+layout(location = 1) in vec4 vertexTexCoord;
 layout(location = 2) in vec4 vertexDebugColor;
+layout(location = 3) in vec4 vertexGradient;
 
-layout(location = 0) out vec3 qt_TexCoord;
+layout(location = 0) out vec4 qt_TexCoord;
 layout(location = 1) out vec4 debugColor;
 
 #if defined(LINEARGRADIENT)
 layout(location = 2) out float gradTabIndex;
+#  define NEXT_LOCATION 3
 #elif defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
 layout(location = 2) out vec2 coord;
+#  define NEXT_LOCATION 3
+#else
+#  define NEXT_LOCATION 2
 #endif
+
+layout(location = NEXT_LOCATION) out vec4 gradient;
 
 layout(std140, binding = 0) uniform buf {
     mat4 qt_Matrix;
+    float matrixScale;
+    float opacity;
+    float reserved2;
+    float reserved3;
 
 #if defined(STROKE)
     vec4 strokeColor;
     float strokeWidth;
-    float reserved1;
-    float reserved2;
-    float reserved3;
+    float reserved4;
+    float reserved5;
+    float reserved6;
 #endif
 
 #if defined(LINEARGRADIENT)
@@ -46,6 +57,7 @@ void main()
 {
     qt_TexCoord = vertexTexCoord;
     debugColor = vertexDebugColor;
+    gradient = vertexGradient / ubuf.matrixScale;
 
 #if defined(LINEARGRADIENT)
     vec2 gradVec = ubuf.gradientEnd - ubuf.gradientStart;

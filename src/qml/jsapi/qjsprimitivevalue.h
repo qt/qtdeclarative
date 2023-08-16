@@ -230,9 +230,13 @@ public:
             return !QJSNumberCoercion::equals(v, 0) && !std::isnan(v);
         }
         case String:    return !asString().isEmpty();
-        default:        Q_UNREACHABLE();
         }
 
+        // GCC 8.x does not treat __builtin_unreachable() as constexpr
+    #if !defined(Q_CC_GNU_ONLY) || (Q_CC_GNU >= 900)
+        // NOLINTNEXTLINE(qt-use-unreachable-return): Triggers on Clang, breaking GCC 8
+        Q_UNREACHABLE();
+    #endif
         return false;
     }
 
@@ -245,9 +249,13 @@ public:
         case Integer:   return asInteger();
         case Double:    return QJSNumberCoercion::toInteger(asDouble());
         case String:    return fromString(asString()).toInteger();
-        default:        Q_UNREACHABLE();
         }
 
+        // GCC 8.x does not treat __builtin_unreachable() as constexpr
+    #if !defined(Q_CC_GNU_ONLY) || (Q_CC_GNU >= 900)
+        // NOLINTNEXTLINE(qt-use-unreachable-return): Triggers on Clang, breaking GCC 8
+        Q_UNREACHABLE();
+    #endif
         return 0;
     }
 
@@ -260,9 +268,13 @@ public:
         case Integer:   return asInteger();
         case Double:    return asDouble();
         case String:    return fromString(asString()).toDouble();
-        default:        Q_UNREACHABLE();
         }
 
+        // GCC 8.x does not treat __builtin_unreachable() as constexpr
+    #if !defined(Q_CC_GNU_ONLY) || (Q_CC_GNU >= 900)
+        // NOLINTNEXTLINE(qt-use-unreachable-return): Triggers on Clang, breaking GCC 8
+        Q_UNREACHABLE();
+    #endif
         return {};
     }
 
@@ -895,9 +907,13 @@ private:
                 return true;
             case String:
                 return false;
-            default:
-                Q_UNREACHABLE();
             }
+
+            // GCC 8.x does not treat __builtin_unreachable() as constexpr
+        #if !defined(Q_CC_GNU_ONLY) || (Q_CC_GNU >= 900)
+            // NOLINTNEXTLINE(qt-use-unreachable-return): Triggers on Clang, breaking GCC 8
+            Q_UNREACHABLE();
+        #endif
             return false;
         }
 

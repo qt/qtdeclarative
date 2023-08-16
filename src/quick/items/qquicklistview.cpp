@@ -1094,7 +1094,8 @@ QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
             } else if (!reuseExistingContext) {
                 context->setContextProperty(QLatin1String("section"), section);
             }
-            QQml_setParent_noEvent(context, nobj);
+            if (!reuseExistingContext)
+                QQml_setParent_noEvent(context, nobj);
             sectionItem = qobject_cast<QQuickItem *>(nobj);
             if (!sectionItem) {
                 delete nobj;
@@ -2033,6 +2034,11 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     ListView are laid out horizontally or vertically. List views are inherently
     flickable because ListView inherits from \l Flickable.
 
+    \note ListView will only load as many delegate items as needed to fill up the view.
+    Items outside of the view will not be loaded unless a sufficient \l cacheBuffer has
+    been set. Hence, a ListView with zero width or height might not load any delegate
+    items at all.
+
     \section1 Example Usage
 
     The following example shows the definition of a simple list model defined
@@ -2211,6 +2217,10 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
 
     \note While an item is in the pool, it might still be alive and respond
     to connected signals and bindings.
+
+    \note For an item to be pooled, it needs to be completely flicked out of the bounds
+    of the view, \e including the extra margins set with \l {ListView::}{cacheBuffer.}
+    Some items will also never be pooled or reused, such as \l currentItem.
 
     The following example shows a delegate that animates a spinning rectangle. When
     it is pooled, the animation is temporarily paused:

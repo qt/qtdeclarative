@@ -7,12 +7,14 @@ import io.qt
 
 Item {
     id: topLevel
-    property alias fillColor: shapePath.fillColor
-    property alias strokeStyle: shapePath.strokeStyle
     property alias capStyle: shapePath.capStyle
-    property alias strokeColor: shapePath.strokeColor
-    property alias strokeWidth: shapePath.strokeWidth
+    property alias dashOffset: shapePath.dashOffset
+    property alias dashPattern: shapePath.dashPattern
+    property alias fillColor: shapePath.fillColor
     property alias fillRule: shapePath.fillRule
+    property alias strokeColor: shapePath.strokeColor
+    property alias strokeStyle: shapePath.strokeStyle
+    property alias strokeWidth: shapePath.strokeWidth
     property alias shapeTransform: shape.transform
 
     property alias startX: shapePath.startX

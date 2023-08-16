@@ -34,6 +34,7 @@ public:
     const QColor &color(QPalette::ColorGroup group, QPalette::ColorRole role) const;
     bool setColor(QPalette::ColorGroup group, QPalette::ColorRole role, QColor color);
     bool resetColor(QPalette::ColorGroup group, QPalette::ColorRole role);
+    bool resetColor(QPalette::ColorGroup group);
 
     bool fromQPalette(QPalette p);
     QPalette palette() const;

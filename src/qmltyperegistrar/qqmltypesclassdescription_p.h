@@ -43,6 +43,7 @@ struct QmlTypesClassDescription
     QTypeRevision addedInRevision;
     QTypeRevision removedInRevision;
     bool isCreatable = true;
+    bool isStructured = false;
     bool isSingleton = false;
     bool hasCustomParser = false;
     bool omitFromQmlTypes = false;
@@ -60,10 +61,14 @@ struct QmlTypesClassDescription
     void collect(const QCborMap *classDef, const QVector<QCborMap> &types,
                  const QVector<QCborMap> &foreign, CollectMode mode,
                  QTypeRevision defaultRevision);
-    void collectRelated(QAnyStringView related, const QVector<QCborMap> &types,
-                        const QVector<QCborMap> &foreign, QTypeRevision defaultRevision);
+    const QCborMap *collectRelated(
+            QAnyStringView related, const QVector<QCborMap> &types,
+            const QVector<QCborMap> &foreign, QTypeRevision defaultRevision,
+            const QList<QAnyStringView> &namespaces);
 
-    static const QCborMap *findType(const QVector<QCborMap> &types, const QAnyStringView &name);
+    static const QCborMap *findType(
+            const QVector<QCborMap> &types, const QVector<QCborMap> &foreign,
+            const QAnyStringView &name, const QList<QAnyStringView> &namespaces);
 
     void collectLocalAnonymous(const QCborMap *classDef,const QVector<QCborMap> &types,
                       const QVector<QCborMap> &foreign, QTypeRevision defaultRevision);

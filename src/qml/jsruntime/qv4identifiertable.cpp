@@ -249,22 +249,18 @@ void IdentifierTable::sweep()
     size -= freed;
 }
 
-PropertyKey IdentifierTable::asPropertyKey(const QString &s)
+PropertyKey IdentifierTable::asPropertyKey(const QString &s,
+                                           IdentifierTable::KeyConversionBehavior conversionBehvior)
 {
     uint subtype;
-    const uint hash = String::createHashValue(s.constData(), s.size(), &subtype);
-    if (subtype == Heap::String::StringType_ArrayIndex)
-        return PropertyKey::fromArrayIndex(hash);
+    uint hash = String::createHashValue(s.constData(), s.size(), &subtype);
+    if (subtype == Heap::String::StringType_ArrayIndex) {
+        if (Q_UNLIKELY(conversionBehvior == ForceConversionToId))
+            hash = String::createHashValueDisallowingArrayIndex(s.constData(), s.size(), &subtype);
+        else
+            return PropertyKey::fromArrayIndex(hash);
+    }
     return resolveStringEntry(s, hash, subtype)->identifier;
-}
-
-PropertyKey IdentifierTable::asPropertyKey(const char *s, int len)
-{
-    uint subtype;
-    uint hash = String::createHashValue(s, len, &subtype);
-    if (subtype == Heap::String::StringType_ArrayIndex)
-        return PropertyKey::fromArrayIndex(hash);
-    return resolveStringEntry(QString::fromLatin1(s, len), hash, subtype)->identifier;
 }
 
 }

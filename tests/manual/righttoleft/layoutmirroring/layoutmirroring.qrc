@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/qt/qml/layoutmirroring">
+        <file>layoutmirroring.qml</file>
+    </qresource>
+</RCC>
+

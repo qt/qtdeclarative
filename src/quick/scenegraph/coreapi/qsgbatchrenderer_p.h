@@ -647,7 +647,7 @@ struct ShaderManagerShader
     }
     QSGMaterialShader *materialShader = nullptr;
     QRhiVertexInputLayout inputLayout;
-    QVarLengthArray<QRhiGraphicsShaderStage, 2> stages;
+    QVarLengthArray<QRhiShaderStage, 2> stages;
     float lastOpacity;
 };
 

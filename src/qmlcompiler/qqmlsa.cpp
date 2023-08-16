@@ -518,11 +518,6 @@ Element::Element()
     new (m_data) QQmlJSScope::ConstPtr();
 }
 
-Element::Element(const QString &internalName)
-{
-    new (m_data) QQmlJSScope::ConstPtr(std::move(QQmlJSScope::create(internalName)));
-}
-
 Element::Element(const Element &other)
 {
     new (m_data) QQmlJSScope::ConstPtr(QQmlJSScope::scope(other));
@@ -563,7 +558,7 @@ Element Element::baseType() const
  */
 QString Element::baseTypeName() const
 {
-    return QQmlJSScope::scope(*this)->baseTypeName();
+    return QQmlJSScope::prettyName(QQmlJSScope::scope(*this)->baseTypeName());
 }
 
 /*!
@@ -587,7 +582,10 @@ bool Element::isNull() const
     return QQmlJSScope::scope(*this).isNull();
 }
 
-QString Element::internalName() const
+/*!
+    \internal
+ */
+QString Element::internalId() const
 {
     return QQmlJSScope::scope(*this)->internalName();
 }
@@ -788,9 +786,14 @@ bool Element::operator!() const
     return !QQmlJSScope::scope(*this);
 }
 
-QString Element::prettyName(QAnyStringView name)
+/*!
+    Returns the name of this Element.
+ */
+QString Element::name() const
 {
-    return QQmlJSScope::prettyName(name);
+    if (isNull())
+        return {};
+    return QQmlJSScope::prettyName(QQmlJSScope::scope(*this)->internalName());
 }
 
 bool Element::operatorEqualsImpl(const Element &lhs, const Element &rhs)
@@ -807,8 +810,12 @@ qsizetype Element::qHashImpl(const Element &key, qsizetype seed) noexcept
     \class QQmlSA::GenericPass
     \inmodule QtQmlCompiler
 
-    \brief Represents a generic static analysis pass. This class should be extended to
-    implement custom behavior.
+    \brief The base class for static analysis passes.
+
+    This class contains common functionality used by more specific passses.
+    Custom passes should not directly derive from it, but rather from one of
+    its subclasses.
+    \sa ElementPass, PropertyPass
  */
 
 class GenericPassPrivate {
@@ -827,16 +834,16 @@ private:
     GenericPass *q_ptr;
 };
 
+GenericPass::~GenericPass() = default;
+
 /*!
     Creates a generic pass.
  */
-GenericPass::~GenericPass() = default;
-
 GenericPass::GenericPass(PassManager *manager)
     : d_ptr{ new GenericPassPrivate{ this, manager } } { }
 
 /*!
-    Emits a warning message \a diagnostic about an issue of tyep \a id.
+    Emits a warning message \a diagnostic about an issue of type \a id.
  */
 void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id)
 {
@@ -844,7 +851,7 @@ void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId
 }
 
 /*!
-    Emits a warning message \a diagnostic about an issue of tyep \a id located at
+    Emits warning message \a diagnostic about an issue of type \a id located at
     \a srcLocation.
  */
 void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id,
@@ -858,7 +865,7 @@ void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId
 }
 
 /*!
-    Emits a warning message \a diagnostic about an issue of tyep \a id located at
+    Emits a warning message \a diagnostic about an issue of type \a id located at
     \a srcLocation and with suggested fix \a fix.
  */
 void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id,
@@ -873,7 +880,8 @@ void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId
 }
 
 /*!
-    Returns the type of \a typeName.
+    Returns the type corresponding to \a typeName inside the
+    currently analysed file.
  */
 Element GenericPass::resolveTypeInFileScope(QAnyStringView typeName)
 {
@@ -883,15 +891,27 @@ Element GenericPass::resolveTypeInFileScope(QAnyStringView typeName)
     return QQmlJSScope::createQQmlSAElement(scope);
 }
 
+/*!
+    Returns the attached type corresponding to \a typeName used inside
+    the currently analysed file.
+ */
 Element GenericPass::resolveAttachedInFileScope(QAnyStringView typeName)
 {
     const auto type = resolveTypeInFileScope(typeName);
     const auto scope = QQmlJSScope::scope(type);
+
+    if (scope.isNull())
+        return QQmlJSScope::createQQmlSAElement(QQmlJSScope::ConstPtr(nullptr));
+
     return QQmlJSScope::createQQmlSAElement(scope->attachedType());
 }
 
 /*!
     Returns the type of \a typeName defined in module \a moduleName.
+    If an attached type and and a non-attached type share the same
+    name (e.g. \c ListView), the \l Element corresponding to the
+    non-attached type is returned.
+    To obtain the attached type, use \l resolveAttached.
  */
 Element GenericPass::resolveType(QAnyStringView moduleName, QAnyStringView typeName)
 {
@@ -899,6 +919,28 @@ Element GenericPass::resolveType(QAnyStringView moduleName, QAnyStringView typeN
     QQmlJSImporter *typeImporter = PassManagerPrivate::visitor(*d->m_manager)->importer();
     const auto module = typeImporter->importModule(moduleName.toString());
     const auto scope = module.type(typeName.toString()).scope;
+    return QQmlJSScope::createQQmlSAElement(scope);
+}
+
+/*!
+    Returns the type of the built-in type identified by \a typeName.
+    Built-in types encompasses \c{C++} types which the  QML engine can handle
+    without any imports (e.g. \l QDateTime and \l QString), global EcmaScript
+    objects like \c Number, as well as the \l{global Qt object}
+    {QML Global Object}.
+ */
+Element GenericPass::resolveBuiltinType(QAnyStringView typeName) const
+{
+    Q_D(const GenericPass);
+    QQmlJSImporter *typeImporter = PassManagerPrivate::visitor(*d->m_manager)->importer();
+    auto typeNameString = typeName.toString();
+    // we have to check both cpp names
+    auto scope = typeImporter->builtinInternalNames().type(typeNameString).scope;
+    if (!scope) {
+        // and qml names (e.g. for bool) - builtinImportHelper is private, so we can't do it in one call
+        auto builtins = typeImporter->importBuiltins();
+        scope = builtins.type(typeNameString).scope;
+    }
     return QQmlJSScope::createQQmlSAElement(scope);
 }
 
@@ -983,7 +1025,8 @@ void PassManager::registerElementPass(std::unique_ptr<ElementPass> pass)
 }
 
 /*!
- * \brief PassManager::registerElementPass registers ElementPass
+   \internal
+   \brief PassManager::registerElementPass registers ElementPass
           with the pass manager.
    \param pass The registered pass. Ownership is transferred to the pass manager.
  */
@@ -1024,11 +1067,25 @@ static QString lookupName(const QQmlSA::Element &element, LookupMode mode = Look
     Setting \a allowInheritance to \c true means that the filtering on the type
     also accepts types deriving from \a typeName.
 
+    \a pass is passed as a \c{std::shared_ptr} to allow reusing the same pass
+    on multiple elements:
+    \code
+    auto titleValiadorPass = std::make_shared<TitleValidatorPass>(manager);
+    manager->registerPropertyPass(titleValidatorPass,
+                                  "QtQuick", "Window", "title");
+    manager->registerPropertyPass(titleValidatorPass,
+                                  "QtQuick.Controls", "Dialog", "title");
+    \endcode
+
     \note Running analysis passes on too many items can be expensive. This is
     why it is generally good to filter down the set of properties of a pass
     using the \a moduleName, \a typeName and \a propertyName.
 
     Returns \c true if the pass was successfully added, \c false otherwise.
+    Adding a pass fails when the \l{QQmlSA::Element}{Element} specified by
+    \a moduleName and \a typeName does not exist.
+
+    \sa PropertyPass
 */
 bool PassManager::registerPropertyPass(std::shared_ptr<PropertyPass> pass,
                                        QAnyStringView moduleName, QAnyStringView typeName,
@@ -1161,7 +1218,19 @@ void PassManagerPrivate::analyzeBinding(const Element &element, const QQmlSA::El
 
 /*!
     Returns \c true if the module named \a module has been imported by the
-    import visitor, \c false otherwise.
+    QML to be analyzed, \c false otherwise.
+
+    This can be used to skip registering a pass which is specific to a specific
+    module.
+
+    \code
+    if (passManager->hasImportedModule("QtPositioning"))
+        passManager->registerElementPass(
+           std::make_unique<PositioningPass>(passManager)
+        );
+    \endcode
+
+    \sa registerPropertyPass(), registerElementPass()
  */
 bool PassManager::hasImportedModule(QAnyStringView module) const
 {
@@ -1174,14 +1243,6 @@ bool PassManager::hasImportedModule(QAnyStringView module) const
 bool PassManager::isCategoryEnabled(QQmlJS::LoggerWarningId category) const
 {
     return !PassManagerPrivate::visitor(*this)->logger()->isCategoryIgnored(category);
-}
-
-/*!
-    Sets whether the given \a category of warnings should be \a enabled.
- */
-void PassManager::setCategoryEnabled(QQmlJS::LoggerWarningId category, bool enabled)
-{
-    PassManagerPrivate::visitor(*this)->logger()->setCategoryIgnored(category, !enabled);
 }
 
 QQmlJSImportVisitor *QQmlSA::PassManagerPrivate::visitor(const QQmlSA::PassManager &manager)
@@ -1258,6 +1319,48 @@ void DebugElementPass::run(const Element &element) {
     \inmodule QtQmlCompiler
 
     \brief Base class for all static analysis passes on elements.
+
+    ElementPass is the simpler of the two analysis passes. It will consider every element in
+    a file. The \l shouldRun() method can be used to filter out irrelevant elements, and the
+    \l run() method is doing the initial work.
+
+    Common tasks suitable for an ElementPass are
+    \list
+    \li checking that properties of an Element are not combined in a nonsensical way
+    \li validating property values (e.g. that a property takes only certain enum values)
+    \li checking behavior dependent on an Element's parent (e.g. not using \l {Item::width}
+        when the parent element is a \c Layout).
+    \endlist
+
+    As shown in the snippet below, it is recommended to do necessary type resolution in the
+    constructor of the ElementPass and cache it in local members, and to implement some
+    filtering via \l shouldRun() to keep the static analysis performant.
+
+    \code
+    using namespace QQmlSA;
+    class MyElementPass : public ElementPass
+    {
+        Element myType;
+        public:
+            MyElementPass(QQmlSA::PassManager *manager)
+            : myType(resolveType("MyModule", "MyType")) {}
+
+            bool shouldRun(const Element &element) override
+            {
+                return element.inherits(myType);
+            }
+            void run(const Element &element) override
+            {
+                // actual pass logic
+            }
+    }
+    \endcode
+
+    ElementPasses have limited insight into how an element's properties are used. If you need
+    that information, consider using a \l PropertyPass instead.
+
+    \note ElementPass will only ever consider instantiable types. Therefore, it is unsuitable
+    to analyze attached types and singletons. Those need to be handled via a PropertyPass.
  */
 
 /*!
@@ -1265,10 +1368,16 @@ void DebugElementPass::run(const Element &element) {
 
     Executes if \c shouldRun() returns \c true. Performs the real computation
     of the pass on \a element.
+    This method is meant to be overridden. Calling the base method is not
+    necessary.
  */
 
 /*!
-    Returns \c true if the \c run() function should be executed on the given \a element.
+    Controls whether the \c run() function should be executed on the given \a element.
+    Subclasses can override this method to improve performance of the analysis by
+    filtering out elements which are not relevant.
+
+    The default implementation unconditionally returns \c true.
  */
 bool ElementPass::shouldRun(const Element &element)
 {
@@ -1498,7 +1607,6 @@ const QQmlJSFixSuggestion &FixSuggestionPrivate::fixSuggestion(const FixSuggesti
     \brief Represents a suggested fix for an issue in the source code.
  */
 
-FixSuggestion::FixSuggestion() : d_ptr{ new FixSuggestionPrivate{ this } } { }
 
 FixSuggestion::FixSuggestion(const QString &fixDescription, const QQmlSA::SourceLocation &location,
                              const QString &replacement)

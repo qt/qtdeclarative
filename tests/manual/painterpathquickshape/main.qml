@@ -6,8 +6,10 @@ import QtQuick.Window
 import QtQuick.Shapes
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtCore
 
 Window {
+    id: theWindow
     width: 1024
     height: 768
     visible: true
@@ -40,6 +42,10 @@ Window {
         ListElement {
             text: "CubicShape"
             source: "CubicShape.qml"
+        }
+        ListElement {
+            text: "DashedStroke"
+            source: "DashedStroke.qml"
         }
         ListElement {
             text: "Mussel"
@@ -189,7 +195,79 @@ Window {
             y: controlPanel.pathMargin
             id: loader
         }
+        MouseArea {
+            acceptedButtons: Qt.NoButton
+            anchors.fill: parent
+            onMouseXChanged: {
+                let p = Qt.point(Math.round(mouseX), Math.round(mouseY))
+                p = mapToItem(loader.item, p)
+                zoomTarget.sourceRect.x = p.x - zoomTarget.sourceRect.width/2
+            }
+            onMouseYChanged: {
+                let p = Qt.point(Math.round(mouseX), Math.round(mouseY))
+                p = mapToItem(loader.item, p)
+                zoomTarget.sourceRect.y = p.y - zoomTarget.sourceRect.height/2
+            }
+            hoverEnabled: true
+        }
+        ShaderEffectSource {
+            id: zoomTarget
+            sourceItem: loader.item
+            sourceRect.width: 16
+            sourceRect.height: 16
+        }
     }
+
+
+    Rectangle {
+        anchors.top: flickable.top
+        anchors.right: flickable.right
+        anchors.margins: 5
+        width: 256
+        height: 256
+        border.color: Qt.black
+        ShaderEffect {
+            anchors.fill: parent
+            anchors.margins: 1
+            property variant src: zoomTarget
+            property real textureWidth: zoomTarget.sourceRect.width
+            property real textureHeight: zoomTarget.sourceRect.height
+            fragmentShader: "zoombox.frag.qsb"
+        }
+        Button {
+            id: plusButton
+            text: "+"
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: 2
+            width: 20
+            height: 20
+            onPressed: {
+                zoomTarget.sourceRect.width = Math.max(zoomTarget.sourceRect.width / 2, 4)
+                zoomTarget.sourceRect.height = Math.max(zoomTarget.sourceRect.height / 2, 4)
+            }
+        }
+        Button {
+            id: minusButton
+            text: "-"
+            anchors.top: plusButton.bottom
+            anchors.right: parent.right
+            anchors.margins: 2
+            width: 20
+            height: 20
+            onPressed: {
+                zoomTarget.sourceRect.width = Math.max(zoomTarget.sourceRect.width * 2, 4)
+                zoomTarget.sourceRect.height = Math.max(zoomTarget.sourceRect.height * 2, 4)
+            }
+        }
+        Text {
+            text: "x"+parent.width / zoomTarget.sourceRect.width
+            anchors.bottom: parent.bottom
+            anchors.right: parent.right
+            anchors.margins: 2
+        }
+    }
+
 
     ControlPanel {
         id: controlPanel
@@ -197,5 +275,10 @@ Window {
         anchors.left: parent.left
         anchors.right: parent.right
         height: parent.height / 4
+    }
+    Settings {
+        property alias currentTab: comboBox.currentIndex
+        property alias windowWidth: theWindow.width
+        property alias windowHeight: theWindow.height
     }
 }

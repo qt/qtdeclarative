@@ -236,7 +236,7 @@ void tst_QAnimationGroupJob::addChildTwice()
 {
     QAbstractAnimationJob *subGroup;
     QAbstractAnimationJob *subGroup2;
-    auto *parent = new QSequentialAnimationGroupJob();
+    auto parent = std::make_unique<QSequentialAnimationGroupJob>();
 
     subGroup = new QAbstractAnimationJob;
     parent->appendAnimation(subGroup);
@@ -266,7 +266,6 @@ void tst_QAnimationGroupJob::addChildTwice()
     QCOMPARE(parent->children()->first(), subGroup2);
     QCOMPARE(parent->children()->last(), subGroup);
 
-    delete parent;
 }
 
 QTEST_MAIN(tst_QAnimationGroupJob)

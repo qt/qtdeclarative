@@ -26,8 +26,12 @@ Item {
 
     function check_value(date, tag, qdt) {
         var result = true;
+        if (isNaN(date)) {
+            console.warn("Invalid Date");
+            return false;
+        }
         if (date.getFullYear() != 2014) {
-            console.warn("Wrong year (" + tag + "):", date.getFullYear(), "!= 2014")
+            console.warn("Wrong year (" + tag + "):", date.getFullYear(), "!= 2014");
             result = false;
         }
         // July; JS's months are Jan 0 to 11 Dec, vs. Qt's 1 to 12.

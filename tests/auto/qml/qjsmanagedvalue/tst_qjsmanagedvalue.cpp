@@ -1577,22 +1577,22 @@ void tst_QJSManagedValue::castToPointer()
 
 void tst_QJSManagedValue::engineDeleted()
 {
-    QJSEngine *eng = new QJSEngine;
+    std::unique_ptr<QJSEngine> eng = std::make_unique<QJSEngine>();
     QObject *temp = new QObject(); // Owned by JS engine, as newQObject() sets JS ownership explicitly
     QJSManagedValue v1(eng->toManagedValue(123));
     QCOMPARE(v1.type(), QJSManagedValue::Number);
     QJSManagedValue v2(eng->toManagedValue(QStringLiteral("ciao")));
     QCOMPARE(v2.type(), QJSManagedValue::String);
-    QJSManagedValue v3(eng->newObject(), eng);
+    QJSManagedValue v3(eng->newObject(), eng.get());
     QCOMPARE(v3.type(), QJSManagedValue::Object);
     QVERIFY(!v3.isNull());
-    QJSManagedValue v4(eng->newQObject(temp), eng);
+    QJSManagedValue v4(eng->newQObject(temp), eng.get());
     QCOMPARE(v4.type(), QJSManagedValue::Object);
     QVERIFY(!v4.isNull());
-    QJSManagedValue v5(QStringLiteral("Hello"), eng);
+    QJSManagedValue v5(QStringLiteral("Hello"), eng.get());
     QCOMPARE(v2.type(), QJSManagedValue::String);
 
-    delete eng;
+    eng.reset();
 
     // You can still check the type, but anything involving the engine is obviously prohibited.
     QCOMPARE(v1.type(), QJSManagedValue::Undefined);

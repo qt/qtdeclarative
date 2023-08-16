@@ -4,6 +4,7 @@ SUBDIRS += \
     fonts \
     gifs \
     headerview \
+    imagine/musicplayer \
     qquickdialog \
     screenshots \
     styles \

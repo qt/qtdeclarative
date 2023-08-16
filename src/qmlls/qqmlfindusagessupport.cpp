@@ -68,7 +68,8 @@ void QQmlFindUsagesSupport::process(QQmlFindUsagesSupport::RequestPointerArgumen
             cacheEntry = codeCache.insert(usage.filename, file->code());
         }
 
-        location.range = QQmlLSUtils::qmlLocationToLspLocation(cacheEntry.value(), usage.location);
+        location.range =
+                QQmlLSUtils::qmlLocationToLspLocation(cacheEntry.value(), usage.sourceLocation);
 
         results.append(location);
     }

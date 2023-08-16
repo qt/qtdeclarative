@@ -30,8 +30,6 @@ QtObject {
         }
 
         x.open("GET", url);
-        x.setRequestHeader("Accept-Language", "en-US");
-
         try {
             var a = x.status;
         } catch (e) {
@@ -54,8 +52,6 @@ QtObject {
                 dataOK = (x.responseText == "QML Rocks!\n");
 
                 x.open("GET", url);
-                x.setRequestHeader("Accept-Language", "en-US");
-
                 try {
                     var a = x.status;
                 } catch (e) {

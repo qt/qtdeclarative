@@ -354,6 +354,8 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
         Path p = current<QmlObject>().addMethod(m, AddOption::KeepExisting, &mPtr);
         pushEl(p, *mPtr, el);
         FileLocations::addRegion(nodeStack.last().fileLocations, u"signal", el->propertyToken());
+        FileLocations::addRegion(nodeStack.last().fileLocations, u"identifier",
+                                 el->identifierToken);
         MethodInfo &mInfo = std::get<MethodInfo>(currentNode().value);
         AST::UiParameterList *args = el->parameters;
         while (args) {
@@ -386,6 +388,8 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
         pushEl(pPathFromOwner, *pPtr, el);
         FileLocations::addRegion(nodeStack.last().fileLocations, u"property",
                                  el->propertyToken());
+        FileLocations::addRegion(nodeStack.last().fileLocations, u"identifier",
+                                 el->identifierToken);
         if (p.name == u"id")
             qmlFile.addError(astParseErrors()
                                      .warning(tr("id is a special attribute, that should not be "
@@ -488,90 +492,91 @@ void QQmlDomAstCreator::endVisit(AST::UiPublicMember *el)
     removeCurrentNode({});
 }
 
+bool QQmlDomAstCreator::visit(AST::FunctionDeclaration *fDef)
+{
+    const QStringView code(qmlFilePtr->code());
+    MethodInfo m;
+    m.name = fDef->name.toString();
+    if (AST::TypeAnnotation *tAnn = fDef->typeAnnotation) {
+        if (AST::Type *t = tAnn->type)
+            m.typeName = typeToString(t);
+    }
+    m.access = MethodInfo::Public;
+    m.methodType = MethodInfo::Method;
+
+    SourceLocation bodyLoc = fDef->body ? combineLocations(fDef->body)
+                                        : combineLocations(fDef->lbraceToken, fDef->rbraceToken);
+    SourceLocation methodLoc = combineLocations(fDef);
+    QStringView preCode = code.mid(methodLoc.begin(), bodyLoc.begin() - methodLoc.begin());
+    QStringView postCode = code.mid(bodyLoc.end(), methodLoc.end() - bodyLoc.end());
+    m.body = std::make_shared<ScriptExpression>(
+            code.mid(bodyLoc.offset, bodyLoc.length), qmlFilePtr->engine(), fDef->body,
+            qmlFilePtr->astComments(), ScriptExpression::ExpressionType::FunctionBody, bodyLoc, 0,
+            preCode, postCode);
+
+    if (fDef->typeAnnotation) {
+        SourceLocation typeLoc = combineLocations(fDef->typeAnnotation);
+        m.returnType = std::make_shared<ScriptExpression>(
+                code.mid(typeLoc.offset, typeLoc.length), qmlFilePtr->engine(),
+                fDef->typeAnnotation, qmlFilePtr->astComments(),
+                ScriptExpression::ExpressionType::ReturnType, typeLoc, 0, u"", u"");
+    }
+
+    MethodInfo *mPtr;
+    Path mPathFromOwner = current<QmlObject>().addMethod(m, AddOption::KeepExisting, &mPtr);
+    pushEl(mPathFromOwner, *mPtr,
+           fDef); // add at the start and use the normal recursive visit?
+    FileLocations::Tree &fLoc = nodeStack.last().fileLocations;
+    if (fDef->identifierToken.isValid())
+        FileLocations::addRegion(fLoc, u"identifier"_s, fDef->identifierToken);
+    auto bodyTree = FileLocations::ensure(fLoc, Path::Field(Fields::body),
+                                          AttachedInfo::PathType::Relative);
+    FileLocations::addRegion(bodyTree, QString(), bodyLoc);
+    if (fDef->lparenToken.length != 0)
+        FileLocations::addRegion(fLoc, u"leftParen", fDef->lparenToken);
+    if (fDef->rparenToken.length != 0)
+        FileLocations::addRegion(fLoc, u"rightParen", fDef->rparenToken);
+    if (fDef->lbraceToken.length != 0)
+        FileLocations::addRegion(fLoc, u"leftBrace", fDef->lbraceToken);
+    if (fDef->rbraceToken.length != 0)
+        FileLocations::addRegion(fLoc, u"rightBrace", fDef->rbraceToken);
+    MethodInfo &mInfo = std::get<MethodInfo>(currentNode().value);
+    AST::FormalParameterList *args = fDef->formals;
+    while (args) {
+        MethodParameter param;
+        param.name = args->element->bindingIdentifier.toString();
+        if (AST::TypeAnnotation *tAnn = args->element->typeAnnotation) {
+            if (AST::Type *t = tAnn->type)
+                param.typeName = typeToString(t);
+        }
+        if (args->element->initializer) {
+            SourceLocation loc = combineLocations(args->element->initializer);
+            auto script = std::make_shared<ScriptExpression>(
+                    code.mid(loc.offset, loc.length), qmlFilePtr->engine(),
+                    args->element->initializer, qmlFilePtr->astComments(),
+                    ScriptExpression::ExpressionType::ArgInitializer, loc);
+            param.defaultValue = script;
+        }
+        SourceLocation parameterLoc = combineLocations(args->element);
+        param.value = std::make_shared<ScriptExpression>(
+                code.mid(parameterLoc.offset, parameterLoc.length), qmlFilePtr->engine(),
+                args->element, qmlFilePtr->astComments(),
+                ScriptExpression::ExpressionType::ArgumentStructure, parameterLoc);
+
+        index_type idx = index_type(mInfo.parameters.size());
+        mInfo.parameters.append(param);
+        auto argLocs = FileLocations::ensure(nodeStack.last().fileLocations,
+                                             Path::Field(Fields::parameters).index(idx),
+                                             AttachedInfo::PathType::Relative);
+        FileLocations::addRegion(argLocs, QString(), combineLocations(args));
+        args = args->next;
+    }
+    return true;
+}
+
 bool QQmlDomAstCreator::visit(AST::UiSourceElement *el)
 {
-    QStringView code(qmlFilePtr->code());
-    if (FunctionDeclaration *fDef = cast<FunctionDeclaration *>(el->sourceElement)) {
-        MethodInfo m;
-        m.name = fDef->name.toString();
-        if (AST::TypeAnnotation *tAnn = fDef->typeAnnotation) {
-            if (AST::Type *t = tAnn->type)
-                m.typeName = typeToString(t);
-        }
-        m.access = MethodInfo::Public;
-        m.methodType = MethodInfo::Method;
-
-        SourceLocation bodyLoc = fDef->body
-                ? combineLocations(fDef->body)
-                : combineLocations(fDef->lbraceToken, fDef->rbraceToken);
-        SourceLocation methodLoc = combineLocations(el);
-        QStringView preCode = code.mid(methodLoc.begin(), bodyLoc.begin() - methodLoc.begin());
-        QStringView postCode = code.mid(bodyLoc.end(), methodLoc.end() - bodyLoc.end());
-        m.body = std::make_shared<ScriptExpression>(
-                code.mid(bodyLoc.offset, bodyLoc.length), qmlFilePtr->engine(), fDef->body,
-                qmlFilePtr->astComments(), ScriptExpression::ExpressionType::FunctionBody, bodyLoc,
-                0, preCode, postCode);
-
-        if (fDef->typeAnnotation) {
-            SourceLocation typeLoc = combineLocations(fDef->typeAnnotation);
-            m.returnType = std::make_shared<ScriptExpression>(
-                    code.mid(typeLoc.offset, typeLoc.length), qmlFilePtr->engine(),
-                    fDef->typeAnnotation, qmlFilePtr->astComments(),
-                    ScriptExpression::ExpressionType::ReturnType, typeLoc, 0, u"", u"");
-        }
-
-        MethodInfo *mPtr;
-        Path mPathFromOwner = current<QmlObject>().addMethod(m, AddOption::KeepExisting, &mPtr);
-        pushEl(mPathFromOwner, *mPtr,
-               fDef); // add at the start and use the normal recursive visit?
-        FileLocations::Tree &fLoc = nodeStack.last().fileLocations;
-        if (fDef->identifierToken.isValid())
-            FileLocations::addRegion(fLoc, u"identifier"_s, fDef->identifierToken);
-        auto bodyTree = FileLocations::ensure(fLoc, Path::Field(Fields::body),
-                                              AttachedInfo::PathType::Relative);
-        FileLocations::addRegion(bodyTree, QString(), bodyLoc);
-        if (fDef->lparenToken.length != 0)
-            FileLocations::addRegion(fLoc, u"leftParen", fDef->lparenToken);
-        if (fDef->rparenToken.length != 0)
-            FileLocations::addRegion(fLoc, u"rightParen", fDef->rparenToken);
-        if (fDef->lbraceToken.length != 0)
-            FileLocations::addRegion(fLoc, u"leftBrace", fDef->lbraceToken);
-        if (fDef->rbraceToken.length != 0)
-            FileLocations::addRegion(fLoc, u"rightBrace", fDef->rbraceToken);
-        loadAnnotations(el);
-        MethodInfo &mInfo = std::get<MethodInfo>(currentNode().value);
-        AST::FormalParameterList *args = fDef->formals;
-        while (args) {
-            MethodParameter param;
-            param.name = args->element->bindingIdentifier.toString();
-            if (AST::TypeAnnotation *tAnn = args->element->typeAnnotation) {
-                if (AST::Type *t = tAnn->type)
-                    param.typeName = typeToString(t);
-            }
-            if (args->element->initializer) {
-                SourceLocation loc = combineLocations(args->element->initializer);
-                auto script = std::make_shared<ScriptExpression>(
-                        code.mid(loc.offset, loc.length), qmlFilePtr->engine(),
-                        args->element->initializer, qmlFilePtr->astComments(),
-                        ScriptExpression::ExpressionType::ArgInitializer, loc);
-                param.defaultValue = script;
-            }
-            SourceLocation parameterLoc = combineLocations(args->element);
-            param.value = std::make_shared<ScriptExpression>(
-                    code.mid(parameterLoc.offset, parameterLoc.length), qmlFilePtr->engine(),
-                    args->element, qmlFilePtr->astComments(),
-                    ScriptExpression::ExpressionType::ArgumentStructure, parameterLoc);
-
-            index_type idx = index_type(mInfo.parameters.size());
-            mInfo.parameters.append(param);
-            auto argLocs = FileLocations::ensure(nodeStack.last().fileLocations,
-                                                 Path::Field(Fields::parameters).index(idx),
-                                                 AttachedInfo::PathType::Relative);
-            FileLocations::addRegion(argLocs, QString(), combineLocations(args));
-            args = args->next;
-        }
-        return true;
-    } else {
+    if (!cast<FunctionDeclaration *>(el->sourceElement)) {
         qCWarning(creatorLog) << "unhandled source el:" << static_cast<AST::Node *>(el);
         Q_UNREACHABLE();
     }
@@ -588,76 +593,79 @@ static void setFormalParameterKind(ScriptElementVariant &variant)
     }
 }
 
+void QQmlDomAstCreator::endVisit(AST::FunctionDeclaration *fDef)
+{
+    MethodInfo &m = std::get<MethodInfo>(currentNode().value);
+    const FileLocations::Tree bodyTree =
+            FileLocations::ensure(currentNodeEl().fileLocations, Path().field(Fields::body));
+    const Path bodyPath = Path().field(Fields::scriptElement);
+
+    if (fDef->body) {
+        if (m_enableScriptExpressions && scriptNodeStack.isEmpty())
+            Q_SCRIPTELEMENT_DISABLE();
+        if (m_enableScriptExpressions) {
+            if (currentScriptNodeEl().isList()) {
+                // It is more intuitive to have functions with a block as a body instead of a
+                // list.
+                auto body = makeScriptElement<ScriptElements::BlockStatement>(fDef->body);
+                body->setStatements(currentScriptNodeEl().takeList());
+                if (auto semanticScope = body->statements().semanticScope())
+                    body->setSemanticScope(*semanticScope);
+                m.body->setScriptElement(finalizeScriptExpression(
+                        ScriptElementVariant::fromElement(body), bodyPath, bodyTree));
+            } else {
+                m.body->setScriptElement(finalizeScriptExpression(
+                        currentScriptNodeEl().takeVariant(), bodyPath, bodyTree));
+            }
+            removeCurrentScriptNode({});
+        }
+    }
+    if (m_enableScriptExpressions) {
+        if (fDef->typeAnnotation) {
+            auto argLoc = FileLocations::ensure(nodeStack.last().fileLocations,
+                                                Path().field(Fields::returnType),
+                                                AttachedInfo::PathType::Relative);
+            const Path pathToReturnType = Path().field(Fields::scriptElement);
+
+            ScriptElementVariant variant = currentScriptNodeEl().takeVariant();
+            finalizeScriptExpression(variant, pathToReturnType, argLoc);
+            m.returnType->setScriptElement(variant);
+            removeCurrentScriptNode({});
+        }
+        std::vector<FormalParameterList *> reversedInitializerExpressions;
+        for (auto it = fDef->formals; it; it = it->next) {
+            reversedInitializerExpressions.push_back(it);
+        }
+        const size_t size = reversedInitializerExpressions.size();
+        for (size_t idx = size - 1; idx < size; --idx) {
+            if (m_enableScriptExpressions && scriptNodeStack.empty()) {
+                Q_SCRIPTELEMENT_DISABLE();
+                break;
+            }
+            auto argLoc = FileLocations::ensure(
+                    nodeStack.last().fileLocations,
+                    Path().field(Fields::parameters).index(idx).field(Fields::value),
+                    AttachedInfo::PathType::Relative);
+            const Path pathToArgument = Path().field(Fields::scriptElement);
+
+            ScriptElementVariant variant = currentScriptNodeEl().takeVariant();
+            setFormalParameterKind(variant);
+            finalizeScriptExpression(variant, pathToArgument, argLoc);
+            m.parameters[idx].value->setScriptElement(variant);
+            removeCurrentScriptNode({});
+        }
+
+        // there should be no more uncollected script elements
+        if (m_enableScriptExpressions && !scriptNodeStack.empty()) {
+            Q_SCRIPTELEMENT_DISABLE();
+        }
+    }
+}
+
 void QQmlDomAstCreator::endVisit(AST::UiSourceElement *el)
 {
     MethodInfo &m = std::get<MethodInfo>(currentNode().value);
-    if (FunctionDeclaration *fDef = cast<FunctionDeclaration *>(el->sourceElement)) {
-
-        const FileLocations::Tree bodyTree =
-                FileLocations::ensure(currentNodeEl().fileLocations, Path().field(Fields::body));
-        const Path bodyPath = Path().field(Fields::scriptElement);
-
-        if (fDef->body) {
-            if (m_enableScriptExpressions && scriptNodeStack.isEmpty())
-                Q_SCRIPTELEMENT_DISABLE();
-            if (m_enableScriptExpressions) {
-                if (currentScriptNodeEl().isList()) {
-                    // It is more intuitive to have functions with a block as a body instead of a
-                    // list.
-                    auto body = makeScriptElement<ScriptElements::BlockStatement>(fDef->body);
-                    body->setStatements(currentScriptNodeEl().takeList());
-                    if (auto semanticScope = body->statements().semanticScope())
-                        body->setSemanticScope(*semanticScope);
-                    m.body->setScriptElement(finalizeScriptExpression(
-                            ScriptElementVariant::fromElement(body), bodyPath, bodyTree));
-                } else {
-                    m.body->setScriptElement(finalizeScriptExpression(
-                            currentScriptNodeEl().takeVariant(), bodyPath, bodyTree));
-                }
-                removeCurrentScriptNode({});
-            }
-        }
-        if (m_enableScriptExpressions) {
-            if (fDef->typeAnnotation) {
-                auto argLoc = FileLocations::ensure(nodeStack.last().fileLocations,
-                                                    Path().field(Fields::returnType),
-                                                    AttachedInfo::PathType::Relative);
-                const Path pathToReturnType = Path().field(Fields::scriptElement);
-
-                ScriptElementVariant variant = currentScriptNodeEl().takeVariant();
-                finalizeScriptExpression(variant, pathToReturnType, argLoc);
-                m.returnType->setScriptElement(variant);
-                removeCurrentScriptNode({});
-            }
-            std::vector<FormalParameterList *> reversedInitializerExpressions;
-            for (auto it = fDef->formals; it; it = it->next) {
-                reversedInitializerExpressions.push_back(it);
-            }
-            const size_t size = reversedInitializerExpressions.size();
-            for (size_t idx = size - 1; idx < size; --idx) {
-                if (m_enableScriptExpressions && scriptNodeStack.empty()) {
-                    Q_SCRIPTELEMENT_DISABLE();
-                    break;
-                }
-                auto argLoc = FileLocations::ensure(
-                        nodeStack.last().fileLocations,
-                        Path().field(Fields::parameters).index(idx).field(Fields::value),
-                        AttachedInfo::PathType::Relative);
-                const Path pathToArgument = Path().field(Fields::scriptElement);
-
-                ScriptElementVariant variant = currentScriptNodeEl().takeVariant();
-                setFormalParameterKind(variant);
-                finalizeScriptExpression(variant, pathToArgument, argLoc);
-                m.parameters[idx].value->setScriptElement(variant);
-                removeCurrentScriptNode({});
-            }
-
-            // there should be no more uncollected script elements
-            if (m_enableScriptExpressions && !scriptNodeStack.empty()) {
-                Q_SCRIPTELEMENT_DISABLE();
-            }
-        }
-    }
+    loadAnnotations(el);
     QmlObject &obj = current<QmlObject>();
     MethodInfo *mPtr =
             valueFromMultimap(obj.m_methods, m.name, nodeStack.last().path.last().headIndex());
@@ -841,6 +849,13 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
     } else {
         pathFromOwner =
                 current<QmlObject>().addBinding(bindingV, AddOption::KeepExisting, &bindingPtr);
+        QmlStackElement &containingObjectEl = currentEl<QmlObject>();
+        // remove the containingObjectEl.path prefix from pathFromOwner
+        Path pathFromContainingObject = pathFromOwner.mid(containingObjectEl.path.length());
+        auto bindingFileLocation =
+                FileLocations::ensure(containingObjectEl.fileLocations, pathFromContainingObject);
+        FileLocations::addRegion(bindingFileLocation, u"identifier",
+                                 el->qualifiedId->identifierToken);
         Q_ASSERT_X(bindingPtr, className, "binding could not be retrieved");
     }
     if (bindingPtr)
@@ -2156,8 +2171,9 @@ QQmlJSASTClassListToVisit
                         e.setSemanticScope(scope);
                     } else if constexpr (std::is_same_v<U, MethodInfo>) {
                         if (e.body) {
-                            if (auto scriptElement = e.body->scriptElement())
+                            if (auto scriptElement = e.body->scriptElement()) {
                                 scriptElement.base()->setSemanticScope(scope);
+                            }
                         }
                         e.setSemanticScope(scope);
                     }
@@ -2170,26 +2186,32 @@ void QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomBeforeEndvisit()
 {
     QQmlJSScope::Ptr scope = m_scopeCreator.m_currentScope;
 
-    auto visitPropertyDefinition = [&scope](auto &&e) {
-        using U = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
-        if constexpr (std::is_same_v<U, PropertyDefinition>) {
-            e.scope = scope;
-            Q_ASSERT(e.scope);
-        }
-    };
-
     // depending whether the property definition has a binding, the property definition might be
     // either at the last position in the stack or at the position before the last position.
     if (m_domCreator.nodeStack.size() > 1
         && m_domCreator.nodeStack.last().item.kind == DomType::Binding) {
-        std::visit([&visitPropertyDefinition](auto &&e) { visitPropertyDefinition(e); },
-                   m_domCreator.currentNodeEl(1).item.value);
+        std::visit(
+                [&scope](auto &&e) {
+                    using U = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
+                    if constexpr (std::is_same_v<U, PropertyDefinition>) {
+                        e.scope = scope;
+                        Q_ASSERT(e.scope);
+                    }
+                },
+                m_domCreator.currentNodeEl(1).item.value);
     }
     if (m_domCreator.nodeStack.size() > 0) {
         std::visit(
-                [&visitPropertyDefinition](auto &&e) {
-                    visitPropertyDefinition(e);
-                    // TODO: find which dom elements also have a scope and implement them here
+                [&scope](auto &&e) {
+                    using U = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
+                    if constexpr (std::is_same_v<U, PropertyDefinition>) {
+                        e.scope = scope;
+                        Q_ASSERT(e.scope);
+                    } else if constexpr (std::is_same_v<U, MethodInfo>) {
+                        if (e.methodType == MethodInfo::Signal) {
+                            e.setSemanticScope(scope);
+                        }
+                    }
                 },
                 m_domCreator.currentNodeEl().item.value);
     }

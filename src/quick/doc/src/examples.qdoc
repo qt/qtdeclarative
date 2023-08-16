@@ -6,7 +6,6 @@
 \page qtquick-codesamples.html
 \title Qt Quick Examples and Tutorials
 \brief Building UIs with QML
-\ingroup all-examples
 \ingroup qtquick
 \keyword qtquick-samples
 
@@ -99,7 +98,6 @@ Creator.
         \b{QML Types and Controls}
         \list
         \li \l{Qt Quick Controls - Gallery}{Controls Gallery}
-        \li \l{Calendar Example}
         \li \l{tableview/gameoflife}{TableView}
         \li \l{Qt Quick Examples - Text}{Text and Fonts}
         \endlist
@@ -112,7 +110,6 @@ Creator.
         \li \l{Qt Quick Examples - Positioners}{Positioners}
         \li \l{Qt Quick Examples - Views}{Views}
         \li \l{Qt Quick Examples - Window and Screen}{Windows and Screen}
-        \li \l{Qt Quick Examples - Right to Left}{Right-to-Left and Text Layout}
         \endlist
     \enddiv
     \div {class="doc-column"}
@@ -133,15 +130,13 @@ Creator.
         \b{Keyboard, Focus, and Touch}
         \list
         \li \l{Qt Quick Examples - Key Interaction}{Key Interaction}
-        \li \l{Qt Quick Examples - MouseArea}{MouseArea}
+        \li \l{Qt Quick Examples - Pointer Handlers}{Pointer Handlers}
         \endlist
     \enddiv
     \div {class="doc-column"}
         \b{System and Events}
         \list
-        \li \l{Qt Quick Examples - Threading}{Threading}
         \li \l{Qt Quick Examples - Accessibility}{Accessibility}
-        \li \l{Qt Quick Examples - externaldraganddrop}{External Drag and Drop}
         \li \l{Qt Quick Examples - Drag and Drop}{Drag and Drop}
         \li \l{Qt Quick Examples - Item Variable Refresh Rate}{Item Variable Refresh Rate}
         \endlist
@@ -153,6 +148,7 @@ Creator.
         \li \l{Scene Graph - RHI Under QML}{Portable QRhi-based 3D rendering as a scene underlay}
         \li \l{Scene Graph - RHI Texture Item}{Displaying a QRhi-rendered image in a QQuickItem}
         \li \l{Scene Graph - Custom QSGRenderNode}{Implementing a QRhi-based QSGRenderNode}
+        \li \l{QQuickRenderControl RHI Example}{Redirecting Qt Quick rendering into a QRhiTexture}
         \li \l{Scene Graph - Two Texture Providers}{Texture Providers and Materials}
         \li \l{Scene Graph - Custom Geometry}{Custom Geometry}
         \li \l{Scene Graph - Graph}{Graph}

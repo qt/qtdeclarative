@@ -78,6 +78,12 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     Q_ASSERT(m_qObjectType);
     m_qObjectListType = builtinTypes.type(u"QObjectList"_s).scope;
     Q_ASSERT(m_qObjectListType);
+    m_functionType = builtinTypes.type(u"function"_s).scope;
+    Q_ASSERT(m_functionType);
+    m_numberPrototype = builtinTypes.type(u"NumberPrototype"_s).scope;
+    Q_ASSERT(m_numberPrototype);
+    m_arrayPrototype = builtinTypes.type(u"ArrayPrototype"_s).scope;
+    Q_ASSERT(m_arrayPrototype);
 
     QQmlJSScope::Ptr emptyType = QQmlJSScope::create();
     emptyType->setAccessSemantics(QQmlJSScope::AccessSemantics::None);
@@ -95,22 +101,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     metaObjectType->setAccessSemantics(QQmlJSScope::AccessSemantics::Reference);
     m_metaObjectType = metaObjectType;
 
-    QQmlJSScope::Ptr functionType = QQmlJSScope::create();
-    functionType->setInternalName(u"function"_s);
-    functionType->setAccessSemantics(QQmlJSScope::AccessSemantics::Value);
-    m_functionType = functionType;
-
     m_jsGlobalObject = importer->jsGlobalObject();
-    auto numberMethods = m_jsGlobalObject->methods(u"Number"_s);
-    Q_ASSERT(numberMethods.size() == 1);
-    m_numberPrototype = numberMethods[0].returnType()->baseType();
-    Q_ASSERT(m_numberPrototype);
-    Q_ASSERT(m_numberPrototype->internalName() == u"NumberPrototype"_s);
-
-    auto arrayMethods = m_jsGlobalObject->methods(u"Array"_s);
-    Q_ASSERT(arrayMethods.size() == 1);
-    m_arrayType = arrayMethods[0].returnType();
-    Q_ASSERT(m_arrayType);
 }
 
 /*!
@@ -410,6 +401,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::transformed(
         return QQmlJSRegisterContent::create(
                     (this->*op)(origin.storedType()), origin.conversionOrigins(),
                     (this->*op)(origin.conversionResult()),
+                    (this->*op)(origin.conversionResultScope()),
                     origin.variant(), (this->*op)(origin.scopeType()));
     }
 
@@ -513,6 +505,7 @@ bool QQmlJSTypeResolver::adjustTrackedType(
     // If we cannot convert to the new type without the help of e.g. lookupResultMetaType(),
     // we better not change the type.
     if (!canPrimitivelyConvertFromTo(tracked, conversion)
+           && !canPopulate(conversion, tracked, nullptr)
            && !selectConstructor(conversion, tracked, nullptr).isValid()) {
         return false;
     }
@@ -538,6 +531,7 @@ bool QQmlJSTypeResolver::adjustTrackedType(
     // If we cannot convert to the new type without the help of e.g. lookupResultMetaType(),
     // we better not change the type.
     if (!canPrimitivelyConvertFromTo(tracked, result)
+            && !canPopulate(result, tracked, nullptr)
             && !selectConstructor(result, tracked, nullptr).isValid()) {
         return false;
     }
@@ -600,8 +594,11 @@ QString QQmlJSTypeResolver::containedTypeName(const QQmlJSRegisterContent &conta
 bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
                                           const QQmlJSScope::ConstPtr &to) const
 {
-    if (canPrimitivelyConvertFromTo(from, to) || selectConstructor(to, from, nullptr).isValid())
+    if (canPrimitivelyConvertFromTo(from, to)
+            || canPopulate(to, from, nullptr)
+            || selectConstructor(to, from, nullptr).isValid()) {
         return true;
+    }
 
     // ### need a generic solution for custom cpp types:
     // if (from->m_hasBoolOverload && equals(to, boolType))
@@ -638,16 +635,28 @@ static QQmlJSRegisterContent::ContentVariant mergeVariants(QQmlJSRegisterContent
 QQmlJSRegisterContent QQmlJSTypeResolver::merge(const QQmlJSRegisterContent &a,
                                                 const QQmlJSRegisterContent &b) const
 {
-    QList<QQmlJSScope::ConstPtr> origins;
-    if (a.isConversion())
-        origins.append(a.conversionOrigins());
-    else
-        origins.append(containedType(a));
+    if (a == b)
+        return a;
 
-    if (b.isConversion())
+    QList<QQmlJSScope::ConstPtr> origins;
+
+    QQmlJSScope::ConstPtr aResultScope;
+    if (a.isConversion()) {
+        origins.append(a.conversionOrigins());
+        aResultScope = a.conversionResultScope();
+    } else {
+        origins.append(containedType(a));
+        aResultScope = a.scopeType();
+    }
+
+    QQmlJSScope::ConstPtr bResultScope;
+    if (b.isConversion()) {
         origins.append(b.conversionOrigins());
-    else
+        bResultScope = b.conversionResultScope();
+    } else {
         origins.append(containedType(b));
+        bResultScope = b.scopeType();
+    }
 
     std::sort(origins.begin(), origins.end());
     const auto erase = std::unique(origins.begin(), origins.end());
@@ -657,6 +666,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::merge(const QQmlJSRegisterContent &a,
                 merge(a.storedType(), b.storedType()),
                 origins,
                 merge(containedType(a), containedType(b)),
+                merge(aResultScope, bResultScope),
                 mergeVariants(a.variant(), b.variant()),
                 merge(a.scopeType(), b.scopeType()));
 }
@@ -707,14 +717,6 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
 
     if (isNumeric(a) && isNumeric(b))
         return realType();
-
-    const auto isStringCompatible = [&](const QQmlJSScope::ConstPtr &type) {
-        // TODO: We can losslessly coerce more types to string. Should we?
-        return isIntegral(type) || equals(type, stringType());
-    };
-
-    if (isStringCompatible(a) && isStringCompatible(b))
-        return stringType();
 
     if (isPrimitive(a) && isPrimitive(b))
         return jsPrimitiveType();
@@ -1031,16 +1033,73 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
     return false;
 }
 
+bool QQmlJSTypeResolver::canPopulate(
+        const QQmlJSScope::ConstPtr &type, const QQmlJSScope::ConstPtr &passedArgumentType,
+        bool *isExtension) const
+{
+    // TODO: We could allow QVariantMap and QVariantHash to be populated, but that needs extra
+    //       code in the code generator.
+
+    if (type.isNull()
+            || canHold(passedArgumentType, type)
+            || isPrimitive(passedArgumentType)
+            || type->accessSemantics() != QQmlJSScope::AccessSemantics::Value
+            || !type->isStructured()) {
+        return false;
+    }
+
+    if (isExtension)
+        *isExtension = !type->extensionType().scope.isNull();
+
+    return true;
+}
+
 QQmlJSMetaMethod QQmlJSTypeResolver::selectConstructor(
-        const QQmlJSScope::ConstPtr &type, const QQmlJSScope::ConstPtr &passedArgumentType, bool *isExtension) const
+        const QQmlJSScope::ConstPtr &type, const QQmlJSScope::ConstPtr &passedArgumentType,
+        bool *isExtension) const
 {
     // If the "from" type can hold the target type, we should not try to coerce
     // it to any constructor argument.
-    if (type.isNull() || canHold(passedArgumentType, type))
+    if (type.isNull()
+            || canHold(passedArgumentType, type)
+            || type->accessSemantics() != QQmlJSScope::AccessSemantics::Value
+            || !type->isCreatable()) {
         return QQmlJSMetaMethod();
+    }
+
+    auto doSelectConstructor = [&](const QQmlJSScope::ConstPtr &type) {
+        QQmlJSMetaMethod candidate;
+
+        const auto ownMethods = type->ownMethods();
+        for (const QQmlJSMetaMethod &method : ownMethods) {
+            if (!method.isConstructor())
+                continue;
+
+            const auto index = method.constructorIndex();
+            Q_ASSERT(index != QQmlJSMetaMethod::RelativeFunctionIndex::Invalid);
+
+            const auto methodArguments = method.parameters();
+            if (methodArguments.size() != 1)
+                continue;
+
+            const QQmlJSScope::ConstPtr methodArgumentType = methodArguments[0].type();
+
+            if (equals(passedArgumentType, methodArgumentType))
+                return method;
+
+            // Do not select further ctors here. We don't want to do multi-step construction as that
+            // is confusing and easily leads to infinite recursion.
+            if (!candidate.isValid()
+                && canPrimitivelyConvertFromTo(passedArgumentType, methodArgumentType)) {
+                candidate = method;
+            }
+        }
+
+        return candidate;
+    };
 
     if (QQmlJSScope::ConstPtr extension = type->extensionType().scope) {
-        const QQmlJSMetaMethod ctor = selectConstructor(extension, passedArgumentType, nullptr);
+        const QQmlJSMetaMethod ctor = doSelectConstructor(extension);
         if (ctor.isValid()) {
             if (isExtension)
                 *isExtension = true;
@@ -1051,36 +1110,7 @@ QQmlJSMetaMethod QQmlJSTypeResolver::selectConstructor(
     if (isExtension)
         *isExtension = false;
 
-    QQmlJSMetaMethod candidate;
-    if (!type->isCreatable() || type->accessSemantics() != QQmlJSScope::AccessSemantics::Value)
-        return candidate;
-
-    const auto ownMethods = type->ownMethods();
-    for (const QQmlJSMetaMethod &method : ownMethods) {
-        if (!method.isConstructor())
-            continue;
-
-        const auto index = method.constructorIndex();
-        Q_ASSERT(index != QQmlJSMetaMethod::RelativeFunctionIndex::Invalid);
-
-        const auto methodArguments = method.parameters();
-        if (methodArguments.size() != 1)
-            continue;
-
-        const QQmlJSScope::ConstPtr methodArgumentType = methodArguments[0].type();
-
-        if (equals(passedArgumentType, methodArgumentType))
-            return method;
-
-        // Do not select further ctors here. We don't want to do multi-step construction as that
-        // is confusing and easily leads to infinite recursion.
-        if (!candidate.isValid()
-                && canPrimitivelyConvertFromTo(passedArgumentType, methodArgumentType)) {
-            candidate = method;
-        }
-    }
-
-    return candidate;
+    return doSelectConstructor(type);
 }
 
 bool QQmlJSTypeResolver::areEquivalentLists(
@@ -1538,13 +1568,14 @@ QQmlJSRegisterContent QQmlJSTypeResolver::convert(
 {
     if (from.isConversion()) {
         return QQmlJSRegisterContent::create(
-                    to.storedType(), from.conversionOrigins(), containedType(to), from.variant(),
-                    from.scopeType());
+                to.storedType(), from.conversionOrigins(), containedType(to),
+                to.scopeType() ? to.scopeType() : from.conversionResultScope(),
+                from.variant(), from.scopeType());
     }
 
     return QQmlJSRegisterContent::create(
-                to.storedType(), QList<QQmlJSScope::ConstPtr>{containedType(from)},
-                containedType(to), from.variant(), from.scopeType());
+            to.storedType(), QList<QQmlJSScope::ConstPtr>{containedType(from)},
+            containedType(to), to.scopeType(), from.variant(), from.scopeType());
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::comparableType(const QQmlJSScope::ConstPtr &type) const

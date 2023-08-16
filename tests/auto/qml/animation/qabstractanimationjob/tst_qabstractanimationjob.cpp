@@ -53,8 +53,7 @@ void tst_QAbstractAnimationJob::construction()
 
 void tst_QAbstractAnimationJob::destruction()
 {
-    TestableQAbstractAnimation *anim = new TestableQAbstractAnimation;
-    delete anim;
+    std::unique_ptr<TestableQAbstractAnimation> anim = std::make_unique<TestableQAbstractAnimation>();
 }
 
 void tst_QAbstractAnimationJob::currentLoop()

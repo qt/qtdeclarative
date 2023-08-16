@@ -16,6 +16,7 @@
 #include <QtQuickTemplates2/private/qquicktheme_p_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickControls2/qquickstyle.h>
+#include <QSignalSpy>
 
 //using namespace QQuickVisualTestUtils;
 
@@ -52,6 +53,8 @@ private slots:
     void updateBindings();
 
     void resolve();
+
+    void resetColor();
 };
 
 tst_palette::tst_palette()
@@ -425,6 +428,74 @@ void tst_palette::resolve()
             != control->property("palette").value<QQuickPalette*>()->window());
     QCOMPARE(window->property("palette").value<QQuickPalette*>()->windowText(),
              control->property("palette").value<QQuickPalette*>()->windowText());
+}
+
+void tst_palette::resetColor()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("reset-color.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow*>(component.create()));
+    QVERIFY2(!window.isNull(), qPrintable(component.errorString()));
+    auto windowPalette = window->property("palette").value<QQuickPalette*>();
+    QVERIFY(windowPalette);
+
+    auto control = window->property("control").value<QQuickControl*>();
+    QVERIFY(control);
+    auto controlPalette = control->property("palette").value<QQuickPalette*>();
+    QVERIFY(controlPalette);
+    auto item1Palette = window->property("item1Palette").value<QQuickPalette*>();
+    QVERIFY(item1Palette);
+    auto item2Palette = window->property("item2Palette").value<QQuickPalette*>();
+    QVERIFY(item2Palette);
+
+    QCOMPARE(controlPalette->disabled()->window(), item2Palette->disabled()->window());
+    QCOMPARE(controlPalette->disabled()->text(), item1Palette->disabled()->text());
+    QCOMPARE(controlPalette->disabled()->windowText(), windowPalette->disabled()->windowText());
+
+    {
+        QSignalSpy spy(controlPalette, &QQuickPalette::changed);
+        item1Palette->disabled()->setText(Qt::red);
+        QVERIFY(spy.count() == 1 || spy.wait());
+        QCOMPARE(controlPalette->disabled()->text(), QColor(Qt::red));
+    }
+
+    {
+        QSignalSpy spy(controlPalette, &QQuickPalette::changed);
+        item1Palette->disabled()->setWindowText(Qt::red);
+        QVERIFY(spy.count() == 1 || spy.wait());
+        QCOMPARE(controlPalette->disabled()->windowText(), QColor(Qt::red));
+    }
+
+    {
+        QSignalSpy spy(controlPalette, &QQuickPalette::changed);
+        item2Palette->disabled()->setWindowText(Qt::blue);
+        QVERIFY(spy.count() == 1 || spy.wait());
+        QCOMPARE(controlPalette->disabled()->windowText(), QColor(Qt::blue));
+    }
+
+    {
+        QSignalSpy spy(controlPalette, &QQuickPalette::changed);
+        QMetaObject::invokeMethod(window.get(), "resetColor", Qt::DirectConnection);
+        QCOMPARE(controlPalette->window(), windowPalette->window());
+        windowPalette->setWindow(Qt::green);
+        QCOMPARE(controlPalette->window(), QColor(Qt::green));
+        QVERIFY(spy.count() >= 2);
+    }
+
+    {
+        QSignalSpy spy(controlPalette, &QQuickPalette::changed);
+        QMetaObject::invokeMethod(window.get(), "resetGroup", Qt::DirectConnection);
+        QCOMPARE(controlPalette->disabled()->windowText(), windowPalette->disabled()->windowText());
+        windowPalette->disabled()->setWindow(Qt::blue);
+        QCOMPARE(controlPalette->disabled()->window(), QColor(Qt::blue));
+        item2Palette->disabled()->setWindow(Qt::red);
+        QCOMPARE(controlPalette->disabled()->window(), QColor(Qt::blue));
+        if (spy.count() == 0)
+            spy.wait();
+        QCOMPARE(spy.count(), 2);
+    }
 }
 
 QTEST_MAIN(tst_palette)

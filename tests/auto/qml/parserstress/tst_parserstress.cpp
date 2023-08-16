@@ -41,9 +41,9 @@ QFileInfoList tst_parserstress::findJSFiles(const QDir &d)
         rv << fileInfo;
     }
 
-    QStringList dirs = d.entryList(QDir::Dirs | QDir::NoDotAndDotDot |
+    const QStringList dirs = d.entryList(QDir::Dirs | QDir::NoDotAndDotDot |
                                    QDir::NoSymLinks);
-    foreach (const QString &dir, dirs) {
+    for (const QString &dir : dirs) {
         QDir sub = d;
         sub.cd(dir);
         rv << findJSFiles(sub);

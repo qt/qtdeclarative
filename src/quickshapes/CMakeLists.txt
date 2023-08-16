@@ -21,6 +21,8 @@ qt_internal_add_qml_module(QuickShapesPrivate
         qquickshapegenericrenderer.cpp qquickshapegenericrenderer_p.h
         qquickshapesglobal.h qquickshapesglobal_p.h
         qquickshapecurverenderer.cpp qquickshapecurverenderer_p.h qquickshapecurverenderer_p_p.h
+        qquickshapecurvenode.cpp qquickshapecurvenode_p.h qquickshapecurvenode_p_p.h qquickshapecurvenode_p.cpp
+        qquickshapestrokenode.cpp qquickshapestrokenode_p.h qquickshapestrokenode_p_p.h qquickshapestrokenode_p.cpp
         qt_quadratic_bezier.cpp
         qquickshapesoftwarerenderer.cpp qquickshapesoftwarerenderer_p.h
     PUBLIC_LIBRARIES
@@ -28,7 +30,6 @@ qt_internal_add_qml_module(QuickShapesPrivate
         Qt::GuiPrivate
         Qt::Qml
         Qt::QuickPrivate
-        Qt::ShaderTools
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS
 )
@@ -56,24 +57,26 @@ qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders"
         "shaders_ng/conicalgradient.frag"
         "shaders_ng/shapecurve.frag"
         "shaders_ng/shapecurve.vert"
+        "shaders_ng/shapestroke.frag"
+        "shaders_ng/shapestroke.vert"
         "shaders_ng/wireframe.frag"
         "shaders_ng/wireframe.vert"
 )
 
-qt_internal_add_shaders(QuickShapesPrivate "shaders_stroke"
+qt_internal_add_shaders(QuickShapesPrivate "shaders_derivatives"
     SILENT
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
-    DEFINES "STROKE"
+    DEFINES "USE_DERIVATIVES"
     PREFIX
         "/qt-project.org/shapes"
     FILES
         "shaders_ng/shapecurve.frag"
         "shaders_ng/shapecurve.vert"
     OUTPUTS
-        "shaders_ng/shapecurve_stroke.frag.qsb"
-        "shaders_ng/shapecurve_stroke.vert.qsb"
+        "shaders_ng/shapecurve_derivatives.frag.qsb"
+        "shaders_ng/shapecurve_derivatives.vert.qsb"
 )
 
 qt_internal_add_shaders(QuickShapesPrivate "shaders_lg"
@@ -81,7 +84,8 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_lg"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
-    DEFINES "LINEARGRADIENT"
+    DEFINES
+        "LINEARGRADIENT"
     PREFIX
         "/qt-project.org/shapes"
     FILES
@@ -92,22 +96,22 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_lg"
         "shaders_ng/shapecurve_lg.vert.qsb"
 )
 
-qt_internal_add_shaders(QuickShapesPrivate "shaders_lg_stroke"
+qt_internal_add_shaders(QuickShapesPrivate "shaders_lg_derivatives"
     SILENT
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
     DEFINES
         "LINEARGRADIENT"
-        "STROKE"
+        "USE_DERIVATIVES"
     PREFIX
         "/qt-project.org/shapes"
     FILES
         "shaders_ng/shapecurve.frag"
         "shaders_ng/shapecurve.vert"
     OUTPUTS
-        "shaders_ng/shapecurve_lg_stroke.frag.qsb"
-        "shaders_ng/shapecurve_lg_stroke.vert.qsb"
+        "shaders_ng/shapecurve_lg_derivatives.frag.qsb"
+        "shaders_ng/shapecurve_lg_derivatives.vert.qsb"
 )
 
 qt_internal_add_shaders(QuickShapesPrivate "shaders_rg"
@@ -115,7 +119,8 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_rg"
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
-    DEFINES "RADIALGRADIENT"
+    DEFINES
+        "RADIALGRADIENT"
     PREFIX
         "/qt-project.org/shapes"
     FILES
@@ -126,22 +131,22 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_rg"
         "shaders_ng/shapecurve_rg.vert.qsb"
 )
 
-qt_internal_add_shaders(QuickShapesPrivate "shaders_rg_stroke"
+qt_internal_add_shaders(QuickShapesPrivate "shaders_rg_derivatives"
     SILENT
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
     DEFINES
         "RADIALGRADIENT"
-        "STROKE"
+        "USE_DERIVATIVES"
     PREFIX
         "/qt-project.org/shapes"
     FILES
         "shaders_ng/shapecurve.frag"
         "shaders_ng/shapecurve.vert"
     OUTPUTS
-        "shaders_ng/shapecurve_rg_stroke.frag.qsb"
-        "shaders_ng/shapecurve_rg_stroke.vert.qsb"
+        "shaders_ng/shapecurve_rg_derivatives.frag.qsb"
+        "shaders_ng/shapecurve_rg_derivatives.vert.qsb"
 )
 
 qt_internal_add_shaders(QuickShapesPrivate "shaders_cg"
@@ -161,20 +166,21 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_cg"
         "shaders_ng/shapecurve_cg.vert.qsb"
 )
 
-qt_internal_add_shaders(QuickShapesPrivate "shaders_cg_stroke"
+qt_internal_add_shaders(QuickShapesPrivate "shaders_cg_derivatives"
     SILENT
     BATCHABLE
     PRECOMPILE
     OPTIMIZED
     DEFINES
         "CONICALGRADIENT"
-        "STROKE"
+        "USE_DERIVATIVES"
     PREFIX
         "/qt-project.org/shapes"
     FILES
         "shaders_ng/shapecurve.frag"
         "shaders_ng/shapecurve.vert"
     OUTPUTS
-        "shaders_ng/shapecurve_cg_stroke.frag.qsb"
-        "shaders_ng/shapecurve_cg_stroke.vert.qsb"
+        "shaders_ng/shapecurve_cg_derivatives.frag.qsb"
+        "shaders_ng/shapecurve_cg_derivatives.vert.qsb"
 )
+

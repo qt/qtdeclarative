@@ -1,0 +1,55 @@
+\startuml
+start
+:QGuiApplicationPrivate::process[Mouse|Touch|Tablet]Event();
+:QGuiApplication::sendSpontaneousEvent();
+:ℚWindow::event();
+:ℚDeliveryAgent::event();
+partition ℚDeliveryAgentPrivate::deliverPointerEvent() {
+    if (isBeginEvent()) then (yes)
+        partition "deliverPressOrReleaseEvent()" {
+            repeat :loop over QEventPoints;
+                :ℚDeliveryAgentPrivate::pointerTargets();
+            repeat while (more?) is (yes)
+            ->no;
+            repeat :loop over targetItems;
+                :**deliverMatchingPointsToItem()**;
+            repeat while (more?) is (yes)
+            ->no;
+        }
+    endif
+    if (allUpdatedPointsAccepted()) then (no)
+        partition "deliverUpdatedPoints()" {
+            repeat :loop over exclusive grabbers;
+                if (grabber type?) then (pointer handler)
+                    :ℚPointerHandler::handlePointerEvent();
+                else (Item)
+                    :**deliverMatchingPointsToItem()**;
+                endif
+            repeat while (more grabbers?) is (yes)
+            repeat :loop over QEventPoints;
+                partition "deliverToPassiveGrabbers()" {
+                    repeat :loop over passive grabbers;
+                        if (grabber type?) then (pointer handler)
+                            :ℚPointerHandler::handlePointerEvent();
+                        else (Item)
+                            :QCoreApplication::sendEvent(item, event);
+                        endif
+                    repeat while (more grabbers?) is (yes)
+                }
+            repeat while (more points?) is (yes)
+        }
+    endif
+    if (isEndEvent()) then (yes)
+        partition "deliverPressOrReleaseEvent()" {
+            repeat :loop over QEventPoints;
+                :ℚDeliveryAgentPrivate::pointerTargets();
+            repeat while (more?) is (yes)
+            ->no;
+            repeat :loop over targetItems;
+                :**deliverMatchingPointsToItem()**;
+            repeat while (more?) is (yes)
+        }
+    endif
+}
+stop
+\enduml

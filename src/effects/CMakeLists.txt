@@ -29,42 +29,11 @@ qt_internal_add_qml_module(QuickEffectsPrivate
     GENERATE_PRIVATE_CPP_EXPORTS
 )
 
-# Resources:
-set(effects_resource_files
-    "data/BlurItem.qml"
-    "data/shaders/bluritems.vert.qsb"
-    "data/shaders/bluritems.frag.qsb"
-    "data/shaders/multieffect_c.vert.qsb"
-    "data/shaders/multieffect_cs.vert.qsb"
-    "data/shaders/multieffect_c0.frag.qsb"
-    "data/shaders/multieffect_cb1.frag.qsb"
-    "data/shaders/multieffect_cb2.frag.qsb"
-    "data/shaders/multieffect_cb3.frag.qsb"
-    "data/shaders/multieffect_cbs1.frag.qsb"
-    "data/shaders/multieffect_cbs2.frag.qsb"
-    "data/shaders/multieffect_cbs3.frag.qsb"
-    "data/shaders/multieffect_cm0.frag.qsb"
-    "data/shaders/multieffect_cmb1.frag.qsb"
-    "data/shaders/multieffect_cmb2.frag.qsb"
-    "data/shaders/multieffect_cmb3.frag.qsb"
-    "data/shaders/multieffect_cmbs1.frag.qsb"
-    "data/shaders/multieffect_cmbs2.frag.qsb"
-    "data/shaders/multieffect_cmbs3.frag.qsb"
-    "data/shaders/multieffect_cms0.frag.qsb"
-    "data/shaders/multieffect_cms1.frag.qsb"
-    "data/shaders/multieffect_cms2.frag.qsb"
-    "data/shaders/multieffect_cms3.frag.qsb"
-    "data/shaders/multieffect_cs0.frag.qsb"
-    "data/shaders/multieffect_cs1.frag.qsb"
-    "data/shaders/multieffect_cs2.frag.qsb"
-    "data/shaders/multieffect_cs3.frag.qsb"
-)
-
 qt_internal_add_resource(QuickEffectsPrivate "effects"
     PREFIX
         "/"
     FILES
-        ${effects_resource_files}
+        "data/BlurItem.qml"
 )
 
 qt_internal_extend_target(QuickEffectsPrivate CONDITION MSVC
@@ -79,4 +48,323 @@ qt_internal_extend_target(QuickEffectsPrivate CONDITION EXISTS "qqml_enable_gcov
         -fno-elide-constructors
         -fprofile-arcs
         -ftest-coverage
+)
+
+set(EFFECT_SHADER_ARGS
+        SILENT
+        PRECOMPILE
+        OPTIMIZED
+        PREFIX
+            "/"
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders1"
+    ${EFFECT_SHADER_ARGS}
+    BATCHABLE
+    FILES
+        "data/shaders/bluritems.vert"
+        "data/shaders/bluritems.frag"
+)
+
+# Multieffect fragment shaders
+# c = Common color effects
+# m = Mask
+# b = Blur
+# s = Shadow
+# [n] = Amount of blur items used
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders2"
+    ${EFFECT_SHADER_ARGS}
+    BATCHABLE
+    FILES
+        "data/shaders/multieffect.vert"
+    OUTPUTS
+        "data/shaders/multieffect_c.vert.qsb"
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders3"
+    ${EFFECT_SHADER_ARGS}
+    BATCHABLE
+    FILES
+        "data/shaders/multieffect.vert"
+    OUTPUTS
+        "data/shaders/multieffect_cs.vert.qsb"
+    DEFINES
+        SHADOW
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders4"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_c0.frag.qsb"
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders5"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cm0.frag.qsb"
+    DEFINES
+        MASK
+)
+
+# Special shaders for non-blurred shadows (cs0 and cms0)
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders6"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cs0.frag.qsb"
+    DEFINES
+        SHADOW
+        BL0
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders7"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cms0.frag.qsb"
+    DEFINES
+        MASK
+        SHADOW
+        BL0
+)
+
+# Shaders for different blur levels
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders8"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cb1.frag.qsb"
+    DEFINES
+        BLUR
+        BL1
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders9"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cs1.frag.qsb"
+    DEFINES
+        SHADOW
+        BL1
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders10"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cmb1.frag.qsb"
+    DEFINES
+        MASK
+        BLUR
+        BL1
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders11"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cms1.frag.qsb"
+    DEFINES
+        MASK
+        SHADOW
+        BL1
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders12"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cbs1.frag.qsb"
+    DEFINES
+        BLUR
+        SHADOW
+        BL1
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders13"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cmbs1.frag.qsb"
+    DEFINES
+        MASK
+        BLUR
+        SHADOW
+        BL1
+)
+
+# level 2
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders14"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cb2.frag.qsb"
+    DEFINES
+        BLUR
+        BL1
+        BL2
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders15"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cs2.frag.qsb"
+    DEFINES
+        SHADOW
+        BL1
+        BL2
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders16"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cmb2.frag.qsb"
+    DEFINES
+        MASK
+        BLUR
+        BL1
+        BL2
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders17"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cms2.frag.qsb"
+    DEFINES
+        MASK
+        SHADOW
+        BL1
+        BL2
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders18"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cbs2.frag.qsb"
+    DEFINES
+        BLUR
+        SHADOW
+        BL1
+        BL2
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders19"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cmbs2.frag.qsb"
+    DEFINES
+        MASK
+        BLUR
+        SHADOW
+        BL1
+        BL2
+)
+
+# level 3
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders20"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cb3.frag.qsb"
+    DEFINES
+        BLUR
+        BL1
+        BL2
+        BL3
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders21"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cs3.frag.qsb"
+    DEFINES
+        SHADOW
+        BL1
+        BL2
+        BL3
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders22"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cmb3.frag.qsb"
+    DEFINES
+        MASK
+        BLUR
+        BL1
+        BL2
+        BL3
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders23"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cms3.frag.qsb"
+    DEFINES
+        MASK
+        SHADOW
+        BL1
+        BL2
+        BL3
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders24"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cbs3.frag.qsb"
+    DEFINES
+        BLUR
+        SHADOW
+        BL1
+        BL2
+        BL3
+)
+
+qt_internal_add_shaders(QuickEffectsPrivate "multieffect_shaders25"
+    ${EFFECT_SHADER_ARGS}
+    FILES
+        "data/shaders/multieffect.frag"
+    OUTPUTS
+        "data/shaders/multieffect_cmbs3.frag.qsb"
+    DEFINES
+        MASK
+        BLUR
+        SHADOW
+        BL1
+        BL2
+        BL3
 )

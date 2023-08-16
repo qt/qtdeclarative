@@ -1,0 +1,242 @@
+/*! \internal
+    \page qq-ideal-pointer-event-delivery-single-drag Dragging one DragHandler with one touchpoint
+    \tableofcontents
+
+    <a href="https://doc.qt.io/qt-6/qtquick-input-topic.html">Multi-touch</a>
+    is intended to be a strong feature in Qt Quick, so let's run this example
+    on a touchscreen:
+
+    \snippet pointerHandlers/pinchAndDragHandlers.qml entire
+
+    The intended behavior is that we have three Rectangles that can be dragged,
+    and you can alternatively perform a pinch gesture on the parent Rectangle
+    to scale and rotate it. The object instances involved look like this:
+
+    \dotfile pinchAndDragHandlers.dot "pinch and drag handlers"
+
+    (In these diagrams, ℚ is a shortcut for QQuick, to save space.
+    ResizeItemToWindow comes from \c qtdeclarative/tools/qml/ResizeItemToWindow.qml
+    which is a resource in the
+    <a href="https://doc.qt.io/qt-6/qtquick-qml-runtime.html">qml executable</a>
+    which wraps our top-level Rectangle into a Window.)
+
+    \section qq-ideal-pointer-event-delivery-press-draghandler-prep Touch press on a DragHandler: preparation
+
+    Let's start with the scenario that you attempt to drag one Rectangle
+    with one finger. A QTouchEvent arrives, it contains a single QEventPoint
+    representing the single finger, and we have to decide which items and
+    handlers we're going to visit.
+
+    \image html pinchAndDragHandlers-singlePressPrep.svg "touch press event delivery: preparation"
+
+    Since Qt 5.8 (change ccc5c54602821761a2f1a42c4bc473afd53439c9), we stopped
+    doing ad-hoc recursive delivery of touch and mouse events: we wanted to
+    ensure that delivery is deterministic (in spite of what user code may do to
+    the parent hierarchy during delivery), so we first build a list of Items to
+    visit, in QQuickDeliveryAgentPrivate::pointerTargets() (which is recursive
+    itself). This is somewhat expensive, but fortunately we only need to do
+    that when handling the event that begins a gesture, such as a press event.
+    A press event is a pointer event in which \e any QEventPoint has the
+    \c Pressed QEventPoint::state.
+
+    But how do we decide which items are relevant and need to be visited?
+    First, the QEventPoint must fall within the item's bounds, so we need to
+    call QQuickItem::mapFromScene() to localize from the scene (window)
+    coordinates to item coordinates, and then QQuickItem::contains() to check
+    whether it's inside. (QQuickItem::contains() is virtual so that QQuickShape
+    can be non-rectangular; also, any Item can have a
+    QQuickItem::containmentMask() to declare non-rectangular bounds.) Then, we
+    call QQuickItemPrivate::anyPointerHandlerWants() which calls
+    QQuickPointerHandler::wantsEventPoint() on each of the item's pointer
+    handlers: if any handler wants the eventpoint, we need to visit that item.
+    Otherwise, if QQuickItem::acceptTouchEvents() returns false, we do \e not
+    need to visit that item. Thus, pointerTargets() pre-visits all items in the
+    scene to build the list of potential targets.
+
+    \section qq-ideal-pointer-event-delivery-press-draghandler Touch press on a DragHandler: delivery to targets
+
+    After building the list, we are prepared to begin actual delivery of the
+    press event. QQuickDeliveryAgentPrivate::deliverPressOrReleaseEvent() loops
+    over \c targetItems and calls
+    QQuickDeliveryAgentPrivate::deliverMatchingPointsToItem(). (Parent-item
+    filtering could have intercepted it before that; but as stated, we're
+    neglecting that complication for now.)
+
+    \image html pinchAndDragHandlers-singlePressDelivery.svg "touch press event actual delivery"
+
+    For each item in \c targetItems, again we need to call mapFromScene() and
+    set QEventPoint::position() to item-local coordinates:
+    QQuickDeliveryAgentPrivate::localizePointerEvent() takes care of that.
+    We always let Pointer Handlers handle the event before the Item itself
+    (because this allows a handler to override or augment behavior that a C++
+    QQuickItem subclass has in its QQuickItem::touchEvent() function: another
+    complication that we're neglecting for now). The implementation for that
+    is in QQuickItemPrivate::handlePointerEvent(): it simply loops over any
+    handlers that are found in the list QQuickItemPrivate::ExtraData::pointerHandlers
+    and calls QQuickPointerHandler::handlePointerEvent() on each of those.
+    That's not a virtual function; but it calls wantsPointerEvent()
+    again, and then handlePointerEventImpl() which \e is virtual.
+
+    PinchHandler would get the event first if it was relevant, because
+    pointerTargets() was a preorder traversal, so parents come before children
+    in the \c targetItems list. But QQuickMultiPointHandler::wantsPointerEvent()
+    has already returned false, because QQuickMultiPointHandler::eligiblePoints()
+    has only found one point, and QQuickMultiPointHandler::minimumPointCount()
+    is 2 by default. (You might be wondering, what if the user presses a
+    second finger later to start the pinch gesture? We'll get to that below.)
+    So it can be skipped; next in \c targetItems should be a Rectangle whose
+    bounds contain QEventPoint::position() \e and that has a DragHandler.
+    By default, one point is enough for a DragHandler: its inherited
+    QQuickMultiPointHandler::wantsPointerEvent() has already returned \c true,
+    and QQuickMultiPointHandlerPrivate::currentPoints is already storing
+    information about the QEventPoints that it wants to handle.
+    (QEventPoint::id() is guaranteed to remain constant during one gesture:
+    once pressed, the same finger keeps manipulating the same QEventPoint.
+    In \c currentPoints[0], QQuickHandlerPoint::id() remembers it.)
+    So QQuickDragHandler::handlePointerEventImpl() can immediately iterate
+    \c currentPoints, find the QEventPoint that has the same ID; and then
+    it calls QQuickPointerHandler::setPassiveGrab(), because DragHandler
+    needs to monitor the position of that point. The drag gesture will not
+    begin until the point is dragged a distance in pixels greater than
+    QStyleHints::startDragDistance(), and it's not appropriate for DragHandler
+    to take the exclusive grab of that touchpoint until it's sure the user
+    really means to drag. (What if the same Rectangle also had a TapHandler?
+    The user could either drag, or tap without dragging; but at the time of the
+    press, it's ambiguous, so both handlers would need their own grabs, to express
+    interest in monitoring that touchpoint.) But without any grab, the handler
+    would not be visited again when the next event occurs: a touchpoint
+    movement or release.
+
+    We've omitted details about the meaning of QEventPoint::accepted() and
+    QEvent::accepted() flags. Pointer handlers need to take grabs explicitly:
+    that helps to remove ambiguity about the consequences of the \c accepted flags.
+
+    \section qq-ideal-pointer-event-delivery-move-draghandler Touch move on a DragHandler: delivery to grabber
+
+    \image html pinchAndDragHandlers-drag-one-rect.png "dragging one rectangle via touch"
+
+    So we're done handling the press; now let's try to start dragging.
+
+    Let's say the user's finger quickly moves far enough on the touchscreen to
+    generate a single QTouchEvent with a delta greater than the drag threshold.
+
+    Again, QGuiApplicationPrivate::processTouchEvent() handles the next QPA
+    touch event (QWindowSystemInterfacePrivate::TouchEvent). For each
+    touchpoint (for each finger being held down), it calls
+    QPointingDevicePrivate::pointById() to retrieve the
+    QPointingDevicePrivate::EventPointData that was stored previously when the
+    press event was delivered, and updates its stored state, including the
+    QEventPoint instance, to be current for this incoming move event.
+    QEventPoint::globalPressPosition() is not updated though: it continues to
+    hold the position at which the press occurred; therefore, any object that
+    ends up handing the moving point can check to see how far it moved since
+    press. Likewise, QEventPoint::pressTimestamp() holds the time at which it
+    was pressed.
+
+    \image html pinchAndDragHandlers-singleMoveDelivery.svg "touch move event delivery"
+
+    Another QTouchEvent instance is stack-allocated, with type
+    QEvent::TouchUpdate, in which \c point(0) is a QEventPoint (with state
+    QEventPoint::Updated) with QEventPoint::scenePosition() being the current
+    finger position in the window, while QEventPoint::scenePressPosition()
+    remembers where it was pressed during the previous press event. It's sent
+    to the application via QGuiApplication::sendSpontaneousEvent(), then to
+    ① QQuickWindow::event(), which dispatches to ② QQuickDeliveryAgent::event().
+    ③ QQuickDeliveryAgentPrivate::deliverPointerEvent() calls
+    ④ QQuickDeliveryAgentPrivate::deliverUpdatedPoints(), which (among other
+    things) iterates the QEventPoints, and for each of those, iterates the
+    passive grabbers in QPointingDevicePrivate::EventPointData::passiveGrabbers
+    and calls ⑤ QQuickDeliveryAgentPrivate::deliverToPassiveGrabbers(). It uses
+    ⑥ QQuickDeliveryAgentPrivate::localizePointerEvent() to ⑦ map
+    QEventPoint::position() to the passive-grabbing DragHandler's parent item's
+    coordinate system, and calls ⑧ QQuickPointerHandler::handlePointerEvent().
+    ⑨ QQuickMultiPointHandler::wantsPointerEvent() returns \c true because all
+    the same QQuickMultiPointHandlerPrivate::currentPoints still exist in this
+    QTouchEvent (with no points left over); so
+    ⑩ QQuickDragHandler::handlePointerEventImpl() is called. For each point, it
+    calculates the movement delta \c (scenePosition() - scenePressPosition());
+    ⑪ QQuickPointerHandlerPrivate::dragOverThreshold() checks whether it's moved
+    far enough to activate dragging. (If multiple points were being dragged,
+    handlePointerEventImpl() would also check whether they are all being
+    dragged in approximately the same direction.) It did move far enough, and
+    now DragHandler knows it should take responsibility for this gesture:
+    apparently the user is really trying to drag its parent item, the
+    Rectangle. It calls ⑫ QQuickMultiPointHandler::grabPoints() to try to take
+    the exclusive grab. Nothing is interfering with that, so the attempt
+    succeeds and returns \c true; therefore, it's ok to call
+    ⑬ QQuickPointerHandler::setActive(), which triggers
+    ⑭ QQuickDragHandler::onActiveChanged(), which updates some internal state
+    etc.; and then ⑮ emits the activeChanged() signal. In our example, the
+    Rectangle has a binding to ⑯ change color when the DragHandler becomes
+    active. And since by default, DragHandler's \c target is the same as its
+    \c parent, QQuickDragHandler::handlePointerEventImpl() ends with a call to
+    ⑰ QQuickMultiPointHandler::moveTarget(). That uses QMetaProperty::write()
+    to ⑱ change the Rectangle's \c x and \c y properties; the reason we do it
+    that way is in case property value interceptors (BoundaryRule or Behavior)
+    are in use. And so the Rectangle moves as far as the finger is dragged.
+
+    \section qq-ideal-pointer-event-delivery-release-draghandler Touch release: delivery to grabber
+
+    Now let's say there's a QPA event with
+    QWindowSystemInterface::TouchPoint::state being QEventPoint::Released.
+
+    \image html pinchAndDragHandlers-singleReleaseDelivery.svg "touch release event delivery"
+
+    It's processed like the touch move: the persistent QEventPoint is updated
+    with current values again, and another QTouchEvent instance is
+    stack-allocated, with type QEvent::TouchEnd, and ① sent to the window and ②
+    the delivery agent. When it gets to ③ QQuickDeliveryAgentPrivate::deliverPointerEvent(),
+    ④ deliverUpdatedPoints() is called first (same as for the move). As usual,
+    the event is not given to the item or its handlers until it's been ⑤
+    localized to the item's coordinate system.
+
+    ⑥ QQuickPointerHandler::handlePointerEvent() calls
+    ⑦ QQuickMultiPointHandler::wantsPointerEvent(), which is able to see that the
+    point it's tracking (in QQuickMultiPointHandlerPrivate::currentPoints) is
+    no longer eligible because it's been released; so it calls
+    ⑧ QQuickPointerHandler::setActive() with \c false immediately, which calls
+    ⑨ onActiveChanged() and emits the ⑩ activeChanged signal. (Thus our Rectangle
+    ⑪ changes its color again.) QQuickPointerHandler::handlePointerEvent() then
+    calls QPointerEvent::setExclusiveGrabber() with \c nullptr to give up its
+    exclusive grab. ⑫ QPointingDevice::grabChanged() is emitted.
+    QQuickDeliveryAgentPrivate::onGrabChanged() handles that signal, and calls
+    ⑬ QQuickDragHandler::onGrabChanged(), which has minimal consequences in this
+    case. (QQuickPointerHandler::onGrabChanged() calls
+    QQuickPointerHandler::setActive() with \c false again: it's a failsafe that
+    some other scenarios rely on.)
+
+    \section qq-ideal-pointer-event-delivery-touch-summary Touch delivery activity diagrams
+
+    So let's generalize the functionality we've covered so far.
+    As we'll see later, mouse events are treated a bit differently;
+    but ideally it would be the same: a mouse event is just a QPointerEvent
+    that comes from a different device, containing only one QEventPoint,
+    just like our single-finger touch event.
+
+    A begin (press) event goes to deliverPressOrReleaseEvent(), and then
+    if the QEventPoints weren't all accepted, it goes to deliverUpdatedPoints().
+
+    An update (move) event goes to deliverUpdatedPoints() only.
+
+    An end (release) event goes to deliverUpdatedPoints() and then
+    deliverPressOrReleaseEvent().
+
+    \startuml
+    !include ideal-pointer-event-delivery.puml
+    \enduml
+
+    QQuickDeliveryAgentPrivate::deliverMatchingPointsToItem() is called from
+    two places (deliverPressOrReleaseEvent() and deliverUpdatedPoints()), so
+    it's shown in a separate activity diagram:
+
+    \startuml
+    !include deliverMatchingPointsToItem.puml
+    \enduml
+
+    In conclusion, we've seen the details of touch event dispatching for one
+    short drag gesture to one DragHandler. In practice, Pointer Handlers are
+    still not the most common way to handle pointer events (even if we'd like
+    to end up there eventually): there are a lot of legacy QQuickItem
+    subclasses that do their event handling by overriding virtual functions
+    rather than by having handlers added. But let's save that for later.
+*/

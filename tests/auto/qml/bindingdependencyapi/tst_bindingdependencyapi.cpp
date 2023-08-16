@@ -104,12 +104,12 @@ void tst_bindingdependencyapi::testSingleDep()
     QQmlEngine engine;
     QQmlComponent c(&engine);
     c.setData(code, QUrl());
-    QObject *rect = c.create();
+    std::unique_ptr<QObject> rect { c.create() };
     QTest::qWait(10);
-    QVERIFY(rect != nullptr);
+    QVERIFY(rect.get() != nullptr);
     QObject *text = rect->findChildren<QQuickText *>().front();
 
-    QObject *referencedObject = rect->objectName() == referencedObjectName ? rect : rect->findChild<QObject *>(referencedObjectName);
+    QObject *referencedObject = rect->objectName() == referencedObjectName ? rect.get() : rect->findChild<QObject *>(referencedObjectName);
 
     auto data = QQmlData::get(text);
     QVERIFY(data);
@@ -125,8 +125,6 @@ void tst_bindingdependencyapi::testSingleDep()
     QCOMPARE(dependency.property().name(), "labelText");
     QCOMPARE(dependency.read().toString(), QStringLiteral("Hello world!"));
     QCOMPARE(dependency, QQmlProperty(referencedObject, "labelText"));
-
-    delete rect;
 }
 
 bool tst_bindingdependencyapi::findProperties(const QVector<QQmlProperty> &properties, QObject *obj, const QString &propertyName, const QVariant &value)
@@ -183,12 +181,12 @@ void tst_bindingdependencyapi::testManyDeps()
     QQmlEngine engine;
     QQmlComponent c(&engine);
     c.setData(code, QUrl());
-    QObject *rect = c.create();
+    std::unique_ptr<QObject> rect { c.create() };
     if (c.isError()) {
         qWarning() << c.errorString();
     }
     QTest::qWait(100);
-    QVERIFY(rect != nullptr);
+    QVERIFY(rect.get() != nullptr);
     QObject *text = rect->findChildren<QQuickText *>().front();
     QObject *configObj = rect->findChild<QObject *>("config");
 
@@ -201,11 +199,9 @@ void tst_bindingdependencyapi::testManyDeps()
     auto dependencies = binding->dependencies();
     QCOMPARE(dependencies.size(), 3);
 
-    QVERIFY(findProperties(dependencies, rect, "name", "world"));
+    QVERIFY(findProperties(dependencies, rect.get(), "name", "world"));
     QVERIFY(findProperties(dependencies, text, "greeting", "Hello"));
     QVERIFY(findProperties(dependencies, configObj, "helloWorldTemplate", "%1 %2!"));
-
-    delete rect;
 }
 
 void tst_bindingdependencyapi::testConditionalDependencies_data()
@@ -263,12 +259,12 @@ void tst_bindingdependencyapi::testConditionalDependencies()
     QQmlEngine engine;
     QQmlComponent c(&engine);
     c.setData(code, QUrl());
-    QObject *rect = c.create();
+    std::unique_ptr<QObject> rect { c.create() };
     QTest::qWait(10);
-    QVERIFY(rect != nullptr);
+    QVERIFY(rect.get() != nullptr);
     QObject *text = rect->findChildren<QQuickText *>().front();
 
-    QObject *referencedObject = rect->objectName() == referencedObjectName ? rect : rect->findChild<QObject *>(referencedObjectName);
+    QObject *referencedObject = rect->objectName() == referencedObjectName ? rect.get() : rect->findChild<QObject *>(referencedObjectName);
 
     auto data = QQmlData::get(text);
     QVERIFY(data);
@@ -290,8 +286,6 @@ void tst_bindingdependencyapi::testConditionalDependencies()
     dependencies = binding->dependencies();
     QCOMPARE(dependencies.size(), 1);
     QVERIFY(findProperties(dependencies, referencedObject, "haveDep", false));
-
-    delete rect;
 }
 
 void tst_bindingdependencyapi::testBindingLoop()
@@ -306,12 +300,12 @@ void tst_bindingdependencyapi::testBindingLoop()
                               "text: labelText\n"
                           "}\n"
                       "}"), QUrl());
-    QObject *rect = c.create();
+    std::unique_ptr<QObject> rect { c.create() };
     if (c.isError()) {
         qWarning() << c.errorString();
     }
     QTest::qWait(100);
-    QVERIFY(rect != nullptr);
+    QVERIFY(rect.get() != nullptr);
     QObject *text = rect->findChildren<QQuickText *>().front();
 
     auto data = QQmlData::get(text);
@@ -324,10 +318,8 @@ void tst_bindingdependencyapi::testBindingLoop()
     QCOMPARE(dependencies.size(), 1);
     auto dependency = dependencies.front();
     QVERIFY(dependency.isValid());
-    QCOMPARE(quintptr(dependency.object()), quintptr(rect));
+    QCOMPARE(quintptr(dependency.object()), quintptr(rect.get()));
     QCOMPARE(dependency.property().name(), "labelText");
-
-    delete rect;
 }
 
 void tst_bindingdependencyapi::testQproperty()

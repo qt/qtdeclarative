@@ -34,6 +34,7 @@ public:
     bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
     void forwardMouseEvent(QMouseEvent *event, QQuickItem *destination, QPointF localPos);
     bool attachedObjectsSetPressed(QQuickItem *item, QPointF scenePos, bool pressed, bool cancel = false);
+    QQuickItem *getPressedItem(QQuickItem *childItem, QMouseEvent *event) const;
 
     void resizeContent() override;
     void resizeBackground() override;

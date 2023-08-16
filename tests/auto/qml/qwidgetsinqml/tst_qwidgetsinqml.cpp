@@ -40,7 +40,8 @@ public:
     {}
 
     QQmlListProperty<QObject> data() {
-        return QQmlListProperty<QObject>(this, 0, children_append, children_count, children_at, children_clear);
+        return QQmlListProperty<QObject>(
+                this, nullptr, children_append, children_count, children_at, children_clear);
     }
 
     static void children_append(QQmlListProperty<QObject> *prop, QObject *o)
@@ -58,12 +59,12 @@ public:
         }
     }
 
-    static int children_count(QQmlListProperty<QObject> *prop)
+    static qsizetype children_count(QQmlListProperty<QObject> *prop)
     {
         return static_cast<QObjectContainer*>(prop->object)->dataChildren.count();
     }
 
-    static QObject *children_at(QQmlListProperty<QObject> *prop, int index)
+    static QObject *children_at(QQmlListProperty<QObject> *prop, qsizetype index)
     {
         return static_cast<QObjectContainer*>(prop->object)->dataChildren.at(index);
     }

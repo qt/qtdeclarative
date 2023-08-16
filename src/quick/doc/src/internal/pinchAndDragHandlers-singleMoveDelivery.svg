@@ -1,0 +1,851 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<!-- Pages: 1 -->
+
+<svg
+   width="737.57623pt"
+   height="332.46246pt"
+   viewBox="0 0 737.65964 332.46246"
+   version="1.1"
+   id="svg806"
+   sodipodi:docname="pinchAndDragHandlers-singleMoveDelivery.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs810">
+    <marker
+       style="overflow:visible"
+       id="marker1576"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Arrow5"
+       markerWidth="5.8874259"
+       markerHeight="6.6094756"
+       viewBox="0 0 5.8874262 6.6094758"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="m 6,0 c -3,1 -7,3 -9,5 0,0 0,-4 2,-5 -2,-1 -2,-5 -2,-5 2,2 6,4 9,5 z"
+         id="path1574" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker1576-4"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Arrow5"
+       markerWidth="5.8874259"
+       markerHeight="6.6094756"
+       viewBox="0 0 5.8874262 6.6094758"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="m 6,0 c -3,1 -7,3 -9,5 0,0 0,-4 2,-5 -2,-1 -2,-5 -2,-5 2,2 6,4 9,5 z"
+         id="path1574-4" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow5"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Arrow5"
+       markerWidth="5.8874264"
+       markerHeight="6.6094756"
+       viewBox="0 0 5.8874262 6.6094758"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="m 6,0 c -3,1 -7,3 -9,5 0,0 0,-4 2,-5 -2,-1 -2,-5 -2,-5 2,2 6,4 9,5 z"
+         id="path8893" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker1576-4-5"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Arrow5"
+       markerWidth="5.8874259"
+       markerHeight="6.6094756"
+       viewBox="0 0 5.8874262 6.6094758"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="m 6,0 c -3,1 -7,3 -9,5 0,0 0,-4 2,-5 -2,-1 -2,-5 -2,-5 2,2 6,4 9,5 z"
+         id="path1574-4-3" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="namedview808"
+     pagecolor="#ffffff"
+     bordercolor="#111111"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="pt"
+     showgrid="false"
+     inkscape:zoom="2.7028887"
+     inkscape:cx="512.78471"
+     inkscape:cy="236.59872"
+     inkscape:window-width="3840"
+     inkscape:window-height="2139"
+     inkscape:window-x="3840"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg806" />
+  <g
+     id="graph0"
+     class="graph"
+     transform="translate(4,328.48129)">
+    <polygon
+       fill="#ffffff"
+       stroke="none"
+       points="615.07,4 -4,4 -4,-328 615.07,-328 "
+       id="polygon654"
+       transform="matrix(1.1915609,0,0,1,0.76624365,0)" />
+    <!-- llfkmbbephlg -->
+    <g
+       id="node1"
+       class="node"
+       style="stroke-width:1.00011;stroke-dasharray:none">
+      <title
+         id="title656">llfkmbbephlg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="250.78,-288 474.53,-288 474.53,-324 262.78,-324 262.78,-328 250.78,-328 "
+         id="polygon658"
+         style="stroke-width:1.00011;stroke-dasharray:none" />
+      <polyline
+         fill="none"
+         stroke="#000000"
+         points="250.78,-324 262.78,-324"
+         id="polyline660"
+         style="stroke-width:1.00011;stroke-dasharray:none" />
+      <text
+         text-anchor="middle"
+         x="362.66"
+         y="-300.95001"
+         font-family="Times, serif"
+         font-size="6pt"
+         id="text662"
+         style="stroke-width:1.00011;stroke-dasharray:none">ResizeItemToWindow_QMLTYPE_1</text>
+    </g>
+    <!-- llfkmbbeijgg -->
+    <g
+       id="node2"
+       class="node">
+      <title
+         id="title665">llfkmbbeijgg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="322.78,-216 402.53,-216 402.53,-252 322.78,-252 "
+         id="polygon667" />
+      <text
+         text-anchor="middle"
+         x="362.66"
+         y="-229.32001"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text669">ℚRootItem</text>
+    </g>
+    <!-- llfkmbbephlg&#45;&gt;llfkmbbeijgg -->
+    <g
+       id="edge1"
+       class="edge">
+      <title
+         id="title672">llfkmbbephlg-&gt;llfkmbbeijgg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 362.66,-274.81 c 0,7.77 0,15.86 0,22.71"
+         id="path674" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="362.66,-286.8 358.66,-280.8 362.66,-274.8 366.66,-280.8 "
+         id="polygon676" />
+    </g>
+    <!-- llfkmbbepmbg -->
+    <g
+       id="node3"
+       class="node">
+      <title
+         id="title679">llfkmbbepmbg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="245.66,-144 327.66,-144 327.66,-180 245.66,-180 "
+         id="polygon681" />
+      <text
+         text-anchor="middle"
+         x="286.66"
+         y="-157.32001"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text683">ℚRectangle</text>
+    </g>
+    <!-- llfkmbbeijgg&#45;&gt;llfkmbbepmbg -->
+    <g
+       id="edge2"
+       class="edge">
+      <title
+         id="title686">llfkmbbeijgg-&gt;llfkmbbepmbg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 334.28,-206.87 c -9.61,8.86 -20.1,18.52 -28.79,26.52"
+         id="path688" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="343.21,-215.09 336.09,-213.96 334.38,-206.96 341.51,-208.08 "
+         id="polygon690" />
+    </g>
+    <!-- llfkmbclplkg -->
+    <g
+       id="node11"
+       class="node">
+      <title
+         id="title693">llfkmbclplkg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="345.8,-156.44 439.66,-144 533.52,-156.44 533.43,-176.56 345.89,-176.56 "
+         id="polygon695" />
+      <text
+         text-anchor="middle"
+         x="439.66"
+         y="-157.32001"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text697">ℚDeliveryAgent</text>
+    </g>
+    <!-- llfkmbbeijgg&#45;&gt;llfkmbclplkg -->
+    <g
+       id="edge10"
+       class="edge">
+      <title
+         id="title700">llfkmbbeijgg-&gt;llfkmbclplkg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 391.18,-207.07 c 11.28,10.25 23.79,21.62 33.27,30.25"
+         id="path702" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="382.36,-215.09 384.11,-208.09 391.24,-207.02 389.49,-214.01 "
+         id="polygon704" />
+    </g>
+    <!-- llfkmbodpifg -->
+    <g
+       id="node4"
+       class="node">
+      <title
+         id="title707">llfkmbodpifg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="177.32,-95.56 88.66,-108 0,-95.56 0.08,-75.44 177.23,-75.44 "
+         id="polygon709" />
+      <text
+         text-anchor="middle"
+         x="88.660004"
+         y="-85.330002"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text711">ℚPinchHandler</text>
+    </g>
+    <!-- llfkmbbepmbg&#45;&gt;llfkmbodpifg -->
+    <g
+       id="edge3"
+       class="edge">
+      <title
+         id="title714">llfkmbbepmbg-&gt;llfkmbodpifg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 233.33,-142.15 c -34.69,12.27 -78.95,27.92 -109.33,38.66"
+         id="path716" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="244.78,-146.2 237.79,-147.97 233.47,-142.2 240.46,-140.42 "
+         id="polygon718" />
+    </g>
+    <!-- llfkmbnfping -->
+    <g
+       id="node5"
+       class="node">
+      <title
+         id="title721">llfkmbnfping</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="195.66,-72 277.66,-72 277.66,-108 195.66,-108 "
+         id="polygon723" />
+      <text
+         text-anchor="middle"
+         x="236.66"
+         y="-85.330002"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text725">ℚRectangle</text>
+    </g>
+    <!-- llfkmbbepmbg&#45;&gt;llfkmbnfping -->
+    <g
+       id="edge4"
+       class="edge">
+      <title
+         id="title728">llfkmbbepmbg-&gt;llfkmbnfping</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 266.73,-133.1 c -6.04,8.45 -12.48,17.48 -17.85,25"
+         id="path730" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="273.78,-142.96 267.03,-140.41 266.8,-133.2 273.54,-135.76 "
+         id="polygon732" />
+    </g>
+    <!-- llfkmbbdfibg -->
+    <g
+       id="node7"
+       class="node">
+      <title
+         id="title735">llfkmbbdfibg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="295.66,-72 377.66,-72 377.66,-108 295.66,-108 "
+         id="polygon737" />
+      <text
+         text-anchor="middle"
+         x="336.66"
+         y="-85.330002"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text739">ℚRectangle</text>
+    </g>
+    <!-- llfkmbbepmbg&#45;&gt;llfkmbbdfibg -->
+    <g
+       id="edge6"
+       class="edge">
+      <title
+         id="title742">llfkmbbepmbg-&gt;llfkmbbdfibg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 306.59,-133.1 c 6.03,8.45 12.48,17.48 17.85,25"
+         id="path744" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="299.54,-142.96 299.77,-135.76 306.52,-133.2 306.28,-140.41 "
+         id="polygon746" />
+    </g>
+    <!-- llfkmbodeang -->
+    <g
+       id="node9"
+       class="node">
+      <title
+         id="title749">llfkmbodeang</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="440.66,-72 522.66,-72 522.66,-108 440.66,-108 "
+         id="polygon751" />
+      <text
+         text-anchor="middle"
+         x="481.66"
+         y="-85.330002"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text753">ℚRectangle</text>
+    </g>
+    <!-- llfkmbbepmbg&#45;&gt;llfkmbodeang -->
+    <g
+       id="edge8"
+       class="edge">
+      <title
+         id="title756">llfkmbbepmbg-&gt;llfkmbodeang</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 340.14,-141.8 c 31.61,11.35 71.02,25.49 100.22,35.98"
+         id="path758" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="328.86,-145.85 333.16,-140.06 340.16,-141.8 335.86,-147.59 "
+         id="polygon760" />
+    </g>
+    <!-- llfkmbbfjjgg -->
+    <g
+       id="node6"
+       class="node">
+      <title
+         id="title763">llfkmbbfjjgg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="233.07,-23.56 147.66,-36 62.25,-23.56 62.33,-3.44 232.99,-3.44 "
+         id="polygon765" />
+      <text
+         text-anchor="middle"
+         x="147.66"
+         y="-13.33"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text767">ℚDragHandler</text>
+    </g>
+    <!-- llfkmbnfping&#45;&gt;llfkmbbfjjgg -->
+    <g
+       id="edge5"
+       class="edge">
+      <title
+         id="title770">llfkmbnfping-&gt;llfkmbbfjjgg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 204.77,-63.92 c -12.86,10.12 -27.25,21.44 -38.37,30.18"
+         id="path772" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="213.95,-71.14 206.76,-70.57 204.52,-63.72 211.71,-64.29 "
+         id="polygon774" />
+    </g>
+    <!-- llfkmbbfibdg -->
+    <g
+       id="node8"
+       class="node">
+      <title
+         id="title777">llfkmbbfibdg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="422.07,-23.56 336.66,-36 251.25,-23.56 251.33,-3.44 421.99,-3.44 "
+         id="polygon779" />
+      <text
+         text-anchor="middle"
+         x="336.66"
+         y="-13.33"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text781">ℚDragHandler</text>
+    </g>
+    <!-- llfkmbbdfibg&#45;&gt;llfkmbbfibdg -->
+    <g
+       id="edge7"
+       class="edge">
+      <title
+         id="title784">llfkmbbdfibg-&gt;llfkmbbfibdg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 336.66,-58.81 c 0,7.77 0,15.86 0,22.71"
+         id="path786" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="336.66,-70.8 332.66,-64.8 336.66,-58.8 340.66,-64.8 "
+         id="polygon788" />
+    </g>
+    <!-- llfkmbcknglg -->
+    <g
+       id="node10"
+       class="node">
+      <title
+         id="title791">llfkmbcknglg</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="611.07,-23.56 525.66,-36 440.25,-23.56 440.33,-3.44 610.99,-3.44 "
+         id="polygon793" />
+      <text
+         text-anchor="middle"
+         x="525.65997"
+         y="-13.33"
+         font-family="Times, serif"
+         font-size="9pt"
+         id="text795">ℚDragHandler</text>
+    </g>
+    <!-- llfkmbodeang&#45;&gt;llfkmbcknglg -->
+    <g
+       id="edge9"
+       class="edge">
+      <title
+         id="title798">llfkmbodeang-&gt;llfkmbcknglg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 499.32,-60.9 c 5.62,8.94 11.63,18.5 16.49,26.23"
+         id="path800" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="493.01,-70.93 492.82,-63.72 499.4,-60.77 499.59,-67.98 "
+         id="polygon802" />
+    </g>
+    <g
+       id="g11866"
+       class="edge"
+       transform="rotate(-90,623.51573,-276.02262)">
+      <title
+         id="title11860">llfkmbbephlg-&gt;llfkmbbeijgg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 362.66,-274.81 c 0,7.77 0,15.86 0,22.71"
+         id="path11862" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="366.66,-280.8 362.66,-286.8 358.66,-280.8 362.66,-274.8 "
+         id="polygon11864" />
+    </g>
+    <path
+       fill="none"
+       stroke="#000000"
+       d="m 708.8157,-33.802688 c 0,-1.93521 -13.67346,-3.50801 -30.51031,-3.50801 -16.83686,0 -30.51503,1.5728 -30.51503,3.50801 0,0 0,31.5378501 0,31.5378501 0,1.93522003 13.67817,3.50801 30.51503,3.50801 16.83685,0 30.51031,-1.57278997 30.51031,-3.50801 0,0 0,-31.5378501 0,-31.5378501"
+       id="path12337"
+       style="stroke-width:0.568213" />
+    <path
+       fill="none"
+       stroke="#000000"
+       d="m 708.8157,-33.802688 c 0,1.92838 -13.67346,3.50116 -30.51031,3.50116 -16.83686,0 -30.51503,-1.57278 -30.51503,-3.50116"
+       id="path12339"
+       style="stroke-width:0.568213" />
+    <text
+       text-anchor="middle"
+       x="678.23846"
+       y="-14.011026"
+       font-family="Times, serif"
+       font-size="6pt"
+       id="text12341"
+       style="stroke-width:0.681807">currentPoints</text>
+    <g
+       id="g14256"
+       class="edge"
+       transform="rotate(-90,507.65517,-314.66065)">
+      <title
+         id="title14250">llfkmbbephlg-&gt;llfkmbbeijgg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 362.66,-274.81 c 0,7.77 0,15.86 0,22.71"
+         id="path14252" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="362.66,-286.8 358.66,-280.8 362.66,-274.8 366.66,-280.8 "
+         id="polygon14254" />
+    </g>
+    <path
+       fill="none"
+       stroke="#000000"
+       d="m 631.59317,-188.30128 c 0,-1.93521 -13.67346,-3.50801 -30.51031,-3.50801 -16.83686,0 -30.51503,1.5728 -30.51503,3.50801 0,0 0,31.53785 0,31.53785 0,1.93522 13.67817,3.50801 30.51503,3.50801 16.83685,0 30.51031,-1.57279 30.51031,-3.50801 0,0 0,-31.53785 0,-31.53785"
+       id="path14258"
+       style="stroke-width:0.568213" />
+    <path
+       fill="none"
+       stroke="#000000"
+       d="m 631.59317,-188.30128 c 0,1.92838 -13.67346,3.50116 -30.51031,3.50116 -16.83686,0 -30.51503,-1.57278 -30.51503,-3.50116"
+       id="path14260"
+       style="stroke-width:0.568213" />
+    <text
+       text-anchor="middle"
+       x="601.01593"
+       y="-168.50961"
+       font-family="Times, serif"
+       font-size="6pt"
+       id="text14262"
+       style="stroke-width:0.681807">targetItems</text>
+    <g
+       id="g3826"
+       class="edge"
+       transform="rotate(180,500.1871,-52.761609)">
+      <title
+         id="title3820">llfkmbodeang-&gt;llfkmbcknglg</title>
+      <path
+         fill="none"
+         stroke="#000000"
+         d="m 499.32,-60.9 c 5.62,8.94 11.63,18.5 16.49,26.23"
+         id="path3822" />
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="492.82,-63.72 499.4,-60.77 499.59,-67.98 493.01,-70.93 "
+         id="polygon3824" />
+    </g>
+  </g>
+  <g
+     id="g2388"
+     transform="translate(166.85425,118.15234)">
+    <rect
+       style="fill:#ffffff;stroke:#000000;stroke-width:0.869398;stroke-linecap:square;stroke-dasharray:0.869398, 0.869398;stroke-opacity:1"
+       id="rect981"
+       width="115.87793"
+       height="32.582088"
+       x="-181.46954"
+       y="-115.9365"
+       ry="0"
+       transform="matrix(1,0,-0.22867874,0.97350194,0,0)" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9pt;line-height:125%;font-family:Times, serif;-inkscape-font-specification:'Times, serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       x="-149.44366"
+       y="-93.742676"
+       id="text1897"><tspan
+         sodipodi:role="line"
+         id="tspan1895"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9pt;font-family:Times, serif;-inkscape-font-specification:'Times, serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+         x="-149.44366"
+         y="-93.742676">QGuiApplication</tspan></text>
+  </g>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.00011;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.00011, 1.00011;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker1576)"
+     d="m 508.49821,147.40834 c -5.01114,-15.80414 29.88553,-12.14178 19.22974,-0.30829"
+     id="path2661"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.00011;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.00011, 1.00011;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker1576-4)"
+     d="m 529.10578,290.07508 c 2.22687,-20.59627 43.00062,-73.20365 2.77101,-64.44971"
+     id="path9238"
+     sodipodi:nodetypes="cc" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="450.67688"
+     y="193.66904"
+     id="text9282"><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="450.67688"
+       y="193.66904"
+       id="tspan9280">⑦ mapFromScene()</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="497.35483"
+     y="100.48878"
+     id="text9334"><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="497.35483"
+       y="100.48878"
+       id="tspan9332">③ deliverPointerEvent()</tspan><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="497.35483"
+       y="111.44315"
+       id="tspan1575">④ deliverUpdatedPoints()</tspan><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="497.35483"
+       y="122.39753"
+       id="tspan1577">⑤ deliverToPassiveGrabbers()</tspan><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="497.35483"
+       y="133.3519"
+       id="tspan9365">⑥ localizePointerEvent()</tspan></text>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.00011;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.00011, 1.00011;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker1576-4)"
+     d="m 443.986,186.10711 c 3.61207,29.57315 14.20183,7.52734 15.4725,29.56066"
+     id="path9427"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.00011;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.00011, 1.00011;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker1576)"
+     d="m 546.28994,291.07097 c -3.52959,-16.19952 30.87947,-9.32879 19.17598,1.46963"
+     id="path14423"
+     sodipodi:nodetypes="cc" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="557.57617"
+     y="233.58138"
+     id="text14441"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="557.57617"
+       y="233.58138"
+       id="tspan14459"
+       sodipodi:role="line">⑩ handlePointerEventImpl()</tspan><tspan
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="557.57617"
+       y="244.53575"
+       sodipodi:role="line"
+       id="tspan2285">⑪ dragOverThreshold()</tspan><tspan
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="557.57617"
+       y="255.49011"
+       sodipodi:role="line"
+       id="tspan2287">⑫ grabPoints()</tspan><tspan
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="557.57617"
+       y="266.44449"
+       sodipodi:role="line"
+       id="tspan2289">⑬ setActive()</tspan><tspan
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="557.57617"
+       y="277.39886"
+       sodipodi:role="line"
+       id="tspan2603">⑰ moveTarget()</tspan></text>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.03579;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.03579, 1.03579;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#Arrow5)"
+     d="M 249.32923,23.153194 H 125.81655"
+     id="path1311" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="129.35161"
+     y="18.770849"
+     id="text1315"><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="129.35161"
+       y="18.770849"
+       id="tspan1317">① event(QTouchEvent*)</tspan></text>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.03579;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.03579, 1.03579;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#Arrow5)"
+     d="M 480.13219,146.11428 434.01617,42.608119"
+     id="path2865"
+     sodipodi:nodetypes="cc" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="224.50352"
+     y="-380.62888"
+     id="text2981"
+     transform="rotate(65.571486)"><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="224.50352"
+       y="-380.62888"
+       id="tspan2979">② event(QTouchEvent*)</tspan></text>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.00011;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.00011, 1.00011;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker1576-4-5)"
+     d="m 442.97658,187.15842 c -50.02267,78.60672 40.30509,72.83709 29.70231,109.51513"
+     id="path9238-5"
+     sodipodi:nodetypes="cc" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="496.79193"
+     y="226.98381"
+     id="text9304-6"
+     transform="rotate(6.9725705)"><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="496.79193"
+       y="226.98381"
+       id="tspan9302"> ⑧ handlePointerEvent()</tspan><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="496.79193"
+       y="237.93819"
+       id="tspan2397">⑨ wantsPointerEvent()</tspan><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="496.79193"
+       y="247.93932"
+       id="tspan2371" /></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="639.57428"
+     y="275.21478"
+     id="text2293"><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="639.57428"
+       y="275.21478"
+       id="tspan2291">⑭ onActiveChanged()</tspan></text>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:#1c1be6;stroke-width:1.00011;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:1.00011, 1.00011;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker1576-4)"
+     d="m 625.08309,266.11561 c 33.3115,8.38416 -25.30249,21.02634 -26.36628,32.66492"
+     id="path2399"
+     sodipodi:nodetypes="cc" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="537.05072"
+     y="198.02666"
+     id="text2575"><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="537.05072"
+       y="198.02666"
+       id="tspan2573">⑮ activeChanged Ⓢ</tspan><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="537.05072"
+       y="208.98103"
+       id="tspan4018">⑯ setColor()</tspan><tspan
+       sodipodi:role="line"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1c1be6;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       x="537.05072"
+       y="219.93539"
+       id="tspan2601">⑱ setX() / setY()</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#808080;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     id="text3431"
+     transform="rotate(-38.038218,476.61944,239.40311)"><textPath
+       xlink:href="#path9238-5"
+       id="textPath3609"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+         id="tspan3429">QTouchEvent*</tspan></textPath></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.750085px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     id="text3832"
+     transform="rotate(58.431196)"
+     x="474.64865"
+     y="-273.09793"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6pt;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.750085px"
+       id="tspan3828">target</tspan></text>
+  <circle
+     id="path4083"
+     style="fill:#000000;stroke:#e6a11b;stroke-width:0.750085"
+     cx="536.95331"
+     cy="217.47479"
+     r="0.0092422031" />
+  <circle
+     id="path4109"
+     style="fill:#000000;stroke:#e6a11b;stroke-width:0.750085"
+     cx="550.58368"
+     cy="218.91232"
+     r="0.0092422031" />
+  <circle
+     id="path4135"
+     style="fill:#000000;stroke:#e6a11b;stroke-width:0.750085"
+     cx="584.84467"
+     cy="-85.462952"
+     r="0.0092422031" />
+</svg>

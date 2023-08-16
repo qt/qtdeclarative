@@ -25,6 +25,7 @@
 #include "qqmlgototypedefinitionsupport_p.h"
 #include "qqmlformatting_p.h"
 #include "qqmlgotodefinitionsupport_p.h"
+#include "qqmlrenamesymbolsupport_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -67,6 +68,7 @@ private:
     QmlGoToDefinitionSupport m_definitionSupport;
     QQmlFindUsagesSupport m_referencesSupport;
     QQmlDocumentFormatting m_documentFormatting;
+    QQmlRenameSymbolSupport m_renameSupport;
     int m_returnValue = 1;
 };
 

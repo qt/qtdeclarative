@@ -319,8 +319,8 @@ TestCase {
 
         control.x = -10
         control.y = -10
-        compare(control.x, 0)
-        compare(control.y, 0)
+        compare(control.x, -10)
+        compare(control.y, -10)
     }
 
     function test_margins() {

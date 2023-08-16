@@ -30,7 +30,7 @@ QDate EventModel::date() const
     return m_date;
 }
 
-void EventModel::setDate(const QDate &date)
+void EventModel::setDate(QDate date)
 {
     if (date == m_date)
         return;

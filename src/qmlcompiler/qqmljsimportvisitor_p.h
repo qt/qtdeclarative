@@ -14,6 +14,7 @@
 //
 // We mean it.
 
+#include <private/qqmljscontextualtypes_p.h>
 #include <private/qtqmlcompilerexports_p.h>
 
 #include "qqmljsannotation_p.h"

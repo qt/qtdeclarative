@@ -29,6 +29,7 @@
 #include <private/qqmlvaluetypeproxybinding_p.h>
 #include <QtCore/private/qproperty_p.h>
 #include <QtQuick/qquickwindow.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 
@@ -379,6 +380,7 @@ private slots:
     void qpropertyBindingHandlesUndefinedWithoutResetCorrectly_data();
     void qpropertyBindingHandlesUndefinedWithoutResetCorrectly();
     void qpropertyBindingRestoresObserverAfterReset();
+    void qpropertyBindingObserverCorrectlyLinkedAfterReset();
     void hugeRegexpQuantifiers();
     void singletonTypeWrapperLookup();
     void getThisObject();
@@ -5298,6 +5300,7 @@ void tst_qqmlecmascript::propertyChangeSlots()
     QQmlComponent component(&engine, testFileUrl("changeslots/propertyChangeSlots.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(object, qPrintable(component.errorString()));
+    QCOMPARE(object->property("changeCount"), 15);
 
     // ensure that invalid property names fail properly.
     QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
@@ -5312,20 +5315,6 @@ void tst_qqmlecmascript::propertyChangeSlots()
     expectedErrorString = e2.url().toString() + QLatin1String(":9:5: Cannot assign to non-existent property \"on____nameWithUnderscoresChanged\"");
     QCOMPARE(e2.errors().at(0).toString(), expectedErrorString);
     object.reset(e2.create());
-    QVERIFY(!object);
-
-    QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
-    QQmlComponent e3(&engine, testFileUrl("changeslots/propertyChangeSlotErrors.3.qml"));
-    expectedErrorString = e3.url().toString() + QLatin1String(":9:5: Cannot assign to non-existent property \"on$NameWithDollarsignChanged\"");
-    QCOMPARE(e3.errors().at(0).toString(), expectedErrorString);
-    object.reset(e3.create());
-    QVERIFY(!object);
-
-    QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
-    QQmlComponent e4(&engine, testFileUrl("changeslots/propertyChangeSlotErrors.4.qml"));
-    expectedErrorString = e4.url().toString() + QLatin1String(":9:5: Cannot assign to non-existent property \"on_6NameWithUnderscoreNumberChanged\"");
-    QCOMPARE(e4.errors().at(0).toString(), expectedErrorString);
-    object.reset(e4.create());
     QVERIFY(!object);
 }
 
@@ -9441,6 +9430,21 @@ void tst_qqmlecmascript::qpropertyBindingRestoresObserverAfterReset()
     QVERIFY(o->property("steps").toInt() > 3);
 }
 
+void tst_qqmlecmascript::qpropertyBindingObserverCorrectlyLinkedAfterReset()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("qpropertyResetCorrectlyLinked.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("width"), 200);
+    auto item = qobject_cast<QQuickItem *>(o.get());
+    auto itemPriv = QQuickItemPrivate::get(item);
+    QBindingStorage *storage = qGetBindingStorage(itemPriv);
+    QPropertyBindingDataPointer ptr { storage->bindingData(&itemPriv->width) };
+    QCOMPARE(ptr.observerCount(), 1);
+}
+
 void tst_qqmlecmascript::hugeRegexpQuantifiers()
 {
     QJSEngine engine;
@@ -10079,6 +10083,9 @@ public:
 
     Q_INVOKABLE void triggerSignal() { emit fooMember2Emitted(&m_fooMember2); }
 
+    Q_INVOKABLE const FrozenFoo *getConst() { return createFloating(); }
+    Q_INVOKABLE FrozenFoo *getNonConst() { return createFloating(); }
+
     FrozenFoo *fooMember() { return &m_fooMember; }
     FrozenFoo *fooMember2() { return &m_fooMember2; }
 
@@ -10088,6 +10095,16 @@ signals:
 private:
     const FrozenFoo *fooMemberConst() const { return &m_fooMember; }
 
+    FrozenFoo *createFloating()
+    {
+        if (!m_floating) {
+            m_floating = new FrozenFoo;
+            m_floating->setObjectName(objectName());
+        }
+        return m_floating;
+    }
+
+    FrozenFoo *m_floating = nullptr;
     FrozenFoo m_fooMember;
     FrozenFoo m_fooMember2;
 };
@@ -10110,6 +10127,17 @@ void tst_qqmlecmascript::frozenQObject()
     QVERIFY(frozenObjects->property("caughtSignal").toBool());
     QCOMPARE(frozenObjects->fooMember()->name(), QStringLiteral("Jane"));
     QCOMPARE(frozenObjects->fooMember2()->name(), QStringLiteral("Jane"));
+
+    QQmlComponent component3(&engine, testFileUrl("frozenQObject3.qml"));
+    QScopedPointer<QObject> root3(component3.create());
+    QCOMPARE(root3->objectName(), QLatin1String("a/b"));
+    QVERIFY(root3->property("objConst").value<QObject *>());
+    QVERIFY(root3->property("objNonConst").value<QObject *>());
+
+    QTRY_VERIFY(root3->property("gcs").toInt() > 8);
+
+    QVERIFY(root3->property("objConst").value<QObject *>());
+    QVERIFY(root3->property("objNonConst").value<QObject *>());
 }
 
 struct ConstPointer : QObject

@@ -35,6 +35,8 @@ BirthdayParty {
     }
 
     function stuff(sn) {
+        // Warning: to not test for signal handlers like this in actual code.
+        // Use the helper methods in QQmlSignalNames instead.
         if (sn.substr(0, 2) === "on" && sn[2] === sn[2].toUpperCase())
             return sn
         return "on" + sn.substr(0, 1).toUpperCase() + sn.substr(1)

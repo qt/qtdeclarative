@@ -86,17 +86,17 @@ QString AttachedPropertyTypeValidatorPass::addWarning(TypeDescription attachType
     }
 
     m_attachedTypes.insert(
-            { std::make_pair<>(attachedType.internalName(),
+            { std::make_pair<>(attachedType.internalId(),
                                Warning{ elements, allowInDelegate, warning.toString() }) });
 
-    return attachedType.internalName();
+    return attachedType.internalId();
 }
 
 void AttachedPropertyTypeValidatorPass::checkWarnings(const QQmlSA::Element &element,
                                                       const QQmlSA::Element &scopeUsedIn,
                                                       const QQmlSA::SourceLocation &location)
 {
-    auto warning = m_attachedTypes.constFind(element.internalName());
+    auto warning = m_attachedTypes.constFind(element.internalId());
     if (warning == m_attachedTypes.cend())
         return;
     for (const QQmlSA::Element &type : warning->allowedTypes) {
@@ -111,7 +111,9 @@ void AttachedPropertyTypeValidatorPass::checkWarnings(const QQmlSA::Element &ele
 
         // If the scope is at the root level, we cannot know whether it will be used
         // as a delegate or not.
-        if (!scopeUsedIn.parentScope() || scopeUsedIn.parentScope().internalName() == u"global"_s)
+        // ### TODO: add a method to check whether a scope is the global scope
+        // so that we do not need to use internalId
+        if (!scopeUsedIn.parentScope() || scopeUsedIn.parentScope().internalId() == u"global"_s)
             return;
 
         for (const QQmlSA::Binding &binding :
@@ -178,7 +180,6 @@ ControlsNativeValidatorPass::ControlsNativeValidatorPass(QQmlSA::PassManager *ma
                 QStringList { "background", "contentItem", "header", "footer", "menuBar" } },
         ControlElement { "ComboBox", QStringList { "indicator" } },
         ControlElement { "Dial", QStringList { "handle" } },
-        ControlElement { "Dialog", QStringList { "header", "footer" } },
         ControlElement { "GroupBox", QStringList { "label" } },
         ControlElement { "$internal$.QQuickIndicatorButton", QStringList { "indicator" }, false },
         ControlElement { "Label", QStringList { "background" } },
@@ -430,7 +431,7 @@ VarBindingTypeValidatorPass::VarBindingTypeValidatorPass(
 
     for (const auto pair : expectedPropertyTypes.asKeyValueRange()) {
         const QQmlSA::Element propType = pair.second.module.isEmpty()
-                ? QQmlSA::Element(pair.second.name)
+                ? resolveBuiltinType(pair.second.name)
                 : resolveType(pair.second.module, pair.second.name);
         if (!propType.isNull())
             propertyTypes.insert(pair.first, propType);
@@ -487,13 +488,13 @@ void VarBindingTypeValidatorPass::onBinding(const QQmlSA::Element &element,
              */
             return;
         }
-        const QString bindingTypeName = QQmlSA::Element::prettyName(
-                bindingTypeIsComposite ? bindingType.baseType().internalName()
-                                       : bindingType.internalName());
+        const QString bindingTypeName =
+                bindingTypeIsComposite ? bindingType.baseType().name()
+                                       : bindingType.name();
         QStringList expectedTypeNames;
 
         for (auto it = range.first; it != range.second; it++)
-            expectedTypeNames << QQmlSA::Element::prettyName(it.value().internalName());
+            expectedTypeNames << it.value().name();
 
         emitWarning(u"Unexpected type for property \"%1\" expected %2 got %3"_s.arg(
                             propertyName, expectedTypeNames.join(u", "_s), bindingTypeName),
@@ -544,7 +545,7 @@ void AttachedPropertyReuse::onRead(const QQmlSA::Element &element, const QString
                 suggestion.setAutoApplicable();
 
             emitWarning("Using attached type %1 already initialized in a parent scope."_L1.arg(
-                                element.internalName()),
+                                element.name()),
                         category, attachedLocation, suggestion);
         }
 
@@ -561,7 +562,9 @@ void AttachedPropertyReuse::onRead(const QQmlSA::Element &element, const QString
 
     if (category == quickControlsAttachedPropertyReuse) {
         for (QQmlSA::Element parent = attached; parent; parent = parent.baseType()) {
-            if (parent.internalName() == "QQuickAttachedPropertyPropagator"_L1) {
+            // ### TODO: Make it possible to resolve QQuickAttachedPropertyPropagator
+            // so that we don't have to compare the internal id
+            if (parent.internalId() == "QQuickAttachedPropertyPropagator"_L1) {
                 usedAttachedTypes.insert(readScope, {attached, location});
                 break;
             }

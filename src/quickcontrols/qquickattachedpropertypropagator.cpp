@@ -8,8 +8,11 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
+#include <QtQuickTemplates2/private/qquickpopupitem_p_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcAttached, "qt.quick.controls.attachedpropertypropagator")
 
 /*!
     \class QQuickAttachedPropertyPropagator
@@ -70,6 +73,33 @@ static QQuickAttachedPropertyPropagator *attachedObject(const QMetaObject *type,
 */
 static QQuickAttachedPropertyPropagator *findAttachedParent(const QMetaObject *ourAttachedType, QObject *objectWeAreAttachedTo)
 {
+    /*
+        In the Material ComboBox.qml, we have code like this:
+
+        popup: T.Popup {
+            // ...
+            Material.theme: control.Material.theme
+            // ...
+
+            background: Rectangle {
+                //...
+                color: parent.Material.dialogColor
+
+         The Material attached object has to be accessed this way due to
+         deferred execution limitations (see 3e87695fb4b1a5d503c744046e6d9f43a2ae18a6).
+         However, since parent here refers to QQuickPopupItem and not the popup,
+         the color will actually come from the window. If a dark theme was set on
+         the ComboBox, it will not be respected in the background if we don't have
+         the check below.
+    */
+    auto popupItem = qobject_cast<QQuickPopupItem *>(objectWeAreAttachedTo);
+    if (popupItem) {
+        auto popupItemPrivate = QQuickPopupItemPrivate::get(popupItem);
+        QQuickAttachedPropertyPropagator *popupAttached = attachedObject(ourAttachedType, popupItemPrivate->popup);
+        if (popupAttached)
+            return popupAttached;
+    }
+
     QQuickItem *item = qobject_cast<QQuickItem *>(objectWeAreAttachedTo);
     if (item) {
         // lookup parent items and popups
@@ -246,11 +276,16 @@ void QQuickAttachedPropertyPropagatorPrivate::setAttachedParent(QQuickAttachedPr
         return;
 
     QQuickAttachedPropertyPropagator *oldParent = attachedParent;
-    if (attachedParent)
+    qCDebug(lcAttached) << "setAttachedParent called on" << q->parent();
+    if (attachedParent) {
+        qCDebug(lcAttached) << "- removing ourselves as an attached child of" << attachedParent->parent() << attachedParent;
         QQuickAttachedPropertyPropagatorPrivate::get(attachedParent)->attachedChildren.removeOne(q);
+    }
     attachedParent = parent;
-    if (parent)
+    if (parent) {
+        qCDebug(lcAttached) << "- adding ourselves as an attached child of" << parent->parent() << parent;
         QQuickAttachedPropertyPropagatorPrivate::get(parent)->attachedChildren.append(q);
+    }
     q->attachedParentChange(parent, oldParent);
 }
 
@@ -258,9 +293,8 @@ void QQuickAttachedPropertyPropagatorPrivate::itemWindowChanged(QQuickWindow *wi
 {
     Q_Q(QQuickAttachedPropertyPropagator);
     QQuickAttachedPropertyPropagator *attachedParent = nullptr;
-    QQuickItem *item = qobject_cast<QQuickItem *>(q->sender());
-    if (item)
-        attachedParent = findAttachedParent(q->metaObject(), item);
+    qCDebug(lcAttached) << "window of" << q->parent() << "changed to" << window;
+    attachedParent = findAttachedParent(q->metaObject(), q->parent());
     if (!attachedParent)
         attachedParent = attachedObject(q->metaObject(), window);
     setAttachedParent(attachedParent);
@@ -269,8 +303,9 @@ void QQuickAttachedPropertyPropagatorPrivate::itemWindowChanged(QQuickWindow *wi
 void QQuickAttachedPropertyPropagatorPrivate::itemParentChanged(QQuickItem *item, QQuickItem *parent)
 {
     Q_Q(QQuickAttachedPropertyPropagator);
+    Q_UNUSED(item);
     Q_UNUSED(parent);
-    setAttachedParent(findAttachedParent(q->metaObject(), item));
+    setAttachedParent(findAttachedParent(q->metaObject(), q->parent()));
 }
 
 /*!
@@ -353,8 +388,11 @@ void QQuickAttachedPropertyPropagator::initialize()
         d->setAttachedParent(attachedParent);
 
     const QList<QQuickAttachedPropertyPropagator *> attachedChildren = findAttachedChildren(metaObject(), parent());
-    for (QQuickAttachedPropertyPropagator *child : attachedChildren)
+    qCDebug(lcAttached) << "initialize called for" << parent() << "- found" << attachedChildren.size() << "attached children";
+    for (QQuickAttachedPropertyPropagator *child : attachedChildren) {
+        qCDebug(lcAttached) << "-" << child->parent();
         QQuickAttachedPropertyPropagatorPrivate::get(child)->setAttachedParent(this);
+    }
 }
 
 /*!

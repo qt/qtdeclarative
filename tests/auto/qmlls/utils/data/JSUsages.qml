@@ -84,4 +84,72 @@ Item {
             return rootId.recursive(123)
         }
     }
+
+    signal helloSignal()
+
+    function callSignals() {
+        helloSignal()
+        if (false) {
+            helloSignal()
+        } else {
+        // helloSignal() // not a usage btw
+            if (true)
+                helloSignal()
+        }
+    }
+    function callSignals2() {
+        helloSignal()
+        if (false) {
+            widthChanged()
+        } else {
+        // helloSignal() // not a usage btw
+            if (true)
+                widthChanged()
+            rootId.widthChanged()
+        }
+    }
+    Item {
+        function callSignalsInChild() {
+            widthChanged()
+            rootId.widthChanged()
+        }
+    }
+
+    function myHelloHandler() { let x = 32; }
+    onHelloSignal: myHelloHandler
+
+    property int helloPropertyBinding
+    helloPropertyBinding: 123
+
+    property int checkHandlers
+    onCheckHandlersChanged: myHelloHandler
+    onChildrenChanged: myHelloHandler
+    function callChanged() {
+        checkHandlersChanged()
+        childrenChanged()
+    }
+    property int _: 48
+    property int ______42: 48
+    property int _123a: 48
+    on_Changed: myHelloHandler
+    on______42Changed: myHelloHandler
+    on_123AChanged: myHelloHandler
+    function weirdPropertynames() {
+        _Changed()
+        ______42Changed()
+        _123aChanged()
+    }
+
+    TapHandler {
+        onTapped: myHelloHandler
+        function f() {
+            tapped()
+        }
+    }
+
+    function anotherF() {
+        helloPropertyChanged()
+    }
+    onHelloPropertyChanged: myHelloHandler
+    Type {}
 }

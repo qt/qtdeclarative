@@ -13,6 +13,7 @@ Item {
         Component.onCompleted: {
             addExample(qsTr("Tiles"), qsTr("Press and drag tiles to move them into the matching colored boxes"),  Qt.resolvedUrl("tiles/tiles.qml"))
             addExample(qsTr("GridView"), qsTr("Press and drag to re-order items in the grid"), Qt.resolvedUrl("views/gridview.qml"))
+            addExample(qsTr("External"), qsTr("Drag and drop between this and other applications."), Qt.resolvedUrl("external/externaldraganddrop.qml"))
         }
     }
 }

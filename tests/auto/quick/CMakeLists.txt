@@ -90,7 +90,7 @@ if(QT_FEATURE_private_tests)
     add_subdirectory(qquickshadereffect)
     add_subdirectory(qquickanimatedsprite)
     add_subdirectory(qquickspritesequence)
-    add_subdirectory(qquickitemrhiintegration)
+    add_subdirectory(qquickrhiitem)
     add_subdirectory(rendernode)
 
     if(QT_FEATURE_opengl)

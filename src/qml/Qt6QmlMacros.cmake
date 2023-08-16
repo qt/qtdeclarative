@@ -537,7 +537,10 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         if(arg_NAMESPACE)
             list(APPEND type_registration_extra_args NAMESPACE ${arg_NAMESPACE})
         endif()
+        set_target_properties(${target} PROPERTIES _qt_internal_has_qmltypes TRUE)
         _qt_internal_qml_type_registration(${target} ${type_registration_extra_args})
+    else()
+        set_target_properties(${target} PROPERTIES _qt_internal_has_qmltypes FALSE)
     endif()
 
     set(output_targets)
@@ -1598,7 +1601,7 @@ function(qt6_add_qml_plugin target)
 
     if(NOT arg_CLASS_NAME)
         if(NOT "${arg_BACKING_TARGET}" STREQUAL "")
-            get_target_property(arg_CLASS_NAME ${target} QT_QML_MODULE_CLASS_NAME)
+            get_target_property(arg_CLASS_NAME ${arg_BACKING_TARGET} QT_QML_MODULE_CLASS_NAME)
         endif()
         if(NOT arg_CLASS_NAME)
             _qt_internal_compute_qml_plugin_class_name_from_uri("${arg_URI}" arg_CLASS_NAME)
@@ -1745,6 +1748,36 @@ function(qt6_add_qml_plugin target)
         set_property(TARGET ${target} APPEND PROPERTY
             AUTOMOC_MOC_OPTIONS "-Muri=${arg_URI}"
         )
+    endif()
+
+    # Work around QTBUG-115152.
+    # Assign / duplicate the backing library's metatypes file to the qml plugin.
+    # This ensures that the metatypes are passed as foreign types to qmltyperegistrar when
+    # a consumer links against the plugin, but not the backing library.
+    # This is needed because the plugin links PRIVATEly to the backing library and thus the
+    # backing library's INTERFACE_SOURCES don't end up in the final consumer's SOURCES.
+    # Arguably doing this is cleaner than changing the linkage to PUBLIC, because that will
+    # propagate not only the INTERFACE_SOURCES, but also other link dependencies, which might
+    # be unwanted.
+    # In general this is a workaround due to CMake's limitations around support for propagating
+    # custom properties across targets to a final consumer target.
+    # https://gitlab.kitware.com/cmake/cmake/-/issues/20416
+    if(arg_BACKING_TARGET
+            AND TARGET "${arg_BACKING_TARGET}" AND NOT arg_BACKING_TARGET STREQUAL target)
+        get_target_property(plugin_meta_types_file "${target}" INTERFACE_QT_META_TYPES_BUILD_FILE)
+        get_target_property(
+            backing_meta_types_file "${arg_BACKING_TARGET}" INTERFACE_QT_META_TYPES_BUILD_FILE)
+        get_target_property(
+            backing_meta_types_file_name
+            "${arg_BACKING_TARGET}" INTERFACE_QT_META_TYPES_FILE_NAME)
+        get_target_property(backing_has_qmltypes "${arg_BACKING_TARGET}" _qt_internal_has_qmltypes)
+        if(backing_has_qmltypes AND NOT plugin_meta_types_file)
+            _qt_internal_assign_build_metatypes_files_and_properties(
+                "${target}"
+                METATYPES_FILE_NAME "${backing_meta_types_file_name}"
+                METATYPES_FILE_PATH "${backing_meta_types_file}"
+            )
+        endif()
     endif()
 
     if(ANDROID)

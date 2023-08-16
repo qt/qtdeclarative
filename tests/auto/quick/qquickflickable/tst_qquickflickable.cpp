@@ -227,6 +227,7 @@ private slots:
     void coalescedMove();
     void onlyOneMove();
     void proportionalWheelScrolling();
+    void pixelAlignedEndPoints();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -2878,7 +2879,7 @@ void tst_qquickflickable::receiveTapOutsideContentItem()
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QQuickTapHandler tapHandler(&flickable);
-    QSignalSpy clickedSpy(&tapHandler, SIGNAL(tapped(QEventPoint, Qt::MouseButton)));
+    QSignalSpy clickedSpy(&tapHandler, SIGNAL(tapped(QEventPoint,Qt::MouseButton)));
 
     // Tap outside the content item in the top-left corner
     QTest::mouseClick(&window, Qt::LeftButton, {}, QPoint(5, 5));
@@ -3307,6 +3308,36 @@ void tst_qquickflickable::proportionalWheelScrolling() // QTBUG-106338 etc.
     QVERIFY(flickable->property("ended").value<bool>());
     QCOMPARE(flickable->property("movementsAfterEnd").value<int>(), 0);
 }
+
+void tst_qquickflickable::pixelAlignedEndPoints()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("endpoints.qml")));
+    QQuickViewTestUtils::centerOnScreen(&window);
+    QVERIFY(window.isVisible());
+    QQuickItem *rootItem = window.rootObject();
+    QVERIFY(rootItem);
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(rootItem);
+    QVERIFY(flickable);
+    flickable->setPixelAligned(true);
+    QVERIFY(flickable->isAtYBeginning());
+
+    QSignalSpy isAtEndSpy(flickable, &QQuickFlickable::atYEndChanged);
+    QSignalSpy isAtBeginningSpy(flickable, &QQuickFlickable::atYBeginningChanged);
+
+    flickable->setContentY(199.99);
+    QCOMPARE(flickable->contentY(), 200);
+    QVERIFY(!flickable->isAtYBeginning());
+    QVERIFY(flickable->isAtYEnd());
+    QCOMPARE(isAtEndSpy.count(), 1);
+    QCOMPARE(isAtBeginningSpy.count(), 1);
+
+    flickable->setContentY(0.01);
+    QCOMPARE(flickable->contentY(), 0);
+    QVERIFY(flickable->isAtYBeginning());
+    QVERIFY(!flickable->isAtYEnd());
+    QCOMPARE(isAtEndSpy.count(), 2);
+    QCOMPARE(isAtBeginningSpy.count(), 2);}
 
 QTEST_MAIN(tst_qquickflickable)
 

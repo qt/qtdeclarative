@@ -33,9 +33,18 @@ target_link_libraries(rhitextureitem PRIVATE
 )
 
 qt_add_qml_module(rhitextureitem
-    URI SceneGraphRendering
-    QML_FILES main.qml
-    RESOURCE_PREFIX /scenegraph/rhitextureitem
+    URI
+        SceneGraphRendering
+    QML_FILES
+        main.qml
+        SettingsDrawer.qml
+    RESOURCE_PREFIX
+        /scenegraph/rhitextureitem
+    RESOURCES
+        icon_settings.png
+        icon_settings@2x.png
+        icon_settings@3x.png
+        icon_settings@4x.png
     NO_RESOURCE_TARGET_PATH
 )
 
@@ -45,8 +54,8 @@ qt_add_shaders(rhitextureitem "rhitextureitem_shaders"
     PREFIX
         /scenegraph/rhitextureitem
     FILES
-        shaders/logo.vert
-        shaders/logo.frag
+        shaders/color.vert
+        shaders/color.frag
 )
 
 qt_add_shaders(rhitextureitem "rhitextureitem_effect_shaders"

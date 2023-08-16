@@ -1,10 +1,8 @@
 import QtQuick
 import qmldirtest
 
-Window {
-    width: 640
-    height: 480
-    visible: true
+Item {
+    objectName: Name.name
     property color color: mybutton.color
 
     MyButton {

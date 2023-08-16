@@ -184,14 +184,12 @@ void tst_qqmlcomponent::loadEmptyUrl()
 void tst_qqmlcomponent::qmlIncubateObject()
 {
     QQmlComponent component(&engine, testFileUrl("incubateObject.qml"));
-    QObject *object = component.create();
+    std::unique_ptr<QObject> object { component.create() };
     QVERIFY(object != nullptr);
     QCOMPARE(object->property("test1").toBool(), true);
     QCOMPARE(object->property("test2").toBool(), false);
 
     QTRY_VERIFY(object->property("test2").toBool());
-
-    delete object;
 }
 
 void tst_qqmlcomponent::qmlCreateWindow()
@@ -398,11 +396,11 @@ void tst_qqmlcomponent::qmlCreateParentReference()
 
     QQmlComponent component(&engine, testFileUrl("createParentReference.qml"));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
-    QObject *object = component.create();
+    std::unique_ptr<QObject> object { component.create() };
     QVERIFY(object != nullptr);
 
-    QVERIFY(QMetaObject::invokeMethod(object, "createChild"));
-    delete object;
+    QVERIFY(QMetaObject::invokeMethod(object.get(), "createChild"));
+    object.reset();
 
     engine.setOutputWarningsToStandardError(false);
     QCOMPARE(engine.outputWarningsToStandardError(), false);
@@ -424,10 +422,8 @@ void tst_qqmlcomponent::async()
     QCOMPARE(watcher.ready, 1);
     QCOMPARE(watcher.error, 0);
 
-    QObject *object = component.create();
+    std::unique_ptr<QObject> object { component.create() };
     QVERIFY(object != nullptr);
-
-    delete object;
 }
 
 void tst_qqmlcomponent::asyncHierarchy()
@@ -445,7 +441,7 @@ void tst_qqmlcomponent::asyncHierarchy()
     QCOMPARE(watcher.ready, 1);
     QCOMPARE(watcher.error, 0);
 
-    QObject *root = component.create();
+    std::unique_ptr<QObject> root { component.create() };
     QVERIFY(root != nullptr);
 
     // ensure that the parent-child relationship hierarchy is correct
@@ -469,8 +465,6 @@ void tst_qqmlcomponent::asyncHierarchy()
 
     // ensure that values and bindings are assigned correctly
     QVERIFY(root->property("success").toBool());
-
-    delete root;
 }
 
 void tst_qqmlcomponent::asyncForceSync()
@@ -1474,7 +1468,7 @@ void tst_qqmlcomponent::complexObjectArgument()
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
-    QCOMPARE(o->objectName(), QStringLiteral("26"));
+    QCOMPARE(o->objectName(), QStringLiteral("26 - 25"));
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

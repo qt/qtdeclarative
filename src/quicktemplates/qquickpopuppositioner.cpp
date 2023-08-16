@@ -170,12 +170,17 @@ void QQuickPopupPositioner::reposition()
                 }
 
                 // as a last resort, adjust the width to fit the window
+                // Negative margins don't require resize as popup not pushed within
+                // the boundary. But otherwise, retain existing behavior of resizing
+                // for items, such as menus, which enables flip.
                 if (p->allowHorizontalResize) {
-                    if (rect.left() < bounds.left()) {
+                    if ((margins.left() >= 0 || !p->relaxEdgeConstraint)
+                            && (rect.left() < bounds.left())) {
                         rect.setLeft(bounds.left());
                         widthAdjusted = true;
                     }
-                    if (rect.right() > bounds.right()) {
+                    if ((margins.right() >= 0 || !p->relaxEdgeConstraint)
+                            && (rect.right() > bounds.right())) {
                         rect.setRight(bounds.right());
                         widthAdjusted = true;
                     }
@@ -198,12 +203,17 @@ void QQuickPopupPositioner::reposition()
                 }
 
                 // as a last resort, adjust the height to fit the window
+                // Negative margins don't require resize as popup not pushed within
+                // the boundary. But otherwise, retain existing behavior of resizing
+                // for items, such as menus, which enables flip.
                 if (p->allowVerticalResize) {
-                    if (rect.top() < bounds.top()) {
+                    if ((margins.top() >= 0 || !p->relaxEdgeConstraint)
+                            && (rect.top() < bounds.top())) {
                         rect.setTop(bounds.top());
                         heightAdjusted = true;
                     }
-                    if (rect.bottom() > bounds.bottom()) {
+                    if ((margins.bottom() >= 0 || !p->relaxEdgeConstraint)
+                            && (rect.bottom() > bounds.bottom())) {
                         rect.setBottom(bounds.bottom());
                         heightAdjusted = true;
                     }

@@ -395,8 +395,8 @@ void tst_QParallelAnimationGroupJob::deleteChildrenWithRunningGroup()
     // test if children can be activated when their group is stopped
     QParallelAnimationGroupJob group;
 
-    TestAnimation *anim1 = new TestAnimation(200);
-    group.appendAnimation(anim1);
+    std::unique_ptr<TestAnimation> anim1 = std::make_unique<TestAnimation>(200);
+    group.appendAnimation(anim1.get());
 
     QCOMPARE(group.duration(), anim1->duration());
 
@@ -406,7 +406,7 @@ void tst_QParallelAnimationGroupJob::deleteChildrenWithRunningGroup()
 
     QTRY_VERIFY(group.currentLoopTime() > 0);
 
-    delete anim1;
+    anim1.reset();
     QVERIFY(group.children()->isEmpty());
     QCOMPARE(group.duration(), 0);
     QCOMPARE(group.state(), QAnimationGroupJob::Stopped);
@@ -793,34 +793,34 @@ void tst_QParallelAnimationGroupJob::addAndRemoveDuration()
 {
     QParallelAnimationGroupJob group;
     QCOMPARE(group.duration(), 0);
-    TestAnimation *test = new TestAnimation(250);      // 0, duration = 250;
-    group.appendAnimation(test);
+    std::unique_ptr<TestAnimation> test = std::make_unique<TestAnimation>(250);      // 0, duration = 250;
+    group.appendAnimation(test.get());
     QCOMPARE(test->group(), static_cast<QAnimationGroupJob*>(&group));
     QCOMPARE(test->duration(), 250);
     QCOMPARE(group.duration(), 250);
 
-    TestAnimation *test2 = new TestAnimation(750);     // 1
-    group.appendAnimation(test2);
+    std::unique_ptr<TestAnimation> test2 = std::make_unique<TestAnimation>(750);     // 1
+    group.appendAnimation(test2.get());
     QCOMPARE(test2->group(), static_cast<QAnimationGroupJob*>(&group));
     QCOMPARE(group.duration(), 750);
 
-    TestAnimation *test3 = new TestAnimation(500);     // 2
-    group.appendAnimation(test3);
+    std::unique_ptr<TestAnimation> test3 = std::make_unique<TestAnimation>(500);     // 2
+    group.appendAnimation(test3.get());
     QCOMPARE(test3->group(), static_cast<QAnimationGroupJob*>(&group));
     QCOMPARE(group.duration(), 750);
 
-    group.removeAnimation(test2);    // remove the one with duration = 750
-    delete test2;
+    group.removeAnimation(test2.get());    // remove the one with duration = 750
+    test2.reset();
     QCOMPARE(group.duration(), 500);
 
-    group.removeAnimation(test3);    // remove the one with duration = 500
-    delete test3;
+    group.removeAnimation(test3.get());    // remove the one with duration = 500
+    test3.reset();
     QCOMPARE(group.duration(), 250);
 
-    group.removeAnimation(test);    // remove the last one (with duration = 250)
+    group.removeAnimation(test.get());    // remove the last one (with duration = 250)
     QCOMPARE(test->group(), static_cast<QAnimationGroupJob*>(nullptr));
     QCOMPARE(group.duration(), 0);
-    delete test;
+    test.reset();
 }
 
 void tst_QParallelAnimationGroupJob::pauseResume()
@@ -878,16 +878,16 @@ void tst_QParallelAnimationGroupJob::pauseResume()
 void tst_QParallelAnimationGroupJob::crashWhenRemovingUncontrolledAnimation()
 {
     QParallelAnimationGroupJob group;
-    TestAnimation *anim = new TestAnimation;
+    std::unique_ptr<TestAnimation> anim = std::make_unique<TestAnimation>();
     anim->setLoopCount(-1);
-    TestAnimation *anim2 = new TestAnimation;
+    std::unique_ptr<TestAnimation> anim2 = std::make_unique<TestAnimation>();
     anim2->setLoopCount(-1);
-    group.appendAnimation(anim);
-    group.appendAnimation(anim2);
+    group.appendAnimation(anim.get());
+    group.appendAnimation(anim2.get());
     group.start();
-    delete anim;
+    anim.reset();
     // it would crash here because the internals of the group would still have a reference to anim
-    delete anim2;
+    anim2.reset();
 }
 
 void tst_QParallelAnimationGroupJob::uncontrolledWithLoops()

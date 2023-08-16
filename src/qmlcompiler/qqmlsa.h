@@ -199,7 +199,6 @@ class Q_QMLCOMPILER_EXPORT Element
 
 public:
     Element();
-    explicit Element(const QString &);
     Element(const Element &);
     Element(Element &&other) noexcept
     {
@@ -217,7 +216,7 @@ public:
     bool inherits(const Element &) const;
 
     bool isNull() const;
-    QString internalName() const;
+    QString internalId() const;
     AccessSemantics accessSemantics() const;
     bool isComposite() const;
 
@@ -245,7 +244,7 @@ public:
     explicit operator bool() const;
     bool operator!() const;
 
-    static QString prettyName(QAnyStringView);
+    QString name() const;
 
     friend inline bool operator==(const QQmlSA::Element &lhs, const QQmlSA::Element &rhs)
     {
@@ -293,6 +292,7 @@ public:
     Element resolveTypeInFileScope(QAnyStringView typeName);
     Element resolveAttachedInFileScope(QAnyStringView typeName);
     Element resolveType(QAnyStringView moduleName, QAnyStringView typeName); // #### TODO: revisions
+    Element resolveBuiltinType(QAnyStringView typeName) const;
     Element resolveAttached(QAnyStringView moduleName, QAnyStringView typeName);
     Element resolveLiteralType(const Binding &binding);
 
@@ -324,7 +324,6 @@ public:
     bool hasImportedModule(QAnyStringView name) const;
 
     bool isCategoryEnabled(QQmlJS::LoggerWarningId category) const;
-    void setCategoryEnabled(QQmlJS::LoggerWarningId category, bool enabled = true);
 
     std::vector<std::shared_ptr<ElementPass>> elementPasses() const;
     std::multimap<QString, PropertyPassInfo> propertyPasses() const;
@@ -394,7 +393,6 @@ class Q_QMLCOMPILER_EXPORT FixSuggestion
     Q_DECLARE_PRIVATE(FixSuggestion)
 
 public:
-    FixSuggestion();
     FixSuggestion(const QString &fixDescription, const QQmlSA::SourceLocation &location,
                   const QString &replacement = QString());
     FixSuggestion(const FixSuggestion &);

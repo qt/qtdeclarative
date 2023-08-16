@@ -10,6 +10,7 @@
 #include <QtCore/QRegularExpression>
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 
 QT_BEGIN_NAMESPACE
 using namespace QLspSpecification;
@@ -287,8 +288,7 @@ static QList<CompletionItem> bindingsCompletions(DomItem &containingObject)
                         if (it.value().methodType == MethodInfo::MethodType::Signal) {
                             CompletionItem comp;
                             QString signal = it.key();
-                            comp.label =
-                                    (u"on"_s + signal.at(0).toUpper() + signal.mid(1)).toUtf8();
+                            comp.label = QQmlSignalNames::signalNameToHandlerName(signal).toUtf8();
                             res.append(comp);
                         }
                         ++it;

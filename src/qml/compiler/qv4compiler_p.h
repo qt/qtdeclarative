@@ -100,6 +100,8 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT JSUnitGenerator {
     ReturnedValue constant(int idx) const;
 
     int registerJSClass(const QStringList &members);
+    int jsClassSize(int jsClassId) const;
+    QString jsClassMember(int jsClassId, int member) const;
 
     int registerTranslation(const CompiledData::TranslationData &translation);
 
@@ -116,6 +118,7 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT JSUnitGenerator {
 
     StringTableGenerator stringTable;
     QString codeGeneratorName;
+
 private:
     CompiledData::Unit generateHeader(GeneratorOption option, quint32_le *functionOffsets, uint *jsClassDataOffset);
 

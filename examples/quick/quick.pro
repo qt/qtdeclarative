@@ -2,7 +2,6 @@ TEMPLATE = subdirs
 SUBDIRS =   quick-accessibility \
             animation \
             draganddrop \
-            externaldraganddrop \
             canvas \
             imageelements \
             keyinteraction \
@@ -15,11 +14,9 @@ SUBDIRS =   quick-accessibility \
             mousearea \
             pointerhandlers \
             positioners \
-            righttoleft \
             scenegraph \
             shadereffects \
             text \
-            threading \
             tutorials \
             customitems \
             imageprovider \

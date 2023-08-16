@@ -691,27 +691,45 @@ TestCase {
         }
     }
 
+    function test_removableDelegates_data() {
+        return [
+            { tag: "mouse", touch: false },
+            { tag: "touch", touch: true }
+        ]
+    }
+
     function test_removableDelegates() {
         var listView = createTemporaryObject(removableDelegatesComponent, testCase);
         verify(listView);
         compare(listView.count, 3);
 
+        let touch = data.touch ? touchEvent(listView) : null
+
         // Expose the remove button.
         var firstItem = listView.itemAt(0, 0);
-        mousePress(listView, firstItem.width / 2, firstItem.height / 2);
+        if (data.touch)
+            touch.press(0, listView, firstItem.width / 2, firstItem.height / 2).commit()
+        else
+            mousePress(listView, firstItem.width / 2, firstItem.height / 2);
         verify(firstItem.pressed);
         compare(firstItem.swipe.position, 0.0);
         verify(!firstItem.swipe.complete);
         verify(!firstItem.swipe.leftItem);
 
-        mouseMove(listView, firstItem.width * 1.1, firstItem.height / 2);
+        if (data.touch)
+            touch.move(0, listView, firstItem.width * 1.1, firstItem.height / 2).commit()
+        else
+            mouseMove(listView, firstItem.width * 1.1, firstItem.height / 2);
         verify(firstItem.pressed);
         compare(firstItem.swipe.position, 0.6);
         verify(!firstItem.swipe.complete);
         verify(firstItem.swipe.leftItem);
         verify(!firstItem.swipe.leftItem.SwipeDelegate.pressed);
 
-        mouseRelease(listView, firstItem.width / 2, firstItem.height / 2);
+        if (data.touch)
+            touch.release(0, listView, firstItem.width / 2, firstItem.height / 2).commit()
+        else
+            mouseRelease(listView, firstItem.width / 2, firstItem.height / 2);
         verify(!firstItem.pressed);
         tryCompare(firstItem.swipe, "position", 1.0);
         tryCompare(firstItem.swipe, "complete", true);
@@ -727,12 +745,25 @@ TestCase {
 
         // Click the left item to remove the delegate from the list.
         var contentItemX = firstItem.contentItem.x;
-        mousePress(listView, firstItem.width / 2, firstItem.height / 2);
+        // press
+        if (data.touch)
+            touch.press(0, listView, firstItem.width / 2, firstItem.height / 2).commit()
+        else
+            mousePress(listView, firstItem.width / 2, firstItem.height / 2);
         verify(firstItem.swipe.leftItem.SwipeDelegate.pressed);
         compare(leftClickedSpy.count, 0);
         verify(firstItem.pressed);
 
-        mouseRelease(listView, firstItem.width / 2, firstItem.height / 2);
+        // simulate inadvertent movement which can easily happen
+        if (data.touch)
+            touch.move(0, listView, firstItem.width / 2 + 1, firstItem.height / 2).commit()
+        else
+            mouseMove(listView, firstItem.width / 2 + 1, firstItem.height / 2);
+        // release
+        if (data.touch)
+            touch.release(0, listView, firstItem.width / 2, firstItem.height / 2).commit()
+        else
+            mouseRelease(listView, firstItem.width / 2, firstItem.height / 2);
         verify(!firstItem.swipe.leftItem.SwipeDelegate.pressed);
         compare(leftClickedSpy.count, 1);
         verify(!firstItem.pressed);
@@ -1746,5 +1777,48 @@ TestCase {
 
         swipe(control, 0, -1.0)
         compare(control.swipe.rightItem.color, Qt.color("tomato"))
+    }
+
+
+    Component {
+        id: swipeDelegate
+
+        SwipeDelegate {
+          anchors.centerIn: parent
+          width: 100
+          height: 50
+          contentItem: Rectangle {
+              color: "red"
+          }
+          swipe.right: Row {
+              height: parent.height
+              anchors.right: parent.right
+              property alias buttonItem: button
+              Button {
+                  id: button
+                  width: 50
+                  height: parent.height
+                  text: "Button"
+              }
+          }
+       }
+    }
+
+    function test_mouseEventOnNonVisualItem() {
+        let control = createTemporaryObject(swipeDelegate, testCase)
+        verify(control)
+
+        swipe(control, 0, -1.0)
+        verify(control.swipe.rightItem.visible)
+
+        let rightItem = control.swipe.rightItem
+        let rightClickSpy = signalSpyComponent.createObject(control,
+                    { target: rightItem.buttonItem, signalName: "clicked" })
+        verify(rightClickSpy)
+        verify(rightClickSpy.valid)
+
+        mouseClick(rightItem)
+
+        compare(rightClickSpy.count, 1)
     }
 }

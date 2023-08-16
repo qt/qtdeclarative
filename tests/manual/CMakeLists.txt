@@ -8,11 +8,13 @@ add_subdirectory(mousearea)
 add_subdirectory(nodetypes_ng)
 # add_subdirectory(qmltypememory) # TODO: C++ API changed
 # add_subdirectory(quickwidgetviewer) # TODO: C++ API changed
+add_subdirectory(righttoleft)
 add_subdirectory(scalablepath)
 add_subdirectory(shapestest)
 add_subdirectory(tableview)
 add_subdirectory(text)
 add_subdirectory(touch)
+add_subdirectory(threading)
 # add_subdirectory(v4) # TODO: port if needed
 add_subdirectory(quickcontrols)
 add_subdirectory(quickdialogs)
@@ -22,3 +24,4 @@ if(QT_FEATURE_qml_network AND TARGET Qt::Quick)
 endif()
 add_subdirectory(qmlextensionplugins)
 add_subdirectory(fontfeatures)
+add_subdirectory(wasm)
