@@ -47,11 +47,12 @@ public:
         return m_strokeWidth;
     }
 
-    void appendTriangle(const QVector2D &v0, const QVector2D &v1, const QVector2D &v2, // triangle vertices
-                        const QVector2D &p0, const QVector2D &p1, const QVector2D &p2); // curve points
-
-    void appendTriangle(const QVector2D &v0, const QVector2D &v1, const QVector2D &v2, // triangle vertices
-                        const QVector2D &p0, const QVector2D &p1); // line points
+    void appendTriangle(const std::array<QVector2D, 3> &v, // triangle vertices
+                        const std::array<QVector2D, 3> &p, // curve points
+                        const std::array<QVector2D, 3> &n); // vertex normals
+    void appendTriangle(const std::array<QVector2D, 3> &v, // triangle vertices
+                        const std::array<QVector2D, 2> &p, // line points
+                        const std::array<QVector2D, 3> &n); // vertex normals
 
     void cookGeometry();
 
@@ -62,6 +63,16 @@ public:
         return m_uncookedIndexes;
     }
 
+    float debug() const
+    {
+        return m_debug;
+    }
+
+    void setDebug(float newDebug)
+    {
+        m_debug = newDebug;
+    }
+
 private:
 
     struct StrokeVertex
@@ -70,17 +81,16 @@ private:
         float ax, ay;
         float bx, by;
         float cx, cy;
-        float H, G; //depressed cubic parameters
-        float offset; //mapping between depressed and happy cubic
+        float nx, ny; //normal vector: direction to move vertext to account for AA
     };
 
     void updateMaterial();
 
-    static QVector3D HGforPoint(QVector2D A, QVector2D B, QVector2D C, QVector2D p);
-    static std::array<QVector2D, 3> curveABC(QVector2D p0, QVector2D p1, QVector2D p2);
+    static std::array<QVector2D, 3> curveABC(const std::array<QVector2D, 3> &p);
 
     QColor m_color;
     float m_strokeWidth = 0.0f;
+    float m_debug = 0.0f;
 
 protected:
     QScopedPointer<QQuickShapeStrokeMaterial> m_material;

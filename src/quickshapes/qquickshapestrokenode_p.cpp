@@ -62,7 +62,13 @@ bool QQuickShapeStrokeMaterialShader::updateUniformData(RenderState &state, QSGM
         memcpy(buf->data() + offset, &w, 4);
         changed = true;
     }
-    //offset += 16;
+    offset += 4;
+    if (oldNode == nullptr || newNode->debug() != oldNode->debug()) {
+        float w = newNode->debug();
+        memcpy(buf->data() + offset, &w, 4);
+        changed = true;
+    }
+//    offset += 4;
 
     return changed;
 }

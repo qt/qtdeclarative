@@ -53,10 +53,9 @@ const QSGGeometry::AttributeSet &QQuickShapeCurveNode::attributes()
     static QSGGeometry::Attribute data[] = {
         QSGGeometry::Attribute::createWithAttributeType(0, 2, QSGGeometry::FloatType, QSGGeometry::PositionAttribute),
         QSGGeometry::Attribute::createWithAttributeType(1, 3, QSGGeometry::FloatType, QSGGeometry::TexCoordAttribute),
-        QSGGeometry::Attribute::createWithAttributeType(2, 4, QSGGeometry::FloatType, QSGGeometry::ColorAttribute),
-        QSGGeometry::Attribute::createWithAttributeType(3, 4, QSGGeometry::FloatType, QSGGeometry::UnknownAttribute),
+        QSGGeometry::Attribute::createWithAttributeType(2, 4, QSGGeometry::FloatType, QSGGeometry::UnknownAttribute),
     };
-    static QSGGeometry::AttributeSet attrs = { 4, sizeof(CurveNodeVertex), data };
+    static QSGGeometry::AttributeSet attrs = { 3, sizeof(CurveNodeVertex), data };
     return attrs;
 }
 

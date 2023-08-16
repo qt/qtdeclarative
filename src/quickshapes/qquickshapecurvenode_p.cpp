@@ -74,21 +74,20 @@ namespace {
             const QMatrix4x4 m = state.combinedMatrix();
 
             memcpy(buf->data() + offset, m.constData(), 64);
-            offset += 64;
 
             matrixScale = qSqrt(qAbs(state.determinant()));
-            memcpy(buf->data() + offset, &matrixScale, 4);
-            offset += 4;
+            memcpy(buf->data() + offset + 64, &matrixScale, 4);
 
             changed = true;
         }
+        offset += 68;
 
         if (state.isOpacityDirty()) {
             const float opacity = state.opacity();
             memcpy(buf->data() + offset, &opacity, 4);
             changed = true;
         }
-        offset += 12;
+        offset += 4;
 
         QQuickShapeCurveMaterial *newMaterial = static_cast<QQuickShapeCurveMaterial *>(newEffect);
         QQuickShapeCurveMaterial *oldMaterial = static_cast<QQuickShapeCurveMaterial *>(oldEffect);
@@ -98,6 +97,13 @@ namespace {
 
         if (newNode == nullptr)
             return changed;
+
+        if (oldNode == nullptr || oldNode->debug() != newNode->debug()) {
+            float debug = newNode->debug();
+            memcpy(buf->data() + offset, &debug, 4);
+            changed = true;
+        }
+        offset += 8;
 
         if (newNode->hasStroke()) {
             Q_ASSERT(buf->size() >= offset + 32);

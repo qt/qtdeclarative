@@ -19,80 +19,54 @@ void QQuickShapeStrokeNode::QQuickShapeStrokeNode::updateMaterial()
     setMaterial(m_material.data());
 }
 
-// Find the parameters H, G for the depressed cubic
-// t^2+H*t+G=0
-// that results from the equation
-// Q'(s).(p-Q(s)) = 0
-// The last parameter is the static offset between s and t:
-// s = t - b/(3a)
-// use it to get back the parameter t
-QVector3D QQuickShapeStrokeNode::HGforPoint(QVector2D q_a, QVector2D q_b, QVector2D q_c, QVector2D p)
-{
-    // this is a constant for the curve
-    float a = -2. * QVector2D::dotProduct(q_a, q_a);
-    // this is a constant for the curve
-    float b = -3. * QVector2D::dotProduct(q_a, q_b);
-    //this is linear in p so it can be put into the shader with vertex data
-    float c = 2. * QVector2D::dotProduct(q_a, p) - QVector2D::dotProduct(q_b, q_b) - 2. * QVector2D::dotProduct(q_a, q_c);
-    //this is linear in p so it can be put into the shader with vertex data
-    float d = QVector2D::dotProduct(q_b,p) - QVector2D::dotProduct(q_b, q_c);
-    // convert to depressed cubic.
-    // both functions are linear in c and d and thus linear in p
-    // Put in vertex data.
-    float H = (3. * a * c - b * b) / (3. * a * a);
-    float G = (2. * b * b * b - 9. * a * b * c + 27. * a * a * d) / (27. * a * a * a);
-
-    return QVector3D(H, G, b/(3*a));
-}
-
 // Take the start, control and end point of a curve and return the points A, B, C
 // representing the curve as Q(s) = A*s*s + B*s + C
-std::array<QVector2D, 3> QQuickShapeStrokeNode::curveABC(QVector2D p0, QVector2D p1, QVector2D p2)
+std::array<QVector2D, 3> QQuickShapeStrokeNode::curveABC(const std::array<QVector2D, 3> &p)
 {
-    QVector2D a = p0 - 2*p1 + p2;
-    QVector2D b = 2*p1 - 2*p0;
-    QVector2D c = p0;
+    QVector2D a = p[0] - 2*p[1] + p[2];
+    QVector2D b = 2*p[1] - 2*p[0];
+    QVector2D c = p[0];
 
     return {a, b, c};
 }
 
-void QQuickShapeStrokeNode::appendTriangle(const QVector2D &v0, const QVector2D &v1, const QVector2D &v2,
-                    const QVector2D &p0, const QVector2D &p1, const QVector2D &p2)
+// Curve from p[0] to p[2] with control point p[1]
+void QQuickShapeStrokeNode::appendTriangle(const std::array<QVector2D, 3> &v,
+                                           const std::array<QVector2D, 3> &p,
+                                           const std::array<QVector2D, 3> &n)
 {
-    auto abc = curveABC(p0, p1, p2);
+    auto abc = curveABC(p);
 
     int currentVertex = m_uncookedVertexes.count();
 
-    for (auto p : QList<QVector2D>({v0, v1, v2})) {
-        auto hg = HGforPoint(abc[0], abc[1], abc[2], p);
-
-        m_uncookedVertexes.append( { p.x(), p.y(),
-                               abc[0].x(), abc[0].y(), abc[1].x(), abc[1].y(), abc[2].x(), abc[2].y(),
-                               hg.x(), hg.y(),
-                               hg.z()} );
+    for (int i = 0; i < 3; ++i) {
+        m_uncookedVertexes.append( { v[i].x(), v[i].y(),
+                                   abc[0].x(), abc[0].y(), abc[1].x(), abc[1].y(), abc[2].x(), abc[2].y(),
+                                   n[i].x(), n[i].y() } );
     }
     m_uncookedIndexes << currentVertex << currentVertex + 1 << currentVertex + 2;
 }
 
-void QQuickShapeStrokeNode::appendTriangle(const QVector2D &v0, const QVector2D &v1, const QVector2D &v2,
-                    const QVector2D &p0, const QVector2D &p1)
+// Straight line from p0 to p1
+void QQuickShapeStrokeNode::appendTriangle(const std::array<QVector2D, 3> &v,
+                                           const std::array<QVector2D, 2> &p,
+                                           const std::array<QVector2D, 3> &n)
 {
     // We could reduce this to a linear equation by setting A to (0,0).
     // However, then we cannot use the cubic solution and need an additional
     // code path in the shader. The following formulation looks more complicated
     // but allows to always use the cubic solution.
-    auto A = p1 - p0;
+    auto A = p[1] - p[0];
     auto B = QVector2D(0., 0.);
-    auto C = p0;
+    auto C = p[0];
 
     int currentVertex = m_uncookedVertexes.count();
 
-    for (auto p : QList<QVector2D>({v0, v1, v2})) {
-        auto hg = HGforPoint(A, B, C, p);
-        m_uncookedVertexes.append( { p.x(), p.y(),
-                               A.x(), A.y(), B.x(), B.y(), C.x(), C.y(),
-                               hg.x(), hg.y(),
-                               hg.z()} );
+//    for (auto v : QList<QPair<QVector2D, QVector2D>>({{v0, n0}, {v1, n1}, {v2, n2}})) {
+    for (int i = 0; i < 3; ++i) {
+        m_uncookedVertexes.append( { v[i].x(), v[i].y(),
+                                   A.x(), A.y(), B.x(), B.y(), C.x(), C.y(),
+                                   n[i].x(), n[i].y() } );
     }
     m_uncookedIndexes << currentVertex << currentVertex + 1 << currentVertex + 2;
 }
@@ -129,11 +103,9 @@ const QSGGeometry::AttributeSet &QQuickShapeStrokeNode::attributes()
         QSGGeometry::Attribute::createWithAttributeType(1, 2, QSGGeometry::FloatType, QSGGeometry::UnknownAttribute), //A
         QSGGeometry::Attribute::createWithAttributeType(2, 2, QSGGeometry::FloatType, QSGGeometry::UnknownAttribute), //B
         QSGGeometry::Attribute::createWithAttributeType(3, 2, QSGGeometry::FloatType, QSGGeometry::UnknownAttribute), //C
-        QSGGeometry::Attribute::createWithAttributeType(4, 2, QSGGeometry::FloatType, QSGGeometry::UnknownAttribute), //HG
-        QSGGeometry::Attribute::createWithAttributeType(5, 1, QSGGeometry::FloatType, QSGGeometry::UnknownAttribute), //offset
-
+        QSGGeometry::Attribute::createWithAttributeType(4, 2, QSGGeometry::FloatType, QSGGeometry::UnknownAttribute), //normalVector
     };
-    static QSGGeometry::AttributeSet attrs = { 6, sizeof(StrokeVertex), data };
+    static QSGGeometry::AttributeSet attrs = { 5, sizeof(StrokeVertex), data };
     return attrs;
 }
 
