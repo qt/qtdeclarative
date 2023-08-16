@@ -671,9 +671,9 @@ QQuickShape::~QQuickShape()
            The renderer is unknown.
 
     \value Shape.GeometryRenderer
-           The generic, driver independent solution for OpenGL. Uses the same
+           The generic, driver independent solution for GPU rendering. Uses the same
            CPU-based triangulation approach as QPainter's OpenGL 2 paint
-           engine. This is the default when the OpenGL Qt Quick scenegraph
+           engine. This is the default when the RHI-based Qt Quick scenegraph
            backend is in use.
 
     \value Shape.SoftwareRenderer
@@ -682,44 +682,34 @@ QQuickShape::~QQuickShape()
            with the \c software backend.
 
     \value Shape.CurveRenderer
-           Added as technology preview in Qt 6.6.
-           Experimental renderer which triangulates the polygonal internal hull of the shape,
-           similar to \c Shape.GeometryRenderer. But instead of also triangulating curved areas,
-           this renderer renders curved areas using a specialized fragment shader. This means that
-           the shape does not need to be re-tesselated when it changes size or is zoomed. For
-           supported shapes, this can give improved runtime performance in cases where the shapes
-           are repeatedly transformed.
+           Experimental GPU-based renderer, added as technology preview in Qt 6.6.
+           In contrast to \c Shape.GeometryRenderer, curves are not approximated by short straight
+           lines. Instead, curves are rendered using a specialized fragment shader. This improves
+           visual quality and avoids re-tesselation performance hit when zooming. Also,
+           \c Shape.CurveRenderer provides native, high-quality anti-aliasing, without the
+           performance cost of multi- or supersampling.
 
     By default, \c Shape.GeometryRenderer will be selected unless the Qt Quick scenegraph is running
     with the \c software backend. In that case, \c Shape.SoftwareRenderer will be used.
+    \c Shape.CurveRenderer may be requested using the \l preferredRendererType property.
 
-    \c Shape.CurveRenderer can be optionally selected using the \l preferredRendererType property.
-
-    In addition to rendering smooth curves regardless of zoom level, this renderer applies
-    anti-aliasing without enabling MSAA on the surface, which may provide performance gain.
-
-    Note that \c Shape.CurveRenderer is currently regarded as experimental and has several
-    limitations:
+    Note that \c Shape.CurveRenderer is currently regarded as experimental. The enum name of
+    this renderer may change in future versions of Qt, and some shapes may render incorrectly.
+    Among the known limitations are:
     \list 1
-      \li The \c GL_OES_standard_derivatives extension to OpenGL is required when the OpenGL
-          RHI backend is in use (this is available by default on OpenGL ES 3 and later, but
-          optional in OpenGL ES 2).
-      \li Only quadratic curves are supported (cubic curves will be approximated by quadratic
-          curves).
-      \li Shapes where elements intersect are not supported. Use the \l [QML] {Path::simplified}
-          {Path.simplified} property to remove self-intersections from such shapes.
+      \li Only quadratic curves are inherently supported. Cubic curves will be approximated by
+          quadratic curves.
+      \li Shapes where elements intersect are not rendered correctly. The \l [QML] {Path::simplified}
+          {Path.simplified} property may be used to remove self-intersections from such shapes, but
+          may incur a performance cost and reduced visual quality.
       \li Shapes that span a large numerical range, such as a long string of text, may have
           issues. Consider splitting these shapes into multiple ones, for instance by making
           a \l PathText for each individual word.
+      \li If the shape is being rendered into a Qt Quick 3D scene, the
+          \c GL_OES_standard_derivatives extension to OpenGL is required when the OpenGL
+          RHI backend is in use (this is available by default on OpenGL ES 3 and later, but
+          optional in OpenGL ES 2).
     \endlist
-
-   Due to the fact that the \c Shape.CurveRenderer approximates cubic curves, there are certain
-   shapes it will not render accurately. For instance, circular arcs are not representable using quadratic
-   curves and will only look approximately correct. If the visual representation is
-   insufficient for a particular shape, consider using \c Shape.GeometryRenderer instead.
-
-   \note The \c Shape.CurveRenderer is currently considered a tech preview, thus the name of
-   this enum may change in future versions of Qt and some shapes may render incorrectly.
 */
 
 QQuickShape::RendererType QQuickShape::rendererType() const

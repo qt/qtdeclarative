@@ -20,7 +20,7 @@ layout(std140, binding = 0) uniform buf {
     vec4 strokeColor;
 
     float strokeWidth;
-    float reserved4;
+    float debug;
     float reserved5;
     float reserved6;
 } ubuf;
@@ -125,5 +125,7 @@ void main()
     float centerline = step(ubuf.strokeWidth * 0.01, dmin);
     fillCoverage = fillCoverage * centerline + min(1., ubuf.strokeWidth * ubuf.matrixScale) * (1. - centerline);
 
-    fragColor = vec4(ubuf.strokeColor.rgb, 1.0) *ubuf.strokeColor.a * fillCoverage * ubuf.opacity;
+    fragColor = vec4(ubuf.strokeColor.rgb, 1.0) *ubuf.strokeColor.a * fillCoverage * ubuf.opacity
+                + ubuf.debug * vec4(0.0, 0.5, 1.0, 1.0) * (1.0 - fillCoverage) * ubuf.opacity;
+
 }

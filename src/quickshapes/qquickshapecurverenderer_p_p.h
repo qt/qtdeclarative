@@ -17,17 +17,11 @@
 //
 
 #include <QtQuickShapes/private/qquickshapesglobal_p.h>
-#include <QtGui/qvector2d.h>
-#include <QPainterPath>
 #include <QLoggingCategory>
 
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcShapeCurveRenderer);
-
-class QBezier;
-Q_QUICKSHAPES_PRIVATE_EXPORT void qt_toQuadratics(const QBezier &b, QPolygonF *out,
-                                                  qreal errorLimit = 0.01);
 
 QT_END_NAMESPACE
 
