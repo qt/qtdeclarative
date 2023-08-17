@@ -418,6 +418,8 @@ private slots:
     void attachedInCtor();
     void byteArrayConversion();
 
+    void callMethodOfAttachedDerived();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -8025,6 +8027,27 @@ void tst_qqmllanguage::byteArrayConversion()
     QCOMPARE(receiver->byteArrays.length(), 2);
     QCOMPARE(receiver->byteArrays[0], QByteArray("\1\2\3"));
     QCOMPARE(receiver->byteArrays[1], QByteArray("\4\5\6"));
+}
+
+void tst_qqmllanguage::callMethodOfAttachedDerived()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(R"(
+        import QtQml
+        import Test
+
+        QtObject {
+            Component.onCompleted: Counter.increase()
+            property int v: Counter.value
+        }
+    )", QUrl());
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("v").toInt(), 99);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
