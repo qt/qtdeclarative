@@ -1866,4 +1866,48 @@ private:
 
 void registerTypes();
 
+class CounterAttachedBaseType: public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    Q_PROPERTY (int value READ value NOTIFY valueChanged)
+
+public:
+    CounterAttachedBaseType(QObject *parent = nullptr) : QObject(parent) {}
+
+    int value() { return m_value; }
+    Q_SIGNAL void valueChanged();
+
+protected:
+    int m_value = 98;
+};
+
+
+class CounterAttachedType: public CounterAttachedBaseType
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+
+public:
+    CounterAttachedType(QObject *parent = nullptr) : CounterAttachedBaseType(parent) {}
+
+    Q_INVOKABLE void increase() {
+        ++m_value;
+        Q_EMIT valueChanged();
+    }
+};
+
+class Counter : public QObject
+{
+    Q_OBJECT
+    QML_ATTACHED(CounterAttachedBaseType)
+    QML_ELEMENT
+
+public:
+    static CounterAttachedBaseType *qmlAttachedProperties(QObject *o)
+    {
+        return new CounterAttachedType(o);
+    }
+};
+
 #endif // TESTTYPES_H

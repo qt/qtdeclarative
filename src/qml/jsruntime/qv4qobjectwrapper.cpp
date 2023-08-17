@@ -2102,12 +2102,10 @@ void Heap::QObjectMethod::init(QV4::ExecutionContext *scope, Object *object, int
 const QMetaObject *Heap::QObjectMethod::metaObject()
 {
     Scope scope(internalClass->engine);
-    if (Scoped<QV4::QObjectWrapper> objectWrapper(scope, wrapper); objectWrapper)
-        return objectWrapper->metaObject();
-    if (Scoped<QV4::QQmlTypeWrapper> typeWrapper(scope, wrapper); typeWrapper)
-        return typeWrapper->metaObject();
     if (Scoped<QV4::QQmlValueTypeWrapper> valueWrapper(scope, wrapper); valueWrapper)
         return valueWrapper->metaObject();
+    if (QObject *self = object())
+        return self->metaObject();
     return nullptr;
 }
 

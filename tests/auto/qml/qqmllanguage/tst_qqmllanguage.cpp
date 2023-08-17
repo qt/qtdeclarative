@@ -388,6 +388,8 @@ private slots:
     void bindingAliasToComponentUrl();
     void signalInlineComponentArg();
 
+    void callMethodOfAttachedDerived();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -6667,6 +6669,27 @@ void tst_qqmllanguage::signalInlineComponentArg()
         QCOMPARE(object->property("successFromSignalFromFile"),
                  QStringLiteral("Signal was called from another file"));
     }
+}
+
+void tst_qqmllanguage::callMethodOfAttachedDerived()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(R"(
+        import QtQml
+        import Test
+
+        QtObject {
+            Component.onCompleted: Counter.increase()
+            property int v: Counter.value
+        }
+    )", QUrl());
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("v").toInt(), 99);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
