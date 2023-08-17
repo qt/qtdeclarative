@@ -725,6 +725,18 @@ inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter
     return param.isList() ? compilationUnit->typeIds.listId : compilationUnit->typeIds.id;
 }
 
+template <typename ObjectContainer, typename CompiledObject>
+int objectForId(const ObjectContainer *objectContainer, const CompiledObject &component, int id)
+{
+    for (quint32 i = 0, count = component.namedObjectsInComponentCount(); i < count; ++i) {
+        const int candidateIndex = component.namedObjectsInComponentTable()[i];
+        const CompiledObject &candidate = *objectContainer->objectAt(candidateIndex);
+        if (candidate.objectId() == id)
+            return candidateIndex;
+    }
+    return -1;
+}
+
 template <typename ObjectContainer>
 class QQmlPropertyCacheAliasCreator
 {
@@ -741,7 +753,6 @@ private:
             const CompiledObject &component, const QV4::CompiledData::Alias &alias, QMetaType *type,
             QTypeRevision *version, QQmlPropertyData::Flags *propertyFlags,
             QQmlEnginePrivate *enginePriv);
-    int objectForId(const CompiledObject &component, int id) const;
 
     QQmlPropertyCacheVector *propertyCaches;
     const ObjectContainer *objectContainer;
@@ -773,7 +784,8 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         QVarLengthArray<const QV4::CompiledData::Alias *, 4> seenAliases({lastAlias});
 
         do {
-            const int targetObjectIndex = objectForId(component, lastAlias->targetObjectId());
+            const int targetObjectIndex = objectForId(
+                    objectContainer, component, lastAlias->targetObjectId());
             Q_ASSERT(targetObjectIndex >= 0);
             const CompiledObject *targetObject = objectContainer->objectAt(targetObjectIndex);
             Q_ASSERT(targetObject);
@@ -796,7 +808,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
                     component, *lastAlias, type, version, propertyFlags, enginePriv);
     }
 
-    const int targetObjectIndex = objectForId(component, alias.targetObjectId());
+    const int targetObjectIndex = objectForId(objectContainer, component, alias.targetObjectId());
     Q_ASSERT(targetObjectIndex >= 0);
     const CompiledObject &targetObject = *objectContainer->objectAt(targetObjectIndex);
 
@@ -927,18 +939,6 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesTo
     }
 
     return QQmlError();
-}
-
-template <typename ObjectContainer>
-inline int QQmlPropertyCacheAliasCreator<ObjectContainer>::objectForId(const CompiledObject &component, int id) const
-{
-    for (quint32 i = 0, count = component.namedObjectsInComponentCount(); i < count; ++i) {
-        const int candidateIndex = component.namedObjectsInComponentTable()[i];
-        const CompiledObject &candidate = *objectContainer->objectAt(candidateIndex);
-        if (candidate.objectId() == id)
-            return candidateIndex;
-    }
-    return -1;
 }
 
 QT_END_NAMESPACE
