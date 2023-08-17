@@ -53,7 +53,8 @@ private:
     void allocateNamedObjects(CompiledObject *object) const;
     void setObjectId(int index) const;
     [[nodiscard]] bool markAsComponent(int index) const;
-    [[nodiscard]] AliasResolutionResult resolveAliasesInObject(int objectIndex, QQmlError *error);
+    [[nodiscard]] AliasResolutionResult resolveAliasesInObject(
+            const CompiledObject &component, int objectIndex, QQmlError *error);
     [[nodiscard]] bool wrapImplicitComponent(CompiledBinding *binding);
 
     [[nodiscard]] QQmlError findAndRegisterImplicitComponents(
@@ -381,13 +382,14 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolveAliases(int com
         for (int objectIndex: std::as_const(m_objectsWithAliases)) {
 
             QQmlError error;
-            const auto result = resolveAliasesInObject(objectIndex, &error);
+            const auto &component = *m_compiler->objectAt(componentIndex);
+            const auto result = resolveAliasesInObject(component, objectIndex, &error);
             if (error.isValid())
                 return error;
 
             if (result == AllAliasesResolved) {
                 QQmlError error = aliasCacheCreator.appendAliasesToPropertyCache(
-                            *m_compiler->objectAt(componentIndex), objectIndex, m_enginePrivate);
+                            component, objectIndex, m_enginePrivate);
                 if (error.isValid())
                     return error;
                 atLeastOneAliasResolved = true;
