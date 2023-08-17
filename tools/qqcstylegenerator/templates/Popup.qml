@@ -24,13 +24,7 @@ T.Popup {
     readonly property string __currentState: control.modal ? "modal" : "normal";
     readonly property var config: ConfigReader.controls.popup[__currentState] || {}
 
-    background: BorderImage {
-        source: Qt.resolvedUrl(control.config.background.filePath)
-        border {
-            top: control.config.background?.topOffset || 0
-            bottom: control.config.background?.bottomOffset || 0
-            left: control.config.background?.leftOffset || 0
-            right: control.config.background?.rightOffset || 0
-        }
+    background: StyleImage {
+        imageConfig: control.config.background
     }
 }

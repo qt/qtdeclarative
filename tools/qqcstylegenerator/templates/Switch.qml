@@ -41,18 +41,19 @@ T.Switch {
         implicitWidth: handleBackground.width > 0 ? handleBackground.width : handleBackground.handle.width * 2
         implicitHeight: handleBackground.height > 0 ? handleBackground.height : handleBackground.handle.height
 
-        property Image handleBackground: Image {
+        property Item handleBackground: StyleImage {
             parent: control.indicator
-            source: Qt.resolvedUrl(control.config.handle_background.filePath)
+            imageConfig: control.config.handle_background
 
-            property Image handle: Image {
+            property Item handle: StyleImage {
                 parent: control.indicator.handleBackground
                 x: control.config.handle_contentItem.leftPadding
                     + (control.visualPosition * (parent.width - width
                         - control.config.handle_contentItem.leftPadding
                         - control.config.handle_contentItem.rightPadding))
                 y: control.config.handle_contentItem.topPadding
-                source: Qt.resolvedUrl(control.config.handle.filePath)
+
+                imageConfig: control.config.handle
 
                 Behavior on x {
                     enabled: !control.down
@@ -79,13 +80,7 @@ T.Switch {
         verticalAlignment: control.config.label.textVAlignment
     }
 
-    background: BorderImage {
-        source: Qt.resolvedUrl(control.config.background.filePath)
-        border {
-            top: control.config.background?.topOffset || 0
-            bottom: control.config.background?.bottomOffset || 0
-            left: control.config.background?.leftOffset || 0
-            right: control.config.background?.rightOffset || 0
-        }
+    background: StyleImage {
+        imageConfig: control.config.background
     }
 }

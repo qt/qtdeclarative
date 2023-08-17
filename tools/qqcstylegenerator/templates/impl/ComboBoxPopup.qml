@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.FigmaStyle
-import QtQuick.Controls
 import QtQuick.Templates as T
 
 Popup {
@@ -38,13 +37,7 @@ Popup {
         ScrollIndicator.vertical: ScrollIndicator { }
     }
 
-    background: BorderImage {
-        source: Qt.resolvedUrl(config.background.filePath)
-        border {
-            top: config.background?.topOffset || 0
-            bottom: config.background?.bottomOffset || 0
-            left: config.background?.leftOffset || 0
-            right: config.background?.rightOffset || 0
-        }
+    background: StyleImage {
+        imageConfig: control.config.background
     }
 }
