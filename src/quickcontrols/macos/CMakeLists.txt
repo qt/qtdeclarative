@@ -23,6 +23,7 @@ set(qml_files
     "Slider.qml"
     "SpinBox.qml"
     "Switch.qml"
+    "SwitchDelegate.qml"
     "TextArea.qml"
     "TextField.qml"
 )
