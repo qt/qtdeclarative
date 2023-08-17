@@ -34,6 +34,7 @@ private slots:
     void recompileAfterDirectoryChange();
     void fileSelectors();
     void localAliases();
+    void aliasToAlias();
     void cacheResources();
     void stableOrderOfDependentCompositeTypes();
     void singletonDependency();
@@ -672,6 +673,55 @@ void tst_qmldiskcache::localAliases()
         QScopedPointer<QObject> obj(component.create());
         QVERIFY(!obj.isNull());
         QCOMPARE(obj->property("bar").toInt(), 100);
+    }
+}
+
+void tst_qmldiskcache::aliasToAlias()
+{
+    QQmlEngine engine;
+
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    const QByteArray contents = QByteArrayLiteral(R"(
+        import QML
+        QtObject {
+            id: foo
+            readonly property alias myAlias: bar.prop
+
+            property QtObject o: QtObject {
+                id: bar
+
+                property QtObject o: QtObject {
+                    id: baz
+                    readonly property int value: 100
+                }
+
+                readonly property alias prop: baz.value
+            }
+        }
+    )");
+
+    {
+        testCompiler.clearCache();
+        QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+        QVERIFY2(testCompiler.verify(), qPrintable(testCompiler.lastErrorString));
+    }
+
+    {
+        CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("myAlias").toInt(), 100);
+    }
+
+    engine.clearComponentCache();
+
+    {
+        CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("myAlias").toInt(), 100);
     }
 }
 

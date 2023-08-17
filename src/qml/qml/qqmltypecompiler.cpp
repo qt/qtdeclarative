@@ -807,8 +807,10 @@ bool QQmlComponentAndAliasResolver<QQmlTypeCompiler>::wrapImplicitComponent(QmlI
 template<>
 typename QQmlComponentAndAliasResolver<QQmlTypeCompiler>::AliasResolutionResult
 QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
-        int objectIndex, QQmlError *error)
+        const CompiledObject &component, int objectIndex, QQmlError *error)
 {
+    Q_UNUSED(component);
+
     const QmlIR::Object * const obj = m_compiler->objectAt(objectIndex);
     if (!obj->aliasCount())
         return AllAliasesResolved;
