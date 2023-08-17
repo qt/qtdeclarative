@@ -431,6 +431,8 @@ private slots:
     void signalNames_data();
     void signalNames();
 
+    void callMethodOfAttachedDerived();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -8251,6 +8253,27 @@ Item {
     QCOMPARE(o->property("success"), true);
     QMetaObject::invokeMethod(o.data(), "f");
     QVERIFY(changeSignal.size() == 2);
+}
+
+void tst_qqmllanguage::callMethodOfAttachedDerived()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(R"(
+        import QtQml
+        import Test
+
+        QtObject {
+            Component.onCompleted: Counter.increase()
+            property int v: Counter.value
+        }
+    )", QUrl());
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("v").toInt(), 99);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
