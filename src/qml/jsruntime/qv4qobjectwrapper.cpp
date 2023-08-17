@@ -1955,13 +1955,11 @@ static const QQmlPropertyData *ResolveOverloaded(
     } else {
         QString error = QLatin1String("Unable to determine callable overload.  Candidates are:");
         for (int i = 0; i < methodCount; ++i) {
-            for (int i = 0; i < methodCount; ++i) {
-                const QQmlPropertyData &candidate = methods[i];
-                const QMetaMethod m = candidate.isConstructor()
-                                      ? object.metaObject()->constructor(candidate.coreIndex())
-                                      : object.metaObject()->method(candidate.coreIndex());
-                error += u"\n    " + QString::fromUtf8(m.methodSignature());
-            }
+            const QQmlPropertyData &candidate = methods[i];
+            const QMetaMethod m = candidate.isConstructor()
+                                  ? object.metaObject()->constructor(candidate.coreIndex())
+                                  : object.metaObject()->method(candidate.coreIndex());
+            error += u"\n    " + QString::fromUtf8(m.methodSignature());
         }
 
         engine->throwError(error);
