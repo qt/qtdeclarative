@@ -234,7 +234,6 @@ StackProperties stackPropertiesGeneric(qsizetype stackSize = 0)
 
     pthread_t thread = pthread_self();
     pthread_attr_t sattr;
-    pthread_attr_init(&sattr);
 #  if defined(PTHREAD_NP_H) || defined(_PTHREAD_NP_H_) || defined(Q_OS_NETBSD)
     pthread_attr_get_np(thread, &sattr);
 #  else
