@@ -162,6 +162,8 @@ void registerTypes()
     qmlRegisterTypesAndRevisions<AttachedInCtor>("Test", 1);
 
     qmlRegisterTypesAndRevisions<ByteArrayReceiver>("Test", 1);
+
+    qmlRegisterTypesAndRevisions<Counter>("Test", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)
