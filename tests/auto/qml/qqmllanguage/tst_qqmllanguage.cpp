@@ -316,6 +316,7 @@ private slots:
     void inlineComponentFoundBeforeOtherImports();
     void inlineComponentDuplicateNameError();
     void inlineComponentWithAliasInstantiatedWithNewProperties();
+    void inlineComponentWithImplicitComponent();
 
     void selfReference();
     void selfReferencingSingleton();
@@ -6111,6 +6112,17 @@ void tst_qqmllanguage::inlineComponentWithAliasInstantiatedWithNewProperties()
     QScopedPointer<QObject> root {component.create()};
     QVERIFY2(root, qPrintable(component.errorString()));
     QCOMPARE(root->property("result").toString(), "Bar");
+}
+
+void tst_qqmllanguage::inlineComponentWithImplicitComponent()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("inlineComponentWithImplicitComponent.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+
+    QCOMPARE(root->objectName(), "green blue"_L1);
 }
 
 struct QJSValueConvertible {
