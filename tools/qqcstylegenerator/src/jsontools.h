@@ -31,5 +31,6 @@ bool resolvedHidden(const QString &figmaId);
 QList<QJsonObject> findChildren(const QStringList &keyValueList, const QJsonObject &root);
 QJsonObject findChild(const QStringList &keyValueList, const QJsonObject &root, bool warnOnDuplicates);
 QJsonObject findNamedChild(const QStringList &namePath, const QJsonObject &root, bool warnOnDuplicates);
+QJsonObject findChildWithKey(const QString &key, const QJsonObject &root);
 
 } // namespace

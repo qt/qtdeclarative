@@ -107,6 +107,50 @@ void clearCache()
     g_idToPathMap.clear();
 }
 
+QJsonObject findChildWithKeyImpl(const QString &key
+    , const QJsonObject &root
+    , QStringList &currentPath)
+{
+    Q_ASSERT(!key.isEmpty());
+
+    QJsonObject result;
+
+    const bool visible = root.value("visible").toBool(true);
+    currentPath.append(root["name"].toString() + (visible ? "" : " [hidden]"));
+
+    const auto children = root.value("children").toArray();
+    for (auto it = children.constBegin(); it != children.constEnd(); ++it) {
+        const auto value = *it;
+        if (!value.isObject())
+            throw NoChildFoundException(QStringLiteral("expected only objects in array, but found ")
+                + QString::number(value.type()) + ". Searched for: " + key);
+
+        const QJsonObject object = value.toObject();
+        if (object.contains(key)) {
+            const QString figmaId = object["id"].toString("<no id>");
+            if (!g_idToPathMap.contains(figmaId)) {
+                // Store the path to all objects we searched for, for both
+                // debugging and visibility purposes.
+                const bool visible = object.value("visible").toBool(true);
+                const QString currentPathString = currentPath.join(",");
+                g_idToPathMap[figmaId] = currentPathString + "," + object["name"].toString()
+                        + (visible ? "" : " [hidden]");
+            }
+            return object;
+        }
+
+        result = findChildWithKeyImpl(key, object, currentPath);
+        if (!result.empty())
+            return result;
+    }
+
+    currentPath.removeLast();
+    if (result.isEmpty())
+        throw NoChildFoundException(QStringLiteral("could not find Figma child with key: ") + key);
+
+    return result;
+}
+
 void findChildrenImpl(const QStringList &keyValueList
     , const QJsonObject &root
     , bool firstOnly
@@ -255,6 +299,21 @@ QJsonObject findNamedChild(const QStringList &namePath, const QJsonObject &root,
         child = findChildImpl({"name", name}, child, warnOnDuplicates, currentPath);
 
     return child;
+}
+
+/**
+ * Search for a json object recursively inside root that has the given
+ * key. Returns the first one found.
+*/
+QJsonObject findChildWithKey(const QString &key, const QJsonObject &root)
+{
+    QStringList currentPath;
+    const QString pathToRoot = resolvedPath(root["id"].toString());
+    if (!pathToRoot.isEmpty()) {
+        currentPath = pathToRoot.split(',');
+        currentPath.removeLast();
+    }
+    return findChildWithKeyImpl(key, root, currentPath);
 }
 
 } // namespace

@@ -450,8 +450,8 @@ private:
                 generateSpacing(contentAtoms, outputStateConfig);
                 generatePadding(outputStateConfig);
 
-                const auto stateComponent = JsonTools::findChild({"type", "COMPONENT", "name", "state=" + figmaState}, componentSet, m_bridge->m_sanity);
-                generateTransitions(stateComponent, outputStateConfig, configStatesArray);
+                const auto stateVariant = findVariantInstance(componentSet, figmaState);
+                generateTransitions(stateVariant, outputStateConfig, controlState, configStatesArray);
 
             } catch (std::exception &e) {
                 warning("generate control: " + QString(e.what()) + "; " + m_currentAtomInfo);
@@ -481,6 +481,20 @@ private:
             jsonPath += child.trimmed();
 
         return findNamedChild(jsonPath, componentSet, false);
+    }
+
+    QJsonObject findVariantInstance(const QJsonObject &parent, const QString &figmaState) {
+        const auto stateComponent = JsonTools::findChild({"type", "COMPONENT", "name", "state=" + figmaState}, parent, m_bridge->m_sanity);
+        const auto stateInstance = JsonTools::findChildWithKey("componentProperties", stateComponent);
+        const auto stateObject = getObject("componentProperties", stateInstance);
+        if (!stateObject.isEmpty()) {
+            const auto value = getObject("state", stateObject);
+            if (value.value("type").toString() == "VARIANT"
+                && value.value("value").toString() == figmaState) {
+                    return stateInstance;
+            }
+        }
+        return {};
     }
 
     void exportFigmaObject(const QJsonObject &obj, const QStringList &atomExportList,
@@ -627,7 +641,7 @@ private:
         outputConfig.insert("alignItems", atom["primaryAxisAlignItems"]);
     }
 
-    void generateTransitions(const QJsonObject &component, QJsonObject &outputConfig, const QJsonArray &statesArray)
+    void generateTransitions(const QJsonObject &component, QJsonObject &outputConfig, const QString &controlState, const QJsonArray &statesArray)
     {
         // Due to a limitation in Figma's REST API we are only able
         // to get one transition per component, no matter how many
@@ -666,6 +680,7 @@ private:
         QJsonObject transitionObject;
         transitionObject.insert("duration", duration);
         transitionObject.insert("type", easingType);
+        transitionObject.insert("from", controlState);
         transitionObject.insert("to", stateValue);
 
         QJsonArray transitionsArray;
