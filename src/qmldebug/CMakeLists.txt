@@ -34,8 +34,6 @@ qt_internal_add_module(QmlDebugPrivate
         qqmlprofilertypedevent.cpp qqmlprofilertypedevent_p.h
         qv4debugclient.cpp qv4debugclient_p.h
         qv4debugclient_p_p.h
-    NO_PCH_SOURCES
-        qv4debugclient.cpp # undef QT_NO_FOREACH
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Network
