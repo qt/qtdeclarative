@@ -6,6 +6,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcQsgLeak)
+
 #ifndef QT_NO_DEBUG
 bool qsg_material_failure = false;
 bool qsg_test_and_clear_material_failure()
@@ -105,7 +107,7 @@ QSGMaterial::QSGMaterial()
 {
     Q_UNUSED(m_reserved);
 #ifndef QT_NO_DEBUG
-    if (_q_sg_leak_check) {
+    if (lcQsgLeak().isDebugEnabled()) {
         ++qt_material_count;
         static bool atexit_registered = false;
         if (!atexit_registered) {
@@ -124,10 +126,10 @@ QSGMaterial::QSGMaterial()
 QSGMaterial::~QSGMaterial()
 {
 #ifndef QT_NO_DEBUG
-    if (_q_sg_leak_check) {
+    if (lcQsgLeak().isDebugEnabled()) {
         --qt_material_count;
         if (qt_material_count < 0)
-            qDebug("Material destroyed after qt_print_material_count() was called.");
+            qCDebug(lcQsgLeak, "Material destroyed after qt_print_material_count() was called.");
     }
 #endif
 }

@@ -35,6 +35,8 @@ Q_GLOBAL_STATIC(QMutex, qsg_valid_texture_mutex)
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcQsgLeak)
+
 bool operator==(const QSGSamplerDescription &a, const QSGSamplerDescription &b) noexcept
 {
     return a.filtering == b.filtering
@@ -303,7 +305,7 @@ QSGTexture::QSGTexture()
     : QObject(*(new QSGTexturePrivate(this)))
 {
 #ifndef QT_NO_DEBUG
-    if (_q_sg_leak_check)
+    if (lcQsgLeak().isDebugEnabled())
         qt_debug_add_texture(this);
 
     QMutexLocker locker(qsg_valid_texture_mutex());
@@ -318,7 +320,7 @@ QSGTexture::QSGTexture(QSGTexturePrivate &dd)
     : QObject(dd)
 {
 #ifndef QT_NO_DEBUG
-    if (_q_sg_leak_check)
+    if (lcQsgLeak().isDebugEnabled())
         qt_debug_add_texture(this);
 
     QMutexLocker locker(qsg_valid_texture_mutex());
@@ -332,7 +334,7 @@ QSGTexture::QSGTexture(QSGTexturePrivate &dd)
 QSGTexture::~QSGTexture()
 {
 #ifndef QT_NO_DEBUG
-    if (_q_sg_leak_check)
+    if (lcQsgLeak().isDebugEnabled())
         qt_debug_remove_texture(this);
 
     QMutexLocker locker(qsg_valid_texture_mutex());

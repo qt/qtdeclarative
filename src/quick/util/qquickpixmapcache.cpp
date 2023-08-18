@@ -56,6 +56,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcQsgLeak)
+
 #if defined(QT_DEBUG) && QT_CONFIG(thread)
 class ThreadAffinityMarker
 {
@@ -1281,8 +1283,8 @@ QQuickPixmapStore::~QQuickPixmapStore()
     }
 
 #ifndef QT_NO_DEBUG
-    if (leakedPixmaps && _q_sg_leak_check)
-        qDebug("Number of leaked pixmaps: %i", leakedPixmaps);
+    if (leakedPixmaps)
+        qCDebug(lcQsgLeak, "Number of leaked pixmaps: %i", leakedPixmaps);
 #endif
 }
 

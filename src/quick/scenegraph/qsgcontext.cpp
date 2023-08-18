@@ -63,6 +63,9 @@ Q_LOGGING_CATEGORY(QSG_LOG_TIME_GLYPH,          "qt.scenegraph.time.glyph")
 // Timing inside the renderer base class
 Q_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERER,       "qt.scenegraph.time.renderer")
 
+// Leak checks
+Q_LOGGING_CATEGORY(lcQsgLeak,                   "qt.scenegraph.leaks")
+
 // Applicable for render loops that install their own animation driver, such as
 // the 'threaded' loop. This env.var. is documented in the scenegraph docs.
 DEFINE_BOOL_CONFIG_OPTION(useElapsedTimerBasedAnimationDriver, QSG_USE_SIMPLE_ANIMATION_DRIVER);
