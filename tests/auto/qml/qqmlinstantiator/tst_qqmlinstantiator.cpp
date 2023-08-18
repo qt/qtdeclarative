@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 #include <qtest.h>
 #include <QSignalSpy>
+#include <QSortFilterProxyModel>
 #include <QDebug>
 
 #include <QtQml/qqmlengine.h>
@@ -28,6 +29,7 @@ private slots:
     void activeModelChangeInteraction();
     void intModelChange();
     void createAndRemove();
+    void removeDuringModelChange();
 
     void asynchronous_data();
     void asynchronous();
@@ -304,6 +306,93 @@ void tst_qqmlinstantiator::boundDelegateComponent()
     QCOMPARE(b->objectAt(0)->objectName(), QStringLiteral("root1"));
     QCOMPARE(b->objectAt(1)->objectName(), QStringLiteral("root2"));
     QCOMPARE(b->objectAt(2)->objectName(), QStringLiteral("root3"));
+}
+
+class SingleBoolItemModel : public QAbstractListModel
+{
+    Q_OBJECT
+
+public:
+    SingleBoolItemModel(QObject *parent = nullptr) : QAbstractListModel(parent) {}
+
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override
+    {
+        if (parent.isValid())
+            return 0;
+        return 1;
+    }
+
+    QVariant data(const QModelIndex &index, int role) const override
+    {
+        if (index.parent().isValid() || index.row() != 0 || index.column() != 0
+                || role != Qt::UserRole)
+            return QVariant();
+
+        return m_active;
+    }
+
+    bool setData(const QModelIndex &index, const QVariant &value,
+                 int role) override {
+        if (index.parent().isValid() || index.row() != 0 || index.column() != 0
+                || role != Qt::UserRole || m_active == value.toBool())
+            return false;
+
+        m_active = value.toBool();
+        Q_EMIT dataChanged(index, index, QList<int>{Qt::UserRole});
+        return true;
+    }
+
+    QHash<int, QByteArray> roleNames() const override
+    {
+        return { {Qt::UserRole, "active"} };
+    }
+
+private:
+    bool m_active = true;
+};
+
+class FilterBoolRoleProxyModel : public QSortFilterProxyModel
+{
+    Q_OBJECT
+
+public:
+    FilterBoolRoleProxyModel(QObject *parent = nullptr)
+        : QSortFilterProxyModel(parent) {}
+
+    bool filterAcceptsRow(int source_row,
+                          const QModelIndex &source_parent) const override
+    {
+        return sourceModel()->index(source_row, 0, source_parent).data(Qt::UserRole).toBool();
+    }
+};
+
+void tst_qqmlinstantiator::removeDuringModelChange()
+{
+    SingleBoolItemModel model;
+
+    FilterBoolRoleProxyModel proxyModel;
+    proxyModel.setSourceModel(&model);
+    proxyModel.setFilterRole(Qt::UserRole);
+    QCOMPARE(proxyModel.rowCount(), 1);
+
+    QQmlEngine engine;
+    const QUrl url(testFileUrl("removeDuringModelChange.qml"));
+    QQmlComponent component(&engine, url);
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY2(!o.isNull(), qPrintable(component.errorString()));
+
+    QQmlInstantiator *instantiator = qobject_cast<QQmlInstantiator *>(o.data());
+
+    instantiator->setModel(QVariant::fromValue(&proxyModel));
+
+    QSignalSpy removedSpy(instantiator, &QQmlInstantiator::objectRemoved);
+    QMetaObject::invokeMethod(instantiator->object(), "deactivate");
+
+    // We should still be alive at this point.
+    QCOMPARE(removedSpy.size(), 1);
+    QCOMPARE(proxyModel.rowCount(), 0);
 }
 
 QTEST_MAIN(tst_qqmlinstantiator)
