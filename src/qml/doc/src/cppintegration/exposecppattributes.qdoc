@@ -39,6 +39,14 @@ Registration is required for Q_GADGET types, as they don't derive from a known
 common base and can't be made available automatically. Without registration,
 their properties and methods are inaccessible.
 
+You can make C++ types from a different module available in your own module by
+adding a dependency to your \l{qt_add_qml_module} call using the \e DEPENDENCIES
+option. You may, for example, want to depend on QtQuick so that your QML-exposed
+C++ types can use \l QColor as method arguments and return values. QtQuick
+exposes \l QColor as a \l {QML Value Types}{value type} \e color. Such
+dependencies may be automatically inferred at run time, but you should not rely
+on this.
+
 Also note that a number of the important concepts covered in this document are
 demonstrated in the \l{Writing QML Extensions with C++} tutorial.
 
