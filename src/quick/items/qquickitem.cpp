@@ -3253,23 +3253,23 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
         }
         QQuickItemPrivate::get(that)->addPointerHandler(pointerHandler);
     } else {
-        QQuickWindow *thisWindow = qmlobject_cast<QQuickWindow *>(o);
-        QQuickItem *item = that;
-        QQuickWindow *itemWindow = that->window();
-        while (!itemWindow && item && item->parentItem()) {
-            item = item->parentItem();
-            itemWindow = item->window();
-        }
+        if (QQuickWindow *quickWindow = qmlobject_cast<QQuickWindow *>(o)) {
+            QQuickItem *item = that;
+            QQuickWindow *itemWindow = that->window();
+            while (!itemWindow && item && item->parentItem()) {
+                item = item->parentItem();
+                itemWindow = item->window();
+            }
 
-        if (thisWindow) {
             if (itemWindow) {
-                qCDebug(lcTransient) << thisWindow << "is transient for" << itemWindow;
-                thisWindow->setTransientParent(itemWindow);
+                qCDebug(lcTransient) << quickWindow << "is transient for" << itemWindow;
+                quickWindow->setTransientParent(itemWindow);
             } else {
                 QObject::connect(item, &QQuickItem::windowChanged,
-                    thisWindow, &QQuickWindow::setTransientParent_helper);
+                    quickWindow, &QQuickWindow::setTransientParent_helper);
             }
         }
+
         o->setParent(that);
         resources_append(prop, o);
     }
