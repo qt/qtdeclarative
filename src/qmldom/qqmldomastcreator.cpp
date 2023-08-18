@@ -12,8 +12,10 @@
 #include "qqmldomastdumper_p.h"
 #include "qqmldomattachedinfo_p.h"
 #include "qqmldomastcreator_p.h"
+#include "qqmldom_utils_p.h"
 
 #include <QtQml/private/qqmljsast_p.h>
+#include <QtQmlCompiler/private/qqmljsutils_p.h>
 
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
@@ -280,17 +282,19 @@ bool QQmlDomAstCreator::visit(UiProgram *program)
     // we hide the component span because the component s written after the imports
     FileLocations::addRegion(rootMap, QString(), combineLocations(program));
     pushEl(p, *cPtr, program);
-    // implicit imports
+
     // add implicit directory import
     if (!fInfo.canonicalPath().isEmpty()) {
         Import selfDirImport(QmlUri::fromDirectoryString(fInfo.canonicalPath()));
         selfDirImport.implicit = true;
         qmlFilePtr->addImport(selfDirImport);
     }
+    // add implicit imports from the environment (QML, QtQml for example)
     for (Import i : qmlFile.environment().ownerAs<DomEnvironment>()->implicitImports()) {
         i.implicit = true;
         qmlFilePtr->addImport(i);
     }
+
     return true;
 }
 
@@ -2118,10 +2122,11 @@ static QStringList qmldirFilesFrom(MutableDomItem &qmlFile)
 }
 
 QQmlDomAstCreatorWithQQmlJSScope::QQmlDomAstCreatorWithQQmlJSScope(MutableDomItem &qmlFile,
-                                                                   QQmlJSLogger *logger)
+                                                                   QQmlJSLogger *logger,
+                                                                   QQmlJSResourceFileMapper *mapper)
     : m_root(QQmlJSScope::create()),
       m_logger(logger),
-      m_importer(importPathsFrom(qmlFile), nullptr, true),
+      m_importer(importPathsFrom(qmlFile), mapper, true),
       m_implicitImportDirectory(QQmlJSImportVisitor::implicitImportDirectory(
               m_logger->fileName(), m_importer.resourceFileMapper())),
       m_scopeCreator(m_root, &m_importer, m_logger, m_implicitImportDirectory,
@@ -2226,10 +2231,19 @@ void createDom(MutableDomItem qmlFile, DomCreationOptions options)
 {
     if (std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>()) {
         QQmlJSLogger logger; // TODO
+
+        std::unique_ptr<QQmlJSResourceFileMapper> mapper;
+        if (auto environmentPtr = qmlFile.environment().ownerAs<DomEnvironment>()) {
+            const QStringList resourceFiles =
+                    resourceFilesFromBuildFolders(environmentPtr->loadPaths());
+            mapper = std::make_unique<QQmlJSResourceFileMapper>(
+                    resourceFilesFromBuildFolders(resourceFiles));
+        }
         // the logger filename is used to populate the QQmlJSScope filepath.
         logger.setFileName(qmlFile.canonicalFilePath());
         if (options.testFlag(DomCreationOption::WithSemanticAnalysis)) {
-            auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(qmlFile, &logger);
+            auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(qmlFile, &logger,
+                                                                        mapper.get());
             v->enableScriptExpressions(options.testFlag(DomCreationOption::WithScriptExpressions));
 
             AST::Node::accept(qmlFilePtr->ast(), v.get());

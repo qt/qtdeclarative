@@ -7,9 +7,12 @@
 #include <QtQmlCompiler/private/qqmljslinter_p.h>
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
 #include <QtQmlDom/private/qqmldom_utils_p.h>
+#include <QtQmlDom/private/qqmldomtop_p.h>
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qdir.h>
 #include <chrono>
 
 using namespace QLspSpecification;
@@ -295,12 +298,16 @@ void QmlLintSuggestions::diagnoseHelper(const QByteArray &url,
     qCDebug(lintLog) << "has doc, do real lint";
     QStringList imports = m_codeModel->buildPathsForFileUrl(url);
     imports.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
+    const QString filename = doc.canonicalFilePath();
+    // add source directory as last import as fallback in case there is no qmldir in the build
+    // folder this mimics qmllint behaviors
+    imports.append(QFileInfo(filename).dir().absolutePath());
     // add m_server->clientInfo().rootUri & co?
     bool silent = true;
-    QString filename = doc.canonicalFilePath();
-    QString fileContents = doc.field(Fields::code).value().toString();
-    QStringList qmltypesFiles;
-    QStringList resourceFiles;
+    const QString fileContents = doc.field(Fields::code).value().toString();
+    const QStringList qmltypesFiles;
+    const QStringList resourceFiles = resourceFilesFromBuildFolders(imports);
+
     QList<QQmlJS::LoggerCategory> categories;
 
     QQmlJSLinter linter(imports);

@@ -60,6 +60,8 @@ private slots:
     void linting();
     void rangeFormatting_data();
     void rangeFormatting();
+    void qmldirImportsFromBuild();
+    void qmldirImportsFromSource();
 
 private:
     QProcess m_server;

@@ -162,7 +162,7 @@ public:
     }
     QmldirFile(const QmldirFile &o) = default;
 
-    static std::shared_ptr<QmldirFile> fromPathAndCode(QString path, QString code);
+    static std::shared_ptr<QmldirFile> fromPathAndCode(const QString &path, const QString &code);
 
     std::shared_ptr<QmldirFile> makeCopy(DomItem &self) const
     {

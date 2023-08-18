@@ -1342,6 +1342,61 @@ void tst_qmlls_modules::rangeFormatting()
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
 }
 
+void tst_qmlls_modules::qmldirImportsFromBuild()
+{
+    const QString filePath = u"completions/fromBuildDir.qml"_s;
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+
+    Notifications::AddBuildDirsParams bDirs;
+    UriToBuildDirs ub;
+    ub.baseUri = *uri;
+    ub.buildDirs.append(testFile("buildDir").toUtf8());
+    bDirs.buildDirsToSet.append(ub);
+    m_protocol->typedRpc()->sendNotification(QByteArray(Notifications::AddBuildDirsMethod), bDirs);
+
+    bool diagnosticOk = false;
+    m_protocol->registerPublishDiagnosticsNotificationHandler(
+            [&diagnosticOk, &uri](const QByteArray &, const PublishDiagnosticsParams &p) {
+                if (p.uri != *uri)
+                    return;
+
+                if constexpr (enable_debug_output) {
+                    for (const auto &x : p.diagnostics) {
+                        qDebug() << x.message;
+                    }
+                }
+                QCOMPARE(p.diagnostics.size(), 0);
+                diagnosticOk = true;
+            });
+
+    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 5000);
+}
+
+void tst_qmlls_modules::qmldirImportsFromSource()
+{
+    const QString filePath = u"sourceDir/Main.qml"_s;
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+
+    bool diagnosticOk = false;
+    m_protocol->registerPublishDiagnosticsNotificationHandler(
+            [&diagnosticOk, &uri](const QByteArray &, const PublishDiagnosticsParams &p) {
+                if (p.uri != *uri)
+                    return;
+
+                if constexpr (enable_debug_output) {
+                    for (const auto &x : p.diagnostics) {
+                        qDebug() << x.message;
+                    }
+                }
+                QCOMPARE(p.diagnostics.size(), 0);
+                diagnosticOk = true;
+            });
+
+    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 5000);
+}
+
 QTEST_MAIN(tst_qmlls_modules)
 
 #include <tst_qmlls_modules.moc>

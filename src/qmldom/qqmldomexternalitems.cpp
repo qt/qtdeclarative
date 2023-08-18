@@ -63,7 +63,7 @@ ErrorGroups QmldirFile::myParsingErrors()
     return res;
 }
 
-std::shared_ptr<QmldirFile> QmldirFile::fromPathAndCode(QString path, QString code)
+std::shared_ptr<QmldirFile> QmldirFile::fromPathAndCode(const QString &path, const QString &code)
 {
     QString canonicalFilePath = QFileInfo(path).canonicalFilePath();
 

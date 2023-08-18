@@ -17,6 +17,7 @@
 
 #include <QtCore/qglobal.h>
 #include "qqmldomitem_p.h"
+#include <QtCore/qstringlist.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -34,7 +35,7 @@ namespace QQmlJS {
 namespace Dom {
 
 void createDom(MutableDomItem qmlFile, DomCreationOptions options = None);
-
+QStringList resourceFilesFromBuildFolders(const QStringList &buildFolders);
 }
 }; // namespace QQmlJS
 

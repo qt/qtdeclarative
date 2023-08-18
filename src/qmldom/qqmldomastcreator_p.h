@@ -447,7 +447,8 @@ public:
 class QQmlDomAstCreatorWithQQmlJSScope : public AST::Visitor
 {
 public:
-    QQmlDomAstCreatorWithQQmlJSScope(MutableDomItem &qmlFile, QQmlJSLogger *logger);
+    QQmlDomAstCreatorWithQQmlJSScope(MutableDomItem &qmlFile, QQmlJSLogger *logger,
+                                     QQmlJSResourceFileMapper *mapper);
 
 #define X(name)                       \
     bool visit(AST::name *) override; \
