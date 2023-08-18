@@ -62,6 +62,8 @@ public:
             if (!m_abort)
                 downloadFigmaDocument();
             if (!m_abort)
+                copyFiles();
+            if (!m_abort)
                 generateControls();
             if (!m_abort)
                 downloadImages();
@@ -285,6 +287,26 @@ private:
                 + ": " + parseError.errorString()).toStdString());
 
         m_inputConfig = configDoc.object();
+    }
+
+    void copyFiles()
+    {
+        if (!m_bridge->m_overwriteQml)
+            return;
+
+        QJsonObject qmlConfig = getObject("qml", m_inputConfig);
+
+        const QStringList filesToCopy = getStringList("copy", qmlConfig, false);
+        progressLabel("Copying QML files");
+        for (const QString &file : filesToCopy) {
+            const auto re = QRegularExpression::fromWildcard(file);
+            QDirIterator it(":", QDirIterator::Subdirectories);
+            while (it.hasNext()) {
+                const QString filePath = it.next();
+                if (re.match(filePath).hasMatch())
+                    copyFileToStyleFolder(filePath);
+            }
+        }
     }
 
     void generateControls()

@@ -22,7 +22,6 @@ qt_internal_add_app(qqcstylegenerator
 
 qt_add_resources(qqcstylegenerator "controls"
     PREFIX "/"
-    BASE templates
     FILES
         main.qml
         templates/Button.qml

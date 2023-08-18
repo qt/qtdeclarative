@@ -8,10 +8,12 @@
         {"atom": "indicator", "export": ["image", "geometry"]},
         {"atom": "label", "export": ["text", "geometry"]}
     ],
+    "qml": {
+        "copy": [":/templates/*.qml", ":/templates/impl/*.qml"]
+    },
     "controls": [
     {
         "name": "Button",
-        "copy": ":/Button.qml",
         "page": "Library",
         "component set": "ButtonTemplate${Theme}",
         "atoms": [
@@ -31,7 +33,6 @@
     },
     {
         "name": "CheckBox",
-        "copy": ":/CheckBox.qml",
         "page": "Library",
         "component set": "CheckBoxTemplate${Theme}",
         "contents": ["indicator", "label"],
@@ -58,7 +59,6 @@
     },
     {
         "name": "ComboBox",
-        "copy": ":/ComboBox.qml",
         "page": "Library",
         "component set": "ComboBoxTemplate${Theme}",
         "atoms": [
@@ -79,7 +79,6 @@
     },
     {
         "name": "ComboBoxPopup",
-        "copy": ":/impl/ComboBoxPopup.qml",
         "page": "Library",
         "component set": "ComboBoxTemplate${Theme}",
         "atoms": [
@@ -98,7 +97,6 @@
     },
     {
         "name": "Frame",
-        "copy": ":/Frame.qml",
         "page": "Library",
         "component set": "FrameTemplate${Theme}",
         "atoms": [
@@ -112,7 +110,6 @@
     },
     {
         "name": "ItemDelegate",
-        "copy": ":/ItemDelegate.qml",
         "page": "Library",
         "component set": "ItemDelegateTemplate${Theme}",
         "atoms": [
@@ -132,7 +129,6 @@
     },
     {
         "name": "Popup",
-        "copy": ":/Popup.qml",
         "component set": "PopupTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "PopupBackground, background"},
@@ -145,7 +141,6 @@
     },
     {
         "name": "RadioButton",
-        "copy": ":/RadioButton.qml",
         "page": "Library",
         "component set": "RadioButtonTemplate${Theme}",
         "contents": ["indicator", "label"],
@@ -168,7 +163,6 @@
     },
     {
         "name": "RangeSlider",
-        "copy": ":/RangeSlider.qml",
         "page": "Library",
         "component set": "RangeSliderTemplate${Theme}",
         "contents": ["groove", "track", "handle"],
@@ -189,7 +183,6 @@
     },
     {
         "name": "ScrollBar",
-        "copy": ":/ScrollBar.qml",
         "page": "Library",
         "component set": "ScrollBarTemplate${Theme}",
         "atoms": [
@@ -206,7 +199,6 @@
     },
     {
         "name": "ScrollIndicator",
-        "copy": ":/ScrollIndicator.qml",
         "page": "Library",
         "component set": "ScrollIndicatorTemplate${Theme}",
         "atoms": [
@@ -221,7 +213,6 @@
     },
     {
         "name": "Slider",
-        "copy": ":/Slider.qml",
         "page": "Library",
         "component set": "SliderTemplate${Theme}",
         "contents": ["groove", "track", "handle"],
@@ -241,7 +232,6 @@
     },
     {
         "name": "SpinBox",
-        "copy": ":/SpinBox.qml",
         "page": "Library",
         "component set": "SpinBoxTemplate${Theme}",
         "contents": ["indicator-down", "textInput", "indicator-up"],
@@ -265,7 +255,6 @@
     },
     {
         "name": "Switch",
-        "copy": ":/Switch.qml",
         "page": "Library",
         "component set": "SwitchTemplate${Theme}",
         "contents": ["handle-background", "label"],
@@ -289,7 +278,6 @@
     },
     {
         "name": "TabBar",
-        "copy": ":/TabBar.qml",
         "page": "Library",
         "component set": "TabBarTemplate${Theme}",
         "contents": ["tabButton1", "tabButton2"],
@@ -308,7 +296,6 @@
     },
     {
         "name": "TabButton",
-        "copy": ":/TabButton.qml",
         "page": "Library",
         "component set": "TabButtonTemplate${Theme}",
         "atoms": [
@@ -329,7 +316,6 @@
     },
     {
         "name": "TextArea",
-        "copy": ":/TextArea.qml",
         "page": "Library",
         "component set": "TextAreaTemplate${Theme}",
         "atoms": [
@@ -346,7 +332,6 @@
     },
     {
         "name": "TextField",
-        "copy": ":/TextField.qml",
         "page": "Library",
         "component set": "TextFieldTemplate${Theme}",
         "atoms": [
@@ -363,7 +348,6 @@
     },
     {
         "name": "ToolBar",
-        "copy": ":/ToolBar.qml",
         "page": "Library",
         "component set": "ToolBarTemplate${Theme}",
         "contents": ["toolButton1", "toolButton2"],
@@ -382,7 +366,6 @@
     },
     {
         "name": "ToolButton",
-        "copy": ":/ToolButton.qml",
         "page": "Library",
         "component set": "ToolButtonTemplate${Theme}",
         "atoms": [
