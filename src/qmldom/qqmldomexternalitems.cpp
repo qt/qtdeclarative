@@ -6,6 +6,7 @@
 #include "qqmldomcomments_p.h"
 #include "qqmldommock_p.h"
 #include "qqmldomelements_p.h"
+#include "qqmldom_utils_p.h"
 
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
@@ -158,8 +159,11 @@ void QmldirFile::setFromQmldir()
     }
     for (QQmlDirParser::Import const &imp : m_qmldir.dependencies()) {
         QString uri = imp.module;
-        if (imp.flags & QQmlDirParser::Import::Auto)
-            qWarning() << "qmldir contains dependency with auto keyword";
+        if (imp.flags & QQmlDirParser::Import::Auto) {
+            qCDebug(QQmlJSDomImporting) << "QmldirFile::setFromQmlDir: ignoring initial version"
+                                           " 'auto' in depends command, using latest version"
+                                           " instead.";
+        }
         Version v = Version(
                 (imp.version.hasMajorVersion() ? imp.version.majorVersion() : int(Version::Latest)),
                 (imp.version.hasMinorVersion() ? imp.version.minorVersion()
