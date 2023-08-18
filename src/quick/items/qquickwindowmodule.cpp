@@ -78,8 +78,7 @@ void QQuickWindowQmlImpl::componentComplete()
     d->componentComplete = true;
 
     QQuickItem *itemParent = qmlobject_cast<QQuickItem *>(QObject::parent());
-    const bool transientParentAlreadySet = QQuickWindowPrivate::get(this)->transientParentPropertySet;
-    if (!transientParentAlreadySet && itemParent && !itemParent->window()) {
+    if (!d->transientParentPropertySet && itemParent && !itemParent->window()) {
         qCDebug(lcTransient) << "window" << title() << "has invisible Item parent" << itemParent << "transientParent"
                              << transientParent() << "declared visibility" << d->visibility << "; delaying show";
         connect(itemParent, &QQuickItem::windowChanged, this,
