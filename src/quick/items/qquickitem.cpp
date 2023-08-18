@@ -3246,34 +3246,32 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
 
     if (QQuickItem *item = qmlobject_cast<QQuickItem *>(o)) {
         item->setParentItem(that);
-    } else {
-        if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o)) {
-            if (pointerHandler->parent() != that) {
-                qCDebug(lcHandlerParent) << "reparenting handler" << pointerHandler << ":" << pointerHandler->parent() << "->" << that;
-                pointerHandler->setParent(that);
-            }
-            QQuickItemPrivate::get(that)->addPointerHandler(pointerHandler);
-        } else {
-            QQuickWindow *thisWindow = qmlobject_cast<QQuickWindow *>(o);
-            QQuickItem *item = that;
-            QQuickWindow *itemWindow = that->window();
-            while (!itemWindow && item && item->parentItem()) {
-                item = item->parentItem();
-                itemWindow = item->window();
-            }
-
-            if (thisWindow) {
-                if (itemWindow) {
-                    qCDebug(lcTransient) << thisWindow << "is transient for" << itemWindow;
-                    thisWindow->setTransientParent(itemWindow);
-                } else {
-                    QObject::connect(item, SIGNAL(windowChanged(QQuickWindow*)),
-                                     thisWindow, SLOT(setTransientParent_helper(QQuickWindow*)));
-                }
-            }
-            o->setParent(that);
-            resources_append(prop, o);
+    } else if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o)) {
+        if (pointerHandler->parent() != that) {
+            qCDebug(lcHandlerParent) << "reparenting handler" << pointerHandler << ":" << pointerHandler->parent() << "->" << that;
+            pointerHandler->setParent(that);
         }
+        QQuickItemPrivate::get(that)->addPointerHandler(pointerHandler);
+    } else {
+        QQuickWindow *thisWindow = qmlobject_cast<QQuickWindow *>(o);
+        QQuickItem *item = that;
+        QQuickWindow *itemWindow = that->window();
+        while (!itemWindow && item && item->parentItem()) {
+            item = item->parentItem();
+            itemWindow = item->window();
+        }
+
+        if (thisWindow) {
+            if (itemWindow) {
+                qCDebug(lcTransient) << thisWindow << "is transient for" << itemWindow;
+                thisWindow->setTransientParent(itemWindow);
+            } else {
+                QObject::connect(item, &QQuickItem::windowChanged,
+                    thisWindow, &QQuickWindow::setTransientParent_helper);
+            }
+        }
+        o->setParent(that);
+        resources_append(prop, o);
     }
 }
 

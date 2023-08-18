@@ -241,6 +241,7 @@ private:
 #endif
 
     friend class QQuickItem;
+    friend class QQuickItemPrivate;
     friend class QQuickWidget;
     friend class QQuickRenderControl;
     friend class QQuickAnimatorController;
