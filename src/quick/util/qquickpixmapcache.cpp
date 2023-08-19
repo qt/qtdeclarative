@@ -156,6 +156,7 @@ public:
     QQuickImageProviderOptions providerOptions;
 
     class Event : public QEvent {
+        Q_EVENT_DISABLE_COPY(Event);
     public:
         Event(ReadError, const QString &, const QSize &, QQuickTextureFactory *factory);
         ~Event();
@@ -207,6 +208,7 @@ public slots:
 private slots:
     void networkRequestDone();
 private:
+    Q_DISABLE_COPY(ReaderThreadExecutionEnforcer)
     bool event(QEvent *e) override;
 
     QQuickPixmapReader *reader;
@@ -230,6 +232,7 @@ protected:
     void run() override;
 
 private:
+    Q_DISABLE_COPY(QQuickPixmapReader)
     friend class ReaderThreadExecutionEnforcer;
     void processJobs();
     void processJob(QQuickPixmapReply *, const QUrl &, const QString &, QQuickImageProvider::ImageType, const QSharedPointer<QQuickImageProvider> &);
@@ -405,6 +408,9 @@ public:
 #ifdef Q_OS_WEBOS
     bool storeToCache;
 #endif
+
+private:
+    Q_DISABLE_COPY(QQuickPixmapData)
 };
 
 int QQuickPixmapReply::finishedMethodIndex = -1;
@@ -555,6 +561,8 @@ public:
     }
     bool hasOpenGL;
     QStringList fileSuffixes;
+private:
+    Q_DISABLE_COPY(BackendSupport)
 };
 Q_GLOBAL_STATIC(BackendSupport, backendSupport);
 
@@ -1166,9 +1174,8 @@ void QQuickPixmapReader::run()
 #endif
 }
 
-class QQuickPixmapKey
+struct QQuickPixmapKey
 {
-public:
     const QUrl *url;
     const QRect *region;
     const QSize *size;
@@ -1233,6 +1240,7 @@ public:
     QHash<QQuickPixmapKey, QQuickPixmapData *> m_cache;
 
 private:
+    Q_DISABLE_COPY(QQuickPixmapStore)
     void shrinkCache(int remove);
 
     QQuickPixmapData *m_unreferencedPixmaps;
