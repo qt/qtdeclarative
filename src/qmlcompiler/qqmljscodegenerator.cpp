@@ -3155,10 +3155,14 @@ QString QQmlJSCodeGenerator::convertStored(
             return u"std::numeric_limits<double>::quiet_NaN()"_s;
         if (m_typeResolver->equals(to, m_typeResolver->stringType()))
             return QQmlJSUtils::toLiteral(u"undefined"_s);
+        if (m_typeResolver->equals(to, m_typeResolver->varType()))
+            return u"QVariant()"_s;
+        if (m_typeResolver->equals(to, m_typeResolver->jsValueType()))
+            return u"QJSValue();"_s;
+        if (m_typeResolver->equals(to, m_typeResolver->jsPrimitiveType()))
+            return u"QJSPrimitiveValue()"_s;
         if (m_typeResolver->equals(from, to))
             return QString();
-        // Anything else is just the default constructed type.
-        return to->augmentedInternalName() + u"()"_s;
     }
 
     if (m_typeResolver->equals(from, m_typeResolver->nullType())) {

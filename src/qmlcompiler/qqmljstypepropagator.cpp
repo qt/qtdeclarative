@@ -83,9 +83,10 @@ void QQmlJSTypePropagator::generate_Ret()
 
     if (m_function->isSignalHandler) {
         // Signal handlers cannot return anything.
-    } else if (!m_returnType.isValid() && m_state.accumulatorIn().isValid()
-               && !m_typeResolver->registerContains(
-                   m_state.accumulatorIn(), m_typeResolver->voidType())) {
+    } else if (m_typeResolver->registerContains(
+                       m_state.accumulatorIn(), m_typeResolver->voidType())) {
+        // You can always return undefined.
+    } else if (!m_returnType.isValid() && m_state.accumulatorIn().isValid()) {
         setError(u"function without type annotation returns %1"_s
                          .arg(m_state.accumulatorIn().descriptiveName()));
         return;
