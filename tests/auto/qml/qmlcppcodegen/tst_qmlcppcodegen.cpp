@@ -206,6 +206,7 @@ private slots:
     void variantMapLookup();
     void variantReturn();
     void variantlist();
+    void voidConversion();
     void voidFunction();
 };
 
@@ -4187,6 +4188,23 @@ void tst_QmlCppCodegen::variantlist()
     QCOMPARE(things.size(), 2);
     QCOMPARE(things[0].toString(), u"thing"_s);
     QCOMPARE(things[1].toInt(), 30);
+}
+
+void tst_QmlCppCodegen::voidConversion()
+{
+    QQmlEngine engine;
+    const QUrl url(u"qrc:/qt/qml/TestTypes/voidConversion.qml"_s);
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url.toString() + u":8: Error: Cannot assign [undefined] to QPointF"_s));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->property("p"), QPointF(20, 10));
 }
 
 void tst_QmlCppCodegen::voidFunction()

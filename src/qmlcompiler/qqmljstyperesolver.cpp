@@ -1192,11 +1192,11 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
         return true;
     }
 
-    if (equals(from, m_voidType) || equals(to, m_voidType))
+    if (equals(to, m_voidType))
         return true;
 
     if (to.isNull())
-        return false;
+        return equals(from, m_voidType);
 
     const auto types = { m_dateTimeType, m_dateType, m_timeType, m_stringType };
     for (const auto &originType : types) {

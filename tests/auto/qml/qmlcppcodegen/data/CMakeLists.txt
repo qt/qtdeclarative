@@ -245,6 +245,7 @@ set(qml_files
     variantReturn.qml
     variantlist.qml
     versionmismatch.qml
+    voidConversion.qml
     voidfunction.qml
     dummy_imports.qml
 )
