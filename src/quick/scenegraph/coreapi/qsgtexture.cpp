@@ -882,7 +882,7 @@ QT_DEFINE_NATIVE_INTERFACE(QSGD3D12Texture);
     \sa QQuickWindow::sceneGraphInitialized(), QSGTexture,
     {Scene Graph - Metal Texture Import}, {Scene Graph - Vulkan Texture Import}
 
-    \since 6.0
+    \since 6.6
  */
 QSGTexture *QSGD3D12Texture::fromNative(void *texture,
                                         int resourceState,
