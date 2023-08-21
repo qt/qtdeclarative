@@ -101,7 +101,6 @@ to a \l{QtQml::Date}{Date} object.
 /*!
 \qmlvaluetype point
 \ingroup qtqmlvaluetypes
-\ingroup qtquickvaluetypes
 \brief a value with x and y attributes.
 
 The \c point type refers to a value with \c x and \c y attributes.
@@ -131,7 +130,6 @@ Properties of type \c point are \c {Qt.point(0, 0)} by default.
 /*!
 \qmlvaluetype size
 \ingroup qtqmlvaluetypes
-\ingroup qtquickvaluetypes
 \brief a value with width and height attributes.
 
 The \c size type refers to a value with has \c width and \c height attributes.
@@ -171,7 +169,6 @@ is automatically converted into a QSizeF value.
 /*!
 \qmlvaluetype rect
 \ingroup qtqmlvaluetypes
-\ingroup qtquickvaluetypes
 \brief a value with x, y, width and height attributes.
 
 The \c rect type refers to a value with \c x, \c y, \c width and \c height attributes.
