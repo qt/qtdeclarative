@@ -52,7 +52,7 @@ Item {
         y: targetItem ? targetItem.y + topOffset - frameSize - root.y : 0
         width: targetItem ? targetItem.width - leftOffset - rightOffset + (frameSize * 2) : 0
         height: targetItem ? targetItem.height - topOffset - bottomOffset + (frameSize * 2) : 0
-        radius: frameRadius
+        radius: frameRadius + frameSize
         visible: targetItem && targetItem.visible
         color: "transparent"
 
@@ -67,7 +67,7 @@ Item {
             property: "frameSize"
             duration: 300
             from: 15
-            to: 2.5
+            to: 3
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
