@@ -524,6 +524,8 @@ void QSGBasicInternalRectangleNode::updateGeometry()
             t = qBound(0.0, t, 1.0);
 
             int i = 1;
+            if (t < stops.first().first)
+                return colorToColor4ub(stops.first().second);
             while (i < stops.size()) {
                 const QGradientStop &prev = stops.at(i - 1);
                 const QGradientStop &next = stops.at(i);
