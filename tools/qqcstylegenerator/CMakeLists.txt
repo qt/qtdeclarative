@@ -44,6 +44,7 @@ qt_add_resources(qqcstylegenerator "controls"
         templates/ToolBar.qml
         templates/ToolButton.qml
         templates/impl/ComboBoxPopup.qml
+        templates/impl/StyleImage.qml
         config.json
         figma_and_qt@2x.png
         background.png
