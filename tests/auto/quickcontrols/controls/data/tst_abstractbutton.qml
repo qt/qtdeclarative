@@ -967,5 +967,38 @@ TestCase {
          verify(control)
 
          verify(!control.checkable)
-     }
+    }
+
+    function test_rightMouseButton() {
+        var control = createTemporaryObject(button, testCase)
+        verify(control)
+
+        let pressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
+        verify(pressedSpy.valid)
+
+        let releasedSpy = signalSpy.createObject(control, { target: control, signalName: "released" })
+        verify(releasedSpy.valid)
+
+        let clickedSpy = signalSpy.createObject(control, { target: control, signalName: "clicked" })
+        verify(clickedSpy.valid)
+
+        // button should not react on the right mouse button by defualt
+        mousePress(control, control.width / 2, control.height / 2, Qt.RightButton)
+        mouseRelease(control, control.width / 2, control.height / 2, Qt.RightButton)
+
+        compare(pressedSpy.count, 0)
+        compare(releasedSpy.count, 0)
+        compare(clickedSpy.count, 0)
+
+        // QTBUG-116289 - adding a HoverHandler into the button should not affect the handling of the right mouse button
+        let hoverHandler = createTemporaryQmlObject("import QtQuick; HoverHandler {}", control)
+        control.data.push(hoverHandler)
+
+        mousePress(control, control.width / 2, control.height / 2, Qt.RightButton)
+        mouseRelease(control, control.width / 2, control.height / 2, Qt.RightButton)
+
+        compare(pressedSpy.count, 0)
+        compare(releasedSpy.count, 0)
+        compare(clickedSpy.count, 0)
+    }
 }
