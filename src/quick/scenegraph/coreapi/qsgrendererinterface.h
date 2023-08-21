@@ -48,7 +48,7 @@ public:
         RenderPassResource,
         RedirectPaintDevice,
         GraphicsQueueFamilyIndexResource,
-        GraphicsQueueIndexResource
+        GraphicsQueueIndexResource,
     };
 
     enum ShaderType {
