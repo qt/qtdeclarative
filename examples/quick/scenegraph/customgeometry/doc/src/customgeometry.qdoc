@@ -4,6 +4,7 @@
 /*!
     \example scenegraph/customgeometry
     \title Scene Graph - Custom Geometry
+    \examplecategory {Graphics & Multimedia}
     \ingroup qtquickexamples
     \brief Shows how to implement a custom geometry in the Qt Quick Scene Graph.
 

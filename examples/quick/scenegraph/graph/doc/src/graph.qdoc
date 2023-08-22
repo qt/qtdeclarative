@@ -4,6 +4,7 @@
 /*!
     \example scenegraph/graph
     \title Scene Graph - Graph
+    \examplecategory {Graphics & Multimedia}
     \ingroup qtquickexamples
 
     \brief Demonstrates how one can combine custom materials and geometries

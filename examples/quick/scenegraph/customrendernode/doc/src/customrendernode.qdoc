@@ -4,6 +4,7 @@
 /*!
     \example scenegraph/customrendernode
     \title Scene Graph - Custom QSGRenderNode
+    \examplecategory {Graphics & Multimedia}
     \ingroup qtquickexamples
     \brief Shows how to use QSGRenderNode to implement custom rendering in the Qt Quick scenegraph.
 
