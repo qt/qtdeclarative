@@ -152,6 +152,10 @@ void main()
     // finally mix in debug
     fragColor = mix(combined, vec4(debugColor, 1.0), ubuf.debug) * ubuf.opacity;
 #else
-    fragColor = mix(baseColor() * clamp(0.5 + f / df, 0.0, 1.0), vec4(debugColor, 1.0), ubuf.debug) * ubuf.opacity;
+    // Special case: mask out concave curve in "negative space".
+    int specialCaseMask = 1 - int(qt_TexCoord.w != 0.0) * (int(qt_TexCoord.x < 0.0) +  int(qt_TexCoord.x > 1.0));
+    float fillCoverage = clamp(0.5 + f / df, 0.0, 1.0) * float(specialCaseMask);
+
+    fragColor = mix(baseColor() * fillCoverage, vec4(debugColor, 1.0), ubuf.debug) * ubuf.opacity;
 #endif
 }

@@ -426,70 +426,67 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addFillNodes(const PathData
         wfVertices.append({ep.x(), ep.y(), 0.0f, 0.0f, 1.0f}); // 2
     };
 
-    // Find a point on the other side of the line
-    auto findPointOtherSide = [](const QVector2D &startPoint,
+    auto addCurveTriangleWithNormals = [&](const QQuadPath::Element &element,
+                                           const std::array<QVector2D, 3> &v,
+                                           const std::array<QVector2D, 3> &n) {
+        node->appendTriangle(v, n, [&element](QVector2D v) { return elementUvForPoint(element, v); });
+        wfVertices.append({v[0].x(), v[0].y(), 1.0f, 0.0f, 0.0f}); // 0
+        wfVertices.append({v[1].x(), v[1].y(), 0.0f, 1.0f, 0.0f}); // 1
+        wfVertices.append({v[2].x(), v[2].y(), 0.0f, 0.0f, 1.0f}); // 2
+    };
+
+    auto outsideNormal = [](const QVector2D &startPoint,
                                  const QVector2D &endPoint,
-                                 const QVector2D &referencePoint) {
+                                 const QVector2D &insidePoint) {
 
         QVector2D baseLine = endPoint - startPoint;
-        QVector2D insideVector = referencePoint - startPoint;
-        QVector2D normal = QVector2D(-baseLine.y(), baseLine.x()); // TODO: limit size of triangle
+        QVector2D insideVector = insidePoint - startPoint;
+        QVector2D normal = QVector2D(-baseLine.y(), baseLine.x()).normalized();
 
         bool swap = QVector2D::dotProduct(insideVector, normal) < 0;
 
-        return swap ? startPoint + normal : startPoint - normal;
+        return swap ? normal : -normal;
     };
 
-    auto addLineTriangle = [&](const QQuadPath::Element &element,
+    auto addTriangleForLine = [&](const QQuadPath::Element &element,
                                const QVector2D &sp,
                                const QVector2D &ep,
                                const QVector2D &cp) {
         addCurveTriangle(element, sp, ep, cp);
-        // Add a triangle on the outer side of the line to get some more AA
-        // The new point replaces cp
-        QVector2D op = findPointOtherSide(sp, ep, cp);
-        addCurveTriangle(element, sp, op, ep);
+
+        // Add triangles on the outer side to make room for AA
+        const QVector2D normal = outsideNormal(sp, ep, cp);
+        constexpr QVector2D null;
+        addCurveTriangleWithNormals(element, {sp, sp, ep}, {null, normal, null});
+        addCurveTriangleWithNormals(element, {sp, ep, ep}, {normal, normal, null});
     };
 
-    auto addConvexTriangle = [&](const QQuadPath::Element &element,
+    auto addTriangleForConcave = [&](const QQuadPath::Element &element,
+                                  const QVector2D &sp,
+                                  const QVector2D &ep,
+                                  const QVector2D &cp) {
+        addTriangleForLine(element, sp, ep, cp);
+    };
+
+    auto addTriangleForConvex = [&](const QQuadPath::Element &element,
                                  const QVector2D &sp,
                                  const QVector2D &ep,
                                  const QVector2D &cp) {
         addCurveTriangle(element, sp, ep, cp);
         // Add two triangles on the outer side to get some more AA
 
+        constexpr QVector2D null;
         // First triangle on the line sp-cp, replacing ep
         {
-            QVector2D op = findPointOtherSide(sp, cp, ep);
-            addCurveTriangle(element, sp, cp, op);
+            const QVector2D normal = outsideNormal(sp, cp, ep);
+            addCurveTriangleWithNormals(element, {sp, sp, cp}, {null, normal, null});
         }
 
         // Second triangle on the line ep-cp, replacing sp
         {
-            QVector2D op = findPointOtherSide(ep, cp, sp);
-            addCurveTriangle(element, op, cp, ep);
+            const QVector2D normal = outsideNormal(ep, cp, sp);
+            addCurveTriangleWithNormals(element, {ep, ep, cp}, {null, normal, null});
         }
-    };
-
-    // This is guaranteed to be in safe space (the curve will never enter the triangle)
-    // ### This is the opposite of what we really want: it's going to be extremely thin when we need it,
-    // and big when it's completely pointless, but a thicker triangle could be going into negative space
-    auto oppositePoint = [](const QVector2D &startPoint,
-                            const QVector2D &endPoint,
-                            const QVector2D &controlPoint) -> QVector2D {
-        return startPoint + 2 * (endPoint - controlPoint);
-    };
-
-    // Identical to addLineTriangle, except for how op is calculated
-    auto addConcaveTriangle = [&](const QQuadPath::Element &element,
-                                  const QVector2D &sp,
-                                  const QVector2D &ep,
-                                  const QVector2D &cp) {
-        addCurveTriangle(element, sp, ep, cp);
-        // Add an outer triangle to give extra AA for very flat curves
-        QVector2D op = oppositePoint(sp, ep, cp);
-        // The new point replaces cp
-        addCurveTriangle(element, sp, op, ep);
     };
 
     auto addFillTriangle = [&](const QVector2D &p1, const QVector2D &p2, const QVector2D &p3) {
@@ -514,12 +511,12 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addFillNodes(const PathData
             } else {
                 if (element.isConvex()) {
                     internalHull.lineTo(ep);
-                    addConvexTriangle(element, toRoundedVec2D(sp), toRoundedVec2D(ep), toRoundedVec2D(cp));
+                    addTriangleForConvex(element, toRoundedVec2D(sp), toRoundedVec2D(ep), toRoundedVec2D(cp));
                     convexPointHash.insert(toRoundedPair(sp), index);
                 } else {
                     internalHull.lineTo(cp);
                     internalHull.lineTo(ep);
-                    addConcaveTriangle(element, toRoundedVec2D(sp), toRoundedVec2D(ep), toRoundedVec2D(cp));
+                    addTriangleForConcave(element, toRoundedVec2D(sp), toRoundedVec2D(ep), toRoundedVec2D(cp));
                     concaveControlPointHash.insert(toRoundedPair(cp), index);
                 }
             }
@@ -613,7 +610,7 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addFillNodes(const PathData
         }
         if (lineElementIndex != -1) {
             int ci = (6 - si - ei) % 3; // 1+2+3 is 6, so missing number is 6-n1-n2
-            addLineTriangle(pathData.fillPath.elementAt(lineElementIndex), p[si], p[ei], p[ci]);
+            addTriangleForLine(pathData.fillPath.elementAt(lineElementIndex), p[si], p[ei], p[ci]);
         } else if (concaveElementIndex != -1) {
             addCurveTriangle(pathData.fillPath.elementAt(concaveElementIndex), p[0], p[1], p[2]);
         } else if (convexElementIndex != -1) {
