@@ -799,7 +799,7 @@ void QSGRenderThread::syncAndRender()
                 int((syncTime/1000000)),
                 int((renderTime - syncTime) / 1000000),
                 int((threadTimer.nsecsElapsed() - renderTime) / 1000000));
-        if (!qFuzzyIsNull(lastCompletedGpuTime) && cd->graphicsConfig.isTimestampsEnabled()) {
+        if (!qFuzzyIsNull(lastCompletedGpuTime) && cd->graphicsConfig.timestampsEnabled()) {
             qCDebug(QSG_LOG_TIME_RENDERLOOP, "[window %p][render thread %p] syncAndRender: last retrieved GPU frame time was %.4f ms",
                     window,
                     QThread::currentThread(),

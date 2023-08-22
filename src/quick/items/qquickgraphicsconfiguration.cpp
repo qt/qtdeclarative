@@ -591,7 +591,7 @@ bool QQuickGraphicsConfiguration::isDebugMarkersEnabled() const
 
     \since 6.6
 
-    \sa isTimestampsEnabled(), setDebugMarkers()
+    \sa timestampsEnabled(), setDebugMarkers()
  */
 void QQuickGraphicsConfiguration::setTimestamps(bool enable)
 {
@@ -609,7 +609,7 @@ void QQuickGraphicsConfiguration::setTimestamps(bool enable)
     \since 6.6
     \sa setTimestamps()
  */
-bool QQuickGraphicsConfiguration::isTimestampsEnabled() const
+bool QQuickGraphicsConfiguration::timestampsEnabled() const
 {
     return d->flags.testFlag(QQuickGraphicsConfigurationPrivate::EnableTimestamps);
 }

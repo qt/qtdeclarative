@@ -1105,7 +1105,7 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
 
     const bool debugLayer = wd->graphicsConfig.isDebugLayerEnabled();
     const bool debugMarkers = wd->graphicsConfig.isDebugMarkersEnabled();
-    const bool timestamps = wd->graphicsConfig.isTimestampsEnabled();
+    const bool timestamps = wd->graphicsConfig.timestampsEnabled();
     const bool preferSoftware = wd->graphicsConfig.prefersSoftwareDevice();
     const bool pipelineCacheSave = !wd->graphicsConfig.pipelineCacheSaveFile().isEmpty()
             || (wd->graphicsConfig.isAutomaticPipelineCacheEnabled()
