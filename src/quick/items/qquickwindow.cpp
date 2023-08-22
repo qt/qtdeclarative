@@ -1762,7 +1762,7 @@ void QQuickWindowPrivate::data_append(QQmlListProperty<QObject> *property, QObje
         return;
     QQuickWindow *that = static_cast<QQuickWindow *>(property->object);
     if (QQuickWindow *window = qmlobject_cast<QQuickWindow *>(o)) {
-        qCDebug(lcTransient) << window << "is transient for" << that;
+        qCDebug(lcTransient) << "Setting" << that << "as transient parent of" << window;
         window->setTransientParent(that);
     }
     QQmlListProperty<QObject> itemProperty = QQuickItemPrivate::get(that->contentItem())->data();
@@ -2230,7 +2230,7 @@ void QQuickWindow::cleanupSceneGraph()
 
 void QQuickWindow::setTransientParent_helper(QQuickWindow *window)
 {
-    qCDebug(lcTransient) << this << "is transient for" << window;
+    qCDebug(lcTransient) << "Setting" << window << "as transient parent of" << this;
     setTransientParent(window);
     disconnect(sender(), SIGNAL(windowChanged(QQuickWindow*)),
                this, SLOT(setTransientParent_helper(QQuickWindow*)));

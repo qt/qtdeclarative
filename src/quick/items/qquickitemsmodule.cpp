@@ -105,7 +105,7 @@ static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject
             QQuickWindow *win = qmlobject_cast<QQuickWindow *>(obj);
             if (win) {
                 // A Window inside an Item should be transient for that item's window
-                qCDebug(lcTransient) << win << "is transient for" << parentItem->window();
+                qCDebug(lcTransient) << "Setting" << parentItem->window() << "as transient parent of" << win;
                 win->setTransientParent(parentItem->window());
                 return QQmlPrivate::Parented;
             }
@@ -119,7 +119,7 @@ static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject
         QQuickWindow *win = qmlobject_cast<QQuickWindow *>(obj);
         if (win) {
             // A Window inside a Window should be transient for it
-            qCDebug(lcTransient) << win << "is transient for" << parentWindow;
+            qCDebug(lcTransient) << "Setting" << parentWindow << "as transient parent of" << win;
             win->setTransientParent(parentWindow);
             return QQmlPrivate::Parented;
         } else if (QQuickItem *item = qmlobject_cast<QQuickItem *>(obj)) {

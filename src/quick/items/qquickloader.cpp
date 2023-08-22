@@ -676,7 +676,7 @@ void QQuickLoaderPrivate::incubatorStateChanged(QQmlIncubator::Status status)
         if (!item) {
             QQuickWindow *window = qmlobject_cast<QQuickWindow*>(object);
             if (window) {
-                qCDebug(lcTransient) << window << "is transient for" << q->window();
+                qCDebug(lcTransient) << "Setting" << q->window() << "as transient parent of" << window;
                 window->setTransientParent(q->window());
             }
         }
@@ -808,7 +808,7 @@ void QQuickLoader::itemChange(QQuickItem::ItemChange change, const QQuickItem::I
     case ItemSceneChange: {
         QQuickWindow *loadedWindow = qmlobject_cast<QQuickWindow *>(item());
         if (loadedWindow) {
-            qCDebug(lcTransient) << loadedWindow << "is transient for" << value.window;
+            qCDebug(lcTransient) << "Setting" << value.window << "as transient parent of" << loadedWindow;
             loadedWindow->setTransientParent(value.window);
         }
         break;

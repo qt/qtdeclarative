@@ -3262,7 +3262,7 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
             }
 
             if (itemWindow) {
-                qCDebug(lcTransient) << quickWindow << "is transient for" << itemWindow;
+                qCDebug(lcTransient) << "Setting" << itemWindow << "as transient parent of" << quickWindow;
                 quickWindow->setTransientParent(itemWindow);
             } else {
                 QObject::connect(item, &QQuickItem::windowChanged,
