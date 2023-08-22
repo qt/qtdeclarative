@@ -4,6 +4,7 @@
 /*!
     \title Qt Quick Particles Examples - System
     \example particles/system
+    \examplecategory {Graphics & Multimedia}
     \brief This is a collection of examples using Affectors in the QML particle system.
     \image qml-system-example.png
 
