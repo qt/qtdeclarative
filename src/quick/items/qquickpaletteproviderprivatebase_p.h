@@ -230,9 +230,9 @@ template<class Impl, class I> decltype(auto) getPrivateImpl(I &t) { return Impl:
 template <class T>
 decltype(auto) getPrivate(T &item)
 {
-    if constexpr (std::is_same_v<T, QQuickWindow>) {
+    if constexpr (std::is_base_of_v<T, QQuickWindow>) {
         return getPrivateImpl<QQuickWindowPrivate>(item);
-    } else if constexpr (std::is_same_v<T, QQuickItem>) {
+    } else if constexpr (std::is_base_of_v<T, QQuickItem>) {
         return getPrivateImpl<QQuickItemPrivate>(item);
     } else {
         static_assert (dependent_false<T>::value, "Extend please.");
@@ -257,12 +257,15 @@ template<class I, class Impl>
 QPalette QQuickPaletteProviderPrivateBase<I, Impl>::parentPalette(const QPalette &fallbackPalette) const
 {
     if constexpr (!isRootWindow<I>()) {
-        for (auto parentItem = itemWithPalette()->parentItem(); parentItem;
-             parentItem = parentItem->parentItem()) {
+        // Popups should always inherit from their window, even child popups: QTBUG-115707.
+        if (!std::is_base_of_v<QQuickPopup, I>) {
+            for (auto parentItem = itemWithPalette()->parentItem(); parentItem;
+                 parentItem = parentItem->parentItem()) {
 
-            // Don't allocate a new palette here. Use only if it's already pre allocated
-            if (parentItem && getPrivate(*parentItem)->providesPalette()) {
-                return getPrivate(*parentItem)->palette()->toQPalette();
+                // Don't allocate a new palette here. Use only if it's already pre allocated
+                if (parentItem && getPrivate(*parentItem)->providesPalette()) {
+                    return getPrivate(*parentItem)->palette()->toQPalette();
+                }
             }
         }
 
@@ -279,7 +282,7 @@ const QQuickItem* rootItem(const I &item)
 {
     if constexpr (isRootWindow<I>()) {
         return item.contentItem();
-    } else if constexpr (std::is_same_v<QQuickPopup, I>) {
+    } else if constexpr (std::is_base_of_v<QQuickPopup, I>) {
         return nullptr;
     } else {
         return &item;
