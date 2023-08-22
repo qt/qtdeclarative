@@ -37,7 +37,7 @@
 
     \quotefromfile scenegraph/vulkanunderqml/vulkansquircle.h
     \skipto class VulkanSquircle
-    \printto public
+    \printto public:
 
     We then go on to declare public and private items:
 
