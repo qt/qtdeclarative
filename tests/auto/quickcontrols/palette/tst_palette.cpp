@@ -7,6 +7,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
@@ -17,7 +18,7 @@
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 
-//using namespace QQuickVisualTestUtils;
+using namespace QQuickControlsTestUtils;
 
 // Need a more descriptive failure message: QTBUG-87039
 #define COMPARE_PALETTES(actualPalette, expectedPalette) \
@@ -40,6 +41,7 @@ private slots:
 
     void inheritance_data();
     void inheritance();
+    void childPopupInheritance();
 
     void defaultPalette_data();
     void defaultPalette();
@@ -201,6 +203,40 @@ void tst_palette::inheritance()
     auto grandChildMo = grandChild->metaObject();
     grandChildMo->property(grandChildMo->indexOfProperty("palette")).reset(grandChild);
     QCOMPARE(grandChildPalette->window(), windowPalette->window());
+}
+
+// The child popups in inheritance() don't test actual nested child popups,
+// only popups that are children of items and the items within those popups.
+// We need to specifically test this to prevent QTBUG-115707 from happening again.
+void tst_palette::childPopupInheritance()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("childPopupInheritance.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    const auto *windowPrivate = QQuickWindowPrivate::get(helper.window);
+    const auto windowsWindowTextColor = windowPrivate->palette()->toQPalette().color(QPalette::WindowText);
+
+    // parentPopup sets windowText explicitly, so its label should use that color.
+    auto *parentPopup = helper.appWindow->findChild<QQuickPopup *>("parentPopup");
+    QVERIFY(parentPopup);
+    parentPopup->open();
+    QTRY_VERIFY(parentPopup->isOpened());
+    auto *parentPopupLabel = helper.appWindow->findChild<QObject *>("parentPopupLabel");
+    QVERIFY(parentPopupLabel);
+    QCOMPARE(parentPopupLabel->property("color").value<QColor>(), "#ffdead");
+
+    // All other child popups don't set anything explicitly, and should inherit from their window.
+    auto *childPopup = helper.appWindow->findChild<QQuickPopup *>("childPopup");
+    QVERIFY(childPopup);
+    auto *childPopupLabel = helper.appWindow->findChild<QObject *>("childPopupLabel");
+    QVERIFY(childPopupLabel);
+    QCOMPARE(childPopupLabel->property("color").value<QColor>(), windowsWindowTextColor);
+
+    auto *grandchildPopup = helper.appWindow->findChild<QQuickPopup *>("grandchildPopup");
+    QVERIFY(grandchildPopup);
+    auto *grandchildPopupLabel = helper.appWindow->findChild<QObject *>("grandchildPopupLabel");
+    QVERIFY(grandchildPopupLabel);
+    QCOMPARE(grandchildPopupLabel->property("color").value<QColor>(), windowsWindowTextColor);
 }
 
 class TestTheme : public QQuickTheme
