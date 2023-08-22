@@ -3,6 +3,7 @@
 /*!
     \title Qt Quick Particles Examples - Emitters
     \example particles/emitters
+    \examplecategory {Graphics & Multimedia}
     \brief This is a collection of examples using Emitters in the QML particle system.
     \image qml-emitters-example.png
 
