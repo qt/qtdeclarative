@@ -4,6 +4,7 @@
 /*!
     \example scenegraph/d3d11underqml
     \title Scene Graph - Direct3D 11 Under QML
+    \examplecategory {Graphics & Multimedia}
     \ingroup qtquickexamples
     \brief Shows how to render directly with Direct3D 11 under a Qt Quick scene.
 
