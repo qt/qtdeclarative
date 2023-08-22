@@ -221,26 +221,6 @@ extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];
 }
 }
 
-// QML-generated types have no C++ names, but we want to call a method that
-// expects a pointer to a QML-generated type as argument.
-//
-// We force the QML engine to assign a specific name to our type and declare
-// an incomplete dummy class of the same name here. The dummy class does not
-// have a proper metatype by itself. Therefore, when we want to pass a (null)
-// pointer of it to invokeMethod(), usually invokeMethod() would complain that
-// the metatype of the argument we pass does not match the metatype of the
-// argument the method expects. In order to work around it, we specialize
-// qMetaTypeInterfaceForType() and produce a "correct" metatype this way.
-class Dummy_QMLTYPE_0;
-
-// We set this to the actual value retrieved from an actual instance of the QML
-// type before retrieving the metatype interface for the first time.
-static const QtPrivate::QMetaTypeInterface *dummyMetaTypeInterface = nullptr;
-template<>
-const QtPrivate::QMetaTypeInterface *QtPrivate::qMetaTypeInterfaceForType<Dummy_QMLTYPE_0 *>() {
-    return dummyMetaTypeInterface;
-}
-
 static void checkColorProperties(QQmlComponent *component)
 {
     QVERIFY2(component->isReady(), qPrintable(component->errorString()));
@@ -1763,32 +1743,65 @@ void tst_QmlCppCodegen::funcWithParams()
     QCOMPARE(object->property("bar").toInt(), 30);
 }
 
+// QML-generated types have no C++ names, but we want to call a method that
+// expects a pointer to a QML-generated type as argument.
+//
+// We force the QML engine to assign a specific name to our type and declare
+// an incomplete dummy class of the same name here. The dummy class does not
+// have a proper metatype by itself. Therefore, when we want to pass a (null)
+// pointer of it to invokeMethod(), usually invokeMethod() would complain that
+// the metatype of the argument we pass does not match the metatype of the
+// argument the method expects. In order to work around it, we specialize
+// qMetaTypeInterfaceForType() and produce a "correct" metatype this way.
+class Dummy2_QMLTYPE_0;
+
+// We set this to the actual value retrieved from an actual instance of the QML
+// type before retrieving the metatype interface for the first time.
+static const QtPrivate::QMetaTypeInterface *dummyMetaTypeInterface = nullptr;
+template<>
+const QtPrivate::QMetaTypeInterface *QtPrivate::qMetaTypeInterfaceForType<Dummy2_QMLTYPE_0 *>() {
+    return dummyMetaTypeInterface;
+}
+
 void tst_QmlCppCodegen::functionArguments()
 {
-    QQmlEngine engine;
+    qmlClearTypeRegistrations();
 
-    // Ensure that Dummy gets counter value 0. Don't do that at home
+    QQmlEngine engine;
+    QQmlComponent preheat(&engine);
+    preheat.setData(R"(
+        import QtQml
+        import TestTypes
+        QtObject {
+            objectName: Style.objectName
+        }
+    )", QUrl(u"qrc:/qt/qml/TestTypes/preheat.qml"_s));
+    QVERIFY2(preheat.isReady(), qPrintable(preheat.errorString()));
+    QScopedPointer<QObject> hot(preheat.create());
+    QVERIFY(!hot.isNull());
+
+    // Ensure that Dummy gets counter value 1. Don't do that at home
     QScopedValueRollback<QAtomicInt> rb(QQmlPropertyCacheCreatorBase::classIndexCounter, 0);
 
-    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/Dummy.qml"_s));
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/Dummy2.qml"_s));
     QVERIFY2(component.isReady(), component.errorString().toUtf8());
     QScopedPointer<QObject> object(component.create());
 
     const QMetaObject *metaObject = object->metaObject();
     dummyMetaTypeInterface = metaObject->metaType().iface();
     const QByteArray className = QByteArray(metaObject->className());
-    QCOMPARE(className, "Dummy_QMLTYPE_0");
+    QCOMPARE(className, "Dummy2_QMLTYPE_0");
 
     int result;
     int a = 1;
     bool b = false;
-    Dummy_QMLTYPE_0 *c = nullptr;
+    Dummy2_QMLTYPE_0 *c = nullptr;
     double d = -1.2;
     int e = 3;
 
     metaObject->invokeMethod(
                 object.data(), "someFunction", Q_RETURN_ARG(int, result),
-                Q_ARG(int, a), Q_ARG(bool, b), Q_ARG(Dummy_QMLTYPE_0 *, c),
+                Q_ARG(int, a), Q_ARG(bool, b), Q_ARG(Dummy2_QMLTYPE_0 *, c),
                 Q_ARG(double, d), Q_ARG(int, e));
     QCOMPARE(result, 42);
 

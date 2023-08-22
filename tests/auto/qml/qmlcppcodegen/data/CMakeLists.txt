@@ -39,6 +39,7 @@ set(qml_files
     Cycle2.qml
     Cycle3.qml
     Dummy.qml
+    Dummy2.qml
     Enums.qml
     Foozle.qml
     Loopy.qml
