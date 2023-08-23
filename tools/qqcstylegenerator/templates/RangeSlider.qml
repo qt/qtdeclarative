@@ -13,15 +13,10 @@ T.RangeSlider {
                              first.implicitHandleHeight + topPadding + bottomPadding,
                              second.implicitHandleHeight + topPadding + bottomPadding)
 
-    topPadding: (control.horizontal ? config.topPadding : config.rightPadding) || 0
-    leftPadding: (control.horizontal ? config.leftPadding : config.bottomPadding) || 0
-    rightPadding: (control.horizontal ? config.rightPadding : config.topPadding) || 0
-    bottomPadding: (control.horizontal ? config.bottomPadding : config.leftPadding) || 0
-
-    topInset: (control.horizontal ? -config.topInset : config.rightInset) || 0
-    leftInset: (control.horizontal ? -config.leftInset : config.bottomInset) || 0
-    rightInset: (control.horizontal ? -config.rightInset : config.topInset) || 0
-    bottomInset: (control.horizontal ? -config.bottomInset : config.leftInset) || 0
+    topPadding: horizontal ? config.topPadding : config.leftPadding || 0
+    leftPadding: horizontal ? config.leftPadding : config.bottomPadding || 0
+    rightPadding: horizontal ? config.rightPadding : config.topPadding || 0
+    bottomPadding: horizontal ? config.bottomPadding : config.rightPadding || 0
 
     property string __controlState: [
         visualFocus && "focused",
@@ -44,77 +39,73 @@ T.RangeSlider {
     ].filter(Boolean).join("-") || "normal"
     readonly property var secondHandleConfig: ConfigReader.controls.rangeslider[__secondHandleState] || {}
 
-    first.handle: BorderImage {
-        x: Math.round(control.leftPadding + (control.horizontal ? control.first.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2))
-        y: Math.round(control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.first.visualPosition * (control.availableHeight - height)))
-        source: Qt.resolvedUrl(control.firstHandleConfig.first_handle.filePath)
-        border {
-            top: control.firstHandleConfig.first_handle?.topOffset || 0
-            bottom: control.firstHandleConfig.first_handle?.bottomOffset || 0
-            left: control.firstHandleConfig.first_handle?.leftOffset || 0
-            right: control.firstHandleConfig.first_handle?.rightOffset || 0
-        }
+    first.handle: StyleImage {
+        x: Math.round(control.leftPadding + (control.horizontal
+            ? control.first.visualPosition * (control.availableWidth - width)
+            : (control.availableWidth - width) / 2))
+        y: Math.round(control.topPadding + (control.horizontal
+            ? (control.availableHeight - height) / 2
+            : control.first.visualPosition * (control.availableHeight - height)))
+
+        imageConfig: control.firstHandleConfig.first_handle
     }
 
-    second.handle: BorderImage {
-        x: control.leftPadding + (control.horizontal ? control.second.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
-        y: control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.second.visualPosition * (control.availableHeight - height))
-        source: Qt.resolvedUrl(control.secondHandleConfig.second_handle.filePath)
-        border {
-            top: control.secondHandleConfig.second_handle?.topOffset || 0
-            bottom: control.secondHandleConfig.second_handle?.bottomOffset || 0
-            left: control.secondHandleConfig.second_handle?.leftOffset || 0
-            right: control.secondHandleConfig.second_handle?.rightOffset || 0
-        }
+    second.handle: StyleImage {
+        x: Math.round(control.leftPadding + (control.horizontal
+            ? control.second.visualPosition * (control.availableWidth - width)
+            : (control.availableWidth - width) / 2))
+        y: Math.round(control.topPadding + (control.horizontal
+            ? (control.availableHeight - height) / 2
+            : control.second.visualPosition * (control.availableHeight - height)))
+
+        imageConfig: control.secondHandleConfig.second_handle
     }
 
     background: Item {
-        implicitWidth: control.horizontal ? _background.implicitWidth : _background.implicitHeight
-        implicitHeight: control.horizontal ? _background.implicitHeight : _background.implicitWidth
+        implicitWidth: control.horizontal
+            ? (_background.implicitWidth || _background.groove.implicitWidth)
+            : (_background.implicitHeight || _background.groove.implicitHeight)
+        implicitHeight: control.horizontal
+            ? (_background.implicitHeight || _background.groove.implicitHeight)
+            : (_background.implicitWidth || _background.groove.implicitWidth)
 
-        property BorderImage _background: BorderImage {
+        property Item _background: StyleImage {
             parent: control.background
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: control.horizontal ? background.width : background.height
-            height: control.horizontal ? background.height : background.width
-            rotation: control.horizontal ? 0 : -90
-            scale: control.horizontal && control.mirrored ? -1 : 1
-            source: Qt.resolvedUrl(control.config.background.filePath)
-            border {
-                top: control.config.background?.topOffset || 0
-                bottom: control.config.background?.bottomOffset || 0
-                left: control.config.background?.leftOffset || 0
-                right: control.config.background?.rightOffset || 0
-            }
+            anchors.fill: parent
+            imageConfig: control.config.background
 
-            property BorderImage groove: BorderImage {
+            property Item groove: StyleImage {
                 parent: control.background._background
-                x: (control.horizontal ? control.leftPadding : control.bottomPadding) + ((control.horizontal ? control.availableWidth : control.availableHeight) - width) / 2
-                y: (control.horizontal ? control.topPadding : control.rightPadding) + ((control.horizontal ? control.availableHeight : control.availableWidth) - height) / 2
-                width: control.horizontal ? control.availableWidth : control.availableHeight
-                height: implicitHeight
-                source: Qt.resolvedUrl(control.config.groove.filePath)
-                border {
-                    top: control.config.groove?.topOffset || 0
-                    bottom: control.config.groove?.bottomOffset || 0
-                    left: control.config.groove?.leftOffset || 0
-                    right: control.config.groove?.rightOffset || 0
-                }
+                x: control.leftPadding - control.leftInset + (control.horizontal
+                    ? control.first.handle.width / 2
+                    : (control.availableWidth - width) / 2)
+                y: control.topPadding - control.rightInset + (control.horizontal
+                    ? ((control.availableHeight - height) / 2)
+                    : control.first.handle.height / 2)
 
-                property BorderImage track: BorderImage {
+                width: control.horizontal
+                    ? control.availableWidth
+                        - (control.first.handle.width / 2) - (control.second.handle.width / 2)
+                    : implicitWidth
+                height: control.horizontal
+                    ? implicitHeight
+                    : control.availableHeight
+                        - (control.first.handle.width / 2) - (control.second.handle.width / 2)
+                imageConfig: control.config.groove
+                horizontal: control.horizontal
+
+                property Item track: StyleImage {
                     parent: control.background._background.groove
-                    x: control.first.position * (parent.width - control.first.handle.width / 2)
-                    y: (parent.height - height) / 2
-                    width: control.second.position * (parent.width - control.first.handle.width) - control.first.position * (parent.width - control.first.handle.width)
-                    height: parent.height
-                    source: Qt.resolvedUrl(control.config.track.filePath)
-                    border {
-                        top: control.config.track?.topOffset || 0
-                        bottom: control.config.track?.bottomOffset || 0
-                        left: control.config.track?.leftOffset || 0
-                        right: control.config.track?.rightOffset || 0
-                    }
+                    x: horizontal ? parent.width * control.first.position : 0
+                    y: horizontal ? 0 : parent.height - (parent.height * control.second.position)
+                    width: horizontal
+                        ? parent.width * (control.second.position - control.first.position)
+                        : parent.width
+                    height: horizontal
+                        ? parent.height
+                        : parent.height * (control.second.position - control.first.position)
+                    imageConfig: control.config.track
+                    horizontal: control.horizontal
                 }
             }
         }
