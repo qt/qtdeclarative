@@ -5,6 +5,7 @@
     \example tableview/gameoflife
     \brief The \e{Conway’s Game of Life} example shows how the QML TableView
     type can be used to display a C++ model that the user can pan around.
+    \examplecategory {Graphics & Multimedia}
 
     \image gameoflife.png
     \ingroup qtquickexamples

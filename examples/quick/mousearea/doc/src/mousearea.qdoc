@@ -6,6 +6,7 @@
     \brief This is an example of the MouseArea type in QML.
     \image qml-mousearea-example.png
     \ingroup qtquickexamples
+    \examplecategory {Graphics & Multimedia}
 
     \e MouseArea example shows how to respond to clicks and drags with a
     \l MouseArea. For more information, visit

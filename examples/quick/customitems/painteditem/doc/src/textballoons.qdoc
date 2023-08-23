@@ -5,6 +5,7 @@
     \brief Shows how to implement QPainter-based custom scenegraph items.
     \example customitems/painteditem
     \ingroup qtquickexamples
+    \examplecategory {Graphics & Multimedia}
 
     The Painted Item example shows how to use the QML Scene Graph framework to
     implement custom scenegraph items using QPainter.

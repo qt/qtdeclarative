@@ -5,6 +5,7 @@
     \title UI Components: Flipable Example
     \example customitems/flipable
     \brief The Flipable Example shows an item that flips whenever clicked, rotating around the y-axis.
+    \examplecategory {Graphics & Multimedia}
 
     This example shows how to use the \l Flipable element.
 
