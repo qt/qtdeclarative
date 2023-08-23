@@ -855,13 +855,15 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     The Window object creates a new top-level window for a Qt Quick scene. It automatically sets up the
     window for use with \c {QtQuick} graphical types.
 
-    A Window can be declared inside an Item or inside another Window; in that
+    A Window can be declared inside an Item or inside another Window, in which
     case the inner Window will automatically become "transient for" the outer
-    Window: that is, most platforms will show it centered upon the outer window
-    by default, and there may be other platform-dependent behaviors, depending
-    also on the \l flags. If the nested window is intended to be a dialog in
-    your application, you should also set \l flags to Qt.Dialog, because some
-    window managers will not provide the centering behavior without that flag.
+    Window, with the outer Window as its \l transientParent. Most platforms will
+    show the Window centered upon the outer window in this case, and there may be
+    other platform-dependent behaviors, depending also on the \l flags. If the nested
+    window is intended to be a dialog in your application, you should also set \l flags
+    to \c Qt.Dialog, because some window managers will not provide the centering behavior
+    without that flag.
+
     You can also declare multiple windows inside a top-level \l QtObject, in which
     case the windows will have no transient relationship.
 
@@ -3566,16 +3568,15 @@ void QQuickWindow::endExternalCommands()
     shown, that minimizing the parent window will also minimize the transient
     window, and so on; however results vary somewhat from platform to platform.
 
-    Normally if you declare a Window inside an Item or inside another Window,
-    this relationship is deduced automatically. In that case, if you declare
-    this window's \l visible property \c true, it will not actually be shown
-    until the \c transientParent window is shown.
+    Declaring a Window inside an Item or inside another Window will automatically
+    set up a transient parent relationship to the containing Item or Window,
+    unless the \l transientParent property is explicitly set. This applies
+    when creating Window items via \l Qt.createComponent or \l Qt.createQmlObject
+    as well, if an Item or Window is passed as the \c parent argument.
 
-    However if you set this property, then Qt Quick will no longer wait until
-    the \c transientParent window is shown before showing this window. If you
-    want to be able to show a transient window independently of the "parent"
-    Item or Window within which it was declared, you can remove that
-    relationship by setting \c transientParent to \c null:
+    A Window with a transient parent will not be shown until its transient
+    parent is shown, even if the \l visible property is \c true. Setting
+    the \l transientParent to \c null will override this behavior:
 
     \snippet qml/nestedWindowTransientParent.qml 0
     \snippet qml/nestedWindowTransientParent.qml 1
