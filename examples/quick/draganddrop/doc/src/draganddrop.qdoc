@@ -6,6 +6,7 @@
     \brief This is a collection of QML drag and drop examples.
     \image qml-draganddrop-example.png
     \ingroup qtquickexamples
+    \examplecategory {Graphics & Multimedia}
 
     \e{Drag and Drop} is a collection of small QML examples relating to the drag
     and drop functionality. For more information, visit the \l{Drag and Drop}
