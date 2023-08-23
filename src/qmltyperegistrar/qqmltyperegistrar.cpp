@@ -9,6 +9,7 @@
 #include "qqmltypescreator_p.h"
 #include "qanystringviewutils_p.h"
 #include "qqmltyperegistrarconstants_p.h"
+#include "qqmltyperegistrarutils_p.h"
 
 QT_BEGIN_NAMESPACE
 using namespace Qt::Literals;
@@ -235,9 +236,11 @@ void QmlTypeRegistrar::write(QTextStream &output)
             else if (name == S_ADDED_IN_VERSION) {
                 int version = toInt(toStringView(v, S_VALUE));
                 addedIn = QTypeRevision::fromEncodedVersion(version);
+                addedIn = handleInMinorVersion(addedIn, majorVersion);
             } else if (name == S_REMOVED_IN_VERSION) {
                 int version = toInt(toStringView(v, S_VALUE));
                 removedIn = QTypeRevision::fromEncodedVersion(version);
+                removedIn = handleInMinorVersion(removedIn, majorVersion);
             }
         }
 

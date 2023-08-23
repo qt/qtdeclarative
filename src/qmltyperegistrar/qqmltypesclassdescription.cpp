@@ -1,6 +1,7 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
+#include "qqmltyperegistrarutils_p.h"
 #include "qqmltypesclassdescription_p.h"
 
 #include "qanystringviewutils_p.h"
@@ -161,13 +162,12 @@ void QmlTypesClassDescription::collect(
             continue;
         }
 
-        if (name == S_ADDED_IN_VERSION) {
-            const QTypeRevision revision = QTypeRevision::fromEncodedVersion(toInt(value));
+        if (const bool added = (name == S_ADDED_IN_VERSION);
+            added || name == S_REMOVED_IN_VERSION) {
+            QTypeRevision revision = QTypeRevision::fromEncodedVersion(toInt(value));
+            revision = handleInMinorVersion(revision, defaultRevision.majorVersion());
             if (mode == TopLevel) {
-                addedInRevision = revision;
-                revisions.append(revision);
-            } else if (!elementName.isEmpty()) {
-                revisions.append(revision);
+                (added ? addedInRevision : removedInRevision) = revision;
             }
             continue;
         }
@@ -181,8 +181,6 @@ void QmlTypesClassDescription::collect(
                 elementName = classDefName;
             else if (value != S_ANONYMOUS)
                 elementName = value;
-        } else if (name == S_REMOVED_IN_VERSION) {
-            removedInRevision = QTypeRevision::fromEncodedVersion(toInt(value));
         } else if (name == S_CREATABLE) {
             isCreatable = (value != S_FALSE);
         } else if (name == S_CREATION_METHOD) {
@@ -226,6 +224,9 @@ void QmlTypesClassDescription::collect(
             immediateNames = split(value, ',');
         }
     }
+
+    if (addedInRevision.isValid() && !elementName.isEmpty())
+        revisions.append(addedInRevision);
 
     // If the local type is a namespace the result can only be a namespace,
     // no matter what the foreign type is.
@@ -293,9 +294,10 @@ void QmlTypesClassDescription::collect(
         collectInterfaces(classDef);
 
     if (!addedInRevision.isValid()) {
-        revisions.append(defaultRevision);
         addedInRevision = defaultRevision;
-    } else if (addedInRevision < defaultRevision) {
+    }
+    if (addedInRevision <= defaultRevision
+        && (!removedInRevision.isValid() || defaultRevision < removedInRevision)) {
         revisions.append(defaultRevision);
     }
 

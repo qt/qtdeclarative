@@ -356,6 +356,12 @@ void tst_qmltyperegistrar::addRemoveVersion()
     QCOMPARE(o->property("thing").toInt(), thingAccessible ? 24 : 0);
 }
 
+void tst_qmltyperegistrar::addInMinorVersion()
+{
+    QVERIFY(qmltypesData.contains("exports: [\"QmlTypeRegistrarTest/MinorVersioned 1.5\"]"));
+    QVERIFY(qmltypesData.contains("exports: [\"QmlTypeRegistrarTest/MinorVersioned 1.2\"]"));
+}
+
 #ifdef QT_QUICK_LIB
 void tst_qmltyperegistrar::foreignRevisionedProperty()
 {

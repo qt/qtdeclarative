@@ -461,6 +461,29 @@ public:
     int revisioned() const { return 24; }
 };
 
+class AddedInLateMinorVersion : public QObject
+{
+    Q_OBJECT
+    QML_ADDED_IN_VERSION(1, 5)
+    Q_PROPERTY(int revisioned READ revisioned CONSTANT)
+    QML_NAMED_ELEMENT(MinorVersioned)
+public:
+    AddedInLateMinorVersion(QObject *parent = nullptr) : QObject(parent) {}
+    int revisioned() const { return 123; }
+};
+
+class RemovedInLateMinorVersion : public QObject
+{
+    Q_OBJECT
+    QML_ADDED_IN_VERSION(1, 2)
+    QML_REMOVED_IN_VERSION(1, 4)
+    Q_PROPERTY(int revisioned READ revisioned CONSTANT)
+    QML_NAMED_ELEMENT(MinorVersioned)
+public:
+    RemovedInLateMinorVersion(QObject *parent = nullptr) : QObject(parent) { }
+    int revisioned() const { return 456; }
+};
+
 class RemovedInEarlyVersion : public AddedInLateVersion
 {
     Q_OBJECT
@@ -692,6 +715,7 @@ private slots:
 
     void addRemoveVersion_data();
     void addRemoveVersion();
+    void addInMinorVersion();
     void typeInModuleMajorVersionZero();
     void resettableProperty();
     void duplicateExportWarnings();
