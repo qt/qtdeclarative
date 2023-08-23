@@ -68,7 +68,7 @@ public:
 struct QQmlQLocationPermission : public QObject
 {
     QML_PERMISSION(LocationPermission)
-    QML_ADDED_IN_MINOR_VERSION(6)
+    QML_ADDED_IN_VERSION(6, 6)
     QML_EXTENDED_NAMESPACE(QLocationPermission)
     QML_PERMISSION_PROPERTY(QLocationPermission::Availability, availability, setAvailability)
     QML_PERMISSION_PROPERTY(QLocationPermission::Accuracy, accuracy, setAccuracy)
@@ -77,7 +77,7 @@ struct QQmlQLocationPermission : public QObject
 struct QQmlCalendarPermission : public QObject
 {
     QML_PERMISSION(CalendarPermission)
-    QML_ADDED_IN_MINOR_VERSION(6)
+    QML_ADDED_IN_VERSION(6, 6)
     QML_EXTENDED_NAMESPACE(QCalendarPermission)
     QML_PERMISSION_PROPERTY(QCalendarPermission::AccessMode, accessMode, setAccessMode)
 };
@@ -85,7 +85,7 @@ struct QQmlCalendarPermission : public QObject
 struct QQmlContactsPermission : public QObject
 {
     QML_PERMISSION(ContactsPermission)
-    QML_ADDED_IN_MINOR_VERSION(6)
+    QML_ADDED_IN_VERSION(6, 6)
     QML_EXTENDED_NAMESPACE(QContactsPermission)
     QML_PERMISSION_PROPERTY(QContactsPermission::AccessMode, accessMode, setAccessMode)
 };
@@ -93,7 +93,7 @@ struct QQmlContactsPermission : public QObject
 struct QQmlBluetoothPermission : public QObject
 {
     QML_PERMISSION(BluetoothPermission)
-    QML_ADDED_IN_MINOR_VERSION(6)
+    QML_ADDED_IN_VERSION(6, 6)
     QML_EXTENDED_NAMESPACE(QBluetoothPermission)
     QML_PERMISSION_PROPERTY(QBluetoothPermission::CommunicationModes, communicationModes, setCommunicationModes)
 };
@@ -101,13 +101,13 @@ struct QQmlBluetoothPermission : public QObject
 struct QQmlCameraPermission : public QObject
 {
     QML_PERMISSION(CameraPermission)
-    QML_ADDED_IN_MINOR_VERSION(6)
+    QML_ADDED_IN_VERSION(6, 6)
 };
 
 struct QQmlMicrophonePermission : public QObject
 {
     QML_PERMISSION(MicrophonePermission)
-    QML_ADDED_IN_MINOR_VERSION(6)
+    QML_ADDED_IN_VERSION(6, 6)
 };
 
 QT_END_NAMESPACE
