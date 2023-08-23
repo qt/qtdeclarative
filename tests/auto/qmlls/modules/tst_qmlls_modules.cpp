@@ -3,6 +3,7 @@
 
 #include "tst_qmlls_modules.h"
 #include "QtQmlLS/private/qqmllsutils_p.h"
+#include <memory>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -22,26 +23,10 @@ QT_USE_NAMESPACE
 using namespace Qt::StringLiterals;
 using namespace QLspSpecification;
 
-static constexpr bool enable_debug_output = true;
+static constexpr bool enable_debug_output = false;
 
-tst_qmlls_modules::tst_qmlls_modules()
-    : QQmlDataTest(QT_QMLTEST_DATADIR),
-      m_protocol([this](const QByteArray &data) { m_server.write(data); })
+tst_qmlls_modules::tst_qmlls_modules() : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
-    connect(&m_server, &QProcess::readyReadStandardOutput, this, [this]() {
-        QByteArray data = m_server.readAllStandardOutput();
-        m_protocol.receiveData(data);
-    });
-
-    connect(&m_server, &QProcess::readyReadStandardError, this,
-            [this]() {
-        QProcess::ProcessChannel tmp = m_server.readChannel();
-        m_server.setReadChannel(QProcess::StandardError);
-        while (m_server.canReadLine())
-            std::cerr << m_server.readLine().constData();
-        m_server.setReadChannel(tmp);
-    });
-
     m_qmllsPath =
             QLibraryInfo::path(QLibraryInfo::BinariesPath) + QLatin1String("/qmlls");
 #ifdef Q_OS_WIN
@@ -55,22 +40,32 @@ tst_qmlls_modules::tst_qmlls_modules()
     // when using EditingRecorder
     m_server.setProgram(m_qmllsPath);
     // m_server.setArguments(QStringList() << u"-v"_s << u"-w"_s << u"8"_s);
-    /*
-    m_protocol.registerPublishDiagnosticsNotificationHandler([](const QByteArray &, auto) {
-        // ignoring qmlint notifications
-    });
-    */
 }
 
-void tst_qmlls_modules::initTestCase()
+void tst_qmlls_modules::init()
 {
-    QQmlDataTest::initTestCase();
-    if (!QFileInfo::exists(m_qmllsPath)) {
-        QString message =
-                QStringLiteral("qmlls executable not found (looked for %0)").arg(m_qmllsPath);
-        QSKIP(qPrintable(message)); // until we add a feature for this we avoid failing here
+    QQmlDataTest::init();
+
+    m_protocol = std::make_unique<QLanguageServerProtocol>(
+            [this](const QByteArray &data) { m_server.write(data); });
+
+    connect(&m_server, &QProcess::readyReadStandardOutput, this, [this]() {
+        QByteArray data = m_server.readAllStandardOutput();
+        m_protocol->receiveData(data);
+    });
+
+    if constexpr (enable_debug_output) {
+        connect(&m_server, &QProcess::readyReadStandardError, this, [this]() {
+            QProcess::ProcessChannel tmp = m_server.readChannel();
+            m_server.setReadChannel(QProcess::StandardError);
+            while (m_server.canReadLine())
+                qDebug() << m_server.readLine();
+            m_server.setReadChannel(tmp);
+        });
     }
+
     m_server.start();
+
     InitializeParams clientInfo;
     clientInfo.rootUri = QUrl::fromLocalFile(dataDirectory() + "/default").toString().toUtf8();
 
@@ -82,40 +77,90 @@ void tst_qmlls_modules::initTestCase()
     pDiag.versionSupport = true;
     clientInfo.capabilities.textDocument = tDoc;
     bool didInit = false;
-    m_protocol.requestInitialize(clientInfo, [this, &didInit](const InitializeResult &serverInfo) {
+    m_protocol->requestInitialize(clientInfo, [this, &didInit](const InitializeResult &serverInfo) {
         Q_UNUSED(serverInfo);
-        m_protocol.notifyInitialized(InitializedParams());
+        m_protocol->notifyInitialized(InitializedParams());
         didInit = true;
     });
     QTRY_COMPARE_WITH_TIMEOUT(didInit, true, 10000);
+}
 
-    for (const QString &filePath :
-         QStringList({ u"completions/Yyy.qml"_s, u"completions/fromBuildDir.qml"_s,
-                       u"completions/SomeBase.qml"_s, u"findUsages/jsIdentifierUsages.qml"_s,
-                       u"findDefinition/jsDefinitions.qml"_s, u"linting/SimpleItem.qml"_s,
-                       u"formatting/rangeFormatting.qml"_s})) {
-        QFile file(testFile(filePath));
-        QVERIFY(file.open(QIODevice::ReadOnly));
-        DidOpenTextDocumentParams oParams;
-        TextDocumentItem textDocument;
-        QByteArray uri = testFileUrl(filePath).toString().toUtf8();
-        textDocument.uri = uri;
-        textDocument.text = file.readAll();
-        oParams.textDocument = textDocument;
-        m_protocol.notifyDidOpenTextDocument(oParams);
-        m_uriToClose.append(uri);
+void tst_qmlls_modules::cleanup()
+{
+    for (const QByteArray &uri : m_uriToClose) {
+        DidCloseTextDocumentParams closeP;
+        closeP.textDocument.uri = uri;
+        m_protocol->notifyDidCloseTextDocument(closeP);
+    }
+    m_uriToClose.clear();
+
+    disconnect(&m_server, nullptr, this, nullptr);
+    m_server.closeWriteChannel();
+    m_server.waitForFinished();
+    QTRY_COMPARE(m_server.state(), QProcess::NotRunning);
+    QCOMPARE(m_server.exitStatus(), QProcess::NormalExit);
+}
+
+/*!
+\internal
+Opens a file from a relative filePath, and returns the loaded uri.
+Returns an empty option when the file could not be found.
+*/
+std::optional<QByteArray> tst_qmlls_modules::openFile(const QString &filePath)
+{
+    return openFileFromAbsolutePath(testFile(filePath));
+}
+
+/*!
+\internal
+Opens a file from an absolute filePath, and returns the loaded uri.
+Returns an empty option when the file could not be found.
+*/
+std::optional<QByteArray> tst_qmlls_modules::openFileFromAbsolutePath(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly))
+        return {};
+    DidOpenTextDocumentParams oParams;
+    TextDocumentItem textDocument;
+    QByteArray uri = QUrl::fromLocalFile(filePath).toEncoded();
+    textDocument.uri = uri;
+    textDocument.text = file.readAll();
+    oParams.textDocument = textDocument;
+    m_protocol->notifyDidOpenTextDocument(oParams);
+    m_uriToClose.append(uri);
+    return uri;
+}
+
+/*!
+\internal
+Ignore qmllint warnings, when not needed for the test.
+*/
+void tst_qmlls_modules::ignoreDiagnostics()
+{
+    m_protocol->registerPublishDiagnosticsNotificationHandler(
+            [](const QByteArray &, const PublishDiagnosticsParams &) {});
+}
+
+void tst_qmlls_modules::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+    if (!QFileInfo::exists(m_qmllsPath)) {
+        QString message =
+                QStringLiteral("qmlls executable not found (looked for %0)").arg(m_qmllsPath);
+        QSKIP(qPrintable(message)); // until we add a feature for this we avoid failing here
     }
 }
 
 void tst_qmlls_modules::completions_data()
 {
-    QTest::addColumn<QByteArray>("uri");
+    QTest::addColumn<QString>("filePath");
     QTest::addColumn<int>("lineNr");
     QTest::addColumn<int>("character");
     QTest::addColumn<ExpectedCompletions>("expected");
     QTest::addColumn<QStringList>("notExpected");
 
-    QByteArray uri = testFileUrl("completions/Yyy.qml").toString().toUtf8();
+    QString uri = u"completions/Yyy.qml"_s;
 
     QTest::newRow("objEmptyLine") << uri << 8 << 0
                                   << ExpectedCompletions({
@@ -221,8 +266,8 @@ void tst_qmlls_modules::completions_data()
             << QStringList({ u"foo"_s, u"import"_s, u"lala()"_s, u"width"_s });
 }
 
-void tst_qmlls_modules::checkCompletions(QByteArray uri, int lineNr, int character,
-                                            ExpectedCompletions expected, QStringList notExpected)
+void tst_qmlls_modules::checkCompletions(const QByteArray &uri, int lineNr, int character,
+                                         ExpectedCompletions expected, QStringList notExpected)
 {
     CompletionParams cParams;
     cParams.position.line = lineNr;
@@ -231,7 +276,7 @@ void tst_qmlls_modules::checkCompletions(QByteArray uri, int lineNr, int charact
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     auto clean = [didFinish]() { *didFinish = true; };
 
-    m_protocol.requestCompletion(
+    m_protocol->requestCompletion(
             cParams,
             [clean, uri, expected, notExpected](auto res) {
                 QScopeGuard cleanup(clean);
@@ -316,26 +361,30 @@ void tst_qmlls_modules::checkCompletions(QByteArray uri, int lineNr, int charact
 
 void tst_qmlls_modules::completions()
 {
-    QFETCH(QByteArray, uri);
+    QFETCH(QString, filePath);
     QFETCH(int, lineNr);
     QFETCH(int, character);
     QFETCH(ExpectedCompletions, expected);
     QFETCH(QStringList, notExpected);
 
-    QTEST_CHECKED(checkCompletions(uri, lineNr, character, expected, notExpected));
+    ignoreDiagnostics();
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+
+    QTEST_CHECKED(checkCompletions(*uri, lineNr, character, expected, notExpected));
 }
 
 void tst_qmlls_modules::function_documentations_data()
 {
-    QTest::addColumn<QByteArray>("uri");
+    QTest::addColumn<QString>("filePath");
     QTest::addColumn<int>("lineNr");
     QTest::addColumn<int>("character");
     QTest::addColumn<ExpectedDocumentations>("expectedDocs");
 
-    QByteArray uri = testFileUrl("completions/Yyy.qml").toString().toUtf8();
+    const QString filePath = u"completions/Yyy.qml"_s;
 
     QTest::newRow("longfunction")
-            << uri << 5 << 14
+            << filePath << 5 << 14
             << ExpectedDocumentations{
                    std::make_tuple(u"lala()"_s, u"returns void"_s, u"lala()"_s),
                    std::make_tuple(u"longfunction()"_s, u"returns string"_s,
@@ -349,19 +398,24 @@ documentedFunction(arg1, arg2 = "Qt"))"_s),
 
 void tst_qmlls_modules::function_documentations()
 {
-    QFETCH(QByteArray, uri);
+    QFETCH(QString, filePath);
     QFETCH(int, lineNr);
     QFETCH(int, character);
     QFETCH(ExpectedDocumentations, expectedDocs);
 
+    ignoreDiagnostics();
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+
     CompletionParams cParams;
     cParams.position.line = lineNr;
     cParams.position.character = character;
-    cParams.textDocument.uri = uri;
+    cParams.textDocument.uri = *uri;
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     auto clean = [didFinish]() { *didFinish = true; };
 
-    m_protocol.requestCompletion(
+    m_protocol->requestCompletion(
             cParams,
             [clean, uri, expectedDocs](auto res) {
                 const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&res);
@@ -426,99 +480,100 @@ void tst_qmlls_modules::function_documentations()
 
 void tst_qmlls_modules::buildDir()
 {
-    QString filePath = u"completions/fromBuildDir.qml"_s;
-    QByteArray uri = testFileUrl(filePath).toString().toUtf8();
-    QTEST_CHECKED(checkCompletions(uri, 3, 0,
-                     ExpectedCompletions({
-                             { u"property"_s, CompletionItemKind::Keyword },
-                             { u"function"_s, CompletionItemKind::Keyword },
-                             { u"Rectangle"_s, CompletionItemKind::Class },
-                     }),
-                     QStringList({ u"BuildDirType"_s, u"QtQuick"_s, u"width"_s, u"vector4d"_s })));
+    ignoreDiagnostics();
+    const QString filePath = u"completions/fromBuildDir.qml"_s;
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+    QTEST_CHECKED(checkCompletions(
+            *uri, 3, 0,
+            ExpectedCompletions({
+                    { u"property"_s, CompletionItemKind::Keyword },
+                    { u"function"_s, CompletionItemKind::Keyword },
+                    { u"Rectangle"_s, CompletionItemKind::Class },
+            }),
+            QStringList({ u"BuildDirType"_s, u"QtQuick"_s, u"width"_s, u"vector4d"_s })));
     Notifications::AddBuildDirsParams bDirs;
     UriToBuildDirs ub;
-    ub.baseUri = uri;
+    ub.baseUri = *uri;
     ub.buildDirs.append(testFile("buildDir").toUtf8());
     bDirs.buildDirsToSet.append(ub);
-    m_protocol.typedRpc()->sendNotification(QByteArray(Notifications::AddBuildDirsMethod), bDirs);
+    m_protocol->typedRpc()->sendNotification(QByteArray(Notifications::AddBuildDirsMethod), bDirs);
     DidChangeTextDocumentParams didChange;
-    didChange.textDocument.uri = uri;
+    didChange.textDocument.uri = *uri;
     didChange.textDocument.version = 2;
     TextDocumentContentChangeEvent change;
+
     QFile file(testFile(filePath));
     QVERIFY(file.open(QIODevice::ReadOnly));
     change.text = file.readAll();
     didChange.contentChanges.append(change);
-    m_protocol.notifyDidChangeTextDocument(didChange);
-    QTEST_CHECKED(checkCompletions(uri, 3, 0,
-                     ExpectedCompletions({
-                             { u"BuildDirType"_s, CompletionItemKind::Class },
-                             { u"Rectangle"_s, CompletionItemKind::Class },
-                             { u"property"_s, CompletionItemKind::Keyword },
-                             { u"width"_s, CompletionItemKind::Property },
-                             { u"function"_s, CompletionItemKind::Keyword },
-                     }),
-                     QStringList({ u"QtQuick"_s, u"vector4d"_s })));
-}
-void tst_qmlls_modules::cleanupTestCase()
-{
-    for (const QByteArray &uri : m_uriToClose) {
-        DidCloseTextDocumentParams closeP;
-        closeP.textDocument.uri = uri;
-        m_protocol.notifyDidCloseTextDocument(closeP);
-    }
-    m_server.closeWriteChannel();
-    QTRY_COMPARE(m_server.state(), QProcess::NotRunning);
-    QCOMPARE(m_server.exitStatus(), QProcess::NormalExit);
+    m_protocol->notifyDidChangeTextDocument(didChange);
+    QTEST_CHECKED(checkCompletions(*uri, 3, 0,
+                                   ExpectedCompletions({
+                                           { u"BuildDirType"_s, CompletionItemKind::Class },
+                                           { u"Rectangle"_s, CompletionItemKind::Class },
+                                           { u"property"_s, CompletionItemKind::Keyword },
+                                           { u"width"_s, CompletionItemKind::Property },
+                                           { u"function"_s, CompletionItemKind::Keyword },
+                                   }),
+                                   QStringList({ u"QtQuick"_s, u"vector4d"_s })));
 }
 
 void tst_qmlls_modules::goToTypeDefinition_data()
 {
-    QTest::addColumn<QByteArray>("uri");
+    QTest::addColumn<QString>("filePath");
     QTest::addColumn<int>("line");
     QTest::addColumn<int>("character");
-    QTest::addColumn<QByteArray>("expectedUri");
+    QTest::addColumn<QString>("expectedFilePath");
     QTest::addColumn<int>("expectedStartLine");
     QTest::addColumn<int>("expectedStartCharacter");
     QTest::addColumn<int>("expectedEndLine");
     QTest::addColumn<int>("expectedEndCharacter");
 
-    QByteArray yyyUri = testFileUrl("completions/Yyy.qml").toString().toUtf8();
-    QByteArray zzzUri = testFileUrl("completions/Zzz.qml").toString().toUtf8();
-    QByteArray someBaseUri = testFileUrl("completions/SomeBase.qml").toString().toUtf8();
+    const QString yyyPath = u"completions/Yyy.qml"_s;
+    const QString zzzPath = u"completions/Zzz.qml"_s;
+    const QString someBasePath = u"completions/SomeBase.qml"_s;
 
-    QTest::newRow("BaseOfYyy") << yyyUri << 3 << 1 << zzzUri << 2 << 0 << 9 << 1;
-    QTest::newRow("BaseOfIC") << yyyUri << 29 << 19 << zzzUri << 2 << 0 << 9 << 1;
+    QTest::newRow("BaseOfYyy") << yyyPath << 3 << 1 << zzzPath << 2 << 0 << 9 << 1;
+    QTest::newRow("BaseOfIC") << yyyPath << 29 << 19 << zzzPath << 2 << 0 << 9 << 1;
 
-    QTest::newRow("PropertyType") << yyyUri << 30 << 14 << someBaseUri << 2 << 0 << 4 << 1;
+    QTest::newRow("PropertyType") << yyyPath << 30 << 14 << someBasePath << 2 << 0 << 4 << 1;
 
-    QTest::newRow("TypeInIC") << yyyUri << 29 << 36 << someBaseUri << 2 << 0 << 4 << 1;
-    QTest::newRow("ICTypeDefinition") << yyyUri << 29 << 15 << yyyUri << 29 << 18 << 29 << 48;
+    QTest::newRow("TypeInIC") << yyyPath << 29 << 36 << someBasePath << 2 << 0 << 4 << 1;
+    QTest::newRow("ICTypeDefinition") << yyyPath << 29 << 15 << yyyPath << 29 << 18 << 29 << 48;
 }
 
 void tst_qmlls_modules::goToTypeDefinition()
 {
-    QFETCH(QByteArray, uri);
+    QFETCH(QString, filePath);
     QFETCH(int, line);
     QFETCH(int, character);
-    QFETCH(QByteArray, expectedUri);
+    QFETCH(QString, expectedFilePath);
     QFETCH(int, expectedStartLine);
     QFETCH(int, expectedStartCharacter);
     QFETCH(int, expectedEndLine);
     QFETCH(int, expectedEndCharacter);
 
-    QVERIFY(uri.startsWith("file://"_ba));
+    ignoreDiagnostics();
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+    QVERIFY(uri->startsWith("file://"_ba));
+
+    // note: do not call openFile(expectedFilePath), the definition should be found even if
+    // the qmlls user did not open the qml file with the definition yet.
+    const auto expectedUri = testFileUrl(expectedFilePath).toEncoded();
 
     // TODO
     TypeDefinitionParams params;
     params.position.line = line;
     params.position.character = character;
-    params.textDocument.uri = uri;
+    params.textDocument.uri = *uri;
 
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     auto clean = [didFinish]() { *didFinish = true; };
 
-    m_protocol.requestTypeDefinition(
+    m_protocol->requestTypeDefinition(
             params,
             [&](auto res) {
                 QScopeGuard cleanup(clean);
@@ -545,7 +600,7 @@ void tst_qmlls_modules::goToTypeDefinition()
 
 void tst_qmlls_modules::goToDefinition_data()
 {
-    QTest::addColumn<QByteArray>("uri");
+    QTest::addColumn<QString>("filePath");
     // keep in mind that line and character are starting at 1!
     QTest::addColumn<int>("line");
     QTest::addColumn<int>("character");
@@ -559,28 +614,29 @@ void tst_qmlls_modules::goToDefinition_data()
 
     const QByteArray JSDefinitionsQml =
             testFileUrl(u"findDefinition/jsDefinitions.qml"_s).toEncoded();
+    const QString JSDefinitionsQmlPath = u"findDefinition/jsDefinitions.qml"_s;
     const QByteArray noResultExpected;
 
-    QTest::addRow("JSIdentifierX") << JSDefinitionsQml << 14 << 11 << JSDefinitionsQml << 13 << 13
-                                   << 13 << 13 + strlen("x");
-    QTest::addRow("propertyI") << JSDefinitionsQml << 14 << 14 << JSDefinitionsQml << 9 << 18 << 9
-                               << 18 + strlen("i");
-    QTest::addRow("qualifiedPropertyI")
-            << JSDefinitionsQml << 15 << 21 << JSDefinitionsQml << 9 << 18 << 9 << 18 + strlen("i");
-    QTest::addRow("id") << JSDefinitionsQml << 15 << 17 << JSDefinitionsQml << 7 << 9 << 7
+    QTest::addRow("JSIdentifierX") << JSDefinitionsQmlPath << 14 << 11 << JSDefinitionsQml << 13
+                                   << 13 << 13 << 13 + strlen("x");
+    QTest::addRow("propertyI") << JSDefinitionsQmlPath << 14 << 14 << JSDefinitionsQml << 9 << 18
+                               << 9 << 18 + strlen("i");
+    QTest::addRow("qualifiedPropertyI") << JSDefinitionsQmlPath << 15 << 21 << JSDefinitionsQml << 9
+                                        << 18 << 9 << 18 + strlen("i");
+    QTest::addRow("id") << JSDefinitionsQmlPath << 15 << 17 << JSDefinitionsQml << 7 << 9 << 7
                         << 9 + strlen("rootId");
 
-    QTest::addRow("parameterA") << JSDefinitionsQml << 10 << 16 << noResultExpected << -1 << -1
+    QTest::addRow("parameterA") << JSDefinitionsQmlPath << 10 << 16 << noResultExpected << -1 << -1
                                 << -1 << size_t{};
-    QTest::addRow("parameterB") << JSDefinitionsQml << 10 << 28 << noResultExpected << -1 << -1
+    QTest::addRow("parameterB") << JSDefinitionsQmlPath << 10 << 28 << noResultExpected << -1 << -1
                                 << -1 << size_t{};
-    QTest::addRow("comment") << JSDefinitionsQml << 10 << 21 << noResultExpected << -1 << -1 << -1
-                             << size_t{};
+    QTest::addRow("comment") << JSDefinitionsQmlPath << 10 << 21 << noResultExpected << -1 << -1
+                             << -1 << size_t{};
 }
 
 void tst_qmlls_modules::goToDefinition()
 {
-    QFETCH(QByteArray, uri);
+    QFETCH(QString, filePath);
     QFETCH(int, line);
     QFETCH(int, character);
     QFETCH(QByteArray, expectedUri);
@@ -589,17 +645,21 @@ void tst_qmlls_modules::goToDefinition()
     QFETCH(int, expectedEndLine);
     QFETCH(size_t, expectedEndCharacter);
 
-    QVERIFY(uri.startsWith("file://"_ba));
+    ignoreDiagnostics();
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+    QVERIFY(uri->startsWith("file://"_ba));
 
     DefinitionParams params;
     params.position.line = line - 1;
     params.position.character = character - 1;
-    params.textDocument.uri = uri;
+    params.textDocument.uri = *uri;
 
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     auto clean = [didFinish]() { *didFinish = true; };
 
-    m_protocol.requestDefinition(
+    m_protocol->requestDefinition(
             params,
             [&](auto res) {
                 QScopeGuard cleanup(clean);
@@ -659,12 +719,14 @@ static QLspSpecification::Location locationFrom(const QByteArray fileName, const
 
 void tst_qmlls_modules::findUsages_data()
 {
-    QTest::addColumn<QByteArray>("uri");
+    QTest::addColumn<QString>("filePath");
     QTest::addColumn<int>("line");
     QTest::addColumn<int>("character");
     QTest::addColumn<QList<QLspSpecification::Location>>("expectedUsages");
 
-    QByteArray jsIdentifierUsagesUri = testFileUrl("findUsages/jsIdentifierUsages.qml").toEncoded();
+    const QByteArray jsIdentifierUsagesUri =
+            testFileUrl("findUsages/jsIdentifierUsages.qml").toEncoded();
+    const QString jsIdentifierUsagesPath = u"findUsages/jsIdentifierUsages.qml"_s;
 
     QString jsIdentifierUsagesContent;
     {
@@ -682,9 +744,9 @@ void tst_qmlls_modules::findUsages_data()
     QVERIFY(sumUsages.front().uri.startsWith("file://"_ba));
 
     // line and character start at 1!
-    QTest::addRow("sumUsagesFromUsage") << jsIdentifierUsagesUri << 10 << 14 << sumUsages;
-    QTest::addRow("sumUsagesFromUsage2") << jsIdentifierUsagesUri << 10 << 20 << sumUsages;
-    QTest::addRow("sumUsagesFromDefinition") << jsIdentifierUsagesUri << 8 << 14 << sumUsages;
+    QTest::addRow("sumUsagesFromUsage") << jsIdentifierUsagesPath << 10 << 14 << sumUsages;
+    QTest::addRow("sumUsagesFromUsage2") << jsIdentifierUsagesPath << 10 << 20 << sumUsages;
+    QTest::addRow("sumUsagesFromDefinition") << jsIdentifierUsagesPath << 8 << 14 << sumUsages;
 }
 
 static bool operator==(const QLspSpecification::Location &a, const QLspSpecification::Location &b)
@@ -718,21 +780,25 @@ static QString locationToString(const QLspSpecification::Location &l)
 
 void tst_qmlls_modules::findUsages()
 {
-    QFETCH(QByteArray, uri);
+    QFETCH(QString, filePath);
     // line and character start at 1!
     QFETCH(int, line);
     QFETCH(int, character);
     QFETCH(QList<QLspSpecification::Location>, expectedUsages);
 
-    QVERIFY(uri.startsWith("file://"_ba));
+    ignoreDiagnostics();
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+    QVERIFY(uri->startsWith("file://"_ba));
 
     ReferenceParams params;
     params.position.line = line - 1;
     params.position.character = character - 1;
-    params.textDocument.uri = uri;
+    params.textDocument.uri = *uri;
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     auto clean = [didFinish]() { *didFinish = true; };
-    m_protocol.requestReference(
+    m_protocol->requestReference(
             params,
             [&](auto res) {
                 QScopeGuard cleanup(clean);
@@ -750,6 +816,9 @@ void tst_qmlls_modules::findUsages()
                             qDebug() << locationToString(x);
                         }
                     }
+                } else {
+                    // dont get warning on unused function when enable_debug_output is false
+                    Q_UNUSED(locationToString);
                 }
 
                 QVERIFY(locationListsAreEqual(*result, expectedUsages));
@@ -771,9 +840,15 @@ void tst_qmlls_modules::documentFormatting_data()
 
     // Exclude some test files which require options support
     QStringList excludedFiles;
-    excludedFiles << "tests/auto/qml/qmlformat/data/checkIdsNewline.qml";
-    excludedFiles << "tests/auto/qml/qmlformat/data/normalizedFunctionsSpacing.qml";
-    excludedFiles << "tests/auto/qml/qmlformat/data/normalizedObjectsSpacing.qml";
+    excludedFiles << u"tests/auto/qml/qmlformat/data/checkIdsNewline.qml"_s;
+    excludedFiles << u"tests/auto/qml/qmlformat/data/normalizedFunctionsSpacing.qml"_s;
+    excludedFiles << u"tests/auto/qml/qmlformat/data/normalizedObjectsSpacing.qml"_s;
+
+    // excluded because it crashes Dom construction
+    // TODO: fix QQMLDomAstConstructor to not crash on these files, see QTBUG-116392
+    excludedFiles << u"tests/auto/qml/qmlformat/data/ecmaScriptClassInQml.qml"_s;
+    excludedFiles << u"tests/auto/qml/qmlformat/data/Example1.qml"_s;
+    excludedFiles << u"tests/auto/qml/qmlformat/data/nestedFunctions.qml"_s;
 
     const auto shouldSkip = [&excludedFiles](const QString &fileName) {
         for (const QString &file : excludedFiles) {
@@ -781,17 +856,6 @@ void tst_qmlls_modules::documentFormatting_data()
                 return true;
         }
         return false;
-    };
-
-    // TODO: move into a separate member function
-    const auto registerFile = [this](const QString &filePath) {
-        QFile testFile(filePath);
-        QVERIFY(testFile.open(QIODevice::ReadOnly));
-        const auto fileUri = QUrl::fromLocalFile(filePath).toEncoded();
-        DidOpenTextDocumentParams oParams;
-        oParams.textDocument = TextDocumentItem{ fileUri, testFile.readAll() };
-        m_protocol.notifyDidOpenTextDocument(oParams);
-        m_uriToClose.append(fileUri);
     };
 
     // Filter to include files contain .formatted.
@@ -803,14 +867,11 @@ void tst_qmlls_modules::documentFormatting_data()
         if (shouldSkip(unformattedFilePath))
             continue;
 
-        registerFile(unformattedFilePath);
         QTest::newRow(qPrintable(unformattedFileInfo.fileName()))
                 << unformattedFilePath << formattedFileInfo.canonicalFilePath();
     }
 
     // Extra tests
-    const QString blanklinesPath = testFile("formatting/blanklines.qml");
-    registerFile(blanklinesPath);
     QTest::newRow("leading-and-trailing-blanklines")
             << testFile("formatting/blanklines.qml")
             << testFile("formatting/blanklines.formatted.qml");
@@ -821,8 +882,13 @@ void tst_qmlls_modules::documentFormatting()
     QFETCH(QString, originalFile);
     QFETCH(QString, expectedFile);
 
+    ignoreDiagnostics();
+
+    const auto uri = openFileFromAbsolutePath(originalFile);
+    QVERIFY(uri);
+
     DocumentFormattingParams params;
-    params.textDocument.uri = QUrl::fromLocalFile(originalFile).toEncoded();
+    params.textDocument.uri = *uri;
 
     const auto lineCount = [](const QString &filePath) {
         QFile file(filePath);
@@ -868,15 +934,15 @@ void tst_qmlls_modules::documentFormatting()
         ProtocolBase::defaultResponseErrorHandler(err);
         QVERIFY2(false, "error computing the completion");
     };
-    m_protocol.requestDocumentFormatting(params, std::move(responseHandler),
-                                         std::move(errorHandler));
+    m_protocol->requestDocumentFormatting(params, std::move(responseHandler),
+                                          std::move(errorHandler));
 
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 50000);
 }
 
 void tst_qmlls_modules::renameUsages_data()
 {
-    QTest::addColumn<QByteArray>("uri");
+    QTest::addColumn<QString>("filePath");
     QTest::addColumn<int>("line");
     QTest::addColumn<int>("character");
     QTest::addColumn<QString>("newName");
@@ -885,7 +951,9 @@ void tst_qmlls_modules::renameUsages_data()
 
     QLspSpecification::ResponseError noError;
 
-    QByteArray jsIdentifierUsagesUri = testFileUrl("findUsages/jsIdentifierUsages.qml").toEncoded();
+    const QString jsIdentifierUsagesPath = u"findUsages/jsIdentifierUsages.qml"_s;
+    const QByteArray jsIdentifierUsagesUri =
+            testFileUrl("findUsages/jsIdentifierUsages.qml").toEncoded();
 
     QString jsIdentifierUsagesContent;
     {
@@ -916,13 +984,13 @@ void tst_qmlls_modules::renameUsages_data()
 
     // line and character start at 1!
     QTest::addRow("sumRenameFromUsage")
-            << jsIdentifierUsagesUri << 10 << 14 << u"specialSum"_s << sumRenames << noError;
+            << jsIdentifierUsagesPath << 10 << 14 << u"specialSum"_s << sumRenames << noError;
     QTest::addRow("sumRenameFromUsage2")
-            << jsIdentifierUsagesUri << 10 << 20 << u"specialSum"_s << sumRenames << noError;
+            << jsIdentifierUsagesPath << 10 << 20 << u"specialSum"_s << sumRenames << noError;
     QTest::addRow("sumRenameFromDefinition")
-            << jsIdentifierUsagesUri << 8 << 14 << u"specialSum"_s << sumRenames << noError;
+            << jsIdentifierUsagesPath << 8 << 14 << u"specialSum"_s << sumRenames << noError;
     QTest::addRow("invalidSumRenameFromDefinition")
-            << jsIdentifierUsagesUri << 8 << 14 << u"function"_s << sumRenames
+            << jsIdentifierUsagesPath << 8 << 14 << u"function"_s << sumRenames
             << QLspSpecification::ResponseError{
                    0,
                    "Invalid EcmaScript identifier!",
@@ -932,7 +1000,7 @@ void tst_qmlls_modules::renameUsages_data()
 
 void tst_qmlls_modules::renameUsages()
 {
-    QFETCH(QByteArray, uri);
+    QFETCH(QString, filePath);
     // line and character start at 1!
     QFETCH(int, line);
     QFETCH(int, character);
@@ -940,17 +1008,21 @@ void tst_qmlls_modules::renameUsages()
     QFETCH(QLspSpecification::WorkspaceEdit, expectedEdit);
     QFETCH(QLspSpecification::ResponseError, expectedError);
 
-    QVERIFY(uri.startsWith("file://"_ba));
+    ignoreDiagnostics();
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+    QVERIFY(uri->startsWith("file://"_ba));
 
     RenameParams params;
     params.position.line = line - 1;
     params.position.character = character - 1;
-    params.textDocument.uri = uri;
+    params.textDocument.uri = *uri;
     params.newName = newName.toUtf8();
 
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     auto clean = [didFinish]() { *didFinish = true; };
-    m_protocol.requestRename(
+    m_protocol->requestRename(
             params,
             [&](auto res) {
                 QScopeGuard cleanup(clean);
@@ -1065,8 +1137,7 @@ struct EditingRecorder
         --endCharacter;
 
         DidChangeTextDocumentParams params;
-        params.textDocument =
-                VersionedTextDocumentIdentifier{ { lastFileUri.toUtf8() }, ++version };
+        params.textDocument = VersionedTextDocumentIdentifier{ { lastFileUri }, ++version };
         params.contentChanges.append({
                 Range{ Position{ startLine, startCharacter }, Position{ endLine, endCharacter } },
                 std::nullopt, // deprecated range length
@@ -1075,7 +1146,7 @@ struct EditingRecorder
         actions.append(params);
     }
 
-    void setFile(const QString &uri) { lastFileUri = uri; }
+    void setFile(const QString &filePath) { lastFilePath = filePath; }
 
     void setCurrentExpectedDiagnostic(const QString &diagnostic)
     {
@@ -1083,7 +1154,8 @@ struct EditingRecorder
         diagnosticsPerFileVersions[version] = diagnostic;
     }
 
-    QString lastFileUri;
+    QString lastFilePath;
+    QByteArray lastFileUri;
     int version = 0;
 };
 
@@ -1092,10 +1164,10 @@ static constexpr int characterAfter(const char *line)
     return std::char_traits<char>::length(line) + 1;
 }
 
-static EditingRecorder propertyTypoScenario(const QString &uri)
+static EditingRecorder propertyTypoScenario(const QByteArray &fileUri)
 {
     EditingRecorder propertyTypo;
-    propertyTypo.setFile(uri);
+    propertyTypo.lastFileUri = fileUri;
 
     propertyTypo.changeText(5, 1, 5, 1, u"    property int t"_s);
 
@@ -1129,19 +1201,26 @@ static EditingRecorder propertyTypoScenario(const QString &uri)
 
 void tst_qmlls_modules::linting_data()
 {
+    QTest::addColumn<QString>("filePath");
     QTest::addColumn<EditingRecorder>("recorder");
 
     QTest::addRow("property-typo")
+            << u"linting/SimpleItem.qml"_s
             << propertyTypoScenario(testFileUrl(u"linting/SimpleItem.qml"_s).toEncoded());
 }
 
 void tst_qmlls_modules::linting()
 {
+    QFETCH(QString, filePath);
     QFETCH(EditingRecorder, recorder);
     bool diagnosticOk = false;
-    m_protocol.registerPublishDiagnosticsNotificationHandler(
-            [&recorder, &diagnosticOk](const QByteArray &, const PublishDiagnosticsParams &p) {
-                if (p.uri != recorder.lastFileUri || !p.version)
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+    recorder.lastFileUri = *uri;
+    m_protocol->registerPublishDiagnosticsNotificationHandler(
+            [&recorder, &diagnosticOk, &uri](const QByteArray &,
+                                             const PublishDiagnosticsParams &p) {
+                if (p.uri != *uri || !p.version)
                     return;
                 auto expectedMessage = recorder.diagnosticsPerFileVersions.find(*p.version);
                 if (expectedMessage == recorder.diagnosticsPerFileVersions.end()) {
@@ -1165,7 +1244,7 @@ void tst_qmlls_modules::linting()
                 diagnosticOk = true;
             });
     for (const auto &action : recorder.actions) {
-        m_protocol.notifyDidChangeTextDocument(action);
+        m_protocol->notifyDidChangeTextDocument(action);
         QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 5000);
         diagnosticOk = false;
     }
@@ -1173,58 +1252,63 @@ void tst_qmlls_modules::linting()
 
 void tst_qmlls_modules::rangeFormatting_data()
 {
-    QTest::addColumn<QByteArray>("uri");
+    QTest::addColumn<QString>("filePath");
     QTest::addColumn<QLspSpecification::Range>("selectedRange");
     QTest::addColumn<QLspSpecification::Range>("expectedRange");
     QTest::addColumn<QString>("expectedAfterFormat");
 
-    const QByteArray filePath = testFileUrl("formatting/rangeFormatting.qml").toEncoded();
+    const QString filePath = u"formatting/rangeFormatting.qml"_s;
 
     {
         QLspSpecification::Range selectedRange = { { 5, 0 }, { 9, 0 } };
         QLspSpecification::Range expectedRange = { { 0, 0 }, { 24, 0 } };
         QTest::addRow("selectRegion1") << filePath << selectedRange << expectedRange
-                                       << testFile("formatting/rangeFormatting.formatted1.qml");
+                                       << u"formatting/rangeFormatting.formatted1.qml"_s;
     }
 
     {
         QLspSpecification::Range selectedRange = { { 10, 25 }, { 23, 0 } };
         QLspSpecification::Range expectedRange = { { 0, 0 }, { 24, 0 } };
         QTest::addRow("selecteRegion2") << filePath << selectedRange << expectedRange
-                                        << testFile("formatting/rangeFormatting.formatted2.qml");
+                                        << u"formatting/rangeFormatting.formatted2.qml"_s;
     }
 
     {
         QLspSpecification::Range selectedRange = { { 14, 36 }, { 14, 45 } };
         QLspSpecification::Range expectedRange = { { 0, 0 }, { 24, 0 } };
         QTest::addRow("selectSingleLine") << filePath << selectedRange << expectedRange
-                                          << testFile("formatting/rangeFormatting.formatted3.qml");
+                                          << u"formatting/rangeFormatting.formatted3.qml"_s;
     }
 
     {
         QLspSpecification::Range selectedRange = { { 0, 0 }, { 24, 0 } };
         QLspSpecification::Range expectedRange = { { 0, 0 }, { 24, 0 } };
         QTest::addRow("selecteEntireFile") << filePath << selectedRange << expectedRange
-                                           << testFile("formatting/rangeFormatting.formatted4.qml");
+                                           << u"formatting/rangeFormatting.formatted4.qml"_s;
     }
 
     {
         QLspSpecification::Range selectedRange = { { 10, 3 }, { 20, 4 } };
         QLspSpecification::Range expectedRange = { { 0, 0 }, { 24, 0 } };
         QTest::addRow("selectUnbalanced") << filePath << selectedRange << expectedRange
-                                          << testFile("formatting/rangeFormatting.formatted5.qml");
+                                          << u"formatting/rangeFormatting.formatted5.qml"_s;
     }
 }
 
 void tst_qmlls_modules::rangeFormatting()
 {
-    QFETCH(QByteArray, uri);
+    QFETCH(QString, filePath);
     QFETCH(QLspSpecification::Range, selectedRange);
     QFETCH(QLspSpecification::Range, expectedRange);
     QFETCH(QString, expectedAfterFormat);
 
+    ignoreDiagnostics();
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+
     QLspSpecification::DocumentRangeFormattingParams params;
-    params.textDocument.uri = uri;
+    params.textDocument.uri = *uri;
     params.range = selectedRange;
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     const auto clean = [didFinish]() { *didFinish = true; };
@@ -1235,7 +1319,7 @@ void tst_qmlls_modules::rangeFormatting()
         auto result = std::get_if<QList<TextEdit>>(&res);
         QVERIFY(result);
 
-        QFile file(expectedAfterFormat);
+        QFile file(testFile(expectedAfterFormat));
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
             QFAIL("Error while opening the file ");
 
@@ -1253,8 +1337,8 @@ void tst_qmlls_modules::rangeFormatting()
         QVERIFY2(false, "error occurred while range formatting");
     };
 
-    m_protocol.requestDocumentRangeFormatting(params, std::move(responseHandler),
-                                              std::move(errorHandler));
+    m_protocol->requestDocumentRangeFormatting(params, std::move(responseHandler),
+                                               std::move(errorHandler));
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
 }
 
