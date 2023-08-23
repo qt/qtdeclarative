@@ -112,9 +112,13 @@ For cases where the QML module needs a custom plugin class implementation, the
 \l{NO_GENERATE_PLUGIN_SOURCE} and usually the \l{NO_PLUGIN_OPTIONAL} options
 will be needed.
 
+The \c STATIC QML modules also generate the static QML plugins if
+\c NO_PLUGIN is not specified. Targets that import such \c STATIC QML modules
+also need to explicitly link to corresponding QML plugins.
+
 \note
 When using static linking, it might be necessary to use
-\c Q_IMPORT_QML_PLUGIN to ensure that the QML plugin is correctly linked.
+\l {Q_IMPORT_QML_PLUGIN} to ensure that the QML plugin is correctly linked.
 
 \section3 Plugin target with no backing target
 
