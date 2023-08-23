@@ -6,6 +6,7 @@
     \brief This is a collection of QML examples relating to image types.
     \image qml-imageelements-example.png
     \ingroup qtquickexamples
+    \examplecategory {Graphics & Multimedia}
 
     \e{Image Elements} is a collection of small QML examples relating to image
     types. For more information, visit \l{Use Case - Visual Elements In QML}.

@@ -6,6 +6,7 @@
     \image qml-shapes-example.png
     \brief A Qt Quick example demonstrating the use of shape items.
     \ingroup qtquickexamples
+    \examplecategory {Graphics & Multimedia}
 
     This example demonstrates the usage of the \l Shape type in Qt Quick. Shapes
     allow efficiently rendering stroked and filled lines, curves, and arcs in Qt

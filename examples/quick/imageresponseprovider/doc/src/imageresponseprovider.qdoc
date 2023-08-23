@@ -5,6 +5,7 @@
     \title C++ Extensions: Image Response Provider Example
     \example imageresponseprovider
     \brief How to load images asynchronously in QML.
+    \examplecategory {Graphics & Multimedia}
 
 
     This examples shows how to use QQuickImageProvider to serve images
