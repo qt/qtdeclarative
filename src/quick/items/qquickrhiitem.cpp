@@ -988,7 +988,17 @@ QRhiRenderBuffer *QQuickRhiItemRenderer::depthStencilBuffer() const
     QRhiTextureRenderTarget by calling
     \l{QRhiTextureRenderTarget::renderPassDescriptor()}{renderPassDescriptor()}.
 
-    \sa colorTexture(), depthStencilBuffer()
+    \note The returned QRhiTextureRenderTarget always reports a
+    \l{QRhiTextureRenderTarget::}{devicePixelRatio()} of \c 1.
+    This is because only swapchains and the associated window have a concept of
+    device pixel ratio, not textures, and the render target here always refers
+    to a texture. If the on-screen scale factor is relevant for rendering,
+    query and story it via the item's
+    \c{window()->effectiveDevicePixelRatio()} in \l synchronize().
+    When doing so, always prefer using \l{QQuickWindow::}{effectiveDevicePixelRatio()}
+    over the base class' \l{QWindow::}{devicePixelRatio()}.
+
+    \sa colorTexture(), depthStencilBuffer(), QQuickWindow::effectiveDevicePixelRatio()
  */
 QRhiTextureRenderTarget *QQuickRhiItemRenderer::renderTarget() const
 {
