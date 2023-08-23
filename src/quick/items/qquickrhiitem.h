@@ -14,7 +14,7 @@ class QRhi;
 class QRhiCommandBuffer;
 class QRhiTexture;
 class QRhiRenderBuffer;
-class QRhiTextureRenderTarget;
+class QRhiRenderTarget;
 
 class Q_QUICK_EXPORT QQuickRhiItemRenderer : public QObject
 {
@@ -33,7 +33,7 @@ public:
     QRhiRenderBuffer *msaaColorBuffer() const;
     QRhiTexture *resolveTexture() const;
     QRhiRenderBuffer *depthStencilBuffer() const;
-    QRhiTextureRenderTarget *renderTarget() const;
+    QRhiRenderTarget *renderTarget() const;
 
 private:
     void *data;

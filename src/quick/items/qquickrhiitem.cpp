@@ -1000,7 +1000,7 @@ QRhiRenderBuffer *QQuickRhiItemRenderer::depthStencilBuffer() const
 
     \sa colorTexture(), depthStencilBuffer(), QQuickWindow::effectiveDevicePixelRatio()
  */
-QRhiTextureRenderTarget *QQuickRhiItemRenderer::renderTarget() const
+QRhiRenderTarget *QQuickRhiItemRenderer::renderTarget() const
 {
     return data ? static_cast<QQuickRhiItemNode *>(data)->m_renderTarget.get() : nullptr;
 }
