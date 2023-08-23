@@ -291,6 +291,7 @@ private:
     void generateVariantEqualityComparison(const QQmlJSRegisterContent &nonStorable,
                                            const QString &registerName, bool invert);
     void generateArrayInitializer(int argc, int argv);
+    void generateWriteBack(int registerIndex);
     void rejectIfNonQObjectOut(const QString &error);
     void rejectIfBadArray();
 

@@ -4236,6 +4236,8 @@ void tst_QmlCppCodegen::writeBack()
     Person *shadowable = person->property("shadowable").value<Person *>();
     QVERIFY(shadowable);
     QCOMPARE(shadowable->area(), QRectF(40, 50, 16, 17));
+
+    QCOMPARE(person->property("ints"), QVariant::fromValue(QList<int>({12, 22, 2, 1, 0, 0, 33})));
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
