@@ -6636,7 +6636,7 @@ void QQuickTableViewResizeHandler::updateDrag(QPointerEvent *event, QEventPoint 
 #if QT_CONFIG(cursor)
         tableViewPrivate->updateCursor();
 #endif
-        // fallthrough
+        Q_FALLTHROUGH();
     case Dragging: {
         const qreal distX = point.position().x() - m_columnStartX;
         const qreal distY = point.position().y() - m_rowStartY;
