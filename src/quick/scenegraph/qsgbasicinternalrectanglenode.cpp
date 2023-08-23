@@ -479,43 +479,43 @@ void QSGBasicInternalRectangleNode::updateGeometry()
             }};
 
         const float innerRadius[][2] = {{
-                float(!m_gradient_is_vertical ? innerRadiusTL : innerRadiusTL),
-                float(!m_gradient_is_vertical ? innerRadiusBL : innerRadiusTR)
+                innerRadiusTL,
+                !m_gradient_is_vertical ? innerRadiusBL : innerRadiusTR
             }, {
-                float(!m_gradient_is_vertical ? innerRadiusTR : innerRadiusBL),
-                float(!m_gradient_is_vertical ? innerRadiusBR : innerRadiusBR)
+                !m_gradient_is_vertical ? innerRadiusTR : innerRadiusBL,
+                innerRadiusBR
             }};
 
         const float outerRadius[][2] = {{
-                float(!m_gradient_is_vertical ? outerRadiusTL : outerRadiusTL),
-                float(!m_gradient_is_vertical ? outerRadiusBL : outerRadiusTR)
+                outerRadiusTL,
+                !m_gradient_is_vertical ? outerRadiusBL : outerRadiusTR
             }, {
-                float(!m_gradient_is_vertical ? outerRadiusTR : outerRadiusBL),
-                float(!m_gradient_is_vertical ? outerRadiusBR : outerRadiusBR)
+                !m_gradient_is_vertical ? outerRadiusTR : outerRadiusBL,
+                outerRadiusBR
             }};
 
         const int segments[][2] = {{
-                (!m_gradient_is_vertical ? segmentsTL : segmentsTL),
-                (!m_gradient_is_vertical ? segmentsBL : segmentsTR)
+                segmentsTL,
+                !m_gradient_is_vertical ? segmentsBL : segmentsTR
             }, {
-                (!m_gradient_is_vertical ? segmentsTR : segmentsBL),
-                (!m_gradient_is_vertical ? segmentsBR : segmentsBR)
+                !m_gradient_is_vertical ? segmentsTR : segmentsBL,
+                segmentsBR
             }};
 
         const float cosStep[][2] = {{
-                float(!m_gradient_is_vertical ? cosStepTL : cosStepTL),
-                float(!m_gradient_is_vertical ? cosStepBL : cosStepTR)
+                cosStepTL,
+                !m_gradient_is_vertical ? cosStepBL : cosStepTR
             }, {
-                float(!m_gradient_is_vertical ? cosStepTR : cosStepBL),
-                float(!m_gradient_is_vertical ? cosStepBR : cosStepBR)
+                !m_gradient_is_vertical ? cosStepTR : cosStepBL,
+                cosStepBR
             }};
 
         const float sinStep[][2] = {{
-                float(!m_gradient_is_vertical ? sinStepTL : sinStepTL),
-                float(!m_gradient_is_vertical ? sinStepBL : sinStepTR)
+                sinStepTL,
+                !m_gradient_is_vertical ? sinStepBL : sinStepTR
             }, {
-                float(!m_gradient_is_vertical ? sinStepTR : sinStepBL),
-                float(!m_gradient_is_vertical ? sinStepBR : sinStepBR)
+                !m_gradient_is_vertical ? sinStepTR : sinStepBL,
+                sinStepBR
             }};
 
         auto fillColorFromX = [&](float x) {
