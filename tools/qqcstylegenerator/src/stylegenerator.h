@@ -72,7 +72,7 @@ public:
             if (!m_abort)
                 generateConfiguration();
         } catch (std::exception &e) {
-            warning(e.what());
+            error(e.what());
         }
 
         QThread::currentThread()->quit();
@@ -97,12 +97,19 @@ private:
         QNetworkReply *reply = manager->get(request);
 
         QObject::connect(reply, &QNetworkReply::finished, [this, &reply]{
-            if (reply->error() == QNetworkReply::NoError)
-                m_document = QJsonDocument::fromJson(reply->readAll());
+            if (reply->error() != QNetworkReply::NoError)
+                return;
 
-            setFigmaFileName(getString("name", m_document.object()));
+            m_document = QJsonDocument::fromJson(reply->readAll());
+
             if (qgetenv("QSTYLEGENERATOR_SAVEDOC") == "true")
                 saveForDebug(m_document.object(), "figmastyle.json");
+
+            try {
+                setFigmaFileName(getString("name", m_document.object()));
+            } catch (std::exception &e) {
+                warning("could not resolve name of design file: " + QString(e.what()));
+            }
         });
 
         QObject::connect(reply, &QNetworkReply::downloadProgress, [this]{
@@ -113,9 +120,11 @@ private:
         while (reply->isRunning() && !m_abort)
             dispatcher->processEvents(QEventLoop::AllEvents | QEventLoop::WaitForMoreEvents);
 
-        if (reply->error() != QNetworkReply::NoError)
-            throw RestCallException(QStringLiteral("Could not download design file from Figma: ")
-                + networkErrorString(reply));
+        if (reply->error() != QNetworkReply::NoError) {
+            throw RestCallException(QStringLiteral("Could not download design file from Figma! ")
+                + "Please check that the file ID (" + m_bridge->m_fileId
+                + ") is correct! (error message: " + networkErrorString(reply) + ")");
+        }
     }
 
     QList<QJsonDocument> generateImageUrls(const ImageFormat &imageFormat)
