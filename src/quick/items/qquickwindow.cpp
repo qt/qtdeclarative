@@ -4222,6 +4222,18 @@ QQuickGraphicsConfiguration QQuickWindow::graphicsConfiguration() const
 }
 
 /*!
+    Creates a text node. When the scenegraph is not initialized, the return value is null.
+
+    \since 6.7
+    \sa QSGTextNode
+ */
+QSGTextNode *QQuickWindow::createTextNode() const
+{
+    Q_D(const QQuickWindow);
+    return isSceneGraphInitialized() ? d->context->sceneGraphContext()->createTextNode(d->context) : nullptr;
+}
+
+/*!
     Creates a simple rectangle node. When the scenegraph is not initialized, the return value is null.
 
     This is cross-backend alternative to constructing a QSGSimpleRectNode directly.

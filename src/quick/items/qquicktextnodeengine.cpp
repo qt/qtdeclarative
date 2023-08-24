@@ -756,7 +756,7 @@ void QQuickTextNodeEngine::mergeProcessedNodes(QList<BinaryTreeNode *> *regularN
     }
 }
 
-void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
+void QQuickTextNodeEngine::addToSceneGraph(QSGInternalTextNode *parentNode,
                                             QQuickText::TextStyle style,
                                             const QColor &styleColor)
 {

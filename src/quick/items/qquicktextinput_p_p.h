@@ -36,7 +36,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickTextNode;
+class QSGInternalTextNode;
 class QInputControl;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickTextInputPrivate : public QQuickImplicitSizeItemPrivate
@@ -199,7 +199,7 @@ public:
     QFont sourceFont;
 
     QQuickItem *cursorItem;
-    QQuickTextNode *textNode;
+    QSGInternalTextNode *textNode;
     std::unique_ptr<MaskInputData[]> m_maskData;
     QInputControl *m_inputControl;
 

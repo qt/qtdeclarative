@@ -13,7 +13,7 @@
 #include <QtQml/qqmlinfo.h>
 #include <QtGui/qevent.h>
 #include <QTextBoundaryFinder>
-#include "qquicktextnode_p.h"
+#include "qsginternaltextnode_p.h"
 #include <QtQuick/qsgsimplerectnode.h>
 
 #include <QtGui/qstylehints.h>
@@ -1916,9 +1916,9 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     d->updateType = QQuickTextInputPrivate::UpdateNone;
 
-    QQuickTextNode *node = static_cast<QQuickTextNode *>(oldNode);
+    QSGInternalTextNode *node = static_cast<QSGInternalTextNode *>(oldNode);
     if (node == nullptr)
-        node = new QQuickTextNode(this);
+        node = d->sceneGraphContext()->createInternalTextNode(d->sceneGraphRenderContext());
     d->textNode = node;
 
     const bool showCursor = !isReadOnly() && d->cursorItem == nullptr && d->cursorVisible && d->m_blinkStatus;
@@ -1929,9 +1929,19 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         else
             node->clearCursor();
     } else {
-        node->setUseNativeRenderer(d->renderType == NativeRendering);
+        node->setRenderType(QSGTextNode::RenderType(d->renderType));
         node->deleteContent();
         node->setMatrix(QMatrix4x4());
+        node->setTextStyle(QSGInternalTextNode::Normal);
+        node->setColor(d->color);
+        node->setSelectionTextColor(d->selectedTextColor);
+        node->setSelectionColor(d->selectionColor);
+        node->setSmooth(smooth());
+
+        if (flags().testFlag(ItemObservesViewport))
+            node->setViewport(clipRect());
+        else
+            node->setViewport(QRectF{});
 
         QPointF offset(leftPadding(), topPadding());
         if (d->autoScroll && d->m_textLayout.lineCount() > 0) {
@@ -1947,16 +1957,14 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
                 || !d->m_textLayout.preeditAreaText().isEmpty()
 #endif
                 ) {
-            node->addTextLayout(offset, &d->m_textLayout, d->color,
-                                QQuickText::Normal, QColor(), QColor(),
-                                d->selectionColor, d->selectedTextColor,
+            node->addTextLayout(offset, &d->m_textLayout,
                                 d->selectionStart(),
                                 d->selectionEnd() - 1); // selectionEnd() returns first char after
-                                                                 // selection
+                                                        // selection
         }
 
         if (showCursor)
-                node->setCursor(cursorRectangle(), d->color);
+            node->setCursor(cursorRectangle(), d->color);
 
         d->textLayoutDirty = false;
     }

@@ -1,7 +1,7 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include "qquicktextnode_p.h"
+#include "qsginternaltextnode_p.h"
 
 #include "qquicktextnodeengine_p.h"
 
@@ -29,28 +29,27 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(lcVP)
 
 /*!
-  Creates an empty QQuickTextNode
+  Creates an empty QSGInternalTextNode
 */
-QQuickTextNode::QQuickTextNode(QQuickItem *ownerElement)
-    : m_cursorNode(nullptr), m_ownerElement(ownerElement), m_useNativeRenderer(false), m_renderTypeQuality(-1)
+QSGInternalTextNode::QSGInternalTextNode(QSGRenderContext *renderContext)
+    : m_renderContext(renderContext)
 {
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QLatin1String("text"));
 #endif
 }
 
-QQuickTextNode::~QQuickTextNode()
+QSGInternalTextNode::~QSGInternalTextNode()
 {
     qDeleteAll(m_textures);
 }
 
-QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
-                                     QQuickText::TextStyle style, const QColor &styleColor,
-                                     QSGNode *parentNode)
+QSGGlyphNode *QSGInternalTextNode::addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
+                                             QQuickText::TextStyle style, const QColor &styleColor,
+                                             QSGNode *parentNode)
 {
-    QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
     QRawFont font = glyphs.rawFont();
-    bool preferNativeGlyphNode = m_useNativeRenderer;
+    bool preferNativeGlyphNode = m_renderType == NativeRendering;
     if (!preferNativeGlyphNode) {
         QRawFontPrivate *fontPriv = QRawFontPrivate::get(font);
         if (fontPriv->fontEngine->hasUnreliableGlyphOutline()) {
@@ -61,7 +60,9 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
         }
     }
 
-    QSGGlyphNode *node = sg->sceneGraphContext()->createGlyphNode(sg, preferNativeGlyphNode, m_renderTypeQuality);
+    QSGGlyphNode *node = m_renderContext->sceneGraphContext()->createGlyphNode(m_renderContext,
+                                                                               preferNativeGlyphNode,
+                                                                               m_renderTypeQuality);
 
     node->setGlyphs(position + QPointF(0, glyphs.rawFont().ascent()), glyphs);
     node->setStyle(style);
@@ -83,7 +84,9 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
     parentNode->appendChildNode(node);
 
     if (style == QQuickText::Outline && color.alpha() > 0 && styleColor != color) {
-        QSGGlyphNode *fillNode = sg->sceneGraphContext()->createGlyphNode(sg, preferNativeGlyphNode, m_renderTypeQuality);
+        QSGGlyphNode *fillNode = m_renderContext->sceneGraphContext()->createGlyphNode(m_renderContext,
+                                                                                       preferNativeGlyphNode,
+                                                                                       m_renderTypeQuality);
         fillNode->setGlyphs(position + QPointF(0, glyphs.rawFont().ascent()), glyphs);
         fillNode->setStyle(QQuickText::Normal);
         fillNode->setPreferredAntialiasingMode(QSGGlyphNode::GrayAntialiasing);
@@ -100,17 +103,16 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
     return node;
 }
 
-void QQuickTextNode::setCursor(const QRectF &rect, const QColor &color)
+void QSGInternalTextNode::setCursor(const QRectF &rect, const QColor &color)
 {
     if (m_cursorNode != nullptr)
         delete m_cursorNode;
 
-    QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
-    m_cursorNode =  sg->sceneGraphContext()->createInternalRectangleNode(rect, color);
+    m_cursorNode = m_renderContext->sceneGraphContext()->createInternalRectangleNode(rect, color);
     appendChildNode(m_cursorNode);
 }
 
-void QQuickTextNode::clearCursor()
+void QSGInternalTextNode::clearCursor()
 {
     if (m_cursorNode)
         removeChildNode(m_cursorNode);
@@ -118,42 +120,35 @@ void QQuickTextNode::clearCursor()
     m_cursorNode = nullptr;
 }
 
-void QQuickTextNode::addRectangleNode(const QRectF &rect, const QColor &color)
+void QSGInternalTextNode::addRectangleNode(const QRectF &rect, const QColor &color)
 {
-    QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
-    appendChildNode(sg->sceneGraphContext()->createInternalRectangleNode(rect, color));
+    appendChildNode(m_renderContext->sceneGraphContext()->createInternalRectangleNode(rect, color));
 }
 
-
-void QQuickTextNode::addImage(const QRectF &rect, const QImage &image)
+void QSGInternalTextNode::addImage(const QRectF &rect, const QImage &image)
 {
-    QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
-    QSGInternalImageNode *node = sg->sceneGraphContext()->createInternalImageNode(sg);
-    QSGTexture *texture = sg->createTexture(image);
-    if (m_ownerElement->smooth())
+    QSGInternalImageNode *node = m_renderContext->sceneGraphContext()->createInternalImageNode(m_renderContext);
+    QSGTexture *texture = m_renderContext->createTexture(image);
+    if (m_smooth)
         texture->setFiltering(QSGTexture::Linear);
     m_textures.append(texture);
     node->setTargetRect(rect);
     node->setInnerTargetRect(rect);
     node->setTexture(texture);
-    if (m_ownerElement->smooth())
+    if (m_smooth)
         node->setFiltering(QSGTexture::Linear);
     appendChildNode(node);
     node->update();
 }
 
-void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *textDocument,
-                                  const QColor &textColor,
-                                  QQuickText::TextStyle style, const QColor &styleColor,
-                                  const QColor &anchorColor,
-                                  const QColor &selectionColor, const QColor &selectedTextColor,
-                                  int selectionStart, int selectionEnd)
+void QSGInternalTextNode::addTextDocument(const QPointF &position, QTextDocument *textDocument,
+                                          int selectionStart, int selectionEnd)
 {
     QQuickTextNodeEngine engine;
-    engine.setTextColor(textColor);
-    engine.setSelectedTextColor(selectedTextColor);
-    engine.setSelectionColor(selectionColor);
-    engine.setAnchorColor(anchorColor);
+    engine.setTextColor(m_color);
+    engine.setSelectedTextColor(m_selectionTextColor);
+    engine.setSelectionColor(m_selectionColor);
+    engine.setAnchorColor(m_anchorColor);
     engine.setPosition(position);
 
     QList<QTextFrame *> frames;
@@ -182,29 +177,26 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
                 Q_ASSERT(!engine.currentLine().isValid());
 
                 QTextBlock block = it.currentBlock();
-                engine.addTextBlock(textDocument, block, position, textColor, anchorColor, selectionStart, selectionEnd,
+                engine.addTextBlock(textDocument, block, position, m_color, m_anchorColor, selectionStart, selectionEnd,
                                     (textDocument->characterCount() > QQuickTextPrivate::largeTextSizeThreshold ?
-                                         m_ownerElement->clipRect() : QRectF()));
+                                         m_viewport : QRectF()));
                 ++it;
             }
         }
     }
 
-    engine.addToSceneGraph(this, style, styleColor);
+    engine.addToSceneGraph(this, QQuickText::TextStyle(m_textStyle), m_styleColor);
 }
 
-void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLayout, const QColor &color,
-                                QQuickText::TextStyle style, const QColor &styleColor,
-                                const QColor &anchorColor,
-                                const QColor &selectionColor, const QColor &selectedTextColor,
-                                int selectionStart, int selectionEnd,
-                                int lineStart, int lineCount)
+void QSGInternalTextNode::addTextLayout(const QPointF &position, QTextLayout *textLayout,
+                                        int selectionStart, int selectionEnd,
+                                        int lineStart, int lineCount)
 {
     QQuickTextNodeEngine engine;
-    engine.setTextColor(color);
-    engine.setSelectedTextColor(selectedTextColor);
-    engine.setSelectionColor(selectionColor);
-    engine.setAnchorColor(anchorColor);
+    engine.setTextColor(m_color);
+    engine.setSelectedTextColor(m_selectionTextColor);
+    engine.setSelectionColor(m_selectionColor);
+    engine.setAnchorColor(m_anchorColor);
     engine.setPosition(position);
 
 #if QT_CONFIG(im)
@@ -215,12 +207,6 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
     QVarLengthArray<QTextLayout::FormatRange> colorChanges;
     engine.mergeFormats(textLayout, &colorChanges);
 
-    // If there's a lot of text, insert only the range of lines that can possibly be visible within the viewport.
-    QRectF viewport;
-    if (m_ownerElement->flags().testFlag(QQuickItem::ItemObservesViewport)) {
-        viewport = m_ownerElement->clipRect();
-        qCDebug(lcVP) << "text viewport" << viewport;
-    }
     lineCount = lineCount >= 0
             ? qMin(lineStart + lineCount, textLayout->lineCount())
             : textLayout->lineCount();
@@ -240,8 +226,9 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
             end += preeditLength;
         }
 #endif
-        if (viewport.isNull() || (line.y() + line.height() > viewport.top() && line.y() < viewport.bottom())) {
-            if (!inViewport && !viewport.isNull()) {
+        // If there's a lot of text, insert only the range of lines that can possibly be visible within the viewport.
+        if (m_viewport.isNull() || (line.y() + line.height() > m_viewport.top() && line.y() < m_viewport.bottom())) {
+            if (!inViewport && !m_viewport.isNull()) {
                 m_firstLineInViewport = i;
                 qCDebug(lcVP) << "first line in viewport" << i << "@" << line.y();
             }
@@ -249,17 +236,17 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
             engine.setCurrentLine(line);
             engine.addGlyphsForRanges(colorChanges, start, end, selectionStart, selectionEnd);
         } else if (inViewport) {
-            Q_ASSERT(!viewport.isNull());
+            Q_ASSERT(!m_viewport.isNull());
             m_firstLinePastViewport = i;
             qCDebug(lcVP) << "first omitted line past bottom of viewport" << i << "@" << line.y();
             break; // went past the bottom of the viewport, so we're done
         }
     }
 
-    engine.addToSceneGraph(this, style, styleColor);
+    engine.addToSceneGraph(this, QQuickText::TextStyle(m_textStyle), m_styleColor);
 }
 
-void QQuickTextNode::deleteContent()
+void QSGInternalTextNode::deleteContent()
 {
     while (firstChild() != nullptr)
         delete firstChild();

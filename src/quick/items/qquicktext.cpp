@@ -10,7 +10,7 @@
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qsgadaptationlayer_p.h>
-#include "qquicktextnode_p.h"
+#include "qsginternaltextnode_p.h"
 #include "qquickimage_p_p.h"
 #include "qquicktextutil_p.h"
 #include "qquicktextdocument_p.h"
@@ -2551,40 +2551,43 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 
     const qreal dy = QQuickTextUtil::alignedY(d->layedOutTextRect.height() + d->lineHeightOffset(), d->availableHeight(), d->vAlign) + topPadding();
 
-    QQuickTextNode *node = nullptr;
+    QSGInternalTextNode *node = nullptr;
     if (!oldNode)
-        node = new QQuickTextNode(this);
+        node = d->sceneGraphContext()->createInternalTextNode(d->sceneGraphRenderContext());
     else
-        node = static_cast<QQuickTextNode *>(oldNode);
+        node = static_cast<QSGInternalTextNode *>(oldNode);
 
-    node->setUseNativeRenderer(d->renderType == NativeRendering);
+    node->setSmooth(smooth());
+
+    node->setTextStyle(QSGTextNode::TextStyle(d->style));
+    node->setRenderType(QSGTextNode::RenderType(d->renderType));
     node->setRenderTypeQuality(d->renderTypeQuality());
     node->deleteContent();
     node->setMatrix(QMatrix4x4());
 
-    const QColor color = QColor::fromRgba(d->color);
-    const QColor styleColor = QColor::fromRgba(d->styleColor);
-    const QColor linkColor = QColor::fromRgba(d->linkColor);
+    node->setColor(QColor::fromRgba(d->color));
+    node->setStyleColor(QColor::fromRgba(d->styleColor));
+    node->setAnchorColor(QColor::fromRgba(d->linkColor));
 
     if (d->richText) {
+        node->setViewport(clipRect());
         const qreal dx = QQuickTextUtil::alignedX(d->layedOutTextRect.width(), d->availableWidth(), effectiveHAlign()) + leftPadding();
         d->ensureDoc();
-        node->addTextDocument(QPointF(dx, dy), d->extra->doc, color, d->style, styleColor, linkColor);
+        node->addTextDocument(QPointF(dx, dy), d->extra->doc);
     } else if (d->layedOutTextRect.width() > 0) {
+        if (flags().testFlag(ItemObservesViewport))
+            node->setViewport(clipRect());
+        else
+            node->setViewport(QRectF{});
         const qreal dx = QQuickTextUtil::alignedX(d->lineWidth, d->availableWidth(), effectiveHAlign()) + leftPadding();
         int unelidedLineCount = d->lineCount;
         if (d->elideLayout)
             unelidedLineCount -= 1;
-        if (unelidedLineCount > 0) {
-            node->addTextLayout(
-                        QPointF(dx, dy),
-                        &d->layout,
-                        color, d->style, styleColor, linkColor,
-                        QColor(), QColor(), -1, -1,
-                        0, unelidedLineCount);
-        }
+        if (unelidedLineCount > 0)
+            node->addTextLayout(QPointF(dx, dy), &d->layout, -1, -1,0, unelidedLineCount);
+
         if (d->elideLayout)
-            node->addTextLayout(QPointF(dx, dy), d->elideLayout, color, d->style, styleColor, linkColor);
+            node->addTextLayout(QPointF(dx, dy), d->elideLayout);
 
         if (d->extra.isAllocated()) {
             for (QQuickStyledTextImgTag *img : std::as_const(d->extra->visibleImgTags)) {
@@ -3056,7 +3059,7 @@ void QQuickText::invalidate()
 bool QQuickTextPrivate::transformChanged(QQuickItem *transformedItem)
 {
     // If there's a lot of text, we may need QQuickText::updatePaintNode() to call
-    // QQuickTextNode::addTextLayout() again to populate a different range of lines
+    // QSGInternalTextNode::addTextLayout() again to populate a different range of lines
     if (flags & QQuickItem::ItemObservesViewport) {
         updateType = UpdatePaintNode;
         dirty(QQuickItemPrivate::Content);

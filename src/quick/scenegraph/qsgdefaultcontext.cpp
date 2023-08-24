@@ -19,6 +19,7 @@
 #include <QtQuick/private/qsgdefaultspritenode_p.h>
 #endif
 #include <QtQuick/private/qsgrhishadereffectnode_p.h>
+#include <QtQuick/private/qsginternaltextnode_p.h>
 
 #include <QOpenGLContext>
 

@@ -10,7 +10,7 @@
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuickTest/QtQuickTest>
 #include <private/qquicktext_p_p.h>
-#include <private/qquicktextnode_p.h>
+#include <private/qsginternaltextnode_p.h>
 #include <private/qquicktextdocument_p.h>
 #include <private/qquickvaluetypes_p.h>
 #include <QFontMetrics>
@@ -3006,10 +3006,10 @@ void tst_qquicktext::largeTextObservesViewport_data()
     Q_ASSERT(text.size() > QQuickTextPrivate::largeTextSizeThreshold);
 
     // by default, the root item acts as the viewport:
-    // QQuickTextNode doesn't populate lines of text beyond the bottom of the window
+    // QSGInternalTextNode doesn't populate lines of text beyond the bottom of the window
     QTest::newRow("default plain text") << text << QQuickText::PlainText << 0 << false;
     // make the rectangle into a viewport item, and move the text upwards:
-    // QQuickTextNode doesn't populate lines of text beyond the bottom of the viewport rectangle
+    // QSGInternalTextNode doesn't populate lines of text beyond the bottom of the viewport rectangle
     QTest::newRow("clipped plain text") << text << QQuickText::PlainText << 10 << true;
 
     {
@@ -3053,13 +3053,13 @@ void tst_qquicktext::largeTextObservesViewport()
     QVERIFY(textItem);
     QQuickItem *viewportItem = textItem->parentItem();
     QQuickTextPrivate *textPriv = QQuickTextPrivate::get(textItem);
-    QQuickTextNode *node = static_cast<QQuickTextNode *>(textPriv->paintNode);
+    QSGInternalTextNode *node = static_cast<QSGInternalTextNode *>(textPriv->paintNode);
     QFontMetricsF fm(textItem->font());
     const qreal expectedTextHeight = (parentIsViewport ? viewportItem->height() : window.height() - viewportItem->y());
     const qreal lineSpacing = qCeil(fm.height());
     // A paragraph break is the same as an extra line break; so since our "lines" are paragraphs in StyledText,
     // visually, with StyledText we skip down 10 "lines", but the first paragraph you see says "line 5".
-    // It's OK anyway for the test, because QQuickTextNode::addTextLayout() treats the paragraph breaks like lines of text.
+    // It's OK anyway for the test, because QSGTextNode::addTextLayout() treats the paragraph breaks like lines of text.
     const int expectedLastLine = linesAboveViewport + int(expectedTextHeight / lineSpacing);
 
     viewportItem->setFlag(QQuickItem::ItemIsViewport, parentIsViewport);

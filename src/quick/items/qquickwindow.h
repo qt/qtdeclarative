@@ -36,6 +36,7 @@ class QQuickGraphicsConfiguration;
 class QRhi;
 class QRhiSwapChain;
 class QRhiTexture;
+class QSGTextNode;
 
 class Q_QUICK_EXPORT QQuickWindow : public QWindow
 {
@@ -155,6 +156,7 @@ public:
     QSGRectangleNode *createRectangleNode() const;
     QSGImageNode *createImageNode() const;
     QSGNinePatchNode *createNinePatchNode() const;
+    QSGTextNode *createTextNode() const;
 
     static TextRenderType textRenderType();
     static void setTextRenderType(TextRenderType renderType);

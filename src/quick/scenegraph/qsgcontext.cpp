@@ -6,6 +6,7 @@
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
 #include <QtQuick/private/qsgadaptationlayer_p.h>
+#include <QtQuick/private/qsginternaltextnode_p.h>
 
 #include <QGuiApplication>
 #include <QScreen>
@@ -330,6 +331,16 @@ QSGInternalRectangleNode *QSGContext::createInternalRectangleNode(const QRectF &
     node->setColor(c);
     node->update();
     return node;
+}
+
+QSGInternalTextNode *QSGContext::createInternalTextNode(QSGRenderContext *renderContext)
+{
+    return new QSGInternalTextNode(renderContext);
+}
+
+QSGTextNode *QSGContext::createTextNode(QSGRenderContext *renderContext)
+{
+    return createInternalTextNode(renderContext);
 }
 
 /*!
