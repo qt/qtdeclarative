@@ -23,8 +23,6 @@
 #include <private/qtquickglobal_p.h>
 #include <QtQuick/qquickimageprovider.h>
 
-#include <private/qintrusivelist_p.h>
-
 QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
@@ -170,7 +168,6 @@ public:
 private:
     Q_DISABLE_COPY(QQuickPixmap)
     QQuickPixmapData *d;
-    QIntrusiveListNode dataListNode;
     friend class QQuickPixmapData;
 };
 

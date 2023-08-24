@@ -312,7 +312,7 @@ public:
     , storeToCache(true)
 #endif
     {
-        declarativePixmaps.insert(pixmap);
+        Q_UNUSED(pixmap);
     }
 
     QQuickPixmapData(QQuickPixmap *pixmap, const QUrl &u, const QRect &r, const QSize &s, const QQuickImageProviderOptions &po,
@@ -326,7 +326,7 @@ public:
     , storeToCache(true)
 #endif
     {
-        declarativePixmaps.insert(pixmap);
+        Q_UNUSED(pixmap);
     }
 
     QQuickPixmapData(QQuickPixmap *pixmap, const QUrl &u, QQuickTextureFactory *texture,
@@ -341,7 +341,7 @@ public:
     , storeToCache(true)
 #endif
     {
-        declarativePixmaps.insert(pixmap);
+        Q_UNUSED(pixmap);
     }
 
     QQuickPixmapData(QQuickPixmap *pixmap, QQuickTextureFactory *texture)
@@ -353,18 +353,13 @@ public:
     , storeToCache(true)
 #endif
     {
+        Q_UNUSED(pixmap);
         if (texture)
             requestSize = implicitSize = texture->textureSize();
-        declarativePixmaps.insert(pixmap);
     }
 
     ~QQuickPixmapData()
     {
-        while (!declarativePixmaps.isEmpty()) {
-            QQuickPixmap *referencer = declarativePixmaps.first();
-            declarativePixmaps.remove(referencer);
-            referencer->d = nullptr;
-        }
         delete textureFactory;
     }
 
@@ -394,9 +389,6 @@ public:
 
     // actual image data, after loading
     QQuickTextureFactory *textureFactory;
-
-    // linked list of referencers, just to prevent memory leaks: see QQuickPixmapData dtor
-    QIntrusiveList<QQuickPixmap, &QQuickPixmap::dataListNode> declarativePixmaps;
 
     QQuickPixmapReply *reply;
 
@@ -1675,7 +1667,6 @@ QQuickPixmap::QQuickPixmap(const QUrl &url, const QImage &image)
 QQuickPixmap::~QQuickPixmap()
 {
     if (d) {
-        d->declarativePixmaps.remove(this);
         d->release();
         d = nullptr;
     }
@@ -1801,7 +1792,6 @@ void QQuickPixmap::setPixmap(const QQuickPixmap &other)
             d->release();
         d = other.d;
         d->addref();
-        d->declarativePixmaps.insert(this);
     }
 }
 
@@ -1854,7 +1844,6 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QRect &reques
                         qreal devicePixelRatio)
 {
     if (d) {
-        d->declarativePixmaps.remove(this);
         d->release();
         d = nullptr;
     }
@@ -1939,7 +1928,6 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QRect &reques
     } else {
         d = *iter;
         d->addref();
-        d->declarativePixmaps.insert(this);
         qCDebug(lcImg) << "loaded from cache" << url << "frame" << frame;
     }
 }
@@ -1984,7 +1972,6 @@ void QQuickPixmap::loadImageFromDevice(QQmlEngine *engine, QIODevice *device, co
     } else {
         d = *iter;
         d->addref();
-        d->declarativePixmaps.insert(this);
         qCDebug(lcImg) << "loaded from cache" << url << "frame" << frame << "refCount" << d->refCount;
         locker.unlock();
         if (oldD)
@@ -1995,7 +1982,6 @@ void QQuickPixmap::loadImageFromDevice(QQmlEngine *engine, QIODevice *device, co
 void QQuickPixmap::clear()
 {
     if (d) {
-        d->declarativePixmaps.remove(this);
         d->release();
         d = nullptr;
     }
@@ -2006,7 +1992,6 @@ void QQuickPixmap::clear(QObject *obj)
     if (d) {
         if (d->reply)
             QObject::disconnect(d->reply, nullptr, obj, nullptr);
-        d->declarativePixmaps.remove(this);
         d->release();
         d = nullptr;
     }
