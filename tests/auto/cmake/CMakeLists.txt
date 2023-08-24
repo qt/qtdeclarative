@@ -111,6 +111,14 @@ if(TARGET Qt::Qml)
         _qt_internal_test_expect_pass(qmlquery)
     endif()
     _qt_internal_test_expect_fail(test_internal_singleton)
+
+    # Make sure that we don't attempt to run binary when crosscompiling
+    if(NOT CMAKE_CROSSCOMPILING)
+        set(test_static_qml_module_extra_args BINARY test_static_qml_module)
+    else()
+        set(test_static_qml_module_extra_args "")
+    endif()
+    _qt_internal_test_expect_pass(test_static_qml_module ${test_static_qml_module_extra_args})
 endif()
 
 if(TARGET Qt::Quick)

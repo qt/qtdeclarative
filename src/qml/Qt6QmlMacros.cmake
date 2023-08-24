@@ -3172,9 +3172,16 @@ endmacro()
 
 
 # This function is called as a finalizer in qt6_finalize_executable() for any
-# target that links against the Qml library for a statically built Qt.
+# target that links against the Qml library.
 function(qt6_import_qml_plugins target)
-    if(QT6_IS_SHARED_LIBS_BUILD)
+    if(NOT TARGET ${QT_CMAKE_EXPORT_NAMESPACE}::qmlimportscanner)
+        return()
+    endif()
+
+    get_target_property(is_imported ${QT_CMAKE_EXPORT_NAMESPACE}::qmlimportscanner IMPORTED)
+    if(NOT is_imported)
+        message(DEBUG "qt6_import_qml_plugins is called before qmlimportscanner is built."
+            " Skip calling qmlimportscanner because it doesn't yet exist.")
         return()
     endif()
 
@@ -3200,39 +3207,68 @@ function(qt6_import_qml_plugins target)
         math(EXPR last_index "${qml_import_scanner_imports_count} - 1")
         foreach(index RANGE 0 ${last_index})
             _qt_internal_parse_qml_imports_entry(entry ${index})
-            if(entry_PATH AND entry_PLUGIN)
-                # Sometimes a plugin appears multiple times with different versions.
-                # Make sure to process it only once.
-                list(FIND added_plugins "${entry_PLUGIN}" _index)
-                if(NOT _index EQUAL -1)
-                    continue()
+            if(entry_PATH)
+                if(NOT entry_PLUGIN)
+                    # Check if qml module is built within the build tree, and should have a plugin
+                    # target, but its qmldir file is not generated yet.
+                    get_property(dirs GLOBAL PROPERTY _qt_all_qml_output_dirs)
+                    if(dirs)
+                        list(FIND dirs "${entry_PATH}" index)
+                        if(NOT index EQUAL -1)
+                            get_property(qml_targets GLOBAL PROPERTY _qt_all_qml_targets)
+                            list(GET qml_targets ${index} qml_module)
+                            if(qml_module AND TARGET ${qml_module})
+                                get_target_property(entry_LINKTARGET
+                                    ${qml_module} QT_QML_MODULE_PLUGIN_TARGET)
+                                if(entry_LINKTARGET AND TARGET ${entry_LINKTARGET})
+                                    get_target_property(entry_PLUGIN ${entry_LINKTARGET}
+                                        OUTPUT_NAME)
+                                endif()
+                            endif()
+                        endif()
+                    endif()
                 endif()
-                list(APPEND added_plugins "${entry_PLUGIN}")
 
-                # Link against the Qml plugin.
-                # For plugins provided by Qt, we assume those plugin targets are already defined
-                # (typically brought in via find_package(Qt6...) ).
-                # For other plugins, the targets can come from the project itself.
-                #
-                if(entry_LINKTARGET)
-                    if(TARGET ${entry_LINKTARGET})
-                        list(APPEND plugins_to_link "${entry_LINKTARGET}")
+                if(entry_PLUGIN)
+                    # Sometimes a plugin appears multiple times with different versions.
+                    # Make sure to process it only once.
+                    list(FIND added_plugins "${entry_PLUGIN}" _index)
+                    if(NOT _index EQUAL -1)
+                        continue()
+                    endif()
+                    list(APPEND added_plugins "${entry_PLUGIN}")
+
+                    # Link against the Qml plugin.
+                    # For plugins provided by Qt, we assume those plugin targets are already defined
+                    # (typically brought in via find_package(Qt6...) ).
+                    # For other plugins, the targets can come from the project itself.
+                    #
+                    if(entry_LINKTARGET)
+                        if(TARGET ${entry_LINKTARGET})
+                            get_target_property(target_type ${entry_LINKTARGET} TYPE)
+                            if(target_type STREQUAL "STATIC_LIBRARY")
+                                list(APPEND plugins_to_link "${entry_LINKTARGET}")
+                            endif()
+                        else()
+                            message(WARNING
+                                "The qml plugin '${entry_PLUGIN}' is a dependency of '${target}', "
+                                "but the link target it defines (${entry_LINKTARGET}) does not "
+                                "exist in the current scope. The plugin will not be linked."
+                            )
+                        endif()
+                    elseif(TARGET ${entry_PLUGIN})
+                        get_target_property(target_type ${entry_PLUGIN} TYPE)
+                        if(target_type STREQUAL "STATIC_LIBRARY")
+                            list(APPEND plugins_to_link "${entry_PLUGIN}")
+                        endif()
                     else()
+                        # TODO: QTBUG-94605 Figure out if this is a reasonable scenario to support
                         message(WARNING
                             "The qml plugin '${entry_PLUGIN}' is a dependency of '${target}', "
-                            "but the link target it defines (${entry_LINKTARGET}) does not exist "
-                            "in the current scope. The plugin will not be linked."
+                            "but there is no target by that name in the current scope. The plugin "
+                            "will not be linked."
                         )
                     endif()
-                elseif(TARGET ${entry_PLUGIN})
-                    list(APPEND plugins_to_link "${entry_PLUGIN}")
-                else()
-                    # TODO: QTBUG-94605 Figure out if this is a reasonable scenario to support
-                    message(WARNING
-                        "The qml plugin '${entry_PLUGIN}' is a dependency of '${target}', "
-                        "but there is no target by that name in the current scope. The plugin will "
-                        "not be linked."
-                    )
                 endif()
             endif()
         endforeach()
