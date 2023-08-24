@@ -65,12 +65,16 @@ protected:
     void classBegin() override;
     void componentComplete() override;
 
+    bool event(QEvent *) override;
+
     QQuickWindowQmlImpl(QQuickWindowQmlImplPrivate &dd, QWindow *parent);
 
 private Q_SLOTS:
-    void setWindowVisibility();
+    void applyWindowVisibility();
+    void updateTransientParent();
 
 private:
+    void checkForConflictingVisibilityProperties();
     bool transientParentVisible();
 
 private:

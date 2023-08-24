@@ -62,6 +62,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcMouse)
 Q_DECLARE_LOGGING_CATEGORY(lcTouch)
 Q_DECLARE_LOGGING_CATEGORY(lcPtr)
 Q_LOGGING_CATEGORY(lcDirty, "qt.quick.dirty")
+Q_LOGGING_CATEGORY(lcQuickWindow, "qt.quick.window")
 Q_LOGGING_CATEGORY(lcTransient, "qt.quick.window.transient")
 
 bool QQuickWindowPrivate::defaultAlphaBuffer = false;
@@ -1764,10 +1765,6 @@ void QQuickWindowPrivate::data_append(QQmlListProperty<QObject> *property, QObje
     if (!o)
         return;
     QQuickWindow *that = static_cast<QQuickWindow *>(property->object);
-    if (QQuickWindow *window = qmlobject_cast<QQuickWindow *>(o)) {
-        qCDebug(lcTransient) << "Setting" << that << "as transient parent of" << window;
-        window->setTransientParent(that);
-    }
     QQmlListProperty<QObject> itemProperty = QQuickItemPrivate::get(that->contentItem())->data();
     itemProperty.append(&itemProperty, o);
 }
@@ -2229,14 +2226,6 @@ void QQuickWindow::cleanupSceneGraph()
     d->runAndClearJobs(&d->beforeRenderingJobs);
     d->runAndClearJobs(&d->afterRenderingJobs);
     d->runAndClearJobs(&d->afterSwapJobs);
-}
-
-void QQuickWindow::setTransientParent_helper(QQuickWindow *window)
-{
-    qCDebug(lcTransient) << "Setting" << window << "as transient parent of" << this;
-    setTransientParent(window);
-    disconnect(sender(), SIGNAL(windowChanged(QQuickWindow*)),
-               this, SLOT(setTransientParent_helper(QQuickWindow*)));
 }
 
 QOpenGLContext *QQuickWindowPrivate::openglContext()
@@ -3568,7 +3557,8 @@ void QQuickWindow::endExternalCommands()
     shown, that minimizing the parent window will also minimize the transient
     window, and so on; however results vary somewhat from platform to platform.
 
-    Declaring a Window inside an Item or inside another Window will automatically
+    Declaring a Window inside an Item or inside another Window, either via the
+    \l{Window::data}{default property} or a dedicated property, will automatically
     set up a transient parent relationship to the containing Item or Window,
     unless the \l transientParent property is explicitly set. This applies
     when creating Window items via \l Qt.createComponent or \l Qt.createQmlObject

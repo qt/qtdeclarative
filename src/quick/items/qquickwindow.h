@@ -229,7 +229,6 @@ private Q_SLOTS:
     void cleanupSceneGraph();
     void physicalDpiChanged();
     void handleScreenChanged(QScreen *screen);
-    void setTransientParent_helper(QQuickWindow *window);
     void runJobsAfterSwap();
     void handleApplicationStateChanged(Qt::ApplicationState state);
     void handleFontDatabaseChanged();
