@@ -719,6 +719,13 @@ QString DateObject::dateTimeToString(const QDateTime &dateTime, ExecutionEngine 
     return ToString(TimeClip(dateTime.toMSecsSinceEpoch()), engine->localTZA);
 }
 
+double DateObject::dateTimeToNumber(const QDateTime &dateTime)
+{
+    if (!dateTime.isValid())
+        return qQNaN();
+    return TimeClip(dateTime.toMSecsSinceEpoch());
+}
+
 QDateTime DateObject::stringToDateTime(const QString &string, ExecutionEngine *engine)
 {
     return ToDateTime(ParseString(string, engine->localTZA), QTimeZone::LocalTime);

@@ -1296,8 +1296,14 @@ void tst_QmlCppCodegen::dateConversions()
     QCOMPARE(o->property("date").value<QDateTime>(), refDate);
     QCOMPARE(o->property("time").value<QDateTime>(), refTime);
 
-    QCOMPARE(o->property("dateString").toString(), (engine.coerceValue<QDateTime, QString>(refDate)));
-    QCOMPARE(o->property("timeString").toString(), (engine.coerceValue<QDateTime, QString>(refTime)));
+    QCOMPARE(o->property("dateString").toString(),
+             (engine.coerceValue<QDateTime, QString>(refDate)));
+    QCOMPARE(o->property("dateNumber").toDouble(),
+             (engine.coerceValue<QDateTime, double>(refDate)));
+    QCOMPARE(o->property("timeString").toString(),
+             (engine.coerceValue<QDateTime, QString>(refTime)));
+    QCOMPARE(o->property("timeNumber").toDouble(),
+             (engine.coerceValue<QDateTime, double>(refTime)));
 
     QMetaObject::invokeMethod(o.data(), "shuffle");
 
@@ -1308,12 +1314,23 @@ void tst_QmlCppCodegen::dateConversions()
     const QTime time = ref->myTime();
 
     QCOMPARE(o->property("dateString").toString(), (engine.coerceValue<QDate, QString>(date)));
+    QCOMPARE(o->property("dateNumber").toDouble(), (engine.coerceValue<QDate, double>(date)));
     QCOMPARE(o->property("timeString").toString(), (engine.coerceValue<QTime, QString>(time)));
+    QCOMPARE(o->property("timeNumber").toDouble(), (engine.coerceValue<QTime, double>(time)));
 
     QMetaObject::invokeMethod(o.data(), "fool");
 
     QCOMPARE(ref->myDate(), (engine.coerceValue<QTime, QDate>(time)));
     QCOMPARE(ref->myTime(), (engine.coerceValue<QDate, QTime>(date)));
+
+    QMetaObject::invokeMethod(o.data(), "invalidate");
+    QMetaObject::invokeMethod(o.data(), "shuffle");
+
+    QCOMPARE(o->property("dateString").toString(), "Invalid Date"_L1);
+    QVERIFY(qIsNaN(o->property("dateNumber").toDouble()));
+    QCOMPARE(o->property("timeString").toString(), "Invalid Date"_L1);
+    QVERIFY(qIsNaN(o->property("timeNumber").toDouble()));
+
 }
 
 void tst_QmlCppCodegen::deadShoeSize()

@@ -3656,7 +3656,8 @@ QString QQmlJSCodeGenerator::convertStored(
                  m_typeResolver->dateTimeType(),
                  m_typeResolver->dateType(),
                  m_typeResolver->timeType(),
-                 m_typeResolver->stringType()}) {
+                 m_typeResolver->stringType(),
+                 m_typeResolver->realType()}) {
                 if (m_typeResolver->equals(to, targetType)) {
                     return u"aotContext->engine->coerceValue<%1, %2>(%3)"_s.arg(
                                 originType->internalName(), targetType->internalName(), variable);

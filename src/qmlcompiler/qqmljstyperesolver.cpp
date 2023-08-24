@@ -1219,7 +1219,10 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
                 return true;
         }
 
-        break;;
+        if (equals(to, m_realType))
+            return true;
+
+        break;
     }
 
     if (equals(from, m_nullType)

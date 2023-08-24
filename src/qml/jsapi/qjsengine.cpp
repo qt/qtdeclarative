@@ -960,6 +960,11 @@ QString QJSEngine::convertDateTimeToString(const QDateTime &dateTime)
     return QV4::DateObject::dateTimeToString(dateTime, handle());
 }
 
+double QJSEngine::convertDateTimeToNumber(const QDateTime &dateTime)
+{
+    return QV4::DateObject::dateTimeToNumber(dateTime);
+}
+
 QDate QJSEngine::convertDateTimeToDate(const QDateTime &dateTime)
 {
     return QV4::DateObject::dateTimeToDate(dateTime);
