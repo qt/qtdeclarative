@@ -206,6 +206,7 @@ private slots:
     void variantMapLookup();
     void variantReturn();
     void variantlist();
+    void variantMap();
     void voidConversion();
     void voidFunction();
     void writeBack();
@@ -4206,6 +4207,18 @@ void tst_QmlCppCodegen::variantlist()
     QCOMPARE(things.size(), 2);
     QCOMPARE(things[0].toString(), u"thing"_s);
     QCOMPARE(things[1].toInt(), 30);
+}
+
+void tst_QmlCppCodegen::variantMap()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/variantMap.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->objectName(), "a b"_L1);
+    QCOMPARE(o->property("r"), QVariant::fromValue(QRectF(12, 13, 14, 15)));
 }
 
 void tst_QmlCppCodegen::voidConversion()

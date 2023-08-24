@@ -648,13 +648,19 @@ void QQmlJSBasicBlocks::adjustTypes()
         const InstructionAnnotation &annotation = m_annotations[object.instructionOffset];
 
         Q_ASSERT(it->trackedTypes.size() == 1);
-        Q_ASSERT(it->trackedTypes[0] == m_typeResolver->containedType(annotation.changedRegister));
+        QQmlJSScope::ConstPtr resultType = it->trackedTypes[0];
+
+        Q_ASSERT(resultType == m_typeResolver->containedType(annotation.changedRegister));
         Q_ASSERT(!annotation.readRegisters.isEmpty());
 
-        if (!m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->typeReaders.values()))
-            setError(adjustErrorMessage(it->trackedTypes[0], it->typeReaders.values()));
+        if (!m_typeResolver->adjustTrackedType(resultType, it->typeReaders.values()))
+            setError(adjustErrorMessage(resultType, it->typeReaders.values()));
 
-        QQmlJSScope::ConstPtr resultType = it->trackedTypes[0];
+        if (m_typeResolver->equals(resultType, m_typeResolver->varType())
+                || m_typeResolver->equals(resultType, m_typeResolver->variantMapType())) {
+            // It's all variant anyway
+            return;
+        }
 
         const int classSize = m_jsUnitGenerator->jsClassSize(object.internalClassId);
         Q_ASSERT(object.argc >= classSize);

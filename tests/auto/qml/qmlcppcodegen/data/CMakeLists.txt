@@ -30,6 +30,7 @@ set(cpp_sources
 set(qml_files
     AccessModelMethodsFromOutside.qml
     ArraySequenceLengthInterop.qml
+    B.qml
     BadType.qml
     BaseMember.qml
     BindingExpression.qml
@@ -241,6 +242,7 @@ set(qml_files
     valueTypeLists.qml
     valueTypeProperty.qml
     valueTypeReference.qml
+    variantMap.qml
     variantMapLookup.qml
     variantReturn.qml
     variantlist.qml

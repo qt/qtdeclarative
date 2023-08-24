@@ -1979,6 +1979,8 @@ void QQmlJSTypePropagator::generate_DefineObjectLiteral(int internalClassId, int
     for (int i = classSize; i < argc; i += 3) {
         // layout for remaining members is:
         // 0: ObjectLiteralArgument - Value|Method|Getter|Setter
+        // We cannot do anything useful with this. Any code that would call a getter/setter/method
+        // could not be compiled to C++. Ignore it.
 
         // 1: name of argument
         addReadRegister(

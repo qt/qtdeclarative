@@ -2376,6 +2376,45 @@ void QQmlJSCodeGenerator::generate_DefineObjectLiteral(int internalClassId, int 
 
     const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(m_state.accumulatorOut());
 
+    const int classSize = m_jsUnitGenerator->jsClassSize(internalClassId);
+    Q_ASSERT(argc >= classSize);
+
+    if (m_typeResolver->equals(contained, m_typeResolver->varType())
+        || m_typeResolver->equals(contained, m_typeResolver->variantMapType())) {
+
+        m_body += m_state.accumulatorVariableOut + u" = QVariantMap {\n";
+        const QQmlJSScope::ConstPtr propType = m_typeResolver->varType();
+        for (int i = 0; i < classSize; ++i) {
+            m_body += u"{ "_s
+                    + QQmlJSUtils::toLiteral(m_jsUnitGenerator->jsClassMember(internalClassId, i))
+                    + u", "_s;
+            const int currentArg = args + i;
+            const QQmlJSScope::ConstPtr argType = registerType(currentArg).storedType();
+            const QString consumedArg = consumedRegisterVariable(currentArg);
+            m_body += convertStored(argType, propType, consumedArg) + u" },\n";
+        }
+
+        for (int i = classSize; i < argc; i += 3) {
+            const int nameArg = argc + i + 1;
+            m_body += u"{ "_s
+                    + conversion(
+                              registerType(nameArg),
+                              m_typeResolver->globalType(m_typeResolver->stringType()),
+                              consumedRegisterVariable(nameArg))
+                    + u", "_s;
+
+            const int valueArg = argc + i + 2;
+            m_body += convertStored(
+                              registerType(valueArg).storedType(),
+                              propType,
+                              consumedRegisterVariable(valueArg))
+                    + u" },\n";
+        }
+
+        m_body += u"};\n";
+        return;
+    }
+
     m_body += m_state.accumulatorVariableOut + u" = "_s + stored->augmentedInternalName();
     const bool isVariantOrPrimitive = m_typeResolver->equals(stored, m_typeResolver->varType())
             || m_typeResolver->equals(stored, m_typeResolver->jsPrimitiveType());
@@ -2390,6 +2429,9 @@ void QQmlJSCodeGenerator::generate_DefineObjectLiteral(int internalClassId, int 
     }
     m_body += u";\n";
 
+    if (argc == 0)
+        return;
+
     bool isExtension = false;
     if (!m_typeResolver->canPopulate(contained, m_typeResolver->variantMapType(), &isExtension)) {
         reject(u"storing an object literal in a non-structured value type"_s);
@@ -2398,11 +2440,6 @@ void QQmlJSCodeGenerator::generate_DefineObjectLiteral(int internalClassId, int 
     const QQmlJSScope::ConstPtr accessor = isExtension
             ? contained->extensionType().scope
             : contained;
-
-    const int classSize = m_jsUnitGenerator->jsClassSize(internalClassId);
-    Q_ASSERT(argc >= classSize);
-    if (argc == 0)
-        return;
 
     m_body += u"{\n";
     m_body += u"    const QMetaObject *meta = ";
