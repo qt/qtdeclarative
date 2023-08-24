@@ -14,7 +14,7 @@
     "controls": [
     {
         "name": "Button",
-        "page": "Library",
+        "page": "Components",
         "component set": "ButtonTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ButtonBackground, background"},
@@ -33,7 +33,7 @@
     },
     {
         "name": "CheckBox",
-        "page": "Library",
+        "page": "Components",
         "component set": "CheckBoxTemplate${Theme}",
         "contents": ["indicator", "label"],
         "atoms": [
@@ -59,7 +59,7 @@
     },
     {
         "name": "ComboBox",
-        "page": "Library",
+        "page": "Components",
         "component set": "ComboBoxTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ComboBoxBackground, background"},
@@ -79,7 +79,7 @@
     },
     {
         "name": "ComboBoxPopup",
-        "page": "Library",
+        "page": "Components",
         "component set": "ComboBoxTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ComboBoxPopup, background"},
@@ -97,7 +97,7 @@
     },
     {
         "name": "Frame",
-        "page": "Library",
+        "page": "Components",
         "component set": "FrameTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "FrameBackground, background"},
@@ -110,7 +110,7 @@
     },
     {
         "name": "ItemDelegate",
-        "page": "Library",
+        "page": "Components",
         "component set": "ItemDelegateTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ItemDelegateBackground, background"},
@@ -141,7 +141,7 @@
     },
     {
         "name": "RadioButton",
-        "page": "Library",
+        "page": "Components",
         "component set": "RadioButtonTemplate${Theme}",
         "contents": ["indicator", "label"],
         "atoms": [
@@ -163,7 +163,7 @@
     },
     {
         "name": "RangeSlider",
-        "page": "Library",
+        "page": "Components",
         "component set": "RangeSliderTemplate${Theme}",
         "contents": ["groove", "track", "handle"],
         "atoms": [
@@ -183,7 +183,7 @@
     },
     {
         "name": "ScrollBar",
-        "page": "Library",
+        "page": "Components",
         "component set": "ScrollBarTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ScrollbarBackground, background"},
@@ -199,7 +199,7 @@
     },
     {
         "name": "ScrollIndicator",
-        "page": "Library",
+        "page": "Components",
         "component set": "ScrollIndicatorTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ScrollIndicatorBackground, background"},
@@ -213,7 +213,7 @@
     },
     {
         "name": "Slider",
-        "page": "Library",
+        "page": "Components",
         "component set": "SliderTemplate${Theme}",
         "contents": ["groove", "track", "handle"],
         "atoms": [
@@ -232,7 +232,7 @@
     },
     {
         "name": "SpinBox",
-        "page": "Library",
+        "page": "Components",
         "component set": "SpinBoxTemplate${Theme}",
         "contents": ["indicator-down", "textInput", "indicator-up"],
         "atoms": [
@@ -255,7 +255,7 @@
     },
     {
         "name": "Switch",
-        "page": "Library",
+        "page": "Components",
         "component set": "SwitchTemplate${Theme}",
         "contents": ["handle-background", "label"],
         "atoms": [
@@ -278,7 +278,7 @@
     },
     {
         "name": "TabBar",
-        "page": "Library",
+        "page": "Components",
         "component set": "TabBarTemplate${Theme}",
         "contents": ["tabButton1", "tabButton2"],
         "atoms": [
@@ -296,7 +296,7 @@
     },
     {
         "name": "TabButton",
-        "page": "Library",
+        "page": "Components",
         "component set": "TabButtonTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "TabButtonBackground, background"},
@@ -316,7 +316,7 @@
     },
     {
         "name": "TextArea",
-        "page": "Library",
+        "page": "Components",
         "component set": "TextAreaTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "TextAreaBackground, background"},
@@ -332,7 +332,7 @@
     },
     {
         "name": "TextField",
-        "page": "Library",
+        "page": "Components",
         "component set": "TextFieldTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "TextFieldBackground, background"},
@@ -348,7 +348,7 @@
     },
     {
         "name": "ToolBar",
-        "page": "Library",
+        "page": "Components",
         "component set": "ToolBarTemplate${Theme}",
         "contents": ["toolButton1", "toolButton2"],
         "atoms": [
@@ -366,7 +366,7 @@
     },
     {
         "name": "ToolButton",
-        "page": "Library",
+        "page": "Components",
         "component set": "ToolButtonTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "ToolButtonBackground, background"},
