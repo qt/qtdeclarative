@@ -7,18 +7,18 @@
 
 set(qml_files
     "controls/DefaultButton.qml"
-    "controls/DefaultSlider.qml"
-    "controls/DefaultGroupBox.qml"
     "controls/DefaultCheckBox.qml"
-    "controls/DefaultRadioButton.qml"
-    "controls/DefaultSpinBox.qml"
-    "controls/DefaultTextField.qml"
-    "controls/DefaultFrame.qml"
-    "controls/DefaultTextArea.qml"
     "controls/DefaultComboBox.qml"
-    "controls/DefaultScrollBar.qml"
-    "controls/DefaultProgressBar.qml"
     "controls/DefaultDial.qml"
+    "controls/DefaultFrame.qml"
+    "controls/DefaultGroupBox.qml"
+    "controls/DefaultProgressBar.qml"
+    "controls/DefaultRadioButton.qml"
+    "controls/DefaultScrollBar.qml"
+    "controls/DefaultSlider.qml"
+    "controls/DefaultSpinBox.qml"
+    "controls/DefaultTextArea.qml"
+    "controls/DefaultTextField.qml"
 )
 
 if(MACOS)

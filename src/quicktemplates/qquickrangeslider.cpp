@@ -225,6 +225,8 @@ void QQuickRangeSliderNode::setHandle(QQuickItem *handle)
     if (d->handle == handle)
         return;
 
+    QQuickControlPrivate::warnIfCustomizationNotSupported(d->slider, handle, QStringLiteral("handle"));
+
     if (!d->handle.isExecuting())
         d->cancelHandle();
 

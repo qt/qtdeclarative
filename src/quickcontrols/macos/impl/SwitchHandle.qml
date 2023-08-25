@@ -24,12 +24,4 @@ Rectangle {
         shadowScale: 0.92
         shadowOpacity: 1
     }
-
-    Behavior on x {
-        enabled: !handle.down
-        SmoothedAnimation {
-            velocity: 75
-            easing.type: Easing.InOutQuad
-        }
-    }
 }

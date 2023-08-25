@@ -17,6 +17,7 @@ set(qml_files
     "GroupBox.qml"
     "ProgressBar.qml"
     "RadioButton.qml"
+    "RangeSlider.qml"
     "ScrollBar.qml"
     "ScrollView.qml"
     "SelectionRectangle.qml"

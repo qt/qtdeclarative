@@ -98,5 +98,15 @@ Rectangle {
         x: Math.max(1, Math.min(parent.width - width - 1, indicator.control.visualPosition * parent.width - (width / 2)))
         y: (parent.height - height) / 2
         down: indicator.control.down
+
+        // We have this here because we don't want this behavior for RangeSlider,
+        // which also uses SwitchHandle.
+        Behavior on x {
+            enabled: !handle.down
+
+            SmoothedAnimation {
+                velocity: 200
+            }
+        }
     }
 }
