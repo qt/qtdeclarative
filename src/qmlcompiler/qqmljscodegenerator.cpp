@@ -2594,57 +2594,15 @@ void QQmlJSCodeGenerator::generate_CheckException()
 void QQmlJSCodeGenerator::generate_CmpEqNull()
 {
     INJECT_TRACE_INFO(generate_CmlEqNull);
-
-    m_body += m_state.accumulatorVariableOut + u" = "_s;
-    m_body += conversion(
-                m_typeResolver->boolType(), m_state.accumulatorOut(),
-                u"QJSPrimitiveValue(QJSPrimitiveNull()).equals("_s
-                + convertStored(
-                    m_state.accumulatorIn().storedType(), m_typeResolver->jsPrimitiveType(),
-                    consumedAccumulatorVariableIn()) + u')');
-    m_body += u";\n"_s;
+    generateEqualityOperation(
+            m_typeResolver->globalType(m_typeResolver->nullType()), QString(), u"equals"_s, false);
 }
 
 void QQmlJSCodeGenerator::generate_CmpNeNull()
 {
     INJECT_TRACE_INFO(generate_CmlNeNull);
-
-    m_body += m_state.accumulatorVariableOut + u" = "_s;
-    m_body += conversion(
-                m_typeResolver->boolType(), m_state.accumulatorOut(),
-                u"!QJSPrimitiveValue(QJSPrimitiveNull()).equals("_s
-                + convertStored(
-                    m_state.accumulatorIn().storedType(), m_typeResolver->jsPrimitiveType(),
-                    consumedAccumulatorVariableIn()) + u')');
-    m_body += u";\n"_s;
-}
-
-QString QQmlJSCodeGenerator::eqIntExpression(int lhsConst)
-{
-    if (m_typeResolver->isIntegral(m_state.accumulatorIn()))
-        return QString::number(lhsConst) + u" == "_s + m_state.accumulatorVariableIn;
-
-    if (m_typeResolver->registerIsStoredIn(m_state.accumulatorIn(), m_typeResolver->boolType())) {
-        return QString::number(lhsConst) + u" == "_s
-                + convertStored(m_state.accumulatorIn().storedType(), m_typeResolver->int32Type(),
-                                consumedAccumulatorVariableIn());
-    }
-
-    if (m_typeResolver->isNumeric(m_state.accumulatorIn())) {
-        return convertStored(m_typeResolver->int32Type(), m_typeResolver->realType(),
-                             QString::number(lhsConst)) + u" == "_s
-                + convertStored(m_state.accumulatorIn().storedType(), m_typeResolver->realType(),
-                                consumedAccumulatorVariableIn());
-    }
-
-    QString result;
-    result += convertStored(m_typeResolver->int32Type(), m_typeResolver->jsPrimitiveType(),
-                            QString::number(lhsConst));
-    result += u".equals("_s;
-    result += convertStored(m_state.accumulatorIn().storedType(), m_typeResolver->jsPrimitiveType(),
-                            consumedAccumulatorVariableIn());
-    result += u')';
-    return result;
+    generateEqualityOperation(
+            m_typeResolver->globalType(m_typeResolver->nullType()), QString(), u"equals"_s, true);
 }
 
 QString QQmlJSCodeGenerator::getLookupPreparation(
@@ -2717,30 +2675,30 @@ void QQmlJSCodeGenerator::generate_CmpEqInt(int lhsConst)
 {
     INJECT_TRACE_INFO(generate_CmpEqInt);
 
-    m_body += m_state.accumulatorVariableOut + u" = "_s;
-    m_body += conversion(m_typeResolver->boolType(), m_state.accumulatorOut(),
-                         eqIntExpression(lhsConst)) + u";\n"_s;
+    generateEqualityOperation(
+            m_typeResolver->globalType(m_typeResolver->int32Type()), QString::number(lhsConst),
+            u"equals"_s, false);
 }
 
 void QQmlJSCodeGenerator::generate_CmpNeInt(int lhsConst)
 {
     INJECT_TRACE_INFO(generate_CmpNeInt);
 
-    m_body += m_state.accumulatorVariableOut + u" = "_s;
-    m_body += conversion(m_typeResolver->boolType(), m_state.accumulatorOut(),
-                         u"!("_s + eqIntExpression(lhsConst) + u')') + u";\n"_s;
+    generateEqualityOperation(
+            m_typeResolver->globalType(m_typeResolver->int32Type()), QString::number(lhsConst),
+            u"equals"_s, true);
 }
 
 void QQmlJSCodeGenerator::generate_CmpEq(int lhs)
 {
     INJECT_TRACE_INFO(generate_CmpEq);
-    generateEqualityOperation(lhs, u"equals"_s, false);
+    generateEqualityOperation(registerType(lhs), registerVariable(lhs), u"equals"_s, false);
 }
 
 void QQmlJSCodeGenerator::generate_CmpNe(int lhs)
 {
     INJECT_TRACE_INFO(generate_CmpNe);
-    generateEqualityOperation(lhs, u"equals"_s, true);
+    generateEqualityOperation(registerType(lhs), registerVariable(lhs), u"equals"_s, true);
 }
 
 void QQmlJSCodeGenerator::generate_CmpGt(int lhs)
@@ -2770,13 +2728,13 @@ void QQmlJSCodeGenerator::generate_CmpLe(int lhs)
 void QQmlJSCodeGenerator::generate_CmpStrictEqual(int lhs)
 {
     INJECT_TRACE_INFO(generate_CmpStrictEqual);
-    generateEqualityOperation(lhs, u"strictlyEquals"_s, false);
+    generateEqualityOperation(registerType(lhs), registerVariable(lhs), u"strictlyEquals"_s, false);
 }
 
 void QQmlJSCodeGenerator::generate_CmpStrictNotEqual(int lhs)
 {
     INJECT_TRACE_INFO(generate_CmpStrictNotEqual);
-    generateEqualityOperation(lhs, u"strictlyEquals"_s, true);
+    generateEqualityOperation(registerType(lhs), registerVariable(lhs), u"strictlyEquals"_s, true);
 }
 
 void QQmlJSCodeGenerator::generate_CmpIn(int lhs)
@@ -3106,9 +3064,10 @@ void QQmlJSCodeGenerator::generateExceptionCheck()
     m_body += u"    return "_s + errorReturnValue() + u";\n"_s;
 }
 
-void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &function, bool invert)
+void QQmlJSCodeGenerator::generateEqualityOperation(
+        const QQmlJSRegisterContent &lhsContent, const QString &lhsName,
+        const QString &function, bool invert)
 {
-    const QQmlJSRegisterContent lhsContent = registerType(lhs);
     const bool strictlyComparableWithVar = function == "strictlyEquals"_L1
             && canStrictlyCompareWithVar(m_typeResolver, lhsContent, m_state.accumulatorIn());
     auto isComparable = [&]() {
@@ -3137,47 +3096,87 @@ void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &func
     const QQmlJSScope::ConstPtr lhsType = lhsContent.storedType();
     const QQmlJSScope::ConstPtr rhsType = m_state.accumulatorIn().storedType();
 
-    const auto primitive = m_typeResolver->jsPrimitiveType();
-    if (m_typeResolver->equals(lhsType, rhsType) && !m_typeResolver->equals(lhsType, primitive)) {
-        m_body += m_state.accumulatorVariableOut + u" = "_s;
-        if (isTypeStorable(m_typeResolver, lhsType)) {
-            m_body += conversion(m_typeResolver->boolType(), m_state.accumulatorOut(),
-                                 consumedRegisterVariable(lhs) + (invert ? u" != "_s : u" == "_s)
-                                 + consumedAccumulatorVariableIn());
-        } else {
-            // null === null and  undefined === undefined
-            m_body += invert ? u"false"_s : u"true"_s;
-        }
-    } else if (strictlyComparableWithVar) {
+    if (strictlyComparableWithVar) {
         // Determine which side is holding a storable type
-        if (const auto registerVariableName = registerVariable(lhs);
-            !registerVariableName.isEmpty()) {
+        if (!lhsName.isEmpty()) {
             // lhs register holds var type
-            generateVariantEqualityComparison(m_state.accumulatorIn(), registerVariableName,
-                                              invert);
+            generateVariantEqualityComparison(m_state.accumulatorIn(), lhsName, invert);
         } else {
             // lhs content is not storable and rhs is var type
             generateVariantEqualityComparison(lhsContent, m_state.accumulatorVariableIn, invert);
         }
-    } else if (canCompareWithQObject(m_typeResolver, lhsContent, m_state.accumulatorIn())) {
-        m_body += m_state.accumulatorVariableOut + u" = "_s;
-        m_body += u'('
-                + (isTypeStorable(m_typeResolver, lhsContent.storedType())
-                           ? registerVariable(lhs)
-                           : m_state.accumulatorVariableIn)
-                + (invert ? u" != "_s : u" == "_s) + u"nullptr)"_s;
-    } else {
-        m_body += m_state.accumulatorVariableOut + u" = "_s;
-        m_body += conversion(
-                    m_typeResolver->boolType(), m_state.accumulatorOut(),
-                    (invert ? u"!"_s : QString())
-                    + convertStored(registerType(lhs).storedType(), primitive,
-                                    consumedRegisterVariable(lhs))
-                    + u'.' + function + u'(' + convertStored(
-                        m_state.accumulatorIn().storedType(), primitive,
-                        consumedAccumulatorVariableIn())
-                    + u')');
+        return;
     }
+
+    const auto primitive = m_typeResolver->jsPrimitiveType();
+
+    const auto comparison = [&]() -> QString {
+        const QString sign = invert ? u" != "_s : u" == "_s;
+
+        if (m_typeResolver->equals(lhsType, rhsType)
+                && !m_typeResolver->equals(lhsType, primitive)) {
+
+            // Straight forward comparison of equal types,
+            // except QJSPrimitiveValue which has two comparison functions.
+
+            if (isTypeStorable(m_typeResolver, lhsType))
+                return lhsName + sign + m_state.accumulatorVariableIn;
+
+            // null === null and undefined === undefined
+            return invert ? u"false"_s : u"true"_s;
+        }
+
+        if (canCompareWithQObject(m_typeResolver, lhsContent, m_state.accumulatorIn())) {
+            // Comparison of QObject-derived with nullptr or different QObject-derived.
+            return (isTypeStorable(m_typeResolver, lhsType)
+                            ? lhsName
+                            : u"nullptr"_s)
+                    + sign
+                    + (isTypeStorable(m_typeResolver, rhsType)
+                               ? m_state.accumulatorVariableIn
+                               : u"nullptr"_s);
+        }
+
+        if ((m_typeResolver->isUnsignedInteger(rhsType)
+                    && m_typeResolver->isUnsignedInteger(lhsType))
+                || (m_typeResolver->isSignedInteger(rhsType)
+                    && m_typeResolver->isSignedInteger(lhsType))) {
+            // Both integers of same signedness: Let the C++ compiler perform the type promotion
+            return lhsName + sign + m_state.accumulatorVariableIn;
+        }
+
+        if (m_typeResolver->equals(rhsType, m_typeResolver->boolType())
+                && m_typeResolver->isIntegral(lhsType)) {
+            // Integral and bool: We can promote the bool to the integral type
+            return lhsName + sign
+                    + convertStored(rhsType, lhsType, m_state.accumulatorVariableIn);
+        }
+
+        if (m_typeResolver->equals(lhsType, m_typeResolver->boolType())
+                && m_typeResolver->isIntegral(rhsType)) {
+            // Integral and bool: We can promote the bool to the integral type
+            return convertStored(lhsType, rhsType, lhsName) + sign
+                    + m_state.accumulatorVariableIn;
+        }
+
+        if (m_typeResolver->isNumeric(lhsType) && m_typeResolver->isNumeric(rhsType)) {
+            // Both numbers: promote them to double
+            return convertStored(lhsType, m_typeResolver->realType(), lhsName)
+                    + sign
+                    + convertStored(
+                            rhsType, m_typeResolver->realType(), m_state.accumulatorVariableIn);
+        }
+
+        // If none of the above matches, we have to use QJSPrimitiveValue
+        return (invert ? u"!"_s : QString())
+                + convertStored(lhsType, primitive, lhsName)
+                + u'.' + function + u'(' + convertStored(
+                        rhsType, primitive, m_state.accumulatorVariableIn)
+                + u')';
+    };
+
+    m_body += m_state.accumulatorVariableOut + u" = "_s;
+    m_body += conversion(m_typeResolver->boolType(), m_state.accumulatorOut(), comparison());
     m_body += u";\n"_s;
 }
 

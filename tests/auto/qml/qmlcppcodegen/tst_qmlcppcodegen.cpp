@@ -3080,6 +3080,7 @@ void tst_QmlCppCodegen::nullComparison()
     QCOMPARE(o->property("w").toInt(), 3);
     QCOMPARE(o->property("x").toInt(), 1);
     QCOMPARE(o->property("y").toInt(), 5);
+    QCOMPARE(o->property("z").toInt(), 18);
 }
 
 void tst_QmlCppCodegen::numbersInJsPrimitive()

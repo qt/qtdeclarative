@@ -276,7 +276,7 @@ protected:
 
 private:
     void generateExceptionCheck();
-    void generateEqualityOperation(int lhs, const QString &function, bool invert);
+    void generateEqualityOperation(const QQmlJSRegisterContent &lhsContent, const QString &lhsName, const QString &function, bool invert);
     void generateCompareOperation(int lhs, const QString &cppOperator);
     void generateArithmeticOperation(int lhs, const QString &cppOperator);
     void generateShiftOperation(int lhs, const QString &cppOperator);
