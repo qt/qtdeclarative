@@ -3600,15 +3600,16 @@ bool Codegen::visit(ForEachStatement *ast)
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
     {
-        auto cleanup = [ast, iterator, iteratorDone, this]() {
-            if (ast->type == ForEachType::Of) {
+        std::function<void()> cleanup;
+        if (ast->type == ForEachType::Of) {
+            cleanup = [iterator, iteratorDone, this]() {
                 iterator.loadInAccumulator();
                 Instruction::IteratorClose close;
                 close.done = iteratorDone.stackSlot();
                 bytecodeGenerator->addInstruction(close);
-            }
-        };
-        ControlFlowLoop flow(this, &end, &in, cleanup);
+            };
+        }
+        ControlFlowLoop flow(this, &end, &in, std::move(cleanup));
         bytecodeGenerator->addLoopStart(in);
         in.link();
         iterator.loadInAccumulator();
