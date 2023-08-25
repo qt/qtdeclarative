@@ -19,15 +19,16 @@ GroupBox {
 
     Flickable {
         id: flickable
-        width: 500
-        height: 450
+        width: parent.width - 10
+        height: parent.height - 10
         contentHeight: meetingHeader.contentHeight + textSummary.contentHeight + 50
-        contentWidth: 500
+        contentWidth: parent.width - 10
         clip: true
         boundsBehavior: Flickable.StopAtBounds
 
         ScrollBar.vertical: ScrollBar {
             policy: ScrollBar.AlwaysOn
+
             Accessible.role: Accessible.ScrollBar
             Accessible.name: "Vertical ScrollBar"
             Accessible.description: "Use this to scroll summary page"
@@ -72,7 +73,7 @@ GroupBox {
                 topMargin: 10
                 leftMargin: 10
             }
-            width: 300
+            width: parent.width - 50
             font.pixelSize: 16
             textFormat: TextEdit.RichText
             text: qsTr((" Occurrence:<b> %1 </b> <br>

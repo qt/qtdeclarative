@@ -1,4 +1,3 @@
-
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 import QtQuick
@@ -7,6 +6,7 @@ import QtQuick.Controls
 
 Item {
     id: root
+    width: parent.width
     enum Types {
         Invitees,
         Scheduler,
@@ -17,7 +17,7 @@ Item {
     property alias currentIndex: meetingTabs.currentIndex
     TabBar {
         id: meetingTabs
-        width: parent.width
+        width: parent.width - 20
         TabButton {
             text: qsTr("Meeting Invitees")
             Accessible.role: Accessible.PageTab
@@ -43,7 +43,7 @@ Item {
     }
 
     StackLayout {
-        width: 550
+        width: parent.width - 20
         currentIndex: meetingTabs.currentIndex
         anchors {
             left: parent.left

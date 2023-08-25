@@ -14,6 +14,9 @@ ApplicationWindow {
     }
     WasmMenu {
         id: wasmMenu
+        Accessible.focusable: true
+        focusPolicy: Qt.StrongFocus
+        focus: true
         property string timeCaption: "Initiated at :"
         anchors {
             left: parent.left
@@ -68,9 +71,8 @@ ApplicationWindow {
     }
 
     Rectangle {
-
-        width: 600
-        height: 550
+        width: parent.width - 40
+        height: parent.height - wasmToolbar.height - wasmMenu.height - 40
         border.color: "black"
         border.width: 1
         anchors {
@@ -83,12 +85,10 @@ ApplicationWindow {
         MeetingTabs {
             id: meetingTabs
             anchors {
-                left: parent.left
-                leftMargin: 5
-                top: parent.top
-                topMargin: 5
+                centerIn: parent
             }
-            width: 550
+            height: parent.height - 10
+            width: parent.width - 10
         }
     }
 }

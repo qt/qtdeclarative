@@ -5,7 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 ToolBar {
-    id:mainTooBar
+    id: mainTooBar
     signal cancelThisMeeting
     signal requestReadReceipt
     property bool cancelMeeting: false
@@ -14,7 +14,7 @@ ToolBar {
         spacing: 10
         Accessible.role: Accessible.ToolBar
         ToolButton {
-            id:cancelButton
+            id: cancelButton
             text: qsTr("Clear")
             Accessible.role: Accessible.Button
             Accessible.name: text
@@ -24,7 +24,7 @@ ToolBar {
             }
         }
         ToolButton {
-            id:readRequestButton
+            id: readRequestButton
             text: qsTr("Request receipt")
             Accessible.role: Accessible.Button
             Accessible.name: text
@@ -33,6 +33,5 @@ ToolBar {
                 requestReadReceipt()
             }
         }
-
     }
 }
