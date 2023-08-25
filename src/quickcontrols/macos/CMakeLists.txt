@@ -6,6 +6,7 @@
 #####################################################################
 
 set(qml_files
+    "BusyIndicator.qml"
     "Button.qml"
     "Slider.qml"
     "GroupBox.qml"
@@ -45,6 +46,13 @@ qt_internal_add_qml_module(qtquickcontrols2macosstyleplugin
         qtquickcontrols2macosstyleplugin.cpp
     QML_FILES
         ${qml_files}
+    RESOURCES
+        images/busyindicator-dark.webp
+        images/busyindicator-dark@2x.webp
+        images/busyindicator-dark@3x.webp
+        images/busyindicator-light.webp
+        images/busyindicator-light@2x.webp
+        images/busyindicator-light@3x.webp
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
