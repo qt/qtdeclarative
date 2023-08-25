@@ -1152,7 +1152,7 @@ QQuickPixmapStore::~QQuickPixmapStore()
     // unreference all (leaked) pixmaps
     const auto cache = m_cache; // NOTE: intentional copy (QTBUG-65077); releasing items from the cache modifies m_cache.
     for (auto *pixmap : cache) {
-        int currRefCount = pixmap->refCount;
+        auto currRefCount = pixmap->refCount;
         if (currRefCount) {
 #ifndef QT_NO_DEBUG
             leakedPixmaps++;
