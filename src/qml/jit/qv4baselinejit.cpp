@@ -586,7 +586,7 @@ void BaselineJIT::generate_GetIterator(int iterator)
     BASELINEJIT_GENERATE_RUNTIME_CALL(GetIterator, CallResultDestination::InAccumulator);
 }
 
-void BaselineJIT::generate_IteratorNext(int value, int done)
+void BaselineJIT::generate_IteratorNext(int value, int offset)
 {
     as->saveAccumulatorInFrame();
     as->prepareCallWithArgCount(3);
@@ -594,10 +594,10 @@ void BaselineJIT::generate_IteratorNext(int value, int done)
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(IteratorNext, CallResultDestination::InAccumulator);
-    as->storeReg(done);
+    labels.insert(as->jumpTrue(absoluteOffset(offset)));
 }
 
-void BaselineJIT::generate_IteratorNextForYieldStar(int iterator, int object)
+void BaselineJIT::generate_IteratorNextForYieldStar(int iterator, int object, int offset)
 {
     as->saveAccumulatorInFrame();
     as->prepareCallWithArgCount(4);
@@ -606,13 +606,13 @@ void BaselineJIT::generate_IteratorNextForYieldStar(int iterator, int object)
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(IteratorNextForYieldStar, CallResultDestination::InAccumulator);
+    labels.insert(as->jumpTrue(absoluteOffset(offset)));
 }
 
-void BaselineJIT::generate_IteratorClose(int done)
+void BaselineJIT::generate_IteratorClose()
 {
     as->saveAccumulatorInFrame();
-    as->prepareCallWithArgCount(3);
-    as->passJSSlotAsArg(done, 2);
+    as->prepareCallWithArgCount(2);
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(IteratorClose, CallResultDestination::InAccumulator);

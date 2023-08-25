@@ -2299,23 +2299,23 @@ void QQmlJSCodeGenerator::generate_GetIterator(int iterator)
     BYTECODE_UNIMPLEMENTED();
 }
 
-void QQmlJSCodeGenerator::generate_IteratorNext(int value, int done)
+void QQmlJSCodeGenerator::generate_IteratorNext(int value, int offset)
 {
     Q_UNUSED(value)
-    Q_UNUSED(done)
+    Q_UNUSED(offset)
     BYTECODE_UNIMPLEMENTED();
 }
 
-void QQmlJSCodeGenerator::generate_IteratorNextForYieldStar(int iterator, int object)
+void QQmlJSCodeGenerator::generate_IteratorNextForYieldStar(int iterator, int object, int offset)
 {
     Q_UNUSED(iterator)
     Q_UNUSED(object)
+    Q_UNUSED(offset)
     BYTECODE_UNIMPLEMENTED();
 }
 
-void QQmlJSCodeGenerator::generate_IteratorClose(int done)
+void QQmlJSCodeGenerator::generate_IteratorClose()
 {
-    Q_UNUSED(done)
     BYTECODE_UNIMPLEMENTED();
 }
 

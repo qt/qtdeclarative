@@ -1897,23 +1897,23 @@ void QQmlJSTypePropagator::generate_GetIterator(int iterator)
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
-void QQmlJSTypePropagator::generate_IteratorNext(int value, int done)
+void QQmlJSTypePropagator::generate_IteratorNext(int value, int offset)
 {
     Q_UNUSED(value)
-    Q_UNUSED(done)
+    Q_UNUSED(offset)
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
-void QQmlJSTypePropagator::generate_IteratorNextForYieldStar(int iterator, int object)
+void QQmlJSTypePropagator::generate_IteratorNextForYieldStar(int iterator, int object, int offset)
 {
     Q_UNUSED(iterator)
     Q_UNUSED(object)
+    Q_UNUSED(offset)
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
-void QQmlJSTypePropagator::generate_IteratorClose(int done)
+void QQmlJSTypePropagator::generate_IteratorClose()
 {
-    Q_UNUSED(done)
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 

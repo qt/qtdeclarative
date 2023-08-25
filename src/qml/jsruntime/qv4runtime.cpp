@@ -862,6 +862,8 @@ ReturnedValue Runtime::IteratorNextForYieldStar::call(ExecutionEngine *engine, c
             engine->hasException = false;
 
             ScopedValue ret(scope, static_cast<const Object &>(iterator).get(engine->id_return()));
+            if (engine->hasException)
+                return Encode(true);
             if (ret->isUndefined()) {
                 // propagate return()
                 return Encode::undefined();
@@ -876,14 +878,13 @@ ReturnedValue Runtime::IteratorNextForYieldStar::call(ExecutionEngine *engine, c
 
             ScopedValue t(scope, static_cast<const Object &>(iterator).get(engine->id_throw()));
             if (engine->hasException)
-                return Encode::undefined();
+                return Encode(true);
             if (t->isUndefined()) {
                 // no throw method on the iterator
-                ScopedValue done(scope, Encode(false));
-                IteratorClose::call(engine, iterator, done);
-                if (engine->hasException)
-                    return Encode::undefined();
-                return engine->throwTypeError();
+                IteratorClose::call(engine, iterator);
+                if (!engine->hasException)
+                    engine->throwTypeError();
+                return Encode(true);
             }
             f = t->as<FunctionObject>();
             arg = exceptionValue;
@@ -894,14 +895,18 @@ ReturnedValue Runtime::IteratorNextForYieldStar::call(ExecutionEngine *engine, c
         f = next->as<FunctionObject>();
     }
 
-    if (!f)
-        return engine->throwTypeError();
+    if (!f) {
+        engine->throwTypeError();
+        return Encode(true);
+    }
 
     ScopedObject o(scope, f->call(&iterator, arg, 1));
     if (scope.hasException())
         return Encode(true);
-    if (!o)
-        return engine->throwTypeError();
+    if (!o) {
+        engine->throwTypeError();
+        return Encode(true);
+    }
 
     ScopedValue d(scope, o->get(engine->id_done()));
     if (scope.hasException())
@@ -909,18 +914,15 @@ ReturnedValue Runtime::IteratorNextForYieldStar::call(ExecutionEngine *engine, c
     bool done = d->toBoolean();
     if (done) {
         *object = o->get(engine->id_value());
-        return returnCalled ? Encode::undefined() : Encode(true);
+        return (returnCalled && !engine->hasException) ? Encode::undefined() : Encode(true);
     }
     *object = o;
     return Encode(false);
 }
 
-ReturnedValue Runtime::IteratorClose::call(ExecutionEngine *engine, const Value &iterator, const Value &done)
+ReturnedValue Runtime::IteratorClose::call(ExecutionEngine *engine, const Value &iterator)
 {
     Q_ASSERT(iterator.isObject());
-    Q_ASSERT(done.isBoolean());
-    if (done.booleanValue())
-        return Encode::undefined();
 
     Scope scope(engine);
     ScopedValue e(scope);

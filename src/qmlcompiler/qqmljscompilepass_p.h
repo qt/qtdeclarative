@@ -411,9 +411,9 @@ protected:
     void generate_GetTemplateObject(int) override {}
     void generate_Increment() override {}
     void generate_InitializeBlockDeadTemporalZone(int, int) override {}
-    void generate_IteratorClose(int) override {}
+    void generate_IteratorClose() override {}
     void generate_IteratorNext(int, int) override {}
-    void generate_IteratorNextForYieldStar(int, int) override {}
+    void generate_IteratorNextForYieldStar(int, int, int) override {}
     void generate_Jump(int) override {}
     void generate_JumpFalse(int) override {}
     void generate_JumpNoException(int) override {}

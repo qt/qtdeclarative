@@ -844,7 +844,8 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
     MOTH_BEGIN_INSTR(IteratorNextForYieldStar)
         STORE_ACC();
         acc = Runtime::IteratorNextForYieldStar::call(engine, accumulator, STACK_VALUE(iterator), &STACK_VALUE(object));
-        CHECK_EXCEPTION;
+        if (ACC.toBoolean())
+            code += offset;
     MOTH_END_INSTR(IteratorNextForYieldStar)
 
     MOTH_BEGIN_INSTR(CallValue)
@@ -1054,15 +1055,14 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         STORE_IP();
         STORE_ACC();
         acc = Runtime::IteratorNext::call(engine, accumulator, &STACK_VALUE(value));
-        STACK_VALUE(done) = acc;
-        CHECK_EXCEPTION;
+        if (ACC.toBoolean())
+            code += offset;
     MOTH_END_INSTR(IteratorNext)
 
     MOTH_BEGIN_INSTR(IteratorClose)
         STORE_IP();
         STORE_ACC();
-        acc = Runtime::IteratorClose::call(engine, accumulator, STACK_VALUE(done));
-        CHECK_EXCEPTION;
+        acc = Runtime::IteratorClose::call(engine, accumulator);
     MOTH_END_INSTR(IteratorClose)
 
     MOTH_BEGIN_INSTR(DestructureRestElement)

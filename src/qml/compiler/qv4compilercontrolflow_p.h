@@ -167,8 +167,8 @@ struct ControlFlowUnwindCleanup : public ControlFlowUnwind
     ~ControlFlowUnwindCleanup() {
         if (cleanup) {
             unwindLabel.link();
-            generator()->setUnwindHandler(parentUnwindHandler());
             cleanup();
+            generator()->setUnwindHandler(parentUnwindHandler());
             emitUnwindHandler();
         }
     }

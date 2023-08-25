@@ -194,9 +194,8 @@ ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const V
         // sets them into the created array.
         forever {
             if (k > (static_cast<qint64>(1) << 53) - 1) {
-                ScopedValue falsey(scope, Encode(false));
                 ScopedValue error(scope, scope.engine->throwTypeError());
-                return Runtime::IteratorClose::call(scope.engine, iterator, falsey);
+                return Runtime::IteratorClose::call(scope.engine, iterator);
             }
 
             // Retrieve the next value. If the iteration ends, we're done here.
@@ -218,7 +217,7 @@ ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const V
                 mapArguments[1] = Value::fromDouble(k);
                 mappedValue = mapfn->call(thisArg, mapArguments, 2);
                 if (scope.hasException())
-                    return Runtime::IteratorClose::call(scope.engine, iterator, Value::fromBoolean(false));
+                    return Runtime::IteratorClose::call(scope.engine, iterator);
             } else {
                 mappedValue = *nextValue;
             }
@@ -230,10 +229,8 @@ ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const V
                 scope.engine->throwTypeError(QString::fromLatin1("Cannot redefine property: %1").arg(k));
             }
 
-            if (scope.hasException()) {
-                ScopedValue falsey(scope, Encode(false));
-                return Runtime::IteratorClose::call(scope.engine, iterator, falsey);
-            }
+            if (scope.hasException())
+                return Runtime::IteratorClose::call(scope.engine, iterator);
 
             k++;
         }

@@ -405,15 +405,15 @@ QString dumpBytecode(
         MOTH_END_INSTR(GetIterator)
 
         MOTH_BEGIN_INSTR(IteratorNext)
-            s << dumpRegister(value, nFormals) << ", " << dumpRegister(done, nFormals);
+            s << dumpRegister(value, nFormals) << ", " << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(IteratorNext)
 
         MOTH_BEGIN_INSTR(IteratorNextForYieldStar)
-            s << dumpRegister(iterator, nFormals) << ", " << dumpRegister(object, nFormals);
+            s << dumpRegister(iterator, nFormals) << ", " << dumpRegister(object, nFormals)
+              << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(IteratorNextForYieldStar)
 
         MOTH_BEGIN_INSTR(IteratorClose)
-            s << dumpRegister(done, nFormals);
         MOTH_END_INSTR(IteratorClose)
 
         MOTH_BEGIN_INSTR(DestructureRestElement)
