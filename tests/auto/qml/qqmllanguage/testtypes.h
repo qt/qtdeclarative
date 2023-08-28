@@ -1549,6 +1549,7 @@ class BareSingleton : public QObject
     Q_OBJECT
     QML_SINGLETON
     QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     BareSingleton(QObject *parent = nullptr) : QObject(parent)
@@ -1562,6 +1563,7 @@ class UncreatableSingleton : public QObject
     Q_OBJECT
     QML_SINGLETON
     QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     static UncreatableSingleton *instance();

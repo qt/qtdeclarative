@@ -77,7 +77,7 @@ QQmlTypePrivate::~QQmlTypePrivate()
         break;
     case QQmlType::SingletonType:
     case QQmlType::CompositeSingletonType:
-        delete extraData.singletonTypeData->singletonInstanceInfo;
+        extraData.singletonTypeData->singletonInstanceInfo.reset();
         delete extraData.singletonTypeData;
         break;
     case QQmlType::CompositeType:
@@ -508,12 +508,12 @@ QObject *QQmlType::createWithQQmlData() const
     return instance;
 }
 
-QQmlType::SingletonInstanceInfo *QQmlType::singletonInstanceInfo() const
+QQmlType::SingletonInstanceInfo::ConstPtr QQmlType::singletonInstanceInfo() const
 {
     if (!d)
-        return nullptr;
+        return {};
     if (d->regType != SingletonType && d->regType != CompositeSingletonType)
-        return nullptr;
+        return {};
     return d->extraData.singletonTypeData->singletonInstanceInfo;
 }
 

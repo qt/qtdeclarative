@@ -119,14 +119,24 @@ public:
 
     bool isInlineComponentType() const;
 
-    struct Q_QML_PRIVATE_EXPORT SingletonInstanceInfo
+    struct Q_QML_PRIVATE_EXPORT SingletonInstanceInfo final
+        : public QQmlRefCounted<SingletonInstanceInfo>
     {
+        using Ptr = QQmlRefPointer<SingletonInstanceInfo>;
+        using ConstPtr = QQmlRefPointer<const SingletonInstanceInfo>;
+
+        static Ptr create() { return Ptr(new SingletonInstanceInfo, Ptr::Adopt); }
+
         std::function<QJSValue(QQmlEngine *, QJSEngine *)> scriptCallback = {};
         std::function<QObject *(QQmlEngine *, QJSEngine *)> qobjectCallback = {};
         QString typeName;
         QUrl url; // used by composite singletons
+
+    private:
+        Q_DISABLE_COPY_MOVE(SingletonInstanceInfo)
+        SingletonInstanceInfo() = default;
     };
-    SingletonInstanceInfo *singletonInstanceInfo() const;
+    SingletonInstanceInfo::ConstPtr singletonInstanceInfo() const;
 
     QUrl sourceUrl() const;
 

@@ -262,7 +262,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
             QObject *object = nullptr;
 
             if (ty.isSingleton()) {
-                QQmlType::SingletonInstanceInfo *siinfo = ty.singletonInstanceInfo();
+                QQmlType::SingletonInstanceInfo::ConstPtr siinfo = ty.singletonInstanceInfo();
                 if (!siinfo) {
                     std::cerr << "Internal error, " << qPrintable(tyName)
                               << "(" << qPrintable( QString::fromUtf8(ty.typeName()) ) << ")"

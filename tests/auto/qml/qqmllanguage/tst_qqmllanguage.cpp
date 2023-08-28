@@ -431,6 +431,8 @@ private slots:
 
     void callMethodOfAttachedDerived();
 
+    void multiVersionSingletons();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -8265,6 +8267,20 @@ void tst_qqmllanguage::callMethodOfAttachedDerived()
     QVERIFY(!o.isNull());
 
     QCOMPARE(o->property("v").toInt(), 99);
+}
+
+void tst_qqmllanguage::multiVersionSingletons()
+{
+    QQmlEngine engine;
+
+    for (const char *name : { "BareSingleton", "UncreatableSingleton"}) {
+        const int id1 = qmlTypeId("Test", 1, 0, name);
+        const int id2 = qmlTypeId("Test", 11, 0, name);
+        QVERIFY(id1 != id2);
+        const QJSValue value1 = engine.singletonInstance<QJSValue>(id1);
+        const QJSValue value2 = engine.singletonInstance<QJSValue>(id2);
+        QVERIFY(value1.strictlyEquals(value2));
+    }
 }
 
 QTEST_MAIN(tst_qqmllanguage)

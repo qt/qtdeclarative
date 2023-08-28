@@ -1906,13 +1906,12 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
 {
     Q_Q(QQmlEngine);
 
-    QJSValue value = singletonInstances.value(type);
-    if (!value.isUndefined()) {
-        return value;
-    }
-
-    QQmlType::SingletonInstanceInfo *siinfo = type.singletonInstanceInfo();
+    QQmlType::SingletonInstanceInfo::ConstPtr siinfo = type.singletonInstanceInfo();
     Q_ASSERT(siinfo != nullptr);
+
+    QJSValue value = singletonInstances.value(siinfo);
+    if (!value.isUndefined())
+        return value;
 
     if (siinfo->scriptCallback) {
         value = siinfo->scriptCallback(q, q);
@@ -1922,7 +1921,7 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
             // should behave identically to QML singleton types.
             q->setContextForObject(o, new QQmlContext(q->rootContext(), q));
         }
-        singletonInstances.convertAndInsert(v4engine(), type, &value);
+        singletonInstances.convertAndInsert(v4engine(), siinfo, &value);
 
     } else if (siinfo->qobjectCallback) {
         QObject *o = siinfo->qobjectCallback(q, q);
@@ -1951,7 +1950,7 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
         }
 
         value = q->newQObject(o);
-        singletonInstances.convertAndInsert(v4engine(), type, &value);
+        singletonInstances.convertAndInsert(v4engine(), siinfo, &value);
     } else if (!siinfo->url.isEmpty()) {
         QQmlComponent component(q, siinfo->url, QQmlComponent::PreferSynchronous);
         if (component.isError()) {
@@ -1962,7 +1961,7 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
         }
         QObject *o = component.beginCreate(q->rootContext());
         value = q->newQObject(o);
-        singletonInstances.convertAndInsert(v4engine(), type, &value);
+        singletonInstances.convertAndInsert(v4engine(), siinfo, &value);
         component.completeCreate();
     }
 

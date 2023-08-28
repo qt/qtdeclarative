@@ -477,13 +477,43 @@ static void uniqueRevisions(QVector<QTypeRevision> *revisions, QTypeRevision def
     revisions->erase(it, revisions->end());
 }
 
+static QQmlType::SingletonInstanceInfo::ConstPtr singletonInstanceInfo(
+        const QQmlPrivate::RegisterSingletonType &type)
+{
+    QQmlType::SingletonInstanceInfo::Ptr siinfo = QQmlType::SingletonInstanceInfo::create();
+    siinfo->scriptCallback = type.scriptApi;
+    siinfo->qobjectCallback = type.qObjectApi;
+    siinfo->typeName = QString::fromUtf8(type.typeName);
+    return QQmlType::SingletonInstanceInfo::ConstPtr(
+            siinfo.take(), QQmlType::SingletonInstanceInfo::ConstPtr::Adopt);
+}
+
+static QQmlType::SingletonInstanceInfo::ConstPtr singletonInstanceInfo(
+        const QQmlPrivate::RegisterCompositeSingletonType &type)
+{
+    QQmlType::SingletonInstanceInfo::Ptr siinfo = QQmlType::SingletonInstanceInfo::create();
+    siinfo->url = QQmlTypeLoader::normalize(type.url);
+    siinfo->typeName = QString::fromUtf8(type.typeName);
+    return QQmlType::SingletonInstanceInfo::ConstPtr(
+            siinfo.take(), QQmlType::SingletonInstanceInfo::ConstPtr::Adopt);
+}
+
+static int finalizeType(const QQmlType &dtype)
+{
+    if (!dtype.isValid())
+        return -1;
+
+    QQmlMetaType::registerUndeletableType(dtype);
+    return dtype.index();
+}
+
 /*
 This method is "over generalized" to allow us to (potentially) register more types of things in
 the future without adding exported symbols.
 */
 int QQmlPrivate::qmlregister(RegistrationType type, void *data)
 {
-    QQmlType dtype;
+
     switch (type) {
     case AutoParentRegistration:
         return QQmlMetaType::registerAutoParentFunction(
@@ -616,6 +646,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
             type.extensionMetaObject,
             QTypeRevision()
         };
+        const QQmlType::SingletonInstanceInfo::ConstPtr siinfo
+                = singletonInstanceInfo(revisionRegistration);
 
         const QTypeRevision added = revisionClassInfo(
                     type.classInfoMetaObject, "QML.AddedInVersion",
@@ -644,7 +676,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                 revisionRegistration.qObjectApi = type.qObjectApi;
             }
 
-            const int id = qmlregister(SingletonRegistration, &revisionRegistration);
+            const int id = finalizeType(
+                    QQmlMetaType::registerSingletonType(revisionRegistration, siinfo));
             if (type.qmlTypeIds)
                 type.qmlTypeIds->append(id);
         }
@@ -685,32 +718,30 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         break;
     }
     case TypeRegistration:
-        dtype = QQmlMetaType::registerType(*reinterpret_cast<RegisterType *>(data));
-        break;
+        return finalizeType(
+                QQmlMetaType::registerType(*reinterpret_cast<RegisterType *>(data)));
     case InterfaceRegistration:
-        dtype = QQmlMetaType::registerInterface(*reinterpret_cast<RegisterInterface *>(data));
-        break;
+        return finalizeType(
+                QQmlMetaType::registerInterface(*reinterpret_cast<RegisterInterface *>(data)));
     case SingletonRegistration:
-        dtype = QQmlMetaType::registerSingletonType(*reinterpret_cast<RegisterSingletonType *>(data));
-        break;
+        return finalizeType(QQmlMetaType::registerSingletonType(
+                *reinterpret_cast<RegisterSingletonType *>(data),
+                singletonInstanceInfo(*reinterpret_cast<RegisterSingletonType *>(data))));
     case CompositeRegistration:
-        dtype = QQmlMetaType::registerCompositeType(*reinterpret_cast<RegisterCompositeType *>(data));
-        break;
+        return finalizeType(QQmlMetaType::registerCompositeType(
+                *reinterpret_cast<RegisterCompositeType *>(data)));
     case CompositeSingletonRegistration:
-        dtype = QQmlMetaType::registerCompositeSingletonType(*reinterpret_cast<RegisterCompositeSingletonType *>(data));
-        break;
+        return finalizeType(QQmlMetaType::registerCompositeSingletonType(
+                *reinterpret_cast<RegisterCompositeSingletonType *>(data),
+                singletonInstanceInfo(*reinterpret_cast<RegisterCompositeSingletonType *>(data))));
     case SequentialContainerRegistration:
-        dtype = QQmlMetaType::registerSequentialContainer(*reinterpret_cast<RegisterSequentialContainer *>(data));
-        break;
+        return finalizeType(QQmlMetaType::registerSequentialContainer(
+                *reinterpret_cast<RegisterSequentialContainer *>(data)));
     default:
         return -1;
     }
 
-    if (!dtype.isValid())
-        return -1;
-
-    QQmlMetaType::registerUndeletableType(dtype);
-    return dtype.index();
+    return -1;
 }
 
 void QQmlPrivate::qmlunregister(RegistrationType type, quintptr data)
