@@ -63,7 +63,7 @@ public:
         // b when type equals FunctionType. For that reason, the semantic meaning of the bit is
         // overloaded, and the accessor functions are used to get the correct value
         //
-        // Moreover, isSignalHandler, isOverload and isCloned make only sense
+        // Moreover, isSignalHandler, isOverridableSignal and isCloned make only sense
         // for functions, too (and could at a later point be reused for flags that only make sense
         // for non-functions)
         //
@@ -76,7 +76,10 @@ public:
         unsigned isAliasORisVMESignal          : 1; // Is a QML alias to another property OR Signal was added by QML
         unsigned isFinalORisV4Function         : 1; // Has FINAL flag OR Function takes QQmlV4Function* args
         unsigned isSignalHandler               : 1; // Function is a signal handler
-        unsigned isOverload                    : 1; // Function is an overload of another function
+
+        // TODO: Remove this once we can. Signals should not be overridable.
+        unsigned isOverridableSignal           : 1; // Function is an overridable signal
+
         unsigned isRequiredORisCloned          : 1; // Has REQUIRED flag OR The function was marked as cloned
         unsigned isConstructorORisBindable     : 1; // The function was marked is a constructor OR property is backed by QProperty<T>
         unsigned isOverridden                  : 1; // Is overridden by a extension property
@@ -157,9 +160,11 @@ public:
             isSignalHandler = b;
         }
 
-        void setIsOverload(bool b) {
+        // TODO: Remove this once we can. Signals should not be overridable.
+        void setIsOverridableSignal(bool b) {
             Q_ASSERT(type == FunctionType);
-            isOverload = b;
+            Q_ASSERT(isResettableORisSignal);
+            isOverridableSignal = b;
         }
 
         void setIsCloned(bool b) {
@@ -209,8 +214,10 @@ public:
     bool isVMESignal() const { return isFunction() && m_flags.isAliasORisVMESignal; }
     bool isV4Function() const { return isFunction() && m_flags.isFinalORisV4Function; }
     bool isSignalHandler() const { return m_flags.isSignalHandler; }
-    bool isOverload() const { return m_flags.isOverload; }
-    void setOverload(bool onoff) { m_flags.isOverload = onoff; }
+
+    // TODO: Remove this once we can. Signals should not be overridable.
+    bool isOverridableSignal() const { return m_flags.isOverridableSignal; }
+
     bool isCloned() const { return isFunction() && m_flags.isRequiredORisCloned; }
     bool isConstructor() const { return isFunction() && m_flags.isConstructorORisBindable; }
     bool isBindable() const { return !isFunction() && m_flags.isConstructorORisBindable; }
@@ -417,7 +424,7 @@ QQmlPropertyData::Flags::Flags()
     , isAliasORisVMESignal(false)
     , isFinalORisV4Function(false)
     , isSignalHandler(false)
-    , isOverload(false)
+    , isOverridableSignal(false)
     , isRequiredORisCloned(false)
     , isConstructorORisBindable(false)
     , isOverridden(false)

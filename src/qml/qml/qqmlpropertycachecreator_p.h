@@ -461,8 +461,13 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
     // For property change signal override detection.
     // We prepopulate a set of signal names which already exist in the object,
     // and throw an error if there is a signal/method defined as an override.
-    QSet<QString> seenSignals;
-    seenSignals << QStringLiteral("destroyed") << QStringLiteral("parentChanged") << QStringLiteral("objectNameChanged");
+    // TODO: Remove AllowOverride once we can. No override should be allowed.
+    enum class AllowOverride { No, Yes };
+    QHash<QString, AllowOverride> seenSignals {
+        { QStringLiteral("destroyed"), AllowOverride::No },
+        { QStringLiteral("parentChanged"), AllowOverride::No },
+        { QStringLiteral("objectNameChanged"), AllowOverride::No }
+    };
     const QQmlPropertyCache *parentCache = cache.data();
     while ((parentCache = parentCache->parent().data())) {
         if (int pSigCount = parentCache->signalCount()) {
@@ -473,7 +478,15 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
                 for (QQmlPropertyCache::StringCache::ConstIterator iter = parentCache->stringCache.begin();
                      iter != parentCache->stringCache.end(); ++iter) {
                     if (currPSig == (*iter).second) {
-                        seenSignals.insert(iter.key());
+                        if (currPSig->isOverridableSignal()) {
+                            const qsizetype oldSize = seenSignals.size();
+                            AllowOverride &entry = seenSignals[iter.key()];
+                            if (seenSignals.size() != oldSize)
+                                entry = AllowOverride::Yes;
+                        } else {
+                            seenSignals[iter.key()] = AllowOverride::No;
+                        }
+
                         break;
                     }
                 }
@@ -489,7 +502,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
 
         const QString changedSigName =
                 QQmlSignalNames::propertyNameToChangedSignalName(stringAt(p->nameIndex));
-        seenSignals.insert(changedSigName);
+        seenSignals[changedSigName] = AllowOverride::No;
 
         cache->appendSignal(changedSigName, flags, effectiveMethodIndex++);
     }
@@ -501,7 +514,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
 
         const QString changedSigName =
                 QQmlSignalNames::propertyNameToChangedSignalName(stringAt(a->nameIndex()));
-        seenSignals.insert(changedSigName);
+        seenSignals[changedSigName] = AllowOverride::No;
 
         cache->appendSignal(changedSigName, flags, effectiveMethodIndex++);
     }
@@ -553,10 +566,26 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
             flags.setHasArguments(true);
 
         QString signalName = stringAt(s->nameIndex);
-        if (seenSignals.contains(signalName))
-            return qQmlCompileError(s->location, QQmlPropertyCacheCreatorBase::tr("Duplicate signal name: invalid override of property change signal or superclass signal"));
-        seenSignals.insert(signalName);
-
+        const auto it = seenSignals.find(signalName);
+        if (it == seenSignals.end()) {
+            seenSignals[signalName] = AllowOverride::No;
+        } else {
+            // TODO: Remove the AllowOverride::Yes branch once we can.
+            QQmlError message = qQmlCompileError(
+                    s->location,
+                    QQmlPropertyCacheCreatorBase::tr(
+                            "Duplicate signal name: "
+                            "invalid override of property change signal or superclass signal"));
+            switch (*it) {
+            case AllowOverride::No:
+                return message;
+            case AllowOverride::Yes:
+                message.setUrl(objectContainer->url());
+                enginePrivate->warning(message);
+                *it = AllowOverride::No; // No further overriding allowed.
+                break;
+            }
+        }
         cache->appendSignal(signalName, flags, effectiveMethodIndex++,
                             paramCount?paramTypes.constData():nullptr, names);
     }
@@ -569,8 +598,23 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
         auto flags = QQmlPropertyData::defaultSlotFlags();
 
         const QString slotName = stringAt(function->nameIndex);
-        if (seenSignals.contains(slotName))
-            return qQmlCompileError(function->location, QQmlPropertyCacheCreatorBase::tr("Duplicate method name: invalid override of property change signal or superclass signal"));
+        const auto it = seenSignals.constFind(slotName);
+        if (it != seenSignals.constEnd()) {
+            // TODO: Remove the AllowOverride::Yes branch once we can.
+            QQmlError message = qQmlCompileError(
+                function->location,
+                QQmlPropertyCacheCreatorBase::tr(
+                        "Duplicate method name: "
+                        "invalid override of property change signal or superclass signal"));
+            switch (*it) {
+            case AllowOverride::No:
+                return message;
+            case AllowOverride::Yes:
+                message.setUrl(objectContainer->url());
+                enginePrivate->warning(message);
+                break;
+            }
+        }
         // Note: we don't append slotName to the seenSignals list, since we don't
         // protect against overriding change signals or methods with properties.
 
