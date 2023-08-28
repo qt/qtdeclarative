@@ -75,7 +75,8 @@ static void codeActionHandler(
         edit.documentChanges = edits;
 
         CodeAction action;
-        action.kind = u"refactor.rewrite"_s.toUtf8();
+        // VS Code and QtC ignore everything that is not a 'quickfix'.
+        action.kind = u"quickfix"_s.toUtf8();
         action.edit = edit;
         action.title = message.toUtf8();
 

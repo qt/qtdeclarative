@@ -17,6 +17,7 @@
 #include <QtTest/qtest.h>
 #include <QtQmlLS/private/qlspcustomtypes_p.h>
 
+#include <functional>
 #include <iostream>
 #include <variant>
 
@@ -50,12 +51,17 @@ private slots:
     void findUsages();
     void documentFormatting_data();
     void documentFormatting();
+    void quickFixes_data();
+    void quickFixes();
 
 private:
     QProcess m_server;
     QLanguageServerProtocol m_protocol;
     QString m_qmllsPath;
     QList<QByteArray> m_uriToClose;
+    std::function<void(const QByteArray &, const QLspSpecification::PublishDiagnosticsParams &)>
+            m_diagnosticNotificationHandler;
+    QList<QLspSpecification::Diagnostic> m_diagnosticsForQuickFixes;
 };
 
 #endif // TST_QMLLSMODULES_H

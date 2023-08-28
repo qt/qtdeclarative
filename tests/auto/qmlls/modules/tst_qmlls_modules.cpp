@@ -3,6 +3,10 @@
 
 #include "tst_qmlls_modules.h"
 #include "QtQmlLS/private/qqmllsutils_p.h"
+#include <algorithm>
+#include <tuple>
+#include <type_traits>
+#include <variant>
 
 // Check if QTest already has a QTEST_CHECKED macro
 #ifndef QTEST_CHECKED
@@ -18,7 +22,7 @@ QT_USE_NAMESPACE
 using namespace Qt::StringLiterals;
 using namespace QLspSpecification;
 
-static constexpr bool enable_debug_output = true;
+static constexpr bool enable_debug_output = false;
 
 tst_qmlls_modules::tst_qmlls_modules()
     : QQmlDataTest(QT_QMLTEST_DATADIR),
@@ -48,9 +52,11 @@ tst_qmlls_modules::tst_qmlls_modules()
     m_qmllsPath = qEnvironmentVariable("QMLLS", m_qmllsPath);
     m_server.setProgram(m_qmllsPath);
     // m_server.setArguments(QStringList() << u"-v"_s << u"-w"_s << u"8"_s);
-    m_protocol.registerPublishDiagnosticsNotificationHandler([](const QByteArray &, auto) {
-        // ignoring qmlint notifications
-    });
+    m_protocol.registerPublishDiagnosticsNotificationHandler(
+            [this](const QByteArray &url, const PublishDiagnosticsParams &p) {
+                if (this->m_diagnosticNotificationHandler)
+                    this->m_diagnosticNotificationHandler(url, p);
+            });
 }
 
 void tst_qmlls_modules::initTestCase()
@@ -80,10 +86,10 @@ void tst_qmlls_modules::initTestCase()
     });
     QTRY_COMPARE_WITH_TIMEOUT(didInit, true, 10000);
 
-    for (const QString &filePath :
-         QStringList({ u"completions/Yyy.qml"_s, u"completions/fromBuildDir.qml"_s,
-                       u"completions/SomeBase.qml"_s, u"findUsages/jsIdentifierUsages.qml"_s,
-                       u"findDefinition/jsDefinitions.qml"_s })) {
+    for (const QString &filePath : QStringList(
+                 { u"completions/Yyy.qml"_s, u"completions/fromBuildDir.qml"_s,
+                   u"completions/SomeBase.qml"_s, u"findUsages/jsIdentifierUsages.qml"_s,
+                   u"findDefinition/jsDefinitions.qml"_s, u"quickfixes/INeedAQuickFix.qml"_s })) {
         QFile file(testFile(filePath));
         QVERIFY(file.open(QIODevice::ReadOnly));
         DidOpenTextDocumentParams oParams;
@@ -622,21 +628,27 @@ void tst_qmlls_modules::goToDefinition()
 }
 
 // startLine and startCharacter start at 1, not 0
+static QLspSpecification::Range rangeFrom(const QString &code, quint32 startLine,
+                                          quint32 startCharacter, quint32 length)
+{
+    QLspSpecification::Range range;
+    // the LSP works with lines and characters starting at 0
+    range.start.line = startLine - 1;
+    range.start.character = startCharacter - 1;
+    quint32 startOffset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
+    auto end = QQmlLSUtils::textRowAndColumnFrom(code, startOffset + length);
+    range.end.line = end.line;
+    range.end.character = end.character;
+    return range;
+}
+// startLine and startCharacter start at 1, not 0
 static QLspSpecification::Location locationFrom(const QByteArray fileName, const QString &code,
                                                 quint32 startLine, quint32 startCharacter,
                                                 quint32 length)
 {
     QLspSpecification::Location location;
     location.uri = QQmlLSUtils::qmlUrlToLspUri(fileName);
-    // the LSP works with lines and characters starting at 0
-    location.range.start.line = startLine - 1;
-    location.range.start.character = startCharacter - 1;
-
-    quint32 startOffset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
-    auto end = QQmlLSUtils::textRowAndColumnFrom(code, startOffset + length);
-    location.range.end.line = end.line;
-    location.range.end.character = end.character;
-
+    location.range = rangeFrom(code, startLine, startCharacter, length);
     return location;
 }
 
@@ -855,6 +867,131 @@ void tst_qmlls_modules::documentFormatting()
                                          std::move(errorHandler));
 
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 50000);
+}
+
+void tst_qmlls_modules::quickFixes_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<CodeActionParams>("codeActionParams");
+    QTest::addColumn<int>("diagnosticIndex");
+    QTest::addColumn<Range>("replacementRange");
+    QTest::addColumn<QString>("replacementText");
+
+    const QString filePath = u"quickfixes/INeedAQuickFix.qml"_s;
+
+    QString fileContent;
+    {
+        QFile file(testFile(filePath));
+        QVERIFY(file.open(QFile::Text | QFile::ReadOnly));
+        fileContent = file.readAll();
+    }
+
+    CodeActionParams firstCodeAction;
+    firstCodeAction.range = rangeFrom(fileContent, 10, 23, 1);
+    firstCodeAction.textDocument.uri = testFileUrl(filePath).toEncoded();
+
+    const Range firstRange = rangeFrom(fileContent, 10, 10, 0);
+    const QString firstReplacement = u"(xxx) => "_s;
+
+    QTest::addRow("injectedParameters")
+            << filePath << firstCodeAction << 1 << firstRange << firstReplacement;
+
+    CodeActionParams secondCodeAction;
+    secondCodeAction.textDocument.uri = testFileUrl(filePath).toEncoded();
+    secondCodeAction.range = rangeFrom(fileContent, 15, 20, 1);
+
+    const Range secondRange = rangeFrom(fileContent, 15, 20, 0);
+    const QString secondReplacement = u"hello."_s;
+
+    QTest::addRow("parentProperty")
+            << filePath << secondCodeAction << 2 << secondRange << secondReplacement;
+}
+
+std::tuple<int, int, int, int> rangeAsTuple(const Range &range)
+{
+    return std::make_tuple(range.start.line, range.start.character, range.end.line,
+                           range.end.character);
+}
+
+void tst_qmlls_modules::quickFixes()
+{
+    QFETCH(QString, filePath);
+    QFETCH(CodeActionParams, codeActionParams);
+    // The index of the diagnostic that the quickFix belongs to.
+    // diagnostics are sorted by their range (= text position in the current file).
+    QFETCH(int, diagnosticIndex);
+    QFETCH(Range, replacementRange);
+    QFETCH(QString, replacementText);
+
+    const auto uri = testFileUrl(filePath).toEncoded();
+
+    bool diagnosticOk = false;
+    QList<Diagnostic> diagnostics;
+
+    // run first the diagnostic that proposes a quickfix
+    m_diagnosticNotificationHandler = [&diagnosticOk, &uri, &diagnostics, this,
+                                       &diagnosticIndex](const QByteArray &,
+                                                         const PublishDiagnosticsParams &p) {
+        if (p.uri != uri)
+            return;
+
+        if constexpr (enable_debug_output) {
+            for (const auto &x : p.diagnostics) {
+                qDebug() << x.message;
+            }
+        }
+
+        QCOMPARE_GE(p.diagnostics.size(), diagnosticIndex);
+
+        QList<Diagnostic> sorted{ p.diagnostics };
+        std::sort(sorted.begin(), sorted.end(), [](const Diagnostic &a, const Diagnostic &b) {
+            return rangeAsTuple(a.range) < rangeAsTuple(b.range);
+        });
+        m_diagnosticsForQuickFixes = sorted;
+        diagnostics.append(sorted[diagnosticIndex]);
+
+        diagnosticOk = true;
+    };
+    if (!m_diagnosticsForQuickFixes.isEmpty()) {
+        diagnostics.append(m_diagnosticsForQuickFixes[diagnosticIndex]);
+    } else {
+        QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 5000);
+    }
+
+    codeActionParams.context.diagnostics = diagnostics;
+
+    using InnerT = QList<std::variant<Command, CodeAction>>;
+    using T = std::variant<InnerT, std::nullptr_t>;
+
+    bool codeActionOk = false;
+
+    // request a quickfix with the obtained diagnostic
+    m_protocol.requestCodeAction(codeActionParams, [&](const T &result) {
+        QVERIFY(std::holds_alternative<InnerT>(result));
+        InnerT inner = std::get<InnerT>(result);
+        QCOMPARE(inner.size(), 1);
+        QVERIFY(std::holds_alternative<CodeAction>(inner.front()));
+        CodeAction codeAction = std::get<CodeAction>(inner.front());
+
+        QCOMPARE(codeAction.kind, "quickfix"); // everything else is ignored by QtC, VS Code, ...
+
+        QVERIFY(codeAction.edit);
+        QVERIFY(codeAction.edit->documentChanges);
+        QVERIFY(std::holds_alternative<QList<TextDocumentEdit>>(*codeAction.edit->documentChanges));
+        auto edits = std::get<QList<TextDocumentEdit>>(*codeAction.edit->documentChanges);
+        QCOMPARE(edits.size(), 1);
+        QCOMPARE(edits.front().edits.size(), 1);
+        QVERIFY(std::holds_alternative<TextEdit>(edits.front().edits.front()));
+        auto textEdit = std::get<TextEdit>(edits.front().edits.front());
+
+        // make sure that the quick fix does something
+        QCOMPARE(textEdit.newText, replacementText);
+        QCOMPARE(rangeAsTuple(textEdit.range), rangeAsTuple(replacementRange));
+
+        codeActionOk = true;
+    });
+
+    QTRY_VERIFY_WITH_TIMEOUT(codeActionOk, 5000);
 }
 
 QTEST_MAIN(tst_qmlls_modules)
