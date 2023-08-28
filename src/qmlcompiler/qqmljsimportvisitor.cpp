@@ -872,12 +872,12 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                             if (requiredScope != scope) {
                                 if (!prevRequiredScope.isNull()) {
                                     auto sourceScope = prevRequiredScope->baseType();
-                                    suggestion = QQmlJSFixSuggestion {
-                                        "%1:%2:%3: Property marked as required in %4"_L1
-                                            .arg(sourceScope->filePath())
-                                            .arg(sourceScope->sourceLocation().startLine)
-                                            .arg(sourceScope->sourceLocation().startColumn)
-                                            .arg(requiredScopeName),
+                                    suggestion = QQmlJSFixSuggestion{
+                                        "%1:%2:%3: Property marked as required in %4."_L1
+                                                .arg(sourceScope->filePath())
+                                                .arg(sourceScope->sourceLocation().startLine)
+                                                .arg(sourceScope->sourceLocation().startColumn)
+                                                .arg(requiredScopeName),
                                         sourceScope->sourceLocation()
                                     };
                                     suggestion->setFilename(sourceScope->filePath());
@@ -1003,12 +1003,12 @@ void QQmlJSImportVisitor::checkSignal(
             const qsizetype newLength = m_logger->code().indexOf(u'\n', location.end())
                     - location.offset;
 
-            fix = QQmlJSFixSuggestion {
-                    "Implicitly defining %1 as signal handler in Connections is deprecated. "
-                    "Create a function instead"_L1.arg(handlerName),
-                    QQmlJS::SourceLocation(location.offset, newLength, location.startLine,
-                                           location.startColumn),
-                    "function %1(%2) { ... }"_L1.arg(handlerName, handlerParameters.join(u", "))
+            fix = QQmlJSFixSuggestion{
+                "Implicitly defining %1 as signal handler in Connections is deprecated. "
+                "Create a function instead."_L1.arg(handlerName),
+                QQmlJS::SourceLocation(location.offset, newLength, location.startLine,
+                                       location.startColumn),
+                "function %1(%2) { ... }"_L1.arg(handlerName, handlerParameters.join(u", "))
             };
         }
 
@@ -1411,11 +1411,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::StringLiteral *sl)
             templateString += c;
         }
 
-        QQmlJSFixSuggestion suggestion = {
-            "Use a template literal instead"_L1,
-            sl->literalToken,
-            u"`" % templateString % u"`"
-        };
+        QQmlJSFixSuggestion suggestion = { "Use a template literal instead."_L1, sl->literalToken,
+                                           u"`" % templateString % u"`" };
         suggestion.setAutoApplicable();
         m_logger->log(QStringLiteral("String contains unescaped line terminator which is "
                                      "deprecated."),

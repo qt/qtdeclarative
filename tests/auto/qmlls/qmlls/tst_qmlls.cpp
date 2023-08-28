@@ -214,8 +214,7 @@ void tst_Qmlls::didOpenTextDocument()
 
                     QString title = QString::fromUtf8(action.title);
                     QVERIFY(action.kind.has_value());
-                    QCOMPARE(QString::fromUtf8(action.kind.value()),
-                             QLatin1StringView("refactor.rewrite"));
+                    QCOMPARE(QString::fromUtf8(action.kind.value()), QLatin1StringView("quickfix"));
                     QVERIFY(action.edit.has_value());
                     WorkspaceEdit edit = action.edit.value();
 

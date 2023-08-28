@@ -80,7 +80,8 @@ static void codeActionHandler(
         edit.documentChanges = edits;
 
         CodeAction action;
-        action.kind = u"refactor.rewrite"_s.toUtf8();
+        // VS Code and QtC ignore everything that is not a 'quickfix'.
+        action.kind = u"quickfix"_s.toUtf8();
         action.edit = edit;
         action.title = message.toUtf8();
 
@@ -165,7 +166,16 @@ static Diagnostic messageToDiagnostic_helper(AdvanceFunc advancePositionPastLoca
                                     position);
     }
     range.end = position;
-    diagnostic.message = message.message.toUtf8();
+    if (message.fixSuggestion && !message.fixSuggestion->fixDescription().isEmpty()) {
+        diagnostic.message = QString(message.message)
+                                     .append(u": "_s)
+                                     .append(message.fixSuggestion->fixDescription())
+                                     .simplified()
+                                     .toUtf8();
+    } else {
+        diagnostic.message = message.message.toUtf8();
+    }
+
     diagnostic.source = QByteArray("qmllint");
 
     auto suggestion = message.fixSuggestion;

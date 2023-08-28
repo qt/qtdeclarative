@@ -381,11 +381,11 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
 
                 QQmlJS::SourceLocation fixLocation = location;
                 fixLocation.length = 0;
-                suggestion = QQmlJSFixSuggestion {
-                    name + " is a member of a parent element.\n      You can qualify the access "
-                           "with its id to avoid this warning:\n"_L1,
-                    fixLocation,
-                    (id.isEmpty() ? u"<id>."_s : (id + u'.'))
+                suggestion = QQmlJSFixSuggestion{
+                    name
+                            + " is a member of a parent element.\n      You can qualify the access "
+                              "with its id to avoid this warning.\n"_L1,
+                    fixLocation, (id.isEmpty() ? u"<id>."_s : (id + u'.'))
                 };
 
                 if (id.isEmpty())

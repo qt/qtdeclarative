@@ -3,9 +3,11 @@
 
 #include "tst_qmlls_modules.h"
 #include "QtQmlLS/private/qqmllsutils_p.h"
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <variant>
 
@@ -1395,6 +1397,130 @@ void tst_qmlls_modules::qmldirImportsFromSource()
             });
 
     QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 5000);
+}
+
+void tst_qmlls_modules::quickFixes_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<CodeActionParams>("codeActionParams");
+    QTest::addColumn<int>("diagnosticIndex");
+    QTest::addColumn<Range>("replacementRange");
+    QTest::addColumn<QString>("replacementText");
+
+    const QString filePath = u"quickfixes/INeedAQuickFix.qml"_s;
+
+    QString fileContent;
+    {
+        QFile file(testFile(filePath));
+        QVERIFY(file.open(QFile::Text | QFile::ReadOnly));
+        fileContent = file.readAll();
+    }
+
+    CodeActionParams firstCodeAction;
+    firstCodeAction.range = rangeFrom(fileContent, 10, 23, 1);
+    firstCodeAction.textDocument.uri = testFileUrl(filePath).toEncoded();
+
+    const Range firstRange = rangeFrom(fileContent, 10, 10, 0);
+    const QString firstReplacement = u"(xxx) => "_s;
+
+    QTest::addRow("injectedParameters")
+            << filePath << firstCodeAction << 0 << firstRange << firstReplacement;
+
+    CodeActionParams secondCodeAction;
+    secondCodeAction.textDocument.uri = testFileUrl(filePath).toEncoded();
+    secondCodeAction.range = rangeFrom(fileContent, 15, 20, 1);
+
+    const Range secondRange = rangeFrom(fileContent, 15, 20, 0);
+    const QString secondReplacement = u"hello."_s;
+
+    QTest::addRow("parentProperty")
+            << filePath << secondCodeAction << 1 << secondRange << secondReplacement;
+}
+
+std::tuple<int, int, int, int> rangeAsTuple(const Range &range)
+{
+    return std::make_tuple(range.start.line, range.start.character, range.end.line,
+                           range.end.character);
+}
+
+void tst_qmlls_modules::quickFixes()
+{
+    QFETCH(QString, filePath);
+    QFETCH(CodeActionParams, codeActionParams);
+    // The index of the diagnostic that the quickFix belongs to.
+    // diagnostics are sorted by their range (= text position in the current file).
+    QFETCH(int, diagnosticIndex);
+    QFETCH(Range, replacementRange);
+    QFETCH(QString, replacementText);
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+
+    bool diagnosticOk = false;
+    QList<Diagnostic> diagnostics;
+
+    // run first the diagnostic that proposes a quickfix
+    m_protocol->registerPublishDiagnosticsNotificationHandler(
+            [&diagnosticOk, &uri, &diagnostics,
+             &diagnosticIndex](const QByteArray &, const PublishDiagnosticsParams &p) {
+                if (p.uri != *uri)
+                    return;
+
+                if constexpr (enable_debug_output) {
+                    for (const auto &x : p.diagnostics) {
+                        qDebug() << x.message;
+                    }
+                }
+                QCOMPARE_GE(p.diagnostics.size(), diagnosticIndex);
+
+                QList<Diagnostic> partially_sorted{ p.diagnostics };
+                std::nth_element(partially_sorted.begin(),
+                                 std::next(partially_sorted.begin(), diagnosticIndex),
+                                 partially_sorted.end(),
+                                 [](const Diagnostic &a, const Diagnostic &b) {
+                                     return rangeAsTuple(a.range) < rangeAsTuple(b.range);
+                                 });
+                diagnostics.append(partially_sorted[diagnosticIndex]);
+
+                diagnosticOk = true;
+            });
+
+    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 5000);
+
+    codeActionParams.context.diagnostics = diagnostics;
+
+    using InnerT = QList<std::variant<Command, CodeAction>>;
+    using T = std::variant<InnerT, std::nullptr_t>;
+
+    bool codeActionOk = false;
+
+    // request a quickfix with the obtained diagnostic
+    m_protocol->requestCodeAction(codeActionParams, [&](const T &result) {
+        QVERIFY(std::holds_alternative<InnerT>(result));
+        InnerT inner = std::get<InnerT>(result);
+        QCOMPARE(inner.size(), 1);
+        QVERIFY(std::holds_alternative<CodeAction>(inner.front()));
+        CodeAction codeAction = std::get<CodeAction>(inner.front());
+
+        QCOMPARE(codeAction.kind, "quickfix"); // everything else is ignored by QtC, VS Code, ...
+
+        QVERIFY(codeAction.edit);
+        QVERIFY(codeAction.edit->documentChanges);
+        QVERIFY(std::holds_alternative<QList<TextDocumentEdit>>(*codeAction.edit->documentChanges));
+        auto edits = std::get<QList<TextDocumentEdit>>(*codeAction.edit->documentChanges);
+        QCOMPARE(edits.size(), 1);
+        QCOMPARE(edits.front().edits.size(), 1);
+        QVERIFY(std::holds_alternative<TextEdit>(edits.front().edits.front()));
+        auto textEdit = std::get<TextEdit>(edits.front().edits.front());
+
+        // make sure that the quick fix does something
+        QCOMPARE(textEdit.newText, replacementText);
+        QCOMPARE(rangeAsTuple(textEdit.range), rangeAsTuple(replacementRange));
+
+        codeActionOk = true;
+    });
+
+    QTRY_VERIFY_WITH_TIMEOUT(codeActionOk, 5000);
 }
 
 QTEST_MAIN(tst_qmlls_modules)

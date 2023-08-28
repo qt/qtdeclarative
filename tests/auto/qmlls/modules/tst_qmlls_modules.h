@@ -62,6 +62,8 @@ private slots:
     void rangeFormatting();
     void qmldirImportsFromBuild();
     void qmldirImportsFromSource();
+    void quickFixes_data();
+    void quickFixes();
 
 private:
     QProcess m_server;
