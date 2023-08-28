@@ -123,7 +123,6 @@ public:
     {
         std::function<QJSValue(QQmlEngine *, QJSEngine *)> scriptCallback = {};
         std::function<QObject *(QQmlEngine *, QJSEngine *)> qobjectCallback = {};
-        const QMetaObject *instanceMetaObject = nullptr;
         QString typeName;
         QUrl url; // used by composite singletons
     };

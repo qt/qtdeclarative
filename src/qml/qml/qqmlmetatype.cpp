@@ -89,8 +89,6 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->extraData.singletonTypeData->singletonInstanceInfo->scriptCallback = type.scriptApi;
     d->extraData.singletonTypeData->singletonInstanceInfo->qobjectCallback = type.qObjectApi;
     d->extraData.singletonTypeData->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
-    d->extraData.singletonTypeData->singletonInstanceInfo->instanceMetaObject
-            = type.qObjectApi ? type.instanceMetaObject : nullptr;
     d->extraData.singletonTypeData->extFunc = type.extensionObjectCreate;
     d->extraData.singletonTypeData->extMetaObject = type.extensionMetaObject;
 
