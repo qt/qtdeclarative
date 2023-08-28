@@ -1397,26 +1397,20 @@ bool Codegen::visit(BinaryExpression *ast)
             return false;
 
         BytecodeGenerator::Label iftrue = bytecodeGenerator->newLabel();
-        BytecodeGenerator::Label iffalse = bytecodeGenerator->newLabel();
 
-        Instruction::CmpNeNull cmp;
+        Instruction::CmpEqNull cmp;
 
         left = left.storeOnStack();
         left.loadInAccumulator();
         bytecodeGenerator->addInstruction(cmp);
 
         bytecodeGenerator->jumpTrue().link(iftrue);
-        bytecodeGenerator->jumpFalse().link(iffalse);
 
         blockTailCalls.unblock();
 
-        iftrue.link();
-
         left.loadInAccumulator();
-
         BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
-
-        iffalse.link();
+        iftrue.link();
 
         Reference right = expression(ast->right);
         right.loadInAccumulator();
