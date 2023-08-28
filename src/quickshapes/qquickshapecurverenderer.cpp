@@ -1538,7 +1538,7 @@ static void handleOverlap(QQuadPath &path, int e1, int e2, int recursionLevel = 
     }
 
     if (recursionLevel > 8) {
-        qDebug() << "Triangle overlap: recursion level" << recursionLevel << "aborting!";
+        qCDebug(lcShapeCurveRenderer) << "Triangle overlap: recursion level" << recursionLevel << "aborting!";
         return;
     }
 
@@ -1592,7 +1592,7 @@ static void handleOverlap(QQuadPath &path, int e1, const QVector2D vertex, int r
     if (vertex == path.elementAt(e1).endPoint() || !isOverlap(path, e1, vertex))
         return;
     if (recursionLevel > 8) {
-        qDebug() << "Vertex overlap: recursion level" << recursionLevel << "aborting!";
+        qCDebug(lcShapeCurveRenderer) << "Vertex overlap: recursion level" << recursionLevel << "aborting!";
         return;
     }
 
