@@ -193,15 +193,7 @@ QRect QSGAbstractRenderer::viewportRect() const
  */
 void QSGAbstractRenderer::setProjectionMatrixToRect(const QRectF &rect)
 {
-    QMatrix4x4 matrix;
-    matrix.ortho(rect.x(),
-                 rect.x() + rect.width(),
-                 rect.y() + rect.height(),
-                 rect.y(),
-                 1,
-                 -1);
-    setProjectionMatrix(matrix);
-    setProjectionMatrixWithNativeNDC(matrix);
+    setProjectionMatrixToRect(rect, {}, false);
 }
 
 /*!
@@ -217,24 +209,49 @@ void QSGAbstractRenderer::setProjectionMatrixToRect(const QRectF &rect)
  */
 void QSGAbstractRenderer::setProjectionMatrixToRect(const QRectF &rect, MatrixTransformFlags flags)
 {
+    setProjectionMatrixToRect(rect, flags, flags.testFlag(MatrixTransformFlipY));
+}
+
+/*!
+    Convenience method that calls setProjectionMatrix() with an
+    orthographic matrix generated from \a rect.
+
+    Set MatrixTransformFlipY in \a flags when the graphics API uses Y down in
+    its normalized device coordinate system (for example, Vulkan).
+
+    Convenience method that calls setProjectionMatrixWithNativeNDC() with an
+    orthographic matrix generated from \a rect.
+
+    Set true to \a nativeNDCFlipY to flip the Y axis relative to
+    projection matrix in its normalized device coordinate system.
+
+    \sa setProjectionMatrix(), projectionMatrix()
+    \sa setProjectionMatrixWithNativeNDC(), projectionMatrixWithNativeNDC()
+
+    \since 6.7
+ */
+void QSGAbstractRenderer::setProjectionMatrixToRect(const QRectF &rect, MatrixTransformFlags flags,
+                                                    bool nativeNDCFlipY)
+{
     const bool flipY = flags.testFlag(MatrixTransformFlipY);
+
+    const float left = rect.x();
+    const float right = rect.x() + rect.width();
+    float bottom = rect.y() + rect.height();
+    float top = rect.y();
+
+    if (flipY)
+        std::swap(top, bottom);
+
     QMatrix4x4 matrix;
-    matrix.ortho(rect.x(),
-                 rect.x() + rect.width(),
-                 flipY ? rect.y() : rect.y() + rect.height(),
-                 flipY ? rect.y() + rect.height() : rect.y(),
-                 1,
-                 -1);
+    matrix.ortho(left, right, bottom, top, 1, -1);
     setProjectionMatrix(matrix);
 
-    if (flipY) {
+    if (nativeNDCFlipY) {
+        std::swap(top, bottom);
+
         matrix.setToIdentity();
-        matrix.ortho(rect.x(),
-                     rect.x() + rect.width(),
-                     rect.y() + rect.height(),
-                     rect.y(),
-                     1,
-                     -1);
+        matrix.ortho(left, right, bottom, top, 1, -1);
     }
     setProjectionMatrixWithNativeNDC(matrix);
 }

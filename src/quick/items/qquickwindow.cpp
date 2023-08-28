@@ -635,13 +635,6 @@ void QQuickWindowPrivate::renderSceneGraph()
     emit q->beforeRendering();
     runAndClearJobs(&beforeRenderingJobs);
 
-    QSGAbstractRenderer::MatrixTransformFlags matrixFlags;
-    bool flipY = rhi ? !rhi->isYUpInNDC() : false;
-    if (!customRenderTarget.isNull() && customRenderTarget.mirrorVertically())
-        flipY = !flipY;
-    if (flipY)
-        matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
-
     const qreal devicePixelRatio = q->effectiveDevicePixelRatio();
     QSize pixelSize;
     if (redirect.rt.renderTarget)
@@ -656,7 +649,16 @@ void QQuickWindowPrivate::renderSceneGraph()
     renderer->setDevicePixelRatio(devicePixelRatio);
     renderer->setDeviceRect(QRect(QPoint(0, 0), pixelSize));
     renderer->setViewportRect(QRect(QPoint(0, 0), pixelSize));
-    renderer->setProjectionMatrixToRect(QRectF(QPointF(0, 0), pixelSize / devicePixelRatio), matrixFlags);
+
+    QSGAbstractRenderer::MatrixTransformFlags matrixFlags;
+    bool flipY = rhi ? !rhi->isYUpInNDC() : false;
+    if (!customRenderTarget.isNull() && customRenderTarget.mirrorVertically())
+        flipY = !flipY;
+    if (flipY)
+        matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
+
+    const QRectF rect(QPointF(0, 0), pixelSize / devicePixelRatio);
+    renderer->setProjectionMatrixToRect(rect, matrixFlags, rhi && !rhi->isYUpInNDC());
 
     context->renderNextFrame(renderer);
 
