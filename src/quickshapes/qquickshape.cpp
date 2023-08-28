@@ -1064,7 +1064,7 @@ QQuickShape::RendererType QQuickShapePrivate::selectRendererType()
         return res;
 
     static const bool environmentPreferCurve =
-            qEnvironmentVariable("QT_QUICKSHAPES_BACKEND").toLower() == QLatin1String("curve");
+        qEnvironmentVariable("QT_QUICKSHAPES_BACKEND").toLower() == QLatin1String("curverenderer");
 
     switch (ri->graphicsApi()) {
     case QSGRendererInterface::Software:
