@@ -41,7 +41,6 @@ QSGDistanceFieldGlyphNode::~QSGDistanceFieldGlyphNode()
     if (m_glyph_cache) {
         m_glyph_cache->release(m_glyphs.glyphIndexes());
         m_glyph_cache->unregisterGlyphNode(this);
-        m_glyph_cache->unregisterOwnerElement(ownerElement());
     }
 }
 
@@ -90,13 +89,10 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
         return;
 
     if (m_glyph_cache != oldCache) {
-        Q_ASSERT(ownerElement() != nullptr);
         if (oldCache) {
             oldCache->unregisterGlyphNode(this);
-            oldCache->unregisterOwnerElement(ownerElement());
         }
         m_glyph_cache->registerGlyphNode(this);
-        m_glyph_cache->registerOwnerElement(ownerElement());
     }
     m_glyph_cache->populate(glyphs.glyphIndexes());
 

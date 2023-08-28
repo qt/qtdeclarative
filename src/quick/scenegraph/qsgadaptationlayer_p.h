@@ -388,13 +388,9 @@ public:
 
     virtual void update() = 0;
 
-    void setOwnerElement(QQuickItem *ownerElement) { m_ownerElement = ownerElement; }
-    QQuickItem *ownerElement() const { return m_ownerElement; }
-
     void accept(QSGNodeVisitorEx *visitor) override { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 protected:
     QRectF m_bounding_rect;
-    QQuickItem *m_ownerElement = nullptr;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldGlyphConsumer
@@ -472,8 +468,6 @@ public:
     void registerGlyphNode(QSGDistanceFieldGlyphConsumer *node) { m_registeredNodes.insert(node); }
     void unregisterGlyphNode(QSGDistanceFieldGlyphConsumer *node) { m_registeredNodes.remove(node); }
 
-    virtual void registerOwnerElement(QQuickItem *ownerElement);
-    virtual void unregisterOwnerElement(QQuickItem *ownerElement);
     virtual void processPendingGlyphs();
 
     virtual bool eightBitFormatIsAlphaSwizzled() const = 0;
