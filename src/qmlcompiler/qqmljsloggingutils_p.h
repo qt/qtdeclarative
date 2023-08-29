@@ -15,6 +15,7 @@
 // We mean it.
 //
 
+#include <QtCore/qstring.h>
 #include <private/qtqmlcompilerexports_p.h>
 
 #include "qqmljsloggingutils.h"
