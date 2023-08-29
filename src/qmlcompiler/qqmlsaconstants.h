@@ -34,12 +34,6 @@ enum ScriptBindingKind : unsigned int {
     Script_ChangeHandler, // onXChanged: { ... }
 };
 
-enum class BindingTargetSpecifier {
-    SimplePropertyTarget, // e.g. `property int p: 42`
-    ListPropertyTarget, // e.g. `property list<Item> pList: [ Text {} ]`
-    UnnamedPropertyTarget // default property bindings, where property name is unspecified
-};
-
 enum class ScopeType {
     JSFunctionScope,
     JSLexicalScope,
