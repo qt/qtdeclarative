@@ -483,7 +483,7 @@ static QQmlType::SingletonInstanceInfo::ConstPtr singletonInstanceInfo(
     QQmlType::SingletonInstanceInfo::Ptr siinfo = QQmlType::SingletonInstanceInfo::create();
     siinfo->scriptCallback = type.scriptApi;
     siinfo->qobjectCallback = type.qObjectApi;
-    siinfo->typeName = QString::fromUtf8(type.typeName);
+    siinfo->typeName = type.typeName;
     return QQmlType::SingletonInstanceInfo::ConstPtr(
             siinfo.take(), QQmlType::SingletonInstanceInfo::ConstPtr::Adopt);
 }
@@ -493,7 +493,7 @@ static QQmlType::SingletonInstanceInfo::ConstPtr singletonInstanceInfo(
 {
     QQmlType::SingletonInstanceInfo::Ptr siinfo = QQmlType::SingletonInstanceInfo::create();
     siinfo->url = QQmlTypeLoader::normalize(type.url);
-    siinfo->typeName = QString::fromUtf8(type.typeName);
+    siinfo->typeName = type.typeName;
     return QQmlType::SingletonInstanceInfo::ConstPtr(
             siinfo.take(), QQmlType::SingletonInstanceInfo::ConstPtr::Adopt);
 }

@@ -631,7 +631,7 @@ static QQmlType createTypeForUrl(
         if (mode == QQmlMetaType::Singleton) {
             QQmlType::SingletonInstanceInfo::Ptr siinfo = QQmlType::SingletonInstanceInfo::create();
             siinfo->url = url;
-            siinfo->typeName = typeName;
+            siinfo->typeName = typeName.toUtf8();
             priv->extraData.singletonTypeData->singletonInstanceInfo =
                     QQmlType::SingletonInstanceInfo::ConstPtr(
                             siinfo.take(), QQmlType::SingletonInstanceInfo::ConstPtr::Adopt);

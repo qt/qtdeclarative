@@ -432,7 +432,7 @@ QByteArray QQmlType::typeName() const
 {
     if (d) {
         if (d->regType == SingletonType || d->regType == CompositeSingletonType)
-            return d->extraData.singletonTypeData->singletonInstanceInfo->typeName.toUtf8();
+            return d->extraData.singletonTypeData->singletonInstanceInfo->typeName;
         else if (d->baseMetaObject)
             return d->baseMetaObject->className();
     }

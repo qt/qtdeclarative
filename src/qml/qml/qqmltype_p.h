@@ -129,7 +129,7 @@ public:
 
         std::function<QJSValue(QQmlEngine *, QJSEngine *)> scriptCallback = {};
         std::function<QObject *(QQmlEngine *, QJSEngine *)> qobjectCallback = {};
-        QString typeName;
+        QByteArray typeName;
         QUrl url; // used by composite singletons
 
     private:
