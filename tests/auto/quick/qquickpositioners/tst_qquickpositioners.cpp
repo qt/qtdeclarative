@@ -3807,7 +3807,7 @@ void tst_qquickpositioners::test_mirroring()
         rootB->setProperty("testRightToLeft", true); // layoutDirection: Qt.RightToLeft
 
         // LTR == RTL + mirror
-        for (const QString objectName : std::as_const(objectNames)) {
+        for (const QString &objectName : std::as_const(objectNames)) {
             // horizontal.qml and horizontal-padding.qml only have three items
             if (qmlFile.startsWith(QString("horizontal")) && objectName == QString("four"))
                 break;
