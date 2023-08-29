@@ -316,4 +316,36 @@ QJsonObject findChildWithKey(const QString &key, const QJsonObject &root)
     return findChildWithKeyImpl(key, root, currentPath);
 }
 
+bool modifyValue(const QString &figmaId, const QString &key, const QString& newValue, QJsonObject &root)
+{
+    // Note: The Qt JSON API is "read-only", which means that we cannot
+    // directly change a value nested inside a object hierarchy as this will
+    // cause the implicitly shared object to detatch. Instead we need to reassign
+    // the changed objects recursively back to the root.
+    // Note: this function will not search inside arrays, only objects.
+    bool rootChanged = false;
+
+    if (root.contains("figmaId")) {
+        const QString id = root["figmaId"].toString();
+        if (id == figmaId) {
+            root[key] = newValue;
+            return true;
+        }
+    }
+
+    for (const auto &childKey : std::as_const(root).keys()) {
+        QJsonValue childValue = root[childKey];
+        if (!childValue.isObject())
+            continue;
+        QJsonObject childObject = childValue.toObject();
+        const bool childChanged = modifyValue(figmaId, key, newValue, childObject);
+        if (childChanged) {
+            rootChanged = true;
+            root[childKey] = childObject;
+        }
+    }
+
+    return rootChanged;
+}
+
 } // namespace

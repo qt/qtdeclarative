@@ -212,7 +212,23 @@ private:
         for (const QString &figmaId : imageUrls.keys()) {
             const QString imageUrl = imageUrls.value(figmaId).toString();
             if (imageUrl.isEmpty()) {
-                warning("No image URL generated for id: " + figmaId + ", " + figmaIdToFileNameMap.value(figmaId));
+                // Figma doesn't create imageUrls for empty images (where nothing
+                // was drawn). For those cases we need to clear the filePath in the
+                // output config as well, so that QML doesn't complain about a missing images.
+                const QString filePath = figmaIdToFileNameMap.value(figmaId);
+                debug("no image URL generated for image: " + filePath + " (image probably empty)");
+
+                const QString fileTheme = filePath.split('/').first();
+                for (const QString &theme : std::as_const(m_outputConfig).keys()) {
+                    if (theme.compare(fileTheme, Qt::CaseInsensitive) == 0) {
+                        auto &config = m_outputConfig[theme];
+                        const bool modified = JsonTools::modifyValue(figmaId, "filePath", "", config);
+                        if (!modified)
+                            warning("Could not clear filePath: " + filePath);
+                        m_outputConfig[theme] = config;
+                    }
+                }
+
                 requestCount--;
                 continue;
             }

@@ -33,4 +33,6 @@ QJsonObject findChild(const QStringList &keyValueList, const QJsonObject &root, 
 QJsonObject findNamedChild(const QStringList &namePath, const QJsonObject &root, bool warnOnDuplicates);
 QJsonObject findChildWithKey(const QString &key, const QJsonObject &root);
 
+bool modifyValue(const QString &figmaId, const QString &key, const QString& newValue, QJsonObject &root);
+
 } // namespace
