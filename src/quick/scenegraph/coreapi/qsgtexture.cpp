@@ -119,7 +119,7 @@ static QHash<QSGTexture*, SGTextureTraceItem*> qt_debug_allocated_textures;
 
 inline static void qt_debug_print_texture_count()
 {
-    qDebug("Number of leaked textures: %i", qt_debug_texture_count);
+    qCDebug(lcQsgLeak, "Number of leaked textures: %i", qt_debug_texture_count);
     qt_debug_texture_count = -1;
 
 #if defined(CAN_BACKTRACE_EXECINFO)

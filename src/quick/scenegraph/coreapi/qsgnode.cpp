@@ -18,7 +18,7 @@ static int qt_node_count = 0;
 
 static void qt_print_node_count()
 {
-    qDebug("Number of leaked nodes: %i", qt_node_count);
+    qCDebug(lcQsgLeak, "Number of leaked nodes: %i", qt_node_count);
     qt_node_count = -1;
 }
 #endif

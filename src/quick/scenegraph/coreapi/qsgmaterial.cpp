@@ -37,7 +37,7 @@ static int qt_material_count = 0;
 
 static void qt_print_material_count()
 {
-    qDebug("Number of leaked materials: %i", qt_material_count);
+    qCDebug(lcQsgLeak, "Number of leaked materials: %i", qt_material_count);
     qt_material_count = -1;
 }
 #endif
