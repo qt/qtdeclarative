@@ -31,6 +31,8 @@
 #  include <unistd.h>
 #elif defined(Q_OS_INTEGRITY)
 #  include <INTEGRITY.h>
+#elif defined(Q_OS_VXWORKS)
+#  include <taskLib.h>
 #elif defined(Q_OS_WASM)
 #  include <emscripten/stack.h>
 #endif
@@ -231,6 +233,22 @@ StackProperties stackProperties()
     const uintptr_t end = emscripten_stack_get_end();
     const size_t size = base - end;
     return createStackProperties(reinterpret_cast<void *>(base), size);
+}
+
+#elif defined(Q_OS_VXWORKS)
+
+StackProperties stackProperties()
+{
+    TASK_DESC taskDescription;
+    taskInfoGet(taskIdSelf(), &taskDescription);
+
+#if Q_STACK_GROWTH_DIRECTION < 0
+    return createStackProperties(
+                decrementStackPointer(taskDescription.td_pStackBase, taskDescription.td_stackSize),
+                taskDescription.td_stackSize);
+#else
+    return createStackProperties(taskDescription.td_pStackBase, taskDescription.td_stackSize);
+#endif
 }
 
 #else
