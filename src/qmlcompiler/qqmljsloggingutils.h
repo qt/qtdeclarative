@@ -17,7 +17,6 @@ class SourceLocation;
 }
 
 namespace QQmlJS {
-class LoggerCategoryPrivate;
 
 class Q_QMLCOMPILER_EXPORT LoggerWarningId
 {
@@ -37,41 +36,6 @@ private:
         return a.m_name != b.m_name;
     }
     const QAnyStringView m_name;
-};
-
-class Q_QMLCOMPILER_EXPORT LoggerCategory
-{
-    Q_DECLARE_PRIVATE(LoggerCategory)
-
-public:
-    LoggerCategory();
-    LoggerCategory(QString name, QString settingsName, QString description, QtMsgType level,
-                   bool ignored = false, bool isDefault = false);
-    LoggerCategory(const LoggerCategory &);
-    LoggerCategory(LoggerCategory &&) noexcept;
-    LoggerCategory &operator=(const LoggerCategory &);
-    LoggerCategory &operator=(LoggerCategory &&) noexcept;
-    ~LoggerCategory();
-
-    QString name() const;
-    QString settingsName() const;
-    QString description() const;
-    QtMsgType level() const;
-    bool isIgnored() const;
-    bool isDefault() const;
-
-    LoggerWarningId id() const;
-
-    void setLevel(QtMsgType);
-    void setIgnored(bool);
-
-    friend bool operator==(const LoggerCategory &category, const LoggerWarningId &warningId)
-    {
-        return category.name() == warningId.name();
-    }
-
-private:
-    std::unique_ptr<QQmlJS::LoggerCategoryPrivate> d_ptr;
 };
 
 } // namespace QQmlJS

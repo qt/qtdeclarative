@@ -18,7 +18,7 @@
 #include <private/qtqmlcompilerexports_p.h>
 
 #include "qcoloroutput_p.h"
-#include "qqmljsloggingutils.h"
+#include "qqmljsloggingutils_p.h"
 
 #include <private/qqmljsdiagnosticmessage_p.h>
 
