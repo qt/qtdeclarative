@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmljsimportvisitor_p.h"
+#include "qqmljslogger_p.h"
 #include "qqmljsmetatypes_p.h"
 #include "qqmljsresourcefilemapper_p.h"
 
@@ -1385,13 +1386,35 @@ inline QQmlJSImportVisitor::UnfinishedBinding
 createNonUniqueScopeBinding(QQmlJSScope::Ptr &scope, const QString &name,
                             const QQmlJS::SourceLocation &srcLocation);
 
+static void logLowerCaseImport(QStringView superType, QQmlJS::SourceLocation location,
+                               QQmlJSLogger *logger)
+{
+    QStringView namespaceName{ superType };
+    namespaceName = namespaceName.first(namespaceName.indexOf(u'.'));
+    logger->log(u"Namespace '%1' of '%2' must start with an upper case letter."_s.arg(namespaceName)
+                        .arg(superType),
+                qmlUncreatableType, location, true, true);
+}
+
 bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 {
     const QString superType = buildName(definition->qualifiedTypeNameId);
 
     const bool isRoot = !rootScopeIsValid();
     Q_ASSERT(!superType.isEmpty());
-    if (superType.front().isUpper()) {
+
+    // we need to assume that it is a type based on its capitalization. Types defined in inline
+    // components, for example, can have their type definition after their type usages:
+    // Item { property IC myIC; component IC: Item{}; }
+    const qsizetype indexOfTypeName = superType.lastIndexOf(u'.');
+    const bool looksLikeGroupedProperty = superType.front().isLower();
+
+    if (indexOfTypeName != -1 && looksLikeGroupedProperty) {
+        logLowerCaseImport(superType, definition->qualifiedTypeNameId->identifierToken,
+                           m_logger);
+    }
+
+    if (!looksLikeGroupedProperty) {
         if (!isRoot) {
             enterEnvironment(QQmlSA::ScopeType::QMLScope, superType,
                              definition->firstSourceLocation());
@@ -1438,7 +1461,6 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
     } else {
         enterEnvironmentNonUnique(QQmlSA::ScopeType::GroupedPropertyScope, superType,
                                   definition->firstSourceLocation());
-        Q_ASSERT(rootScopeIsValid());
         m_bindings.append(createNonUniqueScopeBinding(m_currentScope, superType,
                                                       definition->firstSourceLocation()));
         QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
@@ -1509,6 +1531,10 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
                 publicMember->firstSourceLocation());
         }
         QString typeName = buildName(publicMember->memberType);
+        if (typeName.contains(u'.') && typeName.front().isLower()) {
+            logLowerCaseImport(typeName, publicMember->typeToken, m_logger);
+        }
+
         QString aliasExpr;
         const bool isAlias = (typeName == u"alias"_s);
         if (isAlias) {
@@ -2202,6 +2228,11 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     QString prefix = QLatin1String("");
     if (import->asToken.isValid()) {
         prefix += import->importId;
+        if (!import->importId.isEmpty() && !import->importId.front().isUpper()) {
+            m_logger->log(u"Import qualifier '%1' must start with a capital letter."_s.arg(
+                                  import->importId),
+                          qmlImport, import->importIdToken, true, true);
+        }
     }
 
     auto filename = import->fileName.toString();
@@ -2483,6 +2514,11 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     bool needsResolution = false;
     int scopesEnteredCounter = 0;
 
+    const QString typeName = buildName(uiob->qualifiedTypeNameId);
+    if (typeName.front().isLower() && typeName.contains(u'.')) {
+        logLowerCaseImport(typeName, uiob->qualifiedTypeNameId->identifierToken, m_logger);
+    }
+
     QString prefix;
     for (auto group = uiob->qualifiedId; group->next; group = group->next) {
         const QString idName = group->name.toString();
@@ -2518,7 +2554,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     if (needsResolution)
         QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
 
-    enterEnvironment(QQmlSA::ScopeType::QMLScope, buildName(uiob->qualifiedTypeNameId),
+    enterEnvironment(QQmlSA::ScopeType::QMLScope, typeName,
                      uiob->qualifiedTypeNameId->identifierToken);
     QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
 
