@@ -62,10 +62,12 @@ private:
     Q_DISABLE_COPY(QQuickPixmapCache)
 
     void shrinkCache(int remove);
+    int destroyCache();
+    qsizetype referencedCost() const;
 
 private:
     QHash<QQuickPixmapKey, QQuickPixmapData *> m_cache;
-    QMutex m_cacheMutex; // avoid simultaneous iteration and modification
+    mutable QMutex m_cacheMutex; // avoid simultaneous iteration and modification
 
     QQuickPixmapData *m_unreferencedPixmaps = nullptr;
     QQuickPixmapData *m_lastUnreferencedPixmap = nullptr;
@@ -76,6 +78,7 @@ private:
 
     friend class QQuickPixmap;
     friend class QQuickPixmapData;
+    friend class tst_qquickpixmapcache;
 };
 
 QT_END_NAMESPACE

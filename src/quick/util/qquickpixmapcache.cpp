@@ -1224,26 +1224,38 @@ QQuickPixmapCache *QQuickPixmapCache::instance()
 
 QQuickPixmapCache::~QQuickPixmapCache()
 {
+    destroyCache();
+}
+
+/*! \internal
+    Empty the cache completely, to prevent leaks. Returns the number of
+    leaked pixmaps (should always be \c 0).
+
+    This is work the destructor needs to do, but we put it into a function
+    only to make it testable in autotests, because the static instance()
+    cannot be destroyed before shutdown.
+*/
+int QQuickPixmapCache::destroyCache()
+{
+    if (m_destroying)
+        return -1;
+
     m_destroying = true;
 
-#ifndef QT_NO_DEBUG
-    int leakedPixmaps = 0;
-#endif
     // Prevent unreferencePixmap() from assuming it needs to kick
     // off the cache expiry timer, as we're shrinking the cache
     // manually below after releasing all the pixmaps.
     m_timerId = -2;
 
     // unreference all (leaked) pixmaps
+    int leakedPixmaps = 0;
     const auto cache = m_cache; // NOTE: intentional copy (QTBUG-65077); releasing items from the cache modifies m_cache.
     for (auto *pixmap : cache) {
         auto currRefCount = pixmap->refCount;
         if (currRefCount) {
-#ifndef QT_NO_DEBUG
             leakedPixmaps++;
             qCDebug(lcQsgLeak) << "leaked pixmap: refCount" << pixmap->refCount << pixmap->url << "frame" << pixmap->frame
                                << "size" << pixmap->requestSize << "region" << pixmap->requestRegion;
-#endif
             while (currRefCount > 0) {
                 pixmap->release(this);
                 currRefCount--;
@@ -1252,13 +1264,22 @@ QQuickPixmapCache::~QQuickPixmapCache()
     }
 
     // free all unreferenced pixmaps
-    while (m_lastUnreferencedPixmap) {
+    while (m_lastUnreferencedPixmap)
         shrinkCache(20);
-    }
 
-#ifndef QT_NO_DEBUG
     qCDebug(lcQsgLeak, "Number of leaked pixmaps: %i", leakedPixmaps);
-#endif
+    return leakedPixmaps;
+}
+
+qsizetype QQuickPixmapCache::referencedCost() const
+{
+    qsizetype ret = 0;
+    QMutexLocker locker(&m_cacheMutex);
+    for (const auto *pixmap : std::as_const(m_cache)) {
+        if (pixmap->refCount)
+            ret += pixmap->cost();
+    }
+    return ret;
 }
 
 /*! \internal
