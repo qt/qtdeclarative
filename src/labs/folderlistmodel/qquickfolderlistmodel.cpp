@@ -278,6 +278,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
 
         Component {
             id: fileDelegate
+            required property string fileName
             Text { text: fileName }
         }
 
