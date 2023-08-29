@@ -3927,7 +3927,8 @@ void Codegen::handleTryCatch(TryStatement *ast)
 void Codegen::handleTryFinally(TryStatement *ast)
 {
     RegisterScope scope(this);
-    ControlFlowFinally finally(this, ast->finallyExpression);
+    const bool hasCatchBlock = ast->catchExpression;
+    ControlFlowFinally finally(this, ast->finallyExpression, hasCatchBlock);
     TailCallBlocker blockTailCalls(this); // IMPORTANT: destruction will unblock tail calls before finally is generated
 
     if (ast->catchExpression) {
