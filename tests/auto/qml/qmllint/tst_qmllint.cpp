@@ -1074,6 +1074,27 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
             << Result { { Message {
                     QStringLiteral("Function without return type annotation returns double")
                } } };
+
+    QTest::newRow("lowerCaseQualifiedImport")
+            << QStringLiteral("lowerCaseQualifiedImport.qml")
+            << Result{ {
+                       Message{ u"Import qualifier 'test' must start with a capital letter."_s },
+                       Message{
+                               u"Namespace 'test' of 'test.Rectangle' must start with an upper case letter."_s },
+               } };
+    QTest::newRow("lowerCaseQualifiedImport2")
+            << QStringLiteral("lowerCaseQualifiedImport2.qml")
+            << Result{ {
+                       Message{ u"Import qualifier 'test' must start with a capital letter."_s },
+                       Message{
+                               u"Namespace 'test' of 'test.Item' must start with an upper case letter."_s },
+                       Message{
+                               u"Namespace 'test' of 'test.Rectangle' must start with an upper case letter."_s },
+                       Message{
+                               u"Namespace 'test' of 'test.color' must start with an upper case letter."_s },
+                       Message{
+                               u"Namespace 'test' of 'test.Grid' must start with an upper case letter."_s },
+               } };
 }
 
 void TestQmllint::dirtyQmlCode()
