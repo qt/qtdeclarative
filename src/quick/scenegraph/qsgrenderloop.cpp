@@ -682,8 +682,9 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
                 handleDeviceLoss();
             else if (frameResult == QRhi::FrameOpError)
                 qWarning("Failed to end frame");
+        } else {
+            lastCompletedGpuTime = cd->swapchain->currentFrameCommandBuffer()->lastCompletedGpuTime();
         }
-        lastCompletedGpuTime = cd->swapchain->currentFrameCommandBuffer()->lastCompletedGpuTime();
     }
     if (needsPresent)
         cd->fireFrameSwapped();
