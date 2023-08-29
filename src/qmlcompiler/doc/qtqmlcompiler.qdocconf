@@ -45,3 +45,5 @@ navigation.cppclassespage = "Qt QML Compiler C++ Classes"
 
 # Enforce zero documentation warnings
 warninglimit = 0
+exampledirs += \
+    ../../../examples/qmlcompiler

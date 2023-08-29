@@ -1,0 +1,13 @@
+{
+    "name": "HelloWorld",
+    "author": "Qt Example",
+    "description": "Demonstrates how to write a qmllint plugin",
+    "version": "1.0",
+    "loggingCategories": [
+        {
+            "name": "hello-world",
+            "settingsName": "HelloWorld",
+            "description": "Used to create test messages"
+        }
+    ]
+}
