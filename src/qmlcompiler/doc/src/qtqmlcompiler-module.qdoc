@@ -5,6 +5,9 @@
     \module QtQmlCompiler
     \modulestate Technical Preview
     \title Qt QML Compiler C++ Classes
+    \qtcmakepackage QmlCompiler
 
-    \brief The Qt QML Compiler module provides tools for static analysis of QML code.
+    For more information on the Qt QmlCompiler module, see the
+    \l{Qt QML Compiler} module documentation.\brief The Qt QML Compiler module provides tools
+    for static analysis of QML code.
 */
