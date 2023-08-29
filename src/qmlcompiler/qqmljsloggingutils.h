@@ -4,8 +4,8 @@
 #ifndef QQMLJSLOGGER_H
 #define QQMLJSLOGGER_H
 
-#include <QtCore/QFileInfo>
-#include <qtqmlcompilerexports.h>
+#include <QtCore/qanystringview.h>
+#include <QtQmlCompiler/qtqmlcompilerexports.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -23,7 +23,7 @@ class Q_QMLCOMPILER_EXPORT LoggerWarningId
 public:
     constexpr LoggerWarningId(QAnyStringView name) : m_name(name) { }
 
-    const QAnyStringView name() const { return m_name; }
+    QAnyStringView name() const { return m_name; }
 
 private:
     friend bool operator==(const LoggerWarningId &a, const LoggerWarningId &b)

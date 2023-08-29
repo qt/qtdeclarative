@@ -13,12 +13,14 @@
 // future versions of Qt.
 //
 
-#include "qqmlsaconstants.h"
-#include "qqmljsloggingutils.h"
+#include <QtQmlCompiler/qqmlsaconstants.h>
+#include <QtQmlCompiler/qqmljsloggingutils.h>
 
-#include <qtqmlcompilerexports.h>
+#include <QtQmlCompiler/qtqmlcompilerexports.h>
 
-#include <QtCore/QMultiHash>
+#include <QtCore/qhash.h>
+#include <QtCore/qsharedpointer.h>
+#include <QtCore/qplugin.h>
 #include <QtQmlCompiler/qqmlsasourcelocation.h>
 
 #include <unordered_map>
