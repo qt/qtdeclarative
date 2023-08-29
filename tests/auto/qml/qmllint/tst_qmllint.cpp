@@ -1320,7 +1320,9 @@ void TestQmllint::compilerWarnings()
 
     auto categories = QQmlJSLogger::defaultCategories();
 
-    auto category = std::find(categories.begin(), categories.end(), qmlCompiler);
+    auto category = std::find_if(categories.begin(), categories.end(), [](const QQmlJS::LoggerCategory& category) {
+        return category.id() == qmlCompiler;
+    });
     Q_ASSERT(category != categories.end());
 
     if (enableCompilerWarnings) {
@@ -1691,7 +1693,9 @@ void TestQmllint::qrcUrlImport()
 void TestQmllint::attachedPropertyReuse()
 {
     auto categories = QQmlJSLogger::defaultCategories();
-    auto category = std::find(categories.begin(), categories.end(), qmlAttachedPropertyReuse);
+    auto category = std::find_if(categories.begin(), categories.end(), [](const QQmlJS::LoggerCategory& category) {
+        return category.id() == qmlAttachedPropertyReuse;
+    });
     Q_ASSERT(category != categories.end());
 
     category->setLevel(QtWarningMsg);
