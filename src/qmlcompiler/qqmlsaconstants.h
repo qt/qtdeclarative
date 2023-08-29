@@ -36,12 +36,6 @@ enum ScriptBindingKind : unsigned int {
     Script_ChangeHandler, // onXChanged: { ... }
 };
 
-enum ExtensionKind {
-    NotExtension,
-    ExtensionType,
-    ExtensionNamespace,
-};
-
 enum class BindingTargetSpecifier {
     SimplePropertyTarget, // e.g. `property int p: 42`
     ListPropertyTarget, // e.g. `property list<Item> pList: [ Text {} ]`
