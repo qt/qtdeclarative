@@ -122,8 +122,8 @@ private:
 
         if (reply->error() != QNetworkReply::NoError) {
             throw RestCallException(QStringLiteral("Could not download design file from Figma! ")
-                + "Please check that the file ID (" + m_bridge->m_fileId
-                + ") is correct! (error message: " + networkErrorString(reply) + ")");
+                + "Please check that your Figma token is valid and that the file ID '" + m_bridge->m_fileId
+                + "' is correct! (error message: " + networkErrorString(reply) + ")");
         }
     }
 
@@ -431,6 +431,9 @@ private:
         }
 
         const QJsonObject componentSet = JsonTools::findChild({"type", "COMPONENT_SET", "name", componentSetName}, searchRoot, m_bridge->m_sanity);
+        const QString componentSetId = JsonTools::getString("id", componentSet);
+        const QString componentSetPath = JsonTools::resolvedPath(componentSetId);
+        debug("using component set: " + componentSetPath);
 
         for (const QJsonValue &configStateValue : configStatesArray) try {
             QJsonObject outputStateConfig;
@@ -739,7 +742,7 @@ private:
         }
 
         if (stateValue.isEmpty()) {
-            warning("No corresponding state found for figma state: " + figmaStateName.toString());
+            warning("No corresponding config state found for figma state: " + figmaStateName.toString() + "; " + m_currentAtomInfo);
             return;
         }
 

@@ -14,7 +14,7 @@ int main(int argc, char **argv){
     QGuiApplication::setApplicationName("StyleGenerator");
 
     QCommandLineParser parser;
-    parser.setApplicationDescription("Creates a Qt Quick Controls style from a .qtbridge file.");
+    parser.setApplicationDescription("Creates a Qt Quick Controls style from a Figma file.");
     parser.addHelpOption();
     parser.addOptions({
         {{"d", "directory"},
