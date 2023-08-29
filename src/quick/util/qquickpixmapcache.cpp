@@ -301,7 +301,7 @@ class QQuickPixmapCache;
 class QQuickPixmapData
 {
 public:
-    QQuickPixmapData(QQuickPixmap *pixmap, const QUrl &u, const QRect &r, const QSize &rs,
+    QQuickPixmapData(const QUrl &u, const QRect &r, const QSize &rs,
                      const QQuickImageProviderOptions &po, const QString &e)
     : refCount(1), frameCount(1), frame(0), inCache(false), pixmapStatus(QQuickPixmap::Error),
       url(u), errorString(e), requestRegion(r), requestSize(rs),
@@ -312,10 +312,9 @@ public:
     , storeToCache(true)
 #endif
     {
-        Q_UNUSED(pixmap);
     }
 
-    QQuickPixmapData(QQuickPixmap *pixmap, const QUrl &u, const QRect &r, const QSize &s, const QQuickImageProviderOptions &po,
+    QQuickPixmapData(const QUrl &u, const QRect &r, const QSize &s, const QQuickImageProviderOptions &po,
                      QQuickImageProviderOptions::AutoTransform aTransform, int frame=0, int frameCount=1)
     : refCount(1), frameCount(frameCount), frame(frame), inCache(false), pixmapStatus(QQuickPixmap::Loading),
       url(u), requestRegion(r), requestSize(s),
@@ -326,10 +325,9 @@ public:
     , storeToCache(true)
 #endif
     {
-        Q_UNUSED(pixmap);
     }
 
-    QQuickPixmapData(QQuickPixmap *pixmap, const QUrl &u, QQuickTextureFactory *texture,
+    QQuickPixmapData(const QUrl &u, QQuickTextureFactory *texture,
                      const QSize &s, const QRect &r, const QSize &rs, const QQuickImageProviderOptions &po,
                      QQuickImageProviderOptions::AutoTransform aTransform, int frame=0, int frameCount=1)
     : refCount(1), frameCount(frameCount), frame(frame), inCache(false), pixmapStatus(QQuickPixmap::Ready),
@@ -341,10 +339,9 @@ public:
     , storeToCache(true)
 #endif
     {
-        Q_UNUSED(pixmap);
     }
 
-    QQuickPixmapData(QQuickPixmap *pixmap, QQuickTextureFactory *texture)
+    QQuickPixmapData(QQuickTextureFactory *texture)
     : refCount(1), frameCount(1), frame(0), inCache(false), pixmapStatus(QQuickPixmap::Ready),
       appliedTransform(QQuickImageProviderOptions::UsePluginDefaultTransform),
       textureFactory(texture), reply(nullptr), prevUnreferenced(nullptr),
@@ -353,7 +350,6 @@ public:
     , storeToCache(true)
 #endif
     {
-        Q_UNUSED(pixmap);
         if (texture)
             requestSize = implicitSize = texture->textureSize();
     }
@@ -1524,7 +1520,7 @@ void QQuickPixmapData::removeFromCache(QQuickPixmapCache *store)
     }
 }
 
-static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, QQmlEngine *engine, const QUrl &url,
+static QQuickPixmapData* createPixmapDataSync(QQmlEngine *engine, const QUrl &url,
                                               const QRect &requestRegion, const QSize &requestSize,
                                               const QQuickImageProviderOptions &providerOptions, int frame, bool *ok,
                                               qreal devicePixelRatio)
@@ -1542,7 +1538,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
 
         switch (imageType) {
             case QQuickImageProvider::Invalid:
-                return new QQuickPixmapData(declarativePixmap, url, requestRegion, requestSize, providerOptions,
+                return new QQuickPixmapData(url, requestRegion, requestSize, providerOptions,
                     QQuickPixmap::tr("Invalid image provider: %1").arg(url.toString()));
             case QQuickImageProvider::Texture:
             {
@@ -1550,7 +1546,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
                                                            : provider->requestTexture(imageId(url), &readSize, requestSize);
                 if (texture) {
                     *ok = true;
-                    return new QQuickPixmapData(declarativePixmap, url, texture, readSize, requestRegion, requestSize,
+                    return new QQuickPixmapData(url, texture, readSize, requestRegion, requestSize,
                                                 providerOptions, QQuickImageProviderOptions::UsePluginDefaultTransform, frame);
                 }
                 break;
@@ -1562,7 +1558,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
                                           : provider->requestImage(imageId(url), &readSize, requestSize);
                 if (!image.isNull()) {
                     *ok = true;
-                    return new QQuickPixmapData(declarativePixmap, url, QQuickTextureFactory::textureFactoryForImage(image),
+                    return new QQuickPixmapData(url, QQuickTextureFactory::textureFactoryForImage(image),
                                                 readSize, requestRegion, requestSize, providerOptions,
                                                 QQuickImageProviderOptions::UsePluginDefaultTransform, frame);
                 }
@@ -1574,7 +1570,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
                                             : provider->requestPixmap(imageId(url), &readSize, requestSize);
                 if (!pixmap.isNull()) {
                     *ok = true;
-                    return new QQuickPixmapData(declarativePixmap, url, QQuickTextureFactory::textureFactoryForImage(pixmap.toImage()),
+                    return new QQuickPixmapData(url, QQuickTextureFactory::textureFactoryForImage(pixmap.toImage()),
                                                 readSize, requestRegion, requestSize, providerOptions,
                                                 QQuickImageProviderOptions::UsePluginDefaultTransform, frame);
                 }
@@ -1588,7 +1584,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
         }
 
         // provider has bad image type, or provider returned null image
-        return new QQuickPixmapData(declarativePixmap, url, requestRegion, requestSize, providerOptions,
+        return new QQuickPixmapData(url, requestRegion, requestSize, providerOptions,
             QQuickPixmap::tr("Failed to get image from provider: %1").arg(url.toString()));
     }
 
@@ -1606,7 +1602,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
             QQuickTextureFactory *factory = texReader.read();
             if (factory) {
                 *ok = true;
-                return new QQuickPixmapData(declarativePixmap, url, factory, factory->textureSize(), requestRegion, requestSize,
+                return new QQuickPixmapData(url, factory, factory->textureSize(), requestRegion, requestSize,
                                             providerOptions, QQuickImageProviderOptions::UsePluginDefaultTransform, frame);
             } else {
                 errorString = QQuickPixmap::tr("Error decoding: %1").arg(url.toString());
@@ -1620,7 +1616,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
             if (readImage(url, &f, &image, &errorString, &readSize, &frameCount, requestRegion, requestSize,
                           providerOptions, &appliedTransform, frame, devicePixelRatio)) {
                 *ok = true;
-                return new QQuickPixmapData(declarativePixmap, url, QQuickTextureFactory::textureFactoryForImage(image), readSize, requestRegion, requestSize,
+                return new QQuickPixmapData(url, QQuickTextureFactory::textureFactoryForImage(image), readSize, requestRegion, requestSize,
                                             providerOptions, appliedTransform, frame, frameCount);
             } else if (f.fileName() != localFile) {
                 errorString += QString::fromLatin1(" (%1)").arg(f.fileName());
@@ -1629,7 +1625,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
     } else {
         errorString = QQuickPixmap::tr("Cannot open: %1").arg(url.toString());
     }
-    return new QQuickPixmapData(declarativePixmap, url, requestRegion, requestSize, providerOptions, errorString);
+    return new QQuickPixmapData(url, requestRegion, requestSize, providerOptions, errorString);
 }
 
 
@@ -1659,7 +1655,7 @@ QQuickPixmap::QQuickPixmap(QQmlEngine *engine, const QUrl &url, const QRect &reg
 
 QQuickPixmap::QQuickPixmap(const QUrl &url, const QImage &image)
 {
-    d = new QQuickPixmapData(this, url, new QQuickDefaultTextureFactory(image), image.size(), QRect(), QSize(),
+    d = new QQuickPixmapData(url, new QQuickDefaultTextureFactory(image), image.size(), QRect(), QSize(),
                              QQuickImageProviderOptions(), QQuickImageProviderOptions::UsePluginDefaultTransform);
     d->addToCache();
 }
@@ -1777,7 +1773,7 @@ void QQuickPixmap::setImage(const QImage &p)
     if (!p.isNull()) {
         if (d)
             d->release();
-        d = new QQuickPixmapData(this, QQuickTextureFactory::textureFactoryForImage(p));
+        d = new QQuickPixmapData(QQuickTextureFactory::textureFactoryForImage(p));
     }
 }
 
@@ -1892,7 +1888,7 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QRect &reques
         if (!(options & QQuickPixmap::Asynchronous)) {
             bool ok = false;
             PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingStarted>(url));
-            d = createPixmapDataSync(this, engine, url, requestRegion, requestSize, providerOptions, frame, &ok, devicePixelRatio);
+            d = createPixmapDataSync(engine, url, requestRegion, requestSize, providerOptions, frame, &ok, devicePixelRatio);
             if (ok) {
                 PIXMAP_PROFILE(pixmapLoadingFinished(url, QSize(width(), height())));
                 if (options & QQuickPixmap::Cache)
@@ -1912,7 +1908,7 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QRect &reques
             return;
 
 
-        d = new QQuickPixmapData(this, url, requestRegion, requestSize, providerOptions,
+        d = new QQuickPixmapData(url, requestRegion, requestSize, providerOptions,
                                  QQuickImageProviderOptions::UsePluginDefaultTransform, frame, frameCount);
         if (options & QQuickPixmap::Cache)
             d->addToCache();
@@ -1954,7 +1950,7 @@ void QQuickPixmap::loadImageFromDevice(QQmlEngine *engine, QIODevice *device, co
             return;
 
         locker.unlock();
-        d = new QQuickPixmapData(this, url, requestRegion, requestSize, providerOptions,
+        d = new QQuickPixmapData(url, requestRegion, requestSize, providerOptions,
                                  QQuickImageProviderOptions::UsePluginDefaultTransform, frame, frameCount);
         d->specialDevice = device;
         d->addToCache();
