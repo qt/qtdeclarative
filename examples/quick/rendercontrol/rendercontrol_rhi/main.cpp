@@ -14,6 +14,7 @@
 #include <QGridLayout>
 #include <QPushButton>
 #include <QSlider>
+#include <QCheckBox>
 #include <QScrollBar>
 #include <QListWidget>
 #include <QPainter>
@@ -112,6 +113,8 @@ public:
     ImageLabel *m_focus = nullptr;
     QLabel *m_fullSizeViewerWindow = nullptr;
     QVector<QImage> m_frames;
+
+    bool m_mirrorVertically = false;
 };
 
 MainWindow::MainWindow(AnimationDriver *animationDriver)
@@ -149,6 +152,12 @@ MainWindow::MainWindow(AnimationDriver *animationDriver)
 //! [anim-slider]
     controlLayout->addWidget(animLabel);
     controlLayout->addWidget(animSlider);
+
+    QCheckBox *mirrorCheckBox = new QCheckBox(tr("Mirror vertically"));
+    QObject::connect(mirrorCheckBox, &QCheckBox::stateChanged, mirrorCheckBox, [this, mirrorCheckBox] {
+        m_mirrorVertically = mirrorCheckBox->isChecked();
+    });
+    controlLayout->addWidget(mirrorCheckBox);
 
     QGridLayout *gridLayout = new QGridLayout;
     vlayout->addLayout(gridLayout);
@@ -414,6 +423,11 @@ void MainWindow::render()
 
     if (m_frameCount > 0)
         stepAnimations();
+
+    // this is only here to communicate the possibly changed mirrorVertically flag
+    QQuickRenderTarget quickRt = QQuickRenderTarget::fromRhiRenderTarget(m_rt.get());
+    quickRt.setMirrorVertically(m_mirrorVertically);
+    m_scene->setRenderTarget(quickRt);
 
 //! [render-core]
     QElapsedTimer cpuTimer;
