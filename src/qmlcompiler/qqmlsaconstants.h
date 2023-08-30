@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlSA {
 
-enum BindingType : unsigned int {
+enum class BindingType : unsigned int {
     Invalid,
     BoolLiteral,
     NumberLiteral,
