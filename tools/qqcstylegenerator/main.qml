@@ -164,14 +164,15 @@ ApplicationWindow {
                     text: bridge.targetDirectory
                     onTextChanged: bridge.targetDirectory = text
                 }
-                Button {
-                    flat: true
-                    icon.source: "qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/folder-icon-square.png"
+
+                ToolButton {
+                    icon.source: "qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/folder-icon-round.png"
                     onClicked: stylePathDialog.open()
                 }
+
                 FolderDialog {
                     id: stylePathDialog
-                    onAccepted: stylePathInput.text = selectedFolder
+                    onAccepted: stylePathInput.text = bridge.toLocalFile(selectedFolder)
                 }
             }
 
@@ -184,6 +185,11 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 text: bridge.figmaUrlOrId
                 onTextChanged: bridge.figmaUrlOrId = text
+                ToolTip.visible: hovered
+                ToolTip.delay: 1000
+                ToolTip.text: "How to get the Figma file ID:"
+                              + "\n1. Click the 'Share' button in the top right corner in Figma"
+                              + "\n2. Click 'Copy link'"
             }
 
             Label {
@@ -195,6 +201,14 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 text: bridge.figmaToken
                 onTextChanged: bridge.figmaToken = text
+                ToolTip.visible: hovered
+                ToolTip.delay: 1000
+                ToolTip.text: "How to get a Figma token:"
+                              + "\n1. Login to your Figma account."
+                              + "\n2. Head to Settings from the top-left menu inside Figma."
+                              + "\n3. Find the Personal access tokens section."
+                              + "\n4. Click Generate new token to open the configuration modal."
+                              + "\n5. Click Generate token."
             }
 
             Label {
@@ -214,6 +228,38 @@ ApplicationWindow {
                 id: showLogCheckbox
                 checked: false
                 onCheckedChanged: outputScrollView.visible = checked
+            }
+
+            Label {
+                text: "Show usage"
+            }
+
+            CheckBox {
+                id: usageCheckbox
+                checked: false
+            }
+        }
+
+        Frame {
+            visible: usageCheckbox.checked
+            Layout.fillWidth: true
+            Layout.columnSpan: 2
+            TextArea {
+                anchors.fill: parent
+                readonly property int slashIndex: bridge.targetDirectory.lastIndexOf("/")
+                readonly property string importPath: bridge.targetDirectory.slice(0, slashIndex)
+                readonly property string styleName: bridge.targetDirectory.slice(slashIndex + 1)
+                readOnly: true
+                wrapMode: TextEdit.Wrap
+                text: slashIndex === -1 || importPath === "" || styleName === ""
+                      ? "You need to set a valid target directory!"
+                      : "The name of this style will be '" + styleName + "', and the import path"
+                      + " will be '" + importPath + "'"
+                      + "\n\nIf you assign the import path to the environment variable 'QML_IMPORT_PATH'"
+                      + "\nan application can use this style by for example launching it with the name of"
+                      + " the style as argument:"
+                      + "\n\nexport QML_IMPORT_PATH=" + importPath
+                      + "\n./yourapp -style=" + styleName
             }
         }
 
@@ -249,6 +295,7 @@ ApplicationWindow {
                     stop()
                 } else {
                     outputModel.clear()
+                    filteredModel.clear()
                     figmaFileName = ""
                     bridge.generate()
                 }
@@ -266,7 +313,7 @@ ApplicationWindow {
                 clip: true
                 reuseItems: false
                 model: filteredModel
-                delegate: Text {
+                delegate: Label {
                     text: msg
                     Component.onCompleted: {
                         if (implicitWidth > outputView.contentWidth)

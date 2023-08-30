@@ -57,3 +57,8 @@ void Bridge::stop()
     Q_ASSERT(m_generator);
     m_generator->m_abort = true;
 }
+
+QString Bridge::toLocalFile(const QUrl &url) const
+{
+    return QUrl(url).toLocalFile();
+}

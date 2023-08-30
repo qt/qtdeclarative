@@ -24,6 +24,8 @@ public:
     Q_INVOKABLE void generate();
     Q_INVOKABLE void stop();
 
+    Q_INVOKABLE QString toLocalFile(const QUrl &url) const;
+
 signals:
     void targetDirectoryChanged();
     void figmaUrlOrIdChanged();

@@ -51,7 +51,7 @@ int main(int argc, char **argv){
     if (parser.isSet("token"))
         bridge.m_figmaToken = parser.value("token");
     if (parser.isSet("directory"))
-        bridge.m_targetDirectory = parser.value("directory");
+        bridge.m_targetDirectory = QDir(parser.value("directory")).absolutePath();
     if (!parser.positionalArguments().isEmpty())
         bridge.m_figmaUrlOrId = parser.positionalArguments().first();
 
