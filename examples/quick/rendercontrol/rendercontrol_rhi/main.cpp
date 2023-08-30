@@ -488,10 +488,10 @@ void MainWindow::render()
                     readResult.pixelSize.width(), readResult.pixelSize.height(),
                     QImage::Format_RGBA8888_Premultiplied);
     QImage result;
-if (rhi->isYUpInFramebuffer())
-    result = wrapperImage.mirrored();
-else
-    result = wrapperImage.copy();
+    if (rhi->isYUpInFramebuffer())
+        result = wrapperImage.mirrored();
+    else
+        result = wrapperImage.copy();
 
 //! [render-core]
 

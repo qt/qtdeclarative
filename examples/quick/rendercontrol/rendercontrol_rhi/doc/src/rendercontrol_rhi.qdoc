@@ -127,8 +127,8 @@
     enabled may lead to lags in widget drawing. This is as expected, because if
     some widget animation (e.g. highlight of a QPushButton or QCheckBox) is
     managed via \l QPropertyAnimation and similar, then those animation are
-    driven by the same QAnimationDriver, and that does not advance unless
-    triggered manually via the buttons.
+    driven by the same QAnimationDriver, and that does not advance until a new
+    frame is requested by clicking on the buttons.
 
     Advancing the animations is done before each frame (i.e., before the
     QQuickRenderControl::beginFrame() call) by simply calling advance():
