@@ -50,7 +50,7 @@ void SignalHandlerPass::run(const QQmlSA::Element &element)
 
         // Already script binding, check if the script kind is signal handler
         if (propertyBinding.bindingType() == QQmlSA::BindingType::Script) {
-            if (propertyBinding.scriptKind() == QQmlSA::ScriptBindingKind::Script_SignalHandler) {
+            if (propertyBinding.scriptKind() == QQmlSA::ScriptBindingKind::SignalHandler) {
                 emitWarning(u"Declared signal handler \"%1\""_s.arg(propertyName),
                             qmlControlsSanity, propertyBinding.sourceLocation());
             }

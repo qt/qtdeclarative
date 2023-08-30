@@ -1775,7 +1775,7 @@ QQmlJSImportVisitor::parseBindingExpression(const QString &name,
 
         QQmlJSMetaPropertyBinding binding(location, name);
         binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
-                                 QQmlSA::ScriptBindingKind::Script_PropertyBinding);
+                                 QQmlSA::ScriptBindingKind::PropertyBinding);
         m_bindings.append(UnfinishedBinding { m_currentScope, [=]() { return binding; } });
         return BindingExpressionParseResult::Script;
     }
@@ -1819,7 +1819,7 @@ QQmlJSImportVisitor::parseBindingExpression(const QString &name,
             binding.setStringLiteral(templateLit->value);
         } else {
             binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
-                                     QQmlSA::ScriptBindingKind::Script_PropertyBinding);
+                                     QQmlSA::ScriptBindingKind::PropertyBinding);
             for (QQmlJS::AST::TemplateLiteral *l = templateLit; l; l = l->next) {
                 if (QQmlJS::AST::ExpressionNode *expression = l->expression)
                     expression->accept(this);
@@ -1841,7 +1841,7 @@ QQmlJSImportVisitor::parseBindingExpression(const QString &name,
     if (!binding.isValid()) {
         // consider this to be a script binding (see IRBuilder::setBindingValue)
         binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
-                                 QQmlSA::ScriptBindingKind::Script_PropertyBinding,
+                                 QQmlSA::ScriptBindingKind::PropertyBinding,
                                  isUndefinedBinding ? ScriptBindingValueType::ScriptValue_Undefined
                                                     : ScriptBindingValueType::ScriptValue_Unknown);
     }
@@ -2031,18 +2031,18 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
                 signalParameters]() {
             // when encountering a signal handler, add it as a script binding
             Q_ASSERT(scope->isFullyResolved());
-            QQmlSA::ScriptBindingKind kind = QQmlSA::ScriptBindingKind::Script_Invalid;
+            QQmlSA::ScriptBindingKind kind = QQmlSA::ScriptBindingKind::Invalid;
             const auto methods = scope->methods(signalName, QQmlJSMetaMethodType::Signal);
             if (!methods.isEmpty()) {
-                kind = QQmlSA::ScriptBindingKind::Script_SignalHandler;
+                kind = QQmlSA::ScriptBindingKind::SignalHandler;
                 checkSignal(scope, groupLocation, name, signalParameters);
             } else if (QQmlJSUtils::changeHandlerProperty(scope, signalName).has_value()) {
-                kind = QQmlSA::ScriptBindingKind::Script_ChangeHandler;
+                kind = QQmlSA::ScriptBindingKind::ChangeHandler;
                 checkSignal(scope, groupLocation, name, signalParameters);
             } else if (scope->hasProperty(name)) {
                 // Not a signal handler after all.
                 // We can see this now because the type is fully resolved.
-                kind = QQmlSA::ScriptBindingKind::Script_PropertyBinding;
+                kind = QQmlSA::ScriptBindingKind::PropertyBinding;
                 m_signalHandlers.remove(firstSourceLocation);
             } else {
                 // We already know it's bad, but let's allow checkSignal() to do its thing.

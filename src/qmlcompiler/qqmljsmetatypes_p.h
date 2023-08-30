@@ -520,7 +520,7 @@ class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaPropertyBinding
             friend bool operator!=(Script a, Script b) { return !(a == b); }
             QQmlJSMetaMethod::RelativeFunctionIndex index =
                     QQmlJSMetaMethod::RelativeFunctionIndex::Invalid;
-            ScriptBindingKind kind = ScriptBindingKind::Script_Invalid;
+            ScriptBindingKind kind = ScriptBindingKind::Invalid;
             ScriptBindingValueType valueType = ScriptBindingValueType::ScriptValue_Unknown;
         };
         struct Object {
@@ -753,7 +753,7 @@ public:
         if (auto *script = std::get_if<Content::Script>(&m_bindingContent))
             return script->kind;
         // warn
-        return ScriptBindingKind::Script_Invalid;
+        return ScriptBindingKind::Invalid;
     }
 
     ScriptBindingValueType scriptValueType() const

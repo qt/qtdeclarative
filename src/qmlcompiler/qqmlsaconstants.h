@@ -27,11 +27,11 @@ enum class BindingType : unsigned int {
     GroupProperty,
 };
 
-enum ScriptBindingKind : unsigned int {
-    Script_Invalid,
-    Script_PropertyBinding, // property int p: 1 + 1
-    Script_SignalHandler, // onSignal: { ... }
-    Script_ChangeHandler, // onXChanged: { ... }
+enum class ScriptBindingKind : unsigned int {
+    Invalid,
+    PropertyBinding, // property int p: 1 + 1
+    SignalHandler, // onSignal: { ... }
+    ChangeHandler, // onXChanged: { ... }
 };
 
 enum class ScopeType {
