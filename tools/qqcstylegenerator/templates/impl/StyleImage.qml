@@ -22,9 +22,15 @@ Item {
     BorderImage {
         x: -imageConfig.leftShadow
         y: -imageConfig.topShadow
-        width: (root.horizontal ? root.width : root.height) + imageConfig.leftShadow + imageConfig.rightShadow
-        height: (root.horizontal ? root.height : root.width) + imageConfig.topShadow + imageConfig.bottomShadow
+        width: Math.max(minWidth, (root.horizontal ? root.width : root.height))
+               + imageConfig.leftShadow + imageConfig.rightShadow
+        height: Math.max(minHeight, (root.horizontal ? root.height : root.width))
+                + imageConfig.topShadow + imageConfig.bottomShadow
         source: Qt.resolvedUrl(imageConfig.filePath)
+
+        readonly property real minWidth: imageConfig.leftOffset + imageConfig.rightOffset
+        readonly property real minHeight: imageConfig.topOffset + imageConfig.bottomOffset
+
         border {
             top: imageConfig.topOffset + imageConfig.topShadow
             left: imageConfig.leftOffset + imageConfig.leftShadow
