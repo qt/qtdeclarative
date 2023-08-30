@@ -245,7 +245,7 @@ Element QQmlSA::Binding::literalType(const QQmlJSTypeResolver *resolver) const
 bool Binding::hasUndefinedScriptValue() const
 {
     const auto &jsBinding = BindingPrivate::binding(*this);
-    return jsBinding.bindingType() == Script
+    return jsBinding.bindingType() == BindingType::Script
             && jsBinding.scriptValueType() == ScriptValue_Undefined;
 }
 

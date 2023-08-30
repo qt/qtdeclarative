@@ -57,7 +57,7 @@ public:
                                          ? u"NULL"_s
                                          : (value.name().isNull() ? value.baseTypeName()
                                                                   : value.name()))
-                            .arg(binding.bindingType())
+                            .arg(qToUnderlying(binding.bindingType()))
                             .arg(bindingScope.baseTypeName()),
                     plugin, bindingScope.sourceLocation());
     }
