@@ -38,6 +38,6 @@ Popup {
     }
 
     background: StyleImage {
-        imageConfig: control.config.background
+        imageConfig: config.background
     }
 }
