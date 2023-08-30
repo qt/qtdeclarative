@@ -120,6 +120,16 @@
 
     \snippet rendercontrol/rendercontrol_rhi/main.cpp anim-slider
 
+    \note Installing the custom animation driver is made optional via the
+    \c animCheckBox check box. This allows comparing the effect of having and
+    not having a custom animation driver installed. In addition, on some
+    platforms (and perhaps depending on the theme), having the custom driver
+    enabled may lead to lags in widget drawing. This is as expected, because if
+    some widget animation (e.g. highlight of a QPushButton or QCheckBox) is
+    managed via \l QPropertyAnimation and similar, then those animation are
+    driven by the same QAnimationDriver, and that does not advance unless
+    triggered manually via the buttons.
+
     Advancing the animations is done before each frame (i.e., before the
     QQuickRenderControl::beginFrame() call) by simply calling advance():
 

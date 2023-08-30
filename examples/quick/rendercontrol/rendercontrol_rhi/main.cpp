@@ -37,9 +37,16 @@
 class AnimationDriver : public QAnimationDriver
 {
 public:
-    AnimationDriver() : m_step(16) { }
+    AnimationDriver(QObject *parent = nullptr)
+        : QAnimationDriver(parent),
+          m_step(16)
+    {
+    }
 
-    void setStep(int milliseconds) { m_step = milliseconds; }
+    void setStep(int milliseconds)
+    {
+        m_step = milliseconds;
+    }
 
     void advance() override
     {
@@ -65,7 +72,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(AnimationDriver *animationDriver);
+    MainWindow();
     ~MainWindow();
 
     void load(const QString &filename);
@@ -78,7 +85,7 @@ private:
     void reset();
     void stepAnimations();
 
-    AnimationDriver *m_animationDriver;
+    AnimationDriver *m_animationDriver = nullptr;
 
     std::unique_ptr<QQuickRenderControl> m_renderControl;
     std::unique_ptr<QQuickWindow> m_scene;
@@ -117,8 +124,7 @@ public:
     bool m_mirrorVertically = false;
 };
 
-MainWindow::MainWindow(AnimationDriver *animationDriver)
-    : m_animationDriver(animationDriver)
+MainWindow::MainWindow()
 {
     QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *vlayout = new QVBoxLayout(centralWidget);
@@ -145,13 +151,36 @@ MainWindow::MainWindow(AnimationDriver *animationDriver)
     animSlider->setMaximum(1000);
     QLabel *animLabel = new QLabel;
     QObject::connect(animSlider, &QSlider::valueChanged, animSlider, [this, animLabel, animSlider] {
-        m_animationDriver->setStep(animSlider->value());
+        if (m_animationDriver)
+            m_animationDriver->setStep(animSlider->value());
         animLabel->setText(tr("Simulated elapsed time per frame: %1 ms").arg(animSlider->value()));
     });
     animSlider->setValue(16);
-//! [anim-slider]
+    QCheckBox *animCheckBox = new QCheckBox(tr("Custom animation driver"));
+    animCheckBox->setToolTip(tr("Note: Installing the custom animation driver makes widget drawing unreliable, depending on the platform.\n"
+                                "This is due to widgets themselves relying on QPropertyAnimation and similar, which are driven by the same QAnimationDriver.\n"
+                                "In any case, the functionality of the widgets are not affected, just the rendering may lag behind.\n"
+                                "When not checked, Qt Quick animations advance based on the system time, i.e. the time elapsed since the last press of the Next button."));
+    QObject::connect(animCheckBox, &QCheckBox::stateChanged, animCheckBox, [this, animCheckBox, animSlider, animLabel] {
+        if (animCheckBox->isChecked()) {
+            animSlider->setEnabled(true);
+            animLabel->setEnabled(true);
+            m_animationDriver = new AnimationDriver(this);
+            m_animationDriver->install();
+            m_animationDriver->setStep(animSlider->value());
+        } else {
+            animSlider->setEnabled(false);
+            animLabel->setEnabled(false);
+            delete m_animationDriver;
+            m_animationDriver = nullptr;
+        }
+    });
+    animSlider->setEnabled(false);
+    animLabel->setEnabled(false);
+    controlLayout->addWidget(animCheckBox);
     controlLayout->addWidget(animLabel);
     controlLayout->addWidget(animSlider);
+//! [anim-slider]
 
     QCheckBox *mirrorCheckBox = new QCheckBox(tr("Mirror vertically"));
     QObject::connect(mirrorCheckBox, &QCheckBox::stateChanged, mirrorCheckBox, [this, mirrorCheckBox] {
@@ -517,9 +546,11 @@ else
 //! [anim-step]
 void MainWindow::stepAnimations()
 {
-    // Now the Qt Quick scene will think that <slider value> milliseconds have
-    // elapsed and update animations accordingly when doing the next frame.
-    m_animationDriver->advance();
+    if (m_animationDriver) {
+        // Now the Qt Quick scene will think that <slider value> milliseconds have
+        // elapsed and update animations accordingly when doing the next frame.
+        m_animationDriver->advance();
+    }
 }
 //! [anim-step]
 
@@ -527,14 +558,11 @@ int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
 
-    AnimationDriver animDriver;
-    animDriver.install();
-
 #if QT_CONFIG(vulkan)
     QVulkanInstance vulkanInstance;
 #endif
 
-    MainWindow mainWindow(&animDriver);
+    MainWindow mainWindow;
 
 //! [apiselect]
     QDialog apiSelect;
