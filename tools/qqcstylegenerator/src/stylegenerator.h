@@ -300,9 +300,6 @@ private:
 
     void copyFiles()
     {
-        if (!m_bridge->m_overwriteQml)
-            return;
-
         QJsonObject qmlConfig = getObject("qml", m_inputConfig);
 
         const QStringList filesToCopy = getStringList("copy", qmlConfig, false);
@@ -313,7 +310,7 @@ private:
             while (it.hasNext()) {
                 const QString filePath = it.next();
                 if (re.match(filePath).hasMatch())
-                    copyFileToStyleFolder(filePath);
+                    copyFileToStyleFolder(filePath, m_bridge->m_overwriteQml);
             }
         }
     }
