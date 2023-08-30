@@ -339,6 +339,9 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("objectDestructuring")
             << "objectDestructuring.qml"
             << "objectDestructuring.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("destructuringFunctionParameter")
+            << "destructuringFunctionParameter.qml"
+            << "destructuringFunctionParameter.formatted.qml" << QStringList{} << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()
