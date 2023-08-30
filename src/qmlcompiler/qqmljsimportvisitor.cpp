@@ -34,6 +34,7 @@ using namespace Qt::StringLiterals;
 using namespace QQmlJS::AST;
 
 /*!
+    \internal
     Returns if assigning \a assignedType to \a property would require an
     implicit component wrapping.
  */
