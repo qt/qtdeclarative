@@ -418,8 +418,13 @@ private:
         if (!pageName.isEmpty() && pageName == m_cachedPageName) {
             searchRoot = m_cachedPage;
         } else if (!pageName.isEmpty()) {
+            try {
+                m_cachedPage = JsonTools::findChild({"type", "CANVAS", "name", pageName}, documentRoot, m_bridge->m_sanity);
+            } catch (std::exception &e) {
+                Q_UNUSED(e);
+                throw std::runtime_error("Could not find page in Figma: " + pageName.toStdString());
+            }
             m_cachedPageName = pageName;
-            m_cachedPage = JsonTools::findChild({"type", "CANVAS", "name", pageName}, documentRoot, m_bridge->m_sanity);
             searchRoot = m_cachedPage;
         } else {
             searchRoot = documentRoot;
