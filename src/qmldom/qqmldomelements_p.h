@@ -378,7 +378,7 @@ class QMLDOM_EXPORT ScriptExpression final : public OwningItem
     Q_GADGET
     Q_DECLARE_TR_FUNCTIONS(ScriptExpression)
 public:
-    enum class ExpressionType { BindingExpression, FunctionBody, ArgInitializer };
+    enum class ExpressionType { BindingExpression, FunctionBody, ArgInitializer, ArgumentStructure};
     Q_ENUM(ExpressionType);
     constexpr static DomType kindValue = DomType::ScriptExpression;
     DomType kind() const override { return kindValue; }
@@ -667,7 +667,9 @@ public:
     bool isPointer = false;
     bool isReadonly = false;
     bool isList = false;
+    bool isRestElement = false;
     std::shared_ptr<ScriptExpression> defaultValue;
+    std::shared_ptr<ScriptExpression> value;
     QList<QmlObject> annotations;
     RegionComments comments;
 };

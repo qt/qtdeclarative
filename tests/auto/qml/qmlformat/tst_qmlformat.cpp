@@ -312,6 +312,15 @@ void TestQmlformat::testFormat_data()
             << "blanklinesAfterComment.formatted.qml" << QStringList{} << RunOption::OnCopy;
     QTest::newRow("pragmaValue") << "pragma.qml"
                                  << "pragma.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("objectDestructuring")
+            << "objectDestructuring.qml"
+            << "objectDestructuring.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("destructuringFunctionParameter")
+            << "destructuringFunctionParameter.qml"
+            << "destructuringFunctionParameter.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("ellipsisFunctionArgument")
+            << "ellipsisFunctionArgument.qml"
+            << "ellipsisFunctionArgument.formatted.qml" << QStringList{} << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()

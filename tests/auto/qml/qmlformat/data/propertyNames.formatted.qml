@@ -7,7 +7,7 @@ Item {
             "string name": "string value",
             "Infinity": "numeric value",
             [computedItem]: "computed value",
-            "copiedItem": copiedItem
+            copiedItem
         };
     }
 }

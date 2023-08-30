@@ -566,6 +566,14 @@ public:
                                     ScriptExpression::ExpressionType::ArgInitializer, loc);
                     param.defaultValue = script;
                 }
+                if (args->element->type == AST::PatternElement::SpreadElement)
+                    param.isRestElement = true;
+                SourceLocation parameterLoc = combineLocations(args->element);
+                param.value = std::make_shared<ScriptExpression>(
+                        code.mid(parameterLoc.offset, parameterLoc.length), qmlFilePtr->engine(),
+                        args->element, qmlFilePtr->astComments(),
+                        ScriptExpression::ExpressionType::ArgumentStructure, parameterLoc);
+
                 index_type idx = index_type(mInfo.parameters.size());
                 mInfo.parameters.append(param);
                 auto argLocs = FileLocations::ensure(nodeStack.last().fileLocations,
@@ -852,7 +860,7 @@ public:
 #else
             toString(el->type),
 #endif
-            false, false, false, {}, {}, {}
+            false, false, false, false, {}, {}, {}, {}
         };
         return true;
     }
