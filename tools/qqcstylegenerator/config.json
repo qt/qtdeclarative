@@ -182,6 +182,26 @@
         ]
     },
     {
+        "name": "RoundButton",
+        "page": "Components",
+        "component set": "RoundButtonTemplate${Theme}",
+        "atoms": [
+            {"atom": "background", "figmaPath": "RoundButtonBackground, background"},
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
+            {"atom": "label", "figmaPath": "ContentItem, label"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "checked", "figmaState": "checked"},
+            {"state": "checked-disabled", "figmaState": "checkedDisabled"},
+            {"state": "checked-hovered", "figmaState": "checkedHovered"},
+            {"state": "checked-pressed", "figmaState": "checkedPressed"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "pressed", "figmaState": "pressed"}
+        ]
+    },
+    {
         "name": "ScrollBar",
         "page": "Components",
         "component set": "ScrollBarTemplate${Theme}",
