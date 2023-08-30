@@ -4,11 +4,9 @@
 #ifndef QQMLSACONSTANTS_H
 #define QQMLSACONSTANTS_H
 
-#include <QtCore/qfileinfo.h>
+#include <QtCore/qtconfigmacros.h>
 
 QT_BEGIN_NAMESPACE
-
-class QQmlJSScope;
 
 namespace QQmlSA {
 
@@ -57,7 +55,6 @@ enum class ScopeType {
     EnumScope
 };
 
-enum class QQmlJSMetaMethodAccess { Private, Protected, Public };
 } // namespace QQmlSA
 
 QT_END_NAMESPACE
