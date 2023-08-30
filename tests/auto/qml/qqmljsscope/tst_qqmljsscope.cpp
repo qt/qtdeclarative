@@ -697,12 +697,12 @@ void tst_qqmljsscope::resolvedNonUniqueScopes()
         auto onCompletedBinding = value(componentBindings, u"onCompleted"_s);
         QVERIFY(onCompletedBinding.isValid());
         QCOMPARE(onCompletedBinding.bindingType(), QQmlSA::BindingType::Script);
-        QCOMPARE(onCompletedBinding.scriptKind(), QQmlSA::ScriptBindingKind::Script_SignalHandler);
+        QCOMPARE(onCompletedBinding.scriptKind(), QQmlSA::ScriptBindingKind::SignalHandler);
         auto onDestructionBinding = value(componentBindings, u"onDestruction"_s);
         QVERIFY(onDestructionBinding.isValid());
         QCOMPARE(onDestructionBinding.bindingType(), QQmlSA::BindingType::Script);
         QCOMPARE(onDestructionBinding.scriptKind(),
-                 QQmlSA::ScriptBindingKind::Script_SignalHandler);
+                 QQmlSA::ScriptBindingKind::SignalHandler);
     }
 
     {
@@ -715,7 +715,7 @@ void tst_qqmljsscope::resolvedNonUniqueScopes()
         auto onXChangedBinding = value(pBindings, u"onXChanged"_s);
         QVERIFY(onXChangedBinding.isValid());
         QCOMPARE(onXChangedBinding.bindingType(), QQmlSA::BindingType::Script);
-        QCOMPARE(onXChangedBinding.scriptKind(), QQmlSA::ScriptBindingKind::Script_SignalHandler);
+        QCOMPARE(onXChangedBinding.scriptKind(), QQmlSA::ScriptBindingKind::SignalHandler);
     }
 }
 
