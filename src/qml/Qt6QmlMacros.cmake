@@ -3244,7 +3244,8 @@ function(qt6_import_qml_plugins target)
             # across those libraries to the end target (executable or shared library).
             # The plugin initializers will be linked via usage requirements from the plugin target.
             get_target_property(target_type ${target} TYPE)
-            if(target_type STREQUAL "EXECUTABLE" OR target_type STREQUAL "SHARED_LIBRARY")
+            if(target_type STREQUAL "EXECUTABLE" OR target_type STREQUAL "SHARED_LIBRARY"
+                OR target_type STREQUAL "MODULE_LIBRARY")
                 set(link_type "PRIVATE")
             else()
                 set(link_type "INTERFACE")
