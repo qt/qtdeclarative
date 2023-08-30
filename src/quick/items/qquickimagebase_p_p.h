@@ -18,7 +18,7 @@
 #include "qquickimplicitsizeitem_p_p.h"
 #include "qquickimagebase_p.h"
 
-#include <QtQuick/private/qquickpixmapcache_p.h>
+#include <QtQuick/private/qquickpixmap_p.h>
 
 QT_BEGIN_NAMESPACE
 

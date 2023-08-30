@@ -36,7 +36,7 @@
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/private/qqmlmetatype_p.h>
 
-#include <QtQuick/private/qquickpixmapcache_p.h>
+#include <QtQuick/private/qquickpixmap_p.h>
 
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>

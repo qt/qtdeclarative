@@ -480,8 +480,8 @@ Q_GLOBAL_STATIC(QQuickPixmap, dataLeakPixmap)
 void tst_qquickpixmapcache::dataLeak()
 {
     // Should not leak cached QQuickPixmapData.
-    // Unfortunately, since the QQuickPixmapStore
-    // is a global static, and it releases the cache
+    // Unfortunately, since the QQuickPixmapCache
+    // is a singleton, and it releases the cache
     // entries on dtor (application exit), we must use
     // valgrind to determine whether it leaks or not.
     QQuickPixmap *p1 = new QQuickPixmap;
@@ -497,7 +497,7 @@ void tst_qquickpixmapcache::dataLeak()
 
     // When the (global static) dataLeakPixmap is deleted, it
     // shouldn't attempt to dereference a QQuickPixmapData
-    // which has been deleted by the QQuickPixmapStore
+    // which has been deleted by the QQuickPixmapCache
     // destructor.
 }
 #endif

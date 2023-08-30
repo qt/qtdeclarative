@@ -29,7 +29,7 @@
 
 #include <private/qtextengine_p.h>
 #include <private/qquickstyledtext_p.h>
-#include <QtQuick/private/qquickpixmapcache_p.h>
+#include <QtQuick/private/qquickpixmap_p.h>
 
 #include <qmath.h>
 #include <limits.h>

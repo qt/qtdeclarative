@@ -40,10 +40,10 @@
 
 #define IMAGEREQUEST_MAX_NETWORK_REQUEST_COUNT 8
 
-// After QQuickPixmapStore::unreferencePixmap() it may get deleted via a timer in 30 seconds
+// After QQuickPixmapCache::unreferencePixmap() it may get deleted via a timer in 30 seconds
 #define CACHE_EXPIRE_TIME 30
 
-// How many (1/4) of the unreferenced pixmaps to delete in QQuickPixmapStore::timerEvent()
+// How many (1/4) of the unreferenced pixmaps to delete in QQuickPixmapCache::timerEvent()
 #define CACHE_REMOVAL_FRACTION 4
 
 #define PIXMAP_PROFILE(Code) Q_QUICK_PROFILE(QQuickProfiler::ProfilePixmapCache, Code)
@@ -100,7 +100,7 @@ Q_LOGGING_CATEGORY(lcImg, "qt.quick.image")
 
 /*! \internal
     The maximum currently-unused image data that can be stored for potential
-    later reuse, in bytes. See QQuickPixmapStore::shrinkCache()
+    later reuse, in bytes. See QQuickPixmapCache::shrinkCache()
 */
 static int cache_limit = 2048 * 1024;
 
@@ -293,7 +293,7 @@ public:
 #  define PIXMAP_READER_LOCK()
 #endif
 
-class QQuickPixmapStore;
+class QQuickPixmapCache;
 
 /*! \internal
     The private storage for QQuickPixmap.
@@ -370,9 +370,9 @@ public:
 
     int cost() const;
     void addref();
-    void release(QQuickPixmapStore *store = nullptr);
+    void release(QQuickPixmapCache *store = nullptr);
     void addToCache();
-    void removeFromCache(QQuickPixmapStore *store = nullptr);
+    void removeFromCache(QQuickPixmapCache *store = nullptr);
 
     uint refCount;
     int frameCount;
@@ -401,7 +401,7 @@ public:
     QQuickPixmapReply *reply;
 
     // prev/next pointers to form a linked list for dereferencing pixmaps that are currently unused
-    // (those get lazily deleted in QQuickPixmapStore::shrinkCache())
+    // (those get lazily deleted in QQuickPixmapCache::shrinkCache())
     QQuickPixmapData *prevUnreferenced;
     QQuickPixmapData**prevUnreferencedPtr;
     QQuickPixmapData *nextUnreferenced;
@@ -1178,15 +1178,6 @@ void QQuickPixmapReader::run()
 #endif
 }
 
-struct QQuickPixmapKey
-{
-    const QUrl *url;
-    const QRect *region;
-    const QSize *size;
-    int frame;
-    QQuickImageProviderOptions options;
-};
-
 inline bool operator==(const QQuickPixmapKey &lhs, const QQuickPixmapKey &rhs)
 {
     return *lhs.url == *rhs.url &&
@@ -1225,45 +1216,13 @@ inline QDebug operator<<(QDebug debug, const QQuickPixmapKey &key)
 }
 #endif
 
-class QQuickPixmapStore : public QObject
+QQuickPixmapCache *QQuickPixmapCache::instance()
 {
-    Q_OBJECT
-public:
-    QQuickPixmapStore();
-    ~QQuickPixmapStore();
-
-    void unreferencePixmap(QQuickPixmapData *);
-    void referencePixmap(QQuickPixmapData *);
-
-    void purgeCache();
-
-protected:
-    void timerEvent(QTimerEvent *) override;
-
-public:
-    QHash<QQuickPixmapKey, QQuickPixmapData *> m_cache;
-    QMutex m_cacheMutex; // avoid simultaneous iteration and modification
-
-private:
-    Q_DISABLE_COPY(QQuickPixmapStore)
-    void shrinkCache(int remove);
-
-    QQuickPixmapData *m_unreferencedPixmaps;
-    QQuickPixmapData *m_lastUnreferencedPixmap;
-
-    int m_unreferencedCost;
-    int m_timerId;
-    bool m_destroying;
-};
-Q_GLOBAL_STATIC(QQuickPixmapStore, pixmapStore);
-
-
-QQuickPixmapStore::QQuickPixmapStore()
-    : m_unreferencedPixmaps(nullptr), m_lastUnreferencedPixmap(nullptr), m_unreferencedCost(0), m_timerId(-1), m_destroying(false)
-{
+    static QQuickPixmapCache self;
+    return &self;
 }
 
-QQuickPixmapStore::~QQuickPixmapStore()
+QQuickPixmapCache::~QQuickPixmapCache()
 {
     m_destroying = true;
 
@@ -1306,7 +1265,7 @@ QQuickPixmapStore::~QQuickPixmapStore()
     Declare that \a data is currently unused so that shrinkCache() can lazily
     delete it later.
 */
-void QQuickPixmapStore::unreferencePixmap(QQuickPixmapData *data)
+void QQuickPixmapCache::unreferencePixmap(QQuickPixmapData *data)
 {
     Q_ASSERT(data->prevUnreferenced == nullptr);
     Q_ASSERT(data->prevUnreferencedPtr == nullptr);
@@ -1340,7 +1299,7 @@ void QQuickPixmapStore::unreferencePixmap(QQuickPixmapData *data)
     Declare that \a data is being used (by a QQuickPixmap) so that
     shrinkCache() won't delete it. (This is not reference counting though.)
 */
-void QQuickPixmapStore::referencePixmap(QQuickPixmapData *data)
+void QQuickPixmapCache::referencePixmap(QQuickPixmapData *data)
 {
     Q_ASSERT(data->prevUnreferencedPtr);
 
@@ -1364,7 +1323,7 @@ void QQuickPixmapStore::referencePixmap(QQuickPixmapData *data)
     Delete the least-recently-released QQuickPixmapData instances
     until the remaining bytes are less than cache_limit.
 */
-void QQuickPixmapStore::shrinkCache(int remove)
+void QQuickPixmapCache::shrinkCache(int remove)
 {
     qCDebug(lcImg) << "reduce unreferenced cost" << m_unreferencedCost << "to less than limit" << cache_limit;
     while ((remove > 0 || m_unreferencedCost > cache_limit) && m_lastUnreferencedPixmap) {
@@ -1385,7 +1344,7 @@ void QQuickPixmapStore::shrinkCache(int remove)
     }
 }
 
-void QQuickPixmapStore::timerEvent(QTimerEvent *)
+void QQuickPixmapCache::timerEvent(QTimerEvent *)
 {
     int removalCost = m_unreferencedCost / CACHE_REMOVAL_FRACTION;
 
@@ -1397,14 +1356,14 @@ void QQuickPixmapStore::timerEvent(QTimerEvent *)
     }
 }
 
-void QQuickPixmapStore::purgeCache()
+void QQuickPixmapCache::purgeCache()
 {
     shrinkCache(m_unreferencedCost);
 }
 
 void QQuickPixmap::purgeCache()
 {
-    pixmapStore()->purgeCache();
+    QQuickPixmapCache::instance()->purgeCache();
 }
 
 QQuickPixmapReply::QQuickPixmapReply(QQuickPixmapData *d)
@@ -1470,10 +1429,10 @@ void QQuickPixmapData::addref()
     ++refCount;
     PIXMAP_PROFILE(pixmapCountChanged<QQuickProfiler::PixmapReferenceCountChanged>(url, refCount));
     if (prevUnreferencedPtr)
-        pixmapStore()->referencePixmap(this);
+        QQuickPixmapCache::instance()->referencePixmap(this);
 }
 
-void QQuickPixmapData::release(QQuickPixmapStore *store)
+void QQuickPixmapData::release(QQuickPixmapCache *store)
 {
     Q_ASSERT(refCount > 0);
     --refCount;
@@ -1490,7 +1449,7 @@ void QQuickPixmapData::release(QQuickPixmapStore *store)
             QQuickPixmapReader::readerMutex.unlock();
         }
 
-        store = store ? store : pixmapStore();
+        store = store ? store : QQuickPixmapCache::instance();
         if (pixmapStatus == QQuickPixmap::Ready
 #ifdef Q_OS_WEBOS
                 && storeToCache
@@ -1508,7 +1467,7 @@ void QQuickPixmapData::release(QQuickPixmapStore *store)
 }
 
 /*! \internal
-    Add this to the global static QQuickPixmapStore.
+    Add this to the QQuickPixmapCache singleton.
 
     \note The actual image will end up in QQuickPixmapData::textureFactory.
     At the time addToCache() is called, it's generally not yet loaded; so the
@@ -1522,30 +1481,30 @@ void QQuickPixmapData::addToCache()
 {
     if (!inCache) {
         QQuickPixmapKey key = { &url, &requestRegion, &requestSize, frame, providerOptions };
-        QMutexLocker locker(&pixmapStore()->m_cacheMutex);
+        QMutexLocker locker(&QQuickPixmapCache::instance()->m_cacheMutex);
         if (lcImg().isDebugEnabled()) {
-            qCDebug(lcImg) << "adding" << key << "to total" << pixmapStore()->m_cache.size();
-            for (auto it = pixmapStore()->m_cache.keyBegin(); it != pixmapStore()->m_cache.keyEnd(); ++it) {
+            qCDebug(lcImg) << "adding" << key << "to total" << QQuickPixmapCache::instance()->m_cache.size();
+            for (auto it = QQuickPixmapCache::instance()->m_cache.keyBegin(); it != QQuickPixmapCache::instance()->m_cache.keyEnd(); ++it) {
                 if (*(it->url) == url && it->frame == frame)
                     qDebug(lcImg) << "    similar pre-existing:" << *it;
             }
         }
-        pixmapStore()->m_cache.insert(key, this);
+        QQuickPixmapCache::instance()->m_cache.insert(key, this);
         inCache = true;
         PIXMAP_PROFILE(pixmapCountChanged<QQuickProfiler::PixmapCacheCountChanged>(
-                url, pixmapStore()->m_cache.size()));
+                url, QQuickPixmapCache::instance()->m_cache.size()));
     }
 }
 
-void QQuickPixmapData::removeFromCache(QQuickPixmapStore *store)
+void QQuickPixmapData::removeFromCache(QQuickPixmapCache *store)
 {
     if (inCache) {
         if (!store)
-            store = pixmapStore();
+            store = QQuickPixmapCache::instance();
         QQuickPixmapKey key = { &url, &requestRegion, &requestSize, frame, providerOptions };
-        QMutexLocker locker(&pixmapStore()->m_cacheMutex);
+        QMutexLocker locker(&QQuickPixmapCache::instance()->m_cacheMutex);
         store->m_cache.remove(key);
-        qCDebug(lcImg) << "removed" << key << implicitSize << "; total remaining" << pixmapStore()->m_cache.size();
+        qCDebug(lcImg) << "removed" << key << implicitSize << "; total remaining" << QQuickPixmapCache::instance()->m_cache.size();
         inCache = false;
         PIXMAP_PROFILE(pixmapCountChanged<QQuickProfiler::PixmapCacheCountChanged>(
                 url, store->m_cache.size()));
@@ -1880,9 +1839,9 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QRect &reques
     }
 
     QQuickPixmapKey key = { &url, &requestRegion, &requestSize, frame, providerOptions };
-    QQuickPixmapStore *store = pixmapStore();
+    QQuickPixmapCache *store = QQuickPixmapCache::instance();
 
-    QMutexLocker locker(&pixmapStore()->m_cacheMutex);
+    QMutexLocker locker(&QQuickPixmapCache::instance()->m_cacheMutex);
     QHash<QQuickPixmapKey, QQuickPixmapData *>::Iterator iter = store->m_cache.end();
 
 #ifdef Q_OS_WEBOS
@@ -1977,7 +1936,7 @@ void QQuickPixmap::loadImageFromDevice(QQmlEngine *engine, QIODevice *device, co
 {
     auto oldD = d;
     QQuickPixmapKey key = { &url, &requestRegion, &requestSize, frame, providerOptions };
-    QQuickPixmapStore *store = pixmapStore();
+    QQuickPixmapCache *store = QQuickPixmapCache::instance();
     QHash<QQuickPixmapKey, QQuickPixmapData *>::Iterator iter = store->m_cache.end();
     QMutexLocker locker(&store->m_cacheMutex);
     iter = store->m_cache.find(key);
@@ -2036,7 +1995,7 @@ bool QQuickPixmap::isCached(const QUrl &url, const QRect &requestRegion, const Q
                             const int frame, const QQuickImageProviderOptions &options)
 {
     QQuickPixmapKey key = { &url, &requestRegion, &requestSize, frame, options };
-    QQuickPixmapStore *store = pixmapStore();
+    QQuickPixmapCache *store = QQuickPixmapCache::instance();
 
     return store->m_cache.contains(key);
 }

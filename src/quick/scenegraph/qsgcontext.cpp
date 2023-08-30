@@ -4,7 +4,7 @@
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
-#include <QtQuick/private/qquickpixmapcache_p.h>
+#include <QtQuick/private/qquickpixmap_p.h>
 #include <QtQuick/private/qsgadaptationlayer_p.h>
 #include <QtQuick/private/qsginternaltextnode_p.h>
 

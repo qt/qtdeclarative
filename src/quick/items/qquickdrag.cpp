@@ -9,7 +9,7 @@
 #include <private/qquickitem_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <private/qquickitemchangelistener_p.h>
-#include <private/qquickpixmapcache_p.h>
+#include <private/qquickpixmap_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <QtCore/qbuffer.h>
 #include <QtCore/qmimedata.h>

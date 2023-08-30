@@ -187,6 +187,7 @@ qt_internal_add_qml_module(Quick
         util/qquickforeignutils.cpp util/qquickforeignutils_p.h
         util/qquickglobal.cpp
         util/qquickimageprovider.cpp util/qquickimageprovider.h util/qquickimageprovider_p.h
+        util/qquickpixmap_p.h
         util/qquickpixmapcache.cpp util/qquickpixmapcache_p.h
         util/qquickprofiler_p.h
         util/qquickpropertychanges.cpp util/qquickpropertychanges_p.h
