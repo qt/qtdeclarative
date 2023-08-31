@@ -1887,6 +1887,8 @@ bool MethodParameter::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor
 void MethodParameter::writeOut(DomItem &self, OutWriter &ow) const
 {
     if (!name.isEmpty()) {
+        if (isRestElement)
+            ow.writeRegion(u"ellipsis", u"...");
         ow.writeRegion(u"name", name);
         if (!typeName.isEmpty())
             ow.writeRegion(u"colon", u":").space().writeRegion(u"type", typeName);

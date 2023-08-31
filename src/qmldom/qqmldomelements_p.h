@@ -679,6 +679,7 @@ public:
     bool isPointer = false;
     bool isReadonly = false;
     bool isList = false;
+    bool isRestElement = false;
     std::shared_ptr<ScriptExpression> defaultValue;
     /*!
         \internal

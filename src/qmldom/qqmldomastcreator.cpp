@@ -561,6 +561,8 @@ bool QQmlDomAstCreator::visit(AST::FunctionDeclaration *fDef)
                     ScriptExpression::ExpressionType::ArgInitializer, loc);
             param.defaultValue = script;
         }
+        if (args->element->type == AST::PatternElement::SpreadElement)
+            param.isRestElement = true;
         SourceLocation parameterLoc = combineLocations(args->element);
         param.value = std::make_shared<ScriptExpression>(
                 code.mid(parameterLoc.offset, parameterLoc.length), qmlFilePtr->engine(),
