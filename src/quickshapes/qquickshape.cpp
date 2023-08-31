@@ -699,8 +699,8 @@ QQuickShape::~QQuickShape()
     \list 1
       \li Only quadratic curves are inherently supported. Cubic curves will be approximated by
           quadratic curves.
-      \li Shapes where elements intersect are not rendered correctly. The \l [QML] {Path::simplified}
-          {Path.simplified} property may be used to remove self-intersections from such shapes, but
+      \li Shapes where elements intersect are not rendered correctly. The \l [QML] {Path::simplify}
+          {Path.simplify} property may be used to remove self-intersections from such shapes, but
           may incur a performance cost and reduced visual quality.
       \li Shapes that span a large numerical range, such as a long string of text, may have
           issues. Consider splitting these shapes into multiple ones, for instance by making
