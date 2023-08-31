@@ -442,19 +442,6 @@ struct ValueArray {
         return values;
     }
 
-    void insertData(EngineBase *e, uint index, Value v) {
-        for (uint i = size - 1; i > index; --i) {
-            values[i] = values[i - 1];
-        }
-        set(e, index, v);
-    }
-    void removeData(EngineBase *e, uint index, int n = 1) {
-        Q_UNUSED(e);
-        for (uint i = index; i < size - n; ++i) {
-            values[i] = values[i + n];
-        }
-    }
-
     void mark(MarkStack *markStack) {
         for (Value *v = values, *end = values + alloc; v < end; ++v)
             v->mark(markStack);
