@@ -372,7 +372,7 @@ void QQuickPath::processPath()
         d->_path = createPath(QPointF(), QPointF(), d->_attributes, d->pathLength, d->_attributePoints, &d->closed);
     }
 
-    if (d->simplified)
+    if (d->simplify)
         d->_path = d->_path.simplified();
 
     emit changed();
@@ -715,7 +715,7 @@ void QQuickPath::invalidateSequentialHistory() const
     d->prevBez.isValid = false;
 }
 
-/*! \qmlproperty bool QtQuick::Path::simplified
+/*! \qmlproperty bool QtQuick::Path::simplify
     \since 6.6
 
     When set to true, the path will be simplified. This implies merging all subpaths that intersect,
@@ -723,22 +723,22 @@ void QQuickPath::invalidateSequentialHistory() const
     merged. The simplified path is intended to be used with ShapePath.OddEvenFill. Bezier curves may
     be flattened to line segments due to numerical instability of doing bezier curve intersections.
 */
-void QQuickPath::setSimplified(bool simplified)
+void QQuickPath::setSimplify(bool s)
 {
     Q_D(QQuickPath);
-    if (d->simplified == simplified)
+    if (d->simplify == s)
         return;
 
-    d->simplified = simplified;
+    d->simplify = s;
     processPath();
 
-    emit simplifiedChanged();
+    emit simplifyChanged();
 }
 
-bool QQuickPath::simplified() const
+bool QQuickPath::simplify() const
 {
     Q_D(const QQuickPath);
-    return d->simplified;
+    return d->simplify;
 }
 
 /*!
