@@ -185,7 +185,11 @@ bool QQmlJSLinter::Plugin::parseMetaData(const QJsonObject &metaData, QString pl
 
         const QString categoryId =
                 (m_isInternal ? u""_s : u"Plugin."_s) + m_name + u'.' + object[u"name"].toString();
-        m_categories << QQmlJS::LoggerCategory{ categoryId, categoryId,
+        const auto settingsNameIt = object.constFind(u"settingsName");
+        const QString settingsName = (settingsNameIt == object.constEnd())
+                ? categoryId
+                : settingsNameIt->toString(categoryId);
+        m_categories << QQmlJS::LoggerCategory{ categoryId, settingsName,
                                                 object["description"_L1].toString(), QtWarningMsg,
                                                 ignored };
     }
