@@ -1898,6 +1898,9 @@ void TestQmllint::testPlugin()
             Result { { Message { u"QtQuick.Controls and NO QtQuick present"_s } } });
     // Verify that none of the passes do anything when they're not supposed to
     runTest("nothing_pluginTest.qml", Result::clean());
+
+    QVERIFY(runQmllint("settings/plugin/elemenpass_pluginSettingTest.qml", true, QStringList(), false)
+                    .isEmpty());
 }
 
 // TODO: Eventually tests for (real) plugins need to be moved into a separate file
