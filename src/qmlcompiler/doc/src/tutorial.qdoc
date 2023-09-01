@@ -214,4 +214,16 @@ and have also become aware of the limitations of static checks.
 
 In this chapter we learn how to improve our custom warnings by amending them
 with fixit hints.
+
+So far, we only created warning messages. However, sometimes we also want to
+add a tip for the user how to fix the code. For that, we can pass an instance
+of \c FixSuggestion to \l{QQmlSA::GenericPass::emitWarning}{emitWarning}.
+A fix suggestion always consists of a description of what should be fixed, and
+the location where it should apply. It can also feature a replacement text.
+By default, the replacement text is only shown in the diagnostic message.
+By calling \c{setAutoApplicable(true)} on the \c{FixSuggestion}, the user
+can however apply the fix automatically via qmllint or the QML language
+server.
+It is important to only mark the suggestion as auto-applicable if the
+resulting code is valid.
 */
