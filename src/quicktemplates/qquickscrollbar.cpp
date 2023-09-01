@@ -745,6 +745,7 @@ void QQuickScrollBar::setMinimumSize(qreal minimumSize)
 /*!
     \since QtQuick.Controls 2.4 (Qt 5.11)
     \qmlproperty real QtQuick.Controls::ScrollBar::visualSize
+    \readonly
 
     This property holds the effective visual size of the scroll bar,
     which may be limited by the \l {minimumSize}{minimum size}.
@@ -760,6 +761,7 @@ qreal QQuickScrollBar::visualSize() const
 /*!
     \since QtQuick.Controls 2.4 (Qt 5.11)
     \qmlproperty real QtQuick.Controls::ScrollBar::visualPosition
+    \readonly
 
     This property holds the effective visual position of the scroll bar,
     which may be limited by the \l {minimumSize}{minimum size}.
