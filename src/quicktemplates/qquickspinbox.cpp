@@ -239,7 +239,9 @@ void QQuickSpinBoxPrivate::contentItemTextChanged()
     if (!inputTextItem)
         return;
     QString text = inputTextItem->text();
+#if QT_CONFIG(validator)
     validator->fixup(text);
+#endif
 
     if (live) {
         const int enteredVal = evaluateValueFromText(text);
