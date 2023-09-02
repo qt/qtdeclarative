@@ -45,6 +45,7 @@ public:
 
     qreal logicalPosition(qreal position) const;
 
+    void setPosition(qreal position, bool notifyVisualChange = true);
     qreal snapPosition(qreal position) const;
     qreal positionAt(const QPointF &point) const;
     void setInteractive(bool interactive);
