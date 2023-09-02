@@ -989,4 +989,19 @@ TestCase {
         compare(oldPosition, control.position)
         compare(oldStepSize, control.stepSize)
     }
+
+    function test_visualSizeChanged_is_emitted_by_setSize() {
+        const control = createTemporaryObject(scrollBar, testCase, {size: 0.2})
+        verify(control)
+
+        const spy = signalSpy.createObject(control, {target: control, signalName: "visualSizeChanged"})
+        verify(spy.valid)
+
+        compare(control.visualSize, 0.2)
+
+        control.size = 0.5
+
+        compare(spy.count, 1)
+        compare(control.visualSize, 0.5)
+    }
 }
