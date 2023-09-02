@@ -9,7 +9,9 @@
 #include "qquickapplicationwindow_p.h"
 #include "qquickoverlay_p_p.h"
 #include "qquickcontrol_p_p.h"
+#if QT_CONFIG(quicktemplates2_container)
 #include "qquickdialog_p.h"
+#endif
 
 #include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlinfo.h>
@@ -354,9 +356,11 @@ void QQuickPopupPrivate::init()
 void QQuickPopupPrivate::closeOrReject()
 {
     Q_Q(QQuickPopup);
+#if QT_CONFIG(quicktemplates2_container)
     if (QQuickDialog *dialog = qobject_cast<QQuickDialog*>(q))
         dialog->reject();
     else
+#endif
         q->close();
     touchId = -1;
 }
