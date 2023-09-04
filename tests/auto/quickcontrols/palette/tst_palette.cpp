@@ -21,12 +21,6 @@
 
 using namespace QQuickControlsTestUtils;
 
-// Need a more descriptive failure message: QTBUG-87039
-#define COMPARE_PALETTES(actualPalette, expectedPalette) \
-    QVERIFY2(actualPalette == expectedPalette, \
-        qPrintable(QString::fromLatin1("\n   Actual:    %1\n   Expected:  %2") \
-            .arg(QDebug::toString(actualPalette)).arg(QDebug::toString(expectedPalette))));
-
 class tst_palette : public QQmlDataTest
 {
     Q_OBJECT
@@ -111,6 +105,7 @@ void tst_palette::palette_data()
     customPalette.setColor(QPalette::Window, QColor("plum"));
     customPalette.setColor(QPalette::WindowText, QColor("salmon"));
     customPalette.setColor(QPalette::PlaceholderText, QColor("magenta"));
+    customPalette.setColor(QPalette::Accent, QColor("darkkhaki"));
 
     QTest::newRow("Control:custom") << "palette-control-custom.qml" << customPalette;
     QTest::newRow("AppWindow:custom") << "palette-appwindow-custom.qml" << customPalette;
@@ -132,7 +127,7 @@ void tst_palette::palette()
     QVariant var = object->property("palette");
     QVERIFY(var.isValid());
 
-    COMPARE_PALETTES(var.value<QQuickPalette*>()->toQPalette(), expectedPalette);
+    QCOMPARE(var.value<QQuickPalette*>()->toQPalette(), expectedPalette);
 }
 
 void tst_palette::inheritance_data()
