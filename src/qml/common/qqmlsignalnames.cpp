@@ -191,6 +191,25 @@ std::optional<QString> QQmlSignalNames::handlerNameToSignalName(QStringView hand
 
 /*!
 \internal
+Returns a signal name from \a handlerName string. Do not use it on changed handlers, see
+changedHandlerNameToSignalName for that! Accepts improperly capitalized handler names and
+incorrectly resolves signal names that start with '_' or '$'.
+*/
+std::optional<QString> QQmlSignalNames::badHandlerNameToSignalName(QStringView handler)
+{
+    if (handler.size() <= StrlenOn || !handler.startsWith(On))
+        return {};
+
+    QString signalName = handler.sliced(StrlenOn).toString();
+
+    // This is quite wrong. But we need it for backwards compatibility.
+    signalName.front() = signalName.front().toLower();
+
+    return signalName;
+}
+
+/*!
+\internal
 Returns a signal name from \a changedHandlerName string. Makes sure not to lowercase the 'C' from
 Changed.
 */

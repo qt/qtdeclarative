@@ -381,11 +381,11 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
     };
 
     const QString terminalString = terminal.toString();
-    if (auto signalName = QQmlSignalNames::handlerNameToSignalName(terminalString)) {
+    const auto findSignal = [&](const QString &signalName) {
         if (ddata && ddata->propertyCache) {
             // Try method
-            const QQmlPropertyData *d =
-                    ddata->propertyCache->property(*signalName, currentObject, context);
+            const QQmlPropertyData *d
+                    = ddata->propertyCache->property(signalName, currentObject, context);
 
             // ### Qt7: This code treats methods as signals. It should use d->isSignal().
             //          That would be a change in behavior, though. Right now you can construct a
@@ -396,13 +396,29 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
             if (d) {
                 object = currentObject;
                 core = *d;
-                return;
+                return true;
             }
 
-            if (findChangeSignal(terminalString))
-                return;
-        } else if (findSignalInMetaObject(signalName->toUtf8())) {
+            return findChangeSignal(terminalString);
+        }
+
+        return findSignalInMetaObject(signalName.toUtf8());
+    };
+
+    auto signalName = QQmlSignalNames::handlerNameToSignalName(terminalString);
+    if (signalName) {
+        if (findSignal(*signalName))
             return;
+    } else {
+        signalName = QQmlSignalNames::badHandlerNameToSignalName(terminalString);
+        if (signalName) {
+            qWarning()
+                    << terminalString
+                    << "is not a properly capitalized signal handler name."
+                    << QQmlSignalNames::signalNameToHandlerName(*signalName)
+                    << "would be correct.";
+            if (findSignal(*signalName))
+                return;
         }
     }
 
