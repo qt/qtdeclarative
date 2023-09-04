@@ -49,10 +49,10 @@ class Q_QUICK_EXPORT QQuickRhiItem : public QQuickItem
     Q_PROPERTY(TextureFormat textureFormat READ textureFormat WRITE setTextureFormat NOTIFY textureFormatChanged FINAL)
     Q_PROPERTY(bool autoRenderTarget READ isAutoRenderTargetEnabled WRITE setAutoRenderTarget NOTIFY autoRenderTargetChanged FINAL)
     Q_PROPERTY(bool mirrorVertically READ isMirrorVerticallyEnabled WRITE setMirrorVertically NOTIFY mirrorVerticallyChanged FINAL)
-    Q_PROPERTY(bool alphaBlending READ alphaBlending WRITE setAlphaBlending NOTIFY alphaBlendingChanged)
-    Q_PROPERTY(int explicitTextureWidth READ explicitTextureWidth WRITE setExplicitTextureWidth NOTIFY explicitTextureWidthChanged)
-    Q_PROPERTY(int explicitTextureHeight READ explicitTextureHeight WRITE setExplicitTextureHeight NOTIFY explicitTextureHeightChanged)
-    Q_PROPERTY(QSize effectiveTextureSize READ effectiveTextureSize NOTIFY effectiveTextureSizeChanged)
+    Q_PROPERTY(bool alphaBlending READ alphaBlending WRITE setAlphaBlending NOTIFY alphaBlendingChanged FINAL)
+    Q_PROPERTY(int explicitTextureWidth READ explicitTextureWidth WRITE setExplicitTextureWidth NOTIFY explicitTextureWidthChanged FINAL)
+    Q_PROPERTY(int explicitTextureHeight READ explicitTextureHeight WRITE setExplicitTextureHeight NOTIFY explicitTextureHeightChanged FINAL)
+    Q_PROPERTY(QSize effectiveTextureSize READ effectiveTextureSize NOTIFY effectiveTextureSizeChanged FINAL)
 
 public:
     enum class TextureFormat {
