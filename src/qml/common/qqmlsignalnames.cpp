@@ -11,6 +11,12 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::Literals;
 
+static constexpr const QLatin1String On("on");
+static constexpr const QLatin1String Changed("Changed");
+
+static constexpr const qsizetype StrlenOn = On.length();
+static constexpr const qsizetype StrlenChanged = Changed.length();
+
 static std::optional<qsizetype> firstLetterIdx(QStringView name, qsizetype removePrefix = 0,
                                                qsizetype removeSuffix = 0)
 {
@@ -84,12 +90,12 @@ QString QQmlSignalNames::addPrefixToPropertyName(QStringView prefix, QStringView
 
 QString QQmlSignalNames::propertyNameToChangedSignalName(QStringView property)
 {
-    return property.toString().append(u"Changed"_s);
+    return property.toString().append(Changed);
 }
 
 QByteArray QQmlSignalNames::propertyNameToChangedSignalName(QUtf8StringView property)
 {
-    return toUtf8Data(property).append("Changed"_ba);
+    return toUtf8Data(property).append(QByteArrayView(Changed));
 }
 
 QString QQmlSignalNames::propertyNameToChangedHandlerName(QStringView property)
@@ -100,13 +106,11 @@ QString QQmlSignalNames::propertyNameToChangedHandlerName(QStringView property)
 template<typename View>
 std::optional<View> changedSignalNameToPropertyNameTemplate(View changeSignal)
 {
-    constexpr qsizetype changedLen =
-            static_cast<qsizetype>(std::char_traits<char>::length("Changed"));
-    if (changeSignal.size() < changedLen
-        || changeSignal.last(changedLen).compare("Changed"_L1) != 0)
+    const qsizetype changeSignalSize = changeSignal.size();
+    if (changeSignalSize < StrlenChanged || changeSignal.last(StrlenChanged).compare(Changed) != 0)
         return std::nullopt;
 
-    const View result = changeSignal.sliced(0, changeSignal.length() - changedLen);
+    const View result = changeSignal.sliced(0, changeSignalSize - StrlenChanged);
     if (!result.isEmpty())
         return result;
 
@@ -151,24 +155,27 @@ std::optional<QString> QQmlSignalNames::changedHandlerNameToPropertyName(QString
 QString QQmlSignalNames::signalNameToHandlerName(QAnyStringView signal)
 {
     QString handlerName;
-    signal.visit([&handlerName](auto &&s) { handlerName = u"on"_s.append(s); });
+    handlerName.reserve(StrlenOn + signal.length());
+    handlerName.append(On);
 
-    changeCaseOfFirstLetter(handlerName, ToUpper, strlen("on"));
+    signal.visit([&handlerName](auto &&s) { handlerName.append(s); });
+
+    changeCaseOfFirstLetter(handlerName, ToUpper, StrlenOn);
     return handlerName;
 }
 
 enum HandlerType { ChangedHandler, Handler };
 
-static std::optional<QString> handlerNameToSignalNameHelper(QStringView handler, HandlerType type)
+template<HandlerType type>
+static std::optional<QString> handlerNameToSignalNameHelper(QStringView handler)
 {
     if (!QQmlSignalNames::isHandlerName(handler))
         return {};
 
-    QString signalName = handler.sliced(strlen("on")).toString();
-    if (signalName.isEmpty())
-        return {};
+    QString signalName = handler.sliced(StrlenOn).toString();
+    Q_ASSERT(!signalName.isEmpty());
 
-    changeCaseOfFirstLetter(signalName, ToLower, 0, type == ChangedHandler ? strlen("Changed") : 0);
+    changeCaseOfFirstLetter(signalName, ToLower, 0, type == ChangedHandler ? StrlenChanged : 0);
     return signalName;
 }
 
@@ -179,7 +186,7 @@ changedHandlerNameToSignalName for that!
 */
 std::optional<QString> QQmlSignalNames::handlerNameToSignalName(QStringView handler)
 {
-    return handlerNameToSignalNameHelper(handler, Handler);
+    return handlerNameToSignalNameHelper<Handler>(handler);
 }
 
 /*!
@@ -189,16 +196,15 @@ Changed.
 */
 std::optional<QString> QQmlSignalNames::changedHandlerNameToSignalName(QStringView handler)
 {
-    return handlerNameToSignalNameHelper(handler, ChangedHandler);
+    return handlerNameToSignalNameHelper<ChangedHandler>(handler);
 }
 
 bool QQmlSignalNames::isChangedSignalName(QStringView signalName)
 {
-    const qsizetype smallestAllowedSize = strlen("XChanged");
-    if (signalName.size() < smallestAllowedSize || !signalName.endsWith(u"Changed"_s))
+    if (signalName.size() <= StrlenChanged || !signalName.endsWith(Changed))
         return false;
 
-    if (auto letter = firstLetter(signalName, 0, strlen("Changed")))
+    if (auto letter = firstLetter(signalName, 0, StrlenChanged))
         return letter->isLower();
 
     return true;
@@ -206,12 +212,13 @@ bool QQmlSignalNames::isChangedSignalName(QStringView signalName)
 
 bool QQmlSignalNames::isChangedHandlerName(QStringView signalName)
 {
-    const qsizetype smallestAllowedSize = strlen("onXChanged");
-    if (signalName.size() < smallestAllowedSize || !signalName.startsWith(u"on"_s)
-        || !signalName.endsWith(u"Changed"_s))
+    if (signalName.size() <= (StrlenOn + StrlenChanged)
+            || !signalName.startsWith(On)
+            || !signalName.endsWith(Changed)) {
         return false;
+    }
 
-    if (auto letter = firstLetter(signalName, strlen("on"), strlen("Changed")))
+    if (auto letter = firstLetter(signalName, StrlenOn, StrlenChanged))
         return letter->isUpper();
 
     return true;
@@ -219,11 +226,10 @@ bool QQmlSignalNames::isChangedHandlerName(QStringView signalName)
 
 bool QQmlSignalNames::isHandlerName(QStringView signalName)
 {
-    const qsizetype smallestAllowedSize = strlen("onX");
-    if (signalName.size() < smallestAllowedSize || !signalName.startsWith(u"on"_s))
+    if (signalName.size() <= StrlenOn || !signalName.startsWith(On))
         return false;
 
-    if (auto letter = firstLetter(signalName, strlen("on")))
+    if (auto letter = firstLetter(signalName, StrlenOn))
         return letter->isUpper();
 
     return true;
