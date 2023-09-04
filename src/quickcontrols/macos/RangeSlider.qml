@@ -94,7 +94,6 @@ T.RangeSlider {
             height: control.horizontal
                 ? parent.barThickness
                 : control.second.position * parent.height - control.first.position * parent.height - parent.barThickness
-            // TODO: use control.palette.accentColor instead when it's available: QTBUG-116106
             color: control.palette.accent
         }
     }

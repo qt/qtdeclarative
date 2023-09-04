@@ -16,6 +16,12 @@ Rectangle {
     // For QQuickMacFocusFrame.
     readonly property real __focusFrameRadius: radius
 
+    color: Qt.styleHints.colorScheme === Qt.Light
+        ? Qt.darker(indicator.control.checked
+            ? indicator.palette.accent : "#d9d6d2", indicator.control.down ? indicator.downTintFactor : 1)
+        : Qt.lighter(indicator.control.checked
+            ? indicator.palette.accent : "#454545", indicator.control.down ? indicator.downTintFactor : 1)
+
     states: [
         State {
             name: "checked"
@@ -25,47 +31,22 @@ Rectangle {
             // we can trigger the property change for the transition. We only
             // the ColorAnimation to happen when changing checked state.
             PropertyChanges {
-                target: firstGradientStop
+                target: indicator
                 color: Qt.styleHints.colorScheme === Qt.Light
-                    ? indicator.control.checked ? "#3679f6" : "#d9d6d2"
-                    : indicator.control.checked ? "#3679f6" : "#454545"
-            }
-            PropertyChanges {
-                target: secondGradientStop
-                color: Qt.styleHints.colorScheme === Qt.Light
-                    ? indicator.control.checked ? "#478cf6" : "#d9d6d2"
-                    : indicator.control.checked ? "#478cf6" : "#454545"
+                    ? indicator.control.checked ? indicator.palette.accent : "#d9d6d2"
+                    : indicator.control.checked ? indicator.palette.accent : "#454545"
             }
         }
     ]
 
     transitions: Transition {
         ColorAnimation {
-            targets: [firstGradientStop, secondGradientStop]
+            targets: indicator
             property: "color"
             // We try to match the speed of x's SmoothedAnimation below,
             // and 17 pixels (handle travel distance) / 75 pixels a second = 0.226.
             duration: 226
             easing.type: Easing.InOutQuad
-        }
-    }
-
-    gradient: Gradient {
-        GradientStop {
-            id: firstGradientStop
-            position: 0
-            // No existing palette roles are closed to the actual native background color (#d9d6d2).
-            // TODO: use control.palette.accentColor instead of #3679f6/#478cf6 when it's available: QTBUG-116106
-            color: Qt.styleHints.colorScheme === Qt.Light
-                ? Qt.darker(indicator.control.checked ? "#3679f6" : "#d9d6d2", indicator.control.down ? indicator.downTintFactor : 1)
-                : Qt.lighter(indicator.control.checked ? "#3679f6" : "#454545", indicator.control.down ? indicator.downTintFactor : 1)
-        }
-        GradientStop {
-            id: secondGradientStop
-            position: 1
-            color: Qt.styleHints.colorScheme === Qt.Light
-                ? Qt.darker(indicator.control.checked ? "#478cf6" : "#d9d6d2", indicator.control.down ? indicator.downTintFactor : 1)
-                : Qt.lighter(indicator.control.checked ? "#478cf6" : "#454545", indicator.control.down ? indicator.downTintFactor : 1)
         }
     }
 
