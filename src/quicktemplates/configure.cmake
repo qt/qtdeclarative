@@ -31,6 +31,7 @@ qt_feature("quicktemplates2-calendar" PRIVATE
     SECTION "Quick Templates 2"
     LABEL "Calendar support"
     PURPOSE "Provides calendar types."
+    CONDITION QT_FEATURE_itemmodel
 )
 qt_feature("quicktemplates2-container" PRIVATE
     SECTION "Quick Templates 2"
