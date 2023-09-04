@@ -380,6 +380,9 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
         return false;
     };
 
+    static constexpr QLatin1String On("on");
+    static constexpr qsizetype StrlenOn = On.size();
+
     const QString terminalString = terminal.toString();
     if (QmlIR::IRBuilder::isSignalPropertyName(terminalString)) {
         QString signalName = terminalString.mid(2);
@@ -412,6 +415,26 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
         } else if (findSignalInMetaObject(signalName.toUtf8())) {
             return;
         }
+    } else if (terminalString.size() > StrlenOn && terminalString.startsWith(On)) {
+        // This is quite wrong. But we need it for backwards compatibility.
+        QString signalName = terminalString.sliced(2);
+        signalName.front() = signalName.front().toLower();
+
+        QString handlerName = On + signalName;
+        const auto end = handlerName.end();
+        auto result = std::find_if(
+                std::next(handlerName.begin(), StrlenOn), end,
+                [](const QChar &c) { return c.isLetter(); });
+        if (result != end)
+            *result = result->toUpper();
+
+        qWarning()
+                << terminalString
+                << "is not a properly capitalized signal handler name."
+                << handlerName
+                << "would be correct.";
+        if (findSignalInMetaObject(signalName.toUtf8()))
+            return;
     }
 
     if (ddata && ddata->propertyCache) {

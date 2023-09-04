@@ -55,6 +55,7 @@ private slots:
     void bindToPropertyWithUnderscoreChangeHandler();
     void invalidTarget();
 
+    void badSignalHandlerName();
 private:
     QQmlEngine engine;
     void prefixes();
@@ -484,6 +485,26 @@ void tst_qqmlconnections::invalidTarget()
                     + QLatin1String(":5:5: TypeError: Cannot read property 'objectName' of null")));
     QTRY_VERIFY(root->objectName().isEmpty());
 }
+
+void tst_qqmlconnections::badSignalHandlerName()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("badSignalHandlerName.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            "\"on_foo\" is not a properly capitalized signal handler name. "
+            "\"on_Foo\" would be correct.");
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+
+    QCOMPARE(root->property("handled").toInt(), 0);
+    QMetaObject::invokeMethod(root.data(), "_foo");
+    QCOMPARE(root->property("handled").toInt(), 3);
+}
+
 
 QTEST_MAIN(tst_qqmlconnections)
 
