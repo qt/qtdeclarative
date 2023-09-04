@@ -250,7 +250,6 @@ bool QQuickStackViewPrivate::replaceElements(QQuickStackElement *target, const Q
 
 QQuickItem *QQuickStackViewPrivate::popToItem(QQuickItem *item, QQuickStackView::Operation operation, CurrentItemPolicy currentItemPolicy)
 {
-    Q_Q(QQuickStackView);
     const QString operationName = QStringLiteral("pop");
     if (modifyingElements) {
         warnOfInterruption(operationName);
@@ -310,9 +309,12 @@ QQuickItem *QQuickStackViewPrivate::popToItem(QQuickItem *item, QQuickStackView:
         }
         depthChange(elements.size(), oldDepth);
 #if QT_CONFIG(quick_viewtransitions)
+        Q_Q(QQuickStackView);
         startTransition(QQuickStackTransition::popExit(operation, exit, q),
             QQuickStackTransition::popEnter(operation, enter, q),
             operation == QQuickStackView::Immediate);
+#else
+        Q_UNUSED(operation);
 #endif
         setCurrentItem(enter);
     }
