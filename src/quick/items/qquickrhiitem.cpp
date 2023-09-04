@@ -746,9 +746,11 @@ void QQuickRhiItem::setExplicitTextureHeight(int height)
 
     This property exposes the size, in pixels, of the underlying color buffer
     (the QRhiTexture or QRhiRenderBuffer). It is provided for use on the GUI
-    thread thread, for example from QML to perform calculations based on it, if
-    needed. QQuickRhiItemRenderer implementations should not use this property.
-    Rather, query the size from the
+    (main) thread, in QML bindings or JavaScript.
+
+    \note QQuickRhiItemRenderer implementations, operating on the scene graph
+    render thread, should not use this property. Those should rather query the
+    size from the
     \l{QQuickRhiItemRenderer::renderTarget()}{render target}.
 
     This is a read-only property.
@@ -993,7 +995,7 @@ QRhiRenderBuffer *QQuickRhiItemRenderer::depthStencilBuffer() const
     This is because only swapchains and the associated window have a concept of
     device pixel ratio, not textures, and the render target here always refers
     to a texture. If the on-screen scale factor is relevant for rendering,
-    query and story it via the item's
+    query and store it via the item's
     \c{window()->effectiveDevicePixelRatio()} in \l synchronize().
     When doing so, always prefer using \l{QQuickWindow::}{effectiveDevicePixelRatio()}
     over the base class' \l{QWindow::}{devicePixelRatio()}.
