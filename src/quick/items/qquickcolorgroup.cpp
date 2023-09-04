@@ -499,6 +499,21 @@ void QQuickColorGroup::resetPlaceholderText()
     resetColor(QPalette::PlaceholderText, &QQuickColorGroup::placeholderTextChanged);
 }
 
+QColor QQuickColorGroup::accent() const
+{
+    return color(QPalette::Accent);
+}
+
+void QQuickColorGroup::setAccent(const QColor &color)
+{
+    setColor(QPalette::Accent, color, &QQuickColorGroup::accentChanged);
+}
+
+void QQuickColorGroup::resetAccent()
+{
+    resetColor(QPalette::Accent, &QQuickColorGroup::accentChanged);
+}
+
 QPalette::ColorGroup QQuickColorGroup::groupTag() const
 {
     return m_groupTag;

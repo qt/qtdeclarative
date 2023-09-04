@@ -52,6 +52,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickColorGroup : public QObject
     Q_PROPERTY(QColor windowText      READ windowText      WRITE setWindowText      RESET resetWindowText      NOTIFY windowTextChanged      FINAL)
     Q_PROPERTY(QColor placeholderText READ placeholderText WRITE setPlaceholderText
                RESET resetPlaceholderText NOTIFY placeholderTextChanged REVISION(6, 2) FINAL)
+    Q_PROPERTY(QColor accent READ accent WRITE setAccent RESET resetAccent NOTIFY accentChanged REVISION(6, 6) FINAL)
 
     QML_NAMED_ELEMENT(ColorGroup)
     QML_ADDED_IN_VERSION(6, 0)
@@ -144,6 +145,10 @@ public:
     void setPlaceholderText(const QColor &color);
     void resetPlaceholderText();
 
+    QColor accent() const;
+    void setAccent(const QColor &color);
+    void resetAccent();
+
     QPalette::ColorGroup groupTag() const;
     void setGroupTag(QPalette::ColorGroup tag);
 
@@ -173,6 +178,7 @@ Q_SIGNALS:
     void windowChanged();
     void windowTextChanged();
     Q_REVISION(6, 2) void placeholderTextChanged();
+    Q_REVISION(6, 6) void accentChanged();
 
     void changed();
 
