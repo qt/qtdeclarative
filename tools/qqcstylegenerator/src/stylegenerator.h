@@ -857,13 +857,23 @@ private:
 
         QString targetPath = m_bridge->m_targetDirectory + "/" + destPath;
         mkTargetPath(targetPath);
-        if (!overwrite && QFileInfo(targetPath).exists()) {
-            debug(targetPath + " exists, skipping overwrite");
-            return;
+
+        if (QFileInfo(targetPath).exists()) {
+            if (!overwrite) {
+                debug(targetPath + " exists, skipping overwrite");
+                return;
+            } else if (!QFile(targetPath).remove()) {
+                warning("Could not remove existing file: " + targetPath);
+                return;
+            }
         }
 
-        debug("copying " + QFileInfo(srcPath).fileName() + " to " + targetPath);
-        srcFile.copy(targetPath);
+        if (srcFile.copy(targetPath)) {
+            debug("copying " + QFileInfo(srcPath).fileName() + " to " + targetPath);
+        } else {
+            warning("Could not copy " + QFileInfo(srcPath).fileName() + " to " + targetPath);
+            return;
+        }
 
         // Files we copy from resources are read-only, so change target permission
         // so that the user can modify generated QML files etc.
