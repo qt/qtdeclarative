@@ -657,7 +657,7 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
         do {
             attr = parseAttribute(ch, textIn);
             if (is_equal_ignoring_case(attr.first, QLatin1String("src"))) {
-                image->url =  QUrl(attr.second.toString());
+                image->url = QUrl(attr.second.toString());
             } else if (is_equal_ignoring_case(attr.first, QLatin1String("width"))) {
                 image->size.setWidth(attr.second.toString().toInt());
             } else if (is_equal_ignoring_case(attr.first, QLatin1String("height"))) {
@@ -687,10 +687,15 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
             }
         }
 
-        imgWidth = image->size.width();
-        image->offset = -std::fmod(imgWidth, spaceWidth) / 2.0;
-        imgTags->append(image);
-
+        // Return immediately if img tag has invalid url
+        if (!image->url.isValid()) {
+            delete image;
+            qCWarning(lcStyledText) << "StyledText - Invalid base url in img tag";
+        } else {
+            imgWidth = image->size.width();
+            image->offset = -std::fmod(imgWidth, spaceWidth) / 2.0;
+            imgTags->append(image);
+        }
     } else {
         // if we already have a list of img tags for this text
         // we only want to update the positions of these tags.
