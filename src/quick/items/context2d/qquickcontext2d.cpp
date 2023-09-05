@@ -3597,7 +3597,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_putImageData(const QV4::Fu
     \code
     var gradient = ctx.createLinearGradient(0, 0, 100, 100);
     gradient.addColorStop(0.3, Qt.rgba(1, 0, 0, 1));
-    gradient.addColorStop(0.7, 'rgba(0, 255, 255, 1');
+    gradient.addColorStop(0.7, 'rgba(0, 255, 255, 1)');
     \endcode
   */
 QV4::ReturnedValue QQuickContext2DStyle::gradient_proto_addColorStop(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
