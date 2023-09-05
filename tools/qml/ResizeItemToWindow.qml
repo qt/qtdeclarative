@@ -5,19 +5,16 @@ import QtQuick 2.0
 
 Window {
     property Item containedObject: null
-    property bool __resizeGuard: false
     onContainedObjectChanged:  {
         if (containedObject == undefined || containedObject == null) {
             visible = false;
             return;
         }
-        __resizeGuard = true
         width = containedObject.width;
         height = containedObject.height;
         containedObject.parent = contentItem;
         visible = true;
-        __resizeGuard = false
     }
-    onWidthChanged: if (!__resizeGuard && containedObject) containedObject.width = width
-    onHeightChanged: if (!__resizeGuard && containedObject) containedObject.height = height
+    onWidthChanged: if (containedObject) containedObject.width = width
+    onHeightChanged: if (containedObject) containedObject.height = height
 }
