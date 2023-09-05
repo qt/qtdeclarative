@@ -15,4 +15,6 @@ qt_internal_add_test(tst_qml
         QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
     LIBRARIES
         Qt::QuickTestUtilsPrivate
+        Qt::Gui
+        Qt::GuiPrivate
 )
