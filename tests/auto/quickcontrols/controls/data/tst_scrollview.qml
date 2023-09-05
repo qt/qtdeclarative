@@ -685,6 +685,7 @@ TestCase {
 
             ListView {
                 id: listView
+                objectName: "customListView"
                 model: 20
                 delegate: Text {
                     text: modelData

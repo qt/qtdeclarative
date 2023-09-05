@@ -39,6 +39,7 @@ public:
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
+    void itemDestroyed(QQuickItem *item) override;
 
     void contentChildrenChange();
 
