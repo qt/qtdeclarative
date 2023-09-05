@@ -184,4 +184,8 @@ Item {
         area2.clicked()
         area3.clicked()
     }
+
+    function checkParameters(a: int, b: double, c: string) {
+        return a + b + c
+    }
 }

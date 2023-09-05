@@ -628,10 +628,6 @@ void tst_qmlls_modules::goToDefinition_data()
     QTest::addRow("id") << JSDefinitionsQmlPath << 15 << 17 << JSDefinitionsQml << 7 << 9 << 7
                         << 9 + strlen("rootId");
 
-    QTest::addRow("parameterA") << JSDefinitionsQmlPath << 10 << 16 << noResultExpected << -1 << -1
-                                << -1 << size_t{};
-    QTest::addRow("parameterB") << JSDefinitionsQmlPath << 10 << 28 << noResultExpected << -1 << -1
-                                << -1 << size_t{};
     QTest::addRow("comment") << JSDefinitionsQmlPath << 10 << 21 << noResultExpected << -1 << -1
                              << -1 << size_t{};
 }

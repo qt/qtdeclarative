@@ -404,23 +404,44 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(DomItem obj
     return locationFromDomItem(typeDefinition);
 }
 
+static bool findDefinitionFromItem(DomItem item, const QString &name)
+{
+    if (std::optional<QQmlJSScope::Ptr> scope = item.semanticScope(); scope) {
+        qCDebug(QQmlLSUtilsLog) << "Searching for definition in" << item.internalKindStr();
+        if (auto jsIdentifier = scope.value()->JSIdentifier(name)) {
+            qCDebug(QQmlLSUtilsLog) << "Found scope" << scope.value()->baseTypeName();
+            return true;
+        }
+    }
+    return false;
+}
+
 static DomItem findJSIdentifierDefinition(DomItem item, const QString &name)
 {
     DomItem definitionOfItem;
     item.visitUp([&name, &definitionOfItem](DomItem &i) {
-        if (std::optional<QQmlJSScope::Ptr> scope = i.semanticScope(); scope) {
-            qCDebug(QQmlLSUtilsLog) << "Searching for definition in" << i.internalKindStr();
-            if (auto jsIdentifier = scope.value()->JSIdentifier(name)) {
-                qCDebug(QQmlLSUtilsLog) << "Found scope" << scope.value()->baseTypeName();
-                definitionOfItem = i;
-                return false;
-            }
+        if (findDefinitionFromItem(i, name)) {
+            definitionOfItem = i;
+            return false;
         }
         // early exit: no JS definitions/usages outside the ScriptExpression DOM element.
         if (i.internalKind() == DomType::ScriptExpression)
             return false;
         return true;
     });
+
+    if (definitionOfItem)
+        return definitionOfItem;
+
+    // special case: somebody asks for usages of a function parameter from its definition
+    // function parameters are defined in the method's scope
+    if (DomItem res = item.filterUp([](DomType k, DomItem &) { return k == DomType::MethodInfo; },
+                                    FilterUpOptions::ReturnOuter)) {
+        DomItem candidate = res.field(Fields::body).field(Fields::scriptElement);
+        if (findDefinitionFromItem(candidate, name)) {
+            return candidate;
+        }
+    }
 
     return definitionOfItem;
 }
@@ -641,6 +662,21 @@ static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
                        findUsages);
 }
 
+static QQmlLSUtilsLocation locationFromJSIdentifierDefinition(DomItem definitionOfItem,
+                                                              const QString &name)
+{
+    Q_ASSERT_X(definitionOfItem.semanticScope().has_value()
+                       && definitionOfItem.semanticScope().value()->JSIdentifier(name).has_value(),
+               "QQmlLSUtils::locationFromJSIdentifierDefinition",
+               "JS definition does not actually define the JS identifier. "
+               "Did you obtain definitionOfItem from findJSIdentifierDefinition() ?");
+    QQmlJS::SourceLocation location =
+            definitionOfItem.semanticScope().value()->JSIdentifier(name).value().location;
+
+    QQmlLSUtilsLocation result = { definitionOfItem.canonicalFilePath(), location };
+    return result;
+}
+
 static void findUsagesHelper(DomItem item, const QString &name, QList<QQmlLSUtilsLocation> &result)
 {
     qCDebug(QQmlLSUtilsLog) << "Looking for JS identifier with name" << name;
@@ -676,6 +712,11 @@ static void findUsagesHelper(DomItem item, const QString &name, QList<QQmlLSUtil
                 }
                 return true;
             });
+
+    const QQmlLSUtilsLocation definition =
+            locationFromJSIdentifierDefinition(definitionOfItem, name);
+    if (!result.contains(definition))
+        result.append(definition);
 }
 
 QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
@@ -1090,19 +1131,7 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
 
         // check: is it a JS identifier?
         if (DomItem definitionOfItem = findJSIdentifierDefinition(item, name)) {
-            Q_ASSERT_X(definitionOfItem.semanticScope().has_value()
-                               && definitionOfItem.semanticScope()
-                                          .value()
-                                          ->JSIdentifier(name)
-                                          .has_value(),
-                       "QQmlLSUtils::findDefinitionOf",
-                       "JS definition does not actually define the JS identifer. "
-                       "It should be empty.");
-            QQmlJS::SourceLocation location =
-                    definitionOfItem.semanticScope().value()->JSIdentifier(name).value().location;
-
-            QQmlLSUtilsLocation result = { definitionOfItem.canonicalFilePath(), location };
-            return result;
+            return locationFromJSIdentifierDefinition(definitionOfItem, name);
         }
 
         // not a JS identifier, check for ids and properties and methods

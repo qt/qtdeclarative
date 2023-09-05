@@ -16,7 +16,7 @@ const static int outOfOne = 1;
 const static int outOfTwo = 2;
 
 // enable/disable additional debug output
-constexpr static bool enable_debug_output = false;
+constexpr static bool enable_debug_output = true;
 
 static QString printSet(const QSet<QString> &s)
 {
@@ -832,6 +832,19 @@ void tst_qmlls_utils::findUsages_data()
         QQmlLSUtilsLocation::from(testFileName, testFileContent, 185, 15, strlen("clicked")),
     };
 
+    QList<QQmlLSUtilsLocation> aParamUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 30, strlen("a")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 16, strlen("a")),
+    };
+    QList<QQmlLSUtilsLocation> bParamUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 38, strlen("b")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 20, strlen("b")),
+    };
+    QList<QQmlLSUtilsLocation> cParamUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 49, strlen("c")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 24, strlen("c")),
+    };
+
     std::sort(sumUsages.begin(), sumUsages.end());
     std::sort(iUsages.begin(), iUsages.end());
     std::sort(subItemHelloPropertyUsages.begin(), subItemHelloPropertyUsages.end());
@@ -853,6 +866,9 @@ void tst_qmlls_utils::findUsages_data()
     std::sort(mouseArea1ClickedUsages.begin(), mouseArea1ClickedUsages.end());
     std::sort(mouseArea2ClickedUsages.begin(), mouseArea2ClickedUsages.end());
     std::sort(mouseArea3ClickedUsages.begin(), mouseArea3ClickedUsages.end());
+    std::sort(aParamUsages.begin(), aParamUsages.end());
+    std::sort(bParamUsages.begin(), bParamUsages.end());
+    std::sort(cParamUsages.begin(), cParamUsages.end());
 
     QTest::addRow("findSumFromDeclaration") << testFileName << 8 << 13 << sumUsages;
     QTest::addRow("findSumFromUsage") << testFileName << 10 << 20 << sumUsages;
@@ -940,6 +956,9 @@ void tst_qmlls_utils::findUsages_data()
             << testFileName << 184 << 15 << mouseArea2ClickedUsages;
     QTest::addRow("findSignalsInConnectionObjectWithTarget")
             << testFileName << 185 << 15 << mouseArea3ClickedUsages;
+
+    QTest::addRow("findMethodParameter") << testFileName << 189 << 16 << aParamUsages;
+    QTest::addRow("findMethodParameter2") << testFileName << 188 << 30 << aParamUsages;
 }
 
 void tst_qmlls_utils::findUsages()
@@ -1252,13 +1271,13 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
     QTest::addRow("inlineComponentProperty")
             << JSDefinitionsQml << 62 << 21 << JSDefinitionsQml << 54 << 22 << strlen("data");
 
-    QTest::addRow("parameterA") << JSDefinitionsQml << 10 << 16 << noResultExpected << -1 << -1
-                                << size_t{};
+    QTest::addRow("parameterA") << JSDefinitionsQml << 10 << 16 << JSDefinitionsQml << 10 << 16
+                                << strlen("a");
     QTest::addRow("parameterAUsage")
             << JSDefinitionsQml << 10 << 39 << JSDefinitionsQml << -1 << 16 << strlen("a");
 
-    QTest::addRow("parameterB") << JSDefinitionsQml << 10 << 28 << noResultExpected << -1 << -1
-                                << size_t{};
+    QTest::addRow("parameterB") << JSDefinitionsQml << 10 << 28 << JSDefinitionsQml << 10 << 28
+                                << strlen("b");
     QTest::addRow("parameterBUsage")
             << JSDefinitionsQml << 10 << 86 << JSDefinitionsQml << -1 << 28 << strlen("b");
 
