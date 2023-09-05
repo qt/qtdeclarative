@@ -52,6 +52,8 @@ void tst_qquicksystempalette::activePalette()
     QCOMPARE(palette.shadow().color(), object->shadow());
     QCOMPARE(palette.highlight().color(), object->highlight());
     QCOMPARE(palette.highlightedText().color(), object->highlightedText());
+    QCOMPARE(palette.placeholderText().color(), object->placeholderText());
+    QCOMPARE(palette.accent().color(), object->accent());
 
     delete object;
 }
@@ -80,6 +82,8 @@ void tst_qquicksystempalette::inactivePalette()
     QCOMPARE(palette.shadow().color(), object->shadow());
     QCOMPARE(palette.highlight().color(), object->highlight());
     QCOMPARE(palette.highlightedText().color(), object->highlightedText());
+    QCOMPARE(palette.placeholderText().color(), object->placeholderText());
+    QCOMPARE(palette.accent().color(), object->accent());
 
     delete object;
 }
@@ -108,6 +112,8 @@ void tst_qquicksystempalette::disabledPalette()
     QCOMPARE(palette.shadow().color(), object->shadow());
     QCOMPARE(palette.highlight().color(), object->highlight());
     QCOMPARE(palette.highlightedText().color(), object->highlightedText());
+    QCOMPARE(palette.placeholderText().color(), object->placeholderText());
+    QCOMPARE(palette.accent().color(), object->accent());
 
     delete object;
 }
