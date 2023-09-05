@@ -185,7 +185,12 @@ Item {
         area3.clicked()
     }
 
-    function checkParameters(a: int, b: double, c: string) {
-        return a + b + c
+    function checkParameters(a: int, b: double, {x, y={}, z=[x,y]}) {
+        return a + b + c + x + y + z
+    }
+
+    function deconstructingUsages(xxx) {
+        let {a, b} = xxx;
+        let c = a + b;
     }
 }

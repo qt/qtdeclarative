@@ -844,6 +844,23 @@ void tst_qmlls_utils::findUsages_data()
         QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 49, strlen("c")),
         QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 24, strlen("c")),
     };
+    QList<QQmlLSUtilsLocation> xParamUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 50, strlen("x")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 28, strlen("x")),
+    };
+    QList<QQmlLSUtilsLocation> yParamUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 53, strlen("y")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 32, strlen("y")),
+    };
+    QList<QQmlLSUtilsLocation> zParamUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 59, strlen("z")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 36, strlen("z")),
+    };
+
+    QList<QQmlLSUtilsLocation> deconstructedAUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 193, 14, strlen("a")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 194, 17, strlen("a")),
+    };
 
     std::sort(sumUsages.begin(), sumUsages.end());
     std::sort(iUsages.begin(), iUsages.end());
@@ -869,6 +886,10 @@ void tst_qmlls_utils::findUsages_data()
     std::sort(aParamUsages.begin(), aParamUsages.end());
     std::sort(bParamUsages.begin(), bParamUsages.end());
     std::sort(cParamUsages.begin(), cParamUsages.end());
+    std::sort(xParamUsages.begin(), xParamUsages.end());
+    std::sort(yParamUsages.begin(), yParamUsages.end());
+    std::sort(zParamUsages.begin(), zParamUsages.end());
+    std::sort(deconstructedAUsages.begin(), deconstructedAUsages.end());
 
     QTest::addRow("findSumFromDeclaration") << testFileName << 8 << 13 << sumUsages;
     QTest::addRow("findSumFromUsage") << testFileName << 10 << 20 << sumUsages;
@@ -957,8 +978,22 @@ void tst_qmlls_utils::findUsages_data()
     QTest::addRow("findSignalsInConnectionObjectWithTarget")
             << testFileName << 185 << 15 << mouseArea3ClickedUsages;
 
-    QTest::addRow("findMethodParameter") << testFileName << 189 << 16 << aParamUsages;
-    QTest::addRow("findMethodParameter2") << testFileName << 188 << 30 << aParamUsages;
+    QTest::addRow("findMethodParameterA") << testFileName << 189 << 16 << aParamUsages;
+    QTest::addRow("findMethodParameterAFromUsage") << testFileName << 188 << 30 << aParamUsages;
+
+    QTest::addRow("deconstructed") << testFileName << 194 << 17 << deconstructedAUsages;
+    QTest::addRow("deconstructedFromDefinition")
+            << testFileName << 193 << 14 << deconstructedAUsages;
+
+    QTest::addRow("findMethodParameterXDeconstructed") << testFileName << 188 << 50 << xParamUsages;
+    QTest::addRow("findMethodParameterXDeconstructedFromUsage")
+            << testFileName << 189 << 28 << xParamUsages;
+    QTest::addRow("findMethodParameterYDeconstructed") << testFileName << 188 << 53 << yParamUsages;
+    QTest::addRow("findMethodParameterYDeconstructedFromUsage")
+            << testFileName << 189 << 32 << yParamUsages;
+    QTest::addRow("findMethodParameterZDeconstructed") << testFileName << 188 << 59 << zParamUsages;
+    QTest::addRow("findMethodParameterZDeconstructedFromUsage")
+            << testFileName << 189 << 36 << zParamUsages;
 }
 
 void tst_qmlls_utils::findUsages()

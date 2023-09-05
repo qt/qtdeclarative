@@ -3330,7 +3330,7 @@ BindingElisionElement: ElisionOpt BindingElement;
 BindingProperty: BindingIdentifier InitializerOpt_In;
 /.
     case $rule_number: {
-        AST::StringLiteralPropertyName *name = new (pool) AST::StringLiteralPropertyName(stringRef(1));
+        AST::IdentifierPropertyName *name = new (pool) AST::IdentifierPropertyName(stringRef(1));
         name->propertyNameToken = loc(1);
         // if initializer is an anonymous function expression, we need to assign identifierref as it's name
         if (auto *f = asAnonymousFunctionDefinition(sym(2).Expression))
