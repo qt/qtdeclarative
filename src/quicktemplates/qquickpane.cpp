@@ -143,14 +143,30 @@ void QQuickPanePrivate::itemImplicitHeightChanged(QQuickItem *item)
         updateImplicitContentHeight();
 }
 
+void QQuickPanePrivate::itemDestroyed(QQuickItem *item)
+{
+    // Do this check before calling the base class implementation, as that clears contentItem.
+    if (item == firstChild)
+        firstChild = nullptr;
+
+    QQuickControlPrivate::itemDestroyed(item);
+}
+
 void QQuickPanePrivate::contentChildrenChange()
 {
     Q_Q(QQuickPane);
-    QQuickItem *newFirstChild = contentChildItems().value(0);
+
+    // The first child varies depending on how the content item is declared.
+    // If it's declared as a child of the Pane, it will be parented to the
+    // default QQuickContentItem. If it's assigned to the contentItem property
+    // directly, QQuickControl::contentItem will be used."
+    QQuickItem *newFirstChild = ((qobject_cast<QQuickContentItem *>(contentItem))
+        ? contentChildItems().value(0) : *contentItem);
+
     if (newFirstChild != firstChild) {
         if (firstChild)
             removeImplicitSizeListener(firstChild);
-        if (newFirstChild)
+        if (newFirstChild && newFirstChild != contentItem)
             addImplicitSizeListener(newFirstChild);
         firstChild = newFirstChild;
     }
