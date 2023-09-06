@@ -3464,8 +3464,14 @@ MutableDomItem MutableDomItem::setScript(std::shared_ptr<ScriptExpression> exp)
         break;
     case DomType::MethodParameter:
         if (MethodParameter *p = mutableAs<MethodParameter>()) {
-            p->defaultValue = exp;
-            return field(Fields::body);
+            if (exp->expressionType() == ScriptExpression::ExpressionType::ArgInitializer) {
+                p->defaultValue = exp;
+                return field(Fields::defaultValue);
+            }
+            if (exp->expressionType() == ScriptExpression::ExpressionType::ArgumentStructure) {
+                p->value = exp;
+                return field(Fields::value);
+            }
         }
         break;
     case DomType::ScriptExpression:
