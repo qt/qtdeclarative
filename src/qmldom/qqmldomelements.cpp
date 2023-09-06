@@ -1661,6 +1661,9 @@ void ScriptExpression::setCode(QString code, QString preCode, QString postCode)
         if (!m_preCode.isEmpty())
             m_ast = firstNodeInRange(m_ast, m_preCode.size(),
                                      m_preCode.size() + m_code.size());
+        if (auto *sList = AST::cast<AST::FormalParameterList *>(m_ast)) {
+            m_ast = sList->element;
+        }
         if (m_expressionType != ExpressionType::FunctionBody) {
             if (AST::StatementList *sList = AST::cast<AST::StatementList *>(m_ast)) {
                 if (!sList->next)
@@ -1861,6 +1864,8 @@ bool MethodParameter::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor
     cont = cont && self.dvValueField(visitor, Fields::isReadonly, isReadonly);
     cont = cont && self.dvValueField(visitor, Fields::isList, isList);
     cont = cont && self.dvWrapField(visitor, Fields::defaultValue, defaultValue);
+    cont = cont && self.dvValueField(visitor, Fields::preCode, u"function f("_s);
+    cont = cont && self.dvValueField(visitor, Fields::postCode, u") {}"_s);
     if (!annotations.isEmpty())
         cont = cont && self.dvWrapField(visitor, Fields::annotations, annotations);
     cont = cont && self.dvWrapField(visitor, Fields::comments, comments);
