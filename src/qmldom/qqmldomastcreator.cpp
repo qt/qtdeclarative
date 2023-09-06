@@ -43,7 +43,7 @@ static Q_LOGGING_CATEGORY(creatorLog, "qt.qmldom.astcreator", QtWarningMsg);
 
 #define Q_SCRIPTELEMENT_EXIT_IF(check)            \
     do {                                          \
-        if (m_enableScriptExpressions && check) { \
+        if (m_enableScriptExpressions && (check)) { \
             Q_SCRIPTELEMENT_DISABLE();            \
             return;                               \
         }                                         \
@@ -1520,17 +1520,17 @@ void QQmlDomAstCreator::endVisitHelper(
         current->insertChild(Fields::identifier, ScriptElementVariant::fromElement(identifier));
     }
     if (pe->initializer) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::initializer, scriptNodeStack.last().takeVariant());
         scriptNodeStack.removeLast();
     }
     if (pe->typeAnnotation) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::type, scriptNodeStack.last().takeVariant());
         scriptNodeStack.removeLast();
     }
     if (pe->bindingTarget) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::bindingElement, scriptNodeStack.last().takeVariant());
         scriptNodeStack.removeLast();
     }
@@ -2090,6 +2090,20 @@ void QQmlDomAstCreator::endVisit(AST::ForEachStatement *exp)
     }
 
     pushScriptElement(current);
+}
+
+
+bool QQmlDomAstCreator::visit(AST::ClassExpression *)
+{
+    // TODO: Add support for js expressions in classes
+    // For now, turning off explicitly to avoid unwanted problems
+    if (m_enableScriptExpressions)
+        Q_SCRIPTELEMENT_DISABLE();
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::ClassExpression *)
+{
 }
 
 static const DomEnvironment *environmentFrom(MutableDomItem &qmlFile)

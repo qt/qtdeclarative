@@ -2268,6 +2268,14 @@ private slots:
         }
     }
 
+    void doNotCrashEcmaScriptClass()
+    {
+        using namespace Qt::StringLiterals;
+        QString testFile = baseDir + u"/ecmaScriptClass.qml"_s;
+        DomItem rootQmlObject = rootQmlObjectFromFile(testFile, qmltypeDirs);
+        QVERIFY(rootQmlObject);
+    }
+
 private:
     struct DomItemWithLocation
     {
