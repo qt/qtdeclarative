@@ -949,8 +949,9 @@ function(_qt_internal_target_enable_qmllint target)
     )
     _qt_internal_assign_to_qmllint_targets_folder(${lint_target})
 
+    set(lint_args "--json" "${CMAKE_BINARY_DIR}/${lint_target}.json")
     add_custom_target(${lint_target_json}
-        COMMAND "$<${have_qmllint_files}:${cmd}>" --json ${CMAKE_BINARY_DIR}/${lint_target}.json
+        COMMAND "$<${have_qmllint_files}:${cmd};${lint_args}>"
         COMMAND_EXPAND_LISTS
         DEPENDS
             ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint
