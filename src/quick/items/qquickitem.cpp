@@ -6967,6 +6967,8 @@ void QQuickItem::setFlag(Flag flag, bool enabled)
     else
         setFlags((Flags)(d->flags & ~(quint32)flag));
 
+    // We don't return early if the flag did not change. That's useful in case
+    // we need to intentionally trigger this parent-chain traversal again.
     if (enabled && flag == ItemObservesViewport) {
         QQuickItem *par = parentItem();
         while (par) {

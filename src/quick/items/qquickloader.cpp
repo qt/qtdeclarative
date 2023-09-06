@@ -804,12 +804,23 @@ void QQuickLoader::componentComplete()
 
 void QQuickLoader::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
 {
-    if (change == ItemSceneChange) {
+    switch (change) {
+    case ItemSceneChange: {
         QQuickWindow *loadedWindow = qmlobject_cast<QQuickWindow *>(item());
         if (loadedWindow) {
             qCDebug(lcTransient) << loadedWindow << "is transient for" << value.window;
             loadedWindow->setTransientParent(value.window);
         }
+        break;
+    }
+    case ItemChildAddedChange:
+        Q_ASSERT(value.item);
+        if (value.item->flags().testFlag(QQuickItem::ItemObservesViewport))
+            // Re-trigger the parent traversal to get subtreeTransformChangedEnabled turned on
+            value.item->setFlag(QQuickItem::ItemObservesViewport);
+        break;
+    default:
+        break;
     }
     QQuickItem::itemChange(change, value);
 }
