@@ -6,6 +6,7 @@
     \title Scene Graph - OpenGL Under QML
     \examplecategory {Graphics & Multimedia}
     \ingroup qtquickexamples
+    \examplecategory {Mobile}
     \brief Shows how to render OpenGL under a Qt Quick scene.
 
     \image openglunderqml-example.jpg
