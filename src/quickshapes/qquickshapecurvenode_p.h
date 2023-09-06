@@ -28,7 +28,10 @@ public:
 
     void setColor(QColor col)
     {
+        if (m_color == col)
+            return;
         m_color = col;
+        updateMaterial();
     }
 
     QColor color() const
