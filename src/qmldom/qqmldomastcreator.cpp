@@ -39,13 +39,13 @@ static Q_LOGGING_CATEGORY(creatorLog, "qt.qmldom.astcreator", QtWarningMsg);
         disableScriptElements();                                                       \
     } while (false)
 
-#define Q_SCRIPTELEMENT_EXIT_IF(check)              \
-    do {                                            \
-        if (m_enableScriptExpressions && (check)) { \
-            Q_SCRIPTELEMENT_DISABLE();              \
-            return;                                 \
-        }                                           \
-    } while (false)
+#define Q_SCRIPTELEMENT_EXIT_IF(check)          \
+  do {                                          \
+    if (m_enableScriptExpressions && (check)) { \
+      Q_SCRIPTELEMENT_DISABLE();                \
+      return;                                   \
+    }                                           \
+  } while (false)
 
 QT_BEGIN_NAMESPACE
 namespace QQmlJS {
@@ -1839,6 +1839,19 @@ void QQmlDomAstCreator::endVisit(AST::Type *exp)
     }
 
     pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::ClassExpression *)
+{
+    // TODO: Add support for js expressions in classes
+    // For now, turning off explicitly to avoid unwanted problems
+    if (m_enableScriptExpressions)
+        Q_SCRIPTELEMENT_DISABLE();
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::ClassExpression *)
+{
 }
 
 static const DomEnvironment *environmentFrom(MutableDomItem &qmlFile)
