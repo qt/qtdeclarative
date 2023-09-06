@@ -8,6 +8,7 @@
     \keyword Qt Quick Controls 2 - Wearable Demo
     \ingroup qtquickcontrols-examples
     \examplecategory {Embedded}
+    \examplecategory {Mobile}
     \brief Demonstrates an application launcher designed for wearable devices.
 
     \image qtquickcontrols-wearable.png
