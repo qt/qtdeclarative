@@ -7,6 +7,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQuick/private/qquicktext_p.h>
+#include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuickTest/QtQuickTest>
 #include <private/qquicktext_p_p.h>
@@ -101,6 +102,7 @@ private slots:
     void clipRect();
     void largeTextObservesViewport_data();
     void largeTextObservesViewport();
+    void largeTextInDelayedLoader();
     void lineLaidOut();
     void lineLaidOutRelayout();
     void lineLaidOutHAlign();
@@ -3050,6 +3052,29 @@ void tst_qquicktext::largeTextObservesViewport()
     QCOMPARE(renderedLineRange.first, linesAboveViewport);
     // if linesAboveViewport == 90, a chapter heading is visible, and those take more space
     QVERIFY(qAbs(renderedLineRange.second - (expectedLastLine + 1)) < (linesAboveViewport > 80 ? 4 : 2));
+}
+
+void tst_qquicktext::largeTextInDelayedLoader() // QTBUG-115687
+{
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("loaderActiveOnVisible.qml")));
+    auto flick = view.rootObject()->findChild<QQuickFlickable*>();
+    QVERIFY(flick);
+    auto textItem = view.rootObject()->findChild<QQuickText*>();
+    QVERIFY(textItem);
+    QQuickTextPrivate *textPriv = QQuickTextPrivate::get(textItem);
+    QQuickTextNode *node = static_cast<QQuickTextNode *>(textPriv->paintNode);
+    const auto initialLineRange = node->renderedLineRange();
+    qCDebug(lcTests) << "first line rendered" << initialLineRange.first
+                     << "; first line past viewport" << initialLineRange.second;
+    flick->setContentY(500);
+    QTRY_COMPARE_NE(node->renderedLineRange(), initialLineRange);
+    const auto scrolledLineRange = node->renderedLineRange();
+    qCDebug(lcTests) << "after scroll: first line rendered" << scrolledLineRange.first
+                     << "; first line past viewport" << scrolledLineRange.second;
+    // We scrolled a good bit more than one window-height, so we must render a
+    // non-overlapping range of text some distance past the initial blocks.
+    QCOMPARE_GT(scrolledLineRange.first, initialLineRange.second);
 }
 
 void tst_qquicktext::lineLaidOut()
