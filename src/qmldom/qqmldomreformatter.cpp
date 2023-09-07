@@ -333,6 +333,8 @@ protected:
                     useInitializer = true;
                     if (bindingIdentifierExist)
                         out(assignment->bindingIdentifier);
+                    if (assignment->bindingTarget)
+                        accept(assignment->bindingTarget);
                 }
 
                 if (assignment->initializer) {
