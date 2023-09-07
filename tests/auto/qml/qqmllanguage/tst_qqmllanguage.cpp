@@ -8271,11 +8271,13 @@ void tst_qqmllanguage::callMethodOfAttachedDerived()
 
 void tst_qqmllanguage::multiVersionSingletons()
 {
+    qmlRegisterTypesAndRevisions<BareSingleton>("MultiVersionSingletons", 11);
+    qmlRegisterTypesAndRevisions<UncreatableSingleton>("MultiVersionSingletons", 11);
     QQmlEngine engine;
 
     for (const char *name : { "BareSingleton", "UncreatableSingleton"}) {
-        const int id1 = qmlTypeId("Test", 1, 0, name);
-        const int id2 = qmlTypeId("Test", 11, 0, name);
+        const int id1 = qmlTypeId("MultiVersionSingletons", 1, 0, name);
+        const int id2 = qmlTypeId("MultiVersionSingletons", 11, 0, name);
         QVERIFY(id1 != id2);
         const QJSValue value1 = engine.singletonInstance<QJSValue>(id1);
         const QJSValue value2 = engine.singletonInstance<QJSValue>(id2);

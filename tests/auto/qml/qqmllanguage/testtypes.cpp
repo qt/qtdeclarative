@@ -98,8 +98,8 @@ void registerTypes()
     qmlRegisterType<ImmediateProperties>("Test", 1, 0, "ImmediateProperties");
 
     qmlRegisterTypesAndRevisions<Extended, Foreign, ForeignExtended>("Test", 1);
-    qmlRegisterTypesAndRevisions<BareSingleton>("Test", 11);
-    qmlRegisterTypesAndRevisions<UncreatableSingleton>("Test", 11);
+    qmlRegisterTypesAndRevisions<BareSingleton>("Test", 1);
+    qmlRegisterTypesAndRevisions<UncreatableSingleton>("Test", 1);
 
     // Metatype/namespace variation one: Register namespace first
 
