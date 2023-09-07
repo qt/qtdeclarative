@@ -24,6 +24,7 @@
         "states": [
             {"state": "normal", "figmaState": "normal"},
             {"state": "checked", "figmaState": "checked"},
+            {"state": "checked-disabled", "figmaState": "checkedDisabled"},
             {"state": "checked-hovered", "figmaState": "checkedHovered"},
             {"state": "checked-pressed", "figmaState": "checkedPressed"},
             {"state": "disabled", "figmaState": "disabled"},
