@@ -281,7 +281,7 @@ public:
             const QV4::CompiledData::Binding *binding,
             QQmlComponentPrivate::ConstructionState *immediateState);
     void createDelayedValues();
-    void onDelayedValueChanged(const QString &delayedName);
+    void onDelayedValueChanged(QString delayedName);
     void evalDelayed();
     void buildBindEntries(QQmlBind *q, QQmlComponentPrivate::DeferredState *deferredState);
 };
@@ -898,14 +898,14 @@ void QQmlBindPrivate::createDelayedValues()
     delayedValues = std::make_unique<QQmlPropertyMap>();
     QObject::connect(
             delayedValues.get(), &QQmlPropertyMap::valueChanged,
-            delayedValues.get(), [this](const QString &delayedName, const QVariant &value) {
+            delayedValues.get(), [this](QString delayedName, const QVariant &value) {
                 Q_UNUSED(value);
-                onDelayedValueChanged(delayedName);
+                onDelayedValueChanged(std::move(delayedName));
             }
     );
 }
 
-void QQmlBindPrivate::onDelayedValueChanged(const QString &delayedName)
+void QQmlBindPrivate::onDelayedValueChanged(QString delayedName)
 {
     Q_ASSERT(delayed);
     Q_ASSERT(delayedValues);
@@ -916,7 +916,7 @@ void QQmlBindPrivate::onDelayedValueChanged(const QString &delayedName)
     else if (pending.contains(delayedName))
         return;
 
-    pending.append(delayedName);
+    pending.append(std::move(delayedName));
     (*delayedValues)[pendingName].setValue(std::move(pending));
 }
 
