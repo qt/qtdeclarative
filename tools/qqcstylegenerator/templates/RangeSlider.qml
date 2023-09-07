@@ -21,7 +21,7 @@ T.RangeSlider {
     property string __controlState: [
         visualFocus && "focused",
         !control.enabled && "disabled",
-        control.hovered && !(first.pressed || second.pressed) && "hovered",
+        control.enabled && control.hovered && !(first.pressed || second.pressed) && "hovered",
     ].filter(Boolean).join("-") || "normal"
     readonly property var config: ConfigReader.controls.rangeslider[__controlState] || {}
 
