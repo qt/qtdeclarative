@@ -24,6 +24,12 @@ class tst_qmlls_utils : public QQmlDataTest
 {
     Q_OBJECT
 
+    using ExpectedCompletion = QPair<QString, QLspSpecification::CompletionItemKind>;
+    using ExpectedCompletions = QSet<ExpectedCompletion>;
+
+    using ExpectedDocumentation = std::tuple<QString, QString, QString>;
+    using ExpectedDocumentations = QList<ExpectedDocumentation>;
+
 public:
     tst_qmlls_utils() : QQmlDataTest(QT_QMLLS_UTILS_DATADIR) { }
 
@@ -57,6 +63,9 @@ private slots:
 
     void isValidEcmaScriptIdentifier();
     void isValidEcmaScriptIdentifier_data();
+
+    void completions_data();
+    void completions();
 
 private:
     using EnvironmentAndFile = std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>;

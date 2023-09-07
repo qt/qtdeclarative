@@ -41,8 +41,6 @@ private slots:
     void init() final;
     void cleanup();
     void initTestCase() final;
-    void completions_data();
-    void completions();
     void function_documentations_data();
     void function_documentations();
     void buildDir();

@@ -15,6 +15,8 @@
 // We mean it.
 //
 
+#include "qqmlcompletioncontextstrings_p.h"
+
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
@@ -24,6 +26,8 @@
 #include <variant>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(QQmlLSCompletionLog);
 
 struct QQmlLSUtilsItemLocation
 {
@@ -112,35 +116,57 @@ enum QQmlLSUtilsResolveOptions {
     ResolveActualTypeForFieldMemberExpression,
 };
 
+enum class TypeCompletionsType { None, Types, TypesAndAttributes };
+
+enum class FunctionCompletion { None, Declaration };
+
+enum class ImportCompletionType { None, Module, Version };
+
+using DomItem = QQmlJS::Dom::DomItem;
+
 class QQmlLSUtils
 {
 public:
     static qsizetype textOffsetFrom(const QString &code, int row, int character);
     static QQmlLSUtilsTextPosition textRowAndColumnFrom(const QString &code, qsizetype offset);
-    static QList<QQmlLSUtilsItemLocation> itemsFromTextLocation(const QQmlJS::Dom::DomItem &file,
+    static QList<QQmlLSUtilsItemLocation> itemsFromTextLocation(const DomItem &file,
                                                                 int line, int character);
-    static QQmlJS::Dom::DomItem sourceLocationToDomItem(const QQmlJS::Dom::DomItem &file,
+    static DomItem sourceLocationToDomItem(const DomItem &file,
                                                         const QQmlJS::SourceLocation &location);
     static QByteArray lspUriToQmlUrl(const QByteArray &uri);
     static QByteArray qmlUrlToLspUri(const QByteArray &url);
     static QLspSpecification::Range qmlLocationToLspLocation(const QString &code,
                                                              QQmlJS::SourceLocation qmlLocation);
-    static QQmlJS::Dom::DomItem baseObject(const QQmlJS::Dom::DomItem &qmlObject);
+    static DomItem baseObject(const DomItem &qmlObject);
     static std::optional<QQmlLSUtilsLocation>
-    findTypeDefinitionOf(const QQmlJS::Dom::DomItem &item);
-    static std::optional<QQmlLSUtilsLocation> findDefinitionOf(const QQmlJS::Dom::DomItem &item);
-    static QList<QQmlLSUtilsLocation> findUsagesOf(const QQmlJS::Dom::DomItem &item);
+    findTypeDefinitionOf(const DomItem &item);
+    static std::optional<QQmlLSUtilsLocation> findDefinitionOf(const DomItem &item);
+    static QList<QQmlLSUtilsLocation> findUsagesOf(const DomItem &item);
 
     static std::optional<QQmlLSUtilsErrorMessage>
-    checkNameForRename(const QQmlJS::Dom::DomItem &item, const QString &newName,
+    checkNameForRename(const DomItem &item, const QString &newName,
                        std::optional<QQmlLSUtilsExpressionType> targetType = std::nullopt);
     static QList<QQmlLSUtilsEdit>
-    renameUsagesOf(const QQmlJS::Dom::DomItem &item, const QString &newName,
+    renameUsagesOf(const DomItem &item, const QString &newName,
                    std::optional<QQmlLSUtilsExpressionType> targetType = std::nullopt);
 
     static std::optional<QQmlLSUtilsExpressionType>
-    resolveExpressionType(const QQmlJS::Dom::DomItem &item, QQmlLSUtilsResolveOptions);
+    resolveExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions);
     static bool isValidEcmaScriptIdentifier(QStringView view);
+
+    // completion stuff
+    using CompletionItem = QLspSpecification::CompletionItem;
+    static QList<CompletionItem> bindingsCompletions(const DomItem &containingObject);
+    static QList<CompletionItem> importCompletions(const DomItem &file,
+                                                   const CompletionContextStrings &ctx);
+    static QList<CompletionItem> idsCompletions(const DomItem& component);
+
+    static QList<CompletionItem> reachableSymbols(const DomItem &context,
+                                                  const CompletionContextStrings &ctx,
+                                                  TypeCompletionsType typeCompletionType,
+                                                  FunctionCompletion completeMethodCalls);
+    static QList<CompletionItem> completions(const DomItem& currentItem,
+                                             const CompletionContextStrings &ctx);
 };
 QT_END_NAMESPACE
 
