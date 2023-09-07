@@ -31,7 +31,8 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-Q_LOGGING_CATEGORY(lcQmlCompiler, "qt.qml.compiler");
+Q_LOGGING_CATEGORY(lcQmlUsedBeforeDeclared, "qt.qml.usedbeforedeclared");
+Q_LOGGING_CATEGORY(lcQmlInjectedParameter, "qt.qml.injectedparameter");
 
 using namespace QV4;
 using namespace QV4::Compiler;
@@ -42,7 +43,7 @@ void CodegenWarningInterface::reportVarUsedBeforeDeclaration(
         const QString &name, const QString &fileName, QQmlJS::SourceLocation declarationLocation,
         QQmlJS::SourceLocation accessLocation)
 {
-    qCWarning(lcQmlCompiler).nospace().noquote()
+    qCWarning(lcQmlUsedBeforeDeclared).nospace().noquote()
             << fileName << ":" << accessLocation.startLine << ":" << accessLocation.startColumn
             << " Variable \"" << name << "\" is used before its declaration at "
             << declarationLocation.startLine << ":" << declarationLocation.startColumn << ".";
@@ -2609,7 +2610,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, co
         }
 
         if (resolved.isInjected && accessLocation.isValid()) {
-            qCWarning(lcQmlCompiler).nospace().noquote()
+            qCWarning(lcQmlInjectedParameter).nospace().noquote()
                     << url().toString() << ":" << accessLocation.startLine
                     << ":" << accessLocation.startColumn << " Parameter \"" << name
                     << "\" is not declared."
