@@ -70,21 +70,35 @@ static auto getQQmlJSScopeFromSmartPtr(const From &p) -> decltype(p.get())
 template<typename QQmlJSScopePtr, typename Action>
 static bool searchBaseAndExtensionTypes(QQmlJSScopePtr type, const Action &check)
 {
+    if (!type)
+        return false;
+
     // NB: among other things, getQQmlJSScopeFromSmartPtr() also resolves const
     // vs non-const pointer issue, so use it's return value as the type
     using T = decltype(
             getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(std::declval<QQmlJSScope::ConstPtr>()));
 
+    const bool isValueType = (type->accessSemantics() == QQmlJSScope::AccessSemantics::Value);
+
     QDuplicateTracker<T> seen;
     for (T scope = type; scope && !seen.hasSeen(scope);
          scope = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->baseType())) {
-        // Extensions override their base types
-        for (T extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->extensionType());
-             extension && !seen.hasSeen(extension);
-             extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(extension->baseType())) {
+        QDuplicateTracker<T> seenExtensions;
+        // Extensions override the types they extend. However, usually base
+        // types of extensions are ignored. The unusual cases are when we
+        // have a value type or when we have the QObject type, in which case
+        // we also study the extension's base type hierarchy.
+        const bool isQObject = scope->internalName() == QLatin1String("QObject");
+        T extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->extensionType());
+        do {
+            if (!extension || seenExtensions.hasSeen(extension))
+                break;
+
             if (check(extension))
                 return true;
-        }
+
+            extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(extension->baseType());
+        } while (isValueType || isQObject);
 
         if (check(scope))
             return true;
