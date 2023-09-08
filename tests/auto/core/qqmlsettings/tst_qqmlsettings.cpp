@@ -33,6 +33,7 @@ private slots:
     void siblings();
     void initial();
     void noApplicationIdentifiersSet();
+    void fromResources();
 };
 
 // ### Replace keyValueMap("foo", "bar") with QVariantMap({{"foo", "bar"}})
@@ -491,6 +492,17 @@ void tst_QQmlSettings::noApplicationIdentifiersSet()
     QSettings settings;
     // ... but the settings' value should be false because it was never loaded.
     QVERIFY(!settings.value("success").toBool());
+}
+
+void tst_QQmlSettings::fromResources()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("resources.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+
+    QCOMPARE(root->property("text").toString(), QLatin1String("from resource"));
 }
 
 QTEST_MAIN(tst_QQmlSettings)
