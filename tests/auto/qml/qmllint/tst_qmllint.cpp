@@ -1246,6 +1246,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("attachedImportUse") << QStringLiteral("attachedImportUse.qml");
     QTest::newRow("VariantMapGetPropertyLookup") << QStringLiteral("variantMapLookup.qml");
     QTest::newRow("ScriptInTemplate") << QStringLiteral("scriptInTemplate.qml");
+    QTest::newRow("WriteListProperty") << QStringLiteral("writeListProperty.qml");
 }
 
 void TestQmllint::cleanQmlCode()
