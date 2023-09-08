@@ -1266,6 +1266,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("StringToDateTime") << QStringLiteral("stringToDateTime.qml");
     QTest::newRow("ScriptInTemplate") << QStringLiteral("scriptInTemplate.qml");
     QTest::newRow("AddressableValue") << QStringLiteral("addressableValue.qml");
+    QTest::newRow("WriteListProperty") << QStringLiteral("writeListProperty.qml");
 }
 
 void TestQmllint::cleanQmlCode()
