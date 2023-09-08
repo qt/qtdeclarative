@@ -931,7 +931,7 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
         return;
     }
 
-    if (!property.isWritable()) {
+    if (!property.isWritable() && !property.storedType()->isListProperty()) {
         setError(u"Can't assign to read-only property %1"_s.arg(propertyName));
 
         m_logger->log(u"Cannot assign to read-only property %1"_s.arg(propertyName),
