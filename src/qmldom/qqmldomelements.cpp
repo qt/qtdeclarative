@@ -1791,7 +1791,7 @@ QString MethodInfo::preCode(DomItem &self) const
             first = false;
         else
             ow.write(u", ");
-        ow.write(mp.name);
+        ow.write(mp.value->code());
     }
     ow.writeRegion(u"rightParen", u")");
     ow.ensureSpace().writeRegion(u"leftBrace", u"{");
