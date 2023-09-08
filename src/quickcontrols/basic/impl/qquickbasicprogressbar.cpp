@@ -143,7 +143,6 @@ void QQuickBasicProgressBarNode::sync(QQuickItem *item)
             QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode*>(transformNode->firstChild());
             if (!rectNode) {
                 rectNode = d->sceneGraphContext()->createInternalRectangleNode();
-                rectNode->setColor(bar->color());
                 transformNode->appendChildNode(rectNode);
             }
 
@@ -151,6 +150,9 @@ void QQuickBasicProgressBarNode::sync(QQuickItem *item)
             m.translate(blockStartX(i), 0);
             transformNode->setMatrix(m);
 
+            // Set the color here too in case it was set after component completion,
+            // as updateCurrentTime doesn't sync it.
+            rectNode->setColor(bar->color());
             rectNode->setRect(QRectF(QPointF(0, 0), QSizeF(BlockWidth, item->implicitHeight())));
             rectNode->update();
 
@@ -165,10 +167,12 @@ void QQuickBasicProgressBarNode::sync(QQuickItem *item)
         QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode *>(firstChild());
         if (!rectNode) {
             rectNode = d->sceneGraphContext()->createInternalRectangleNode();
-            rectNode->setColor(bar->color());
             appendChildNode(rectNode);
         }
 
+        // Always set the color, not just when creating the rectangle node, so that we respect
+        // changes that are made after component completion.
+        rectNode->setColor(bar->color());
         rectNode->setRect(QRectF(QPointF(0, 0), QSizeF(bar->progress() * item->width(), item->implicitHeight())));
         rectNode->update();
     }
