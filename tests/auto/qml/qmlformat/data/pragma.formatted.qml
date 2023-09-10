@@ -5,5 +5,4 @@ pragma ValueTypeBehavior: Copy, Addressable
 
 import QtQml
 
-QtObject {
-}
+QtObject {}

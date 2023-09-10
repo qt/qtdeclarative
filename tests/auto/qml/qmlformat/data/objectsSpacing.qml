@@ -3,6 +3,10 @@ Item {
     Button {
     }
 
+    Button {
+        id: foo
+    }
+
     height: 360
     width: 360
 
