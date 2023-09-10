@@ -18,7 +18,9 @@ using namespace Qt::StringLiterals;
 
 void QQmlToolingSettings::addOption(const QString &name, QVariant defaultValue)
 {
-    m_values[name] = defaultValue;
+    if (defaultValue.isValid()) {
+        m_values[name] = defaultValue;
+    }
 }
 
 bool QQmlToolingSettings::read(const QString &settingsFilePath)
