@@ -142,11 +142,9 @@ Item {
         // This is an orphan
 
         // This is a cool text
-        Text {
-        },
+        Text {},
         // This is a cool rectangle
-        Rectangle {
-        }
+        Rectangle {}
     ]
     // This comment is related to the property animation
     PropertyAnimation on x {

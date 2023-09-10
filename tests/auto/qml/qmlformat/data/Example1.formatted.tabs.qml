@@ -135,11 +135,9 @@ Item {
 		// This is an orphan
 
 		// This is a cool text
-		Text {
-		},
+		Text {},
 		// This is a cool rectangle
-		Rectangle {
-		}
+		Rectangle {}
 	]
 
 	// some_read_only_bool

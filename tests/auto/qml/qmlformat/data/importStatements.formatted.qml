@@ -5,5 +5,4 @@ import QtQuick.Controls
 
 import org.test.module
 
-QtObject {
-}
+QtObject {}

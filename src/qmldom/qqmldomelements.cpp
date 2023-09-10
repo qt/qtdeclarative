@@ -719,7 +719,7 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
     ow.writeRegion(IdentifierRegion, name());
     if (!onTarget.isEmpty())
         ow.space().writeRegion(OnTokenRegion).space().writeRegion(OnTargetRegion, onTarget);
-    ow.writeRegion(LeftBraceRegion, u" {").newline();
+    ow.writeRegion(LeftBraceRegion, u" {");
     int baseIndent = ow.increaseIndent();
     int spacerId = 0;
     if (!idStr().isEmpty()) { // *always* put id first
@@ -735,8 +735,10 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
             == LineWriterOptions::AttributesSequence::Normalize) {
             ow.ensureNewline(2);
         }
-        if (myId)
+        if (myId) {
             myId.writeOutPost(ow);
+            ow.ensureNewline(1);
+        }
     }
     quint32 counter = ow.counter();
     DomItem component;
@@ -860,9 +862,10 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
             } else {
                 el.second.writeOut(ow);
             }
+            ow.ensureNewline();
         }
         ow.decreaseIndent(1, baseIndent);
-        ow.ensureNewline().write(u"}");
+        ow.write(u"}");
 
         return;
     }
