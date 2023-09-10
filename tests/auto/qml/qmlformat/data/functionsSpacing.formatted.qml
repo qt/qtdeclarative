@@ -6,8 +6,7 @@ Item {
     }
     function test2() {
     }
-    Button {
-    }
+    Button {}
 
     function test4() {
     }

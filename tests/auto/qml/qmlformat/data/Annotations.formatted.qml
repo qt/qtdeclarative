@@ -10,17 +10,14 @@ import QtCharts 2.0
 @Pippo {
     atg1: 3
 }
-@Annotation2 {
-}
+@Annotation2 {}
 Item {
-    @Annotate {
-    }
+    @Annotate {}
     anchors.fill: parent
     @AnnotateMore {
         property int x: 5
     }
-    @AnnotateALot {
-    }
+    @AnnotateALot {}
     property variant othersSlice: 0
 
     //![1]
@@ -79,14 +76,12 @@ Item {
         @BindingAnn {
             bType: 2
         }
-        val2: Item {
-        }
+        val2: Item {}
         @BindingAnn {
             bType: 3
         }
         val3: [
-            Item {
-            }
+            Item {}
         ]
         @BindingAnn {
             bType: 4

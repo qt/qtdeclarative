@@ -1,6 +1,9 @@
 Item {
 
+    Button {}
+
     Button {
+        id: foo
     }
 
     height: 360
