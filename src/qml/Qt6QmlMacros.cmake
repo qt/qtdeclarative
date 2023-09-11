@@ -3100,7 +3100,12 @@ but this file does not exist.  Possible reasons include:
     # Construct the -importPath arguments.
     set(import_path_arguments)
     foreach(path IN LISTS qml_import_paths)
-        list(APPEND import_path_arguments -importPath ${path})
+        if(EXISTS "${path}" OR scan_at_build_time)
+            list(APPEND import_path_arguments -importPath ${path})
+        else()
+            message(DEBUG "The import path ${path} is mentioned for ${target}, but it doesn't"
+                " exists.")
+        endif()
     endforeach()
 
     list(APPEND cmd_args ${import_path_arguments})
