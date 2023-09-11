@@ -55,7 +55,7 @@ int main(int argc, char **argv){
     if (!parser.positionalArguments().isEmpty())
         bridge.m_figmaUrlOrId = parser.positionalArguments().first();
 
-    if (parser.positionalArguments().isEmpty()) {
+    if (argc == 1) {
         // GUI mode
         QQmlApplicationEngine engine;
         engine.rootContext()->setContextProperty("bridge", &bridge);
