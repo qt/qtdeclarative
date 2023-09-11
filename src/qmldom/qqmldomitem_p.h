@@ -916,6 +916,7 @@ public:
     DomItem environment() const;
     DomItem universe() const;
     DomItem containingFile() const;
+    DomItem containingScriptExpression() const;
     DomItem goToFile(const QString &filePath) const;
     DomItem goUp(int) const;
     DomItem directParent() const;

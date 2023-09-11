@@ -650,6 +650,7 @@ private slots:
     void testInMemory()
     {
         DomItem res = DomItem::fromCode("MyItem{}");
+        QCOMPARE(res.qmlObject(GoTo::Strict), DomItem());
         DomItem obj = res.qmlObject(GoTo::MostLikely);
         QCOMPARE(obj.name(), u"MyItem");
     }
@@ -2456,6 +2457,58 @@ private slots:
         env.loadPendingDependencies();
 
         QCOMPARE(fileA.goToFile(canonicalFilePathB), fileB);
+    }
+
+    void goUp()
+    {
+        using namespace Qt::StringLiterals;
+        const QString filePath = baseDir + u"/nullStatements.qml"_s;
+        const QString canonicalFilePathB = QFileInfo(filePath).canonicalFilePath();
+        QVERIFY(!canonicalFilePathB.isEmpty());
+
+        DomItem env = DomEnvironment::create(
+                qmltypeDirs,
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+        DomItem fileA;
+        DomItem fileB;
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
+
+        env.loadFile(
+                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), filePath, options),
+                [&fileA](Path, const DomItem &, const DomItem &newIt) {
+                    fileA = newIt.fileObject();
+                },
+                LoadOption::DefaultLoad);
+
+        env.loadPendingDependencies();
+
+        QCOMPARE(fileA.top().goUp(1), DomItem());
+        QCOMPARE(fileA.top().directParent(), DomItem());
+
+        DomItem component = fileA.field(Fields::components).key(QString()).index(0);
+
+        DomItem forStatement = component.field(Fields::objects)
+                                       .index(0)
+                                       .field(Fields::methods)
+                                       .key(u"testForNull"_s)
+                                       .index(0)
+                                       .field(Fields::body)
+                                       .field(Fields::scriptElement)
+                                       .field(Fields::statements)
+                                       .index(0)
+                                       .field(Fields::body);
+
+        DomItem forStatementBlock = forStatement.field(Fields::statements);
+
+        QCOMPARE(forStatementBlock.directParent(), forStatement);
+        QCOMPARE(forStatementBlock.goUp(1), forStatement);
+        QCOMPARE(forStatementBlock.goUp(11), component);
+
+        QCOMPARE(forStatement.component(GoTo::Strict), component);
     }
 
 private:

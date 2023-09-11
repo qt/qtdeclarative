@@ -862,6 +862,7 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
                 FileLocations::ensure(containingObjectEl.fileLocations, pathFromContainingObject);
         FileLocations::addRegion(bindingFileLocation, u"identifier",
                                  el->qualifiedId->identifierToken);
+        FileLocations::addRegion(bindingFileLocation, u"colon", el->colonToken);
         Q_ASSERT_X(bindingPtr, className, "binding could not be retrieved");
     }
     if (bindingPtr)

@@ -287,6 +287,14 @@ Q_ENUM_NS(GoTo)
 enum class AddOption { KeepExisting, Overwrite };
 Q_ENUM_NS(AddOption)
 
+/*!
+\internal
+FilterUpOptions decide in which direction the filtering is done.
+ReturnInner starts the search at top(), and work its way down to the current
+element.
+ReturnOuter and ReturnOuterNoSelf starts the search at the current element and
+works their way up to to top().
+*/
 enum class FilterUpOptions { ReturnOuter, ReturnOuterNoSelf, ReturnInner };
 Q_ENUM_NS(FilterUpOptions)
 

@@ -1,5 +1,6 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+#include "qqmldomconstants_p.h"
 #include "qqmldomitem_p.h"
 #include "qqmldompath_p.h"
 #include "qqmldomtop_p.h"
@@ -458,14 +459,7 @@ DomItem DomItem::fileObject(GoTo options) const
 
 DomItem DomItem::rootQmlObject(GoTo options) const
 {
-    if (DomItem res = filterUp([](DomType k, const DomItem &) { return k == DomType::QmlObject; },
-                               FilterUpOptions::ReturnInner))
-        return res;
-    if (options == GoTo::MostLikely) {
-        if (DomItem comp = component(options))
-            return comp.field(Fields::objects).index(0);
-    }
-    return DomItem();
+    return qmlObject(options, FilterUpOptions::ReturnInner);
 }
 
 DomItem DomItem::container() const
@@ -531,6 +525,20 @@ DomItem DomItem::universe() const
 
 /*!
    \internal
+   Shorthand to obtain the ScriptExpression DomItem, in which this DomItem is defined.
+   Returns an empty DomItem if the item is not defined inside a ScriptExpression.
+   \sa goToFile()
+ */
+DomItem DomItem::containingScriptExpression() const
+{
+    if (DomItem res = filterUp([](DomType k, const DomItem &) { return k == DomType::ScriptExpression; },
+                               FilterUpOptions::ReturnOuter))
+        return res;
+    return DomItem();
+}
+
+/*!
+   \internal
    Shorthand to obtain the QmlFile DomItem, in which this DomItem is defined.
    Returns an empty DomItem if the item is not defined in a QML file.
    \sa goToFile()
@@ -562,7 +570,12 @@ DomItem DomItem::goToFile(const QString &canonicalPath) const
  */
 DomItem DomItem::goUp(int n) const
 {
-    DomItem parent = owner().path(pathFromOwner().dropTail(n));
+    Path path = canonicalPath();
+    // first entry of path is usually top(), and you cannot go up from top().
+    if (path.length() < n + 1)
+        return DomItem();
+
+    DomItem parent = top().path(path.dropTail(n));
     return parent;
 }
 
@@ -575,63 +588,39 @@ DomItem DomItem::directParent() const
     return goUp(1);
 }
 
+/*!
+\internal
+Finds the first element in the DomItem hierarchy that satisfies filter.
+Use options to set the search direction, see also \l{FilterUpOptions}.
+*/
 DomItem DomItem::filterUp(function_ref<bool(DomType k, const DomItem &)> filter, FilterUpOptions options) const
 {
-    DomItem it = *this;
-    DomType k = it.internalKind();
+    if (options == FilterUpOptions::ReturnOuter && filter(internalKind(), *this)) {
+        return *this;
+    }
+
     switch (options) {
     case FilterUpOptions::ReturnOuter:
     case FilterUpOptions::ReturnOuterNoSelf: {
-        bool checkTop = (options == FilterUpOptions::ReturnOuter);
-        while (k != DomType::Empty) {
-            if (checkTop && filter(k, it))
-                return it;
-            checkTop = true;
-            if (!domTypeIsOwningItem(k)) {
-                DomItem el = it.owner();
-                DomItem res;
-                k = DomType::Empty;
-                Path pp = it.pathFromOwner();
-                DomType k2 = el.internalKind();
-                if (filter(k2, el)) {
-                    k = k2;
-                    res = el;
-                }
-                for (Path p : pp.mid(0, pp.length() - 1)) {
-                    el = el.path(p);
-                    DomType k2 = el.internalKind();
-                    if (filter(k2, el)) {
-                        k = k2;
-                        res = el;
-                    }
-                }
-                if (k != DomType::Empty)
-                    return res;
-                it = it.owner();
+        for (DomItem current = *this, previous = DomItem(); current;
+             previous = current, current = current.directParent()) {
+            if (filter(current.internalKind(), current)) {
+                if (options != FilterUpOptions::ReturnOuterNoSelf || current != *this)
+                    return current;
             }
-            it = it.containingObject();
-            k = it.internalKind();
-        }
-    } break;
-    case FilterUpOptions::ReturnInner:
-        while (k != DomType::Empty) {
-            if (!domTypeIsOwningItem(k)) {
-                DomItem el = owner();
-                Path pp = pathFromOwner();
-                for (Path p : pp) {
-                    DomItem child = el.path(p);
-                    DomType k2 = child.internalKind();
-                    if (filter(k2, child))
-                        return child;
-                    el = child;
-                }
-                it = it.owner();
-            }
-            it = it.containingObject();
-            k = it.internalKind();
         }
         break;
     }
+    case FilterUpOptions::ReturnInner:
+        DomItem current = top();
+        for (const Path &currentPath : canonicalPath()) {
+            current = current.path(currentPath);
+            if (filter(current.internalKind(), current))
+                return current;
+        }
+        break;
+    }
+
     return DomItem();
 }
 
