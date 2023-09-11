@@ -40,12 +40,12 @@ QT_BEGIN_NAMESPACE
     \value Unknown An unknown graphics API is in use
     \value Software The Qt Quick 2D Renderer is in use
     \value OpenVG OpenVG via EGL
-    \value OpenGL OpenGL ES 2.0 or higher via a graphics abstraction layer. This value was introduced in Qt 5.14.
-    \value Direct3D11 Direct3D 11 via a graphics abstraction layer. This value was introduced in Qt 5.14.
-    \value Direct3D12 Direct3D 12 via a graphics abstraction layer. This value was introduced in Qt 6.6.
-    \value Vulkan Vulkan 1.0 via a graphics abstraction layer. This value was introduced in Qt 5.14.
-    \value Metal Metal via a graphics abstraction layer. This value was introduced in Qt 5.14.
-    \value Null Null (no output) via a graphics abstraction layer. This value was introduced in Qt 5.14.
+    \value [since 5.14] OpenGL OpenGL ES 2.0 or higher via a graphics abstraction layer.
+    \value [since 5.14] Direct3D11 Direct3D 11 via a graphics abstraction layer.
+    \value [since 6.6] Direct3D12 Direct3D 12 via a graphics abstraction layer.
+    \value [since 5.14] Vulkan Vulkan 1.0 via a graphics abstraction layer.
+    \value [since 5.14] Metal Metal via a graphics abstraction layer.
+    \value [since 5.14] Null Null (no output) via a graphics abstraction layer.
     \omitvalue OpenGLRhi
     \omitvalue Direct3D11Rhi
     \omitvalue VulkanRhi
@@ -78,76 +78,69 @@ QT_BEGIN_NAMESPACE
     \value PainterResource The resource is a pointer to the active QPainter
     used by the scenegraph, when running with the software backend.
 
-    \value RhiResource The resource is a pointer to the QRhi instance used by
-    the scenegraph, when applicable. This value was introduced in Qt 5.14.
+    \value [since 5.14] RhiResource The resource is a pointer to the QRhi instance used by
+    the scenegraph, when applicable.
 
-    \value RhiSwapchainResource The resource is a pointer to a QRhiSwapchain
+    \value [since 6.0] RhiSwapchainResource The resource is a pointer to a QRhiSwapchain
     instance that is associated with the window. The value is null when the
-    window is used in combination with QQuickRenderControl. This value was
-    introduced in Qt 6.0.
+    window is used in combination with QQuickRenderControl.
 
-    \value RhiRedirectCommandBuffer The resource is a pointer to a
+    \value [since 6.0] RhiRedirectCommandBuffer The resource is a pointer to a
     QRhiCommandBuffer instance that is associated with the window and its
     QQuickRenderControl. The value is null when the window is not associated
-    with a QQuickRenderControl. This value was introduced in Qt 6.0.
+    with a QQuickRenderControl.
 
-    \value RhiRedirectRenderTarget The resource is a pointer to a
+    \value [since 6.0] RhiRedirectRenderTarget The resource is a pointer to a
     QRhiTextureRenderTarget instance that is associated with the window and its
     QQuickRenderControl. The value is null when the window is not associated
     with a QQuickRenderControl. Note that the value always reflects the main
     texture render target and it does not depend on the Qt Quick scene, meaning
     it does not take any additional texture-targeting render passes generated
-    by ShaderEffect or QQuickItem layers into account. This value was
-    introduced in Qt 6.0.
+    by ShaderEffect or QQuickItem layers into account.
 
-    \value PhysicalDeviceResource The resource is a pointer to the pysical
+    \value [since 5.14] PhysicalDeviceResource The resource is a pointer to the pysical
     device object used by the scenegraph, when applicable. For example, a
     \c{VkPhysicalDevice *}. Note that with Vulkan the returned value is a
-    pointer to the VkPhysicalDevice, not the handle itself. This value was
-    introduced in Qt 5.14.
+    pointer to the VkPhysicalDevice, not the handle itself.
 
-    \value OpenGLContextResource The resource is a pointer to the
+    \value [since 5.14] OpenGLContextResource The resource is a pointer to the
     QOpenGLContext used by the scenegraph (on the render thread), when
-    applicable. This value was introduced in Qt 5.14.
+    applicable.
 
-    \value DeviceContextResource The resource is a pointer to the device
+    \value [since 5.14] DeviceContextResource The resource is a pointer to the device
     context used by the scenegraph, when applicable. For example, a
-    \c{ID3D11DeviceContext *}. This value was introduced in Qt 5.14.
+    \c{ID3D11DeviceContext *}.
 
-    \value CommandEncoderResource The resource is a pointer to the currently
+    \value [since 5.14] CommandEncoderResource The resource is a pointer to the currently
     active render command encoder object used by the scenegraph, when
     applicable. For example, a \c{MTLRenderCommandEncoder *}. This object has
     limited validity, and is only valid while the scene graph is recording a
-    render pass for the next frame. This value was introduced in Qt 5.14.
+    render pass for the next frame.
 
-    \value VulkanInstanceResource The resource is a pointer to the
-    QVulkanInstance used by the scenegraph, when applicable. This value was
-    introduced in Qt 5.14.
+    \value [since 5.14] VulkanInstanceResource The resource is a pointer to the
+    QVulkanInstance used by the scenegraph, when applicable.
 
-    \value RenderPassResource The resource is a pointer to the main render pass
+    \value [since 5.14] RenderPassResource The resource is a pointer to the main render pass
     used by the scenegraph, describing the color and depth/stecil attachments
     and how they are used. For example, a \c{VkRenderPass *}. Note that the
     value always reflects the main render target (either the on-screen window
     or the texture QQuickRenderControl redirects to) and it does not depend on
     the Qt Quick scene, meaning it does not take any additional
     texture-targeting render passes generated by ShaderEffect or QQuickItem
-    layers into account. This value was introduced in Qt 5.14.
+    layers into account.
 
-    \value RedirectPaintDevice The resource is a pointer to QPaintDevice instance
+    \value [since 6.4] RedirectPaintDevice The resource is a pointer to QPaintDevice instance
     that is associated with the window and its QQuickRenderControl. The value is
-    null when the window is not associated with a QQuickRenderControl. This value
-    was introduced in Qt 6.4.
+    null when the window is not associated with a QQuickRenderControl.
 
-    \value GraphicsQueueFamilyIndexResource The resource is a pointer to the
+    \value [since 6.6] GraphicsQueueFamilyIndexResource The resource is a pointer to the
     graphics queue family index used by the scenegraph, when applicable. With
-    Vulkan, this is a pointer to a \c uint32_t index value. This value was
-    introduced in Qt 6.6.
+    Vulkan, this is a pointer to a \c uint32_t index value.
 
-    \value GraphicsQueueIndexResource The resource is a pointer to the graphics
+    \value [since 6.6] GraphicsQueueIndexResource The resource is a pointer to the graphics
     queue index (uint32_t) used by the scenegraph, when applicable. With
     Vulkan, this is a pointer to a \c uint32_t index value, which in practice
-    is the index of the VkQueue reported for \c CommandQueueResource. This
-    value was introduced in Qt 6.6.
+    is the index of the VkQueue reported for \c CommandQueueResource.
  */
 
 /*!
@@ -155,9 +148,8 @@ QT_BEGIN_NAMESPACE
     \value UnknownShadingLanguage Not yet known due to no window and scenegraph associated
     \value GLSL GLSL or GLSL ES
     \value HLSL HLSL
-    \value RhiShader Consumes QShader instances containing shader variants for
-    multiple target languages and intermediate formats. This value was introduced in
-    Qt 5.14.
+    \value [since 5.14] RhiShader Consumes QShader instances containing shader variants for
+    multiple target languages and intermediate formats.
  */
 
 /*!
