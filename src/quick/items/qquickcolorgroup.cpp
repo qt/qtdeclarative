@@ -50,6 +50,16 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
+    \qmlproperty color QtQuick::ColorGroup::accent
+    \since 6.6
+
+    A color that typically contrasts or compliments \l base, \l window, and \l
+    button colors. It usually represents the users' choice of desktop
+    personalisation. Styling of interactive components is a typical use case.
+    Unless explicitly set, it defaults to \l highlight.
+*/
+
+/*!
     \qmlproperty color QtQuick::ColorGroup::alternateBase
 
     Used as the alternate background color in item views with alternating row colors.
