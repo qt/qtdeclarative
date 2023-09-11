@@ -406,8 +406,7 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
     QQuickItem *oldContentItem = contentItem;
     if (oldContentItem) {
         disconnect(oldContentItem, &QQuickItem::baselineOffsetChanged, this, &QQuickControlPrivate::updateBaselineOffset);
-        if (oldContentItem)
-            QQuickItemPrivate::get(oldContentItem)->removeItemChangeListener(this, QQuickControlPrivate::Focus);
+        QQuickItemPrivate::get(oldContentItem)->removeItemChangeListener(this, QQuickControlPrivate::Focus);
         removeImplicitSizeListener(oldContentItem);
     }
 
