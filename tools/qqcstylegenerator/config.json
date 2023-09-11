@@ -17,7 +17,7 @@
         "page": "Components",
         "component set": "ButtonTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "ButtonBackground, background"},
+            {"atom": "background", "figmaPath": "ButtonBackground"},
             {"atom": "contentItem", "figmaPath": "contentItem"},
             {"atom": "label", "figmaPath": "contentItem, label"}
         ],
@@ -38,7 +38,7 @@
         "component set": "CheckBoxTemplate${Theme}",
         "contents": ["indicator", "label"],
         "atoms": [
-            {"atom": "background", "figmaPath": "CheckBoxBackground, background"},
+            {"atom": "background", "figmaPath": "CheckBoxBackground"},
             {"atom": "label", "figmaPath": "ContentItem, Label"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "indicator", "figmaPath": "ContentItem, CheckBoxIndicatorBox"}
@@ -63,7 +63,7 @@
         "page": "Components",
         "component set": "ComboBoxTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "ComboBoxBackground, background"},
+            {"atom": "background", "figmaPath": "ComboBoxBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "indicator", "figmaPath": "ComboBoxHandle"},
             {"atom": "label", "figmaPath": "ContentItem, Label"}
@@ -83,7 +83,7 @@
         "page": "Components",
         "component set": "ComboBoxTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "ComboBoxPopup, background"},
+            {"atom": "background", "figmaPath": "ComboBoxPopup"},
             {"atom": "contentItem", "figmaPath": "PopupLayout, ContentItem"}
         ],
         "states": [
@@ -101,7 +101,7 @@
         "page": "Components",
         "component set": "FrameTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "FrameBackground, background"},
+            {"atom": "background", "figmaPath": "FrameBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem"}
         ],
         "states": [
@@ -114,7 +114,7 @@
         "page": "Components",
         "component set": "ItemDelegateTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "ItemDelegateBackground, background"},
+            {"atom": "background", "figmaPath": "ItemDelegateBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "label", "figmaPath": "ContentItem, Label"}
         ],
@@ -132,7 +132,7 @@
         "name": "Popup",
         "component set": "PopupTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "PopupBackground, background"},
+            {"atom": "background", "figmaPath": "PopupBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
         ],
         "states": [
@@ -146,7 +146,7 @@
         "component set": "RadioButtonTemplate${Theme}",
         "contents": ["indicator", "label"],
         "atoms": [
-            {"atom": "background", "figmaPath": "RadioButtonBackground, background"},
+            {"atom": "background", "figmaPath": "RadioButtonBackground"},
             {"atom": "label", "figmaPath": "ContentItem, Label"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "indicator", "figmaPath": "ContentItem, RadioButtonIndicator"}
@@ -168,7 +168,7 @@
         "component set": "RangeSliderTemplate${Theme}",
         "contents": ["groove", "track", "handle"],
         "atoms": [
-            {"atom": "background", "figmaPath": "RangeSliderBackground, background"},
+            {"atom": "background", "figmaPath": "RangeSliderBackground"},
             {"atom": "groove", "figmaPath": "RangeSliderGroove, groveBack"},
             {"atom": "track", "figmaPath": "RangeSliderTrack, trackBack"},
             {"atom": "first-handle", "figmaPath": "RangeSliderHandleFirst"},
@@ -187,7 +187,7 @@
         "page": "Components",
         "component set": "RoundButtonTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "RoundButtonBackground, background"},
+            {"atom": "background", "figmaPath": "RoundButtonBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "label", "figmaPath": "ContentItem, label"}
         ],
@@ -207,7 +207,7 @@
         "page": "Components",
         "component set": "ScrollBarTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "ScrollbarBackground, background"},
+            {"atom": "background", "figmaPath": "ScrollbarBackground"},
             {"atom": "handle", "figmaPath": "ScrollbarHandle"},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
         ],
@@ -223,7 +223,7 @@
         "page": "Components",
         "component set": "ScrollIndicatorTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "ScrollIndicatorBackground, background"},
+            {"atom": "background", "figmaPath": "ScrollIndicatorBackground"},
             {"atom": "handle", "figmaPath": "ScrollIndicatorHandle"},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
         ],
@@ -238,7 +238,7 @@
         "component set": "SliderTemplate${Theme}",
         "contents": ["groove", "track", "handle"],
         "atoms": [
-            {"atom": "background", "figmaPath": "SliderBackground, background"},
+            {"atom": "background", "figmaPath": "SliderBackground"},
             {"atom": "groove", "figmaPath": "SliderGroove, groveBack"},
             {"atom": "track", "figmaPath": "SliderTrack, trackBack"},
             {"atom": "handle", "figmaPath": "SliderHandle"},
@@ -257,7 +257,7 @@
         "component set": "SpinBoxTemplate${Theme}",
         "contents": ["indicator-down", "textInput", "indicator-up"],
         "atoms": [
-            {"atom": "background", "figmaPath": "spinboxBackground, background"},
+            {"atom": "background", "figmaPath": "spinboxBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "indicator-up", "figmaPath": "ContentItem, UpIndicator"},
             {"atom": "indicator-down", "figmaPath": "ContentItem, DownIndicator"},
@@ -280,10 +280,10 @@
         "component set": "SwitchTemplate${Theme}",
         "contents": ["handle-background", "label"],
         "atoms": [
-            {"atom": "background", "figmaPath": "SwitchBackground, background"},
+            {"atom": "background", "figmaPath": "SwitchBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "handle", "figmaPath": "ContentItem, SwitchHandle"},
-            {"atom": "handle-background", "figmaPath": "ContentItem, HandleBackground, background"},
+            {"atom": "handle-background", "figmaPath": "ContentItem, HandleBackground"},
             {"atom": "handle-contentItem", "figmaPath": "ContentItem, HandleTemplate, ContentItem", "export": "layout"},
             {"atom": "label", "figmaPath": "ContentItem, Label"}
         ],
@@ -303,7 +303,7 @@
         "component set": "TabBarTemplate${Theme}",
         "contents": ["tabButton1", "tabButton2"],
         "atoms": [
-            {"atom": "background", "figmaPath": "TabBarBackground, background"},
+            {"atom": "background", "figmaPath": "TabBarBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "tabButton1", "figmaPath": "ContentItem, TabButton1", "export": "geometry"},
             {"atom": "tabButton2", "figmaPath": "ContentItem, TabButton2", "export": "geometry"}
@@ -320,7 +320,7 @@
         "page": "Components",
         "component set": "TabButtonTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "TabButtonBackground, background"},
+            {"atom": "background", "figmaPath": "TabButtonBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "label", "figmaPath": "ContentItem, label"}
         ],
@@ -340,7 +340,7 @@
         "page": "Components",
         "component set": "TextAreaTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "TextAreaBackground, background"},
+            {"atom": "background", "figmaPath": "TextAreaBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "label", "figmaPath": "ContentItem, Label"}
         ],
@@ -356,7 +356,7 @@
         "page": "Components",
         "component set": "TextFieldTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "TextFieldBackground, background"},
+            {"atom": "background", "figmaPath": "TextFieldBackground"},
             {"atom": "contentItem", "figmaPath": "contentItem"},
             {"atom": "label", "figmaPath": "ContentItem, Label"}
         ],
@@ -373,7 +373,7 @@
         "component set": "ToolBarTemplate${Theme}",
         "contents": ["toolButton1", "toolButton2"],
         "atoms": [
-            {"atom": "background", "figmaPath": "ToolBarBackground, background"},
+            {"atom": "background", "figmaPath": "ToolBarBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "toolButton1", "figmaPath": "ContentItem, ToolButton1", "export": "geometry"},
             {"atom": "toolButton2", "figmaPath": "ContentItem, ToolButton2", "export": "geometry"}
@@ -390,7 +390,7 @@
         "page": "Components",
         "component set": "ToolButtonTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "ToolButtonBackground, background"},
+            {"atom": "background", "figmaPath": "ToolButtonBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "label", "figmaPath": "ContentItem, label"}
         ],
