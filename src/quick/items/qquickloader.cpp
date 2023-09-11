@@ -161,9 +161,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
 
     \section2 Loader Sizing Behavior
 
-    If the source component is not an Item type, Loader does not
-    apply any special sizing rules.  When used to load visual types,
-    Loader applies the following sizing rules:
+    When used to load visual types, Loader applies the following sizing rules:
 
     \list
     \li If an explicit size is not specified for the Loader, the Loader
@@ -190,6 +188,8 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     \li The red rectangle will be 50x50, centered in the root item.
     \endtable
 
+    If the source component is not an Item type, Loader does not apply any
+    special sizing rules.
 
     \section2 Receiving Signals from Loaded Objects
 
