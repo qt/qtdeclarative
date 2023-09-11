@@ -129,6 +129,7 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/nullishCoalescing_RHS_Or.qml";
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/typeAnnotations.2.qml";
     m_invalidFiles << "tests/auto/qml/qqmlparser/data/disallowedtypeannotations/qmlnestedfunction.qml";
+    m_invalidFiles << "tests/auto/qmlls/utils/data/emptyFile.qml";
 
     // Files that get changed:
     // rewrite of import "bla/bla/.." to import "bla"

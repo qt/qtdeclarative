@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import QtQuick as QQ
-
+pragma Singleton
 Zzz {
     id: root
     width: height
@@ -26,4 +26,41 @@ Zzz {
     QQ.Rectangle {
         color:"red"
     }
+
+    Item {
+        id: someItem
+        property int helloProperty
+    }
+
+    function parameterCompletion(helloWorld, helloMe: int) {
+        let helloVar = 42;
+        let result = someItem.helloProperty + helloWorld;
+        return result;
+    }
+
+    component Base: QtObject {
+        property int propertyInBase
+        function functionInBase(jsParameterInBase) {
+            let jsIdentifierInBase;
+            return jsIdentifierInBase;
+        }
+    }
+
+    Base {
+        property int propertyInDerived
+        function functionInDerived(jsParameterInDerived) {
+            let jsIdentifierInDerived;
+            return jsIdentifierInDerived;
+        }
+
+        property Base child: Base {
+            property int propertyInChild
+            function functionInChild(jsParameterInChild) {
+                let jsIdentifierInChild;
+                return someItem.helloProperty;
+            }
+        }
+    }
+    function test1() {  for (myvar = 42; i<0; ++i){}  console.log(myvar);}
+    function test2() {  for (var myvar = 42; i<0; ++i){}  console.log(myvar);}
 }

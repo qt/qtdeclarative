@@ -7,4 +7,6 @@ Item {
     Rectangle {
         width: zzz.height
     }
+
+    property int propertyOfZZZ
 }

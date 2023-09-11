@@ -63,6 +63,15 @@ QQmlJSScope::Ptr QQmlJSScope::clone(const ConstPtr &origin)
     return cloned;
 }
 
+/*!
+\internal
+Return all the JavaScript identifiers defined in the current scope.
+*/
+QHash<QString, QQmlJSScope::JavaScriptIdentifier> QQmlJSScope::ownJSIdentifiers() const
+{
+    return m_jsIdentifiers;
+}
+
 void QQmlJSScope::insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier)
 {
     Q_ASSERT(m_scopeType != QQmlSA::ScopeType::QMLScope);

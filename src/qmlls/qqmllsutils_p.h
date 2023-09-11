@@ -116,9 +116,8 @@ enum QQmlLSUtilsResolveOptions {
     ResolveActualTypeForFieldMemberExpression,
 };
 
-enum class TypeCompletionsType { None, Types, TypesAndAttributes };
-
-enum class FunctionCompletion { None, Declaration };
+enum class TypeCompletionOption { None, Types, QmlTypes, TypesAndAttributes };
+Q_DECLARE_FLAGS(TypeCompletionOptions, TypeCompletionOption);
 
 enum class ImportCompletionType { None, Module, Version };
 
@@ -163,8 +162,10 @@ public:
 
     static QList<CompletionItem> reachableSymbols(const DomItem &context,
                                                   const CompletionContextStrings &ctx,
-                                                  TypeCompletionsType typeCompletionType,
-                                                  FunctionCompletion completeMethodCalls);
+                                                  TypeCompletionOptions typeCompletionType);
+
+    static QList<CompletionItem> scriptIdentifierCompletion(const DomItem &context,
+                                                            const CompletionContextStrings &ctx);
     static QList<CompletionItem> completions(const DomItem& currentItem,
                                              const CompletionContextStrings &ctx);
 };

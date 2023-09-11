@@ -208,6 +208,7 @@ public:
     static void reparent(const QQmlJSScope::Ptr &parentScope, const QQmlJSScope::Ptr &childScope);
 
     void insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier);
+    QHash<QString, JavaScriptIdentifier> ownJSIdentifiers() const;
     void insertPropertyIdentifier(const QQmlJSMetaProperty &prop);
 
     ScopeType scopeType() const { return m_scopeType; }

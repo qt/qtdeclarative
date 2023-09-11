@@ -259,10 +259,10 @@ void tst_qmlls_modules::function_documentations_data()
     QTest::newRow("longfunction")
             << filePath << 5 << 14
             << ExpectedDocumentations{
-                   std::make_tuple(u"lala()"_s, u"returns void"_s, u"lala()"_s),
-                   std::make_tuple(u"longfunction()"_s, u"returns string"_s,
+                   std::make_tuple(u"lala"_s, u"returns void"_s, u"lala()"_s),
+                   std::make_tuple(u"longfunction"_s, u"returns string"_s,
                                    uR"(longfunction(a, b, c = "c", d = "d"))"_s),
-                   std::make_tuple(u"documentedFunction()"_s, u"returns string"_s,
+                   std::make_tuple(u"documentedFunction"_s, u"returns string"_s,
                                    uR"(// documentedFunction: is documented
 // returns 'Good'
 documentedFunction(arg1, arg2 = "Qt"))"_s),
@@ -301,7 +301,7 @@ void tst_qmlls_modules::function_documentations()
                     bool hasFoundExpected = false;
                     const auto expectedLabel = std::get<0>(exp);
                     for (const CompletionItem &c : *cItems) {
-                        if (c.kind->toInt() != int(CompletionItemKind::Function)) {
+                        if (c.kind->toInt() != int(CompletionItemKind::Method)) {
                             // Only check functions.
                             continue;
                         }
@@ -348,7 +348,7 @@ void tst_qmlls_modules::function_documentations()
                 QVERIFY2(false, "error computing the completion");
                 clean();
             });
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 30000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 3000);
 }
 
 void tst_qmlls_modules::buildDir()

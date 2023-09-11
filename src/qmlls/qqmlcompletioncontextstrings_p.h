@@ -46,6 +46,8 @@ public:
     // if we are at line start
     bool atLineStart() const { return m_atLineStart; }
 
+    qsizetype offset() const { return m_pos; }
+
 private:
     QString m_code; // the current code
     qsizetype m_pos = {}; // current position of the cursor
