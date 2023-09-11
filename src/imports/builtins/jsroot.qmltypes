@@ -2045,6 +2045,7 @@ Module {
         Property { name: "Key_twosuperior"; type: "number"; isReadonly: true }
         Property { name: "Key_threesuperior"; type: "number"; isReadonly: true }
         Property { name: "Key_acute"; type: "number"; isReadonly: true }
+        Property { name: "Key_micro"; type: "number"; isReadonly: true }
         Property { name: "Key_mu"; type: "number"; isReadonly: true }
         Property { name: "Key_paragraph"; type: "number"; isReadonly: true }
         Property { name: "Key_periodcentered"; type: "number"; isReadonly: true }
