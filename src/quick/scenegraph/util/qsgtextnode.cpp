@@ -43,9 +43,9 @@ QT_BEGIN_NAMESPACE
       This enum type describes type of glyph node used for rendering the text.
 
       \value QtRendering Text is rendered using a scalable distance field for each glyph.
-      \value Text.NativeRendering Text is rendered using a platform-specific technique.
+      \value NativeRendering Text is rendered using a platform-specific technique.
 
-      Select \c Text.NativeRendering if you prefer text to look native on the target platform and do
+      Select \c NativeRendering if you prefer text to look native on the target platform and do
       not require advanced features such as transformation of the text. Using such features in
       combination with the NativeRendering render type will lend poor and sometimes pixelated
       results.
@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn void QSGTextNode::setColor(const QColor &color)
 
-    Sets the main color to use when rendering the text to \c color.
+    Sets the main color to use when rendering the text to \a color.
 
     The default is black: \c QColor(0, 0, 0).
 */
@@ -118,7 +118,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn void QSGTextNode::setSelectionColor(const QColor &color)
 
-    Sets the color of the selection background to \a selectionColor when any part of the text is
+    Sets the color of the selection background to \a color when any part of the text is
     marked as selected.
 
     The default is dark blue: \c QColor(0, 0, 128).
@@ -209,9 +209,9 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn void QSGTextNode::setViewport(const QRectF &viewport)
 
-    Sets the bounding rect of the viewport where the text is displayed. Providing this information
-    makes it possible for the QSGTextNode to optimize which parts of the text layout or document
-    are included in the scene graph.
+    Sets the bounding rect of the viewport where the text is displayed to \a viewport. Providing
+    this information makes it possible for the QSGTextNode to optimize which parts of the text
+    layout or document are included in the scene graph.
 
     The default is a default-constructed QRectF. For this viewport, all contents will be included
     in the graph.

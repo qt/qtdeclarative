@@ -110,3 +110,6 @@ macro.svgcolor.DocBook = "<db:phrase role=\"color:\1\">&#160;&#160;&#160;&#160;&
 
 # suppress qdoc warnings for \instantiates entries
 spurious += "C\\+\\+ class .*\\\\instantiates .*"
+
+# Enforce zero documentation warnings
+warninglimit = 0

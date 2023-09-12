@@ -78,7 +78,7 @@
     scenegraph when rendering.
 
     The main render loop is the following. This also shows how to perform
-    GPU->CPU readbacks of images. Once a QImage is available, the \l
+    GPU->CPU readbacks of images. Once a QImage is available, the
     QWidget-based user interface updates accordingly. We will omit diving
     into the details for that here.
 
@@ -108,7 +108,7 @@
     expected to perceive. Consider rendering 5 frames in a row, in a tight loop.
     How the animations in those 5 frames move depends on the speed with which
     the CPU executes the loop iterations. That is almost never ideal. To ensure
-    consistent animations, install a custom \l QAnimationDriver. While this is
+    consistent animations, install a custom QAnimationDriver. While this is
     an undocumented (but public) API meant for advanced users, the example here
     provides a simple example of using it.
 

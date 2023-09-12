@@ -42,3 +42,6 @@ sourcedirs  += ..
 
 navigation.landingpage = "Qt QML Compiler"
 navigation.cppclassespage = "Qt QML Compiler C++ Classes"
+
+# Enforce zero documentation warnings
+warninglimit = 0

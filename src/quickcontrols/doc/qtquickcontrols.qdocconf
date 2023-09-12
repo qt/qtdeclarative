@@ -104,3 +104,6 @@ macro.stylecolor.DocBook = "<db:phrase role=\"color:\1\">\1 \2</db:phrase>"
 
 macro.nbsp.HTML = "&nbsp;"
 macro.nbsp.DocBook = "&#160;"
+
+# Enforce zero documentation warnings
+warninglimit = 0

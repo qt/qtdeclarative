@@ -528,20 +528,23 @@ QSGTextureProvider *QQuickRhiItem::textureProvider() const
     Existing QRhiGraphicsPipeline objects created with a different sample count
     must not be used anymore. When the value changes, all color and
     depth-stencil buffers are destroyed and recreated automatically, and
-    initialize() is invoked again. However, when
+    \l {QQuickRhiItemRenderer::}{initialize()} is invoked again. However, when
     \l autoRenderTarget is \c false, it will be up to the application to
     manage this with regards to the depth-stencil buffer or additional color
     buffers.
 
     Changing the sample count from the default 1 to a higher value implies that
-    colorTexture() becomes \nullptr and msaaColorBuffer() starts returning a
+    \l {QQuickRhiItemRenderer::}{colorTexture()} becomes \nullptr and
+    \l {QQuickRhiItemRenderer::}{msaaColorBuffer()} starts returning a
     valid object. Switching back to 1 (or 0), implies the opposite: in the next
     call to initialize() msaaColorBuffer() is going to return \nullptr, whereas
-    colorTexture() becomes once again valid. In addition, resolveTexture()
+    colorTexture() becomes once again valid. In addition,
+    \l {QQuickRhiItemRenderer::}{resolveTexture()}
     returns a valid (non-multisample) QRhiTexture whenever the sample count is
     greater than 1 (i.e., MSAA is in use).
 
-    \sa msaaColorBuffer(), resolveTexture()
+    \sa QQuickRhiItemRenderer::msaaColorBuffer(),
+        QQuickRhiItemRenderer::resolveTexture()
  */
 
 int QQuickRhiItem::sampleCount() const
@@ -1080,7 +1083,7 @@ QRhiRenderTarget *QQuickRhiItemRenderer::renderTarget() const
 
     This function is called on the render thread, if there is one, while the
     main/GUI thread is blocked. It is called from
-    \l{QQuickItem::updatePaintNode()}{the QQuickRhiItem's synchronize step},
+    \l{QQuickItem::updatePaintNode()}{the \a {item}'s synchronize step},
     and allows reading and writing data belonging to the main and render
     threads. Typically property values stored in the QQuickRhiItem are copied
     into the QQuickRhiItemRenderer, so that they can be safely read afterwards

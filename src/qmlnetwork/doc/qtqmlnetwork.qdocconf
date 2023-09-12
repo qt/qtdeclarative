@@ -32,3 +32,6 @@ navigation.landingpage = "Qt QML Network"
 navigation.qmltypespage = "Qt QML Network QML Types"
 
 tagfile = qtqmlnetwork.tags
+
+# Enforce zero documentation warnings
+warninglimit = 0

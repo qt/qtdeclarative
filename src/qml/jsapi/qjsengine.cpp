@@ -1028,7 +1028,7 @@ QDate QJSEngine::convertDateTimeToDate(const QDateTime &dateTime)
     conversions between JavaScript-equivalent types that are not
     performed by qvariant_cast by default.
 
-    \sa coerceValue(), fromScriptValue(), qvariant_cast()
+    \sa coerceValue(), fromScriptValue(), {QVariant::}{qvariant_cast()}
 */
 
 /*! \fn template <typename From, typename To> T QJSEngine::coerceValue(const From &from)
@@ -1040,7 +1040,7 @@ QDate QJSEngine::convertDateTimeToDate(const QDateTime &dateTime)
     performed by qvariant_cast by default. This method is a generalization of
     all the other conversion methods in this class.
 
-    \sa fromVariant(), qvariant_cast(), fromScriptValue(), toScriptValue()
+    \sa fromVariant(), {QVariant::}{qvariant_cast()}, fromScriptValue(), toScriptValue()
 */
 
 /*!
