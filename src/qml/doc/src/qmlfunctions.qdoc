@@ -980,7 +980,7 @@
 */
 
 /*!
-   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, QJSValue (*callback)(QQmlEngine *, QJSEngine *))
+   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, std::function<QJSValue(QQmlEngine *, QJSEngine *)> callback)
    \relates QQmlEngine
 
    This function may be used to register a singleton type provider \a callback in a particular \a uri
@@ -1071,7 +1071,7 @@
 */
 
 /*!
-   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, QObject *(*callback)(QQmlEngine *, QJSEngine *))
+   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, std::function<QObject*(QQmlEngine *, QJSEngine *)> callback)
    \relates QQmlEngine
 
    This function may be used to register a singleton type provider \a callback in a particular \a uri
@@ -1161,15 +1161,6 @@
    \endqml
 
    \sa QML_SINGLETON, {Choosing the Correct Integration Method Between C++ and QML}
-*/
-
-
-/*!
-   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, std::function<QObject*(QQmlEngine *, QJSEngine *)> callback)
-   \relates QQmlEngine
-
-   \overload qmlRegisterSingletonType
-   \since 5.14
 */
 
 /*!
