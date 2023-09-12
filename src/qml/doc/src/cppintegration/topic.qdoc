@@ -55,7 +55,7 @@ provides ways to do the reverse and manipulate QML objects from C++ code. See
 details.
 
 It is often desirable to expose some state as global properties to QML.
-\l{qtqml-cpp-integration-exposecppstate.html}{Exposing State from C++ to QML}
+\l{qtqml-cppintegration-exposecppstate.html}{Exposing State from C++ to QML}
 describes how to do this.
 
 Finally, the C++ code may be integrated into either a C++ application or a C++ plugin depending on

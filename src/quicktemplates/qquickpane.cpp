@@ -31,8 +31,8 @@ Q_LOGGING_CATEGORY(lcPane, "qt.quick.controls.pane")
     dynamically need to be explicitly parented to the \c contentItem.
 
     As mentioned in \l {Event Handling}, Pane does not let click and touch
-    events through to items beneath it. If \l wheelEnabled is \c true, the
-    same applies to mouse wheel events.
+    events through to items beneath it. If \l [QML] {Control::}{wheelEnabled}
+    is \c true, the same applies to mouse wheel events.
 
     \section1 Content Sizing
 

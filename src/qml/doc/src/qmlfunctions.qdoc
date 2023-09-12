@@ -465,9 +465,10 @@
   for example because they belong to 3rdparty libraries.
   To register a namespace, see \l QML_FOREIGN_NAMESPACE().
 
-  \b{NOTE:} You may want to use \l QML_NAMED_ELEMENT() instead of \l QML_ELEMENT due to the fact that
-  the element will be named like the struct it is contained in, not the foreign type.
-  See the \l {Extension Objects} for an example.
+  \note You may want to use \l QML_NAMED_ELEMENT() instead of \l QML_ELEMENT.
+  With QML_ELEMENT, the element is named after the struct it is contained in,
+  not the foreign type. The \l {Foreign objects integration} chapter in
+  \l {Writing advanced QML Extensions with C++} demonstrates this.
 
   \include {qualified-class-name.qdocinc} {class name must be qualified}
 

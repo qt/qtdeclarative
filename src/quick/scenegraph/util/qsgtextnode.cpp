@@ -94,7 +94,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn QSGTextNode::TextStyle QSGTextNode::textStyle() const
+    \fn QSGTextNode::TextStyle QSGTextNode::textStyle()
 
     Returns the style of the rendered text.
 
