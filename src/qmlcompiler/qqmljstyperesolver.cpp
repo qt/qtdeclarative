@@ -102,6 +102,18 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     m_metaObjectType = metaObjectType;
 
     m_jsGlobalObject = importer->jsGlobalObject();
+
+    QQmlJSScope::Ptr forInIteratorPtr = QQmlJSScope::create();
+    forInIteratorPtr->setAccessSemantics(QQmlJSScope::AccessSemantics::Value);
+    forInIteratorPtr->setFilePath(u"qjslist.h"_s);
+    forInIteratorPtr->setInternalName(u"QJSListForInIterator::Ptr"_s);
+    m_forInIteratorPtr = forInIteratorPtr;
+
+    QQmlJSScope::Ptr forOfIteratorPtr = QQmlJSScope::create();
+    forOfIteratorPtr->setAccessSemantics(QQmlJSScope::AccessSemantics::Value);
+    forOfIteratorPtr->setFilePath(u"qjslist.h"_s);
+    forOfIteratorPtr->setInternalName(u"QJSListForOfIterator::Ptr"_s);
+    m_forOfIteratorPtr = forOfIteratorPtr;
 }
 
 /*!
@@ -863,7 +875,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
                  m_stringListType, m_byteArrayType, m_urlType, m_dateTimeType, m_dateType,
                  m_timeType, m_variantListType, m_variantMapType, m_varType, m_jsValueType,
                  m_jsPrimitiveType, m_listPropertyType, m_qObjectType, m_qObjectListType,
-                 m_metaObjectType }) {
+                 m_metaObjectType, m_forInIteratorPtr, m_forOfIteratorPtr }) {
         if (equals(type, builtin) || equals(type, builtin->listType()))
             return type;
     }
@@ -1485,13 +1497,22 @@ QQmlJSRegisterContent QQmlJSTypeResolver::valueType(const QQmlJSRegisterContent 
     QQmlJSScope::ConstPtr scope;
     QQmlJSScope::ConstPtr value;
 
-    auto valueType = [this](const QQmlJSScope::ConstPtr &scope) {
+    auto valueType = [&](const QQmlJSScope::ConstPtr &scope) {
         if (scope->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence)
             return scope->valueType();
-        else if (equals(scope, m_jsValueType) || equals(scope, m_varType))
+
+        if (equals(scope, m_forInIteratorPtr))
+            return m_int32Type;
+
+        if (equals(scope, m_forOfIteratorPtr))
+            return list.scopeType()->valueType();
+
+        if (equals(scope, m_jsValueType) || equals(scope, m_varType))
             return m_jsValueType;
-        else if (equals(scope, m_stringType))
+
+        if (equals(scope, m_stringType))
             return m_stringType;
+
         return QQmlJSScope::ConstPtr();
     };
 
@@ -1527,6 +1548,30 @@ QQmlJSRegisterContent QQmlJSTypeResolver::returnType(
              || variant == QQmlJSRegisterContent::JavaScriptReturnValue);
     return QQmlJSRegisterContent::create(
             storedType(type), type, QQmlJSRegisterContent::InvalidLookupIndex, variant, scope);
+}
+
+QQmlJSRegisterContent QQmlJSTypeResolver::iteratorPointer(
+        const QQmlJSRegisterContent &listType, QQmlJS::AST::ForEachType type,
+        int lookupIndex) const
+{
+    const QQmlJSScope::ConstPtr value = (type == QQmlJS::AST::ForEachType::In)
+            ? m_int32Type
+            : containedType(valueType(listType));
+
+    QQmlJSScope::ConstPtr iteratorPointer = type == QQmlJS::AST::ForEachType::In
+            ? m_forInIteratorPtr
+            : m_forOfIteratorPtr;
+
+    const QQmlJSScope::ConstPtr listContained = containedType(listType);
+
+    QQmlJSMetaProperty prop;
+    prop.setPropertyName(u"<>"_s);
+    prop.setTypeName(iteratorPointer->internalName());
+    prop.setType(iteratorPointer);
+    return QQmlJSRegisterContent::create(
+            storedType(iteratorPointer), prop, lookupIndex,
+            QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::ListIterator,
+            listContained);
 }
 
 bool QQmlJSTypeResolver::registerIsStoredIn(

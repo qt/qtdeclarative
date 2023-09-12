@@ -72,6 +72,8 @@ public:
     QQmlJSScope::ConstPtr qObjectType() const { return m_qObjectType; }
     QQmlJSScope::ConstPtr qObjectListType() const { return m_qObjectListType; }
     QQmlJSScope::ConstPtr arrayPrototype() const { return m_arrayPrototype; }
+    QQmlJSScope::ConstPtr forInIteratorPtr() const { return m_forInIteratorPtr; }
+    QQmlJSScope::ConstPtr forOfIteratorPtr() const { return m_forOfIteratorPtr; }
 
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
     QQmlJSScope::ConstPtr scopeForId(
@@ -124,6 +126,10 @@ public:
     QQmlJSRegisterContent returnType(
             const QQmlJSScope::ConstPtr &type, QQmlJSRegisterContent::ContentVariant variant,
             const QQmlJSScope::ConstPtr &scope) const;
+
+    QQmlJSRegisterContent iteratorPointer(
+            const QQmlJSRegisterContent &listType, QQmlJS::AST::ForEachType type,
+            int lookupIndex) const;
 
     bool registerIsStoredIn(const QQmlJSRegisterContent &reg,
                             const QQmlJSScope::ConstPtr &type) const;
@@ -254,6 +260,8 @@ protected:
     QQmlJSScope::ConstPtr m_metaObjectType;
     QQmlJSScope::ConstPtr m_functionType;
     QQmlJSScope::ConstPtr m_jsGlobalObject;
+    QQmlJSScope::ConstPtr m_forInIteratorPtr;
+    QQmlJSScope::ConstPtr m_forOfIteratorPtr;
 
     QQmlJSScopesById m_objectsById;
     QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> m_objectsByLocation;

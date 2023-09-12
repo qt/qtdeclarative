@@ -674,30 +674,54 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
 
     const QQmlJSRegisterContent baseType = registerType(base);
 
-    if (!m_typeResolver->isNumeric(m_state.accumulatorIn())
-            || (!baseType.isList()
-                && !m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->stringType()))) {
-        reject(u"LoadElement with non-list base type or non-numeric arguments"_s);
+    if (!baseType.isList()
+            && !m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->stringType())) {
+        reject(u"LoadElement with non-list base type "_s + baseType.descriptiveName());
         return;
     }
-
-    AccumulatorConverter registers(this);
-
-    const QString baseName = registerVariable(base);
-    const QString indexName = m_state.accumulatorVariableIn;
 
     const QString voidAssignment = u"    "_s + m_state.accumulatorVariableOut + u" = "_s +
             conversion(m_typeResolver->globalType(m_typeResolver->voidType()),
                        m_state.accumulatorOut(), QString()) + u";\n"_s;
 
-    if (!m_typeResolver->isIntegral(m_state.accumulatorIn())) {
+    QString indexName = m_state.accumulatorVariableIn;
+    QQmlJSScope::ConstPtr indexType;
+    if (m_typeResolver->isNumeric(m_state.accumulatorIn())) {
+        indexType = m_typeResolver->containedType(m_state.accumulatorIn());
+    } else if (m_state.accumulatorIn().isConversion()) {
+        const auto origins = m_state.accumulatorIn().conversionOrigins();
+        if (origins.size() == 2) {
+            const auto target = m_typeResolver->equals(origins[0], m_typeResolver->voidType())
+                ? origins[1]
+                : origins[0];
+
+            if (m_typeResolver->isNumeric(target)) {
+                indexType = target;
+                m_body += u"if (!" + indexName + u".metaType().isValid())\n"
+                        + voidAssignment
+                        + u"else ";
+                indexName = convertStored(
+                        m_state.accumulatorIn().storedType(), indexType, indexName);
+            } else {
+                reject(u"LoadElement with non-numeric argument"_s);
+                return;
+            }
+        } else {
+            reject(u"LoadElement with non-numeric argument"_s);
+            return;
+        }
+    }
+
+    AccumulatorConverter registers(this);
+    const QString baseName = registerVariable(base);
+
+    if (!m_typeResolver->isIntegral(indexType)) {
         m_body += u"if (!QJSNumberCoercion::isArrayIndex("_s + indexName + u"))\n"_s
                 + voidAssignment
                 + u"else "_s;
     }
 
-    if (!m_typeResolver->isUnsignedInteger(
-                m_typeResolver->containedType(m_state.accumulatorIn()))) {
+    if (!m_typeResolver->isUnsignedInteger(indexType)) {
         m_body += u"if ("_s + indexName + u" < 0)\n"_s
                 + voidAssignment
                 + u"else "_s;
@@ -2295,15 +2319,70 @@ void QQmlJSCodeGenerator::generate_PopContext()
 
 void QQmlJSCodeGenerator::generate_GetIterator(int iterator)
 {
-    Q_UNUSED(iterator)
-    BYTECODE_UNIMPLEMENTED();
+    INJECT_TRACE_INFO(generate_GetIterator);
+
+    addInclude(u"qjslist.h"_s);
+    const QQmlJSRegisterContent listType = m_state.accumulatorIn();
+    if (!listType.isList())
+        reject(u"iterator on non-list type"_s);
+
+    const QQmlJSRegisterContent iteratorType = m_state.accumulatorOut();
+
+    const QString identifier = QString::number(iteratorType.baseLookupIndex());
+    const QString iteratorName = m_state.accumulatorVariableOut + u"Iterator" + identifier;
+    const QString listName = m_state.accumulatorVariableOut + u"List" + identifier;
+
+    m_body += u"QJSListFor"_s
+            + (iterator == int(QQmlJS::AST::ForEachType::In) ? u"In"_s : u"Of"_s)
+            + u"Iterator "_s + iteratorName + u";\n";
+    m_body += m_state.accumulatorVariableOut + u" = &" + iteratorName + u";\n";
+
+    m_body += m_state.accumulatorVariableOut + u"->init(";
+    if (iterator == int(QQmlJS::AST::ForEachType::In)) {
+        if (!m_typeResolver->equals(iteratorType.storedType(), m_typeResolver->forInIteratorPtr()))
+            reject(u"using non-iterator as iterator"_s);
+        m_body += u"QJSList(&" + m_state.accumulatorVariableIn + u", aotContext->engine)";
+    }
+    m_body += u");\n";
+
+    if (iterator == int(QQmlJS::AST::ForEachType::Of)) {
+        if (!m_typeResolver->equals(iteratorType.storedType(), m_typeResolver->forOfIteratorPtr()))
+            reject(u"using non-iterator as iterator"_s);
+        m_body += u"const auto &" // Rely on life time extension for const refs
+                + listName + u" = " + consumedAccumulatorVariableIn();
+    }
 }
 
 void QQmlJSCodeGenerator::generate_IteratorNext(int value, int offset)
 {
-    Q_UNUSED(value)
-    Q_UNUSED(offset)
-    BYTECODE_UNIMPLEMENTED();
+    INJECT_TRACE_INFO(generate_IteratorNext);
+
+    Q_ASSERT(value == m_state.changedRegisterIndex());
+    const QQmlJSRegisterContent iteratorContent = m_state.accumulatorIn();
+    const QQmlJSScope::ConstPtr iteratorType = iteratorContent.storedType();
+
+    const QString iteratorTypeName = iteratorType->internalName();
+    const QString listName = m_state.accumulatorVariableIn
+            + u"List" + QString::number(iteratorContent.baseLookupIndex());
+    QString qjsList;
+    if (m_typeResolver->equals(iteratorType, m_typeResolver->forOfIteratorPtr()))
+        qjsList = u"QJSList(&" + listName + u", aotContext->engine)";
+    else if (!m_typeResolver->equals(iteratorType, m_typeResolver->forInIteratorPtr()))
+        reject(u"using non-iterator as iterator"_s);
+
+    m_body += u"if (" + m_state.accumulatorVariableIn + u"->hasNext(" + qjsList + u")) {\n    ";
+    m_body += changedRegisterVariable() + u" = "
+            + conversion(
+                      m_typeResolver->valueType(iteratorContent),
+                      m_state.changedRegister(),
+                      m_state.accumulatorVariableIn + u"->next(" + qjsList + u')')
+            + u";\n";
+    m_body += u"} else {\n    ";
+    m_body += changedRegisterVariable() + u" = "
+            + conversion(m_typeResolver->voidType(), m_state.changedRegister(), QString());
+    m_body += u";\n    ";
+    generateJumpCodeWithTypeConversions(offset);
+    m_body += u"\n}"_s;
 }
 
 void QQmlJSCodeGenerator::generate_IteratorNextForYieldStar(int iterator, int object, int offset)

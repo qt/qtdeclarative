@@ -56,6 +56,7 @@ public:
         JavaScriptReturnValue,
 
         ListValue,
+        ListIterator,
         Builtin,
         Unknown,
     };

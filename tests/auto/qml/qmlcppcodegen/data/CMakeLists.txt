@@ -144,6 +144,7 @@ set(qml_files
     invisibleListElementType.qml
     invisibleTypes.qml
     isnan.qml
+    iteration.qml
     javaScriptArgument.qml
     jsArrayMethods.qml
     jsArrayMethodsUntyped.qml

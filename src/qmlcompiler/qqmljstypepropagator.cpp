@@ -700,27 +700,47 @@ bool QQmlJSTypePropagator::checkForEnumProblems(
 
 void QQmlJSTypePropagator::generate_LoadElement(int base)
 {
-    const QQmlJSRegisterContent baseRegister = m_state.registers[base].content;
-
-    if ((!baseRegister.isList()
-         && !m_typeResolver->registerContains(baseRegister, m_typeResolver->stringType()))
-            || !m_typeResolver->isNumeric(m_state.accumulatorIn())) {
+    const auto fallback = [&]() {
         const auto jsValue = m_typeResolver->globalType(m_typeResolver->jsValueType());
         addReadAccumulator(jsValue);
         addReadRegister(base, jsValue);
         setAccumulator(jsValue);
+    };
+
+    const QQmlJSRegisterContent baseRegister = m_state.registers[base].content;
+    if (!baseRegister.isList()
+        && !m_typeResolver->registerContains(baseRegister, m_typeResolver->stringType())) {
+        fallback();
+        return;
+    }
+    addReadRegister(base, baseRegister);
+
+    if (m_typeResolver->isNumeric(m_state.accumulatorIn())) {
+        const auto contained = m_typeResolver->containedType(m_state.accumulatorIn());
+        if (m_typeResolver->isSignedInteger(contained))
+            addReadAccumulator(m_typeResolver->globalType(m_typeResolver->int32Type()));
+        else if (m_typeResolver->isUnsignedInteger(contained))
+            addReadAccumulator(m_typeResolver->globalType(m_typeResolver->uint32Type()));
+        else
+            addReadAccumulator(m_typeResolver->globalType(m_typeResolver->realType()));
+    } else if (m_state.accumulatorIn().isConversion()) {
+        const auto origins = m_state.accumulatorIn().conversionOrigins();
+        const bool isOptionalNumber = origins.length() == 2
+                && ((m_typeResolver->isNumeric(origins[0])
+                     && m_typeResolver->equals(origins[1], m_typeResolver->voidType()))
+                    || (m_typeResolver->isNumeric(origins[1])
+                        && m_typeResolver->equals(origins[0], m_typeResolver->voidType())));
+        if (isOptionalNumber) {
+            addReadAccumulator(m_state.accumulatorIn());
+        } else {
+            fallback();
+            return;
+        }
+    } else {
+        fallback();
         return;
     }
 
-    const auto contained = m_typeResolver->containedType(m_state.accumulatorIn());
-    if (m_typeResolver->isSignedInteger(contained))
-        addReadAccumulator(m_typeResolver->globalType(m_typeResolver->int32Type()));
-    else if (m_typeResolver->isUnsignedInteger(contained))
-        addReadAccumulator(m_typeResolver->globalType(m_typeResolver->uint32Type()));
-    else
-        addReadAccumulator(m_typeResolver->globalType(m_typeResolver->realType()));
-
-    addReadRegister(base, baseRegister);
     // We can end up with undefined.
     setAccumulator(m_typeResolver->merge(
             m_typeResolver->valueType(baseRegister),
@@ -1893,15 +1913,28 @@ void QQmlJSTypePropagator::generate_PopContext()
 
 void QQmlJSTypePropagator::generate_GetIterator(int iterator)
 {
-    Q_UNUSED(iterator)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    const QQmlJSRegisterContent listType = m_state.accumulatorIn();
+    if (!listType.isList()) {
+        const auto jsValue = m_typeResolver->globalType(m_typeResolver->jsValueType());
+        addReadAccumulator(jsValue);
+        setAccumulator(jsValue);
+        return;
+    }
+
+    addReadAccumulator(listType);
+    setAccumulator(m_typeResolver->iteratorPointer(
+            listType, QQmlJS::AST::ForEachType(iterator), currentInstructionOffset()));
 }
 
 void QQmlJSTypePropagator::generate_IteratorNext(int value, int offset)
 {
-    Q_UNUSED(value)
-    Q_UNUSED(offset)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    const QQmlJSRegisterContent iteratorType = m_state.accumulatorIn();
+    addReadAccumulator(iteratorType);
+    setRegister(value, m_typeResolver->merge(
+                                m_typeResolver->valueType(iteratorType),
+                                m_typeResolver->globalType(m_typeResolver->voidType())));
+    saveRegisterStateForJump(offset);
+    m_state.setHasSideEffects(true);
 }
 
 void QQmlJSTypePropagator::generate_IteratorNextForYieldStar(int iterator, int object, int offset)
@@ -1914,7 +1947,7 @@ void QQmlJSTypePropagator::generate_IteratorNextForYieldStar(int iterator, int o
 
 void QQmlJSTypePropagator::generate_IteratorClose()
 {
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    // Noop
 }
 
 void QQmlJSTypePropagator::generate_DestructureRestElement()
@@ -2587,6 +2620,8 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
     case QV4::Moth::Instr::Type::InitializeBlockDeadTemporalZone:
     case QV4::Moth::Instr::Type::ConvertThisToObject:
     case QV4::Moth::Instr::Type::DeadTemporalZoneCheck:
+    case QV4::Moth::Instr::Type::IteratorNext:
+    case QV4::Moth::Instr::Type::IteratorNextForYieldStar:
         if (m_state.changedRegisterIndex() == Accumulator && !m_error->isValid()) {
             setError(u"Instruction is not expected to populate the accumulator"_s);
             return;

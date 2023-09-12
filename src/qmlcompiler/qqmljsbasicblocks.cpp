@@ -225,6 +225,12 @@ void QQmlJSBasicBlocks::generate_JumpNotUndefined(int offset)
     processJump(offset, Conditional);
 }
 
+void QQmlJSBasicBlocks::generate_IteratorNext(int value, int offset)
+{
+    Q_UNUSED(value);
+    processJump(offset, Conditional);
+}
+
 void QQmlJSBasicBlocks::generate_Ret()
 {
     auto currentBlock = basicBlockForInstruction(m_basicBlocks, currentInstructionOffset());
