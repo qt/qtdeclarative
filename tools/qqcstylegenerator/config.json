@@ -2,10 +2,10 @@
     "themes": ["Light", "Dark"],
     "image formats": ["png@2x"],
     "default export": [
-        {"atom": "default", "export": ["image", "geometry"]},
-        {"atom": "background", "export": ["image", "geometry"]},
+        {"atom": "default", "export": ["image"]},
+        {"atom": "background", "export": ["image"]},
         {"atom": "contentItem", "export": ["layout"]},
-        {"atom": "indicator", "export": ["image", "geometry"]},
+        {"atom": "indicator", "export": ["image"]},
         {"atom": "label", "export": ["text", "geometry"]}
     ],
     "qml": {

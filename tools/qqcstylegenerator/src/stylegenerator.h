@@ -41,6 +41,22 @@ struct ImageFormat
     QString scale;
 };
 
+struct Radii
+{
+    qreal topLeft = 0;
+    qreal topRight = 0;
+    qreal bottomLeft = 0;
+    qreal bottomRight = 0;
+};
+
+struct BorderImageOffset
+{
+    int left = 0;
+    int right = 0;
+    int top = 0;
+    int bottom = 0;
+};
+
 class StyleGenerator : public QObject
 {
     Q_OBJECT
@@ -565,6 +581,8 @@ private:
                 exportJson(obj, atomConfig);
             else if (atomExport == "text")
                 exportText(obj, atomConfig);
+            else if (atomExport == "borderImageOffset")
+                exportBorderImageOffset(obj, atomConfig);
             else
                 throw std::runtime_error("Unknown option: '" + atomExport.toStdString() + "'");
         } catch (std::exception &e) {
@@ -576,7 +594,6 @@ private:
     {
         const auto geometry = getFigmaBoundingBox(atom);
         const auto geometryIncludingShadow = getFigmaRenderBounds(atom);
-        const auto stretch = getStretch(atom);
 
         // Note that the geometry we insert into the config file is
         // the geometry of atom/shape without shadows. This means that
@@ -586,26 +603,6 @@ private:
         outputConfig.insert("y", geometry.y());
         outputConfig.insert("width", geometry.width());
         outputConfig.insert("height", geometry.height());
-
-        const int halfWidth = geometry.width() / 2;
-        const int halfHeight = geometry.height() / 2;
-
-        auto leftOffset = qMin(stretch.left(), halfWidth);
-        auto rightOffset = qMin(stretch.right(), halfWidth);
-        auto topOffset = qMin(stretch.top(), halfHeight);
-        auto bottomOffset = qMin(stretch.bottom(), halfHeight);
-
-        // workaround to make sure that there is at least a 1px
-        // middle area to stretch in case of fully-rounded corners
-        if ((bottomOffset + topOffset) == geometry.height())
-            bottomOffset--;
-        if ((rightOffset + leftOffset) == geometry.width())
-            rightOffset--;
-
-        outputConfig.insert("leftOffset", leftOffset);
-        outputConfig.insert("topOffset", topOffset);
-        outputConfig.insert("rightOffset", rightOffset);
-        outputConfig.insert("bottomOffset", bottomOffset);
 
         // Report the margins around the image that contains drop shadows (and
         // possibly other effects). This is quite similar to insets, except that
@@ -626,34 +623,67 @@ private:
         outputConfig.insert("bottomShadow", qMax(0., bottomShadow));
     }
 
+    void exportBorderImageOffset(const QJsonObject &atom, QJsonObject &outputConfig)
+    {
+        const auto geometry = getFigmaBoundingBox(atom);
+        const int halfWidth = geometry.width() / 2;
+        const int halfHeight = geometry.height() / 2;
+
+        // Get the image offsets from the design. But ensure that the offset ends up
+        // smaller than the image itself (since Figma doesn't care if the designer e.g
+        // uses a radius that is far bigger than the rectangle).
+        BorderImageOffset offset = resolveBorderImageOffset(atom);
+        offset.left = qMin(offset.left, halfWidth);
+        offset.right = qMin(offset.right, halfWidth);
+        offset.top = qMin(offset.top, halfHeight);
+        offset.bottom = qMin(offset.bottom, halfHeight);
+
+        // Workaround to make sure that there is at least a 1px
+        // middle area to stretch in case of fully-rounded corners
+        if ((offset.bottom + offset.top) == geometry.height())
+            offset.bottom--;
+        if ((offset.right + offset.left) == geometry.width())
+            offset.right--;
+
+        outputConfig.insert("leftOffset", offset.left);
+        outputConfig.insert("topOffset", offset.top);
+        outputConfig.insert("rightOffset", offset.right);
+        outputConfig.insert("bottomOffset", offset.bottom);
+    }
+
     void exportImage(const QJsonObject &atom, const QStringList &imageFormats, QJsonObject &outputConfig)
     {
-        Q_UNUSED(atom);
         const QString figmaId = getString("figmaId", outputConfig);
         const QString imageName = getString("name", outputConfig);
+        const bool atomVisible = !resolvedHidden(figmaId);
 
-        if (resolvedHidden(figmaId)) {
+        if (atomVisible) {
+            const QString imageFolder = m_currentTheme.toLower() + "/images/";
+            for (const ImageFormat imageFormat : imageFormats) {
+                const QString fileNameForReading = imageFolder + imageName + "." + imageFormat.format;
+                const QString fileNameForWriting =  imageFolder
+                        + (imageFormat.hasScale
+                           ? imageName + '@' + imageFormat.scale + "x." + imageFormat.format
+                           : imageName + '.' + imageFormat.format);
+
+                auto &figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
+                figmaIdToFileNameMap.insert(figmaId, fileNameForWriting);
+                m_imageCount++;
+
+                outputConfig.insert("export", "image");
+                outputConfig.insert("filePath", fileNameForReading);
+                debug("exporting image: " + fileNameForWriting);
+            }
+        } else {
             outputConfig.insert("filePath", "");
             debug("skipping hidden image: " + imageName + (m_bridge->m_sanity ? ", path: " + resolvedPath(figmaId) : ""));
-            return;
         }
 
-        const QString imageFolder = m_currentTheme.toLower() + "/images/";
-        for (const ImageFormat imageFormat : imageFormats) {
-            const QString fileNameForReading = imageFolder + imageName + "." + imageFormat.format;
-            const QString fileNameForWriting =  imageFolder
-                    + (imageFormat.hasScale
-                    ? imageName + '@' + imageFormat.scale + "x." + imageFormat.format
-                    : imageName + '.' + imageFormat.format);
-
-            auto &figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
-            figmaIdToFileNameMap.insert(figmaId, fileNameForWriting);
-            m_imageCount++;
-
-            outputConfig.insert("export", "image");
-            outputConfig.insert("filePath", fileNameForReading);
-            debug("exporting image: " + fileNameForWriting);
-        }
+        // Exporting an image will also automatically export related
+        // properties, such as geometry, shadows and border offsets
+        // (even for hidden / not generated images, otherwise QML bindings will fail)
+        exportGeometry(atom, outputConfig);
+        exportBorderImageOffset(atom, outputConfig);
     }
 
     void exportJson(const QJsonObject &atom, QJsonObject &outputConfig)
@@ -708,6 +738,56 @@ private:
 
         outputConfig.insert("layoutMode", atom["layoutMode"]);
         outputConfig.insert("alignItems", atom["primaryAxisAlignItems"]);
+    }
+
+    BorderImageOffset getBorderImageOffset(const QJsonObject &obj)
+    {
+        // Use radii and border width of the obj to determine the offsets.
+        // The biggest of them wins.
+        const qreal borderWidth = obj["strokeWeight"].toDouble(0);
+        const Radii radii = getRadii(obj);
+
+        BorderImageOffset offset;
+        offset.left = qCeil(qMax(borderWidth, qMax(radii.topLeft, radii.bottomLeft)));
+        offset.right = qCeil(qMax(borderWidth, qMax(radii.topRight, radii.bottomRight)));
+        offset.top = qCeil(qMax(borderWidth, qMax(radii.topLeft, radii.topRight)));
+        offset.bottom = qCeil(qMax(borderWidth, qMax(radii.bottomLeft, radii.bottomRight)));
+
+        return offset;
+    }
+
+    BorderImageOffset resolveBorderImageOffset(const QJsonObject &atom)
+    {
+        // If the atom has a child "borderImageOffset", and it's visible, we use it's
+        // layout padding to determine the border image offsets. But this is mostly meant
+        // as a fall back solution for the designer if our attempt to resolve the offset
+        // ends up wrong. Because ideally we try to determine the offset by looking
+        // at the radii and border width of the "fillAndStroke" child, or if it's missing, the
+        // atom itself. By using an offset that is bigger than the radii and border, we
+        // ensure that those parts of the image will not get scaled.
+        try {
+            const auto child = JsonTools::findNamedChild({"borderImageOffset"}, atom, m_bridge->m_sanity);
+            const bool hidden = JsonTools::resolvedHidden(child["id"].toString());
+            if (!hidden) {
+                BorderImageOffset offset;
+                offset.left = child["paddingLeft"].toInt();
+                offset.right = child["paddingRight"].toInt();
+                offset.top = child["paddingTop"].toInt();
+                offset.bottom = child["paddingBottom"].toInt();
+                return offset;
+            }
+        } catch (std::exception &e) {
+            Q_UNUSED(e);
+        }
+
+        try {
+            const auto child = JsonTools::findNamedChild({"fillAndStroke"}, atom, m_bridge->m_sanity);
+            return getBorderImageOffset(child);
+        } catch (std::exception &e) {
+            Q_UNUSED(e);
+        }
+
+        return getBorderImageOffset(atom);
     }
 
     void generateTransitions(const QJsonObject &component, QJsonObject &outputConfig, const QString &controlState, const QJsonArray &statesArray)
@@ -931,39 +1011,20 @@ private:
         return QRectF(x, y, width, height);
     }
 
-    QMargins getStretch(const QJsonObject rectangle) const
+    Radii getRadii(const QJsonObject rectangle) const
     {
-        // Determine the stretch factor of the rectangle based on its corner radii
-        qreal topLeftRadius = 0;
-        qreal topRightRadius = 0;
-        qreal bottomRightRadius = 0;
-        qreal bottomLeftRadius = 0;
-
         const QJsonValue radiusValue = rectangle.value("cornerRadius");
         if (radiusValue != QJsonValue::Undefined) {
             const qreal r = radiusValue.toDouble();
-            topLeftRadius = r;
-            topRightRadius = r;
-            bottomRightRadius = r;
-            bottomLeftRadius = r;
-        } else {
-            const QJsonValue radiiValue = rectangle.value("rectangleCornerRadii");
-            if (radiiValue == QJsonValue::Undefined)
-                return {};
-            const QJsonArray r = radiiValue.toArray();
-            Q_ASSERT(r.count() == 4);
-            topLeftRadius= r[0].toDouble();
-            topRightRadius= r[1].toDouble();
-            bottomRightRadius = r[2].toDouble();
-            bottomLeftRadius = r[3].toDouble();
+            return {r, r, r, r};
         }
 
-        const qreal left = qMax(topLeftRadius, bottomLeftRadius);
-        const qreal right = qMax(topRightRadius, bottomRightRadius);
-        const qreal top = qMax(topLeftRadius, topRightRadius);
-        const qreal bottom = qMax(bottomLeftRadius, bottomRightRadius);
-
-        return QMargins(left, top, right, bottom);
+        const QJsonValue radiiValue = rectangle.value("rectangleCornerRadii");
+        if (radiiValue == QJsonValue::Undefined)
+            return {0, 0, 0, 0};
+        const QJsonArray r = radiiValue.toArray();
+        Q_ASSERT(r.count() == 4);
+        return {r[0].toDouble(), r[1].toDouble(), r[2].toDouble(), r[3].toDouble()};
     }
 
     QString themeVarsResolved(const QString &str)
