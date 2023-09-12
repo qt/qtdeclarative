@@ -926,8 +926,8 @@ Element GenericPass::resolveType(QAnyStringView moduleName, QAnyStringView typeN
     Returns the type of the built-in type identified by \a typeName.
     Built-in types encompasses \c{C++} types which the  QML engine can handle
     without any imports (e.g. \l QDateTime and \l QString), global EcmaScript
-    objects like \c Number, as well as the \l{global Qt object}
-    {QML Global Object}.
+    objects like \c Number, as well as the \l {QML Global Object}
+    {global Qt object}.
  */
 Element GenericPass::resolveBuiltinType(QAnyStringView typeName) const
 {

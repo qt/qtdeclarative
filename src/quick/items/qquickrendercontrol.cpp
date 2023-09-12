@@ -643,7 +643,7 @@ QRhiCommandBuffer *QQuickRenderControl::commandBuffer() const
     assumes Direct3D 11 but the same concepts apply other graphics APIs as
     well.
 
-    \badcode
+    \code
         if (!m_quickInitialized) {
             m_quickWindow->setGraphicsDevice(QQuickGraphicsDevice::fromDeviceAndContext(m_engine->device(), m_engine->context()));
 
@@ -669,7 +669,7 @@ QRhiCommandBuffer *QQuickRenderControl::commandBuffer() const
     the \c software adaptation of Qt Quick.
 
     \note Internally beginFrame() and endFrame() invoke
-    \l{QRhi::}beginOffscreenFrame() and \l{QRhi::}endOffscreenFrame(),
+    \l{QRhi::}{beginOffscreenFrame()} and \l{QRhi::}{endOffscreenFrame()},
     respectively. This implies that there must not be a frame (neither
     offscreen, nor swapchain-based) being recorded on the QRhi when
     this function is called.

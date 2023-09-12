@@ -878,7 +878,7 @@ QQuickPointerHandlerPrivate::QQuickPointerHandlerPrivate()
 {
 }
 
-/*!
+/*! \internal
     Returns \c true if the movement delta \a d in pixels along the \a axis
     exceeds QQuickPointerHandler::dragThreshold() \e or QEventPoint::velocity()
     exceeds QStyleHints::startDragVelocity().
