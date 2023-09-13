@@ -262,7 +262,7 @@ FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, Path p, AST::Node *n
     return createMap(base, p, n);
 }
 
-QQmlDomAstCreator::QQmlDomAstCreator(MutableDomItem qmlFile)
+QQmlDomAstCreator::QQmlDomAstCreator(const MutableDomItem &qmlFile)
     : qmlFile(qmlFile),
       qmlFilePtr(qmlFile.ownerAs<QmlFile>()),
       rootMap(qmlFilePtr->fileLocationsTree())
@@ -2243,7 +2243,7 @@ void QQmlDomAstCreatorWithQQmlJSScope::throwRecursionDepthError()
 {
 }
 
-void createDom(MutableDomItem qmlFile, DomCreationOptions options)
+void createDom(MutableDomItem &&qmlFile, DomCreationOptions options)
 {
     if (std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>()) {
         QQmlJSLogger logger; // TODO

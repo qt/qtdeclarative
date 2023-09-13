@@ -119,7 +119,7 @@ public:
     [[nodiscard]] ErrorMessage &withFile(QString);
     [[nodiscard]] ErrorMessage &withFile(QStringView);
     [[nodiscard]] ErrorMessage &withLocation(SourceLocation);
-    [[nodiscard]] ErrorMessage &withItem(DomItem);
+    [[nodiscard]] ErrorMessage &withItem(const DomItem &);
 
     ErrorMessage handle(const ErrorHandler &errorHandler=nullptr);
 

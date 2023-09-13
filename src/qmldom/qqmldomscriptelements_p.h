@@ -164,7 +164,7 @@ private:
        a sorted map to always iterate the children in the same order.
      */
     std::map<QQmlJS::Dom::FieldType, VariantT> m_children;
-    DomType m_kind;
+    DomType m_kind = DomType::Empty;
 };
 
 class BlockStatement : public ScriptElementBase<DomType::ScriptBlockStatement>

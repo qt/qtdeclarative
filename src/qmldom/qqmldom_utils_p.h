@@ -34,7 +34,7 @@ qOverloadedVisitor(Ts...) -> qOverloadedVisitor<Ts...>;
 namespace QQmlJS {
 namespace Dom {
 
-void createDom(MutableDomItem qmlFile, DomCreationOptions options = None);
+void createDom(MutableDomItem &&qmlFile, DomCreationOptions options = None);
 QStringList resourceFilesFromBuildFolders(const QStringList &buildFolders);
 }
 }; // namespace QQmlJS

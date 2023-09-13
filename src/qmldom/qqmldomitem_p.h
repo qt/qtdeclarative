@@ -1696,10 +1696,11 @@ public:
     MutableDomItem setAnnotations(QList<QmlObject> annotations);
     MutableDomItem setScript(std::shared_ptr<ScriptExpression> exp);
     MutableDomItem setCode(QString code);
-    MutableDomItem addPropertyDef(PropertyDefinition propertyDef,
+    MutableDomItem addPropertyDef(const PropertyDefinition &propertyDef,
                                   AddOption option = AddOption::Overwrite);
     MutableDomItem addBinding(Binding binding, AddOption option = AddOption::Overwrite);
-    MutableDomItem addMethod(MethodInfo functionDef, AddOption option = AddOption::Overwrite);
+    MutableDomItem addMethod(
+            const MethodInfo &functionDef, AddOption option = AddOption::Overwrite);
     MutableDomItem addChild(QmlObject child);
     MutableDomItem addAnnotation(QmlObject child);
     MutableDomItem addPreComment(const Comment &comment, QString regionName = QString());
@@ -1716,10 +1717,10 @@ public:
     void setSemanticScope(const QQmlJSScope::Ptr &scope);
 
     MutableDomItem() = default;
-    MutableDomItem(DomItem owner, Path pathFromOwner):
+    MutableDomItem(const DomItem &owner, Path pathFromOwner):
         m_owner(owner), m_pathFromOwner(pathFromOwner)
     {}
-    MutableDomItem(DomItem item):
+    MutableDomItem(const DomItem &item):
         m_owner(item.owner()), m_pathFromOwner(item.pathFromOwner())
     {}
 
@@ -1760,7 +1761,7 @@ public:
     // it is dangerous to assume it stays valid when updates are preformed...
     DomItem item() const { return m_owner.path(m_pathFromOwner); }
 
-    friend bool operator==(const MutableDomItem o1, const MutableDomItem &o2)
+    friend bool operator==(const MutableDomItem &o1, const MutableDomItem &o2)
     {
         return o1.m_owner == o2.m_owner && o1.m_pathFromOwner == o2.m_pathFromOwner;
     }

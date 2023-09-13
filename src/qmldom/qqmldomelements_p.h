@@ -852,14 +852,14 @@ public:
         if (pathFromOwner())
             updatePathFromOwner(pathFromOwner());
     }
-    Path addPropertyDef(PropertyDefinition propertyDef, AddOption option,
+    Path addPropertyDef(const PropertyDefinition &propertyDef, AddOption option,
                         PropertyDefinition **pDef = nullptr)
     {
         return insertUpdatableElementInMultiMap(pathFromOwner().field(Fields::propertyDefs),
                                                 m_propertyDefs, propertyDef.name, propertyDef,
                                                 option, pDef);
     }
-    MutableDomItem addPropertyDef(MutableDomItem &self, PropertyDefinition propertyDef,
+    MutableDomItem addPropertyDef(MutableDomItem &self, const PropertyDefinition &propertyDef,
                                   AddOption option);
 
     Path addBinding(Binding binding, AddOption option, Binding **bPtr = nullptr)
@@ -868,12 +868,12 @@ public:
                                                 binding.name(), binding, option, bPtr);
     }
     MutableDomItem addBinding(MutableDomItem &self, Binding binding, AddOption option);
-    Path addMethod(MethodInfo functionDef, AddOption option, MethodInfo **mPtr = nullptr)
+    Path addMethod(const MethodInfo &functionDef, AddOption option, MethodInfo **mPtr = nullptr)
     {
         return insertUpdatableElementInMultiMap(pathFromOwner().field(Fields::methods), m_methods,
                                                 functionDef.name, functionDef, option, mPtr);
     }
-    MutableDomItem addMethod(MutableDomItem &self, MethodInfo functionDef, AddOption option);
+    MutableDomItem addMethod(MutableDomItem &self, const MethodInfo &functionDef, AddOption option);
     Path addChild(QmlObject child, QmlObject **cPtr = nullptr)
     {
         return appendUpdatableElementInQList(pathFromOwner().field(Fields::children), m_children,

@@ -101,9 +101,6 @@ enum class ParserState{
     End
 };
 
-PathComponent::~PathComponent(){
-}
-
 int PathComponent::cmp(const PathComponent &p1, const PathComponent &p2)
 {
     int k1 = static_cast<int>(p1.kind());

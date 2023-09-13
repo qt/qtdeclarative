@@ -174,12 +174,12 @@ void QmlComponent::writeOut(const DomItem &self, OutWriter &lw) const
 QList<QString> QmlComponent::subComponentsNames(const DomItem &self) const
 {
     DomItem components = self.owner().field(Fields::components);
-    QSet<QString> cNames = components.keys();
+    const QSet<QString> cNames = components.keys();
     QString myNameDot = self.pathFromOwner()[1].headName();
     if (!myNameDot.isEmpty())
         myNameDot += QLatin1Char('.');
     QList<QString> subNames;
-    for (QString cName : cNames)
+    for (const QString &cName : cNames)
         if (cName.startsWith(myNameDot)
             && !QStringView(cName).mid(myNameDot.size()).contains(QLatin1Char('.'))
             && !cName.isEmpty())
@@ -192,8 +192,8 @@ QList<DomItem> QmlComponent::subComponents(const DomItem &self) const
 {
     DomItem components = self.owner().field(Fields::components);
     QList<DomItem> res;
-    for (QString cName : subComponentsNames(self))
-        for (DomItem comp : components.key(cName).values())
+    for (const QString &cName : subComponentsNames(self))
+        for (const DomItem &comp : components.key(cName).values())
             res.append(comp);
     return res;
 }
@@ -671,8 +671,8 @@ LocallyResolvedAlias QmlObject::resolveAlias(const DomItem &self, const QStringL
     return res;
 }
 
-MutableDomItem QmlObject::addPropertyDef(MutableDomItem &self, PropertyDefinition propertyDef,
-                                         AddOption option)
+MutableDomItem QmlObject::addPropertyDef(
+        MutableDomItem &self, const PropertyDefinition &propertyDef, AddOption option)
 {
     Path p = addPropertyDef(propertyDef, option);
     if (p.last().headIndex(0) > 1)
@@ -690,7 +690,8 @@ MutableDomItem QmlObject::addBinding(MutableDomItem &self, Binding binding, AddO
     return self.owner().path(p);
 }
 
-MutableDomItem QmlObject::addMethod(MutableDomItem &self, MethodInfo functionDef, AddOption option)
+MutableDomItem QmlObject::addMethod(
+        MutableDomItem &self, const MethodInfo &functionDef, AddOption option)
 {
     Path p = addMethod(functionDef, option);
     if (p.last().headIndex(0) > 1)
@@ -751,7 +752,8 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
         auto addMMap = [&attribs, &startLoc](const DomItem &base, FileLocations::Tree baseLoc) {
             if (!base)
                 return;
-            for (auto els : base.values()) {
+            const auto values = base.values();
+            for (const auto &els : values) {
                 FileLocations::Tree elsLoc =
                         FileLocations::find(baseLoc, els.pathFromOwner().last());
                 for (auto el : els.values()) {
@@ -858,8 +860,10 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
     DomItem propertyDefs = field(self, Fields::propertyDefs);
 
     if (isRootObject) {
-        for (auto enumDescs : component.field(Fields::enumerations).values()) {
-            for (auto enumDesc : enumDescs.values()) {
+        const auto descs = component.field(Fields::enumerations).values();
+        for (const auto &enumDescs : descs) {
+            const auto values = enumDescs.values();
+            for (const auto &enumDesc : values) {
                 ow.ensureNewline(1);
                 enumDesc.writeOut(ow);
                 ow.ensureNewline(1);
@@ -870,8 +874,8 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
         spacerId = ow.addNewlinesAutospacerCallback(2);
     QSet<QString> mergedDefBinding;
     for (const QString &defName : propertyDefs.sortedKeys()) {
-        auto pDefs = propertyDefs.key(defName).values();
-        for (auto pDef : pDefs) {
+        const auto pDefs = propertyDefs.key(defName).values();
+        for (const auto &pDef : pDefs) {
             const PropertyDefinition *pDefPtr = pDef.as<PropertyDefinition>();
             Q_ASSERT(pDefPtr);
             DomItem b;
@@ -921,8 +925,10 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
     }
     ow.removeTextAddCallback(spacerId);
     QList<DomItem> signalList, methodList;
-    for (auto ms : field(self, Fields::methods).values()) {
-        for (auto m : ms.values()) {
+    const auto fields = field(self, Fields::methods).values();
+    for (const auto &ms : fields) {
+        const auto values = ms.values();
+        for (const auto &m : values) {
             const MethodInfo *mPtr = m.as<MethodInfo>();
             if (mPtr && mPtr->methodType == MethodInfo::MethodType::Signal)
                 signalList.append(m);
@@ -952,9 +958,10 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
     }
     ow.removeTextAddCallback(spacerId);
     QList<DomItem> normalBindings, signalHandlers, delayedBindings;
-    for (auto bName : bindings.sortedKeys()) {
+    for (const auto &bName : bindings.sortedKeys()) {
         bool skipFirstNormal = mergedDefBinding.contains(bName);
-        for (auto b : bindings.key(bName).values()) {
+        const auto values = bindings.key(bName).values();
+        for (const auto &b : values) {
             const Binding *bPtr = b.as<Binding>();
             if (skipFirstNormal) {
                 if (bPtr && bPtr->bindingType() == BindingType::Normal) {
@@ -989,7 +996,8 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
     if (counter != ow.counter())
         spacerId = ow.addNewlinesAutospacerCallback(2);
     first = true;
-    for (auto c : field(self, Fields::children).values()) {
+    const auto values = field(self, Fields::children).values();
+    for (const auto &c : values) {
         if (!first && ow.lineWriter.options().objectsSpacing) {
             ow.newline().newline();
         }
@@ -1003,7 +1011,8 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
         DomItem subComps = component.field(Fields::subComponents);
         if (counter != ow.counter())
             spacerId = ow.addNewlinesAutospacerCallback(2);
-        for (auto subC : subComps.values()) {
+        const auto values = subComps.values();
+        for (const auto &subC : values) {
             ow.ensureNewline();
             subC.writeOut(ow);
         }
@@ -1239,7 +1248,6 @@ Export Export::fromString(Path source, QStringView exp, Path typePath, ErrorHand
                           "or 'Name major.minor' not '%1'.")
                                .arg(exp))
                 .handle(h);
-    QString package;
     if (slashIdx != -1)
         res.uri = exp.left(slashIdx).toString();
     res.typeName = exp.mid(slashIdx + 1, spaceIdx - (slashIdx + 1)).toString();
@@ -1306,7 +1314,8 @@ void EnumDecl::writeOut(const DomItem &self, OutWriter &ow) const
             .space()
             .writeRegion(u"lbrace", u"{");
     int iLevel = ow.increaseIndent(1);
-    for (auto value : self.field(Fields::values).values()) {
+    const auto values = self.field(Fields::values).values();
+    for (const auto &value : values) {
         ow.ensureNewline();
         value.writeOut(ow);
     }
@@ -1332,7 +1341,7 @@ QList<Path> ImportScope::allSources(const DomItem &self) const
         knownPaths.insert(pNow);
         res.append(pNow);
         DomItem sourceBase = top.path(pNow);
-        for (DomItem autoExp : sourceBase.field(Fields::autoExports).values()) {
+        for (const DomItem &autoExp : sourceBase.field(Fields::autoExports).values()) {
             if (const ModuleAutoExport *autoExpPtr = autoExp.as<ModuleAutoExport>()) {
                 Path newSource;
                 if (autoExpPtr->inheritVersion) {
@@ -1649,7 +1658,8 @@ void ScriptExpression::setCode(QString code, QString preCode, QString postCode)
         QQmlJS::Parser parser(m_engine.get());
         if ((qmlMode && !parser.parse()) || (!qmlMode && !parser.parseScript()))
             addErrorLocal(domParsingErrors().error(tr("Parsing of code failed")));
-        for (DiagnosticMessage msg : parser.diagnosticMessages()) {
+        const auto messages = parser.diagnosticMessages();
+        for (const DiagnosticMessage &msg : messages) {
             ErrorMessage err = domParsingErrors().errorMessage(msg);
             err.location.offset -= m_localOffset.offset;
             err.location.startLine -= m_localOffset.startLine;
@@ -1817,7 +1827,7 @@ void MethodInfo::writeOut(const DomItem &self, OutWriter &ow) const
         bool first = true;
         ow.writeRegion(u"leftParen", u"(");
         int baseIndent = ow.increaseIndent();
-        for (DomItem arg : self.field(Fields::parameters).values()) {
+        for (const DomItem &arg : self.field(Fields::parameters).values()) {
             if (first)
                 first = false;
             else
@@ -1835,7 +1845,7 @@ void MethodInfo::writeOut(const DomItem &self, OutWriter &ow) const
         ow.writeRegion(u"function").space().writeRegion(u"name", name);
         bool first = true;
         ow.writeRegion(u"leftParen", u"(");
-        for (DomItem arg : self.field(Fields::parameters).values()) {
+        for (const DomItem &arg : self.field(Fields::parameters).values()) {
             if (first)
                 first = false;
             else

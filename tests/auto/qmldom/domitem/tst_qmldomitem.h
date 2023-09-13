@@ -719,7 +719,7 @@ private slots:
                 }
                 ++i;
             }
-            for (DomItem obj : qmlObj.children().values()) {
+            for (const DomItem &obj : qmlObj.children().values()) {
                 if (obj.as<QmlObject>())
                     checkAliases(obj);
             }
@@ -2330,7 +2330,7 @@ private slots:
     }
 
 private:
-    static Path reconstructPathFromFileLocations(DomItem item)
+    static Path reconstructPathFromFileLocations(const DomItem &item)
     {
         QList<Path> paths;
         for (FileLocations::Tree current = FileLocations::treeOf(item); current;
@@ -2355,7 +2355,7 @@ private slots:
            Check if the path obtained by the filelocations is the same as the DomItem path. Both
            need to be equal to find DomItem's from their location in the source code.
         */
-        auto compareFileLocationsPathWithCanonicalPath = [](DomItem item) {
+        auto compareFileLocationsPathWithCanonicalPath = [](const DomItem &item) {
             Path canonical = item.canonicalPath();
             QVERIFY(canonical.length() > 0);
             if (canonical.length() > 0)

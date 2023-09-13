@@ -202,7 +202,7 @@ QList<DomItem> ModuleIndex::autoExports(const DomItem &self) const
     QList<ModuleAutoExport> knownExports;
     for (Path p : mySources) {
         DomItem autoExports = self.path(p).field(Fields::autoExports);
-        for (DomItem i : autoExports.values()) {
+        for (const DomItem &i : autoExports.values()) {
             if (const ModuleAutoExport *iPtr = i.as<ModuleAutoExport>()) {
                 if (!knownAutoImportUris.contains(iPtr->import.uri.toString())
                     || !knownExports.contains(*iPtr)) {

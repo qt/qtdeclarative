@@ -1207,7 +1207,7 @@ void DomItem::writeOutPre(OutWriter &ow) const
 {
     if (hasAnnotations()) {
         DomItem anns = field(Fields::annotations);
-        for (auto ann : anns.values()) {
+        for (const auto &ann : anns.values()) {
             if (ann.annotations().indexes() == 0) {
                 ow.ensureNewline();
                 ann.writeOut(ow);
@@ -1255,7 +1255,7 @@ DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(const DomItem &origi
         if (dumped.isEmpty())
             return;
         s(u"\ndump: ");
-        for (auto dumpPath : dumped) {
+        for (const auto &dumpPath : dumped) {
             s(u" ");
             sinkEscaped(s, dumpPath);
         }
@@ -1318,8 +1318,7 @@ DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(const DomItem &origi
         DomItem newFile = newEnv.copy(newFilePtr, Path());
         if (newFilePtr->isValid()) {
             if (extraChecks & (WriteOutCheck::ReparseCompare | WriteOutCheck::ReparseStable)) {
-                MutableDomItem newFileMutable(newFile);
-                createDom(newFileMutable);
+                createDom(MutableDomItem (newFile));
                 if ((extraChecks & WriteOutCheck::ReparseCompare)
                     && !compare(reformatted, u"reformatted", newFile, u"reparsed",
                                 FieldFilter::compareNoCommentsFilter()))
@@ -1949,7 +1948,7 @@ public:
     bool isList = false;
 };
 
-static bool visitForLookupType(DomItem el, LookupType lookupType,
+static bool visitForLookupType(const DomItem &el, LookupType lookupType,
                                function_ref<bool(const DomItem &)> visitor)
 {
     bool correctType = false;
@@ -1979,7 +1978,7 @@ static bool visitForLookupType(DomItem el, LookupType lookupType,
     return true;
 }
 
-static bool visitQualifiedNameLookup(DomItem newIt, QStringList &subpath,
+static bool visitQualifiedNameLookup(const DomItem &newIt, QStringList &subpath,
                                      function_ref<bool(const DomItem &)> visitor, LookupType lookupType,
                                      ErrorHandler &errorHandler, QList<Path> *visitedRefs)
 {
@@ -2491,7 +2490,7 @@ void DomItem::clearErrors(ErrorGroups groups, bool iterate) const
     if (m_owner) {
         std::visit([&groups](auto &&ow) { ow->clearErrors(groups); }, *m_owner);
         if (iterate)
-            iterateSubOwners([groups](DomItem i){
+            iterateSubOwners([groups](const DomItem &i){
                 i.clearErrors(groups, true);
                 return true;
             });
@@ -3131,7 +3130,7 @@ QList<DomItem> Reference::getAll(const DomItem &self, ErrorHandler h, QList<Path
                 h, ResolveOption::None, referredObjectPath, visitedRefs);
         if (env) {
             QList<Path> canonicalPaths;
-            for (DomItem i : res) {
+            for (const DomItem &i : res) {
                 if (i)
                     canonicalPaths.append(i.canonicalPath());
                 else
@@ -3540,7 +3539,8 @@ MutableDomItem MutableDomItem::setCode(QString code)
     return MutableDomItem();
 }
 
-MutableDomItem MutableDomItem::addPropertyDef(PropertyDefinition propertyDef, AddOption option)
+MutableDomItem MutableDomItem::addPropertyDef(
+        const PropertyDefinition &propertyDef, AddOption option)
 {
     if (QmlObject *el = mutableAs<QmlObject>())
         return el->addPropertyDef(*this, propertyDef, option);
@@ -3558,7 +3558,7 @@ MutableDomItem MutableDomItem::addBinding(Binding binding, AddOption option)
     return MutableDomItem();
 }
 
-MutableDomItem MutableDomItem::addMethod(MethodInfo functionDef, AddOption option)
+MutableDomItem MutableDomItem::addMethod(const MethodInfo &functionDef, AddOption option)
 {
     if (QmlObject *el = mutableAs<QmlObject>())
         return el->addMethod(*this, functionDef, option);

@@ -404,7 +404,7 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(const DomIt
     return locationFromDomItem(typeDefinition);
 }
 
-static bool findDefinitionFromItem(DomItem item, const QString &name)
+static bool findDefinitionFromItem(const DomItem &item, const QString &name)
 {
     if (std::optional<QQmlJSScope::Ptr> scope = item.semanticScope(); scope) {
         qCDebug(QQmlLSUtilsLog) << "Searching for definition in" << item.internalKindStr();
@@ -416,7 +416,7 @@ static bool findDefinitionFromItem(DomItem item, const QString &name)
     return false;
 }
 
-static DomItem findJSIdentifierDefinition(DomItem item, const QString &name)
+static DomItem findJSIdentifierDefinition(const DomItem &item, const QString &name)
 {
     DomItem definitionOfItem;
     item.visitUp([&name, &definitionOfItem](const DomItem &i) {
@@ -567,7 +567,7 @@ static QStringList namesOfPossibleUsages(const QString &name,
     return namesToCheck;
 }
 
-static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
+static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &name,
                                          QList<QQmlLSUtilsLocation> &result)
 {
     auto expressionType =
@@ -662,7 +662,7 @@ static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
                        findUsages);
 }
 
-static QQmlLSUtilsLocation locationFromJSIdentifierDefinition(DomItem definitionOfItem,
+static QQmlLSUtilsLocation locationFromJSIdentifierDefinition(const DomItem &definitionOfItem,
                                                               const QString &name)
 {
     Q_ASSERT_X(definitionOfItem.semanticScope().has_value()
@@ -677,7 +677,8 @@ static QQmlLSUtilsLocation locationFromJSIdentifierDefinition(DomItem definition
     return result;
 }
 
-static void findUsagesHelper(DomItem item, const QString &name, QList<QQmlLSUtilsLocation> &result)
+static void findUsagesHelper(
+        const DomItem &item, const QString &name, QList<QQmlLSUtilsLocation> &result)
 {
     qCDebug(QQmlLSUtilsLog) << "Looking for JS identifier with name" << name;
     DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
@@ -846,7 +847,7 @@ static QQmlJSScope::ConstPtr findScopeInConnections(QQmlJSScope::ConstPtr scope,
 }
 
 static std::optional<QQmlLSUtilsExpressionType>
-resolveIdentifierExpressionType(DomItem item, QQmlLSUtilsResolveOptions options)
+resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions options)
 {
     auto referrerScope = item.nearestSemanticScope();
     if (!referrerScope)
@@ -1065,7 +1066,7 @@ DomItem QQmlLSUtils::sourceLocationToDomItem(const DomItem &file,
 }
 
 static std::optional<QQmlLSUtilsLocation>
-findMethodDefinitionOf(DomItem file, QQmlJS::SourceLocation location, const QString &name)
+findMethodDefinitionOf(const DomItem &file, QQmlJS::SourceLocation location, const QString &name)
 {
     DomItem owner = QQmlLSUtils::sourceLocationToDomItem(file, location);
     DomItem method = owner.field(Fields::methods).key(name).index(0);
@@ -1086,7 +1087,7 @@ findMethodDefinitionOf(DomItem file, QQmlJS::SourceLocation location, const QStr
 }
 
 static std::optional<QQmlLSUtilsLocation>
-findPropertyDefinitionOf(DomItem file, QQmlJS::SourceLocation propertyDefinitionLocation,
+findPropertyDefinitionOf(const DomItem &file, QQmlJS::SourceLocation propertyDefinitionLocation,
                          const QString &name)
 {
     DomItem propertyOwner = QQmlLSUtils::sourceLocationToDomItem(file, propertyDefinitionLocation);
@@ -1350,7 +1351,7 @@ QQmlLSUtils::checkNameForRename(const DomItem &item, const QString &dirtyNewName
     return {};
 }
 
-static std::optional<QString> oldNameFrom(DomItem item)
+static std::optional<QString> oldNameFrom(const DomItem &item)
 {
     switch (item.internalKind()) {
     case DomType::ScriptIdentifierExpression: {

@@ -422,8 +422,7 @@ void DomUniverse::execQueue()
                 envPtr->addQmlFile(qmlFile);
                 DomItem env(envPtr);
                 if (qmlFile->isValid()) {
-                    MutableDomItem qmlFileObj(env.copy(qmlFile));
-                    createDom(qmlFileObj, t.file.options());
+                    createDom(MutableDomItem(env.copy(qmlFile)), t.file.options());
                 } else {
                     QString errs;
                     DomItem qmlFileObj = env.copy(qmlFile);

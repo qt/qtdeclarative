@@ -134,7 +134,7 @@ private:
     QList<ScriptStackElement> scriptNodeStack;
     QVector<int> arrayBindingLevels;
     FileLocations::Tree rootMap;
-    bool m_enableScriptExpressions;
+    bool m_enableScriptExpressions = false;
 
     template<typename T>
     QmlStackElement &currentEl(int idx = 0)
@@ -187,7 +187,7 @@ private:
     void removeCurrentNode(std::optional<DomType> expectedType);
     void removeCurrentScriptNode(std::optional<DomType> expectedType);
 
-    void pushEl(Path p, DomValue it, AST::Node *n)
+    void pushEl(Path p, const DomValue &it, AST::Node *n)
     {
         nodeStack.append({ p, it, createMap(it.kind, p, n) });
     }
@@ -296,7 +296,7 @@ private:
     ScriptElementVariant scriptElementForQualifiedId(AST::UiQualifiedId *expression);
 
 public:
-    QQmlDomAstCreator(MutableDomItem qmlFile);
+    explicit QQmlDomAstCreator(const MutableDomItem &qmlFile);
 
     bool visit(AST::UiProgram *program) override;
     void endVisit(AST::UiProgram *) override;
@@ -596,7 +596,7 @@ private:
     }
 
     QQmlJSScope::Ptr m_root;
-    QQmlJSLogger *m_logger;
+    QQmlJSLogger *m_logger = nullptr;
     QQmlJSImporter m_importer;
     QString m_implicitImportDirectory;
     QQmlJSImportVisitor m_scopeCreator;
@@ -610,7 +610,7 @@ private:
         InactiveVisitor inactiveVisitor;
     };
     std::optional<Marker> m_marker;
-    bool m_enableScriptExpressions;
+    bool m_enableScriptExpressions = false;
 };
 
 } // end namespace Dom

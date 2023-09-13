@@ -285,8 +285,12 @@ public:
 
 class QMLDOM_EXPORT PathComponent {
 public:
-    PathComponent(): data() {}
-    ~PathComponent();
+    PathComponent() = default;
+    PathComponent(const PathComponent &) = default;
+    PathComponent(PathComponent &&) = default;
+    PathComponent &operator=(const PathComponent &) = default;
+    PathComponent &operator=(PathComponent &&) = default;
+    ~PathComponent() = default;
 
     Kind kind() const { return base()->kind(); }
     QString name() const { return base()->name(); };
@@ -360,6 +364,36 @@ private:
                 break;
             }
         }
+
+        Data(Data &&d) {
+            switch (d.kind()){
+            case Kind::Empty:
+                new (&empty) Empty(std::move(d.empty));
+                break;
+            case Kind::Field:
+                new (&field) Field(std::move(d.field));
+                break;
+            case Kind::Index:
+                new (&index) Index(std::move(d.index));
+                break;
+            case Kind::Key:
+                new (&key) Key(std::move(d.key));
+                break;
+            case Kind::Root:
+                new (&root) Root(std::move(d.root));
+                break;
+            case Kind::Current:
+                new (&current) Current(std::move(d.current));
+                break;
+            case Kind::Any:
+                new (&any) Any(std::move(d.any));
+                break;
+            case Kind::Filter:
+                new (&filter) Filter(std::move(d.filter));
+                break;
+            }
+        }
+
         Data(const Empty &o) {
             Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&empty) && "non C++11 compliant compiler");
             new (&empty) Empty(o);
@@ -392,12 +426,23 @@ private:
             Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&filter) && "non C++11 compliant compiler");
             new (&filter) Filter(o);
         }
+
         Data &operator=(const Data &d) {
-            Q_ASSERT(this != &d);
-            this->~Data(); // destruct & construct new...
-            new (this)Data(d);
+            if (this != &d) {
+                this->~Data(); // destruct & construct new...
+                new (this) Data(d);
+            }
             return *this;
         }
+
+        Data &operator=(Data &&d) {
+            if (this != &d) {
+                this->~Data(); // destruct & construct new...
+                new (this) Data(std::move(d));
+            }
+            return *this;
+        }
+
         Kind kind() const {
             return reinterpret_cast<const Base*>(this)->kind();
         }

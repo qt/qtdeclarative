@@ -348,7 +348,7 @@ public:
     AstRangesVisitor() = default;
 
     void addNodeRanges(AST::Node *rootNode);
-    void addItemRanges(DomItem item, FileLocations::Tree itemLocations, Path currentP);
+    void addItemRanges(const DomItem &item, FileLocations::Tree itemLocations, Path currentP);
 
     void throwRecursionDepthError() override { }
 
@@ -378,7 +378,8 @@ void AstRangesVisitor::addNodeRanges(AST::Node *rootNode)
     AST::Node::accept(rootNode, this);
 }
 
-void AstRangesVisitor::addItemRanges(DomItem item, FileLocations::Tree itemLocations, Path currentP)
+void AstRangesVisitor::addItemRanges(
+        const DomItem &item, FileLocations::Tree itemLocations, Path currentP)
 {
     if (!itemLocations) {
         if (item)
@@ -485,9 +486,9 @@ void AstComments::collectComments(MutableDomItem &item)
 Collects and associates comments with javascript AST::Node pointers and MutableDomItem in
 rootItem
 */
-void AstComments::collectComments(std::shared_ptr<Engine> engine, AST::Node *n,
-                                  std::shared_ptr<AstComments> ccomm, MutableDomItem rootItem,
-                                  FileLocations::Tree rootItemLocations)
+void AstComments::collectComments(
+        std::shared_ptr<Engine> engine, AST::Node *n, std::shared_ptr<AstComments> ccomm,
+        const MutableDomItem &rootItem, FileLocations::Tree rootItemLocations)
 {
     if (!n)
         return;

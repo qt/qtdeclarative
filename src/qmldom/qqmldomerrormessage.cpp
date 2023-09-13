@@ -385,7 +385,7 @@ ErrorMessage &ErrorMessage::withLocation(SourceLocation loc)
     return *this;
 }
 
-ErrorMessage &ErrorMessage::withItem(DomItem el)
+ErrorMessage &ErrorMessage::withItem(const DomItem &el)
 {
     if (path.length() == 0)
         path = el.canonicalPath();

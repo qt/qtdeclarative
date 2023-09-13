@@ -259,7 +259,7 @@ static QList<CompletionItem> importCompletions(const DomItem &file, const Comple
     return res;
 }
 
-static QList<CompletionItem> idsCompletions(DomItem component)
+static QList<CompletionItem> idsCompletions(const DomItem &component)
 {
     qCDebug(complLog) << "adding ids completions";
     QList<CompletionItem> res;

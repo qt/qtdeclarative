@@ -32,7 +32,7 @@ class QmltypesReader
 {
     Q_DECLARE_TR_FUNCTIONS(TypeDescriptionReader)
 public:
-    explicit QmltypesReader(DomItem qmltypesFile)
+    explicit QmltypesReader(const DomItem &qmltypesFile)
         : m_qmltypesFilePtr(qmltypesFile.ownerAs<QmltypesFile>()), m_qmltypesFile(qmltypesFile)
     {
     }

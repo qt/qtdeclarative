@@ -55,15 +55,15 @@ public:
         return rawComment.mid(commentEnd, rawComment.size() - commentEnd);
     }
 
-    quint32 commentBegin;
-    quint32 commentEnd;
-    quint32 commentContentBegin;
-    quint32 commentContentEnd;
+    quint32 commentBegin = 0;
+    quint32 commentEnd = 0;
+    quint32 commentContentBegin = 0;
+    quint32 commentContentEnd = 0;
     QStringView commentStartStr;
     QStringView commentEndStr;
     bool hasStartNewline = false;
     bool hasEndNewline = false;
-    int nContentNewlines;
+    int nContentNewlines = 0;
     QStringView rawComment;
     QStringList warnings;
 };
@@ -186,9 +186,10 @@ public:
 
     Path canonicalPath(const DomItem &self) const override { return self.m_ownerPath; }
     static void collectComments(MutableDomItem &item);
-    static void collectComments(std::shared_ptr<Engine> engine, AST::Node *n,
-                                std::shared_ptr<AstComments> collectComments,
-                                MutableDomItem rootItem, FileLocations::Tree rootItemLocations);
+    static void collectComments(
+            std::shared_ptr<Engine> engine, AST::Node *n,
+            std::shared_ptr<AstComments> collectComments, const MutableDomItem &rootItem,
+            FileLocations::Tree rootItemLocations);
     AstComments(std::shared_ptr<Engine> e) : m_engine(e) { }
     AstComments(const AstComments &o)
         : OwningItem(o), m_engine(o.m_engine), m_commentedElements(o.m_commentedElements)
