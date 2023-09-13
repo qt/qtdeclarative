@@ -9,8 +9,6 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qmlls_qqmlcodemodel
     SOURCES
         tst_qmlls_qqmlcodemodel.cpp tst_qmlls_qqmlcodemodel.h
-    DEFINES
-        QT_QMLLS_QQMLCODEMODEL_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
     LIBRARIES
         Qt::Core
         Qt::QmlDomPrivate
