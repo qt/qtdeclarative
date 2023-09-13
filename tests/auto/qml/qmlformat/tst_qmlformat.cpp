@@ -351,6 +351,9 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("importStatements")
             << "importStatements.qml"
             << "importStatements.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("arrayEndComma")
+            << "arrayEndComma.qml"
+            << "arrayEndComma.formatted.qml" << QStringList{} << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()

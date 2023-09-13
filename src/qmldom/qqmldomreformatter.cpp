@@ -267,9 +267,16 @@ protected:
     {
         out(ast->lbracketToken);
         int baseIndent = lw.increaseIndent(1);
-        if (ast->elements)
+        if (ast->elements) {
             accept(ast->elements);
-        out(ast->commaToken);
+            out(ast->commaToken);
+            auto lastElement = lastListElement(ast->elements);
+            if (lastElement->element && cast<ObjectPattern *>(lastElement->element->initializer)) {
+                newLine();
+            }
+        } else {
+            out(ast->commaToken);
+        }
         lw.decreaseIndent(1, baseIndent);
         out(ast->rbracketToken);
         return false;
@@ -291,14 +298,22 @@ protected:
     bool visit(PatternElementList *ast) override
     {
         for (PatternElementList *it = ast; it; it = it->next) {
+            const bool isObjectInitializer =
+                    it->element && cast<ObjectPattern *>(it->element->initializer);
+            if (isObjectInitializer)
+                newLine();
+
             if (it->elision)
                 accept(it->elision);
             if (it->elision && it->element)
                 out(", ");
             if (it->element)
                 accept(it->element);
-            if (it->next)
+            if (it->next) {
                 out(", ");
+                if (isObjectInitializer)
+                    newLine();
+            }
         }
         return false;
     }
