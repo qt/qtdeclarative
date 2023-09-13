@@ -162,10 +162,10 @@ static Diagnostic messageToDiagnostic_helper(AdvanceFunc advancePositionPastLoca
     if (srcLoc.isValid()) {
         position.line = srcLoc.startLine - 1;
         position.character = srcLoc.startColumn - 1;
-        advancePositionPastLocation(message.loc,
-                                    position);
+        range.end = position;
+        advancePositionPastLocation(message.loc, range.end);
     }
-    range.end = position;
+
     if (message.fixSuggestion && !message.fixSuggestion->fixDescription().isEmpty()) {
         diagnostic.message = QString(message.message)
                                      .append(u": "_s)
