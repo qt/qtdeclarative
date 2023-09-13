@@ -58,7 +58,7 @@ public:
     DomType kind;
     FileToLoad file;
     std::weak_ptr<DomUniverse> requestingUniverse; // make it a shared_ptr?
-    function<void(Path, DomItem &, DomItem &)> callback;
+    function<void(Path, const DomItem &, const DomItem &)> callback;
 };
 
 class QMLDOM_EXPORT ExternalItemPairBase: public OwningItem { // all access should have the lock of the DomUniverse containing this
@@ -78,21 +78,21 @@ public:
         OwningItem(o), validExposedAt(o.validExposedAt), currentExposedAt(o.currentExposedAt)
     {}
     virtual std::shared_ptr<ExternalOwningItem> validItem() const = 0;
-    virtual DomItem validItem(DomItem &self) const = 0;
+    virtual DomItem validItem(const DomItem &self) const = 0;
     virtual std::shared_ptr<ExternalOwningItem> currentItem() const = 0;
-    virtual DomItem currentItem(DomItem &self) const = 0;
+    virtual DomItem currentItem(const DomItem &self) const = 0;
 
-    QString canonicalFilePath(DomItem &) const final override;
-    Path canonicalPath(DomItem &self) const final override;
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor) final override;
-    DomItem field(DomItem &self, QStringView name) const final override
+    QString canonicalFilePath(const DomItem &) const final override;
+    Path canonicalPath(const DomItem &self) const final override;
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const final override;
+    DomItem field(const DomItem &self, QStringView name) const final override
     {
         return OwningItem::field(self, name);
     }
 
     bool currentIsValid() const;
 
-    std::shared_ptr<ExternalItemPairBase> makeCopy(DomItem &self) const
+    std::shared_ptr<ExternalItemPairBase> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<ExternalItemPairBase>(doCopy(self));
     }
@@ -121,7 +121,7 @@ template<class T>
 class QMLDOM_EXPORT ExternalItemPair final : public ExternalItemPairBase
 { // all access should have the lock of the DomUniverse containing this
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &) const override
+    std::shared_ptr<OwningItem> doCopy(const DomItem &) const override
     {
         return std::make_shared<ExternalItemPair>(*this);
     }
@@ -143,10 +143,10 @@ public:
     {
     }
     std::shared_ptr<ExternalOwningItem> validItem() const override { return valid; }
-    DomItem validItem(DomItem &self) const override { return self.copy(valid); }
+    DomItem validItem(const DomItem &self) const override { return self.copy(valid); }
     std::shared_ptr<ExternalOwningItem> currentItem() const override { return current; }
-    DomItem currentItem(DomItem &self) const override { return self.copy(current); }
-    std::shared_ptr<ExternalItemPair> makeCopy(DomItem &self) const
+    DomItem currentItem(const DomItem &self) const override { return self.copy(current); }
+    std::shared_ptr<ExternalItemPair> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<ExternalItemPair>(doCopy(self));
     }
@@ -173,9 +173,9 @@ public:
 
     virtual Path canonicalPath() const = 0;
 
-    Path canonicalPath(DomItem &) const override;
-    DomItem containingObject(DomItem &) const override;
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor) override;
+    Path canonicalPath(const DomItem &) const override;
+    DomItem containingObject(const DomItem &) const override;
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
     template<typename T>
     void setExtraOwningItem(QString fieldName, std::shared_ptr<T> item)
     {
@@ -198,7 +198,7 @@ class QMLDOM_EXPORT DomUniverse final : public DomTop
     Q_GADGET
     Q_DECLARE_TR_FUNCTIONS(DomUniverse);
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &self) const override;
+    std::shared_ptr<OwningItem> doCopy(const DomItem &self) const override;
 
 public:
     enum class Option{
@@ -219,13 +219,13 @@ public:
 
     Path canonicalPath() const override;
     using DomTop::canonicalPath;
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor) override;
-    std::shared_ptr<DomUniverse> makeCopy(DomItem &self) const
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
+    std::shared_ptr<DomUniverse> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<DomUniverse>(doCopy(self));
     }
 
-    void loadFile(DomItem &self, const FileToLoad &file, Callback callback, LoadOptions loadOptions,
+    void loadFile(const DomItem &self, const FileToLoad &file, Callback callback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>());
     void execQueue();
 
@@ -377,22 +377,22 @@ public:
     ExternalItemInfoBase(const ExternalItemInfoBase &o) = default;
 
     virtual std::shared_ptr<ExternalOwningItem> currentItem() const = 0;
-    virtual DomItem currentItem(DomItem &) const = 0;
+    virtual DomItem currentItem(const DomItem &) const = 0;
 
-    QString canonicalFilePath(DomItem &) const final override;
+    QString canonicalFilePath(const DomItem &) const final override;
     Path canonicalPath() const { return m_canonicalPath; }
-    Path canonicalPath(DomItem &) const final override { return canonicalPath(); }
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor) final override;
-    DomItem field(DomItem &self, QStringView name) const final override
+    Path canonicalPath(const DomItem &) const final override { return canonicalPath(); }
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const final override;
+    DomItem field(const DomItem &self, QStringView name) const final override
     {
         return OwningItem::field(self, name);
     }
 
-    int currentRevision(DomItem &self) const;
-    int lastRevision(DomItem &self) const;
-    int lastValidRevision(DomItem &self) const;
+    int currentRevision(const DomItem &self) const;
+    int lastRevision(const DomItem &self) const;
+    int lastValidRevision(const DomItem &self) const;
 
-    std::shared_ptr<ExternalItemInfoBase> makeCopy(DomItem &self) const
+    std::shared_ptr<ExternalItemInfoBase> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<ExternalItemInfoBase>(doCopy(self));
     }
@@ -444,7 +444,7 @@ template<typename T>
 class ExternalItemInfo final : public ExternalItemInfoBase
 {
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &) const override
+    std::shared_ptr<OwningItem> doCopy(const DomItem &) const override
     {
         return std::make_shared<ExternalItemInfo>(*this);
     }
@@ -465,7 +465,7 @@ public:
     {
     }
 
-    std::shared_ptr<ExternalItemInfo> makeCopy(DomItem &self) const
+    std::shared_ptr<ExternalItemInfo> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<ExternalItemInfo>(doCopy(self));
     }
@@ -473,7 +473,7 @@ public:
     std::shared_ptr<ExternalOwningItem> currentItem() const override {
         return current;
     }
-    DomItem currentItem(DomItem &self) const override { return self.copy(current); }
+    DomItem currentItem(const DomItem &self) const override { return self.copy(current); }
 
     std::shared_ptr<T> current;
 };
@@ -497,7 +497,7 @@ class QMLDOM_EXPORT LoadInfo final : public OwningItem
     Q_DECLARE_TR_FUNCTIONS(LoadInfo);
 
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &self) const override;
+    std::shared_ptr<OwningItem> doCopy(const DomItem &self) const override;
 
 public:
     constexpr static DomType kindValue = DomType::LoadInfo;
@@ -532,23 +532,23 @@ public:
         }
     }
 
-    Path canonicalPath(DomItem &self) const override;
+    Path canonicalPath(const DomItem &self) const override;
 
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor) override;
-    std::shared_ptr<LoadInfo> makeCopy(DomItem &self) const
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
+    std::shared_ptr<LoadInfo> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<LoadInfo>(doCopy(self));
     }
-    void addError(DomItem &self, ErrorMessage msg) override
+    void addError(const DomItem &self, ErrorMessage msg) override
     {
         self.path(elementCanonicalPath()).addError(msg);
     }
 
-    void addEndCallback(DomItem &self, std::function<void(Path, DomItem &, DomItem &)> callback);
+    void addEndCallback(const DomItem &self, std::function<void(Path, const DomItem &, const DomItem &)> callback);
 
-    void advanceLoad(DomItem &self);
-    void finishedLoadingDep(DomItem &self, const Dependency &d);
-    void execEnd(DomItem &self);
+    void advanceLoad(const DomItem &self);
+    void finishedLoadingDep(const DomItem &self, const Dependency &d);
+    void execEnd(const DomItem &self);
 
     Status status() const
     {
@@ -593,15 +593,15 @@ public:
     }
 
 private:
-    void doAddDependencies(DomItem &self);
-    void addDependency(DomItem &self, const Dependency &dep);
+    void doAddDependencies(const DomItem &self);
+    void addDependency(const DomItem &self, const Dependency &dep);
 
     Path m_elementCanonicalPath;
     Status m_status;
     int m_nLoaded;
     QQueue<Dependency> m_toDo;
     QList<Dependency> m_inProgress;
-    QList<std::function<void(Path, DomItem &, DomItem &)>> m_endCallbacks;
+    QList<std::function<void(Path, const DomItem &, const DomItem &)>> m_endCallbacks;
 };
 
 enum class EnvLookup { Normal, NoBase, BaseOnly };
@@ -615,8 +615,8 @@ public:
     enum class Cached { None, First, All };
     Q_ENUM(Cached)
 
-    static RefCacheEntry forPath(DomItem &el, Path canonicalPath);
-    static bool addForPath(DomItem &el, Path canonicalPath, const RefCacheEntry &entry,
+    static RefCacheEntry forPath(const DomItem &el, Path canonicalPath);
+    static bool addForPath(const DomItem &el, Path canonicalPath, const RefCacheEntry &entry,
                            AddOption addOption = AddOption::KeepExisting);
 
     Cached cached = Cached::None;
@@ -628,7 +628,7 @@ class QMLDOM_EXPORT DomEnvironment final : public DomTop
     Q_GADGET
     Q_DECLARE_TR_FUNCTIONS(DomEnvironment);
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &self) const override;
+    std::shared_ptr<OwningItem> doCopy(const DomItem &self) const override;
 
 public:
     enum class Option {
@@ -649,54 +649,54 @@ public:
 
     Path canonicalPath() const override;
     using DomTop::canonicalPath;
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor) override;
-    DomItem field(DomItem &self, QStringView name) const final override;
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
+    DomItem field(const DomItem &self, QStringView name) const final override;
 
-    std::shared_ptr<DomEnvironment> makeCopy(DomItem &self) const;
+    std::shared_ptr<DomEnvironment> makeCopy(const DomItem &self) const;
 
-    void loadFile(DomItem &self, FileToLoad file, Callback loadCallback,
+    void loadFile(const DomItem &self, FileToLoad file, Callback loadCallback,
                   Callback directDepsCallback, Callback endCallback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   ErrorHandler h = nullptr);
-    void loadModuleDependency(DomItem &self, QString uri, Version v,
+    void loadModuleDependency(const DomItem &self, QString uri, Version v,
                               Callback loadCallback = nullptr, Callback endCallback = nullptr,
                               ErrorHandler = nullptr);
-    void loadBuiltins(DomItem &self, Callback callback = nullptr, ErrorHandler h = nullptr);
+    void loadBuiltins(const DomItem &self, Callback callback = nullptr, ErrorHandler h = nullptr);
     void removePath(const QString &path);
 
     std::shared_ptr<DomUniverse> universe() const;
 
-    QSet<QString> moduleIndexUris(DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
-    QSet<int> moduleIndexMajorVersions(DomItem &self, QString uri,
+    QSet<QString> moduleIndexUris(const DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
+    QSet<int> moduleIndexMajorVersions(const DomItem &self, QString uri,
                                        EnvLookup lookup = EnvLookup::Normal) const;
-    std::shared_ptr<ModuleIndex> moduleIndexWithUri(DomItem &self, QString uri, int majorVersion,
+    std::shared_ptr<ModuleIndex> moduleIndexWithUri(const DomItem &self, QString uri, int majorVersion,
                                                     EnvLookup lookup, Changeable changeable,
                                                     ErrorHandler errorHandler = nullptr);
-    std::shared_ptr<ModuleIndex> moduleIndexWithUri(DomItem &self, QString uri, int majorVersion,
+    std::shared_ptr<ModuleIndex> moduleIndexWithUri(const DomItem &self, QString uri, int majorVersion,
                                                     EnvLookup lookup = EnvLookup::Normal) const;
     std::shared_ptr<ExternalItemInfo<QmlDirectory>>
-    qmlDirectoryWithPath(DomItem &self, QString path, EnvLookup options = EnvLookup::Normal) const;
-    QSet<QString> qmlDirectoryPaths(DomItem &self, EnvLookup options = EnvLookup::Normal) const;
+    qmlDirectoryWithPath(const DomItem &self, QString path, EnvLookup options = EnvLookup::Normal) const;
+    QSet<QString> qmlDirectoryPaths(const DomItem &self, EnvLookup options = EnvLookup::Normal) const;
     std::shared_ptr<ExternalItemInfo<QmldirFile>>
-    qmldirFileWithPath(DomItem &self, QString path, EnvLookup options = EnvLookup::Normal) const;
-    QSet<QString> qmldirFilePaths(DomItem &self, EnvLookup options = EnvLookup::Normal) const;
+    qmldirFileWithPath(const DomItem &self, QString path, EnvLookup options = EnvLookup::Normal) const;
+    QSet<QString> qmldirFilePaths(const DomItem &self, EnvLookup options = EnvLookup::Normal) const;
     std::shared_ptr<ExternalItemInfoBase>
-    qmlDirWithPath(DomItem &self, QString path, EnvLookup options = EnvLookup::Normal) const;
-    QSet<QString> qmlDirPaths(DomItem &self, EnvLookup options = EnvLookup::Normal) const;
+    qmlDirWithPath(const DomItem &self, QString path, EnvLookup options = EnvLookup::Normal) const;
+    QSet<QString> qmlDirPaths(const DomItem &self, EnvLookup options = EnvLookup::Normal) const;
     std::shared_ptr<ExternalItemInfo<QmlFile>>
-    qmlFileWithPath(DomItem &self, QString path, EnvLookup options = EnvLookup::Normal) const;
-    QSet<QString> qmlFilePaths(DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
+    qmlFileWithPath(const DomItem &self, QString path, EnvLookup options = EnvLookup::Normal) const;
+    QSet<QString> qmlFilePaths(const DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
     std::shared_ptr<ExternalItemInfo<JsFile>>
-    jsFileWithPath(DomItem &self, QString path, EnvLookup options = EnvLookup::Normal) const;
-    QSet<QString> jsFilePaths(DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
+    jsFileWithPath(const DomItem &self, QString path, EnvLookup options = EnvLookup::Normal) const;
+    QSet<QString> jsFilePaths(const DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
     std::shared_ptr<ExternalItemInfo<QmltypesFile>>
-    qmltypesFileWithPath(DomItem &self, QString path, EnvLookup options = EnvLookup::Normal) const;
-    QSet<QString> qmltypesFilePaths(DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
+    qmltypesFileWithPath(const DomItem &self, QString path, EnvLookup options = EnvLookup::Normal) const;
+    QSet<QString> qmltypesFilePaths(const DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
     std::shared_ptr<ExternalItemInfo<GlobalScope>>
-    globalScopeWithName(DomItem &self, QString name, EnvLookup lookup = EnvLookup::Normal) const;
+    globalScopeWithName(const DomItem &self, QString name, EnvLookup lookup = EnvLookup::Normal) const;
     std::shared_ptr<ExternalItemInfo<GlobalScope>>
-    ensureGlobalScopeWithName(DomItem &self, QString name, EnvLookup lookup = EnvLookup::Normal);
-    QSet<QString> globalScopeNames(DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
+    ensureGlobalScopeWithName(const DomItem &self, QString name, EnvLookup lookup = EnvLookup::Normal);
+    QSet<QString> globalScopeNames(const DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
 
     explicit DomEnvironment(QStringList loadPaths, Options options = Option::SingleThreaded,
                             std::shared_ptr<DomUniverse> universe = nullptr);
@@ -704,7 +704,7 @@ public:
                             Options options = Option::SingleThreaded);
     DomEnvironment(const DomEnvironment &o) = delete;
     static DomItem create(QStringList loadPaths, Options options = Option::SingleThreaded,
-                          DomItem &universe = DomItem::empty);
+                          const DomItem &universe = DomItem::empty);
 
     std::shared_ptr<ExternalItemInfo<QmlFile>>
     addQmlFile(std::shared_ptr<QmlFile> file, AddOption option = AddOption::KeepExisting);
@@ -719,14 +719,14 @@ public:
     std::shared_ptr<ExternalItemInfo<GlobalScope>>
     addGlobalScope(std::shared_ptr<GlobalScope> file, AddOption option = AddOption::KeepExisting);
 
-    bool commitToBase(DomItem &self, std::shared_ptr<DomEnvironment> validEnv = nullptr);
+    bool commitToBase(const DomItem &self, std::shared_ptr<DomEnvironment> validEnv = nullptr);
 
-    void addLoadInfo(DomItem &self, std::shared_ptr<LoadInfo> loadInfo);
+    void addLoadInfo(const DomItem &self, std::shared_ptr<LoadInfo> loadInfo);
     std::shared_ptr<LoadInfo> loadInfo(Path path) const;
     QList<Path> loadInfoPaths() const;
     QHash<Path, std::shared_ptr<LoadInfo>> loadInfos() const;
-    void loadPendingDependencies(DomItem &self);
-    bool finishLoadingDependencies(DomItem &self, int waitMSec = 30000);
+    void loadPendingDependencies(const DomItem &self);
+    bool finishLoadingDependencies(const DomItem &self, int waitMSec = 30000);
     void addWorkForLoadInfo(Path elementCanonicalPath);
 
     Options options() const;
@@ -741,7 +741,7 @@ public:
     static QList<Import> defaultImplicitImports();
     QList<Import> implicitImports() const;
 
-    void addAllLoadedCallback(DomItem &self, Callback c);
+    void addAllLoadedCallback(const DomItem &self, Callback c);
 
     void clearReferenceCache();
     void setLoadPaths(const QStringList &v);
@@ -752,13 +752,13 @@ private:
     QSet<QString> getStrings(function_ref<QSet<QString>()> getBase, const QMap<QString, T> &selfMap,
                              EnvLookup lookup) const;
 
-    Callback callbackForQmlDirectory(DomItem &self, Callback loadCallback,
+    Callback callbackForQmlDirectory(const DomItem &self, Callback loadCallback,
                                      Callback directDepsCallback, Callback endCallback);
-    Callback callbackForQmlFile(DomItem &self, Callback loadCallback, Callback directDepsCallback,
+    Callback callbackForQmlFile(const DomItem &self, Callback loadCallback, Callback directDepsCallback,
                                 Callback endCallback);
-    Callback callbackForQmltypesFile(DomItem &self, Callback loadCallback,
+    Callback callbackForQmltypesFile(const DomItem &self, Callback loadCallback,
                                      Callback directDepsCallback, Callback endCallback);
-    Callback callbackForQmldirFile(DomItem &self, Callback loadCallback,
+    Callback callbackForQmldirFile(const DomItem &self, Callback loadCallback,
                                    Callback directDepsCallback, Callback endCallback);
 
     std::shared_ptr<ModuleIndex> lookupModuleInEnv(const QString &uri, int majorVersion) const;
@@ -770,7 +770,7 @@ private:
         Origin fromBase = FromGlobal;
     };
     // helper function used by the moduleIndexWithUri methods
-    ModuleLookupResult moduleIndexWithUriHelper(DomItem &self, QString uri, int majorVersion,
+    ModuleLookupResult moduleIndexWithUriHelper(const DomItem &self, QString uri, int majorVersion,
                                                     EnvLookup lookup = EnvLookup::Normal) const;
 
     const Options m_options;

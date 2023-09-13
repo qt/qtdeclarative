@@ -270,7 +270,8 @@ class QMLDOM_EXPORT Filter final : public Base
 {
 public:
     Filter() = default;
-    Filter(std::function<bool(DomItem)> f, QStringView filterDescription = u"<native code filter>");
+    Filter(std::function<bool(const DomItem &)> f,
+           QStringView filterDescription = u"<native code filter>");
     Kind kind() const override { return Kind::Filter; }
     QString name() const override;
     bool checkName(QStringView s) const override;
@@ -278,7 +279,7 @@ public:
     bool hasSquareBrackets() const override { return true; }
     const Filter *asFilter() const override { return this; }
 
-    std::function<bool(DomItem)> filterFunction;
+    std::function<bool(const DomItem &)> filterFunction;
     QStringView filterDescription;
 };
 
@@ -316,12 +317,11 @@ private:
     friend class QQmlJS::Dom::Path;
     friend class QQmlJS::Dom::PathEls::TestPaths;
 
-    Base *base() {
-        return reinterpret_cast<Base*>(&data);
-    }
-    const Base *base() const {
-        return reinterpret_cast<const Base*>(&data);
-    }
+    // TODO: is all extremely nasty. We're casting to the common base of the union members and
+    //       relying on the data layout of all of those to follow our expectations.
+    Base *base() { return reinterpret_cast<Base*>(&data); }
+    const Base *base() const { return reinterpret_cast<const Base*>(&data); }
+
     union Data {
         Data(): empty() { }
         Data(const Data &d) {
@@ -679,7 +679,7 @@ public:
     QString headName() const;
     bool checkHeadName(QStringView name) const;
     index_type headIndex(index_type defaultValue=-1) const;
-    std::function<bool(DomItem)> headFilter() const;
+    std::function<bool(const DomItem &)> headFilter() const;
     Path head() const;
     Path last() const;
     Source split() const;
@@ -715,8 +715,9 @@ public:
     Path key(QStringView name) const;
     Path index(index_type i) const;
     Path any() const;
-    Path filter(std::function<bool(DomItem)>, QString) const;
-    Path filter(std::function<bool(DomItem)>, QStringView desc=u"<native code filter>") const;
+    Path filter(std::function<bool(const DomItem &)>, QString) const;
+    Path filter(std::function<bool(const DomItem &)>,
+                QStringView desc=u"<native code filter>") const;
     Path current(PathCurrent s) const;
     Path current(QString s) const;
     Path current(QStringView s=u"") const;
@@ -809,6 +810,9 @@ inline size_t qHash(const Path &path, size_t seed)
             *it++ = qHash(p.component(0).stringView(), seed)^size_t(p.headRoot())^size_t(p.headCurrent());
         }
     }
+
+    // TODO: Get rid of the reinterpret_cast.
+    // Rather hash the path components in a more structured way.
     return qHash(QByteArray::fromRawData(reinterpret_cast<char *>(&buf[0]), (it - &buf[0])*sizeof(size_t)), seed);
 }
 

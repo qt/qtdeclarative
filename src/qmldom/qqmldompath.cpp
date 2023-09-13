@@ -82,7 +82,8 @@ void Base::dump(Sink sink) const {
         sink(u"]");
 }
 
-Filter::Filter(function<bool(DomItem)> f, QStringView filterDescription): filterFunction(f), filterDescription(filterDescription) {}
+Filter::Filter(function<bool(const DomItem &)> f, QStringView filterDescription)
+    : filterFunction(f), filterDescription(filterDescription) {}
 
 QString Filter::name() const {
     return QLatin1String("?(%1)").arg(filterDescription); }
@@ -248,7 +249,7 @@ index_type Path::headIndex(index_type defaultValue) const
     return component(0).index(defaultValue);
 }
 
-function<bool (DomItem)> Path::headFilter() const
+function<bool(const DomItem &)> Path::headFilter() const
 {
     auto &comp = component(0);
     if (PathEls::Filter const * f = comp.base()->asFilter()) {
@@ -646,14 +647,14 @@ Path Path::any() const
                     QStringList(), QVector<Component>(1,Component(PathEls::Any())), m_data));
 }
 
-Path Path::filter(function<bool (DomItem)> filterF, QString desc) const
+Path Path::filter(function<bool(const DomItem &)> filterF, QString desc) const
 {
     auto res = filter(filterF, QStringView(desc));
     res.m_data->strData.append(desc);
     return res;
 }
 
-Path Path::filter(function<bool (DomItem)> filter, QStringView desc) const
+Path Path::filter(function<bool(const DomItem &)> filter, QStringView desc) const
 {
     if (m_endOffset != 0)
         return noEndOffset().filter(filter, desc);

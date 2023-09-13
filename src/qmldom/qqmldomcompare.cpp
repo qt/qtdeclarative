@@ -8,8 +8,8 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
-bool domCompare(DomItem &i1, DomItem &i2, function_ref<bool(Path, DomItem &, DomItem &)> change,
-                function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter,
+bool domCompare(const DomItem &i1, const DomItem &i2, function_ref<bool(Path, const DomItem &, const DomItem &)> change,
+                function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter,
                 Path basePath)
 {
     DomKind k1 = i1.domKind();
@@ -155,15 +155,15 @@ bool domCompare(DomItem &i1, DomItem &i2, function_ref<bool(Path, DomItem &, Dom
 }
 
 QStringList
-domCompareStrList(DomItem &i1, DomItem &i2,
-                  function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &) const> filter,
+domCompareStrList(const DomItem &i1, const DomItem &i2,
+                  function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &) const> filter,
                   DomCompareStrList stopAtFirstDiff)
 {
     QStringList res;
     bool hasDiff = false;
     domCompare(
             i1, i2,
-            [&res, &hasDiff, stopAtFirstDiff](Path p, DomItem &j1, DomItem &j2) {
+            [&res, &hasDiff, stopAtFirstDiff](Path p, const DomItem &j1, const DomItem &j2) {
                 hasDiff = true;
                 if (!j1) {
                     res.append(QStringLiteral("- %1\n").arg(p.toString()));

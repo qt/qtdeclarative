@@ -172,7 +172,7 @@ void CompletionRequest::sendCompletions(QmlLsp::OpenDocumentSnapshot &doc)
     m_response.sendResponse(res);
 }
 
-static QList<CompletionItem> importCompletions(DomItem &file, const CompletionContextStrings &ctx)
+static QList<CompletionItem> importCompletions(const DomItem &file, const CompletionContextStrings &ctx)
 {
     // returns completions for import statements, ctx is supposed to be in an import statement
     QList<CompletionItem> res;
@@ -272,13 +272,13 @@ static QList<CompletionItem> idsCompletions(DomItem component)
     return res;
 }
 
-static QList<CompletionItem> bindingsCompletions(DomItem &containingObject)
+static QList<CompletionItem> bindingsCompletions(const DomItem &containingObject)
 {
     // returns valid bindings completions (i.e. reachable properties and signal handlers)
     QList<CompletionItem> res;
     qCDebug(complLog) << "binding completions";
     containingObject.visitPrototypeChain(
-            [&res](DomItem &it) {
+            [&res](const DomItem &it) {
                 qCDebug(complLog) << "prototypeChain" << it.internalKindStr() << it.canonicalPath();
                 if (const QmlObject *itPtr = it.as<QmlObject>()) {
                     // signal handlers
@@ -310,7 +310,7 @@ static QList<CompletionItem> bindingsCompletions(DomItem &containingObject)
     return res;
 }
 
-static QList<CompletionItem> reachableSymbols(DomItem &context, const CompletionContextStrings &ctx,
+static QList<CompletionItem> reachableSymbols(const DomItem &context, const CompletionContextStrings &ctx,
                                               TypeCompletionsType typeCompletionType,
                                               FunctionCompletion completeMethodCalls)
 {
@@ -319,7 +319,7 @@ static QList<CompletionItem> reachableSymbols(DomItem &context, const Completion
     QMap<CompletionItemKind, QSet<QString>> symbols;
     QSet<quintptr> visited;
     QList<Path> visitedRefs;
-    auto addLocalSymbols = [&res, typeCompletionType, completeMethodCalls, &symbols](DomItem &el) {
+    auto addLocalSymbols = [&res, typeCompletionType, completeMethodCalls, &symbols](const DomItem &el) {
         switch (typeCompletionType) {
         case TypeCompletionsType::None:
             return false;
@@ -411,8 +411,8 @@ static QList<CompletionItem> reachableSymbols(DomItem &context, const Completion
     } else {
         QList<QStringView> baseItems = ctx.base().split(u'.', Qt::SkipEmptyParts);
         Q_ASSERT(!baseItems.isEmpty());
-        auto addReachableSymbols = [&visited, &visitedRefs, &addLocalSymbols](Path,
-                                                                              DomItem &it) -> bool {
+        auto addReachableSymbols = [&visited, &visitedRefs, &addLocalSymbols](
+                                           Path, const DomItem &it) -> bool {
             qCDebug(complLog) << "adding directly accessible symbols of" << it.internalKindStr()
                               << it.canonicalPath();
             it.visitDirectAccessibleScopes(addLocalSymbols, VisitPrototypesOption::Normal,

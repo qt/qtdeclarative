@@ -15,7 +15,7 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
-OutWriterState::OutWriterState(Path itCanonicalPath, DomItem &it, FileLocations::Tree fLoc)
+OutWriterState::OutWriterState(Path itCanonicalPath, const DomItem &it, FileLocations::Tree fLoc)
     : itemCanonicalPath(itCanonicalPath), item(it), currentMap(fLoc)
 {
     DomItem cRegions = it.field(Fields::comments);
@@ -50,7 +50,7 @@ OutWriterState &OutWriter::state(int i)
     return states[states.size() - 1 - i];
 }
 
-void OutWriter::itemStart(DomItem &it)
+void OutWriter::itemStart(const DomItem &it)
 {
     if (!topLocation->path())
         topLocation->setPath(it.canonicalPath());
@@ -77,7 +77,7 @@ void OutWriter::itemStart(DomItem &it)
     regionStart(QString());
 }
 
-void OutWriter::itemEnd(DomItem &it)
+void OutWriter::itemEnd(const DomItem &it)
 {
     Q_ASSERT(states.size() > 0);
     Q_ASSERT(state().item == it);
@@ -126,7 +126,7 @@ OutWriter &OutWriter::writeRegion(QString rName, QStringView toWrite)
     return *this;
 }
 
-DomItem OutWriter::updatedFile(DomItem &qmlFile)
+DomItem OutWriter::updatedFile(const DomItem &qmlFile)
 {
     Q_ASSERT(qmlFile.internalKind() == DomType::QmlFile);
     if (std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>()) {

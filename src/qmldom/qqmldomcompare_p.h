@@ -26,20 +26,20 @@ namespace QQmlJS {
 namespace Dom {
 
 bool domCompare(
-        DomItem &i1, DomItem &i2, function_ref<bool(Path, DomItem &, DomItem &)> change,
-        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter = noFilter,
+        const DomItem &i1, const DomItem &i2, function_ref<bool(Path, const DomItem &, const DomItem &)> change,
+        function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter = noFilter,
         Path p = Path());
 
 enum DomCompareStrList { FirstDiff, AllDiffs };
 
 QMLDOM_EXPORT QStringList domCompareStrList(
-        DomItem &i1, DomItem &i2,
-        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &) const> filter = noFilter,
+        const DomItem &i1, const DomItem &i2,
+        function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &) const> filter = noFilter,
         DomCompareStrList stopAtFirstDiff = DomCompareStrList::FirstDiff);
 
 inline QStringList domCompareStrList(
-        MutableDomItem &i1, DomItem &i2,
-        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &) const> filter = noFilter,
+        MutableDomItem &i1, const DomItem &i2,
+        function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &) const> filter = noFilter,
         DomCompareStrList stopAtFirstDiff = DomCompareStrList::FirstDiff)
 {
     DomItem ii1 = i1.item();
@@ -47,8 +47,8 @@ inline QStringList domCompareStrList(
 }
 
 inline QStringList domCompareStrList(
-        DomItem &i1, MutableDomItem &i2,
-        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &) const> filter = noFilter,
+        const DomItem &i1, MutableDomItem &i2,
+        function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &) const> filter = noFilter,
         DomCompareStrList stopAtFirstDiff = DomCompareStrList::FirstDiff)
 {
     DomItem ii2 = i2.item();
@@ -57,7 +57,7 @@ inline QStringList domCompareStrList(
 
 inline QStringList domCompareStrList(
         MutableDomItem &i1, MutableDomItem &i2,
-        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &) const> filter = noFilter,
+        function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &) const> filter = noFilter,
         DomCompareStrList stopAtFirstDiff = DomCompareStrList::FirstDiff)
 {
     DomItem ii1 = i1.item();

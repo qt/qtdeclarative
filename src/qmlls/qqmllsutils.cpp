@@ -35,7 +35,7 @@ Q_LOGGING_CATEGORY(QQmlLSUtilsLog, "qt.languageserver.utils")
    \internal
     Helper to check if item is a Field Member Expression \c {<someExpression>.propertyName}.
 */
-static bool isFieldMemberExpression(DomItem &item)
+static bool isFieldMemberExpression(const DomItem &item)
 {
     return item.internalKind() == DomType::ScriptBinaryExpression
             && item.field(Fields::operation).value().toInteger()
@@ -47,7 +47,7 @@ static bool isFieldMemberExpression(DomItem &item)
     Helper to check if item is a Field Member Access \c memberAccess in
     \c {<someExpression>.memberAccess}.
 */
-static bool isFieldMemberAccess(DomItem &item)
+static bool isFieldMemberAccess(const DomItem &item)
 {
     auto parent = item.directParent();
     if (!isFieldMemberExpression(parent))
@@ -289,7 +289,7 @@ DomItem QQmlLSUtils::baseObject(DomItem object)
     return base;
 }
 
-static std::optional<QQmlLSUtilsLocation> locationFromDomItem(DomItem &item,
+static std::optional<QQmlLSUtilsLocation> locationFromDomItem(const DomItem &item,
                                                               const QString &regionName = QString())
 {
     QQmlLSUtilsLocation location;
@@ -346,7 +346,7 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(DomItem obj
             const QString bindingName = binding->name();
             object.containingObject().visitLookup(
                     bindingName,
-                    [&propertyDefinition](DomItem &item) {
+                    [&propertyDefinition](const DomItem &item) {
                         if (item.internalKind() == QQmlJS::Dom::DomType::PropertyDefinition) {
                             propertyDefinition = item;
                             return false;
@@ -370,7 +370,7 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(DomItem obj
     case QQmlJS::Dom::DomType::ScriptIdentifierExpression: {
         if (object.directParent().internalKind() == DomType::ScriptType) {
             DomItem type =
-                    object.filterUp([](DomType k, DomItem &) { return k == DomType::ScriptType; },
+                    object.filterUp([](DomType k, const DomItem &) { return k == DomType::ScriptType; },
                                     FilterUpOptions::ReturnOuter);
 
             const QString name = type.field(Fields::typeName).value().toString();
@@ -419,7 +419,7 @@ static bool findDefinitionFromItem(DomItem item, const QString &name)
 static DomItem findJSIdentifierDefinition(DomItem item, const QString &name)
 {
     DomItem definitionOfItem;
-    item.visitUp([&name, &definitionOfItem](DomItem &i) {
+    item.visitUp([&name, &definitionOfItem](const DomItem &i) {
         if (findDefinitionFromItem(i, name)) {
             definitionOfItem = i;
             return false;
@@ -435,7 +435,7 @@ static DomItem findJSIdentifierDefinition(DomItem item, const QString &name)
 
     // special case: somebody asks for usages of a function parameter from its definition
     // function parameters are defined in the method's scope
-    if (DomItem res = item.filterUp([](DomType k, DomItem &) { return k == DomType::MethodInfo; },
+    if (DomItem res = item.filterUp([](DomType k, const DomItem &) { return k == DomType::MethodInfo; },
                                     FilterUpOptions::ReturnOuter)) {
         DomItem candidate = res.field(Fields::body).field(Fields::scriptElement);
         if (findDefinitionFromItem(candidate, name)) {
@@ -582,7 +582,7 @@ static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
         return namesToCheck.contains(nameToCheck);
     };
 
-    auto findUsages = [&targetType, &result, &name, &checkName](Path, DomItem &current,
+    auto findUsages = [&targetType, &result, &name, &checkName](Path, const DomItem &current,
                                                                 bool) -> bool {
         bool resolveType = false;
         bool continueForChildren = true;
@@ -691,7 +691,7 @@ static void findUsagesHelper(DomItem item, const QString &name, QList<QQmlLSUtil
 
     definitionOfItem.visitTree(
             Path(), emptyChildrenVisitor, VisitOption::VisitAdopted | VisitOption::Recurse,
-            [&name, &result](Path, DomItem &item, bool) -> bool {
+            [&name, &result](Path, const DomItem &item, bool) -> bool {
                 qCDebug(QQmlLSUtilsLog) << "Visiting a " << item.internalKindStr();
                 if (item.internalKind() == DomType::ScriptIdentifierExpression
                     && item.field(Fields::identifier).value().toString() == name) {
@@ -812,7 +812,7 @@ propertyFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QStr
     return {};
 }
 
-static QQmlJSScope::ConstPtr findScopeInConnections(QQmlJSScope::ConstPtr scope, DomItem &item)
+static QQmlJSScope::ConstPtr findScopeInConnections(QQmlJSScope::ConstPtr scope, const DomItem &item)
 {
     if (!scope || (scope->baseType() && scope->baseType()->internalName() != u"QQmlConnections"_s))
         return {};
