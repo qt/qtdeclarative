@@ -2278,7 +2278,7 @@ int QMacStyle::styleHint(StyleHint sh, const QStyleOption *opt, QStyleHintReturn
                     ++srow;
                 }
             }
-            QBitmap qmask = QBitmap::fromImage(img_mask);
+            QBitmap qmask = QBitmap::fromImage(std::move(img_mask));
             mask->region = QRegion(qmask);
         }
         break; }

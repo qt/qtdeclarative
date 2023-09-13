@@ -667,7 +667,7 @@ void QCommonStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, Q
 
                 imagePainter.drawPolygon(a);
                 imagePainter.end();
-                pixmap = QPixmap::fromImage(image);
+                pixmap = QPixmap::fromImage(std::move(image));
                 pixmap.setDevicePixelRatio(pixelRatio);
                 QPixmapCache::insert(pixmapName, pixmap);
             }
@@ -5229,8 +5229,8 @@ QPixmap QCommonStyle::standardPixmap(StandardPixmap sp, const QStyleOption *opti
     case SP_ToolBarHorizontalExtensionButton:
         if (rtl) {
             QImage im(tb_extension_arrow_h_xpm);
-            im = im.convertToFormat(QImage::Format_ARGB32).mirrored(true, false);
-            return QPixmap::fromImage(im);
+            im = std::move(im).convertToFormat(QImage::Format_ARGB32).mirrored(true, false);
+            return QPixmap::fromImage(std::move(im));
         }
         return cachedPixmapFromXPM(tb_extension_arrow_h_xpm);
     case SP_ToolBarVerticalExtensionButton:
@@ -6025,7 +6025,7 @@ QPixmap QCommonStyle::generatedIconPixmap(QIcon::Mode iconMode, const QPixmap &p
             }
         }
 
-        return QPixmap::fromImage(im);
+        return QPixmap::fromImage(std::move(im));
     }
     case QIcon::Selected: {
         QImage img = pixmap.toImage().convertToFormat(QImage::Format_ARGB32_Premultiplied);
@@ -6035,7 +6035,7 @@ QPixmap QCommonStyle::generatedIconPixmap(QIcon::Mode iconMode, const QPixmap &p
         painter.setCompositionMode(QPainter::CompositionMode_SourceAtop);
         painter.fillRect(0, 0, img.width(), img.height(), color);
         painter.end();
-        return QPixmap::fromImage(img); }
+        return QPixmap::fromImage(std::move(img)); }
     case QIcon::Active:
         return pixmap;
     default:
