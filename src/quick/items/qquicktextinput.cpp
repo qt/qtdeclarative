@@ -3618,7 +3618,7 @@ void QQuickTextInputPrivate::selectWordAtPos(int cursor)
     moveCursor(c, false);
     // ## text layout should support end of words.
     int end = m_textLayout.nextCursorPosition(c, QTextLayout::SkipWords);
-    while (end > cursor && m_text[end-1].isSpace())
+    while (end > cursor && m_text.at(end - 1).isSpace())
         --end;
     moveCursor(end, true);
 }
