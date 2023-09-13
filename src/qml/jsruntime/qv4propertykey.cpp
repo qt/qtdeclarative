@@ -8,6 +8,8 @@
 #include <qv4engine_p.h>
 #include <qv4scopedvalue_p.h>
 
+using namespace Qt::Literals::StringLiterals;
+
 QV4::Heap::StringOrSymbol *QV4::PropertyKey::toStringOrSymbol(QV4::ExecutionEngine *e)
 {
     if (isArrayIndex())
@@ -56,9 +58,9 @@ QV4::Heap::String *QV4::PropertyKey::asFunctionName(ExecutionEngine *engine, Fun
 {
     QString n;
     if (prefix == Getter)
-        n = QStringLiteral("get ");
+        n += "get "_L1;
     else if (prefix == Setter)
-        n = QStringLiteral("set ");
+        n += "set "_L1;
     if (isArrayIndex())
         n += QString::number(asArrayIndex());
     else {
