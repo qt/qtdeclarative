@@ -1824,9 +1824,7 @@ void QQuickWindowPrivate::rhiCreationFailureMessage(const QString &backendName,
 
 void QQuickWindowPrivate::cleanupNodes()
 {
-    for (int ii = 0; ii < cleanupNodeList.size(); ++ii)
-        delete cleanupNodeList.at(ii);
-    cleanupNodeList.clear();
+    qDeleteAll(std::exchange(cleanupNodeList, {}));
 }
 
 void QQuickWindowPrivate::cleanupNodesOnShutdown(QQuickItem *item)
