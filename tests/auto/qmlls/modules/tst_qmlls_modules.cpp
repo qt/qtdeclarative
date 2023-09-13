@@ -995,5 +995,3 @@ void tst_qmlls_modules::quickFixes()
 }
 
 QTEST_MAIN(tst_qmlls_modules)
-
-#include <tst_qmlls_modules.moc>
