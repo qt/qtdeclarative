@@ -74,6 +74,7 @@ public:
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
+    void itemDestroyed(QQuickItem *item) override;
 
     qreal from = 0;
     qreal to = 1;
@@ -234,6 +235,16 @@ void QQuickSliderPrivate::itemImplicitHeightChanged(QQuickItem *item)
     QQuickControlPrivate::itemImplicitHeightChanged(item);
     if (item == handle)
         emit q->implicitHandleHeightChanged();
+}
+
+void QQuickSliderPrivate::itemDestroyed(QQuickItem *item)
+{
+    Q_Q(QQuickSlider);
+    QQuickControlPrivate::itemDestroyed(item);
+    if (item == handle) {
+        handle = nullptr;
+        emit q->handleChanged();
+    }
 }
 
 QQuickSlider::QQuickSlider(QQuickItem *parent)
