@@ -51,6 +51,9 @@
 
 #include <rhi/qrhi.h>
 
+#include <utility>
+#include <mutex>
+
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
@@ -1111,18 +1114,15 @@ QQuickWindow::~QQuickWindow()
     delete root;
     d->deliveryAgent = nullptr; // avoid forwarding events there during destruction
 
-    d->renderJobMutex.lock();
-    qDeleteAll(d->beforeSynchronizingJobs);
-    d->beforeSynchronizingJobs.clear();
-    qDeleteAll(d->afterSynchronizingJobs);
-    d->afterSynchronizingJobs.clear();
-    qDeleteAll(d->beforeRenderingJobs);
-    d->beforeRenderingJobs.clear();
-    qDeleteAll(d->afterRenderingJobs);
-    d->afterRenderingJobs.clear();
-    qDeleteAll(d->afterSwapJobs);
-    d->afterSwapJobs.clear();
-    d->renderJobMutex.unlock();
+
+    {
+        const std::lock_guard locker(d->renderJobMutex);
+        qDeleteAll(std::exchange(d->beforeSynchronizingJobs, {}));
+        qDeleteAll(std::exchange(d->afterSynchronizingJobs, {}));
+        qDeleteAll(std::exchange(d->beforeRenderingJobs, {}));
+        qDeleteAll(std::exchange(d->afterRenderingJobs, {}));;
+        qDeleteAll(std::exchange(d->afterSwapJobs, {}));
+    }
 
     // It is important that the pixmap cache is cleaned up during shutdown.
     // Besides playing nice, this also solves a practical problem that
