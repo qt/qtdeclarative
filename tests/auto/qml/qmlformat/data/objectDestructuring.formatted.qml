@@ -107,25 +107,25 @@ QtObject {
             myLambda(myObject);
         };
         myFunction(({
-                    a,
-                    b: {
-                        c,
-                        d: [firstD]
-                    },
-                    e: {
-                        f,
-                        g: {
-                            h,
-                            i: [, secondI]
-                        }
+                a,
+                b: {
+                    c,
+                    d: [firstD]
+                },
+                e: {
+                    f,
+                    g: {
+                        h,
+                        i: [, secondI]
                     }
-                }) => {
-                console.log(a); // 1
-                console.log(c); // 2
-                console.log(firstD); // 3
-                console.log(f); // 6
-                console.log(h); // 7
-                console.log(secondI); // 9
-            });
+                }
+            }) => {
+            console.log(a); // 1
+            console.log(c); // 2
+            console.log(firstD); // 3
+            console.log(f); // 6
+            console.log(h); // 7
+            console.log(secondI); // 9
+        });
     }
 }

@@ -8,8 +8,8 @@ Item {
 
     onTestChanged: {
         fooBar(test, {
-                // Testing
-                "foo": "bar"
-            });
+            // Testing
+            "foo": "bar"
+        });
     }
 }
