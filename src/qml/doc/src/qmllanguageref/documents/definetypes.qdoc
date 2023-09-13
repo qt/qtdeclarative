@@ -321,11 +321,11 @@ With this pragma you can change the way type annotations on functions are
 handled. By default the interpreter and JIT ignore type annotations, but
 the \l{QML script compiler} enforces them when compiling to C++.
 
-Specifying \c{Enforce} as value makes sure the type annotations are always
+Specifying \c{Enforced} as value makes sure the type annotations are always
 enforced. The resulting type coercions increase the overhead of calling
 typed JavaScript functions.
 
-Specifying \c{Ignore} as value makes the \l{QML script compiler} ignore
+Specifying \c{Ignored} as value makes the \l{QML script compiler} ignore
 any JavaScript functions when compiling the document to C++. This means less
 code is compiled to C++ ahead of time, and more code has to be interpreted or
 JIT-compiled.
