@@ -701,7 +701,7 @@ QMimeData *QQuickDragAttachedPrivate::createMimeData() const
                     else
                         qmlWarning(q) << "Don't know how to encode text as " << mimeType;
                 } else {
-                    mimeData->setData(mimeType, text.toUtf8().constData());
+                    mimeData->setData(mimeType, text.toUtf8());
                 }
             } else {
                 qmlWarning(q) << "Mime data contains a string, but mime type " << mimeType
