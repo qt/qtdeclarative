@@ -311,13 +311,39 @@ bool Import::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     return cont;
 }
 
-void Import::writeOut(DomItem &, OutWriter &ow) const
+void Import::writeOut(DomItem &self, OutWriter &ow) const
 {
     if (implicit)
         return;
-    ow.ensureNewline();
+
+    QString code;
+    const DomItem owner = self.owner();
+    if (std::shared_ptr<QmlFile> qmlFilePtr = self.ownerAs<QmlFile>())
+        code = qmlFilePtr->code();
+
+    // check for an empty line before the import, and preserve it
+    int preNewlines = 0;
+
+    const FileLocations::Tree elLoc = FileLocations::findAttachedInfo(self).foundTree;
+
+    quint32 start = elLoc->info().fullRegion.offset;
+    if (size_t(code.size()) >= start) {
+        while (start != 0) {
+            QChar c = code.at(--start);
+            if (c == u'\n') {
+                if (++preNewlines == 2)
+                    break;
+            } else if (!c.isSpace())
+                break;
+        }
+    }
+    if (preNewlines == 0)
+        ++preNewlines;
+
+    ow.ensureNewline(preNewlines);
     ow.writeRegion(u"import").space();
     ow.writeRegion(u"uri", uri.toString());
+
     if (uri.isModule()) {
         QString vString = version.stringValue();
         if (!vString.isEmpty())
