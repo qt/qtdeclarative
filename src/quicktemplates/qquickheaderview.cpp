@@ -304,6 +304,11 @@ bool QHeaderDataProxyModel::hasChildren(const QModelIndex &parent) const
     return false;
 }
 
+QHash<int, QByteArray> QHeaderDataProxyModel::roleNames() const
+{
+    return m_model ? m_model->roleNames() : QAbstractItemModel::roleNames();
+}
+
 QVariant QHeaderDataProxyModel::variantValue() const
 {
     return QVariant::fromValue(static_cast<QObject *>(const_cast<QHeaderDataProxyModel *>(this)));
