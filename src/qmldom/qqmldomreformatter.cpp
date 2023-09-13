@@ -463,9 +463,7 @@ protected:
     {
         accept(ast->base);
         out(ast->lparenToken);
-        int baseIndent = lw.increaseIndent(1);
         accept(ast->arguments);
-        lw.decreaseIndent(1, baseIndent);
         out(ast->rparenToken);
         return false;
     }

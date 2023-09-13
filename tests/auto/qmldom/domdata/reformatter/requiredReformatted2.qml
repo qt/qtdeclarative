@@ -8,7 +8,7 @@ Item {
 
     function foo() {
         theItem.foo("The issue is exacerbated if the object literal is wrapped onto the next line like so:", {
-                "foo": theFoo
-            });
+            "foo": theFoo
+        });
     }
 }
