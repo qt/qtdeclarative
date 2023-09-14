@@ -10,11 +10,11 @@
 
 #include <rhi/qrhi.h>
 
+//![node]
 class CustomRenderNode : public QSGRenderNode
 {
 public:
     CustomRenderNode(QQuickWindow *window);
-    virtual ~CustomRenderNode();
 
     void setVertices(const QList<QVector2D> &vertices);
 
@@ -25,44 +25,31 @@ public:
     QSGRenderNode::StateFlags changedStates() const override;
 
 protected:
-    QQuickWindow *m_window = nullptr;
-    QRhiBuffer *m_vertexBuffer = nullptr;
-    QRhiBuffer *m_uniformBuffer = nullptr;
-    QRhiShaderResourceBindings *m_resourceBindings = nullptr;
-    QRhiGraphicsPipeline *m_pipeLine = nullptr;
+    QQuickWindow *m_window;
+    std::unique_ptr<QRhiBuffer> m_vertexBuffer;
+    std::unique_ptr<QRhiBuffer> m_uniformBuffer;
+    std::unique_ptr<QRhiShaderResourceBindings> m_resourceBindings;
+    std::unique_ptr<QRhiGraphicsPipeline> m_pipeline;
     QList<QRhiShaderStage> m_shaders;
     bool m_verticesDirty = true;
     QList<QVector2D> m_vertices;
 };
+//![node]
 
-CustomRenderNode::CustomRenderNode(QQuickWindow *window) : m_window(window)
+CustomRenderNode::CustomRenderNode(QQuickWindow *window)
+    : m_window(window)
 {
-    Q_ASSERT(QFile::exists(":/scenegraph/customrendernode/shaders/customrender.vert.qsb"));
-    Q_ASSERT(QFile::exists(":/scenegraph/customrendernode/shaders/customrender.frag.qsb"));
-
     QFile file;
     file.setFileName(":/scenegraph/customrendernode/shaders/customrender.vert.qsb");
-    file.open(QFile::ReadOnly);
-    m_shaders.append(
-            QRhiShaderStage(QRhiShaderStage::Vertex, QShader::fromSerialized(file.readAll())));
+    if (!file.open(QFile::ReadOnly))
+        qFatal("Failed to load vertex shader");
+    m_shaders.append(QRhiShaderStage(QRhiShaderStage::Vertex, QShader::fromSerialized(file.readAll())));
 
     file.close();
     file.setFileName(":/scenegraph/customrendernode/shaders/customrender.frag.qsb");
-    file.open(QFile::ReadOnly);
-    m_shaders.append(
-            QRhiShaderStage(QRhiShaderStage::Fragment, QShader::fromSerialized(file.readAll())));
-}
-
-CustomRenderNode::~CustomRenderNode()
-{
-    if (m_pipeLine)
-        delete m_pipeLine;
-    if (m_resourceBindings)
-        delete m_resourceBindings;
-    if (m_vertexBuffer)
-        delete m_vertexBuffer;
-    if (m_uniformBuffer)
-        delete m_uniformBuffer;
+    if (!file.open(QFile::ReadOnly))
+        qFatal("Failed to load fragment shader");
+    m_shaders.append(QRhiShaderStage(QRhiShaderStage::Fragment, QShader::fromSerialized(file.readAll())));
 }
 
 void CustomRenderNode::setVertices(const QList<QVector2D> &vertices)
@@ -76,143 +63,129 @@ void CustomRenderNode::setVertices(const QList<QVector2D> &vertices)
     markDirty(QSGNode::DirtyGeometry);
 }
 
+//![node-release]
 void CustomRenderNode::releaseResources()
 {
-    if (m_vertexBuffer) {
-        delete m_vertexBuffer;
-        m_vertexBuffer = nullptr;
-    }
-
-    if (m_uniformBuffer) {
-        delete m_uniformBuffer;
-        m_uniformBuffer = nullptr;
-    }
-
-    if (m_pipeLine) {
-        delete m_pipeLine;
-        m_pipeLine = nullptr;
-    }
-
-    if (m_resourceBindings) {
-        delete m_resourceBindings;
-        m_resourceBindings = nullptr;
-    }
-
+    m_vertexBuffer.reset();
+    m_uniformBuffer.reset();
+    m_pipeline.reset();
+    m_resourceBindings.reset();
 }
+//![node-release]
 
+//![node-flags]
 QSGRenderNode::RenderingFlags CustomRenderNode::flags() const
 {
-    // We are rendering 2D content directly into the scene graph
-    return { QSGRenderNode::NoExternalRendering | QSGRenderNode::DepthAwareRendering };
+    // We are rendering 2D content directly into the scene graph using QRhi, no
+    // direct usage of a 3D API. Hence NoExternalRendering. This is a minor
+    // optimization.
+
+    // Additionally, the node takes the item transform into account by relying
+    // on projectionMatrix() and matrix() (see prepare()) and never rendering at
+    // other Z coordinates. Hence DepthAwareRendering. This is a potentially
+    // bigger optimization.
+
+    return QSGRenderNode::NoExternalRendering | QSGRenderNode::DepthAwareRendering;
 }
+//![node-flags]
 
 QSGRenderNode::StateFlags CustomRenderNode::changedStates() const
 {
-    return {QSGRenderNode::StateFlag::ViewportState | QSGRenderNode::StateFlag::CullState};
+    // In Qt 6 only ViewportState and ScissorState matter, the rest is ignored.
+    return QSGRenderNode::StateFlag::ViewportState | QSGRenderNode::StateFlag::CullState;
 }
 
+//![node-prepare]
 void CustomRenderNode::prepare()
 {
-    QRhiSwapChain *swapChain = m_window->swapChain();
     QRhi *rhi = m_window->rhi();
-    Q_ASSERT(swapChain);
-    Q_ASSERT(rhi);
-
     QRhiResourceUpdateBatch *resourceUpdates = rhi->nextResourceUpdateBatch();
 
     if (m_verticesDirty) {
-        if (m_vertexBuffer) {
-            delete m_vertexBuffer;
-            m_vertexBuffer = nullptr;
-        }
+        m_vertexBuffer.reset();
         m_verticesDirty = false;
     }
 
     if (!m_vertexBuffer) {
-        m_vertexBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer,
-                                        m_vertices.count() * sizeof(QVector2D));
+        m_vertexBuffer.reset(rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer,
+                                            m_vertices.count() * sizeof(QVector2D)));
         m_vertexBuffer->create();
-        resourceUpdates->uploadStaticBuffer(m_vertexBuffer, m_vertices.constData());
+        resourceUpdates->uploadStaticBuffer(m_vertexBuffer.get(), m_vertices.constData());
     }
-
+//![node-prepare]
     if (!m_uniformBuffer) {
-        m_uniformBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 68);
+        m_uniformBuffer.reset(rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 68));
         m_uniformBuffer->create();
     }
 
     if (!m_resourceBindings) {
-        m_resourceBindings = rhi->newShaderResourceBindings();
+        m_resourceBindings.reset(rhi->newShaderResourceBindings());
         m_resourceBindings->setBindings({ QRhiShaderResourceBinding::uniformBuffer(
                 0,
                 QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
-                m_uniformBuffer) });
+                m_uniformBuffer.get()) });
         m_resourceBindings->create();
     }
 
-    if (!m_pipeLine) {
+    if (!m_pipeline) {
+        m_pipeline.reset(rhi->newGraphicsPipeline());
 
-        m_pipeLine = rhi->newGraphicsPipeline();
-
-        //
         // If layer.enabled == true on our QQuickItem, the rendering face is flipped for
         // backends with isYUpInFrameBuffer == true (OpenGL). This does not happen with
         // RHI backends with isYUpInFrameBuffer == false. We swap the triangle winding
         // order to work around this.
-        //
-        m_pipeLine->setFrontFace(renderTarget()->resourceType() == QRhiResource::TextureRenderTarget
+        m_pipeline->setFrontFace(renderTarget()->resourceType() == QRhiResource::TextureRenderTarget
                                                  && rhi->isYUpInFramebuffer()
                                          ? QRhiGraphicsPipeline::CW
                                          : QRhiGraphicsPipeline::CCW);
-        m_pipeLine->setCullMode(QRhiGraphicsPipeline::Back);
-        m_pipeLine->setTopology(QRhiGraphicsPipeline::TriangleStrip);
+        m_pipeline->setCullMode(QRhiGraphicsPipeline::Back);
+        m_pipeline->setTopology(QRhiGraphicsPipeline::TriangleStrip);
         QRhiGraphicsPipeline::TargetBlend blend;
         blend.enable = true;
-        m_pipeLine->setTargetBlends({ blend });
-        m_pipeLine->setShaderResourceBindings(m_resourceBindings);
-        m_pipeLine->setShaderStages(m_shaders.cbegin(), m_shaders.cend());
-        m_pipeLine->setDepthTest(true);
+        m_pipeline->setTargetBlends({ blend });
+        m_pipeline->setShaderResourceBindings(m_resourceBindings.get());
+        m_pipeline->setShaderStages(m_shaders.cbegin(), m_shaders.cend());
+        m_pipeline->setDepthTest(true);
         QRhiVertexInputLayout inputLayout;
         inputLayout.setBindings({ { 2 * sizeof(float) } });
         inputLayout.setAttributes({ { 0, 0, QRhiVertexInputAttribute::Float2, 0 } });
-        m_pipeLine->setVertexInputLayout(inputLayout);
-        m_pipeLine->setRenderPassDescriptor(renderTarget()->renderPassDescriptor());
-        m_pipeLine->create();
+        m_pipeline->setVertexInputLayout(inputLayout);
+        m_pipeline->setRenderPassDescriptor(renderTarget()->renderPassDescriptor());
+        m_pipeline->create();
     }
 
-    QMatrix4x4 mvp = *projectionMatrix() * *matrix();
-    float opacity = inheritedOpacity();
+    const QMatrix4x4 mvp = *projectionMatrix() * *matrix();
+    const float opacity = inheritedOpacity();
 
-    resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 0, 64, mvp.constData());
-    resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 64, 4, &opacity);
-
-    swapChain->currentFrameCommandBuffer()->resourceUpdate(resourceUpdates);
+    resourceUpdates->updateDynamicBuffer(m_uniformBuffer.get(), 0, 64, mvp.constData());
+    resourceUpdates->updateDynamicBuffer(m_uniformBuffer.get(), 64, 4, &opacity);
+    commandBuffer()->resourceUpdate(resourceUpdates);
 }
 
+//![node-render]
 void CustomRenderNode::render(const RenderState *state)
 {
-
-    QRhiSwapChain *swapChain = m_window->swapChain();
-    Q_ASSERT(swapChain);
-
-    QRhiCommandBuffer *cb = swapChain->currentFrameCommandBuffer();
-    Q_ASSERT(cb);
-
-    cb->setGraphicsPipeline(m_pipeLine);
+    QRhiCommandBuffer *cb = commandBuffer();
+    cb->setGraphicsPipeline(m_pipeline.get());
     QSize renderTargetSize = renderTarget()->pixelSize();
     cb->setViewport(QRhiViewport(0, 0, renderTargetSize.width(), renderTargetSize.height()));
     cb->setShaderResources();
-    QRhiCommandBuffer::VertexInput vertexBindings[] = { { m_vertexBuffer, 0 } };
+    QRhiCommandBuffer::VertexInput vertexBindings[] = { { m_vertexBuffer.get(), 0 } };
     cb->setVertexInput(0, 1, vertexBindings);
     cb->draw(m_vertices.count());
 }
+//![node-render]
 
-CustomRender::CustomRender(QQuickItem *parent) : QQuickItem(parent)
+//![item-ctor]
+CustomRender::CustomRender(QQuickItem *parent)
+    : QQuickItem(parent)
 {
     setFlag(ItemHasContents, true);
     connect(this, &CustomRender::verticesChanged, this, &CustomRender::update);
 }
+//![item-ctor]
 
-const QList<QVector2D> &CustomRender::vertices() const
+QList<QVector2D> CustomRender::vertices() const
 {
     return m_vertices;
 }
@@ -226,6 +199,7 @@ void CustomRender::setVertices(const QList<QVector2D> &newVertices)
     emit verticesChanged();
 }
 
+//![item-update]
 QSGNode *CustomRender::updatePaintNode(QSGNode *old, UpdatePaintNodeData *)
 {
     CustomRenderNode *node = static_cast<CustomRenderNode *>(old);
@@ -237,3 +211,4 @@ QSGNode *CustomRender::updatePaintNode(QSGNode *old, UpdatePaintNodeData *)
 
     return node;
 }
+//![item-update]

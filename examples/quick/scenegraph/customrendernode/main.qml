@@ -45,11 +45,10 @@ Item {
         anchors.bottom: parent.bottom
         anchors.margins: 20
         wrapMode: Text.WordWrap
-        text: qsTr("This example creates a custom scenegraph QSGRenderNode render node and " +
-              "demonstrates its use. The render node is placed in front of a red " +
-              "rectangle, and behind a white rectangle. Rendering is demonstrated " +
-              "directly into the scenegraph, and as a layered item. Opacity and " +
-              "rotation transform changes are exercised.")
+        text: qsTr("This example creates a custom QQuickItem backed by a QSGRenderNode in the scene graph. " +
+              "The render node is placed in front of a red rectangle, and behind a white rectangle. " +
+              "Rendering is demonstrated directly into the scenegraph, and as a layered, texture-backed item (layer.enabled set to true). " +
+              "Opacity and rotation transform changes are exercised as well.")
 
         Rectangle {
             z:-1
