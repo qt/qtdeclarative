@@ -641,9 +641,9 @@ DomItem DomItem::scope(FilterUpOptions options) const
     return res;
 }
 
-std::optional<QQmlJSScope::Ptr> DomItem::nearestSemanticScope() const
+QQmlJSScope::ConstPtr DomItem::nearestSemanticScope() const
 {
-    std::optional<QQmlJSScope::Ptr> scope;
+    QQmlJSScope::ConstPtr scope;
     visitUp([&scope](const DomItem &item) {
         scope = item.semanticScope();
         return !scope; // stop when scope was true
@@ -651,10 +651,10 @@ std::optional<QQmlJSScope::Ptr> DomItem::nearestSemanticScope() const
     return scope;
 }
 
-std::optional<QQmlJSScope::Ptr> DomItem::semanticScope() const
+QQmlJSScope::ConstPtr DomItem::semanticScope() const
 {
-    std::optional<QQmlJSScope::Ptr> scope = std::visit(
-            [](auto &&e) -> std::optional<QQmlJSScope::Ptr> {
+    QQmlJSScope::ConstPtr scope = std::visit(
+            [](auto &&e) -> QQmlJSScope::ConstPtr {
                 using T = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
                 if constexpr (std::is_same_v<T, const QmlObject *>) {
                     return e->semanticScope();
@@ -3694,11 +3694,11 @@ void ListPBase::writeOut(const DomItem &self, OutWriter &ow, bool compact) const
     ow.writeRegion(u"rightSquareBrace", u"]");
 }
 
-std::optional<QQmlJSScope::Ptr> ScriptElement::semanticScope()
+QQmlJSScope::ConstPtr ScriptElement::semanticScope()
 {
     return m_scope;
 }
-void ScriptElement::setSemanticScope(const QQmlJSScope::Ptr &scope)
+void ScriptElement::setSemanticScope(const QQmlJSScope::ConstPtr &scope)
 {
     m_scope = scope;
 }

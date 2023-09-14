@@ -616,7 +616,7 @@ void QQmlDomAstCreator::endVisit(AST::FunctionDeclaration *fDef)
                 auto body = makeScriptElement<ScriptElements::BlockStatement>(fDef->body);
                 body->setStatements(currentScriptNodeEl().takeList());
                 if (auto semanticScope = body->statements().semanticScope())
-                    body->setSemanticScope(*semanticScope);
+                    body->setSemanticScope(semanticScope);
                 m.body->setScriptElement(finalizeScriptExpression(
                         ScriptElementVariant::fromElement(body), bodyPath, bodyTree));
             } else {
@@ -2166,7 +2166,7 @@ QQmlJSASTClassListToVisit
         void
         QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomAfterEndvisit()
 {
-    QQmlJSScope::Ptr scope = m_scopeCreator.m_currentScope;
+    const QQmlJSScope::ConstPtr scope = m_scopeCreator.m_currentScope;
     if (!m_domCreator.scriptNodeStack.isEmpty()) {
         auto topOfStack = m_domCreator.currentScriptNodeEl();
         switch (topOfStack.kind) {
@@ -2206,7 +2206,7 @@ QQmlJSASTClassListToVisit
 
 void QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomBeforeEndvisit()
 {
-    QQmlJSScope::Ptr scope = m_scopeCreator.m_currentScope;
+    const QQmlJSScope::ConstPtr scope = m_scopeCreator.m_currentScope;
 
     // depending whether the property definition has a binding, the property definition might be
     // either at the last position in the stack or at the position before the last position.

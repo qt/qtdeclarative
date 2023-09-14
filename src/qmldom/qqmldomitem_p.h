@@ -679,11 +679,11 @@ struct ScriptElement : public DomElement
     using DomElement::DomElement;
     virtual void createFileLocations(std::shared_ptr<AttachedInfoT<FileLocations>> fileLocationOfOwner) = 0;
 
-    std::optional<QQmlJSScope::Ptr> semanticScope();
-    void setSemanticScope(const QQmlJSScope::Ptr &scope);
+    QQmlJSScope::ConstPtr semanticScope();
+    void setSemanticScope(const QQmlJSScope::ConstPtr &scope);
 
 private:
-    std::optional<QQmlJSScope::Ptr> m_scope;
+    QQmlJSScope::ConstPtr m_scope;
 };
 
 /*!
@@ -927,8 +927,8 @@ public:
     DomItem globalScope() const;
     DomItem component(GoTo option = GoTo::Strict) const;
     DomItem scope(FilterUpOptions options = FilterUpOptions::ReturnOuter) const;
-    std::optional<QQmlJSScope::Ptr> nearestSemanticScope() const;
-    std::optional<QQmlJSScope::Ptr> semanticScope() const;
+    QQmlJSScope::ConstPtr nearestSemanticScope() const;
+    QQmlJSScope::ConstPtr semanticScope() const;
 
     // convenience getters
     DomItem get(ErrorHandler h = nullptr, QList<Path> *visitedRefs = nullptr) const;
@@ -1713,8 +1713,8 @@ public:
     {
         return addPostComment(comment, regionName.toString());
     }
-    QQmlJSScope::Ptr semanticScope();
-    void setSemanticScope(const QQmlJSScope::Ptr &scope);
+    QQmlJSScope::ConstPtr semanticScope();
+    void setSemanticScope(const QQmlJSScope::ConstPtr &scope);
 
     MutableDomItem() = default;
     MutableDomItem(const DomItem &owner, Path pathFromOwner):

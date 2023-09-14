@@ -650,7 +650,7 @@ public:
     bool isPointer = false;
     bool isDefaultMember = false;
     bool isRequired = false;
-    std::optional<QQmlJSScope::Ptr> scope;
+    QQmlJSScope::ConstPtr scope;
 };
 
 class QMLDOM_EXPORT PropertyInfo
@@ -717,8 +717,8 @@ public:
                                      QLatin1String("function foo(){\n"), QLatin1String("\n}\n"));
     }
     MethodInfo() = default;
-    std::optional<QQmlJSScope::Ptr> semanticScope() const { return m_semanticScope; }
-    void setSemanticScope(QQmlJSScope::Ptr scope) { m_semanticScope = scope; }
+    QQmlJSScope::ConstPtr semanticScope() const { return m_semanticScope; }
+    void setSemanticScope(const QQmlJSScope::ConstPtr &scope) { m_semanticScope = scope; }
 
     // TODO: make private + add getters/setters
     QList<MethodParameter> parameters;
@@ -726,7 +726,7 @@ public:
     std::shared_ptr<ScriptExpression> body;
     std::shared_ptr<ScriptExpression> returnType;
     bool isConstructor = false;
-    std::optional<QQmlJSScope::Ptr> m_semanticScope;
+    QQmlJSScope::ConstPtr m_semanticScope;
 };
 
 class QMLDOM_EXPORT EnumItem
@@ -896,8 +896,8 @@ public:
                                       std::shared_ptr<ScriptExpression> accessSequence) const;
     LocallyResolvedAlias resolveAlias(const DomItem &self, const QStringList &accessSequence) const;
 
-    std::optional<QQmlJSScope::Ptr> semanticScope() const { return m_scope; }
-    void setSemanticScope(const QQmlJSScope::Ptr &scope) { m_scope = scope; }
+    QQmlJSScope::ConstPtr semanticScope() const { return m_scope; }
+    void setSemanticScope(const QQmlJSScope::ConstPtr &scope) { m_scope = scope; }
 
 private:
     friend class QQmlDomAstCreator;
@@ -911,7 +911,7 @@ private:
     QMultiMap<QString, MethodInfo> m_methods;
     QList<QmlObject> m_children;
     QList<QmlObject> m_annotations;
-    std::optional<QQmlJSScope::Ptr> m_scope;
+    QQmlJSScope::ConstPtr m_scope;
 };
 
 class Export
@@ -1085,14 +1085,14 @@ public:
     QList<QString> subComponentsNames(const DomItem &self) const;
     QList<DomItem> subComponents(const DomItem &self) const;
 
-    void setSemanticScope(const QQmlJSScope::Ptr &scope) { m_semanticScope = scope; }
-    std::optional<QQmlJSScope::Ptr> semanticScope() const { return m_semanticScope; }
+    void setSemanticScope(const QQmlJSScope::ConstPtr &scope) { m_semanticScope = scope; }
+    QQmlJSScope::ConstPtr semanticScope() const { return m_semanticScope; }
 
 private:
     friend class QQmlDomAstCreator;
     Path m_nextComponentPath;
     QMultiMap<QString, Id> m_ids;
-    std::optional<QQmlJSScope::Ptr> m_semanticScope;
+    QQmlJSScope::ConstPtr m_semanticScope;
 };
 
 class QMLDOM_EXPORT GlobalComponent final : public Component

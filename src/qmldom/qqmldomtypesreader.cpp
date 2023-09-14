@@ -27,8 +27,9 @@ static ErrorGroups readerParseErrors()
     return errs;
 }
 
-void QmltypesReader::insertProperty(QQmlJSScope::Ptr jsScope, const QQmlJSMetaProperty &property,
-                                    QMap<int, QmlObject> &objs)
+void QmltypesReader::insertProperty(
+        const QQmlJSScope::ConstPtr &jsScope, const QQmlJSMetaProperty &property,
+        QMap<int, QmlObject> &objs)
 {
     PropertyDefinition prop;
     prop.name = property.propertyName();
@@ -108,7 +109,7 @@ EnumDecl QmltypesReader::enumFromMetaEnum(const QQmlJSMetaEnum &metaEnum)
     return res;
 }
 
-void QmltypesReader::insertComponent(const QQmlJSScope::Ptr &jsScope,
+void QmltypesReader::insertComponent(const QQmlJSScope::ConstPtr &jsScope,
                                      const QList<QQmlJSScope::Export> &exportsList)
 {
     QmltypesComponent comp;

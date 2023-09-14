@@ -42,10 +42,10 @@ public:
 private:
     void addError(ErrorMessage &&message);
 
-    void insertProperty(QQmlJSScope::Ptr jsScope, const QQmlJSMetaProperty &property,
+    void insertProperty(const QQmlJSScope::ConstPtr &jsScope, const QQmlJSMetaProperty &property,
                         QMap<int, QmlObject> &objs);
     void insertSignalOrMethod(const QQmlJSMetaMethod &metaMethod, QMap<int, QmlObject> &objs);
-    void insertComponent(const QQmlJSScope::Ptr &jsScope,
+    void insertComponent(const QQmlJSScope::ConstPtr &jsScope,
                          const QList<QQmlJSScope::Export> &exportsList);
     EnumDecl enumFromMetaEnum(const QQmlJSMetaEnum &metaEnum);
 

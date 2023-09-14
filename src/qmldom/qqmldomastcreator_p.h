@@ -110,7 +110,7 @@ class QQmlDomAstCreator final : public AST::Visitor
             return std::get<ScriptElements::ScriptList>(std::move(value));
         }
 
-        void setSemanticScope(const QQmlJSScope::Ptr &scope)
+        void setSemanticScope(const QQmlJSScope::ConstPtr &scope)
         {
             if (auto x = std::get_if<ScriptElementVariant>(&value)) {
                 x->base()->setSemanticScope(scope);

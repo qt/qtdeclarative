@@ -406,10 +406,10 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(const DomIt
 
 static bool findDefinitionFromItem(const DomItem &item, const QString &name)
 {
-    if (std::optional<QQmlJSScope::Ptr> scope = item.semanticScope(); scope) {
+    if (const QQmlJSScope::ConstPtr &scope = item.semanticScope()) {
         qCDebug(QQmlLSUtilsLog) << "Searching for definition in" << item.internalKindStr();
-        if (auto jsIdentifier = scope.value()->JSIdentifier(name)) {
-            qCDebug(QQmlLSUtilsLog) << "Found scope" << scope.value()->baseTypeName();
+        if (auto jsIdentifier = scope->JSIdentifier(name)) {
+            qCDebug(QQmlLSUtilsLog) << "Found scope" << scope->baseTypeName();
             return true;
         }
     }
@@ -591,7 +591,7 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
 
         if (auto scope = current.semanticScope()) {
             // is the current property shadowed by some JS identifier? ignore current + its children
-            if (scope.value()->JSIdentifier(name)) {
+            if (scope->JSIdentifier(name)) {
                 return false;
             }
         }
@@ -665,13 +665,13 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
 static QQmlLSUtilsLocation locationFromJSIdentifierDefinition(const DomItem &definitionOfItem,
                                                               const QString &name)
 {
-    Q_ASSERT_X(definitionOfItem.semanticScope().has_value()
-                       && definitionOfItem.semanticScope().value()->JSIdentifier(name).has_value(),
+    Q_ASSERT_X(!definitionOfItem.semanticScope().isNull()
+                       && definitionOfItem.semanticScope()->JSIdentifier(name).has_value(),
                "QQmlLSUtils::locationFromJSIdentifierDefinition",
                "JS definition does not actually define the JS identifier. "
                "Did you obtain definitionOfItem from findJSIdentifierDefinition() ?");
     QQmlJS::SourceLocation location =
-            definitionOfItem.semanticScope().value()->JSIdentifier(name).value().location;
+            definitionOfItem.semanticScope()->JSIdentifier(name).value().location;
 
     QQmlLSUtilsLocation result = { definitionOfItem.canonicalFilePath(), location };
     return result;
@@ -706,8 +706,8 @@ static void findUsagesHelper(
                     const QString fileName = item.canonicalFilePath();
                     result.append({ fileName, location });
                     return true;
-                } else if (std::optional<QQmlJSScope::Ptr> scope = item.semanticScope();
-                           scope && scope.value()->JSIdentifier(name)) {
+                } else if (QQmlJSScope::ConstPtr scope = item.semanticScope();
+                           scope && scope->JSIdentifier(name)) {
                     // current JS identifier has been redefined, do not visit children
                     return false;
                 }
@@ -849,7 +849,7 @@ static QQmlJSScope::ConstPtr findScopeInConnections(QQmlJSScope::ConstPtr scope,
 static std::optional<QQmlLSUtilsExpressionType>
 resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions options)
 {
-    auto referrerScope = item.nearestSemanticScope();
+    const auto referrerScope = item.nearestSemanticScope();
     if (!referrerScope)
         return {};
 
@@ -894,12 +894,12 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
     } else {
         DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
         if (definitionOfItem) {
-            Q_ASSERT_X(definitionOfItem.semanticScope().has_value()
-                               && definitionOfItem.semanticScope().value()->JSIdentifier(name),
+            Q_ASSERT_X(!definitionOfItem.semanticScope().isNull()
+                               && definitionOfItem.semanticScope()->JSIdentifier(name),
                        "QQmlLSUtils::findDefinitionOf",
                        "JS definition does not actually define the JS identifer. "
                        "It should be empty.");
-            auto scope = definitionOfItem.semanticScope().value();
+            auto scope = definitionOfItem.semanticScope();
             auto jsIdentifier = scope->JSIdentifier(name);
             if (jsIdentifier->scope) {
                 return QQmlLSUtilsExpressionType{ name, jsIdentifier->scope.toStrongRef(),
@@ -911,21 +911,19 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
         }
 
         // check if its a method
-        if (auto scope = methodFromReferrerScope(*referrerScope, name, options)) {
-            return *scope;
-        }
+        if (auto scope = methodFromReferrerScope(referrerScope, name, options))
+            return scope;
 
         // check if its an (unqualified) property
-        if (auto scope = propertyFromReferrerScope(*referrerScope, name, options)) {
+        if (auto scope = propertyFromReferrerScope(referrerScope, name, options))
             return *scope;
-        }
     }
 
     // check if its an id
     auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
     if (!resolver)
         return {};
-    QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope.value());
+    QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope);
     if (fromId)
         return QQmlLSUtilsExpressionType{ name, fromId, QmlObjectIdIdentifier };
 
@@ -947,7 +945,7 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
     case DomType::PropertyDefinition: {
         auto propertyDefinition = item.as<PropertyDefinition>();
         if (propertyDefinition && propertyDefinition->scope) {
-            auto &scope = propertyDefinition->scope.value();
+            const auto &scope = propertyDefinition->scope;
             return QQmlLSUtilsExpressionType{ propertyDefinition->name, scope, PropertyIdentifier };
         }
         return {};
@@ -980,7 +978,7 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
     case DomType::QmlObject: {
         auto object = item.as<QmlObject>();
         if (object && object->semanticScope())
-            return QQmlLSUtilsExpressionType{ std::nullopt, object->semanticScope().value(),
+            return QQmlLSUtilsExpressionType{ std::nullopt, object->semanticScope(),
                                               QmlObjectIdentifier };
 
         return {};
@@ -1138,18 +1136,18 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(const DomItem &
         }
 
         // not a JS identifier, check for ids and properties and methods
-        auto referrerScope = item.nearestSemanticScope();
+        const auto referrerScope = item.nearestSemanticScope();
         if (!referrerScope)
             return {};
 
         // check: is it a method name?
-        if (auto scope = methodFromReferrerScope(*referrerScope, name)) {
+        if (auto scope = methodFromReferrerScope(referrerScope, name)) {
             const QString canonicalPath = scope->semanticScope->filePath();
             DomItem file = item.goToFile(canonicalPath);
             return findMethodDefinitionOf(file, scope->semanticScope->sourceLocation(), name);
         }
 
-        if (auto scope = propertyFromReferrerScope(*referrerScope, name,
+        if (auto scope = propertyFromReferrerScope(referrerScope, name,
                                                    QQmlLSUtilsResolveOptions::ResolveOwnerType)) {
             const QString canonicalPath = scope->semanticScope->filePath();
             DomItem file = item.goToFile(canonicalPath);
@@ -1160,7 +1158,7 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(const DomItem &
         auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
         if (!resolver)
             return {};
-        QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope.value());
+        QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope);
         if (fromId) {
             DomItem qmlObject = QQmlLSUtils::sourceLocationToDomItem(item.containingFile(),
                                                                      fromId->sourceLocation());
@@ -1339,7 +1337,7 @@ QQmlLSUtils::checkNameForRename(const DomItem &item, const QString &dirtyNewName
 
     // is it defined in the current module?
     const QString moduleOfDefinition = ownerType->semanticScope->moduleName();
-    const QString moduleOfCurrentItem = userSemanticScope.value()->moduleName();
+    const QString moduleOfCurrentItem = userSemanticScope->moduleName();
     if (moduleOfDefinition != moduleOfCurrentItem) {
         return QQmlLSUtilsErrorMessage{
             0,
