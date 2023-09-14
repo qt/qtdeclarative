@@ -117,28 +117,29 @@ class QQmlLSUtils
 public:
     static qsizetype textOffsetFrom(const QString &code, int row, int character);
     static QQmlLSUtilsTextPosition textRowAndColumnFrom(const QString &code, qsizetype offset);
-    static QList<QQmlLSUtilsItemLocation> itemsFromTextLocation(QQmlJS::Dom::DomItem file, int line,
-                                                                int character);
-    static QQmlJS::Dom::DomItem sourceLocationToDomItem(QQmlJS::Dom::DomItem file,
+    static QList<QQmlLSUtilsItemLocation> itemsFromTextLocation(const QQmlJS::Dom::DomItem &file,
+                                                                int line, int character);
+    static QQmlJS::Dom::DomItem sourceLocationToDomItem(const QQmlJS::Dom::DomItem &file,
                                                         const QQmlJS::SourceLocation &location);
     static QByteArray lspUriToQmlUrl(const QByteArray &uri);
     static QByteArray qmlUrlToLspUri(const QByteArray &url);
     static QLspSpecification::Range qmlLocationToLspLocation(const QString &code,
                                                              QQmlJS::SourceLocation qmlLocation);
-    static QQmlJS::Dom::DomItem baseObject(QQmlJS::Dom::DomItem qmlObject);
-    static std::optional<QQmlLSUtilsLocation> findTypeDefinitionOf(QQmlJS::Dom::DomItem item);
-    static std::optional<QQmlLSUtilsLocation> findDefinitionOf(QQmlJS::Dom::DomItem item);
-    static QList<QQmlLSUtilsLocation> findUsagesOf(QQmlJS::Dom::DomItem item);
+    static QQmlJS::Dom::DomItem baseObject(const QQmlJS::Dom::DomItem &qmlObject);
+    static std::optional<QQmlLSUtilsLocation>
+    findTypeDefinitionOf(const QQmlJS::Dom::DomItem &item);
+    static std::optional<QQmlLSUtilsLocation> findDefinitionOf(const QQmlJS::Dom::DomItem &item);
+    static QList<QQmlLSUtilsLocation> findUsagesOf(const QQmlJS::Dom::DomItem &item);
 
     static std::optional<QQmlLSUtilsErrorMessage>
-    checkNameForRename(QQmlJS::Dom::DomItem item, const QString &newName,
+    checkNameForRename(const QQmlJS::Dom::DomItem &item, const QString &newName,
                        std::optional<QQmlLSUtilsExpressionType> targetType = std::nullopt);
     static QList<QQmlLSUtilsEdit>
-    renameUsagesOf(QQmlJS::Dom::DomItem item, const QString &newName,
+    renameUsagesOf(const QQmlJS::Dom::DomItem &item, const QString &newName,
                    std::optional<QQmlLSUtilsExpressionType> targetType = std::nullopt);
 
     static std::optional<QQmlLSUtilsExpressionType>
-    resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolveOptions);
+    resolveExpressionType(const QQmlJS::Dom::DomItem &item, QQmlLSUtilsResolveOptions);
     static bool isValidEcmaScriptIdentifier(QStringView view);
 };
 QT_END_NAMESPACE

@@ -178,7 +178,7 @@ QQmlLSUtilsTextPosition QQmlLSUtils::textRowAndColumnFrom(const QString &text, q
     If line and character point between two objects, two objects might be returned.
     If line and character point to whitespace, it might return an inner node of the QmlDom-Tree.
  */
-QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(DomItem file, int line,
+QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(const DomItem &file, int line,
                                                                   int character)
 {
     QList<QQmlLSUtilsItemLocation> itemsFound;
@@ -270,7 +270,7 @@ QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(DomItem file, 
     return itemsFound;
 }
 
-DomItem QQmlLSUtils::baseObject(DomItem object)
+DomItem QQmlLSUtils::baseObject(const DomItem &object)
 {
     if (!object.as<QmlObject>())
         return {};
@@ -321,7 +321,7 @@ static std::optional<QQmlLSUtilsLocation> locationFromDomItem(const DomItem &ite
    For a \c Methodparameter, return the location of the type of the parameter.
    Otherwise, return std::nullopt.
  */
-std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(DomItem object)
+std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(const DomItem &object)
 {
     DomItem typeDefinition;
 
@@ -719,7 +719,7 @@ static void findUsagesHelper(DomItem item, const QString &name, QList<QQmlLSUtil
         result.append(definition);
 }
 
-QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
+QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(const DomItem &item)
 {
     QList<QQmlLSUtilsLocation> result;
 
@@ -936,7 +936,8 @@ resolveIdentifierExpressionType(DomItem item, QQmlLSUtilsResolveOptions options)
     annotations).
 */
 std::optional<QQmlLSUtilsExpressionType>
-QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolveOptions options)
+QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
+                                   QQmlLSUtilsResolveOptions options)
 {
     switch (item.internalKind()) {
     case DomType::ScriptIdentifierExpression: {
@@ -1027,7 +1028,8 @@ QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolve
     Q_UNREACHABLE();
 }
 
-DomItem QQmlLSUtils::sourceLocationToDomItem(DomItem file, const QQmlJS::SourceLocation &location)
+DomItem QQmlLSUtils::sourceLocationToDomItem(const DomItem &file,
+                                             const QQmlJS::SourceLocation &location)
 {
     // QQmlJS::SourceLocation starts counting at 1 but the utils and the LSP start at 0.
     auto items = QQmlLSUtils::itemsFromTextLocation(file, location.startLine - 1,
@@ -1105,7 +1107,7 @@ findPropertyDefinitionOf(DomItem file, QQmlJS::SourceLocation propertyDefinition
     return {};
 }
 
-std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
+std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(const DomItem &item)
 {
 
     switch (item.internalKind()) {
@@ -1265,7 +1267,7 @@ expressionTypeWithDefinition(const QQmlLSUtilsExpressionType &ownerType)
 }
 
 std::optional<QQmlLSUtilsErrorMessage>
-QQmlLSUtils::checkNameForRename(DomItem item, const QString &dirtyNewName,
+QQmlLSUtils::checkNameForRename(const DomItem &item, const QString &dirtyNewName,
                                 std::optional<QQmlLSUtilsExpressionType> ownerType)
 {
     // general checks for ECMAscript identifiers
@@ -1413,7 +1415,7 @@ Special cases:
 \endlist
 */
 QList<QQmlLSUtilsEdit>
-QQmlLSUtils::renameUsagesOf(DomItem item, const QString &dirtyNewName,
+QQmlLSUtils::renameUsagesOf(const DomItem &item, const QString &dirtyNewName,
                             std::optional<QQmlLSUtilsExpressionType> targetType)
 {
     QList<QQmlLSUtilsEdit> results;
