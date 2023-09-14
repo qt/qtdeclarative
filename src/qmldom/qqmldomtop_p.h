@@ -539,9 +539,9 @@ public:
     {
         return std::static_pointer_cast<LoadInfo>(doCopy(self));
     }
-    void addError(const DomItem &self, ErrorMessage msg) override
+    void addError(const DomItem &self, ErrorMessage &&msg) override
     {
-        self.path(elementCanonicalPath()).addError(msg);
+        self.path(elementCanonicalPath()).addError(std::move(msg));
     }
 
     void addEndCallback(const DomItem &self, std::function<void(Path, const DomItem &, const DomItem &)> callback);

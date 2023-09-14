@@ -1330,7 +1330,7 @@ DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(const DomItem &origi
         } else {
             const auto iterateErrors = [&newFile](Sink s) {
                 newFile.iterateErrors(
-                        [s](DomItem, ErrorMessage msg) {
+                        [s](const DomItem &, const ErrorMessage &msg) {
                             s(u"\n  ");
                             msg.dump(s);
                             return true;
@@ -2467,12 +2467,14 @@ QDateTime DomItem::lastDataUpdateAt() const
         return QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
 }
 
-void DomItem::addError(ErrorMessage msg) const
+void DomItem::addError(ErrorMessage &&msg) const
 {
     if (m_owner) {
         DomItem myOwner = owner();
         std::visit(
-                [this, &myOwner, &msg](auto &&ow) { ow->addError(myOwner, msg.withItem(*this)); },
+                [this, &myOwner, &msg](auto &&ow) {
+                    ow->addError(myOwner, std::move(msg.withItem(*this)));
+                },
                 *m_owner);
     } else
         defaultErrorHandler(msg.withItem(*this));
@@ -2481,7 +2483,7 @@ void DomItem::addError(ErrorMessage msg) const
 ErrorHandler DomItem::errorHandler() const
 {
     DomItem self = *this;
-    return [self](ErrorMessage m) mutable { self.addError(m); };
+    return [self](const ErrorMessage &m) { self.addError(ErrorMessage(m)); };
 }
 
 void DomItem::clearErrors(ErrorGroups groups, bool iterate) const
@@ -2496,8 +2498,9 @@ void DomItem::clearErrors(ErrorGroups groups, bool iterate) const
     }
 }
 
-bool DomItem::iterateErrors(function_ref<bool(const DomItem &, ErrorMessage)> visitor, bool iterate,
-                            Path inPath) const
+bool DomItem::iterateErrors(
+        function_ref<bool(const DomItem &, const ErrorMessage &)> visitor, bool iterate,
+        Path inPath) const
 {
     if (m_owner) {
         DomItem ow = owner();
@@ -3287,12 +3290,12 @@ void OwningItem::refreshedDataAt(QDateTime tNew)
         m_lastDataUpdateAt = tNew;
 }
 
-void OwningItem::addError(const DomItem &, ErrorMessage msg)
+void OwningItem::addError(const DomItem &, ErrorMessage &&msg)
 {
-    addErrorLocal(msg);
+    addErrorLocal(std::move(msg));
 }
 
-void OwningItem::addErrorLocal(ErrorMessage msg)
+void OwningItem::addErrorLocal(ErrorMessage &&msg)
 {
     QMutexLocker l(mutex());
     quint32 &c = m_errorsCounts[msg];
@@ -3314,7 +3317,7 @@ void OwningItem::clearErrors(ErrorGroups groups)
 }
 
 bool OwningItem::iterateErrors(
-        const DomItem &self, function_ref<bool(const DomItem &, ErrorMessage)> visitor,
+        const DomItem &self, function_ref<bool(const DomItem &, const ErrorMessage &)> visitor,
         Path inPath)
 {
     QMultiMap<Path, ErrorMessage> myErrors;
@@ -3370,7 +3373,7 @@ bool operator==(const DomItem &o1, const DomItem &o2)
 ErrorHandler MutableDomItem::errorHandler()
 {
     MutableDomItem self;
-    return [&self](ErrorMessage m) { self.addError(m); };
+    return [&self](const ErrorMessage &m) { self.addError(ErrorMessage(m)); };
 }
 
 MutableDomItem MutableDomItem::addPrototypePath(Path prototypePath)

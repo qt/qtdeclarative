@@ -196,9 +196,9 @@ void QmldirFile::setFromQmldir()
     bool hasErrors = false;
     for (auto const &el : m_qmldir.errors(uri().toString())) {
         ErrorMessage msg = myParsingErrors().errorMessage(el);
-        addErrorLocal(msg);
         if (msg.level == ErrorLevel::Error || msg.level == ErrorLevel::Fatal)
             hasErrors = true;
+        addErrorLocal(std::move(msg));
     }
     setIsValid(!hasErrors); // consider it valid also with errors?
     m_plugins = m_qmldir.plugins();
@@ -326,8 +326,11 @@ QmlFile::QmlFile(QString filePath, QString code, QDateTime lastDataUpdateAt, int
     lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/true);
     QQmlJS::Parser parser(m_engine.get());
     m_isValid = parser.parse();
-    for (DiagnosticMessage msg : parser.diagnosticMessages())
-        addErrorLocal(myParsingErrors().errorMessage(msg).withFile(filePath).withPath(m_path));
+    const auto diagnostics = parser.diagnosticMessages();
+    for (const DiagnosticMessage &msg : diagnostics) {
+        addErrorLocal(
+                std::move(myParsingErrors().errorMessage(msg).withFile(filePath).withPath(m_path)));
+    }
     m_ast = parser.ast();
 }
 
@@ -358,9 +361,9 @@ DomItem QmlFile::field(const DomItem &self, QStringView name) const
     return DomBase::field(self, name);
 }
 
-void QmlFile::addError(const DomItem &self, ErrorMessage msg)
+void QmlFile::addError(const DomItem &self, ErrorMessage &&msg)
 {
-    self.containingObject().addError(msg);
+    self.containingObject().addError(std::move(msg));
 }
 
 void QmlFile::writeOut(const DomItem &self, OutWriter &ow) const

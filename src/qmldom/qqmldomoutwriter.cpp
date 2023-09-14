@@ -186,7 +186,7 @@ DomItem OutWriter::updatedFile(const DomItem &qmlFile)
                                         targetExpr.item()
                                                 .copy(exprPtr, targetExpr.canonicalPath())
                                                 .iterateErrors(
-                                                        [s](DomItem, ErrorMessage msg) {
+                                                        [s](const DomItem &, const ErrorMessage &msg) {
                                                             s(u"\n  ");
                                                             msg.dump(s);
                                                             return true;

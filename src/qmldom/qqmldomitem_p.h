@@ -1069,12 +1069,12 @@ public:
     QDateTime frozenAt() const;
     QDateTime lastDataUpdateAt() const;
 
-    void addError(ErrorMessage msg) const;
+    void addError(ErrorMessage &&msg) const;
     ErrorHandler errorHandler() const;
     void clearErrors(ErrorGroups groups = ErrorGroups({}), bool iterate = true) const;
     // return false if a quick exit was requested
     bool iterateErrors(
-            function_ref<bool(const DomItem &source, ErrorMessage msg)> visitor, bool iterate,
+            function_ref<bool (const DomItem &, const ErrorMessage &)> visitor, bool iterate,
             Path inPath = Path()) const;
 
     bool iterateSubOwners(function_ref<bool(const DomItem &owner)> visitor) const;
@@ -1450,13 +1450,13 @@ public:
     virtual bool freeze();
     QDateTime frozenAt() const;
 
-    virtual void addError(const DomItem &self, ErrorMessage msg);
-    void addErrorLocal(ErrorMessage msg);
+    virtual void addError(const DomItem &self, ErrorMessage &&msg);
+    void addErrorLocal(ErrorMessage &&msg);
     void clearErrors(ErrorGroups groups = ErrorGroups({}));
     // return false if a quick exit was requested
     bool iterateErrors(
             const DomItem &self,
-            function_ref<bool(const DomItem &source, ErrorMessage msg)> visitor,
+            function_ref<bool(const DomItem &source, const ErrorMessage &msg)> visitor,
             Path inPath = Path());
     QMultiMap<Path, ErrorMessage> localErrors() const {
         QMutexLocker l(mutex());
@@ -1683,7 +1683,7 @@ public:
     QDateTime frozenAt() { return m_owner.frozenAt(); }
     QDateTime lastDataUpdateAt() { return m_owner.lastDataUpdateAt(); }
 
-    void addError(ErrorMessage msg) { item().addError(msg); }
+    void addError(ErrorMessage &&msg) { item().addError(std::move(msg)); }
     ErrorHandler errorHandler();
 
     // convenience setters

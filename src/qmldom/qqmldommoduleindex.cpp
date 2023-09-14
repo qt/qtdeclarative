@@ -246,12 +246,12 @@ QList<DomItem> ModuleIndex::exportsWithNameAndMinorVersion(const DomItem &self, 
                 undef.append(exportItem);
             } else {
                 if (majorVersion() < 0)
-                    self.addError(myVersioningErrors()
+                    self.addError(std::move(myVersioningErrors()
                                           .error(tr("Module %1 (unversioned) has versioned entries "
                                                     "for '%2' from %3")
                                                          .arg(uri(), name,
                                                               source.canonicalPath().toString()))
-                                          .withPath(myPath));
+                                                    .withPath(myPath)));
                 if ((versionPtr->majorVersion == majorVersion()
                      || versionPtr->majorVersion == Version::Undefined)
                     && versionPtr->minorVersion >= vNow
@@ -266,11 +266,11 @@ QList<DomItem> ModuleIndex::exportsWithNameAndMinorVersion(const DomItem &self, 
     }
     if (!undef.isEmpty()) {
         if (!res.isEmpty()) {
-            self.addError(myVersioningErrors()
+            self.addError(std::move(myVersioningErrors()
                                   .error(tr("Module %1 (major version %2) has versioned and "
                                             "unversioned entries for '%3'")
                                                  .arg(uri(), QString::number(majorVersion()), name))
-                                  .withPath(myPath));
+                                            .withPath(myPath)));
             return res + undef;
         } else {
             return undef;

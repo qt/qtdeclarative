@@ -65,7 +65,7 @@ bool parseFile(const QString &filename, const Options &options)
     std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>();
     if (!qmlFilePtr || !qmlFilePtr->isValid()) {
         qmlFile.iterateErrors(
-                [](DomItem, ErrorMessage msg) {
+                [](const DomItem &, const ErrorMessage &msg) {
                     errorToQDebug(msg);
                     return true;
                 },

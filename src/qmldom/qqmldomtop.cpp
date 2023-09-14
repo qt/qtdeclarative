@@ -427,7 +427,7 @@ void DomUniverse::execQueue()
                 } else {
                     QString errs;
                     DomItem qmlFileObj = env.copy(qmlFile);
-                    qmlFile->iterateErrors(qmlFileObj, [&errs](DomItem, ErrorMessage m) {
+                    qmlFile->iterateErrors(qmlFileObj, [&errs](const DomItem &, const ErrorMessage &m) {
                         errs += m.toString();
                         errs += u"\n";
                         return true;
@@ -465,8 +465,11 @@ void DomUniverse::execQueue()
                 Q_ASSERT(false);
             }
         }
-        for (const ErrorMessage &m : messages)
-            newValue.addError(m);
+
+        for (auto it = messages.begin(), end = messages.end(); it != end; ++it)
+            newValue.addError(std::move(*it));
+        messages.clear();
+
         // to do: tell observers?
         // execute callback
         if (t.callback) {
@@ -1126,7 +1129,7 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
                 Path::Field(Fields::loadInfo),
                 [this](const DomItem &map, QString pStr) {
                     bool hasErrors = false;
-                    Path p = Path::fromString(pStr, [&hasErrors](ErrorMessage m) {
+                    Path p = Path::fromString(pStr, [&hasErrors](const ErrorMessage &m) {
                         switch (m.level) {
                         case ErrorLevel::Debug:
                         case ErrorLevel::Info:

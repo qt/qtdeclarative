@@ -338,7 +338,7 @@ void QmlLintSuggestions::diagnoseHelper(const QByteArray &url,
 
     QList<Diagnostic> diagnostics;
     doc.iterateErrors(
-            [&diagnostics, &advancePositionPastLocation](DomItem, ErrorMessage msg) {
+            [&diagnostics, &advancePositionPastLocation](const DomItem &, const ErrorMessage &msg) {
                 Diagnostic diagnostic;
                 diagnostic.severity = severityFromMsgType(QtMsgType(int(msg.level)));
                 // do something with msg.errorGroups ?

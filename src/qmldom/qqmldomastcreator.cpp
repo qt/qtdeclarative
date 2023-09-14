@@ -395,10 +395,10 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
         FileLocations::addRegion(nodeStack.last().fileLocations, u"identifier",
                                  el->identifierToken);
         if (p.name == u"id")
-            qmlFile.addError(astParseErrors()
+            qmlFile.addError(std::move(astParseErrors()
                                      .warning(tr("id is a special attribute, that should not be "
                                                  "used as property name"))
-                                     .withPath(currentNodeEl().path));
+                                               .withPath(currentNodeEl().path)));
         if (p.isDefaultMember)
             FileLocations::addRegion(nodeStack.last().fileLocations, u"default",
                                      el->defaultToken());
@@ -768,11 +768,11 @@ bool QQmlDomAstCreator::visit(AST::UiObjectBinding *el)
     Path bPathFromOwner = current<QmlObject>().addBinding(
             Binding(toString(el->qualifiedId), value, bType), AddOption::KeepExisting, &bPtr);
     if (bPtr->name() == u"id")
-        qmlFile.addError(astParseErrors()
+        qmlFile.addError(std::move(astParseErrors()
                                  .warning(tr("id attributes should only be a lower case letter "
                                              "followed by letters, numbers or underscore, "
                                              "assuming they refer to an id property"))
-                                 .withPath(bPathFromOwner));
+                                           .withPath(bPathFromOwner)));
     pushEl(bPathFromOwner, *bPtr, el);
     FileLocations::addRegion(nodeStack.last().fileLocations, u"colon", el->colonToken);
     loadAnnotations(el);
@@ -833,24 +833,24 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
                     QStringLiteral(uR"([[:lower:]][[:lower:][:upper:]0-9_]*)")));
             auto m = idRe.matchView(iExp->name);
             if (!m.hasMatch()) {
-                qmlFile.addError(
+                qmlFile.addError(std::move(
                         astParseErrors()
                                 .warning(tr("id attributes should only be a lower case letter "
                                             "followed by letters, numbers or underscore, not %1")
                                                  .arg(iExp->name))
-                                .withPath(pathFromOwner));
+                                .withPath(pathFromOwner)));
             }
         } else {
             pathFromOwner =
                     current<QmlObject>().addBinding(bindingV, AddOption::KeepExisting, &bindingPtr);
             Q_ASSERT_X(bindingPtr, className, "binding could not be retrieved");
-            qmlFile.addError(
+            qmlFile.addError(std::move(
                     astParseErrors()
                             .warning(tr("id attributes should only be a lower case letter "
                                         "followed by letters, numbers or underscore, not %1 "
                                         "%2, assuming they refer to a property")
                                              .arg(script->code(), script->astRelocatableDump()))
-                            .withPath(pathFromOwner));
+                            .withPath(pathFromOwner)));
         }
     } else {
         pathFromOwner =
@@ -931,10 +931,10 @@ bool QQmlDomAstCreator::visit(AST::UiArrayBinding *el)
     Path bindingPathFromOwner =
             current<QmlObject>().addBinding(bindingV, AddOption::KeepExisting, &bindingPtr);
     if (bindingV.name() == u"id")
-        qmlFile.addError(
+        qmlFile.addError(std::move(
                 astParseErrors()
                         .error(tr("id attributes should have only simple strings as values"))
-                        .withPath(bindingPathFromOwner));
+                        .withPath(bindingPathFromOwner)));
     pushEl(bindingPathFromOwner, *bindingPtr, el);
     FileLocations::addRegion(currentNodeEl().fileLocations, u"colon", el->colonToken);
     loadAnnotations(el);

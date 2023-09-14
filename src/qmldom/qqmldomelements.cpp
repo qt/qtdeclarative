@@ -1655,7 +1655,7 @@ void ScriptExpression::setCode(QString code, QString preCode, QString postCode)
             err.location.startLine -= m_localOffset.startLine;
             if (err.location.startLine == 1)
                 err.location.startColumn -= m_localOffset.startColumn;
-            addErrorLocal(err);
+            addErrorLocal(std::move(err));
         }
         m_ast = parser.rootNode();
         if (AST::Program *programPtr = AST::cast<AST::Program *>(m_ast)) {

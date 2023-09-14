@@ -260,7 +260,7 @@ public:
     {
         return std::static_pointer_cast<QmlFile>(doCopy(self));
     }
-    void addError(const DomItem &self, ErrorMessage msg) override;
+    void addError(const DomItem &self, ErrorMessage &&msg) override;
 
     const QMultiMap<QString, QmlComponent> &components() const & { return m_components; }
     void setComponents(const QMultiMap<QString, QmlComponent> &components)

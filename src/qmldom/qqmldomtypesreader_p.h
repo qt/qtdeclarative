@@ -40,7 +40,7 @@ public:
     bool parse();
     // static void read
 private:
-    void addError(ErrorMessage message);
+    void addError(ErrorMessage &&message);
 
     void insertProperty(QQmlJSScope::Ptr jsScope, const QQmlJSMetaProperty &property,
                         QMap<int, QmlObject> &objs);
@@ -53,7 +53,7 @@ private:
     DomItem &qmltypesFile() { return m_qmltypesFile; }
     ErrorHandler handler()
     {
-        return [this](ErrorMessage m) { this->addError(m); };
+        return [this](const ErrorMessage &m) { this->addError(ErrorMessage(m)); };
     }
 
 private:

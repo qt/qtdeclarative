@@ -249,7 +249,7 @@ bool QmltypesReader::parse()
     return m_isValid;
 }
 
-void QmltypesReader::addError(ErrorMessage message)
+void QmltypesReader::addError(ErrorMessage &&message)
 {
     if (message.file.isEmpty())
         message.file = qmltypesFile().canonicalFilePath();

@@ -61,7 +61,7 @@ void QQmlDocumentFormatting::process(RequestPointerArgument request)
     auto qmlFile = file.ownerAs<QmlFile>();
     if (!qmlFile || !qmlFile->isValid()) {
         file.iterateErrors(
-                [](DomItem, ErrorMessage msg) {
+                [](const DomItem &, const ErrorMessage &msg) {
                     errorToQDebug(msg);
                     return true;
                 },
