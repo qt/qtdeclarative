@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include <QGuiApplication>
-#include <QtQuick/QQuickView>
+#include <QQuickView>
 #include <QSurfaceFormat>
 
 int main(int argc, char **argv)
 {
+    QGuiApplication app(argc, argv);
+
+    // On macOS, request a core profile context in the unlikely case of using OpenGL.
 #ifdef Q_OS_MACOS
     QSurfaceFormat format = QSurfaceFormat::defaultFormat();
     format.setMajorVersion(4);
@@ -15,30 +18,31 @@ int main(int argc, char **argv)
     QSurfaceFormat::setDefaultFormat(format);
 #endif
 
-    QGuiApplication app(argc, argv);
-
     QQuickView view;
 
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setSource(QUrl("qrc:///scenegraph/customrendernode/main.qml"));
-    view.setColor(QColor(0, 0, 0));
+    view.setColor(Qt::black);
     view.show();
 
     QString api;
     switch (view.graphicsApi()) {
-    case QSGRendererInterface::GraphicsApi::OpenGLRhi:
+    case QSGRendererInterface::OpenGL:
         api = "RHI OpenGL";
         break;
-    case QSGRendererInterface::GraphicsApi::Direct3D11Rhi:
-        api = "RHI Direct3D";
+    case QSGRendererInterface::Direct3D11:
+        api = "RHI Direct 3D 11";
         break;
-    case QSGRendererInterface::GraphicsApi::VulkanRhi:
+    case QSGRendererInterface::Direct3D12:
+        api = "RHI Direct 3D 12";
+        break;
+    case QSGRendererInterface::Vulkan:
         api = "RHI Vulkan";
         break;
-    case QSGRendererInterface::GraphicsApi::MetalRhi:
+    case QSGRendererInterface::Metal:
         api = "RHI Metal";
         break;
-    case QSGRendererInterface::GraphicsApi::NullRhi:
+    case QSGRendererInterface::Null:
         api = "RHI Null";
         break;
     default:
@@ -48,5 +52,5 @@ int main(int argc, char **argv)
 
     view.setTitle(QStringLiteral("Custom QSGRenderNode - ") + api);
 
-    return QGuiApplication::exec();
+    return app.exec();
 }
