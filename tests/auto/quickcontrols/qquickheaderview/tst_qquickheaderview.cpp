@@ -218,7 +218,7 @@ private:
 };
 
 tst_QQuickHeaderView::tst_QQuickHeaderView()
-    : QQmlDataTest(QT_QMLTEST_DATADIR)
+    : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::FailOnWarnings)
 {
 }
 
@@ -302,10 +302,14 @@ void tst_QQuickHeaderView::testOrientation()
     QVERIFY(vhv);
 
     hhv->setSyncView(&otherView);
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+        ".*Setting syncDirection other than Qt::Horizontal is invalid."));
     hhv->setSyncDirection(Qt::Vertical);
     QVERIFY(QQuickTest::qWaitForPolish(hhv));
 
     vhv->setSyncView(&otherView);
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+        ".*Setting syncDirection other than Qt::Vertical is invalid."));
     vhv->setSyncDirection(Qt::Horizontal);
     QVERIFY(QQuickTest::qWaitForPolish(vhv));
 
