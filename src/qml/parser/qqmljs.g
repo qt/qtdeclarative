@@ -758,6 +758,7 @@ UiPragma: T_PRAGMA PragmaId T_COLON UiPragmaValueList Semicolon;
         AST::UiPragma *pragma = new (pool) AST::UiPragma(
                 stringRef(2), sym(4).UiPragmaValueList->finish());
         pragma->pragmaToken = loc(1);
+        pragma->colonToken = loc(3);
         pragma->semicolonToken = loc(5);
         sym(1).Node = pragma;
     } break;

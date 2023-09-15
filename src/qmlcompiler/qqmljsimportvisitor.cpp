@@ -2368,9 +2368,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
             } else if (value == u"Unbound") {
                 m_scopesById.setComponentsAreBound(false);
             } else {
-                m_logger->log(
-                        u"Unkonwn argument \"%s\" to pragma ComponentBehavior"_s.arg(value),
-                        qmlSyntax, pragma->firstSourceLocation());
+                m_logger->log(u"Unknown argument \"%1\" to pragma ComponentBehavior"_s.arg(value),
+                              qmlSyntax, pragma->firstSourceLocation());
             }
         });
     } else if (pragma->name == u"FunctionSignatureBehavior") {
@@ -2381,7 +2380,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
                 m_scopesById.setSignaturesAreEnforced(false);
             } else {
                 m_logger->log(
-                        u"Unkonwn argument \"%s\" to pragma FunctionSignatureBehavior"_s.arg(value),
+                        u"Unknown argument \"%1\" to pragma FunctionSignatureBehavior"_s.arg(value),
                         qmlSyntax, pragma->firstSourceLocation());
             }
         });
@@ -2396,9 +2395,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
             } else if (value == u"Inaddressable") {
                 m_scopesById.setValueTypesAreAddressable(false);
             } else {
-                m_logger->log(
-                        u"Unkonwn argument \"%s\" to pragma ValueTypeBehavior"_s.arg(value),
-                        qmlSyntax, pragma->firstSourceLocation());
+                m_logger->log(u"Unknown argument \"%1\" to pragma ValueTypeBehavior"_s.arg(value),
+                              qmlSyntax, pragma->firstSourceLocation());
             }
         });
     }

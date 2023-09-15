@@ -1556,6 +1556,7 @@ void tst_qmlls_utils::completions_data()
 
     QString file = testFile(u"Yyy.qml"_s);
     QString emptyFile = testFile(u"emptyFile.qml"_s);
+    QString pragmaFile = testFile(u"pragmas.qml"_s);
 
     QTest::newRow("objEmptyLine") << file << 9 << 1
                                   << ExpectedCompletions({
@@ -1753,7 +1754,63 @@ void tst_qmlls_utils::completions_data()
                } << None;
 
     QTest::newRow("pragma")
-            << file << 3 << 8
+            << pragmaFile << 1 << 8
+            << ExpectedCompletions({
+                       { u"NativeMethodBehavior"_s, CompletionItemKind::Value },
+                       { u"ComponentBehavior"_s, CompletionItemKind::Value },
+                       { u"ListPropertyAssignBehavior"_s, CompletionItemKind::Value },
+                       { u"Singleton"_s, CompletionItemKind::Value },
+                       // note: only complete the Addressible/Inaddressible part of ValueTypeBehavior!
+                       { u"ValueTypeBehavior"_s, CompletionItemKind::Value },
+               })
+            << QStringList{
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"FunctionSignatureBehavior"_s,
+                   u"Strict"_s,
+               } << None;
+
+    QTest::newRow("pragmaValue")
+            << pragmaFile << 2 << 30
+            << ExpectedCompletions({
+                       { u"AcceptThisObject"_s, CompletionItemKind::Value },
+                       { u"RejectThisObject"_s, CompletionItemKind::Value },
+               })
+            << QStringList{
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"FunctionSignatureBehavior"_s,
+                   u"Strict"_s,
+                   u"NativeMethodBehavior"_s,
+                   u"ComponentBehavior"_s,
+                   u"ListPropertyAssignBehavior"_s,
+                   u"Singleton"_s,
+                   u"ValueTypeBehavior"_s,
+                   u"Unbound"_s,
+               } << None;
+
+    QTest::newRow("pragmaMultiValue")
+            << pragmaFile << 3 << 43
+            << ExpectedCompletions({
+                       { u"ReplaceIfNotDefault"_s, CompletionItemKind::Value },
+                       { u"Append"_s, CompletionItemKind::Value },
+                       { u"Replace"_s, CompletionItemKind::Value },
+               })
+            << QStringList{
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"FunctionSignatureBehavior"_s,
+                   u"Strict"_s,
+                   u"NativeMethodBehavior"_s,
+                   u"ComponentBehavior"_s,
+                   u"ListPropertyAssignBehavior"_s,
+                   u"Singleton"_s,
+                   u"ValueTypeBehavior"_s,
+                   u"Unbound"_s,
+               } << None;
+
+    QTest::newRow("pragmaWithoutValue")
+            << pragmaFile << 1 << 17
             << ExpectedCompletions({
                        { u"NativeMethodBehavior"_s, CompletionItemKind::Value },
                        { u"ComponentBehavior"_s, CompletionItemKind::Value },
@@ -1848,7 +1905,6 @@ void tst_qmlls_utils::completions()
                 "there is nothing to complete, or there is nothing behind 'QQ.' and the parser "
                 "fails because of the unexpected '.'",
                 Abort);
-        QEXPECT_FAIL("pragma", "Pragma completion not supported yet", Abort);
         QEXPECT_FAIL("propertyTypeCompletion", "No completion for property types supported yet",
                      Abort);
         QEXPECT_FAIL("var-variable",

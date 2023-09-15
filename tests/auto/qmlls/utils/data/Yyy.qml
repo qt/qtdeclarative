@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import QtQuick as QQ
-pragma Singleton
+
 Zzz {
     id: root
     width: height

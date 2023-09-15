@@ -1892,6 +1892,71 @@ static bool cursorInFrontOfItem(const DomItem &currentItem,
     return ctx.offset() <= fileLocations.offset;
 }
 
+static bool cursorAfterColon(const DomItem &currentItem, const CompletionContextStrings &ctx)
+{
+    auto location = FileLocations::treeOf(currentItem)->info();
+    auto region = location.regions.constFind(u"colon"_s);
+
+    if (region == location.regions.constEnd())
+        return false;
+
+    if (region.value().isValid() && region.value().offset < ctx.offset()) {
+        return true;
+    }
+    return false;
+}
+
+/*!
+\internal
+\brief Mapping from pragma names to allowed pragma values.
+
+This mapping of pragma names to pragma values is not complete. In fact, it only contains the
+pragma names and values that one should see autocompletion for.
+Some pragmas like FunctionSignatureBehavior or Strict or the Reference/Value of ValueTypeBehavior,
+for example, should currently not be proposed as completion items by qmlls.
+
+An empty QList-value in the QMap means that the pragma does not accept pragma values.
+*/
+static const QMap<QString, QList<QString>> valuesForPragmas{
+    { u"ComponentBehavior"_s, { u"Unbound"_s, u"Bound"_s } },
+    { u"NativeMethodBehavior"_s, { u"AcceptThisObject"_s, u"RejectThisObject"_s } },
+    { u"ListPropertyAssignBehavior"_s, { u"Append"_s, u"Replace"_s, u"ReplaceIfNotDefault"_s } },
+    { u"Singleton"_s, {} },
+    { u"ValueTypeBehavior"_s, { u"Addressable"_s, u"Inaddressable"_s } },
+};
+
+static QList<CompletionItem> pragmaCompletion(QQmlJS::Dom::DomItem currentItem,
+                                              const CompletionContextStrings &ctx)
+{
+    if (cursorAfterColon(currentItem, ctx)) {
+        const QString name = currentItem.field(Fields::name).value().toString();
+        auto values = valuesForPragmas.constFind(name);
+        if (values == valuesForPragmas.constEnd())
+            return {};
+
+        QList<CompletionItem> res;
+        for (const auto &value : *values) {
+            CompletionItem comp;
+            comp.label = value.toUtf8();
+            comp.kind = static_cast<int>(CompletionItemKind::Value);
+            res.append(comp);
+        }
+        return res;
+    }
+
+    QList<CompletionItem> res;
+    for (const auto &pragma : valuesForPragmas.asKeyValueRange()) {
+        CompletionItem comp;
+        comp.label = pragma.first.toUtf8();
+        if (!pragma.second.isEmpty()) {
+            comp.insertText = QString(pragma.first).append(u": ").toUtf8();
+        }
+        comp.kind = static_cast<int>(CompletionItemKind::Value);
+        res.append(comp);
+    }
+    return res;
+}
+
 QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
                                                const CompletionContextStrings &ctx)
 {
@@ -1901,7 +1966,7 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
     }
 
     if (currentItem.internalKind() == DomType::Pragma) {
-        return {};
+        return pragmaCompletion(currentItem, ctx);
     }
 
     const DomItem containingType = currentItem.filterUp(
@@ -1933,25 +1998,19 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
     if (currentItem.internalKind() == DomType::Binding) {
         QList<CompletionItem> res;
         // do scriptidentifiercompletion after the ':' of a binding
-        auto location = FileLocations::treeOf(currentItem)->info();
-        auto region = location.regions.constFind(u"colon"_s);
 
-        if (region != location.regions.constEnd()) {
-            if (region.value().isValid() && region.value().offset < ctx.offset()) {
-                QList<CompletionItem> res;
-                res << scriptIdentifierCompletion(currentItem, ctx);
-                if (auto type = resolveExpressionType(currentItem, ResolveOwnerType)) {
-                    const QStringList names =
-                            currentItem.field(Fields::name).toString().split(u'.');
-                    const QQmlJSScope *current = resolve(type->semanticScope.get(), names);
-                    // add type names when binding to an object type or a property with var type
-                    if (!current
-                        || current->accessSemantics() == QQmlSA::AccessSemantics::Reference) {
-                        res << reachableSymbols(currentItem, ctx, TypeCompletionOption::QmlTypes);
-                    }
+        if (cursorAfterColon(currentItem, ctx)) {
+            QList<CompletionItem> res;
+            res << scriptIdentifierCompletion(currentItem, ctx);
+            if (auto type = resolveExpressionType(currentItem, ResolveOwnerType)) {
+                const QStringList names = currentItem.field(Fields::name).toString().split(u'.');
+                const QQmlJSScope *current = resolve(type->semanticScope.get(), names);
+                // add type names when binding to an object type or a property with var type
+                if (!current || current->accessSemantics() == QQmlSA::AccessSemantics::Reference) {
+                    res << reachableSymbols(currentItem, ctx, TypeCompletionOption::QmlTypes);
                 }
-                return res;
             }
+            return res;
         }
         res << bindingsCompletions(containingObject);
         // add Qml Types for default binding

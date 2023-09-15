@@ -319,7 +319,11 @@ bool QQmlDomAstCreator::visit(UiPragma *el)
     for (auto t = el->values; t; t = t->next)
         valueList << t->value.toString();
 
-    createMap(DomType::Pragma, qmlFilePtr->addPragma(Pragma(el->name.toString(), valueList)), el);
+    auto fileLocation = createMap(
+            DomType::Pragma, qmlFilePtr->addPragma(Pragma(el->name.toString(), valueList)), el);
+    if (el->colonToken.isValid()) {
+        FileLocations::addRegion(fileLocation, u"colon"_s, el->colonToken);
+    }
     return true;
 }
 
