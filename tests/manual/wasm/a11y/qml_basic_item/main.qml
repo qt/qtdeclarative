@@ -71,24 +71,27 @@ ApplicationWindow {
     }
 
     Rectangle {
-        width: parent.width - 40
-        height: parent.height - wasmToolbar.height - wasmMenu.height - 40
+        width: parent.width - 30
+        height: parent.height - wasmToolbar.height - wasmMenu.height - 30
         border.color: "black"
         border.width: 1
+        id:outerRect
         anchors {
             left: parent.left
             leftMargin: 20
             top: wasmToolbar.bottom
             topMargin: 10
+            bottomMargin: 10
         }
 
         MeetingTabs {
             id: meetingTabs
+            parent:outerRect
             anchors {
                 centerIn: parent
             }
-            height: parent.height - 10
-            width: parent.width - 10
+            height: parent.height - 20
+            width: parent.width - 20
         }
     }
 }

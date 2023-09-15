@@ -10,9 +10,10 @@ MenuBar {
     signal showDate
     signal showAboutDialog
     Menu {
-        title: "&Chrono"
+        title: "Chrono"
+
         MenuItem {
-            text: "&Date"
+            text: "Date"
             Accessible.role: Accessible.ButtonMenu
             Accessible.name: text
             Accessible.description: text
@@ -21,7 +22,7 @@ MenuBar {
             }
         }
         MenuItem {
-            text: "&Time"
+            text: "Time"
             Accessible.role: Accessible.ButtonMenu
             Accessible.name: text
             Accessible.description: text
@@ -31,10 +32,10 @@ MenuBar {
         }
     }
     Menu {
-        title: "&Help"
+        title: "Help"
 
         MenuItem {
-            text: "&about"
+            text: "About"
             Accessible.role: Accessible.ButtonMenu
             Accessible.name: text
             Accessible.description: text
@@ -43,4 +44,11 @@ MenuBar {
             }
         }
     }
+    delegate: MenuBarItem {
+           id: menuBarItem
+           Accessible.role: Accessible.ButtonMenu
+           Accessible.name: menuBarItem.text
+           Accessible.description: menuBarItem.text
+
+       }
 }

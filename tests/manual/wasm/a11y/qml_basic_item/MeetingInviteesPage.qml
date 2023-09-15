@@ -7,7 +7,7 @@ import QtQuick.Controls
 GroupBox {
     id: grpBox
     title: "Add Invitees"
-
+    height: parent.height - 10
     property alias nextButton: nextButton
     property alias dateAndTime: dateAndTime
     property string inviteesNameEmail

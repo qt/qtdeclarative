@@ -7,6 +7,7 @@ import QtQuick.Layouts
 GroupBox {
     id: root
     title: "Summary"
+    height: parent.height-10
     property string meetingOccurrence: "Once"
     property string onlineOfflineStatus: "offline"
     property int roomNumber: 0

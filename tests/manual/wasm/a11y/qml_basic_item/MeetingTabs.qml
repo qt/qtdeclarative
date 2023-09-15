@@ -6,7 +6,14 @@ import QtQuick.Controls
 
 Item {
     id: root
-    width: parent.width
+    width: parent.width -10
+    height:parent.height -10
+    property color itemColor: "lightgrey"
+        Rectangle {
+            width: parent.width
+            height: parent.height
+            color: itemColor
+        }
     enum Types {
         Invitees,
         Scheduler,
@@ -17,21 +24,24 @@ Item {
     property alias currentIndex: meetingTabs.currentIndex
     TabBar {
         id: meetingTabs
-        width: parent.width - 20
+        width: parent.width
         TabButton {
             text: qsTr("Meeting Invitees")
+            width:meetingTabs.width/3
             Accessible.role: Accessible.PageTab
             Accessible.name: text
             Accessible.description: "Tab to add meeting invitees"
         }
         TabButton {
             text: qsTr("Meeting Scheduler")
+            width:meetingTabs.width/3
             Accessible.role: Accessible.PageTab
             Accessible.name: text
             Accessible.description: "Tab to add a schedule"
         }
         TabButton {
             text: qsTr("Summary")
+            width:meetingTabs.width/3
             Accessible.role: Accessible.PageTab
             Accessible.name: text
             Accessible.description: "Tab to add meeting summary"
