@@ -830,18 +830,8 @@ Q_AUTOTEST_EXPORT QQmlGuiProvider *QQml_guiProvider(void)
 
 //Docs in qqmlengine.cpp
 QQmlApplication::QQmlApplication(QObject *parent)
-    : QObject(*(new QQmlApplicationPrivate),parent)
+    : QQmlApplication(*(new QQmlApplicationPrivate), parent)
 {
-    connect(QCoreApplication::instance(), SIGNAL(aboutToQuit()),
-            this, SIGNAL(aboutToQuit()));
-    connect(QCoreApplication::instance(), SIGNAL(applicationNameChanged()),
-            this, SIGNAL(nameChanged()));
-    connect(QCoreApplication::instance(), SIGNAL(applicationVersionChanged()),
-            this, SIGNAL(versionChanged()));
-    connect(QCoreApplication::instance(), SIGNAL(organizationNameChanged()),
-            this, SIGNAL(organizationChanged()));
-    connect(QCoreApplication::instance(), SIGNAL(organizationDomainChanged()),
-            this, SIGNAL(domainChanged()));
 }
 
 QQmlApplication::QQmlApplication(QQmlApplicationPrivate &dd, QObject *parent)
