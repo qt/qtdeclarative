@@ -1083,7 +1083,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 recordError(binding->valueLocation, tr("Cannot assign object type %1 with no default method").arg(QString::fromLatin1(createdSubObject->metaObject()->className())));
                 return false;
             }
-            qCWarning(lcQmlDefaultMethod) << "Assigning an object to a signal handler is deprecated."
+            qCWarning(lcQmlDefaultMethod) << "Assigning an object to a signal handler is deprecated. "
                                              "Instead, create the object, give it an id, and call the desired slot from the signal handler."
                                              ;
 
