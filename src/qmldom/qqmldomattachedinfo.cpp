@@ -186,7 +186,7 @@ bool AttachedInfo::iterateDirectSubpaths(const DomItem &self, DirectVisitor visi
                 },
                 [this](const DomItem &) {
                     QSet<QString> res;
-                    for (auto p : m_subItems.keys())
+                    for (const auto &p : m_subItems.keys())
                         res.insert(p.toString());
                     return res;
                 },
@@ -225,7 +225,7 @@ AttachedInfo::Ptr AttachedInfo::ensure(AttachedInfo::Ptr self, Path path, Attach
         break;
     }
     Ptr res = self;
-    for (auto p : path) {
+    for (const auto &p : path) {
         if (AttachedInfo::Ptr subEl = res->m_subItems.value(p)) {
             res = subEl;
         } else {

@@ -756,7 +756,8 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
             for (const auto &els : values) {
                 FileLocations::Tree elsLoc =
                         FileLocations::find(baseLoc, els.pathFromOwner().last());
-                for (auto el : els.values()) {
+                const auto elsValues = els.values();
+                for (const auto &el : elsValues) {
                     FileLocations::Tree elLoc =
                             FileLocations::find(elsLoc, el.pathFromOwner().last());
                     attribs.append(std::make_pair(startLoc(elLoc), el));
@@ -770,7 +771,8 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
         auto addSingleLevel = [&attribs, &startLoc](const DomItem &base, FileLocations::Tree baseLoc) {
             if (!base)
                 return;
-            for (auto el : base.values()) {
+            const auto baseValues = base.values();
+            for (const auto &el : baseValues) {
                 FileLocations::Tree elLoc = FileLocations::find(baseLoc, el.pathFromOwner().last());
                 attribs.append(std::make_pair(startLoc(elLoc), el));
             }
@@ -938,7 +940,7 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
     }
     if (counter != ow.counter())
         spacerId = ow.addNewlinesAutospacerCallback(2);
-    for (auto &sig : signalList) {
+    for (const auto &sig : std::as_const(signalList)) {
         ow.ensureNewline();
         sig.writeOut(ow);
         ow.ensureNewline();
@@ -947,7 +949,7 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
     if (counter != ow.counter())
         spacerId = ow.addNewlinesAutospacerCallback(2);
     bool first = true;
-    for (auto &method : methodList) {
+    for (const auto &method : std::as_const(methodList)) {
         if (!first && ow.lineWriter.options().functionsSpacing) {
             ow.newline();
         }
@@ -980,17 +982,17 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
     }
     if (counter != ow.counter())
         spacerId = ow.addNewlinesAutospacerCallback(2);
-    for (auto &b : normalBindings)
+    for (const auto &b : std::as_const(normalBindings))
         b.writeOut(ow);
     ow.removeTextAddCallback(spacerId);
     if (counter != ow.counter())
         spacerId = ow.addNewlinesAutospacerCallback(2);
-    for (auto &b : delayedBindings)
+    for (const auto &b : std::as_const(delayedBindings))
         b.writeOut(ow);
     ow.removeTextAddCallback(spacerId);
     if (counter != ow.counter())
         spacerId = ow.addNewlinesAutospacerCallback(2);
-    for (auto &b : signalHandlers)
+    for (const auto &b : std::as_const(signalHandlers))
         b.writeOut(ow);
     ow.removeTextAddCallback(spacerId);
     if (counter != ow.counter())

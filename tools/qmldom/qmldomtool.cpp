@@ -285,7 +285,7 @@ int main(int argc, char *argv[])
         };
         qsizetype iPathToDump = 0;
         bool globalPaths = false;
-        for (auto p : pathsToDump)
+        for (const auto &p : pathsToDump)
             if (p.headKind() == Path::Kind::Root)
                 globalPaths = true;
         if (globalPaths)

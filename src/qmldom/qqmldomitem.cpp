@@ -1182,7 +1182,8 @@ DomItem DomItem::key(QString name) const
 bool DomItem::visitKeys(function_ref<bool(QString, const DomItem &)> visitor) const
 {
     // use iterateDirectSubpathsConst instead?
-    for (auto k : sortedKeys()) {
+    const QStringList keys = sortedKeys();
+    for (const QString &k : keys) {
         DomItem v = key(k);
         if (!visitor(k, v))
             return false;
