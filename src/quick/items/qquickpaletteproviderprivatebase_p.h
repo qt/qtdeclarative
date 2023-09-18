@@ -221,7 +221,7 @@ void QQuickPaletteProviderPrivateBase<I, Impl>::registerPalette(PalettePtr palet
     // In order to avoid extra noise, we should connect
     // the following signals only after everything is already setup
     I::connect(paletteData(), &QQuickPalette::changed, itemWithPalette(), &I::paletteChanged);
-    I::connect(paletteData(), &QQuickPalette::changed, [this]{ updateChildrenPalettes(toQPalette()); });
+    I::connect(paletteData(), &QQuickPalette::changed, itemWithPalette(), [this]{ updateChildrenPalettes(toQPalette()); });
 }
 
 template<class T> struct dependent_false : std::false_type {};
