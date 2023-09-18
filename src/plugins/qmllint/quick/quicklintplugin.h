@@ -160,7 +160,7 @@ public:
         RestrictToControls
     };
 
-    AttachedPropertyReuse(QQmlSA::PassManager *manager, QQmlJS::LoggerWarningId category)
+    AttachedPropertyReuse(QQmlSA::PassManager *manager, QQmlSA::LoggerWarningId category)
         : QQmlSA::PropertyPass(manager), category(category)
     {}
 
@@ -177,7 +177,7 @@ private:
     };
 
     QMultiHash<QQmlSA::Element, ElementAndLocation> usedAttachedTypes;
-    QQmlJS::LoggerWarningId category;
+    QQmlSA::LoggerWarningId category;
 };
 
 QT_END_NAMESPACE

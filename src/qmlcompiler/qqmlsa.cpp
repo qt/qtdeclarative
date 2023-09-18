@@ -845,7 +845,7 @@ GenericPass::GenericPass(PassManager *manager)
 /*!
     Emits a warning message \a diagnostic about an issue of type \a id.
  */
-void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id)
+void GenericPass::emitWarning(QAnyStringView diagnostic, LoggerWarningId id)
 {
     emitWarning(diagnostic, id, QQmlSA::SourceLocation{});
 }
@@ -854,7 +854,7 @@ void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId
     Emits warning message \a diagnostic about an issue of type \a id located at
     \a srcLocation.
  */
-void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id,
+void GenericPass::emitWarning(QAnyStringView diagnostic, LoggerWarningId id,
                               QQmlSA::SourceLocation srcLocation)
 {
     Q_D(const GenericPass);
@@ -868,7 +868,7 @@ void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId
     Emits a warning message \a diagnostic about an issue of type \a id located at
     \a srcLocation and with suggested fix \a fix.
  */
-void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id,
+void GenericPass::emitWarning(QAnyStringView diagnostic, LoggerWarningId id,
                               QQmlSA::SourceLocation srcLocation, const QQmlSA::FixSuggestion &fix)
 {
     Q_D(const GenericPass);
@@ -1240,7 +1240,7 @@ bool PassManager::hasImportedModule(QAnyStringView module) const
 /*!
     Returns \c true if warnings of \a category are enabled, \c false otherwise.
  */
-bool PassManager::isCategoryEnabled(QQmlJS::LoggerWarningId category) const
+bool PassManager::isCategoryEnabled(LoggerWarningId category) const
 {
     return !PassManagerPrivate::visitor(*this)->logger()->isCategoryIgnored(category);
 }

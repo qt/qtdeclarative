@@ -24,6 +24,8 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 
+using LoggerWarningId = QQmlSA::LoggerWarningId;
+
 class LoggerCategoryPrivate;
 
 class Q_QMLCOMPILER_EXPORT LoggerCategory
