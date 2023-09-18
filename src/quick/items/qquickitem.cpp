@@ -7068,15 +7068,17 @@ void QQuickItem::setX(qreal v)
     if (qt_is_nan(v))
         return;
 
-    const qreal oldx = d->x;
+    const qreal oldx = d->x.valueBypassingBindings();
     if (oldx == v)
         return;
 
-    d->x = v;
+    d->x.setValueBypassingBindings(v);
 
     d->dirty(QQuickItemPrivate::Position);
 
-    const qreal y = d->y, w = d->width, h = d->height;
+    const qreal y = d->y.valueBypassingBindings();
+    const qreal w = d->width.valueBypassingBindings();
+    const qreal h = d->height.valueBypassingBindings();
     geometryChange(QRectF(v, y, w, h), QRectF(oldx, y, w, h));
 }
 
@@ -7087,17 +7089,19 @@ void QQuickItem::setY(qreal v)
     if (qt_is_nan(v))
         return;
 
-    const qreal oldy = d->y;
+    const qreal oldy = d->y.valueBypassingBindings();
     if (oldy == v)
         return;
 
-    d->y = v;
+    d->y.setValueBypassingBindings(v);
 
     d->dirty(QQuickItemPrivate::Position);
 
     // we use v instead of d->y, as that avoid a method call
     // and we have v anyway in scope
-    const qreal x = d->x, w = d->width, h = d->height;
+    const qreal x = d->x.valueBypassingBindings();
+    const qreal w = d->width.valueBypassingBindings();
+    const qreal h = d->height.valueBypassingBindings();
     geometryChange(QRectF(x, v, w, h), QRectF(x, oldy, w, h));
 }
 
@@ -7167,15 +7171,17 @@ void QQuickItem::setWidth(qreal w)
         return;
 
     d->widthValidFlag = true;
-    const qreal oldWidth = d->width;
+    const qreal oldWidth = d->width.valueBypassingBindings();
     if (oldWidth == w)
         return;
 
-    d->width = w;
+    d->width.setValueBypassingBindings(w);
 
     d->dirty(QQuickItemPrivate::Size);
 
-    const qreal x = d->x, y = d->y, h = d->height;
+    const qreal x = d->x.valueBypassingBindings();
+    const qreal y = d->y.valueBypassingBindings();
+    const qreal h = d->height.valueBypassingBindings();
     geometryChange(QRectF(x, y, w, h), QRectF(x, y, oldWidth, h));
 }
 
@@ -7373,15 +7379,17 @@ void QQuickItem::setHeight(qreal h)
         return;
 
     d->heightValidFlag = true;
-    const qreal oldHeight = d->height;
+    const qreal oldHeight = d->height.valueBypassingBindings();
     if (oldHeight == h)
         return;
 
-    d->height = h;
+    d->height.setValueBypassingBindings(h);
 
     d->dirty(QQuickItemPrivate::Size);
 
-    const qreal x = d->x, y = d->y, w = d->width;
+    const qreal x = d->x.valueBypassingBindings();
+    const qreal y = d->y.valueBypassingBindings();
+    const qreal w = d->width.valueBypassingBindings();
     geometryChange(QRectF(x, y, w, h), QRectF(x, y, w, oldHeight));
 }
 
