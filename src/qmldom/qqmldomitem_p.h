@@ -1081,22 +1081,22 @@ public:
     bool iterateDirectSubpaths(DirectVisitor v) const;
 
     template<typename T>
-    DomItem subDataItem(const PathEls::PathComponent &c, T value,
+    DomItem subDataItem(const PathEls::PathComponent &c, const T &value,
                         ConstantData::Options options = ConstantData::Options::MapIsMap) const;
     template<typename T>
-    DomItem subDataItemField(QStringView f, T value,
+    DomItem subDataItemField(QStringView f, const T &value,
                              ConstantData::Options options = ConstantData::Options::MapIsMap) const
     {
         return subDataItem(PathEls::Field(f), value, options);
     }
     template<typename T>
-    DomItem subValueItem(const PathEls::PathComponent &c, T value,
+    DomItem subValueItem(const PathEls::PathComponent &c, const T &value,
                          ConstantData::Options options = ConstantData::Options::MapIsMap) const;
     template<typename T>
-    bool dvValue(DirectVisitor visitor, const PathEls::PathComponent &c, T value,
+    bool dvValue(DirectVisitor visitor, const PathEls::PathComponent &c, const T &value,
                  ConstantData::Options options = ConstantData::Options::MapIsMap) const;
     template<typename T>
-    bool dvValueField(DirectVisitor visitor, QStringView f, T value,
+    bool dvValueField(DirectVisitor visitor, QStringView f, const T &value,
                       ConstantData::Options options = ConstantData::Options::MapIsMap) const
     {
         return this->dvValue<T>(visitor, PathEls::Field(f), value, options);
@@ -1976,7 +1976,7 @@ constexpr bool domTypeIsScriptElement(DomType k)
 }
 
 template<typename T>
-DomItem DomItem::subValueItem(const PathEls::PathComponent &c, T value,
+DomItem DomItem::subValueItem(const PathEls::PathComponent &c, const T &value,
                               ConstantData::Options options) const
 {
     using BaseT = std::remove_cv_t<std::remove_reference_t<T>>;
@@ -2003,7 +2003,7 @@ DomItem DomItem::subValueItem(const PathEls::PathComponent &c, T value,
 }
 
 template<typename T>
-DomItem DomItem::subDataItem(const PathEls::PathComponent &c, T value,
+DomItem DomItem::subDataItem(const PathEls::PathComponent &c, const T &value,
                              ConstantData::Options options) const
 {
     using BaseT = std::remove_cv_t<std::remove_reference_t<T>>;
@@ -2020,7 +2020,7 @@ DomItem DomItem::subDataItem(const PathEls::PathComponent &c, T value,
 }
 
 template<typename T>
-bool DomItem::dvValue(DirectVisitor visitor, const PathEls::PathComponent &c, T value,
+bool DomItem::dvValue(DirectVisitor visitor, const PathEls::PathComponent &c, const T &value,
                       ConstantData::Options options) const
 {
     auto lazyWrap = [this, &c, &value, options]() {
