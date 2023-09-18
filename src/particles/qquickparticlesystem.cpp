@@ -594,7 +594,7 @@ void QQuickParticleSystem::finishRegisteringParticleEmitter(QQuickParticleEmitte
     connect(e, SIGNAL(groupChanged(QString)),
             this, SLOT(emittersChanged()));
     if (m_componentComplete)
-        emittersChanged();
+        emitterAdded(e);
     e->reset();//Start, so that starttime factors appropriately
 }
 
@@ -833,6 +833,11 @@ void QQuickParticleSystem::emittersChanged()
         particleCount += groupData[i]->size();
     }
 
+    postProcessEmitters();
+}
+
+void QQuickParticleSystem::postProcessEmitters()
+{
     if (m_debugMode)
         qDebug() << "Particle system emitters changed. New particle count: " << particleCount << "in" << groupData.size() << "groups.";
 
@@ -851,6 +856,30 @@ void QQuickParticleSystem::emittersChanged()
     if (!m_groups.isEmpty())
         createEngine();
 
+}
+
+void QQuickParticleSystem::emitterAdded(QQuickParticleEmitter *e)
+{
+    if (!m_componentComplete)
+        return;
+
+    // Populate group and set size.
+    const int groupId = e->groupId();
+    if (groupId == QQuickParticleGroupData::InvalidID) {
+        QQuickParticleGroupData *group = new QQuickParticleGroupData(e->group(), this);
+        group->setSize(e->particleCount());
+    } else {
+        QQuickParticleGroupData *group = groupData[groupId];
+        group->setSize(group->size() + e->particleCount());
+    }
+
+    // groupData can have changed independently, so we still have to iterate it all
+    // to count the particles.
+    particleCount = 0;
+    for (int i = 0, ei = groupData.size(); i != ei; ++i)
+        particleCount += groupData[i]->size();
+
+    postProcessEmitters();
 }
 
 void QQuickParticleSystem::createEngine()

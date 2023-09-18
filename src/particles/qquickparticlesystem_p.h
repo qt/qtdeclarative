@@ -418,6 +418,8 @@ private:
     void searchNextFreeGroupId();
 
 private:
+    void emitterAdded(QQuickParticleEmitter *e);
+    void postProcessEmitters();
     void initializeSystem();
     void initGroups();
     QList<QPointer<QQuickParticleEmitter> > m_emitters;
