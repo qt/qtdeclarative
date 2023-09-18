@@ -285,10 +285,10 @@ public:
     GenericPass(PassManager *manager);
     virtual ~GenericPass();
 
-    void emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id);
-    void emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id,
+    void emitWarning(QAnyStringView diagnostic, LoggerWarningId id);
+    void emitWarning(QAnyStringView diagnostic, LoggerWarningId id,
                      QQmlSA::SourceLocation srcLocation);
-    void emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id,
+    void emitWarning(QAnyStringView diagnostic, LoggerWarningId id,
                      QQmlSA::SourceLocation srcLocation, const QQmlSA::FixSuggestion &fix);
 
     Element resolveTypeInFileScope(QAnyStringView typeName);
@@ -325,7 +325,7 @@ public:
 
     bool hasImportedModule(QAnyStringView name) const;
 
-    bool isCategoryEnabled(QQmlJS::LoggerWarningId category) const;
+    bool isCategoryEnabled(LoggerWarningId category) const;
 
     std::vector<std::shared_ptr<ElementPass>> elementPasses() const;
     std::multimap<QString, PropertyPassInfo> propertyPasses() const;

@@ -5,7 +5,7 @@
 
 using namespace Qt::StringLiterals;
 
-static constexpr QQmlJS::LoggerWarningId plugin{ "testPlugin.test" };
+static constexpr QQmlSA::LoggerWarningId plugin{ "testPlugin.test" };
 
 class ElementTest : public QQmlSA::ElementPass
 {
