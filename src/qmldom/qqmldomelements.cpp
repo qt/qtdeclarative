@@ -462,13 +462,13 @@ DomItem QmlObject::field(const DomItem &self, QStringView name) const
         break;
     case 13:
         if (name == Fields::propertyInfos)
+            // Need to explicitly copy self here since we might store this and call it later.
             return self.subMapItem(Map(
                     pathFromOwner().field(Fields::propertyInfos),
-                    [self](const DomItem &map, QString k) mutable {
-                        auto pInfo = self.propertyInfoWithName(k);
-                        return map.wrap(PathEls::Key(k), pInfo);
+                    [copiedSelf = self](const DomItem &map, const QString &k) {
+                        return map.wrap(PathEls::Key(k), copiedSelf.propertyInfoWithName(k));
                     },
-                    [self](const DomItem &) mutable { return self.propertyInfoNames(); },
+                    [copiedSelf = self](const DomItem &) { return copiedSelf.propertyInfoNames(); },
                     QLatin1String("PropertyInfo")));
         break;
     case 19:
@@ -1481,7 +1481,7 @@ DomItem BindingValue::value(const DomItem &binding) const
     case BindingValueKind::Array:
         return binding.subListItem(List::fromQListRef<QmlObject>(
                 binding.pathFromOwner().field(u"value"), array,
-                [binding](const DomItem &self, const PathEls::PathComponent &, const QmlObject &obj) {
+                [](const DomItem &self, const PathEls::PathComponent &, const QmlObject &obj) {
                     return self.copy(&obj);
                 }));
     }

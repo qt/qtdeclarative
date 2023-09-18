@@ -616,8 +616,10 @@ void LoadInfo::advanceLoad(const DomItem &self)
             if (!dep.uri.isEmpty()) {
                 self.loadModuleDependency(
                         dep.uri, dep.version,
-                        [this, self, dep](Path, const DomItem &, const DomItem &) mutable {
-                            finishedLoadingDep(self, dep);
+                        [this, copiedSelf = self, dep](Path, const DomItem &, const DomItem &) {
+                            // Need to explicitly copy self here since we might store this and
+                            // call it later.
+                            finishedLoadingDep(copiedSelf, dep);
                         },
                         self.errorHandler());
                 Q_ASSERT(dep.filePath.isEmpty() && "dependency with both uri and file");
@@ -626,8 +628,10 @@ void LoadInfo::advanceLoad(const DomItem &self)
                 if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>())
                     envPtr->loadFile(
                             env, FileToLoad::fromFileSystem(envPtr, dep.filePath),
-                            [this, self, dep](Path, const DomItem &, const DomItem &) mutable {
-                                finishedLoadingDep(self, dep);
+                            [this, copiedSelf = self, dep](Path, const DomItem &, const DomItem &) {
+                                // Need to explicitly copy self here since we might store this and
+                                // call it later.
+                                finishedLoadingDep(copiedSelf, dep);
                             },
                             nullptr, nullptr, LoadOption::DefaultLoad, dep.fileType,
                             self.errorHandler());

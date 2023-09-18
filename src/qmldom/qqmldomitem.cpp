@@ -1112,7 +1112,7 @@ DomItem DomItem::path(Path p, ErrorHandler errorHandler) const
     if (!p)
         return *this;
     DomItem res;
-    resolve(p, [&res](Path, DomItem it) {
+    resolve(p, [&res](Path, const DomItem &it) {
         res = it;
         return false;
     }, errorHandler);
@@ -2481,8 +2481,8 @@ void DomItem::addError(ErrorMessage &&msg) const
 
 ErrorHandler DomItem::errorHandler() const
 {
-    DomItem self = *this;
-    return [self](const ErrorMessage &m) { self.addError(ErrorMessage(m)); };
+    // We need a copy here. Error handlers may be called when this is gone.
+    return [self = *this](const ErrorMessage &m) { self.addError(ErrorMessage(m)); };
 }
 
 void DomItem::clearErrors(ErrorGroups groups, bool iterate) const
