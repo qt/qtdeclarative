@@ -1831,10 +1831,12 @@ QSet<QString> DomItem::localSymbolNames(LocalSymbolsTypes typeFilter) const
         break;
     case DomType::QmlFile: // subComponents, imported types
         if (typeFilter & LocalSymbolsType::ObjectType) {
-            DomItem comps = field(Fields::components);
-            for (auto k : comps.keys())
-                if (!k.isEmpty())
+            const QSet<QString> keys = field(Fields::components).keys();
+            for (const QString &k : keys) {
+                if (!k.isEmpty()) {
                     res.insert(k);
+                }
+            }
         }
         break;
     case DomType::ImportScope: {

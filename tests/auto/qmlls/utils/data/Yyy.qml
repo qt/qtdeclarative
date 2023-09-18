@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import QtQuick as QQ
-
+import QtCore
 Zzz {
     id: root
     width: height
@@ -11,7 +11,7 @@ Zzz {
         height: root.foo.height
 
     }
-
+    component MyRectangle: Rectangle {}
     function lala() {}
     property Rectangle foo: Rectangle{ height: 200 }
     function longfunction(a, b, c = "c", d = "d"): string {
@@ -74,5 +74,24 @@ Zzz {
         }
         // this is not fine, let variables have block scope
         console.log(helloLetVariable);
+    }
+    property var testSingleton: SystemInformation.byteOrder
+
+    Item {
+        id: itemWithEnums
+        enum Hello { World }
+        enum MyEnum { ValueOne, ValueTwo }
+    }
+
+    property var testEnums: itemWithEnums.World
+    property var testEnums2: itemWithEnums.Hello.World
+
+    Component.onCompleted: {}
+    property var anything: Rectangle{ height: 200 }
+    function createRectangle(): Rectangle {}
+    function createItem(): Item {}
+    function createAnything() {}
+    function helloJSStatements() {
+        let x = 3;
     }
 }

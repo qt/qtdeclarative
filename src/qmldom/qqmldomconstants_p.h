@@ -324,6 +324,8 @@ enum class LocalSymbolsType {
     Namespace = 0x40,
     Global = 0x80,
     MethodParameter = 0x100,
+    Singleton = 0x200,
+    AttachedType = 0x400,
 };
 Q_ENUM_NS(LocalSymbolsType)
 Q_DECLARE_FLAGS(LocalSymbolsTypes, LocalSymbolsType)

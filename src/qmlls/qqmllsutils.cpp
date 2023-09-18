@@ -1663,8 +1663,8 @@ QList<CompletionItem> QQmlLSUtils::idsCompletions(const DomItem& component)
 static void reachableTypes(QSet<QString> &symbols, const DomItem &el, LocalSymbolsTypes options)
 {
     switch (el.internalKind()) {
+    case DomType::QmlFile:
     case DomType::ImportScope: {
-
         const QSet<QString> localSymbols = el.localSymbolNames(options);
         qCDebug(QQmlLSCompletionLog) << "adding local symbols of:" << el.internalKindStr()
                                      << el.canonicalPath() << localSymbols;
@@ -1681,31 +1681,19 @@ static void reachableTypes(QSet<QString> &symbols, const DomItem &el, LocalSymbo
 
 QList<CompletionItem> QQmlLSUtils::reachableSymbols(const DomItem &context,
                                                     const CompletionContextStrings &ctx,
-                                                    TypeCompletionOptions typeCompletionType)
+                                                    LocalSymbolsTypes options)
 {
     // returns completions for the reachable types or attributes from context
     QList<CompletionItem> res;
     QMap<CompletionItemKind, QSet<QString>> symbols;
     QSet<quintptr> visited;
     QList<Path> visitedRefs;
-    auto addLocalSymbols = [&typeCompletionType, &symbols](const DomItem &el) {
-        LocalSymbolsTypes options;
-        if (typeCompletionType.testFlag(TypeCompletionOption::Types)) {
-            options.setFlag(LocalSymbolsType::Namespace);
-            options.setFlag(LocalSymbolsType::ValueType);
-            options.setFlag(LocalSymbolsType::ObjectType);
-        }
-        if (typeCompletionType.testFlag(TypeCompletionOption::QmlTypes)) {
-            options.setFlag(LocalSymbolsType::ObjectType);
-            options.setFlag(LocalSymbolsType::Namespace);
-        }
-        if (options != LocalSymbolsType::None) {
-            reachableTypes(symbols[CompletionItemKind::Class], el, options);
-        }
+    auto addLocalSymbols = [&options, &symbols](const DomItem &el) {
+        reachableTypes(symbols[CompletionItemKind::Class], el, options);
         return true;
     };
     if (ctx.base().isEmpty()) {
-        if (typeCompletionType != TypeCompletionOption::None) {
+        if (options != LocalSymbolsType::None) {
             qCDebug(QQmlLSCompletionLog)
                     << "adding symbols reachable from:" << context.internalKindStr()
                     << context.canonicalPath();
@@ -1958,49 +1946,85 @@ static QList<CompletionItem> pragmaCompletion(QQmlJS::Dom::DomItem currentItem,
     return res;
 }
 
+static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &currentItem,
+                                                       const CompletionContextStrings &ctx)
+{
+    QList<CompletionItem> res;
+    if (ctx.base().isEmpty()) {
+        // TODO: complete also the brackets after function?
+        for (QUtf8StringView s : std::array<QUtf8StringView, 5>(
+                     { u8"property", u8"readonly", u8"default", u8"signal", u8"function" })) {
+            CompletionItem comp;
+            comp.label = s.data();
+            comp.kind = int(CompletionItemKind::Keyword);
+            res.append(comp);
+        }
+
+        // add bindings
+        const DomItem containingObject = currentItem.qmlObject();
+        res += QQmlLSUtils::bindingsCompletions(containingObject);
+
+        // add Qml Types for default binding
+        const DomItem containingFile = currentItem.containingFile();
+        res += QQmlLSUtils::reachableSymbols(containingFile, ctx, LocalSymbolsType::ObjectType);
+    }
+    return res;
+}
+
 QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
                                                const CompletionContextStrings &ctx)
 {
-    if (currentItem.internalKind() == DomType::Id) {
+    DomType completionType = currentItem.internalKind();
+    for (DomItem current = currentItem; current; current = current.directParent()) {
+        const DomType currentType = current.internalKind();
+        switch (currentType) {
+        case DomType::Id:
+        case DomType::Pragma:
+        case DomType::ScriptFormalParameter:
+        case DomType::Binding:
+        case DomType::Import:
+        case DomType::ScriptType:
+        case DomType::QmlObject:
+        case DomType::ScriptExpression:
+        case DomType::QmlFile:
+        case DomType::MethodInfo:
+        case DomType::PropertyDefinition:
+            completionType = current.internalKind();
+            break;
+        default:
+            continue;
+        }
+        break;
+    }
+
+    if (completionType == DomType::Id) {
         // suppress completions for ids
         return {};
     }
 
-    if (currentItem.internalKind() == DomType::Pragma) {
+    if (completionType == DomType::Pragma) {
         return pragmaCompletion(currentItem, ctx);
     }
 
-    const DomItem containingType = currentItem.filterUp(
-            [](DomType type, const QQmlJS::Dom::DomItem &) { return type == DomType::ScriptType; },
-            FilterUpOptions::ReturnInner);
-    if (containingType) {
-        TypeCompletionOptions typeCompletionType;
-        typeCompletionType.setFlag(TypeCompletionOption::Types);
-        typeCompletionType.setFlag(TypeCompletionOption::QmlTypes);
-        return reachableSymbols(currentItem, ctx, typeCompletionType);
+    if (completionType == DomType::ScriptType) {
+        LocalSymbolsTypes options;
+        options.setFlag(LocalSymbolsType::ObjectType);
+        options.setFlag(LocalSymbolsType::ValueType);
+        return reachableSymbols(currentItem, ctx, options);
     }
 
-    const DomItem containingParameter = currentItem.filterUp(
-            [](DomType type, const QQmlJS::Dom::DomItem &) {
-                return type == DomType::ScriptFormalParameter;
-            },
-            FilterUpOptions::ReturnInner);
-    if (containingParameter) {
+    if (completionType == DomType::ScriptFormalParameter) {
         // no autocompletion inside of function parameter definition
         return {};
     }
 
-    const DomItem containingScriptExpression = currentItem.containingScriptExpression();
-    if (containingScriptExpression) {
-        return scriptIdentifierCompletion(currentItem, ctx);
-    }
-    const DomItem containingObject = currentItem.qmlObject();
-    const DomItem containingFile = currentItem.containingFile();
-    if (currentItem.internalKind() == DomType::Binding) {
-        QList<CompletionItem> res;
-        // do scriptidentifiercompletion after the ':' of a binding
+    if (completionType == DomType::Binding) {
+        const DomItem containingBinding = currentItem.filterUp(
+                [](DomType type, const QQmlJS::Dom::DomItem &) { return type == DomType::Binding; },
+                FilterUpOptions::ReturnOuter);
 
-        if (cursorAfterColon(currentItem, ctx)) {
+        // do scriptidentifiercompletion after the ':' of a binding
+        if (cursorAfterColon(containingBinding, ctx)) {
             QList<CompletionItem> res;
             res << scriptIdentifierCompletion(currentItem, ctx);
             if (auto type = resolveExpressionType(currentItem, ResolveOwnerType)) {
@@ -2008,29 +2032,53 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
                 const QQmlJSScope *current = resolve(type->semanticScope.get(), names);
                 // add type names when binding to an object type or a property with var type
                 if (!current || current->accessSemantics() == QQmlSA::AccessSemantics::Reference) {
-                    res << reachableSymbols(currentItem, ctx, TypeCompletionOption::QmlTypes);
+                    LocalSymbolsTypes options;
+                    options.setFlag(LocalSymbolsType::ObjectType);
+                    res << reachableSymbols(currentItem, ctx, options);
                 }
             }
             return res;
         }
-        res << bindingsCompletions(containingObject);
+
+        // ignore the binding if asking for completion in front of the binding
+        if (cursorInFrontOfItem(containingBinding, ctx)) {
+            return insideQmlObjectCompletion(currentItem, ctx);
+        }
+
+        QList<CompletionItem> res;
+        const DomItem containingObject = currentItem.qmlObject();
+        const QStringList toResolve =
+                containingBinding.field(Fields::name).value().toString().split(u'.');
+        if (toResolve.size() == 1) {
+            res << bindingsCompletions(containingObject);
+        } else {
+            // TODO: without QTBUG-117380, containingBinding.field(Fields::name) cannot be
+            // resolved to its actual type
+            res << bindingsCompletions(containingObject);
+        }
         // add Qml Types for default binding
-        res += reachableSymbols(containingFile, ctx, TypeCompletionOption::QmlTypes);
+        res += reachableSymbols(currentItem, ctx, LocalSymbolsType::ObjectType);
         return res;
     }
 
-    if (currentItem.internalKind() == DomType::Import) {
+    if (completionType == DomType::ScriptExpression) {
+        return scriptIdentifierCompletion(currentItem, ctx);
+    }
+
+    if (completionType == DomType::Import) {
+        const DomItem containingFile = currentItem.containingFile();
         QList<CompletionItem> res;
         res += importCompletions(containingFile, ctx);
 
         // when in front of the import statement: propose types for root Qml Object completion
         if (cursorInFrontOfItem(currentItem, ctx))
-            res += reachableSymbols(containingFile, ctx, TypeCompletionOption::QmlTypes);
+            res += reachableSymbols(containingFile, ctx, LocalSymbolsType::ObjectType);
 
         return res;
     }
 
-    if (!containingObject) {
+    if (completionType == DomType::QmlFile) {
+        const DomItem containingFile = currentItem.containingFile();
         QList<CompletionItem> res;
         // completions for code outside the root Qml Object
         // global completions
@@ -2045,28 +2093,31 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             }
         }
         // Types for root Qml Object completion
-        res += reachableSymbols(containingFile, ctx, TypeCompletionOption::QmlTypes);
+        res += reachableSymbols(containingFile, ctx, LocalSymbolsType::ObjectType);
         return res;
     }
 
-    if (ctx.atLineStart() && currentItem.internalKind() != DomType::List) {
+    if (completionType == DomType::QmlObject) {
         // inside some Qml Object
-        QList<CompletionItem> res;
-        if (ctx.base().isEmpty()) {
-            // TODO: complete also the brackets after function?
-            for (const QStringView &s : std::array<QStringView, 5>(
-                         { u"property", u"readonly", u"default", u"signal", u"function" })) {
-                CompletionItem comp;
-                comp.label = s.toUtf8();
-                comp.kind = int(CompletionItemKind::Keyword);
-                res.append(comp);
-            }
-            // add bindings
-            res += bindingsCompletions(containingObject);
-            // add Qml Types for default binding
-            res += reachableSymbols(containingFile, ctx, TypeCompletionOption::QmlTypes);
+        return insideQmlObjectCompletion(currentItem, ctx);
+    }
+
+    if (completionType == DomType::MethodInfo) {
+        // suppress completions
+        return {};
+    }
+
+    if (completionType == DomType::PropertyDefinition) {
+        auto info = FileLocations::treeOf(currentItem)->info();
+        auto propertyKeyWord = info.regions[u"property"_s];
+        auto propertyIdentifier = info.regions[u"identifier"_s];
+        if (propertyKeyWord.end() <= ctx.offset() && ctx.offset() < propertyIdentifier.offset) {
+            return reachableSymbols(currentItem, ctx,
+                                    LocalSymbolsType::ObjectType
+                                            | LocalSymbolsType::ValueType);
         }
-        return res;
+        // do not autocomplete the rest
+        return {};
     }
 
     // no completion could be found

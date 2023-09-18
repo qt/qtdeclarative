@@ -116,9 +116,6 @@ enum QQmlLSUtilsResolveOptions {
     ResolveActualTypeForFieldMemberExpression,
 };
 
-enum class TypeCompletionOption { None, Types, QmlTypes, TypesAndAttributes };
-Q_DECLARE_FLAGS(TypeCompletionOptions, TypeCompletionOption);
-
 enum class ImportCompletionType { None, Module, Version };
 
 using DomItem = QQmlJS::Dom::DomItem;
@@ -160,9 +157,9 @@ public:
                                                    const CompletionContextStrings &ctx);
     static QList<CompletionItem> idsCompletions(const DomItem& component);
 
-    static QList<CompletionItem> reachableSymbols(const DomItem &context,
-                                                  const CompletionContextStrings &ctx,
-                                                  TypeCompletionOptions typeCompletionType);
+    static QList<CompletionItem>
+    reachableSymbols(const DomItem &context, const CompletionContextStrings &ctx,
+                     QQmlJS::Dom::LocalSymbolsTypes typeCompletionType);
 
     static QList<CompletionItem> scriptIdentifierCompletion(const DomItem &context,
                                                             const CompletionContextStrings &ctx);
