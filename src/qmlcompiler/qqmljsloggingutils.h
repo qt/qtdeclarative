@@ -16,7 +16,7 @@ namespace QQmlSA {
 class SourceLocation;
 }
 
-namespace QQmlJS {
+namespace QQmlSA {
 
 class Q_QMLCOMPILER_EXPORT LoggerWarningId
 {
@@ -38,44 +38,44 @@ private:
     const QAnyStringView m_name;
 };
 
-} // namespace QQmlJS
+} // namespace QQmlSA
 
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlRequired;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlUnresolvedAlias;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlAliasCycle;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlImport;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlRecursionDepthErrors;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlWith;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlInheritanceCycle;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlDeprecated;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlSignalParameters;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlMissingType;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlUnresolvedType;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlIncompatibleType;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlMissingProperty;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlRestrictedType;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlPrefixedImportType;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlNonListProperty;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlReadOnlyProperty;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlDuplicatePropertyBinding;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlDuplicatedName;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlDeferredPropertyId;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlUnqualified;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlUnusedImports;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlMultilineStrings;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlSyntax;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlSyntaxIdQuotation;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlSyntaxDuplicateIds;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlCompiler;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlAttachedPropertyReuse;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlPlugin;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlVarUsedBeforeDeclaration;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlInvalidLintDirective;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlUseProperFunction;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlAccessSingleton;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlTopLevelComponent;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlUncreatableType;
-extern const Q_QMLCOMPILER_EXPORT QQmlJS::LoggerWarningId qmlMissingEnumEntry;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlRequired;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlUnresolvedAlias;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlAliasCycle;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlImport;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlRecursionDepthErrors;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlWith;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlInheritanceCycle;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlDeprecated;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlSignalParameters;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlMissingType;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlUnresolvedType;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlIncompatibleType;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlMissingProperty;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlRestrictedType;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlPrefixedImportType;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlNonListProperty;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlReadOnlyProperty;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlDuplicatePropertyBinding;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlDuplicatedName;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlDeferredPropertyId;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlUnqualified;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlUnusedImports;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlMultilineStrings;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlSyntax;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlSyntaxIdQuotation;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlSyntaxDuplicateIds;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlCompiler;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlAttachedPropertyReuse;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlPlugin;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlVarUsedBeforeDeclaration;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlInvalidLintDirective;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlUseProperFunction;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlAccessSingleton;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlTopLevelComponent;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlUncreatableType;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlMissingEnumEntry;
 
 QT_END_NAMESPACE
 
