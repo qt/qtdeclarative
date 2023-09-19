@@ -243,11 +243,11 @@ bool QmltypesReader::parse()
                                        qmltypesFilePtr()->code());
     QStringList dependencies;
     QList<QQmlJSExportedScope> objects;
-    m_isValid = reader(&objects, &dependencies);
+    const bool isValid = reader(&objects, &dependencies);
     for (const auto &obj : std::as_const(objects))
         insertComponent(obj.scope, obj.exports);
-    qmltypesFilePtr()->setIsValid(m_isValid);
-    return m_isValid;
+    qmltypesFilePtr()->setIsValid(isValid);
+    return isValid;
 }
 
 void QmltypesReader::addError(ErrorMessage &&message)

@@ -57,7 +57,6 @@ private:
     }
 
 private:
-    bool m_isValid;
     std::shared_ptr<QmltypesFile> m_qmltypesFilePtr;
     DomItem m_qmltypesFile;
     Path m_currentPath;
