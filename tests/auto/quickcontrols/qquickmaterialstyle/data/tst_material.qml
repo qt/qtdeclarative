@@ -1200,4 +1200,18 @@ TestCase {
         tryCompare(comboBoxPopup, "opened", true)
         compare(comboBoxPopup.background.color, comboBoxPopup.Material.dialogColor)
     }
+
+    function test_nullTextAreaBackground() {
+        let textArea = createTemporaryObject(textAreaComponent, testCase)
+        verify(textArea)
+        // Store the placeholder text item before we set the background to null,
+        // because it will be unparented at that point.
+        let placeholderTextItem = textArea.children[0]
+        verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+        // Assigning null to the background shouldn't cause any warnings,
+        // it should just hide the placeholder text item, since it has nothing to anchor to.
+        // Note that we can't use the properties argument of createTemporaryObject due to QTBUG-117201.
+        textArea.background = null
+        verify(!placeholderTextItem.visible)
+    }
 }
