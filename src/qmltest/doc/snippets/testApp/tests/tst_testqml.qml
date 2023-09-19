@@ -8,7 +8,8 @@ import QtTest
 import MyModule
 
 Item {
-    width: 800; height: 600
+    width: 800
+    height: 600
 
     MyButton {
         id: myButton
@@ -16,8 +17,8 @@ Item {
     }
 
     TestCase {
-        name: "MyButton";
-        when: windowShown;
+        name: "MyButton"
+        when: windowShown
 
         function test_clickToExpand() {
             const widthBeforeClick = myButton.width;

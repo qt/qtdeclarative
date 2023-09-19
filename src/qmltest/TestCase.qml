@@ -235,7 +235,7 @@ import "testlogger.js" as TestLogger
 
     \sa {QtTest::SignalSpy}{SignalSpy}, {Qt Quick Test}
 
-    \section1 Separating tests from application logic
+    \section1 Separating Tests from Application Logic
 
     In most cases, you would want to separate your tests from the application
     logic by splitting them into different projects and linking them.
@@ -245,67 +245,100 @@ import "testlogger.js" as TestLogger
     \badcode
     .
     | — CMakeLists.txt
+    | - main.qml
     | — src
-    |  | — main.cpp
-    | — qml
-    |  | — main.qml
-    | — modules
-    |  | — MyModule
-    |     | — MyButton.qml
-    |     | — CMakeLists.txt
+        | — main.cpp
+    | — MyModule
+        | — MyButton.qml
+        | — CMakeLists.txt
     | — tests
-       | — UnitQMLTests
-          | — tst_testqml.qml
-          | — main.cpp
-          | — setup.cpp
-          | — setup.h
+        | — tst_testqml.qml
+        | — main.cpp
+        | — setup.cpp
+        | — setup.h
     \endcode
 
-    Now, to test the \c modules/MyModule/MyButton.qml, create a library for
-    \c MyModule in \c modules/MyModule/CMakeLists.txt and link it to your
+    Now, to test \c MyModule/MyButton.qml, create a library for
+    \c MyModule in \c MyModule/CMakeLists.txt and link it to your
     test project, \c tests/UnitQMLTests/CMakeLists.txt:
 
     \if defined(onlinedocs)
-        \tab {build-qt-app}{tab-cmake-add-library}{modules/MyModule/MyButton.qml}{checked}
-        \tab {build-qt-app}{tab-cmake-link-against-library}{tests/UnitQMLTests/CMakeLists.txt}{}
+        \tab {build-qt-app}{tab-cmake-add-library}{MyModule/CMakeLists.txt}{checked}
+        \tab {build-qt-app}{tab-cmake-link-against-library}{tests/CMakeLists.txt}{}
+        \tab {build-qt-app}{tab-tests_main}{tests/main.cpp}{}
+        \tab {build-qt-app}{tab-tests-setup-cpp}{tests/setup.cpp}{}
+        \tab
+        {build-qt-app}{tab-tests-setup-h}{tests/setup.h}{}
+        \tab {build-qt-app}{tab-project-cmake}{CMakeLists.txt}{}
         \tabcontent {tab-cmake-add-library}
     \else
-        \section1 Add library
+        \section2 Add Library
     \endif
     \dots
-    \snippet modules_MyModule_CMakeLists.txt add library
+    \snippet testApp/MyModule/CMakeLists.txt add library
     \dots
     \if defined(onlinedocs)
         \endtabcontent
         \tabcontent {tab-cmake-link-against-library}
     \else
-        \section1 Link against library
+        \section2 Link Against Library
     \endif
     \dots
-    \snippet tests_UnitQMLTests_CMakeLists.txt link against library
+    \snippet testApp/tests/CMakeLists.txt link against library
+    \dots
+    \if defined(onlinedocs)
+        \endtabcontent
+        \tabcontent {tab-tests_main}
+    \else
+        \section2 Test main.cpp
+    \endif
+    \snippet testApp/tests/main.cpp main
+    \if defined(onlinedocs)
+        \endtabcontent
+        \tabcontent {tab-tests-setup-cpp}
+    \else
+        \section2 Test Setup C++
+    \endif
+    \snippet testApp/tests/setup.cpp setup
+    \if defined(onlinedocs)
+        \endtabcontent
+        \tabcontent {tab-tests-setup-h}
+    \else
+        \section2 Test Setup Header
+    \endif
+    \snippet testApp/tests/setup.h setup
+    \if defined(onlinedocs)
+        \endtabcontent
+        \tabcontent {tab-project-cmake}
+    \else
+        \section2 Project CMakeLists
+    \endif
+    \dots
+    \snippet testApp/CMakeLists.txt project-cmake
     \dots
     \if defined(onlinedocs)
         \endtabcontent
     \endif
 
-    Then, in your \c tests/UnitQMLTests/tst_testqml.qml, you can import your
-    \c modules/MyModule/MyButton.qml:
+
+    Then, in \c tests/tst_testqml.qml, you can import
+    \c MyModule/MyButton.qml:
 
     \if defined(onlinedocs)
-        \tab {test-qml}{tab-qml-import}{tests/UnitQMLTests/tst_testqml.qml}{checked}
-        \tab {test-qml}{tab-qml-my-button}{modules/MyModule/MyButton.qml}{}
+        \tab {test-qml}{tab-qml-import}{tests/tst_testqml.qml}{checked}
+        \tab {test-qml}{tab-qml-my-button}{MyModule/MyButton.qml}{}
         \tabcontent {tab-qml-import}
     \else
-        \section1 Import QML
+        \section2 Import QML
     \endif
-    \snippet tests_UnitQMLTests_tst_testqml.qml import
+    \snippet testApp/tests/tst_testqml.qml import
     \if defined(onlinedocs)
         \endtabcontent
         \tabcontent {tab-qml-my-button}
     \else
-        \section1 Define QML button
+        \section2 Define QML Button
     \endif
-    \snippet modules_MyModule_MyButton.qml define
+    \snippet testApp/MyModule/MyButton.qml define
     \if defined(onlinedocs)
         \endtabcontent
     \endif
