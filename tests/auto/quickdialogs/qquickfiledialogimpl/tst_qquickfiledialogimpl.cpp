@@ -1198,15 +1198,17 @@ void tst_QQuickFileDialogImpl::itemsDisabledWhenNecessary()
 void tst_QQuickFileDialogImpl::fileMode_data()
 {
     QTest::addColumn<QQuickFileDialog::FileMode>("fileMode");
+    QTest::addColumn<QString>("acceptButtonText");
 
-    QTest::newRow("OpenFile") << QQuickFileDialog::OpenFile;
-    QTest::newRow("OpenFiles") << QQuickFileDialog::OpenFiles;
-    QTest::newRow("SaveFile") << QQuickFileDialog::SaveFile;
+    QTest::newRow("OpenFile") << QQuickFileDialog::OpenFile << "Open";
+    QTest::newRow("OpenFiles") << QQuickFileDialog::OpenFiles << "Open";
+    QTest::newRow("SaveFile") << QQuickFileDialog::SaveFile << "Save";
 }
 
 void tst_QQuickFileDialogImpl::fileMode()
 {
     QFETCH(QQuickFileDialog::FileMode, fileMode);
+    QFETCH(QString, acceptButtonText);
 
     // Open the dialog.
     FileDialogTestHelper dialogHelper(this, "fileDialog.qml");
@@ -1221,13 +1223,13 @@ void tst_QQuickFileDialogImpl::fileMode()
     COMPARE_URL(dialogHelper.dialog->currentFile(), QUrl::fromLocalFile(tempFile1->fileName()));
     COMPARE_URLS(dialogHelper.dialog->currentFiles(), { QUrl::fromLocalFile(tempFile1->fileName()) });
 
-    // All modes should support opening an existing file, so the Open button should be enabled.
+    // All modes should support opening an existing file, so the accept button should be enabled.
     QVERIFY(dialogHelper.quickDialog->footer());
     auto dialogButtonBox = dialogHelper.quickDialog->footer()->findChild<QQuickDialogButtonBox*>();
     QVERIFY(dialogButtonBox);
-    QQuickAbstractButton* openButton = findDialogButton(dialogButtonBox, "Open");
-    QVERIFY(openButton);
-    QCOMPARE(openButton->isEnabled(), true);
+    QQuickAbstractButton *acceptButton = findDialogButton(dialogButtonBox, acceptButtonText);
+    QVERIFY(acceptButton);
+    QCOMPARE(acceptButton->isEnabled(), true);
 
     // Only the OpenFiles mode should allow multiple files to be selected, however.
     QQuickFileDialogDelegate *tempFile2Delegate = nullptr;
