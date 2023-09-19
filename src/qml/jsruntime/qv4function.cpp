@@ -68,8 +68,8 @@ ReturnedValue Function::call(
         });
     case JsTyped:
         return QV4::coerceAndCall(
-                    context->engine(), jsTypedFunction, compiledFunction, thisObject, argv, argc,
-                    [this, context](const Value *thisObject, const Value *argv, int argc) {
+                    context->engine(), jsTypedFunction, compiledFunction, argv, argc,
+                    [this, context, thisObject](const Value *argv, int argc) {
             return doCall(this, thisObject, argv, argc, context);
         });
     default:

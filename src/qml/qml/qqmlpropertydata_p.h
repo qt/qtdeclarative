@@ -80,7 +80,7 @@ public:
         unsigned isRequiredORisCloned          : 1; // Has REQUIRED flag OR The function was marked as cloned
         unsigned isConstructorORisBindable     : 1; // The function was marked is a constructor OR property is backed by QProperty<T>
         unsigned isOverridden                  : 1; // Is overridden by a extension property
-        unsigned reserved                      : 1;
+        unsigned hasMetaObject                 : 1;
         unsigned type                          : 3; // stores an entry of Types
 
         // Internal QQmlPropertyCache flags
@@ -173,6 +173,10 @@ public:
             isConstructorORisBindable = b;
         }
 
+        void setHasMetaObject(bool b) {
+            hasMetaObject = b;
+        }
+
         void setType(Type newType) {
             type = newType;
         }
@@ -212,6 +216,7 @@ public:
     bool isVMESignal() const { return isFunction() && m_flags.isAliasORisVMESignal; }
     bool isV4Function() const { return isFunction() && m_flags.isFinalORisV4Function; }
     bool isSignalHandler() const { return m_flags.isSignalHandler; }
+    bool hasMetaObject() const { return m_flags.hasMetaObject; }
 
     // TODO: Remove this once we can. Signals should not be overridable.
     bool isOverridableSignal() const { return m_flags.isOverridableSignal; }
@@ -280,8 +285,36 @@ public:
     QTypeRevision typeVersion() const { return m_typeVersion; }
     void setTypeVersion(QTypeRevision typeVersion) { m_typeVersion = typeVersion; }
 
-    QQmlPropertyCacheMethodArguments *arguments() const { return m_arguments; }
-    void setArguments(QQmlPropertyCacheMethodArguments *args) { m_arguments = args; }
+    QQmlPropertyCacheMethodArguments *arguments() const
+    {
+        Q_ASSERT(!hasMetaObject());
+        return m_arguments;
+    }
+    void setArguments(QQmlPropertyCacheMethodArguments *args)
+    {
+        Q_ASSERT(!hasMetaObject());
+        m_arguments = args;
+    }
+
+    const QMetaObject *metaObject() const
+    {
+        Q_ASSERT(hasMetaObject());
+        return m_metaObject;
+    }
+
+    void setMetaObject(const QMetaObject *metaObject)
+    {
+        Q_ASSERT(!hasArguments() || !m_arguments);
+        m_flags.setHasMetaObject(true);
+        m_metaObject = metaObject;
+    }
+
+    QMetaMethod metaMethod() const
+    {
+        Q_ASSERT(hasMetaObject());
+        Q_ASSERT(isFunction());
+        return m_metaObject->method(m_coreIndex);
+    }
 
     int metaObjectOffset() const { return m_metaObjectOffset; }
     void setMetaObjectOffset(int off)
@@ -393,6 +426,7 @@ private:
     union {
         QQmlPropertyCacheMethodArguments *m_arguments = nullptr;
         StaticMetaCallFunction m_staticMetaCallFunction;
+        const QMetaObject *m_metaObject;
     };
 };
 
@@ -426,11 +460,10 @@ QQmlPropertyData::Flags::Flags()
     , isRequiredORisCloned(false)
     , isConstructorORisBindable(false)
     , isOverridden(false)
-    , reserved(false)
+    , hasMetaObject(false)
     , type(OtherType)
     , overrideIndexIsProperty(false)
 {
-    Q_UNUSED(reserved)
 }
 
 bool QQmlPropertyData::Flags::operator==(const QQmlPropertyData::Flags &other) const
@@ -444,6 +477,7 @@ bool QQmlPropertyData::Flags::operator==(const QQmlPropertyData::Flags &other) c
             isOverridden == other.isOverridden &&
             isSignalHandler == other.isSignalHandler &&
             isRequiredORisCloned == other.isRequiredORisCloned &&
+            hasMetaObject == other.hasMetaObject &&
             type == other.type &&
             isConstructorORisBindable == other.isConstructorORisBindable &&
             overrideIndexIsProperty == other.overrideIndexIsProperty;

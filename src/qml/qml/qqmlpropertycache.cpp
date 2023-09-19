@@ -80,8 +80,6 @@ void QQmlPropertyData::load(const QMetaProperty &p)
 void QQmlPropertyData::load(const QMetaMethod &m)
 {
     setCoreIndex(m.methodIndex());
-    setArguments(nullptr);
-
     setPropType(m.returnMetaType());
 
     m_flags.setType(Flags::FunctionType);

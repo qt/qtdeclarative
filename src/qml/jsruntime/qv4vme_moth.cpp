@@ -395,6 +395,21 @@ static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
         } \
     } while (false)
 
+struct AOTCompiledMetaMethod
+{
+public:
+    AOTCompiledMetaMethod(const QQmlPrivate::AOTCompiledFunction *aotCompiledFunction)
+        : aotCompiledFunction(aotCompiledFunction)
+    {}
+
+    int parameterCount() const { return aotCompiledFunction->argumentTypes.size(); }
+    QMetaType returnMetaType() const { return aotCompiledFunction->returnType; }
+    QMetaType parameterMetaType(int i) const { return aotCompiledFunction->argumentTypes[i]; }
+
+private:
+    const QQmlPrivate::AOTCompiledFunction *aotCompiledFunction = nullptr;
+};
+
 void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
 {
     qt_v4ResolvePendingBreakpointsHook();
@@ -412,136 +427,24 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
                   function->compiledFunction->location.column());
     Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
 
-    const qsizetype numFunctionArguments = function->aotCompiledFunction->argumentTypes.size();
+    const AOTCompiledMetaMethod method(function->aotCompiledFunction);
+    QV4::coerceAndCall(
+            engine, &method, frame->returnAndArgValues(),
+            frame->returnAndArgTypes(), frame->argc(),
+            [frame, engine, function](void **argv, int argc) {
+        Q_UNUSED(argc);
 
-    Q_ALLOCA_DECLARE(void *, transformedArguments);
-    for (qsizetype i = 0; i < numFunctionArguments; ++i) {
-        const bool isValid = frame->argc() > i;
-        const QMetaType frameType = isValid ? frame->argTypes()[i] : QMetaType();
-
-        const QMetaType argumentType = function->aotCompiledFunction->argumentTypes[i];
-        if (isValid && argumentType == frameType)
-            continue;
-
-        if (transformedArguments == nullptr) {
-            Q_ALLOCA_ASSIGN(void *, transformedArguments, numFunctionArguments * sizeof(void *));
-            memcpy(transformedArguments, frame->argv(), frame->argc() * sizeof(void *));
+        QQmlPrivate::AOTCompiledContext aotContext;
+        if (auto context = QV4::ExecutionEngine::qmlContext(frame->context()->d())) {
+            QV4::Heap::QQmlContextWrapper *wrapper = static_cast<Heap::QmlContext *>(context)->qml();
+            aotContext.qmlScopeObject = wrapper->scopeObject;
+            aotContext.qmlContext = wrapper->context;
         }
 
-        if (argumentType.sizeOf() == 0) {
-            transformedArguments[i] = nullptr;
-            continue;
-        }
-
-        void *frameVal = isValid ? frame->argv()[i] : nullptr;
-        if (isValid && frameType == QMetaType::fromType<QVariant>()) {
-            QVariant *variant = static_cast<QVariant *>(frameVal);
-
-            const QMetaType variantType = variant->metaType();
-            if (variantType == argumentType) {
-                // Slightly nasty, but we're allowed to do this.
-                // We don't want to destruct() the QVariant's data() below.
-                transformedArguments[i] = frame->argv()[i] = variant->data();
-            } else {
-                Q_ALLOCA_VAR(void, arg, argumentType.sizeOf());
-                argumentType.construct(arg);
-                QMetaType::convert(variantType, variant->data(), argumentType, arg);
-                transformedArguments[i] = arg;
-            }
-            continue;
-        }
-
-        Q_ALLOCA_VAR(void, arg, argumentType.sizeOf());
-
-        if (argumentType == QMetaType::fromType<QVariant>()) {
-            if (isValid)
-                new (arg) QVariant(frameType, frameVal);
-            else
-                new (arg) QVariant();
-        } else if (argumentType == QMetaType::fromType<QJSPrimitiveValue>()) {
-            if (isValid)
-                new (arg) QJSPrimitiveValue(frameType, frameVal);
-            else
-                new (arg) QJSPrimitiveValue();
-        } else {
-
-            argumentType.construct(arg);
-            if (isValid)
-                QMetaType::convert(frameType, frameVal, argumentType, arg);
-        }
-
-        transformedArguments[i] = arg;
-    }
-
-    const QMetaType returnType = function->aotCompiledFunction->returnType;
-    const QMetaType frameReturn = frame->returnType();
-    bool returnsQVariantWrapper = false;
-    Q_ALLOCA_DECLARE(void, transformedResult);
-    if (frame->returnValue() && returnType != frameReturn) {
-        if (frameReturn == QMetaType::fromType<QVariant>()) {
-            void *returnValue = frame->returnValue();
-            new (returnValue) QVariant(returnType);
-            transformedResult = static_cast<QVariant *>(returnValue)->data();
-            returnsQVariantWrapper = true;
-        } else if (returnType.sizeOf() > 0) {
-            Q_ALLOCA_ASSIGN(void, transformedResult, returnType.sizeOf());
-        } else {
-            transformedResult = frame; // Some non-null marker value
-        }
-    }
-
-    QQmlPrivate::AOTCompiledContext aotContext;
-    if (auto context = QV4::ExecutionEngine::qmlContext(frame->context()->d())) {
-        QV4::Heap::QQmlContextWrapper *wrapper = static_cast<Heap::QmlContext *>(context)->qml();
-        aotContext.qmlScopeObject = wrapper->scopeObject;
-        aotContext.qmlContext = wrapper->context;
-    }
-
-    aotContext.engine = engine->jsEngine();
-    aotContext.compilationUnit = function->executableCompilationUnit();
-
-    function->aotCompiledFunction->functionPtr(
-                &aotContext, transformedResult ? transformedResult : frame->returnValue(),
-                transformedArguments ? transformedArguments : frame->argv());
-
-    if (transformedResult && !returnsQVariantWrapper) {
-        // Shortcut the common case of the AOT function returning a more generic QObject pointer
-        // that we need to QObject-cast. No need to construct or destruct anything in that case.
-        if ((frameReturn.flags() & QMetaType::PointerToQObject)
-                && (returnType.flags() & QMetaType::PointerToQObject)) {
-            QObject *resultObj = *static_cast<QObject **>(transformedResult);
-            *static_cast<QObject **>(frame->returnValue())
-                    = (resultObj && resultObj->metaObject()->inherits(frameReturn.metaObject()))
-                            ? resultObj
-                            : nullptr;
-        } else if (returnType == QMetaType::fromType<QVariant>()) {
-            const QVariant *resultVariant = static_cast<QVariant *>(transformedResult);
-            if (resultVariant->metaType() == frameReturn) {
-                frameReturn.construct(frame->returnValue(), resultVariant->data());
-            } else {
-                // Convert needs a pre-constructed target.
-                frameReturn.construct(frame->returnValue());
-                QMetaType::convert(resultVariant->metaType(), resultVariant->data(),
-                               frameReturn, frame->returnValue());
-            }
-            resultVariant->~QVariant();
-        } else {
-            // Convert needs a pre-constructed target.
-            frameReturn.construct(frame->returnValue());
-            QMetaType::convert(returnType, transformedResult, frameReturn, frame->returnValue());
-            returnType.destruct(transformedResult);
-        }
-    }
-
-    if (transformedArguments) {
-        for (int i = 0; i < numFunctionArguments; ++i) {
-            void *arg = transformedArguments[i];
-            if (arg == nullptr)
-                continue;
-            if (i >= frame->argc() || arg != frame->argv()[i])
-                function->aotCompiledFunction->argumentTypes[i].destruct(arg);
-        }
-    }
+        aotContext.engine = engine->jsEngine();
+        aotContext.compilationUnit = function->executableCompilationUnit();
+        function->aotCompiledFunction->functionPtr(&aotContext, argv[0], argv + 1);
+    });
 }
 
 ReturnedValue VME::exec(JSTypesStackFrame *frame, ExecutionEngine *engine)
