@@ -1428,6 +1428,7 @@ void tst_QQuickFileDialogImpl::selectNewFileViaTextField_data()
 void tst_QQuickFileDialogImpl::selectNewFileViaTextField()
 {
     QFETCH(QQuickFileDialog::FileMode, fileMode);
+    QFETCH(QString, acceptButtonText);
 
     // Open the dialog.
     FileDialogTestHelper dialogHelper(this, "fileDialog.qml");
@@ -1447,19 +1448,35 @@ void tst_QQuickFileDialogImpl::selectNewFileViaTextField()
              "The TextField for file name should only be visible when the FileMode is 'SaveFile'");
 
     if (fileMode == QQuickFileDialog::SaveFile) {
+        QVERIFY(dialogHelper.quickDialog->footer());
+        auto dialogButtonBox = dialogHelper.quickDialog->footer()->findChild<QQuickDialogButtonBox*>();
+        QVERIFY(dialogButtonBox);
+        QQuickAbstractButton *acceptButton = findDialogButton(dialogButtonBox, acceptButtonText);
+        QVERIFY(acceptButton);
+        QCOMPARE(acceptButton->isEnabled(), false);
+
         const QPoint textFieldCenterPos =
                 fileNameTextField->mapToScene({ fileNameTextField->width() / 2, fileNameTextField->height() / 2 }).toPoint();
 
         QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, textFieldCenterPos);
         QTRY_VERIFY(fileNameTextField->hasActiveFocus());
+        QCOMPARE(acceptButton->isEnabled(), false);
 
         const QByteArray newFileName("foo.txt");
         for (const auto &c : newFileName)
             QTest::keyClick(dialogHelper.window(), c);
+        QCOMPARE(acceptButton->isEnabled(), true);
+
         QTest::keyClick(dialogHelper.window(), Qt::Key_Enter);
+        QCOMPARE(acceptButton->isEnabled(), true);
 
         QTRY_COMPARE(fileNameTextField->text(), newFileName);
         QCOMPARE(dialogHelper.dialog->selectedFile().fileName(), newFileName);
+
+        QVERIFY(fileNameTextField->hasActiveFocus());
+        for (int i = 0; i < newFileName.size(); i++)
+            QTest::keyClick(dialogHelper.window(), Qt::Key_Backspace);
+        QCOMPARE(acceptButton->isEnabled(), false);
     }
 }
 

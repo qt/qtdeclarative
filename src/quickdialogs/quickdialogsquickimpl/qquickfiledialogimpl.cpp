@@ -575,7 +575,17 @@ void QQuickFileDialogImplAttachedPrivate::fileDialogListViewCurrentIndexChanged(
     }
 }
 
-void QQuickFileDialogImplAttachedPrivate::fileNameChangedByUser()
+void QQuickFileDialogImplAttachedPrivate::fileNameEditedByUser()
+{
+    if (!buttonBox)
+        return;
+    auto openButton = buttonBox->standardButton(QPlatformDialogHelper::Open);
+    if (!openButton || !fileNameTextField)
+        return;
+    openButton->setEnabled(!fileNameTextField->text().isEmpty());
+}
+
+void QQuickFileDialogImplAttachedPrivate::fileNameEditingByUserFinished()
 {
     auto fileDialogImpl = qobject_cast<QQuickFileDialogImpl *>(parent);
     if (!fileDialogImpl)
@@ -742,16 +752,21 @@ void QQuickFileDialogImplAttached::setFileNameTextField(QQuickTextField *fileNam
     if (fileNameTextField == d->fileNameTextField)
         return;
 
-    if (d->fileNameTextField)
+    if (d->fileNameTextField) {
         QObjectPrivate::disconnect(d->fileNameTextField, &QQuickTextField::editingFinished,
-            d, &QQuickFileDialogImplAttachedPrivate::fileNameChangedByUser);
+            d, &QQuickFileDialogImplAttachedPrivate::fileNameEditingByUserFinished);
+        QObjectPrivate::disconnect(d->fileNameTextField, &QQuickTextField::textEdited,
+            d, &QQuickFileDialogImplAttachedPrivate::fileNameEditedByUser);
+    }
 
     d->fileNameTextField = fileNameTextField;
 
-    if (d->fileNameTextField)
+    if (d->fileNameTextField) {
         QObjectPrivate::connect(d->fileNameTextField, &QQuickTextField::editingFinished,
-            d, &QQuickFileDialogImplAttachedPrivate::fileNameChangedByUser);
-
+            d, &QQuickFileDialogImplAttachedPrivate::fileNameEditingByUserFinished);
+        QObjectPrivate::connect(d->fileNameTextField, &QQuickTextField::textEdited,
+            d, &QQuickFileDialogImplAttachedPrivate::fileNameEditedByUser);
+    }
     emit fileNameTextFieldChanged();
 }
 
