@@ -317,18 +317,22 @@ the file, no matter how deeply nested.
 
 \section2 FunctionSignatureBehavior
 
-With this pragma you can change the way type annotations on functions are
-handled. By default the interpreter and JIT ignore type annotations, but
-the \l{QML script compiler} enforces them when compiling to C++.
+With this pragma you can change the way type annotations on functions
+are handled. Since Qt 6.7 type annotations are enforced when calling
+functions. Before, only the \l{QML script compiler} enforced the type
+annotations. The interpreter and JIT compiler ignored them. Always
+enforcing the type annotations is a behavior change in comparison to
+earlier versions since you could call functions with mismatched
+arguments before.
 
-Specifying \c{Enforced} as value makes sure the type annotations are always
-enforced. The resulting type coercions increase the overhead of calling
-typed JavaScript functions.
+Specifying \c{Ignored} as value makes the QML engine and the
+\l{QML script compiler} ignore any type annotations and therefore
+restores the pre-6.7 behavior of the interpreter and JIT. As a result
+less code is compiled to C++ ahead of time, and more code has to be
+interpreted or JIT-compiled.
 
-Specifying \c{Ignored} as value makes the \l{QML script compiler} ignore
-any JavaScript functions when compiling the document to C++. This means less
-code is compiled to C++ ahead of time, and more code has to be interpreted or
-JIT-compiled.
+Specifying \c{Enforced} as value explicitly states the default: Type
+annotations are always enforced.
 
 \sa {Type annotations and assertions}
 
