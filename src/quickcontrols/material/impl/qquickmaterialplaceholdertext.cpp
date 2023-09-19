@@ -279,9 +279,6 @@ void QQuickMaterialPlaceholderText::componentComplete()
     // as Material 3 placeholder text should always be left-aligned.
     QQuickText::componentComplete();
 
-    if (!parentItem())
-        qmlWarning(this) << "Expected parent item by component completion!";
-
     m_largestHeight = implicitHeight();
     if (m_largestHeight > 0) {
         emit largestHeightChanged();

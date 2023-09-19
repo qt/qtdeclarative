@@ -51,7 +51,8 @@ T.TextArea {
         renderType: control.renderType
         // When the TextArea is in a Flickable, the background is reparented to it
         // so that decorations don't move with the content. We need to do the same.
-        parent: control.background.parent
+        // Also allow the background to be set to null; in that case we're just not visible.
+        parent: control.background?.parent ?? null
 
         filled: control.Material.containerStyle === Material.Filled
         verticalPadding: control.Material.textFieldVerticalPadding
