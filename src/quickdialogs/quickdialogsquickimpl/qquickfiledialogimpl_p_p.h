@@ -70,7 +70,8 @@ class QQuickFileDialogImplAttachedPrivate : public QObjectPrivate
 {
     void nameFiltersComboBoxItemActivated(int index);
     void fileDialogListViewCurrentIndexChanged();
-    void fileNameChangedByUser();
+    void fileNameEditedByUser();
+    void fileNameEditingByUserFinished();
 
 public:
     Q_DECLARE_PUBLIC(QQuickFileDialogImplAttached)
