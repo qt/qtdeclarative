@@ -72,7 +72,7 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
     endif()
     add_subdirectory(quicknativestyle)
 
-    if(QT_FEATURE_testlib AND QT_FEATURE_network AND QT_FEATURE_quick_itemview AND TARGET Qt::Test AND TARGET Qt::QuickControls2)
+    if(QT_FEATURE_testlib AND QT_FEATURE_network AND QT_FEATURE_quick_itemview AND TARGET Qt::Test AND TARGET Qt::QuickControls2 AND NOT (WASM AND BUILD_SHARED_LIBS))
         add_subdirectory(quickcontrolstestutils)
     endif()
 else()
