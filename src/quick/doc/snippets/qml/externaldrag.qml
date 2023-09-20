@@ -12,7 +12,6 @@ Item {
         color: "green"
         radius: 5
 
-        Drag.active: dragHandler.active
         Drag.dragType: Drag.Automatic
         Drag.supportedActions: Qt.CopyAction
         Drag.mimeData: {
@@ -30,8 +29,11 @@ Item {
             onActiveChanged:
                 if (active) {
                     parent.grabToImage(function(result) {
-                        parent.Drag.imageSource = result.url;
+                        parent.Drag.imageSource = result.url
+                        parent.Drag.active = true
                     })
+                } else {
+                    parent.Drag.active = false
                 }
         }
     }
