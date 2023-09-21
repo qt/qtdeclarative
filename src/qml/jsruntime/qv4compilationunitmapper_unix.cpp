@@ -43,6 +43,16 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
     // Data structure and qt version matched, so now we can access the rest of the file safely.
 
     length = static_cast<size_t>(lseek(fd, 0, SEEK_END));
+    /* Error out early on file corruption. We assume we can read header.unitSize bytes
+       later (even before verifying the checksum), potentially causing out-of-bound
+       reads
+       Also, no need to wait until checksum verification if we know beforehand
+       that the cached unit is bogus
+    */
+    if (length != header.unitSize) {
+        *errorString = QStringLiteral("Potential file corruption, file too small");
+        return nullptr;
+    }
 
     void *ptr = mmap(nullptr, length, PROT_READ, MAP_SHARED, fd, /*offset*/0);
     if (ptr == MAP_FAILED) {
