@@ -6641,6 +6641,10 @@ bool QQuickTableViewResizeHandler::wantsEventPoint(const QPointerEvent *event, c
     if (!QQuickSinglePointHandler::wantsEventPoint(event, point))
         return false;
 
+    // If we have a mouse wheel event then we do not want to do anything related to resizing.
+    if (event->type() == QEvent::Type::Wheel)
+        return false;
+
     // When the user is flicking, we disable resizing, so that
     // he doesn't start to resize by accident.
     auto tableView = static_cast<QQuickTableView *>(parentItem()->parent());
