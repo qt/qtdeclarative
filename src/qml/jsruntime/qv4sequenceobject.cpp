@@ -714,14 +714,15 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
                                 variant, valueMetaType);
                     if (converted.isValid()) {
                         variant = converted;
-                    } else if (!variant.convert(valueMetaType)) {
+                    } else if (!variant.convert(valueMetaType) && originalType.isValid()) {
+                        // If the original type was void, we're converting a "hole" in a sparse
+                        // array. There is no point in warning about that.
                         qWarning().noquote()
                                 << QLatin1String("Could not convert array value "
                                                  "at position %1 from %2 to %3")
                                    .arg(QString::number(i),
                                         QString::fromUtf8(originalType.name()),
                                         QString::fromUtf8(valueMetaType.name()));
-                        variant = QVariant(valueMetaType);
                     }
                 }
                 meta->addValueAtEnd(result.data(), variant.constData());

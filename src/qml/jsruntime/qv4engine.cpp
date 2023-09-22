@@ -1595,15 +1595,15 @@ static QVariant toVariant(
                     } else {
                         auto originalType = asVariant.metaType();
                         bool couldConvert = asVariant.convert(valueMetaType);
-                        if (!couldConvert) {
+                        if (!couldConvert && originalType.isValid()) {
+                            // If the original type was void, we're converting a "hole" in a sparse
+                            // array. There is no point in warning about that.
                             qWarning().noquote()
                                     << QLatin1String("Could not convert array value "
                                                      "at position %1 from %2 to %3")
                                        .arg(QString::number(i),
                                             QString::fromUtf8(originalType.name()),
                                             QString::fromUtf8(valueMetaType.name()));
-                            // create default constructed value
-                            asVariant = QVariant(valueMetaType, nullptr);
                         }
                         retnAsIterable.metaContainer().addValue(retn.data(), asVariant.constData());
                     }
