@@ -385,101 +385,6 @@ void QQuickParticleGroupData::prepareRecycler(QQuickParticleData* d)
     }
 }
 
-QQuickParticleData::QQuickParticleData()
-    : index(0)
-    , systemIndex(-1)
-    , groupId(0)
-    , colorOwner(nullptr)
-    , rotationOwner(nullptr)
-    , deformationOwner(nullptr)
-    , animationOwner(nullptr)
-{
-    x = 0;
-    y = 0;
-    t = -1;
-    lifeSpan = 0;
-    size = 0;
-    endSize = 0;
-    vx = 0;
-    vy = 0;
-    ax = 0;
-    ay = 0;
-    xx = 1;
-    xy = 0;
-    yx = 0;
-    yy = 1;
-    rotation = 0;
-    rotationVelocity = 0;
-    autoRotate = 0;
-    animIdx = 0;
-    frameDuration = 1;
-    frameAt = -1;
-    frameCount = 1;
-    animT = -1;
-    animX = 0;
-    animY = 0;
-    animWidth = 1;
-    animHeight = 1;
-    color.r = 255;
-    color.g = 255;
-    color.b = 255;
-    color.a = 255;
-    delegate = nullptr;
-}
-
-QQuickParticleData::QQuickParticleData(const QQuickParticleData &other)
-{
-    *this = other;
-}
-
-QQuickParticleData &QQuickParticleData::operator=(const QQuickParticleData &other)
-{
-    clone(other);
-
-    groupId = other.groupId;
-    index = other.index;
-    systemIndex = other.systemIndex;
-    // Lazily initialized
-
-    return *this;
-}
-
-void QQuickParticleData::clone(const QQuickParticleData& other)
-{
-    x = other.x;
-    y = other.y;
-    t = other.t;
-    lifeSpan = other.lifeSpan;
-    size = other.size;
-    endSize = other.endSize;
-    vx = other.vx;
-    vy = other.vy;
-    ax = other.ax;
-    ay = other.ay;
-    xx = other.xx;
-    xy = other.xy;
-    yx = other.yx;
-    yy = other.yy;
-    rotation = other.rotation;
-    rotationVelocity = other.rotationVelocity;
-    autoRotate = other.autoRotate;
-    animIdx = other.animIdx;
-    frameDuration = other.frameDuration;
-    frameCount = other.frameCount;
-    animT = other.animT;
-    animX = other.animX;
-    animY = other.animY;
-    animWidth = other.animWidth;
-    animHeight = other.animHeight;
-    color = other.color;
-    delegate = other.delegate;
-
-    colorOwner = other.colorOwner;
-    rotationOwner = other.rotationOwner;
-    deformationOwner = other.deformationOwner;
-    animationOwner = other.animationOwner;
-}
-
 QQuickV4ParticleData QQuickParticleData::v4Value(QQuickParticleSystem *particleSystem)
 {
     return QQuickV4ParticleData(this, particleSystem);
@@ -944,11 +849,10 @@ void QQuickParticleSystem::moveGroups(QQuickParticleData *d, int newGIdx)
     if (!d || newGIdx == d->groupId)
         return;
 
-    QQuickParticleData* pd = newDatum(newGIdx, false, d->systemIndex);
+    QQuickParticleData *pd = newDatum(newGIdx, false, d->systemIndex, d);
     if (!pd)
         return;
 
-    pd->clone(*d);
     finishNewDatum(pd);
 
     d->systemIndex = -1;
@@ -971,14 +875,28 @@ int QQuickParticleSystem::nextSystemIndex()
     return m_nextIndex++;
 }
 
-QQuickParticleData* QQuickParticleSystem::newDatum(int groupId, bool respectLimits, int sysIndex)
+QQuickParticleData *QQuickParticleSystem::newDatum(
+        int groupId, bool respectLimits, int sysIndex,
+        const QQuickParticleData *cloneFrom)
 {
     Q_ASSERT(groupId < groupData.size());//XXX shouldn't really be an assert
 
-    QQuickParticleData* ret = groupData[groupId]->newDatum(respectLimits);
-    if (!ret) {
+    QQuickParticleData *ret = groupData[groupId]->newDatum(respectLimits);
+    if (!ret)
         return nullptr;
+
+    if (cloneFrom) {
+        // We need to retain the "identity" information of the new particle data since it may be
+        // "recycled" and still be tracked.
+        const int retainedIndex = ret->index;
+        const int retainedGroupId = ret->groupId;
+        const int retainedSystemIndex = ret->systemIndex;
+        *ret = *cloneFrom;
+        ret->index = retainedIndex;
+        ret->groupId = retainedGroupId;
+        ret->systemIndex = retainedSystemIndex;
     }
+
     if (sysIndex == -1) {
         if (ret->systemIndex == -1)
             ret->systemIndex = nextSystemIndex();

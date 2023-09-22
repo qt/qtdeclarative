@@ -28,7 +28,7 @@
 #include <private/qv4util_p.h>
 #include <private/qv4global_p.h>
 #include <private/qv4staticvalue_p.h>
-#include "qtquickparticlesglobal_p.h"
+#include <private/qtquickparticlesglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -208,14 +208,9 @@ struct Color4ub {
     uchar a;
 };
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleData {
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleData
+{
 public:
-    //TODO: QObject like memory management (without the cost, just attached to system)
-    QQuickParticleData();
-
-    QQuickParticleData(const QQuickParticleData &other);
-    QQuickParticleData &operator=(const QQuickParticleData &other);
-
     //Convenience functions for working backwards, because parameters are from the start of particle life
     //If setting multiple parameters at once, doing the conversion yourself will be faster.
 
@@ -242,55 +237,55 @@ public:
     float curAY() const { return ay; }
     float curAY(QQuickParticleSystem *) const { return ay; } // used by the macros in qquickv4particledata.cpp
 
-    int index;
-    int systemIndex;
+    int index = 0;
+    int systemIndex = -1;
 
     //General Position Stuff
-    float x;
-    float y;
-    float t;
-    float lifeSpan;
-    float size;
-    float endSize;
-    float vx;
-    float vy;
-    float ax;
-    float ay;
+    float x = 0;
+    float y = 0;
+    float t = -1;
+    float lifeSpan = 0;
+    float size = 0;
+    float endSize = 0;
+    float vx = 0;
+    float vy = 0;
+    float ax = 0;
+    float ay = 0;
 
     //Painter-specific stuff, now universally shared
     //Used by ImageParticle color mode
-    Color4ub color;
+    Color4ub color = { 255, 255, 255, 255};
     //Used by ImageParticle deform mode
-    float xx;
-    float xy;
-    float yx;
-    float yy;
-    float rotation;
-    float rotationVelocity;
-    uchar autoRotate; // Basically a bool
+    float xx = 1;
+    float xy = 0;
+    float yx = 0;
+    float yy = 1;
+    float rotation = 0;
+    float rotationVelocity = 0;
+    uchar autoRotate = 0; // Basically a bool
     //Used by ImageParticle Sprite mode
-    float animIdx;
-    float frameDuration;
-    float frameAt;//Used for duration -1
-    float frameCount;
-    float animT;
-    float animX;
-    float animY;
-    float animWidth;
-    float animHeight;
+    float animIdx = 0;
+    float frameDuration = 1;
+    float frameAt = -1;//Used for duration -1
+    float frameCount = 1;
+    float animT = -1;
+    float animX = 0;
+    float animY = 0;
+    float animWidth = 1;
+    float animHeight = 1;
 
-    QQuickParticleGroupData::ID groupId;
+    QQuickParticleGroupData::ID groupId = 0;
 
     //Used by ImageParticle data shadowing
-    QQuickImageParticle* colorOwner;
-    QQuickImageParticle* rotationOwner;
-    QQuickImageParticle* deformationOwner;
-    QQuickImageParticle* animationOwner;
+    QQuickImageParticle* colorOwner = nullptr;
+    QQuickImageParticle* rotationOwner = nullptr;
+    QQuickImageParticle* deformationOwner = nullptr;
+    QQuickImageParticle* animationOwner = nullptr;
 
     //Used by ItemParticle
-    QQuickItem* delegate;
+    QQuickItem* delegate = nullptr;
     //Used by custom affectors
-    float update;
+    float update = 0;
 
     void debugDump(QQuickParticleSystem *particleSystem) const;
     bool stillAlive(QQuickParticleSystem *particleSystem) const; //Only checks end, because usually that's all you need and it's a little faster.
@@ -298,12 +293,15 @@ public:
     float lifeLeft(QQuickParticleSystem *particleSystem) const;
 
     float curSize(QQuickParticleSystem *particleSystem) const;
-    void clone(const QQuickParticleData& other);//Not =, leaves meta-data like index
+
     QQuickV4ParticleData v4Value(QQuickParticleSystem *particleSystem);
     void extendLife(float time, QQuickParticleSystem *particleSystem);
 
     static inline constexpr float EPSILON() noexcept { return 0.001f; }
 };
+
+static_assert(std::is_trivially_copyable_v<QQuickParticleData>);
+static_assert(std::is_trivially_destructible_v<QQuickParticleData>);
 
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleSystem : public QQuickItem
 {
@@ -364,7 +362,9 @@ private Q_SLOTS:
 public:
     //These can be called multiple times per frame, performance critical
     void emitParticle(QQuickParticleData* p, QQuickParticleEmitter *particleEmitter);
-    QQuickParticleData* newDatum(int groupId, bool respectLimits = true, int sysIdx = -1);
+    QQuickParticleData *newDatum(
+            int groupId, bool respectLimits = true, int sysIdx = -1,
+            const QQuickParticleData *cloneFrom = nullptr);
     void finishNewDatum(QQuickParticleData*);
     void moveGroups(QQuickParticleData *d, int newGIdx);
     int nextSystemIndex();
