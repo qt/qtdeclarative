@@ -54,17 +54,13 @@ QQmlPropertyData::flagsForProperty(const QMetaProperty &p)
     const QMetaType metaType = p.metaType();
     int propType = metaType.id();
     if (p.isEnumType()) {
-        flags.type = QQmlPropertyData::Flags::EnumType;
+        flags.setType(QQmlPropertyData::Flags::EnumType);
     } else if (metaType.flags() & QMetaType::PointerToQObject) {
-        flags.type = QQmlPropertyData::Flags::QObjectDerivedType;
+        flags.setType(QQmlPropertyData::Flags::QObjectDerivedType);
     } else if (propType == QMetaType::QVariant) {
-        flags.type = QQmlPropertyData::Flags::QVariantType;
-    } else if (propType < static_cast<int>(QMetaType::User)) {
-        // nothing to do
-    } else if (propType == qMetaTypeId<QJSValue>()) {
-        flags.type = QQmlPropertyData::Flags::QJSValueType;
+        flags.setType(QQmlPropertyData::Flags::QVariantType);
     } else if (metaType.flags() & QMetaType::IsQmlList) {
-        flags.type = QQmlPropertyData::Flags::QListType;
+        flags.setType(QQmlPropertyData::Flags::QListType);
     }
 
     return flags;
@@ -88,7 +84,7 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 
     setPropType(m.returnMetaType());
 
-    m_flags.type = Flags::FunctionType;
+    m_flags.setType(Flags::FunctionType);
     if (m.methodType() == QMetaMethod::Signal) {
         m_flags.setIsSignal(true);
     } else if (m.methodType() == QMetaMethod::Constructor) {

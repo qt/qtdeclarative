@@ -652,9 +652,9 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
         const QV4::CompiledData::CommonType type = p->commonType();
 
         if (p->isList())
-            propertyFlags.type = QQmlPropertyData::Flags::QListType;
+            propertyFlags.setType(QQmlPropertyData::Flags::QListType);
         else if (type == QV4::CompiledData::CommonType::Var)
-            propertyFlags.type = QQmlPropertyData::Flags::VarPropertyType;
+            propertyFlags.setType(QQmlPropertyData::Flags::VarPropertyType);
 
         if (type != QV4::CompiledData::CommonType::Invalid) {
             propertyType = p->isList()
@@ -707,11 +707,9 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
             }
 
             if (p->isList())
-                propertyFlags.type = QQmlPropertyData::Flags::QListType;
+                propertyFlags.setType(QQmlPropertyData::Flags::QListType);
             else if (propertyType.flags().testFlag(QMetaType::PointerToQObject))
-                propertyFlags.type = QQmlPropertyData::Flags::QObjectDerivedType;
-            else
-                propertyFlags.type = QQmlPropertyData::Flags::ValueType;
+                propertyFlags.setType(QQmlPropertyData::Flags::QObjectDerivedType);
         }
 
         if (!p->isReadOnly() && !propertyType.flags().testFlag(QMetaType::IsQmlList))
@@ -890,7 +888,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
 
         *version = typeRef->version();
 
-        propertyFlags->type = QQmlPropertyData::Flags::QObjectDerivedType;
+        propertyFlags->setType(QQmlPropertyData::Flags::QObjectDerivedType);
     } else {
         int coreIndex = QQmlPropertyIndex::fromEncoded(alias.encodedMetaPropertyIndex).coreIndex();
         int valueTypeIndex = QQmlPropertyIndex::fromEncoded(
@@ -941,7 +939,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
                     propertyFlags->copyPropertyTypeFlags(targetProperty->flags());
 
                     if (targetProperty->isVarProperty())
-                        propertyFlags->type = QQmlPropertyData::Flags::QVariantType;
+                        propertyFlags->setType(QQmlPropertyData::Flags::QVariantType);
                 }
             }
         }

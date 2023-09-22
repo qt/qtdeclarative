@@ -37,20 +37,18 @@ public:
 
     struct Flags {
         friend class QQmlPropertyData;
-        enum Types {
+        enum Type {
             OtherType            = 0,
             FunctionType         = 1, // Is an invokable
             QObjectDerivedType   = 2, // Property type is a QObject* derived type
             EnumType             = 3, // Property type is an enum
             QListType            = 4, // Property type is a QML list
-            /*QmlBindingType       = 5; was: Property type is a QQmlBinding*; now unused */
-            QJSValueType         = 6, // Property type is a QScriptValue
-                                      // Gap, used to be V4HandleType
-            VarPropertyType      = 8, // Property type is a "var" property of VMEMO
-            QVariantType         = 9, // Property is a QVariant
-            ValueType            = 10 // Property type is a custom value type
+            VarPropertyType      = 5, // Property type is a "var" property of VMEMO
+            QVariantType         = 6, // Property is a QVariant
+            // One spot left for an extra type in the 3 bits used to store this.
         };
 
+    private:
         // The _otherBits (which "pad" the Flags struct to align it nicely) are used
         // to store the relative property index. It will only get used when said index fits. See
         // trySetStaticMetaCallFunction for details.
@@ -68,7 +66,6 @@ public:
         // for non-functions)
         //
         // Lastly, isDirect and isOverridden apply to both functions and non-functions
-    private:
         unsigned isConst                       : 1; // Property: has CONST flag/Method: is const
         unsigned isVMEFunction                 : 1; // Function was added by QML
         unsigned isWritableORhasArguments      : 1; // Has WRITE function OR Function takes arguments
@@ -83,14 +80,13 @@ public:
         unsigned isRequiredORisCloned          : 1; // Has REQUIRED flag OR The function was marked as cloned
         unsigned isConstructorORisBindable     : 1; // The function was marked is a constructor OR property is backed by QProperty<T>
         unsigned isOverridden                  : 1; // Is overridden by a extension property
-    public:
-        unsigned type             : 4; // stores an entry of Types
-
-        // Apply only to IsFunctions
+        unsigned reserved                      : 1;
+        unsigned type                          : 3; // stores an entry of Types
 
         // Internal QQmlPropertyCache flags
-        unsigned overrideIndexIsProperty: 1;
+        unsigned overrideIndexIsProperty       : 1;
 
+    public:
         inline Flags();
         inline bool operator==(const Flags &other) const;
         inline void copyPropertyTypeFlags(Flags from);
@@ -177,6 +173,9 @@ public:
             isConstructorORisBindable = b;
         }
 
+        void setType(Type newType) {
+            type = newType;
+        }
     };
 
 
@@ -205,7 +204,6 @@ public:
     bool isQObject() const { return m_flags.type == Flags::QObjectDerivedType; }
     bool isEnum() const { return m_flags.type == Flags::EnumType; }
     bool isQList() const { return m_flags.type == Flags::QListType; }
-    bool isQJSValue() const { return m_flags.type == Flags::QJSValueType; }
     bool isVarProperty() const { return m_flags.type == Flags::VarPropertyType; }
     bool isQVariant() const { return m_flags.type == Flags::QVariantType; }
     bool isVMEFunction() const { return isFunction() && m_flags.isVMEFunction; }
@@ -360,7 +358,7 @@ public:
     static Flags defaultSignalFlags()
     {
         Flags f;
-        f.type = Flags::FunctionType;
+        f.setType(Flags::FunctionType);
         f.setIsSignal(true);
         f.setIsVMESignal(true);
         return f;
@@ -369,7 +367,7 @@ public:
     static Flags defaultSlotFlags()
     {
         Flags f;
-        f.type = Flags::FunctionType;
+        f.setType(Flags::FunctionType);
         f.setIsVMEFunction(true);
         return f;
     }
@@ -428,9 +426,12 @@ QQmlPropertyData::Flags::Flags()
     , isRequiredORisCloned(false)
     , isConstructorORisBindable(false)
     , isOverridden(false)
+    , reserved(false)
     , type(OtherType)
     , overrideIndexIsProperty(false)
-{}
+{
+    Q_UNUSED(reserved)
+}
 
 bool QQmlPropertyData::Flags::operator==(const QQmlPropertyData::Flags &other) const
 {
@@ -454,7 +455,6 @@ void QQmlPropertyData::Flags::copyPropertyTypeFlags(QQmlPropertyData::Flags from
     case QObjectDerivedType:
     case EnumType:
     case QListType:
-    case QJSValueType:
     case QVariantType:
         type = from.type;
     }
