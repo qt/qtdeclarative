@@ -5373,7 +5373,8 @@ bool QQuickItemPrivate::transformChanged(QQuickItem *transformedItem)
     if (subtreeTransformChangedEnabled) {
         // Inform the children in paint order: by the time we visit leaf items,
         // they can see any consequences in their parents
-        for (auto child : paintOrderChildItems())
+        const auto children = paintOrderChildItems();
+        for (QQuickItem *child : children)
             childWantsIt |= QQuickItemPrivate::get(child)->transformChanged(transformedItem);
     }
 
