@@ -44,12 +44,16 @@ QQuickParticlePainter::QQuickParticlePainter(QQuickItem *parent)
 void QQuickParticlePainter::itemChange(ItemChange change, const ItemChangeData &data)
 {
     if (change == QQuickItem::ItemSceneChange) {
-        if (m_window)
-            disconnect(m_window, SIGNAL(sceneGraphInvalidated()), this, SLOT(sceneGraphInvalidated()));
+        if (m_window) {
+            disconnect(m_window, &QQuickWindow::sceneGraphInvalidated,
+                       this, &QQuickParticlePainter::sceneGraphInvalidated);
+        }
         m_window = data.window;
         m_windowChanged = true;
-        if (m_window)
-            connect(m_window, SIGNAL(sceneGraphInvalidated()), this, SLOT(sceneGraphInvalidated()), Qt::DirectConnection);
+        if (m_window) {
+            connect(m_window, &QQuickWindow::sceneGraphInvalidated,
+                    this, &QQuickParticlePainter::sceneGraphInvalidated, Qt::DirectConnection);
+        }
     }
     QQuickItem::itemChange(change, data);
 }

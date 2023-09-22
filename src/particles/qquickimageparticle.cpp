@@ -1052,8 +1052,8 @@ void QQuickImageParticle::createEngine()
         delete m_spriteEngine;
     if (m_sprites.size()) {
         m_spriteEngine = new QQuickSpriteEngine(m_sprites, this);
-        connect(m_spriteEngine, SIGNAL(stateChanged(int)),
-                this, SLOT(spriteAdvance(int)), Qt::DirectConnection);
+        connect(m_spriteEngine, &QQuickStochasticEngine::stateChanged,
+                this, &QQuickImageParticle::spriteAdvance, Qt::DirectConnection);
         m_explicitAnimation = true;
     } else {
         m_spriteEngine = nullptr;

@@ -589,10 +589,10 @@ void QQuickParticleSystem::registerParticleEmitter(QQuickParticleEmitter* e)
 
 void QQuickParticleSystem::finishRegisteringParticleEmitter(QQuickParticleEmitter* e)
 {
-    connect(e, SIGNAL(particleCountChanged()),
-            this, SLOT(emittersChanged()));
-    connect(e, SIGNAL(groupChanged(QString)),
-            this, SLOT(emittersChanged()));
+    connect(e, &QQuickParticleEmitter::particleCountChanged,
+            this, &QQuickParticleSystem::emittersChanged);
+    connect(e, &QQuickParticleEmitter::groupChanged,
+            this, &QQuickParticleSystem::emittersChanged);
     if (m_componentComplete)
         emitterAdded(e);
     e->reset();//Start, so that starttime factors appropriately
@@ -931,8 +931,8 @@ void QQuickParticleSystem::createEngine()
         stateEngine->setCount(particleCount);
         stateEngine->m_states = states;
 
-        connect(stateEngine, SIGNAL(stateChanged(int)),
-                this, SLOT(particleStateChange(int)));
+        connect(stateEngine, &QQuickStochasticEngine::stateChanged,
+                this, &QQuickParticleSystem::particleStateChange);
 
     } else {
         if (stateEngine)

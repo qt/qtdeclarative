@@ -33,12 +33,12 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
   , m_defaultEmissionExtruder(new QQuickParticleExtruder(this))
 {
     //TODO: If followed increased their size
-    connect(this, SIGNAL(followChanged(QString)),
-            this, SLOT(recalcParticlesPerSecond()));
-    connect(this, SIGNAL(particleDurationChanged(int)),
-            this, SLOT(recalcParticlesPerSecond()));
-    connect(this, SIGNAL(particlesPerParticlePerSecondChanged(int)),
-            this, SLOT(recalcParticlesPerSecond()));
+    connect(this, &QQuickTrailEmitter::followChanged,
+            this, &QQuickTrailEmitter::recalcParticlesPerSecond);
+    connect(this, &QQuickTrailEmitter::particleDurationChanged,
+            this, &QQuickTrailEmitter::recalcParticlesPerSecond);
+    connect(this, &QQuickTrailEmitter::particlesPerParticlePerSecondChanged,
+            this, &QQuickTrailEmitter::recalcParticlesPerSecond);
 }
 
 /*!

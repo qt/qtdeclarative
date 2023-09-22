@@ -207,10 +207,10 @@ QQuickParticleEmitter::QQuickParticleEmitter(QQuickItem *parent) :
 
 {
     //TODO: Reset velocity/acc back to null vector? Or allow null pointer?
-    connect(this, SIGNAL(particlesPerSecondChanged(qreal)),
-            this, SIGNAL(particleCountChanged()));
-    connect(this, SIGNAL(particleDurationChanged(int)),
-            this, SIGNAL(particleCountChanged()));
+    connect(this, &QQuickParticleEmitter::particlesPerSecondChanged,
+            this, &QQuickParticleEmitter::particleCountChanged);
+    connect(this, &QQuickParticleEmitter::particleDurationChanged,
+            this, &QQuickParticleEmitter::particleCountChanged);
 }
 
 QQuickParticleEmitter::~QQuickParticleEmitter()
@@ -281,15 +281,15 @@ void QQuickParticleEmitter::setMaxParticleCount(int arg)
 {
     if (m_maxParticleCount != arg) {
         if (arg < 0 && m_maxParticleCount >= 0){
-            connect(this, SIGNAL(particlesPerSecondChanged(qreal)),
-                    this, SIGNAL(particleCountChanged()));
-            connect(this, SIGNAL(particleDurationChanged(int)),
-                    this, SIGNAL(particleCountChanged()));
-        }else if (arg >= 0 && m_maxParticleCount < 0){
-            disconnect(this, SIGNAL(particlesPerSecondChanged(qreal)),
-                    this, SIGNAL(particleCountChanged()));
-            disconnect(this, SIGNAL(particleDurationChanged(int)),
-                    this, SIGNAL(particleCountChanged()));
+            connect(this, &QQuickParticleEmitter::particlesPerSecondChanged,
+                    this, &QQuickParticleEmitter::particleCountChanged);
+            connect(this, &QQuickParticleEmitter::particleDurationChanged,
+                    this, &QQuickParticleEmitter::particleCountChanged);
+        } else if (arg >= 0 && m_maxParticleCount < 0){
+            disconnect(this, &QQuickParticleEmitter::particlesPerSecondChanged,
+                       this, &QQuickParticleEmitter::particleCountChanged);
+            disconnect(this, &QQuickParticleEmitter::particleDurationChanged,
+                       this, &QQuickParticleEmitter::velocityFromMovementChanged);
         }
         m_overwrite = arg < 0;
         m_maxParticleCount = arg;
