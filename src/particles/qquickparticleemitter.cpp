@@ -4,10 +4,12 @@
 #undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
 
 #include "qquickparticleemitter_p.h"
-#include <private/qqmlengine_p.h>
+
 #include <private/qqmlglobal_p.h>
-#include <private/qjsvalue_p.h>
-#include <QRandomGenerator>
+#include <private/qquickv4particledata_p.h>
+
+#include <QtCore/qrandom.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -221,7 +223,8 @@ QQuickParticleEmitter::~QQuickParticleEmitter()
 
 bool QQuickParticleEmitter::isEmitConnected()
 {
-    IS_SIGNAL_CONNECTED(this, QQuickParticleEmitter, emitParticles, (const QJSValue &));
+    IS_SIGNAL_CONNECTED(
+            this, QQuickParticleEmitter, emitParticles, (const QList<QQuickV4ParticleData> &));
 }
 
 void QQuickParticleEmitter::reclaculateGroupId() const
@@ -449,19 +452,14 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
             m_system->emitParticle(d, this);
 
     if (isEmitConnected()) {
-        QQmlEngine *qmlEngine = ::qmlEngine(this);
-        QV4::ExecutionEngine *v4 = qmlEngine->handle();
-        QV4::Scope scope(v4);
-
         //Done after emitParticle so that the Painter::load is done first, this allows you to customize its static variables
         //We then don't need to request another reload, because the first reload isn't scheduled until we get back to the render thread
-        QV4::ScopedArrayObject array(scope, v4->newArrayObject(toEmit.size()));
-        QV4::ScopedValue v(scope);
-        for (int i=0; i<toEmit.size(); i++)
-            array->put(i, (v = toEmit[i]->v4Value(m_system)));
 
-        QJSValue particles;
-        QJSValuePrivate::setValue(&particles, array);
+        QList<QQuickV4ParticleData> particles;
+        particles.reserve(toEmit.size());
+        for (QQuickParticleData *particle : std::as_const(toEmit))
+            particles.push_back(particle->v4Value(m_system));
+
         emit emitParticles(particles);//A chance for arbitrary JS changes
     }
 

@@ -212,7 +212,6 @@ class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleData {
 public:
     //TODO: QObject like memory management (without the cost, just attached to system)
     QQuickParticleData();
-    ~QQuickParticleData();
 
     QQuickParticleData(const QQuickParticleData &other);
     QQuickParticleData &operator=(const QQuickParticleData &other);
@@ -300,13 +299,10 @@ public:
 
     float curSize(QQuickParticleSystem *particleSystem) const;
     void clone(const QQuickParticleData& other);//Not =, leaves meta-data like index
-    QV4::ReturnedValue v4Value(QQuickParticleSystem *particleSystem);
+    QQuickV4ParticleData v4Value(QQuickParticleSystem *particleSystem);
     void extendLife(float time, QQuickParticleSystem *particleSystem);
 
     static inline constexpr float EPSILON() noexcept { return 0.001f; }
-
-private:
-    QQuickV4ParticleData* v4Datum;
 };
 
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleSystem : public QQuickItem

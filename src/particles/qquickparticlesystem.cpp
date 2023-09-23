@@ -14,6 +14,7 @@
 #include "qquicktrailemitter_p.h"//###For auto-follow on states, perhaps should be in emitter?
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
+#include <private/qqmlvaluetypewrapper_p.h>
 #include <cmath>
 #include <QDebug>
 
@@ -392,7 +393,6 @@ QQuickParticleData::QQuickParticleData()
     , rotationOwner(nullptr)
     , deformationOwner(nullptr)
     , animationOwner(nullptr)
-    , v4Datum(nullptr)
 {
     x = 0;
     y = 0;
@@ -427,11 +427,6 @@ QQuickParticleData::QQuickParticleData()
     delegate = nullptr;
 }
 
-QQuickParticleData::~QQuickParticleData()
-{
-    delete v4Datum;
-}
-
 QQuickParticleData::QQuickParticleData(const QQuickParticleData &other)
 {
     *this = other;
@@ -445,7 +440,6 @@ QQuickParticleData &QQuickParticleData::operator=(const QQuickParticleData &othe
     index = other.index;
     systemIndex = other.systemIndex;
     // Lazily initialized
-    v4Datum = nullptr;
 
     return *this;
 }
@@ -486,11 +480,9 @@ void QQuickParticleData::clone(const QQuickParticleData& other)
     animationOwner = other.animationOwner;
 }
 
-QV4::ReturnedValue QQuickParticleData::v4Value(QQuickParticleSystem* particleSystem)
+QQuickV4ParticleData QQuickParticleData::v4Value(QQuickParticleSystem *particleSystem)
 {
-    if (!v4Datum)
-        v4Datum = new QQuickV4ParticleData(qmlEngine(particleSystem)->handle(), this, particleSystem);
-    return v4Datum->v4Value();
+    return QQuickV4ParticleData(this, particleSystem);
 }
 
 void QQuickParticleData::debugDump(QQuickParticleSystem* particleSystem) const
