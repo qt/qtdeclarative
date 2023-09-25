@@ -59,7 +59,7 @@ steps such as use cases and introductory material. For more information about Qt
         \b{Beginning with QML and Qt Quick}
         \list
         \li \l{First Steps with QML}
-        \li \l{Getting Started Programming with Qt Quick}{Qt Quick Text Editor}
+        \li \l{Getting Started Programming with Qt Quick}{Alarms Application}
         \li \l{Qt Design Studio: Your First UI}{Qt Design Studio Tutorials}
         \li \l{QML Advanced Tutorial}{SameGame}
         \endlist
