@@ -336,6 +336,14 @@ how to set the \c QT_QML_SINGLETON_TYPE property.
 \target qmltc-cmake
 \section2 Compiling QML to C++ with QML type compiler
 
+\note The \l{QML type compiler} \c{qmltc} does not guarantee that the generated
+C++ stays API-, source- or binary-compatible between past or future versions,
+even patch versions.
+Furthermore, qmltc-compiled apps using Qt's QML modules will require linking
+against private Qt API, see also
+\l{QML type compiler#compiling-qml-code-with-qmltc}{Compiling QML code with qmltc}.
+
+
 If a QML module has \c{.qml} files, you can compile them to C++ using \l{QML
 type compiler}{qmltc}. Unlike \l{qmlcachegen-auto}{bytecode compilation}, you
 have to explicitly enable qmltc via \l{ENABLE_TYPE_COMPILER} argument. In which
