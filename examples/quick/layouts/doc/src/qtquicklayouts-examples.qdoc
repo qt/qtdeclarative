@@ -6,6 +6,7 @@
     \brief Demonstrates how to use layout types to arrange a UI.
     \image qtquicklayouts-example-layouts.png
     \ingroup qtquickexamples
+    \examplecategory {User Interface Components}
 
     This example shows how to easily arrange UI components into
     \l{Qt Quick Layouts}{layouts} with \l{GridLayout}, \l{RowLayout}, and

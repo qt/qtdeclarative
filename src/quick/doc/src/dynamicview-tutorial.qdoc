@@ -30,6 +30,7 @@ directory.
 \nextpage QML Dynamic View Ordering Tutorial 2 - Dragging View Items
 
 \example tutorials/dynamicview/dynamicview1
+\examplecategory {User Interface Components}
 
 We begin our application by defining a ListView, a model which will provide data to the view, and a
 delegate which provides a template for constructing items in the view.
