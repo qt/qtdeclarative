@@ -118,7 +118,7 @@ private:
 
         auto dispatcher = QThread::currentThread()->eventDispatcher();
         while (reply->isRunning() && !m_abort)
-            dispatcher->processEvents(QEventLoop::AllEvents | QEventLoop::WaitForMoreEvents);
+            dispatcher->processEvents(QEventLoop::AllEvents);
 
         if (reply->error() != QNetworkReply::NoError) {
             throw RestCallException(QStringLiteral("Could not download design file from Figma! ")
@@ -187,7 +187,7 @@ private:
 
             auto dispatcher = QThread::currentThread()->eventDispatcher();
             while (reply->isRunning() && !m_abort)
-                dispatcher->processEvents(QEventLoop::AllEvents | QEventLoop::WaitForMoreEvents);
+                dispatcher->processEvents(QEventLoop::AllEvents);
 
             if (reply->error() != QNetworkReply::NoError)
                 throw RestCallException(QStringLiteral("Could not download images from Figma: ") + networkErrorString(reply));
@@ -275,7 +275,7 @@ private:
 
         auto dispatcher = QThread::currentThread()->eventDispatcher();
         while (requestCount > 0 && !m_abort)
-            dispatcher->processEvents(QEventLoop::AllEvents | QEventLoop::WaitForMoreEvents);
+            dispatcher->processEvents(QEventLoop::AllEvents);
     }
 
     void downloadImages()
