@@ -5,6 +5,7 @@
     \example models/objectlistmodel
     \title Models and Views: Object ListModel Example
     \brief Shows how to use a QList<QObject*> as a model in QML.
+    \examplecategory {User Interface Components}
 
     \image qml-objectlistmodel-example.png
 */

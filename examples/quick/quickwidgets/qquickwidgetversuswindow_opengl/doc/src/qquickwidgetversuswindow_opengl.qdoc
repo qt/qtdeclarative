@@ -5,6 +5,7 @@
     \title QQuickWidget - QQuickView Comparison Example
     \example quickwidgets/qquickwidgetversuswindow_opengl
     \brief Demonstrates the benefits of QQuickWidget over a QQuickView embedded as a native window.
+    \examplecategory {User Interface Components}
     \image qquickwidgetversuswindow-opengl-example.jpg
 
     The example allows showing the same Qt Quick scene within the same
