@@ -15,7 +15,12 @@
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickControls2Impl/private/qquickiconlabel_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
+#include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
+#include <QtQuickTemplates2/private/qquickbutton_p.h>
+
+using namespace QQuickControlsTestUtils;
 
 class tst_StyleImports : public QQmlDataTest
 {
@@ -37,6 +42,9 @@ private slots:
 
     void fallbackStyleShouldNotOverwriteTheme_data();
     void fallbackStyleShouldNotOverwriteTheme();
+
+    void fallbackStyleThemeRespected_data();
+    void fallbackStyleThemeRespected();
 
     void attachedTypesAvailable_data();
     void attachedTypesAvailable();
@@ -276,6 +284,121 @@ void tst_StyleImports::fallbackStyleShouldNotOverwriteTheme()
     // For example: the Fusion style provides Button.qml, so the Button's text color
     // should be that of QPalette::ButtonText from QQuickFusionTheme.
     QCOMPARE(contentItem->color(), expectedContentItemColor);
+}
+
+enum FallbackMethod {
+    QmlDirImport,
+    EnvVar
+};
+
+void tst_StyleImports::fallbackStyleThemeRespected_data()
+{
+    QTest::addColumn<QString>("qmlFilePath");
+    QTest::addColumn<QString>("runtimeStyle");
+    QTest::addColumn<FallbackMethod>("fallbackMethod");
+    QTest::addColumn<Qt::ColorScheme>("colorScheme");
+    QTest::addColumn<QColor>("expectedButtonTextColor");
+    QTest::addColumn<QColor>("expectedWindowColor");
+
+    // Taken from qquickmaterialstyle.cpp.
+    static const QRgb materialBackgroundColorLight = 0xFFFFFBFE;
+    static const QRgb materialBackgroundColorDark = 0xFF1C1B1F;
+
+    // Notes:
+    // - FileSystemStyle has blue button text.
+    // - StyleThatImportsMaterial has red button text.
+    // - All rows result in Material being the fallback.
+
+    QTest::newRow("import controls, env var fallback, light") << "applicationWindowWithButton.qml"
+        << "FileSystemStyle" << EnvVar << Qt::ColorScheme::Light
+        << QColor::fromRgb(0x0000ff) << QColor::fromRgba(materialBackgroundColorLight);
+    QTest::newRow("import controls, env var fallback, dark") << "applicationWindowWithButton.qml"
+        << "FileSystemStyle" << EnvVar << Qt::ColorScheme::Dark
+        << QColor::fromRgb(0x0000ff) << QColor::fromRgba(materialBackgroundColorDark);
+
+    QTest::newRow("import controls, qmldir fallback, light") << "applicationWindowWithButton.qml"
+        << "StyleThatImportsMaterial" << QmlDirImport << Qt::ColorScheme::Light
+        << QColor::fromRgb(0xff0000) << QColor::fromRgba(materialBackgroundColorLight);
+    QTest::newRow("import controls, qmldir fallback, dark") << "applicationWindowWithButton.qml"
+        << "StyleThatImportsMaterial" << QmlDirImport << Qt::ColorScheme::Dark
+        << QColor::fromRgb(0xff0000) << QColor::fromRgba(materialBackgroundColorDark);
+
+    QTest::newRow("import style, qmldir fallback, light") << "importStyleWithQmlDirFallback.qml"
+        << "" << QmlDirImport << Qt::ColorScheme::Light
+        << QColor::fromRgb(0xff0000) << QColor::fromRgba(materialBackgroundColorLight);
+    QTest::newRow("import style, qmldir fallback, dark") << "importStyleWithQmlDirFallback.qml"
+        << "" << QmlDirImport << Qt::ColorScheme::Dark
+        << QColor::fromRgb(0xff0000) << QColor::fromRgba(materialBackgroundColorDark);
+}
+
+// Tests that a fallback style's (the Material style, in this case) theme settings
+// are respected for both run-time and compile-time style selection.
+void tst_StyleImports::fallbackStyleThemeRespected()
+{
+    QFETCH(QString, qmlFilePath);
+    QFETCH(QString, runtimeStyle);
+    QFETCH(FallbackMethod, fallbackMethod);
+    QFETCH(Qt::ColorScheme, colorScheme);
+    QFETCH(QColor, expectedButtonTextColor);
+    QFETCH(QColor, expectedWindowColor);
+
+    const char *materialThemeEnvVarName = "QT_QUICK_CONTROLS_MATERIAL_THEME";
+    const QString originalMaterialTheme = qgetenv(materialThemeEnvVarName);
+    qputenv(materialThemeEnvVarName, colorScheme == Qt::ColorScheme::Light ? "Light" : "Dark");
+
+    // Only set this if it's not empty, because setting an empty style
+    // will still cause it be resolved and we end up using the platform default.
+    if (!runtimeStyle.isEmpty())
+        QQuickStyle::setStyle(runtimeStyle);
+
+    const char *fallbackStyleEnvVarName = "QT_QUICK_CONTROLS_FALLBACK_STYLE";
+    const QString originalFallbackStyle = qgetenv(fallbackStyleEnvVarName);
+    if (fallbackMethod == EnvVar)
+        qputenv(fallbackStyleEnvVarName, "Material");
+
+    auto cleanup = qScopeGuard([&]() {
+        qputenv(materialThemeEnvVarName, qPrintable(originalMaterialTheme));
+        qputenv(fallbackStyleEnvVarName, qPrintable(originalFallbackStyle));
+    });
+
+    QQuickControlsApplicationHelper helper(this, qmlFilePath, {},
+        QStringList() << dataDirectory() + QLatin1String("/styles"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    auto button = helper.window->property("button").value<QQuickButton*>();
+    QVERIFY(button);
+    // contentItem should be a label with "salmon" text color.
+    QCOMPARE(button->contentItem()->property("color").value<QColor>(), expectedButtonTextColor);
+    const QStringList skippedTestRows = {
+        // This row only fails when run on its own.
+        "import controls, qmldir fallback, dark",
+        /*
+            This is also failing for the second row when running all tests,
+            or the following tests in the given order:
+            fallbackStyleThemeRespected:"import controls, env var fallback, dark"
+            fallbackStyleThemeRespected:"import controls, qmldir fallback, light"
+            It fails because of QTBUG-117526 - the fallback style is reported as being empty because
+            it was imported via the qmldir, which QQuickStyle isn't aware of. So the
+            Material theme never gets (re-)initialized, and it retains the dark theme
+            from the previous test row. It doesn't fail when run on its own, because the default
+            Material theme is light, so it doesn't matter if it's not initialized in that case.
+        */
+        "import controls, qmldir fallback, light"
+    };
+    if (skippedTestRows.contains(QTest::currentDataTag()))
+        QSKIP("This row is unreliable depending on the order in which it is run, due to QTBUG-117526");
+    QCOMPARE(helper.appWindow->color(), expectedWindowColor);
+
+    // If using run-time style selection, check that QQuickStyle reports the correct values.
+    // QQuickStyle is not supported when using compile-time style selection.
+    if (!runtimeStyle.isEmpty()) {
+        QCOMPARE(QQuickStyle::name(), runtimeStyle);
+        // QTBUG-117526: This will fail when fallbackMethod is QmlDirImport, because
+        // QQuickStylePrivate::fallbackStyle has the wrong value when using
+        // run-time style selection and the fallback style is imported via the style's qmldir.
+        // Remove this comment when the bug is fixed.
+        QCOMPARE(QQuickStylePrivate::fallbackStyle(), "Material");
+    }
 }
 
 void tst_StyleImports::attachedTypesAvailable_data()

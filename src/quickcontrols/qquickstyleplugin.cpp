@@ -54,18 +54,31 @@ void QQuickStylePlugin::registerTypes(const char *uri)
         theme = createTheme(effectiveCurrentStyleName);
     }
 
-    if (name() != effectiveCurrentStyleName) {
-        qCDebug(lcStylePlugin).nospace() << "theme does not belong to current style ("
-            << effectiveCurrentStyleName << "); not calling initializeTheme()";
+    // The primary fallback is the style set by the user. We need to check for that here
+    // so that we can ensure that fallback styles' themes are initialized (QTBUG-117403)
+    // without also allowing the Basic style to be initialized, as it is a secondary fallback
+    // for every built-in style (and only built-in styles can be fallbacks).
+    const bool thisPluginBelongsToCurrentStyle = name() == effectiveCurrentStyleName;
+    const bool isPrimaryFallback = name() == QQuickStylePrivate::fallbackStyle();
+    if (!thisPluginBelongsToCurrentStyle && !isPrimaryFallback) {
+        qCDebug(lcStylePlugin).nospace() << "this style plugin does not belong to the current ("
+            << effectiveCurrentStyleName << ") or fallback (" << QQuickStylePrivate::fallbackStyle()
+            << ") style; not calling initializeTheme()";
         return;
     }
 
-    qCDebug(lcStylePlugin) << "theme has not yet been initialized; calling initializeTheme()";
+    if (thisPluginBelongsToCurrentStyle) {
+        qCDebug(lcStylePlugin).nospace() << "this style plugin belongs to the current style "
+            << effectiveCurrentStyleName << "; calling initializeTheme()";
+    } else {
+        qCDebug(lcStylePlugin).nospace() << "this style plugin belongs to the fallback style "
+            << QQuickStylePrivate::fallbackStyle() << "; calling initializeTheme()";
+    }
     initializeTheme(theme);
     connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged,
                                      this, &QQuickStylePlugin::updateTheme);
 
-    if (!styleName.isEmpty())
+    if (!isPrimaryFallback && !styleName.isEmpty())
         QFileSelectorPrivate::addStatics(QStringList() << styleName);
 }
 
