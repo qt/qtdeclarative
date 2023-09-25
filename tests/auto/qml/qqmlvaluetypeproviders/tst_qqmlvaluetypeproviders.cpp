@@ -477,6 +477,9 @@ void tst_qqmlvaluetypeproviders::recursive()
 
     MyTypeObject *m = qobject_cast<MyTypeObject *>(o.data());
     QCOMPARE(m->structured().p().x(), 76);
+
+    // Recursive write back into a list detached from the property.
+    QCOMPARE(m->property("aa").toInt(), 12);
 }
 
 void tst_qqmlvaluetypeproviders::date()

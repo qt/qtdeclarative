@@ -98,6 +98,8 @@ public:
     const QList<QSizeF> &sizes() const { return m_sizes; }
     void setSizes(const QList<QSizeF> &sizes) { m_sizes = sizes; }
 
+    Q_INVOKABLE QList<QSizeF> sizesDetached() const { return m_sizes; }
+
 private:
 
     friend bool operator==(const StructuredValueType &a, const StructuredValueType &b)
