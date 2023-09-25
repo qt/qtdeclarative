@@ -50,7 +50,11 @@ enum QQmlLSUtilsIdentifierType : char {
     SignalHandlerIdentifier,
     MethodIdentifier,
     QmlObjectIdIdentifier,
-    QmlObjectIdentifier
+    QmlObjectIdentifier,
+    SingletonIdentifier,
+    EnumeratorIdentifier,
+    EnumeratorValueIdentifier,
+    AttachedTypeIdentifier,
 };
 
 struct QQmlLSUtilsErrorMessage
@@ -157,9 +161,9 @@ public:
                                                    const CompletionContextStrings &ctx);
     static QList<CompletionItem> idsCompletions(const DomItem& component);
 
-    static QList<CompletionItem>
-    reachableSymbols(const DomItem &context, const CompletionContextStrings &ctx,
-                     QQmlJS::Dom::LocalSymbolsTypes typeCompletionType);
+    static QList<CompletionItem> reachableTypes(const DomItem &context,
+                                                QQmlJS::Dom::LocalSymbolsTypes typeCompletionType,
+                                                QLspSpecification::CompletionItemKind kind);
 
     static QList<CompletionItem> scriptIdentifierCompletion(const DomItem &context,
                                                             const CompletionContextStrings &ctx);

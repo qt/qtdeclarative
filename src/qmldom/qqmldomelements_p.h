@@ -1038,6 +1038,10 @@ public:
     void setExtensionIsNamespace(bool v) { m_extensionIsNamespace = v; }
     QQmlJSScope::AccessSemantics accessSemantics() const { return m_accessSemantics; }
     void setAccessSemantics(QQmlJSScope::AccessSemantics v) { m_accessSemantics = v; }
+
+    void setSemanticScope(const QQmlJSScope::ConstPtr &scope) { m_semanticScope = scope; }
+    QQmlJSScope::ConstPtr semanticScope() const { return m_semanticScope; }
+
 private:
     QList<Export> m_exports;
     QList<int> m_metaRevisions;
@@ -1048,6 +1052,7 @@ private:
     QString m_valueTypeName;
     QString m_extensionTypeName;
     QQmlJSScope::AccessSemantics m_accessSemantics;
+    QQmlJSScope::ConstPtr m_semanticScope;
 };
 
 class QMLDOM_EXPORT QmlComponent final : public Component

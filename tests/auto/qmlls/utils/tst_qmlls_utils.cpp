@@ -1581,21 +1581,21 @@ void tst_qmlls_utils::completions_data()
             { u"int"_s, CompletionItemKind::Class },
             { u"date"_s, CompletionItemKind::Class },
     });
-    const auto creatableTypes = ExpectedCompletions({
-            { u"Rectangle"_s, CompletionItemKind::Class },
-            { u"MyRectangle"_s, CompletionItemKind::Class },
-            { u"Zzz"_s, CompletionItemKind::Class },
-            { u"Item"_s, CompletionItemKind::Class },
-            { u"QtObject"_s, CompletionItemKind::Class },
+    const auto constructorTypes = ExpectedCompletions({
+            { u"Rectangle"_s, CompletionItemKind::Constructor },
+            { u"MyRectangle"_s, CompletionItemKind::Constructor },
+            { u"Zzz"_s, CompletionItemKind::Constructor },
+            { u"Item"_s, CompletionItemKind::Constructor },
+            { u"QtObject"_s, CompletionItemKind::Constructor },
     });
     const auto rectangleTypes = ExpectedCompletions({
-            { u"Rectangle"_s, CompletionItemKind::Class },
-            { u"MyRectangle"_s, CompletionItemKind::Class },
+            { u"Rectangle"_s, CompletionItemKind::Constructor },
+            { u"MyRectangle"_s, CompletionItemKind::Constructor },
     });
 
     QTest::newRow("objEmptyLine") << file << 9 << 1
                                   << ExpectedCompletions({
-                                             { u"Rectangle"_s, CompletionItemKind::Class },
+                                             { u"Rectangle"_s, CompletionItemKind::Constructor },
                                              { u"property"_s, CompletionItemKind::Keyword },
                                              { u"width"_s, CompletionItemKind::Property },
                                              { u"function"_s, CompletionItemKind::Keyword },
@@ -1635,18 +1635,19 @@ void tst_qmlls_utils::completions_data()
     QTest::newRow("inBindingLabel")
             << file << 6 << 10
             << ExpectedCompletions({
-                       { u"Rectangle"_s, CompletionItemKind::Class },
+                       { u"Rectangle"_s, CompletionItemKind::Constructor },
                        { u"width"_s, CompletionItemKind::Property },
                })
             << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"property"_s }) << InsertColon;
 
     QTest::newRow("afterBinding") << file << 6 << 11
-                                  << ExpectedCompletions({
-                                             { u"height"_s, CompletionItemKind::Property },
-                                             { u"width"_s, CompletionItemKind::Property },
-                                             { u"Rectangle"_s, CompletionItemKind::Class },
-                                             { singletonName, CompletionItemKind::Class },
-                                     })
+                                  << (ExpectedCompletions({
+                                              { u"height"_s, CompletionItemKind::Property },
+                                              { u"width"_s, CompletionItemKind::Property },
+                                              { u"Rectangle"_s, CompletionItemKind::Constructor },
+                                              { singletonName, CompletionItemKind::Class },
+                                      })
+                                      + attachedTypes)
                                   << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s })
                                   << None;
 
@@ -1802,7 +1803,7 @@ void tst_qmlls_utils::completions_data()
             { u"createRectangle"_s, CompletionItemKind::Method},
             { u"createItem"_s, CompletionItemKind::Method},
             { u"createAnything"_s, CompletionItemKind::Method},
-    }) += creatableTypes)
+    }) += constructorTypes)
                                                << QStringList{
                                                       u"helloWorld"_s,
                                                       u"helloMe"_s,
@@ -1833,7 +1834,7 @@ void tst_qmlls_utils::completions_data()
             { u"width"_s, CompletionItemKind::Property},
             { u"property"_s, CompletionItemKind::Keyword },
             { u"function"_s, CompletionItemKind::Keyword },
-    }) += creatableTypes)
+    }) += constructorTypes)
                                                << QStringList{
                                                       u"helloWorld"_s,
                                                       u"helloMe"_s,
@@ -2112,6 +2113,11 @@ void tst_qmlls_utils::completions()
               [](const CompletionItem&a, const CompletionItem&b) {return a.label < b.label;});
 
     for (const CompletionItem &c : completions) {
+        // explicitly forbid marker structs created by QQmlJSImporter
+        QVERIFY(!c.label.startsWith("$internal$."));
+        QVERIFY(!c.label.startsWith("$module$."));
+        QVERIFY(!c.label.startsWith("$anonymous$."));
+
         if (c.kind->toInt() == int(CompletionItemKind::Module)) {
             QVERIFY2(!modulesTracker.hasSeen(c.label), "Duplicate module: " + c.label);
         } else if (c.kind->toInt() == int(CompletionItemKind::Keyword)) {
@@ -2147,40 +2153,33 @@ void tst_qmlls_utils::completions()
         QEXPECT_FAIL("inMethodBody", "Completion for JS Statement/keywords not implemented yet",
                      Abort);
         QEXPECT_FAIL("letStatementAfterEqual", "Completion not implemented yet!", Abort);
-        QEXPECT_FAIL("enumsFromEnumName", "Completion not implemented yet!", Abort);
-        QEXPECT_FAIL("enumsFromItem", "Completion not implemented yet!", Abort);
-        QEXPECT_FAIL("singletonPropertyAndEnums", "Completion not implemented yet!", Abort);
-        QEXPECT_FAIL("singleton", "Completion not implemented yet!", Abort);
-        QEXPECT_FAIL("attachedTypesInScript", "Completion not implemented yet!", Abort);
-        QEXPECT_FAIL("attachedTypesInLongScript", "Completion not implemented yet!", Abort);
         QVERIFY2(labels.contains(exp.first),
                  u"no %1 in %2"_s
                          .arg(exp.first, QStringList(labels.begin(), labels.end()).join(u", "_s))
                          .toUtf8());
         if (labels.contains(exp.first)) {
+
+            bool foundEntry = false;
+            bool hasCorrectKind = false;
+            CompletionItemKind foundKind;
             for (const CompletionItem &c : completions) {
-                const auto kind = static_cast<CompletionItemKind>(c.kind->toInt());
-
-                bool foundEntry = false;
-                bool hasCorrectKind = false;
-                for (const ExpectedCompletion &e : expected) {
-                    if (c.label == e.first) {
-                        foundEntry = true;
-                        hasCorrectKind |= kind == e.second;
-                    }
+                if (c.label == exp.first) {
+                    foundKind = static_cast<CompletionItemKind>(c.kind->toInt());
+                    foundEntry = true;
+                    if (foundKind == exp.second)
+                        hasCorrectKind = true;
                 }
-
-                // Ignore QVERIFY for those completions not in the expected list.
-                if (!foundEntry)
-                    continue;
-
-                QVERIFY2(hasCorrectKind,
-                         qPrintable(
-                                 QString::fromLatin1("Completion item '%1' has wrong kind '%2'")
-                                         .arg(c.label)
-                                         .arg(QMetaEnum::fromType<CompletionItemKind>().valueToKey(
-                                                 int(kind)))));
             }
+
+            // Ignore QVERIFY for those completions not in the expected list.
+            if (!foundEntry)
+                continue;
+
+            QVERIFY2(hasCorrectKind,
+                     qPrintable(QString::fromLatin1("Completion item '%1' has wrong kind '%2'")
+                                        .arg(exp.first)
+                                        .arg(QMetaEnum::fromType<CompletionItemKind>().valueToKey(
+                                                int(foundKind)))));
         }
     }
     for (const QString &nexp : notExpected) {

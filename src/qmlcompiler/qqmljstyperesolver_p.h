@@ -14,6 +14,7 @@
 //
 // We mean it.
 
+#include <memory>
 #include <private/qtqmlcompilerexports_p.h>
 
 #include <private/qqmlirbuilder_p.h>
@@ -21,6 +22,7 @@
 #include "qqmljsimporter_p.h"
 #include "qqmljslogger_p.h"
 #include "qqmljsregistercontent_p.h"
+#include "qqmljsresourcefilemapper_p.h"
 #include "qqmljsscope_p.h"
 #include "qqmljsscopesbyid_p.h"
 
@@ -86,6 +88,10 @@ public:
         return m_imports.hasType(name) && !m_imports.type(name).scope;
     }
 
+    const QHash<QString, QQmlJS::ImportedScope<QQmlJSScope::ConstPtr>> &importedTypes() const
+    {
+        return m_imports.types();
+    }
     QQmlJSScope::ConstPtr typeForName(const QString &name) const
     {
         return m_imports.type(name).scope;
@@ -286,6 +292,16 @@ protected:
     };
 
     std::unique_ptr<QHash<QQmlJSScope::ConstPtr, TrackedType>> m_trackedTypes;
+};
+
+/*!
+\internal
+Keep this struct around to be able to populate deferred scopes obtained from a QQmlJSTypeResolver.
+*/
+struct QQmlJSTypeResolverDependencies
+{
+    std::shared_ptr<QQmlJSImporter> importer;
+    std::shared_ptr<QQmlJSResourceFileMapper> mapper;
 };
 
 QT_END_NAMESPACE

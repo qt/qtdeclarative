@@ -324,9 +324,11 @@ public:
     {
         return m_typeResolver;
     }
-    void setTypeResolver(const std::shared_ptr<QQmlJSTypeResolver> &typeResolver)
+    void setTypeResolverWithDependencies(const std::shared_ptr<QQmlJSTypeResolver> &typeResolver,
+                                         const QQmlJSTypeResolverDependencies &dependencies)
     {
         m_typeResolver = typeResolver;
+        m_typeResolverDependencies = dependencies;
     }
 
 private:
@@ -341,6 +343,7 @@ private:
     QList<Import> m_imports;
     ImportScope m_importScope;
     std::optional<std::shared_ptr<QQmlJSTypeResolver>> m_typeResolver;
+    QQmlJSTypeResolverDependencies m_typeResolverDependencies;
 };
 
 class QMLDOM_EXPORT QmltypesFile final : public ExternalOwningItem

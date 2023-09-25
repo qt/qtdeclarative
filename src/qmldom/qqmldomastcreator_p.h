@@ -451,7 +451,7 @@ class QQmlDomAstCreatorWithQQmlJSScope : public AST::Visitor
 {
 public:
     QQmlDomAstCreatorWithQQmlJSScope(MutableDomItem &qmlFile, QQmlJSLogger *logger,
-                                     QQmlJSResourceFileMapper *mapper);
+                                     QQmlJSImporter *importer);
 
 #define X(name)                       \
     bool visit(AST::name *) override; \
@@ -471,7 +471,6 @@ public:
         m_domCreator.enableScriptExpressions(enable);
     }
 
-    QQmlJSImporter &importer() { return m_importer; }
     QQmlJSImportVisitor &scopeCreator() { return m_scopeCreator; }
 
 private:
@@ -597,7 +596,7 @@ private:
 
     QQmlJSScope::Ptr m_root;
     QQmlJSLogger *m_logger = nullptr;
-    QQmlJSImporter m_importer;
+    QQmlJSImporter *m_importer = nullptr;
     QString m_implicitImportDirectory;
     QQmlJSImportVisitor m_scopeCreator;
     QQmlDomAstCreator m_domCreator;

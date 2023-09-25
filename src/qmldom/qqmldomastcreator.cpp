@@ -2151,13 +2151,13 @@ static QStringList qmldirFilesFrom(MutableDomItem &qmlFile)
 
 QQmlDomAstCreatorWithQQmlJSScope::QQmlDomAstCreatorWithQQmlJSScope(MutableDomItem &qmlFile,
                                                                    QQmlJSLogger *logger,
-                                                                   QQmlJSResourceFileMapper *mapper)
+                                                                   QQmlJSImporter *importer)
     : m_root(QQmlJSScope::create()),
       m_logger(logger),
-      m_importer(importPathsFrom(qmlFile), mapper, true),
+      m_importer(importer),
       m_implicitImportDirectory(QQmlJSImportVisitor::implicitImportDirectory(
-              m_logger->fileName(), m_importer.resourceFileMapper())),
-      m_scopeCreator(m_root, &m_importer, m_logger, m_implicitImportDirectory,
+              m_logger->fileName(), m_importer->resourceFileMapper())),
+      m_scopeCreator(m_root, m_importer, m_logger, m_implicitImportDirectory,
                      qmldirFilesFrom(qmlFile)),
       m_domCreator(qmlFile)
 {
@@ -2259,27 +2259,29 @@ void createDom(MutableDomItem &&qmlFile, DomCreationOptions options)
 {
     if (std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>()) {
         QQmlJSLogger logger; // TODO
-
-        std::unique_ptr<QQmlJSResourceFileMapper> mapper;
-        if (auto environmentPtr = qmlFile.environment().ownerAs<DomEnvironment>()) {
-            const QStringList resourceFiles =
-                    resourceFilesFromBuildFolders(environmentPtr->loadPaths());
-            mapper = std::make_unique<QQmlJSResourceFileMapper>(
-                    resourceFilesFromBuildFolders(resourceFiles));
-        }
         // the logger filename is used to populate the QQmlJSScope filepath.
         logger.setFileName(qmlFile.canonicalFilePath());
+
         if (options.testFlag(DomCreationOption::WithSemanticAnalysis)) {
+            std::shared_ptr<QQmlJSResourceFileMapper> mapper;
+            if (auto environmentPtr = qmlFile.environment().ownerAs<DomEnvironment>()) {
+                const QStringList resourceFiles =
+                        resourceFilesFromBuildFolders(environmentPtr->loadPaths());
+                mapper = std::make_shared<QQmlJSResourceFileMapper>(
+                        resourceFilesFromBuildFolders(resourceFiles));
+            }
+            auto importer =
+                    std::make_shared<QQmlJSImporter>(importPathsFrom(qmlFile), mapper.get(), true);
             auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(qmlFile, &logger,
-                                                                        mapper.get());
+                                                                        importer.get());
             v->enableScriptExpressions(options.testFlag(DomCreationOption::WithScriptExpressions));
 
             AST::Node::accept(qmlFilePtr->ast(), v.get());
             AstComments::collectComments(qmlFile);
 
-            auto typeResolver = std::make_shared<QQmlJSTypeResolver>(&v->importer());
+            auto typeResolver = std::make_shared<QQmlJSTypeResolver>(importer.get());
             typeResolver->init(&v->scopeCreator(), nullptr);
-            qmlFilePtr->setTypeResolver(typeResolver);
+            qmlFilePtr->setTypeResolverWithDependencies(typeResolver, { importer, mapper });
         } else {
             auto v = std::make_unique<QQmlDomAstCreator>(qmlFile);
             v->enableScriptExpressions(options.testFlag(DomCreationOption::WithScriptExpressions));

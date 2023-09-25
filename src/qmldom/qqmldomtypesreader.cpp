@@ -113,16 +113,22 @@ void QmltypesReader::insertComponent(const QQmlJSScope::ConstPtr &jsScope,
                                      const QList<QQmlJSScope::Export> &exportsList)
 {
     QmltypesComponent comp;
+    comp.setSemanticScope(jsScope);
     QMap<int, QmlObject> objects;
     {
         bool hasExports = false;
         for (const QQmlJSScope::Export &jsE : exportsList) {
             int metaRev = jsE.version().toEncodedVersion<int>();
             hasExports = true;
-            objects.insert(metaRev, QmlObject());
+            QmlObject object;
+            object.setSemanticScope(jsScope);
+            objects.insert(metaRev, object);
         }
-        if (!hasExports)
-            objects.insert(0, QmlObject());
+        if (!hasExports) {
+            QmlObject object;
+            object.setSemanticScope(jsScope);
+            objects.insert(0, object);
+        }
     }
     bool incrementedPath = false;
     QString prototype;
@@ -216,6 +222,7 @@ void QmltypesReader::insertComponent(const QQmlJSScope::ConstPtr &jsScope,
         Export e;
         e.uri = jsE.package();
         e.typeName = jsE.type();
+        e.isSingleton = jsScope->isSingleton();
         e.version = Version((v.hasMajorVersion() ? v.majorVersion() : Version::Latest),
                             (v.hasMinorVersion() ? v.minorVersion() : Version::Latest));
         e.typePath = revToPath.value(metaRev);

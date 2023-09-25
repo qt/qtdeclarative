@@ -848,49 +848,107 @@ static QQmlJSScope::ConstPtr findScopeInConnections(QQmlJSScope::ConstPtr scope,
 }
 
 static std::optional<QQmlLSUtilsExpressionType>
+resolveFieldMemberExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions options)
+{
+    const QString name = item.field(Fields::identifier).value().toString();
+    DomItem parent = item.directParent();
+    auto owner = QQmlLSUtils::resolveExpressionType(
+            parent.field(Fields::left),
+            QQmlLSUtilsResolveOptions::ResolveActualTypeForFieldMemberExpression);
+    if (!owner)
+        return {};
+
+    if (auto methods = owner.value().semanticScope->methods(name); !methods.isEmpty()) {
+        switch (options) {
+        case ResolveOwnerType: {
+            const bool isSignal = methods.front().methodType() == QQmlJSMetaMethodType::Signal;
+            QQmlLSUtilsIdentifierType type = isSignal ? QQmlLSUtilsIdentifierType::SignalIdentifier
+                                                      : QQmlLSUtilsIdentifierType::MethodIdentifier;
+            return QQmlLSUtilsExpressionType{ name, owner->semanticScope, type };
+        }
+        case ResolveActualTypeForFieldMemberExpression:
+            // not implemented, but JS functions have methods and properties
+            // see
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
+            // for the list of properties/methods of functions
+            // see also code below for non-qualified method access
+            break;
+        }
+    }
+    if (auto property = owner->semanticScope->property(name); property.isValid()) {
+        switch (options) {
+        case ResolveOwnerType:
+            return QQmlLSUtilsExpressionType{ name, owner->semanticScope,
+                                              QQmlLSUtilsIdentifierType::PropertyIdentifier };
+        case ResolveActualTypeForFieldMemberExpression:
+            return QQmlLSUtilsExpressionType{ name, property.type(),
+                                              QQmlLSUtilsIdentifierType::PropertyIdentifier };
+        }
+    }
+
+    // distinguish between the `someItem.MyEnumerator.MyEnumeratorValue` case and the
+    // `someItem.MyEnumeratorValue` case by using the QQmlLSUtilsIdentifierType::Enumerator,
+    // as they have the same owner type (enumerators do not have their own qqmljsscope).
+    switch (owner->type) {
+    case QQmlLSUtilsIdentifierType::EnumeratorValueIdentifier:
+        // for example, 'someItem.MyEnumerator.MyEnumeratorValue.<current name to be resolved>'
+        // or 'someItem.MyEnumeratorValue.<current name to be resolved>'
+        break;
+    case QQmlLSUtilsIdentifierType::EnumeratorIdentifier:
+        // for example, 'someItem.MyEnumerator.<current name to be resolved>'
+        // do not check name in this case, just assumes its a value of the enumerator so the
+        // autocompletion still works when the user is still typing the enumerator value name.
+        if (auto enumerator = owner->semanticScope->enumeration(owner->name.value_or(QString()));
+            enumerator.isValid()) {
+            return QQmlLSUtilsExpressionType{
+                owner->name, owner->semanticScope,
+                QQmlLSUtilsIdentifierType::EnumeratorValueIdentifier
+            };
+        }
+        break;
+    default:
+        // for example, 'someItem.<current name to be resolved>'
+        if (auto enumerator = owner->semanticScope->enumeration(name); enumerator.isValid()) {
+            return QQmlLSUtilsExpressionType{ name, owner->semanticScope,
+                                              QQmlLSUtilsIdentifierType::EnumeratorIdentifier };
+        }
+        for (const QQmlJSMetaEnum &enumerator : owner->semanticScope->enumerations()) {
+            if (enumerator.hasKey(name)) {
+                return QQmlLSUtilsExpressionType{
+                    name, owner->semanticScope, QQmlLSUtilsIdentifierType::EnumeratorValueIdentifier
+                };
+            }
+        }
+    }
+    qCDebug(QQmlLSUtilsLog) << "Could not find identifier expression for" << item.internalKindStr();
+    return {};
+}
+
+static std::optional<QQmlLSUtilsExpressionType>
 resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions options)
 {
+    if (isFieldMemberAccess(item)) {
+        return resolveFieldMemberExpressionType(item, options);
+    }
+
+    const QString name = item.field(Fields::identifier).value().toString();
+
     const auto referrerScope = item.nearestSemanticScope();
     if (!referrerScope)
         return {};
 
-    const QString name = item.field(Fields::identifier).value().toString();
+    const auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
+    if (!resolver)
+        return {};
 
-    if (isFieldMemberAccess(item)) {
-        DomItem parent = item.directParent();
-        auto owner = QQmlLSUtils::resolveExpressionType(
-                parent.field(Fields::left),
-                QQmlLSUtilsResolveOptions::ResolveActualTypeForFieldMemberExpression);
-        if (!owner)
-            return {};
-
-        if (auto methods = owner.value().semanticScope->methods(name); !methods.isEmpty()) {
-            switch (options) {
-            case ResolveOwnerType: {
-                const bool isSignal = methods.front().methodType() == QQmlJSMetaMethodType::Signal;
-                QQmlLSUtilsIdentifierType type = isSignal
-                        ? QQmlLSUtilsIdentifierType::SignalIdentifier
-                        : QQmlLSUtilsIdentifierType::MethodIdentifier;
-                return QQmlLSUtilsExpressionType{ name, owner->semanticScope, type };
-            }
-            case ResolveActualTypeForFieldMemberExpression:
-                // not implemented, but JS functions have methods and properties
-                // see
-                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
-                // for the list of properties/methods of functions
-                // see also code below for non-qualified method access
-                break;
-            }
+    if (auto scope = resolver.value()->typeForName(name)) {
+        if (scope->isSingleton()) {
+            return QQmlLSUtilsExpressionType{ name, scope,
+                                              QQmlLSUtilsIdentifierType::SingletonIdentifier };
         }
-        if (auto property = owner->semanticScope->property(name); property.isValid()) {
-            switch (options) {
-            case ResolveOwnerType:
-                return QQmlLSUtilsExpressionType{ name, owner->semanticScope,
-                                                  QQmlLSUtilsIdentifierType::PropertyIdentifier };
-            case ResolveActualTypeForFieldMemberExpression:
-                return QQmlLSUtilsExpressionType{ name, property.type(),
-                                                  QQmlLSUtilsIdentifierType::PropertyIdentifier };
-            }
+        if (auto attachedScope = scope->attachedType()) {
+            return QQmlLSUtilsExpressionType{ name, attachedScope,
+                                              QQmlLSUtilsIdentifierType::AttachedTypeIdentifier };
         }
     } else {
         DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
@@ -921,9 +979,6 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
     }
 
     // check if its an id
-    auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
-    if (!resolver)
-        return {};
     QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope);
     if (fromId)
         return QQmlLSUtilsExpressionType{ name, fromId, QmlObjectIdIdentifier };
@@ -1261,6 +1316,10 @@ expressionTypeWithDefinition(const QQmlLSUtilsExpressionType &ownerType)
     case JavaScriptIdentifier:
     case QmlObjectIdIdentifier:
     case QmlObjectIdentifier:
+    case SingletonIdentifier:
+    case EnumeratorIdentifier:
+    case EnumeratorValueIdentifier:
+    case AttachedTypeIdentifier:
         return ownerType.semanticScope;
     }
     return {};
@@ -1522,8 +1581,11 @@ bool QQmlLSUtils::isValidEcmaScriptIdentifier(QStringView identifier)
 
 QList<CompletionItem> QQmlLSUtils::bindingsCompletions(const DomItem &containingObject)
 {
-    // returns valid bindings completions (i.e. reachable properties and signal handlers)
     QList<CompletionItem> res;
+
+    res << reachableTypes(containingObject, LocalSymbolsType::AttachedType,
+                          CompletionItemKind::Class);
+
     qCDebug(QQmlLSCompletionLog) << "binding completions";
     containingObject.visitPrototypeChain(
             [&res](const DomItem &it) {
@@ -1660,71 +1722,56 @@ QList<CompletionItem> QQmlLSUtils::idsCompletions(const DomItem& component)
     return res;
 }
 
-static void reachableTypes(QSet<QString> &symbols, const DomItem &el, LocalSymbolsTypes options)
+static bool testScopeSymbol(const QQmlJSScope::ConstPtr &scope, LocalSymbolsTypes options,
+                            CompletionItemKind kind)
 {
-    switch (el.internalKind()) {
-    case DomType::QmlFile:
-    case DomType::ImportScope: {
-        const QSet<QString> localSymbols = el.localSymbolNames(options);
-        qCDebug(QQmlLSCompletionLog) << "adding local symbols of:" << el.internalKindStr()
-                                     << el.canonicalPath() << localSymbols;
-        symbols += localSymbols;
-        break;
+    const bool currentIsSingleton = scope->isSingleton();
+    const bool currentIsAttached = !scope->attachedType().isNull();
+    if ((options & LocalSymbolsType::Singleton) && currentIsSingleton) {
+        return true;
     }
-    default: {
-        qCDebug(QQmlLSCompletionLog) << "skipping local symbols for non type"
-                                     << el.internalKindStr() << el.canonicalPath();
-        break;
+    if ((options & LocalSymbolsType::AttachedType) && currentIsAttached) {
+        return true;
     }
+    const bool isObjectType = scope->isReferenceType();
+    if (options & LocalSymbolsType::ObjectType && !currentIsSingleton && isObjectType) {
+        return kind != CompletionItemKind::Constructor || scope->isCreatable();
     }
+    if (options & LocalSymbolsType::ValueType && !currentIsSingleton && !isObjectType) {
+        return true;
+    }
+    return false;
 }
 
-QList<CompletionItem> QQmlLSUtils::reachableSymbols(const DomItem &context,
-                                                    const CompletionContextStrings &ctx,
-                                                    LocalSymbolsTypes options)
+QList<CompletionItem> QQmlLSUtils::reachableTypes(const DomItem &el, LocalSymbolsTypes options,
+                                                  CompletionItemKind kind)
 {
-    // returns completions for the reachable types or attributes from context
+    auto file = el.containingFile().as<QmlFile>();
+    if (!file)
+        return {};
+    auto resolver = file->typeResolver();
+    if (!resolver)
+        return {};
+
     QList<CompletionItem> res;
-    QMap<CompletionItemKind, QSet<QString>> symbols;
-    QSet<quintptr> visited;
-    QList<Path> visitedRefs;
-    auto addLocalSymbols = [&options, &symbols](const DomItem &el) {
-        reachableTypes(symbols[CompletionItemKind::Class], el, options);
-        return true;
-    };
-    if (ctx.base().isEmpty()) {
-        if (options != LocalSymbolsType::None) {
-            qCDebug(QQmlLSCompletionLog)
-                    << "adding symbols reachable from:" << context.internalKindStr()
-                    << context.canonicalPath();
-            DomItem it = context.proceedToScope();
-            it.visitScopeChain(addLocalSymbols, LookupOption::Normal, &defaultErrorHandler,
-                               &visited, &visitedRefs);
-        }
-    } else {
-        QList<QStringView> baseItems = ctx.base().split(u'.', Qt::SkipEmptyParts);
-        Q_ASSERT(!baseItems.isEmpty());
-        auto addReachableSymbols = [&visited, &visitedRefs, &addLocalSymbols](Path,
-                                                                              const DomItem &it) -> bool {
-            qCDebug(QQmlLSCompletionLog) << "adding directly accessible symbols of"
-                                         << it.internalKindStr() << it.canonicalPath();
-            it.visitDirectAccessibleScopes(addLocalSymbols, VisitPrototypesOption::Normal,
-                                           &defaultErrorHandler, &visited, &visitedRefs);
-            return true;
-        };
-        Path toSearch = Paths::lookupSymbolPath(ctx.base().toString().chopped(1));
-        context.resolve(toSearch, addReachableSymbols, &defaultErrorHandler);
-        // add attached types? technically we should...
-    }
-    for (auto symbolKinds = symbols.constBegin(); symbolKinds != symbols.constEnd();
-         ++symbolKinds) {
-        for (auto symbol = symbolKinds.value().constBegin();
-             symbol != symbolKinds.value().constEnd(); ++symbol) {
-            CompletionItem comp;
-            comp.label = symbol->toUtf8();
-            comp.kind = int(symbolKinds.key());
-            res.append(comp);
-        }
+    for (const auto &type : resolver.value()->importedTypes().asKeyValueRange()) {
+        // ignore special QQmlJSImporterMarkers
+        const bool isMarkerType = type.first.contains(u"$internal$.")
+                || type.first.contains(u"$anonymous$.") || type.first.contains(u"$module$.");
+        if (isMarkerType)
+            continue;
+
+        auto &scope = type.second.scope;
+        if (!scope)
+            continue;
+
+        if (!testScopeSymbol(scope, options, kind))
+            continue;
+
+        CompletionItem completion;
+        completion.label = type.first.toUtf8();
+        completion.kind = int(kind);
+        res << completion;
     }
     return res;
 }
@@ -1797,6 +1844,69 @@ static QList<CompletionItem> propertyCompletion(const QQmlJSScope *scope,
     return result;
 }
 
+static QList<CompletionItem> enumerationCompletion(const QQmlJSScope *scope,
+                                                   QDuplicateTracker<QString> *usedNames)
+{
+    QList<CompletionItem> result;
+    for (const QQmlJSMetaEnum &enumerator : scope->enumerations()) {
+        if (usedNames && usedNames->hasSeen(enumerator.name())) {
+            continue;
+        }
+        CompletionItem completion;
+        completion.label = enumerator.name().toUtf8();
+        completion.kind = static_cast<int>(CompletionItemKind::Enum);
+        result.append(completion);
+    }
+    return result;
+}
+
+static QList<CompletionItem> enumerationValueCompletionHelper(const QStringList &enumeratorKeys)
+{
+    QList<CompletionItem> result;
+    for (const QString &enumeratorKey : enumeratorKeys) {
+        CompletionItem completion;
+        completion.label = enumeratorKey.toUtf8();
+        completion.kind = static_cast<int>(CompletionItemKind::EnumMember);
+        result.append(completion);
+    }
+    return result;
+}
+
+/*!
+\internal
+Creates completion items for enumerationvalues.
+If enumeratorName is a valid enumerator then only do completion for the requested enumerator, and
+otherwise do completion for \b{all other possible} enumerators.
+
+For example:
+```
+id: someItem
+enum Hello { World }
+enum MyEnum { ValueOne, ValueTwo }
+
+// Hello does refer to a enumerator:
+property var a: Hello.<complete only World here>
+
+// someItem does not refer to a enumerator:
+property var b: someItem.<complete World, ValueOne and ValueTwo here>
+```
+*/
+
+static QList<CompletionItem> enumerationValueCompletion(const QQmlJSScope *scope,
+                                                        const QString &enumeratorName)
+{
+    auto enumerator = scope->enumeration(enumeratorName);
+    if (enumerator.isValid()) {
+        return enumerationValueCompletionHelper(enumerator.keys());
+    }
+
+    QList<CompletionItem> result;
+    for (const QQmlJSMetaEnum &enumerator : scope->enumerations()) {
+        result << enumerationValueCompletionHelper(enumerator.keys());
+    }
+    return result;
+}
+
 /*!
 \internal
 Calls F on all JavaScript-parents of scope. For example, you can use this method to
@@ -1831,21 +1941,36 @@ QList<CompletionItem> QQmlLSUtils::scriptIdentifierCompletion(const DomItem &con
     const bool hasQualifier = !ctx.base().isEmpty();
 
     if (!hasQualifier) {
-        result << idsCompletions(context.component());
+        result << idsCompletions(context.component())
+               << reachableTypes(context,
+                                 LocalSymbolsType::Singleton | LocalSymbolsType::AttachedType,
+                                 CompletionItemKind::Class);
 
         auto scope = context.nearestSemanticScope();
         if (!scope)
             return result;
         nearestScope = scope.get();
+
+        result << enumerationCompletion(nearestScope, &usedNames);
     } else {
         auto expressionType = QQmlLSUtils::resolveExpressionType(context, ResolveOwnerType);
-        if (!expressionType)
+        if (!expressionType || !expressionType->semanticScope)
             return result;
         nearestScope = expressionType->semanticScope.get();
+
+        if (expressionType->name) {
+            // note: you only get enumeration values in qualified expressions, never alone
+            result << enumerationValueCompletion(nearestScope, *expressionType->name);
+
+            // skip enumeration types if already inside an enumeration type
+            if (auto enumerator = nearestScope->enumeration(*expressionType->name);
+                !enumerator.isValid()) {
+                result << enumerationCompletion(nearestScope, &usedNames);
+            }
+        }
     }
 
-    if (!nearestScope)
-        return result;
+    Q_ASSERT(nearestScope);
 
     result << methodCompletion(nearestScope, &usedNames)
            << propertyCompletion(nearestScope, &usedNames);
@@ -1966,7 +2091,8 @@ static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &currentIte
 
         // add Qml Types for default binding
         const DomItem containingFile = currentItem.containingFile();
-        res += QQmlLSUtils::reachableSymbols(containingFile, ctx, LocalSymbolsType::ObjectType);
+        res += QQmlLSUtils::reachableTypes(containingFile, LocalSymbolsType::ObjectType,
+                                           CompletionItemKind::Constructor);
     }
     return res;
 }
@@ -2010,7 +2136,7 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
         LocalSymbolsTypes options;
         options.setFlag(LocalSymbolsType::ObjectType);
         options.setFlag(LocalSymbolsType::ValueType);
-        return reachableSymbols(currentItem, ctx, options);
+        return reachableTypes(currentItem, options, CompletionItemKind::Class);
     }
 
     if (completionType == DomType::ScriptFormalParameter) {
@@ -2034,7 +2160,7 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
                 if (!current || current->accessSemantics() == QQmlSA::AccessSemantics::Reference) {
                     LocalSymbolsTypes options;
                     options.setFlag(LocalSymbolsType::ObjectType);
-                    res << reachableSymbols(currentItem, ctx, options);
+                    res << reachableTypes(currentItem, options, CompletionItemKind::Constructor);
                 }
             }
             return res;
@@ -2057,7 +2183,8 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             res << bindingsCompletions(containingObject);
         }
         // add Qml Types for default binding
-        res += reachableSymbols(currentItem, ctx, LocalSymbolsType::ObjectType);
+        res += reachableTypes(currentItem, LocalSymbolsType::ObjectType,
+                              CompletionItemKind::Constructor);
         return res;
     }
 
@@ -2072,7 +2199,8 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
 
         // when in front of the import statement: propose types for root Qml Object completion
         if (cursorInFrontOfItem(currentItem, ctx))
-            res += reachableSymbols(containingFile, ctx, LocalSymbolsType::ObjectType);
+            res += reachableTypes(containingFile, LocalSymbolsType::ObjectType,
+                                  CompletionItemKind::Constructor);
 
         return res;
     }
@@ -2093,7 +2221,8 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             }
         }
         // Types for root Qml Object completion
-        res += reachableSymbols(containingFile, ctx, LocalSymbolsType::ObjectType);
+        res += reachableTypes(containingFile, LocalSymbolsType::ObjectType,
+                              CompletionItemKind::Constructor);
         return res;
     }
 
@@ -2112,9 +2241,9 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
         auto propertyKeyWord = info.regions[u"property"_s];
         auto propertyIdentifier = info.regions[u"identifier"_s];
         if (propertyKeyWord.end() <= ctx.offset() && ctx.offset() < propertyIdentifier.offset) {
-            return reachableSymbols(currentItem, ctx,
-                                    LocalSymbolsType::ObjectType
-                                            | LocalSymbolsType::ValueType);
+            return reachableTypes(currentItem,
+                                  LocalSymbolsType::ObjectType | LocalSymbolsType::ValueType,
+                                  CompletionItemKind::Class);
         }
         // do not autocomplete the rest
         return {};
