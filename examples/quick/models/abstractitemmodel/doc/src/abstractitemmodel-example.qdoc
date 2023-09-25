@@ -5,6 +5,7 @@
     \example models/abstractitemmodel
     \title Models and Views: AbstractItemModel Example
     \brief Shows how to use a QAbstractItemModel subclass as a model in QML.
+    \examplecategory {User Interface Components}
 
     \image qml-abstractitemmodel-example.png
 */

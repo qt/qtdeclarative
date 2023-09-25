@@ -5,6 +5,8 @@
     \title QQuickRenderControl OpenGL Example
     \example rendercontrol/rendercontrol_opengl
     \brief Shows how to render a Qt Quick scene into a texture that is then used by a non-Quick based OpenGL renderer.
+    \examplecategory {Graphics & Multimedia}
+
     \image rendercontrol-opengl-example.jpg
 
     The Qt Quick scene is managed by a QQuickWindow that is not visible

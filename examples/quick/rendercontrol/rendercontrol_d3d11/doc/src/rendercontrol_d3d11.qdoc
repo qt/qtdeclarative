@@ -5,5 +5,7 @@
     \title QQuickRenderControl D3D11 Example
     \example rendercontrol/rendercontrol_d3d11
     \brief Shows how to render a Qt Quick scene into a texture that is then used by a non-Quick based Direct3D 11 renderer.
+    \examplecategory {Graphics & Multimedia}
+
     \image rendercontrol-d3d11-example.jpg
 */

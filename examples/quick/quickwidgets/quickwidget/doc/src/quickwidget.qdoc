@@ -5,6 +5,8 @@
     \title Qt Quick Widgets Example
     \example quickwidgets/quickwidget
     \brief Demonstrates how to mix QML with a Qt Widgets application using the QQuickWidget class.
+    \examplecategory {User Interface Components}
+
     \image qtquickwidgets-example.png
 */
 
