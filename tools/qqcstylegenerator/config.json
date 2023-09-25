@@ -308,12 +308,14 @@
         "name": "SpinBox",
         "page": "Components",
         "component set": "SpinBoxTemplate${Theme}",
-        "contents": ["indicator-down", "textInput", "indicator-up"],
+        "contents": ["indicator-down-background", "textInput", "indicator-up-background"],
         "atoms": [
             {"atom": "background", "figmaPath": "spinboxBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
-            {"atom": "indicator-up", "figmaPath": "ContentItem, UpIndicator"},
-            {"atom": "indicator-down", "figmaPath": "ContentItem, DownIndicator"},
+            {"atom": "indicator-up-icon", "figmaPath": "ContentItem, UpIndicator, indicator"},
+            {"atom": "indicator-up-background", "figmaPath": "ContentItem, UpIndicator, background"},
+            {"atom": "indicator-down-icon", "figmaPath": "ContentItem, DownIndicator, indicator"},
+            {"atom": "indicator-down-background", "figmaPath": "ContentItem, DownIndicator, background"},
             {"atom": "textInput", "figmaPath": "ContentItem, textInput", "export": ["geometry", "text"]}
         ],
         "states": [

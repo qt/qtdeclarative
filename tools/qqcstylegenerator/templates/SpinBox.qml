@@ -63,22 +63,36 @@ T.SpinBox {
         inputMethodHints: control.inputMethodHints
     }
 
-    up.indicator: Image {
+    up.indicator: StyleImage {
         x: control.mirroredIndicators
             ? (control.upConfig?.leftPadding || 0)
             : control.width - width - (control.upConfig?.rightPadding || 0)
         y: (control.upConfig?.topPadding || 0)
             + (control.height - (control.upConfig ? control.upConfig.topPadding + control.upConfig.bottomPadding : 0) - height) / 2
-        source: Qt.resolvedUrl(control.upConfig.indicator_up.filePath)
+        height: control.availableHeight
+        imageConfig: control.upConfig.indicator_up_background
+
+        StyleImage {
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            imageConfig: control.upConfig.indicator_up_icon
+        }
     }
 
-    down.indicator: Image {
+    down.indicator: StyleImage {
         x: control.mirroredIndicators
             ? control.width - width - (control.downConfig?.rightPadding || 0)
             : (control.downConfig?.leftPadding || 0)
         y: (control.downConfig?.topPadding || 0)
             + (control.height - (control.downConfig ? control.downConfig.topPadding + control.downConfig.bottomPadding : 0) - height) / 2
-        source: Qt.resolvedUrl(control.downConfig.indicator_down.filePath)
+        imageConfig: control.downConfig.indicator_down_background
+        height: control.availableHeight
+
+        StyleImage {
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            imageConfig: control.downConfig.indicator_down_icon
+        }
     }
 
     background: StyleImage {
