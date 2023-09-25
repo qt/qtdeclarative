@@ -320,7 +320,7 @@ public:
     ImportScope &importScope() { return m_importScope; }
     const ImportScope &importScope() const { return m_importScope; }
 
-    std::optional<std::shared_ptr<QQmlJSTypeResolver>> typeResolver() const
+    std::shared_ptr<QQmlJSTypeResolver> typeResolver() const
     {
         return m_typeResolver;
     }
@@ -342,7 +342,7 @@ private:
     QList<Pragma> m_pragmas;
     QList<Import> m_imports;
     ImportScope m_importScope;
-    std::optional<std::shared_ptr<QQmlJSTypeResolver>> m_typeResolver;
+    std::shared_ptr<QQmlJSTypeResolver> m_typeResolver;
     QQmlJSTypeResolverDependencies m_typeResolverDependencies;
 };
 

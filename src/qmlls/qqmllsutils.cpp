@@ -838,7 +838,7 @@ static QQmlJSScope::ConstPtr findScopeInConnections(QQmlJSScope::ConstPtr scope,
         auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
         if (!resolver)
             return {};
-        return resolver.value()->scopeForId(targetName, scope);
+        return resolver->scopeForId(targetName, scope);
     } else {
         // No binding to target property, return the container object's scope
         return scope->parentScope();
@@ -941,7 +941,7 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
     if (!resolver)
         return {};
 
-    if (auto scope = resolver.value()->typeForName(name)) {
+    if (auto scope = resolver->typeForName(name)) {
         if (scope->isSingleton()) {
             return QQmlLSUtilsExpressionType{ name, scope,
                                               QQmlLSUtilsIdentifierType::SingletonIdentifier };
@@ -979,7 +979,7 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
     }
 
     // check if its an id
-    QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope);
+    QQmlJSScope::ConstPtr fromId = resolver->scopeForId(name, referrerScope);
     if (fromId)
         return QQmlLSUtilsExpressionType{ name, fromId, QmlObjectIdIdentifier };
 
@@ -1214,7 +1214,7 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(const DomItem &
         auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
         if (!resolver)
             return {};
-        QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope);
+        QQmlJSScope::ConstPtr fromId = resolver->scopeForId(name, referrerScope);
         if (fromId) {
             DomItem qmlObject = QQmlLSUtils::sourceLocationToDomItem(item.containingFile(),
                                                                      fromId->sourceLocation());
@@ -1754,7 +1754,8 @@ QList<CompletionItem> QQmlLSUtils::reachableTypes(const DomItem &el, LocalSymbol
         return {};
 
     QList<CompletionItem> res;
-    for (const auto &type : resolver.value()->importedTypes().asKeyValueRange()) {
+    const auto keyValueRange = resolver->importedTypes().asKeyValueRange();
+    for (const auto &type : keyValueRange) {
         // ignore special QQmlJSImporterMarkers
         const bool isMarkerType = type.first.contains(u"$internal$.")
                 || type.first.contains(u"$anonymous$.") || type.first.contains(u"$module$.");
