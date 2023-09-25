@@ -504,7 +504,7 @@ int Sequence::virtualMetacall(Object *object, QMetaObject::Call call, int index,
     switch (call) {
     case QMetaObject::ReadProperty: {
         const QMetaType valueType = sequence->d()->valueMetaType();
-        if (!sequence->loadReference())
+        if (sequence->d()->isReference() && !sequence->loadReference())
             return 0;
         const QMetaSequence metaSequence = sequence->d()->metaSequence();
         if (metaSequence.valueMetaType() != valueType)
@@ -522,7 +522,8 @@ int Sequence::virtualMetacall(Object *object, QMetaObject::Call call, int index,
         if (index < 0 || index >= metaSequence.size(storagePointer))
             return 0;
         metaSequence.setValueAtIndex(storagePointer, index, a[0]);
-        sequence->storeReference();
+        if (sequence->d()->isReference())
+            sequence->storeReference();
         break;
     }
     default:
