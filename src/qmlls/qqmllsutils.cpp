@@ -2078,8 +2078,9 @@ static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &currentIte
     QList<CompletionItem> res;
     if (ctx.base().isEmpty()) {
         // TODO: complete also the brackets after function?
-        for (QUtf8StringView s : std::array<QUtf8StringView, 5>(
-                     { u8"property", u8"readonly", u8"default", u8"signal", u8"function" })) {
+        for (QUtf8StringView s : std::array<QUtf8StringView, 8>(
+                     { u8"property", u8"readonly", u8"default", u8"signal", u8"function",
+                       u8"required", u8"enum", u8"component" })) {
             CompletionItem comp;
             comp.label = s.data();
             comp.kind = int(CompletionItemKind::Keyword);

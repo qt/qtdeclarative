@@ -1566,6 +1566,13 @@ void tst_qmlls_utils::completions_data()
             { attachedTypeName2, CompletionItemKind::Class },
     });
 
+    const auto keywords = ExpectedCompletions({
+            { u"function"_s, CompletionItemKind::Keyword },
+            { u"required"_s, CompletionItemKind::Keyword },
+            { u"enum"_s, CompletionItemKind::Keyword },
+            { u"component"_s, CompletionItemKind::Keyword },
+    });
+
     const auto jsStatements = ExpectedCompletions({
             { u"return"_s, CompletionItemKind::Keyword },
             { u"for"_s, CompletionItemKind::Keyword },
@@ -1594,12 +1601,11 @@ void tst_qmlls_utils::completions_data()
     });
 
     QTest::newRow("objEmptyLine") << file << 9 << 1
-                                  << ExpectedCompletions({
-                                             { u"Rectangle"_s, CompletionItemKind::Constructor },
-                                             { u"property"_s, CompletionItemKind::Keyword },
-                                             { u"width"_s, CompletionItemKind::Property },
-                                             { u"function"_s, CompletionItemKind::Keyword },
-                                     })
+                                  << (ExpectedCompletions({
+                                              { u"Rectangle"_s, CompletionItemKind::Constructor },
+                                              { u"property"_s, CompletionItemKind::Keyword },
+                                              { u"width"_s, CompletionItemKind::Property },
+                                      }) += keywords)
                                   << QStringList({ u"QtQuick"_s, u"vector4d"_s }) << InsertColon;
 
     QTest::newRow("attachedTypes") << file << 9 << 1 << attachedTypes
