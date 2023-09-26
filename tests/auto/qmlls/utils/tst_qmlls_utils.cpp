@@ -1826,15 +1826,15 @@ void tst_qmlls_utils::completions_data()
                    u"Strict"_s,
                } << None;
 
-    QTest::newRow("var-variable") << file << 64 << 67
-                                  << ExpectedCompletions({
-                                             { u"myvar"_s, CompletionItemKind::Value },
-                                     })
-                                  << QStringList{} << None;
-    QTest::newRow("let-variable")
-            << file << 3 << 8
-            << ExpectedCompletions({})
-            << QStringList{ u"myvar"_s, } << None;
+    QTest::newRow("non-block-scoped-variable")
+            << file << 69 << 21
+            << ExpectedCompletions({
+                       { u"helloVarVariable"_s, CompletionItemKind::Variable },
+               })
+            << QStringList{} << None;
+    QTest::newRow("block-scoped-variable")
+            << file << 76 << 21 << ExpectedCompletions({})
+            << QStringList{ u"helloLetVariable"_s, u"helloVarVariable"_s } << None;
 }
 
 void tst_qmlls_utils::completions()
@@ -1906,9 +1906,6 @@ void tst_qmlls_utils::completions()
                 "fails because of the unexpected '.'",
                 Abort);
         QEXPECT_FAIL("propertyTypeCompletion", "No completion for property types supported yet",
-                     Abort);
-        QEXPECT_FAIL("var-variable",
-                     "Completion for var-variables currently acts the same as for let-variables.",
                      Abort);
         QVERIFY2(labels.contains(exp.first),
                  u"no %1 in %2"_s
