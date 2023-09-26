@@ -1027,7 +1027,7 @@ public:
                          LookupOptions = LookupOption::Normal, ErrorHandler h = nullptr,
                          QSet<quintptr> *visited = nullptr, QList<Path> *visitedRefs = nullptr) const;
     bool visitLocalSymbolsNamed(QString name, function_ref<bool(const DomItem &)> visitor) const;
-    QSet<QString> localSymbolNames(LocalSymbolsTypes lTypes = LocalSymbolsType::All) const;
+    QSet<QString> localSymbolNames(LocalSymbolsTypes lTypes) const;
     bool visitLookup1(QString symbolName, function_ref<bool(const DomItem &)> visitor,
                       LookupOptions = LookupOption::Normal, ErrorHandler h = nullptr,
                       QSet<quintptr> *visited = nullptr, QList<Path> *visitedRefs = nullptr) const;

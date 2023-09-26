@@ -315,17 +315,15 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(WriteOutChecks)
 
 enum class LocalSymbolsType {
     None = 0x0,
-    QmlTypes = 0x1,
-    Types = 0x3,
-    Signals = 0x4,
-    Methods = 0xC,
-    Attributes = 0x10,
-    Ids = 0x20,
-    Components = 0x40,
-    Namespaces = 0x80,
-    Globals = 0x100,
-    MethodParameters = 0x200,
-    All = 0x3FF
+    ObjectType = 0x1,
+    ValueType = 0x2,
+    Signal = 0x4,
+    Method = 0x8,
+    Attribute = 0x10,
+    Id = 0x20,
+    Namespace = 0x40,
+    Global = 0x80,
+    MethodParameter = 0x100,
 };
 Q_ENUM_NS(LocalSymbolsType)
 Q_DECLARE_FLAGS(LocalSymbolsTypes, LocalSymbolsType)

@@ -1691,12 +1691,13 @@ QList<CompletionItem> QQmlLSUtils::reachableSymbols(const DomItem &context,
     auto addLocalSymbols = [&typeCompletionType, &symbols](const DomItem &el) {
         LocalSymbolsTypes options;
         if (typeCompletionType.testFlag(TypeCompletionOption::Types)) {
-            options.setFlag(LocalSymbolsType::Namespaces);
-            options.setFlag(LocalSymbolsType::Types);
+            options.setFlag(LocalSymbolsType::Namespace);
+            options.setFlag(LocalSymbolsType::ValueType);
+            options.setFlag(LocalSymbolsType::ObjectType);
         }
         if (typeCompletionType.testFlag(TypeCompletionOption::QmlTypes)) {
-            options.setFlag(LocalSymbolsType::QmlTypes);
-            options.setFlag(LocalSymbolsType::Namespaces);
+            options.setFlag(LocalSymbolsType::ObjectType);
+            options.setFlag(LocalSymbolsType::Namespace);
         }
         if (options != LocalSymbolsType::None) {
             reachableTypes(symbols[CompletionItemKind::Class], el, options);

@@ -1804,21 +1804,19 @@ QSet<QString> DomItem::localSymbolNames(LocalSymbolsTypes typeFilter) const
         return res;
     switch (internalKind()) {
     case DomType::QmlObject:
-        if (typeFilter & LocalSymbolsType::Attributes) {
+        if (typeFilter & LocalSymbolsType::Attribute) {
             res += propertyDefs().keys();
             res += bindings().keys();
         }
-        if (typeFilter & LocalSymbolsType::Methods) {
-            if ((typeFilter & LocalSymbolsType::Methods) == LocalSymbolsType::Methods) {
-                res += methods().keys();
-            } else {
-                bool shouldAddSignals = bool(typeFilter & LocalSymbolsType::Signals);
-                if (const QmlObject *objPtr = as<QmlObject>()) {
-                    auto methods = objPtr->methods();
-                    for (auto it = methods.cbegin(); it != methods.cend(); ++it) {
-                        if (bool(it.value().methodType == MethodInfo::MethodType::Signal)
-                            == shouldAddSignals)
-                            res += it.key();
+        if (typeFilter.testFlag(LocalSymbolsType::Signal)
+            || typeFilter.testFlag(LocalSymbolsType::Method)) {
+            if (const QmlObject *objPtr = as<QmlObject>()) {
+                auto methods = objPtr->methods();
+                for (auto it = methods.cbegin(); it != methods.cend(); ++it) {
+                    const bool isSignal = it.value().methodType == MethodInfo::MethodType::Signal;
+                    if (((typeFilter & LocalSymbolsType::Signal) && isSignal)
+                        || ((typeFilter & LocalSymbolsType::Method) && !isSignal)) {
+                        res += it.key();
                     }
                 }
             }
@@ -1828,11 +1826,11 @@ QSet<QString> DomItem::localSymbolNames(LocalSymbolsTypes typeFilter) const
         // to do
         break;
     case DomType::QmlComponent:
-        if (typeFilter & LocalSymbolsType::Ids)
+        if (typeFilter & LocalSymbolsType::Id)
             res += ids().keys();
         break;
     case DomType::QmlFile: // subComponents, imported types
-        if (typeFilter & LocalSymbolsType::Components) {
+        if (typeFilter & LocalSymbolsType::ObjectType) {
             DomItem comps = field(Fields::components);
             for (auto k : comps.keys())
                 if (!k.isEmpty())
@@ -1841,18 +1839,16 @@ QSet<QString> DomItem::localSymbolNames(LocalSymbolsTypes typeFilter) const
         break;
     case DomType::ImportScope: {
         const ImportScope *currentPtr = as<ImportScope>();
-        if (typeFilter & LocalSymbolsType::Types) {
-            if ((typeFilter & LocalSymbolsType::Types) == LocalSymbolsType::Types) {
-                res += currentPtr->importedNames(*this);
-            } else {
-                bool qmlTypes = bool(typeFilter & LocalSymbolsType::QmlTypes);
-                for (const QString &typeName : currentPtr->importedNames(*this)) {
-                    if ((!typeName.isEmpty() && typeName.at(0).isUpper()) == qmlTypes)
-                        res += typeName;
-                }
+        const bool importObjects = typeFilter & LocalSymbolsType::ObjectType;
+        const bool importValues = typeFilter & LocalSymbolsType::ValueType;
+        if (importObjects || importValues) {
+            for (const QString &typeName : currentPtr->importedNames(*this)) {
+                const bool isObject = !typeName.isEmpty() && typeName.at(0).isUpper();
+                if ((isObject && importObjects) || (!isObject && importValues))
+                    res += typeName;
             }
         }
-        if (typeFilter & LocalSymbolsType::Namespaces) {
+        if (typeFilter & LocalSymbolsType::Namespace) {
             for (const auto &k : currentPtr->subImports().keys())
                 res.insert(k);
         }
@@ -1861,11 +1857,11 @@ QSet<QString> DomItem::localSymbolNames(LocalSymbolsTypes typeFilter) const
     case DomType::QmltypesComponent:
     case DomType::JsResource:
     case DomType::GlobalComponent:
-        if (typeFilter & LocalSymbolsType::Globals)
+        if (typeFilter & LocalSymbolsType::Global)
             res += enumerations().keys();
         break;
     case DomType::MethodInfo: {
-        if (typeFilter & LocalSymbolsType::MethodParameters) {
+        if (typeFilter & LocalSymbolsType::MethodParameter) {
             DomItem params = field(Fields::parameters);
             params.visitIndexes([&res](const DomItem &p) {
                 const MethodParameter *pPtr = p.as<MethodParameter>();
