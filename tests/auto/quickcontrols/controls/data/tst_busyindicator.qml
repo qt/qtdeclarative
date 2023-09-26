@@ -22,7 +22,14 @@ TestCase {
         id: mouseArea
         MouseArea { }
     }
-
+    
+    Component {
+        id: busyIndicatorInItem
+        Item {
+            BusyIndicator { }
+        }
+    }
+    
     function init() {
         failOnWarning(/.?/)
     }
@@ -62,5 +69,17 @@ TestCase {
 
         touch.release(0, control).commit()
         verify(!ma.pressed)
+    }
+
+    // QTBUG-108808
+    function test_visibility() {
+        let control = createTemporaryObject(busyIndicatorInItem, testCase, {visible: false})
+        verify(control)
+
+        let invisibleImage = grabImage(control)
+        control.visible = true
+        let visibleImage = grabImage(control)
+
+        verify(!invisibleImage.equals(visibleImage))
     }
 }
