@@ -41,7 +41,7 @@
             {"atom": "background", "figmaPath": "CheckBoxBackground"},
             {"atom": "label", "figmaPath": "ContentItem, Label"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
-            {"atom": "indicator", "figmaPath": "ContentItem, CheckBoxIndicatorBox"}
+            {"atom": "indicator", "figmaPath": "ContentItem, CheckBoxIndicator"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -65,7 +65,7 @@
         "atoms": [
             {"atom": "background", "figmaPath": "ComboBoxBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
-            {"atom": "indicator", "figmaPath": "ComboBoxHandle"},
+            {"atom": "indicator", "figmaPath": "ComboBoxIndicator"},
             {"atom": "label", "figmaPath": "ContentItem, Label"}
         ],
         "states": [
@@ -169,8 +169,8 @@
         "contents": ["groove", "track", "handle"],
         "atoms": [
             {"atom": "background", "figmaPath": "RangeSliderBackground"},
-            {"atom": "groove", "figmaPath": "RangeSliderGroove, groveBack"},
-            {"atom": "track", "figmaPath": "RangeSliderTrack, trackBack"},
+            {"atom": "groove", "figmaPath": "RangeSliderGroove"},
+            {"atom": "track", "figmaPath": "RangeSliderTrack"},
             {"atom": "first-handle", "figmaPath": "RangeSliderHandleFirst"},
             {"atom": "second-handle", "figmaPath": "RangeSliderHandleSecond"},
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
@@ -228,7 +228,6 @@
             {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
         ],
         "states": [
-            {"state": "hovered", "figmaState": "hovered"},
             {"state": "normal", "figmaState": "normal"}
         ]
     },
@@ -239,8 +238,8 @@
         "contents": ["groove", "track", "handle"],
         "atoms": [
             {"atom": "background", "figmaPath": "SliderBackground"},
-            {"atom": "groove", "figmaPath": "SliderGroove, groveBack"},
-            {"atom": "track", "figmaPath": "SliderTrack, trackBack"},
+            {"atom": "groove", "figmaPath": "SliderGroove"},
+            {"atom": "track", "figmaPath": "SliderTrack"},
             {"atom": "handle", "figmaPath": "SliderHandle"},
             {"atom": "contentItem", "figmaPath": "ContentItem"}
         ],
@@ -284,7 +283,7 @@
             {"atom": "contentItem", "figmaPath": "ContentItem"},
             {"atom": "handle", "figmaPath": "ContentItem, SwitchHandle"},
             {"atom": "handle-background", "figmaPath": "ContentItem, HandleBackground"},
-            {"atom": "handle-contentItem", "figmaPath": "ContentItem, HandleTemplate, ContentItem", "export": "layout"},
+            {"atom": "handle-contentItem", "figmaPath": "ContentItem, indicator, indicatorLayout", "export": "layout"},
             {"atom": "label", "figmaPath": "ContentItem, Label"}
         ],
         "states": [

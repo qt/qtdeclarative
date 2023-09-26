@@ -21,11 +21,7 @@ T.ScrollIndicator {
     leftInset: -config.leftInset || 0
     rightInset: -config.rightInset || 0
 
-    readonly property string __currentState: [
-        !control.enabled && "disabled",
-        control.enabled && control.hovered && "hovered",
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.scrollindicator[__currentState] || {}
+    readonly property var config: ConfigReader.controls.scrollindicator["normal"] || {}
 
     contentItem: Item {
         implicitWidth: control.horizontal ? _handle.implicitWidth : _handle.implicitHeight
