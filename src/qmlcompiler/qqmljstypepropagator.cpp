@@ -951,6 +951,12 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
         return;
     }
 
+    if (property.storedType().isNull()) {
+        setError(u"Cannot determine type for property %1 of type %2"_s.arg(
+                propertyName, callBase.descriptiveName()));
+        return;
+    }
+
     if (!property.isWritable() && !property.storedType()->isListProperty()) {
         setError(u"Can't assign to read-only property %1"_s.arg(propertyName));
 

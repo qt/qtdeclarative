@@ -9,6 +9,7 @@ QtObject {
     property string attachedForNasty: Nasty.objectName
 
     property Nasty nasty: Nasty {
+        id: theNasty
         objectName: Component.objectName
     }
 
@@ -98,5 +99,12 @@ QtObject {
         for (var a in Component)
             ++result;
         return result;
+    }
+
+    property alias selfself: self
+    property alias nastyBad: theNasty.bad
+    function writeToUnknown() : int {
+        self.selfself.nastyBad = undefined;
+        return 5;
     }
 }
