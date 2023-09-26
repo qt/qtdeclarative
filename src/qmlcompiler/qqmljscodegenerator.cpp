@@ -2327,6 +2327,10 @@ void QQmlJSCodeGenerator::generate_GetIterator(int iterator)
         reject(u"iterator on non-list type"_s);
 
     const QQmlJSRegisterContent iteratorType = m_state.accumulatorOut();
+    if (!iteratorType.isProperty()) {
+        reject(u"using non-iterator as iterator"_s);
+        return;
+    }
 
     const QString identifier = QString::number(iteratorType.baseLookupIndex());
     const QString iteratorName = m_state.accumulatorVariableOut + u"Iterator" + identifier;
@@ -2359,8 +2363,12 @@ void QQmlJSCodeGenerator::generate_IteratorNext(int value, int offset)
 
     Q_ASSERT(value == m_state.changedRegisterIndex());
     const QQmlJSRegisterContent iteratorContent = m_state.accumulatorIn();
-    const QQmlJSScope::ConstPtr iteratorType = iteratorContent.storedType();
+    if (!iteratorContent.isProperty()) {
+        reject(u"using non-iterator as iterator"_s);
+        return;
+    }
 
+    const QQmlJSScope::ConstPtr iteratorType = iteratorContent.storedType();
     const QString iteratorTypeName = iteratorType->internalName();
     const QString listName = m_state.accumulatorVariableIn
             + u"List" + QString::number(iteratorContent.baseLookupIndex());

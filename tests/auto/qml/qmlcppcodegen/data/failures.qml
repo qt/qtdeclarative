@@ -92,4 +92,11 @@ QtObject {
 
     // Cannot generate code for getters
     property rect r3: ({ get x() { return 42; }, y: 4 })
+
+    property int nonIterable: {
+        var result = 1;
+        for (var a in Component)
+            ++result;
+        return result;
+    }
 }
