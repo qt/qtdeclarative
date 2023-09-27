@@ -88,15 +88,15 @@ Rectangle {
                 }
                 ListElement {
                     name: qsTr("Dash pattern")
-                    shapeUrl: "linearGradient.qml"
+                    shapeUrl: "dashPattern.qml"
                 }
                 ListElement {
                     name: qsTr("Linear gradient")
-                    shapeUrl: "radialGradient.qml"
+                    shapeUrl: "linearGradient.qml"
                 }
                 ListElement {
                     name: qsTr("Radial gradient")
-                    shapeUrl: "dashPattern.qml"
+                    shapeUrl: "radialGradient.qml"
                 }
                 ListElement {
                     name: qsTr("Fill rules")
