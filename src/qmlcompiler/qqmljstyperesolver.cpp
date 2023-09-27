@@ -1077,20 +1077,6 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr
                         scope);
                 return true;
             }
-
-            if (std::optional<QQmlJSScope::JavaScriptIdentifier> identifier =
-                        scope->findJSIdentifier(name);
-                identifier.has_value()) {
-                QQmlJSMetaProperty prop;
-                prop.setPropertyName(name);
-                prop.setTypeName(u"QJSValue"_s);
-                prop.setType(jsValueType());
-                prop.setIsWritable(!identifier->isConst);
-
-                result = QQmlJSRegisterContent::create(
-                        jsValueType(), prop, QQmlJSRegisterContent::JavaScriptObject, type);
-                return true;
-            }
         }
 
         return checkEnums(scope, name, &result, mode);
@@ -1098,6 +1084,22 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr
 
     if (QQmlJSUtils::searchBaseAndExtensionTypes(type, check))
         return result;
+
+    for (auto scope = type;
+         scope && (scope->scopeType() == QQmlJSScope::ScopeType::JSFunctionScope
+                   || scope->scopeType() == QQmlJSScope::ScopeType::JSLexicalScope);
+         scope = scope->parentScope()) {
+        if (auto ownIdentifier = scope->JSIdentifier(name)) {
+            QQmlJSMetaProperty prop;
+            prop.setPropertyName(name);
+            prop.setTypeName(u"QJSValue"_s);
+            prop.setType(jsValueType());
+            prop.setIsWritable(!(ownIdentifier.value().isConst));
+
+            return QQmlJSRegisterContent::create(jsValueType(), prop,
+                                                 QQmlJSRegisterContent::JavaScriptObject, scope);
+        }
+    }
 
     if (QQmlJSScope::ConstPtr attachedBase = typeForName(name)) {
         if (QQmlJSScope::ConstPtr attached = attachedBase->attachedType()) {
