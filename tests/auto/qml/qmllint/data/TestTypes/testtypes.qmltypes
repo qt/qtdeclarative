@@ -191,4 +191,11 @@ Module {
             index: 0
         }
     }
+    Component {
+        file: "foo.h"
+        name: "Foo"
+        prototype: "QObject"
+        exports: ["TestTypes/Foo 1.0"]
+        Method { name: "print" }
+    }
 }
