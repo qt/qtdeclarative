@@ -1382,6 +1382,7 @@ UiObjectMemberWithArray: UiPropertyAttributes T_IDENTIFIER T_LT UiPropertyType T
         node->typeToken = loc(4);
         node->identifierToken = loc(6);
         node->semicolonToken = loc(7); // insert a fake ';' before ':'
+        node->colonToken = loc(7);
 
         AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(6));
         propertyName->identifierToken = loc(6);
@@ -1411,6 +1412,7 @@ UiObjectMemberExpressionStatementLookahead: UiPropertyAttributes UiPropertyType 
         node->typeToken = loc(2);
         node->identifierToken = loc(3);
         node->semicolonToken = loc(4); // insert a fake ';' before ':'
+        node->colonToken = loc(4);
 
         AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(3));
         propertyName->identifierToken = loc(3);

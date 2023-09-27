@@ -14,6 +14,7 @@
 #include <QtQml/private/qqmlsignalnames_p.h>
 #include <QtQml/private/qqmljslexer_p.h>
 
+#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <optional>
@@ -171,6 +172,95 @@ QQmlLSUtilsTextPosition QQmlLSUtils::textRowAndColumnFrom(const QString &text, q
     return { row, column };
 }
 
+static QList<QQmlLSUtilsItemLocation>::const_iterator
+handlePropertyDefinitionAndBindingOverlap(const QList<QQmlLSUtilsItemLocation> &items,
+                                          qsizetype offsetInFile)
+{
+    auto smallest = std::min_element(
+            items.begin(), items.end(),
+            [](const QQmlLSUtilsItemLocation &a, const QQmlLSUtilsItemLocation &b) {
+                return a.fileLocation->info().fullRegion.length
+                        < b.fileLocation->info().fullRegion.length;
+            });
+
+    if (smallest->domItem.internalKind() == DomType::Binding) {
+        // weird edge case: the filelocations of property definitions and property bindings are
+        // actually overlapping, which means that qmlls cannot distinguish between bindings and
+        // bindings in property definitions. Those need to be treated differently for
+        // autocompletion, for example.
+        // Therefore: when inside a binding and a propertydefinition, choose the property definition
+        // if offsetInFile is before the colon, like for example:
+        // property var helloProperty: Rectangle { /*...*/ }
+        // |----return propertydef---|-- return Binding ---|
+
+        // get the smallest property definition to avoid getting the property definition that the
+        // current QmlObject is getting bound to!
+        auto smallestPropertyDefinition = std::min_element(
+                items.begin(), items.end(),
+                [](const QQmlLSUtilsItemLocation &a, const QQmlLSUtilsItemLocation &b) {
+                    // make property definition smaller to avoid getting smaller items that are not
+                    // property definitions
+                    const bool aIsPropertyDefinition =
+                            a.domItem.internalKind() == DomType::PropertyDefinition;
+                    const bool bIsPropertyDefinition =
+                            b.domItem.internalKind() == DomType::PropertyDefinition;
+                    return aIsPropertyDefinition > bIsPropertyDefinition
+                            && a.fileLocation->info().fullRegion.length
+                            < b.fileLocation->info().fullRegion.length;
+                });
+
+        if (smallestPropertyDefinition->domItem.internalKind() != DomType::PropertyDefinition)
+            return smallest;
+
+        const auto propertyDefinitionColon =
+                smallestPropertyDefinition->fileLocation->info().regions[u"colon"_s];
+        const auto smallestColon = smallest->fileLocation->info().regions[u"colon"_s];
+        // sanity check: is it the definition of the current binding? check if they both have their
+        // ':' at the same location
+        if (propertyDefinitionColon.isValid() && propertyDefinitionColon == smallestColon
+            && offsetInFile < smallestColon.offset) {
+            return smallestPropertyDefinition;
+        }
+    }
+    return smallest;
+}
+
+static QList<QQmlLSUtilsItemLocation>
+filterItemsFromTextLocation(const QList<QQmlLSUtilsItemLocation> &items, qsizetype offsetInFile)
+{
+    if (items.size() < 2)
+        return items;
+
+    // if there are multiple items, take the smallest one + its neighbors
+    // this allows to prefer inline components over main components, when both contain the
+    // current textposition, and to disregard internal structures like property maps, which
+    // "contain" everything from their first-appearing to last-appearing property (e.g. also
+    // other stuff in between those two properties).
+
+    QList<QQmlLSUtilsItemLocation> filteredItems;
+
+    auto smallest = handlePropertyDefinitionAndBindingOverlap(items, offsetInFile);
+
+    filteredItems.append(*smallest);
+
+    const QQmlJS::SourceLocation smallestLoc = smallest->fileLocation->info().fullRegion;
+    const quint32 smallestBegin = smallestLoc.begin();
+    const quint32 smallestEnd = smallestLoc.end();
+
+    for (auto it = items.begin(); it != items.end(); it++) {
+        if (it == smallest)
+            continue;
+
+        const QQmlJS::SourceLocation itLoc = it->fileLocation->info().fullRegion;
+        const quint32 itBegin = itLoc.begin();
+        const quint32 itEnd = itLoc.end();
+        if (itBegin == smallestEnd || smallestBegin == itEnd) {
+            filteredItems.append(*it);
+        }
+    }
+    return filteredItems;
+}
+
 /*!
     \internal
     \brief Find the DomItem representing the object situated in file at given line and
@@ -236,39 +326,8 @@ QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(const DomItem 
     }
 
     // filtering step:
-    if (itemsFound.size() > 1) {
-        // if there are multiple items, take the smallest one + its neighbors
-        // this allows to prefer inline components over main components, when both contain the
-        // current textposition, and to disregard internal structures like property maps, which
-        // "contain" everything from their first-appearing to last-appearing property (e.g. also
-        // other stuff in between those two properties).
-        auto smallest = std::min_element(
-                itemsFound.begin(), itemsFound.end(),
-                [](const QQmlLSUtilsItemLocation &a, const QQmlLSUtilsItemLocation &b) {
-                    return a.fileLocation->info().fullRegion.length
-                            < b.fileLocation->info().fullRegion.length;
-                });
-        QList<QQmlLSUtilsItemLocation> filteredItems;
-        filteredItems.append(*smallest);
-
-        const QQmlJS::SourceLocation smallestLoc = smallest->fileLocation->info().fullRegion;
-        const quint32 smallestBegin = smallestLoc.begin();
-        const quint32 smallestEnd = smallestLoc.end();
-
-        for (auto it = itemsFound.begin(); it != itemsFound.end(); it++) {
-            if (it == smallest)
-                continue;
-
-            const QQmlJS::SourceLocation itLoc = it->fileLocation->info().fullRegion;
-            const quint32 itBegin = itLoc.begin();
-            const quint32 itEnd = itLoc.end();
-            if (itBegin == smallestEnd || smallestBegin == itEnd) {
-                filteredItems.append(*it);
-            }
-        }
-        itemsFound = filteredItems;
-    }
-    return itemsFound;
+    auto filtered = filterItemsFromTextLocation(itemsFound, targetPos);
+    return filtered;
 }
 
 DomItem QQmlLSUtils::baseObject(const DomItem &object)

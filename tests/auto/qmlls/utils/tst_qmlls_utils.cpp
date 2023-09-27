@@ -2095,14 +2095,6 @@ void tst_qmlls_utils::completions()
         QEXPECT_FAIL("letStatement", "JS Statement completion not implemented yet!", Abort);
         QEXPECT_FAIL("block-scoped-variable", "JS Statement completion not implemented yet!", Abort);
         QEXPECT_FAIL("singleton", "completion not implemented yet!", Abort);
-        QEXPECT_FAIL("propertyNameCompletion2",
-                     "Because of a file locations overlap in the DOM, you cannot differentiate "
-                     "between bindings and property definitions. To be fixed soon™️.",
-                     Abort);
-        QEXPECT_FAIL("propertyNameCompletion",
-                     "Because of a file locations overlap in the DOM, you cannot differentiate "
-                     "between bindings and property definitions. To be fixed soon™️.",
-                     Abort);
         QVERIFY(completions.isEmpty());
         return;
     }
