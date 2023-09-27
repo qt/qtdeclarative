@@ -1860,7 +1860,7 @@ QList<CompletionItem> QQmlLSUtils::scriptIdentifierCompletion(const DomItem &con
     return result;
 }
 
-static const QQmlJSScope *resolve(const QQmlJSScope *current, QStringList names)
+static const QQmlJSScope *resolve(const QQmlJSScope *current, const QStringList &names)
 {
     for (const QString &name : names) {
         if (auto property = current->property(name); property.isValid()) {
