@@ -577,6 +577,10 @@ void tst_QQuickMultiPointTouchArea::nested()
 
 void tst_QQuickMultiPointTouchArea::inFlickable()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("On Android, QPointingDevicePrivate::queryPointById() sometimes fails to find a point 'in play' (QTBUG-117079)");
+#endif
+
     QScopedPointer<QQuickView> window(createAndShowView("inFlickable.qml"));
     QVERIFY(window->rootObject() != nullptr);
 
