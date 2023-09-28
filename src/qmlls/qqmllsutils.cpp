@@ -33,6 +33,10 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(QQmlLSUtilsLog, "qt.languageserver.utils")
 Q_LOGGING_CATEGORY(QQmlLSCompletionLog, "qt.languageserver.completions")
 
+static QList<CompletionItem> methodCompletion(const QQmlJSScope *scope,
+                                              QDuplicateTracker<QString> *usedNames);
+static QList<CompletionItem> propertyCompletion(const QQmlJSScope *scope,
+                                                QDuplicateTracker<QString> *usedNames);
 /*!
    \internal
     Helper to check if item is a Field Member Expression \c {<someExpression>.propertyName}.
@@ -1647,6 +1651,40 @@ bool QQmlLSUtils::isValidEcmaScriptIdentifier(QStringView identifier)
     return eofToken == static_cast<int>(QQmlJS::Lexer::EOF_SYMBOL);
 }
 
+static QList<CompletionItem> signalHandlerCompletion(const QQmlJSScope *scope,
+                                                     QDuplicateTracker<QString> *usedNames)
+{
+    QList<CompletionItem> res;
+    const auto keyValues = scope->methods().asKeyValueRange();
+    for (const auto &[name, method] : keyValues) {
+        if (method.access() != QQmlJSMetaMethod::Public
+            || method.methodType() != QQmlJSMetaMethodType::Signal) {
+            continue;
+        }
+        if (usedNames && usedNames->hasSeen(name)) {
+            continue;
+        }
+
+        CompletionItem completion;
+        completion.label = QQmlSignalNames::signalNameToHandlerName(name).toUtf8();
+        completion.kind = int(CompletionItemKind::Method);
+        res << completion;
+    }
+    return res;
+}
+
+static QList<CompletionItem> &&insertColonsForCompletions(QList<CompletionItem> &&completions)
+{
+    for (auto &completion : completions) {
+        // ignore the completions that already have insertText set
+        if (completion.insertText)
+            continue;
+
+        completion.insertText = QByteArray(completion.label).append(": ");
+    }
+    return std::move(completions);
+}
+
 QList<CompletionItem> QQmlLSUtils::bindingsCompletions(const DomItem &containingObject)
 {
     QList<CompletionItem> res;
@@ -1654,38 +1692,13 @@ QList<CompletionItem> QQmlLSUtils::bindingsCompletions(const DomItem &containing
     res << reachableTypes(containingObject, LocalSymbolsType::AttachedType,
                           CompletionItemKind::Class);
 
-    qCDebug(QQmlLSCompletionLog) << "binding completions";
-    containingObject.visitPrototypeChain(
-            [&res](const DomItem &it) {
-                qCDebug(QQmlLSCompletionLog)
-                        << "prototypeChain" << it.internalKindStr() << it.canonicalPath();
-                if (const QmlObject *itPtr = it.as<QmlObject>()) {
-                    // signal handlers
-                    auto methods = itPtr->methods();
-                    auto it = methods.cbegin();
-                    while (it != methods.cend()) {
-                        if (it.value().methodType == MethodInfo::MethodType::Signal) {
-                            CompletionItem comp;
-                            QString signal = it.key();
-                            comp.label = QQmlSignalNames::signalNameToHandlerName(signal).toUtf8();
-                            res.append(comp);
-                        }
-                        ++it;
-                    }
-                    // properties that can be bound
-                    auto pDefs = itPtr->propertyDefs();
-                    for (auto it2 = pDefs.keyBegin(); it2 != pDefs.keyEnd(); ++it2) {
-                        qCDebug(QQmlLSCompletionLog) << "adding property" << *it2;
-                        CompletionItem comp;
-                        comp.label = it2->toUtf8();
-                        comp.insertText = (*it2 + u": "_s).toUtf8();
-                        comp.kind = int(CompletionItemKind::Property);
-                        res.append(comp);
-                    }
-                }
-                return true;
-            },
-            VisitPrototypesOption::Normal);
+    const QQmlJSScope::ConstPtr scope = containingObject.semanticScope();
+    if (!scope)
+        return res;
+
+    res << insertColonsForCompletions(propertyCompletion(scope.get(), nullptr));
+    res << insertColonsForCompletions(signalHandlerCompletion(scope.get(), nullptr));
+
     return res;
 }
 

@@ -1608,6 +1608,14 @@ void tst_qmlls_utils::completions_data()
                                       }) += keywords)
                                   << QStringList({ u"QtQuick"_s, u"vector4d"_s }) << InsertColon;
 
+    QTest::newRow("handlers") << file << 5 << 1
+                              << ExpectedCompletions{ {
+                                         { u"onHandleMe"_s, CompletionItemKind::Method },
+                                         { u"onDefaultPropertyChanged"_s,
+                                           CompletionItemKind::Method },
+                                 } }
+                              << QStringList({ u"QtQuick"_s, u"vector4d"_s }) << InsertColon;
+
     QTest::newRow("attachedTypes") << file << 9 << 1 << attachedTypes
                                    << QStringList{ u"QtQuick"_s, u"vector4d"_s } << InsertColon;
 

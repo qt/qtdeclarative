@@ -98,4 +98,5 @@ Zzz {
     readonly property int readonlyProperty: 456
     default property int defaultProperty
     property int builtin: Math.abs(43)
+    signal handleMe()
 }
