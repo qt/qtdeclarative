@@ -125,6 +125,8 @@ enum class ImportCompletionType { None, Module, Version };
 
 using DomItem = QQmlJS::Dom::DomItem;
 
+enum QQmlLSUtilsAppendOption { AppendSemicolon, AppendNothing };
+
 class QQmlLSUtils
 {
 public:
@@ -168,9 +170,11 @@ public:
     static QList<CompletionItem> completions(const DomItem& currentItem,
                                              const CompletionContextStrings &ctx);
 
+
     // JS statement completion
     static QList<CompletionItem> suggestJSStatementCompletion(const DomItem &currentItem);
-    static QList<CompletionItem> suggestVariableDeclarationStatementCompletion();
+    static QList<CompletionItem>
+    suggestVariableDeclarationStatementCompletion(QQmlLSUtilsAppendOption option = AppendSemicolon);
 };
 QT_END_NAMESPACE
 

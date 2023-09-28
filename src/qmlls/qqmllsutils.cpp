@@ -2064,6 +2064,11 @@ decltype(auto) collectFromAllJavaScriptParents(const QQmlJSScope::ConstPtr &scop
     return result;
 }
 
+// TODO: rename this to 'expressionCompletion', expression as in expression vs statements
+/*!
+\internal
+Generate autocompletions for JS expressions (expressions as in 'expressions and statements').
+*/
 QList<CompletionItem> QQmlLSUtils::scriptIdentifierCompletion(const DomItem &context,
                                                               const CompletionContextStrings &ctx)
 {
@@ -2427,13 +2432,18 @@ static QList<CompletionItem> insideQmlFileCompletion(const DomItem &currentItem,
 \internal
 Generate the snippets for let, var and const variable declarations.
 */
-QList<CompletionItem> QQmlLSUtils::suggestVariableDeclarationStatementCompletion()
+QList<CompletionItem>
+QQmlLSUtils::suggestVariableDeclarationStatementCompletion(QQmlLSUtilsAppendOption option)
 {
     QList<CompletionItem> result;
     // let/var/const statement
     for (auto view : std::array<QUtf8StringView, 3>{ "let", "var", "const" }) {
-        result.append(makeSnippet(QByteArray(view.data()).append(" variable = value;"),
-                                  QByteArray(view.data()).append(" ${1:variable} = $0;")));
+        result.append(makeSnippet(QByteArray(view.data()).append(" variable = value"),
+                                  QByteArray(view.data()).append(" ${1:variable} = $0")));
+        if (option == AppendSemicolon) {
+            result.back().insertText->append(";");
+            result.back().label.append(";");
+        }
     }
     return result;
 }
@@ -2457,6 +2467,10 @@ Here is a list of statements that do \e{not} get any completions:
 QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &currentItem)
 {
     QList<CompletionItem> result = suggestVariableDeclarationStatementCompletion();
+
+    // expression statements
+    CompletionContextStrings empty{ QString(), 0 };
+    result << scriptIdentifierCompletion(currentItem, empty);
 
     // block statement
     result.append(makeSnippet("{ statements... }", "{\n\t$0\n}"));
@@ -2564,6 +2578,63 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &c
     return result;
 }
 
+/*!
+\internal
+Returns true if left and right are valid, with ctx denoting an offset lying between left.end()
+and right.end().
+If the code is currently being written, that is, right is an invalid sourcelocation because it was
+not written by the user yet, then return true when ctx is behind the sourcelocation denoted by left.
+Otherwise, returns false.
+*/
+static bool betweenLocations(QQmlJS::SourceLocation left, const CompletionContextStrings &ctx,
+                             QQmlJS::SourceLocation right)
+{
+    if (!left.isValid())
+        return false;
+    // note: left.end() == ctx.offset() means that the cursor lies exactly after left
+    if (!(left.end() <= ctx.offset()))
+        return false;
+    if (!right.isValid())
+        return true;
+
+    // note: ctx.offset() == right.begin() means that the cursor lies exactly before right
+    return ctx.offset() <= right.begin();
+}
+static bool afterLocation(QQmlJS::SourceLocation left, const CompletionContextStrings &ctx)
+{
+    return betweenLocations(left, ctx, QQmlJS::SourceLocation{});
+}
+
+static QList<CompletionItem> insideForStatementCompletion(const DomItem &currentItem,
+                                                    const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
+    const QQmlJS::SourceLocation firstSemicolon = regions[FirstSemicolonTokenRegion];
+    const QQmlJS::SourceLocation secondSemicolon = regions[SecondSemicolonRegion];
+    const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
+
+    if (betweenLocations(leftParenthesis, ctx, firstSemicolon)) {
+        QList<CompletionItem> res;
+        res << QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx)
+            << QQmlLSUtils::suggestVariableDeclarationStatementCompletion();
+        return res;
+    }
+    if (betweenLocations(firstSemicolon, ctx, secondSemicolon)
+        || betweenLocations(secondSemicolon, ctx, rightParenthesis)) {
+        QList<CompletionItem> res;
+        res << QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+        return res;
+    }
+
+    if (afterLocation(rightParenthesis, ctx)) {
+        return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+    }
+
+    return {};
+}
+
 QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
                                                const CompletionContextStrings &ctx)
 {
@@ -2590,6 +2661,8 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             return scriptIdentifierCompletion(currentItem, ctx);
         case DomType::Import:
             return insideImportCompletion(currentItem, ctx);
+        case DomType::ScriptForStatement:
+            return insideForStatementCompletion(current, ctx);
         case DomType::QmlFile:
             return insideQmlFileCompletion(currentItem, ctx);
         case DomType::QmlObject:

@@ -1365,6 +1365,13 @@ void QQmlDomAstCreator::endVisit(AST::ForStatement *forStatement)
         return;
 
     auto current = makeScriptElement<ScriptElements::ForStatement>(forStatement);
+    current->addLocation(FileLocationRegion::ForKeywordRegion, forStatement->forToken);
+    current->addLocation(FileLocationRegion::LeftParenthesisRegion, forStatement->lparenToken);
+    current->addLocation(FileLocationRegion::FirstSemicolonTokenRegion,
+                         forStatement->firstSemicolonToken);
+    current->addLocation(FileLocationRegion::SecondSemicolonRegion,
+                         forStatement->secondSemicolonToken);
+    current->addLocation(FileLocationRegion::RightParenthesisRegion, forStatement->rparenToken);
 
     if (forStatement->statement) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());

@@ -201,6 +201,8 @@ OutWriter &OutWriter::writeRegion(FileLocationRegion region)
     case CommaTokenRegion:
         codeForRegion = u","_s;
         break;
+    case ForKeywordRegion:
+        codeForRegion = u"for"_s;
 
     // not keywords:
     case ImportUriRegion:
@@ -210,6 +212,9 @@ OutWriter &OutWriter::writeRegion(FileLocationRegion region)
     case MainRegion:
     case OnTargetRegion:
     case TypeIdentifierRegion:
+    case FirstSemicolonTokenRegion:
+    case SecondSemicolonRegion:
+    case InOfTokenRegion:
         Q_ASSERT_X(false, "regionToString", "Using regionToString on a value or an identifier!");
         return *this;
     }

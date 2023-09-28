@@ -1679,8 +1679,7 @@ void tst_qmlls_utils::completions_data()
                        { u"signal name;"_s, CompletionItemKind::Snippet, u"signal ${0:name};"_s },
                        { u"required name;"_s, CompletionItemKind::Snippet,
                          u"required ${0:name};"_s },
-                       { functionCompletion,
-                         CompletionItemKind::Snippet,
+                       { functionCompletion, CompletionItemKind::Snippet,
                          u"function ${1:name}($2): ${3:returnType} {\n\t$0\n}"_s },
                        { u"enum name { Values...}"_s, CompletionItemKind::Snippet,
                          u"enum ${1:name} {\n\t${0:values}\n}"_s },
@@ -2237,6 +2236,134 @@ void tst_qmlls_utils::completions_data()
                        u"readonly"_s,
                        u"required"_s,
                } << None;
+
+    const QString forStatementCompletion = u"for (initializer; condition; increment) statement"_s;
+    const QString ifStatementCompletion = u"if (condition) statement"_s;
+    const QString letStatementCompletion = u"let variable = value;"_s;
+    const QString constStatementCompletion = u"const variable = value;"_s;
+    const QString varStatementCompletion = u"var variable = value;"_s;
+    const QString caseStatementCompletion = u"case value: statements..."_s;
+    const QString caseStatement2Completion = u"case value: { statements... }"_s;
+    const QString defaultStatementCompletion = u"default: statements..."_s;
+    const QString defaultStatement2Completion = u"default: { statements... }"_s;
+
+    // warning: the completion strings in the test below were all tested by hand in VS Code to
+    // make sure they are easy to use. Make sure to check the code snippets by hand before changing
+    // them.
+    QTest::newRow("jsStatements")
+            << file << 104 << 1
+            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet,
+                                      u"let ${1:variable} = $0;"_s },
+                                    { u"const variable = value;"_s, CompletionItemKind::Snippet,
+                                      u"const ${1:variable} = $0;"_s },
+                                    { u"var variable = value;"_s, CompletionItemKind::Snippet,
+                                      u"var ${1:variable} = $0;"_s },
+                                    { u"{ statements... }"_s, CompletionItemKind::Snippet,
+                                      u"{\n\t$0\n}"_s },
+                                    { u"if (condition) statement"_s, CompletionItemKind::Snippet,
+                                      u"if ($1)\n\t$0"_s },
+                                    { u"if (condition) { statements }"_s,
+                                      CompletionItemKind::Snippet, u"if ($1) {\n\t$0\n}"_s },
+                                    { u"do { statements } while (condition);"_s,
+                                      CompletionItemKind::Snippet, u"do {\n\t$1\n} while ($0);"_s },
+                                    { u"while (condition) statement"_s, CompletionItemKind::Snippet,
+                                      u"while ($1)\n\t$0"_s },
+                                    { u"while (condition) { statements...}"_s,
+                                      CompletionItemKind::Snippet, u"while ($1) {\n\t$0\n}"_s },
+                                    { u"for (initializer; condition; increment) statement"_s,
+                                      CompletionItemKind::Snippet, u"for ($1;$2;$3)\n\t$0"_s },
+                                    { u"for (initializer; condition; increment) { statements... }"_s,
+                                      CompletionItemKind::Snippet, u"for ($1;$2;$3) {\n\t$0\n}"_s },
+                                    { u"try { statements... } catch(error) { statements... }"_s,
+                                      CompletionItemKind::Snippet, u"try {\n\t$1\n} catch($2) {\n\t$0\n}"_s },
+                                    { u"try { statements... } finally { statements... }"_s,
+                                      CompletionItemKind::Snippet, u"try {\n\t$1\n} finally {\n\t$0\n}"_s },
+                                    { u"try { statements... } catch(error) { statements... } finally { statements... }"_s,
+                                      CompletionItemKind::Snippet, u"try {\n\t$1\n} catch($2) {\n\t$3\n} finally {\n\t$0\n}"_s },
+                                    { u"for (property in object) { statements... }"_s,
+                                      CompletionItemKind::Snippet, u"for ($1 in $2) {\n\t$0\n}"_s },
+                                    { u"for (element of array) { statements... }"_s,
+                                      CompletionItemKind::Snippet, u"for ($1 of $2) {\n\t$0\n}"_s },
+                                    { u"continue"_s, CompletionItemKind::Keyword },
+                                    { u"break"_s, CompletionItemKind::Keyword },
+                                    }
+            << QStringList{ caseStatementCompletion,
+                            caseStatement2Completion,
+                            defaultStatementCompletion,
+                            defaultStatement2Completion,
+               } << None;
+
+    QTest::newRow("forStatementLet")
+            << file << 103 << 13
+            << ExpectedCompletions{
+                       { letStatementCompletion, CompletionItemKind::Snippet,
+                         u"let ${1:variable} = $0;"_s },
+                       { constStatementCompletion, CompletionItemKind::Snippet,
+                         u"const ${1:variable} = $0;"_s },
+                       { varStatementCompletion, CompletionItemKind::Snippet,
+                         u"var ${1:variable} = $0;"_s },
+                       { u"helloJSStatements"_s, CompletionItemKind::Method }
+                }
+            << QStringList{
+                       u"property"_s,
+                       u"readonly"_s,
+                       u"required"_s,
+                       forStatementCompletion,
+                       ifStatementCompletion,
+               } << None;
+
+    QTest::newRow("forStatementCondition")
+            << file << 103 << 25
+            << ExpectedCompletions{
+                   { u"helloJSStatements"_s, CompletionItemKind::Method },
+                   { u"i"_s, CompletionItemKind::Variable },
+               }
+            << QStringList{ u"property"_s,          u"readonly"_s,           u"required"_s,
+                            forStatementCompletion, ifStatementCompletion,   varStatementCompletion,
+                            letStatementCompletion, constStatementCompletion, }
+            << None;
+
+    QTest::newRow("forStatementIncrement")
+            << file << 103 << 31
+            << ExpectedCompletions{
+                   { u"helloJSStatements"_s, CompletionItemKind::Method },
+                   { u"i"_s, CompletionItemKind::Variable },
+                }
+            << QStringList{ u"property"_s,          u"readonly"_s,           u"required"_s,
+                            forStatementCompletion, ifStatementCompletion,   varStatementCompletion,
+                            letStatementCompletion, constStatementCompletion, }
+            << None;
+
+    QTest::newRow("forStatementIncrement2")
+            << file << 103 << 33
+            << ExpectedCompletions{ { u"helloJSStatements"_s, CompletionItemKind::Method } }
+            << QStringList{ u"property"_s,          u"readonly"_s,           u"required"_s,
+                            forStatementCompletion, ifStatementCompletion,   varStatementCompletion,
+                            letStatementCompletion, constStatementCompletion, }
+            << None;
+
+    QTest::newRow("forStatementBeforeBracket")
+            << file << 103 << 36
+            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { constStatementCompletion, CompletionItemKind:: Snippet },
+                                    { varStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"helloJSStatements"_s, CompletionItemKind::Method },
+                                    { u"i"_s, CompletionItemKind::Variable },
+                                    { forStatementCompletion, CompletionItemKind::Snippet }
+               }
+            << QStringList{ propertyCompletion }
+            << None;
+
+    QTest::newRow("forStatementAfterBracket")
+            << file << 103 << 37
+            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { constStatementCompletion, CompletionItemKind::Snippet },
+                                    { varStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"helloJSStatements"_s, CompletionItemKind::Method },
+                                    { forStatementCompletion, CompletionItemKind::Snippet }
+               }
+            << QStringList{ propertyCompletion }
+            << None;
 }
 
 void tst_qmlls_utils::completions()

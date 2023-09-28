@@ -99,4 +99,9 @@ Zzz {
     default property int defaultProperty
     property int builtin: Math.abs(43)
     signal handleMe()
+    function helloForStatement() {
+        for(let i = 0; i < 5; ++i) {
+
+        }
+    }
 }
