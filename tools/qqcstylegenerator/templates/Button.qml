@@ -25,17 +25,16 @@ T.Button {
 
     icon.width: 17
     icon.height: 17
-    icon.color: control.flat ? (control.enabled ? (control.down ? control.palette.highlight : control.palette.button)
-                                                : control.palette.mid)
+    icon.color: control.flat ? (control.down ? control.palette.highlight : control.palette.windowText)
                              : control.palette.buttonText
 
-    readonly property string currentState: [
+    readonly property string __currentState: [
         control.checked && "checked",
         !control.enabled && "disabled",
         control.enabled && !control.down && control.hovered && "hovered",
         control.down && "pressed"
     ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.button[currentState] || {}
+    readonly property var config: (control.flat ? ConfigReader.controls.flatbutton[__currentState] : ConfigReader.controls.button[__currentState]) || {}
 
     contentItem: IconLabel {
         spacing: control.spacing

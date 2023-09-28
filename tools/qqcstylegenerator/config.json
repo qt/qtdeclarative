@@ -33,6 +33,26 @@
         ]
     },
     {
+        "name": "FlatButton",
+        "page": "Components",
+        "component set": "FlatButtonTemplate${Theme}",
+        "atoms": [
+            {"atom": "background", "figmaPath": "FlatButtonBackground"},
+            {"atom": "contentItem", "figmaPath": "contentItem"},
+            {"atom": "label", "figmaPath": "contentItem, label"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "checked", "figmaState": "checked"},
+            {"state": "checked-disabled", "figmaState": "checkedDisabled"},
+            {"state": "checked-hovered", "figmaState": "checkedHovered"},
+            {"state": "checked-pressed", "figmaState": "checkedPressed"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "pressed", "figmaState": "pressed"}
+        ]
+    },
+    {
         "name": "CheckBox",
         "page": "Components",
         "component set": "CheckBoxTemplate${Theme}",
