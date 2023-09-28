@@ -1475,11 +1475,13 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
         target->metaObject()->metacall(target, QMetaObject::BindableProperty, index, argv);
         const bool success = bindable.setBinding(qmlBinding);
 
+        const auto bindingPrivateRefCount = QPropertyBindingPrivate::get(qmlBinding)->ref;
+
         // Only pop_front after setting the binding as the bindings are refcounted.
         sharedState->allQPropertyBindings.pop_front();
 
         // If the binding was actually not set, it's deleted now.
-        if (success) {
+        if (success && bindingPrivateRefCount > 1) {
             if (auto priv = QPropertyBindingPrivate::get(qmlBinding); priv->hasCustomVTable()) {
                 auto qmlBindingPriv = static_cast<QQmlPropertyBinding *>(priv);
                 auto jsExpression = qmlBindingPriv->jsExpression();
