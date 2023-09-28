@@ -950,15 +950,15 @@ private slots:
         auto blockSemanticScope = block.semanticScope();
         QVERIFY(blockSemanticScope);
         QVERIFY(blockSemanticScope);
-        QVERIFY(blockSemanticScope->JSIdentifier(u"sum"_s));
-        QVERIFY(blockSemanticScope->JSIdentifier(u"helloWorld"_s));
-        QVERIFY(blockSemanticScope->JSIdentifier(u"a"_s));
-        QVERIFY(blockSemanticScope->JSIdentifier(u"b"_s));
-        QVERIFY(blockSemanticScope->JSIdentifier(u"aa"_s));
-        QVERIFY(blockSemanticScope->JSIdentifier(u"bb"_s));
-        QVERIFY(blockSemanticScope->JSIdentifier(u"bool1"_s));
-        QVERIFY(blockSemanticScope->JSIdentifier(u"bool2"_s));
-        QVERIFY(blockSemanticScope->JSIdentifier(u"nullVar"_s));
+        QVERIFY(blockSemanticScope->ownJSIdentifier(u"sum"_s));
+        QVERIFY(blockSemanticScope->ownJSIdentifier(u"helloWorld"_s));
+        QVERIFY(blockSemanticScope->ownJSIdentifier(u"a"_s));
+        QVERIFY(blockSemanticScope->ownJSIdentifier(u"b"_s));
+        QVERIFY(blockSemanticScope->ownJSIdentifier(u"aa"_s));
+        QVERIFY(blockSemanticScope->ownJSIdentifier(u"bb"_s));
+        QVERIFY(blockSemanticScope->ownJSIdentifier(u"bool1"_s));
+        QVERIFY(blockSemanticScope->ownJSIdentifier(u"bool2"_s));
+        QVERIFY(blockSemanticScope->ownJSIdentifier(u"nullVar"_s));
         DomItem statements = block.field(Fields::statements);
         QCOMPARE(statements.indexes(), 8);
 
@@ -1577,7 +1577,7 @@ private slots:
             DomItem functionF = functionFs.index(0);
 
             QVERIFY(!functionF.semanticScope().isNull());
-            QVERIFY(functionF.semanticScope()->JSIdentifier("helloF").has_value());
+            QVERIFY(functionF.semanticScope()->ownJSIdentifier("helloF").has_value());
             DomItem parameters = functionF.field(Fields::parameters);
             std::vector<QString> parameterNames = {
                 u"q"_s, u"w"_s, u"e"_s, u"r"_s, u"t"_s, u"y"_s
@@ -1597,8 +1597,7 @@ private slots:
             QCOMPARE(functionFWithDefaults.indexes(), 1);
             DomItem functionFWithDefault = functionFWithDefaults.index(0);
             QVERIFY(!functionFWithDefault.semanticScope().isNull());
-            QVERIFY(functionFWithDefault.semanticScope()->JSIdentifier(
-                    u"helloFWithDefault"_s));
+            QVERIFY(functionFWithDefault.semanticScope()->ownJSIdentifier(u"helloFWithDefault"_s));
             DomItem parameters = functionFWithDefault.field(Fields::parameters);
 
             const std::vector<QString> parameterNames = { u"q"_s, u"w"_s, u"e"_s,
@@ -1629,7 +1628,7 @@ private slots:
             // already tested in deconstruction().
             DomItem method = rootQmlObject.field(Fields::methods).key(u"evil"_s).index(0);
             QVERIFY(!method.semanticScope().isNull());
-            QVERIFY(method.semanticScope()->JSIdentifier("helloEvil").has_value());
+            QVERIFY(method.semanticScope()->ownJSIdentifier("helloEvil").has_value());
             DomItem parameters = method.field(Fields::parameters);
             QCOMPARE(parameters.indexes(), 3);
 
@@ -1671,7 +1670,7 @@ private slots:
         {
             DomItem method = rootQmlObject.field(Fields::methods).key(u"marmelade"_s).index(0);
             QVERIFY(!method.semanticScope().isNull());
-            QVERIFY(method.semanticScope()->JSIdentifier(u"helloMarmelade"_s));
+            QVERIFY(method.semanticScope()->ownJSIdentifier(u"helloMarmelade"_s));
             DomItem parameters = method.field(Fields::parameters);
             QCOMPARE(parameters.indexes(), 1);
             {
@@ -1684,7 +1683,7 @@ private slots:
         {
             DomItem method = rootQmlObject.field(Fields::methods).key(u"marmelade2"_s).index(0);
             QVERIFY(!method.semanticScope().isNull());
-            QVERIFY(method.semanticScope()->JSIdentifier(u"helloMarmelade2"_s));
+            QVERIFY(method.semanticScope()->ownJSIdentifier(u"helloMarmelade2"_s));
             DomItem parameters = method.field(Fields::parameters);
             QCOMPARE(parameters.indexes(), 3);
             {
@@ -1930,8 +1929,8 @@ private slots:
             // Check if semantic scope is correctly created for the CaseClause
             auto blockSemanticScope = caseDogBlock.semanticScope();
             QVERIFY(blockSemanticScope);
-            QVERIFY(blockSemanticScope->JSIdentifier(u"name"_s));
-            QVERIFY(blockSemanticScope->JSIdentifier(u"another"_s));
+            QVERIFY(blockSemanticScope->ownJSIdentifier(u"name"_s));
+            QVERIFY(blockSemanticScope->ownJSIdentifier(u"another"_s));
 
             // Default clause
             DomItem defaultClause =
@@ -2023,7 +2022,7 @@ private slots:
             QCOMPARE(singleLineWhileBody.internalKind(), DomType::ScriptBinaryExpression);
             auto singleLineWhileScope = singleLineWhile.semanticScope();
             QVERIFY(singleLineWhileScope);
-            QVERIFY(singleLineWhileScope->findJSIdentifier("i")); // i is in the parent scope
+            QVERIFY(singleLineWhileScope->jsIdentifier("i")); // i is in the parent scope
         }
 
         {
@@ -2043,7 +2042,7 @@ private slots:
             QVERIFY(doWhileBody);
             auto doWhileBodyScope = doWhileBody.semanticScope();
             QVERIFY(doWhileBodyScope);
-            QVERIFY(doWhileBodyScope->JSIdentifier("b")); // const b = a
+            QVERIFY(doWhileBodyScope->ownJSIdentifier("b")); // const b = a
             QCOMPARE(doWhileBody.internalKind(), DomType::ScriptBlockStatement);
             QCOMPARE(doWhileBody.field(Fields::statements).index(0).internalKind(),
                      DomType::ScriptVariableDeclaration); // const b = a
@@ -2074,7 +2073,7 @@ private slots:
                                             .index(2);
             auto singleDoWhileScope = singleDoWhile.semanticScope();
             QVERIFY(singleDoWhileScope);
-            QVERIFY(singleDoWhileScope->findJSIdentifier("a")); // a = a - 1
+            QVERIFY(singleDoWhileScope->jsIdentifier("a")); // a = a - 1
         }
 
         {
@@ -2161,7 +2160,7 @@ private slots:
             QVERIFY(forthForEach);
             auto forthForEachScope = forthForEach.semanticScope();
             QVERIFY(forthForEachScope);
-            QVERIFY(forthForEachScope->findJSIdentifier("t")); // t lives in parent scope
+            QVERIFY(forthForEachScope->jsIdentifier("t")); // t lives in parent scope
         }
 
         {
@@ -2177,10 +2176,10 @@ private slots:
             QVERIFY(outerForEach);
             auto outerForEachScope = outerForEach.semanticScope();
             QVERIFY(outerForEachScope);
-            QVERIFY(outerForEachScope->findJSIdentifier("a")); // var [a,b,c,d]
-            QVERIFY(outerForEachScope->findJSIdentifier("b"));
-            QVERIFY(outerForEachScope->findJSIdentifier("c"));
-            QVERIFY(outerForEachScope->findJSIdentifier("d"));
+            QVERIFY(outerForEachScope->jsIdentifier("a")); // var [a,b,c,d]
+            QVERIFY(outerForEachScope->jsIdentifier("b"));
+            QVERIFY(outerForEachScope->jsIdentifier("c"));
+            QVERIFY(outerForEachScope->jsIdentifier("d"));
             QCOMPARE(outerForEach.internalKind(), DomType::ScriptForEachStatement);
             QCOMPARE(statements.index(1).internalKind(), DomType::ScriptForEachStatement);
             QCOMPARE(outerForEach.field(Fields::expression)
@@ -2190,7 +2189,7 @@ private slots:
                      "enumerable");
             auto outerForEachBodyScope = outerForEach.field(Fields::body).semanticScope();
             QVERIFY(outerForEachBodyScope);
-            QVERIFY(outerForEachBodyScope->JSIdentifier("t")); // let t
+            QVERIFY(outerForEachBodyScope->ownJSIdentifier("t")); // let t
             DomItem forInStatements = outerForEach.field(Fields::body).field(Fields::statements);
             QCOMPARE(forInStatements.index(0).internalKind(), DomType::ScriptVariableDeclaration);
             QCOMPARE(forInStatements.index(1).internalKind(), DomType::ScriptForEachStatement);
@@ -2199,7 +2198,7 @@ private slots:
             QVERIFY(firstForEach);
             auto firstForEachScope = firstForEach.semanticScope();
             QVERIFY(firstForEachScope);
-            QVERIFY(firstForEachScope->findJSIdentifier("t"));
+            QVERIFY(firstForEachScope->jsIdentifier("t"));
             QCOMPARE(firstForEach.field(Fields::bindingElement).internalKind(),
                      DomType::ScriptIdentifierExpression);
             QCOMPARE(firstForEach.field(Fields::bindingElement)
@@ -2223,9 +2222,9 @@ private slots:
             QVERIFY(secondForEach);
             auto secondForEachScope = secondForEach.semanticScope();
             QVERIFY(secondForEachScope);
-            QVERIFY(secondForEachScope->JSIdentifier("a1")); // const [a1,,a2,...rest]
-            QVERIFY(secondForEachScope->JSIdentifier("a2"));
-            QVERIFY(secondForEachScope->JSIdentifier("rest"));
+            QVERIFY(secondForEachScope->ownJSIdentifier("a1")); // const [a1,,a2,...rest]
+            QVERIFY(secondForEachScope->ownJSIdentifier("a2"));
+            QVERIFY(secondForEachScope->ownJSIdentifier("rest"));
 
             DomItem bindingElement =
                     secondForEach.field(Fields::bindingElement).field(Fields::bindingElement);
@@ -2247,7 +2246,7 @@ private slots:
             QVERIFY(thirdForEach);
             auto thirdForEachScope = thirdForEach.semanticScope();
             QVERIFY(thirdForEachScope);
-            QVERIFY(thirdForEachScope->JSIdentifier("t"));
+            QVERIFY(thirdForEachScope->ownJSIdentifier("t"));
         }
     }
 

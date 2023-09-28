@@ -286,7 +286,7 @@ bool QQmlJSScope::isComponentRootElement() const {
 }
 
 std::optional<QQmlJSScope::JavaScriptIdentifier>
-QQmlJSScope::findJSIdentifier(const QString &id) const
+QQmlJSScope::jsIdentifier(const QString &id) const
 {
     for (const auto *scope = this; scope; scope = scope->parentScope().data()) {
         if (scope->m_scopeType == QQmlSA::ScopeType::JSFunctionScope
@@ -300,7 +300,7 @@ QQmlJSScope::findJSIdentifier(const QString &id) const
     return std::optional<JavaScriptIdentifier>{};
 }
 
-std::optional<QQmlJSScope::JavaScriptIdentifier> QQmlJSScope::JSIdentifier(const QString &id) const
+std::optional<QQmlJSScope::JavaScriptIdentifier> QQmlJSScope::ownJSIdentifier(const QString &id) const
 {
     auto it = m_jsIdentifiers.find(id);
     if (it != m_jsIdentifiers.end())

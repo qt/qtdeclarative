@@ -314,7 +314,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
             if (scope->childScopes().size() == 0)
                 continue;
 
-            const auto jsId = scope->childScopes().first()->findJSIdentifier(name);
+            const auto jsId = scope->childScopes().first()->jsIdentifier(name);
 
             if (jsId.has_value() && jsId->kind == QQmlJSScope::JavaScriptIdentifier::Injected) {
                 const QQmlJSScope::JavaScriptIdentifier id = jsId.value();

@@ -1369,7 +1369,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
          scope && (scope->scopeType() == QQmlSA::ScopeType::JSFunctionScope
                    || scope->scopeType() == QQmlSA::ScopeType::JSLexicalScope);
          scope = scope->parentScope()) {
-        if (auto ownIdentifier = scope->JSIdentifier(name)) {
+        if (auto ownIdentifier = scope->ownJSIdentifier(name)) {
             QQmlJSMetaProperty prop;
             prop.setPropertyName(name);
             prop.setTypeName(u"QJSValue"_s);

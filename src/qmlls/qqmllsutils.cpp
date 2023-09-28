@@ -409,7 +409,7 @@ static bool findDefinitionFromItem(const DomItem &item, const QString &name)
 {
     if (const QQmlJSScope::ConstPtr &scope = item.semanticScope()) {
         qCDebug(QQmlLSUtilsLog) << "Searching for definition in" << item.internalKindStr();
-        if (auto jsIdentifier = scope->JSIdentifier(name)) {
+        if (auto jsIdentifier = scope->ownJSIdentifier(name)) {
             qCDebug(QQmlLSUtilsLog) << "Found scope" << scope->baseTypeName();
             return true;
         }
@@ -592,7 +592,7 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
 
         if (auto scope = current.semanticScope()) {
             // is the current property shadowed by some JS identifier? ignore current + its children
-            if (scope->JSIdentifier(name)) {
+            if (scope->ownJSIdentifier(name)) {
                 return false;
             }
         }
@@ -667,12 +667,12 @@ static QQmlLSUtilsLocation locationFromJSIdentifierDefinition(const DomItem &def
                                                               const QString &name)
 {
     Q_ASSERT_X(!definitionOfItem.semanticScope().isNull()
-                       && definitionOfItem.semanticScope()->JSIdentifier(name).has_value(),
+                       && definitionOfItem.semanticScope()->ownJSIdentifier(name).has_value(),
                "QQmlLSUtils::locationFromJSIdentifierDefinition",
                "JS definition does not actually define the JS identifier. "
                "Did you obtain definitionOfItem from findJSIdentifierDefinition() ?");
     QQmlJS::SourceLocation location =
-            definitionOfItem.semanticScope()->JSIdentifier(name).value().location;
+            definitionOfItem.semanticScope()->ownJSIdentifier(name).value().location;
 
     QQmlLSUtilsLocation result = { definitionOfItem.canonicalFilePath(), location };
     return result;
@@ -708,7 +708,7 @@ static void findUsagesHelper(
                     result.append({ fileName, location });
                     return true;
                 } else if (QQmlJSScope::ConstPtr scope = item.semanticScope();
-                           scope && scope->JSIdentifier(name)) {
+                           scope && scope->ownJSIdentifier(name)) {
                     // current JS identifier has been redefined, do not visit children
                     return false;
                 }
@@ -896,12 +896,12 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
         DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
         if (definitionOfItem) {
             Q_ASSERT_X(!definitionOfItem.semanticScope().isNull()
-                               && definitionOfItem.semanticScope()->JSIdentifier(name),
+                               && definitionOfItem.semanticScope()->ownJSIdentifier(name),
                        "QQmlLSUtils::findDefinitionOf",
                        "JS definition does not actually define the JS identifer. "
                        "It should be empty.");
             auto scope = definitionOfItem.semanticScope();
-            auto jsIdentifier = scope->JSIdentifier(name);
+            auto jsIdentifier = scope->ownJSIdentifier(name);
             if (jsIdentifier->scope) {
                 return QQmlLSUtilsExpressionType{ name, jsIdentifier->scope.toStrongRef(),
                                                   QQmlLSUtilsIdentifierType::JavaScriptIdentifier };

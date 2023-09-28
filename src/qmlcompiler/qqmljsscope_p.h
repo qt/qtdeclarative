@@ -386,8 +386,8 @@ public:
     void setAccessSemantics(AccessSemantics semantics) { m_semantics = semantics; }
     AccessSemantics accessSemantics() const { return m_semantics; }
 
-    std::optional<JavaScriptIdentifier> findJSIdentifier(const QString &id) const;
-    std::optional<JavaScriptIdentifier> JSIdentifier(const QString &id) const;
+    std::optional<JavaScriptIdentifier> jsIdentifier(const QString &id) const;
+    std::optional<JavaScriptIdentifier> ownJSIdentifier(const QString &id) const;
 
     QQmlJS::ConstPtrWrapperIterator childScopesBegin() const { return m_childScopes.constBegin(); }
     QQmlJS::ConstPtrWrapperIterator childScopesEnd() const { return m_childScopes.constEnd(); }
