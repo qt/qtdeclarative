@@ -2193,9 +2193,9 @@ void tst_qmlls_utils::completions()
 
     for (const CompletionItem &c : completions) {
         // explicitly forbid marker structs created by QQmlJSImporter
-        QVERIFY(!c.label.startsWith("$internal$."));
-        QVERIFY(!c.label.startsWith("$module$."));
-        QVERIFY(!c.label.startsWith("$anonymous$."));
+        QVERIFY(!c.label.contains("$internal$."));
+        QVERIFY(!c.label.contains("$module$."));
+        QVERIFY(!c.label.contains("$anonymous$."));
 
         if (c.kind->toInt() == int(CompletionItemKind::Module)) {
             QVERIFY2(!modulesTracker.hasSeen(c.label), "Duplicate module: " + c.label);
