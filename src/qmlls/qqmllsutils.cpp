@@ -1042,6 +1042,15 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
     if (fromId)
         return QQmlLSUtilsExpressionType{ name, fromId, QmlObjectIdIdentifier };
 
+    const QQmlJSScope::ConstPtr jsGlobal = resolver->jsGlobalObject();
+    // check if its a JS global method
+    if (auto scope = methodFromReferrerScope(jsGlobal, name, options))
+        return scope;
+
+    // check if its an JS global property
+    if (auto scope = propertyFromReferrerScope(jsGlobal, name, options))
+        return *scope;
+
     return {};
 }
 /*!
@@ -2040,6 +2049,17 @@ QList<CompletionItem> QQmlLSUtils::scriptIdentifierCompletion(const DomItem &con
         result << collectFromAllJavaScriptParents<jsIdentifierCompletion>(nearestScope, &usedNames)
                << collectFromAllJavaScriptParents<methodCompletion>(nearestScope, &usedNames)
                << collectFromAllJavaScriptParents<propertyCompletion>(nearestScope, &usedNames);
+
+        auto file = context.containingFile().as<QmlFile>();
+        if (!file)
+            return result;
+        auto resolver = file->typeResolver();
+        if (!resolver)
+            return result;
+
+        const auto globals = resolver->jsGlobalObject();
+        result << methodCompletion(globals.get(), &usedNames)
+               << propertyCompletion(globals.get(), &usedNames);
     }
 
     return result;

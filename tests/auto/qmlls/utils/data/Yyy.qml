@@ -97,4 +97,5 @@ Zzz {
     required property int requiredProperty
     readonly property int readonlyProperty: 456
     default property int defaultProperty
+    property int builtin: Math.abs(43)
 }

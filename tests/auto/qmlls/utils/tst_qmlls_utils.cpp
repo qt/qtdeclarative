@@ -1657,6 +1657,24 @@ void tst_qmlls_utils::completions_data()
                                   << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s })
                                   << None;
 
+    QTest::newRow("jsGlobals") << file << 6 << 11
+                               << ExpectedCompletions{ {
+                                          { u"console"_s, CompletionItemKind::Property },
+                                          { u"Math"_s, CompletionItemKind::Property },
+                                  } }
+                               << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s })
+                               << None;
+
+    QTest::newRow("jsGlobals2") << file << 100 << 32
+                                << ExpectedCompletions{ {
+                                           { u"abs"_s, CompletionItemKind::Method },
+                                           { u"log"_s, CompletionItemKind::Method },
+                                           { u"E"_s, CompletionItemKind::Property },
+                                   } }
+                                << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s,
+                                                 u"foo"_s, u"lala"_s })
+                                << None;
+
     QTest::newRow("afterLongBinding")
             << file << 10 << 16
             << ExpectedCompletions({
