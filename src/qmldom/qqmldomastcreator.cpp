@@ -411,12 +411,18 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
                                      .warning(tr("id is a special attribute, that should not be "
                                                  "used as property name"))
                                                .withPath(currentNodeEl().path)));
-        if (p.isDefaultMember)
+        if (p.isDefaultMember) {
             FileLocations::addRegion(nodeStack.last().fileLocations, u"default",
                                      el->defaultToken());
-        if (p.isRequired)
+        }
+        if (p.isRequired) {
             FileLocations::addRegion(nodeStack.last().fileLocations, u"required",
                                      el->requiredToken());
+        }
+        if (p.isReadonly) {
+            FileLocations::addRegion(nodeStack.last().fileLocations, u"readonly",
+                                     el->readonlyToken());
+        }
         if (el->statement) {
             BindingType bType = BindingType::Normal;
             SourceLocation loc = combineLocations(el->statement);

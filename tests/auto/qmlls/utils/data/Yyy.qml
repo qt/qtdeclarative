@@ -94,4 +94,7 @@ Zzz {
     function helloJSStatements() {
         let x = 3;
     }
+    required property int requiredProperty
+    readonly property int readonlyProperty: 456
+    default property int defaultProperty
 }

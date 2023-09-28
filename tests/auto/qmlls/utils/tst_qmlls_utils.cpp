@@ -2048,6 +2048,87 @@ void tst_qmlls_utils::completions_data()
                    u"Hello"_s,
                    u"MyEnum"_s,
                } << None;
+
+    QTest::newRow("requiredProperty")
+            << file << 97 << 14
+            << ExpectedCompletions({
+                       { u"property"_s, CompletionItemKind::Keyword },
+                       { u"default"_s, CompletionItemKind::Keyword },
+               })
+            << QStringList{
+                   u"readonly"_s,
+                   u"required"_s,
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"foo"_s,
+                   u"ValueOne"_s,
+                   u"ValueTwo"_s,
+                   u"Hello"_s,
+                   u"MyEnum"_s,
+               } << None;
+
+    QTest::newRow("readonlyProperty")
+            << file << 98 << 13
+            << ExpectedCompletions({
+                       { u"property"_s, CompletionItemKind::Keyword },
+                       { u"default"_s, CompletionItemKind::Keyword },
+               })
+            << QStringList{
+                   u"required"_s,
+                   u"readonly"_s,
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"foo"_s,
+                   u"ValueOne"_s,
+                   u"ValueTwo"_s,
+                   u"Hello"_s,
+                   u"MyEnum"_s,
+               } << None;
+
+    QTest::newRow("defaultProperty")
+            << file << 99 << 12
+            << ExpectedCompletions({
+                       { u"property"_s, CompletionItemKind::Keyword },
+                       { u"readonly"_s, CompletionItemKind::Keyword },
+                       { u"required"_s, CompletionItemKind::Keyword },
+               })
+            << QStringList{
+                   u"default"_s,
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"foo"_s,
+                   u"ValueOne"_s,
+                   u"ValueTwo"_s,
+                   u"Hello"_s,
+                   u"MyEnum"_s,
+               } << None;
+
+    QTest::newRow("defaultProperty2")
+            << file << 99 << 20
+            << ExpectedCompletions({
+                       { u"property"_s, CompletionItemKind::Keyword },
+                       { u"readonly"_s, CompletionItemKind::Keyword },
+                       { u"required"_s, CompletionItemKind::Keyword },
+               })
+            << QStringList{
+                   u"default"_s,
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"foo"_s,
+                   u"ValueOne"_s,
+                   u"ValueTwo"_s,
+                   u"Hello"_s,
+                   u"MyEnum"_s,
+               } << None;
+
+    QTest::newRow("defaultProperty3")
+            << file << 99 << 21
+            << ExpectedCompletions{{ u"int"_s, CompletionItemKind::Class}}
+            << QStringList{
+                       u"property"_s,
+                       u"readonly"_s,
+                       u"required"_s,
+               } << None;
 }
 
 void tst_qmlls_utils::completions()

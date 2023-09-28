@@ -2158,6 +2158,67 @@ static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &currentIte
     return res;
 }
 
+static QList<CompletionItem> propertyCompletion(const DomItem &currentItem,
+                                                const CompletionContextStrings &ctx)
+{
+    auto info = FileLocations::treeOf(currentItem)->info();
+    const QQmlJS::SourceLocation propertyKeyword = info.regions[u"property"_s];
+
+    // do completions for the keywords
+    if (ctx.offset() < propertyKeyword.offset + propertyKeyword.length) {
+        const QQmlJS::SourceLocation readonlyKeyword = info.regions[u"readonly"_s];
+        const QQmlJS::SourceLocation defaultKeyword = info.regions[u"default"_s];
+        const QQmlJS::SourceLocation requiredKeyword = info.regions[u"required"_s];
+
+        bool completeReadonly = true;
+        bool completeRequired = true;
+        bool completeDefault = true;
+
+        // if there is already a readonly keyword before the cursor: do not auto complete it again
+        if (readonlyKeyword.isValid() && readonlyKeyword.offset < ctx.offset()) {
+            completeReadonly = false;
+            // also, required keywords do not like readonly keywords
+            completeRequired = false;
+        }
+
+        // same for required
+        if (requiredKeyword.isValid() && requiredKeyword.offset < ctx.offset()) {
+            completeRequired = false;
+            // also, required keywords do not like readonly keywords
+            completeReadonly = false;
+        }
+
+        // same for default
+        if (defaultKeyword.isValid() && defaultKeyword.offset < ctx.offset()) {
+            completeDefault = false;
+        }
+        QList<CompletionItem> items;
+        auto addCompletionKeyword = [&items](QUtf8StringView view, bool complete) {
+            if (!complete)
+                return;
+            CompletionItem item;
+            item.label = view.data();
+            item.kind = int(CompletionItemKind::Keyword);
+            items.append(item);
+        };
+        addCompletionKeyword(u8"readonly", completeReadonly);
+        addCompletionKeyword(u8"required", completeRequired);
+        addCompletionKeyword(u8"default", completeDefault);
+        addCompletionKeyword(u8"property", true);
+
+        return items;
+    }
+
+    const QQmlJS::SourceLocation propertyIdentifier = info.regions[u"identifier"_s];
+    if (propertyKeyword.end() <= ctx.offset() && ctx.offset() < propertyIdentifier.offset) {
+        return QQmlLSUtils::reachableTypes(
+                currentItem, LocalSymbolsType::ObjectType | LocalSymbolsType::ValueType,
+                CompletionItemKind::Class);
+    }
+    // do not autocomplete the rest
+    return {};
+}
+
 QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
                                                const CompletionContextStrings &ctx)
 {
@@ -2298,16 +2359,7 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
     }
 
     if (completionType == DomType::PropertyDefinition) {
-        auto info = FileLocations::treeOf(currentItem)->info();
-        auto propertyKeyWord = info.regions[u"property"_s];
-        auto propertyIdentifier = info.regions[u"identifier"_s];
-        if (propertyKeyWord.end() <= ctx.offset() && ctx.offset() < propertyIdentifier.offset) {
-            return reachableTypes(currentItem,
-                                  LocalSymbolsType::ObjectType | LocalSymbolsType::ValueType,
-                                  CompletionItemKind::Class);
-        }
-        // do not autocomplete the rest
-        return {};
+        return propertyCompletion(currentItem, ctx);
     }
 
     // no completion could be found
