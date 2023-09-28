@@ -13,6 +13,7 @@ Item {
             addExample(qsTr("Shape Gallery"), qsTr("Simple path rendering examples"), Qt.resolvedUrl("shapegallery.qml"))
             addExample(qsTr("Interactive Shape"), qsTr("Dynamic, interactive path rendering examples"), Qt.resolvedUrl("interactive.qml"))
             addExample(qsTr("Anti-aliasing"), qsTr("Improving quality"), Qt.resolvedUrl("sampling.qml"))
+            addExample(qsTr("Magnify My Tiger!"), qsTr("Path zooming example"), Qt.resolvedUrl("zoomtiger.qml"))
             addExample(qsTr("Clip My Tiger!"), qsTr("Clip examples, a.k.a. What Not To Do"), Qt.resolvedUrl("clippedtigers.qml"))
         }
     }

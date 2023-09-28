@@ -203,7 +203,7 @@ Rectangle {
                 }
             }
             Text {
-                text: qsTr("CurveRenderer")
+                text: qsTr("CurveRenderer [tech preview]")
             }
 
             // Now let's use CurveRenderer with built-in antialiasing support.
