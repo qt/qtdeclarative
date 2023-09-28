@@ -78,6 +78,7 @@ private slots:
     void nativeModuleImport();
     void lockedRootObject();
     void crossReferencingSingletonsDeletion();
+    void bindingInstallUseAfterFree();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1694,6 +1695,15 @@ void tst_qqmlengine::crossReferencingSingletonsDeletion()
     std::unique_ptr<QObject> o{ c.create() };
     QVERIFY(o);
     QCOMPARE(o->property("s").toString(), "SingletonA");
+}
+
+void tst_qqmlengine::bindingInstallUseAfterFree()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("bindingInstallUseAfterFree.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o{ c.create() };
+    QVERIFY(o);
 }
 
 QTEST_MAIN(tst_qqmlengine)
