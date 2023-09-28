@@ -129,6 +129,40 @@
         ]
     },
     {
+        "name": "PageIndicator",
+        "page": "Components",
+        "component set": "PageIndicatorTemplate${Theme}",
+        "contents": ["indicator1", "indicator2"],
+        "atoms": [
+            {"atom": "background", "figmaPath": "PageIndicatorBackground"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"},
+            {"atom": "indicator1", "figmaPath": "ContentItem, PageIndicatorDelegate1", "export": "geometry"},
+            {"atom": "indicator2", "figmaPath": "ContentItem, PageIndicatorDelegate2", "export": "geometry"}
+        ],
+        "states": [
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "normal", "figmaState": "normal"}
+        ]
+    },
+    {
+        "name": "PageIndicatorDelegate",
+        "page": "Components",
+        "component set": "PageIndicatorTemplate${Theme}",
+        "atoms": [
+            {"atom": "indicator", "figmaPath": "PageIndicatorDelegate"}
+        ],
+        "states": [
+            {"state": "delegate-current", "figmaState": "delegateCurrent"},
+            {"state": "delegate-current-hovered", "figmaState": "currentHovered"},
+            {"state": "delegate-current-pressed", "figmaState": "currentPressed"},
+            {"state": "delegate-pressed", "figmaState": "delegatePressed"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "normal", "figmaState": "normal"}
+        ]
+    },
+    {
         "name": "Popup",
         "component set": "PopupTemplate${Theme}",
         "atoms": [

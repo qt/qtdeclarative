@@ -29,6 +29,7 @@ qt_add_resources(qqcstylegenerator "controls"
         templates/ComboBox.qml
         templates/Frame.qml
         templates/ItemDelegate.qml
+        templates/PageIndicator.qml
         templates/Popup.qml
         templates/RadioButton.qml
         templates/RangeSlider.qml
@@ -45,6 +46,7 @@ qt_add_resources(qqcstylegenerator "controls"
         templates/ToolBar.qml
         templates/ToolButton.qml
         templates/impl/ComboBoxPopup.qml
+        templates/impl/PageIndicatorDelegate.qml
         templates/impl/StyleImage.qml
         config.json
         figma_and_qt@2x.png
