@@ -828,14 +828,6 @@ inline bool emptyChildrenVisitor(Path, const DomItem &, bool)
 
 class MutableDomItem;
 
-enum DomCreationOption : char {
-    None = 0,
-    WithSemanticAnalysis = 1,
-    WithScriptExpressions = 2,
-};
-
-Q_DECLARE_FLAGS(DomCreationOptions, DomCreationOption);
-
 class FileToLoad
 {
 public:

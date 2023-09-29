@@ -331,6 +331,14 @@ Q_ENUM_NS(LocalSymbolsType)
 Q_DECLARE_FLAGS(LocalSymbolsTypes, LocalSymbolsType)
 Q_DECLARE_OPERATORS_FOR_FLAGS(LocalSymbolsTypes)
 
+enum DomCreationOption : char {
+    None = 0,
+    WithSemanticAnalysis = 1,
+    WithScriptExpressions = 2,
+};
+
+Q_DECLARE_FLAGS(DomCreationOptions, DomCreationOption);
+
 } // end namespace Dom
 } // end namespace QQmlJS
 

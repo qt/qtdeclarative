@@ -30,6 +30,7 @@ class Comment;
 class CommentedElement;
 class ConstantData;
 class DomBase;
+enum DomCreationOption : char;
 class DomEnvironment;
 class DomItem;
 class DomTop;
