@@ -485,6 +485,8 @@ void coerceAndCall(
         } else if (returnType.sizeOf() > 0) {
             Q_ALLOCA_ASSIGN(void, transformedResult, returnType.sizeOf());
             transformedArguments[0] = transformedResult;
+            if (returnType.flags() & QMetaType::NeedsConstruction)
+                returnType.construct(transformedResult);
         } else {
             transformedResult = transformedArguments[0] = &argc; // Some non-null marker value
         }
