@@ -283,7 +283,7 @@ class RegionRef
 {
 public:
     Path path; // store the MutableDomItem instead?
-    QString regionName;
+    FileLocationRegion regionName;
 };
 
 // internal class to keep a reference either to an AST::Node* or a region of a DomItem and the
@@ -292,8 +292,8 @@ class ElementRef
 {
 public:
     ElementRef(AST::Node *node, quint32 size) : element(node), size(size) { }
-    ElementRef(Path path, QString region, quint32 size)
-        : element(RegionRef { path, region }), size(size)
+    ElementRef(Path path, FileLocationRegion region, quint32 size)
+        : element(RegionRef{ path, region }), size(size)
     {
     }
     operator bool() const
@@ -651,14 +651,11 @@ void AstComments::collectComments(
         if (!commentEl)
             checkInsideEl();
         if (!commentEl) {
-            qCWarning(commentsLog) << "Could not assign comment at" << locationToData(cLoc)
+            qCWarning(commentsLog) << "Could not assign comment at" << sourceLocationToQCborValue(cLoc)
                                    << "adding before root node";
             if (rootItem && (rootItemLocations || !n)) {
-                commentEl.element = RegionRef { Path(), QString() };
-                commentEl.size =
-                        rootItemLocations->info()
-                                .regions.value(QString(), rootItemLocations->info().fullRegion)
-                                .length;
+                commentEl.element = RegionRef{ Path(), MainRegion };
+                commentEl.size = FileLocations::region(rootItemLocations, MainRegion).length;
                 // attach to rootItem
             } else if (n) {
                 commentEl.element = n;
@@ -732,8 +729,15 @@ QMultiMap<quint32, const QList<Comment> *> AstComments::allCommentsInNode(AST::N
 bool RegionComments::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
-    if (!regionComments.isEmpty())
-        cont = cont && self.dvWrapField(visitor, Fields::regionComments, regionComments);
+    if (!regionComments.isEmpty()) {
+        cont = cont
+                && self.dvItemField(visitor, Fields::regionComments, [this, &self]() -> DomItem {
+                       const Path pathFromOwner =
+                               self.pathFromOwner().field(Fields::regionComments);
+                       auto map = Map::fromFileRegionMap(pathFromOwner, regionComments);
+                       return self.subMapItem(map);
+                   });
+    }
     return cont;
 }
 

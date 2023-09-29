@@ -2599,6 +2599,72 @@ private:
         }
     }
 
+private slots:
+    void mapsKeyedByFileLocationRegion()
+    {
+        using namespace Qt::StringLiterals;
+        const QString filePath = baseDir + u"/fileLocationRegion.qml"_s;
+        const DomItem rootQmlObject = rootQmlObjectFromFile(filePath, qmltypeDirs);
+        QVERIFY(rootQmlObject);
+
+        // test if preComments map works correctly with DomItem interface
+        const DomItem binding = rootQmlObject.field(Fields::bindings).key(u"helloWorld"_s).index(0);
+        const DomItem bindingRegionComments =
+                binding.field(Fields::comments).field(Fields::regionComments);
+        const DomItem preComments =
+                bindingRegionComments.key(fileLocationRegionName(FileLocationRegion::IdentifierRegion))
+                        .field(Fields::preComments);
+
+        QCOMPARE(preComments.indexes(), 1);
+        QString rawPreComment = preComments.index(0).field(Fields::rawComment).value().toString();
+        QCOMPARE(preComments.index(0)
+                         .field(Fields::rawComment)
+                         .value()
+                         .toString()
+                         // replace weird newlines by \n
+                         .replace("\r\n", "\n")
+                         .replace("\r", "\n"),
+                 u"    // before helloWorld binding\n    "_s);
+
+        // test if postComments map works correctly with DomItem interface
+        const DomItem postComments =
+                bindingRegionComments
+                        .key(fileLocationRegionName(FileLocationRegion::MainRegion))
+                        .field(Fields::postComments);
+        QCOMPARE(postComments.indexes(), 1);
+        QCOMPARE(postComments.index(0)
+                         .field(Fields::rawComment)
+                         .value()
+                         .toString()
+                         // replace the windows newlines by \n
+                         .replace("\r\n", "\n")
+                         .replace("\r", "\n"),
+                 u" // after helloWorld binding\n"_s);
+
+        const auto fileLocations = FileLocations::findAttachedInfo(binding);
+        const DomItem bindingFileLocation =
+                rootQmlObject.path(fileLocations.foundTreePath).field(Fields::infoItem);
+
+        // test if FileLocation Tree map works correctly with DomItem interface
+        QCOMPARE(bindingFileLocation.field(Fields::fullRegion).value(),
+                 bindingFileLocation.field(Fields::regions)
+                         .key(fileLocationRegionName(FileLocationRegion::MainRegion))
+                         .value());
+
+        QCOMPARE(bindingFileLocation.field(Fields::fullRegion).value(),
+                 sourceLocationToQCborValue(fileLocations.foundTree->info().fullRegion));
+
+        QCOMPARE(bindingFileLocation.field(Fields::regions)
+                         .key(fileLocationRegionName(FileLocationRegion::MainRegion))
+                         .value(),
+                 sourceLocationToQCborValue(fileLocations.foundTree->info().regions[MainRegion]));
+
+        QCOMPARE(bindingFileLocation.field(Fields::regions)
+                         .key(fileLocationRegionName(FileLocationRegion::ColonTokenRegion))
+                         .value(),
+                 sourceLocationToQCborValue(fileLocations.foundTree->info().regions[ColonTokenRegion]));
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

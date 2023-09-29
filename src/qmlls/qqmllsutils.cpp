@@ -217,8 +217,8 @@ handlePropertyDefinitionAndBindingOverlap(const QList<QQmlLSUtilsItemLocation> &
             return smallest;
 
         const auto propertyDefinitionColon =
-                smallestPropertyDefinition->fileLocation->info().regions[u"colon"_s];
-        const auto smallestColon = smallest->fileLocation->info().regions[u"colon"_s];
+                smallestPropertyDefinition->fileLocation->info().regions[ColonTokenRegion];
+        const auto smallestColon = smallest->fileLocation->info().regions[ColonTokenRegion];
         // sanity check: is it the definition of the current binding? check if they both have their
         // ':' at the same location
         if (propertyDefinitionColon.isValid() && propertyDefinitionColon == smallestColon
@@ -354,7 +354,7 @@ DomItem QQmlLSUtils::baseObject(const DomItem &object)
 }
 
 static std::optional<QQmlLSUtilsLocation> locationFromDomItem(const DomItem &item,
-                                                              const QString &regionName = QString())
+                                                              FileLocationRegion region)
 {
     QQmlLSUtilsLocation location;
     location.filename = item.canonicalFilePath();
@@ -364,12 +364,9 @@ static std::optional<QQmlLSUtilsLocation> locationFromDomItem(const DomItem &ite
     if (!tree)
         return {};
 
-    auto info = tree->info();
-    if (!regionName.isEmpty() && info.regions.contains(regionName)) {
-        location.sourceLocation = info.regions[regionName];
-    } else {
-        location.sourceLocation = info.fullRegion;
-    }
+    location.sourceLocation = FileLocations::region(tree, region);
+    if (!location.sourceLocation.isValid() && region != QQmlJS::Dom::MainRegion)
+        location.sourceLocation = FileLocations::region(tree, MainRegion);
     return location;
 }
 
@@ -457,7 +454,7 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(const DomIt
             typeDefinition = typeDefinition.component();
         }
 
-        return locationFromDomItem(typeDefinition, u"identifier"_s);
+        return locationFromDomItem(typeDefinition, FileLocationRegion::IdentifierRegion);
     }
     default:
         qDebug() << "QQmlLSUtils::findTypeDefinitionOf: Found unimplemented Type"
@@ -465,7 +462,7 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(const DomIt
         return {};
     }
 
-    return locationFromDomItem(typeDefinition);
+    return locationFromDomItem(typeDefinition, FileLocationRegion::MainRegion);
 }
 
 static bool findDefinitionFromItem(const DomItem &item, const QString &name)
@@ -651,7 +648,7 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
         bool resolveType = false;
         bool continueForChildren = true;
         DomItem toBeResolved = current;
-        QString subRegion;
+        FileLocationRegion subRegion = MainRegion;
 
         if (auto scope = current.semanticScope()) {
             // is the current property shadowed by some JS identifier? ignore current + its children
@@ -667,7 +664,7 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
             if (!checkName(propertyName))
                 return true;
 
-            subRegion = u"identifier"_s;
+            subRegion = IdentifierRegion;
             resolveType = true;
             break;
         }
@@ -684,7 +681,7 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
             if (!checkName(methodName))
                 return true;
 
-            subRegion = u"identifier"_s;
+            subRegion = IdentifierRegion;
             resolveType = true;
             break;
         }
@@ -703,15 +700,9 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
                 auto tree = FileLocations::treeOf(current);
                 QQmlJS::SourceLocation sourceLocation;
 
-                if (subRegion.isEmpty()) {
-                    sourceLocation = tree->info().fullRegion;
-                } else {
-                    auto regions = tree->info().regions;
-                    auto it = regions.constFind(subRegion);
-                    if (it == regions.constEnd())
-                        return continueForChildren;
-                    sourceLocation = *it;
-                }
+                sourceLocation = FileLocations::region(tree, subRegion);
+                if (!sourceLocation.isValid())
+                    return continueForChildren;
 
                 QQmlLSUtilsLocation location{ current.canonicalFilePath(), sourceLocation };
                 if (!result.contains(location))
@@ -1207,7 +1198,7 @@ findMethodDefinitionOf(const DomItem &file, QQmlJS::SourceLocation location, con
 
     auto regions = fileLocation->info().regions;
 
-    if (auto it = regions.constFind(u"identifier"_s); it != regions.constEnd()) {
+    if (auto it = regions.constFind(IdentifierRegion); it != regions.constEnd()) {
         QQmlLSUtilsLocation result;
         result.sourceLocation = *it;
         result.filename = method.canonicalFilePath();
@@ -1229,7 +1220,7 @@ findPropertyDefinitionOf(const DomItem &file, QQmlJS::SourceLocation propertyDef
 
     auto regions = fileLocation->info().regions;
 
-    if (auto it = regions.constFind(u"identifier"_s); it != regions.constEnd()) {
+    if (auto it = regions.constFind(IdentifierRegion); it != regions.constEnd()) {
         QQmlLSUtilsLocation result;
         result.sourceLocation = *it;
         result.filename = propertyDefinition.canonicalFilePath();
@@ -2100,7 +2091,7 @@ static bool cursorInFrontOfItem(const DomItem &currentItem,
 static bool cursorAfterColon(const DomItem &currentItem, const CompletionContextStrings &ctx)
 {
     auto location = FileLocations::treeOf(currentItem)->info();
-    auto region = location.regions.constFind(u"colon"_s);
+    auto region = location.regions.constFind(ColonTokenRegion);
 
     if (region == location.regions.constEnd())
         return false;
@@ -2193,13 +2184,13 @@ static QList<CompletionItem> propertyCompletion(const DomItem &currentItem,
                                                 const CompletionContextStrings &ctx)
 {
     auto info = FileLocations::treeOf(currentItem)->info();
-    const QQmlJS::SourceLocation propertyKeyword = info.regions[u"property"_s];
+    const QQmlJS::SourceLocation propertyKeyword = info.regions[PropertyKeywordRegion];
 
     // do completions for the keywords
     if (ctx.offset() < propertyKeyword.offset + propertyKeyword.length) {
-        const QQmlJS::SourceLocation readonlyKeyword = info.regions[u"readonly"_s];
-        const QQmlJS::SourceLocation defaultKeyword = info.regions[u"default"_s];
-        const QQmlJS::SourceLocation requiredKeyword = info.regions[u"required"_s];
+        const QQmlJS::SourceLocation readonlyKeyword = info.regions[ReadonlyKeywordRegion];
+        const QQmlJS::SourceLocation defaultKeyword = info.regions[DefaultKeywordRegion];
+        const QQmlJS::SourceLocation requiredKeyword = info.regions[RequiredKeywordRegion];
 
         bool completeReadonly = true;
         bool completeRequired = true;
@@ -2240,7 +2231,7 @@ static QList<CompletionItem> propertyCompletion(const DomItem &currentItem,
         return items;
     }
 
-    const QQmlJS::SourceLocation propertyIdentifier = info.regions[u"identifier"_s];
+    const QQmlJS::SourceLocation propertyIdentifier = info.regions[IdentifierRegion];
     if (propertyKeyword.end() <= ctx.offset() && ctx.offset() < propertyIdentifier.offset) {
         return QQmlLSUtils::reachableTypes(
                 currentItem, LocalSymbolsType::ObjectType | LocalSymbolsType::ValueType,

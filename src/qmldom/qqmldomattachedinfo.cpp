@@ -1,11 +1,16 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+#include "qqmldom_fwd_p.h"
 #include "qqmldomlinewriter_p.h"
 #include "qqmldomelements_p.h"
+#include "qqmldompath_p.h"
 
 QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
+
+using namespace Qt::StringLiterals;
+
 
 /*!
 \internal
@@ -29,63 +34,34 @@ Attributes:
 bool FileLocations::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
-#ifdef QmlDomAddCodeStr
-    bool hasCode = false;
-    QString codeStr = self.fileObject().field(Fields::code).value().toString();
-    auto loc2str = [&self, &codeStr](SourceLocation loc) {
-        if (loc.offset < codeStr.length() && loc.end() <= codeStr.length())
-            return QStringView(codeStr).mid(loc.offset, loc.length);
-        return QStringView();
-    };
-#else
-    auto loc2str = [](SourceLocation) { return QStringView(); };
-#endif
     cont = cont && self.dvValueLazyField(visitor, Fields::fullRegion, [this]() {
-        return locationToData(fullRegion);
+        return sourceLocationToQCborValue(fullRegion);
     });
-    cont = cont && self.dvItemField(visitor, Fields::regions, [this, &self, &loc2str]() {
-        return self.subMapItem(Map::fromMapRef<SourceLocation>(
-                self.pathFromOwner().field(Fields::regions), regions,
-                [&loc2str](const DomItem &map, const PathEls::PathComponent &key, const SourceLocation &el) {
-                    return map.subLocationItem(key, el, loc2str(el));
-                }));
+    cont = cont && self.dvItemField(visitor, Fields::regions, [this, &self]() -> DomItem {
+        const Path pathFromOwner = self.pathFromOwner().field(Fields::regions);
+        auto map = Map::fromFileRegionMap(pathFromOwner, regions);
+        return self.subMapItem(map);
     });
     cont = cont
-            && self.dvItemField(visitor, Fields::preCommentLocations, [this, &self, &loc2str]() {
-                   return self.subMapItem(Map::fromMapRef<QList<SourceLocation>>(
-                           self.pathFromOwner().field(Fields::preCommentLocations),
-                           preCommentLocations,
-                           [&loc2str](const DomItem &map, const PathEls::PathComponent &key,
-                                      const QList<SourceLocation> &el) {
-                               return map.subListItem(List::fromQListRef<SourceLocation>(
-                                       map.pathFromOwner().appendComponent(key), el,
-                                       [&loc2str](const DomItem &list, const PathEls::PathComponent &idx,
-                                                  const SourceLocation &el) {
-                                           return list.subLocationItem(idx, el, loc2str(el));
-                                       }));
-                           }));
+            && self.dvItemField(visitor, Fields::preCommentLocations, [this, &self]() -> DomItem {
+                   const Path pathFromOwner =
+                           self.pathFromOwner().field(Fields::preCommentLocations);
+                   auto map = Map::fromFileRegionListMap(pathFromOwner, preCommentLocations);
+                   return self.subMapItem(map);
                });
     cont = cont
-            && self.dvItemField(visitor, Fields::postCommentLocations, [this, &self, &loc2str]() {
-                   return self.subMapItem(Map::fromMapRef<QList<SourceLocation>>(
-                           self.pathFromOwner().field(Fields::postCommentLocations),
-                           postCommentLocations,
-                           [&loc2str](const DomItem &map, const PathEls::PathComponent &key,
-                                      const QList<SourceLocation> &el) {
-                               return map.subListItem(List::fromQListRef<SourceLocation>(
-                                       map.pathFromOwner().appendComponent(key), el,
-                                       [&loc2str](const DomItem &list, const PathEls::PathComponent &idx,
-                                                  const SourceLocation &el) {
-                                           return list.subLocationItem(idx, el, loc2str(el));
-                                       }));
-                           }));
+            && self.dvItemField(visitor, Fields::postCommentLocations, [this, &self]() -> DomItem {
+                   const Path pathFromOwner =
+                           self.pathFromOwner().field(Fields::postCommentLocations);
+                   auto map = Map::fromFileRegionListMap(pathFromOwner, postCommentLocations);
+                   return self.subMapItem(map);
                });
     return cont;
 }
 
-void FileLocations::ensureCommentLocations(QList<QString> keys)
+void FileLocations::ensureCommentLocations(const QList<FileLocationRegion> &keys)
 {
-    for (auto k : keys) {
+    for (FileLocationRegion k : keys) {
         preCommentLocations[k];
         postCommentLocations[k];
     }
@@ -134,29 +110,44 @@ const FileLocations *FileLocations::fileLocationsOf(const DomItem &item)
     return nullptr;
 }
 
-void FileLocations::updateFullLocation(FileLocations::Tree fLoc, SourceLocation loc) {
+void FileLocations::updateFullLocation(const FileLocations::Tree &fLoc, SourceLocation loc)
+{
     Q_ASSERT(fLoc);
     if (loc != SourceLocation()) {
         FileLocations::Tree p = fLoc;
         while (p) {
             SourceLocation &l = p->info().fullRegion;
-            if (loc.begin() < l.begin() || loc.end() > l.end())
+            if (loc.begin() < l.begin() || loc.end() > l.end()) {
                 l = combine(l, loc);
-            else
+                p->info().regions[MainRegion] = l;
+            } else {
                 break;
+            }
             p = p->parent();
         }
     }
 }
 
-void FileLocations::addRegion(FileLocations::Tree fLoc, QString locName, SourceLocation loc) {
+void FileLocations::addRegion(const FileLocations::Tree &fLoc, FileLocationRegion region,
+                              SourceLocation loc)
+{
     Q_ASSERT(fLoc);
-    fLoc->info().regions[locName] = loc;
+    fLoc->info().regions[region] = loc;
     updateFullLocation(fLoc, loc);
 }
 
-void FileLocations::addRegion(FileLocations::Tree fLoc, QStringView locName, SourceLocation loc) {
-    addRegion(fLoc, locName.toString(), loc);
+SourceLocation FileLocations::region(const FileLocations::Tree &fLoc, FileLocationRegion region)
+{
+    Q_ASSERT(fLoc);
+    const auto &regions = fLoc->info().regions;
+    if (auto it = regions.constFind(region); it != regions.constEnd() && it->isValid()) {
+        return *it;
+    }
+
+    if (region == MainRegion)
+        return fLoc->info().fullRegion;
+
+    return SourceLocation{};
 }
 
 /*!

@@ -5,6 +5,7 @@
 // but in this type of warning, it often isn't.
 //#if defined(Q_CC_GNU) && Q_CC_GNU >= 1100
 //QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized")
+#include "qqmldomconstants_p.h"
 #include "qqmldompath_p.h"
 #if defined(__GNUC__) && __GNUC__ >= 11
 #  pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
@@ -162,10 +163,10 @@ void QmlComponent::writeOut(const DomItem &self, OutWriter &lw) const
     if (name().contains(QLatin1Char('.'))) {
         // inline component
         lw.ensureNewline()
-                .writeRegion(u"component")
+                .writeRegion(ComponentKeywordRegion)
                 .space()
-                .writeRegion(u"componentName", name().split(QLatin1Char('.')).last())
-                .writeRegion(u"colon", u":")
+                .writeRegion(IdentifierRegion, name().split(QLatin1Char('.')).last())
+                .writeRegion(ColonTokenRegion)
                 .space();
     }
     self.field(Fields::objects).index(0).writeOut(lw);
@@ -316,15 +317,15 @@ void Import::writeOut(const DomItem &, OutWriter &ow) const
     if (implicit)
         return;
     ow.ensureNewline();
-    ow.writeRegion(u"import").space();
-    ow.writeRegion(u"uri", uri.toString());
+    ow.writeRegion(ImportTokenRegion).space();
+    ow.writeRegion(ImportUriRegion, uri.toString());
     if (uri.isModule()) {
         QString vString = version.stringValue();
         if (!vString.isEmpty())
             ow.space().write(vString);
     }
     if (!importId.isEmpty())
-        ow.space().writeRegion(u"as").space().writeRegion(u"id", importId);
+        ow.space().writeRegion(AsTokenRegion).space().writeRegion(IdNameRegion, importId);
 }
 
 Id::Id(QString idName, Path referredObject) : name(idName), referredObjectPath(referredObject) { }
@@ -710,10 +711,10 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
     DomItem owner = self.owner();
     if (std::shared_ptr<QmlFile> qmlFilePtr = self.ownerAs<QmlFile>())
         code = qmlFilePtr->code();
-    ow.writeRegion(u"name", name());
+    ow.writeRegion(IdentifierRegion, name());
     if (!onTarget.isEmpty())
-        ow.space().writeRegion(u"on", u"on").space().writeRegion(u"onTarget", onTarget);
-    ow.writeRegion(u"leftBrace", u" {").newline();
+        ow.space().writeRegion(OnTokenRegion).space().writeRegion(OnTargetRegion, onTarget);
+    ow.writeRegion(LeftBraceRegion, u" {").newline();
     int baseIndent = ow.increaseIndent();
     int spacerId = 0;
     if (!idStr().isEmpty()) { // *always* put id first
@@ -721,10 +722,10 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
         if (myId)
             myId.writeOutPre(ow);
         ow.ensureNewline()
-                .writeRegion(u"idToken", u"id")
-                .writeRegion(u"idColon", u":")
+                .writeRegion(IdTokenRegion)
+                .writeRegion(IdColonTokenRegion)
                 .space()
-                .writeRegion(u"id", idStr());
+                .writeRegion(IdNameRegion, idStr());
         if (ow.lineWriter.options().attributesSequence
             == LineWriterOptions::AttributesSequence::Normalize) {
             ow.ensureNewline(2);
@@ -845,7 +846,7 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
                     else {
                         qWarning() << "Internal error casting binding to Binding in"
                                    << b.canonicalPath();
-                        ow.writeRegion(u"leftBrace", u"{").writeRegion(u"rightBrace", u"}");
+                        ow.writeRegion(LeftBraceRegion).writeRegion(RightBraceRegion);
                     }
                     b.writeOutPost(ow);
                 }
@@ -919,7 +920,7 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, QString onTarget) c
                 else {
                     qWarning() << "Internal error casting binding to Binding in"
                                << b.canonicalPath();
-                    ow.writeRegion(u"leftBrace", u"{").writeRegion(u"rightBrace", u"}");
+                    ow.writeRegion(LeftBraceRegion).writeRegion(RightBraceRegion);
                 }
                 b.writeOutPost(ow);
             }
@@ -1187,8 +1188,8 @@ void Binding::writeOut(const DomItem &self, OutWriter &lw) const
 {
     lw.ensureNewline();
     if (m_bindingType == BindingType::Normal) {
-        lw.writeRegion(u"name", name());
-        lw.writeRegion(u"colon", u":").space();
+        lw.writeRegion(IdentifierRegion, name());
+        lw.writeRegion(ColonTokenRegion).space();
         writeOutValue(self, lw);
     } else {
         DomItem v = valueItem(self);
@@ -1317,11 +1318,11 @@ Path EnumDecl::addAnnotation(const QmlObject &annotation, QmlObject **aPtr)
 
 void EnumDecl::writeOut(const DomItem &self, OutWriter &ow) const
 {
-    ow.writeRegion(u"enum", u"enum")
+    ow.writeRegion(EnumKeywordRegion)
             .space()
-            .writeRegion(u"name", name())
+            .writeRegion(IdentifierRegion, name())
             .space()
-            .writeRegion(u"lbrace", u"{");
+            .writeRegion(LeftBraceRegion);
     int iLevel = ow.increaseIndent(1);
     const auto values = self.field(Fields::values).values();
     for (const auto &value : values) {
@@ -1329,7 +1330,7 @@ void EnumDecl::writeOut(const DomItem &self, OutWriter &ow) const
         value.writeOut(ow);
     }
     ow.decreaseIndent(1, iLevel);
-    ow.ensureNewline().writeRegion(u"rbrace", u"}");
+    ow.ensureNewline().writeRegion(RightBraceRegion);
 }
 
 QList<Path> ImportScope::allSources(const DomItem &self) const
@@ -1593,7 +1594,7 @@ bool ScriptExpression::iterateDirectSubpaths(const DomItem &self, DirectVisitor 
     cont = cont
             && self.dvValueLazyField(
                     visitor, Fields::localOffset,
-                    [this]() { return locationToData(localOffset()); },
+                    [this]() { return sourceLocationToQCborValue(localOffset()); },
                     ConstantData::Options::MapIsMap);
     cont = cont && self.dvValueLazyField(visitor, Fields::astRelocatableDump, [this]() {
         return astRelocatableDump();
@@ -1742,8 +1743,8 @@ void ScriptExpression::writeOut(const DomItem &self, OutWriter &lw) const
 
 SourceLocation ScriptExpression::globalLocation(const DomItem &self) const
 {
-    if (const FileLocations *fLocPtr = FileLocations::fileLocationsOf(self)) {
-        return fLocPtr->regions.value(QString(), fLocPtr->fullRegion);
+    if (const FileLocations::Tree tree = FileLocations::treeOf(self)) {
+        return FileLocations::region(tree, MainRegion);
     }
     return SourceLocation();
 }
@@ -1757,16 +1758,16 @@ void PropertyDefinition::writeOut(const DomItem &, OutWriter &lw) const
 {
     lw.ensureNewline();
     if (isDefaultMember)
-        lw.writeRegion(u"default").space();
+        lw.writeRegion(DefaultKeywordRegion).space();
     if (isRequired)
-        lw.writeRegion(u"required").space();
+        lw.writeRegion(RequiredKeywordRegion).space();
     if (isReadonly)
-        lw.writeRegion(u"readonly").space();
+        lw.writeRegion(ReadonlyKeywordRegion).space();
     if (!typeName.isEmpty()) {
-        lw.writeRegion(u"property").space();
-        lw.writeRegion(u"type", typeName).space();
+        lw.writeRegion(PropertyKeywordRegion).space();
+        lw.writeRegion(TypeIdentifierRegion, typeName).space();
     }
-    lw.writeRegion(u"name", name);
+    lw.writeRegion(IdentifierRegion, name);
 }
 
 bool MethodInfo::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
@@ -1802,9 +1803,9 @@ QString MethodInfo::preCode(const DomItem &self) const
     MockObject standinObj(self.pathFromOwner());
     DomItem standin = self.copy(&standinObj);
     ow.itemStart(standin);
-    ow.writeRegion(u"function").space().writeRegion(u"name", name);
+    ow.writeRegion(FunctionKeywordRegion).space().writeRegion(IdentifierRegion, name);
     bool first = true;
-    ow.writeRegion(u"leftParen", u"(");
+    ow.writeRegion(LeftParenthesisRegion);
     for (const MethodParameter &mp : parameters) {
         if (first)
             first = false;
@@ -1812,8 +1813,8 @@ QString MethodInfo::preCode(const DomItem &self) const
             ow.write(u", ");
         ow.write(mp.value->code());
     }
-    ow.writeRegion(u"rightParen", u")");
-    ow.ensureSpace().writeRegion(u"leftBrace", u"{");
+    ow.writeRegion(RightParenthesisRegion);
+    ow.ensureSpace().writeRegion(LeftBraceRegion);
     ow.itemEnd(standin);
     ow.eof();
     return res;
@@ -1830,11 +1831,11 @@ void MethodInfo::writeOut(const DomItem &self, OutWriter &ow) const
     case MethodType::Signal: {
         if (body)
             qCWarning(domLog) << "signal should not have a body in" << self.canonicalPath();
-        ow.writeRegion(u"signal").space().writeRegion(u"name", name);
+        ow.writeRegion(SignalKeywordRegion).space().writeRegion(IdentifierRegion, name);
         if (parameters.isEmpty())
             return;
         bool first = true;
-        ow.writeRegion(u"leftParen", u"(");
+        ow.writeRegion(LeftParenthesisRegion);
         int baseIndent = ow.increaseIndent();
         for (const DomItem &arg : self.field(Fields::parameters).values()) {
             if (first)
@@ -1846,14 +1847,14 @@ void MethodInfo::writeOut(const DomItem &self, OutWriter &ow) const
             else
                 qCWarning(domLog) << "failed to cast to MethodParameter";
         }
-        ow.writeRegion(u"rightParen", u")");
+        ow.writeRegion(RightParenthesisRegion);
         ow.decreaseIndent(1, baseIndent);
         return;
     } break;
     case MethodType::Method: {
-        ow.writeRegion(u"function").space().writeRegion(u"name", name);
+        ow.writeRegion(FunctionKeywordRegion).space().writeRegion(IdentifierRegion, name);
         bool first = true;
-        ow.writeRegion(u"leftParen", u"(");
+        ow.writeRegion(LeftParenthesisRegion);
         for (const DomItem &arg : self.field(Fields::parameters).values()) {
             if (first)
                 first = false;
@@ -1861,20 +1862,20 @@ void MethodInfo::writeOut(const DomItem &self, OutWriter &ow) const
                 ow.write(u", ");
             arg.writeOut(ow);
         }
-        ow.writeRegion(u"rightParen", u")");
+        ow.writeRegion(RightParenthesisRegion);
         if (!typeName.isEmpty()) {
-            ow.writeRegion(u"colon", u":");
+            ow.writeRegion(ColonTokenRegion);
             ow.space();
-            ow.writeRegion(u"returnType", typeName);
+            ow.writeRegion(TypeIdentifierRegion, typeName);
         }
-        ow.ensureSpace().writeRegion(u"leftBrace", u"{");
+        ow.ensureSpace().writeRegion(LeftBraceRegion);
         int baseIndent = ow.increaseIndent();
         if (DomItem b = self.field(Fields::body)) {
             ow.ensureNewline();
             b.writeOut(ow);
         }
         ow.decreaseIndent(1, baseIndent);
-        ow.ensureNewline().writeRegion(u"rightBrace", u"}");
+        ow.ensureNewline().writeRegion(RightBraceRegion);
     } break;
     }
 }
@@ -1907,12 +1908,12 @@ void MethodParameter::writeOut(const DomItem &self, OutWriter &ow) const
 {
     if (!name.isEmpty()) {
         if (isRestElement)
-            ow.writeRegion(u"ellipsis", u"...");
-        ow.writeRegion(u"name", name);
+            ow.writeRegion(EllipsisTokenRegion);
+        ow.writeRegion(IdentifierRegion, name);
         if (!typeName.isEmpty())
-            ow.writeRegion(u"colon", u":").space().writeRegion(u"type", typeName);
+            ow.writeRegion(ColonTokenRegion).space().writeRegion(TypeIdentifierRegion, typeName);
         if (defaultValue) {
-            ow.space().writeRegion(u"equal", u"=").space();
+            ow.space().writeRegion(EqualTokenRegion).space();
             self.subOwnerItem(PathEls::Field(Fields::defaultValue), defaultValue).writeOut(ow);
         }
     } else {
@@ -1926,27 +1927,27 @@ void MethodParameter::writeOutSignal(const DomItem &self, OutWriter &ow) const
 {
     self.writeOutPre(ow);
     if (!typeName.isEmpty())
-        ow.writeRegion(u"type", typeName).space();
-    ow.writeRegion(u"name", name);
+        ow.writeRegion(TypeIdentifierRegion, typeName).space();
+    ow.writeRegion(IdentifierRegion, name);
     self.writeOutPost(ow);
 }
 
 void Pragma::writeOut(const DomItem &, OutWriter &ow) const
 {
     ow.ensureNewline();
-    ow.writeRegion(u"pragma").space().writeRegion(u"name", name);
+    ow.writeRegion(PragmaKeywordRegion).space().writeRegion(IdentifierRegion, name);
 
     bool isFirst = true;
     for (const auto &value : values) {
         if (isFirst) {
             isFirst = false;
-            ow.writeRegion(u"colon", u": ");
-            ow.writeRegion(u"values", value);
+            ow.writeRegion(ColonTokenRegion).space();
+            ow.writeRegion(PragmaValuesRegion, value);
             continue;
         }
 
-        ow.writeRegion(u"comma", u", ");
-        ow.writeRegion(u"values", value);
+        ow.writeRegion(CommaTokenRegion).space();
+        ow.writeRegion(PragmaValuesRegion, value);
     }
     ow.ensureNewline();
 }
@@ -1963,7 +1964,7 @@ bool EnumItem::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor)
 void EnumItem::writeOut(const DomItem &self, OutWriter &ow) const
 {
     ow.ensureNewline();
-    ow.writeRegion(u"name", name());
+    ow.writeRegion(IdentifierRegion, name());
     bool hasDefaultValue = false;
     index_type myIndex = self.pathFromOwner().last().headIndex();
     if (myIndex == 0)
@@ -1980,10 +1981,10 @@ void EnumItem::writeOut(const DomItem &self, OutWriter &ow) const
         QString v = QString::number(value(), 'f', 0);
         if (abs(value() - v.toDouble()) > 1.e-10)
             v = QString::number(value());
-        ow.space().writeRegion(u"equal", u"=").space().writeRegion(u"value", v);
+        ow.space().writeRegion(EqualTokenRegion).space().writeRegion(PragmaValuesRegion, v);
     }
     if (myIndex >= 0 && self.container().indexes() != myIndex + 1)
-        ow.writeRegion(u"comma", u",");
+        ow.writeRegion(CommaTokenRegion);
 }
 
 QmlUri QmlUri::fromString(const QString &str)

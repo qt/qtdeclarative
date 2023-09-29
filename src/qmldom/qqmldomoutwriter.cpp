@@ -74,55 +74,154 @@ void OutWriter::itemStart(const DomItem &it)
     if (updateLocs)
         state().fullRegionId = lineWriter.startSourceLocation(
                 [newFLoc](SourceLocation l) { FileLocations::updateFullLocation(newFLoc, l); });
-    regionStart(QString());
+    regionStart(MainRegion);
 }
 
 void OutWriter::itemEnd(const DomItem &it)
 {
     Q_ASSERT(states.size() > 0);
     Q_ASSERT(state().item == it);
-    regionEnd(QString());
+    regionEnd(MainRegion);
     state().closeState(*this);
     states.removeLast();
 }
 
-void OutWriter::regionStart(QString rName)
+void OutWriter::regionStart(FileLocationRegion region)
 {
-    Q_ASSERT(!state().pendingRegions.contains(rName));
+    Q_ASSERT(!state().pendingRegions.contains(region));
     FileLocations::Tree fMap = state().currentMap;
-    if (!skipComments && state().pendingComments.contains(rName)) {
+    if (!skipComments && state().pendingComments.contains(region)) {
         bool updateLocs = lineWriter.options().updateOptions & LineWriterOptions::Update::Locations;
         QList<SourceLocation> *cLocs =
-                (updateLocs ? &(fMap->info().preCommentLocations[rName]) : nullptr);
-        state().pendingComments[rName].writePre(*this, cLocs);
+                (updateLocs ? &(fMap->info().preCommentLocations[region]) : nullptr);
+        state().pendingComments[region].writePre(*this, cLocs);
     }
-    state().pendingRegions[rName] = lineWriter.startSourceLocation(
-            [rName, fMap](SourceLocation l) { FileLocations::addRegion(fMap, rName, l); });
+    state().pendingRegions[region] = lineWriter.startSourceLocation(
+            [region, fMap](SourceLocation l) { FileLocations::addRegion(fMap, region, l); });
 }
 
-void OutWriter::regionEnd(QString rName)
+void OutWriter::regionEnd(FileLocationRegion region)
 {
-    Q_ASSERT(state().pendingRegions.contains(rName));
+    Q_ASSERT(state().pendingRegions.contains(region));
     FileLocations::Tree fMap = state().currentMap;
-    lineWriter.endSourceLocation(state().pendingRegions.value(rName));
-    state().pendingRegions.remove(rName);
-    if (state().pendingComments.contains(rName)) {
+    lineWriter.endSourceLocation(state().pendingRegions.value(region));
+    state().pendingRegions.remove(region);
+    if (state().pendingComments.contains(region)) {
         if (!skipComments) {
             bool updateLocs =
                     lineWriter.options().updateOptions & LineWriterOptions::Update::Locations;
             QList<SourceLocation> *cLocs =
-                    (updateLocs ? &(fMap->info().postCommentLocations[rName]) : nullptr);
-            state().pendingComments[rName].writePost(*this, cLocs);
+                    (updateLocs ? &(fMap->info().postCommentLocations[region]) : nullptr);
+            state().pendingComments[region].writePost(*this, cLocs);
         }
-        state().pendingComments.remove(rName);
+        state().pendingComments.remove(region);
     }
 }
 
-OutWriter &OutWriter::writeRegion(QString rName, QStringView toWrite)
+/*!
+\internal
+Helper method for writeRegion(FileLocationRegion region) that allows to use
+\c{writeRegion(ColonTokenRegion);} instead of having to write out the more error-prone
+\c{writeRegion(ColonTokenRegion, ":");} for tokens and keywords.
+*/
+OutWriter &OutWriter::writeRegion(FileLocationRegion region)
 {
-    regionStart(rName);
+    QString codeForRegion;
+    switch (region) {
+    case ComponentKeywordRegion:
+        codeForRegion = u"component"_s;
+        break;
+    case IdColonTokenRegion:
+    case ColonTokenRegion:
+        codeForRegion = u":"_s;
+        break;
+    case ImportTokenRegion:
+        codeForRegion = u"import"_s;
+        break;
+    case AsTokenRegion:
+        codeForRegion = u"as"_s;
+        break;
+    case OnTokenRegion:
+        codeForRegion = u"on"_s;
+        break;
+    case IdTokenRegion:
+        codeForRegion = u"id"_s;
+        break;
+    case LeftBraceRegion:
+        codeForRegion = u"{"_s;
+        break;
+    case RightBraceRegion:
+        codeForRegion = u"}"_s;
+        break;
+    case LeftBracketRegion:
+        codeForRegion = u"["_s;
+        break;
+    case RightBracketRegion:
+        codeForRegion = u"]"_s;
+        break;
+    case LeftParenthesisRegion:
+        codeForRegion = u"("_s;
+        break;
+    case RightParenthesisRegion:
+        codeForRegion = u")"_s;
+        break;
+    case EnumKeywordRegion:
+        codeForRegion = u"enum"_s;
+        break;
+    case DefaultKeywordRegion:
+        codeForRegion = u"default"_s;
+        break;
+    case RequiredKeywordRegion:
+        codeForRegion = u"required"_s;
+        break;
+    case ReadonlyKeywordRegion:
+        codeForRegion = u"readonly"_s;
+        break;
+    case PropertyKeywordRegion:
+        codeForRegion = u"property"_s;
+        break;
+    case FunctionKeywordRegion:
+        codeForRegion = u"function"_s;
+        break;
+    case SignalKeywordRegion:
+        codeForRegion = u"signal"_s;
+        break;
+    case ReturnKeywordRegion:
+        codeForRegion = u"return"_s;
+        break;
+    case EllipsisTokenRegion:
+        codeForRegion = u"..."_s;
+        break;
+    case EqualTokenRegion:
+        codeForRegion = u"="_s;
+        break;
+    case PragmaKeywordRegion:
+        codeForRegion = u"pragma"_s;
+        break;
+    case CommaTokenRegion:
+        codeForRegion = u","_s;
+        break;
+
+    // not keywords:
+    case ImportUriRegion:
+    case IdNameRegion:
+    case IdentifierRegion:
+    case PragmaValuesRegion:
+    case MainRegion:
+    case OnTargetRegion:
+    case TypeIdentifierRegion:
+        Q_ASSERT_X(false, "regionToString", "Using regionToString on a value or an identifier!");
+        return *this;
+    }
+
+    return writeRegion(region, codeForRegion);
+}
+
+OutWriter &OutWriter::writeRegion(FileLocationRegion region, QStringView toWrite)
+{
+    regionStart(region);
     lineWriter.write(toWrite);
-    regionEnd(rName);
+    regionEnd(region);
     return *this;
 }
 

@@ -53,7 +53,7 @@ public:
     void createFileLocations(FileLocations::Tree base) override
     {
         FileLocations::Tree res = FileLocations::ensure(base, pathFromOwner(), AttachedInfo::PathType::Relative);
-        FileLocations::addRegion(res, QString(), m_combinedLocation);
+        FileLocations::addRegion(res, MainRegion, m_combinedLocation);
     }
 
     /*

@@ -42,6 +42,7 @@ class ExternalItemInfoBase;
 class ExternalItemPairBase;
 class ExternalOwningItem;
 class FileLocations;
+enum FileLocationRegion : int;
 class FileWriter;
 class GlobalComponent;
 class GlobalScope;
