@@ -1674,6 +1674,8 @@ void tst_QJSEngine::valueConversion_basic()
         QCOMPARE(eng.fromScriptValue<unsigned short>(num), (unsigned short)(123));
         QCOMPARE(eng.fromScriptValue<float>(num), float(123));
         QCOMPARE(eng.fromScriptValue<double>(num), double(123));
+        QCOMPARE(eng.fromScriptValue<long>(num), long(123));
+        QCOMPARE(eng.fromScriptValue<ulong>(num), ulong(123));
         QCOMPARE(eng.fromScriptValue<qlonglong>(num), qlonglong(123));
         QCOMPARE(eng.fromScriptValue<qulonglong>(num), qulonglong(123));
     }
@@ -1685,6 +1687,8 @@ void tst_QJSEngine::valueConversion_basic()
         QCOMPARE(eng.fromScriptValue<unsigned short>(num), (unsigned short)(123));
         QCOMPARE(eng.fromScriptValue<float>(num), float(123));
         QCOMPARE(eng.fromScriptValue<double>(num), double(123));
+        QCOMPARE(eng.fromScriptValue<long>(num), long(123));
+        QCOMPARE(eng.fromScriptValue<ulong>(num), ulong(123));
         QCOMPARE(eng.fromScriptValue<qlonglong>(num), qlonglong(123));
         QCOMPARE(eng.fromScriptValue<qulonglong>(num), qulonglong(123));
     }
