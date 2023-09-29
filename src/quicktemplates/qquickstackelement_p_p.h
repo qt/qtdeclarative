@@ -23,6 +23,8 @@
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQml/private/qv4persistent_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlContext;

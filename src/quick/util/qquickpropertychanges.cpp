@@ -23,6 +23,7 @@
 #include <QtQml/private/qqmlsignalnames_p.h>
 
 #include <private/qobject_p.h>
+#include <QtCore/qpointer.h>
 
 QT_BEGIN_NAMESPACE
 

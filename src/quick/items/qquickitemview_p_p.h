@@ -29,6 +29,7 @@ QT_REQUIRE_CONFIG(quick_itemview);
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
 #include <QtQmlModels/private/qqmlchangeset_p.h>
 
+#include <QtCore/qpointer.h>
 
 QT_BEGIN_NAMESPACE
 

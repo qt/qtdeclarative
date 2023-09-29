@@ -22,6 +22,8 @@
 #include <private/qqmlopenmetaobject_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 
+#include <QtCore/qpointer.h>
+
 #include <memory>
 
 QT_BEGIN_NAMESPACE

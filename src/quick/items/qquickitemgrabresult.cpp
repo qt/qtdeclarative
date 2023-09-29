@@ -19,6 +19,8 @@
 #include <private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 const QEvent::Type Event_Grab_Completed = static_cast<QEvent::Type>(QEvent::User + 1);

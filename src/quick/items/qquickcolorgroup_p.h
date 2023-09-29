@@ -22,6 +22,8 @@
 
 #include <QtQml/qqml.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickPalette;

@@ -21,6 +21,8 @@
 
 #include "qquickfontdialogimpl_p.h"
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickFontDialogImplPrivate : public QQuickDialogPrivate

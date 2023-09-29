@@ -7,7 +7,10 @@
 #include <private/qquickstate_p_p.h>
 
 #include <QtQml/qqmlinfo.h>
+
 #include <QtCore/qmath.h>
+#include <QtCore/qpointer.h>
+
 #include <memory>
 
 QT_BEGIN_NAMESPACE

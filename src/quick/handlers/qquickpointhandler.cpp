@@ -3,7 +3,9 @@
 
 #include "qquickpointhandler_p.h"
 #include <private/qquickwindow_p.h>
+
 #include <QDebug>
+#include <QtCore/qpointer.h>
 
 QT_BEGIN_NAMESPACE
 

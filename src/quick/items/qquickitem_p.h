@@ -42,6 +42,7 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qelapsedtimer.h>
+#include <QtCore/qpointer.h>
 
 QT_BEGIN_NAMESPACE
 

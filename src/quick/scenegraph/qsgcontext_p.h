@@ -28,6 +28,8 @@
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgrendererinterface.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QSGContextPrivate;

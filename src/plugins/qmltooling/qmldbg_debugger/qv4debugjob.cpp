@@ -13,6 +13,8 @@
 
 #include <QtQml/qqmlengine.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 QV4DebugJob::~QV4DebugJob()

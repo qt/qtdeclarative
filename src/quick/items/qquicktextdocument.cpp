@@ -12,6 +12,8 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/private/qquickpixmap_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!

@@ -8,6 +8,8 @@
 #include <QtQuick/private/qquickdeliveryagent_p_p.h>
 #include <QtGui/private/qinputdevice_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcPointerHandlerDispatch, "qt.quick.handler.dispatch")

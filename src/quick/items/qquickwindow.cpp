@@ -48,6 +48,7 @@
 #ifndef QT_NO_DEBUG_STREAM
 #include <private/qdebug_p.h>
 #endif
+#include <QtCore/qpointer.h>
 
 #include <rhi/qrhi.h>
 

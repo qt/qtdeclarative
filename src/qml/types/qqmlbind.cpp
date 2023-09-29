@@ -25,6 +25,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qpointer.h>
 #include <QtCore/qtimer.h>
 
 QT_BEGIN_NAMESPACE

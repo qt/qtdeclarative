@@ -48,6 +48,8 @@
 # include <QtGui/qcursor.h>
 #endif
 
+#include <QtCore/qpointer.h>
+
 #include <algorithm>
 #include <limits>
 

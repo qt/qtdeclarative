@@ -44,6 +44,8 @@
 
 #include <private/qsgdefaultrendercontext_p.h>
 
+#include <QtCore/qpointer.h>
+
 #include <cmath>
 #if defined(Q_OS_QNX) || defined(Q_OS_ANDROID)
 #include <ctype.h>
