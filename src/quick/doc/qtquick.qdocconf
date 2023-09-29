@@ -95,8 +95,6 @@ examples.fileextensions += "*.qm"
 
 manifestmeta.thumbnail.names += "QtQuick/QML Dynamic View Ordering Tutorial*"
 
-manifestmeta.highlighted.names = "QtQuick/Qt Quick Demo - Same Game"
-
 navigation.landingpage = "Qt Quick"
 navigation.cppclassespage = "Qt Quick C++ Classes"
 navigation.qmltypespage = "Qt Quick QML Types"
