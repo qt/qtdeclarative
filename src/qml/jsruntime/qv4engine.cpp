@@ -2457,6 +2457,12 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
     case QMetaType::UInt:
         *reinterpret_cast<uint*>(data) = value.toUInt32();
         return true;
+    case QMetaType::Long:
+        *reinterpret_cast<long*>(data) = long(value.toInteger());
+        return true;
+    case QMetaType::ULong:
+        *reinterpret_cast<ulong*>(data) = ulong(value.toInteger());
+        return true;
     case QMetaType::LongLong:
         *reinterpret_cast<qlonglong*>(data) = qlonglong(value.toInteger());
         return true;
