@@ -99,10 +99,19 @@ FileLocations::Tree FileLocations::ensure(FileLocations::Tree base, Path basePat
     return AttachedInfoT<FileLocations>::ensure(base, basePath, pType);
 }
 
+/*!
+\internal
+Allows to query information about the FileLocations::Tree obtained from item, such as path of
+the Tree root in the Dom, the path of this item's Tree in the Dom, and so on.
+
+\note You can use \c{qDebug() << item.path(FileLocations::findAttachedInfo(item).foundTreePath)} or
+\c{item.path(FileLocations::findAttachedInfo(item).foundTreePath).toString()} to print out the Tree
+of item, for example, as Tree's cannot be printed when outside the Dom.
+*/
 AttachedInfoLookupResult<FileLocations::Tree>
-FileLocations::findAttachedInfo(const DomItem &item, AttachedInfo::FindOptions options)
+FileLocations::findAttachedInfo(const DomItem &item)
 {
-    return AttachedInfoT<FileLocations>::findAttachedInfo(item, Fields::fileLocationsTree, options);
+    return AttachedInfoT<FileLocations>::findAttachedInfo(item, Fields::fileLocationsTree);
 }
 
 /*!
@@ -111,7 +120,7 @@ FileLocations::findAttachedInfo(const DomItem &item, AttachedInfo::FindOptions o
  */
 FileLocations::Tree FileLocations::treeOf(const DomItem &item)
 {
-    return AttachedInfoT<FileLocations>::treePtr(item, Fields::fileLocationsTree);
+    return findAttachedInfo(item).foundTree;
 }
 
 /*!
@@ -257,8 +266,7 @@ AttachedInfo::Ptr AttachedInfo::find(AttachedInfo::Ptr self, Path p, AttachedInf
 }
 
 AttachedInfoLookupResult<AttachedInfo::Ptr>
-AttachedInfo::findAttachedInfo(const DomItem &item, QStringView fieldName,
-                               AttachedInfo::FindOptions options)
+AttachedInfo::findAttachedInfo(const DomItem &item, QStringView fieldName)
 {
     Path p;
     DomItem fLoc = item.field(fieldName);
@@ -281,17 +289,11 @@ AttachedInfo::findAttachedInfo(const DomItem &item, QStringView fieldName,
         if (AttachedInfo::Ptr foundTree =
                     AttachedInfo::find(fLocPtr, p, AttachedInfo::PathType::Relative))
             res.foundTree = foundTree;
-    if (options & (FindOption::SetRootTreePath | FindOption::SetFoundTreePath))
-        res.rootTreePath = fLoc.canonicalPath();
-    if (options & FindOption::SetFoundTreePath) {
-        Path foundTreePath = res.rootTreePath.value();
-        if (res.lookupPath) {
-            foundTreePath = foundTreePath.key(res.lookupPath.head().toString());
-            for (Path pEl : res.lookupPath.mid(1))
-                foundTreePath = foundTreePath.field(Fields::subItems).key(pEl.toString());
-        }
-        res.foundTreePath = foundTreePath;
-    }
+    res.rootTreePath = fLoc.canonicalPath();
+
+    res.foundTreePath = res.rootTreePath;
+    for (Path pEl : res.lookupPath)
+        res.foundTreePath = res.foundTreePath.field(Fields::subItems).key(pEl.toString());
     return res;
 }
 
@@ -315,10 +317,10 @@ UpdatedScriptExpression::Tree UpdatedScriptExpression::ensure(UpdatedScriptExpre
 }
 
 AttachedInfoLookupResult<UpdatedScriptExpression::Tree>
-UpdatedScriptExpression::findAttachedInfo(const DomItem &item, AttachedInfo::FindOptions options)
+UpdatedScriptExpression::findAttachedInfo(const DomItem &item)
 {
     return AttachedInfoT<UpdatedScriptExpression>::findAttachedInfo(
-            item, Fields::updatedScriptExpressions, options);
+            item, Fields::updatedScriptExpressions);
 }
 
 UpdatedScriptExpression::Tree UpdatedScriptExpression::treePtr(const DomItem &item)

@@ -25,22 +25,25 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 namespace Dom {
+struct AttachedInfoLookupResultBase
+{
+    Path lookupPath;
+    Path rootTreePath;
+    Path foundTreePath;
+};
 template<typename TreePtr>
-class AttachedInfoLookupResult
+class AttachedInfoLookupResult: public AttachedInfoLookupResultBase
 {
 public:
     TreePtr foundTree;
-    Path lookupPath; // relative path used to reach result
-    std::optional<Path> rootTreePath; // path of the root TreePath
-    std::optional<Path> foundTreePath;
+
     operator bool() { return bool(foundTree); }
     template<typename T>
     AttachedInfoLookupResult<std::shared_ptr<T>> as() const
     {
         AttachedInfoLookupResult<std::shared_ptr<T>> res;
+        res.AttachedInfoLookupResultBase::operator=(*this);
         res.foundTree = std::static_pointer_cast<T>(foundTree);
-        res.lookupPath = lookupPath;
-        res.rootTreePath = rootTreePath;
         return res;
     }
 };
@@ -53,14 +56,6 @@ public:
         Canonical
     };
     Q_ENUM(PathType)
-    enum class FindOption {
-        None = 0,
-        SetRootTreePath = 0x1,
-        SetFoundTreePath = 0x2,
-        Default = 0x3
-    };
-    Q_DECLARE_FLAGS(FindOptions, FindOption)
-    Q_FLAG(FindOptions)
 
     constexpr static DomType kindValue = DomType::AttachedInfo;
     using Ptr = std::shared_ptr<AttachedInfo>;
@@ -83,12 +78,11 @@ public:
 
     static Ptr ensure(Ptr self, Path path, PathType pType = PathType::Relative);
     static Ptr find(Ptr self, Path p, PathType pType = PathType::Relative);
-    static AttachedInfoLookupResult<Ptr>
-    findAttachedInfo(const DomItem &item, QStringView treeFieldName,
-                     FindOptions options = AttachedInfo::FindOption::None);
+    static AttachedInfoLookupResult<Ptr> findAttachedInfo(const DomItem &item,
+                                                          QStringView treeFieldName);
     static Ptr treePtr(const DomItem &item, QStringView fieldName)
     {
-        return findAttachedInfo(item, fieldName, FindOption::None).foundTree;
+        return findAttachedInfo(item, fieldName).foundTree;
     }
 
     DomItem itemAtPath(const DomItem &self, Path p, PathType pType = PathType::Relative) const
@@ -144,7 +138,6 @@ protected:
     std::weak_ptr<AttachedInfo> m_parent;
     QMap<Path, Ptr> m_subItems;
 };
-Q_DECLARE_OPERATORS_FOR_FLAGS(AttachedInfo::FindOptions)
 
 template<typename Info>
 class QMLDOM_EXPORT AttachedInfoT final : public AttachedInfo
@@ -179,11 +172,10 @@ public:
         return std::static_pointer_cast<AttachedInfoT>(AttachedInfo::find(self, p, pType));
     }
 
-    static AttachedInfoLookupResult<Ptr> findAttachedInfo(const DomItem &item, QStringView fieldName,
-                                                          AttachedInfo::FindOptions options)
+    static AttachedInfoLookupResult<Ptr> findAttachedInfo(const DomItem &item,
+                                                          QStringView fieldName)
     {
-        return AttachedInfo::findAttachedInfo(item, fieldName, options)
-                .template as<AttachedInfoT>();
+        return AttachedInfo::findAttachedInfo(item, fieldName).template as<AttachedInfoT>();
     }
     static Ptr treePtr(const DomItem &item, QStringView fieldName)
     {
@@ -249,9 +241,7 @@ public:
     }
 
     // returns the path looked up and the found tree when looking for the info attached to item
-    static AttachedInfoLookupResult<Tree>
-    findAttachedInfo(const DomItem &item,
-                     AttachedInfo::FindOptions options = AttachedInfo::FindOption::Default);
+    static AttachedInfoLookupResult<Tree> findAttachedInfo(const DomItem &item);
     static FileLocations::Tree treeOf(const DomItem &);
     static const FileLocations *fileLocationsOf(const DomItem &);
 
@@ -279,8 +269,7 @@ public:
 
     // returns the path looked up and the found tree when looking for the info attached to item
     static AttachedInfoLookupResult<Tree>
-    findAttachedInfo(const DomItem &item,
-                     AttachedInfo::FindOptions options = AttachedInfo::FindOption::Default);
+    findAttachedInfo(const DomItem &item);
     // convenience: find FileLocations::Tree attached to the given item
     static Tree treePtr(const DomItem &);
     // convenience: find FileLocations* attached to the given item (if there is one)

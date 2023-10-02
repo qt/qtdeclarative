@@ -2165,9 +2165,9 @@ DomItem DomItem::fileLocationsTree() const
 {
     if (DomItem l = field(Fields::fileLocationsTree))
         return l;
-    auto res = FileLocations::findAttachedInfo(*this, AttachedInfo::FindOption::SetFoundTreePath);
-    if (res && res.foundTreePath.value()) {
-        return copy(res.foundTree, res.foundTreePath.value());
+    auto res = FileLocations::findAttachedInfo(*this);
+    if (res && res.foundTreePath) {
+        return copy(res.foundTree, res.foundTreePath);
     }
     return DomItem();
 }
