@@ -554,7 +554,8 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
     \value StackView.ReplaceTransition An operation with replace transitions (since QtQuick.Controls 2.1).
     \value StackView.PopTransition An operation with pop transitions (since QtQuick.Controls 2.1).
 
-    If no operation is provided, \c PushTransition will be used.
+    If no operation is provided, \c Immediate will be used if the stack is
+    empty, and \c PushTransition otherwise.
 
     \note Items that already exist in the stack are not pushed.
 
@@ -813,7 +814,8 @@ void QQuickStackView::pop(QQmlV4Function *args)
     \value StackView.ReplaceTransition An operation with replace transitions (since QtQuick.Controls 2.1).
     \value StackView.PopTransition An operation with pop transitions (since QtQuick.Controls 2.1).
 
-    If no operation is provided, \c ReplaceTransition will be used.
+    If no operation is provided, \c Immediate will be used if the stack is
+    empty, and \c ReplaceTransition otherwise.
 
     The following example illustrates the use of push and pop transitions with replace().
 
