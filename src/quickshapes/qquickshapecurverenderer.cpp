@@ -309,8 +309,13 @@ void QQuickShapeCurveRenderer::updateNode()
                     static_cast<QQuickShapeCurveNode *>(pathNode)->setColor(pathData.fillColor);
             }
             if (!(dirtyFlags & StrokeDirty)) {
-                for (auto &strokeNode : std::as_const(pathData.strokeNodes))
-                    static_cast<QQuickShapeCurveNode *>(strokeNode)->setColor(pathData.pen.color());
+                if (useTriangulatingStroker) {
+                    for (auto &strokeNode : std::as_const(pathData.strokeNodes))
+                        static_cast<QQuickShapeCurveNode *>(strokeNode)->setColor(pathData.pen.color());
+                } else {
+                    for (auto &strokeNode : std::as_const(pathData.strokeNodes))
+                        static_cast<QQuickShapeStrokeNode *>(strokeNode)->setColor(pathData.pen.color());
+                }
             }
         }
 
