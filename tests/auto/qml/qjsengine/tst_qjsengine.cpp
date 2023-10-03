@@ -17,6 +17,7 @@
 #include <QScopeGuard>
 #include <QUrl>
 #include <QModelIndex>
+#include <QtQml/qqmllist.h>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)
@@ -1700,6 +1701,13 @@ void tst_QJSEngine::valueConversion_basic()
         QJSValue code = eng.toScriptValue(c.unicode());
         QCOMPARE(eng.fromScriptValue<QChar>(code), c);
         QCOMPARE(eng.fromScriptValue<QChar>(eng.toScriptValue(c)), c);
+    }
+
+    {
+        QList<QObject *> list = {this};
+        QQmlListProperty<QObject> prop(this, &list);
+        QJSValue jsVal = eng.toScriptValue(prop);
+        QCOMPARE(eng.fromScriptValue<QQmlListProperty<QObject>>(jsVal), prop);
     }
 
     QVERIFY(eng.toScriptValue(static_cast<void *>(nullptr)).isNull());

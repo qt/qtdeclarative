@@ -2651,6 +2651,13 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         }
     }
 
+    if (metaType == QMetaType::fromType<QQmlListProperty<QObject>>()) {
+        if (const QV4::QmlListWrapper *wrapper = value.as<QV4::QmlListWrapper>()) {
+            *reinterpret_cast<QQmlListProperty<QObject> *>(data) = *wrapper->d()->property();
+            return true;
+        }
+    }
+
     if (const QQmlValueTypeWrapper *vtw = value.as<QQmlValueTypeWrapper>()) {
         const QMetaType valueType = vtw->type();
         if (valueType == metaType)
