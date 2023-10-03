@@ -125,7 +125,8 @@ ReturnedValue convertAndCall(
         types[i + 1] = argumentType;
         if (const qsizetype argumentSize = argumentType.sizeOf()) {
             Q_ALLOCA_VAR(void, argument, argumentSize);
-            argumentType.construct(argument);
+            if (argumentType.flags() & QMetaType::NeedsConstruction)
+                argumentType.construct(argument);
             if (i < argc)
                 ExecutionEngine::metaTypeFromJS(argv[i], argumentType, argument);
             values[i + 1] = argument;
@@ -139,6 +140,8 @@ ReturnedValue convertAndCall(
     if (const qsizetype returnSize = types[0].sizeOf()) {
         Q_ALLOCA_ASSIGN(void, returnValue, returnSize);
         values[0] = returnValue;
+        if (types[0].flags() & QMetaType::NeedsConstruction)
+            types[0].construct(returnValue);
     } else {
         values[0] = nullptr;
     }
@@ -151,13 +154,16 @@ ReturnedValue convertAndCall(
     ReturnedValue result;
     if (values[0]) {
         result = engine->metaTypeToJS(types[0], values[0]);
-        types[0].destruct(values[0]);
+        if (types[0].flags() & QMetaType::NeedsDestruction)
+            types[0].destruct(values[0]);
     } else {
         result = Encode::undefined();
     }
 
-    for (qsizetype i = 1, end = numFunctionArguments + 1; i < end; ++i)
-        types[i].destruct(values[i]);
+    for (qsizetype i = 1, end = numFunctionArguments + 1; i < end; ++i) {
+        if (types[i].flags() & QMetaType::NeedsDestruction)
+            types[i].destruct(values[i]);
+    }
 
     return result;
 }
@@ -477,10 +483,9 @@ void coerceAndCall(
         memcpy(transformedArguments, argv, (argc + 1) * sizeof(void *));
 
         if (frameReturn == QMetaType::fromType<QVariant>()) {
-            void *returnValue = argv[0];
-            new (returnValue) QVariant(returnType);
-            transformedResult = transformedArguments[0]
-                    = static_cast<QVariant *>(returnValue)->data();
+            QVariant *returnValue = static_cast<QVariant *>(argv[0]);
+            *returnValue = QVariant(returnType);
+            transformedResult = transformedArguments[0] = returnValue->data();
             returnsQVariantWrapper = true;
         } else if (returnType.sizeOf() > 0) {
             Q_ALLOCA_ASSIGN(void, transformedResult, returnType.sizeOf());
@@ -545,8 +550,11 @@ void coerceAndCall(
     call(transformedArguments, numFunctionArguments);
 
     if (transformedResult && !returnsQVariantWrapper) {
-        if (frameReturn.sizeOf() > 0)
+        if (frameReturn.sizeOf() > 0) {
+            if (frameReturn.flags() & QMetaType::NeedsDestruction)
+                frameReturn.destruct(argv[0]);
             coerce(engine, returnType, transformedResult, frameReturn, argv[0]);
+        }
         if (returnType.flags() & QMetaType::NeedsDestruction)
             returnType.destruct(transformedResult);
     }

@@ -675,20 +675,21 @@ void QQmlBinding::doUpdate(const DeleteWatcher &watcher, QQmlPropertyData::Write
     if (v4Function && v4Function->kind == QV4::Function::AotCompiled && !hasBoundFunction()) {
         const auto returnType = v4Function->aotCompiledFunction->returnType;
         if (returnType == QMetaType::fromType<QVariant>()) {
-            // It expects uninitialized memory
-            Q_ALLOCA_VAR(QVariant, result, sizeof(QVariant));
-            const bool isUndefined = !evaluate(result, returnType);
+            QVariant result;
+            const bool isUndefined = !evaluate(&result, returnType);
             if (canWrite())
-                error = !write(result->data(), result->metaType(), isUndefined, flags);
-            result->~QVariant();
+                error = !write(result.data(), result.metaType(), isUndefined, flags);
         } else {
             const auto size = returnType.sizeOf();
             if (Q_LIKELY(size > 0)) {
                 Q_ALLOCA_VAR(void, result, size);
+                if (returnType.flags() & QMetaType::NeedsConstruction)
+                    returnType.construct(result);
                 const bool isUndefined = !evaluate(result, returnType);
                 if (canWrite())
                     error = !write(result, returnType, isUndefined, flags);
-                returnType.destruct(result);
+                if (returnType.flags() & QMetaType::NeedsDestruction)
+                    returnType.destruct(result);
             } else if (canWrite()) {
                 error = !write(QV4::Encode::undefined(), true, flags);
             }
