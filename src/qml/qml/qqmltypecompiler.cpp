@@ -151,11 +151,13 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
         document->jsModule.fileName = typeData->urlString();
         document->jsModule.finalUrl = typeData->finalUrlString();
         QmlIR::JSCodeGen v4CodeGenerator(document, engine->v4engine()->illegalNames());
-        if (!v4CodeGenerator.generateCodeForComponents(componentRoots())) {
-            recordError(v4CodeGenerator.error());
-            return nullptr;
+        for (QmlIR::Object *object : qAsConst(document->objects)) {
+            if (!v4CodeGenerator.generateRuntimeFunctions(object)) {
+                Q_ASSERT(v4CodeGenerator.hasError());
+                recordError(v4CodeGenerator.error());
+                return nullptr;
+            }
         }
-
         document->javaScriptCompilationUnit = v4CodeGenerator.generateCompilationUnit(/*generated unit data*/false);
     }
 

@@ -694,6 +694,7 @@ public:
     int maxGCStackSize() const;
 
     bool checkStackLimits();
+    int safeForAllocLength(qint64 len64);
 
     bool canJIT(Function *f = nullptr)
     {
@@ -778,6 +779,9 @@ public:
                        int argc, void **args, QMetaType *types);
 
 private:
+    template<int Frames>
+    friend struct ExecutionEngineCallDepthRecorder;
+
     QV4::ReturnedValue fromData(
             const QMetaType &type, const void *ptr, const QVariant *variant = nullptr);
 
@@ -813,12 +817,15 @@ private:
 #define CHECK_STACK_LIMITS(v4) if ((v4)->checkStackLimits()) return Encode::undefined(); \
     ExecutionEngineCallDepthRecorder _executionEngineCallDepthRecorder(v4);
 
+template<int Frames = 1>
 struct ExecutionEngineCallDepthRecorder
 {
     ExecutionEngine *ee;
 
-    ExecutionEngineCallDepthRecorder(ExecutionEngine *e): ee(e) { ++ee->callDepth; }
-    ~ExecutionEngineCallDepthRecorder() { --ee->callDepth; }
+    ExecutionEngineCallDepthRecorder(ExecutionEngine *e): ee(e) { ee->callDepth += Frames; }
+    ~ExecutionEngineCallDepthRecorder() { ee->callDepth -= Frames; }
+
+    bool hasOverflow() const { return ee->callDepth >= ExecutionEngine::maxCallDepth; }
 };
 
 inline bool ExecutionEngine::checkStackLimits()

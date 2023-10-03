@@ -875,15 +875,14 @@ void QQuickTextField::hoverEnterEvent(QHoverEvent *event)
     Q_D(QQuickTextField);
     QQuickTextInput::hoverEnterEvent(event);
     setHovered(d->hoverEnabled);
-    event->setAccepted(d->hoverEnabled);
+    event->ignore();
 }
 
 void QQuickTextField::hoverLeaveEvent(QHoverEvent *event)
 {
-    Q_D(QQuickTextField);
     QQuickTextInput::hoverLeaveEvent(event);
     setHovered(false);
-    event->setAccepted(d->hoverEnabled);
+    event->ignore();
 }
 #endif
 

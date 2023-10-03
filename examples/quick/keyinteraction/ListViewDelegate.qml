@@ -87,13 +87,8 @@ Item {
 
     states: State {
         name: "active"; when: container.activeFocus
-        PropertyChanges {
-            content {
-                color: "#FCFFF5"
-                scale: 1.1
-            }
-            label.font.pixelSize: 16
-        }
+        PropertyChanges { target: content; color: "#FCFFF5"; scale: 1.1 }
+        PropertyChanges { target: label; font.pixelSize: 16 }
     }
 
     transitions: Transition {

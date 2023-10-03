@@ -1,10 +1,10 @@
 # Generated from qqmlchangeset.pro.
 
 #####################################################################
-## tst_qqmlchangeset Binary:
+## tst_bench_qqmlchangeset Binary:
 #####################################################################
 
-qt_internal_add_benchmark(tst_qqmlchangeset
+qt_internal_add_benchmark(tst_bench_qqmlchangeset
     SOURCES
         tst_qqmlchangeset.cpp
     DEFINES

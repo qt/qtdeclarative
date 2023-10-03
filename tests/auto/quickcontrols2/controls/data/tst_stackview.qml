@@ -1591,4 +1591,26 @@ TestCase {
         tryCompare(control, "busy", true)
         tryCompare(control, "busy", false)
     }
+
+    Component {
+        id: noProperties
+        Item {}
+    }
+
+    Component {
+        id: invalidProperties
+
+        StackView {
+            anchors.fill: parent
+        }
+    }
+
+    function test_invalidProperties() {
+        let control = createTemporaryObject(invalidProperties, testCase)
+        verify(control)
+        verify(control.empty)
+        ignoreWarning(/Cannot resolve property "unknownProperty.test"/)
+        control.push(noProperties, { "unknownProperty.test": "crashes" })
+        verify(!control.empty)
+    }
 }

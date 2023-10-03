@@ -228,7 +228,7 @@ void OSAllocator::commit(void* address, size_t bytes, bool writable, bool execut
 
     while (madvise(address, bytes, MADV_WILLNEED)) {
         if (errno != EAGAIN)
-            CRASH();
+            break; // We don't have to crash here. MADV_WILLNEED is only advisory
     }
 
 #elif HAVE(MADV_FREE_REUSE)

@@ -65,7 +65,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialog : public QQuickPopup
     Q_PROPERTY(QPlatformDialogHelper::StandardButtons standardButtons READ standardButtons WRITE setStandardButtons NOTIFY standardButtonsChanged FINAL)
     // 2.3 (Qt 5.10)
     Q_PROPERTY(int result READ result WRITE setResult NOTIFY resultChanged FINAL REVISION(2, 3))
-    Q_FLAGS(QPlatformDialogHelper::StandardButtons)
+    QML_EXTENDED_NAMESPACE(QPlatformDialogHelper)
     // 2.5 (Qt 5.12)
     Q_PROPERTY(qreal implicitHeaderWidth READ implicitHeaderWidth NOTIFY implicitHeaderWidthChanged FINAL REVISION(2, 5))
     Q_PROPERTY(qreal implicitHeaderHeight READ implicitHeaderHeight NOTIFY implicitHeaderHeightChanged FINAL REVISION(2, 5))

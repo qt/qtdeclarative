@@ -839,6 +839,7 @@ void QQuickScrollBar::hoverEnterEvent(QHoverEvent *event)
     Q_D(QQuickScrollBar);
     QQuickControl::hoverEnterEvent(event);
     d->updateHover(event->position());
+    event->ignore();
 }
 
 void QQuickScrollBar::hoverMoveEvent(QHoverEvent *event)
@@ -846,6 +847,7 @@ void QQuickScrollBar::hoverMoveEvent(QHoverEvent *event)
     Q_D(QQuickScrollBar);
     QQuickControl::hoverMoveEvent(event);
     d->updateHover(event->position());
+    event->ignore();
 }
 
 void QQuickScrollBar::hoverLeaveEvent(QHoverEvent *event)
@@ -854,6 +856,7 @@ void QQuickScrollBar::hoverLeaveEvent(QHoverEvent *event)
     QQuickControl::hoverLeaveEvent(event);
 
     d->updateHover(QPoint(), false);    //position is not needed when we force it to unhover
+    event->ignore();
 }
 #endif
 
@@ -912,6 +915,7 @@ void QQuickScrollBarAttachedPrivate::setFlickable(QQuickFlickable *item)
         // The latter doesn't remove the listener but only resets its types. Thus, it leaves behind a dangling
         // pointer on destruction.
         QQuickItemPrivate::get(flickable)->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+        QQuickItemPrivate::get(flickable)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed);
         if (horizontal)
             cleanupHorizontal();
         if (vertical)
@@ -921,7 +925,10 @@ void QQuickScrollBarAttachedPrivate::setFlickable(QQuickFlickable *item)
     flickable = item;
 
     if (item) {
+        // Don't know how to combine these calls into one, and as long as they're separate calls,
+        // the remove* calls above need to be separate too, otherwise they will have no effect.
         QQuickItemPrivate::get(item)->updateOrAddGeometryChangeListener(this, QQuickGeometryChange::Size);
+        QQuickItemPrivate::get(item)->updateOrAddItemChangeListener(this, QQuickItemPrivate::Destroyed);
         if (horizontal)
             initHorizontal();
         if (vertical)
@@ -1135,6 +1142,8 @@ void QQuickScrollBarAttachedPrivate::itemImplicitHeightChanged(QQuickItem *item)
 
 void QQuickScrollBarAttachedPrivate::itemDestroyed(QQuickItem *item)
 {
+    if (item == flickable)
+        flickable = nullptr;
     if (item == horizontal)
         horizontal = nullptr;
     if (item == vertical)

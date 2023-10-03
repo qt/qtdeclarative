@@ -8,3 +8,7 @@
 [RangeSlider::test_overlappingHandles]
 b2qt
 qnx
+
+# QTBUG-101704
+[ToolTip::test_attachedSizeBug]
+*

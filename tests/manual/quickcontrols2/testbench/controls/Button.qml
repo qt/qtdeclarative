@@ -56,25 +56,47 @@ QtObject {
         [],
         ["disabled"],
         ["pressed"],
-        ["checked"],
-        ["checked", "disabled"],
-        ["checked"],
+        ["checkable", "checked"],
+        ["checkable", "checked", "disabled"],
+        ["checkable", "checked"],
         ["highlighted"],
         ["highlighted", "disabled"],
         ["highlighted", "pressed"],
-        ["highlighted", "checked"],
+        ["highlighted", "checkable"],
         ["highlighted", "checkable", "pressed"],
         ["highlighted", "checkable", "checked"],
+        ["icon"],
+        ["icon", "disabled"],
+        ["icon", "pressed"],
+        ["icon", "checkable", "checked"],
+        ["icon", "checkable", "checked", "disabled"],
+        ["icon", "checkable", "checked"],
+        ["icon", "highlighted"],
+        ["icon", "highlighted", "disabled"],
+        ["icon", "highlighted", "pressed"],
+        ["icon", "highlighted", "checkable"],
+        ["icon", "highlighted", "checkable", "pressed"],
+        ["icon", "highlighted", "checkable", "checked"],
         ["flat"],
         ["flat", "disabled"],
         ["flat", "pressed"],
-        ["flat", "checked"],
         ["flat", "checkable"],
+        ["flat", "checkable", "checked"],
         ["flat", "checkable", "pressed"],
         ["flat", "checkable", "checked", "pressed"],
         ["flat", "checkable", "highlighted"],
         ["flat", "checkable", "highlighted", "pressed"],
-        ["flat", "checkable", "highlighted", "checked"]
+        ["flat", "checkable", "highlighted", "checked"],
+        ["icon", "flat"],
+        ["icon", "flat", "disabled"],
+        ["icon", "flat", "pressed"],
+        ["icon", "flat", "checkable"],
+        ["icon", "flat", "checkable", "checked"],
+        ["icon", "flat", "checkable", "pressed"],
+        ["icon", "flat", "checkable", "checked", "pressed"],
+        ["icon", "flat", "checkable", "highlighted"],
+        ["icon", "flat", "checkable", "highlighted", "pressed"],
+        ["icon", "flat", "checkable", "highlighted", "checked"]
     ]
 
     property Component component: Button {
@@ -86,5 +108,6 @@ QtObject {
         // Only set it if it's pressed, or the non-pressed examples will have no press effects
         down: is("pressed") ? true : undefined
         highlighted: is("highlighted")
+        icon.source: is("icon") ? "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png" : ""
     }
 }

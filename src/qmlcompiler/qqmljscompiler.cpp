@@ -238,17 +238,12 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
         for (QmlIR::Object *object: qAsConst(irDocument.objects)) {
             if (object->functionsAndExpressions->count == 0 && object->bindingCount() == 0)
                 continue;
-            QList<QmlIR::CompiledFunctionOrExpression> functionsToCompile;
-            for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next)
-                functionsToCompile << *foe;
-            const QVector<int> runtimeFunctionIndices = v4CodeGen.generateJSCodeForFunctionsAndBindings(functionsToCompile);
-            if (v4CodeGen.hasError()) {
+
+            if (!v4CodeGen.generateRuntimeFunctions(object)) {
+                Q_ASSERT(v4CodeGen.hasError());
                 error->appendDiagnostic(inputFileName, v4CodeGen.error());
                 return false;
             }
-
-            QQmlJS::MemoryPool *pool = irDocument.jsParserEngine.pool();
-            object->runtimeFunctionIndices.allocate(pool, runtimeFunctionIndices);
 
             if (!aotCompiler)
                 continue;
@@ -269,6 +264,12 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                       std::back_inserter(bindingsAndFunctions));
             std::copy(object->functionsBegin(), object->functionsEnd(),
                       std::back_inserter(bindingsAndFunctions));
+
+            QList<QmlIR::CompiledFunctionOrExpression> functionsToCompile;
+            for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first;
+                 foe; foe = foe->next) {
+                functionsToCompile << *foe;
+            }
 
             // AOT-compile bindings and functions in the same order as above so that the runtime
             // class indices match
@@ -326,7 +327,8 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                                            << diagnosticErrorMessage(inputFileName, *error);
                 } else if (auto *func = std::get_if<QQmlJSAotFunction>(&result)) {
                     qCInfo(lcAotCompiler) << "Generated code:" << func->code;
-                    aotFunctionsByIndex[runtimeFunctionIndices[bindingOrFunction.index()]] = *func;
+                    aotFunctionsByIndex[object->runtimeFunctionIndices[bindingOrFunction.index()]] =
+                            *func;
                 }
             });
         }

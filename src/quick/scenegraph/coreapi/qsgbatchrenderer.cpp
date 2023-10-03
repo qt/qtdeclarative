@@ -953,8 +953,14 @@ Renderer::~Renderer()
             qsg_wipeBatch(m_batchPool.at(i), separateIndexBuffer);
     }
 
-    for (Node *n : qAsConst(m_nodes))
+    for (Node *n : qAsConst(m_nodes)) {
+        if (n->type() == QSGNode::GeometryNodeType) {
+            Element *e = n->element();
+            if (!e->removed)
+                m_elementsToDelete.add(e);
+        }
         m_nodeAllocator.release(n);
+    }
 
     // Remaining elements...
     for (int i=0; i<m_elementsToDelete.size(); ++i)

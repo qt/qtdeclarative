@@ -47,6 +47,7 @@
 #include <QQmlFile>
 #include <QFile>
 #include <QFileSelector>
+#include <QMutexLocker>
 
 QT_BEGIN_NAMESPACE
 
@@ -207,7 +208,8 @@ QSGMaterialType *QSGRhiShaderMaterialTypeCache::get(const QShader &vs, const QSh
     return t;
 }
 
-static QSGRhiShaderMaterialTypeCache shaderMaterialTypeCache;
+static QHash<void *, QSGRhiShaderMaterialTypeCache> shaderMaterialTypeCache;
+static QMutex shaderMaterialTypeCacheMutex;
 
 class QSGRhiShaderEffectMaterialShader : public QSGMaterialShader
 {
@@ -657,7 +659,12 @@ void QSGRhiShaderEffectNode::syncMaterial(SyncData *syncData)
             m_material.m_fragmentShader = defaultFragmentShader;
         }
 
-        m_material.m_materialType = shaderMaterialTypeCache.get(m_material.m_vertexShader, m_material.m_fragmentShader);
+        {
+            QMutexLocker lock(&shaderMaterialTypeCacheMutex);
+            m_material.m_materialType = shaderMaterialTypeCache[syncData->materialTypeCacheKey].get(m_material.m_vertexShader,
+                                                                                                    m_material.m_fragmentShader);
+        }
+
         m_material.m_linker.reset(m_material.m_vertexShader, m_material.m_fragmentShader);
 
         if (m_material.m_hasCustomVertexShader) {
@@ -775,9 +782,10 @@ void QSGRhiShaderEffectNode::preprocess()
     }
 }
 
-void QSGRhiShaderEffectNode::cleanupMaterialTypeCache()
+void QSGRhiShaderEffectNode::cleanupMaterialTypeCache(void *materialTypeCacheKey)
 {
-    shaderMaterialTypeCache.reset();
+    QMutexLocker lock(&shaderMaterialTypeCacheMutex);
+    shaderMaterialTypeCache[materialTypeCacheKey].reset();
 }
 
 bool QSGRhiGuiThreadShaderEffectManager::hasSeparateSamplerAndTextureObjects() const

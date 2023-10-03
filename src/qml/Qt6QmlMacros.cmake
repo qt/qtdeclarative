@@ -1810,6 +1810,11 @@ function(_qt_internal_qml_type_registration target)
 
     if (TARGET ${target}Private)
         list(APPEND cmd_args --private-includes)
+    else()
+        string(REGEX MATCH "Private$" privateSuffix ${target})
+        if (privateSuffix)
+            list(APPEND cmd_args --private-includes)
+        endif()
     endif()
 
     get_target_property(target_metatypes_json_file ${target} INTERFACE_QT_META_TYPES_BUILD_FILE)
@@ -2043,9 +2048,8 @@ but this file does not exist.  Possible reasons include:
         -cmake-output
     )
     get_target_property(qml_import_path ${target} QT_QML_IMPORT_PATH)
-
-    if (qml_import_path)
-        list(APPEND cmd_args ${qml_import_path})
+    if(qml_import_path)
+        list(APPEND qml_import_paths ${qml_import_path})
     endif()
 
     # Facilitate self-import so we can find the qmldir file

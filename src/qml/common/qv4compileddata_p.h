@@ -79,7 +79,11 @@ QT_BEGIN_NAMESPACE
 // Also change the comment behind the number to describe the latest change. This has the added
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
-#define QV4_DATA_STRUCTURE_VERSION 0x34 // added a flag to mark functions as closure wrappers
+
+// Note: We got two different versions 0x36 now, one with builtin value types and one without.
+//       However, the one without is exclusive to Qt 6.4+ and the compiled data cannot be preserved
+//       across Qt versions. Therefore, this is fine.
+#define QV4_DATA_STRUCTURE_VERSION 0x36 // reordered runtime functions when compiling at run time
 
 class QIODevice;
 class QQmlTypeNameCache;

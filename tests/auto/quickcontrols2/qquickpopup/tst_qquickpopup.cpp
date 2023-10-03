@@ -998,6 +998,10 @@ void tst_QQuickPopup::wheel()
     QVERIFY(popup && popup->contentItem());
     popup->setModal(modal);
 
+    QQuickPopup *nestedPopup = window->property("nestedPopup").value<QQuickPopup*>();
+    QVERIFY(nestedPopup && nestedPopup->contentItem());
+    nestedPopup->setModal(modal);
+
     QQuickSlider *popupSlider = window->property("popupSlider").value<QQuickSlider*>();
     QVERIFY(popupSlider);
 
@@ -1026,6 +1030,22 @@ void tst_QQuickPopup::wheel()
 
         QVERIFY(qFuzzyCompare(contentSlider->value(), oldContentValue)); // must not have moved
         QVERIFY(!qFuzzyCompare(popupSlider->value(), oldPopupValue)); // must have moved
+    }
+
+    QSignalSpy nestedOpenedSpy(nestedPopup, SIGNAL(opened()));
+    QVERIFY(nestedOpenedSpy.isValid());
+    nestedPopup->open();
+    QVERIFY(nestedOpenedSpy.size() == 1 || nestedOpenedSpy.wait());
+
+    {
+        // wheel over the popup content
+        qreal oldContentValue = contentSlider->value();
+        qreal oldPopupValue = popupSlider->value();
+
+        QVERIFY(sendWheelEvent(popupSlider, QPoint(popupSlider->width() / 2, popupSlider->height() / 2), 15));
+
+        QVERIFY(qFuzzyCompare(contentSlider->value(), oldContentValue)); // must not have moved
+        QCOMPARE(qFuzzyCompare(popupSlider->value(), oldPopupValue), modal); // must not have moved unless modeless
     }
 
     {

@@ -49,6 +49,9 @@ Item {
     property alias tableViewV: tableViewV
     property alias tableViewHV: tableViewHV
 
+    property real delegateWidth: 30
+    property real delegateHeight: 60
+
     Column {
         spacing: 10
         TableView {
@@ -93,7 +96,7 @@ Item {
             height: 100
             anchors.margins: 1
             clip: true
-            delegate: tableViewDelegate
+            delegate: tableViewDelegateMainView
             columnSpacing: 1
             rowSpacing: 1
 
@@ -106,10 +109,27 @@ Item {
         id: tableViewDelegate
         Rectangle {
             objectName: "tableViewDelegate"
+            color: "lightblue"
+            border.width: 1
+            implicitWidth: 100
+            implicitHeight: 100
+
+            Text {
+                anchors.centerIn: parent
+                font.pixelSize: 10
+                text: parent.TableView.view.objectName + "\n" + column + ", " + row
+            }
+        }
+    }
+
+    Component {
+        id: tableViewDelegateMainView
+        Rectangle {
+            objectName: "tableViewDelegate"
             color: "lightgray"
             border.width: 1
-            implicitWidth: 30
-            implicitHeight: 60
+            implicitWidth: delegateWidth
+            implicitHeight: delegateHeight
 
             Text {
                 anchors.centerIn: parent
