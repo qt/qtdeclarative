@@ -31,6 +31,7 @@ qt_add_resources(qqcstylegenerator "controls"
         templates/ItemDelegate.qml
         templates/PageIndicator.qml
         templates/Popup.qml
+        templates/ProgressBar.qml
         templates/RadioButton.qml
         templates/RangeSlider.qml
         templates/RoundButton.qml

@@ -33,26 +33,6 @@
         ]
     },
     {
-        "name": "FlatButton",
-        "page": "Components",
-        "component set": "FlatButtonTemplate${Theme}",
-        "atoms": [
-            {"atom": "background", "figmaPath": "FlatButtonBackground"},
-            {"atom": "contentItem", "figmaPath": "contentItem"},
-            {"atom": "label", "figmaPath": "contentItem, label"}
-        ],
-        "states": [
-            {"state": "normal", "figmaState": "normal"},
-            {"state": "checked", "figmaState": "checked"},
-            {"state": "checked-disabled", "figmaState": "checkedDisabled"},
-            {"state": "checked-hovered", "figmaState": "checkedHovered"},
-            {"state": "checked-pressed", "figmaState": "checkedPressed"},
-            {"state": "disabled", "figmaState": "disabled"},
-            {"state": "hovered", "figmaState": "hovered"},
-            {"state": "pressed", "figmaState": "pressed"}
-        ]
-    },
-    {
         "name": "CheckBox",
         "page": "Components",
         "component set": "CheckBoxTemplate${Theme}",
@@ -130,6 +110,26 @@
         ]
     },
     {
+        "name": "FlatButton",
+        "page": "Components",
+        "component set": "FlatButtonTemplate${Theme}",
+        "atoms": [
+            {"atom": "background", "figmaPath": "FlatButtonBackground"},
+            {"atom": "contentItem", "figmaPath": "contentItem"},
+            {"atom": "label", "figmaPath": "contentItem, label"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "checked", "figmaState": "checked"},
+            {"state": "checked-disabled", "figmaState": "checkedDisabled"},
+            {"state": "checked-hovered", "figmaState": "checkedHovered"},
+            {"state": "checked-pressed", "figmaState": "checkedPressed"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "pressed", "figmaState": "pressed"}
+        ]
+    },
+    {
         "name": "ItemDelegate",
         "page": "Components",
         "component set": "ItemDelegateTemplate${Theme}",
@@ -184,6 +184,7 @@
     },
     {
         "name": "Popup",
+        "page": "Components",
         "component set": "PopupTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "PopupBackground"},
@@ -191,6 +192,20 @@
         ],
         "states": [
             {"state": "modal", "figmaState": "modal"},
+            {"state": "normal", "figmaState": "normal"}
+        ]
+    },
+    {
+        "name": "ProgressBar",
+        "page": "Components",
+        "component set": "ProgressBarTemplate${Theme}",
+        "atoms": [
+            {"atom": "groove", "figmaPath": "progressbarGroove" },
+            {"atom": "track", "figmaPath": "progressbarTrack"}
+        ],
+        "states": [
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "indeterminate", "figmaState": "indeterminate"},
             {"state": "normal", "figmaState": "normal"}
         ]
     },
