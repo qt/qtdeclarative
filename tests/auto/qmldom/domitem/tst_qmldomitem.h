@@ -2305,29 +2305,28 @@ private slots:
                 DomItem childItem = current.item.path(it.key());
                 FileLocations::Tree childTree =
                         std::static_pointer_cast<AttachedInfoT<FileLocations>>(it.value());
+                if (!childItem) {
+                    const auto attachedInfo = FileLocations::findAttachedInfo(current.item);
+                    const DomItem treeItem = current.item.path(attachedInfo.foundTreePath);
+                    qDebug() << current.item.internalKindStr()
+                             << "has incorrect FileLocations! Make sure that "
+                                "finalizeScriptExpression is called with the right arguments. It "
+                                "should print out some debugging information with the "
+                                "qt.qmldom.astcreator.debug logging rule.";
+                    qDebug() << "Current FileLocations has keys:"
+                             << treeItem.field(Fields::subItems).keys()
+                             << "but current Item of type" << current.item.internalKindStr()
+                             << "has fields: " << current.item.fields()
+                             << "and keys: " << current.item.keys()
+                             << "and indexes: " << current.item.indexes();
+                }
                 QVERIFY(childItem.internalKind() != DomType::Empty);
                 queue.push_back({ childItem, childTree });
             }
         }
     }
 
-private:
-    static Path reconstructPathFromFileLocations(const DomItem &item)
-    {
-        QList<Path> paths;
-        for (FileLocations::Tree current = FileLocations::treeOf(item); current;
-             current = current->parent()) {
-            Q_ASSERT(paths.isEmpty() || FileLocations::find(current, paths.back()));
-            paths.append(current->path());
-        }
-        Path result;
-        for (auto it = paths.crbegin(); it != paths.crend(); ++it) {
-            result = result.path(*it);
-        }
-        return result;
-    }
 private slots:
-
     void finalizeScriptExpressions()
     {
         QString fileName = baseDir + u"/finalizeScriptExpressions.qml"_s;
@@ -2341,7 +2340,8 @@ private slots:
             Path canonical = item.canonicalPath();
             QVERIFY(canonical.length() > 0);
             if (canonical.length() > 0)
-                QCOMPARE(canonical, reconstructPathFromFileLocations(item));
+                QCOMPARE(canonical.toString(),
+                         FileLocations::treeOf(item)->canonicalPathForTesting());
         };
 
         /*

@@ -174,6 +174,10 @@ void QQmlDomAstCreator::removeCurrentScriptNode(std::optional<DomType> expectedT
 /*!
    \internal
    Prepares a script element DOM representation such that it can be used inside a QML DOM element.
+   This recursively sets the pathFromOwner and creates the FileLocations::Tree for all children of
+   element.
+
+   Beware that pathFromOwner is appended to ownerFileLocations when creating the FileLocations!
 
    Make sure to add, for each of its use, a test in tst_qmldomitem:finalizeScriptExpressions, as
    using a wrong pathFromOwner and/or a wrong base might lead to bugs hard to debug and spurious
@@ -181,13 +185,16 @@ void QQmlDomAstCreator::removeCurrentScriptNode(std::optional<DomType> expectedT
  */
 const ScriptElementVariant &
 QQmlDomAstCreator::finalizeScriptExpression(const ScriptElementVariant &element, Path pathFromOwner,
-                                            const FileLocations::Tree &base)
+                                            const FileLocations::Tree &ownerFileLocations)
 {
     auto e = element.base();
     Q_ASSERT(e);
 
+    qCDebug(creatorLog) << "Finalizing script expression with path:"
+                        << ownerFileLocations->canonicalPathForTesting().append(
+                                   pathFromOwner.toString());
     e->updatePathFromOwner(pathFromOwner);
-    e->createFileLocations(base);
+    e->createFileLocations(ownerFileLocations);
     return element;
 }
 

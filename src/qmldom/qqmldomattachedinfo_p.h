@@ -213,6 +213,16 @@ public:
 
     const Info &info() const { return m_info; }
     Info &info() { return m_info; }
+
+    QString canonicalPathForTesting() const
+    {
+        QString result;
+        for (auto *it = this; it; it = it->parent().get()) {
+            result.prepend(it->path().toString());
+        }
+        return result;
+    }
+
 protected:
     std::shared_ptr<OwningItem> doCopy(const DomItem &) const override
     {
