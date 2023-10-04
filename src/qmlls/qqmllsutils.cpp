@@ -33,9 +33,9 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(QQmlLSUtilsLog, "qt.languageserver.utils")
 Q_LOGGING_CATEGORY(QQmlLSCompletionLog, "qt.languageserver.completions")
 
-static QList<CompletionItem> methodCompletion(const QQmlJSScope *scope,
+static QList<CompletionItem> methodCompletion(const QQmlJSScope::ConstPtr &scope,
                                               QDuplicateTracker<QString> *usedNames);
-static QList<CompletionItem> propertyCompletion(const QQmlJSScope *scope,
+static QList<CompletionItem> propertyCompletion(const QQmlJSScope::ConstPtr &scope,
                                                 QDuplicateTracker<QString> *usedNames);
 /*!
    \internal
@@ -1651,7 +1651,7 @@ bool QQmlLSUtils::isValidEcmaScriptIdentifier(QStringView identifier)
     return eofToken == static_cast<int>(QQmlJS::Lexer::EOF_SYMBOL);
 }
 
-static QList<CompletionItem> signalHandlerCompletion(const QQmlJSScope *scope,
+static QList<CompletionItem> signalHandlerCompletion(const QQmlJSScope::ConstPtr &scope,
                                                      QDuplicateTracker<QString> *usedNames)
 {
     QList<CompletionItem> res;
@@ -1696,8 +1696,8 @@ QList<CompletionItem> QQmlLSUtils::bindingsCompletions(const DomItem &containing
     if (!scope)
         return res;
 
-    res << insertColonsForCompletions(propertyCompletion(scope.get(), nullptr));
-    res << insertColonsForCompletions(signalHandlerCompletion(scope.get(), nullptr));
+    res << insertColonsForCompletions(propertyCompletion(scope, nullptr));
+    res << insertColonsForCompletions(signalHandlerCompletion(scope, nullptr));
 
     return res;
 }
@@ -1858,7 +1858,7 @@ QList<CompletionItem> QQmlLSUtils::reachableTypes(const DomItem &el, LocalSymbol
     return res;
 }
 
-static QList<CompletionItem> jsIdentifierCompletion(const QQmlJSScope *scope,
+static QList<CompletionItem> jsIdentifierCompletion(const QQmlJSScope::ConstPtr &scope,
                                                     QDuplicateTracker<QString> *usedNames)
 {
     QList<CompletionItem> result;
@@ -1884,7 +1884,7 @@ static QList<CompletionItem> jsIdentifierCompletion(const QQmlJSScope *scope,
     return result;
 }
 
-static QList<CompletionItem> methodCompletion(const QQmlJSScope *scope,
+static QList<CompletionItem> methodCompletion(const QQmlJSScope::ConstPtr &scope,
                                               QDuplicateTracker<QString> *usedNames)
 {
     QList<CompletionItem> result;
@@ -1905,7 +1905,7 @@ static QList<CompletionItem> methodCompletion(const QQmlJSScope *scope,
     return result;
 }
 
-static QList<CompletionItem> propertyCompletion(const QQmlJSScope *scope,
+static QList<CompletionItem> propertyCompletion(const QQmlJSScope::ConstPtr &scope,
                                                 QDuplicateTracker<QString> *usedNames)
 {
     QList<CompletionItem> result;
@@ -1926,7 +1926,7 @@ static QList<CompletionItem> propertyCompletion(const QQmlJSScope *scope,
     return result;
 }
 
-static QList<CompletionItem> enumerationCompletion(const QQmlJSScope *scope,
+static QList<CompletionItem> enumerationCompletion(const QQmlJSScope::ConstPtr &scope,
                                                    QDuplicateTracker<QString> *usedNames)
 {
     QList<CompletionItem> result;
@@ -1974,7 +1974,7 @@ property var b: someItem.<complete World, ValueOne and ValueTwo here>
 ```
 */
 
-static QList<CompletionItem> enumerationValueCompletion(const QQmlJSScope *scope,
+static QList<CompletionItem> enumerationValueCompletion(const QQmlJSScope::ConstPtr &scope,
                                                         const QString &enumeratorName)
 {
     auto enumerator = scope->enumeration(enumeratorName);
@@ -2003,10 +2003,10 @@ collect all the JavaScript Identifiers from following code:
 ```
 */
 template<auto F, typename... T>
-decltype(auto) collectFromAllJavaScriptParents(const QQmlJSScope *scope, T... args)
+decltype(auto) collectFromAllJavaScriptParents(const QQmlJSScope::ConstPtr &scope, T... args)
 {
     decltype(F(scope, args...)) result;
-    for (const QQmlJSScope *current = scope; current; current = current->parentScope().get()) {
+    for (QQmlJSScope::ConstPtr current = scope; current; current = current->parentScope()) {
         result << F(current, args...);
         if (current->scopeType() == QQmlSA::ScopeType::QMLScope)
             break;
@@ -2019,7 +2019,7 @@ QList<CompletionItem> QQmlLSUtils::scriptIdentifierCompletion(const DomItem &con
 {
     QList<CompletionItem> result;
     QDuplicateTracker<QString> usedNames;
-    const QQmlJSScope *nearestScope;
+    QQmlJSScope::ConstPtr nearestScope;
     const bool hasQualifier = !ctx.base().isEmpty();
 
     if (!hasQualifier) {
@@ -2031,14 +2031,14 @@ QList<CompletionItem> QQmlLSUtils::scriptIdentifierCompletion(const DomItem &con
         auto scope = context.nearestSemanticScope();
         if (!scope)
             return result;
-        nearestScope = scope.get();
+        nearestScope = scope;
 
         result << enumerationCompletion(nearestScope, &usedNames);
     } else {
         auto expressionType = QQmlLSUtils::resolveExpressionType(context, ResolveOwnerType);
         if (!expressionType || !expressionType->semanticScope)
             return result;
-        nearestScope = expressionType->semanticScope.get();
+        nearestScope = expressionType->semanticScope;
 
         if (expressionType->name) {
             // note: you only get enumeration values in qualified expressions, never alone
@@ -2071,8 +2071,7 @@ QList<CompletionItem> QQmlLSUtils::scriptIdentifierCompletion(const DomItem &con
             return result;
 
         const auto globals = resolver->jsGlobalObject();
-        result << methodCompletion(globals.get(), &usedNames)
-               << propertyCompletion(globals.get(), &usedNames);
+        result << methodCompletion(globals, &usedNames) << propertyCompletion(globals, &usedNames);
     }
 
     return result;
