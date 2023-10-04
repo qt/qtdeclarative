@@ -16,7 +16,7 @@ T.Switch {
     spacing: config.spacing || 0
 
     topPadding: config.topPadding || 0
-    leftPadding: config.topPadding || 0
+    leftPadding: config.leftPadding || 0
     rightPadding: config.rightPadding || 0
     bottomPadding: config.bottomPadding || 0
 
