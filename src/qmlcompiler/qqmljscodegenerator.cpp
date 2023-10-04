@@ -1010,6 +1010,15 @@ void QQmlJSCodeGenerator::generateWriteBack(int registerIndex)
 
         const int lookupIndex = writeBack.resultLookupIndex();
         if (lookupIndex == -1) {
+            // This is essential for the soundness of the type system.
+            //
+            // If a value or a list is returned from a function, we cannot know
+            // whether it is a copy or a reference. Therefore, we cannot know whether
+            // we have to write it back and so we have to reject any write on it.
+            //
+            // Only if we are sure that the value is locally created we can be sure
+            // we don't have to write it back. In this latter case we could allow
+            // a modification that doesn't write back.
             reject(u"write-back of non-lookup"_s);
             break;
         }
