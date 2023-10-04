@@ -316,13 +316,6 @@ void tst_StyleImports::fallbackStyleThemeRespected_data()
         << "FileSystemStyle" << EnvVar << Qt::ColorScheme::Dark
         << QColor::fromRgb(0x0000ff) << QColor::fromRgba(materialBackgroundColorDark);
 
-    QTest::newRow("import controls, qmldir fallback, light") << "applicationWindowWithButton.qml"
-        << "StyleThatImportsMaterial" << QmlDirImport << Qt::ColorScheme::Light
-        << QColor::fromRgb(0xff0000) << QColor::fromRgba(materialBackgroundColorLight);
-    QTest::newRow("import controls, qmldir fallback, dark") << "applicationWindowWithButton.qml"
-        << "StyleThatImportsMaterial" << QmlDirImport << Qt::ColorScheme::Dark
-        << QColor::fromRgb(0xff0000) << QColor::fromRgba(materialBackgroundColorDark);
-
     QTest::newRow("import style, qmldir fallback, light") << "importStyleWithQmlDirFallback.qml"
         << "" << QmlDirImport << Qt::ColorScheme::Light
         << QColor::fromRgb(0xff0000) << QColor::fromRgba(materialBackgroundColorLight);
@@ -369,34 +362,12 @@ void tst_StyleImports::fallbackStyleThemeRespected()
     QVERIFY(button);
     // contentItem should be a label with "salmon" text color.
     QCOMPARE(button->contentItem()->property("color").value<QColor>(), expectedButtonTextColor);
-    const QStringList skippedTestRows = {
-        // This row only fails when run on its own.
-        "import controls, qmldir fallback, dark",
-        /*
-            This is also failing for the second row when running all tests,
-            or the following tests in the given order:
-            fallbackStyleThemeRespected:"import controls, env var fallback, dark"
-            fallbackStyleThemeRespected:"import controls, qmldir fallback, light"
-            It fails because of QTBUG-117526 - the fallback style is reported as being empty because
-            it was imported via the qmldir, which QQuickStyle isn't aware of. So the
-            Material theme never gets (re-)initialized, and it retains the dark theme
-            from the previous test row. It doesn't fail when run on its own, because the default
-            Material theme is light, so it doesn't matter if it's not initialized in that case.
-        */
-        "import controls, qmldir fallback, light"
-    };
-    if (skippedTestRows.contains(QTest::currentDataTag()))
-        QSKIP("This row is unreliable depending on the order in which it is run, due to QTBUG-117526");
     QCOMPARE(helper.appWindow->color(), expectedWindowColor);
 
     // If using run-time style selection, check that QQuickStyle reports the correct values.
     // QQuickStyle is not supported when using compile-time style selection.
     if (!runtimeStyle.isEmpty()) {
         QCOMPARE(QQuickStyle::name(), runtimeStyle);
-        // QTBUG-117526: This will fail when fallbackMethod is QmlDirImport, because
-        // QQuickStylePrivate::fallbackStyle has the wrong value when using
-        // run-time style selection and the fallback style is imported via the style's qmldir.
-        // Remove this comment when the bug is fixed.
         QCOMPARE(QQuickStylePrivate::fallbackStyle(), "Material");
     }
 }
