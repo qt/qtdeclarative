@@ -94,6 +94,7 @@ excludefiles += ../util/qquickpropertychanges_p.h
 examples.fileextensions += "*.qm"
 
 manifestmeta.thumbnail.names += "QtQuick/QML Dynamic View Ordering Tutorial*"
+manifestmeta.highlighted.names = "QtQuick/Qt Quick Layouts - Responsive Layout Example"
 
 navigation.landingpage = "Qt Quick"
 navigation.cppclassespage = "Qt Quick C++ Classes"
