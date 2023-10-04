@@ -6,12 +6,12 @@ import QtQuick.Templates as T
 T.TextArea {
     id: control
 
-    implicitWidth: Math.max(contentWidth + leftPadding + rightPadding,
-                            implicitBackgroundWidth + leftInset + rightInset,
-                            placeholder.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
-                             implicitBackgroundHeight + topInset + bottomInset,
-                             placeholder.implicitHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max((background.minimumWidth || implicitBackgroundWidth)
+                            + leftInset + rightInset,
+                            contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max((background.minimumHeight || implicitBackgroundHeight)
+                            + topInset + bottomInset,
+                            contentHeight + topPadding + bottomPadding)
 
     topPadding: config.topPadding || 0
     bottomPadding: config.bottomPadding || 0
