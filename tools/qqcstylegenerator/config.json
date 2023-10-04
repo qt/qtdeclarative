@@ -102,7 +102,8 @@
         "component set": "FrameTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "FrameBackground"},
-            {"atom": "contentItem", "figmaPath": "ContentItem"}
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
+            {"atom": "label", "figmaPath": "Label"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},

@@ -19,17 +19,18 @@ Item {
     // item will also be adjusted to match the rotated image.
     property bool horizontal: true
 
+    // The minimum size of the image should be at least 1px tall and wide, even without any offsets
+    readonly property real minimumWidth: Math.max(1, imageConfig.leftOffset + imageConfig.rightOffset)
+    readonly property real minimumHeight: Math.max(1, imageConfig.topOffset + imageConfig.bottomOffset)
+
     BorderImage {
         x: -imageConfig.leftShadow
         y: -imageConfig.topShadow
-        width: Math.max(minWidth, (root.horizontal ? root.width : root.height))
+        width: Math.max(root.minimumWidth, (root.horizontal ? root.width : root.height))
                + imageConfig.leftShadow + imageConfig.rightShadow
-        height: Math.max(minHeight, (root.horizontal ? root.height : root.width))
+        height: Math.max(root.minimumHeight, (root.horizontal ? root.height : root.width))
                 + imageConfig.topShadow + imageConfig.bottomShadow
         source: Qt.resolvedUrl(imageConfig.filePath)
-
-        readonly property real minWidth: imageConfig.leftOffset + imageConfig.rightOffset
-        readonly property real minHeight: imageConfig.topOffset + imageConfig.bottomOffset
 
         border {
             top: imageConfig.topOffset + imageConfig.topShadow

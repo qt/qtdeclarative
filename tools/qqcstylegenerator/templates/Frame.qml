@@ -6,10 +6,12 @@ import QtQuick.Templates as T
 T.Frame {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
+    implicitWidth: Math.max((background.minimumWidth || implicitBackgroundWidth)
+                            + leftInset + rightInset,
                             contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             contentHeight + topPadding + bottomPadding)
+    implicitHeight: Math.max((background.minimumHeight || implicitBackgroundHeight)
+                            + topInset + bottomInset,
+                            contentHeight + topPadding + bottomPadding)
 
     topPadding: config.topPadding || 0
     bottomPadding: config.bottomPadding || 0
