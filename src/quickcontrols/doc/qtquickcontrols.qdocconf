@@ -105,7 +105,10 @@ macro.stylecolor.DocBook = "<db:phrase role=\"color:\1\">\1 \2</db:phrase>"
 macro.nbsp.HTML = "&nbsp;"
 macro.nbsp.DocBook = "&#160;"
 
-manifestmeta.highlighted.names = "QtQuickControls/Qt Quick Controls - Wearable Demo"
+manifestmeta.highlighted.names = \
+    "QtQuickControls/Qt Quick Controls - Wearable Demo" \
+    "QtQuickControls/Qt Quick Controls - Gallery" \
+    "QtQuickControls/Qt Quick Controls - Event Calendar"
 
 # Fail the documentation build if there are more warnings than the limit
 warninglimit = 0
