@@ -66,12 +66,8 @@ T.Switch {
     }
 
     contentItem: Text {
-        leftPadding: control.indicator && !control.mirroredIndicator
-            ? control.indicator.x + control.indicator.width + control.spacing
-            : 0
-        rightPadding: control.indicator && control.mirroredIndicator
-            ? control.width - control.indicator.x + control.spacing
-            : 0
+        leftPadding: control.indicator && !control.mirroredIndicator ? control.indicator.width + control.spacing : 0
+        rightPadding: control.indicator && control.mirroredIndicator ? control.indicator.width + control.spacing : 0
         text: control.text
         font: control.font
         color: control.palette.windowText
