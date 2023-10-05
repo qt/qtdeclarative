@@ -67,6 +67,7 @@ private slots:
     void contextParam();
     void conversionDecrement();
     void conversions();
+    void convertToOriginalReadAcumulatorForUnaryOperators();
     void cppValueTypeList();
     void dateConstruction();
     void dateConversions();
@@ -1229,6 +1230,15 @@ void tst_QmlCppCodegen::conversions()
     QVERIFY(object->metaObject()->invokeMethod(object.data(), "retUndefined",
                                                Q_RETURN_ARG(QVariant, undef)));
     QVERIFY(!undef.isValid());
+}
+
+void tst_QmlCppCodegen::convertToOriginalReadAcumulatorForUnaryOperators()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/convertToOriginalReadAcumulatorForUnaryOperators.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
 }
 
 void tst_QmlCppCodegen::cppValueTypeList()
