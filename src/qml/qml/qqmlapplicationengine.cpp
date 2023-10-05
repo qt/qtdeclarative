@@ -354,6 +354,11 @@ void QQmlApplicationEngine::load(const QString &filePath)
     engine.loadFromModule("QtQuick", "Rectangle");
     \endcode
 
+    \note The module identified by \a uri is searched in the
+    \l {QML Import Path}{import path}, in the same way as if
+    you were doing \c{import uri} inside a QML file. If the
+    module cannot be located there, this function will fail.
+
     \since 6.5
     \sa QQmlComponent::loadFromModule
  */
