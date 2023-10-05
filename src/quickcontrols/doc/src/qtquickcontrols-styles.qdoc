@@ -131,19 +131,33 @@
     import QtQuick.Controls
     \endqml
 
-    The QtQuick.Controls plugin will import the style and fallback
-    style that were set at runtime via one of the following approaches:
+    The QtQuick.Controls plugin will import the style that was set at runtime
+    via one of the following approaches:
 
     \list
     \li \l[CPP]{QQuickStyle::setStyle()}
     \li The \c -style command line argument
-    \li The \c QT_QUICK_CONTROLS_STYLE environment variable
-    \li The \c qtquickcontrols2.conf configuration file
+    \li The \l {Supported Environment Variables in Qt Quick Controls}
+        {QT_QUICK_CONTROLS_STYLE environment variable}
+    \li The \l {Qt Quick Controls Configuration File}{qtquickcontrols2.conf
+        configuration file}
     \endlist
 
     The priority of these approaches follows the order they are listed,
     from highest to lowest. That is, using \c QQuickStyle to set the style will
     always take priority over using the command line argument, for example.
+
+    Similarly, the fallback style can be set via one of the following methods:
+    \list
+    \li \l[CPP]{QQuickStyle::setFallbackStyle()}
+    \li The \l {Supported Environment Variables in Qt Quick Controls}
+        {QT_QUICK_CONTROLS_FALLBACK_STYLE environment variable}
+    \li The \l {Qt Quick Controls Configuration File}{qtquickcontrols2.conf
+        configuration file}
+    \endlist
+
+    \note you can only dynamically choose the fallback style if it hasn't been
+    chosen statically in the main style's qmldir file.
 
     The benefit of run-time style selection is that a single application binary
     can support multiple styles, meaning that the end user can choose which
