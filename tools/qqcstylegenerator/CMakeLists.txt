@@ -28,6 +28,7 @@ qt_add_resources(qqcstylegenerator "controls"
         templates/CheckBox.qml
         templates/ComboBox.qml
         templates/Frame.qml
+        templates/GroupBox.qml
         templates/ItemDelegate.qml
         templates/PageIndicator.qml
         templates/Popup.qml
@@ -46,6 +47,7 @@ qt_add_resources(qqcstylegenerator "controls"
         templates/TextField.qml
         templates/ToolBar.qml
         templates/ToolButton.qml
+        templates/ToolTip.qml
         templates/impl/ComboBoxPopup.qml
         templates/impl/PageIndicatorDelegate.qml
         templates/impl/StyleImage.qml

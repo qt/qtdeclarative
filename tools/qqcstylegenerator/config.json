@@ -131,6 +131,24 @@
         ]
     },
     {
+        "name": "GroupBox",
+        "page": "Components",
+        "component set": "GroupBoxTemplate${Theme}",
+        "atoms": [
+            {"atom": "background", "figmaPath": "GroupBoxBackground"},
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
+            {"atom": "label", "figmaPath": "Label", "export": "geometry"},
+            {"atom": "label-background", "figmaPath": "Label, LabelBackground"},
+            {"atom": "label-contentItem", "figmaPath": "Label, ContentItem", "export": "layout"},
+            {"atom": "label-text", "figmaPath": "Label, label", "export": "text"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "hovered", "figmaState": "hovered"}
+        ]
+    },
+    {
         "name": "ItemDelegate",
         "page": "Components",
         "component set": "ItemDelegateTemplate${Theme}",
@@ -475,6 +493,19 @@
             {"state": "hovered", "figmaState": "hovered"},
             {"state": "normal", "figmaState": "normal"},
             {"state": "pressed", "figmaState": "pressed"}
+        ]
+    },
+    {
+        "name": "ToolTip",
+        "page": "Components",
+        "component set": "ToolTipTemplate${Theme}",
+        "atoms": [
+            {"atom": "background", "figmaPath": "ToolTipBackground"},
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
+            {"atom": "label", "figmaPath": "ContentItem, label"}
+        ],
+        "states": [
+            {"state": "normal", "figmaState": "normal"}
         ]
     }
     ]
