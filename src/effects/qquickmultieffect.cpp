@@ -1595,7 +1595,7 @@ void QQuickMultiEffectPrivate::updateBlurItemSizes(bool forceUpdate)
 void QQuickMultiEffectPrivate::updateEffectShaders()
 {
     Q_Q(QQuickMultiEffect);
-    if (!q->isComponentComplete())
+    if (!q->isComponentComplete() || !m_shaderEffect)
         return;
 
     QString vShader = QStringLiteral("multieffect_c");
