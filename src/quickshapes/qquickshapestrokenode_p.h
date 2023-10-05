@@ -6,6 +6,7 @@
 
 #include <QtQuick/qsgnode.h>
 
+#include "qquickshapeabstractcurvenode_p.h"
 #include "qquickshapegenericrenderer_p.h"
 #include "qquickshapestrokenode_p_p.h"
 
@@ -22,12 +23,12 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickShapeStrokeNode : public QSGGeometryNode
+class QQuickShapeStrokeNode : public QQuickShapeAbstractCurveNode
 {
 public:
     QQuickShapeStrokeNode();
 
-    void setColor(QColor col)
+    void setColor(QColor col) override
     {
         m_color = col;
     }

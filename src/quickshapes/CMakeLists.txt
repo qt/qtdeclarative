@@ -22,6 +22,7 @@ qt_internal_add_qml_module(QuickShapesPrivate
         qquickshapesglobal.h qquickshapesglobal_p.h
         qquickshapecurverenderer.cpp qquickshapecurverenderer_p.h qquickshapecurverenderer_p_p.h
         qquickshapecurvenode.cpp qquickshapecurvenode_p.h qquickshapecurvenode_p_p.h qquickshapecurvenode_p.cpp
+        qquickshapeabstractcurvenode_p.h
         qquickshapestrokenode.cpp qquickshapestrokenode_p.h qquickshapestrokenode_p_p.h qquickshapestrokenode_p.cpp
         qquadpath_p.h qquadpath.cpp
         qquickshapesoftwarerenderer.cpp qquickshapesoftwarerenderer_p.h

@@ -6,6 +6,7 @@
 
 #include <QtQuick/qsgnode.h>
 
+#include "qquickshapeabstractcurvenode_p.h"
 #include "qquickshapegenericrenderer_p.h"
 
 //
@@ -21,12 +22,12 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickShapeCurveNode : public QSGGeometryNode
+class QQuickShapeCurveNode : public QQuickShapeAbstractCurveNode
 {
 public:
     QQuickShapeCurveNode();
 
-    void setColor(QColor col)
+    void setColor(QColor col) override
     {
         if (m_color == col)
             return;
