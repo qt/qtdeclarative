@@ -13,6 +13,20 @@
     },
     "controls": [
     {
+        "name": "BusyIndicator",
+        "page": "Components",
+        "component set": "BusyIndicatorTemplate${Theme}",
+        "atoms": [
+            {"atom": "background", "figmaPath": "BusyIndicatorBackground"},
+            {"atom": "contentItem", "figmaPath": "ContentItem"},
+            {"atom": "indicator", "figmaPath": "BusyIndicatorIndicator"}
+        ],
+        "states": [
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "normal", "figmaState": "normal"}
+        ]
+    },
+    {
         "name": "Button",
         "page": "Components",
         "component set": "ButtonTemplate${Theme}",
