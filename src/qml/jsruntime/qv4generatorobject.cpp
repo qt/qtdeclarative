@@ -62,7 +62,7 @@ ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Valu
     ExecutionEngine *engine = gf->engine();
 
     Scope scope(gf);
-    Scoped<GeneratorObject> g(scope, engine->memoryManager->allocManaged<GeneratorObject>(sizeof(GeneratorObject::Data), engine->classes[EngineBase::Class_GeneratorObject]));
+    Scoped<GeneratorObject> g(scope, engine->memoryManager->allocManaged<GeneratorObject>(engine->classes[EngineBase::Class_GeneratorObject]));
     g->setPrototypeOf(ScopedObject(scope, gf->get(scope.engine->id_prototype())));
 
     // We need to set up a separate JSFrame for the generator, as it's being re-entered
