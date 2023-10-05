@@ -76,7 +76,7 @@ protected:
 
 };
 
-class QQuickShapeWireFrameNode : public QSGGeometryNode
+class QQuickShapeWireFrameNode : public QQuickShapeAbstractCurveNode
 {
 public:
     struct WireFrameVertex
@@ -89,6 +89,11 @@ public:
         setFlag(OwnsGeometry, true);
         setGeometry(new QSGGeometry(attributes(), 0, 0));
         activateMaterial();
+    }
+
+    void setColor(QColor col) override
+    {
+        Q_UNUSED(col);
     }
 
     void activateMaterial()
@@ -306,16 +311,11 @@ void QQuickShapeCurveRenderer::updateNode()
         if (dirtyFlags & UniformsDirty) {
             if (!(dirtyFlags & FillDirty)) {
                 for (auto &pathNode : std::as_const(pathData.fillNodes))
-                    static_cast<QQuickShapeCurveNode *>(pathNode)->setColor(pathData.fillColor);
+                    pathNode->setColor(pathData.fillColor);
             }
             if (!(dirtyFlags & StrokeDirty)) {
-                if (useTriangulatingStroker) {
-                    for (auto &strokeNode : std::as_const(pathData.strokeNodes))
-                        static_cast<QQuickShapeCurveNode *>(strokeNode)->setColor(pathData.pen.color());
-                } else {
-                    for (auto &strokeNode : std::as_const(pathData.strokeNodes))
-                        static_cast<QQuickShapeStrokeNode *>(strokeNode)->setColor(pathData.pen.color());
-                }
+                for (auto &strokeNode : std::as_const(pathData.strokeNodes))
+                    strokeNode->setColor(pathData.pen.color());
             }
         }
 
@@ -387,13 +387,13 @@ static inline float determinant(const QVector2D &p1, const QVector2D &p2, const 
 }
 }
 
-QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addFillNodes(const PathData &pathData,
+QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const PathData &pathData,
                                                                   NodeList *debugNodes)
 {
     auto *node = new QQuickShapeCurveNode;
     node->setGradientType(pathData.gradientType);
 
-    QVector<QSGGeometryNode *> ret;
+    NodeList ret;
     const QColor &color = pathData.fillColor;
     QPainterPath internalHull;
     internalHull.setFillRule(pathData.fillPath.fillRule());
@@ -714,9 +714,9 @@ QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addFillNodes(const PathData
     return ret;
 }
 
-QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addTriangulatingStrokerNodes(const PathData &pathData, NodeList *debugNodes)
+QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addTriangulatingStrokerNodes(const PathData &pathData, NodeList *debugNodes)
 {
-    QVector<QSGGeometryNode *> ret;
+    NodeList ret;
     const QColor &color = pathData.pen.color();
 
     QVector<QQuickShapeWireFrameNode::WireFrameVertex> wfVertices;
@@ -1428,9 +1428,9 @@ static QList<TriangleData> customTriangulator2(const QQuadPath &path, float penW
 
 };
 
-QVector<QSGGeometryNode *> QQuickShapeCurveRenderer::addCurveStrokeNodes(const PathData &pathData, NodeList *debugNodes)
+QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addCurveStrokeNodes(const PathData &pathData, NodeList *debugNodes)
 {
-    QVector<QSGGeometryNode *> ret;
+    NodeList ret;
     const QColor &color = pathData.pen.color();
 
     const bool debug = debugVisualization() & DebugCurves;

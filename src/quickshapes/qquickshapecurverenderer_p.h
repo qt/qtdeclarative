@@ -18,6 +18,7 @@
 #include <QtQuickShapes/private/qquickshapesglobal_p.h>
 #include <QtQuickShapes/private/qquickshape_p_p.h>
 #include <QtQuickShapes/private/qquadpath_p.h>
+#include <QtQuickShapes/private/qquickshapeabstractcurvenode_p.h>
 #include <qsgnode.h>
 #include <qsggeometry.h>
 #include <qsgmaterial.h>
@@ -56,7 +57,7 @@ public:
 
     void setRootNode(QSGNode *node);
 
-    using NodeList = QVector<QSGGeometryNode *>;
+    using NodeList = QVector<QQuickShapeAbstractCurveNode *>;
 
     enum DirtyFlag
     {
@@ -106,9 +107,9 @@ private:
 
     void deleteAndClear(NodeList *nodeList);
 
-    QVector<QSGGeometryNode *> addFillNodes(const PathData &pathData, NodeList *debugNodes);
-    QVector<QSGGeometryNode *> addTriangulatingStrokerNodes(const PathData &pathData, NodeList *debugNodes);
-    QVector<QSGGeometryNode *> addCurveStrokeNodes(const PathData &pathData, NodeList *debugNodes);
+    NodeList addFillNodes(const PathData &pathData, NodeList *debugNodes);
+    NodeList addTriangulatingStrokerNodes(const PathData &pathData, NodeList *debugNodes);
+    NodeList addCurveStrokeNodes(const PathData &pathData, NodeList *debugNodes);
 
     void solveOverlaps(QQuadPath &path);
 
