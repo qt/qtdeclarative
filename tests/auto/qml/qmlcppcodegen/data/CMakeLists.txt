@@ -44,6 +44,7 @@ set(qml_files
     Loopy.qml
     OkType.qml
     Panel.qml
+    Planner.qml
     ProgressBar/Keyframe.qml
     ProgressBar/KeyframeGroup.qml
     ProgressBar/ProgressBar.ui.qml
@@ -87,6 +88,7 @@ set(qml_files
     conversionDecrement.qml
     conversions.qml
     conversions2.qml
+    convertToOriginalReadAcumulatorForUnaryOperators.qml
     curlygrouped.qml
     cycleHead.qml
     dateConversions.qml

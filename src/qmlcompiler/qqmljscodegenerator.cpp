@@ -2917,7 +2917,8 @@ void QQmlJSCodeGenerator::generateArithmeticConstOperation(int rhsConst, const Q
 
 void QQmlJSCodeGenerator::generateUnaryOperation(const QString &cppOperator)
 {
-    const auto var = conversion(m_state.accumulatorIn(), m_state.readAccumulator(),
+    const auto var = conversion(m_state.accumulatorIn(),
+                                m_typeResolver->original(m_state.readAccumulator()),
                                 consumedAccumulatorVariableIn());
 
     if (var == m_state.accumulatorVariableOut) {
