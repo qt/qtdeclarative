@@ -91,6 +91,17 @@ public:
         VirtualRegisters registers;
         VirtualRegisters lookups;
 
+        /*!
+            \internal
+            \brief The accumulatorIn is the input register of the current instruction.
+
+            It holds a content, a type that content is acctually stored in, and an enclosing type
+            of the stored type called the scope. Note that passes after the original type
+            propagation may change the type of this register to a different type that the original
+            one can be coerced to. Therefore, when analyzing the same instruction in a later pass,
+            the type may differ from what was seen or requested ealier. See \l {readAccumulator()}.
+            The input type may then need to be converted to the expected type.
+        */
         const QQmlJSRegisterContent &accumulatorIn() const
         {
             auto it = registers.find(Accumulator);
@@ -98,6 +109,10 @@ public:
             return it.value().content;
         };
 
+        /*!
+            \internal
+            \brief The accumulatorOut is the output register of the current instruction.
+        */
         const QQmlJSRegisterContent &accumulatorOut() const
         {
             Q_ASSERT(m_changedRegisterIndex == Accumulator);
@@ -162,6 +177,13 @@ public:
             return it != m_readRegisters.end() && it->second.affectedBySideEffects;
         }
 
+        /*!
+            \internal
+            \brief The readAccumulator is the register content expected by the current instruction.
+
+            It may differ from the actual input type of the accumulatorIn register and usage of the
+            value may require a conversion.
+        */
         QQmlJSRegisterContent readAccumulator() const
         {
             return readRegister(Accumulator);
