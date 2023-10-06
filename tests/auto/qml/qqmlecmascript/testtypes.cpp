@@ -583,6 +583,8 @@ void registerTypes()
 
     qmlRegisterTypesAndRevisions<ListPropertyAssignment_Gadget>("Qt.test", 1);
     qmlRegisterTypesAndRevisions<ListPropertyAssignment_Object>("Qt.test", 1);
+
+    qmlRegisterTypesAndRevisions<SingletonRegistrationWrapper>("Qt.test", 1);
 }
 
 #include "testtypes.moc"
