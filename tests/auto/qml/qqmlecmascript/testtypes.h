@@ -2069,6 +2069,43 @@ public:
 };
 
 
+class SingletonBase : public QObject {
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE virtual void trackPage(const QString&) {}
+    Q_INVOKABLE virtual void trackPage(const QString&, const QVariantMap&) {}
+
+    bool m_okay = false;
+};
+
+class SingletonImpl : public SingletonBase {
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE virtual void trackPage(const QString&) override {}
+    Q_INVOKABLE virtual void trackPage(const QString&, const QVariantMap&) override
+    {
+        m_okay = true;
+    }
+};
+
+class SingletonRegistrationWrapper {
+    Q_GADGET
+    QML_FOREIGN(SingletonBase)
+    QML_NAMED_ELEMENT(SingletonInheritanceTest)
+    QML_SINGLETON
+
+public:
+    static SingletonBase* create(QQmlEngine*, QJSEngine*) {
+        return new SingletonImpl();
+    }
+
+private:
+    SingletonRegistrationWrapper() = default;
+};
+
+
 void registerTypes();
 
 #endif // TESTTYPES_H

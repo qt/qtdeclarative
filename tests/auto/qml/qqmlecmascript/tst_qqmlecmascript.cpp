@@ -422,6 +422,8 @@ private slots:
 
     void resetGadet();
 
+    void methodCallOnDerivedSingleton();
+
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     static void verifyContextLifetime(const QQmlRefPointer<QQmlContextData> &ctxt);
@@ -10476,6 +10478,18 @@ void tst_qqmlecmascript::resetGadet()
     QCOMPARE(resettableGadgetHolder->g().value(), 0);
     resettableGadgetHolder->setProperty("trigger", QVariant::fromValue(true));
     QCOMPARE(resettableGadgetHolder->g().value(), 42);
+}
+
+void tst_qqmlecmascript::methodCallOnDerivedSingleton()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFile("methodCallOnDerivedSingleton.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    auto singleton = engine.singletonInstance<SingletonBase *>("Qt.test", "SingletonInheritanceTest");
+    QVERIFY(singleton);
+    QVERIFY(singleton->m_okay);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
