@@ -56,8 +56,25 @@ const QMetaObject *QQmlTypeWrapper::metaObject() const
     if (!type.isValid())
         return nullptr;
 
-    if (type.isSingleton())
-        return type.metaObject();
+    if (type.isSingleton()) {
+        auto metaObjectCandidate = type.metaObject();
+        // if the candidate is the same as te baseMetaObject, we know that
+        // we don't have an extended singleton; in that case the
+        // actual instance might be subclass of type instead of type itself
+        // so we need to query the actual object for it's meta-object
+        if (metaObjectCandidate == type.baseMetaObject()) {
+            QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(engine()->qmlEngine());
+            auto object = qmlEngine->singletonInstance<QObject *>(type);
+            if (object)
+                return object->metaObject();
+        }
+        /* if we instead have an extended singleton, the dynamic proxy
+           meta-object must alreday be set up correctly
+          ### TODO: it isn't, as QQmlTypePrivate::init has no way to
+                    query the object
+        */
+        return metaObjectCandidate;
+    }
 
     return type.attachedPropertiesType(QQmlEnginePrivate::get(engine()->qmlEngine()));
 }

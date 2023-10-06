@@ -543,6 +543,8 @@ void registerTypes()
     qmlRegisterType<Sender>("Qt.test", 1,0, "Sender");
     qmlRegisterTypesAndRevisions<ReadOnlyBindable>("Qt.test", 1);
     qmlRegisterTypesAndRevisions<ResettableGadgetHolder>("Qt.test", 1);
+
+    qmlRegisterTypesAndRevisions<SingletonRegistrationWrapper>("Qt.test", 1);
 }
 
 #include "testtypes.moc"
