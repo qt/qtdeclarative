@@ -504,21 +504,21 @@ private:
     template<typename T>
     bool visitT(T *t)
     {
-        if (m_marker && m_marker->nodeKind == t->kind) {
-            m_marker->count += 1;
+        if (m_inactiveVisitorMarker && m_inactiveVisitorMarker->nodeKind == t->kind) {
+            m_inactiveVisitorMarker->count += 1;
         }
 
         // first case: no marker, both can visit
-        if (!m_marker) {
+        if (!m_inactiveVisitorMarker) {
             bool continueForDom = m_domCreator.visit(t);
             bool continueForScope = m_scopeCreator.visit(t);
             if (!continueForDom && !continueForScope)
                 return false;
             else if (continueForDom ^ continueForScope) {
-                m_marker.emplace();
-                m_marker->inactiveVisitor = continueForDom ? ScopeCreator : DomCreator;
-                m_marker->count = 1;
-                m_marker->nodeKind = AST::Node::Kind(t->kind);
+                m_inactiveVisitorMarker.emplace();
+                m_inactiveVisitorMarker->inactiveVisitorKind = continueForDom ? ScopeCreator : DomCreator;
+                m_inactiveVisitorMarker->count = 1;
+                m_inactiveVisitorMarker->nodeKind = AST::Node::Kind(t->kind);
 
                 if constexpr (RequiresCustomIteration<T>::value) {
                     customListIteration(t);
@@ -540,18 +540,8 @@ private:
         }
 
         // second case: a marker, just one visit
-        switch (m_marker->inactiveVisitor) {
+        switch (m_inactiveVisitorMarker->stillActiveVisitorKind()) {
         case DomCreator: {
-            const bool continueForScope = m_scopeCreator.visit(t);
-            if (continueForScope) {
-                if constexpr (RequiresCustomIteration<T>::value) {
-                    customListIteration(t);
-                    return false;
-                }
-            }
-            return continueForScope;
-        }
-        case ScopeCreator: {
             const bool continueForDom = m_domCreator.visit(t);
             if (continueForDom) {
                 if constexpr (RequiresCustomIteration<T>::value) {
@@ -561,6 +551,16 @@ private:
             }
             return continueForDom;
         }
+        case ScopeCreator: {
+            const bool continueForScope = m_scopeCreator.visit(t);
+            if (continueForScope) {
+                if constexpr (RequiresCustomIteration<T>::value) {
+                    customListIteration(t);
+                    return false;
+                }
+            }
+            return continueForScope;
+        }
         };
         Q_UNREACHABLE();
     }
@@ -568,20 +568,20 @@ private:
     template<typename T>
     void endVisitT(T *t)
     {
-        if (m_marker && m_marker->nodeKind == t->kind) {
-            m_marker->count -= 1;
-            if (m_marker->count == 0)
-                m_marker.reset();
+        if (m_inactiveVisitorMarker && m_inactiveVisitorMarker->nodeKind == t->kind) {
+            m_inactiveVisitorMarker->count -= 1;
+            if (m_inactiveVisitorMarker->count == 0)
+                m_inactiveVisitorMarker.reset();
         }
 
-        if (m_marker) {
-            switch (m_marker->inactiveVisitor) {
+        if (m_inactiveVisitorMarker) {
+            switch (m_inactiveVisitorMarker->stillActiveVisitorKind()) {
             case DomCreator: {
-                m_scopeCreator.endVisit(t);
+                m_domCreator.endVisit(t);
                 return;
             }
             case ScopeCreator: {
-                m_domCreator.endVisit(t);
+                m_scopeCreator.endVisit(t);
                 return;
             }
             };
@@ -601,14 +601,24 @@ private:
     QQmlJSImportVisitor m_scopeCreator;
     QQmlDomAstCreator m_domCreator;
 
-    enum InactiveVisitor : bool { DomCreator, ScopeCreator };
-    struct Marker
+    enum VisitorKind : bool { DomCreator, ScopeCreator };
+    /*! \internal
+        \brief Holds the information to reactivate a visitor
+        This struct tracks a visitor during its inactive phases
+        and holds the information needed to reactivate the visitor.
+    */
+    struct InactiveVisitorMarker
     {
         qsizetype count;
         AST::Node::Kind nodeKind;
-        InactiveVisitor inactiveVisitor;
+        VisitorKind inactiveVisitorKind;
+
+        VisitorKind stillActiveVisitorKind() const
+        {
+            return inactiveVisitorKind == DomCreator ? ScopeCreator : DomCreator;
+        }
     };
-    std::optional<Marker> m_marker;
+    std::optional<InactiveVisitorMarker> m_inactiveVisitorMarker;
     bool m_enableScriptExpressions = false;
 };
 
