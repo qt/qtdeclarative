@@ -2182,8 +2182,7 @@ QQmlDomAstCreatorWithQQmlJSScope::QQmlDomAstCreatorWithQQmlJSScope(MutableDomIte
 QQmlJSASTClassListToVisit
 #undef X
 
-        void
-        QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomAfterEndvisit()
+void QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomAfterEndvisit()
 {
     const QQmlJSScope::ConstPtr scope = m_scopeCreator.m_currentScope;
     if (!m_domCreator.scriptNodeStack.isEmpty()) {
