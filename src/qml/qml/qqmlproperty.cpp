@@ -380,7 +380,6 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
         return false;
     };
 
-    const QString terminalString = terminal.toString();
     const auto findSignal = [&](const QString &signalName) {
         if (ddata && ddata->propertyCache) {
             // Try method
@@ -399,21 +398,21 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
                 return true;
             }
 
-            return findChangeSignal(terminalString);
+            return findChangeSignal(terminal);
         }
 
         return findSignalInMetaObject(signalName.toUtf8());
     };
 
-    auto signalName = QQmlSignalNames::handlerNameToSignalName(terminalString);
+    auto signalName = QQmlSignalNames::handlerNameToSignalName(terminal);
     if (signalName) {
         if (findSignal(*signalName))
             return;
     } else {
-        signalName = QQmlSignalNames::badHandlerNameToSignalName(terminalString);
+        signalName = QQmlSignalNames::badHandlerNameToSignalName(terminal);
         if (signalName) {
             qWarning()
-                    << terminalString
+                    << terminal
                     << "is not a properly capitalized signal handler name."
                     << QQmlSignalNames::signalNameToHandlerName(*signalName)
                     << "would be correct.";
@@ -431,7 +430,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
             if (!property->isFunction()) {
                 object = currentObject;
                 core = *property;
-                nameCache = terminalString;
+                nameCache = terminal.toString();
                 return;
             }
             property = ddata->propertyCache->overrideData(property);
