@@ -241,14 +241,7 @@ StackProperties stackProperties()
 {
     TASK_DESC taskDescription;
     taskInfoGet(taskIdSelf(), &taskDescription);
-
-#if Q_STACK_GROWTH_DIRECTION < 0
-    return createStackProperties(
-                decrementStackPointer(taskDescription.td_pStackBase, taskDescription.td_stackSize),
-                taskDescription.td_stackSize);
-#else
     return createStackProperties(taskDescription.td_pStackBase, taskDescription.td_stackSize);
-#endif
 }
 
 #else
