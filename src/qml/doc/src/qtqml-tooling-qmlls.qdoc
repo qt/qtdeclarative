@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-\page qtquick-tool-qmlls.html
+\page qtqml-tooling-qmlls.html
 \title QML Language Server
 \brief Overview of the QML Language Server (qmlls).
 \ingroup explanations-tools

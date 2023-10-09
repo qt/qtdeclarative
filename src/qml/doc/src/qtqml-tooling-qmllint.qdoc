@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-\page qtquick-tool-qmllint.html
+\page qtqml-tooling-qmllint.html
 \title qmllint
+\ingroup explanations-tools
 \brief A tool for verifying the syntax of QML files and warning about
 anti-patterns.
 
