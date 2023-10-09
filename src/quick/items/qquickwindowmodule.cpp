@@ -200,8 +200,11 @@ void QQuickWindowQmlImpl::applyWindowVisibility()
         }
     }
 
-    // FIXME: Should we bail out in this case?
-    checkForConflictingVisibilityProperties();
+    if (d->visibleExplicitlySet && ((d->visibility == Hidden && d->visible) ||
+                                    (d->visibility > AutomaticVisibility && !d->visible))) {
+        // FIXME: Should we bail out in this case?
+        qmlWarning(this) << "Conflicting properties 'visible' and 'visibility'";
+    }
 
     if (d->visibility == AutomaticVisibility) {
         setWindowState(QGuiApplicationPrivate::platformIntegration()->defaultWindowState(flags()));
@@ -220,38 +223,6 @@ bool QQuickWindowQmlImpl::transientParentVisible()
        return rw && rw->isVisible();
    }
    return true;
-}
-
-/*
-    Let the user know if they've assigned conflicting values to
-    the visible and visibility properties.
-*/
-void QQuickWindowQmlImpl::checkForConflictingVisibilityProperties()
-{
-    Q_D(QQuickWindowQmlImpl);
-    if (d->visibleExplicitlySet && ((d->visibility == Hidden && d->visible) ||
-                                    (d->visibility > AutomaticVisibility && !d->visible))) {
-        QQmlData *data = QQmlData::get(this);
-        Q_ASSERT(data && data->context);
-
-        QQmlError error;
-        error.setObject(this);
-
-        QQmlRefPointer<QQmlContextData> urlContext = data->context;
-        while (urlContext && urlContext->url().isEmpty())
-            urlContext = urlContext->parent();
-        error.setUrl(urlContext ? urlContext->url() : QUrl());
-
-        QString objectId = data->context->findObjectId(this);
-        if (!objectId.isEmpty())
-            error.setDescription(QCoreApplication::translate("QQuickWindowQmlImpl",
-                "Conflicting properties 'visible' and 'visibility' for Window '%1'").arg(objectId));
-        else
-            error.setDescription(QCoreApplication::translate("QQuickWindowQmlImpl",
-                "Conflicting properties 'visible' and 'visibility'"));
-
-        QQmlEnginePrivate::get(data->context->engine())->warning(error);
-    }
 }
 
 QObject *QQuickWindowQmlImpl::screen() const

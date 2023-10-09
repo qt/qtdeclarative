@@ -74,7 +74,6 @@ private Q_SLOTS:
     void updateTransientParent();
 
 private:
-    void checkForConflictingVisibilityProperties();
     bool transientParentVisible();
 
 private:
