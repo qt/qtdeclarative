@@ -24,15 +24,9 @@ T.SpinBox {
 
     readonly property bool mirroredIndicators: control.mirrored !== (config.mirrored || false)
 
-    leftPadding: (config ? config.spacing + config.leftPadding : 0)
-        + (mirroredIndicators
-        ? (up.indicator ? up.indicator.width : 0)
-        : (down.indicator ? down.indicator.width : 0))
-    rightPadding: (config ? config.spacing + config.rightPadding : 0)
-        + (mirroredIndicators
-        ? (down.indicator ? down.indicator.width : 0)
-        : (up.indicator ? up.indicator.width : 0))
-    topPadding: config?.topPadding || 0
+    leftPadding: config.leftPadding || 0
+    rightPadding: config.rightPadding || 0
+    topPadding: config.topPadding || 0
     bottomPadding: config?.bottomPadding || 0
 
     topInset: -config?.topInset || 0
@@ -63,35 +57,30 @@ T.SpinBox {
         inputMethodHints: control.inputMethodHints
     }
 
+    down.indicator: StyleImage {
+        height: control.height
+        imageConfig: control.downConfig.indicator_down_background
+
+        StyleImage {
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            imageConfig: control.mirrored
+                ? control.upConfig.indicator_up_icon
+                : control.downConfig.indicator_down_icon
+        }
+    }
+
     up.indicator: StyleImage {
-        x: control.mirroredIndicators
-            ? (control.upConfig?.leftPadding || 0)
-            : control.width - width - (control.upConfig?.rightPadding || 0)
-        y: (control.upConfig?.topPadding || 0)
-            + (control.height - (control.upConfig ? control.upConfig.topPadding + control.upConfig.bottomPadding : 0) - height) / 2
-        height: control.availableHeight
+        x: control.width - width
+        height: control.height
         imageConfig: control.upConfig.indicator_up_background
 
         StyleImage {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
-            imageConfig: control.upConfig.indicator_up_icon
-        }
-    }
-
-    down.indicator: StyleImage {
-        x: control.mirroredIndicators
-            ? control.width - width - (control.downConfig?.rightPadding || 0)
-            : (control.downConfig?.leftPadding || 0)
-        y: (control.downConfig?.topPadding || 0)
-            + (control.height - (control.downConfig ? control.downConfig.topPadding + control.downConfig.bottomPadding : 0) - height) / 2
-        imageConfig: control.downConfig.indicator_down_background
-        height: control.availableHeight
-
-        StyleImage {
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            imageConfig: control.downConfig.indicator_down_icon
+            imageConfig: control.mirrored
+                ? control.downConfig.indicator_down_icon
+                : control.upConfig.indicator_up_icon
         }
     }
 

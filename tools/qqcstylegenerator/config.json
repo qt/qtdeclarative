@@ -329,10 +329,10 @@
         "atoms": [
             {"atom": "background", "figmaPath": "spinboxBackground"},
             {"atom": "contentItem", "figmaPath": "ContentItem"},
-            {"atom": "indicator-up-icon", "figmaPath": "ContentItem, UpIndicator, indicator"},
-            {"atom": "indicator-up-background", "figmaPath": "ContentItem, UpIndicator, background"},
-            {"atom": "indicator-down-icon", "figmaPath": "ContentItem, DownIndicator, indicator"},
-            {"atom": "indicator-down-background", "figmaPath": "ContentItem, DownIndicator, background"},
+            {"atom": "indicator-up-icon", "figmaPath": "UpIndicator, ContentItem"},
+            {"atom": "indicator-up-background", "figmaPath": "UpIndicator, spinboxBackground"},
+            {"atom": "indicator-down-icon", "figmaPath": "DownIndicator, ContentItem"},
+            {"atom": "indicator-down-background", "figmaPath": "DownIndicator, spinboxBackground"},
             {"atom": "textInput", "figmaPath": "ContentItem, textInput", "export": ["geometry", "text"]}
         ],
         "states": [
