@@ -1123,6 +1123,7 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
             debugMarkers, timestamps, preferSoftware, pipelineCacheSave);
 
     QRhi::Flags flags;
+    flags |= QRhi::SuppressSmokeTestWarnings;
     if (debugMarkers)
         flags |= QRhi::EnableDebugMarkers;
     if (timestamps)
