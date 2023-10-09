@@ -25,23 +25,29 @@ To use the module, import the \c QtQml module with the following statement:
 import QtQml
 \endqml
 
-Most clients will never need to use the \c QtQml import, as all of the types
-are also provided by the \c QtQuick namespace, which may be imported as
-follows:
+Many clients will never need to use the \c QtQml module directly, but will rather
+import it indirectly via the \c QtQuick module as follows:
 
 \qml
 import QtQuick
 \endqml
 
-See the \l{Qt Quick} module documentation for more information about the
-\c QtQuick namespace and what it provides to QML application developers.
+See the \l{Qt Quick} module documentation for more information about its types.
 
 The QML types for creating lists and models, such as \l ListModel and
-\l ListElement, are moved to a submodule, \c QtQml.Models. The
-\l {Qt QML Models QML Types}{Qt QML Models} page has more information.
+\l ListElement, belong to a submodule, \l{Qt QML Models QML Types}{QtQml.Models}.
 
-The documentation for the types below applies equally to the types of the same
-name provided by the \l{Qt Quick} module, as they are in fact identical.
+The \l WorkerScript QML type belongs to the submodule
+\l{Qt QML WorkerScript QML Types}{QtQml.WorkerScript}.
+
+Both, \l{Qt QML Models QML Types}{QtQml.Models} and
+\l{Qt QML WorkerScript QML Types}{QtQml.WorkerScript} are automatically imported
+whenever you import \c QtQml. All their types are then available, too.
+
+The \l{Qt Quick} module automatically imports \c QtQml and, transitively,
+\l{Qt QML Models QML Types}{QtQml.Models} and
+\l{Qt QML WorkerScript QML Types}{QtQml.WorkerScript}, making all their types
+available whenever you import \c QtQuick.
 
 \section1 Value Types
 
