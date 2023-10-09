@@ -202,7 +202,8 @@
         "component set": "ProgressBarTemplate${Theme}",
         "atoms": [
             {"atom": "groove", "figmaPath": "progressbarGroove" },
-            {"atom": "track", "figmaPath": "progressbarTrack"}
+            {"atom": "track", "figmaPath": "progressbarTrack"},
+            {"atom": "contentItem", "figmaPath": "ContentItem", "export": "layout"}
         ],
         "states": [
             {"state": "disabled", "figmaState": "disabled"},
