@@ -336,7 +336,7 @@
   engine in order to assert on that.
 
   \sa QML_ELEMENT, QML_NAMED_ELEMENT(),
-      qmlRegisterSingletonInstance(), QQmlEngine::singletonInstance()
+      qmlRegisterSingletonInstance(), QQmlEngine::singletonInstance(), {Singletons in QML}
 */
 
 /*!
