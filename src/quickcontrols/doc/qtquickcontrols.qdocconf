@@ -106,6 +106,7 @@ macro.nbsp.HTML = "&nbsp;"
 macro.nbsp.DocBook = "&#160;"
 
 manifestmeta.highlighted.names = \
+    "QtQuickControls/File System Explorer" \
     "QtQuickControls/Qt Quick Controls - Wearable Demo" \
     "QtQuickControls/Qt Quick Controls - Gallery" \
     "QtQuickControls/Qt Quick Controls - Event Calendar"
