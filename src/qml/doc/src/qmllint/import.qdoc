@@ -5,22 +5,169 @@
 \page qmllint-warnings-and-errors-import.html
 \ingroup qmllint-warnings-and-errors
 
-\title import
-\brief BRIEF
+\title Warnings Occurred While Importing
+\brief The imported module was not found.
 
-\section1 import
+This warning category contains multiple warnings:
+\list
+\li \l{Failed To Import Module}
+\li \l{Component Was Not Found}
+\li \l{Import Qualifier Must Start With A Capital Letter}
+\li \l{Unknown Import Syntax}
+\endlist
+
+\section1 Failed To Import Module
 
 \section2 What happened?
-TODO
+The module imported via \l{Import Statements}{import statement} was not found.
+
+This can be caused, for example, by
+\list
+    \li a typo in the import statement, or
+    \li a user-defined module that was not built, or
+    \li a wrong \l{Import Statements#qml-import-path}{import path}, or
+    \li a missing module
+\endlist
 
 \section2 Why is this bad?
-TODO
+The application can't run because it can't find a module it relies on.
 
-\section2 Example
+\section2 Examples
+
+\section3 Typo In The Import Statement
 \qml
+import QtQuicky // not ok: typo in module name
+
+Item {
+}
 \endqml
-You can fix this warning by TODO
+You can fix this warning by correcting the typo:
 \qml
+import QtQuick // ok: no typo in module name
+
+Item {
+}
 \endqml
+
+\section3 User-Defined Module That Was Not Built
+
+Some tooling like \l{QML Language Server} or \l{qmllint} can't find user-defined modules when they
+are not built. If your project defines the QML Module you are trying to import, then
+the QML tooling will not find it until you build it.
+
+\note If building the module does not help when using \l{QML Language Server}, follow the
+instructions in
+\l{QML Language Server#setting-up-the-qml-language-server-in-your-editor}{QML Language Server setup instructions}
+and make sure that you communicate the correct build folder to \l{QML Language Server}.
+
+\section3 Wrong Import Path
+
+Please refer to \l{Import Statements#qml-import-path}{the QML import path documentation} and to
+\l{Debugging QML Applications#debugging-module-imports}{the debugging module import documentation}
+for more information about import paths.
+
+\section3 Missing Module
+
+If the previous sections did not help to find the imported module, it might be missing.
+This might be caused by a missing dependency. When using external libraries, verify that they are
+actually installed, and that their modules end up in an
+\l{Import Statements#qml-import-path}{import path}.
+
+\section1 Component Was Not Found
+
+\section2 What happened?
+Some component was not found.
+
+\section2 Why is this bad?
+The application can't run because it can't instantiate the non-found component.
+
+\section2 Examples
+
+\section3 Typo In The Component Name
+\qml
+import QtQuick
+
+Item {
+    Itemy {} // not ok: typo in name
+}
+\endqml
+You can fix this warning by correcting the typo:
+\qml
+import QtQuick
+
+Item {
+    Item {} // ok: no typo in name
+}
+\endqml
+
+\section3 Missing Import Statement
+
+\qml
+
+Item { // not ok: must be imported from QtQuick first
+}
+\endqml
+You can fix this warning by adding the missing module import:
+\qml
+import QtQuick
+
+Item { // ok: was imported from QtQuick
+}
+\endqml
+
+\section1 Import Qualifier must start with a capital letter
+
+\section2 What happened?
+Some imported module has an invalid qualifier.
+
+\section2 Why is this bad?
+The module imported with this invalid qualifier can't be used.
+
+\section2 Examples
+
+\qml
+import QtQuick as qq
+
+qq.Item {
+}
+\endqml
+You can fix this warning by making the import qualifier start with an upper case letter:
+\qml
+import QtQuick as Qq
+
+Qq.Item {
+}
+\endqml
+
+\section1 Unknown Import Syntax
+
+\section2 What happened?
+An import statement is using an invalid \l{Import Statements}{import syntax}.
+
+\section2 Why is this bad?
+The application can't run because it can't import a module it relies on.
+
+\section2 Examples
+
+\qml
+import "¯\(ツ)/¯:/path/to/Module"
+import QtQuick
+
+Item {
+}
+\endqml
+You can fix this warning by using URLs that have an allowed scheme:
+\qml
+import "qrc:/path/to/Module"
+import QtQuick
+
+Item {
+}
+\endqml
+
+\note This example assumes that you are not using \l{QQmlAbstractUrlInterceptor}{URL handlers}.
+
+\sa{Import Statements}
+
 */
 
