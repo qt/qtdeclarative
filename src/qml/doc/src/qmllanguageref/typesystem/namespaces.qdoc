@@ -9,4 +9,8 @@ A QML Namespace is a special kind of type that only exposes enumerations and can
 be instantiated. A namespace can only be declared in C++, using the \l QML_ELEMENT or
 \l QML_NAMED_ELEMENT macro inside a C++ namespace marked with \l{Q_NAMESPACE}.
 
+QML namespaces can be used to
+\l{qtqml-cppintegration-definetypes.html#value-types-with-enumerations}{extract enumerations}
+from other types.
+
 */
