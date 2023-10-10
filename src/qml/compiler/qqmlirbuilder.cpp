@@ -921,6 +921,10 @@ bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
         } else if (node->name == "ValueTypeBehavior"_L1) {
             if (!PragmaParser<Pragma::ValueTypeBehaviorValue>::run(this, node, pragma))
                 return false;
+        } else if (node->name == "Translator"_L1) {
+            pragma->type = Pragma::Translator;
+            pragma->translationContextIndex = registerString(node->values->value.toString());
+
         } else {
             recordError(node->pragmaToken, QCoreApplication::translate(
                             "QQmlParser", "Unknown pragma '%1'").arg(node->name));
@@ -1710,6 +1714,11 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
                         .testFlag(Pragma::Addressable)) {
                     createdUnit->flags |= Unit::ValueTypesAddressable;
                 }
+                break;
+            case Pragma::Translator:
+                if (createdUnit->translationTableSize)
+                    if (quint32_le *index = createdUnit->translationContextIndex())
+                        *index = p->translationContextIndex;
                 break;
             }
         }

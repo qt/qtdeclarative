@@ -24,6 +24,7 @@ private slots:
     void idTranslation();
     void translationChange();
     void preferJSContext();
+    void pragmaContext();
     void listModel();
 };
 
@@ -175,6 +176,10 @@ class DummyTranslator : public QTranslator
             return QString::fromUtf8("Deutsch in mylibrary");
         if (!qstrcmp(sourceText, "English in translation") && !qstrcmp(context, "nested_js_translation"))
             return QString::fromUtf8("Deutsch in Setzung");
+        if (!qstrcmp(sourceText, "English in translation") && !qstrcmp(context, "contextSetWithPragma"))
+            return QString::fromUtf8("Deutsch in Setzung pragma");
+        if (!qstrcmp(sourceText, "English in translation") && !qstrcmp(context, "setContext"))
+            return QString::fromUtf8("Deutsch in Setzung set");
         if (!qstrcmp(sourceText, "soup"))
             return QString::fromUtf8("Suppe");
         if (!qstrcmp(sourceText, "fish"))
@@ -242,6 +247,24 @@ void tst_qqmltranslation::preferJSContext()
              QStringLiteral("Deutsch in Setzung"));
     QCOMPARE(object->property("german2").toString(),
              QStringLiteral("Deutsch in mylibrary"));
+
+    QCoreApplication::removeTranslator(&translator);
+}
+
+void tst_qqmltranslation::pragmaContext()
+{
+    DummyTranslator translator;
+    QCoreApplication::installTranslator(&translator);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("pragmacontext.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QCOMPARE(object->property("german1").toString(),
+             QStringLiteral("Deutsch in Setzung pragma"));
+    QCOMPARE(object->property("german2").toString(),
+             QStringLiteral("Deutsch in Setzung set"));
 
     QCoreApplication::removeTranslator(&translator);
 }

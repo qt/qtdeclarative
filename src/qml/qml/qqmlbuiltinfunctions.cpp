@@ -2171,6 +2171,11 @@ QString GlobalExtensions::currentTranslationContext(ExecutionEngine *engine)
     while (frame && context.isEmpty()) {
         if (CompiledData::CompilationUnitBase *baseUnit = frame->v4Function->compilationUnit) {
             const auto *unit = static_cast<const CompiledData::CompilationUnit *>(baseUnit);
+            auto translationContextIndex = unit->data->translationContextIndex();
+            if (translationContextIndex)
+                context = unit->stringAt(*translationContextIndex);
+            if (!context.isEmpty())
+                break;
             QString fileName = unit->fileName();
             QUrl url(unit->fileName());
             if (url.isValid() && url.isRelative()) {
