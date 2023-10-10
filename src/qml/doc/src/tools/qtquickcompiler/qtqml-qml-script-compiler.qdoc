@@ -19,26 +19,94 @@ explains the compilation workflow.
 
 \image qmlsc-compilation-scheme.png
 
-\section1 qmlsc and qmlcachegen
-
 QML script compiler is available in two versions. One is \e qmlcachegen, which
 is a part of the \l{Qt Quick Compiler}. Another one is \e qmlsc, which is a part
 of the commercial-only add-on \e{Qt Quick Compiler Extensions}.
 
-The base functionality of the QML script compiler is available in both the
-\e qmlsc tool and the \e qmlcachegen tool. \e qmlsc can generate more efficient
-C++ code when run in \e direct mode. It is enabled by passing \c{--direct-calls}
-via \c QT_QMLCACHEGEN_ARGUMENTS to \l{qt_add_qml_module}. In direct mode
-\e qmlsc expects that all C++ types used in your QML code can be made available
-to the generated code by simple C++ include statements. This means you have to
-link to private Qt APIs by passing Qt::QuickPrivate, Qt::QmlPrivate, etc to
-link_libraries() in CMake. \e qmlcachegen does not implement direct mode and
-ignores the \e{--direct-calls} option. Furthermore, \e qmlsc accepts
-a \e {--static} option that you can also pass via \e QT_QMLCACHEGEN_ARGUMENTS
-in \l qt_add_qml_module. In \e static mode, \e qmlsc ignores shadowing of
-properties. This is dangerous if your code actually shadows properties, but
-allows for more JavaScript code to be compiled to C++. \e qmlcachegen ignores
-the \e {--static} option.
+\section1 qmlcachegen
+\e qmlcachegen uses the meta-object system and generates lookups and stores them in a
+central place, a compilation unit. The compilation unit contains a representation of
+document structure, compact byte code representation for each function and expression,
+and native code for functions and bindings that compiler fully understands.
+The byte code in a compilation unit can be used by the QML engine to avoid re-compilation
+and to speed up execution.
+
+\section1 qmlsc
+\e qmlsc, on the flip side, extends the base functionality of qmlcachegen by providing
+two extra modes.
+
+\list
+\li \l {static mode}
+\li \l {direct mode}
+\endlist
+
+\section2 static mode
+In static mode, qmlsc assumes that no properties of any types exposed to C++ can be
+shadowed by derived types. It eliminates the shadow checking mechanism and allows more
+JavaScript code to be compiled to C++ and eventually generates faster code.
+
+To enable static mode in qmlsc, you should pass \c{--static} via \c{QT_QMLCACHEGEN_ARGUMENTS} to \l{qt_add_qml_module}.
+\badcode
+    qt_add_qml_module(someTarget
+    ...
+    )
+
+    set_target_properties(someTarget PROPERTIES
+        QT_QMLCACHEGEN_ARGUMENTS "--static"
+    )
+\endcode
+
+\warning qmlsc static-mode generates invalid code if any properties are shadowed in
+the QML document.
+
+\section2 direct mode
+In direct mode, qmlsc assumes that all C++ types used in your QML code are available
+and can be included as C++ headers to the generated code. Then the generated code
+accesses or modifies properties by directly calling getters, setters and invokable
+functions in those headers which makes the execution even faster. This means you have to
+link to private Qt APIs in CMake.
+
+\warning Private Qt APIs change often. You will need to recompile Qt for each new version.
+
+\warning If a type is only defined in a plugin or has no header, you can’t use it in direct mode.
+
+To enable direct mode, you should consider the followings:
+
+\list
+    \li you should pass \c{--direct-calls} via \c{QT_QMLCACHEGEN_ARGUMENTS} to \l{qt_add_qml_module}.
+
+\badcode
+    qt_add_qml_module(someTarget
+    ...
+    )
+
+    set_target_properties(someTarget PROPERTIES
+        QT_QMLCACHEGEN_ARGUMENTS "--direct-calls"
+    )
+\endcode
+
+    \li Link all the relavant private Qt modules instead of their public counterparts.
+\badcode
+    qt_add_qml_module(someTarget
+    ...
+    )
+
+    target_link_libraries(someTarget PRIVATE
+        Qt::QmlPrivate
+        Qt::QuickPrivate
+        ...
+    )
+\endcode
+
+    \li Do not set the \c{PLUGIN_TARGET} to be the same as the backing library target.
+\badcode
+    # direct mode will not function in this setup.
+    qt_add_qml_module(someTarget
+    PLUGIN_TARGET someTarget
+    ...
+    )
+\endcode
+\endlist
 
 \section1 Limitations when compiling JavaScript to C++
 
