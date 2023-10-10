@@ -1,0 +1,10 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtqml-tooling-qmlimportscanner.html
+\title qmlimportscanner
+\brief Overview of the qmlimportscanner utility.
+\ingroup qtqml-tooling
+
+*/

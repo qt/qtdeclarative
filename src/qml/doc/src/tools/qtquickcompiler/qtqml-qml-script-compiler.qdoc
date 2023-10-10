@@ -6,6 +6,7 @@
 \title QML script compiler
 \brief A tool to compile functions and expressions in QML.
 \keyword qmlsc
+\ingroup qtqml-tooling
 
 The QML script compiler compiles functions and expressions in QML and JavaScript
 files to a byte code that can be interpreted or Just-in-time compiled by the

@@ -5,7 +5,7 @@
 \page qtqml-tooling-qmlls.html
 \title QML Language Server
 \brief Overview of the QML Language Server (qmlls).
-\ingroup explanations-tools
+\ingroup qtqml-tooling
 
 QML Language Server is a tool shipped with Qt that helps you write code
 in your favorite (LSP-supporting) editor.

@@ -4,7 +4,7 @@
 /*!
 \page qtqml-tooling-qmllint.html
 \title qmllint
-\ingroup explanations-tools
+\ingroup qtqml-tooling
 \brief A tool for verifying the syntax of QML files and warning about
 anti-patterns.
 

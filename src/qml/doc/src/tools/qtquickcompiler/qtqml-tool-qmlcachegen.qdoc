@@ -5,6 +5,7 @@
 \page qtqml-tool-qmlcachegen.html
 \title qmlcachegen
 \brief A tool to compile QML documents ahead of time
+\ingroup qtqml-tooling
 
 \e qmlcachegen is an internal build tool, invoked by the build system
 when using \l qt_add_qml_module in CMake or CONFIG+=qtquickcompiler in
