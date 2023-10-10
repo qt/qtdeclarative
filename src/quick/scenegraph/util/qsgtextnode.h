@@ -25,7 +25,8 @@ public:
     enum RenderType
     {
         QtRendering,
-        NativeRendering
+        NativeRendering,
+        CurveRendering
     };
 
     ~QSGTextNode() override = default;

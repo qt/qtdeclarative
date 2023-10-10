@@ -124,7 +124,8 @@ public:
     Q_ENUM(SelectionMode)
 
     enum RenderType { QtRendering,
-                      NativeRendering
+                      NativeRendering,
+                      CurveRendering
                     };
     Q_ENUM(RenderType)
 

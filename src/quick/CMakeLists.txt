@@ -134,13 +134,18 @@ qt_internal_add_qml_module(Quick
         scenegraph/coreapi/qsgtexture.cpp scenegraph/coreapi/qsgtexture.h scenegraph/coreapi/qsgtexture_p.h
         scenegraph/coreapi/qsgtexture_platform.h
         scenegraph/qsgadaptationlayer.cpp scenegraph/qsgadaptationlayer_p.h
+        scenegraph/qsgcurveabstractnode_p.h
         scenegraph/qsgbasicglyphnode.cpp scenegraph/qsgbasicglyphnode_p.h
         scenegraph/qsgbasicinternalimagenode.cpp scenegraph/qsgbasicinternalimagenode_p.h
         scenegraph/qsgbasicinternalrectanglenode.cpp scenegraph/qsgbasicinternalrectanglenode_p.h
         scenegraph/qsgcontext.cpp scenegraph/qsgcontext_p.h
         scenegraph/qsgcontextplugin.cpp scenegraph/qsgcontextplugin_p.h
+        scenegraph/qsgcurvefillnode.cpp scenegraph/qsgcurvefillnode_p.cpp scenegraph/qsgcurvefillnode_p.h scenegraph/qsgcurvefillnode_p_p.h
+        scenegraph/qsgcurvestrokenode.cpp scenegraph/qsgcurvestrokenode_p.cpp scenegraph/qsgcurvestrokenode_p.h scenegraph/qsgcurvestrokenode_p_p.h
         scenegraph/qsgdefaultcontext.cpp scenegraph/qsgdefaultcontext_p.h
         scenegraph/qsgdefaultglyphnode.cpp scenegraph/qsgdefaultglyphnode_p.cpp scenegraph/qsgdefaultglyphnode_p.h
+        scenegraph/qsgcurveglyphatlas.cpp scenegraph/qsgcurveglyphatlas_p.h
+        scenegraph/qsgcurveglyphnode.cpp scenegraph/qsgcurveglyphnode_p.h
         scenegraph/qsgdefaultglyphnode_p_p.h
         scenegraph/qsgdefaultinternalimagenode.cpp scenegraph/qsgdefaultinternalimagenode_p.h
         scenegraph/qsgdefaultinternalrectanglenode.cpp scenegraph/qsgdefaultinternalrectanglenode_p.h
@@ -153,6 +158,7 @@ qt_internal_add_qml_module(Quick
         scenegraph/qsgrhishadereffectnode.cpp scenegraph/qsgrhishadereffectnode_p.h
         scenegraph/qsgrhisupport.cpp scenegraph/qsgrhisupport_p.h
         scenegraph/qsgrhitextureglyphcache.cpp scenegraph/qsgrhitextureglyphcache_p.h
+        scenegraph/qsgcurveprocessor.cpp scenegraph/qsgcurveprocessor_p.h
         scenegraph/util/qsgareaallocator.cpp scenegraph/util/qsgareaallocator_p.h
         scenegraph/util/qsgdefaultimagenode.cpp scenegraph/util/qsgdefaultimagenode_p.h
         scenegraph/util/qsgdefaultninepatchnode.cpp scenegraph/util/qsgdefaultninepatchnode_p.h
@@ -171,6 +177,8 @@ qt_internal_add_qml_module(Quick
         scenegraph/util/qsgtextureprovider.cpp scenegraph/util/qsgtextureprovider.h
         scenegraph/util/qsgtexturereader.cpp scenegraph/util/qsgtexturereader_p.h
         scenegraph/util/qsgvertexcolormaterial.cpp scenegraph/util/qsgvertexcolormaterial.h
+        scenegraph/util/qquadpath.cpp scenegraph/util/qquadpath_p.h
+        scenegraph/util/qsggradientcache.cpp scenegraph/util/qsggradientcache_p.h
         util/qminimalflatset_p.h
         util/qquickanimation.cpp util/qquickanimation_p.h
         util/qquickanimation_p_p.h
@@ -308,6 +316,141 @@ qt_internal_add_shaders(Quick "scenegraph_shaders"
         "scenegraph/shaders_ng/vertexcolor.vert"
         "scenegraph/shaders_ng/visualization.frag"
         "scenegraph/shaders_ng/visualization.vert"
+)
+
+qt_internal_add_shaders(Quick "scenegraph_curve_shaders"
+    SILENT
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    PREFIX
+        "/qt-project.org"
+    FILES
+        "scenegraph/shaders_ng/shapecurve.frag"
+        "scenegraph/shaders_ng/shapecurve.vert"
+        "scenegraph/shaders_ng/shapestroke.frag"
+        "scenegraph/shaders_ng/shapestroke.vert"
+)
+
+qt_internal_add_shaders(Quick "scenegraph_curve_shaders_derivatives"
+    SILENT
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    DEFINES "USE_DERIVATIVES"
+    PREFIX
+        "/qt-project.org"
+    FILES
+        "scenegraph/shaders_ng/shapecurve.frag"
+        "scenegraph/shaders_ng/shapecurve.vert"
+    OUTPUTS
+        "scenegraph/shaders_ng/shapecurve_derivatives.frag.qsb"
+        "scenegraph/shaders_ng/shapecurve_derivatives.vert.qsb"
+)
+
+qt_internal_add_shaders(Quick "scenegraph_curve_shaders_lg"
+    SILENT
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    DEFINES
+        "LINEARGRADIENT"
+    PREFIX
+        "/qt-project.org"
+    FILES
+        "scenegraph/shaders_ng/shapecurve.frag"
+        "scenegraph/shaders_ng/shapecurve.vert"
+    OUTPUTS
+        "scenegraph/shaders_ng/shapecurve_lg.frag.qsb"
+        "scenegraph/shaders_ng/shapecurve_lg.vert.qsb"
+)
+
+qt_internal_add_shaders(Quick "scenegraph_curve_shaders_lg_derivatives"
+    SILENT
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    DEFINES
+        "LINEARGRADIENT"
+        "USE_DERIVATIVES"
+    PREFIX
+        "/qt-project.org"
+    FILES
+        "scenegraph/shaders_ng/shapecurve.frag"
+        "scenegraph/shaders_ng/shapecurve.vert"
+    OUTPUTS
+        "scenegraph/shaders_ng/shapecurve_lg_derivatives.frag.qsb"
+        "scenegraph/shaders_ng/shapecurve_lg_derivatives.vert.qsb"
+)
+
+qt_internal_add_shaders(Quick "scenegraph_curve_shaders_rg"
+    SILENT
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    DEFINES
+        "RADIALGRADIENT"
+    PREFIX
+        "/qt-project.org"
+    FILES
+        "scenegraph/shaders_ng/shapecurve.frag"
+        "scenegraph/shaders_ng/shapecurve.vert"
+    OUTPUTS
+        "scenegraph/shaders_ng/shapecurve_rg.frag.qsb"
+        "scenegraph/shaders_ng/shapecurve_rg.vert.qsb"
+)
+
+qt_internal_add_shaders(Quick "scenegraph_curve_shaders_rg_derivatives"
+    SILENT
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    DEFINES
+        "RADIALGRADIENT"
+        "USE_DERIVATIVES"
+    PREFIX
+        "/qt-project.org"
+    FILES
+        "scenegraph/shaders_ng/shapecurve.frag"
+        "scenegraph/shaders_ng/shapecurve.vert"
+    OUTPUTS
+        "scenegraph/shaders_ng/shapecurve_rg_derivatives.frag.qsb"
+        "scenegraph/shaders_ng/shapecurve_rg_derivatives.vert.qsb"
+)
+
+qt_internal_add_shaders(Quick "scenegraph_curve_shaders_cg"
+    SILENT
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    DEFINES
+        "CONICALGRADIENT"
+    PREFIX
+        "/qt-project.org"
+    FILES
+        "scenegraph/shaders_ng/shapecurve.frag"
+        "scenegraph/shaders_ng/shapecurve.vert"
+    OUTPUTS
+        "scenegraph/shaders_ng/shapecurve_cg.frag.qsb"
+        "scenegraph/shaders_ng/shapecurve_cg.vert.qsb"
+)
+
+qt_internal_add_shaders(Quick "scenegraph_curve_shaders_cg_derivatives"
+    SILENT
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    DEFINES
+        "CONICALGRADIENT"
+        "USE_DERIVATIVES"
+    PREFIX
+        "/qt-project.org"
+    FILES
+        "scenegraph/shaders_ng/shapecurve.frag"
+        "scenegraph/shaders_ng/shapecurve.vert"
+    OUTPUTS
+        "scenegraph/shaders_ng/shapecurve_cg_derivatives.frag.qsb"
+        "scenegraph/shaders_ng/shapecurve_cg_derivatives.vert.qsb"
 )
 
 qt_internal_extend_target(Quick CONDITION QT_FEATURE_qml_network

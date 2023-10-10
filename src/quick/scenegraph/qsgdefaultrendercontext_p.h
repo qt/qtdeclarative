@@ -70,6 +70,7 @@ public:
     void preprocess() override;
     void invalidateGlyphCaches() override;
     QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font, int renderTypeQuality) override;
+    QSGCurveGlyphAtlas *curveGlyphAtlas(const QRawFont &font) override;
 
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
     QSGRenderer *createRenderer(QSGRendererInterface::RenderMode renderMode = QSGRendererInterface::RenderMode2D) override;
@@ -119,6 +120,7 @@ protected:
     bool m_useDepthBufferFor2D;
     QRhiResourceUpdateBatch *m_glyphCacheResourceUpdates;
     QSet<QRhiTexture *> m_pendingGlyphCacheTextures;
+    QHash<QString, QSGCurveGlyphAtlas *> m_curveGlyphAtlases;
 };
 
 QT_END_NAMESPACE

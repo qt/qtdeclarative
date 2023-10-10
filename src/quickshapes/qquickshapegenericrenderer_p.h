@@ -17,6 +17,7 @@
 
 #include <QtQuickShapes/private/qquickshapesglobal_p.h>
 #include <QtQuickShapes/private/qquickshape_p_p.h>
+#include <QtQuick/private/qsggradientcache_p.h>
 #include <qsgnode.h>
 #include <qsggeometry.h>
 #include <qsgmaterial.h>
@@ -101,7 +102,7 @@ private:
         Qt::FillRule fillRule;
         QPainterPath path;
         FillGradientType fillGradientActive;
-        GradientDesc fillGradient;
+        QSGGradientCache::GradientDesc fillGradient;
         VertexContainerType fillVertices;
         IndexContainerType fillIndices;
         QSGGeometry::Type indexType;
@@ -188,7 +189,7 @@ public:
     void activateMaterial(QQuickWindow *window, Material m);
 
     // shadow data for custom materials
-    QQuickAbstractPathRenderer::GradientDesc m_fillGradient;
+    QSGGradientCache::GradientDesc m_fillGradient;
 
 private:
     QScopedPointer<QSGMaterial> m_material;

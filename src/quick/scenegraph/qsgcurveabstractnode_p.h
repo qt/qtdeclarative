@@ -1,12 +1,11 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#ifndef QQUICKSHAPEABSTRACTCURVENODE_P_H
-#define QQUICKSHAPEABSTRACTCURVENODE_P_H
+#ifndef QSGCURVEABSTRACTNODE_P_H
+#define QSGCURVEABSTRACTNODE_P_H
 
+#include <QtGui/qcolor.h>
 #include <QtQuick/qsgnode.h>
-
-#include "qquickshapegenericrenderer_p.h"
 
 //
 //  W A R N I N G
@@ -21,12 +20,13 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickShapeAbstractCurveNode : public QSGGeometryNode
+class QSGCurveAbstractNode : public QSGGeometryNode
 {
 public:
     virtual void setColor(QColor col) = 0;
+    virtual void cookGeometry() = 0;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKSHAPEABSTRACTCURVENODE_P_H
+#endif // QSGCURVEABSTRACTNODE_P_H

@@ -1,13 +1,16 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#ifndef QQUICKSHAPECURVENODE_P_H
-#define QQUICKSHAPECURVENODE_P_H
+#ifndef QSGCURVEFILLNODE_P_H
+#define QSGCURVEFILLNODE_P_H
 
+#include <QtGui/qbrush.h>
+
+#include <QtQuick/private/qtquickexports_p.h>
+#include <QtQuick/private/qsggradientcache_p.h>
 #include <QtQuick/qsgnode.h>
 
-#include "qquickshapeabstractcurvenode_p.h"
-#include "qquickshapegenericrenderer_p.h"
+#include "qsgcurveabstractnode_p.h"
 
 //
 //  W A R N I N G
@@ -22,10 +25,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickShapeCurveNode : public QQuickShapeAbstractCurveNode
+class Q_QUICK_PRIVATE_EXPORT QSGCurveFillNode : public QSGCurveAbstractNode
 {
 public:
-    QQuickShapeCurveNode();
+    QSGCurveFillNode();
 
     void setColor(QColor col) override
     {
@@ -66,22 +69,27 @@ public:
         return m_strokeWidth;
     }
 
-    void setFillGradient(const QQuickAbstractPathRenderer::GradientDesc &fillGradient)
+    void setFillGradient(const QSGGradientCache::GradientDesc &fillGradient)
     {
         m_fillGradient = fillGradient;
     }
 
-    QQuickAbstractPathRenderer::GradientDesc fillGradient() const
+    QSGGradientCache::GradientDesc fillGradient() const
     {
         return m_fillGradient;
     }
 
-    void setGradientType(QQuickAbstractPathRenderer::FillGradientType type)
+    void setGradientType(QGradient::Type type)
     {
         if (m_gradientType != type) {
             m_gradientType = type;
             updateMaterial();
         }
+    }
+
+    QGradient::Type gradientType() const
+    {
+        return m_gradientType;
     }
 
     float debug() const
@@ -94,10 +102,6 @@ public:
         m_debug = newDebug;
     }
 
-    QQuickAbstractPathRenderer::FillGradientType gradientType() const
-    {
-        return m_gradientType;
-    }
 
     bool hasStroke() const
     {
@@ -139,7 +143,43 @@ public:
             duvdy.x(), duvdy.y(),
             n[2].x(), n[2].y()
         });
+    }
 
+    void appendTriangle(const QVector2D &v1,
+                        const QVector2D &v2,
+                        const QVector2D &v3,
+                        const QVector3D &uv1,
+                        const QVector3D &uv2,
+                        const QVector3D &uv3,
+                        const QVector2D &n1,
+                        const QVector2D &n2,
+                        const QVector2D &n3,
+                        const QVector2D &duvdx,
+                        const QVector2D &duvdy)
+    {
+        m_uncookedIndexes.append(m_uncookedVertexes.size());
+        m_uncookedVertexes.append( { v1.x(), v1.y(),
+            uv1.x(), uv1.y(), uv1.z(),
+            duvdx.x(), duvdx.y(),
+            duvdy.x(), duvdy.y(),
+            n1.x(), n1.y()
+        });
+
+        m_uncookedIndexes.append(m_uncookedVertexes.size());
+        m_uncookedVertexes.append( { v2.x(), v2.y(),
+            uv2.x(), uv2.y(), uv2.z(),
+            duvdx.x(), duvdx.y(),
+            duvdy.x(), duvdy.y(),
+            n2.x(), n2.y()
+        });
+
+        m_uncookedIndexes.append(m_uncookedVertexes.size());
+        m_uncookedVertexes.append( { v3.x(), v3.y(),
+            uv3.x(), uv3.y(), uv3.z(),
+            duvdx.x(), duvdx.y(),
+            duvdy.x(), duvdy.y(),
+            n3.x(), n3.y()
+        });
     }
 
     void appendTriangle(const QVector2D &v1,
@@ -150,22 +190,12 @@ public:
         appendTriangle({v1, v2, v3}, {}, uvForPoint);
     }
 
-    void appendIndex(quint32 index)
-    {
-        m_uncookedIndexes.append(index);
-    }
-
-    void appendIndexes(QVector<quint32> indexes)
-    {
-        m_uncookedIndexes.append(indexes);
-    }
-
     QVector<quint32> uncookedIndexes() const
     {
         return m_uncookedIndexes;
     }
 
-    void cookGeometry();
+    void cookGeometry() override;
 
 private:
     struct CurveNodeVertex
@@ -182,8 +212,8 @@ private:
     QColor m_strokeColor = Qt::transparent;
     float m_strokeWidth = 0.0f;
     float m_debug = 0.0f;
-    QQuickAbstractPathRenderer::GradientDesc m_fillGradient;
-    QQuickAbstractPathRenderer::FillGradientType m_gradientType = QQuickAbstractPathRenderer::NoGradient;
+    QSGGradientCache::GradientDesc m_fillGradient;
+    QGradient::Type m_gradientType = QGradient::NoGradient;
 
     QScopedPointer<QSGMaterial> m_material;
 
@@ -193,4 +223,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QQUICKSHAPECURVENODE_P_H
+#endif // QSGCURVEFILLNODE_P_H

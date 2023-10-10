@@ -37,16 +37,7 @@ public:
         SupportsAsync = 0x01
     };
     Q_DECLARE_FLAGS(Flags, Flag)
-
     enum FillGradientType { NoGradient = 0, LinearGradient, RadialGradient, ConicalGradient };
-    struct GradientDesc { // can fully describe a linear/radial/conical gradient
-        QGradientStops stops;
-        QQuickShapeGradient::SpreadMode spread = QQuickShapeGradient::PadSpread;
-        QPointF a; // start (L) or center point (R/C)
-        QPointF b; // end (L) or focal point (R)
-        qreal v0; // center radius (R) or start angle (C)
-        qreal v1; // focal radius (R)
-    };
 
     virtual ~QQuickAbstractPathRenderer() { }
 
@@ -162,38 +153,6 @@ public:
     bool enableVendorExts = false;
     bool syncTimingActive = false;
     qreal triangulationScale = 1.0;
-};
-
-struct QQuickShapeGradientCacheKey
-{
-    QQuickShapeGradientCacheKey(const QGradientStops &stops, QQuickShapeGradient::SpreadMode spread)
-        : stops(stops), spread(spread)
-    { }
-    QGradientStops stops;
-    QQuickShapeGradient::SpreadMode spread;
-    bool operator==(const QQuickShapeGradientCacheKey &other) const
-    {
-        return spread == other.spread && stops == other.stops;
-    }
-};
-
-inline size_t qHash(const QQuickShapeGradientCacheKey &v, size_t seed = 0)
-{
-    size_t h = seed + v.spread;
-    for (int i = 0; i < 3 && i < v.stops.size(); ++i)
-        h += v.stops[i].second.rgba();
-    return h;
-}
-
-class QQuickShapeGradientCache
-{
-public:
-    ~QQuickShapeGradientCache();
-    static QQuickShapeGradientCache *cacheForRhi(QRhi *rhi);
-    QSGTexture *get(const QQuickShapeGradientCacheKey &grad);
-
-private:
-    QHash<QQuickShapeGradientCacheKey, QSGPlainTexture *> m_textures;
 };
 
 QT_END_NAMESPACE

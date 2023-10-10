@@ -1,9 +1,10 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#ifndef QQUICKSHAPECURVENODE_P_P_H
-#define QQUICKSHAPECURVENODE_P_P_H
+#ifndef QSGCURVEFILLNODE_P_P_H
+#define QSGCURVEFILLNODE_P_P_H
 
+#include <QtQuick/private/qtquickexports_p.h>
 #include <QtQuick/qsgmaterial.h>
 
 //
@@ -19,14 +20,14 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickShapeCurveNode;
-class QQuickShapeCurveMaterial : public QSGMaterial
+class QSGCurveFillNode;
+class Q_QUICK_PRIVATE_EXPORT QSGCurveFillMaterial : public QSGMaterial
 {
 public:
-    QQuickShapeCurveMaterial(QQuickShapeCurveNode *node);
+    QSGCurveFillMaterial(QSGCurveFillNode *node);
     int compare(const QSGMaterial *other) const override;
 
-    QQuickShapeCurveNode *node() const
+    QSGCurveFillNode *node() const
     {
         return m_node;
     }
@@ -35,9 +36,9 @@ private:
     QSGMaterialType *type() const override;
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 
-    QQuickShapeCurveNode *m_node;
+    QSGCurveFillNode *m_node;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKSHAPECURVENODE_P_P_H
+#endif // QSGCURVEFILLNODE_P_P_H

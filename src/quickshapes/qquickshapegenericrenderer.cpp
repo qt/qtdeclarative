@@ -7,6 +7,8 @@
 #include <rhi/qrhi.h>
 #include <QSGVertexColorMaterial>
 
+#include <QtQuick/private/qsggradientcache_p.h>
+
 #if QT_CONFIG(thread)
 #include <QThreadPool>
 #endif
@@ -176,7 +178,7 @@ void QQuickShapeGenericRenderer::setFillGradient(int index, QQuickShapeGradient 
     ShapePathData &d(m_sp[index]);
     if (gradient) {
         d.fillGradient.stops = gradient->gradientStops(); // sorted
-        d.fillGradient.spread = gradient->spread();
+        d.fillGradient.spread = QGradient::Spread(gradient->spread());
         if (QQuickShapeLinearGradient *g  = qobject_cast<QQuickShapeLinearGradient *>(gradient)) {
             d.fillGradientActive = LinearGradient;
             d.fillGradient.a = QPointF(g->x1(), g->y1());
@@ -754,8 +756,8 @@ void QQuickShapeLinearGradientRhiShader::updateSampledImage(RenderState &state, 
 
     QQuickShapeLinearGradientMaterial *m = static_cast<QQuickShapeLinearGradientMaterial *>(newMaterial);
     QQuickShapeGenericStrokeFillNode *node = m->node();
-    const QQuickShapeGradientCacheKey cacheKey(node->m_fillGradient.stops, node->m_fillGradient.spread);
-    QSGTexture *t = QQuickShapeGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
+    const QSGGradientCacheKey cacheKey(node->m_fillGradient.stops, QGradient::Spread(node->m_fillGradient.spread));
+    QSGTexture *t = QSGGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
     t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
     *texture = t;
 }
@@ -777,8 +779,8 @@ int QQuickShapeLinearGradientMaterial::compare(const QSGMaterial *other) const
     if (a == b)
         return 0;
 
-    const QQuickAbstractPathRenderer::GradientDesc *ga = &a->m_fillGradient;
-    const QQuickAbstractPathRenderer::GradientDesc *gb = &b->m_fillGradient;
+    const QSGGradientCache::GradientDesc *ga = &a->m_fillGradient;
+    const QSGGradientCache::GradientDesc *gb = &b->m_fillGradient;
 
     if (int d = ga->spread - gb->spread)
         return d;
@@ -883,8 +885,8 @@ void QQuickShapeRadialGradientRhiShader::updateSampledImage(RenderState &state, 
 
     QQuickShapeRadialGradientMaterial *m = static_cast<QQuickShapeRadialGradientMaterial *>(newMaterial);
     QQuickShapeGenericStrokeFillNode *node = m->node();
-    const QQuickShapeGradientCacheKey cacheKey(node->m_fillGradient.stops, node->m_fillGradient.spread);
-    QSGTexture *t = QQuickShapeGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
+    const QSGGradientCacheKey cacheKey(node->m_fillGradient.stops, QGradient::Spread(node->m_fillGradient.spread));
+    QSGTexture *t = QSGGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
     t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
     *texture = t;
 }
@@ -906,8 +908,8 @@ int QQuickShapeRadialGradientMaterial::compare(const QSGMaterial *other) const
     if (a == b)
         return 0;
 
-    const QQuickAbstractPathRenderer::GradientDesc *ga = &a->m_fillGradient;
-    const QQuickAbstractPathRenderer::GradientDesc *gb = &b->m_fillGradient;
+    const QSGGradientCache::GradientDesc *ga = &a->m_fillGradient;
+    const QSGGradientCache::GradientDesc *gb = &b->m_fillGradient;
 
     if (int d = ga->spread - gb->spread)
         return d;
@@ -1001,8 +1003,8 @@ void QQuickShapeConicalGradientRhiShader::updateSampledImage(RenderState &state,
 
     QQuickShapeConicalGradientMaterial *m = static_cast<QQuickShapeConicalGradientMaterial *>(newMaterial);
     QQuickShapeGenericStrokeFillNode *node = m->node();
-    const QQuickShapeGradientCacheKey cacheKey(node->m_fillGradient.stops, node->m_fillGradient.spread);
-    QSGTexture *t = QQuickShapeGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
+    const QSGGradientCacheKey cacheKey(node->m_fillGradient.stops, QGradient::Spread(node->m_fillGradient.spread));
+    QSGTexture *t = QSGGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
     t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
     *texture = t;
 }
@@ -1024,8 +1026,8 @@ int QQuickShapeConicalGradientMaterial::compare(const QSGMaterial *other) const
     if (a == b)
         return 0;
 
-    const QQuickAbstractPathRenderer::GradientDesc *ga = &a->m_fillGradient;
-    const QQuickAbstractPathRenderer::GradientDesc *gb = &b->m_fillGradient;
+    const QSGGradientCache::GradientDesc *ga = &a->m_fillGradient;
+    const QSGGradientCache::GradientDesc *gb = &b->m_fillGradient;
 
     if (int d = ga->a.x() - gb->a.x())
         return d;

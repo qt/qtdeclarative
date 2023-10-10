@@ -2656,9 +2656,16 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     text. Using such features in combination with the NativeTextRendering
     render type will lend poor and sometimes pixelated results.
 
-    \value QtTextRendering Use Qt's own rasterization algorithm.
+    Both \c QtTextRendering and \c CurveTextRendering are hardware-accelerated techniques.
+    \c QtTextRendering is the faster of the two, but uses more memory and will exhibit rendering
+    artifacts at large sizes. \c CurveTextRendering should be considered as an alternative in cases
+    where \c QtTextRendering does not give good visual results or where reducing graphics memory
+    consumption is a priority.
 
+    \value QtTextRendering Use Qt's own rasterization algorithm.
     \value NativeTextRendering Use the operating system's native rasterizer for text.
+    \value CurveTextRendering  Text is rendered using a curve rasterizer running directly on
+                               the graphics hardware. (Introduced in Qt 6.7.0.)
 */
 
 /*!

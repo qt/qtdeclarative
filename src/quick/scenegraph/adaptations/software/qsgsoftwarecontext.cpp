@@ -75,10 +75,10 @@ QSGPainterNode *QSGSoftwareContext::createPainterNode(QQuickPaintedItem *item)
     return new QSGSoftwarePainterNode(item);
 }
 
-QSGGlyphNode *QSGSoftwareContext::createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode, int renderTypeQuality)
+QSGGlyphNode *QSGSoftwareContext::createGlyphNode(QSGRenderContext *rc, QSGTextNode::RenderType renderType, int renderTypeQuality)
 {
     Q_UNUSED(rc);
-    Q_UNUSED(preferNativeGlyphNode);
+    Q_UNUSED(renderType);
     Q_UNUSED(renderTypeQuality);
     return new QSGSoftwareGlyphNode();
 }

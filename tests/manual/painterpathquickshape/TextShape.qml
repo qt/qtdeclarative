@@ -7,7 +7,7 @@ import QtQuick.Controls
 import QtQuick.Dialogs
 
 ControlledShape {
-    fillRule: ShapePath.OddEvenFill
+    fillRule: ShapePath.WindingFill
     delegate: [
         PathText {
           text: "foobar"

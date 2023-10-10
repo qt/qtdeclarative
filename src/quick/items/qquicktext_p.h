@@ -109,7 +109,8 @@ public:
     Q_ENUM(WrapMode)
 
     enum RenderType { QtRendering,
-                      NativeRendering
+                      NativeRendering,
+                      CurveRendering
                     };
     Q_ENUM(RenderType)
 

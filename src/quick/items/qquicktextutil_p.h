@@ -99,6 +99,8 @@ typename T::RenderType QQuickTextUtil::textRenderType()
         return T::QtRendering;
     case QQuickWindow::NativeTextRendering:
         return T::NativeRendering;
+    case QQuickWindow::CurveTextRendering:
+        return T::CurveRendering;
     }
 
     Q_UNREACHABLE_RETURN(T::QtRendering);

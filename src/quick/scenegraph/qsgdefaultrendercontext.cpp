@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qsgdefaultrendercontext_p.h"
+#include "qsgcurveglyphatlas_p.h"
 
 #include <QtGui/QGuiApplication>
 
@@ -71,6 +72,9 @@ void QSGDefaultRenderContext::invalidateGlyphCaches()
         }
     }
 
+    qDeleteAll(m_curveGlyphAtlases);
+    m_curveGlyphAtlases.clear();
+
     {
         auto it = m_fontEnginesToClean.begin();
         while (it != m_fontEnginesToClean.end()) {
@@ -130,6 +134,9 @@ void QSGDefaultRenderContext::invalidate()
             delete it.key();
     }
     m_fontEnginesToClean.clear();
+
+    qDeleteAll(m_curveGlyphAtlases);
+    m_curveGlyphAtlases.clear();
 
     qDeleteAll(m_glyphCaches);
     m_glyphCaches.clear();
@@ -252,6 +259,18 @@ void QSGDefaultRenderContext::preprocess()
         it.value()->processPendingGlyphs();
         it.value()->update();
     }
+}
+
+QSGCurveGlyphAtlas *QSGDefaultRenderContext::curveGlyphAtlas(const QRawFont &font)
+{
+    QString key = fontKey(font, 0);
+    QSGCurveGlyphAtlas *atlas = m_curveGlyphAtlases.value(key, nullptr);
+    if (atlas == nullptr) {
+        atlas = new QSGCurveGlyphAtlas(font);
+        m_curveGlyphAtlases.insert(key, atlas);
+    }
+
+    return atlas;
 }
 
 QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(const QRawFont &font, int renderTypeQuality)

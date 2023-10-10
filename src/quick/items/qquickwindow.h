@@ -82,7 +82,8 @@ public:
 
     enum TextRenderType {
         QtTextRendering,
-        NativeTextRendering
+        NativeTextRendering,
+        CurveTextRendering
     };
     Q_ENUM(TextRenderType)
 

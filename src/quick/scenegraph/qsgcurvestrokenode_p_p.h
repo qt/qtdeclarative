@@ -1,9 +1,10 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#ifndef QQUICKSHAPESTROKENODE_P_P_H
-#define QQUICKSHAPESTROKENODE_P_P_H
+#ifndef QSGCURVESTROKENODE_P_P_H
+#define QSGCURVESTROKENODE_P_P_H
 
+#include <QtQuick/private/qtquickexports_p.h>
 #include <QtQuick/qsgmaterial.h>
 
 //
@@ -19,28 +20,28 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickShapeStrokeNode;
-class QQuickShapeStrokeMaterial;
+class QSGCurveStrokeNode;
+class QSGCurveStrokeMaterial;
 
-class QQuickShapeStrokeMaterialShader : public QSGMaterialShader
+class Q_QUICK_PRIVATE_EXPORT QSGCurveStrokeMaterialShader : public QSGMaterialShader
 {
 public:
-    QQuickShapeStrokeMaterialShader()
+    QSGCurveStrokeMaterialShader()
     {
         setShaderFileName(VertexStage,
-                          QStringLiteral(":/qt-project.org/shapes/shaders_ng/shapestroke.vert.qsb"));
+                          QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/shapestroke.vert.qsb"));
         setShaderFileName(FragmentStage,
-                          QStringLiteral(":/qt-project.org/shapes/shaders_ng/shapestroke.frag.qsb"));
+                          QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/shapestroke.frag.qsb"));
     }
 
     bool updateUniformData(RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
 };
 
 
-class QQuickShapeStrokeMaterial : public QSGMaterial
+class Q_QUICK_PRIVATE_EXPORT QSGCurveStrokeMaterial : public QSGMaterial
 {
 public:
-    QQuickShapeStrokeMaterial(QQuickShapeStrokeNode *node)
+    QSGCurveStrokeMaterial(QSGCurveStrokeNode *node)
         : m_node(node)
     {
         setFlag(Blending, true);
@@ -48,7 +49,7 @@ public:
 
     int compare(const QSGMaterial *other) const override;
 
-    QQuickShapeStrokeNode *node() const
+    QSGCurveStrokeNode *node() const
     {
         return m_node;
     }
@@ -61,12 +62,12 @@ protected:
     }
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode) const override
     {
-        return new QQuickShapeStrokeMaterialShader;
+        return new QSGCurveStrokeMaterialShader;
     }
 
-    QQuickShapeStrokeNode *m_node;
+    QSGCurveStrokeNode *m_node;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKSHAPESTROKENODE_P_P_H
+#endif // QSGCURVESTROKENODE_P_P_H

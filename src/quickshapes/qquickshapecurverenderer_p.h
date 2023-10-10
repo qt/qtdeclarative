@@ -17,8 +17,9 @@
 
 #include <QtQuickShapes/private/qquickshapesglobal_p.h>
 #include <QtQuickShapes/private/qquickshape_p_p.h>
-#include <QtQuickShapes/private/qquadpath_p.h>
-#include <QtQuickShapes/private/qquickshapeabstractcurvenode_p.h>
+#include <QtQuick/private/qquadpath_p.h>
+#include <QtQuick/private/qsgcurveabstractnode_p.h>
+#include <QtQuick/private/qsggradientcache_p.h>
 #include <qsgnode.h>
 #include <qsggeometry.h>
 #include <qsgmaterial.h>
@@ -27,6 +28,7 @@
 #include <QtCore/qrunnable.h>
 
 #include <QtGui/private/qtriangulator_p.h>
+#include <QtQuick/private/qsgcurvefillnode_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -57,7 +59,7 @@ public:
 
     void setRootNode(QSGNode *node);
 
-    using NodeList = QVector<QQuickShapeAbstractCurveNode *>;
+    using NodeList = QVector<QSGCurveAbstractNode *>;
 
     enum DirtyFlag
     {
@@ -79,15 +81,15 @@ public:
 private:
     struct PathData {
 
-        bool isFillVisible() const { return fillColor.alpha() > 0 || gradientType != NoGradient; }
+        bool isFillVisible() const { return fillColor.alpha() > 0 || gradientType != QGradient::NoGradient; }
 
         bool isStrokeVisible() const
         {
             return validPenWidth && pen.color().alpha() > 0 && pen.style() != Qt::NoPen;
         }
 
-        FillGradientType gradientType = NoGradient;
-        GradientDesc gradient;
+        QGradient::Type gradientType = QGradient::NoGradient;
+        QSGGradientCache::GradientDesc gradient;
         QPainterPath originalPath;
         QQuadPath path;
         QQuadPath fillPath;
@@ -110,8 +112,6 @@ private:
     NodeList addFillNodes(const PathData &pathData, NodeList *debugNodes);
     NodeList addTriangulatingStrokerNodes(const PathData &pathData, NodeList *debugNodes);
     NodeList addCurveStrokeNodes(const PathData &pathData, NodeList *debugNodes);
-
-    void solveOverlaps(QQuadPath &path);
 
     QSGNode *m_rootNode;
     QVector<PathData> m_paths;

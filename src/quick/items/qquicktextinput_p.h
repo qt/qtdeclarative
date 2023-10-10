@@ -138,7 +138,8 @@ public:
     Q_ENUM(CursorPosition)
 
     enum RenderType { QtRendering,
-                      NativeRendering
+                      NativeRendering,
+                      CurveRendering
                     };
     Q_ENUM(RenderType)
 

@@ -1,6 +1,3 @@
-// Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
-
 #version 440
 
 layout(location = 0) in vec4 P;
@@ -130,5 +127,4 @@ void main()
 
     fragColor = vec4(ubuf.strokeColor.rgb, 1.0) *ubuf.strokeColor.a * fillCoverage * ubuf.opacity
                 + ubuf.debug * vec4(0.0, 0.5, 1.0, 1.0) * (1.0 - fillCoverage) * ubuf.opacity;
-
 }

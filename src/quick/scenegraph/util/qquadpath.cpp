@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquadpath_p.h"
-#include "qquickshapecurverenderer_p_p.h"
 #include <QtGui/private/qbezier_p.h>
 #include <QtMath>
+#include <QtCore/QLoggingCategory>
 #include <QtCore/QVarLengthArray>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcSGCurveProcessor);
 
 static qreal qt_scoreQuadratic(const QBezier &b, QPointF qcp)
 {
@@ -755,7 +757,7 @@ void QQuadPath::splitElementAt(int index)
 
 #ifndef QT_NO_DEBUG
     if (qFuzzyCompare(quad1.sp, quad1.ep) || qFuzzyCompare(quad2.sp, quad2.ep))
-        qCDebug(lcShapeCurveRenderer) << "Splitting has resulted in ~null quad";
+        qCDebug(lcSGCurveProcessor) << "Splitting has resulted in ~null quad";
 #endif
 }
 

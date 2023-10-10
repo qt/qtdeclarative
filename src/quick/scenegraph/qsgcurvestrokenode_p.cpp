@@ -1,24 +1,30 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include "qquickshapestrokenode_p_p.h"
-#include "qquickshapestrokenode_p.h"
-
-#include "qquickshapegenericrenderer_p.h"
+#include "qsgcurvestrokenode_p_p.h"
+#include "qsgcurvestrokenode_p.h"
 
 QT_BEGIN_NAMESPACE
 
-bool QQuickShapeStrokeMaterialShader::updateUniformData(RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
+bool QSGCurveStrokeMaterialShader::updateUniformData(RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
     bool changed = false;
     QByteArray *buf = state.uniformData();
     Q_ASSERT(buf->size() >= 64);
 
+    auto *newMaterial = static_cast<QSGCurveStrokeMaterial *>(newEffect);
+    auto *oldMaterial = static_cast<QSGCurveStrokeMaterial *>(oldEffect);
+
+    auto *newNode = newMaterial != nullptr ? newMaterial->node() : nullptr;
+    auto *oldNode = oldMaterial != nullptr ? oldMaterial->node() : nullptr;
+
     if (state.isMatrixDirty()) {
-        const QMatrix4x4 m = state.combinedMatrix();
+        QMatrix4x4 m = state.combinedMatrix();
+        float localScale = newNode != nullptr ? newNode->localScale() : 1.0f;
+        m.scale(localScale);
         memcpy(buf->data(), m.constData(), 64);
 
-        float matrixScale = qSqrt(qAbs(state.determinant())) * state.devicePixelRatio();
+        float matrixScale = qSqrt(qAbs(state.determinant())) * state.devicePixelRatio() * localScale;
         memcpy(buf->data()+64, &matrixScale, 4);
         changed = true;
     }
@@ -30,13 +36,6 @@ bool QQuickShapeStrokeMaterialShader::updateUniformData(RenderState &state, QSGM
     }
 
     int offset = 64+16;
-
-    auto *newMaterial = static_cast<QQuickShapeStrokeMaterial *>(newEffect);
-    auto *oldMaterial = static_cast<QQuickShapeStrokeMaterial *>(oldEffect);
-
-    auto *newNode = newMaterial != nullptr ? newMaterial->node() : nullptr;
-    auto *oldNode = oldMaterial != nullptr ? oldMaterial->node() : nullptr;
-
     if (newNode == nullptr)
         return changed;
 
@@ -73,11 +72,11 @@ bool QQuickShapeStrokeMaterialShader::updateUniformData(RenderState &state, QSGM
     return changed;
 }
 
-int QQuickShapeStrokeMaterial::compare(const QSGMaterial *other) const
+int QSGCurveStrokeMaterial::compare(const QSGMaterial *other) const
 {
     int typeDif = type() - other->type();
     if (!typeDif) {
-        auto *othernode = static_cast<const QQuickShapeStrokeMaterial*>(other)->node();
+        auto *othernode = static_cast<const QSGCurveStrokeMaterial*>(other)->node();
         if (node()->color() != othernode->color())
             return node()->color().rgb() < othernode->color().rgb() ? -1 : 1;
         if (node()->strokeWidth() != othernode->strokeWidth())

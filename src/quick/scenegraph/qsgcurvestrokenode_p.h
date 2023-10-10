@@ -1,14 +1,14 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#ifndef QQUICKSHAPESTROKENODE_P_H
-#define QQUICKSHAPESTROKENODE_P_H
+#ifndef QSGCURVESTROKENODE_P_H
+#define QSGCURVESTROKENODE_P_H
 
+#include <QtQuick/private/qtquickexports_p.h>
 #include <QtQuick/qsgnode.h>
 
-#include "qquickshapeabstractcurvenode_p.h"
-#include "qquickshapegenericrenderer_p.h"
-#include "qquickshapestrokenode_p_p.h"
+#include "qsgcurveabstractnode_p.h"
+#include "qsgcurvestrokenode_p_p.h"
 
 //
 //  W A R N I N G
@@ -23,10 +23,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickShapeStrokeNode : public QQuickShapeAbstractCurveNode
+class Q_QUICK_PRIVATE_EXPORT QSGCurveStrokeNode : public QSGCurveAbstractNode
 {
 public:
-    QQuickShapeStrokeNode();
+    QSGCurveStrokeNode();
 
     void setColor(QColor col) override
     {
@@ -55,7 +55,7 @@ public:
                         const std::array<QVector2D, 2> &p, // line points
                         const std::array<QVector2D, 3> &n); // vertex normals
 
-    void cookGeometry();
+    void cookGeometry() override;
 
     static const QSGGeometry::AttributeSet &attributes();
 
@@ -72,6 +72,16 @@ public:
     void setDebug(float newDebug)
     {
         m_debug = newDebug;
+    }
+
+    void setLocalScale(float scale)
+    {
+        m_localScale = scale;
+    }
+
+    float localScale() const
+    {
+        return m_localScale;
     }
 
 private:
@@ -92,9 +102,10 @@ private:
     QColor m_color;
     float m_strokeWidth = 0.0f;
     float m_debug = 0.0f;
+    float m_localScale = 1.0f;
 
 protected:
-    QScopedPointer<QQuickShapeStrokeMaterial> m_material;
+    QScopedPointer<QSGCurveStrokeMaterial> m_material;
 
     QVector<StrokeVertex> m_uncookedVertexes;
     QVector<quint32> m_uncookedIndexes;
@@ -102,4 +113,4 @@ protected:
 
 QT_END_NAMESPACE
 
-#endif // QQUICKSHAPESTROKENODE_P_H
+#endif // QSGCURVESTROKENODE_P_H

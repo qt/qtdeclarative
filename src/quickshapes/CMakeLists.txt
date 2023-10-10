@@ -21,10 +21,6 @@ qt_internal_add_qml_module(QuickShapesPrivate
         qquickshapegenericrenderer.cpp qquickshapegenericrenderer_p.h
         qquickshapesglobal.h qquickshapesglobal_p.h
         qquickshapecurverenderer.cpp qquickshapecurverenderer_p.h qquickshapecurverenderer_p_p.h
-        qquickshapecurvenode.cpp qquickshapecurvenode_p.h qquickshapecurvenode_p_p.h qquickshapecurvenode_p.cpp
-        qquickshapeabstractcurvenode_p.h
-        qquickshapestrokenode.cpp qquickshapestrokenode_p.h qquickshapestrokenode_p_p.h qquickshapestrokenode_p.cpp
-        qquadpath_p.h qquadpath.cpp
         qquickshapesoftwarerenderer.cpp qquickshapesoftwarerenderer_p.h
     PUBLIC_LIBRARIES
         Qt::Core
@@ -56,132 +52,7 @@ qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders"
         "shaders_ng/radialgradient.frag"
         "shaders_ng/conicalgradient.vert"
         "shaders_ng/conicalgradient.frag"
-        "shaders_ng/shapecurve.frag"
-        "shaders_ng/shapecurve.vert"
-        "shaders_ng/shapestroke.frag"
-        "shaders_ng/shapestroke.vert"
         "shaders_ng/wireframe.frag"
         "shaders_ng/wireframe.vert"
-)
-
-qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders_derivatives"
-    SILENT
-    BATCHABLE
-    PRECOMPILE
-    OPTIMIZED
-    DEFINES "USE_DERIVATIVES"
-    PREFIX
-        "/qt-project.org/shapes"
-    FILES
-        "shaders_ng/shapecurve.frag"
-        "shaders_ng/shapecurve.vert"
-    OUTPUTS
-        "shaders_ng/shapecurve_derivatives.frag.qsb"
-        "shaders_ng/shapecurve_derivatives.vert.qsb"
-)
-
-qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders_lg"
-    SILENT
-    BATCHABLE
-    PRECOMPILE
-    OPTIMIZED
-    DEFINES
-        "LINEARGRADIENT"
-    PREFIX
-        "/qt-project.org/shapes"
-    FILES
-        "shaders_ng/shapecurve.frag"
-        "shaders_ng/shapecurve.vert"
-    OUTPUTS
-        "shaders_ng/shapecurve_lg.frag.qsb"
-        "shaders_ng/shapecurve_lg.vert.qsb"
-)
-
-qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders_lg_derivatives"
-    SILENT
-    BATCHABLE
-    PRECOMPILE
-    OPTIMIZED
-    DEFINES
-        "LINEARGRADIENT"
-        "USE_DERIVATIVES"
-    PREFIX
-        "/qt-project.org/shapes"
-    FILES
-        "shaders_ng/shapecurve.frag"
-        "shaders_ng/shapecurve.vert"
-    OUTPUTS
-        "shaders_ng/shapecurve_lg_derivatives.frag.qsb"
-        "shaders_ng/shapecurve_lg_derivatives.vert.qsb"
-)
-
-qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders_rg"
-    SILENT
-    BATCHABLE
-    PRECOMPILE
-    OPTIMIZED
-    DEFINES
-        "RADIALGRADIENT"
-    PREFIX
-        "/qt-project.org/shapes"
-    FILES
-        "shaders_ng/shapecurve.frag"
-        "shaders_ng/shapecurve.vert"
-    OUTPUTS
-        "shaders_ng/shapecurve_rg.frag.qsb"
-        "shaders_ng/shapecurve_rg.vert.qsb"
-)
-
-qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders_rg_derivatives"
-    SILENT
-    BATCHABLE
-    PRECOMPILE
-    OPTIMIZED
-    DEFINES
-        "RADIALGRADIENT"
-        "USE_DERIVATIVES"
-    PREFIX
-        "/qt-project.org/shapes"
-    FILES
-        "shaders_ng/shapecurve.frag"
-        "shaders_ng/shapecurve.vert"
-    OUTPUTS
-        "shaders_ng/shapecurve_rg_derivatives.frag.qsb"
-        "shaders_ng/shapecurve_rg_derivatives.vert.qsb"
-)
-
-qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders_cg"
-    SILENT
-    BATCHABLE
-    PRECOMPILE
-    OPTIMIZED
-    DEFINES
-        "CONICALGRADIENT"
-    PREFIX
-        "/qt-project.org/shapes"
-    FILES
-        "shaders_ng/shapecurve.frag"
-        "shaders_ng/shapecurve.vert"
-    OUTPUTS
-        "shaders_ng/shapecurve_cg.frag.qsb"
-        "shaders_ng/shapecurve_cg.vert.qsb"
-)
-
-qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders_cg_derivatives"
-    SILENT
-    BATCHABLE
-    PRECOMPILE
-    OPTIMIZED
-    DEFINES
-        "CONICALGRADIENT"
-        "USE_DERIVATIVES"
-    PREFIX
-        "/qt-project.org/shapes"
-    FILES
-        "shaders_ng/shapecurve.frag"
-        "shaders_ng/shapecurve.vert"
-    OUTPUTS
-        "shaders_ng/shapecurve_cg_derivatives.frag.qsb"
-        "shaders_ng/shapecurve_cg_derivatives.vert.qsb"
 )
 

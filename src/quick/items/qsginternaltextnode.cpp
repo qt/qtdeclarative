@@ -10,7 +10,6 @@
 #include <private/qquickclipnode_p.h>
 #include <private/qquickitem_p.h>
 #include <private/qquicktextdocument_p.h>
-#include <QtQuick/private/qsgcontext_p.h>
 
 #include <QtCore/qpoint.h>
 #include <qtextdocument.h>
@@ -60,10 +59,14 @@ QSGGlyphNode *QSGInternalTextNode::addGlyphs(const QPointF &position, const QGly
         }
     }
 
-    QSGGlyphNode *node = m_renderContext->sceneGraphContext()->createGlyphNode(m_renderContext,
-                                                                               preferNativeGlyphNode,
-                                                                               m_renderTypeQuality);
+    QSGTextNode::RenderType preferredRenderType =
+        preferNativeGlyphNode
+            ? QSGTextNode::NativeRendering
+            : m_renderType;
 
+    QSGGlyphNode *node = m_renderContext->sceneGraphContext()->createGlyphNode(m_renderContext,
+                                                                               preferredRenderType,
+                                                                               m_renderTypeQuality);
     node->setGlyphs(position + QPointF(0, glyphs.rawFont().ascent()), glyphs);
     node->setStyle(style);
     node->setStyleColor(styleColor);
@@ -85,7 +88,7 @@ QSGGlyphNode *QSGInternalTextNode::addGlyphs(const QPointF &position, const QGly
 
     if (style == QQuickText::Outline && color.alpha() > 0 && styleColor != color) {
         QSGGlyphNode *fillNode = m_renderContext->sceneGraphContext()->createGlyphNode(m_renderContext,
-                                                                                       preferNativeGlyphNode,
+                                                                                       preferredRenderType,
                                                                                        m_renderTypeQuality);
         fillNode->setGlyphs(position + QPointF(0, glyphs.rawFont().ascent()), glyphs);
         fillNode->setStyle(QQuickText::Normal);

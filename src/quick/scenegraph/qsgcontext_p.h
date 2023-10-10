@@ -27,6 +27,7 @@
 
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgrendererinterface.h>
+#include <QtQuick/qsgtextnode.h>
 
 #include <QtCore/qpointer.h>
 
@@ -65,6 +66,7 @@ class QRhiRenderPassDescriptor;
 class QRhiCommandBuffer;
 class QQuickGraphicsConfiguration;
 class QQuickItem;
+class QSGCurveGlyphAtlas;
 
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERLOOP)
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_COMPILATION)
@@ -98,7 +100,7 @@ public:
     virtual QSGInternalImageNode *createInternalImageNode(QSGRenderContext *renderContext) = 0;
     virtual QSGInternalTextNode *createInternalTextNode(QSGRenderContext *renderContext);
     virtual QSGPainterNode *createPainterNode(QQuickPaintedItem *item) = 0;
-    virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode, int renderTypeQuality) = 0;
+    virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, QSGTextNode::RenderType renderType, int renderTypeQuality) = 0;
     virtual QSGLayer *createLayer(QSGRenderContext *renderContext) = 0;
     virtual QSGGuiThreadShaderEffectManager *createGuiThreadShaderEffectManager();
     virtual QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext);
@@ -165,6 +167,7 @@ public:
     virtual void preprocess();
     virtual void invalidateGlyphCaches();
     virtual QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font, int renderTypeQuality);
+    virtual QSGCurveGlyphAtlas *curveGlyphAtlas(const QRawFont &font);
     QSGTexture *textureForFactory(QQuickTextureFactory *factory, QQuickWindow *window);
 
     virtual QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const = 0;

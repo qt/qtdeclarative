@@ -1,27 +1,27 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include "qquickshapestrokenode_p.h"
-#include "qquickshapestrokenode_p_p.h"
+#include "qsgcurvestrokenode_p.h"
+#include "qsgcurvestrokenode_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QQuickShapeStrokeNode::QQuickShapeStrokeNode()
+QSGCurveStrokeNode::QSGCurveStrokeNode()
 {
     setFlag(OwnsGeometry, true);
     setGeometry(new QSGGeometry(attributes(), 0, 0));
     updateMaterial();
 }
 
-void QQuickShapeStrokeNode::QQuickShapeStrokeNode::updateMaterial()
+void QSGCurveStrokeNode::QSGCurveStrokeNode::updateMaterial()
 {
-    m_material.reset(new QQuickShapeStrokeMaterial(this));
+    m_material.reset(new QSGCurveStrokeMaterial(this));
     setMaterial(m_material.data());
 }
 
 // Take the start, control and end point of a curve and return the points A, B, C
 // representing the curve as Q(s) = A*s*s + B*s + C
-std::array<QVector2D, 3> QQuickShapeStrokeNode::curveABC(const std::array<QVector2D, 3> &p)
+std::array<QVector2D, 3> QSGCurveStrokeNode::curveABC(const std::array<QVector2D, 3> &p)
 {
     QVector2D a = p[0] - 2*p[1] + p[2];
     QVector2D b = 2*p[1] - 2*p[0];
@@ -31,7 +31,7 @@ std::array<QVector2D, 3> QQuickShapeStrokeNode::curveABC(const std::array<QVecto
 }
 
 // Curve from p[0] to p[2] with control point p[1]
-void QQuickShapeStrokeNode::appendTriangle(const std::array<QVector2D, 3> &v,
+void QSGCurveStrokeNode::appendTriangle(const std::array<QVector2D, 3> &v,
                                            const std::array<QVector2D, 3> &p,
                                            const std::array<QVector2D, 3> &n)
 {
@@ -48,7 +48,7 @@ void QQuickShapeStrokeNode::appendTriangle(const std::array<QVector2D, 3> &v,
 }
 
 // Straight line from p0 to p1
-void QQuickShapeStrokeNode::appendTriangle(const std::array<QVector2D, 3> &v,
+void QSGCurveStrokeNode::appendTriangle(const std::array<QVector2D, 3> &v,
                                            const std::array<QVector2D, 2> &p,
                                            const std::array<QVector2D, 3> &n)
 {
@@ -71,7 +71,7 @@ void QQuickShapeStrokeNode::appendTriangle(const std::array<QVector2D, 3> &v,
     m_uncookedIndexes << currentVertex << currentVertex + 1 << currentVertex + 2;
 }
 
-void QQuickShapeStrokeNode::cookGeometry()
+void QSGCurveStrokeNode::cookGeometry()
 {
     QSGGeometry *g = geometry();
     if (g->indexType() != QSGGeometry::UnsignedIntType) {
@@ -96,7 +96,7 @@ void QQuickShapeStrokeNode::cookGeometry()
     m_uncookedVertexes.clear();
 }
 
-const QSGGeometry::AttributeSet &QQuickShapeStrokeNode::attributes()
+const QSGGeometry::AttributeSet &QSGCurveStrokeNode::attributes()
 {
     static QSGGeometry::Attribute data[] = {
         QSGGeometry::Attribute::createWithAttributeType(0, 2, QSGGeometry::FloatType, QSGGeometry::PositionAttribute), //vertexCoord

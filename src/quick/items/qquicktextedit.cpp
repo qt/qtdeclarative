@@ -533,11 +533,19 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
 
     \value TextEdit.QtRendering     Text is rendered using a scalable distance field for each glyph.
     \value TextEdit.NativeRendering Text is rendered using a platform-specific technique.
+    \value TextEdit.CurveRendering  Text is rendered using a curve rasterizer running directly on
+                                    the graphics hardware. (Introduced in Qt 6.7.0.)
 
     Select \c TextEdit.NativeRendering if you prefer text to look native on the target platform and do
     not require advanced features such as transformation of the text. Using such features in
     combination with the NativeRendering render type will lend poor and sometimes pixelated
     results.
+
+    Both \c TextEdit.QtRendering and \c TextEdit.CurveRendering are hardware-accelerated techniques.
+    \c QtRendering is the faster of the two, but uses more memory and will exhibit rendering
+    artifacts at large sizes. \c CurveRendering should be considered as an alternative in cases
+    where \c QtRendering does not give good visual results or where reducing graphics memory
+    consumption is a priority.
 
     The default rendering type is determined by \l QQuickWindow::textRenderType().
 */

@@ -1,19 +1,20 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include "qquickshapecurvenode_p_p.h"
-#include "qquickshapecurvenode_p.h"
+#include "qsgcurvefillnode_p_p.h"
+#include "qsgcurvefillnode_p.h"
+#include "util/qsggradientcache_p.h"
 
-#include "qquickshapegenericrenderer_p.h"
+#include <private/qsgtexture_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace {
 
-    class QQuickShapeCurveMaterialShader : public QSGMaterialShader
+    class QSGCurveFillMaterialShader : public QSGMaterialShader
     {
     public:
-        QQuickShapeCurveMaterialShader(QQuickAbstractPathRenderer::FillGradientType gradientType,
+        QSGCurveFillMaterialShader(QGradient::Type gradientType,
                                        bool includeStroke,
                                        bool useDerivatives);
 
@@ -22,17 +23,17 @@ namespace {
                                 QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
     };
 
-    QQuickShapeCurveMaterialShader::QQuickShapeCurveMaterialShader(QQuickAbstractPathRenderer::FillGradientType gradientType,
+    QSGCurveFillMaterialShader::QSGCurveFillMaterialShader(QGradient::Type gradientType,
                                                                    bool includeStroke,
                                                                    bool useDerivatives)
     {
-        QString baseName = QStringLiteral(":/qt-project.org/shapes/shaders_ng/shapecurve");
+        QString baseName = QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/shapecurve");
 
-        if (gradientType == QQuickAbstractPathRenderer::LinearGradient) {
+        if (gradientType == QGradient::LinearGradient) {
             baseName += QStringLiteral("_lg");
-        } else if (gradientType == QQuickAbstractPathRenderer::RadialGradient) {
+        } else if (gradientType == QGradient::RadialGradient) {
             baseName += QStringLiteral("_rg");
-        } else if (gradientType == QQuickAbstractPathRenderer::ConicalGradient) {
+        } else if (gradientType == QGradient::ConicalGradient) {
             baseName += QStringLiteral("_cg");
         }
 
@@ -46,23 +47,23 @@ namespace {
         setShaderFileName(FragmentStage, baseName + QStringLiteral(".frag.qsb"));
     }
 
-    void QQuickShapeCurveMaterialShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
+    void QSGCurveFillMaterialShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                                                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
     {
         Q_UNUSED(oldMaterial);
-        const QQuickShapeCurveMaterial *m = static_cast<QQuickShapeCurveMaterial *>(newMaterial);
-        const QQuickShapeCurveNode *node = m->node();
-        if (binding != 1 || node->gradientType() == QQuickAbstractPathRenderer::NoGradient)
+        const QSGCurveFillMaterial *m = static_cast<QSGCurveFillMaterial *>(newMaterial);
+        const QSGCurveFillNode *node = m->node();
+        if (binding != 1 || node->gradientType() == QGradient::NoGradient)
             return;
 
-        const QQuickShapeGradientCacheKey cacheKey(node->fillGradient().stops,
+        const QSGGradientCacheKey cacheKey(node->fillGradient().stops,
                                                    node->fillGradient().spread);
-        QSGTexture *t = QQuickShapeGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
+        QSGTexture *t = QSGGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
         t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
         *texture = t;
     }
 
-    bool QQuickShapeCurveMaterialShader::updateUniformData(RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
+    bool QSGCurveFillMaterialShader::updateUniformData(RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
     {
         bool changed = false;
         QByteArray *buf = state.uniformData();
@@ -89,11 +90,11 @@ namespace {
         }
         offset += 4;
 
-        QQuickShapeCurveMaterial *newMaterial = static_cast<QQuickShapeCurveMaterial *>(newEffect);
-        QQuickShapeCurveMaterial *oldMaterial = static_cast<QQuickShapeCurveMaterial *>(oldEffect);
+        QSGCurveFillMaterial *newMaterial = static_cast<QSGCurveFillMaterial *>(newEffect);
+        QSGCurveFillMaterial *oldMaterial = static_cast<QSGCurveFillMaterial *>(oldEffect);
 
-        QQuickShapeCurveNode *newNode = newMaterial != nullptr ? newMaterial->node() : nullptr;
-        QQuickShapeCurveNode *oldNode = oldMaterial != nullptr ? oldMaterial->node() : nullptr;
+        QSGCurveFillNode *newNode = newMaterial != nullptr ? newMaterial->node() : nullptr;
+        QSGCurveFillNode *oldNode = oldMaterial != nullptr ? oldMaterial->node() : nullptr;
 
         if (newNode == nullptr)
             return changed;
@@ -134,7 +135,7 @@ namespace {
             offset += 16;
         }
 
-        if (newNode->gradientType() == QQuickAbstractPathRenderer::NoGradient) {
+        if (newNode->gradientType() == QGradient::NoGradient) {
             Q_ASSERT(buf->size() >= offset + 16);
 
             QVector4D newColor = QVector4D(newNode->color().redF(),
@@ -154,7 +155,7 @@ namespace {
             }
 
             offset += 16;
-        } else if (newNode->gradientType() == QQuickAbstractPathRenderer::LinearGradient) {
+        } else if (newNode->gradientType() == QGradient::LinearGradient) {
             Q_ASSERT(buf->size() >= offset + 8 + 8);
 
             QVector2D newGradientStart = QVector2D(newNode->fillGradient().a);
@@ -179,7 +180,7 @@ namespace {
             }
 
             offset += 8;
-        } else if (newNode->gradientType() == QQuickAbstractPathRenderer::RadialGradient) {
+        } else if (newNode->gradientType() == QGradient::RadialGradient) {
             Q_ASSERT(buf->size() >= offset + 8 + 8 + 4 + 4);
 
             QVector2D newFocalPoint = QVector2D(newNode->fillGradient().b);
@@ -225,7 +226,7 @@ namespace {
             }
             offset += 4;
 
-        } else if (newNode->gradientType() == QQuickAbstractPathRenderer::ConicalGradient) {
+        } else if (newNode->gradientType() == QGradient::ConicalGradient) {
             Q_ASSERT(buf->size() >= offset + 8 + 4);
 
             QVector2D newFocalPoint = QVector2D(newNode->fillGradient().a);
@@ -254,30 +255,30 @@ namespace {
     }
 }
 
-QQuickShapeCurveMaterial::QQuickShapeCurveMaterial(QQuickShapeCurveNode *node)
+QSGCurveFillMaterial::QSGCurveFillMaterial(QSGCurveFillNode *node)
     : m_node(node)
 {
     setFlag(Blending, true);
     setFlag(RequiresDeterminant, true);
 }
 
-int QQuickShapeCurveMaterial::compare(const QSGMaterial *other) const
+int QSGCurveFillMaterial::compare(const QSGMaterial *other) const
 {
     if (other->type() != type())
         return (type() - other->type());
 
-    const QQuickShapeCurveMaterial *otherMaterial =
-            static_cast<const QQuickShapeCurveMaterial *>(other);
+    const QSGCurveFillMaterial *otherMaterial =
+            static_cast<const QSGCurveFillMaterial *>(other);
 
-    QQuickShapeCurveNode *a = node();
-    QQuickShapeCurveNode *b = otherMaterial->node();
+    QSGCurveFillNode *a = node();
+    QSGCurveFillNode *b = otherMaterial->node();
     if (a == b)
         return 0;
 
     if (int d = a->strokeColor().rgba() - b->strokeColor().rgba())
         return d;
 
-    if (a->gradientType() == QQuickAbstractPathRenderer::NoGradient) {
+    if (a->gradientType() == QGradient::NoGradient) {
         if (int d = a->color().red() - b->color().red())
             return d;
         if (int d = a->color().green() - b->color().green())
@@ -287,8 +288,8 @@ int QQuickShapeCurveMaterial::compare(const QSGMaterial *other) const
         if (int d = a->color().alpha() - b->color().alpha())
             return d;
     } else {
-        const QQuickAbstractPathRenderer::GradientDesc &ga = a->fillGradient();
-        const QQuickAbstractPathRenderer::GradientDesc &gb = b->fillGradient();
+        const QSGGradientCache::GradientDesc &ga = a->fillGradient();
+        const QSGGradientCache::GradientDesc &gb = b->fillGradient();
 
         if (int d = ga.a.x() - gb.a.x())
             return d;
@@ -321,7 +322,7 @@ int QQuickShapeCurveMaterial::compare(const QSGMaterial *other) const
     return 0;
 }
 
-QSGMaterialType *QQuickShapeCurveMaterial::type() const
+QSGMaterialType *QSGCurveFillMaterial::type() const
 {
     static QSGMaterialType type[8];
     uint index = node()->gradientType();
@@ -333,11 +334,11 @@ QSGMaterialType *QQuickShapeCurveMaterial::type() const
     return &type[index];
 }
 
-QSGMaterialShader *QQuickShapeCurveMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
+QSGMaterialShader *QSGCurveFillMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
-    return new QQuickShapeCurveMaterialShader(node()->gradientType(),
-                                              node()->hasStroke(),
-                                              renderMode == QSGRendererInterface::RenderMode3D);
+    return new QSGCurveFillMaterialShader(node()->gradientType(),
+                                          node()->hasStroke(),
+                                          renderMode == QSGRendererInterface::RenderMode3D);
 }
 
 

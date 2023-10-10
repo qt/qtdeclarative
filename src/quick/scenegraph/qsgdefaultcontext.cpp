@@ -7,6 +7,7 @@
 #include <QtQuick/private/qsgdefaultinternalimagenode_p.h>
 #include <QtQuick/private/qsgdefaultpainternode_p.h>
 #include <QtQuick/private/qsgdefaultglyphnode_p.h>
+#include <QtQuick/private/qsgcurveglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p_p.h>
 #include <QtQuick/private/qsgrhisupport_p.h>
@@ -146,10 +147,12 @@ QSGPainterNode *QSGDefaultContext::createPainterNode(QQuickPaintedItem *item)
 }
 
 QSGGlyphNode *QSGDefaultContext::createGlyphNode(QSGRenderContext *rc,
-                                                 bool preferNativeGlyphNode,
+                                                 QSGTextNode::RenderType renderType,
                                                  int renderTypeQuality)
 {
-    if (m_distanceFieldDisabled || preferNativeGlyphNode) {
+    if (renderType == QSGTextNode::CurveRendering) {
+        return new QSGCurveGlyphNode(rc);
+    } else if (m_distanceFieldDisabled || renderType == QSGTextNode::NativeRendering) {
         return new QSGDefaultGlyphNode(rc);
     } else {
         QSGDistanceFieldGlyphNode *node = new QSGDistanceFieldGlyphNode(rc);

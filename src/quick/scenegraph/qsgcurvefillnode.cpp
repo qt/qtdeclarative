@@ -1,15 +1,12 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include "qquickshapecurvenode_p.h"
-#include "qquickshapecurvenode_p_p.h"
+#include "qsgcurvefillnode_p.h"
+#include "qsgcurvefillnode_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
-namespace {
-}
-
-QQuickShapeCurveNode::QQuickShapeCurveNode()
+QSGCurveFillNode::QSGCurveFillNode()
 {
     setFlag(OwnsGeometry, true);
     setGeometry(new QSGGeometry(attributes(), 0, 0));
@@ -17,13 +14,13 @@ QQuickShapeCurveNode::QQuickShapeCurveNode()
     updateMaterial();
 }
 
-void QQuickShapeCurveNode::updateMaterial()
+void QSGCurveFillNode::updateMaterial()
 {
-    m_material.reset(new QQuickShapeCurveMaterial(this));
+    m_material.reset(new QSGCurveFillMaterial(this));
     setMaterial(m_material.data());
 }
 
-void QQuickShapeCurveNode::cookGeometry()
+void QSGCurveFillNode::cookGeometry()
 {
     QSGGeometry *g = geometry();
     if (g->indexType() != QSGGeometry::UnsignedIntType) {
@@ -48,7 +45,7 @@ void QQuickShapeCurveNode::cookGeometry()
     m_uncookedVertexes.clear();
 }
 
-const QSGGeometry::AttributeSet &QQuickShapeCurveNode::attributes()
+const QSGGeometry::AttributeSet &QSGCurveFillNode::attributes()
 {
     static QSGGeometry::Attribute data[] = {
         QSGGeometry::Attribute::createWithAttributeType(0, 2, QSGGeometry::FloatType, QSGGeometry::PositionAttribute),

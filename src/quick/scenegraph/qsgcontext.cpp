@@ -474,6 +474,16 @@ void QSGRenderContext::preprocess()
 }
 
 /*!
+    Factory function for curve atlases that can be used to provide geometry for the curve
+    renderer for a given font.
+*/
+QSGCurveGlyphAtlas *QSGRenderContext::curveGlyphAtlas(const QRawFont &font)
+{
+    Q_UNUSED(font);
+    return nullptr;
+}
+
+/*!
     Factory function for scene graph backends of the distance-field glyph cache.
  */
 QSGDistanceFieldGlyphCache *QSGRenderContext::distanceFieldGlyphCache(const QRawFont &, int)
