@@ -47,6 +47,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public Q
 
 public:
     QQuickWindowQmlImpl(QWindow *parent = nullptr);
+    ~QQuickWindowQmlImpl();
 
     void setVisible(bool visible);
     void setVisibility(QWindow::Visibility visibility);

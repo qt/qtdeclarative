@@ -95,15 +95,16 @@ void QQuickWindowQmlImpl::componentComplete()
 QQuickWindowQmlImpl::QQuickWindowQmlImpl(QQuickWindowQmlImplPrivate &dd, QWindow *parent)
     : QQuickWindow(dd, parent)
 {
-    // These two signals are called during QWindow's dtor, thus they have to be queued connections
-    // or else our slots will be called instantly when our destructor has already run but our
-    // connections haven't been removed yet.
-    connect(this, &QWindow::visibleChanged, this, &QQuickWindowQmlImpl::visibleChanged,
-            Qt::QueuedConnection);
-    connect(this, &QWindow::visibilityChanged, this, &QQuickWindowQmlImpl::visibilityChanged,
-            Qt::QueuedConnection);
-
+    connect(this, &QWindow::visibleChanged, this, &QQuickWindowQmlImpl::visibleChanged);
+    connect(this, &QWindow::visibilityChanged, this, &QQuickWindowQmlImpl::visibilityChanged);
     connect(this, &QWindow::screenChanged, this, &QQuickWindowQmlImpl::screenChanged);
+}
+
+QQuickWindowQmlImpl::~QQuickWindowQmlImpl()
+{
+    // Destroy the window while we are still alive, so that any signals
+    // emitted by the destruction can be delivered properly.
+    destroy();
 }
 
 bool QQuickWindowQmlImpl::event(QEvent *event)
