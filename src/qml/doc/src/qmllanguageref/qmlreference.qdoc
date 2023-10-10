@@ -61,6 +61,8 @@ modules.
             \li \l{qtqml-documents-definetypes.html}{Defining Object Types from QML}
             \li \l{qtqml-cppintegration-definetypes.html}{Defining Object Types from C++}
             \endlist
+        \li \l{qtqml-typesystem-sequencetypes.html}{QML Sequence Types}
+        \li \l{qtqml-typesystem-namespaces.html}{QML Namespaces}
         \endlist
 
     \li \l{qtqml-modules-topic.html}{QML Modules}

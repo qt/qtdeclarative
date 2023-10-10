@@ -1,0 +1,76 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+/*!
+\page qtqml-typesystem-sequencetypes.html
+\title QML Sequence Types
+\brief Description of QML sequence types
+
+For every \l{qtqml-typesystem-objecttypes.html}{object type} and
+\l{qtqml-typesystem-valuetypes.html}{value type} a sequence type for storing
+multiple instances of the type is automatically made available. You can use
+the \c list keyword to create properties of sequence types:
+
+\qml
+import QtQml
+
+QtObject {
+    property list<int> ints: [1, 2, 3, 4]
+    property list<Connection> connections: [
+        Connection {
+            // ...
+        },
+        Connection {
+            // ...
+        }
+    ]
+}
+\endqml
+
+Sequences of value types are implemented as \l{QList} and sequences of object
+types are implemented as \l{QQmlListProperty}.
+
+Sequences in QML generally behave like the JavaScript \c Array type, with some
+important differences which result from the use of a C++ storage type in the
+implementation:
+
+\list 1
+\li Deleting an element from a sequence will result in a default-constructed
+    value replacing that element, rather than an \c undefined value.
+\li Setting the \c length property of a sequence to a value larger
+    than its current value will result in the sequence being padded out to the
+    specified length with default-constructed elements rather than \c undefined
+    elements.
+\li The Qt container classes support signed (rather than
+    unsigned) integer indexes; thus, attempting to access any index greater
+    than the maximum number \l qsizetype can hold will fail.
+\endlist
+
+If you wish to remove elements from a sequence rather than simply replace
+them with default constructed values, do not use the indexed delete operator
+(\c{delete sequence[i]}) but instead use the \c {splice} function
+(\c{sequence.splice(startIndex, deleteCount)}).
+
+In general any container recognizable by \l QMetaSequence can be passed from
+C++ to QML via \l Q_PROPERTY or \l Q_INVOKABLE methods. This includes, but is
+not limited to, all registered QList, QQueue, QStack, QSet, std::list,
+std::vector that contain a type marked with \l Q_DECLARE_METATYPE.
+
+Using a sequence via \l QMetaSequence results in expensive data conversions.
+To avoid the conversions you can register your own anonymous sequence types
+using \l{QML_SEQUENTIAL_CONTAINER} from C++. Types registered this way behave
+like the pre-defined sequence types and are stored as-is. However, they have
+no QML names.
+
+\warning Sequences stored as a C++ container like \l QList or \c std::vector are
+subject to the effects caused by \l{Value Type and Sequence References} and
+should thus be handled with care. \l QQmlListProperty is not affected since
+it is only a view for an underlying container. C++ standard containers such as
+\c std::vector are not implicitly shared. Therefore, copying them always
+produces a deep copy. Since a sequence read from a property always has to be
+copied at least once, using such containers as QML sequences is rather
+expensive, even if you don't modify them from QML.
+
+The QtQml module contains a few \l{qtqml-qmlmodule.html#sequence-types}{sequence types}
+you may want to use.
+
+*/

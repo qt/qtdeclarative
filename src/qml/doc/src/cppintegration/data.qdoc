@@ -306,96 +306,14 @@ calling its \l {QDateTime::}{time()} method.
 
 \section2 Sequence Type to JavaScript Array
 
-Certain C++ sequence types are supported transparently in QML to behave like
-JavaScript \c Array types.
-
-In particular, QML currently supports:
-\list
-  \li \c {QList<int>}
-  \li \c {QList<qreal>}
-  \li \c {QList<bool>}
-  \li \c {QList<QString>} and \c{QStringList}
-  \li \c {QVector<QString>}
-  \li \c {std::vector<QString>}
-  \li \c {QList<QUrl>}
-  \li \c {QVector<QUrl>}
-  \li \c {std::vector<QUrl>}
-  \li \c {QVector<int>}
-  \li \c {QVector<qreal>}
-  \li \c {QVector<bool>}
-  \li \c {std::vector<int>}
-  \li \c {std::vector<qreal>}
-  \li \c {std::vector<bool>}
-\endlist
-
-and all registered QList, QVector, QQueue, QStack, QSet, std::list,
-std::vector that contain a type marked with \l Q_DECLARE_METATYPE.
-
-These sequence types are implemented directly in terms of the underlying C++
-sequence. There are two ways in which such sequences can be exposed to QML:
-as a Q_PROPERTY of the given sequence type; or as the return type of a
-Q_INVOKABLE method. There are some differences in the way these are
-implemented, which are important to note.
-
-If the sequence is exposed as a Q_PROPERTY, accessing any value in the
-sequence by index will cause the sequence data to be read from the QObject's
-property, then a read to occur. Similarly, modifying any value in the
-sequence will cause the sequence data to be read, and then the modification
-will be performed and the modified sequence will be written back to the
-QObject's property.
-
-If the sequence is returned from a Q_INVOKABLE function, access and mutation
-is much cheaper, as no QObject property read or write occurs; instead, the
-C++ sequence data is accessed and modified directly.
-
-In both the Q_PROPERTY and return from Q_INVOKABLE cases, the elements
-of a std::vector are copied. This copying may be an expensive operation,
-so std::vector should be used judiciously.
+See \l{QML Sequence Types} for a general description of sequence types. The
+\l{Qt QML QML Types}{QtQml module} contains a few sequence types
+you may want to use.
 
 You can also create a list-like data structure by constructing a QJSValue using
 QJSEngine::newArray(). Such a JavaScript array does not need any conversion
 when passing it between QML and C++. See \l{QJSValue#Working With Arrays} for
 details on how to manipulate JavaScript arrays from C++.
-
-Other sequence types are not supported transparently, and instead an
-instance of any other sequence type will be passed between QML and C++ as an
-opaque QVariantList.
-
-\b {Important Note:} There are some minor differences between the
-semantics of such sequence Array types and default JavaScript Array types
-which result from the use of a C++ storage type in the implementation. In
-particular, deleting an element from an Array will result in a
-default-constructed value replacing that element, rather than an Undefined
-value. Similarly, setting the length property of the Array to a value larger
-than its current value will result in the Array being padded out to the
-specified length with default-constructed elements rather than Undefined
-elements.  Finally, the Qt container classes support signed (rather than
-unsigned) integer indexes; thus, attempting to access any index greater
-than INT_MAX will fail.
-
-The default-constructed values for each sequence type are as follows:
-\table
-\row \li QList<int> \li integer value 0
-\row \li QList<qreal> \li real value 0.0
-\row \li QList<bool> \li boolean value \c {false}
-\row \li QList<QString> and QStringList \li empty QString
-\row \li QVector<QString> \li empty QString
-\row \li std::vector<QString> \li empty QString
-\row \li QList<QUrl> \li empty QUrl
-\row \li QVector<QUrl> \li empty QUrl
-\row \li std::vector<QUrl> \li empty QUrl
-\row \li QVector<int> \li integer value 0
-\row \li QVector<qreal> \li real value 0.0
-\row \li QVector<bool> \li boolean value \c {false}
-\row \li std::vector<int> \li integer value 0
-\row \li std::vector<qreal> \li real value 0.0
-\row \li std::vector<bool> \li boolean value \c {false}
-\endtable
-
-If you wish to remove elements from a sequence rather than simply replace
-them with default constructed values, do not use the indexed delete operator
-("delete sequence[i]") but instead use the \c {splice} function
-("sequence.splice(startIndex, deleteCount)").
 
 \section2 QByteArray to JavaScript ArrayBuffer
 

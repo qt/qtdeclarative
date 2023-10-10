@@ -22,7 +22,7 @@ Wherever the type definitions come from, the engine will enforce type-safety
 for properties and instances of those types.
 
 
-\section1 Value Types
+\section1 QML Value Types
 
 The QML language has built-in support for various primitive types including
 integers, double-precision floating point numbers, strings, and boolean values.
@@ -32,6 +32,35 @@ passed as arguments to methods of objects.
 See the \l{qtqml-typesystem-valuetypes.html}{QML Value Types} documentation for
 more information about value types.
 
+\section1 QML Object Types
+
+A QML object type is a type from which a QML object can be instantiated. QML
+object types are derived from \l QtObject, and are provided by QML modules.
+Applications can import these modules to use the object types they provide.
+The \c QtQuick module provides the most common object types needed to create
+user interfaces in QML.
+
+Finally, every QML document implicitly defines a QML object type, which can be
+re-used in other QML documents.  See the documentation about
+\l{qtqml-typesystem-objecttypes.html}{object types in the QML type system} for
+in-depth information about object types.
+
+\section1 QML Sequence Types
+
+Sequence types can be used to store sequences of values or objects.
+
+See the documentation about
+\l{qtqml-typesystem-sequencetypes.html}{sequence types in the QML type system}
+for in-depth information about sequence types.
+
+\section1 QML Namespaces
+
+QML Namespaces can be used to expose enumerations from C++ namespaces.
+
+See the documentation about
+\l{qtqml-typesystem-namespaces.html}{namespaces in the QML type system}
+for in-depth information about namespaces.
+
 \section1 JavaScript Types
 
 JavaScript objects and arrays are supported by the QML engine. Any standard
@@ -40,7 +69,7 @@ JavaScript type can be created and stored using the generic \l var type.
 For example, the standard \c Date and \c Array types are available, as below:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 Item {
     property var theArray: []
@@ -57,18 +86,5 @@ Item {
 
 See \l {qtqml-javascript-expressions.html}{JavaScript Expressions in QML Documents} for more details.
 
-
-\section1 QML Object Types
-
-A QML object type is a type from which a QML object can be instantiated. QML
-object types are derived from \l QtObject, and are provided by QML modules.
-Applications can import these modules to use the object types they provide.
-The \c QtQuick module provides the most common object types needed to create
-user interfaces in QML.
-
-Finally, every QML document implicitly defines a QML object type, which can be
-re-used in other QML documents.  See the documentation about
-\l{qtqml-typesystem-objecttypes.html}{object types in the QML type system} for
-in-depth information about object types.
 
 */

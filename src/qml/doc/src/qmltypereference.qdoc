@@ -50,6 +50,21 @@ provided:
 
 \annotatedlist qtqmlvaluetypes
 
+\section1 Sequence Types
+
+The following \l{qtqml-typesystem-topic.html#sequence-types}{QML sequence types}
+are provided by the Qt QML module in addition to the ones registered with each
+value type and object type:
+
+\list
+  \li \c {std::vector<QString>}
+  \li \c {std::vector<QUrl>}
+  \li \c {std::vector<bool>}
+  \li \c {std::vector<int>}
+  \li \c {std::vector<float>}
+  \li \c {std::vector<double>}
+\endlist
+
 \section1 Object Types
 
 The following \l{qtqml-typesystem-objecttypes.html}{QML object types} are
