@@ -347,4 +347,65 @@ output:
     MouseArea clicked
     Send clicked
 \endcode
-*/
+
+\note Connections to function objects will stay alive as long as the sender of the signal is alive.
+This behavior is analogous to the 3-argument version of QObject::connect() in C++.
+
+\qml
+Window {
+    visible: true
+    width: 400
+    height: 400
+
+    Item {
+        id: item
+        property color globalColor: "red"
+
+        Button {
+            text: "change global color"
+            onPressed: {
+                item.globalColor = item.globalColor === Qt.color("red") ? "green" : "red"
+            }
+        }
+
+        Button {
+            x: 150
+            text: "clear rectangles"
+            onPressed: repeater.model = 0
+        }
+
+        Repeater {
+            id: repeater
+            model: 5
+            Rectangle {
+                id: rect
+                color: "red"
+                width: 50
+                height: 50
+                x: (width + 2) * index + 2
+                y: 100
+                Component.onCompleted: {
+                    if (index % 2 === 0) {
+                        item.globalColorChanged.connect(() => {
+                            rect.color = item.globalColor
+                        })
+                    }
+                }
+            }
+        }
+    }
+}
+\endqml
+
+In the contrived example above, the goal is to flip the color of every even rectangle to follow
+some global color. To achieve this, for every even rectangle, a connection is made between the
+globalColorChanged signal and a function to set the rectangle's color. This works as expected while
+the rectangles are alive. However, once the clear button is pressed, the rectangles are gone but
+the function handling the signal is still called every time the signal is emitted. This can be
+seen by the error messages thrown by the function trying to run in the background when changing
+the global color.
+
+In the current setup, the connections would only be destroyed once the item holding
+globalColor is destroyed. To prevent the connections from lingering on, they can be explicitly
+disconnected when the rectangles are being destroyed.
+ */
