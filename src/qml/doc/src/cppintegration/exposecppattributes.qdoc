@@ -91,7 +91,8 @@ Instead of:
 \badcode
 using FooEnum = Foo::Enum;
 
-class Bar : public QObject {
+class Bar : public QObject
+{
     Q_OBJECT
     Q_PROPERTY(FooEnum enum READ enum WRITE setEnum NOTIFY enumChanged)
 };
@@ -100,37 +101,46 @@ class Bar : public QObject {
 Refer to the type directly:
 
 \code
-class Bar : public QObject {
+class Bar : public QObject
+{
     Q_OBJECT
     Q_PROPERTY(Foo::Enum enum READ enum WRITE setEnum NOTIFY enumChanged)
 };
 \endcode
 
+In order to make \c Message available you need to use \l{QML_ELEMENT} in C++
+and \l{qt_add_qml_module} in CMake.
+
 \code
 class Message : public QObject
 {
     Q_OBJECT
+    QML_ELEMENT
     Q_PROPERTY(QString author READ author WRITE setAuthor NOTIFY authorChanged)
 public:
-    void setAuthor(const QString &a) {
+    void setAuthor(const QString &a)
+    {
         if (a != m_author) {
             m_author = a;
             emit authorChanged();
         }
     }
-    QString author() const {
+
+    QString author() const
+    {
         return m_author;
     }
+
 signals:
     void authorChanged();
+
 private:
     QString m_author;
 };
 \endcode
 
-If an instance of this class was \l{Embedding C++ Objects into QML with Context
-Properties}{set as a context property} when loading a file named \c MyItem.qml
-from C++:
+An instance of \c Message can be passed as required property to a file called
+\c MyItem.qml to make it available:
 
 \code
  int main(int argc, char *argv[]) {
@@ -138,7 +148,7 @@ from C++:
 
      QQuickView view;
      Message msg;
-     view.engine()->rootContext()->setContextProperty("msg", &msg);
+     view.setInitialProperties({{"msg", &msg}});
      view.setSource(QUrl::fromLocalFile("MyItem.qml"));
      view.show();
 
@@ -150,9 +160,11 @@ Then, the \c author property could be read from \c MyItem.qml:
 
 \qml
 // MyItem.qml
-import QtQuick 2.0
+import QtQuick
 
 Text {
+    required property Message msg
+
     width: 100; height: 100
     text: msg.author    // invokes Message::author() to get this value
 
@@ -389,6 +401,8 @@ that is a public slot:
  class MessageBoard : public QObject
  {
      Q_OBJECT
+     QML_ELEMENT
+
  public:
      Q_INVOKABLE bool postMessage(const QString &msg) {
          qDebug() << "Called the C++ method with" << msg;
@@ -402,7 +416,7 @@ that is a public slot:
  };
 \endcode
 
-If an instance of \c MessageBoard was set as the context data for a file \c
+If an instance of \c MessageBoard was set as the required property for a file \c
 MyItem.qml, then \c MyItem.qml could invoke the two methods as shown in the
 examples below:
 
@@ -416,7 +430,7 @@ examples below:
 
      MessageBoard msgBoard;
      QQuickView view;
-     view.engine()->rootContext()->setContextProperty("msgBoard", &msgBoard);
+     view.setInitialProperties({{"msgBoard", &msgBoard}});
      view.setSource(QUrl::fromLocalFile("MyItem.qml"));
      view.show();
 
@@ -431,6 +445,8 @@ examples below:
 import QtQuick 2.0
 
 Item {
+    required property MessageBoard msgBoard
+
     width: 100; height: 100
 
     MouseArea {
