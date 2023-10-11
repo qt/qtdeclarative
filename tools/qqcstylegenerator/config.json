@@ -150,7 +150,7 @@
         "component set": "GroupBoxTemplate${Theme}",
         "atoms": [
             {"atom": "background", "figmaPath": "GroupBoxBackground"},
-            {"atom": "contentItem", "figmaPath": "ContentItem"},
+            {"atom": "contentItem", "figmaPath": "groupBox, ContentItem"},
             {"atom": "label", "figmaPath": "Label", "export": "geometry"},
             {"atom": "label-background", "figmaPath": "Label, LabelBackground"},
             {"atom": "label-contentItem", "figmaPath": "Label, ContentItem", "export": "layout"},
