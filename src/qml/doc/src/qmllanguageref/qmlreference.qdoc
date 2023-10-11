@@ -49,6 +49,7 @@ modules.
         \li \l{qtqml-javascript-resources.html}{Defining JavaScript Resources In QML}
         \li \l{qtqml-javascript-imports.html}{Importing JavaScript Resources In QML}
         \li \l{qtqml-javascript-hostenvironment.html}{JavaScript Host Environment}
+        \li \l{qtqml-javascript-finetuning.html}{Configuring the JavaScript engine}
         \endlist
 
     \li \l{qtqml-typesystem-topic.html}{The QML Type System}
