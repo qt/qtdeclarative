@@ -177,9 +177,15 @@ protected:
 };
 \endcode
 
-Although the previous example would work, it is not optimal.  Real world incubation
-controllers should try and maximize the amount of idle time they consume - rather
-than a static amount like 5 milliseconds - while not disturbing the application.
+Although the example works, it is heavily simplified. Real world incubation controllers
+try and maximize the amount of idle time they consume while not disturbing the
+application. Using a static amount of 5 milliseconds like above may both leave idle
+time on the table in some frames and disturb the application in others.
+
+\l{QQuickWindow}, \l{QQuickView}, and \l{QQuickWidget} all pre-create an incubation
+controller that spaces out incubation over multiple frames using a more intelligent
+algorithm. You rarely have to write your own.
+
 */
 
 /*!
@@ -457,25 +463,37 @@ synchronously which, depending on the complexity of the object,  can cause notic
 stutters in the application.
 
 The use of QQmlIncubator gives more control over the creation of a QML object,
-including allowing it to be created asynchronously using application idle time.  The following
+including allowing it to be created asynchronously using application idle time. The following
 example shows a simple use of QQmlIncubator.
 
 \code
+// Initialize the incubator
 QQmlIncubator incubator;
 component->create(incubator);
-
-while (!incubator.isReady()) {
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
-}
-
-QObject *object = incubator.object();
 \endcode
 
-Asynchronous incubators are controlled by a QQmlIncubationController that is
-set on the QQmlEngine, which lets the engine know when the application is idle and
+Let the incubator run for a while (normally by returning control to the event loop),
+then poll it. There are a number of ways to get back to the incubator later. You may
+want to connect to one of the signals sent by \l{QQuickWindow}, or you may want to run
+a \l{QTimer} especially for that. You may also need the object for some specific
+purpose and poll the incubator when that purpose arises.
+
+\code
+// Poll the incubator
+if (incubator.isReady()) {
+    QObject *object = incubator.object();
+    // Use created object
+}
+\endcode
+
+Asynchronous incubators are controlled by a \l{QQmlIncubationController} that is
+set on the \l{QQmlEngine}, which lets the engine know when the application is idle and
 incubating objects should be processed.  If an incubation controller is not set on the
-QQmlEngine, QQmlIncubator creates objects synchronously regardless of the
-specified IncubationMode.
+\l{QQmlEngine}, \l{QQmlIncubator} creates objects synchronously regardless of the
+specified IncubationMode. By default, no incubation controller is set. However,
+\l{QQuickView}, \l{QQuickWindow} and \l{QQuickWidget} all set incubation controllers
+on their respective \l{QQmlEngine}s. These incubation controllers space out incubations
+across multiple frames while the view is being rendered.
 
 QQmlIncubator supports three incubation modes:
 \list
