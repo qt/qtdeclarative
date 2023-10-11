@@ -17,7 +17,7 @@ T.GroupBox {
     readonly property real __deltaX: (config.background.x - config.label.x) || 0
     spacing: (__deltaY - config.label.height) || 0
 
-    topPadding: (config.topPadding || 0) + (spacing >= 0 ? (implicitLabelHeight + spacing) : __deltaY)
+    topPadding: (config.topPadding || 0) + (spacing >= 0 ? (label.height + spacing) : __deltaY)
     bottomPadding: config.bottomPadding || 0
     leftPadding: (config.leftPadding || 0) + (__deltaX >= 0 ? __deltaX : 0)
     rightPadding: config.rightPadding || 0
@@ -41,6 +41,8 @@ T.GroupBox {
         leftPadding: control.config.label_contentItem.leftPadding || 0
         rightPadding: control.config.label_contentItem.rightPadding || 0
         bottomPadding: control.config.label_contentItem.bottomPadding || 0
+
+        height: Math.max(implicitHeight, config.label.height)
 
         text: control.title
         font: control.font
