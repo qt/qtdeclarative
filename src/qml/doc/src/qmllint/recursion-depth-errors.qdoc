@@ -5,22 +5,49 @@
 \page qmllint-warnings-and-errors-recursion-depth-errors.html
 \ingroup qmllint-warnings-and-errors
 
-\title recursion-depth-errors
-\brief BRIEF
+\title Recursion Depths Errors
+\brief Qml statement or expression is too deeply nested.
 
-\section1 recursion-depth-errors
-
+\section1 Maximum Statement Or Expression Depth Exceeded
 \section2 What happened?
-TODO
+A QML statement or expression was too deeply nested for the compiler. This usually only happens for
+generated code where statements or expressions can be very long, as the recursion limit is usually
+large enough for any sensible QML document.
 
 \section2 Why is this bad?
-TODO
+The QML engine will not be able to run this code.
 
 \section2 Example
 \qml
+import QtQuick
+
+Item {
+    function f() {
+        let x = 1 + 1 + .... + 1 // maximum depth exceeded: add too many ones together
+        return x
+    }
+
+    Item { Item { .... } } // maximum depth exceeded: too many nested Item's
+}
 \endqml
-You can fix this warning by TODO
+
+You can fix this warning by auto-generating smaller code pieces. You could split deeply nested
+Components in multiple files or inline components, or split deeply nested expressions into multiple
+expressions:
 \qml
+import QtQuick
+
+Item {
+    function f() {
+        let x = 1 + 1 + .... + 1 // first half of the split
+        x += 1 + 1 + .... + 1 // second half of the split
+        return x
+    }
+
+    component NestedItem : Item { Item {... }} // first half of the nested Item
+    component DeeplyNestedItem: Item { ... NestedItem{} ... } // second half of the nested Items + NestedItem
+    DeeplyNestedItem {}
+}
 \endqml
 */
 
