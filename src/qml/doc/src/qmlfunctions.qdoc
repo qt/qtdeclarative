@@ -60,7 +60,7 @@
   \include {qualified-class-name.qdocinc} {class name must be qualified}
 
   \sa {Choosing the Correct Integration Method Between C++ and QML}, QML_NAMED_ELEMENT(),
-      Q_REVISION(), QML_ADDED_IN_MINOR_VERSION()
+      Q_REVISION(), QML_ADDED_IN_VERSION()
 */
 
 /*!
@@ -308,13 +308,33 @@
 */
 
 /*!
+  \macro QML_ADDED_IN_VERSION(MAJOR, MINOR)
+  \relates QQmlEngine
+
+  Declares that the enclosing type or namespace was added in the specified
+  \a{MAJOR}.\a{MINOR} version. The version is assumed to be in line with any
+  revisions given by \l Q_REVISION() macros on methods, slots, or signals,
+  and any REVISION() attributes on properties declared with \l Q_PROPERTY().
+
+  \l QML_ADDED_IN_VERSION() only takes effect if the type or namespace is
+  available in QML, by having a \l QML_ELEMENT, \l QML_NAMED_ELEMENT(),
+  \l QML_ANONYMOUS, or \l QML_INTERFACE macro.
+
+  If the QML module the type belongs to is imported with a lower version than
+  the one determined this way, the QML type is invisible.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT
+*/
+
+/*!
   \macro QML_ADDED_IN_MINOR_VERSION(VERSION)
   \relates QQmlEngine
+  \deprecated [6.7] Use QML_ADDED_IN_VERSION and specify the full version
 
   Declares that the enclosing type or namespace was added in the specified minor
   \a VERSION, relative to the module major version. The minor version is assumed
   to be in line with any revisions given by \l Q_REVISION() macros on methods,
-  slots, or signals, and any REVISION tags on properties declared with
+  slots, or signals, and any REVISION() attributes on properties declared with
   \l Q_PROPERTY().
 
   \l QML_ADDED_IN_MINOR_VERSION() only takes effect if the type or namespace is
@@ -324,17 +344,37 @@
   If the QML module the type belongs to is imported with a lower version than
   the one determined this way, the QML type is invisible.
 
-  \sa QML_ELEMENT, QML_NAMED_ELEMENT()
+  \sa QML_ADDED_IN_VERSION, QML_ELEMENT, QML_NAMED_ELEMENT
+*/
+
+/*!
+  \macro QML_REMOVED_IN_VERSION(MAJOR, MINOR)
+  \relates QQmlEngine
+
+  Declares that the enclosing type or namespace was removed in the specified
+  \a{MAJOR}.\a{MINOR} version. This is primarily useful when replacing the
+  implementation of a QML type. If a corresponding \l QML_ADDED_IN_VERSION()
+  is present on a different type or namespace of the same QML name, then the
+  removed type is used when importing versions of the module lower than
+  \a{MAJOR}.\a{MINOR}, and the added type is used when importing
+  versions of the module greater or equal \a{MAJOR}.\a{MINOR}.
+
+  \l QML_REMOVED_IN_VERSION() only takes effect if type or namespace is
+  available in QML, by having a \l QML_ELEMENT, \l QML_NAMED_ELEMENT(),
+  \l QML_ANONYMOUS, or \l QML_INTERFACE macro.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT
 */
 
 /*!
   \macro QML_REMOVED_IN_MINOR_VERSION(VERSION)
   \relates QQmlEngine
+  \deprecated [6.7] Use QML_REMOVED_IN_VERSION and specify the full version
 
   Declares that the enclosing type or namespace was removed in the specified
   minor \a VERSION, relative to the module major version. This is primarily
   useful when replacing the implementation of a QML type. If a corresponding
-  \l QML_ADDED_IN_MINOR_VERSION() is present on a different type or namespace of
+  \l QML_ADDED_IN_VERSION() is present on a different type or namespace of
   the same QML name, then the removed type is used when importing versions of
   the module lower than \a VERSION, and the added type is used when importing
   versions of the module greater or equal \a VERSION.
@@ -343,7 +383,7 @@
   available in QML, by having a \l QML_ELEMENT, \l QML_NAMED_ELEMENT(),
   \l QML_ANONYMOUS, or \l QML_INTERFACE macro.
 
-  \sa QML_ELEMENT, QML_NAMED_ELEMENT()
+  \sa QML_REMOVED_IN_VERSION, QML_ELEMENT, QML_NAMED_ELEMENT
 */
 
 /*!
@@ -368,7 +408,7 @@
   \note Keeping multiple \l{PAST_MAJOR_VERSIONS} around is computationally
         expensive.
 
-  \sa QML_ELEMENT, QML_ADDED_IN_MINOR_VERSION
+  \sa QML_ELEMENT, QML_ADDED_IN_VERSION
 */
 
 /*!
@@ -454,6 +494,7 @@
 
   Declares that any \l QML_ELEMENT, \l QML_NAMED_ELEMENT(), \l QML_ANONYMOUS,
   \l QML_INTERFACE, \l QML_UNCREATABLE(), \l QML_SINGLETON,
+  \l QML_ADDED_IN_VERSION(), \l QML_REMOVED_IN_VERSION(),
   \l QML_ADDED_IN_MINOR_VERSION(), \l QML_REMOVED_IN_MINOR_VERSION(),
   \l QML_ATTACHED(), \l QML_EXTENDED(), or \l  QML_EXTENDED_NAMESPACE() macros
   in the enclosing C++ type do not apply to the enclosing type but instead to
@@ -480,6 +521,7 @@
 
   Declares that any \l QML_ELEMENT, \l QML_NAMED_ELEMENT(), \l QML_ANONYMOUS,
   \l QML_INTERFACE, \l QML_UNCREATABLE(), \l QML_SINGLETON,
+  \l QML_ADDED_IN_VERSION(), \l QML_REMOVED_IN_VERSION(),
   \l QML_ADDED_IN_MINOR_VERSION(), or \l QML_REMOVED_IN_MINOR_VERSION()
   macros in the enclosing C++ namespace do not apply to the enclosing type but
   instead to \a FOREIGN_NAMESPACE. The enclosing namespace still needs to be
