@@ -5,22 +5,19 @@
 \page qmllint-warnings-and-errors-deprecated.html
 \ingroup qmllint-warnings-and-errors
 
-\title deprecated
-\brief BRIEF
+\title Deprecated
+\brief A deprecated property or type was used.
 
-\section1 deprecated
+\section1 Deprecated Binding or Type
 
 \section2 What happened?
-TODO
+A deprecated type was instantiated, a deprecated property was used or a deprecated method was
+called.
 
 \section2 Why is this bad?
-TODO
+Types, properties and methods can be deprecated for different reasons, please refer to the
+documentation of the deprecated item to find out why they were deprecated.
 
-\section2 Example
-\qml
-\endqml
-You can fix this warning by TODO
-\qml
-\endqml
+You can fix the deprecation warning by following the advice on the deprecation notice in the
+documentation of the deprecated item.
 */
-
