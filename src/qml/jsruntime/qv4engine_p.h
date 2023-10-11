@@ -655,6 +655,7 @@ public:
     int maxGCStackSize() const;
 
     bool checkStackLimits();
+    int safeForAllocLength(qint64 len64);
 
     bool canJIT(Function *f = nullptr)
     {
@@ -723,6 +724,9 @@ public:
     QQmlRefPointer<ExecutableCompilationUnit> loadModule(const QUrl &_url, const ExecutableCompilationUnit *referrer = nullptr);
 
 private:
+    template<int Frames>
+    friend struct ExecutionEngineCallDepthRecorder;
+
 #if QT_CONFIG(qml_debug)
     QScopedPointer<QV4::Debugging::Debugger> m_debugger;
     QScopedPointer<QV4::Profiling::Profiler> m_profiler;
@@ -753,14 +757,17 @@ private:
 };
 
 #define CHECK_STACK_LIMITS(v4) if ((v4)->checkStackLimits()) return Encode::undefined(); \
-    ExecutionEngineCallDepthRecorder _executionEngineCallDepthRecorder(v4);
+    ExecutionEngineCallDepthRecorder<1> _executionEngineCallDepthRecorder(v4);
 
+template<int Frames = 1>
 struct ExecutionEngineCallDepthRecorder
 {
     ExecutionEngine *ee;
 
-    ExecutionEngineCallDepthRecorder(ExecutionEngine *e): ee(e) { ++ee->callDepth; }
-    ~ExecutionEngineCallDepthRecorder() { --ee->callDepth; }
+    ExecutionEngineCallDepthRecorder(ExecutionEngine *e): ee(e) { ee->callDepth += Frames; }
+    ~ExecutionEngineCallDepthRecorder() { ee->callDepth -= Frames; }
+
+    bool hasOverflow() const { return ee->callDepth >= ExecutionEngine::maxCallDepth; }
 };
 
 inline bool ExecutionEngine::checkStackLimits()

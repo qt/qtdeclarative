@@ -1892,6 +1892,25 @@ int ExecutionEngine::maxGCStackSize() const
     return m_maxGCStackSize;
 }
 
+/*!
+    \internal
+    Returns \a length converted to int if its safe to
+    pass to \c Scope::alloc.
+    Otherwise it throws a RangeError, and returns 0.
+ */
+int ExecutionEngine::safeForAllocLength(qint64 len64)
+{
+    if (len64 < 0ll || len64 > qint64(std::numeric_limits<int>::max())) {
+        this->throwRangeError(QStringLiteral("Invalid array length."));
+        return 0;
+    }
+    if (len64 > qint64(this->jsStackLimit - this->jsStackTop)) {
+        this->throwRangeError(QStringLiteral("Array too large for apply()."));
+        return 0;
+    }
+    return len64;
+}
+
 ReturnedValue ExecutionEngine::global()
 {
     return globalObject->asReturnedValue();
