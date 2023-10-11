@@ -5,11 +5,123 @@
 \page qmllint-warnings-and-errors-signal-handler-parameters.html
 \ingroup qmllint-warnings-and-errors
 
-\title signal-handler-parameters
-\brief BRIEF
+\title Signal Handler Parameters
+\brief The signal handler does not satisfy the signal types.
 
-\section1 signal-handler-parameters
+This warning category has multiple warnings:
+\list
+    \li \l{Type Of Parameter In Signal Was Not Found}
+    \li \l{Type Of Parameter In Signal Cannot Be Used}
+    \li \l{The Signal Has A Parameter Of The Same Name}
+\endlist
 
+
+\section1 Type Of Parameter In Signal Was Not Found
+
+\section2 What happened?
+A signal handler tried to handle a signal with parameters of unknown QML types.
+
+Usually, this happens when handling C++ defined signals in QML when the module with the C++ defined
+signal does not properly declare its QML dependency to another QML module. If the module with the
+C++ defined signal compiles, then this is a sign that a dependency was only declared on the C++
+level and not on \l{qt_add_qml_module#declaring-module-dependencies}{the QML module level}.
+
+\note If you are importing QML modules with external dependencies, verify that they are
+actually installed, and that their modules end up in an
+\l{Import Statements#qml-import-path}{import path}.
+
+The warning might also indicate that the parameter type of the C++ defined signal does not have
+a QML counterpart. The parameter type might be missing the
+\l{QQmlEngine Class#QML_ELEMENT}{QML_ELEMENT} macro, for example. Refer to
+\l{Defining QML Types from C++} or \l{Overview - QML and C++ Integration} in this case.
+
+\section2 Why is this bad?
+In the first case, the module with the C++ signal has an undeclared dependency on the QML module
+level, which makes it hard to use the module, as users of the module need to guess the module's
+hidden dependencies.
+
+In both cases, QML tooling is not able to find the QML counterpart of the
+C++ type: the \l{Qt Quick Compiler}{compiler} can't compile this signal handler to
+C++ and \l{qmllint} as well as \l{QML Language Server} can't analyze this handler.
+
+\section2 Example
+
+Let our module have a C++ class with one \c{helloWorld} signal:
+\code
+#include <QQuickItem>
+#include <QtQml/qqmlregistration.h>
+#include <QObject>
+
+class MyCppObject : public QObject
+{
+ Q_OBJECT
+ QML_ELEMENT
+public:
+ MyCppObject(QObject *parent = nullptr)
+     : QObject(parent)
+ {}
+
+signals:
+ void helloWorld(QQuickItem *i);
+
+};
+\endcode
+with following CMakeLists.txt:
+\badcode
+find_package(Qt6 6.5 REQUIRED COMPONENTS Quick QuickControls2)
+
+qt_standard_project_setup(REQUIRES 6.5)
+
+qt_add_executable(mymodule
+ main.cpp
+)
+
+qt_add_qml_module(mymodule
+    URI MyModule
+    VERSION 1.0
+    QML_FILES Main.qml
+    SOURCES mycppobject.cpp mycppobject.h
+)
+
+# declare C++ dependency to Quick
+target_link_libraries(appuntitled27
+ PRIVATE Qt6::Quick
+)
+\endcode
+The C++ dependency \c{Quick} was declared, such that this class can compile and the QQuickItem
+include can be found. Also, mymodule does not have any dependency on QtQuick.
+
+Now, lets try to handle this \c{helloWorld} signal in QML:
+\qml
+import MyModule // name of the module with MyCppObject
+
+MyCppObject {
+    onHelloWorld: function (x) { console.log(x); } // not ok: Type QQuickItem was not found!
+}
+\endqml
+
+The reason of the warning message is that in the QML code, \c{QQuickItem} and its QML counterpart
+\c{Item} are not known: the dependency 'QtQuick' of MyModule was not declared in the CMakeLists.txt!
+
+You can add it as following in the qt_add_qml_module() call:
+\badcode
+qt_add_qml_module(mymodule
+    URI MyModule
+    ...
+    # declare QML dependencies to QtQuick:
+    DEPENDENCIES QtQuick
+    ...
+)
+\endcode
+
+Now, the QML code should be fine again!
+
+\sa {qt_add_qml_module#declaring-module-dependencies}
+
+\omit
+TODO: QML Lint cannot detect if you pass signal parameters by value, reference or pointer!
+Therefore, it will never print that warning.
+\section1 Type Of Parameter In Signal Should Be Passed By Pointer
 \section2 What happened?
 TODO
 
@@ -21,6 +133,128 @@ TODO
 \endqml
 You can fix this warning by TODO
 \qml
+\endqml
+
+TODO: QML Lint cannot detect if you pass signal parameters by value, reference or pointer!
+Therefore, it will never print that warning.
+that warning
+\section1 Type Of Parameter In Signal Should Be Passed By Value Or Const Reference
+\section2 What happened?
+TODO
+
+\section2 Why is this bad?
+TODO
+
+\section2 Example
+\qml
+\endqml
+You can fix this warning by TODO
+\qml
+\endqml
+
+\endomit
+
+\section1 Signal Handler Has More Formal Parameters Than The Signal It Handles
+\section2 What happened?
+A signal handler expects more parameters than what the signal will actually provide.
+
+\section2 Why is this bad?
+The extra parameters will be undefined.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    signal helloWorld(x: QtObject)  // signal expects only one parameter
+
+    onHelloWorld: function (x,y,z) {} // not ok: signal handler handles three parameters
+}
+\endqml
+You can fix this warning by removing the extra parameters of the signal handler:
+\qml
+import QtQuick
+
+Item {
+    signal helloWorld(x: QtObject)  // signal expects only one parameter
+
+    onHelloWorld: function (x) {} // ok: signal handler handles one parameter
+}
+\endqml
+
+It can also be fixed by adding the missing parameters to the signal's declaration:
+\qml
+import QtQuick
+
+Item {
+    signal helloWorld(x: QtObject, y: int, y: int)  // signal expects three parameters
+
+    onHelloWorld: function (x,y,z) {} // ok: signal handler handles three parameters
+}
+\endqml
+
+\section1 The Signal Has A Parameter Of The Same Name
+\section2 What happened?
+The signal or signal handler might have swapped some of its arguments, or some arguments might be
+missing.
+
+\section2 Why is this bad?
+This is very probably a typo and not intended by the user.
+
+\section2 Example
+\section3 Missing Arguments
+\qml
+import QtQuick
+
+Item {
+    signal helloWorld(x: QtObject, y: int)
+
+    onHelloWorld: function (y) {} // not ok: it seems that x was forgotten
+}
+
+\endqml
+You can fix this warning by adding the missing parameters:
+\qml
+import QtQuick
+
+Item {
+    signal helloWorld(x: QtObject, y: int)
+
+    onHelloWorld: function (x, y) {} // ok: parameters have the same order as in helloWorld
+}
+\endqml
+or by renaming the first parameter:
+\qml
+import QtQuick
+
+Item {
+    signal helloWorld(x: QtObject, y: int)
+
+    onHelloWorld: function (x) {} // ok: parameters have the same order as in helloWorld, even if y is missing
+}
+\endqml
+
+\section3 Swapped Arguments
+\qml
+import QtQuick
+
+Item {
+    signal helloWorld(x: QtObject, y: int)
+
+    onHelloWorld: function (y, x) {} // not ok: helloWorld expects first 'x' then 'y'
+}
+
+\endqml
+You can fix this warning by reordering the parameters in the correct order
+\qml
+import QtQuick
+
+Item {
+    signal helloWorld(x: QtObject, y: int)
+
+    onHelloWorld: function (x, y) {} // ok: parameters have the same order as in helloWorld
+}
+
 \endqml
 */
 
