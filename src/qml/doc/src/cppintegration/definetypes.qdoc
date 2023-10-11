@@ -88,7 +88,7 @@ using either the class name or an explicitly given name as QML type name. The
 minor version(s) will be derived from any revisions attached to properties,
 methods, or signals. The default minor version is \c 0. You can explicitly
 restrict the type to be available only from specific minor versions by adding
-the \c QML_ADDED_IN_MINOR_VERSION() macro to the class declaration. Clients can
+the \c QML_ADDED_IN_VERSION() macro to the class declaration. Clients can
 import suitable versions of the namespace in order to use the type.
 
 For example, suppose there is a \c Message class with \c author and
@@ -414,7 +414,7 @@ available when \c MyTypes version 1.1 or higher is imported. Imports of
 \c MyTypes version 1.0 remain unaffected.
 
 For the same reason, new types introduced in later versions should be tagged
-with the QML_ADDED_IN_MINOR_VERSION macro.
+with the QML_ADDED_IN_VERSION macro.
 
 This feature of the language allows for behavioural changes to be made
 without breaking existing applications. Consequently QML module authors
