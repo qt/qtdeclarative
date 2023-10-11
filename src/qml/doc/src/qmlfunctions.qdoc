@@ -9,14 +9,24 @@
   class or namespace name as the QML element name.
 
   For example, this makes the C++ class \c Slider available as a QML type
-  named \c Slider.
+  named \c Slider. All its properties, invokable methods and enums are exposed.
 
   \code
   class Slider : public QObject
   {
       Q_OBJECT
       QML_ELEMENT
-      ...
+      Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged FINAL)
+      // ...
+  public:
+      enum Slippiness {
+          Dry, Wet, Icy
+      };
+      Q_ENUM(Slippiness)
+
+      Q_INVOKABLE void slide(Slippiness slippiness);
+
+      // ...
   }
   \endcode
 
@@ -46,12 +56,34 @@
   import com.mycompany.qmlcomponents 1.0
 
   Slider {
+      value: 12
+      Component.onCompleted: slide(Slider.Icy)
+
       // ...
   }
   \endqml
 
   You can also make namespaces tagged with Q_NAMESPACE available this way, in
-  order to expose any enums tagged with Q_ENUM_NS they contain.
+  order to expose any enums tagged with Q_ENUM_NS they contain:
+
+  \code
+  namespace MyNamespace {
+    Q_NAMESPACE
+    QML_ELEMENT
+
+    enum MyEnum {
+        Key1,
+        Key2,
+    };
+    Q_ENUM_NS(MyEnum)
+  }
+  \endcode
+
+  In QML, you can then use the enums:
+
+  \qml
+  Component.onCompleted: console.log(MyNamespace.Key2)
+  \endqml
 
   \b{NOTE:} When classes have the same name but are located in different namespaces using
   \l QML_ELEMENT on both of them will cause a conflict.
@@ -793,7 +825,7 @@
         Key1,
         Key2,
     };
-    Q_ENUM(MyEnum)
+    Q_ENUM_NS(MyEnum)
   }
 
   //...
