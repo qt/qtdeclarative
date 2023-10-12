@@ -55,6 +55,11 @@ T.ComboBox {
     contentItem: T.TextField {
         text: control.editable ? control.editText : control.displayText
 
+        implicitWidth: implicitBackgroundWidth + leftInset + rightInset
+                       || contentWidth + leftPadding + rightPadding
+        implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                                 contentHeight + topPadding + bottomPadding)
+
         enabled: control.editable
         autoScroll: control.editable
         readOnly: control.down
@@ -77,5 +82,6 @@ T.ComboBox {
         __combobox: control
         y: control.height
         height: Math.min(contentItem.implicitHeight + topPadding + bottomPadding, control.Window.height - topMargin - bottomMargin)
+        width: control.width
     }
 }

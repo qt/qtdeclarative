@@ -2,10 +2,13 @@ import QtQuick
 import QtQuick.FigmaStyle
 import QtQuick.Templates as T
 
-Popup {
+T.Popup {
     id: popup
 
-    required property T.ComboBox __combobox
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
+                            contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                             contentHeight + topPadding + bottomPadding)
 
     topPadding: config.topPadding || 0
     leftPadding: config.leftPadding || 0
@@ -16,6 +19,8 @@ Popup {
     bottomInset: -config.bottomInset || 0
     leftInset: -config.leftInset || 0
     rightInset: -config.rightInset || 0
+
+    required property T.ComboBox __combobox
 
     readonly property string __currentState: [
         !__combobox.enabled && "disabled",

@@ -97,7 +97,7 @@
         "page": "Components",
         "component set": "ComboBoxTemplate${Theme}",
         "atoms": [
-            {"atom": "background", "figmaPath": "ComboBoxPopup"},
+            {"atom": "background", "figmaPath": "PopupBackground"},
             {"atom": "contentItem", "figmaPath": "PopupLayout, ContentItem"}
         ],
         "states": [
