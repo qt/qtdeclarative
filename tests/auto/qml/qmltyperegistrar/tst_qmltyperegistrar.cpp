@@ -730,4 +730,36 @@ void tst_qmltyperegistrar::valueTypeSelfReference()
     })"));
 }
 
+void tst_qmltyperegistrar::foreignNamespaceFromGadget()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent c(&engine);
+        c.setData(QStringLiteral(R"(
+            import QtQml
+            import QmlTypeRegistrarTest
+            QtObject {
+                objectName: 'b' + NetworkManager.B
+            }
+        )").toUtf8(), QUrl("foreignNamespaceFromGadget.qml"));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QCOMPARE(o->objectName(), QStringLiteral("b1"));
+    }
+
+    {
+        QQmlComponent c(&engine);
+        c.setData(QStringLiteral(R"(
+            import QtQml
+            import QmlTypeRegistrarTest
+            QtObject {
+                objectName: 'b' + NotNamespaceForeign.B
+            }
+        )").toUtf8(), QUrl("foreignNamespaceFromGadget2.qml"));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QCOMPARE(o->objectName(), QStringLiteral("b1"));
+    }
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

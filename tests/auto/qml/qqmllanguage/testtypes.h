@@ -2388,6 +2388,32 @@ public:
     }
 };
 
+
+struct ForeignNamespace
+{
+    Q_GADGET
+public:
+    enum Abc { A, B, C, D };
+    Q_ENUM(Abc)
+};
+
+class ForeignNamespaceForeign
+{
+    Q_GADGET
+    QML_ELEMENT
+    QML_FOREIGN_NAMESPACE(ForeignNamespace)
+};
+
+class LeakingForeignNamespaceForeign : public QObject, public ForeignNamespaceForeign
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    enum AnotherAbc { D, C, B, A };
+    Q_ENUM(AnotherAbc)
+};
+
 struct ValueTypeWithLength
 {
     Q_GADGET

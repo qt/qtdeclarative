@@ -638,6 +638,36 @@ public:
     inline int row() const { return v.row(); }
 };
 
+
+namespace NetworkManager {
+Q_NAMESPACE
+
+enum NM { A, B, C};
+Q_ENUM_NS(NM)
+}
+
+struct NMForeign
+{
+    Q_GADGET
+    QML_NAMED_ELEMENT(NetworkManager)
+    QML_FOREIGN_NAMESPACE(NetworkManager)
+};
+
+struct NotNamespace {
+    Q_GADGET
+public:
+    enum Abc {
+        A, B, C, D
+    };
+    Q_ENUM(Abc);
+};
+
+struct NotNamespaceForeign {
+    Q_GADGET
+    QML_FOREIGN_NAMESPACE(NotNamespace)
+    QML_ELEMENT
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -694,6 +724,7 @@ private slots:
     void withNamespace();
     void sequenceRegistration();
     void valueTypeSelfReference();
+    void foreignNamespaceFromGadget();
 
 private:
     QByteArray qmltypesData;

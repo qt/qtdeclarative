@@ -208,6 +208,11 @@ void QmlTypeRegistrar::write(QTextStream &output)
         const QString className = classDef[QLatin1String("qualifiedClassName")].toString();
 
         QString targetName = className;
+
+        // If either the foreign or the local part is a namespace we need to
+        // generate a namespace registration.
+        bool targetIsNamespace = classDef.value(QLatin1String("namespace")).toBool();
+
         QString extendedName;
         bool seenQmlElement = false;
         QString qmlElementName;
@@ -220,11 +225,14 @@ void QmlTypeRegistrar::write(QTextStream &output)
             if (name == QStringLiteral("QML.Element")) {
                 seenQmlElement = true;
                 qmlElementName = v[QStringLiteral("value")].toString();
-            } else if (name == QStringLiteral("QML.Foreign"))
+            } else if (name == QStringLiteral("QML.Foreign")) {
                 targetName = v[QLatin1String("value")].toString();
-            else if (name == QStringLiteral("QML.Extended"))
+            } else if (name == QStringLiteral("QML.ForeignIsNamespace")) {
+                targetIsNamespace = targetIsNamespace
+                        || (v[QLatin1String("value")].toString() == QLatin1String("true"));
+            } else if (name == QStringLiteral("QML.Extended")) {
                 extendedName = v[QStringLiteral("value")].toString();
-            else if (name == QStringLiteral("QML.AddedInVersion")) {
+            } else if (name == QStringLiteral("QML.AddedInVersion")) {
                 int version = v[QStringLiteral("value")].toString().toInt();
                 addedIn = QTypeRevision::fromEncodedVersion(version);
             } else if (name == QStringLiteral("QML.RemovedInVersion")) {
@@ -242,32 +250,24 @@ void QmlTypeRegistrar::write(QTextStream &output)
         // We want all related metatypes to be registered by name, so that we can look them up
         // without including the C++ headers. That's the reason for the QMetaType(foo).id() calls.
 
-        if (classDef.value(QLatin1String("namespace")).toBool()) {
+        if (targetIsNamespace) {
             // We need to figure out if the _target_ is a namespace. If not, it already has a
             // QMetaType and we don't need to generate one.
 
             QString targetTypeName = targetName;
-            const auto targetIsNamespace = [&]() {
-                if (className == targetName)
-                    return true;
+            const QList<QString> namespaces = MetaTypesJsonProcessor::namespaces(classDef);
 
-                const QStringList namespaces = MetaTypesJsonProcessor::namespaces(classDef);
-                const QJsonObject *target = QmlTypesClassDescription::findType(
-                        m_types, m_foreignTypes, targetName, namespaces);
+            const QJsonObject *target = QmlTypesClassDescription::findType(
+                    m_types, m_foreignTypes, targetName, namespaces);
 
-                if (!target)
-                    return false;
+            if (target && target->value(QLatin1String("object")).toBool())
+                targetTypeName += QLatin1String(" *");
 
-                if (target->value(QStringLiteral("namespace")).toBool())
-                    return true;
-
-                if (target->value(QStringLiteral("object")).toBool())
-                    targetTypeName += QStringLiteral(" *");
-
-                return false;
-            };
-
-            if (targetIsNamespace()) {
+            // If there is no foreign type, the local one is a namespace.
+            // Otherwise, only do metaTypeForNamespace if the target _metaobject_ is a namespace.
+            // Not if we merely consider it to be a namespace for QML purposes.
+            if (className == targetName
+                    || (target && target->value(QLatin1String("namespace")).toBool())) {
                 output << uR"(
     {
         Q_CONSTINIT static auto metaType = QQmlPrivate::metaTypeForNamespace(

@@ -7459,6 +7459,33 @@ LeakingForeignerForeign {
         QVERIFY(o->property("anotherAbc").isValid());
         QVERIFY(!o->property("abc").isValid());
     }
+
+    {
+        QQmlComponent c(&engine);
+        c.setData(R"(
+import StaticTest
+import QtQml
+QtObject {
+    objectName: 'b' + ForeignNamespaceForeign.B
+})", QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+        QCOMPARE(o->objectName(), "b1");
+    }
+    {
+        QQmlComponent c(&engine);
+        c.setData(R"(
+import StaticTest
+import QtQml
+QtObject {
+    objectName: 'b' + LeakingForeignNamespaceForeign.B
+})", QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+        QCOMPARE(o->objectName(), "b2");
+    }
 }
 
 void tst_qqmllanguage::attachedOwnProperties()
