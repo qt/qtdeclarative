@@ -144,6 +144,7 @@ void QmlTypesClassDescription::collect(
     const QList<QAnyStringView> namespaces = MetaTypesJsonProcessor::namespaces(*classDef);
 
     QAnyStringView foreignTypeName;
+    bool foreignIsNamespace = false;
     bool isConstructible = false;
     for (const QCborValue &classInfo : classInfos) {
         const QCborMap obj = classInfo.toMap();
@@ -212,6 +213,8 @@ void QmlTypesClassDescription::collect(
                 isSingleton = true;
         } else if (name == S_FOREIGN) {
             foreignTypeName = value;
+        } else if (name == S_FOREIGN_IS_NAMESPACE) {
+            foreignIsNamespace = (value == S_TRUE);
         } else if (name == S_OMIT_FROM_QML_TYPES) {
             if (value == S_TRUE)
                 omitFromQmlTypes = true;
@@ -230,7 +233,7 @@ void QmlTypesClassDescription::collect(
 
     // If the local type is a namespace the result can only be a namespace,
     // no matter what the foreign type is.
-    const bool isNamespace = classDef->value(S_NAMESPACE).toBool();
+    const bool isNamespace = foreignIsNamespace || classDef->value(S_NAMESPACE).toBool();
 
     if (!foreignTypeName.isEmpty()) {
         // We can re-use a type with own QML.* macros as target of QML.Foreign

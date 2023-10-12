@@ -19,7 +19,9 @@ QT_BEGIN_NAMESPACE
     inline constexpr void qt_qmlMarker_foreign() {}
 
 #define QML_FOREIGN_NAMESPACE(FOREIGN_NAMESPACE) \
-    Q_CLASSINFO("QML.Foreign", #FOREIGN_NAMESPACE)
+    Q_CLASSINFO("QML.Foreign", #FOREIGN_NAMESPACE) \
+    Q_CLASSINFO("QML.ForeignIsNamespace", "true") \
+    inline constexpr void qt_qmlMarker_foreign() {}
 
 #define QML_CUSTOMPARSER Q_CLASSINFO("QML.HasCustomParser", "true")
 
