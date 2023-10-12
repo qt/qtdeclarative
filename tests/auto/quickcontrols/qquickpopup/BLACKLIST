@@ -11,6 +11,7 @@ macos
 macos
 [focusMultiplePopup]
 macos
+opensuse-leap # QTBUG-118058
 # QTBUG-114718 (end)
 
 [overlay]
