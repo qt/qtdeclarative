@@ -18,8 +18,8 @@ class Q_QML_EXPORT QQmlFile
 {
 public:
     QQmlFile();
-    QQmlFile(QQmlEngine *, const QUrl &);
-    QQmlFile(QQmlEngine *, const QString &);
+    QQmlFile(QQmlEngine *engine, const QUrl &url);
+    QQmlFile(QQmlEngine *engine, const QString &url);
     ~QQmlFile();
 
     enum Status { Null, Ready, Error, Loading };
@@ -42,7 +42,7 @@ public:
     void load(QQmlEngine *, const QString &);
 
     void clear();
-    void clear(QObject *);
+    void clear(QObject *object);
 
 #if QT_CONFIG(qml_network)
     bool connectFinished(QObject *, const char *);
