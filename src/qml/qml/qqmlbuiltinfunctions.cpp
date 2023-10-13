@@ -87,6 +87,7 @@ the \l Qt::LeftButton and \l Qt::RightButton enumeration values as \c Qt.LeftBut
 
 
 \section1 Types
+\target globalqtobjecttypes
 
 The Qt object also contains helper functions for creating objects of specific
 data types. This is primarily useful when setting the properties of an item

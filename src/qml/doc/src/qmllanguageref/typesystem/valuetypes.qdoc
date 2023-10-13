@@ -52,20 +52,23 @@ document, with the following exceptions:
 
 \section2 Built-in Value Types Provided By The QML Language
 
-The built-in value types supported natively in the QML language are listed below:
+The built-in value types supported natively in the \l{The QML Reference}{QML language} are listed below:
 \annotatedlist qmlvaluetypes
 
 \section2 Value Types Provided By QML Modules
 
 QML modules may extend the QML language with more value types.
 
-The value types provided by the \c QtQml module are:
+For instance, the value types provided by the \c QtQml module are:
 \annotatedlist qtqmlvaluetypes
 
 The value types provided by the \c QtQuick module are:
 \annotatedlist qtquickvaluetypes
 
-The \l{QtQml::Qt}{Qt} global object provides useful functions for manipulating values of value types.
+The \l{QtQml::Qt}{Qt} global object provides \l{globalqtobjecttypes}{useful functions} for manipulating values of value
+types for the \l{Qt Qml} and \l{Qt Quick} modules.
+
+Other Qt modules will document their value types on their respective module pages.
 
 You may define your own value types as described in
 \l{qtqml-cppintegration-definetypes.html}{Defining QML Types from C++}.
