@@ -1407,7 +1407,7 @@
 
 /*!
   \macro QML_CONSTRUCTIBLE_VALUE
-  \internal
+  \since 6.5
   \relates QQmlEngine
 
   Marks the surrounding value type as constructible. That is, any \l Q_INVOKABLE
@@ -1437,12 +1437,35 @@
   }
   \endqml
 
+  You can also construct lists of values this way:
+
+  \qml
+  QtObject {
+      property list<myValueType> v: [5.4, 4.5, 3.3]
+  }
+  \endqml
+
+  If you make value types \l{ValueTypeBehavior}{addressable}, you can
+  use such a type in a \l{Type annotations and assertions}{type assertion}
+  to explicitly construct it:
+
+  \qml
+  pragma ValueTypeBehavior: Addressable
+
+  QtObject {
+      function process(d: real) {
+          let v = d as myValueType;
+          // v is a myValueType now, not a number
+      }
+  }
+  \endqml
+
   \sa QML_VALUE_TYPE
 */
 
 /*!
   \macro QML_STRUCTURED_VALUE
-  \internal
+  \since 6.5
   \relates QQmlEngine
 
   Marks the surrounding value type as structured. Structured value types can
@@ -1476,6 +1499,32 @@
 
   The extra parentheses are necessary to disambiguate the JavaScript object
   from what might be interpreted as a JavaScript code block.
+
+  You can also construct lists of values this way:
+
+  \qml
+  QtObject {
+      property list<myValueType> v: [
+          {d: 4.4, e: "a string"},
+          {d: 7.1, e: "another string"}
+      ]
+  }
+  \endqml
+
+  If you make value types \l{ValueTypeBehavior}{addressable}, you can
+  use such a type in a \l{Type annotations and assertions}{type assertion}
+  to explicitly construct it:
+
+  \qml
+  pragma ValueTypeBehavior: Addressable
+
+  QtObject {
+      function process(d: real) {
+          let v = {d: d, e: objectName} as myValueType;
+          // v is a myValueType now
+      }
+  }
+  \endqml
 
   \sa QML_VALUE_TYPE QML_CONSTRUCTIBLE_VALUE
 */
