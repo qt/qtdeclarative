@@ -5,22 +5,117 @@
 \page qmllint-warnings-and-errors-duplicate-property-binding.html
 \ingroup qmllint-warnings-and-errors
 
-\title duplicate-property-binding
-\brief BRIEF
+\title Duplicate Bindings
+\brief A property was bound multiple times.
 
-\section1 duplicate-property-binding
+This warning category has multiple warnings:
+\list
+    \li \l{Duplicate Interceptor On Property}
+    \li \l{Cannot Combine Value Source And Binding}
+    \li \l{Duplicate Value Source On Property}
+\endlist
+
+\section1 Duplicate Interceptor On Property
 
 \section2 What happened?
-TODO
+One property has multiple \l{Property Modifier Types}{interceptors}.
 
 \section2 Why is this bad?
-TODO
+Setting multiple interceptors on the same property is unsupported by the QML engine.
 
 \section2 Example
+
+Lets use \l{Behavior} as interceptor twice on the same property:
 \qml
+import QtQuick
+
+Rectangle {
+    Behavior on width {
+        NumberAnimation { duration: 1000 }
+    }
+    Behavior on width { // not ok: Duplicate interceptor on property "width" [duplicate-property-binding]
+        NumberAnimation { duration: 2000 }
+    }
+}
 \endqml
-You can fix this warning by TODO
+You can fix this warning by removing all but one \l{Behavior}:
 \qml
+import QtQuick
+
+Rectangle {
+    Behavior on width {
+        NumberAnimation { duration: 2000 }
+    }
+}
+
+\sa {Property Modifier Types}
+
+\section1 Duplicate Value Source On Property
+
+\section2 What happened?
+One property has multiple \l{Property Value Sources}{value sources}.
+
+\section2 Why is this bad?
+The value sources will show unexpected behavior when combined. See \l{Example}{example} below.
+
+\section2 Example
+
+Lets use \l{NumberAnimation} as value source twice on the same property:
+\qml
+import QtQuick
+
+Rectangle {
+    NumberAnimation on x { to: 50; duration: 1000 }
+    NumberAnimation on x { to: 10; duration: 100 } // not ok: Duplicate value source on property "x" [duplicate-property-binding]
+
+    onXChanged: console.log(x)
+}
 \endqml
+
+If you check the output of that program, you will see that the two NumberAnimation will interleave
+each other, which is probably not the effect that was intended.
+You can fix this warning by removing all but one \l{NumberAnimation}:
+\qml
+import QtQuick
+
+Rectangle {
+    NumberAnimation on x { to: 50; duration: 1000 }
+}
+\endqml
+
+
+\section1 Cannot Combine Value Source And Binding
+
+\section2 What happened?
+One property has a \l{Property Value Sources}{value source} and a binding on the same property.
+
+\section2 Why is this bad?
+The binding will updated the property value before the value source starts updating this property.
+This may lead to unexpected behavior, and is also harder to read.
+
+\section2 Example
+
+Lets use \l{NumberAnimation} as value source on the same property:
+\qml
+import QtQuick
+
+Rectangle {
+    NumberAnimation on x { to: 50; duration: 1000 } // not ok: Cannot combine value source and binding on property "x" [duplicate-property-binding]
+    x: 55
+
+    onXChanged: console.log(x)
+}
+\endqml
+
+If you check the output of that program, you will see that the \l{NumberAnimation} will animate
+from 55 to 50, which would be easier to read with following code:
+\qml
+import QtQuick
+
+Rectangle {
+    NumberAnimation on x { from: 55; to: 50; duration: 1000 } // ok: intentions are clearer now!
+}
+\endqml
+
 */
 
