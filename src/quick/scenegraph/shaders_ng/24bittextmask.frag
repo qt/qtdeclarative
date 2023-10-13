@@ -16,5 +16,5 @@ layout(std140, binding = 0) uniform buf {
 void main()
 {
     vec4 glyph = texture(_qt_texture, sampleCoord);
-    fragColor = vec4(glyph.rgb * ubuf.color.a, glyph.a);
+    fragColor = glyph * ubuf.color.a;
 }
