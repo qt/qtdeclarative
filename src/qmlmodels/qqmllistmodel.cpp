@@ -1916,6 +1916,7 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
 /*!
     \qmltype ListModel
     \instantiates QQmlListModel
+    \inherits AbstractListModel
     \inqmlmodule QtQml.Models
     \ingroup qtquick-models
     \brief Defines a free-form list data source.
@@ -1932,6 +1933,10 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
 
     Elements can be manipulated via the model using the setProperty() method, which
     allows the roles of the specified element to be set and changed.
+
+    ListModel inherits from \l{QAbstractListModel} and provides its \l{Q_INVOKABLE}
+    methods. You can, for example use \l{QAbstractItemModel::index} to retrieve a
+    \l{QModelIndex} for a row and column.
 
     \section1 Example Usage
 
