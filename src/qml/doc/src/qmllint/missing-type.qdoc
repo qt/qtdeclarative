@@ -5,22 +5,235 @@
 \page qmllint-warnings-and-errors-missing-type.html
 \ingroup qmllint-warnings-and-errors
 
-\title missing-type
-\brief BRIEF
+\title Missing Type
+\brief A type used in a binding or alias was not found.
 
-\section1 missing-type
+This warning category has multiple warnings:
+\list
+ \li \l{Cannot Deduce Type of Alias}
+ \li \l{No Type Found For Property}
+\endlist
+
+\section1 Cannot Deduce Type of Alias
 
 \section2 What happened?
-TODO
+An alias property points to a property with a C++ type whose QML counterpart was not found. This can
+be caused by importing a QML module which do not declare its QML dependencies on other modules.
+
+\note If you are importing QML modules with external dependencies, verify that they are
+actually installed, and that their modules end up in an
+\l{Import Statements#qml-import-path}{import path}.
+
+The warning might also indicate that the type of the property referenced by the alias does not have
+a QML counterpart. The referenced property type might be missing the
+\l{QQmlEngine Class#QML_ELEMENT}{QML_ELEMENT} macro, for example. Refer to
+\l{Defining QML Types from C++} or \l{Overview - QML and C++ Integration} in this case.
 
 \section2 Why is this bad?
-TODO
+QML tooling is not able to find the QML counterpart of the C++ type: the
+\l{Qt Quick Compiler}{compiler} can't compile this property alias to
+C++ and \l{qmllint} as well as \l{QML Language Server} can't analyze this property alias.
 
 \section2 Example
+Let our QML module have one C++ class with a property \c{myProperty}:
+
+\code
+#include <QQuickItem>
+#include <QtQml/qqmlregistration.h>
+#include <QObject>
+
+class MyCppObject : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    MyCppObject(QObject *parent = nullptr)
+        : QObject(parent)
+    {}
+
+    Q_PROPERTY(QQuickItem *myProperty READ myProperty WRITE setMyProperty NOTIFY notifyMyProperty)
+    QQuickItem *myProperty() { return m_myProperty; }
+    void setMyProperty(QQuickItem *item) { emit notifyMyProperty(); m_myProperty = item; }
+
+private:
+    QQuickItem *m_myProperty;
+
+signals:
+    void notifyMyProperty();
+};
+\endcode
+
+with following \c{CMakeLists.txt}:
+\badcode
+project(mymodule VERSION 0.1 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Quick)
+qt_standard_project_setup(REQUIRES 6.5)
+
+qt_add_executable(appmymodule
+    main.cpp
+)
+
+qt_add_qml_module(appmymodule
+    URI mymodule
+    VERSION 1.0
+    QML_FILES Main.qml HelloWorld.qml
+    SOURCES mycppobject.cpp mycppobject.h
+)
+
+target_link_libraries(appmymodule
+ PRIVATE Qt6::Quick
+)
+\endcode
+
+The C++ dependency \c{Quick} was declared, such that this class can compile and the QQuickItem
+include can be found. Also, \c{mymodule} does not have any dependency on QtQuick.
+
+Now, let's try to use \c{myProperty} in an alias in QML. The program will run but QML tooling like
+the \l{Qt Quick Compiler}{compiler}, for example, will complain about the usage of \c{myProperty}:
 \qml
+import mymodule
+
+MyCppObject {
+    id: root
+
+    property alias myAlias: root.myProperty // not ok: Cannot deduce type of alias [missing-type]
+}
 \endqml
-You can fix this warning by TODO
+The reason for the warning message is that in the QML code, the type \c{QQuickItem} of
+\c{myProperty} and its QML counterpart \c{Item} are not known, even if you have \c{import QtQuick}
+in your QML file. This is because the same type can be exposed multiple times with different
+attributes in different modules: \c{mymodule} actually has to be precise about the QML type of
+\c{myProperty}.
+
+You can fix this warning by adding the dependency in the \c{CMakeLists.txt}:
+\badcode
+qt_add_qml_module(mymodule
+    URI mymodule
+    ...
+    # declarare QML dependency to QtQuick module
+    DEPENDENCIES QtQuick
+    ...
+)
+
+Now, the warning should be gone!
+
+\sa{Declaring module dependencies}
+
+\section1 No Type Found For Property
+
+\section2 What happened?
+A binding was set on a property whose QML type was not found. This can be caused by a QML module
+which does not declare its QML dependencies on other modules.
+
+\note If you are importing QML modules with external dependencies, verify that they are
+actually installed, and that their modules end up in an
+\l{Import Statements#qml-import-path}{import path}.
+
+The warning might also indicate that the type of the property does not have
+a QML counterpart. The property type might be missing the
+\l{QQmlEngine Class#QML_ELEMENT}{QML_ELEMENT} macro, for example. Refer to
+\l{Defining QML Types from C++} or \l{Overview - QML and C++ Integration} in this case.
+
+\section2 Why is this bad?
+QML tooling is not able to find the QML counterpart of the C++ type: the
+\l{Qt Quick Compiler}{compiler} can't compile this property binding to
+C++ and \l{qmllint} as well as \l{QML Language Server} can't analyze this property binding.
+
+\section2 Example
+Let our QML module have a C++ class with two properties, \c{myProperty} and \c{myProperty2}:
+
+\code
+#include <QQuickItem>
+#include <QtQml/qqmlregistration.h>
+#include <QObject>
+
+class MyCppObject : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    MyCppObject(QObject *parent = nullptr)
+     : QObject(parent)
+    {}
+
+    Q_PROPERTY(QQuickItem *myProperty READ myProperty WRITE setMyProperty NOTIFY notifyMyProperty)
+    QQuickItem *myProperty() { return m_myProperty; }
+    void setMyProperty(QQuickItem *item) { emit notifyMyProperty(); m_myProperty = item; }
+
+    Q_PROPERTY(QQuickItem *myProperty2 READ myProperty2 WRITE setMyProperty2 NOTIFY notifyMyProperty2)
+    QQuickItem *myProperty2() { return m_myProperty2; }
+    void setMyProperty2(QQuickItem *item) { emit notifyMyProperty2(); m_myProperty2 = item; }
+
+private:
+    QQuickItem *m_myProperty;
+    QQuickItem *m_myProperty2;
+
+signals:
+    void notifyMyProperty();
+    void notifyMyProperty2();
+};
+\endcode
+
+with following \c{CMakeLists.txt}:
+\badcode
+project(mymodule VERSION 0.1 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Quick)
+qt_standard_project_setup(REQUIRES 6.5)
+
+qt_add_executable(appmymodule
+    main.cpp
+)
+
+qt_add_qml_module(appmymodule
+    URI mymodule
+    VERSION 1.0
+    QML_FILES Main.qml HelloWorld.qml
+    SOURCES mycppobject.cpp mycppobject.h
+)
+
+target_link_libraries(appmymodule
+ PRIVATE Qt6::Quick
+)
+\endcode
+
+The C++ dependency \c{Quick} was declared, such that this class can compile and the QQuickItem
+include can be found. Also, \c{mymodule} does not have any dependency on QtQuick.
+
+Now, let's try to bind \c{myProperty2} to \c{myProperty} in an alias in QML. The program will run
+but QML tooling like the \l{Qt Quick Compiler}{compiler}, for example, will complain about the
+usage of \c{myProperty}:
+
 \qml
+import mymodule
+
+MyCppObject {
+    id: root
+
+    myProperty: myProperty2 // not ok: No type found for property "myProperty". [missing-type]
+}
 \endqml
+The reason for the warning message is that in the QML code, the type \c{QQuickItem} of \c{myProperty}
+and its QML counterpart \c{Item} are not known: the dependency 'QtQuick' of mymodule was not
+declared in the \c{CMakeLists.txt}.
+
+You can fix this warning by adding the dependency in the \c{CMakeLists.txt}:
+\badcode
+qt_add_qml_module(mymodule
+    URI mymodule
+    ...
+    # declarare QML dependency to QtQuick module
+    DEPENDENCIES QtQuick
+    ...
+)
+
+Now, the warning should be gone!
+
+\sa{Declaring module dependencies}
+
+\endcode
 */
 
