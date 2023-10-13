@@ -329,6 +329,8 @@ need to have their \c QT_QML_SINGLETON_TYPE source property set to \c TRUE, to
 ensure that the \c singleton command is written into the
 \l{Module Definition qmldir Files}{qmldir} file. This must be done in addition
 to the QML file containing the \c {pragma Singleton} statement.
+The source property must be set before creating the module the
+singleton belongs to.
 
 See \l{qt_target_qml_sources_example}{qt_target_qml_sources()} for an example on
 how to set the \c QT_QML_SINGLETON_TYPE property.
