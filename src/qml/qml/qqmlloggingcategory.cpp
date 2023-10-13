@@ -15,11 +15,11 @@
     \since 5.8
 
     A logging category can be passed to console.log() and friends as the first argument.
-    If supplied to the logger the LoggingCategory's name will be used as Logging Category
-    otherwise the default logging category will be used.
+    If supplied to the logger the LoggingCategory's name will be used as logging category.
+    Otherwise the default logging category will be used.
 
     \qml
-    import QtQuick 2.8
+    import QtQuick
 
     Item {
         LoggingCategory {
@@ -29,10 +29,17 @@
         }
 
         Component.onCompleted: {
-          console.log(category, "message");
+            console.log(category, "log message");
+            console.warn(category, "warning message");
         }
     }
     \endqml
+
+    By default this outputs only \c{com.qt.category: warning message}. The
+    \c{log message} is suppressed due to the \l{defaultLogLevel}. You can,
+    however, configure log levels for QML logging categories the same way
+    you can configure them for
+    \l{QLoggingCategory#configuring-categories}{QLoggingCategory}.
 
     \note As the creation of objects is expensive, it is encouraged to put the needed
     LoggingCategory definitions into a singleton and import this where needed.
@@ -58,8 +65,21 @@
     Holds the default log level of the logging category. By default it is
     created with the LoggingCategory.Debug log level.
 
+    The following enumeration values are available:
+    \list
+    \li LoggingCategory.Debug
+    \li LoggingCategory.Info
+    \li LoggingCategory.Warning
+    \li LoggingCategory.Critical
+    \li LoggingCategory.Fatal
+    \endlist
+
+    They mirror the values of the \l{QtMsgType} enumeration.
+
     \note This property needs to be set when declaring the LoggingCategory
     and cannot be changed later.
+
+    \sa QtMsgType
 */
 
 QQmlLoggingCategory::QQmlLoggingCategory(QObject *parent)
