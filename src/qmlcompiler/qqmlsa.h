@@ -27,14 +27,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlJSImportVisitor;      // needed for PassManager
-class QQmlJSTypeResolver;       // needed for PassManager
-struct QQmlJSTypePropagator;    // needed for PassManager
-
-namespace QQmlJS {
-class ConstPtrWrapperIterator;  // needed for Element's child scope iterators
-} // namespace QQmlJS
-
 namespace QQmlSA {
 
 class BindingPrivate;
@@ -96,7 +88,6 @@ public:
     ScriptBindingKind scriptKind() const;
     bool hasObject() const;
     Element objectType() const;
-    Element literalType(const QQmlJSTypeResolver *) const;
     bool hasUndefinedScriptValue() const;
 
     friend bool operator==(const Binding &lhs, const Binding &rhs)
@@ -240,9 +231,6 @@ public:
     Binding::Bindings ownPropertyBindings(const QString &propertyName) const;
     QList<Binding> propertyBindings(const QString &propertyName) const;
 
-    QQmlJS::ConstPtrWrapperIterator childScopesBegin() const;
-    QQmlJS::ConstPtrWrapperIterator childScopesEnd() const;
-
     explicit operator bool() const;
     bool operator!() const;
 
@@ -309,13 +297,10 @@ private:
 
 class Q_QMLCOMPILER_EXPORT PassManager
 {
-    friend struct ::QQmlJSTypePropagator;
+    Q_DISABLE_COPY_MOVE(PassManager)
     Q_DECLARE_PRIVATE(PassManager)
 
 public:
-    PassManager(QQmlJSImportVisitor *visitor, QQmlJSTypeResolver *resolver);
-    ~PassManager();
-
     void registerElementPass(std::unique_ptr<ElementPass> pass);
     bool registerPropertyPass(std::shared_ptr<PropertyPass> pass, QAnyStringView moduleName,
                               QAnyStringView typeName,
@@ -332,6 +317,9 @@ public:
     std::unordered_map<quint32, BindingInfo> bindingsByLocation() const;
 
 private:
+    PassManager();
+    ~PassManager();
+
     std::unique_ptr<PassManagerPrivate> d_ptr;
 };
 

@@ -237,11 +237,6 @@ QQmlSA::Element Binding::objectType() const
     return QQmlJSScope::createQQmlSAElement(BindingPrivate::binding(*this).objectType());
 }
 
-Element QQmlSA::Binding::literalType(const QQmlJSTypeResolver *resolver) const
-{
-    return QQmlJSScope::createQQmlSAElement(BindingPrivate::binding(*this).literalType(resolver));
-}
-
 bool Binding::hasUndefinedScriptValue() const
 {
     const auto &jsBinding = BindingPrivate::binding(*this);
@@ -760,22 +755,6 @@ QQmlSA::Binding::Bindings BindingsPrivate::createBindings(
     return bindings;
 }
 
-/*!
-    Returns an iterator to the beginning of this Element's children.
- */
-QQmlJS::ConstPtrWrapperIterator Element::childScopesBegin() const
-{
-    return QQmlJSScope::scope(*this)->childScopesBegin();
-}
-
-/*!
-    Returns an iterator to the end of this Element's children.
- */
-QQmlJS::ConstPtrWrapperIterator Element::childScopesEnd() const
-{
-    return QQmlJSScope::scope(*this)->childScopesEnd();
-}
-
 Element::operator bool() const
 {
     return bool(QQmlJSScope::scope(*this));
@@ -960,7 +939,9 @@ Element GenericPass::resolveAttached(QAnyStringView moduleName, QAnyStringView t
 Element GenericPass::resolveLiteralType(const QQmlSA::Binding &binding)
 {
     Q_D(const GenericPass);
-    return binding.literalType(PassManagerPrivate::resolver(*d->m_manager));
+
+    return QQmlJSScope::createQQmlSAElement(BindingPrivate::binding(binding).literalType(
+            PassManagerPrivate::resolver(*d->m_manager)));
 }
 
 /*!
@@ -1005,15 +986,9 @@ QString GenericPass::sourceCode(QQmlSA::SourceLocation location)
     \brief Can analyze an element and its children with static analysis passes.
  */
 
-/*!
-    Constructs a pass manager given an import \a visitor and a type \a resolver.
- */
-QQmlSA::PassManager::PassManager(QQmlJSImportVisitor *visitor, QQmlJSTypeResolver *resolver)
-    : d_ptr{ new PassManagerPrivate{ this, visitor, resolver } }
-{
-}
-
-PassManager::~PassManager() = default; // explicitly defaulted out-of-line for PIMPL
+// explicitly defaulted out-of-line for PIMPL
+PassManager::PassManager() = default;
+PassManager::~PassManager() = default;
 
 /*!
     Registers a static analysis \a pass to be run on all elements.
@@ -1159,6 +1134,16 @@ void PassManager::analyze(const Element &root)
     d->analyze(root);
 }
 
+static QQmlJS::ConstPtrWrapperIterator childScopesBegin(const Element &element)
+{
+    return QQmlJSScope::scope(element)->childScopesBegin();
+}
+
+static QQmlJS::ConstPtrWrapperIterator childScopesEnd(const Element &element)
+{
+    return QQmlJSScope::scope(element)->childScopesEnd();
+}
+
 void PassManagerPrivate::analyze(const Element &root)
 {
     QList<Element> runStack;
@@ -1170,7 +1155,7 @@ void PassManagerPrivate::analyze(const Element &root)
             if (elementPass->shouldRun(element))
                 elementPass->run(element);
 
-        for (auto it = element.childScopesBegin(); it != element.childScopesEnd(); ++it) {
+        for (auto it = childScopesBegin(element), end = childScopesEnd(element); it != end; ++it) {
             if ((*it)->scopeType() == QQmlSA::ScopeType::QMLScope)
                 runStack.push_back(QQmlJSScope::createQQmlSAElement(*it));
         }

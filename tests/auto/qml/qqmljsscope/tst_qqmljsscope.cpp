@@ -801,6 +801,9 @@ public:
     void run(const QQmlSA::Element &) override { }
 };
 
+using PassManagerPtr = std::unique_ptr<
+        QQmlSA::PassManager, decltype(&QQmlSA::PassManagerPrivate::deletePassManager)>;
+
 void tst_qqmljsscope::attachedTypeResolution()
 {
     QFETCH(bool, creatable);
@@ -827,8 +830,12 @@ void tst_qqmljsscope::attachedTypeResolution()
     QQmlJSImportVisitor v{
         QQmlJSScope::create(), &importer, logger.get(), implicitImportDirectory, {}
     };
-    QQmlSA::PassManager manager{ &v, &resolver };
-    TestPass pass{ &manager };
+
+    PassManagerPtr manager(
+            QQmlSA::PassManagerPrivate::createPassManager(&v, &resolver),
+            &QQmlSA::PassManagerPrivate::deletePassManager);
+
+    TestPass pass{ manager.get() };
     const auto &resolved = pass.resolveType(moduleName, typeName);
 
     QVERIFY(!resolved.isNull());
@@ -881,8 +888,12 @@ void tst_qqmljsscope::builtinTypeResolution()
     QQmlJSImportVisitor v{
         QQmlJSScope::create(), &importer, &logger, implicitImportDirectory, {}
     };
-    QQmlSA::PassManager manager{ &v, &resolver };
-    TestPass pass{ &manager };
+
+    PassManagerPtr manager(
+            QQmlSA::PassManagerPrivate::createPassManager(&v, &resolver),
+            &QQmlSA::PassManagerPrivate::deletePassManager);
+
+    TestPass pass{ manager.get() };
     auto element = pass.resolveBuiltinType(typeName);
     QCOMPARE(element.isNull(), !valid);
 }

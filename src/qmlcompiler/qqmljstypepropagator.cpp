@@ -73,7 +73,7 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSTypePropagator::run(
 void QQmlJSTypePropagator::generate_Ret()
 {
     if (m_passManager != nullptr && m_function->isProperty) {
-        m_passManager->d_func()->analyzeBinding(
+        QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeBinding(
                 QQmlJSScope::createQQmlSAElement(m_function->qmlScope),
                 QQmlJSScope::createQQmlSAElement(
                         m_typeResolver->containedType(m_state.accumulatorIn())),
@@ -583,7 +583,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
     }
 
     if (m_passManager != nullptr) {
-        m_passManager->d_func()->analyzeRead(
+        QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeRead(
                 QQmlJSScope::createQQmlSAElement(m_function->qmlScope), name,
                 QQmlJSScope::createQQmlSAElement(m_function->qmlScope),
                 QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
@@ -643,7 +643,7 @@ void QQmlJSTypePropagator::generate_StoreNameCommon(int nameIndex)
     }
 
     if (m_passManager != nullptr) {
-        m_passManager->d_func()->analyzeWrite(
+        QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeWrite(
                 QQmlJSScope::createQQmlSAElement(m_function->qmlScope), name,
                 QQmlJSScope::createQQmlSAElement(m_typeResolver->containedType(in)),
                 QQmlJSScope::createQQmlSAElement(m_function->qmlScope),
@@ -901,7 +901,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
         const bool isAttached =
                 m_state.accumulatorIn().variant() == QQmlJSRegisterContent::ObjectAttached;
 
-        m_passManager->d_func()->analyzeRead(
+        QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeRead(
                 QQmlJSScope::createQQmlSAElement(
                         m_typeResolver->containedType(m_state.accumulatorIn())),
                 propertyName,
@@ -989,7 +989,7 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
     if (m_passManager != nullptr) {
         const bool isAttached = callBase.variant() == QQmlJSRegisterContent::ObjectAttached;
 
-        m_passManager->d_func()->analyzeWrite(
+        QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeWrite(
                 QQmlJSScope::createQQmlSAElement(m_typeResolver->containedType(callBase)),
                 propertyName,
                 QQmlJSScope::createQQmlSAElement(
@@ -1167,7 +1167,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
 
     if (m_passManager != nullptr) {
         // TODO: Should there be an analyzeCall() in the future? (w. corresponding onCall in Pass)
-        m_passManager->d_func()->analyzeRead(
+        QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeRead(
                 QQmlJSScope::createQQmlSAElement(baseType), propertyName,
                 QQmlJSScope::createQQmlSAElement(m_function->qmlScope),
                 QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
