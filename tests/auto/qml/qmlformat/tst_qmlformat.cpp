@@ -40,6 +40,8 @@ private Q_SLOTS:
 
     void testBackupFileLimit();
 
+    void testFilesOption_data();
+    void testFilesOption();
 private:
     QString readTestFile(const QString &path);
     QString runQmlformat(const QString &fileToFormat, QStringList args, bool shouldSucceed = true,
@@ -452,6 +454,73 @@ void TestQmlformat::testBackupFileLimit()
         QVERIFY(QFileInfo::exists(tempFile));
         QVERIFY(!QFileInfo::exists(backupFile));
     };
+}
+
+void TestQmlformat::testFilesOption_data()
+{
+    QTest::addColumn<QString>("containerFile");
+    QTest::addColumn<QStringList>("individualFiles");
+
+    QTest::newRow("initial") << "fileListToFormat"
+            << QStringList{"valid1.qml", "invalidEntry:cannot be parsed", "valid2.qml"};
+}
+
+void TestQmlformat::testFilesOption()
+{
+    QFETCH(QString, containerFile);
+    QFETCH(QStringList, individualFiles);
+
+    // Create a temporary directory
+    QTemporaryDir tempDir;
+    tempDir.setAutoRemove(false);
+    QStringList actualFormattedFilesPath;
+
+    // Iterate through files in the source directory and copy them to the temporary directory
+    const auto sourceDir = dataDirectory() + QDir::separator() + "filesOption";
+
+    // Create a file that contains the list of files to be formatted
+    const QString tempFilePath = tempDir.path() + QDir::separator() + containerFile;
+    QFile container(tempFilePath);
+    if (container.open(QIODevice::Text | QIODevice::WriteOnly)) {
+        QTextStream out(&container);
+
+        for (const auto &file : individualFiles) {
+            QString destinationFilePath = tempDir.path() + QDir::separator() + file;
+            if (QFile::copy(sourceDir + QDir::separator() + file, destinationFilePath))
+                actualFormattedFilesPath << destinationFilePath;
+            out << destinationFilePath << "\n";
+        }
+
+        container.close();
+    } else {
+        QFAIL("Cannot create temp test file\n");
+        return;
+    }
+
+    {
+        QProcess process;
+        process.start(m_qmlformatPath, QStringList{"-F", tempFilePath});
+        QVERIFY(process.waitForFinished());
+        QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    }
+
+    const auto readFile = [](const QString &filePath){
+        QFile file(filePath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            qWarning() << "Error on opening the file " << filePath;
+            return QByteArray{};
+        }
+
+        return file.readAll();
+    };
+
+    for (const auto &filePath : actualFormattedFilesPath) {
+        auto expectedFormattedFile = QFileInfo(filePath).fileName();
+        const auto expectedFormattedFilePath = sourceDir + QDir::separator() +
+            expectedFormattedFile.replace(".qml", ".formatted.qml");
+
+        QCOMPARE(readFile(filePath), readFile(expectedFormattedFilePath));
+    }
 }
 
 QString TestQmlformat::runQmlformat(const QString &fileToFormat, QStringList args,
