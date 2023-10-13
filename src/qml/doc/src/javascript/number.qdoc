@@ -34,21 +34,32 @@
     If \a locale is not specified, the default locale will be used.
 
     The following example shows a number formatted for the German locale:
-    \code
+    \qml
     import QtQuick 2.0
 
     Text {
         text: "The value is: " +  Number(4742378.423).toLocaleString(Qt.locale("de_DE"))
     }
-    \endcode
+    \endqml
+
+    You can customize individual fields of the \a{locale} to tightly control
+    the output:
+    \qml
+    let locale = Qt.locale("de_DE");
+    let a = Number(1000).toLocaleString(locale)); // a == 1.000,00
+    locale.numberOptions = Locale.OmitGroupSeparator;
+    let b = Number(1000).toLocaleString(locale)); // b == 1000,00
+    \endqml
 
     You can apply toLocaleString() directly to constants, provided the decimal
     is included in the constant, e.g.
-    \code
+    \qml
     123.0.toLocaleString(Qt.locale("de_DE")) // OK
     123..toLocaleString(Qt.locale("de_DE"))  // OK
     123.toLocaleString(Qt.locale("de_DE"))   // fails
-    \endcode
+    \endqml
+
+    \sa {QtQml::Locale}{Locale}
 */
 
 /*!
@@ -69,12 +80,14 @@
     If \a locale is not supplied the default locale will be used.
 
     For example, using the German locale:
-    \code
+    \qml
     var german = Qt.locale("de_DE");
     var d;
     d = Number.fromLocaleString(german, "1234,56")   // d == 1234.56
     d = Number.fromLocaleString(german, "1.234,56") // d == 1234.56
     d = Number.fromLocaleString(german, "1234.56")  // throws exception
     d = Number.fromLocaleString(german, "1.234")    // d == 1234.0
-    \endcode
+    \endqml
+
+    \sa {QtQml::Locale}{Locale}
 */
