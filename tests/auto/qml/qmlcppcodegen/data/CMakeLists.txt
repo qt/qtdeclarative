@@ -183,6 +183,7 @@ set(qml_files
     notEqualsInt.qml
     notNotString.qml
     nullAccess.qml
+    nullAccessInsideSignalHandler.qml
     nullComparison.qml
     numbersInJsPrimitive.qml
     objectInVar.qml

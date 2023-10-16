@@ -154,6 +154,7 @@ private slots:
     void notEqualsInt();
     void notNotString();
     void nullAccess();
+    void nullAccessInsideSignalHandler();
     void nullComparison();
     void numbersInJsPrimitive();
     void objectInVar();
@@ -3090,6 +3091,20 @@ void tst_QmlCppCodegen::nullAccess()
     QCOMPARE(object->property("width").toDouble(), 0.0);
     QCOMPARE(object->property("height").toDouble(), 0.0);
 }
+
+void tst_QmlCppCodegen::nullAccessInsideSignalHandler()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/nullAccessInsideSignalHandler.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QTest::ignoreMessage(QtWarningMsg,
+                         "qrc:/qt/qml/TestTypes/nullAccessInsideSignalHandler.qml:15: ReferenceError: "
+                         "text is not defined");
+    QScopedPointer<QObject> object(component.create());
+    QSignalSpy spy(object.data(), SIGNAL(say_hello()));
+    QTRY_VERIFY(spy.size() > 0);
+}
+
 
 void tst_QmlCppCodegen::nullComparison()
 {

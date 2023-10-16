@@ -1773,6 +1773,12 @@ bool AOTCompiledContext::loadScopeObjectPropertyLookup(uint index, void *target)
 {
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
 
+    if (!qmlScopeObject) {
+        engine->handle()->throwReferenceError(
+                compilationUnit->runtimeStrings[l->nameIndex]->toQString());
+        return false;
+    }
+
     ObjectPropertyResult result = ObjectPropertyResult::NeedsInit;
     if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupScopeObjectProperty)
         result = loadObjectProperty(l, qmlScopeObject, target, qmlContext);
