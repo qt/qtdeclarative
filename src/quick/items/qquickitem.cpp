@@ -7116,11 +7116,12 @@ void QQuickItem::setY(qreal v)
 void QQuickItem::setPosition(const QPointF &pos)
 {
     Q_D(QQuickItem);
-    if (QPointF(d->x, d->y) == pos)
-        return;
 
-    const qreal oldx = d->x;
-    const qreal oldy = d->y;
+    const qreal oldx = d->x.valueBypassingBindings();
+    const qreal oldy = d->y.valueBypassingBindings();
+
+    if (QPointF(oldx, oldy) == pos)
+        return;
 
     /* This preserves the bindings, because that was what the code used to do
        The effect of this is that you can have
@@ -7140,7 +7141,8 @@ void QQuickItem::setPosition(const QPointF &pos)
 
     d->dirty(QQuickItemPrivate::Position);
 
-    const qreal w = d->width, h = d->height;
+    const qreal w = d->width.valueBypassingBindings();
+    const qreal h = d->height.valueBypassingBindings();
     geometryChange(QRectF(pos.x(), pos.y(), w, h), QRectF(oldx, oldy, w, h));
 }
 
@@ -7498,11 +7500,11 @@ void QQuickItem::setImplicitSize(qreal w, qreal h)
     const qreal oldHeight = height;
     if (!wDone) {
         width = w;
-        d->width = w;
+        d->width.setValueBypassingBindings(w);
     }
     if (!hDone) {
         height = h;
-        d->height = h;
+        d->height.setValueBypassingBindings(h);
     }
 
     d->dirty(QQuickItemPrivate::Size);
@@ -7558,17 +7560,19 @@ void QQuickItem::setSize(const QSizeF &size)
     d->heightValidFlag = true;
     d->widthValidFlag = true;
 
-    if (d->width == size.width() && d->height == size.height())
+    const qreal oldHeight = d->height.valueBypassingBindings();
+    const qreal oldWidth = d->width.valueBypassingBindings();
+
+    if (oldWidth == size.width() && oldHeight == size.height())
         return;
 
-    const qreal oldHeight = d->height;
-    const qreal oldWidth = d->width;
     d->height.setValueBypassingBindings(size.height());
     d->width.setValueBypassingBindings(size.width());
 
     d->dirty(QQuickItemPrivate::Size);
 
-    const qreal x = d->x, y = d->y;
+    const qreal x = d->x.valueBypassingBindings();
+    const qreal y = d->y.valueBypassingBindings();
     geometryChange(QRectF(x, y, size.width(), size.height()), QRectF(x, y, oldWidth, oldHeight));
 }
 
