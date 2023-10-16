@@ -39,6 +39,7 @@ qt_add_resources(qqcstylegenerator "controls"
         templates/RoundButton.qml
         templates/ScrollBar.qml
         templates/ScrollIndicator.qml
+        templates/ScrollView.qml
         templates/Slider.qml
         templates/SpinBox.qml
         templates/Switch.qml
