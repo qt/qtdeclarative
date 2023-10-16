@@ -27,7 +27,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickCheckBox : public QQuickAbstractBut
     Q_PROPERTY(bool tristate READ isTristate WRITE setTristate NOTIFY tristateChanged FINAL)
     Q_PROPERTY(Qt::CheckState checkState READ checkState WRITE setCheckState NOTIFY checkStateChanged FINAL)
     // 2.4 (Qt 5.11)
-    Q_PRIVATE_PROPERTY(QQuickCheckBox::d_func(), QJSValue nextCheckState MEMBER nextCheckState WRITE setNextCheckState NOTIFY nextCheckStateChanged FINAL REVISION(2, 4))
+    Q_PROPERTY(QJSValue nextCheckState READ getNextCheckState WRITE setNextCheckState NOTIFY
+                       nextCheckStateChanged FINAL REVISION(2, 4))
     QML_NAMED_ELEMENT(CheckBox)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -39,6 +40,8 @@ public:
 
     Qt::CheckState checkState() const;
     void setCheckState(Qt::CheckState state);
+    QJSValue getNextCheckState() const;
+    void setNextCheckState(const QJSValue &callback);
 
 Q_SIGNALS:
     void tristateChanged();
