@@ -136,7 +136,6 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
 
     JSTypedFunction *synthesized = new JSTypedFunction;
 
-    QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine->qmlEngine());
     auto findQmlType = [&](const CompiledData::ParameterType &param) {
         const quint32 type = param.typeNameIndexOrCommonType();
         if (param.indexIsCommonType()) {
@@ -158,7 +157,7 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                 : QQmlType();
         }
 
-        return enginePrivate->typeLoader.getType(qmltype.sourceUrl())->compilationUnit()->qmlType;
+        return qmltype;
     };
 
     for (quint16 i = 0; i < nFormals; ++i)

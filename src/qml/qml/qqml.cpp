@@ -1962,14 +1962,8 @@ bool AOTCompiledContext::loadTypeLookup(uint index, void *target) const
 
     const QV4::Heap::QQmlTypeWrapper *typeWrapper = static_cast<const QV4::Heap::QQmlTypeWrapper *>(
                 l->qmlTypeLookup.qmlTypeWrapper);
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlEngine());
 
     QMetaType metaType = typeWrapper->type().typeId();
-    if (!metaType.isValid()) {
-        metaType = ep->typeLoader.getType(typeWrapper->type().sourceUrl())
-                ->compilationUnit()->qmlType.typeId();
-    }
-
     *static_cast<const QMetaObject **>(target)
             = QQmlMetaType::metaObjectForType(metaType).metaObject();
     return true;

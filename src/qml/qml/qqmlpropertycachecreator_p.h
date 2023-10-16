@@ -683,14 +683,9 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
                         compositeType = objectContainer->qmlTypeForComponent(icName);
                     Q_ASSERT(compositeType.isValid());
                 } else if (selfReference) {
-                     compositeType = objectContainer->qmlTypeForComponent();
+                    compositeType = objectContainer->qmlTypeForComponent();
                 } else {
-                    QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
-                    Q_ASSERT(tdata);
-                    Q_ASSERT(tdata->isComplete());
-
-                    auto compilationUnit = tdata->compilationUnit();
-                    compositeType = compilationUnit->qmlTypeForComponent();
+                    compositeType = qmltype;
                 }
 
                 if (p->isList()) {
@@ -766,15 +761,7 @@ inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter
         return param.isList() ? qmlType.qListTypeId() : qmlType.typeId();
     }
 
-    QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
-    Q_ASSERT(tdata);
-    Q_ASSERT(tdata->isComplete());
-
-    auto compilationUnit = tdata->compilationUnit();
-
-    return param.isList()
-               ? compilationUnit->qmlType.qListTypeId()
-               : compilationUnit->qmlType.typeId();
+    return param.isList() ? qmltype.qListTypeId() : qmltype.typeId();
 }
 
 template <typename ObjectContainer, typename CompiledObject>

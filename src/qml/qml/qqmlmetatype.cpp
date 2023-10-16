@@ -673,6 +673,8 @@ QQmlType QQmlMetaType::findCompositeType(
     }
 
     if (urlExists) {
+        if (compilationUnit.isNull())
+            return QQmlType(*found);
         const auto composite = data->compositeTypes.constFind(found.value()->typeId.iface());
         if (composite == data->compositeTypes.constEnd() || composite.value() == compilationUnit)
             return QQmlType(*found);
@@ -1893,8 +1895,11 @@ void QQmlMetaType::registerInternalCompositeType(
 
     auto doInsert = [&data, &compilationUnit](const QtPrivate::QMetaTypeInterface *iface) {
         Q_ASSERT(iface);
-        const auto it = data->compositeTypes.constFind(iface);
-        Q_ASSERT(it == data->compositeTypes.constEnd() || *it == compilationUnit);
+        Q_ASSERT(compilationUnit);
+
+        // We can't assert on anything else here. We may get a completely new type as exposed
+        // by the qmldiskcache test that changes a QML file in place during the execution
+        // of the test.
         data->compositeTypes.insert(iface, compilationUnit);
     };
 

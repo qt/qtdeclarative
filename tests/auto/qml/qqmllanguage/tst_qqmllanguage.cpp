@@ -432,6 +432,7 @@ private slots:
     void callMethodOfAttachedDerived();
 
     void multiVersionSingletons();
+    void typeAnnotationCycle();
 
 private:
     QQmlEngine engine;
@@ -8283,6 +8284,16 @@ void tst_qqmllanguage::multiVersionSingletons()
         const QJSValue value2 = engine.singletonInstance<QJSValue>(id2);
         QVERIFY(value1.strictlyEquals(value2));
     }
+}
+
+void tst_qqmllanguage::typeAnnotationCycle()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("TypeAnnotationCycle1.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("b").value<QObject*>(), o.data());
 }
 
 QTEST_MAIN(tst_qqmllanguage)
