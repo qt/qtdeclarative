@@ -238,7 +238,8 @@
             {"atom": "contentItem", "figmaPath": "Layout"}
         ],
         "states": [
-            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "disabled", "figmaState": "disabledNormal"},
+            {"state": "disabled-indeterminate", "figmaState": "disabledIndeterminate"},
             {"state": "indeterminate", "figmaState": "indeterminate"},
             {"state": "normal", "figmaState": "normal"}
         ]
