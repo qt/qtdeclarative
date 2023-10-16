@@ -72,6 +72,8 @@ T.Slider {
                     height: horizontal ? parent.height : parent.height * control.position
                     imageConfig: control.config.track
                     horizontal: control.horizontal
+                    minimumWidth: 0
+                    minimumHeight: 0
                 }
             }
         }

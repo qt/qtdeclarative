@@ -106,6 +106,8 @@ T.RangeSlider {
                         : parent.height * (control.second.position - control.first.position)
                     imageConfig: control.config.track
                     horizontal: control.horizontal
+                    minimumWidth: 0
+                    minimumHeight: 0
                 }
             }
         }

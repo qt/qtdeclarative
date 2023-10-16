@@ -20,8 +20,8 @@ Item {
     property bool horizontal: true
 
     // The minimum size of the image should be at least 1px tall and wide, even without any offsets
-    readonly property real minimumWidth: Math.max(1, imageConfig.leftOffset + imageConfig.rightOffset)
-    readonly property real minimumHeight: Math.max(1, imageConfig.topOffset + imageConfig.bottomOffset)
+    property real minimumWidth: Math.max(1, imageConfig.leftOffset + imageConfig.rightOffset)
+    property real minimumHeight: Math.max(1, imageConfig.topOffset + imageConfig.bottomOffset)
 
     BorderImage {
         x: -imageConfig.leftShadow
@@ -33,11 +33,12 @@ Item {
         source: Qt.resolvedUrl(imageConfig.filePath)
 
         border {
-            top: imageConfig.topOffset + imageConfig.topShadow
-            left: imageConfig.leftOffset + imageConfig.leftShadow
-            bottom: imageConfig.bottomOffset + imageConfig.bottomShadow
-            right: imageConfig.rightOffset + imageConfig.rightShadow
+            top: Math.min(height / 2, imageConfig.topOffset + imageConfig.topShadow)
+            left: Math.min(width / 2, imageConfig.leftOffset + imageConfig.leftShadow)
+            bottom: Math.min(height / 2, imageConfig.bottomOffset + imageConfig.bottomShadow)
+            right: Math.min(width / 2, imageConfig.rightOffset + imageConfig.rightShadow)
         }
+
         transform: [
             Rotation {
                 angle: root.horizontal ? 0 : 90
