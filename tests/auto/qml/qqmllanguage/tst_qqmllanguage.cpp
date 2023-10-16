@@ -426,6 +426,8 @@ private slots:
 
     void callMethodOfAttachedDerived();
 
+    void typeAnnotationCycle();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -8154,6 +8156,23 @@ void tst_qqmllanguage::callMethodOfAttachedDerived()
     QVERIFY(!o.isNull());
 
     QCOMPARE(o->property("v").toInt(), 99);
+}
+
+void tst_qqmllanguage::typeAnnotationCycle()
+{
+    QQmlEngine engine;
+
+    const QUrl url = testFileUrl("TypeAnnotationCycle1.qml");
+    const QUrl url2 = testFileUrl("TypeAnnotationCycle2.qml");
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(
+                    QLatin1String("Cyclic dependency detected between \"%1\" and \"%2\"")
+                            .arg(url.toString(), url2.toString())));
+
+    QQmlComponent c(&engine, url);
+    QVERIFY(!c.isReady());
 }
 
 QTEST_MAIN(tst_qqmllanguage)

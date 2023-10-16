@@ -110,6 +110,9 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     for (int i = 0, count = m_compiledData->objectCount(); i < count; ++i) {
         auto object = m_compiledData->objectAt(i);
         m_typeReferences.collectFromObject(object);
+        m_typeReferences.collectFromFunctions(
+                m_compiledData->objectFunctionsBegin(object),
+                m_compiledData->objectFunctionsEnd(object));
         const auto inlineComponentTable = object->inlineComponentTable();
         for (auto i = 0; i != object->nInlineComponents; ++i) {
             ics.push_back(inlineComponentTable[i]);
@@ -735,7 +738,13 @@ void QQmlTypeData::continueLoadFromIR()
         }
     }
 
-    m_typeReferences.collectFromObjects(m_document->objects.constBegin(), m_document->objects.constEnd());
+    for (auto it = m_document->objects.constBegin(), end = m_document->objects.constEnd();
+         it != end; ++it) {
+        const QmlIR::Object *object = *it;
+        m_typeReferences.collectFromObject(object);
+        m_typeReferences.collectFromFunctions(object->functionsBegin(), object->functionsEnd());
+    }
+
     m_importCache->setBaseUrl(finalUrl(), finalUrlString());
 
     // For remote URLs, we don't delay the loading of the implicit import

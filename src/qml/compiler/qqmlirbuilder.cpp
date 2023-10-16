@@ -61,7 +61,8 @@ bool Parameter::initType(
     auto builtinType = stringToBuiltinType(typeName);
     if (builtinType == QV4::CompiledData::CommonType::Invalid) {
         if (typeName.isEmpty()) {
-            paramType->set(listFlag, 0);
+            paramType->set(
+                    listFlag | QV4::CompiledData::ParameterType::Common, quint32(builtinType));
             return false;
         }
         Q_ASSERT(quint32(typeNameIndex) < (1u << 31));

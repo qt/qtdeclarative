@@ -1362,6 +1362,28 @@ struct TypeReferenceMap : QHash<int, TypeReference>
         return *insert(nameIndex, loc);
     }
 
+    template <typename Iterator>
+    void collectFromFunctions(Iterator it, Iterator end)
+    {
+        for (; it != end; ++it) {
+            auto formal = it->formalsBegin();
+            auto formalEnd = it->formalsEnd();
+            for ( ; formal != formalEnd; ++formal) {
+                if (!formal->type.indexIsCommonType()) {
+                    TypeReference &r
+                            = this->add(formal->type.typeNameIndexOrCommonType(), it->location);
+                    r.errorWhenNotFound = true;
+                }
+            }
+
+            if (!it->returnType.indexIsCommonType()) {
+                TypeReference &r
+                    = this->add(it->returnType.typeNameIndexOrCommonType(), it->location);
+                r.errorWhenNotFound = true;
+            }
+        }
+    }
+
     template <typename CompiledObject>
     void collectFromObject(const CompiledObject *obj)
     {
@@ -1392,13 +1414,6 @@ struct TypeReferenceMap : QHash<int, TypeReference>
         for (; ic != icEnd; ++ic) {
             this->add(ic->nameIndex, ic->location);
         }
-    }
-
-    template <typename Iterator>
-    void collectFromObjects(Iterator it, Iterator end)
-    {
-        for (; it != end; ++it)
-            collectFromObject(*it);
     }
 };
 

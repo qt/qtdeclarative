@@ -470,8 +470,9 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     for (int i = 0; i < irFunction->arguments.size(); ++i) {
         auto *formal = &formals[i];
         formal->nameIndex = getStringId(irFunction->arguments.at(i).id);
-        if (QQmlJS::AST::TypeAnnotation *annotation = irFunction->arguments.at(i).typeAnnotation.data())
-            QmlIR::Parameter::initType(&formal->type, idGenerator, annotation->type);
+        QQmlJS::AST::TypeAnnotation *annotation = irFunction->arguments.at(i).typeAnnotation.data();
+        QmlIR::Parameter::initType(
+                &formal->type, idGenerator, annotation ? annotation->type : nullptr);
     }
 
     // write locals
