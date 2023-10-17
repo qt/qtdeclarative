@@ -68,6 +68,7 @@ public:
 
     void actionTextChange();
     void setText(const QString &text, bool isExplicit);
+    void init();
 
     void updateEffectiveIcon();
 

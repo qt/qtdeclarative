@@ -3277,6 +3277,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , baselineOffset(0)
     , itemNodeInstance(nullptr)
     , paintNode(nullptr)
+    , szPolicy(QLayoutPolicy::Fixed, QLayoutPolicy::Fixed)
 {
 }
 
@@ -3299,6 +3300,17 @@ void QQuickItemPrivate::init(QQuickItem *parent)
         QQuickItemPrivate *parentPrivate = QQuickItemPrivate::get(parent);
         setImplicitLayoutMirror(parentPrivate->inheritedLayoutMirror, parentPrivate->inheritMirrorFromParent);
     }
+}
+
+QLayoutPolicy QQuickItemPrivate::sizePolicy() const
+{
+    return szPolicy;
+}
+
+void QQuickItemPrivate::setSizePolicy(const QLayoutPolicy::Policy& horizontalPolicy, const QLayoutPolicy::Policy& verticalPolicy)
+{
+    szPolicy.setHorizontalPolicy(horizontalPolicy);
+    szPolicy.setVerticalPolicy(verticalPolicy);
 }
 
 void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)

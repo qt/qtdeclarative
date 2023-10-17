@@ -76,6 +76,7 @@ QQuickPathViewPrivate::QQuickPathViewPrivate()
     , highlightRangeMode(QQuickPathView::StrictlyEnforceRange)
     , highlightMoveDuration(300), modelCount(0), snapMode(QQuickPathView::NoSnap)
 {
+    setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Preferred);
 }
 
 void QQuickPathViewPrivate::init()

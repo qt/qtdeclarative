@@ -176,6 +176,8 @@ QAbstractItemModel *QQuickHeaderViewBasePrivate::selectionSourceModel()
 QQuickHeaderViewBase::QQuickHeaderViewBase(Qt::Orientation orient, QQuickItem *parent)
     : QQuickTableView(*(new QQuickHeaderViewBasePrivate), parent)
 {
+    d_func()->setSizePolicy(orient == Qt::Horizontal ? QLayoutPolicy::Preferred : QLayoutPolicy::Fixed,
+                            orient == Qt::Horizontal ? QLayoutPolicy::Fixed : QLayoutPolicy::Preferred);
     d_func()->setOrientation(orient);
     setSyncDirection(orient);
 }

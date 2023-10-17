@@ -65,6 +65,8 @@ public:
 QQuickProgressBar::QQuickProgressBar(QQuickItem *parent)
     : QQuickControl(*(new QQuickProgressBarPrivate), parent)
 {
+    Q_D(QQuickProgressBar);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
 }
 
 /*!

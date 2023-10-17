@@ -259,6 +259,9 @@ QPalette QQuickTumblerPrivate::defaultPalette() const
 QQuickTumbler::QQuickTumbler(QQuickItem *parent)
     : QQuickControl(*(new QQuickTumblerPrivate), parent)
 {
+    Q_D(QQuickTumbler);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Preferred);
+
     setActiveFocusOnTab(true);
 
     connect(this, SIGNAL(leftPaddingChanged()), this, SLOT(_q_updateItemWidths()));

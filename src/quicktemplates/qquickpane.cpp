@@ -108,6 +108,7 @@ void QQuickPanePrivate::init()
 #endif
     connect(q, &QQuickControl::implicitContentWidthChanged, this, &QQuickPanePrivate::updateContentWidth);
     connect(q, &QQuickControl::implicitContentHeightChanged, this, &QQuickPanePrivate::updateContentHeight);
+    setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Preferred);
 }
 
 QList<QQuickItem *> QQuickPanePrivate::contentChildItems() const

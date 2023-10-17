@@ -470,6 +470,7 @@ QQuickSpinBox::QQuickSpinBox(QQuickItem *parent)
     Q_D(QQuickSpinBox);
     d->up = new QQuickIndicatorButton(this);
     d->down = new QQuickIndicatorButton(this);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
 
     setFlag(ItemIsFocusScope);
     setFiltersChildMouseEvents(true);
