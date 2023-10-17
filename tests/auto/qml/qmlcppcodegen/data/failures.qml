@@ -107,4 +107,7 @@ QtObject {
         self.selfself.nastyBad = undefined;
         return 5;
     }
+
+    readonly property int someNumber: 10
+    function writeToReadonly() { someNumber = 20 }
 }

@@ -628,7 +628,7 @@ void QQmlJSTypePropagator::generate_StoreNameCommon(int nameIndex)
         return;
     }
 
-    if (!type.isWritable() && !m_function->qmlScope->hasOwnProperty(name)) {
+    if (!type.isWritable()) {
         setError(u"Can't assign to read-only property %1"_s.arg(name));
 
         m_logger->log(u"Cannot assign to read-only property %1"_s.arg(name), qmlReadOnlyProperty,
