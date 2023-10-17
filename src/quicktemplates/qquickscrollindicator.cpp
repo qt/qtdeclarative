@@ -168,6 +168,8 @@ void QQuickScrollIndicatorPrivate::resizeContent()
 QQuickScrollIndicator::QQuickScrollIndicator(QQuickItem *parent)
     : QQuickControl(*(new QQuickScrollIndicatorPrivate), parent)
 {
+    Q_D(QQuickScrollIndicator);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
 }
 
 QQuickScrollIndicatorAttached *QQuickScrollIndicator::qmlAttachedProperties(QObject *object)
@@ -294,6 +296,11 @@ void QQuickScrollIndicator::setOrientation(Qt::Orientation orientation)
     Q_D(QQuickScrollIndicator);
     if (d->orientation == orientation)
         return;
+
+    if (orientation == Qt::Horizontal)
+        d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
+    else
+        d->setSizePolicy(QLayoutPolicy::Fixed, QLayoutPolicy::Preferred);
 
     d->orientation = orientation;
     if (isComponentComplete())

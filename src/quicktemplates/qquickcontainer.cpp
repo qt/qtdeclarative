@@ -167,6 +167,7 @@ void QQuickContainerPrivate::init()
     QObject::connect(contentModel, &QQmlObjectModel::childrenChanged, q, &QQuickContainer::contentChildrenChanged);
     connect(q, &QQuickControl::implicitContentWidthChanged, this, &QQuickContainerPrivate::updateContentWidth);
     connect(q, &QQuickControl::implicitContentHeightChanged, this, &QQuickContainerPrivate::updateContentHeight);
+    setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Preferred);
 }
 
 void QQuickContainerPrivate::cleanup()

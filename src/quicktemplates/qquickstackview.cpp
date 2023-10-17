@@ -384,6 +384,9 @@ QQuickStackView::QQuickStackView(QQuickItem *parent)
     : QQuickControl(*(new QQuickStackViewPrivate), parent)
 {
     setFlag(ItemIsFocusScope);
+
+    Q_D(QQuickStackView);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Preferred);
 }
 
 QQuickStackView::~QQuickStackView()
