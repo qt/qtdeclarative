@@ -45,6 +45,16 @@ Item {
     id: spy
     visible: false
 
+    Component.onDestruction: {
+        // We are potentially destroyed before the target object,
+        // and since only the sender (target) being destroyed destroys a connection
+        // in QML, and not the receiver (us/"spy"), we need to manually disconnect.
+        // When QTBUG-118166 is implemented, we can remove this.
+        let signalFunc = target ? target[signalName] : null
+        if (signalFunc)
+            signalFunc.disconnect(spy.qtest_activated)
+    }
+
     TestUtil {
         id: util
     }
