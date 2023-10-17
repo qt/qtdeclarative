@@ -1459,6 +1459,10 @@
   Returns -1 if no matching type was found or one of the given parameters
   was invalid.
 
+  \note: qmlTypeId tries to make modules available, even if they were not accessed by any
+  engine yet. This can introduce overhead the first time a module is accessed. Trying to
+  find types from a module which does not exist always introduces this overhead.
+
   \sa QML_ELEMENT, QML_NAMED_ELEMENT, QML_SINGLETON, qmlRegisterType(), qmlRegisterSingletonType()
 */
 
