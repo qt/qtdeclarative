@@ -1197,6 +1197,8 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
 {
     QQmlJSMetaMethod javascriptFunction;
     QQmlJSMetaMethod candidate;
+    bool hasMultipleCandidates = false;
+
     for (const auto &method : methods) {
 
         // If we encounter a JavaScript function, use this as a fallback if no other method matches
@@ -1238,19 +1240,32 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
             if (canConvertFromTo(content, m_typeResolver->globalType(argumentType)))
                 continue;
 
+            // We can try to call a method that expects a derived type.
+            if (argumentType->isReferenceType()
+                    && m_typeResolver->inherits(
+                        argumentType->baseType(), m_typeResolver->containedType(content))) {
+                continue;
+            }
+
             errors->append(
                     u"argument %1 contains %2 but is expected to contain the type %3"_s.arg(i).arg(
-                            m_state.registers[argv + i].content.descriptiveName(),
-                            arguments[i].typeName()));
+                            content.descriptiveName(), arguments[i].typeName()));
             fuzzyMatch = false;
             break;
         }
 
-        if (exactMatch)
+        if (exactMatch) {
             return method;
-        else if (fuzzyMatch && !candidate.isValid())
-            candidate = method;
+        } else if (fuzzyMatch) {
+            if (!candidate.isValid())
+                candidate = method;
+            else
+                hasMultipleCandidates = true;
+        }
     }
+
+    if (hasMultipleCandidates)
+        return QQmlJSMetaMethod();
 
     return candidate.isValid() ? candidate : javascriptFunction;
 }
@@ -1336,11 +1351,15 @@ void QQmlJSTypePropagator::propagateCall(
     const QQmlJSMetaMethod match = bestMatchForCall(methods, argc, argv, &errors);
 
     if (!match.isValid()) {
-        Q_ASSERT(errors.size() == methods.size());
-        if (methods.size() == 1)
+        if (methods.size() == 1) {
+            // Cannot have multiple fuzzy matches if there is only one method
+            Q_ASSERT(errors.size() == 1);
             setError(errors.first());
-        else
+        } else if (errors.size() < methods.size()) {
+            setError(u"Multiple matching overrides found. Cannot determine the right one."_s);
+        } else {
             setError(u"No matching override found. Candidates:\n"_s + errors.join(u'\n'));
+        }
         return;
     }
 

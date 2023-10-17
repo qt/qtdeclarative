@@ -3341,6 +3341,8 @@ void tst_QmlCppCodegen::overriddenProperty()
     QCOMPARE(child->objectName(), u"double"_s);
     QMetaObject::invokeMethod(child, "doArray");
     QCOMPARE(child->objectName(), u"javaScript"_s);
+    QMetaObject::invokeMethod(child, "doFoo");
+    QCOMPARE(child->objectName(), u"ObjectWithMethod"_s);
 
     ObjectWithMethod *benign = new ObjectWithMethod(object.data());
     benign->theThing = 10;

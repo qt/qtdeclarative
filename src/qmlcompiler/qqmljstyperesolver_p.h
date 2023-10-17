@@ -209,6 +209,8 @@ public:
 
     bool isTriviallyCopyable(const QQmlJSScope::ConstPtr &type) const;
 
+    bool inherits(const QQmlJSScope::ConstPtr &derived, const QQmlJSScope::ConstPtr &base) const;
+
 protected:
 
     QQmlJSRegisterContent memberType(
