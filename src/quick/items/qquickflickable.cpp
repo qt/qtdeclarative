@@ -1548,6 +1548,15 @@ void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
 void QQuickFlickable::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickFlickable);
+
+    if (event->type() == QEvent::TouchCancel) {
+        if (d->interactive && d->wantsPointerEvent(event))
+            d->cancelInteraction();
+        else
+            QQuickItem::touchEvent(event);
+        return;
+    }
+
     bool unhandled = false;
     const auto &firstPoint = event->points().first();
     switch (firstPoint.state()) {
