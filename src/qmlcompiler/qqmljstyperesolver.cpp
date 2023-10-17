@@ -1110,6 +1110,22 @@ bool QQmlJSTypeResolver::areEquivalentLists(
     return false;
 }
 
+bool QQmlJSTypeResolver::inherits(const QQmlJSScope::ConstPtr &derived, const QQmlJSScope::ConstPtr &base) const
+{
+    const bool matchByName = !base->isComposite();
+    for (QQmlJSScope::ConstPtr derivedBase = derived; derivedBase;
+            derivedBase = derivedBase->baseType()) {
+        if (equals(derivedBase, base))
+            return true;
+        if (matchByName
+                && !derivedBase->isComposite()
+                && derivedBase->internalName() == base->internalName()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
         const QQmlJSScope::ConstPtr &from, const QQmlJSScope::ConstPtr &to) const
 {

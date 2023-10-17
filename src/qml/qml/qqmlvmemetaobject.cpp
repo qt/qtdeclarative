@@ -1107,13 +1107,13 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     Q_ASSERT(parameterCount == function->formalParameterCount());
                     if (void *result = a[0])
                         arguments->types[0].destruct(result);
-                    function->call(nullptr, a, arguments->types, parameterCount);
+                    function->call(object, a, arguments->types, parameterCount);
                 } else {
                     Q_ASSERT(function->formalParameterCount() == 0);
                     const QMetaType returnType = methodData->propType();
                     if (void *result = a[0])
                         returnType.destruct(result);
-                    function->call(nullptr, a, &returnType, 0);
+                    function->call(object, a, &returnType, 0);
                 }
 
                 if (scope.hasException()) {
