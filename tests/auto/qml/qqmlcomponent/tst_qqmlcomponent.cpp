@@ -147,6 +147,7 @@ private slots:
     void loadFromQrc();
     void removeBinding();
     void complexObjectArgument();
+    void bindingEvaluationOrder();
 
 private:
     QQmlEngine engine;
@@ -1469,6 +1470,33 @@ void tst_qqmlcomponent::complexObjectArgument()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->objectName(), QStringLiteral("26 - 25"));
+}
+
+void tst_qqmlcomponent::bindingEvaluationOrder()
+{
+    // Note: This test explicitly tests the order in which bindings are
+    // evaluated, which is generally unspecified. This, however, exists
+    // as a regression test for QQmlObjectCreator code that is supposed
+    // to *not* mess with the QmlIR given to it.
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(R"(
+        import QtQml
+        QtObject {
+            property var myList: ["dummy"]
+            property int p1: { myList.push("p1"); return 0; }
+            property int p2: { myList.push("p2"); return 0; }
+        })", QUrl());
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    const QList<QVariant> myList = o->property("myList").toList();
+    QCOMPARE(myList.size(), 3);
+    QCOMPARE(myList[0].toString(), u"dummy"_s);
+    QCOMPARE(myList[1].toString(), u"p1"_s);
+    QCOMPARE(myList[2].toString(), u"p2"_s);
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
