@@ -337,7 +337,24 @@ void qmlUnregisterModuleImport(const char *uri, int moduleMajor,
 //From qqml.h
 int qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 {
-    return QQmlMetaType::typeId(uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName);
+    auto revision = QTypeRevision::fromVersion(versionMajor, versionMinor);
+    int id =  QQmlMetaType::typeId(uri, revision, qmlName);
+    if (id != -1)
+        return id;
+    /* If the module hasn't been imported yet, we might not have the id of a
+       singleton at this point. To obtain it, we need an engine in order to
+       to do the resolution steps.
+       This is expensive, but we assume that users don't constantly query invalid
+       Types; internal code should use QQmlMetaType API.
+    */
+    QQmlEngine engine;
+    auto *enginePriv = QQmlEnginePrivate::get(&engine);
+    auto loadHelper = QQml::makeRefPointer<LoadHelper>(&enginePriv->typeLoader, uri);
+    auto type = loadHelper->resolveType(qmlName).type;
+    if (type.availableInVersion(revision))
+        return type.index();
+    else
+        return -1;
 }
 
 static bool checkSingletonInstance(QQmlEngine *engine, QObject *instance)

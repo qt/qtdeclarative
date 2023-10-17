@@ -5751,6 +5751,9 @@ void tst_qqmllanguage::retrieveQmlTypeId()
     QVERIFY(qmlTypeId("Test", 1, 0, "MyExtendedUncreateableBaseClass") >= 0);
     QVERIFY(qmlTypeId("Test", 1, 0, "MyUncreateableBaseClass") >= 0);
     QVERIFY(qmlTypeId("Test", 1, 0, "MyTypeObjectSingleton") >= 0);
+
+    // Must also work for declaratively registered types whose module wasn't imported  so far
+    QVERIFY(qmlTypeId("testhelper", 1, 0, "PurelyDeclarativeSingleton") >= 0);
 }
 
 void tst_qqmllanguage::polymorphicFunctionLookup()

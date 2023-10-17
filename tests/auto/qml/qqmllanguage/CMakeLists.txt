@@ -33,6 +33,8 @@ qt_internal_add_test(tst_qqmllanguage
     TESTDATA ${test_data}
 )
 
+add_subdirectory(testhelper)
+
 #### Keys ignored in scope 1:.:.:qqmllanguage.pro:<TRUE>:
 # OTHER_FILES = "data/readonlyObjectProperty.qml"
 # QML_IMPORT_NAME = "StaticTest"
