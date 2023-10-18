@@ -387,6 +387,7 @@ QMLDOM_FIELD(base);
 QMLDOM_FIELD(binaryExpression);
 QMLDOM_FIELD(bindable);
 QMLDOM_FIELD(bindingElement);
+QMLDOM_FIELD(bindingIdentifiers);
 QMLDOM_FIELD(bindingType);
 QMLDOM_FIELD(bindings);
 QMLDOM_FIELD(block);

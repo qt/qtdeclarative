@@ -1057,7 +1057,8 @@ Binding::Binding(const Binding &o)
     : m_bindingType(o.m_bindingType),
       m_name(o.m_name),
       m_annotations(o.m_annotations),
-      m_comments(o.m_comments)
+      m_comments(o.m_comments),
+      m_bindingIdentifiers(o.m_bindingIdentifiers)
 {
     if (o.m_value) {
         m_value = std::make_unique<BindingValue>(*o.m_value);
@@ -1072,6 +1073,7 @@ Binding &Binding::operator=(const Binding &o)
     m_bindingType = o.m_bindingType;
     m_annotations = o.m_annotations;
     m_comments = o.m_comments;
+    m_bindingIdentifiers = o.m_bindingIdentifiers;
     if (o.m_value) {
         if (!m_value)
             m_value = std::make_unique<BindingValue>(*o.m_value);
@@ -1102,6 +1104,11 @@ bool Binding::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) 
     cont = cont && self.dvValueLazyField(visitor, Fields::postCode, [this]() {
         return this->postCode();
     });
+    if (m_bindingIdentifiers) {
+        cont = cont && self.dvItemField(visitor, Fields::bindingIdentifiers, [this, &self]() {
+            return self.subScriptElementWrapperItem(m_bindingIdentifiers);
+        });
+    }
     cont = cont && self.dvWrapField(visitor, Fields::annotations, m_annotations);
     return cont;
 }

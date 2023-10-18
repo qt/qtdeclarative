@@ -82,6 +82,7 @@ public:
     // QSet<QString> const keys(const DomItem &self) const override;
     // DomItem key(const DomItem &self, QString name) const override;
 
+    QQmlJS::SourceLocation combinedLocation() const { return m_combinedLocation; }
 protected:
     QQmlJS::SourceLocation m_combinedLocation;
 };

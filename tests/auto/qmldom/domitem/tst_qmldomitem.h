@@ -2258,6 +2258,55 @@ private slots:
         QVERIFY(rootQmlObject);
     }
 
+    void bindingAttachedOrGroupedProperties()
+    {
+        using namespace Qt::StringLiterals;
+        QString testFile = baseDir + u"/attachedOrGroupedProperties.qml"_s;
+        DomItem rootQmlObject = rootQmlObjectFromFile(testFile, qmltypeDirs);
+        QVERIFY(rootQmlObject);
+
+        DomItem dotNotation = rootQmlObject.path(u".children[0].bindings[\"grouped.font.family\"][0].bindingIdentifiers");
+        QVERIFY(dotNotation);
+        QCOMPARE(dotNotation.internalKind(), DomType::ScriptBinaryExpression);
+        QCOMPARE(dotNotation.field(Fields::left).internalKind(), DomType::ScriptBinaryExpression);
+        QCOMPARE(dotNotation.field(Fields::right).field(Fields::identifier).value().toString(), u"family");
+        QCOMPARE(dotNotation.field(Fields::right).internalKind(), DomType::ScriptIdentifierExpression);
+        QCOMPARE(dotNotation.field(Fields::left).field(Fields::left).internalKind(), DomType::ScriptIdentifierExpression);
+        QCOMPARE(dotNotation.field(Fields::left).field(Fields::left).field(Fields::identifier).value().toString(), u"grouped");
+        QCOMPARE(dotNotation.field(Fields::left).field(Fields::right).internalKind(), DomType::ScriptIdentifierExpression);
+        QCOMPARE(dotNotation.field(Fields::left).field(Fields::right).field(Fields::identifier).value().toString(), u"font");
+        auto dotNotationScope = dotNotation.semanticScope();
+        QVERIFY(!dotNotationScope);
+
+        DomItem groupNotationChild1 = rootQmlObject.path(u".children[1].children[0]");
+        QVERIFY(groupNotationChild1);
+        QCOMPARE(groupNotationChild1.internalKind(), DomType::QmlObject);
+        QCOMPARE(groupNotationChild1.field(Fields::name).value().toString(), u"myText");
+        auto myTextScope = groupNotationChild1.semanticScope();
+        QVERIFY(myTextScope);
+        QCOMPARE(myTextScope->scopeType(), QQmlJSScope::ScopeType::GroupedPropertyScope);
+        QVERIFY(myTextScope->hasProperty("font"));
+
+        DomItem groupNotationChild2 = groupNotationChild1.path(u".children[0]");
+        QCOMPARE(groupNotationChild2.internalKind(), DomType::QmlObject);
+        QCOMPARE(groupNotationChild2.field(Fields::name).value().toString(), u"font");
+
+        auto fontScope = groupNotationChild2.semanticScope();
+        QVERIFY(fontScope);
+        QCOMPARE(fontScope->scopeType(), QQmlJSScope::ScopeType::GroupedPropertyScope);
+        QVERIFY(fontScope->hasProperty("pixelSize"));
+
+        DomItem pixelSize = groupNotationChild2.path(u".bindings[\"pixelSize\"][0].bindingIdentifiers");
+        QCOMPARE(pixelSize.internalKind(), DomType::ScriptIdentifierExpression);
+        QCOMPARE(pixelSize.field(Fields::identifier).value().toString(), u"pixelSize");
+
+        DomItem attached = rootQmlObject.path(u".bindings[\"Keys.onPressed\"][0].bindingIdentifiers");
+        QVERIFY(attached);
+        QCOMPARE(attached.internalKind(), DomType::ScriptBinaryExpression);
+        QCOMPARE(attached.field(Fields::left).field(Fields::identifier).value().toString(), u"Keys");
+        QCOMPARE(attached.field(Fields::right).field(Fields::identifier).value().toString(), u"onPressed");
+    }
+
 private:
     struct DomItemWithLocation
     {

@@ -714,7 +714,8 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
                 }
 
                 QQmlLSUtilsLocation location{ current.canonicalFilePath(), sourceLocation };
-                result.append(location);
+                if (!result.contains(location))
+                    result.append(location);
             }
         }
         return continueForChildren;

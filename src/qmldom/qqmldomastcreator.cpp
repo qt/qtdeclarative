@@ -871,6 +871,24 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
                             .withPath(pathFromOwner)));
         }
     } else {
+        // Create FieldExpression if the bindable element has dots
+        const auto reparentExp = [](const auto &left, const auto &right){
+            SourceLocation s1, s2;
+            left.visitConst([&s1](auto &&el){
+                s1 = el->combinedLocation();
+            });
+
+            right.visitConst([&s2](auto &&el){
+                s2 = el->combinedLocation();
+            });
+
+            auto result = std::make_shared<ScriptElements::BinaryExpression>(s1, s2);
+            result->setOp(ScriptElements::BinaryExpression::FieldMemberAccess);
+            result->setLeft(left);
+            result->setRight(right);
+            return ScriptElementVariant::fromElement(result);
+        };
+
         pathFromOwner =
                 current<QmlObject>().addBinding(bindingV, AddOption::KeepExisting, &bindingPtr);
         QmlStackElement &containingObjectEl = currentEl<QmlObject>();
@@ -881,6 +899,24 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
         FileLocations::addRegion(bindingFileLocation, u"identifier",
                                  el->qualifiedId->identifierToken);
         FileLocations::addRegion(bindingFileLocation, u"colon", el->colonToken);
+
+        ScriptElementVariant bindable;
+        bool first = true;
+        for (auto exp = el->qualifiedId; exp; exp = exp->next) {
+            const SourceLocation identifierLoc = exp->identifierToken;
+            auto id = std::make_shared<ScriptElements::IdentifierExpression>(identifierLoc);
+            id->setName(exp->name);
+            if (first) {
+                first = false;
+                bindable = ScriptElementVariant::fromElement(id);
+                continue;
+            }
+            bindable = reparentExp(bindable, ScriptElementVariant::fromElement(id));
+        }
+        bindingPtr->setBindingIdentifiers(finalizeScriptExpression(bindable,
+                            pathFromOwner.field(Fields::bindingIdentifiers),
+                        rootMap));
+
         Q_ASSERT_X(bindingPtr, className, "binding could not be retrieved");
     }
     if (bindingPtr)
