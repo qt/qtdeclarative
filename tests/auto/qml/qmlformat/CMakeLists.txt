@@ -24,6 +24,7 @@ qt_internal_add_test(tst_qmlformat
         Qt::TestPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
+    TIMEOUT 3000
 )
 
 add_dependencies(tst_qmlformat Qt::qmlformat)
