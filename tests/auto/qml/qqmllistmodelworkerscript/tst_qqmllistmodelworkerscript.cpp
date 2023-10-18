@@ -578,7 +578,7 @@ void tst_qqmllistmodelworkerscript::property_changes_worker()
 
     QQmlExpression expr(engine.rootContext(), &model, script_setup);
     expr.evaluate();
-    QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
+    QVERIFY2(!expr.hasError(), qPrintable(expr.error().toString()));
 
     QSignalSpy spyItemsChanged(&model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QList<int>)));
 
