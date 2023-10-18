@@ -280,9 +280,15 @@ void InternalClass::destroy()
     Base::destroy();
 }
 
-QString InternalClass::keyAt(uint index) const
+ReturnedValue InternalClass::keyAt(uint index) const
 {
-    return nameMap.at(index).toQString();
+    PropertyKey key = nameMap.at(index);
+    if (!key.isValid())
+        return Encode::undefined();
+    if (key.isArrayIndex())
+        return Encode(key.asArrayIndex());
+    Q_ASSERT(key.isStringOrSymbol());
+    return key.asStringOrSymbol()->asReturnedValue();
 }
 
 void InternalClass::changeMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, InternalClassEntry *entry)

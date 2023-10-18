@@ -299,9 +299,14 @@ ReturnedValue ExecutionContext::getProperty(String *name)
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
 
-            uint index = c->internalClass->indexOfValueOrGetter(id);
-            if (index < UINT_MAX)
+            const uint index = c->internalClass->indexOfValueOrGetter(id);
+            if (index < c->locals.alloc)
                 return c->locals[index].asReturnedValue();
+
+            // TODO: We should look up the module imports here, but those are part of the CU:
+            //       imports[index - c->locals.size];
+            //       See QTBUG-118478
+
             Q_FALLTHROUGH();
         }
         case Heap::ExecutionContext::Type_WithContext:
@@ -349,9 +354,14 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
 
-            uint index = c->internalClass->indexOfValueOrGetter(id);
-            if (index < UINT_MAX)
+            const uint index = c->internalClass->indexOfValueOrGetter(id);
+            if (index < c->locals.alloc)
                 return c->locals[index].asReturnedValue();
+
+            // TODO: We should look up the module imports here, but those are part of the CU:
+            //       imports[index - c->locals.size];
+            //       See QTBUG-118478
+
             Q_FALLTHROUGH();
         }
         case Heap::ExecutionContext::Type_GlobalContext: {
