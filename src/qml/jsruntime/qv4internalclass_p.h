@@ -332,7 +332,7 @@ struct InternalClass : Base {
     void init(InternalClass *other);
     void destroy();
 
-    Q_QML_PRIVATE_EXPORT QString keyAt(uint index) const;
+    Q_QML_PRIVATE_EXPORT ReturnedValue keyAt(uint index) const;
     Q_REQUIRED_RESULT InternalClass *nonExtensible();
     Q_REQUIRED_RESULT InternalClass *locked();
 

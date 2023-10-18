@@ -216,10 +216,14 @@ public:
             QJsonArray scopes = frameObj.value(QLatin1String("scopes")).toArray();
             int nscopes = scopes.size();
             int s = 0;
-            for (s = 0; s < nscopes; ++s) {
-                QJsonObject o = scopes.at(s).toObject();
-                if (o.value(QLatin1String("type")).toInt(-2) == 1) // CallContext
-                    break;
+            if (m_targetScope != -1) {
+                s = m_targetScope;
+            } else {
+                for (s = 0; s < nscopes; ++s) {
+                    QJsonObject o = scopes.at(s).toObject();
+                    if (o.value(QLatin1String("type")).toInt(-2) == 1) // CallContext
+                        break;
+                }
             }
             if (s == nscopes)
                 return;
@@ -249,6 +253,7 @@ public:
     bool m_wasPaused;
     QV4Debugger::PauseReason m_pauseReason;
     bool m_captureContextInfo;
+    int m_targetScope = -1;
     QList<QV4Debugger::ExecutionState> m_statesWhenPaused;
     QList<TestBreakPoint> m_breakPointsToAddWhenPaused;
     QVector<QV4::StackFrame> m_stackTrace;
@@ -323,6 +328,9 @@ private slots:
     void readThis();
     void signalParameters();
     void debuggerNoCrash();
+
+    void breakPointInJSModule();
+
 private:
     QV4Debugger *debugger() const
     {
@@ -963,6 +971,35 @@ void tst_qv4debugger::debuggerNoCrash()
     const QJsonObject result = debuggerAgent->m_lookupResults[0];
     const QJsonArray properties = result["0"].toObject().value("properties").toArray();
     QCOMPARE(properties[0].toObject().value("value").toString(), QStringLiteral("patron"));
+
+    debugThread->quit();
+    debugThread->wait();
+}
+
+void tst_qv4debugger::breakPointInJSModule()
+{
+    QQmlEngine engine;
+    QV4::ExecutionEngine *v4 = engine.handle();
+    QPointer<QV4Debugger> v4Debugger = new QV4Debugger(v4);
+    v4->setDebugger(v4Debugger.data());
+
+    QScopedPointer<QThread> debugThread(new QThread);
+    debugThread->start();
+    QScopedPointer<TestAgent> debuggerAgent(new TestAgent(v4));
+    debuggerAgent->addDebugger(v4Debugger);
+    debuggerAgent->moveToThread(debugThread.data());
+
+    QQmlComponent component(&engine, testFileUrl("breakPointInJSModule.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    debuggerAgent->m_captureContextInfo = true;
+    debuggerAgent->m_targetScope = 1;
+    v4Debugger->addBreakPoint("module2.mjs", 6);
+
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+
+    QVERIFY(!debuggerAgent->m_capturedScope.isEmpty());
 
     debugThread->quit();
     debugThread->wait();

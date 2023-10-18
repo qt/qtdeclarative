@@ -1086,8 +1086,11 @@ QStringList QJSManagedValue::jsMetaMembers() const
         const int size = heapClass->size;
         QStringList result;
         result.reserve(size);
-        for (int i = 0; i < size; ++i)
-            result.append(heapClass->keyAt(i));
+        QV4::Scope scope(c->engine());
+        for (int i = 0; i < size; ++i) {
+            QV4::ScopedValue key(scope, heapClass->keyAt(i));
+            result.append(key->toQString());
+        }
         return result;
     }
 
