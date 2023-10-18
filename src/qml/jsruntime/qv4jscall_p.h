@@ -196,16 +196,15 @@ bool convertAndCall(ExecutionEngine *engine, QObject *thisObject,
     const QMetaType resultType = types[0];
     if (scope.hasException()) {
         // Clear the return value
+        resultType.destruct(result);
         resultType.construct(result);
     } else {
         // When the return type is QVariant, JS objects are to be returned as
         // QJSValue wrapped in QVariant. metaTypeFromJS unwraps them, unfortunately.
-        if (resultType == QMetaType::fromType<QVariant>()) {
-            new (result) QVariant(ExecutionEngine::toVariant(jsResult, QMetaType {}));
-        } else {
-            resultType.construct(result);
+        if (resultType == QMetaType::fromType<QVariant>())
+            *static_cast<QVariant *>(result) = ExecutionEngine::toVariant(jsResult, QMetaType {});
+        else
             ExecutionEngine::metaTypeFromJS(jsResult, resultType, result);
-        }
     }
     return !jsResult->isUndefined();
 }
