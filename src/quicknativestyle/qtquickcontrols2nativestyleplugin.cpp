@@ -13,8 +13,8 @@
 #include "qquickcommonstyle.h"
 
 #if defined(Q_OS_MACOS)
-#include "qquickmacstyle_mac_p.h"
 #include "qquickmacfocusframe.h"
+#include "qquickmacstyle_mac_p.h"
 #elif defined(Q_OS_WINDOWS)
 # include "qquickwindowsxpstyle_p.h"
 #endif
@@ -40,7 +40,7 @@ public:
     QString name() const override;
 
 #if defined(Q_OS_MACOS)
-    QScopedPointer<QQuickMacFocusFrame> m_focusFrame;
+    QScopedPointer<QQuickFocusFrame> m_focusFrame;
 #endif
 };
 

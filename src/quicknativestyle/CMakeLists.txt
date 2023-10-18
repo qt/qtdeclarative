@@ -22,7 +22,7 @@ set(qml_files
 )
 
 if(MACOS)
-    list(APPEND qml_files "util/FocusFrame.qml")
+    list(APPEND qml_files "util/MacFocusFrame.qml")
 endif()
 
 if(QT_FEATURE_quick_treeview)
@@ -62,6 +62,7 @@ qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
         qstyle/qquickstylehelper.cpp qstyle/qquickstylehelper_p.h
         qstyle/qquickstyleoption.cpp qstyle/qquickstyleoption.h
         qtquickcontrols2nativestyleplugin.cpp
+        util/qquickfocusframe.cpp util/qquickfocusframe.h
     QML_FILES
         ${qml_files}
     DEFINES
