@@ -1059,11 +1059,17 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                 };
     QTest::newRow("IsNotAnEntryOfEnum")
             << QStringLiteral("IsNotAnEntryOfEnum.qml")
-            << Result{ { Message{ QStringLiteral("\"Hour\" is not an entry of enum \"Mode\"."), 13,
-                                  62, QtInfoMsg } },
+            << Result{ {
+                         Message {
+                                  QStringLiteral("Member \"Mode\" not found on type \"Item\""), 12,
+                                  29, QtWarningMsg },
+                          Message{
+                                  QStringLiteral("\"Hour\" is not an entry of enum \"Mode\"."), 13,
+                                  62, QtInfoMsg }
+                       },
                        {},
-                       { Message{ QStringLiteral("Hours") } },
-                       Result::ExitsNormally };
+                       { Message{ QStringLiteral("Hours") } }
+               };
 
     QTest::newRow("StoreNameMethod")
             << QStringLiteral("storeNameMethod.qml")

@@ -814,6 +814,20 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
                 u"Cannot access singleton as a property of an object. Did you want to access an attached object?"_s,
                 qmlAccessSingleton, getCurrentSourceLocation());
         setAccumulator(QQmlJSRegisterContent());
+    } else if (m_state.accumulatorOut().isEnumeration()) {
+        switch (m_state.accumulatorIn().variant()) {
+        case QQmlJSRegisterContent::ExtensionObjectEnum:
+        case QQmlJSRegisterContent::MetaType:
+        case QQmlJSRegisterContent::ObjectAttached:
+        case QQmlJSRegisterContent::ObjectEnum:
+        case QQmlJSRegisterContent::ObjectModulePrefix:
+        case QQmlJSRegisterContent::ScopeAttached:
+        case QQmlJSRegisterContent::ScopeModulePrefix:
+        case QQmlJSRegisterContent::Singleton:
+            break; // OK, can look up enums on that thing
+        default:
+            setAccumulator(QQmlJSRegisterContent());
+        }
     }
 
     if (checkForEnumProblems(m_state.accumulatorIn(), propertyName))
