@@ -189,6 +189,7 @@ set(qml_files
     popContextAfterRet.qml
     prefixedMetaType.qml
     pressAndHoldButton.qml
+    readEnumFromInstance.qml
     registerPropagation.qml
     registerelimination.qml
     revisions.qml
