@@ -350,7 +350,8 @@ private:
     void generateControls()
     {
         QJsonArray controlsArray = getArray("controls", m_inputConfig);
-        progressTo(controlsArray.count());
+        const QJsonArray defaultControls = getArray("default controls", m_inputConfig);
+        progressTo(controlsArray.count() + defaultControls.count());
 
         const QJsonArray themesArray = m_inputConfig.value("themes").toArray();
         if (themesArray.isEmpty())
@@ -371,22 +372,30 @@ private:
         }
 
         QRegularExpression re(m_bridge->m_controlToGenerate);
+        for (const auto controlValue: defaultControls) {
+            progress();
+            tryGenerateControl(controlValue.toObject(), re, true);
+        }
+
         for (const auto controlValue : controlsArray) {
             progress();
-            const auto controlObj = controlValue.toObject();
-            const QString name = getString("name", controlObj);
-            if (!re.match(name).hasMatch())
-                continue;
-
-            try {
-                generateControl(controlObj);
-            } catch (std::exception &e) {
-                warning("could not generate " + name + ": " + e.what());
-            }
+            tryGenerateControl(controlValue.toObject(), re);
         }
     }
 
-    void generateControl(const QJsonObject &controlObj)
+    void tryGenerateControl(const QJsonObject &controlObj, const QRegularExpression &re, bool isDefault = false) {
+        const QString name = getString("name", controlObj);
+        if (!re.match(name).hasMatch())
+            return;
+
+        try {
+            generateControl(controlObj, isDefault);
+        } catch (std::exception &e) {
+            warning("could not generate " + name + ": " + e.what());
+        }
+    }
+
+    void generateControl(const QJsonObject &controlObj, const bool isDefault = false)
     {
         const QString controlName = getString("name", controlObj);
         progressLabel("Generating " + controlName);
@@ -405,7 +414,8 @@ private:
             m_currentTheme = theme;
             m_themeVars.clear();
             m_themeVars.insert("Theme", theme);
-            exportAssets(controlObj);
+            if (!isDefault)
+                exportAssets(controlObj);
         } catch (std::exception &e) {
             warning("failed exporting assets for theme: "
                 + m_themeVars["Theme"] + "; " + e.what());

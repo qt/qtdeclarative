@@ -24,6 +24,7 @@ qt_add_resources(qqcstylegenerator "controls"
     PREFIX "/"
     FILES
         main.qml
+        templates/ApplicationWindow.qml
         templates/BusyIndicator.qml
         templates/Button.qml
         templates/CheckBox.qml

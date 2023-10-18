@@ -11,6 +11,14 @@
     "qml": {
         "copy": [":/templates/*.qml", ":/templates/impl/*.qml"]
     },
+    "default controls": [
+    {
+        "name": "ApplicationWindow"
+    },
+    {
+        "name": "ScrollView"
+    }
+    ],
     "controls": [
     {
         "name": "BusyIndicator",
