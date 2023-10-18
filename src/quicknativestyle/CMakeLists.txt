@@ -23,6 +23,8 @@ set(qml_files
 
 if(MACOS)
     list(APPEND qml_files "util/MacFocusFrame.qml")
+elseif(WIN32)
+    list(APPEND qml_files "util/WindowsFocusFrame.qml")
 endif()
 
 if(QT_FEATURE_quick_treeview)
@@ -110,6 +112,7 @@ qt_internal_extend_target(qtquickcontrols2nativestyleplugin CONDITION WIN32
         qstyle/windows/qquickwindowsxpstyle.cpp
         qstyle/windows/qquickwindowsxpstyle_p.h
         qstyle/windows/qquickwindowsxpstyle_p_p.h
+        util/qquickwindowsfocusframe.cpp util/qquickwindowsfocusframe.h
     INCLUDE_DIRECTORIES
         qstyle/windows
     LIBRARIES

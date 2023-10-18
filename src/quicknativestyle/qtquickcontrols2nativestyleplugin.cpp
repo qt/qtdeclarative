@@ -16,7 +16,8 @@
 #include "qquickmacfocusframe.h"
 #include "qquickmacstyle_mac_p.h"
 #elif defined(Q_OS_WINDOWS)
-# include "qquickwindowsxpstyle_p.h"
+#include "qquickwindowsfocusframe.h"
+#include "qquickwindowsxpstyle_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -39,7 +40,7 @@ public:
     void initializeTheme(QQuickTheme *theme) override;
     QString name() const override;
 
-#if defined(Q_OS_MACOS)
+#if defined(Q_OS_MACOS) || defined (Q_OS_WIN)
     QScopedPointer<QQuickFocusFrame> m_focusFrame;
 #endif
 };
@@ -121,6 +122,8 @@ void QtQuickControls2NativeStylePlugin::initializeEngine(QQmlEngine *engine, con
 
 #if defined(Q_OS_MACOS)
     m_focusFrame.reset(new QQuickMacFocusFrame());
+#elif defined(Q_OS_WIN)
+    m_focusFrame.reset(new QQuickWindowsFocusFrame());
 #endif
 
     qAddPostRoutine(deleteQStyle);
