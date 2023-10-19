@@ -619,7 +619,8 @@ void tst_qmlls_modules::findUsages_data()
     QTest::addRow("sumUsagesFromDefinition") << jsIdentifierUsagesPath << 8 << 14 << sumUsages;
 }
 
-static bool operator==(const QLspSpecification::Location &a, const QLspSpecification::Location &b)
+static bool locationsAreEqual(const QLspSpecification::Location &a,
+                              const QLspSpecification::Location &b)
 {
     return std::tie(a.uri, a.range.start.character, a.range.start.line, a.range.end.character,
                     a.range.end.line)
@@ -630,12 +631,7 @@ static bool operator==(const QLspSpecification::Location &a, const QLspSpecifica
 static bool locationListsAreEqual(const QList<QLspSpecification::Location> &a,
                                   const QList<QLspSpecification::Location> &b)
 {
-    return std::equal(
-            a.cbegin(), a.cend(), b.cbegin(), b.cend(),
-            [](const QLspSpecification::Location &a, const QLspSpecification::Location &b) {
-                return a == b; // as else std::equal will not find the above implementation of
-                               // operator==
-            });
+    return std::equal(a.cbegin(), a.cend(), b.cbegin(), b.cend(), locationsAreEqual);
 }
 
 static QString locationToString(const QLspSpecification::Location &l)
