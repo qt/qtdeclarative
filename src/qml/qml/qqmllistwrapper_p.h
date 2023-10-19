@@ -29,7 +29,8 @@ namespace QV4 {
 
 namespace Heap {
 
-struct QmlListWrapper : Object {
+struct QmlListWrapper : Object
+{
     void init(QMetaType propertyType);
     void init(QObject *object, int propertyId, QMetaType propertyType);
     void init(QObject *object, const QQmlListProperty<QObject> &list, QMetaType propertyType);
@@ -55,8 +56,6 @@ private:
 
     // interface instead of QMetaType to keep class a POD
     const QtPrivate::QMetaTypeInterface *m_propertyType;
-
-    QObjectList *m_ownData;
 };
 
 }

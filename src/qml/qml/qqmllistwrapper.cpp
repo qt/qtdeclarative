@@ -22,11 +22,81 @@ using namespace Qt::StringLiterals;
 
 DEFINE_OBJECT_VTABLE(QmlListWrapper);
 
-static void setCustomArrayData(Heap::QmlListWrapper *d)
+static void setArrayData(Heap::QmlListWrapper *d)
 {
     QV4::Scope scope(d->internalClass->engine);
     QV4::ScopedObject o(scope, d);
-    o->setArrayType(Heap::ArrayData::Custom);
+    o->arrayCreate();
+}
+
+struct ListWrapperObject
+{
+    QV4::Scope scope;
+    QV4::ScopedObject object;
+
+    ListWrapperObject(QQmlListProperty<QObject> *p)
+        : scope(static_cast<Heap::QmlListWrapper *>(p->data)->internalClass->engine)
+        , object(scope, static_cast<Heap::QmlListWrapper *>(p->data))
+    {
+        Q_ASSERT(object);
+        Q_ASSERT(object->arrayData());
+    }
+
+    Heap::ArrayData *arrayData() const
+    {
+        return object->arrayData();
+    }
+};
+
+static void appendWrapped(QQmlListProperty<QObject> *p, QObject *o)
+{
+    ListWrapperObject object(p);
+    Heap::ArrayData *arrayData = object.arrayData();
+
+    const uint length = arrayData->length();
+    if (Q_UNLIKELY(length == std::numeric_limits<uint>::max())) {
+        object.scope.engine->throwRangeError(QLatin1String("Too many elements."));
+        return;
+    }
+
+    ArrayData::realloc(object.object, Heap::ArrayData::Simple, length + 1, false);
+    arrayData->vtable()->put(
+            object.object, length, QV4::QObjectWrapper::wrap(object.scope.engine, o));
+}
+
+static qsizetype countWrapped(QQmlListProperty<QObject> *p)
+{
+    ListWrapperObject object(p);
+    return object.arrayData()->length();
+}
+
+static QObject *atWrapped(QQmlListProperty<QObject> *p, qsizetype i)
+{
+    ListWrapperObject object(p);
+    QV4::Scoped<QObjectWrapper> result(object.scope, object.arrayData()->get(i));
+    return result ? result->object() : nullptr;
+}
+
+static void clearWrapped(QQmlListProperty<QObject> *p)
+{
+    ListWrapperObject object(p);
+    object.arrayData()->vtable()->truncate(object.object, 0);
+}
+
+static void replaceWrapped(QQmlListProperty<QObject> *p, qsizetype i, QObject *o)
+{
+    ListWrapperObject object(p);
+    object.arrayData()->vtable()->put(
+            object.object, i, QV4::QObjectWrapper::wrap(object.scope.engine, o));
+}
+
+static void removeLastWrapped(QQmlListProperty<QObject> *p)
+{
+    ListWrapperObject object(p);
+    Heap::ArrayData *arrayData = object.arrayData();
+    const uint length = arrayData->length();
+    if (length > 0)
+        arrayData->vtable()->truncate(object.object, length - 1);
 }
 
 void Heap::QmlListWrapper::init(QMetaType propertyType)
@@ -34,9 +104,11 @@ void Heap::QmlListWrapper::init(QMetaType propertyType)
     Object::init();
     m_object.init();
     m_propertyType = propertyType.iface();
-    m_ownData = new QObjectList;
-    *property() = QQmlListProperty<QObject>(nullptr, m_ownData);
-    setCustomArrayData(this);
+    setArrayData(this);
+    *property() = QQmlListProperty<QObject>(
+            nullptr, this,
+            appendWrapped, countWrapped, atWrapped,
+            clearWrapped, replaceWrapped, removeLastWrapped);
 }
 
 void Heap::QmlListWrapper::init(QObject *object, int propertyId, QMetaType propertyType)
@@ -44,10 +116,8 @@ void Heap::QmlListWrapper::init(QObject *object, int propertyId, QMetaType prope
     Object::init();
     m_object.init(object);
     m_propertyType = propertyType.iface();
-    m_ownData = nullptr;
     void *args[] = { property(), nullptr };
     QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyId, args);
-    setCustomArrayData(this);
 }
 
 void Heap::QmlListWrapper::init(
@@ -56,15 +126,12 @@ void Heap::QmlListWrapper::init(
     Object::init();
     m_object.init(object);
     m_propertyType = propertyType.iface();
-    m_ownData = nullptr;
     *property() = list;
-    setCustomArrayData(this);
 }
 
 void Heap::QmlListWrapper::destroy()
 {
     m_object.destroy();
-    delete m_ownData;
     Object::destroy();
 }
 

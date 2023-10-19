@@ -433,6 +433,7 @@ private slots:
 
     void multiVersionSingletons();
     void typeAnnotationCycle();
+    void corpseInQmlList();
 
 private:
     QQmlEngine engine;
@@ -8321,6 +8322,53 @@ void tst_qqmllanguage::typeAnnotationCycle()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("b").value<QObject*>(), o.data());
+}
+
+void tst_qqmllanguage::corpseInQmlList()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("corpseInQmlList.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QScopedPointer<QObject> a(new QObject);
+    QMetaObject::invokeMethod(o.data(), "setB", Q_ARG(QObject *, a.data()));
+
+    QJSValue b = o->property("b").value<QJSValue>();
+    QQmlListProperty<QObject> list
+            = qjsvalue_cast<QQmlListProperty<QObject>>(b.property(QStringLiteral("b")));
+
+    QCOMPARE(list.count(&list), 1);
+    QCOMPARE(list.at(&list, 0), a.data());
+
+    a.reset();
+
+    b = o->property("b").value<QJSValue>();
+    list = qjsvalue_cast<QQmlListProperty<QObject>>(b.property(QStringLiteral("b")));
+
+    QCOMPARE(list.count(&list), 1);
+    QCOMPARE(list.at(&list, 0), nullptr);
+
+    // The list itself is still alive:
+
+    list.append(&list, o.data());
+    QCOMPARE(list.count(&list), 2);
+    QCOMPARE(list.at(&list, 0), nullptr);
+    QCOMPARE(list.at(&list, 1), o.data());
+
+    list.replace(&list, 0, o.data());
+    QCOMPARE(list.count(&list), 2);
+    QCOMPARE(list.at(&list, 0), o.data());
+    QCOMPARE(list.at(&list, 1), o.data());
+
+    list.removeLast(&list);
+    QCOMPARE(list.count(&list), 1);
+    QCOMPARE(list.at(&list, 0), o.data());
+
+    list.clear(&list);
+    QCOMPARE(list.count(&list), 0);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
