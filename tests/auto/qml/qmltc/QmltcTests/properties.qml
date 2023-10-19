@@ -26,13 +26,13 @@ QtObject {
     property date dateP
     property font fontP
     property matrix4x4 matrix4x4P
-    property point pointP
-    property quaternion quatP
-    property rect rectP
-    property size sizeP
-    property vector2d vec2dP
-    property vector3d vec3dP
-    property vector4d vec4dP
+    property point pointP: ({ x: 100, y: 200 })
+    property quaternion quatP: ({ x: 100, y: 200, z: 300, scalar: 400 })
+    property rect rectP: ({ x: 100, y: 200, width: 300, height: 400 })
+    property size sizeP: ({ width: 100, height: 200 })
+    property vector2d vec2dP : ({ x: 100, y: 200 })
+    property vector3d vec3dP: ({ x: 100, y: 200, z: 300 })
+    property vector4d vec4dP: ({ x: 100, y: 200, z: 300, w: 400 })
 
     default property QtObject defaultObjP
     readonly property string readonlyStringP: "foobar"
