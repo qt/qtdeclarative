@@ -195,7 +195,6 @@ public:
 
     uint persistentGraphics : 1;
     uint persistentSceneGraph : 1;
-    uint componentComplete : 1;
     uint inDestructor : 1;
 
     // Storage for setRenderTarget(QQuickRenderTarget).
