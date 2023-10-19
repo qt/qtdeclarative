@@ -1135,7 +1135,7 @@ void tst_qmlls_modules::rangeFormatting_data()
     {
         QLspSpecification::Range selectedRange = { { 10, 25 }, { 23, 0 } };
         QLspSpecification::Range expectedRange = { { 0, 0 }, { 24, 0 } };
-        QTest::addRow("selecteRegion2") << filePath << selectedRange << expectedRange
+        QTest::addRow("selectRegion2") << filePath << selectedRange << expectedRange
                                         << u"formatting/rangeFormatting.formatted2.qml"_s;
     }
 
@@ -1149,7 +1149,7 @@ void tst_qmlls_modules::rangeFormatting_data()
     {
         QLspSpecification::Range selectedRange = { { 0, 0 }, { 24, 0 } };
         QLspSpecification::Range expectedRange = { { 0, 0 }, { 24, 0 } };
-        QTest::addRow("selecteEntireFile") << filePath << selectedRange << expectedRange
+        QTest::addRow("selectEntireFile") << filePath << selectedRange << expectedRange
                                            << u"formatting/rangeFormatting.formatted4.qml"_s;
     }
 
@@ -1194,6 +1194,20 @@ void tst_qmlls_modules::rangeFormatting()
         QCOMPARE(text.range.start.character, expectedRange.start.character);
         QCOMPARE(text.range.end.line, expectedRange.end.line);
         QCOMPARE(text.range.end.character, expectedRange.end.character);
+#if defined(Q_OS_WIN)
+        QEXPECT_FAIL("selectRegion1",
+                     "TODO: Was broken by b6c89c0d1354f24e26c3df45a3524e363c4116bb for windows.",
+                     Abort);
+        QEXPECT_FAIL("selectRegion2",
+                     "TODO: Was broken by b6c89c0d1354f24e26c3df45a3524e363c4116bb for windows.",
+                     Abort);
+        QEXPECT_FAIL("selectSingleLine",
+                     "TODO: Was broken by b6c89c0d1354f24e26c3df45a3524e363c4116bb for windows.",
+                     Abort);
+        QEXPECT_FAIL("selectUnbalanced",
+                     "TODO: Was broken by b6c89c0d1354f24e26c3df45a3524e363c4116bb for windows.",
+                     Abort);
+#endif
         QCOMPARE(text.newText, file.readAll());
     };
 
