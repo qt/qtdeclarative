@@ -427,6 +427,7 @@ private slots:
     void callMethodOfAttachedDerived();
 
     void typeAnnotationCycle();
+    void objectInQmlListAndGc();
 
 private:
     QQmlEngine engine;
@@ -8200,6 +8201,25 @@ void tst_qqmllanguage::typeAnnotationCycle()
 
     QQmlComponent c(&engine, url);
     QVERIFY(!c.isReady());
+}
+
+void tst_qqmllanguage::objectInQmlListAndGc()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("objectInList.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    // Process the deletion event
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QQmlListProperty<QObject> children = o->property("child").value<QQmlListProperty<QObject>>();
+    QCOMPARE(children.count(&children), 1);
+    QObject *child = children.at(&children, 0);
+    QVERIFY(child);
+    QCOMPARE(child->objectName(), QLatin1String("child"));
 }
 
 QTEST_MAIN(tst_qqmllanguage)

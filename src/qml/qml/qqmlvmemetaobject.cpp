@@ -54,14 +54,42 @@ QQmlVMEResolvedList::QQmlVMEResolvedList(QQmlListProperty<QObject> *prop)
 
     if (auto *md = static_cast<QV4::MemberData *>(
                 m_metaObject->propertyAndMethodStorage.asManaged())) {
-        const auto *v = (md->data() + m_id)->as<QV4::VariantObject>();
-        Q_ASSERT(v);
-        Q_ASSERT(v->d());
-        QVariant &data = v->d()->data();
-        Q_ASSERT(data.userType() == qMetaTypeId<QVector<QQmlGuard<QObject>>>());
-        m_list = static_cast<QVector<QQmlGuard<QObject>> *>(data.data());
+        const QV4::Value *v = md->data() + m_id;
+        Q_ASSERT(v->as<QV4::Object>());
+        m_list = static_cast<QV4::Heap::Object *>(v->heapObject());
         Q_ASSERT(m_list);
     }
+}
+
+void QQmlVMEResolvedList::append(QObject *o) const
+{
+    QV4::Scope scope(m_list->internalClass->engine);
+    QV4::Heap::ArrayData *arrayData = m_list->arrayData;
+
+    const uint length = arrayData->length();
+    if (Q_UNLIKELY(length == std::numeric_limits<uint>::max())) {
+        scope.engine->throwRangeError(QLatin1String("Too many elements."));
+        return;
+    }
+
+    QV4::ScopedObject object(scope, m_list);
+    QV4::ArrayData::realloc(object, QV4::Heap::ArrayData::Simple, length + 1, false);
+    arrayData->vtable()->put(
+            object, length, QV4::QObjectWrapper::wrap(scope.engine, o));
+}
+
+QObject *QQmlVMEResolvedList::at(qsizetype i) const
+{
+    QV4::Scope scope(m_list->internalClass->engine);
+    QV4::Scoped<QV4::QObjectWrapper> result(scope, m_list->arrayData->get(i));
+    return result ? result->object() : nullptr;
+}
+
+void QQmlVMEResolvedList::replace(qsizetype i, QObject *o) const
+{
+    QV4::Scope scope(m_list->internalClass->engine);
+    QV4::ScopedObject object(scope, m_list);
+    m_list->arrayData->vtable()->put(object, i, QV4::QObjectWrapper::wrap(scope.engine, o));
 }
 
 QQmlVMEResolvedList::~QQmlVMEResolvedList() = default;
@@ -74,48 +102,48 @@ void QQmlVMEResolvedList::activateSignal() const
 void QQmlVMEMetaObject::list_append(QQmlListProperty<QObject> *prop, QObject *o)
 {
     const QQmlVMEResolvedList resolved(prop);
-    resolved.list()->append(o);
+    resolved.append(o);
     resolved.activateSignal();
 }
 
 void QQmlVMEMetaObject::list_append_nosignal(QQmlListProperty<QObject> *prop, QObject *o)
 {
-    QQmlVMEResolvedList(prop).list()->append(o);
+    QQmlVMEResolvedList(prop).append(o);
 }
 
 static qsizetype list_count(QQmlListProperty<QObject> *prop)
 {
-    return QQmlVMEResolvedList(prop).list()->size();
+    return QQmlVMEResolvedList(prop).size();
 }
 
 static QObject *list_at(QQmlListProperty<QObject> *prop, qsizetype index)
 {
-    return QQmlVMEResolvedList(prop).list()->at(index);
+    return QQmlVMEResolvedList(prop).at(index);
 }
 
 void QQmlVMEMetaObject::list_clear(QQmlListProperty<QObject> *prop)
 {
     const QQmlVMEResolvedList resolved(prop);
-    resolved.list()->clear();
+    resolved.clear();
     resolved.activateSignal();
 }
 
 void QQmlVMEMetaObject::list_clear_nosignal(QQmlListProperty<QObject> *prop)
 {
-    QQmlVMEResolvedList(prop).list()->clear();
+    QQmlVMEResolvedList(prop).clear();
 }
 
 static void list_replace(QQmlListProperty<QObject> *prop, qsizetype index, QObject *o)
 {
     const QQmlVMEResolvedList resolved(prop);
-    resolved.list()->replace(index, o);
+    resolved.replace(index, o);
     resolved.activateSignal();
 }
 
 static void list_removeLast(QQmlListProperty<QObject> *prop)
 {
     const QQmlVMEResolvedList resolved(prop);
-    resolved.list()->removeLast();
+    resolved.removeLast();
     resolved.activateSignal();
 }
 
@@ -646,20 +674,19 @@ QObject* QQmlVMEMetaObject::readPropertyAsQObject(int id) const
     return wrapper->object();
 }
 
-QVector<QQmlGuard<QObject>> *QQmlVMEMetaObject::readPropertyAsList(int id) const
+void QQmlVMEMetaObject::initPropertyAsList(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
-        return nullptr;
+        return;
 
     QV4::Scope scope(engine);
-    QV4::Scoped<QV4::VariantObject> v(scope, *(md->data() + id));
-    if (!v || v->d()->data().metaType() != QMetaType::fromType<QVector<QQmlGuard<QObject>>>()) {
-        const QVector<QQmlGuard<QObject>> guards;
-        v = engine->newVariantObject(QMetaType::fromType<QVector<QQmlGuard<QObject>>>(), &guards);
+    QV4::ScopedObject v(scope, *(md->data() + id));
+    if (!v) {
+        v = engine->newObject();
+        v->arrayCreate();
         md->set(engine, id, v);
     }
-    return static_cast<QVector<QQmlGuard<QObject>> *>(v->d()->data().data());
 }
 
 QRectF QQmlVMEMetaObject::readPropertyAsRectF(int id) const
@@ -740,7 +767,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                             }
                             quintptr encodedIndex = (inheritanceDepth << idBits) + id;
 
-                            readPropertyAsList(id); // Initializes if necessary
+                            initPropertyAsList(id);
                             *static_cast<QQmlListProperty<QObject> *>(a[0])
                                     = QQmlListProperty<QObject>(
                                         object, reinterpret_cast<void *>(quintptr(encodedIndex)),
