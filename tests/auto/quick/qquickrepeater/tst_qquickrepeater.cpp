@@ -1056,8 +1056,7 @@ void tst_QQuickRepeater::ownership()
 
     QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(aim.get()));
 
-    engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    gc(engine);
 
     QVERIFY(modelGuard);
 
@@ -1075,8 +1074,7 @@ void tst_QQuickRepeater::ownership()
 
     QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(delegate.get()));
 
-    engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    gc(engine);
 
     QVERIFY(delegateGuard);
 
@@ -1089,8 +1087,7 @@ void tst_QQuickRepeater::ownership()
     delegate.release();
     aim.release();
 
-    engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    gc(engine);
 
     QVERIFY(!delegateGuard);
     QVERIFY(!modelGuard);

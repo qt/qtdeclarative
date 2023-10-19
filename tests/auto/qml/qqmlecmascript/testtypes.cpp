@@ -9,6 +9,7 @@
 #include <QQmlEngine>
 #include <QJSEngine>
 #include <QThread>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class BaseExtensionObject : public QObject
 {
@@ -394,9 +395,7 @@ void QObjectContainer::children_append(QQmlListProperty<QObject> *prop, QObject 
 
     if (that->gcOnAppend) {
         QQmlEngine *engine = qmlEngine(that);
-        engine->collectGarbage();
-        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-        QCoreApplication::processEvents();
+        gc(*engine);
     }
 }
 

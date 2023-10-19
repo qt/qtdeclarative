@@ -7,6 +7,7 @@
 #include <QtCore/QMutexLocker>
 #include <QtQml/QQmlComponent>
 #include <QtQml/QQmlEngine>
+#include <private/qqmlengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -108,6 +109,34 @@ QQmlTestMessageHandler::~QQmlTestMessageHandler()
     qInstallMessageHandler(m_oldHandler);
     QQmlTestMessageHandler::m_instance = nullptr;
 }
+
+
+bool gcDone(const QV4::ExecutionEngine *engine) {
+    // always true as long as the gc is non-incremental
+    Q_UNUSED(engine);
+    return true;
+}
+
+void gc(QV4::ExecutionEngine &engine, GCFlags flags)
+{
+    engine.memoryManager->runGC();
+    if (int(GCFlags::DontSendPostedEvents) & int(flags))
+        return;
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+}
+
+bool gcDone(QQmlEngine *engine) {
+    auto priv = QQmlEnginePrivate::get(engine);
+    return gcDone(priv->v4engine());
+}
+
+void gc(QQmlEngine &engine, GCFlags flags)
+{
+    auto priv = QQmlEnginePrivate::get(&engine);
+    gc(*priv->v4engine(), flags);
+}
+
 
 QT_END_NAMESPACE
 

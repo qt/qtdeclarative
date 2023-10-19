@@ -22,7 +22,6 @@ Rectangle {
             if (component.status == Component.Ready) {
                 text.vp = component.createObject(null); // has JavaScript ownership
             }
-            gc();
         }
     }
 }

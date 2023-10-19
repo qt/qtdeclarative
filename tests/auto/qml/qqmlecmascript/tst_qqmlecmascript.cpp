@@ -444,14 +444,6 @@ private:
     }
 };
 
-static void gc(QQmlEngine &engine)
-{
-    engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-    QCoreApplication::processEvents();
-}
-
-
 tst_qqmlecmascript::tst_qqmlecmascript()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
@@ -4082,10 +4074,7 @@ void tst_qqmlecmascript::ownership()
 
         QScopedPointer<QObject> object(component.create(context.data()));
 
-        engine.collectGarbage();
-
-        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-        QCoreApplication::processEvents();
+        gc(engine);
 
         QVERIFY(own.object.isNull());
     }
@@ -4099,10 +4088,7 @@ void tst_qqmlecmascript::ownership()
 
         QScopedPointer<QObject> object(component.create(context.data()));
 
-        engine.collectGarbage();
-
-        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-        QCoreApplication::processEvents();
+        gc(engine);
 
         QVERIFY(own.object != nullptr);
     }
@@ -4178,9 +4164,7 @@ void tst_qqmlecmascript::ownershipCustomReturnValue()
     QVERIFY(source.value != nullptr);
     }
 
-    engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-    QCoreApplication::processEvents();
+    gc(engine);
 
     QVERIFY(source.value.isNull());
 }
@@ -4211,10 +4195,7 @@ void tst_qqmlecmascript::ownershipRootObject()
     QScopedPointer<QObject> object(component.create(context.data()));
     QVERIFY2(object, qPrintable(component.errorString()));
 
-    engine.collectGarbage();
-
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-    QCoreApplication::processEvents();
+    gc(engine);
 
     QVERIFY(own.object != nullptr);
 }
@@ -4239,10 +4220,7 @@ void tst_qqmlecmascript::ownershipConsistency()
     QScopedPointer<QObject> object(component.create(context.data()));
     QVERIFY2(object, qPrintable(component.errorString()));
 
-    engine.collectGarbage();
-
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-    QCoreApplication::processEvents();
+    gc(engine);
 
     QVERIFY(own.object != nullptr);
 }
@@ -4772,6 +4750,7 @@ void tst_qqmlecmascript::verifyContextLifetime(const QQmlRefPointer<QQmlContextD
             }
 
             ctxt->engine()->collectGarbage();
+            QTRY_VERIFY(gcDone(ctxt->engine()));
             qml = scripts->get(i);
             newContext = qml ? qml->getContext() : nullptr;
             QCOMPARE(scriptContext.data(), newContext.data());
@@ -5599,7 +5578,9 @@ void tst_qqmlecmascript::propertyVarOwnership()
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(object, qPrintable(component.errorString()));
     QMetaObject::invokeMethod(object.data(), "createComponent");
-    engine.collectGarbage();
+    // This test only works if we don't deliver the pending delete later event
+    // that collectGarbage will post before calling runTest
+    gc(engine, GCFlags::DontSendPostedEvents);
     QMetaObject::invokeMethod(object.data(), "runTest");
     QCOMPARE(object->property("test").toBool(), true);
     }
@@ -5615,8 +5596,7 @@ void tst_qqmlecmascript::propertyVarImplicitOwnership()
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(object, qPrintable(component.errorString()));
     QMetaObject::invokeMethod(object.data(), "assignCircular");
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
-    QCoreApplication::processEvents();
+    gc(engine);
     QObject *rootObject = object->property("vp").value<QObject*>();
     QVERIFY(rootObject != nullptr);
     QObject *childObject = rootObject->findChild<QObject*>("text");
@@ -5625,6 +5605,8 @@ void tst_qqmlecmascript::propertyVarImplicitOwnership()
     QCOMPARE(childObject->property("textCanary").toInt(), 10);
     // Creates a reference to a constructed QObject:
     QMetaObject::invokeMethod(childObject, "constructQObject");
+    // Don't send delete later events yet, we do it manually later
+    gc(engine, GCFlags::DontSendPostedEvents);
     QPointer<QObject> qobjectGuard(childObject->property("vp").value<QObject*>()); // get the pointer prior to processing deleteLater events.
     QVERIFY(!qobjectGuard.isNull());
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
@@ -5643,8 +5625,7 @@ void tst_qqmlecmascript::propertyVarReparent()
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(object, qPrintable(component.errorString()));
     QMetaObject::invokeMethod(object.data(), "assignVarProp");
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
-    QCoreApplication::processEvents();
+    gc(engine);
     QObject *rect = object->property("vp").value<QObject*>();
     QObject *text = rect->findChild<QObject*>("textOne");
     QObject *text2 = rect->findChild<QObject*>("textTwo");
@@ -5658,6 +5639,7 @@ void tst_qqmlecmascript::propertyVarReparent()
     QCOMPARE(text2->property("textCanary").toInt(), 12);
     // now construct an image which we will reparent.
     QMetaObject::invokeMethod(text2, "constructQObject");
+    gc(engine, GCFlags::DontSendPostedEvents);
     QObject *image = text2->property("vp").value<QObject*>();
     QPointer<QObject> imageGuard(image);
     QVERIFY(!imageGuard.isNull());
@@ -5685,8 +5667,7 @@ void tst_qqmlecmascript::propertyVarReparentNullContext()
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(object, qPrintable(component.errorString()));
     QMetaObject::invokeMethod(object.data(), "assignVarProp");
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
-    QCoreApplication::processEvents();
+    gc(engine);
     QObject *rect = object->property("vp").value<QObject*>();
     QObject *text = rect->findChild<QObject*>("textOne");
     QObject *text2 = rect->findChild<QObject*>("textTwo");
@@ -5700,6 +5681,7 @@ void tst_qqmlecmascript::propertyVarReparentNullContext()
     QCOMPARE(text2->property("textCanary").toInt(), 12);
     // now construct an image which we will reparent.
     QMetaObject::invokeMethod(text2, "constructQObject");
+    gc(engine);
     QObject *image = text2->property("vp").value<QObject*>();
     QPointer<QObject> imageGuard(image);
     QVERIFY(!imageGuard.isNull());
@@ -5926,9 +5908,7 @@ void tst_qqmlecmascript::handleReferenceManagement()
         gc(hrmEngine);
         QCOMPARE(dtorCount, 0); // second has JS ownership, kept alive by first's reference
         object.reset();
-        hrmEngine.collectGarbage();
-        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-        QCoreApplication::processEvents();
+        gc(hrmEngine);
         QCOMPARE(dtorCount, 3);
     }
 
@@ -5945,9 +5925,7 @@ void tst_qqmlecmascript::handleReferenceManagement()
         gc(hrmEngine);
         QCOMPARE(dtorCount, 2); // both should be cleaned up, since circular references shouldn't keep alive.
         object.reset();
-        hrmEngine.collectGarbage();
-        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-        QCoreApplication::processEvents();
+        gc(hrmEngine);
         QCOMPARE(dtorCount, 3);
     }
 
@@ -8224,7 +8202,9 @@ void tst_qqmlecmascript::qqmldataDestroyed()
         QVERIFY2(object, qPrintable(c.errorString()));
         // now gc causing the collection of the dynamically constructed object.
         engine.collectGarbage();
+        QTRY_VERIFY(gcDone(&engine));
         engine.collectGarbage();
+        QTRY_VERIFY(gcDone(&engine));
         // now process events to allow deletion (calling qqmldata::destroyed())
         QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
         QCoreApplication::processEvents();

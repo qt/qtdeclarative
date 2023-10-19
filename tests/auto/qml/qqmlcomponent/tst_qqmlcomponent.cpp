@@ -90,13 +90,6 @@ public slots:
     }
 };
 
-static void gc(QQmlEngine &engine)
-{
-    engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-    QCoreApplication::processEvents();
-}
-
 class tst_qqmlcomponent : public QQmlDataTest
 {
     Q_OBJECT

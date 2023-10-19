@@ -435,7 +435,7 @@ public:
         // There might be JS function objects around that hold a last ref to the compilation unit that's
         // keeping the type compilation data (CompilationUnit) around. Let's collect them as well so that
         // trim works well.
-        engine->collectGarbage();
+        gc(*engine);
 
         engine->trimComponentCache();
     }

@@ -25,7 +25,6 @@ Rectangle {
             if (component.status == Component.Ready) {
                 textTwo.vp = component.createObject(null); // has JavaScript ownership
             }
-            gc();
         }
 
         function deassignVp() {

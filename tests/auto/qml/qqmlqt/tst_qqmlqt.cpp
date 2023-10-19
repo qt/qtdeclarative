@@ -1300,7 +1300,7 @@ void tst_qqmlqt::later()
             QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
             QCoreApplication::processEvents();
         } else if (propNames.at(i) == QLatin1String("collectGarbage")) {
-            engine.collectGarbage();
+            gc(engine, GCFlags::DontSendPostedEvents);
         } else {
             QCOMPARE(root->property(qPrintable(propNames.at(i))), values.at(i));
         }

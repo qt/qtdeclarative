@@ -16,7 +16,6 @@ Item {
 
     function assignCircular() {
         vp = constructGarbage();
-        gc();
     }
 
     function deassignCircular() {

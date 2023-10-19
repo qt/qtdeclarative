@@ -16,7 +16,6 @@ Item {
 
     function assignVarProp() {
         vp = constructGarbage();
-        gc();
     }
 
     function deassignVarProp() {

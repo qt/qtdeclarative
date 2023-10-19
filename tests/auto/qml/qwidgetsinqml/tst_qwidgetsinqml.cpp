@@ -5,6 +5,7 @@
 #include <QQmlEngine>
 #include <QtQml>
 #include <QWidget>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_QWidgetsInQml : public QObject
 {
@@ -19,13 +20,6 @@ private slots:
     void widgetAsDefaultPropertyKept();
     void widgetAsDefaultPropertyKeptDuringCreation();
 };
-
-static void gc(QQmlEngine &engine)
-{
-    engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-    QCoreApplication::processEvents();
-}
 
 // Like QtObject, but with default property
 class QObjectContainer : public QObject

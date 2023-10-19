@@ -824,7 +824,7 @@ void tst_qqmlcontext::contextLeak()
         scriptContext = scriptContextWrapper->as<QV4::QQmlContextWrapper>()->getContext();
     }
 
-    engine.collectGarbage();
+    gc(engine);
 
     // Each time a JS file (non-pragma-shared) is imported, we create a QQmlContext(Data) for it.
     // Make sure that context does not leak.

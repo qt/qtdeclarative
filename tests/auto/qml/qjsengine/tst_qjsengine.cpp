@@ -18,6 +18,7 @@
 #include <QUrl>
 #include <QModelIndex>
 #include <QtQml/qqmllist.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)
@@ -941,7 +942,7 @@ void tst_QJSEngine::newQObject_ownership()
         {
             QJSValue v = eng.newQObject(ptr);
         }
-        eng.collectGarbage();
+        gc(*eng.handle(), GCFlags::DontSendPostedEvents);
         if (ptr)
             QGuiApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
         QVERIFY(ptr.isNull());
@@ -1926,7 +1927,7 @@ void tst_QJSEngine::collectGarbage()
     QPointer<QObject> ptr = new QObject();
     QVERIFY(ptr != nullptr);
     (void)eng.newQObject(ptr);
-    eng.collectGarbage();
+    gc(*eng.handle(), GCFlags::DontSendPostedEvents);
     if (ptr)
         QGuiApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
     QVERIFY(ptr.isNull());
@@ -1961,8 +1962,8 @@ void tst_QJSEngine::collectGarbageNestedWrappersTwoEngines()
     QCOMPARE(engine1.evaluate("foobar.dummy.baz").toInt(), 42);
     QCOMPARE(engine2.evaluate("foobar.dummy.baz").toInt(), 43);
 
-    engine1.collectGarbage();
-    engine2.collectGarbage();
+    gc(*engine1.handle());
+    gc(*engine2.handle());
 
     // The GC should not collect dummy object wrappers neither in engine1 nor engine2, we
     // verify that by checking whether the baz property still has its previous value.
@@ -3900,7 +3901,7 @@ void tst_QJSEngine::prototypeChainGc()
     QJSValue factory = engine.evaluate("(function() { return Object.create(Object.create({})); })");
     QVERIFY(factory.isCallable());
     QJSValue obj = factory.call();
-    engine.collectGarbage();
+    gc(*engine.handle());
 
     QJSValue proto = getProto.call(QJSValueList() << obj);
     proto = getProto.call(QJSValueList() << proto);
@@ -3919,7 +3920,7 @@ void tst_QJSEngine::prototypeChainGc_QTBUG38299()
                     "delete mapping.prop1\n"
                     "\n");
     // Don't hang!
-    engine.collectGarbage();
+    gc(*engine.handle());
 }
 
 void tst_QJSEngine::dynamicProperties()

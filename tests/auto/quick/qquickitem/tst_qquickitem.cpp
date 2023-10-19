@@ -1994,13 +1994,6 @@ void tst_qquickitem::acceptedMouseButtons()
     QCOMPARE(item.releaseCount, 3);
 }
 
-static void gc(QQmlEngine &engine)
-{
-    engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-    QCoreApplication::processEvents();
-}
-
 void tst_qquickitem::visualParentOwnership()
 {
     QQmlEngine engine;

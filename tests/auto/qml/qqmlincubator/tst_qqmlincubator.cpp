@@ -1148,7 +1148,7 @@ void tst_qqmlincubator::garbageCollection()
     QQmlComponent component(&engine, testFileUrl("garbageCollection.qml"));
     QScopedPointer<QObject> obj(component.create());
 
-    engine.collectGarbage();
+    gc(engine);
 
     std::atomic<bool> b{true};
     controller.incubateWhile(&b);
@@ -1166,7 +1166,7 @@ void tst_qqmlincubator::garbageCollection()
     incubatorVariant.clear();
 
     // verify incubator is correctly collected now that incubation is complete and all references are gone
-    engine.collectGarbage();
+    gc(engine);
     QVERIFY(weakIncubatorRef.isNullOrUndefined());
 }
 

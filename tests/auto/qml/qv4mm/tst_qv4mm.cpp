@@ -38,7 +38,8 @@ void tst_qv4mm::gcStats()
 {
     QLoggingCategory::setFilterRules("qt.qml.gc.*=true");
     QQmlEngine engine;
-    engine.collectGarbage();
+    gc(engine);
+    QLoggingCategory::setFilterRules("qt.qml.gc.*=false");
 }
 
 void tst_qv4mm::multiWrappedQObjects()
@@ -62,27 +63,27 @@ void tst_qv4mm::multiWrappedQObjects()
 
         // The additional WeakValue from m_multiplyWrappedQObjects hasn't been moved
         // to m_pendingFreedObjectWrapperValue yet. It's still alive after all.
-        engine1.memoryManager->runGC();
+        gc(engine1);
         QCOMPARE(engine1.memoryManager->m_pendingFreedObjectWrapperValue.size(), 1);
 
         // engine2 doesn't own the object as engine1 was the first to wrap it above.
         // Therefore, no effect here.
-        engine2.memoryManager->runGC();
+        gc(engine2);
         QCOMPARE(engine2.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
     }
 
     // Clears m_pendingFreedObjectWrapperValue. Now it's really dead.
-    engine1.memoryManager->runGC();
+    gc(engine1);
     QCOMPARE(engine1.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
 
-    engine2.memoryManager->runGC();
+    gc(engine2);
     QCOMPARE(engine2.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
 }
 
 void tst_qv4mm::accessParentOnDestruction()
 {
-    QLoggingCategory::setFilterRules("qt.qml.gc.*=false");
     QQmlEngine engine;
+
     QQmlComponent component(&engine, testFileUrl("createdestroy.qml"));
     std::unique_ptr<QObject> obj(component.create());
     QVERIFY(obj);
@@ -91,6 +92,7 @@ void tst_qv4mm::accessParentOnDestruction()
     QTRY_VERIFY(!timer->property("running").toBool());
     QCOMPARE(obj->property("iterations").toInt(), 100);
     QCOMPARE(obj->property("creations").toInt(), 100);
+    gc(engine); // ensure incremental gc has finished, and collected all objects
     QCOMPARE(obj->property("destructions").toInt(), 100);
 }
 
@@ -181,7 +183,7 @@ void tst_qv4mm::cleanInternalClasses()
     }
 
     // Make sure that all dangling ICs are actually gone.
-    scope.engine->memoryManager->runGC();
+    gc(engine);
 
     // Now the GC has removed the ICs we originally added by adding properties.
     QVERIFY(prevIC->d()->transitions.empty() || prevIC->d()->transitions.front().lookup == nullptr);
