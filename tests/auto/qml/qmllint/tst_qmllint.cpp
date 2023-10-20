@@ -2023,17 +2023,34 @@ void TestQmllint::valueTypesFromString()
     runTest("valueTypesFromString.qml",
             Result{ {
                             Message{
+                                    u"Binding is not supported: Type QPointF should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                            Message{
                                     u"Binding is not supported: Type QSizeF should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
                             Message{
                                     u"Binding is not supported: Type QRectF should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
                             Message{
-                                    u"Binding is not supported: Type QPointF should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                                    u"Binding is not supported: Type QVector2D should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                            Message{
+                                    u"Binding is not supported: Type QVector3D should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                            Message{
+                                    u"Binding is not supported: Type QVector4D should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                            Message{
+                                    u"Binding is not supported: Type QQuaternion should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
+                            Message{
+                                    u"Binding is not supported: Type QMatrix4x4 should be constructed using QML_STRUCTURED_VALUE's construction mechanism, instead of a string."_s },
                     },
                     { /*bad messages */ },
                     {
                             Message{ u"({ width: 30, height: 50 })"_s },
                             Message{ u"({ x: 10, y: 20, width: 30, height: 50 })"_s },
                             Message{ u"({ x: 30, y: 50 })"_s },
+                            Message{ u"({ x: 1, y: 2 })"_s },
+                            Message{ u"({ x: 1, y: 2 })"_s },
+                            Message{ u"({ x: 1, y: 2, z: 3 })"_s },
+                            Message{ u"({ x: 1, y: 2, z: 3, w: 4 })"_s },
+                            Message{ u"({ scalar: 1, x: 2, y: 3, z: 4 })"_s },
+                            Message{
+                                    u"({ m11: 1, m12: 2, m13: 3, m14: 4, m21: 5, m22: 6, m23: 7, m24: 8, m31: 9, m32: 10, m33: 11, m34: 12, m41: 13, m42: 14, m43: 15, m44: 16 })"_s },
                     } });
 }
 

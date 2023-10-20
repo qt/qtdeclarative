@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "quicklintplugin.h"
+#include "qquickliteralbindingcheck_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -610,6 +611,8 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
     if (hasQuick) {
         manager->registerElementPass(std::make_unique<AnchorsValidatorPass>(manager));
         manager->registerElementPass(std::make_unique<PropertyChangesValidatorPass>(manager));
+        manager->registerPropertyPass(std::make_unique<QQuickLiteralBindingCheck>(manager),
+                                      QAnyStringView(), QAnyStringView());
 
         auto forbiddenChildProperty =
                 std::make_unique<ForbiddenChildrenPropertyValidatorPass>(manager);
