@@ -614,6 +614,11 @@ QQuickRangeSlider::QQuickRangeSlider(QQuickItem *parent)
     d->second = new QQuickRangeSliderNode(1.0, this);
 
     setFlag(QQuickItem::ItemIsFocusScope);
+#ifdef Q_OS_MACOS
+    setFocusPolicy(Qt::TabFocus);
+#else
+    setFocusPolicy(Qt::StrongFocus);
+#endif
     setAcceptedMouseButtons(Qt::LeftButton);
 #if QT_CONFIG(quicktemplates2_multitouch)
     setAcceptTouchEvents(true);

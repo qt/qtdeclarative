@@ -907,4 +907,15 @@ TestCase {
         control.visible = true
         waitForRendering(control)
     }
+
+    function test_clickFocus() {
+        let control = createTemporaryObject(slider, testCase)
+        verify(control)
+
+        mouseClick(control)
+        if (Qt.platform.os === "osx")
+            verify(!control.activeFocus)
+        else
+            verify(control.activeFocus)
+    }
 }

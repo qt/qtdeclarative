@@ -1230,4 +1230,15 @@ TestCase {
         compare(control.first.value, 0.2)
         compare(control.first.position, 0.2)
     }
+
+    function test_clickFocus() {
+        let control = createTemporaryObject(sliderComponent, testCase)
+        verify(control)
+
+        mouseClick(control)
+        if (Qt.platform.os === "osx")
+            verify(!control.activeFocus)
+        else
+            verify(control.activeFocus)
+    }
 }
