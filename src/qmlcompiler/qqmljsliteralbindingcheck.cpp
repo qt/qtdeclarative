@@ -8,6 +8,7 @@
 #include <private/qqmljsmetatypes_p.h>
 #include <private/qqmlsa_p.h>
 #include <private/qqmlsasourcelocation_p.h>
+#include <private/qqmlstringconverters_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -46,9 +47,15 @@ static bool canConvertForLiteralBinding(QQmlJSTypeResolver *resolver,
 }
 
 QQmlJSLiteralBindingCheck::QQmlJSLiteralBindingCheck(QQmlSA::PassManager *passManager)
-    : QQmlSA::PropertyPass(passManager),
+    : LiteralBindingCheckBase(passManager),
       m_resolver(QQmlSA::PassManagerPrivate::resolver(*passManager))
 {
+}
+
+QQmlJSStructuredTypeError QQmlJSLiteralBindingCheck::check(const QString &typeName,
+                                                           const QString &value) const
+{
+    return QQmlJSValueTypeFromStringCheck::hasError(typeName, value);
 }
 
 static QString literalPrettyTypeName(QQmlSA::BindingType type)
@@ -70,14 +77,12 @@ static QString literalPrettyTypeName(QQmlSA::BindingType type)
     Q_UNREACHABLE_RETURN(QString());
 }
 
-void QQmlJSLiteralBindingCheck::onBinding(const QQmlSA::Element &element, const QString &propertyName,
-                           const QQmlSA::Binding &binding, const QQmlSA::Element &bindingScope,
-                           const QQmlSA::Element &value)
+QQmlSA::Property LiteralBindingCheckBase::getProperty(const QString &propertyName,
+                                                      const QQmlSA::Binding &binding,
+                                                      const QQmlSA::Element &bindingScope) const
 {
-    Q_UNUSED(value);
-
     if (!QQmlSA::Binding::isLiteralBinding(binding.bindingType()))
-        return;
+        return {};
 
     const QString unqualifiedPropertyName = [&propertyName]() {
         if (auto idx = propertyName.lastIndexOf(u'.'); idx != -1 && idx != propertyName.size() - 1)
@@ -85,6 +90,18 @@ void QQmlJSLiteralBindingCheck::onBinding(const QQmlSA::Element &element, const 
         return propertyName;
     }();
     const auto property = bindingScope.property(unqualifiedPropertyName);
+    return property;
+}
+
+
+void LiteralBindingCheckBase::onBinding(const QQmlSA::Element &element, const QString &propertyName,
+                                        const QQmlSA::Binding &binding,
+                                        const QQmlSA::Element &bindingScope,
+                                        const QQmlSA::Element &value)
+{
+    Q_UNUSED(value);
+
+    const auto property = getProperty(propertyName, binding, bindingScope);
     if (!property.isValid())
         return;
 
@@ -95,6 +112,39 @@ void QQmlJSLiteralBindingCheck::onBinding(const QQmlSA::Element &element, const 
                     qmlReadOnlyProperty, binding.sourceLocation());
         return;
     }
+    if (auto propertyType = property.type(); propertyType) {
+        auto construction = check(propertyType.internalId(), binding.stringValue());
+        if (construction.isValid()) {
+            const QString warningMessage =
+                    u"Binding is not supported: Type %1 should be constructed using"
+                    u" QML_STRUCTURED_VALUE's construction mechanism, instead of a "
+                    u"string."_s.arg(propertyType.internalId());
+
+            if (!construction.code.isNull()) {
+                QQmlSA::FixSuggestion suggestion(
+                        u"Replace string by structured value construction"_s,
+                        binding.sourceLocation(), construction.code);
+                emitWarning(warningMessage, qmlIncompatibleType, binding.sourceLocation(), suggestion);
+                return;
+            }
+            emitWarning(warningMessage, qmlIncompatibleType, binding.sourceLocation());
+            return;
+        }
+    }
+
+}
+
+void QQmlJSLiteralBindingCheck::onBinding(const QQmlSA::Element &element,
+                                          const QString &propertyName,
+                                          const QQmlSA::Binding &binding,
+                                          const QQmlSA::Element &bindingScope,
+                                          const QQmlSA::Element &value)
+{
+    LiteralBindingCheckBase::onBinding(element, propertyName, binding, bindingScope, value);
+
+    const auto property = getProperty(propertyName, binding, bindingScope);
+    if (!property.isValid())
+        return;
 
     if (!canConvertForLiteralBinding(m_resolver, resolveLiteralType(binding), property.type())) {
         emitWarning(u"Cannot assign literal of type %1 to %2"_s.arg(

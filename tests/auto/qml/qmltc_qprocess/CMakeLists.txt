@@ -42,6 +42,7 @@ qt6_add_qml_module(tst_qmltc_qprocess
         data/invalidSignalHandlers.qml
         data/QmlBaseFromAnotherModule.qml
         data/invalidTypeAnnotation.qml
+        data/constructFromString.qml
 )
 
 set(common_libraries

@@ -15,15 +15,33 @@
 // We mean it.
 
 #include <QtCore/qglobal.h>
-#include <qtqmlcompilerexports.h>
 #include <QtQmlCompiler/qqmlsa.h>
+
+#include <qtqmlcompilerexports.h>
+#include "qqmljsvaluetypefromstringcheck_p.h"
 
 QT_BEGIN_NAMESPACE
 
 class QQmlJSImportVisitor;
 class QQmlJSTypeResolver;
 
-class Q_QMLCOMPILER_EXPORT QQmlJSLiteralBindingCheck: public QQmlSA::PropertyPass
+class Q_QMLCOMPILER_EXPORT LiteralBindingCheckBase : public QQmlSA::PropertyPass
+{
+public:
+    using QQmlSA::PropertyPass::PropertyPass;
+
+    void onBinding(const QQmlSA::Element &element, const QString &propertyName,
+                   const QQmlSA::Binding &binding, const QQmlSA::Element &bindingScope,
+                   const QQmlSA::Element &value) override;
+
+protected:
+    virtual QQmlJSStructuredTypeError check(const QString &typeName, const QString &value) const = 0;
+
+    QQmlSA::Property getProperty(const QString &propertyName, const QQmlSA::Binding &binding,
+                                 const QQmlSA::Element &bindingScope) const;
+};
+
+class Q_QMLCOMPILER_EXPORT QQmlJSLiteralBindingCheck: public LiteralBindingCheckBase
 {
 public:
     QQmlJSLiteralBindingCheck(QQmlSA::PassManager *manager);
@@ -34,6 +52,9 @@ public:
 
 private:
     QQmlJSTypeResolver *m_resolver;
+
+protected:
+    QQmlJSStructuredTypeError check(const QString &typeName, const QString &value) const override;
 };
 
 QT_END_NAMESPACE
