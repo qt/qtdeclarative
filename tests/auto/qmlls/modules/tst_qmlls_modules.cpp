@@ -353,7 +353,6 @@ void tst_qmlls_modules::function_documentations()
 
 void tst_qmlls_modules::buildDir()
 {
-    QSKIP("TODO: Was broken by eade144a6d95a715decfd7ab7b1fd7c164041c9a");
     ignoreDiagnostics();
     const QString filePath = u"completions/fromBuildDir.qml"_s;
     const auto uri = openFile(filePath);
@@ -363,7 +362,7 @@ void tst_qmlls_modules::buildDir()
             ExpectedCompletions({
                     { u"property"_s, CompletionItemKind::Keyword },
                     { u"function"_s, CompletionItemKind::Keyword },
-                    { u"Rectangle"_s, CompletionItemKind::Class },
+                    { u"Rectangle"_s, CompletionItemKind::Constructor },
             }),
             QStringList({ u"BuildDirType"_s, u"QtQuick"_s, u"width"_s, u"vector4d"_s })));
     Notifications::AddBuildDirsParams bDirs;
@@ -372,20 +371,24 @@ void tst_qmlls_modules::buildDir()
     ub.buildDirs.append(testFile("buildDir").toUtf8());
     bDirs.buildDirsToSet.append(ub);
     m_protocol->typedRpc()->sendNotification(QByteArray(Notifications::AddBuildDirsMethod), bDirs);
+
     DidChangeTextDocumentParams didChange;
     didChange.textDocument.uri = *uri;
     didChange.textDocument.version = 2;
-    TextDocumentContentChangeEvent change;
 
-    QFile file(testFile(filePath));
-    QVERIFY(file.open(QIODevice::ReadOnly));
-    change.text = file.readAll();
+    // change the file content to force qqmlcodemodel to recreate a new DomItem
+    // if it reuses the old DomItem then it will not know about the added build directory
+    TextDocumentContentChangeEvent change;
+    change.range = Range{ Position{ 4, 0 }, Position{ 4, 0 } };
+    change.text = "\n";
+
     didChange.contentChanges.append(change);
     m_protocol->notifyDidChangeTextDocument(didChange);
+
     QTEST_CHECKED(checkCompletions(*uri, 3, 0,
                                    ExpectedCompletions({
-                                           { u"BuildDirType"_s, CompletionItemKind::Class },
-                                           { u"Rectangle"_s, CompletionItemKind::Class },
+                                           { u"BuildDirType"_s, CompletionItemKind::Constructor },
+                                           { u"Rectangle"_s, CompletionItemKind::Constructor },
                                            { u"property"_s, CompletionItemKind::Keyword },
                                            { u"width"_s, CompletionItemKind::Property },
                                            { u"function"_s, CompletionItemKind::Keyword },
