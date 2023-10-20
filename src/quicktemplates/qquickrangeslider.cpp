@@ -486,8 +486,14 @@ bool QQuickRangeSliderPrivate::handlePress(const QPointF &point, ulong timestamp
 
     if (hitNode) {
         hitNode->setPressed(true);
-        if (QQuickItem *handle = hitNode->handle())
+        if (QQuickItem *handle = hitNode->handle()) {
             handle->setZ(1);
+
+            // A specific handle was hit, so it should get focus, rather than the default
+            // (first handle) that gets focus whenever the RangeSlider itself does - see focusInEvent().
+            if (focusPolicy & Qt::ClickFocus)
+                handle->forceActiveFocus(Qt::MouseFocusReason);
+        }
         QQuickRangeSliderNodePrivate::get(hitNode)->touchId = touchId;
     }
     if (otherNode) {
