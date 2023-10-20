@@ -5,6 +5,7 @@
 
 #include <qtquickglobal.h>
 #include <private/qqmlvaluetype_p.h>
+#include <private/qqmlstringconverters_p.h>
 #include <private/qcolorspace_p.h>
 #include <private/qfont_p.h>
 
@@ -162,48 +163,10 @@ void QQuickColorValueType::setHslLightness(qreal hslLightness)
     v.setHslF(hue, saturation, hslLightness, alpha);
 }
 
-template<typename T, int NumParams>
-QVariant createValueTypeFromNumberString(const QString &s)
-{
-    Q_STATIC_ASSERT_X(NumParams == 2 || NumParams == 3 || NumParams == 4 || NumParams == 16,
-                      "Unsupported number of params; add an additional case below if necessary.");
-
-    if (s.count(u',') != NumParams - 1)
-        return QVariant();
-
-    QVarLengthArray<float, NumParams> parameters;
-    bool ok = true;
-    for (qsizetype prev = 0, next = s.indexOf(u','), length = s.size(); ok && prev < length;) {
-        parameters.append(s.mid(prev, next - prev).toFloat(&ok));
-        prev = next + 1;
-        next = (parameters.size() == NumParams - 1) ? length : s.indexOf(u',', prev);
-    }
-
-    if (!ok)
-        return QVariant();
-
-    if constexpr (NumParams == 2) {
-        return T(parameters[0], parameters[1]);
-    } else if constexpr (NumParams == 3) {
-        return T(parameters[0], parameters[1], parameters[2]);
-    } else if constexpr (NumParams == 4) {
-        return T(parameters[0], parameters[1], parameters[2], parameters[3]);
-    } else if constexpr (NumParams == 16) {
-        return T(parameters[0], parameters[1], parameters[2], parameters[3],
-                 parameters[4], parameters[5], parameters[6], parameters[7],
-                 parameters[8], parameters[9], parameters[10], parameters[11],
-                 parameters[12], parameters[13], parameters[14], parameters[15]);
-    } else {
-        Q_UNREACHABLE();
-    }
-
-    return QVariant();
-}
-
 QVariant QQuickVector2DValueType::create(const QJSValue &params)
 {
     if (params.isString())
-        return createValueTypeFromNumberString<QVector2D, 2>(params.toString());
+        return QQmlStringConverters::valueTypeFromNumberString<QVector2D, 2, u','>(params.toString());
     if (params.isArray())
         return QVector2D(params.property(0).toNumber(), params.property(1).toNumber());
     return QVariant();
@@ -296,8 +259,10 @@ bool QQuickVector2DValueType::fuzzyEquals(const QVector2D &vec) const
 
 QVariant QQuickVector3DValueType::create(const QJSValue &params)
 {
-    if (params.isString())
-        return createValueTypeFromNumberString<QVector3D, 3>(params.toString());
+    if (params.isString()) {
+        return QQmlStringConverters::valueTypeFromNumberString<QVector3D, 3, u',', u','>(
+                params.toString());
+    }
 
     if (params.isArray()) {
         return QVector3D(params.property(0).toNumber(), params.property(1).toNumber(),
@@ -415,8 +380,10 @@ bool QQuickVector3DValueType::fuzzyEquals(const QVector3D &vec) const
 
 QVariant QQuickVector4DValueType::create(const QJSValue &params)
 {
-    if (params.isString())
-        return createValueTypeFromNumberString<QVector4D, 4>(params.toString());
+    if (params.isString()) {
+        return QQmlStringConverters::valueTypeFromNumberString<QVector4D, 4, u',', u',', u','>(
+                params.toString());
+    }
 
     if (params.isArray()) {
         return QVector4D(params.property(0).toNumber(), params.property(1).toNumber(),
@@ -542,8 +509,10 @@ bool QQuickVector4DValueType::fuzzyEquals(const QVector4D &vec) const
 
 QVariant QQuickQuaternionValueType::create(const QJSValue &params)
 {
-    if (params.isString())
-        return createValueTypeFromNumberString<QQuaternion, 4>(params.toString());
+    if (params.isString()) {
+        return QQmlStringConverters::valueTypeFromNumberString<QQuaternion, 4, u',', u',', u','>(
+                params.toString());
+    }
 
     if (params.isArray()) {
         return QQuaternion(params.property(0).toNumber(), params.property(1).toNumber(),
@@ -682,8 +651,12 @@ QVariant QQuickMatrix4x4ValueType::create(const QJSValue &params)
     if (params.isNull() || params.isUndefined())
         return QMatrix4x4();
 
-    if (params.isString())
-        return createValueTypeFromNumberString<QMatrix4x4, 16>(params.toString());
+    if (params.isString()) {
+        return QQmlStringConverters::valueTypeFromNumberString<QMatrix4x4, 16, u',', u',', u',',
+                                                               u',', u',', u',', u',', u',', u',',
+                                                               u',', u',', u',', u',', u',', u','>(
+                params.toString());
+    }
 
     if (params.isArray() && params.property(QStringLiteral("length")).toInt() == 16) {
         return QMatrix4x4(params.property(0).toNumber(),
