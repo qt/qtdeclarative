@@ -25,13 +25,13 @@ T.Switch {
     leftInset: -config.leftInset || 0
     rightInset: -config.rightInset || 0
 
-    readonly property string currentState: [
+    readonly property string __currentState: [
         control.checked && "checked",
         !control.enabled && "disabled",
         control.enabled && !control.down && control.hovered && "hovered",
         control.down && "pressed"
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.switch[currentState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.switch_[__currentState] || {}
     readonly property bool mirroredIndicator: control.mirrored !== (config.mirrored || false)
 
     indicator: Item {

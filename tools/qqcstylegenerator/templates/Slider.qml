@@ -16,12 +16,12 @@ T.Slider {
     rightPadding: horizontal ? config.rightPadding : config.topPadding || 0
     bottomPadding: horizontal ? config.bottomPadding : config.rightPadding || 0
 
-    readonly property string currentState: [
+    readonly property string __currentState: [
         !control.enabled && "disabled",
         control.enabled && !control.pressed && control.hovered && "hovered",
         control.pressed && "pressed"
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.slider[currentState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.slider[__currentState] || {}
 
     handle: StyleImage {
         x: Math.round(control.leftPadding + (control.horizontal

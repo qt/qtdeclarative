@@ -14,7 +14,7 @@ T.ToolTip {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
-    readonly property var config: ConfigReader.controls.tooltip["normal"] || {}
+    readonly property var config: Config.controls.tooltip["normal"] || {}
 
     topPadding: config.topPadding || 0
     bottomPadding: config.bottomPadding || 0

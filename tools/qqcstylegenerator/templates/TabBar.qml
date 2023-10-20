@@ -23,10 +23,10 @@ T.TabBar {
     leftInset: -config.leftInset || 0
     rightInset: -config.rightInset || 0
 
-    readonly property string currentState: position === TabBar.Header
+    readonly property string __currentState: position === TabBar.Header
         ? (enabled ? "normal" : "disabled")
         : (enabled ? "normal-footer" : "disabled-footer")
-    readonly property var config: ConfigReader.controls.tabbar[currentState] || {}
+    readonly property var config: Config.controls.tabbar[__currentState] || {}
 
     contentItem: ListView {
         model: control.contentModel

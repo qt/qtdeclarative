@@ -31,13 +31,13 @@ T.RoundButton {
             : control.palette.mid)
         : control.palette.buttonText
 
-    readonly property string currentState: [
+    readonly property string __currentState: [
         control.checked && "checked",
         !control.enabled && "disabled",
         control.enabled && !control.down && control.hovered && "hovered",
         control.down && "pressed"
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.roundbutton[currentState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.roundbutton[__currentState] || {}
 
     contentItem: IconLabel {
         spacing: control.spacing

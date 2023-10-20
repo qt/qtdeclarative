@@ -24,8 +24,8 @@ T.ProgressBar {
     readonly property string __currentState: [
         !control.enabled && "disabled",
         control.indeterminate && "indeterminate"
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.progressbar[__currentState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.progressbar[__currentState] || {}
 
     contentItem: Item {
         parent: control.background

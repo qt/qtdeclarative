@@ -27,8 +27,8 @@ T.Popup {
         __combobox.enabled && !__combobox.pressed && __combobox.hovered && "hovered",
         popup.visible && "open",
         __combobox.pressed && "pressed"
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.comboboxpopup[__currentState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.comboboxpopup[__currentState] || {}
 
     contentItem: ListView {
         clip: true

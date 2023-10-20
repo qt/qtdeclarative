@@ -30,8 +30,8 @@ T.ComboBox {
         control.enabled && !control.pressed && control.hovered && "hovered",
         control.popup.visible && "open",
         control.pressed && "pressed"
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.combobox[__currentState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.combobox[__currentState] || {}
 
     delegate: ItemDelegate {
         required property var model

@@ -33,8 +33,8 @@ T.Button {
         !control.enabled && "disabled",
         control.enabled && !control.down && control.hovered && "hovered",
         control.down && "pressed"
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: (control.flat ? ConfigReader.controls.flatbutton[__currentState] : ConfigReader.controls.button[__currentState]) || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: (control.flat ? Config.controls.flatbutton[__currentState] : Config.controls.button[__currentState]) || {}
 
     contentItem: IconLabel {
         spacing: control.spacing

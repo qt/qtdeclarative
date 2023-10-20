@@ -23,10 +23,10 @@ T.ToolBar {
     leftInset: -config.leftInset || 0
     rightInset: -config.rightInset || 0
 
-    readonly property string currentState: position === ToolBar.Header
+    readonly property string __currentState: position === ToolBar.Header
         ? (enabled ? "normal" : "disabled")
         : (enabled ? "normal-footer" : "disabled-footer")
-    readonly property var config: ConfigReader.controls.toolbar[currentState] || {}
+    readonly property var config: Config.controls.toolbar[__currentState] || {}
 
     background: StyleImage {
         imageConfig: control.config.background

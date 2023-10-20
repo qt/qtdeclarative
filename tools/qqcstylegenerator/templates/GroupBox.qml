@@ -30,8 +30,8 @@ T.GroupBox {
     readonly property string __currentState: [
         !control.enabled && "disabled",
         control.enabled && control.hovered && "hovered",
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.groupbox[__currentState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.groupbox[__currentState] || {}
 
     label: T.Label {
         x: control.__deltaX > 0 ? 0 : -__deltaX

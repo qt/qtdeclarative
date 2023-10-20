@@ -28,8 +28,8 @@ T.ScrollBar {
         !control.enabled && "disabled",
         control.enabled && !control.pressed && control.hovered && "hovered",
         control.pressed && "pressed"
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.scrollbar[__currentState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.scrollbar[__currentState] || {}
 
     contentItem: StyleImage {
         imageConfig: control.config.handle

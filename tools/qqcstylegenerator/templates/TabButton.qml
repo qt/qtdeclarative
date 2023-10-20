@@ -23,13 +23,13 @@ T.TabButton {
     leftInset: -config.leftInset || 0
     rightInset: -config.rightInset || 0
 
-    readonly property string currentState: [
+    readonly property string __currentState: [
         checked && "checked",
         !enabled && "disabled",
         enabled && !down && hovered && "hovered",
         down && "pressed"
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.tabbutton[currentState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.tabbutton[__currentState] || {}
 
     contentItem: IconLabel {
         spacing: control.spacing

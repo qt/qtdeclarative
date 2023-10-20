@@ -22,7 +22,7 @@ T.BusyIndicator {
     rightInset: -config.rightInset || 0
 
     readonly property string __currentState: !control.enabled ? "disabled" : "normal"
-    readonly property var config: ConfigReader.controls.busyindicator[__currentState] || {}
+    readonly property var config: Config.controls.busyindicator[__currentState] || {}
 
     contentItem: StyleImage {
         imageConfig: control.config.indicator

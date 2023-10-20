@@ -13,8 +13,8 @@ StyleImage {
         pageIndicator.enabled && (index === pageIndicator.currentIndex || pressed) && "delegate",
         pageIndicator.enabled && index === pageIndicator.currentIndex && "current",
         pageIndicator.enabled && pageIndicator.interactive && pressed && "pressed"
-    ].filter(Boolean).join("-") || (pageIndicator.hovered ? "hovered" : "normal")
-    readonly property var config: ConfigReader.controls.pageindicatordelegate[__currentState].indicator || {}
+    ].filter(Boolean).join("_") || (pageIndicator.hovered ? "hovered" : "normal")
+    readonly property var config: Config.controls.pageindicatordelegate[__currentState].indicator || {}
 
     imageConfig: config
 }

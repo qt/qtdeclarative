@@ -22,22 +22,23 @@ T.RangeSlider {
         visualFocus && "focused",
         !control.enabled && "disabled",
         control.enabled && control.hovered && !(first.pressed || second.pressed) && "hovered",
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.rangeslider[__controlState] || {}
+    ].filter(Boolean).join("_") || "normal"
+
+    readonly property var config: Config.controls.rangeslider[__controlState] || {}
 
     property string __firstHandleState: [
         first.hovered && !first.pressed && "hovered",
         first.pressed && "handle-pressed",
         visualFocus && "focused",
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var firstHandleConfig: ConfigReader.controls.rangeslider[__firstHandleState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var firstHandleConfig: Config.controls.rangeslider[__firstHandleState] || {}
 
     property string __secondHandleState: [
         second.hovered && !second.pressed && "hovered",
         second.pressed && "handle-pressed",
         visualFocus && "focused",
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var secondHandleConfig: ConfigReader.controls.rangeslider[__secondHandleState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var secondHandleConfig: Config.controls.rangeslider[__secondHandleState] || {}
 
     first.handle: StyleImage {
         x: Math.round(control.leftPadding + (control.horizontal

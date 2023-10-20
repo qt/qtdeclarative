@@ -17,10 +17,10 @@ T.SpinBox {
         enabled && hovered && (up.hovered || up.pressed) && "up",
         enabled && (down.pressed || up.pressed) && "pressed",
         enabled && hovered && !(down.pressed || up.pressed) && "hovered"
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.spinbox[__controlState] || {}
-    readonly property var downConfig: value == from ? ConfigReader.controls.spinbox["atlimit"] : config
-    readonly property var upConfig: value == to ? ConfigReader.controls.spinbox["atlimit"] : config
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.spinbox[__controlState] || {}
+    readonly property var downConfig: value == from ? Config.controls.spinbox["atlimit"] : config
+    readonly property var upConfig: value == to ? Config.controls.spinbox["atlimit"] : config
 
     readonly property bool mirroredIndicators: control.mirrored !== (config.mirrored || false)
 

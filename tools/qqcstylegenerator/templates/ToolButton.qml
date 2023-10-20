@@ -23,14 +23,14 @@ T.ToolButton {
     leftInset: -config.leftInset || 0
     rightInset: -config.rightInset || 0
 
-    readonly property string currentState: [
+    readonly property string __currentState: [
         control.checked && "checked",
         !control.enabled && "disabled",
         control.visualFocus && "focused",
         control.enabled && !control.down && control.hovered && "hovered",
         down && "pressed"
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.toolbutton[currentState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.toolbutton[__currentState] || {}
 
     // TODO: Set this from the config?
     icon.width: 17

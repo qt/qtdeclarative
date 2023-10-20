@@ -22,7 +22,7 @@ T.Popup {
     rightInset: -config.rightInset || 0
 
     readonly property string __currentState: control.modal ? "modal" : "normal";
-    readonly property var config: ConfigReader.controls.popup[__currentState] || {}
+    readonly property var config: Config.controls.popup[__currentState] || {}
 
     background: StyleImage {
         imageConfig: control.config.background

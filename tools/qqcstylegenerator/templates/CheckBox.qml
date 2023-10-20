@@ -24,14 +24,14 @@ T.CheckBox {
     leftInset: -config.leftInset || 0
     rightInset: -config.rightInset || 0
 
-    readonly property string currentState: [
+    readonly property string __currentState: [
         control.checkState === Qt.Checked && "checked",
         !control.enabled && "disabled",
         control.enabled && !control.down && control.hovered && "hovered",
         control.checkState === Qt.PartiallyChecked && "partiallyChecked",
         control.down && "pressed",
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.checkbox[currentState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.checkbox[__currentState] || {}
     readonly property bool mirroredIndicator: control.mirrored !== (config.mirrored || false)
 
     indicator: Image {

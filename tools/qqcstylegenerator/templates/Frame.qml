@@ -23,8 +23,8 @@ T.Frame {
     leftInset: -config.leftInset || 0
     rightInset: -config.rightInset || 0
 
-    readonly property string currentState: !control.enabled ? "disabled" : "normal";
-    readonly property var config: ConfigReader.controls.frame[currentState] || {}
+    readonly property string __currentState: !control.enabled ? "disabled" : "normal";
+    readonly property var config: Config.controls.frame[__currentState] || {}
 
     background: StyleImage {
         imageConfig: control.config.background

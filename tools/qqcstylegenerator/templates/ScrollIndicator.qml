@@ -21,7 +21,7 @@ T.ScrollIndicator {
     rightInset: (horizontal ? -config.rightInset : -config.topInset) || 0
     bottomInset: (horizontal ? -config.bottomInset : -config.rightInset) || 0
 
-    readonly property var config: ConfigReader.controls.scrollindicator["normal"] || {}
+    readonly property var config: Config.controls.scrollindicator["normal"] || {}
 
     contentItem: StyleImage {
         imageConfig: control.config.handle

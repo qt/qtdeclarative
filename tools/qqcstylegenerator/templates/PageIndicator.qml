@@ -26,8 +26,8 @@ T.PageIndicator {
     readonly property string __currentState: [
         !control.enabled && "disabled",
         control.enabled && control.hovered && "hovered",
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.pageindicator[__currentState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.pageindicator[__currentState] || {}
 
     delegate: PageIndicatorDelegate {
         pageIndicator: control

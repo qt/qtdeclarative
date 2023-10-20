@@ -84,9 +84,9 @@ public:
             if (!m_abort)
                 downloadImages();
             if (!m_abort)
-                generateQmlDir();
-            if (!m_abort)
                 generateConfiguration();
+            if (!m_abort)
+                generateQmlDir();
         } catch (std::exception &e) {
             error(e.what());
         }
@@ -541,9 +541,50 @@ private:
             warning("generate control: " + QString(e.what()) + " " + m_currentAtomInfo);
         }
 
+        auto controlNameModified = controlName.toLower();
+        // switch is a keyword in QML so add a "_"
+        // before placing it into the config object
+        if (controlNameModified == "switch")
+            controlNameModified.append("_");
+
         // Add the control configuration to the global configuration document
-        m_outputConfig[m_currentTheme].insert(controlName.toLower(), outputControlConfig);
+        m_outputConfig[m_currentTheme].insert(controlNameModified, outputControlConfig);
     }
+
+    QString generateQMLForJsonObject(const QJsonObject &object, const QString &objectName, QString &indent) {
+        QString qml;
+
+        if (!objectName.isEmpty()) {
+            qml += indent + "readonly property QtObject " + objectName + ": QtObject {\n";
+            indent += "\t";
+        }
+
+        for (auto it = object.begin(); it != object.end(); ++it) {
+            QString key = it.key();
+            key.replace('-', '_');
+            const QJsonValue& value = it.value();
+
+            if (value.isObject()) {
+                qml += generateQMLForJsonObject(value.toObject(), key, indent) + "\n";
+            } else if (value.isString()) {
+                qml += indent + "readonly property string " + key + ": \"" + value.toString() + "\"\n";
+            } else if (value.isDouble()) {
+                qml += indent + "readonly property real " + key + ": " + QString::number(value.toDouble()) + "\n";
+            } else if (value.isBool()) {
+                qml += indent + "readonly property bool " + key + ": " + (value.toBool() ? "true" : "false") + "\n";
+            } else if (value.isNull()) {
+                qml += indent + "readonly property var " + key + ": null\n";
+            }
+        }
+
+        if (!objectName.isEmpty()) {
+            indent.chop(1);
+            qml += indent + "}\n";
+        }
+
+        return qml;
+    }
+
 
     QJsonObject findAtomObject(const QString &path, const QString &figmaState, const QJsonObject &componentSet)
     {
@@ -680,7 +721,7 @@ private:
                 figmaIdToFileNameMap.insert(figmaId, fileNameForWriting);
                 m_imageCount++;
 
-                outputConfig.insert("export", "image");
+                outputConfig.insert("exportType", "image");
                 outputConfig.insert("filePath", fileNameForReading);
                 debug("exporting image: " + fileNameForWriting);
             }
@@ -899,15 +940,23 @@ private:
 
     void generateConfiguration()
     {
-        debug("Generating config.json");
+        debug("Generating Config.qml");
+        const QString fileName = "/Config.qml";
+        QString result;
+        result = "pragma Singleton\n"
+                "import QtQml\n"
+                "\n"
+                "QtObject {\n"
+                "\treadonly property QtObject controls: Qt.styleHints.colorScheme === Qt.Light ? light.controls : dark.controls\n\n";
         for (const QString &theme : std::as_const(m_outputConfig).keys()) {
-            QJsonObject root;
-            root.insert("version", "1.0");
-            root.insert("controls", m_outputConfig[theme]);
-            const QString fileName = theme.toLower() + "/config.json";
-            debug("generating " + fileName);
-            createTextFileInStylefolder(fileName, QJsonDocument(root).toJson());
+            result.append("\treadonly property QtObject " + theme.toLower() + ": QtObject {\n");
+            QString indent = "\t\t";
+            QString qml = generateQMLForJsonObject(m_outputConfig[theme], "controls", indent);
+            indent.chop(1);
+            result.append(qml + indent + "}\n");
         }
+        result.append("}\n");
+        createTextFileInStylefolder(fileName, result);
     }
 
     void generateQmlDir()
@@ -920,6 +969,8 @@ private:
         qmldir += "module " + styleName + "\n";
         for (const QString &control : m_qmlDirControls)
             qmldir += control + version + control + ".qml\n";
+
+        qmldir += "singleton Config" + version + "Config.qml" + "\n";
 
         debug("generating qmldir");
         createTextFileInStylefolder("qmldir", qmldir);

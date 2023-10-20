@@ -30,12 +30,12 @@ T.TextArea {
     horizontalAlignment: control.config.label.textHAlignment
     placeholderTextColor: control.palette.placeholderText
 
-    readonly property string currentState: [
+    readonly property string __currentState: [
         !enabled && "disabled",
         activeFocus && "focused",
         enabled && !activeFocus && hovered && "hovered",
-    ].filter(Boolean).join("-") || "normal"
-    readonly property var config: ConfigReader.controls.textarea[currentState] || {}
+    ].filter(Boolean).join("_") || "normal"
+    readonly property var config: Config.controls.textarea[__currentState] || {}
 
     PlaceholderText {
         id: placeholder
