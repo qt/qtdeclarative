@@ -248,7 +248,7 @@ void QQuickAbstractDialog::setVisible(bool visible)
 }
 
 /*!
-    \qmlproperty StandardCode QtQuick.Dialogs::Dialog::result
+    \qmlproperty int QtQuick.Dialogs::Dialog::result
 
     This property holds the result code.
 
@@ -259,12 +259,12 @@ void QQuickAbstractDialog::setVisible(bool visible)
     \note MessageDialog sets the result to the value of the clicked standard
           button instead of using the standard result codes.
 */
-QQuickAbstractDialog::StandardCode QQuickAbstractDialog::result() const
+int QQuickAbstractDialog::result() const
 {
     return m_result;
 }
 
-void QQuickAbstractDialog::setResult(StandardCode result)
+void QQuickAbstractDialog::setResult(int result)
 {
     if (m_result == result)
         return;
@@ -312,9 +312,9 @@ void QQuickAbstractDialog::close()
     m_visible = false;
     emit visibleChanged();
 
-    if (m_result == Accepted)
+    if (dialogCode() == Accepted)
         emit accepted();
-    else // if (m_result == Rejected)
+    else if (dialogCode() == Rejected)
         emit rejected();
 }
 
@@ -343,13 +343,13 @@ void QQuickAbstractDialog::reject()
 }
 
 /*!
-    \qmlmethod void QtQuick.Dialogs::Dialog::done(StandardCode result)
+    \qmlmethod void QtQuick.Dialogs::Dialog::done(int result)
 
     Closes the dialog and sets the \a result.
 
     \sa accept(), reject(), result
 */
-void QQuickAbstractDialog::done(StandardCode result)
+void QQuickAbstractDialog::done(int result)
 {
     setResult(result);
     close();
@@ -460,6 +460,8 @@ void QQuickAbstractDialog::onHide(QPlatformDialogHelper *dialog)
 {
     Q_UNUSED(dialog);
 }
+
+int QQuickAbstractDialog::dialogCode() const { return m_result; }
 
 QWindow *QQuickAbstractDialog::findParentWindow() const
 {

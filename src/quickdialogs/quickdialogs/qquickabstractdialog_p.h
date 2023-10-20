@@ -42,7 +42,7 @@ class Q_QUICKDIALOGS2_PRIVATE_EXPORT QQuickAbstractDialog : public QObject, publ
     Q_PROPERTY(Qt::WindowFlags flags READ flags WRITE setFlags NOTIFY flagsChanged FINAL)
     Q_PROPERTY(Qt::WindowModality modality READ modality WRITE setModality NOTIFY modalityChanged FINAL)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
-    Q_PROPERTY(StandardCode result READ result WRITE setResult NOTIFY resultChanged FINAL)
+    Q_PROPERTY(int result READ result WRITE setResult NOTIFY resultChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "data")
     Q_MOC_INCLUDE(<QtGui/qwindow.h>)
     QML_ANONYMOUS
@@ -74,15 +74,15 @@ public:
     enum StandardCode { Rejected, Accepted };
     Q_ENUM(StandardCode)
 
-    StandardCode result() const;
-    void setResult(StandardCode result);
+    int result() const;
+    void setResult(int result);
 
 public Q_SLOTS:
     void open();
     void close();
     virtual void accept();
     virtual void reject();
-    virtual void done(StandardCode result);
+    virtual void done(int result);
 
 Q_SIGNALS:
     void accepted();
@@ -105,6 +105,7 @@ protected:
     virtual void onCreate(QPlatformDialogHelper *dialog);
     virtual void onShow(QPlatformDialogHelper *dialog);
     virtual void onHide(QPlatformDialogHelper *dialog);
+    virtual int dialogCode() const;
 
     QWindow *findParentWindow() const;
 
@@ -112,7 +113,7 @@ protected:
     bool m_visible = false;
     bool m_complete = false;
     bool m_firstShow = true;
-    StandardCode m_result = Rejected;
+    int m_result = Rejected;
     QWindow *m_parentWindow = nullptr;
     QString m_title;
     Qt::WindowFlags m_flags = Qt::Dialog;
