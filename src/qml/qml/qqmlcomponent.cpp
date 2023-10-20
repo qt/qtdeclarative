@@ -247,7 +247,7 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     }
     \endqml
 
-    \sa {Qt QML}
+    \sa {Qt Qml}
 */
 
 /*!

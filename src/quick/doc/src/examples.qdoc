@@ -13,7 +13,7 @@ Qt includes several examples to demonstrate a particular usage. The examples
 run as applications or as non-GUI examples in Qt Creator. Qt tutorials show
 the step-by-step information and give insight to particular code snippets.
 
-This page lists the \l{Qt QML} and \l{Qt Quick} examples, however, many other
+This page lists the \l{Qt Qml} and \l{Qt Quick} examples, however, many other
 \l{All Modules}{Qt modules} contain examples related to their QML API.
 
 \section1 Running the Examples and Demos
@@ -81,7 +81,7 @@ steps such as use cases and introductory material. For more information about Qt
 \section2 Extending QML
 
 The following tutorials show how a QML-based application can be combined and
-exteneded with C++ code using the \l{Qt QML} module.
+exteneded with C++ code using the \l{Qt Qml} module.
 \list
     \li \l {Writing QML Extensions with C++}
     \li \l {Writing advanced QML Extensions with C++}

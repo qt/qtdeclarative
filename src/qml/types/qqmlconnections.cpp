@@ -202,7 +202,7 @@ public:
     then all signal handlers specified as \c{function} in the same Connections
     object are ignored.
 
-    \sa {Qt QML}
+    \sa {Qt Qml}
 */
 QQmlConnections::QQmlConnections(QObject *parent) :
     QObject(*(new QQmlConnectionsPrivate), parent)

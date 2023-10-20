@@ -103,7 +103,7 @@ QT_BEGIN_NAMESPACE
     edited with \l{Qt Design Studio}. Mind that \l{Qt Design Studio} also imposes a number
     of further restrictions on the files it can work with.
 
-    \sa {Qt Quick Examples - Animation#States}{States example}, {Qt Quick States}, {Qt QML}
+    \sa {Qt Quick Examples - Animation#States}{States example}, {Qt Quick States}, {Qt Qml}
 */
 
 /*!

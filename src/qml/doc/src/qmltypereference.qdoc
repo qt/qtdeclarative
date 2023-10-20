@@ -7,7 +7,7 @@
 \ingroup qmlmodules
 \brief List of QML types provided by the Qt QML module
 
-The \l{Qt QML} module provides the definition and implementation of various
+The \l{Qt Qml} module provides the definition and implementation of various
 convenience types that can be used with the QML language. This includes
 elementary QML types, which can provide the basis for further extensions to the
 QML language. The \l QtObject and \l Component object types are non-visual and

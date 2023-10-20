@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQml.XmlListModel
     \brief For specifying a role to an \l XmlListModel.
 
-    \sa {All QML Types}{Qt QML}
+    \sa {All QML Types}{Qt Qml}
 */
 
 /*!

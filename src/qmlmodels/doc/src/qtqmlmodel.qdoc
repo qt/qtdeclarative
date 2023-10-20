@@ -17,7 +17,7 @@
     \endqml
 
     \note QtQml.Models module started at version 2.1 to match the version
-    of the parent module, \l{Qt QML}.
+    of the parent module, \l{Qt Qml}.
 
     In addition, Qt.labs.qmlmodels provides experimental QML types for models.
     To use these experimental types, import the module with the following line:

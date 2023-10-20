@@ -384,7 +384,7 @@ void QQmlBindPrivate::validate(QQmlBind *q) const
     The Binding type restores any previously set direct bindings on the
     property.
 
-    \sa {Qt QML}
+    \sa {Qt Qml}
 */
 QQmlBind::QQmlBind(QObject *parent)
     : QObject(*(new QQmlBindPrivate), parent)

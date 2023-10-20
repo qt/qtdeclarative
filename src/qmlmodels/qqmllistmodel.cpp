@@ -2009,7 +2009,7 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
     You must call sync() or else the changes made to the list from that
     thread will not be reflected in the list model in the main thread.
 
-    \sa {qml-data-models}{Data Models}, {Qt QML}
+    \sa {qml-data-models}{Data Models}, {Qt Qml}
 */
 
 QQmlListModel::QQmlListModel(QObject *parent)

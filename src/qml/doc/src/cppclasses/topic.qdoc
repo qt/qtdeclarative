@@ -5,7 +5,7 @@
 \title Important C++ Classes Provided By The Qt QML Module
 \brief Overview of the C++ classes provided by the Qt QML module
 
-The \l{Qt QML} module provides C++ classes which implement the QML framework.
+The \l{Qt Qml} module provides C++ classes which implement the QML framework.
 Clients can use these classes to interact with the QML run-time (for example,
 by injecting data or invoking methods on objects), and to instantiate a
 hierarchy of objects from a QML document.  The Qt QML module provides more

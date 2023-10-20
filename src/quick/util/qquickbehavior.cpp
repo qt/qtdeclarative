@@ -183,7 +183,7 @@ UntypedProxyProperty::UntypedProxyProperty(QUntypedBindable bindable, QQuickBeha
     state change. For general advice on using Behaviors to animate state changes, see
     \l{Using Qt Quick Behaviors with States}.
 
-    \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation#Behaviors}{Behavior example}, {Qt QML}
+    \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation#Behaviors}{Behavior example}, {Qt Qml}
 */
 
 
