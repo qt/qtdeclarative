@@ -6,7 +6,7 @@
     \title Qt Quick Controls - Contact List
     \keyword Qt Quick Controls 2 - Contact List
     \ingroup qtquickcontrols-examples
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {User Interface Components}
     \examplecategory {Mobile}
     \brief A QML app using Qt Quick Controls and a C++ class that implements
     a simple contact list.
