@@ -23,6 +23,10 @@
 #include <QtCore/qlist.h>
 #include <private/qlazilyallocated_p.h>
 
+#if QT_CONFIG(accessibility)
+#include <QtGui/qaccessible.h>
+#endif
+
 #include <limits>
 
 QT_BEGIN_NAMESPACE
@@ -33,6 +37,9 @@ class QSGInternalTextNode;
 class QQuickTextNodeEngine;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
+#if QT_CONFIG(accessibility)
+    , public QAccessible::ActivationObserver
+#endif
 {
 public:
     Q_DECLARE_PUBLIC(QQuickTextEdit)
@@ -84,6 +91,16 @@ public:
         , textCached(true), inLayout(false), selectByKeyboard(false), selectByKeyboardSet(false)
         , hadSelection(false), markdownText(false), inResize(false)
     {
+#if QT_CONFIG(accessibility)
+        QAccessible::installActivationObserver(this);
+#endif
+    }
+
+    ~QQuickTextEditPrivate()
+    {
+#if QT_CONFIG(accessibility)
+        QAccessible::removeActivationObserver(this);
+#endif
     }
 
     static QQuickTextEditPrivate *get(QQuickTextEdit *item) {
@@ -113,6 +130,11 @@ public:
 
 #if QT_CONFIG(im)
     Qt::InputMethodHints effectiveInputMethodHints() const;
+#endif
+
+#if QT_CONFIG(accessibility)
+    void accessibilityActiveChanged(bool active) override;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
     inline qreal padding() const { return extra.isAllocated() ? extra->padding : 0.0; }

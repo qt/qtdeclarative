@@ -121,16 +121,10 @@ using namespace Qt::StringLiterals;
 
 QQuickTextAreaPrivate::QQuickTextAreaPrivate()
 {
-#if QT_CONFIG(accessibility)
-    QAccessible::installActivationObserver(this);
-#endif
 }
 
 QQuickTextAreaPrivate::~QQuickTextAreaPrivate()
 {
-#if QT_CONFIG(accessibility)
-    QAccessible::removeActivationObserver(this);
-#endif
 }
 
 void QQuickTextAreaPrivate::setTopInset(qreal value, bool reset)
@@ -420,32 +414,12 @@ void QQuickTextAreaPrivate::implicitHeightChanged()
     emit q->implicitHeightChanged3();
 }
 
-void QQuickTextAreaPrivate::readOnlyChanged(bool isReadOnly)
-{
-    Q_UNUSED(isReadOnly);
-#if QT_CONFIG(accessibility)
-    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(q_func()))
-        accessibleAttached->set_readOnly(isReadOnly);
-#endif
-}
-
 #if QT_CONFIG(accessibility)
 void QQuickTextAreaPrivate::accessibilityActiveChanged(bool active)
 {
-    if (!active)
-        return;
-
-    Q_Q(QQuickTextArea);
-    QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
-    Q_ASSERT(accessibleAttached);
-    accessibleAttached->setRole(effectiveAccessibleRole());
-    accessibleAttached->set_readOnly(q->isReadOnly());
-    accessibleAttached->setDescription(placeholder);
-}
-
-QAccessible::Role QQuickTextAreaPrivate::accessibleRole() const
-{
-    return QAccessible::EditableText;
+    QQuickTextEditPrivate::accessibilityActiveChanged(active);
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(q_func()))
+        accessibleAttached->setDescription(placeholder);
 }
 #endif
 
@@ -507,8 +481,6 @@ QQuickTextArea::QQuickTextArea(QQuickItem *parent)
     d->setImplicitResizeEnabled(false);
     d->pressHandler.control = this;
 
-    QObjectPrivate::connect(this, &QQuickTextEdit::readOnlyChanged,
-                            d, &QQuickTextAreaPrivate::readOnlyChanged);
 #if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
     if (qEnvironmentVariable("QT_QUICK_CONTROLS_TEXT_SELECTION_BEHAVIOR") == u"old"_s)
         QQuickTextEdit::setOldSelectionDefault();
@@ -925,10 +897,6 @@ void QQuickTextArea::componentComplete()
 #if QT_CONFIG(quicktemplates2_hover)
     if (!d->explicitHoverEnabled)
         setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
-#endif
-#if QT_CONFIG(accessibility)
-    if (QAccessible::isActive())
-        d->accessibilityActiveChanged(true);
 #endif
 }
 
