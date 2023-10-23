@@ -55,6 +55,7 @@ enum QQmlLSUtilsIdentifierType : char {
     EnumeratorIdentifier,
     EnumeratorValueIdentifier,
     AttachedTypeIdentifier,
+    GroupedPropertyIdentifier,
 };
 
 struct QQmlLSUtilsErrorMessage

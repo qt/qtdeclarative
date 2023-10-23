@@ -864,6 +864,24 @@ void tst_qmlls_utils::findUsages_data()
         QQmlLSUtilsLocation::from(testFileName, testFileContent, 194, 17, strlen("a")),
     };
 
+
+    QString groupPropertyContent;
+    {
+        QFile file(testFile("groupPropertyUsage.qml"));
+        QVERIFY(file.open(QIODeviceBase::ReadOnly));
+        groupPropertyContent = QString::fromUtf8(file.readAll());
+    }
+
+    QList<QQmlLSUtilsLocation> groupPropertyUsages1{
+        QQmlLSUtilsLocation::from(testFile("groupPropertyUsage.qml"), groupPropertyContent, 14, 17, strlen("family")),
+        QQmlLSUtilsLocation::from(testFile("groupPropertyUsage.qml"), groupPropertyContent, 23, 35, strlen("family")),
+    };
+
+    QList<QQmlLSUtilsLocation> groupPropertyUsages2{
+        QQmlLSUtilsLocation::from(testFile("groupPropertyUsage.qml"), groupPropertyContent, 23, 5, strlen("font")),
+        QQmlLSUtilsLocation::from(testFile("groupPropertyUsage.qml"), groupPropertyContent, 24, 5, strlen("font")),
+    };
+
     std::sort(sumUsages.begin(), sumUsages.end());
     std::sort(iUsages.begin(), iUsages.end());
     std::sort(subItemHelloPropertyUsages.begin(), subItemHelloPropertyUsages.end());
@@ -892,6 +910,8 @@ void tst_qmlls_utils::findUsages_data()
     std::sort(yParamUsages.begin(), yParamUsages.end());
     std::sort(zParamUsages.begin(), zParamUsages.end());
     std::sort(deconstructedAUsages.begin(), deconstructedAUsages.end());
+    std::sort(groupPropertyUsages1.begin(), groupPropertyUsages1.end());
+    std::sort(groupPropertyUsages2.begin(), groupPropertyUsages2.end());
 
     QTest::addRow("findSumFromDeclaration") << testFileName << 8 << 13 << sumUsages;
     QTest::addRow("findSumFromUsage") << testFileName << 10 << 20 << sumUsages;
@@ -996,6 +1016,10 @@ void tst_qmlls_utils::findUsages_data()
     QTest::addRow("findMethodParameterZDeconstructed") << testFileName << 188 << 59 << zParamUsages;
     QTest::addRow("findMethodParameterZDeconstructedFromUsage")
             << testFileName << 189 << 36 << zParamUsages;
+    QTest::addRow("groupPropertyUsages1")
+            << testFile("groupPropertyUsage.qml") << 14 << 17 << groupPropertyUsages1;
+    QTest::addRow("groupPropertyUsages2")
+            << testFile("groupPropertyUsage.qml") << 23 << 5 << groupPropertyUsages2;
 }
 
 void tst_qmlls_utils::findUsages()

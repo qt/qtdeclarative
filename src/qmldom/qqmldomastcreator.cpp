@@ -734,6 +734,12 @@ bool QQmlDomAstCreator::visit(AST::UiObjectDefinition *el)
         default:
             Q_UNREACHABLE();
         }
+        Path pathFromContainingObject = sPathFromOwner.mid(currentNodeEl().path.length());
+        FileLocations::Tree fLoc =
+                FileLocations::ensure(currentNodeEl().fileLocations, pathFromContainingObject,
+                                      AttachedInfo::PathType::Relative);
+        FileLocations::addRegion(fLoc, IdentifierRegion,
+                                 el->qualifiedTypeNameId->identifierToken);
     }
     Q_ASSERT_X(sPtr, className, "could not recover new scope");
     pushEl(sPathFromOwner, *sPtr, el);

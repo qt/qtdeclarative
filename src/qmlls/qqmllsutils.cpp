@@ -658,6 +658,7 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
         }
 
         switch (current.internalKind()) {
+        case DomType::QmlObject:
         case DomType::Binding:
         case DomType::PropertyDefinition: {
             const QString propertyName = current.field(Fields::name).value().toString();
@@ -873,6 +874,47 @@ propertyFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QStr
     return {};
 }
 
+static std::optional<QQmlLSUtilsExpressionType>
+propertyBindingFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QString &name,
+                          QQmlLSUtilsResolveOptions options)
+{
+    if (auto bindings = referrerScope->propertyBindings(name); !bindings.isEmpty()) {
+        const auto binding = bindings.front();
+
+        if ((binding.bindingType() != QQmlSA::BindingType::AttachedProperty) &&
+            (binding.bindingType() != QQmlSA::BindingType::GroupProperty))
+            return {};
+
+        const auto getTypeIdentifier = [&binding]{
+            switch (binding.bindingType()) {
+            case QQmlSA::BindingType::AttachedProperty: return AttachedTypeIdentifier;
+            case QQmlSA::BindingType::GroupProperty: return GroupedPropertyIdentifier;
+            default:
+                Q_UNREACHABLE();
+            }
+        };
+
+        const auto getScope = [&binding]{
+            switch (binding.bindingType()) {
+            case QQmlSA::BindingType::AttachedProperty: return binding.attachingType();
+            case QQmlSA::BindingType::GroupProperty: return binding.groupType();
+            default:
+                Q_UNREACHABLE();
+            }
+        };
+
+        switch (options) {
+        case ResolveOwnerType: {
+            return QQmlLSUtilsExpressionType{ name, referrerScope, getTypeIdentifier()};
+        }
+        case ResolveActualTypeForFieldMemberExpression:
+            return QQmlLSUtilsExpressionType{name, getScope(), getTypeIdentifier()};
+        }
+    }
+
+    return {};
+}
+
 static QQmlJSScope::ConstPtr findScopeInConnections(QQmlJSScope::ConstPtr scope, const DomItem &item)
 {
     if (!scope || (scope->baseType() && scope->baseType()->internalName() != u"QQmlConnections"_s))
@@ -934,6 +976,10 @@ resolveFieldMemberExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions 
             break;
         }
     }
+
+    if (auto scope = propertyBindingFromReferrerScope(owner->semanticScope,name, options))
+        return *scope;
+
     if (auto property = owner->semanticScope->property(name); property.isValid()) {
         switch (options) {
         case ResolveOwnerType:
@@ -992,10 +1038,6 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
 
     const QString name = item.field(Fields::identifier).value().toString();
 
-    const auto referrerScope = item.nearestSemanticScope();
-    if (!referrerScope)
-        return {};
-
     const auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
     if (!resolver)
         return {};
@@ -1009,33 +1051,40 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
             return QQmlLSUtilsExpressionType{ name, attachedScope,
                                               QQmlLSUtilsIdentifierType::AttachedTypeIdentifier };
         }
-    } else {
-        DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
-        if (definitionOfItem) {
-            Q_ASSERT_X(!definitionOfItem.semanticScope().isNull()
-                               && definitionOfItem.semanticScope()->ownJSIdentifier(name),
-                       "QQmlLSUtils::findDefinitionOf",
-                       "JS definition does not actually define the JS identifer. "
-                       "It should be empty.");
-            auto scope = definitionOfItem.semanticScope();
-            auto jsIdentifier = scope->ownJSIdentifier(name);
-            if (jsIdentifier->scope) {
-                return QQmlLSUtilsExpressionType{ name, jsIdentifier->scope.toStrongRef(),
-                                                  QQmlLSUtilsIdentifierType::JavaScriptIdentifier };
-            } else {
-                return QQmlLSUtilsExpressionType{ name, scope,
-                                                  QQmlLSUtilsIdentifierType::JavaScriptIdentifier };
-            }
-        }
-
-        // check if its a method
-        if (auto scope = methodFromReferrerScope(referrerScope, name, options))
-            return scope;
-
-        // check if its an (unqualified) property
-        if (auto scope = propertyFromReferrerScope(referrerScope, name, options))
-            return *scope;
     }
+
+    if (DomItem definitionOfItem = findJSIdentifierDefinition(item, name)) {
+        Q_ASSERT_X(!definitionOfItem.semanticScope().isNull()
+                            && definitionOfItem.semanticScope()->ownJSIdentifier(name),
+                    "QQmlLSUtils::findDefinitionOf",
+                    "JS definition does not actually define the JS identifer. "
+                    "It should be empty.");
+        auto scope = definitionOfItem.semanticScope();
+        auto jsIdentifier = scope->ownJSIdentifier(name);
+        if (jsIdentifier->scope) {
+            return QQmlLSUtilsExpressionType{ name, jsIdentifier->scope.toStrongRef(),
+                                                QQmlLSUtilsIdentifierType::JavaScriptIdentifier };
+        } else {
+            return QQmlLSUtilsExpressionType{ name, scope,
+                                                QQmlLSUtilsIdentifierType::JavaScriptIdentifier };
+        }
+    }
+
+    const auto referrerScope = item.nearestSemanticScope();
+    if (!referrerScope)
+        return {};
+
+    // check if its a method
+    if (auto scope = methodFromReferrerScope(referrerScope, name, options))
+        return scope;
+
+    // check if its found as a property binding
+    if (auto scope = propertyBindingFromReferrerScope(referrerScope, name, options))
+        return *scope;
+
+    // check if its an (unqualified) property
+    if (auto scope = propertyFromReferrerScope(referrerScope, name, options))
+        return *scope;
 
     // check if its an id
     QQmlJSScope::ConstPtr fromId = resolver->scopeForId(name, referrerScope);
@@ -1101,10 +1150,18 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
     }
     case DomType::QmlObject: {
         auto object = item.as<QmlObject>();
-        if (object && object->semanticScope())
-            return QQmlLSUtilsExpressionType{ std::nullopt, object->semanticScope(),
-                                              QmlObjectIdentifier };
-
+        if (!object)
+            return {};
+        if (const auto scope = object->semanticScope()) {
+            const auto name = item.name();
+            const auto resolved = resolveNameInQmlScope(name, scope);
+            switch (options) {
+            case ResolveOwnerType:
+                return QQmlLSUtilsExpressionType{name, scope->parentScope(), resolved->type};
+            case ResolveActualTypeForFieldMemberExpression:
+                return QQmlLSUtilsExpressionType{name, scope, resolved->type};
+            }
+        }
         return {};
     }
     case DomType::MethodInfo: {
@@ -1382,6 +1439,7 @@ expressionTypeWithDefinition(const QQmlLSUtilsExpressionType &ownerType)
     case EnumeratorIdentifier:
     case EnumeratorValueIdentifier:
     case AttachedTypeIdentifier:
+    case GroupedPropertyIdentifier:
         return ownerType.semanticScope;
     }
     return {};
