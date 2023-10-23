@@ -148,7 +148,7 @@ void tst_qmlls_utils::findItemFromLocation_data()
                                       << -1 << positionAfterOneIndent;
     QTest::addRow("findIntBinding")
             << file1Qml << 30 << positionAfterOneIndent << firstResult << outOfOne
-            << QQmlJS::Dom::DomType::Binding
+            << QQmlJS::Dom::DomType::ScriptIdentifierExpression
             // start of the a identifier of the "a" binding
             << -1 << positionAfterOneIndent;
     QTest::addRow("findIntBinding2") << file1Qml << 30 << 8 << firstResult << outOfOne
@@ -157,7 +157,7 @@ void tst_qmlls_utils::findItemFromLocation_data()
                                      << -1 << positionAfterOneIndent;
 
     QTest::addRow("colorBinding") << file1Qml << 39 << 13 << firstResult << outOfOne
-                                  << QQmlJS::Dom::DomType::Binding << -1
+                                  << QQmlJS::Dom::DomType::ScriptIdentifierExpression << -1
                                   << 2 * positionAfterOneIndent - 1;
 
     QTest::addRow("findVarProperty") << file1Qml << 12 << 12 << firstResult << outOfOne
