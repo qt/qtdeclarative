@@ -253,13 +253,22 @@ ApplicationWindow {
                 wrapMode: TextEdit.Wrap
                 text: slashIndex === -1 || importPath === "" || styleName === ""
                       ? "You need to set a valid target directory!"
+
                       : "The name of this style will be '" + styleName + "', and the import path"
-                      + " will be '" + importPath + "'"
-                      + "\n\nIf you assign the import path to the environment variable 'QML_IMPORT_PATH'"
-                      + "\nan application can use this style by for example launching it with the name of"
+                      + " will be '" + importPath + "'."
+                      + "\n\n"
+                      + "If you assign the import path to the environment variable 'QML_IMPORT_PATH'"
+                      + " an application can use this style by for example launching it with the name of"
                       + " the style as argument:"
                       + "\n\nexport QML_IMPORT_PATH=" + importPath
                       + "\n./yourapp -style=" + styleName
+                      + "\n\n"
+                      + "Another alternative is build the style into an application as a resource."
+                      + " The style already contains a resource file '" + styleName + ".qrc' that you"
+                      + " can add to your project, e.g:"
+                      + "\n\n"
+                      + "qt_add_executable(application main.cpp "
+                      + importPath + "/" + styleName + "/" + styleName + ".qrc)"
             }
         }
 

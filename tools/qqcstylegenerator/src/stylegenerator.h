@@ -87,6 +87,8 @@ public:
                 generateConfiguration();
             if (!m_abort)
                 generateQmlDir();
+            if (!m_abort)
+                generateQrcFile();
         } catch (std::exception &e) {
             error(e.what());
         }
@@ -974,6 +976,35 @@ private:
 
         debug("generating qmldir");
         createTextFileInStylefolder("qmldir", qmldir);
+    }
+
+    void generateQrcFile()
+    {
+        debug("Generating Qt resource file");
+        const QString styleName = QFileInfo(m_bridge->m_targetDirectory).fileName();
+        const QString targetPath = QFileInfo(m_bridge->m_targetDirectory).absolutePath();
+
+        QString resources;
+        resources += "<RCC>\n";
+        resources += "\t<qresource prefix=\"/qt/qml\">\n";
+
+        QDirIterator it(styleName, QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            QString file = it.next();
+            if (file.endsWith('.')) {
+                // QDir::NoDotAndDotDot
+                continue;
+            }
+            resources += "\t\t<file alias=\"" + file + "\">"
+                    + targetPath + QDir::separator() + file
+                    + "</file>\n";
+        }
+
+        resources += "\t</qresource>\n";
+        resources += "</RCC>\n";
+
+
+        createTextFileInStylefolder(styleName + ".qrc", resources);
     }
 
     void mkTargetPath(const QString &path) const
