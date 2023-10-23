@@ -5,7 +5,6 @@
 #include "qquicktextedit_p_p.h"
 #include "qquicktextcontrol_p.h"
 #include "qquicktextdocument_p.h"
-#include "qquickevents_p_p.h"
 #include "qquickwindow.h"
 #include "qsginternaltextnode_p.h"
 #include "qquicktextnodeengine_p.h"
@@ -2426,12 +2425,7 @@ bool QQuickTextEdit::isInputMethodComposing() const
 }
 
 QQuickTextEditPrivate::ExtraData::ExtraData()
-    : padding(0)
-    , topPadding(0)
-    , leftPadding(0)
-    , rightPadding(0)
-    , bottomPadding(0)
-    , explicitTopPadding(false)
+    : explicitTopPadding(false)
     , explicitLeftPadding(false)
     , explicitRightPadding(false)
     , explicitBottomPadding(false)

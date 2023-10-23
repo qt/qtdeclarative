@@ -42,7 +42,7 @@ public:
     struct Node {
         explicit Node(int startPos = std::numeric_limits<int>::max(),
                       QSGInternalTextNode *node = nullptr)
-            : m_startPos(startPos), m_node(node), m_dirty(false) { }
+            : m_startPos(startPos), m_node(node) { }
         QSGInternalTextNode *textNode() const { return m_node; }
         void moveStartPos(int delta) { Q_ASSERT(m_startPos + delta > 0); m_startPos += delta; }
         int startPos() const { return m_startPos; }
@@ -52,7 +52,7 @@ public:
     private:
         int m_startPos;
         QSGInternalTextNode *m_node;
-        bool m_dirty;
+        bool m_dirty = false;
 
 #ifndef QT_NO_DEBUG_STREAM
         friend QDebug Q_QUICK_PRIVATE_EXPORT operator<<(QDebug, const Node &);
@@ -63,11 +63,11 @@ public:
     struct ExtraData {
         ExtraData();
 
-        qreal padding;
-        qreal topPadding;
-        qreal leftPadding;
-        qreal rightPadding;
-        qreal bottomPadding;
+        qreal padding = 0;
+        qreal topPadding = 0;
+        qreal leftPadding = 0;
+        qreal rightPadding = 0;
+        qreal bottomPadding = 0;
         bool explicitTopPadding : 1;
         bool explicitLeftPadding : 1;
         bool explicitRightPadding : 1;
@@ -78,20 +78,7 @@ public:
 
 
     QQuickTextEditPrivate()
-        : color(QRgb(0xFF000000)), selectionColor(QRgb(0xFF000080)), selectedTextColor(QRgb(0xFFFFFFFF))
-        , textMargin(0.0), xoff(0), yoff(0)
-        , font(sourceFont), cursorComponent(nullptr), cursorItem(nullptr), document(nullptr), control(nullptr)
-        , quickDocument(nullptr), lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
-        , hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop)
-        , format(QQuickTextEdit::PlainText), wrapMode(QQuickTextEdit::NoWrap)
-        , renderType(QQuickTextUtil::textRenderType<QQuickTextEdit>())
-        , contentDirection(Qt::LayoutDirectionAuto)
-        , mouseSelectionMode(QQuickTextEdit::SelectCharacters)
-#if QT_CONFIG(im)
-        , inputMethodHints(Qt::ImhNone)
-#endif
-        , updateType(UpdatePaintNode)
-        , dirty(false), richText(false), cursorVisible(false), cursorPending(false)
+        : dirty(false), richText(false), cursorVisible(false), cursorPending(false)
         , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
         , selectByMouse(true), canPaste(false), canPasteValid(false), hAlignImplicit(true)
         , textCached(true), inLayout(false), selectByKeyboard(false), selectByKeyboardSet(false)
@@ -137,31 +124,31 @@ public:
     bool isImplicitResizeEnabled() const;
     void setImplicitResizeEnabled(bool enabled);
 
-    QColor color;
-    QColor selectionColor;
-    QColor selectedTextColor;
+    QColor color = QRgb(0xFF000000);
+    QColor selectionColor = QRgb(0xFF000080);
+    QColor selectedTextColor = QRgb(0xFFFFFFFF);
 
     QSizeF contentSize;
 
-    qreal textMargin;
-    qreal xoff;
-    qreal yoff;
+    qreal textMargin = 0;
+    qreal xoff = 0;
+    qreal yoff = 0;
 
     QString text;
     QUrl baseUrl;
     QFont sourceFont;
     QFont font;
 
-    QQmlComponent* cursorComponent;
-    QQuickItem* cursorItem;
-    QQuickTextDocumentWithImageResources *document;
-    QQuickTextControl *control;
-    QQuickTextDocument *quickDocument;
+    QQmlComponent* cursorComponent = nullptr;
+    QQuickItem* cursorItem = nullptr;
+    QQuickTextDocumentWithImageResources *document = nullptr;
+    QQuickTextControl *control = nullptr;
+    QQuickTextDocument *quickDocument = nullptr;
     QList<Node> textNodeMap;
 
-    int lastSelectionStart;
-    int lastSelectionEnd;
-    int lineCount;
+    int lastSelectionStart = 0;
+    int lastSelectionEnd = 0;
+    int lineCount = 0;
     int firstBlockInViewport = -1;   // only for the autotest; can be wrong after scrolling sometimes
     int firstBlockPastViewport = -1; // only for the autotest
     QRectF renderedRegion;
@@ -173,17 +160,17 @@ public:
         UpdateAll
     };
 
-    QQuickTextEdit::HAlignment hAlign;
-    QQuickTextEdit::VAlignment vAlign;
-    QQuickTextEdit::TextFormat format;
-    QQuickTextEdit::WrapMode wrapMode;
-    QQuickTextEdit::RenderType renderType;
-    Qt::LayoutDirection contentDirection;
-    QQuickTextEdit::SelectionMode mouseSelectionMode;
+    QQuickTextEdit::HAlignment hAlign = QQuickTextEdit::AlignLeft;
+    QQuickTextEdit::VAlignment vAlign = QQuickTextEdit::AlignTop;
+    QQuickTextEdit::TextFormat format = QQuickTextEdit::PlainText;
+    QQuickTextEdit::WrapMode wrapMode = QQuickTextEdit::NoWrap;
+    QQuickTextEdit::RenderType renderType = QQuickTextUtil::textRenderType<QQuickTextEdit>();
+    Qt::LayoutDirection contentDirection = Qt::LayoutDirectionAuto;
+    QQuickTextEdit::SelectionMode mouseSelectionMode = QQuickTextEdit::SelectCharacters;
 #if QT_CONFIG(im)
-    Qt::InputMethodHints inputMethodHints;
+    Qt::InputMethodHints inputMethodHints = Qt::ImhNone;
 #endif
-    UpdateType updateType;
+    UpdateType updateType = UpdatePaintNode;
 
     bool dirty : 1;
     bool richText : 1;
