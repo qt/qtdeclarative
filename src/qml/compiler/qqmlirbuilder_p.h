@@ -669,8 +669,12 @@ void tryGeneratingTranslationBindingBase(QStringView base, QQmlJS::AST::Argument
     if (base == QLatin1String("qsTr")) {
         QV4::CompiledData::TranslationData translationData;
         translationData.number = -1;
-        translationData.commentIndex = 0; // empty string
-        translationData.contextIndex = 0;
+
+        // empty string
+        translationData.commentIndex = 0;
+
+        // No context (not empty string)
+        translationData.contextIndex = QV4::CompiledData::TranslationData::NoContextIndex;
 
         if (!args || !args->expression)
             return; // no arguments, stop
@@ -710,8 +714,12 @@ void tryGeneratingTranslationBindingBase(QStringView base, QQmlJS::AST::Argument
     } else if (base == QLatin1String("qsTrId")) {
         QV4::CompiledData::TranslationData translationData;
         translationData.number = -1;
-        translationData.commentIndex = 0; // empty string, but unused
-        translationData.contextIndex = 0;
+
+        // empty string, but unused
+        translationData.commentIndex = 0;
+
+        // No context (not empty string)
+        translationData.contextIndex = QV4::CompiledData::TranslationData::NoContextIndex;
 
         if (!args || !args->expression)
             return; // no arguments, stop

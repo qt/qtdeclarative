@@ -66,7 +66,9 @@ void tst_qqmltranslation::translation()
                              << QStringLiteral("basic2")
                              << QStringLiteral("disambiguation")
                              << QStringLiteral("disambiguation2")
-                             << QStringLiteral("singular") << QStringLiteral("plural");
+                             << QStringLiteral("singular")
+                             << QStringLiteral("plural")
+                             << QStringLiteral("emptyContext");
 
         const QV4::CompiledData::Object *rootObject
                 = compilationUnit->qmlData->objectAt(/*root object*/0);
@@ -100,6 +102,7 @@ void tst_qqmltranslation::translation()
     QCOMPARE(object->property("singular2").toString(), QLatin1String("1 canard"));
     QCOMPARE(object->property("plural").toString(), QLatin1String("2 canards"));
     QCOMPARE(object->property("plural2").toString(), QLatin1String("2 canards"));
+    QCOMPARE(object->property("emptyContext").toString(), QLatin1String("hello"));
 
     QCoreApplication::removeTranslator(&translator);
     delete object;
