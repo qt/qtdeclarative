@@ -24,18 +24,11 @@
 
 #include <QtQuickTemplates2/private/qquicktextarea_p.h>
 
-#if QT_CONFIG(accessibility)
-#include <QtGui/qaccessible.h>
-#endif
-
 QT_BEGIN_NAMESPACE
 
 class QQuickFlickable;
 
 class QQuickTextAreaPrivate : public QQuickTextEditPrivate, public QQuickItemChangeListener
-#if QT_CONFIG(accessibility)
-    , public QAccessible::ActivationObserver
-#endif
 {
 public:
     Q_DECLARE_PUBLIC(QQuickTextArea)
@@ -92,7 +85,6 @@ public:
 
 #if QT_CONFIG(accessibility)
     void accessibilityActiveChanged(bool active) override;
-    QAccessible::Role accessibleRole() const override;
 #endif
 
     void cancelBackground();
