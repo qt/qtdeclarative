@@ -61,7 +61,6 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
     add_subdirectory(quickcontrols)
     add_subdirectory(quickdialogs)
     add_subdirectory(quicknativestyle)
-    add_subdirectory(quickfigmastyle)
 
     if(QT_FEATURE_testlib AND QT_FEATURE_network AND TARGET Qt::Test AND TARGET Qt::QuickControls2)
         add_subdirectory(quickcontrolstestutils)

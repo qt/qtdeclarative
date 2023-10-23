@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.FigmaStyle
 import QtQuick.Templates as T
 
 T.Popup {

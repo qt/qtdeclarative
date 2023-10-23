@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.FigmaStyle
 import QtQuick.Controls.impl
 import QtQuick.Templates as T
 
