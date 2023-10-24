@@ -83,6 +83,8 @@ public:
                 generateControls();
             if (!m_abort)
                 downloadImages();
+            progressTo(3);
+            progressLabel("Generating configuration files");
             if (!m_abort)
                 generateConfiguration();
             if (!m_abort)
@@ -959,6 +961,7 @@ private:
         }
         result.append("}\n");
         createTextFileInStylefolder(fileName, result);
+        progress();
     }
 
     void generateQmlDir()
@@ -976,6 +979,7 @@ private:
 
         debug("generating qmldir");
         createTextFileInStylefolder("qmldir", qmldir);
+        progress();
     }
 
     void generateQrcFile()
@@ -1005,6 +1009,7 @@ private:
 
 
         createTextFileInStylefolder(styleName + ".qrc", resources);
+        progress();
     }
 
     void mkTargetPath(const QString &path) const
