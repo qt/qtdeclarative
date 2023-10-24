@@ -18,6 +18,7 @@ set(qml_files
     "SelectionRectangle.qml"
     "Slider.qml"
     "SpinBox.qml"
+    "Switch.qml"
     "TextArea.qml"
     "TextField.qml"
     "ScrollBar.qml"
