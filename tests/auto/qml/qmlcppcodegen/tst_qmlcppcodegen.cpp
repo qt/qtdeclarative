@@ -60,6 +60,7 @@ private slots:
     void construct();
     void contextParam();
     void conversionDecrement();
+    void conversionInDeadCode();
     void conversions();
     void convertToOriginalReadAcumulatorForUnaryOperators();
     void cppValueTypeList();
@@ -1055,6 +1056,25 @@ void tst_QmlCppCodegen::conversionDecrement()
     QCOMPARE(o->property("currentPageIndex").toInt(), 4);
     o->setProperty("pages", 60);
     QCOMPARE(o->property("currentPageIndex").toInt(), 3);
+}
+
+void tst_QmlCppCodegen::conversionInDeadCode()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/conversionInDeadCode.qml"_s));
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("a").toInt(), -4);
+    QCOMPARE(o->property("b").toInt(), 12);
+    QCOMPARE(o->property("c").toInt(), 10);
+    QCOMPARE(o->property("d").toInt(), 10);
+    QCOMPARE(o->property("e").toInt(), 10);
+    QCOMPARE(o->property("f").toInt(), 20);
+    QCOMPARE(o->property("g").toInt(), 33);
 }
 
 void tst_QmlCppCodegen::conversions()
