@@ -264,11 +264,14 @@ ApplicationWindow {
                       + "\n./yourapp -style=" + styleName
                       + "\n\n"
                       + "Another alternative is build the style into an application as a resource."
-                      + " The style already contains a resource file '" + styleName + ".qrc' that you"
+                      + " The style folder contains a resource file for this, " + styleName + ".qrc, that you"
                       + " can add to your project, e.g:"
                       + "\n\n"
                       + "qt_add_executable(application main.cpp "
                       + importPath + "/" + styleName + "/" + styleName + ".qrc)"
+                      + "\n\nYou If you want to use compile time selection of the style, you"
+                      + " can use the following import in your QML files:"
+                      + "\n\nimport \"qrc:/qt/qml/" + styleName + "\""
             }
         }
 
