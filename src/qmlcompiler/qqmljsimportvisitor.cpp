@@ -2229,6 +2229,12 @@ void QQmlJSImportVisitor::importFromHost(const QString &path, const QString &pre
                                          const QQmlJS::SourceLocation &location)
 {
     QFileInfo fileInfo(path);
+    if (!fileInfo.exists()) {
+        m_logger->log("File or directory you are trying to import does not exist: %1."_L1.arg(path),
+                      qmlImport, location);
+        return;
+    }
+
     if (fileInfo.isFile()) {
         const auto scope = m_importer->importFile(path);
         const QString actualPrefix = prefix.isEmpty() ? scope->internalName() : prefix;
@@ -2239,6 +2245,11 @@ void QQmlJSImportVisitor::importFromHost(const QString &path, const QString &pre
         m_rootScopeImports.addTypes(scopes);
         for (auto it = scopes.types().keyBegin(), end = scopes.types().keyEnd(); it != end; it++)
             addImportWithLocation(*it, location);
+    } else {
+        m_logger->log(
+                "%1 is neither a file nor a directory. Are sure the import path is correct?"_L1.arg(
+                        path),
+                qmlImport, location);
     }
 }
 

@@ -1,0 +1,3 @@
+import "/dev/null"
+
+QtObject {}

@@ -81,6 +81,9 @@ private Q_SLOTS:
 
     void qrcUrlImport();
 
+    void incorrectImportFromHost_data();
+    void incorrectImportFromHost();
+
     void attachedPropertyReuse();
 
     void missingBuiltinsNoCrash();
@@ -1717,6 +1720,34 @@ void TestQmllint::qrcUrlImport()
     callQmllint(testFile("untitled/main.qml"), true, &warnings, {}, {},
                 { testFile("untitled/qrcUrlImport.qrc") });
     checkResult(warnings, Result::clean());
+}
+
+void TestQmllint::incorrectImportFromHost_data()
+{
+    QTest::addColumn<QString>("filename");
+    QTest::addColumn<Result>("result");
+
+    QTest::newRow("NonexistentFile")
+            << QStringLiteral("importNonexistentFile.qml")
+            << Result{ { Message{
+                       QStringLiteral("File or directory you are trying to import does not exist"),
+                       1, 1 } } };
+#ifndef Q_OS_WIN
+    // there is no /dev/null device on Win
+    QTest::newRow("NullDevice")
+            << QStringLiteral("importNullDevice.qml")
+            << Result{ { Message{ QStringLiteral("is neither a file nor a directory. Are sure the "
+                                                 "import path is correct?"),
+                                  1, 1 } } };
+#endif
+}
+
+void TestQmllint::incorrectImportFromHost()
+{
+    QFETCH(QString, filename);
+    QFETCH(Result, result);
+
+    runTest(filename, result);
 }
 
 void TestQmllint::attachedPropertyReuse()
