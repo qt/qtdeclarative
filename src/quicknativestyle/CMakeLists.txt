@@ -47,6 +47,7 @@ qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
         items/qquickstyleitem.cpp items/qquickstyleitem.h
         items/qquickstyleitembutton.cpp items/qquickstyleitembutton.h
         items/qquickstyleitemcheckbox.cpp items/qquickstyleitemcheckbox.h
+        items/qquickstyleitemdelaybutton.cpp items/qquickstyleitemdelaybutton.h
         items/qquickstyleitemdial.cpp items/qquickstyleitemdial.h
         items/qquickstyleitemframe.cpp items/qquickstyleitemframe.h
         items/qquickstyleitemgroupbox.cpp items/qquickstyleitemgroupbox.h

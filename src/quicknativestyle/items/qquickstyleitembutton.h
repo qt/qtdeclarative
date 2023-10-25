@@ -23,7 +23,7 @@ protected:
     StyleItemGeometry calculateGeometry() override;
 
 private:
-    void initStyleOption(QStyleOptionButton &styleOption) const;
+    virtual void initStyleOption(QStyleOptionButton &styleOption) const;
 };
 
 QT_END_NAMESPACE

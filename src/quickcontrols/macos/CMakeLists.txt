@@ -10,6 +10,7 @@ set(qml_files
     "Button.qml"
     "CheckBox.qml"
     "ComboBox.qml"
+    "DelayButton.qml"
     "Dial.qml"
     "Dialog.qml"
     "DialogButtonBox.qml"
