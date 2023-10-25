@@ -7,7 +7,7 @@ import QtQuick.Shapes
 Shape {
     asynchronous: true
     width: 494; height: 510
-
+    property bool highlightOnTap: true
     ShapePath {
         fillColor: "#ffffff"
         strokeColor: "#000000"
@@ -3574,7 +3574,10 @@ Shape {
         opacity: tapHandler.pressed ? 1 : 0
         containsMode: Shape.FillContains
 
-        TapHandler { id: tapHandler }
+        TapHandler {
+            id: tapHandler
+            enabled: highlightOnTap
+        }
 
         ShapePath {
             strokeColor: "red"

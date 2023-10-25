@@ -81,8 +81,12 @@ public:
     static void unregisterInternalCompositeType(QMetaType metaType, QMetaType listMetaType);
     static QQmlType registerType(const QQmlPrivate::RegisterType &type);
     static QQmlType registerInterface(const QQmlPrivate::RegisterInterface &type);
-    static QQmlType registerSingletonType(const QQmlPrivate::RegisterSingletonType &type);
-    static QQmlType registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &type);
+    static QQmlType registerSingletonType(
+            const QQmlPrivate::RegisterSingletonType &type,
+            const QQmlType::SingletonInstanceInfo::ConstPtr &siinfo);
+    static QQmlType registerCompositeSingletonType(
+            const QQmlPrivate::RegisterCompositeSingletonType &type,
+            const QQmlType::SingletonInstanceInfo::ConstPtr &siinfo);
     static QQmlType registerCompositeType(const QQmlPrivate::RegisterCompositeType &type);
     static RegistrationResult registerPluginTypes(QObject *instance, const QString &basePath,
                                                   const QString &uri, const QString &typeNamespace,

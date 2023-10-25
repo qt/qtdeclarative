@@ -69,21 +69,12 @@ class QQuickCheckBoxPrivate : public QQuickAbstractButtonPrivate
     Q_DECLARE_PUBLIC(QQuickCheckBox)
 
 public:
-    void setNextCheckState(const QJSValue &callback);
-
     QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::CheckBox); }
 
     bool tristate = false;
     Qt::CheckState checkState = Qt::Unchecked;
     QJSValue nextCheckState;
 };
-
-void QQuickCheckBoxPrivate::setNextCheckState(const QJSValue &callback)
-{
-    Q_Q(QQuickCheckBox);
-    nextCheckState = callback;
-    emit q->nextCheckStateChanged();
-}
 
 QQuickCheckBox::QQuickCheckBox(QQuickItem *parent)
     : QQuickAbstractButton(*(new QQuickCheckBoxPrivate), parent)
@@ -148,6 +139,19 @@ void QQuickCheckBox::setCheckState(Qt::CheckState state)
     emit checkStateChanged();
     if (d->checked != wasChecked)
         emit checkedChanged();
+}
+
+QJSValue QQuickCheckBox::getNextCheckState() const
+{
+    Q_D(const QQuickCheckBox);
+    return d->nextCheckState;
+}
+
+void QQuickCheckBox::setNextCheckState(const QJSValue &callback)
+{
+    Q_D(QQuickCheckBox);
+    d->nextCheckState = callback;
+    emit nextCheckStateChanged();
 }
 
 QFont QQuickCheckBox::defaultFont() const

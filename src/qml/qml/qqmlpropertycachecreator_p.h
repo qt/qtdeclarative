@@ -461,8 +461,13 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
     // For property change signal override detection.
     // We prepopulate a set of signal names which already exist in the object,
     // and throw an error if there is a signal/method defined as an override.
-    QSet<QString> seenSignals;
-    seenSignals << QStringLiteral("destroyed") << QStringLiteral("parentChanged") << QStringLiteral("objectNameChanged");
+    // TODO: Remove AllowOverride once we can. No override should be allowed.
+    enum class AllowOverride { No, Yes };
+    QHash<QString, AllowOverride> seenSignals {
+        { QStringLiteral("destroyed"), AllowOverride::No },
+        { QStringLiteral("parentChanged"), AllowOverride::No },
+        { QStringLiteral("objectNameChanged"), AllowOverride::No }
+    };
     const QQmlPropertyCache *parentCache = cache.data();
     while ((parentCache = parentCache->parent().data())) {
         if (int pSigCount = parentCache->signalCount()) {
@@ -473,7 +478,15 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
                 for (QQmlPropertyCache::StringCache::ConstIterator iter = parentCache->stringCache.begin();
                      iter != parentCache->stringCache.end(); ++iter) {
                     if (currPSig == (*iter).second) {
-                        seenSignals.insert(iter.key());
+                        if (currPSig->isOverridableSignal()) {
+                            const qsizetype oldSize = seenSignals.size();
+                            AllowOverride &entry = seenSignals[iter.key()];
+                            if (seenSignals.size() != oldSize)
+                                entry = AllowOverride::Yes;
+                        } else {
+                            seenSignals[iter.key()] = AllowOverride::No;
+                        }
+
                         break;
                     }
                 }
@@ -489,7 +502,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
 
         const QString changedSigName =
                 QQmlSignalNames::propertyNameToChangedSignalName(stringAt(p->nameIndex));
-        seenSignals.insert(changedSigName);
+        seenSignals[changedSigName] = AllowOverride::No;
 
         cache->appendSignal(changedSigName, flags, effectiveMethodIndex++);
     }
@@ -501,7 +514,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
 
         const QString changedSigName =
                 QQmlSignalNames::propertyNameToChangedSignalName(stringAt(a->nameIndex()));
-        seenSignals.insert(changedSigName);
+        seenSignals[changedSigName] = AllowOverride::No;
 
         cache->appendSignal(changedSigName, flags, effectiveMethodIndex++);
     }
@@ -553,10 +566,26 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
             flags.setHasArguments(true);
 
         QString signalName = stringAt(s->nameIndex);
-        if (seenSignals.contains(signalName))
-            return qQmlCompileError(s->location, QQmlPropertyCacheCreatorBase::tr("Duplicate signal name: invalid override of property change signal or superclass signal"));
-        seenSignals.insert(signalName);
-
+        const auto it = seenSignals.find(signalName);
+        if (it == seenSignals.end()) {
+            seenSignals[signalName] = AllowOverride::No;
+        } else {
+            // TODO: Remove the AllowOverride::Yes branch once we can.
+            QQmlError message = qQmlCompileError(
+                    s->location,
+                    QQmlPropertyCacheCreatorBase::tr(
+                            "Duplicate signal name: "
+                            "invalid override of property change signal or superclass signal"));
+            switch (*it) {
+            case AllowOverride::No:
+                return message;
+            case AllowOverride::Yes:
+                message.setUrl(objectContainer->url());
+                enginePrivate->warning(message);
+                *it = AllowOverride::No; // No further overriding allowed.
+                break;
+            }
+        }
         cache->appendSignal(signalName, flags, effectiveMethodIndex++,
                             paramCount?paramTypes.constData():nullptr, names);
     }
@@ -569,8 +598,23 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
         auto flags = QQmlPropertyData::defaultSlotFlags();
 
         const QString slotName = stringAt(function->nameIndex);
-        if (seenSignals.contains(slotName))
-            return qQmlCompileError(function->location, QQmlPropertyCacheCreatorBase::tr("Duplicate method name: invalid override of property change signal or superclass signal"));
+        const auto it = seenSignals.constFind(slotName);
+        if (it != seenSignals.constEnd()) {
+            // TODO: Remove the AllowOverride::Yes branch once we can.
+            QQmlError message = qQmlCompileError(
+                function->location,
+                QQmlPropertyCacheCreatorBase::tr(
+                        "Duplicate method name: "
+                        "invalid override of property change signal or superclass signal"));
+            switch (*it) {
+            case AllowOverride::No:
+                return message;
+            case AllowOverride::Yes:
+                message.setUrl(objectContainer->url());
+                enginePrivate->warning(message);
+                break;
+            }
+        }
         // Note: we don't append slotName to the seenSignals list, since we don't
         // protect against overriding change signals or methods with properties.
 
@@ -608,9 +652,9 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
         const QV4::CompiledData::CommonType type = p->commonType();
 
         if (p->isList())
-            propertyFlags.type = QQmlPropertyData::Flags::QListType;
+            propertyFlags.setType(QQmlPropertyData::Flags::QListType);
         else if (type == QV4::CompiledData::CommonType::Var)
-            propertyFlags.type = QQmlPropertyData::Flags::VarPropertyType;
+            propertyFlags.setType(QQmlPropertyData::Flags::VarPropertyType);
 
         if (type != QV4::CompiledData::CommonType::Invalid) {
             propertyType = p->isList()
@@ -639,14 +683,9 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
                         compositeType = objectContainer->qmlTypeForComponent(icName);
                     Q_ASSERT(compositeType.isValid());
                 } else if (selfReference) {
-                     compositeType = objectContainer->qmlTypeForComponent();
+                    compositeType = objectContainer->qmlTypeForComponent();
                 } else {
-                    QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
-                    Q_ASSERT(tdata);
-                    Q_ASSERT(tdata->isComplete());
-
-                    auto compilationUnit = tdata->compilationUnit();
-                    compositeType = compilationUnit->qmlTypeForComponent();
+                    compositeType = qmltype;
                 }
 
                 if (p->isList()) {
@@ -663,11 +702,9 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
             }
 
             if (p->isList())
-                propertyFlags.type = QQmlPropertyData::Flags::QListType;
+                propertyFlags.setType(QQmlPropertyData::Flags::QListType);
             else if (propertyType.flags().testFlag(QMetaType::PointerToQObject))
-                propertyFlags.type = QQmlPropertyData::Flags::QObjectDerivedType;
-            else
-                propertyFlags.type = QQmlPropertyData::Flags::ValueType;
+                propertyFlags.setType(QQmlPropertyData::Flags::QObjectDerivedType);
         }
 
         if (!p->isReadOnly() && !propertyType.flags().testFlag(QMetaType::IsQmlList))
@@ -724,15 +761,19 @@ inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter
         return param.isList() ? qmlType.qListTypeId() : qmlType.typeId();
     }
 
-    QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
-    Q_ASSERT(tdata);
-    Q_ASSERT(tdata->isComplete());
+    return param.isList() ? qmltype.qListTypeId() : qmltype.typeId();
+}
 
-    auto compilationUnit = tdata->compilationUnit();
-
-    return param.isList()
-               ? compilationUnit->qmlType.qListTypeId()
-               : compilationUnit->qmlType.typeId();
+template <typename ObjectContainer, typename CompiledObject>
+int objectForId(const ObjectContainer *objectContainer, const CompiledObject &component, int id)
+{
+    for (quint32 i = 0, count = component.namedObjectsInComponentCount(); i < count; ++i) {
+        const int candidateIndex = component.namedObjectsInComponentTable()[i];
+        const CompiledObject &candidate = *objectContainer->objectAt(candidateIndex);
+        if (candidate.objectId() == id)
+            return candidateIndex;
+    }
+    return -1;
 }
 
 template <typename ObjectContainer>
@@ -751,7 +792,6 @@ private:
             const CompiledObject &component, const QV4::CompiledData::Alias &alias, QMetaType *type,
             QTypeRevision *version, QQmlPropertyData::Flags *propertyFlags,
             QQmlEnginePrivate *enginePriv);
-    int objectForId(const CompiledObject &component, int id) const;
 
     QQmlPropertyCacheVector *propertyCaches;
     const ObjectContainer *objectContainer;
@@ -783,7 +823,8 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         QVarLengthArray<const QV4::CompiledData::Alias *, 4> seenAliases({lastAlias});
 
         do {
-            const int targetObjectIndex = objectForId(component, lastAlias->targetObjectId());
+            const int targetObjectIndex = objectForId(
+                    objectContainer, component, lastAlias->targetObjectId());
             Q_ASSERT(targetObjectIndex >= 0);
             const CompiledObject *targetObject = objectContainer->objectAt(targetObjectIndex);
             Q_ASSERT(targetObject);
@@ -806,7 +847,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
                     component, *lastAlias, type, version, propertyFlags, enginePriv);
     }
 
-    const int targetObjectIndex = objectForId(component, alias.targetObjectId());
+    const int targetObjectIndex = objectForId(objectContainer, component, alias.targetObjectId());
     Q_ASSERT(targetObjectIndex >= 0);
     const CompiledObject &targetObject = *objectContainer->objectAt(targetObjectIndex);
 
@@ -834,7 +875,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
 
         *version = typeRef->version();
 
-        propertyFlags->type = QQmlPropertyData::Flags::QObjectDerivedType;
+        propertyFlags->setType(QQmlPropertyData::Flags::QObjectDerivedType);
     } else {
         int coreIndex = QQmlPropertyIndex::fromEncoded(alias.encodedMetaPropertyIndex).coreIndex();
         int valueTypeIndex = QQmlPropertyIndex::fromEncoded(
@@ -885,7 +926,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
                     propertyFlags->copyPropertyTypeFlags(targetProperty->flags());
 
                     if (targetProperty->isVarProperty())
-                        propertyFlags->type = QQmlPropertyData::Flags::QVariantType;
+                        propertyFlags->setType(QQmlPropertyData::Flags::QVariantType);
                 }
             }
         }
@@ -936,18 +977,6 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesTo
     }
 
     return QQmlError();
-}
-
-template <typename ObjectContainer>
-inline int QQmlPropertyCacheAliasCreator<ObjectContainer>::objectForId(const CompiledObject &component, int id) const
-{
-    for (quint32 i = 0, count = component.namedObjectsInComponentCount(); i < count; ++i) {
-        const int candidateIndex = component.namedObjectsInComponentTable()[i];
-        const CompiledObject &candidate = *objectContainer->objectAt(candidateIndex);
-        if (candidate.objectId() == id)
-            return candidateIndex;
-    }
-    return -1;
 }
 
 QT_END_NAMESPACE

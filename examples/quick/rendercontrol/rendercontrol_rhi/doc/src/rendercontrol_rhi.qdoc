@@ -5,6 +5,7 @@
     \title QQuickRenderControl RHI Example
     \example rendercontrol/rendercontrol_rhi
     \brief Shows how to render a Qt Quick scene into a QRhiTexture.
+    \examplecategory {Graphics & Multimedia}
     \image rendercontrol-rhi-example.jpg
 
     This example demonstrates how to set up a Qt Quick scene that has its
@@ -78,7 +79,7 @@
     scenegraph when rendering.
 
     The main render loop is the following. This also shows how to perform
-    GPU->CPU readbacks of images. Once a QImage is available, the \l
+    GPU->CPU readbacks of images. Once a QImage is available, the
     QWidget-based user interface updates accordingly. We will omit diving
     into the details for that here.
 
@@ -108,7 +109,7 @@
     expected to perceive. Consider rendering 5 frames in a row, in a tight loop.
     How the animations in those 5 frames move depends on the speed with which
     the CPU executes the loop iterations. That is almost never ideal. To ensure
-    consistent animations, install a custom \l QAnimationDriver. While this is
+    consistent animations, install a custom QAnimationDriver. While this is
     an undocumented (but public) API meant for advanced users, the example here
     provides a simple example of using it.
 
@@ -119,6 +120,16 @@
     to the setStep() function of our QAnimationDriver subclass.
 
     \snippet rendercontrol/rendercontrol_rhi/main.cpp anim-slider
+
+    \note Installing the custom animation driver is made optional via the
+    \c animCheckBox check box. This allows comparing the effect of having and
+    not having a custom animation driver installed. In addition, on some
+    platforms (and perhaps depending on the theme), having the custom driver
+    enabled may lead to lags in widget drawing. This is as expected, because if
+    some widget animation (e.g. highlight of a QPushButton or QCheckBox) is
+    managed via \l QPropertyAnimation and similar, then those animation are
+    driven by the same QAnimationDriver, and that does not advance until a new
+    frame is requested by clicking on the buttons.
 
     Advancing the animations is done before each frame (i.e., before the
     QQuickRenderControl::beginFrame() call) by simply calling advance():

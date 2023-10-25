@@ -1,0 +1,146 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtqml-tooling-qmlformat.html
+\title qmlformat
+\brief Overview of the qmlformat tool.
+\ingroup qtqml-tooling
+
+\section1 qmlformat
+\e qmlformat is a tool that automatically formats QML files in accordance
+with the \l{QML Coding Conventions}. \l{Details}{More...}
+
+\table
+\header
+    \li Usage:
+\row
+    \li qmlformat [\l{options}] \l{arguments}
+\endtable
+
+\section2 Options
+\target options
+The following options are available:
+
+\table
+\header
+    \li Option
+    \li Default Value
+    \li Description
+\row
+    \li -h, --help
+    \li
+    \li Displays help on commandline options.
+\row
+    \li --help-all
+    \li
+    \li Displays help, including generic Qt options.
+
+\row
+    \li -v, --version
+    \li
+    \li Displays version information.
+\row
+    \li -V, --verbose
+    \li
+    \li Verbose mode. Outputs more detailed information.
+\row
+    \li --write-defaults
+    \li
+    \li Writes defaults settings to .qmlformat.ini and exits
+        (Warning: This will overwrite any existing settings and comments!)
+\row
+    \li --ignore-settings
+    \li
+    \li Ignores all settings files and only takes command line options into consideration
+\row
+    \li -i, --inplace
+    \li
+    \li Edit file in-place instead of outputting to stdout.
+\row
+    \li -f, --force
+    \li
+    \li Continue even if an error has occurred.
+\row
+    \li -t, --tabs
+    \li
+    \li Use tabs instead of spaces.
+\row
+    \li -w, --indent-width <width>
+    \li 4
+    \li How many spaces are used when indenting.
+\row
+    \li -n, --normalize
+    \li
+    \li Reorders the attributes of the objects according to the QML Coding Guidelines.
+\row
+    \li -F, --files <file>
+    \li
+    \li Format all files listed in file, in-place
+\row
+    \li -l, --newline <newline>
+    \li
+    \li Override the new line format to use (native macos unix windows).
+\row
+    \li --objects-spacing
+    \li
+    \li Ensure spaces between objects (only works with normalize option).
+\row
+    \li --functions-spacing
+    \li
+    \li Ensure spaces between functions (only works with normalize option).
+
+\endtable
+
+\section2 Arguments
+\target arguments
+\table
+\header
+    \li Arguments:
+\row
+    \li filenames
+\endtable
+
+\section2 Details
+\e qmlformat is flexible and can be configured according to your needs.
+
+\section3 Output
+qmlformat writes the formatted version of the file to stdout.
+If you wish to have your file updated in-place specify the \c{-i} flag.
+
+\section3 Grouping Properties, Functions, and Signals Together
+With \c{-n} or \c{--normalize} flag, \e qmlformat groups all properties, functions,
+and signals together, instead of retaining the order you specified.
+
+\section3 Settings File
+You can configure \e qmlformat by including a settings file \c{.qmlformat.ini} in your
+project source or in the parent directories of your project source folder. A default
+settings file can be obtained by passing the \c{--write-defaults} flag. This generates the
+\c{.qmlformat.ini} file in the current working directory.
+
+\warning \c{--write-defaults} will overwrite any existing settings and comments!
+
+\section3 Formatting a List of Files
+While you can pass a list of files to be formatted as arguments, qmlformat provides
+\c {-F} option to format a set of files stored in a file. In this case, formatting will happen
+inplace.
+
+\code
+    // FileList.txt
+    main.qml
+    mycomponent.qml
+\endcode
+
+Then, use it like
+\code
+    qmlformat -F FileList.txt
+\endcode
+
+\note If the file contains an invalid entry, for example, a file path that
+doesn't exist or a valid file path but the content is an invalid qml document,
+then \c qmlformat will error out for that particular entry. It will still format
+the valid file entries in place.
+
+\warning If you provide -F option, qmlformat will ignore the positional arguments.
+
+*/

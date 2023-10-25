@@ -895,7 +895,7 @@ void ExecutionEngine::setProfiler(Profiling::Profiler *profiler)
 void ExecutionEngine::initRootContext()
 {
     Scope scope(this);
-    Scoped<ExecutionContext> r(scope, memoryManager->allocManaged<ExecutionContext>(sizeof(ExecutionContext::Data)));
+    Scoped<ExecutionContext> r(scope, memoryManager->allocManaged<ExecutionContext>());
     r->d_unchecked()->init(Heap::ExecutionContext::Type_GlobalContext);
     r->d()->activation.set(this, globalObject->d());
     jsObjects[RootContext] = r;
@@ -1595,15 +1595,15 @@ static QVariant toVariant(
                     } else {
                         auto originalType = asVariant.metaType();
                         bool couldConvert = asVariant.convert(valueMetaType);
-                        if (!couldConvert) {
+                        if (!couldConvert && originalType.isValid()) {
+                            // If the original type was void, we're converting a "hole" in a sparse
+                            // array. There is no point in warning about that.
                             qWarning().noquote()
                                     << QLatin1String("Could not convert array value "
                                                      "at position %1 from %2 to %3")
                                        .arg(QString::number(i),
                                             QString::fromUtf8(originalType.name()),
                                             QString::fromUtf8(valueMetaType.name()));
-                            // create default constructed value
-                            asVariant = QVariant(valueMetaType, nullptr);
                         }
                         retnAsIterable.metaContainer().addValue(retn.data(), asVariant.constData());
                     }
@@ -2457,6 +2457,12 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
     case QMetaType::UInt:
         *reinterpret_cast<uint*>(data) = value.toUInt32();
         return true;
+    case QMetaType::Long:
+        *reinterpret_cast<long*>(data) = long(value.toInteger());
+        return true;
+    case QMetaType::ULong:
+        *reinterpret_cast<ulong*>(data) = ulong(value.toInteger());
+        return true;
     case QMetaType::LongLong:
         *reinterpret_cast<qlonglong*>(data) = qlonglong(value.toInteger());
         return true;
@@ -2647,6 +2653,13 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
     if (metaType == QMetaType::fromType<QQmlListReference>()) {
         if (const QV4::QmlListWrapper *wrapper = value.as<QV4::QmlListWrapper>()) {
             *reinterpret_cast<QQmlListReference *>(data) = wrapper->toListReference();
+            return true;
+        }
+    }
+
+    if (metaType == QMetaType::fromType<QQmlListProperty<QObject>>()) {
+        if (const QV4::QmlListWrapper *wrapper = value.as<QV4::QmlListWrapper>()) {
+            *reinterpret_cast<QQmlListProperty<QObject> *>(data) = *wrapper->d()->property();
             return true;
         }
     }

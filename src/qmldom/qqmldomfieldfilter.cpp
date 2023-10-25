@@ -61,7 +61,7 @@ QString FieldFilter::describeFieldsFilter() const
     return fieldFilterStr;
 }
 
-bool FieldFilter::operator()(DomItem &obj, Path p, DomItem &i) const
+bool FieldFilter::operator()(const DomItem &obj, Path p, const DomItem &i) const
 {
     if (p)
         return this->operator()(obj, p.component(0), i);
@@ -69,7 +69,7 @@ bool FieldFilter::operator()(DomItem &obj, Path p, DomItem &i) const
         return this->operator()(obj, PathEls::Empty(), i);
 }
 
-bool FieldFilter::operator()(DomItem &base, const PathEls::PathComponent &c, DomItem &obj) const
+bool FieldFilter::operator()(const DomItem &base, const PathEls::PathComponent &c, const DomItem &obj) const
 {
     DomType baseK = base.internalKind();
     if (c.kind() == Path::Kind::Field) {

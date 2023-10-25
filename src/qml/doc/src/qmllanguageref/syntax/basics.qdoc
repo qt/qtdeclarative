@@ -24,7 +24,7 @@ A QML document may have one or more imports at the top of the file.
 An import can be any one of:
 
 \list
-\li a versioned namespace into which types have been registered (e.g., by a plugin)
+\li a QML Module
 \li a relative directory which contains type-definitions as QML documents
 \li a JavaScript file
 \endlist
@@ -33,10 +33,9 @@ JavaScript file imports must be qualified when imported, so that the properties 
 
 The generic form of the various imports are as follows:
 \list
-\li \tt{import Namespace VersionMajor.VersionMinor}
-\li \tt{import Namespace VersionMajor.VersionMinor as SingletonTypeIdentifier}
-\li \tt{import "directory"}
-\li \tt{import "file.js" as ScriptIdentifier}
+\li \tt{import <ModuleIdentifier> [<Version.Number>] [as <Qualifier>]}
+\li \tt{import "<Directory>"}
+\li \tt{import "<JavaScriptFile>" [as <ScriptIdentifier>]}
 \endlist
 
 Examples:

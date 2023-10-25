@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <optional>
 
+#include <QtCore/private/qduplicatetracker_p.h>
+
 // some helper constants for the tests
 const static int positionAfterOneIndent = 5;
 const static QString noResultExpected;
@@ -16,7 +18,7 @@ const static int outOfOne = 1;
 const static int outOfTwo = 2;
 
 // enable/disable additional debug output
-constexpr static bool enable_debug_output = false;
+constexpr static bool enable_debug_output = true;
 
 static QString printSet(const QSet<QString> &s)
 {
@@ -299,7 +301,6 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation_data()
     // item to be checked against
     QTest::addColumn<int>("resultIndex");
     QTest::addColumn<int>("expectedItemsCount");
-    QTest::addColumn<QString>("expectedTypeName");
     QTest::addColumn<QString>("expectedFilePath");
     // set to -1 when unchanged from above line and character. 0-based.
     QTest::addColumn<int>("expectedLine");
@@ -309,80 +310,74 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation_data()
     const QString TypeQml = testFile(u"Type.qml"_s);
     // pass this as file when no result is expected, e.g. for type definition of "var".
 
-    QTest::addRow("onCProperty") << file1Qml << 11 << 16 << firstResult << outOfOne << "file1.C"
-                                 << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("onCProperty") << file1Qml << 11 << 16 << firstResult << outOfOne << file1Qml << 7
+                                 << positionAfterOneIndent;
 
-    QTest::addRow("onCProperty2") << file1Qml << 28 << 37 << firstResult << outOfOne << "file1.C"
-                                  << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("onCProperty2") << file1Qml << 28 << 37 << firstResult << outOfOne << file1Qml
+                                  << 7 << positionAfterOneIndent;
 
-    QTest::addRow("onCProperty3") << file1Qml << 28 << 35 << firstResult << outOfOne << "file1.C"
-                                  << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("onCProperty3") << file1Qml << 28 << 35 << firstResult << outOfOne << file1Qml
+                                  << 7 << positionAfterOneIndent;
 
-    QTest::addRow("onCBinding") << file1Qml << 46 << 8 << firstResult << outOfOne << "file1.C"
-                                << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("onCBinding") << file1Qml << 46 << 8 << firstResult << outOfOne << file1Qml << 7
+                                << positionAfterOneIndent;
 
-    QTest::addRow("onDefaultBinding")
-            << file1Qml << 16 << positionAfterOneIndent << firstResult << outOfOne << "file1.C"
-            << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("onDefaultBinding") << file1Qml << 16 << positionAfterOneIndent << firstResult
+                                      << outOfOne << file1Qml << 7 << positionAfterOneIndent;
 
     QTest::addRow("onDefaultBindingId")
-            << file1Qml << 16 << 28 << firstResult << outOfOne << "firstD" << file1Qml << 16 << 20;
+            << file1Qml << 16 << 28 << firstResult << outOfOne << file1Qml << 16 << 20;
 
-    QTest::addRow("findIntProperty") << file1Qml << 9 << 18 << firstResult << outOfOne << u"int"_s
-                                     << file1Qml << -1 << positionAfterOneIndent;
-
-    QTest::addRow("colorBinding") << file1Qml << 39 << 8 << firstResult << outOfOne << u"QColor"_s
-                                  << file1Qml << -1 << positionAfterOneIndent;
+    QTest::addRow("findIntProperty") << file1Qml << 9 << 18 << firstResult << outOfOne << file1Qml
+                                     << -1 << positionAfterOneIndent;
+    QTest::addRow("colorBinding") << file1Qml << 39 << 8 << firstResult << outOfOne << file1Qml
+                                  << -1 << positionAfterOneIndent;
 
     // check what happens between items (it should not crash)
 
-    QTest::addRow("onWhitespaceBeforeC") << file1Qml << 16 << 1 << firstResult << outOfOne
-                                         << noResultExpected << noResultExpected << -1 << -1;
+    QTest::addRow("onWhitespaceBeforeC")
+            << file1Qml << 16 << 1 << firstResult << outOfOne << noResultExpected << -1 << -1;
 
-    QTest::addRow("onWhitespaceAfterC") << file1Qml << 17 << 23 << firstResult << outOfOne
-                                        << noResultExpected << noResultExpected << -1 << -1;
+    QTest::addRow("onWhitespaceAfterC")
+            << file1Qml << 17 << 23 << firstResult << outOfOne << noResultExpected << -1 << -1;
 
-    QTest::addRow("onWhitespaceBetweenCAndD") << file1Qml << 17 << 24 << firstResult << outOfOne
-                                              << noResultExpected << noResultExpected << -1 << -1;
+    QTest::addRow("onWhitespaceBetweenCAndD")
+            << file1Qml << 17 << 24 << firstResult << outOfOne << noResultExpected << -1 << -1;
 
-    QTest::addRow("ic") << file1Qml << 15 << 15 << firstResult << outOfOne << u"icid"_s << file1Qml
-                        << -1 << 18;
-    QTest::addRow("icBase") << file1Qml << 15 << 20 << firstResult << outOfOne << u"QQuickItem"_s
+    QTest::addRow("ic") << file1Qml << 15 << 15 << firstResult << outOfOne << file1Qml << -1 << 18;
+    QTest::addRow("icBase") << file1Qml << 15 << 20 << firstResult << outOfOne
                             << u"TODO: file location for C++ defined types?"_s << -1 << -1;
-    QTest::addRow("ic3") << file1Qml << 15 << 33 << firstResult << outOfOne << u"icid"_s << file1Qml
-                         << -1 << 18;
+    QTest::addRow("ic3") << file1Qml << 15 << 33 << firstResult << outOfOne << file1Qml << -1 << 18;
 
     // TODO: type definition of function = type definition of return type?
     // if not, this might need fixing:
     // currently, asking the type definition of the "function" keyword returns
     // the type definitin of the return type (when available).
-    QTest::addRow("function-keyword") << file1Qml << 33 << 5 << firstResult << outOfOne
-                                      << u"file1.C"_s << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("function-keyword") << file1Qml << 33 << 5 << firstResult << outOfOne << file1Qml
+                                      << 7 << positionAfterOneIndent;
     QTest::addRow("function-parameter-builtin")
-            << file1Qml << 33 << 20 << firstResult << outOfOne << "a" << file1Qml << -1 << -1;
-    QTest::addRow("function-parameter-item")
-            << file1Qml << 33 << 36 << firstResult << outOfOne << "file1.C" << file1Qml << 7
-            << positionAfterOneIndent;
+            << file1Qml << 33 << 20 << firstResult << outOfOne << file1Qml << -1 << -1;
+    QTest::addRow("function-parameter-item") << file1Qml << 33 << 36 << firstResult << outOfOne
+                                             << file1Qml << 7 << positionAfterOneIndent;
 
-    QTest::addRow("function-return") << file1Qml << 33 << 41 << firstResult << outOfOne << "file1.C"
-                                     << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("function-return") << file1Qml << 33 << 41 << firstResult << outOfOne << file1Qml
+                                     << 7 << positionAfterOneIndent;
 
-    QTest::addRow("void-function") << file1Qml << 36 << 17 << firstResult << outOfOne << "void"
-                                   << noResultExpected << -1 << -1;
+    QTest::addRow("void-function")
+            << file1Qml << 36 << 17 << firstResult << outOfOne << noResultExpected << -1 << -1;
 
-    QTest::addRow("rectangle-property")
-            << file1Qml << 44 << 31 << firstResult << outOfOne << "QQuickRectangle"
-            << "TODO: c++ type location" << -1 << -1;
+    QTest::addRow("rectangle-property") << file1Qml << 44 << 31 << firstResult << outOfOne
+                                        << "TODO: c++ type location" << -1 << -1;
 
     QTest::addRow("functionParameterICUsage")
-            << file1Qml << 34 << 16 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
+            << file1Qml << 34 << 16 << firstResult << outOfOne << file1Qml << 7 << 15;
 
     QTest::addRow("ICBindingUsage")
-            << file1Qml << 47 << 21 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
+            << file1Qml << 47 << 21 << firstResult << outOfOne << file1Qml << 7 << 15;
     QTest::addRow("ICBindingUsage2")
-            << file1Qml << 49 << 11 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
+            << file1Qml << 49 << 11 << firstResult << outOfOne << file1Qml << 7 << 15;
     QTest::addRow("ICBindingUsage3")
-            << file1Qml << 52 << 17 << firstResult << outOfOne << "file1.C" << file1Qml << 7 << 18;
+            << file1Qml << 52 << 17 << firstResult << outOfOne << file1Qml << 7 << 15;
 }
 
 void tst_qmlls_utils::findTypeDefinitionFromLocation()
@@ -392,7 +387,6 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
     QFETCH(int, character);
     QFETCH(int, resultIndex);
     QFETCH(int, expectedItemsCount);
-    QFETCH(QString, expectedTypeName);
     QFETCH(QString, expectedFilePath);
     QFETCH(int, expectedLine);
     QFETCH(int, expectedCharacter);
@@ -419,18 +413,14 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
 
     QCOMPARE(locations.size(), expectedItemsCount);
 
-    QQmlJS::Dom::DomItem type = QQmlLSUtils::findTypeDefinitionOf(locations[resultIndex].domItem);
+    auto base = QQmlLSUtils::findTypeDefinitionOf(locations[resultIndex].domItem);
 
     // if expectedFilePath is empty, we probably just want to make sure that it does
     // not crash
     if (expectedFilePath == noResultExpected) {
-        QCOMPARE(type.internalKind(), QQmlJS::Dom::DomType::Empty);
+        QVERIFY(!base);
         return;
     }
-
-    QVERIFY(type);
-
-    QQmlJS::Dom::FileLocations::Tree typeLocationToTest = QQmlJS::Dom::FileLocations::treeOf(type);
 
     QEXPECT_FAIL("findIntProperty", "Builtins not supported yet", Abort);
     QEXPECT_FAIL("function-parameter-builtin", "Base types defined in C++ are not supported yet",
@@ -438,48 +428,24 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
     QEXPECT_FAIL("colorBinding", "Types from C++ bases not supported yet", Abort);
     QEXPECT_FAIL("rectangle-property", "Types from C++ bases not supported yet", Abort);
     QEXPECT_FAIL("icBase", "Base types defined in C++ are not supported yet", Abort);
+    QVERIFY(base);
 
-    auto fileObject = type.containingFile().as<QQmlJS::Dom::QmlFile>();
+    auto fileObject =
+            locations[resultIndex].domItem.goToFile(base->filename).as<QQmlJS::Dom::QmlFile>();
 
     // print some debug message when failing, instead of using QVERIFY2
     // (printing the type every time takes a lot of time).
     if constexpr (enable_debug_output) {
         if (!fileObject)
-            qDebug() << "This has no file: " << type.containingFile() << " for type "
-                     << type.field(QQmlJS::Dom::Fields::type).get().component();
+            qDebug() << "Could not find the file" << base->filename << "in the Dom.";
     }
 
     QVERIFY(fileObject);
+    QCOMPARE(base->filename, expectedFilePath);
     QCOMPARE(fileObject->canonicalFilePath(), expectedFilePath);
 
-    QCOMPARE(typeLocationToTest->info().fullRegion.startLine, quint32(expectedLine));
-    QCOMPARE(typeLocationToTest->info().fullRegion.startColumn, quint32(expectedCharacter));
-
-    if (auto object = type.as<QQmlJS::Dom::QmlObject>()) {
-        const std::vector<QString> except = {
-            "functionParameterICUsage",
-            "ICBindingUsage",
-            "ICBindingUsage2",
-            "ICBindingUsage3",
-        };
-        for (const QString &functionName : except) {
-            QEXPECT_FAIL(
-                    functionName.toStdString().c_str(),
-                    "Types for JS-identifiers point to the type inside inline components instead "
-                    "of the inline component itself",
-                    Continue);
-        }
-        QCOMPARE(object->idStr(), expectedTypeName);
-    } else if (auto exported = type.as<QQmlJS::Dom::Export>()) {
-        QCOMPARE(exported->typeName, expectedTypeName);
-    } else {
-        if constexpr (enable_debug_output) {
-            if (type.name() != expectedTypeName)
-                qDebug() << " has not the unexpected name " << type.name()
-                         << " instead of expected " << expectedTypeName << " in " << type;
-        }
-        QCOMPARE(type.name(), expectedTypeName);
-    }
+    QCOMPARE(base->sourceLocation.startLine, quint32(expectedLine));
+    QCOMPARE(base->sourceLocation.startColumn, quint32(expectedCharacter));
 }
 
 void tst_qmlls_utils::findLocationOfItem_data()
@@ -624,6 +590,9 @@ void tst_qmlls_utils::findBaseObject_data()
 
 void tst_qmlls_utils::findBaseObject()
 {
+    const QByteArray failOnInlineComponentsMessage =
+            "The Dom cannot resolve inline components from the basetype yet.";
+
     QFETCH(QString, filePath);
     QFETCH(int, line);
     QFETCH(int, character);
@@ -650,15 +619,17 @@ void tst_qmlls_utils::findBaseObject()
     }
     QCOMPARE(locations.size(), 1);
 
-    auto type = QQmlLSUtils::findTypeDefinitionOf(locations.front().domItem);
-    auto base = QQmlLSUtils::baseObject(type);
-    QByteArray failOnInlineComponentsMessage =
-            "The Dom cannot resolve inline components from the basetype yet.";
-
+    auto typeLocation = QQmlLSUtils::findTypeDefinitionOf(locations.front().domItem);
     QEXPECT_FAIL("inline-ic", failOnInlineComponentsMessage, Abort);
-    QEXPECT_FAIL("inline-ic-from-id", failOnInlineComponentsMessage, Abort);
     QEXPECT_FAIL("inline-ic2", failOnInlineComponentsMessage, Abort);
     QEXPECT_FAIL("inline-ic2-from-id", failOnInlineComponentsMessage, Abort);
+    QVERIFY(typeLocation);
+    QQmlJS::Dom::DomItem type = QQmlLSUtils::sourceLocationToDomItem(
+            locations.front().domItem.goToFile(typeLocation->filename),
+            typeLocation->sourceLocation);
+    auto base = QQmlLSUtils::baseObject(type);
+
+    QEXPECT_FAIL("inline-ic-from-id", failOnInlineComponentsMessage, Abort);
 
     if constexpr (enable_debug_output) {
         if (!base)
@@ -846,6 +817,53 @@ void tst_qmlls_utils::findUsages_data()
         QQmlLSUtilsLocation::from(testFileName, testFileContent, 140, 9, strlen("_123aChanged")),
     };
 
+    QList<QQmlLSUtilsLocation> mouseArea1ClickedUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 159, 9, strlen("onClicked")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 167, 23, strlen("clicked")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 183, 15, strlen("clicked")),
+    };
+
+    QList<QQmlLSUtilsLocation> mouseArea2ClickedUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 166, 22, strlen("onClicked")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 184, 15, strlen("clicked")),
+    };
+
+    QList<QQmlLSUtilsLocation> mouseArea3ClickedUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 168, 23, strlen("clicked")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 178, 9, strlen("onClicked")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 185, 15, strlen("clicked")),
+    };
+
+    QList<QQmlLSUtilsLocation> aParamUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 30, strlen("a")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 16, strlen("a")),
+    };
+    QList<QQmlLSUtilsLocation> bParamUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 38, strlen("b")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 20, strlen("b")),
+    };
+    QList<QQmlLSUtilsLocation> cParamUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 49, strlen("c")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 24, strlen("c")),
+    };
+    QList<QQmlLSUtilsLocation> xParamUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 50, strlen("x")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 28, strlen("x")),
+    };
+    QList<QQmlLSUtilsLocation> yParamUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 53, strlen("y")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 32, strlen("y")),
+    };
+    QList<QQmlLSUtilsLocation> zParamUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 59, strlen("z")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 36, strlen("z")),
+    };
+
+    QList<QQmlLSUtilsLocation> deconstructedAUsages{
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 193, 14, strlen("a")),
+        QQmlLSUtilsLocation::from(testFileName, testFileContent, 194, 17, strlen("a")),
+    };
+
     std::sort(sumUsages.begin(), sumUsages.end());
     std::sort(iUsages.begin(), iUsages.end());
     std::sort(subItemHelloPropertyUsages.begin(), subItemHelloPropertyUsages.end());
@@ -864,6 +882,16 @@ void tst_qmlls_utils::findUsages_data()
     std::sort(checkHandlersUsages2.begin(), checkHandlersUsages2.end());
     std::sort(checkHandlersUsages3.begin(), checkHandlersUsages3.end());
     std::sort(checkHandlersUsages4.begin(), checkHandlersUsages4.end());
+    std::sort(mouseArea1ClickedUsages.begin(), mouseArea1ClickedUsages.end());
+    std::sort(mouseArea2ClickedUsages.begin(), mouseArea2ClickedUsages.end());
+    std::sort(mouseArea3ClickedUsages.begin(), mouseArea3ClickedUsages.end());
+    std::sort(aParamUsages.begin(), aParamUsages.end());
+    std::sort(bParamUsages.begin(), bParamUsages.end());
+    std::sort(cParamUsages.begin(), cParamUsages.end());
+    std::sort(xParamUsages.begin(), xParamUsages.end());
+    std::sort(yParamUsages.begin(), yParamUsages.end());
+    std::sort(zParamUsages.begin(), zParamUsages.end());
+    std::sort(deconstructedAUsages.begin(), deconstructedAUsages.end());
 
     QTest::addRow("findSumFromDeclaration") << testFileName << 8 << 13 << sumUsages;
     QTest::addRow("findSumFromUsage") << testFileName << 10 << 20 << sumUsages;
@@ -944,6 +972,30 @@ void tst_qmlls_utils::findUsages_data()
             << testFileName << 132 << 18 << checkHandlersUsages3;
     QTest::addRow("findQmlPropertyHandler4FromDefinition")
             << testFileName << 133 << 18 << checkHandlersUsages4;
+
+    QTest::addRow("findSignalsInConnectionObject")
+            << testFileName << 183 << 15 << mouseArea1ClickedUsages;
+    QTest::addRow("findSignalsInConnectionObjectWithNoTarget")
+            << testFileName << 184 << 15 << mouseArea2ClickedUsages;
+    QTest::addRow("findSignalsInConnectionObjectWithTarget")
+            << testFileName << 185 << 15 << mouseArea3ClickedUsages;
+
+    QTest::addRow("findMethodParameterA") << testFileName << 189 << 16 << aParamUsages;
+    QTest::addRow("findMethodParameterAFromUsage") << testFileName << 188 << 30 << aParamUsages;
+
+    QTest::addRow("deconstructed") << testFileName << 194 << 17 << deconstructedAUsages;
+    QTest::addRow("deconstructedFromDefinition")
+            << testFileName << 193 << 14 << deconstructedAUsages;
+
+    QTest::addRow("findMethodParameterXDeconstructed") << testFileName << 188 << 50 << xParamUsages;
+    QTest::addRow("findMethodParameterXDeconstructedFromUsage")
+            << testFileName << 189 << 28 << xParamUsages;
+    QTest::addRow("findMethodParameterYDeconstructed") << testFileName << 188 << 53 << yParamUsages;
+    QTest::addRow("findMethodParameterYDeconstructedFromUsage")
+            << testFileName << 189 << 32 << yParamUsages;
+    QTest::addRow("findMethodParameterZDeconstructed") << testFileName << 188 << 59 << zParamUsages;
+    QTest::addRow("findMethodParameterZDeconstructedFromUsage")
+            << testFileName << 189 << 36 << zParamUsages;
 }
 
 void tst_qmlls_utils::findUsages()
@@ -1256,13 +1308,13 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
     QTest::addRow("inlineComponentProperty")
             << JSDefinitionsQml << 62 << 21 << JSDefinitionsQml << 54 << 22 << strlen("data");
 
-    QTest::addRow("parameterA") << JSDefinitionsQml << 10 << 16 << noResultExpected << -1 << -1
-                                << size_t{};
+    QTest::addRow("parameterA") << JSDefinitionsQml << 10 << 16 << JSDefinitionsQml << 10 << 16
+                                << strlen("a");
     QTest::addRow("parameterAUsage")
             << JSDefinitionsQml << 10 << 39 << JSDefinitionsQml << -1 << 16 << strlen("a");
 
-    QTest::addRow("parameterB") << JSDefinitionsQml << 10 << 28 << noResultExpected << -1 << -1
-                                << size_t{};
+    QTest::addRow("parameterB") << JSDefinitionsQml << 10 << 28 << JSDefinitionsQml << 10 << 28
+                                << strlen("b");
     QTest::addRow("parameterBUsage")
             << JSDefinitionsQml << 10 << 86 << JSDefinitionsQml << -1 << 28 << strlen("b");
 
@@ -1487,6 +1539,761 @@ void tst_qmlls_utils::isValidEcmaScriptIdentifier()
     QFETCH(bool, isValid);
 
     QCOMPARE(QQmlLSUtils::isValidEcmaScriptIdentifier(identifier), isValid);
+}
+
+using namespace QLspSpecification;
+
+enum InsertOption { None, InsertColon };
+
+void tst_qmlls_utils::completions_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+    QTest::addColumn<ExpectedCompletions>("expected");
+    QTest::addColumn<QStringList>("notExpected");
+    QTest::addColumn<InsertOption>("insertOptions");
+
+    const QString file = testFile(u"Yyy.qml"_s);
+    const QString emptyFile = testFile(u"emptyFile.qml"_s);
+    const QString pragmaFile = testFile(u"pragmas.qml"_s);
+
+    const QString singletonName = u"SystemInformation"_s;
+    const QString attachedTypeName = u"Component"_s;
+    const QString attachedTypeName2 = u"Keys"_s;
+    const auto attachedTypes = ExpectedCompletions({
+            { attachedTypeName, CompletionItemKind::Class },
+            { attachedTypeName2, CompletionItemKind::Class },
+    });
+
+    const auto keywords = ExpectedCompletions({
+            { u"function"_s, CompletionItemKind::Keyword },
+            { u"required"_s, CompletionItemKind::Keyword },
+            { u"enum"_s, CompletionItemKind::Keyword },
+            { u"component"_s, CompletionItemKind::Keyword },
+    });
+
+    const auto jsStatements = ExpectedCompletions({
+            { u"return"_s, CompletionItemKind::Keyword },
+            { u"for"_s, CompletionItemKind::Keyword },
+            { u"while"_s, CompletionItemKind::Keyword },
+            { u"do"_s, CompletionItemKind::Keyword },
+            { u"switch"_s, CompletionItemKind::Keyword },
+            { u"foo"_s, CompletionItemKind::Property },
+    });
+
+    const auto mixedTypes = ExpectedCompletions({
+            { u"Zzz"_s, CompletionItemKind::Class },
+            { u"Item"_s, CompletionItemKind::Class },
+            { u"int"_s, CompletionItemKind::Class },
+            { u"date"_s, CompletionItemKind::Class },
+    });
+    const auto constructorTypes = ExpectedCompletions({
+            { u"Rectangle"_s, CompletionItemKind::Constructor },
+            { u"MyRectangle"_s, CompletionItemKind::Constructor },
+            { u"Zzz"_s, CompletionItemKind::Constructor },
+            { u"Item"_s, CompletionItemKind::Constructor },
+            { u"QtObject"_s, CompletionItemKind::Constructor },
+    });
+    const auto rectangleTypes = ExpectedCompletions({
+            { u"Rectangle"_s, CompletionItemKind::Constructor },
+            { u"MyRectangle"_s, CompletionItemKind::Constructor },
+    });
+
+    QTest::newRow("objEmptyLine") << file << 9 << 1
+                                  << (ExpectedCompletions({
+                                              { u"Rectangle"_s, CompletionItemKind::Constructor },
+                                              { u"property"_s, CompletionItemKind::Keyword },
+                                              { u"width"_s, CompletionItemKind::Property },
+                                      }) += keywords)
+                                  << QStringList({ u"QtQuick"_s, u"vector4d"_s }) << InsertColon;
+
+    QTest::newRow("handlers") << file << 5 << 1
+                              << ExpectedCompletions{ {
+                                         { u"onHandleMe"_s, CompletionItemKind::Method },
+                                         { u"onDefaultPropertyChanged"_s,
+                                           CompletionItemKind::Method },
+                                 } }
+                              << QStringList({ u"QtQuick"_s, u"vector4d"_s }) << InsertColon;
+
+    QTest::newRow("attachedTypes") << file << 9 << 1 << attachedTypes
+                                   << QStringList{ u"QtQuick"_s, u"vector4d"_s } << InsertColon;
+
+    QTest::newRow("attachedTypesInScript") << file << 6 << 12 << attachedTypes
+                                           << QStringList{ u"QtQuick"_s, u"vector4d"_s } << None;
+    QTest::newRow("attachedTypesInLongScript")
+            << file << 10 << 16 << attachedTypes << QStringList{ u"QtQuick"_s, u"vector4d"_s }
+            << None;
+
+    QTest::newRow("completionFromRootId") << file << 10 << 21
+                                          << ExpectedCompletions({
+                                                     { u"width"_s, CompletionItemKind::Property },
+                                                     { u"lala"_s, CompletionItemKind::Method },
+                                                     { u"foo"_s, CompletionItemKind::Property },
+                                             })
+                                          << QStringList{ u"QtQuick"_s, u"vector4d"_s } << None;
+
+    QTest::newRow("attachedProperties") << file << 89 << 15
+                                        << ExpectedCompletions({
+                                                   { u"onCompleted"_s, CompletionItemKind::Method },
+                                           })
+                                        << QStringList{ u"QtQuick"_s,
+                                                        u"vector4d"_s,
+                                                        attachedTypeName,
+                                                        u"Rectangle"_s,
+                                                        u"property"_s,
+                                                        u"foo"_s,
+                                                        u"onActiveFocusOnTabChanged"_s }
+                                        << InsertColon;
+
+    QTest::newRow("inBindingLabel")
+            << file << 6 << 10
+            << ExpectedCompletions({
+                       { u"Rectangle"_s, CompletionItemKind::Constructor },
+                       { u"width"_s, CompletionItemKind::Property },
+               })
+            << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"property"_s }) << InsertColon;
+
+    QTest::newRow("afterBinding") << file << 6 << 11
+                                  << (ExpectedCompletions({
+                                              { u"height"_s, CompletionItemKind::Property },
+                                              { u"width"_s, CompletionItemKind::Property },
+                                              { u"Rectangle"_s, CompletionItemKind::Constructor },
+                                              { singletonName, CompletionItemKind::Class },
+                                      })
+                                      + attachedTypes)
+                                  << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s })
+                                  << None;
+
+    QTest::newRow("jsGlobals") << file << 6 << 11
+                               << ExpectedCompletions{ {
+                                          { u"console"_s, CompletionItemKind::Property },
+                                          { u"Math"_s, CompletionItemKind::Property },
+                                  } }
+                               << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s })
+                               << None;
+
+    QTest::newRow("jsGlobals2") << file << 100 << 32
+                                << ExpectedCompletions{ {
+                                           { u"abs"_s, CompletionItemKind::Method },
+                                           { u"log"_s, CompletionItemKind::Method },
+                                           { u"E"_s, CompletionItemKind::Property },
+                                   } }
+                                << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s,
+                                                 u"foo"_s, u"lala"_s })
+                                << None;
+
+    QTest::newRow("afterLongBinding")
+            << file << 10 << 16
+            << ExpectedCompletions({
+                       { u"height"_s, CompletionItemKind::Property },
+                       { u"width"_s, CompletionItemKind::Property },
+               })
+            << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s, u"Rectangle"_s }) << None;
+
+    QTest::newRow("afterId") << file << 5 << 8 << ExpectedCompletions({})
+                             << QStringList({
+                                        u"QtQuick"_s,
+                                        u"property"_s,
+                                        u"Rectangle"_s,
+                                        u"width"_s,
+                                        u"vector4d"_s,
+                                        u"import"_s,
+                                })
+                             << None;
+
+    QTest::newRow("emptyFile") << emptyFile << 1 << 1
+                               << ExpectedCompletions({
+                                          { u"import"_s, CompletionItemKind::Keyword },
+                                          { u"pragma"_s, CompletionItemKind::Keyword },
+                                  })
+                               << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"width"_s }) << None;
+
+    QTest::newRow("importImport") << file << 1 << 4
+                                  << ExpectedCompletions({
+                                             { u"import"_s, CompletionItemKind::Keyword },
+                                     })
+                                  << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"width"_s,
+                                                   u"Rectangle"_s })
+                                  << None;
+
+    QTest::newRow("importModuleStart")
+            << file << 1 << 8
+            << ExpectedCompletions({
+                       { u"QtQuick"_s, CompletionItemKind::Module },
+               })
+            << QStringList({ u"vector4d"_s, u"width"_s, u"Rectangle"_s, u"import"_s }) << None;
+
+    QTest::newRow("importVersionStart")
+            << file << 1 << 16
+            << ExpectedCompletions({
+                       { u"2"_s, CompletionItemKind::Constant },
+                       { u"as"_s, CompletionItemKind::Keyword },
+               })
+            << QStringList({ u"Rectangle"_s, u"import"_s, u"vector4d"_s, u"width"_s }) << None;
+
+    // QTest::newRow("importVersionMinor")
+    //         << uri << 1 << 18
+    //         << ExpectedCompletions({
+    //                    { u"15"_s, CompletionItemKind::Constant },
+    //            })
+    //         << QStringList({ u"as"_s, u"Rectangle"_s, u"import"_s, u"vector4d"_s, u"width"_s });
+
+    QTest::newRow("expandBase1") << file << 10 << 24
+                                 << ExpectedCompletions({
+                                            { u"width"_s, CompletionItemKind::Property },
+                                            { u"foo"_s, CompletionItemKind::Property },
+                                    })
+                                 << QStringList({ u"import"_s, u"Rectangle"_s }) << None;
+
+    QTest::newRow("expandBase2") << file << 11 << 30
+                                 << ExpectedCompletions({
+                                            { u"width"_s, CompletionItemKind::Property },
+                                            { u"color"_s, CompletionItemKind::Property },
+                                    })
+                                 << QStringList({ u"foo"_s, u"import"_s, u"Rectangle"_s }) << None;
+
+    QTest::newRow("asCompletions")
+            << file << 26 << 9
+            << ExpectedCompletions({
+                       { u"Rectangle"_s, CompletionItemKind::Field },
+               })
+            << QStringList({ u"foo"_s, u"import"_s, u"lala()"_s, u"width"_s }) << None;
+
+    QTest::newRow("parameterCompletion")
+            << file << 36 << 24
+            << ExpectedCompletions({
+                       { u"helloWorld"_s, CompletionItemKind::Variable },
+                       { u"helloMe"_s, CompletionItemKind::Variable },
+               })
+            << QStringList() << None;
+
+    QTest::newRow("inMethodName") << file << 15 << 14 << ExpectedCompletions({})
+                                  << QStringList{ u"QtQuick"_s, u"vector4d"_s, u"foo"_s,
+                                                  u"root"_s,    u"Item"_s,     singletonName }
+                                  << None;
+
+    QTest::newRow("inMethodReturnType")
+            << file << 17 << 54 << mixedTypes
+            << QStringList{ u"QtQuick"_s, u"foo"_s, u"root"_s, } << None;
+
+    QTest::newRow("inMethodBody") << file << 15 << 22
+                                  << (jsStatements
+                                      + ExpectedCompletions({
+                                              { u"foo"_s, CompletionItemKind::Property },
+                                              { u"root"_s, CompletionItemKind::Value },
+                                      }))
+                                  << QStringList{ u"QtQuick"_s, u"vector4d"_s } << None;
+
+    QTest::newRow("letStatement") << file << 95 << 13 << ExpectedCompletions({})
+                                  << QStringList{ u"QtQuick"_s, u"vector4d"_s, u"root"_s } << None;
+
+    QTest::newRow("inParameterCompletion")
+            << file << 35 << 39 << ExpectedCompletions({})
+            << QStringList{
+                   u"helloWorld"_s,
+                   u"helloMe"_s,
+               } << None;
+
+    QTest::newRow("parameterTypeCompletion") << file << 35 << 55 << mixedTypes
+                                             << QStringList{
+                                                    u"helloWorld"_s,
+                                                    u"helloMe"_s,
+                                                } << None;
+
+    QTest::newRow("propertyTypeCompletion") << file << 16 << 14 << mixedTypes
+                                             << QStringList{
+                                                    u"helloWorld"_s,
+                                                    u"helloMe"_s,
+                                                } << None;
+    QTest::newRow("propertyTypeCompletion2") << file << 16 << 23 << mixedTypes
+                                             << QStringList{
+                                                    u"helloWorld"_s,
+                                                    u"helloMe"_s,
+                                                } << None;
+    QTest::newRow("propertyNameCompletion") << file << 16 << 24 << ExpectedCompletions({ })
+                                             << QStringList{
+                                                    u"helloWorld"_s,
+                                                    u"helloMe"_s,
+                                                    u"Zzz"_s,
+                                                    u"Item"_s,
+                                                    u"int"_s,
+                                                    u"date"_s,
+                                                } << None;
+    QTest::newRow("propertyNameCompletion2") << file << 16 << 25 << ExpectedCompletions({ })
+                                             << QStringList{
+                                                    u"helloWorld"_s,
+                                                    u"helloMe"_s,
+                                                    u"Zzz"_s,
+                                                    u"Item"_s,
+                                                    u"int"_s,
+                                                    u"date"_s,
+                                                } << None;
+
+    QTest::newRow("propertyDefinitionBinding") << file << 90 << 28 << (ExpectedCompletions({
+            { u"lala"_s, CompletionItemKind::Method},
+            { u"createRectangle"_s, CompletionItemKind::Method},
+            { u"createItem"_s, CompletionItemKind::Method},
+            { u"createAnything"_s, CompletionItemKind::Method},
+    }) += constructorTypes)
+                                               << QStringList{
+                                                      u"helloWorld"_s,
+                                                      u"helloMe"_s,
+                                                      u"int"_s,
+                                                      u"date"_s,
+                                                  } << None;
+
+    QTest::newRow("ignoreNonRelatedTypesForPropertyDefinitionBinding") << file << 16 << 29 <<
+            (ExpectedCompletions({
+            { u"createRectangle"_s, CompletionItemKind::Method},
+            { u"createItem"_s, CompletionItemKind::Method},
+            { u"createAnything"_s, CompletionItemKind::Method},
+    }) += rectangleTypes)
+                                               << QStringList{
+                                                      u"Item"_s,
+                                                      u"Zzz"_s,
+                                                      u"helloWorld"_s,
+                                                      u"helloMe"_s,
+                                                      u"int"_s,
+                                                      u"date"_s,
+                                                      u"Item"_s,
+                                                      u"QtObject"_s,
+                                                  } << None;
+
+    QTest::newRow("inBoundObject") << file << 16 << 40 <<
+            (ExpectedCompletions({
+            { u"objectName"_s, CompletionItemKind::Property},
+            { u"width"_s, CompletionItemKind::Property},
+            { u"property"_s, CompletionItemKind::Keyword },
+            { u"function"_s, CompletionItemKind::Keyword },
+    }) += constructorTypes)
+                                               << QStringList{
+                                                      u"helloWorld"_s,
+                                                      u"helloMe"_s,
+                                                      u"int"_s,
+                                                      u"date"_s,
+                                                      u"QtQuick"_s,
+                                                      u"vector4d"_s,
+                                                  } << InsertColon;
+
+    QTest::newRow("qualifiedIdentifierCompletion")
+            << file << 37 << 36
+            << ExpectedCompletions({
+                       { u"helloProperty"_s, CompletionItemKind::Property },
+                       { u"childAt"_s, CompletionItemKind::Method },
+               })
+            << QStringList{ u"helloVar"_s, u"someItem"_s, u"color"_s, u"helloWorld"_s,
+                            u"propertyOfZZZ"_s }
+            << None;
+
+    QTest::newRow("scriptExpressionCompletion")
+            << file << 60 << 16
+            << ExpectedCompletions({
+                       // parameters
+                       { u"jsParameterInChild"_s, CompletionItemKind::Variable },
+                       // own properties
+                       { u"jsIdentifierInChild"_s, CompletionItemKind::Variable },
+                       { u"functionInChild"_s, CompletionItemKind::Method },
+                       { u"propertyInChild"_s, CompletionItemKind::Property },
+                       // inherited properties from QML
+                       { u"functionInBase"_s, CompletionItemKind::Method },
+                       { u"propertyInBase"_s, CompletionItemKind::Property },
+                       // inherited properties (transitive) from C++
+                       { u"objectName"_s, CompletionItemKind::Property },
+                       { u"someItem"_s, CompletionItemKind::Value },
+               })
+            << QStringList{
+                   u"helloVar"_s,
+                   u"color"_s,
+                   u"helloWorld"_s,
+                   u"propertyOfZZZ"_s,
+                   u"propertyInDerived"_s,
+                   u"functionInDerived"_s,
+                   u"jsIdentifierInDerived"_s,
+                   u"jsIdentifierInBase"_s,
+                   u"lala"_s,
+                   u"foo"_s,
+                   u"jsParameterInBase"_s,
+                   u"jsParameterInDerived"_s,
+               } << None;
+
+    QTest::newRow("qualifiedScriptExpressionCompletion")
+            << file << 60 << 34
+            << ExpectedCompletions({
+                       // own properties
+                       { u"helloProperty"_s, CompletionItemKind::Property },
+                       // inherited properties (transitive) from C++
+                       { u"width"_s, CompletionItemKind::Property },
+               })
+            << QStringList{
+                   u"helloVar"_s,
+                   u"color"_s,
+                   u"helloWorld"_s,
+                   u"propertyOfZZZ"_s,
+                   u"propertyInDerived"_s,
+                   u"functionInDerived"_s,
+                   u"jsIdentifierInDerived"_s,
+                   u"jsIdentifierInBase"_s,
+                   u"jsIdentifierInChild"_s,
+                   u"lala"_s,
+                   u"foo"_s,
+                   u"jsParameterInBase"_s,
+                   u"jsParameterInDerived"_s,
+                   u"jsParameterInChild"_s,
+                   u"functionInChild"_s,
+               } << None;
+
+    QTest::newRow("pragma")
+            << pragmaFile << 1 << 8
+            << ExpectedCompletions({
+                       { u"NativeMethodBehavior"_s, CompletionItemKind::Value },
+                       { u"ComponentBehavior"_s, CompletionItemKind::Value },
+                       { u"ListPropertyAssignBehavior"_s, CompletionItemKind::Value },
+                       { u"Singleton"_s, CompletionItemKind::Value },
+                       // note: only complete the Addressible/Inaddressible part of ValueTypeBehavior!
+                       { u"ValueTypeBehavior"_s, CompletionItemKind::Value },
+               })
+            << QStringList{
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"FunctionSignatureBehavior"_s,
+                   u"Strict"_s,
+               } << None;
+
+    QTest::newRow("pragmaValue")
+            << pragmaFile << 2 << 30
+            << ExpectedCompletions({
+                       { u"AcceptThisObject"_s, CompletionItemKind::Value },
+                       { u"RejectThisObject"_s, CompletionItemKind::Value },
+               })
+            << QStringList{
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"FunctionSignatureBehavior"_s,
+                   u"Strict"_s,
+                   u"NativeMethodBehavior"_s,
+                   u"ComponentBehavior"_s,
+                   u"ListPropertyAssignBehavior"_s,
+                   u"Singleton"_s,
+                   u"ValueTypeBehavior"_s,
+                   u"Unbound"_s,
+               } << None;
+
+    QTest::newRow("pragmaMultiValue")
+            << pragmaFile << 3 << 43
+            << ExpectedCompletions({
+                       { u"ReplaceIfNotDefault"_s, CompletionItemKind::Value },
+                       { u"Append"_s, CompletionItemKind::Value },
+                       { u"Replace"_s, CompletionItemKind::Value },
+               })
+            << QStringList{
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"FunctionSignatureBehavior"_s,
+                   u"Strict"_s,
+                   u"NativeMethodBehavior"_s,
+                   u"ComponentBehavior"_s,
+                   u"ListPropertyAssignBehavior"_s,
+                   u"Singleton"_s,
+                   u"ValueTypeBehavior"_s,
+                   u"Unbound"_s,
+               } << None;
+
+    QTest::newRow("pragmaWithoutValue")
+            << pragmaFile << 1 << 17
+            << ExpectedCompletions({
+                       { u"NativeMethodBehavior"_s, CompletionItemKind::Value },
+                       { u"ComponentBehavior"_s, CompletionItemKind::Value },
+                       { u"ListPropertyAssignBehavior"_s, CompletionItemKind::Value },
+                       { u"Singleton"_s, CompletionItemKind::Value },
+                       // note: only complete the Addressible/Inaddressible part of ValueTypeBehavior!
+                       { u"ValueTypeBehavior"_s, CompletionItemKind::Value },
+               })
+            << QStringList{
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"FunctionSignatureBehavior"_s,
+                   u"Strict"_s,
+               } << None;
+
+    QTest::newRow("non-block-scoped-variable")
+            << file << 69 << 21
+            << ExpectedCompletions({
+                       { u"helloVarVariable"_s, CompletionItemKind::Variable },
+               })
+            << QStringList{} << None;
+    QTest::newRow("block-scoped-variable")
+            << file << 76 << 21 << ExpectedCompletions({})
+            << QStringList{ u"helloLetVariable"_s, u"helloVarVariable"_s } << None;
+
+    QTest::newRow("singleton") << file << 78 << 33
+                               << ExpectedCompletions({
+                                          { singletonName, CompletionItemKind::Class },
+                                  })
+                               << QStringList{} << None;
+
+    QTest::newRow("singletonPropertyAndEnums")
+            << file << 78 << 52
+            << ExpectedCompletions({
+                       { u"byteOrder"_s, CompletionItemKind::Property },
+                       { u"Little"_s, CompletionItemKind::EnumMember },
+                       { u"Endian"_s, CompletionItemKind::Enum },
+               })
+            << QStringList{
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"foo"_s,
+               } << None;
+
+    QTest::newRow("enumsFromItem")
+            << file << 86 << 44
+            << ExpectedCompletions({
+                       { u"World"_s, CompletionItemKind::EnumMember },
+                       { u"ValueOne"_s, CompletionItemKind::EnumMember },
+                       { u"ValueTwo"_s, CompletionItemKind::EnumMember },
+                       { u"Hello"_s, CompletionItemKind::Enum },
+                       { u"MyEnum"_s, CompletionItemKind::Enum },
+               })
+            << QStringList{
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"foo"_s,
+               } << None;
+
+    QTest::newRow("enumsFromEnumName")
+            << file << 87 << 50
+            << ExpectedCompletions({
+                       { u"World"_s, CompletionItemKind::EnumMember },
+               })
+            << QStringList{
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"foo"_s,
+                   u"ValueOne"_s,
+                   u"ValueTwo"_s,
+                   u"Hello"_s,
+                   u"MyEnum"_s,
+               } << None;
+
+    QTest::newRow("requiredProperty")
+            << file << 97 << 14
+            << ExpectedCompletions({
+                       { u"property"_s, CompletionItemKind::Keyword },
+                       { u"default"_s, CompletionItemKind::Keyword },
+               })
+            << QStringList{
+                   u"readonly"_s,
+                   u"required"_s,
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"foo"_s,
+                   u"ValueOne"_s,
+                   u"ValueTwo"_s,
+                   u"Hello"_s,
+                   u"MyEnum"_s,
+               } << None;
+
+    QTest::newRow("readonlyProperty")
+            << file << 98 << 13
+            << ExpectedCompletions({
+                       { u"property"_s, CompletionItemKind::Keyword },
+                       { u"default"_s, CompletionItemKind::Keyword },
+               })
+            << QStringList{
+                   u"required"_s,
+                   u"readonly"_s,
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"foo"_s,
+                   u"ValueOne"_s,
+                   u"ValueTwo"_s,
+                   u"Hello"_s,
+                   u"MyEnum"_s,
+               } << None;
+
+    QTest::newRow("defaultProperty")
+            << file << 99 << 12
+            << ExpectedCompletions({
+                       { u"property"_s, CompletionItemKind::Keyword },
+                       { u"readonly"_s, CompletionItemKind::Keyword },
+                       { u"required"_s, CompletionItemKind::Keyword },
+               })
+            << QStringList{
+                   u"default"_s,
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"foo"_s,
+                   u"ValueOne"_s,
+                   u"ValueTwo"_s,
+                   u"Hello"_s,
+                   u"MyEnum"_s,
+               } << None;
+
+    QTest::newRow("defaultProperty2")
+            << file << 99 << 20
+            << ExpectedCompletions({
+                       { u"property"_s, CompletionItemKind::Keyword },
+                       { u"readonly"_s, CompletionItemKind::Keyword },
+                       { u"required"_s, CompletionItemKind::Keyword },
+               })
+            << QStringList{
+                   u"default"_s,
+                   u"int"_s,
+                   u"Rectangle"_s,
+                   u"foo"_s,
+                   u"ValueOne"_s,
+                   u"ValueTwo"_s,
+                   u"Hello"_s,
+                   u"MyEnum"_s,
+               } << None;
+
+    QTest::newRow("defaultProperty3")
+            << file << 99 << 21
+            << ExpectedCompletions{{ u"int"_s, CompletionItemKind::Class}}
+            << QStringList{
+                       u"property"_s,
+                       u"readonly"_s,
+                       u"required"_s,
+               } << None;
+}
+
+void tst_qmlls_utils::completions()
+{
+    QFETCH(QString, filePath);
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(ExpectedCompletions, expected);
+    QFETCH(QStringList, notExpected);
+    QFETCH(InsertOption, insertOptions);
+
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+
+    auto locations = QQmlLSUtils::itemsFromTextLocation(
+            file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
+
+    QCOMPARE(locations.size(), 1);
+
+    QString code;
+    {
+        QFile file(filePath);
+        QVERIFY(file.open(QIODeviceBase::ReadOnly));
+        code = QString::fromUtf8(file.readAll());
+    }
+
+    qsizetype pos = QQmlLSUtils::textOffsetFrom(code, line - 1, character - 1);
+    CompletionContextStrings ctxt{ code, pos };
+    QList<CompletionItem> completions =
+            QQmlLSUtils::completions(locations.front().domItem, ctxt);
+
+    if (expected.isEmpty()) {
+        if constexpr (enable_debug_output) {
+            if (!completions.isEmpty()) {
+                QStringList unexpected;
+                for (const auto &current : completions) {
+                    unexpected << current.label;
+                }
+                qDebug() << "Received unexpected completions:" << unexpected.join(u", ");
+            }
+        }
+        QEXPECT_FAIL("letStatement", "JS Statement completion not implemented yet!", Abort);
+        QEXPECT_FAIL("block-scoped-variable", "JS Statement completion not implemented yet!", Abort);
+        QEXPECT_FAIL("singleton", "completion not implemented yet!", Abort);
+        QVERIFY(completions.isEmpty());
+        return;
+    }
+
+    QSet<QString> labels;
+    QDuplicateTracker<QByteArray> modulesTracker;
+    QDuplicateTracker<QByteArray> keywordsTracker;
+    QDuplicateTracker<QByteArray> classesTracker;
+    QDuplicateTracker<QByteArray> fieldsTracker;
+    QDuplicateTracker<QByteArray> propertiesTracker;
+
+    // avoid QEXPECT_FAIL tests to XPASS when completion order changes
+    std::sort(completions.begin(), completions.end(),
+              [](const CompletionItem&a, const CompletionItem&b) {return a.label < b.label;});
+
+    for (const CompletionItem &c : completions) {
+        // explicitly forbid marker structs created by QQmlJSImporter
+        QVERIFY(!c.label.contains("$internal$."));
+        QVERIFY(!c.label.contains("$module$."));
+        QVERIFY(!c.label.contains("$anonymous$."));
+
+        if (c.kind->toInt() == int(CompletionItemKind::Module)) {
+            QVERIFY2(!modulesTracker.hasSeen(c.label), "Duplicate module: " + c.label);
+        } else if (c.kind->toInt() == int(CompletionItemKind::Keyword)) {
+            QVERIFY2(!keywordsTracker.hasSeen(c.label), "Duplicate keyword: " + c.label);
+        } else if (c.kind->toInt() == int(CompletionItemKind::Class)) {
+            QVERIFY2(!classesTracker.hasSeen(c.label), "Duplicate class: " + c.label);
+        } else if (c.kind->toInt() == int(CompletionItemKind::Field)) {
+            QVERIFY2(!fieldsTracker.hasSeen(c.label), "Duplicate field: " + c.label);
+        } else if (c.kind->toInt() == int(CompletionItemKind::Property)) {
+            QVERIFY2(!propertiesTracker.hasSeen(c.label), "Duplicate property: " + c.label);
+            if (insertOptions & InsertColon) {
+                // note: a property should end with a colon with a space for 'insertText', for
+                // better coding experience.
+                QCOMPARE(c.insertText, c.label + u": "_s);
+            } else {
+
+                QCOMPARE(c.insertText, std::nullopt);
+            }
+        }
+        labels << c.label;
+    }
+
+    for (const ExpectedCompletion &exp : expected) {
+        QEXPECT_FAIL(
+                "asCompletions",
+                "Cannot complete after 'QQ.': either there is already a type behind and then "
+                "there is nothing to complete, or there is nothing behind 'QQ.' and the parser "
+                "fails because of the unexpected '.'",
+                Abort);
+        QEXPECT_FAIL("attachedProperties",
+                     "Completion for attached properties requires first QTBUG-117380 to be solved",
+                     Abort);
+        QEXPECT_FAIL("inMethodBody", "Completion for JS Statement/keywords not implemented yet",
+                     Abort);
+        QEXPECT_FAIL("letStatementAfterEqual", "Completion not implemented yet!", Abort);
+        QVERIFY2(labels.contains(exp.first),
+                 u"no %1 in %2"_s
+                         .arg(exp.first, QStringList(labels.begin(), labels.end()).join(u", "_s))
+                         .toUtf8());
+        if (labels.contains(exp.first)) {
+
+            bool foundEntry = false;
+            bool hasCorrectKind = false;
+            CompletionItemKind foundKind;
+            for (const CompletionItem &c : completions) {
+                if (c.label == exp.first) {
+                    foundKind = static_cast<CompletionItemKind>(c.kind->toInt());
+                    foundEntry = true;
+                    if (foundKind == exp.second)
+                        hasCorrectKind = true;
+                }
+            }
+
+            // Ignore QVERIFY for those completions not in the expected list.
+            if (!foundEntry)
+                continue;
+
+            QVERIFY2(hasCorrectKind,
+                     qPrintable(QString::fromLatin1("Completion item '%1' has wrong kind '%2'")
+                                        .arg(exp.first)
+                                        .arg(QMetaEnum::fromType<CompletionItemKind>().valueToKey(
+                                                int(foundKind)))));
+        }
+    }
+    for (const QString &nexp : notExpected) {
+        QEXPECT_FAIL("ignoreNonRelatedTypesForPropertyDefinitionBinding",
+                     "Filtering by Type not implemented yet, for example to avoid proposing "
+                     "binding Items to Rectangle properties.",
+                     Abort);
+        QVERIFY2(!labels.contains(nexp), u"found unexpected completion  %1"_s.arg(nexp).toUtf8());
+    }
 }
 
 QTEST_MAIN(tst_qmlls_utils)

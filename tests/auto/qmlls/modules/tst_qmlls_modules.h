@@ -32,16 +32,18 @@ class tst_qmlls_modules : public QQmlDataTest
     Q_OBJECT
 public:
     tst_qmlls_modules();
-    void checkCompletions(QByteArray uri, int lineNr, int character, ExpectedCompletions expected,
-                          QStringList notExpected);
+    void checkCompletions(const QByteArray &filePath, int lineNr, int character,
+                          ExpectedCompletions expected, QStringList notExpected);
+    std::optional<QByteArray> openFile(const QString &uri);
+    std::optional<QByteArray> openFileFromAbsolutePath(const QString &uri);
+    void ignoreDiagnostics();
 private slots:
+    void init() final;
+    void cleanup();
     void initTestCase() final;
-    void completions_data();
-    void completions();
     void function_documentations_data();
     void function_documentations();
     void buildDir();
-    void cleanupTestCase();
     void goToTypeDefinition_data();
     void goToTypeDefinition();
     void goToDefinition_data();
@@ -54,10 +56,16 @@ private slots:
     void renameUsages();
     void linting_data();
     void linting();
+    void rangeFormatting_data();
+    void rangeFormatting();
+    void qmldirImportsFromBuild();
+    void qmldirImportsFromSource();
+    void quickFixes_data();
+    void quickFixes();
 
 private:
     QProcess m_server;
-    QLanguageServerProtocol m_protocol;
+    std::unique_ptr<QLanguageServerProtocol> m_protocol;
     QString m_qmllsPath;
     QList<QByteArray> m_uriToClose;
 };

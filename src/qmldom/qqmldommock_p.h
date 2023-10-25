@@ -52,7 +52,7 @@ public:
     MockObject copy() const;
     std::pair<QString, MockObject> asStringPair() const;
 
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor) override;
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
 
     QMap<QString, MockObject> subObjects;
     QMap<QString, QCborValue> subValues;
@@ -62,7 +62,7 @@ public:
 class MockOwner final : public OwningItem
 {
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &self) const override;
+    std::shared_ptr<OwningItem> doCopy(const DomItem &self) const override;
 
 public:
     constexpr static DomType kindValue = DomType::MockOwner;
@@ -94,10 +94,10 @@ public:
 
     MockOwner(const MockOwner &o);
 
-    std::shared_ptr<MockOwner> makeCopy(DomItem &self) const;
-    Path canonicalPath(DomItem &self) const override;
+    std::shared_ptr<MockOwner> makeCopy(const DomItem &self) const;
+    Path canonicalPath(const DomItem &self) const override;
 
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor) override;
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
 
     Path pathFromTop;
     QMap<QString, MockObject> subObjects;

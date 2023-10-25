@@ -104,3 +104,13 @@ macro.stylecolor.DocBook = "<db:phrase role=\"color:\1\">\1 \2</db:phrase>"
 
 macro.nbsp.HTML = "&nbsp;"
 macro.nbsp.DocBook = "&#160;"
+
+manifestmeta.highlighted.names = \
+    "QtQuickControls/File System Explorer" \
+    "QtQuickControls/Qt Quick Controls - Wearable Demo" \
+    "QtQuickControls/Qt Quick Controls - Gallery" \
+    "QtQuickControls/Qt Quick Controls - Event Calendar" \
+    "QtQuickControls/Qt Quick Controls - Contact List"
+
+# Enforce zero documentation warnings
+warninglimit = 0

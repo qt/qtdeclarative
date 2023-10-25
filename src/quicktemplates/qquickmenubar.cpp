@@ -171,7 +171,7 @@ void QQuickMenuBarPrivate::onItemTriggered()
 
 void QQuickMenuBarPrivate::onMenuAboutToHide()
 {
-    if (triggering || !currentItem || (currentItem->isHovered() && currentItem->isEnabled()) || !currentItem->isHighlighted())
+    if (triggering || !currentItem || !currentItem->isHighlighted())
         return;
 
     popupMode = false;
@@ -502,6 +502,7 @@ void QQuickMenuBar::keyPressEvent(QKeyEvent *event)
         else
             d->activatePreviousItem();
         break;
+    // This is triggered when no popup is open but a menu bar item is highlighted and has focus.
     case Qt::Key_Escape:
         if (d->currentItem) {
             d->activateItem(nullptr);

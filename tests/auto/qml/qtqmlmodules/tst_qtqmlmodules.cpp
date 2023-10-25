@@ -23,33 +23,27 @@ void tst_qtqmlmodules::baseTypes()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("base.qml"));
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
+    std::unique_ptr<QObject> object { component.create() };
+    QVERIFY(object);
     QVERIFY(object->property("success").toBool());
-
-    delete object;
 }
 
 void tst_qtqmlmodules::modelsTypes()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("models.qml"));
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
+    std::unique_ptr<QObject> object { component.create() };
+    QVERIFY(object);
     QVERIFY(object->property("success").toBool());
-
-    delete object;
 }
 
 void tst_qtqmlmodules::unavailableTypes()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("unavailable.qml"));
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
+    std::unique_ptr<QObject> object { component.create() };
+    QVERIFY(object);
     QVERIFY(object->property("success").toBool());
-
-    delete object;
 }
 
 QTEST_MAIN(tst_qtqmlmodules)

@@ -719,9 +719,31 @@ QString DateObject::dateTimeToString(const QDateTime &dateTime, ExecutionEngine 
     return ToString(TimeClip(dateTime.toMSecsSinceEpoch()), engine->localTZA);
 }
 
+double DateObject::dateTimeToNumber(const QDateTime &dateTime)
+{
+    if (!dateTime.isValid())
+        return qQNaN();
+    return TimeClip(dateTime.toMSecsSinceEpoch());
+}
+
 QDateTime DateObject::stringToDateTime(const QString &string, ExecutionEngine *engine)
 {
     return ToDateTime(ParseString(string, engine->localTZA), QTimeZone::LocalTime);
+}
+
+QDateTime DateObject::timestampToDateTime(double timestamp, QTimeZone zone)
+{
+    return ToDateTime(timestamp, zone);
+}
+
+double DateObject::componentsToTimestamp(
+        double year, double month, double day, double hours,
+        double mins, double secs, double ms, ExecutionEngine *v4)
+{
+    if (year >= 0 && year <= 99)
+        year += 1900;
+    const double t = MakeDate(MakeDay(year, month, day), MakeTime(hours, mins, secs, ms));
+    return UTC(t, v4->localTZA);
 }
 
 QDate DateObject::dateTimeToDate(const QDateTime &dateTime)
@@ -773,17 +795,14 @@ ReturnedValue DateCtor::virtualCallAsConstructor(const FunctionObject *that, con
     }
 
     else { // d.argc > 1
-        double year  = argv[0].toNumber();
-        double month = argv[1].toNumber();
-        double day  = argc >= 3 ? argv[2].toNumber() : 1;
-        double hours = argc >= 4 ? argv[3].toNumber() : 0;
-        double mins = argc >= 5 ? argv[4].toNumber() : 0;
-        double secs = argc >= 6 ? argv[5].toNumber() : 0;
-        double ms    = argc >= 7 ? argv[6].toNumber() : 0;
-        if (year >= 0 && year <= 99)
-            year += 1900;
-        t = MakeDate(MakeDay(year, month, day), MakeTime(hours, mins, secs, ms));
-        t = UTC(t, v4->localTZA);
+        const double year  = argv[0].toNumber();
+        const double month = argv[1].toNumber();
+        const double day  = argc >= 3 ? argv[2].toNumber() : 1;
+        const double hours = argc >= 4 ? argv[3].toNumber() : 0;
+        const double mins = argc >= 5 ? argv[4].toNumber() : 0;
+        const double secs = argc >= 6 ? argv[5].toNumber() : 0;
+        const double ms    = argc >= 7 ? argv[6].toNumber() : 0;
+        t = DateObject::componentsToTimestamp(year, month, day, hours, mins, secs, ms, v4);
     }
 
     ReturnedValue o = Encode(v4->newDateObject(t));

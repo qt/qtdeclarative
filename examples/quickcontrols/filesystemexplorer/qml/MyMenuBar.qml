@@ -6,130 +6,172 @@ import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import FileSystemModule
 
-// The MenuBar also serves as a controller for our Window as we don't use any decorations.
+// The MenuBar also serves as a controller for our window as we don't use any decorations.
 MenuBar {
     id: root
 
-    required property ApplicationWindow rootWindow
+    required property ApplicationWindow dragWindow
     property alias infoText: windowInfo.text
 
-    implicitHeight: 25
-
-    // The top level menus on the left side
+    // Customization of the top level menus inside the MenuBar
     delegate: MenuBarItem {
         id: menuBarItem
-        implicitHeight: 25
 
         contentItem: Text {
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
+
+            text: menuBarItem.text
+            font: menuBarItem.font
+            elide: Text.ElideRight
             color: menuBarItem.highlighted ? Colors.textFile : Colors.text
             opacity: enabled ? 1.0 : 0.3
-            text: menuBarItem.text
-            elide: Text.ElideRight
-            font: menuBarItem.font
         }
 
         background: Rectangle {
+            id: background
+
             color: menuBarItem.highlighted ? Colors.selection : "transparent"
             Rectangle {
                 id: indicator
+
                 width: 0; height: 3
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
+
                 color: Colors.color1
-
                 states: State {
-                    name: "active"; when: menuBarItem.highlighted
-                    PropertyChanges { target: indicator; width: parent.width }
+                    name: "active"
+                    when: menuBarItem.highlighted
+                    PropertyChanges {
+                        indicator.width: background.width - 2
+                    }
                 }
-
                 transitions: Transition {
                     NumberAnimation {
                         properties: "width"
-                        duration: 300
+                        duration: 175
                     }
                 }
+            }
+        }
+    }
+    // We use the contentItem property as a place to attach our window decorations. Beneath
+    // the usual menu entries within a MenuBar, it includes a centered information text, along
+    // with the minimize, maximize, and close buttons.
+    contentItem: RowLayout {
+        id: windowBar
 
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+
+        spacing: root.spacing
+        Repeater {
+            id: menuBarItems
+
+            Layout.alignment: Qt.AlignLeft
+            model: root.contentModel
+        }
+
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Text {
+                id: windowInfo
+
+                width: parent.width; height: parent.height
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                leftPadding: windowActions.width
+                color: Colors.text
+                clip: true
+            }
+        }
+
+        RowLayout {
+            id: windowActions
+
+            Layout.alignment: Qt.AlignRight
+            Layout.fillHeight: true
+
+            spacing: 0
+
+            component InteractionButton: Rectangle {
+                id: interactionButton
+
+                signal action()
+                property alias hovered: hoverHandler.hovered
+
+                Layout.fillHeight: true
+                Layout.preferredWidth: height
+
+                color: hovered ? Colors.background : "transparent"
+                HoverHandler {
+                    id: hoverHandler
+                }
+                TapHandler {
+                    id: tapHandler
+                    onTapped: interactionButton.action()
+                }
+            }
+
+            InteractionButton {
+                id: minimize
+
+                onAction: root.dragWindow.showMinimized()
+                Rectangle {
+                    anchors.centerIn: parent
+                    color: parent.hovered ? Colors.iconIndicator : Colors.icon
+                    height: 2
+                    width: parent.height - 14
+                }
+            }
+
+            InteractionButton {
+                id: maximize
+
+                onAction: root.dragWindow.showMaximized()
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 7
+                    border.color: parent.hovered ? Colors.iconIndicator : Colors.icon
+                    border.width: 2
+                    color: "transparent"
+                }
+            }
+
+            InteractionButton {
+                id: close
+
+                color: hovered ? "#ec4143" : "transparent"
+                onAction: root.dragWindow.close()
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: parent.height - 8; height: 2
+
+                    rotation: 45
+                    antialiasing: true
+                    transformOrigin: Item.Center
+                    color: parent.hovered ? Colors.iconIndicator : Colors.icon
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.height
+                        height: parent.width
+
+                        antialiasing: true
+                        color: parent.color
+                    }
+                }
             }
         }
     }
 
-    // The background property contains an information text in the middle as well as the
-    // Minimize, Maximize and Close Buttons.
     background: Rectangle {
         color: Colors.surface2
         // Make the empty space drag the specified root window.
-        WindowDragHandler { dragWindow: rootWindow }
-
-        Text {
-            id: windowInfo
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
-            color: Colors.text
-        }
-
-        component InteractionButton: Rectangle {
-            signal action;
-            property alias hovered: hoverHandler.hovered
-
-            width: root.height
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            color: hovered ? Colors.background : "transparent"
-
-            HoverHandler { id: hoverHandler }
-            TapHandler { onTapped: action() }
-        }
-
-        InteractionButton {
-            id: minimize
-
-            anchors.right: maximize.left
-            onAction: rootWindow.showMinimized()
-            Rectangle {
-                width: parent.height - 10; height: 2
-                anchors.centerIn: parent
-                color: parent.hovered ? Colors.iconIndicator : Colors.icon
-            }
-        }
-
-        InteractionButton {
-            id: maximize
-
-            anchors.right: close.left
-            onAction: rootWindow.showMaximized()
-            Rectangle {
-                anchors.fill: parent
-                anchors.margins: 5
-                border.width: 2
-                color: "transparent"
-                border.color: parent.hovered ? Colors.iconIndicator : Colors.icon
-            }
-        }
-
-        InteractionButton {
-            id: close
-
-            color: hovered ? "#ec4143" : "transparent"
-            anchors.right: parent.right
-            onAction: rootWindow.close()
-            Rectangle {
-                width: parent.height - 8; height: 2
-                anchors.centerIn: parent
-                color: parent.hovered ? Colors.iconIndicator : Colors.icon
-                rotation: 45
-                transformOrigin: Item.Center
-                antialiasing: true
-                Rectangle {
-                    width: parent.height
-                    height: parent.width
-                    anchors.centerIn: parent
-                    color: parent.color
-                    antialiasing: true
-                }
-            }
+        WindowDragHandler {
+            dragWindow: root.dragWindow
         }
     }
-
 }

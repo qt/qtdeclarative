@@ -9,7 +9,7 @@
 #include <private/qquickitem_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <private/qquickitemchangelistener_p.h>
-#include <private/qquickpixmapcache_p.h>
+#include <private/qquickpixmap_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <QtCore/qbuffer.h>
 #include <QtCore/qmimedata.h>
@@ -701,7 +701,7 @@ QMimeData *QQuickDragAttachedPrivate::createMimeData() const
                     else
                         qmlWarning(q) << "Don't know how to encode text as " << mimeType;
                 } else {
-                    mimeData->setData(mimeType, text.toUtf8().constData());
+                    mimeData->setData(mimeType, text.toUtf8());
                 }
             } else {
                 qmlWarning(q) << "Mime data contains a string, but mime type " << mimeType

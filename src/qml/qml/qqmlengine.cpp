@@ -580,29 +580,16 @@ void QQmlEnginePrivate::init()
   \inmodule QtQml
   \brief The QQmlEngine class provides an environment for instantiating QML components.
 
-  Each QML component is instantiated in a QQmlContext.
-  QQmlContext's are essential for passing data to QML
-  components.  In QML, contexts are arranged hierarchically and this
-  hierarchy is managed by the QQmlEngine.
+  A QQmlEngine is used to manage \l{components}{QQmlComponent} and objects created from
+  them and execute their bindings and functions. QQmlEngine also inherits from
+  \l{QJSEngine} which allows seamless integration between your QML components and
+  JavaScript code.
 
-  Prior to creating any QML components, an application must have
-  created a QQmlEngine to gain access to a QML context.  The
-  following example shows how to create a simple Text item.
+  Each QML component is instantiated in a QQmlContext. In QML, contexts are arranged
+  hierarchically and this hierarchy is managed by the QQmlEngine. By default,
+  components are instantiated in the \l {QQmlEngine::rootContext()}{root context}.
 
-  \code
-  QQmlEngine engine;
-  QQmlComponent component(&engine);
-  component.setData("import QtQuick 2.0\nText { text: \"Hello world!\" }", QUrl());
-  QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
-
-  //add item to view, etc
-  ...
-  \endcode
-
-  In this case, the Text item will be created in the engine's
-  \l {QQmlEngine::rootContext()}{root context}.
-
-  \sa QQmlComponent, QQmlContext, {QML Global Object}
+  \sa QQmlComponent, QQmlContext, {QML Global Object}, QQmlApplicationEngine
 */
 
 /*!
@@ -1906,13 +1893,12 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
 {
     Q_Q(QQmlEngine);
 
-    QJSValue value = singletonInstances.value(type);
-    if (!value.isUndefined()) {
-        return value;
-    }
-
-    QQmlType::SingletonInstanceInfo *siinfo = type.singletonInstanceInfo();
+    QQmlType::SingletonInstanceInfo::ConstPtr siinfo = type.singletonInstanceInfo();
     Q_ASSERT(siinfo != nullptr);
+
+    QJSValue value = singletonInstances.value(siinfo);
+    if (!value.isUndefined())
+        return value;
 
     if (siinfo->scriptCallback) {
         value = siinfo->scriptCallback(q, q);
@@ -1922,7 +1908,7 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
             // should behave identically to QML singleton types.
             q->setContextForObject(o, new QQmlContext(q->rootContext(), q));
         }
-        singletonInstances.convertAndInsert(v4engine(), type, &value);
+        singletonInstances.convertAndInsert(v4engine(), siinfo, &value);
 
     } else if (siinfo->qobjectCallback) {
         QObject *o = siinfo->qobjectCallback(q, q);
@@ -1951,7 +1937,7 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
         }
 
         value = q->newQObject(o);
-        singletonInstances.convertAndInsert(v4engine(), type, &value);
+        singletonInstances.convertAndInsert(v4engine(), siinfo, &value);
     } else if (!siinfo->url.isEmpty()) {
         QQmlComponent component(q, siinfo->url, QQmlComponent::PreferSynchronous);
         if (component.isError()) {
@@ -1962,7 +1948,7 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
         }
         QObject *o = component.beginCreate(q->rootContext());
         value = q->newQObject(o);
-        singletonInstances.convertAndInsert(v4engine(), type, &value);
+        singletonInstances.convertAndInsert(v4engine(), siinfo, &value);
         component.completeCreate();
     }
 

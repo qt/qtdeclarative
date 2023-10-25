@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickcustomaffector_p.h"
-#include <private/qqmlengine_p.h>
+
+#include <private/qquickv4particledata_p.h>
 #include <private/qqmlglobal_p.h>
-#include <private/qjsvalue_p.h>
-#include <QQmlEngine>
-#include <QDebug>
+
+#include <QtCore/qdebug.h>
+
 QT_BEGIN_NAMESPACE
 
 //TODO: Move docs (and inheritence) to real base when docs can propagate. Currently this pretends to be the base class!
@@ -66,7 +67,9 @@ QQuickCustomAffector::QQuickCustomAffector(QQuickItem *parent) :
 
 bool QQuickCustomAffector::isAffectConnected()
 {
-    IS_SIGNAL_CONNECTED(this, QQuickCustomAffector, affectParticles, (const QJSValue &, qreal));
+    IS_SIGNAL_CONNECTED(
+            this, QQuickCustomAffector, affectParticles,
+            (const QList<QQuickV4ParticleData> &, qreal));
 }
 
 void QQuickCustomAffector::affectSystem(qreal dt)
@@ -110,19 +113,13 @@ void QQuickCustomAffector::affectSystem(qreal dt)
     if (m_onceOff)
         dt = 1.0;
 
-    QQmlEngine *qmlEngine = ::qmlEngine(this);
-    QV4::ExecutionEngine *v4 = qmlEngine->handle();
-
-    QV4::Scope scope(v4);
-    QV4::ScopedArrayObject array(scope, v4->newArrayObject(toAffect.size()));
-    QV4::ScopedValue v(scope);
-    for (int i=0; i<toAffect.size(); i++)
-        array->put(i, (v = toAffect[i]->v4Value(m_system)));
+    QList<QQuickV4ParticleData> particles;
+    particles.reserve(toAffect.size());
+    for (QQuickParticleData *data: std::as_const(toAffect))
+        particles.push_back(data->v4Value(m_system));
 
     const auto doAffect = [&](qreal dt) {
         affectProperties(toAffect, dt);
-        QJSValue particles;
-        QJSValuePrivate::setValue(&particles, array);
         emit affectParticles(particles, dt);
     };
 

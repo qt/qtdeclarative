@@ -21,6 +21,8 @@
 #include <private/qqmlchangeset_p.h>
 #include <private/qqmlobjectmodel_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_REQUIRE_CONFIG(qml_object_model);
 
 QT_BEGIN_NAMESPACE

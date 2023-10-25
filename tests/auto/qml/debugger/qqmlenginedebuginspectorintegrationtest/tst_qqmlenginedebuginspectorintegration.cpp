@@ -24,7 +24,7 @@ public:
     tst_QQmlEngineDebugInspectorIntegration();
 
 private:
-    ConnectResult init(bool restrictServices);
+    ConnectResult runAndConnect(bool restrictServices);
     QList<QQmlDebugClient *> createClients() override;
 
     QQmlEngineDebugObjectReference findRootObject();
@@ -68,7 +68,7 @@ tst_QQmlEngineDebugInspectorIntegration::tst_QQmlEngineDebugInspectorIntegration
 {
 }
 
-QQmlDebugTest::ConnectResult tst_QQmlEngineDebugInspectorIntegration::init(bool restrictServices)
+QQmlDebugTest::ConnectResult tst_QQmlEngineDebugInspectorIntegration::runAndConnect(bool restrictServices)
 {
     return QQmlDebugTest::connectTo(
                 QLibraryInfo::path(QLibraryInfo::BinariesPath) + "/qml",
@@ -96,15 +96,15 @@ void tst_QQmlEngineDebugInspectorIntegration::connect_data()
 void tst_QQmlEngineDebugInspectorIntegration::connect()
 {
     QFETCH(bool, restrictMode);
-    QCOMPARE(init(restrictMode), ConnectSuccess);
+    QCOMPARE(runAndConnect(restrictMode), ConnectSuccess);
 }
 
 void tst_QQmlEngineDebugInspectorIntegration::objectLocationLookup()
 {
-    QCOMPARE(init(true), ConnectSuccess);
+    QCOMPARE(runAndConnect(true), ConnectSuccess);
 
     bool success = false;
-    QQmlEngineDebugObjectReference rootObject = findRootObject();
+    const QQmlEngineDebugObjectReference rootObject = findRootObject();
     QVERIFY(rootObject.debugId != -1);
     const QString fileName = QFileInfo(rootObject.source.url.toString()).fileName();
     int lineNumber = rootObject.source.lineNumber;
@@ -114,7 +114,7 @@ void tst_QQmlEngineDebugInspectorIntegration::objectLocationLookup()
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_engineDebugClient, SIGNAL(result())));
 
-    foreach (QQmlEngineDebugObjectReference child, rootObject.children) {
+    for (const QQmlEngineDebugObjectReference &child : rootObject.children) {
         success = false;
         lineNumber = child.source.lineNumber;
         columnNumber = child.source.columnNumber;
@@ -127,12 +127,12 @@ void tst_QQmlEngineDebugInspectorIntegration::objectLocationLookup()
 
 void tst_QQmlEngineDebugInspectorIntegration::select()
 {
-    QCOMPARE(init(true), ConnectSuccess);
+    QCOMPARE(runAndConnect(true), ConnectSuccess);
 
-    QQmlEngineDebugObjectReference rootObject = findRootObject();
+    const QQmlEngineDebugObjectReference rootObject = findRootObject();
     QList<int> childIds;
     int requestId = 0;
-    foreach (const QQmlEngineDebugObjectReference &child, rootObject.children) {
+    for (const QQmlEngineDebugObjectReference &child : rootObject.children) {
         requestId = m_inspectorClient->select(QList<int>() << child.debugId);
         QTRY_COMPARE(m_recipient->lastResponseId, requestId);
         QVERIFY(m_recipient->lastResult);
@@ -145,7 +145,7 @@ void tst_QQmlEngineDebugInspectorIntegration::select()
 
 void tst_QQmlEngineDebugInspectorIntegration::createObject()
 {
-    QCOMPARE(init(true), ConnectSuccess);
+    QCOMPARE(runAndConnect(true), ConnectSuccess);
 
     QString qml = QLatin1String("Rectangle {\n"
                                 "  id: xxxyxxx\n"
@@ -172,7 +172,7 @@ void tst_QQmlEngineDebugInspectorIntegration::createObject()
 
 void tst_QQmlEngineDebugInspectorIntegration::moveObject()
 {
-    QCOMPARE(init(true), ConnectSuccess);
+    QCOMPARE(runAndConnect(true), ConnectSuccess);
 
     QCOMPARE(m_inspectorClient->state(), QQmlDebugClient::Enabled);
     QQmlEngineDebugObjectReference rootObject = findRootObject();
@@ -197,7 +197,7 @@ void tst_QQmlEngineDebugInspectorIntegration::moveObject()
 
 void tst_QQmlEngineDebugInspectorIntegration::destroyObject()
 {
-    QCOMPARE(init(true), ConnectSuccess);
+    QCOMPARE(runAndConnect(true), ConnectSuccess);
 
     QCOMPARE(m_inspectorClient->state(), QQmlDebugClient::Enabled);
     QQmlEngineDebugObjectReference rootObject = findRootObject();

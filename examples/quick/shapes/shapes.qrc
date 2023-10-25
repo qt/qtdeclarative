@@ -23,5 +23,6 @@
         <file>arcRotation.qml</file>
         <file>tigerLoader.qml</file>
         <file>text.qml</file>
+        <file>zoomtiger.qml</file>
     </qresource>
 </RCC>

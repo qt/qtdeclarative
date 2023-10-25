@@ -17,7 +17,7 @@
 
 #include "qquickparticlepainter_p.h"
 #include "qquickdirection_p.h"
-#include <private/qquickpixmapcache_p.h>
+#include <private/qquickpixmap_p.h>
 #include <QQmlListProperty>
 #include <QtGui/qcolor.h>
 #include <QtQuick/qsgmaterial.h>

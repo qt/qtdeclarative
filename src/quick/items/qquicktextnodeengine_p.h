@@ -9,7 +9,7 @@
 #include <QtGui/qtextdocument.h>
 #include <QtGui/qtextlayout.h>
 #include "qquickclipnode_p.h"
-#include "qquicktextnode_p.h"
+#include "qsginternaltextnode_p.h"
 
 #ifndef QQUICKTEXTNODEENGINE_P_H
 #define QQUICKTEXTNODEENGINE_P_H
@@ -160,7 +160,7 @@ public:
 
     void mergeProcessedNodes(QList<BinaryTreeNode *> *regularNodes,
                              QList<BinaryTreeNode *> *imageNodes);
-    void addToSceneGraph(QQuickTextNode *parent,
+    void addToSceneGraph(QSGInternalTextNode *parent,
                          QQuickText::TextStyle style = QQuickText::Normal,
                          const QColor &styleColor = QColor());
 
@@ -188,7 +188,6 @@ public:
     {
         m_position = position;
     }
-
 
 
 
@@ -234,7 +233,7 @@ private:
 
     bool m_hasSelection : 1;
     bool m_hasContents : 1;
-    friend class QQuickTextNode;
+    friend class QSGInternalTextNode;
 
 };
 

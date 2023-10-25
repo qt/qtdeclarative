@@ -287,6 +287,10 @@ struct StorableMsg {
         msg(e)
     {}
 
+    StorableMsg(ErrorMessage &&e):
+          msg(std::move(e))
+    {}
+
     ErrorMessage msg;
 };
 
@@ -296,12 +300,12 @@ static QHash<QLatin1String, StorableMsg> &registry()
     return r;
 }
 
-QLatin1String ErrorMessage::msg(const char *errorId, ErrorMessage err)
+QLatin1String ErrorMessage::msg(const char *errorId, ErrorMessage &&err)
 {
-    return msg(QLatin1String(errorId), err);
+    return msg(QLatin1String(errorId), std::move(err));
 }
 
-QLatin1String ErrorMessage::msg(QLatin1String errorId, ErrorMessage err)
+QLatin1String ErrorMessage::msg(QLatin1String errorId, ErrorMessage &&err)
 {
     bool doubleRegister = false;
     ErrorMessage old = myErrors().debug(u"dummy");
@@ -312,14 +316,14 @@ QLatin1String ErrorMessage::msg(QLatin1String errorId, ErrorMessage err)
             old = r[err.errorId].msg;
             doubleRegister = true;
         }
-        r[errorId] = StorableMsg{err.withErrorId(errorId)};
+        r[errorId] = StorableMsg{std::move(err.withErrorId(errorId))};
     }
     if (doubleRegister)
         defaultErrorHandler(myErrors().warning(tr("Double registration of error %1: (%2) vs (%3)").arg(errorId, err.withErrorId(errorId).toString(), old.toString())));
     return errorId;
 }
 
-void ErrorMessage::visitRegisteredMessages(function_ref<bool (ErrorMessage)> visitor)
+void ErrorMessage::visitRegisteredMessages(function_ref<bool(const ErrorMessage &)> visitor)
 {
     QHash<QLatin1String, StorableMsg> r;
     {
@@ -381,7 +385,7 @@ ErrorMessage &ErrorMessage::withLocation(SourceLocation loc)
     return *this;
 }
 
-ErrorMessage &ErrorMessage::withItem(DomItem el)
+ErrorMessage &ErrorMessage::withItem(const DomItem &el)
 {
     if (path.length() == 0)
         path = el.canonicalPath();

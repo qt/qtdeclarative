@@ -5,8 +5,10 @@
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmldata_p.h>
 #include <private/qqmlmetatype_p.h>
+
 #include <private/qmetaobjectbuilder_p.h>
 #include <qdebug.h>
+#include <QtCore/qpointer.h>
 #include <QtCore/qset.h>
 
 QT_BEGIN_NAMESPACE

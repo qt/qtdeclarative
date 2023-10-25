@@ -199,7 +199,7 @@ void tst_pointerhandlers::buttonTapHandler() // QTBUG-105609
     case QPointingDevice::DeviceType::Mouse:
         // click it
         QTest::mouseClick(&window, mouseButton, Qt::NoModifier, pos);
-        QTRY_COMPARE(clickedSpy.size(), 1); // perhaps Button should not react to right-click, but it does
+        QTRY_COMPARE(clickedSpy.size(), mouseButton == Qt::RightButton ? 0 : 1);
         QCOMPARE(tappedSpy.size(), 1);
         break;
 

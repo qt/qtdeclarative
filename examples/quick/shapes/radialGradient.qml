@@ -15,30 +15,80 @@ Rectangle {
         ShapePath {
             strokeWidth: 4
             strokeColor: "red"
-            fillGradient: LinearGradient {
-                x1: 20
-                y1: 20
-                x2: 180
-                y2: 130
+            fillGradient: RadialGradient {
+                centerX: 100
+                centerY: 100
+                centerRadius: 100
+                SequentialAnimation on focalRadius {
+                    loops: Animation.Infinite
+                    NumberAnimation {
+                        from: 1
+                        to: 20
+                        duration: 2000
+                    }
+                    NumberAnimation {
+                        from: 20
+                        to: 1
+                        duration: 2000
+                    }
+                }
+                SequentialAnimation on focalX {
+                    loops: Animation.Infinite
+                    NumberAnimation {
+                        from: 50
+                        to: 150
+                        duration: 3000
+                    }
+                    NumberAnimation {
+                        from: 150
+                        to: 50
+                        duration: 3000
+                    }
+                }
+                SequentialAnimation on focalY {
+                    loops: Animation.Infinite
+                    NumberAnimation {
+                        from: 50
+                        to: 150
+                        duration: 1000
+                    }
+                    NumberAnimation {
+                        from: 150
+                        to: 50
+                        duration: 1000
+                    }
+                }
                 GradientStop {
                     position: 0
-                    color: "blue"
+                    color: "#ffffff"
                 }
                 GradientStop {
-                    position: 0.2
-                    color: "green"
+                    position: 0.11
+                    color: "#f9ffa0"
                 }
                 GradientStop {
-                    position: 0.4
-                    color: "red"
+                    position: 0.13
+                    color: "#f9ff99"
                 }
                 GradientStop {
-                    position: 0.6
-                    color: "yellow"
+                    position: 0.14
+                    color: "#f3ff86"
+                }
+                GradientStop {
+                    position: 0.49
+                    color: "#93b353"
+                }
+                GradientStop {
+                    position: 0.87
+                    color: "#264619"
+                }
+                GradientStop {
+                    position: 0.96
+                    color: "#0c1306"
                 }
                 GradientStop {
                     position: 1
-                    color: "cyan"
+                    color: "#000000"
                 }
             }
             fillColor: "blue" // ignored with the gradient set
@@ -57,33 +107,6 @@ Rectangle {
             PathLine {
                 x: 20
                 y: 20
-            }
-        }
-        transform: Rotation {
-            origin.x: 100
-            origin.y: 50
-            axis {
-                x: 0
-                y: 1
-                z: 0
-            }
-            SequentialAnimation on angle {
-                NumberAnimation {
-                    from: 0
-                    to: 75
-                    duration: 2000
-                }
-                NumberAnimation {
-                    from: 75
-                    to: -75
-                    duration: 4000
-                }
-                NumberAnimation {
-                    from: -75
-                    to: 0
-                    duration: 2000
-                }
-                loops: Animation.Infinite
             }
         }
     }

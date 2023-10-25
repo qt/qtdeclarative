@@ -54,17 +54,13 @@ QQmlPropertyData::flagsForProperty(const QMetaProperty &p)
     const QMetaType metaType = p.metaType();
     int propType = metaType.id();
     if (p.isEnumType()) {
-        flags.type = QQmlPropertyData::Flags::EnumType;
+        flags.setType(QQmlPropertyData::Flags::EnumType);
     } else if (metaType.flags() & QMetaType::PointerToQObject) {
-        flags.type = QQmlPropertyData::Flags::QObjectDerivedType;
+        flags.setType(QQmlPropertyData::Flags::QObjectDerivedType);
     } else if (propType == QMetaType::QVariant) {
-        flags.type = QQmlPropertyData::Flags::QVariantType;
-    } else if (propType < static_cast<int>(QMetaType::User)) {
-        // nothing to do
-    } else if (propType == qMetaTypeId<QJSValue>()) {
-        flags.type = QQmlPropertyData::Flags::QJSValueType;
+        flags.setType(QQmlPropertyData::Flags::QVariantType);
     } else if (metaType.flags() & QMetaType::IsQmlList) {
-        flags.type = QQmlPropertyData::Flags::QListType;
+        flags.setType(QQmlPropertyData::Flags::QListType);
     }
 
     return flags;
@@ -84,11 +80,9 @@ void QQmlPropertyData::load(const QMetaProperty &p)
 void QQmlPropertyData::load(const QMetaMethod &m)
 {
     setCoreIndex(m.methodIndex());
-    setArguments(nullptr);
-
     setPropType(m.returnMetaType());
 
-    m_flags.type = Flags::FunctionType;
+    m_flags.setType(Flags::FunctionType);
     if (m.methodType() == QMetaMethod::Signal) {
         m_flags.setIsSignal(true);
     } else if (m.methodType() == QMetaMethod::Constructor) {
@@ -352,6 +346,18 @@ QQmlPropertyCache::copyAndAppend(const QMetaObject *metaObject,
     return rv;
 }
 
+static QHashedString signalNameToHandlerName(const QHashedString &methodName)
+{
+    return QQmlSignalNames::signalNameToHandlerName(methodName);
+}
+
+static QHashedString signalNameToHandlerName(const QHashedCStringRef &methodName)
+{
+    return QQmlSignalNames::signalNameToHandlerName(
+            QLatin1StringView{ methodName.constData(), methodName.length() });
+}
+
+
 void QQmlPropertyCache::append(const QMetaObject *metaObject,
                                QTypeRevision typeVersion,
                                QQmlPropertyData::Flags propertyFlags,
@@ -440,40 +446,29 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
 
         QQmlPropertyData *old = nullptr;
 
-        if (utf8) {
-            QHashedString methodName(QString::fromUtf8(rawName, cptr - rawName));
+        const auto doSetNamedProperty = [&](const auto &methodName) {
             if (StringCache::mapped_type *it = stringCache.value(methodName)) {
                 if (handleOverride(methodName, data, (old = it->second)) == InvalidOverride)
-                    continue;
+                    return;
             }
+
             setNamedProperty(methodName, ii, data);
 
             if (data->isSignal()) {
-                QHashedString on(QQmlSignalNames::signalNameToHandlerName(methodName));
-                setNamedProperty(on, ii, sigdata);
+
+                // TODO: Remove this once we can. Signals should not be overridable.
+                if (!utf8)
+                    data->m_flags.setIsOverridableSignal(true);
+
+                setNamedProperty(signalNameToHandlerName(methodName), ii, sigdata);
                 ++signalHandlerIndex;
             }
-        } else {
-            QHashedCStringRef methodName(rawName, cptr - rawName);
-            if (StringCache::mapped_type *it = stringCache.value(methodName)) {
-                if (handleOverride(methodName, data, (old = it->second)) == InvalidOverride)
-                    continue;
-            }
-            setNamedProperty(methodName, ii, data);
+        };
 
-            if (data->isSignal()) {
-                QHashedString on(QQmlSignalNames::signalNameToHandlerName(
-                        QLatin1StringView{ methodName.constData(), methodName.length() }));
-                setNamedProperty(on, ii, data);
-                ++signalHandlerIndex;
-            }
-        }
-
-        if (old) {
-            // We only overload methods in the same class, exactly like C++
-            if (old->isFunction() && old->coreIndex() >= methodOffset)
-                data->m_flags.setIsOverload(true);
-        }
+        if (utf8)
+            doSetNamedProperty(QHashedString(QString::fromUtf8(rawName, cptr - rawName)));
+        else
+            doSetNamedProperty(QHashedCStringRef(rawName, cptr - rawName));
     }
 
     int propCount = metaObject->propertyCount();

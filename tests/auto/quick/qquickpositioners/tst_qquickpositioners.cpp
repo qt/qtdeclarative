@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 #include <QtTest/QtTest>
 #include <QtQuick/qquickview.h>
 #include <qqmlengine.h>
@@ -3757,7 +3758,7 @@ void tst_qquickpositioners::test_mirroring()
     QList<QString> objectNames;
     objectNames << "one" << "two" << "three" << "four" << "five";
 
-    foreach (const QString qmlFile, qmlFiles) {
+    for (const QString &qmlFile : std::as_const(qmlFiles)) {
         QScopedPointer<QQuickView> windowA(createView(testFile(qmlFile)));
         QQuickItem *rootA = qobject_cast<QQuickItem*>(windowA->rootObject());
 
@@ -3770,7 +3771,7 @@ void tst_qquickpositioners::test_mirroring()
         rootA->setProperty("testRightToLeft", true); // layoutDirection: Qt.RightToLeft
 
         // LTR != RTL
-        foreach (const QString objectName, objectNames) {
+        for (const QString &objectName : std::as_const(objectNames)) {
             // horizontal.qml and horizontal-padding.qml only have three items
             if (qmlFile.startsWith(QString("horizontal")) && objectName == QString("four"))
                 break;
@@ -3785,7 +3786,7 @@ void tst_qquickpositioners::test_mirroring()
         inheritProp.write(true);
 
         // RTL == mirror
-        foreach (const QString objectName, objectNames) {
+        for (const QString &objectName : std::as_const(objectNames)) {
             // horizontal.qml and horizontal-padding.qml only have three items
             if (qmlFile.startsWith(QString("horizontal")) && objectName == QString("four"))
                 break;
@@ -3806,7 +3807,7 @@ void tst_qquickpositioners::test_mirroring()
         rootB->setProperty("testRightToLeft", true); // layoutDirection: Qt.RightToLeft
 
         // LTR == RTL + mirror
-        foreach (const QString objectName, objectNames) {
+        for (const QString &objectName : std::as_const(objectNames)) {
             // horizontal.qml and horizontal-padding.qml only have three items
             if (qmlFile.startsWith(QString("horizontal")) && objectName == QString("four"))
                 break;

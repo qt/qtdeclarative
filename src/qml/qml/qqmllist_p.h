@@ -20,6 +20,8 @@
 #include "qqmlmetatype_p.h"
 #include <QtQml/private/qbipointer_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlListReferencePrivate

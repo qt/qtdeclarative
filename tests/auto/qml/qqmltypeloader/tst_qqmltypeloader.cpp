@@ -62,19 +62,18 @@ void tst_QQMLTypeLoader::testLoadComplete()
 #ifdef Q_OS_ANDROID
     QSKIP("Loading dynamic plugins does not work on Android");
 #endif
-    QQuickView *window = new QQuickView();
+    std::unique_ptr<QQuickView> window = std::make_unique<QQuickView>();
     window->engine()->addImportPath(QT_TESTCASE_BUILDDIR);
     qDebug() << window->engine()->importPathList();
     window->setGeometry(0,0,240,320);
     window->setSource(testFileUrl("test_load_complete.qml"));
     window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window.get()));
 
     QObject *rootObject = window->rootObject();
     QTRY_VERIFY(rootObject != nullptr);
     QTRY_COMPARE(rootObject->property("created").toInt(), 2);
     QTRY_COMPARE(rootObject->property("loaded").toInt(), 2);
-    delete window;
 }
 
 void tst_QQMLTypeLoader::loadComponentSynchronously()

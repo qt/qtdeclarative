@@ -6,6 +6,7 @@
     \brief This is a collection of QML examples relating to text.
     \image qml-text-example.png
     \ingroup qtquickexamples
+    \examplecategory {Graphics & Multimedia}
 
     \e Text is a collection of small QML examples relating to text. Each example
     is a small QML file, usually containing or emphasizing a particular type or

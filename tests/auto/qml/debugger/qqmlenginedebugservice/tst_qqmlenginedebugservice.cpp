@@ -691,9 +691,9 @@ void tst_QQmlEngineDebugService::queryObject()
         QQmlEngineDebugObjectReference text;
         for (const QQmlEngineDebugObjectReference &child : obj.children) {
             QVERIFY(!child.className.isEmpty());
-            if (child.className == "Rectangle")
+            if (child.idString == "blueRect")
                 rect = child;
-            else if (child.className == "Text")
+            else if (child.idString == "blueText")
                 text = child;
         }
 
@@ -770,9 +770,9 @@ void tst_QQmlEngineDebugService::queryObjectsForLocation()
         QQmlEngineDebugObjectReference text;
         for (const QQmlEngineDebugObjectReference &child : obj.children) {
             QVERIFY(!child.className.isEmpty());
-            if (child.className == "Rectangle")
+            if (child.idString == "blueRect")
                 rect = child;
-            else if (child.className == "Text")
+            else if (child.idString == "blueText")
                 text = child;
         }
 

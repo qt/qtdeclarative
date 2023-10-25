@@ -36,6 +36,7 @@ class QQuickGraphicsConfiguration;
 class QRhi;
 class QRhiSwapChain;
 class QRhiTexture;
+class QSGTextNode;
 
 class Q_QUICK_EXPORT QQuickWindow : public QWindow
 {
@@ -155,6 +156,7 @@ public:
     QSGRectangleNode *createRectangleNode() const;
     QSGImageNode *createImageNode() const;
     QSGNinePatchNode *createNinePatchNode() const;
+    QSGTextNode *createTextNode() const;
 
     static TextRenderType textRenderType();
     static void setTextRenderType(TextRenderType renderType);
@@ -227,7 +229,6 @@ private Q_SLOTS:
     void cleanupSceneGraph();
     void physicalDpiChanged();
     void handleScreenChanged(QScreen *screen);
-    void setTransientParent_helper(QQuickWindow *window);
     void runJobsAfterSwap();
     void handleApplicationStateChanged(Qt::ApplicationState state);
     void handleFontDatabaseChanged();
@@ -241,6 +242,7 @@ private:
 #endif
 
     friend class QQuickItem;
+    friend class QQuickItemPrivate;
     friend class QQuickWidget;
     friend class QQuickRenderControl;
     friend class QQuickAnimatorController;

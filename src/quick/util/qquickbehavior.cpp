@@ -14,6 +14,7 @@
 #include <private/qquickanimatorjob_p.h>
 
 #include <private/qobject_p.h>
+#include <QtCore/qpointer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -406,7 +407,7 @@ void QQuickBehavior::write(const QVariant &value)
 
     QList<QQmlProperty> after;
     auto *newInstance = d->animation->transition(actions, after, QQuickAbstractAnimation::Forward);
-    Q_ASSERT(newInstance != d->animationInstance);
+    Q_ASSERT(!newInstance || newInstance != d->animationInstance);
     delete d->animationInstance;
     d->animationInstance = newInstance;
 

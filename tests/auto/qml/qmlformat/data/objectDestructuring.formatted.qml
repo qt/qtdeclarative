@@ -2,10 +2,6 @@ import QtQml
 
 QtObject {
 
-    Component.onCompleted: {
-        set1();
-    }
-
     function set1() {
         const array = [1, 2, 3, 4];
         const [a, b] = [1, 2];
@@ -68,5 +64,68 @@ QtObject {
                 a: a1,
                 b: b1
             } = obj);
+        const complicatedObject = {
+            a: 1,
+            b: {
+                c: 2,
+                d: {
+                    e: 3,
+                    f: [4, 5, 6]
+                }
+            },
+            g: [7, 8, 9]
+        };
+        const {
+            patron,
+            b: {
+                mafik,
+                d: {
+                    e,
+                    f: [, secondF, ...restF]
+                }
+            },
+            g: [firstG, ...restG]
+        } = complicatedObject;
+    }
+
+    Component.onCompleted: {
+        const myFunction = myLambda => {
+            const myObject = {
+                a: 1,
+                b: {
+                    c: 2,
+                    d: [3, 4, 5]
+                },
+                e: {
+                    f: 6,
+                    g: {
+                        h: 7,
+                        i: [8, 9, 10]
+                    }
+                }
+            };
+            myLambda(myObject);
+        };
+        myFunction(({
+                    a,
+                    b: {
+                        c,
+                        d: [firstD]
+                    },
+                    e: {
+                        f,
+                        g: {
+                            h,
+                            i: [, secondI]
+                        }
+                    }
+                }) => {
+                console.log(a); // 1
+                console.log(c); // 2
+                console.log(firstD); // 3
+                console.log(f); // 6
+                console.log(h); // 7
+                console.log(secondI); // 9
+            });
     }
 }

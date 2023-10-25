@@ -47,6 +47,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public Q
 
 public:
     QQuickWindowQmlImpl(QWindow *parent = nullptr);
+    ~QQuickWindowQmlImpl();
 
     void setVisible(bool visible);
     void setVisibility(QWindow::Visibility visibility);
@@ -65,10 +66,13 @@ protected:
     void classBegin() override;
     void componentComplete() override;
 
+    bool event(QEvent *) override;
+
     QQuickWindowQmlImpl(QQuickWindowQmlImplPrivate &dd, QWindow *parent);
 
 private Q_SLOTS:
-    void setWindowVisibility();
+    void applyWindowVisibility();
+    void updateTransientParent();
 
 private:
     bool transientParentVisible();

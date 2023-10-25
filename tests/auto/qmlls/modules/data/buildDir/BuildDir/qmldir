@@ -1,2 +1,3 @@
 module BuildDir
 BuildDirType 1.0 BuildDirType.qml
+import QtQuick.Controls.Basic

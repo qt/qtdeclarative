@@ -133,9 +133,9 @@ protected:
     void generate_PopScriptContext() override;
     void generate_PopContext() override;
     void generate_GetIterator(int iterator) override;
-    void generate_IteratorNext(int value, int done) override;
-    void generate_IteratorNextForYieldStar(int iterator, int object) override;
-    void generate_IteratorClose(int done) override;
+    void generate_IteratorNext(int value, int offset) override;
+    void generate_IteratorNextForYieldStar(int iterator, int object, int offset) override;
+    void generate_IteratorClose() override;
     void generate_DestructureRestElement() override;
     void generate_DeleteProperty(int base, int index) override;
     void generate_DeleteName(int name) override;
@@ -260,11 +260,13 @@ protected:
     void generateEnumLookup(int index);
 
     QString registerVariable(int index) const;
+    QString lookupVariable(int lookupIndex) const;
     QString consumedRegisterVariable(int index) const;
     QString consumedAccumulatorVariableIn() const;
 
     QString changedRegisterVariable() const;
     QQmlJSRegisterContent registerType(int index) const;
+    QQmlJSRegisterContent lookupType(int lookupIndex) const;
     bool shouldMoveRegister(int index) const;
 
     QString m_body;
@@ -274,7 +276,7 @@ protected:
 
 private:
     void generateExceptionCheck();
-    void generateEqualityOperation(int lhs, const QString &function, bool invert);
+    void generateEqualityOperation(const QQmlJSRegisterContent &lhsContent, const QString &lhsName, const QString &function, bool invert);
     void generateCompareOperation(int lhs, const QString &cppOperator);
     void generateArithmeticOperation(int lhs, const QString &cppOperator);
     void generateShiftOperation(int lhs, const QString &cppOperator);
@@ -288,7 +290,11 @@ private:
     void generateTypeLookup(int index);
     void generateVariantEqualityComparison(const QQmlJSRegisterContent &nonStorable,
                                            const QString &registerName, bool invert);
+    void generateArrayInitializer(int argc, int argv);
+    void generateWriteBack(int registerIndex);
     void rejectIfNonQObjectOut(const QString &error);
+    void rejectIfBadArray();
+
 
     QString eqIntExpression(int lhsConst);
     QString argumentsList(int argc, int argv, QString *outVar);
@@ -336,17 +342,20 @@ private:
     {
         QString internalName;
         int registerIndex = -1;
+        int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex;
 
     private:
         friend size_t qHash(const RegisterVariablesKey &key, size_t seed = 0) noexcept
         {
-            return qHashMulti(seed, key.internalName, key.registerIndex);
+            return qHashMulti(seed, key.internalName, key.registerIndex, key.lookupIndex);
         }
 
         friend bool operator==(
                 const RegisterVariablesKey &lhs, const RegisterVariablesKey &rhs) noexcept
         {
-            return lhs.registerIndex == rhs.registerIndex && lhs.internalName == rhs.internalName;
+            return lhs.registerIndex == rhs.registerIndex
+                    && lhs.lookupIndex == rhs.lookupIndex
+                    && lhs.internalName == rhs.internalName;
         }
 
         friend bool operator!=(

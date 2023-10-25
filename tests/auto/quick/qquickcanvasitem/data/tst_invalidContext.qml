@@ -28,16 +28,16 @@ Item {
         anchors.fill: parent
         property var paintContext: null
 
-        function paint() {
+        function doPaint() {
             paintContext.fillStyle = Qt.rgba(1, 0, 0, 1);
             paintContext.fillRect(0, 0, width, height);
-            requestAnimationFrame(paint);
+            requestAnimationFrame(doPaint);
         }
 
         onAvailableChanged: {
             if (available) {
                 paintContext = getContext("2d")
-                requestAnimationFrame(paint);
+                requestAnimationFrame(doPaint);
             }
         }
     }

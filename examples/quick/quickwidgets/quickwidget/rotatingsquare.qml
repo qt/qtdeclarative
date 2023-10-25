@@ -31,6 +31,8 @@ Rectangle {
                     text.api = "OpenGL on QRhi";
                 else if (api === GraphicsInfo.Direct3D11)
                     text.api = "D3D11 on QRhi";
+                else if (api === GraphicsInfo.Direct3D12)
+                    text.api = "D3D12 on QRhi";
                 else if (api === GraphicsInfo.Vulkan)
                     text.api = "Vulkan on QRhi";
                 else if (api === GraphicsInfo.Metal)

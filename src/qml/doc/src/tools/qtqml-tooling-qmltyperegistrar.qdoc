@@ -1,0 +1,10 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtqml-tooling-qmltyperegistrar.html
+\title qmltyperegistrar
+\brief Overview of the qmltyperegistrar utility.
+\ingroup qtqml-tooling
+
+*/

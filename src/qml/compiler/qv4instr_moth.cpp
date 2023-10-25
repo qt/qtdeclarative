@@ -154,7 +154,7 @@ QString dumpBytecode(
         MOTH_END_INSTR(StoreReg)
 
         MOTH_BEGIN_INSTR(MoveReg)
-            s << dumpRegister(destReg, nFormals) << ", " << dumpRegister(srcReg, nFormals);
+            s << dumpRegister(srcReg, nFormals) << ", " << dumpRegister(destReg, nFormals);
         MOTH_END_INSTR(MoveReg)
 
         MOTH_BEGIN_INSTR(LoadImport)
@@ -185,7 +185,7 @@ QString dumpBytecode(
         MOTH_END_INSTR(LoadInt)
 
         MOTH_BEGIN_INSTR(MoveConst)
-            s << dumpRegister(destTemp, nFormals) << ", C" << constIndex;
+            s << "C" << constIndex << ", " << dumpRegister(destTemp, nFormals);
         MOTH_END_INSTR(MoveConst)
 
         MOTH_BEGIN_INSTR(LoadLocal)
@@ -221,7 +221,7 @@ QString dumpBytecode(
         MOTH_END_INSTR(LoadRuntimeString)
 
         MOTH_BEGIN_INSTR(MoveRegExp)
-            s << dumpRegister(destReg, nFormals) << ", " <<regExpId;
+            s << regExpId << ", " << dumpRegister(destReg, nFormals);
         MOTH_END_INSTR(MoveRegExp)
 
         MOTH_BEGIN_INSTR(LoadClosure)
@@ -405,15 +405,15 @@ QString dumpBytecode(
         MOTH_END_INSTR(GetIterator)
 
         MOTH_BEGIN_INSTR(IteratorNext)
-            s << dumpRegister(value, nFormals) << ", " << dumpRegister(done, nFormals);
+            s << dumpRegister(value, nFormals) << ", " << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(IteratorNext)
 
         MOTH_BEGIN_INSTR(IteratorNextForYieldStar)
-            s << dumpRegister(iterator, nFormals) << ", " << dumpRegister(object, nFormals);
+            s << dumpRegister(iterator, nFormals) << ", " << dumpRegister(object, nFormals)
+              << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(IteratorNextForYieldStar)
 
         MOTH_BEGIN_INSTR(IteratorClose)
-            s << dumpRegister(done, nFormals);
         MOTH_END_INSTR(IteratorClose)
 
         MOTH_BEGIN_INSTR(DestructureRestElement)

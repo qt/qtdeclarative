@@ -117,6 +117,14 @@ public:
     constexpr static inline std::size_t align(std::size_t size)
     { return (size + Chunk::SlotSize - 1) & ~(Chunk::SlotSize - 1); }
 
+    /* NOTE: allocManaged comes in various overloads. If size is not passed explicitly
+       sizeof(ManagedType::Data) is used for size. However, there are quite a few cases
+       where we allocate more than sizeof(ManagedType::Data); that's generally the case
+       when the Object has a ValueArray member.
+       If no internal class pointer is provided, ManagedType::defaultInternalClass(engine)
+       will be used as the internal class.
+    */
+
     template<typename ManagedType>
     inline typename ManagedType::Data *allocManaged(std::size_t size, Heap::InternalClass *ic)
     {
@@ -130,14 +138,35 @@ public:
     }
 
     template<typename ManagedType>
+    inline typename ManagedType::Data *allocManaged(Heap::InternalClass *ic)
+    {
+        return allocManaged<ManagedType>(sizeof(typename ManagedType::Data), ic);
+    }
+
+    template<typename ManagedType>
     inline typename ManagedType::Data *allocManaged(std::size_t size, InternalClass *ic)
     {
         return allocManaged<ManagedType>(size, ic->d());
     }
 
     template<typename ManagedType>
+    inline typename ManagedType::Data *allocManaged(InternalClass *ic)
+    {
+        return allocManaged<ManagedType>(sizeof(typename ManagedType::Data), ic);
+    }
+
+    template<typename ManagedType>
     inline typename ManagedType::Data *allocManaged(std::size_t size)
     {
+        Scope scope(engine);
+        Scoped<InternalClass> ic(scope, ManagedType::defaultInternalClass(engine));
+        return allocManaged<ManagedType>(size, ic);
+    }
+
+    template<typename ManagedType>
+    inline typename ManagedType::Data *allocManaged()
+    {
+        auto constexpr size = sizeof(typename ManagedType::Data);
         Scope scope(engine);
         Scoped<InternalClass> ic(scope, ManagedType::defaultInternalClass(engine));
         return allocManaged<ManagedType>(size, ic);
@@ -208,7 +237,7 @@ public:
     typename ManagedType::Data *alloc(Args&&... args)
     {
         Scope scope(engine);
-        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
+        Scoped<ManagedType> t(scope, allocManaged<ManagedType>());
         t->d_unchecked()->init(std::forward<Args>(args)...);
         return t->d();
     }

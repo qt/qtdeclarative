@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 #include <qtest.h>
 #include <qdir.h>
 #include <QtQml/qqmlengine.h>
@@ -207,7 +208,8 @@ void tst_qqmlmoduleplugin::importsPlugin()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(QString("import%1 worked").arg(suffix)));
     QTest::ignoreMessage(QtWarningMsg, "Module 'org.qtproject.AutoTestQmlPluginType' does not contain a module identifier directive - it cannot be protected from external registrations.");
     QQmlComponent component(&engine, testFileUrl(qmlFile));
-    foreach (QQmlError err, component.errors())
+    const auto errors = component.errors();
+    for (const QQmlError &err : errors)
         qWarning() << err;
     VERIFY_ERRORS(0);
     std::unique_ptr<QObject> object { component.create() };
@@ -281,7 +283,8 @@ void tst_qqmlmoduleplugin::importPluginWithQmlFile()
     QTest::ignoreMessage(QtWarningMsg, "Module 'org.qtproject.AutoTestPluginWithQmlFile' does not contain a module identifier directive - it cannot be protected from external registrations.");
 
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("pluginWithQmlFile.qml")));
-    foreach (QQmlError err, component.errors())
+    const auto errors = component.errors();
+    for (const QQmlError &err : errors)
         qWarning() << err;
     VERIFY_ERRORS(0);
     std::unique_ptr<QObject> object { component.create() };
@@ -302,7 +305,8 @@ void tst_qqmlmoduleplugin::remoteImportWithQuotedUrl()
     QCOMPARE(object->property("width").toInt(), 300);
     QVERIFY(object.get() != nullptr);
 
-    foreach (QQmlError err, component.errors())
+    const auto errors = component.errors();
+    for (const QQmlError &err : errors)
         qWarning() << err;
     VERIFY_ERRORS(0);
 }
@@ -324,7 +328,8 @@ void tst_qqmlmoduleplugin::remoteImportWithUnquotedUri()
     QVERIFY(object.get() != nullptr);
     QCOMPARE(object->property("width").toInt(), 300);
 
-    foreach (QQmlError err, component.errors())
+    const auto errors = component.errors();
+    for (const QQmlError &err : errors)
         qWarning() << err;
     VERIFY_ERRORS(0);
 }
@@ -677,7 +682,8 @@ void tst_qqmlmoduleplugin::importsChildPlugin()
     QTest::ignoreMessage(QtWarningMsg, "child import worked");
     QTest::ignoreMessage(QtWarningMsg, "Module 'org.qtproject.AutoTestQmlPluginType.ChildPlugin' does not contain a module identifier directive - it cannot be protected from external registrations.");
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("child.qml")));
-    foreach (QQmlError err, component.errors())
+    const auto errors = component.errors();
+    for (const QQmlError &err : errors)
         qWarning() << err;
     VERIFY_ERRORS(0);
     std::unique_ptr<QObject> object { component.create() };
@@ -693,7 +699,8 @@ void tst_qqmlmoduleplugin::importsChildPlugin2()
     QTest::ignoreMessage(QtWarningMsg, "child import2 worked");
     QTest::ignoreMessage(QtWarningMsg, "Module 'org.qtproject.AutoTestQmlPluginType.ChildPlugin' does not contain a module identifier directive - it cannot be protected from external registrations.");
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("child2.qml")));
-    foreach (QQmlError err, component.errors())
+    const auto errors = component.errors();
+    for (const QQmlError &err : errors)
         qWarning() << err;
     VERIFY_ERRORS(0);
     std::unique_ptr<QObject> object { component.create() };
@@ -709,7 +716,8 @@ void tst_qqmlmoduleplugin::importsChildPlugin21()
     QTest::ignoreMessage(QtWarningMsg, "child import2.1 worked");
     QTest::ignoreMessage(QtWarningMsg, "Module 'org.qtproject.AutoTestQmlPluginType.ChildPlugin' does not contain a module identifier directive - it cannot be protected from external registrations.");
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("child21.qml")));
-    foreach (QQmlError err, component.errors())
+    const auto errors = component.errors();
+    for (const QQmlError &err : errors)
         qWarning() << err;
     VERIFY_ERRORS(0);
     std::unique_ptr<QObject> object { component.create() };

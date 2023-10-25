@@ -2,35 +2,35 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qqmlproperty.h"
-#include "qqmlproperty_p.h"
 
-#include "qqmlboundsignal_p.h"
-#include "qqmlcontext.h"
-#include "qqmlboundsignal_p.h"
-#include "qqmlengine.h"
-#include "qqmlengine_p.h"
-#include "qqmldata_p.h"
-#include "qqmlstringconverters_p.h"
-
-#include "qqmlvmemetaobject_p.h"
-#include "qqmlvaluetypeproxybinding_p.h"
 #include <private/qjsvalue_p.h>
+#include <private/qmetaobject_p.h>
+#include <private/qproperty_p.h>
+#include <private/qqmlboundsignal_p.h>
+#include <private/qqmlbuiltinfunctions_p.h>
+#include <private/qqmldata_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmlirbuilder_p.h>
+#include <private/qqmllist_p.h>
+#include <private/qqmlproperty_p.h>
+#include <private/qqmlsignalnames_p.h>
+#include <private/qqmlstringconverters_p.h>
+#include <private/qqmlvaluetypeproxybinding_p.h>
+#include <private/qqmlvaluetypewrapper_p.h>
+#include <private/qqmlvmemetaobject_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4qobjectwrapper_p.h>
-#include <private/qqmlbuiltinfunctions_p.h>
-#include <private/qqmlirbuilder_p.h>
-#include <QtQml/private/qqmllist_p.h>
-#include <QtQml/private/qqmlsignalnames_p.h>
 
-#include <QStringList>
-#include <QVector>
-#include <private/qmetaobject_p.h>
-#include <private/qqmlvaluetypewrapper_p.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlpropertymap.h>
+
 #include <QtCore/qdebug.h>
-#include <cmath>
-#include <QtQml/QQmlPropertyMap>
-#include <QtCore/private/qproperty_p.h>
 #include <QtCore/qsequentialiterable.h>
+#include <QtCore/qstringlist.h>
+#include <QtCore/qvector.h>
+
+#include <cmath>
 
 QT_BEGIN_NAMESPACE
 
@@ -380,12 +380,11 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
         return false;
     };
 
-    const QString terminalString = terminal.toString();
-    if (auto signalName = QQmlSignalNames::handlerNameToSignalName(terminalString)) {
+    const auto findSignal = [&](const QString &signalName) {
         if (ddata && ddata->propertyCache) {
             // Try method
-            const QQmlPropertyData *d =
-                    ddata->propertyCache->property(*signalName, currentObject, context);
+            const QQmlPropertyData *d
+                    = ddata->propertyCache->property(signalName, currentObject, context);
 
             // ### Qt7: This code treats methods as signals. It should use d->isSignal().
             //          That would be a change in behavior, though. Right now you can construct a
@@ -396,13 +395,29 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
             if (d) {
                 object = currentObject;
                 core = *d;
-                return;
+                return true;
             }
 
-            if (findChangeSignal(terminalString))
-                return;
-        } else if (findSignalInMetaObject(signalName->toUtf8())) {
+            return findChangeSignal(terminal);
+        }
+
+        return findSignalInMetaObject(signalName.toUtf8());
+    };
+
+    auto signalName = QQmlSignalNames::handlerNameToSignalName(terminal);
+    if (signalName) {
+        if (findSignal(*signalName))
             return;
+    } else {
+        signalName = QQmlSignalNames::badHandlerNameToSignalName(terminal);
+        if (signalName) {
+            qWarning()
+                    << terminal
+                    << "is not a properly capitalized signal handler name."
+                    << QQmlSignalNames::signalNameToHandlerName(*signalName)
+                    << "would be correct.";
+            if (findSignal(*signalName))
+                return;
         }
     }
 
@@ -415,7 +430,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
             if (!property->isFunction()) {
                 object = currentObject;
                 core = *property;
-                nameCache = terminalString;
+                nameCache = terminal.toString();
                 return;
             }
             property = ddata->propertyCache->overrideData(property);

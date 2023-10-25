@@ -1,0 +1,74 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtqml-tooling-qmlpreview.html
+\title qmlpreview
+\brief Overview of the qmlpreview utility.
+\ingroup qtqml-tooling
+
+\section1 The Qml Preview
+The QML Preview tool watches QML and JavaScript files on disk and updates
+the application live with any changes. The application to be previewed
+has to have QML debugging enabled. \l {details}{More...}
+
+\table
+\header
+    \li Usage
+\row
+    \li qmlpreview [\l{options}] executable [parameters...]
+\endtable
+
+\section2 options
+
+\table
+\header
+    \li Option
+    \li Description
+\row
+    \li   --verbose
+    \li Print debugging output.
+\row
+    \li -h, --help
+    \li Displays help on commandline options.
+\row
+    \li --help-all
+    \li Displays help, including generic Qt options.
+\row
+    \li -v, --version
+    \li Displays version information.
+\endtable
+
+\section2 Arguments
+
+\table
+    \header
+        \li Argument
+        \li Description
+    \row
+        \li executable
+        \li The path of the executable file that loads a QML document.
+    \row
+        \li parameters
+        \li Arguments of the executable
+
+\endtable
+
+\section2 Details
+\target details
+
+\section3 Enable QML Debugging
+To enable QML debugging, make sure you build your application with appropriate
+configuration parameters. When using qmake, you should add \c {CONFIG+=qml_debug}
+in the \c {.pro} file. If you use another build system, then \c {QT_QML_DEBUG}
+variable should be defined.
+
+\badcode
+    qt_add_executable(MyApp
+    ...
+    )
+
+    target_compile_definitions(MyApp PRIVATE QT_QML_DEBUG)
+\endcode
+
+*/

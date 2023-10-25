@@ -369,3 +369,6 @@ cmake_install.cmake
 *_autogen
 tst_*.xml
 CMakeLists.txt.user
+
+# QML Language Server ini-files
+.qmlls.ini

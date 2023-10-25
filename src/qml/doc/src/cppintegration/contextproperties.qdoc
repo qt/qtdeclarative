@@ -5,6 +5,22 @@
 \title Embedding C++ Objects into QML with Context Properties
 \brief Description of how to embed C++ data into QML using context properties
 
+\warning By using context properties in your QML code, you create a dependency from your QML code
+         to the specific context you have in mind when writing it. This limits re-usability of your
+         code since the context may be different in other places where it might be used.
+         Furthermore, the dependency is not declared. You never \c import the context or otherwise
+         state what you expect. Therefore, anyone trying to re-use your code will have difficulties
+         finding out whether the place of re-use has a context sufficient for your code.
+
+\warning Context properties are invisible to any tooling that processes QML code ahead of time,
+         before you load it into the QML engine. The \l{Qt Quick Compiler}, \l{qmllint}, and the
+         \l{QML Language Server} do not know anything about your context properties and will
+         consider any access to context properties as an \e{unqualified access}.
+
+\note Context properties can generally be replaced either by regular properties on the root object
+      of a component, or by singletons defined either in C++ using \l{QML_SINGLETON}{QML_SINGLETON}
+      or in QML using \l{qtqml-documents-definetypes.html#singleton}{pragma Singleton}.
+
 When loading a QML object into a C++ application, it can be useful to directly embed some C++ data
 that can be used from within the QML code. This makes it possible, for example, to invoke a C++
 method on the embedded object, or use a C++ object instance as a data model for a QML view.

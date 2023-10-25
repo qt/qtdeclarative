@@ -10,16 +10,27 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
 
+QT_BEGIN_NAMESPACE
+
 /*!
-\class QQmlFile
-\brief The QQmlFile class gives access to local and remote files.
+    \class QQmlFile
+    \inmodule QtQml
+    \since 5.0
+    \brief The QQmlFile class provides static utility methods to categorize URLs.
 
-\internal
-
-Supports file:// and qrc:/ uris and whatever QNetworkAccessManager supports.
+    QQmlFile provides some static utility methods to categorize URLs
+    and file names the way \l{QQmlEngine} does when loading content from them.
 */
 
-QT_BEGIN_NAMESPACE
+/*!
+    \internal
+
+    \enum QQmlFile::Status
+    \value Null
+    \value Ready
+    \value Error
+    \value Loading
+ */
 
 static char qrc_string[] = "qrc";
 static char file_string[] = "file";
@@ -159,22 +170,36 @@ QQmlFilePrivate::QQmlFilePrivate()
 {
 }
 
+/*!
+    \internal
+ */
 QQmlFile::QQmlFile()
 : d(new QQmlFilePrivate)
 {
 }
 
-QQmlFile::QQmlFile(QQmlEngine *e, const QUrl &url)
+/*!
+    \internal
+    Constructs a QQmlFile for content at \a url, using \a engine to retrieve it.
+ */
+QQmlFile::QQmlFile(QQmlEngine *engine, const QUrl &url)
 : d(new QQmlFilePrivate)
 {
-    load(e, url);
+    load(engine, url);
 }
 
-QQmlFile::QQmlFile(QQmlEngine *e, const QString &url)
-    : QQmlFile(e, QUrl(url))
+/*!
+    \internal
+    Constructs a QQmlFile for content at \a url, using \a engine to retrieve it.
+ */
+QQmlFile::QQmlFile(QQmlEngine *engine, const QString &url)
+    : QQmlFile(engine, QUrl(url))
 {
 }
 
+/*!
+    \internal
+ */
 QQmlFile::~QQmlFile()
 {
 #if QT_CONFIG(qml_network)
@@ -184,26 +209,41 @@ QQmlFile::~QQmlFile()
     d = nullptr;
 }
 
+/*!
+    \internal
+ */
 bool QQmlFile::isNull() const
 {
     return status() == Null;
 }
 
+/*!
+    \internal
+ */
 bool QQmlFile::isReady() const
 {
     return status() == Ready;
 }
 
+/*!
+    \internal
+ */
 bool QQmlFile::isError() const
 {
     return status() == Error;
 }
 
+/*!
+    \internal
+ */
 bool QQmlFile::isLoading() const
 {
     return status() == Loading;
 }
 
+/*!
+    \internal
+ */
 QUrl QQmlFile::url() const
 {
     if (!d->urlString.isEmpty()) {
@@ -213,6 +253,9 @@ QUrl QQmlFile::url() const
     return d->url;
 }
 
+/*!
+    \internal
+ */
 QQmlFile::Status QQmlFile::status() const
 {
     if (d->url.isEmpty() && d->urlString.isEmpty())
@@ -227,6 +270,9 @@ QQmlFile::Status QQmlFile::status() const
         return Ready;
 }
 
+/*!
+    \internal
+ */
 QString QQmlFile::error() const
 {
     switch (d->error) {
@@ -240,21 +286,34 @@ QString QQmlFile::error() const
     }
 }
 
+/*!
+    \internal
+ */
 qint64 QQmlFile::size() const
 {
     return d->data.size();
 }
 
+/*!
+    \internal
+ */
 const char *QQmlFile::data() const
 {
     return d->data.constData();
 }
 
+/*!
+    \internal
+ */
 QByteArray QQmlFile::dataByteArray() const
 {
     return d->data;
 }
 
+/*!
+    \internal
+    Loads content at \a url using \a engine.
+ */
 void QQmlFile::load(QQmlEngine *engine, const QUrl &url)
 {
     Q_ASSERT(engine);
@@ -285,6 +344,10 @@ void QQmlFile::load(QQmlEngine *engine, const QUrl &url)
     }
 }
 
+/*!
+    \internal
+    Loads content at \a url using \a engine.
+ */
 void QQmlFile::load(QQmlEngine *engine, const QString &url)
 {
     Q_ASSERT(engine);
@@ -319,6 +382,9 @@ void QQmlFile::load(QQmlEngine *engine, const QString &url)
     }
 }
 
+/*!
+    \internal
+ */
 void QQmlFile::clear()
 {
     d->url = QUrl();
@@ -327,12 +393,22 @@ void QQmlFile::clear()
     d->error = QQmlFilePrivate::None;
 }
 
-void QQmlFile::clear(QObject *)
+/*!
+    \internal
+    Redirects to the other clear() overload, ignoring \a object.
+ */
+void QQmlFile::clear(QObject *object)
 {
+    Q_UNUSED(object);
     clear();
 }
 
 #if QT_CONFIG(qml_network)
+
+/*!
+    \internal
+    Connects \a method of \a object to the internal \c{finished} signal.
+ */
 bool QQmlFile::connectFinished(QObject *object, const char *method)
 {
     if (!d || !d->reply) {
@@ -340,10 +416,13 @@ bool QQmlFile::connectFinished(QObject *object, const char *method)
         return false;
     }
 
-    return QObject::connect(d->reply, SIGNAL(finished()),
-                            object, method);
+    return QObject::connect(d->reply, SIGNAL(finished()), object, method);
 }
 
+/*!
+    \internal
+    Connects \a method of \a object to the internal \c{finished} signal.
+ */
 bool QQmlFile::connectFinished(QObject *object, int method)
 {
     if (!d || !d->reply) {
@@ -355,6 +434,10 @@ bool QQmlFile::connectFinished(QObject *object, int method)
                                 object, method);
 }
 
+/*!
+    \internal
+    Connects \a method of \a object to the internal \c{downloadProgress} signal.
+ */
 bool QQmlFile::connectDownloadProgress(QObject *object, const char *method)
 {
     if (!d || !d->reply) {
@@ -366,6 +449,10 @@ bool QQmlFile::connectDownloadProgress(QObject *object, const char *method)
                             object, method);
 }
 
+/*!
+    \internal
+    Connects \a method of \a object to the internal \c{downloadProgress} signal.
+ */
 bool QQmlFile::connectDownloadProgress(QObject *object, int method)
 {
     if (!d || !d->reply) {
@@ -379,11 +466,14 @@ bool QQmlFile::connectDownloadProgress(QObject *object, int method)
 #endif
 
 /*!
-Returns true if QQmlFile will open \a url synchronously.
+    \internal
 
-Synchronous urls have a qrc:/ or file:// scheme.
+    Returns \c true if QQmlFile will open \a url synchronously.
+    Otherwise returns \c false. Synchronous urls have a \c{qrc:} or \c{file:}
+    scheme.
 
-\note On Android, urls with assets:/ scheme are also considered synchronous.
+    \note On Android, urls with \c{assets:} or \c{content:} scheme are also
+          considered synchronous.
 */
 bool QQmlFile::isSynchronous(const QUrl &url)
 {
@@ -406,11 +496,14 @@ bool QQmlFile::isSynchronous(const QUrl &url)
 }
 
 /*!
-Returns true if QQmlFile will open \a url synchronously.
+    \internal
 
-Synchronous urls have a qrc:/ or file:// scheme.
+    Returns \c true if QQmlFile will open \a url synchronously.
+    Otherwise returns \c false. Synchronous urls have a \c{qrc:} or \c{file:}
+    scheme.
 
-\note On Android, urls with assets:/ scheme are also considered synchronous.
+    \note On Android, urls with \c{assets:} or \c{content:} scheme are also
+          considered synchronous.
 */
 bool QQmlFile::isSynchronous(const QString &url)
 {
@@ -460,11 +553,12 @@ static bool hasLocalContentAuthority(const QUrl &url)
 #endif
 
 /*!
-Returns true if \a url is a local file that can be opened with QFile.
+    Returns \c true if \a url is a local file that can be opened with \l{QFile}.
+    Otherwise returns \c false. Local file urls have either a \c{qrc:} or
+    \c{file:} scheme.
 
-Local file urls have either a qrc:/ or file:// scheme.
-
-\note On Android, urls with assets:/ scheme are also considered local files.
+    \note On Android, urls with \c{assets:} or \c{content:} scheme are also
+          considered local files.
 */
 bool QQmlFile::isLocalFile(const QUrl &url)
 {
@@ -540,11 +634,12 @@ static bool hasLocalContentAuthority(const QString &url, qsizetype schemeLength)
 #endif
 
 /*!
-Returns true if \a url is a local file that can be opened with QFile.
+    Returns \c true if \a url is a local file that can be opened with \l{QFile}.
+    Otherwise returns \c false. Local file urls have either a \c{qrc:} or
+    \c{file:} scheme.
 
-Local file urls have either a qrc: or file: scheme.
-
-\note On Android, urls with assets: or content: scheme are also considered local files.
+    \note On Android, urls with \c{assets:} or \c{content:} scheme are also considered
+          local files.
 */
 bool QQmlFile::isLocalFile(const QString &url)
 {
@@ -585,8 +680,10 @@ bool QQmlFile::isLocalFile(const QString &url)
 }
 
 /*!
-If \a url is a local file returns a path suitable for passing to QFile.  Otherwise returns an
-empty string.
+    If \a url is a local file returns a path suitable for passing to \l{QFile}.
+    Otherwise returns an empty string.
+
+    \sa isLocalFile
 */
 QString QQmlFile::urlToLocalFileOrQrc(const QUrl& url)
 {
@@ -637,8 +734,10 @@ static bool isDoubleSlashed(const QString &url, qsizetype offset)
 }
 
 /*!
-If \a url is a local file returns a path suitable for passing to QFile.  Otherwise returns an
-empty string.
+    If \a url is a local file returns a path suitable for passing to \l{QFile}.
+    Otherwise returns an empty string.
+
+    \sa isLocalFile
 */
 QString QQmlFile::urlToLocalFileOrQrc(const QString& url)
 {

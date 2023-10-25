@@ -1,8 +1,8 @@
 import QtQuick 2.0
-
+// The translation data starts at line == 4. QCoreApplication::translate() tolerates this.
 QtObject {
     objectName: "test"
-
+    property string emptyContext: qsTranslate("", "hello")
     property string basic: qsTr("hello")
     property string basic2: qsTranslate("CustomContext", "goodbye")
     property string basic3: if (objectName.length > 0) qsTr("hello")

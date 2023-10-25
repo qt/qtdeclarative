@@ -1,0 +1,3 @@
+module SourceDir
+B 1.0 A.qml
+import QtQuick.Controls.Basic

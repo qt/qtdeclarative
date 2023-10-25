@@ -1,5 +1,4 @@
-import QtQuick 2.4
-import QtQuick.Window 2.2
+import QtQuick
 
 Rectangle {
     id: root
@@ -19,6 +18,7 @@ Rectangle {
     property Window extraWindow: Window {
         objectName: "extraWindow"
         title: "extra window"
+        transientParent: null
         Text {
             objectName: "extraWindowText"
             anchors.centerIn: parent

@@ -4,15 +4,13 @@
 #ifndef QQMLSACONSTANTS_H
 #define QQMLSACONSTANTS_H
 
-#include <QtCore/qfileinfo.h>
+#include <QtCore/qtconfigmacros.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlJSScope;
-
 namespace QQmlSA {
 
-enum BindingType : unsigned int {
+enum class BindingType : unsigned int {
     Invalid,
     BoolLiteral,
     NumberLiteral,
@@ -29,23 +27,11 @@ enum BindingType : unsigned int {
     GroupProperty,
 };
 
-enum ScriptBindingKind : unsigned int {
-    Script_Invalid,
-    Script_PropertyBinding, // property int p: 1 + 1
-    Script_SignalHandler, // onSignal: { ... }
-    Script_ChangeHandler, // onXChanged: { ... }
-};
-
-enum ExtensionKind {
-    NotExtension,
-    ExtensionType,
-    ExtensionNamespace,
-};
-
-enum class BindingTargetSpecifier {
-    SimplePropertyTarget, // e.g. `property int p: 42`
-    ListPropertyTarget, // e.g. `property list<Item> pList: [ Text {} ]`
-    UnnamedPropertyTarget // default property bindings, where property name is unspecified
+enum class ScriptBindingKind : unsigned int {
+    Invalid,
+    PropertyBinding, // property int p: 1 + 1
+    SignalHandler, // onSignal: { ... }
+    ChangeHandler, // onXChanged: { ... }
 };
 
 enum class ScopeType {
@@ -57,7 +43,6 @@ enum class ScopeType {
     EnumScope
 };
 
-enum class QQmlJSMetaMethodAccess { Private, Protected, Public };
 } // namespace QQmlSA
 
 QT_END_NAMESPACE

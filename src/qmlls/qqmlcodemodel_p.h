@@ -50,7 +50,7 @@ public:
     std::optional<int> scopeVersion;
     QDateTime scopeDependenciesLoadTime;
     bool scopeDependenciesChanged = false;
-    QQmlJSScope::Ptr scope = {};
+    QQmlJSScope::ConstPtr scope;
     QDebug dump(QDebug dbg, DumpOptions dump = DumpOption::NoCode);
 };
 

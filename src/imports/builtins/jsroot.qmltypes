@@ -1603,10 +1603,22 @@ Module {
     Component {
         name: "QtApplicationArguments"
         accessSemantics: "reference"
-        prototype: "ArrayPrototype"
-        Property { name: "0"; type: "string" }
-        Property { name: "1"; type: "string" }
+        prototype: "QtApplicationArgumentsPrototype"
+        Property { name: "0" }
+        Property { name: "1" }
         Property { name: "length"; type: "number" }
+    }
+    Component {
+        name: "QtApplicationArgumentsPrototype"
+        accessSemantics: "reference"
+        prototype: "ArrayPrototype"
+        Property { name: "length" }
+        Method {
+            name: "sort"
+            isJavaScriptFunction: true
+            Parameter {}
+        }
+        Method { name: "valueOf"; isJavaScriptFunction: true }
     }
     Component {
         name: "QtInputMethod"
@@ -2033,6 +2045,7 @@ Module {
         Property { name: "Key_twosuperior"; type: "number"; isReadonly: true }
         Property { name: "Key_threesuperior"; type: "number"; isReadonly: true }
         Property { name: "Key_acute"; type: "number"; isReadonly: true }
+        Property { name: "Key_micro"; type: "number"; isReadonly: true }
         Property { name: "Key_mu"; type: "number"; isReadonly: true }
         Property { name: "Key_paragraph"; type: "number"; isReadonly: true }
         Property { name: "Key_periodcentered"; type: "number"; isReadonly: true }

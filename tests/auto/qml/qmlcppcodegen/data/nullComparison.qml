@@ -6,6 +6,7 @@ QtObject {
     property int w: 1
     property int x: 1
     property int y: 1
+    property int z: 1
     Component.onCompleted: {
         var g = null;
         if (g !== null) {
@@ -22,5 +23,15 @@ QtObject {
         if (h === undefined) {
             y = 5;
         }
+
+        var o = this;
+        if (o != null)
+            z += 7;
+        if (o == null)
+            z += 6;
+        if (g == null)
+            z += 10;
+        if (g != null)
+            z += 20;
     }
 }

@@ -748,8 +748,9 @@ void QSGRenderThread::syncAndRender()
                 qWarning("Failed to end frame");
             if (frameResult == QRhi::FrameOpDeviceLost || frameResult == QRhi::FrameOpSwapChainOutOfDate)
                 QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
+        } else {
+            lastCompletedGpuTime = cd->swapchain->currentFrameCommandBuffer()->lastCompletedGpuTime();
         }
-        lastCompletedGpuTime = cd->swapchain->currentFrameCommandBuffer()->lastCompletedGpuTime();
         d->fireFrameSwapped();
     } else {
         Q_TRACE(QSG_render_exit);
@@ -799,7 +800,7 @@ void QSGRenderThread::syncAndRender()
                 int((syncTime/1000000)),
                 int((renderTime - syncTime) / 1000000),
                 int((threadTimer.nsecsElapsed() - renderTime) / 1000000));
-        if (!qFuzzyIsNull(lastCompletedGpuTime) && cd->graphicsConfig.isTimestampsEnabled()) {
+        if (!qFuzzyIsNull(lastCompletedGpuTime) && cd->graphicsConfig.timestampsEnabled()) {
             qCDebug(QSG_LOG_TIME_RENDERLOOP, "[window %p][render thread %p] syncAndRender: last retrieved GPU frame time was %.4f ms",
                     window,
                     QThread::currentThread(),

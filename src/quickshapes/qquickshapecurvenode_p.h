@@ -6,6 +6,7 @@
 
 #include <QtQuick/qsgnode.h>
 
+#include "qquickshapeabstractcurvenode_p.h"
 #include "qquickshapegenericrenderer_p.h"
 
 //
@@ -21,14 +22,17 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickShapeCurveNode : public QSGGeometryNode
+class QQuickShapeCurveNode : public QQuickShapeAbstractCurveNode
 {
 public:
     QQuickShapeCurveNode();
 
-    void setColor(QColor col)
+    void setColor(QColor col) override
     {
+        if (m_color == col)
+            return;
         m_color = col;
+        updateMaterial();
     }
 
     QColor color() const
@@ -80,6 +84,16 @@ public:
         }
     }
 
+    float debug() const
+    {
+        return m_debug;
+    }
+
+    void setDebug(float newDebug)
+    {
+        m_debug = newDebug;
+    }
+
     QQuickAbstractPathRenderer::FillGradientType gradientType() const
     {
         return m_gradientType;
@@ -90,62 +104,50 @@ public:
         return m_strokeWidth > 0.0f && m_strokeColor.alpha() > 0;
     }
 
+    void appendTriangle(const std::array<QVector2D, 3> &v, // triangle vertices
+                        const std::array<QVector2D, 3> &n, // vertex normals
+                        std::function<QVector3D(QVector2D)> uvForPoint
+                        )
+    {
+        QVector3D uv1 = uvForPoint(v[0]);
+        QVector3D uv2 = uvForPoint(v[1]);
+        QVector3D uv3 = uvForPoint(v[2]);
+
+        QVector2D duvdx = QVector2D(uvForPoint(v[0] + QVector2D(1, 0))) - QVector2D(uv1);
+        QVector2D duvdy = QVector2D(uvForPoint(v[0] + QVector2D(0, 1))) - QVector2D(uv1);
+
+        m_uncookedIndexes.append(m_uncookedVertexes.size());
+        m_uncookedVertexes.append( { v[0].x(), v[0].y(),
+            uv1.x(), uv1.y(), uv1.z(),
+            duvdx.x(), duvdx.y(),
+            duvdy.x(), duvdy.y(),
+            n[0].x(), n[0].y()
+        });
+
+        m_uncookedIndexes.append(m_uncookedVertexes.size());
+        m_uncookedVertexes.append( { v[1].x(), v[1].y(),
+            uv2.x(), uv2.y(), uv2.z(),
+            duvdx.x(), duvdx.y(),
+            duvdy.x(), duvdy.y(),
+            n[1].x(), n[1].y()
+        });
+
+        m_uncookedIndexes.append(m_uncookedVertexes.size());
+        m_uncookedVertexes.append( { v[2].x(), v[2].y(),
+            uv3.x(), uv3.y(), uv3.z(),
+            duvdx.x(), duvdx.y(),
+            duvdy.x(), duvdy.y(),
+            n[2].x(), n[2].y()
+        });
+
+    }
+
     void appendTriangle(const QVector2D &v1,
                         const QVector2D &v2,
                         const QVector2D &v3,
-                        std::function<QVector3D(QVector2D)> uvForPoint,
-                        QVector4D debugColor1,
-                        QVector4D debugColor2,
-                        QVector4D debugColor3)
+                        std::function<QVector3D(QVector2D)> uvForPoint)
     {
-        QVector3D uv1 = uvForPoint(v1);
-        QVector3D uv2 = uvForPoint(v2);
-        QVector3D uv3 = uvForPoint(v3);
-
-        QVector2D duvdx = QVector2D(uvForPoint(v1 + QVector2D(1, 0))) - QVector2D(uv1);
-        QVector2D duvdy = QVector2D(uvForPoint(v1 + QVector2D(0, 1))) - QVector2D(uv1);
-
-        m_uncookedIndexes.append(m_uncookedVertexes.size());
-        m_uncookedVertexes.append( { v1.x(), v1.y(),
-            uv1.x(), uv1.y(), uv1.z(),
-            debugColor1.x(), debugColor1.y(), debugColor1.z(), debugColor1.w(),
-            duvdx.x(), duvdx.y(),
-            duvdy.x(), duvdy.y()
-        });
-
-        m_uncookedIndexes.append(m_uncookedVertexes.size());
-        m_uncookedVertexes.append( { v2.x(), v2.y(),
-            uv2.x(), uv2.y(), uv2.z(),
-            debugColor2.x(), debugColor2.y(), debugColor2.z(), debugColor2.w(),
-            duvdx.x(), duvdx.y(),
-            duvdy.x(), duvdy.y()
-        });
-
-        m_uncookedIndexes.append(m_uncookedVertexes.size());
-        m_uncookedVertexes.append( { v3.x(), v3.y(),
-            uv3.x(), uv3.y(), uv3.z(),
-            debugColor3.x(), debugColor3.y(), debugColor3.z(), debugColor3.w(),
-            duvdx.x(), duvdx.y(),
-            duvdy.x(), duvdy.y()
-        });
-    }
-
-    void appendVertex(const QVector2D &vertex,
-                      std::function<QVector3D(QVector2D)> uvForPoint,
-                      const QVector4D &debugColor)
-    {
-        QVector3D uv = uvForPoint(vertex);
-
-        QVector2D duvdx = QVector2D(uvForPoint(vertex + QVector2D(1, 0))) - QVector2D(uv);
-        QVector2D duvdy = QVector2D(uvForPoint(vertex + QVector2D(0, 1))) - QVector2D(uv);
-
-        m_uncookedVertexes.append( { vertex.x(), vertex.y(),
-                                     uv.x(), uv.y(), uv.z(),
-                                     debugColor.x(), debugColor.y(), debugColor.z(), debugColor.w(),
-                                     duvdx.x(), duvdx.y(),
-                                     duvdy.x(), duvdy.y()
-                                    }
-                                   );
+        appendTriangle({v1, v2, v3}, {}, uvForPoint);
     }
 
     void appendIndex(quint32 index)
@@ -169,8 +171,8 @@ private:
     struct CurveNodeVertex
     {
         float x, y, u, v, w;
-        float r, g, b, a; // Debug color, mixed in proportion to a
         float dudx, dvdx, dudy, dvdy; // Size of pixel in curve space (must be same for all vertices in triangle)
+        float nx, ny; // normal vector describing the direction to shift the vertex for AA
     };
 
     void updateMaterial();
@@ -179,6 +181,7 @@ private:
     QColor m_color = Qt::white;
     QColor m_strokeColor = Qt::transparent;
     float m_strokeWidth = 0.0f;
+    float m_debug = 0.0f;
     QQuickAbstractPathRenderer::GradientDesc m_fillGradient;
     QQuickAbstractPathRenderer::FillGradientType m_gradientType = QQuickAbstractPathRenderer::NoGradient;
 

@@ -17,6 +17,7 @@
 #include <QScopeGuard>
 #include <QUrl>
 #include <QModelIndex>
+#include <QtQml/qqmllist.h>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)
@@ -1672,6 +1673,8 @@ void tst_QJSEngine::valueConversion_basic()
         QCOMPARE(eng.fromScriptValue<unsigned short>(num), (unsigned short)(123));
         QCOMPARE(eng.fromScriptValue<float>(num), float(123));
         QCOMPARE(eng.fromScriptValue<double>(num), double(123));
+        QCOMPARE(eng.fromScriptValue<long>(num), long(123));
+        QCOMPARE(eng.fromScriptValue<ulong>(num), ulong(123));
         QCOMPARE(eng.fromScriptValue<qlonglong>(num), qlonglong(123));
         QCOMPARE(eng.fromScriptValue<qulonglong>(num), qulonglong(123));
     }
@@ -1683,6 +1686,8 @@ void tst_QJSEngine::valueConversion_basic()
         QCOMPARE(eng.fromScriptValue<unsigned short>(num), (unsigned short)(123));
         QCOMPARE(eng.fromScriptValue<float>(num), float(123));
         QCOMPARE(eng.fromScriptValue<double>(num), double(123));
+        QCOMPARE(eng.fromScriptValue<long>(num), long(123));
+        QCOMPARE(eng.fromScriptValue<ulong>(num), ulong(123));
         QCOMPARE(eng.fromScriptValue<qlonglong>(num), qlonglong(123));
         QCOMPARE(eng.fromScriptValue<qulonglong>(num), qulonglong(123));
     }
@@ -1700,6 +1705,13 @@ void tst_QJSEngine::valueConversion_basic()
         QJSValue code = eng.toScriptValue(c.unicode());
         QCOMPARE(eng.fromScriptValue<QChar>(code), c);
         QCOMPARE(eng.fromScriptValue<QChar>(eng.toScriptValue(c)), c);
+    }
+
+    {
+        QList<QObject *> list = {this};
+        QQmlListProperty<QObject> prop(this, &list);
+        QJSValue jsVal = eng.toScriptValue(prop);
+        QCOMPARE(eng.fromScriptValue<QQmlListProperty<QObject>>(jsVal), prop);
     }
 
     QVERIFY(eng.toScriptValue(static_cast<void *>(nullptr)).isNull());
@@ -3637,9 +3649,6 @@ void tst_QJSEngine::qRegularExpressionExport()
 // effect at a given date (QTBUG-9770).
 void tst_QJSEngine::dateRoundtripJSQtJS()
 {
-#ifdef Q_OS_WIN
-    QSKIP("This test fails on Windows due to a bug in QDateTime.");
-#endif
     qint64 secs = QDate(2009, 1, 1).startOfDay(QTimeZone::UTC).toSecsSinceEpoch();
     QJSEngine eng;
     for (int i = 0; i < 8000; ++i) {
@@ -3654,9 +3663,6 @@ void tst_QJSEngine::dateRoundtripJSQtJS()
 
 void tst_QJSEngine::dateRoundtripQtJSQt()
 {
-#ifdef Q_OS_WIN
-    QSKIP("This test fails on Windows due to a bug in QDateTime.");
-#endif
     QDateTime qtDate = QDate(2009, 1, 1).startOfDay();
     QJSEngine eng;
     for (int i = 0; i < 8000; ++i) {
@@ -3670,9 +3676,6 @@ void tst_QJSEngine::dateRoundtripQtJSQt()
 
 void tst_QJSEngine::dateConversionJSQt()
 {
-#ifdef Q_OS_WIN
-    QSKIP("This test fails on Windows due to a bug in QDateTime.");
-#endif
     qint64 secs = QDate(2009, 1, 1).startOfDay(QTimeZone::UTC).toSecsSinceEpoch();
     QJSEngine eng;
     for (int i = 0; i < 8000; ++i) {

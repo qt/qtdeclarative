@@ -11,6 +11,10 @@ QT_BEGIN_NAMESPACE
 QSGSoftwareInternalRectangleNode::QSGSoftwareInternalRectangleNode()
     : m_penWidth(0)
     , m_radius(0)
+    , m_topLeftRadius(-1)
+    , m_topRightRadius(-1)
+    , m_bottomLeftRadius(-1)
+    , m_bottomRightRadius(-1)
     , m_vertical(true)
     , m_cornerPixmapIsDirty(true)
     , m_devicePixelRatio(1)
@@ -171,6 +175,42 @@ void QSGSoftwareInternalRectangleNode::setRadius(qreal radius)
     }
 }
 
+void QSGSoftwareInternalRectangleNode::setTopLeftRadius(qreal radius)
+{
+    if (m_topLeftRadius != radius) {
+        m_topLeftRadius = radius;
+        m_cornerPixmapIsDirty = true;
+        markDirty(DirtyMaterial);
+    }
+}
+
+void QSGSoftwareInternalRectangleNode::setTopRightRadius(qreal radius)
+{
+    if (m_topRightRadius != radius) {
+        m_topRightRadius = radius;
+        m_cornerPixmapIsDirty = true;
+        markDirty(DirtyMaterial);
+    }
+}
+
+void QSGSoftwareInternalRectangleNode::setBottomLeftRadius(qreal radius)
+{
+    if (m_bottomLeftRadius != radius) {
+        m_bottomLeftRadius = radius;
+        m_cornerPixmapIsDirty = true;
+        markDirty(DirtyMaterial);
+    }
+}
+
+void QSGSoftwareInternalRectangleNode::setBottomRightRadius(qreal radius)
+{
+    if (m_bottomRightRadius != radius) {
+        m_bottomRightRadius = radius;
+        m_cornerPixmapIsDirty = true;
+        markDirty(DirtyMaterial);
+    }
+}
+
 void QSGSoftwareInternalRectangleNode::setAligned(bool /*aligned*/)
 {
 }
@@ -211,13 +251,21 @@ void QSGSoftwareInternalRectangleNode::paint(QPainter *painter)
         //Rotated rectangles lose the benefits of direct rendering, and have poor rendering
         //quality when using only blits and fills.
 
-        if (m_radius == 0 && m_penWidth == 0) {
+        if (m_radius == 0
+            && m_penWidth == 0
+            && m_topLeftRadius <= 0
+            && m_topRightRadius <= 0
+            && m_bottomLeftRadius <= 0
+            && m_bottomRightRadius <= 0) {
             //Non-Rounded Rects without borders (fall back to drawRect)
             //Most common case
             painter->setPen(Qt::NoPen);
             painter->setBrush(m_brush);
             painter->drawRect(m_rect);
-        } else {
+        } else if (m_topLeftRadius < 0
+                   && m_topRightRadius < 0
+                   && m_bottomLeftRadius < 0
+                   && m_bottomRightRadius < 0) {
             //Rounded Rects and Rects with Borders
             //Avoids broken behaviors of QPainter::drawRect/roundedRect
             QPixmap pixmap = QPixmap(qRound(m_rect.width() * m_devicePixelRatio), qRound(m_rect.height() * m_devicePixelRatio));
@@ -230,12 +278,34 @@ void QSGSoftwareInternalRectangleNode::paint(QPainter *painter)
             painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
             painter->drawPixmap(m_rect, pixmap);
             painter->setRenderHints(previousRenderHints);
+        } else {
+            // Corners with different radii. Split implementation to avoid
+            // performance regression of the majority of cases
+            QPixmap pixmap = QPixmap(qRound(m_rect.width() * m_devicePixelRatio), qRound(m_rect.height() * m_devicePixelRatio));
+            pixmap.fill(Qt::transparent);
+            pixmap.setDevicePixelRatio(m_devicePixelRatio);
+            QPainter pixmapPainter(&pixmap);
+            // Slow function relying on paths
+            paintRectangleIndividualCorners(&pixmapPainter, QRect(0, 0, m_rect.width(), m_rect.height()));
+
+            QPainter::RenderHints previousRenderHints = painter->renderHints();
+            painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
+            painter->drawPixmap(m_rect, pixmap);
+            painter->setRenderHints(previousRenderHints);
+
         }
 
 
     } else {
         //Paint directly
-        paintRectangle(painter, m_rect);
+        if (m_topLeftRadius < 0
+            && m_topRightRadius < 0
+            && m_bottomLeftRadius < 0
+            && m_bottomRightRadius < 0) {
+            paintRectangle(painter, m_rect);
+        } else {
+            paintRectangleIndividualCorners(painter, m_rect);
+        }
     }
 
 }
@@ -384,6 +454,75 @@ void QSGSoftwareInternalRectangleNode::paintRectangle(QPainter *painter, const Q
     }
 
     painter->setRenderHints(previousRenderHints);
+}
+
+void QSGSoftwareInternalRectangleNode::paintRectangleIndividualCorners(QPainter *painter, const QRect &rect)
+{
+    QPainterPath path;
+
+    const float w = m_penWidth;
+
+    // Radius should never exceeds half of the width or half of the height
+    const float radiusTL = qMin(qMin(rect.width(), rect.height()) * 0.5f, float(m_topLeftRadius < 0. ? m_radius : m_topLeftRadius));
+    const float radiusTR = qMin(qMin(rect.width(), rect.height()) * 0.5f, float(m_topRightRadius < 0. ? m_radius : m_topRightRadius));
+    const float radiusBL = qMin(qMin(rect.width(), rect.height()) * 0.5f, float(m_bottomLeftRadius < 0. ? m_radius : m_bottomLeftRadius));
+    const float radiusBR = qMin(qMin(rect.width(), rect.height()) * 0.5f, float(m_bottomRightRadius < 0 ? m_radius : m_bottomRightRadius));
+
+    const float innerRadiusTL = qMin(qMin(rect.width(), rect.height()) * 0.5f, radiusTL - w);
+    const float innerRadiusTR = qMin(qMin(rect.width(), rect.height()) * 0.5f, radiusTR - w);
+    const float innerRadiusBL = qMin(qMin(rect.width(), rect.height()) * 0.5f, radiusBL - w);
+    const float innerRadiusBR = qMin(qMin(rect.width(), rect.height()) * 0.5f, radiusBR - w);
+
+    QRect rect2 = rect.adjusted(0, 0, 1, 1);
+
+    path.moveTo(rect2.topRight() - QPointF(radiusTR, -w));
+    if (innerRadiusTR > 0.)
+        path.arcTo(QRectF(rect2.topRight() - QPointF(radiusTR + innerRadiusTR, -w), 2. * QSizeF(innerRadiusTR, innerRadiusTR)), 90, -90);
+    else
+        path.lineTo(rect2.topRight() - QPointF(w, -w));
+
+    if (innerRadiusBR > 0.)
+        path.arcTo(QRectF(rect2.bottomRight() - QPointF(radiusBR + innerRadiusBR, radiusBR + innerRadiusBR), 2. * QSizeF(innerRadiusBR, innerRadiusBR)), 0, -90);
+    else
+        path.lineTo(rect2.bottomRight() - QPointF(w, w));
+
+    if (innerRadiusBL > 0.)
+        path.arcTo(QRectF(rect2.bottomLeft() - QPointF(-w, radiusBL + innerRadiusBL), 2. * QSizeF(innerRadiusBL, innerRadiusBL)), -90, -90);
+    else
+        path.lineTo(rect2.bottomLeft() - QPointF(-w, w));
+    if (innerRadiusTL > 0.)
+        path.arcTo(QRectF(rect2.topLeft() + QPointF(w, w), 2. * QSizeF(innerRadiusTL, innerRadiusTL)), -180, -90);
+    else
+        path.lineTo(rect2.topLeft() + QPointF(w, w));
+    path.closeSubpath();
+
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(m_brush);
+    painter->drawPath(path);
+
+    if (w > 0) {
+        path.moveTo(rect2.topRight() - QPointF(radiusTR, 0.));
+        if (radiusTR > 0.)
+            path.arcTo(QRectF(rect2.topRight() - 2. * QPointF(radiusTR, 0.), 2. * QSizeF(radiusTR, radiusTR)), 90, -90);
+        else
+            path.lineTo(rect2.topRight());
+        if (radiusBR > 0.)
+            path.arcTo(QRectF(rect2.bottomRight() - 2. * QPointF(radiusBR, radiusBR), 2. * QSizeF(radiusBR, radiusBR)), 0, -90);
+        else
+            path.lineTo(rect2.bottomRight());
+        if (radiusBL > 0.)
+            path.arcTo(QRectF(rect2.bottomLeft() - 2. * QPointF(0., radiusBL), 2. * QSizeF(radiusBL, radiusBL)), -90, -90);
+        else
+            path.lineTo(rect2.bottomLeft());
+        if (radiusTL > 0.)
+            path.arcTo(QRectF(rect2.topLeft() - 2. * QPointF(0., 0.), 2. * QSizeF(radiusTL, radiusTL)), -180, -90);
+        else
+            path.lineTo(rect2.topLeft());
+        path.closeSubpath();
+
+        painter->setBrush(m_penColor);
+        painter->drawPath(path);
+    }
 }
 
 void QSGSoftwareInternalRectangleNode::generateCornerPixmap()

@@ -21,10 +21,6 @@ Q_TRACE_POINT(qtquick, QSG_update_exit)
 Q_TRACE_POINT(qtquick, QSG_renderScene_entry)
 Q_TRACE_POINT(qtquick, QSG_renderScene_exit)
 
-#ifndef QT_NO_DEBUG
-bool _q_sg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
-#endif
-
 int qt_sg_envInt(const char *name, int defaultValue)
 {
     if (Q_LIKELY(!qEnvironmentVariableIsSet(name)))

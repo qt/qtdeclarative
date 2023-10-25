@@ -1,0 +1,70 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-duplicated-name.html
+\ingroup qmllint-warnings-and-errors
+
+\title Duplicated Name
+\brief Multiple signals or properties share the same name in the same Component.
+
+This warning category has multiple warnings:
+\list
+    \li \l{Duplicated Property Name}
+    \li \l{Duplicated Signal Name}
+\endlist
+
+\section1 Duplicated Property Name
+
+\section2 What happened?
+Multiple properties in the same QML component scope have the same name.
+
+\section2 Why is this bad?
+Components with duplicate property names will not be created at runtime: they will be null instead.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    property int helloWorld
+    property int helloWorld
+}
+\endqml
+You can fix this warning by removing the duplicate property or renaming it:
+\qml
+import QtQuick
+
+Item {
+    property int helloWorld
+}
+\endqml
+
+\section1 Duplicated Signal Name
+
+\section2 What happened?
+Multiple signals in the same QML component scope have the same name.
+
+\section2 Why is this bad?
+Components with duplicate signal names will not be created at runtime: they will be null instead.
+
+\section2 Example
+\qml
+import QtQuick
+
+Rectangle {
+    signal helloWorld
+    signal helloWorld
+}
+\endqml
+You can fix this warning by removing the duplicate signal or renaming it:
+\qml
+import QtQuick
+
+Rectangle {
+    signal helloWorld
+}
+
+\endqml
+*/
+

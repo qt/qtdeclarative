@@ -115,9 +115,13 @@ For cases where the QML module needs a custom plugin class implementation, the
 \l{NO_GENERATE_PLUGIN_SOURCE} and usually the \l{NO_PLUGIN_OPTIONAL} options
 will be needed.
 
+The \c STATIC QML modules also generate the static QML plugins if
+\c NO_PLUGIN is not specified. Targets that import such \c STATIC QML modules
+also need to explicitly link to corresponding QML plugins.
+
 \note
 When using static linking, it might be necessary to use
-\c Q_IMPORT_QML_PLUGIN to ensure that the QML plugin is correctly linked.
+\l {Q_IMPORT_QML_PLUGIN} to ensure that the QML plugin is correctly linked.
 
 \section3 Plugin target with no backing target
 
@@ -325,12 +329,22 @@ need to have their \c QT_QML_SINGLETON_TYPE source property set to \c TRUE, to
 ensure that the \c singleton command is written into the
 \l{Module Definition qmldir Files}{qmldir} file. This must be done in addition
 to the QML file containing the \c {pragma Singleton} statement.
+The source property must be set before creating the module the
+singleton belongs to.
 
 See \l{qt_target_qml_sources_example}{qt_target_qml_sources()} for an example on
 how to set the \c QT_QML_SINGLETON_TYPE property.
 
 \target qmltc-cmake
 \section2 Compiling QML to C++ with QML type compiler
+
+\note The \l{QML type compiler} \c{qmltc} does not guarantee that the generated
+C++ stays API-, source- or binary-compatible between past or future versions,
+even patch versions.
+Furthermore, qmltc-compiled apps using Qt's QML modules will require linking
+against private Qt API, see also
+\l{QML type compiler#compiling-qml-code-with-qmltc}{Compiling QML code with qmltc}.
+
 
 If a QML module has \c{.qml} files, you can compile them to C++ using \l{QML
 type compiler}{qmltc}. Unlike \l{qmlcachegen-auto}{bytecode compilation}, you

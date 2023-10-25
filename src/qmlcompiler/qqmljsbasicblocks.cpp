@@ -225,6 +225,12 @@ void QQmlJSBasicBlocks::generate_JumpNotUndefined(int offset)
     processJump(offset, Conditional);
 }
 
+void QQmlJSBasicBlocks::generate_IteratorNext(int value, int offset)
+{
+    Q_UNUSED(value);
+    processJump(offset, Conditional);
+}
+
 void QQmlJSBasicBlocks::generate_Ret()
 {
     auto currentBlock = basicBlockForInstruction(m_basicBlocks, currentInstructionOffset());
@@ -245,7 +251,7 @@ void QQmlJSBasicBlocks::generate_DefineArray(int argc, int argv)
         return; // empty array/list, nothing to do
 
     m_objectAndArrayDefinitions.append({
-        currentInstructionOffset(), ObjectOrArrayDefinition::arrayClassId, argc, argv
+        currentInstructionOffset(), ObjectOrArrayDefinition::ArrayClassId, argc, argv
     });
 }
 
@@ -255,6 +261,22 @@ void QQmlJSBasicBlocks::generate_DefineObjectLiteral(int internalClassId, int ar
         return;
 
     m_objectAndArrayDefinitions.append({ currentInstructionOffset(), internalClassId, argc, argv });
+}
+
+void QQmlJSBasicBlocks::generate_Construct(int func, int argc, int argv)
+{
+    Q_UNUSED(func)
+    if (argc == 0)
+        return; // empty array/list, nothing to do
+
+    m_objectAndArrayDefinitions.append({
+        currentInstructionOffset(),
+        argc == 1
+            ? ObjectOrArrayDefinition::ArrayConstruct1ArgId
+            : ObjectOrArrayDefinition::ArrayClassId,
+        argc,
+        argv
+    });
 }
 
 void QQmlJSBasicBlocks::processJump(int offset, JumpMode mode)
@@ -582,16 +604,20 @@ void QQmlJSBasicBlocks::adjustTypes()
 
     // Handle the array definitions first.
     // Changing the array type changes the expected element types.
-    auto adjustArray = [&](int instructionOffset) {
+    auto adjustArray = [&](int instructionOffset, int mode) {
         auto it = m_readerLocations.find(instructionOffset);
         if (it == m_readerLocations.end())
             return;
 
         const InstructionAnnotation &annotation = m_annotations[instructionOffset];
+        if (annotation.readRegisters.isEmpty())
+            return;
 
         Q_ASSERT(it->trackedTypes.size() == 1);
         Q_ASSERT(it->trackedTypes[0] == m_typeResolver->containedType(annotation.changedRegister));
-        Q_ASSERT(!annotation.readRegisters.isEmpty());
+
+        if (it->trackedTypes[0]->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence)
+            return; // Constructed something else.
 
         if (!m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->typeReaders.values()))
             setError(adjustErrorMessage(it->trackedTypes[0], it->typeReaders.values()));
@@ -602,11 +628,16 @@ void QQmlJSBasicBlocks::adjustTypes()
         if (QQmlJSScope::ConstPtr valueType = it->trackedTypes[0]->valueType()) {
             const QQmlJSRegisterContent content = annotation.readRegisters.begin().value().content;
             const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(content);
-            if (!m_typeResolver->adjustTrackedType(contained, valueType))
-                setError(adjustErrorMessage(contained, valueType));
 
-            // We still need to adjust the stored type, too.
-            transformRegister(content);
+            // If it's the 1-arg Array ctor, and the argument is a number, that's special.
+            if (mode != ObjectOrArrayDefinition::ArrayConstruct1ArgId
+                    || !m_typeResolver->equals(contained, m_typeResolver->realType())) {
+                if (!m_typeResolver->adjustTrackedType(contained, valueType))
+                    setError(adjustErrorMessage(contained, valueType));
+
+                // We still need to adjust the stored type, too.
+                transformRegister(content);
+            }
         }
 
         handleRegisterReadersAndConversions(it);
@@ -623,13 +654,19 @@ void QQmlJSBasicBlocks::adjustTypes()
         const InstructionAnnotation &annotation = m_annotations[object.instructionOffset];
 
         Q_ASSERT(it->trackedTypes.size() == 1);
-        Q_ASSERT(it->trackedTypes[0] == m_typeResolver->containedType(annotation.changedRegister));
+        QQmlJSScope::ConstPtr resultType = it->trackedTypes[0];
+
+        Q_ASSERT(resultType == m_typeResolver->containedType(annotation.changedRegister));
         Q_ASSERT(!annotation.readRegisters.isEmpty());
 
-        if (!m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->typeReaders.values()))
-            setError(adjustErrorMessage(it->trackedTypes[0], it->typeReaders.values()));
+        if (!m_typeResolver->adjustTrackedType(resultType, it->typeReaders.values()))
+            setError(adjustErrorMessage(resultType, it->typeReaders.values()));
 
-        QQmlJSScope::ConstPtr resultType = it->trackedTypes[0];
+        if (m_typeResolver->equals(resultType, m_typeResolver->varType())
+                || m_typeResolver->equals(resultType, m_typeResolver->variantMapType())) {
+            // It's all variant anyway
+            return;
+        }
 
         const int classSize = m_jsUnitGenerator->jsClassSize(object.internalClassId);
         Q_ASSERT(object.argc >= classSize);
@@ -670,10 +707,15 @@ void QQmlJSBasicBlocks::adjustTypes()
     // from the outer lists/objects to the inner ones.
     for (auto it = m_objectAndArrayDefinitions.crbegin(), end = m_objectAndArrayDefinitions.crend();
          it != end; ++it) {
-        if (it->internalClassId != -1)
+        switch (it->internalClassId) {
+        case ObjectOrArrayDefinition::ArrayClassId:
+        case ObjectOrArrayDefinition::ArrayConstruct1ArgId:
+            adjustArray(it->instructionOffset, it->internalClassId);
+            break;
+        default:
             adjustObject(*it);
-        else
-            adjustArray(it->instructionOffset);
+            break;
+        }
     }
 
     for (auto it = m_readerLocations.begin(), end = m_readerLocations.end(); it != end; ++it) {

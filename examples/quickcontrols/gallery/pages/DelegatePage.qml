@@ -39,121 +39,6 @@ Pane {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            readonly property var delegateComponentMap: {
-                "ItemDelegate": itemDelegateComponent,
-                "SwipeDelegate": swipeDelegateComponent,
-                "CheckDelegate": checkDelegateComponent,
-                "RadioDelegate": radioDelegateComponent,
-                "SwitchDelegate": switchDelegateComponent
-            }
-
-            Component {
-                id: itemDelegateComponent
-
-                ItemDelegate {
-                    text: value
-                    width: ListView.view.width
-
-                    required property string value
-                }
-            }
-
-            Component {
-                id: swipeDelegateComponent
-
-                SwipeDelegate {
-                    id: swipeDelegate
-                    text: value
-                    width: ListView.view.width
-
-                    required property string value
-                    required property Loader delegateItem
-                    required property ListView view
-                    required property int ourIndex
-
-                    Component {
-                        id: removeComponent
-
-                        Rectangle {
-                            color: SwipeDelegate.pressed ? "#333" : "#444"
-                            width: parent.width
-                            height: parent.height
-                            clip: true
-
-                            SwipeDelegate.onClicked: swipeDelegate.view.model.remove(swipeDelegate.ourIndex)
-
-                            Label {
-                                font.pixelSize: swipeDelegate.font.pixelSize
-                                text: qsTr("Remove")
-                                color: "white"
-                                anchors.centerIn: parent
-                            }
-                        }
-                    }
-
-                    SequentialAnimation {
-                        id: removeAnimation
-
-                        PropertyAction {
-                            target: swipeDelegate.delegateItem
-                            property: "ListView.delayRemove"
-                            value: true
-                        }
-                        NumberAnimation {
-                            target: swipeDelegate
-                            property: "height"
-                            to: 0
-                            easing.type: Easing.InOutQuad
-                        }
-                        PropertyAction {
-                            target: swipeDelegate.delegateItem
-                            property: "ListView.delayRemove"
-                            value: false
-                        }
-                    }
-
-                    swipe.left: removeComponent
-                    swipe.right: removeComponent
-                    ListView.onRemove: removeAnimation.start()
-                }
-            }
-
-            Component {
-                id: checkDelegateComponent
-
-                CheckDelegate {
-                    text: value
-
-                    required property string value
-                }
-            }
-
-            ButtonGroup {
-                id: radioButtonGroup
-            }
-
-            Component {
-                id: radioDelegateComponent
-
-                RadioDelegate {
-                    text: value
-
-                    required property string value
-
-                    ButtonGroup.group: radioButtonGroup
-                }
-            }
-
-            Component {
-                id: switchDelegateComponent
-
-                SwitchDelegate {
-                    text: value
-
-                    required property string value
-                }
-            }
-
             model: ListModel {
                 ListElement { type: "ItemDelegate"; value: qsTr("ItemDelegate1") }
                 ListElement { type: "ItemDelegate"; value: qsTr("ItemDelegate2") }
@@ -175,16 +60,119 @@ Pane {
             delegate: Loader {
                 id: delegateLoader
                 width: ListView.view.width
-                sourceComponent: listView.delegateComponentMap[type]
+                sourceComponent: delegateComponentMap[type]
 
                 required property string value
                 required property string type
                 required property var model
                 required property int index
 
-                property Loader delegateItem: delegateLoader
                 property ListView view: listView
-                property int ourIndex: index
+
+                readonly property var delegateComponentMap: {
+                    "ItemDelegate": itemDelegateComponent,
+                    "SwipeDelegate": swipeDelegateComponent,
+                    "CheckDelegate": checkDelegateComponent,
+                    "RadioDelegate": radioDelegateComponent,
+                    "SwitchDelegate": switchDelegateComponent
+                }
+
+                Component {
+                    id: itemDelegateComponent
+
+                    ItemDelegate {
+                        text: delegateLoader.value
+                        width: delegateLoader.width
+                    }
+                }
+
+                Component {
+                    id: swipeDelegateComponent
+
+                    SwipeDelegate {
+                        id: swipeDelegate
+                        text: delegateLoader.value
+                        width: delegateLoader.width
+
+                        Component {
+                            id: removeComponent
+
+                            Rectangle {
+                                color: SwipeDelegate.pressed ? "#333" : "#444"
+                                width: parent.width
+                                height: parent.height
+                                clip: true
+
+                                SwipeDelegate.onClicked: {
+                                    if (delegateLoader.view !== undefined)
+                                        delegateLoader.view.model.remove(delegateLoader.index)
+                                }
+
+                                Label {
+                                    font.pixelSize: swipeDelegate.font.pixelSize
+                                    text: qsTr("Remove")
+                                    color: "white"
+                                    anchors.centerIn: parent
+                                }
+                            }
+                        }
+
+                        SequentialAnimation {
+                            id: removeAnimation
+
+                            PropertyAction {
+                                target: delegateLoader
+                                property: "ListView.delayRemove"
+                                value: true
+                            }
+                            NumberAnimation {
+                                target: swipeDelegate
+                                property: "height"
+                                to: 0
+                                easing.type: Easing.InOutQuad
+                            }
+                            PropertyAction {
+                                target: delegateLoader
+                                property: "ListView.delayRemove"
+                                value: false
+                            }
+                        }
+
+                        swipe.left: removeComponent
+                        swipe.right: removeComponent
+                        ListView.onRemove: removeAnimation.start()
+                    }
+                }
+
+                Component {
+                    id: checkDelegateComponent
+
+                    CheckDelegate {
+                        text: delegateLoader.value
+                    }
+                }
+
+                ButtonGroup {
+                    id: radioButtonGroup
+                }
+
+                Component {
+                    id: radioDelegateComponent
+
+                    RadioDelegate {
+                        text: delegateLoader.value
+
+                        ButtonGroup.group: radioButtonGroup
+                    }
+                }
+
+                Component {
+                    id: switchDelegateComponent
+
+                    SwitchDelegate {
+                        text: delegateLoader.value
+                    }
+                }
             }
         }
     }

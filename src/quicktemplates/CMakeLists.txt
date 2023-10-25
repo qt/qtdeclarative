@@ -26,8 +26,6 @@ qt_internal_add_qml_module(QuickTemplates2
         qquickbuttongroup.cpp qquickbuttongroup_p.h
         qquickcheckbox.cpp qquickcheckbox_p.h
         qquickcheckdelegate.cpp qquickcheckdelegate_p.h
-        qquickcontainer.cpp qquickcontainer_p.h
-        qquickcontainer_p_p.h
         qquickcontentitem.cpp qquickcontentitem_p.h
         qquickcontrol.cpp qquickcontrol_p.h
         qquickcontrol_p_p.h
@@ -36,10 +34,6 @@ qt_internal_add_qml_module(QuickTemplates2
         qquickdeferredpointer_p_p.h
         qquickdelaybutton.cpp qquickdelaybutton_p.h
         qquickdial.cpp qquickdial_p.h
-        qquickdialog.cpp qquickdialog_p.h
-        qquickdialog_p_p.h
-        qquickdialogbuttonbox.cpp qquickdialogbuttonbox_p.h
-        qquickdialogbuttonbox_p_p.h
         qquickdrawer.cpp qquickdrawer_p.h
         qquickdrawer_p_p.h
         qquickframe.cpp qquickframe_p.h
@@ -51,14 +45,6 @@ qt_internal_add_qml_module(QuickTemplates2
         qquickitemdelegate_p_p.h
         qquicklabel.cpp qquicklabel_p.h
         qquicklabel_p_p.h
-        qquickmenu.cpp qquickmenu_p.h
-        qquickmenu_p_p.h
-        qquickmenubar.cpp qquickmenubar_p.h
-        qquickmenubar_p_p.h
-        qquickmenubaritem.cpp qquickmenubaritem_p.h
-        qquickmenubaritem_p_p.h
-        qquickmenuitem.cpp qquickmenuitem_p.h
-        qquickmenuitem_p_p.h
         qquickmenuseparator.cpp qquickmenuseparator_p.h
         qquickoverlay.cpp qquickoverlay_p.h
         qquickoverlay_p_p.h
@@ -90,7 +76,6 @@ qt_internal_add_qml_module(QuickTemplates2
         qquickshortcutcontext_p_p.h
         qquickslider.cpp qquickslider_p.h
         qquickspinbox.cpp qquickspinbox_p.h
-        qquicksplitview.cpp qquicksplitview_p.h
         qquickstackelement.cpp
         qquickstackelement_p_p.h
         qquickstackview.cpp qquickstackview_p.cpp qquickstackview_p.h
@@ -98,10 +83,8 @@ qt_internal_add_qml_module(QuickTemplates2
         qquickswipe_p.h
         qquickswipedelegate.cpp qquickswipedelegate_p.h
         qquickswipedelegate_p_p.h
-        qquickswipeview.cpp qquickswipeview_p.h
         qquickswitch.cpp qquickswitch_p.h
         qquickswitchdelegate.cpp qquickswitchdelegate_p.h
-        qquicktabbar.cpp qquicktabbar_p.h
         qquicktabbutton.cpp qquicktabbutton_p.h
         qquicktextarea.cpp qquicktextarea_p.h
         qquicktextarea_p_p.h
@@ -148,6 +131,31 @@ qt_internal_extend_target(QuickTemplates2 CONDITION TARGET Qt::QmlModels
 qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_accessibility
     SOURCES
         accessible/qaccessiblequickpage.cpp accessible/qaccessiblequickpage_p.h
+)
+
+qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quicktemplates2_container
+    SOURCES
+    qquickcontainer.cpp qquickcontainer_p.h
+    qquickcontainer_p_p.h
+    qquickdialog.cpp qquickdialog_p.h
+    qquickdialog_p_p.h
+    qquickdialogbuttonbox.cpp qquickdialogbuttonbox_p.h
+    qquickdialogbuttonbox_p_p.h
+    qquickmenubar.cpp qquickmenubar_p.h
+    qquickmenubar_p_p.h
+    qquickmenubaritem.cpp qquickmenubaritem_p.h
+    qquickmenubaritem_p_p.h
+    qquicksplitview.cpp qquicksplitview_p.h
+    qquickswipeview.cpp qquickswipeview_p.h
+    qquicktabbar.cpp qquicktabbar_p.h
+)
+
+qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_qml_object_model
+    SOURCES
+        qquickmenu.cpp qquickmenu_p.h
+        qquickmenu_p_p.h
+        qquickmenuitem.cpp qquickmenuitem_p.h
+        qquickmenuitem_p_p.h
 )
 
 qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quick_tableview

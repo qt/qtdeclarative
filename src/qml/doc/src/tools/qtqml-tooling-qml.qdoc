@@ -1,0 +1,107 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtqml-tooling-qml.html
+\title qml
+\brief Overview of the qml command line utility.
+\ingroup qtqml-tooling
+
+\section1 The qml utility
+\c The qml utility tool loads QML documents and creates a window to show the scene
+if your QML document includes a visual item. You can also evaluate non-visual QML
+documents with it.
+It is mainly meant for testing your QML applications or components quickly
+as described in \l {Prototyping with the QML Runtime Tool}{here}.
+
+\table
+\header
+    \li Usage:
+\row
+    \li qml [\l{options}] files... [-- args...]
+\endtable
+
+\section2 options
+
+\table
+\header
+    \li Option
+    \li Description
+\row
+    \li -h, --help
+    \li Displays help on commandline options.
+\row
+    \li --help-all
+    \li Displays help, including generic Qt options.
+\row
+   \li -v, --version
+   \li Displays version information.
+\row
+    \li -a, --apptype <core|gui|widget>
+    \li Select which application class to use. Default is gui.
+\row
+    \li -I <path>
+    \li Prepend the given path to the import paths.
+\row
+    \li -f <file>
+    \li Load the given file as a QML file.
+\row
+    \li -c, --config <file>
+    \li Load the given built-in configuration or configuration file.
+\row
+    \li --list-conf
+    \li List the built-in configurations.
+\row
+    \li --translation <file>
+    \li Load the given file as the translations file.
+\row
+    \li --dummy-data <file>
+    \li Load QML files from the given directory as context properties. (deprecated)
+\row
+    \li --desktop
+    \li Force use of desktop OpenGL (AA_UseDesktopOpenGL).
+\row
+    \li --gles
+    \li Force use of GLES (AA_UseOpenGLES).
+\row
+    \li --software
+    \li Force use of software rendering (AA_UseSoftwareOpenGL).
+\row
+    \li --core-profile
+    \li Force use of OpenGL Core Profile.
+\row
+    \li --disable-context-sharing
+    \li Disable the use of a shared GL context for QtQuick Windows
+\row
+    \li --enable-shader-cache
+    \li Enable persistent caching of generated shaders
+\row
+    \li --transparent
+    \li Requests an alpha channel in order to enable semi-transparent windows.
+\row
+    \li --multisample
+    \li Requests 4x multisample antialiasing.
+\row
+    \li --quiet
+    \li Suppress all output.
+\row
+    \li --verbose
+    \li Print information about what qml is doing, like specific file URLs being loaded.
+\row
+    \li --slow-animations
+    \li Run all animations in slow motion.
+\row
+    \li --fixed-animations
+    \li Run animations off animation tick rather than wall time.
+\row
+    \li -r, --rhi <backend>
+    \li Set the backend for the Qt graphics abstraction (RHI). Backend is one of:
+        default, vulkan, metal, d3d11, gl
+\row
+    \li -S <selector>
+    \li Add selector to the list of QQmlFileSelectors.
+
+\endtable
+
+
+*/

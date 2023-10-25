@@ -24,6 +24,7 @@
 #include <QtQml/private/qqmlanybinding_p.h>
 
 #include <QtCore/qiterable.h>
+#include <QtCore/qpointer.h>
 
 #ifdef Q_CC_MSVC
 // MSVC2010 warns about 'unused variable t', even if it's used in t->~T()

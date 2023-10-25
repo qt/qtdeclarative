@@ -1059,11 +1059,17 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                 };
     QTest::newRow("IsNotAnEntryOfEnum")
             << QStringLiteral("IsNotAnEntryOfEnum.qml")
-            << Result{ { Message{ QStringLiteral("\"Hour\" is not an entry of enum \"Mode\"."), 13,
-                                  62, QtInfoMsg } },
+            << Result{ {
+                         Message {
+                                  QStringLiteral("Member \"Mode\" not found on type \"Item\""), 12,
+                                  29, QtWarningMsg },
+                          Message{
+                                  QStringLiteral("\"Hour\" is not an entry of enum \"Mode\"."), 13,
+                                  62, QtInfoMsg }
+                       },
                        {},
-                       { Message{ QStringLiteral("Hours") } },
-                       Result::ExitsNormally };
+                       { Message{ QStringLiteral("Hours") } }
+               };
 
     QTest::newRow("StoreNameMethod")
             << QStringLiteral("storeNameMethod.qml")
@@ -1074,6 +1080,27 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
             << Result { { Message {
                     QStringLiteral("Function without return type annotation returns double")
                } } };
+
+    QTest::newRow("lowerCaseQualifiedImport")
+            << QStringLiteral("lowerCaseQualifiedImport.qml")
+            << Result{ {
+                       Message{ u"Import qualifier 'test' must start with a capital letter."_s },
+                       Message{
+                               u"Namespace 'test' of 'test.Rectangle' must start with an upper case letter."_s },
+               } };
+    QTest::newRow("lowerCaseQualifiedImport2")
+            << QStringLiteral("lowerCaseQualifiedImport2.qml")
+            << Result{ {
+                       Message{ u"Import qualifier 'test' must start with a capital letter."_s },
+                       Message{
+                               u"Namespace 'test' of 'test.Item' must start with an upper case letter."_s },
+                       Message{
+                               u"Namespace 'test' of 'test.Rectangle' must start with an upper case letter."_s },
+                       Message{
+                               u"Namespace 'test' of 'test.color' must start with an upper case letter."_s },
+                       Message{
+                               u"Namespace 'test' of 'test.Grid' must start with an upper case letter."_s },
+               } };
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -1251,6 +1278,8 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("StringToDateTime") << QStringLiteral("stringToDateTime.qml");
     QTest::newRow("ScriptInTemplate") << QStringLiteral("scriptInTemplate.qml");
     QTest::newRow("AddressableValue") << QStringLiteral("addressableValue.qml");
+    QTest::newRow("WriteListProperty") << QStringLiteral("writeListProperty.qml");
+    QTest::newRow("dontConfuseMemberPrintWithGlobalPrint") << QStringLiteral("findMemberPrint.qml");
 }
 
 void TestQmllint::cleanQmlCode()
@@ -1320,7 +1349,9 @@ void TestQmllint::compilerWarnings()
 
     auto categories = QQmlJSLogger::defaultCategories();
 
-    auto category = std::find(categories.begin(), categories.end(), qmlCompiler);
+    auto category = std::find_if(categories.begin(), categories.end(), [](const QQmlJS::LoggerCategory& category) {
+        return category.id() == qmlCompiler;
+    });
     Q_ASSERT(category != categories.end());
 
     if (enableCompilerWarnings) {
@@ -1446,6 +1477,7 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
     }
 
     bool success = lintResult == QQmlJSLinter::LintSuccess;
+    QEXPECT_FAIL("qtquickdialog", "Will fail until QTBUG-104091 is implemented", Abort);
     QVERIFY2(success == shouldSucceed, QJsonDocument(jsonOutput).toJson());
 
     if (warnings) {
@@ -1690,7 +1722,9 @@ void TestQmllint::qrcUrlImport()
 void TestQmllint::attachedPropertyReuse()
 {
     auto categories = QQmlJSLogger::defaultCategories();
-    auto category = std::find(categories.begin(), categories.end(), qmlAttachedPropertyReuse);
+    auto category = std::find_if(categories.begin(), categories.end(), [](const QQmlJS::LoggerCategory& category) {
+        return category.id() == qmlAttachedPropertyReuse;
+    });
     Q_ASSERT(category != categories.end());
 
     category->setLevel(QtWarningMsg);
@@ -1877,6 +1911,9 @@ void TestQmllint::testPlugin()
             Result { { Message { u"QtQuick.Controls and NO QtQuick present"_s } } });
     // Verify that none of the passes do anything when they're not supposed to
     runTest("nothing_pluginTest.qml", Result::clean());
+
+    QVERIFY(runQmllint("settings/plugin/elemenpass_pluginSettingTest.qml", true, QStringList(), false)
+                    .isEmpty());
 }
 
 // TODO: Eventually tests for (real) plugins need to be moved into a separate file

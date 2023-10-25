@@ -59,7 +59,7 @@ Rectangle {
             }
         }
         delegate: Rectangle {
-            width: parent.width
+            width: wasmList.width
             height: 50
             color: index % 2 === 0 ? "#F5F5F5" : "#FFFFFF"
 

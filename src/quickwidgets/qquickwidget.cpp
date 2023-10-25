@@ -989,6 +989,8 @@ static inline QPlatformBackingStoreRhiConfig::Api graphicsApiToBackingStoreRhiAp
         return QPlatformBackingStoreRhiConfig::Vulkan;
     case QSGRendererInterface::Direct3D11:
         return QPlatformBackingStoreRhiConfig::D3D11;
+    case QSGRendererInterface::Direct3D12:
+        return QPlatformBackingStoreRhiConfig::D3D12;
     case QSGRendererInterface::Metal:
         return QPlatformBackingStoreRhiConfig::Metal;
     default:

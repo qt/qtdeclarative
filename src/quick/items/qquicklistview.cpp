@@ -876,10 +876,12 @@ void QQuickListViewPrivate::layoutVisibleItems(int fromModelIndex)
         FxListItemSG *firstItem = static_cast<FxListItemSG *>(visibleItems.constFirst());
         bool fixedCurrent = currentItem && firstItem->item == currentItem->item;
 
+#if QT_CONFIG(quick_viewtransitions)
         /* Set position of first item in list view when populate transition is configured, as it doesn't set
            while adding visible item (addVisibleItem()) to the view */
         if (transitioner && transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true))
             resetFirstItemPosition(isContentFlowReversed() ? -firstItem->position()-firstItem->size() : firstItem->position());
+#endif
 
         firstVisibleItemPosition = firstItem->position();
         qreal sum = firstItem->size();
@@ -2219,7 +2221,7 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     to connected signals and bindings.
 
     \note For an item to be pooled, it needs to be completely flicked out of the bounds
-    of the view, \e including the extra margins set with \l {ListView::}{cacheBuffer.}
+    of the view, \e including the extra margins set with \l {ListView::}{cacheBuffer}.
     Some items will also never be pooled or reused, such as \l currentItem.
 
     The following example shows a delegate that animates a spinning rectangle. When

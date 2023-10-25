@@ -110,7 +110,7 @@ class QQmlDomAstCreator final : public AST::Visitor
             return std::get<ScriptElements::ScriptList>(std::move(value));
         }
 
-        void setSemanticScope(const QQmlJSScope::Ptr &scope)
+        void setSemanticScope(const QQmlJSScope::ConstPtr &scope)
         {
             if (auto x = std::get_if<ScriptElementVariant>(&value)) {
                 x->base()->setSemanticScope(scope);
@@ -134,7 +134,7 @@ private:
     QList<ScriptStackElement> scriptNodeStack;
     QVector<int> arrayBindingLevels;
     FileLocations::Tree rootMap;
-    bool m_enableScriptExpressions;
+    bool m_enableScriptExpressions = false;
 
     template<typename T>
     QmlStackElement &currentEl(int idx = 0)
@@ -187,7 +187,7 @@ private:
     void removeCurrentNode(std::optional<DomType> expectedType);
     void removeCurrentScriptNode(std::optional<DomType> expectedType);
 
-    void pushEl(Path p, DomValue it, AST::Node *n)
+    void pushEl(Path p, const DomValue &it, AST::Node *n)
     {
         nodeStack.append({ p, it, createMap(it.kind, p, n) });
     }
@@ -196,9 +196,9 @@ private:
 
     FileLocations::Tree createMap(DomType k, Path p, AST::Node *n);
 
-    const ScriptElementVariant &finalizeScriptExpression(const ScriptElementVariant &element,
-                                                         Path pathFromOwner,
-                                                         const FileLocations::Tree &base);
+    const ScriptElementVariant &
+    finalizeScriptExpression(const ScriptElementVariant &element, Path pathFromOwner,
+                             const FileLocations::Tree &ownerFileLocations);
 
     const ScriptElementVariant &finalizeScriptList(AST::Node *ast, FileLocations::Tree base);
     void setScriptExpression (const std::shared_ptr<ScriptExpression>& value);
@@ -296,7 +296,7 @@ private:
     ScriptElementVariant scriptElementForQualifiedId(AST::UiQualifiedId *expression);
 
 public:
-    QQmlDomAstCreator(MutableDomItem qmlFile);
+    explicit QQmlDomAstCreator(const MutableDomItem &qmlFile);
 
     bool visit(AST::UiProgram *program) override;
     void endVisit(AST::UiProgram *) override;
@@ -413,6 +413,9 @@ public:
     bool visit(AST::ForEachStatement *) override;
     void endVisit(AST::ForEachStatement *) override;
 
+    bool visit(AST::ClassExpression *) override;
+    void endVisit(AST::ClassExpression *) override;
+
     // lists of stuff whose children do not need a qqmljsscope: visitation order can be custom
     bool visit(AST::ArgumentList *) override;
     bool visit(AST::UiParameterList *) override;
@@ -447,7 +450,8 @@ public:
 class QQmlDomAstCreatorWithQQmlJSScope : public AST::Visitor
 {
 public:
-    QQmlDomAstCreatorWithQQmlJSScope(MutableDomItem &qmlFile, QQmlJSLogger *logger);
+    QQmlDomAstCreatorWithQQmlJSScope(MutableDomItem &qmlFile, QQmlJSLogger *logger,
+                                     QQmlJSImporter *importer);
 
 #define X(name)                       \
     bool visit(AST::name *) override; \
@@ -467,7 +471,6 @@ public:
         m_domCreator.enableScriptExpressions(enable);
     }
 
-    QQmlJSImporter &importer() { return m_importer; }
     QQmlJSImportVisitor &scopeCreator() { return m_scopeCreator; }
 
 private:
@@ -592,8 +595,8 @@ private:
     }
 
     QQmlJSScope::Ptr m_root;
-    QQmlJSLogger *m_logger;
-    QQmlJSImporter m_importer;
+    QQmlJSLogger *m_logger = nullptr;
+    QQmlJSImporter *m_importer = nullptr;
     QString m_implicitImportDirectory;
     QQmlJSImportVisitor m_scopeCreator;
     QQmlDomAstCreator m_domCreator;
@@ -606,7 +609,7 @@ private:
         InactiveVisitor inactiveVisitor;
     };
     std::optional<Marker> m_marker;
-    bool m_enableScriptExpressions;
+    bool m_enableScriptExpressions = false;
 };
 
 } // end namespace Dom

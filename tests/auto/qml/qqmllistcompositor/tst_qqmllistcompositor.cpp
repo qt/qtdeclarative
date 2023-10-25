@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 #include <qtest.h>
 #include <private/qqmllistcompositor_p.h>
 
@@ -179,7 +180,7 @@ void tst_qqmllistcompositor::find()
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
-    foreach (const Range &range, ranges)
+    for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
     compositor.find(startGroup, startIndex);
@@ -241,7 +242,7 @@ void tst_qqmllistcompositor::findInsertPosition()
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
-    foreach (const Range &range, ranges)
+    for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
     QQmlListCompositor::insert_iterator it = compositor.findInsertPosition(group, index);
@@ -499,7 +500,7 @@ void tst_qqmllistcompositor::clearFlags()
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
-    foreach (const Range &range, ranges)
+    for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
     QVector<C::Remove> removes;
@@ -681,7 +682,7 @@ void tst_qqmllistcompositor::setFlags()
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
-    foreach (const Range &range, ranges)
+    for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
     QVector<C::Insert> inserts;
@@ -968,7 +969,7 @@ void tst_qqmllistcompositor::move()
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
-    foreach (const Range &range, ranges)
+    for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
     QVector<C::Remove> removes;
@@ -1202,7 +1203,7 @@ void tst_qqmllistcompositor::listItemsInserted()
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
-    foreach (const Range &range, ranges)
+    for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
     QVector<C::Insert> inserts;
@@ -1338,7 +1339,7 @@ void tst_qqmllistcompositor::listItemsRemoved()
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
-    foreach (const Range &range, ranges)
+    for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
     QVector<C::Remove> removes;
@@ -1532,7 +1533,7 @@ void tst_qqmllistcompositor::listItemsMoved()
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
-    foreach (const Range &range, ranges)
+    for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
     QVector<C::Remove> removes;
@@ -1612,7 +1613,7 @@ void tst_qqmllistcompositor::listItemsChanged()
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
-    foreach (const Range &range, ranges)
+    for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
     QVector<C::Change> changes;

@@ -23,6 +23,8 @@ QT_REQUIRE_CONFIG(quick_listview);
 
 #include <private/qtquickglobal_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickListView;

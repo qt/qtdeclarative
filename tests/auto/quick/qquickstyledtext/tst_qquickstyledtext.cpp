@@ -127,6 +127,7 @@ void tst_qquickstyledtext::textOutput_data()
     QTest::newRow("space leading bold") << "this is<b> bold</b>" << "this is bold" << (FormatList() << Format(Format::Bold, 7, 5)) << false;
     QTest::newRow("space trailing bold") << "this is <b>bold </b>" << "this is bold " << (FormatList() << Format(Format::Bold, 8, 5)) << false;
     QTest::newRow("img") << "a<img src=\"blah.png\"/>b" << "a  b" << FormatList() << false;
+    QTest::newRow("img") << "a<img />b" << "a  b" << FormatList() << false;
     QTest::newRow("tag mix") << "<f6>ds<b></img><pro>gfh</b><w><w>ghj</stron><ql><sl><pl>dfg</j6><img><bol><r><prp>dfg<bkj></b><up><string>ewrq</al><bl>jklhj<zl>" << "dsgfhghjdfgdfgewrqjklhj" << (FormatList() << Format(Format::Bold, 2, 3)) << false;
     QTest::newRow("named html entities") << "&gt; &lt; &amp; &quot; &nbsp;" << QLatin1String("> < & \" ") + QChar(QChar::Nbsp) << FormatList() << false;
     QTest::newRow("invalid html entities") << "a &hello & a &goodbye;" << "a &hello & a " << FormatList() << false;

@@ -15,6 +15,7 @@
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickheaderview_p.h>
+#include <QtQuickTemplates2/private/qquicklabel_p.h>
 #include <private/qquickheaderview_p_p.h>
 
 using namespace QQuickVisualTestUtils;
@@ -134,6 +135,10 @@ class TestTableModelWithHeader : public TestTableModel {
 
     Q_OBJECT
 public:
+    enum Role {
+        CustomRole = Qt::UserRole
+    };
+
     void setRowCount(int count) override
     {
         vData.resize(count);
@@ -145,6 +150,17 @@ public:
         hData.resize(count);
         TestTableModel::setColumnCount(count);
     }
+
+    QVariant data(const QModelIndex &index, int role) const override
+    {
+        switch (role) {
+        case CustomRole:
+            return QString("%1-%2").arg(index.column()).arg(index.row());
+        default:
+            return TestTableModel::data(index, role);
+        }
+    }
+
     Q_INVOKABLE QVariant headerData(int section, Qt::Orientation orientation,
         int role = Qt::DisplayRole) const override
     {
@@ -157,6 +173,8 @@ public:
             auto &data = orientation == Qt::Horizontal ? hData : vData;
             return data[section].toString();
         }
+        case CustomRole:
+            return (orientation == Qt::Horizontal ? "c" : "r") + QString::number(section);
         default:
             return QVariant();
         }
@@ -176,6 +194,13 @@ public:
         data[section] = value;
         emit headerDataChanged(orientation, section, section);
         return true;
+    }
+
+    Q_INVOKABLE QHash<int, QByteArray> roleNames() const override
+    {
+        auto names = TestTableModel::roleNames();
+        names[CustomRole] = "customRole";
+        return names;
     }
 
 private:
@@ -202,6 +227,8 @@ private slots:
 
     void resizableHandlerBlockingEvents();
 
+    void headerData();
+
 private:
     QQmlEngine *engine;
     QString errorString;
@@ -218,7 +245,7 @@ private:
 };
 
 tst_QQuickHeaderView::tst_QQuickHeaderView()
-    : QQmlDataTest(QT_QMLTEST_DATADIR)
+    : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::FailOnWarnings)
 {
 }
 
@@ -302,10 +329,14 @@ void tst_QQuickHeaderView::testOrientation()
     QVERIFY(vhv);
 
     hhv->setSyncView(&otherView);
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+        ".*Setting syncDirection other than Qt::Horizontal is invalid."));
     hhv->setSyncDirection(Qt::Vertical);
     QVERIFY(QQuickTest::qWaitForPolish(hhv));
 
     vhv->setSyncView(&otherView);
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+        ".*Setting syncDirection other than Qt::Vertical is invalid."));
     vhv->setSyncDirection(Qt::Horizontal);
     QVERIFY(QQuickTest::qWaitForPolish(vhv));
 
@@ -395,6 +426,23 @@ void tst_QQuickHeaderView::resizableHandlerBlockingEvents()
     QVERIFY(mouseArea);
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(mouseArea));
     QVERIFY(mouseArea->isPressed());
+}
+
+void tst_QQuickHeaderView::headerData()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("headerData.qml"));
+    QVERIFY2(helper.errorMessage.isEmpty(), helper.errorMessage);
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto headerView = window->property("headerView").value<QQuickHeaderViewBase *>();
+    QVERIFY(headerView);
+    const auto firstHeaderCell = headerView->itemAtIndex(headerView->index(0, 0));
+    QVERIFY(firstHeaderCell);
+    const auto label = firstHeaderCell->findChild<QQuickLabel *>();
+    QVERIFY(label);
+    QCOMPARE(label->text(), "c0");
 }
 
 QTEST_MAIN(tst_QQuickHeaderView)

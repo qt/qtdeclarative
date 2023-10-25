@@ -6,6 +6,7 @@
     \image qml-shadereffects-example.png
     \brief A Qt Quick example demonstrating the use of shader effects.
     \ingroup qtquickexamples
+    \examplecategory {Graphics & Multimedia}
 
     This example demonstrates a couple of visual effects that you can perform
     with shaders in Qt Quick. It applies five different effects on a text and

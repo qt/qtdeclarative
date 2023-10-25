@@ -175,11 +175,8 @@ private:
 
     QSGGeometry *m_geometry;
 
-    QT_WARNING_PUSH
-    QT_WARNING_DISABLE_GCC("-Wattributes")
-    [[maybe_unused]] int m_reserved_start_index;
-    [[maybe_unused]] int m_reserved_end_index;
-    QT_WARNING_POP
+    Q_DECL_UNUSED_MEMBER int m_reserved_start_index;
+    Q_DECL_UNUSED_MEMBER int m_reserved_end_index;
 
     const QMatrix4x4 *m_matrix;
     const QSGClipNode *m_clip_list;

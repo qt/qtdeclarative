@@ -3,6 +3,7 @@
 #include "qquickpalettecolorprovider_p.h"
 
 #include <QtQuick/private/qquickabstractpaletteprovider_p.h>
+#include <QtGui/private/qpalette_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -15,31 +16,6 @@ static QPalette::ColorGroup adjustCg(QPalette::ColorGroup group)
 {
     return group == QPalette::All ? QPalette::Active : group;
 }
-
-// Begin copy from qpalette.cpp
-static constexpr QPalette::ResolveMask colorRoleOffset(QPalette::ColorGroup colorGroup)
-{
-    Q_ASSERT(colorGroup < QPalette::NColorGroups);
-    // Exclude NoRole; that bit is used for AccentColor
-    return (qToUnderlying(QPalette::NColorRoles) - 1) * qToUnderlying(colorGroup);
-}
-
-// TODO: Share the function by private interface in qtbase
-static constexpr QPalette::ResolveMask bitPosition(QPalette::ColorGroup colorGroup,
-                                                   QPalette::ColorRole colorRole)
-{
-    // Map AccentColor into NoRole for resolving purposes
-    if (colorRole == QPalette::AccentColor)
-        colorRole = QPalette::NoRole;
-
-    return colorRole + colorRoleOffset(colorGroup);
-}
-
-static_assert(bitPosition(QPalette::ColorGroup(QPalette::NColorGroups - 1),
-                          QPalette::ColorRole(QPalette::NColorRoles - 1))
-                  < sizeof(QPalette::ResolveMask) * CHAR_BIT,
-              "The resolve mask type is not wide enough to fit the entire bit mask.");
-// End copy from qpalette.cpp
 
 class DefaultPalettesProvider : public QQuickAbstractPaletteProvider
 {
@@ -79,9 +55,9 @@ bool QQuickPaletteColorProvider::resetColor(QPalette::ColorGroup group, QPalette
 
     if (group == QPalette::All) {
         for (int g = QPalette::Active; g < QPalette::NColorGroups; ++g)
-            unsetResolveMask |= (QPalette::ResolveMask(1) << bitPosition(QPalette::ColorGroup(g), role));
+            unsetResolveMask |= (QPalette::ResolveMask(1) << QPalettePrivate::bitPosition(QPalette::ColorGroup(g), role));
     } else {
-        unsetResolveMask = (QPalette::ResolveMask(1) << bitPosition(group, role));
+        unsetResolveMask = (QPalette::ResolveMask(1) << QPalettePrivate::bitPosition(group, role));
     }
 
     m_requestedPalette->setResolveMask(m_requestedPalette->resolveMask() & ~unsetResolveMask);
@@ -100,7 +76,7 @@ bool QQuickPaletteColorProvider::resetColor(QPalette::ColorGroup group)
         QPalette::ResolveMask mask = 0;
         for (int roleIndex = QPalette::WindowText; roleIndex < QPalette::NColorRoles; ++roleIndex) {
             const auto cr = QPalette::ColorRole(roleIndex);
-            mask |= (QPalette::ResolveMask(1) << bitPosition(group, cr));
+            mask |= (QPalette::ResolveMask(1) << QPalettePrivate::bitPosition(group, cr));
         }
         return mask;
     };

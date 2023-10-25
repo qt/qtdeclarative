@@ -271,6 +271,8 @@ private slots:
     void attachedPropertiesOnEditDelegate();
     void requiredPropertiesOnEditDelegate();
     void resettingRolesRespected();
+    void checkScroll_data();
+    void checkScroll();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -302,6 +304,18 @@ QPoint tst_QQuickTableView::getContextRowAndColumn(const QQuickItem *item) const
     const int row = context->contextProperty("row").toInt();
     const int column = context->contextProperty("column").toInt();
     return QPoint(column, row);
+}
+
+static void sendWheelEvent(QQuickWindow *window, QPoint pos, QPoint angleDelta,
+                           QPoint pixelDelta,
+                           Qt::KeyboardModifiers modifiers = Qt::NoModifier,
+                           Qt::ScrollPhase phase = Qt::NoScrollPhase,
+                           bool inverted = false) {
+    QWheelEvent wheelEvent(pos, window->mapToGlobal(pos), pixelDelta,
+                           angleDelta, Qt::NoButton, modifiers, phase,
+                           inverted);
+    QGuiApplication::sendEvent(window, &wheelEvent);
+    qApp->processEvents();
 }
 
 void tst_QQuickTableView::setAndGetModel_data()
@@ -4394,7 +4408,7 @@ void tst_QQuickTableView::warnOnWrongModelInSelectionModel()
     selectionModel.setModel(&model2);
 
     // And change currentIndex. This will produce a warning.
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*model differs.*"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*TableView.selectionModel.model.*"));
     selectionModel.setCurrentIndex(model2.index(0, 0), QItemSelectionModel::NoUpdate);
 }
 
@@ -7320,6 +7334,41 @@ void tst_QQuickTableView::resettingRolesRespected()
     QVERIFY(!tableView->property("success").toBool());
     model.useCustomRoleNames(true);
     QTRY_VERIFY(tableView->property("success").toBool());
+}
+
+void tst_QQuickTableView::checkScroll_data()
+{
+    QTest::addColumn<bool>("resizableColumns");
+    QTest::addColumn<bool>("resizableRows");
+    QTest::newRow("T, T") << true << true;
+    QTest::newRow("T, F") << true << false;
+    QTest::newRow("F, T") << false << true;
+    QTest::newRow("F, F") << false << false;
+}
+
+/*!
+    Make sure that the TableView is scrollable regardless
+    of the values of resizableColumns and resizableRows.
+*/
+void tst_QQuickTableView::checkScroll() // QTBUG-116566
+{
+    QFETCH(bool, resizableColumns);
+    QFETCH(bool, resizableRows);
+    LOAD_TABLEVIEW("plaintableview.qml"); // gives us 'tableView' variable
+
+    tableView->setResizableColumns(resizableColumns);
+    tableView->setResizableRows(resizableRows);
+
+    auto model = TestModelAsVariant(20, 10);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Scroll with the mouse wheel
+    sendWheelEvent(view, {10, 10}, {0, -120}, {0, -120});
+
+    // Check that scrolling succeeded
+    QTRY_COMPARE_GT(tableView->contentY(), 20);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

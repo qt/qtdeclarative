@@ -74,15 +74,16 @@ The current contexts are:
 \endlist
  */
 
-void Base::dump(Sink sink) const {
-    if (hasSquareBrackets())
+void Base::dump(Sink sink, const QString &name, bool hasSquareBrackets) const {
+    if (hasSquareBrackets)
         sink(u"[");
-    sink(name());
-    if (hasSquareBrackets())
+    sink(name);
+    if (hasSquareBrackets)
         sink(u"]");
 }
 
-Filter::Filter(function<bool(DomItem)> f, QStringView filterDescription): filterFunction(f), filterDescription(filterDescription) {}
+Filter::Filter(function<bool(const DomItem &)> f, QStringView filterDescription)
+    : filterFunction(f), filterDescription(filterDescription) {}
 
 QString Filter::name() const {
     return QLatin1String("?(%1)").arg(filterDescription); }
@@ -100,9 +101,6 @@ enum class ParserState{
     End
 };
 
-PathComponent::~PathComponent(){
-}
-
 int PathComponent::cmp(const PathComponent &p1, const PathComponent &p2)
 {
     int k1 = static_cast<int>(p1.kind());
@@ -115,19 +113,19 @@ int PathComponent::cmp(const PathComponent &p1, const PathComponent &p2)
     case Kind::Empty:
         return 0;
     case Kind::Field:
-        return p1.data.field.fieldName.compare(p2.data.field.fieldName);
+        return std::get<Field>(p1.m_data).fieldName.compare(std::get<Field>(p2.m_data).fieldName);
     case Kind::Index:
-        if (p1.data.index.indexValue < p2.data.index.indexValue)
+        if (std::get<Index>(p1.m_data).indexValue < std::get<Index>(p2.m_data).indexValue)
             return -1;
-        if (p1.data.index.indexValue > p2.data.index.indexValue)
+        if (std::get<Index>(p1.m_data).indexValue > std::get<Index>(p2.m_data).indexValue)
             return 1;
         return 0;
     case Kind::Key:
-        return p1.data.key.keyValue.compare(p2.data.key.keyValue);
+        return std::get<Key>(p1.m_data).keyValue.compare(std::get<Key>(p2.m_data).keyValue);
     case Kind::Root:
     {
-        PathRoot k1 = p1.data.root.contextKind;
-        PathRoot k2 = p2.data.root.contextKind;
+        PathRoot k1 = std::get<Root>(p1.m_data).contextKind;
+        PathRoot k2 = std::get<Root>(p2.m_data).contextKind;
         if (k1 == PathRoot::Env || k1 == PathRoot::Universe)
             k1 = PathRoot::Top;
         if (k2 == PathRoot::Env || k2 == PathRoot::Universe)
@@ -135,23 +133,26 @@ int PathComponent::cmp(const PathComponent &p1, const PathComponent &p2)
         int c = int(k1) - int(k2);
         if (c != 0)
             return c;
-        return p1.data.root.contextName.compare(p2.data.root.contextName);
+        return std::get<Root>(p1.m_data).contextName.compare(std::get<Root>(p2.m_data).contextName);
     }
     case Kind::Current:
     {
-        int c = int(p1.data.current.contextKind) - int(p2.data.current.contextKind);
+        int c = int(std::get<Current>(p1.m_data).contextKind)
+                - int(std::get<Current>(p2.m_data).contextKind);
         if (c != 0)
             return c;
-        return p1.data.current.contextName.compare(p2.data.current.contextName);
+        return std::get<Current>(p1.m_data).contextName
+                .compare(std::get<Current>(p2.m_data).contextName);
     }
     case Kind::Any:
         return 0;
     case Kind::Filter:
     {
-        int c = p1.data.filter.filterDescription.compare(p2.data.filter.filterDescription);
+        int c = std::get<Filter>(p1.m_data).filterDescription
+                        .compare(std::get<Filter>(p2.m_data).filterDescription);
         if (c != 0)
             return c;
-        if (p1.data.filter.filterDescription.startsWith(u"<")) {
+        if (std::get<Filter>(p1.m_data).filterDescription.startsWith(u"<")) {
             // assuming non comparable native code (target comparison is not portable)
             auto pp1 = &p1;
             auto pp2 = &p2;
@@ -213,7 +214,7 @@ PathIterator Path::end() const
 PathRoot Path::headRoot() const
 {
     auto &comp = component(0);
-    if (PathEls::Root const * r = comp.base()->asRoot())
+    if (PathEls::Root const * r = comp.asRoot())
         return r->contextKind;
     return PathRoot::Other;
 }
@@ -221,7 +222,7 @@ PathRoot Path::headRoot() const
 PathCurrent Path::headCurrent() const
 {
     auto comp = component(0);
-    if (PathEls::Current const * c = comp.base()->asCurrent())
+    if (PathEls::Current const * c = comp.asCurrent())
         return c->contextKind;
     return PathCurrent::Other;
 }
@@ -248,10 +249,10 @@ index_type Path::headIndex(index_type defaultValue) const
     return component(0).index(defaultValue);
 }
 
-function<bool (DomItem)> Path::headFilter() const
+function<bool(const DomItem &)> Path::headFilter() const
 {
     auto &comp = component(0);
-    if (PathEls::Filter const * f = comp.base()->asFilter()) {
+    if (PathEls::Filter const * f = comp.asFilter()) {
         return f->filterFunction;
     }
     return {};
@@ -646,14 +647,14 @@ Path Path::any() const
                     QStringList(), QVector<Component>(1,Component(PathEls::Any())), m_data));
 }
 
-Path Path::filter(function<bool (DomItem)> filterF, QString desc) const
+Path Path::filter(function<bool(const DomItem &)> filterF, QString desc) const
 {
     auto res = filter(filterF, QStringView(desc));
     res.m_data->strData.append(desc);
     return res;
 }
 
-Path Path::filter(function<bool (DomItem)> filter, QStringView desc) const
+Path Path::filter(function<bool(const DomItem &)> filter, QStringView desc) const
 {
     if (m_endOffset != 0)
         return noEndOffset().filter(filter, desc);
@@ -869,10 +870,10 @@ Path Path::appendComponent(const PathEls::PathComponent &c)
         }
         break;
     case PathEls::Kind::Filter:
-        if (!c.base()->asFilter()->filterDescription.isEmpty()) {
-            my_data->strData.append(c.base()->asFilter()->filterDescription.toString());
+        if (!c.asFilter()->filterDescription.isEmpty()) {
+            my_data->strData.append(c.asFilter()->filterDescription.toString());
             my_data->components.append(
-                    PathEls::Filter(c.base()->asFilter()->filterFunction, my_data->strData.last()));
+                    PathEls::Filter(c.asFilter()->filterFunction, my_data->strData.last()));
         } else {
             my_data->components.append(c);
         }

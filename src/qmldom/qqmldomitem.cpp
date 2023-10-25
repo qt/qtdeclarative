@@ -1,5 +1,6 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+#include "qqmldomconstants_p.h"
 #include "qqmldomitem_p.h"
 #include "qqmldompath_p.h"
 #include "qqmldomtop_p.h"
@@ -104,18 +105,18 @@ The minimal overload set to be usable consists of following methods:
 
 \li \c{pathFromOwner()} returns the path from the owner to the current element
 \code
-    Path pathFromOwner(DomItem &self) const override;
+    Path pathFromOwner(const DomItem &self) const override;
 \endcode
 
 \li \c{canonicalPath()} returns the path
 \code
-    Path canonicalPath(DomItem &self) const override;
+    Path canonicalPath(const DomItem &self) const override;
 \endcode
 
 \li \c{iterateDirectSubpaths} iterates the *direct* subpaths/children and returns false if a quick
 end was requested:
 \code
-bool iterateDirectSubpaths(DomItem &self, function_ref<bool(Path, DomItem)>) const = 0;
+bool iterateDirectSubpaths(const DomItem &self, function_ref<bool(Path, DomItem)>) const = 0;
 \endcode
 
 \endlist
@@ -238,7 +239,7 @@ QCborValue locationToData(SourceLocation loc, QStringView strValue)
     return res;
 }
 
-QString DomBase::canonicalFilePath(DomItem &self) const
+QString DomBase::canonicalFilePath(const DomItem &self) const
 {
     auto parent = containingObject(self);
     if (parent)
@@ -246,7 +247,7 @@ QString DomBase::canonicalFilePath(DomItem &self) const
     return QString();
 }
 
-void DomBase::writeOut(DomItem &self, OutWriter &) const
+void DomBase::writeOut(const DomItem &self, OutWriter &) const
 {
     qCWarning(writeOutLog) << "Ignoring unsupported writeOut for " << domTypeToString(kind()) << ":"
                            << self.canonicalPath();
@@ -256,7 +257,7 @@ ConstantData::ConstantData(Path pathFromOwner, QCborValue value, Options options
     : DomElement(pathFromOwner), m_value(value), m_options(options)
 {}
 
-bool ConstantData::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+bool ConstantData::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     static QHash<QString, QString> knownFields;
     static QBasicMutex m;
@@ -399,7 +400,7 @@ ErrorGroups DomItem::myResolveErrors()
     return res;
 }
 
-Path DomItem::canonicalPath()
+Path DomItem::canonicalPath() const
 {
     Path res = visitEl([this](auto &&el) { return el->canonicalPath(*this); });
     if (!(!res || res.headKind() == Path::Kind::Root)) {
@@ -410,7 +411,7 @@ Path DomItem::canonicalPath()
 
 }
 
-DomItem DomItem::containingObject()
+DomItem DomItem::containingObject() const
 {
     return visitEl([this](auto &&el) { return el->containingObject(*this); });
 }
@@ -421,9 +422,9 @@ DomItem DomItem::containingObject()
 
    qmlObject() might also return the object of a component if GoTo:MostLikely is used.
  */
-DomItem DomItem::qmlObject(GoTo options, FilterUpOptions filterOptions)
+DomItem DomItem::qmlObject(GoTo options, FilterUpOptions filterOptions) const
 {
-    if (DomItem res = filterUp([](DomType k, DomItem &) { return k == DomType::QmlObject; },
+    if (DomItem res = filterUp([](DomType k, const DomItem &) { return k == DomType::QmlObject; },
                                filterOptions))
         return res;
     if (options == GoTo::MostLikely) {
@@ -433,7 +434,7 @@ DomItem DomItem::qmlObject(GoTo options, FilterUpOptions filterOptions)
     return DomItem();
 }
 
-DomItem DomItem::fileObject(GoTo options)
+DomItem DomItem::fileObject(GoTo options) const
 {
     DomItem res = *this;
     DomType k = res.internalKind();
@@ -456,19 +457,12 @@ DomItem DomItem::fileObject(GoTo options)
     return res;
 }
 
-DomItem DomItem::rootQmlObject(GoTo options)
+DomItem DomItem::rootQmlObject(GoTo options) const
 {
-    if (DomItem res = filterUp([](DomType k, DomItem &) { return k == DomType::QmlObject; },
-                               FilterUpOptions::ReturnInner))
-        return res;
-    if (options == GoTo::MostLikely) {
-        if (DomItem comp = component(options))
-            return comp.field(Fields::objects).index(0);
-    }
-    return DomItem();
+    return qmlObject(options, FilterUpOptions::ReturnInner);
 }
 
-DomItem DomItem::container()
+DomItem DomItem::container() const
 {
     Path path = pathFromOwner();
     if (!path)
@@ -479,7 +473,7 @@ DomItem DomItem::container()
     return containingObject();
 }
 
-DomItem DomItem::globalScope()
+DomItem DomItem::globalScope() const
 {
     if (internalKind() == DomType::GlobalScope)
         return *this;
@@ -495,7 +489,7 @@ DomItem DomItem::globalScope()
    \internal
    \brief The owner of an element, for an qmlObject this is the containing qml file.
  */
-DomItem DomItem::owner()
+DomItem DomItem::owner() const
 {
     if (domTypeIsOwningItem(m_kind) || m_kind == DomType::Empty)
         return *this;
@@ -504,14 +498,14 @@ DomItem DomItem::owner()
             *m_owner);
 }
 
-DomItem DomItem::top()
+DomItem DomItem::top() const
 {
     if (domTypeIsTopItem(m_kind) || m_kind == DomType::Empty)
         return *this;
     return std::visit([](auto &&el) { return DomItem(el, el, Path(), el.get()); }, *m_top);
 }
 
-DomItem DomItem::environment()
+DomItem DomItem::environment() const
 {
     DomItem res = top();
     if (res.internalKind() == DomType::DomEnvironment)
@@ -519,7 +513,7 @@ DomItem DomItem::environment()
     return DomItem(); // we are in the universe, and cannot go back to the environment...
 }
 
-DomItem DomItem::universe()
+DomItem DomItem::universe() const
 {
     DomItem res = top();
     if (res.internalKind() == DomType::DomUniverse)
@@ -531,13 +525,27 @@ DomItem DomItem::universe()
 
 /*!
    \internal
+   Shorthand to obtain the ScriptExpression DomItem, in which this DomItem is defined.
+   Returns an empty DomItem if the item is not defined inside a ScriptExpression.
+   \sa goToFile()
+ */
+DomItem DomItem::containingScriptExpression() const
+{
+    if (DomItem res = filterUp([](DomType k, const DomItem &) { return k == DomType::ScriptExpression; },
+                               FilterUpOptions::ReturnOuter))
+        return res;
+    return DomItem();
+}
+
+/*!
+   \internal
    Shorthand to obtain the QmlFile DomItem, in which this DomItem is defined.
    Returns an empty DomItem if the item is not defined in a QML file.
    \sa goToFile()
  */
-DomItem DomItem::containingFile()
+DomItem DomItem::containingFile() const
 {
-    if (DomItem res = filterUp([](DomType k, DomItem &) { return k == DomType::QmlFile; },
+    if (DomItem res = filterUp([](DomType k, const DomItem &) { return k == DomType::QmlFile; },
                                FilterUpOptions::ReturnOuter))
         return res;
     return DomItem();
@@ -548,7 +556,7 @@ DomItem DomItem::containingFile()
    Shorthand to obtain the QmlFile DomItem from a canonicalPath.
    \sa containingFile()
  */
-DomItem DomItem::goToFile(const QString &canonicalPath)
+DomItem DomItem::goToFile(const QString &canonicalPath) const
 {
     Q_UNUSED(canonicalPath);
     DomItem file =
@@ -560,9 +568,14 @@ DomItem DomItem::goToFile(const QString &canonicalPath)
    \internal
    In the DomItem hierarchy, go \c n levels up.
  */
-DomItem DomItem::goUp(int n)
+DomItem DomItem::goUp(int n) const
 {
-    DomItem parent = owner().path(pathFromOwner().dropTail(n));
+    Path path = canonicalPath();
+    // first entry of path is usually top(), and you cannot go up from top().
+    if (path.length() < n + 1)
+        return DomItem();
+
+    DomItem parent = top().path(path.dropTail(n));
     return parent;
 }
 
@@ -570,95 +583,73 @@ DomItem DomItem::goUp(int n)
    \internal
    In the DomItem hierarchy, go 1 level up to get the direct parent.
  */
-DomItem DomItem::directParent()
+DomItem DomItem::directParent() const
 {
     return goUp(1);
 }
 
-DomItem DomItem::filterUp(function_ref<bool(DomType k, DomItem &)> filter, FilterUpOptions options)
+/*!
+\internal
+Finds the first element in the DomItem hierarchy that satisfies filter.
+Use options to set the search direction, see also \l{FilterUpOptions}.
+*/
+DomItem DomItem::filterUp(function_ref<bool(DomType k, const DomItem &)> filter, FilterUpOptions options) const
 {
-    DomItem it = *this;
-    DomType k = it.internalKind();
+    if (options == FilterUpOptions::ReturnOuter && filter(internalKind(), *this)) {
+        return *this;
+    }
+
     switch (options) {
     case FilterUpOptions::ReturnOuter:
     case FilterUpOptions::ReturnOuterNoSelf: {
-        bool checkTop = (options == FilterUpOptions::ReturnOuter);
-        while (k != DomType::Empty) {
-            if (checkTop && filter(k, it))
-                return it;
-            checkTop = true;
-            if (!domTypeIsOwningItem(k)) {
-                DomItem el = it.owner();
-                DomItem res;
-                k = DomType::Empty;
-                Path pp = it.pathFromOwner();
-                DomType k2 = el.internalKind();
-                if (filter(k2, el)) {
-                    k = k2;
-                    res = el;
-                }
-                for (Path p : pp.mid(0, pp.length() - 1)) {
-                    el = el.path(p);
-                    DomType k2 = el.internalKind();
-                    if (filter(k2, el)) {
-                        k = k2;
-                        res = el;
-                    }
-                }
-                if (k != DomType::Empty)
-                    return res;
-                it = it.owner();
+        for (DomItem current = *this, previous = DomItem(); current;
+             previous = current, current = current.directParent()) {
+            if (filter(current.internalKind(), current)) {
+                if (options != FilterUpOptions::ReturnOuterNoSelf || current != *this)
+                    return current;
             }
-            it = it.containingObject();
-            k = it.internalKind();
-        }
-    } break;
-    case FilterUpOptions::ReturnInner:
-        while (k != DomType::Empty) {
-            if (!domTypeIsOwningItem(k)) {
-                DomItem el = owner();
-                Path pp = pathFromOwner();
-                for (Path p : pp) {
-                    DomItem child = el.path(p);
-                    DomType k2 = child.internalKind();
-                    if (filter(k2, child))
-                        return child;
-                    el = child;
-                }
-                it = it.owner();
-            }
-            it = it.containingObject();
-            k = it.internalKind();
         }
         break;
     }
+    case FilterUpOptions::ReturnInner:
+        DomItem current = top();
+        for (const Path &currentPath : canonicalPath()) {
+            current = current.path(currentPath);
+            if (filter(current.internalKind(), current))
+                return current;
+        }
+        break;
+    }
+
     return DomItem();
 }
 
-DomItem DomItem::scope(FilterUpOptions options)
+DomItem DomItem::scope(FilterUpOptions options) const
 {
-    DomItem res = filterUp([](DomType, DomItem &el) { return el.isScope(); }, options);
+    DomItem res = filterUp([](DomType, const DomItem &el) { return el.isScope(); }, options);
     return res;
 }
 
-std::optional<QQmlJSScope::Ptr> DomItem::nearestSemanticScope()
+QQmlJSScope::ConstPtr DomItem::nearestSemanticScope() const
 {
-    std::optional<QQmlJSScope::Ptr> scope;
-    visitUp([&scope](DomItem &item) {
+    QQmlJSScope::ConstPtr scope;
+    visitUp([&scope](const DomItem &item) {
         scope = item.semanticScope();
         return !scope; // stop when scope was true
     });
     return scope;
 }
 
-std::optional<QQmlJSScope::Ptr> DomItem::semanticScope()
+QQmlJSScope::ConstPtr DomItem::semanticScope() const
 {
-    std::optional<QQmlJSScope::Ptr> scope = std::visit(
-            [](auto &&e) -> std::optional<QQmlJSScope::Ptr> {
+    QQmlJSScope::ConstPtr scope = std::visit(
+            [](auto &&e) -> QQmlJSScope::ConstPtr {
                 using T = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
-                if constexpr (std::is_same_v<T, QmlObject *>) {
+                if constexpr (std::is_same_v<T, const QmlObject *>) {
                     return e->semanticScope();
-                } else if constexpr (std::is_same_v<T, QmlComponent *>) {
+                } else if constexpr (std::is_same_v<T, const QmlComponent *>) {
+                    return e->semanticScope();
+                } else if constexpr (std::is_same_v<T, const QmltypesComponent *>) {
                     return e->semanticScope();
                 } else if constexpr (std::is_same_v<T, SimpleObjectWrap>) {
                     if (const MethodInfo *mi = e->template as<MethodInfo>()) {
@@ -673,25 +664,25 @@ std::optional<QQmlJSScope::Ptr> DomItem::semanticScope()
     return scope;
 }
 
-DomItem DomItem::get(ErrorHandler h, QList<Path> *visitedRefs)
+DomItem DomItem::get(ErrorHandler h, QList<Path> *visitedRefs) const
 {
     if (const Reference *refPtr = as<Reference>())
         return refPtr->get(*this, h, visitedRefs);
     return DomItem();
 }
 
-QList<DomItem> DomItem::getAll(ErrorHandler h, QList<Path> *visitedRefs)
+QList<DomItem> DomItem::getAll(ErrorHandler h, QList<Path> *visitedRefs) const
 {
     if (const Reference *refPtr = as<Reference>())
         return refPtr->getAll(*this, h, visitedRefs);
     return {};
 }
 
-PropertyInfo DomItem::propertyInfoWithName(QString name)
+PropertyInfo DomItem::propertyInfoWithName(QString name) const
 {
     PropertyInfo pInfo;
-    visitPrototypeChain([&pInfo, name](DomItem &obj) {
-        return obj.visitLocalSymbolsNamed(name, [&pInfo, name](DomItem &el) {
+    visitPrototypeChain([&pInfo, name](const DomItem &obj) {
+        return obj.visitLocalSymbolsNamed(name, [&pInfo, name](const DomItem &el) {
             switch (el.internalKind()) {
             case DomType::Binding:
                 pInfo.bindings.append(el);
@@ -708,10 +699,10 @@ PropertyInfo DomItem::propertyInfoWithName(QString name)
     return pInfo;
 }
 
-QSet<QString> DomItem::propertyInfoNames()
+QSet<QString> DomItem::propertyInfoNames() const
 {
     QSet<QString> res;
-    visitPrototypeChain([&res](DomItem &obj) {
+    visitPrototypeChain([&res](const DomItem &obj) {
         res += obj.propertyDefs().keys();
         res += obj.bindings().keys();
         return true;
@@ -719,10 +710,10 @@ QSet<QString> DomItem::propertyInfoNames()
     return res;
 }
 
-DomItem DomItem::component(GoTo options)
+DomItem DomItem::component(GoTo options) const
 {
     if (DomItem res = filterUp(
-                [](DomType kind, DomItem &) {
+                [](DomType kind, const DomItem &) {
                     return kind == DomType::QmlComponent || kind == DomType::QmltypesComponent
                             || kind == DomType::GlobalComponent;
                 },
@@ -768,7 +759,7 @@ static QMap<LookupType, QString> lookupTypeToStringMap()
 }
 
 bool DomItem::resolve(Path path, DomItem::Visitor visitor, ErrorHandler errorHandler,
-                      ResolveOptions options, Path fullPath, QList<Path> *visitedRefs)
+                      ResolveOptions options, Path fullPath, QList<Path> *visitedRefs) const
 {
     QList<Path> vRefs;
     Path fPath = fullPath;
@@ -865,7 +856,7 @@ bool DomItem::resolve(Path path, DomItem::Visitor visitor, ErrorHandler errorHan
                         DomItem resolveRes;
                         it.resolve(
                                 toResolve,
-                                [&resolveRes](Path, DomItem &r) {
+                                [&resolveRes](Path, const DomItem &r) {
                                     resolveRes = r;
                                     return false;
                                 },
@@ -902,7 +893,7 @@ bool DomItem::resolve(Path path, DomItem::Visitor visitor, ErrorHandler errorHan
                 if (!branchExhausted)
                     visitTree(
                             Path(),
-                            [toFind, &toDos, iPath](Path, DomItem &item, bool) {
+                            [toFind, &toDos, iPath](Path, const DomItem &item, bool) {
                                 // avoid non directly attached?
                                 DomItem newItem = item[toFind];
                                 if (newItem)
@@ -930,7 +921,7 @@ bool DomItem::resolve(Path path, DomItem::Visitor visitor, ErrorHandler errorHan
                     break;
                 case PathCurrent::ObjChain: {
                     bool cont = it.visitPrototypeChain(
-                            [&toDos, iPath](DomItem &subEl) {
+                            [&toDos, iPath](const DomItem &subEl) {
                                 toDos.append({ subEl, iPath });
                                 return true;
                             },
@@ -943,7 +934,7 @@ bool DomItem::resolve(Path path, DomItem::Visitor visitor, ErrorHandler errorHan
                 }
                 case PathCurrent::ScopeChain: {
                     bool cont = it.visitScopeChain(
-                            [&toDos, iPath](DomItem &subEl) {
+                            [&toDos, iPath](const DomItem &subEl) {
                                 toDos.append({ subEl, iPath });
                                 return true;
                             },
@@ -1073,7 +1064,7 @@ bool DomItem::resolve(Path path, DomItem::Visitor visitor, ErrorHandler errorHan
                     }
                     it.visitLookup(
                             target,
-                            [&toDos, iPath](DomItem &subEl) {
+                            [&toDos, iPath](const DomItem &subEl) {
                                 toDos.append({ subEl, iPath });
                                 return true;
                             },
@@ -1087,7 +1078,7 @@ bool DomItem::resolve(Path path, DomItem::Visitor visitor, ErrorHandler errorHan
             case Path::Kind::Any:
                 visitTree(
                         Path(),
-                        [&toDos, iPath](Path, DomItem &item, bool) {
+                        [&toDos, iPath](Path, const DomItem &item, bool) {
                             toDos.append({ item, iPath });
                             return true;
                         },
@@ -1107,49 +1098,49 @@ bool DomItem::resolve(Path path, DomItem::Visitor visitor, ErrorHandler errorHan
     return true;
 }
 
-DomItem DomItem::path(Path p, ErrorHandler errorHandler)
+DomItem DomItem::path(Path p, ErrorHandler errorHandler) const
 {
     if (!p)
         return *this;
     DomItem res;
-    resolve(p, [&res](Path, DomItem it) {
+    resolve(p, [&res](Path, const DomItem &it) {
         res = it;
         return false;
     }, errorHandler);
     return res;
 }
 
-DomItem DomItem::path(QString p, ErrorHandler errorHandler)
+DomItem DomItem::path(QString p, ErrorHandler errorHandler) const
 {
     return path(Path::fromString(p, errorHandler));
 }
 
-DomItem DomItem::path(QStringView p, ErrorHandler errorHandler)
+DomItem DomItem::path(QStringView p, ErrorHandler errorHandler) const
 {
     return path(Path::fromString(p, errorHandler));
 }
 
-QList<QString> DomItem::fields()
+QList<QString> DomItem::fields() const
 {
     return visitEl([this](auto &&el) { return el->fields(*this); });
 }
 
-DomItem DomItem::field(QStringView name)
+DomItem DomItem::field(QStringView name) const
 {
     return visitEl([this, name](auto &&el) { return el->field(*this, name); });
 }
 
-index_type DomItem::indexes()
+index_type DomItem::indexes() const
 {
     return visitEl([this](auto &&el) { return el->indexes(*this); });
 }
 
-DomItem DomItem::index(index_type i)
+DomItem DomItem::index(index_type i) const
 {
     return visitEl([this, i](auto &&el) { return el->index(*this, i); });
 }
 
-bool DomItem::visitIndexes(function_ref<bool(DomItem &)> visitor)
+bool DomItem::visitIndexes(function_ref<bool(const DomItem &)> visitor) const
 {
     // use iterateDirectSubpathsConst instead?
     int nIndexes = indexes();
@@ -1161,12 +1152,12 @@ bool DomItem::visitIndexes(function_ref<bool(DomItem &)> visitor)
     return true;
 }
 
-QSet<QString> DomItem::keys()
+QSet<QString> DomItem::keys() const
 {
     return visitEl([this](auto &&el) { return el->keys(*this); });
 }
 
-QStringList DomItem::sortedKeys()
+QStringList DomItem::sortedKeys() const
 {
     QSet<QString> ks = keys();
     QStringList sortedKs(ks.begin(), ks.end());
@@ -1174,15 +1165,16 @@ QStringList DomItem::sortedKeys()
     return sortedKs;
 }
 
-DomItem DomItem::key(QString name)
+DomItem DomItem::key(QString name) const
 {
     return visitEl([this, name](auto &&el) { return el->key(*this, name); });
 }
 
-bool DomItem::visitKeys(function_ref<bool(QString, DomItem &)> visitor)
+bool DomItem::visitKeys(function_ref<bool(QString, const DomItem &)> visitor) const
 {
     // use iterateDirectSubpathsConst instead?
-    for (auto k : sortedKeys()) {
+    const QStringList keys = sortedKeys();
+    for (const QString &k : keys) {
         DomItem v = key(k);
         if (!visitor(k, v))
             return false;
@@ -1190,10 +1182,10 @@ bool DomItem::visitKeys(function_ref<bool(QString, DomItem &)> visitor)
     return true;
 }
 
-QList<DomItem> DomItem::values()
+QList<DomItem> DomItem::values() const
 {
     QList<DomItem> res;
-    visitEl([this, &res](auto &&el) {
+    visitEl([this, &res](const auto &el) {
         return el->iterateDirectSubpathsConst(
                 *this, [&res](const PathEls::PathComponent &, function_ref<DomItem()> item) {
                     res.append(item());
@@ -1203,11 +1195,11 @@ QList<DomItem> DomItem::values()
     return res;
 }
 
-void DomItem::writeOutPre(OutWriter &ow)
+void DomItem::writeOutPre(OutWriter &ow) const
 {
     if (hasAnnotations()) {
         DomItem anns = field(Fields::annotations);
-        for (auto ann : anns.values()) {
+        for (const auto &ann : anns.values()) {
             if (ann.annotations().indexes() == 0) {
                 ow.ensureNewline();
                 ann.writeOut(ow);
@@ -1222,24 +1214,24 @@ void DomItem::writeOutPre(OutWriter &ow)
     ow.itemStart(*this);
 }
 
-void DomItem::writeOut(OutWriter &ow)
+void DomItem::writeOut(OutWriter &ow) const
 {
     writeOutPre(ow);
     visitEl([this, &ow](auto &&el) { el->writeOut(*this, ow); });
     writeOutPost(ow);
 }
 
-void DomItem::writeOutPost(OutWriter &ow)
+void DomItem::writeOutPost(OutWriter &ow) const
 {
     ow.itemEnd(*this);
 }
 
-DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(DomItem &original, DomItem &reformatted,
+DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(const DomItem &original, const DomItem &reformatted,
                                                             OutWriter &ow,
-                                                            WriteOutChecks extraChecks)
+                                                            WriteOutChecks extraChecks) const
 {
     QStringList dumped;
-    auto maybeDump = [&ow, extraChecks, &dumped](DomItem &obj, QStringView objName) {
+    auto maybeDump = [&ow, extraChecks, &dumped](const DomItem &obj, QStringView objName) {
         QString objDumpPath;
         if (extraChecks & WriteOutCheck::DumpOnFailure) {
             objDumpPath = QDir(QDir::tempPath())
@@ -1255,13 +1247,13 @@ DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(DomItem &original, D
         if (dumped.isEmpty())
             return;
         s(u"\ndump: ");
-        for (auto dumpPath : dumped) {
+        for (const auto &dumpPath : dumped) {
             s(u" ");
             sinkEscaped(s, dumpPath);
         }
     };
-    auto compare = [&maybeDump, &dumpedDumper, this](DomItem &obj1, QStringView obj1Name,
-                                                     DomItem &obj2, QStringView obj2Name,
+    auto compare = [&maybeDump, &dumpedDumper, this](const DomItem &obj1, QStringView obj1Name,
+                                                     const DomItem &obj2, QStringView obj2Name,
                                                      const FieldFilter &filter) {
         const auto diffList = domCompareStrList(obj1, obj2, filter, DomCompareStrList::AllDiffs);
         if (!diffList.isEmpty()) {
@@ -1275,7 +1267,7 @@ DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(DomItem &original, D
         return true;
     };
     auto checkStability = [&maybeDump, &dumpedDumper, &dumped, &ow,
-                           this](QString expected, DomItem &obj, QStringView objName) {
+                           this](QString expected, const DomItem &obj, QStringView objName) {
         LineWriter lw2([](QStringView) {}, ow.lineWriter.fileName(), ow.lineWriter.options());
         OutWriter ow2(lw2);
         ow2.indentNextlines = true;
@@ -1318,8 +1310,7 @@ DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(DomItem &original, D
         DomItem newFile = newEnv.copy(newFilePtr, Path());
         if (newFilePtr->isValid()) {
             if (extraChecks & (WriteOutCheck::ReparseCompare | WriteOutCheck::ReparseStable)) {
-                MutableDomItem newFileMutable(newFile);
-                createDom(newFileMutable);
+                createDom(MutableDomItem (newFile));
                 if ((extraChecks & WriteOutCheck::ReparseCompare)
                     && !compare(reformatted, u"reformatted", newFile, u"reparsed",
                                 FieldFilter::compareNoCommentsFilter()))
@@ -1330,7 +1321,7 @@ DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(DomItem &original, D
         } else {
             const auto iterateErrors = [&newFile](Sink s) {
                 newFile.iterateErrors(
-                        [s](DomItem, ErrorMessage msg) {
+                        [s](const DomItem &, const ErrorMessage &msg) {
                             s(u"\n  ");
                             msg.dump(s);
                             return true;
@@ -1348,7 +1339,7 @@ DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(DomItem &original, D
     return WriteOutCheckResult::Success;
 }
 
-DomItem DomItem::writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks)
+DomItem DomItem::writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks) const
 {
     ow.indentNextlines = true;
     writeOut(ow);
@@ -1362,7 +1353,7 @@ DomItem DomItem::writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks)
 }
 
 DomItem DomItem::writeOut(QString path, int nBackups, const LineWriterOptions &options,
-                          FileWriter *fw, WriteOutChecks extraChecks)
+                          FileWriter *fw, WriteOutChecks extraChecks) const
 {
     DomItem res = *this;
     DomItem copy;
@@ -1390,7 +1381,7 @@ DomItem DomItem::writeOut(QString path, int nBackups, const LineWriterOptions &o
     return res;
 }
 
-bool DomItem::isCanonicalChild(DomItem &item)
+bool DomItem::isCanonicalChild(const DomItem &item) const
 {
     bool isChild = false;
     if (item.isOwningItem()) {
@@ -1403,7 +1394,7 @@ bool DomItem::isCanonicalChild(DomItem &item)
     return isChild;
 }
 
-bool DomItem::hasAnnotations()
+bool DomItem::hasAnnotations() const
 {
     bool hasAnnotations = false;
     DomType iKind = internalKind();
@@ -1453,7 +1444,7 @@ bool DomItem::hasAnnotations()
  */
 bool DomItem::visitTree(Path basePath, DomItem::ChildrenVisitor visitor, VisitOptions options,
                         DomItem::ChildrenVisitor openingVisitor,
-                        DomItem::ChildrenVisitor closingVisitor)
+                        DomItem::ChildrenVisitor closingVisitor) const
 {
     if (!*this)
         return true;
@@ -1497,10 +1488,10 @@ bool DomItem::visitTree(Path basePath, DomItem::ChildrenVisitor visitor, VisitOp
                 });
     });
 }
-static bool visitPrototypeIndex(QList<DomItem> &toDo, DomItem &current,
-                                DomItem &derivedFromPrototype, ErrorHandler h,
+static bool visitPrototypeIndex(QList<DomItem> &toDo, const DomItem &current,
+                                const DomItem &derivedFromPrototype, ErrorHandler h,
                                 QList<Path> *visitedRefs, VisitPrototypesOptions options,
-                                DomItem &prototype)
+                                const DomItem &prototype)
 {
     Path elId = prototype.canonicalPath();
     if (visitedRefs->contains(elId))
@@ -1523,7 +1514,7 @@ static bool visitPrototypeIndex(QList<DomItem> &toDo, DomItem &current,
     } else {
         if (protos.size() > 1) {
             QStringList protoPaths;
-            for (DomItem &p : protos)
+            for (const DomItem &p : protos)
                 protoPaths.append(p.canonicalPath().toString());
             derivedFromPrototype.myErrors()
                     .warning(derivedFromPrototype
@@ -1563,9 +1554,9 @@ static bool visitPrototypeIndex(QList<DomItem> &toDo, DomItem &current,
     return true;
 }
 
-bool DomItem::visitPrototypeChain(function_ref<bool(DomItem &)> visitor,
+bool DomItem::visitPrototypeChain(function_ref<bool(const DomItem &)> visitor,
                                   VisitPrototypesOptions options, ErrorHandler h,
-                                  QSet<quintptr> *visited, QList<Path> *visitedRefs)
+                                  QSet<quintptr> *visited, QList<Path> *visitedRefs) const
 {
     QSet<quintptr> visitedLocal;
     if (!visited)
@@ -1601,16 +1592,16 @@ bool DomItem::visitPrototypeChain(function_ref<bool(DomItem &)> visitor,
             return false;
         shouldVisit = true;
         current.field(Fields::prototypes)
-                .visitIndexes([&toDo, &current, this, &h, visitedRefs, options](DomItem &el) {
+                .visitIndexes([&toDo, &current, this, &h, visitedRefs, options](const DomItem &el) {
                     return visitPrototypeIndex(toDo, current, *this, h, visitedRefs, options, el);
                 });
     }
     return true;
 }
 
-bool DomItem::visitDirectAccessibleScopes(function_ref<bool(DomItem &)> visitor,
+bool DomItem::visitDirectAccessibleScopes(function_ref<bool(const DomItem &)> visitor,
                                           VisitPrototypesOptions options, ErrorHandler h,
-                                          QSet<quintptr> *visited, QList<Path> *visitedRefs)
+                                          QSet<quintptr> *visited, QList<Path> *visitedRefs) const
 {
     // these are the scopes one can access with the . operator from the current location
     // but currently not the attached types, which we should
@@ -1655,9 +1646,9 @@ bool DomItem::visitDirectAccessibleScopes(function_ref<bool(DomItem &)> visitor,
  * visit the values JS reaches accessing a type directly: the values if it is a singleton or the
  * attached type
  */
-bool DomItem::visitStaticTypePrototypeChains(function_ref<bool(DomItem &)> visitor,
+bool DomItem::visitStaticTypePrototypeChains(function_ref<bool(const DomItem &)> visitor,
                                              VisitPrototypesOptions options, ErrorHandler h,
-                                             QSet<quintptr> *visited, QList<Path> *visitedRefs)
+                                             QSet<quintptr> *visited, QList<Path> *visitedRefs) const
 {
     QSet<quintptr> visitedLocal;
     if (!visited)
@@ -1678,7 +1669,7 @@ bool DomItem::visitStaticTypePrototypeChains(function_ref<bool(DomItem &)> visit
 /*!
     \brief Let the visitor visit the Dom Tree hierarchy of this DomItem.
  */
-bool DomItem::visitUp(function_ref<bool(DomItem &)> visitor)
+bool DomItem::visitUp(function_ref<bool(const DomItem &)> visitor) const
 {
     Path p = canonicalPath();
     while (p.length() > 0) {
@@ -1693,8 +1684,8 @@ bool DomItem::visitUp(function_ref<bool(DomItem &)> visitor)
 /*!
     \brief Let the visitor visit the QML scope hierarchy of this DomItem.
  */
-bool DomItem::visitScopeChain(function_ref<bool(DomItem &)> visitor, LookupOptions options,
-                              ErrorHandler h, QSet<quintptr> *visited, QList<Path> *visitedRefs)
+bool DomItem::visitScopeChain(function_ref<bool(const DomItem &)> visitor, LookupOptions options,
+                              ErrorHandler h, QSet<quintptr> *visited, QList<Path> *visitedRefs) const
 {
     QSet<quintptr> visitedLocal;
     if (!visited)
@@ -1808,98 +1799,14 @@ bool DomItem::visitScopeChain(function_ref<bool(DomItem &)> visitor, LookupOptio
     return true;
 }
 
-QSet<QString> DomItem::localSymbolNames(LocalSymbolsTypes typeFilter)
-{
-    QSet<QString> res;
-    if (typeFilter == LocalSymbolsType::None)
-        return res;
-    switch (internalKind()) {
-    case DomType::QmlObject:
-        if (typeFilter & LocalSymbolsType::Attributes) {
-            res += propertyDefs().keys();
-            res += bindings().keys();
-        }
-        if (typeFilter & LocalSymbolsType::Methods) {
-            if ((typeFilter & LocalSymbolsType::Methods) == LocalSymbolsType::Methods) {
-                res += methods().keys();
-            } else {
-                bool shouldAddSignals = bool(typeFilter & LocalSymbolsType::Signals);
-                if (const QmlObject *objPtr = as<QmlObject>()) {
-                    auto methods = objPtr->methods();
-                    for (auto it = methods.cbegin(); it != methods.cend(); ++it) {
-                        if (bool(it.value().methodType == MethodInfo::MethodType::Signal)
-                            == shouldAddSignals)
-                            res += it.key();
-                    }
-                }
-            }
-        }
-        break;
-    case DomType::ScriptExpression:
-        // to do
-        break;
-    case DomType::QmlComponent:
-        if (typeFilter & LocalSymbolsType::Ids)
-            res += ids().keys();
-        break;
-    case DomType::QmlFile: // subComponents, imported types
-        if (typeFilter & LocalSymbolsType::Components) {
-            DomItem comps = field(Fields::components);
-            for (auto k : comps.keys())
-                if (!k.isEmpty())
-                    res.insert(k);
-        }
-        break;
-    case DomType::ImportScope: {
-        const ImportScope *currentPtr = as<ImportScope>();
-        if (typeFilter & LocalSymbolsType::Types) {
-            if ((typeFilter & LocalSymbolsType::Types) == LocalSymbolsType::Types) {
-                res += currentPtr->importedNames(*this);
-            } else {
-                bool qmlTypes = bool(typeFilter & LocalSymbolsType::QmlTypes);
-                for (const QString &typeName : currentPtr->importedNames(*this)) {
-                    if ((!typeName.isEmpty() && typeName.at(0).isUpper()) == qmlTypes)
-                        res += typeName;
-                }
-            }
-        }
-        if (typeFilter & LocalSymbolsType::Namespaces) {
-            for (const auto &k : currentPtr->subImports().keys())
-                res.insert(k);
-        }
-        break;
-    }
-    case DomType::QmltypesComponent:
-    case DomType::JsResource:
-    case DomType::GlobalComponent:
-        if (typeFilter & LocalSymbolsType::Globals)
-            res += enumerations().keys();
-        break;
-    case DomType::MethodInfo: {
-        if (typeFilter & LocalSymbolsType::MethodParameters) {
-            DomItem params = field(Fields::parameters);
-            params.visitIndexes([&res](DomItem &p) {
-                const MethodParameter *pPtr = p.as<MethodParameter>();
-                res.insert(pPtr->name);
-                return true;
-            });
-        }
-        break;
-    }
-    default:
-        break;
-    }
-    return res;
-}
-
-bool DomItem::visitLookup1(QString symbolName, function_ref<bool(DomItem &)> visitor,
+bool DomItem::visitLookup1(QString symbolName, function_ref<bool(const DomItem &)> visitor,
                            LookupOptions opts, ErrorHandler h, QSet<quintptr> *visited,
-                           QList<Path> *visitedRefs)
+                           QList<Path> *visitedRefs) const
 {
     return visitScopeChain(
-            [symbolName, visitor](DomItem &obj) {
+            [symbolName, visitor](const DomItem &obj) {
                 return obj.visitLocalSymbolsNamed(symbolName,
-                                                  [visitor](DomItem &el) { return visitor(el); });
+                                                  [visitor](const DomItem &el) { return visitor(el); });
             },
             opts, h, visited, visitedRefs);
 }
@@ -1949,8 +1856,8 @@ public:
     bool isList = false;
 };
 
-static bool visitForLookupType(DomItem el, LookupType lookupType,
-                               function_ref<bool(DomItem &)> visitor)
+static bool visitForLookupType(const DomItem &el, LookupType lookupType,
+                               function_ref<bool(const DomItem &)> visitor)
 {
     bool correctType = false;
     DomType iType = el.internalKind();
@@ -1979,8 +1886,8 @@ static bool visitForLookupType(DomItem el, LookupType lookupType,
     return true;
 }
 
-static bool visitQualifiedNameLookup(DomItem newIt, QStringList &subpath,
-                                     function_ref<bool(DomItem &)> visitor, LookupType lookupType,
+static bool visitQualifiedNameLookup(const DomItem &newIt, QStringList &subpath,
+                                     function_ref<bool(const DomItem &)> visitor, LookupType lookupType,
                                      ErrorHandler &errorHandler, QList<Path> *visitedRefs)
 {
     QVector<ResolveToDo> lookupToDos(
@@ -2004,9 +1911,9 @@ static bool visitQualifiedNameLookup(DomItem newIt, QStringList &subpath,
             }
             if (scope.internalKind() == DomType::QmlObject)
                 scope.visitDirectAccessibleScopes(
-                        [&lookupToDos, subPathNow, iSubPath](DomItem &el) {
+                        [&lookupToDos, subPathNow, iSubPath](const DomItem &el) {
                             return el.visitLocalSymbolsNamed(
-                                    subPathNow, [&lookupToDos, iSubPath](DomItem &subEl) {
+                                    subPathNow, [&lookupToDos, iSubPath](const DomItem &subEl) {
                                         lookupToDos.append({ subEl, iSubPath });
                                         return true;
                                     });
@@ -2015,12 +1922,12 @@ static bool visitQualifiedNameLookup(DomItem newIt, QStringList &subpath,
                         visitedRefs);
         } else {
             bool cont = scope.visitDirectAccessibleScopes(
-                    [&visitor, subPathNow, lookupType](DomItem &el) -> bool {
+                    [&visitor, subPathNow, lookupType](const DomItem &el) -> bool {
                         if (lookupType == LookupType::Symbol)
                             return el.visitLocalSymbolsNamed(subPathNow, visitor);
                         else
                             return el.visitLocalSymbolsNamed(
-                                    subPathNow, [lookupType, &visitor](DomItem &el) -> bool {
+                                    subPathNow, [lookupType, &visitor](const DomItem &el) -> bool {
                                         return visitForLookupType(el, lookupType, visitor);
                                     });
                     },
@@ -2033,9 +1940,9 @@ static bool visitQualifiedNameLookup(DomItem newIt, QStringList &subpath,
     return true;
 }
 
-bool DomItem::visitLookup(QString target, function_ref<bool(DomItem &)> visitor,
+bool DomItem::visitLookup(QString target, function_ref<bool(const DomItem &)> visitor,
                           LookupType lookupType, LookupOptions opts, ErrorHandler errorHandler,
-                          QSet<quintptr> *visited, QList<Path> *visitedRefs)
+                          QSet<quintptr> *visited, QList<Path> *visitedRefs) const
 {
     if (target.isEmpty())
         return true;
@@ -2053,7 +1960,7 @@ bool DomItem::visitLookup(QString target, function_ref<bool(DomItem &)> visitor,
             return visitLookup1(
                     subpath.at(0),
                     [&subpath, visitor, lookupType, &errorHandler,
-                     visitedRefs](DomItem &newIt) -> bool {
+                     visitedRefs](const DomItem &newIt) -> bool {
                         return visitQualifiedNameLookup(newIt, subpath, visitor, lookupType,
                                                         errorHandler, visitedRefs);
                     },
@@ -2070,8 +1977,8 @@ bool DomItem::visitLookup(QString target, function_ref<bool(DomItem &)> visitor,
         }
         if (localQmltypes) {
             if (DomItem localTypes = localQmltypes.field(Fields::components).key(baseTarget)) {
-                bool cont = localTypes.visitIndexes([&visitor](DomItem &els) {
-                    return els.visitIndexes([&visitor](DomItem &el) {
+                bool cont = localTypes.visitIndexes([&visitor](const DomItem &els) {
+                    return els.visitIndexes([&visitor](const DomItem &el) {
                         if (DomItem obj = el.field(Fields::objects).index(0))
                             return visitor(obj);
                         return true;
@@ -2082,10 +1989,10 @@ bool DomItem::visitLookup(QString target, function_ref<bool(DomItem &)> visitor,
             }
         }
         DomItem qmltypes = environment().field(Fields::qmltypesFileWithPath);
-        return qmltypes.visitKeys([baseTarget, &visitor](QString, DomItem &els) {
+        return qmltypes.visitKeys([baseTarget, &visitor](QString, const DomItem &els) {
             DomItem comps =
                     els.field(Fields::currentItem).field(Fields::components).key(baseTarget);
-            return comps.visitIndexes([&visitor](DomItem &el) {
+            return comps.visitIndexes([&visitor](const DomItem &el) {
                 if (DomItem obj = el.field(Fields::objects).index(0))
                     return visitor(obj);
                 return true;
@@ -2106,7 +2013,7 @@ bool DomItem::visitLookup(QString target, function_ref<bool(DomItem &)> visitor,
    Also does multiple rounds of resolving for nested DomItems.
    Prefer this over \l {DomItem::get}.
  */
-DomItem DomItem::proceedToScope(ErrorHandler h, QList<Path> *visitedRefs)
+DomItem DomItem::proceedToScope(ErrorHandler h, QList<Path> *visitedRefs) const
 {
     // follow references, resolve exports
     DomItem current = *this;
@@ -2132,12 +2039,12 @@ DomItem DomItem::proceedToScope(ErrorHandler h, QList<Path> *visitedRefs)
 }
 
 QList<DomItem> DomItem::lookup(QString symbolName, LookupType type, LookupOptions opts,
-                               ErrorHandler errorHandler)
+                               ErrorHandler errorHandler) const
 {
     QList<DomItem> res;
     visitLookup(
             symbolName,
-            [&res](DomItem &el) {
+            [&res](const DomItem &el) {
                 res.append(el);
                 return true;
             },
@@ -2146,12 +2053,12 @@ QList<DomItem> DomItem::lookup(QString symbolName, LookupType type, LookupOption
 }
 
 DomItem DomItem::lookupFirst(QString symbolName, LookupType type, LookupOptions opts,
-                             ErrorHandler errorHandler)
+                             ErrorHandler errorHandler) const
 {
     DomItem res;
     visitLookup(
             symbolName,
-            [&res](DomItem &el) {
+            [&res](const DomItem &el) {
                 res = el;
                 return false;
             },
@@ -2159,38 +2066,38 @@ DomItem DomItem::lookupFirst(QString symbolName, LookupType type, LookupOptions 
     return res;
 }
 
-quintptr DomItem::id()
+quintptr DomItem::id() const
 {
     return visitEl([](auto &&b) { return b->id(); });
 }
 
-Path DomItem::pathFromOwner()
+Path DomItem::pathFromOwner() const
 {
     return visitEl([this](auto &&e) { return e->pathFromOwner(*this); });
 }
 
-QString DomItem::canonicalFilePath()
+QString DomItem::canonicalFilePath() const
 {
     return visitEl([this](auto &&e) { return e->canonicalFilePath(*this); });
 }
 
-DomItem DomItem::fileLocationsTree()
+DomItem DomItem::fileLocationsTree() const
 {
     if (DomItem l = field(Fields::fileLocationsTree))
         return l;
-    auto res = FileLocations::findAttachedInfo(*this, AttachedInfo::FindOption::SetFoundTreePath);
-    if (res && res.foundTreePath.value()) {
-        return copy(res.foundTree, res.foundTreePath.value());
+    auto res = FileLocations::findAttachedInfo(*this);
+    if (res && res.foundTreePath) {
+        return copy(res.foundTree, res.foundTreePath);
     }
     return DomItem();
 }
 
-DomItem DomItem::fileLocations()
+DomItem DomItem::fileLocations() const
 {
     return fileLocationsTree().field(Fields::infoItem);
 }
 
-MutableDomItem DomItem::makeCopy(DomItem::CopyOption option)
+MutableDomItem DomItem::makeCopy(DomItem::CopyOption option) const
 {
     if (m_kind == DomType::Empty)
         return MutableDomItem();
@@ -2210,8 +2117,8 @@ MutableDomItem DomItem::makeCopy(DomItem::CopyOption option)
         newEnvPtr = std::make_shared<DomEnvironment>(
                 envPtr, envPtr->loadPaths(), envPtr->options());
         DomBase *eBase = envPtr.get();
-        if (std::holds_alternative<DomEnvironment *>(m_element) && eBase
-            && std::get<DomEnvironment *>(m_element) == eBase)
+        if (std::holds_alternative<const DomEnvironment *>(m_element) && eBase
+            && std::get<const DomEnvironment *>(m_element) == eBase)
             return MutableDomItem(DomItem(newEnvPtr));
     } else if (std::shared_ptr<DomUniverse> univPtr = top().ownerAs<DomUniverse>()) {
         newEnvPtr = std::make_shared<DomEnvironment>(
@@ -2268,7 +2175,7 @@ MutableDomItem DomItem::makeCopy(DomItem::CopyOption option)
     return MutableDomItem(newItem.path(pathFromOwner()));
 }
 
-bool DomItem::commitToBase(std::shared_ptr<DomEnvironment> validEnvPtr)
+bool DomItem::commitToBase(std::shared_ptr<DomEnvironment> validEnvPtr) const
 {
     DomItem env = environment();
     if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>()) {
@@ -2277,7 +2184,7 @@ bool DomItem::commitToBase(std::shared_ptr<DomEnvironment> validEnvPtr)
     return false;
 }
 
-bool DomItem::visitLocalSymbolsNamed(QString name, function_ref<bool(DomItem &)> visitor)
+bool DomItem::visitLocalSymbolsNamed(QString name, function_ref<bool(const DomItem &)> visitor) const
 {
     if (name.isEmpty()) // no empty symbol
         return true;
@@ -2320,7 +2227,7 @@ bool DomItem::visitLocalSymbolsNamed(QString name, function_ref<bool(DomItem &)>
         break;
     case DomType::MethodInfo: {
         DomItem params = field(Fields::parameters);
-        if (!params.visitIndexes([name, visitor](DomItem &p) {
+        if (!params.visitIndexes([name, visitor](const DomItem &p) {
                 const MethodParameter *pPtr = p.as<MethodParameter>();
                 if (pPtr->name == name && !visitor(p))
                     return false;
@@ -2354,31 +2261,31 @@ bool DomItem::visitLocalSymbolsNamed(QString name, function_ref<bool(DomItem &)>
     return true;
 }
 
-DomItem DomItem::operator[](const QString &cName)
+DomItem DomItem::operator[](const QString &cName) const
 {
     if (internalKind() == DomType::Map)
         return key(cName);
     return field(cName);
 }
 
-DomItem DomItem::operator[](QStringView cName)
+DomItem DomItem::operator[](QStringView cName) const
 {
     if (internalKind() == DomType::Map)
         return key(cName.toString());
     return field(cName);
 }
 
-DomItem DomItem::operator[](Path p)
+DomItem DomItem::operator[](Path p) const
 {
     return path(p);
 }
 
-QCborValue DomItem::value()
+QCborValue DomItem::value() const
 {
     return base()->value();
 }
 
-void DomItem::dumpPtr(Sink sink)
+void DomItem::dumpPtr(Sink sink) const
 {
     sink(u"DomItem{ topPtr:");
     sink(QString::number((quintptr)topPtr().get(), 16));
@@ -2392,15 +2299,15 @@ void DomItem::dumpPtr(Sink sink)
 }
 
 void DomItem::dump(Sink s, int indent,
-                   function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter)
+                   function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter) const
 {
     visitEl([this, s, indent, filter](auto &&e) { e->dump(*this, s, indent, filter); });
 }
 
 FileWriter::Status
 DomItem::dump(QString path,
-              function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter,
-              int nBackups, int indent, FileWriter *fw)
+              function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter,
+              int nBackups, int indent, FileWriter *fw) const
 {
     FileWriter localFw;
     if (!fw)
@@ -2423,19 +2330,19 @@ DomItem::dump(QString path,
     return fw->status;
 }
 
-QString DomItem::toString()
+QString DomItem::toString() const
 {
     return dumperToString([this](Sink s){ dump(s); });
 }
 
-int DomItem::derivedFrom()
+int DomItem::derivedFrom() const
 {
     if (m_owner)
         return std::visit([](auto &&ow) { return ow->derivedFrom(); }, *m_owner);
     return 0;
 }
 
-int DomItem::revision()
+int DomItem::revision() const
 {
     if (m_owner)
         return std::visit([](auto &&ow) { return ow->revision(); }, *m_owner);
@@ -2443,7 +2350,7 @@ int DomItem::revision()
         return -1;
 }
 
-QDateTime DomItem::createdAt()
+QDateTime DomItem::createdAt() const
 {
     if (m_owner)
         return std::visit([](auto &&ow) { return ow->createdAt(); }, *m_owner);
@@ -2451,7 +2358,7 @@ QDateTime DomItem::createdAt()
         return QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
 }
 
-QDateTime DomItem::frozenAt()
+QDateTime DomItem::frozenAt() const
 {
     if (m_owner)
         return std::visit([](auto &&ow) { return ow->frozenAt(); }, *m_owner);
@@ -2459,7 +2366,7 @@ QDateTime DomItem::frozenAt()
         return QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
 }
 
-QDateTime DomItem::lastDataUpdateAt()
+QDateTime DomItem::lastDataUpdateAt() const
 {
     if (m_owner)
         return std::visit([](auto &&ow) { return ow->lastDataUpdateAt(); }, *m_owner);
@@ -2467,37 +2374,40 @@ QDateTime DomItem::lastDataUpdateAt()
         return QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
 }
 
-void DomItem::addError(ErrorMessage msg)
+void DomItem::addError(ErrorMessage &&msg) const
 {
     if (m_owner) {
         DomItem myOwner = owner();
         std::visit(
-                [this, &myOwner, &msg](auto &&ow) { ow->addError(myOwner, msg.withItem(*this)); },
+                [this, &myOwner, &msg](auto &&ow) {
+                    ow->addError(myOwner, std::move(msg.withItem(*this)));
+                },
                 *m_owner);
     } else
         defaultErrorHandler(msg.withItem(*this));
 }
 
-ErrorHandler DomItem::errorHandler()
+ErrorHandler DomItem::errorHandler() const
 {
-    DomItem self = *this;
-    return [self](ErrorMessage m) mutable { self.addError(m); };
+    // We need a copy here. Error handlers may be called when this is gone.
+    return [self = *this](const ErrorMessage &m) { self.addError(ErrorMessage(m)); };
 }
 
-void DomItem::clearErrors(ErrorGroups groups, bool iterate)
+void DomItem::clearErrors(ErrorGroups groups, bool iterate) const
 {
     if (m_owner) {
         std::visit([&groups](auto &&ow) { ow->clearErrors(groups); }, *m_owner);
         if (iterate)
-            iterateSubOwners([groups](DomItem i){
+            iterateSubOwners([groups](const DomItem &i){
                 i.clearErrors(groups, true);
                 return true;
             });
     }
 }
 
-bool DomItem::iterateErrors(function_ref<bool(DomItem, ErrorMessage)> visitor, bool iterate,
-                            Path inPath)
+bool DomItem::iterateErrors(
+        function_ref<bool(const DomItem &, const ErrorMessage &)> visitor, bool iterate,
+        Path inPath) const
 {
     if (m_owner) {
         DomItem ow = owner();
@@ -2505,7 +2415,7 @@ bool DomItem::iterateErrors(function_ref<bool(DomItem, ErrorMessage)> visitor, b
                          inPath](auto &&el) { return el->iterateErrors(ow, visitor, inPath); },
                         *m_owner))
             return false;
-        if (iterate && !iterateSubOwners([inPath, visitor](DomItem &i) {
+        if (iterate && !iterateSubOwners([inPath, visitor](const DomItem &i) {
                 return i.iterateErrors(visitor, true, inPath);
             }))
             return false;
@@ -2513,7 +2423,7 @@ bool DomItem::iterateErrors(function_ref<bool(DomItem, ErrorMessage)> visitor, b
     return true;
 }
 
-bool DomItem::iterateSubOwners(function_ref<bool(DomItem &)> visitor)
+bool DomItem::iterateSubOwners(function_ref<bool(const DomItem &)> visitor) const
 {
     if (m_owner) {
         DomItem ow = owner();
@@ -2523,22 +2433,22 @@ bool DomItem::iterateSubOwners(function_ref<bool(DomItem &)> visitor)
     return true;
 }
 
-bool DomItem::iterateDirectSubpaths(DirectVisitor v)
+bool DomItem::iterateDirectSubpaths(DirectVisitor v) const
 {
-    return visitMutableEl(
-            [this, v](auto &&el) mutable { return el->iterateDirectSubpaths(*this, v); });
+    return visitEl(
+            [this, v](auto &&el) { return el->iterateDirectSubpaths(*this, v); });
 }
 
-DomItem DomItem::subReferencesItem(const PathEls::PathComponent &c, QList<Path> paths)
+DomItem DomItem::subReferencesItem(const PathEls::PathComponent &c, QList<Path> paths) const
 {
     return subListItem(
                 List::fromQList<Path>(pathFromOwner().appendComponent(c), paths,
-                                      [](DomItem &list, const PathEls::PathComponent &p, Path &el) {
+                                      [](const DomItem &list, const PathEls::PathComponent &p, const Path &el) {
                     return list.subReferenceItem(p, el);
                 }));
 }
 
-DomItem DomItem::subReferenceItem(const PathEls::PathComponent &c, Path referencedObject)
+DomItem DomItem::subReferenceItem(const PathEls::PathComponent &c, Path referencedObject) const
 {
     if (domTypeIsOwningItem(internalKind())) {
         return DomItem(m_top, m_owner, m_ownerPath, Reference(referencedObject, Path(c)));
@@ -2548,14 +2458,14 @@ DomItem DomItem::subReferenceItem(const PathEls::PathComponent &c, Path referenc
     }
 }
 
-shared_ptr<DomTop> DomItem::topPtr()
+shared_ptr<DomTop> DomItem::topPtr() const
 {
     if (m_top)
         return std::visit([](auto &&el) -> shared_ptr<DomTop> { return el; }, *m_top);
     return {};
 }
 
-shared_ptr<OwningItem> DomItem::owningItemPtr()
+shared_ptr<OwningItem> DomItem::owningItemPtr() const
 {
     if (m_owner)
         return std::visit([](auto &&el) -> shared_ptr<OwningItem> { return el; }, *m_owner);
@@ -2571,15 +2481,6 @@ const DomBase *DomItem::base() const
     return visitEl([](auto &&el) -> const DomBase * { return el->domBase(); });
 }
 
-/*!
-   \internal
-   Returns a pointer to the virtual base pointer to a DomBase.
-*/
-DomBase *DomItem::mutableBase()
-{
-    return visitMutableEl([](auto &&el) -> DomBase * { return el->domBase(); });
-}
-
 DomItem::DomItem(std::shared_ptr<DomEnvironment> envPtr):
     DomItem(envPtr, envPtr, Path(), envPtr.get())
 {
@@ -2591,7 +2492,7 @@ DomItem::DomItem(std::shared_ptr<DomUniverse> universePtr):
 }
 
 void DomItem::loadFile(const FileToLoad &file, DomTop::Callback callback, LoadOptions loadOptions,
-                       std::optional<DomType> fileType)
+                       std::optional<DomType> fileType) const
 {
     DomItem topEl = top();
     if (topEl.internalKind() == DomType::DomEnvironment
@@ -2614,8 +2515,8 @@ void DomItem::loadFile(const FileToLoad &file, DomTop::Callback callback, LoadOp
 }
 
 void DomItem::loadModuleDependency(QString uri, Version version,
-                                   std::function<void(Path, DomItem &, DomItem &)> callback,
-                                   ErrorHandler errorHandler)
+                                   std::function<void(Path, const DomItem &, const DomItem &)> callback,
+                                   ErrorHandler errorHandler) const
 {
     DomItem topEl = top();
     if (topEl.internalKind() == DomType::DomEnvironment) {
@@ -2632,7 +2533,7 @@ void DomItem::loadModuleDependency(QString uri, Version version,
     }
 }
 
-void DomItem::loadBuiltins(std::function<void(Path, DomItem &, DomItem &)> callback, ErrorHandler h)
+void DomItem::loadBuiltins(std::function<void(Path, const DomItem &, const DomItem &)> callback, ErrorHandler h) const
 {
     DomItem env = environment();
     if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>())
@@ -2641,7 +2542,7 @@ void DomItem::loadBuiltins(std::function<void(Path, DomItem &, DomItem &)> callb
         myErrors().error(tr("Cannot load builtins without DomEnvironment")).handle(h);
 }
 
-void DomItem::loadPendingDependencies()
+void DomItem::loadPendingDependencies() const
 {
     DomItem env = environment();
     if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>())
@@ -2680,28 +2581,28 @@ DomItem DomItem::fromCode(QString code, DomType fileType)
 Empty::Empty()
 {}
 
-Path Empty::pathFromOwner(DomItem &) const
+Path Empty::pathFromOwner(const DomItem &) const
 {
     return Path();
 }
 
-Path Empty::canonicalPath(DomItem &) const
+Path Empty::canonicalPath(const DomItem &) const
 {
     return Path();
 }
 
-bool Empty::iterateDirectSubpaths(DomItem &, DirectVisitor)
+bool Empty::iterateDirectSubpaths(const DomItem &, DirectVisitor) const
 {
     return true;
 }
 
-DomItem Empty::containingObject(DomItem &self) const
+DomItem Empty::containingObject(const DomItem &self) const
 {
     return self;
 }
 
-void Empty::dump(DomItem &, Sink s, int,
-                 function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)>) const
+void Empty::dump(const DomItem &, Sink s, int,
+                 function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)>) const
 {
     s(u"null");
 }
@@ -2715,7 +2616,7 @@ quintptr Map::id() const
     return quintptr(0);
 }
 
-bool Map::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+bool Map::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     QSet<QString> ksSet = keys(self);
     QStringList ksList = QStringList(ksSet.begin(), ksSet.end());
@@ -2727,19 +2628,19 @@ bool Map::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     return true;
 }
 
-const QSet<QString> Map::keys(DomItem &self) const
+const QSet<QString> Map::keys(const DomItem &self) const
 {
     return m_keys(self);
 }
 
-DomItem Map::key(DomItem &self, QString name) const
+DomItem Map::key(const DomItem &self, QString name) const
 {
     return m_lookup(self, name);
 }
 
 void DomBase::dump(
-        DomItem &self, Sink sink, int indent,
-        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter) const
+        const DomItem &self, Sink sink, int indent,
+        function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter) const
 {
     bool comma = false;
     DomKind dK = self.domKind();
@@ -2869,12 +2770,12 @@ quintptr List::id() const
 }
 
 void List::dump(
-        DomItem &self, Sink sink, int indent,
-        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter) const
+        const DomItem &self, Sink sink, int indent,
+        function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter) const
 {
     bool first = true;
     sink(u"[");
-    const_cast<List *>(this)->iterateDirectSubpaths(
+    iterateDirectSubpaths(
             self,
             [&self, indent, &first, sink, filter](const PathEls::PathComponent &c,
                                                   function_ref<DomItem()> itemF) {
@@ -2892,7 +2793,7 @@ void List::dump(
     sink(u"]");
 }
 
-bool List::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+bool List::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     if (m_iterator) {
         return m_iterator(self, [visitor](index_type i, function_ref<DomItem()> itemF) {
@@ -2907,22 +2808,22 @@ bool List::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     return true;
 }
 
-index_type List::indexes(DomItem &self) const
+index_type List::indexes(const DomItem &self) const
 {
     return m_length(self);
 }
 
-DomItem List::index(DomItem &self, index_type index) const
+DomItem List::index(const DomItem &self, index_type index) const
 {
     return m_lookup(self, index);
 }
 
-void List::writeOut(DomItem &self, OutWriter &ow, bool compact) const
+void List::writeOut(const DomItem &self, OutWriter &ow, bool compact) const
 {
     ow.writeRegion(u"leftSquareBrace", u"[");
     int baseIndent = ow.increaseIndent(1);
     bool first = true;
-    const_cast<List *>(this)->iterateDirectSubpaths(
+    iterateDirectSubpaths(
             self,
             [&ow, &first, compact](const PathEls::PathComponent &, function_ref<DomItem()> elF) {
                 if (first)
@@ -2943,19 +2844,19 @@ void List::writeOut(DomItem &self, OutWriter &ow, bool compact) const
 
 DomElement::DomElement(Path pathFromOwner) : m_pathFromOwner(pathFromOwner) { }
 
-Path DomElement::pathFromOwner(DomItem &) const
+Path DomElement::pathFromOwner(const DomItem &) const
 {
     Q_ASSERT(m_pathFromOwner && "uninitialized DomElement");
     return m_pathFromOwner;
 }
 
-Path DomElement::canonicalPath(DomItem &self) const
+Path DomElement::canonicalPath(const DomItem &self) const
 {
     Q_ASSERT(m_pathFromOwner && "uninitialized DomElement");
     return self.owner().canonicalPath().path(m_pathFromOwner);
 }
 
-DomItem DomElement::containingObject(DomItem &self) const
+DomItem DomElement::containingObject(const DomItem &self) const
 {
     Q_ASSERT(m_pathFromOwner && "uninitialized DomElement");
     return DomBase::containingObject(self);
@@ -3004,7 +2905,7 @@ quintptr Reference::id() const
     return quintptr(0);
 }
 
-bool Reference::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+bool Reference::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
     cont = cont && self.dvValueLazyField(visitor, Fields::referredObjectPath, [this]() {
@@ -3015,7 +2916,7 @@ bool Reference::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     return cont;
 }
 
-DomItem Reference::field(DomItem &self, QStringView name) const
+DomItem Reference::field(const DomItem &self, QStringView name) const
 {
     if (Fields::referredObjectPath == name)
         return self.subDataItemField(Fields::referredObjectPath, referredObjectPath.toString());
@@ -3024,22 +2925,22 @@ DomItem Reference::field(DomItem &self, QStringView name) const
     return DomItem();
 }
 
-QList<QString> Reference::fields(DomItem &) const
+QList<QString> Reference::fields(const DomItem &) const
 {
     return QList<QString>({QString::fromUtf16(Fields::referredObjectPath), QString::fromUtf16(Fields::get)});
 }
 
-DomItem Reference::index(DomItem &, index_type) const
+DomItem Reference::index(const DomItem &, index_type) const
 {
     return DomItem();
 }
 
-DomItem Reference::key(DomItem &, QString) const
+DomItem Reference::key(const DomItem &, QString) const
 {
     return DomItem();
 }
 
-DomItem Reference::get(DomItem &self, ErrorHandler h, QList<Path> *visitedRefs) const
+DomItem Reference::get(const DomItem &self, ErrorHandler h, QList<Path> *visitedRefs) const
 {
     DomItem res;
     if (referredObjectPath) {
@@ -3075,7 +2976,7 @@ DomItem Reference::get(DomItem &self, ErrorHandler h, QList<Path> *visitedRefs) 
         QList<Path> visitedRefsLocal;
         self.resolve(
                 referredObjectPath,
-                [&res](Path, DomItem &el) {
+                [&res](Path, const DomItem &el) {
                     res = el;
                     return false;
                 },
@@ -3088,7 +2989,7 @@ DomItem Reference::get(DomItem &self, ErrorHandler h, QList<Path> *visitedRefs) 
     return res;
 }
 
-QList<DomItem> Reference::getAll(DomItem &self, ErrorHandler h, QList<Path> *visitedRefs) const
+QList<DomItem> Reference::getAll(const DomItem &self, ErrorHandler h, QList<Path> *visitedRefs) const
 {
     QList<DomItem> res;
     if (referredObjectPath) {
@@ -3130,14 +3031,14 @@ QList<DomItem> Reference::getAll(DomItem &self, ErrorHandler h, QList<Path> *vis
         }
         self.resolve(
                 referredObjectPath,
-                [&res](Path, DomItem &el) {
+                [&res](Path, const DomItem &el) {
                     res.append(el);
                     return true;
                 },
                 h, ResolveOption::None, referredObjectPath, visitedRefs);
         if (env) {
             QList<Path> canonicalPaths;
-            for (DomItem i : res) {
+            for (const DomItem &i : res) {
                 if (i)
                     canonicalPaths.append(i.canonicalPath());
                 else
@@ -3210,14 +3111,14 @@ int OwningItem::nextRevision()
     return ++nextRev;
 }
 
-bool OwningItem::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+bool OwningItem::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
     cont = cont && self.dvItemField(visitor, Fields::errors, [&self, this]() {
         QMultiMap<Path, ErrorMessage> myErrors = localErrors();
         return self.subMapItem(Map(
                 self.pathFromOwner().field(Fields::errors),
-                [myErrors](DomItem &map, QString key) {
+                [myErrors](const DomItem &map, QString key) {
                     auto it = myErrors.find(Path::fromString(key));
                     if (it != myErrors.end())
                         return map.subDataItem(PathEls::Key(key), it->toCbor(),
@@ -3225,7 +3126,7 @@ bool OwningItem::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
                     else
                         return DomItem();
                 },
-                [myErrors](DomItem &) {
+                [myErrors](const DomItem &) {
                     QSet<QString> res;
                     auto it = myErrors.keyBegin();
                     auto end = myErrors.keyEnd();
@@ -3238,7 +3139,7 @@ bool OwningItem::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     return cont;
 }
 
-DomItem OwningItem::containingObject(DomItem &self) const
+DomItem OwningItem::containingObject(const DomItem &self) const
 {
     Source s = self.canonicalPath().split();
     if (s.pathFromSource) {
@@ -3296,12 +3197,12 @@ void OwningItem::refreshedDataAt(QDateTime tNew)
         m_lastDataUpdateAt = tNew;
 }
 
-void OwningItem::addError(DomItem &, ErrorMessage msg)
+void OwningItem::addError(const DomItem &, ErrorMessage &&msg)
 {
-    addErrorLocal(msg);
+    addErrorLocal(std::move(msg));
 }
 
-void OwningItem::addErrorLocal(ErrorMessage msg)
+void OwningItem::addErrorLocal(ErrorMessage &&msg)
 {
     QMutexLocker l(mutex());
     quint32 &c = m_errorsCounts[msg];
@@ -3322,8 +3223,9 @@ void OwningItem::clearErrors(ErrorGroups groups)
     }
 }
 
-bool OwningItem::iterateErrors(DomItem &self, function_ref<bool(DomItem, ErrorMessage)> visitor,
-                               Path inPath)
+bool OwningItem::iterateErrors(
+        const DomItem &self, function_ref<bool(const DomItem &, const ErrorMessage &)> visitor,
+        Path inPath)
 {
     QMultiMap<Path, ErrorMessage> myErrors;
     {
@@ -3339,7 +3241,7 @@ bool OwningItem::iterateErrors(DomItem &self, function_ref<bool(DomItem, ErrorMe
     return true;
 }
 
-bool OwningItem::iterateSubOwners(DomItem &self, function_ref<bool(DomItem &owner)> visitor)
+bool OwningItem::iterateSubOwners(const DomItem &self, function_ref<bool(const DomItem &owner)> visitor)
 {
     return self.iterateDirectSubpaths(
             [&self, visitor](const PathEls::PathComponent &, function_ref<DomItem()> iF) {
@@ -3353,13 +3255,11 @@ bool OwningItem::iterateSubOwners(DomItem &self, function_ref<bool(DomItem &owne
             });
 }
 
-bool operator==(const DomItem &o1c, const DomItem &o2c)
+bool operator==(const DomItem &o1, const DomItem &o2)
 {
-    DomItem &o1 = *const_cast<DomItem *>(&o1c);
-    DomItem &o2 = *const_cast<DomItem *>(&o2c);
     if (o1.m_kind != o2.m_kind)
         return false;
-    return o1.visitMutableEl([&o1, &o2](auto &&el1) {
+    return o1.visitEl([&o1, &o2](auto &&el1) {
         auto &&el2 = std::get<std::decay_t<decltype(el1)>>(o2.m_element);
         auto id1 = el1->id();
         auto id2 = el2->id();
@@ -3380,7 +3280,7 @@ bool operator==(const DomItem &o1c, const DomItem &o2c)
 ErrorHandler MutableDomItem::errorHandler()
 {
     MutableDomItem self;
-    return [&self](ErrorMessage m) { self.addError(m); };
+    return [&self](const ErrorMessage &m) { self.addError(ErrorMessage(m)); };
 }
 
 MutableDomItem MutableDomItem::addPrototypePath(Path prototypePath)
@@ -3483,8 +3383,14 @@ MutableDomItem MutableDomItem::setScript(std::shared_ptr<ScriptExpression> exp)
         break;
     case DomType::MethodParameter:
         if (MethodParameter *p = mutableAs<MethodParameter>()) {
-            p->defaultValue = exp;
-            return field(Fields::body);
+            if (exp->expressionType() == ScriptExpression::ExpressionType::ArgInitializer) {
+                p->defaultValue = exp;
+                return field(Fields::defaultValue);
+            }
+            if (exp->expressionType() == ScriptExpression::ExpressionType::ArgumentStructure) {
+                p->value = exp;
+                return field(Fields::value);
+            }
         }
         break;
     case DomType::ScriptExpression:
@@ -3541,7 +3447,8 @@ MutableDomItem MutableDomItem::setCode(QString code)
     return MutableDomItem();
 }
 
-MutableDomItem MutableDomItem::addPropertyDef(PropertyDefinition propertyDef, AddOption option)
+MutableDomItem MutableDomItem::addPropertyDef(
+        const PropertyDefinition &propertyDef, AddOption option)
 {
     if (QmlObject *el = mutableAs<QmlObject>())
         return el->addPropertyDef(*this, propertyDef, option);
@@ -3559,7 +3466,7 @@ MutableDomItem MutableDomItem::addBinding(Binding binding, AddOption option)
     return MutableDomItem();
 }
 
-MutableDomItem MutableDomItem::addMethod(MethodInfo functionDef, AddOption option)
+MutableDomItem MutableDomItem::addMethod(const MethodInfo &functionDef, AddOption option)
 {
     if (QmlObject *el = mutableAs<QmlObject>())
         return el->addMethod(*this, functionDef, option);
@@ -3652,7 +3559,7 @@ MutableDomItem MutableDomItem::addPostComment(const Comment &comment, QString re
 
 QDebug operator<<(QDebug debug, const DomItem &c)
 {
-    dumperToQDebug([&c](Sink s) { const_cast<DomItem *>(&c)->dump(s); }, debug);
+    dumperToQDebug([&c](Sink s) { c.dump(s); }, debug);
     return debug;
 }
 
@@ -3663,7 +3570,7 @@ QDebug operator<<(QDebug debug, const MutableDomItem &c)
                                      << ", " << cc.canonicalPath().toString() << ")";
 }
 
-bool ListPBase::iterateDirectSubpaths(DomItem &self, DirectVisitor v)
+bool ListPBase::iterateDirectSubpaths(const DomItem &self, DirectVisitor v) const
 {
     index_type len = index_type(m_pList.size());
     for (index_type i = 0; i < len; ++i) {
@@ -3673,7 +3580,7 @@ bool ListPBase::iterateDirectSubpaths(DomItem &self, DirectVisitor v)
     return true;
 }
 
-void ListPBase::writeOut(DomItem &self, OutWriter &ow, bool compact) const
+void ListPBase::writeOut(const DomItem &self, OutWriter &ow, bool compact) const
 {
     ow.writeRegion(u"leftSquareBrace", u"[");
     int baseIndent = ow.increaseIndent(1);
@@ -3695,13 +3602,33 @@ void ListPBase::writeOut(DomItem &self, OutWriter &ow, bool compact) const
     ow.writeRegion(u"rightSquareBrace", u"]");
 }
 
-std::optional<QQmlJSScope::Ptr> ScriptElement::semanticScope()
+QQmlJSScope::ConstPtr ScriptElement::semanticScope()
 {
     return m_scope;
 }
-void ScriptElement::setSemanticScope(const QQmlJSScope::Ptr &scope)
+void ScriptElement::setSemanticScope(const QQmlJSScope::ConstPtr &scope)
 {
     m_scope = scope;
+}
+
+/*!
+  \internal
+  \brief Returns a pointer to the virtual base for virtual method calls.
+
+  A helper to call virtual methods without having to call std::visit(...).
+ */
+ScriptElement::PointerType<ScriptElement> ScriptElementVariant::base() const
+{
+    if (!m_data)
+        return nullptr;
+
+    return std::visit(
+            [](auto &&e) {
+                // std::reinterpret_pointer_cast does not exist on qnx it seems...
+                return std::shared_ptr<ScriptElement>(
+                        e, static_cast<ScriptElement *>(e.get()));
+            },
+            *m_data);
 }
 
 } // end namespace Dom

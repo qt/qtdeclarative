@@ -2046,16 +2046,16 @@ int QMacStyle::pixelMetric(PixelMetric metric, const QStyleOption *opt) const
             : 0;
         break;
     case PM_PushButtonFocusFrameRadius:
-        ret = LargeSmallMini(opt, 8, 7, 5);
+        ret = LargeSmallMini(opt, 5, 4, 2);
         break;
     case PM_CheckBoxFocusFrameRadius:
-        ret = LargeSmallMini(opt, 6, 5, 4);
+        ret = LargeSmallMini(opt, 3, 2, 1);
         break;
     case PM_ComboBoxFocusFrameRadius:
-        ret = LargeSmallMini(opt, 8, 7, 4);
+        ret = LargeSmallMini(opt, 5, 4, 1);
         break;
     case PM_RadioButtonFocusFrameRadius:
-        ret = 10;
+        ret = 7;
         break;
     case PM_SliderFocusFrameRadius:
         // QTBUG-93423: We currently need to skip drawing a focus ring around the handle, since
@@ -2068,7 +2068,7 @@ int QMacStyle::pixelMetric(PixelMetric metric, const QStyleOption *opt) const
     case PM_SpinBoxFocusFrameRadius:
     case PM_TextAreaFocusFrameRadius:
     case PM_TextFieldFocusFrameRadius:
-        ret = 3;
+        ret = 0;
         break;
     default:
         ret = QCommonStyle::pixelMetric(metric, opt);
@@ -2278,7 +2278,7 @@ int QMacStyle::styleHint(StyleHint sh, const QStyleOption *opt, QStyleHintReturn
                     ++srow;
                 }
             }
-            QBitmap qmask = QBitmap::fromImage(img_mask);
+            QBitmap qmask = QBitmap::fromImage(std::move(img_mask));
             mask->region = QRegion(qmask);
         }
         break; }

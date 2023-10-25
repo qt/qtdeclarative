@@ -758,6 +758,7 @@ UiPragma: T_PRAGMA PragmaId T_COLON UiPragmaValueList Semicolon;
         AST::UiPragma *pragma = new (pool) AST::UiPragma(
                 stringRef(2), sym(4).UiPragmaValueList->finish());
         pragma->pragmaToken = loc(1);
+        pragma->colonToken = loc(3);
         pragma->semicolonToken = loc(5);
         sym(1).Node = pragma;
     } break;
@@ -1381,6 +1382,7 @@ UiObjectMemberWithArray: UiPropertyAttributes T_IDENTIFIER T_LT UiPropertyType T
         node->typeToken = loc(4);
         node->identifierToken = loc(6);
         node->semicolonToken = loc(7); // insert a fake ';' before ':'
+        node->colonToken = loc(7);
 
         AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(6));
         propertyName->identifierToken = loc(6);
@@ -1410,6 +1412,7 @@ UiObjectMemberExpressionStatementLookahead: UiPropertyAttributes UiPropertyType 
         node->typeToken = loc(2);
         node->identifierToken = loc(3);
         node->semicolonToken = loc(4); // insert a fake ';' before ':'
+        node->colonToken = loc(4);
 
         AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(3));
         propertyName->identifierToken = loc(3);
@@ -1494,6 +1497,7 @@ UiObjectMember: T_COMPONENT T_IDENTIFIER T_COLON UiObjectDefinition;
         }
         auto inlineComponent = new (pool) AST::UiInlineComponent(stringRef(2), sym(4).UiObjectDefinition);
         inlineComponent->componentToken = loc(1);
+        inlineComponent->identifierToken = loc(2);
         sym(1).Node = inlineComponent;
     } break;
 ./
@@ -3329,7 +3333,7 @@ BindingElisionElement: ElisionOpt BindingElement;
 BindingProperty: BindingIdentifier InitializerOpt_In;
 /.
     case $rule_number: {
-        AST::StringLiteralPropertyName *name = new (pool) AST::StringLiteralPropertyName(stringRef(1));
+        AST::IdentifierPropertyName *name = new (pool) AST::IdentifierPropertyName(stringRef(1));
         name->propertyNameToken = loc(1);
         // if initializer is an anonymous function expression, we need to assign identifierref as it's name
         if (auto *f = asAnonymousFunctionDefinition(sym(2).Expression))

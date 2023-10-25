@@ -167,8 +167,8 @@ struct ControlFlowUnwindCleanup : public ControlFlowUnwind
     ~ControlFlowUnwindCleanup() {
         if (cleanup) {
             unwindLabel.link();
-            generator()->setUnwindHandler(parentUnwindHandler());
             cleanup();
+            generator()->setUnwindHandler(parentUnwindHandler());
             emitUnwindHandler();
         }
     }
@@ -338,12 +338,17 @@ struct ControlFlowFinally : public ControlFlowUnwind
     QQmlJS::AST::Finally *finally;
     bool insideFinally = false;
 
-    ControlFlowFinally(Codegen *cg, QQmlJS::AST::Finally *finally)
+    ControlFlowFinally(Codegen *cg, QQmlJS::AST::Finally *finally, bool hasCatchBlock)
         : ControlFlowUnwind(cg, Finally), finally(finally)
     {
         Q_ASSERT(finally != nullptr);
         setupUnwindHandler();
-        generator()->setUnwindHandler(&unwindLabel);
+
+        // No need to set the handler for the finally now if there is a catch block.
+        // In that case, a handler for the latter will be set immediately after this.
+        if (!hasCatchBlock) {
+            generator()->setUnwindHandler(&unwindLabel);
+        }
     }
 
     virtual bool requiresUnwind() override {

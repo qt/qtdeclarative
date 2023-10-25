@@ -1,0 +1,50 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-with.html
+\ingroup qmllint-warnings-and-errors
+
+\title With Statements
+\brief With statements are strongly discouraged in QML.
+
+\section1 With Statements
+
+\section2 What happened?
+The JavaScript \c{with} statement was used.
+
+\section2 Why is this bad?
+With statements might cause false positives when analysing unqualified identifiers. Also, \c{with}
+statements are
+\l{https://262.ecma-international.org/#sec-with-statement}{marked as deprecated by the latest JavaScript standard}.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    function f() {
+        with (Math) {
+            return PI
+        }
+    }
+}
+\endqml
+You can fix this warning by replacing the \c{with} statement with a destructuring property,
+for example:
+\qml
+import QtQuick
+
+Item {
+    function f() {
+        const { PI } = Math;
+        return PI
+    }
+}
+
+\endqml
+
+\note You can find more replacement ideas
+\l{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with?retiredLocale=de#examples}{here}.
+*/
+

@@ -223,6 +223,8 @@ public:
                 return from.toLocalTime().time();
             if constexpr (std::is_same_v<To, QString>)
                 return convertDateTimeToString(from.toLocalTime());
+            if constexpr (std::is_same_v<To, double>)
+                return convertDateTimeToNumber(from.toLocalTime());
         }
 
         if constexpr (std::is_same_v<From, QDate>) {
@@ -234,6 +236,8 @@ public:
             }
             if constexpr (std::is_same_v<To, QString>)
                 return convertDateTimeToString(coerceValue<QDate, QDateTime>(from));
+            if constexpr (std::is_same_v<To, double>)
+                return convertDateTimeToNumber(coerceValue<QDate, QDateTime>(from));
         }
 
         if constexpr (std::is_same_v<From, QTime>) {
@@ -246,6 +250,8 @@ public:
                 return QDateTime(coerceValue<QTime, QDate>(from), from, QTimeZone::LocalTime);
             if constexpr (std::is_same_v<To, QString>)
                 return convertDateTimeToString(coerceValue<QTime, QDateTime>(from));
+            if constexpr (std::is_same_v<To, double>)
+                return convertDateTimeToNumber(coerceValue<QTime, QDateTime>(from));
         }
 
         if constexpr (std::is_same_v<To, std::remove_const_t<std::remove_pointer_t<To>> const *>) {
@@ -325,6 +331,7 @@ private:
 
     QString convertQObjectToString(QObject *object);
     QString convertDateTimeToString(const QDateTime &dateTime);
+    double convertDateTimeToNumber(const QDateTime &dateTime);
     static QDate convertDateTimeToDate(const QDateTime &dateTime);
 
     template<typename T>

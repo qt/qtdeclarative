@@ -333,6 +333,8 @@ protected:
                     useInitializer = true;
                     if (bindingIdentifierExist)
                         out(assignment->bindingIdentifier);
+                    if (assignment->bindingTarget)
+                        accept(assignment->bindingTarget);
                 }
 
                 if (assignment->initializer) {
@@ -983,7 +985,7 @@ protected:
     {
         for (FormalParameterList *it = ast; it; it = it->next) {
             // compare FormalParameterList::finish
-            if (auto id = it->element->bindingIdentifier.toString(); !id.startsWith(u"arg#"))
+            if (auto id = it->element->bindingIdentifier.toString(); !id.isEmpty())
                 out(id);
             if (it->element->bindingTarget)
                 accept(it->element->bindingTarget);

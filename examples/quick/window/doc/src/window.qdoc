@@ -6,6 +6,7 @@
     \brief This example demonstrates the Window and Screen types in QML.
     \image qml-window-example.png
     \ingroup qtquickexamples
+    \examplecategory {Graphics & Multimedia}
 
     \e{Window and Screen} shows how to:
 

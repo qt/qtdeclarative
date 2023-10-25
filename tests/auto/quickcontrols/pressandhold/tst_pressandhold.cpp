@@ -43,17 +43,19 @@ void tst_PressAndHold::pressAndHold_data()
 {
     QTest::addColumn<QByteArray>("data");
     QTest::addColumn<QByteArray>("signal");
+    QTest::addColumn<bool>("acceptsRightMouseButton");
 
-    QTest::newRow("Button") << QByteArray("import QtQuick.Controls; Button { text: 'Button' }") << QByteArray(SIGNAL(pressAndHold()));
-    QTest::newRow("SwipeDelegate") << QByteArray("import QtQuick.Controls; SwipeDelegate { text: 'SwipeDelegate' }") << QByteArray(SIGNAL(pressAndHold()));
-    QTest::newRow("TextField") << QByteArray("import QtQuick.Controls; TextField { text: 'TextField' }") << QByteArray(SIGNAL(pressAndHold(QQuickMouseEvent*)));
-    QTest::newRow("TextArea") << QByteArray("import QtQuick.Controls; TextArea { text: 'TextArea' }") << QByteArray(SIGNAL(pressAndHold(QQuickMouseEvent*)));
+    QTest::newRow("Button") << QByteArray("import QtQuick.Controls; Button { text: 'Button' }") << QByteArray(SIGNAL(pressAndHold())) << false;
+    QTest::newRow("SwipeDelegate") << QByteArray("import QtQuick.Controls; SwipeDelegate { text: 'SwipeDelegate' }") << QByteArray(SIGNAL(pressAndHold())) << false;
+    QTest::newRow("TextField") << QByteArray("import QtQuick.Controls; TextField { text: 'TextField' }") << QByteArray(SIGNAL(pressAndHold(QQuickMouseEvent*))) << true;
+    QTest::newRow("TextArea") << QByteArray("import QtQuick.Controls; TextArea { text: 'TextArea' }") << QByteArray(SIGNAL(pressAndHold(QQuickMouseEvent*))) << true;
 }
 
 void tst_PressAndHold::pressAndHold()
 {
     QFETCH(QByteArray, data);
     QFETCH(QByteArray, signal);
+    QFETCH(bool, acceptsRightMouseButton);
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -106,19 +108,21 @@ void tst_PressAndHold::pressAndHold()
     waitSpy.clear();
 
     // pressAndHold() canceled by 2nd press
-    QGuiApplication::sendEvent(control.data(), &press);
-    QGuiApplication::sendEvent(control.data(), &press2); // cancels pressAndHold()
-    QGuiApplication::sendEvent(waitControl.data(), &press);
-    // by the time the second control emits pressAndHold(), we can reliably
-    // assume that the first control would have emitted pressAndHold() if it
-    // wasn't canceled as appropriate by the 2nd press event above
-    QTRY_COMPARE(waitSpy.size(), 1);
-    QCOMPARE(spy.size(), 0);
-    QGuiApplication::sendEvent(control.data(), &release);
-    QGuiApplication::sendEvent(waitControl.data(), &release);
-    QCOMPARE(waitSpy.size(), 1);
-    QCOMPARE(spy.size(), 0);
-    waitSpy.clear();
+    if (acceptsRightMouseButton) {
+        QGuiApplication::sendEvent(control.data(), &press);
+        QGuiApplication::sendEvent(control.data(), &press2); // cancels pressAndHold()
+        QGuiApplication::sendEvent(waitControl.data(), &press);
+        // by the time the second control emits pressAndHold(), we can reliably
+        // assume that the first control would have emitted pressAndHold() if it
+        // wasn't canceled as appropriate by the 2nd press event above
+        QTRY_COMPARE(waitSpy.size(), 1);
+        QCOMPARE(spy.size(), 0);
+        QGuiApplication::sendEvent(control.data(), &release);
+        QGuiApplication::sendEvent(waitControl.data(), &release);
+        QCOMPARE(waitSpy.size(), 1);
+        QCOMPARE(spy.size(), 0);
+        waitSpy.clear();
+    }
 }
 
 void tst_PressAndHold::keepSelection_data()

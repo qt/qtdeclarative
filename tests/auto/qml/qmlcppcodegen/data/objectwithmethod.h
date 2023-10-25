@@ -32,6 +32,9 @@ public:
     Q_INVOKABLE void overloaded(QQmlV4Function *) { setObjectName(QStringLiteral("javaScript")); }
     Q_INVOKABLE void overloaded(double) { setObjectName(QStringLiteral("double")); }
     Q_INVOKABLE void overloaded(const QString &) { setObjectName(QStringLiteral("string")); }
+
+    Q_INVOKABLE void foo(const QString &bla) { setObjectName(bla); }
+    Q_INVOKABLE void foo(ObjectWithMethod *) { setObjectName(QStringLiteral("ObjectWithMethod")); }
 };
 
 class OverriddenObjectName : public ObjectWithMethod

@@ -5,6 +5,7 @@
     \example tableview/pixelator
     \brief The Pixelator example shows how a QML TableView and a delegate
     can be used for custom table models.
+    \examplecategory {Graphics & Multimedia}
 
     \image qt-pixelator.png
     \ingroup qtquickexamples

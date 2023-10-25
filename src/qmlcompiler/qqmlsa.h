@@ -13,25 +13,19 @@
 // future versions of Qt.
 //
 
-#include "qqmlsaconstants.h"
-#include "qqmljsloggingutils.h"
+#include <QtQmlCompiler/qqmlsaconstants.h>
+#include <QtQmlCompiler/qqmljsloggingutils.h>
 
-#include <qtqmlcompilerexports.h>
+#include <QtQmlCompiler/qtqmlcompilerexports.h>
 
-#include <QtCore/QMultiHash>
+#include <QtCore/qhash.h>
+#include <QtCore/qsharedpointer.h>
+#include <QtCore/qplugin.h>
 #include <QtQmlCompiler/qqmlsasourcelocation.h>
 
 #include <unordered_map>
 
 QT_BEGIN_NAMESPACE
-
-class QQmlJSImportVisitor;      // needed for PassManager
-class QQmlJSTypeResolver;       // needed for PassManager
-struct QQmlJSTypePropagator;    // needed for PassManager
-
-namespace QQmlJS {
-class ConstPtrWrapperIterator;  // needed for Element's child scope iterators
-} // namespace QQmlJS
 
 namespace QQmlSA {
 
@@ -94,7 +88,6 @@ public:
     ScriptBindingKind scriptKind() const;
     bool hasObject() const;
     Element objectType() const;
-    Element literalType(const QQmlJSTypeResolver *) const;
     bool hasUndefinedScriptValue() const;
 
     friend bool operator==(const Binding &lhs, const Binding &rhs)
@@ -238,9 +231,6 @@ public:
     Binding::Bindings ownPropertyBindings(const QString &propertyName) const;
     QList<Binding> propertyBindings(const QString &propertyName) const;
 
-    QQmlJS::ConstPtrWrapperIterator childScopesBegin() const;
-    QQmlJS::ConstPtrWrapperIterator childScopesEnd() const;
-
     explicit operator bool() const;
     bool operator!() const;
 
@@ -283,10 +273,10 @@ public:
     GenericPass(PassManager *manager);
     virtual ~GenericPass();
 
-    void emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id);
-    void emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id,
+    void emitWarning(QAnyStringView diagnostic, LoggerWarningId id);
+    void emitWarning(QAnyStringView diagnostic, LoggerWarningId id,
                      QQmlSA::SourceLocation srcLocation);
-    void emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id,
+    void emitWarning(QAnyStringView diagnostic, LoggerWarningId id,
                      QQmlSA::SourceLocation srcLocation, const QQmlSA::FixSuggestion &fix);
 
     Element resolveTypeInFileScope(QAnyStringView typeName);
@@ -307,13 +297,10 @@ private:
 
 class Q_QMLCOMPILER_EXPORT PassManager
 {
-    friend struct ::QQmlJSTypePropagator;
+    Q_DISABLE_COPY_MOVE(PassManager)
     Q_DECLARE_PRIVATE(PassManager)
 
 public:
-    PassManager(QQmlJSImportVisitor *visitor, QQmlJSTypeResolver *resolver);
-    ~PassManager();
-
     void registerElementPass(std::unique_ptr<ElementPass> pass);
     bool registerPropertyPass(std::shared_ptr<PropertyPass> pass, QAnyStringView moduleName,
                               QAnyStringView typeName,
@@ -323,13 +310,16 @@ public:
 
     bool hasImportedModule(QAnyStringView name) const;
 
-    bool isCategoryEnabled(QQmlJS::LoggerWarningId category) const;
+    bool isCategoryEnabled(LoggerWarningId category) const;
 
     std::vector<std::shared_ptr<ElementPass>> elementPasses() const;
     std::multimap<QString, PropertyPassInfo> propertyPasses() const;
     std::unordered_map<quint32, BindingInfo> bindingsByLocation() const;
 
 private:
+    PassManager();
+    ~PassManager();
+
     std::unique_ptr<PassManagerPrivate> d_ptr;
 };
 

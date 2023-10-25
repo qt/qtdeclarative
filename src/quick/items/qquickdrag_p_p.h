@@ -25,7 +25,7 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
-#include <QtQuick/private/qquickpixmapcache_p.h>
+#include <QtQuick/private/qquickpixmap_p.h>
 
 QT_BEGIN_NAMESPACE
 

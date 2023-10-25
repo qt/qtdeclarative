@@ -37,20 +37,18 @@ public:
 
     struct Flags {
         friend class QQmlPropertyData;
-        enum Types {
+        enum Type {
             OtherType            = 0,
             FunctionType         = 1, // Is an invokable
             QObjectDerivedType   = 2, // Property type is a QObject* derived type
             EnumType             = 3, // Property type is an enum
             QListType            = 4, // Property type is a QML list
-            /*QmlBindingType       = 5; was: Property type is a QQmlBinding*; now unused */
-            QJSValueType         = 6, // Property type is a QScriptValue
-                                      // Gap, used to be V4HandleType
-            VarPropertyType      = 8, // Property type is a "var" property of VMEMO
-            QVariantType         = 9, // Property is a QVariant
-            ValueType            = 10 // Property type is a custom value type
+            VarPropertyType      = 5, // Property type is a "var" property of VMEMO
+            QVariantType         = 6, // Property is a QVariant
+            // One spot left for an extra type in the 3 bits used to store this.
         };
 
+    private:
         // The _otherBits (which "pad" the Flags struct to align it nicely) are used
         // to store the relative property index. It will only get used when said index fits. See
         // trySetStaticMetaCallFunction for details.
@@ -63,12 +61,11 @@ public:
         // b when type equals FunctionType. For that reason, the semantic meaning of the bit is
         // overloaded, and the accessor functions are used to get the correct value
         //
-        // Moreover, isSignalHandler, isOverload and isCloned make only sense
+        // Moreover, isSignalHandler, isOverridableSignal and isCloned make only sense
         // for functions, too (and could at a later point be reused for flags that only make sense
         // for non-functions)
         //
         // Lastly, isDirect and isOverridden apply to both functions and non-functions
-    private:
         unsigned isConst                       : 1; // Property: has CONST flag/Method: is const
         unsigned isVMEFunction                 : 1; // Function was added by QML
         unsigned isWritableORhasArguments      : 1; // Has WRITE function OR Function takes arguments
@@ -76,18 +73,20 @@ public:
         unsigned isAliasORisVMESignal          : 1; // Is a QML alias to another property OR Signal was added by QML
         unsigned isFinalORisV4Function         : 1; // Has FINAL flag OR Function takes QQmlV4Function* args
         unsigned isSignalHandler               : 1; // Function is a signal handler
-        unsigned isOverload                    : 1; // Function is an overload of another function
+
+        // TODO: Remove this once we can. Signals should not be overridable.
+        unsigned isOverridableSignal           : 1; // Function is an overridable signal
+
         unsigned isRequiredORisCloned          : 1; // Has REQUIRED flag OR The function was marked as cloned
         unsigned isConstructorORisBindable     : 1; // The function was marked is a constructor OR property is backed by QProperty<T>
         unsigned isOverridden                  : 1; // Is overridden by a extension property
-    public:
-        unsigned type             : 4; // stores an entry of Types
-
-        // Apply only to IsFunctions
+        unsigned hasMetaObject                 : 1;
+        unsigned type                          : 3; // stores an entry of Types
 
         // Internal QQmlPropertyCache flags
-        unsigned overrideIndexIsProperty: 1;
+        unsigned overrideIndexIsProperty       : 1;
 
+    public:
         inline Flags();
         inline bool operator==(const Flags &other) const;
         inline void copyPropertyTypeFlags(Flags from);
@@ -157,9 +156,11 @@ public:
             isSignalHandler = b;
         }
 
-        void setIsOverload(bool b) {
+        // TODO: Remove this once we can. Signals should not be overridable.
+        void setIsOverridableSignal(bool b) {
             Q_ASSERT(type == FunctionType);
-            isOverload = b;
+            Q_ASSERT(isResettableORisSignal);
+            isOverridableSignal = b;
         }
 
         void setIsCloned(bool b) {
@@ -172,6 +173,13 @@ public:
             isConstructorORisBindable = b;
         }
 
+        void setHasMetaObject(bool b) {
+            hasMetaObject = b;
+        }
+
+        void setType(Type newType) {
+            type = newType;
+        }
     };
 
 
@@ -200,7 +208,6 @@ public:
     bool isQObject() const { return m_flags.type == Flags::QObjectDerivedType; }
     bool isEnum() const { return m_flags.type == Flags::EnumType; }
     bool isQList() const { return m_flags.type == Flags::QListType; }
-    bool isQJSValue() const { return m_flags.type == Flags::QJSValueType; }
     bool isVarProperty() const { return m_flags.type == Flags::VarPropertyType; }
     bool isQVariant() const { return m_flags.type == Flags::QVariantType; }
     bool isVMEFunction() const { return isFunction() && m_flags.isVMEFunction; }
@@ -209,8 +216,11 @@ public:
     bool isVMESignal() const { return isFunction() && m_flags.isAliasORisVMESignal; }
     bool isV4Function() const { return isFunction() && m_flags.isFinalORisV4Function; }
     bool isSignalHandler() const { return m_flags.isSignalHandler; }
-    bool isOverload() const { return m_flags.isOverload; }
-    void setOverload(bool onoff) { m_flags.isOverload = onoff; }
+    bool hasMetaObject() const { return m_flags.hasMetaObject; }
+
+    // TODO: Remove this once we can. Signals should not be overridable.
+    bool isOverridableSignal() const { return m_flags.isOverridableSignal; }
+
     bool isCloned() const { return isFunction() && m_flags.isRequiredORisCloned; }
     bool isConstructor() const { return isFunction() && m_flags.isConstructorORisBindable; }
     bool isBindable() const { return !isFunction() && m_flags.isConstructorORisBindable; }
@@ -275,8 +285,36 @@ public:
     QTypeRevision typeVersion() const { return m_typeVersion; }
     void setTypeVersion(QTypeRevision typeVersion) { m_typeVersion = typeVersion; }
 
-    QQmlPropertyCacheMethodArguments *arguments() const { return m_arguments; }
-    void setArguments(QQmlPropertyCacheMethodArguments *args) { m_arguments = args; }
+    QQmlPropertyCacheMethodArguments *arguments() const
+    {
+        Q_ASSERT(!hasMetaObject());
+        return m_arguments;
+    }
+    void setArguments(QQmlPropertyCacheMethodArguments *args)
+    {
+        Q_ASSERT(!hasMetaObject());
+        m_arguments = args;
+    }
+
+    const QMetaObject *metaObject() const
+    {
+        Q_ASSERT(hasMetaObject());
+        return m_metaObject;
+    }
+
+    void setMetaObject(const QMetaObject *metaObject)
+    {
+        Q_ASSERT(!hasArguments() || !m_arguments);
+        m_flags.setHasMetaObject(true);
+        m_metaObject = metaObject;
+    }
+
+    QMetaMethod metaMethod() const
+    {
+        Q_ASSERT(hasMetaObject());
+        Q_ASSERT(isFunction());
+        return m_metaObject->method(m_coreIndex);
+    }
 
     int metaObjectOffset() const { return m_metaObjectOffset; }
     void setMetaObjectOffset(int off)
@@ -353,7 +391,7 @@ public:
     static Flags defaultSignalFlags()
     {
         Flags f;
-        f.type = Flags::FunctionType;
+        f.setType(Flags::FunctionType);
         f.setIsSignal(true);
         f.setIsVMESignal(true);
         return f;
@@ -362,7 +400,7 @@ public:
     static Flags defaultSlotFlags()
     {
         Flags f;
-        f.type = Flags::FunctionType;
+        f.setType(Flags::FunctionType);
         f.setIsVMEFunction(true);
         return f;
     }
@@ -388,6 +426,7 @@ private:
     union {
         QQmlPropertyCacheMethodArguments *m_arguments = nullptr;
         StaticMetaCallFunction m_staticMetaCallFunction;
+        const QMetaObject *m_metaObject;
     };
 };
 
@@ -417,13 +456,15 @@ QQmlPropertyData::Flags::Flags()
     , isAliasORisVMESignal(false)
     , isFinalORisV4Function(false)
     , isSignalHandler(false)
-    , isOverload(false)
+    , isOverridableSignal(false)
     , isRequiredORisCloned(false)
     , isConstructorORisBindable(false)
     , isOverridden(false)
+    , hasMetaObject(false)
     , type(OtherType)
     , overrideIndexIsProperty(false)
-{}
+{
+}
 
 bool QQmlPropertyData::Flags::operator==(const QQmlPropertyData::Flags &other) const
 {
@@ -436,6 +477,7 @@ bool QQmlPropertyData::Flags::operator==(const QQmlPropertyData::Flags &other) c
             isOverridden == other.isOverridden &&
             isSignalHandler == other.isSignalHandler &&
             isRequiredORisCloned == other.isRequiredORisCloned &&
+            hasMetaObject == other.hasMetaObject &&
             type == other.type &&
             isConstructorORisBindable == other.isConstructorORisBindable &&
             overrideIndexIsProperty == other.overrideIndexIsProperty;
@@ -447,7 +489,6 @@ void QQmlPropertyData::Flags::copyPropertyTypeFlags(QQmlPropertyData::Flags from
     case QObjectDerivedType:
     case EnumType:
     case QListType:
-    case QJSValueType:
     case QVariantType:
         type = from.type;
     }

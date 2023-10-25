@@ -109,7 +109,7 @@ void QSGRhiTextureGlyphCache::prepareGlyphImage(QImage *img)
     m_bgra = false;
 
     if (img->format() == QImage::Format_Mono) {
-        *img = img->convertToFormat(QImage::Format_Grayscale8);
+        *img = std::move(*img).convertToFormat(QImage::Format_Grayscale8);
     } else if (img->depth() == 32) {
         if (img->format() == QImage::Format_RGB32 || img->format() == QImage::Format_ARGB32_Premultiplied) {
             // We need to make the alpha component equal to the average of the RGB values.

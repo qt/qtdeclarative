@@ -504,7 +504,7 @@ int Sequence::virtualMetacall(Object *object, QMetaObject::Call call, int index,
     switch (call) {
     case QMetaObject::ReadProperty: {
         const QMetaType valueType = sequence->d()->valueMetaType();
-        if (!sequence->loadReference())
+        if (sequence->d()->isReference() && !sequence->loadReference())
             return 0;
         const QMetaSequence metaSequence = sequence->d()->metaSequence();
         if (metaSequence.valueMetaType() != valueType)
@@ -522,7 +522,8 @@ int Sequence::virtualMetacall(Object *object, QMetaObject::Call call, int index,
         if (index < 0 || index >= metaSequence.size(storagePointer))
             return 0;
         metaSequence.setValueAtIndex(storagePointer, index, a[0]);
-        sequence->storeReference();
+        if (sequence->d()->isReference())
+            sequence->storeReference();
         break;
     }
     default:
@@ -714,14 +715,15 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
                                 variant, valueMetaType);
                     if (converted.isValid()) {
                         variant = converted;
-                    } else if (!variant.convert(valueMetaType)) {
+                    } else if (!variant.convert(valueMetaType) && originalType.isValid()) {
+                        // If the original type was void, we're converting a "hole" in a sparse
+                        // array. There is no point in warning about that.
                         qWarning().noquote()
                                 << QLatin1String("Could not convert array value "
                                                  "at position %1 from %2 to %3")
                                    .arg(QString::number(i),
                                         QString::fromUtf8(originalType.name()),
                                         QString::fromUtf8(valueMetaType.name()));
-                        variant = QVariant(valueMetaType);
                     }
                 }
                 meta->addValueAtEnd(result.data(), variant.constData());

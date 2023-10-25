@@ -58,7 +58,7 @@ public:
                 link();
         }
 
-        void link() {
+        void link() const {
             Q_ASSERT(index >= 0);
             Q_ASSERT(generator->labels[index] == -1);
             generator->labels[index] = generator->instructions.size();

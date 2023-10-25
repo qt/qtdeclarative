@@ -1,0 +1,65 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-required.html
+\ingroup qmllint-warnings-and-errors
+
+\title Component is Missing a Required Property
+\brief A component's required property was not bound.
+
+\section1 Component is Missing a Required Property
+
+\section2 What happened?
+The \l{QML Object Attributes#required-properties}{required property} of a component was not set.
+
+
+\section2 Why is this bad?
+QML applications where components miss required properties will misbehave: they will not
+start at all if a missing required property is detected statically. Dynamically created components
+with missing required properties will not be created at runtime: they will be null instead.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    component RepeatMe: Item {
+        required property int index;
+        required property int helloWorld;
+    }
+
+    RepeatMe {} // not ok: required properties index and helloWorld not set
+
+    Repeater {
+        model: 10
+        RepeatMe {} // not ok: required property index set by Repeater, but not helloWorld
+    }
+}
+\endqml
+You can fix this warning by setting the required properties
+\qml
+import QtQuick
+
+Item {
+    component RepeatMe: Item {
+        required property int index;
+        required property int helloWorld;
+    }
+
+    RepeatMe {
+        index: 0
+        helloWorld: 42
+    } // ok: all required properties were set
+
+    Repeater {
+        model: 10
+        RepeatMe {
+            helloWorld: index * 2 + 1
+        } // ok: all required properties were set: index by the Repeater and helloWorld by the user
+    }
+}
+\endqml
+
+\sa {QML Coding Conventions#required-properties}{QML Coding Conventions - Required Properties}
+*/

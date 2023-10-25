@@ -861,10 +861,9 @@ void tst_QQuickPathView::dataModel()
 
     model.moveItem(3, 5);
     QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").size(), 5);
-    QList<QQuickItem*> items = findItems<QQuickItem>(pathview, "wrapper");
-    foreach (QQuickItem *item, items) {
+    const QList<QQuickItem *> items = findItems<QQuickItem>(pathview, "wrapper");
+    for (QQuickItem *item : items)
         QVERIFY(item->property("onPath").toBool());
-    }
     QCOMPARE(pathview->currentItem(), findItem<QQuickItem>(pathview, "wrapper", 1));
 
     // QTBUG-14199
@@ -2502,7 +2501,8 @@ void tst_QQuickPathView::qtbug37815()
     const int pathItemCount = pathView->pathItemCount();
     const int cacheItemCount = pathView->cacheItemCount();
     int totalCount = 0;
-    foreach (QQuickItem *item, pathView->childItems()) {
+    const auto childItems = pathView->childItems();
+    for (QQuickItem *item : childItems) {
         if (item->objectName().startsWith(QLatin1String("delegate")))
             ++totalCount;
     }
@@ -2571,7 +2571,8 @@ void tst_QQuickPathView::qtbug53464()
 
     const int pathItemCount = pathView->pathItemCount();
     int totalCount = 0;
-    foreach (QQuickItem *item, pathView->childItems()) {
+    const auto childItems = pathView->childItems();
+    for (QQuickItem *item : childItems) {
         if (item->objectName().startsWith(QLatin1String("delegate")))
             ++totalCount;
     }

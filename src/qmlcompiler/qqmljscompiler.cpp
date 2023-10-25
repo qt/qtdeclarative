@@ -468,7 +468,7 @@ void wrapCall(const QQmlPrivate::AOTCompiledContext *aotContext, void *dataPtr, 
        binding(aotContext, argumentsPtr);
     } else {
         if (dataPtr) {
-           new (dataPtr) return_type(binding(aotContext, argumentsPtr));
+           *static_cast<return_type *>(dataPtr) = binding(aotContext, argumentsPtr);
         } else {
            binding(aotContext, argumentsPtr);
         }

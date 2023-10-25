@@ -533,7 +533,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
         result = v4->catchException(&trace);
         if (exceptionStackTrace) {
             for (auto &&frame: trace)
-                exceptionStackTrace->push_back(QString::fromLatin1("%1:%2:%3:%4").arg(
+                exceptionStackTrace->push_back(QLatin1StringView("%1:%2:%3:%4").arg(
                                           frame.function,
                                           QString::number(qAbs(frame.line)),
                                           QString::number(frame.column),
@@ -960,6 +960,11 @@ QString QJSEngine::convertDateTimeToString(const QDateTime &dateTime)
     return QV4::DateObject::dateTimeToString(dateTime, handle());
 }
 
+double QJSEngine::convertDateTimeToNumber(const QDateTime &dateTime)
+{
+    return QV4::DateObject::dateTimeToNumber(dateTime);
+}
+
 QDate QJSEngine::convertDateTimeToDate(const QDateTime &dateTime)
 {
     return QV4::DateObject::dateTimeToDate(dateTime);
@@ -1023,7 +1028,7 @@ QDate QJSEngine::convertDateTimeToDate(const QDateTime &dateTime)
     conversions between JavaScript-equivalent types that are not
     performed by qvariant_cast by default.
 
-    \sa coerceValue(), fromScriptValue(), qvariant_cast()
+    \sa coerceValue(), fromScriptValue(), {QVariant::}{qvariant_cast()}
 */
 
 /*! \fn template <typename From, typename To> T QJSEngine::coerceValue(const From &from)
@@ -1035,7 +1040,7 @@ QDate QJSEngine::convertDateTimeToDate(const QDateTime &dateTime)
     performed by qvariant_cast by default. This method is a generalization of
     all the other conversion methods in this class.
 
-    \sa fromVariant(), qvariant_cast(), fromScriptValue(), toScriptValue()
+    \sa fromVariant(), {QVariant::}{qvariant_cast()}, fromScriptValue(), toScriptValue()
 */
 
 /*!

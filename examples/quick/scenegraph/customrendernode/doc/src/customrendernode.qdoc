@@ -4,13 +4,21 @@
 /*!
     \example scenegraph/customrendernode
     \title Scene Graph - Custom QSGRenderNode
+    \examplecategory {Graphics & Multimedia}
     \ingroup qtquickexamples
     \brief Shows how to use QSGRenderNode to implement custom rendering in the Qt Quick scenegraph.
 
-    The custom render node example shows how to implement an item that is rendered using
-    a custom QSGRenderNode.
+    The custom render node example shows how to implement a QQuickItem subclass
+    that is backed by a scene graph node derived from QSGRenderNode, providing
+    it's own QRhi-based rendering.
 
-    \image customrendernode-example.gif
+    \image customrendernode-example.jpg
+
+    \note This example demonstrates advanced, low-level functionality performing
+    portable, cross-platform 3D rendering, while relying on APIs with limited
+    compatibility guarantee from the Qt Gui module.  To be able to use the QRhi
+    APIs, the application links to \c{Qt::GuiPrivate} and includes
+    \c{<rhi/qrhi.h>}.
 
     QSGRenderNode allows direct access to the Render Hardware Interface (RHI)
     within the scenegraph. This example demonstrates how to create QSGRenderNode
@@ -23,12 +31,6 @@
     native 3D API such as OpenGL, Metal, or Vulkan. Rather, the application uses
     Qt's graphics and shader abstraction layer.
 
-    \note This example demonstrates advanced, low-level functionality performing
-    portable, cross-platform 3D rendering, while relying on APIs with limited
-    compatibility guarantee from the Qt Gui module.  To be able to use the QRhi
-    APIs, the application links to \c{Qt::GuiPrivate} and includes
-    \c{<rhi/qrhi.h>}.
-
     QSGRenderNode is the enabler for one of the three ways to integrate custom
     2D/3D rendering into a Qt Quick scene. The other two options are to perform
     the rendering \c before or \c after the Qt Quick scene's own rendering,
@@ -39,5 +41,88 @@
     injecting custom rendering commands "inline" with the Qt Quick scene's
     own rendering.
 
-    \sa {Scene Graph - RHI Under QML}, {Scene Graph - RHI Texture Item}
+    Refer to the following examples for these three approaches:
+
+    \list
+
+    \li \l{Scene Graph - RHI Under QML} - Demonstrates an "underlay" approach
+    based on the \l{QQuickWindow::beforeRendering()} signal. No additional
+    render pass and resources are needed, but composition and blending with the
+    rest of the Qt Quick scene is quite limited. Rendering "under" or "over" the
+    Qt Quick scene is the simplest approach.
+
+    \li \l{Scene Graph - RHI Texture Item} - Demonstrates creating a custom
+    QQuickItem that renders into a texture and displays a quad textured with the
+    generated content. This is very flexible and allows complete blending and
+    composition of the resulting 2D image with the rest of the Qt Quick scene.
+    That comes at the expense of an additional render pass and render target.
+
+    \li This example - Demonstrates the "inline" approach, where the Qt Quick
+    scene graph calls into the custom item and node implementation during the
+    main render pass. This approach can be great for performance (no extra
+    render passes, texturing, and blending are involved), but has potential
+    pitfalls and is the most complicated method.
+
+    \endlist
+
+    The custom item derives from QQuickItem. Most importantly, it reimplements
+    \l{QQuickItem::}updatePaintNode().
+
+    \snippet scenegraph/customrendernode/customrender.h item
+
+    The constructor sets the \l{QQuickItem::}ItemHasContents flag to indicate
+    that this is a visual item.
+
+    \snippet scenegraph/customrendernode/customrender.cpp item-ctor
+
+    The updatePaintNode() implementation creates an instance of the custom
+    scenegraph node, if not yet done. The backing QSGNode tree for this item
+    consists of a single node, an instance of a QSGRenderNode-derived class.
+    When Qt Quick's threaded rendering model is in use, this function is called
+    on the render thread with the main thread blocked. That is why it is safe to
+    access main thread data (such as data stored in QQuickItems). The node, the
+    instance of the QSGRenderNode subclass, is going to "live on" the render
+    thread.
+
+    \snippet scenegraph/customrendernode/customrender.cpp item-update
+
+    The \c CustomRenderNode class derives from QSGRenderNode, reimplementing a
+    number of virtual functions. To manage QRhi resources (buffers, pipelines,
+    etc.), smart pointers are quite useful in this case, because the node is
+    destroyed by the scene graph together with the rest of the scene on the
+    render thread (if there is one) while the QRhi is still available, and
+    therefore releasing resources from the destructor or via smart pointers is
+    legal and safe.
+
+    \snippet scenegraph/customrendernode/customrender.cpp node
+
+    Well-behaving QSGRenderNode subclasses also reimplement
+    \l{QSGRenderNode::}releaseResources(),which in this case can be a simple set
+    of reset() calls.
+
+    \snippet scenegraph/customrendernode/customrender.cpp node-release
+
+    This QSGRenderNode is performing its rendering through the QRhi APIs (and
+    not directly through OpenGL, Vulkan, Metal, etc.), and it takes the item
+    transform into account (as it only really does 2D rendering). Hence
+    specifying the appropriate flags, which may bring a small performance
+    improvement.
+
+    \snippet scenegraph/customrendernode/customrender.cpp node-flags
+
+    The prepare() and render() functions are called every time the Qt Quick
+    scene renders. The first is called when preparing (but not yet recording)
+    the render pass. This typically creates resources, such as buffers,
+    textures, and graphics pipelines, if not yet done, and enqueues uploading
+    data to them.
+
+    \snippet scenegraph/customrendernode/customrender.cpp node-prepare
+
+    The render() function is called while the recording of a render pass,
+    targeting either the QQuickWindow's swapchain, or a texture (in case of
+    layered items, or when within a ShaderEffectSource), is active.
+
+    \snippet scenegraph/customrendernode/customrender.cpp node-render
+
+    \sa QSGRenderNode, QRhi, {Scene Graph - RHI Under QML}, {Scene Graph - RHI Texture Item}, {Qt Quick Scene Graph}
 */

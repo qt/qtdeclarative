@@ -35,7 +35,7 @@ public:
     bool isDebugMarkersEnabled() const;
 
     void setTimestamps(bool enable);
-    bool isTimestampsEnabled() const;
+    bool timestampsEnabled() const;
 
     void setPreferSoftwareDevice(bool enable);
     bool prefersSoftwareDevice() const;
@@ -48,9 +48,6 @@ public:
 
     void setPipelineCacheLoadFile(const QString &filename);
     QString pipelineCacheLoadFile() const;
-
-    void setHdr(bool enable);
-    bool isHdrEnabled() const;
 
 private:
     void detach();

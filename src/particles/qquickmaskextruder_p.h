@@ -15,7 +15,7 @@
 // We mean it.
 //
 #include "qquickparticleextruder_p.h"
-#include <private/qquickpixmapcache_p.h>
+#include <private/qquickpixmap_p.h>
 #include <QUrl>
 #include <QImage>
 

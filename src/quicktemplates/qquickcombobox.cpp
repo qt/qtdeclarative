@@ -211,6 +211,7 @@ public:
     void hidePopup(bool accept);
     void togglePopup(bool accept);
     void popupVisibleChanged();
+    void popupDestroyed();
 
     void itemClicked();
     void itemHovered();
@@ -255,6 +256,7 @@ public:
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
+    void itemDestroyed(QQuickItem *item) override;
 
     void setInputMethodHints(Qt::InputMethodHints hints, bool force = false);
 
@@ -361,6 +363,13 @@ void QQuickComboBoxPrivate::popupVisibleChanged()
         q->setDown(pressed || isPopupVisible());
         hasDown = false;
     }
+}
+
+void QQuickComboBoxPrivate::popupDestroyed()
+{
+    Q_Q(QQuickComboBox);
+    popup = nullptr;
+    emit q->popupChanged();
 }
 
 void QQuickComboBoxPrivate::itemClicked()
@@ -837,6 +846,16 @@ void QQuickComboBoxPrivate::itemImplicitHeightChanged(QQuickItem *item)
     QQuickControlPrivate::itemImplicitHeightChanged(item);
     if (item == indicator)
         emit q->implicitIndicatorHeightChanged();
+}
+
+void QQuickComboBoxPrivate::itemDestroyed(QQuickItem *item)
+{
+    Q_Q(QQuickComboBox);
+    QQuickControlPrivate::itemDestroyed(item);
+    if (item == indicator) {
+        indicator = nullptr;
+        emit q->indicatorChanged();
+    }
 }
 
 qreal QQuickComboBoxPrivate::getContentWidth() const
@@ -1339,6 +1358,7 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
         d->cancelPopup();
 
     if (d->popup) {
+        QObjectPrivate::disconnect(d->popup.data(), &QQuickPopup::destroyed, d, &QQuickComboBoxPrivate::popupDestroyed);
         QObjectPrivate::disconnect(d->popup.data(), &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::popupVisibleChanged);
         QQuickComboBoxPrivate::hideOldPopup(d->popup);
     }
@@ -1346,6 +1366,9 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
         QQuickPopupPrivate::get(popup)->allowVerticalFlip = true;
         popup->setClosePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent);
         QObjectPrivate::connect(popup, &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::popupVisibleChanged);
+        // QQuickPopup does not derive from QQuickItemChangeListener, so we cannot use
+        // QQuickItemChangeListener::itemDestroyed so we have to use QObject::destroyed
+        QObjectPrivate::connect(popup, &QQuickPopup::destroyed, d, &QQuickComboBoxPrivate::popupDestroyed);
 
 #if QT_CONFIG(quick_itemview)
         if (QQuickItemView *itemView = popup->findChild<QQuickItemView *>())

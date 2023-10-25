@@ -385,6 +385,7 @@ QStyleOptionTitleBar::QStyleOptionTitleBar(int versionIn)
 {
 }
 
+#if QT_CONFIG(quick_itemview)
 /*!
     Constructs a QStyleOptionViewItem, initializing the members
     variables to their default values.
@@ -406,6 +407,7 @@ QStyleOptionViewItem::QStyleOptionViewItem(int versionIn)
       checkState(Qt::Unchecked), viewItemPosition(QStyleOptionViewItem::Invalid)
 {
 }
+#endif // QT_CONFIG(quick_itemview)
 
 /*!
     Constructs a QStyleOptionTabWidgetFrame, initializing the members

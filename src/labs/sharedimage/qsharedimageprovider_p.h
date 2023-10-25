@@ -18,7 +18,7 @@
 #include "qtlabssharedimageglobal_p.h"
 
 #include <QQuickImageProvider>
-#include <private/qquickpixmapcache_p.h>
+#include <private/qquickpixmap_p.h>
 #include <QScopedPointer>
 
 #include "qsharedimageloader_p.h"

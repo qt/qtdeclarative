@@ -7,6 +7,8 @@
 
 #include <QtQml/qqmlinfo.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 // XXX todo - i think this needs work and a bit of a re-think

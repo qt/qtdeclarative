@@ -11,6 +11,8 @@
 #include "qquickaction_p.h"
 #include "qquickaction_p_p.h"
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!

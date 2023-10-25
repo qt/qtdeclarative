@@ -4104,7 +4104,7 @@ void tst_qquickwindow::visibleVsVisibility()
     QFETCH(bool, expectVisible);
     QFETCH(bool, expectConflictingPropertyWarning);
 
-    const QString warningMsg = qmlfile.toString() + ": Conflicting properties 'visible' and 'visibility'";
+    const QString warningMsg = qmlfile.toString() + ":3:1: QML Window: Conflicting properties 'visible' and 'visibility'";
 
     QTest::failOnWarning(QRegularExpression(".*"));
     if (expectConflictingPropertyWarning)

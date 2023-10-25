@@ -28,11 +28,14 @@
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgrendererinterface.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QSGContextPrivate;
 class QSGInternalRectangleNode;
 class QSGInternalImageNode;
+class QSGInternalTextNode;
 class QSGPainterNode;
 class QSGGlyphNode;
 class QSGRenderer;
@@ -50,6 +53,7 @@ class QSGRendererInterface;
 class QSGShaderEffectNode;
 class QSGGuiThreadShaderEffectManager;
 class QSGRectangleNode;
+class QSGTextNode;
 class QSGImageNode;
 class QSGNinePatchNode;
 class QSGSpriteNode;
@@ -60,6 +64,7 @@ class QRhiRenderTarget;
 class QRhiRenderPassDescriptor;
 class QRhiCommandBuffer;
 class QQuickGraphicsConfiguration;
+class QQuickItem;
 
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERLOOP)
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_COMPILATION)
@@ -91,6 +96,7 @@ public:
     QSGInternalRectangleNode *createInternalRectangleNode(const QRectF &rect, const QColor &c);
     virtual QSGInternalRectangleNode *createInternalRectangleNode() = 0;
     virtual QSGInternalImageNode *createInternalImageNode(QSGRenderContext *renderContext) = 0;
+    virtual QSGInternalTextNode *createInternalTextNode(QSGRenderContext *renderContext);
     virtual QSGPainterNode *createPainterNode(QQuickPaintedItem *item) = 0;
     virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode, int renderTypeQuality) = 0;
     virtual QSGLayer *createLayer(QSGRenderContext *renderContext) = 0;
@@ -108,6 +114,7 @@ public:
 
     virtual QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext);
 
+    virtual QSGTextNode *createTextNode(QSGRenderContext *renderContext);
     virtual QSGRectangleNode *createRectangleNode() = 0;
     virtual QSGImageNode *createImageNode() = 0;
     virtual QSGNinePatchNode *createNinePatchNode() = 0;

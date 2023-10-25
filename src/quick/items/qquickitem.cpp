@@ -48,6 +48,8 @@
 # include <QtGui/qcursor.h>
 #endif
 
+#include <QtCore/qpointer.h>
+
 #include <algorithm>
 #include <limits>
 
@@ -3246,34 +3248,15 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
 
     if (QQuickItem *item = qmlobject_cast<QQuickItem *>(o)) {
         item->setParentItem(that);
-    } else {
-        if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o)) {
-            if (pointerHandler->parent() != that) {
-                qCDebug(lcHandlerParent) << "reparenting handler" << pointerHandler << ":" << pointerHandler->parent() << "->" << that;
-                pointerHandler->setParent(that);
-            }
-            QQuickItemPrivate::get(that)->addPointerHandler(pointerHandler);
-        } else {
-            QQuickWindow *thisWindow = qmlobject_cast<QQuickWindow *>(o);
-            QQuickItem *item = that;
-            QQuickWindow *itemWindow = that->window();
-            while (!itemWindow && item && item->parentItem()) {
-                item = item->parentItem();
-                itemWindow = item->window();
-            }
-
-            if (thisWindow) {
-                if (itemWindow) {
-                    qCDebug(lcTransient) << thisWindow << "is transient for" << itemWindow;
-                    thisWindow->setTransientParent(itemWindow);
-                } else {
-                    QObject::connect(item, SIGNAL(windowChanged(QQuickWindow*)),
-                                     thisWindow, SLOT(setTransientParent_helper(QQuickWindow*)));
-                }
-            }
-            o->setParent(that);
-            resources_append(prop, o);
+    } else if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o)) {
+        if (pointerHandler->parent() != that) {
+            qCDebug(lcHandlerParent) << "reparenting handler" << pointerHandler << ":" << pointerHandler->parent() << "->" << that;
+            pointerHandler->setParent(that);
         }
+        QQuickItemPrivate::get(that)->addPointerHandler(pointerHandler);
+    } else {
+        o->setParent(that);
+        resources_append(prop, o);
     }
 }
 
@@ -5375,7 +5358,8 @@ bool QQuickItemPrivate::transformChanged(QQuickItem *transformedItem)
     if (subtreeTransformChangedEnabled) {
         // Inform the children in paint order: by the time we visit leaf items,
         // they can see any consequences in their parents
-        for (auto child : paintOrderChildItems())
+        const auto children = paintOrderChildItems();
+        for (QQuickItem *child : children)
             childWantsIt |= QQuickItemPrivate::get(child)->transformChanged(transformedItem);
     }
 
@@ -6972,6 +6956,8 @@ void QQuickItem::setFlag(Flag flag, bool enabled)
     else
         setFlags((Flags)(d->flags & ~(quint32)flag));
 
+    // We don't return early if the flag did not change. That's useful in case
+    // we need to intentionally trigger this parent-chain traversal again.
     if (enabled && flag == ItemObservesViewport) {
         QQuickItem *par = parentItem();
         while (par) {
@@ -7071,15 +7057,17 @@ void QQuickItem::setX(qreal v)
     if (qt_is_nan(v))
         return;
 
-    const qreal oldx = d->x;
+    const qreal oldx = d->x.valueBypassingBindings();
     if (oldx == v)
         return;
 
-    d->x = v;
+    d->x.setValueBypassingBindings(v);
 
     d->dirty(QQuickItemPrivate::Position);
 
-    const qreal y = d->y, w = d->width, h = d->height;
+    const qreal y = d->y.valueBypassingBindings();
+    const qreal w = d->width.valueBypassingBindings();
+    const qreal h = d->height.valueBypassingBindings();
     geometryChange(QRectF(v, y, w, h), QRectF(oldx, y, w, h));
 }
 
@@ -7090,17 +7078,19 @@ void QQuickItem::setY(qreal v)
     if (qt_is_nan(v))
         return;
 
-    const qreal oldy = d->y;
+    const qreal oldy = d->y.valueBypassingBindings();
     if (oldy == v)
         return;
 
-    d->y = v;
+    d->y.setValueBypassingBindings(v);
 
     d->dirty(QQuickItemPrivate::Position);
 
     // we use v instead of d->y, as that avoid a method call
     // and we have v anyway in scope
-    const qreal x = d->x, w = d->width, h = d->height;
+    const qreal x = d->x.valueBypassingBindings();
+    const qreal w = d->width.valueBypassingBindings();
+    const qreal h = d->height.valueBypassingBindings();
     geometryChange(QRectF(x, v, w, h), QRectF(x, oldy, w, h));
 }
 
@@ -7110,11 +7100,12 @@ void QQuickItem::setY(qreal v)
 void QQuickItem::setPosition(const QPointF &pos)
 {
     Q_D(QQuickItem);
-    if (QPointF(d->x, d->y) == pos)
-        return;
 
-    const qreal oldx = d->x;
-    const qreal oldy = d->y;
+    const qreal oldx = d->x.valueBypassingBindings();
+    const qreal oldy = d->y.valueBypassingBindings();
+
+    if (QPointF(oldx, oldy) == pos)
+        return;
 
     /* This preserves the bindings, because that was what the code used to do
        The effect of this is that you can have
@@ -7134,7 +7125,8 @@ void QQuickItem::setPosition(const QPointF &pos)
 
     d->dirty(QQuickItemPrivate::Position);
 
-    const qreal w = d->width, h = d->height;
+    const qreal w = d->width.valueBypassingBindings();
+    const qreal h = d->height.valueBypassingBindings();
     geometryChange(QRectF(pos.x(), pos.y(), w, h), QRectF(oldx, oldy, w, h));
 }
 
@@ -7170,15 +7162,17 @@ void QQuickItem::setWidth(qreal w)
         return;
 
     d->widthValidFlag = true;
-    const qreal oldWidth = d->width;
+    const qreal oldWidth = d->width.valueBypassingBindings();
     if (oldWidth == w)
         return;
 
-    d->width = w;
+    d->width.setValueBypassingBindings(w);
 
     d->dirty(QQuickItemPrivate::Size);
 
-    const qreal x = d->x, y = d->y, h = d->height;
+    const qreal x = d->x.valueBypassingBindings();
+    const qreal y = d->y.valueBypassingBindings();
+    const qreal h = d->height.valueBypassingBindings();
     geometryChange(QRectF(x, y, w, h), QRectF(x, y, oldWidth, h));
 }
 
@@ -7376,15 +7370,17 @@ void QQuickItem::setHeight(qreal h)
         return;
 
     d->heightValidFlag = true;
-    const qreal oldHeight = d->height;
+    const qreal oldHeight = d->height.valueBypassingBindings();
     if (oldHeight == h)
         return;
 
-    d->height = h;
+    d->height.setValueBypassingBindings(h);
 
     d->dirty(QQuickItemPrivate::Size);
 
-    const qreal x = d->x, y = d->y, w = d->width;
+    const qreal x = d->x.valueBypassingBindings();
+    const qreal y = d->y.valueBypassingBindings();
+    const qreal w = d->width.valueBypassingBindings();
     geometryChange(QRectF(x, y, w, h), QRectF(x, y, w, oldHeight));
 }
 
@@ -7488,11 +7484,11 @@ void QQuickItem::setImplicitSize(qreal w, qreal h)
     const qreal oldHeight = height;
     if (!wDone) {
         width = w;
-        d->width = w;
+        d->width.setValueBypassingBindings(w);
     }
     if (!hDone) {
         height = h;
-        d->height = h;
+        d->height.setValueBypassingBindings(h);
     }
 
     d->dirty(QQuickItemPrivate::Size);
@@ -7548,17 +7544,19 @@ void QQuickItem::setSize(const QSizeF &size)
     d->heightValidFlag = true;
     d->widthValidFlag = true;
 
-    if (d->width == size.width() && d->height == size.height())
+    const qreal oldHeight = d->height.valueBypassingBindings();
+    const qreal oldWidth = d->width.valueBypassingBindings();
+
+    if (oldWidth == size.width() && oldHeight == size.height())
         return;
 
-    const qreal oldHeight = d->height;
-    const qreal oldWidth = d->width;
     d->height.setValueBypassingBindings(size.height());
     d->width.setValueBypassingBindings(size.width());
 
     d->dirty(QQuickItemPrivate::Size);
 
-    const qreal x = d->x, y = d->y;
+    const qreal x = d->x.valueBypassingBindings();
+    const qreal y = d->y.valueBypassingBindings();
     geometryChange(QRectF(x, y, size.width(), size.height()), QRectF(x, y, oldWidth, oldHeight));
 }
 

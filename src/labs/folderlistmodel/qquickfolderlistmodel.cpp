@@ -284,6 +284,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
 
         Component {
             id: fileDelegate
+            required property string fileName
             Text { text: fileName }
         }
 
@@ -400,7 +401,8 @@ QModelIndex QQuickFolderListModel::index(int row, int , const QModelIndex &) con
 
     The value must be a \c file: or \c qrc: URL, or a relative URL.
 
-    The default value is an invalid URL.
+    The default value is the application's working directory at the time
+    when the FolderListModel is first initialized.
 */
 QUrl QQuickFolderListModel::folder() const
 {

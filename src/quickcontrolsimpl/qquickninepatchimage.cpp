@@ -401,7 +401,7 @@ void QQuickNinePatchImage::pixmapChange()
 
         d->ninePatch = d->pix.image();
         if (d->ninePatch.depth() != 32)
-            d->ninePatch = d->ninePatch.convertToFormat(QImage::Format_ARGB32);
+            d->ninePatch = std::move(d->ninePatch).convertToFormat(QImage::Format_ARGB32);
 
         int w = d->ninePatch.width();
         int h = d->ninePatch.height();

@@ -4,8 +4,11 @@
 #include "qquickshortcutcontext_p_p.h"
 #include "qquickoverlay_p_p.h"
 #include "qquicktooltip_p.h"
+#include <QtQmlModels/private/qtqmlmodels-config_p.h>
+#if QT_CONFIG(qml_object_model)
 #include "qquickmenu_p.h"
 #include "qquickmenu_p_p.h"
+#endif
 #include "qquickpopup_p.h"
 
 #include <QtCore/qloggingcategory.h>
@@ -53,6 +56,7 @@ bool QQuickShortcutContext::matcher(QObject *obj, Qt::ShortcutContext context)
                 obj = popup->window();
                 item = popup->popupItem();
 
+#if QT_CONFIG(qml_object_model)
                 if (!obj) {
                     // The popup has no associated window (yet). However, sub-menus,
                     // unlike top-level menus, will not have an associated window
@@ -64,6 +68,7 @@ bool QQuickShortcutContext::matcher(QObject *obj, Qt::ShortcutContext context)
                             obj = parentMenu->window();
                     }
                 }
+#endif
                 break;
             }
             obj = obj->parent();

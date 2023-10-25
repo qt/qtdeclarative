@@ -1105,7 +1105,7 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
 
     const bool debugLayer = wd->graphicsConfig.isDebugLayerEnabled();
     const bool debugMarkers = wd->graphicsConfig.isDebugMarkersEnabled();
-    const bool timestamps = wd->graphicsConfig.isTimestampsEnabled();
+    const bool timestamps = wd->graphicsConfig.timestampsEnabled();
     const bool preferSoftware = wd->graphicsConfig.prefersSoftwareDevice();
     const bool pipelineCacheSave = !wd->graphicsConfig.pipelineCacheSaveFile().isEmpty()
             || (wd->graphicsConfig.isAutomaticPipelineCacheEnabled()
@@ -1514,12 +1514,6 @@ void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet, QQuickW
 
     QRhiSwapChain::Format swapChainFormat = QRhiSwapChain::SDR;
 
-    if (window->graphicsConfiguration().isHdrEnabled()) {
-        const QRhiSwapChain::Format autoFormat = QRhiSwapChain::HDRExtendedSrgbLinear;
-        if (scWithWindowSet->isFormatSupported(autoFormat))
-            swapChainFormat = autoFormat;
-    }
-
     QByteArray hdrRequest = qgetenv("QSG_RHI_HDR");
     if (!hdrRequest.isEmpty()) {
         hdrRequest = hdrRequest.toLower();
@@ -1527,6 +1521,8 @@ void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet, QQuickW
             swapChainFormat = QRhiSwapChain::HDRExtendedSrgbLinear;
         else if (hdrRequest == QByteArrayLiteral("hdr10"))
             swapChainFormat = QRhiSwapChain::HDR10;
+        else if (hdrRequest == QByteArrayLiteral("p3"))
+            swapChainFormat = QRhiSwapChain::HDRExtendedDisplayP3Linear;
     }
 
     const char *fmtStr = "unknown";
@@ -1539,6 +1535,9 @@ void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet, QQuickW
         break;
     case QRhiSwapChain::HDR10:
         fmtStr = "HDR10";
+        break;
+    case QRhiSwapChain::HDRExtendedDisplayP3Linear:
+        fmtStr = "Extended Linear Display P3";
         break;
     default:
         break;

@@ -32,3 +32,6 @@ navigation.landingpage = "Qt QML Core"
 navigation.qmltypespage = "Qt QML Core QML Types"
 
 tagfile = qtqmlcore.tags
+
+# Enforce zero documentation warnings
+warninglimit = 0

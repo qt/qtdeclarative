@@ -1,0 +1,85 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-non-list-property.html
+\ingroup qmllint-warnings-and-errors
+
+\title Non-List Property
+\brief Multiple values were assigned to a non-list property.
+
+\section1 Cannot Assign Multiple Objects To A Default Non-List Property
+
+\section2 What happened?
+A \l{Default Properties}{default property} has multiple bindings but the default
+property type is not a list type and only expects one binding.
+
+\section2 Why is this bad?
+All the bindings to the default property, except the last one, will be ignored. This most likely
+hints that the default property should instead be a list, or that there are too many bindings to
+the same property.
+
+\section2 Example
+
+Let's declare a component \c{MyComponent} that has one default non-list property, and then lets
+bind three items to that default property:
+\qml
+import QtQuick
+
+Item {
+    component MyComponent: QtObject {
+        default property Item helloWorld
+    }
+    MyComponent {
+        // first item bound to default property:
+        Item { objectName: "first" } // will warn: Cannot assign multiple objects to a default non-list property [non-list-property]
+        // second item bound to default property:
+        Item { objectName: "second" } // not ok: default property was bound already
+        // third item bound to default property:
+        Item { objectName: "third" } // not ok: default property was bound already
+
+        Component.onCompleted: console.log(helloWorld.objectName) // prints "third"
+    }
+}
+
+\endqml
+You can fix this warning by replacing the default property by a list:
+\qml
+import QtQuick
+
+Item {
+    component MyComponent: QtObject {
+        default property list<Item> helloWorld
+    }
+    MyComponent {
+        // first item bound to default property:
+        Item { objectName: "first" } // ok: binding a first item to the list
+        // second item bound to default property:
+        Item { objectName: "second" } // ok: binding a second item to the list
+        // third item bound to default property:
+        Item { objectName: "third" } // ok: binding a third item to the list
+    }
+}
+\endqml
+You can also fix this warning by removing all the unwanted bindings, in case the default property
+is not supposed to be a list:
+\qml
+import QtQuick
+
+Item {
+    component MyComponent: QtObject {
+        default property Item helloWorld
+    }
+    MyComponent {
+        Item { objectName: "first" } // ok: just one item bound to default property
+    }
+    MyComponent {
+        Item { objectName: "second" } // ok: just one item bound to default property
+    }
+    MyComponent {
+        Item { objectName: "third" } // ok: just one item bound to default property
+    }
+}
+\endqml
+*/
+

@@ -21,6 +21,8 @@
 
 #include <private/qevent_p.h>
 #include <private/qpointingdevice_p.h>
+
+#include <QtCore/qpointer.h>
 #include <private/qobject_p.h>
 
 #include <memory>

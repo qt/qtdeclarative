@@ -1,0 +1,200 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \qmltype sslConfiguration
+    \inqmlmodule QtNetwork
+
+    \brief The sslConfiguration class holds the configuration and state of an
+    SSL connection.
+
+    sslConfiguration is used to relay information
+    about an open SSL connection and to allow the application to control
+    certain features of that connection.
+    The sslConfiguration encapsulates QSslConfiguration object inside.
+    The sslConfiguration calls defaultSslCongiguration in ctor.
+
+    \sa QSslConfiguration
+*/
+
+/*!
+    \qmlproperty QList sslConfiguration::sslOptions
+    Holds the list of SslOption values, that are activated by configuration.
+
+    \sa QSsl::SslOption
+*/
+
+/*!
+    \qmlproperty string sslConfiguration::ciphers
+    Holds the cryptographic cipher suite for this configuration to \a ciphers,
+    which is a colon-separated list of cipher suite names.
+
+    \sa QSslConfiguration::ciphers
+*/
+
+/*!
+    \qmlproperty enumeration sslConfiguration::protocol
+    Holds SslProtocol enumeration value.
+    \sa QSsl::SslProtocol
+ */
+
+/*!
+    \qmlproperty enumeration sslConfiguration::peerVerifyMode
+    Holds PeerVerifyMode enumeration value.
+
+    \sa QSslSocket::PeerVerifyMode
+ */
+
+/*!
+    \qmlproperty int sslConfiguration::peerVerifyDepth
+
+    Holds the maximum number of certificates in the peer's certificate chain
+    to be checked during the SSL handshake phase, or 0 (the default) if no
+    maximum depth has been set, indicating that the whole certificate chain
+    should be checked.
+
+    \sa QSslConfiguration::peerVerifyDepth
+ */
+
+/*!
+    \qmlproperty bytearray sslConfiguration::sessionTicket
+
+    Holds the session ticket used in the SSL handshake in ASN.1
+    format, suitable to e.g. be persisted to disk.
+
+    \sa QSslConfiguration::sessionTicket
+ */
+
+/*!
+    \qmlmethod void sslConfiguration::setCertificateFiles(const QStringList &certificateFiles);
+
+    This function loads into configuration the list of certificates \a certificateFiles
+    provided by user.
+*/
+
+/*!
+    \qmlmethod void sslConfiguration::setPrivateKey(const QQmlSslKey &privateKey);
+
+    This function sets into configuration user defined Private key value \a privateKey.
+
+    \sa QSslKey, sslKey
+*/
+
+/*!
+    \qmltype sslDtlsConfiguration
+    \inqmlmodule QtNetwork
+
+    \brief The sslDtlsConfiguration class holds the Dtls
+    default configuration and state of an SSL connection.
+
+    \sa QSslConfiguration
+*/
+
+/*!
+    \qmlproperty QList sslDtlsConfiguration::sslOptions
+    Holds the list of SslOption values, that are activated by configuration.
+
+    \sa QSsl::SslOption
+*/
+
+/*!
+    \qmlproperty string sslDtlsConfiguration::ciphers
+    Holds the cryptographic cipher suite for this configuration to \a ciphers,
+    which is a colon-separated list of cipher suite names.
+
+    \sa QSslConfiguration::ciphers
+*/
+
+/*!
+    \qmlproperty enumeration sslDtlsConfiguration::protocol
+    Holds SslProtocol enumeration value.
+    \sa QSsl::SslProtocol
+ */
+
+/*!
+    \qmlproperty enumeration sslDtlsConfiguration::peerVerifyMode
+    Holds PeerVerifyMode enumeration value.
+
+    \sa QSslSocket::PeerVerifyMode
+*/
+
+/*!
+    \qmlproperty int sslDtlsConfiguration::peerVerifyDepth
+
+    Holds the maximum number of certificates in the peer's certificate chain
+    to be checked during the SSL handshake phase, or 0 (the default) if no
+    maximum depth has been set, indicating that the whole certificate chain
+    should be checked.
+
+    \sa QSslConfiguration::peerVerifyDepth
+*/
+
+/*!
+    \qmlproperty bytearray sslDtlsConfiguration::sessionTicket
+
+    Holds the session ticket used in the SSL handshake in ASN.1
+    format, suitable to e.g. be persisted to disk.
+
+    \sa QSslConfiguration::sessionTicket
+*/
+
+/*!
+    \qmlmethod void sslDtlsConfiguration::setCertificateFiles(const QStringList &certificateFiles);
+
+    This function loads into configuration the list of certificates \a certificateFiles
+    provided by user.
+*/
+
+/*!
+    \qmlmethod void sslDtlsConfiguration::setPrivateKey(const QQmlSslKey &privateKey);
+
+    This function sets into configuration user defined Private key value \a privateKey.
+
+    \sa QSslKey, sslKey
+*/
+
+/*!
+    \qmltype sslKey
+    \inqmlmodule QtNetwork
+
+    \instantiates QSslKey
+    \brief The sslKey class provides the interface for private and public keys.
+
+    The sslKey provides an API for managing keys.
+    The QML sslKey class is \c Q_GADGET based, it generates QSslKey object
+    based on it's QML properties.
+
+    \sa QSslKey
+*/
+
+/*!
+    \qmlproperty string sslKey::keyFile
+    Holds the path to the \c *.pem key file.
+*/
+
+/*!
+    \qmlproperty enumeration sslKey::keyAlgorithm
+    Holds KeyAlgorithm enumeration value.
+
+    \sa QSsl::KeyAlgorithm
+*/
+
+/*!
+    \qmlproperty enumeration sslKey::keyFormat
+    Holds EncodingFormat enumeration value.
+    \sa QSsl::EncodingFormat
+*/
+
+/*!
+    \qmlproperty bytearray sslKey::keyPassPhrase
+
+    Holds the value to be used to decrypt QSslKey.
+
+    \sa QSslKey
+*/
+
+/*!
+    \qmlproperty enumeration sslKey::keyType
+    Holds KeyType enumeration value.
+    \sa QSsl::KeyType
+*/

@@ -1692,7 +1692,7 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
     };
 
     switch (binding.scriptKind()) {
-    case QQmlSA::ScriptBindingKind::Script_PropertyBinding: {
+    case QQmlSA::ScriptBindingKind::PropertyBinding: {
         if (!propertyType) {
             recordError(binding.sourceLocation(),
                         u"Binding on property '" + propertyName + u"' of unknown type");
@@ -1734,13 +1734,13 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
                 property, valueTypeIndex, accessor.name);
         break;
     }
-    case QQmlSA::ScriptBindingKind::Script_SignalHandler: {
+    case QQmlSA::ScriptBindingKind::SignalHandler: {
         const auto name = QQmlSignalNames::handlerNameToSignalName(propertyName);
         Q_ASSERT(name.has_value());
         compileScriptSignal(*name);
         break;
     }
-    case QQmlSA ::ScriptBindingKind::Script_ChangeHandler: {
+    case QQmlSA ::ScriptBindingKind::ChangeHandler: {
         const QString objectClassName = objectType->internalName();
         const QString bindingFunctorName = newSymbol(bindingSymbolName + u"Functor");
 

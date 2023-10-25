@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 #include "testtypes.h"
 
 #include <private/qv4qmlcontext_p.h>
@@ -162,6 +163,8 @@ void registerTypes()
     qmlRegisterTypesAndRevisions<AttachedInCtor>("Test", 1);
 
     qmlRegisterTypesAndRevisions<ByteArrayReceiver>("Test", 1);
+
+    qmlRegisterTypesAndRevisions<Counter>("Test", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)
@@ -184,7 +187,7 @@ void CustomBinding::componentComplete()
 {
     Q_ASSERT(m_target);
 
-    foreach (const QV4::CompiledData::Binding *binding, bindings) {
+    for (const QV4::CompiledData::Binding *binding : std::as_const(bindings)) {
         QString name = compilationUnit->stringAt(binding->propertyNameIndex);
 
         int bindingId = binding->value.compiledScriptIndex;

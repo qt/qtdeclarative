@@ -10,6 +10,34 @@
 #include <QtCore/qproperty.h>
 #include <QtCore/qrect.h>
 
+struct Inner
+{
+    Q_GADGET
+    QML_VALUE_TYPE(inner)
+    QML_STRUCTURED_VALUE
+    Q_PROPERTY(int i MEMBER i)
+
+private:
+    friend bool operator==(const Inner &lhs, const Inner &rhs) { return lhs.i == rhs.i; }
+    friend bool operator!=(const Inner &lhs, const Inner &rhs) { return !(lhs == rhs); }
+
+    int i = 11;
+};
+
+struct Outer
+{
+    Q_GADGET
+    QML_VALUE_TYPE(outer)
+    QML_STRUCTURED_VALUE
+    Q_PROPERTY(Inner inner MEMBER inner)
+
+private:
+    friend bool operator==(const Outer &lhs, const Outer &rhs) { return lhs.inner == rhs.inner; }
+    friend bool operator!=(const Outer &lhs, const Outer &rhs) { return !(lhs == rhs); }
+
+    Inner inner;
+};
+
 // Intentionally opaque type
 class Barzle : public QObject {};
 
@@ -24,6 +52,7 @@ class Person : public QObject
     Q_PROPERTY(QList<Person *> cousins READ cousins WRITE setCousins NOTIFY cousinsChanged FINAL)
     Q_PROPERTY(QByteArray data READ data WRITE setData NOTIFY dataChanged FINAL)
     Q_PROPERTY(QRectF area READ area WRITE setArea NOTIFY areaChanged) // not FINAL
+    Q_PROPERTY(QRectF area2 READ area WRITE setArea NOTIFY areaChanged BINDABLE areaBindable FINAL)
     QML_ELEMENT
 public:
     Person(QObject *parent = nullptr);
@@ -56,6 +85,7 @@ public:
 
     QRectF area() const;
     void setArea(const QRectF &newArea);
+    QBindable<QRectF> areaBindable();
 
     Q_INVOKABLE QString getName() const { return m_name; }
 
@@ -81,7 +111,7 @@ private:
     QList<Barzle *> m_barzles;
     QList<Person *> m_cousins;
     QProperty<QByteArray> m_data;
-    QRectF m_area;
+    QProperty<QRectF> m_area;
 };
 
 class BarzleListRegistration

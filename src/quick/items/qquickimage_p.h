@@ -30,6 +30,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImage : public QQuickImageBase
     Q_PROPERTY(qreal paintedHeight READ paintedHeight NOTIFY paintedGeometryChanged FINAL)
     Q_PROPERTY(HAlignment horizontalAlignment READ horizontalAlignment WRITE setHorizontalAlignment NOTIFY horizontalAlignmentChanged FINAL)
     Q_PROPERTY(VAlignment verticalAlignment READ verticalAlignment WRITE setVerticalAlignment NOTIFY verticalAlignmentChanged FINAL)
+    Q_PROPERTY(QSize sourceSize READ sourceSize WRITE setSourceSize RESET resetSourceSize NOTIFY sourceSizeChanged FINAL)
     Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged REVISION(2, 3) FINAL)
     Q_PROPERTY(bool autoTransform READ autoTransform WRITE setAutoTransform NOTIFY autoTransformChanged REVISION(2, 5) FINAL)
     Q_PROPERTY(QRectF sourceClipRect READ sourceClipRect WRITE setSourceClipRect RESET resetSourceClipRect NOTIFY sourceClipRectChanged REVISION(2, 15) FINAL)

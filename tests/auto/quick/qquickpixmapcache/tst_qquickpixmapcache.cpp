@@ -5,15 +5,46 @@
 #include <QtQuick/private/qquickpixmapcache_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQuick/qquickimageprovider.h>
+#include <QtQuick/qquickview.h>
 #include <QtQml/QQmlComponent>
 #include <QNetworkReply>
+#include <QtGui/qpainter.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 #if QT_CONFIG(concurrent)
 #include <qtconcurrentrun.h>
 #include <qfuture.h>
 #endif
+
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
+class SlowProvider : public QQuickImageProvider
+{
+public:
+    SlowProvider() : QQuickImageProvider(Pixmap) {}
+
+    QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize) override
+    {
+        const int row = id.toInt();
+        qCDebug(lcTests) << requestCount << QThread::currentThread() << "row" << row << requestedSize;
+        QPixmap image(requestedSize);
+        QPainter painter(&image);
+        const QColor c(128, row % 8 * 32, 64);
+        painter.fillRect(0, 0, requestedSize.width(), requestedSize.height(), c);
+        if (size)
+            *size = requestedSize;
+        ++requestCount;
+        QThread::currentThread()->msleep(row);
+        return image;
+    }
+
+    int requestCount = 0;
+};
+Q_DECLARE_METATYPE(SlowProvider*);
+
+QT_BEGIN_NAMESPACE
 
 #define PIXMAP_DATA_LEAK_TEST 0
 
@@ -41,6 +72,7 @@ private slots:
 #if PIXMAP_DATA_LEAK_TEST
     void dataLeak();
 #endif
+    void slowDevice();
 private:
     QQmlEngine engine;
     TestHTTPServer server;
@@ -450,7 +482,6 @@ void tst_qquickpixmapcache::asynchronousNoCache()
     QScopedPointer<QObject> root {component.create()}; // should not crash
 }
 
-
 #if PIXMAP_DATA_LEAK_TEST
 // This test should not be enabled by default as it
 // produces spurious output in the expected case.
@@ -460,9 +491,9 @@ class DataLeakView : public QQuickView
     Q_OBJECT
 
 public:
-    explicit DataLeakView() : QQuickView()
+    explicit DataLeakView(const QUrl &src) : QQuickView()
     {
-        setSource(testFileUrl("dataLeak.qml"));
+        setSource(src);
     }
 
     void showFor2Seconds()
@@ -480,14 +511,14 @@ Q_GLOBAL_STATIC(QQuickPixmap, dataLeakPixmap)
 void tst_qquickpixmapcache::dataLeak()
 {
     // Should not leak cached QQuickPixmapData.
-    // Unfortunately, since the QQuickPixmapStore
-    // is a global static, and it releases the cache
+    // Unfortunately, since the QQuickPixmapCache
+    // is a singleton, and it releases the cache
     // entries on dtor (application exit), we must use
-    // valgrind to determine whether it leaks or not.
+    // valgrind or ASAN to determine whether it leaks or not.
     QQuickPixmap *p1 = new QQuickPixmap;
     QQuickPixmap *p2 = new QQuickPixmap;
     {
-        QScopedPointer<DataLeakView> test(new DataLeakView);
+        QScopedPointer<DataLeakView> test(new DataLeakView(testFileUrl("dataLeak.qml")));
         test->showFor2Seconds();
         dataLeakPixmap()->load(test->engine(), testFileUrl("exists.png"));
         p1->load(test->engine(), testFileUrl("exists.png"));
@@ -497,11 +528,44 @@ void tst_qquickpixmapcache::dataLeak()
 
     // When the (global static) dataLeakPixmap is deleted, it
     // shouldn't attempt to dereference a QQuickPixmapData
-    // which has been deleted by the QQuickPixmapStore
+    // which has been deleted by the QQuickPixmapCache
     // destructor.
 }
 #endif
 #undef PIXMAP_DATA_LEAK_TEST
+
+/*!
+    Test lots of async QQuickPixmap::loadImageFromDevice() jobs with random
+    sizes and frames, so that cached images are seldom reused. Some jobs get
+    cancelled, some succeed. This should not lead to any cache leaks.
+    Similar to the QtPdf usecase in QTBUG-114953
+*/
+void tst_qquickpixmapcache::slowDevice()
+{
+#ifdef QT_BUILD_INTERNAL
+    auto *provider = new SlowProvider;
+    engine.addImageProvider("slow", provider); // takes ownership
+
+    {
+        QQuickView window(&engine, nullptr);
+        QVERIFY(QQuickTest::showView(window, testFileUrl("tableViewWithDeviceLoadingImages.qml")));
+        // Timer generates 5 requests / sec; TableView shows multiple delegates (depending on size);
+        // so we should get 100 requests in some fraction of 20 sec. Give it 30 to be sure.
+        QTRY_COMPARE_GE_WITH_TIMEOUT(provider->requestCount, 100, 30000);
+        const int cacheCount = QQuickPixmapCache::instance()->m_cache.size();
+        qCDebug(lcTests) << "cached pixmaps" << cacheCount;
+        QCOMPARE_GT(cacheCount, 0);
+    } // window goes out of scope: all QQuickPixmapData instances should be eventually unreferenced
+
+    QTRY_COMPARE(QQuickPixmapCache::instance()->referencedCost(), 0);
+    const int leakedPixmaps = QQuickPixmapCache::instance()->destroyCache();
+    QCOMPARE(leakedPixmaps, 0);
+#else
+    QSKIP("This test relies on private APIs that are only exported in developer-builds");
+#endif
+}
+
+QT_END_NAMESPACE
 
 QTEST_MAIN(tst_qquickpixmapcache)
 

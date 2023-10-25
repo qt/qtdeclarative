@@ -61,6 +61,7 @@ public:
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
+    void itemDestroyed(QQuickItem *item) override;
 
     QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::GroupBox); }
 
@@ -102,6 +103,16 @@ void QQuickGroupBoxPrivate::itemImplicitHeightChanged(QQuickItem *item)
     QQuickFramePrivate::itemImplicitHeightChanged(item);
     if (item == label)
         emit q->implicitLabelHeightChanged();
+}
+
+void QQuickGroupBoxPrivate::itemDestroyed(QQuickItem *item)
+{
+    Q_Q(QQuickGroupBox);
+    QQuickFramePrivate::itemDestroyed(item);
+    if (item == label) {
+        label = nullptr;
+        emit q->labelChanged();
+    }
 }
 
 QQuickGroupBox::QQuickGroupBox(QQuickItem *parent)

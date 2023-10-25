@@ -146,7 +146,6 @@ Window {
         anchors.fill: flickable
         fillMode: Image.Tile
         source: "qrc:/background.png"
-        smooth: true
     }
     Rectangle {
         id: solidBackground
@@ -196,7 +195,8 @@ Window {
             id: loader
         }
         MouseArea {
-            acceptedButtons: Qt.NoButton
+            id: theMouseArea
+            acceptedButtons: Qt.RightButton
             anchors.fill: parent
             onMouseXChanged: {
                 let p = Qt.point(Math.round(mouseX), Math.round(mouseY))

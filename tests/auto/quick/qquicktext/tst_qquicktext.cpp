@@ -7,10 +7,11 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQuick/private/qquicktext_p.h>
+#include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuickTest/QtQuickTest>
 #include <private/qquicktext_p_p.h>
-#include <private/qquicktextnode_p.h>
+#include <private/qsginternaltextnode_p.h>
 #include <private/qquicktextdocument_p.h>
 #include <private/qquickvaluetypes_p.h>
 #include <QFontMetrics>
@@ -101,6 +102,7 @@ private slots:
     void clipRect();
     void largeTextObservesViewport_data();
     void largeTextObservesViewport();
+    void largeTextInDelayedLoader();
     void lineLaidOut();
     void lineLaidOutRelayout();
     void lineLaidOutHAlign();
@@ -249,13 +251,12 @@ void tst_qquicktext::text()
     {
         QQmlComponent textComponent(&engine);
         textComponent.setData("import QtQuick 2.0\nText { text: \"\" }", QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->text(), QString(""));
         QCOMPARE(textObject->width(), qreal(0));
-
-        delete textObject;
     }
 
     for (int i = 0; i < standard.size(); i++)
@@ -263,14 +264,12 @@ void tst_qquicktext::text()
         QString componentStr = "import QtQuick 2.0\nText { text: \"" + standard.at(i) + "\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->text(), standard.at(i));
         QVERIFY(textObject->width() > 0);
-
-        delete textObject;
     }
 
     for (int i = 0; i < richText.size(); i++)
@@ -278,14 +277,13 @@ void tst_qquicktext::text()
         QString componentStr = "import QtQuick 2.0\nText { text: \"" + richText.at(i) + "\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QString expected = richText.at(i);
         QCOMPARE(textObject->text(), expected.replace("\\\"", "\""));
         QVERIFY(textObject->width() > 0);
-
-        delete textObject;
     }
 }
 
@@ -295,12 +293,11 @@ void tst_qquicktext::width()
     {
         QQmlComponent textComponent(&engine);
         textComponent.setData("import QtQuick 2.0\nText { text: \"\" }", QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->width(), 0.);
-
-        delete textObject;
     }
 
     bool requiresUnhintedMetrics = !qmlDisableDistanceField();
@@ -342,14 +339,13 @@ void tst_qquicktext::width()
         QString componentStr = "import QtQuick 2.0\nText { text: \"" + standard.at(i) + "\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QVERIFY(textObject->boundingRect().width() > 0);
         QCOMPARE(textObject->width(), qreal(metricWidth));
         QVERIFY(textObject->textFormat() == QQuickText::AutoText); // setting text doesn't change format
-
-        delete textObject;
     }
 
     for (int i = 0; i < richText.size(); i++)
@@ -359,7 +355,8 @@ void tst_qquicktext::width()
         QString componentStr = "import QtQuick 2.0\nText { text: \"" + richText.at(i) + "\"; textFormat: Text.RichText }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
         QVERIFY(textObject != nullptr);
 
         QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
@@ -371,8 +368,6 @@ void tst_qquicktext::width()
 
         QCOMPARE(int(textObject->width()), int(doc->idealWidth()));
         QCOMPARE(textObject->textFormat(), QQuickText::RichText);
-
-        delete textObject;
     }
 }
 
@@ -383,14 +378,13 @@ void tst_qquicktext::wrap()
     {
         QQmlComponent textComponent(&engine);
         textComponent.setData("import QtQuick 2.0\nText { text: \"Hello\"; wrapMode: Text.WordWrap; width: 300 }", QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
         QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
         textHeight = textObject->height();
 
         QCOMPARE(textObject->wrapMode(), QQuickText::WordWrap);
         QCOMPARE(textObject->width(), 300.);
-
-        delete textObject;
     }
 
     for (int i = 0; i < standard.size(); i++)
@@ -398,7 +392,8 @@ void tst_qquicktext::wrap()
         QString componentStr = "import QtQuick 2.0\nText { wrapMode: Text.WordWrap; width: 30; text: \"" + standard.at(i) + "\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->width(), 30.);
@@ -407,8 +402,6 @@ void tst_qquicktext::wrap()
         int oldHeight = textObject->height();
         textObject->setWidth(100);
         QVERIFY(textObject->height() < oldHeight);
-
-        delete textObject;
     }
 
     for (int i = 0; i < richText.size(); i++)
@@ -416,7 +409,8 @@ void tst_qquicktext::wrap()
         QString componentStr = "import QtQuick 2.0\nText { wrapMode: Text.WordWrap; width: 30; text: \"" + richText.at(i) + "\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->width(), 30.);
@@ -425,8 +419,6 @@ void tst_qquicktext::wrap()
         qreal oldHeight = textObject->height();
         textObject->setWidth(100);
         QVERIFY(textObject->height() < oldHeight);
-
-        delete textObject;
     }
 
     // Check that increasing width from idealWidth will cause a relayout
@@ -435,7 +427,8 @@ void tst_qquicktext::wrap()
         QString componentStr = "import QtQuick 2.0\nText { wrapMode: Text.WordWrap; textFormat: Text.RichText; width: 30; text: \"" + richText.at(i) + "\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->width(), 30.);
@@ -454,8 +447,6 @@ void tst_qquicktext::wrap()
         qreal oldHeight = textObject->height();
         textObject->setWidth(100);
         QVERIFY(textObject->height() < oldHeight);
-
-        delete textObject;
     }
 
     // richtext again with a fixed height
@@ -464,7 +455,8 @@ void tst_qquicktext::wrap()
         QString componentStr = "import QtQuick 2.0\nText { wrapMode: Text.WordWrap; width: 30; height: 50; text: \"" + richText.at(i) + "\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->width(), 30.);
@@ -473,8 +465,6 @@ void tst_qquicktext::wrap()
         qreal oldHeight = textObject->implicitHeight();
         textObject->setWidth(100);
         QVERIFY(textObject->implicitHeight() < oldHeight);
-
-        delete textObject;
     }
 
     {
@@ -512,13 +502,12 @@ void tst_qquicktext::elide()
         {
             QQmlComponent textComponent(&engine);
             textComponent.setData(("import QtQuick 2.0\nText { text: \"\"; "+elide+" width: 100 }").toLatin1(), QUrl::fromLocalFile(""));
-            QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QScopedPointer<QObject> object(textComponent.create());
+            QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
             QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
             QCOMPARE(textObject->elideMode(), m);
             QCOMPARE(textObject->width(), 100.);
-
-            delete textObject;
         }
 
         for (int i = 0; i < standard.size(); i++)
@@ -526,7 +515,8 @@ void tst_qquicktext::elide()
             QString componentStr = "import QtQuick 2.0\nText { "+elide+" width: 100; text: \"" + standard.at(i) + "\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-            QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QScopedPointer<QObject> object(textComponent.create());
+            QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
             QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
             QCOMPARE(textObject->elideMode(), m);
@@ -534,8 +524,6 @@ void tst_qquicktext::elide()
 
             if (m != QQuickText::ElideNone && !standard.at(i).contains('\n'))
                 QVERIFY(textObject->contentWidth() <= textObject->width());
-
-            delete textObject;
         }
 
         for (int i = 0; i < richText.size(); i++)
@@ -543,7 +531,8 @@ void tst_qquicktext::elide()
             QString componentStr = "import QtQuick 2.0\nText { "+elide+" width: 100; text: \"" + richText.at(i) + "\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-            QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QScopedPointer<QObject> object(textComponent.create());
+            QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
             QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
             QCOMPARE(textObject->elideMode(), m);
@@ -551,8 +540,6 @@ void tst_qquicktext::elide()
 
             if (m != QQuickText::ElideNone && standard.at(i).contains("<br>"))
                 QVERIFY(textObject->contentWidth() <= textObject->width());
-
-            delete textObject;
         }
     }
 }
@@ -717,7 +704,8 @@ void tst_qquicktext::textFormat()
     {
         QQmlComponent textComponent(&engine);
         textComponent.setData("import QtQuick 2.0\nText { text: \"Hello\"; textFormat: Text.RichText }", QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->textFormat(), QQuickText::RichText);
@@ -725,13 +713,12 @@ void tst_qquicktext::textFormat()
         QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
         QVERIFY(textPrivate != nullptr);
         QVERIFY(textPrivate->richText);
-
-        delete textObject;
     }
     {
         QQmlComponent textComponent(&engine);
         textComponent.setData("import QtQuick 2.0\nText { text: \"<b>Hello</b>\" }", QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->textFormat(), QQuickText::AutoText);
@@ -739,18 +726,15 @@ void tst_qquicktext::textFormat()
         QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
         QVERIFY(textPrivate != nullptr);
         QVERIFY(textPrivate->styledText);
-
-        delete textObject;
     }
     {
         QQmlComponent textComponent(&engine);
         textComponent.setData("import QtQuick 2.0\nText { text: \"<b>Hello</b>\"; textFormat: Text.PlainText }", QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->textFormat(), QQuickText::PlainText);
-
-        delete textObject;
     }
 
     {
@@ -866,12 +850,11 @@ void tst_qquicktext::horizontalAlignment()
             QString componentStr = "import QtQuick 2.0\nText { horizontalAlignment: \"" + horizontalAlignmentmentStrings.at(j) + "\"; text: \"" + standard.at(i) + "\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-            QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QScopedPointer<QObject> object(textComponent.create());
+            QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
             QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
             QCOMPARE((int)textObject->hAlign(), (int)horizontalAlignmentments.at(j));
-
-            delete textObject;
         }
     }
 
@@ -882,12 +865,11 @@ void tst_qquicktext::horizontalAlignment()
             QString componentStr = "import QtQuick 2.0\nText { horizontalAlignment: \"" + horizontalAlignmentmentStrings.at(j) + "\"; text: \"" + richText.at(i) + "\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-            QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QScopedPointer<QObject> object(textComponent.create());
+            QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
             QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
             QCOMPARE((int)textObject->hAlign(), (int)horizontalAlignmentments.at(j));
-
-            delete textObject;
         }
     }
 
@@ -1004,11 +986,11 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     QString componentStr = "import QtQuick 2.0\nText {}";
     QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
     QVERIFY2(textObject, qPrintable(textComponent.errorString()));
     QCOMPARE(textObject->hAlign(), qApp->inputMethod()->inputDirection() == Qt::LeftToRight ?
                                   QQuickText::AlignLeft : QQuickText::AlignRight);
-    delete textObject;
 }
 
 int tst_qquicktext::numberOfNonWhitePixels(int fromX, int toX, const QImage &image)
@@ -1106,12 +1088,11 @@ void tst_qquicktext::verticalAlignment()
             QString componentStr = "import QtQuick 2.0\nText { verticalAlignment: \"" + verticalAlignmentmentStrings.at(j) + "\"; text: \"" + standard.at(i) + "\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-            QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QScopedPointer<QObject> object(textComponent.create());
+            QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
             QVERIFY(textObject != nullptr);
             QCOMPARE((int)textObject->vAlign(), (int)verticalAlignmentments.at(j));
-
-            delete textObject;
         }
     }
 
@@ -1122,12 +1103,11 @@ void tst_qquicktext::verticalAlignment()
             QString componentStr = "import QtQuick 2.0\nText { verticalAlignment: \"" + verticalAlignmentmentStrings.at(j) + "\"; text: \"" + richText.at(i) + "\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-            QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QScopedPointer<QObject> object(textComponent.create());
+            QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
             QVERIFY(textObject != nullptr);
             QCOMPARE((int)textObject->vAlign(), (int)verticalAlignmentments.at(j));
-
-            delete textObject;
         }
     }
 
@@ -1140,80 +1120,74 @@ void tst_qquicktext::font()
         QString componentStr = "import QtQuick 2.0\nText { font.pointSize: 40; text: \"Hello World\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
         QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->font().pointSize(), 40);
         QCOMPARE(textObject->font().bold(), false);
         QCOMPARE(textObject->font().italic(), false);
-
-        delete textObject;
     }
 
     {
         QString componentStr = "import QtQuick 2.0\nText { font.pixelSize: 40; text: \"Hello World\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
         QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->font().pixelSize(), 40);
         QCOMPARE(textObject->font().bold(), false);
         QCOMPARE(textObject->font().italic(), false);
-
-        delete textObject;
     }
 
     {
         QString componentStr = "import QtQuick 2.0\nText { font.bold: true; text: \"Hello World\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
         QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->font().bold(), true);
         QCOMPARE(textObject->font().italic(), false);
-
-        delete textObject;
     }
 
     {
         QString componentStr = "import QtQuick 2.0\nText { font.italic: true; text: \"Hello World\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
         QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->font().italic(), true);
         QCOMPARE(textObject->font().bold(), false);
-
-        delete textObject;
     }
 
     {
         QString componentStr = "import QtQuick 2.0\nText { font.family: \"Helvetica\"; text: \"Hello World\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
         QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->font().family(), QString("Helvetica"));
         QCOMPARE(textObject->font().bold(), false);
         QCOMPARE(textObject->font().italic(), false);
-
-        delete textObject;
     }
 
     {
         QString componentStr = "import QtQuick 2.0\nText { font.family: \"\"; text: \"Hello World\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
         QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->font().family(), QString(""));
-
-        delete textObject;
     }
 }
 
@@ -1225,18 +1199,18 @@ void tst_qquicktext::style()
         QString componentStr = "import QtQuick 2.0\nText { style: \"" + styleStrings.at(i) + "\"; styleColor: \"white\"; text: \"Hello World\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
         QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE((int)textObject->style(), (int)styles.at(i));
         QCOMPARE(textObject->styleColor(), QColor("white"));
-
-        delete textObject;
     }
     QString componentStr = "import QtQuick 2.0\nText { text: \"Hello World\" }";
     QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
     QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
     QRectF brPre = textObject->boundingRect();
@@ -1245,8 +1219,6 @@ void tst_qquicktext::style()
 
     QVERIFY(brPre.width() < brPost.width());
     QVERIFY(brPre.height() < brPost.height());
-
-    delete textObject;
 }
 
 void tst_qquicktext::color()
@@ -1257,14 +1229,13 @@ void tst_qquicktext::color()
         QString componentStr = "import QtQuick 2.0\nText { color: \"" + colorStrings.at(i) + "\"; text: \"Hello World\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
         QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->color(), QColor(colorStrings.at(i)));
         QCOMPARE(textObject->styleColor(), QColor("black"));
         QCOMPARE(textObject->linkColor(), QColor("blue"));
-
-        delete textObject;
     }
 
     for (int i = 0; i < colorStrings.size(); i++)
@@ -1272,7 +1243,8 @@ void tst_qquicktext::color()
         QString componentStr = "import QtQuick 2.0\nText { styleColor: \"" + colorStrings.at(i) + "\"; text: \"Hello World\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
         QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->styleColor(), QColor(colorStrings.at(i)));
@@ -1304,8 +1276,6 @@ void tst_qquicktext::color()
         textObject->setLinkColor(QColor("blue"));
         QCOMPARE(textObject->linkColor(), QColor("blue"));
         QCOMPARE(linkColorSpy.size(), 2);
-
-        delete textObject;
     }
 
     for (int i = 0; i < colorStrings.size(); i++)
@@ -1313,14 +1283,13 @@ void tst_qquicktext::color()
         QString componentStr = "import QtQuick 2.0\nText { linkColor: \"" + colorStrings.at(i) + "\"; text: \"Hello World\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
         QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->styleColor(), QColor("black"));
         QCOMPARE(textObject->color(), QColor("black"));
         QCOMPARE(textObject->linkColor(), QColor(colorStrings.at(i)));
-
-        delete textObject;
     }
 
     for (int i = 0; i < colorStrings.size(); i++)
@@ -1334,14 +1303,13 @@ void tst_qquicktext::color()
                     "text: \"Hello World\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-            QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QScopedPointer<QObject> object(textComponent.create());
+            QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
             QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
             QCOMPARE(textObject->color(), QColor(colorStrings.at(i)));
             QCOMPARE(textObject->styleColor(), QColor(colorStrings.at(j)));
             QCOMPARE(textObject->linkColor(), QColor(colorStrings.at(j)));
-
-            delete textObject;
         }
     }
     {
@@ -1352,12 +1320,11 @@ void tst_qquicktext::color()
         QString componentStr = "import QtQuick 2.0\nText { color: \"" + colorStr + "\"; text: \"Hello World\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
         QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
 
         QCOMPARE(textObject->color(), testColor);
-
-        delete textObject;
     } {
         QString colorStr = "#001234";
         QColor testColor(colorStr);
@@ -1435,21 +1402,19 @@ void tst_qquicktext::smooth()
             QString componentStr = "import QtQuick 2.0\nText { smooth: false; text: \"" + standard.at(i) + "\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-            QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QScopedPointer<QObject> object(textComponent.create());
+            QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
             QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
             QCOMPARE(textObject->smooth(), false);
-
-            delete textObject;
         }
         {
             QString componentStr = "import QtQuick 2.0\nText { text: \"" + standard.at(i) + "\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-            QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QScopedPointer<QObject> object(textComponent.create());
+            QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
             QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
             QCOMPARE(textObject->smooth(), true);
-
-            delete textObject;
         }
     }
     for (int i = 0; i < richText.size(); i++)
@@ -1458,21 +1423,19 @@ void tst_qquicktext::smooth()
             QString componentStr = "import QtQuick 2.0\nText { smooth: false; text: \"" + richText.at(i) + "\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-            QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QScopedPointer<QObject> object(textComponent.create());
+            QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
             QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
             QCOMPARE(textObject->smooth(), false);
-
-            delete textObject;
         }
         {
             QString componentStr = "import QtQuick 2.0\nText { text: \"" + richText.at(i) + "\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-            QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+            QScopedPointer<QObject> object(textComponent.create());
+            QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
             QVERIFY2(textObject != nullptr, qPrintable(textComponent.errorString()));
             QCOMPARE(textObject->smooth(), true);
-
-            delete textObject;
         }
     }
 }
@@ -1538,23 +1501,21 @@ void tst_qquicktext::weight()
         QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE((int)textObject->font().weight(), int(QQuickFontEnums::Normal));
-
-        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 2.0\nText { font.weight: Font.Bold; text: \"Hello world!\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE((int)textObject->font().weight(), int(QQuickFontEnums::Bold));
-
-        delete textObject;
     }
 }
 
@@ -1603,56 +1564,51 @@ void tst_qquicktext::capitalization()
         QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE((int)textObject->font().capitalization(), int(QQuickFontEnums::MixedCase));
-
-        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\"; font.capitalization: \"AllUppercase\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE((int)textObject->font().capitalization(), int(QQuickFontEnums::AllUppercase));
-
-        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\"; font.capitalization: \"AllLowercase\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE((int)textObject->font().capitalization(), int(QQuickFontEnums::AllLowercase));
-
-        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\"; font.capitalization: \"SmallCaps\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE((int)textObject->font().capitalization(), int(QQuickFontEnums::SmallCaps));
-
-        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\"; font.capitalization: \"Capitalize\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE((int)textObject->font().capitalization(), int(QQuickFontEnums::Capitalize));
-
-        delete textObject;
     }
 }
 
@@ -1662,34 +1618,31 @@ void tst_qquicktext::letterSpacing()
         QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->font().letterSpacing(), 0.0);
-
-        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\"; font.letterSpacing: -2 }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->font().letterSpacing(), -2.);
-
-        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\"; font.letterSpacing: 3 }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->font().letterSpacing(), 3.);
-
-        delete textObject;
     }
 }
 
@@ -1699,34 +1652,31 @@ void tst_qquicktext::wordSpacing()
         QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->font().wordSpacing(), 0.0);
-
-        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\"; font.wordSpacing: -50 }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->font().wordSpacing(), -50.);
-
-        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\"; font.wordSpacing: 200 }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->font().wordSpacing(), 200.);
-
-        delete textObject;
     }
 }
 
@@ -2118,7 +2068,8 @@ void tst_qquicktext::linkInteraction()
             "}";
     QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
     QVERIFY(textObject != nullptr);
 
@@ -2169,8 +2120,6 @@ void tst_qquicktext::linkInteraction()
     QCOMPARE(test.hoveredLink, QString());
     QCOMPARE(textObject->hoveredLink(), QString());
     QCOMPARE(textObject->linkAt(-1, -1), QString());
-
-    delete textObject;
 }
 
 void tst_qquicktext::baseUrl()
@@ -2202,12 +2151,15 @@ void tst_qquicktext::baseUrl()
 
 void tst_qquicktext::embeddedImages_data()
 {
+    // Cancel some mess left by clipRectOutsideViewportDynamicallyChanged():
+    qmlClearTypeRegistrations();
+
     QTest::addColumn<QUrl>("qmlfile");
     QTest::addColumn<QString>("error");
     QTest::newRow("local") << testFileUrl("embeddedImagesLocal.qml") << "";
     QTest::newRow("local-error") << testFileUrl("embeddedImagesLocalError.qml")
         << testFileUrl("embeddedImagesLocalError.qml").toString()+":3:1: QML Text: Cannot open: " + testFileUrl("http/notexists.png").toString();
-    QTest::newRow("local") << testFileUrl("embeddedImagesLocalRelative.qml") << "";
+    QTest::newRow("local-relative") << testFileUrl("embeddedImagesLocalRelative.qml") << "";
     QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "";
     QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
                                   << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML Text: Error transferring {{ServerBaseUrl}}/notexists.png - server replied: Not found";
@@ -2229,12 +2181,12 @@ void tst_qquicktext::embeddedImages()
     if (!error.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, error.toLatin1());
 
-    QQuickView *view = new QQuickView;
+    QScopedPointer<QQuickView> view(new QQuickView);
     view->rootContext()->setContextProperty(QStringLiteral("serverBaseUrl"), server.baseUrl());
     view->setSource(qmlfile);
     view->show();
     view->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(view));
+    QVERIFY(QTest::qWaitForWindowActive(view.get()));
     QQuickText *textObject = qobject_cast<QQuickText*>(view->rootObject());
 
     QVERIFY(textObject != nullptr);
@@ -2249,8 +2201,6 @@ void tst_qquicktext::embeddedImages()
         QCOMPARE(textObject->width(), 16.0); // default size of QTextDocument broken image icon
         QCOMPARE(textObject->height(), 16.0);
     }
-
-    delete view;
 }
 
 void tst_qquicktext::lineCount()
@@ -2408,7 +2358,8 @@ void tst_qquicktext::implicitSize()
             "maximumLineCount: 2 }";
     QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
     QVERIFY2(textObject, qPrintable(textComponent.errorString()));
 
     QVERIFY(textObject->width() < textObject->implicitWidth());
@@ -2418,8 +2369,6 @@ void tst_qquicktext::implicitSize()
     textObject->resetWidth();
     QCOMPARE(textObject->width(), textObject->implicitWidth());
     QCOMPARE(textObject->height(), textObject->implicitHeight());
-
-    delete textObject;
 }
 
 void tst_qquicktext::implicitSizeMaxLineCount()
@@ -3006,10 +2955,10 @@ void tst_qquicktext::largeTextObservesViewport_data()
     Q_ASSERT(text.size() > QQuickTextPrivate::largeTextSizeThreshold);
 
     // by default, the root item acts as the viewport:
-    // QQuickTextNode doesn't populate lines of text beyond the bottom of the window
+    // QSGInternalTextNode doesn't populate lines of text beyond the bottom of the window
     QTest::newRow("default plain text") << text << QQuickText::PlainText << 0 << false;
     // make the rectangle into a viewport item, and move the text upwards:
-    // QQuickTextNode doesn't populate lines of text beyond the bottom of the viewport rectangle
+    // QSGInternalTextNode doesn't populate lines of text beyond the bottom of the viewport rectangle
     QTest::newRow("clipped plain text") << text << QQuickText::PlainText << 10 << true;
 
     {
@@ -3053,13 +3002,13 @@ void tst_qquicktext::largeTextObservesViewport()
     QVERIFY(textItem);
     QQuickItem *viewportItem = textItem->parentItem();
     QQuickTextPrivate *textPriv = QQuickTextPrivate::get(textItem);
-    QQuickTextNode *node = static_cast<QQuickTextNode *>(textPriv->paintNode);
+    QSGInternalTextNode *node = static_cast<QSGInternalTextNode *>(textPriv->paintNode);
     QFontMetricsF fm(textItem->font());
     const qreal expectedTextHeight = (parentIsViewport ? viewportItem->height() : window.height() - viewportItem->y());
     const qreal lineSpacing = qCeil(fm.height());
     // A paragraph break is the same as an extra line break; so since our "lines" are paragraphs in StyledText,
     // visually, with StyledText we skip down 10 "lines", but the first paragraph you see says "line 5".
-    // It's OK anyway for the test, because QQuickTextNode::addTextLayout() treats the paragraph breaks like lines of text.
+    // It's OK anyway for the test, because QSGTextNode::addTextLayout() treats the paragraph breaks like lines of text.
     const int expectedLastLine = linesAboveViewport + int(expectedTextHeight / lineSpacing);
 
     viewportItem->setFlag(QQuickItem::ItemIsViewport, parentIsViewport);
@@ -3082,6 +3031,29 @@ void tst_qquicktext::largeTextObservesViewport()
     QCOMPARE(renderedLineRange.first, linesAboveViewport);
     // if linesAboveViewport == 90, a chapter heading is visible, and those take more space
     QVERIFY(qAbs(renderedLineRange.second - (expectedLastLine + 1)) < (linesAboveViewport > 80 ? 4 : 2));
+}
+
+void tst_qquicktext::largeTextInDelayedLoader() // QTBUG-115687
+{
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("loaderActiveOnVisible.qml")));
+    auto flick = view.rootObject()->findChild<QQuickFlickable*>();
+    QVERIFY(flick);
+    auto textItem = view.rootObject()->findChild<QQuickText*>();
+    QVERIFY(textItem);
+    QQuickTextPrivate *textPriv = QQuickTextPrivate::get(textItem);
+    QSGInternalTextNode *node = static_cast<QSGInternalTextNode *>(textPriv->paintNode);
+    const auto initialLineRange = node->renderedLineRange();
+    qCDebug(lcTests) << "first line rendered" << initialLineRange.first
+                     << "; first line past viewport" << initialLineRange.second;
+    flick->setContentY(500);
+    QTRY_COMPARE_NE(node->renderedLineRange(), initialLineRange);
+    const auto scrolledLineRange = node->renderedLineRange();
+    qCDebug(lcTests) << "after scroll: first line rendered" << scrolledLineRange.first
+                     << "; first line past viewport" << scrolledLineRange.second;
+    // We scrolled a good bit more than one window-height, so we must render a
+    // non-overlapping range of text some distance past the initial blocks.
+    QCOMPARE_GT(scrolledLineRange.first, initialLineRange.second);
 }
 
 void tst_qquicktext::lineLaidOut()
@@ -3327,7 +3299,8 @@ void tst_qquicktext::imgTagsAlign()
     QString componentStr = "import QtQuick 2.0\nText { text: \"This is a test <img src=\\\"" + src + "\\\" align=\\\"" + align + "\\\"> of image.\" }";
     QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), testFileUrl("."));
-    QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
     QVERIFY(textObject != nullptr);
     QCOMPARE(textObject->height(), qreal(imgHeight));
@@ -3342,8 +3315,6 @@ void tst_qquicktext::imgTagsAlign()
         QVERIFY(br.y() == imgHeight / 2.0 - br.height() / 2.0);
     else if (align == "top")
         QCOMPARE(br.y(), qreal(0));
-
-    delete textObject;
 }
 
 void tst_qquicktext::imgTagsMultipleImages()
@@ -3352,7 +3323,8 @@ void tst_qquicktext::imgTagsMultipleImages()
 
     QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), testFileUrl("."));
-    QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
     QVERIFY(textObject != nullptr);
     QCOMPARE(textObject->height(), qreal(85));
@@ -3360,34 +3332,30 @@ void tst_qquicktext::imgTagsMultipleImages()
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
     QVERIFY(textPrivate != nullptr);
     QCOMPARE(textPrivate->extra->visibleImgTags.size(), 2);
-
-    delete textObject;
 }
 
 void tst_qquicktext::imgTagsElide()
 {
     QScopedPointer<QQuickView> window(createView(testFile("imgTagsElide.qml")));
-    QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
-    QVERIFY(myText != nullptr);
+    QScopedPointer<QQuickText> myText(window->rootObject()->findChild<QQuickText*>("myText"));
+    QVERIFY(myText);
 
-    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText.data());
     QVERIFY(textPrivate != nullptr);
     QCOMPARE(textPrivate->extra->visibleImgTags.size(), 0);
     myText->setMaximumLineCount(20);
     QTRY_COMPARE(textPrivate->extra->visibleImgTags.size(), 1);
-
-    delete myText;
 }
 
 void tst_qquicktext::imgTagsUpdates()
 {
     QScopedPointer<QQuickView> window(createView(testFile("imgTagsUpdates.qml")));
-    QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
-    QVERIFY(myText != nullptr);
+    QScopedPointer<QQuickText> myText(window->rootObject()->findChild<QQuickText*>("myText"));
+    QVERIFY(myText);
 
-    QSignalSpy spy(myText, SIGNAL(contentSizeChanged()));
+    QSignalSpy spy(myText.data(), SIGNAL(contentSizeChanged()));
 
-    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText.data());
     QVERIFY(textPrivate != nullptr);
 
     myText->setText("This is a heart<img src=\"images/heart200.png\">.");
@@ -3401,8 +3369,6 @@ void tst_qquicktext::imgTagsUpdates()
     // if maximumLineCount is set and the img tag doesn't have an explicit size
     // we relayout twice.
     QCOMPARE(spy.size(), 3);
-
-    delete myText;
 }
 
 void tst_qquicktext::imgTagsError()
@@ -3416,10 +3382,10 @@ void tst_qquicktext::imgTagsError()
             + testFileUrl("images/starfish_2.pn").toString());
     QTest::ignoreMessage(QtWarningMsg, expectedMessage.toLatin1());
     textComponent.setData(componentStr.toLatin1(), testFileUrl("."));
-    QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
     QVERIFY(textObject != nullptr);
-    delete textObject;
 }
 
 void tst_qquicktext::fontSizeMode_data()
@@ -4249,7 +4215,7 @@ void tst_qquicktext::baselineOffset_data()
     QTest::newRow("customLine")
             << "hello world"
             << "hello\nworld"
-            << QByteArray("height: 200; onLineLaidOut: line.y += 16")
+            << QByteArray("height: 200; onLineLaidOut: (line) => { line.y += 16; }")
             << &expectedBaselineCustom
             << &expectedBaselineCustom;
 
@@ -4345,7 +4311,8 @@ void tst_qquicktext::baselineOffset_data()
     QTest::newRow("customLine with padding")
             << "hello world"
             << "hello\nworld"
-            << QByteArray("height: 200; topPadding: 10; bottomPadding: 20; onLineLaidOut: line.y += 16")
+            << QByteArray("height: 200; topPadding: 10; bottomPadding: 20; "
+                          "onLineLaidOut: (line) => { line.y += 16; }")
             << &expectedBaselineCustom
             << &expectedBaselineCustom;
 
@@ -4443,7 +4410,7 @@ void tst_qquicktext::htmlLists()
     QFETCH(QString, text);
     QFETCH(int, nbLines);
 
-    QQuickView *view = createView(testFile("htmlLists.qml"));
+    QScopedPointer<QQuickView>view(createView(testFile("htmlLists.qml")));
     QQuickText *textObject = view->rootObject()->findChild<QQuickText*>("myText");
 
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
@@ -4455,11 +4422,9 @@ void tst_qquicktext::htmlLists()
 
     view->show();
     view->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(view));
+    QVERIFY(QTest::qWaitForWindowActive(view.get()));
 
     QCOMPARE(textPrivate->extra->doc->lineCount(), nbLines);
-
-    delete view;
 }
 
 void tst_qquicktext::htmlLists_data()
@@ -4544,9 +4509,9 @@ void tst_qquicktext::padding()
     QTRY_COMPARE(window->status(), QQuickView::Ready);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
-    QQuickItem *root = window->rootObject();
+    QScopedPointer<QQuickItem> root(window->rootObject());
     QVERIFY(root);
-    QQuickText *obj = qobject_cast<QQuickText*>(root);
+    QQuickText *obj = qobject_cast<QQuickText*>(root.data());
     QVERIFY(obj != nullptr);
 
     qreal cw = obj->contentWidth();
@@ -4637,8 +4602,6 @@ void tst_qquicktext::padding()
     QCOMPARE(obj->leftPadding(), 0.0);
     QCOMPARE(obj->rightPadding(), 0.0);
     QCOMPARE(obj->bottomPadding(), 0.0);
-
-    delete root;
 }
 
 void tst_qquicktext::paddingInLoader() // QTBUG-83413
@@ -4673,23 +4636,21 @@ void tst_qquicktext::hintingPreference()
         QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE((int)textObject->font().hintingPreference(), (int)QFont::PreferDefaultHinting);
-
-        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\"; font.hintingPreference: Font.PreferNoHinting }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
         QVERIFY(textObject != nullptr);
         QCOMPARE((int)textObject->font().hintingPreference(), (int)QFont::PreferNoHinting);
-
-        delete textObject;
     }
 }
 

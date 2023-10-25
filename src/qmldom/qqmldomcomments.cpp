@@ -190,7 +190,7 @@ A comment has methods to write it out again (write) and expose it to the Dom
 /*!
 \brief Expose attributes to the Dom
 */
-bool Comment::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+bool Comment::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
     cont = cont && self.dvValueField(visitor, Fields::rawComment, rawComment());
@@ -235,7 +235,7 @@ Every region has a name, and should be written out using the OutWriter.writeRegi
 startRegion/ EndRegion). Region comments keeps a mapping containing them.
 */
 
-bool CommentedElement::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+bool CommentedElement::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
     cont = cont && self.dvWrapField(visitor, Fields::preComments, preComments);
@@ -348,7 +348,7 @@ public:
     AstRangesVisitor() = default;
 
     void addNodeRanges(AST::Node *rootNode);
-    void addItemRanges(DomItem item, FileLocations::Tree itemLocations, Path currentP);
+    void addItemRanges(const DomItem &item, FileLocations::Tree itemLocations, Path currentP);
 
     void throwRecursionDepthError() override { }
 
@@ -378,7 +378,8 @@ void AstRangesVisitor::addNodeRanges(AST::Node *rootNode)
     AST::Node::accept(rootNode, this);
 }
 
-void AstRangesVisitor::addItemRanges(DomItem item, FileLocations::Tree itemLocations, Path currentP)
+void AstRangesVisitor::addItemRanges(
+        const DomItem &item, FileLocations::Tree itemLocations, Path currentP)
 {
     if (!itemLocations) {
         if (item)
@@ -432,12 +433,12 @@ const QSet<int> AstRangesVisitor::kindsToSkip()
 \brief Stores the comments associated with javascript AST::Node pointers
 */
 
-bool AstComments::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+bool AstComments::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = self.dvItemField(visitor, Fields::commentedElements, [this, &self]() {
         return self.subMapItem(Map(
                 self.pathFromOwner().field(Fields::commentedElements),
-                [this](DomItem &map, QString key) {
+                [this](const DomItem &map, QString key) {
                     bool ok;
                     // we expose the comments as map just for debugging purposes,
                     // as key we use the address hex value as key (keys must be strings)
@@ -448,7 +449,7 @@ bool AstComments::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
                         return map.wrap(PathEls::Key(key), m_commentedElements[n]);
                     return DomItem();
                 },
-                [this](DomItem &) {
+                [this](const DomItem &) {
                     QSet<QString> res;
                     for (AST::Node *n : m_commentedElements.keys()) {
                         QString name;
@@ -485,9 +486,9 @@ void AstComments::collectComments(MutableDomItem &item)
 Collects and associates comments with javascript AST::Node pointers and MutableDomItem in
 rootItem
 */
-void AstComments::collectComments(std::shared_ptr<Engine> engine, AST::Node *n,
-                                  std::shared_ptr<AstComments> ccomm, MutableDomItem rootItem,
-                                  FileLocations::Tree rootItemLocations)
+void AstComments::collectComments(
+        std::shared_ptr<Engine> engine, AST::Node *n, std::shared_ptr<AstComments> ccomm,
+        const MutableDomItem &rootItem, FileLocations::Tree rootItemLocations)
 {
     if (!n)
         return;
@@ -673,7 +674,7 @@ void AstComments::collectComments(std::shared_ptr<Engine> engine, AST::Node *n,
             else
                 cEl.postComments.append(comment);
         } else if (commentEl.element.index() == 1) {
-            DomItem rComments = rootItem.item()
+            MutableDomItem rComments = rootItem.item()
                                         .path(std::get<1>(commentEl.element).path)
                                         .field(Fields::comments);
             if (RegionComments *rCommentsPtr = rComments.mutableAs<RegionComments>()) {
@@ -728,7 +729,7 @@ QMultiMap<quint32, const QList<Comment> *> AstComments::allCommentsInNode(AST::N
     return v.nodeComments;
 }
 
-bool RegionComments::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+bool RegionComments::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
     if (!regionComments.isEmpty())

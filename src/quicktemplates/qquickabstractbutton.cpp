@@ -1126,6 +1126,11 @@ void QQuickAbstractButton::keyReleaseEvent(QKeyEvent *event)
 
 void QQuickAbstractButton::mousePressEvent(QMouseEvent *event)
 {
+    if (!(event->buttons() & Qt::LeftButton)) {
+        event->ignore();
+        return;
+    }
+
     Q_D(QQuickAbstractButton);
     d->pressButtons = event->buttons();
     QQuickControl::mousePressEvent(event);

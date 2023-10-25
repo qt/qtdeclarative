@@ -290,6 +290,16 @@ void QQmlObjectCreator::populateDeferredBinding(const QQmlProperty &qmlProperty,
     }
 }
 
+void QQmlObjectCreator::populateDeferredInstance(
+        QObject *outerObject, int deferredIndex, int index, QObject *instance,
+        QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty,
+        const QV4::CompiledData::Binding *binding)
+{
+    doPopulateDeferred(outerObject, deferredIndex, [&]() {
+        populateInstance(index, instance, bindingTarget, valueTypeProperty, binding);
+    });
+}
+
 void QQmlObjectCreator::finalizePopulateDeferred()
 {
     phase = ObjectsCreated;
@@ -1073,7 +1083,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 recordError(binding->valueLocation, tr("Cannot assign object type %1 with no default method").arg(QString::fromLatin1(createdSubObject->metaObject()->className())));
                 return false;
             }
-            qCWarning(lcQmlDefaultMethod) << "Assigning an object to a signal handler is deprecated."
+            qCWarning(lcQmlDefaultMethod) << "Assigning an object to a signal handler is deprecated. "
                                              "Instead, create the object, give it an id, and call the desired slot from the signal handler."
                                              ;
 
@@ -1465,11 +1475,13 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
         target->metaObject()->metacall(target, QMetaObject::BindableProperty, index, argv);
         const bool success = bindable.setBinding(qmlBinding);
 
+        const auto bindingPrivateRefCount = QPropertyBindingPrivate::get(qmlBinding)->ref;
+
         // Only pop_front after setting the binding as the bindings are refcounted.
         sharedState->allQPropertyBindings.pop_front();
 
         // If the binding was actually not set, it's deleted now.
-        if (success) {
+        if (success && bindingPrivateRefCount > 1) {
             if (auto priv = QPropertyBindingPrivate::get(qmlBinding); priv->hasCustomVTable()) {
                 auto qmlBindingPriv = static_cast<QQmlPropertyBinding *>(priv);
                 auto jsExpression = qmlBindingPriv->jsExpression();

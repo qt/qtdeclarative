@@ -116,7 +116,7 @@ QT_BEGIN_NAMESPACE
     Container does not provide any default visualization. It is used to implement
     such containers as \l SwipeView and \l TabBar. When implementing a custom
     container, the most important part of the API is \l contentModel, which provides
-    the contained items in a way that it can be used as a delegate model for item
+    the contained items in a way that it can be used as an object model for item
     views and repeaters.
 
     \code

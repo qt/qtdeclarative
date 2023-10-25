@@ -50,11 +50,11 @@ void tst_qqmltranslation::translation()
 
     QQmlEngine engine;
     QQmlComponent component(&engine, testFile);
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
+    std::unique_ptr<QObject> object { component.create() };
+    QVERIFY(object);
 
     if (verifyCompiledData) {
-        QQmlContext *context = qmlContext(object);
+        QQmlContext *context = qmlContext(object.get());
         QQmlEnginePrivate *engine = QQmlEnginePrivate::get(context->engine());
         QQmlRefPointer<QQmlTypeData> typeData = engine->typeLoader.getType(context->baseUrl());
         QVERIFY(!typeData->backupSourceCode().isValid());
@@ -66,7 +66,9 @@ void tst_qqmltranslation::translation()
                              << QStringLiteral("basic2")
                              << QStringLiteral("disambiguation")
                              << QStringLiteral("disambiguation2")
-                             << QStringLiteral("singular") << QStringLiteral("plural");
+                             << QStringLiteral("singular")
+                             << QStringLiteral("plural")
+                             << QStringLiteral("emptyContext");
 
         const QV4::CompiledData::Object *rootObject
                 = compilationUnit->qmlData->objectAt(/*root object*/0);
@@ -100,9 +102,9 @@ void tst_qqmltranslation::translation()
     QCOMPARE(object->property("singular2").toString(), QLatin1String("1 canard"));
     QCOMPARE(object->property("plural").toString(), QLatin1String("2 canards"));
     QCOMPARE(object->property("plural2").toString(), QLatin1String("2 canards"));
+    QCOMPARE(object->property("emptyContext").toString(), QLatin1String("hello"));
 
     QCoreApplication::removeTranslator(&translator);
-    delete object;
 }
 
 void tst_qqmltranslation::idTranslation()
@@ -113,11 +115,11 @@ void tst_qqmltranslation::idTranslation()
 
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("idtranslation.qml"));
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
+    std::unique_ptr<QObject> object { component.create() };
+    QVERIFY(object);
 
     {
-        QQmlContext *context = qmlContext(object);
+        QQmlContext *context = qmlContext(object.get());
         QQmlEnginePrivate *engine = QQmlEnginePrivate::get(context->engine());
         QQmlRefPointer<QQmlTypeData> typeData = engine->typeLoader.getType(context->baseUrl());
         QVERIFY(!typeData->backupSourceCode().isValid());
@@ -144,7 +146,6 @@ void tst_qqmltranslation::idTranslation()
     QCOMPARE(object->property("idTranslation3").toString(), QLatin1String("bonjour tout le monde"));
 
     QCoreApplication::removeTranslator(&translator);
-    delete object;
 }
 
 class CppTranslationBase : public QQuickItem

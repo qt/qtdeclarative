@@ -7,6 +7,7 @@
 
 #include <private/qv4arraybuffer_p.h>
 
+#include <QtCore/qpointer.h>
 #include <QtCore/qregularexpression.h>
 
 QT_BEGIN_NAMESPACE

@@ -88,7 +88,7 @@ using either the class name or an explicitly given name as QML type name. The
 minor version(s) will be derived from any revisions attached to properties,
 methods, or signals. The default minor version is \c 0. You can explicitly
 restrict the type to be available only from specific minor versions by adding
-the \c QML_ADDED_IN_MINOR_VERSION() macro to the class declaration. Clients can
+the \c QML_ADDED_IN_VERSION() macro to the class declaration. Clients can
 import suitable versions of the namespace in order to use the type.
 
 For example, suppose there is a \c Message class with \c author and
@@ -205,6 +205,60 @@ There are some further limitations on what you can do with value types:
 \li The API to define extensions to value types (\l{QML_EXTENDED}) is not public
     and subject to future changes.
 \endlist
+
+\section2 Value Types with Enumerations
+
+Exposing enumerations from a value type to QML requires some extra steps.
+
+Value types have lower case names in QML and types with lower case
+names are generally not addressable in JavaScript code (unless you specify
+\l{ValueTypeBehavior}{pragma ValueTypeBehavior: Addressable}). If you have
+a value type in C++ with an enumeration you want to expose to QML, you
+need to expose the enumeration separately.
+
+This can be solved by using \l{QML_FOREIGN_NAMESPACE}. First, derive from
+your value type to create a separate C++ type:
+
+\code
+class Person
+{
+    Q_GADGET
+    Q_PROPERTY(QString firstName READ firstName WRITE setFirstName)
+    Q_PROPERTY(QString lastName READ lastName WRITE setLastName)
+    QML_VALUE_TYPE(person)
+public:
+    enum TheEnum { A, B, C };
+    Q_ENUM(TheEnum)
+    //...
+};
+
+class PersonDerived: public Person
+{
+    Q_GADGET
+};
+\endcode
+
+Then expose the derived type as a foreign namespace:
+
+\code
+namespace PersonDerivedForeign
+{
+    Q_NAMESPACE
+    QML_NAMED_ELEMENT(Person)
+    QML_FOREIGN_NAMESPACE(PersonDerived)
+}
+\endcode
+
+This produces a \l{qtqml-typesystem-namespaces.html}{QML Namespace}
+called \c Person (upper case) with an enumeration called \c TheEnum and
+values \c{A}, \c{B}, and \c{C}. Then you can write the following in QML:
+
+\qml
+    someProperty: Person.A
+\endqml
+
+At the same time you can still use your value type called \c person
+(lower case) exactly as before.
 
 \section2 Registering Non-Instantiable Types
 
@@ -360,7 +414,7 @@ available when \c MyTypes version 1.1 or higher is imported. Imports of
 \c MyTypes version 1.0 remain unaffected.
 
 For the same reason, new types introduced in later versions should be tagged
-with the QML_ADDED_IN_MINOR_VERSION macro.
+with the QML_ADDED_IN_VERSION macro.
 
 This feature of the language allows for behavioural changes to be made
 without breaking existing applications. Consequently QML module authors

@@ -504,6 +504,7 @@ void QCommonStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, Q
                 proxy()->drawPrimitive(PE_FrameLineEdit, panel, p);
         }
         break;
+#if QT_CONFIG(quick_itemview)
     case PE_IndicatorColumnViewArrow: {
     if (const QStyleOptionViewItem *viewOpt = qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
         bool reverse = (viewOpt->direction == Qt::RightToLeft);
@@ -597,6 +598,7 @@ void QCommonStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, Q
             }
         }
         break;
+#endif // QT_CONFIG(quick_itemview)
     case PE_PanelScrollAreaCorner: {
         const QBrush brush(opt->palette.brush(QPalette::Window));
         p->fillRect(opt->rect, brush);
@@ -667,7 +669,7 @@ void QCommonStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, Q
 
                 imagePainter.drawPolygon(a);
                 imagePainter.end();
-                pixmap = QPixmap::fromImage(image);
+                pixmap = QPixmap::fromImage(std::move(image));
                 pixmap.setDevicePixelRatio(pixelRatio);
                 QPixmapCache::insert(pixmapName, pixmap);
             }
@@ -813,6 +815,7 @@ QString QCommonStylePrivate::calculateElidedText(const QString &text, const QTex
     return ret;
 }
 
+#if QT_CONFIG(quick_itemview)
 QSize QCommonStylePrivate::viewItemSize(const QStyleOptionViewItem *option, int role) const
 {
     switch (role) {
@@ -1030,6 +1033,7 @@ void QCommonStylePrivate::viewItemLayout(const QStyleOptionViewItem *opt,  QRect
         *textRect = display;
     }
 }
+#endif // QT_CONFIG(quick_itemview)
 
 QString QCommonStylePrivate::toolButtonElideText(const QStyleOptionToolButton *option,
                                                  const QRect &textRect, int flags) const
@@ -2036,6 +2040,7 @@ void QCommonStyle::drawControl(ControlElement element, const QStyleOption *opt, 
         p->drawLine(line2starting, top, line2starting, bottom);
         }
         break;
+#if QT_CONFIG(quick_itemview)
     case CE_ItemViewItem:
         if (const QStyleOptionViewItem *vopt = qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
             p->save();
@@ -2114,6 +2119,7 @@ void QCommonStyle::drawControl(ControlElement element, const QStyleOption *opt, 
              p->restore();
         }
         break;
+#endif // QT_CONFIG(quick_itemview)
     case CE_ShapedFrame:
         if (const QStyleOptionFrame *f = qstyleoption_cast<const QStyleOptionFrame *>(opt)) {
             int frameShape  = f->frameShape;
@@ -2830,6 +2836,7 @@ QRect QCommonStyle::subElementRect(SubElement sr, const QStyleOption *opt) const
         }
         break;
     }
+#if QT_CONFIG(quick_itemview)
     case SE_ItemViewItemCheckIndicator:
         if (!qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
             r = subElementRect(SE_CheckBoxIndicator, opt);
@@ -2856,6 +2863,7 @@ QRect QCommonStyle::subElementRect(SubElement sr, const QStyleOption *opt) const
                 r = d->displayRect;
                                }
         break;
+#endif // QT_CONFIG(quick_itemview)
     case SE_ToolBarHandle:
         if (const QStyleOptionToolBar *tbopt = qstyleoption_cast<const QStyleOptionToolBar *>(opt)) {
             if (tbopt->features & QStyleOptionToolBar::Movable) {
@@ -4475,7 +4483,6 @@ int QCommonStyle::pixelMetric(PixelMetric m, const QStyleOption *opt) const
 
 QSize QCommonStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QSize &csz) const
 {
-    Q_D(const QCommonStyle);
     QSize sz(!csz.isEmpty() ? csz : QSize(0,0));
 
     switch (ct) {
@@ -4608,8 +4615,10 @@ QSize QCommonStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, c
             sz = QSize(1 + 3 * (buttonSize + 1), buttonSize);
         }
         break;
+#if QT_CONFIG(quick_itemview)
     case CT_ItemViewItem:
         if (const QStyleOptionViewItem *vopt = qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
+            Q_D(const QCommonStyle);
             QRect decorationRect, displayRect, checkRect;
             d->viewItemLayout(vopt, &checkRect, &decorationRect, &displayRect, true);
             sz = (decorationRect|displayRect|checkRect).size();
@@ -4617,6 +4626,7 @@ QSize QCommonStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, c
                 sz.rheight() += 2; // Prevent icons from overlapping.
                       }
         break;
+#endif // QT_CONFIG(quick_itemview)
     case CT_SpinBox:
         if (const QStyleOptionSpinBox *vopt = qstyleoption_cast<const QStyleOptionSpinBox *>(opt)) {
             // Add button + frame widths
@@ -4974,9 +4984,11 @@ int QCommonStyle::styleHint(StyleHint sh, const QStyleOption *opt, QStyleHintRet
     case SH_Splitter_OpaqueResize:
         ret = true;
         break;
+#if QT_CONFIG(quick_itemview)
     case SH_ItemView_ScrollMode:
         ret = QStyleOptionViewItem::ScrollPerItem;
         break;
+#endif // QT_CONFIG(quick_itemview)
     case SH_TitleBar_ShowToolTipsOnButtons:
         ret = true;
         break;
@@ -5229,8 +5241,8 @@ QPixmap QCommonStyle::standardPixmap(StandardPixmap sp, const QStyleOption *opti
     case SP_ToolBarHorizontalExtensionButton:
         if (rtl) {
             QImage im(tb_extension_arrow_h_xpm);
-            im = im.convertToFormat(QImage::Format_ARGB32).mirrored(true, false);
-            return QPixmap::fromImage(im);
+            im = std::move(im).convertToFormat(QImage::Format_ARGB32).mirrored(true, false);
+            return QPixmap::fromImage(std::move(im));
         }
         return cachedPixmapFromXPM(tb_extension_arrow_h_xpm);
     case SP_ToolBarVerticalExtensionButton:
@@ -6025,7 +6037,7 @@ QPixmap QCommonStyle::generatedIconPixmap(QIcon::Mode iconMode, const QPixmap &p
             }
         }
 
-        return QPixmap::fromImage(im);
+        return QPixmap::fromImage(std::move(im));
     }
     case QIcon::Selected: {
         QImage img = pixmap.toImage().convertToFormat(QImage::Format_ARGB32_Premultiplied);
@@ -6035,7 +6047,7 @@ QPixmap QCommonStyle::generatedIconPixmap(QIcon::Mode iconMode, const QPixmap &p
         painter.setCompositionMode(QPainter::CompositionMode_SourceAtop);
         painter.fillRect(0, 0, img.width(), img.height(), color);
         painter.end();
-        return QPixmap::fromImage(img); }
+        return QPixmap::fromImage(std::move(img)); }
     case QIcon::Active:
         return pixmap;
     default:

@@ -31,6 +31,8 @@
 #  include <unistd.h>
 #elif defined(Q_OS_INTEGRITY)
 #  include <INTEGRITY.h>
+#elif defined(Q_OS_VXWORKS)
+#  include <taskLib.h>
 #elif defined(Q_OS_WASM)
 #  include <emscripten/stack.h>
 #endif
@@ -147,12 +149,19 @@ StackProperties stackProperties()
 static_assert(Q_STACK_GROWTH_DIRECTION < 0);
 StackProperties stackProperties()
 {
+    // MinGW complains about out of bounds array access in compiler headers
+    QT_WARNING_PUSH
+    QT_WARNING_DISABLE_GCC("-Warray-bounds")
+
     // Get the stack base.
 #  ifdef _WIN64
     PNT_TIB64 pTib = reinterpret_cast<PNT_TIB64>(NtCurrentTeb());
 #  else
     PNT_TIB pTib = reinterpret_cast<PNT_TIB>(NtCurrentTeb());
 #  endif
+
+    QT_WARNING_POP
+
     quint8 *stackBase = reinterpret_cast<quint8 *>(pTib->StackBase);
 
     // Get the stack limit. tib->StackLimit is the size of the
@@ -226,6 +235,22 @@ StackProperties stackProperties()
     return createStackProperties(reinterpret_cast<void *>(base), size);
 }
 
+#elif defined(Q_OS_VXWORKS)
+
+StackProperties stackProperties()
+{
+    TASK_DESC taskDescription;
+    taskInfoGet(taskIdSelf(), &taskDescription);
+
+#if Q_STACK_GROWTH_DIRECTION < 0
+    return createStackProperties(
+                decrementStackPointer(taskDescription.td_pStackBase, taskDescription.td_stackSize),
+                taskDescription.td_stackSize);
+#else
+    return createStackProperties(taskDescription.td_pStackBase, taskDescription.td_stackSize);
+#endif
+}
+
 #else
 
 StackProperties stackPropertiesGeneric(qsizetype stackSize = 0)
@@ -234,8 +259,8 @@ StackProperties stackPropertiesGeneric(qsizetype stackSize = 0)
 
     pthread_t thread = pthread_self();
     pthread_attr_t sattr;
-    pthread_attr_init(&sattr);
 #  if defined(PTHREAD_NP_H) || defined(_PTHREAD_NP_H_) || defined(Q_OS_NETBSD)
+    pthread_attr_init(&sattr);
     pthread_attr_get_np(thread, &sattr);
 #  else
     pthread_getattr_np(thread, &sattr);

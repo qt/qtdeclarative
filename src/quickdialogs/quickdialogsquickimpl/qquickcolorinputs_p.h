@@ -23,6 +23,8 @@
 
 #include "qquickcolordialogutils_p.h"
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickColorInputs : public QQuickItem

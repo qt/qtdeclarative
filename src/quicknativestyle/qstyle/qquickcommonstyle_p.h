@@ -30,15 +30,18 @@ class QCommonStylePrivate : public QStylePrivate
     Q_DECLARE_PUBLIC(QCommonStyle)
 public:
 
+#if QT_CONFIG(quick_itemview)
     ~QCommonStylePrivate()
     {
         delete cachedOption;
     }
+#endif // QT_CONFIG(quick_itemview)
 
     QString calculateElidedText(const QString &text, const QTextOption &textOption,
                                 const QFont &font, const QRect &textRect, const Qt::Alignment valign,
                                 Qt::TextElideMode textElideMode, int flags,
                                 bool lastVisibleLineShouldBeElided, QPointF *paintStartPosition) const;
+#if QT_CONFIG(quick_itemview)
     void viewItemDrawText(QPainter *p, const QStyleOptionViewItem *option, const QRect &rect) const;
     void viewItemLayout(const QStyleOptionViewItem *opt,  QRect *checkRect,
                         QRect *pixmapRect, QRect *textRect, bool sizehint) const;
@@ -62,6 +65,7 @@ public:
                && option.font == cachedOption->font
                && option.viewItemPosition == cachedOption->viewItemPosition;
     }
+#endif // QT_CONFIG(quick_itemview)
     QString toolButtonElideText(const QStyleOptionToolButton *toolbutton,
                                 const QRect &textRect, int flags) const;
 

@@ -14,6 +14,7 @@
 #include <QtQml/private/qqmlsignalnames_p.h>
 #include <QtQml/private/qqmljslexer_p.h>
 
+#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <optional>
@@ -30,12 +31,17 @@ using namespace Qt::StringLiterals;
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(QQmlLSUtilsLog, "qt.languageserver.utils")
+Q_LOGGING_CATEGORY(QQmlLSCompletionLog, "qt.languageserver.completions")
 
+static QList<CompletionItem> methodCompletion(const QQmlJSScope::ConstPtr &scope,
+                                              QDuplicateTracker<QString> *usedNames);
+static QList<CompletionItem> propertyCompletion(const QQmlJSScope::ConstPtr &scope,
+                                                QDuplicateTracker<QString> *usedNames);
 /*!
    \internal
     Helper to check if item is a Field Member Expression \c {<someExpression>.propertyName}.
 */
-static bool isFieldMemberExpression(DomItem &item)
+static bool isFieldMemberExpression(const DomItem &item)
 {
     return item.internalKind() == DomType::ScriptBinaryExpression
             && item.field(Fields::operation).value().toInteger()
@@ -47,7 +53,7 @@ static bool isFieldMemberExpression(DomItem &item)
     Helper to check if item is a Field Member Access \c memberAccess in
     \c {<someExpression>.memberAccess}.
 */
-static bool isFieldMemberAccess(DomItem &item)
+static bool isFieldMemberAccess(const DomItem &item)
 {
     auto parent = item.directParent();
     if (!isFieldMemberExpression(parent))
@@ -170,6 +176,95 @@ QQmlLSUtilsTextPosition QQmlLSUtils::textRowAndColumnFrom(const QString &text, q
     return { row, column };
 }
 
+static QList<QQmlLSUtilsItemLocation>::const_iterator
+handlePropertyDefinitionAndBindingOverlap(const QList<QQmlLSUtilsItemLocation> &items,
+                                          qsizetype offsetInFile)
+{
+    auto smallest = std::min_element(
+            items.begin(), items.end(),
+            [](const QQmlLSUtilsItemLocation &a, const QQmlLSUtilsItemLocation &b) {
+                return a.fileLocation->info().fullRegion.length
+                        < b.fileLocation->info().fullRegion.length;
+            });
+
+    if (smallest->domItem.internalKind() == DomType::Binding) {
+        // weird edge case: the filelocations of property definitions and property bindings are
+        // actually overlapping, which means that qmlls cannot distinguish between bindings and
+        // bindings in property definitions. Those need to be treated differently for
+        // autocompletion, for example.
+        // Therefore: when inside a binding and a propertydefinition, choose the property definition
+        // if offsetInFile is before the colon, like for example:
+        // property var helloProperty: Rectangle { /*...*/ }
+        // |----return propertydef---|-- return Binding ---|
+
+        // get the smallest property definition to avoid getting the property definition that the
+        // current QmlObject is getting bound to!
+        auto smallestPropertyDefinition = std::min_element(
+                items.begin(), items.end(),
+                [](const QQmlLSUtilsItemLocation &a, const QQmlLSUtilsItemLocation &b) {
+                    // make property definition smaller to avoid getting smaller items that are not
+                    // property definitions
+                    const bool aIsPropertyDefinition =
+                            a.domItem.internalKind() == DomType::PropertyDefinition;
+                    const bool bIsPropertyDefinition =
+                            b.domItem.internalKind() == DomType::PropertyDefinition;
+                    return aIsPropertyDefinition > bIsPropertyDefinition
+                            && a.fileLocation->info().fullRegion.length
+                            < b.fileLocation->info().fullRegion.length;
+                });
+
+        if (smallestPropertyDefinition->domItem.internalKind() != DomType::PropertyDefinition)
+            return smallest;
+
+        const auto propertyDefinitionColon =
+                smallestPropertyDefinition->fileLocation->info().regions[u"colon"_s];
+        const auto smallestColon = smallest->fileLocation->info().regions[u"colon"_s];
+        // sanity check: is it the definition of the current binding? check if they both have their
+        // ':' at the same location
+        if (propertyDefinitionColon.isValid() && propertyDefinitionColon == smallestColon
+            && offsetInFile < smallestColon.offset) {
+            return smallestPropertyDefinition;
+        }
+    }
+    return smallest;
+}
+
+static QList<QQmlLSUtilsItemLocation>
+filterItemsFromTextLocation(const QList<QQmlLSUtilsItemLocation> &items, qsizetype offsetInFile)
+{
+    if (items.size() < 2)
+        return items;
+
+    // if there are multiple items, take the smallest one + its neighbors
+    // this allows to prefer inline components over main components, when both contain the
+    // current textposition, and to disregard internal structures like property maps, which
+    // "contain" everything from their first-appearing to last-appearing property (e.g. also
+    // other stuff in between those two properties).
+
+    QList<QQmlLSUtilsItemLocation> filteredItems;
+
+    auto smallest = handlePropertyDefinitionAndBindingOverlap(items, offsetInFile);
+
+    filteredItems.append(*smallest);
+
+    const QQmlJS::SourceLocation smallestLoc = smallest->fileLocation->info().fullRegion;
+    const quint32 smallestBegin = smallestLoc.begin();
+    const quint32 smallestEnd = smallestLoc.end();
+
+    for (auto it = items.begin(); it != items.end(); it++) {
+        if (it == smallest)
+            continue;
+
+        const QQmlJS::SourceLocation itLoc = it->fileLocation->info().fullRegion;
+        const quint32 itBegin = itLoc.begin();
+        const quint32 itEnd = itLoc.end();
+        if (itBegin == smallestEnd || smallestBegin == itEnd) {
+            filteredItems.append(*it);
+        }
+    }
+    return filteredItems;
+}
+
 /*!
     \internal
     \brief Find the DomItem representing the object situated in file at given line and
@@ -178,7 +273,7 @@ QQmlLSUtilsTextPosition QQmlLSUtils::textRowAndColumnFrom(const QString &text, q
     If line and character point between two objects, two objects might be returned.
     If line and character point to whitespace, it might return an inner node of the QmlDom-Tree.
  */
-QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(DomItem file, int line,
+QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(const DomItem &file, int line,
                                                                   int character)
 {
     QList<QQmlLSUtilsItemLocation> itemsFound;
@@ -235,42 +330,11 @@ QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(DomItem file, 
     }
 
     // filtering step:
-    if (itemsFound.size() > 1) {
-        // if there are multiple items, take the smallest one + its neighbors
-        // this allows to prefer inline components over main components, when both contain the
-        // current textposition, and to disregard internal structures like property maps, which
-        // "contain" everything from their first-appearing to last-appearing property (e.g. also
-        // other stuff in between those two properties).
-        auto smallest = std::min_element(
-                itemsFound.begin(), itemsFound.end(),
-                [](const QQmlLSUtilsItemLocation &a, const QQmlLSUtilsItemLocation &b) {
-                    return a.fileLocation->info().fullRegion.length
-                            < b.fileLocation->info().fullRegion.length;
-                });
-        QList<QQmlLSUtilsItemLocation> filteredItems;
-        filteredItems.append(*smallest);
-
-        const QQmlJS::SourceLocation smallestLoc = smallest->fileLocation->info().fullRegion;
-        const quint32 smallestBegin = smallestLoc.begin();
-        const quint32 smallestEnd = smallestLoc.end();
-
-        for (auto it = itemsFound.begin(); it != itemsFound.end(); it++) {
-            if (it == smallest)
-                continue;
-
-            const QQmlJS::SourceLocation itLoc = it->fileLocation->info().fullRegion;
-            const quint32 itBegin = itLoc.begin();
-            const quint32 itEnd = itLoc.end();
-            if (itBegin == smallestEnd || smallestBegin == itEnd) {
-                filteredItems.append(*it);
-            }
-        }
-        itemsFound = filteredItems;
-    }
-    return itemsFound;
+    auto filtered = filterItemsFromTextLocation(itemsFound, targetPos);
+    return filtered;
 }
 
-DomItem QQmlLSUtils::baseObject(DomItem object)
+DomItem QQmlLSUtils::baseObject(const DomItem &object)
 {
     if (!object.as<QmlObject>())
         return {};
@@ -289,29 +353,48 @@ DomItem QQmlLSUtils::baseObject(DomItem object)
     return base;
 }
 
+static std::optional<QQmlLSUtilsLocation> locationFromDomItem(const DomItem &item,
+                                                              const QString &regionName = QString())
+{
+    QQmlLSUtilsLocation location;
+    location.filename = item.canonicalFilePath();
+
+    auto tree = FileLocations::treeOf(item);
+    // tree is null for C++ defined types, for example
+    if (!tree)
+        return {};
+
+    auto info = tree->info();
+    if (!regionName.isEmpty() && info.regions.contains(regionName)) {
+        location.sourceLocation = info.regions[regionName];
+    } else {
+        location.sourceLocation = info.fullRegion;
+    }
+    return location;
+}
+
 /*!
    \internal
-   \brief Extracts the QML object type of an \l DomItem.
+   \brief Returns the location of the type definition pointed by object.
 
-   For a \c PropertyDefinition, return the type of the property.
-   For a \c Binding, return the bound item's type if an QmlObject is bound, and otherwise the type
-   of the property.
-   For a \c QmlObject, do nothing and return it.
-   For an \c Id, return the object to
-   which the id resolves.
-   For a \c Methodparameter, return the type of the parameter. =
-   Otherwise, return an empty item.
+   For a \c PropertyDefinition, return the location of the type of the property.
+   For a \c Binding, return the bound item's type location if an QmlObject is bound, and otherwise
+   the type of the property.
+   For a \c QmlObject, return the location of the QmlObject's base.
+   For an \c Id, return the location of the object to which the id resolves.
+   For a \c Methodparameter, return the location of the type of the parameter.
+   Otherwise, return std::nullopt.
  */
-DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
+std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(const DomItem &object)
 {
-    DomItem result;
+    DomItem typeDefinition;
 
     switch (object.internalKind()) {
     case QQmlJS::Dom::DomType::QmlComponent:
-        result = object.field(Fields::objects).index(0);
+        typeDefinition = object.field(Fields::objects).index(0);
         break;
     case QQmlJS::Dom::DomType::QmlObject:
-        result = baseObject(object);
+        typeDefinition = baseObject(object);
         break;
     case QQmlJS::Dom::DomType::Binding: {
         auto binding = object.as<Binding>();
@@ -319,14 +402,15 @@ DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
 
         // try to grab the type from the bound object
         if (binding->valueKind() == BindingValueKind::Object) {
-            result = baseObject(object.field(Fields::value));
+            typeDefinition = baseObject(object.field(Fields::value));
+            break;
         } else {
             // use the type of the property it is bound on for scriptexpression etc.
             DomItem propertyDefinition;
             const QString bindingName = binding->name();
             object.containingObject().visitLookup(
                     bindingName,
-                    [&propertyDefinition](DomItem &item) {
+                    [&propertyDefinition](const DomItem &item) {
                         if (item.internalKind() == QQmlJS::Dom::DomType::PropertyDefinition) {
                             propertyDefinition = item;
                             return false;
@@ -334,64 +418,94 @@ DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
                         return true;
                     },
                     LookupType::PropertyDef);
-            result = propertyDefinition.field(Fields::type).proceedToScope();
+            typeDefinition = propertyDefinition.field(Fields::type).proceedToScope();
+            break;
         }
-        break;
+        Q_UNREACHABLE();
     }
     case QQmlJS::Dom::DomType::Id:
-        result = object.field(Fields::referredObject).proceedToScope();
+        typeDefinition = object.field(Fields::referredObject).proceedToScope();
         break;
     case QQmlJS::Dom::DomType::PropertyDefinition:
     case QQmlJS::Dom::DomType::MethodParameter:
     case QQmlJS::Dom::DomType::MethodInfo:
-        result = object.field(Fields::type).proceedToScope();
+        typeDefinition = object.field(Fields::type).proceedToScope();
         break;
     case QQmlJS::Dom::DomType::ScriptIdentifierExpression: {
         if (object.directParent().internalKind() == DomType::ScriptType) {
             DomItem type =
-                    object.filterUp([](DomType k, DomItem &) { return k == DomType::ScriptType; },
+                    object.filterUp([](DomType k, const DomItem &) { return k == DomType::ScriptType; },
                                     FilterUpOptions::ReturnOuter);
 
             const QString name = type.field(Fields::typeName).value().toString();
-            result = object.path(Paths::lookupTypePath(name));
+            typeDefinition = object.path(Paths::lookupTypePath(name));
             break;
         }
+
         auto scope = QQmlLSUtils::resolveExpressionType(
                 object, QQmlLSUtilsResolveOptions::ResolveActualTypeForFieldMemberExpression);
         if (!scope)
             return {};
 
-        return QQmlLSUtils::sourceLocationToDomItem(object.containingFile(),
-                                                    scope->semanticScope->sourceLocation());
+        typeDefinition = QQmlLSUtils::sourceLocationToDomItem(
+                object.containingFile(), scope->semanticScope->sourceLocation());
+
+        switch (scope->type) {
+        case QmlObjectIdIdentifier:
+            break;
+        default:
+            typeDefinition = typeDefinition.component();
+        }
+
+        return locationFromDomItem(typeDefinition, u"identifier"_s);
     }
-    case QQmlJS::Dom::DomType::Empty:
-        break;
     default:
         qDebug() << "QQmlLSUtils::findTypeDefinitionOf: Found unimplemented Type"
                  << object.internalKindStr();
-        result = {};
+        return {};
     }
 
-    return result;
+    return locationFromDomItem(typeDefinition);
 }
 
-static DomItem findJSIdentifierDefinition(DomItem item, const QString &name)
+static bool findDefinitionFromItem(const DomItem &item, const QString &name)
+{
+    if (const QQmlJSScope::ConstPtr &scope = item.semanticScope()) {
+        qCDebug(QQmlLSUtilsLog) << "Searching for definition in" << item.internalKindStr();
+        if (auto jsIdentifier = scope->ownJSIdentifier(name)) {
+            qCDebug(QQmlLSUtilsLog) << "Found scope" << scope->baseTypeName();
+            return true;
+        }
+    }
+    return false;
+}
+
+static DomItem findJSIdentifierDefinition(const DomItem &item, const QString &name)
 {
     DomItem definitionOfItem;
-    item.visitUp([&name, &definitionOfItem](DomItem &i) {
-        if (std::optional<QQmlJSScope::Ptr> scope = i.semanticScope(); scope) {
-            qCDebug(QQmlLSUtilsLog) << "Searching for definition in" << i.internalKindStr();
-            if (auto jsIdentifier = scope.value()->JSIdentifier(name)) {
-                qCDebug(QQmlLSUtilsLog) << "Found scope" << scope.value()->baseTypeName();
-                definitionOfItem = i;
-                return false;
-            }
+    item.visitUp([&name, &definitionOfItem](const DomItem &i) {
+        if (findDefinitionFromItem(i, name)) {
+            definitionOfItem = i;
+            return false;
         }
         // early exit: no JS definitions/usages outside the ScriptExpression DOM element.
         if (i.internalKind() == DomType::ScriptExpression)
             return false;
         return true;
     });
+
+    if (definitionOfItem)
+        return definitionOfItem;
+
+    // special case: somebody asks for usages of a function parameter from its definition
+    // function parameters are defined in the method's scope
+    if (DomItem res = item.filterUp([](DomType k, const DomItem &) { return k == DomType::MethodInfo; },
+                                    FilterUpOptions::ReturnOuter)) {
+        DomItem candidate = res.field(Fields::body).field(Fields::scriptElement);
+        if (findDefinitionFromItem(candidate, name)) {
+            return candidate;
+        }
+    }
 
     return definitionOfItem;
 }
@@ -517,7 +631,7 @@ static QStringList namesOfPossibleUsages(const QString &name,
     return namesToCheck;
 }
 
-static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
+static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &name,
                                          QList<QQmlLSUtilsLocation> &result)
 {
     auto expressionType =
@@ -532,7 +646,7 @@ static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
         return namesToCheck.contains(nameToCheck);
     };
 
-    auto findUsages = [&targetType, &result, &name, &checkName](Path, DomItem &current,
+    auto findUsages = [&targetType, &result, &name, &checkName](Path, const DomItem &current,
                                                                 bool) -> bool {
         bool resolveType = false;
         bool continueForChildren = true;
@@ -541,7 +655,7 @@ static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
 
         if (auto scope = current.semanticScope()) {
             // is the current property shadowed by some JS identifier? ignore current + its children
-            if (scope.value()->JSIdentifier(name)) {
+            if (scope->ownJSIdentifier(name)) {
                 return false;
             }
         }
@@ -612,7 +726,23 @@ static void findUsagesOfNonJSIdentifiers(DomItem item, const QString &name,
                        findUsages);
 }
 
-static void findUsagesHelper(DomItem item, const QString &name, QList<QQmlLSUtilsLocation> &result)
+static QQmlLSUtilsLocation locationFromJSIdentifierDefinition(const DomItem &definitionOfItem,
+                                                              const QString &name)
+{
+    Q_ASSERT_X(!definitionOfItem.semanticScope().isNull()
+                       && definitionOfItem.semanticScope()->ownJSIdentifier(name).has_value(),
+               "QQmlLSUtils::locationFromJSIdentifierDefinition",
+               "JS definition does not actually define the JS identifier. "
+               "Did you obtain definitionOfItem from findJSIdentifierDefinition() ?");
+    QQmlJS::SourceLocation location =
+            definitionOfItem.semanticScope()->ownJSIdentifier(name).value().location;
+
+    QQmlLSUtilsLocation result = { definitionOfItem.canonicalFilePath(), location };
+    return result;
+}
+
+static void findUsagesHelper(
+        const DomItem &item, const QString &name, QList<QQmlLSUtilsLocation> &result)
 {
     qCDebug(QQmlLSUtilsLog) << "Looking for JS identifier with name" << name;
     DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
@@ -626,7 +756,7 @@ static void findUsagesHelper(DomItem item, const QString &name, QList<QQmlLSUtil
 
     definitionOfItem.visitTree(
             Path(), emptyChildrenVisitor, VisitOption::VisitAdopted | VisitOption::Recurse,
-            [&name, &result](Path, DomItem &item, bool) -> bool {
+            [&name, &result](Path, const DomItem &item, bool) -> bool {
                 qCDebug(QQmlLSUtilsLog) << "Visiting a " << item.internalKindStr();
                 if (item.internalKind() == DomType::ScriptIdentifierExpression
                     && item.field(Fields::identifier).value().toString() == name) {
@@ -640,16 +770,21 @@ static void findUsagesHelper(DomItem item, const QString &name, QList<QQmlLSUtil
                     const QString fileName = item.canonicalFilePath();
                     result.append({ fileName, location });
                     return true;
-                } else if (std::optional<QQmlJSScope::Ptr> scope = item.semanticScope();
-                           scope && scope.value()->JSIdentifier(name)) {
+                } else if (QQmlJSScope::ConstPtr scope = item.semanticScope();
+                           scope && scope->ownJSIdentifier(name)) {
                     // current JS identifier has been redefined, do not visit children
                     return false;
                 }
                 return true;
             });
+
+    const QQmlLSUtilsLocation definition =
+            locationFromJSIdentifierDefinition(definitionOfItem, name);
+    if (!result.contains(definition))
+        result.append(definition);
 }
 
-QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
+QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(const DomItem &item)
 {
     QList<QQmlLSUtilsLocation> result;
 
@@ -742,61 +877,152 @@ propertyFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QStr
     return {};
 }
 
-static std::optional<QQmlLSUtilsExpressionType>
-resolveIdentifierExpressionType(DomItem item, QQmlLSUtilsResolveOptions options)
+static QQmlJSScope::ConstPtr findScopeInConnections(QQmlJSScope::ConstPtr scope, const DomItem &item)
 {
-    auto referrerScope = item.nearestSemanticScope();
-    if (!referrerScope)
+    if (!scope || (scope->baseType() && scope->baseType()->internalName() != u"QQmlConnections"_s))
         return {};
+
+    // Perform target name search if there is binding to property "target"
+    QString targetName;
+    if (scope->hasOwnPropertyBindings(u"target"_s)) {
+        DomItem current = item.qmlObject();
+        auto target = current.bindings().key(u"target"_s).index(0);
+        if (target) {
+            targetName = target.field(Fields::value)
+                                 .field(Fields::scriptElement)
+                                 .field(Fields::identifier)
+                                 .value()
+                                 .toString();
+        }
+    }
+
+    if (!targetName.isEmpty()) {
+        // look for the scope of target
+        auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
+        if (!resolver)
+            return {};
+        return resolver->scopeForId(targetName, scope);
+    } else {
+        // No binding to target property, return the container object's scope
+        return scope->parentScope();
+    }
+
+    return {};
+}
+
+static std::optional<QQmlLSUtilsExpressionType>
+resolveFieldMemberExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions options)
+{
+    const QString name = item.field(Fields::identifier).value().toString();
+    DomItem parent = item.directParent();
+    auto owner = QQmlLSUtils::resolveExpressionType(
+            parent.field(Fields::left),
+            QQmlLSUtilsResolveOptions::ResolveActualTypeForFieldMemberExpression);
+    if (!owner)
+        return {};
+
+    if (auto methods = owner.value().semanticScope->methods(name); !methods.isEmpty()) {
+        switch (options) {
+        case ResolveOwnerType: {
+            const bool isSignal = methods.front().methodType() == QQmlJSMetaMethodType::Signal;
+            QQmlLSUtilsIdentifierType type = isSignal ? QQmlLSUtilsIdentifierType::SignalIdentifier
+                                                      : QQmlLSUtilsIdentifierType::MethodIdentifier;
+            return QQmlLSUtilsExpressionType{ name, owner->semanticScope, type };
+        }
+        case ResolveActualTypeForFieldMemberExpression:
+            // not implemented, but JS functions have methods and properties
+            // see
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
+            // for the list of properties/methods of functions
+            // see also code below for non-qualified method access
+            break;
+        }
+    }
+    if (auto property = owner->semanticScope->property(name); property.isValid()) {
+        switch (options) {
+        case ResolveOwnerType:
+            return QQmlLSUtilsExpressionType{ name, owner->semanticScope,
+                                              QQmlLSUtilsIdentifierType::PropertyIdentifier };
+        case ResolveActualTypeForFieldMemberExpression:
+            return QQmlLSUtilsExpressionType{ name, property.type(),
+                                              QQmlLSUtilsIdentifierType::PropertyIdentifier };
+        }
+    }
+
+    // distinguish between the `someItem.MyEnumerator.MyEnumeratorValue` case and the
+    // `someItem.MyEnumeratorValue` case by using the QQmlLSUtilsIdentifierType::Enumerator,
+    // as they have the same owner type (enumerators do not have their own qqmljsscope).
+    switch (owner->type) {
+    case QQmlLSUtilsIdentifierType::EnumeratorValueIdentifier:
+        // for example, 'someItem.MyEnumerator.MyEnumeratorValue.<current name to be resolved>'
+        // or 'someItem.MyEnumeratorValue.<current name to be resolved>'
+        break;
+    case QQmlLSUtilsIdentifierType::EnumeratorIdentifier:
+        // for example, 'someItem.MyEnumerator.<current name to be resolved>'
+        // do not check name in this case, just assumes its a value of the enumerator so the
+        // autocompletion still works when the user is still typing the enumerator value name.
+        if (auto enumerator = owner->semanticScope->enumeration(owner->name.value_or(QString()));
+            enumerator.isValid()) {
+            return QQmlLSUtilsExpressionType{
+                owner->name, owner->semanticScope,
+                QQmlLSUtilsIdentifierType::EnumeratorValueIdentifier
+            };
+        }
+        break;
+    default:
+        // for example, 'someItem.<current name to be resolved>'
+        if (auto enumerator = owner->semanticScope->enumeration(name); enumerator.isValid()) {
+            return QQmlLSUtilsExpressionType{ name, owner->semanticScope,
+                                              QQmlLSUtilsIdentifierType::EnumeratorIdentifier };
+        }
+        for (const QQmlJSMetaEnum &enumerator : owner->semanticScope->enumerations()) {
+            if (enumerator.hasKey(name)) {
+                return QQmlLSUtilsExpressionType{
+                    name, owner->semanticScope, QQmlLSUtilsIdentifierType::EnumeratorValueIdentifier
+                };
+            }
+        }
+    }
+    qCDebug(QQmlLSUtilsLog) << "Could not find identifier expression for" << item.internalKindStr();
+    return {};
+}
+
+static std::optional<QQmlLSUtilsExpressionType>
+resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions options)
+{
+    if (isFieldMemberAccess(item)) {
+        return resolveFieldMemberExpressionType(item, options);
+    }
 
     const QString name = item.field(Fields::identifier).value().toString();
 
-    if (isFieldMemberAccess(item)) {
-        DomItem parent = item.directParent();
-        auto owner = QQmlLSUtils::resolveExpressionType(
-                parent.field(Fields::left),
-                QQmlLSUtilsResolveOptions::ResolveActualTypeForFieldMemberExpression);
-        if (!owner)
-            return {};
+    const auto referrerScope = item.nearestSemanticScope();
+    if (!referrerScope)
+        return {};
 
-        if (auto methods = owner.value().semanticScope->methods(name); !methods.isEmpty()) {
-            switch (options) {
-            case ResolveOwnerType: {
-                const bool isSignal = methods.front().methodType() == QQmlJSMetaMethodType::Signal;
-                QQmlLSUtilsIdentifierType type = isSignal
-                        ? QQmlLSUtilsIdentifierType::SignalIdentifier
-                        : QQmlLSUtilsIdentifierType::MethodIdentifier;
-                return QQmlLSUtilsExpressionType{ name, owner->semanticScope, type };
-            }
-            case ResolveActualTypeForFieldMemberExpression:
-                // not implemented, but JS functions have methods and properties
-                // see
-                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
-                // for the list of properties/methods of functions
-                // see also code below for non-qualified method access
-                break;
-            }
+    const auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
+    if (!resolver)
+        return {};
+
+    if (auto scope = resolver->typeForName(name)) {
+        if (scope->isSingleton()) {
+            return QQmlLSUtilsExpressionType{ name, scope,
+                                              QQmlLSUtilsIdentifierType::SingletonIdentifier };
         }
-        if (auto property = owner->semanticScope->property(name); property.isValid()) {
-            switch (options) {
-            case ResolveOwnerType:
-                return QQmlLSUtilsExpressionType{ name, owner->semanticScope,
-                                                  QQmlLSUtilsIdentifierType::PropertyIdentifier };
-            case ResolveActualTypeForFieldMemberExpression:
-                return QQmlLSUtilsExpressionType{ name, property.type(),
-                                                  QQmlLSUtilsIdentifierType::PropertyIdentifier };
-            }
+        if (auto attachedScope = scope->attachedType()) {
+            return QQmlLSUtilsExpressionType{ name, attachedScope,
+                                              QQmlLSUtilsIdentifierType::AttachedTypeIdentifier };
         }
     } else {
         DomItem definitionOfItem = findJSIdentifierDefinition(item, name);
         if (definitionOfItem) {
-            Q_ASSERT_X(definitionOfItem.semanticScope().has_value()
-                               && definitionOfItem.semanticScope().value()->JSIdentifier(name),
+            Q_ASSERT_X(!definitionOfItem.semanticScope().isNull()
+                               && definitionOfItem.semanticScope()->ownJSIdentifier(name),
                        "QQmlLSUtils::findDefinitionOf",
                        "JS definition does not actually define the JS identifer. "
                        "It should be empty.");
-            auto scope = definitionOfItem.semanticScope().value();
-            auto jsIdentifier = scope->JSIdentifier(name);
+            auto scope = definitionOfItem.semanticScope();
+            auto jsIdentifier = scope->ownJSIdentifier(name);
             if (jsIdentifier->scope) {
                 return QQmlLSUtilsExpressionType{ name, jsIdentifier->scope.toStrongRef(),
                                                   QQmlLSUtilsIdentifierType::JavaScriptIdentifier };
@@ -807,23 +1033,27 @@ resolveIdentifierExpressionType(DomItem item, QQmlLSUtilsResolveOptions options)
         }
 
         // check if its a method
-        if (auto scope = methodFromReferrerScope(*referrerScope, name, options)) {
-            return *scope;
-        }
+        if (auto scope = methodFromReferrerScope(referrerScope, name, options))
+            return scope;
 
         // check if its an (unqualified) property
-        if (auto scope = propertyFromReferrerScope(*referrerScope, name, options)) {
+        if (auto scope = propertyFromReferrerScope(referrerScope, name, options))
             return *scope;
-        }
     }
 
     // check if its an id
-    auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
-    if (!resolver)
-        return {};
-    QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope.value());
+    QQmlJSScope::ConstPtr fromId = resolver->scopeForId(name, referrerScope);
     if (fromId)
         return QQmlLSUtilsExpressionType{ name, fromId, QmlObjectIdIdentifier };
+
+    const QQmlJSScope::ConstPtr jsGlobal = resolver->jsGlobalObject();
+    // check if its a JS global method
+    if (auto scope = methodFromReferrerScope(jsGlobal, name, options))
+        return scope;
+
+    // check if its an JS global property
+    if (auto scope = propertyFromReferrerScope(jsGlobal, name, options))
+        return *scope;
 
     return {};
 }
@@ -833,7 +1063,8 @@ resolveIdentifierExpressionType(DomItem item, QQmlLSUtilsResolveOptions options)
     annotations).
 */
 std::optional<QQmlLSUtilsExpressionType>
-QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolveOptions options)
+QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
+                                   QQmlLSUtilsResolveOptions options)
 {
     switch (item.internalKind()) {
     case DomType::ScriptIdentifierExpression: {
@@ -842,7 +1073,7 @@ QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolve
     case DomType::PropertyDefinition: {
         auto propertyDefinition = item.as<PropertyDefinition>();
         if (propertyDefinition && propertyDefinition->scope) {
-            auto &scope = propertyDefinition->scope.value();
+            const auto &scope = propertyDefinition->scope;
             return QQmlLSUtilsExpressionType{ propertyDefinition->name, scope, PropertyIdentifier };
         }
         return {};
@@ -858,6 +1089,10 @@ QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolve
             if (name == u"id")
                 return QQmlLSUtilsExpressionType{ name, owner.value(), QmlObjectIdIdentifier };
 
+            if (QQmlJSScope::ConstPtr targetScope = findScopeInConnections(owner.value(), item)) {
+                return QQmlLSUtilsExpressionType{ name, targetScope,
+                                                  resolveNameInQmlScope(name, targetScope)->type };
+            }
             auto signalOrProperty = resolveNameInQmlScope(name, owner.value());
             if (signalOrProperty)
                 return QQmlLSUtilsExpressionType{ name, owner.value(), signalOrProperty->type };
@@ -871,7 +1106,7 @@ QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolve
     case DomType::QmlObject: {
         auto object = item.as<QmlObject>();
         if (object && object->semanticScope())
-            return QQmlLSUtilsExpressionType{ std::nullopt, object->semanticScope().value(),
+            return QQmlLSUtilsExpressionType{ std::nullopt, object->semanticScope(),
                                               QmlObjectIdentifier };
 
         return {};
@@ -879,9 +1114,17 @@ QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolve
     case DomType::MethodInfo: {
         auto object = item.as<MethodInfo>();
         if (object && object->semanticScope()) {
-            auto scope = object->semanticScope();
+            std::optional<QQmlJSScope::ConstPtr> scope = object->semanticScope();
             if (!scope)
                 return {};
+
+            if (QQmlJSScope::ConstPtr targetScope =
+                        findScopeInConnections(scope.value()->parentScope(), item)) {
+                return QQmlLSUtilsExpressionType{
+                    object->name, targetScope,
+                    resolveNameInQmlScope(object->name, targetScope)->type
+                };
+            }
 
             // in case scope is the semantic scope for the function bodies: grab the owner's scope
             // this happens for all methods but not for signals (they do not have a body)
@@ -912,7 +1155,8 @@ QQmlLSUtils::resolveExpressionType(QQmlJS::Dom::DomItem item, QQmlLSUtilsResolve
     Q_UNREACHABLE();
 }
 
-DomItem QQmlLSUtils::sourceLocationToDomItem(DomItem file, const QQmlJS::SourceLocation &location)
+DomItem QQmlLSUtils::sourceLocationToDomItem(const DomItem &file,
+                                             const QQmlJS::SourceLocation &location)
 {
     // QQmlJS::SourceLocation starts counting at 1 but the utils and the LSP start at 0.
     auto items = QQmlLSUtils::itemsFromTextLocation(file, location.startLine - 1,
@@ -948,7 +1192,7 @@ DomItem QQmlLSUtils::sourceLocationToDomItem(DomItem file, const QQmlJS::SourceL
 }
 
 static std::optional<QQmlLSUtilsLocation>
-findMethodDefinitionOf(DomItem file, QQmlJS::SourceLocation location, const QString &name)
+findMethodDefinitionOf(const DomItem &file, QQmlJS::SourceLocation location, const QString &name)
 {
     DomItem owner = QQmlLSUtils::sourceLocationToDomItem(file, location);
     DomItem method = owner.field(Fields::methods).key(name).index(0);
@@ -969,7 +1213,7 @@ findMethodDefinitionOf(DomItem file, QQmlJS::SourceLocation location, const QStr
 }
 
 static std::optional<QQmlLSUtilsLocation>
-findPropertyDefinitionOf(DomItem file, QQmlJS::SourceLocation propertyDefinitionLocation,
+findPropertyDefinitionOf(const DomItem &file, QQmlJS::SourceLocation propertyDefinitionLocation,
                          const QString &name)
 {
     DomItem propertyOwner = QQmlLSUtils::sourceLocationToDomItem(file, propertyDefinitionLocation);
@@ -990,7 +1234,7 @@ findPropertyDefinitionOf(DomItem file, QQmlJS::SourceLocation propertyDefinition
     return {};
 }
 
-std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
+std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(const DomItem &item)
 {
 
     switch (item.internalKind()) {
@@ -1016,34 +1260,22 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
 
         // check: is it a JS identifier?
         if (DomItem definitionOfItem = findJSIdentifierDefinition(item, name)) {
-            Q_ASSERT_X(definitionOfItem.semanticScope().has_value()
-                               && definitionOfItem.semanticScope()
-                                          .value()
-                                          ->JSIdentifier(name)
-                                          .has_value(),
-                       "QQmlLSUtils::findDefinitionOf",
-                       "JS definition does not actually define the JS identifer. "
-                       "It should be empty.");
-            QQmlJS::SourceLocation location =
-                    definitionOfItem.semanticScope().value()->JSIdentifier(name).value().location;
-
-            QQmlLSUtilsLocation result = { definitionOfItem.canonicalFilePath(), location };
-            return result;
+            return locationFromJSIdentifierDefinition(definitionOfItem, name);
         }
 
         // not a JS identifier, check for ids and properties and methods
-        auto referrerScope = item.nearestSemanticScope();
+        const auto referrerScope = item.nearestSemanticScope();
         if (!referrerScope)
             return {};
 
         // check: is it a method name?
-        if (auto scope = methodFromReferrerScope(*referrerScope, name)) {
+        if (auto scope = methodFromReferrerScope(referrerScope, name)) {
             const QString canonicalPath = scope->semanticScope->filePath();
             DomItem file = item.goToFile(canonicalPath);
             return findMethodDefinitionOf(file, scope->semanticScope->sourceLocation(), name);
         }
 
-        if (auto scope = propertyFromReferrerScope(*referrerScope, name,
+        if (auto scope = propertyFromReferrerScope(referrerScope, name,
                                                    QQmlLSUtilsResolveOptions::ResolveOwnerType)) {
             const QString canonicalPath = scope->semanticScope->filePath();
             DomItem file = item.goToFile(canonicalPath);
@@ -1054,7 +1286,7 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(DomItem item)
         auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
         if (!resolver)
             return {};
-        QQmlJSScope::ConstPtr fromId = resolver.value()->scopeForId(name, referrerScope.value());
+        QQmlJSScope::ConstPtr fromId = resolver->scopeForId(name, referrerScope);
         if (fromId) {
             DomItem qmlObject = QQmlLSUtils::sourceLocationToDomItem(item.containingFile(),
                                                                      fromId->sourceLocation());
@@ -1156,13 +1388,17 @@ expressionTypeWithDefinition(const QQmlLSUtilsExpressionType &ownerType)
     case JavaScriptIdentifier:
     case QmlObjectIdIdentifier:
     case QmlObjectIdentifier:
+    case SingletonIdentifier:
+    case EnumeratorIdentifier:
+    case EnumeratorValueIdentifier:
+    case AttachedTypeIdentifier:
         return ownerType.semanticScope;
     }
     return {};
 }
 
 std::optional<QQmlLSUtilsErrorMessage>
-QQmlLSUtils::checkNameForRename(DomItem item, const QString &dirtyNewName,
+QQmlLSUtils::checkNameForRename(const DomItem &item, const QString &dirtyNewName,
                                 std::optional<QQmlLSUtilsExpressionType> ownerType)
 {
     // general checks for ECMAscript identifiers
@@ -1233,7 +1469,7 @@ QQmlLSUtils::checkNameForRename(DomItem item, const QString &dirtyNewName,
 
     // is it defined in the current module?
     const QString moduleOfDefinition = ownerType->semanticScope->moduleName();
-    const QString moduleOfCurrentItem = userSemanticScope.value()->moduleName();
+    const QString moduleOfCurrentItem = userSemanticScope->moduleName();
     if (moduleOfDefinition != moduleOfCurrentItem) {
         return QQmlLSUtilsErrorMessage{
             0,
@@ -1245,7 +1481,7 @@ QQmlLSUtils::checkNameForRename(DomItem item, const QString &dirtyNewName,
     return {};
 }
 
-static std::optional<QString> oldNameFrom(DomItem item)
+static std::optional<QString> oldNameFrom(const DomItem &item)
 {
     switch (item.internalKind()) {
     case DomType::ScriptIdentifierExpression: {
@@ -1310,7 +1546,7 @@ Special cases:
 \endlist
 */
 QList<QQmlLSUtilsEdit>
-QQmlLSUtils::renameUsagesOf(DomItem item, const QString &dirtyNewName,
+QQmlLSUtils::renameUsagesOf(const DomItem &item, const QString &dirtyNewName,
                             std::optional<QQmlLSUtilsExpressionType> targetType)
 {
     QList<QQmlLSUtilsEdit> results;
@@ -1413,6 +1649,754 @@ bool QQmlLSUtils::isValidEcmaScriptIdentifier(QStringView identifier)
     // make sure there is nothing following the lexed identifier
     const int eofToken = lexer.lex();
     return eofToken == static_cast<int>(QQmlJS::Lexer::EOF_SYMBOL);
+}
+
+static QList<CompletionItem> signalHandlerCompletion(const QQmlJSScope::ConstPtr &scope,
+                                                     QDuplicateTracker<QString> *usedNames)
+{
+    QList<CompletionItem> res;
+    const auto keyValues = scope->methods().asKeyValueRange();
+    for (const auto &[name, method] : keyValues) {
+        if (method.access() != QQmlJSMetaMethod::Public
+            || method.methodType() != QQmlJSMetaMethodType::Signal) {
+            continue;
+        }
+        if (usedNames && usedNames->hasSeen(name)) {
+            continue;
+        }
+
+        CompletionItem completion;
+        completion.label = QQmlSignalNames::signalNameToHandlerName(name).toUtf8();
+        completion.kind = int(CompletionItemKind::Method);
+        res << completion;
+    }
+    return res;
+}
+
+static QList<CompletionItem> &&insertColonsForCompletions(QList<CompletionItem> &&completions)
+{
+    for (auto &completion : completions) {
+        // ignore the completions that already have insertText set
+        if (completion.insertText)
+            continue;
+
+        completion.insertText = QByteArray(completion.label).append(": ");
+    }
+    return std::move(completions);
+}
+
+QList<CompletionItem> QQmlLSUtils::bindingsCompletions(const DomItem &containingObject)
+{
+    QList<CompletionItem> res;
+
+    res << reachableTypes(containingObject, LocalSymbolsType::AttachedType,
+                          CompletionItemKind::Class);
+
+    const QQmlJSScope::ConstPtr scope = containingObject.semanticScope();
+    if (!scope)
+        return res;
+
+    res << insertColonsForCompletions(propertyCompletion(scope, nullptr));
+    res << insertColonsForCompletions(signalHandlerCompletion(scope, nullptr));
+
+    return res;
+}
+
+QList<CompletionItem> QQmlLSUtils::importCompletions(const DomItem &file,
+                                                     const CompletionContextStrings &ctx)
+{
+    // returns completions for import statements, ctx is supposed to be in an import statement
+    QList<CompletionItem> res;
+    ImportCompletionType importCompletionType = ImportCompletionType::None;
+    QRegularExpression spaceRe(uR"(\W+)"_s);
+    QList<QStringView> linePieces = ctx.preLine().split(spaceRe, Qt::SkipEmptyParts);
+    qsizetype effectiveLength = linePieces.size()
+            + ((!ctx.preLine().isEmpty() && ctx.preLine().last().isSpace()) ? 1 : 0);
+    if (effectiveLength < 2) {
+        CompletionItem comp;
+        comp.label = "import";
+        comp.kind = int(CompletionItemKind::Keyword);
+        res.append(comp);
+    }
+    if (linePieces.isEmpty() || linePieces.first() != u"import")
+        return res;
+    if (effectiveLength == 2) {
+        // the cursor is after the import, possibly in a partial module name
+        importCompletionType = ImportCompletionType::Module;
+    } else if (effectiveLength == 3) {
+        if (linePieces.last() != u"as") {
+            // the cursor is after the module, possibly in a partial version token (or partial as)
+            CompletionItem comp;
+            comp.label = "as";
+            comp.kind = int(CompletionItemKind::Keyword);
+            res.append(comp);
+            importCompletionType = ImportCompletionType::Version;
+        }
+    }
+    DomItem env = file.environment();
+    if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>()) {
+        switch (importCompletionType) {
+        case ImportCompletionType::None:
+            break;
+        case ImportCompletionType::Module: {
+            QDuplicateTracker<QString> modulesSeen;
+            for (const QString &uri : envPtr->moduleIndexUris(env)) {
+                QStringView base = ctx.base(); // if we allow spaces we should get rid of them
+                if (uri.startsWith(base)) {
+                    QStringList rest = uri.mid(base.size()).split(u'.');
+                    if (rest.isEmpty())
+                        continue;
+
+                    const QString label = rest.first();
+                    if (!modulesSeen.hasSeen(label)) {
+                        CompletionItem comp;
+                        comp.label = label.toUtf8();
+                        comp.kind = int(CompletionItemKind::Module);
+                        res.append(comp);
+                    }
+                }
+            }
+            break;
+        }
+        case ImportCompletionType::Version:
+            if (ctx.base().isEmpty()) {
+                for (int majorV :
+                     envPtr->moduleIndexMajorVersions(env, linePieces.at(1).toString())) {
+                    CompletionItem comp;
+                    comp.label = QString::number(majorV).toUtf8();
+                    comp.kind = int(CompletionItemKind::Constant);
+                    res.append(comp);
+                }
+            } else {
+                bool hasMajorVersion = ctx.base().endsWith(u'.');
+                int majorV = -1;
+                if (hasMajorVersion)
+                    majorV = ctx.base().mid(0, ctx.base().size() - 1).toInt(&hasMajorVersion);
+                if (!hasMajorVersion)
+                    break;
+                if (std::shared_ptr<ModuleIndex> mIndex =
+                            envPtr->moduleIndexWithUri(env, linePieces.at(1).toString(), majorV)) {
+                    for (int minorV : mIndex->minorVersions()) {
+                        CompletionItem comp;
+                        comp.label = QString::number(minorV).toUtf8();
+                        comp.kind = int(CompletionItemKind::Constant);
+                        res.append(comp);
+                    }
+                }
+            }
+            break;
+        }
+    }
+    return res;
+}
+
+QList<CompletionItem> QQmlLSUtils::idsCompletions(const DomItem& component)
+{
+    qCDebug(QQmlLSCompletionLog) << "adding ids completions";
+    QList<CompletionItem> res;
+    for (const QString &k : component.field(Fields::ids).keys()) {
+        CompletionItem comp;
+        comp.label = k.toUtf8();
+        comp.kind = int(CompletionItemKind::Value);
+        res.append(comp);
+    }
+    return res;
+}
+
+static bool testScopeSymbol(const QQmlJSScope::ConstPtr &scope, LocalSymbolsTypes options,
+                            CompletionItemKind kind)
+{
+    const bool currentIsSingleton = scope->isSingleton();
+    const bool currentIsAttached = !scope->attachedType().isNull();
+    if ((options & LocalSymbolsType::Singleton) && currentIsSingleton) {
+        return true;
+    }
+    if ((options & LocalSymbolsType::AttachedType) && currentIsAttached) {
+        return true;
+    }
+    const bool isObjectType = scope->isReferenceType();
+    if (options & LocalSymbolsType::ObjectType && !currentIsSingleton && isObjectType) {
+        return kind != CompletionItemKind::Constructor || scope->isCreatable();
+    }
+    if (options & LocalSymbolsType::ValueType && !currentIsSingleton && !isObjectType) {
+        return true;
+    }
+    return false;
+}
+
+QList<CompletionItem> QQmlLSUtils::reachableTypes(const DomItem &el, LocalSymbolsTypes options,
+                                                  CompletionItemKind kind)
+{
+    auto file = el.containingFile().as<QmlFile>();
+    if (!file)
+        return {};
+    auto resolver = file->typeResolver();
+    if (!resolver)
+        return {};
+
+    QList<CompletionItem> res;
+    const auto keyValueRange = resolver->importedTypes().asKeyValueRange();
+    for (const auto &type : keyValueRange) {
+        // ignore special QQmlJSImporterMarkers
+        const bool isMarkerType = type.first.contains(u"$internal$.")
+                || type.first.contains(u"$anonymous$.") || type.first.contains(u"$module$.");
+        if (isMarkerType)
+            continue;
+
+        auto &scope = type.second.scope;
+        if (!scope)
+            continue;
+
+        if (!testScopeSymbol(scope, options, kind))
+            continue;
+
+        CompletionItem completion;
+        completion.label = type.first.toUtf8();
+        completion.kind = int(kind);
+        res << completion;
+    }
+    return res;
+}
+
+static QList<CompletionItem> jsIdentifierCompletion(const QQmlJSScope::ConstPtr &scope,
+                                                    QDuplicateTracker<QString> *usedNames)
+{
+    QList<CompletionItem> result;
+    for (const auto &[name, jsIdentifier] : scope->ownJSIdentifiers().asKeyValueRange()) {
+        CompletionItem completion;
+        if (usedNames && usedNames->hasSeen(name)) {
+            continue;
+        }
+        completion.label = name.toUtf8();
+        completion.kind = int(CompletionItemKind::Variable);
+        QString detail = u"has type "_s;
+        if (jsIdentifier.typeName) {
+            if (jsIdentifier.isConst) {
+                detail.append(u"const ");
+            }
+            detail.append(*jsIdentifier.typeName);
+        } else {
+            detail.append(jsIdentifier.isConst ? u"const"_s : u"var"_s);
+        }
+        completion.detail = detail.toUtf8();
+        result.append(completion);
+    }
+    return result;
+}
+
+static QList<CompletionItem> methodCompletion(const QQmlJSScope::ConstPtr &scope,
+                                              QDuplicateTracker<QString> *usedNames)
+{
+    QList<CompletionItem> result;
+    // JS functions in current and base scopes
+    for (const auto &[name, method] : scope->methods().asKeyValueRange()) {
+        if (method.access() != QQmlJSMetaMethod::Public)
+            continue;
+        if (usedNames && usedNames->hasSeen(name)) {
+            continue;
+        }
+        CompletionItem completion;
+        completion.label = name.toUtf8();
+        completion.kind = int(CompletionItemKind::Method);
+        result.append(completion);
+        // TODO: QQmlLSUtils::reachableSymbols seems to be able to do documentation and detail
+        // and co, it should also be done here if possible.
+    }
+    return result;
+}
+
+static QList<CompletionItem> propertyCompletion(const QQmlJSScope::ConstPtr &scope,
+                                                QDuplicateTracker<QString> *usedNames)
+{
+    QList<CompletionItem> result;
+    for (const auto &[name, property] : scope->properties().asKeyValueRange()) {
+        if (usedNames && usedNames->hasSeen(name)) {
+            continue;
+        }
+        CompletionItem completion;
+        completion.label = name.toUtf8();
+        completion.kind = int(CompletionItemKind::Property);
+        QString detail{ u"has type "_s };
+        if (!property.isWritable())
+            detail.append(u"readonly "_s);
+        detail.append(property.typeName().isEmpty() ? u"var"_s : property.typeName());
+        completion.detail = detail.toUtf8();
+        result.append(completion);
+    }
+    return result;
+}
+
+static QList<CompletionItem> enumerationCompletion(const QQmlJSScope::ConstPtr &scope,
+                                                   QDuplicateTracker<QString> *usedNames)
+{
+    QList<CompletionItem> result;
+    for (const QQmlJSMetaEnum &enumerator : scope->enumerations()) {
+        if (usedNames && usedNames->hasSeen(enumerator.name())) {
+            continue;
+        }
+        CompletionItem completion;
+        completion.label = enumerator.name().toUtf8();
+        completion.kind = static_cast<int>(CompletionItemKind::Enum);
+        result.append(completion);
+    }
+    return result;
+}
+
+static QList<CompletionItem> enumerationValueCompletionHelper(const QStringList &enumeratorKeys)
+{
+    QList<CompletionItem> result;
+    for (const QString &enumeratorKey : enumeratorKeys) {
+        CompletionItem completion;
+        completion.label = enumeratorKey.toUtf8();
+        completion.kind = static_cast<int>(CompletionItemKind::EnumMember);
+        result.append(completion);
+    }
+    return result;
+}
+
+/*!
+\internal
+Creates completion items for enumerationvalues.
+If enumeratorName is a valid enumerator then only do completion for the requested enumerator, and
+otherwise do completion for \b{all other possible} enumerators.
+
+For example:
+```
+id: someItem
+enum Hello { World }
+enum MyEnum { ValueOne, ValueTwo }
+
+// Hello does refer to a enumerator:
+property var a: Hello.<complete only World here>
+
+// someItem does not refer to a enumerator:
+property var b: someItem.<complete World, ValueOne and ValueTwo here>
+```
+*/
+
+static QList<CompletionItem> enumerationValueCompletion(const QQmlJSScope::ConstPtr &scope,
+                                                        const QString &enumeratorName)
+{
+    auto enumerator = scope->enumeration(enumeratorName);
+    if (enumerator.isValid()) {
+        return enumerationValueCompletionHelper(enumerator.keys());
+    }
+
+    QList<CompletionItem> result;
+    for (const QQmlJSMetaEnum &enumerator : scope->enumerations()) {
+        result << enumerationValueCompletionHelper(enumerator.keys());
+    }
+    return result;
+}
+
+/*!
+\internal
+Calls F on all JavaScript-parents of scope. For example, you can use this method to
+collect all the JavaScript Identifiers from following code:
+```
+{ // this block statement contains only 'x'
+    let x = 3;
+    { // this block statement contains only 'y', and 'x' has to be retrieved via its parent.
+        let y = 4;
+    }
+}
+```
+*/
+template<auto F, typename... T>
+decltype(auto) collectFromAllJavaScriptParents(const QQmlJSScope::ConstPtr &scope, T... args)
+{
+    decltype(F(scope, args...)) result;
+    for (QQmlJSScope::ConstPtr current = scope; current; current = current->parentScope()) {
+        result << F(current, args...);
+        if (current->scopeType() == QQmlSA::ScopeType::QMLScope)
+            break;
+    }
+    return result;
+}
+
+QList<CompletionItem> QQmlLSUtils::scriptIdentifierCompletion(const DomItem &context,
+                                                              const CompletionContextStrings &ctx)
+{
+    QList<CompletionItem> result;
+    QDuplicateTracker<QString> usedNames;
+    QQmlJSScope::ConstPtr nearestScope;
+    const bool hasQualifier = !ctx.base().isEmpty();
+
+    if (!hasQualifier) {
+        result << idsCompletions(context.component())
+               << reachableTypes(context,
+                                 LocalSymbolsType::Singleton | LocalSymbolsType::AttachedType,
+                                 CompletionItemKind::Class);
+
+        auto scope = context.nearestSemanticScope();
+        if (!scope)
+            return result;
+        nearestScope = scope;
+
+        result << enumerationCompletion(nearestScope, &usedNames);
+    } else {
+        auto expressionType = QQmlLSUtils::resolveExpressionType(context, ResolveOwnerType);
+        if (!expressionType || !expressionType->semanticScope)
+            return result;
+        nearestScope = expressionType->semanticScope;
+
+        if (expressionType->name) {
+            // note: you only get enumeration values in qualified expressions, never alone
+            result << enumerationValueCompletion(nearestScope, *expressionType->name);
+
+            // skip enumeration types if already inside an enumeration type
+            if (auto enumerator = nearestScope->enumeration(*expressionType->name);
+                !enumerator.isValid()) {
+                result << enumerationCompletion(nearestScope, &usedNames);
+            }
+        }
+    }
+
+    Q_ASSERT(nearestScope);
+
+    result << methodCompletion(nearestScope, &usedNames)
+           << propertyCompletion(nearestScope, &usedNames);
+
+    if (!hasQualifier) {
+        // collect all of the stuff from parents
+        result << collectFromAllJavaScriptParents<jsIdentifierCompletion>(nearestScope, &usedNames)
+               << collectFromAllJavaScriptParents<methodCompletion>(nearestScope, &usedNames)
+               << collectFromAllJavaScriptParents<propertyCompletion>(nearestScope, &usedNames);
+
+        auto file = context.containingFile().as<QmlFile>();
+        if (!file)
+            return result;
+        auto resolver = file->typeResolver();
+        if (!resolver)
+            return result;
+
+        const auto globals = resolver->jsGlobalObject();
+        result << methodCompletion(globals, &usedNames) << propertyCompletion(globals, &usedNames);
+    }
+
+    return result;
+}
+
+static const QQmlJSScope *resolve(const QQmlJSScope *current, const QStringList &names)
+{
+    for (const QString &name : names) {
+        if (auto property = current->property(name); property.isValid()) {
+            if (auto propertyType = property.type().get()) {
+                current = propertyType;
+                continue;
+            }
+        }
+        return {};
+    }
+    return current;
+}
+
+static bool cursorInFrontOfItem(const DomItem &currentItem,
+                                const CompletionContextStrings &ctx)
+{
+    auto fileLocations = FileLocations::treeOf(currentItem)->info().fullRegion;
+    return ctx.offset() <= fileLocations.offset;
+}
+
+static bool cursorAfterColon(const DomItem &currentItem, const CompletionContextStrings &ctx)
+{
+    auto location = FileLocations::treeOf(currentItem)->info();
+    auto region = location.regions.constFind(u"colon"_s);
+
+    if (region == location.regions.constEnd())
+        return false;
+
+    if (region.value().isValid() && region.value().offset < ctx.offset()) {
+        return true;
+    }
+    return false;
+}
+
+/*!
+\internal
+\brief Mapping from pragma names to allowed pragma values.
+
+This mapping of pragma names to pragma values is not complete. In fact, it only contains the
+pragma names and values that one should see autocompletion for.
+Some pragmas like FunctionSignatureBehavior or Strict or the Reference/Value of ValueTypeBehavior,
+for example, should currently not be proposed as completion items by qmlls.
+
+An empty QList-value in the QMap means that the pragma does not accept pragma values.
+*/
+static const QMap<QString, QList<QString>> valuesForPragmas{
+    { u"ComponentBehavior"_s, { u"Unbound"_s, u"Bound"_s } },
+    { u"NativeMethodBehavior"_s, { u"AcceptThisObject"_s, u"RejectThisObject"_s } },
+    { u"ListPropertyAssignBehavior"_s, { u"Append"_s, u"Replace"_s, u"ReplaceIfNotDefault"_s } },
+    { u"Singleton"_s, {} },
+    { u"ValueTypeBehavior"_s, { u"Addressable"_s, u"Inaddressable"_s } },
+};
+
+static QList<CompletionItem> pragmaCompletion(QQmlJS::Dom::DomItem currentItem,
+                                              const CompletionContextStrings &ctx)
+{
+    if (cursorAfterColon(currentItem, ctx)) {
+        const QString name = currentItem.field(Fields::name).value().toString();
+        auto values = valuesForPragmas.constFind(name);
+        if (values == valuesForPragmas.constEnd())
+            return {};
+
+        QList<CompletionItem> res;
+        for (const auto &value : *values) {
+            CompletionItem comp;
+            comp.label = value.toUtf8();
+            comp.kind = static_cast<int>(CompletionItemKind::Value);
+            res.append(comp);
+        }
+        return res;
+    }
+
+    QList<CompletionItem> res;
+    for (const auto &pragma : valuesForPragmas.asKeyValueRange()) {
+        CompletionItem comp;
+        comp.label = pragma.first.toUtf8();
+        if (!pragma.second.isEmpty()) {
+            comp.insertText = QString(pragma.first).append(u": ").toUtf8();
+        }
+        comp.kind = static_cast<int>(CompletionItemKind::Value);
+        res.append(comp);
+    }
+    return res;
+}
+
+static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &currentItem,
+                                                       const CompletionContextStrings &ctx)
+{
+    QList<CompletionItem> res;
+    if (ctx.base().isEmpty()) {
+        // TODO: complete also the brackets after function?
+        for (QUtf8StringView s : std::array<QUtf8StringView, 8>(
+                     { u8"property", u8"readonly", u8"default", u8"signal", u8"function",
+                       u8"required", u8"enum", u8"component" })) {
+            CompletionItem comp;
+            comp.label = s.data();
+            comp.kind = int(CompletionItemKind::Keyword);
+            res.append(comp);
+        }
+
+        // add bindings
+        const DomItem containingObject = currentItem.qmlObject();
+        res += QQmlLSUtils::bindingsCompletions(containingObject);
+
+        // add Qml Types for default binding
+        const DomItem containingFile = currentItem.containingFile();
+        res += QQmlLSUtils::reachableTypes(containingFile, LocalSymbolsType::ObjectType,
+                                           CompletionItemKind::Constructor);
+    }
+    return res;
+}
+
+static QList<CompletionItem> propertyCompletion(const DomItem &currentItem,
+                                                const CompletionContextStrings &ctx)
+{
+    auto info = FileLocations::treeOf(currentItem)->info();
+    const QQmlJS::SourceLocation propertyKeyword = info.regions[u"property"_s];
+
+    // do completions for the keywords
+    if (ctx.offset() < propertyKeyword.offset + propertyKeyword.length) {
+        const QQmlJS::SourceLocation readonlyKeyword = info.regions[u"readonly"_s];
+        const QQmlJS::SourceLocation defaultKeyword = info.regions[u"default"_s];
+        const QQmlJS::SourceLocation requiredKeyword = info.regions[u"required"_s];
+
+        bool completeReadonly = true;
+        bool completeRequired = true;
+        bool completeDefault = true;
+
+        // if there is already a readonly keyword before the cursor: do not auto complete it again
+        if (readonlyKeyword.isValid() && readonlyKeyword.offset < ctx.offset()) {
+            completeReadonly = false;
+            // also, required keywords do not like readonly keywords
+            completeRequired = false;
+        }
+
+        // same for required
+        if (requiredKeyword.isValid() && requiredKeyword.offset < ctx.offset()) {
+            completeRequired = false;
+            // also, required keywords do not like readonly keywords
+            completeReadonly = false;
+        }
+
+        // same for default
+        if (defaultKeyword.isValid() && defaultKeyword.offset < ctx.offset()) {
+            completeDefault = false;
+        }
+        QList<CompletionItem> items;
+        auto addCompletionKeyword = [&items](QUtf8StringView view, bool complete) {
+            if (!complete)
+                return;
+            CompletionItem item;
+            item.label = view.data();
+            item.kind = int(CompletionItemKind::Keyword);
+            items.append(item);
+        };
+        addCompletionKeyword(u8"readonly", completeReadonly);
+        addCompletionKeyword(u8"required", completeRequired);
+        addCompletionKeyword(u8"default", completeDefault);
+        addCompletionKeyword(u8"property", true);
+
+        return items;
+    }
+
+    const QQmlJS::SourceLocation propertyIdentifier = info.regions[u"identifier"_s];
+    if (propertyKeyword.end() <= ctx.offset() && ctx.offset() < propertyIdentifier.offset) {
+        return QQmlLSUtils::reachableTypes(
+                currentItem, LocalSymbolsType::ObjectType | LocalSymbolsType::ValueType,
+                CompletionItemKind::Class);
+    }
+    // do not autocomplete the rest
+    return {};
+}
+
+QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
+                                               const CompletionContextStrings &ctx)
+{
+    DomType completionType = currentItem.internalKind();
+    for (DomItem current = currentItem; current; current = current.directParent()) {
+        const DomType currentType = current.internalKind();
+        switch (currentType) {
+        case DomType::Id:
+        case DomType::Pragma:
+        case DomType::ScriptFormalParameter:
+        case DomType::Binding:
+        case DomType::Import:
+        case DomType::ScriptType:
+        case DomType::QmlObject:
+        case DomType::ScriptExpression:
+        case DomType::QmlFile:
+        case DomType::MethodInfo:
+        case DomType::PropertyDefinition:
+            completionType = current.internalKind();
+            break;
+        default:
+            continue;
+        }
+        break;
+    }
+
+    if (completionType == DomType::Id) {
+        // suppress completions for ids
+        return {};
+    }
+
+    if (completionType == DomType::Pragma) {
+        return pragmaCompletion(currentItem, ctx);
+    }
+
+    if (completionType == DomType::ScriptType) {
+        LocalSymbolsTypes options;
+        options.setFlag(LocalSymbolsType::ObjectType);
+        options.setFlag(LocalSymbolsType::ValueType);
+        return reachableTypes(currentItem, options, CompletionItemKind::Class);
+    }
+
+    if (completionType == DomType::ScriptFormalParameter) {
+        // no autocompletion inside of function parameter definition
+        return {};
+    }
+
+    if (completionType == DomType::Binding) {
+        const DomItem containingBinding = currentItem.filterUp(
+                [](DomType type, const QQmlJS::Dom::DomItem &) { return type == DomType::Binding; },
+                FilterUpOptions::ReturnOuter);
+
+        // do scriptidentifiercompletion after the ':' of a binding
+        if (cursorAfterColon(containingBinding, ctx)) {
+            QList<CompletionItem> res;
+            res << scriptIdentifierCompletion(currentItem, ctx);
+            if (auto type = resolveExpressionType(currentItem, ResolveOwnerType)) {
+                const QStringList names = currentItem.field(Fields::name).toString().split(u'.');
+                const QQmlJSScope *current = resolve(type->semanticScope.get(), names);
+                // add type names when binding to an object type or a property with var type
+                if (!current || current->accessSemantics() == QQmlSA::AccessSemantics::Reference) {
+                    LocalSymbolsTypes options;
+                    options.setFlag(LocalSymbolsType::ObjectType);
+                    res << reachableTypes(currentItem, options, CompletionItemKind::Constructor);
+                }
+            }
+            return res;
+        }
+
+        // ignore the binding if asking for completion in front of the binding
+        if (cursorInFrontOfItem(containingBinding, ctx)) {
+            return insideQmlObjectCompletion(currentItem, ctx);
+        }
+
+        QList<CompletionItem> res;
+        const DomItem containingObject = currentItem.qmlObject();
+        const QStringList toResolve =
+                containingBinding.field(Fields::name).value().toString().split(u'.');
+        if (toResolve.size() == 1) {
+            res << bindingsCompletions(containingObject);
+        } else {
+            // TODO: without QTBUG-117380, containingBinding.field(Fields::name) cannot be
+            // resolved to its actual type
+            res << bindingsCompletions(containingObject);
+        }
+        // add Qml Types for default binding
+        res += reachableTypes(currentItem, LocalSymbolsType::ObjectType,
+                              CompletionItemKind::Constructor);
+        return res;
+    }
+
+    if (completionType == DomType::ScriptExpression) {
+        return scriptIdentifierCompletion(currentItem, ctx);
+    }
+
+    if (completionType == DomType::Import) {
+        const DomItem containingFile = currentItem.containingFile();
+        QList<CompletionItem> res;
+        res += importCompletions(containingFile, ctx);
+
+        // when in front of the import statement: propose types for root Qml Object completion
+        if (cursorInFrontOfItem(currentItem, ctx))
+            res += reachableTypes(containingFile, LocalSymbolsType::ObjectType,
+                                  CompletionItemKind::Constructor);
+
+        return res;
+    }
+
+    if (completionType == DomType::QmlFile) {
+        const DomItem containingFile = currentItem.containingFile();
+        QList<CompletionItem> res;
+        // completions for code outside the root Qml Object
+        // global completions
+        if (ctx.atLineStart()) {
+            if (ctx.base().isEmpty()) {
+                for (const QStringView &s : std::array<QStringView, 2>({ u"pragma", u"import" })) {
+                    CompletionItem comp;
+                    comp.label = s.toUtf8();
+                    comp.kind = int(CompletionItemKind::Keyword);
+                    res.append(comp);
+                }
+            }
+        }
+        // Types for root Qml Object completion
+        res += reachableTypes(containingFile, LocalSymbolsType::ObjectType,
+                              CompletionItemKind::Constructor);
+        return res;
+    }
+
+    if (completionType == DomType::QmlObject) {
+        // inside some Qml Object
+        return insideQmlObjectCompletion(currentItem, ctx);
+    }
+
+    if (completionType == DomType::MethodInfo) {
+        // suppress completions
+        return {};
+    }
+
+    if (completionType == DomType::PropertyDefinition) {
+        return propertyCompletion(currentItem, ctx);
+    }
+
+    // no completion could be found
+    qCDebug(QQmlLSUtilsLog) << "No completion was found for current request.";
+    return {};
 }
 
 QT_END_NAMESPACE

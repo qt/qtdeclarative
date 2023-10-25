@@ -86,6 +86,7 @@ private slots:
     void giveMenuItemFocusOnButtonPress();
     void customMenuCullItems();
     void customMenuUseRepeaterAsTheContentItem();
+    void invalidUrlInImgTag();
 
 private:
     static bool hasWindowActivation();
@@ -2113,6 +2114,27 @@ void tst_QQuickMenu::customMenuUseRepeaterAsTheContentItem()
     QQuickItem *menuItemLast = menu->itemAt(menu->count() - 1);
     QTRY_VERIFY(!QQuickItemPrivate::get(menuItemFirst)->culled);
     QTRY_VERIFY(!QQuickItemPrivate::get(menuItemLast)->culled);
+}
+
+// QTBUG-116672 - Application loads menu containing invalid styled text
+// (img tag) without crash
+void tst_QQuickMenu::invalidUrlInImgTag()
+{
+    QTest::ignoreMessage(QtWarningMsg, "StyledText - Invalid base url in img tag");
+
+    QQuickControlsApplicationHelper helper(this, QLatin1String("invalidUrlInImgTag.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
+    menu->open();
+    QTRY_VERIFY(menu->isVisible());
+
+    QQuickMenuItem *menuItemFirst = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
+    QVERIFY(menuItemFirst);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)

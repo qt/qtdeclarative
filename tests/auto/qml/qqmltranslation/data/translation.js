@@ -58,3 +58,7 @@ function plural2() {
         return qsTr("%n duck(s)", "", 2)
     return "";
 }
+
+function emptyContext() {
+    return qsTranslate("", "hello")
+}

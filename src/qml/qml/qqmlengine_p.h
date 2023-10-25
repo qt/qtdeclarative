@@ -39,6 +39,7 @@
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qpair.h>
+#include <QtCore/qpointer.h>
 #include <QtCore/qproperty.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qstring.h>
@@ -252,10 +253,12 @@ public:
     }
 
 private:
-    class SingletonInstances : private QHash<QQmlType, QJSValue>
+    class SingletonInstances : private QHash<QQmlType::SingletonInstanceInfo::ConstPtr, QJSValue>
     {
     public:
-        void convertAndInsert(QV4::ExecutionEngine *engine, const QQmlType &type, QJSValue *value)
+        void convertAndInsert(
+                QV4::ExecutionEngine *engine, const QQmlType::SingletonInstanceInfo::ConstPtr &type,
+                QJSValue *value)
         {
             QJSValuePrivate::manageStringOnV4Heap(engine, value);
             insert(type, *value);
@@ -263,11 +266,11 @@ private:
 
         void clear()
         {
-            const auto canDelete = [](QObject *instance, const auto &type) -> bool {
+            const auto canDelete = [](QObject *instance, const auto &siinfo) -> bool {
                 if (!instance)
                     return false;
 
-                if (!type.singletonInstanceInfo()->url.isEmpty())
+                if (!siinfo->url.isEmpty())
                     return true;
 
                 const auto *ddata = QQmlData::get(instance, false);
@@ -287,11 +290,11 @@ private:
                     delete instance;
             }
 
-            QHash<QQmlType, QJSValue>::clear();
+            QHash<QQmlType::SingletonInstanceInfo::ConstPtr, QJSValue>::clear();
         }
 
-        using QHash<QQmlType, QJSValue>::value;
-        using QHash<QQmlType, QJSValue>::take;
+        using QHash<QQmlType::SingletonInstanceInfo::ConstPtr, QJSValue>::value;
+        using QHash<QQmlType::SingletonInstanceInfo::ConstPtr, QJSValue>::take;
     };
 
     SingletonInstances singletonInstances;

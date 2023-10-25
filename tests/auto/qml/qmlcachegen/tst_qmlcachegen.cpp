@@ -63,6 +63,8 @@ private slots:
     void inlineComponent();
     void posthocRequired();
 
+    void gracefullyHandleTruncatedCacheFile();
+
     void scriptStringCachegenInteraction();
     void saveableUnitPointer();
 };
@@ -837,6 +839,23 @@ void tst_qmlcachegen::posthocRequired()
     QVERIFY2(component.errorString().contains(
                  QStringLiteral("Required property x was not initialized")),
              qPrintable(component.errorString()));
+}
+
+void tst_qmlcachegen::gracefullyHandleTruncatedCacheFile()
+{
+#if defined(QTEST_CROSS_COMPILED)
+    QSKIP("Cannot call qmlcachegen on cross-compiled target.");
+#endif
+
+    bool ok = generateCache(testFile("truncateTest.qml"));
+    QVERIFY(ok);
+    const QString qmlcFile = testFile("truncateTest.qmlc");
+    QVERIFY(QFile::exists(qmlcFile));
+    QFile::resize(qmlcFile, QFileInfo(qmlcFile).size() / 2);
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, testFileUrl("truncateTest.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
 }
 
 void tst_qmlcachegen::scriptStringCachegenInteraction()

@@ -85,11 +85,11 @@ private slots:
         auto c10=PathComponent(Any());
         QCOMPARE(c10.kind(), Kind::Any);
         QVERIFY(c9!=c10);
-        auto c11=PathComponent(Filter([](DomItem){ return true; }));
+        auto c11=PathComponent(Filter([](const DomItem &){ return true; }));
         auto c12=c11;
-        auto c13=PathComponent(Filter([](DomItem){ return false; }));
-        auto c14=PathComponent(Filter([](DomItem){ return false; }, u"skipAll"));
-        auto c15=PathComponent(Filter([](DomItem){ return true; }, u"skipAll"));
+        auto c13=PathComponent(Filter([](const DomItem &){ return false; }));
+        auto c14=PathComponent(Filter([](const DomItem &){ return false; }, u"skipAll"));
+        auto c15=PathComponent(Filter([](const DomItem &){ return true; }, u"skipAll"));
         QCOMPARE(c11.kind(), Kind::Filter);
         QCOMPARE(c11, c11);
         QVERIFY(c11 != c12); // native code assumed to be non comparable and different even if they are the same
@@ -132,7 +132,7 @@ private slots:
         QCOMPARE(p6[6].headKind(), Kind::Empty);
         auto rString = u"$.@.aa[4][\"bla\"][*].";
         QCOMPARE(p6.toString(), rString);
-        auto p7 = p6.filter([](DomItem){ return true; }, u"true");
+        auto p7 = p6.filter([](const DomItem &){ return true; }, u"true");
         auto p7Str = p7.toString();
         QCOMPARE(p7Str, u"$.@.aa[4][\"bla\"][*].[?(true)]");
         auto p8 = p7.dropTail();

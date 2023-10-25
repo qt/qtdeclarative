@@ -1,0 +1,50 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-unresolved-alias.html
+\ingroup qmllint-warnings-and-errors
+
+\title Unresolved Alias
+\brief Property of property alias was not found.
+
+\section1 Unresolved Alias
+
+\section2 What happened?
+A property alias should hold a reference to another property, see also
+\l{QML Object Attributes#property-aliases}{QML Object Attributes - Property Aliases}.
+In this case, it holds a reference to a property that was not found.
+
+\section2 Why is this bad?
+Instances of components with unresolved alias will not be created at runtime:
+they will be null instead.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    id: someId
+    property int helloWorld
+
+    property alias helloWorldAlias: helloWorld      // not ok: aliases have to refer by id
+    property alias helloWorldAlias2: someId.helloWorlddd    // not ok: no helloWorlddd in someId
+    property alias helloWorldAlias3: someIddd.helloWorld    // not ok: someIddd does not exist
+}
+
+\endqml
+You can fix this warning by making sure that the id and the properties of the alias property
+really do exist:
+\qml
+import QtQuick
+
+Item {
+    id: someId
+    property int helloWorld
+
+    property alias helloWorldAlias: someId.helloWorld   // ok: alias refers by id
+    property alias helloWorldAlias2: someId.helloWorld  // ok: helloWorld does exist in someId
+    property alias helloWorldAlias3: someId.helloWorld  // ok: someId does exist
+}
+\endqml
+*/

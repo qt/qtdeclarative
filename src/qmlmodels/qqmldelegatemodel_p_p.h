@@ -14,6 +14,7 @@
 #include <private/qqmlopenmetaobject_p.h>
 
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qpointer.h>
 
 //
 //  W A R N I N G

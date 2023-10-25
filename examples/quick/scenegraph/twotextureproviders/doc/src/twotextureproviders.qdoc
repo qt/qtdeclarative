@@ -4,6 +4,7 @@
 /*!
     \example scenegraph/twotextureproviders
     \title Scene Graph - Two Texture Providers
+    \examplecategory {Graphics & Multimedia}
     \ingroup qtquickexamples
 
     \brief Shows how to combine two textures from two texture providers in a custom scene graph node.

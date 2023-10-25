@@ -17,6 +17,7 @@
 
 #include "qquickitem_p.h"
 #include <QtCore/qmetaobject.h>
+#include <private/qlazilyallocated_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -40,7 +41,26 @@ public:
     QJSValue gradient;
     QQuickPen *pen;
     qreal radius;
+
+    struct ExtraData {
+        ExtraData()
+            : topLeftRadius(-1.),
+              topRightRadius(-1.),
+              bottomLeftRadius(-1.),
+              bottomRightRadius(-1.)
+        {
+        }
+
+        qreal topLeftRadius;
+        qreal topRightRadius;
+        qreal bottomLeftRadius;
+        qreal bottomRightRadius;
+    };
+    QLazilyAllocated<ExtraData> extraRectangle;
+
     static int doUpdateSlotIdx;
+
+    void maybeSetImplicitAntialiasing();
 };
 
 QT_END_NAMESPACE

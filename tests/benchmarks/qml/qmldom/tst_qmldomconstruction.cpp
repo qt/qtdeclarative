@@ -61,7 +61,7 @@ void tst_qmldomconstruction::domConstructionTime()
 
         env.loadFile(
                 FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), fileName, withScope),
-                [&tFile](Path, DomItem &, DomItem &newIt) { tFile = newIt.fileObject(); },
+                [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt.fileObject(); },
                 LoadOption::DefaultLoad);
         env.loadPendingDependencies();
     }

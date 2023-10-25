@@ -12,6 +12,7 @@ Rectangle {
     opacity: 0.3
     width: 20
     height: 20
+    visible: !theMouseArea.pressed
 
     property real cx: 400
     property real cy: 800

@@ -1046,17 +1046,10 @@ void FormalParameterList::accept0(BaseVisitor *visitor)
     }
 }
 
-FormalParameterList *FormalParameterList::finish(QQmlJS::MemoryPool *pool)
+FormalParameterList *FormalParameterList::finish(QQmlJS::MemoryPool *)
 {
     FormalParameterList *front = next;
     next = nullptr;
-
-    int i = 0;
-    for (const FormalParameterList *it = this; it; it = it->next) {
-        if (it->element && it->element->bindingIdentifier.isEmpty())
-            it->element->bindingIdentifier = pool->newString(QLatin1String("arg#") + QString::number(i));
-        ++i;
-    }
     return front;
 }
 

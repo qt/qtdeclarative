@@ -190,7 +190,7 @@ The following functions are also on the Qt object.
 */
 
 /*!
-    \qmlproperty object Qt::application
+    \qmlproperty Application Qt::application
     \since 5.1
 
     The \c application object provides access to global application state
@@ -213,7 +213,7 @@ The following functions are also on the Qt object.
 */
 
 /*!
-    \qmlproperty object Qt::inputMethod
+    \qmlproperty InputMethod Qt::inputMethod
     \since 5.0
 
     It is the same as the \l InputMethod singleton.

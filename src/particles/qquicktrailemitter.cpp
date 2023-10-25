@@ -1,12 +1,17 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
+#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
+
 #include "qquicktrailemitter_p.h"
-#include <private/qqmlengine_p.h>
+
 #include <private/qqmlglobal_p.h>
-#include <private/qjsvalue_p.h>
-#include <QRandomGenerator>
+#include <private/qquickv4particledata_p.h>
+
+#include <QtCore/qrandom.h>
+
 #include <cmath>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -31,12 +36,12 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
   , m_defaultEmissionExtruder(new QQuickParticleExtruder(this))
 {
     //TODO: If followed increased their size
-    connect(this, SIGNAL(followChanged(QString)),
-            this, SLOT(recalcParticlesPerSecond()));
-    connect(this, SIGNAL(particleDurationChanged(int)),
-            this, SLOT(recalcParticlesPerSecond()));
-    connect(this, SIGNAL(particlesPerParticlePerSecondChanged(int)),
-            this, SLOT(recalcParticlesPerSecond()));
+    connect(this, &QQuickTrailEmitter::followChanged,
+            this, &QQuickTrailEmitter::recalcParticlesPerSecond);
+    connect(this, &QQuickTrailEmitter::particleDurationChanged,
+            this, &QQuickTrailEmitter::recalcParticlesPerSecond);
+    connect(this, &QQuickTrailEmitter::particlesPerParticlePerSecondChanged,
+            this, &QQuickTrailEmitter::recalcParticlesPerSecond);
 }
 
 /*!
@@ -92,8 +97,9 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
 
 bool QQuickTrailEmitter::isEmitFollowConnected()
 {
-    IS_SIGNAL_CONNECTED(this, QQuickTrailEmitter, emitFollowParticles,
-                        (const QJSValue &, const QJSValue &));
+    IS_SIGNAL_CONNECTED(
+            this, QQuickTrailEmitter, emitFollowParticles,
+            (const QList<QQuickV4ParticleData> &, const QQuickV4ParticleData &));
 }
 
 void QQuickTrailEmitter::recalcParticlesPerSecond(){
@@ -232,21 +238,15 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
             m_system->emitParticle(d, this);
 
         if (isEmitConnected() || isEmitFollowConnected()) {
-            QQmlEngine *qmlEngine = ::qmlEngine(this);
-            QV4::ExecutionEngine *v4 = qmlEngine->handle();
 
-            QV4::Scope scope(v4);
-            QV4::ScopedArrayObject array(scope, v4->newArrayObject(toEmit.size()));
-            QV4::ScopedValue v(scope);
-            for (int i=0; i<toEmit.size(); i++)
-                array->put(i, (v = toEmit[i]->v4Value(m_system)));
+            QList<QQuickV4ParticleData> particles;
+            particles.reserve(toEmit.size());
+            for (QQuickParticleData *particle : std::as_const(toEmit))
+                particles.push_back(particle->v4Value(m_system));
 
-            QJSValue particles;
-            QJSValuePrivate::setValue(&particles, array);
             if (isEmitFollowConnected()) {
                 //A chance for many arbitrary JS changes
-                emit emitFollowParticles(
-                        particles, QJSValuePrivate::fromReturnedValue(d->v4Value(m_system)));
+                emit emitFollowParticles(particles, d->v4Value(m_system));
             } else if (isEmitConnected()) {
                 emit emitParticles(particles);//A chance for arbitrary JS changes
             }

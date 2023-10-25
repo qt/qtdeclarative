@@ -198,7 +198,7 @@ void QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::setObjectId(
 template<>
 typename QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::AliasResolutionResult
 QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::resolveAliasesInObject(
-        int objectIndex, QQmlError *error)
+        const CompiledObject &component, int objectIndex, QQmlError *error)
 {
     const CompiledObject *obj = m_compiler->objectAt(objectIndex);
     for (auto alias = obj->aliasesBegin(), end = obj->aliasesEnd(); alias != end; ++alias) {
@@ -206,6 +206,20 @@ QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::resolveAliasesInO
             *error = qQmlCompileError( alias->referenceLocation, tr("Unresolved alias found"));
             return NoAliasResolved;
         }
+
+        if (alias->isAliasToLocalAlias() || alias->encodedMetaPropertyIndex == -1)
+            continue;
+
+        const int targetObjectIndex
+                = objectForId(m_compiler, component, alias->targetObjectId());
+        const int coreIndex
+                = QQmlPropertyIndex::fromEncoded(alias->encodedMetaPropertyIndex).coreIndex();
+
+        QQmlPropertyCache::ConstPtr targetCache = m_propertyCaches->at(targetObjectIndex);
+        Q_ASSERT(targetCache);
+
+        if (!targetCache->property(coreIndex))
+            return SomeAliasesResolved;
     }
 
     return AllAliasesResolved;
@@ -824,6 +838,10 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
 
 void QQmlTypeData::resolveTypes()
 {
+    // Load the implicit import since it may have additional scripts.
+    if (!m_implicitImportLoaded && !loadImplicitImport())
+        return;
+
     // Add any imported scripts to our resolved set
     const auto resolvedScripts = m_importCache->resolvedScripts();
     for (const QQmlImports::ScriptReference &script : resolvedScripts) {

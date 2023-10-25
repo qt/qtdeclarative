@@ -66,7 +66,9 @@ public:
     }
 
 Q_SIGNALS:
-    void emitFollowParticles(const QJSValue &particles, const QJSValue &followed);
+    void emitFollowParticles(
+            const QList<QQuickV4ParticleData> &particles,
+            const QQuickV4ParticleData &followed);
 
     void particlesPerParticlePerSecondChanged(int arg);
 

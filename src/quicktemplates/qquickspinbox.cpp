@@ -115,6 +115,7 @@ public:
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
+    void itemDestroyed(QQuickItem *item) override;
 
     QString evaluateTextFromValue(int val) const;
     int evaluateValueFromText(const QString &text) const;
@@ -242,7 +243,9 @@ void QQuickSpinBoxPrivate::contentItemTextChanged()
     if (!inputTextItem)
         return;
     QString text = inputTextItem->text();
+#if QT_CONFIG(validator)
     validator->fixup(text);
+#endif
 
     if (live) {
         const int enteredVal = evaluateValueFromText(text);
@@ -412,6 +415,15 @@ void QQuickSpinBoxPrivate::itemImplicitHeightChanged(QQuickItem *item)
         emit up->implicitIndicatorHeightChanged();
     else if (item == down->indicator())
         emit down->implicitIndicatorHeightChanged();
+}
+
+void QQuickSpinBoxPrivate::itemDestroyed(QQuickItem *item)
+{
+    QQuickControlPrivate::itemDestroyed(item);
+    if (item == up->indicator())
+        up->setIndicator(nullptr);
+    else if (item == down->indicator())
+        down->setIndicator(nullptr);
 }
 
 

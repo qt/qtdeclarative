@@ -1549,6 +1549,7 @@ class BareSingleton : public QObject
     Q_OBJECT
     QML_SINGLETON
     QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     BareSingleton(QObject *parent = nullptr) : QObject(parent)
@@ -1562,6 +1563,7 @@ class UncreatableSingleton : public QObject
     Q_OBJECT
     QML_SINGLETON
     QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     static UncreatableSingleton *instance();
@@ -2388,6 +2390,32 @@ public:
     }
 };
 
+
+struct ForeignNamespace
+{
+    Q_GADGET
+public:
+    enum Abc { A, B, C, D };
+    Q_ENUM(Abc)
+};
+
+class ForeignNamespaceForeign
+{
+    Q_GADGET
+    QML_ELEMENT
+    QML_FOREIGN_NAMESPACE(ForeignNamespace)
+};
+
+class LeakingForeignNamespaceForeign : public QObject, public ForeignNamespaceForeign
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    enum AnotherAbc { D, C, B, A };
+    Q_ENUM(AnotherAbc)
+};
+
 struct ValueTypeWithLength
 {
     Q_GADGET
@@ -2695,6 +2723,50 @@ public:
     Q_INVOKABLE void byteArrayTest(const QByteArray &ba)
     {
         byteArrays.push_back(ba);
+    }
+};
+
+class CounterAttachedBaseType: public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    Q_PROPERTY (int value READ value NOTIFY valueChanged)
+
+public:
+    CounterAttachedBaseType(QObject *parent = nullptr) : QObject(parent) {}
+
+    int value() { return m_value; }
+    Q_SIGNAL void valueChanged();
+
+protected:
+    int m_value = 98;
+};
+
+
+class CounterAttachedType: public CounterAttachedBaseType
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+
+public:
+    CounterAttachedType(QObject *parent = nullptr) : CounterAttachedBaseType(parent) {}
+
+    Q_INVOKABLE void increase() {
+        ++m_value;
+        Q_EMIT valueChanged();
+    }
+};
+
+class Counter : public QObject
+{
+    Q_OBJECT
+    QML_ATTACHED(CounterAttachedBaseType)
+    QML_ELEMENT
+
+public:
+    static CounterAttachedBaseType *qmlAttachedProperties(QObject *o)
+    {
+        return new CounterAttachedType(o);
     }
 };
 

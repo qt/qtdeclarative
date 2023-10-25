@@ -132,4 +132,12 @@ QMetaObject *QQmlProxyMetaObject::toDynamicMetaObject(QObject *)
     return metaObject;
 }
 
+void QQmlProxyMetaObject::objectDestroyed(QObject *object)
+{
+    if (parent)
+        parent->objectDestroyed(object);
+    else
+        QDynamicMetaObjectData::objectDestroyed(object);
+}
+
 QT_END_NAMESPACE

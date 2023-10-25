@@ -74,8 +74,7 @@ ReturnedValue WeakMapCtor::construct(const FunctionObject *f, const Value *argv,
                 if (scope.hasException())
                     break;
             }
-            ScopedValue falsey(scope, Encode(false));
-            return Runtime::IteratorClose::call(scope.engine, iter, falsey);
+            return Runtime::IteratorClose::call(scope.engine, iter);
         }
     }
     return a->asReturnedValue();

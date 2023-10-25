@@ -22,6 +22,8 @@
 #endif
 #include <private/qanimationjobutil_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_REQUIRE_CONFIG(quick_itemview);
 
 QT_BEGIN_NAMESPACE

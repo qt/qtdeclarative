@@ -16,6 +16,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::Literals::StringLiterals;
+
 Q_LOGGING_CATEGORY(lcQQPropertyBinding, "qt.qml.propertybinding");
 
 QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, QV4::Function *function,
@@ -279,7 +281,7 @@ QString QQmlPropertyBinding::createBindingLoopErrorDescription()
     Q_ASSERT(propertyData);
     Q_ASSERT(!targetIndex().hasValueTypeIndex());
     QQmlProperty prop = QQmlPropertyPrivate::restore(target(), *propertyData, &valueTypeData, nullptr);
-    return QStringLiteral(R"(QML %1: Binding loop detected for property "%2")").arg(QQmlMetaType::prettyTypeName(target()) , prop.name());
+    return R"(QML %1: Binding loop detected for property "%2")"_L1.arg(QQmlMetaType::prettyTypeName(target()) , prop.name());
 }
 
 void QQmlPropertyBinding::bindingErrorCallback(QPropertyBindingPrivate *that)

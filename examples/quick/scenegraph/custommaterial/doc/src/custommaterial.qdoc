@@ -4,6 +4,7 @@
 /*!
     \example scenegraph/custommaterial
     \title Scene Graph - Custom Material
+    \examplecategory {Graphics & Multimedia}
     \ingroup qtquickexamples
     \brief Shows how to implement a custom material in the Qt Quick Scene Graph.
 

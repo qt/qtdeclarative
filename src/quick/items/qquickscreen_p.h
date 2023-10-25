@@ -18,6 +18,8 @@
 #include <QtQml/qqml.h>
 #include <QtQuick/private/qtquickglobal_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 

@@ -9,6 +9,7 @@ QtObject {
     property string attachedForNasty: Nasty.objectName
 
     property Nasty nasty: Nasty {
+        id: theNasty
         objectName: Component.objectName
     }
 
@@ -83,11 +84,6 @@ QtObject {
         return a;
     }
 
-    property Person shadowable
-    function setLookupOnShadowable() {
-        shadowable.area.width = 16
-    }
-
     // TODO: Drop these once we can manipulate QVariant-wrapped lists.
     property list<withLength> withLengths
     property int l: withLengths.length
@@ -97,4 +93,21 @@ QtObject {
 
     // Cannot generate code for getters
     property rect r3: ({ get x() { return 42; }, y: 4 })
+
+    property int nonIterable: {
+        var result = 1;
+        for (var a in Component)
+            ++result;
+        return result;
+    }
+
+    property alias selfself: self
+    property alias nastyBad: theNasty.bad
+    function writeToUnknown() : int {
+        self.selfself.nastyBad = undefined;
+        return 5;
+    }
+
+    readonly property int someNumber: 10
+    function writeToReadonly() { someNumber = 20 }
 }

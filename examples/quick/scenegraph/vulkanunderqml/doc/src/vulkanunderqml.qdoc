@@ -4,6 +4,7 @@
 /*!
     \example scenegraph/vulkanunderqml
     \title Scene Graph - Vulkan Under QML
+    \examplecategory {Graphics & Multimedia}
     \ingroup qtquickexamples
     \brief Shows how to render directly with Vulkan under a Qt Quick scene.
 
@@ -37,7 +38,7 @@
 
     \quotefromfile scenegraph/vulkanunderqml/vulkansquircle.h
     \skipto class VulkanSquircle
-    \printto public
+    \printto public:
 
     We then go on to declare public and private items:
 

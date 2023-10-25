@@ -25,22 +25,25 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 namespace Dom {
+struct AttachedInfoLookupResultBase
+{
+    Path lookupPath;
+    Path rootTreePath;
+    Path foundTreePath;
+};
 template<typename TreePtr>
-class AttachedInfoLookupResult
+class AttachedInfoLookupResult: public AttachedInfoLookupResultBase
 {
 public:
     TreePtr foundTree;
-    Path lookupPath; // relative path used to reach result
-    std::optional<Path> rootTreePath; // path of the root TreePath
-    std::optional<Path> foundTreePath;
+
     operator bool() { return bool(foundTree); }
     template<typename T>
     AttachedInfoLookupResult<std::shared_ptr<T>> as() const
     {
         AttachedInfoLookupResult<std::shared_ptr<T>> res;
+        res.AttachedInfoLookupResultBase::operator=(*this);
         res.foundTree = std::static_pointer_cast<T>(foundTree);
-        res.lookupPath = lookupPath;
-        res.rootTreePath = rootTreePath;
         return res;
     }
 };
@@ -53,23 +56,15 @@ public:
         Canonical
     };
     Q_ENUM(PathType)
-    enum class FindOption {
-        None = 0,
-        SetRootTreePath = 0x1,
-        SetFoundTreePath = 0x2,
-        Default = 0x3
-    };
-    Q_DECLARE_FLAGS(FindOptions, FindOption)
-    Q_FLAG(FindOptions)
 
     constexpr static DomType kindValue = DomType::AttachedInfo;
     using Ptr = std::shared_ptr<AttachedInfo>;
 
     DomType kind() const override { return kindValue; }
-    Path canonicalPath(DomItem &self) const override { return self.m_ownerPath; }
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
+    Path canonicalPath(const DomItem &self) const override { return self.m_ownerPath; }
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const override;
 
-    AttachedInfo::Ptr makeCopy(DomItem &self) const
+    AttachedInfo::Ptr makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<AttachedInfo>(doCopy(self));
     }
@@ -83,15 +78,14 @@ public:
 
     static Ptr ensure(Ptr self, Path path, PathType pType = PathType::Relative);
     static Ptr find(Ptr self, Path p, PathType pType = PathType::Relative);
-    static AttachedInfoLookupResult<Ptr>
-    findAttachedInfo(DomItem &item, QStringView treeFieldName,
-                     FindOptions options = AttachedInfo::FindOption::None);
-    static Ptr treePtr(DomItem &item, QStringView fieldName)
+    static AttachedInfoLookupResult<Ptr> findAttachedInfo(const DomItem &item,
+                                                          QStringView treeFieldName);
+    static Ptr treePtr(const DomItem &item, QStringView fieldName)
     {
-        return findAttachedInfo(item, fieldName, FindOption::None).foundTree;
+        return findAttachedInfo(item, fieldName).foundTree;
     }
 
-    DomItem itemAtPath(DomItem &self, Path p, PathType pType = PathType::Relative) const
+    DomItem itemAtPath(const DomItem &self, Path p, PathType pType = PathType::Relative) const
     {
         if (Ptr resPtr = find(self.ownerAs<AttachedInfo>(), p, pType)) {
             if (pType == PathType::Canonical)
@@ -105,7 +99,7 @@ public:
         return DomItem();
     }
 
-    DomItem infoAtPath(DomItem &self, Path p, PathType pType = PathType::Relative) const
+    DomItem infoAtPath(const DomItem &self, Path p, PathType pType = PathType::Relative) const
     {
         return itemAtPath(self, p, pType).field(Fields::infoItem);
     }
@@ -132,11 +126,7 @@ public:
     }
 
     virtual AttachedInfo::Ptr instantiate(AttachedInfo::Ptr parent, Path p = Path()) const = 0;
-    virtual DomItem infoItem(DomItem &self) = 0;
-    DomItem infoItem(DomItem &self) const
-    {
-        return const_cast<AttachedInfo *>(this)->infoItem(self);
-    }
+    virtual DomItem infoItem(const DomItem &self) const = 0;
     QMap<Path, Ptr> subItems() const {
         return m_subItems;
     }
@@ -148,7 +138,6 @@ protected:
     std::weak_ptr<AttachedInfo> m_parent;
     QMap<Path, Ptr> m_subItems;
 };
-Q_DECLARE_OPERATORS_FOR_FLAGS(AttachedInfo::FindOptions)
 
 template<typename Info>
 class QMLDOM_EXPORT AttachedInfoT final : public AttachedInfo
@@ -183,13 +172,12 @@ public:
         return std::static_pointer_cast<AttachedInfoT>(AttachedInfo::find(self, p, pType));
     }
 
-    static AttachedInfoLookupResult<Ptr> findAttachedInfo(DomItem &item, QStringView fieldName,
-                                                          AttachedInfo::FindOptions options)
+    static AttachedInfoLookupResult<Ptr> findAttachedInfo(const DomItem &item,
+                                                          QStringView fieldName)
     {
-        return AttachedInfo::findAttachedInfo(item, fieldName, options)
-                .template as<AttachedInfoT>();
+        return AttachedInfo::findAttachedInfo(item, fieldName).template as<AttachedInfoT>();
     }
-    static Ptr treePtr(DomItem &item, QStringView fieldName)
+    static Ptr treePtr(const DomItem &item, QStringView fieldName)
     {
         return std::static_pointer_cast<AttachedInfoT>(AttachedInfo::treePtr(item, fieldName));
     }
@@ -214,9 +202,9 @@ public:
     AttachedInfo::Ptr instantiate(AttachedInfo::Ptr parent, Path p = Path()) const override {
         return Ptr(new AttachedInfoT(std::static_pointer_cast<AttachedInfoT>(parent), p));
     }
-    DomItem infoItem(DomItem &self) override { return self.wrapField(Fields::infoItem, m_info); }
+    DomItem infoItem(const DomItem &self) const override { return self.wrapField(Fields::infoItem, m_info); }
 
-    Ptr makeCopy(DomItem &self) const
+    Ptr makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<AttachedInfoT>(doCopy(self));
     }
@@ -225,8 +213,18 @@ public:
 
     const Info &info() const { return m_info; }
     Info &info() { return m_info; }
+
+    QString canonicalPathForTesting() const
+    {
+        QString result;
+        for (auto *it = this; it; it = it->parent().get()) {
+            result.prepend(it->path().toString());
+        }
+        return result;
+    }
+
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &) const override
+    std::shared_ptr<OwningItem> doCopy(const DomItem &) const override
     {
         return Ptr(new AttachedInfoT(*this));
     }
@@ -240,7 +238,7 @@ public:
     using Tree = std::shared_ptr<AttachedInfoT<FileLocations>>;
     constexpr static DomType kindValue = DomType::FileLocations;
     DomType kind() const {  return kindValue; }
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor);
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const;
     void ensureCommentLocations(QList<QString> keys);
 
     static Tree createTree(Path basePath);
@@ -253,11 +251,9 @@ public:
     }
 
     // returns the path looked up and the found tree when looking for the info attached to item
-    static AttachedInfoLookupResult<Tree>
-    findAttachedInfo(DomItem &item,
-                     AttachedInfo::FindOptions options = AttachedInfo::FindOption::Default);
-    static FileLocations::Tree treeOf(DomItem &);
-    static const FileLocations *fileLocationsOf(DomItem &);
+    static AttachedInfoLookupResult<Tree> findAttachedInfo(const DomItem &item);
+    static FileLocations::Tree treeOf(const DomItem &);
+    static const FileLocations *fileLocationsOf(const DomItem &);
 
     static void updateFullLocation(Tree fLoc, SourceLocation loc);
     static void addRegion(Tree fLoc, QString locName, SourceLocation loc);
@@ -276,19 +272,18 @@ public:
     using Tree = std::shared_ptr<AttachedInfoT<UpdatedScriptExpression>>;
     constexpr static DomType kindValue = DomType::UpdatedScriptExpression;
     DomType kind() const { return kindValue; }
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor);
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const;
 
     static Tree createTree(Path basePath);
     static Tree ensure(Tree base, Path basePath, AttachedInfo::PathType pType);
 
     // returns the path looked up and the found tree when looking for the info attached to item
     static AttachedInfoLookupResult<Tree>
-    findAttachedInfo(DomItem &item,
-                     AttachedInfo::FindOptions options = AttachedInfo::FindOption::Default);
+    findAttachedInfo(const DomItem &item);
     // convenience: find FileLocations::Tree attached to the given item
-    static Tree treePtr(DomItem &);
+    static Tree treePtr(const DomItem &);
     // convenience: find FileLocations* attached to the given item (if there is one)
-    static const UpdatedScriptExpression *exprPtr(DomItem &);
+    static const UpdatedScriptExpression *exprPtr(const DomItem &);
 
     static bool visitTree(Tree base, function_ref<bool(Path, Tree)> visitor,
                           Path basePath = Path());

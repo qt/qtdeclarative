@@ -170,13 +170,17 @@ Item {
                 id: slSize
                 enabled: cbSize.checked
                 from: 8
-                to: 1024
+                to: 2048
                 value: 128
             }
         }
 
         Label {
             text: qsTr("Backing texture size: %1x%2 pixels").arg(renderer.effectiveTextureSize.width).arg(renderer.effectiveTextureSize.height)
+        }
+
+        Label {
+            text: qsTr("Item logical size: %1x%2").arg(renderer.width).arg(renderer.height)
         }
 
         CheckBox {
@@ -224,7 +228,7 @@ Item {
         }
 
         GroupBox {
-            title: qsTr("Texture format (no visible effect)")
+            title: qsTr("Texture format")
             ColumnLayout {
                 RadioButton {
                     id: rdFormatRGBA8

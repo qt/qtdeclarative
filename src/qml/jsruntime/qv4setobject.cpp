@@ -8,6 +8,7 @@
 #include "qv4symbol_p.h"
 
 using namespace QV4;
+using namespace Qt::Literals::StringLiterals;
 
 DEFINE_OBJECT_VTABLE(SetCtor);
 DEFINE_OBJECT_VTABLE(WeakSetCtor);
@@ -37,7 +38,7 @@ ReturnedValue WeakSetCtor::construct(const FunctionObject *f, const Value *argv,
     if (argc > 0) {
         ScopedValue iterable(scope, argv[0]);
         if (!iterable->isUndefined() && !iterable->isNull()) {
-            ScopedFunctionObject adder(scope, a->get(ScopedString(scope, scope.engine->newString(QString::fromLatin1("add")))));
+            ScopedFunctionObject adder(scope, a->get(ScopedString(scope, scope.engine->newString(u"add"_s))));
             if (!adder)
                 return scope.engine->throwTypeError();
             ScopedObject iter(scope, Runtime::GetIterator::call(scope.engine, iterable, true));
@@ -54,10 +55,8 @@ ReturnedValue WeakSetCtor::construct(const FunctionObject *f, const Value *argv,
                     return a.asReturnedValue();
 
                 adder->call(a, nextValue, 1);
-                if (scope.hasException()) {
-                    ScopedValue falsey(scope, Encode(false));
-                    return Runtime::IteratorClose::call(scope.engine, iter, falsey);
-                }
+                if (scope.hasException())
+                    return Runtime::IteratorClose::call(scope.engine, iter);
             }
         }
     }

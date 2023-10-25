@@ -237,15 +237,10 @@ QQmlSA::Element Binding::objectType() const
     return QQmlJSScope::createQQmlSAElement(BindingPrivate::binding(*this).objectType());
 }
 
-Element QQmlSA::Binding::literalType(const QQmlJSTypeResolver *resolver) const
-{
-    return QQmlJSScope::createQQmlSAElement(BindingPrivate::binding(*this).literalType(resolver));
-}
-
 bool Binding::hasUndefinedScriptValue() const
 {
     const auto &jsBinding = BindingPrivate::binding(*this);
-    return jsBinding.bindingType() == Script
+    return jsBinding.bindingType() == BindingType::Script
             && jsBinding.scriptValueType() == ScriptValue_Undefined;
 }
 
@@ -760,22 +755,6 @@ QQmlSA::Binding::Bindings BindingsPrivate::createBindings(
     return bindings;
 }
 
-/*!
-    Returns an iterator to the beginning of this Element's children.
- */
-QQmlJS::ConstPtrWrapperIterator Element::childScopesBegin() const
-{
-    return QQmlJSScope::scope(*this)->childScopesBegin();
-}
-
-/*!
-    Returns an iterator to the end of this Element's children.
- */
-QQmlJS::ConstPtrWrapperIterator Element::childScopesEnd() const
-{
-    return QQmlJSScope::scope(*this)->childScopesEnd();
-}
-
 Element::operator bool() const
 {
     return bool(QQmlJSScope::scope(*this));
@@ -845,7 +824,7 @@ GenericPass::GenericPass(PassManager *manager)
 /*!
     Emits a warning message \a diagnostic about an issue of type \a id.
  */
-void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id)
+void GenericPass::emitWarning(QAnyStringView diagnostic, LoggerWarningId id)
 {
     emitWarning(diagnostic, id, QQmlSA::SourceLocation{});
 }
@@ -854,7 +833,7 @@ void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId
     Emits warning message \a diagnostic about an issue of type \a id located at
     \a srcLocation.
  */
-void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id,
+void GenericPass::emitWarning(QAnyStringView diagnostic, LoggerWarningId id,
                               QQmlSA::SourceLocation srcLocation)
 {
     Q_D(const GenericPass);
@@ -868,7 +847,7 @@ void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId
     Emits a warning message \a diagnostic about an issue of type \a id located at
     \a srcLocation and with suggested fix \a fix.
  */
-void GenericPass::emitWarning(QAnyStringView diagnostic, QQmlJS::LoggerWarningId id,
+void GenericPass::emitWarning(QAnyStringView diagnostic, LoggerWarningId id,
                               QQmlSA::SourceLocation srcLocation, const QQmlSA::FixSuggestion &fix)
 {
     Q_D(const GenericPass);
@@ -926,8 +905,8 @@ Element GenericPass::resolveType(QAnyStringView moduleName, QAnyStringView typeN
     Returns the type of the built-in type identified by \a typeName.
     Built-in types encompasses \c{C++} types which the  QML engine can handle
     without any imports (e.g. \l QDateTime and \l QString), global EcmaScript
-    objects like \c Number, as well as the \l{global Qt object}
-    {QML Global Object}.
+    objects like \c Number, as well as the \l {QML Global Object}
+    {global Qt object}.
  */
 Element GenericPass::resolveBuiltinType(QAnyStringView typeName) const
 {
@@ -960,7 +939,9 @@ Element GenericPass::resolveAttached(QAnyStringView moduleName, QAnyStringView t
 Element GenericPass::resolveLiteralType(const QQmlSA::Binding &binding)
 {
     Q_D(const GenericPass);
-    return binding.literalType(PassManagerPrivate::resolver(*d->m_manager));
+
+    return QQmlJSScope::createQQmlSAElement(BindingPrivate::binding(binding).literalType(
+            PassManagerPrivate::resolver(*d->m_manager)));
 }
 
 /*!
@@ -1005,15 +986,9 @@ QString GenericPass::sourceCode(QQmlSA::SourceLocation location)
     \brief Can analyze an element and its children with static analysis passes.
  */
 
-/*!
-    Constructs a pass manager given an import \a visitor and a type \a resolver.
- */
-QQmlSA::PassManager::PassManager(QQmlJSImportVisitor *visitor, QQmlJSTypeResolver *resolver)
-    : d_ptr{ new PassManagerPrivate{ this, visitor, resolver } }
-{
-}
-
-PassManager::~PassManager() = default; // explicitly defaulted out-of-line for PIMPL
+// explicitly defaulted out-of-line for PIMPL
+PassManager::PassManager() = default;
+PassManager::~PassManager() = default;
 
 /*!
     Registers a static analysis \a pass to be run on all elements.
@@ -1159,6 +1134,16 @@ void PassManager::analyze(const Element &root)
     d->analyze(root);
 }
 
+static QQmlJS::ConstPtrWrapperIterator childScopesBegin(const Element &element)
+{
+    return QQmlJSScope::scope(element)->childScopesBegin();
+}
+
+static QQmlJS::ConstPtrWrapperIterator childScopesEnd(const Element &element)
+{
+    return QQmlJSScope::scope(element)->childScopesEnd();
+}
+
 void PassManagerPrivate::analyze(const Element &root)
 {
     QList<Element> runStack;
@@ -1170,7 +1155,7 @@ void PassManagerPrivate::analyze(const Element &root)
             if (elementPass->shouldRun(element))
                 elementPass->run(element);
 
-        for (auto it = element.childScopesBegin(); it != element.childScopesEnd(); ++it) {
+        for (auto it = childScopesBegin(element), end = childScopesEnd(element); it != end; ++it) {
             if ((*it)->scopeType() == QQmlSA::ScopeType::QMLScope)
                 runStack.push_back(QQmlJSScope::createQQmlSAElement(*it));
         }
@@ -1240,7 +1225,7 @@ bool PassManager::hasImportedModule(QAnyStringView module) const
 /*!
     Returns \c true if warnings of \a category are enabled, \c false otherwise.
  */
-bool PassManager::isCategoryEnabled(QQmlJS::LoggerWarningId category) const
+bool PassManager::isCategoryEnabled(LoggerWarningId category) const
 {
     return !PassManagerPrivate::visitor(*this)->logger()->isCategoryIgnored(category);
 }
@@ -1430,17 +1415,17 @@ void PropertyPass::onRead(const Element &element, const QString &propertyName,
     Executes whenever a property is written to.
 
     The property \a propertyName of \a element is written to by an instruction
-    within \a writeScope defined at \a location. The property is written the
-    value \a value.
+    within \a writeScope defined at \a location. The type of the expression
+    written to \a propertyName is \a expressionType.
  */
 void PropertyPass::onWrite(const Element &element, const QString &propertyName,
-                           const Element &value, const Element &writeScope,
+                           const Element &expressionType, const Element &writeScope,
                            QQmlSA::SourceLocation location)
 {
     Q_UNUSED(element);
     Q_UNUSED(propertyName);
     Q_UNUSED(writeScope);
-    Q_UNUSED(value);
+    Q_UNUSED(expressionType);
     Q_UNUSED(location);
 }
 

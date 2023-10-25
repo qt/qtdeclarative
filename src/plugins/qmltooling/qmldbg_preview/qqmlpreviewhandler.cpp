@@ -13,7 +13,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQml/qqmlcomponent.h>
 
-#include <private/qquickpixmapcache_p.h>
+#include <private/qquickpixmap_p.h>
 #include <private/qquickview_p.h>
 #include <private/qhighdpiscaling_p.h>
 

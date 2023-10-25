@@ -44,11 +44,16 @@ void tst_QQmlDebugClient::initTestCase()
 
     m_service = new QQmlDebugTestService("tst_QQmlDebugClient::handshake()");
 
-    foreach (const QString &service, QQmlDebuggingEnabler::debuggerServices())
+    const QStringList debuggerServices = QQmlDebuggingEnabler::debuggerServices();
+    for (const QString &service : debuggerServices)
         QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)nullptr);
-    foreach (const QString &service, QQmlDebuggingEnabler::inspectorServices())
+
+    const QStringList inspectorServices = QQmlDebuggingEnabler::inspectorServices();
+    for (const QString &service : inspectorServices)
         QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)nullptr);
-    foreach (const QString &service, QQmlDebuggingEnabler::profilerServices())
+
+    const QStringList profilerServices = QQmlDebuggingEnabler::profilerServices();
+    for (const QString &service : profilerServices)
         QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)nullptr);
 
     const QString waitingMsg = QString("QML Debugger: Waiting for connection on port %1...").arg(PORT);

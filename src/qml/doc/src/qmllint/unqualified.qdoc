@@ -1,0 +1,52 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-unqualified.html
+\ingroup qmllint-warnings-and-errors
+
+\title Unqualified Access
+\brief Accessing an outer scope without its id.
+
+\section1 Unqualified Access
+
+\section2 What happened?
+
+A parent element was accessed without its \l{QML Object Attributes#the-id-attribute}{id}.
+
+\section2 Why is this bad?
+
+This makes the code harder to read and impedes performance.
+
+\section2 Example
+
+\qml
+import QtQuick
+
+Item {
+    property int helloWorld
+    Item {
+        property int unqualifiedAccess: helloWorld + 1 // not ok: Unqualified access here.
+    }
+}
+\endqml
+
+You can fix this warning by referring to the parent object by
+\l{QML Object Attributes#the-id-attribute}{id}.
+If the object currently has no \l{QML Object Attributes#the-id-attribute}{id}, you will need to add
+one first.
+
+\qml
+import QtQuick
+
+Item {
+    id: root
+    property int helloWorld
+    Item {
+        property int unqualifiedAccess: root.helloWorld + 1 // ok: this access is qualified now!
+    }
+}
+\endqml
+
+\sa {QML Coding Conventions#unqualified-access}{QML Coding Conventions - Unqualified Access}
+*/

@@ -5,6 +5,7 @@
     \example responsivelayouts
     \brief Demonstrates how to use LayoutItemProxy to make a responsive UI.
     \ingroup qtquickexamples
+    \examplecategory {User Interface Components}
 
     This example shows how to use LayoutProxyItems in combination with
     \l{Qt Quick Layouts}{layouts} to create responsive layouts.

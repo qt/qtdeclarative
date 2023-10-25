@@ -106,7 +106,7 @@ void QQuickMaskExtruder::ensureInitialized(const QRectF &rf)
     // Image will in all likelyhood be in this format already, so
     // no extra memory or conversion takes place
     if (m_img.format() != QImage::Format_ARGB32 && m_img.format() != QImage::Format_ARGB32_Premultiplied)
-        m_img = m_img.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+        m_img = std::move(m_img).convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
     // resample on the fly using 16-bit
     int sx = (m_img.width() << 16) / r.width();

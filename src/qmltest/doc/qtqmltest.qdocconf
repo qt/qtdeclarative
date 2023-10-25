@@ -36,3 +36,6 @@ exampledirs += snippets
 navigation.landingpage = "Qt Quick Test"
 navigation.cppclassespage = "Qt Quick Test C++ API"
 navigation.qmltypespage = "Qt Quick Test QML Types"
+
+# Enforce zero documentation warnings
+warninglimit = 0

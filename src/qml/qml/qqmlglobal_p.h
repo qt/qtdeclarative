@@ -49,7 +49,7 @@ T qmlGetConfigOption(const char *var)
     Connect \a Signal of \a Sender to \a Method of \a Receiver.  \a Signal must be
     of type \a SenderType and \a Receiver of type \a ReceiverType.
 
-    Unlike QObject::connect(), this method caches the lookup of the signal and method
+    Unlike QObject::connect(), this macro caches the lookup of the signal and method
     indexes.  It also does not require lazy QMetaObjects to be built so should be
     preferred in all QML code that might interact with QML built objects.
 
@@ -88,7 +88,7 @@ do { \
     Disconnect \a Signal of \a Sender from \a Method of \a Receiver.  \a Signal must be
     of type \a SenderType and \a Receiver of type \a ReceiverType.
 
-    Unlike QObject::disconnect(), this method caches the lookup of the signal and method
+    Unlike QObject::disconnect(), this macro caches the lookup of the signal and method
     indexes.  It also does not require lazy QMetaObjects to be built so should be
     preferred in all QML code that might interact with QML built objects.
 

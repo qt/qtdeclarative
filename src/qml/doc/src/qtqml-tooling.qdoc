@@ -1,0 +1,48 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+/*!
+\group qtqml-tooling
+\title Qt Qml Tooling
+\brief List of Qt Qml Tools and Utilities
+
+The Qt Qml module provides a range of tools and utilities that enhance
+the developer and designer experience and includes some internal tools
+used by Qt. The following sections offer a concise overview of these tools
+and utilities, along with links to additional information about each of them.
+
+\section1 Developer Tools
+
+A set of tools provided by the Qt Qml module that aim to facilitate a QML developer's life
+during various phases of development. These tools are:
+
+\list
+    \li \l {qmllint}
+    \li \l {qmlformat}
+    \li \l {QML Language Server}{qmlls}
+    \li \l {qmlprofiler}
+\endlist
+
+\section1 Designer Tools
+
+The Qt Qml module also provides user facing tools which can increase the productivity
+of designers by helping them with fast prototyping. These tools are:
+
+\list
+    \li \l{qml}
+    \li \l{qmlpreview}
+\endlist
+
+\section1 Internal Tools
+
+Certain utility tools are not intended for direct user interaction.
+Instead, they are all meant to be invoked by the build system,
+augmenting its functionality and capabilities.
+
+\list
+    \li \l {QML type compiler}
+    \li \l {QML script compiler}
+    \li \l {qmltyperegistrar}
+    \li \l {qmlimportscanner}
+\endlist
+
+*/

@@ -12,8 +12,10 @@
 #include "qqmldomastdumper_p.h"
 #include "qqmldomattachedinfo_p.h"
 #include "qqmldomastcreator_p.h"
+#include "qqmldom_utils_p.h"
 
 #include <QtQml/private/qqmljsast_p.h>
+#include <QtQmlCompiler/private/qqmljsutils_p.h>
 
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
@@ -41,7 +43,7 @@ static Q_LOGGING_CATEGORY(creatorLog, "qt.qmldom.astcreator", QtWarningMsg);
 
 #define Q_SCRIPTELEMENT_EXIT_IF(check)            \
     do {                                          \
-        if (m_enableScriptExpressions && check) { \
+        if (m_enableScriptExpressions && (check)) { \
             Q_SCRIPTELEMENT_DISABLE();            \
             return;                               \
         }                                         \
@@ -172,6 +174,10 @@ void QQmlDomAstCreator::removeCurrentScriptNode(std::optional<DomType> expectedT
 /*!
    \internal
    Prepares a script element DOM representation such that it can be used inside a QML DOM element.
+   This recursively sets the pathFromOwner and creates the FileLocations::Tree for all children of
+   element.
+
+   Beware that pathFromOwner is appended to ownerFileLocations when creating the FileLocations!
 
    Make sure to add, for each of its use, a test in tst_qmldomitem:finalizeScriptExpressions, as
    using a wrong pathFromOwner and/or a wrong base might lead to bugs hard to debug and spurious
@@ -179,13 +185,16 @@ void QQmlDomAstCreator::removeCurrentScriptNode(std::optional<DomType> expectedT
  */
 const ScriptElementVariant &
 QQmlDomAstCreator::finalizeScriptExpression(const ScriptElementVariant &element, Path pathFromOwner,
-                                            const FileLocations::Tree &base)
+                                            const FileLocations::Tree &ownerFileLocations)
 {
     auto e = element.base();
     Q_ASSERT(e);
 
+    qCDebug(creatorLog) << "Finalizing script expression with path:"
+                        << ownerFileLocations->canonicalPathForTesting().append(
+                                   pathFromOwner.toString());
     e->updatePathFromOwner(pathFromOwner);
-    e->createFileLocations(base);
+    e->createFileLocations(ownerFileLocations);
     return element;
 }
 
@@ -260,7 +269,7 @@ FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, Path p, AST::Node *n
     return createMap(base, p, n);
 }
 
-QQmlDomAstCreator::QQmlDomAstCreator(MutableDomItem qmlFile)
+QQmlDomAstCreator::QQmlDomAstCreator(const MutableDomItem &qmlFile)
     : qmlFile(qmlFile),
       qmlFilePtr(qmlFile.ownerAs<QmlFile>()),
       rootMap(qmlFilePtr->fileLocationsTree())
@@ -280,17 +289,19 @@ bool QQmlDomAstCreator::visit(UiProgram *program)
     // we hide the component span because the component s written after the imports
     FileLocations::addRegion(rootMap, QString(), combineLocations(program));
     pushEl(p, *cPtr, program);
-    // implicit imports
+
     // add implicit directory import
     if (!fInfo.canonicalPath().isEmpty()) {
         Import selfDirImport(QmlUri::fromDirectoryString(fInfo.canonicalPath()));
         selfDirImport.implicit = true;
         qmlFilePtr->addImport(selfDirImport);
     }
+    // add implicit imports from the environment (QML, QtQml for example)
     for (Import i : qmlFile.environment().ownerAs<DomEnvironment>()->implicitImports()) {
         i.implicit = true;
         qmlFilePtr->addImport(i);
     }
+
     return true;
 }
 
@@ -315,7 +326,11 @@ bool QQmlDomAstCreator::visit(UiPragma *el)
     for (auto t = el->values; t; t = t->next)
         valueList << t->value.toString();
 
-    createMap(DomType::Pragma, qmlFilePtr->addPragma(Pragma(el->name.toString(), valueList)), el);
+    auto fileLocation = createMap(
+            DomType::Pragma, qmlFilePtr->addPragma(Pragma(el->name.toString(), valueList)), el);
+    if (el->colonToken.isValid()) {
+        FileLocations::addRegion(fileLocation, u"colon"_s, el->colonToken);
+    }
     return true;
 }
 
@@ -390,17 +405,24 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
                                  el->propertyToken());
         FileLocations::addRegion(nodeStack.last().fileLocations, u"identifier",
                                  el->identifierToken);
+        FileLocations::addRegion(nodeStack.last().fileLocations, u"colon", el->colonToken);
         if (p.name == u"id")
-            qmlFile.addError(astParseErrors()
+            qmlFile.addError(std::move(astParseErrors()
                                      .warning(tr("id is a special attribute, that should not be "
                                                  "used as property name"))
-                                     .withPath(currentNodeEl().path));
-        if (p.isDefaultMember)
+                                               .withPath(currentNodeEl().path)));
+        if (p.isDefaultMember) {
             FileLocations::addRegion(nodeStack.last().fileLocations, u"default",
                                      el->defaultToken());
-        if (p.isRequired)
+        }
+        if (p.isRequired) {
             FileLocations::addRegion(nodeStack.last().fileLocations, u"required",
                                      el->requiredToken());
+        }
+        if (p.isReadonly) {
+            FileLocations::addRegion(nodeStack.last().fileLocations, u"readonly",
+                                     el->readonlyToken());
+        }
         if (el->statement) {
             BindingType bType = BindingType::Normal;
             SourceLocation loc = combineLocations(el->statement);
@@ -557,6 +579,8 @@ bool QQmlDomAstCreator::visit(AST::FunctionDeclaration *fDef)
                     ScriptExpression::ExpressionType::ArgInitializer, loc);
             param.defaultValue = script;
         }
+        if (args->element->type == AST::PatternElement::SpreadElement)
+            param.isRestElement = true;
         SourceLocation parameterLoc = combineLocations(args->element);
         param.value = std::make_shared<ScriptExpression>(
                 code.mid(parameterLoc.offset, parameterLoc.length), qmlFilePtr->engine(),
@@ -610,7 +634,7 @@ void QQmlDomAstCreator::endVisit(AST::FunctionDeclaration *fDef)
                 auto body = makeScriptElement<ScriptElements::BlockStatement>(fDef->body);
                 body->setStatements(currentScriptNodeEl().takeList());
                 if (auto semanticScope = body->statements().semanticScope())
-                    body->setSemanticScope(*semanticScope);
+                    body->setSemanticScope(semanticScope);
                 m.body->setScriptElement(finalizeScriptExpression(
                         ScriptElementVariant::fromElement(body), bodyPath, bodyTree));
             } else {
@@ -762,11 +786,11 @@ bool QQmlDomAstCreator::visit(AST::UiObjectBinding *el)
     Path bPathFromOwner = current<QmlObject>().addBinding(
             Binding(toString(el->qualifiedId), value, bType), AddOption::KeepExisting, &bPtr);
     if (bPtr->name() == u"id")
-        qmlFile.addError(astParseErrors()
+        qmlFile.addError(std::move(astParseErrors()
                                  .warning(tr("id attributes should only be a lower case letter "
                                              "followed by letters, numbers or underscore, "
                                              "assuming they refer to an id property"))
-                                 .withPath(bPathFromOwner));
+                                           .withPath(bPathFromOwner)));
     pushEl(bPathFromOwner, *bPtr, el);
     FileLocations::addRegion(nodeStack.last().fileLocations, u"colon", el->colonToken);
     loadAnnotations(el);
@@ -827,24 +851,24 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
                     QStringLiteral(uR"([[:lower:]][[:lower:][:upper:]0-9_]*)")));
             auto m = idRe.matchView(iExp->name);
             if (!m.hasMatch()) {
-                qmlFile.addError(
+                qmlFile.addError(std::move(
                         astParseErrors()
                                 .warning(tr("id attributes should only be a lower case letter "
                                             "followed by letters, numbers or underscore, not %1")
                                                  .arg(iExp->name))
-                                .withPath(pathFromOwner));
+                                .withPath(pathFromOwner)));
             }
         } else {
             pathFromOwner =
                     current<QmlObject>().addBinding(bindingV, AddOption::KeepExisting, &bindingPtr);
             Q_ASSERT_X(bindingPtr, className, "binding could not be retrieved");
-            qmlFile.addError(
+            qmlFile.addError(std::move(
                     astParseErrors()
                             .warning(tr("id attributes should only be a lower case letter "
                                         "followed by letters, numbers or underscore, not %1 "
                                         "%2, assuming they refer to a property")
                                              .arg(script->code(), script->astRelocatableDump()))
-                            .withPath(pathFromOwner));
+                            .withPath(pathFromOwner)));
         }
     } else {
         pathFromOwner =
@@ -856,6 +880,7 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
                 FileLocations::ensure(containingObjectEl.fileLocations, pathFromContainingObject);
         FileLocations::addRegion(bindingFileLocation, u"identifier",
                                  el->qualifiedId->identifierToken);
+        FileLocations::addRegion(bindingFileLocation, u"colon", el->colonToken);
         Q_ASSERT_X(bindingPtr, className, "binding could not be retrieved");
     }
     if (bindingPtr)
@@ -925,10 +950,10 @@ bool QQmlDomAstCreator::visit(AST::UiArrayBinding *el)
     Path bindingPathFromOwner =
             current<QmlObject>().addBinding(bindingV, AddOption::KeepExisting, &bindingPtr);
     if (bindingV.name() == u"id")
-        qmlFile.addError(
+        qmlFile.addError(std::move(
                 astParseErrors()
                         .error(tr("id attributes should have only simple strings as values"))
-                        .withPath(bindingPathFromOwner));
+                        .withPath(bindingPathFromOwner)));
     pushEl(bindingPathFromOwner, *bindingPtr, el);
     FileLocations::addRegion(currentNodeEl().fileLocations, u"colon", el->colonToken);
     loadAnnotations(el);
@@ -1111,6 +1136,7 @@ bool QQmlDomAstCreator::visit(AST::UiInlineComponent *el)
     Path p = qmlFilePtr->addComponent(QmlComponent(cName), AddOption::KeepExisting, &compPtr);
     pushEl(p, *compPtr, el);
     FileLocations::addRegion(nodeStack.last().fileLocations, u"component", el->componentToken);
+    FileLocations::addRegion(nodeStack.last().fileLocations, u"identifier", el->identifierToken);
     loadAnnotations(el);
     return true;
 }
@@ -1515,17 +1541,17 @@ void QQmlDomAstCreator::endVisitHelper(
         current->insertChild(Fields::identifier, ScriptElementVariant::fromElement(identifier));
     }
     if (pe->initializer) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::initializer, scriptNodeStack.last().takeVariant());
         scriptNodeStack.removeLast();
     }
     if (pe->typeAnnotation) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::type, scriptNodeStack.last().takeVariant());
         scriptNodeStack.removeLast();
     }
     if (pe->bindingTarget) {
-        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
         current->insertChild(Fields::bindingElement, scriptNodeStack.last().takeVariant());
         scriptNodeStack.removeLast();
     }
@@ -2087,6 +2113,20 @@ void QQmlDomAstCreator::endVisit(AST::ForEachStatement *exp)
     pushScriptElement(current);
 }
 
+
+bool QQmlDomAstCreator::visit(AST::ClassExpression *)
+{
+    // TODO: Add support for js expressions in classes
+    // For now, turning off explicitly to avoid unwanted problems
+    if (m_enableScriptExpressions)
+        Q_SCRIPTELEMENT_DISABLE();
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::ClassExpression *)
+{
+}
+
 static const DomEnvironment *environmentFrom(MutableDomItem &qmlFile)
 {
     auto top = qmlFile.top();
@@ -2117,13 +2157,14 @@ static QStringList qmldirFilesFrom(MutableDomItem &qmlFile)
 }
 
 QQmlDomAstCreatorWithQQmlJSScope::QQmlDomAstCreatorWithQQmlJSScope(MutableDomItem &qmlFile,
-                                                                   QQmlJSLogger *logger)
+                                                                   QQmlJSLogger *logger,
+                                                                   QQmlJSImporter *importer)
     : m_root(QQmlJSScope::create()),
       m_logger(logger),
-      m_importer(importPathsFrom(qmlFile), nullptr, true),
+      m_importer(importer),
       m_implicitImportDirectory(QQmlJSImportVisitor::implicitImportDirectory(
-              m_logger->fileName(), m_importer.resourceFileMapper())),
-      m_scopeCreator(m_root, &m_importer, m_logger, m_implicitImportDirectory,
+              m_logger->fileName(), m_importer->resourceFileMapper())),
+      m_scopeCreator(m_root, m_importer, m_logger, m_implicitImportDirectory,
                      qmldirFilesFrom(qmlFile)),
       m_domCreator(qmlFile)
 {
@@ -2141,10 +2182,9 @@ QQmlDomAstCreatorWithQQmlJSScope::QQmlDomAstCreatorWithQQmlJSScope(MutableDomIte
 QQmlJSASTClassListToVisit
 #undef X
 
-        void
-        QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomAfterEndvisit()
+void QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomAfterEndvisit()
 {
-    QQmlJSScope::Ptr scope = m_scopeCreator.m_currentScope;
+    const QQmlJSScope::ConstPtr scope = m_scopeCreator.m_currentScope;
     if (!m_domCreator.scriptNodeStack.isEmpty()) {
         auto topOfStack = m_domCreator.currentScriptNodeEl();
         switch (topOfStack.kind) {
@@ -2184,7 +2224,7 @@ QQmlJSASTClassListToVisit
 
 void QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomBeforeEndvisit()
 {
-    QQmlJSScope::Ptr scope = m_scopeCreator.m_currentScope;
+    const QQmlJSScope::ConstPtr scope = m_scopeCreator.m_currentScope;
 
     // depending whether the property definition has a binding, the property definition might be
     // either at the last position in the stack or at the position before the last position.
@@ -2221,22 +2261,33 @@ void QQmlDomAstCreatorWithQQmlJSScope::throwRecursionDepthError()
 {
 }
 
-void createDom(MutableDomItem qmlFile, DomCreationOptions options)
+void createDom(MutableDomItem &&qmlFile, DomCreationOptions options)
 {
     if (std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>()) {
         QQmlJSLogger logger; // TODO
         // the logger filename is used to populate the QQmlJSScope filepath.
         logger.setFileName(qmlFile.canonicalFilePath());
+
         if (options.testFlag(DomCreationOption::WithSemanticAnalysis)) {
-            auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(qmlFile, &logger);
+            std::shared_ptr<QQmlJSResourceFileMapper> mapper;
+            if (auto environmentPtr = qmlFile.environment().ownerAs<DomEnvironment>()) {
+                const QStringList resourceFiles =
+                        resourceFilesFromBuildFolders(environmentPtr->loadPaths());
+                mapper = std::make_shared<QQmlJSResourceFileMapper>(
+                        resourceFilesFromBuildFolders(resourceFiles));
+            }
+            auto importer =
+                    std::make_shared<QQmlJSImporter>(importPathsFrom(qmlFile), mapper.get(), true);
+            auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(qmlFile, &logger,
+                                                                        importer.get());
             v->enableScriptExpressions(options.testFlag(DomCreationOption::WithScriptExpressions));
 
             AST::Node::accept(qmlFilePtr->ast(), v.get());
             AstComments::collectComments(qmlFile);
 
-            auto typeResolver = std::make_shared<QQmlJSTypeResolver>(&v->importer());
+            auto typeResolver = std::make_shared<QQmlJSTypeResolver>(importer.get());
             typeResolver->init(&v->scopeCreator(), nullptr);
-            qmlFilePtr->setTypeResolver(typeResolver);
+            qmlFilePtr->setTypeResolverWithDependencies(typeResolver, { importer, mapper });
         } else {
             auto v = std::make_unique<QQmlDomAstCreator>(qmlFile);
             v->enableScriptExpressions(options.testFlag(DomCreationOption::WithScriptExpressions));
