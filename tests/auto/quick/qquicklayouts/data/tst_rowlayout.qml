@@ -1290,6 +1290,78 @@ Item {
         }
 
         Component {
+            id: sizeHintBindingLoopComp
+            Item {
+                id: root
+                anchors.fill: parent
+                property var customWidth: 100
+                RowLayout {
+                    id: col
+                    Item {
+                        id: item
+                        implicitHeight: 80
+                        implicitWidth: Math.max(col2.implicitWidth, root.customWidth + 20)
+                        ColumnLayout {
+                            id: col2
+                            width: parent.width
+                            Item {
+                                id: rect
+                                implicitWidth: root.customWidth
+                                implicitHeight: 80
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function test_sizeHintBindingLoopIssue() {
+            var item = createTemporaryObject(sizeHintBindingLoopComp, container)
+            waitForRendering(item)
+            item.customWidth += 10
+            waitForRendering(item)
+            verify(!BindingLoopDetector.bindingLoopDetected, "Detected binding loop")
+            BindingLoopDetector.reset()
+        }
+
+        Component {
+            id: polishLayoutItemComp
+            Item {
+                anchors.fill: parent
+                implicitHeight: contentLayout.implicitHeight
+                implicitWidth: contentLayout.implicitWidth
+                property alias textLayout: contentLayout
+                RowLayout {
+                    width: parent.width
+                    height: parent.height
+                    ColumnLayout {
+                        id: contentLayout
+                        Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+                        Layout.maximumWidth: 200
+                        Repeater {
+                            model: 2
+                            Text {
+                                Layout.fillWidth: true
+                                text: "This is a long text causing line breaks to show the bug."
+                                wrapMode: Text.Wrap
+                            }
+                        }
+                        Item {
+                            Layout.fillHeight: true
+                        }
+                    }
+                }
+            }
+        }
+
+        function test_polishLayoutItemIssue() {
+            var rootItem = createTemporaryObject(polishLayoutItemComp, container)
+            waitForRendering(rootItem)
+            var textItem = rootItem.textLayout.children[1]
+            verify(textItem.y >= rootItem.textLayout.children[0].height)
+        }
+
+        Component {
             id: rearrangeNestedLayouts_Component
             RowLayout {
                 id: layout
