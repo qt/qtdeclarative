@@ -30,7 +30,7 @@ public:
     static QQuickRenderTargetPrivate *get(QQuickRenderTarget *rt) { return rt->d; }
     static const QQuickRenderTargetPrivate *get(const QQuickRenderTarget *rt) { return rt->d; }
     QQuickRenderTargetPrivate();
-    QQuickRenderTargetPrivate(const QQuickRenderTargetPrivate *other);
+    QQuickRenderTargetPrivate(const QQuickRenderTargetPrivate &other);
     bool resolve(QRhi *rhi, QQuickWindowRenderTarget *dst);
 
     enum class Type {

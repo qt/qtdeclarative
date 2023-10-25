@@ -842,12 +842,12 @@ QQuickGraphicsConfigurationPrivate::QQuickGraphicsConfigurationPrivate()
     pipelineCacheLoadFile = pipelineCacheLoadFileEnv;
 }
 
-QQuickGraphicsConfigurationPrivate::QQuickGraphicsConfigurationPrivate(const QQuickGraphicsConfigurationPrivate *other)
+QQuickGraphicsConfigurationPrivate::QQuickGraphicsConfigurationPrivate(const QQuickGraphicsConfigurationPrivate &other)
     : ref(1),
-      deviceExtensions(other->deviceExtensions),
-      flags(other->flags),
-      pipelineCacheSaveFile(other->pipelineCacheSaveFile),
-      pipelineCacheLoadFile(other->pipelineCacheLoadFile)
+      deviceExtensions(other.deviceExtensions),
+      flags(other.flags),
+      pipelineCacheSaveFile(other.pipelineCacheSaveFile),
+      pipelineCacheLoadFile(other.pipelineCacheLoadFile)
 {
 }
 

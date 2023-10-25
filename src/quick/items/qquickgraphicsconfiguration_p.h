@@ -27,7 +27,7 @@ public:
     static QQuickGraphicsConfigurationPrivate *get(QQuickGraphicsConfiguration *p) { return p->d; }
     static const QQuickGraphicsConfigurationPrivate *get(const QQuickGraphicsConfiguration *p) { return p->d; }
     QQuickGraphicsConfigurationPrivate();
-    QQuickGraphicsConfigurationPrivate(const QQuickGraphicsConfigurationPrivate *other);
+    QQuickGraphicsConfigurationPrivate(const QQuickGraphicsConfigurationPrivate &other);
 
     enum Flag {
         UseDepthBufferFor2D = 0x01,

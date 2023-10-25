@@ -27,7 +27,7 @@ public:
     static QQuickGraphicsDevicePrivate *get(QQuickGraphicsDevice *p) { return p->d; }
     static const QQuickGraphicsDevicePrivate *get(const QQuickGraphicsDevice *p) { return p->d; }
     QQuickGraphicsDevicePrivate();
-    QQuickGraphicsDevicePrivate(const QQuickGraphicsDevicePrivate *other);
+    QQuickGraphicsDevicePrivate(const QQuickGraphicsDevicePrivate &other);
 
     enum class Type {
         Null,
