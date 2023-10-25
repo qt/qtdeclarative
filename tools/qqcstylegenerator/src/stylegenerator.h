@@ -966,6 +966,13 @@ private:
 
     void generateQmlDir()
     {
+        if (!m_bridge->m_overwriteQml) {
+            // If the user doesn't want us to regenerate QML, we shouldn't modify the
+            // qmldir either. This allows the user to tweak it by hand, such
+            // as removing unstyled controls, or set a different fallback style.
+            return;
+        }
+
         debug("Generating qmldir");
         const QString styleName = QFileInfo(m_bridge->m_targetDirectory).fileName();
         const QString version(" 1.0 ");
