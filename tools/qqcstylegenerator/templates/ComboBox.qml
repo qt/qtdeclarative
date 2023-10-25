@@ -30,7 +30,8 @@ T.ComboBox {
         control.popup.visible && "open",
         control.pressed && "pressed"
     ].filter(Boolean).join("_") || "normal"
-    readonly property var config: Config.controls.combobox[__currentState] || {}
+    readonly property var config: (control.editable ? Config.controls.editablecombobox[__currentState] : Config.controls.combobox[__currentState]) || {}
+
 
     delegate: ItemDelegate {
         required property var model
@@ -54,8 +55,13 @@ T.ComboBox {
     contentItem: T.TextField {
         text: control.editable ? control.editText : control.displayText
 
-        implicitWidth: implicitBackgroundWidth + leftInset + rightInset
-                       || contentWidth + leftPadding + rightPadding
+        topPadding: control.config.label_contentItem.topPadding || 0
+        leftPadding: control.config.label_contentItem.leftPadding || 0
+        rightPadding: control.config.label_contentItem.rightPadding || 0
+        bottomPadding: control.config.label_contentItem.bottomPadding || 0
+
+        implicitWidth: (implicitBackgroundWidth + leftInset + rightInset)
+                        || contentWidth + leftPadding + rightPadding
         implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                                  contentHeight + topPadding + bottomPadding)
 
@@ -69,8 +75,12 @@ T.ComboBox {
         color: control.palette.text
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
-        verticalAlignment: control.config.label.textVAlignment
-        horizontalAlignment: control.config.label.textHAlignment
+        horizontalAlignment: control.config.label_text.textHAlignment
+        verticalAlignment: control.config.label_text.textVAlignment
+
+        background: StyleImage {
+            imageConfig: control.config.label_background
+        }
     }
 
     background: StyleImage {

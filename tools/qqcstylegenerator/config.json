@@ -84,14 +84,19 @@
         "name": "ComboBox",
         "page": "Components",
         "component set": "ComboBoxTemplate${Theme}",
+        "contents": ["label", "indicator"],
         "atoms": [
             {"atom": "background", "figmaPath": "Background"},
             {"atom": "contentItem", "figmaPath": "Layout"},
             {"atom": "indicator", "figmaPath": "Indicator"},
-            {"atom": "label", "figmaPath": "Label"}
+            {"atom": "label", "figmaPath": "TextFieldLayout", "export": "geometry"},
+            {"atom": "label-background", "figmaPath": "TextFieldBackground"},
+            {"atom": "label-contentItem", "figmaPath": "TextFieldLayout", "export": "layout"},
+            {"atom": "label-text", "figmaPath": "TextFieldLayout, Label", "export": "text"}
         ],
         "states": [
             {"state": "disabled", "figmaState": "disabled"},
+            {"state": "focused", "figmaState": "focused"},
             {"state": "hovered", "figmaState": "hovered"},
             {"state": "hovered-open", "figmaState": "openedHovered"},
             {"state": "normal", "figmaState": "normal"},
@@ -110,6 +115,31 @@
         ],
         "states": [
             {"state": "disabled", "figmaState": "disabled"},
+            {"state": "hovered", "figmaState": "hovered"},
+            {"state": "hovered-open", "figmaState": "openedHovered"},
+            {"state": "normal", "figmaState": "normal"},
+            {"state": "open", "figmaState": "opened"},
+            {"state": "open-pressed", "figmaState": "openedPressed"},
+            {"state": "pressed", "figmaState": "pressed"}
+        ]
+    },
+    {
+        "name": "EditableComboBox",
+        "page": "Components",
+        "component set": "EditableComboBoxTemplate${Theme}",
+        "contents": ["label", "indicator"],
+        "atoms": [
+            {"atom": "background", "figmaPath": "Background"},
+            {"atom": "contentItem", "figmaPath": "Layout"},
+            {"atom": "indicator", "figmaPath": "Indicator"},
+            {"atom": "label", "figmaPath": "TextFieldLayout", "export": "geometry"},
+            {"atom": "label-background", "figmaPath": "TextFieldBackground"},
+            {"atom": "label-contentItem", "figmaPath": "TextFieldLayout", "export": "layout"},
+            {"atom": "label-text", "figmaPath": "TextFieldLayout, Label", "export": "text"}
+        ],
+        "states": [
+            {"state": "disabled", "figmaState": "disabled"},
+            {"state": "focused", "figmaState": "focused"},
             {"state": "hovered", "figmaState": "hovered"},
             {"state": "hovered-open", "figmaState": "openedHovered"},
             {"state": "normal", "figmaState": "normal"},
