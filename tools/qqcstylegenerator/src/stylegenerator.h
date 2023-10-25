@@ -78,6 +78,8 @@ public:
             if (!m_abort)
                 downloadFigmaDocument();
             if (!m_abort)
+                resolveGlobalConfig();
+            if (!m_abort)
                 copyFiles();
             if (!m_abort)
                 generateControls();
@@ -144,6 +146,27 @@ private:
             throw RestCallException(QStringLiteral("Could not download design file from Figma! ")
                 + "Please check that your Figma token is valid and that the file ID '" + m_bridge->m_fileId
                 + "' is correct! (error message: " + networkErrorString(reply) + ")");
+        }
+    }
+
+    void resolveGlobalConfig()
+    {
+        const QJsonArray themesArray = m_inputConfig.value("themes").toArray();
+        if (themesArray.isEmpty())
+            throw std::runtime_error("The input config needs to list at least one theme!");
+        for (const QJsonValue &themeValue : themesArray)
+            m_themes.append(themeValue.toString());
+
+        const QJsonArray imageFormats = m_inputConfig.value("image formats").toArray();
+        for (const QJsonValue &formatValue : imageFormats)
+            m_imageFormats.append(formatValue.toString());
+
+        const QJsonArray exportArray = m_inputConfig.value("default export").toArray();
+        for (const QJsonValue &exportValue : exportArray) {
+            const QJsonObject exportObj = exportValue.toObject();
+            const QString atom = getString("atom", exportObj);
+            const QStringList exportList = getStringList("export", exportObj, true);
+            m_defaultExport[atom] = exportList;
         }
     }
 
@@ -357,24 +380,6 @@ private:
         const QJsonArray defaultControls = getArray("default controls", m_inputConfig);
         progressTo(controlsArray.count() + defaultControls.count());
 
-        const QJsonArray themesArray = m_inputConfig.value("themes").toArray();
-        if (themesArray.isEmpty())
-            throw std::runtime_error("The input config needs to list at least one theme!");
-        for (const QJsonValue &themeValue : themesArray)
-            m_themes.append(themeValue.toString());
-
-        const QJsonArray imageFormats = m_inputConfig.value("image formats").toArray();
-        for (const QJsonValue &formatValue : imageFormats)
-            m_imageFormats.append(formatValue.toString());
-
-        const QJsonArray exportArray = m_inputConfig.value("default export").toArray();
-        for (const QJsonValue &exportValue : exportArray) {
-            const QJsonObject exportObj = exportValue.toObject();
-            const QString atom = getString("atom", exportObj);
-            const QStringList exportList = getStringList("export", exportObj, true);
-            m_defaultExport[atom] = exportList;
-        }
-
         QRegularExpression re(m_bridge->m_controlToGenerate);
         for (const auto controlValue: defaultControls) {
             progress();
@@ -437,30 +442,10 @@ private:
         // Get the json object that describes the control in the Figma file
         const auto controlName = getString("name", controlObj);
         const auto componentSetName = getThemeString("component set", controlObj);
-        const auto documentRoot = getObject("document", m_document.object());
         const auto configStatesArray = getArray("states", controlObj);
 
-        // Each control in the config file can optionally specify a page
-        // where the component set should be found. If not set, we
-        // search the whole document.
-        QJsonObject searchRoot;
-        const auto pageName = controlObj["page"].toString();
-        if (!pageName.isEmpty() && pageName == m_cachedPageName) {
-            searchRoot = m_cachedPage;
-        } else if (!pageName.isEmpty()) {
-            try {
-                m_cachedPage = JsonTools::findChild({"type", "CANVAS", "name", pageName}, documentRoot, m_bridge->m_sanity);
-            } catch (std::exception &e) {
-                Q_UNUSED(e);
-                throw std::runtime_error("Could not find page in Figma: " + pageName.toStdString());
-            }
-            m_cachedPageName = pageName;
-            searchRoot = m_cachedPage;
-        } else {
-            searchRoot = documentRoot;
-        }
-
-        const QJsonObject componentSet = JsonTools::findChild({"type", "COMPONENT_SET", "name", componentSetName}, searchRoot, m_bridge->m_sanity);
+        const QJsonObject searchRoot = getComponentSearchRoot(controlObj);
+        const QJsonObject componentSet = getComponentSet(searchRoot, componentSetName);
         const QString componentSetId = JsonTools::getString("id", componentSet);
         const QString componentSetPath = JsonTools::resolvedPath(componentSetId);
         debug("using component set: " + componentSetPath);
@@ -793,6 +778,36 @@ private:
 
         outputConfig.insert("layoutMode", atom["layoutMode"]);
         outputConfig.insert("alignItems", atom["primaryAxisAlignItems"]);
+    }
+
+    const QJsonObject getComponentSearchRoot(const QJsonObject &configObj) const
+    {
+        // Each control in the config file can optionally specify a page
+        // where the component set should be found. If not set, we
+        // return the document root.
+        auto self = const_cast<StyleGenerator *>(this);
+        const auto pageName = configObj["page"].toString();
+        if (!pageName.isEmpty() && pageName == m_cachedPageName) {
+            return m_cachedPage;
+        } else if (!pageName.isEmpty()) {
+            try {
+                const auto documentRoot = getObject("document", m_document.object());
+                self->m_cachedPage = JsonTools::findChild({"type", "CANVAS", "name", pageName}, documentRoot, m_bridge->m_sanity);
+            } catch (std::exception &e) {
+                Q_UNUSED(e);
+                throw std::runtime_error("Could not find page in Figma: " + pageName.toStdString());
+            }
+            self->m_cachedPageName = pageName;
+            return m_cachedPage;
+        }
+
+        const auto documentRoot = getObject("document", m_document.object());
+        return documentRoot;
+    }
+
+    const QJsonObject getComponentSet(const QJsonObject &searchRoot, const QString &componentSetName)
+    {
+        return JsonTools::findChild({"type", "COMPONENT_SET", "name", componentSetName}, searchRoot, m_bridge->m_sanity);
     }
 
     BorderImageOffset getBorderImageOffset(const QJsonObject &obj)
