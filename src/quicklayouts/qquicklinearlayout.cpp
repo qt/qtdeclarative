@@ -457,10 +457,6 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
         return;
     }
 
-    // Should normally not be needed, but there might be an incoming window resize event that we
-    // will process before we process updatePolish()
-    ensureLayoutItemsUpdated(QQuickLayout::ApplySizeHints | QQuickLayout::Recursive);
-
     d->m_rearranging = true;
     qCDebug(lcQuickLayouts) << objectName() << "QQuickGridLayoutBase::rearrange()" << size;
     Qt::LayoutDirection visualDir = effectiveLayoutDirection();
@@ -479,9 +475,14 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
     d->engine.setGeometries(QRectF(QPointF(0,0), size), d->styleInfo);
     d->m_rearranging = false;
 
-    for (QQuickItem *invalid : std::as_const(d->m_invalidateAfterRearrange))
-        invalidate(invalid);
-    d->m_invalidateAfterRearrange.clear();
+    if (d->m_invalidateAfterRearrange.size() > 0) {
+        for (QQuickItem *invalid : std::as_const(d->m_invalidateAfterRearrange)) {
+            if (QQuickGridLayoutItem *layoutItem = d->engine.findLayoutItem(invalid))
+                layoutItem->invalidate();
+        }
+        invalidate();
+        d->m_invalidateAfterRearrange.clear();
+    }
 }
 
 /**********************************
