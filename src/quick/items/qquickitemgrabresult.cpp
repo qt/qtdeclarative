@@ -14,10 +14,12 @@
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlInfo>
 
-#include <private/qquickpixmapcache_p.h>
+#include <private/qquickpixmap_p.h>
 #include <private/qquickitem_p.h>
 #include <private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
+
+#include <QtCore/qpointer.h>
 
 QT_BEGIN_NAMESPACE
 

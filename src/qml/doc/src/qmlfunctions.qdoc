@@ -9,14 +9,24 @@
   class or namespace name as the QML element name.
 
   For example, this makes the C++ class \c Slider available as a QML type
-  named \c Slider.
+  named \c Slider. All its properties, invokable methods and enums are exposed.
 
   \code
   class Slider : public QObject
   {
       Q_OBJECT
       QML_ELEMENT
-      ...
+      Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged FINAL)
+      // ...
+  public:
+      enum Slippiness {
+          Dry, Wet, Icy
+      };
+      Q_ENUM(Slippiness)
+
+      Q_INVOKABLE void slide(Slippiness slippiness);
+
+      // ...
   }
   \endcode
 
@@ -46,12 +56,34 @@
   import com.mycompany.qmlcomponents 1.0
 
   Slider {
+      value: 12
+      Component.onCompleted: slide(Slider.Icy)
+
       // ...
   }
   \endqml
 
   You can also make namespaces tagged with Q_NAMESPACE available this way, in
-  order to expose any enums tagged with Q_ENUM_NS they contain.
+  order to expose any enums tagged with Q_ENUM_NS they contain:
+
+  \code
+  namespace MyNamespace {
+    Q_NAMESPACE
+    QML_ELEMENT
+
+    enum MyEnum {
+        Key1,
+        Key2,
+    };
+    Q_ENUM_NS(MyEnum)
+  }
+  \endcode
+
+  In QML, you can then use the enums:
+
+  \qml
+  Component.onCompleted: console.log(MyNamespace.Key2)
+  \endqml
 
   \b{NOTE:} When classes have the same name but are located in different namespaces using
   \l QML_ELEMENT on both of them will cause a conflict.
@@ -60,7 +92,7 @@
   \include {qualified-class-name.qdocinc} {class name must be qualified}
 
   \sa {Choosing the Correct Integration Method Between C++ and QML}, QML_NAMED_ELEMENT(),
-      Q_REVISION(), QML_ADDED_IN_MINOR_VERSION()
+      Q_REVISION(), QML_ADDED_IN_VERSION()
 */
 
 /*!
@@ -308,13 +340,33 @@
 */
 
 /*!
+  \macro QML_ADDED_IN_VERSION(MAJOR, MINOR)
+  \relates QQmlEngine
+
+  Declares that the enclosing type or namespace was added in the specified
+  \a{MAJOR}.\a{MINOR} version. The version is assumed to be in line with any
+  revisions given by \l Q_REVISION() macros on methods, slots, or signals,
+  and any REVISION() attributes on properties declared with \l Q_PROPERTY().
+
+  \l QML_ADDED_IN_VERSION() only takes effect if the type or namespace is
+  available in QML, by having a \l QML_ELEMENT, \l QML_NAMED_ELEMENT(),
+  \l QML_ANONYMOUS, or \l QML_INTERFACE macro.
+
+  If the QML module the type belongs to is imported with a lower version than
+  the one determined this way, the QML type is invisible.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT
+*/
+
+/*!
   \macro QML_ADDED_IN_MINOR_VERSION(VERSION)
   \relates QQmlEngine
+  \deprecated [6.7] Use QML_ADDED_IN_VERSION and specify the full version
 
   Declares that the enclosing type or namespace was added in the specified minor
   \a VERSION, relative to the module major version. The minor version is assumed
   to be in line with any revisions given by \l Q_REVISION() macros on methods,
-  slots, or signals, and any REVISION tags on properties declared with
+  slots, or signals, and any REVISION() attributes on properties declared with
   \l Q_PROPERTY().
 
   \l QML_ADDED_IN_MINOR_VERSION() only takes effect if the type or namespace is
@@ -324,17 +376,37 @@
   If the QML module the type belongs to is imported with a lower version than
   the one determined this way, the QML type is invisible.
 
-  \sa QML_ELEMENT, QML_NAMED_ELEMENT()
+  \sa QML_ADDED_IN_VERSION, QML_ELEMENT, QML_NAMED_ELEMENT
+*/
+
+/*!
+  \macro QML_REMOVED_IN_VERSION(MAJOR, MINOR)
+  \relates QQmlEngine
+
+  Declares that the enclosing type or namespace was removed in the specified
+  \a{MAJOR}.\a{MINOR} version. This is primarily useful when replacing the
+  implementation of a QML type. If a corresponding \l QML_ADDED_IN_VERSION()
+  is present on a different type or namespace of the same QML name, then the
+  removed type is used when importing versions of the module lower than
+  \a{MAJOR}.\a{MINOR}, and the added type is used when importing
+  versions of the module greater or equal \a{MAJOR}.\a{MINOR}.
+
+  \l QML_REMOVED_IN_VERSION() only takes effect if type or namespace is
+  available in QML, by having a \l QML_ELEMENT, \l QML_NAMED_ELEMENT(),
+  \l QML_ANONYMOUS, or \l QML_INTERFACE macro.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT
 */
 
 /*!
   \macro QML_REMOVED_IN_MINOR_VERSION(VERSION)
   \relates QQmlEngine
+  \deprecated [6.7] Use QML_REMOVED_IN_VERSION and specify the full version
 
   Declares that the enclosing type or namespace was removed in the specified
   minor \a VERSION, relative to the module major version. This is primarily
   useful when replacing the implementation of a QML type. If a corresponding
-  \l QML_ADDED_IN_MINOR_VERSION() is present on a different type or namespace of
+  \l QML_ADDED_IN_VERSION() is present on a different type or namespace of
   the same QML name, then the removed type is used when importing versions of
   the module lower than \a VERSION, and the added type is used when importing
   versions of the module greater or equal \a VERSION.
@@ -343,7 +415,7 @@
   available in QML, by having a \l QML_ELEMENT, \l QML_NAMED_ELEMENT(),
   \l QML_ANONYMOUS, or \l QML_INTERFACE macro.
 
-  \sa QML_ELEMENT, QML_NAMED_ELEMENT()
+  \sa QML_REMOVED_IN_VERSION, QML_ELEMENT, QML_NAMED_ELEMENT
 */
 
 /*!
@@ -368,7 +440,7 @@
   \note Keeping multiple \l{PAST_MAJOR_VERSIONS} around is computationally
         expensive.
 
-  \sa QML_ELEMENT, QML_ADDED_IN_MINOR_VERSION
+  \sa QML_ELEMENT, QML_ADDED_IN_VERSION
 */
 
 /*!
@@ -454,6 +526,7 @@
 
   Declares that any \l QML_ELEMENT, \l QML_NAMED_ELEMENT(), \l QML_ANONYMOUS,
   \l QML_INTERFACE, \l QML_UNCREATABLE(), \l QML_SINGLETON,
+  \l QML_ADDED_IN_VERSION(), \l QML_REMOVED_IN_VERSION(),
   \l QML_ADDED_IN_MINOR_VERSION(), \l QML_REMOVED_IN_MINOR_VERSION(),
   \l QML_ATTACHED(), \l QML_EXTENDED(), or \l  QML_EXTENDED_NAMESPACE() macros
   in the enclosing C++ type do not apply to the enclosing type but instead to
@@ -465,9 +538,10 @@
   for example because they belong to 3rdparty libraries.
   To register a namespace, see \l QML_FOREIGN_NAMESPACE().
 
-  \b{NOTE:} You may want to use \l QML_NAMED_ELEMENT() instead of \l QML_ELEMENT due to the fact that
-  the element will be named like the struct it is contained in, not the foreign type.
-  See the \l {Extension Objects} for an example.
+  \note You may want to use \l QML_NAMED_ELEMENT() instead of \l QML_ELEMENT.
+  With QML_ELEMENT, the element is named after the struct it is contained in,
+  not the foreign type. The \l {Foreign objects integration} chapter in
+  \l {Writing advanced QML Extensions with C++} demonstrates this.
 
   \include {qualified-class-name.qdocinc} {class name must be qualified}
 
@@ -480,6 +554,7 @@
 
   Declares that any \l QML_ELEMENT, \l QML_NAMED_ELEMENT(), \l QML_ANONYMOUS,
   \l QML_INTERFACE, \l QML_UNCREATABLE(), \l QML_SINGLETON,
+  \l QML_ADDED_IN_VERSION(), \l QML_REMOVED_IN_VERSION(),
   \l QML_ADDED_IN_MINOR_VERSION(), or \l QML_REMOVED_IN_MINOR_VERSION()
   macros in the enclosing C++ namespace do not apply to the enclosing type but
   instead to \a FOREIGN_NAMESPACE. The enclosing namespace still needs to be
@@ -792,7 +867,7 @@
         Key1,
         Key2,
     };
-    Q_ENUM(MyEnum)
+    Q_ENUM_NS(MyEnum)
   }
 
   //...
@@ -979,7 +1054,7 @@
 */
 
 /*!
-   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, QJSValue (*callback)(QQmlEngine *, QJSEngine *))
+   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, std::function<QJSValue(QQmlEngine *, QJSEngine *)> callback)
    \relates QQmlEngine
 
    This function may be used to register a singleton type provider \a callback in a particular \a uri
@@ -1070,7 +1145,7 @@
 */
 
 /*!
-   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, QObject *(*callback)(QQmlEngine *, QJSEngine *))
+   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, std::function<QObject*(QQmlEngine *, QJSEngine *)> callback)
    \relates QQmlEngine
 
    This function may be used to register a singleton type provider \a callback in a particular \a uri
@@ -1160,15 +1235,6 @@
    \endqml
 
    \sa QML_SINGLETON, {Choosing the Correct Integration Method Between C++ and QML}
-*/
-
-
-/*!
-   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, std::function<QObject*(QQmlEngine *, QJSEngine *)> callback)
-   \relates QQmlEngine
-
-   \overload qmlRegisterSingletonType
-   \since 5.14
 */
 
 /*!
@@ -1415,7 +1481,7 @@
 
 /*!
   \macro QML_CONSTRUCTIBLE_VALUE
-  \internal
+  \since 6.5
   \relates QQmlEngine
 
   Marks the surrounding value type as constructible. That is, any \l Q_INVOKABLE
@@ -1445,12 +1511,35 @@
   }
   \endqml
 
+  You can also construct lists of values this way:
+
+  \qml
+  QtObject {
+      property list<myValueType> v: [5.4, 4.5, 3.3]
+  }
+  \endqml
+
+  If you make value types \l{ValueTypeBehavior}{addressable}, you can
+  use such a type in a \l{Type annotations and assertions}{type assertion}
+  to explicitly construct it:
+
+  \qml
+  pragma ValueTypeBehavior: Addressable
+
+  QtObject {
+      function process(d: real) {
+          let v = d as myValueType;
+          // v is a myValueType now, not a number
+      }
+  }
+  \endqml
+
   \sa QML_VALUE_TYPE
 */
 
 /*!
   \macro QML_STRUCTURED_VALUE
-  \internal
+  \since 6.5
   \relates QQmlEngine
 
   Marks the surrounding value type as structured. Structured value types can
@@ -1484,6 +1573,32 @@
 
   The extra parentheses are necessary to disambiguate the JavaScript object
   from what might be interpreted as a JavaScript code block.
+
+  You can also construct lists of values this way:
+
+  \qml
+  QtObject {
+      property list<myValueType> v: [
+          {d: 4.4, e: "a string"},
+          {d: 7.1, e: "another string"}
+      ]
+  }
+  \endqml
+
+  If you make value types \l{ValueTypeBehavior}{addressable}, you can
+  use such a type in a \l{Type annotations and assertions}{type assertion}
+  to explicitly construct it:
+
+  \qml
+  pragma ValueTypeBehavior: Addressable
+
+  QtObject {
+      function process(d: real) {
+          let v = {d: d, e: objectName} as myValueType;
+          // v is a myValueType now
+      }
+  }
+  \endqml
 
   \sa QML_VALUE_TYPE QML_CONSTRUCTIBLE_VALUE
 */

@@ -7,6 +7,7 @@
     \brief This is a collection of QML model-view examples.
     \image qml-modelviews-example.png
     \ingroup qtquickexamples
+    \examplecategory {Graphics & Multimedia}
 
     \e Views is a collection of small QML examples relating to model and view
     functionality. They demonstrate how to show data from a model using the

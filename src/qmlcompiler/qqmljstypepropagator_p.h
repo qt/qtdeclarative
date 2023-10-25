@@ -101,9 +101,9 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypePropagator : public QQmlJSCompileP
     void generate_PopScriptContext() override;
     void generate_PopContext() override;
     void generate_GetIterator(int iterator) override;
-    void generate_IteratorNext(int value, int done) override;
-    void generate_IteratorNextForYieldStar(int iterator, int object) override;
-    void generate_IteratorClose(int done) override;
+    void generate_IteratorNext(int value, int offset) override;
+    void generate_IteratorNextForYieldStar(int iterator, int object, int offset) override;
+    void generate_IteratorClose() override;
     void generate_DestructureRestElement() override;
     void generate_DeleteProperty(int base, int index) override;
     void generate_DeleteName(int name) override;
@@ -215,7 +215,8 @@ private:
     bool propagateTranslationMethod(const QList<QQmlJSMetaMethod> &methods, int argc, int argv);
     void propagateStringArgCall(int argv);
     bool propagateArrayMethod(const QString &name, int argc, int argv, const QQmlJSRegisterContent &valueType);
-    void propagatePropertyLookup(const QString &name);
+    void propagatePropertyLookup(
+            const QString &name, int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex);
     void propagateScopeLookupCall(const QString &functionName, int argc, int argv);
     void saveRegisterStateForJump(int offset);
     bool canConvertFromTo(const QQmlJSRegisterContent &from, const QQmlJSRegisterContent &to);

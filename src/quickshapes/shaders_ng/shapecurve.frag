@@ -1,19 +1,14 @@
 #version 440
 
 layout(location = 0) in vec4 qt_TexCoord;
-layout(location = 1) in vec4 debugColor;
+layout(location = 1) in vec4 gradient;
 
 #if defined(LINEARGRADIENT)
 layout(location = 2) in float gradTabIndex;
-#  define NEXT_LOCATION 3
 #elif defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
 layout(location = 2) in vec2 coord;
-#  define NEXT_LOCATION 3
-#else
-#  define NEXT_LOCATION 2
 #endif
 
-layout(location = NEXT_LOCATION) in vec4 gradient;
 
 layout(location = 0) out vec4 fragColor;
 
@@ -21,7 +16,7 @@ layout(std140, binding = 0) uniform buf {
     mat4 qt_Matrix;
     float matrixScale;
     float opacity;
-    float reserved2;
+    float debug;
     float reserved3;
 
 #if defined(STROKE)
@@ -133,6 +128,13 @@ void main()
     float df = length(vec2(dfx, dfy));
 #endif
 
+    float isLine = 1.0 - abs(qt_TexCoord.z);
+    float isCurve = 1.0 - isLine;
+    float debugR = isCurve * min(1.0, 1.0 - qt_TexCoord.z);
+    float debugG = isLine;
+    float debugB = isCurve * min(1.0, 1.0 - qt_TexCoord.z * -1.0) + debugG;
+    vec3 debugColor = vec3(debugR, debugG, debugB);
+
 #if defined(STROKE)
     float distance = (f / df); // distance from centre of fragment to line
 
@@ -148,8 +150,12 @@ void main()
     vec4 combined = fill * (1.0 - stroke.a) +  stroke * stroke.a;
 
     // finally mix in debug
-    fragColor = mix(combined, vec4(debugColor.rgb, 1.0), debugColor.a) * ubuf.opacity;
+    fragColor = mix(combined, vec4(debugColor, 1.0), ubuf.debug) * ubuf.opacity;
 #else
-    fragColor = mix(baseColor() * clamp(0.5 + f / df, 0.0, 1.0), vec4(debugColor.rgb, 1.0), debugColor.a) * ubuf.opacity;
+    // Special case: mask out concave curve in "negative space".
+    int specialCaseMask = 1 - int(qt_TexCoord.w != 0.0) * (int(qt_TexCoord.x < 0.0) +  int(qt_TexCoord.x > 1.0));
+    float fillCoverage = clamp(0.5 + f / df, 0.0, 1.0) * float(specialCaseMask);
+
+    fragColor = mix(baseColor() * fillCoverage, vec4(debugColor, 1.0), ubuf.debug) * ubuf.opacity;
 #endif
 }

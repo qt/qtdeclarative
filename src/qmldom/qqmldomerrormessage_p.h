@@ -99,9 +99,9 @@ class QMLDOM_EXPORT ErrorMessage { // reuse Some of the other DiagnosticMessages
 public:
     using Level = ErrorLevel;
     // error registry (usage is optional)
-    static QLatin1String msg(const char *errorId, ErrorMessage err);
-    static QLatin1String msg(QLatin1String errorId, ErrorMessage err);
-    static void visitRegisteredMessages(function_ref<bool(ErrorMessage)> visitor);
+    static QLatin1String msg(const char *errorId, ErrorMessage &&err);
+    static QLatin1String msg(QLatin1String errorId, ErrorMessage &&err);
+    static void visitRegisteredMessages(function_ref<bool (const ErrorMessage &)> visitor);
     [[nodiscard]] static ErrorMessage load(QLatin1String errorId);
     [[nodiscard]] static ErrorMessage load(const char *errorId);
     template<typename... T>
@@ -119,7 +119,7 @@ public:
     [[nodiscard]] ErrorMessage &withFile(QString);
     [[nodiscard]] ErrorMessage &withFile(QStringView);
     [[nodiscard]] ErrorMessage &withLocation(SourceLocation);
-    [[nodiscard]] ErrorMessage &withItem(DomItem);
+    [[nodiscard]] ErrorMessage &withItem(const DomItem &);
 
     ErrorMessage handle(const ErrorHandler &errorHandler=nullptr);
 

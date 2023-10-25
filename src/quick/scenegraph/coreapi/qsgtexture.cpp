@@ -35,6 +35,8 @@ Q_GLOBAL_STATIC(QMutex, qsg_valid_texture_mutex)
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcQsgLeak)
+
 bool operator==(const QSGSamplerDescription &a, const QSGSamplerDescription &b) noexcept
 {
     return a.filtering == b.filtering
@@ -117,7 +119,7 @@ static QHash<QSGTexture*, SGTextureTraceItem*> qt_debug_allocated_textures;
 
 inline static void qt_debug_print_texture_count()
 {
-    qDebug("Number of leaked textures: %i", qt_debug_texture_count);
+    qCDebug(lcQsgLeak, "Number of leaked textures: %i", qt_debug_texture_count);
     qt_debug_texture_count = -1;
 
 #if defined(CAN_BACKTRACE_EXECINFO)
@@ -303,7 +305,7 @@ QSGTexture::QSGTexture()
     : QObject(*(new QSGTexturePrivate(this)))
 {
 #ifndef QT_NO_DEBUG
-    if (_q_sg_leak_check)
+    if (lcQsgLeak().isDebugEnabled())
         qt_debug_add_texture(this);
 
     QMutexLocker locker(qsg_valid_texture_mutex());
@@ -318,7 +320,7 @@ QSGTexture::QSGTexture(QSGTexturePrivate &dd)
     : QObject(dd)
 {
 #ifndef QT_NO_DEBUG
-    if (_q_sg_leak_check)
+    if (lcQsgLeak().isDebugEnabled())
         qt_debug_add_texture(this);
 
     QMutexLocker locker(qsg_valid_texture_mutex());
@@ -332,7 +334,7 @@ QSGTexture::QSGTexture(QSGTexturePrivate &dd)
 QSGTexture::~QSGTexture()
 {
 #ifndef QT_NO_DEBUG
-    if (_q_sg_leak_check)
+    if (lcQsgLeak().isDebugEnabled())
         qt_debug_remove_texture(this);
 
     QMutexLocker locker(qsg_valid_texture_mutex());
@@ -880,7 +882,7 @@ QT_DEFINE_NATIVE_INTERFACE(QSGD3D12Texture);
     \sa QQuickWindow::sceneGraphInitialized(), QSGTexture,
     {Scene Graph - Metal Texture Import}, {Scene Graph - Vulkan Texture Import}
 
-    \since 6.0
+    \since 6.6
  */
 QSGTexture *QSGD3D12Texture::fromNative(void *texture,
                                         int resourceState,

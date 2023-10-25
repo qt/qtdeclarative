@@ -4,6 +4,8 @@
 #include "qsharedimageloader_p.h"
 #include <private/qobject_p.h>
 #include <private/qimage_p.h>
+
+#include <QtCore/qpointer.h>
 #include <QSharedMemory>
 
 #include <memory>

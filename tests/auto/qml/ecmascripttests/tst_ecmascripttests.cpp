@@ -40,7 +40,7 @@ static inline bool isNoise(QByteArrayView name)
 #ifdef QT_V4_WANT_ES262_WARNINGS
     return false;
 #else
-    const QByteArrayView noisy("qt.qml.compiler");
+    const QByteArrayView noisy("qt.qml.usedbeforedeclared");
     return name.startsWith(noisy) && (name.size() <= noisy.size() || name[noisy.size()] == '.');
 #endif
 }
@@ -59,7 +59,7 @@ void tst_EcmaScriptTests::filterCategories(QLoggingCategory *category)
 void tst_EcmaScriptTests::initTestCase()
 {
     QQmlDataTest::initTestCase();
-    /* Suppress lcQmlCompiler's "qt.qml.compiler" warnings; we aren't in a
+    /* Suppress lcQmlCompiler's "qt.qml.usedbeforedeclared" warnings; we aren't in a
        position to fix test262's many warnings and they flood messages so we
        didn't get to see actual failures unless we passed -maxwarnings with a
        huge value on the command-line (resulting in huge log output).

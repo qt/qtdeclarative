@@ -7,6 +7,7 @@
 #include <QQuickItem>
 #include <QVector2D>
 
+//![item]
 class CustomRender : public QQuickItem
 {
     Q_OBJECT
@@ -16,11 +17,10 @@ class CustomRender : public QQuickItem
 public:
     explicit CustomRender(QQuickItem *parent = nullptr);
 
-    const QList<QVector2D> &vertices() const;
+    QList<QVector2D> vertices() const;
     void setVertices(const QList<QVector2D> &newVertices);
 
 signals:
-
     void verticesChanged();
 
 protected:
@@ -29,5 +29,6 @@ protected:
 private:
     QList<QVector2D> m_vertices;
 };
+//![item]
 
 #endif // CUSTOMRENDER_H

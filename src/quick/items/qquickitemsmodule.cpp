@@ -93,22 +93,11 @@ QT_END_NAMESPACE
 
 static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject *parent)
 {
-    // When setting a parent (especially during dynamic object creation) in QML,
-    // also try to set up the analogous item/window relationship.
     if (QQuickItem *parentItem = qmlobject_cast<QQuickItem *>(parent)) {
-        QQuickItem *item = qmlobject_cast<QQuickItem *>(obj);
-        if (item) {
+        if (QQuickItem *item = qmlobject_cast<QQuickItem *>(obj)) {
             // An Item has another Item
             item->setParentItem(parentItem);
             return QQmlPrivate::Parented;
-        } else if (parentItem->window()) {
-            QQuickWindow *win = qmlobject_cast<QQuickWindow *>(obj);
-            if (win) {
-                // A Window inside an Item should be transient for that item's window
-                qCDebug(lcTransient) << win << "is transient for" << parentItem->window();
-                win->setTransientParent(parentItem->window());
-                return QQmlPrivate::Parented;
-            }
         } else if (QQuickPointerHandler *handler = qmlobject_cast<QQuickPointerHandler *>(obj)) {
             QQuickItemPrivate::get(parentItem)->addPointerHandler(handler);
             handler->setParent(parent);
@@ -116,13 +105,7 @@ static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject
         }
         return QQmlPrivate::IncompatibleObject;
     } else if (QQuickWindow *parentWindow = qmlobject_cast<QQuickWindow *>(parent)) {
-        QQuickWindow *win = qmlobject_cast<QQuickWindow *>(obj);
-        if (win) {
-            // A Window inside a Window should be transient for it
-            qCDebug(lcTransient) << win << "is transient for" << parentWindow;
-            win->setTransientParent(parentWindow);
-            return QQmlPrivate::Parented;
-        } else if (QQuickItem *item = qmlobject_cast<QQuickItem *>(obj)) {
+        if (QQuickItem *item = qmlobject_cast<QQuickItem *>(obj)) {
             // The parent of an Item inside a Window is actually the implicit content Item
             item->setParentItem(parentWindow->contentItem());
             return QQmlPrivate::Parented;

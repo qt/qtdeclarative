@@ -7,7 +7,7 @@
 #include "qquicktextdocument_p.h"
 #include "qquickevents_p_p.h"
 #include "qquickwindow.h"
-#include "qquicktextnode_p.h"
+#include "qsginternaltextnode_p.h"
 #include "qquicktextnodeengine_p.h"
 
 #include <QtCore/qmath.h>
@@ -107,7 +107,7 @@ namespace {
         RootNode() : cursorNode(nullptr), frameDecorationsNode(nullptr)
         { }
 
-        void resetFrameDecorations(QQuickTextNode* newNode)
+        void resetFrameDecorations(QSGInternalTextNode* newNode)
         {
             if (frameDecorationsNode) {
                 removeChildNode(frameDecorationsNode);
@@ -130,7 +130,7 @@ namespace {
         }
 
         QSGInternalRectangleNode *cursorNode;
-        QQuickTextNode* frameDecorationsNode;
+        QSGInternalTextNode* frameDecorationsNode;
 
     };
 }
@@ -2064,7 +2064,7 @@ static inline bool operator<(const TextNode &n1, const TextNode &n2)
     return n1.startPos() < n2.startPos();
 }
 
-static inline void updateNodeTransform(QQuickTextNode* node, const QPointF &topLeft)
+static inline void updateNodeTransform(QSGInternalTextNode *node, const QPointF &topLeft)
 {
     QMatrix4x4 transformMatrix;
     transformMatrix.translate(topLeft.x(), topLeft.y());
@@ -2115,7 +2115,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         delete oldNode;
         oldNode = nullptr;
 
-        // If we had any QQuickTextNode node references, they were deleted along with the root node
+        // If we had any QSGInternalTextNode node references, they were deleted along with the root node
         // But here we must delete the Node structures in textNodeMap
         d->textNodeMap.clear();
     }
@@ -2144,7 +2144,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
             firstDirtyPos = nodeIterator->startPos();
             // ### this could be optimized if the first and last dirty nodes are not connected
             // as the intermediate text nodes would usually only need to be transformed differently.
-            QQuickTextNode *firstCleanNode = nullptr;
+            QSGInternalTextNode *firstCleanNode = nullptr;
             auto it = d->textNodeMap.constEnd();
             while (it != nodeIterator) {
                 --it;
@@ -2170,7 +2170,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         rootNode->resetFrameDecorations(d->createTextNode());
         resetEngine(&frameDecorationsEngine, d->color, d->selectedTextColor, d->selectionColor);
 
-        QQuickTextNode *node = nullptr;
+        QSGInternalTextNode *node = nullptr;
 
         int currentNodeSize = 0;
         int nodeStart = firstDirtyPos;
@@ -2915,7 +2915,7 @@ void QQuickTextEditPrivate::handleFocusEvent(QFocusEvent *event)
     }
 }
 
-void QQuickTextEditPrivate::addCurrentTextNodeToRoot(QQuickTextNodeEngine *engine, QSGTransformNode *root, QQuickTextNode *node, TextNodeIterator &it, int startPos)
+void QQuickTextEditPrivate::addCurrentTextNodeToRoot(QQuickTextNodeEngine *engine, QSGTransformNode *root, QSGInternalTextNode *node, TextNodeIterator &it, int startPos)
 {
     engine->addToSceneGraph(node, QQuickText::Normal, QColor());
     it = textNodeMap.insert(it, TextNode(startPos, node));
@@ -2923,11 +2923,12 @@ void QQuickTextEditPrivate::addCurrentTextNodeToRoot(QQuickTextNodeEngine *engin
     root->appendChildNode(node);
 }
 
-QQuickTextNode *QQuickTextEditPrivate::createTextNode()
+QSGInternalTextNode *QQuickTextEditPrivate::createTextNode()
 {
     Q_Q(QQuickTextEdit);
-    QQuickTextNode* node = new QQuickTextNode(q);
-    node->setUseNativeRenderer(renderType == QQuickTextEdit::NativeRendering);
+    QSGInternalTextNode* node = sceneGraphContext()->createInternalTextNode(sceneGraphRenderContext());
+    node->setRenderType(QSGTextNode::RenderType(renderType));
+    node->setSmooth(q->smooth());
     return node;
 }
 

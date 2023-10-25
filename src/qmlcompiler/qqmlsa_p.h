@@ -178,18 +178,25 @@ class Q_QMLCOMPILER_EXPORT PassManagerPrivate
 {
     friend class QT_PREPEND_NAMESPACE(QQmlJSScope);
 
-    Q_DECLARE_PUBLIC(PassManager)
-
 public:
     Q_DISABLE_COPY_MOVE(PassManagerPrivate)
 
     friend class GenericPass;
-    PassManagerPrivate(PassManager *manager, QQmlJSImportVisitor *visitor,
-                       QQmlJSTypeResolver *resolver)
-        : m_visitor(visitor), m_typeResolver(resolver), q_ptr{ manager }
+    PassManagerPrivate(QQmlJSImportVisitor *visitor, QQmlJSTypeResolver *resolver)
+        : m_visitor(visitor), m_typeResolver(resolver)
     {
-        Q_UNUSED(m_typeResolver);
     }
+
+    static PassManagerPrivate *get(PassManager *manager) { return manager->d_func(); }
+    static const PassManagerPrivate *get(const PassManager *manager) { return manager->d_func(); }
+    static PassManager *createPassManager(QQmlJSImportVisitor *visitor, QQmlJSTypeResolver *resolver)
+    {
+        PassManager *result = new PassManager();
+        result->d_ptr = std::make_unique<PassManagerPrivate>(visitor, resolver);
+        return result;
+    }
+    static void deletePassManager(PassManager *q) { delete q; }
+
     void registerElementPass(std::unique_ptr<ElementPass> pass);
     bool registerPropertyPass(std::shared_ptr<PropertyPass> pass, QAnyStringView moduleName,
                               QAnyStringView typeName,
@@ -202,8 +209,6 @@ public:
     static QQmlJSImportVisitor *visitor(const QQmlSA::PassManager &);
     static QQmlJSTypeResolver *resolver(const QQmlSA::PassManager &);
 
-private:
-    friend struct ::QQmlJSTypePropagator;
 
     QSet<PropertyPass *> findPropertyUsePasses(const QQmlSA::Element &element,
                                                const QString &propertyName);
@@ -225,8 +230,6 @@ private:
     std::unordered_map<quint32, BindingInfo> m_bindingsByLocation;
     QQmlJSImportVisitor *m_visitor;
     QQmlJSTypeResolver *m_typeResolver;
-
-    PassManager *q_ptr;
 };
 
 class FixSuggestionPrivate

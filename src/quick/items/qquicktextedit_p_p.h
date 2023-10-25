@@ -29,7 +29,7 @@ QT_BEGIN_NAMESPACE
 class QTextLayout;
 class QQuickTextDocumentWithImageResources;
 class QQuickTextControl;
-class QQuickTextNode;
+class QSGInternalTextNode;
 class QQuickTextNodeEngine;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
@@ -41,9 +41,9 @@ public:
 
     struct Node {
         explicit Node(int startPos = std::numeric_limits<int>::max(),
-                      QQuickTextNode *node = nullptr)
+                      QSGInternalTextNode *node = nullptr)
             : m_startPos(startPos), m_node(node), m_dirty(false) { }
-        QQuickTextNode* textNode() const { return m_node; }
+        QSGInternalTextNode *textNode() const { return m_node; }
         void moveStartPos(int delta) { Q_ASSERT(m_startPos + delta > 0); m_startPos += delta; }
         int startPos() const { return m_startPos; }
         void setDirty() { m_dirty = true; }
@@ -51,7 +51,7 @@ public:
 
     private:
         int m_startPos;
-        QQuickTextNode* m_node;
+        QSGInternalTextNode *m_node;
         bool m_dirty;
 
 #ifndef QT_NO_DEBUG_STREAM
@@ -121,8 +121,8 @@ public:
 
     void setNativeCursorEnabled(bool) {}
     void handleFocusEvent(QFocusEvent *event);
-    void addCurrentTextNodeToRoot(QQuickTextNodeEngine *, QSGTransformNode *, QQuickTextNode*, TextNodeIterator&, int startPos);
-    QQuickTextNode* createTextNode();
+    void addCurrentTextNodeToRoot(QQuickTextNodeEngine *, QSGTransformNode *, QSGInternalTextNode *, TextNodeIterator&, int startPos);
+    QSGInternalTextNode* createTextNode();
 
 #if QT_CONFIG(im)
     Qt::InputMethodHints effectiveInputMethodHints() const;

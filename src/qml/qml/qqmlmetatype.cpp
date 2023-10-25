@@ -70,8 +70,10 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data,
     return d;
 }
 
-static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &elementName,
-                                       const QQmlPrivate::RegisterSingletonType &type)
+static QQmlTypePrivate *createQQmlType(
+        QQmlMetaTypeData *data, const QString &elementName,
+        const QQmlPrivate::RegisterSingletonType &type,
+        const QQmlType::SingletonInstanceInfo::ConstPtr &siinfo)
 {
     auto *d = new QQmlTypePrivate(QQmlType::SingletonType);
     data->registerType(d);
@@ -85,12 +87,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
         d->revision = type.revision;
     }
 
-    d->extraData.singletonTypeData->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
-    d->extraData.singletonTypeData->singletonInstanceInfo->scriptCallback = type.scriptApi;
-    d->extraData.singletonTypeData->singletonInstanceInfo->qobjectCallback = type.qObjectApi;
-    d->extraData.singletonTypeData->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
-    d->extraData.singletonTypeData->singletonInstanceInfo->instanceMetaObject
-            = type.qObjectApi ? type.instanceMetaObject : nullptr;
+    d->extraData.singletonTypeData->singletonInstanceInfo = siinfo;
     d->extraData.singletonTypeData->extFunc = type.extensionObjectCreate;
     d->extraData.singletonTypeData->extMetaObject = type.extensionMetaObject;
 
@@ -183,8 +180,10 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     return d;
 }
 
-static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &elementName,
-                                       const QQmlPrivate::RegisterCompositeSingletonType &type)
+static QQmlTypePrivate *createQQmlType(
+        QQmlMetaTypeData *data, const QString &elementName,
+        const QQmlPrivate::RegisterCompositeSingletonType &type,
+        const QQmlType::SingletonInstanceInfo::ConstPtr &siinfo)
 {
     auto *d = new QQmlTypePrivate(QQmlType::CompositeSingletonType);
     data->registerType(d);
@@ -192,12 +191,9 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
 
     d->version = type.version;
 
-    const QUrl normalized = QQmlTypeLoader::normalize(type.url);
-    d->extraData.singletonTypeData->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
-    d->extraData.singletonTypeData->singletonInstanceInfo->url = normalized;
-    d->extraData.singletonTypeData->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
+    d->extraData.singletonTypeData->singletonInstanceInfo = siinfo;
     addQQmlMetaTypeInterfaces(
-        d, QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(normalized));
+            d, QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(siinfo->url));
     return d;
 }
 
@@ -492,7 +488,9 @@ QQmlType QQmlMetaType::registerType(const QQmlPrivate::RegisterType &type)
     return QQmlType(priv);
 }
 
-QQmlType QQmlMetaType::registerSingletonType(const QQmlPrivate::RegisterSingletonType &type)
+QQmlType QQmlMetaType::registerSingletonType(
+        const QQmlPrivate::RegisterSingletonType &type,
+        const QQmlType::SingletonInstanceInfo::ConstPtr &siinfo)
 {
     if (type.structVersion > 1)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
@@ -505,14 +503,16 @@ QQmlType QQmlMetaType::registerSingletonType(const QQmlPrivate::RegisterSingleto
         return QQmlType();
     }
 
-    QQmlTypePrivate *priv = createQQmlType(data, typeName, type);
+    QQmlTypePrivate *priv = createQQmlType(data, typeName, type, siinfo);
 
     addTypeToData(priv, data);
 
     return QQmlType(priv);
 }
 
-QQmlType QQmlMetaType::registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &type)
+QQmlType QQmlMetaType::registerCompositeSingletonType(
+        const QQmlPrivate::RegisterCompositeSingletonType &type,
+        const QQmlType::SingletonInstanceInfo::ConstPtr &siinfo)
 {
     if (type.structVersion > 1)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
@@ -529,11 +529,11 @@ QQmlType QQmlMetaType::registerCompositeSingletonType(const QQmlPrivate::Registe
         return QQmlType();
     }
 
-    QQmlTypePrivate *priv = createQQmlType(data, typeName, type);
+    QQmlTypePrivate *priv = createQQmlType(data, typeName, type, siinfo);
     addTypeToData(priv, data);
 
     QQmlMetaTypeData::Files *files = fileImport ? &(data->urlToType) : &(data->urlToNonFileImportType);
-    files->insert(QQmlTypeLoader::normalize(type.url), priv);
+    files->insert(siinfo->url, priv);
 
     return QQmlType(priv);
 }
@@ -629,9 +629,12 @@ static QQmlType createTypeForUrl(
         priv->version = version;
 
         if (mode == QQmlMetaType::Singleton) {
-            priv->extraData.singletonTypeData->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
-            priv->extraData.singletonTypeData->singletonInstanceInfo->url = url;
-            priv->extraData.singletonTypeData->singletonInstanceInfo->typeName = typeName;
+            QQmlType::SingletonInstanceInfo::Ptr siinfo = QQmlType::SingletonInstanceInfo::create();
+            siinfo->url = url;
+            siinfo->typeName = typeName.toUtf8();
+            priv->extraData.singletonTypeData->singletonInstanceInfo =
+                    QQmlType::SingletonInstanceInfo::ConstPtr(
+                            siinfo.take(), QQmlType::SingletonInstanceInfo::ConstPtr::Adopt);
         } else {
             priv->extraData.compositeTypeData = url;
         }
@@ -670,6 +673,8 @@ QQmlType QQmlMetaType::findCompositeType(
     }
 
     if (urlExists) {
+        if (compilationUnit.isNull())
+            return QQmlType(*found);
         const auto composite = data->compositeTypes.constFind(found.value()->typeId.iface());
         if (composite == data->compositeTypes.constEnd() || composite.value() == compilationUnit)
             return QQmlType(*found);
@@ -1890,8 +1895,11 @@ void QQmlMetaType::registerInternalCompositeType(
 
     auto doInsert = [&data, &compilationUnit](const QtPrivate::QMetaTypeInterface *iface) {
         Q_ASSERT(iface);
-        const auto it = data->compositeTypes.constFind(iface);
-        Q_ASSERT(it == data->compositeTypes.constEnd() || *it == compilationUnit);
+        Q_ASSERT(compilationUnit);
+
+        // We can't assert on anything else here. We may get a completely new type as exposed
+        // by the qmldiskcache test that changes a QML file in place during the execution
+        // of the test.
         data->compositeTypes.insert(iface, compilationUnit);
     };
 

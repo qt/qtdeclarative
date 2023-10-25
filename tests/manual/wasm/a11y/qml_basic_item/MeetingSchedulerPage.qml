@@ -13,6 +13,7 @@ GroupBox {
     property int calendarWeek: calendar.value
     property string meetingDescription: description.text
     property alias description: description
+    height: parent.height-10
     ColumnLayout {
         anchors.fill: parent
         spacing: 10

@@ -18,6 +18,8 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickSelectionRectanglePrivate;

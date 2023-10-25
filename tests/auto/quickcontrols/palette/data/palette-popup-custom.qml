@@ -25,4 +25,5 @@ Popup {
     palette.window: "plum"
     palette.windowText: "salmon"
     palette.placeholderText: "magenta"
+    palette.accent: "darkkhaki"
 }

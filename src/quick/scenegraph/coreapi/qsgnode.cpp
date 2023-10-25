@@ -11,12 +11,14 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcQsgLeak)
+
 #ifndef QT_NO_DEBUG
 static int qt_node_count = 0;
 
 static void qt_print_node_count()
 {
-    qDebug("Number of leaked nodes: %i", qt_node_count);
+    qCDebug(lcQsgLeak, "Number of leaked nodes: %i", qt_node_count);
     qt_node_count = -1;
 }
 #endif
@@ -255,7 +257,7 @@ QSGNode::QSGNode(QSGNodePrivate &dd, NodeType type)
 void QSGNode::init()
 {
 #ifndef QT_NO_DEBUG
-    if (_q_sg_leak_check) {
+    if (lcQsgLeak().isDebugEnabled()) {
         ++qt_node_count;
         static bool atexit_registered = false;
         if (!atexit_registered) {
@@ -280,10 +282,10 @@ void QSGNode::init()
 QSGNode::~QSGNode()
 {
 #ifndef QT_NO_DEBUG
-    if (_q_sg_leak_check) {
+    if (lcQsgLeak().isDebugEnabled()) {
         --qt_node_count;
         if (qt_node_count < 0)
-            qDebug("Node destroyed after qt_print_node_count() was called.");
+            qCDebug(lcQsgLeak, "Node destroyed after qt_print_node_count() was called.");
     }
 #endif
     destroy();

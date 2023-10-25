@@ -18,7 +18,7 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qstring.h>
 #include <QtGui/qicon.h>
-#include <QtQuick/private/qquickpixmapcache_p.h>
+#include <QtQuick/private/qquickpixmap_p.h>
 
 #include "qquicklabsplatformicon_p.h"
 

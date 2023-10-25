@@ -36,3 +36,6 @@ navigation.qmltypespage = "Qt Labs Platform QML Types"
 tagfile                 = qtlabsplatform.tags
 
 macro.labs = "\\note \\e{Types in Qt.labs modules are not guaranteed to remain compatible in future versions.}"
+
+# Enforce zero documentation warnings
+warninglimit = 0

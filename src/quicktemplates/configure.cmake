@@ -31,6 +31,13 @@ qt_feature("quicktemplates2-calendar" PRIVATE
     SECTION "Quick Templates 2"
     LABEL "Calendar support"
     PURPOSE "Provides calendar types."
+    CONDITION QT_FEATURE_itemmodel
+)
+qt_feature("quicktemplates2-container" PRIVATE
+    SECTION "Quick Templates 2"
+    LABEL "Container controls support"
+    PURPOSE "Provides support for Container and its sub-classes."
+    CONDITION QT_FEATURE_qml_object_model
 )
 qt_configure_add_summary_section(NAME "Qt Quick Templates 2")
 qt_configure_add_summary_entry(ARGS "quicktemplates2-hover")

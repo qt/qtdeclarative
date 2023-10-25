@@ -66,7 +66,7 @@ tst_Sanity::tst_Sanity()
     m_linter.setPluginsEnabled(true);
 
     for (auto &category : m_categories) {
-        if (category == qmlDeferredPropertyId || category == qmlAttachedPropertyReuse) {
+        if (category.id() == qmlDeferredPropertyId || category.id() == qmlAttachedPropertyReuse) {
             category.setLevel(QtWarningMsg);
             category.setIgnored(false);
         } else {

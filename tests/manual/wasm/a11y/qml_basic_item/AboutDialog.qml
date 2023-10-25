@@ -6,36 +6,45 @@ import QtQuick.Controls
 
 Dialog {
     id: aboutDialog
-    width: 400
+    width: 500
     height: 150
     title: "WebAssembly Dialog box"
-    Accessible.role: Accessible.Dialog
-    Accessible.name: title
-    Accessible.description: "About DialogBox."
     modal: true
-    Label {
-        id: labelInfo
-        anchors.centerIn: parent
-        text: "Accessibility Demo sample application developed in QML."
-        Accessible.role: Accessible.StaticText
-        Accessible.name: text
-        Accessible.description: "Purpose of this application."
-    }
 
-    Button {
-        id: closeButton
-        text: "Close"
-        anchors {
-            top: labelInfo.bottom
-            topMargin: 10
-            horizontalCenter: parent.horizontalCenter
+    background: Rectangle {
+        width: parent.width * 0.8
+        height: parent.height * 0.4
+        color: "lightgray"
+        anchors.fill: parent
+        Accessible.role: Accessible.Dialog
+        Accessible.name: parent.title
+        Accessible.description: "The About Dialog box."
+    }
+    ColumnLayout {
+        spacing: 2
+        anchors.fill: parent
+
+        Label {
+            id: labelInfo
+            Layout.alignment: Qt.AlignCenter
+            text: "Accessibility Demo sample application developed in QML."
+            Accessible.role: Accessible.StaticText
+            horizontalAlignment: Text.AlignHCenter
+            Accessible.name: text
+            Accessible.description: "Purpose of this application."
+            wrapMode: Text.WordWrap
         }
 
-        Accessible.role: Accessible.Button
-        Accessible.name: text
-        Accessible.description: "To close the About Dialog box."
-        onClicked: {
-            aboutDialog.close()
+        Button {
+            id: closeButton
+            text: "Close"
+            Layout.alignment: Qt.AlignCenter
+            Accessible.role: Accessible.Button
+            Accessible.name: text
+            Accessible.description: "To close the About Dialog box."
+            onClicked: {
+                aboutDialog.close()
+            }
         }
     }
 }

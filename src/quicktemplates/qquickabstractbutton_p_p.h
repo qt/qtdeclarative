@@ -21,6 +21,8 @@
 #  include <QtGui/qkeysequence.h>
 #endif
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickAction;

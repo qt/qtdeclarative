@@ -202,6 +202,56 @@ Rectangle {
                     }
                 }
             }
+            Text {
+                text: qsTr("CurveRenderer [tech preview]")
+            }
+
+            // Now let's use CurveRenderer with built-in antialiasing support.
+            Rectangle {
+                color: "lightGray"
+                width: 400
+                height: 200
+
+                Shape {
+                    x: 30
+                    y: 20
+                    width: 50
+                    height: 50
+                    scale: 2
+                    preferredRendererType: Shape.CurveRenderer
+                    antialiasing: true
+
+                    ShapePath {
+                        strokeColor: "green"
+                        NumberAnimation on strokeWidth {
+                            from: 1
+                            to: 20
+                            duration: 5000
+                        }
+                        fillColor: "transparent"
+                        capStyle: ShapePath.RoundCap
+
+                        startX: 40
+                        startY: 30
+                        PathQuad {
+                            x: 50
+                            y: 80
+                            controlX: 0
+                            controlY: 80
+                        }
+                        PathLine {
+                            x: 150
+                            y: 80
+                        }
+                        PathQuad {
+                            x: 160
+                            y: 30
+                            controlX: 200
+                            controlY: 80
+                        }
+                    }
+                }
+            }
         }
     }
 }

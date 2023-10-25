@@ -75,7 +75,7 @@ public:
 
 
 Q_SIGNALS:
-    void affectParticles(const QJSValue &particles, qreal dt);
+    void affectParticles(const QList<QQuickV4ParticleData> &particles, qreal dt);
 
     void positionChanged(QQuickDirection * arg);
 

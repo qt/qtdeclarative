@@ -15,6 +15,12 @@ QAbstractItemModel, its header data will be used. Otherwise the data in
 the model will be used directly (for example, if you assign a model that
 is simply an array of strings).
 
+\note In order to show the header data of a QAbstractItemModel, \1
+will internally wrap the model's header data in an independent proxy
+model. This model shares no model items with the \l {TableView::model}{application model}.
+This means that if you call functions such as \l {TableView::index()}{index()}, the model
+index you get back will belong to the proxy model and not the application model.
+
 By default, \l textRole is set to \c "display", meaning that data from the
 model's \l {Qt::ItemDataRole}{Qt::DisplayRole} will be used. You can set
 this to another role name in order to have that data displayed instead.

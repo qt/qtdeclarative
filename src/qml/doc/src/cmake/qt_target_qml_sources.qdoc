@@ -159,6 +159,8 @@ the type it provides is an internal one. The name of the type itself can also
 be overridden using the \c QT_QML_SOURCE_TYPENAME property. All three of these
 will be reflected in the file's type entries in the
 \l{qmldir-autogeneration}{generated \c qmldir file}.
+The source properties must be set before \l{qt_add_qml_module}{creating} the
+module the singleton belongs to.
 
 \target QT_RESOURCE_ALIAS
 All files listed with \c QML_FILES or \c RESOURCES will be added to the

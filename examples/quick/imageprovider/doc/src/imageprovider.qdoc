@@ -5,6 +5,7 @@
     \title C++ Extensions: Image Provider Example
     \brief How to load images in QML with QQuickImageProvider.
     \example imageprovider
+    \examplecategory {Graphics & Multimedia}
 
     This examples shows how to use QQuickImageProvider to serve images
     to QML image elements.

@@ -1,0 +1,37 @@
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
+
+project = QtQmlNetwork
+description = Qt QML Network Reference Documentation
+version = $QT_VERSION
+
+qhp.projects = QtQmlNetwork
+
+qhp.QtQmlNetwork.file = qtqmlnetwork.qhp
+qhp.QtQmlNetwork.namespace = org.qt-project.qtqmlnetwork.$QT_VERSION_TAG
+qhp.QtQmlNetwork.virtualFolder = qtqmlnetwork
+qhp.QtQmlNetwork.indexTitle = Qt QML Network
+qhp.QtQmlNetwork.indexRoot =
+
+qhp.QtQmlNetwork.subprojects = qmltypes
+qhp.QtQmlNetwork.subprojects.qmltypes.title = QML Types
+qhp.QtQmlNetwork.subprojects.qmltypes.indexTitle = Qt QML Network QML Types
+qhp.QtQmlNetwork.subprojects.qmltypes.selectors = qmlclass
+qhp.QtQmlNetwork.subprojects.qmltypes.sortPages = true
+
+depends = qtcore qtdoc qtqml qtnetwork
+
+# This module has no documented C++ types, clear the module header
+moduleheader =
+
+headerdirs += ../
+sourcedirs += ../
+
+imagedirs += images
+
+navigation.landingpage = "Qt QML Network"
+navigation.qmltypespage = "Qt QML Network QML Types"
+
+tagfile = qtqmlnetwork.tags
+
+# Enforce zero documentation warnings
+warninglimit = 0

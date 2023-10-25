@@ -23,6 +23,7 @@
 #include <QtQuick/qquickitem.h>
 
 #include <QtCore/qeasingcurve.h>
+#include <QtCore/qpointer.h>
 
 QT_BEGIN_NAMESPACE
 

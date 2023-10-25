@@ -24,6 +24,25 @@ See the documentation page titled
 \l{qtqml-javascript-expressions.html}{JavaScript Expressions in QML Documents}
 for more information about using JavaScript expressions in QML.
 
+\section1 Dynamic QML Object Creation from JavaScript
+
+QML supports the dynamic creation of objects from within JavaScript. This is
+useful to delay instantiation of objects until necessary, thereby improving
+application startup time. It also allows visual objects to be dynamically
+created and added to the scene in reaction to user input or other events. This
+functionality can be used in two main ways.
+
+Object can be created dynamically from JavaScript in an imperative way using
+\l{qtqml-javascript-dynamicobjectcreation.html}{dynamic creation of objects}.
+This can be useful, for example, when QML is used as an application scripting
+language.
+
+\note When creating user interfaces, the preferred way of creating objects
+dynamically is to use declarative constructs as these integrate best with the
+QML engine and tooling. Various types exist to enable this functionality such
+as the \l{Loader}, \l{Instantiator}, \l{Repeater} types.
+
+
 \section1 JavaScript Resources
 
 Application logic defined in JavaScript functions may be separated into

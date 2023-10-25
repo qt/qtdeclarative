@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -557,14 +558,15 @@ void doComponentCompleteRecursive(QObject *object)
         QList<QObject*> childList = object->children();
 
         if (item) {
-            foreach (QQuickItem *childItem, item->childItems()) {
+            const auto childItems = item->childItems();
+            for (QQuickItem *childItem : childItems) {
                 if (!childList.contains(childItem))
                     childList.append(childItem);
             }
         }
 
-        foreach (QObject *child, childList)
-                doComponentCompleteRecursive(child);
+        for (QObject *child : std::as_const(childList))
+            doComponentCompleteRecursive(child);
 
         if (item) {
             static_cast<QQmlParserStatus*>(item)->componentComplete();

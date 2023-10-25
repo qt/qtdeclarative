@@ -42,6 +42,7 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qelapsedtimer.h>
+#include <QtCore/qpointer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -282,7 +283,6 @@ public:
     static void children_removeLast(QQmlListProperty<QQuickItem> *);
 
     // visibleChildren property
-    static void visibleChildren_append(QQmlListProperty<QQuickItem> *prop, QQuickItem *o);
     static qsizetype visibleChildren_count(QQmlListProperty<QQuickItem> *prop);
     static QQuickItem *visibleChildren_at(QQmlListProperty<QQuickItem> *prop, qsizetype index);
 

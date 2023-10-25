@@ -17,6 +17,7 @@
 
 #include "qqmlpreviewfileloader.h"
 
+#include <QtCore/qpointer.h>
 #include <private/qabstractfileengine_p.h>
 #include <private/qfsfileengine_p.h>
 #include <QtCore/qbuffer.h>

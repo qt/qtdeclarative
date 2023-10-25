@@ -7,16 +7,21 @@
 
 QML supports built-in and custom value types.
 
-A \e{value type} is one that is passed by value rather than by reference, such
-as an \c int or a \c string. This contrasts with
+A \e{value type} is one that is conceptually passed by value rather than by
+reference, such as an \c int or a \c string. This contrasts with
 \l{qtqml-typesystem-topic.html#qml-object-types}{QML Object Types}. Object types
 are passed by reference. If you assign an instance of an object type to two
 different properties, both properties carry the same value. Modifying the object
 is reflected in both properties. If you assign an instance of a value type to
 two different properties, the properties carry separate values. If you modify
-one of them, the other one stays the same. Unlike an object type, a value type
-cannot be used to declare QML objects: it is not possible, for example, to
-declare an \c int{} object or a \c size{} object.
+one of them, the other one stays the same. Value types are only conceptually
+passed by value since it must still be possible to interact with them as if they
+were JavaScript objects. To facilitate this, in reality they are passed as
+\l{Value Type and Sequence References}{Value Type References} when you access them
+from JavaScript code.
+
+Unlike an object type, a value type cannot be used to declare QML objects:
+it is not possible, for example, to declare an \c int{} object or a \c size{} object.
 
 Value types can be used to refer to:
 
@@ -53,7 +58,11 @@ The built-in value types supported natively in the QML language are listed below
 \section2 Value Types Provided By QML Modules
 
 QML modules may extend the QML language with more value types.
-For example, the value types provided by the \c QtQuick module are listed below:
+
+The value types provided by the \c QtQml module are:
+\annotatedlist qtqmlvaluetypes
+
+The value types provided by the \c QtQuick module are:
 \annotatedlist qtquickvaluetypes
 
 The \l{QtQml::Qt}{Qt} global object provides useful functions for manipulating values of value types.

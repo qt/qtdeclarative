@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 #include <qtest.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
@@ -334,7 +335,8 @@ void tst_qqmllistmodelworkerscript::dynamic_worker()
     if (script[0] == QLatin1Char('{') && script[script.size()-1] == QLatin1Char('}'))
         script = script.mid(1, script.size() - 2);
     QVariantList operations;
-    foreach (const QString &s, script.split(';')) {
+    const QStringList statements = script.split(';');
+    for (const QString &s : statements) {
         if (!s.isEmpty())
             operations << s;
     }
@@ -383,7 +385,8 @@ void tst_qqmllistmodelworkerscript::dynamic_worker_sync()
     if (script[0] == QLatin1Char('{') && script[script.size()-1] == QLatin1Char('}'))
         script = script.mid(1, script.size() - 2);
     QVariantList operations;
-    foreach (const QString &s, script.split(';')) {
+    const QStringList statements = script.split(';');
+    for (const QString &s : statements) {
         if (!s.isEmpty())
             operations << s;
     }
@@ -575,7 +578,7 @@ void tst_qqmllistmodelworkerscript::property_changes_worker()
 
     QQmlExpression expr(engine.rootContext(), &model, script_setup);
     expr.evaluate();
-    QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
+    QVERIFY2(!expr.hasError(), qPrintable(expr.error().toString()));
 
     QSignalSpy spyItemsChanged(&model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QList<int>)));
 
@@ -801,7 +804,8 @@ void tst_qqmllistmodelworkerscript::dynamic_role()
     if (script[0] == QLatin1Char('{') && script[script.size()-1] == QLatin1Char('}'))
         script = script.mid(1, script.size() - 2);
     QVariantList operations;
-    foreach (const QString &s, script.split(';')) {
+    const QStringList statements = script.split(';');
+    for (const QString &s : statements) {
         if (!s.isEmpty())
             operations << s;
     }

@@ -9,6 +9,7 @@
 #include "qqmltypescreator_p.h"
 #include "qanystringviewutils_p.h"
 #include "qqmltyperegistrarconstants_p.h"
+#include "qqmltyperegistrarutils_p.h"
 
 QT_BEGIN_NAMESPACE
 using namespace Qt::Literals;
@@ -215,6 +216,11 @@ void QmlTypeRegistrar::write(QTextStream &output)
         const QString className = classDef[S_QUALIFIED_CLASS_NAME].toString();
 
         QString targetName = className;
+
+        // If either the foreign or the local part is a namespace we need to
+        // generate a namespace registration.
+        bool targetIsNamespace = classDef.value(S_NAMESPACE).toBool();
+
         QAnyStringView extendedName;
         bool seenQmlElement = false;
         QString qmlElementName;
@@ -228,16 +234,20 @@ void QmlTypeRegistrar::write(QTextStream &output)
             if (name == S_ELEMENT) {
                 seenQmlElement = true;
                 qmlElementName = v[S_VALUE].toString();
-            } else if (name == S_FOREIGN)
+            } else if (name == S_FOREIGN) {
                 targetName = v[S_VALUE].toString();
-            else if (name == S_EXTENDED)
+            } else if (name == S_FOREIGN_IS_NAMESPACE) {
+                targetIsNamespace = targetIsNamespace || (v[S_VALUE] == S_TRUE);
+            } else if (name == S_EXTENDED) {
                 extendedName = toStringView(v, S_VALUE);
-            else if (name == S_ADDED_IN_VERSION) {
+            } else if (name == S_ADDED_IN_VERSION) {
                 int version = toInt(toStringView(v, S_VALUE));
                 addedIn = QTypeRevision::fromEncodedVersion(version);
+                addedIn = handleInMinorVersion(addedIn, majorVersion);
             } else if (name == S_REMOVED_IN_VERSION) {
                 int version = toInt(toStringView(v, S_VALUE));
                 removedIn = QTypeRevision::fromEncodedVersion(version);
+                removedIn = handleInMinorVersion(removedIn, majorVersion);
             }
         }
 
@@ -250,34 +260,25 @@ void QmlTypeRegistrar::write(QTextStream &output)
         // We want all related metatypes to be registered by name, so that we can look them up
         // without including the C++ headers. That's the reason for the QMetaType(foo).id() calls.
 
-        if (classDef.value(S_NAMESPACE).toBool()) {
+        if (targetIsNamespace) {
             // We need to figure out if the _target_ is a namespace. If not, it already has a
             // QMetaType and we don't need to generate one.
 
             QString targetTypeName = targetName;
-            const auto targetIsNamespace = [&]() {
-                if (className == targetName)
-                    return true;
 
-                const QList<QAnyStringView> namespaces
-                        = MetaTypesJsonProcessor::namespaces(classDef);
+            const QList<QAnyStringView> namespaces
+                    = MetaTypesJsonProcessor::namespaces(classDef);
 
-                const QCborMap *target = QmlTypesClassDescription::findType(
-                        m_types, m_foreignTypes, targetName, namespaces);
+            const QCborMap *target = QmlTypesClassDescription::findType(
+                    m_types, m_foreignTypes, targetName, namespaces);
 
-                if (!target)
-                    return false;
+            if (target && target->value(S_OBJECT).toBool())
+                targetTypeName += QStringLiteral(" *");
 
-                if (target->value(S_NAMESPACE).toBool())
-                    return true;
-
-                if (target->value(S_OBJECT).toBool())
-                    targetTypeName += QStringLiteral(" *");
-
-                return false;
-            };
-
-            if (targetIsNamespace()) {
+            // If there is no foreign type, the local one is a namespace.
+            // Otherwise, only do metaTypeForNamespace if the target _metaobject_ is a namespace.
+            // Not if we merely consider it to be a namespace for QML purposes.
+            if (className == targetName || (target && target->value(S_NAMESPACE).toBool())) {
                 output << uR"(
     {
         Q_CONSTINIT static auto metaType = QQmlPrivate::metaTypeForNamespace(

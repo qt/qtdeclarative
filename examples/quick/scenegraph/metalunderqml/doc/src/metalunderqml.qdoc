@@ -4,6 +4,7 @@
 /*!
     \example scenegraph/metalunderqml
     \title Scene Graph - Metal Under QML
+    \examplecategory {Graphics & Multimedia}
     \ingroup qtquickexamples
     \brief Shows how to render directly with Metal under a Qt Quick scene.
 

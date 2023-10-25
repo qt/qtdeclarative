@@ -17,6 +17,8 @@
 
 #include <QtQuickShapes/private/qquickshapesglobal_p.h>
 #include <QtQuickShapes/private/qquickshape_p_p.h>
+#include <QtQuickShapes/private/qquadpath_p.h>
+#include <QtQuickShapes/private/qquickshapeabstractcurvenode_p.h>
 #include <qsgnode.h>
 #include <qsggeometry.h>
 #include <qsgmaterial.h>
@@ -27,235 +29,6 @@
 #include <QtGui/private/qtriangulator_p.h>
 
 QT_BEGIN_NAMESPACE
-
-class QuadPath
-{
-public:
-    void moveTo(const QVector2D &to)
-    {
-        subPathToStart = true;
-        currentPoint = to;
-    }
-
-    void lineTo(const QVector2D &to)
-    {
-        addElement({}, to, true);
-    }
-
-    void quadTo(const QVector2D &control, const QVector2D &to)
-    {
-        addElement(control, to);
-    }
-
-    QRectF controlPointRect() const;
-
-    Qt::FillRule fillRule() const { return m_fillRule; }
-    void setFillRule(Qt::FillRule rule) { m_fillRule = rule; }
-
-    void reserve(qsizetype size) { m_elements.reserve(size); }
-    qsizetype elementCount() const { return m_elements.size(); }
-    bool isEmpty() const { return m_elements.size() == 0; }
-    qsizetype elementCountRecursive() const;
-
-    static QuadPath fromPainterPath(const QPainterPath &path);
-    QPainterPath toPainterPath() const;
-    QuadPath subPathsClosed() const;
-    QuadPath flattened() const;
-    QuadPath dashed(qreal lineWidth, const QList<qreal> &dashPattern, qreal dashOffset = 0) const;
-
-    class Element
-    {
-    public:
-        Element ()
-            : m_isSubpathStart(false), m_isSubpathEnd(false), m_isLine(false)
-        {
-        }
-
-        bool isSubpathStart() const
-        {
-            return m_isSubpathStart;
-        }
-
-        bool isSubpathEnd() const
-        {
-            return m_isSubpathEnd;
-        }
-
-        bool isLine() const
-        {
-            return m_isLine;
-        }
-
-        bool isConvex() const
-        {
-            return m_curvatureFlags & Convex;
-        }
-
-        QVector2D startPoint() const
-        {
-            return sp;
-        }
-
-        QVector2D controlPoint() const
-        {
-            return cp;
-        }
-
-        QVector2D endPoint() const
-        {
-            return ep;
-        }
-
-        QVector2D midPoint() const
-        {
-            return isLine() ? 0.5f * (sp + ep) : (0.25f * sp) + (0.5f * cp) + (0.25 * ep);
-        }
-
-        QVector3D uvForPoint(QVector2D p) const;
-
-        std::array<QVector2D, 3> ABC() const;
-
-        QVector3D HGForPoint(QVector2D p) const;
-
-        qsizetype childCount() const { return m_numChildren; }
-
-        qsizetype indexOfChild(qsizetype childNumber) const
-        {
-            Q_ASSERT(childNumber >= 0 && childNumber < childCount());
-            return -(m_firstChildIndex + 1 + childNumber);
-        }
-
-        QVector2D pointAtFraction(float t) const;
-
-        QVector2D tangentAtFraction(float t) const
-        {
-            return isLine() ? (ep - sp) : ((1 - t) * 2 * (cp - sp)) + (t * 2 * (ep - cp));
-        }
-
-        QVector2D normalAtFraction(float t) const
-        {
-            const QVector2D tan = tangentAtFraction(t);
-            return QVector2D(-tan.y(), tan.x());
-        }
-
-        float extent() const;
-
-        void setAsConvex(bool isConvex)
-        {
-            if (isConvex)
-                m_curvatureFlags = Element::CurvatureFlags(m_curvatureFlags | Element::Convex);
-            else
-                m_curvatureFlags = Element::CurvatureFlags(m_curvatureFlags & ~Element::Convex);
-
-        }
-
-    private:
-        int intersectionsAtY(float y, float *fractions) const;
-
-        enum CurvatureFlags : quint8 {
-            CurvatureUndetermined = 0,
-            FillOnRight = 1,
-            Convex = 2
-        };
-
-        QVector2D sp;
-        QVector2D cp;
-        QVector2D ep;
-        int m_firstChildIndex = 0;
-        quint8 m_numChildren = 0;
-        CurvatureFlags m_curvatureFlags = CurvatureUndetermined;
-        quint8 m_isSubpathStart : 1;
-        quint8 m_isSubpathEnd : 1;
-        quint8 m_isLine : 1;
-        friend class QuadPath;
-        friend QDebug operator<<(QDebug, const QuadPath::Element &);
-    };
-
-    template<typename Func>
-    void iterateChildrenOf(Element &e, Func &&lambda)
-    {
-        const qsizetype lastChildIndex = e.m_firstChildIndex + e.childCount() - 1;
-        for (qsizetype i = e.m_firstChildIndex; i <= lastChildIndex; i++) {
-            Element &c = m_childElements[i];
-            if (c.childCount() > 0)
-                iterateChildrenOf(c, lambda);
-            else
-                lambda(c);
-        }
-    }
-
-    template<typename Func>
-    void iterateChildrenOf(const Element &e, Func &&lambda) const
-    {
-        const qsizetype lastChildIndex = e.m_firstChildIndex + e.childCount() - 1;
-        for (qsizetype i = e.m_firstChildIndex; i <= lastChildIndex; i++) {
-            const Element &c = m_childElements[i];
-            if (c.childCount() > 0)
-                iterateChildrenOf(c, lambda);
-            else
-                lambda(c);
-        }
-    }
-
-    template<typename Func>
-    void iterateElements(Func &&lambda)
-    {
-        for (auto &e : m_elements) {
-            if (e.childCount() > 0)
-                iterateChildrenOf(e, lambda);
-            else
-                lambda(e);
-        }
-    }
-
-    template<typename Func>
-    void iterateElements(Func &&lambda) const
-    {
-        for (auto &e : m_elements) {
-            if (e.childCount() > 0)
-                iterateChildrenOf(e, lambda);
-            else
-                lambda(e);
-        }
-    }
-
-    void splitElementAt(qsizetype index);
-    Element &elementAt(qsizetype i) { return i < 0 ? m_childElements[-(i + 1)] : m_elements[i]; }
-    const Element &elementAt(qsizetype i) const
-    {
-        return i < 0 ? m_childElements[-(i + 1)] : m_elements[i];
-    }
-
-    qsizetype indexOfChildAt(qsizetype i, qsizetype childNumber) const
-    {
-        return elementAt(i).indexOfChild(childNumber);
-    }
-
-    void addCurvatureData();
-    bool contains(const QVector2D &v) const;
-
-private:
-    void addElement(const QVector2D &control, const QVector2D &to, bool isLine = false);
-    Element::CurvatureFlags coordinateOrderOfElement(const Element &element) const;
-    static bool isControlPointOnLeft(const Element &element);
-    static QVector2D closestPointOnLine(const QVector2D &start,
-                                        const QVector2D &end,
-                                        const QVector2D &p);
-    static bool isPointOnLeft(const QVector2D &p, const QVector2D &sp, const QVector2D &ep);
-    static bool isPointOnLine(const QVector2D &p, const QVector2D &sp, const QVector2D &ep);
-    static bool isPointNearLine(const QVector2D &p, const QVector2D &sp, const QVector2D &ep);
-
-    friend QDebug operator<<(QDebug, const QuadPath &);
-
-    bool subPathToStart = true;
-    Qt::FillRule m_fillRule = Qt::OddEvenFill;
-    QVector2D currentPoint;
-    QList<Element> m_elements;
-    QList<Element> m_childElements;
-};
-
-QDebug operator<<(QDebug, const QuadPath::Element &);
-QDebug operator<<(QDebug, const QuadPath &);
 
 class QQuickShapeCurveRenderer : public QQuickAbstractPathRenderer
 {
@@ -284,7 +57,7 @@ public:
 
     void setRootNode(QSGNode *node);
 
-    using NodeList = QVector<QSGGeometryNode *>;
+    using NodeList = QVector<QQuickShapeAbstractCurveNode *>;
 
     enum DirtyFlag
     {
@@ -316,9 +89,9 @@ private:
         FillGradientType gradientType = NoGradient;
         GradientDesc gradient;
         QPainterPath originalPath;
-        QuadPath path;
-        QuadPath fillPath;
-        QuadPath strokePath;
+        QQuadPath path;
+        QQuadPath fillPath;
+        QQuadPath strokePath;
         QColor fillColor;
         Qt::FillRule fillRule = Qt::OddEvenFill;
         QPen pen;
@@ -334,11 +107,11 @@ private:
 
     void deleteAndClear(NodeList *nodeList);
 
-    QVector<QSGGeometryNode *> addFillNodes(const PathData &pathData, NodeList *debugNodes);
-    QVector<QSGGeometryNode *> addTriangulatingStrokerNodes(const PathData &pathData, NodeList *debugNodes);
-    QVector<QSGGeometryNode *> addCurveStrokeNodes(const PathData &pathData, NodeList *debugNodes);
+    NodeList addFillNodes(const PathData &pathData, NodeList *debugNodes);
+    NodeList addTriangulatingStrokerNodes(const PathData &pathData, NodeList *debugNodes);
+    NodeList addCurveStrokeNodes(const PathData &pathData, NodeList *debugNodes);
 
-    void solveOverlaps(QuadPath &path);
+    void solveOverlaps(QQuadPath &path);
 
     QSGNode *m_rootNode;
     QVector<PathData> m_paths;

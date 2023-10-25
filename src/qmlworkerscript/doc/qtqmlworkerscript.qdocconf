@@ -28,3 +28,6 @@ sourcedirs  += ..
 exampledirs += snippets
 
 navigation.qmltypespage = "Qt Qml WorkerScript QML Types"
+
+# Enforce zero documentation warnings
+warninglimit = 0

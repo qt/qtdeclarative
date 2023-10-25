@@ -7,7 +7,6 @@
     \title Qt Quick Controls - To Do List
     \keyword Qt Quick Controls 2 - To Do List
     \ingroup qtquickcontrols-examples
-    \examplecategory {Mobile}
     \brief To do list application for iOS.
 
     This example demonstrates how to create a simple to do list application for

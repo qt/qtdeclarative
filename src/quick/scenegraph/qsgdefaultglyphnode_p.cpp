@@ -205,7 +205,7 @@ bool QSG24BitTextMaskRhiShader::updateGraphicsPipelineState(RenderState &state, 
     QVector4D color = mat->color();
 
     // this is dynamic state but it's - magic! - taken care of by the renderer
-    ps->blendConstant = QColor::fromRgbF(color.x(), color.y(), color.z(), color.w());
+    ps->blendConstant = QColor::fromRgbF(color.x(), color.y(), color.z());
 
     return true;
 }

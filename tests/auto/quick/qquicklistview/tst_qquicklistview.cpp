@@ -5059,14 +5059,14 @@ void tst_QQuickListView::test_mirroring()
     QCOMPARE(listviewA->layoutDirection(), listviewA->effectiveLayoutDirection());
 
     // LTR != RTL
-    foreach (const QString objectName, objectNames)
+    for (const QString &objectName : std::as_const(objectNames))
         QVERIFY(findItem<QQuickItem>(listviewA, objectName)->x() != findItem<QQuickItem>(listviewB, objectName)->x());
 
     listviewA->setProperty("layoutDirection", Qt::LeftToRight);
     listviewB->setProperty("layoutDirection", Qt::LeftToRight);
 
     // LTR == LTR
-    foreach (const QString objectName, objectNames)
+    for (const QString &objectName : std::as_const(objectNames))
         QCOMPARE(findItem<QQuickItem>(listviewA, objectName)->x(), findItem<QQuickItem>(listviewB, objectName)->x());
 
     QCOMPARE(listviewB->layoutDirection(), listviewB->effectiveLayoutDirection());
@@ -5074,25 +5074,25 @@ void tst_QQuickListView::test_mirroring()
     QVERIFY(listviewB->layoutDirection() != listviewB->effectiveLayoutDirection());
 
     // LTR != LTR+mirror
-    foreach (const QString objectName, objectNames)
+    for (const QString &objectName : std::as_const(objectNames))
         QVERIFY(findItem<QQuickItem>(listviewA, objectName)->x() != findItem<QQuickItem>(listviewB, objectName)->x());
 
     listviewA->setProperty("layoutDirection", Qt::RightToLeft);
 
     // RTL == LTR+mirror
-    foreach (const QString objectName, objectNames)
+    for (const QString &objectName : std::as_const(objectNames))
         QCOMPARE(findItem<QQuickItem>(listviewA, objectName)->x(), findItem<QQuickItem>(listviewB, objectName)->x());
 
     listviewB->setProperty("layoutDirection", Qt::RightToLeft);
 
     // RTL != RTL+mirror
-    foreach (const QString objectName, objectNames)
+    for (const QString &objectName : std::as_const(objectNames))
         QVERIFY(findItem<QQuickItem>(listviewA, objectName)->x() != findItem<QQuickItem>(listviewB, objectName)->x());
 
     listviewA->setProperty("layoutDirection", Qt::LeftToRight);
 
     // LTR == RTL+mirror
-    foreach (const QString objectName, objectNames)
+    for (const QString &objectName : std::as_const(objectNames))
         QCOMPARE(findItem<QQuickItem>(listviewA, objectName)->x(), findItem<QQuickItem>(listviewB, objectName)->x());
 }
 
@@ -7886,7 +7886,8 @@ void tst_QQuickListView::multipleDisplaced()
     QTRY_VERIFY(listview->property("displaceTransitionsDone").toBool());
 
     QVariantMap transitionsStarted = listview->property("displaceTransitionsStarted").toMap();
-    foreach (const QString &name, transitionsStarted.keys()) {
+    const QStringList keys = transitionsStarted.keys();
+    for (const QString &name : keys) {
         QVERIFY2(transitionsStarted[name] == 1,
                  qPrintable(QString("%1 was displaced %2 times").arg(name).arg(transitionsStarted[name].toInt())));
     }
@@ -8419,7 +8420,7 @@ void tst_QQuickListView::stickyPositioning()
 
     listview->positionViewAtIndex(positionIndex, positionMode);
 
-    foreach (const QPointF &offset, movement) {
+    for (const QPointF &offset : std::as_const(movement)) {
         listview->setContentX(listview->contentX() + offset.x());
         listview->setContentY(listview->contentY() + offset.y());
     }

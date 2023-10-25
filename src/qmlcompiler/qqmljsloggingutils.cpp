@@ -123,6 +123,14 @@ LoggerCategoryPrivate *LoggerCategoryPrivate::get(LoggerCategory *loggerCategory
     return loggerCategory->d_func();
 }
 
+/*!
+    \class QQmlSA::LoggerWarningId
+    \inmodule QtQmlCompiler
+
+    \brief A wrapper around a string literal to uniquely identify
+    warning categories in the \c{QQmlSA} framework.
+*/
+
 } // namespace QQmlJS
 
 QT_END_NAMESPACE

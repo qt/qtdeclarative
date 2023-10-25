@@ -4,8 +4,9 @@
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
-#include <QtQuick/private/qquickpixmapcache_p.h>
+#include <QtQuick/private/qquickpixmap_p.h>
 #include <QtQuick/private/qsgadaptationlayer_p.h>
+#include <QtQuick/private/qsginternaltextnode_p.h>
 
 #include <QGuiApplication>
 #include <QScreen>
@@ -62,6 +63,9 @@ Q_LOGGING_CATEGORY(QSG_LOG_TIME_GLYPH,          "qt.scenegraph.time.glyph")
 
 // Timing inside the renderer base class
 Q_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERER,       "qt.scenegraph.time.renderer")
+
+// Leak checks
+Q_LOGGING_CATEGORY(lcQsgLeak,                   "qt.scenegraph.leaks")
 
 // Applicable for render loops that install their own animation driver, such as
 // the 'threaded' loop. This env.var. is documented in the scenegraph docs.
@@ -327,6 +331,16 @@ QSGInternalRectangleNode *QSGContext::createInternalRectangleNode(const QRectF &
     node->setColor(c);
     node->update();
     return node;
+}
+
+QSGInternalTextNode *QSGContext::createInternalTextNode(QSGRenderContext *renderContext)
+{
+    return new QSGInternalTextNode(renderContext);
+}
+
+QSGTextNode *QSGContext::createTextNode(QSGRenderContext *renderContext)
+{
+    return createInternalTextNode(renderContext);
 }
 
 /*!

@@ -25,6 +25,8 @@
 #include <QtQuick/private/qquicktransitionmanager_p_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickTransition;

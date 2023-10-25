@@ -7,7 +7,7 @@ Item {
     id: root
     width: 10; height: 20; scale: blueRect.scale;
     Rectangle { id: blueRect; width: 500; height: 600; color: "blue"; }
-    Text { font.bold: true; color: blueRect.color; }
+    Text { id: blueText; font.bold: true; color: blueRect.color; }
     MouseArea {
         onEntered: { console.log('hello') }
     }

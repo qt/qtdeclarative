@@ -7,9 +7,12 @@
 #include <QtQmlCompiler/private/qqmljslinter_p.h>
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
 #include <QtQmlDom/private/qqmldom_utils_p.h>
+#include <QtQmlDom/private/qqmldomtop_p.h>
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qdir.h>
 #include <chrono>
 
 using namespace QLspSpecification;
@@ -77,7 +80,8 @@ static void codeActionHandler(
         edit.documentChanges = edits;
 
         CodeAction action;
-        action.kind = u"refactor.rewrite"_s.toUtf8();
+        // VS Code and QtC ignore everything that is not a 'quickfix'.
+        action.kind = u"quickfix"_s.toUtf8();
         action.edit = edit;
         action.title = message.toUtf8();
 
@@ -158,11 +162,20 @@ static Diagnostic messageToDiagnostic_helper(AdvanceFunc advancePositionPastLoca
     if (srcLoc.isValid()) {
         position.line = srcLoc.startLine - 1;
         position.character = srcLoc.startColumn - 1;
-        advancePositionPastLocation(message.loc,
-                                    position);
+        range.end = position;
+        advancePositionPastLocation(message.loc, range.end);
     }
-    range.end = position;
-    diagnostic.message = message.message.toUtf8();
+
+    if (message.fixSuggestion && !message.fixSuggestion->fixDescription().isEmpty()) {
+        diagnostic.message = QString(message.message)
+                                     .append(u": "_s)
+                                     .append(message.fixSuggestion->fixDescription())
+                                     .simplified()
+                                     .toUtf8();
+    } else {
+        diagnostic.message = message.message.toUtf8();
+    }
+
     diagnostic.source = QByteArray("qmllint");
 
     auto suggestion = message.fixSuggestion;
@@ -295,12 +308,16 @@ void QmlLintSuggestions::diagnoseHelper(const QByteArray &url,
     qCDebug(lintLog) << "has doc, do real lint";
     QStringList imports = m_codeModel->buildPathsForFileUrl(url);
     imports.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
+    const QString filename = doc.canonicalFilePath();
+    // add source directory as last import as fallback in case there is no qmldir in the build
+    // folder this mimics qmllint behaviors
+    imports.append(QFileInfo(filename).dir().absolutePath());
     // add m_server->clientInfo().rootUri & co?
     bool silent = true;
-    QString filename = doc.canonicalFilePath();
-    QString fileContents = doc.field(Fields::code).value().toString();
-    QStringList qmltypesFiles;
-    QStringList resourceFiles;
+    const QString fileContents = doc.field(Fields::code).value().toString();
+    const QStringList qmltypesFiles;
+    const QStringList resourceFiles = resourceFilesFromBuildFolders(imports);
+
     QList<QQmlJS::LoggerCategory> categories;
 
     QQmlJSLinter linter(imports);
@@ -321,7 +338,7 @@ void QmlLintSuggestions::diagnoseHelper(const QByteArray &url,
 
     QList<Diagnostic> diagnostics;
     doc.iterateErrors(
-            [&diagnostics, &advancePositionPastLocation](DomItem, ErrorMessage msg) {
+            [&diagnostics, &advancePositionPastLocation](const DomItem &, const ErrorMessage &msg) {
                 Diagnostic diagnostic;
                 diagnostic.severity = severityFromMsgType(QtMsgType(int(msg.level)));
                 // do something with msg.errorGroups ?

@@ -8,8 +8,11 @@
 #include "qquicktextarea_p.h"
 #include "qquicktextfield_p.h"
 #include "qquicktoolbar_p.h"
+#include <private/qtquicktemplates2-config_p.h>
+#if QT_CONFIG(quicktemplates2_container)
 #include "qquicktabbar_p.h"
 #include "qquickdialogbuttonbox_p.h"
+#endif
 #include "qquickdeferredexecute_p_p.h"
 #include "qquickdeferredpointer_p_p.h"
 
@@ -412,10 +415,12 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
             header->setZ(1);
         if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(header))
             toolBar->setPosition(QQuickToolBar::Header);
+#if QT_CONFIG(quicktemplates2_container)
         else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(header))
             tabBar->setPosition(QQuickTabBar::Header);
         else if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(header))
             buttonBox->setPosition(QQuickDialogButtonBox::Header);
+#endif
     }
     if (isComponentComplete())
         d->relayout();
@@ -467,10 +472,12 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
             footer->setZ(1);
         if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(footer))
             toolBar->setPosition(QQuickToolBar::Footer);
+#if QT_CONFIG(quicktemplates2_container)
         else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(footer))
             tabBar->setPosition(QQuickTabBar::Footer);
         else if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(footer))
             buttonBox->setPosition(QQuickDialogButtonBox::Footer);
+#endif
     }
     if (isComponentComplete())
         d->relayout();

@@ -3,18 +3,15 @@
 
 #include "filesystemmodel.h"
 
-#include <QMimeDatabase>
 #include <QStandardPaths>
+#include <QMimeDatabase>
+#include <QTextDocument>
+#include <QTextObject>
 
 FileSystemModel::FileSystemModel(QObject *parent) : QFileSystemModel(parent)
 {
-    setRootPath(QStandardPaths::writableLocation(QStandardPaths::HomeLocation));
-}
-
-int FileSystemModel::columnCount(const QModelIndex &parent) const
-{
-    Q_UNUSED(parent);
-    return 1;
+    setFilter(QDir::AllEntries | QDir::Hidden | QDir::NoDotAndDotDot);
+    setInitialDirectory();
 }
 
 QString FileSystemModel::readFile(const QString &filePath)
@@ -45,4 +42,48 @@ QString FileSystemModel::readFile(const QString &filePath)
         }
     }
     return tr("Filetype not supported!");
+}
+
+// This function gets called from Editor.qml
+int FileSystemModel::currentLineNumber(QQuickTextDocument *textDocument, int cursorPosition)
+{
+    if (QTextDocument *td = textDocument->textDocument()) {
+        QTextBlock tb = td->findBlock(cursorPosition);
+        return tb.blockNumber();
+    }
+    return -1;
+}
+
+int FileSystemModel::columnCount(const QModelIndex &parent) const
+{
+    Q_UNUSED(parent)
+    return 1;
+}
+
+QModelIndex FileSystemModel::rootIndex() const
+{
+    return m_rootIndex;
+}
+
+void FileSystemModel::setRootIndex(const QModelIndex index)
+{
+    if (index == m_rootIndex)
+        return;
+    m_rootIndex = index;
+    emit rootIndexChanged();
+}
+
+void FileSystemModel::setInitialDirectory(const QString &path)
+{
+    QDir dir(path);
+    if (dir.makeAbsolute())
+        setRootPath(dir.path());
+    else
+        setRootPath(getDefaultRootDir());
+    setRootIndex(QFileSystemModel::index(dir.path(), 0));
+}
+
+QString FileSystemModel::getDefaultRootDir()
+{
+    return QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
 }

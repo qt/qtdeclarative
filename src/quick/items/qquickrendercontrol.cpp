@@ -281,6 +281,17 @@ int QQuickRenderControl::samples() const
     \note This function does not need to be, and must not be, called when using
     the \c software adaptation of Qt Quick.
 
+    With the default Qt Quick adaptation this function creates a new \l QRhi
+    object, similarly to what would happen with an on-screen QQuickWindow when
+    QQuickRenderControl was not used. To make this new QRhi object adopt some
+    existing device or context resource (e.g. use an existing QOpenGLContext
+    instead of creating a new one), use QQuickWindow::setGraphicsDevice() as
+    mentioned above. When the application wants to make the Qt Quick rendering
+    use an already existing \l QRhi object, that is possible as well via
+    \l QQuickGraphicsDevice::fromRhi(). When such a QQuickGraphicsDevice,
+    referencing an already existing QRhi, is set, there will be no new,
+    dedicated \l QRhi object created in initialize().
+
     \since 6.0
 
     \sa QQuickRenderTarget, QQuickGraphicsDevice, QQuickGraphicsConfiguration::preferredInstanceExtensions()
@@ -357,7 +368,8 @@ bool QQuickRenderControl::sync()
             return false;
         }
         if (!d->cb) {
-            qWarning("QQuickRenderControl cannot be used with QRhi when no QRhiCommandBuffer is provided");
+            qWarning("QQuickRenderControl cannot be used with QRhi when no QRhiCommandBuffer is provided "
+                     "(perhaps beginFrame() was not called or it was unsuccessful?)");
             return false;
         }
         cd->setCustomCommandBuffer(d->cb);
@@ -580,7 +592,12 @@ QQuickWindow *QQuickRenderControl::window() const
     \note The QRhi exists only when initialize() has successfully completed.
     Before that the return value is null.
 
+    \note This function is not applicable and returns null when using the
+    \c software adaptation of Qt Quick.
+
     \since 6.6
+
+    \sa commandBuffer(), beginFrame(), endFrame()
  */
 QRhi *QQuickRenderControl::rhi() const
 {
@@ -603,7 +620,12 @@ QRhi *QQuickRenderControl::rhi() const
     the command buffer right after endFrame(), but before the next
     beginFrame(), is valid.
 
+    \note This function is not applicable and returns null when using the
+    \c software adaptation of Qt Quick.
+
     \since 6.6
+
+    \sa rhi(), beginFrame(), endFrame()
  */
 QRhiCommandBuffer *QQuickRenderControl::commandBuffer() const
 {
@@ -625,7 +647,7 @@ QRhiCommandBuffer *QQuickRenderControl::commandBuffer() const
     assumes Direct3D 11 but the same concepts apply other graphics APIs as
     well.
 
-    \badcode
+    \code
         if (!m_quickInitialized) {
             m_quickWindow->setGraphicsDevice(QQuickGraphicsDevice::fromDeviceAndContext(m_engine->device(), m_engine->context()));
 
@@ -647,6 +669,15 @@ QRhiCommandBuffer *QQuickRenderControl::commandBuffer() const
         m_renderControl->endFrame(); // Qt Quick's rendering commands are submitted to the device context here
     \endcode
 
+    \note This function does not need to be, and must not be, called when using
+    the \c software adaptation of Qt Quick.
+
+    \note Internally beginFrame() and endFrame() invoke
+    \l{QRhi::}{beginOffscreenFrame()} and \l{QRhi::}{endOffscreenFrame()},
+    respectively. This implies that there must not be a frame (neither
+    offscreen, nor swapchain-based) being recorded on the QRhi when
+    this function is called.
+
     \since 6.0
 
     \sa endFrame(), initialize(), sync(), render(), QQuickGraphicsDevice, QQuickRenderTarget
@@ -654,8 +685,18 @@ QRhiCommandBuffer *QQuickRenderControl::commandBuffer() const
 void QQuickRenderControl::beginFrame()
 {
     Q_D(QQuickRenderControl);
-    if (!d->rhi || d->rhi->isRecordingFrame())
+    if (!d->rhi) {
+        qWarning("QQuickRenderControl: No QRhi in beginFrame()");
         return;
+    }
+    if (d->frameStatus == QQuickRenderControlPrivate::RecordingFrame) {
+        qWarning("QQuickRenderControl: beginFrame() must be followed by a call to endFrame() before calling beginFrame() again");
+        return;
+    }
+    if (d->rhi->isRecordingFrame()) {
+        qWarning("QQuickRenderControl: Attempted to beginFrame() while the QRhi is already recording a frame");
+        return;
+    }
 
     emit d->window->beforeFrameBegin();
 
@@ -686,6 +727,9 @@ void QQuickRenderControl::beginFrame()
     scenegraph are submitted to the context or command queue, whichever is
     applicable.
 
+    \note This function does not need to be, and must not be, called when using
+    the \c software adaptation of Qt Quick.
+
     \since 6.0
 
     \sa beginFrame(), initialize(), sync(), render(), QQuickGraphicsDevice, QQuickRenderTarget
@@ -693,8 +737,18 @@ void QQuickRenderControl::beginFrame()
 void QQuickRenderControl::endFrame()
 {
     Q_D(QQuickRenderControl);
-    if (!d->rhi || !d->rhi->isRecordingFrame())
+    if (!d->rhi) {
+        qWarning("QQuickRenderControl: No QRhi in endFrame()");
         return;
+    }
+    if (d->frameStatus != QQuickRenderControlPrivate::RecordingFrame) {
+        qWarning("QQuickRenderControl: endFrame() must only be called after a successful beginFrame()");
+        return;
+    }
+    if (!d->rhi->isRecordingFrame()) {
+        qWarning("QQuickRenderControl: Attempted to endFrame() while the QRhi is not recording a frame");
+        return;
+    }
 
     d->rhi->endOffscreenFrame();
     // do not null out d->cb; this allows calling lastCompletedGpuTime() for example

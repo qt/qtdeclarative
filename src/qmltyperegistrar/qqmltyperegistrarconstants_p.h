@@ -142,6 +142,7 @@ static constexpr QLatin1StringView S_ELEMENT                      { "QML.Element
 static constexpr QLatin1StringView S_EXTENDED                     { "QML.Extended" };
 static constexpr QLatin1StringView S_EXTENSION_IS_NAMESPACE       { "QML.ExtensionIsNamespace" };
 static constexpr QLatin1StringView S_FOREIGN                      { "QML.Foreign" };
+static constexpr QLatin1StringView S_FOREIGN_IS_NAMESPACE         { "QML.ForeignIsNamespace" };
 static constexpr QLatin1StringView S_HAS_CUSTOM_PARSER            { "QML.HasCustomParser" };
 static constexpr QLatin1StringView S_OMIT_FROM_QML_TYPES          { "QML.OmitFromQmlTypes" };
 static constexpr QLatin1StringView S_REMOVED_IN_VERSION           { "QML.RemovedInVersion" };

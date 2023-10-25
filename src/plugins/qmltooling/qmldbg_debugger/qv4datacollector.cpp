@@ -188,9 +188,10 @@ bool QV4DataCollector::collectScope(QJsonObject *dict, int frameNr, int scopeNr)
         QV4::ScopedValue v(scope);
         QV4::Heap::InternalClass *ic = ctxt->internalClass();
         for (uint i = 0; i < ic->size; ++i) {
-            QString name = ic->keyAt(i);
-            names.append(name);
-            v = static_cast<QV4::Heap::CallContext *>(ctxt->d())->locals[i];
+            QV4::ScopedValue stringOrSymbol(scope, ic->keyAt(i));
+            QV4::ScopedString propName(scope, stringOrSymbol->toString(scope.engine));
+            names.append(propName->toQString());
+            v = ctxt->getProperty(propName);
             collectedRefs.append(addValueRef(v));
         }
 

@@ -17,4 +17,5 @@ QtObject {
     property string singular2: Js.singular2()
     property string plural: Js.plural()
     property string plural2: Js.plural2()
+    property string emptyContext: Js.emptyContext()
 }

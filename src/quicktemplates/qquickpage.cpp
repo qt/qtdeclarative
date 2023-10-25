@@ -3,9 +3,11 @@
 
 #include "qquickpage_p.h"
 #include "qquickpage_p_p.h"
-#include "qquicktabbar_p.h"
 #include "qquicktoolbar_p.h"
+#if QT_CONFIG(quicktemplates2_container)
+#include "qquicktabbar_p.h"
 #include "qquickdialogbuttonbox_p.h"
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -75,23 +77,27 @@ namespace {
         Footer
     };
 
+Q_STATIC_ASSERT(int(Header) == int(QQuickToolBar::Header));
+Q_STATIC_ASSERT(int(Footer) == int(QQuickToolBar::Footer));
+
+#if QT_CONFIG(quicktemplates2_container)
     Q_STATIC_ASSERT(int(Header) == int(QQuickTabBar::Header));
     Q_STATIC_ASSERT(int(Footer) == int(QQuickTabBar::Footer));
 
-    Q_STATIC_ASSERT(int(Header) == int(QQuickToolBar::Header));
-    Q_STATIC_ASSERT(int(Footer) == int(QQuickToolBar::Footer));
-
     Q_STATIC_ASSERT(int(Header) == int(QQuickDialogButtonBox::Header));
     Q_STATIC_ASSERT(int(Footer) == int(QQuickDialogButtonBox::Footer));
+#endif
 
     static void setPos(QQuickItem *item, Position position)
     {
         if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(item))
             toolBar->setPosition(static_cast<QQuickToolBar::Position>(position));
+#if QT_CONFIG(quicktemplates2_container)
         else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(item))
             tabBar->setPosition(static_cast<QQuickTabBar::Position>(position));
         else if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(item))
             buttonBox->setPosition(static_cast<QQuickDialogButtonBox::Position>(position));
+#endif
     }
 }
 

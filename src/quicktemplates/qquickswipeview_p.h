@@ -17,6 +17,8 @@
 
 #include <QtQuickTemplates2/private/qquickcontainer_p.h>
 
+QT_REQUIRE_CONFIG(quicktemplates2_container);
+
 QT_BEGIN_NAMESPACE
 
 class QQuickSwipeViewAttached;

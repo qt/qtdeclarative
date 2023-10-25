@@ -31,8 +31,8 @@ Q_LOGGING_CATEGORY(lcPane, "qt.quick.controls.pane")
     dynamically need to be explicitly parented to the \c contentItem.
 
     As mentioned in \l {Event Handling}, Pane does not let click and touch
-    events through to items beneath it. If \l wheelEnabled is \c true, the
-    same applies to mouse wheel events.
+    events through to items beneath it. If \l [QML] {Control::}{wheelEnabled}
+    is \c true, the same applies to mouse wheel events.
 
     \section1 Content Sizing
 
@@ -143,14 +143,30 @@ void QQuickPanePrivate::itemImplicitHeightChanged(QQuickItem *item)
         updateImplicitContentHeight();
 }
 
+void QQuickPanePrivate::itemDestroyed(QQuickItem *item)
+{
+    // Do this check before calling the base class implementation, as that clears contentItem.
+    if (item == firstChild)
+        firstChild = nullptr;
+
+    QQuickControlPrivate::itemDestroyed(item);
+}
+
 void QQuickPanePrivate::contentChildrenChange()
 {
     Q_Q(QQuickPane);
-    QQuickItem *newFirstChild = contentChildItems().value(0);
+
+    // The first child varies depending on how the content item is declared.
+    // If it's declared as a child of the Pane, it will be parented to the
+    // default QQuickContentItem. If it's assigned to the contentItem property
+    // directly, QQuickControl::contentItem will be used."
+    QQuickItem *newFirstChild = ((qobject_cast<QQuickContentItem *>(contentItem))
+        ? contentChildItems().value(0) : *contentItem);
+
     if (newFirstChild != firstChild) {
         if (firstChild)
             removeImplicitSizeListener(firstChild);
-        if (newFirstChild)
+        if (newFirstChild && newFirstChild != contentItem)
             addImplicitSizeListener(newFirstChild);
         firstChild = newFirstChild;
     }

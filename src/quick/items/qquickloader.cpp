@@ -161,9 +161,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
 
     \section2 Loader Sizing Behavior
 
-    If the source component is not an Item type, Loader does not
-    apply any special sizing rules.  When used to load visual types,
-    Loader applies the following sizing rules:
+    When used to load visual types, Loader applies the following sizing rules:
 
     \list
     \li If an explicit size is not specified for the Loader, the Loader
@@ -190,6 +188,8 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     \li The red rectangle will be 50x50, centered in the root item.
     \endtable
 
+    If the source component is not an Item type, Loader does not apply any
+    special sizing rules.
 
     \section2 Receiving Signals from Loaded Objects
 
@@ -673,13 +673,6 @@ void QQuickLoaderPrivate::incubatorStateChanged(QQmlIncubator::Status status)
     if (status == QQmlIncubator::Ready) {
         object = incubator->object();
         item = qmlobject_cast<QQuickItem*>(object);
-        if (!item) {
-            QQuickWindow *window = qmlobject_cast<QQuickWindow*>(object);
-            if (window) {
-                qCDebug(lcTransient) << window << "is transient for" << q->window();
-                window->setTransientParent(q->window());
-            }
-        }
         emit q->itemChanged();
         initResize();
         incubator->clear();
@@ -804,12 +797,15 @@ void QQuickLoader::componentComplete()
 
 void QQuickLoader::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
 {
-    if (change == ItemSceneChange) {
-        QQuickWindow *loadedWindow = qmlobject_cast<QQuickWindow *>(item());
-        if (loadedWindow) {
-            qCDebug(lcTransient) << loadedWindow << "is transient for" << value.window;
-            loadedWindow->setTransientParent(value.window);
-        }
+    switch (change) {
+    case ItemChildAddedChange:
+        Q_ASSERT(value.item);
+        if (value.item->flags().testFlag(QQuickItem::ItemObservesViewport))
+            // Re-trigger the parent traversal to get subtreeTransformChangedEnabled turned on
+            value.item->setFlag(QQuickItem::ItemObservesViewport);
+        break;
+    default:
+        break;
     }
     QQuickItem::itemChange(change, value);
 }

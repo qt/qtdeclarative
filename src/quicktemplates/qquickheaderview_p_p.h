@@ -44,6 +44,7 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     bool hasChildren(const QModelIndex &parent = QModelIndex()) const override;
+    QHash<int, QByteArray> roleNames() const override;
 
     inline QVariant variantValue() const;
     inline Qt::Orientation orientation() const;
@@ -70,6 +71,7 @@ public:
     void setModelImpl(const QVariant &newModel) override;
     void syncModel() override;
     void syncSyncView() override;
+    QAbstractItemModel *selectionSourceModel() override;
 
 protected:
     QHeaderDataProxyModel m_headerDataProxyModel;

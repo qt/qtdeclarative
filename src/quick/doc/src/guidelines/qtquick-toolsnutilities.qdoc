@@ -75,7 +75,7 @@ tests are setup, UI tests are a lot easier to run.
 
 \section1 qmllint
 
-\l{qtquick-tool-qmllint.html}{qmllint} is a tool shipped with Qt, that verifies
+\l{qmllint} is a tool shipped with Qt, that verifies
 the syntatic validity of QML files. It also warns about some QML anti-patterns.
 If you want to disable a specific warning type, you can find the appropriate
 flag for doing so by passing \c{--help} on the command line.

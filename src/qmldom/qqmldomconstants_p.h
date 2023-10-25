@@ -287,6 +287,14 @@ Q_ENUM_NS(GoTo)
 enum class AddOption { KeepExisting, Overwrite };
 Q_ENUM_NS(AddOption)
 
+/*!
+\internal
+FilterUpOptions decide in which direction the filtering is done.
+ReturnInner starts the search at top(), and work its way down to the current
+element.
+ReturnOuter and ReturnOuterNoSelf starts the search at the current element and
+works their way up to to top().
+*/
 enum class FilterUpOptions { ReturnOuter, ReturnOuterNoSelf, ReturnInner };
 Q_ENUM_NS(FilterUpOptions)
 
@@ -307,21 +315,29 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(WriteOutChecks)
 
 enum class LocalSymbolsType {
     None = 0x0,
-    QmlTypes = 0x1,
-    Types = 0x3,
-    Signals = 0x4,
-    Methods = 0xC,
-    Attributes = 0x10,
-    Ids = 0x20,
-    Components = 0x40,
-    Namespaces = 0x80,
-    Globals = 0x100,
-    MethodParameters = 0x200,
-    All = 0x3FF
+    ObjectType = 0x1,
+    ValueType = 0x2,
+    Signal = 0x4,
+    Method = 0x8,
+    Attribute = 0x10,
+    Id = 0x20,
+    Namespace = 0x40,
+    Global = 0x80,
+    MethodParameter = 0x100,
+    Singleton = 0x200,
+    AttachedType = 0x400,
 };
 Q_ENUM_NS(LocalSymbolsType)
 Q_DECLARE_FLAGS(LocalSymbolsTypes, LocalSymbolsType)
 Q_DECLARE_OPERATORS_FOR_FLAGS(LocalSymbolsTypes)
+
+enum DomCreationOption : char {
+    None = 0,
+    WithSemanticAnalysis = 1,
+    WithScriptExpressions = 2,
+};
+
+Q_DECLARE_FLAGS(DomCreationOptions, DomCreationOption);
 
 } // end namespace Dom
 } // end namespace QQmlJS

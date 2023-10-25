@@ -32,11 +32,9 @@ void tst_qqmlfileselector::basicTest()
     selector.setExtraSelectors(QStringList() << "basic");
 
     QQmlComponent component(&engine, testFileUrl("basicTest.qml"));
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
+    std::unique_ptr<QObject> object { component.create() };
+    QVERIFY(object.get() != nullptr);
     QCOMPARE(object->property("value").toString(), QString("selected"));
-
-    delete object;
 }
 
 void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &message)
@@ -102,8 +100,6 @@ void tst_qqmlfileselector::qmldirCompatibility()
         QVERIFY(!engine.rootObjects().isEmpty());
         QObject *object = engine.rootObjects().at(0);
         QCOMPARE(object->property("color").value<QColor>(), QColorConstants::Svg::green);
-
-        QEXPECT_FAIL("", "scripts in implicit import are not resolved", Continue);
         QCOMPARE(object->objectName(), "base");
     }
 }

@@ -1,0 +1,46 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-inheritance-cycle.html
+\ingroup qmllint-warnings-and-errors
+
+\title Inheritance Cycle
+\brief A component inherits from itself.
+
+\section1 Component Is Part Of An Inheritance Cycle
+
+\section2 What happened?
+A component inherited directly or indirectly from itself.
+
+Usually, Components can inherit properties, methods, signals and enums from other components.
+
+If a component inherits itself directly or indirectly through another base component, then
+it forms an inheritance cycle. The warning indicates that the current component is inside an
+inheritance cycle, see \l{#example}{Example}.
+
+\section2 Why is this bad?
+Components with inheritance cycles will not be created at runtime: they will be null instead.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    component Cycle: Cycle {} // not ok: directly inherits from itself
+    component C: C2 {}        // not ok: indirectly inherits from itself
+    component C2: C{}
+}
+\endqml
+You can fix this warning by breaking up the inheritance cycle
+\qml
+import QtQuick
+
+Item {
+    component Cycle: Item {}  // ok: does not inherit from itself
+    component C: C2 {}        // ok: does not indirectly inherits from itself anymore
+    component C2: Cycle{}
+}
+\endqml
+*/
+

@@ -90,7 +90,7 @@ qt_internal_add_qml_module(Quick
         items/qquicktextedit_p_p.h
         items/qquicktextinput.cpp items/qquicktextinput_p.h
         items/qquicktextinput_p_p.h
-        items/qquicktextnode.cpp items/qquicktextnode_p.h
+        items/qsginternaltextnode.cpp items/qsginternaltextnode_p.h
         items/qquicktextnodeengine.cpp items/qquicktextnodeengine_p.h
         items/qquicktextutil.cpp items/qquicktextutil_p.h
         items/qquicktranslate.cpp items/qquicktranslate_p.h
@@ -166,6 +166,7 @@ qt_internal_add_qml_module(Quick
         scenegraph/util/qsgrhiatlastexture.cpp scenegraph/util/qsgrhiatlastexture_p.h
         scenegraph/util/qsgsimplerectnode.cpp scenegraph/util/qsgsimplerectnode.h
         scenegraph/util/qsgsimpletexturenode.cpp scenegraph/util/qsgsimpletexturenode.h
+        scenegraph/util/qsgtextnode.cpp scenegraph/util/qsgtexturematerial.h scenegraph/util/qsgtextnode.h
         scenegraph/util/qsgtexturematerial.cpp scenegraph/util/qsgtexturematerial.h scenegraph/util/qsgtexturematerial_p.h
         scenegraph/util/qsgtextureprovider.cpp scenegraph/util/qsgtextureprovider.h
         scenegraph/util/qsgtexturereader.cpp scenegraph/util/qsgtexturereader_p.h
@@ -186,6 +187,7 @@ qt_internal_add_qml_module(Quick
         util/qquickforeignutils.cpp util/qquickforeignutils_p.h
         util/qquickglobal.cpp
         util/qquickimageprovider.cpp util/qquickimageprovider.h util/qquickimageprovider_p.h
+        util/qquickpixmap_p.h
         util/qquickpixmapcache.cpp util/qquickpixmapcache_p.h
         util/qquickprofiler_p.h
         util/qquickpropertychanges.cpp util/qquickpropertychanges_p.h

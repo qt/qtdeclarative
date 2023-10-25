@@ -225,6 +225,8 @@ void QQuickRangeSliderNode::setHandle(QQuickItem *handle)
     if (d->handle == handle)
         return;
 
+    QQuickControlPrivate::warnIfCustomizationNotSupported(d->slider, handle, QStringLiteral("handle"));
+
     if (!d->handle.isExecuting())
         d->cancelHandle();
 
@@ -354,6 +356,7 @@ public:
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
+    void itemDestroyed(QQuickItem *item) override;
 
     bool live = true;
     qreal from = defaultFrom;
@@ -483,8 +486,14 @@ bool QQuickRangeSliderPrivate::handlePress(const QPointF &point, ulong timestamp
 
     if (hitNode) {
         hitNode->setPressed(true);
-        if (QQuickItem *handle = hitNode->handle())
+        if (QQuickItem *handle = hitNode->handle()) {
             handle->setZ(1);
+
+            // A specific handle was hit, so it should get focus, rather than the default
+            // (first handle) that gets focus whenever the RangeSlider itself does - see focusInEvent().
+            if (focusPolicy & Qt::ClickFocus)
+                handle->forceActiveFocus(Qt::MouseFocusReason);
+        }
         QQuickRangeSliderNodePrivate::get(hitNode)->touchId = touchId;
     }
     if (otherNode) {
@@ -594,6 +603,15 @@ void QQuickRangeSliderPrivate::itemImplicitHeightChanged(QQuickItem *item)
         emit second->implicitHandleHeightChanged();
 }
 
+void QQuickRangeSliderPrivate::itemDestroyed(QQuickItem *item)
+{
+    QQuickControlPrivate::itemDestroyed(item);
+    if (item == first->handle())
+        first->setHandle(nullptr);
+    else if (item == second->handle())
+        second->setHandle(nullptr);
+}
+
 QQuickRangeSlider::QQuickRangeSlider(QQuickItem *parent)
     : QQuickControl(*(new QQuickRangeSliderPrivate), parent)
 {
@@ -602,6 +620,11 @@ QQuickRangeSlider::QQuickRangeSlider(QQuickItem *parent)
     d->second = new QQuickRangeSliderNode(1.0, this);
 
     setFlag(QQuickItem::ItemIsFocusScope);
+#ifdef Q_OS_MACOS
+    setFocusPolicy(Qt::TabFocus);
+#else
+    setFocusPolicy(Qt::StrongFocus);
+#endif
     setAcceptedMouseButtons(Qt::LeftButton);
 #if QT_CONFIG(quicktemplates2_multitouch)
     setAcceptTouchEvents(true);

@@ -5,7 +5,7 @@
 
 using namespace Qt::StringLiterals;
 
-static constexpr QQmlJS::LoggerWarningId plugin{ "testPlugin.test" };
+static constexpr QQmlSA::LoggerWarningId plugin{ "testPlugin.test" };
 
 class ElementTest : public QQmlSA::ElementPass
 {
@@ -57,7 +57,7 @@ public:
                                          ? u"NULL"_s
                                          : (value.name().isNull() ? value.baseTypeName()
                                                                   : value.name()))
-                            .arg(binding.bindingType())
+                            .arg(qToUnderlying(binding.bindingType()))
                             .arg(bindingScope.baseTypeName()),
                     plugin, bindingScope.sourceLocation());
     }

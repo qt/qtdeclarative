@@ -22,6 +22,8 @@
 
 #include <QtGui/private/qeventpoint_p.h>
 
+#include <QtCore/qpointer.h>
+
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
 // On one hand, uncommenting this will make troubleshooting easier (avoid the 60FPS hover events).

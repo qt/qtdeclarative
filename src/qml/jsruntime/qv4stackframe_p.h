@@ -144,6 +144,9 @@ struct Q_QML_PRIVATE_EXPORT MetaTypesStackFrame : public CppStackFrame
     const QMetaType *argTypes() const { return metaTypes + 1; }
     void **argv() const { return returnAndArgs + 1; }
 
+    const QMetaType *returnAndArgTypes() const { return metaTypes; }
+    void **returnAndArgValues() const { return returnAndArgs; }
+
     QObject *thisObject() const { return CppStackFrameBase::thisObject; }
 
     ExecutionContext *context() const { return CppStackFrameBase::context; }

@@ -1,6 +1,8 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
+#undef QT_NO_FOREACH // this file contains unported legacy Q_FOREACH uses
+
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qquickitem_p.h>
@@ -1050,8 +1052,8 @@ void QQuickImageParticle::createEngine()
         delete m_spriteEngine;
     if (m_sprites.size()) {
         m_spriteEngine = new QQuickSpriteEngine(m_sprites, this);
-        connect(m_spriteEngine, SIGNAL(stateChanged(int)),
-                this, SLOT(spriteAdvance(int)), Qt::DirectConnection);
+        connect(m_spriteEngine, &QQuickStochasticEngine::stateChanged,
+                this, &QQuickImageParticle::spriteAdvance, Qt::DirectConnection);
         m_explicitAnimation = true;
     } else {
         m_spriteEngine = nullptr;

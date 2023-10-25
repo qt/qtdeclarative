@@ -6,4 +6,5 @@ BuildDirType {
         width: 250
         height: 10
     }
+    Button {}
 }

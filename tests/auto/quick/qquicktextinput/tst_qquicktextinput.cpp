@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
@@ -1877,7 +1878,7 @@ void tst_qquicktextinput::maxLength()
     QVERIFY(textinputObject != nullptr);
     QVERIFY(textinputObject->text().isEmpty());
     QCOMPARE(textinputObject->maxLength(), 10);
-    foreach (const QString &str, standard) {
+    for (const QString &str : std::as_const(standard)) {
         QVERIFY(textinputObject->text().size() <= 10);
         textinputObject->setText(str);
         QVERIFY(textinputObject->text().size() <= 10);

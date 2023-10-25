@@ -1198,15 +1198,17 @@ void tst_QQuickFileDialogImpl::itemsDisabledWhenNecessary()
 void tst_QQuickFileDialogImpl::fileMode_data()
 {
     QTest::addColumn<QQuickFileDialog::FileMode>("fileMode");
+    QTest::addColumn<QString>("acceptButtonText");
 
-    QTest::newRow("OpenFile") << QQuickFileDialog::OpenFile;
-    QTest::newRow("OpenFiles") << QQuickFileDialog::OpenFiles;
-    QTest::newRow("SaveFile") << QQuickFileDialog::SaveFile;
+    QTest::newRow("OpenFile") << QQuickFileDialog::OpenFile << "Open";
+    QTest::newRow("OpenFiles") << QQuickFileDialog::OpenFiles << "Open";
+    QTest::newRow("SaveFile") << QQuickFileDialog::SaveFile << "Save";
 }
 
 void tst_QQuickFileDialogImpl::fileMode()
 {
     QFETCH(QQuickFileDialog::FileMode, fileMode);
+    QFETCH(QString, acceptButtonText);
 
     // Open the dialog.
     FileDialogTestHelper dialogHelper(this, "fileDialog.qml");
@@ -1221,13 +1223,13 @@ void tst_QQuickFileDialogImpl::fileMode()
     COMPARE_URL(dialogHelper.dialog->currentFile(), QUrl::fromLocalFile(tempFile1->fileName()));
     COMPARE_URLS(dialogHelper.dialog->currentFiles(), { QUrl::fromLocalFile(tempFile1->fileName()) });
 
-    // All modes should support opening an existing file, so the Open button should be enabled.
+    // All modes should support opening an existing file, so the accept button should be enabled.
     QVERIFY(dialogHelper.quickDialog->footer());
     auto dialogButtonBox = dialogHelper.quickDialog->footer()->findChild<QQuickDialogButtonBox*>();
     QVERIFY(dialogButtonBox);
-    QQuickAbstractButton* openButton = findDialogButton(dialogButtonBox, "Open");
-    QVERIFY(openButton);
-    QCOMPARE(openButton->isEnabled(), true);
+    QQuickAbstractButton *acceptButton = findDialogButton(dialogButtonBox, acceptButtonText);
+    QVERIFY(acceptButton);
+    QCOMPARE(acceptButton->isEnabled(), true);
 
     // Only the OpenFiles mode should allow multiple files to be selected, however.
     QQuickFileDialogDelegate *tempFile2Delegate = nullptr;
@@ -1426,6 +1428,7 @@ void tst_QQuickFileDialogImpl::selectNewFileViaTextField_data()
 void tst_QQuickFileDialogImpl::selectNewFileViaTextField()
 {
     QFETCH(QQuickFileDialog::FileMode, fileMode);
+    QFETCH(QString, acceptButtonText);
 
     // Open the dialog.
     FileDialogTestHelper dialogHelper(this, "fileDialog.qml");
@@ -1445,19 +1448,35 @@ void tst_QQuickFileDialogImpl::selectNewFileViaTextField()
              "The TextField for file name should only be visible when the FileMode is 'SaveFile'");
 
     if (fileMode == QQuickFileDialog::SaveFile) {
+        QVERIFY(dialogHelper.quickDialog->footer());
+        auto dialogButtonBox = dialogHelper.quickDialog->footer()->findChild<QQuickDialogButtonBox*>();
+        QVERIFY(dialogButtonBox);
+        QQuickAbstractButton *acceptButton = findDialogButton(dialogButtonBox, acceptButtonText);
+        QVERIFY(acceptButton);
+        QCOMPARE(acceptButton->isEnabled(), false);
+
         const QPoint textFieldCenterPos =
                 fileNameTextField->mapToScene({ fileNameTextField->width() / 2, fileNameTextField->height() / 2 }).toPoint();
 
         QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, textFieldCenterPos);
         QTRY_VERIFY(fileNameTextField->hasActiveFocus());
+        QCOMPARE(acceptButton->isEnabled(), false);
 
         const QByteArray newFileName("foo.txt");
         for (const auto &c : newFileName)
             QTest::keyClick(dialogHelper.window(), c);
+        QCOMPARE(acceptButton->isEnabled(), true);
+
         QTest::keyClick(dialogHelper.window(), Qt::Key_Enter);
+        QCOMPARE(acceptButton->isEnabled(), true);
 
         QTRY_COMPARE(fileNameTextField->text(), newFileName);
         QCOMPARE(dialogHelper.dialog->selectedFile().fileName(), newFileName);
+
+        QVERIFY(fileNameTextField->hasActiveFocus());
+        for (int i = 0; i < newFileName.size(); i++)
+            QTest::keyClick(dialogHelper.window(), Qt::Key_Backspace);
+        QCOMPARE(acceptButton->isEnabled(), false);
     }
 }
 

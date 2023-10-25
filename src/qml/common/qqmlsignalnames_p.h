@@ -49,6 +49,9 @@ public:
     static bool isHandlerName(QStringView signalName);
 
     static QString addPrefixToPropertyName(QStringView prefix, QStringView propertyName);
+
+    // ### Qt7: remove this
+    static std::optional<QString> badHandlerNameToSignalName(QStringView handler);
 };
 
 QT_END_NAMESPACE

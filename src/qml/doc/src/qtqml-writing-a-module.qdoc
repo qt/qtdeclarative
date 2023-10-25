@@ -104,10 +104,201 @@ CMakeLists.txt, link the plugin, not the backing library, into the main program:
 \skipto target_link_libraries
 \printuntil )
 
-\section1 Exporting Multiple Major Versions from The Same Module
+\section1 Versions
+
+QML has a complex system to assign versions to components and modules. In most
+cases you should ignore all of it by:
+
+\list 1
+    \li Never adding a version to your import statements
+    \li Never specifying any versions in \l{qt_add_qml_module}
+    \li Never using \l{QML_ADDED_IN_VERSION} or \l{QT_QML_SOURCE_VERSIONS}
+    \li Never using \l{Q_REVISION} or the \c{REVISION()} attribute in \l{Q_PROPERTY}
+    \li Avoiding unqualified access
+    \li Generously using import namespaces
+\endlist
+
+Versioning is ideally handled outside the language itself. You may, for example,
+keep separate \l{QML Import Path}{import paths} for different sets of QML modules.
+Or you may use a versioning mechanism provided by your operating system to install
+or uninstall packages with QML modules.
+
+In some cases, Qt's own QML modules may show different behavior, depending on what
+version is imported. In particular, if a property is added to a QML component, and
+your code contains unqualified access to another property of the same name, your
+code will break. In the following example, the code will behave differently
+depending on the version of Qt, because the \l{QQuickRectangle::topLeftRadius}
+property was added in Qt 6.7:
+
+\qml
+import QtQuick
+
+Item {
+    // property you want to use
+    property real topLeftRadius: 24
+
+    Rectangle {
+
+        // correct for Qt version < 6.7 but uses Rectangle's topLeftRadius in 6.7
+        objectName: "top left radius:" + topLeftRadius
+    }
+}
+\endqml
+
+The solution here is to avoid the unqualified access. \l{qmllint} can be used to
+find such problems. The following example accesses the property you actually mean
+in a safe, qualified way:
+
+\qml
+import QtQuick
+
+Item {
+    id: root
+
+    // property you want to use
+    property real topLeftRadius: 24
+
+    Rectangle {
+
+        // never mixes up topLeftRadius with unrelated Rectangle's topLeftRadius
+        objectName: "top left radius:" + root.topLeftRadius
+    }
+}
+\endqml
+
+You can also avoid the incompatibility by importing a specific version of QtQuick:
+
+\qml
+// make sure Rectangle has no topLeftRadius property
+import QtQuick 6.6
+
+Item {
+    property real topLeftRadius: 24
+    Rectangle {
+        objectName: "top left radius:" + topLeftRadius
+    }
+}
+\endqml
+
+Another problem solved by versioning is the fact that QML components imported by
+different modules may shadow each other. In the following example, if \c{MyModule} were
+to introduce a component named \c{Rectangle} in a newer version, the \c{Rectangle}
+created by this document would not be a \l{QQuickRectangle} anymore, but rather the
+new \c{Rectangle} introduced by \c{MyModule}.
+
+\qml
+import QtQuick
+import MyModule
+
+Rectangle {
+    // MyModule's Rectangle, not QtQuick's
+}
+\endqml
+
+A good way to avoid the shadowing would be to import \c{QtQuick} and/or \c{MyModule}
+into type namespaces as follows:
+
+\qml
+import QtQuick as QQ
+import MyModule as MM
+
+QQ.Rectangle {
+   // QtQuick's Rectangle
+}
+\endqml
+
+Alternatively, if you import \c{MyModule} with a fixed version, and the new component
+receives a correct version tag via \l{QML_ADDED_IN_VERSION} or \l{QT_QML_SOURCE_VERSIONS},
+the shadowing is also avoided:
+
+\qml
+import QtQuick 6.6
+
+// Types introduced after 1.0 are not available, like Rectangle for example
+import MyModule 1.0
+
+Rectangle {
+    // QtQuick's Rectangle
+}
+\endqml
+
+For this to work, you need to use versions in \c{MyModule}. There are a few things
+to be aware of.
+
+\section2 If you add versions, add them everywhere
+
+You need to add a \c{VERSION} attribute to \l{qt_add_qml_module}. The version should
+be the most recent version provided by your module. Older minor versions of the same
+major version will automatically be registered. For older major versions, see
+\l{#Exporting Multiple Major Versions from The Same Module}{below}.
+
+You should add \l{QML_ADDED_IN_VERSION} or \l{QT_QML_SOURCE_VERSIONS} to every type
+that was \e not introduced in version \c{x.0} of your module, where \c{x} is the current
+major version.
+
+If you forget to add a version tag, the component will be available in all versions,
+making the versioning ineffective.
+
+However, there is no way to add versions to properties, methods, and signals defined
+in QML. The only way to version QML documents is to add a new document with separate
+\l{QT_QML_SOURCE_VERSIONS} for each change.
+
+\section2 Versions are not transitive
+
+If a component from your module \c{A} imports another module \c{B} and instantiates a type
+from that module as the root element, then the import version of \c{B} is relevant for the
+properties available from the resulting component, no matter what version of \l{A} is
+imported by a user.
+
+Consider a file \c{TypeFromA.qml} with version \c{2.6} in module \c{A}:
+
+\qml
+import B 2.7
+
+// Exposes TypeFromB 2.7, no matter what version of A is imported
+TypeFromB { }
+\endqml
+
+Now consider a user of \c{TypeFromA}:
+
+\qml
+import A 2.6
+
+// This is TypeFromB 2.7.
+TypeFromA { }
+\endqml
+
+The user hopes to see version \c{2.6} but actually gets version
+\c{2.7} of the base class \c{TypeFromB}.
+
+Therefore, in order to be safe, you not only have to duplicate your QML files and
+give them new versions when you add properties yourself, but also when you bump
+versions of modules you import.
+
+\section2 Qualified access does not honor versioning
+
+Versioning only affects unqualified access to members of a type or the type itself.
+In the example with \c{topLeftRadius}, if you write \c{this.topLeftRadius}, the
+property will be resolved if you're using Qt 6.7, even if you \c{import QtQuick 6.6}.
+
+\section2 Versions and revisions
+
+With \l{QML_ADDED_IN_VERSION}, and the two-argument variants of \l{Q_REVISION} and
+\l{Q_PROPERTY}'s \c{REVISION()}, you can only declare versions that are tightly coupled
+to the \l{QMetaObject}{metaobject's} revision as exposed in \l{QMetaMethod::revision}
+and \l{QMetaProperty::revision}. This means all the types in your type hierarchy have
+to follow the same versioning scheme. This includes any types provided by Qt itself
+that you inherit from.
+
+With \l{qmlRegisterType} and related functions you can register any mapping between
+metaobject revisions and type versions. You then need to use the one-argument forms
+of \l{Q_REVISION} and the \c{REVISION} attribute of \l{Q_PROPERTY}. However, this
+can become rather complex and confusing and is not recommended.
+
+\section2 Exporting multiple major versions from the same module
 
 \l qt_add_qml_module by default considers the major version given in its
-URI argument, even if the individual types declare other versions in their
+VERSION argument, even if the individual types declare other versions in their
 added specific version via \l QT_QML_SOURCE_VERSIONS or \l Q_REVISION.
 If a module is available under more than one version, you also need to decide
 what versions the individual QML files are available under. To declare further

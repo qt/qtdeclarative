@@ -28,7 +28,7 @@ QT_REQUIRE_CONFIG(quick_sprite);
 #include <QImage>
 #include <QPair>
 #include <QRandomGenerator>
-#include <private/qquickpixmapcache_p.h>
+#include <private/qquickpixmap_p.h>
 #include <private/qtquickglobal_p.h>
 
 QT_BEGIN_NAMESPACE

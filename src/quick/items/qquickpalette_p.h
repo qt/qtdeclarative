@@ -16,6 +16,8 @@
 
 #include <QtQuick/private/qquickcolorgroup_p.h>
 
+#include <QtCore/qpointer.h>
+
 #include <array>
 
 QT_BEGIN_NAMESPACE

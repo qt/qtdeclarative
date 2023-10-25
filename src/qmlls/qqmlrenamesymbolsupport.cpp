@@ -33,46 +33,33 @@ void QQmlRenameSymbolSupport::registerHandlers(QLanguageServer *, QLanguageServe
 void QQmlRenameSymbolSupport::process(QQmlRenameSymbolSupport::RequestPointerArgument request)
 {
     QLspSpecification::WorkspaceEdit result;
-    std::optional<QQmlLSUtilsErrorMessage> error;
-
-    QScopeGuard onExit([&error, &request, &result]() {
-        if (error.has_value()) {
-            request->m_response.sendErrorResponse(error->code, error->message.toUtf8());
-        } else {
-            request->m_response.sendResponse(result);
-        }
-    });
+    ResponseScopeGuard guard(result, request->m_response);
 
     auto itemsFound = itemsForRequest(request);
-    if (!itemsFound) {
+    if (guard.setErrorFrom(itemsFound))
         return;
-    }
+
+    QQmlLSUtilsItemLocation &front = std::get<QList<QQmlLSUtilsItemLocation>>(itemsFound).front();
 
     const QString newName = QString::fromUtf8(request->m_parameters.newName);
-    auto expressionType =
-            QQmlLSUtils::resolveExpressionType(itemsFound->front().domItem, ResolveOwnerType);
+    auto expressionType = QQmlLSUtils::resolveExpressionType(front.domItem, ResolveOwnerType);
 
     if (!expressionType) {
-        error = QQmlLSUtilsErrorMessage{ 0, u"Cannot rename the requested object"_s };
+        guard.setError(QQmlLSUtilsErrorMessage{ 0, u"Cannot rename the requested object"_s });
         return;
     }
 
-    if (auto renameImpossible = QQmlLSUtils::checkNameForRename(itemsFound->front().domItem,
-                                                                newName, expressionType)) {
-        error = renameImpossible;
+    if (guard.setErrorFrom(QQmlLSUtils::checkNameForRename(front.domItem, newName, expressionType)))
         return;
-    }
 
     QList<QLspSpecification::TextDocumentEdit> editsByFileForResult;
     // The QLspSpecification::WorkspaceEdit requires the changes to be grouped by files, so
     // collect them into editsByFileUris.
     QMap<QUrl, QList<QLspSpecification::TextEdit>> editsByFileUris;
 
-    auto renames =
-            QQmlLSUtils::renameUsagesOf(itemsFound->front().domItem, newName, expressionType);
+    auto renames = QQmlLSUtils::renameUsagesOf(front.domItem, newName, expressionType);
 
-    QQmlJS::Dom::DomItem files =
-            itemsFound->front().domItem.top().field(QQmlJS::Dom::Fields::qmlFileWithPath);
+    QQmlJS::Dom::DomItem files = front.domItem.top().field(QQmlJS::Dom::Fields::qmlFileWithPath);
 
     QHash<QString, QString> codeCache;
 

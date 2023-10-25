@@ -6,6 +6,7 @@
 #include <QQmlEngine>
 #include <QtQuick/qquickitem.h>
 #include <QtQuickTemplates2/private/qquickdeferredexecute_p_p.h>
+#include <QQmlIncubator>
 
 class DeferredPropertyTester : public QObject
 {
@@ -48,6 +49,7 @@ public:
     tst_qquickdeferred() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 private slots:
     void noSpuriousBinding();
+    void abortedIncubation();
 };
 
 
@@ -61,6 +63,25 @@ void tst_qquickdeferred::noSpuriousBinding() {
     std::unique_ptr<QObject> root(comp.create());
     QVERIFY2(root, qPrintable(comp.errorString()));
     root->setProperty("toggle", false);
+}
+
+// QTBUG-116828
+// This test checks the case where we cancel incubation of a componet with a deferred property
+// Components that have deferred properties should also provide an itemDestoryed method that
+// that resets the deferred property to null to prevent issues with dangling pointers.
+void tst_qquickdeferred::abortedIncubation()
+{
+    QQmlEngine engine;
+    QQmlIncubationController controller;
+    engine.setIncubationController(&controller);
+
+    {
+        QQmlIncubator incubator;
+        QQmlComponent componet(&engine, testFileUrl("abortedIncubation.qml"));
+        componet.create(incubator);
+        controller.incubateFor(1);
+        incubator.clear(); // abort incubation (and dont crash)
+    }
 }
 
 QTEST_MAIN(tst_qquickdeferred)

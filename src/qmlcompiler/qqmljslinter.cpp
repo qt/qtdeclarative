@@ -185,7 +185,11 @@ bool QQmlJSLinter::Plugin::parseMetaData(const QJsonObject &metaData, QString pl
 
         const QString categoryId =
                 (m_isInternal ? u""_s : u"Plugin."_s) + m_name + u'.' + object[u"name"].toString();
-        m_categories << QQmlJS::LoggerCategory{ categoryId, categoryId,
+        const auto settingsNameIt = object.constFind(u"settingsName");
+        const QString settingsName = (settingsNameIt == object.constEnd())
+                ? categoryId
+                : settingsNameIt->toString(categoryId);
+        m_categories << QQmlJS::LoggerCategory{ categoryId, settingsName,
                                                 object["description"_L1].toString(), QtWarningMsg,
                                                 ignored };
     }
@@ -548,10 +552,12 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
             QQmlJSLiteralBindingCheck literalCheck;
             literalCheck.run(&v, &typeResolver);
 
-            QScopedPointer<QQmlSA::PassManager> passMan;
+            using PassManagerPtr = std::unique_ptr<
+                    QQmlSA::PassManager, decltype(&QQmlSA::PassManagerPrivate::deletePassManager)>;
+            PassManagerPtr passMan(nullptr, &QQmlSA::PassManagerPrivate::deletePassManager);
 
             if (m_enablePlugins) {
-                passMan.reset(new QQmlSA::PassManager(&v, &typeResolver));
+                passMan.reset(QQmlSA::PassManagerPrivate::createPassManager(&v, &typeResolver));
 
                 for (const Plugin &plugin : m_plugins) {
                     if (!plugin.isValid() || !plugin.isEnabled())

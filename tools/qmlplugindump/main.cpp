@@ -262,7 +262,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
             QObject *object = nullptr;
 
             if (ty.isSingleton()) {
-                QQmlType::SingletonInstanceInfo *siinfo = ty.singletonInstanceInfo();
+                QQmlType::SingletonInstanceInfo::ConstPtr siinfo = ty.singletonInstanceInfo();
                 if (!siinfo) {
                     std::cerr << "Internal error, " << qPrintable(tyName)
                               << "(" << qPrintable( QString::fromUtf8(ty.typeName()) ) << ")"
@@ -272,7 +272,8 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
                 if (ty.isQObjectSingleton()) {
                     if (verbose)
                         std::cerr << "Trying to get singleton for " << qPrintable(tyName)
-                                  << " (" << qPrintable( siinfo->typeName )  << ")" << std::endl;
+                                  << " (" << qPrintable( QString::fromUtf8(siinfo->typeName) )
+                                  << ")" << std::endl;
                     collectReachableMetaObjects(object, &metas, info);
                     object = QQmlEnginePrivate::get(engine)->singletonInstance<QObject*>(ty);
                 } else {

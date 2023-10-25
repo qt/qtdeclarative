@@ -30,7 +30,7 @@ namespace Dom {
 class QMLDOM_EXPORT OutWriterState
 {
 public:
-    OutWriterState(Path itPath, DomItem &it, FileLocations::Tree fLoc);
+    OutWriterState(Path itPath, const DomItem &it, FileLocations::Tree fLoc);
 
     void closeState(OutWriter &);
 
@@ -86,8 +86,8 @@ public:
         return indent;
     }
 
-    void itemStart(DomItem &it);
-    void itemEnd(DomItem &it);
+    void itemStart(const DomItem &it);
+    void itemEnd(const DomItem &it);
     void regionStart(QString rName);
     void regionStart(QStringView rName) { regionStart(rName.toString()); }
     void regionEnd(QString rName);
@@ -154,7 +154,7 @@ public:
             updExp->info().expr = exp;
         }
     }
-    DomItem updatedFile(DomItem &qmlFile);
+    DomItem updatedFile(const DomItem &qmlFile);
 };
 
 } // end namespace Dom

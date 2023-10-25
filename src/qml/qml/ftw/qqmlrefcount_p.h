@@ -79,8 +79,20 @@ public:
 
     inline T* take() { T *res = o; o = nullptr; return res; }
 
-    friend bool operator==(const QQmlRefPointer &a, const QQmlRefPointer &b) { return a.o == b.o; }
-    friend bool operator!=(const QQmlRefPointer &a, const QQmlRefPointer &b) { return !(a == b); }
+    friend bool operator==(const QQmlRefPointer &a, const QQmlRefPointer &b) noexcept
+    {
+        return a.o == b.o;
+    }
+
+    friend bool operator!=(const QQmlRefPointer &a, const QQmlRefPointer &b) noexcept
+    {
+        return !(a == b);
+    }
+
+    friend size_t qHash(const QQmlRefPointer &v, size_t seed = 0) noexcept
+    {
+        return qHash(v.o, seed);
+    }
 
     void reset(T *t = nullptr)
     {

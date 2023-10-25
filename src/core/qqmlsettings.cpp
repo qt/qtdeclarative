@@ -2,15 +2,18 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qqmlsettings_p.h"
-#include <qcoreevent.h>
-#include <qcoreapplication.h>
-#include <qloggingcategory.h>
-#include <qsettings.h>
-#include <qpointer.h>
-#include <qjsvalue.h>
-#include <qqmlinfo.h>
-#include <qdebug.h>
-#include <qhash.h>
+
+#include <QtQml/qjsvalue.h>
+#include <QtQml/qqmlfile.h>
+#include <QtQml/qqmlinfo.h>
+
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qcoreevent.h>
+#include <QtCore/qdebug.h>
+#include <QtCore/qhash.h>
+#include <QtCore/qloggingcategory.h>
+#include <QtCore/qpointer.h>
+#include <QtCore/qsettings.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -236,7 +239,9 @@ QSettings *QQmlSettingsPrivate::instance() const
         return settings;
 
     QQmlSettings *q = const_cast<QQmlSettings *>(q_func());
-    settings = location.isLocalFile() ? new QSettings(location.toLocalFile(), QSettings::IniFormat, q) : new QSettings(q);
+    settings = QQmlFile::isLocalFile(location)
+            ? new QSettings(QQmlFile::urlToLocalFileOrQrc(location), QSettings::IniFormat, q)
+            : new QSettings(q);
 
     if (settings->status() != QSettings::NoError) {
         // TODO: can't print out the enum due to the following error:

@@ -858,6 +858,9 @@ private:
     QDataBuffer<Element *> m_tmpAlphaElements;
     QDataBuffer<Element *> m_tmpOpaqueElements;
 
+    QDataBuffer<QRhiBuffer *> m_vboPool;
+    QDataBuffer<QRhiBuffer *> m_iboPool;
+
     uint m_rebuild;
     qreal m_zRange;
 #if defined(QSGBATCHRENDERER_INVALIDATE_WEDGED_NODES)

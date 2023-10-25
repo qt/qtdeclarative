@@ -372,16 +372,16 @@ void tst_SceneGraph::render_data()
     QRegularExpression baseSamples("#base: *(\\d+) *(\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+)");
     QRegularExpression finalSamples("#final: *(\\d+) *(\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+)");
 
-    foreach (QString fileName, files) {
+    for (QString fileName : std::as_const(files)) {
         QFile file(testFile(fileName));
         if (!file.open(QFile::ReadOnly)) {
             qFatal("render_data: QFile::open failed! file=%s, error=%s",
                    qPrintable(fileName), qPrintable(file.errorString()));
         }
-        QStringList contents = QString::fromLatin1(file.readAll()).split(QLatin1Char('\n'));
+        const QStringList contents = QString::fromLatin1(file.readAll()).split(QLatin1Char('\n'));
 
         int samples = -1;
-        foreach (QString line, contents) {
+        for (const QString &line : contents) {
             auto match = sampleCount.match(line);
             if (match.hasMatch()) {
                 samples = match.captured(1).toInt();
@@ -392,7 +392,7 @@ void tst_SceneGraph::render_data()
             qFatal("render_data: failed to find string '#samples: [count], file=%s", qPrintable(fileName));
 
         QList<Sample> baseStage, finalStage;
-        foreach (QString line, contents) {
+        for (const QString &line : contents) {
             auto match = baseSamples.match(line);
             if (match.hasMatch())
                 baseStage << sample_from_regexp(&match);

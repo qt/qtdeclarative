@@ -1,0 +1,53 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+/*!
+\page qtqml-typesystem-references.html
+\title QML Value Type and Sequence References
+\brief Description of QML value type and sequence references
+
+\l{QML Value Types} and \l{QML Sequence Types} are necessarily passed by value.
+In contrast to \l{QML Object Types} they have no identity of themselves, but can
+only be accessed as properties of other objects or values, or as values returned
+from methods. Each such access implicitly creates a copy. Yet, in JavaScript
+everything is an object. There is no such concept as a value type in JavaScript.
+For example, if you execute \c{font.bold = true} in JavaScript, we expect the \c bold
+property of \c font to be set, no matter what \c font is. But consider the following
+code snippet:
+
+\qml
+import QtQuick
+Text {
+    onSomethingHappened: font.bold = true
+}
+\endqml
+
+In this case we know that \c font is a value type. Accessing it creates a local copy
+by calling the getter of a \l{Q_PROPERTY}. We can then set the \c bold property on it,
+but that would usually only affect the copy, not the original \l{Q_PROPERTY}.
+
+To overcome this problem, QML offers the concept of references. When you retrieve
+an instance of a value or sequence type from a property, the QML engine remembers
+the property along with the value itself. If the value is modified, it is written
+back to the property. This produces the illusion of an object with separate identity
+and makes the above case, along with many others, just work.
+
+This can be rather expensive, though. If a sequence is exposed as a Q_PROPERTY,
+accessing any value in the sequence by index will cause the whole sequence data
+to be read from the property. From this sequence data, a single element is then
+retrieved. Similarly, modifying any value in the sequence causes the
+sequence data to be read. Then the modification is performed and the modified
+sequence is be written back to the property. A read operation can be relatively
+cheap if the type in question is implicitly shared. A modification always incurs
+at least one deep copy.
+
+If you return an instance of a sequence or value type from a \l Q_INVOKABLE function
+you avoid such overhead. Return values are not attached to any property and won't be
+written back.
+
+Sequences of object types are passed as \l{QQmlListProperty} by default.
+\l{QQmlListProperty} is not an actual container, but only a view, or reference, to
+some sequential storage. Therefore, \{QQmlListProperty} is not affected by this
+effect. You can, however, register other sequence types for objects using
+\l{QML_SEQUENTIAL_CONTAINER}. Those will be affected.
+
+*/

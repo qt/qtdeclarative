@@ -18,15 +18,30 @@ T.ProgressBar {
 
     contentItem: Item {
         parent: control.background
-        implicitWidth: progress.width
-        implicitHeight: progress.implicitHeight
+        implicitWidth: control.indeterminate ? animatedProgress.implicitWidth : progress.implicitWidth
+        implicitHeight: control.indeterminate ? animatedProgress.implicitHeight : progress.implicitHeight
         scale: control.mirrored ? -1 : 1
 
         readonly property NinePatchImage progress: NinePatchImage {
             parent: control.contentItem
-            visible: control.indeterminate || control.value
+            visible: !control.indeterminate && control.value
             y: (parent.height - height) / 2
-            width: control.indeterminate ? control.width * 0.4 : control.position * parent.width
+            width: control.position * parent.width
+
+            source: IOS.url + "slider-progress"
+            NinePatchImageSelector on source {
+                states: [
+                    {"light": Qt.styleHints.colorScheme === Qt.Light},
+                    {"dark": Qt.styleHints.colorScheme === Qt.Dark}
+                ]
+            }
+        }
+
+        readonly property NinePatchImage animatedProgress: NinePatchImage {
+            parent: control.contentItem
+            visible: control.indeterminate
+            y: (parent.height - height) / 2
+            width: control.width * 0.4
 
             source: IOS.url + "slider-progress"
             NinePatchImageSelector on source {

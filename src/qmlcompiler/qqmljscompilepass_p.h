@@ -89,6 +89,7 @@ public:
     struct State
     {
         VirtualRegisters registers;
+        VirtualRegisters lookups;
 
         const QQmlJSRegisterContent &accumulatorIn() const
         {
@@ -105,6 +106,10 @@ public:
 
         void setRegister(int registerIndex, QQmlJSRegisterContent content)
         {
+            const int lookupIndex = content.resultLookupIndex();
+            if (lookupIndex != QQmlJSRegisterContent::InvalidLookupIndex)
+                lookups[lookupIndex] = { content, false, false };
+
             m_changedRegister = std::move(content);
             m_changedRegisterIndex = registerIndex;
         }
@@ -168,13 +173,23 @@ public:
         }
 
         bool hasSideEffects() const { return m_hasSideEffects; }
-        void setHasSideEffects(bool hasSideEffects) {
-            m_hasSideEffects = hasSideEffects;
+
+        void markSideEffects(bool hasSideEffects) { m_hasSideEffects = hasSideEffects; }
+        void applySideEffects(bool hasSideEffects)
+        {
             if (!hasSideEffects)
                 return;
 
             for (auto it = registers.begin(), end = registers.end(); it != end; ++it)
                 it.value().affectedBySideEffects = true;
+
+            for (auto it = lookups.begin(), end = lookups.end(); it != end; ++it)
+                it.value().affectedBySideEffects = true;
+        }
+
+        void setHasSideEffects(bool hasSideEffects) {
+            markSideEffects(hasSideEffects);
+            applySideEffects(hasSideEffects);
         }
 
         bool isRename() const { return m_isRename; }
@@ -246,6 +261,7 @@ protected:
 
         const auto instruction = annotations.find(currentInstructionOffset());
         newState.registers = oldState.registers;
+        newState.lookups = oldState.lookups;
 
         // Usually the initial accumulator type is the output of the previous instruction, but ...
         if (oldState.changedRegisterIndex() != InvalidRegister) {
@@ -254,10 +270,14 @@ protected:
                     = oldState.changedRegister();
         }
 
+        // Side effects are applied at the end of an instruction: An instruction with side
+        // effects can still read its registers before the side effects happen.
+        newState.applySideEffects(oldState.hasSideEffects());
+
         if (instruction == annotations.constEnd())
             return newState;
 
-        newState.setHasSideEffects(instruction->second.hasSideEffects);
+        newState.markSideEffects(instruction->second.hasSideEffects);
         newState.setReadRegisters(instruction->second.readRegisters);
         newState.setIsRename(instruction->second.isRename);
 
@@ -391,9 +411,9 @@ protected:
     void generate_GetTemplateObject(int) override {}
     void generate_Increment() override {}
     void generate_InitializeBlockDeadTemporalZone(int, int) override {}
-    void generate_IteratorClose(int) override {}
+    void generate_IteratorClose() override {}
     void generate_IteratorNext(int, int) override {}
-    void generate_IteratorNextForYieldStar(int, int) override {}
+    void generate_IteratorNextForYieldStar(int, int, int) override {}
     void generate_Jump(int) override {}
     void generate_JumpFalse(int) override {}
     void generate_JumpNoException(int) override {}

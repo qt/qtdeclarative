@@ -19,6 +19,8 @@
 #include <QtQuickTemplates2/private/qquickcontainer_p.h>
 #include <QtGui/qpa/qplatformdialoghelper.h>
 
+QT_REQUIRE_CONFIG(quicktemplates2_container);
+
 QT_BEGIN_NAMESPACE
 
 class QQmlComponent;

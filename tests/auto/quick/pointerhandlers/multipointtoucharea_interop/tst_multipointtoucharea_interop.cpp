@@ -15,6 +15,8 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 
+#include <QtCore/qpointer.h>
+
 Q_LOGGING_CATEGORY(lcPointerTests, "qt.quick.pointer.tests")
 
 class tst_MptaInterop : public QQmlDataTest

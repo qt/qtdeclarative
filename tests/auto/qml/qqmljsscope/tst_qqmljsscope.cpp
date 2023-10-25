@@ -340,7 +340,9 @@ void tst_qqmljsscope::descriptiveNameOfNull()
     property.setPropertyName(u"foo"_s);
     property.setTypeName(u"baz"_s);
     QQmlJSRegisterContent unscoped = QQmlJSRegisterContent::create(
-                stored, property, QQmlJSRegisterContent::ScopeProperty, QQmlJSScope::ConstPtr());
+            stored, property, QQmlJSRegisterContent::InvalidLookupIndex,
+            QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::ScopeProperty,
+            QQmlJSScope::ConstPtr());
     QCOMPARE(unscoped.descriptiveName(), u"bar of (invalid type)::foo with type baz"_s);
 }
 
@@ -695,12 +697,12 @@ void tst_qqmljsscope::resolvedNonUniqueScopes()
         auto onCompletedBinding = value(componentBindings, u"onCompleted"_s);
         QVERIFY(onCompletedBinding.isValid());
         QCOMPARE(onCompletedBinding.bindingType(), QQmlSA::BindingType::Script);
-        QCOMPARE(onCompletedBinding.scriptKind(), QQmlSA::ScriptBindingKind::Script_SignalHandler);
+        QCOMPARE(onCompletedBinding.scriptKind(), QQmlSA::ScriptBindingKind::SignalHandler);
         auto onDestructionBinding = value(componentBindings, u"onDestruction"_s);
         QVERIFY(onDestructionBinding.isValid());
         QCOMPARE(onDestructionBinding.bindingType(), QQmlSA::BindingType::Script);
         QCOMPARE(onDestructionBinding.scriptKind(),
-                 QQmlSA::ScriptBindingKind::Script_SignalHandler);
+                 QQmlSA::ScriptBindingKind::SignalHandler);
     }
 
     {
@@ -713,7 +715,7 @@ void tst_qqmljsscope::resolvedNonUniqueScopes()
         auto onXChangedBinding = value(pBindings, u"onXChanged"_s);
         QVERIFY(onXChangedBinding.isValid());
         QCOMPARE(onXChangedBinding.bindingType(), QQmlSA::BindingType::Script);
-        QCOMPARE(onXChangedBinding.scriptKind(), QQmlSA::ScriptBindingKind::Script_SignalHandler);
+        QCOMPARE(onXChangedBinding.scriptKind(), QQmlSA::ScriptBindingKind::SignalHandler);
     }
 }
 
@@ -799,6 +801,9 @@ public:
     void run(const QQmlSA::Element &) override { }
 };
 
+using PassManagerPtr = std::unique_ptr<
+        QQmlSA::PassManager, decltype(&QQmlSA::PassManagerPrivate::deletePassManager)>;
+
 void tst_qqmljsscope::attachedTypeResolution()
 {
     QFETCH(bool, creatable);
@@ -825,8 +830,12 @@ void tst_qqmljsscope::attachedTypeResolution()
     QQmlJSImportVisitor v{
         QQmlJSScope::create(), &importer, logger.get(), implicitImportDirectory, {}
     };
-    QQmlSA::PassManager manager{ &v, &resolver };
-    TestPass pass{ &manager };
+
+    PassManagerPtr manager(
+            QQmlSA::PassManagerPrivate::createPassManager(&v, &resolver),
+            &QQmlSA::PassManagerPrivate::deletePassManager);
+
+    TestPass pass{ manager.get() };
     const auto &resolved = pass.resolveType(moduleName, typeName);
 
     QVERIFY(!resolved.isNull());
@@ -879,8 +888,12 @@ void tst_qqmljsscope::builtinTypeResolution()
     QQmlJSImportVisitor v{
         QQmlJSScope::create(), &importer, &logger, implicitImportDirectory, {}
     };
-    QQmlSA::PassManager manager{ &v, &resolver };
-    TestPass pass{ &manager };
+
+    PassManagerPtr manager(
+            QQmlSA::PassManagerPrivate::createPassManager(&v, &resolver),
+            &QQmlSA::PassManagerPrivate::deletePassManager);
+
+    TestPass pass{ manager.get() };
     auto element = pass.resolveBuiltinType(typeName);
     QCOMPARE(element.isNull(), !valid);
 }

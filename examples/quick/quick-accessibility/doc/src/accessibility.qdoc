@@ -5,6 +5,7 @@
     \example quick-accessibility
     \brief This example demonstrates the implementation of accessible buttons.
     \ingroup qtquickexamples
+    \examplecategory {Graphics & Multimedia}
 
     \e Accessibility demonstrates QML types that are augmented with meta-data
     for accessibility systems. For more information, visit the

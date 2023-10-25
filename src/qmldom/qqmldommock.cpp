@@ -32,7 +32,7 @@ std::pair<QString, MockObject> MockObject::asStringPair() const
     return std::make_pair(pathFromOwner().last().headName(), *this);
 }
 
-bool MockObject::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+bool MockObject::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     static QHash<QString, QString> knownFields;
     static QBasicMutex m;
@@ -60,7 +60,7 @@ bool MockObject::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     return cont;
 }
 
-std::shared_ptr<OwningItem> MockOwner::doCopy(DomItem &) const
+std::shared_ptr<OwningItem> MockOwner::doCopy(const DomItem &) const
 {
     return std::make_shared<MockOwner>(*this);
 }
@@ -77,17 +77,17 @@ MockOwner::MockOwner(const MockOwner &o)
     }
 }
 
-std::shared_ptr<MockOwner> MockOwner::makeCopy(DomItem &self) const
+std::shared_ptr<MockOwner> MockOwner::makeCopy(const DomItem &self) const
 {
     return std::static_pointer_cast<MockOwner>(doCopy(self));
 }
 
-Path MockOwner::canonicalPath(DomItem &) const
+Path MockOwner::canonicalPath(const DomItem &) const
 {
     return pathFromTop;
 }
 
-bool MockOwner::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+bool MockOwner::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     static QHash<QString, QString> knownFields;
     static QBasicMutex m;

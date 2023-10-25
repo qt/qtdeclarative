@@ -38,12 +38,12 @@ public:
         return Path::Field(Fields::moduleScope)
                 .key(version.isValid() ? QString::number(version.minorVersion) : QString());
     }
-    Path pathFromOwner(DomItem &) const override { return pathFromOwner(); }
-    Path canonicalPath(DomItem &self) const override
+    Path pathFromOwner(const DomItem &) const override { return pathFromOwner(); }
+    Path canonicalPath(const DomItem &self) const override
     {
         return self.owner().canonicalPath().path(pathFromOwner());
     }
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const override;
 
     QString uri;
     Version version;
@@ -54,7 +54,7 @@ class QMLDOM_EXPORT ModuleIndex final : public OwningItem
     Q_DECLARE_TR_FUNCTIONS(ModuleIndex);
 
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &self) const override;
+    std::shared_ptr<OwningItem> doCopy(const DomItem &self) const override;
 
 public:
     enum class Status { NotLoaded, Loading, Loaded };
@@ -71,21 +71,21 @@ public:
 
     ~ModuleIndex();
 
-    std::shared_ptr<ModuleIndex> makeCopy(DomItem &self) const
+    std::shared_ptr<ModuleIndex> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<ModuleIndex>(doCopy(self));
     }
 
-    Path canonicalPath(DomItem &) const override
+    Path canonicalPath(const DomItem &) const override
     {
         return Paths::moduleIndexPath(uri(), majorVersion());
     }
 
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const override;
 
-    QSet<QString> exportNames(DomItem &self) const;
+    QSet<QString> exportNames(const DomItem &self) const;
 
-    QList<DomItem> exportsWithNameAndMinorVersion(DomItem &self, QString name,
+    QList<DomItem> exportsWithNameAndMinorVersion(const DomItem &self, QString name,
                                                   int minorVersion) const;
 
     QString uri() const { return m_uri; }
@@ -106,7 +106,7 @@ public:
             m_qmltypesFilesPaths.append(p);
     }
 
-    QList<Path> qmldirsToLoad(DomItem &self);
+    QList<Path> qmldirsToLoad(const DomItem &self);
     QList<Path> qmltypesFilesPaths() const
     {
         QMutexLocker l(mutex());
@@ -122,7 +122,7 @@ public:
         QMutexLocker l(mutex());
         return m_directoryPaths;
     }
-    QList<DomItem> autoExports(DomItem &self) const;
+    QList<DomItem> autoExports(const DomItem &self) const;
 
 private:
     QString m_uri;

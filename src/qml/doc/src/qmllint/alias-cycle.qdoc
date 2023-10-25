@@ -1,0 +1,60 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-alias-cycle.html
+\ingroup qmllint-warnings-and-errors
+
+\title Alias Cycle
+\brief Alias property is part of an alias cycle.
+
+\section1 Alias Property Is Part Of An Alias Cycle
+
+\section2 What happened?
+A \l{QML Object Attributes#property-aliases}{property alias} resolves to itself or to another
+alias resolving to itself.
+
+Usually, \l{QML Object Attributes#property-aliases}{a property alias} should reference another
+property either directly, or indirectly by passing through another alias property.
+
+If a property alias directly or indirectly references itself, then it forms an alias cycle.
+The warning indicates that the current alias property is inside or references
+an alias cycle, see \l{#example}{Example}.
+
+\section2 Why is this bad?
+Instances of components with alias cycles will not be created at runtime: they will be null instead.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    id: someId
+    property alias myself: someId.myself // not ok: referring to itself
+
+    property alias cycle: someId.cycle2 // not ok: indirectly referring to itself
+    property alias cycle2: someId.cycle
+
+    property alias indirect: someId.cycle // not ok: referring to alias indirectly referring to itself
+}
+\endqml
+You can fix this warning by breaking up the alias cycles:
+\qml
+import QtQuick
+
+Item {
+    id: someId
+    Item {
+        id: anotherId
+        property string myself
+        property int cycle
+    }
+    property alias myself: anotherId.myself // ok: referring to a property
+
+    property alias cycle: someId.cycle2 // ok: does not refer to itself anymore
+    property alias cycle2: anotherId.cycle // ok: not a cycle anymore
+
+    property alias indirect: someId.cycle // ok: cycle does not form an alias cycle anymore
+}
+\endqml
+*/

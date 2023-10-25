@@ -6,6 +6,7 @@
     \brief This is a collection of QML Positioner examples.
     \image qml-positioners-example.png
     \ingroup qtquickexamples
+    \examplecategory {User Interface Components}
 
     \e Positioners is a collection of small QML examples relating to
     positioners. Each example is a small QML file emphasizing a particular type

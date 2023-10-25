@@ -839,6 +839,8 @@ Renderer::Renderer(QSGDefaultRenderContext *ctx, QSGRendererInterface::RenderMod
     , m_elementsToDelete(64)
     , m_tmpAlphaElements(16)
     , m_tmpOpaqueElements(16)
+    , m_vboPool(16)
+    , m_iboPool(16)
     , m_rebuild(FullRebuild)
     , m_zRange(0)
 #if defined(QSGBATCHRENDERER_INVALIDATE_WEDGED_NODES)
@@ -915,6 +917,10 @@ Renderer::~Renderer()
             qsg_wipeBatch(m_alphaBatches.at(i));
         for (int i = 0; i < m_batchPool.size(); ++i)
             qsg_wipeBatch(m_batchPool.at(i));
+        for (int i = 0; i < m_vboPool.size(); ++i)
+            delete m_vboPool.at(i);
+        for (int i = 0; i < m_iboPool.size(); ++i)
+            delete m_iboPool.at(i);
     }
 
     for (Node *n : std::as_const(m_nodes)) {
@@ -964,10 +970,24 @@ void Renderer::releaseCachedResources()
     m_vertexUploadPool.reset();
     m_indexUploadPool.shrink(0);
     m_indexUploadPool.reset();
+
+    for (int i = 0; i < m_vboPool.size(); ++i)
+        delete m_vboPool.at(i);
+    m_vboPool.reset();
+
+    for (int i = 0; i < m_iboPool.size(); ++i)
+        delete m_iboPool.at(i);
+    m_iboPool.reset();
 }
 
 void Renderer::invalidateAndRecycleBatch(Batch *b)
 {
+    if (b->vbo.buf != nullptr)
+        m_vboPool.add(b->vbo.buf);
+    if (b->ibo.buf != nullptr)
+        m_iboPool.add(b->ibo.buf);
+    b->vbo.buf = nullptr;
+    b->ibo.buf = nullptr;
     b->invalidate();
     for (int i=0; i<m_batchPool.size(); ++i)
         if (b == m_batchPool.at(i))
@@ -996,8 +1016,9 @@ void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
 {
     // Batches are pooled and reused which means the QRhiBuffer will be
     // still valid in a recycled Batch. We only hit the newBuffer() path
-    // for brand new Batches.
-    if (!buffer->buf) {
+    // when there are no buffers to recycle.
+    QDataBuffer<QRhiBuffer *> *bufferPool = isIndexBuf ? &m_iboPool : &m_vboPool;
+    if (!buffer->buf && bufferPool->isEmpty()) {
         buffer->buf = m_rhi->newBuffer(QRhiBuffer::Immutable,
                                        isIndexBuf ? QRhiBuffer::IndexBuffer : QRhiBuffer::VertexBuffer,
                                        buffer->size);
@@ -1007,6 +1028,28 @@ void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
             buffer->buf = nullptr;
         }
     } else {
+        if (!buffer->buf) {
+            const quint32 expectedSize = buffer->size;
+            qsizetype foundBufferIndex = 0;
+            for (qsizetype i = 0; i < bufferPool->size(); ++i) {
+                QRhiBuffer *testBuffer = bufferPool->at(i);
+                if (!buffer->buf
+                    || (testBuffer->size() >= expectedSize && testBuffer->size() < buffer->buf->size())
+                    || (testBuffer->size() < expectedSize && testBuffer->size() > buffer->buf->size())) {
+                    foundBufferIndex = i;
+                    buffer->buf = testBuffer;
+                    if (buffer->buf->size() == expectedSize)
+                        break;
+                }
+            }
+
+            if (foundBufferIndex < bufferPool->size() - 1) {
+                qSwap(bufferPool->data()[foundBufferIndex],
+                      bufferPool->data()[bufferPool->size() - 1]);
+            }
+            bufferPool->pop_back();
+        }
+
         bool needsRebuild = false;
         if (buffer->buf->size() < buffer->size) {
             buffer->buf->setSize(buffer->size);

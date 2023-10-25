@@ -5,7 +5,9 @@
 
 #include <QtQml/qqml.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
+#if QT_CONFIG(quicktemplates2_container)
 #include <QtQuickTemplates2/private/qquicksplitview_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -33,6 +35,7 @@ struct QQuickOverlayAttachedForeign
     QML_ADDED_IN_VERSION(2, 3)
 };
 
+#if QT_CONFIG(quicktemplates2_container)
 struct QQuickSplitHandleAttachedForeign
 {
     Q_GADGET
@@ -41,6 +44,7 @@ struct QQuickSplitHandleAttachedForeign
     QML_UNCREATABLE("")
     QML_ADDED_IN_VERSION(2, 13)
 };
+#endif
 
 QT_END_NAMESPACE
 

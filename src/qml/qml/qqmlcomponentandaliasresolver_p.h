@@ -53,13 +53,15 @@ private:
     void allocateNamedObjects(CompiledObject *object) const;
     void setObjectId(int index) const;
     [[nodiscard]] bool markAsComponent(int index) const;
-    [[nodiscard]] AliasResolutionResult resolveAliasesInObject(int objectIndex, QQmlError *error);
+    [[nodiscard]] AliasResolutionResult resolveAliasesInObject(
+            const CompiledObject &component, int objectIndex, QQmlError *error);
     [[nodiscard]] bool wrapImplicitComponent(CompiledBinding *binding);
 
     [[nodiscard]] QQmlError findAndRegisterImplicitComponents(
             const CompiledObject *obj, const QQmlPropertyCache::ConstPtr &propertyCache);
     [[nodiscard]] QQmlError collectIdsAndAliases(int objectIndex);
     [[nodiscard]] QQmlError resolveAliases(int componentIndex);
+    [[nodiscard]] QQmlError resolveComponentsInInlineComponentRoot(int root);
 
     QString stringAt(int idx) const { return m_compiler->stringAt(idx); }
     QV4::ResolvedTypeReference *resolvedType(int id) const { return m_compiler->resolvedType(id); }
@@ -186,6 +188,36 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::findAndRegisterImplici
     return QQmlError();
 }
 
+template<typename ObjectContainer>
+QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolveComponentsInInlineComponentRoot(
+        int root)
+{
+    // Find implicit components in the inline component itself. Also warn about inline
+    // components being explicit components.
+
+    const auto rootObj = m_compiler->objectAt(root);
+    Q_ASSERT(rootObj->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot));
+
+    if (const int typeName = rootObj->inheritedTypeNameIndex) {
+        const auto *tref = resolvedType(typeName);
+        Q_ASSERT(tref);
+        if (tref->type().metaObject() == &QQmlComponent::staticMetaObject) {
+            qCWarning(lcQmlTypeCompiler).nospace().noquote()
+                    << m_compiler->url().toString() << ":" << rootObj->location.line() << ":"
+                    << rootObj->location.column()
+                    << ": Using a Component as the root of an inline component is deprecated: "
+                       "inline components are "
+                       "automatically wrapped into Components when needed.";
+            return QQmlError();
+        }
+    }
+
+    const QQmlPropertyCache::ConstPtr rootCache = m_propertyCaches->at(root);
+    Q_ASSERT(rootCache);
+
+    return findAndRegisterImplicitComponents(rootObj, rootCache);
+}
+
 // Resolve ignores everything relating to inline components, except for implicit components.
 template<typename ObjectContainer>
 QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolve(int root)
@@ -195,6 +227,12 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolve(int root)
     // In the implicit case Item is surrounded by a synthetic Component {} because the property
     // on the left hand side is of QQmlComponent type.
     const int objCountWithoutSynthesizedComponents = m_compiler->objectCount();
+
+    if (root != 0) {
+        const QQmlError error = resolveComponentsInInlineComponentRoot(root);
+        if (error.isValid())
+            return error;
+    }
 
     // root+1, as ic root is handled at the end
     const int startObjectIndex = root == 0 ? root : root+1;
@@ -207,6 +245,21 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolve(int root)
                 = obj->hasFlag(QV4::CompiledData::Object::IsPartOfInlineComponent);
         QQmlPropertyCache::ConstPtr cache = m_propertyCaches->at(i);
 
+        if (root == 0) {
+            // normal component root, skip over anything inline component related
+            if (isInlineComponentRoot || isPartOfInlineComponent)
+                continue;
+        } else if (!isPartOfInlineComponent || isInlineComponentRoot) {
+            // When handling an inline component, stop where the inline component ends
+            // Note: We do not support nested inline components. Therefore, isInlineComponentRoot
+            //       tells us that the element after the current inline component is again an
+            //       inline component
+            break;
+        }
+
+        if (obj->inheritedTypeNameIndex == 0 && !cache)
+            continue;
+
         bool isExplicitComponent = false;
         if (obj->inheritedTypeNameIndex) {
             auto *tref = resolvedType(obj->inheritedTypeNameIndex);
@@ -214,33 +267,6 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolve(int root)
             if (tref->type().metaObject() == &QQmlComponent::staticMetaObject)
                 isExplicitComponent = true;
         }
-
-        if (isInlineComponentRoot && isExplicitComponent) {
-            qCWarning(lcQmlTypeCompiler).nospace().noquote()
-                    << m_compiler->url().toString() << ":" << obj->location.line() << ":"
-                    << obj->location.column()
-                    << ": Using a Component as the root of an inline component is deprecated: "
-                       "inline components are "
-                       "automatically wrapped into Components when needed.";
-        }
-
-        if (root == 0) {
-            // normal component root, skip over anything inline component related
-            if (isInlineComponentRoot || isPartOfInlineComponent)
-                continue;
-        } else if (!isPartOfInlineComponent || isInlineComponentRoot) {
-            // We've left the current inline component (potentially entered a new one),
-            // but we still need to resolve implicit components which are part of inline components.
-            if (cache && !isExplicitComponent) {
-                const QQmlError error = findAndRegisterImplicitComponents(obj, cache);
-                if (error.isValid())
-                    return error;
-            }
-            break;
-        }
-
-        if (obj->inheritedTypeNameIndex == 0 && !cache)
-            continue;
 
         if (!isExplicitComponent) {
             if (cache) {
@@ -381,13 +407,14 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolveAliases(int com
         for (int objectIndex: std::as_const(m_objectsWithAliases)) {
 
             QQmlError error;
-            const auto result = resolveAliasesInObject(objectIndex, &error);
+            const auto &component = *m_compiler->objectAt(componentIndex);
+            const auto result = resolveAliasesInObject(component, objectIndex, &error);
             if (error.isValid())
                 return error;
 
             if (result == AllAliasesResolved) {
                 QQmlError error = aliasCacheCreator.appendAliasesToPropertyCache(
-                            *m_compiler->objectAt(componentIndex), objectIndex, m_enginePrivate);
+                            component, objectIndex, m_enginePrivate);
                 if (error.isValid())
                     return error;
                 atLeastOneAliasResolved = true;

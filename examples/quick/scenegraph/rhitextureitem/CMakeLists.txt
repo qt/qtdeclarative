@@ -29,7 +29,6 @@ target_link_libraries(rhitextureitem PRIVATE
     Qt6::GuiPrivate
     Qt6::Qml
     Qt6::Quick
-    Qt6::QuickPrivate
 )
 
 qt_add_qml_module(rhitextureitem

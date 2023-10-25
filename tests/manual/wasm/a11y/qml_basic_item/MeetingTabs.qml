@@ -1,4 +1,3 @@
-
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 import QtQuick
@@ -7,6 +6,14 @@ import QtQuick.Controls
 
 Item {
     id: root
+    width: parent.width -10
+    height:parent.height -10
+    property color itemColor: "lightgrey"
+        Rectangle {
+            width: parent.width
+            height: parent.height
+            color: itemColor
+        }
     enum Types {
         Invitees,
         Scheduler,
@@ -20,18 +27,21 @@ Item {
         width: parent.width
         TabButton {
             text: qsTr("Meeting Invitees")
+            width:meetingTabs.width/3
             Accessible.role: Accessible.PageTab
             Accessible.name: text
             Accessible.description: "Tab to add meeting invitees"
         }
         TabButton {
             text: qsTr("Meeting Scheduler")
+            width:meetingTabs.width/3
             Accessible.role: Accessible.PageTab
             Accessible.name: text
             Accessible.description: "Tab to add a schedule"
         }
         TabButton {
             text: qsTr("Summary")
+            width:meetingTabs.width/3
             Accessible.role: Accessible.PageTab
             Accessible.name: text
             Accessible.description: "Tab to add meeting summary"
@@ -43,7 +53,7 @@ Item {
     }
 
     StackLayout {
-        width: 550
+        width: parent.width - 20
         currentIndex: meetingTabs.currentIndex
         anchors {
             left: parent.left

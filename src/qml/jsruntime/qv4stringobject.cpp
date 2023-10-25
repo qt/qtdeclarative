@@ -30,6 +30,7 @@
 #endif
 
 using namespace QV4;
+using namespace Qt::Literals::StringLiterals;
 
 DEFINE_OBJECT_VTABLE(StringObject);
 
@@ -599,7 +600,7 @@ ReturnedValue StringPrototype::method_padEnd(const FunctionObject *f, const Valu
     double maxLen = argv[0].toInteger();
     if (maxLen <= s->d()->length())
         return s->asReturnedValue();
-    QString fillString = (argc > 1 && !argv[1].isUndefined()) ? argv[1].toQString() : QString::fromLatin1(" ");
+    QString fillString = (argc > 1 && !argv[1].isUndefined()) ? argv[1].toQString() : u" "_s;
     if (v4->hasException)
         return Encode::undefined();
 
@@ -638,7 +639,7 @@ ReturnedValue StringPrototype::method_padStart(const FunctionObject *f, const Va
     double maxLen = argv[0].toInteger();
     if (maxLen <= s->d()->length())
         return s->asReturnedValue();
-    QString fillString = (argc > 1 && !argv[1].isUndefined()) ? argv[1].toQString() : QString::fromLatin1(" ");
+    QString fillString = (argc > 1 && !argv[1].isUndefined()) ? argv[1].toQString() : u" "_s;
     if (v4->hasException)
         return Encode::undefined();
 

@@ -9,10 +9,14 @@
 #include <QtCore/qlocale.h>
 #include <QtCore/qvariant.h>
 #include <QtCore/qdebug.h>
-#include <QtCore/qabstractitemmodel.h>
 
 #include <QtGui/qicon.h>
 #include <QtGui/qfontmetrics.h>
+
+#include <QtQuick/private/qtquick-config_p.h>
+#if QT_CONFIG(quick_itemview)
+#include <QtCore/qabstractitemmodel.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -375,6 +379,7 @@ protected:
 
 Q_DECL_DEPRECATED typedef QStyleOptionDockWidget QStyleOptionDockWidgetV2;
 
+#if QT_CONFIG(quick_itemview)
 class QStyleOptionViewItem : public QStyleOption
 {
 public:
@@ -428,6 +433,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QStyleOptionViewItem::ViewItemFeatures)
 Q_DECL_DEPRECATED typedef QStyleOptionViewItem QStyleOptionViewItemV2;
 Q_DECL_DEPRECATED typedef QStyleOptionViewItem QStyleOptionViewItemV3;
 Q_DECL_DEPRECATED typedef QStyleOptionViewItem QStyleOptionViewItemV4;
+#endif // QT_CONFIG(quick_itemview)
 
 class QStyleOptionToolBox : public QStyleOption
 {

@@ -72,7 +72,7 @@ public:
     static void children_clear(QQmlListProperty<QObject> *prop)
     {
         QObjectContainer *that = static_cast<QObjectContainer*>(prop->object);
-        foreach (QObject *c, that->dataChildren)
+        for (QObject *c : std::as_const(that->dataChildren))
             QObject::disconnect(c, SIGNAL(destroyed(QObject*)), that, SLOT(childDestroyed(QObject*)));
         that->dataChildren.clear();
     }

@@ -65,7 +65,7 @@ bool parseFile(const QString &filename, const Options &options)
     std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>();
     if (!qmlFilePtr || !qmlFilePtr->isValid()) {
         qmlFile.iterateErrors(
-                [](DomItem, ErrorMessage msg) {
+                [](const DomItem &, const ErrorMessage &msg) {
                     errorToQDebug(msg);
                     return true;
                 },
@@ -292,6 +292,10 @@ int main(int argc, char *argv[])
         return settings.writeDefaults() ? 0 : -1;
 
     auto getSettings = [&](const QString &file, Options options) {
+        // Perform formatting inplace if --files option is set.
+        if (!options.files.isEmpty())
+            options.inplace = true;
+
         if (options.ignoreSettings || !settings.search(file))
             return options;
 

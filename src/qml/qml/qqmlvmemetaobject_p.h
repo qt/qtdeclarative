@@ -48,14 +48,38 @@ public:
     ~QQmlVMEResolvedList();
 
     QQmlVMEMetaObject *metaObject() const { return m_metaObject; }
-    QVector<QQmlGuard<QObject>> *list() const { return m_list; }
+    QV4::Heap::Object *list() const { return m_list; }
     quintptr id() const { return m_id; }
+
+    void append(QObject *o) const;
+    void replace(qsizetype i, QObject *o) const;
+    QObject *at(qsizetype i) const;
+
+    qsizetype size() const { return m_list->arrayData->length(); }
+
+    void clear() const
+    {
+        QV4::Scope scope(m_list->internalClass->engine);
+        QV4::ScopedObject object(scope, m_list);
+        m_list->arrayData->vtable()->truncate(object, 0);
+    }
+
+    void removeLast() const
+    {
+        const uint length = m_list->arrayData->length();
+        if (length == 0)
+            return;
+
+        QV4::Scope scope(m_list->internalClass->engine);
+        QV4::ScopedObject object(scope, m_list);
+        m_list->arrayData->vtable()->truncate(object, length - 1);
+    }
 
     void activateSignal() const;
 
 private:
     QQmlVMEMetaObject *m_metaObject = nullptr;
-    QVector<QQmlGuard<QObject>> *m_list = nullptr;
+    QV4::Heap::Object *m_list = nullptr;
     quintptr m_id = 0;
 };
 
@@ -210,7 +234,7 @@ public:
 
     QRectF readPropertyAsRectF(int id) const;
     QObject *readPropertyAsQObject(int id) const;
-    QVector<QQmlGuard<QObject> > *readPropertyAsList(int id) const;
+    void initPropertyAsList(int id) const;
 
     void writeProperty(int id, int v);
     void writeProperty(int id, bool v);

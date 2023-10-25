@@ -43,6 +43,22 @@ struct QJSList : private QJSListIndexClamp
 
     QJSList(List *list, QJSEngine *engine) : m_list(list), m_engine(engine) {}
 
+    Value at(int index) const
+    {
+        Q_ASSERT(index >= 0 && index < size());
+        return *(m_list->cbegin() + index);
+    }
+
+    int size() const
+    {
+        return int(std::min(m_list->size(), qsizetype(std::numeric_limits<int>::max())));
+    }
+
+    void resize(int size)
+    {
+        m_list->resize(size);
+    }
+
     bool includes(const Value &value) const
     {
         return std::find(m_list->cbegin(), m_list->cend(), value) != m_list->cend();
@@ -151,6 +167,31 @@ struct QJSList<QQmlListProperty<QObject>, QObject *>  : private QJSListIndexClam
     Q_DISABLE_COPY_MOVE(QJSList)
 
     QJSList(QQmlListProperty<QObject> *list, QJSEngine *engine) : m_list(list), m_engine(engine) {}
+
+    QObject *at(int index) const
+    {
+        Q_ASSERT(index >= 0 && index < size());
+        return m_list->at(m_list, index);
+    }
+
+    int size() const
+    {
+        return int(std::min(m_list->count(m_list), qsizetype(std::numeric_limits<int>::max())));
+    }
+
+    void resize(int size)
+    {
+        qsizetype current = m_list->count(m_list);
+        if (current < size && m_list->append) {
+            do {
+                m_list->append(m_list, nullptr);
+            } while (++current < size);
+        } else if (current > size && m_list->removeLast) {
+            do {
+                m_list->removeLast(m_list);
+            } while (--current > size);
+        }
+    }
 
     bool includes(const QObject *value) const
     {
@@ -288,6 +329,47 @@ private:
     QQmlListProperty<QObject> *m_list = nullptr;
     QJSEngine *m_engine = nullptr;
 };
+
+struct QJSListForInIterator
+{
+public:
+    using Ptr = QJSListForInIterator *;
+    template<typename List, typename Value>
+    void init(const QJSList<List, Value> &list)
+    {
+        m_index = 0;
+        m_size = list.size();
+    }
+
+    bool hasNext() const { return m_index < m_size; }
+    int next() { return m_index++; }
+
+private:
+    int m_index;
+    int m_size;
+};
+
+// QJSListForInIterator must not require initialization so that we can jump over it with goto.
+static_assert(std::is_trivial_v<QJSListForInIterator>);
+
+struct QJSListForOfIterator
+{
+public:
+    using Ptr = QJSListForOfIterator *;
+    void init() { m_index = 0; }
+
+    template<typename List, typename Value>
+    bool hasNext(const QJSList<List, Value> &list) const { return m_index < list.size(); }
+
+    template<typename List, typename Value>
+    Value next(const QJSList<List, Value> &list) { return list.at(m_index++); }
+
+private:
+    int m_index;
+};
+
+// QJSListForOfIterator must not require initialization so that we can jump over it with goto.
+static_assert(std::is_trivial_v<QJSListForOfIterator>);
 
 QT_END_NAMESPACE
 

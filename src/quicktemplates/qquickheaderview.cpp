@@ -174,6 +174,16 @@ void QQuickHeaderViewBasePrivate::syncSyncView()
     QQuickTableViewPrivate::syncSyncView();
 }
 
+QAbstractItemModel *QQuickHeaderViewBasePrivate::selectionSourceModel()
+{
+    // Our proxy model shares no common model items with HeaderView.model. So
+    // selections done in HeaderView cannot be represented in an ItemSelectionModel
+    // that is shared with the syncView (and for the same reason, the mapping functions
+    // modelIndex(cell) and cellAtIndex(index) have not been overridden either).
+    // Instead, we set the internal proxy model as selection source model.
+    return &m_headerDataProxyModel;
+}
+
 QQuickHeaderViewBase::QQuickHeaderViewBase(Qt::Orientation orient, QQuickItem *parent)
     : QQuickTableView(*(new QQuickHeaderViewBasePrivate), parent)
 {
@@ -302,6 +312,11 @@ bool QHeaderDataProxyModel::hasChildren(const QModelIndex &parent) const
     if (!parent.isValid())
         return rowCount(parent) > 0 && columnCount(parent) > 0;
     return false;
+}
+
+QHash<int, QByteArray> QHeaderDataProxyModel::roleNames() const
+{
+    return m_model ? m_model->roleNames() : QAbstractItemModel::roleNames();
 }
 
 QVariant QHeaderDataProxyModel::variantValue() const

@@ -10,7 +10,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtGui/qguiapplication.h>
 
-#include <private/qquickpixmapcache_p.h>
+#include <private/qquickpixmap_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qversionedpacket_p.h>
 

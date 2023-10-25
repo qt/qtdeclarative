@@ -75,7 +75,7 @@ void tst_qqmlextensionplugin::iidCheck_data()
     files = removeDuplicates(std::move(files));
 
     QTest::addColumn<QString>("filePath");
-    foreach (const QString &file, files) {
+    for (const QString &file: std::as_const(files)) {
         QFileInfo fileInfo(file);
         QTest::newRow(fileInfo.baseName().toLatin1().data()) << fileInfo.absoluteFilePath();
     }

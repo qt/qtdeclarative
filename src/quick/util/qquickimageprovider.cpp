@@ -4,7 +4,7 @@
 #include "qquickimageprovider.h"
 
 #include "qquickimageprovider_p.h"
-#include "qquickpixmapcache_p.h"
+#include "qquickpixmap_p.h"
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qqmlglobal_p.h>
 #include <QtGui/qcolorspace.h>

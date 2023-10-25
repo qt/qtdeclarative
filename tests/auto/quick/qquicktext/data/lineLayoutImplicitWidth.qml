@@ -23,7 +23,7 @@ Rectangle {
 
         text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam quis ante tristique, fermentum magna at, varius lacus. Donec elementum orci sit amet ligula efficitur, eget sodales orci porttitor. Etiam laoreet tellus quis nisi mollis lacinia. Cras vitae nisl sed nunc semper blandit. Duis egestas commodo lacus non congue. Fusce quis rhoncus urna. And magna arcu, sodales vitae nunc vel, rutrum hendrerit magna. Nullam imperdiet porttitor sem at euismod. Morbi faucibus libero sit amet vestibulum aliquam. Duis consectetur lacinia malesuada. Sed quis ante dui. Name dignissim faucibus felis. Quisque dapibus aliquam ante, eu cursus elit dictum in. Mauris placerat efficitur rutrum."
 
-        onLineLaidOut: {
+        onLineLaidOut: (line) => {
             var n = line.number
 
             // Save information about the line so the autotest can retrieve it

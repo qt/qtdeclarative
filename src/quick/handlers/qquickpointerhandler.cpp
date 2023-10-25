@@ -8,6 +8,8 @@
 #include <QtQuick/private/qquickdeliveryagent_p_p.h>
 #include <QtGui/private/qinputdevice_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcPointerHandlerDispatch, "qt.quick.handler.dispatch")
@@ -878,7 +880,7 @@ QQuickPointerHandlerPrivate::QQuickPointerHandlerPrivate()
 {
 }
 
-/*!
+/*! \internal
     Returns \c true if the movement delta \a d in pixels along the \a axis
     exceeds QQuickPointerHandler::dragThreshold() \e or QEventPoint::velocity()
     exceeds QStyleHints::startDragVelocity().

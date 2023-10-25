@@ -106,8 +106,13 @@ QRectF Person::area() const
 
 void Person::setArea(const QRectF &newArea)
 {
-    if (m_area == newArea)
+    if (m_area.valueBypassingBindings() == newArea)
         return;
     m_area = newArea;
     emit areaChanged();
+}
+
+QBindable<QRectF> Person::areaBindable()
+{
+    return QBindable<QRectF>(&m_area);
 }

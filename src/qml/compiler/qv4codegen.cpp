@@ -31,7 +31,8 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-Q_LOGGING_CATEGORY(lcQmlCompiler, "qt.qml.compiler");
+Q_LOGGING_CATEGORY(lcQmlUsedBeforeDeclared, "qt.qml.usedbeforedeclared");
+Q_LOGGING_CATEGORY(lcQmlInjectedParameter, "qt.qml.injectedparameter");
 
 using namespace QV4;
 using namespace QV4::Compiler;
@@ -42,7 +43,7 @@ void CodegenWarningInterface::reportVarUsedBeforeDeclaration(
         const QString &name, const QString &fileName, QQmlJS::SourceLocation declarationLocation,
         QQmlJS::SourceLocation accessLocation)
 {
-    qCWarning(lcQmlCompiler).nospace().noquote()
+    qCWarning(lcQmlUsedBeforeDeclared).nospace().noquote()
             << fileName << ":" << accessLocation.startLine << ":" << accessLocation.startColumn
             << " Variable \"" << name << "\" is used before its declaration at "
             << declarationLocation.startLine << ":" << declarationLocation.startColumn << ".";
@@ -712,9 +713,8 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
     RegisterScope scope(this);
 
     Reference iterator = Reference::fromStackSlot(this);
-    Reference iteratorValue = Reference::fromStackSlot(this);
-    Reference iteratorDone = Reference::fromStackSlot(this);
-    Reference::storeConstOnStack(this, Encode(false), iteratorDone.stackSlot());
+    QVarLengthArray<Reference> iteratorValues;
+    Reference ignored;
 
     array.loadInAccumulator();
     Instruction::GetIterator iteratorObjInstr;
@@ -722,45 +722,76 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
     bytecodeGenerator->addInstruction(iteratorObjInstr);
     iterator.storeConsumeAccumulator();
 
+    BytecodeGenerator::Label done = bytecodeGenerator->newLabel();
+    Reference needsClose = Reference::storeConstOnStack(this, Encode(false));
+
+    for (PatternElementList *p = bindingList; p; p = p->next) {
+        PatternElement *e = p->element;
+        for (Elision *elision = p->elision; elision; elision = elision->next) {
+            iterator.loadInAccumulator();
+            Instruction::IteratorNext next;
+            if (!ignored.isValid())
+                ignored = Reference::fromStackSlot(this);
+            next.value = ignored.stackSlot();
+            bytecodeGenerator->addJumpInstruction(next).link(done);
+        }
+
+        if (!e)
+            continue;
+
+        if (e->type != PatternElement::RestElement) {
+            iterator.loadInAccumulator();
+            Instruction::IteratorNext next;
+            iteratorValues.push_back(Reference::fromStackSlot(this));
+            next.value = iteratorValues.back().stackSlot();
+            bytecodeGenerator->addJumpInstruction(next).link(done);
+        }
+    }
+
+    // If we've iterated through all the patterns without exhausing the iterator, it needs
+    // to be closed. But we don't close it here because:
+    // a, closing might throw an exception and we want to assign the values before we handle that
+    // b, there might be a rest element that could still continue iterating
+    Reference::fromConst(this, Encode(true)).storeOnStack(needsClose.stackSlot());
+
+    done.link();
+    bytecodeGenerator->checkException();
+
     {
-        auto cleanup = [this, iterator, iteratorDone]() {
+        ControlFlowUnwindCleanup flow(this, [&]() {
+            BytecodeGenerator::Label skipClose = bytecodeGenerator->newLabel();
+            needsClose.loadInAccumulator();
+            bytecodeGenerator->jumpFalse().link(skipClose);
             iterator.loadInAccumulator();
             Instruction::IteratorClose close;
-            close.done = iteratorDone.stackSlot();
             bytecodeGenerator->addInstruction(close);
-        };
+            skipClose.link();
+        });
 
-        ControlFlowUnwindCleanup flow(this, cleanup);
-
+        auto it = iteratorValues.constBegin();
         for (PatternElementList *p = bindingList; p; p = p->next) {
             PatternElement *e = p->element;
-            for (Elision *elision = p->elision; elision; elision = elision->next) {
-                iterator.loadInAccumulator();
-                Instruction::IteratorNext next;
-                next.value = iteratorValue.stackSlot();
-                next.done = iteratorDone.stackSlot();
-                bytecodeGenerator->addInstruction(next);
-            }
 
             if (!e)
                 continue;
 
-            RegisterScope scope(this);
-            iterator.loadInAccumulator();
-
             if (e->type == PatternElement::RestElement) {
-                Reference::fromConst(this, Encode(true)).storeOnStack(iteratorDone.stackSlot());
+                Q_ASSERT(it == iteratorValues.constEnd());
+
+                // The rest element is guaranteed to exhaust the iterator
+                Reference::fromConst(this, Encode(false)).storeOnStack(needsClose.stackSlot());
+
+                iterator.loadInAccumulator();
                 bytecodeGenerator->addInstruction(Instruction::DestructureRestElement());
-                initializeAndDestructureBindingElement(e, Reference::fromAccumulator(this), isDefinition);
+                initializeAndDestructureBindingElement(
+                        e, Reference::fromAccumulator(this), isDefinition);
             } else {
-                Instruction::IteratorNext next;
-                next.value = iteratorValue.stackSlot();
-                next.done = iteratorDone.stackSlot();
-                bytecodeGenerator->addInstruction(next);
-                initializeAndDestructureBindingElement(e, iteratorValue, isDefinition);
-                if (hasError())
-                    return;
+                Q_ASSERT(it != iteratorValues.constEnd());
+                initializeAndDestructureBindingElement(e, *it++, isDefinition);
             }
+
+            if (hasError())
+                return;
         }
     }
 }
@@ -1166,7 +1197,6 @@ bool Codegen::visit(ArrayPattern *ast)
             RegisterScope scope(this);
 
             Reference iterator = Reference::fromStackSlot(this);
-            Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
             Reference lhsValue = Reference::fromStackSlot(this);
 
             // There should be a temporal block, so that variables declared in lhs shadow outside vars.
@@ -1186,24 +1216,23 @@ bool Codegen::visit(ArrayPattern *ast)
 
             BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
             BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
+            BytecodeGenerator::Label done = bytecodeGenerator->newLabel();
 
             {
-                auto cleanup = [this, iterator, iteratorDone]() {
+                auto cleanup = [this, iterator, done]() {
                     iterator.loadInAccumulator();
                     Instruction::IteratorClose close;
-                    close.done = iteratorDone.stackSlot();
                     bytecodeGenerator->addInstruction(close);
+                    done.link();
                 };
-                ControlFlowLoop flow(this, &end, &in, cleanup);
+                ControlFlowLoop flow(this, &end, &in, std::move(cleanup));
 
                 in.link();
                 bytecodeGenerator->addLoopStart(in);
                 iterator.loadInAccumulator();
                 Instruction::IteratorNext next;
                 next.value = lhsValue.stackSlot();
-                next.done = iteratorDone.stackSlot();
-                bytecodeGenerator->addInstruction(next);
-                bytecodeGenerator->addJumpInstruction(Instruction::JumpTrue()).link(end);
+                bytecodeGenerator->addJumpInstruction(next).link(done);
 
                 lhsValue.loadInAccumulator();
                 pushAccumulator();
@@ -1397,26 +1426,20 @@ bool Codegen::visit(BinaryExpression *ast)
             return false;
 
         BytecodeGenerator::Label iftrue = bytecodeGenerator->newLabel();
-        BytecodeGenerator::Label iffalse = bytecodeGenerator->newLabel();
 
-        Instruction::CmpNeNull cmp;
+        Instruction::CmpEqNull cmp;
 
         left = left.storeOnStack();
         left.loadInAccumulator();
         bytecodeGenerator->addInstruction(cmp);
 
         bytecodeGenerator->jumpTrue().link(iftrue);
-        bytecodeGenerator->jumpFalse().link(iffalse);
 
         blockTailCalls.unblock();
 
-        iftrue.link();
-
         left.loadInAccumulator();
-
         BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
-
-        iffalse.link();
+        iftrue.link();
 
         Reference right = expression(ast->right);
         right.loadInAccumulator();
@@ -2615,7 +2638,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, co
         }
 
         if (resolved.isInjected && accessLocation.isValid()) {
-            qCWarning(lcQmlCompiler).nospace().noquote()
+            qCWarning(lcQmlInjectedParameter).nospace().noquote()
                     << url().toString() << ":" << accessLocation.startLine
                     << ":" << accessLocation.startColumn << " Parameter \"" << name
                     << "\" is not declared."
@@ -3225,15 +3248,15 @@ bool Codegen::visit(YieldExpression *ast)
         Instruction::IteratorNextForYieldStar next;
         next.object = lhsValue.stackSlot();
         next.iterator = iterator.stackSlot();
-        bytecodeGenerator->addInstruction(next);
-
-        BytecodeGenerator::Jump done = bytecodeGenerator->jumpTrue();
+        BytecodeGenerator::Jump done = bytecodeGenerator->addJumpInstruction(next);
         bytecodeGenerator->jumpNotUndefined().link(loop);
+
         lhsValue.loadInAccumulator();
         emitReturn(acc);
 
 
         done.link();
+        bytecodeGenerator->checkException();
 
         lhsValue.loadInAccumulator();
         setExprResult(acc);
@@ -3577,7 +3600,6 @@ bool Codegen::visit(ForEachStatement *ast)
     TailCallBlocker blockTailCalls(this);
 
     Reference iterator = Reference::fromStackSlot(this);
-    Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
     Reference lhsValue = Reference::fromStackSlot(this);
 
     // There should be a temporal block, so that variables declared in lhs shadow outside vars.
@@ -3598,25 +3620,28 @@ bool Codegen::visit(ForEachStatement *ast)
 
     BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label done;
 
     {
-        auto cleanup = [ast, iterator, iteratorDone, this]() {
-            if (ast->type == ForEachType::Of) {
+        std::function<void()> cleanup;
+        if (ast->type == ForEachType::Of) {
+            done = bytecodeGenerator->newLabel();
+            cleanup = [iterator, this, done]() {
                 iterator.loadInAccumulator();
                 Instruction::IteratorClose close;
-                close.done = iteratorDone.stackSlot();
                 bytecodeGenerator->addInstruction(close);
-            }
-        };
-        ControlFlowLoop flow(this, &end, &in, cleanup);
+                done.link();
+            };
+        } else {
+            done = end;
+        }
+        ControlFlowLoop flow(this, &end, &in, std::move(cleanup));
         bytecodeGenerator->addLoopStart(in);
         in.link();
         iterator.loadInAccumulator();
         Instruction::IteratorNext next;
         next.value = lhsValue.stackSlot();
-        next.done = iteratorDone.stackSlot();
-        bytecodeGenerator->addInstruction(next);
-        bytecodeGenerator->addJumpInstruction(Instruction::JumpTrue()).link(end);
+        bytecodeGenerator->addJumpInstruction(next).link(done);
 
         // each iteration gets it's own context, as per spec
         {
@@ -3932,7 +3957,8 @@ void Codegen::handleTryCatch(TryStatement *ast)
 void Codegen::handleTryFinally(TryStatement *ast)
 {
     RegisterScope scope(this);
-    ControlFlowFinally finally(this, ast->finallyExpression);
+    const bool hasCatchBlock = ast->catchExpression;
+    ControlFlowFinally finally(this, ast->finallyExpression, hasCatchBlock);
     TailCallBlocker blockTailCalls(this); // IMPORTANT: destruction will unblock tail calls before finally is generated
 
     if (ast->catchExpression) {

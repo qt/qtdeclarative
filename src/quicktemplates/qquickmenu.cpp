@@ -4,8 +4,11 @@
 #include "qquickmenu_p.h"
 #include "qquickmenu_p_p.h"
 #include "qquickmenuitem_p_p.h"
+#include <private/qtquicktemplates2-config_p.h>
+#if QT_CONFIG(quicktemplates2_container)
 #include "qquickmenubaritem_p.h"
 #include "qquickmenubar_p.h"
+#endif
 #include "qquickpopupitem_p_p.h"
 #include "qquickpopuppositioner_p_p.h"
 #include "qquickaction_p.h"
@@ -580,11 +583,13 @@ void QQuickMenuPrivate::propagateKeyEvent(QKeyEvent *event)
     if (QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(parentItem)) {
         if (QQuickMenu *menu = menuItem->menu())
             QQuickMenuPrivate::get(menu)->propagateKeyEvent(event);
+#if QT_CONFIG(quicktemplates2_container)
     } else if (QQuickMenuBarItem *menuBarItem = qobject_cast<QQuickMenuBarItem *>(parentItem)) {
         if (QQuickMenuBar *menuBar = menuBarItem->menuBar()) {
             event->accept();
             QCoreApplication::sendEvent(menuBar, event);
         }
+#endif
     }
 }
 

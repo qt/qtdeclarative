@@ -7,6 +7,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
@@ -18,13 +19,7 @@
 #include <QtQuickControls2/qquickstyle.h>
 #include <QSignalSpy>
 
-//using namespace QQuickVisualTestUtils;
-
-// Need a more descriptive failure message: QTBUG-87039
-#define COMPARE_PALETTES(actualPalette, expectedPalette) \
-    QVERIFY2(actualPalette == expectedPalette, \
-        qPrintable(QString::fromLatin1("\n   Actual:    %1\n   Expected:  %2") \
-            .arg(QDebug::toString(actualPalette)).arg(QDebug::toString(expectedPalette))));
+using namespace QQuickControlsTestUtils;
 
 class tst_palette : public QQmlDataTest
 {
@@ -41,6 +36,7 @@ private slots:
 
     void inheritance_data();
     void inheritance();
+    void childPopupInheritance();
 
     void defaultPalette_data();
     void defaultPalette();
@@ -109,6 +105,7 @@ void tst_palette::palette_data()
     customPalette.setColor(QPalette::Window, QColor("plum"));
     customPalette.setColor(QPalette::WindowText, QColor("salmon"));
     customPalette.setColor(QPalette::PlaceholderText, QColor("magenta"));
+    customPalette.setColor(QPalette::Accent, QColor("darkkhaki"));
 
     QTest::newRow("Control:custom") << "palette-control-custom.qml" << customPalette;
     QTest::newRow("AppWindow:custom") << "palette-appwindow-custom.qml" << customPalette;
@@ -130,7 +127,7 @@ void tst_palette::palette()
     QVariant var = object->property("palette");
     QVERIFY(var.isValid());
 
-    COMPARE_PALETTES(var.value<QQuickPalette*>()->toQPalette(), expectedPalette);
+    QCOMPARE(var.value<QQuickPalette*>()->toQPalette(), expectedPalette);
 }
 
 void tst_palette::inheritance_data()
@@ -204,6 +201,40 @@ void tst_palette::inheritance()
     auto grandChildMo = grandChild->metaObject();
     grandChildMo->property(grandChildMo->indexOfProperty("palette")).reset(grandChild);
     QCOMPARE(grandChildPalette->window(), windowPalette->window());
+}
+
+// The child popups in inheritance() don't test actual nested child popups,
+// only popups that are children of items and the items within those popups.
+// We need to specifically test this to prevent QTBUG-115707 from happening again.
+void tst_palette::childPopupInheritance()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("childPopupInheritance.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    const auto *windowPrivate = QQuickWindowPrivate::get(helper.window);
+    const auto windowsWindowTextColor = windowPrivate->palette()->toQPalette().color(QPalette::WindowText);
+
+    // parentPopup sets windowText explicitly, so its label should use that color.
+    auto *parentPopup = helper.appWindow->findChild<QQuickPopup *>("parentPopup");
+    QVERIFY(parentPopup);
+    parentPopup->open();
+    QTRY_VERIFY(parentPopup->isOpened());
+    auto *parentPopupLabel = helper.appWindow->findChild<QObject *>("parentPopupLabel");
+    QVERIFY(parentPopupLabel);
+    QCOMPARE(parentPopupLabel->property("color").value<QColor>(), "#ffdead");
+
+    // All other child popups don't set anything explicitly, and should inherit from their window.
+    auto *childPopup = helper.appWindow->findChild<QQuickPopup *>("childPopup");
+    QVERIFY(childPopup);
+    auto *childPopupLabel = helper.appWindow->findChild<QObject *>("childPopupLabel");
+    QVERIFY(childPopupLabel);
+    QCOMPARE(childPopupLabel->property("color").value<QColor>(), windowsWindowTextColor);
+
+    auto *grandchildPopup = helper.appWindow->findChild<QQuickPopup *>("grandchildPopup");
+    QVERIFY(grandchildPopup);
+    auto *grandchildPopupLabel = helper.appWindow->findChild<QObject *>("grandchildPopupLabel");
+    QVERIFY(grandchildPopupLabel);
+    QCOMPARE(grandchildPopupLabel->property("color").value<QColor>(), windowsWindowTextColor);
 }
 
 class TestTheme : public QQuickTheme

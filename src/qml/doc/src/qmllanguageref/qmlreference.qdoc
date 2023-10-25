@@ -49,6 +49,7 @@ modules.
         \li \l{qtqml-javascript-resources.html}{Defining JavaScript Resources In QML}
         \li \l{qtqml-javascript-imports.html}{Importing JavaScript Resources In QML}
         \li \l{qtqml-javascript-hostenvironment.html}{JavaScript Host Environment}
+        \li \l{qtqml-javascript-finetuning.html}{Configuring the JavaScript engine}
         \endlist
 
     \li \l{qtqml-typesystem-topic.html}{The QML Type System}
@@ -60,6 +61,8 @@ modules.
             \li \l{qtqml-documents-definetypes.html}{Defining Object Types from QML}
             \li \l{qtqml-cppintegration-definetypes.html}{Defining Object Types from C++}
             \endlist
+        \li \l{qtqml-typesystem-sequencetypes.html}{QML Sequence Types}
+        \li \l{qtqml-typesystem-namespaces.html}{QML Namespaces}
         \endlist
 
     \li \l{qtqml-modules-topic.html}{QML Modules}

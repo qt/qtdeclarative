@@ -26,6 +26,7 @@ private slots:
     void gradient_multiple();
     void gradient_preset();
     void antialiasing();
+    void multiRadius();
 
 private:
     QQmlEngine engine;
@@ -229,6 +230,82 @@ void tst_qquickrectangle::antialiasing()
     rect->resetAntialiasing();
     QCOMPARE(rect->antialiasing(), true);
     QCOMPARE(spy.size(), 7);
+}
+
+void tst_qquickrectangle::multiRadius()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("multi-radius.qml"));
+    view.show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickRectangle *firstRect = qobject_cast<QQuickRectangle*>(view.rootObject()->property("firstRectangle").value<QObject*>());
+    QQuickRectangle *secondRect = qobject_cast<QQuickRectangle*>(view.rootObject()->property("secondRectangle").value<QObject*>());
+    QQuickRectangle *thirdRect = qobject_cast<QQuickRectangle*>(view.rootObject()->property("thirdRectangle").value<QObject*>());
+    QVERIFY(firstRect);
+    QVERIFY(secondRect);
+    QVERIFY(thirdRect);
+
+    QCOMPARE(firstRect->topLeftRadius(), 10.);
+    QCOMPARE(firstRect->topRightRadius(), 5.);
+    QCOMPARE(firstRect->bottomLeftRadius(), 5.);
+    QCOMPARE(firstRect->bottomRightRadius(), 2.);
+
+    QSignalSpy spytl(firstRect, SIGNAL(topLeftRadiusChanged()));
+    QSignalSpy spytr(firstRect, SIGNAL(topRightRadiusChanged()));
+    QSignalSpy spybl(firstRect, SIGNAL(bottomLeftRadiusChanged()));
+    QSignalSpy spybr(firstRect, SIGNAL(bottomRightRadiusChanged()));
+
+    firstRect->setRadius(12);
+
+    QCOMPARE(firstRect->topLeftRadius(), 10.);
+    QCOMPARE(firstRect->topRightRadius(), 12.);
+    QCOMPARE(firstRect->bottomLeftRadius(), 12.);
+    QCOMPARE(firstRect->bottomRightRadius(), 2.);
+
+    QCOMPARE(spytl.size(), 0);
+    QCOMPARE(spytr.size(), 1);
+    QCOMPARE(spybl.size(), 1);
+    QCOMPARE(spybr.size(), 0);
+
+    firstRect->resetTopLeftRadius();
+    firstRect->resetBottomRightRadius();
+    QCOMPARE(firstRect->topRightRadius(), 12.);
+    QCOMPARE(firstRect->bottomLeftRadius(), 12.);
+
+    QCOMPARE(secondRect->topLeftRadius(), 5.);
+    QCOMPARE(secondRect->topRightRadius(), 10.);
+    QCOMPARE(secondRect->bottomLeftRadius(), 2.);
+    QCOMPARE(secondRect->bottomRightRadius(), 5.);
+
+    QSignalSpy spytl2(secondRect, SIGNAL(topLeftRadiusChanged()));
+    QSignalSpy spytr2(secondRect, SIGNAL(topRightRadiusChanged()));
+    QSignalSpy spybl2(secondRect, SIGNAL(bottomLeftRadiusChanged()));
+    QSignalSpy spybr2(secondRect, SIGNAL(bottomRightRadiusChanged()));
+
+    secondRect->setRadius(12);
+
+    QCOMPARE(secondRect->topLeftRadius(), 12.);
+    QCOMPARE(secondRect->topRightRadius(), 10.);
+    QCOMPARE(secondRect->bottomLeftRadius(), 2.);
+    QCOMPARE(secondRect->bottomRightRadius(), 12.);
+
+    QCOMPARE(spytl2.size(), 1);
+    QCOMPARE(spytr2.size(), 0);
+    QCOMPARE(spybl2.size(), 0);
+    QCOMPARE(spybr2.size(), 1);
+
+    secondRect->resetTopRightRadius();
+    secondRect->resetBottomLeftRadius();
+    QCOMPARE(secondRect->topRightRadius(), 12.);
+    QCOMPARE(secondRect->bottomLeftRadius(), 12.);
+
+    QCOMPARE(thirdRect->topLeftRadius(), 5.);
+    QCOMPARE(thirdRect->topRightRadius(), 5.);
+    QCOMPARE(thirdRect->bottomLeftRadius(), 5.);
+    QCOMPARE(thirdRect->bottomRightRadius(), 5.);
+
 }
 
 QTEST_MAIN(tst_qquickrectangle)

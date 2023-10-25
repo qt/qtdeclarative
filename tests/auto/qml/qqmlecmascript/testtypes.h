@@ -2103,6 +2103,92 @@ private:
     QStringList m_qobjectStringList;
 };
 
+class SingletonBase : public QObject {
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE virtual void trackPage(const QString&) {}
+    Q_INVOKABLE virtual void trackPage(const QString&, const QVariantMap&) {}
+
+    bool m_okay = false;
+};
+
+class SingletonImpl : public SingletonBase {
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE virtual void trackPage(const QString&) override {}
+    Q_INVOKABLE virtual void trackPage(const QString&, const QVariantMap&) override
+    {
+        m_okay = true;
+    }
+};
+
+class SingletonRegistrationWrapper {
+    Q_GADGET
+    QML_FOREIGN(SingletonBase)
+    QML_NAMED_ELEMENT(SingletonInheritanceTest)
+    QML_SINGLETON
+
+public:
+    static SingletonBase* create(QQmlEngine*, QJSEngine*) {
+        return new SingletonImpl();
+    }
+
+private:
+    SingletonRegistrationWrapper() = default;
+};
+
+class MetaCallInterceptor : public QObject, public QDynamicMetaObjectData
+{
+    Q_OBJECT
+public:
+    MetaCallInterceptor()
+    {
+        didGetObjectDestroyedCallback = false;
+    }
+
+    void objectDestroyed(QObject *object) override
+    {
+        didGetObjectDestroyedCallback = true;
+
+        // Deletes this meta object
+        QDynamicMetaObjectData::objectDestroyed(object);
+    }
+
+    QMetaObject *toDynamicMetaObject(QObject *) override
+    {
+        return const_cast<QMetaObject *>(&MetaCallInterceptor::staticMetaObject);
+    }
+
+    int metaCall(QObject *o, QMetaObject::Call call, int idx, void **argv) override
+    {
+        return o->qt_metacall(call, idx, argv);
+    }
+
+    static bool didGetObjectDestroyedCallback;
+};
+
+struct TypeToTriggerProxyMetaObject
+{
+    Q_GADGET
+};
+
+class TypeWithCustomMetaObject : public QObject
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT(TypeWithCustomMetaObject)
+    QML_EXTENDED_NAMESPACE(TypeToTriggerProxyMetaObject)
+
+public:
+    TypeWithCustomMetaObject()
+    {
+        auto *p = QObjectPrivate::get(this);
+        Q_ASSERT(!p->metaObject);
+        p->metaObject = new MetaCallInterceptor;
+    }
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

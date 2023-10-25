@@ -1,0 +1,23 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-deprecated.html
+\ingroup qmllint-warnings-and-errors
+
+\title Deprecated
+\brief A deprecated property or type was used.
+
+\section1 Deprecated Binding or Type
+
+\section2 What happened?
+A deprecated type was instantiated, a deprecated property was used or a deprecated method was
+called.
+
+\section2 Why is this bad?
+Types, properties and methods can be deprecated for different reasons, please refer to the
+documentation of the deprecated item to find out why they were deprecated.
+
+You can fix the deprecation warning by following the advice on the deprecation notice in the
+documentation of the deprecated item.
+*/

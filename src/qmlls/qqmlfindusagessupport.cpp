@@ -6,6 +6,7 @@
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
+#include <variant>
 
 QT_BEGIN_NAMESPACE
 
@@ -37,17 +38,17 @@ void QQmlFindUsagesSupport::registerHandlers(QLanguageServer *, QLanguageServerP
 void QQmlFindUsagesSupport::process(QQmlFindUsagesSupport::RequestPointerArgument request)
 {
     QList<QLspSpecification::Location> results;
-    QScopeGuard onExit([&results, &request]() { request->m_response.sendResponse(results); });
+    ResponseScopeGuard guard(results, request->m_response);
 
     auto itemsFound = itemsForRequest(request);
-    if (!itemsFound) {
+    if (guard.setErrorFrom(itemsFound))
         return;
-    }
 
-    auto usages = QQmlLSUtils::findUsagesOf(itemsFound->front().domItem);
+    QQmlLSUtilsItemLocation &front = std::get<QList<QQmlLSUtilsItemLocation>>(itemsFound).front();
 
-    QQmlJS::Dom::DomItem files =
-            itemsFound->front().domItem.top().field(QQmlJS::Dom::Fields::qmlFileWithPath);
+    auto usages = QQmlLSUtils::findUsagesOf(front.domItem);
+
+    QQmlJS::Dom::DomItem files = front.domItem.top().field(QQmlJS::Dom::Fields::qmlFileWithPath);
 
     QHash<QString, QString> codeCache;
 

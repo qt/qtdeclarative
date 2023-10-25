@@ -27,9 +27,10 @@ QString QQmlJSRegisterContent::descriptiveName() const
 
     switch (m_content.index()) {
     case Type:
-        return result + std::get<QQmlJSScope::ConstPtr>(m_content)->internalName();
+        return result
+                + std::get<std::pair<QQmlJSScope::ConstPtr, int>>(m_content).first->internalName();
     case Property: {
-        const QQmlJSMetaProperty prop = std::get<QQmlJSMetaProperty>(m_content);
+        const QQmlJSMetaProperty prop = std::get<PropertyLookup>(m_content).property;
         return result + scope() + prop.propertyName() + u" with type "_s + prop.typeName();
     }
     case Method: {
@@ -61,10 +62,10 @@ bool QQmlJSRegisterContent::isList() const
 {
     switch (m_content.index()) {
     case Type:
-        return std::get<QQmlJSScope::ConstPtr>(m_content)->accessSemantics()
+        return std::get<std::pair<QQmlJSScope::ConstPtr, int>>(m_content).first->accessSemantics()
                 == QQmlJSScope::AccessSemantics::Sequence;
     case Property:
-        return std::get<QQmlJSMetaProperty>(m_content).type()->accessSemantics()
+        return std::get<PropertyLookup>(m_content).property.type()->accessSemantics()
                 == QQmlJSScope::AccessSemantics::Sequence;
     case Conversion:
         return std::get<ConvertedTypes>(m_content).result->accessSemantics()
@@ -78,7 +79,7 @@ bool QQmlJSRegisterContent::isWritable() const
 {
     switch (m_content.index()) {
     case Property:
-        return std::get<QQmlJSMetaProperty>(m_content).isWritable();
+        return std::get<PropertyLookup>(m_content).property.isWritable();
 
     // TODO: What can we actually write?
     default:
@@ -90,21 +91,23 @@ bool QQmlJSRegisterContent::isWritable() const
 
 QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr &storedType,
                                                     const QQmlJSScope::ConstPtr &type,
+                                                    int resultLookupIndex,
                                                     QQmlJSRegisterContent::ContentVariant variant,
                                                     const QQmlJSScope::ConstPtr &scope)
 {
     QQmlJSRegisterContent result(storedType, scope, variant);
-    result.m_content = type;
+    result.m_content = std::make_pair(type, resultLookupIndex);
     return result;
 }
 
 QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr &storedType,
                                                     const QQmlJSMetaProperty &property,
+                                                    int baseLookupIndex, int resultLookupIndex,
                                                     QQmlJSRegisterContent::ContentVariant variant,
                                                     const QQmlJSScope::ConstPtr &scope)
 {
     QQmlJSRegisterContent result(storedType, scope, variant);
-    result.m_content = property;
+    result.m_content = PropertyLookup { property, baseLookupIndex, resultLookupIndex};
     return result;
 }
 

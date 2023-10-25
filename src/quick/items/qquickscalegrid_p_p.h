@@ -20,7 +20,7 @@
 #include <QtQml/qqml.h>
 #include <QtCore/qobject.h>
 
-#include <QtQuick/private/qquickpixmapcache_p.h>
+#include <QtQuick/private/qquickpixmap_p.h>
 #include <private/qtquickglobal_p.h>
 
 QT_BEGIN_NAMESPACE

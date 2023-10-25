@@ -6,6 +6,7 @@
     \brief This is a collection of QML keyboard interaction examples.
     \image qml-keyinteraction-example.png
     \ingroup qtquickexamples
+    \examplecategory {Graphics & Multimedia}
 
     \e{Keyboard Focus in Qt Quick} combines various methods of
     handling keyboard focus. For more information, visit

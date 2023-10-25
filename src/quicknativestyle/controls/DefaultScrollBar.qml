@@ -17,7 +17,7 @@ T.ScrollBar {
                              implicitContentHeight + topPadding + bottomPadding)
 
     visible: policy === T.ScrollBar.AlwaysOn || (policy === T.ScrollBar.AsNeeded && size < 1.0)
-    minimumSize: !__nativeContentItem ? 10 : orientation === Qt.Vertical ?
+    minimumSize: !__nativeContentItem ? 0.1 : orientation === Qt.Vertical ?
         contentItem.minimumSize.height / height : contentItem.minimumSize.width / width
 
     background: NativeStyle.ScrollBar {

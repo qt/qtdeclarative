@@ -638,6 +638,18 @@ By setting the default property \e alias to \c {inner.children}, any object
 assigned as a child of the outer item is automatically reassigned as a child
 of the inner item.
 
+\warning Setting the values of a an element's default list property can be done implicitly or
+explicitly. Within a single element's definition, these two methods must not be mixed as that leads
+to undefined ordering of the elements in the list.
+
+\qml
+Item {
+    // Use either implicit or explicit assignement to the default list property but not both!
+    Rectangle { width: 40 }         // implicit
+    data: [Rectangle{ width: 100 }] // explicit
+}
+\endqml
+
 \section3 Required Properties
 
 An object declaration may define a property as required, using the \c required

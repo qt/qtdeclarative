@@ -36,6 +36,7 @@ private slots:
     void altNavigation();
     void addRemove();
     void checkHighlightWhenMenuDismissed();
+    void hoverAfterClosingWithEscape();
 
 private:
     static bool hasWindowActivation();
@@ -784,6 +785,40 @@ void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
         menuItem->mapToScene(QPointF(menuItem->width() / 2, menuItem->height() / 2)).toPoint());
     QVERIFY(!dynamicMenuBarItem->isHighlighted());
+}
+
+void tst_qquickmenubar::hoverAfterClosingWithEscape()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
+
+    QQuickControlsApplicationHelper helper(this, QLatin1String("hoverAfterClosingWithEscape.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenuBar *menuBar = window->findChild<QQuickMenuBar *>("menuBar");
+    QVERIFY(menuBar);
+
+    // Open the first menu by clicking on the first menu bar item.
+    auto *firstMenuBarItem(qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(0)));
+    QVERIFY(clickButton(firstMenuBarItem));
+    QQuickMenu *firstMenu = menuBar->menuAt(0);
+    QVERIFY(firstMenu);
+    QTRY_VERIFY(firstMenu->isOpened());
+
+    // Close it with the escape key.
+    QTest::keyClick(window, Qt::Key_Escape);
+    QTRY_VERIFY(!firstMenu->isVisible());
+
+    // Hover over the second menu bar item; it shouldn't cause its menu to open.
+    auto *secondMenuBarItem(qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(1)));
+    QTest::mouseMove(window, mapCenterToWindow(secondMenuBarItem));
+    QQuickMenu *secondMenu = menuBar->menuAt(1);
+    QVERIFY(secondMenu);
+    QVERIFY(!secondMenu->isVisible());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_qquickmenubar)

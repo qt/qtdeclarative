@@ -55,15 +55,15 @@ public:
         return rawComment.mid(commentEnd, rawComment.size() - commentEnd);
     }
 
-    quint32 commentBegin;
-    quint32 commentEnd;
-    quint32 commentContentBegin;
-    quint32 commentContentEnd;
+    quint32 commentBegin = 0;
+    quint32 commentEnd = 0;
+    quint32 commentContentBegin = 0;
+    quint32 commentContentEnd = 0;
     QStringView commentStartStr;
     QStringView commentEndStr;
     bool hasStartNewline = false;
     bool hasEndNewline = false;
-    int nContentNewlines;
+    int nContentNewlines = 0;
     QStringView rawComment;
     QStringList warnings;
 };
@@ -82,7 +82,7 @@ public:
     {
     }
 
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor);
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const;
     int newlinesBefore() const { return m_newlinesBefore; }
     void setNewlinesBefore(int n) { m_newlinesBefore = n; }
     QStringView rawComment() const { return m_comment; }
@@ -107,7 +107,7 @@ public:
     constexpr static DomType kindValue = DomType::CommentedElement;
     DomType kind() const { return kindValue; }
 
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor);
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const;
     void writePre(OutWriter &lw, QList<SourceLocation> *locations = nullptr) const;
     void writePost(OutWriter &lw, QList<SourceLocation> *locations = nullptr) const;
     QMultiMap<quint32, const QList<Comment> *> commentGroups(SourceLocation elLocation) const;
@@ -131,7 +131,7 @@ public:
     constexpr static DomType kindValue = DomType::RegionComments;
     DomType kind() const { return kindValue; }
 
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor);
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const;
 
     friend bool operator==(const RegionComments &c1, const RegionComments &c2)
     {
@@ -170,7 +170,7 @@ public:
 class QMLDOM_EXPORT AstComments final : public OwningItem
 {
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &) const override
+    std::shared_ptr<OwningItem> doCopy(const DomItem &) const override
     {
         return std::make_shared<AstComments>(*this);
     }
@@ -178,17 +178,18 @@ protected:
 public:
     constexpr static DomType kindValue = DomType::AstComments;
     DomType kind() const override { return kindValue; }
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor) override;
-    std::shared_ptr<AstComments> makeCopy(DomItem &self) const
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor)  const override;
+    std::shared_ptr<AstComments> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<AstComments>(doCopy(self));
     }
 
-    Path canonicalPath(DomItem &self) const override { return self.m_ownerPath; }
+    Path canonicalPath(const DomItem &self) const override { return self.m_ownerPath; }
     static void collectComments(MutableDomItem &item);
-    static void collectComments(std::shared_ptr<Engine> engine, AST::Node *n,
-                                std::shared_ptr<AstComments> collectComments,
-                                MutableDomItem rootItem, FileLocations::Tree rootItemLocations);
+    static void collectComments(
+            std::shared_ptr<Engine> engine, AST::Node *n,
+            std::shared_ptr<AstComments> collectComments, const MutableDomItem &rootItem,
+            FileLocations::Tree rootItemLocations);
     AstComments(std::shared_ptr<Engine> e) : m_engine(e) { }
     AstComments(const AstComments &o)
         : OwningItem(o), m_engine(o.m_engine), m_commentedElements(o.m_commentedElements)

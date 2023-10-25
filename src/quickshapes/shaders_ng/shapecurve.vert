@@ -2,29 +2,23 @@
 
 layout(location = 0) in vec4 vertexCoord;
 layout(location = 1) in vec4 vertexTexCoord;
-layout(location = 2) in vec4 vertexDebugColor;
-layout(location = 3) in vec4 vertexGradient;
+layout(location = 2) in vec4 vertexGradient;
+layout(location = 3) in vec2 normalVector;
 
 layout(location = 0) out vec4 qt_TexCoord;
-layout(location = 1) out vec4 debugColor;
+layout(location = 1) out vec4 gradient;
 
 #if defined(LINEARGRADIENT)
 layout(location = 2) out float gradTabIndex;
-#  define NEXT_LOCATION 3
 #elif defined(RADIALGRADIENT) || defined(CONICALGRADIENT)
 layout(location = 2) out vec2 coord;
-#  define NEXT_LOCATION 3
-#else
-#  define NEXT_LOCATION 2
 #endif
-
-layout(location = NEXT_LOCATION) out vec4 gradient;
 
 layout(std140, binding = 0) uniform buf {
     mat4 qt_Matrix;
     float matrixScale;
     float opacity;
-    float reserved2;
+    float debug;
     float reserved3;
 
 #if defined(STROKE)
@@ -53,10 +47,27 @@ layout(std140, binding = 0) uniform buf {
 
 out gl_PerVertex { vec4 gl_Position; };
 
+#define SQRT2 1.41421356237
+
+vec4 addOffset(vec4 texCoord, vec2 offset, vec4 duvdxy)
+{
+    float dudx = duvdxy.x;
+    float dvdx = duvdxy.y;
+    float dudy = duvdxy.z;
+    float dvdy = duvdxy.w;
+    float u = offset.x * dudx + offset.y * dudy;
+    float v = offset.x * dvdx + offset.y * dvdy;
+    // special case external triangles for concave curves
+    int specialCase = int(texCoord.z > 0) * (int(offset.x != 0) + int(offset.y != 0));
+    return vec4(texCoord.x + u, texCoord.y + v, texCoord.z, float(specialCase));
+}
+
 void main()
 {
-    qt_TexCoord = vertexTexCoord;
-    debugColor = vertexDebugColor;
+    vec2 offset = normalVector * SQRT2/ubuf.matrixScale;
+
+    qt_TexCoord = addOffset(vertexTexCoord, offset, vertexGradient);
+
     gradient = vertexGradient / ubuf.matrixScale;
 
 #if defined(LINEARGRADIENT)
@@ -66,5 +77,5 @@ void main()
     coord = vertexCoord.xy - ubuf.translationPoint;
 #endif
 
-    gl_Position = ubuf.qt_Matrix * vertexCoord;
+    gl_Position = ubuf.qt_Matrix * (vertexCoord + vec4(offset, 0, 0));
 }

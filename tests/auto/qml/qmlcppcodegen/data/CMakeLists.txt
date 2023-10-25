@@ -30,6 +30,7 @@ set(cpp_sources
 set(qml_files
     AccessModelMethodsFromOutside.qml
     ArraySequenceLengthInterop.qml
+    B.qml
     BadType.qml
     BaseMember.qml
     BindingExpression.qml
@@ -39,11 +40,13 @@ set(qml_files
     Cycle2.qml
     Cycle3.qml
     Dummy.qml
+    Dummy2.qml
     Enums.qml
     Foozle.qml
     Loopy.qml
     OkType.qml
     Panel.qml
+    Planner.qml
     ProgressBar/Keyframe.qml
     ProgressBar/KeyframeGroup.qml
     ProgressBar/ProgressBar.ui.qml
@@ -63,6 +66,7 @@ set(qml_files
     anchorsFill.qml
     argumentConversion.qml
     array.qml
+    arrayCtor.qml
     asCast.qml
     attachedBaseEnum.qml
     badSequence.qml
@@ -88,8 +92,10 @@ set(qml_files
     conversionDecrement.qml
     conversions.qml
     conversions2.qml
+    convertToOriginalReadAcumulatorForUnaryOperators.qml
     curlygrouped.qml
     cycleHead.qml
+    dateConstruction.qml
     dateConversions.qml
     deadShoeSize.qml
     deadStoreLoop.qml
@@ -140,6 +146,7 @@ set(qml_files
     invisibleListElementType.qml
     invisibleTypes.qml
     isnan.qml
+    iteration.qml
     javaScriptArgument.qml
     jsArrayMethods.qml
     jsArrayMethodsUntyped.qml
@@ -176,6 +183,7 @@ set(qml_files
     notEqualsInt.qml
     notNotString.qml
     nullAccess.qml
+    nullAccessInsideSignalHandler.qml
     nullComparison.qml
     numbersInJsPrimitive.qml
     objectInVar.qml
@@ -189,6 +197,7 @@ set(qml_files
     popContextAfterRet.qml
     prefixedMetaType.qml
     pressAndHoldButton.qml
+    readEnumFromInstance.qml
     registerPropagation.qml
     registerelimination.qml
     revisions.qml
@@ -238,11 +247,14 @@ set(qml_files
     valueTypeLists.qml
     valueTypeProperty.qml
     valueTypeReference.qml
+    variantMap.qml
     variantMapLookup.qml
     variantReturn.qml
     variantlist.qml
     versionmismatch.qml
+    voidConversion.qml
     voidfunction.qml
+    writeback.qml
     dummy_imports.qml
 )
 

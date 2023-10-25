@@ -32,6 +32,10 @@ public:
     void setGradientStops(const QGradientStops &stops) override;
     void setGradientVertical(bool vertical) override;
     void setRadius(qreal radius) override;
+    void setTopLeftRadius(qreal radius) override;
+    void setTopRightRadius(qreal radius) override;
+    void setBottomLeftRadius(qreal radius) override;
+    void setBottomRightRadius(qreal radius) override;
     void setAntialiasing(bool antialiasing) override;
     void setAligned(bool aligned) override;
     void update() override;
@@ -48,8 +52,12 @@ protected:
     QGradientStops m_gradient_stops;
     QColor m_color;
     QColor m_border_color;
-    qreal m_radius;
-    qreal m_pen_width;
+    float m_radius = 0.0f;
+    float m_topLeftRadius = 0.0f;
+    float m_topRightRadius = 0.0f;
+    float m_bottomLeftRadius = 0.0f;
+    float m_bottomRightRadius = 0.0f;
+    float m_pen_width = 0.0f;
 
     uint m_aligned : 1;
     uint m_antialiasing : 1;

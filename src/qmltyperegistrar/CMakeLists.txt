@@ -16,6 +16,7 @@ qt_internal_add_module(QmlTypeRegistrarPrivate
         qqmltyperegistrarconstants_p.h
         qqmltypesclassdescription.cpp qqmltypesclassdescription_p.h
         qqmltypescreator.cpp qqmltypescreator_p.h
+        qqmltyperegistrarutils_p.h qqmltyperegistrarutils.cpp
     NO_UNITY_BUILD_SOURCES
         qqmltypescreator.cpp # S_NAME etc clash
     DEFINES

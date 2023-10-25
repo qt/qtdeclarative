@@ -1,0 +1,23 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtqmlnetwork-index.html
+    \title Qt QML Network
+
+    \brief The Qt QML Network module provides core network functionality in QML.
+
+    The module exposes the Qt C++ \l [QtNetwork] {Qt Network} {Network}
+    functionality to QML.
+
+    \section1 QML Types
+
+    \generatelist {qmltypesbymodule QtNetwork}
+
+    \section1 Related Information
+
+    \list
+      \li \l{Qt Network}
+      \li \l{Qt QML}
+    \endlist
+*/

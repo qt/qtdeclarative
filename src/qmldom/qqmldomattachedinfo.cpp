@@ -26,7 +26,7 @@ Attributes:
 
 \sa QQmlJs::Dom::AttachedInfo
 */
-bool FileLocations::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+bool FileLocations::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
 #ifdef QmlDomAddCodeStr
@@ -46,7 +46,7 @@ bool FileLocations::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     cont = cont && self.dvItemField(visitor, Fields::regions, [this, &self, &loc2str]() {
         return self.subMapItem(Map::fromMapRef<SourceLocation>(
                 self.pathFromOwner().field(Fields::regions), regions,
-                [&loc2str](DomItem &map, const PathEls::PathComponent &key, SourceLocation &el) {
+                [&loc2str](const DomItem &map, const PathEls::PathComponent &key, const SourceLocation &el) {
                     return map.subLocationItem(key, el, loc2str(el));
                 }));
     });
@@ -55,12 +55,12 @@ bool FileLocations::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
                    return self.subMapItem(Map::fromMapRef<QList<SourceLocation>>(
                            self.pathFromOwner().field(Fields::preCommentLocations),
                            preCommentLocations,
-                           [&loc2str](DomItem &map, const PathEls::PathComponent &key,
-                                      QList<SourceLocation> &el) {
+                           [&loc2str](const DomItem &map, const PathEls::PathComponent &key,
+                                      const QList<SourceLocation> &el) {
                                return map.subListItem(List::fromQListRef<SourceLocation>(
                                        map.pathFromOwner().appendComponent(key), el,
-                                       [&loc2str](DomItem &list, const PathEls::PathComponent &idx,
-                                                  SourceLocation &el) {
+                                       [&loc2str](const DomItem &list, const PathEls::PathComponent &idx,
+                                                  const SourceLocation &el) {
                                            return list.subLocationItem(idx, el, loc2str(el));
                                        }));
                            }));
@@ -70,12 +70,12 @@ bool FileLocations::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
                    return self.subMapItem(Map::fromMapRef<QList<SourceLocation>>(
                            self.pathFromOwner().field(Fields::postCommentLocations),
                            postCommentLocations,
-                           [&loc2str](DomItem &map, const PathEls::PathComponent &key,
-                                      QList<SourceLocation> &el) {
+                           [&loc2str](const DomItem &map, const PathEls::PathComponent &key,
+                                      const QList<SourceLocation> &el) {
                                return map.subListItem(List::fromQListRef<SourceLocation>(
                                        map.pathFromOwner().appendComponent(key), el,
-                                       [&loc2str](DomItem &list, const PathEls::PathComponent &idx,
-                                                  SourceLocation &el) {
+                                       [&loc2str](const DomItem &list, const PathEls::PathComponent &idx,
+                                                  const SourceLocation &el) {
                                            return list.subLocationItem(idx, el, loc2str(el));
                                        }));
                            }));
@@ -99,26 +99,35 @@ FileLocations::Tree FileLocations::ensure(FileLocations::Tree base, Path basePat
     return AttachedInfoT<FileLocations>::ensure(base, basePath, pType);
 }
 
+/*!
+\internal
+Allows to query information about the FileLocations::Tree obtained from item, such as path of
+the Tree root in the Dom, the path of this item's Tree in the Dom, and so on.
+
+\note You can use \c{qDebug() << item.path(FileLocations::findAttachedInfo(item).foundTreePath)} or
+\c{item.path(FileLocations::findAttachedInfo(item).foundTreePath).toString()} to print out the Tree
+of item, for example, as Tree's cannot be printed when outside the Dom.
+*/
 AttachedInfoLookupResult<FileLocations::Tree>
-FileLocations::findAttachedInfo(DomItem &item, AttachedInfo::FindOptions options)
+FileLocations::findAttachedInfo(const DomItem &item)
 {
-    return AttachedInfoT<FileLocations>::findAttachedInfo(item, Fields::fileLocationsTree, options);
+    return AttachedInfoT<FileLocations>::findAttachedInfo(item, Fields::fileLocationsTree);
 }
 
 /*!
    \internal
    Returns the tree corresponding to a DomItem.
  */
-FileLocations::Tree FileLocations::treeOf(DomItem &item)
+FileLocations::Tree FileLocations::treeOf(const DomItem &item)
 {
-    return AttachedInfoT<FileLocations>::treePtr(item, Fields::fileLocationsTree);
+    return findAttachedInfo(item).foundTree;
 }
 
 /*!
    \internal
    Returns the filelocation Info corresponding to a DomItem.
  */
-const FileLocations *FileLocations::fileLocationsOf(DomItem &item)
+const FileLocations *FileLocations::fileLocationsOf(const DomItem &item)
 {
     if (FileLocations::Tree t = treeOf(item))
         return &(t->info());
@@ -168,7 +177,7 @@ Attributes:
 \sa QQmlJs::Dom::AttachedInfo
 */
 
-bool AttachedInfo::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+bool AttachedInfo::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
     if (Ptr p = parent())
@@ -180,13 +189,13 @@ bool AttachedInfo::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     cont = cont && self.dvItemField(visitor, Fields::subItems, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::subItems),
-                [this](DomItem &map, QString key) {
+                [this](const DomItem &map, QString key) {
                     Path p = Path::fromString(key);
                     return map.copy(m_subItems.value(p), map.canonicalPath().key(key));
                 },
-                [this](DomItem &) {
+                [this](const DomItem &) {
                     QSet<QString> res;
-                    for (auto p : m_subItems.keys())
+                    for (const auto &p : m_subItems.keys())
                         res.insert(p.toString());
                     return res;
                 },
@@ -225,7 +234,7 @@ AttachedInfo::Ptr AttachedInfo::ensure(AttachedInfo::Ptr self, Path path, Attach
         break;
     }
     Ptr res = self;
-    for (auto p : path) {
+    for (const auto &p : path) {
         if (AttachedInfo::Ptr subEl = res->m_subItems.value(p)) {
             res = subEl;
         } else {
@@ -257,8 +266,7 @@ AttachedInfo::Ptr AttachedInfo::find(AttachedInfo::Ptr self, Path p, AttachedInf
 }
 
 AttachedInfoLookupResult<AttachedInfo::Ptr>
-AttachedInfo::findAttachedInfo(DomItem &item, QStringView fieldName,
-                               AttachedInfo::FindOptions options)
+AttachedInfo::findAttachedInfo(const DomItem &item, QStringView fieldName)
 {
     Path p;
     DomItem fLoc = item.field(fieldName);
@@ -281,21 +289,15 @@ AttachedInfo::findAttachedInfo(DomItem &item, QStringView fieldName,
         if (AttachedInfo::Ptr foundTree =
                     AttachedInfo::find(fLocPtr, p, AttachedInfo::PathType::Relative))
             res.foundTree = foundTree;
-    if (options & (FindOption::SetRootTreePath | FindOption::SetFoundTreePath))
-        res.rootTreePath = fLoc.canonicalPath();
-    if (options & FindOption::SetFoundTreePath) {
-        Path foundTreePath = res.rootTreePath.value();
-        if (res.lookupPath) {
-            foundTreePath = foundTreePath.key(res.lookupPath.head().toString());
-            for (Path pEl : res.lookupPath.mid(1))
-                foundTreePath = foundTreePath.field(Fields::subItems).key(pEl.toString());
-        }
-        res.foundTreePath = foundTreePath;
-    }
+    res.rootTreePath = fLoc.canonicalPath();
+
+    res.foundTreePath = res.rootTreePath;
+    for (Path pEl : res.lookupPath)
+        res.foundTreePath = res.foundTreePath.field(Fields::subItems).key(pEl.toString());
     return res;
 }
 
-bool UpdatedScriptExpression::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+bool UpdatedScriptExpression::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
     cont = cont && self.dvWrapField(visitor, Fields::expr, expr);
@@ -315,18 +317,18 @@ UpdatedScriptExpression::Tree UpdatedScriptExpression::ensure(UpdatedScriptExpre
 }
 
 AttachedInfoLookupResult<UpdatedScriptExpression::Tree>
-UpdatedScriptExpression::findAttachedInfo(DomItem &item, AttachedInfo::FindOptions options)
+UpdatedScriptExpression::findAttachedInfo(const DomItem &item)
 {
     return AttachedInfoT<UpdatedScriptExpression>::findAttachedInfo(
-            item, Fields::updatedScriptExpressions, options);
+            item, Fields::updatedScriptExpressions);
 }
 
-UpdatedScriptExpression::Tree UpdatedScriptExpression::treePtr(DomItem &item)
+UpdatedScriptExpression::Tree UpdatedScriptExpression::treePtr(const DomItem &item)
 {
     return AttachedInfoT<UpdatedScriptExpression>::treePtr(item, Fields::updatedScriptExpressions);
 }
 
-const UpdatedScriptExpression *UpdatedScriptExpression::exprPtr(DomItem &item)
+const UpdatedScriptExpression *UpdatedScriptExpression::exprPtr(const DomItem &item)
 {
     if (UpdatedScriptExpression::Tree t = treePtr(item))
         return &(t->info());

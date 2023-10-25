@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmljsimportvisitor_p.h"
+#include "qqmljslogger_p.h"
 #include "qqmljsmetatypes_p.h"
 #include "qqmljsresourcefilemapper_p.h"
 
@@ -34,6 +35,7 @@ using namespace Qt::StringLiterals;
 using namespace QQmlJS::AST;
 
 /*!
+    \internal
     Returns if assigning \a assignedType to \a property would require an
     implicit component wrapping.
  */
@@ -872,12 +874,12 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                             if (requiredScope != scope) {
                                 if (!prevRequiredScope.isNull()) {
                                     auto sourceScope = prevRequiredScope->baseType();
-                                    suggestion = QQmlJSFixSuggestion {
-                                        "%1:%2:%3: Property marked as required in %4"_L1
-                                            .arg(sourceScope->filePath())
-                                            .arg(sourceScope->sourceLocation().startLine)
-                                            .arg(sourceScope->sourceLocation().startColumn)
-                                            .arg(requiredScopeName),
+                                    suggestion = QQmlJSFixSuggestion{
+                                        "%1:%2:%3: Property marked as required in %4."_L1
+                                                .arg(sourceScope->filePath())
+                                                .arg(sourceScope->sourceLocation().startLine)
+                                                .arg(sourceScope->sourceLocation().startColumn)
+                                                .arg(requiredScopeName),
                                         sourceScope->sourceLocation()
                                     };
                                     suggestion->setFilename(sourceScope->filePath());
@@ -1003,12 +1005,12 @@ void QQmlJSImportVisitor::checkSignal(
             const qsizetype newLength = m_logger->code().indexOf(u'\n', location.end())
                     - location.offset;
 
-            fix = QQmlJSFixSuggestion {
-                    "Implicitly defining %1 as signal handler in Connections is deprecated. "
-                    "Create a function instead"_L1.arg(handlerName),
-                    QQmlJS::SourceLocation(location.offset, newLength, location.startLine,
-                                           location.startColumn),
-                    "function %1(%2) { ... }"_L1.arg(handlerName, handlerParameters.join(u", "))
+            fix = QQmlJSFixSuggestion{
+                "Implicitly defining %1 as signal handler in Connections is deprecated. "
+                "Create a function instead."_L1.arg(handlerName),
+                QQmlJS::SourceLocation(location.offset, newLength, location.startLine,
+                                       location.startColumn),
+                "function %1(%2) { ... }"_L1.arg(handlerName, handlerParameters.join(u", "))
             };
         }
 
@@ -1411,11 +1413,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::StringLiteral *sl)
             templateString += c;
         }
 
-        QQmlJSFixSuggestion suggestion = {
-            "Use a template literal instead"_L1,
-            sl->literalToken,
-            u"`" % templateString % u"`"
-        };
+        QQmlJSFixSuggestion suggestion = { "Use a template literal instead."_L1, sl->literalToken,
+                                           u"`" % templateString % u"`" };
         suggestion.setAutoApplicable();
         m_logger->log(QStringLiteral("String contains unescaped line terminator which is "
                                      "deprecated."),
@@ -1429,13 +1428,35 @@ inline QQmlJSImportVisitor::UnfinishedBinding
 createNonUniqueScopeBinding(QQmlJSScope::Ptr &scope, const QString &name,
                             const QQmlJS::SourceLocation &srcLocation);
 
+static void logLowerCaseImport(QStringView superType, QQmlJS::SourceLocation location,
+                               QQmlJSLogger *logger)
+{
+    QStringView namespaceName{ superType };
+    namespaceName = namespaceName.first(namespaceName.indexOf(u'.'));
+    logger->log(u"Namespace '%1' of '%2' must start with an upper case letter."_s.arg(namespaceName)
+                        .arg(superType),
+                qmlUncreatableType, location, true, true);
+}
+
 bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 {
     const QString superType = buildName(definition->qualifiedTypeNameId);
 
     const bool isRoot = !rootScopeIsValid();
     Q_ASSERT(!superType.isEmpty());
-    if (superType.front().isUpper()) {
+
+    // we need to assume that it is a type based on its capitalization. Types defined in inline
+    // components, for example, can have their type definition after their type usages:
+    // Item { property IC myIC; component IC: Item{}; }
+    const qsizetype indexOfTypeName = superType.lastIndexOf(u'.');
+    const bool looksLikeGroupedProperty = superType.front().isLower();
+
+    if (indexOfTypeName != -1 && looksLikeGroupedProperty) {
+        logLowerCaseImport(superType, definition->qualifiedTypeNameId->identifierToken,
+                           m_logger);
+    }
+
+    if (!looksLikeGroupedProperty) {
         if (!isRoot) {
             enterEnvironment(QQmlSA::ScopeType::QMLScope, superType,
                              definition->firstSourceLocation());
@@ -1482,7 +1503,6 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
     } else {
         enterEnvironmentNonUnique(QQmlSA::ScopeType::GroupedPropertyScope, superType,
                                   definition->firstSourceLocation());
-        Q_ASSERT(rootScopeIsValid());
         m_bindings.append(createNonUniqueScopeBinding(m_currentScope, superType,
                                                       definition->firstSourceLocation()));
         QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
@@ -1553,6 +1573,10 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
                 publicMember->firstSourceLocation());
         }
         QString typeName = buildName(publicMember->memberType);
+        if (typeName.contains(u'.') && typeName.front().isLower()) {
+            logLowerCaseImport(typeName, publicMember->typeToken, m_logger);
+        }
+
         QString aliasExpr;
         const bool isAlias = (typeName == u"alias"_s);
         if (isAlias) {
@@ -1819,7 +1843,7 @@ QQmlJSImportVisitor::parseBindingExpression(const QString &name,
 
         QQmlJSMetaPropertyBinding binding(location, name);
         binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
-                                 QQmlSA::ScriptBindingKind::Script_PropertyBinding);
+                                 QQmlSA::ScriptBindingKind::PropertyBinding);
         m_bindings.append(UnfinishedBinding { m_currentScope, [=]() { return binding; } });
         return BindingExpressionParseResult::Script;
     }
@@ -1863,7 +1887,7 @@ QQmlJSImportVisitor::parseBindingExpression(const QString &name,
             binding.setStringLiteral(templateLit->value);
         } else {
             binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
-                                     QQmlSA::ScriptBindingKind::Script_PropertyBinding);
+                                     QQmlSA::ScriptBindingKind::PropertyBinding);
             for (QQmlJS::AST::TemplateLiteral *l = templateLit; l; l = l->next) {
                 if (QQmlJS::AST::ExpressionNode *expression = l->expression)
                     expression->accept(this);
@@ -1885,7 +1909,7 @@ QQmlJSImportVisitor::parseBindingExpression(const QString &name,
     if (!binding.isValid()) {
         // consider this to be a script binding (see IRBuilder::setBindingValue)
         binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
-                                 QQmlSA::ScriptBindingKind::Script_PropertyBinding,
+                                 QQmlSA::ScriptBindingKind::PropertyBinding,
                                  isUndefinedBinding ? ScriptBindingValueType::ScriptValue_Undefined
                                                     : ScriptBindingValueType::ScriptValue_Unknown);
     }
@@ -2074,18 +2098,18 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
                 signalParameters]() {
             // when encountering a signal handler, add it as a script binding
             Q_ASSERT(scope->isFullyResolved());
-            QQmlSA::ScriptBindingKind kind = QQmlSA::ScriptBindingKind::Script_Invalid;
+            QQmlSA::ScriptBindingKind kind = QQmlSA::ScriptBindingKind::Invalid;
             const auto methods = scope->methods(signalName, QQmlJSMetaMethodType::Signal);
             if (!methods.isEmpty()) {
-                kind = QQmlSA::ScriptBindingKind::Script_SignalHandler;
+                kind = QQmlSA::ScriptBindingKind::SignalHandler;
                 checkSignal(scope, groupLocation, name, signalParameters);
             } else if (QQmlJSUtils::propertyFromChangedHandler(scope, name).has_value()) {
-                kind = QQmlSA::ScriptBindingKind::Script_ChangeHandler;
+                kind = QQmlSA::ScriptBindingKind::ChangeHandler;
                 checkSignal(scope, groupLocation, name, signalParameters);
             } else if (scope->hasProperty(name)) {
                 // Not a signal handler after all.
                 // We can see this now because the type is fully resolved.
-                kind = QQmlSA::ScriptBindingKind::Script_PropertyBinding;
+                kind = QQmlSA::ScriptBindingKind::PropertyBinding;
                 m_signalHandlers.remove(firstSourceLocation);
             } else {
                 // We already know it's bad, but let's allow checkSignal() to do its thing.
@@ -2245,6 +2269,11 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     QString prefix = QLatin1String("");
     if (import->asToken.isValid()) {
         prefix += import->importId;
+        if (!import->importId.isEmpty() && !import->importId.front().isUpper()) {
+            m_logger->log(u"Import qualifier '%1' must start with a capital letter."_s.arg(
+                                  import->importId),
+                          qmlImport, import->importIdToken, true, true);
+        }
     }
 
     auto filename = import->fileName.toString();
@@ -2339,9 +2368,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
             } else if (value == u"Unbound") {
                 m_scopesById.setComponentsAreBound(false);
             } else {
-                m_logger->log(
-                        u"Unkonwn argument \"%s\" to pragma ComponentBehavior"_s.arg(value),
-                        qmlSyntax, pragma->firstSourceLocation());
+                m_logger->log(u"Unknown argument \"%1\" to pragma ComponentBehavior"_s.arg(value),
+                              qmlSyntax, pragma->firstSourceLocation());
             }
         });
     } else if (pragma->name == u"FunctionSignatureBehavior") {
@@ -2352,7 +2380,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
                 m_scopesById.setSignaturesAreEnforced(false);
             } else {
                 m_logger->log(
-                        u"Unkonwn argument \"%s\" to pragma FunctionSignatureBehavior"_s.arg(value),
+                        u"Unknown argument \"%1\" to pragma FunctionSignatureBehavior"_s.arg(value),
                         qmlSyntax, pragma->firstSourceLocation());
             }
         });
@@ -2367,9 +2395,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
             } else if (value == u"Inaddressable") {
                 m_scopesById.setValueTypesAreAddressable(false);
             } else {
-                m_logger->log(
-                        u"Unkonwn argument \"%s\" to pragma ValueTypeBehavior"_s.arg(value),
-                        qmlSyntax, pragma->firstSourceLocation());
+                m_logger->log(u"Unknown argument \"%1\" to pragma ValueTypeBehavior"_s.arg(value),
+                              qmlSyntax, pragma->firstSourceLocation());
             }
         });
     }
@@ -2526,6 +2553,11 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     bool needsResolution = false;
     int scopesEnteredCounter = 0;
 
+    const QString typeName = buildName(uiob->qualifiedTypeNameId);
+    if (typeName.front().isLower() && typeName.contains(u'.')) {
+        logLowerCaseImport(typeName, uiob->qualifiedTypeNameId->identifierToken, m_logger);
+    }
+
     QString prefix;
     for (auto group = uiob->qualifiedId; group->next; group = group->next) {
         const QString idName = group->name.toString();
@@ -2561,7 +2593,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     if (needsResolution)
         QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
 
-    enterEnvironment(QQmlSA::ScopeType::QMLScope, buildName(uiob->qualifiedTypeNameId),
+    enterEnvironment(QQmlSA::ScopeType::QMLScope, typeName,
                      uiob->qualifiedTypeNameId->identifierToken);
     QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
 

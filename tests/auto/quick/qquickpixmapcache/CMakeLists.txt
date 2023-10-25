@@ -22,6 +22,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qquickpixmapcache
     SOURCES
         tst_qquickpixmapcache.cpp
+        deviceloadingimage.h deviceloadingimage.cpp
     LIBRARIES
         Qt::Concurrent
         Qt::CorePrivate
@@ -45,4 +46,8 @@ qt_internal_extend_target(tst_qquickpixmapcache CONDITION ANDROID OR IOS
 qt_internal_extend_target(tst_qquickpixmapcache CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
+)
+
+qt_add_qml_module(tst_qquickpixmapcache
+    URI PixmapCacheTest
 )

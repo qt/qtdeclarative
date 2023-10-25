@@ -338,7 +338,7 @@ public:
     void endVisit(AST::ThisExpression *) override { stop(u"ThisExpression"); }
 
     bool visit(AST::IdentifierExpression *el) override {
-        start(QLatin1String("IdentifierExpression name=%1 identiferToken=%2")
+        start(QLatin1String("IdentifierExpression name=%1 identifierToken=%2")
               .arg(quotedString(el->name), loc(el->identifierToken)));
         return true;
     }

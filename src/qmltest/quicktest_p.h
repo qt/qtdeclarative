@@ -21,6 +21,8 @@
 #include <QtQml/qqmlpropertymap.h>
 #include <QtQml/qqml.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class Q_QUICK_TEST_PRIVATE_EXPORT QTestRootObject : public QObject

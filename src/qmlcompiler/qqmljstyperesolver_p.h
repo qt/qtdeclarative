@@ -14,6 +14,7 @@
 //
 // We mean it.
 
+#include <memory>
 #include <private/qtqmlcompilerexports_p.h>
 
 #include <private/qqmlirbuilder_p.h>
@@ -21,6 +22,7 @@
 #include "qqmljsimporter_p.h"
 #include "qqmljslogger_p.h"
 #include "qqmljsregistercontent_p.h"
+#include "qqmljsresourcefilemapper_p.h"
 #include "qqmljsscope_p.h"
 #include "qqmljsscopesbyid_p.h"
 
@@ -72,6 +74,8 @@ public:
     QQmlJSScope::ConstPtr qObjectType() const { return m_qObjectType; }
     QQmlJSScope::ConstPtr qObjectListType() const { return m_qObjectListType; }
     QQmlJSScope::ConstPtr arrayPrototype() const { return m_arrayPrototype; }
+    QQmlJSScope::ConstPtr forInIteratorPtr() const { return m_forInIteratorPtr; }
+    QQmlJSScope::ConstPtr forOfIteratorPtr() const { return m_forOfIteratorPtr; }
 
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
     QQmlJSScope::ConstPtr scopeForId(
@@ -84,6 +88,10 @@ public:
         return m_imports.hasType(name) && !m_imports.type(name).scope;
     }
 
+    const QHash<QString, QQmlJS::ImportedScope<QQmlJSScope::ConstPtr>> &importedTypes() const
+    {
+        return m_imports.types();
+    }
     QQmlJSScope::ConstPtr typeForName(const QString &name) const
     {
         return m_imports.type(name).scope;
@@ -114,12 +122,20 @@ public:
 
     QQmlJSRegisterContent builtinType(const QQmlJSScope::ConstPtr &type) const;
     QQmlJSRegisterContent globalType(const QQmlJSScope::ConstPtr &type) const;
-    QQmlJSRegisterContent scopedType(const QQmlJSScope::ConstPtr &scope, const QString &name) const;
-    QQmlJSRegisterContent memberType(const QQmlJSRegisterContent &type, const QString &name) const;
+    QQmlJSRegisterContent scopedType(
+            const QQmlJSScope::ConstPtr &scope, const QString &name,
+            int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex) const;
+    QQmlJSRegisterContent memberType(
+            const QQmlJSRegisterContent &type, const QString &name,
+            int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex) const;
     QQmlJSRegisterContent valueType(const QQmlJSRegisterContent &list) const;
     QQmlJSRegisterContent returnType(
             const QQmlJSScope::ConstPtr &type, QQmlJSRegisterContent::ContentVariant variant,
             const QQmlJSScope::ConstPtr &scope) const;
+
+    QQmlJSRegisterContent iteratorPointer(
+            const QQmlJSRegisterContent &listType, QQmlJS::AST::ForEachType type,
+            int lookupIndex) const;
 
     bool registerIsStoredIn(const QQmlJSRegisterContent &reg,
                             const QQmlJSScope::ConstPtr &type) const;
@@ -193,9 +209,13 @@ public:
 
     bool isTriviallyCopyable(const QQmlJSScope::ConstPtr &type) const;
 
+    bool inherits(const QQmlJSScope::ConstPtr &derived, const QQmlJSScope::ConstPtr &base) const;
+
 protected:
 
-    QQmlJSRegisterContent memberType(const QQmlJSScope::ConstPtr &type, const QString &name) const;
+    QQmlJSRegisterContent memberType(
+            const QQmlJSScope::ConstPtr &type, const QString &name,
+            int baseLookupIndex, int resultLookupIndex) const;
     QQmlJSRegisterContent memberEnumType(const QQmlJSScope::ConstPtr &type,
                                          const QString &name) const;
     bool isPrimitive(const QQmlJSScope::ConstPtr &type) const;
@@ -248,6 +268,8 @@ protected:
     QQmlJSScope::ConstPtr m_metaObjectType;
     QQmlJSScope::ConstPtr m_functionType;
     QQmlJSScope::ConstPtr m_jsGlobalObject;
+    QQmlJSScope::ConstPtr m_forInIteratorPtr;
+    QQmlJSScope::ConstPtr m_forOfIteratorPtr;
 
     QQmlJSScopesById m_objectsById;
     QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> m_objectsByLocation;
@@ -272,6 +294,16 @@ protected:
     };
 
     std::unique_ptr<QHash<QQmlJSScope::ConstPtr, TrackedType>> m_trackedTypes;
+};
+
+/*!
+\internal
+Keep this struct around to be able to populate deferred scopes obtained from a QQmlJSTypeResolver.
+*/
+struct QQmlJSTypeResolverDependencies
+{
+    std::shared_ptr<QQmlJSImporter> importer;
+    std::shared_ptr<QQmlJSResourceFileMapper> mapper;
 };
 
 QT_END_NAMESPACE

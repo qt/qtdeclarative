@@ -69,35 +69,21 @@ class Filter;
 
 class Base {
 public:
-    virtual ~Base() = default;
-    virtual Kind kind() const = 0;
-    virtual QString name() const = 0;
-    virtual bool checkName(QStringView s) const = 0;
-    virtual QStringView stringView() const { return QStringView(); }
-    virtual index_type index(index_type defaultValue=-1) const { return defaultValue; }
+    QStringView stringView() const { return QStringView(); }
+    index_type index(index_type defaultValue = -1) const { return defaultValue; }
+    bool hasSquareBrackets() const { return false; }
 
-    virtual void dump(Sink sink) const;
-    virtual bool hasSquareBrackets() const { return false; }
-
-    // casting, could use optional, but that is c++17...
-    virtual const Empty *asEmpty() const { return nullptr; }
-    virtual const Field *asField() const { return nullptr; }
-    virtual const Index *asIndex() const { return nullptr; }
-    virtual const Key *asKey() const { return nullptr; }
-    virtual const Root *asRoot() const { return nullptr; }
-    virtual const Current *asCurrent() const { return nullptr; }
-    virtual const Any *asAny() const { return nullptr; }
-    virtual const Filter *asFilter() const { return nullptr; }
+protected:
+    void dump(Sink sink, const QString &name, bool hasSquareBrackets) const;
 };
 
 class Empty final : public Base
 {
 public:
     Empty() = default;
-    Kind kind() const override { return Kind::Empty; }
-    QString name() const override { return QString(); }
-    bool checkName(QStringView s) const override { return s.isEmpty(); }
-    const Empty * asEmpty() const override { return this; }
+    QString name() const { return QString(); }
+    bool checkName(QStringView s) const { return s.isEmpty(); }
+    void dump(Sink sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
 };
 
 class Field final : public Base
@@ -105,12 +91,10 @@ class Field final : public Base
 public:
     Field() = default;
     Field(QStringView n): fieldName(n) {}
-    Kind kind() const override { return Kind::Field; }
-    QString name() const override { return fieldName.toString(); }
-    bool checkName(QStringView s) const override { return s == fieldName; }
-    QStringView stringView() const override { return fieldName; }
-    const Field * asField() const override { return this; }
-    void dump(Sink sink) const override { sink(fieldName); }
+    QString name() const { return fieldName.toString(); }
+    bool checkName(QStringView s) const { return s == fieldName; }
+    QStringView stringView() const { return fieldName; }
+    void dump(Sink sink) const { sink(fieldName); }
 
     QStringView fieldName;
 };
@@ -120,12 +104,11 @@ class Index final : public Base
 public:
     Index() = default;
     Index(index_type i): indexValue(i) {}
-    Kind kind() const override { return Kind::Index; }
-    QString name() const override { return QString::number(indexValue); }
-    bool checkName(QStringView s) const override { return s == name(); }
-    index_type index(index_type = -1) const override { return indexValue; }
-    bool hasSquareBrackets() const override { return true; }
-    const Index * asIndex() const override { return this; }
+    QString name() const { return QString::number(indexValue); }
+    bool checkName(QStringView s) const { return s == name(); }
+    index_type index(index_type = -1) const { return indexValue; }
+    void dump(Sink sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
+    bool hasSquareBrackets() const { return true; }
 
     index_type indexValue = -1;
 };
@@ -135,17 +118,15 @@ class Key final : public Base
 public:
     Key() = default;
     Key(QString n) : keyValue(n) { }
-    Kind kind() const override { return Kind::Key; }
-    QString name() const override { return keyValue; }
-    bool checkName(QStringView s) const override { return s == keyValue; }
-    QStringView stringView() const override { return keyValue; }
-    void dump(Sink sink) const override {
+    QString name() const { return keyValue; }
+    bool checkName(QStringView s) const { return s == keyValue; }
+    QStringView stringView() const { return keyValue; }
+    void dump(Sink sink) const {
         sink(u"[");
         sinkEscaped(sink, keyValue);
         sink(u"]");
     }
-    bool hasSquareBrackets() const override { return true; }
-    const Key * asKey() const override { return this; }
+    bool hasSquareBrackets() const { return true; }
 
     QString keyValue;
 };
@@ -164,8 +145,7 @@ public:
         if (contextKind == PathRoot::Other)
             contextName = n;
     }
-    Kind kind() const override { return Kind::Root; }
-    QString name() const override {
+    QString name() const {
         switch (contextKind) {
         case PathRoot::Modules:
             return QStringLiteral(u"$modules");
@@ -185,16 +165,13 @@ public:
         Q_ASSERT(false && "Unexpected contextKind in name");
         return QString();
     }
-    bool checkName(QStringView s) const override {
+    bool checkName(QStringView s) const {
         if (contextKind != PathRoot::Other)
             return s.compare(name(), Qt::CaseInsensitive) == 0;
         return s.startsWith(QChar::fromLatin1('$')) && s.mid(1) == contextName;
     }
-    QStringView stringView() const override { return contextName; }
-    void dump(Sink sink) const override {
-        sink(name());
-    }
-    const Root *asRoot() const override { return this; }
+    QStringView stringView() const { return contextName; }
+    void dump(Sink sink) const { sink(name()); }
 
     PathRoot contextKind = PathRoot::Other;
     QStringView contextName;
@@ -214,8 +191,7 @@ public:
         if (contextKind == PathCurrent::Other)
             contextName = n;
     }
-    Kind kind() const override { return Kind::Current; }
-    QString name() const override {
+    QString name() const {
         switch (contextKind) {
         case PathCurrent::Other:
             return QString::fromUtf8("@").append(contextName.toString());
@@ -243,13 +219,13 @@ public:
         Q_ASSERT(false && "Unexpected contextKind in Current::name");
         return QString();
     }
-    bool checkName(QStringView s) const override {
+    bool checkName(QStringView s) const {
         if (contextKind != PathCurrent::Other)
             return s.compare(name(), Qt::CaseInsensitive) == 0;
         return s.startsWith(QChar::fromLatin1('@')) && s.mid(1) == contextName;
     }
-    QStringView stringView() const override { return contextName; }
-    const Current *asCurrent() const override { return this; }
+    QStringView stringView() const { return contextName; }
+    void dump(Sink sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
 
     PathCurrent contextKind = PathCurrent::Other;
     QStringView contextName;
@@ -259,160 +235,110 @@ class Any final : public Base
 {
 public:
     Any() = default;
-    Kind kind() const override { return Kind::Any; }
-    QString name() const override { return QLatin1String("*"); }
-    bool checkName(QStringView s) const override { return s == u"*"; }
-    bool hasSquareBrackets() const override { return true; }
-    const Any *asAny() const override { return this; }
+    QString name() const { return QLatin1String("*"); }
+    bool checkName(QStringView s) const { return s == u"*"; }
+    void dump(Sink sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
+    bool hasSquareBrackets() const { return true; }
 };
 
 class QMLDOM_EXPORT Filter final : public Base
 {
 public:
     Filter() = default;
-    Filter(std::function<bool(DomItem)> f, QStringView filterDescription = u"<native code filter>");
-    Kind kind() const override { return Kind::Filter; }
-    QString name() const override;
-    bool checkName(QStringView s) const override;
-    QStringView stringView() const override { return filterDescription; }
-    bool hasSquareBrackets() const override { return true; }
-    const Filter *asFilter() const override { return this; }
+    Filter(std::function<bool(const DomItem &)> f,
+           QStringView filterDescription = u"<native code filter>");
+    QString name() const;
+    bool checkName(QStringView s) const;
+    QStringView stringView() const { return filterDescription; }
+    void dump(Sink sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
+    bool hasSquareBrackets() const { return true; }
 
-    std::function<bool(DomItem)> filterFunction;
+    std::function<bool(const DomItem &)> filterFunction;
     QStringView filterDescription;
 };
 
 class QMLDOM_EXPORT PathComponent {
 public:
-    PathComponent(): data() {}
-    ~PathComponent();
+    PathComponent() = default;
+    PathComponent(const PathComponent &) = default;
+    PathComponent(PathComponent &&) = default;
+    PathComponent &operator=(const PathComponent &) = default;
+    PathComponent &operator=(PathComponent &&) = default;
+    ~PathComponent() = default;
 
-    Kind kind() const { return base()->kind(); }
-    QString name() const { return base()->name(); };
-    bool checkName(QStringView s) const { return base()->checkName(s); }
-    QStringView stringView() const { return base()->stringView(); };
-    index_type index(index_type defaultValue=-1) const { return base()->index(defaultValue); }
-    void dump(Sink sink) const { base()->dump(sink); }
-    bool hasSquareBrackets() const { return base()->hasSquareBrackets(); }
+    Kind kind() const { return Kind(m_data.index()); }
 
-    const Empty *asEmpty() const { return base()->asEmpty(); }
-    const Field *asField() const { return base()->asField(); }
-    const Index *asIndex() const { return base()->asIndex(); }
-    const Key *asKey() const { return base()->asKey(); }
-    const Root *asRoot() const { return base()->asRoot(); }
-    const Current *asCurrent() const { return base()->asCurrent(); }
-    const Any *asAny() const { return base()->asAny(); }
+    QString name() const
+    {
+        return std::visit([](auto &&d) { return d.name(); }, m_data);
+    }
+
+    bool checkName(QStringView s) const
+    {
+        return std::visit([s](auto &&d) { return d.checkName(s); }, m_data);
+    }
+
+    QStringView stringView() const
+    {
+        return std::visit([](auto &&d) { return d.stringView(); }, m_data);
+    }
+
+    index_type index(index_type defaultValue=-1) const
+    {
+        return std::visit([defaultValue](auto &&d) { return d.index(defaultValue); }, m_data);
+    }
+
+    void dump(Sink sink) const
+    {
+        return std::visit([sink](auto &&d) { return d.dump(sink); }, m_data);
+    }
+
+    bool hasSquareBrackets() const
+    {
+        return std::visit([](auto &&d) { return d.hasSquareBrackets(); }, m_data);
+    }
+
+    const Empty   *asEmpty()   const { return std::get_if<Empty>(&m_data); }
+    const Field   *asField()   const { return std::get_if<Field>(&m_data); }
+    const Index   *asIndex()   const { return std::get_if<Index>(&m_data); }
+    const Key     *asKey()     const { return std::get_if<Key>(&m_data); }
+    const Root    *asRoot()    const { return std::get_if<Root>(&m_data); }
+    const Current *asCurrent() const { return std::get_if<Current>(&m_data); }
+    const Any     *asAny()     const { return std::get_if<Any>(&m_data); }
+    const Filter  *asFilter()  const { return std::get_if<Filter>(&m_data); }
+
     static int cmp(const PathComponent &p1, const PathComponent &p2);
 
-    PathComponent(const Empty &o): data(o) {}
-    PathComponent(const Field &o): data(o) {}
-    PathComponent(const Index &o): data(o) {}
-    PathComponent(const Key &o): data(o) {}
-    PathComponent(const Root &o): data(o) {}
-    PathComponent(const Current &o): data(o) {}
-    PathComponent(const Any &o): data(o) {}
-    PathComponent(const Filter &o): data(o) {}
+    PathComponent(Empty &&o): m_data(std::move(o)) {}
+    PathComponent(Field &&o): m_data(std::move(o)) {}
+    PathComponent(Index &&o): m_data(std::move(o)) {}
+    PathComponent(Key &&o): m_data(std::move(o)) {}
+    PathComponent(Root &&o): m_data(std::move(o)) {}
+    PathComponent(Current &&o): m_data(std::move(o)) {}
+    PathComponent(Any &&o): m_data(std::move(o)) {}
+    PathComponent(Filter &&o): m_data(std::move(o)) {}
+
 private:
     friend class QQmlJS::Dom::Path;
     friend class QQmlJS::Dom::PathEls::TestPaths;
 
-    Base *base() {
-        return reinterpret_cast<Base*>(&data);
-    }
-    const Base *base() const {
-        return reinterpret_cast<const Base*>(&data);
-    }
-    union Data {
-        Data(): empty() { }
-        Data(const Data &d) {
-            switch (d.kind()){
-            case Kind::Empty:
-                Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&empty) && "non C++11 compliant compiler");
-                new (&empty) Empty(d.empty);
-                break;
-            case Kind::Field:
-                Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&field) && "non C++11 compliant compiler");
-                new (&field) Field(d.field);
-                break;
-            case Kind::Index:
-                Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&index) && "non C++11 compliant compiler");
-                new (&index) Index(d.index);
-                break;
-            case Kind::Key:
-                Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&key) && "non C++11 compliant compiler");
-                new (&key) Key(d.key);
-                break;
-            case Kind::Root:
-                Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&root) && "non C++11 compliant compiler");
-                new (&root) Root(d.root);
-                break;
-            case Kind::Current:
-                Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&current) && "non C++11 compliant compiler");
-                new (&current) Current(d.current);
-                break;
-            case Kind::Any:
-                Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&any) && "non C++11 compliant compiler");
-                new (&any) Any(d.any);
-                break;
-            case Kind::Filter:
-                Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&filter) && "non C++11 compliant compiler");
-                new (&filter) Filter(d.filter);
-                break;
-            }
-        }
-        Data(const Empty &o) {
-            Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&empty) && "non C++11 compliant compiler");
-            new (&empty) Empty(o);
-        }
-        Data(const Field &o) {
-            Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&field) && "non C++11 compliant compiler");
-            new (&field) Field(o);
-        }
-        Data(const Index &o){
-            Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&index) && "non C++11 compliant compiler");
-            new (&index) Index(o);
-        }
-        Data(const Key &o) {
-            Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&key) && "non C++11 compliant compiler");
-            new (&key) Key(o);
-        }
-        Data(const Root &o) {
-            Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&root) && "non C++11 compliant compiler");
-            new (&root) Root(o);
-        }
-        Data(const Current &o) {
-            Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&current) && "non C++11 compliant compiler");
-            new (&current) Current(o);
-        }
-        Data(const Any &o) {
-            Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&any) && "non C++11 compliant compiler");
-            new (&any) Any(o);
-        }
-        Data(const Filter &o) {
-            Q_ASSERT(static_cast<void*>(this)==static_cast<void*>(&filter) && "non C++11 compliant compiler");
-            new (&filter) Filter(o);
-        }
-        Data &operator=(const Data &d) {
-            Q_ASSERT(this != &d);
-            this->~Data(); // destruct & construct new...
-            new (this)Data(d);
-            return *this;
-        }
-        Kind kind() const {
-            return reinterpret_cast<const Base*>(this)->kind();
-        }
-        ~Data() {
-            reinterpret_cast<const Base*>(this)->~Base();
-        }
-        Empty empty;
-        Field field;
-        Index index;
-        Key key;
-        Root root;
-        Current current;
-        Any any;
-        Filter filter;
-    } data;
+    using Variant = std::variant<Empty, Field, Index, Key, Root, Current, Any, Filter>;
+
+    template<typename T, Kind K>
+    static constexpr bool variantTypeMatches
+            = std::is_same_v<std::variant_alternative_t<size_t(K), Variant>, T>;
+
+    static_assert(size_t(Kind::Empty) == 0);
+    static_assert(variantTypeMatches<Empty,   Kind::Empty>);
+    static_assert(variantTypeMatches<Field,   Kind::Field>);
+    static_assert(variantTypeMatches<Key,     Kind::Key>);
+    static_assert(variantTypeMatches<Root,    Kind::Root>);
+    static_assert(variantTypeMatches<Current, Kind::Current>);
+    static_assert(variantTypeMatches<Any,     Kind::Any>);
+    static_assert(variantTypeMatches<Filter,  Kind::Filter>);
+    static_assert(std::variant_size_v<Variant> == size_t(Kind::Filter) + 1);
+
+    Variant m_data;
 };
 
 inline bool operator==(const PathComponent& lhs, const PathComponent& rhs){ return PathComponent::cmp(lhs,rhs) == 0; }
@@ -679,7 +605,7 @@ public:
     QString headName() const;
     bool checkHeadName(QStringView name) const;
     index_type headIndex(index_type defaultValue=-1) const;
-    std::function<bool(DomItem)> headFilter() const;
+    std::function<bool(const DomItem &)> headFilter() const;
     Path head() const;
     Path last() const;
     Source split() const;
@@ -715,8 +641,9 @@ public:
     Path key(QStringView name) const;
     Path index(index_type i) const;
     Path any() const;
-    Path filter(std::function<bool(DomItem)>, QString) const;
-    Path filter(std::function<bool(DomItem)>, QStringView desc=u"<native code filter>") const;
+    Path filter(std::function<bool(const DomItem &)>, QString) const;
+    Path filter(std::function<bool(const DomItem &)>,
+                QStringView desc=u"<native code filter>") const;
     Path current(PathCurrent s) const;
     Path current(QString s) const;
     Path current(QStringView s=u"") const;
@@ -809,6 +736,9 @@ inline size_t qHash(const Path &path, size_t seed)
             *it++ = qHash(p.component(0).stringView(), seed)^size_t(p.headRoot())^size_t(p.headCurrent());
         }
     }
+
+    // TODO: Get rid of the reinterpret_cast.
+    // Rather hash the path components in a more structured way.
     return qHash(QByteArray::fromRawData(reinterpret_cast<char *>(&buf[0]), (it - &buf[0])*sizeof(size_t)), seed);
 }
 

@@ -101,7 +101,7 @@ public:
     void setVelocityFromMovement(qreal s);
     void componentComplete() override;
 Q_SIGNALS:
-    void emitParticles(const QJSValue &particles);
+    void emitParticles(const QList<QQuickV4ParticleData> &particles);
     void particlesPerSecondChanged(qreal);
     void particleDurationChanged(int);
     void enabledChanged(bool);

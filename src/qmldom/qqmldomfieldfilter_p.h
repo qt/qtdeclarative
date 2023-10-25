@@ -33,8 +33,8 @@ class QMLDOM_EXPORT FieldFilter
 public:
     QString describeFieldsFilter() const;
     bool addFilter(QString f);
-    bool operator()(DomItem &, Path, DomItem &) const;
-    bool operator()(DomItem &, const PathEls::PathComponent &c, DomItem &) const;
+    bool operator()(const DomItem &, Path, const DomItem &) const;
+    bool operator()(const DomItem &, const PathEls::PathComponent &c, const DomItem &) const;
     static FieldFilter defaultFilter();
     static FieldFilter noLocationFilter();
     static FieldFilter compareFilter();

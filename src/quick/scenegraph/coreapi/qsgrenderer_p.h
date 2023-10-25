@@ -167,10 +167,6 @@ private:
     int m_indent = 0;
 };
 
-#ifndef QT_NO_DEBUG
-extern bool _q_sg_leak_check;
-#endif
-
 QT_END_NAMESPACE
 
 #endif

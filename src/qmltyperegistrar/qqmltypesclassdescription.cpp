@@ -1,6 +1,7 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
+#include "qqmltyperegistrarutils_p.h"
 #include "qqmltypesclassdescription_p.h"
 
 #include "qanystringviewutils_p.h"
@@ -143,6 +144,7 @@ void QmlTypesClassDescription::collect(
     const QList<QAnyStringView> namespaces = MetaTypesJsonProcessor::namespaces(*classDef);
 
     QAnyStringView foreignTypeName;
+    bool foreignIsNamespace = false;
     bool isConstructible = false;
     for (const QCborValue &classInfo : classInfos) {
         const QCborMap obj = classInfo.toMap();
@@ -161,13 +163,12 @@ void QmlTypesClassDescription::collect(
             continue;
         }
 
-        if (name == S_ADDED_IN_VERSION) {
-            const QTypeRevision revision = QTypeRevision::fromEncodedVersion(toInt(value));
+        if (const bool added = (name == S_ADDED_IN_VERSION);
+            added || name == S_REMOVED_IN_VERSION) {
+            QTypeRevision revision = QTypeRevision::fromEncodedVersion(toInt(value));
+            revision = handleInMinorVersion(revision, defaultRevision.majorVersion());
             if (mode == TopLevel) {
-                addedInRevision = revision;
-                revisions.append(revision);
-            } else if (!elementName.isEmpty()) {
-                revisions.append(revision);
+                (added ? addedInRevision : removedInRevision) = revision;
             }
             continue;
         }
@@ -181,8 +182,6 @@ void QmlTypesClassDescription::collect(
                 elementName = classDefName;
             else if (value != S_ANONYMOUS)
                 elementName = value;
-        } else if (name == S_REMOVED_IN_VERSION) {
-            removedInRevision = QTypeRevision::fromEncodedVersion(toInt(value));
         } else if (name == S_CREATABLE) {
             isCreatable = (value != S_FALSE);
         } else if (name == S_CREATION_METHOD) {
@@ -214,6 +213,8 @@ void QmlTypesClassDescription::collect(
                 isSingleton = true;
         } else if (name == S_FOREIGN) {
             foreignTypeName = value;
+        } else if (name == S_FOREIGN_IS_NAMESPACE) {
+            foreignIsNamespace = (value == S_TRUE);
         } else if (name == S_OMIT_FROM_QML_TYPES) {
             if (value == S_TRUE)
                 omitFromQmlTypes = true;
@@ -227,9 +228,12 @@ void QmlTypesClassDescription::collect(
         }
     }
 
+    if (addedInRevision.isValid() && !elementName.isEmpty())
+        revisions.append(addedInRevision);
+
     // If the local type is a namespace the result can only be a namespace,
     // no matter what the foreign type is.
-    const bool isNamespace = classDef->value(S_NAMESPACE).toBool();
+    const bool isNamespace = foreignIsNamespace || classDef->value(S_NAMESPACE).toBool();
 
     if (!foreignTypeName.isEmpty()) {
         // We can re-use a type with own QML.* macros as target of QML.Foreign
@@ -293,9 +297,10 @@ void QmlTypesClassDescription::collect(
         collectInterfaces(classDef);
 
     if (!addedInRevision.isValid()) {
-        revisions.append(defaultRevision);
         addedInRevision = defaultRevision;
-    } else if (addedInRevision < defaultRevision) {
+    }
+    if (addedInRevision <= defaultRevision
+        && (!removedInRevision.isValid() || defaultRevision < removedInRevision)) {
         revisions.append(defaultRevision);
     }
 

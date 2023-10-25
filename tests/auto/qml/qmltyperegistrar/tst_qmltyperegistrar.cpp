@@ -356,6 +356,12 @@ void tst_qmltyperegistrar::addRemoveVersion()
     QCOMPARE(o->property("thing").toInt(), thingAccessible ? 24 : 0);
 }
 
+void tst_qmltyperegistrar::addInMinorVersion()
+{
+    QVERIFY(qmltypesData.contains("exports: [\"QmlTypeRegistrarTest/MinorVersioned 1.5\"]"));
+    QVERIFY(qmltypesData.contains("exports: [\"QmlTypeRegistrarTest/MinorVersioned 1.2\"]"));
+}
+
 #ifdef QT_QUICK_LIB
 void tst_qmltyperegistrar::foreignRevisionedProperty()
 {
@@ -744,6 +750,38 @@ void tst_qmltyperegistrar::valueTypeSelfReference()
         accessSemantics: "value"
         Property { name: "row"; type: "int"; read: "row"; index: 0; isReadonly: true; isFinal: true }
     })"));
+}
+
+void tst_qmltyperegistrar::foreignNamespaceFromGadget()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent c(&engine);
+        c.setData(QStringLiteral(R"(
+            import QtQml
+            import QmlTypeRegistrarTest
+            QtObject {
+                objectName: 'b' + NetworkManager.B
+            }
+        )").toUtf8(), QUrl("foreignNamespaceFromGadget.qml"));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QCOMPARE(o->objectName(), QStringLiteral("b1"));
+    }
+
+    {
+        QQmlComponent c(&engine);
+        c.setData(QStringLiteral(R"(
+            import QtQml
+            import QmlTypeRegistrarTest
+            QtObject {
+                objectName: 'b' + NotNamespaceForeign.B
+            }
+        )").toUtf8(), QUrl("foreignNamespaceFromGadget2.qml"));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QCOMPARE(o->objectName(), QStringLiteral("b1"));
+    }
 }
 
 QTEST_MAIN(tst_qmltyperegistrar)

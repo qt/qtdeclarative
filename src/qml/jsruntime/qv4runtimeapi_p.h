@@ -43,7 +43,7 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
         static constexpr bool lastArgumentIsOutputValue = out == LastArgumentIsOutputValue::Yes;
     };
     using PureMethod = Method<Throws::No, ChangesContext::No, Pure::Yes>;
-    using IteratorMethod = Method<Throws::Yes, ChangesContext::No, Pure::No,
+    using IteratorMethod = Method<Throws::No, ChangesContext::No, Pure::No,
                                   LastArgumentIsOutputValue::Yes>;
 
     /* call */
@@ -285,9 +285,9 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     {
         static ReturnedValue call(ExecutionEngine *, const Value &, const Value &, Value *);
     };
-    struct Q_QML_PRIVATE_EXPORT IteratorClose : Method<Throws::Yes>
+    struct Q_QML_PRIVATE_EXPORT IteratorClose : Method<Throws::No>
     {
-        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &);
+        static ReturnedValue call(ExecutionEngine *, const Value &);
     };
     struct Q_QML_PRIVATE_EXPORT DestructureRestElement : Method<Throws::Yes>
     {

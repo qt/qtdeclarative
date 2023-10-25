@@ -6,7 +6,7 @@
     \keyword Qt Quick Controls - Event Calendar
     \title Qt Quick Controls - Event Calendar
     \ingroup qtquickcontrols-examples
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {User Interface Components}
     \brief A simple event calendar.
 
     \image qtquickcalendar-eventcalendar.png

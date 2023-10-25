@@ -51,11 +51,11 @@ public:
     ExternalOwningItem(QString filePath, QDateTime lastDataUpdateAt, Path pathFromTop,
                        int derivedFrom = 0, QString code = QString());
     ExternalOwningItem(const ExternalOwningItem &o) = default;
-    QString canonicalFilePath(DomItem &) const override;
+    QString canonicalFilePath(const DomItem &) const override;
     QString canonicalFilePath() const;
-    Path canonicalPath(DomItem &) const override;
+    Path canonicalPath(const DomItem &) const override;
     Path canonicalPath() const;
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const override
     {
         bool cont = OwningItem::iterateDirectSubpaths(self, visitor);
         cont = cont && self.dvValueLazyField(visitor, Fields::canonicalFilePath, [this]() {
@@ -69,12 +69,12 @@ public:
         return cont;
     }
 
-    bool iterateSubOwners(DomItem &self, function_ref<bool(DomItem &owner)> visitor) override
+    bool iterateSubOwners(const DomItem &self, function_ref<bool(const DomItem &owner)> visitor) override
     {
         bool cont = OwningItem::iterateSubOwners(self, visitor);
-        cont = cont && self.field(Fields::components).visitKeys([visitor](QString, DomItem &comps) {
-            return comps.visitIndexes([visitor](DomItem &comp) {
-                return comp.field(Fields::objects).visitIndexes([visitor](DomItem &qmlObj) {
+        cont = cont && self.field(Fields::components).visitKeys([visitor](QString, const DomItem &comps) {
+            return comps.visitIndexes([visitor](const DomItem &comp) {
+                return comp.field(Fields::objects).visitIndexes([visitor](const DomItem &qmlObj) {
                     if (const QmlObject *qmlObjPtr = qmlObj.as<QmlObject>())
                         return qmlObjPtr->iterateSubOwners(qmlObj, visitor);
                     Q_ASSERT(false);
@@ -106,7 +106,7 @@ protected:
 class QMLDOM_EXPORT QmlDirectory final : public ExternalOwningItem
 {
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &) const override
+    std::shared_ptr<OwningItem> doCopy(const DomItem &) const override
     {
         return std::make_shared<QmlDirectory>(*this);
     }
@@ -119,12 +119,12 @@ public:
                  int derivedFrom = 0);
     QmlDirectory(const QmlDirectory &o) = default;
 
-    std::shared_ptr<QmlDirectory> makeCopy(DomItem &self) const
+    std::shared_ptr<QmlDirectory> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<QmlDirectory>(doCopy(self));
     }
 
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const override;
 
     const QMultiMap<QString, Export> &exports() const & { return m_exports; }
 
@@ -141,7 +141,7 @@ class QMLDOM_EXPORT QmldirFile final : public ExternalOwningItem
 {
     Q_DECLARE_TR_FUNCTIONS(QmldirFile)
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &) const override
+    std::shared_ptr<OwningItem> doCopy(const DomItem &) const override
     {
         auto copy = std::make_shared<QmldirFile>(*this);
         return copy;
@@ -162,14 +162,14 @@ public:
     }
     QmldirFile(const QmldirFile &o) = default;
 
-    static std::shared_ptr<QmldirFile> fromPathAndCode(QString path, QString code);
+    static std::shared_ptr<QmldirFile> fromPathAndCode(const QString &path, const QString &code);
 
-    std::shared_ptr<QmldirFile> makeCopy(DomItem &self) const
+    std::shared_ptr<QmldirFile> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<QmldirFile>(doCopy(self));
     }
 
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const override;
 
     QmlUri uri() const { return m_uri; }
 
@@ -190,7 +190,7 @@ public:
     QList<ModuleAutoExport> autoExports() const;
     void setAutoExports(const QList<ModuleAutoExport> &autoExport);
 
-    void ensureInModuleIndex(DomItem &self, QString uri);
+    void ensureInModuleIndex(const DomItem &self, QString uri) const;
 
 private:
     void parse();
@@ -209,7 +209,7 @@ private:
 class QMLDOM_EXPORT JsFile final : public ExternalOwningItem
 {
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &) const override
+    std::shared_ptr<OwningItem> doCopy(const DomItem &) const override
     {
         auto copy = std::make_shared<JsFile>(*this);
         return copy;
@@ -226,7 +226,7 @@ public:
     }
     JsFile(const JsFile &o) = default;
 
-    std::shared_ptr<JsFile> makeCopy(DomItem &self) const
+    std::shared_ptr<JsFile> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<JsFile>(doCopy(self));
     }
@@ -242,7 +242,7 @@ private:
 class QMLDOM_EXPORT QmlFile final : public ExternalOwningItem
 {
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &self) const override;
+    std::shared_ptr<OwningItem> doCopy(const DomItem &self) const override;
 
 public:
     constexpr static DomType kindValue = DomType::QmlFile;
@@ -253,18 +253,14 @@ public:
             QDateTime lastDataUpdate = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
             int derivedFrom = 0);
     static ErrorGroups myParsingErrors();
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor)
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const
             override; // iterates the *direct* subpaths, returns false if a quick end was requested
-    DomItem field(DomItem &self, QStringView name) const override
-    {
-        return const_cast<QmlFile *>(this)->field(self, name);
-    }
-    DomItem field(DomItem &self, QStringView name);
-    std::shared_ptr<QmlFile> makeCopy(DomItem &self) const
+    DomItem field(const DomItem &self, QStringView name) const override;
+    std::shared_ptr<QmlFile> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<QmlFile>(doCopy(self));
     }
-    void addError(DomItem &self, ErrorMessage msg) override;
+    void addError(const DomItem &self, ErrorMessage &&msg) override;
 
     const QMultiMap<QString, QmlComponent> &components() const & { return m_components; }
     void setComponents(const QMultiMap<QString, QmlComponent> &components)
@@ -280,7 +276,7 @@ public:
                                                 component, option, cPtr);
     }
 
-    void writeOut(DomItem &self, OutWriter &lw) const override;
+    void writeOut(const DomItem &self, OutWriter &lw) const override;
 
     AST::UiProgram *ast() const
     {
@@ -324,13 +320,15 @@ public:
     ImportScope &importScope() { return m_importScope; }
     const ImportScope &importScope() const { return m_importScope; }
 
-    std::optional<std::shared_ptr<QQmlJSTypeResolver>> typeResolver() const
+    std::shared_ptr<QQmlJSTypeResolver> typeResolver() const
     {
         return m_typeResolver;
     }
-    void setTypeResolver(const std::shared_ptr<QQmlJSTypeResolver> &typeResolver)
+    void setTypeResolverWithDependencies(const std::shared_ptr<QQmlJSTypeResolver> &typeResolver,
+                                         const QQmlJSTypeResolverDependencies &dependencies)
     {
         m_typeResolver = typeResolver;
+        m_typeResolverDependencies = dependencies;
     }
 
 private:
@@ -344,13 +342,14 @@ private:
     QList<Pragma> m_pragmas;
     QList<Import> m_imports;
     ImportScope m_importScope;
-    std::optional<std::shared_ptr<QQmlJSTypeResolver>> m_typeResolver;
+    std::shared_ptr<QQmlJSTypeResolver> m_typeResolver;
+    QQmlJSTypeResolverDependencies m_typeResolverDependencies;
 };
 
 class QMLDOM_EXPORT QmltypesFile final : public ExternalOwningItem
 {
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &) const override
+    std::shared_ptr<OwningItem> doCopy(const DomItem &) const override
     {
         auto res = std::make_shared<QmltypesFile>(*this);
         return res;
@@ -370,10 +369,10 @@ public:
 
     QmltypesFile(const QmltypesFile &o) = default;
 
-    void ensureInModuleIndex(DomItem &self);
+    void ensureInModuleIndex(const DomItem &self) const;
 
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor) override;
-    std::shared_ptr<QmltypesFile> makeCopy(DomItem &self) const
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
+    std::shared_ptr<QmltypesFile> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<QmltypesFile>(doCopy(self));
     }
@@ -422,7 +421,7 @@ private:
 class QMLDOM_EXPORT GlobalScope final : public ExternalOwningItem
 {
 protected:
-    std::shared_ptr<OwningItem> doCopy(DomItem &) const override;
+    std::shared_ptr<OwningItem> doCopy(const DomItem &) const override;
 
 public:
     constexpr static DomType kindValue = DomType::GlobalScope;
@@ -437,8 +436,8 @@ public:
         setIsValid(true);
     }
 
-    bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
-    std::shared_ptr<GlobalScope> makeCopy(DomItem &self) const
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const override;
+    std::shared_ptr<GlobalScope> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<GlobalScope>(doCopy(self));
     }

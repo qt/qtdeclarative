@@ -78,6 +78,13 @@ qt_feature("qml-network" PUBLIC
     CONDITION QT_FEATURE_network
 )
 
+qt_feature("qml-ssl" PUBLIC
+    SECTION "QML"
+    LABEL "QML SSL support"
+    PURPOSE "Provides ssl support in QML."
+    CONDITION QT_FEATURE_ssl
+)
+
 # On arm and arm64 we need a specialization of cacheFlush() for each OS to be
 # enabled. Therefore the config white list. Finally, ios and tvos can
 # technically use the JIT but Apple does not allow it. Therefore, it's disabled
@@ -179,6 +186,7 @@ qt_configure_add_summary_entry(ARGS "qml-debug")
 qt_configure_add_summary_entry(ARGS "qml-jit")
 qt_configure_add_summary_entry(ARGS "qml-xml-http-request")
 qt_configure_add_summary_entry(ARGS "qml-locale")
+qt_configure_add_summary_entry(ARGS "qml-ssl")
 qt_configure_end_summary_section() # end of "Qt QML" section
 qt_configure_add_report_entry(
     TYPE ERROR

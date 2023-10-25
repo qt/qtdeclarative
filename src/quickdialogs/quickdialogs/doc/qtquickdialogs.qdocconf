@@ -36,3 +36,6 @@ navigation.landingpage  = "Qt Quick Dialogs"
 navigation.qmltypespage = "Qt Quick Dialogs QML Types"
 
 tagfile                 = qtquickdialogs.tags
+
+# Enforce zero documentation warnings
+warninglimit = 0

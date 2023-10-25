@@ -40,24 +40,26 @@ void QmlGoToDefinitionSupport::registerHandlers(QLanguageServer *,
 void QmlGoToDefinitionSupport::process(RequestPointerArgument request)
 {
     QList<QLspSpecification::Location> results;
-    QScopeGuard onExit([&results, &request]() { request->m_response.sendResponse(results); });
+    ResponseScopeGuard guard(results, request->m_response);
 
     auto itemsFound = itemsForRequest(request);
-    if (!itemsFound) {
-        return;
-    }
 
-    auto location = QQmlLSUtils::findDefinitionOf(itemsFound->front().domItem);
+    if (guard.setErrorFrom(itemsFound))
+        return;
+
+    QQmlLSUtilsItemLocation &front = std::get<QList<QQmlLSUtilsItemLocation>>(itemsFound).front();
+
+    auto location = QQmlLSUtils::findDefinitionOf(front.domItem);
     if (!location)
         return;
 
     QLspSpecification::Location l;
     l.uri = QUrl::fromLocalFile(location->filename).toEncoded();
 
-    QQmlJS::Dom::DomItem file = itemsFound->front().domItem.goToFile(location->filename);
+    QQmlJS::Dom::DomItem file = front.domItem.goToFile(location->filename);
     auto fileOfBasePtr = file.ownerAs<QQmlJS::Dom::QmlFile>();
     if (!fileOfBasePtr) {
-        qWarning() << u"Could not obtain the file of the base."_s;
+        qDebug() << "Could not find file" << location->filename << "in the dom!";
         return;
     }
     const QString qmlCode = fileOfBasePtr->code();

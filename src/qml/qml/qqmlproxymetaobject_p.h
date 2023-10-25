@@ -49,6 +49,7 @@ public:
 protected:
     int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a) override;
     QMetaObject *toDynamicMetaObject(QObject *) override;
+    void objectDestroyed(QObject *object) override;
 
 private:
     QObject *getProxy(int index);

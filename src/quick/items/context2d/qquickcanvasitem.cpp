@@ -9,7 +9,7 @@
 #include <private/qquickcontext2dtexture_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <qsgtextureprovider.h>
-#include <QtQuick/private/qquickpixmapcache_p.h>
+#include <QtQuick/private/qquickpixmap_p.h>
 #include <QtGui/QGuiApplication>
 #include <qsgtextureprovider.h>
 

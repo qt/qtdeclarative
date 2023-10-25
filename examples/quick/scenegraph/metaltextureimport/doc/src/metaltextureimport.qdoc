@@ -4,6 +4,7 @@
 /*!
     \example scenegraph/metaltextureimport
     \title Scene Graph - Metal Texture Import
+    \examplecategory {Graphics & Multimedia}
     \ingroup qtquickexamples
     \brief Shows how to use a texture created directly with Metal.
 

@@ -133,6 +133,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRectangle : public QQuickItem
     Q_PROPERTY(QJSValue gradient READ gradient WRITE setGradient RESET resetGradient FINAL)
     Q_PROPERTY(QQuickPen * border READ border CONSTANT FINAL)
     Q_PROPERTY(qreal radius READ radius WRITE setRadius NOTIFY radiusChanged FINAL)
+    Q_PROPERTY(qreal topLeftRadius READ topLeftRadius WRITE setTopLeftRadius NOTIFY topLeftRadiusChanged RESET resetTopLeftRadius REVISION(6, 7) FINAL)
+    Q_PROPERTY(qreal topRightRadius READ topRightRadius WRITE setTopRightRadius NOTIFY topRightRadiusChanged RESET resetTopRightRadius REVISION(6, 7) FINAL)
+    Q_PROPERTY(qreal bottomLeftRadius READ bottomLeftRadius WRITE setBottomLeftRadius NOTIFY bottomLeftRadiusChanged RESET resetBottomLeftRadius REVISION(6, 7) FINAL)
+    Q_PROPERTY(qreal bottomRightRadius READ bottomRightRadius WRITE setBottomRightRadius NOTIFY bottomRightRadiusChanged RESET resetBottomRightRadius REVISION(6, 7) FINAL)
     QML_NAMED_ELEMENT(Rectangle)
     QML_ADDED_IN_VERSION(2, 0)
 public:
@@ -150,9 +154,26 @@ public:
     qreal radius() const;
     void setRadius(qreal radius);
 
+    qreal topLeftRadius() const;
+    void setTopLeftRadius(qreal radius);
+    void resetTopLeftRadius();
+    qreal topRightRadius() const;
+    void setTopRightRadius(qreal radius);
+    void resetTopRightRadius();
+    qreal bottomLeftRadius() const;
+    void setBottomLeftRadius(qreal radius);
+    void resetBottomLeftRadius();
+    qreal bottomRightRadius() const;
+    void setBottomRightRadius(qreal radius);
+    void resetBottomRightRadius();
+
 Q_SIGNALS:
     void colorChanged();
     void radiusChanged();
+    Q_REVISION(6, 7) void topLeftRadiusChanged();
+    Q_REVISION(6, 7) void topRightRadiusChanged();
+    Q_REVISION(6, 7) void bottomLeftRadiusChanged();
+    Q_REVISION(6, 7) void bottomRightRadiusChanged();
 
 protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;

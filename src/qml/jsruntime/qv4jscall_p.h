@@ -125,7 +125,8 @@ ReturnedValue convertAndCall(
         types[i + 1] = argumentType;
         if (const qsizetype argumentSize = argumentType.sizeOf()) {
             Q_ALLOCA_VAR(void, argument, argumentSize);
-            argumentType.construct(argument);
+            if (argumentType.flags() & QMetaType::NeedsConstruction)
+                argumentType.construct(argument);
             if (i < argc)
                 ExecutionEngine::metaTypeFromJS(argv[i], argumentType, argument);
             values[i + 1] = argument;
@@ -139,6 +140,8 @@ ReturnedValue convertAndCall(
     if (const qsizetype returnSize = types[0].sizeOf()) {
         Q_ALLOCA_ASSIGN(void, returnValue, returnSize);
         values[0] = returnValue;
+        if (types[0].flags() & QMetaType::NeedsConstruction)
+            types[0].construct(returnValue);
     } else {
         values[0] = nullptr;
     }
@@ -151,13 +154,16 @@ ReturnedValue convertAndCall(
     ReturnedValue result;
     if (values[0]) {
         result = engine->metaTypeToJS(types[0], values[0]);
-        types[0].destruct(values[0]);
+        if (types[0].flags() & QMetaType::NeedsDestruction)
+            types[0].destruct(values[0]);
     } else {
         result = Encode::undefined();
     }
 
-    for (qsizetype i = 1, end = numFunctionArguments + 1; i < end; ++i)
-        types[i].destruct(values[i]);
+    for (qsizetype i = 1, end = numFunctionArguments + 1; i < end; ++i) {
+        if (types[i].flags() & QMetaType::NeedsDestruction)
+            types[i].destruct(values[i]);
+    }
 
     return result;
 }
@@ -190,16 +196,15 @@ bool convertAndCall(ExecutionEngine *engine, QObject *thisObject,
     const QMetaType resultType = types[0];
     if (scope.hasException()) {
         // Clear the return value
+        resultType.destruct(result);
         resultType.construct(result);
     } else {
         // When the return type is QVariant, JS objects are to be returned as
         // QJSValue wrapped in QVariant. metaTypeFromJS unwraps them, unfortunately.
-        if (resultType == QMetaType::fromType<QVariant>()) {
-            new (result) QVariant(ExecutionEngine::toVariant(jsResult, QMetaType {}));
-        } else {
-            resultType.construct(result);
+        if (resultType == QMetaType::fromType<QVariant>())
+            *static_cast<QVariant *>(result) = ExecutionEngine::toVariant(jsResult, QMetaType {});
+        else
             ExecutionEngine::metaTypeFromJS(jsResult, resultType, result);
-        }
     }
     return !jsResult->isUndefined();
 }
@@ -390,7 +395,7 @@ template<typename Callable>
 ReturnedValue coerceAndCall(
     ExecutionEngine *engine,
     const Function::JSTypedFunction *typedFunction, const CompiledData::Function *compiledFunction,
-    const Value *thisObject, const Value *argv, int argc, Callable call)
+    const Value *argv, int argc, Callable call)
 {
     Scope scope(engine);
 
@@ -402,8 +407,167 @@ ReturnedValue coerceAndCall(
             typedFunction->argumentTypes[i], formals[i].type.isList());
     }
 
-    ScopedValue result(scope, call(thisObject, jsCallData.args, jsCallData.argc));
+    ScopedValue result(scope, call(jsCallData.args, jsCallData.argc));
     return coerce(engine, result, typedFunction->returnType, compiledFunction->returnType.isList());
+}
+
+// Note: \a to is unininitialized here! This is in contrast to most other related functions.
+inline void coerce(
+        ExecutionEngine *engine, QMetaType fromType, const void *from, QMetaType toType, void *to)
+{
+    if ((fromType.flags() & QMetaType::PointerToQObject)
+            && (toType.flags() & QMetaType::PointerToQObject)) {
+        QObject *fromObj = *static_cast<QObject * const*>(from);
+        *static_cast<QObject **>(to)
+                = (fromObj && fromObj->metaObject()->inherits(toType.metaObject()))
+                    ? fromObj
+                    : nullptr;
+        return;
+    }
+
+    if (toType == QMetaType::fromType<QVariant>()) {
+        new (to) QVariant(fromType, from);
+        return;
+    }
+
+    if (toType == QMetaType::fromType<QJSPrimitiveValue>()) {
+        new (to) QJSPrimitiveValue(fromType, from);
+        return;
+    }
+
+    if (fromType == QMetaType::fromType<QVariant>()) {
+        const QVariant *fromVariant = static_cast<const QVariant *>(from);
+        if (fromVariant->metaType() == toType)
+            toType.construct(to, fromVariant->data());
+        else
+            coerce(engine, fromVariant->metaType(), fromVariant->data(), toType, to);
+        return;
+    }
+
+    if (fromType == QMetaType::fromType<QJSPrimitiveValue>()) {
+        const QJSPrimitiveValue *fromPrimitive = static_cast<const QJSPrimitiveValue *>(from);
+        if (fromPrimitive->metaType() == toType)
+            toType.construct(to, fromPrimitive->data());
+        else
+            coerce(engine, fromPrimitive->metaType(), fromPrimitive->data(), toType, to);
+        return;
+    }
+
+    // TODO: This is expensive. We might establish a direct C++-to-C++ type coercion, like we have
+    //       for JS-to-JS. However, we shouldn't need this very often. Most of the time the compiler
+    //       will generate code that passes the right arguments.
+    if (toType.flags() & QMetaType::NeedsConstruction)
+        toType.construct(to);
+    QV4::Scope scope(engine);
+    QV4::ScopedValue value(scope, engine->fromData(fromType, from));
+    if (!ExecutionEngine::metaTypeFromJS(value, toType, to))
+        QMetaType::convert(fromType, from, toType, to);
+}
+
+template<typename TypedFunction, typename Callable>
+void coerceAndCall(
+        ExecutionEngine *engine, const TypedFunction *typedFunction,
+        void **argv, const QMetaType *types, int argc, Callable call)
+{
+    const qsizetype numFunctionArguments = typedFunction->parameterCount();
+
+    Q_ALLOCA_DECLARE(void *, transformedArguments);
+    Q_ALLOCA_DECLARE(void, transformedResult);
+
+    const QMetaType returnType = typedFunction->returnMetaType();
+    const QMetaType frameReturn = types[0];
+    bool returnsQVariantWrapper = false;
+    if (argv[0] && returnType != frameReturn) {
+        Q_ALLOCA_ASSIGN(void *, transformedArguments, (numFunctionArguments + 1) * sizeof(void *));
+        memcpy(transformedArguments, argv, (argc + 1) * sizeof(void *));
+
+        if (frameReturn == QMetaType::fromType<QVariant>()) {
+            QVariant *returnValue = static_cast<QVariant *>(argv[0]);
+            *returnValue = QVariant(returnType);
+            transformedResult = transformedArguments[0] = returnValue->data();
+            returnsQVariantWrapper = true;
+        } else if (returnType.sizeOf() > 0) {
+            Q_ALLOCA_ASSIGN(void, transformedResult, returnType.sizeOf());
+            transformedArguments[0] = transformedResult;
+            if (returnType.flags() & QMetaType::NeedsConstruction)
+                returnType.construct(transformedResult);
+        } else {
+            transformedResult = transformedArguments[0] = &argc; // Some non-null marker value
+        }
+    }
+
+    for (qsizetype i = 0; i < numFunctionArguments; ++i) {
+        const bool isValid = argc > i;
+        const QMetaType frameType = isValid ? types[i + 1] : QMetaType();
+
+        const QMetaType argumentType = typedFunction->parameterMetaType(i);
+        if (isValid && argumentType == frameType)
+            continue;
+
+        if (transformedArguments == nullptr) {
+            Q_ALLOCA_ASSIGN(void *, transformedArguments, (numFunctionArguments + 1) * sizeof(void *));
+            memcpy(transformedArguments, argv, (argc + 1) * sizeof(void *));
+        }
+
+        if (argumentType.sizeOf() == 0) {
+            transformedArguments[i + 1] = nullptr;
+            continue;
+        }
+
+        void *frameVal = isValid ? argv[i + 1] : nullptr;
+        if (isValid && frameType == QMetaType::fromType<QVariant>()) {
+            QVariant *variant = static_cast<QVariant *>(frameVal);
+
+            const QMetaType variantType = variant->metaType();
+            if (variantType == argumentType) {
+                // Slightly nasty, but we're allowed to do this.
+                // We don't want to destruct() the QVariant's data() below.
+                transformedArguments[i + 1] = argv[i + 1] = variant->data();
+            } else {
+                Q_ALLOCA_VAR(void, arg, argumentType.sizeOf());
+                coerce(engine, variantType, variant->constData(), argumentType, arg);
+                transformedArguments[i + 1] = arg;
+            }
+            continue;
+        }
+
+        Q_ALLOCA_VAR(void, arg, argumentType.sizeOf());
+
+        if (isValid)
+            coerce(engine, frameType, frameVal, argumentType, arg);
+        else
+            argumentType.construct(arg);
+
+        transformedArguments[i + 1] = arg;
+    }
+
+    if (!transformedArguments) {
+        call(argv, numFunctionArguments);
+        return;
+    }
+
+    call(transformedArguments, numFunctionArguments);
+
+    if (transformedResult && !returnsQVariantWrapper) {
+        if (frameReturn.sizeOf() > 0) {
+            if (frameReturn.flags() & QMetaType::NeedsDestruction)
+                frameReturn.destruct(argv[0]);
+            coerce(engine, returnType, transformedResult, frameReturn, argv[0]);
+        }
+        if (returnType.flags() & QMetaType::NeedsDestruction)
+            returnType.destruct(transformedResult);
+    }
+
+    for (qsizetype i = 0; i < numFunctionArguments; ++i) {
+        void *arg = transformedArguments[i + 1];
+        if (arg == nullptr)
+            continue;
+        if (i >= argc || arg != argv[i + 1]) {
+            const QMetaType argumentType = typedFunction->parameterMetaType(i);
+            if (argumentType.flags() & QMetaType::NeedsDestruction)
+                argumentType.destruct(arg);
+        }
+    }
 }
 
 } // namespace QV4

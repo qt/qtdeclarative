@@ -7,14 +7,14 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-static constexpr QQmlJS::LoggerWarningId quickLayoutPositioning { "Quick.layout-positioning" };
-static constexpr QQmlJS::LoggerWarningId quickAttachedPropertyType { "Quick.attached-property-type" };
-static constexpr QQmlJS::LoggerWarningId quickControlsNativeCustomize { "Quick.controls-native-customize" };
-static constexpr QQmlJS::LoggerWarningId quickAnchorCombinations { "Quick.anchor-combinations" };
-static constexpr QQmlJS::LoggerWarningId quickUnexpectedVarType { "Quick.unexpected-var-type" };
-static constexpr QQmlJS::LoggerWarningId quickPropertyChangesParsed { "Quick.property-changes-parsed" };
-static constexpr QQmlJS::LoggerWarningId quickControlsAttachedPropertyReuse { "Quick.controls-attached-property-reuse" };
-static constexpr QQmlJS::LoggerWarningId quickAttachedPropertyReuse { "Quick.attached-property-reuse" };
+static constexpr QQmlSA::LoggerWarningId quickLayoutPositioning { "Quick.layout-positioning" };
+static constexpr QQmlSA::LoggerWarningId quickAttachedPropertyType { "Quick.attached-property-type" };
+static constexpr QQmlSA::LoggerWarningId quickControlsNativeCustomize { "Quick.controls-native-customize" };
+static constexpr QQmlSA::LoggerWarningId quickAnchorCombinations { "Quick.anchor-combinations" };
+static constexpr QQmlSA::LoggerWarningId quickUnexpectedVarType { "Quick.unexpected-var-type" };
+static constexpr QQmlSA::LoggerWarningId quickPropertyChangesParsed { "Quick.property-changes-parsed" };
+static constexpr QQmlSA::LoggerWarningId quickControlsAttachedPropertyReuse { "Quick.controls-attached-property-reuse" };
+static constexpr QQmlSA::LoggerWarningId quickAttachedPropertyReuse { "Quick.attached-property-reuse" };
 
 ForbiddenChildrenPropertyValidatorPass::ForbiddenChildrenPropertyValidatorPass(
         QQmlSA::PassManager *manager)
@@ -586,7 +586,7 @@ void AttachedPropertyReuse::onWrite(const QQmlSA::Element &element, const QStrin
 void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
                                         const QQmlSA::Element &rootElement)
 {
-    const QQmlJS::LoggerWarningId attachedReuseCategory = [manager]() {
+    const QQmlSA::LoggerWarningId attachedReuseCategory = [manager]() {
         if (manager->isCategoryEnabled(quickAttachedPropertyReuse))
             return quickAttachedPropertyReuse;
         if (manager->isCategoryEnabled(qmlAttachedPropertyReuse))

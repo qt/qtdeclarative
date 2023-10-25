@@ -1787,7 +1787,6 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
         qreal fillTo = to;
 
         bool added = addVisibleItems(fillFrom, fillTo, bufferFrom, bufferTo, false);
-        bool removed = removeNonVisibleItems(bufferFrom, bufferTo);
 
         if (requestedIndex == -1 && buffer && bufferMode != NoBuffer) {
             if (added) {
@@ -1802,6 +1801,8 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
                 added |= addVisibleItems(fillFrom, fillTo, bufferFrom, bufferTo, true);
             }
         }
+
+        bool removed = removeNonVisibleItems(bufferFrom, bufferTo);
 
         if (added || removed) {
             markExtentsDirty();

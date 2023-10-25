@@ -63,6 +63,15 @@ QQmlJSScope::Ptr QQmlJSScope::clone(const ConstPtr &origin)
     return cloned;
 }
 
+/*!
+\internal
+Return all the JavaScript identifiers defined in the current scope.
+*/
+QHash<QString, QQmlJSScope::JavaScriptIdentifier> QQmlJSScope::ownJSIdentifiers() const
+{
+    return m_jsIdentifiers;
+}
+
 void QQmlJSScope::insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier)
 {
     Q_ASSERT(m_scopeType != QQmlSA::ScopeType::QMLScope);
@@ -277,7 +286,7 @@ bool QQmlJSScope::isComponentRootElement() const {
 }
 
 std::optional<QQmlJSScope::JavaScriptIdentifier>
-QQmlJSScope::findJSIdentifier(const QString &id) const
+QQmlJSScope::jsIdentifier(const QString &id) const
 {
     for (const auto *scope = this; scope; scope = scope->parentScope().data()) {
         if (scope->m_scopeType == QQmlSA::ScopeType::JSFunctionScope
@@ -291,7 +300,7 @@ QQmlJSScope::findJSIdentifier(const QString &id) const
     return std::optional<JavaScriptIdentifier>{};
 }
 
-std::optional<QQmlJSScope::JavaScriptIdentifier> QQmlJSScope::JSIdentifier(const QString &id) const
+std::optional<QQmlJSScope::JavaScriptIdentifier> QQmlJSScope::ownJSIdentifier(const QString &id) const
 {
     auto it = m_jsIdentifiers.find(id);
     if (it != m_jsIdentifiers.end())

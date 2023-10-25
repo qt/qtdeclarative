@@ -487,7 +487,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPath : public QObject, public QQmlParserStatu
     Q_PROPERTY(qreal startX READ startX WRITE setStartX NOTIFY startXChanged FINAL)
     Q_PROPERTY(qreal startY READ startY WRITE setStartY NOTIFY startYChanged FINAL)
     Q_PROPERTY(bool closed READ isClosed NOTIFY changed FINAL)
-    Q_PROPERTY(bool simplified READ simplified WRITE setSimplified NOTIFY simplifiedChanged REVISION(6, 6) FINAL)
+    Q_PROPERTY(bool simplify READ simplify WRITE setSimplify NOTIFY simplifyChanged REVISION(6, 6) FINAL)
     Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged REVISION(2, 14))
     Q_CLASSINFO("DefaultProperty", "pathElements")
     QML_NAMED_ELEMENT(Path)
@@ -518,14 +518,14 @@ public:
     QSizeF scale() const;
     void setScale(const QSizeF &scale);
 
-    bool simplified() const;
-    void setSimplified(bool simplified);
+    bool simplify() const;
+    void setSimplify(bool s);
 
 Q_SIGNALS:
     void changed();
     void startXChanged();
     void startYChanged();
-    Q_REVISION(6, 6) void simplifiedChanged();
+    Q_REVISION(6, 6) void simplifyChanged();
     Q_REVISION(2, 14) void scaleChanged();
 
 protected:

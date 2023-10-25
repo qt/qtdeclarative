@@ -5,7 +5,9 @@
 #define QQMLDEBUGCLIENT_P_P_H
 
 #include "qqmldebugclient_p.h"
+
 #include <private/qobject_p.h>
+#include <QtCore/qpointer.h>
 
 //
 //  W A R N I N G

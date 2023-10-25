@@ -23,6 +23,13 @@ qt_internal_add_test(tst_qqmlsettings
     TESTDATA ${test_data}
 )
 
+qt_add_resources(tst_qqmlsettings "test_settings"
+    PREFIX
+        "/"
+    FILES
+        "test_settings.ini"
+)
+
 qt_internal_extend_target(tst_qqmlsettings CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=":/data"

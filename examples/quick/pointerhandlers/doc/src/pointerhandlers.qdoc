@@ -5,6 +5,7 @@
     \example pointerhandlers
     \title Qt Quick Examples - Pointer Handlers
     \ingroup qtquickexamples
+    \examplecategory {User Interface Components}
     \meta tags {quick, input handlers}
     \brief Shows how to use \l {Qt Quick Input Handlers} in interactive components.
 

@@ -12,6 +12,8 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmlguardedcontextdata_p.h>
 
+#include <QtCore/qpointer.h>
+
 //
 //  W A R N I N G
 //  -------------

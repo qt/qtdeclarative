@@ -286,19 +286,27 @@ bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
     if (!hasBoundFunction()) {
         Q_ASSERT(metaType.sizeOf() > 0);
 
-        // No need to construct here. evaluate() expects uninitialized memory.
-        const auto size = [&]() -> qsizetype {
+        using Tuple = std::tuple<qsizetype, bool, bool>;
+        const auto [size, needsConstruction, needsDestruction] = [&]() -> Tuple {
             switch (type) {
-                case QMetaType::QObjectStar: return sizeof(QObject *);
-                case QMetaType::Bool: return sizeof(bool);
-                case QMetaType::Int: return (sizeof(int));
-                case QMetaType::Double: return (sizeof(double));
-                case QMetaType::Float: return (sizeof(float));
-                case QMetaType::QString: return (sizeof(QString));
-                default: return metaType.sizeOf();
+            case QMetaType::QObjectStar: return Tuple(sizeof(QObject *), false, false);
+            case QMetaType::Bool:        return Tuple(sizeof(bool), false, false);
+            case QMetaType::Int:         return Tuple(sizeof(int), false, false);
+            case QMetaType::Double:      return Tuple(sizeof(double), false, false);
+            case QMetaType::Float:       return Tuple(sizeof(float), false, false);
+            case QMetaType::QString:     return Tuple(sizeof(QString), true, true);
+            default: {
+                const auto flags = metaType.flags();
+                return Tuple(
+                        metaType.sizeOf(),
+                        flags & QMetaType::NeedsConstruction,
+                        flags & QMetaType::NeedsDestruction);
+            }
             }
         }();
         Q_ALLOCA_VAR(void, result, size);
+        if (needsConstruction)
+            metaType.construct(result);
 
         const bool evaluatedToUndefined = !jsExpression()->evaluate(&result, &metaType, 0);
         if (!handleErrorAndUndefined(evaluatedToUndefined))
@@ -326,10 +334,12 @@ bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
 
         const bool hasChanged = !metaType.equals(result, dataPtr);
         if (hasChanged) {
-            metaType.destruct(dataPtr);
+            if (needsDestruction)
+                metaType.destruct(dataPtr);
             metaType.construct(dataPtr, result);
         }
-        metaType.destruct(result);
+        if (needsDestruction)
+            metaType.destruct(result);
         return hasChanged;
     }
 

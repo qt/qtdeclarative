@@ -23,7 +23,7 @@ QT_REQUIRE_CONFIG(quick_sprite);
 #include <QUrl>
 #include <QVariantMap>
 #include <QQmlListProperty>
-#include <QtQuick/private/qquickpixmapcache_p.h>
+#include <QtQuick/private/qquickpixmap_p.h>
 #include "qquickspriteengine_p.h"
 #include <QDebug>
 

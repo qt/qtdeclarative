@@ -10,14 +10,14 @@ endif ()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/filesystemexplorer")
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2 Svg)
 qt_standard_project_setup(REQUIRES 6.5)
 
-qt_add_executable(filesystemexplorerapp
+qt_add_executable(filesystemexplorer
     main.cpp
 )
 
-set_target_properties(filesystemexplorerapp
+set_target_properties(filesystemexplorer
     PROPERTIES
         WIN32_EXECUTABLE TRUE
         MACOSX_BUNDLE TRUE
@@ -28,15 +28,15 @@ set_source_files_properties(qml/Colors.qml
         QT_QML_SINGLETON_TYPE TRUE
 )
 
-qt_add_qml_module(filesystemexplorerapp
+qt_add_qml_module(filesystemexplorer
     URI FileSystemModule
     VERSION 1.0
     QML_FILES
         "Main.qml"
         "qml/About.qml"
         "qml/Colors.qml"
+        "qml/Editor.qml"
         "qml/FileSystemView.qml"
-        "qml/Icon.qml"
         "qml/MyMenu.qml"
         "qml/MyMenuBar.qml"
         "qml/Sidebar.qml"
@@ -52,20 +52,24 @@ qt_add_qml_module(filesystemexplorerapp
         "icons/read.svg"
         "icons/resize.svg"
         "icons/qt_logo.svg"
+        "icons/app_icon.svg"
     SOURCES
         filesystemmodel.cpp
         filesystemmodel.h
+        linenumbermodel.cpp
+        linenumbermodel.h
 )
 
-target_link_libraries(filesystemexplorerapp
+target_link_libraries(filesystemexplorer
     PRIVATE
         Qt6::Core
         Qt6::Gui
         Qt6::Quick
         Qt6::QuickControls2
+        Qt6::Svg
 )
 
-install(TARGETS filesystemexplorerapp
+install(TARGETS filesystemexplorer
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -346,9 +346,8 @@ void tst_QQmlPropertyMap::controlledWrite()
     component.setData(qmlSource, QUrl::fromLocalFile(""));
     QVERIFY(component.isReady());
 
-    QObject *obj = component.create();
-    QVERIFY(obj);
-    delete obj;
+    std::unique_ptr<QObject> obj { component.create() };
+    QVERIFY(obj.get());
 
     QCOMPARE(map.value(QLatin1String("key1")), QVariant("HELLO WORLD"));
     QCOMPARE(map.value(QLatin1String("key2")), QVariant("Goodbye"));
@@ -364,8 +363,7 @@ void tst_QQmlPropertyMap::crashBug()
 
     QQmlComponent c(&engine);
     c.setData("import QtQuick 2.0\nBinding { target: map; property: \"myProp\"; value: 10 + 23 }",QUrl());
-    QObject *obj = c.create(&context);
-    delete obj;
+    std::unique_ptr<QObject> obj { c.create(&context) };
 }
 
 void tst_QQmlPropertyMap::QTBUG_17868()
@@ -378,10 +376,9 @@ void tst_QQmlPropertyMap::QTBUG_17868()
     map.insert("key", 1);
     QQmlComponent c(&engine);
     c.setData("import QtQuick 2.0\nItem {property bool error:false; Component.onCompleted: {try{ map.keys(); }catch(e) {error=true;}}}",QUrl());
-    QObject *obj = c.create(&context);
-    QVERIFY(obj);
+    std::unique_ptr<QObject> obj { c.create(&context) };
+    QVERIFY(obj.get());
     QVERIFY(!obj->property("error").toBool());
-    delete obj;
 
 }
 
@@ -434,17 +431,14 @@ void tst_QQmlPropertyMap::QTBUG_31226()
               "  Timer { interval: 5; running: true; onTriggered: { myProp = qmlPropertyMap.greeting; } }\n"
               "}",
               QUrl());
-    QObject *obj = c.create(&context);
-    QVERIFY(obj);
+    std::unique_ptr<QObject> obj { c.create(&context) };
+    QVERIFY(obj.get());
 
     QQmlPropertyMap *qmlPropertyMap = obj->findChild<QQmlPropertyMap*>(QString("qmlPropertyMap"));
     QVERIFY(qmlPropertyMap);
 
     qmlPropertyMap->insert("greeting", QString("Hello world!"));
     QTRY_COMPARE(obj->property("myProp").toString(), QString("Hello world!"));
-
-    delete obj;
-
 }
 
 void tst_QQmlPropertyMap::QTBUG_29836()
@@ -461,13 +455,10 @@ void tst_QQmlPropertyMap::QTBUG_29836()
               "  Timer { interval: 5; running: true; onTriggered: enhancedMap.testSlot() }\n"
               "}",
               QUrl());
-    QObject *obj = c.create(&context);
-    QVERIFY(obj);
+    std::unique_ptr<QObject> obj { c.create(&context) };
+    QVERIFY(obj.get());
 
     QTRY_COMPARE(map.testSlotCalled(), true);
-
-    delete obj;
-
 }
 
 void tst_QQmlPropertyMap::QTBUG_35233()
