@@ -995,6 +995,15 @@ QObject *QQmlComponentPrivate::createWithProperties(QObject *parent, const QVari
 
     The ownership of the returned object instance is transferred to the caller.
 
+    \note The categorization of bindings into constant values and actual
+    bindings is intentionally unspecified and may change between versions of Qt
+    and depending on whether and how you are using \l{qmlcachegen}. You should
+    not rely on any particular binding to be evaluated either before or after
+    beginCreate() returns. For example a constant expression like
+    \e{MyType.EnumValue} may be recognized as such at compile time or deferred
+    to be executed as binding. The same holds for constant expressions like
+    \e{-(5)} or \e{"a" + " constant string"}.
+
     \sa completeCreate(), QQmlEngine::ObjectOwnership
 */
 QObject *QQmlComponent::beginCreate(QQmlContext *context)
