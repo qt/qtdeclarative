@@ -24,6 +24,8 @@
 #include <QtQml/private/qqmljsastvisitor_p.h>
 #include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljsdiagnosticmessage_p.h>
+#include <QtQmlCompiler/qqmlsa.h>
+#include <QtQmlCompiler/private/qqmljsliteralbindingcheck_p.h>
 
 #include <cstdlib> // EXIT_SUCCESS, EXIT_FAILURE
 
@@ -278,6 +280,15 @@ int main(int argc, char **argv)
     visitor.setMode(QmltcVisitor::Compile);
     QmltcTypeResolver typeResolver { &importer };
     typeResolver.init(&visitor, qmlParser.rootNode());
+
+    using PassManagerPtr =
+            std::unique_ptr<QQmlSA::PassManager,
+                            decltype(&QQmlSA::PassManagerPrivate::deletePassManager)>;
+    PassManagerPtr passMan(QQmlSA::PassManagerPrivate::createPassManager(&visitor, &typeResolver),
+                           &QQmlSA::PassManagerPrivate::deletePassManager);
+    passMan->registerPropertyPass(std::make_unique<QQmlJSLiteralBindingCheck>(passMan.get()),
+                                  QString(), QString(), QString());
+    passMan->analyze(QQmlJSScope::createQQmlSAElement(visitor.result()));
 
     if (logger.hasErrors())
         return EXIT_FAILURE;

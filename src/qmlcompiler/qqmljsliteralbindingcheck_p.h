@@ -16,16 +16,24 @@
 
 #include <QtCore/qglobal.h>
 #include <qtqmlcompilerexports.h>
+#include <QtQmlCompiler/qqmlsa.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlJSImportVisitor;
 class QQmlJSTypeResolver;
 
-class Q_QMLCOMPILER_EXPORT QQmlJSLiteralBindingCheck
+class Q_QMLCOMPILER_EXPORT QQmlJSLiteralBindingCheck: public QQmlSA::PropertyPass
 {
 public:
-    void run(QQmlJSImportVisitor *visitor, QQmlJSTypeResolver *resolver);
+    QQmlJSLiteralBindingCheck(QQmlSA::PassManager *manager);
+
+    void onBinding(const QQmlSA::Element &element, const QString &propertyName,
+                   const QQmlSA::Binding &binding, const QQmlSA::Element &bindingScope,
+                   const QQmlSA::Element &value) override;
+
+private:
+    QQmlJSTypeResolver *m_resolver;
 };
 
 QT_END_NAMESPACE

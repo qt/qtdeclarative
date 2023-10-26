@@ -18,9 +18,6 @@ void QmltcTypeResolver::init(QmltcVisitor *visitor, QQmlJS::AST::Node *program)
 {
     QQmlJSTypeResolver::init(visitor, program);
 
-    QQmlJSLiteralBindingCheck literalCheck;
-    literalCheck.run(visitor, this);
-
     m_root = visitor->result();
 
     QQueue<QQmlJSScope::Ptr> objects;

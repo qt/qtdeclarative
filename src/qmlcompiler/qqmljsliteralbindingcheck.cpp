@@ -6,15 +6,21 @@
 #include <private/qqmljsimportvisitor_p.h>
 #include <private/qqmljstyperesolver_p.h>
 #include <private/qqmljsmetatypes_p.h>
+#include <private/qqmlsa_p.h>
+#include <private/qqmlsasourcelocation_p.h>
 
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
 // This makes no sense, but we want to warn about things QQmlPropertyResolver complains about.
-static bool canConvertForLiteralBinding(
-        QQmlJSTypeResolver *resolver, const QQmlJSScope::ConstPtr &from,
-        const QQmlJSScope::ConstPtr &to) {
+static bool canConvertForLiteralBinding(QQmlJSTypeResolver *resolver,
+                                        const QQmlSA::Element &fromElement,
+                                        const QQmlSA::Element &toElement)
+{
+    Q_ASSERT(resolver);
+    auto from = QQmlJSScope::scope(fromElement);
+    auto to = QQmlJSScope::scope(toElement);
     if (resolver->equals(from, to))
         return true;
 
@@ -39,38 +45,63 @@ static bool canConvertForLiteralBinding(
     return true;
 }
 
-void QQmlJSLiteralBindingCheck::run(QQmlJSImportVisitor *visitor, QQmlJSTypeResolver *resolver)
+QQmlJSLiteralBindingCheck::QQmlJSLiteralBindingCheck(QQmlSA::PassManager *passManager)
+    : QQmlSA::PropertyPass(passManager),
+      m_resolver(QQmlSA::PassManagerPrivate::resolver(*passManager))
 {
-    QQmlJSLogger *logger = visitor->logger();
-    const auto literalScopes = visitor->literalScopesToCheck();
-    for (const auto &scope : literalScopes) {
-        const auto bindings = scope->ownPropertyBindings();
-        for (const auto &binding : bindings) {
-            if (!binding.hasLiteral())
-                continue;
+}
 
-            const QString propertyName = binding.propertyName();
-            const QQmlJSMetaProperty property = scope->property(propertyName);
-            if (!property.isValid())
-                continue;
+static QString literalPrettyTypeName(QQmlSA::BindingType type)
+{
+    switch (type) {
+    case QQmlSA::BindingType::BoolLiteral:
+        return u"bool"_s;
+    case QQmlSA::BindingType::NumberLiteral:
+        return u"double"_s;
+    case QQmlSA::BindingType::StringLiteral:
+        return u"string"_s;
+    case QQmlSA::BindingType::RegExpLiteral:
+        return u"regexp"_s;
+    case QQmlSA::BindingType::Null:
+        return u"null"_s;
+    default:
+        return QString();
+    }
+    Q_UNREACHABLE_RETURN(QString());
+}
 
-            // If the property is defined in the same scope where it is set,
-            // we are in fact allowed to set it, even if it's not writable.
-            if (!property.isWritable() && !scope->hasOwnProperty(propertyName)) {
-                logger->log(u"Cannot assign to read-only property %1"_s.arg(propertyName),
-                            qmlReadOnlyProperty, binding.sourceLocation());
-                continue;
-            }
+void QQmlJSLiteralBindingCheck::onBinding(const QQmlSA::Element &element, const QString &propertyName,
+                           const QQmlSA::Binding &binding, const QQmlSA::Element &bindingScope,
+                           const QQmlSA::Element &value)
+{
+    Q_UNUSED(value);
 
-            if (!canConvertForLiteralBinding(
-                        resolver, binding.literalType(resolver), property.type())) {
-                logger->log(u"Cannot assign literal of type %1 to %2"_s.arg(
-                                    QQmlJSScope::prettyName(binding.literalTypeName()),
-                                    QQmlJSScope::prettyName(property.typeName())),
-                            qmlIncompatibleType, binding.sourceLocation());
-                continue;
-            }
-        }
+    if (!QQmlSA::Binding::isLiteralBinding(binding.bindingType()))
+        return;
+
+    const QString unqualifiedPropertyName = [&propertyName]() {
+        if (auto idx = propertyName.lastIndexOf(u'.'); idx != -1 && idx != propertyName.size() - 1)
+            return propertyName.sliced(idx + 1);
+        return propertyName;
+    }();
+    const auto property = bindingScope.property(unqualifiedPropertyName);
+    if (!property.isValid())
+        return;
+
+    // If the property is defined in the same scope where it is set,
+    // we are in fact allowed to set it, even if it's not writable.
+    if (property.isReadonly() && !element.hasOwnProperty(propertyName)) {
+        emitWarning(u"Cannot assign to read-only property %1"_s.arg(propertyName),
+                    qmlReadOnlyProperty, binding.sourceLocation());
+        return;
+    }
+
+    if (!canConvertForLiteralBinding(m_resolver, resolveLiteralType(binding), property.type())) {
+        emitWarning(u"Cannot assign literal of type %1 to %2"_s.arg(
+                            literalPrettyTypeName(binding.bindingType()),
+                            QQmlJSScope::prettyName(property.typeName())),
+                    qmlIncompatibleType, binding.sourceLocation());
+        return;
     }
 }
 
