@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick
 
 Flickable {
     flickableDirection: Flickable.VerticalFlick
@@ -15,7 +15,6 @@ Flickable {
 
     MouseArea {
         id: ma
-        objectName: "mouseArea"
         y: 100
         anchors.horizontalCenter: parent.horizontalCenter
         width: 240
@@ -32,14 +31,7 @@ Flickable {
 
         Rectangle {
             anchors.fill: parent
-            color: parent.pressed ? 'blue' : 'green'
-
-            Text {
-                anchors.fill: parent
-                verticalAlignment: Text.AlignVCenter
-                horizontalAlignment: Text.AlignHCenter
-                text: 'Hello'
-            }
+            color: parent.pressed ? 'blue' : 'lightsteelblue'
         }
     }
 }
