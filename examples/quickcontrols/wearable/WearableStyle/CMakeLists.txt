@@ -22,6 +22,7 @@ set_source_files_properties(UIStyle.qml
 qt_policy(SET QTP0001 NEW)
 qt_add_qml_module(wearablestyle
     URI WearableStyle
+    PLUGIN_TARGET wearablestyle
     QML_FILES
         PageIndicator.qml
         Slider.qml
@@ -47,4 +48,7 @@ install(TARGETS wearablestyle
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
+)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qmldir
+    DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
