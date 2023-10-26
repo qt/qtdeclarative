@@ -760,13 +760,23 @@ void QQmlIncubator::statusChanged(Status status)
 }
 
 /*!
-Called after the \a object is first created, but before property bindings are
-evaluated and, if applicable, QQmlParserStatus::componentComplete() is
-called.  This is equivalent to the point between QQmlComponent::beginCreate()
+Called after the \a object is first created, but before complex property
+bindings are evaluated and, if applicable, QQmlParserStatus::componentComplete()
+is called. This is equivalent to the point between QQmlComponent::beginCreate()
 and QQmlComponent::completeCreate(), and can be used to assign initial values
 to the object's properties.
 
 The default implementation does nothing.
+
+\note Simple bindings such as numeric literals are evaluated before
+setInitialState() is called. The categorization of bindings into simple and
+complex ones is intentionally unspecified and may change between versions of
+Qt and depending on whether and how you are using \l{qmlcachegen}. You should
+not rely on any particular binding to be evaluated either before or after
+setInitialState() is called. For example, a constant expression like
+\e{MyType.EnumValue} may be recognized as such at compile time or deferred
+to be executed as binding. The same holds for constant expressions like
+\e{-(5)} or \e{"a" + " constant string"}.
 */
 void QQmlIncubator::setInitialState(QObject *object)
 {
