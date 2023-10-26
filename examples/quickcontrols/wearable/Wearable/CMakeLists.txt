@@ -17,6 +17,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2)
 qt_policy(SET QTP0001 NEW)
 qt_add_qml_module(wearable
     URI Wearable
+    PLUGIN_TARGET wearable
     QML_FILES
         AlarmsPage.qml
         Clock.qml
@@ -185,4 +186,7 @@ install(TARGETS wearable
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
+)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qmldir
+    DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
