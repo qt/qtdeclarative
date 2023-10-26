@@ -9,6 +9,7 @@ set(qml_files
     "BusyIndicator.qml"
     "Button.qml"
     "CheckBox.qml"
+    "CheckDelegate.qml"
     "ComboBox.qml"
     "DelayButton.qml"
     "Dial.qml"
