@@ -1523,13 +1523,14 @@ void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
         if (d->delayedPressEvent) {
             d->replayDelayedPress();
 
-            // Now send the release
-            if (auto grabber = qmlobject_cast<QQuickItem *>(event->exclusiveGrabber(event->point(0)))) {
-                // not copying or detaching anything, so make sure we return the original event unchanged
-                const auto oldPosition = event->point(0).position();
-                QMutableEventPoint::setPosition(event->point(0), grabber->mapFromScene(event->scenePosition()));
+            auto &firstPoint = event->point(0);
+            if (const auto *grabber = event->exclusiveGrabber(firstPoint); grabber && grabber->isQuickItemType()) {
+                // Since we sent the delayed press to the window, we need to resend the release to the window too.
+                // We're not copying or detaching, so restore the original event position afterwards.
+                const auto oldPosition = firstPoint.position();
+                QMutableEventPoint::setPosition(firstPoint, event->scenePosition());
                 QCoreApplication::sendEvent(window(), event);
-                QMutableEventPoint::setPosition(event->point(0), oldPosition);
+                QMutableEventPoint::setPosition(firstPoint, oldPosition);
             }
 
             // And the event has been consumed
@@ -1582,11 +1583,11 @@ void QQuickFlickable::touchEvent(QTouchEvent *event)
             if (d->delayedPressEvent) {
                 d->replayDelayedPress();
 
-                // Now send the release
-                auto &firstPoint = event->point(0);
-                if (auto grabber = qmlobject_cast<QQuickItem *>(event->exclusiveGrabber(firstPoint))) {
-                    const auto localPos = grabber->mapFromScene(firstPoint.scenePosition());
-                    QScopedPointer<QPointerEvent> localizedEvent(QQuickDeliveryAgentPrivate::clonePointerEvent(event, localPos));
+                const auto &firstPoint = event->point(0);
+                if (const auto *grabber = event->exclusiveGrabber(firstPoint); grabber && grabber->isQuickItemType()) {
+                    // Since we sent the delayed press to the window, we need to resend the release to the window too.
+                    QScopedPointer<QPointerEvent> localizedEvent(
+                            QQuickDeliveryAgentPrivate::clonePointerEvent(event, firstPoint.scenePosition()));
                     QCoreApplication::sendEvent(window(), localizedEvent.data());
                 }
 
