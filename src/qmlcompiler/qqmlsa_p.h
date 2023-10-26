@@ -165,6 +165,8 @@ public:
 
     QString typeName() const;
     bool isValid() const;
+    bool isReadonly() const;
+    QQmlSA::Element type() const;
 
     static QQmlJSMetaProperty property(const QQmlSA::Property &property);
     static QQmlSA::Property createProperty(const QQmlJSMetaProperty &);

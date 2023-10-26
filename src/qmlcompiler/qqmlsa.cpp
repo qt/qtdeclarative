@@ -429,6 +429,24 @@ bool PropertyPrivate::isValid() const
     return m_property.isValid();
 }
 
+/*!
+   Returns whether this property is readonly. Properties defined in QML are readonly when their
+   definition has the 'readonly' keyword. Properties defined in C++ are readonly when they do not
+   have a WRITE accessor function.
+ */
+bool PropertyPrivate::isReadonly() const
+{
+    return !m_property.isWritable();
+}
+
+/*!
+    Returns the type that this property was defined with.
+ */
+QQmlSA::Element PropertyPrivate::type() const
+{
+    return QQmlJSScope::createQQmlSAElement(m_property.type());
+}
+
 QQmlJSMetaProperty PropertyPrivate::property(const QQmlSA::Property &property)
 {
     return property.d_func()->m_property;
@@ -495,6 +513,19 @@ bool Property::isValid() const
     Q_D(const Property);
     return d->isValid();
 }
+
+bool Property::isReadonly() const
+{
+    Q_D(const Property);
+    return d->isReadonly();
+}
+
+QQmlSA::Element Property::type() const
+{
+    Q_D(const Property);
+    return d->type();
+}
+
 
 bool Property::operatorEqualsImpl(const Property &lhs, const Property &rhs)
 {
@@ -608,6 +639,15 @@ bool QQmlSA::Element::isComposite() const
 bool Element::hasProperty(const QString &propertyName) const
 {
     return QQmlJSScope::scope(*this)->hasProperty(propertyName);
+}
+
+/*!
+    Returns whether this Element defines a property with the name \a propertyName
+    which is not defined on its base or extension objects.
+ */
+bool Element::hasOwnProperty(const QString &propertyName) const
+{
+    return QQmlJSScope::scope(*this)->hasOwnProperty(propertyName);
 }
 
 /*!
