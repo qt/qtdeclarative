@@ -27,14 +27,14 @@ T.RangeSlider {
 
     property string __firstHandleState: [
         first.hovered && !first.pressed && "hovered",
-        first.pressed && "handle-pressed",
+        first.pressed && "handle_pressed",
         visualFocus && "focused",
     ].filter(Boolean).join("_") || "normal"
     readonly property var firstHandleConfig: Config.controls.rangeslider[__firstHandleState] || {}
 
     property string __secondHandleState: [
         second.hovered && !second.pressed && "hovered",
-        second.pressed && "handle-pressed",
+        second.pressed && "handle_pressed",
         visualFocus && "focused",
     ].filter(Boolean).join("_") || "normal"
     readonly property var secondHandleConfig: Config.controls.rangeslider[__secondHandleState] || {}
