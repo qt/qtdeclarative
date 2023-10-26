@@ -8,6 +8,7 @@ ItemModelsTest {
     property var parent: modelIndex.parent
     property var model: modelIndex.model
     property var internalId: modelIndex.internalId
+    property var displayData: modelIndex.data(Qt.DisplayRole)
 
     onSignalWithModelIndex: {
         isValid = index.valid
@@ -16,5 +17,6 @@ ItemModelsTest {
         parent = index.parent
         model = index.model
         internalId = index.internalId
+        displayData = index.data(Qt.DisplayRole)
     }
 }
