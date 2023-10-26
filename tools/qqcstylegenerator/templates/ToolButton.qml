@@ -25,7 +25,6 @@ T.ToolButton {
     readonly property string __currentState: [
         control.checked && "checked",
         !control.enabled && "disabled",
-        control.visualFocus && "focused",
         control.enabled && !control.down && control.hovered && "hovered",
         down && "pressed"
     ].filter(Boolean).join("_") || "normal"
