@@ -110,8 +110,6 @@ creating objects of specific data types are also available for clients to use:
 \li \c matrix4x4 - use \l{Qt::matrix4x4()}{Qt.matrix4x4()}
 \endlist
 
-There are also string based constructors for these types. See \l{qtqml-typesystem-valuetypes.html}{QML Value Types} for more information.
-
 \section1 Date/Time Formatters
 
 The Qt object contains several functions for formatting QDateTime, QDate and QTime values.
