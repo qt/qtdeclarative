@@ -92,7 +92,7 @@ bool QQmlScriptString::operator==(const QQmlScriptString &other) const
 {
     if (d == other.d)
         return true;
-    if (!d)
+    if (!d || !other.d)
         return false;
 
     if (d->isNumberLiteral || other.d->isNumberLiteral)
