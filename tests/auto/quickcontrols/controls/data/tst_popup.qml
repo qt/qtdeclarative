@@ -4,6 +4,7 @@
 import QtQuick
 import QtTest
 import QtQuick.Controls
+import QtQuick.Layouts
 import QtQuick.Templates as T
 import QtQuick.NativeStyle as NativeStyle
 import Qt.test.controls
@@ -1481,5 +1482,43 @@ TestCase {
         tryCompare(control, "opened", true)
         let rect = findChild(control.Overlay.overlay, "rect")
         verify(rect)
+    }
+
+    Component {
+        id: popupOverlay
+
+        Popup {
+            id: popupCenterIn
+            property alias text: toastText.text
+            anchors.centerIn: Overlay.overlay
+            dim: true
+            modal: true
+            contentItem: ColumnLayout {
+                Text {
+                    id: toastText
+                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
+                }
+            }
+        }
+    }
+
+    function test_popupOverlayCenterIn() {
+        let control = createTemporaryObject(popupOverlay, testCase)
+        verify(control)
+
+        // Modify text in the popup content item
+        control.text = "this is a long text causing a line break to show the binding loop "
+                        + "(height) again after the first initialization of the text";
+
+        // Open popup item and wait for it to be rendered
+        control.open()
+        waitForRendering(testCase)
+        tryCompare(control, "opened", true)
+
+        // Verify popup position
+        compare(control.x, 0)
+        compare(control.y, control.parent.height / 2 - control.height / 2)
+        control.close()
     }
 }
