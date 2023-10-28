@@ -457,9 +457,10 @@ void tst_qqmllocale::toString_data()
     const QDateTime midnight2000(QDate(2000, 1, 1), QTime(0, 0));
     // 12 AM might not exist in this timezone (some timezones have transitions at midnight).
     if (midnight2000.isValid()) {
-        functionCallScript = "locale.toString(new Date(2000, 1, 1))";
-        QTest::newRow(qPrintable(functionCallScript)) << "en_AU" << functionCallScript
-            << QLatin1String("Tuesday, 1 February 2000 12:00:00 AM ") + midnight2000.timeZoneAbbreviation() << QString();
+        functionCallScript = "locale.toString(new Date(2000, 0, 1))";
+        const QLocale locale("en_AU");
+        QTest::newRow(qPrintable(functionCallScript)) << locale.name() << functionCallScript
+            << locale.toString(midnight2000, QLocale::LongFormat) << QString();
     }
 
     functionCallScript = "locale.toString(new Date(2022, 7, 16), [])";
