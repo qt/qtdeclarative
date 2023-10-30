@@ -6031,11 +6031,11 @@ void tst_qquicktextedit::embeddedImages_data()
     QTest::newRow("local") << testFileUrl("embeddedImagesLocal.qml") << "";
     QTest::newRow("local-error") << testFileUrl("embeddedImagesLocalError.qml")
         << testFileUrl("embeddedImagesLocalError.qml").toString()+":3:1: QML TextEdit: Cannot open: " + testFileUrl("http/notexists.png").toString();
-    QTest::newRow("local") << testFileUrl("embeddedImagesLocalRelative.qml") << "";
+    QTest::newRow("local-relative") << testFileUrl("embeddedImagesLocalRelative.qml") << "";
     QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "";
     QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
         << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML TextEdit: Error transferring {{ServerBaseUrl}}/notexists.png - server replied: Not found";
-    QTest::newRow("remote") << testFileUrl("embeddedImagesRemoteRelative.qml") << "";
+    QTest::newRow("remote-relative") << testFileUrl("embeddedImagesRemoteRelative.qml") << "";
 }
 
 void tst_qquicktextedit::embeddedImages()
