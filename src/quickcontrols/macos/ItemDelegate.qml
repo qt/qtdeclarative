@@ -3,7 +3,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
-import QtQuick.Controls.impl
+import QtQuick.NativeStyle as NativeStyle
 
 T.ItemDelegate {
     id: control
@@ -22,19 +22,7 @@ T.ItemDelegate {
     icon.width: 16
     icon.height: 16
 
-    contentItem: IconLabel {
-        text: control.text
-        font: control.font
-        icon: control.icon
-        color: control.palette.windowText
-        spacing: control.spacing
-        mirrored: control.mirrored
-        display: control.display
-        alignment: control.display === IconLabel.IconOnly || control.display === IconLabel.TextUnderIcon
-            ? Qt.AlignCenter : Qt.AlignLeft
-
-        readonly property bool __ignoreNotCustomizable: true
-    }
+    contentItem: NativeStyle.DefaultItemDelegateIconLabel {}
 
     background: Rectangle {
         implicitWidth: 100

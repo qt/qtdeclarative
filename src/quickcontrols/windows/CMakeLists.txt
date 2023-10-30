@@ -9,6 +9,7 @@ set(qml_files
     "ApplicationWindow.qml"
     "Button.qml"
     "CheckBox.qml"
+    "CheckDelegate.qml"
     "ComboBox.qml"
     "DelayButton.qml"
     "Frame.qml"
