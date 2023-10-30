@@ -17,6 +17,7 @@ set(qml_files
     "DialogButtonBox.qml"
     "Frame.qml"
     "GroupBox.qml"
+    "ItemDelegate.qml"
     "ProgressBar.qml"
     "RadioButton.qml"
     "RadioDelegate.qml"
