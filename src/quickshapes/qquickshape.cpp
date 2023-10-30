@@ -641,6 +641,8 @@ void QQuickShapePrivate::_q_shapePathChanged()
     spChanged = true;
     q->polish();
     emit q->boundingRectChanged();
+    auto br = q->boundingRect();
+    q->setImplicitSize(br.right(), br.bottom());
 }
 
 void QQuickShapePrivate::setStatus(QQuickShape::Status newStatus)
@@ -650,6 +652,18 @@ void QQuickShapePrivate::setStatus(QQuickShape::Status newStatus)
         status = newStatus;
         emit q->statusChanged();
     }
+}
+
+qreal QQuickShapePrivate::getImplicitWidth() const
+{
+    Q_Q(const QQuickShape);
+    return q->boundingRect().right();
+}
+
+qreal QQuickShapePrivate::getImplicitHeight() const
+{
+    Q_Q(const QQuickShape);
+    return q->boundingRect().bottom();
 }
 
 QQuickShape::QQuickShape(QQuickItem *parent)

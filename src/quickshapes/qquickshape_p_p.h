@@ -17,7 +17,7 @@
 
 #include <QtQuickShapes/private/qquickshapesglobal_p.h>
 #include <QtQuickShapes/private/qquickshape_p.h>
-#include <QtQuick/private/qquickitem_p.h>
+#include <private/qquickitem_p.h>
 #include <QPainterPath>
 #include <QColor>
 #include <QBrush>
@@ -138,6 +138,9 @@ public:
     static QQuickShapePrivate *get(QQuickShape *item) { return item->d_func(); }
 
     static void asyncShapeReady(void *data);
+
+    qreal getImplicitWidth() const override;
+    qreal getImplicitHeight() const override;
 
     int effectRefCount;
     QVector<QQuickShapePath *> sp;
