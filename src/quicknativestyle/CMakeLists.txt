@@ -12,6 +12,7 @@ set(qml_files
     "controls/DefaultDial.qml"
     "controls/DefaultFrame.qml"
     "controls/DefaultGroupBox.qml"
+    "controls/DefaultItemDelegate.qml"
     "controls/DefaultItemDelegateIconLabel.qml"
     "controls/DefaultProgressBar.qml"
     "controls/DefaultRadioButton.qml"

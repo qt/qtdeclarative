@@ -375,7 +375,7 @@ void tst_customization::override_data()
             "Windows",
             {
                 "Button", "CheckBox", "CheckDelegate", "ComboBox", "DelayButton", "Frame", "GroupBox",
-                "ProgressBar", "RadioButton", "RangeSlider", "SelectionRectangle",
+                "ItemDelegate", "ProgressBar", "RadioButton", "RangeSlider", "SelectionRectangle",
                 "ScrollBar", "Slider", "SpinBox", "Switch", "TextArea", "TextField"
             }
         }

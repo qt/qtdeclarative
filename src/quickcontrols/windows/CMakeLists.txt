@@ -14,6 +14,7 @@ set(qml_files
     "DelayButton.qml"
     "Frame.qml"
     "GroupBox.qml"
+    "ItemDelegate.qml"
     "ProgressBar.qml"
     "RadioButton.qml"
     "RangeSlider.qml"
