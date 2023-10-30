@@ -16,6 +16,7 @@ set(qml_files
     "controls/DefaultItemDelegateIconLabel.qml"
     "controls/DefaultProgressBar.qml"
     "controls/DefaultRadioButton.qml"
+    "controls/DefaultRadioDelegate.qml"
     "controls/DefaultScrollBar.qml"
     "controls/DefaultSlider.qml"
     "controls/DefaultSpinBox.qml"
