@@ -704,6 +704,9 @@ namespace QQmlPrivate
         void initGetValueLookup(uint index, const QMetaObject *metaObject, QMetaType type) const;
 
         bool getEnumLookup(uint index, void *target) const;
+#if QT_QML_REMOVED_SINCE(6, 6)
+        bool getEnumLookup(uint index, int *target) const;
+#endif
         void initGetEnumLookup(uint index, const QMetaObject *metaObject,
                                const char *enumerator, const char *enumValue) const;
 

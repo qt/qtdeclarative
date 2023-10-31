@@ -24,3 +24,19 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 
 #endif
 
+#if QT_QML_REMOVED_SINCE(6, 6)
+#include <QtQml/qqmlprivate.h>
+#include <QtQml/private/qv4executablecompilationunit_p.h>
+#include <QtQml/private/qv4lookup_p.h>
+
+bool QQmlPrivate::AOTCompiledContext::getEnumLookup(uint index, int *target) const
+{
+    using namespace QQmlPrivate;
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    auto mt = QMetaType(l->qmlEnumValueLookup.metaType);
+    QVariant buffer(mt);
+    getEnumLookup(index, buffer.data());
+    *target = buffer.toInt();
+    return true;
+}
+#endif
