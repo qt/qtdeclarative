@@ -1300,9 +1300,14 @@ Each object in this array has the members \c lineNumber, \c columnNumber, \c fil
 For example, if the above snippet had misspelled color as 'colro' then the array would contain an object like the following:
 { "lineNumber" : 1, "columnNumber" : 32, "fileName" : "dynamicSnippet1", "message" : "Cannot assign to non-existent property \"colro\""}.
 
-Note that this function returns immediately, and therefore may not work if
+\note This function returns immediately, and therefore may not work if
 the \a qml string loads new components (that is, external QML files that have not yet been loaded).
 If this is the case, consider using \l{QtQml::Qt::createComponent()}{Qt.createComponent()} instead.
+
+\warning This function is extremely slow since it has to compile the passed QML string every time
+it is invoked. Furthermore, it's very easy to produce invalid QML when programmatically constructing
+QML code. It's much better to keep your QML components as separate files and add properties and
+methods to customize their behavior than to produce new components by string manipulation.
 
 See \l {Dynamic QML Object Creation from JavaScript} for more information on using this function.
 */
