@@ -102,6 +102,12 @@ It is also possible to instantiate components without blocking via the
 
 \section2 Creating an Object from a String of QML
 
+\warning Creating objects from a string of QML is extremely slow since the engine has to compile the
+passed QML string every time you do it. Furthermore, it's very easy to produce invalid QML when
+programmatically constructing QML code. It's much better to keep your QML components as separate
+files and add properties and methods to customize their behavior than to produce new components by
+string manipulation.
+
 If the QML is not defined until runtime, you can create a QML object from
 a string of QML using the \l{QtQml::Qt::createQmlObject()}{Qt.createQmlObject()}
 function, as in the following example:
