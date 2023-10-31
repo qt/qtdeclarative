@@ -1426,13 +1426,21 @@ void DomEnvironment::loadModuleDependency(const DomItem &self, QString uri, Vers
                 }
             }
         }
-        QAtomicInt toLoad((commonV ? 1 : 0) + ((maxV >= 0) ? 1 : 0));
-        auto loadCallback2 = (loadCallback ? [p, loadCallback, toLoad](Path, const DomItem &, const DomItem &elV) mutable {
-            if (--toLoad == 0) {
-                DomItem el = elV.path(p);
-                loadCallback(p, el, el);
-            }
-        }: Callback());
+
+        // This decrements _separately_ for each copy of the lambda. So, what we get here is not a
+        // limit on the total number of calls but a limit on the number of calls per caller
+        // location. It gets even funnier if the callback is first called and then copied further.
+        // TODO: Is this the intended behavior?
+        int toLoad = (commonV ? 1 : 0) + ((maxV >= 0) ? 1 : 0);
+        const auto loadCallback2 = loadCallback
+                ? [p, loadCallback, toLoad](Path, const DomItem &, const DomItem &elV) mutable {
+                      if (--toLoad == 0) {
+                          DomItem el = elV.path(p);
+                          loadCallback(p, el, el);
+                      }
+                  }
+                : Callback();
+
         if (maxV >= 0)
             loadModuleDependency(self, uri, Version(maxV, v.minorVersion), loadCallback2, nullptr);
         if (commonV)
