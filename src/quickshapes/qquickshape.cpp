@@ -781,14 +781,13 @@ void QQuickShape::setPreferredRendererType(QQuickShape::RendererType preferredTy
     emit preferredRendererTypeChanged();
 }
 
-
 /*!
     \qmlproperty bool QtQuick.Shapes::Shape::asynchronous
 
-    When rendererType is \c Shape.GeometryRenderer, the input path is
-    triangulated on the CPU during the polishing phase of the Shape. This is
-    potentially expensive. To offload this work to separate worker threads,
-    set this property to \c true.
+    When rendererType is \c Shape.GeometryRenderer or \c Shape.CurveRenderer, a certain amount of
+    preprocessing of the input path is performed on the CPU during the polishing phase of the
+    Shape. This is potentially expensive. To offload this work to separate worker threads, set this
+    property to \c true.
 
     When enabled, making a Shape visible will not wait for the content to
     become available. Instead, the GUI/main thread is not blocked and the

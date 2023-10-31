@@ -26,17 +26,20 @@
 #include <qsgrendererinterface.h>
 #include <qsgtexture.h>
 #include <QtCore/qrunnable.h>
+#include <QRunnable>
 
 #include <QtGui/private/qtriangulator_p.h>
 #include <QtQuick/private/qsgcurvefillnode_p.h>
 
 QT_BEGIN_NAMESPACE
 
+class QQuickShapeCurveRunnable;
+
 class QQuickShapeCurveRenderer : public QQuickAbstractPathRenderer
 {
 public:
-    QQuickShapeCurveRenderer(QQuickItem *)
-        : m_rootNode(nullptr)
+    QQuickShapeCurveRenderer(QQuickItem *item)
+        : m_item(item)
     { }
     ~QQuickShapeCurveRenderer() override;
 
@@ -53,7 +56,7 @@ public:
     void setFillGradient(int index, QQuickShapeGradient *gradient) override;
     void endSync(bool async) override;
     void setAsyncCallback(void (*)(void *), void *) override;
-    Flags flags() const override { return Flags{}; }
+    Flags flags() const override { return SupportsAsync; }
 
     void updateNode() override;
 
@@ -90,32 +93,57 @@ private:
 
         QGradient::Type gradientType = QGradient::NoGradient;
         QSGGradientCache::GradientDesc gradient;
+        QColor fillColor;
+        Qt::FillRule fillRule = Qt::OddEvenFill;
+        QPen pen;
+        bool validPenWidth = true;
+        int m_dirty = 0;
+
         QPainterPath originalPath;
         QQuadPath path;
         QQuadPath fillPath;
         QQuadPath strokePath;
-        QColor fillColor;
-        Qt::FillRule fillRule = Qt::OddEvenFill;
-        QPen pen;
-        int m_dirty = 0;
-        bool validPenWidth = true;
-        bool convexConcaveResolved = false;
 
         NodeList fillNodes;
-        NodeList fillDebugNodes;
         NodeList strokeNodes;
-        NodeList strokeDebugNodes;
+
+        QQuickShapeCurveRunnable *currentRunner = nullptr;
     };
 
-    void deleteAndClear(NodeList *nodeList);
+    void createRunner(PathData *pathData);
+    void maybeUpdateAsyncItem();
 
-    NodeList addFillNodes(const PathData &pathData, NodeList *debugNodes);
-    NodeList addTriangulatingStrokerNodes(const PathData &pathData, NodeList *debugNodes);
-    NodeList addCurveStrokeNodes(const PathData &pathData, NodeList *debugNodes);
+    static void processPath(PathData *pathData);
+    static NodeList addFillNodes(const PathData &pathData);
+    static NodeList addTriangulatingStrokerNodes(const PathData &pathData);
+    static NodeList addCurveStrokeNodes(const PathData &pathData);
 
-    QSGNode *m_rootNode;
+    QQuickItem *m_item;
+    QSGNode *m_rootNode = nullptr;
     QVector<PathData> m_paths;
+    void (*m_asyncCallback)(void *) = nullptr;
+    void *m_asyncCallbackData = nullptr;
     static int debugVisualizationFlags;
+
+    friend class QQuickShapeCurveRunnable;
+};
+
+class QQuickShapeCurveRunnable : public QObject, public QRunnable
+{
+    Q_OBJECT
+
+public:
+    void run() override;
+
+    bool isAsync = false;
+    bool isDone = false;
+    bool orphaned = false;
+
+    // input / output
+    QQuickShapeCurveRenderer::PathData pathData;
+
+Q_SIGNALS:
+    void done(QQuickShapeCurveRunnable *self);
 };
 
 QT_END_NAMESPACE

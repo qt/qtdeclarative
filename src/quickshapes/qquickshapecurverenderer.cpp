@@ -4,6 +4,10 @@
 #include "qquickshapecurverenderer_p.h"
 #include "qquickshapecurverenderer_p_p.h"
 
+#if QT_CONFIG(thread)
+#include <QtCore/qthreadpool.h>
+#endif
+
 #include <QtGui/qvector2d.h>
 #include <QtGui/qvector4d.h>
 #include <QtGui/private/qtriangulator_p.h>
@@ -15,8 +19,6 @@
 #include <QtQuick/private/qquadpath_p.h>
 #include <QtQuick/private/qsgcurveprocessor_p.h>
 #include <QtQuick/qsgmaterial.h>
-
-#include <QThread>
 
 QT_BEGIN_NAMESPACE
 
@@ -124,8 +126,13 @@ protected:
 };
 }
 
-
-QQuickShapeCurveRenderer::~QQuickShapeCurveRenderer() { }
+QQuickShapeCurveRenderer::~QQuickShapeCurveRenderer()
+{
+    for (const PathData &pd : std::as_const(m_paths)) {
+        if (pd.currentRunner)
+            pd.currentRunner->orphaned = true;
+    }
+}
 
 void QQuickShapeCurveRenderer::beginSync(int totalCount, bool *countChanged)
 {
@@ -252,86 +259,185 @@ void QQuickShapeCurveRenderer::setFillGradient(int index, QQuickShapeGradient *g
 
 void QQuickShapeCurveRenderer::setAsyncCallback(void (*callback)(void *), void *data)
 {
-    qCWarning(lcShapeCurveRenderer) << "Asynchronous creation not supported by CurveRenderer";
-    Q_UNUSED(callback);
-    Q_UNUSED(data);
+    m_asyncCallback = callback;
+    m_asyncCallbackData = data;
 }
 
 void QQuickShapeCurveRenderer::endSync(bool async)
 {
-    Q_UNUSED(async);
+    bool didKickOffAsync = false;
+
+    for (PathData &pathData : m_paths) {
+        if (!pathData.m_dirty)
+            continue;
+
+        if (pathData.m_dirty == UniformsDirty) {
+            // Requires no curve node computation, gets handled directly in updateNode()
+            continue;
+        }
+
+        if (pathData.currentRunner) {
+            // Already performing async computing. New dirty flags will be handled in the next sync
+            // after the current computation is done and the item is updated
+            continue;
+        }
+
+        createRunner(&pathData);
+
+#if QT_CONFIG(thread)
+        if (async) {
+            pathData.currentRunner->isAsync = true;
+            QThreadPool::globalInstance()->start(pathData.currentRunner);
+            didKickOffAsync = true;
+        } else
+#endif
+        {
+            pathData.currentRunner->run();
+        }
+    }
+
+    if (async && !didKickOffAsync && m_asyncCallback)
+        m_asyncCallback(m_asyncCallbackData);
+}
+
+void QQuickShapeCurveRenderer::createRunner(PathData *pathData)
+{
+    Q_ASSERT(!pathData->currentRunner);
+    QQuickShapeCurveRunnable *runner = new QQuickShapeCurveRunnable;
+    runner->setAutoDelete(false);
+    runner->pathData = *pathData;
+    runner->pathData.fillNodes.clear();
+    runner->pathData.strokeNodes.clear();
+    runner->pathData.currentRunner = nullptr;
+
+    pathData->currentRunner = runner;
+    pathData->m_dirty = 0;
+    QObject::connect(runner, &QQuickShapeCurveRunnable::done, qApp,
+                     [this](QQuickShapeCurveRunnable *r) {
+                         r->isDone = true;
+                         if (r->orphaned) {
+                             r->deleteLater(); // Renderer was destroyed
+                         } else if (r->isAsync) {
+                             maybeUpdateAsyncItem();
+                         }
+                     });
+}
+
+void QQuickShapeCurveRenderer::maybeUpdateAsyncItem()
+{
+    for (const PathData &pd : std::as_const(m_paths)) {
+        if (pd.currentRunner && !pd.currentRunner->isDone)
+            return;
+    }
+    m_item->update();
+    if (m_asyncCallback)
+        m_asyncCallback(m_asyncCallbackData);
+}
+
+void QQuickShapeCurveRunnable::run()
+{
+    QQuickShapeCurveRenderer::processPath(&pathData);
+    emit done(this);
 }
 
 void QQuickShapeCurveRenderer::updateNode()
 {
     if (!m_rootNode)
         return;
+
+    auto updateUniforms = [](const PathData &pathData) {
+        for (auto &pathNode : std::as_const(pathData.fillNodes))
+            pathNode->setColor(pathData.fillColor);
+        for (auto &strokeNode : std::as_const(pathData.strokeNodes))
+            strokeNode->setColor(pathData.pen.color());
+    };
+
+    for (PathData &pathData : m_paths) {
+        if (pathData.currentRunner) {
+            if (!pathData.currentRunner->isDone)
+                continue;
+            const PathData &newData = pathData.currentRunner->pathData;
+            if (newData.m_dirty & PathDirty)
+                pathData.path = newData.path;
+            if (newData.m_dirty & FillDirty) {
+                pathData.fillPath = newData.fillPath;
+                qDeleteAll(pathData.fillNodes);
+                pathData.fillNodes = newData.fillNodes;
+                for (auto *node : std::as_const(pathData.fillNodes))
+                    m_rootNode->appendChildNode(node);
+            }
+            if (newData.m_dirty & StrokeDirty) {
+                qDeleteAll(pathData.strokeNodes);
+                pathData.strokeNodes = newData.strokeNodes;
+                for (auto *node : std::as_const(pathData.strokeNodes))
+                    m_rootNode->appendChildNode(node);
+            }
+            if (newData.m_dirty & UniformsDirty)
+                updateUniforms(pathData);
+
+            // if (pathData.m_dirty && pathData.m_dirty != UniformsDirty && currentRunner.isAsync)
+            //     qDebug("### should enqueue a new sync?");
+
+            pathData.currentRunner->deleteLater();
+            pathData.currentRunner = nullptr;
+        }
+
+        if (pathData.m_dirty == UniformsDirty) {
+            // Simple case so no runner was created in endSync(); handle it directly here
+            updateUniforms(pathData);
+            pathData.m_dirty = 0;
+        }
+    }
+}
+
+void QQuickShapeCurveRenderer::processPath(PathData *pathData)
+{
     static const bool doOverlapSolving = !qEnvironmentVariableIntValue("QT_QUICKSHAPES_DISABLE_OVERLAP_SOLVER");
     static const bool useTriangulatingStroker = qEnvironmentVariableIntValue("QT_QUICKSHAPES_TRIANGULATING_STROKER");
     static const bool simplifyPath = qEnvironmentVariableIntValue("QT_QUICKSHAPES_SIMPLIFY_PATHS");
 
-    for (PathData &pathData : m_paths) {
-        int dirtyFlags = pathData.m_dirty;
+    int &dirtyFlags = pathData->m_dirty;
 
-        if (dirtyFlags & PathDirty) {
-            if (simplifyPath)
-                pathData.path = QQuadPath::fromPainterPath(pathData.originalPath.simplified());
+    if (dirtyFlags & PathDirty) {
+        if (simplifyPath)
+            pathData->path = QQuadPath::fromPainterPath(pathData->originalPath.simplified());
+        else
+            pathData->path = QQuadPath::fromPainterPath(pathData->originalPath);
+        pathData->path.setFillRule(pathData->fillRule);
+        pathData->fillPath = {};
+        dirtyFlags |= (FillDirty | StrokeDirty);
+    }
+
+    if (dirtyFlags & FillDirty) {
+        if (pathData->isFillVisible()) {
+            if (pathData->fillPath.isEmpty()) {
+                pathData->fillPath = pathData->path.subPathsClosed();
+                pathData->fillPath.addCurvatureData();
+                if (doOverlapSolving)
+                    QSGCurveProcessor::solveOverlaps(pathData->fillPath);
+            }
+            pathData->fillNodes = addFillNodes(*pathData);
+            dirtyFlags |= StrokeDirty;
+        }
+    }
+
+    if (dirtyFlags & StrokeDirty) {
+        if (pathData->isStrokeVisible()) {
+            const QPen &pen = pathData->pen;
+            if (pen.style() == Qt::SolidLine)
+                pathData->strokePath = pathData->path;
             else
-                pathData.path = QQuadPath::fromPainterPath(pathData.originalPath);
-            pathData.path.setFillRule(pathData.fillRule);
-            pathData.fillPath = {};
-            dirtyFlags |= (FillDirty | StrokeDirty);
+                pathData->strokePath = pathData->path.dashed(pen.widthF(), pen.dashPattern(), pen.dashOffset());
+
+            if (useTriangulatingStroker)
+                pathData->strokeNodes = addTriangulatingStrokerNodes(*pathData);
+            else
+                pathData->strokeNodes = addCurveStrokeNodes(*pathData);
         }
-
-        if (dirtyFlags & FillDirty) {
-            deleteAndClear(&pathData.fillNodes);
-            deleteAndClear(&pathData.fillDebugNodes);
-            if (pathData.isFillVisible()) {
-                if (pathData.fillPath.isEmpty()) {
-                    pathData.fillPath = pathData.path.subPathsClosed();
-                    pathData.fillPath.addCurvatureData();
-                    if (doOverlapSolving)
-                        QSGCurveProcessor::solveOverlaps(pathData.fillPath);
-                }
-                pathData.fillNodes = addFillNodes(pathData, &pathData.fillDebugNodes);
-                dirtyFlags |= StrokeDirty;
-            }
-        }
-
-        if (dirtyFlags & StrokeDirty) {
-            deleteAndClear(&pathData.strokeNodes);
-            deleteAndClear(&pathData.strokeDebugNodes);
-            if (pathData.isStrokeVisible()) {
-                const QPen &pen = pathData.pen;
-                if (pen.style() == Qt::SolidLine)
-                    pathData.strokePath = pathData.path;
-                else
-                    pathData.strokePath = pathData.path.dashed(pen.widthF(), pen.dashPattern(), pen.dashOffset());
-
-                if (useTriangulatingStroker)
-                    pathData.strokeNodes = addTriangulatingStrokerNodes(pathData, &pathData.strokeDebugNodes);
-                else
-                    pathData.strokeNodes = addCurveStrokeNodes(pathData, &pathData.strokeDebugNodes);
-            }
-        }
-
-        if (dirtyFlags & UniformsDirty) {
-            if (!(dirtyFlags & FillDirty)) {
-                for (auto &pathNode : std::as_const(pathData.fillNodes))
-                    pathNode->setColor(pathData.fillColor);
-            }
-            if (!(dirtyFlags & StrokeDirty)) {
-                for (auto &strokeNode : std::as_const(pathData.strokeNodes))
-                    strokeNode->setColor(pathData.pen.color());
-            }
-        }
-
-        pathData.m_dirty &= ~(PathDirty | FillDirty | StrokeDirty | UniformsDirty);
     }
 }
 
-QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const PathData &pathData,
-                                                                  NodeList *debugNodes)
+QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const PathData &pathData)
 {
     auto *node = new QSGCurveFillNode;
     node->setGradientType(pathData.gradientType);
@@ -366,7 +472,6 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
         node->setFillGradient(pathData.gradient);
 
         node->cookGeometry();
-        m_rootNode->appendChildNode(node);
         ret.append(node);
     }
 
@@ -387,14 +492,13 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
                wfVertices.data(),
                wfg->vertexCount() * wfg->sizeOfVertex());
 
-        m_rootNode->appendChildNode(wfNode);
-        debugNodes->append(wfNode);
+        ret.append(wfNode);
     }
 
     return ret;
 }
 
-QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addTriangulatingStrokerNodes(const PathData &pathData, NodeList *debugNodes)
+QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addTriangulatingStrokerNodes(const PathData &pathData)
 {
     NodeList ret;
     const QColor &color = pathData.pen.color();
@@ -488,7 +592,6 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addTriangulatingStr
         node->setFillGradient(pathData.gradient);
 
         node->cookGeometry();
-        m_rootNode->appendChildNode(node);
         ret.append(node);
     }
     const bool wireFrame = debugVisualization() & DebugWireframe;
@@ -508,8 +611,7 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addTriangulatingStr
                wfVertices.data(),
                wfg->vertexCount() * wfg->sizeOfVertex());
 
-        m_rootNode->appendChildNode(wfNode);
-        debugNodes->append(wfNode);
+        ret.append(wfNode);
     }
 
     return ret;
@@ -535,14 +637,7 @@ void QQuickShapeCurveRenderer::setDebugVisualization(int options)
     debugVisualizationFlags = options;
 }
 
-void QQuickShapeCurveRenderer::deleteAndClear(NodeList *nodeList)
-{
-    for (QSGNode *node : std::as_const(*nodeList))
-        delete node;
-    nodeList->clear();
-}
-
-QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addCurveStrokeNodes(const PathData &pathData, NodeList *debugNodes)
+QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addCurveStrokeNodes(const PathData &pathData)
 {
     NodeList ret;
     const QColor &color = pathData.pen.color();
@@ -586,7 +681,6 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addCurveStrokeNodes
     node->setColor(color);
     node->setStrokeWidth(pathData.pen.widthF());
     node->cookGeometry();
-    m_rootNode->appendChildNode(node);
     ret.append(node);
 
     const bool wireFrame = debugVisualization() & DebugWireframe;
@@ -607,8 +701,7 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addCurveStrokeNodes
                wfVertices.data(),
                wfg->vertexCount() * wfg->sizeOfVertex());
 
-        m_rootNode->appendChildNode(wfNode);
-        debugNodes->append(wfNode);
+        ret.append(wfNode);
     }
 
     return ret;
