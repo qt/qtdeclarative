@@ -293,6 +293,9 @@ class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShape : public QQuickItem
     Q_PROPERTY(Status status READ status NOTIFY statusChanged FINAL)
     Q_PROPERTY(ContainsMode containsMode READ containsMode WRITE setContainsMode NOTIFY containsModeChanged REVISION(1, 11) FINAL)
     Q_PROPERTY(QRectF boundingRect READ boundingRect NOTIFY boundingRectChanged REVISION(6, 6) FINAL)
+    Q_PROPERTY(FillMode fillMode READ fillMode WRITE setFillMode NOTIFY fillModeChanged REVISION(6, 7) FINAL)
+    Q_PROPERTY(HAlignment horizontalAlignment READ horizontalAlignment WRITE setHorizontalAlignment NOTIFY horizontalAlignmentChanged REVISION(6, 7) FINAL)
+    Q_PROPERTY(VAlignment verticalAlignment READ verticalAlignment WRITE setVerticalAlignment NOTIFY verticalAlignmentChanged REVISION(6, 7) FINAL)
 
     Q_PROPERTY(QQmlListProperty<QObject> data READ data)
     Q_CLASSINFO("DefaultProperty", "data")
@@ -322,6 +325,23 @@ public:
     };
     Q_ENUM(ContainsMode)
 
+    enum FillMode {
+        NoResize,
+        PreserveAspectFit,
+        PreserveAspectCrop,
+        Stretch
+    };
+    Q_ENUM(FillMode)
+
+    enum HAlignment { AlignLeft = Qt::AlignLeft,
+                      AlignRight = Qt::AlignRight,
+                      AlignHCenter = Qt::AlignHCenter };
+    Q_ENUM(HAlignment)
+    enum VAlignment { AlignTop = Qt::AlignTop,
+                      AlignBottom = Qt::AlignBottom,
+                      AlignVCenter = Qt::AlignVCenter };
+    Q_ENUM(VAlignment)
+
     QQuickShape(QQuickItem *parent = nullptr);
     ~QQuickShape();
 
@@ -347,6 +367,15 @@ public:
 
     QQmlListProperty<QObject> data();
 
+    Q_REVISION(6, 7) FillMode fillMode() const;
+    Q_REVISION(6, 7) void setFillMode(FillMode newFillMode);
+
+    Q_REVISION(6, 7) HAlignment horizontalAlignment() const;
+    Q_REVISION(6, 7) void setHorizontalAlignment(HAlignment newHorizontalAlignment);
+
+    Q_REVISION(6, 7) VAlignment verticalAlignment() const;
+    Q_REVISION(6, 7) void setVerticalAlignment(VAlignment newVerticalAlignment);
+
 protected:
     QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *) override;
     void updatePolish() override;
@@ -362,6 +391,10 @@ Q_SIGNALS:
     Q_REVISION(6, 6) void preferredRendererTypeChanged();
     Q_REVISION(6, 6) void boundingRectChanged();
     Q_REVISION(1, 11) void containsModeChanged();
+
+    Q_REVISION(6, 7) void fillModeChanged();
+    Q_REVISION(6, 7) void horizontalAlignmentChanged();
+    Q_REVISION(6, 7) void verticalAlignmentChanged();
 
 private:
     Q_DISABLE_COPY(QQuickShape)

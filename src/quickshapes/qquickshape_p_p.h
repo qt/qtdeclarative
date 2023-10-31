@@ -152,6 +152,10 @@ public:
     QQuickShape::RendererType rendererType = QQuickShape::UnknownRenderer;
     QQuickShape::RendererType preferredType = QQuickShape::UnknownRenderer;
     QQuickShape::ContainsMode containsMode = QQuickShape::BoundingRectContains;
+    QQuickShape::FillMode fillMode = QQuickShape::NoResize;
+    QQuickShape::HAlignment horizontalAlignment = QQuickShape::AlignLeft;
+    QQuickShape::VAlignment verticalAlignment = QQuickShape::AlignTop;
+
     bool spChanged = false;
     bool rendererChanged = false;
     bool async = false;

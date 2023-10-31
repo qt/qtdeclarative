@@ -935,6 +935,77 @@ bool QQuickShape::contains(const QPointF &point) const
     return false;
 }
 
+/*!
+    \qmlproperty enumeration QtQuick.Shapes::Shape::fillMode
+    \since QtQuick.Shapes 6.7
+
+     Set this property to define what happens when the path has a different size
+     than the item.
+
+    \value Shape.NoResize           the shape is rendered at its native size, independent of the size of the item. This is the default
+    \value Shape.Stretch            the shape is scaled to fit the item, changing the aspect ratio if necessary.
+                                    Note that non-uniform scaling may cause reduced quality of anti-aliasing when using the curve renderer
+    \value Shape.PreserveAspectFit  the shape is scaled uniformly to fit inside the item
+    \value Shape.PreserveAspectCrop the shape is scaled uniformly to fill the item fully, extending outside the item if necessary.
+                                    Note that this only actually crops the content if \l clip is true
+*/
+
+QQuickShape::FillMode QQuickShape::fillMode() const
+{
+    Q_D(const QQuickShape);
+    return d->fillMode;
+}
+
+void QQuickShape::setFillMode(FillMode newFillMode)
+{
+    Q_D(QQuickShape);
+    if (d->fillMode == newFillMode)
+        return;
+    d->fillMode = newFillMode;
+    emit fillModeChanged();
+}
+
+/*!
+    \qmlproperty enumeration QtQuick.Shapes::Shape::horizontalAlignment
+    \qmlproperty enumeration QtQuick.Shapes::Shape::verticalAlignment
+
+ Sets the horizontal and vertical alignment of the shape within the item. By default, the shape is aligned with \c{(0,0)} on the top left corner.
+
+ The valid values for \c horizontalAlignment are \c Shape.AlignLeft, \c Shape.AlignRight and \c Shape.AlignHCenter.
+ The valid values for \c verticalAlignment are \c Shape.AlignTop, \c Shape.AlignBottom
+ and \c Shape.AlignVCenter.
+*/
+
+QQuickShape::HAlignment QQuickShape::horizontalAlignment() const
+{
+    Q_D(const QQuickShape);
+    return d->horizontalAlignment;
+}
+
+void QQuickShape::setHorizontalAlignment(HAlignment newHorizontalAlignment)
+{
+    Q_D(QQuickShape);
+    if (d->horizontalAlignment == newHorizontalAlignment)
+        return;
+    d->horizontalAlignment = newHorizontalAlignment;
+    emit horizontalAlignmentChanged();
+}
+
+QQuickShape::VAlignment QQuickShape::verticalAlignment() const
+{
+    Q_D(const QQuickShape);
+    return d->verticalAlignment;
+}
+
+void QQuickShape::setVerticalAlignment(VAlignment newVerticalAlignment)
+{
+    Q_D(QQuickShape);
+    if (d->verticalAlignment == newVerticalAlignment)
+        return;
+    d->verticalAlignment = newVerticalAlignment;
+    emit verticalAlignmentChanged();
+}
+
 static void vpe_append(QQmlListProperty<QObject> *property, QObject *obj)
 {
     QQuickShape *item = static_cast<QQuickShape *>(property->object);
@@ -1065,6 +1136,38 @@ QSGNode *QQuickShape::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
         }
         if (d->renderer)
             d->renderer->updateNode();
+
+        // TODO: only add transform node when needed (and then make sure static_cast is safe)
+        QMatrix4x4 fillModeTransform;
+        qreal xScale = 1.0;
+        qreal yScale = 1.0;
+
+        if (d->fillMode != NoResize) {
+            xScale = width() / implicitWidth();
+            yScale = height() / implicitHeight();
+
+            if (d->fillMode == PreserveAspectFit)
+                xScale = yScale = qMin(xScale, yScale);
+            else if (d->fillMode == PreserveAspectCrop)
+                xScale = yScale = qMax(xScale, yScale);
+            fillModeTransform.scale(xScale, yScale);
+        }
+        if (d->horizontalAlignment != AlignLeft || d->verticalAlignment != AlignTop) {
+            qreal tx = 0;
+            qreal ty = 0;
+            qreal w = xScale * implicitWidth();
+            qreal h = yScale * implicitHeight();
+            if (d->horizontalAlignment == AlignRight)
+                tx = width() - w;
+            else if (d->horizontalAlignment == AlignHCenter)
+                tx = (width() - w) / 2;
+            if (d->verticalAlignment == AlignBottom)
+                ty = height() - h;
+            else if (d->verticalAlignment == AlignVCenter)
+                ty = (height() - h) / 2;
+            fillModeTransform.translate(tx / xScale, ty / yScale);
+        }
+        static_cast<QSGTransformNode *>(node)->setMatrix(fillModeTransform);
     }
     return node;
 }
@@ -1138,27 +1241,32 @@ QSGNode *QQuickShapePrivate::createNode()
     if (!ri)
         return node;
 
+    QSGNode *pathNode = nullptr;
     switch (ri->graphicsApi()) {
     case QSGRendererInterface::Software:
-        node = new QQuickShapeSoftwareRenderNode(q);
+        pathNode = new QQuickShapeSoftwareRenderNode(q);
         static_cast<QQuickShapeSoftwareRenderer *>(renderer)->setNode(
-                    static_cast<QQuickShapeSoftwareRenderNode *>(node));
+                    static_cast<QQuickShapeSoftwareRenderNode *>(pathNode));
         break;
     default:
         if (QSGRendererInterface::isApiRhiBased(ri->graphicsApi())) {
             if (rendererType == QQuickShape::CurveRenderer) {
-                node = new QSGNode;
-                static_cast<QQuickShapeCurveRenderer *>(renderer)->setRootNode(node);
+                pathNode = new QSGNode;
+                static_cast<QQuickShapeCurveRenderer *>(renderer)->setRootNode(pathNode);
             } else {
-                node = new QQuickShapeGenericNode;
+                pathNode = new QQuickShapeGenericNode;
                 static_cast<QQuickShapeGenericRenderer *>(renderer)->setRootNode(
-                    static_cast<QQuickShapeGenericNode *>(node));
+                    static_cast<QQuickShapeGenericNode *>(pathNode));
             }
         } else {
             qWarning("No path backend for this graphics API yet");
         }
         break;
     }
+
+    // TODO: only create transform node when needed
+    node = new QSGTransformNode;
+    node->appendChildNode(pathNode);
 
     return node;
 }
