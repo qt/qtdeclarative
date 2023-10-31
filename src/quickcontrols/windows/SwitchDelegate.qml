@@ -4,8 +4,9 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.Windows.impl
+import QtQuick.NativeStyle as NativeStyle
 
-T.Switch {
+T.SwitchDelegate {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
@@ -21,16 +22,21 @@ T.Switch {
     readonly property Item __focusFrameTarget: indicator
     readonly property Item __focusFrameStyleItem: indicator
 
-    indicator: SwitchIndicator {}
+    indicator: SwitchIndicator {
+        x: control.text
+           ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding)
+           : control.leftPadding + (control.availableWidth - width) / 2
+    }
 
-    contentItem: Text {
-        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
-        text: control.text
-        font: control.font
-        color: control.palette.windowText
-        elide: Text.ElideRight
-        verticalAlignment: Text.AlignVCenter
+    contentItem: NativeStyle.DefaultItemDelegateIconLabel {
+        color: control.highlighted ? control.palette.button : control.palette.windowText
+    }
+
+    background: Rectangle {
+        implicitWidth: 100
+        implicitHeight: 20
+        color: Qt.darker(control.highlighted
+            ? control.palette.highlight : control.palette.button, control.down ? 1.05 : 1)
 
         readonly property bool __ignoreNotCustomizable: true
     }
