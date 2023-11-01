@@ -15,6 +15,7 @@ Item {
     property color outlineColor: enableOutline.checked ? Qt.rgba(outlineColor.color.r, outlineColor.color.g, outlineColor.color.b, outlineAlpha) : Qt.rgba(0,0,0,0)
     property color fillColor: Qt.rgba(fillColor.color.r, fillColor.color.g, fillColor.color.b, pathAlpha)
     property alias pathAlpha: alphaSlider.value
+    property alias fillRule: fillRule.currentValue
     property alias outlineAlpha: outlineAlphaSlider.value
     property real outlineWidth: cosmeticPen.checked ? outlineWidthEdit.text / scale : outlineWidthEdit.text
     property alias outlineStyle: outlineStyle.currentValue
@@ -46,6 +47,7 @@ Item {
         property alias cosmeticPen: cosmeticPen.checked
 
         property alias pathAlpha: alphaSlider.value
+        property alias fillRule: fillRule.currentIndex
         property alias fillColor: fillColor.color
 
         property alias setBackground: setBackground.checked
@@ -216,6 +218,25 @@ Item {
             ComboBox {
                 id: gradientType
                 model: [ "NoGradient", "LinearGradient", "RadialGradient", "ConicalGradient" ]
+            }
+            Label {
+                text: "Fill rule:"
+                color: "white"
+            }
+            ComboBox {
+                id: fillRule
+                textRole: "text"
+                valueRole: "style"
+                model: ListModel {
+                    ListElement {
+                        text: "WindingFill"
+                        style: ShapePath.WindingFill
+                    }
+                    ListElement {
+                        text: "OddEvenFill"
+                        style: ShapePath.OddEvenFill
+                    }
+                }
             }
             Label {
                 text: "Fill alpha(" + Math.round(alphaSlider.value*100)/100 + "):"

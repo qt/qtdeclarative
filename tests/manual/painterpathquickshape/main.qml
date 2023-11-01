@@ -40,6 +40,14 @@ Window {
             source: "Squircle.qml"
         }
         ListElement {
+            text: "Intersect"
+            source: "Intersect.qml"
+        }
+        ListElement {
+            text: "Intersect2"
+            source: "Intersect2.qml"
+        }
+        ListElement {
             text: "CubicShape"
             source: "CubicShape.qml"
         }

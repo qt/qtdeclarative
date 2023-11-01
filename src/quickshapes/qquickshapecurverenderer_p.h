@@ -118,6 +118,7 @@ private:
     static NodeList addTriangulatingStrokerNodes(const PathData &pathData);
     static NodeList addCurveStrokeNodes(const PathData &pathData);
 
+    void solveIntersections(QQuadPath &path);
     QQuickItem *m_item;
     QSGNode *m_rootNode = nullptr;
     QVector<PathData> m_paths;

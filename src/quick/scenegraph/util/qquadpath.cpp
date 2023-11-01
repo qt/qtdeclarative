@@ -203,6 +203,37 @@ QVector2D QQuadPath::Element::pointAtFraction(float t) const
     }
 }
 
+QQuadPath::Element QQuadPath::Element::segmentFromTo(float t0, float t1) const
+{
+    if (t0 <= 0 && t1 >= 1)
+        return *this;
+
+    Element part;
+    part.sp = pointAtFraction(t0);
+    part.ep = pointAtFraction(t1);
+
+    if (isLine()) {
+        part.cp = 0.5f * (part.sp + part.ep);
+        part.m_isLine = true;
+    } else {
+        // Split curve right at t0, yields { t0, rcp, endPoint } quad segment
+        const QVector2D rcp = (1 - t0) * controlPoint() + t0 * endPoint();
+        // Split that left at t1, yields  { t0, lcp, t1 } quad segment
+        float segmentT = (t1 - t0) / (1 - t0);
+        part.cp = (1 - segmentT) * part.sp + segmentT * rcp;
+    }
+    return part;
+}
+
+QQuadPath::Element QQuadPath::Element::reversed() const {
+    Element swappedElement;
+    swappedElement.ep = sp;
+    swappedElement.cp = cp;
+    swappedElement.sp = ep;
+    swappedElement.m_isLine = m_isLine;
+    return swappedElement;
+}
+
 float QQuadPath::Element::extent() const
 {
     // TBD: cache this value if we start using it a lot
@@ -331,6 +362,82 @@ bool QQuadPath::contains(const QVector2D &point) const
     };
 
     return (fillRule() == Qt::WindingFill ? (winding_number != 0) : ((winding_number % 2) != 0));
+}
+
+// similar as contains. But we treat the element with the index elementIdx in a special way
+// that should be numerically more stable. The result is a contains for a point on the left
+// and for the right side of the element.
+QQuadPath::Element::FillSide QQuadPath::fillSideOf(int elementIdx, float elementT) const
+{
+    constexpr float toleranceT = 1e-3f;
+    const QVector2D point = m_elements.at(elementIdx).pointAtFraction(elementT);
+
+    int winding_number = 0;
+    for (int i = 0; i < elementCount(); i++) {
+        const Element &e = m_elements.at(i);
+        int dir = 1;
+        float y1 = e.startPoint().y();
+        float y2 = e.endPoint().y();
+        if (y2 < y1) {
+            qSwap(y1, y2);
+            dir = -1;
+        }
+        if (e.m_isLine) {
+            if (point.y() < y1 || point.y() >= y2 || y1 == y2)
+                continue;
+            const float t = (point.y() - e.startPoint().y()) / (e.endPoint().y() - e.startPoint().y());
+            const float x = e.startPoint().x() + t * (e.endPoint().x() - e.startPoint().x());
+            if ((elementIdx != i && x <= point.x()) ||
+                (elementIdx == i && x <= point.x() && qAbs(t - elementT) > toleranceT)) {
+                winding_number += dir;
+            }
+        } else {
+            y1 = qMin(y1, e.controlPoint().y());
+            y2 = qMax(y2, e.controlPoint().y());
+            if (point.y() < y1 || point.y() >= y2)
+                continue;
+            float ts[2];
+            const int numRoots = e.intersectionsAtY(point.y(), ts);
+            // Count if there is exactly one intersection to the left
+            bool oneHit = false;
+            float tForHit = -1;
+            for (int j = 0; j < numRoots; j++) {
+                const float x = e.pointAtFraction(ts[j]).x();
+                if ((elementIdx != i && x <= point.x()) ||
+                    (elementIdx == i && x <= point.x() && qAbs(ts[j] - elementT) > toleranceT)) {
+                    oneHit = !oneHit;
+                    tForHit = ts[j];
+                }
+            }
+            if (oneHit) {
+                dir = e.tangentAtFraction(tForHit).y() < 0 ? -1 : 1;
+                winding_number += dir;
+            }
+        }
+    };
+
+    int left_winding_number = winding_number;
+    int right_winding_number = winding_number;
+
+    int dir = m_elements.at(elementIdx).tangentAtFraction(elementT).y() < 0 ? -1 : 1;
+
+    if (dir > 0) {
+        left_winding_number += dir;
+    } else {
+        right_winding_number += dir;
+    }
+
+    bool leftInside = (fillRule() == Qt::WindingFill ? (left_winding_number != 0) : ((left_winding_number % 2) != 0));
+    bool rightInside = (fillRule() == Qt::WindingFill ? (right_winding_number != 0) : ((right_winding_number % 2) != 0));
+
+    if (leftInside && rightInside)
+        return QQuadPath::Element::FillSideBoth;
+    else if (leftInside)
+        return QQuadPath::Element::FillSideLeft;
+    else if (rightInside)
+        return QQuadPath::Element::FillSideRight;
+    else
+        return QQuadPath::Element::FillSideUndetermined; //should not happen except for numerical error.
 }
 
 void QQuadPath::addElement(const QVector2D &control, const QVector2D &endPoint, bool isLine)
@@ -491,6 +598,22 @@ QPainterPath QQuadPath::toPainterPath() const
         else
             res.quadTo(element.controlPoint().toPointF(), element.endPoint().toPointF());
     };
+    return res;
+}
+
+QString QQuadPath::asSvgString() const
+{
+    QString res;
+    QTextStream str(&res);
+    for (const Element &element : m_elements) {
+        if (element.isSubpathStart())
+            str << "M " << element.startPoint().x() << " " << element.startPoint().y() << " ";
+        if (element.isLine())
+            str << "L " << element.endPoint().x() << " " << element.endPoint().y() << " ";
+        else
+            str << "Q " << element.controlPoint().x() << " " << element.controlPoint().y() << " "
+                << element.endPoint().x() << " " << element.endPoint().y() << " ";
+    }
     return res;
 }
 

@@ -35,6 +35,11 @@ public:
         {
         }
 
+        Element (QVector2D s, QVector2D c, QVector2D e)
+            : sp(s), cp(c), ep(e), m_isSubpathStart(false), m_isSubpathEnd(false), m_isLine(false)
+        {
+        }
+
         bool isSubpathStart() const
         {
             return m_isSubpathStart;
@@ -89,6 +94,10 @@ public:
             }
         }
 
+        Element segmentFromTo(float t0, float t1) const;
+
+        Element reversed() const;
+
         int childCount() const { return m_numChildren; }
 
         int indexOfChild(int childNumber) const
@@ -120,19 +129,34 @@ public:
                 m_curvatureFlags = Element::CurvatureFlags(m_curvatureFlags & ~Element::Convex);
         }
 
+        void setFillOnRight(bool isFillOnRight)
+        {
+            if (isFillOnRight)
+                m_curvatureFlags = Element::CurvatureFlags(m_curvatureFlags | Element::FillOnRight);
+            else
+                m_curvatureFlags = Element::CurvatureFlags(m_curvatureFlags & ~Element::FillOnRight);
+        }
+
         bool isControlPointOnLeft() const
         {
             return isPointOnLeft(cp, sp, ep);
         }
-
-    private:
-        int intersectionsAtY(float y, float *fractions) const;
 
         enum CurvatureFlags : quint8 {
             CurvatureUndetermined = 0,
             FillOnRight = 1,
             Convex = 2
         };
+
+        enum FillSide : quint8 {
+            FillSideUndetermined = 0,
+            FillSideRight = 1,
+            FillSideLeft = 2,
+            FillSideBoth = 3
+        };
+
+    private:
+        int intersectionsAtY(float y, float *fractions) const;
 
         QVector2D sp;
         QVector2D cp;
@@ -190,6 +214,7 @@ public:
 
     static QQuadPath fromPainterPath(const QPainterPath &path);
     QPainterPath toPainterPath() const;
+    QString asSvgString() const;
 
     QQuadPath subPathsClosed() const;
     void addCurvatureData();
@@ -197,6 +222,7 @@ public:
     QQuadPath dashed(qreal lineWidth, const QList<qreal> &dashPattern, qreal dashOffset = 0) const;
     void splitElementAt(int index);
     bool contains(const QVector2D &point) const;
+    Element::FillSide fillSideOf(int elementIdx, float elementT) const;
 
     template<typename Func>
     void iterateChildrenOf(Element &e, Func &&lambda)
@@ -256,7 +282,6 @@ private:
     Element::CurvatureFlags coordinateOrderOfElement(const Element &element) const;
 
     friend QDebug operator<<(QDebug, const QQuadPath &);
-
     bool subPathToStart = true;
     Qt::FillRule m_fillRule = Qt::OddEvenFill;
     QVector2D currentPoint;

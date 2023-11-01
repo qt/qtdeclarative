@@ -417,6 +417,7 @@ void QQuickShapeCurveRenderer::updateNode()
 void QQuickShapeCurveRenderer::processPath(PathData *pathData)
 {
     static const bool doOverlapSolving = !qEnvironmentVariableIntValue("QT_QUICKSHAPES_DISABLE_OVERLAP_SOLVER");
+    static const bool doIntersetionSolving = !qEnvironmentVariableIntValue("QT_QUICKSHAPES_DISABLE_INTERSECTION_SOLVER");
     static const bool useTriangulatingStroker = qEnvironmentVariableIntValue("QT_QUICKSHAPES_TRIANGULATING_STROKER");
     static const bool simplifyPath = qEnvironmentVariableIntValue("QT_QUICKSHAPES_SIMPLIFY_PATHS");
 
@@ -436,6 +437,8 @@ void QQuickShapeCurveRenderer::processPath(PathData *pathData)
         if (pathData->isFillVisible()) {
             if (pathData->fillPath.isEmpty()) {
                 pathData->fillPath = pathData->path.subPathsClosed();
+                if (doIntersetionSolving)
+                    QSGCurveProcessor::solveIntersections(pathData->fillPath);
                 pathData->fillPath.addCurvatureData();
                 if (doOverlapSolving)
                     QSGCurveProcessor::solveOverlaps(pathData->fillPath);
