@@ -40,11 +40,11 @@ public:
     static constexpr DomKind domKindValue = DomKind::ScriptElement;
 
     ScriptElementBase(QQmlJS::SourceLocation combinedLocation = QQmlJS::SourceLocation{})
-        : ScriptElement(), m_combinedLocation(combinedLocation)
+        : ScriptElement(), m_locations({ { FileLocationRegion::MainRegion, combinedLocation } })
     {
     }
     ScriptElementBase(QQmlJS::SourceLocation first, QQmlJS::SourceLocation last)
-        : ScriptElement(), m_combinedLocation(combine(first, last))
+        : ScriptElementBase(combine(first, last))
     {
     }
     DomType kind() const override { return type; }
@@ -52,8 +52,11 @@ public:
 
     void createFileLocations(FileLocations::Tree base) override
     {
-        FileLocations::Tree res = FileLocations::ensure(base, pathFromOwner(), AttachedInfo::PathType::Relative);
-        FileLocations::addRegion(res, MainRegion, m_combinedLocation);
+        FileLocations::Tree res =
+                FileLocations::ensure(base, pathFromOwner(), AttachedInfo::PathType::Relative);
+        for (auto location: m_locations) {
+            FileLocations::addRegion(res, location.first, location.second);
+        }
     }
 
     /*
@@ -82,9 +85,30 @@ public:
     // QSet<QString> const keys(const DomItem &self) const override;
     // DomItem key(const DomItem &self, QString name) const override;
 
-    QQmlJS::SourceLocation combinedLocation() const { return m_combinedLocation; }
+    QQmlJS::SourceLocation combinedLocation() const
+    {
+        Q_ASSERT(m_locations.size() > 0);
+        Q_ASSERT(m_locations.front().first == FileLocationRegion::MainRegion);
+
+        auto current = m_locations.front();
+        return current.second;
+    }
+    void setCombinedLocation(const QQmlJS::SourceLocation &location)
+    {
+        Q_ASSERT(m_locations.size() > 0);
+        Q_ASSERT(m_locations.front().first == FileLocationRegion::MainRegion);
+
+        m_locations.front().second = location;
+    }
+    void addLocation(FileLocationRegion region, QQmlJS::SourceLocation location)
+    {
+        Q_ASSERT_X(region != FileLocationRegion::MainRegion, "ScriptElementBase::addLocation",
+                   "use the setCombinedLocation instead!");
+        m_locations.emplace_back(region, location);
+    }
+
 protected:
-    QQmlJS::SourceLocation m_combinedLocation;
+    std::vector<std::pair<FileLocationRegion, QQmlJS::SourceLocation>> m_locations;
 };
 
 class ScriptList : public ScriptElementBase<DomType::List>
