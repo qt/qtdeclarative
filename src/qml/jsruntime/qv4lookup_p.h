@@ -210,10 +210,6 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             markDef.h2->mark(stack);
     }
 
-    void clear() {
-        memset(&markDef, 0, sizeof(markDef));
-    }
-
     void releasePropertyCache()
     {
         if (getter == getterQObject

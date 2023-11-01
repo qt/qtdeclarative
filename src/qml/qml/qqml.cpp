@@ -1476,7 +1476,7 @@ void AOTCompiledContext::storeNameSloppy(uint nameIndex, void *value, QMetaType 
     // the property cache we store a value into the property.
 
     QV4::Lookup l;
-    l.clear();
+    memset(&l, 0, sizeof(QV4::Lookup));
     l.nameIndex = nameIndex;
     l.forCall = false;
     ObjectPropertyResult storeResult = ObjectPropertyResult::NeedsInit;
