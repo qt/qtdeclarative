@@ -117,6 +117,7 @@ private slots:
     void interceptor();
     void interestingFiles();
     void interestingFiles_data();
+    void internalConversion();
     void invalidPropertyType();
     void invisibleBase();
     void invisibleListElementType();
@@ -2206,6 +2207,21 @@ void tst_QmlCppCodegen::interestingFiles_data()
     QTest::addRow("cycleHead") << u"cycleHead.qml"_s << false;
     QTest::addRow("deadStoreLoop") << u"deadStoreLoop.qml"_s << true;
     QTest::addRow("moveRegVoid") << u"moveRegVoid.qml"_s << true;
+}
+
+void tst_QmlCppCodegen::internalConversion()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/internalConversion.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> obj(c.create());
+    QVERIFY(!obj.isNull());
+
+    QObject *offset = obj->property("offset").value<QObject *>();
+    QVERIFY(offset);
+
+    QCOMPARE(offset->objectName(), "hello"_L1);
+    QCOMPARE(offset->property("mark").toString(), "hello"_L1);
 }
 
 void tst_QmlCppCodegen::invalidPropertyType()

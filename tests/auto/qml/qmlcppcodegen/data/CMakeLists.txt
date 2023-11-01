@@ -145,6 +145,7 @@ set(qml_files
     intToEnum.qml
     interactive.qml
     interceptor.qml
+    internalConversion.qml
     invisibleBase.qml
     invisibleListElementType.qml
     invisibleTypes.qml

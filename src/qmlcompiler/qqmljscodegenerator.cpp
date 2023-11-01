@@ -3912,6 +3912,15 @@ QString QQmlJSCodeGenerator::convertContained(const QQmlJSRegisterContent &from,
                 + u", "_s + argPointer + u"); }()"_s;
     }
 
+    const auto originalFrom = m_typeResolver->original(from);
+    const auto containedOriginalFrom = m_typeResolver->containedType(originalFrom);
+    if (!m_typeResolver->equals(containedFrom, containedOriginalFrom)
+            && m_typeResolver->canHold(containedFrom, containedOriginalFrom)) {
+        // If from is simply a wrapping of a specific type into a more general one, we can convert
+        // the original type instead. You can't nest wrappings after all.
+        return conversion(originalFrom.storedIn(from.storedType()), to, variable);
+    }
+
     reject(u"internal conversion with incompatible or ambiguous types: %1 -> %2"_s
                    .arg(from.descriptiveName(), to.descriptiveName()));
     return QString();
