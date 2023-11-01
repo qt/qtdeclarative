@@ -57,6 +57,7 @@ qt_add_resources(qqcstylegenerator "controls"
         config.json
         figma_and_qt@2x.png
         background.png
+        howto.txt
 )
 
 target_include_directories(qqcstylegenerator PUBLIC src)

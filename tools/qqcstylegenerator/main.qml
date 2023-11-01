@@ -240,41 +240,6 @@ ApplicationWindow {
             }
         }
 
-        Frame {
-            visible: usageCheckbox.checked
-            Layout.fillWidth: true
-            Layout.columnSpan: 2
-            TextArea {
-                anchors.fill: parent
-                readonly property int slashIndex: bridge.targetDirectory.lastIndexOf("/")
-                readonly property string importPath: bridge.targetDirectory.slice(0, slashIndex)
-                readonly property string styleName: bridge.targetDirectory.slice(slashIndex + 1)
-                readOnly: true
-                wrapMode: TextEdit.Wrap
-                text: slashIndex === -1 || importPath === "" || styleName === ""
-                      ? "You need to set a valid target directory!"
-
-                      : "The name of this style will be '" + styleName + "', and the import path"
-                      + " will be '" + importPath + "'."
-                      + "\n\n"
-                      + "If you assign the import path to the environment variable 'QML_IMPORT_PATH'"
-                      + " an application can use this style by for example launching it with the name of"
-                      + " the style as argument:"
-                      + "\n\nexport QML_IMPORT_PATH=" + importPath
-                      + "\n./yourapp -style=" + styleName
-                      + "\n\n"
-                      + "Another alternative is build the style into an application as a resource."
-                      + " The style folder contains a resource file for this, " + styleName + ".qrc, that you"
-                      + " can add to your project, e.g:"
-                      + "\n\n"
-                      + "qt_add_executable(application main.cpp "
-                      + importPath + "/" + styleName + "/" + styleName + ".qrc)"
-                      + "\n\nYou If you want to use compile time selection of the style, you"
-                      + " can use the following import in your QML files:"
-                      + "\n\nimport \"qrc:/qt/qml/" + styleName + "\""
-            }
-        }
-
         ColumnLayout {
             Layout.preferredWidth: parent.width
             Layout.preferredHeight: childrenRect.height
@@ -313,6 +278,27 @@ ApplicationWindow {
                 }
             }
             Component.onCompleted: forceActiveFocus()
+        }
+
+        ScrollView {
+            visible: usageCheckbox.checked
+            Layout.fillWidth: true
+            Layout.preferredHeight: 200
+            contentWidth: textArea.implicitWidth
+            TextArea {
+                id: textArea
+                readonly property int slashIndex: bridge.targetDirectory.lastIndexOf("/")
+                readonly property string importPath: bridge.targetDirectory.slice(0, slashIndex)
+                readonly property string styleName: bridge.targetDirectory.slice(slashIndex + 1)
+                readOnly: true
+                wrapMode: TextEdit.Wrap
+                textFormat: TextEdit.RichText
+                text: slashIndex === -1 || importPath === "" || styleName === ""
+                      ? "You need to set a valid target directory!"
+                      : bridge.howToText()
+                        .replace(/@styleName@/g, styleName)
+                        .replace(/@importPath@/g, importPath)
+            }
         }
 
         ScrollView {

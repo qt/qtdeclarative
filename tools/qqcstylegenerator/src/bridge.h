@@ -25,6 +25,7 @@ public:
     Q_INVOKABLE void stop();
 
     Q_INVOKABLE QString toLocalFile(const QUrl &url) const;
+    Q_INVOKABLE QString howToText();
 
 signals:
     void targetDirectoryChanged();

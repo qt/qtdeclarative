@@ -62,3 +62,16 @@ QString Bridge::toLocalFile(const QUrl &url) const
 {
     return QUrl(url).toLocalFile();
 }
+
+QString Bridge::howToText()
+{
+    QFile file(":/howto.txt");
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return {};
+    QString txt = file.readAll();
+    txt.replace("\n\n", "<p>");
+    txt.replace("\n", "<br>");
+    txt.replace("<code>", "<i>");
+    txt.replace("</code>", "</i>");
+    return txt;
+}

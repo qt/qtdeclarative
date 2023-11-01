@@ -1,0 +1,15 @@
+The name of this style will be <i>@styleName@</I>, and the import path will be <I>@importPath@</i>.
+
+If you assign the import path to the environment variable <i>QML_IMPORT_PATH</i>,  an application can use this style by for example launching it with the name of the style as argument:
+
+<code>export QML_IMPORT_PATH=@importPath@
+./yourapp -style=@styleName@</code>
+
+Another alternative is build the style into an application as a resource. The style folder contains a resource file for this, <I>@styleName@.qrc</i>, that you can add to your CMake project, e.g:
+
+<code>qt_add_executable(application main.cpp @importPath@/@styleName@/@styleName@.qrc)</code>
+
+If you want to use compile time selection of the style, import the style directly from QML:
+
+<code>import "qrc:/qt/qml/@styleName@"</code>
+
