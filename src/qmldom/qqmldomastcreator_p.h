@@ -200,7 +200,6 @@ private:
     finalizeScriptExpression(const ScriptElementVariant &element, Path pathFromOwner,
                              const FileLocations::Tree &ownerFileLocations);
 
-    const ScriptElementVariant &finalizeScriptList(AST::Node *ast, FileLocations::Tree base);
     void setScriptExpression (const std::shared_ptr<ScriptExpression>& value);
 
     Path pathOfLastScriptNode() const;
