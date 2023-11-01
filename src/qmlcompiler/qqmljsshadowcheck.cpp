@@ -114,10 +114,12 @@ void QQmlJSShadowCheck::checkShadowing(
         return;
 
     switch (baseType.variant()) {
-    case QQmlJSRegisterContent::ObjectProperty:
     case QQmlJSRegisterContent::ExtensionObjectProperty:
+    case QQmlJSRegisterContent::ExtensionScopeProperty:
+    case QQmlJSRegisterContent::MethodReturnValue:
+    case QQmlJSRegisterContent::ObjectProperty:
     case QQmlJSRegisterContent::ScopeProperty:
-    case QQmlJSRegisterContent::ExtensionScopeProperty: {
+    case QQmlJSRegisterContent::Unknown: {
         const QQmlJSRegisterContent member = m_typeResolver->memberType(baseType, memberName);
 
         // You can have something like parent.QtQuick.Screen.pixelDensity
