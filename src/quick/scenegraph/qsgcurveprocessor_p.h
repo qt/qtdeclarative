@@ -44,6 +44,9 @@ public:
                               addStrokeTriangleCallback addTriangle,
                               int subdivisions = 3);
     static void solveOverlaps(QQuadPath &path);
+    static QList<QPair<int, int>> findOverlappingCandidates(const QQuadPath &path);
+    static void solveIntersections(QQuadPath &path, bool alwaysReorder = true);
+
 };
 
 QT_END_NAMESPACE

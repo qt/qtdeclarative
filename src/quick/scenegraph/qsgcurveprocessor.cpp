@@ -10,6 +10,7 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcSGCurveProcessor, "qt.quick.curveprocessor");
+Q_LOGGING_CATEGORY(lcSGCurveIntersectionSolver, "qt.quick.curveprocessor.intersections");
 
 namespace {
 // Input coordinate space is pre-mapped so that (0, 0) maps to [0, 0] in uv space.
@@ -110,6 +111,38 @@ bool checkEdge(QVector2D &p1, QVector2D &p2, QVector2D &p, float epsilon)
     return determinant(p1, p2, p) <= epsilon;
 }
 
+// Check if lines l1 and l2 are intersecting and return the respective value. Solutions are stored to
+// the optional pointer solution.
+bool lineIntersection(const LinePoints &l1, const LinePoints &l2, QList<QPair<float, float>> *solution = nullptr)
+{
+    constexpr double eps2 = 1e-5; // Epsilon for parameter space t1-t2
+
+    // see https://www.wolframalpha.com/input?i=solve%28A+%2B+t+*+B+%3D+C+%2B+s*D%3B+E+%2B+t+*+F+%3D+G+%2B+s+*+H+for+s+and+t%29
+    const float A = l1[0].x();
+    const float B = l1[1].x() - l1[0].x();
+    const float C = l2[0].x();
+    const float D = l2[1].x() - l2[0].x();
+    const float E = l1[0].y();
+    const float F = l1[1].y() - l1[0].y();
+    const float G = l2[0].y();
+    const float H = l2[1].y() - l2[0].y();
+
+    float det = D * F - B * H;
+
+    if (det == 0)
+        return false;
+
+    float s = (F * (A - C) - B * (E - G)) / det;
+    float t = (H * (A - C) - D * (E - G)) / det;
+
+    bool intersecting = (s >= eps2 && s <= 1. - eps2 && t >= eps2 && t <= 1. - eps2);
+
+    if (solution && intersecting)
+        solution->append(QPair<float, float>(t, s));
+
+    return intersecting;
+}
+
 
 bool checkTriangleOverlap(TrianglePoints &triangle1, TrianglePoints &triangle2, float epsilon = 1.0/32)
 {
@@ -173,24 +206,140 @@ bool checkTriangleContains (QVector2D pt, QVector2D v1, QVector2D v2, QVector2D 
     return allNegative || allPositive;
 }
 
-// e1 is always a concave curve. e2 can be curve or line
 static bool isOverlap(const QQuadPath &path, int e1, int e2)
 {
     const QQuadPath::Element &element1 = path.elementAt(e1);
     const QQuadPath::Element &element2 = path.elementAt(e2);
 
-    Q_ASSERT(!element1.isLine());
-    TrianglePoints t1{ element1.startPoint(), element1.controlPoint(), element1.endPoint() };
-
-    if (element2.isLine()) {
-        LinePoints line{ element2.startPoint(), element2.endPoint() };
-        return checkLineTriangleOverlap(t1, line);
+    if (element1.isLine()) {
+        LinePoints line1{ element1.startPoint(), element1.endPoint() };
+        if (element2.isLine()) {
+            LinePoints line2{ element2.startPoint(), element2.endPoint() };
+            return lineIntersection(line1, line2);
+        } else {
+            TrianglePoints t2{ element2.startPoint(), element2.controlPoint(), element2.endPoint() };
+            return checkLineTriangleOverlap(t2, line1);
+        }
     } else {
-        TrianglePoints t2{ element2.startPoint(), element2.controlPoint(), element2.endPoint() };
-        return checkTriangleOverlap(t1, t2);
+        TrianglePoints t1{ element1.startPoint(), element1.controlPoint(), element1.endPoint() };
+        if (element2.isLine()) {
+            LinePoints line{ element2.startPoint(), element2.endPoint() };
+            return checkLineTriangleOverlap(t1, line);
+        } else {
+            TrianglePoints t2{ element2.startPoint(), element2.controlPoint(), element2.endPoint() };
+            return checkTriangleOverlap(t1, t2);
+        }
     }
 
     return false;
+}
+
+static float angleBetween(const QVector2D v1, const QVector2D v2)
+{
+    float dot = v1.x() * v2.x() + v1.y() * v2.y();
+    float cross = v1.x() * v2.y() - v1.y() * v2.x();
+    //TODO: Optimization: Maybe we don't need the atan2 here.
+    return atan2(cross, dot);
+}
+
+static bool isIntersecting(const TrianglePoints &t1, const TrianglePoints &t2, QList<QPair<float, float>> *solutions = nullptr)
+{
+    constexpr double eps = 1e-5; // Epsilon for coordinate space x-y
+    constexpr double eps2 = 1e-5; // Epsilon for parameter space t1-t2
+    constexpr int maxIterations = 7; // Maximum iterations allowed for Newton
+
+    // Convert to double to get better accuracy.
+    QPointF td1[3] = {QPointF(t1[0].x(), t1[0].y()), QPointF(t1[1].x(), t1[1].y()), QPointF(t1[2].x(), t1[2].y())};
+    QPointF td2[3] = {QPointF(t2[0].x(), t2[0].y()), QPointF(t2[1].x(), t2[1].y()), QPointF(t2[2].x(), t2[2].y())};
+
+    // F = P1(t1) - P2(t2) where P1 and P2 are bezier curve functions.
+    // F = (0, 0) at the intersection.
+    // t is the vector of bezier curve parameters for curves P1 and P2
+    auto F = [=](QPointF t) { return
+                td1[0] * (1 - t.x()) * (1. - t.x()) + 2 * td1[1] * (1. - t.x()) * t.x() + td1[2] * t.x() * t.x() -
+                td2[0] * (1 - t.y()) * (1. - t.y()) - 2 * td2[1] * (1. - t.y()) * t.y() - td2[2] * t.y() * t.y();};
+
+    // J is the Jacobi Matrix dF/dt where F and t are both vectors of dimension 2.
+    // Storing in a QLineF for simplicity.
+    auto J = [=](QPointF t) { return QLineF(
+                td1[0].x() * (-2 * (1-t.x())) + 2 * td1[1].x() * (1 - 2 * t.x()) + td1[2].x() * 2 * t.x(),
+               -td2[0].x() * (-2 * (1-t.y())) - 2 * td2[1].x() * (1 - 2 * t.y()) - td2[2].x() * 2 * t.y(),
+                td1[0].y() * (-2 * (1-t.x())) + 2 * td1[1].y() * (1 - 2 * t.x()) + td1[2].y() * 2 * t.x(),
+               -td2[0].y() * (-2 * (1-t.y())) - 2 * td2[1].y() * (1 - 2 * t.y()) - td2[2].y() * 2 * t.y());};
+
+    // solve the equation A(as 2x2 matrix)*x = b. Returns x.
+    auto solve = [](QLineF A, QPointF b) {
+        // invert A
+        const double det = A.x1() * A.y2() - A.y1() * A.x2();
+        QLineF Ainv(A.y2() / det, -A.y1() / det, -A.x2() / det, A.x1() / det);
+        // return A^-1 * b
+        return QPointF(Ainv.x1() * b.x() + Ainv.y1() * b.y(),
+                       Ainv.x2() * b.x() + Ainv.y2() * b.y());
+    };
+
+#ifdef INTERSECTION_EXTRA_DEBUG
+    qCDebug(lcSGCurveIntersectionSolver) << "Checking" << t1[0] << t1[1] << t1[2];
+    qCDebug(lcSGCurveIntersectionSolver) << "      vs" << t2[0] << t2[1] << t2[2];
+#endif
+
+    // TODO: Try to figure out reasonable starting points to reach all 4 possible intersections.
+    // This works but is kinda brute forcing it.
+    const QList<QPointF> tref {{0., 0.}, {0.5, 0.}, {1., 0.}, {0., 0.5}, {0.5, 0.5}, {1., 0.5}, {0., 1.}, {0.5, 1.}, {1., 1.}};
+
+    for (auto t0 : tref) {
+        QPointF t = t0;
+        double err = 1;
+        QPointF fval = F(t);
+        int i = 0;
+
+        // TODO: Try to abort sooner, e.g. when falling out of the interval [0-1]?
+        while (err > eps && i < maxIterations) { // && t.x() >= 0 && t.x() <= 1 && t.y() >= 0 && t.y() <= 1) {
+            t = t - solve(J(t), fval);
+            fval = F(t);
+            err = qAbs(fval.x()) + qAbs(fval.y()); // Using the Manhatten length as an error indicator.
+            i++;
+#ifdef INTERSECTION_EXTRA_DEBUG
+            qCDebug(lcSGCurveIntersectionSolver) << "         Newton iteration" << i << "t =" << t << "F =" << fval << "Error =" << err;
+#endif
+        }
+        if (err < eps && t.x() > 10 * eps2 && t.x() < 1. - 10 * eps2 && t.y() > 10 * eps2 && t.y() < 1. - 10 * eps2) {
+#ifdef INTERSECTION_EXTRA_DEBUG
+             qCDebug(lcSGCurveIntersectionSolver) << "         Newton solution (after" << i << ")=" << t << "(" << F(t) << ")";
+#endif
+            if (solutions) {
+                bool append = true;
+                for (auto solution : *solutions) {
+                    if (qAbs(solution.first - t.x()) < 10 * eps2 && qAbs(solution.second - t.y()) < 10 * eps2)
+                        append = false;
+                }
+                if (append)
+                    solutions->append({t.x(), t.y()});
+            }
+            else
+                return true;
+        }
+    }
+    if (solutions)
+        return solutions->size() > 0;
+    else
+        return false;
+}
+
+static bool isIntersecting(const QQuadPath &path, int e1, int e2, QList<QPair<float, float>> *solutions = nullptr)
+{
+
+    const QQuadPath::Element &elem1 = path.elementAt(e1);
+    const QQuadPath::Element &elem2 = path.elementAt(e2);
+
+    if (elem1.isLine() && elem2.isLine()) {
+        return lineIntersection(LinePoints {elem1.startPoint(), elem1.endPoint() },
+                                LinePoints {elem2.startPoint(), elem2.endPoint() },
+                                solutions);
+    } else {
+        return isIntersecting(TrianglePoints { elem1.startPoint(), elem1.controlPoint(), elem1.endPoint() },
+                              TrianglePoints { elem2.startPoint(), elem2.controlPoint(), elem2.endPoint() },
+                              solutions);
+    }
 }
 
 static bool isOverlap(const QQuadPath &path, int index, const QVector2D &vertex)
@@ -721,7 +870,7 @@ static void handleOverlap(QQuadPath &path, int e1, const QVector2D vertex, int r
     if (vertex == path.elementAt(e1).endPoint() || !isOverlap(path, e1, vertex))
         return;
     if (recursionLevel > 8) {
-        qDebug() << "Vertex overlap: recursion level" << recursionLevel << "aborting!";
+        qCDebug(lcSGCurveIntersectionSolver) << "Vertex overlap: recursion level" << recursionLevel << "aborting!";
         return;
     }
 
@@ -778,6 +927,477 @@ void QSGCurveProcessor::solveOverlaps(QQuadPath &path)
         }
     }
 }
+
+// A fast algorithm to find path elements that might overlap. We will only check the overlap of the
+// triangles that define the elements.
+// We will order the elements first and then pool them depending on their x-values. This should
+// reduce the complexity to O(n log n), where n is the number of elements in the path.
+QList<QPair<int, int>> QSGCurveProcessor::findOverlappingCandidates(const QQuadPath &path)
+{
+    struct bRect { float xmin; float xmax; float ymin; float ymax; };
+
+    // Calculate all bounding rectanlges
+    QList<int> elementStarts;
+    QVarLengthArray<bRect, 32> boundingRects;
+    boundingRects.reserve(path.elementCount());
+    for (int i = 0; i < path.elementCount(); i++) {
+        QQuadPath::Element e = path.elementAt(i);
+
+        bRect bR{qMin(qMin(e.startPoint().x(), e.controlPoint().x()), e.endPoint().x()),
+                 qMax(qMax(e.startPoint().x(), e.controlPoint().x()), e.endPoint().x()),
+                 qMin(qMin(e.startPoint().y(), e.controlPoint().y()), e.endPoint().y()),
+                 qMax(qMax(e.startPoint().y(), e.controlPoint().y()), e.endPoint().y())};
+        boundingRects.append(bR);
+        elementStarts.append(i);
+    }
+
+    // Sort the bounding rectangles by x-startpoint and x-endpoint
+    auto compareXmin = [&](int i, int j){return boundingRects.at(i).xmin < boundingRects.at(j).xmin;};
+    auto compareXmax = [&](int i, int j){return boundingRects.at(i).xmax < boundingRects.at(j).xmax;};
+    std::sort(elementStarts.begin(), elementStarts.end(), compareXmin);
+    QList<int> elementEnds = elementStarts;
+    std::sort(elementEnds.begin(), elementEnds.end(), compareXmax);
+
+    QList<int> bRpool;
+    QList<QPair<int, int>> overlappingBB;
+
+    // Start from x = xmin and move towards xmax. Add a rectangle to the pool and check for
+    // intersections with all other rectangles in the pool. If a rectangles xmax is smaller
+    // than the new xmin, it can be removed from the pool.
+    while (!elementStarts.isEmpty()) {
+        int addIndex = elementStarts.takeFirst();
+        const bRect &newR = boundingRects.at(addIndex);
+
+        // First remove elements from the pool that cannot touch the new one
+        // because xmax is too small
+        while (bRpool.size() && elementEnds.size() && newR.xmin >= boundingRects.at(elementEnds.first()).xmax) {
+            int removeIndex = elementEnds.takeFirst();
+            bRpool.removeOne(removeIndex);
+        }
+
+        // Now compare the new element with all elements in the pool.
+        for (int j = 0; j < bRpool.size(); j++) {
+            int i = bRpool.at(j);
+            const bRect &r1 = boundingRects.at(i);
+            // We don't have to check for x because the pooling takes care of it.
+            //if (r1.xmax <= newR.xmin || newR.xmax <= r1.xmin)
+            //    continue;
+            if (r1.ymax <= newR.ymin || newR.ymax <= r1.ymin)
+                continue;
+            // If the bounding boxes are overlapping it is a candidate for an intersection.
+            if (isOverlap(path, i, addIndex)) // Another test to see if the triangles overlap
+                overlappingBB.append(QPair<int, int>(i, addIndex));
+        }
+        bRpool.append(addIndex); //Add the new element to the pool.
+    }
+    return overlappingBB;
+}
+
+void QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
+{
+    struct IntersectionData { int e1; int e2; float t1; float t2; bool in1 = false, in2 = false, out1 = false, out2 = false; };
+    QList<IntersectionData> intersections;
+
+    // Helper function to mark an intersection as handled when the
+    // path i is processed moving forward/backward
+    auto markIntersectionAsHandled = [=](IntersectionData *data, int i, bool forward) {
+        if (data->e1 == i) {
+            if (forward)
+                data->out1 = true;
+            else
+                data->in1 = true;
+        } else if (data->e2 == i){
+            if (forward)
+                data->out2 = true;
+            else
+                data->in2 = true;
+        } else {
+            Q_UNREACHABLE();
+        }
+    };
+
+    // First make a O(n log n) search for candidates.
+    const QList<QPair<int, int>> candidates = findOverlappingCandidates(path);
+
+    // Then check the candidates for actual intersections.
+    for (const auto &candidate : candidates) {
+        QList<QPair<float,float>> res;
+        int e1 = candidate.first;
+        int e2 = candidate.second;
+        if (isIntersecting(path, e1, e2, &res)) {
+            for (const auto &r : res)
+                intersections.append({e1, e2, r.first, r.second});
+        }
+    }
+
+    qCDebug(lcSGCurveIntersectionSolver) << "----- Checking for Intersections -----";
+    qCDebug(lcSGCurveIntersectionSolver) << "Found" << intersections.length() << "intersections";
+    for (const auto &i : intersections) {
+        auto p1 = path.elementAt(i.e1).pointAtFraction(i.t1);
+        auto p2 = path.elementAt(i.e2).pointAtFraction(i.t2);
+        qCDebug(lcSGCurveIntersectionSolver) << "    between" << i.e1 << "and" << i.e2 << "at" << i.t1 << "/" << i.t2 << "->" << p1 << "/" << p2;
+    }
+
+    if (intersections.isEmpty() && !alwaysReorder) {
+        qCDebug(lcSGCurveIntersectionSolver) << "Returning the path unchanged.";
+        return;
+    }
+
+    // Store the starting and end elements of the subpaths to be able
+    // to jump quickly between them. Also keep a list of handled paths,
+    // so we know if we need to come back to a subpath or if it
+    // was already united with another subpath due to an intersection.
+    QList<int> subPathStartPoints;
+    QList<int> subPathEndPoints;
+    QList<bool> subPathHandled;
+    for (int i = 0; i < path.elementCount(); i++) {
+        if (path.elementAt(i).isSubpathStart())
+            subPathStartPoints.append(i);
+        if (path.elementAt(i).isSubpathEnd()) {
+            subPathEndPoints.append(i);
+            subPathHandled.append(false);
+        }
+    }
+
+    // A small helper to find the subPath of an element with index
+    auto subPathIndex = [&](int index) {
+        for (int i = 0; i < subPathStartPoints.size(); i++) {
+            if (index >= subPathStartPoints.at(i) && index <= subPathEndPoints.at(i))
+                return i;
+        }
+        return -1;
+    };
+
+    // Helper function to find a siutable starting point between start and end.
+    // A suitable starting point is where right is inside and left is outside
+    // If left is inside and right is outside it works too, just move in the
+    // other direction (forward = false).
+    auto findStart = [=](QQuadPath &path, int start, int end, int *result, bool *forward) {
+        for (int i = start; i < end; i++) {
+            int adjecent;
+            if (subPathStartPoints.contains(i))
+                adjecent = subPathEndPoints.at(subPathStartPoints.indexOf(i));
+            else
+                adjecent = i - 1;
+
+            QQuadPath::Element::FillSide fillSide = path.fillSideOf(i, 1e-4f);
+            const bool leftInside = fillSide == QQuadPath::Element::FillSideLeft;
+            const bool rightInside = fillSide == QQuadPath::Element::FillSideRight;
+            qCDebug(lcSGCurveIntersectionSolver) << "Element" << i << "/" << adjecent << "meeting point is left/right inside:" << leftInside << "/" << rightInside;
+            if (rightInside) {
+                *result = i;
+                *forward = true;
+                return true;
+            } else if (leftInside) {
+                *result = adjecent;
+                *forward = false;
+                return true;
+            }
+        }
+        return false;
+    };
+
+    // Also store handledElements. This is used to identify and abort
+    // on errors.
+    QVarLengthArray<bool> handledElements(path.elementCount(), false);
+
+    QQuadPath fixedPath;
+    fixedPath.setFillRule(path.fillRule());
+
+    int i1 = 0;
+    float t1 = 0;
+
+    int i2 = 0;
+    float t2 = 0;
+
+    float t = 0;
+    bool forward = true;
+
+    int startedAtIndex = -1;
+    float startedAtT = -1;
+
+    if (!findStart(path, 0, path.elementCount(), &i1, &forward)) {
+        qWarning() << "No suitable start found. This should not happen. Returning the path unchanged.";
+        return;
+    }
+
+    // Helper function to start a new subpath and update temporary variables.
+    auto startNewSubPath = [&](int i, bool forward) {
+        if (forward) {
+            fixedPath.moveTo(path.elementAt(i).startPoint());
+            t = startedAtT = 0;
+        } else {
+            fixedPath.moveTo(path.elementAt(i).endPoint());
+            t = startedAtT = 1;
+        }
+        startedAtIndex = i;
+        subPathHandled[subPathIndex(i)] = true;
+    };
+    startNewSubPath(i1, forward);
+
+    // If not all interactions where found correctly, we might end up in an infinite loop.
+    // Therefore we count the total number of iterations and bail out at some point.
+    int totalIterations = 0;
+
+    do {
+        // Sanity check: Make sure that we do not process the same corner point more than once.
+        if (t == 0 || t == 1) {
+            int nextIndex = i1;
+
+            if (t == 1 && path.elementAt(i1).isSubpathEnd()) {
+                nextIndex = subPathStartPoints.at(subPathIndex(i1));
+            } else if (t == 1) {
+                nextIndex = nextIndex + 1;
+            }
+            if (handledElements[nextIndex]) {
+                qWarning() << "Revisiting an element when trying to solve intersections. This should not happen. Returning the path unchanged.";
+                return;
+            }
+            handledElements[nextIndex] = true;
+        }
+        // Sanity check: Keep an eye on total iterations
+        totalIterations++;
+
+        qCDebug(lcSGCurveIntersectionSolver) << "Checking section" << i1 << "from" << t << "going" << (forward ? "forward" : "backward");
+
+        // Find the next intersection that is as close as possible to t but in direction of processing (forward or !forward).
+        int iC = -1; //intersection candidate
+        t1 = forward? +1 : -1; //intersection candidate t-value
+        for (int j = 0; j < intersections.size(); j++) {
+            if (i1 == intersections[j].e1 &&
+                intersections[j].t1 * (forward? 1 : -1) >  t * (forward? 1 : -1) &&
+                intersections[j].t1 * (forward? 1 : -1) < t1 * (forward? 1 : -1)) {
+                iC = j;
+                t1 = intersections[j].t1;
+                i2 = intersections[j].e2;
+                t2 = intersections[j].t2;
+            }
+            if (i1 == intersections[j].e2 &&
+                intersections[j].t2 * (forward?1 : -1) > t * (forward? 1 : -1) &&
+                intersections[j].t2 * (forward?1 : -1) < t1 * (forward?1 : -1)) {
+                iC = j;
+                t1 = intersections[j].t2;
+                i2 = intersections[j].e1;
+                t2 = intersections[j].t1;
+            }
+        }
+
+        if (iC < 0) {
+            qCDebug(lcSGCurveIntersectionSolver) << "    No intersection found on my way. Adding the rest of the segment " << i1;
+            // If no intersection with the current element was found, just add the rest of the element
+            // to the fixed path and go on.
+            // If we reached the end (going forward) or start (going backward) of a subpath, we have
+            // to wrap aroud. Abort condition for the loop comes separately later.
+            if (forward) {
+                if (path.elementAt(i1).isLine()) {
+                    fixedPath.lineTo(path.elementAt(i1).endPoint());
+                } else {
+                    const QQuadPath::Element rest = path.elementAt(i1).segmentFromTo(t, 1);
+                    fixedPath.quadTo(rest.controlPoint(), rest.endPoint());
+                }
+                if (path.elementAt(i1).isSubpathEnd()) {
+                    int index = subPathEndPoints.indexOf(i1);
+                    qCDebug(lcSGCurveIntersectionSolver) << "    Going back to the start of subPath" << index;
+                    i1 = subPathStartPoints.at(index);
+                } else {
+                    i1++;
+                }
+                t = 0;
+            } else {
+                if (path.elementAt(i1).isLine()) {
+                    fixedPath.lineTo(path.elementAt(i1).startPoint());
+                } else {
+                    const QQuadPath::Element rest = path.elementAt(i1).segmentFromTo(0, t).reversed();
+                    fixedPath.quadTo(rest.controlPoint(), rest.endPoint());
+                }
+                if (path.elementAt(i1).isSubpathStart()) {
+                    int index = subPathStartPoints.indexOf(i1);
+                    qCDebug(lcSGCurveIntersectionSolver) << "    Going back to the end of subPath" << index;
+                    i1 = subPathEndPoints.at(index);
+                } else {
+                    i1--;
+                }
+                t = 1;
+            }
+        } else { // Here comes the part where we actually handle intersections.
+            qCDebug(lcSGCurveIntersectionSolver) << "    Found an intersection at" << t1 << "with" << i2 << "at" << t2;
+
+            // Mark the subpath we intersected with as visisted. We do not have to come here explicitly again.
+            subPathHandled[subPathIndex(i2)] = true;
+
+            // Mark the path that lead us to this intersection as handled on the intersection level.
+            // Note the ! in front of forward. This is required because we move towards the intersection.
+            markIntersectionAsHandled(&intersections[iC], i1, !forward);
+
+            // Split the path from the last point to the newly found intersection.
+            // Add the part of the current segment to the fixedPath.
+            const QQuadPath::Element &elem1 = path.elementAt(i1);
+            if (elem1.isLine()) {
+                fixedPath.lineTo(elem1.pointAtFraction(t1));
+            } else {
+                QQuadPath::Element partUntilIntersection;
+                if (forward) {
+                    partUntilIntersection = elem1.segmentFromTo(t, t1);
+                } else {
+                    partUntilIntersection = elem1.segmentFromTo(t1, t).reversed();
+                }
+                fixedPath.quadTo(partUntilIntersection.controlPoint(), partUntilIntersection.endPoint());
+            }
+
+            // If only one unhandled path is left the decision how to proceed is trivial
+            if (intersections[iC].in1 && intersections[iC].in2 && intersections[iC].out1 && !intersections[iC].out2) {
+                i1 = intersections[iC].e2;
+                t = intersections[iC].t2;
+                forward = true;
+            } else if (intersections[iC].in1 && intersections[iC].in2 && !intersections[iC].out1 && intersections[iC].out2) {
+                i1 = intersections[iC].e1;
+                t = intersections[iC].t1;
+                forward = true;
+            } else if (intersections[iC].in1 && !intersections[iC].in2 && intersections[iC].out1 && intersections[iC].out2) {
+                i1 = intersections[iC].e2;
+                t = intersections[iC].t2;
+                forward = false;
+            } else if (!intersections[iC].in1 && intersections[iC].in2 && intersections[iC].out1 && intersections[iC].out2) {
+                i1 = intersections[iC].e1;
+                t = intersections[iC].t1;
+                forward = false;
+            } else {
+                // If no trivial path is left, calculate the intersection angle to decide which path to move forward.
+                // For winding fill we take the left most path forward, so the inside stays on the right side
+                // For odd even fill we take the right most path forward so we cut of the smallest area.
+                // We come back at the intersection and add the missing pieces as subpaths later on.
+                QVector2D tangent1 = elem1.tangentAtFraction(t1);
+                if (!forward)
+                    tangent1 = -tangent1;
+                const QQuadPath::Element &elem2 = path.elementAt(i2);
+                const QVector2D tangent2 = elem2.tangentAtFraction(t2);
+                const float angle = angleBetween(-tangent1, tangent2);
+                qCDebug(lcSGCurveIntersectionSolver) << "    Angle at intersection is" << angle;
+                // A small angle. Everything smaller is interpreted as tangent
+                constexpr float deltaAngle = 1e-3f;
+                if ((angle > deltaAngle && path.fillRule() == Qt::WindingFill) || (angle < -deltaAngle && path.fillRule() == Qt::OddEvenFill)) {
+                    forward = true;
+                    i1 = i2;
+                    t = t2;
+                    qCDebug(lcSGCurveIntersectionSolver) << "    Next going forward from" << t2 << "on" << i2;
+                } else if ((angle < -deltaAngle && path.fillRule() == Qt::WindingFill) || (angle > deltaAngle && path.fillRule() == Qt::OddEvenFill)) {
+                    forward = false;
+                    i1 = i2;
+                    t = t2;
+                    qCDebug(lcSGCurveIntersectionSolver) << "    Next going backward from" << t2 << "on" << i2;
+                } else { // this is basically a tangential touch and and no crossing. So stay on the current path, keep direction
+                    qCDebug(lcSGCurveIntersectionSolver) << "    Found tangent. Staying on element";
+                }
+            }
+
+            // Mark the path that takes us away from this intersection as handled on the intersection level.
+            if (!(i1 == startedAtIndex && t == startedAtT))
+                markIntersectionAsHandled(&intersections[iC], i1, forward);
+
+            // If we took all paths from an intersection it can be deleted.
+            if (intersections[iC].in1 && intersections[iC].in2 && intersections[iC].out1 && intersections[iC].out2) {
+                qCDebug(lcSGCurveIntersectionSolver) << "    This intersection was processed completely and will be removed";
+                intersections.removeAt(iC);
+            }
+        }
+
+        if (i1 == startedAtIndex && t == startedAtT) {
+            // We reached the point on the subpath where we started. This subpath is done.
+            // We have to find an unhandled subpath or a new subpath that was generated by cuts/intersections.
+            qCDebug(lcSGCurveIntersectionSolver) << "Reached my starting point and try to find a new subpath.";
+
+            // Search for the next subpath to handle.
+            int nextUnhandled = -1;
+            for (int i = 0; i < subPathHandled.size(); i++) {
+                if (!subPathHandled.at(i)) {
+
+                    // Not nesesarrily handled (if findStart return false) but if we find no starting
+                    // point, we cannot/don't need to handle it anyway. So just mark it as handled.
+                    subPathHandled[i] = true;
+
+                    if (findStart(path, subPathStartPoints.at(i), subPathEndPoints.at(i), &i1, &forward)) {
+                        nextUnhandled = i;
+                        qCDebug(lcSGCurveIntersectionSolver) << "Found a new subpath" << i << "to be processed.";
+                        startNewSubPath(i1, forward);
+                        break;
+                    }
+                }
+            }
+
+            // If no valid subpath is left, we have to go back to the unhandled intersections.
+            while (nextUnhandled < 0) {
+                qCDebug(lcSGCurveIntersectionSolver) << "All subpaths handled. Looking for unhandled intersections.";
+                if (intersections.isEmpty()) {
+                    qCDebug(lcSGCurveIntersectionSolver) << "All intersections handled. I am done.";
+                    path = fixedPath;
+                    return;
+                }
+
+                IntersectionData &unhandledIntersec = intersections[0];
+                qCDebug(lcSGCurveIntersectionSolver) << "Revisiting intersection of" << unhandledIntersec.e1 << "with" << unhandledIntersec.e2;
+                qCDebug(lcSGCurveIntersectionSolver) << "Handled are" << unhandledIntersec.e1 << "in:" << unhandledIntersec.in1 << "out:" << unhandledIntersec.out1
+                                                     << "/" << unhandledIntersec.e2 << "in:" << unhandledIntersec.in2 << "out:" << unhandledIntersec.out2;
+
+                // Searching for the correct direction to go forward.
+                // That requires that the intersection + small delta (here 1e-4)
+                // is a valid starting point (filling only on one side)
+                constexpr float deltaT = 1e-4f;
+                if (!unhandledIntersec.in1) {
+                    QQuadPath::Element::FillSide fillSide = path.fillSideOf(unhandledIntersec.e1, unhandledIntersec.t1 - deltaT);
+                    if (fillSide == QQuadPath::Element::FillSideLeft) {
+                        fixedPath.moveTo(path.elementAt(unhandledIntersec.e1).pointAtFraction(unhandledIntersec.t1));
+                        i1 = startedAtIndex = unhandledIntersec.e1;
+                        t = startedAtT = unhandledIntersec.t1;
+                        forward = false;
+                        unhandledIntersec.in1 = true;
+                        break;
+                    }
+                }
+                if (!unhandledIntersec.in2) {
+                    QQuadPath::Element::FillSide fillSide = path.fillSideOf(unhandledIntersec.e2, unhandledIntersec.t2 - deltaT);
+                    if (fillSide == QQuadPath::Element::FillSideLeft) {
+                        fixedPath.moveTo(path.elementAt(unhandledIntersec.e1).pointAtFraction(unhandledIntersec.t1));
+                        i1 = startedAtIndex = unhandledIntersec.e2;
+                        t = startedAtT = unhandledIntersec.t2;
+                        forward = false;
+                        unhandledIntersec.in2 = true;
+                        break;
+                    }
+                }
+                if (!unhandledIntersec.out1) {
+                    QQuadPath::Element::FillSide fillSide = path.fillSideOf(unhandledIntersec.e1, unhandledIntersec.t1 + deltaT);
+                    if (fillSide == QQuadPath::Element::FillSideRight) {
+                        fixedPath.moveTo(path.elementAt(unhandledIntersec.e1).pointAtFraction(unhandledIntersec.t1));
+                        i1 = startedAtIndex = unhandledIntersec.e1;
+                        t = startedAtT = unhandledIntersec.t1;
+                        forward = true;
+                        unhandledIntersec.out1 = true;
+                        break;
+                    }
+                }
+                if (!unhandledIntersec.out2) {
+                    QQuadPath::Element::FillSide fillSide = path.fillSideOf(unhandledIntersec.e2, unhandledIntersec.t2 + deltaT);
+                    if (fillSide == QQuadPath::Element::FillSideRight) {
+                        fixedPath.moveTo(path.elementAt(unhandledIntersec.e1).pointAtFraction(unhandledIntersec.t1));
+                        i1 = startedAtIndex = unhandledIntersec.e2;
+                        t = startedAtT = unhandledIntersec.t2;
+                        forward = true;
+                        unhandledIntersec.out2 = true;
+                        break;
+                    }
+                }
+                intersections.removeFirst();
+                qCDebug(lcSGCurveIntersectionSolver) << "Found no way to move forward at this intersection and removed it.";
+            }
+        }
+
+    } while (totalIterations < path.elementCount() * 50);
+    // Check the totalIterations as a sanity check. Should never be triggered.
+
+    qWarning() << "Could not solve intersections of path. This should not happen. Returning the path unchanged.";
+
+}
+
 
 void QSGCurveProcessor::processStroke(const QQuadPath &strokePath,
                                       float miterLimit,
