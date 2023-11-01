@@ -2301,147 +2301,129 @@ static QList<CompletionItem> propertyCompletion(const DomItem &currentItem,
     return {};
 }
 
+static QList<CompletionItem> bindingCompletion(const DomItem &currentItem,
+                                               const CompletionContextStrings &ctx)
+{
+    const DomItem containingBinding = currentItem.filterUp(
+            [](DomType type, const QQmlJS::Dom::DomItem &) { return type == DomType::Binding; },
+            FilterUpOptions::ReturnOuter);
+
+    // do scriptidentifiercompletion after the ':' of a binding
+    if (cursorAfterColon(containingBinding, ctx)) {
+        QList<CompletionItem> res;
+        res << QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+        if (auto type = QQmlLSUtils::resolveExpressionType(currentItem, ResolveOwnerType)) {
+            const QStringList names = currentItem.field(Fields::name).toString().split(u'.');
+            const QQmlJSScope *current = resolve(type->semanticScope.get(), names);
+            // add type names when binding to an object type or a property with var type
+            if (!current || current->accessSemantics() == QQmlSA::AccessSemantics::Reference) {
+                LocalSymbolsTypes options;
+                options.setFlag(LocalSymbolsType::ObjectType);
+                res << QQmlLSUtils::reachableTypes(currentItem, options, CompletionItemKind::Constructor);
+            }
+        }
+        return res;
+    }
+
+    // ignore the binding if asking for completion in front of the binding
+    if (cursorInFrontOfItem(containingBinding, ctx)) {
+        return insideQmlObjectCompletion(currentItem, ctx);
+    }
+
+    QList<CompletionItem> res;
+    const DomItem containingObject = currentItem.qmlObject();
+    const QStringList toResolve =
+            containingBinding.field(Fields::name).value().toString().split(u'.');
+    if (toResolve.size() == 1) {
+        res << QQmlLSUtils::bindingsCompletions(containingObject);
+    } else {
+        // TODO: without QTBUG-117380, containingBinding.field(Fields::name) cannot be
+        // resolved to its actual type
+        res << QQmlLSUtils::bindingsCompletions(containingObject);
+    }
+    // add Qml Types for default binding
+    res += QQmlLSUtils::reachableTypes(currentItem, LocalSymbolsType::ObjectType,
+                                       CompletionItemKind::Constructor);
+    return res;
+}
+
+static QList<CompletionItem> importCompletion(const DomItem &currentItem,
+                                               const CompletionContextStrings &ctx)
+{
+    const DomItem containingFile = currentItem.containingFile();
+    QList<CompletionItem> res;
+    res += QQmlLSUtils::importCompletions(containingFile, ctx);
+
+    // when in front of the import statement: propose types for root Qml Object completion
+    if (cursorInFrontOfItem(currentItem, ctx))
+        res += QQmlLSUtils::reachableTypes(containingFile, LocalSymbolsType::ObjectType,
+                              CompletionItemKind::Constructor);
+
+    return res;
+}
+
+static QList<CompletionItem> qmlFileCompletion(const DomItem &currentItem,
+                                               const CompletionContextStrings &ctx)
+{
+    const DomItem containingFile = currentItem.containingFile();
+    QList<CompletionItem> res;
+    // completions for code outside the root Qml Object
+    // global completions
+    if (ctx.atLineStart()) {
+        if (ctx.base().isEmpty()) {
+            for (const QStringView &s : std::array<QStringView, 2>({ u"pragma", u"import" })) {
+                CompletionItem comp;
+                comp.label = s.toUtf8();
+                comp.kind = int(CompletionItemKind::Keyword);
+                res.append(comp);
+            }
+        }
+    }
+    // Types for root Qml Object completion
+    res += QQmlLSUtils::reachableTypes(containingFile, LocalSymbolsType::ObjectType,
+                                       CompletionItemKind::Constructor);
+    return res;
+}
+
 QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
                                                const CompletionContextStrings &ctx)
 {
-    DomType completionType = currentItem.internalKind();
     for (DomItem current = currentItem; current; current = current.directParent()) {
         const DomType currentType = current.internalKind();
         switch (currentType) {
         case DomType::Id:
+            // suppress completions for ids
+            return {};
         case DomType::Pragma:
+            return pragmaCompletion(currentItem, ctx);
+        case DomType::ScriptType: {
+            LocalSymbolsTypes options;
+            options.setFlag(LocalSymbolsType::ObjectType);
+            options.setFlag(LocalSymbolsType::ValueType);
+            return reachableTypes(currentItem, options, CompletionItemKind::Class);
+        }
         case DomType::ScriptFormalParameter:
+            // no autocompletion inside of function parameter definition
+            return {};
         case DomType::Binding:
-        case DomType::Import:
-        case DomType::ScriptType:
-        case DomType::QmlObject:
+            return bindingCompletion(currentItem, ctx);
         case DomType::ScriptExpression:
+            return scriptIdentifierCompletion(currentItem, ctx);
+        case DomType::Import:
+            return importCompletion(currentItem, ctx);
         case DomType::QmlFile:
+            return qmlFileCompletion(currentItem, ctx);
+        case DomType::QmlObject:
+            return insideQmlObjectCompletion(currentItem, ctx);
         case DomType::MethodInfo:
+            // suppress completions
+            return {};
         case DomType::PropertyDefinition:
-            completionType = current.internalKind();
-            break;
+            return propertyCompletion(currentItem, ctx);
         default:
             continue;
         }
-        break;
-    }
-
-    if (completionType == DomType::Id) {
-        // suppress completions for ids
-        return {};
-    }
-
-    if (completionType == DomType::Pragma) {
-        return pragmaCompletion(currentItem, ctx);
-    }
-
-    if (completionType == DomType::ScriptType) {
-        LocalSymbolsTypes options;
-        options.setFlag(LocalSymbolsType::ObjectType);
-        options.setFlag(LocalSymbolsType::ValueType);
-        return reachableTypes(currentItem, options, CompletionItemKind::Class);
-    }
-
-    if (completionType == DomType::ScriptFormalParameter) {
-        // no autocompletion inside of function parameter definition
-        return {};
-    }
-
-    if (completionType == DomType::Binding) {
-        const DomItem containingBinding = currentItem.filterUp(
-                [](DomType type, const QQmlJS::Dom::DomItem &) { return type == DomType::Binding; },
-                FilterUpOptions::ReturnOuter);
-
-        // do scriptidentifiercompletion after the ':' of a binding
-        if (cursorAfterColon(containingBinding, ctx)) {
-            QList<CompletionItem> res;
-            res << scriptIdentifierCompletion(currentItem, ctx);
-            if (auto type = resolveExpressionType(currentItem, ResolveOwnerType)) {
-                const QStringList names = currentItem.field(Fields::name).toString().split(u'.');
-                const QQmlJSScope *current = resolve(type->semanticScope.get(), names);
-                // add type names when binding to an object type or a property with var type
-                if (!current || current->accessSemantics() == QQmlSA::AccessSemantics::Reference) {
-                    LocalSymbolsTypes options;
-                    options.setFlag(LocalSymbolsType::ObjectType);
-                    res << reachableTypes(currentItem, options, CompletionItemKind::Constructor);
-                }
-            }
-            return res;
-        }
-
-        // ignore the binding if asking for completion in front of the binding
-        if (cursorInFrontOfItem(containingBinding, ctx)) {
-            return insideQmlObjectCompletion(currentItem, ctx);
-        }
-
-        QList<CompletionItem> res;
-        const DomItem containingObject = currentItem.qmlObject();
-        const QStringList toResolve =
-                containingBinding.field(Fields::name).value().toString().split(u'.');
-        if (toResolve.size() == 1) {
-            res << bindingsCompletions(containingObject);
-        } else {
-            // TODO: without QTBUG-117380, containingBinding.field(Fields::name) cannot be
-            // resolved to its actual type
-            res << bindingsCompletions(containingObject);
-        }
-        // add Qml Types for default binding
-        res += reachableTypes(currentItem, LocalSymbolsType::ObjectType,
-                              CompletionItemKind::Constructor);
-        return res;
-    }
-
-    if (completionType == DomType::ScriptExpression) {
-        return scriptIdentifierCompletion(currentItem, ctx);
-    }
-
-    if (completionType == DomType::Import) {
-        const DomItem containingFile = currentItem.containingFile();
-        QList<CompletionItem> res;
-        res += importCompletions(containingFile, ctx);
-
-        // when in front of the import statement: propose types for root Qml Object completion
-        if (cursorInFrontOfItem(currentItem, ctx))
-            res += reachableTypes(containingFile, LocalSymbolsType::ObjectType,
-                                  CompletionItemKind::Constructor);
-
-        return res;
-    }
-
-    if (completionType == DomType::QmlFile) {
-        const DomItem containingFile = currentItem.containingFile();
-        QList<CompletionItem> res;
-        // completions for code outside the root Qml Object
-        // global completions
-        if (ctx.atLineStart()) {
-            if (ctx.base().isEmpty()) {
-                for (const QStringView &s : std::array<QStringView, 2>({ u"pragma", u"import" })) {
-                    CompletionItem comp;
-                    comp.label = s.toUtf8();
-                    comp.kind = int(CompletionItemKind::Keyword);
-                    res.append(comp);
-                }
-            }
-        }
-        // Types for root Qml Object completion
-        res += reachableTypes(containingFile, LocalSymbolsType::ObjectType,
-                              CompletionItemKind::Constructor);
-        return res;
-    }
-
-    if (completionType == DomType::QmlObject) {
-        // inside some Qml Object
-        return insideQmlObjectCompletion(currentItem, ctx);
-    }
-
-    if (completionType == DomType::MethodInfo) {
-        // suppress completions
-        return {};
-    }
-
-    if (completionType == DomType::PropertyDefinition) {
-        return propertyCompletion(currentItem, ctx);
+        Q_UNREACHABLE();
     }
 
     // no completion could be found
