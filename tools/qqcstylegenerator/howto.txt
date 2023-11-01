@@ -13,3 +13,11 @@ If you want to use compile time selection of the style, import the style directl
 
 <code>import "qrc:/qt/qml/@styleName@"</code>
 
+The style also contains theme icons. In order to use them, you need to add the following line to main.cpp:
+
+<code>QIcon::setThemeName("@styleName@");</code>
+
+You can then use the them from e.g a Button:
+
+<code>Button { icon.name: "navigation_settings" }</code>
+

@@ -13,6 +13,8 @@
 #include <QDir>
 #include <QPixmap>
 
+#include <set>
+
 #include "jsontools.h"
 #include "bridge.h"
 
@@ -84,8 +86,10 @@ public:
             if (!m_abort)
                 generateControls();
             if (!m_abort)
+                generateIcons();
+            if (!m_abort)
                 downloadImages();
-            progressTo(3);
+            progressTo(4);
             progressLabel("Generating configuration files");
             if (!m_abort)
                 generateConfiguration();
@@ -93,6 +97,8 @@ public:
                 generateQmlDir();
             if (!m_abort)
                 generateQrcFile();
+            if (!m_abort)
+                generateIndexThemeFile();
         } catch (std::exception &e) {
             error(e.what());
         }
@@ -540,6 +546,45 @@ private:
         m_outputConfig[m_currentTheme].insert(controlNameModified, outputControlConfig);
     }
 
+    void generateIcons()
+    {
+        // Note that we don't generate different icons per theme, since
+        // they will be colored with a shader in QML to follow the
+        // button icon color.
+        try {
+            QJsonArray iconGroupsArray = getArray("icons", m_inputConfig);
+            for (const auto iconGroupValue : iconGroupsArray) {
+                const QJsonObject iconGroupConfig = iconGroupValue.toObject();
+                const auto name = getString("name", iconGroupConfig);
+                progressLabel("Generating " + name);
+
+                QStringList exportList = getStringList("export", iconGroupConfig);
+                if (exportList.contains("image")) {
+                    exportList.removeAll("image");
+                    exportList += m_imageFormats;
+                }
+
+                const auto componentSetName = getThemeString("component set", iconGroupConfig);
+                const QJsonObject searchRoot = getComponentSearchRoot(iconGroupConfig);
+                const QJsonObject componentSet = getComponentSet(searchRoot, componentSetName);
+                const QString componentSetId = JsonTools::getString("id", componentSet);
+                const QString componentSetPath = JsonTools::resolvedPath(componentSetId);
+                debug("using component set: " + componentSetPath);
+
+                // All the children of the component represents an icon
+                const auto children = componentSet.value("children").toArray();
+                progressTo(children.count());
+
+                for (auto it = children.constBegin(); it != children.constEnd(); ++it) {
+                    exportIcon(it->toObject(), exportList);
+                    progress();
+                }
+            }
+        } catch (std::exception &e) {
+            warning("failed exporting icons: " + QString(e.what()));
+        }
+    }
+
     QString generateQMLForJsonObject(const QJsonObject &object, const QString &objectName, QString &indent) {
         QString qml;
 
@@ -707,6 +752,9 @@ private:
                            : imageName + '.' + imageFormat.format);
 
                 auto &figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
+                if (figmaIdToFileNameMap.contains(figmaId))
+                    warning("'" + figmaIdToFileNameMap[figmaId] + "' has the same figmaId '" + figmaId
+                            + "' as '" + fileNameForWriting + "', and will be overwritten");
                 figmaIdToFileNameMap.insert(figmaId, fileNameForWriting);
                 m_imageCount++;
 
@@ -724,6 +772,46 @@ private:
         // (even for hidden / not generated images, otherwise QML bindings will fail)
         exportGeometry(atom, outputConfig);
         exportBorderImageOffset(atom, outputConfig);
+    }
+
+    void exportIcon(const QJsonObject &iconObj, const QStringList &imageFormats)
+    {
+        const QString figmaId = getString("id", iconObj);
+        const QString figmaName = getString("name", iconObj);
+
+        QString imageName;
+        static QRegularExpression re(R"(Property.*=(.*))");
+        QRegularExpressionMatch match = re.match(figmaName);
+        if (match.hasMatch()) {
+            // The name might be a combination of many properties
+            QStringList propertyNames;
+            const auto properties = figmaName.split(',');
+            for (const auto &propertyName : properties) {
+                QRegularExpressionMatch match = re.match(propertyName);
+                propertyNames << match.captured(1);
+            }
+            imageName = propertyNames.join('_').toLower();
+        } else {
+            imageName = figmaName;
+        }
+        imageName.replace(' ', '_');
+        imageName.replace('-', '_');
+
+        for (const ImageFormat imageFormat : imageFormats) {
+            const QString imageFolder = "icons/icons"
+                    + (imageFormat.hasScale ? + "@" + imageFormat.scale + "x" : "") + "/";
+            const QString fileName = imageFolder + imageName + "." + imageFormat.format;
+
+            auto &figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
+            if (figmaIdToFileNameMap.contains(figmaId))
+                warning("'" + figmaIdToFileNameMap[figmaId] + "' has the same figmaId '" + figmaId
+                        + "' as '" + fileName + "', and will be overwritten");
+            figmaIdToFileNameMap.insert(figmaId, fileName);
+            m_icons.insert(fileName);
+            m_imageCount++;
+
+            debug("exporting icon: " + fileName);
+        }
     }
 
     void exportJson(const QJsonObject &atom, QJsonObject &outputConfig)
@@ -1008,12 +1096,14 @@ private:
     {
         debug("Generating Qt resource file");
         const QString styleName = QFileInfo(m_bridge->m_targetDirectory).fileName();
-        const QString targetPath = QFileInfo(m_bridge->m_targetDirectory).absolutePath();
+        const QString targetPath = QFileInfo(m_bridge->m_targetDirectory).absolutePath() + QDir::separator();
 
         QString resources;
         resources += "<RCC>\n";
-        resources += "\t<qresource prefix=\"/qt/qml\">\n";
 
+        // Add the style into the prefix "/qt/qml", since this path is the
+        // default controls style search path, and therefore works out-of-the-box
+        resources += "\t<qresource prefix=\"/qt/qml\">\n";
         QDirIterator it(styleName, QDirIterator::Subdirectories);
         while (it.hasNext()) {
             QString file = it.next();
@@ -1021,16 +1111,70 @@ private:
                 // QDir::NoDotAndDotDot
                 continue;
             }
-            resources += "\t\t<file alias=\"" + file + "\">"
-                    + targetPath + QDir::separator() + file
-                    + "</file>\n";
+            if (file.startsWith(styleName + "/icons/")) {
+                // icons go into a separate prefix below
+                continue;
+            }
+            resources += "\t\t<file alias=\"" + file + "\">" + targetPath + file + "</file>\n";
+        }
+        resources += "\t</qresource>\n";
+
+        // Add icons into the prefix "/icons", since this path is the
+        // default controls theme search path, and therefore works out-of-the-box
+        resources += "\t<qresource prefix=\"/icons\">\n";
+        resources += "\t\t<file alias=\"" + styleName + "/index.theme\">" + targetPath
+                + styleName + "/icons/index.theme</file>\n";
+
+        for (const QString &iconPath : m_icons) {
+            QString alias = iconPath;
+            alias.replace(QRegularExpression("^icons"), styleName);
+            resources += "\t\t<file alias=\"" + alias + "\">" + targetPath
+                    + styleName + QDir::separator() + iconPath + "</file>\n";
+        }
+        resources += "\t</qresource>\n";
+
+        resources += "</RCC>\n";
+        createTextFileInStylefolder(styleName + ".qrc", resources);
+        progress();
+    }
+
+    void generateIndexThemeFile()
+    {
+        debug("Generating icons/index.theme");
+        const QString styleName = QFileInfo(m_bridge->m_targetDirectory).fileName();
+        const QString targetPath = QFileInfo(m_bridge->m_targetDirectory).absolutePath() + QDir::separator();
+
+        QString scaleDirectoriesConfig;
+        QStringList scaleDirectories;
+        QDirIterator it(styleName + QDir::separator() + "icons");
+        QRegularExpression reGetScale(R"(@(.*)x)");
+
+        while (it.hasNext()) {
+            const QString file = it.next();
+            const QFileInfo fileInfo(file);
+            if (file.endsWith('.') || !fileInfo.isDir())
+                continue;
+
+            const QString directoryName = fileInfo.fileName();
+            scaleDirectories += directoryName;
+
+            auto scale = reGetScale.match(directoryName).captured(1);
+            if (scale.isEmpty())
+                scale = "1";
+
+            scaleDirectoriesConfig += "[" + directoryName + "]\n"
+                    + "Scale=" + scale + "\n"
+                    + "Size=32\n"
+                    + "Type=Fixed\n\n";
         }
 
-        resources += "\t</qresource>\n";
-        resources += "</RCC>\n";
+        const QString contents = QStringLiteral("[Icon Theme]\n")
+                + "Name=" + styleName + "\n"
+                + "Comment=Generated by Qt StyleGenerator\n\n"
+                + "Directories=" + scaleDirectories.join(',') + "\n\n"
+                + scaleDirectoriesConfig;
 
-
-        createTextFileInStylefolder(styleName + ".qrc", resources);
+        createTextFileInStylefolder("icons/index.theme", contents);
         progress();
     }
 
@@ -1210,6 +1354,7 @@ private:
     QJsonDocument m_document;
     QJsonObject m_inputConfig;
     QMap<QString, QJsonObject> m_outputConfig;
+    std::set<QString> m_icons;
     QStringList m_qmlDirControls;
 
     QString m_cachedPageName;

@@ -6,11 +6,20 @@
         {"atom": "background", "export": ["image"]},
         {"atom": "contentItem", "export": ["layout"]},
         {"atom": "indicator", "export": ["image"]},
-        {"atom": "label", "export": ["text", "geometry"]}
+        {"atom": "label", "export": ["text", "geometry"]},
+        {"atom": "icon", "export": ["geometry"]}
     ],
     "qml": {
         "copy": [":/templates/*.qml", ":/templates/impl/*.qml"]
     },
+    "icons": [
+    {
+        "name": "Icons",
+        "page": "Components",
+        "component set": "Icon",
+        "export": ["image"]
+    }
+    ],
     "default controls": [
     {
         "name": "ApplicationWindow"
@@ -38,10 +47,12 @@
         "name": "Button",
         "page": "Components",
         "component set": "ButtonTemplate${Theme}",
+        "contents": ["icon", "label"],
         "atoms": [
             {"atom": "background", "figmaPath": "Background"},
             {"atom": "contentItem", "figmaPath": "Layout"},
-            {"atom": "label", "figmaPath": "label"}
+            {"atom": "label", "figmaPath": "label"},
+            {"atom": "icon", "figmaPath": "Icon"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -166,10 +177,12 @@
         "name": "FlatButton",
         "page": "Components",
         "component set": "FlatButtonTemplate${Theme}",
+        "contents": ["icon", "label"],
         "atoms": [
             {"atom": "background", "figmaPath": "Background"},
             {"atom": "contentItem", "figmaPath": "Layout"},
-            {"atom": "label", "figmaPath": "label"}
+            {"atom": "label", "figmaPath": "label"},
+            {"atom": "icon", "figmaPath": "Icon"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -328,10 +341,12 @@
         "name": "RoundButton",
         "page": "Components",
         "component set": "RoundButtonTemplate${Theme}",
+        "contents": ["icon", "label"],
         "atoms": [
             {"atom": "background", "figmaPath": "Background"},
             {"atom": "contentItem", "figmaPath": "Layout"},
-            {"atom": "label", "figmaPath": "label"}
+            {"atom": "label", "figmaPath": "label"},
+            {"atom": "icon", "figmaPath": "Icon"}
         ],
         "states": [
             {"state": "normal", "figmaState": "normal"},
@@ -462,10 +477,12 @@
         "name": "TabButton",
         "page": "Components",
         "component set": "TabButtonTemplate${Theme}",
+        "contents": ["icon", "label"],
         "atoms": [
             {"atom": "background", "figmaPath": "Background"},
             {"atom": "contentItem", "figmaPath": "Layout"},
-            {"atom": "label", "figmaPath": "label"}
+            {"atom": "label", "figmaPath": "label"},
+            {"atom": "icon", "figmaPath": "Icon"}
         ],
         "states": [
             {"state": "checked", "figmaState": "checked"},
@@ -532,10 +549,12 @@
         "name": "ToolButton",
         "page": "Components",
         "component set": "ToolButtonTemplate${Theme}",
+        "contents": ["icon", "label"],
         "atoms": [
             {"atom": "background", "figmaPath": "Background"},
             {"atom": "contentItem", "figmaPath": "Layout"},
-            {"atom": "label", "figmaPath": "label"}
+            {"atom": "label", "figmaPath": "label"},
+            {"atom": "icon", "figmaPath": "Icon"}
         ],
         "states": [
             {"state": "checked", "figmaState": "checked"},
