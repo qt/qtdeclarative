@@ -2213,20 +2213,57 @@ static QList<CompletionItem> pragmaCompletion(QQmlJS::Dom::DomItem currentItem,
     return res;
 }
 
+static CompletionItem makeSnippet(QUtf8StringView label, QUtf8StringView insertText)
+{
+    CompletionItem res;
+    res.label = label.data();
+    res.insertTextFormat = InsertTextFormat::Snippet;
+    res.insertText = insertText.data();
+    res.kind = int(CompletionItemKind::Snippet);
+    res.insertTextMode = InsertTextMode::AdjustIndentation;
+    return res;
+}
+
 static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &currentItem,
                                                        const CompletionContextStrings &ctx)
 {
     QList<CompletionItem> res;
     if (ctx.base().isEmpty()) {
-        // TODO: complete also the brackets after function?
-        for (QUtf8StringView s : std::array<QUtf8StringView, 8>(
-                     { u8"property", u8"readonly", u8"default", u8"signal", u8"function",
-                       u8"required", u8"enum", u8"component" })) {
-            CompletionItem comp;
-            comp.label = s.data();
-            comp.kind = int(CompletionItemKind::Keyword);
-            res.append(comp);
+        // default/required property completion
+        for (QUtf8StringView view :
+             std::array<QUtf8StringView, 6>{ "", "readonly ", "default ", "default required ",
+                                             "required default ", "required " }) {
+            // readonly properties require an initializer
+            if (view != "readonly ") {
+                res.append(makeSnippet(
+                        QByteArray(view.data()).append("property type name;"),
+                        QByteArray(view.data()).append("property ${1:type} ${0:name};")));
+            }
+
+            res.append(makeSnippet(
+                    QByteArray(view.data()).append("property type name: value;"),
+                    QByteArray(view.data()).append("property ${1:type} ${2:name}: ${0:value};")));
         }
+
+        // signal
+        res.append(makeSnippet("signal name(arg1:type1, ...)", "signal ${1:name}($0)"));
+
+        // signal without parameters
+        res.append(makeSnippet("signal name;", "signal ${0:name};"));
+
+        // make already existing property required
+        res.append(makeSnippet("required name;", "required ${0:name};"));
+
+        // function
+        res.append(makeSnippet("function name(args...): returnType { statements...}",
+                               "function ${1:name}($2): ${3:returnType} {\n\t$0\n}"));
+
+        // enum
+        res.append(makeSnippet("enum name { Values...}", "enum ${1:name} {\n\t${0:values}\n}"));
+
+        // inline component
+        res.append(makeSnippet("component Name: BaseType { ... }",
+                               "component ${1:name}: ${2:baseType} {\n\t$0\n}"));
 
         // add bindings
         const DomItem containingObject = currentItem.qmlObject();

@@ -24,7 +24,12 @@ class tst_qmlls_utils : public QQmlDataTest
 {
     Q_OBJECT
 
-    using ExpectedCompletion = QPair<QString, QLspSpecification::CompletionItemKind>;
+    struct ExpectedCompletion
+    {
+        QString label;
+        QLspSpecification::CompletionItemKind kind;
+        QString snippet = {};
+    };
     using ExpectedCompletions = QList<ExpectedCompletion>;
 
     using ExpectedDocumentation = std::tuple<QString, QString, QString>;

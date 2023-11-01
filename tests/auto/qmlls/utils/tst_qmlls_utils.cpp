@@ -1639,12 +1639,56 @@ void tst_qmlls_utils::completions_data()
     });
 
     QTest::newRow("objEmptyLine") << file << 9 << 1
-                                  << (ExpectedCompletions({
-                                              { u"Rectangle"_s, CompletionItemKind::Constructor },
-                                              { u"property"_s, CompletionItemKind::Keyword },
-                                              { u"width"_s, CompletionItemKind::Property },
-                                      }) += keywords)
+                                  << ExpectedCompletions({
+                                             { u"Rectangle"_s, CompletionItemKind::Constructor },
+                                             { u"width"_s, CompletionItemKind::Property },
+                                     })
                                   << QStringList({ u"QtQuick"_s, u"vector4d"_s }) << InsertColon;
+
+    const QString propertyCompletion = u"property type name: value;"_s;
+    const QString functionCompletion = u"function name(args...): returnType { statements...}"_s;
+    QTest::newRow("objEmptyLineSnippets")
+            << file << 9 << 1
+            << ExpectedCompletions({
+                       { propertyCompletion, CompletionItemKind::Snippet,
+                         u"property ${1:type} ${2:name}: ${0:value};"_s },
+                       { u"readonly property type name: value;"_s, CompletionItemKind::Snippet,
+                         u"readonly property ${1:type} ${2:name}: ${0:value};"_s },
+                       { u"default property type name: value;"_s, CompletionItemKind::Snippet,
+                         u"default property ${1:type} ${2:name}: ${0:value};"_s },
+                       { u"default required property type name: value;"_s,
+                         CompletionItemKind::Snippet,
+                         u"default required property ${1:type} ${2:name}: ${0:value};"_s },
+                       { u"required default property type name: value;"_s,
+                         CompletionItemKind::Snippet,
+                         u"required default property ${1:type} ${2:name}: ${0:value};"_s },
+                       { u"required property type name: value;"_s, CompletionItemKind::Snippet,
+                         u"required property ${1:type} ${2:name}: ${0:value};"_s },
+                       { u"property type name;"_s, CompletionItemKind::Snippet,
+                         u"property ${1:type} ${0:name};"_s },
+                       { u"required property type name;"_s, CompletionItemKind::Snippet,
+                         u"required property ${1:type} ${0:name};"_s },
+                       { u"default property type name;"_s, CompletionItemKind::Snippet,
+                         u"default property ${1:type} ${0:name};"_s },
+                       { u"default required property type name;"_s, CompletionItemKind::Snippet,
+                         u"default required property ${1:type} ${0:name};"_s },
+                       { u"required default property type name;"_s, CompletionItemKind::Snippet,
+                         u"required default property ${1:type} ${0:name};"_s },
+                       { u"signal name(arg1:type1, ...)"_s, CompletionItemKind::Snippet,
+                         u"signal ${1:name}($0)"_s },
+                       { u"signal name;"_s, CompletionItemKind::Snippet, u"signal ${0:name};"_s },
+                       { u"required name;"_s, CompletionItemKind::Snippet,
+                         u"required ${0:name};"_s },
+                       { functionCompletion,
+                         CompletionItemKind::Snippet,
+                         u"function ${1:name}($2): ${3:returnType} {\n\t$0\n}"_s },
+                       { u"enum name { Values...}"_s, CompletionItemKind::Snippet,
+                         u"enum ${1:name} {\n\t${0:values}\n}"_s },
+                       { u"component Name: BaseType { ... }"_s, CompletionItemKind::Snippet,
+                         u"component ${1:name}: ${2:baseType} {\n\t$0\n}"_s },
+               })
+            // not allowed because required properties need an initializer
+            << QStringList({ u"readonly property type name;"_s }) << InsertColon;
 
     QTest::newRow("handlers") << file << 5 << 1
                               << ExpectedCompletions{ {
@@ -1902,8 +1946,8 @@ void tst_qmlls_utils::completions_data()
             (ExpectedCompletions({
             { u"objectName"_s, CompletionItemKind::Property},
             { u"width"_s, CompletionItemKind::Property},
-            { u"property"_s, CompletionItemKind::Keyword },
-            { u"function"_s, CompletionItemKind::Keyword },
+            { propertyCompletion, CompletionItemKind::Snippet },
+            { functionCompletion, CompletionItemKind::Snippet },
     }) += constructorTypes)
                                                << QStringList{
                                                       u"helloWorld"_s,
@@ -2250,6 +2294,7 @@ void tst_qmlls_utils::completions()
     QDuplicateTracker<QByteArray> classesTracker;
     QDuplicateTracker<QByteArray> fieldsTracker;
     QDuplicateTracker<QByteArray> propertiesTracker;
+    QDuplicateTracker<QByteArray> snippetTracker;
 
     // avoid QEXPECT_FAIL tests to XPASS when completion order changes
     std::sort(completions.begin(), completions.end(),
@@ -2269,6 +2314,11 @@ void tst_qmlls_utils::completions()
             QVERIFY2(!classesTracker.hasSeen(c.label), "Duplicate class: " + c.label);
         } else if (c.kind->toInt() == int(CompletionItemKind::Field)) {
             QVERIFY2(!fieldsTracker.hasSeen(c.label), "Duplicate field: " + c.label);
+        } else if (c.kind->toInt() == int(CompletionItemKind::Snippet)) {
+            QVERIFY2(!snippetTracker.hasSeen(c.label), "Duplicate field: " + c.label);
+            if (c.insertText->contains('\n') || c.insertText->contains('\r')) {
+                QCOMPARE(c.insertTextMode, InsertTextMode::AdjustIndentation);
+            }
         } else if (c.kind->toInt() == int(CompletionItemKind::Property)) {
             QVERIFY2(!propertiesTracker.hasSeen(c.label), "Duplicate property: " + c.label);
             if (insertOptions & InsertColon) {
@@ -2296,21 +2346,27 @@ void tst_qmlls_utils::completions()
         QEXPECT_FAIL("inMethodBody", "Completion for JS Statement/keywords not implemented yet",
                      Abort);
         QEXPECT_FAIL("letStatementAfterEqual", "Completion not implemented yet!", Abort);
-        QVERIFY2(labels.contains(exp.first),
+        QVERIFY2(labels.contains(exp.label),
                  u"no %1 in %2"_s
-                         .arg(exp.first, QStringList(labels.begin(), labels.end()).join(u", "_s))
+                         .arg(exp.label, QStringList(labels.begin(), labels.end()).join(u", "_s))
                          .toUtf8());
-        if (labels.contains(exp.first)) {
+        if (labels.contains(exp.label)) {
 
             bool foundEntry = false;
             bool hasCorrectKind = false;
             CompletionItemKind foundKind;
             for (const CompletionItem &c : completions) {
-                if (c.label == exp.first) {
+                if (c.label == exp.label) {
                     foundKind = static_cast<CompletionItemKind>(c.kind->toInt());
                     foundEntry = true;
-                    if (foundKind == exp.second)
+                    if (foundKind == exp.kind) {
                         hasCorrectKind = true;
+                        if (!exp.snippet.isEmpty()) {
+                            QCOMPARE(QString::fromUtf8(c.insertText.value_or(QByteArray())),
+                                     exp.snippet);
+                        }
+                        break;
+                    }
                 }
             }
 
@@ -2320,7 +2376,7 @@ void tst_qmlls_utils::completions()
 
             QVERIFY2(hasCorrectKind,
                      qPrintable(QString::fromLatin1("Completion item '%1' has wrong kind '%2'")
-                                        .arg(exp.first)
+                                        .arg(exp.label)
                                         .arg(QMetaEnum::fromType<CompletionItemKind>().valueToKey(
                                                 int(foundKind)))));
         }
