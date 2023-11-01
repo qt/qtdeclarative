@@ -178,6 +178,7 @@ private slots:
     void scopeVsObject();
     void sequenceToIterable();
     void setLookupConversion();
+    void shadowedAsCasts();
     void shadowedMethod();
     void shifts();
     void signalHandler();
@@ -3671,6 +3672,36 @@ void tst_QmlCppCodegen::setLookupConversion()
     QVERIFY(o->objectName().isEmpty());
     QMetaObject::invokeMethod(o.data(), "t");
     QCOMPARE(o->objectName(), u"a"_s);
+}
+
+void tst_QmlCppCodegen::shadowedAsCasts()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/shadowedAsCasts.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> obj(c.create());
+    QVERIFY(!obj.isNull());
+
+    QObject *shadowed1 = obj->property("shadowed1").value<QObject *>();
+    QVERIFY(shadowed1);
+    QVERIFY(shadowed1->objectName().isEmpty());
+    const QVariant name1 = shadowed1->property("objectName");
+    QCOMPARE(name1.metaType(), QMetaType::fromType<int>());
+    QCOMPARE(name1.toInt(), 43);
+
+    QObject *shadowed2 = obj->property("shadowed2").value<QObject *>();
+    QVERIFY(shadowed2);
+    QVERIFY(shadowed2->objectName().isEmpty());
+    const QVariant name2 = shadowed2->property("objectName");
+    QCOMPARE(name2.metaType(), QMetaType::fromType<int>());
+    QCOMPARE(name2.toInt(), 42);
+
+    QObject *shadowed3 = obj->property("shadowed3").value<QObject *>();
+    QVERIFY(shadowed3);
+    QVERIFY(shadowed3->objectName().isEmpty());
+    const QVariant name3 = shadowed3->property("objectName");
+    QCOMPARE(name3.metaType(), QMetaType::fromType<double>());
+    QCOMPARE(name3.toDouble(), 41.0);
 }
 
 void tst_QmlCppCodegen::shadowedMethod()
