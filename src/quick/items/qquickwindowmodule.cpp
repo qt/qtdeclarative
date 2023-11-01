@@ -29,26 +29,19 @@ QQuickWindowQmlImpl::QQuickWindowQmlImpl(QWindow *parent)
 {
 }
 
-void QQuickWindowQmlImpl::setVisible(bool visible)
+QQuickWindowQmlImpl::QQuickWindowQmlImpl(QQuickWindowQmlImplPrivate &dd, QWindow *parent)
+    : QQuickWindow(dd, parent)
 {
-    Q_D(QQuickWindowQmlImpl);
-    d->visible = visible;
-    d->visibleExplicitlySet = true;
-    if (d->componentComplete)
-        applyWindowVisibility();
+    connect(this, &QWindow::visibleChanged, this, &QQuickWindowQmlImpl::visibleChanged);
+    connect(this, &QWindow::visibilityChanged, this, &QQuickWindowQmlImpl::visibilityChanged);
+    connect(this, &QWindow::screenChanged, this, &QQuickWindowQmlImpl::screenChanged);
 }
 
-void QQuickWindowQmlImpl::setVisibility(Visibility visibility)
+QQuickWindowQmlImpl::~QQuickWindowQmlImpl()
 {
-    Q_D(QQuickWindowQmlImpl);
-    d->visibility = visibility;
-    if (d->componentComplete)
-        applyWindowVisibility();
-}
-
-QQuickWindowAttached *QQuickWindowQmlImpl::qmlAttachedProperties(QObject *object)
-{
-    return new QQuickWindowAttached(object);
+    // Destroy the window while we are still alive, so that any signals
+    // emitted by the destruction can be delivered properly.
+    destroy();
 }
 
 void QQuickWindowQmlImpl::classBegin()
@@ -92,19 +85,21 @@ void QQuickWindowQmlImpl::componentComplete()
             this, &QQuickWindowQmlImpl::applyWindowVisibility);
 }
 
-QQuickWindowQmlImpl::QQuickWindowQmlImpl(QQuickWindowQmlImplPrivate &dd, QWindow *parent)
-    : QQuickWindow(dd, parent)
+void QQuickWindowQmlImpl::setVisible(bool visible)
 {
-    connect(this, &QWindow::visibleChanged, this, &QQuickWindowQmlImpl::visibleChanged);
-    connect(this, &QWindow::visibilityChanged, this, &QQuickWindowQmlImpl::visibilityChanged);
-    connect(this, &QWindow::screenChanged, this, &QQuickWindowQmlImpl::screenChanged);
+    Q_D(QQuickWindowQmlImpl);
+    d->visible = visible;
+    d->visibleExplicitlySet = true;
+    if (d->componentComplete)
+        applyWindowVisibility();
 }
 
-QQuickWindowQmlImpl::~QQuickWindowQmlImpl()
+void QQuickWindowQmlImpl::setVisibility(Visibility visibility)
 {
-    // Destroy the window while we are still alive, so that any signals
-    // emitted by the destruction can be delivered properly.
-    destroy();
+    Q_D(QQuickWindowQmlImpl);
+    d->visibility = visibility;
+    if (d->componentComplete)
+        applyWindowVisibility();
 }
 
 bool QQuickWindowQmlImpl::event(QEvent *event)
@@ -235,6 +230,11 @@ void QQuickWindowQmlImpl::setScreen(QObject *screen)
 {
     QQuickScreenInfo *screenWrapper = qobject_cast<QQuickScreenInfo *>(screen);
     QWindow::setScreen(screenWrapper ? screenWrapper->wrappedScreen() : nullptr);
+}
+
+QQuickWindowAttached *QQuickWindowQmlImpl::qmlAttachedProperties(QObject *object)
+{
+    return new QQuickWindowAttached(object);
 }
 
 QT_END_NAMESPACE
