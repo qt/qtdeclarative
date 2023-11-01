@@ -24,7 +24,7 @@ T.ToolBar {
 
     readonly property string __currentState: position === ToolBar.Header
         ? (enabled ? "normal" : "disabled")
-        : (enabled ? "normal-footer" : "disabled-footer")
+        : (enabled ? "normal_footer" : "disabled_footer")
     readonly property var config: Config.controls.toolbar[__currentState] || {}
 
     background: StyleImage {

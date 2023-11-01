@@ -24,7 +24,7 @@ T.TabBar {
 
     readonly property string __currentState: position === TabBar.Header
         ? (enabled ? "normal" : "disabled")
-        : (enabled ? "normal-footer" : "disabled-footer")
+        : (enabled ? "normal_footer" : "disabled_footer")
     readonly property var config: Config.controls.tabbar[__currentState] || {}
 
     contentItem: ListView {
