@@ -882,6 +882,18 @@ void tst_qmlls_utils::findUsages_data()
         QQmlLSUtilsLocation::from(testFile("groupPropertyUsage.qml"), groupPropertyContent, 24, 5, strlen("font")),
     };
 
+    QString attachedPropertyContent;
+    {
+        QFile file(testFile("attachedPropertyUsage.qml"));
+        QVERIFY(file.open(QIODeviceBase::ReadOnly));
+        attachedPropertyContent = QString::fromUtf8(file.readAll());
+    }
+
+    QList<QQmlLSUtilsLocation> attachedPropertyUsages{
+        QQmlLSUtilsLocation::from(testFile("attachedPropertyUsage.qml"), attachedPropertyContent, 9, 5, strlen("Keys")),
+        QQmlLSUtilsLocation::from(testFile("attachedPropertyUsage.qml"), attachedPropertyContent, 12, 25, strlen("Keys")),
+    };
+
     std::sort(sumUsages.begin(), sumUsages.end());
     std::sort(iUsages.begin(), iUsages.end());
     std::sort(subItemHelloPropertyUsages.begin(), subItemHelloPropertyUsages.end());
@@ -1020,6 +1032,8 @@ void tst_qmlls_utils::findUsages_data()
             << testFile("groupPropertyUsage.qml") << 14 << 17 << groupPropertyUsages1;
     QTest::addRow("groupPropertyUsages2")
             << testFile("groupPropertyUsage.qml") << 23 << 5 << groupPropertyUsages2;
+    QTest::addRow("attachedPropertyUsages")
+            << testFile("attachedPropertyUsage.qml") << 12 << 25 << attachedPropertyUsages;
 }
 
 void tst_qmlls_utils::findUsages()

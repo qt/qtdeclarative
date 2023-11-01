@@ -1038,21 +1038,6 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
 
     const QString name = item.field(Fields::identifier).value().toString();
 
-    const auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
-    if (!resolver)
-        return {};
-
-    if (auto scope = resolver->typeForName(name)) {
-        if (scope->isSingleton()) {
-            return QQmlLSUtilsExpressionType{ name, scope,
-                                              QQmlLSUtilsIdentifierType::SingletonIdentifier };
-        }
-        if (auto attachedScope = scope->attachedType()) {
-            return QQmlLSUtilsExpressionType{ name, attachedScope,
-                                              QQmlLSUtilsIdentifierType::AttachedTypeIdentifier };
-        }
-    }
-
     if (DomItem definitionOfItem = findJSIdentifierDefinition(item, name)) {
         Q_ASSERT_X(!definitionOfItem.semanticScope().isNull()
                             && definitionOfItem.semanticScope()->ownJSIdentifier(name),
@@ -1085,6 +1070,23 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
     // check if its an (unqualified) property
     if (auto scope = propertyFromReferrerScope(referrerScope, name, options))
         return *scope;
+
+    const auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
+    if (!resolver)
+        return {};
+
+    // Returns the baseType, can't use it with options.
+    if (auto scope = resolver->typeForName(name)) {
+        if (scope->isSingleton())
+            return QQmlLSUtilsExpressionType{ name, scope,
+                                              QQmlLSUtilsIdentifierType::SingletonIdentifier };
+
+        if (auto attachedScope = scope->attachedType()) {
+            return QQmlLSUtilsExpressionType{
+                name, attachedScope, QQmlLSUtilsIdentifierType::AttachedTypeIdentifier
+            };
+        }
+    }
 
     // check if its an id
     QQmlJSScope::ConstPtr fromId = resolver->scopeForId(name, referrerScope);
