@@ -4237,7 +4237,7 @@ void tst_QmlCppCodegen::valueTypeBehavior()
                            + u":8: TypeError: Cannot read property 'x' of undefined"_s));
         o->setProperty("v", QLatin1String("not a rect"));
 
-               // If the binding throws an exception, the value doesn't change.
+        // If the binding throws an exception, the value doesn't change.
         QCOMPARE(o->property("x"), 10);
     }
 }

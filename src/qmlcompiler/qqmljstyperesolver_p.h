@@ -184,6 +184,8 @@ public:
 
     QQmlJSRegisterContent convert(
             const QQmlJSRegisterContent &from, const QQmlJSRegisterContent &to) const;
+    QQmlJSRegisterContent cast(
+            const QQmlJSRegisterContent &from, const QQmlJSScope::ConstPtr &to) const;
 
     QQmlJSScope::ConstPtr merge(const QQmlJSScope::ConstPtr &a,
                                 const QQmlJSScope::ConstPtr &b) const;

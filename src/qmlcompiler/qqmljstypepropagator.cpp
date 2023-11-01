@@ -2337,37 +2337,49 @@ void QQmlJSTypePropagator::generate_CmpInstanceOf(int lhs)
 void QQmlJSTypePropagator::generate_As(int lhs)
 {
     const QQmlJSRegisterContent input = checkedInputRegister(lhs);
-    QQmlJSScope::ConstPtr contained;
+    const QQmlJSScope::ConstPtr inContained = m_typeResolver->containedType(input);
+
+    QQmlJSScope::ConstPtr outContained;
 
     switch (m_state.accumulatorIn().variant()) {
     case QQmlJSRegisterContent::ScopeAttached:
-        contained = m_state.accumulatorIn().scopeType();
+        outContained = m_state.accumulatorIn().scopeType();
         break;
     case QQmlJSRegisterContent::MetaType:
-        contained = m_state.accumulatorIn().scopeType();
-        if (contained->isComposite()) // Otherwise we don't need it
+        outContained = m_state.accumulatorIn().scopeType();
+        if (outContained->isComposite()) // Otherwise we don't need it
             addReadAccumulator(m_typeResolver->globalType(m_typeResolver->metaObjectType()));
         break;
     default:
-        contained = m_typeResolver->containedType(m_state.accumulatorIn());
+        outContained = m_typeResolver->containedType(m_state.accumulatorIn());
         break;
     }
 
     QQmlJSRegisterContent output;
 
-    if (contained->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
+    if (outContained->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
         // A referece type cast can result in either the type or null.
-        // Reference tpyes can hold null. We don't need to special case that.
-        output = m_typeResolver->globalType(contained);
+        // Reference types can hold null. We don't need to special case that.
+
+        if (m_typeResolver->inherits(inContained, outContained))
+            output = input;
+        else
+            output = m_typeResolver->cast(input, outContained);
     } else if (!m_typeResolver->canAddressValueTypes()) {
         setError(u"invalid cast from %1 to %2. You can only cast object types."_s
                  .arg(input.descriptiveName(), m_state.accumulatorIn().descriptiveName()));
         return;
     } else {
-        // A value type cast can result in either the type or undefined.
-        output = m_typeResolver->merge(
-                    m_typeResolver->globalType(contained),
-                    m_typeResolver->globalType(m_typeResolver->voidType()));
+        if (m_typeResolver->inherits(inContained, outContained)) {
+            // A "slicing" cannot result in void
+            output = m_typeResolver->cast(input, outContained);
+        } else {
+            // A value type cast can result in either the type or undefined.
+            // Using convert() retains the variant of the input type.
+            output = m_typeResolver->merge(
+                    m_typeResolver->cast(input, outContained),
+                    m_typeResolver->cast(input, m_typeResolver->voidType()));
+        }
     }
 
     addReadRegister(lhs, input);

@@ -2850,14 +2850,17 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
     const QQmlJSRegisterContent originalContent = m_typeResolver->original(outputContent);
 
     const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(originalContent);
+    const bool isTrivial = m_typeResolver->inherits(
+            m_typeResolver->originalContainedType(inputContent), contained);
 
-    if (contained->isReferenceType()) {
+    m_body += m_state.accumulatorVariableOut + u" = "_s;
+
+    if (contained->isReferenceType() && !isTrivial) {
         const QQmlJSScope::ConstPtr genericContained = m_typeResolver->genericType(contained);
         const QString inputConversion = inputContent.storedType()->isReferenceType()
                 ? input
                 : convertStored(inputContent.storedType(), genericContained, input);
 
-        m_body += m_state.accumulatorVariableOut + u" = "_s;
         if (m_typeResolver->equals(
                     m_state.accumulatorIn().storedType(), m_typeResolver->metaObjectType())
                 && contained->isComposite()) {
@@ -2871,7 +2874,9 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
         }
         m_body += u";\n"_s;
         return;
-    } else if (m_typeResolver->equals(inputContent.storedType(), m_typeResolver->varType())) {
+    }
+
+    if (m_typeResolver->equals(inputContent.storedType(), m_typeResolver->varType())) {
         if (const auto target = m_typeResolver->extractNonVoidFromOptionalType(originalContent)) {
             m_body += m_state.accumulatorVariableOut + u" = "_s;
             m_body += input + u".metaType() == "_s + metaType(target)
@@ -2883,8 +2888,13 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
         }
     }
 
-    reject(u"unsupported type assertion"_s);
+    if (isTrivial) {
+        // No actual conversion necessary. The 'as' is a no-op
+        m_body += conversion(inputContent, m_state.accumulatorOut(), input) + u";\n"_s;
+        return;
+    }
 
+    reject(u"unsupported type assertion"_s);
 }
 
 void QQmlJSCodeGenerator::generate_UNot()
@@ -3902,7 +3912,8 @@ QString QQmlJSCodeGenerator::convertContained(const QQmlJSRegisterContent &from,
                 + u", "_s + argPointer + u"); }()"_s;
     }
 
-    reject(u"internal conversion with incompatible or ambiguous types"_s);
+    reject(u"internal conversion with incompatible or ambiguous types: %1 -> %2"_s
+                   .arg(from.descriptiveName(), to.descriptiveName()));
     return QString();
 }
 

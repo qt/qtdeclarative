@@ -1692,6 +1692,12 @@ QQmlJSRegisterContent QQmlJSTypeResolver::convert(
             containedType(to), to.scopeType(), from.variant(), from.scopeType());
 }
 
+QQmlJSRegisterContent QQmlJSTypeResolver::cast(
+        const QQmlJSRegisterContent &from, const QQmlJSScope::ConstPtr &to) const
+{
+    return from.castTo(to).storedIn(storedType(to));
+}
+
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::comparableType(const QQmlJSScope::ConstPtr &type) const
 {
     const auto it = m_trackedTypes->constFind(type);
