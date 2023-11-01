@@ -2356,7 +2356,8 @@ static QList<CompletionItem> insideBindingCompletion(const DomItem &currentItem,
             if (!current || current->accessSemantics() == QQmlSA::AccessSemantics::Reference) {
                 LocalSymbolsTypes options;
                 options.setFlag(LocalSymbolsType::ObjectType);
-                res << QQmlLSUtils::reachableTypes(currentItem, options, CompletionItemKind::Constructor);
+                res << QQmlLSUtils::reachableTypes(currentItem, options,
+                                                   CompletionItemKind::Constructor);
             }
         }
         return res;
@@ -2394,7 +2395,7 @@ static QList<CompletionItem> insideImportCompletion(const DomItem &currentItem,
     // when in front of the import statement: propose types for root Qml Object completion
     if (cursorInFrontOfItem(currentItem, ctx))
         res += QQmlLSUtils::reachableTypes(containingFile, LocalSymbolsType::ObjectType,
-                              CompletionItemKind::Constructor);
+                                           CompletionItemKind::Constructor);
 
     return res;
 }
@@ -2420,6 +2421,109 @@ static QList<CompletionItem> insideQmlFileCompletion(const DomItem &currentItem,
     res += QQmlLSUtils::reachableTypes(containingFile, LocalSymbolsType::ObjectType,
                                        CompletionItemKind::Constructor);
     return res;
+}
+
+/*!
+\internal
+Generate the snippets for let, var and const variable declarations.
+*/
+QList<CompletionItem> QQmlLSUtils::suggestVariableDeclarationStatementCompletion()
+{
+    QList<CompletionItem> result;
+    // let/var/const statement
+    for (auto view : std::array<QUtf8StringView, 3>{ "let", "var", "const" }) {
+        result.append(makeSnippet(QByteArray(view.data()).append(" variable = value;"),
+                                  QByteArray(view.data()).append(" ${1:variable} = $0;")));
+    }
+    return result;
+}
+
+/*!
+\internal
+Generates snippets or keywords for all possible JS statements where it makes sense. To use whenever
+any JS statement can be expected.
+*/
+QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &currentItem)
+{
+    QList<CompletionItem> result = suggestVariableDeclarationStatementCompletion();
+
+    // block statement
+    result.append(makeSnippet("{ statements... }", "{\n\t$0\n}"));
+
+    // if statement
+    result.append(makeSnippet("if (condition) statement", "if ($1)\n\t$0"));
+
+    // if + brackets statement
+    result.append(makeSnippet("if (condition) { statements }", "if ($1) {\n\t$0\n}"));
+
+    // do statement
+    result.append(makeSnippet( "do { statements } while (condition);", "do {\n\t$1\n} while ($0);"));
+
+    // while statement
+    result.append(makeSnippet("while (condition) statement", "while ($1)\n\t$0"));
+
+    // while + brackets statement
+    result.append(makeSnippet("while (condition) { statements...}", "while ($1) {\n\t$0\n}"));
+
+    // for loop statement
+    result.append(
+            makeSnippet("for (initializer; condition; increment) statement", "for ($1;$2;$3)\n\t$0"));
+
+    // for + brackets loop statement
+    result.append(makeSnippet("for (initializer; condition; increment) { statements... }",
+                              "for ($1;$2;$3) {\n\t$0\n}"));
+
+    DomItem loopOrSwitchParent = currentItem;
+    bool alreadyInLoop = false;
+    bool alreadyInSwitch = false;
+    for (DomItem current = currentItem; current; current = current.directParent()) {
+        switch (current.internalKind()) {
+        case DomType::ScriptExpression:
+            // reached end of script expression
+            return result;
+
+        case DomType::ScriptForStatement:
+        case DomType::ScriptForEachStatement:
+        case DomType::ScriptWhileStatement:
+        case DomType::ScriptDoWhileStatement:
+            if (alreadyInLoop)
+                continue;
+            alreadyInLoop = true;
+            for (auto view : std::array<QUtf8StringView, 2>{ "continue", "break" }) {
+                result.emplaceBack();
+                result.back().label = view.data();
+                result.back().kind = int(CompletionItemKind::Keyword);
+            }
+            break;
+
+        case DomType::ScriptSwitchStatement:
+            if (alreadyInSwitch)
+                continue;
+            alreadyInSwitch = true;
+
+            // case snippet
+            result.append(makeSnippet("case value: statements...", "case ${1:value}:\n\t$0"));
+            // case + brackets snippet
+            result.append(
+                    makeSnippet("case value: { statements... }", "case ${1:value}: {\n\t$0\n}"));
+
+            // default snippet
+            result.append(makeSnippet("default: statements...", "default:\n\t$0"));
+            // case + brackets snippet
+            result.append(makeSnippet("default: { statements... }", "default: {\n\t$0\n}"));
+
+            // break
+            result.emplaceBack();
+            result.back().label = "break";
+            result.back().kind = int(CompletionItemKind::Keyword);
+            break;
+        default:
+            continue;
+        }
+        if (alreadyInLoop && alreadyInSwitch)
+            return result;
+    }
+    return result;
 }
 
 QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,

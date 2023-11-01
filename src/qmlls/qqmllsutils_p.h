@@ -167,6 +167,10 @@ public:
                                                             const CompletionContextStrings &ctx);
     static QList<CompletionItem> completions(const DomItem& currentItem,
                                              const CompletionContextStrings &ctx);
+
+    // JS statement completion
+    static QList<CompletionItem> suggestJSStatementCompletion(const DomItem &currentItem);
+    static QList<CompletionItem> suggestVariableDeclarationStatementCompletion();
 };
 QT_END_NAMESPACE
 
