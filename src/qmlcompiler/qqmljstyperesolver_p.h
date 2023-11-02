@@ -107,6 +107,8 @@ public:
             UnaryOperator op, const QQmlJSRegisterContent &operand) const;
 
     bool isPrimitive(const QQmlJSRegisterContent &type) const;
+    bool isPrimitive(const QQmlJSScope::ConstPtr &type) const;
+
     bool isNumeric(const QQmlJSRegisterContent &type) const;
     bool isIntegral(const QQmlJSRegisterContent &type) const;
 
@@ -224,7 +226,6 @@ protected:
             int baseLookupIndex, int resultLookupIndex) const;
     QQmlJSRegisterContent memberEnumType(const QQmlJSScope::ConstPtr &type,
                                          const QString &name) const;
-    bool isPrimitive(const QQmlJSScope::ConstPtr &type) const;
     bool checkEnums(const QQmlJSScope::ConstPtr &scope, const QString &name,
                     QQmlJSRegisterContent *result, QQmlJSScope::ExtensionKind mode) const;
     bool canPrimitivelyConvertFromTo(

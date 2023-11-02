@@ -194,6 +194,7 @@ set(qml_files
     objectInVar.qml
     objectLookupOnListElement.qml
     objectWithStringListMethod.qml
+    optionalComparison.qml
     outOfBounds.qml
     overriddenMember.qml
     ownProperty.qml

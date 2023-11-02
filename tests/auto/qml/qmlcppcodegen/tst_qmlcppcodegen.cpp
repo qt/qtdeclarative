@@ -165,6 +165,7 @@ private slots:
     void objectToString();
     void objectWithStringListMethod();
     void onAssignment();
+    void optionalComparison();
     void outOfBoundsArray();
     void overriddenProperty();
     void ownPropertiesNonShadowable();
@@ -3363,6 +3364,27 @@ void tst_QmlCppCodegen::onAssignment()
     object->metaObject()->invokeMethod(object.data(), "release");
     QCOMPARE(object->property("pressed").toBool(), false);
     QCOMPARE(object->property("scale").toDouble(), 1.0);
+}
+
+void tst_QmlCppCodegen::optionalComparison()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/optionalComparison.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QCOMPARE(object->property("found").toInt(), 1);
+    QCOMPARE(object->property("foundStrict").toInt(), 1);
+    QCOMPARE(object->property("foundNot").toInt(), 2);
+    QCOMPARE(object->property("foundStrictNot").toInt(), 2);
+
+    // this === this, null === null (x4), undefined === undefined
+    QCOMPARE(object->property("undefinedEqualsUndefined").toInt(), 6);
+
+    QCOMPARE(object->property("optionalNull").toBool(), true);
+    object->setObjectName("foo"_L1);
+    QCOMPARE(object->property("optionalNull").toBool(), false);
 }
 
 void tst_QmlCppCodegen::outOfBoundsArray()

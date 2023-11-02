@@ -3159,73 +3159,138 @@ void QQmlJSCodeGenerator::generateEqualityOperation(
         const QQmlJSRegisterContent &lhsContent, const QString &lhsName,
         const QString &function, bool invert)
 {
-    const bool strictlyComparableWithVar = function == "strictlyEquals"_L1
-            && canStrictlyCompareWithVar(m_typeResolver, lhsContent, m_state.accumulatorIn());
+    const QQmlJSRegisterContent rhsContent = m_state.accumulatorIn();
+    const QString rhsName = m_state.accumulatorVariableIn;
+
+    const bool lhsIsOptional = m_typeResolver->isOptionalType(lhsContent);
+    const bool rhsIsOptional = m_typeResolver->isOptionalType(rhsContent);
+
+    const auto rhsContained = rhsIsOptional
+            ? m_typeResolver->extractNonVoidFromOptionalType(rhsContent)
+            : m_typeResolver->containedType(rhsContent);
+
+    const auto lhsContained = lhsIsOptional
+            ? m_typeResolver->extractNonVoidFromOptionalType(lhsContent)
+            : m_typeResolver->containedType(lhsContent);
+
+    const bool isStrict = function == "strictlyEquals"_L1;
+    const bool strictlyComparableWithVar
+            = isStrict && canStrictlyCompareWithVar(m_typeResolver, lhsContained, rhsContained);
     auto isComparable = [&]() {
-        if (m_typeResolver->isPrimitive(lhsContent)
-                && m_typeResolver->isPrimitive(m_state.accumulatorIn())) {
+        if (m_typeResolver->isPrimitive(lhsContent) && m_typeResolver->isPrimitive(rhsContent))
             return true;
-        }
-        if (m_typeResolver->isNumeric(lhsContent) && m_state.accumulatorIn().isEnumeration())
+        if (m_typeResolver->isNumeric(lhsContent) && rhsContent.isEnumeration())
             return true;
-        if (m_typeResolver->isNumeric(m_state.accumulatorIn()) && lhsContent.isEnumeration())
+        if (m_typeResolver->isNumeric(rhsContent) && lhsContent.isEnumeration())
             return true;
         if (strictlyComparableWithVar)
             return true;
-        if (canCompareWithQObject(m_typeResolver, lhsContent, m_state.accumulatorIn()))
+        if (canCompareWithQObject(m_typeResolver, lhsContained, rhsContained))
             return true;
-        if (canCompareWithQUrl(m_typeResolver, lhsContent, m_state.accumulatorIn()))
+        if (canCompareWithQUrl(m_typeResolver, lhsContained, rhsContained))
             return true;
         return false;
     };
 
     if (!isComparable()) {
-        reject(u"incomparable types %1 and %2"_s.arg(m_state.accumulatorIn().descriptiveName(),
-                                                     lhsContent.descriptiveName()));
+        reject(u"incomparable types %1 and %2"_s.arg(
+                rhsContent.descriptiveName(), lhsContent.descriptiveName()));
     }
 
     const QQmlJSScope::ConstPtr lhsType = lhsContent.storedType();
-    const QQmlJSScope::ConstPtr rhsType = m_state.accumulatorIn().storedType();
+    const QQmlJSScope::ConstPtr rhsType = rhsContent.storedType();
 
     if (strictlyComparableWithVar) {
         // Determine which side is holding a storable type
-        if (!lhsName.isEmpty()) {
-            // lhs register holds var type
-            generateVariantEqualityComparison(m_state.accumulatorIn(), lhsName, invert);
-        } else {
-            // lhs content is not storable and rhs is var type
-            generateVariantEqualityComparison(lhsContent, m_state.accumulatorVariableIn, invert);
+        if (!lhsName.isEmpty() && rhsName.isEmpty()) {
+            // lhs register holds var type and rhs is not storable
+            generateVariantEqualityComparison(rhsContent, lhsName, invert);
+            return;
         }
-        return;
+
+        if (!rhsName.isEmpty() && lhsName.isEmpty()) {
+            // lhs content is not storable and rhs is var type
+            generateVariantEqualityComparison(lhsContent, rhsName, invert);
+            return;
+        }
+
+        // It shouldn't be possible to get here because optional null should be stored in
+        // QJSPrimitiveValue, not in QVariant. But let's rather be safe than sorry.
+        reject(u"comparison of optional null"_s);
     }
 
-    const auto primitive = m_typeResolver->jsPrimitiveType();
-
     const auto comparison = [&]() -> QString {
+        const auto primitive = m_typeResolver->jsPrimitiveType();
         const QString sign = invert ? u" != "_s : u" == "_s;
 
         if (m_typeResolver->equals(lhsType, rhsType)
-                && !m_typeResolver->equals(lhsType, primitive)) {
+                && !m_typeResolver->equals(lhsType, primitive)
+                && !m_typeResolver->equals(lhsType, m_typeResolver->varType())) {
 
             // Straight forward comparison of equal types,
             // except QJSPrimitiveValue which has two comparison functions.
 
             if (isTypeStorable(m_typeResolver, lhsType))
-                return lhsName + sign + m_state.accumulatorVariableIn;
+                return lhsName + sign + rhsName;
 
             // null === null and undefined === undefined
             return invert ? u"false"_s : u"true"_s;
         }
 
-        if (canCompareWithQObject(m_typeResolver, lhsContent, m_state.accumulatorIn())) {
+        if (canCompareWithQObject(m_typeResolver, lhsType, rhsType)) {
             // Comparison of QObject-derived with nullptr or different QObject-derived.
-            return (isTypeStorable(m_typeResolver, lhsType)
-                            ? lhsName
-                            : u"nullptr"_s)
+            return (isTypeStorable(m_typeResolver, lhsType) ? lhsName : u"nullptr"_s)
                     + sign
-                    + (isTypeStorable(m_typeResolver, rhsType)
-                               ? m_state.accumulatorVariableIn
-                               : u"nullptr"_s);
+                    + (isTypeStorable(m_typeResolver, rhsType) ? rhsName : u"nullptr"_s);
+        }
+
+        if (canCompareWithQObject(m_typeResolver, lhsContained, rhsContained)) {
+            // Comparison of optional QObject-derived with nullptr or different QObject-derived.
+            // Mind that null == undefined but null !== undefined
+            // Therefore the isStrict dance.
+
+            QString result;
+            if (isStrict) {
+                if (lhsIsOptional) {
+                    if (rhsIsOptional) {
+                        // If both are invalid we're fine
+                        result += u"(!"_s
+                                + lhsName + u".isValid() && !"_s
+                                + rhsName + u".isValid()) || "_s;
+                    }
+
+                    result += u'(' + lhsName + u".isValid() && "_s;
+                } else {
+                    result += u'(';
+                }
+
+                if (rhsIsOptional) {
+                    result += rhsName + u".isValid() && "_s;
+                }
+            } else {
+                result += u'(';
+            }
+
+            // We do not implement comparison with explicit undefined, yet. Only with null.
+            Q_ASSERT(!m_typeResolver->equals(lhsType, m_typeResolver->voidType()));
+            Q_ASSERT(!m_typeResolver->equals(rhsType, m_typeResolver->voidType()));
+
+            const auto resolvedName = [&](const QString name) -> QString {
+                // If isStrict we check validity already before.
+                const QString content = u"*static_cast<QObject **>("_s + name + u".data())"_s;
+                return isStrict
+                        ? content
+                        : u'(' + name + u".isValid() ? "_s + content + u" : nullptr)"_s;
+            };
+
+            const QString lhsResolved = lhsIsOptional ? resolvedName(lhsName) : lhsName;
+            const QString rhsResolved = rhsIsOptional ? resolvedName(rhsName) : rhsName;
+
+            return (invert ? u"!("_s : u"("_s) + result
+                    + (isTypeStorable(m_typeResolver, lhsType) ? lhsResolved : u"nullptr"_s)
+                    + u" == "_s
+                    + (isTypeStorable(m_typeResolver, rhsType) ? rhsResolved : u"nullptr"_s)
+                    + u"))"_s;
         }
 
         if ((m_typeResolver->isUnsignedInteger(rhsType)
@@ -3233,37 +3298,32 @@ void QQmlJSCodeGenerator::generateEqualityOperation(
                 || (m_typeResolver->isSignedInteger(rhsType)
                     && m_typeResolver->isSignedInteger(lhsType))) {
             // Both integers of same signedness: Let the C++ compiler perform the type promotion
-            return lhsName + sign + m_state.accumulatorVariableIn;
+            return lhsName + sign + rhsName;
         }
 
         if (m_typeResolver->equals(rhsType, m_typeResolver->boolType())
                 && m_typeResolver->isIntegral(lhsType)) {
             // Integral and bool: We can promote the bool to the integral type
-            return lhsName + sign
-                    + convertStored(rhsType, lhsType, m_state.accumulatorVariableIn);
+            return lhsName + sign + convertStored(rhsType, lhsType, rhsName);
         }
 
         if (m_typeResolver->equals(lhsType, m_typeResolver->boolType())
                 && m_typeResolver->isIntegral(rhsType)) {
             // Integral and bool: We can promote the bool to the integral type
-            return convertStored(lhsType, rhsType, lhsName) + sign
-                    + m_state.accumulatorVariableIn;
+            return convertStored(lhsType, rhsType, lhsName) + sign + rhsName;
         }
 
         if (m_typeResolver->isNumeric(lhsType) && m_typeResolver->isNumeric(rhsType)) {
             // Both numbers: promote them to double
             return convertStored(lhsType, m_typeResolver->realType(), lhsName)
                     + sign
-                    + convertStored(
-                            rhsType, m_typeResolver->realType(), m_state.accumulatorVariableIn);
+                    + convertStored(rhsType, m_typeResolver->realType(), rhsName);
         }
 
         // If none of the above matches, we have to use QJSPrimitiveValue
         return (invert ? u"!"_s : QString())
                 + convertStored(lhsType, primitive, lhsName)
-                + u'.' + function + u'(' + convertStored(
-                        rhsType, primitive, m_state.accumulatorVariableIn)
-                + u')';
+                + u'.' + function + u'(' + convertStored(rhsType, primitive, rhsName) + u')';
     };
 
     m_body += m_state.accumulatorVariableOut + u" = "_s;

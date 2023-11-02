@@ -364,16 +364,16 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
 };
 
 bool Q_QMLCOMPILER_PRIVATE_EXPORT canStrictlyCompareWithVar(
-        const QQmlJSTypeResolver *typeResolver, const QQmlJSRegisterContent &lhsContent,
-        const QQmlJSRegisterContent &rhsContent);
+        const QQmlJSTypeResolver *typeResolver, const QQmlJSScope::ConstPtr &lhsType,
+        const QQmlJSScope::ConstPtr &rhsType);
 
-bool Q_QMLCOMPILER_PRIVATE_EXPORT canCompareWithQObject(const QQmlJSTypeResolver *typeResolver,
-                                                        const QQmlJSRegisterContent &lhsContent,
-                                                        const QQmlJSRegisterContent &rhsContent);
+bool Q_QMLCOMPILER_PRIVATE_EXPORT canCompareWithQObject(
+        const QQmlJSTypeResolver *typeResolver, const QQmlJSScope::ConstPtr &lhsType,
+        const QQmlJSScope::ConstPtr &rhsType);
 
-bool Q_QMLCOMPILER_PRIVATE_EXPORT canCompareWithQUrl(const QQmlJSTypeResolver *typeResolver,
-                                                     const QQmlJSRegisterContent &lhsContent,
-                                                     const QQmlJSRegisterContent &rhsContent);
+bool Q_QMLCOMPILER_PRIVATE_EXPORT canCompareWithQUrl(
+        const QQmlJSTypeResolver *typeResolver, const QQmlJSScope::ConstPtr &lhsType,
+        const QQmlJSScope::ConstPtr &rhsType);
 
 QT_END_NAMESPACE
 

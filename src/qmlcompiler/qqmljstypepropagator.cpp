@@ -2189,10 +2189,18 @@ void QQmlJSTypePropagator::recordEqualsType(int lhs)
         }
     }
 
+    const auto containedAccumulatorIn = m_typeResolver->isOptionalType(accumulatorIn)
+            ? m_typeResolver->extractNonVoidFromOptionalType(accumulatorIn)
+            : m_typeResolver->containedType(accumulatorIn);
+
+    const auto containedLhs = m_typeResolver->isOptionalType(lhsRegister)
+            ? m_typeResolver->extractNonVoidFromOptionalType(lhsRegister)
+            : m_typeResolver->containedType(lhsRegister);
+
     // We don't modify types if the types are comparable with QObject, QUrl or var types
-    if (canStrictlyCompareWithVar(m_typeResolver, lhsRegister, accumulatorIn)
-        || canCompareWithQObject(m_typeResolver, lhsRegister, accumulatorIn)
-        || canCompareWithQUrl(m_typeResolver, lhsRegister, accumulatorIn)) {
+    if (canStrictlyCompareWithVar(m_typeResolver, containedLhs, containedAccumulatorIn)
+        || canCompareWithQObject(m_typeResolver, containedLhs, containedAccumulatorIn)
+        || canCompareWithQUrl(m_typeResolver, containedLhs, containedAccumulatorIn)) {
         addReadRegister(lhs, lhsRegister);
         addReadAccumulator(accumulatorIn);
         return;
