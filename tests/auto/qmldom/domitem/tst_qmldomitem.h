@@ -2307,6 +2307,33 @@ private slots:
         QCOMPARE(attached.field(Fields::right).field(Fields::identifier).value().toString(), u"onPressed");
     }
 
+    void enumDeclarations()
+    {
+        using namespace Qt::StringLiterals;
+        QString testFile = baseDir + u"/enumDeclarations.qml"_s;
+        DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        QVERIFY(fileObject);
+        DomItem enums = fileObject.path(u".components[\"\"][0].enumerations");
+        QVERIFY(enums);
+
+        DomItem catsEnum = enums.key("Cats").index(0);
+        QVERIFY(catsEnum);
+        QCOMPARE(catsEnum.internalKind(), DomType::EnumDecl);
+        QCOMPARE(catsEnum.name(), u"Cats");
+
+        auto values = catsEnum.field(Fields::values);
+        QCOMPARE(values.length(), 3);
+        QCOMPARE(values.index(0).internalKind(), DomType::EnumItem);
+        QCOMPARE(values.index(0).name(), u"Patron");
+        QCOMPARE(values.index(0).field(Fields::value).value().toInteger(), 0);
+        QCOMPARE(values.index(1).internalKind(), DomType::EnumItem);
+        QCOMPARE(values.index(1).name(), u"Mafya");
+        QCOMPARE(values.index(1).field(Fields::value).value().toInteger(), 1);
+        QCOMPARE(values.index(2).internalKind(), DomType::EnumItem);
+        QCOMPARE(values.index(2).name(), u"Kivrik");
+        QCOMPARE(values.index(2).field(Fields::value).value().toInteger(), -1);
+    }
+
 private:
     struct DomItemWithLocation
     {
