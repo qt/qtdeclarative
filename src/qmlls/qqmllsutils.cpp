@@ -1735,11 +1735,11 @@ static QList<CompletionItem> &&insertColonsForCompletions(QList<CompletionItem> 
     return std::move(completions);
 }
 
-QList<CompletionItem> QQmlLSUtils::bindingsCompletions(const DomItem &containingObject)
+static QList<CompletionItem> suggestBindingCompletion(const DomItem &containingObject)
 {
     QList<CompletionItem> res;
 
-    res << reachableTypes(containingObject, LocalSymbolsType::AttachedType,
+    res << QQmlLSUtils::reachableTypes(containingObject, LocalSymbolsType::AttachedType,
                           CompletionItemKind::Class);
 
     const QQmlJSScope::ConstPtr scope = containingObject.semanticScope();
@@ -1752,8 +1752,8 @@ QList<CompletionItem> QQmlLSUtils::bindingsCompletions(const DomItem &containing
     return res;
 }
 
-QList<CompletionItem> QQmlLSUtils::importCompletions(const DomItem &file,
-                                                     const CompletionContextStrings &ctx)
+static QList<CompletionItem> insideImportCompletionHelper(const DomItem &file,
+                                                          const CompletionContextStrings &ctx)
 {
     // returns completions for import statements, ctx is supposed to be in an import statement
     QList<CompletionItem> res;
@@ -2181,8 +2181,8 @@ static const QMap<QString, QList<QString>> valuesForPragmas{
     { u"ValueTypeBehavior"_s, { u"Addressable"_s, u"Inaddressable"_s } },
 };
 
-static QList<CompletionItem> pragmaCompletion(QQmlJS::Dom::DomItem currentItem,
-                                              const CompletionContextStrings &ctx)
+static QList<CompletionItem> insidePragmaCompletion(QQmlJS::Dom::DomItem currentItem,
+                                                    const CompletionContextStrings &ctx)
 {
     if (cursorAfterColon(currentItem, ctx)) {
         const QString name = currentItem.field(Fields::name).value().toString();
@@ -2267,7 +2267,7 @@ static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &currentIte
 
         // add bindings
         const DomItem containingObject = currentItem.qmlObject();
-        res += QQmlLSUtils::bindingsCompletions(containingObject);
+        res += suggestBindingCompletion(containingObject);
 
         // add Qml Types for default binding
         const DomItem containingFile = currentItem.containingFile();
@@ -2277,7 +2277,7 @@ static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &currentIte
     return res;
 }
 
-static QList<CompletionItem> propertyCompletion(const DomItem &currentItem,
+static QList<CompletionItem> insidePropertyDefinitionCompletion(const DomItem &currentItem,
                                                 const CompletionContextStrings &ctx)
 {
     auto info = FileLocations::treeOf(currentItem)->info();
@@ -2338,7 +2338,7 @@ static QList<CompletionItem> propertyCompletion(const DomItem &currentItem,
     return {};
 }
 
-static QList<CompletionItem> bindingCompletion(const DomItem &currentItem,
+static QList<CompletionItem> insideBindingCompletion(const DomItem &currentItem,
                                                const CompletionContextStrings &ctx)
 {
     const DomItem containingBinding = currentItem.filterUp(
@@ -2372,11 +2372,11 @@ static QList<CompletionItem> bindingCompletion(const DomItem &currentItem,
     const QStringList toResolve =
             containingBinding.field(Fields::name).value().toString().split(u'.');
     if (toResolve.size() == 1) {
-        res << QQmlLSUtils::bindingsCompletions(containingObject);
+        res << suggestBindingCompletion(containingObject);
     } else {
         // TODO: without QTBUG-117380, containingBinding.field(Fields::name) cannot be
         // resolved to its actual type
-        res << QQmlLSUtils::bindingsCompletions(containingObject);
+        res << suggestBindingCompletion(containingObject);
     }
     // add Qml Types for default binding
     res += QQmlLSUtils::reachableTypes(currentItem, LocalSymbolsType::ObjectType,
@@ -2384,12 +2384,12 @@ static QList<CompletionItem> bindingCompletion(const DomItem &currentItem,
     return res;
 }
 
-static QList<CompletionItem> importCompletion(const DomItem &currentItem,
+static QList<CompletionItem> insideImportCompletion(const DomItem &currentItem,
                                                const CompletionContextStrings &ctx)
 {
     const DomItem containingFile = currentItem.containingFile();
     QList<CompletionItem> res;
-    res += QQmlLSUtils::importCompletions(containingFile, ctx);
+    res += insideImportCompletionHelper(containingFile, ctx);
 
     // when in front of the import statement: propose types for root Qml Object completion
     if (cursorInFrontOfItem(currentItem, ctx))
@@ -2399,7 +2399,7 @@ static QList<CompletionItem> importCompletion(const DomItem &currentItem,
     return res;
 }
 
-static QList<CompletionItem> qmlFileCompletion(const DomItem &currentItem,
+static QList<CompletionItem> insideQmlFileCompletion(const DomItem &currentItem,
                                                const CompletionContextStrings &ctx)
 {
     const DomItem containingFile = currentItem.containingFile();
@@ -2432,7 +2432,7 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             // suppress completions for ids
             return {};
         case DomType::Pragma:
-            return pragmaCompletion(currentItem, ctx);
+            return insidePragmaCompletion(currentItem, ctx);
         case DomType::ScriptType: {
             LocalSymbolsTypes options;
             options.setFlag(LocalSymbolsType::ObjectType);
@@ -2443,20 +2443,20 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             // no autocompletion inside of function parameter definition
             return {};
         case DomType::Binding:
-            return bindingCompletion(currentItem, ctx);
+            return insideBindingCompletion(currentItem, ctx);
         case DomType::ScriptExpression:
             return scriptIdentifierCompletion(currentItem, ctx);
         case DomType::Import:
-            return importCompletion(currentItem, ctx);
+            return insideImportCompletion(currentItem, ctx);
         case DomType::QmlFile:
-            return qmlFileCompletion(currentItem, ctx);
+            return insideQmlFileCompletion(currentItem, ctx);
         case DomType::QmlObject:
             return insideQmlObjectCompletion(currentItem, ctx);
         case DomType::MethodInfo:
             // suppress completions
             return {};
         case DomType::PropertyDefinition:
-            return propertyCompletion(currentItem, ctx);
+            return insidePropertyDefinitionCompletion(currentItem, ctx);
         default:
             continue;
         }

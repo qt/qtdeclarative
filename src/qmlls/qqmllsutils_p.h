@@ -157,9 +157,6 @@ public:
 
     // completion stuff
     using CompletionItem = QLspSpecification::CompletionItem;
-    static QList<CompletionItem> bindingsCompletions(const DomItem &containingObject);
-    static QList<CompletionItem> importCompletions(const DomItem &file,
-                                                   const CompletionContextStrings &ctx);
     static QList<CompletionItem> idsCompletions(const DomItem& component);
 
     static QList<CompletionItem> reachableTypes(const DomItem &context,
