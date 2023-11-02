@@ -85,7 +85,7 @@ public:
     // QSet<QString> const keys(const DomItem &self) const override;
     // DomItem key(const DomItem &self, QString name) const override;
 
-    QQmlJS::SourceLocation combinedLocation() const
+    QQmlJS::SourceLocation mainRegionLocation() const
     {
         Q_ASSERT(m_locations.size() > 0);
         Q_ASSERT(m_locations.front().first == FileLocationRegion::MainRegion);
@@ -93,7 +93,7 @@ public:
         auto current = m_locations.front();
         return current.second;
     }
-    void setCombinedLocation(const QQmlJS::SourceLocation &location)
+    void setMainRegionLocation(const QQmlJS::SourceLocation &location)
     {
         Q_ASSERT(m_locations.size() > 0);
         Q_ASSERT(m_locations.front().first == FileLocationRegion::MainRegion);

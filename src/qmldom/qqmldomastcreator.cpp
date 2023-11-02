@@ -883,11 +883,11 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
         const auto reparentExp = [](const auto &left, const auto &right){
             SourceLocation s1, s2;
             left.visitConst([&s1](auto &&el){
-                s1 = el->combinedLocation();
+                s1 = el->mainRegionLocation();
             });
 
             right.visitConst([&s2](auto &&el){
-                s2 = el->combinedLocation();
+                s2 = el->mainRegionLocation();
             });
 
             auto result = std::make_shared<ScriptElements::BinaryExpression>(s1, s2);
