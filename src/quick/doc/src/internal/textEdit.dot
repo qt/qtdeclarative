@@ -1,0 +1,52 @@
+digraph G {
+    node [
+        shape=record
+    ]
+
+    textedit[label="ℚTextEdit"]
+    texteditpriv[label="ℚTextEditPrivate"]
+    texteditextra[label="{ℚTextEditPrivate::ExtraData|padding...}"]
+    textctrl[label="ℚTextControl"]
+    qqpxm[label="ℚPixmap"]
+
+    subgraph cluster_1 {
+        label = "swappable document"
+        color=green
+
+        doc[label="QTextDocument"]
+        docpriv[label="QTextDocumentPrivate"]
+        doclayout[label="QTextDocumentLayout"]
+        qqtih[label="{ℚTextImageHandler||QSizeF intrinsicSize(doc, pos, format)}"]
+
+        doc -> docpriv [arrowtail=diamond, dir=back];
+        doc -> doclayout[arrowhead=vee, label="creates lazily", style="dotted", color="blue"]
+    }
+
+    subgraph cluster_2 {
+        label = "lazily constructed"
+        color=grey
+
+        qqdoc[label="{ℚTextDocument||textDocument()\nsetTextDocument()}"]
+        qqdocpriv[label="ℚTextDocumentPrivate"]
+
+        qqdoc -> qqdocpriv[arrowtail=diamond, dir=back]
+    }
+
+    textedit -> texteditpriv[arrowtail=diamond, dir=back]
+    texteditpriv -> texteditextra[arrowtail=diamond, dir=back]
+    texteditpriv -> doc[arrowtail=odiamond, dir=back]
+    texteditpriv -> qqdoc[arrowtail=odiamond, dir=back]
+    texteditpriv -> textctrl[arrowtail=diamond, dir=back]
+    texteditpriv -> qqpxm[arrowtail=diamond, dir=back, headlabel = "n", label="pixmapsInProgress"]
+    texteditpriv -> qqtih[arrowhead=vee, label="creates", style="dotted", color="blue"]
+    texteditpriv -> qqdoc[arrowhead=vee, label="creates", style="dotted", color="blue"]
+    texteditpriv -> doc[arrowhead=vee, label="creates", style="dotted", color="blue"]
+    textedit -> qqpxm[arrowhead=vee, label="creates", style="dotted", color="blue"]
+    qqtih -> doc[arrowhead=vee, label="parent", style="dashed"]
+    doc -> textedit[arrowhead=vee, label="parent", style="dashed"]
+    qqdoc -> textedit[arrowhead=vee, label="parent", style="dashed"]
+    doclayout -> doc[arrowhead=vee, label="parent", style="dashed"]
+    docpriv -> doclayout[arrowtail=diamond, dir=back]
+    doclayout -> qqtih[arrowtail=odiamond, dir=back, label="registered handler", style="dashed"]  # storage is complex
+    qqdocpriv -> doc[arrowtail=odiamond, dir=back, taillabel="QPointer"]
+}

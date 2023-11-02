@@ -22,6 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QTextDocument;
 class QQuickTextDocument;
 class QQuickTextEditPrivate;
 class QTextBlock;
@@ -364,6 +365,8 @@ private:
     void markDirtyNodesForRange(int start, int end, int charDelta);
     void updateTotalLines();
     void invalidateFontCaches();
+    QTextDocument* document() const;
+    void setDocument(QTextDocument *doc);
 
 protected:
     QQuickTextEdit(QQuickTextEditPrivate &dd, QQuickItem *parent = nullptr);
@@ -395,7 +398,7 @@ protected:
     void updatePolish() override;
 
     friend class QQuickTextUtil;
-    friend class QQuickTextDocument;
+    friend class QQuickTextDocumentPrivate;
 
 private:
     Q_DISABLE_COPY(QQuickTextEdit)

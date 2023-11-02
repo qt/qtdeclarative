@@ -90,7 +90,7 @@ public:
         , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
         , selectByMouse(true), canPaste(false), canPasteValid(false), hAlignImplicit(true)
         , textCached(true), inLayout(false), selectByKeyboard(false), selectByKeyboardSet(false)
-        , hadSelection(false), markdownText(false), inResize(false)
+        , hadSelection(false), markdownText(false), inResize(false), ownsDocument(false)
     {
 #if QT_CONFIG(accessibility)
         QAccessible::installActivationObserver(this);
@@ -214,6 +214,7 @@ public:
     bool hadSelection : 1;
     bool markdownText : 1;
     bool inResize : 1;
+    bool ownsDocument : 1;
 
     static const int largeTextSizeThreshold;
 };

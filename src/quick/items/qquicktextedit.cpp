@@ -815,8 +815,10 @@ bool QQuickTextEditPrivate::determineHorizontalAlignment()
         Qt::LayoutDirection direction = contentDirection;
 #if QT_CONFIG(im)
         if (direction == Qt::LayoutDirectionAuto) {
-            const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
-            direction = textDirection(preeditText);
+            QTextBlock block = control->textCursor().block();
+            if (!block.layout())
+                return false;
+            direction = textDirection(block.layout()->preeditAreaText());
         }
         if (direction == Qt::LayoutDirectionAuto)
             direction = qGuiApp->inputMethod()->inputDirection();
@@ -2230,6 +2232,22 @@ void QQuickTextEdit::invalidateFontCaches()
     }
 }
 
+QTextDocument *QQuickTextEdit::document() const
+{
+    Q_D(const QQuickTextEdit);
+    return d->document;
+}
+
+void QQuickTextEdit::setDocument(QTextDocument *doc)
+{
+    Q_D(QQuickTextEdit);
+    if (d->ownsDocument)
+        delete d->document;
+    d->document = doc;
+    d->ownsDocument = false;
+    d->control->setDocument(doc);
+}
+
 inline void resetEngine(QQuickTextNodeEngine *engine, const QColor& textColor, const QColor& selectedTextColor, const QColor& selectionColor)
 {
     *engine = QQuickTextNodeEngine();
@@ -2593,6 +2611,7 @@ void QQuickTextEditPrivate::init()
     q->setAcceptHoverEvents(true);
 
     document = new QTextDocument(q);
+    ownsDocument = true;
     auto *imageHandler = new QQuickTextImageHandler(document);
     document->documentLayout()->registerHandler(QTextFormat::ImageObject, imageHandler);
 

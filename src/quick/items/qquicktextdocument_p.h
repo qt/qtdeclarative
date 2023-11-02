@@ -32,6 +32,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickPixmap;
+class QQuickTextEdit;
 
 /*! \internal
     QTextImageHandler would attempt to resolve relative paths, and load the
@@ -56,11 +57,14 @@ class QQuickTextDocumentPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickTextDocument)
 public:
-    static QQuickTextDocumentPrivate *get(QQuickTextDocument *doc) {
-        return doc->d_func();
-    }
+    static QQuickTextDocumentPrivate *get(QQuickTextDocument *doc) { return doc->d_func(); }
+    static const QQuickTextDocumentPrivate *get(const QQuickTextDocument *doc) { return doc->d_func(); }
 
-    QPointer<QTextDocument> document;
+    QTextDocument *document() const;
+    void setDocument(QTextDocument *doc);
+
+    // so far the QQuickItem given to the QQuickTextDocument ctor is always a QQuickTextEdit
+    QQuickTextEdit *editor = nullptr;
 };
 
 namespace QtPrivate {

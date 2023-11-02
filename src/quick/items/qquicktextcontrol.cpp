@@ -615,6 +615,12 @@ QTextDocument *QQuickTextControl::document() const
     return d->doc;
 }
 
+void QQuickTextControl::setDocument(QTextDocument *doc)
+{
+    Q_D(QQuickTextControl);
+    d->doc = doc;
+}
+
 void QQuickTextControl::updateCursorRectangle(bool force)
 {
     Q_D(QQuickTextControl);

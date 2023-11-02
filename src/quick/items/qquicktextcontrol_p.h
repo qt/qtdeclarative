@@ -46,6 +46,7 @@ public:
     virtual ~QQuickTextControl();
 
     QTextDocument *document() const;
+    void setDocument(QTextDocument *doc);
 
     void setTextCursor(const QTextCursor &cursor);
     QTextCursor textCursor() const;

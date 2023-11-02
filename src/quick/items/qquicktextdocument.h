@@ -19,6 +19,10 @@ class Q_QUICK_EXPORT QQuickTextDocument : public QObject
 public:
     QQuickTextDocument(QQuickItem *parent);
     QTextDocument *textDocument() const;
+    void setTextDocument(QTextDocument *document);
+
+Q_SIGNALS:
+    Q_REVISION(6,7) void textDocumentChanged();
 
 private:
     Q_DISABLE_COPY(QQuickTextDocument)

@@ -23,15 +23,12 @@ QT_BEGIN_NAMESPACE
     \inmodule QtQuick
 
     This class provides access to the QTextDocument of QQuickTextEdit elements.
-    This is provided to allow usage of the \l{Rich Text Processing} functionalities of Qt.
-    You are not allowed to modify the document, but it can be used to output content, for example with \l{QTextDocumentWriter}),
-    or provide additional formatting, for example with \l{QSyntaxHighlighter}.
+    This is provided to allow usage of the \l{Rich Text Processing} functionalities of Qt,
+    including document modifications. It can also be used to output content,
+    for example with \l{QTextDocumentWriter}), or provide additional formatting,
+    for example with \l{QSyntaxHighlighter}.
 
-    The class has to be used from C++ directly, using the property of the \l TextEdit.
-
-    Warning: The QTextDocument provided is used internally by \l {Qt Quick} elements to provide text manipulation primitives.
-    You are not allowed to perform any modification of the internal state of the QTextDocument. If you do, the element
-    in question may stop functioning or crash.
+    This class cannot be instantiated in QML, but is available from \l TextEdit::textDocument.
 */
 
 /*!
@@ -43,17 +40,43 @@ QQuickTextDocument::QQuickTextDocument(QQuickItem *parent)
 {
     Q_D(QQuickTextDocument);
     Q_ASSERT(parent);
-    Q_ASSERT(qobject_cast<QQuickTextEdit*>(parent));
-    d->document = QPointer<QTextDocument>(qobject_cast<QQuickTextEdit*>(parent)->d_func()->document);
+    d->editor = qobject_cast<QQuickTextEdit *>(parent);
+    Q_ASSERT(d->editor);
+}
+
+QTextDocument *QQuickTextDocumentPrivate::document() const
+{
+    return editor->document();
+}
+
+void QQuickTextDocumentPrivate::setDocument(QTextDocument *doc)
+{
+    Q_Q(QQuickTextDocument);
+    if (doc == editor->document())
+        return;
+
+    editor->setDocument(doc);
+    emit q->textDocumentChanged();
 }
 
 /*!
    Returns a pointer to the QTextDocument object.
 */
-QTextDocument* QQuickTextDocument::textDocument() const
+QTextDocument *QQuickTextDocument::textDocument() const
 {
     Q_D(const QQuickTextDocument);
-    return d->document.data();
+    return d->document();
+}
+
+/*!
+    \brief Sets the given \a document.
+    \since 6.7
+
+    The caller retains ownership of the document.
+*/
+void QQuickTextDocument::setTextDocument(QTextDocument *document)
+{
+    d_func()->setDocument(document);
 }
 
 QQuickTextImageHandler::QQuickTextImageHandler(QObject *parent)
