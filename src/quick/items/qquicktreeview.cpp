@@ -278,9 +278,6 @@ void QQuickTreeViewPrivate::setModelImpl(const QVariant &newModel)
 {
     Q_Q(QQuickTreeView);
 
-    if (newModel == m_assignedModel)
-        return;
-
     m_assignedModel = newModel;
     QVariant effectiveModel = m_assignedModel;
     if (effectiveModel.userType() == qMetaTypeId<QJSValue>())
