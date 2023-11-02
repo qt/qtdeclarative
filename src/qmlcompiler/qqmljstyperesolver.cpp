@@ -816,6 +816,30 @@ bool QQmlJSTypeResolver::canHoldUndefined(const QQmlJSRegisterContent &content) 
     return false;
 }
 
+bool QQmlJSTypeResolver::isOptionalType(const QQmlJSRegisterContent &content) const
+{
+    if (!content.isConversion())
+        return false;
+
+    const auto origins = content.conversionOrigins();
+    if (origins.length() != 2)
+        return false;
+
+    return equals(origins[0], m_voidType) || equals(origins[1], m_voidType);
+}
+
+QQmlJSScope::ConstPtr QQmlJSTypeResolver::extractNonVoidFromOptionalType(
+        const QQmlJSRegisterContent &content) const
+{
+    if (!isOptionalType(content))
+        return QQmlJSScope::ConstPtr();
+
+    const auto origins = content.conversionOrigins();
+    const QQmlJSScope::ConstPtr result = equals(origins[0], m_voidType) ? origins[1] : origins[0];
+    Q_ASSERT(!equals(result, m_voidType));
+    return result;
+}
+
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
         const QQmlJSScope::ConstPtr &type,
         ComponentIsGeneric allowComponent) const

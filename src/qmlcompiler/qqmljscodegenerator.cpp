@@ -689,23 +689,14 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
     if (m_typeResolver->isNumeric(m_state.accumulatorIn())) {
         indexType = m_typeResolver->containedType(m_state.accumulatorIn());
     } else if (m_state.accumulatorIn().isConversion()) {
-        const auto origins = m_state.accumulatorIn().conversionOrigins();
-        if (origins.size() == 2) {
-            const auto target = m_typeResolver->equals(origins[0], m_typeResolver->voidType())
-                ? origins[1]
-                : origins[0];
-
-            if (m_typeResolver->isNumeric(target)) {
-                indexType = target;
-                m_body += u"if (!" + indexName + u".metaType().isValid())\n"
-                        + voidAssignment
-                        + u"else ";
-                indexName = convertStored(
-                        m_state.accumulatorIn().storedType(), indexType, indexName);
-            } else {
-                reject(u"LoadElement with non-numeric argument"_s);
-                return;
-            }
+        const auto target = m_typeResolver->extractNonVoidFromOptionalType(m_state.accumulatorIn());
+        if (m_typeResolver->isNumeric(target)) {
+            indexType = target;
+            m_body += u"if (!" + indexName + u".metaType().isValid())\n"
+                    + voidAssignment
+                    + u"else ";
+            indexName = convertStored(
+                    m_state.accumulatorIn().storedType(), indexType, indexName);
         } else {
             reject(u"LoadElement with non-numeric argument"_s);
             return;
@@ -2881,16 +2872,7 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
         m_body += u";\n"_s;
         return;
     } else if (m_typeResolver->equals(inputContent.storedType(), m_typeResolver->varType())) {
-        if (originalContent.isConversion()) {
-            const auto origins = originalContent.conversionOrigins();
-            Q_ASSERT(origins.size() == 2);
-
-            const auto target = m_typeResolver->equals(origins[0], m_typeResolver->voidType())
-                ? origins[1]
-                : origins[0];
-
-            Q_ASSERT(!m_typeResolver->equals(target, m_typeResolver->voidType()));
-
+        if (const auto target = m_typeResolver->extractNonVoidFromOptionalType(originalContent)) {
             m_body += m_state.accumulatorVariableOut + u" = "_s;
             m_body += input + u".metaType() == "_s + metaType(target)
                     + u" ? " + conversion(inputContent, outputContent, input)

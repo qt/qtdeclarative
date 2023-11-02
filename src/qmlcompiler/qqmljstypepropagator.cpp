@@ -723,19 +723,9 @@ void QQmlJSTypePropagator::generate_LoadElement(int base)
             addReadAccumulator(m_typeResolver->globalType(m_typeResolver->uint32Type()));
         else
             addReadAccumulator(m_typeResolver->globalType(m_typeResolver->realType()));
-    } else if (m_state.accumulatorIn().isConversion()) {
-        const auto origins = m_state.accumulatorIn().conversionOrigins();
-        const bool isOptionalNumber = origins.length() == 2
-                && ((m_typeResolver->isNumeric(origins[0])
-                     && m_typeResolver->equals(origins[1], m_typeResolver->voidType()))
-                    || (m_typeResolver->isNumeric(origins[1])
-                        && m_typeResolver->equals(origins[0], m_typeResolver->voidType())));
-        if (isOptionalNumber) {
-            addReadAccumulator(m_state.accumulatorIn());
-        } else {
-            fallback();
-            return;
-        }
+    } else if (m_typeResolver->isNumeric(m_typeResolver->extractNonVoidFromOptionalType(
+                       m_state.accumulatorIn()))) {
+        addReadAccumulator(m_state.accumulatorIn());
     } else {
         fallback();
         return;

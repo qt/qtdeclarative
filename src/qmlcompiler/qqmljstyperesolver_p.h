@@ -189,6 +189,10 @@ public:
                                 const QQmlJSScope::ConstPtr &b) const;
 
     bool canHoldUndefined(const QQmlJSRegisterContent &content) const;
+    bool isOptionalType(const QQmlJSRegisterContent &content) const;
+    QQmlJSScope::ConstPtr extractNonVoidFromOptionalType(
+            const QQmlJSRegisterContent &content) const;
+
     bool isNumeric(const QQmlJSScope::ConstPtr &type) const;
     bool isIntegral(const QQmlJSScope::ConstPtr &type) const;
     bool isSignedInteger(const QQmlJSScope::ConstPtr &type) const;
