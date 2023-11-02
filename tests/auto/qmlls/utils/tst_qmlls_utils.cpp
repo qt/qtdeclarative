@@ -2342,7 +2342,19 @@ void tst_qmlls_utils::completions_data()
                             letStatementCompletion, constStatementCompletion, }
             << None;
 
-    QTest::newRow("forStatementBeforeBracket")
+    QTest::newRow("forStatementWithoutBlock")
+            << file << 107 << 12
+            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { constStatementCompletion, CompletionItemKind:: Snippet },
+                                    { varStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"helloJSStatements"_s, CompletionItemKind::Method },
+                                    { u"j"_s, CompletionItemKind::Variable },
+                                    { forStatementCompletion, CompletionItemKind::Snippet }
+               }
+            << QStringList{ propertyCompletion }
+            << None;
+
+    QTest::newRow("blockStatementBeforeBracket")
             << file << 103 << 36
             << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
                                     { constStatementCompletion, CompletionItemKind:: Snippet },
@@ -2354,7 +2366,7 @@ void tst_qmlls_utils::completions_data()
             << QStringList{ propertyCompletion }
             << None;
 
-    QTest::newRow("forStatementAfterBracket")
+    QTest::newRow("blockStatementAfterBracket")
             << file << 103 << 37
             << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
                                     { constStatementCompletion, CompletionItemKind::Snippet },

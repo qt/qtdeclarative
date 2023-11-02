@@ -2719,6 +2719,8 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             return insideImportCompletion(currentItem, ctx);
         case DomType::ScriptForStatement:
             return insideForStatementCompletion(current, ctx);
+        case DomType::ScriptBlockStatement:
+            return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
         case DomType::QmlFile:
             return insideQmlFileCompletion(currentItem, ctx);
         case DomType::QmlObject:
