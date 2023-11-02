@@ -67,22 +67,31 @@ if(QT_FEATURE_quick_designer)
 endif()
 
 add_subdirectory(basic)
-add_subdirectory(fusion)
-add_subdirectory(imagine)
-add_subdirectory(material)
-add_subdirectory(universal)
+if(QT_FEATURE_quickcontrols2_fusion)
+    add_subdirectory(fusion)
+endif()
 
-if(MACOS)
+if(QT_FEATURE_quickcontrols2_imagine)
+    add_subdirectory(imagine)
+endif()
+
+if(QT_FEATURE_quickcontrols2_material)
+    add_subdirectory(material)
+endif()
+
+if(QT_FEATURE_quickcontrols2_universal)
+    add_subdirectory(universal)
+endif()
+
+if(QT_FEATURE_quickcontrols2_macos)
     add_subdirectory(macos)
-    ### Remove
+endif()
+
+if(QT_FEATURE_quickcontrols2_ios)
     add_subdirectory(ios)
 endif()
 
-if(IOS)
-    add_subdirectory(ios)
-endif()
-
-if(WIN32)
+if(QT_FEATURE_quickcontrols2_windows)
     add_subdirectory(windows)
 endif()
 
