@@ -61,6 +61,7 @@ T.DelayButton {
         spacing: control.spacing
         mirrored: control.mirrored
         display: control.display
+        mnemonicEnabled: false
 
         icon: control.icon
         defaultIconColor: control.palette.buttonText

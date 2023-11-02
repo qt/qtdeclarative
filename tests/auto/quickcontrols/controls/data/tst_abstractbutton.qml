@@ -787,47 +787,15 @@ TestCase {
         compare(actionSpy.count, data.triggered ? 1 : 0)
     }
 
-    function test_mnemonic() {
+    function test_dontCrashOnDestructionWithMnemonics() {
         if (Qt.platform.os === "osx" || Qt.platform.os === "macos")
             skip("Mnemonics are not used on macOS")
 
         let control = createTemporaryObject(button, testCase)
         verify(control)
 
-        control.text = "&Hello"
-        compare(control.text, "&Hello")
-
         let clickSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
         verify(clickSpy.valid)
-
-        keyClick(Qt.Key_H, Qt.AltModifier)
-        compare(clickSpy.count, 1)
-
-        control.visible = false
-        keyClick(Qt.Key_H, Qt.AltModifier)
-        compare(clickSpy.count, 1)
-
-        control.visible = true
-        keyClick(Qt.Key_H, Qt.AltModifier)
-        compare(clickSpy.count, 2)
-
-        control.text = "Te&st"
-        compare(control.text, "Te&st")
-
-        keyClick(Qt.Key_H, Qt.AltModifier)
-        compare(clickSpy.count, 2)
-
-        keyClick(Qt.Key_S, Qt.AltModifier)
-        compare(clickSpy.count, 3)
-
-        control.visible = false
-        control.text = "&Hidden"
-        keyClick(Qt.Key_H, Qt.AltModifier)
-        compare(clickSpy.count, 3)
-
-        control.visible = true
-        keyClick(Qt.Key_H, Qt.AltModifier)
-        compare(clickSpy.count, 4)
 
         control.text = undefined
         control.action = action.createObject(control, {text: "&Action"})
@@ -837,7 +805,7 @@ TestCase {
 
         keyClick(Qt.Key_A, Qt.AltModifier)
         compare(actionSpy.count, 1)
-        compare(clickSpy.count, 5)
+        compare(clickSpy.count, 1)
 
         // ungrab on destruction (don't crash)
         control.Component.onDestruction.connect(function() { control = null })

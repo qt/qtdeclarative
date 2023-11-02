@@ -8,6 +8,7 @@
 #include "qquickmnemoniclabel_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuickTemplates2/private/qquickicon_p.h>
@@ -25,6 +26,12 @@ void QQuickIconLabelPrivate::completeComponent(QQuickItem *item)
 {
     if (QQmlParserStatus *parserStatus = qobject_cast<QQmlParserStatus *>(item))
         parserStatus->componentComplete();
+}
+
+void QQuickIconLabelPrivate::init()
+{
+    mnemonicEnabled = QGuiApplicationPrivate::platformTheme()->themeHint(
+        QPlatformTheme::MnemonicsEnabled).toBool();
 }
 
 QQuickIconLabelPrivate::~QQuickIconLabelPrivate() = default;
@@ -115,6 +122,7 @@ bool QQuickIconLabelPrivate::createLabel()
         return false;
 
     label = new QQuickMnemonicLabel(q);
+    label->setMnemonicEnabled(mnemonicEnabled);
     watchChanges(label);
     beginClass(label);
     label->setObjectName(QStringLiteral("label"));
@@ -358,11 +366,13 @@ void QQuickIconLabelPrivate::displayChange()
 QQuickIconLabel::QQuickIconLabel(QQuickItem *parent)
     : QQuickItem(*(new QQuickIconLabelPrivate), parent)
 {
+    d_func()->init();
 }
 
 QQuickIconLabel::QQuickIconLabel(QQuickIconLabelPrivate &dd, QQuickItem *parent)
     : QQuickItem(dd, parent)
 {
+    d_func()->init();
 }
 
 QQuickIconLabel::~QQuickIconLabel()
@@ -643,6 +653,35 @@ void QQuickIconLabel::setBottomPadding(qreal padding)
 void QQuickIconLabel::resetBottomPadding()
 {
     setBottomPadding(0);
+}
+
+/*!
+    \internal
+
+    This property determines whether \c "&" in \l text is treated as a
+    mnemonic marker (\c true) or displayed literally (\c false).
+
+    It is forwarded directly to the underlying QQuickMnemonicLabel's own
+    \l {QQuickMnemonicLabel::mnemonicEnabled}{mnemonicEnabled} property.
+    See its documentation for the effect this has on the displayed text.
+*/
+bool QQuickIconLabel::isMnemonicEnabled() const
+{
+    Q_D(const QQuickIconLabel);
+    return d->mnemonicEnabled;
+}
+
+void QQuickIconLabel::setMnemonicEnabled(bool mnemonicEnabled)
+{
+    Q_D(QQuickIconLabel);
+    if (d->mnemonicEnabled == mnemonicEnabled)
+        return;
+
+    d->mnemonicEnabled = mnemonicEnabled;
+    if (d->label)
+        d->label->setMnemonicEnabled(mnemonicEnabled);
+    d->updateImplicitSize();
+    d->layout();
 }
 
 void QQuickIconLabel::componentComplete()

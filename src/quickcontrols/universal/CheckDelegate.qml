@@ -40,6 +40,7 @@ T.CheckDelegate {
         mirrored: control.mirrored
         display: control.display
         alignment: control.display === IconLabel.IconOnly || control.display === IconLabel.TextUnderIcon ? Qt.AlignCenter : Qt.AlignLeft
+        mnemonicEnabled: false
 
         icon: control.icon
         defaultIconColor: Color.transparent(control.Universal.foreground, enabled ? 1.0 : 0.2)

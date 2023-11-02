@@ -75,6 +75,12 @@ public:
     void setText(const QString &text, QQml::PropertyUtils::State propertyState);
     void init();
 
+    // Not exposed to QML: whether mnemonics are supported is determined by
+    // the platform and, for certain derived types (e.g. ItemDelegate, where
+    // mnemonics don't make sense), by the type itself. Not something app
+    // code should be able to toggle per-instance.
+    void setMnemonicEnabled(bool enabled);
+
     void updateEffectiveIcon();
 
     void click();
@@ -123,6 +129,7 @@ public:
     Qt::MouseButtons pressButtons = Qt::NoButton;
     QQuickAbstractButton::Display display = QQuickAbstractButton::TextBesideIcon;
     QQuickDeferredPointer<QQuickItem> indicator;
+    bool mnemonicEnabled = true;
     QQuickButtonGroup *group = nullptr;
     QPointer<QQuickAction> action;
 };

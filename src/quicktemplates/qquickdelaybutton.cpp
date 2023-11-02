@@ -129,7 +129,11 @@ void QQuickDelayButtonPrivate::cancelTransition()
 QQuickDelayButton::QQuickDelayButton(QQuickItem *parent)
     : QQuickAbstractButton(*(new QQuickDelayButtonPrivate), parent)
 {
+    Q_D(QQuickDelayButton);
     setCheckable(true);
+    // DelayButton is designed to be pressed and held, not clicked, so a
+    // keyboard mnemonic shortcut doesn't make sense for it.
+    d->setMnemonicEnabled(false);
 }
 
 /*!

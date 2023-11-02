@@ -4,6 +4,8 @@
 
 #include "qquickmnemoniclabel_p.h"
 
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuick/private/qquicktext_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -11,6 +13,8 @@ QT_BEGIN_NAMESPACE
 QQuickMnemonicLabel::QQuickMnemonicLabel(QQuickItem *parent)
     : QQuickText(parent)
 {
+    m_mnemonicEnabled = QGuiApplicationPrivate::platformTheme()->themeHint(
+        QPlatformTheme::MnemonicsEnabled).toBool();
 }
 
 QString QQuickMnemonicLabel::text() const
@@ -27,17 +31,42 @@ void QQuickMnemonicLabel::setText(const QString &text)
     updateMnemonic();
 }
 
-bool QQuickMnemonicLabel::isMnemonicVisible() const
+/*!
+    \internal
+
+    This property determines whether \c "&" in \l text is treated as a
+    mnemonic marker (\c true) or displayed literally (\c false).
+
+    If \c true, QQuickMnemonicLabel parses \c "&" as a mnemonic marker and
+    removes it from the displayed text, underlining the character that
+    follows it (see \c updateMnemonic()). The character is not underlined when
+    \c QPlatformTheme::UnderlineShortcut is \c false for the current platform,
+    but the \c "&" is still removed.
+
+    If \c false, \c "&" has no special meaning and is displayed literally,
+    which allows it to be used in text such as \c "Cats & Dogs".
+
+    For example, given \l text of \c "M&nemonic":
+    \list
+    \li \c true: the displayed text is \c "Mnemonic", with the \c "n" underlined
+        (depending on \c QPlatformTheme::UnderlineShortcut).
+    \li \c false: the displayed text is \c "M&nemonic" (unchanged).
+    \endlist
+
+    The default value is \c true if the platform supports mnemonics
+    (\c QPlatformTheme::MnemonicsEnabled), otherwise \c false.
+*/
+bool QQuickMnemonicLabel::isMnemonicEnabled() const
 {
-    return m_mnemonicVisible;
+    return m_mnemonicEnabled;
 }
 
-void QQuickMnemonicLabel::setMnemonicVisible(bool visible)
+void QQuickMnemonicLabel::setMnemonicEnabled(bool enabled)
 {
-    if (m_mnemonicVisible == visible)
+    if (m_mnemonicEnabled == enabled)
         return;
 
-    m_mnemonicVisible = visible;
+    m_mnemonicEnabled = enabled;
     updateMnemonic();
 
     if (isComponentComplete())
@@ -56,6 +85,16 @@ static QTextLayout::FormatRange underlineRange(int start, int length = 1)
 // based on QPlatformTheme::removeMnemonics()
 void QQuickMnemonicLabel::updateMnemonic()
 {
+    if (!m_mnemonicEnabled) {
+        // "&" has no special meaning; display the text as-is.
+        QQuickTextPrivate::get(this)->layout.setFormats({});
+        QQuickText::setText(m_fullText);
+        return;
+    }
+
+    const bool showUnderline = QGuiApplicationPrivate::platformTheme()->themeHint(
+        QPlatformTheme::UnderlineShortcut).toBool();
+
     QString text(m_fullText.size(), QChar::Null);
     int idx = 0;
     int pos = 0;
@@ -63,7 +102,9 @@ void QQuickMnemonicLabel::updateMnemonic()
     QList<QTextLayout::FormatRange> formats;
     while (len) {
         if (m_fullText.at(pos) == QLatin1Char('&') && (len == 1 || m_fullText.at(pos + 1) != QLatin1Char('&'))) {
-            if (m_mnemonicVisible && (pos == 0 || m_fullText.at(pos - 1) != QLatin1Char('&')))
+            // A plain mnemonic marker, e.g. "M&nemonic": drop the "&" and
+            // underline the character that follows it.
+            if (showUnderline && (pos == 0 || m_fullText.at(pos - 1) != QLatin1Char('&')))
                 formats += underlineRange(pos);
             ++pos;
             --len;
@@ -73,18 +114,12 @@ void QQuickMnemonicLabel::updateMnemonic()
                    m_fullText.at(pos + 1) == QLatin1Char('&') &&
                    m_fullText.at(pos + 2) != QLatin1Char('&') &&
                    m_fullText.at(pos + 3) == QLatin1Char(')')) {
-            // a mnemonic with format "\s*(&X)"
-            if (m_mnemonicVisible) {
+            // A mnemonic with format "\s*(&X)", used when the label itself has
+            // no natural character to underline (e.g. non-Latin scripts). Keep
+            // "X" in the text, and underline it if the platform draws
+            // underlines for shortcuts.
+            if (showUnderline)
                 formats += underlineRange(pos + 1);
-            } else {
-                int n = 0;
-                while (idx > n && text.at(idx - n - 1).isSpace())
-                    ++n;
-                idx -= n;
-                pos += 4;
-                len -= 4;
-                continue;
-            }
         }
         text[idx] = m_fullText.at(pos);
         ++pos;

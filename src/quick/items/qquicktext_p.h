@@ -132,7 +132,7 @@ public:
     Q_ENUM(FontSizeMode)
 
     QString text() const;
-    void setText(const QString &);
+    virtual void setText(const QString &);
 
     QFont font() const;
     void setFont(const QFont &font);

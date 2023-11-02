@@ -13,6 +13,7 @@ IconLabel {
     spacing: control.spacing
     mirrored: control.mirrored
     display: control.display
+    mnemonicEnabled: false
     alignment: control.display === IconLabel.IconOnly || control.display === IconLabel.TextUnderIcon
         ? Qt.AlignCenter : Qt.AlignLeft
     leftPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0

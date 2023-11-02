@@ -34,16 +34,28 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing ItemDelegate}, {Delegate Controls}
 */
 
+void QQuickItemDelegatePrivate::init()
+{
+    Q_Q(QQuickItemDelegate);
+    q->setFocusPolicy(Qt::NoFocus);
+    setMnemonicEnabled(false);
+}
+
+QPalette QQuickItemDelegatePrivate::defaultPalette() const
+{
+    return QQuickTheme::palette(QQuickTheme::ItemView);
+}
+
 QQuickItemDelegate::QQuickItemDelegate(QQuickItem *parent)
     : QQuickAbstractButton(*(new QQuickItemDelegatePrivate), parent)
 {
-    setFocusPolicy(Qt::NoFocus);
+    d_func()->init();
 }
 
 QQuickItemDelegate::QQuickItemDelegate(QQuickItemDelegatePrivate &dd, QQuickItem *parent)
     : QQuickAbstractButton(dd, parent)
 {
-    setFocusPolicy(Qt::NoFocus);
+    d_func()->init();
 }
 
 /*!
@@ -99,11 +111,6 @@ QAccessible::Role QQuickItemDelegate::accessibleRole() const
     return QAccessible::ListItem;
 }
 #endif
-
-QPalette QQuickItemDelegatePrivate::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::ItemView);
-}
 
 QT_END_NAMESPACE
 

@@ -445,6 +445,8 @@ MainWindow {
                             id: labelWithDelegatesColumn
                             spacing: 4
 
+                            required property var modelData
+                            required property int index
                             readonly property var states: modelData
                             readonly property string statesAsString: states.join("\n")
 
@@ -460,6 +462,7 @@ MainWindow {
                                 objectName: controlName + "ControlContainer"
                                 controlMetaObject: rootDelegate.controlMetaObject
                                 states: labelWithDelegatesColumn.states
+                                index: labelWithDelegatesColumn.index
 
                                 Layout.alignment: Qt.AlignHCenter
                             }

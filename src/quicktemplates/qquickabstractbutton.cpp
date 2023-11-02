@@ -33,6 +33,9 @@
 QT_BEGIN_NAMESPACE
 
 Q_STATIC_LOGGING_CATEGORY(lcButtonAction, "qt.quick.controls.abstractbutton.action")
+#if !QT_CONFIG(shortcut)
+Q_STATIC_LOGGING_CATEGORY(lcButtonMnemonics, "qt.quick.controls.abstractbutton.mnemonics")
+#endif
 
 /*!
     \qmltype AbstractButton
@@ -116,6 +119,8 @@ void QQuickAbstractButtonPrivate::init()
     q->setCursor(Qt::ArrowCursor);
 #endif
     setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
+    mnemonicEnabled = QGuiApplicationPrivate::platformTheme()->themeHint(
+        QPlatformTheme::MnemonicsEnabled).toBool();
 }
 
 QPointF QQuickAbstractButtonPrivate::centerPressPoint() const
@@ -367,6 +372,45 @@ void QQuickAbstractButtonPrivate::setText(const QString &newText, QQml::Property
         return;
 
     q->buttonChange(QQuickAbstractButton::ButtonTextChange);
+}
+
+/*!
+    \internal
+
+    Whether the \l text supports \l {QShortcut#mnemonic}{mnemonics} keys. An
+    example of a mnemonic is "E&xit": a button with this text can be clicked
+    by the keyboard shortcut \c Alt+X, and the \c x will be underlined.
+
+    If \c true, the mnemonic indicator (\c &) is always removed from the
+    displayed text. Depending on the current platform's conventions, this may
+    also enable the corresponding keyboard shortcut and underline the mnemonic.
+
+    If \c false, the mnemonic indicator (\c &) will not be removed from
+    the text and the shortcut will be disabled. This allows \c & to
+    be used literally, as in \c {"Cats & Dogs"}.
+
+    This isn't exposed to QML: whether mnemonics are supported is determined
+    by the platform (QPlatformTheme::MnemonicsEnabled) by default, and forced
+    to \c false by certain derived types (such as \l ItemDelegate and
+    \l DelayButton) for which mnemonics don't make sense. It isn't something
+    app code should be able to toggle per-instance.
+
+    When Qt is \l {Qt Configure Options}{configured} with
+    \c -no-feature-shortcut, shortcuts are disabled, and this has no effect.
+*/
+void QQuickAbstractButtonPrivate::setMnemonicEnabled(bool enabled)
+{
+    if (mnemonicEnabled == enabled)
+        return;
+
+    mnemonicEnabled = enabled;
+#if QT_CONFIG(shortcut)
+    Q_Q(QQuickAbstractButton);
+    q->setShortcut(mnemonicEnabled ? QKeySequence::mnemonic(text) : QKeySequence());
+#else
+    qCDebug(lcButtonMnemonics) << "The mnemonicEnabled property has no effect when Qt is configured"
+        << "with -no-feature-shortcut";
+#endif
 }
 
 void QQuickAbstractButtonPrivate::updateEffectiveIcon()
@@ -1070,7 +1114,7 @@ void QQuickAbstractButton::setShortcut(const QKeySequence &shortcut)
 
     d->ungrabShortcut();
     d->shortcut = shortcut;
-    if (isVisible())
+    if (isVisible() && d->mnemonicEnabled)
         d->grabShortcut();
 }
 #endif
@@ -1361,7 +1405,7 @@ void QQuickAbstractButton::itemChange(ItemChange change, const ItemChangeData &v
     QQuickControl::itemChange(change, value);
 #if QT_CONFIG(shortcut)
     Q_D(QQuickAbstractButton);
-    if (change == ItemVisibleHasChanged) {
+    if (change == ItemVisibleHasChanged && d->mnemonicEnabled) {
         if (value.boolValue)
             d->grabShortcut();
         else
@@ -1387,7 +1431,8 @@ void QQuickAbstractButton::buttonChange(ButtonChange change)
         maybeSetAccessibleName(qt_accStripAmp(txt));
 #endif
 #if QT_CONFIG(shortcut)
-        setShortcut(QKeySequence::mnemonic(txt));
+        if (d->mnemonicEnabled)
+            setShortcut(QKeySequence::mnemonic(txt));
 #endif
         emit textChanged();
         break;

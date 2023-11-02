@@ -25,6 +25,8 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickItemDelegatePrivate : public QQuickAbstract
     Q_DECLARE_PUBLIC(QQuickItemDelegate)
 
 public:
+    void init();
+
     QPalette defaultPalette() const override;
 
     bool highlighted = false;

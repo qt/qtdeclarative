@@ -54,7 +54,7 @@ QtObject {
     ]
 
     property Component component: Button {
-        text: "Button"
+        text: index === 0 ? "&Button" : "Button"
         enabled: !is("disabled")
         flat: is("flat")
         checkable: is("checkable")

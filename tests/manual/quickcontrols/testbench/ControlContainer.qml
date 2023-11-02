@@ -9,12 +9,15 @@ Item {
     implicitWidth: delegate.implicitWidth
     implicitHeight: delegate.implicitHeight
 
-    property var controlMetaObject
-    property var states
+    required property var controlMetaObject
+    required property var states
+    required property int index
 
     Loader {
         id: delegate
         sourceComponent: controlMetaObject ? controlMetaObject.component : null
+
+        readonly property alias index: container.index
 
         function is(state) {
             return container.states.indexOf(state) !== -1

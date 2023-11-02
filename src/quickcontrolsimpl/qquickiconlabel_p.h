@@ -41,6 +41,8 @@ class Q_QUICKCONTROLS2IMPL_EXPORT QQuickIconLabel : public QQuickItem
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding FINAL)
     Q_PROPERTY(QColor defaultIconColor READ defaultIconColor WRITE setDefaultIconColor
         NOTIFY defaultIconColorChanged FINAL REVISION(6, 11))
+    Q_PROPERTY(bool mnemonicEnabled READ isMnemonicEnabled WRITE setMnemonicEnabled
+        FINAL REVISION(6, 13))
     QML_NAMED_ELEMENT(IconLabel)
     QML_ADDED_IN_VERSION(2, 3)
 
@@ -98,6 +100,9 @@ public:
     qreal bottomPadding() const;
     void setBottomPadding(qreal padding);
     void resetBottomPadding();
+
+    bool isMnemonicEnabled() const;
+    void setMnemonicEnabled(bool mnemonicEnabled);
 
 signals:
     void defaultIconColorChanged();

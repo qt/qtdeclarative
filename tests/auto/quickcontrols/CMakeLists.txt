@@ -25,6 +25,7 @@ if(QT_FEATURE_qml_labs)
 endif()
 add_subdirectory(pointerhandlers)
 add_subdirectory(pressandhold)
+add_subdirectory(qquickabstractbutton)
 add_subdirectory(qquickapplicationwindow)
 if(NOT ANDROID) # Not supported on Android: QTBUG-134798
 add_subdirectory(qquickcontextmenu)

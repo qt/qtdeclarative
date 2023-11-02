@@ -69,6 +69,7 @@ T.SwitchDelegate {
         mirrored: control.mirrored
         display: control.display
         alignment: control.display === IconLabel.IconOnly || control.display === IconLabel.TextUnderIcon ? Qt.AlignCenter : Qt.AlignLeft
+        mnemonicEnabled: false
 
         icon: control.icon
         defaultIconColor: control.palette.text

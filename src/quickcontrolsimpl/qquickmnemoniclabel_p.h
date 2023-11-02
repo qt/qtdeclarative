@@ -25,7 +25,7 @@ class Q_QUICKCONTROLS2IMPL_EXPORT QQuickMnemonicLabel : public QQuickText
 {
     Q_OBJECT
     Q_PROPERTY(QString text READ text WRITE setText FINAL)
-    Q_PROPERTY(bool mnemonicVisible READ isMnemonicVisible WRITE setMnemonicVisible FINAL)
+    Q_PROPERTY(bool mnemonicEnabled READ isMnemonicEnabled WRITE setMnemonicEnabled FINAL)
     QML_NAMED_ELEMENT(MnemonicLabel)
     QML_ADDED_IN_VERSION(2, 3)
 
@@ -33,15 +33,15 @@ public:
     explicit QQuickMnemonicLabel(QQuickItem *parent = nullptr);
 
     QString text() const;
-    void setText(const QString &text);
+    void setText(const QString &text) override;
 
-    bool isMnemonicVisible() const;
-    void setMnemonicVisible(bool visible);
+    bool isMnemonicEnabled() const;
+    void setMnemonicEnabled(bool enabled);
 
 private:
     void updateMnemonic();
 
-    bool m_mnemonicVisible = true;
+    bool m_mnemonicEnabled = true;
     QString m_fullText;
 };
 

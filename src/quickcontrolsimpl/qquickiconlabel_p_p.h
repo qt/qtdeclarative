@@ -31,6 +31,7 @@ class Q_AUTOTEST_EXPORT QQuickIconLabelPrivate : public QQuickItemPrivate,
     Q_DECLARE_PUBLIC(QQuickIconLabel)
 
 public:
+    void init();
     ~QQuickIconLabelPrivate() override;
 
     bool hasIcon() const;
@@ -70,6 +71,7 @@ public:
         const QRectF &rectangle);
 
     bool mirrored = false;
+    bool mnemonicEnabled = true;
     QQuickIconLabel::Display display = QQuickIconLabel::TextBesideIcon;
     Qt::Alignment alignment = Qt::AlignCenter;
     qreal spacing = 0;
