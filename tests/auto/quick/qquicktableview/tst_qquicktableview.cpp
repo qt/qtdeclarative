@@ -277,6 +277,7 @@ private slots:
     void resettingRolesRespected();
     void checkScroll_data();
     void checkScroll();
+    void checkRebuildJsModel();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -7494,6 +7495,32 @@ void tst_QQuickTableView::checkScroll() // QTBUG-116566
 
     // Check that scrolling succeeded
     QTRY_COMPARE_GT(tableView->contentY(), 20);
+}
+
+void tst_QQuickTableView::checkRebuildJsModel()
+{
+    LOAD_TABLEVIEW("resetJsModelData.qml"); // gives us 'tableView' variable
+
+    // Generate javascript model
+    const int size = 5;
+    const char* modelUpdated = "modelUpdated";
+
+    QJSEngine jsEngine;
+    QJSValue jsArray;
+    jsArray = jsEngine.newArray(size);
+    for (int i = 0; i < size; ++i)
+        jsArray.setProperty(i, QRandomGenerator::global()->generate());
+
+    QVariant jsModel = QVariant::fromValue(jsArray);
+    tableView->setModel(jsModel);
+    WAIT_UNTIL_POLISHED;
+
+    // Model change would be triggered for the first time
+    QCOMPARE(tableView->property(modelUpdated).toInt(), 1);
+
+    // Set the same model once again and check if model changes
+    tableView->setModel(jsModel);
+    QCOMPARE(tableView->property(modelUpdated).toInt(), 1);
 }
 
 QTEST_MAIN(tst_QQuickTableView)
