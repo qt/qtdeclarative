@@ -428,13 +428,14 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
         if (result != end)
             *result = result->toUpper();
 
-        qWarning()
-                << terminalString
-                << "is not a properly capitalized signal handler name."
-                << handlerName
-                << "would be correct.";
-        if (findSignalInMetaObject(signalName.toUtf8()))
+        if (findSignalInMetaObject(signalName.toUtf8())) {
+            qWarning()
+                    << terminalString
+                    << "is not a properly capitalized signal handler name."
+                    << handlerName
+                    << "would be correct.";
             return;
+        }
     }
 
     if (ddata && ddata->propertyCache) {
