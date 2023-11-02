@@ -48,19 +48,19 @@ qt_feature("quickcontrols2-macos" PRIVATE
     SECTION "Quick Controls 2"
     LABEL "macOS"
     PURPOSE "Provides a native macOS desktop style."
-    CONDITION QT_FEATURE_quickcontrols2_basic
+    CONDITION QT_FEATURE_quickcontrols2_basic AND MACOS
 )
 qt_feature("quickcontrols2-ios" PRIVATE
     SECTION "Quick Controls 2"
     LABEL "iOS"
     PURPOSE "Provides a native-looking iOS style."
-    CONDITION QT_FEATURE_quickcontrols2_basic
+    CONDITION QT_FEATURE_quickcontrols2_basic AND (IOS OR MACOS)
 )
 qt_feature("quickcontrols2-windows" PRIVATE
     SECTION "Quick Controls 2"
     LABEL "Windows"
     PURPOSE "Provides a native Windows desktop style."
-    CONDITION QT_FEATURE_quickcontrols2_basic
+    CONDITION QT_FEATURE_quickcontrols2_basic AND WIN32
 )
 qt_configure_add_summary_section(NAME "Qt Quick Controls 2")
 qt_configure_add_summary_entry(
