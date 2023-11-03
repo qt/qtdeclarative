@@ -2723,6 +2723,22 @@ static QList<CompletionItem> insideReturnStatement(const DomItem &currentItem,
     return {};
 }
 
+static QList<CompletionItem> insideWhileStatement(const DomItem &currentItem,
+                                                  const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
+    const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
+
+    if (betweenLocations(leftParenthesis, ctx, rightParenthesis)) {
+        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    }
+    if (afterLocation(rightParenthesis, ctx)) {
+        return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+    }
+    return {};
+}
+
 QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
                                                const CompletionContextStrings &ctx)
 {
@@ -2790,6 +2806,8 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             return insideIfStatement(currentParent, ctx);
         case DomType::ScriptReturnStatement:
             return insideReturnStatement(currentParent, ctx);
+        case DomType::ScriptWhileStatement:
+            return insideWhileStatement(currentParent, ctx);
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.
@@ -2806,7 +2824,6 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
         case DomType::ScriptCaseClauses:
         case DomType::ScriptCaseClause:
         case DomType::ScriptDefaultClause:
-        case DomType::ScriptWhileStatement:
         case DomType::ScriptDoWhileStatement:
         case DomType::ScriptForEachStatement:
             return {};

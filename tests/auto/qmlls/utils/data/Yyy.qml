@@ -124,4 +124,7 @@ Zzz {
     function helloReturnStatement(hello) {
         return hello
     }
+    function helloWhileStatement(hello) {
+        while (hello) --hello
+    }
 }
