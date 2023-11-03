@@ -223,7 +223,7 @@ private:
         const auto imageUrls = getObject("images", figmaImagesResponsDoc.object());
         const auto figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
 
-        progressLabel("Downloading image urls with format " + imageFormat.name);
+        progressLabel("Downloading images with format " + imageFormat.name);
 
         QScopedPointer<QNetworkAccessManager> manager(new QNetworkAccessManager);
         manager->setAutoDeleteReplies(true);
