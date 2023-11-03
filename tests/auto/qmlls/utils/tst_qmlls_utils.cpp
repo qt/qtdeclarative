@@ -2428,6 +2428,18 @@ void tst_qmlls_utils::completions_data()
             << ExpectedCompletions{ { u"hello"_s, CompletionItemKind::Variable },
                                     { letStatementCompletion, CompletionItemKind::Snippet } }
             << QStringList{ propertyCompletion } << None;
+
+    QTest::newRow("doWhileCondition")
+            << file << 131 << 30
+            << ExpectedCompletions{ { u"hello"_s, CompletionItemKind::Variable }, }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("whileConsequence")
+            << file << 131 << 12
+            << ExpectedCompletions{ { u"hello"_s, CompletionItemKind::Variable },
+                                    { letStatementCompletion, CompletionItemKind::Snippet } }
+            << QStringList{ propertyCompletion } << None;
 }
 
 void tst_qmlls_utils::completions()

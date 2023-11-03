@@ -127,4 +127,7 @@ Zzz {
     function helloWhileStatement(hello) {
         while (hello) --hello
     }
+    function helloDoWhileStatement(hello) {
+        do  --hello;  while (hello);
+    }
 }

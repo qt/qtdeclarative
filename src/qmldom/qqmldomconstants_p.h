@@ -341,6 +341,7 @@ MainRegion denotes the entire FileLocation region.
 */
 enum FileLocationRegion : int {
     AsTokenRegion,
+    DoKeywordRegion,
     ColonTokenRegion,
     CommaTokenRegion,
     ComponentKeywordRegion,
@@ -377,6 +378,7 @@ enum FileLocationRegion : int {
     SecondSemicolonRegion,
     SignalKeywordRegion,
     TypeIdentifierRegion,
+    WhileKeywordRegion,
 };
 Q_ENUM_NS(FileLocationRegion);
 
