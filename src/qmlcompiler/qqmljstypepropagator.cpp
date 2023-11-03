@@ -2174,36 +2174,17 @@ void QQmlJSTypePropagator::recordEqualsType(int lhs)
         return content.isEnumeration() || m_typeResolver->isNumeric(content);
     };
 
-    const auto isIntCompatible = [this](const QQmlJSRegisterContent &content) {
-        auto contained = m_typeResolver->containedType(content);
-        if (contained->scopeType() == QQmlSA::ScopeType::EnumScope)
-            contained = contained->baseType();
-        return m_typeResolver->isIntegral(contained)
-                && !m_typeResolver->equals(contained, m_typeResolver->uint32Type());
-    };
-
     const auto accumulatorIn = m_state.accumulatorIn();
     const auto lhsRegister = m_state.registers[lhs].content;
 
     // If the types are primitive, we compare directly ...
     if (m_typeResolver->isPrimitive(accumulatorIn) || accumulatorIn.isEnumeration()) {
         if (m_typeResolver->registerContains(
-                    accumulatorIn, m_typeResolver->containedType(lhsRegister))) {
-            addReadRegister(lhs, accumulatorIn);
+                    accumulatorIn, m_typeResolver->containedType(lhsRegister))
+                || (isNumericOrEnum(accumulatorIn) && isNumericOrEnum(lhsRegister))
+                || m_typeResolver->isPrimitive(lhsRegister)) {
+            addReadRegister(lhs, lhsRegister);
             addReadAccumulator(accumulatorIn);
-            return;
-        } else if (isNumericOrEnum(accumulatorIn) && isNumericOrEnum(lhsRegister)) {
-            const auto targetType = isIntCompatible(accumulatorIn) && isIntCompatible(lhsRegister)
-                    ? m_typeResolver->globalType(m_typeResolver->int32Type())
-                    : m_typeResolver->globalType(m_typeResolver->realType());
-            addReadRegister(lhs, targetType);
-            addReadAccumulator(targetType);
-            return;
-        } else if (m_typeResolver->isPrimitive(lhsRegister)) {
-            const QQmlJSRegisterContent primitive = m_typeResolver->globalType(
-                        m_typeResolver->jsPrimitiveType());
-            addReadRegister(lhs, primitive);
-            addReadAccumulator(primitive);
             return;
         }
     }

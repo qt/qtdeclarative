@@ -59,6 +59,7 @@ private slots:
     void callWithSpread();
     void colorAsVariant();
     void colorString();
+    void comparisonTypes();
     void componentReturnType();
     void compositeSingleton();
     void compositeTypeMethod();
@@ -963,6 +964,21 @@ void tst_QmlCppCodegen::colorString()
     QCOMPARE(qvariant_cast<QColor>(rootObject->property("c")), QColor::fromRgb(0xdd, 0xdd, 0xdd));
     QCOMPARE(qvariant_cast<QColor>(rootObject->property("d")), QColor::fromRgb(0xaa, 0xaa, 0xaa));
     QCOMPARE(qvariant_cast<QColor>(rootObject->property("e")), QColor::fromRgb(0x11, 0x22, 0x33));
+}
+
+void tst_QmlCppCodegen::comparisonTypes()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/comparisonTypes.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QCOMPARE(object->property("found").toInt(), 1);
+    QCOMPARE(object->property("foundStrict").toInt(), 0);
+
+    QCOMPARE(object->property("foundNot").toInt(), 2);
+    QCOMPARE(object->property("foundNotStrict").toInt(), 10);
 }
 
 void tst_QmlCppCodegen::componentReturnType()
