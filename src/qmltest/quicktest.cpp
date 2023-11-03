@@ -223,22 +223,45 @@ static void handleCompileErrors(
     results.stopLogging();
 }
 
+class SimpleReceiver : public QObject {
+    Q_OBJECT
+public:
+    bool signalReceived = false;
+public slots:
+    void slotFun() { signalReceived = true; }
+};
+
 bool qWaitForSignal(QObject *obj, const char* signal, int timeout)
 {
-    QSignalSpy spy(obj, signal);
-    QElapsedTimer timer;
-    timer.start();
-
-    while (!spy.size()) {
-        int remaining = timeout - int(timer.elapsed());
-        if (remaining <= 0)
-            break;
-        QCoreApplication::processEvents(QEventLoop::AllEvents, remaining);
-        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-        QTest::qSleep(10);
+    if (!obj || !signal) {
+        qWarning("qWaitForSignal: invalid arguments");
+        return false;
+    }
+    if (((signal[0] - '0') & 0x03) != QSIGNAL_CODE) {
+        qWarning("qWaitForSignal: not a valid signal, use the SIGNAL macro");
+        return false;
     }
 
-    return spy.size();
+    int sig = obj->metaObject()->indexOfSignal(signal + 1);
+    if (sig == -1) {
+        const QByteArray ba = QMetaObject::normalizedSignature(signal + 1);
+        sig = obj->metaObject()->indexOfSignal(ba.constData());
+        if (sig == -1) {
+            qWarning("qWaitForSignal: no such signal %s::%s", obj->metaObject()->className(),
+                     signal);
+            return false;
+        }
+    }
+
+    SimpleReceiver receiver;
+    static int slot = receiver.metaObject()->indexOfSlot("slotFun()");
+    if (!QMetaObject::connect(obj, sig, &receiver, slot)) {
+        qWarning("qWaitForSignal: failed to connect to signal %s::%s",
+                 obj->metaObject()->className(), signal);
+        return false;
+    }
+
+    return QTest::qWaitFor([&]() { return receiver.signalReceived; }, timeout);
 }
 
 template <typename... Args>
@@ -667,3 +690,4 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
 QT_END_NAMESPACE
 
 #include "moc_quicktest_p.cpp"
+#include "quicktest.moc"
