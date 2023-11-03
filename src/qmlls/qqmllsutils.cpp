@@ -2442,6 +2442,17 @@ QList<CompletionItem> QQmlLSUtils::suggestVariableDeclarationStatementCompletion
 \internal
 Generates snippets or keywords for all possible JS statements where it makes sense. To use whenever
 any JS statement can be expected.
+
+Here is a list of statements that do \e{not} get any completions:
+\list
+    \li BlockStatement does not need a code snippet, editors automatically include the closing bracket
+    anyway.
+    \li EmptyStatement completion would only generate a single \c{;}
+    \li ExpressionStatement completion cannot generate any snippet, only identifiers
+    \li WithStatement completion is not recommended: qmllint will warn about usage of with statements
+    \li LabelledStatement completion might need to propose labels (TODO?)
+    \li DebuggerStatement completion does not strike as being very useful
+\endlist
 */
 QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &currentItem)
 {
@@ -2472,6 +2483,33 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &c
     // for + brackets loop statement
     result.append(makeSnippet("for (initializer; condition; increment) { statements... }",
                               "for ($1;$2;$3) {\n\t$0\n}"));
+
+    // for ... in + brackets loop statement
+    result.append(makeSnippet("for (property in object) { statements... }",
+                              "for ($1 in $2) {\n\t$0\n}"));
+
+    // for ... of + brackets loop statement
+    result.append(makeSnippet("for (element of array) { statements... }",
+                              "for ($1 of $2) {\n\t$0\n}"));
+
+    // try + catch statement
+    result.append(makeSnippet("try { statements... } catch(error) { statements... }",
+                              "try {\n\t$1\n} catch($2) {\n\t$0\n}"));
+
+    // try + finally statement
+    result.append(makeSnippet("try { statements... } finally { statements... }",
+                              "try {\n\t$1\n} finally {\n\t$0\n}"));
+
+    // try + catch + finally statement
+    result.append(makeSnippet("try { statements... } catch(error) { statements... } finally { statements... }",
+                              "try {\n\t$1\n} catch($2) {\n\t$3\n} finally {\n\t$0\n}"));
+
+    // one can always assume that JS code in QML is inside a function, so always propose `return`
+    for (auto&& view : { "return"_ba, "throw"_ba }) {
+        result.emplaceBack();
+        result.back().label = std::move(view);
+        result.back().kind = int(CompletionItemKind::Keyword);
+    }
 
     DomItem loopOrSwitchParent = currentItem;
     bool alreadyInLoop = false;
