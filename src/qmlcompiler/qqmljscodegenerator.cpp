@@ -776,7 +776,7 @@ void QQmlJSCodeGenerator::generate_StoreElement(int base, int index)
     const auto elementType = m_typeResolver->globalType(m_typeResolver->genericType(
                                           m_typeResolver->containedType(valueType)));
 
-    addInclude(u"qjslist.h"_s);
+    addInclude(u"QtQml/qjslist.h"_s);
     m_body += u"if ("_s;
     if (!m_typeResolver->isIntegral(indexType))
         m_body += u"QJSNumberCoercion::isArrayIndex("_s + indexName + u") && "_s;
@@ -1611,7 +1611,7 @@ bool QQmlJSCodeGenerator::inlineStringMethod(const QString &name, int base, int 
 
 bool QQmlJSCodeGenerator::inlineTranslateMethod(const QString &name, int argc, int argv)
 {
-    addInclude(u"qcoreapplication.h"_s);
+    addInclude(u"QtCore/qcoreapplication.h"_s);
 
     const auto arg = [&](int i, const QQmlJSScope::ConstPtr &type) {
         Q_ASSERT(i < argc);
@@ -1721,9 +1721,9 @@ bool QQmlJSCodeGenerator::inlineMathMethod(const QString &name, int argc, int ar
 {
     addInclude(u"cmath"_s);
     addInclude(u"limits"_s);
-    addInclude(u"qalgorithms.h"_s);
-    addInclude(u"qrandom.h"_s);
-    addInclude(u"qjsprimitivevalue.h"_s);
+    addInclude(u"QtCore/qalgorithms.h"_s);
+    addInclude(u"QtCore/qrandom.h"_s);
+    addInclude(u"QtQml/qjsprimitivevalue.h"_s);
 
     // If the result is not stored, we don't need to generate any code. All the math methods are
     // conceptually pure functions.
@@ -1860,7 +1860,7 @@ bool QQmlJSCodeGenerator::inlineConsoleMethod(const QString &name, int argc, int
     if (type.isEmpty())
         return false;
 
-    addInclude(u"qloggingcategory.h"_s);
+    addInclude(u"QtCore/qloggingcategory.h"_s);
 
     m_body += u"{\n";
     m_body += u"    bool firstArgIsCategory = false;\n";
@@ -1935,7 +1935,7 @@ bool QQmlJSCodeGenerator::inlineArrayMethod(const QString &name, int base, int a
     const QString qjsListMethod = u"QJSList(&"_s + baseVar + u", aotContext->engine)."
             + name + u"(";
 
-    addInclude(u"qjslist.h"_s);
+    addInclude(u"QtQml/qjslist.h"_s);
 
     if (name == u"includes" && argc > 0 && argc < 3) {
         QString call = qjsListMethod
@@ -2175,7 +2175,7 @@ void QQmlJSCodeGenerator::generate_Construct(int func, int argc, int argv)
         if (argc == 1
                 && m_typeResolver->registerContains(
                     m_state.readRegister(argv), m_typeResolver->realType())) {
-            addInclude(u"qjslist.h"_s);
+            addInclude(u"QtQml/qjslist.h"_s);
 
             const QString error = u"    aotContext->engine->throwError(QJSValue::RangeError, "_s
                     + u"QLatin1String(\"Invalid array length\"));\n"_s
@@ -2322,7 +2322,7 @@ void QQmlJSCodeGenerator::generate_GetIterator(int iterator)
 {
     INJECT_TRACE_INFO(generate_GetIterator);
 
-    addInclude(u"qjslist.h"_s);
+    addInclude(u"QtQml/qjslist.h"_s);
     const QQmlJSRegisterContent listType = m_state.accumulatorIn();
     if (!listType.isList())
         reject(u"iterator on non-list type"_s);
