@@ -2726,8 +2726,26 @@ static QList<CompletionItem> insideReturnStatement(const DomItem &currentItem,
 QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
                                                const CompletionContextStrings &ctx)
 {
-    for (DomItem current = currentItem; current; current = current.directParent()) {
-        const DomType currentType = current.internalKind();
+    /*!
+    Completion is not provided on a script identifier expression because script identifier
+    expressions lack context information. Instead, find the first parent that has enough
+    context information and provide completion for this one.
+    For example, a script identifier expression \c{le} in
+    \badcode
+        for (;le;) { ... }
+    \endcode
+    will get completion for a property called \c{leProperty}, while the same script identifier
+    expression in
+    \badcode
+        for (le;;) { ... }
+    \endcode
+    will, in addition to \c{leProperty}, also get completion for the \c{let} statement snippet.
+    In this example, the parent used for the completion is the for-statement, of type
+    DomType::ScriptForStatement.
+    */
+    for (DomItem currentParent = currentItem; currentParent;
+         currentParent = currentParent.directParent()) {
+        const DomType currentType = currentParent.internalKind();
         switch (currentType) {
         case DomType::Id:
             // suppress completions for ids
@@ -2744,34 +2762,34 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             // no autocompletion inside of function parameter definition
             return {};
         case DomType::Binding:
-            return insideBindingCompletion(currentItem, ctx);
+            return insideBindingCompletion(currentParent, ctx);
         case DomType::ScriptExpression:
-            return scriptIdentifierCompletion(currentItem, ctx);
+            return scriptIdentifierCompletion(currentParent, ctx);
         case DomType::Import:
-            return insideImportCompletion(currentItem, ctx);
+            return insideImportCompletion(currentParent, ctx);
         case DomType::ScriptForStatement:
-            return insideForStatementCompletion(current, ctx);
+            return insideForStatementCompletion(currentParent, ctx);
         case DomType::ScriptBlockStatement:
-            return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+            return QQmlLSUtils::suggestJSStatementCompletion(currentParent);
         case DomType::QmlFile:
-            return insideQmlFileCompletion(currentItem, ctx);
+            return insideQmlFileCompletion(currentParent, ctx);
         case DomType::QmlObject:
-            return insideQmlObjectCompletion(currentItem, ctx);
+            return insideQmlObjectCompletion(currentParent, ctx);
         case DomType::MethodInfo:
             // suppress completions
             return {};
         case DomType::PropertyDefinition:
-            return insidePropertyDefinitionCompletion(currentItem, ctx);
+            return insidePropertyDefinitionCompletion(currentParent, ctx);
         case DomType::ScriptBinaryExpression:
-            return scriptIdentifierCompletion(currentItem, ctx);
+            return scriptIdentifierCompletion(currentParent, ctx);
         case DomType::ScriptLiteral:
-            return insideScriptLiteralCompletion(currentItem, ctx);
+            return insideScriptLiteralCompletion(currentParent, ctx);
         case DomType::ScriptCallExpression:
-            return insideCallExpression(currentItem, ctx);
+            return insideCallExpression(currentParent, ctx);
         case DomType::ScriptIfStatement:
-            return insideIfStatement(current, ctx);
+            return insideIfStatement(currentParent, ctx);
         case DomType::ScriptReturnStatement:
-            return insideReturnStatement(current, ctx);
+            return insideReturnStatement(currentParent, ctx);
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.
