@@ -2440,6 +2440,84 @@ void tst_qmlls_utils::completions_data()
             << ExpectedCompletions{ { u"hello"_s, CompletionItemKind::Variable },
                                     { letStatementCompletion, CompletionItemKind::Snippet } }
             << QStringList{ propertyCompletion } << None;
+
+    QTest::newRow("forInStatementLet")
+            << file << 134 << 13
+            << ExpectedCompletions{
+                       { letStatementCompletion, CompletionItemKind::Snippet },
+                       { constStatementCompletion, CompletionItemKind::Snippet },
+                       { varStatementCompletion, CompletionItemKind::Snippet },
+                       { u"helloJSStatements"_s, CompletionItemKind::Method }
+                }
+            << QStringList{
+                       u"property"_s,
+                       u"readonly"_s,
+                       u"required"_s,
+                       forStatementCompletion,
+                       ifStatementCompletion,
+               } << None;
+
+    QTest::newRow("forOfStatementLet")
+            << file << 135 << 13
+            << ExpectedCompletions{
+                       { letStatementCompletion, CompletionItemKind::Snippet },
+                       { constStatementCompletion, CompletionItemKind::Snippet },
+                       { varStatementCompletion, CompletionItemKind::Snippet },
+                       { u"helloJSStatements"_s, CompletionItemKind::Method }
+                }
+            << QStringList{
+                       u"property"_s,
+                       u"readonly"_s,
+                       u"required"_s,
+                       forStatementCompletion,
+                       ifStatementCompletion,
+               } << None;
+
+    QTest::newRow("forInStatementTarget")
+            << file << 134 << 25
+            << ExpectedCompletions{
+                   { u"helloJSStatements"_s, CompletionItemKind::Method },
+                   { u"hello"_s, CompletionItemKind::Variable },
+               }
+            << QStringList{ u"property"_s,          u"readonly"_s,           u"required"_s,
+                            forStatementCompletion, ifStatementCompletion,   varStatementCompletion,
+                            letStatementCompletion, constStatementCompletion, }
+            << None;
+
+    QTest::newRow("forOfStatementTarget")
+            << file << 135 << 24
+            << ExpectedCompletions{
+                   { u"helloJSStatements"_s, CompletionItemKind::Method },
+                   { u"hello"_s, CompletionItemKind::Variable },
+               }
+            << QStringList{ u"property"_s,          u"readonly"_s,           u"required"_s,
+                            forStatementCompletion, ifStatementCompletion,   varStatementCompletion,
+                            letStatementCompletion, constStatementCompletion, }
+            << None;
+
+    QTest::newRow("forInStatementConsequence")
+            << file << 134 << 31
+            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { constStatementCompletion, CompletionItemKind:: Snippet },
+                                    { varStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"helloJSStatements"_s, CompletionItemKind::Method },
+                                    { u"hello"_s, CompletionItemKind::Variable },
+                                    { forStatementCompletion, CompletionItemKind::Snippet }
+               }
+            << QStringList{ propertyCompletion }
+            << None;
+
+    QTest::newRow("forOfStatementConsequence")
+            << file << 135 << 33
+            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { constStatementCompletion, CompletionItemKind:: Snippet },
+                                    { varStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"helloJSStatements"_s, CompletionItemKind::Method },
+                                    { u"hello"_s, CompletionItemKind::Variable },
+                                    { forStatementCompletion, CompletionItemKind::Snippet }
+               }
+            << QStringList{ propertyCompletion }
+            << None;
 }
 
 void tst_qmlls_utils::completions()

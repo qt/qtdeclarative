@@ -130,4 +130,8 @@ Zzz {
     function helloDoWhileStatement(hello) {
         do  --hello;  while (hello);
     }
+    function helloForEachStatement(hello) {
+        for(variable in hello) ++hello;
+        for(element of hello) ++hello;
+    }
 }

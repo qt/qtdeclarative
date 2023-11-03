@@ -2757,6 +2757,33 @@ static QList<CompletionItem> insideDoWhileStatement(const DomItem &currentItem,
     return {};
 }
 
+static QList<CompletionItem> insideForEachStatement(const DomItem &currentItem,
+                                                              const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation inOf = regions[InOfTokenRegion];
+    const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
+    const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
+
+    if (betweenLocations(leftParenthesis, ctx, inOf)) {
+        QList<CompletionItem> res;
+        res << QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx)
+            << QQmlLSUtils::suggestVariableDeclarationStatementCompletion();
+        return res;
+    }
+    if (betweenLocations(inOf, ctx, rightParenthesis)) {
+        const QList<CompletionItem> res = QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+        return res;
+    }
+
+    if (afterLocation(rightParenthesis, ctx)) {
+        return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+    }
+
+    return {};
+}
+
 QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
                                                const CompletionContextStrings &ctx)
 {
@@ -2828,6 +2855,8 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             return insideWhileStatement(currentParent, ctx);
         case DomType::ScriptDoWhileStatement:
             return insideDoWhileStatement(currentParent, ctx);
+        case DomType::ScriptForEachStatement:
+            return insideForEachStatement(currentParent, ctx);
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.
@@ -2844,7 +2873,6 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
         case DomType::ScriptCaseClauses:
         case DomType::ScriptCaseClause:
         case DomType::ScriptDefaultClause:
-        case DomType::ScriptForEachStatement:
             return {};
 
         default:
