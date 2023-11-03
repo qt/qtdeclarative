@@ -966,7 +966,8 @@ private:
 
     void generateQmlDir()
     {
-        if (!m_bridge->m_overwriteQml) {
+        const QString fileName("qmldir");
+        if (!m_bridge->m_overwriteQml && fileExists(fileName)) {
             // If the user doesn't want us to regenerate QML, we shouldn't modify the
             // qmldir either. This allows the user to tweak it by hand, such
             // as removing unstyled controls, or set a different fallback style.
@@ -984,8 +985,7 @@ private:
 
         qmldir += "singleton Config" + version + "Config.qml" + "\n";
 
-        debug("generating qmldir");
-        createTextFileInStylefolder("qmldir", qmldir);
+        createTextFileInStylefolder(fileName, qmldir);
         progress();
     }
 
@@ -1078,6 +1078,12 @@ private:
 
         QTextStream out(&file);
         out << contents;
+    }
+
+    bool fileExists(const QString &destPath) const
+    {
+        QString targetPath = m_bridge->m_targetDirectory + "/" + destPath;
+        return QFileInfo(targetPath).exists();
     }
 
     QRectF getFigmaBoundingBox(const QJsonObject figmaObject) const
