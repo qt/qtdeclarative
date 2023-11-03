@@ -154,22 +154,11 @@ void QQuickHeaderViewBasePrivate::syncModel()
 
 void QQuickHeaderViewBasePrivate::syncSyncView()
 {
-    Q_Q(QQuickHeaderViewBase);
     if (assignedSyncDirection != orientation()) {
         qmlWarning(q_func()) << "Setting syncDirection other than Qt::"
                              << QVariant::fromValue(orientation()).toString()
                              << " is invalid.";
         assignedSyncDirection = orientation();
-    }
-    if (assignedSyncView) {
-        QBoolBlocker fixupGuard(inUpdateContentSize, true);
-        if (orientation() == Qt::Horizontal) {
-            q->setLeftMargin(assignedSyncView->leftMargin());
-            q->setRightMargin(assignedSyncView->rightMargin());
-        } else {
-            q->setTopMargin(assignedSyncView->topMargin());
-            q->setBottomMargin(assignedSyncView->bottomMargin());
-        }
     }
     QQuickTableViewPrivate::syncSyncView();
 }
