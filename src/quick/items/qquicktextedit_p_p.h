@@ -19,6 +19,8 @@
 #include "qquickimplicitsizeitem_p_p.h"
 #include "qquicktextutil_p.h"
 
+#include <QtQuick/private/qquicktextselection_p.h>
+
 #include <QtQml/qqml.h>
 #include <QtCore/qlist.h>
 #include <private/qlazilyallocated_p.h>
@@ -167,6 +169,7 @@ public:
     QTextDocument *document = nullptr;
     QQuickTextControl *control = nullptr;
     QQuickTextDocument *quickDocument = nullptr;
+    mutable QQuickTextSelection *cursorSelection = nullptr;
     QList<Node> textNodeMap;
     QList<QQuickPixmap *> pixmapsInProgress;
 

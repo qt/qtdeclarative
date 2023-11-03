@@ -76,19 +76,64 @@ ApplicationWindow {
     Action {
         id: boldAction
         shortcut: StandardKey.Bold
-        onTriggered: document.bold = !document.bold
+        checkable: true
+        checked: textArea.cursorSelection.font.bold
+        onTriggered: textArea.cursorSelection.font = Qt.font({ bold: checked })
     }
 
     Action {
         id: italicAction
         shortcut: StandardKey.Italic
-        onTriggered: document.italic = !document.italic
+        checkable: true
+        checked: textArea.cursorSelection.font.italic
+        onTriggered: textArea.cursorSelection.font = Qt.font({ italic: checked })
     }
 
     Action {
         id: underlineAction
         shortcut: StandardKey.Underline
-        onTriggered: document.underline = !document.underline
+        checkable: true
+        checked: textArea.cursorSelection.font.underline
+        onTriggered: textArea.cursorSelection.font = Qt.font({ underline: checked })
+    }
+
+    Action {
+        id: strikeoutAction
+        checkable: true
+        checked: textArea.cursorSelection.font.strikeout
+        onTriggered: textArea.cursorSelection.font = Qt.font({ strikeout: checked })
+    }
+
+    Action {
+        id: alignLeftAction
+        shortcut: "Ctrl+{"
+        checkable: true
+        checked: textArea.cursorSelection.alignment === Qt.AlignLeft
+        onTriggered: textArea.cursorSelection.alignment = Qt.AlignLeft
+    }
+
+    Action {
+        id: alignCenterAction
+        shortcut: "Ctrl+|"
+        checkable: true
+        checked: textArea.cursorSelection.alignment === Qt.AlignCenter
+        onTriggered: textArea.cursorSelection.alignment = Qt.AlignCenter
+    }
+
+    Action {
+        id: alignRightAction
+        shortcut: "Ctrl+}"
+        checkable: true
+        checked: textArea.cursorSelection.alignment === Qt.AlignRight
+        onTriggered: textArea.cursorSelection.alignment = Qt.AlignRight
+    }
+
+    Action {
+        id: alignJustifyAction
+        shortcut: "Ctrl+Alt+}"
+        checkable: true
+        checked: textArea.cursorSelection.alignment === Qt.AlignJustify
+        onTriggered: textArea.cursorSelection.alignment = Qt.AlignJustify
     }
 
     Platform.MenuBar {
@@ -135,26 +180,53 @@ ApplicationWindow {
             Platform.MenuItem {
                 text: qsTr("&Bold")
                 checkable: true
-                checked: document.bold
-                onTriggered: document.bold = !document.bold
+                checked: boldAction.checked
+                onTriggered: boldAction.trigger()
             }
             Platform.MenuItem {
                 text: qsTr("&Italic")
                 checkable: true
-                checked: document.italic
-                onTriggered: document.italic = !document.italic
+                checked: italicAction.checked
+                onTriggered: italicAction.trigger()
             }
             Platform.MenuItem {
                 text: qsTr("&Underline")
                 checkable: true
-                checked: document.underline
-                onTriggered: document.underline = !document.underline
+                checked: underlineAction.checked
+                onTriggered: underlineAction.trigger()
             }
             Platform.MenuItem {
                 text: qsTr("&Strikeout")
                 checkable: true
-                checked: document.strikeout
-                onTriggered: document.strikeout = !document.strikeout
+                checked: strikeoutAction.checked
+                onTriggered: strikeoutAction.trigger()
+            }
+
+            Platform.MenuSeparator {}
+
+            Platform.MenuItem {
+                text: qsTr("Align &Left")
+                checkable: true
+                checked: alignLeftAction.checked
+                onTriggered: alignLeftAction.trigger()
+            }
+            Platform.MenuItem {
+                text: qsTr("&Center")
+                checkable: true
+                checked: alignCenterAction.checked
+                onTriggered: alignCenterAction.trigger()
+            }
+            Platform.MenuItem {
+                text: qsTr("&Justify")
+                checkable: true
+                checked: alignJustifyAction.checked
+                onTriggered: alignJustifyAction.trigger()
+            }
+            Platform.MenuItem {
+                text: qsTr("Align &Right")
+                checkable: true
+                checked: alignRightAction.checked
+                onTriggered: alignRightAction.trigger()
             }
         }
     }
@@ -181,13 +253,13 @@ ApplicationWindow {
 
     FontDialog {
         id: fontDialog
-        onAccepted: document.font = selectedFont
+        onAccepted: textArea.cursorSelection.font = selectedFont
     }
 
     ColorDialog {
         id: colorDialog
         selectedColor: "black"
-        onAccepted: document.textColor = selectedColor
+        onAccepted: textArea.cursorSelection.color = selectedColor
     }
 
     MessageDialog {
@@ -280,8 +352,6 @@ ApplicationWindow {
                     text: "\uE800" // icon-bold
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    checkable: true
-                    checked: document.bold
                     action: boldAction
                 }
                 ToolButton {
@@ -289,8 +359,6 @@ ApplicationWindow {
                     text: "\uE801" // icon-italic
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    checkable: true
-                    checked: document.italic
                     action: italicAction
                 }
                 ToolButton {
@@ -298,8 +366,6 @@ ApplicationWindow {
                     text: "\uF0CD" // icon-underline
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    checkable: true
-                    checked: document.underline
                     action: underlineAction
                 }
                 ToolButton {
@@ -307,21 +373,19 @@ ApplicationWindow {
                     text: "\uF0CC"
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    checkable: true
-                    checked: document.strikeout
-                    onClicked: document.strikeout = !document.strikeout
+                    action: strikeoutAction
                 }
                 ToolButton {
                     id: fontFamilyToolButton
                     text: qsTr("\uE808") // icon-font
                     font.family: "fontello"
-                    font.bold: document.bold
-                    font.italic: document.italic
-                    font.underline: document.underline
-                    font.strikeout: document.strikeout
+                    font.bold: textArea.cursorSelection.font.bold
+                    font.italic: textArea.cursorSelection.font.italic
+                    font.underline: textArea.cursorSelection.font.underline
+                    font.strikeout: textArea.cursorSelection.font.strikeout
                     focusPolicy: Qt.TabFocus
                     onClicked: function () {
-                        fontDialog.selectedFont = document.font
+                        fontDialog.selectedFont = textArea.cursorSelection.font
                         fontDialog.open()
                     }
                 }
@@ -331,14 +395,14 @@ ApplicationWindow {
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     onClicked: function () {
-                        colorDialog.selectedColor = document.textColor
+                        colorDialog.selectedColor = textArea.cursorSelection.color
                         colorDialog.open()
                     }
 
                     Rectangle {
                         width: aFontMetrics.width + 3
                         height: 2
-                        color: document.textColor
+                        color: textArea.cursorSelection.color
                         parent: textColorButton.contentItem
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.baseline: parent.baseline
@@ -363,36 +427,28 @@ ApplicationWindow {
                     text: "\uE803" // icon-align-left
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    checkable: true
-                    checked: document.alignment == Qt.AlignLeft
-                    onClicked: document.alignment = Qt.AlignLeft
+                    action: alignLeftAction
                 }
                 ToolButton {
                     id: alignCenterButton
                     text: "\uE804" // icon-align-center
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    checkable: true
-                    checked: document.alignment == Qt.AlignHCenter
-                    onClicked: document.alignment = Qt.AlignHCenter
+                    action: alignCenterAction
                 }
                 ToolButton {
                     id: alignRightButton
                     text: "\uE805" // icon-align-right
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    checkable: true
-                    checked: document.alignment == Qt.AlignRight
-                    onClicked: document.alignment = Qt.AlignRight
+                    action: alignRightAction
                 }
                 ToolButton {
                     id: alignJustifyButton
                     text: "\uE806" // icon-align-justify
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    checkable: true
-                    checked: document.alignment == Qt.AlignJustify
-                    onClicked: document.alignment = Qt.AlignJustify
+                    action: alignJustifyAction
                 }
             }
         }
@@ -404,13 +460,6 @@ ApplicationWindow {
         cursorPosition: textArea.cursorPosition
         selectionStart: textArea.selectionStart
         selectionEnd: textArea.selectionEnd
-
-        property alias family: document.font.family
-        property alias bold: document.font.bold
-        property alias italic: document.font.italic
-        property alias underline: document.font.underline
-        property alias strikeout: document.font.strikeout
-        property alias size: document.font.pointSize
 
         Component.onCompleted: {
             if (Qt.application.arguments.length === 2)
@@ -492,7 +541,7 @@ ApplicationWindow {
         Platform.MenuItem {
             text: qsTr("Font...")
             onTriggered: function () {
-                fontDialog.selectedFont = document.font
+                fontDialog.selectedFont = textArea.cursorSelection.font
                 fontDialog.open()
             }
         }
@@ -500,7 +549,7 @@ ApplicationWindow {
         Platform.MenuItem {
             text: qsTr("Color...")
             onTriggered: function () {
-                colorDialog.selectedColor = document.textColor
+                colorDialog.selectedColor = textArea.cursorSelection.color
                 colorDialog.open()
             }
         }

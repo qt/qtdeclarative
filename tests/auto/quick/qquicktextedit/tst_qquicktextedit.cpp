@@ -226,6 +226,8 @@ private slots:
 
     void rtlAlignmentInColumnLayout_QTBUG_112858();
 
+    void fontManipulationWithCursorSelection();
+
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
 #if QT_CONFIG(shortcut)
@@ -6594,6 +6596,73 @@ void tst_qquicktextedit::rtlAlignmentInColumnLayout_QTBUG_112858()
 
         currentLineStartPos += lines.at(i).size() + 1;
     }
+}
+
+void tst_qquicktextedit::fontManipulationWithCursorSelection()
+{
+    QString testStr = standard[0];//TODO: What should happen for multiline/rich text?
+    QString componentStr = "import QtQuick 2.0\nTextEdit {  text: \""+ testStr +"\"; }";
+    QQmlComponent texteditComponent(&engine);
+    texteditComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(texteditComponent.create());
+    QVERIFY(textEditObject != nullptr);
+
+    const int originalStartPos = 0;
+    const int originalEndPos = (testStr.size() - 1) / 2;
+
+    textEditObject->select(originalStartPos, originalEndPos);
+    QCOMPARE(textEditObject->selectionStart(), originalStartPos);
+    QCOMPARE(textEditObject->selectionEnd(), originalEndPos);
+
+    QCOMPARE(textEditObject->cursorSelection()->text(), textEditObject->text().mid(originalStartPos, originalEndPos));
+
+    // test font manipulation
+    QFont font = textEditObject->cursorSelection()->font();
+    QVERIFY(!font.bold());
+    font.setBold(true);
+    textEditObject->cursorSelection()->setFont(font);
+    QVERIFY(textEditObject->cursorSelection()->font().bold());
+
+    // test color manipulation
+    QCOMPARE_NE(textEditObject->cursorSelection()->color(), QColorConstants::Cyan);
+    textEditObject->cursorSelection()->setColor(QColorConstants::Cyan);
+    QCOMPARE(textEditObject->cursorSelection()->color(), QColorConstants::Cyan);
+
+    // test alignment
+    QCOMPARE(textEditObject->cursorSelection()->alignment(), Qt::AlignLeft);
+    textEditObject->cursorSelection()->setAlignment(Qt::AlignRight);
+    QCOMPARE(textEditObject->cursorSelection()->alignment(), Qt::AlignRight);
+
+    // change seleciton and verify that we don't keep the same formatting
+    const int newStartPos = testStr.size() / 2;
+    const int newEndPos = testStr.size() - 1;
+
+    textEditObject->select(newStartPos, newEndPos);
+    QCOMPARE(textEditObject->selectionStart(), newStartPos);
+    QCOMPARE(textEditObject->selectionEnd(), newEndPos);
+    QVERIFY(!textEditObject->cursorSelection()->font().bold());
+    QCOMPARE_NE(textEditObject->cursorSelection()->color(), QColorConstants::Cyan);
+    QEXPECT_FAIL("", "The text alignment doesn't update when changing selection", Continue);
+    QCOMPARE(textEditObject->cursorSelection()->alignment(), Qt::AlignLeft);
+
+    // change back to the previous fragment, and verify that we have the old formatting
+    textEditObject->select(originalStartPos, originalEndPos);
+    QVERIFY(font.bold());
+    QCOMPARE(textEditObject->cursorSelection()->color(), QColorConstants::Cyan);
+    QCOMPARE(textEditObject->cursorSelection()->alignment(), Qt::AlignRight);
+
+    // test text manipulation
+    textEditObject->cursorSelection()->setText("Q");
+    QEXPECT_FAIL("", "QQuickTextSelection::text doesn't currently work correctly", Continue);
+    QCOMPARE(textEditObject->text(), QLatin1String("Q%1").arg(testStr.mid(newStartPos, newEndPos)));
+
+    // Make sure that QQuickTextEdit::setFont() affects all blocks
+    font.setItalic(true);
+    font.setWeight(QFont::Black);
+    textEditObject->setFont(font);
+    const auto *doc = textEditObject->textDocument()->textDocument();
+    for (QTextBlock block = doc->begin(); block != doc->end(); block = block.next())
+        QCOMPARE(block.charFormat().font(), font);
 }
 
 QT_END_NAMESPACE

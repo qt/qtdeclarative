@@ -25,6 +25,7 @@ QT_BEGIN_NAMESPACE
 class QTextDocument;
 class QQuickTextDocument;
 class QQuickTextEditPrivate;
+class QQuickTextSelection;
 class QTextBlock;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem, public QQuickTextInterface
@@ -79,6 +80,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem, pub
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION(2, 6) FINAL)
     Q_PROPERTY(QString preeditText READ preeditText NOTIFY preeditTextChanged REVISION(2, 7) FINAL)
     Q_PROPERTY(qreal tabStopDistance READ tabStopDistance WRITE setTabStopDistance NOTIFY tabStopDistanceChanged REVISION(2, 10) FINAL)
+    Q_PROPERTY(QQuickTextSelection* cursorSelection READ cursorSelection REVISION(6, 7) CONSTANT FINAL)
     QML_NAMED_ELEMENT(TextEdit)
 #if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
     QML_ADDED_IN_VERSION(6, 4)
@@ -235,6 +237,8 @@ public:
     Q_INVOKABLE int positionAt(qreal x, qreal y) const;
     Q_INVOKABLE void moveCursorSelection(int pos);
     Q_INVOKABLE void moveCursorSelection(int pos, SelectionMode mode);
+
+    QQuickTextSelection *cursorSelection() const;
 
     QRectF boundingRect() const override;
     QRectF clipRect() const override;

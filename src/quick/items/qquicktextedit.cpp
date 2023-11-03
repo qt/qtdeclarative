@@ -1165,6 +1165,24 @@ int QQuickTextEdit::positionAt(qreal x, qreal y) const
 }
 
 /*!
+    \qmlproperty QtQuick::TextSelection QtQuick::TextEdit::cursorSelection
+    \since 6.7
+    \preliminary
+
+    This property is an object that provides properties of the text that is
+    currently selected, if any, alongside the text cursor.
+
+    \sa selectedText, selectionStart, selectionEnd
+*/
+QQuickTextSelection *QQuickTextEdit::cursorSelection() const
+{
+    Q_D(const QQuickTextEdit);
+    if (!d->cursorSelection)
+        d->cursorSelection = new QQuickTextSelection(const_cast<QQuickTextEdit *>(this));
+    return d->cursorSelection;
+}
+
+/*!
     \qmlmethod QtQuick::TextEdit::moveCursorSelection(int position, SelectionMode mode)
 
     Moves the cursor to \a position and updates the selection according to the optional \a mode
@@ -3566,4 +3584,3 @@ QQuickPre64TextEdit::QQuickPre64TextEdit(QQuickItem *parent)
 QT_END_NAMESPACE
 
 #include "moc_qquicktextedit_p.cpp"
-
