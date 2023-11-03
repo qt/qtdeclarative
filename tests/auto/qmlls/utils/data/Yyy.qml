@@ -121,4 +121,7 @@ Zzz {
         else if (hello)
             hello = hello + hello / 2
     }
+    function helloReturnStatement(hello) {
+        return hello
+    }
 }

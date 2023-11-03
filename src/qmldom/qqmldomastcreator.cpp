@@ -1675,6 +1675,7 @@ void QQmlDomAstCreator::endVisit(AST::ReturnStatement *returnStatement)
         return;
 
     auto current = makeScriptElement<ScriptElements::ReturnStatement>(returnStatement);
+    current->addLocation(ReturnKeywordRegion, returnStatement->returnToken);
 
     if (returnStatement->expression) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());

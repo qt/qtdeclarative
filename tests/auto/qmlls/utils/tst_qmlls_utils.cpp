@@ -2410,6 +2410,12 @@ void tst_qmlls_utils::completions_data()
             << ExpectedCompletions{  { u"hello"_s, CompletionItemKind::Variable }, }
             << QStringList{ propertyCompletion, letStatementCompletion, ifStatementCompletion }
             << None;
+    QTest::newRow("returnStatement")
+            << file << 125 << 16
+            << ExpectedCompletions{ { u"hello"_s, CompletionItemKind::Variable },
+               }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
 }
 
 void tst_qmlls_utils::completions()
