@@ -85,6 +85,7 @@ set(qml_files
     childobject.qml
     colorAsVariant.qml
     colorString.qml
+    compareOriginals.qml
     comparisonTypes.qml
     componentReturnType.qml
     compositeTypeMethod.qml

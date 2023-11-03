@@ -276,7 +276,18 @@ protected:
 
 private:
     void generateExceptionCheck();
-    void generateEqualityOperation(const QQmlJSRegisterContent &lhsContent, const QString &lhsName, const QString &function, bool invert);
+
+    void generateEqualityOperation(
+            const QQmlJSRegisterContent &lhsContent, const QString &lhsName,
+            const QString &function, bool invert) {
+        generateEqualityOperation(
+                lhsContent, m_state.accumulatorIn(), lhsName, m_state.accumulatorVariableIn,
+                function, invert);
+    }
+
+    void generateEqualityOperation(
+            const QQmlJSRegisterContent &lhsContent, const QQmlJSRegisterContent &rhsContent,
+            const QString &lhsName, const QString &rhsName, const QString &function, bool invert);
     void generateCompareOperation(int lhs, const QString &cppOperator);
     void generateArithmeticOperation(int lhs, const QString &cppOperator);
     void generateShiftOperation(int lhs, const QString &cppOperator);

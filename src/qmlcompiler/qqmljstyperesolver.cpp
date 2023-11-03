@@ -410,8 +410,22 @@ QQmlJSRegisterContent QQmlJSTypeResolver::transformed(
     }
 
     if (origin.isConversion()) {
+        // When retrieving the originals we want a deep retrieval.
+        // When tracking a new type, we don't want to re-track its originals, though.
+
+        const QList<QQmlJSScope::ConstPtr> origins = origin.conversionOrigins();
+        QList<QQmlJSScope::ConstPtr> transformedOrigins;
+        if (op == &QQmlJSTypeResolver::trackedType) {
+            transformedOrigins = origins;
+        } else {
+            transformedOrigins.reserve(origins.length());
+            for (const QQmlJSScope::ConstPtr &origin: origins)
+                transformedOrigins.append((this->*op)(origin));
+        }
+
         return QQmlJSRegisterContent::create(
-                    (this->*op)(origin.storedType()), origin.conversionOrigins(),
+                    (this->*op)(origin.storedType()),
+                    transformedOrigins,
                     (this->*op)(origin.conversionResult()),
                     (this->*op)(origin.conversionResultScope()),
                     origin.variant(), (this->*op)(origin.scopeType()));

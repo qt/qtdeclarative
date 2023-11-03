@@ -3156,12 +3156,9 @@ void QQmlJSCodeGenerator::generateExceptionCheck()
 }
 
 void QQmlJSCodeGenerator::generateEqualityOperation(
-        const QQmlJSRegisterContent &lhsContent, const QString &lhsName,
-        const QString &function, bool invert)
+        const QQmlJSRegisterContent &lhsContent, const QQmlJSRegisterContent &rhsContent,
+        const QString &lhsName, const QString &rhsName, const QString &function, bool invert)
 {
-    const QQmlJSRegisterContent rhsContent = m_state.accumulatorIn();
-    const QString rhsName = m_state.accumulatorVariableIn;
-
     const bool lhsIsOptional = m_typeResolver->isOptionalType(lhsContent);
     const bool rhsIsOptional = m_typeResolver->isOptionalType(rhsContent);
 
@@ -3192,7 +3189,33 @@ void QQmlJSCodeGenerator::generateEqualityOperation(
         return false;
     };
 
+    const auto retrieveOriginal = [this](const QQmlJSRegisterContent &content) {
+        const auto contained = m_typeResolver->containedType(content);
+        const auto original = m_typeResolver->original(content);
+        const auto containedOriginal = m_typeResolver->containedType(original);
+
+        if (m_typeResolver->equals(contained, containedOriginal)) {
+            if (original.isConversion()) {
+                // The original conversion origins are more accurate
+                return original.storedIn(content.storedType());
+            }
+        } else if (m_typeResolver->canHold(contained, containedOriginal)) {
+            return original.storedIn(content.storedType());
+        }
+
+        return content;
+    };
+
     if (!isComparable()) {
+        QQmlJSRegisterContent lhsOriginal = retrieveOriginal(lhsContent);
+        QQmlJSRegisterContent rhsOriginal = retrieveOriginal(rhsContent);
+        if (lhsOriginal != lhsContent || rhsOriginal != rhsContent) {
+            // If either side is simply a wrapping of a specific type into a more general one, we
+            // can compare the original types instead. You can't nest wrappings after all.
+            generateEqualityOperation(lhsOriginal, rhsOriginal, lhsName, rhsName, function, invert);
+            return;
+        }
+
         reject(u"incomparable types %1 and %2"_s.arg(
                 rhsContent.descriptiveName(), lhsContent.descriptiveName()));
     }

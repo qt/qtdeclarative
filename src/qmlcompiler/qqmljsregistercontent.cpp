@@ -143,7 +143,7 @@ QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr 
 }
 
 QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr &storedType,
-                                                    const QList<QQmlJSScope::ConstPtr> origins,
+                                                    const QList<QQmlJSScope::ConstPtr> &origins,
                                                     const QQmlJSScope::ConstPtr &conversion,
                                                     const QQmlJSScope::ConstPtr &conversionScope,
                                                     ContentVariant variant,
