@@ -2735,6 +2735,32 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
         case DomType::ScriptCallExpression:
             return insideCallExpression(currentItem, ctx);
 
+        // TODO: Implement those statements.
+        // In the meanwhile, suppress completions to avoid weird behaviors.
+        case DomType::ScriptParameter:
+        case DomType::ScriptIfStatement:
+        case DomType::ScriptFunctionDeclaration:
+        case DomType::ScriptVariableDeclaration:
+        case DomType::ScriptVariableDeclarationEntry:
+        case DomType::ScriptReturnStatement:
+        case DomType::ScriptArray:
+        case DomType::ScriptObject:
+        case DomType::ScriptProperty:
+        case DomType::ScriptQualifiedIdentifierExpression:
+        case DomType::ScriptQualifiedIdentifierBit:
+        case DomType::ScriptElision:
+        case DomType::ScriptArrayEntry:
+        case DomType::ScriptPattern:
+        case DomType::ScriptSwitchStatement:
+        case DomType::ScriptCaseBlock:
+        case DomType::ScriptCaseClauses:
+        case DomType::ScriptCaseClause:
+        case DomType::ScriptDefaultClause:
+        case DomType::ScriptWhileStatement:
+        case DomType::ScriptDoWhileStatement:
+        case DomType::ScriptForEachStatement:
+            return {};
+
         default:
             continue;
         }
