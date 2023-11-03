@@ -219,6 +219,7 @@ void QQuickMessageDialog::handleClick(QPlatformDialogHelper::StandardButton butt
                                       QPlatformDialogHelper::ButtonRole role)
 {
     emit buttonClicked(button, role);
+    close();
 }
 
 void QQuickMessageDialog::onCreate(QPlatformDialogHelper *dialog)
