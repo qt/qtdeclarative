@@ -1637,6 +1637,9 @@ void QQmlDomAstCreator::endVisit(AST::IfStatement *ifStatement)
         return;
 
     auto current = makeScriptElement<ScriptElements::IfStatement>(ifStatement);
+    current->addLocation(LeftParenthesisRegion, ifStatement->lparenToken);
+    current->addLocation(RightParenthesisRegion, ifStatement->rparenToken);
+    current->addLocation(ElseKeywordRegion, ifStatement->elseToken);
 
     if (ifStatement->ko) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());

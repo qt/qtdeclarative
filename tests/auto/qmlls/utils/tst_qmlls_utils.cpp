@@ -2376,6 +2376,40 @@ void tst_qmlls_utils::completions_data()
                }
             << QStringList{ propertyCompletion }
             << None;
+
+    QTest::newRow("ifStatementCondition")
+            << file << 110 << 15
+            << ExpectedCompletions{
+                                    { u"hello"_s, CompletionItemKind::Variable },
+               }
+            << QStringList{ propertyCompletion, letStatementCompletion, constStatementCompletion }
+            << None;
+
+    QTest::newRow("ifStatementConsequence")
+            << file << 111 << 12
+            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { constStatementCompletion, CompletionItemKind::Snippet },
+                                    { varStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"hello"_s, CompletionItemKind::Variable },
+               }
+            << QStringList{ propertyCompletion }
+            << None;
+
+    QTest::newRow("ifStatementAlternative")
+            << file << 113 << 12
+            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { constStatementCompletion, CompletionItemKind::Snippet },
+                                    { varStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"hello"_s, CompletionItemKind::Variable },
+               }
+            << QStringList{ propertyCompletion }
+            << None;
+
+    QTest::newRow("elseIfStatement")
+            << file << 121 << 18
+            << ExpectedCompletions{  { u"hello"_s, CompletionItemKind::Variable }, }
+            << QStringList{ propertyCompletion, letStatementCompletion, ifStatementCompletion }
+            << None;
 }
 
 void tst_qmlls_utils::completions()

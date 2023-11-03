@@ -106,4 +106,19 @@ Zzz {
         for(let j = 0; j < 5; ++j)
             helloForStatement()
     }
+    function helloIfStatement(hello) {
+        if (hello)
+            hello = !hello
+        else
+            hello = hello
+        if (hello == !hello) {
+            hello = hello / hello
+        } else {
+            hello += hello
+        }
+        if (hello)
+            hello = hello
+        else if (hello)
+            hello = hello + hello / 2
+    }
 }

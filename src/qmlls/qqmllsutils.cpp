@@ -2691,6 +2691,26 @@ static QList<CompletionItem> insideCallExpression(const DomItem &currentItem,
     return {};
 }
 
+static QList<CompletionItem> insideIfStatement(const DomItem &currentItem,
+                                               const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
+    const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
+    const QQmlJS::SourceLocation elseKeyword = regions[ElseKeywordRegion];
+
+    if (betweenLocations(leftParenthesis, ctx, rightParenthesis)) {
+        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    }
+    if (betweenLocations(rightParenthesis, ctx, elseKeyword)) {
+        return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+    }
+    if (afterLocation(elseKeyword, ctx)) {
+        return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+    }
+    return {};
+}
+
 QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
                                                const CompletionContextStrings &ctx)
 {
@@ -2736,10 +2756,11 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             return insideScriptLiteralCompletion(currentItem, ctx);
         case DomType::ScriptCallExpression:
             return insideCallExpression(currentItem, ctx);
+        case DomType::ScriptIfStatement:
+            return insideIfStatement(current, ctx);
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.
-        case DomType::ScriptIfStatement:
         case DomType::ScriptVariableDeclaration:
         case DomType::ScriptVariableDeclarationEntry:
         case DomType::ScriptReturnStatement:

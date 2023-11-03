@@ -346,6 +346,7 @@ enum FileLocationRegion : int {
     ComponentKeywordRegion,
     DefaultKeywordRegion,
     EllipsisTokenRegion,
+    ElseKeywordRegion,
     EnumKeywordRegion,
     EqualTokenRegion,
     ForKeywordRegion,
