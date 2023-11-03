@@ -142,29 +142,29 @@ public:
         return !(c1 == c2);
     }
 
-    Path addPreComment(const Comment &comment, QString regionName)
+    Path addPreComment(const Comment &comment, FileLocationRegion region)
     {
-        auto &preList = regionComments[regionName].preComments;
+        auto &preList = regionComments[region].preComments;
         index_type idx = preList.size();
         preList.append(comment);
         return Path::Field(Fields::regionComments)
-                .key(regionName)
+                .key(fileLocationRegionName(region))
                 .field(Fields::preComments)
                 .index(idx);
     }
 
-    Path addPostComment(const Comment &comment, QString regionName)
+    Path addPostComment(const Comment &comment, FileLocationRegion region)
     {
-        auto &postList = regionComments[regionName].postComments;
+        auto &postList = regionComments[region].postComments;
         index_type idx = postList.size();
         postList.append(comment);
         return Path::Field(Fields::regionComments)
-                .key(regionName)
+                .key(fileLocationRegionName(region))
                 .field(Fields::postComments)
                 .index(idx);
     }
 
-    QMap<QString, CommentedElement> regionComments;
+    QMap<FileLocationRegion, CommentedElement> regionComments;
 };
 
 class QMLDOM_EXPORT AstComments final : public OwningItem

@@ -460,7 +460,7 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
                 qobject_cast<QQmlAbstractDelegateComponent *>(delegate);
         if (adc) {
             d->m_delegateChooser = adc;
-            d->m_delegateChooserChanged = connect(adc, &QQmlAbstractDelegateComponent::delegateChanged,
+            d->m_delegateChooserChanged = connect(adc, &QQmlAbstractDelegateComponent::delegateChanged, this,
                                                [d](){ d->delegateChanged(); });
         }
     }

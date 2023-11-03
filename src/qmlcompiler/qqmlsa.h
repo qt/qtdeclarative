@@ -169,6 +169,8 @@ public:
 
     QString typeName() const;
     bool isValid() const;
+    bool isReadonly() const;
+    QQmlSA::Element type() const;
 
     friend bool operator==(const Property &lhs, const Property &rhs)
     {
@@ -214,6 +216,7 @@ public:
     bool isComposite() const;
 
     bool hasProperty(const QString &propertyName) const;
+    bool hasOwnProperty(const QString &propertyName) const;
     Property property(const QString &propertyName) const;
     bool isPropertyRequired(const QString &propertyName) const;
     QString defaultPropertyName() const;

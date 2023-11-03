@@ -42,6 +42,9 @@ public:
     Q_INVOKABLE QString toString() const
     { return QLatin1String("QModelIndex") + propertiesString(v); }
 
+    Q_REVISION(6, 7) Q_INVOKABLE QVariant data(int role = Qt::DisplayRole) const
+    { return v.data(role); }
+
     inline int row() const noexcept { return v.row(); }
     inline int column() const noexcept { return v.column(); }
     inline QModelIndex parent() const { return v.parent(); }
@@ -77,6 +80,9 @@ struct QQmlPersistentModelIndexValueType
 public:
     Q_INVOKABLE QString toString() const
     { return QLatin1String("QPersistentModelIndex") + QQmlModelIndexValueType::propertiesString(v); }
+
+    Q_REVISION(6, 7) Q_INVOKABLE QVariant data(int role = Qt::DisplayRole) const
+    { return v.data(role); }
 
     inline int row() const { return v.row(); }
     inline int column() const { return v.column(); }

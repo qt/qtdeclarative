@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 // Also change the comment behind the number to describe the latest change. This has the added
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
-#define QV4_DATA_STRUCTURE_VERSION 0x3D // Reserve special value for "no translation context"
+#define QV4_DATA_STRUCTURE_VERSION 0x3E // Add Translator pragma
 
 class QIODevice;
 class QQmlTypeNameCache;
@@ -1330,6 +1330,20 @@ struct Unit
     const TranslationData *translations() const {
         return reinterpret_cast<const TranslationData *>(reinterpret_cast<const char *>(this) + offsetToTranslationTable);
     }
+
+    const quint32_le *translationContextIndex() const{
+        if ( translationTableSize == 0)
+            return nullptr;
+        return reinterpret_cast<const quint32_le*>((reinterpret_cast<const char *>(this))
+                                                    + offsetToTranslationTable
+                                                    + translationTableSize * sizeof(CompiledData::TranslationData)); }
+
+    quint32_le *translationContextIndex() {
+        if ( translationTableSize == 0)
+            return nullptr;
+        return reinterpret_cast<quint32_le*>((reinterpret_cast<char *>(this))
+                                                    + offsetToTranslationTable
+                                                    + translationTableSize * sizeof(CompiledData::TranslationData)); }
 
     const ImportEntry *importEntryTable() const { return reinterpret_cast<const ImportEntry *>(reinterpret_cast<const char *>(this) + offsetToImportEntryTable); }
     const ExportEntry *localExportEntryTable() const { return reinterpret_cast<const ExportEntry *>(reinterpret_cast<const char *>(this) + offsetToLocalExportEntryTable); }

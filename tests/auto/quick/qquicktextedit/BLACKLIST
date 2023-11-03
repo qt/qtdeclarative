@@ -36,3 +36,11 @@ android
 # QTBUG-108346
 [pasteHtmlIntoMarkdown]
 ubuntu-20.04
+
+# QTBUG-118066
+[inFlickableMouse]
+opensuse-leap
+
+# QTBUG-118066
+[inFlickableTouch]
+opensuse-leap

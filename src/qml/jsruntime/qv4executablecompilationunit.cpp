@@ -976,11 +976,18 @@ QString ExecutableCompilationUnit::translateFrom(TranslationDataIndex index) con
 
     const bool hasContext
             = translation.contextIndex != QV4::CompiledData::TranslationData::NoContextIndex;
+    QByteArray context;
+    if (hasContext) {
+        context = stringAt(translation.contextIndex).toUtf8();
+    } else {
+        auto pragmaTranslationContext = data->translationContextIndex();
+        context = stringAt(*pragmaTranslationContext).toUtf8();
+        context = context.isEmpty() ? fileContext() : context;
+    }
+
     QByteArray comment = stringAt(translation.commentIndex).toUtf8();
     QByteArray text = stringAt(translation.stringIndex).toUtf8();
-    return QCoreApplication::translate(
-            hasContext ? stringAt(translation.contextIndex).toUtf8() : fileContext(),
-            text, comment, translation.number);
+    return QCoreApplication::translate(context, text, comment, translation.number);
 #endif
 }
 

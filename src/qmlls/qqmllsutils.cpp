@@ -217,8 +217,8 @@ handlePropertyDefinitionAndBindingOverlap(const QList<QQmlLSUtilsItemLocation> &
             return smallest;
 
         const auto propertyDefinitionColon =
-                smallestPropertyDefinition->fileLocation->info().regions[u"colon"_s];
-        const auto smallestColon = smallest->fileLocation->info().regions[u"colon"_s];
+                smallestPropertyDefinition->fileLocation->info().regions[ColonTokenRegion];
+        const auto smallestColon = smallest->fileLocation->info().regions[ColonTokenRegion];
         // sanity check: is it the definition of the current binding? check if they both have their
         // ':' at the same location
         if (propertyDefinitionColon.isValid() && propertyDefinitionColon == smallestColon
@@ -354,7 +354,7 @@ DomItem QQmlLSUtils::baseObject(const DomItem &object)
 }
 
 static std::optional<QQmlLSUtilsLocation> locationFromDomItem(const DomItem &item,
-                                                              const QString &regionName = QString())
+                                                              FileLocationRegion region)
 {
     QQmlLSUtilsLocation location;
     location.filename = item.canonicalFilePath();
@@ -364,12 +364,9 @@ static std::optional<QQmlLSUtilsLocation> locationFromDomItem(const DomItem &ite
     if (!tree)
         return {};
 
-    auto info = tree->info();
-    if (!regionName.isEmpty() && info.regions.contains(regionName)) {
-        location.sourceLocation = info.regions[regionName];
-    } else {
-        location.sourceLocation = info.fullRegion;
-    }
+    location.sourceLocation = FileLocations::region(tree, region);
+    if (!location.sourceLocation.isValid() && region != QQmlJS::Dom::MainRegion)
+        location.sourceLocation = FileLocations::region(tree, MainRegion);
     return location;
 }
 
@@ -457,7 +454,7 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(const DomIt
             typeDefinition = typeDefinition.component();
         }
 
-        return locationFromDomItem(typeDefinition, u"identifier"_s);
+        return locationFromDomItem(typeDefinition, FileLocationRegion::IdentifierRegion);
     }
     default:
         qDebug() << "QQmlLSUtils::findTypeDefinitionOf: Found unimplemented Type"
@@ -465,7 +462,7 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(const DomIt
         return {};
     }
 
-    return locationFromDomItem(typeDefinition);
+    return locationFromDomItem(typeDefinition, FileLocationRegion::MainRegion);
 }
 
 static bool findDefinitionFromItem(const DomItem &item, const QString &name)
@@ -651,7 +648,7 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
         bool resolveType = false;
         bool continueForChildren = true;
         DomItem toBeResolved = current;
-        QString subRegion;
+        FileLocationRegion subRegion = MainRegion;
 
         if (auto scope = current.semanticScope()) {
             // is the current property shadowed by some JS identifier? ignore current + its children
@@ -667,7 +664,7 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
             if (!checkName(propertyName))
                 return true;
 
-            subRegion = u"identifier"_s;
+            subRegion = IdentifierRegion;
             resolveType = true;
             break;
         }
@@ -684,7 +681,7 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
             if (!checkName(methodName))
                 return true;
 
-            subRegion = u"identifier"_s;
+            subRegion = IdentifierRegion;
             resolveType = true;
             break;
         }
@@ -703,18 +700,13 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
                 auto tree = FileLocations::treeOf(current);
                 QQmlJS::SourceLocation sourceLocation;
 
-                if (subRegion.isEmpty()) {
-                    sourceLocation = tree->info().fullRegion;
-                } else {
-                    auto regions = tree->info().regions;
-                    auto it = regions.constFind(subRegion);
-                    if (it == regions.constEnd())
-                        return continueForChildren;
-                    sourceLocation = *it;
-                }
+                sourceLocation = FileLocations::region(tree, subRegion);
+                if (!sourceLocation.isValid())
+                    return continueForChildren;
 
                 QQmlLSUtilsLocation location{ current.canonicalFilePath(), sourceLocation };
-                result.append(location);
+                if (!result.contains(location))
+                    result.append(location);
             }
         }
         return continueForChildren;
@@ -835,7 +827,7 @@ hasMethodOrSignal(const QQmlJSScope::ConstPtr &scope, const QString &name)
 
     const bool isSignal = methods.front().methodType() == QQmlJSMetaMethodType::Signal;
     QQmlLSUtilsIdentifierType type = isSignal ? QQmlLSUtilsIdentifierType::SignalIdentifier
-                                              : QQmlLSUtilsIdentifierType::MethodIdentifier;
+                                             : QQmlLSUtilsIdentifierType::MethodIdentifier;
     return type;
 }
 
@@ -846,12 +838,12 @@ methodFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QStrin
                         QQmlLSUtilsResolveOptions = ResolveOwnerType)
 {
     for (QQmlJSScope::ConstPtr current = referrerScope; current; current = current->parentScope()) {
-        if (auto methodType = hasMethodOrSignal(current, name))
-            return QQmlLSUtilsExpressionType{ name, current, *methodType };
+        if (auto type = hasMethodOrSignal(current, name))
+            return QQmlLSUtilsExpressionType{ name, current, *type };
 
         if (const auto signalName = QQmlSignalNames::handlerNameToSignalName(name)) {
-            if (auto methodType = hasMethodOrSignal(current, *signalName)) {
-                return QQmlLSUtilsExpressionType{ name, current, *methodType };
+            if (auto type = hasMethodOrSignal(current, *signalName)) {
+                return QQmlLSUtilsExpressionType{ name, current, SignalHandlerIdentifier };
             }
         }
     }
@@ -863,14 +855,18 @@ propertyFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QStr
                           QQmlLSUtilsResolveOptions options)
 {
     for (QQmlJSScope::ConstPtr current = referrerScope; current; current = current->parentScope()) {
-        if (auto property = current->property(propertyName); property.isValid()) {
+        const auto resolved = resolveNameInQmlScope(propertyName, current);
+        if (!resolved)
+            continue;
+
+        if (auto property = current->property(resolved->name); property.isValid()) {
             switch (options) {
             case ResolveOwnerType:
                 return QQmlLSUtilsExpressionType{ propertyName, current,
-                                                  QQmlLSUtilsIdentifierType::PropertyIdentifier };
+                                                  resolved->type };
             case ResolveActualTypeForFieldMemberExpression:
                 return QQmlLSUtilsExpressionType{ propertyName, property.type(),
-                                                  QQmlLSUtilsIdentifierType::PropertyIdentifier };
+                                                  resolved->type };
             }
         }
     }
@@ -1202,7 +1198,7 @@ findMethodDefinitionOf(const DomItem &file, QQmlJS::SourceLocation location, con
 
     auto regions = fileLocation->info().regions;
 
-    if (auto it = regions.constFind(u"identifier"_s); it != regions.constEnd()) {
+    if (auto it = regions.constFind(IdentifierRegion); it != regions.constEnd()) {
         QQmlLSUtilsLocation result;
         result.sourceLocation = *it;
         result.filename = method.canonicalFilePath();
@@ -1224,7 +1220,7 @@ findPropertyDefinitionOf(const DomItem &file, QQmlJS::SourceLocation propertyDef
 
     auto regions = fileLocation->info().regions;
 
-    if (auto it = regions.constFind(u"identifier"_s); it != regions.constEnd()) {
+    if (auto it = regions.constFind(IdentifierRegion); it != regions.constEnd()) {
         QQmlLSUtilsLocation result;
         result.sourceLocation = *it;
         result.filename = propertyDefinition.canonicalFilePath();
@@ -1318,72 +1314,66 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(const DomItem &
     Q_UNREACHABLE_RETURN(std::nullopt);
 }
 
-static std::optional<QQmlJSScope::ConstPtr> propertyOwnerFrom(const QQmlJSScope::ConstPtr &type,
-                                                              const std::optional<QString> &name)
+static QQmlJSScope::ConstPtr propertyOwnerFrom(const QQmlJSScope::ConstPtr &type,
+                                               const QString &name)
 {
-    if (!name) {
-        qCDebug(QQmlLSUtilsLog) << "QQmlLSUtils::checkNameForRename cannot find property name,"
-                                   " ignoring.";
-        return {};
-    }
+    Q_ASSERT(!name.isEmpty());
+    Q_ASSERT(type);
 
     QQmlJSScope::ConstPtr typeWithDefinition = type;
-    while (!typeWithDefinition->hasOwnProperty(*name)) {
-        typeWithDefinition = type->baseType();
-        if (!typeWithDefinition) {
-            qCDebug(QQmlLSUtilsLog)
-                    << "QQmlLSUtils::checkNameForRename cannot find property definition,"
-                       " ignoring.";
-            return {};
-        }
+    while (typeWithDefinition && !typeWithDefinition->hasOwnProperty(name))
+        typeWithDefinition = typeWithDefinition->baseType();
+
+    if (!typeWithDefinition) {
+        qCDebug(QQmlLSUtilsLog)
+                << "QQmlLSUtils::checkNameForRename cannot find property definition,"
+                    " ignoring.";
     }
+
     return typeWithDefinition;
 }
 
-static std::optional<QQmlJSScope::ConstPtr> methodOwnerFrom(const QQmlJSScope::ConstPtr &type,
-                                                            const std::optional<QString> &name)
+static QQmlJSScope::ConstPtr methodOwnerFrom(const QQmlJSScope::ConstPtr &type,
+                                             const QString &name)
 {
-    if (!name) {
-        qCDebug(QQmlLSUtilsLog) << "QQmlLSUtils::checkNameForRename cannot find method name,"
-                                   " ignoring.";
-        return {};
-    }
+    Q_ASSERT(!name.isEmpty());
+    Q_ASSERT(type);
 
     QQmlJSScope::ConstPtr typeWithDefinition = type;
-    while (!typeWithDefinition->hasOwnMethod(*name)) {
-        typeWithDefinition = type->baseType();
-        if (!typeWithDefinition) {
-            qCDebug(QQmlLSUtilsLog)
-                    << "QQmlLSUtils::checkNameForRename cannot find method definition,"
-                       " ignoring.";
-            return {};
-        }
+    while (typeWithDefinition && !typeWithDefinition->hasOwnMethod(name))
+        typeWithDefinition = typeWithDefinition->baseType();
+
+    if (!typeWithDefinition) {
+        qCDebug(QQmlLSUtilsLog)
+                << "QQmlLSUtils::checkNameForRename cannot find method definition,"
+                    " ignoring.";
     }
+
     return typeWithDefinition;
 }
 
-static std::optional<QQmlJSScope::ConstPtr>
+static QQmlJSScope::ConstPtr
 expressionTypeWithDefinition(const QQmlLSUtilsExpressionType &ownerType)
 {
     switch (ownerType.type) {
     case PropertyIdentifier:
-        return propertyOwnerFrom(ownerType.semanticScope, ownerType.name);
+        return propertyOwnerFrom(ownerType.semanticScope, *ownerType.name);
     case PropertyChangedHandlerIdentifier: {
         const auto propertyName =
                 QQmlSignalNames::changedHandlerNameToPropertyName(*ownerType.name);
-        return propertyOwnerFrom(ownerType.semanticScope, propertyName);
+        return propertyOwnerFrom(ownerType.semanticScope, *propertyName);
         break;
     }
     case PropertyChangedSignalIdentifier: {
         const auto propertyName = QQmlSignalNames::changedSignalNameToPropertyName(*ownerType.name);
-        return propertyOwnerFrom(ownerType.semanticScope, propertyName);
+        return propertyOwnerFrom(ownerType.semanticScope, *propertyName);
     }
     case MethodIdentifier:
     case SignalIdentifier:
-        return methodOwnerFrom(ownerType.semanticScope, ownerType.name);
+        return methodOwnerFrom(ownerType.semanticScope, *ownerType.name);
     case SignalHandlerIdentifier: {
         const auto signalName = QQmlSignalNames::handlerNameToSignalName(*ownerType.name);
-        return methodOwnerFrom(ownerType.semanticScope, signalName);
+        return methodOwnerFrom(ownerType.semanticScope, *signalName);
     }
     case JavaScriptIdentifier:
     case QmlObjectIdIdentifier:
@@ -1463,7 +1453,7 @@ QQmlLSUtils::checkNameForRename(const DomItem &item, const QString &dirtyNewName
     }
 
     // is it not defined in QML?
-    if (!typeWithDefinition.value()->isComposite()) {
+    if (!typeWithDefinition->isComposite()) {
         return QQmlLSUtilsErrorMessage{ 0, u"Cannot rename items defined in non-QML files."_s };
     }
 
@@ -2101,7 +2091,7 @@ static bool cursorInFrontOfItem(const DomItem &currentItem,
 static bool cursorAfterColon(const DomItem &currentItem, const CompletionContextStrings &ctx)
 {
     auto location = FileLocations::treeOf(currentItem)->info();
-    auto region = location.regions.constFind(u"colon"_s);
+    auto region = location.regions.constFind(ColonTokenRegion);
 
     if (region == location.regions.constEnd())
         return false;
@@ -2194,13 +2184,13 @@ static QList<CompletionItem> propertyCompletion(const DomItem &currentItem,
                                                 const CompletionContextStrings &ctx)
 {
     auto info = FileLocations::treeOf(currentItem)->info();
-    const QQmlJS::SourceLocation propertyKeyword = info.regions[u"property"_s];
+    const QQmlJS::SourceLocation propertyKeyword = info.regions[PropertyKeywordRegion];
 
     // do completions for the keywords
     if (ctx.offset() < propertyKeyword.offset + propertyKeyword.length) {
-        const QQmlJS::SourceLocation readonlyKeyword = info.regions[u"readonly"_s];
-        const QQmlJS::SourceLocation defaultKeyword = info.regions[u"default"_s];
-        const QQmlJS::SourceLocation requiredKeyword = info.regions[u"required"_s];
+        const QQmlJS::SourceLocation readonlyKeyword = info.regions[ReadonlyKeywordRegion];
+        const QQmlJS::SourceLocation defaultKeyword = info.regions[DefaultKeywordRegion];
+        const QQmlJS::SourceLocation requiredKeyword = info.regions[RequiredKeywordRegion];
 
         bool completeReadonly = true;
         bool completeRequired = true;
@@ -2241,7 +2231,7 @@ static QList<CompletionItem> propertyCompletion(const DomItem &currentItem,
         return items;
     }
 
-    const QQmlJS::SourceLocation propertyIdentifier = info.regions[u"identifier"_s];
+    const QQmlJS::SourceLocation propertyIdentifier = info.regions[IdentifierRegion];
     if (propertyKeyword.end() <= ctx.offset() && ctx.offset() < propertyIdentifier.offset) {
         return QQmlLSUtils::reachableTypes(
                 currentItem, LocalSymbolsType::ObjectType | LocalSymbolsType::ValueType,

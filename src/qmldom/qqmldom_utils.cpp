@@ -5,6 +5,8 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qdiriterator.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qmetaobject.h>
+#include <QtCore/qcbormap.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -30,6 +32,29 @@ QStringList resourceFilesFromBuildFolders(const QStringList &buildFolders)
         }
     }
     return result;
+}
+
+static QMetaEnum regionEnum = QMetaEnum::fromType<FileLocationRegion>();
+
+QString fileLocationRegionName(FileLocationRegion region)
+{
+    return QString::fromLatin1(regionEnum.key(region));
+}
+
+FileLocationRegion fileLocationRegionValue(QStringView region)
+{
+    return static_cast<FileLocationRegion>(regionEnum.keyToValue(region.toLatin1()));
+}
+
+QCborValue sourceLocationToQCborValue(QQmlJS::SourceLocation loc)
+{
+    QCborMap res({
+        {QStringLiteral(u"offset"), loc.offset},
+        {QStringLiteral(u"length"), loc.length},
+        {QStringLiteral(u"startLine"), loc.startLine},
+        {QStringLiteral(u"startColumn"), loc.startColumn}
+    });
+    return res;
 }
 
 } // namespace Dom

@@ -682,6 +682,10 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     unit.translationTableSize = translations.size();
     unit.offsetToTranslationTable = nextOffset;
     nextOffset += unit.translationTableSize * sizeof(CompiledData::TranslationData);
+    if (unit.translationTableSize != 0) {
+        constexpr auto spaceForTranslationContextId = sizeof(quint32_le);
+        nextOffset += spaceForTranslationContextId;
+    }
 
     nextOffset = static_cast<quint32>(QtPrivate::roundUpToMultipleOf(8, nextOffset));
 

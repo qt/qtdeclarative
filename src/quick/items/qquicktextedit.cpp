@@ -5,7 +5,6 @@
 #include "qquicktextedit_p_p.h"
 #include "qquicktextcontrol_p.h"
 #include "qquicktextdocument_p.h"
-#include "qquickevents_p_p.h"
 #include "qquickwindow.h"
 #include "qsginternaltextnode_p.h"
 #include "qquicktextnodeengine_p.h"
@@ -23,6 +22,10 @@
 #include <private/qqmlproperty_p.h>
 #include <private/qtextengine_p.h>
 #include <private/qsgadaptationlayer_p.h>
+
+#if QT_CONFIG(accessibility)
+#include <private/qquickaccessibleattached_p.h>
+#endif
 
 #include "qquicktextdocument.h"
 
@@ -845,6 +848,25 @@ Qt::InputMethodHints QQuickTextEditPrivate::effectiveInputMethodHints() const
 }
 #endif
 
+#if QT_CONFIG(accessibility)
+void QQuickTextEditPrivate::accessibilityActiveChanged(bool active)
+{
+    if (!active)
+        return;
+
+    Q_Q(QQuickTextEdit);
+    QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
+    Q_ASSERT(accessibleAttached);
+    accessibleAttached->setRole(effectiveAccessibleRole());
+    accessibleAttached->set_readOnly(q->isReadOnly());
+}
+
+QAccessible::Role QQuickTextEditPrivate::accessibleRole() const
+{
+    return QAccessible::EditableText;
+}
+#endif
+
 void QQuickTextEditPrivate::setTopPadding(qreal value, bool reset)
 {
     Q_Q(QQuickTextEdit);
@@ -1538,6 +1560,11 @@ void QQuickTextEdit::componentComplete()
     if (d->cursorComponent && isCursorVisible())
         QQuickTextUtil::createCursor(d);
     polish();
+
+#if QT_CONFIG(accessibility)
+    if (QAccessible::isActive())
+        d->accessibilityActiveChanged(true);
+#endif
 }
 
 /*!
@@ -1695,6 +1722,13 @@ void QQuickTextEdit::setReadOnly(bool r)
     } else if (hasActiveFocus()) {
         setCursorVisible(true);
     }
+
+#if QT_CONFIG(accessibility)
+    if (QAccessible::isActive()) {
+        if (QQuickAccessibleAttached *accessibleAttached = QQuickAccessibleAttached::attachedProperties(this))
+            accessibleAttached->set_readOnly(r);
+    }
+#endif
 }
 
 bool QQuickTextEdit::isReadOnly() const
@@ -2426,12 +2460,7 @@ bool QQuickTextEdit::isInputMethodComposing() const
 }
 
 QQuickTextEditPrivate::ExtraData::ExtraData()
-    : padding(0)
-    , topPadding(0)
-    , leftPadding(0)
-    , rightPadding(0)
-    , bottomPadding(0)
-    , explicitTopPadding(false)
+    : explicitTopPadding(false)
     , explicitLeftPadding(false)
     , explicitRightPadding(false)
     , explicitBottomPadding(false)

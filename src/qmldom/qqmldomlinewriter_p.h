@@ -100,7 +100,8 @@ public:
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(LineWriterOptions::Updates)
 
-using PendingSourceLocationId = QAtomicInt;
+using PendingSourceLocationId = int;
+using PendingSourceLocationIdAtomic = QAtomicInt;
 class LineWriter;
 
 class QMLDOM_EXPORT PendingSourceLocation
@@ -205,7 +206,7 @@ protected:
     int m_utf16Offset = 0; // utf16 offset since start for committed data
     QString m_currentLine;
     LineWriterOptions m_options;
-    PendingSourceLocationId m_lastSourceLocationId;
+    PendingSourceLocationIdAtomic m_lastSourceLocationId;
     QMap<PendingSourceLocationId, PendingSourceLocation> m_pendingSourceLocations;
     QAtomicInt m_lastCallbackId;
     QMap<int, std::function<bool(LineWriter &, TextAddType)>> m_textAddCallbacks;

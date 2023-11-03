@@ -90,6 +90,7 @@ set(qml_files
     construct.qml
     contextParam.qml
     conversionDecrement.qml
+    conversionInDeadCode.qml
     conversions.qml
     conversions2.qml
     convertToOriginalReadAcumulatorForUnaryOperators.qml

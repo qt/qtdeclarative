@@ -16,7 +16,7 @@ QWidgetPlatformMessageDialog::QWidgetPlatformMessageDialog(QObject *parent)
 
     connect(m_dialog.data(), &QMessageBox::accepted, this, &QPlatformDialogHelper::accept);
     connect(m_dialog.data(), &QMessageBox::rejected, this, &QPlatformDialogHelper::reject);
-    connect(m_dialog.data(), &QMessageBox::buttonClicked, [this](QAbstractButton *button) {
+    connect(m_dialog.data(), &QMessageBox::buttonClicked, this, [this](QAbstractButton *button) {
         QMessageBox::ButtonRole role = m_dialog->buttonRole(button);
         QMessageBox::StandardButton standardButton = m_dialog->standardButton(button);
         emit clicked(static_cast<StandardButton>(standardButton), static_cast<ButtonRole>(role));

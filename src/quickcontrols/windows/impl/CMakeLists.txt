@@ -1,0 +1,22 @@
+# Copyright (C) 2023 The Qt Company Ltd.
+# SPDX-License-Identifier: BSD-3-Clause
+
+set(qml_files
+    "SwitchIndicator.qml"
+)
+
+qt_internal_add_qml_module(qtquickcontrols2windowsstyleimplplugin
+    URI "QtQuick.Controls.Windows.impl"
+    VERSION "${PROJECT_VERSION}"
+    PAST_MAJOR_VERSIONS 6
+    CLASS_NAME QtQuickControls2WindowsStyleImplPlugin
+    DEPENDENCIES
+        QtQuick/auto
+    PLUGIN_TARGET qtquickcontrols2windowsstyleimplplugin
+    NO_PLUGIN_OPTIONAL
+    QML_FILES
+        ${qml_files}
+    DEFINES
+        QT_NO_CAST_FROM_ASCII
+        QT_NO_CAST_TO_ASCII
+)

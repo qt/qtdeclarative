@@ -153,7 +153,7 @@ public:
     friend bool operator==(const QQmlJSMetaParameter &a, const QQmlJSMetaParameter &b)
     {
         return a.m_name == b.m_name && a.m_typeName == b.m_typeName
-                && a.m_type.toStrongRef().data() == b.m_type.toStrongRef().data()
+                && a.m_type.owner_equal(b.m_type)
                 && a.m_typeQualifier == b.m_typeQualifier;
     }
 
@@ -164,7 +164,7 @@ public:
 
     friend size_t qHash(const QQmlJSMetaParameter &e, size_t seed = 0)
     {
-        return qHashMulti(seed, e.m_name, e.m_typeName, e.m_type.toStrongRef().data(),
+        return qHashMulti(seed, e.m_name, e.m_typeName, e.m_type.owner_hash(),
                           e.m_typeQualifier);
     }
 
@@ -291,7 +291,7 @@ public:
     friend bool operator==(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
     {
         return a.m_name == b.m_name && a.m_returnTypeName == b.m_returnTypeName
-                && a.m_returnType == b.m_returnType && a.m_parameters == b.m_parameters
+                && a.m_returnType.owner_equal(b.m_returnType) && a.m_parameters == b.m_parameters
                 && a.m_annotations == b.m_annotations && a.m_methodType == b.m_methodType
                 && a.m_methodAccess == b.m_methodAccess && a.m_revision == b.m_revision
                 && a.m_isConstructor == b.m_isConstructor;
@@ -308,7 +308,7 @@ public:
 
         seed = combine(seed, method.m_name);
         seed = combine(seed, method.m_returnTypeName);
-        seed = combine(seed, method.m_returnType.toStrongRef().data());
+        seed = combine(seed, method.m_returnType.owner_hash());
         seed = combine(seed, method.m_annotations);
         seed = combine(seed, method.m_methodType);
         seed = combine(seed, method.m_methodAccess);
@@ -426,7 +426,7 @@ public:
     {
         return a.m_index == b.m_index && a.m_propertyName == b.m_propertyName
                 && a.m_typeName == b.m_typeName && a.m_bindable == b.m_bindable
-                && a.m_type == b.m_type && a.m_isList == b.m_isList
+                && a.m_type.owner_equal(b.m_type) && a.m_isList == b.m_isList
                 && a.m_isWritable == b.m_isWritable && a.m_isPointer == b.m_isPointer
                 && a.m_aliasExpr == b.m_aliasExpr && a.m_revision == b.m_revision
                 && a.m_isFinal == b.m_isFinal;
@@ -524,7 +524,7 @@ class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaPropertyBinding
             ScriptBindingValueType valueType = ScriptBindingValueType::ScriptValue_Unknown;
         };
         struct Object {
-            friend bool operator==(Object a, Object b) { return a.value == b.value && a.typeName == b.typeName; }
+            friend bool operator==(Object a, Object b) { return a.value.owner_equal(b.value) && a.typeName == b.typeName; }
             friend bool operator!=(Object a, Object b) { return !(a == b); }
             QString typeName;
             QWeakPointer<const QQmlJSScope> value;
@@ -532,7 +532,7 @@ class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaPropertyBinding
         struct Interceptor {
             friend bool operator==(Interceptor a, Interceptor b)
             {
-                return a.value == b.value && a.typeName == b.typeName;
+                return a.value.owner_equal(b.value) && a.typeName == b.typeName;
             }
             friend bool operator!=(Interceptor a, Interceptor b) { return !(a == b); }
             QString typeName;
@@ -541,7 +541,7 @@ class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaPropertyBinding
         struct ValueSource {
             friend bool operator==(ValueSource a, ValueSource b)
             {
-                return a.value == b.value && a.typeName == b.typeName;
+                return a.value.owner_equal(b.value) && a.typeName == b.typeName;
             }
             friend bool operator!=(ValueSource a, ValueSource b) { return !(a == b); }
             QString typeName;
@@ -570,7 +570,7 @@ class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaPropertyBinding
             */
             friend bool operator==(AttachedProperty a, AttachedProperty b)
             {
-                return a.value == b.value;
+                return a.value.owner_equal(b.value);
             }
             friend bool operator!=(AttachedProperty a, AttachedProperty b) { return !(a == b); }
             QWeakPointer<const QQmlJSScope> value;
@@ -592,7 +592,7 @@ class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaPropertyBinding
                ### TODO: Obtaining the effective binding result requires some resolving function
             */
             QWeakPointer<const QQmlJSScope> groupScope;
-            friend bool operator==(GroupProperty a, GroupProperty b) { return a.groupScope == b.groupScope; }
+            friend bool operator==(GroupProperty a, GroupProperty b) { return a.groupScope.owner_equal(b.groupScope); }
             friend bool operator!=(GroupProperty a, GroupProperty b) { return !(a == b); }
         };
         using type = std::variant<Invalid, BoolLiteral, NumberLiteral, StringLiteral,

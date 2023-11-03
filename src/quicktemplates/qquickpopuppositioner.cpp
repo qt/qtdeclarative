@@ -98,6 +98,7 @@ void QQuickPopupPositioner::reposition()
                 !centerInParent ? p->allowVerticalMove ? p->y : popupItem->y() : 0,
                 !p->hasWidth && iw > 0 ? iw : w,
                 !p->hasHeight && ih > 0 ? ih : h);
+    bool relaxEdgeConstraint = p->relaxEdgeConstraint;
     if (m_parentItem) {
         // m_parentItem is the parent that the popup should open in,
         // and popupItem()->parentItem() is the overlay, so the mapToItem() calls below
@@ -110,6 +111,8 @@ void QQuickPopupPositioner::reposition()
 
             if (centerInOverlay) {
                 rect.moveCenter(QPointF(qRound(centerInOverlay->width() / 2.0), qRound(centerInOverlay->height() / 2.0)));
+                // Popup cannot be moved outside window bounds when its centered with overlay
+                relaxEdgeConstraint = false;
             } else {
                 const QPointF parentItemCenter = QPointF(qRound(m_parentItem->width() / 2), qRound(m_parentItem->height() / 2));
                 rect.moveCenter(m_parentItem->mapToItem(popupItem->parentItem(), parentItemCenter));
@@ -174,12 +177,12 @@ void QQuickPopupPositioner::reposition()
                 // the boundary. But otherwise, retain existing behavior of resizing
                 // for items, such as menus, which enables flip.
                 if (p->allowHorizontalResize) {
-                    if ((margins.left() >= 0 || !p->relaxEdgeConstraint)
+                    if ((margins.left() >= 0 || !relaxEdgeConstraint)
                             && (rect.left() < bounds.left())) {
                         rect.setLeft(bounds.left());
                         widthAdjusted = true;
                     }
-                    if ((margins.right() >= 0 || !p->relaxEdgeConstraint)
+                    if ((margins.right() >= 0 || !relaxEdgeConstraint)
                             && (rect.right() > bounds.right())) {
                         rect.setRight(bounds.right());
                         widthAdjusted = true;
@@ -207,12 +210,12 @@ void QQuickPopupPositioner::reposition()
                 // the boundary. But otherwise, retain existing behavior of resizing
                 // for items, such as menus, which enables flip.
                 if (p->allowVerticalResize) {
-                    if ((margins.top() >= 0 || !p->relaxEdgeConstraint)
+                    if ((margins.top() >= 0 || !relaxEdgeConstraint)
                             && (rect.top() < bounds.top())) {
                         rect.setTop(bounds.top());
                         heightAdjusted = true;
                     }
-                    if ((margins.bottom() >= 0 || !p->relaxEdgeConstraint)
+                    if ((margins.bottom() >= 0 || !relaxEdgeConstraint)
                             && (rect.bottom() > bounds.bottom())) {
                         rect.setBottom(bounds.bottom());
                         heightAdjusted = true;

@@ -168,18 +168,19 @@ available when you import \c QtQuick.
 
     This value type is provided by the QtQuick import.
 
-    Font weighting is classified on a scale from 0 to 99, where a weight of 0 is ultralight,
-    and 99 is extremely black. The following values are supported:
+    Numerical values for font weights follow the CSS specification, where a
+    weight of 100 is extremely light, and 900 is extremely bold.
+    The following values are supported:
 
-    \value Font.Thin        0
-    \value Font.ExtraLight  12
-    \value Font.Light       25
-    \value Font.Normal      50
-    \value Font.Medium      57
-    \value Font.DemiBold    63
-    \value Font.Bold        75
-    \value Font.ExtraBold   81
-    \value Font.Black       87
+    \value Font.Thin        100
+    \value Font.ExtraLight  200
+    \value Font.Light       300
+    \value Font.Normal      400
+    \value Font.Medium      500
+    \value Font.DemiBold    600
+    \value Font.Bold        700
+    \value Font.ExtraBold   800
+    \value Font.Black       900
 
     Capitalization supports the following values:
 

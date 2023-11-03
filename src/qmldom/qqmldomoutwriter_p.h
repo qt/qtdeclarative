@@ -38,8 +38,8 @@ public:
     DomItem item;
     PendingSourceLocationId fullRegionId;
     FileLocations::Tree currentMap;
-    QMap<QString, PendingSourceLocationId> pendingRegions;
-    QMap<QString, CommentedElement> pendingComments;
+    QMap<FileLocationRegion, PendingSourceLocationId> pendingRegions;
+    QMap<FileLocationRegion, CommentedElement> pendingComments;
 };
 
 class QMLDOM_EXPORT OutWriter
@@ -88,19 +88,12 @@ public:
 
     void itemStart(const DomItem &it);
     void itemEnd(const DomItem &it);
-    void regionStart(QString rName);
-    void regionStart(QStringView rName) { regionStart(rName.toString()); }
-    void regionEnd(QString rName);
-    void regionEnd(QStringView rName) { regionEnd(rName.toString()); }
+    void regionStart(FileLocationRegion region);
+    void regionEnd(FileLocationRegion regino);
 
     quint32 counter() const { return lineWriter.counter(); }
-    OutWriter &writeRegion(QString rName, QStringView toWrite);
-    OutWriter &writeRegion(QStringView rName, QStringView toWrite)
-    {
-        return writeRegion(rName.toString(), toWrite);
-    }
-    OutWriter &writeRegion(QString t) { return writeRegion(t, t); }
-    OutWriter &writeRegion(QStringView t) { return writeRegion(t.toString(), t); }
+    OutWriter &writeRegion(FileLocationRegion region, QStringView toWrite);
+    OutWriter &writeRegion(FileLocationRegion region);
     OutWriter &ensureNewline(int nNewlines = 1)
     {
         lineWriter.ensureNewline(nNewlines);

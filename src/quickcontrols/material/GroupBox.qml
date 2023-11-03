@@ -20,8 +20,10 @@ T.GroupBox {
     topPadding: Material.frameVerticalPadding + (implicitLabelWidth > 0 ? implicitLabelHeight + spacing : 0)
     bottomPadding: Material.frameVerticalPadding
 
+    Material.roundedScale: Material.ExtraSmallScale
+
     label: Text {
-        x: control.leftPadding
+        x: Math.max(control.leftPadding, control.Material.roundedScale)
         width: control.availableWidth
 
         text: control.title
@@ -36,13 +38,14 @@ T.GroupBox {
         width: parent.width
         height: parent.height - control.topPadding + control.bottomPadding
 
-        radius: 2
+        radius: control.Material.roundedScale
         color: control.Material.elevation > 0 ? control.Material.backgroundColor : "transparent"
         border.color: control.Material.frameColor
 
         layer.enabled: control.enabled && control.Material.elevation > 0
-        layer.effect: ElevationEffect {
+        layer.effect: RoundedElevationEffect {
             elevation: control.Material.elevation
+            roundedScale: control.background.radius
         }
     }
 }

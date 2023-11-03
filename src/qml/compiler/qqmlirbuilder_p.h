@@ -411,6 +411,7 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT Pragma
         FunctionSignatureBehavior,
         NativeMethodBehavior,
         ValueTypeBehavior,
+        Translator,
     };
 
     enum ListPropertyAssignBehaviorValue
@@ -453,6 +454,7 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT Pragma
         FunctionSignatureBehaviorValue functionSignatureBehavior;
         NativeMethodBehaviorValue nativeMethodBehavior;
         ValueTypeBehaviorValues::Int valueTypeBehavior;
+        uint translationContextIndex;
     };
 
     QV4::CompiledData::Location location;

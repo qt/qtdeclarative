@@ -2249,6 +2249,7 @@ void QQmlJSCodeGenerator::generate_UnwindToLabel(int level, int offset)
 void QQmlJSCodeGenerator::generate_DeadTemporalZoneCheck(int name)
 {
     Q_UNUSED(name)
+    INJECT_TRACE_INFO(generate_DeadTemporalZoneCheck);
     // Nothing to do here. If we have statically asserted the dtz check in the type propagator
     // the value cannot be empty. Otherwise we can't get here.
 }
@@ -3136,8 +3137,10 @@ QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(
 
     // If the instruction has no side effects and doesn't write any register, it's dead.
     // We might still need the label, though, and the source code comment.
-    if (!m_state.hasSideEffects() && changedRegisterVariable().isEmpty())
+    if (!m_state.hasSideEffects() && changedRegisterVariable().isEmpty()) {
+        generateJumpCodeWithTypeConversions(0);
         return SkipInstruction;
+    }
 
     return ProcessInstruction;
 }

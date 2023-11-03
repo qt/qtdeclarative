@@ -33,6 +33,7 @@ engine interprets code. The following pragmas are exaplained in details below.
 \li \c FunctionSignatureBehavior
 \li \c NativeMethodBehavior
 \li \c ValueTypeBehavior
+\li \c Translator
 \endlist
 
 \section2 Singleton
@@ -257,6 +258,15 @@ way to express the same operations.
 
 \sa {Type annotations and assertions}
 
+\section2 Translator
+
+With this pragma you can set the context for the translations in the file.
+
+\qml
+pragma Translator: myTranslationContext
+\endqml
+
+For more information on internationalization with QML, see \l{QML: Use qsTr()}{Use qsTr}.
 
 \section1 Imports
 

@@ -25,14 +25,14 @@ QQuickRenderTargetPrivate::QQuickRenderTargetPrivate()
 {
 }
 
-QQuickRenderTargetPrivate::QQuickRenderTargetPrivate(const QQuickRenderTargetPrivate *other)
+QQuickRenderTargetPrivate::QQuickRenderTargetPrivate(const QQuickRenderTargetPrivate &other)
     : ref(1),
-      type(other->type),
-      pixelSize(other->pixelSize),
-      devicePixelRatio(other->devicePixelRatio),
-      sampleCount(other->sampleCount),
-      u(other->u),
-      mirrorVertically(other->mirrorVertically)
+      type(other.type),
+      pixelSize(other.pixelSize),
+      devicePixelRatio(other.devicePixelRatio),
+      sampleCount(other.sampleCount),
+      u(other.u),
+      mirrorVertically(other.mirrorVertically)
 {
 }
 

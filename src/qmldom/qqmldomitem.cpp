@@ -1,5 +1,6 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+#include "qqmldomattachedinfo_p.h"
 #include "qqmldomconstants_p.h"
 #include "qqmldomitem_p.h"
 #include "qqmldompath_p.h"
@@ -224,19 +225,6 @@ bool domTypeIsScope(DomType k)
     default:
         return false;
     }
-}
-
-QCborValue locationToData(SourceLocation loc, QStringView strValue)
-{
-    QCborMap res({
-        {QStringLiteral(u"offset"), loc.offset},
-        {QStringLiteral(u"length"), loc.length},
-        {QStringLiteral(u"startLine"), loc.startLine},
-        {QStringLiteral(u"startColumn"), loc.startColumn}
-    });
-    if (!strValue.isEmpty())
-        res.insert(QStringLiteral(u"strValue"), QCborValue(strValue));
-    return res;
 }
 
 QString DomBase::canonicalFilePath(const DomItem &self) const
@@ -2820,7 +2808,7 @@ DomItem List::index(const DomItem &self, index_type index) const
 
 void List::writeOut(const DomItem &self, OutWriter &ow, bool compact) const
 {
-    ow.writeRegion(u"leftSquareBrace", u"[");
+    ow.writeRegion(LeftBracketRegion);
     int baseIndent = ow.increaseIndent(1);
     bool first = true;
     iterateDirectSubpaths(
@@ -2839,7 +2827,7 @@ void List::writeOut(const DomItem &self, OutWriter &ow, bool compact) const
     if (!compact && !first)
         ow.newline();
     ow.decreaseIndent(1, baseIndent);
-    ow.writeRegion(u"rightSquareBrace", u"]");
+    ow.writeRegion(RightBracketRegion);
 }
 
 DomElement::DomElement(Path pathFromOwner) : m_pathFromOwner(pathFromOwner) { }
@@ -3519,17 +3507,17 @@ MutableDomItem MutableDomItem::addAnnotation(QmlObject annotation)
     return MutableDomItem(owner().item(), res);
 }
 
-MutableDomItem MutableDomItem::addPreComment(const Comment &comment, QString regionName)
+MutableDomItem MutableDomItem::addPreComment(const Comment &comment, FileLocationRegion region)
 {
     index_type idx;
     MutableDomItem rC = field(Fields::comments);
     if (auto rcPtr = rC.mutableAs<RegionComments>()) {
-        auto &preList = rcPtr->regionComments[regionName].preComments;
+        auto &preList = rcPtr->regionComments[region].preComments;
         idx = preList.size();
         preList.append(comment);
         MutableDomItem res = path(Path::Field(Fields::comments)
                                           .field(Fields::regionComments)
-                                          .key(regionName)
+                                          .key(fileLocationRegionName(region))
                                           .field(Fields::preComments)
                                           .index(idx));
         Q_ASSERT(res);
@@ -3538,17 +3526,17 @@ MutableDomItem MutableDomItem::addPreComment(const Comment &comment, QString reg
     return MutableDomItem();
 }
 
-MutableDomItem MutableDomItem::addPostComment(const Comment &comment, QString regionName)
+MutableDomItem MutableDomItem::addPostComment(const Comment &comment, FileLocationRegion region)
 {
     index_type idx;
     MutableDomItem rC = field(Fields::comments);
     if (auto rcPtr = rC.mutableAs<RegionComments>()) {
-        auto &postList = rcPtr->regionComments[regionName].postComments;
+        auto &postList = rcPtr->regionComments[region].postComments;
         idx = postList.size();
         postList.append(comment);
         MutableDomItem res = path(Path::Field(Fields::comments)
                                           .field(Fields::regionComments)
-                                          .key(regionName)
+                                          .key(fileLocationRegionName(region))
                                           .field(Fields::postComments)
                                           .index(idx));
         Q_ASSERT(res);
@@ -3582,7 +3570,7 @@ bool ListPBase::iterateDirectSubpaths(const DomItem &self, DirectVisitor v) cons
 
 void ListPBase::writeOut(const DomItem &self, OutWriter &ow, bool compact) const
 {
-    ow.writeRegion(u"leftSquareBrace", u"[");
+    ow.writeRegion(LeftBracketRegion);
     int baseIndent = ow.increaseIndent(1);
     bool first = true;
     index_type len = index_type(m_pList.size());
@@ -3599,7 +3587,7 @@ void ListPBase::writeOut(const DomItem &self, OutWriter &ow, bool compact) const
     if (!compact && !first)
         ow.newline();
     ow.decreaseIndent(1, baseIndent);
-    ow.writeRegion(u"rightSquareBrace", u"]");
+    ow.writeRegion(RightBracketRegion);
 }
 
 QQmlJSScope::ConstPtr ScriptElement::semanticScope()

@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/">
+    <qresource prefix="/qt/qml/translated">
         <file>qml-i18n.qml</file>
     </qresource>
 </RCC>

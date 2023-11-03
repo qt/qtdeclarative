@@ -17,6 +17,7 @@
 
 #include "qqmldom_global.h"
 #include "qqmldom_fwd_p.h"
+#include "qqmldom_utils_p.h"
 #include "qqmldomconstants_p.h"
 #include "qqmldomstringdumper_p.h"
 #include "qqmldompath_p.h"
@@ -87,8 +88,6 @@ QMLDOM_EXPORT QMap<DomType,QString> domTypeToStringMap();
 QMLDOM_EXPORT QString domTypeToString(DomType k);
 QMLDOM_EXPORT QMap<DomKind, QString> domKindToStringMap();
 QMLDOM_EXPORT QString domKindToString(DomKind k);
-
-QMLDOM_EXPORT QCborValue locationToData(SourceLocation loc, QStringView strValue=u"");
 
 inline bool noFilter(const DomItem &, const PathEls::PathComponent &, const DomItem &)
 {
@@ -322,11 +321,23 @@ public:
     template<typename T>
     static Map fromMultiMapRef(Path pathFromOwner, const QMultiMap<QString, T> &mmap);
     template<typename T>
+    static Map fromMultiMap(Path pathFromOwner, const QMultiMap<QString, T> &mmap);
+    template<typename T>
     static Map
     fromMapRef(Path pathFromOwner, const QMap<QString, T> &mmap,
-               std::function<DomItem(const DomItem &, const PathEls::PathComponent &, const T &)> elWrapper);
+               std::function<DomItem(const DomItem &, const PathEls::PathComponent &, const T &)>
+                       elWrapper);
+
+    template<typename T>
+    static Map fromFileRegionMap(Path pathFromOwner,
+                                          const QMap<FileLocationRegion, T> &map);
+    template<typename T>
+    static Map fromFileRegionListMap(Path pathFromOwner,
+                                              const QMap<FileLocationRegion, QList<T>> &map);
 
 private:
+    template<typename MapT>
+    static QSet<QString> fileRegionKeysFromMap(const MapT &map);
     LookupFunction m_lookup;
     Keys m_keys;
     QString m_targetType;
@@ -1102,10 +1113,9 @@ public:
     {
         return this->dvValueLazy(visitor, PathEls::Field(f), valueF, options);
     }
-    DomItem subLocationItem(const PathEls::PathComponent &c, SourceLocation loc,
-                            QStringView code = QStringView()) const
+    DomItem subLocationItem(const PathEls::PathComponent &c, SourceLocation loc) const
     {
-        return this->subDataItem(c, locationToData(loc, code));
+        return this->subDataItem(c, sourceLocationToQCborValue(loc));
     }
     // bool dvSubReference(DirectVisitor visitor, const PathEls::PathComponent &c, Path
     // referencedObject);
@@ -1314,24 +1324,31 @@ inline bool operator!=(const DomItem &o1, const DomItem &o2)
 }
 
 template<typename T>
+static DomItem keyMultiMapHelper(const DomItem &self, QString key,
+                                 const QMultiMap<QString, T> &mmap)
+{
+    auto it = mmap.find(key);
+    auto end = mmap.cend();
+    if (it == end)
+        return DomItem();
+    else {
+        // special case single element (++it == end || it.key() != key)?
+        QList<const T *> values;
+        while (it != end && it.key() == key)
+            values.append(&(*it++));
+        ListP ll(self.pathFromOwner().appendComponent(PathEls::Key(key)), values, QString(),
+                 ListOptions::Reverse);
+        return self.copy(ll);
+    }
+}
+
+template<typename T>
 Map Map::fromMultiMapRef(Path pathFromOwner, const QMultiMap<QString, T> &mmap)
 {
     return Map(
             pathFromOwner,
             [&mmap](const DomItem &self, QString key) {
-                auto it = mmap.find(key);
-                auto end = mmap.cend();
-                if (it == end)
-                    return DomItem();
-                else {
-                    // special case single element (++it == end || it.key() != key)?
-                    QList<const T *> values;
-                    while (it != end && it.key() == key)
-                        values.append(&(*it++));
-                    ListP ll(self.pathFromOwner().appendComponent(PathEls::Key(key)), values,
-                             QString(), ListOptions::Reverse);
-                    return self.copy(ll);
-                }
+                return keyMultiMapHelper(self, key, mmap);
             },
             [&mmap](const DomItem &) { return QSet<QString>(mmap.keyBegin(), mmap.keyEnd()); },
             QLatin1String(typeid(T).name()));
@@ -1352,6 +1369,56 @@ Map Map::fromMapRef(
             },
             [&map](const DomItem &) { return QSet<QString>(map.keyBegin(), map.keyEnd()); },
             QLatin1String(typeid(T).name()));
+}
+
+template<typename MapT>
+QSet<QString> Map::fileRegionKeysFromMap(const MapT &map)
+{
+    QSet<QString> keys;
+    std::transform(map.keyBegin(), map.keyEnd(), std::inserter(keys, keys.begin()), fileLocationRegionName);
+    return keys;
+}
+
+template<typename T>
+Map Map::fromFileRegionMap(Path pathFromOwner, const QMap<FileLocationRegion, T> &map)
+{
+    auto result = Map(
+            pathFromOwner,
+            [&map](const DomItem &mapItem, const QString &key) -> DomItem {
+                auto it = map.constFind(fileLocationRegionValue(key));
+                if (it == map.constEnd())
+                    return {};
+
+                return mapItem.wrap(PathEls::Key(key), *it);
+            },
+            [&map](const DomItem &) { return fileRegionKeysFromMap(map); },
+            QString::fromLatin1(typeid(T).name()));
+    return result;
+}
+
+template<typename T>
+Map Map::fromFileRegionListMap(Path pathFromOwner,
+                                   const QMap<FileLocationRegion, QList<T>> &map)
+{
+    using namespace Qt::StringLiterals;
+    auto result = Map(
+            pathFromOwner,
+            [&map](const DomItem &mapItem, const QString &key) -> DomItem {
+                const QList<SourceLocation> locations = map.value(fileLocationRegionValue(key));
+                if (locations.empty())
+                    return {};
+
+                auto list = List::fromQList<SourceLocation>(
+                        mapItem.pathFromOwner(), locations,
+                        [](const DomItem &self, const PathEls::PathComponent &path,
+                           const SourceLocation &location) {
+                            return self.subLocationItem(path, location);
+                        });
+                return mapItem.subListItem(list);
+            },
+            [&map](const DomItem &) { return fileRegionKeysFromMap(map); },
+            u"QList<%1>"_s.arg(QString::fromLatin1(typeid(T).name())));
+    return result;
 }
 
 template<typename T>
@@ -1695,16 +1762,8 @@ public:
             const MethodInfo &functionDef, AddOption option = AddOption::Overwrite);
     MutableDomItem addChild(QmlObject child);
     MutableDomItem addAnnotation(QmlObject child);
-    MutableDomItem addPreComment(const Comment &comment, QString regionName = QString());
-    MutableDomItem addPreComment(const Comment &comment, QStringView regionName)
-    {
-        return addPreComment(comment, regionName.toString());
-    }
-    MutableDomItem addPostComment(const Comment &comment, QString regionName = QString());
-    MutableDomItem addPostComment(const Comment &comment, QStringView regionName)
-    {
-        return addPostComment(comment, regionName.toString());
-    }
+    MutableDomItem addPreComment(const Comment &comment, FileLocationRegion region);
+    MutableDomItem addPostComment(const Comment &comment, FileLocationRegion region);
     QQmlJSScope::ConstPtr semanticScope();
     void setSemanticScope(const QQmlJSScope::ConstPtr &scope);
 

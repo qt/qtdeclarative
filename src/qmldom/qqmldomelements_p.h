@@ -565,6 +565,9 @@ public:
     QString preCode() const { return preCodeForName(m_name); }
     QString postCode() const { return postCodeForName(m_name); }
 
+    ScriptElementVariant bindingIdentifiers() const { return m_bindingIdentifiers; }
+    void setBindingIdentifiers(const ScriptElementVariant &bindingIdentifiers) { m_bindingIdentifiers = bindingIdentifiers; }
+
 private:
     friend class QQmlDomAstCreator;
     BindingType m_bindingType;
@@ -572,6 +575,7 @@ private:
     std::unique_ptr<BindingValue> m_value;
     QList<QmlObject> m_annotations;
     RegionComments m_comments;
+    ScriptElementVariant m_bindingIdentifiers;
 };
 
 class QMLDOM_EXPORT AttributeInfo

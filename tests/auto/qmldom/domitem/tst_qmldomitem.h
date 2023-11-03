@@ -2258,6 +2258,55 @@ private slots:
         QVERIFY(rootQmlObject);
     }
 
+    void bindingAttachedOrGroupedProperties()
+    {
+        using namespace Qt::StringLiterals;
+        QString testFile = baseDir + u"/attachedOrGroupedProperties.qml"_s;
+        DomItem rootQmlObject = rootQmlObjectFromFile(testFile, qmltypeDirs);
+        QVERIFY(rootQmlObject);
+
+        DomItem dotNotation = rootQmlObject.path(u".children[0].bindings[\"grouped.font.family\"][0].bindingIdentifiers");
+        QVERIFY(dotNotation);
+        QCOMPARE(dotNotation.internalKind(), DomType::ScriptBinaryExpression);
+        QCOMPARE(dotNotation.field(Fields::left).internalKind(), DomType::ScriptBinaryExpression);
+        QCOMPARE(dotNotation.field(Fields::right).field(Fields::identifier).value().toString(), u"family");
+        QCOMPARE(dotNotation.field(Fields::right).internalKind(), DomType::ScriptIdentifierExpression);
+        QCOMPARE(dotNotation.field(Fields::left).field(Fields::left).internalKind(), DomType::ScriptIdentifierExpression);
+        QCOMPARE(dotNotation.field(Fields::left).field(Fields::left).field(Fields::identifier).value().toString(), u"grouped");
+        QCOMPARE(dotNotation.field(Fields::left).field(Fields::right).internalKind(), DomType::ScriptIdentifierExpression);
+        QCOMPARE(dotNotation.field(Fields::left).field(Fields::right).field(Fields::identifier).value().toString(), u"font");
+        auto dotNotationScope = dotNotation.semanticScope();
+        QVERIFY(!dotNotationScope);
+
+        DomItem groupNotationChild1 = rootQmlObject.path(u".children[1].children[0]");
+        QVERIFY(groupNotationChild1);
+        QCOMPARE(groupNotationChild1.internalKind(), DomType::QmlObject);
+        QCOMPARE(groupNotationChild1.field(Fields::name).value().toString(), u"myText");
+        auto myTextScope = groupNotationChild1.semanticScope();
+        QVERIFY(myTextScope);
+        QCOMPARE(myTextScope->scopeType(), QQmlJSScope::ScopeType::GroupedPropertyScope);
+        QVERIFY(myTextScope->hasProperty("font"));
+
+        DomItem groupNotationChild2 = groupNotationChild1.path(u".children[0]");
+        QCOMPARE(groupNotationChild2.internalKind(), DomType::QmlObject);
+        QCOMPARE(groupNotationChild2.field(Fields::name).value().toString(), u"font");
+
+        auto fontScope = groupNotationChild2.semanticScope();
+        QVERIFY(fontScope);
+        QCOMPARE(fontScope->scopeType(), QQmlJSScope::ScopeType::GroupedPropertyScope);
+        QVERIFY(fontScope->hasProperty("pixelSize"));
+
+        DomItem pixelSize = groupNotationChild2.path(u".bindings[\"pixelSize\"][0].bindingIdentifiers");
+        QCOMPARE(pixelSize.internalKind(), DomType::ScriptIdentifierExpression);
+        QCOMPARE(pixelSize.field(Fields::identifier).value().toString(), u"pixelSize");
+
+        DomItem attached = rootQmlObject.path(u".bindings[\"Keys.onPressed\"][0].bindingIdentifiers");
+        QVERIFY(attached);
+        QCOMPARE(attached.internalKind(), DomType::ScriptBinaryExpression);
+        QCOMPARE(attached.field(Fields::left).field(Fields::identifier).value().toString(), u"Keys");
+        QCOMPARE(attached.field(Fields::right).field(Fields::identifier).value().toString(), u"onPressed");
+    }
+
 private:
     struct DomItemWithLocation
     {
@@ -2548,6 +2597,72 @@ private:
             QCOMPARE(current.field(Fields::right).field(Fields::identifier).value().toString(),
                      *currentString);
         }
+    }
+
+private slots:
+    void mapsKeyedByFileLocationRegion()
+    {
+        using namespace Qt::StringLiterals;
+        const QString filePath = baseDir + u"/fileLocationRegion.qml"_s;
+        const DomItem rootQmlObject = rootQmlObjectFromFile(filePath, qmltypeDirs);
+        QVERIFY(rootQmlObject);
+
+        // test if preComments map works correctly with DomItem interface
+        const DomItem binding = rootQmlObject.field(Fields::bindings).key(u"helloWorld"_s).index(0);
+        const DomItem bindingRegionComments =
+                binding.field(Fields::comments).field(Fields::regionComments);
+        const DomItem preComments =
+                bindingRegionComments.key(fileLocationRegionName(FileLocationRegion::IdentifierRegion))
+                        .field(Fields::preComments);
+
+        QCOMPARE(preComments.indexes(), 1);
+        QString rawPreComment = preComments.index(0).field(Fields::rawComment).value().toString();
+        QCOMPARE(preComments.index(0)
+                         .field(Fields::rawComment)
+                         .value()
+                         .toString()
+                         // replace weird newlines by \n
+                         .replace("\r\n", "\n")
+                         .replace("\r", "\n"),
+                 u"    // before helloWorld binding\n    "_s);
+
+        // test if postComments map works correctly with DomItem interface
+        const DomItem postComments =
+                bindingRegionComments
+                        .key(fileLocationRegionName(FileLocationRegion::MainRegion))
+                        .field(Fields::postComments);
+        QCOMPARE(postComments.indexes(), 1);
+        QCOMPARE(postComments.index(0)
+                         .field(Fields::rawComment)
+                         .value()
+                         .toString()
+                         // replace the windows newlines by \n
+                         .replace("\r\n", "\n")
+                         .replace("\r", "\n"),
+                 u" // after helloWorld binding\n"_s);
+
+        const auto fileLocations = FileLocations::findAttachedInfo(binding);
+        const DomItem bindingFileLocation =
+                rootQmlObject.path(fileLocations.foundTreePath).field(Fields::infoItem);
+
+        // test if FileLocation Tree map works correctly with DomItem interface
+        QCOMPARE(bindingFileLocation.field(Fields::fullRegion).value(),
+                 bindingFileLocation.field(Fields::regions)
+                         .key(fileLocationRegionName(FileLocationRegion::MainRegion))
+                         .value());
+
+        QCOMPARE(bindingFileLocation.field(Fields::fullRegion).value(),
+                 sourceLocationToQCborValue(fileLocations.foundTree->info().fullRegion));
+
+        QCOMPARE(bindingFileLocation.field(Fields::regions)
+                         .key(fileLocationRegionName(FileLocationRegion::MainRegion))
+                         .value(),
+                 sourceLocationToQCborValue(fileLocations.foundTree->info().regions[MainRegion]));
+
+        QCOMPARE(bindingFileLocation.field(Fields::regions)
+                         .key(fileLocationRegionName(FileLocationRegion::ColonTokenRegion))
+                         .value(),
+                 sourceLocationToQCborValue(fileLocations.foundTree->info().regions[ColonTokenRegion]));
     }
 
 private:

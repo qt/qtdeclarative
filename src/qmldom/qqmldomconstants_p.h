@@ -331,6 +331,54 @@ Q_ENUM_NS(LocalSymbolsType)
 Q_DECLARE_FLAGS(LocalSymbolsTypes, LocalSymbolsType)
 Q_DECLARE_OPERATORS_FOR_FLAGS(LocalSymbolsTypes)
 
+/*!
+\internal
+The FileLocationRegion allows to map the different FileLocation subregions to their position in
+the actual code. For example, \c{ColonTokenRegion} denotes the position of the ':' token in a
+binding like `myProperty: something()`, or the ':' token in a pragma like `pragma Hello: World`.
+
+These are used for formatting in qmlformat and autocompletion in qmlls.
+
+MainRegion denotes the entire FileLocation region.
+
+\sa{OutWriter::regionToString}, {FileLocations::regionName}
+*/
+enum FileLocationRegion : int {
+    AsTokenRegion,
+    ColonTokenRegion,
+    CommaTokenRegion,
+    ComponentKeywordRegion,
+    DefaultKeywordRegion,
+    EllipsisTokenRegion,
+    EnumKeywordRegion,
+    EqualTokenRegion,
+    FunctionKeywordRegion,
+    IdColonTokenRegion,
+    IdNameRegion,
+    IdTokenRegion,
+    IdentifierRegion,
+    ImportTokenRegion,
+    ImportUriRegion,
+    LeftBraceRegion,
+    LeftBracketRegion,
+    LeftParenthesisRegion,
+    MainRegion,
+    OnTargetRegion,
+    OnTokenRegion,
+    PragmaKeywordRegion,
+    PragmaValuesRegion,
+    PropertyKeywordRegion,
+    ReadonlyKeywordRegion,
+    RequiredKeywordRegion,
+    ReturnKeywordRegion,
+    RightBraceRegion,
+    RightBracketRegion,
+    RightParenthesisRegion,
+    SignalKeywordRegion,
+    TypeIdentifierRegion,
+};
+Q_ENUM_NS(FileLocationRegion);
+
 enum DomCreationOption : char {
     None = 0,
     WithSemanticAnalysis = 1,

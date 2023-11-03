@@ -29,7 +29,12 @@
     \li \b internalId : quint64
     \endlist
 
-    All these properties are read-only, as are their C++ counterparts.
+    All these properties are read-only, as are their C++ counterparts. In addition,
+    we also expose the following functions:
+
+    \list
+    \li QVariant \b{data}(int \e role) (since Qt 6.7)
+    \endlist
 
     \note The usual caveats apply to QModelIndex in QML. If the underlying model changes
     or gets deleted, it may become dangerous to access its properties. Therefore, you

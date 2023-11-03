@@ -202,7 +202,7 @@ FileLocations::Tree QQmlDomAstCreator::createMap(FileLocations::Tree base, Path 
 {
     FileLocations::Tree res = FileLocations::ensure(base, p, AttachedInfo::PathType::Relative);
     if (n)
-        FileLocations::addRegion(res, QString(), combineLocations(n));
+        FileLocations::addRegion(res, MainRegion, combineLocations(n));
     return res;
 }
 
@@ -287,7 +287,7 @@ bool QQmlDomAstCreator::visit(UiProgram *program)
     Q_ASSERT_X(newC.item(), className, "could not recover component added with addComponent");
     // QmlFile region == Component region == program span
     // we hide the component span because the component s written after the imports
-    FileLocations::addRegion(rootMap, QString(), combineLocations(program));
+    FileLocations::addRegion(rootMap, MainRegion, combineLocations(program));
     pushEl(p, *cPtr, program);
 
     // add implicit directory import
@@ -329,7 +329,7 @@ bool QQmlDomAstCreator::visit(UiPragma *el)
     auto fileLocation = createMap(
             DomType::Pragma, qmlFilePtr->addPragma(Pragma(el->name.toString(), valueList)), el);
     if (el->colonToken.isValid()) {
-        FileLocations::addRegion(fileLocation, u"colon"_s, el->colonToken);
+        FileLocations::addRegion(fileLocation, ColonTokenRegion, el->colonToken);
     }
     return true;
 }
@@ -368,8 +368,9 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
         MethodInfo *mPtr;
         Path p = current<QmlObject>().addMethod(m, AddOption::KeepExisting, &mPtr);
         pushEl(p, *mPtr, el);
-        FileLocations::addRegion(nodeStack.last().fileLocations, u"signal", el->propertyToken());
-        FileLocations::addRegion(nodeStack.last().fileLocations, u"identifier",
+        FileLocations::addRegion(nodeStack.last().fileLocations, SignalKeywordRegion,
+                                 el->propertyToken());
+        FileLocations::addRegion(nodeStack.last().fileLocations, IdentifierRegion,
                                  el->identifierToken);
         MethodInfo &mInfo = std::get<MethodInfo>(currentNode().value);
         AST::UiParameterList *args = el->parameters;
@@ -382,7 +383,7 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
             auto argLocs = FileLocations::ensure(nodeStack.last().fileLocations,
                                                  Path::Field(Fields::parameters).index(idx),
                                                  AttachedInfo::PathType::Relative);
-            FileLocations::addRegion(argLocs, QString(), combineLocations(args));
+            FileLocations::addRegion(argLocs, MainRegion, combineLocations(args));
             args = args->next;
         }
         break;
@@ -401,26 +402,26 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
         Path pPathFromOwner =
                 current<QmlObject>().addPropertyDef(p, AddOption::KeepExisting, &pPtr);
         pushEl(pPathFromOwner, *pPtr, el);
-        FileLocations::addRegion(nodeStack.last().fileLocations, u"property",
+        FileLocations::addRegion(nodeStack.last().fileLocations, PropertyKeywordRegion,
                                  el->propertyToken());
-        FileLocations::addRegion(nodeStack.last().fileLocations, u"identifier",
+        FileLocations::addRegion(nodeStack.last().fileLocations, IdentifierRegion,
                                  el->identifierToken);
-        FileLocations::addRegion(nodeStack.last().fileLocations, u"colon", el->colonToken);
+        FileLocations::addRegion(nodeStack.last().fileLocations, ColonTokenRegion, el->colonToken);
         if (p.name == u"id")
             qmlFile.addError(std::move(astParseErrors()
                                      .warning(tr("id is a special attribute, that should not be "
                                                  "used as property name"))
                                                .withPath(currentNodeEl().path)));
         if (p.isDefaultMember) {
-            FileLocations::addRegion(nodeStack.last().fileLocations, u"default",
+            FileLocations::addRegion(nodeStack.last().fileLocations, DefaultKeywordRegion,
                                      el->defaultToken());
         }
         if (p.isRequired) {
-            FileLocations::addRegion(nodeStack.last().fileLocations, u"required",
+            FileLocations::addRegion(nodeStack.last().fileLocations, RequiredKeywordRegion,
                                      el->requiredToken());
         }
         if (p.isReadonly) {
-            FileLocations::addRegion(nodeStack.last().fileLocations, u"readonly",
+            FileLocations::addRegion(nodeStack.last().fileLocations, ReadonlyKeywordRegion,
                                      el->readonlyToken());
         }
         if (el->statement) {
@@ -436,10 +437,10 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
             Path bPathFromOwner = current<QmlObject>().addBinding(Binding(p.name, script, bType),
                                                                   AddOption::KeepExisting, &bPtr);
             FileLocations::Tree bLoc = createMap(DomType::Binding, bPathFromOwner, el);
-            FileLocations::addRegion(bLoc, u"colon", el->colonToken);
+            FileLocations::addRegion(bLoc, ColonTokenRegion, el->colonToken);
             FileLocations::Tree valueLoc = FileLocations::ensure(bLoc, Path::Field(Fields::value),
                                                                  AttachedInfo::PathType::Relative);
-            FileLocations::addRegion(valueLoc, QString(), combineLocations(el->statement));
+            FileLocations::addRegion(valueLoc, MainRegion, combineLocations(el->statement));
             // push it also: its needed in endVisit to add the scriptNode to it
             // do not use pushEl to avoid recreating the already created "bLoc" Map
             nodeStack.append({ bPathFromOwner, *bPtr, bLoc });
@@ -550,18 +551,18 @@ bool QQmlDomAstCreator::visit(AST::FunctionDeclaration *fDef)
            fDef); // add at the start and use the normal recursive visit?
     FileLocations::Tree &fLoc = nodeStack.last().fileLocations;
     if (fDef->identifierToken.isValid())
-        FileLocations::addRegion(fLoc, u"identifier"_s, fDef->identifierToken);
+        FileLocations::addRegion(fLoc, IdentifierRegion, fDef->identifierToken);
     auto bodyTree = FileLocations::ensure(fLoc, Path::Field(Fields::body),
                                           AttachedInfo::PathType::Relative);
-    FileLocations::addRegion(bodyTree, QString(), bodyLoc);
+    FileLocations::addRegion(bodyTree, MainRegion, bodyLoc);
     if (fDef->lparenToken.length != 0)
-        FileLocations::addRegion(fLoc, u"leftParen", fDef->lparenToken);
+        FileLocations::addRegion(fLoc, LeftParenthesisRegion, fDef->lparenToken);
     if (fDef->rparenToken.length != 0)
-        FileLocations::addRegion(fLoc, u"rightParen", fDef->rparenToken);
+        FileLocations::addRegion(fLoc, RightParenthesisRegion, fDef->rparenToken);
     if (fDef->lbraceToken.length != 0)
-        FileLocations::addRegion(fLoc, u"leftBrace", fDef->lbraceToken);
+        FileLocations::addRegion(fLoc, LeftBraceRegion, fDef->lbraceToken);
     if (fDef->rbraceToken.length != 0)
-        FileLocations::addRegion(fLoc, u"rightBrace", fDef->rbraceToken);
+        FileLocations::addRegion(fLoc, RightBraceRegion, fDef->rbraceToken);
     MethodInfo &mInfo = std::get<MethodInfo>(currentNode().value);
     AST::FormalParameterList *args = fDef->formals;
     while (args) {
@@ -592,7 +593,7 @@ bool QQmlDomAstCreator::visit(AST::FunctionDeclaration *fDef)
         auto argLocs = FileLocations::ensure(nodeStack.last().fileLocations,
                                              Path::Field(Fields::parameters).index(idx),
                                              AttachedInfo::PathType::Relative);
-        FileLocations::addRegion(argLocs, QString(), combineLocations(args));
+        FileLocations::addRegion(argLocs, MainRegion, combineLocations(args));
         args = args->next;
     }
     return true;
@@ -792,7 +793,7 @@ bool QQmlDomAstCreator::visit(AST::UiObjectBinding *el)
                                              "assuming they refer to an id property"))
                                            .withPath(bPathFromOwner)));
     pushEl(bPathFromOwner, *bPtr, el);
-    FileLocations::addRegion(nodeStack.last().fileLocations, u"colon", el->colonToken);
+    FileLocations::addRegion(nodeStack.last().fileLocations, ColonTokenRegion, el->colonToken);
     loadAnnotations(el);
     QmlObject *objValue = bPtr->objectValue();
     Q_ASSERT_X(objValue, className, "could not recover objectValue");
@@ -840,10 +841,11 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
             Id idVal(idName, qmlFile.canonicalPath().path(containingObject.pathFromOwner()));
             idVal.value = script;
             containingObject.setIdStr(idName);
-            FileLocations::addRegion(containingObjectEl.fileLocations, u"idToken",
+            FileLocations::addRegion(containingObjectEl.fileLocations, IdTokenRegion,
                                      combineLocations(el->qualifiedId));
-            FileLocations::addRegion(containingObjectEl.fileLocations, u"idColon", el->colonToken);
-            FileLocations::addRegion(containingObjectEl.fileLocations, u"id",
+            FileLocations::addRegion(containingObjectEl.fileLocations, IdColonTokenRegion,
+                                     el->colonToken);
+            FileLocations::addRegion(containingObjectEl.fileLocations, IdNameRegion,
                                      combineLocations(el->statement));
             QmlComponent &comp = current<QmlComponent>();
             pathFromOwner = comp.addId(idVal, AddOption::KeepExisting, &idPtr);
@@ -871,6 +873,24 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
                             .withPath(pathFromOwner)));
         }
     } else {
+        // Create FieldExpression if the bindable element has dots
+        const auto reparentExp = [](const auto &left, const auto &right){
+            SourceLocation s1, s2;
+            left.visitConst([&s1](auto &&el){
+                s1 = el->combinedLocation();
+            });
+
+            right.visitConst([&s2](auto &&el){
+                s2 = el->combinedLocation();
+            });
+
+            auto result = std::make_shared<ScriptElements::BinaryExpression>(s1, s2);
+            result->setOp(ScriptElements::BinaryExpression::FieldMemberAccess);
+            result->setLeft(left);
+            result->setRight(right);
+            return ScriptElementVariant::fromElement(result);
+        };
+
         pathFromOwner =
                 current<QmlObject>().addBinding(bindingV, AddOption::KeepExisting, &bindingPtr);
         QmlStackElement &containingObjectEl = currentEl<QmlObject>();
@@ -878,9 +898,27 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
         Path pathFromContainingObject = pathFromOwner.mid(containingObjectEl.path.length());
         auto bindingFileLocation =
                 FileLocations::ensure(containingObjectEl.fileLocations, pathFromContainingObject);
-        FileLocations::addRegion(bindingFileLocation, u"identifier",
+        FileLocations::addRegion(bindingFileLocation, IdentifierRegion,
                                  el->qualifiedId->identifierToken);
-        FileLocations::addRegion(bindingFileLocation, u"colon", el->colonToken);
+        FileLocations::addRegion(bindingFileLocation, ColonTokenRegion, el->colonToken);
+
+        ScriptElementVariant bindable;
+        bool first = true;
+        for (auto exp = el->qualifiedId; exp; exp = exp->next) {
+            const SourceLocation identifierLoc = exp->identifierToken;
+            auto id = std::make_shared<ScriptElements::IdentifierExpression>(identifierLoc);
+            id->setName(exp->name);
+            if (first) {
+                first = false;
+                bindable = ScriptElementVariant::fromElement(id);
+                continue;
+            }
+            bindable = reparentExp(bindable, ScriptElementVariant::fromElement(id));
+        }
+        bindingPtr->setBindingIdentifiers(finalizeScriptExpression(bindable,
+                            pathFromOwner.field(Fields::bindingIdentifiers),
+                        rootMap));
+
         Q_ASSERT_X(bindingPtr, className, "binding could not be retrieved");
     }
     if (bindingPtr)
@@ -891,7 +929,7 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
         Q_UNREACHABLE();
     loadAnnotations(el);
     // avoid duplicate colon location for id?
-    FileLocations::addRegion(nodeStack.last().fileLocations, u"colon", el->colonToken);
+    FileLocations::addRegion(nodeStack.last().fileLocations, ColonTokenRegion, el->colonToken);
     return true;
 }
 
@@ -955,12 +993,12 @@ bool QQmlDomAstCreator::visit(AST::UiArrayBinding *el)
                         .error(tr("id attributes should have only simple strings as values"))
                         .withPath(bindingPathFromOwner)));
     pushEl(bindingPathFromOwner, *bindingPtr, el);
-    FileLocations::addRegion(currentNodeEl().fileLocations, u"colon", el->colonToken);
+    FileLocations::addRegion(currentNodeEl().fileLocations, ColonTokenRegion, el->colonToken);
     loadAnnotations(el);
     FileLocations::Tree arrayList =
             createMap(currentNodeEl().fileLocations, Path::Field(Fields::value), nullptr);
-    FileLocations::addRegion(arrayList, u"leftSquareBrace", el->lbracketToken);
-    FileLocations::addRegion(arrayList, u"rightSquareBrace", el->lbracketToken);
+    FileLocations::addRegion(arrayList, LeftBracketRegion, el->lbracketToken);
+    FileLocations::addRegion(arrayList, RightBracketRegion, el->rbracketToken);
     arrayBindingLevels.append(nodeStack.size());
     return true;
 }
@@ -1117,7 +1155,7 @@ bool QQmlDomAstCreator::visit(AST::UiEnumMemberList *el)
     EnumItem it(el->member.toString(), el->value);
     EnumDecl &eDecl = std::get<EnumDecl>(currentNode().value);
     Path itPathFromDecl = eDecl.addValue(it);
-    FileLocations::addRegion(createMap(DomType::EnumItem, itPathFromDecl, nullptr), QString(),
+    FileLocations::addRegion(createMap(DomType::EnumItem, itPathFromDecl, nullptr), MainRegion,
                              combine(el->memberToken, el->valueToken));
     return true;
 }
@@ -1135,8 +1173,9 @@ bool QQmlDomAstCreator::visit(AST::UiInlineComponent *el)
     QmlComponent *compPtr;
     Path p = qmlFilePtr->addComponent(QmlComponent(cName), AddOption::KeepExisting, &compPtr);
     pushEl(p, *compPtr, el);
-    FileLocations::addRegion(nodeStack.last().fileLocations, u"component", el->componentToken);
-    FileLocations::addRegion(nodeStack.last().fileLocations, u"identifier", el->identifierToken);
+    FileLocations::addRegion(nodeStack.last().fileLocations, ComponentKeywordRegion,
+                             el->componentToken);
+    FileLocations::addRegion(nodeStack.last().fileLocations, IdentifierRegion, el->identifierToken);
     loadAnnotations(el);
     return true;
 }

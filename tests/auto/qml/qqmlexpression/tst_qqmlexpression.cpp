@@ -140,6 +140,17 @@ void tst_qqmlexpression::emptyScriptString()
 
     const QVariant result = expression.evaluate();
     QVERIFY(!result.isValid());
+
+    QQmlComponent c(&engine, testFileUrl("scriptString.qml"));
+    std::unique_ptr<QObject> root { c.create() };
+    TestObject *testObj = qobject_cast<TestObject*>(root.get());
+    QVERIFY(testObj != nullptr);
+
+    QQmlScriptString script = testObj->scriptString();
+    QVERIFY(!script.isEmpty());
+
+    // verify that comparing against an empty script string does not crash
+    QVERIFY(script != empty);
 }
 
 QTEST_MAIN(tst_qqmlexpression)

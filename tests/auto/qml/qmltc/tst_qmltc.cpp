@@ -380,6 +380,13 @@ void tst_qmltc::properties()
     QCOMPARE(created.realP(), 2.32);
     QCOMPARE(created.stringP(), u"hello, world"_s);
     QCOMPARE(created.urlP(), QUrl(u"https://www.qt.io/"_s));
+    QCOMPARE(created.pointP(), QPoint(100, 200));
+    QCOMPARE(created.quatP(), QQuaternion(400, 100, 200, 300));
+    QCOMPARE(created.rectP(), QRectF(100, 200, 300, 400));
+    QCOMPARE(created.sizeP(), QSizeF(100, 200));
+    QCOMPARE(created.vec2dP(), QVector2D(100, 200));
+    QCOMPARE(created.vec3dP(), QVector3D(100, 200, 300));
+    QCOMPARE(created.vec4dP(), QVector4D(100, 200, 300, 400));
     QCOMPARE(created.varP(), 42.42);
 
     QCOMPARE(created.boolP(), true);

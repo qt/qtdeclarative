@@ -157,5 +157,15 @@ ApplicationWindow {
             color: "pink"
         }
     }
+
+    TabBar {
+        id: bar
+        TabButton {
+            text: qsTr("One")
+        }
+        TabButton {
+            text: qsTr("Two")
+        }
+    }
 }
 

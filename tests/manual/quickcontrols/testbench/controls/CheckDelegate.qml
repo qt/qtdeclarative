@@ -15,6 +15,9 @@ QtObject {
         ["partially-checked"],
         ["partially-checked", "disabled"],
         ["partially-checked", "pressed"],
+        ["highlighted"],
+        ["highlighted", "pressed"],
+        ["mirrored"]
     ]
 
     property Component component: CheckDelegate {
@@ -23,7 +26,10 @@ QtObject {
         checkState: is("checked") ? Qt.Checked : is("partially-checked") ? Qt.PartiallyChecked : Qt.Unchecked
         // Only set it if it's pressed, or the non-pressed examples will have no press effects
         down: is("pressed") ? true : undefined
+        highlighted: is("highlighted")
         focusPolicy: Qt.StrongFocus
+
+        LayoutMirroring.enabled: is("mirrored")
     }
 
     property Component exampleComponent: ListView {

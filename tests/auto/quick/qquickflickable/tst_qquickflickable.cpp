@@ -167,6 +167,7 @@ private slots:
     void rebound();
     void maximumFlickVelocity();
     void flickDeceleration();
+    void pressDelay_data();
     void pressDelay();
     void nestedPressDelay();
     void filterReplayedPress();
@@ -227,11 +228,16 @@ private slots:
     void coalescedMove();
     void onlyOneMove();
     void proportionalWheelScrolling();
+    void touchCancel();
     void pixelAlignedEndPoints();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
     QPointingDevice *touchDevice = QTest::createTouchDevice();
+    const QPointingDevice *mouseDevice = new QPointingDevice(
+            "test mouse", 1000, QInputDevice::DeviceType::Mouse, QPointingDevice::PointerType::Generic,
+            QInputDevice::Capability::Position | QInputDevice::Capability::Hover | QInputDevice::Capability::Scroll,
+            1, 5, QString(), QPointingDeviceUniqueId(), this);
 };
 
 void tst_qquickflickable::initTestCase()
@@ -241,6 +247,8 @@ void tst_qquickflickable::initTestCase()
 #endif
     QQmlDataTest::initTestCase();
     qmlRegisterType<TouchDragArea>("Test",1,0,"TouchDragArea");
+    touchDevice->setParent(this); // avoid leak
+    QWindowSystemInterface::registerInputDevice(mouseDevice);
 }
 
 void tst_qquickflickable::cleanup()
@@ -526,45 +534,54 @@ void tst_qquickflickable::flickDeceleration()
     delete flickable;
 }
 
+void tst_qquickflickable::pressDelay_data()
+{
+    QTest::addColumn<const QPointingDevice *>("device");
+    const QPointingDevice *constTouchDevice = touchDevice;
+
+    QTest::newRow("mouse") << mouseDevice;
+    QTest::newRow("touch") << constTouchDevice;
+}
+
 void tst_qquickflickable::pressDelay()
 {
-    QScopedPointer<QQuickView> window(new QQuickView);
-    window->setSource(testFileUrl("pressDelay.qml"));
-    QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtils::centerOnScreen(window.data());
-    QQuickViewTestUtils::moveMouseAway(window.data());
-    window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != nullptr);
+    QFETCH(const QPointingDevice *, device);
 
-    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
-    QSignalSpy spy(flickable, SIGNAL(pressDelayChanged()));
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("pressDelay.qml")));
 
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window.rootObject());
     QVERIFY(flickable);
-    QCOMPARE(flickable->pressDelay(), 100);
+    QQuickMouseArea *mouseArea = flickable->findChild<QQuickMouseArea*>();
+    QSignalSpy clickedSpy(mouseArea, &QQuickMouseArea::clicked);
 
+    // Test the pressDelay property itself
+    QSignalSpy pressDelayChangedSpy(flickable, &QQuickFlickable::pressDelayChanged);
+    QCOMPARE(flickable->pressDelay(), 100);
     flickable->setPressDelay(200);
     QCOMPARE(flickable->pressDelay(), 200);
-    QCOMPARE(spy.size(),1);
+    QCOMPARE(pressDelayChangedSpy.size(), 1);
     flickable->setPressDelay(200);
-    QCOMPARE(spy.size(),1);
+    QCOMPARE(pressDelayChangedSpy.size(), 1);
 
-    QQuickItem *mouseArea = window->rootObject()->findChild<QQuickItem*>("mouseArea");
-    QSignalSpy clickedSpy(mouseArea, SIGNAL(clicked(QQuickMouseEvent*)));
 
-    moveAndPress(window.data(), QPoint(150, 150));
+    // Test the press delay
+    QPoint p(150, 150);
+    if (device->type() == QInputDevice::DeviceType::Mouse)
+        QQuickTest::pointerMove(device, &window, 0, p);
+    QQuickTest::pointerPress(device, &window, 0, p);
 
     // The press should not occur immediately
-    QVERIFY(!mouseArea->property("pressed").toBool());
+    QCOMPARE(mouseArea->isPressed(), false);
 
     // But, it should occur eventually
-    QTRY_VERIFY(mouseArea->property("pressed").toBool());
+    QTRY_VERIFY(mouseArea->isPressed());
 
-    QCOMPARE(clickedSpy.size(),0);
+    QCOMPARE(clickedSpy.size(), 0);
 
     // On release the clicked signal should be emitted
-    QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(150, 150));
-    QCOMPARE(clickedSpy.size(),1);
+    QQuickTest::pointerRelease(device, &window, 0, p);
+    QCOMPARE(clickedSpy.size(), 1);
 
     // Press and release position should match
     QCOMPARE(flickable->property("pressX").toReal(), flickable->property("releaseX").toReal());
@@ -572,38 +589,44 @@ void tst_qquickflickable::pressDelay()
 
 
     // Test a quick tap within the pressDelay timeout
+    p = QPoint(180, 180);
     clickedSpy.clear();
-    moveAndPress(window.data(), QPoint(180, 180));
+    if (device->type() == QInputDevice::DeviceType::Mouse)
+        QQuickTest::pointerMove(device, &window, 0, p);
+    QQuickTest::pointerPress(device, &window, 0, p);
 
     // The press should not occur immediately
-    QVERIFY(!mouseArea->property("pressed").toBool());
+    QCOMPARE(mouseArea->isPressed(), false);
+    QCOMPARE(clickedSpy.size(), 0);
 
-    QCOMPARE(clickedSpy.size(),0);
-
-    // On release the press, release and clicked signal should be emitted
-    QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(180, 180));
-    QCOMPARE(clickedSpy.size(),1);
+    // On release, the press, release and clicked signal should be emitted
+    QQuickTest::pointerRelease(device, &window, 0, p);
+    QCOMPARE(clickedSpy.size(), 1);
 
     // Press and release position should match
     QCOMPARE(flickable->property("pressX").toReal(), flickable->property("releaseX").toReal());
     QCOMPARE(flickable->property("pressY").toReal(), flickable->property("releaseY").toReal());
 
 
-    // QTBUG-31168
-    moveAndPress(window.data(), QPoint(150, 110));
+    // Test flick after press (QTBUG-31168)
+    QPoint startPosition(150, 110);
+    p = QPoint(150, 190);
+    clickedSpy.clear();
+    if (device->type() == QInputDevice::DeviceType::Mouse)
+        QQuickTest::pointerMove(device, &window, 0, startPosition);
+    QQuickTest::pointerPress(device, &window, 0, startPosition);
 
     // The press should not occur immediately
-    QVERIFY(!mouseArea->property("pressed").toBool());
+    QCOMPARE(mouseArea->isPressed(), false);
+    QQuickTest::pointerMove(device, &window, 0, p);
 
-    QTest::mouseMove(window.data(), QPoint(150, 190));
+    // Since we moved past the drag threshold, we should never receive the press
+    QCOMPARE(mouseArea->isPressed(), false);
+    QTRY_COMPARE(mouseArea->isPressed(), false);
 
-    // As we moved pass the drag threshold, we should never receive the press
-    QVERIFY(!mouseArea->property("pressed").toBool());
-    QTRY_VERIFY(!mouseArea->property("pressed").toBool());
-
-    // On release the clicked signal should *not* be emitted
-    QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(150, 190));
-    QCOMPARE(clickedSpy.size(),1);
+    // On release, the clicked signal should *not* be emitted
+    QQuickTest::pointerRelease(device, &window, 0, p);
+    QCOMPARE(clickedSpy.size(), 0);
 }
 
 // QTBUG-17361
@@ -3307,6 +3330,34 @@ void tst_qquickflickable::proportionalWheelScrolling() // QTBUG-106338 etc.
 
     QVERIFY(flickable->property("ended").value<bool>());
     QCOMPARE(flickable->property("movementsAfterEnd").value<int>(), 0);
+}
+
+void tst_qquickflickable::touchCancel()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("flickable03.qml")));
+    QQuickViewTestUtils::centerOnScreen(&window);
+    QVERIFY(window.isVisible());
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window.rootObject());
+    QVERIFY(flickable != nullptr);
+
+    QSignalSpy movementStartedSpy(flickable, SIGNAL(movementStarted()));
+    QSignalSpy movementEndedSpy(flickable, SIGNAL(movementEnded()));
+
+    int touchPosY = 10;
+    QTest::touchEvent(&window, touchDevice).press(0, {10, touchPosY}).commit();
+    QQuickTouchUtils::flush(&window);
+
+    for (int i = 0; i < 3; ++i) {
+        touchPosY += qApp->styleHints()->startDragDistance();
+        QTest::touchEvent(&window, touchDevice).move(0, {10, touchPosY}).commit();
+        QQuickTouchUtils::flush(&window);
+    }
+
+    QTRY_COMPARE(movementStartedSpy.size(), 1);
+    QWindowSystemInterface::handleTouchCancelEvent(nullptr, touchDevice);
+    QTRY_COMPARE(movementEndedSpy.size(), 1);
 }
 
 void tst_qquickflickable::pixelAlignedEndPoints()

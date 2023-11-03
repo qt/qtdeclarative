@@ -12,8 +12,11 @@ set(qml_files
     "controls/DefaultDial.qml"
     "controls/DefaultFrame.qml"
     "controls/DefaultGroupBox.qml"
+    "controls/DefaultItemDelegate.qml"
+    "controls/DefaultItemDelegateIconLabel.qml"
     "controls/DefaultProgressBar.qml"
     "controls/DefaultRadioButton.qml"
+    "controls/DefaultRadioDelegate.qml"
     "controls/DefaultScrollBar.qml"
     "controls/DefaultSlider.qml"
     "controls/DefaultSpinBox.qml"
@@ -47,11 +50,14 @@ qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
         items/qquickstyleitem.cpp items/qquickstyleitem.h
         items/qquickstyleitembutton.cpp items/qquickstyleitembutton.h
         items/qquickstyleitemcheckbox.cpp items/qquickstyleitemcheckbox.h
+        items/qquickstyleitemdelaybutton.cpp items/qquickstyleitemdelaybutton.h
+        items/qquickstyleitemcheckdelegate.cpp items/qquickstyleitemcheckdelegate.h
         items/qquickstyleitemdial.cpp items/qquickstyleitemdial.h
         items/qquickstyleitemframe.cpp items/qquickstyleitemframe.h
         items/qquickstyleitemgroupbox.cpp items/qquickstyleitemgroupbox.h
         items/qquickstyleitemprogressbar.cpp items/qquickstyleitemprogressbar.h
         items/qquickstyleitemradiobutton.cpp items/qquickstyleitemradiobutton.h
+        items/qquickstyleitemradiodelegate.cpp items/qquickstyleitemradiodelegate.h
         items/qquickstyleitemscrollbar.cpp items/qquickstyleitemscrollbar.h
         items/qquickstyleitemslider.cpp items/qquickstyleitemslider.h
         items/qquickstyleitemspinbox.cpp items/qquickstyleitemspinbox.h

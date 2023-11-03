@@ -239,7 +239,7 @@ public:
     constexpr static DomType kindValue = DomType::FileLocations;
     DomType kind() const {  return kindValue; }
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const;
-    void ensureCommentLocations(QList<QString> keys);
+    void ensureCommentLocations(const QList<FileLocationRegion> &keys);
 
     static Tree createTree(Path basePath);
     static Tree ensure(Tree base, Path basePath,
@@ -255,14 +255,18 @@ public:
     static FileLocations::Tree treeOf(const DomItem &);
     static const FileLocations *fileLocationsOf(const DomItem &);
 
-    static void updateFullLocation(Tree fLoc, SourceLocation loc);
-    static void addRegion(Tree fLoc, QString locName, SourceLocation loc);
-    static void addRegion(Tree fLoc, QStringView locName, SourceLocation loc);
+    static void updateFullLocation(const Tree &fLoc, SourceLocation loc);
+    static void addRegion(const Tree &fLoc, FileLocationRegion region, SourceLocation loc);
+    static QQmlJS::SourceLocation region(const Tree &fLoc, FileLocationRegion region);
 
+private:
+    static QMetaEnum regionEnum;
+
+public:
     SourceLocation fullRegion;
-    QMap<QString, SourceLocation> regions;
-    QMap<QString, QList<SourceLocation>> preCommentLocations;
-    QMap<QString, QList<SourceLocation>> postCommentLocations;
+    QMap<FileLocationRegion, SourceLocation> regions;
+    QMap<FileLocationRegion, QList<SourceLocation>> preCommentLocations;
+    QMap<FileLocationRegion, QList<SourceLocation>> postCommentLocations;
 };
 
 class QMLDOM_EXPORT UpdatedScriptExpression
