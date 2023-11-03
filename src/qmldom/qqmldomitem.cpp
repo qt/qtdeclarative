@@ -2498,6 +2498,7 @@ void DomItem::loadFile(const FileToLoad &file, DomTop::Callback callback, LoadOp
             Q_ASSERT(false && "expected either DomUniverse or DomEnvironment cast to succeed");
     } else {
         addError(myErrors().warning(tr("loadFile called without DomEnvironment or DomUniverse.")));
+        // TODO(QTBUG-119550) fix this bug. see task for details
         callback(Paths::qmlFileInfoPath(file.canonicalPath()), DomItem::empty, DomItem::empty);
     }
 }

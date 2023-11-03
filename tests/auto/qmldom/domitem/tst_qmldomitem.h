@@ -2411,6 +2411,24 @@ private slots:
         }
     }
 
+    void plainJSDOM_data() {
+        QTest::addColumn<QString>("filename");
+
+        QTest::newRow("simplestJSStatement") << "simplestJSStatement.js";
+        QTest::newRow("import") << "import.js";
+    }
+
+    void plainJSDOM() {
+        using namespace Qt::StringLiterals;
+        QFETCH(QString, filename);
+
+        QString testFile = baseDir + "/" + filename;
+        auto dom = parse(testFile, qmltypeDirs);
+        QVERIFY(dom);
+        QCOMPARE(dom.internalKind(), DomType::JsFile);
+        auto filePtr = dom.fileObject().ownerAs<JsFile>();
+        QVERIFY(filePtr && filePtr->isValid());
+    }
 private:
     struct DomItemWithLocation
     {
@@ -2664,25 +2682,32 @@ private slots:
     }
 
 private:
-    static DomItem rootQmlObjectFromFile(const QString &path, const QStringList &qmltypeDirs)
+    static DomItem parse(const QString &path, const QStringList &qmltypeDirs)
     {
         DomItem env = DomEnvironment::create(
                 qmltypeDirs,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
-        DomItem tFile;
+        DomItem fileItem;
         DomCreationOptions options;
         options.setFlag(DomCreationOption::WithScriptExpressions);
         options.setFlag(DomCreationOption::WithSemanticAnalysis);
 
         env.loadFile(
                 FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), path, options),
-                [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt.fileObject(); },
+                [&fileItem](Path, const DomItem &, const DomItem &newIt) {
+                    fileItem = newIt.fileObject();
+                },
                 LoadOption::DefaultLoad);
         env.loadPendingDependencies();
+        return fileItem;
+    }
 
-        return tFile.rootQmlObject(GoTo::MostLikely);
+    static DomItem rootQmlObjectFromFile(const QString &path, const QStringList &qmltypeDirs)
+    {
+        auto dom = parse(path, qmltypeDirs);
+        return dom.rootQmlObject(GoTo::MostLikely);
     }
 
     void fieldMemberExpressionHelper(const DomItem &actual, const QStringList &expected)

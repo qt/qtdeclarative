@@ -227,6 +227,9 @@ public:
         : ExternalOwningItem(filePath, lastDataUpdateAt, pathFromTop, derivedFrom)
     {
     }
+    JsFile(QString filePath = QString(), QString code = QString(),
+           QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+           int derivedFrom = 0);
     JsFile(const JsFile &o) = default;
 
     std::shared_ptr<JsFile> makeCopy(const DomItem &self) const
@@ -237,6 +240,7 @@ public:
     std::shared_ptr<QQmlJS::Engine> engine() const { return m_engine; }
     JsResource rootComponent() const { return m_rootComponent; }
 
+    static ErrorGroups myParsingErrors();
 private:
     std::shared_ptr<QQmlJS::Engine> m_engine;
     JsResource m_rootComponent;

@@ -294,6 +294,33 @@ QMap<QString, QString> QmldirFile::qmlFiles() const
     return res;
 }
 
+JsFile::JsFile(QString filePath, QString code,
+       QDateTime lastDataUpdateAt,
+       int derivedFrom)
+    : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::qmlFilePath(filePath), derivedFrom,
+                         code)
+{
+    m_engine = std::make_shared<QQmlJS::Engine>();
+    QQmlJS::Lexer lexer(m_engine.get());
+    lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/false);
+    QQmlJS::Parser parser(m_engine.get());
+    //TODO(QTBUG-117849) add mjs support
+    m_isValid = /*isESModule ? parser.parseModule() :*/ parser.parseProgram();
+    const auto diagnostics = parser.diagnosticMessages();
+    for (const DiagnosticMessage &msg : diagnostics) {
+        addErrorLocal(
+                std::move(myParsingErrors().errorMessage(msg).withFile(filePath).withPath(m_path)));
+    }
+}
+
+ErrorGroups JsFile::myParsingErrors()
+{
+    static ErrorGroups res = { { DomItem::domErrorGroup, NewErrorGroup("JsFile"),
+                                 NewErrorGroup("Parsing") } };
+    return res;
+}
+
+
 std::shared_ptr<OwningItem> QmlFile::doCopy(const DomItem &) const
 {
     auto res = std::make_shared<QmlFile>(*this);

@@ -234,7 +234,10 @@ static DomType fileTypeForPath(const DomItem &self, QString canonicalFilePath)
         return DomType::QmldirFile;
     } else if (QFileInfo(canonicalFilePath).isDir()) {
         return DomType::QmlDirectory;
-    } else {
+    } else if (canonicalFilePath.endsWith(u".js", Qt::CaseInsensitive)) {
+        return DomType::JsFile;
+    }
+    else {
         self.addError(DomUniverse::myErrors()
                               .error(QCoreApplication::translate("Dom::fileTypeForPath",
                                                                  "Could not detect type of file %1")
@@ -252,7 +255,8 @@ void DomUniverse::loadFile(const DomItem &self, const FileToLoad &file, Callback
     case DomType::QmlFile:
     case DomType::QmltypesFile:
     case DomType::QmldirFile:
-    case DomType::QmlDirectory: {
+    case DomType::QmlDirectory:
+    case DomType::JsFile: {
         // Protect the queue from concurrent access.
         QMutexLocker l(mutex());
         m_queue.enqueue(ParsingTask{ QDateTime::currentDateTimeUtc(), loadOptions, fType, file,
@@ -345,7 +349,7 @@ void DomUniverse::execQueue()
     QVector<ErrorMessage> messages;
 
     if (t.kind == DomType::QmlFile || t.kind == DomType::QmltypesFile
-        || t.kind == DomType::QmldirFile || t.kind == DomType::QmlDirectory) {
+        || t.kind == DomType::QmldirFile || t.kind == DomType::QmlDirectory || t.kind == DomType::JsFile) {
         auto getValue = [&t, this, &canonicalPath]() -> std::shared_ptr<ExternalItemPairBase> {
             if (t.kind == DomType::QmlFile)
                 return m_qmlFileWithPath.value(canonicalPath);
@@ -355,6 +359,8 @@ void DomUniverse::execQueue()
                 return m_qmlFileWithPath.value(canonicalPath);
             else if (t.kind == DomType::QmlDirectory)
                 return m_qmlDirectoryWithPath.value(canonicalPath);
+            else if (t.kind == DomType::JsFile)
+                return m_jsFileWithPath.value(canonicalPath);
             else
                 Q_ASSERT(false);
             return {};
@@ -463,6 +469,35 @@ void DomUniverse::execQueue()
                                                         mutex());
                 oldValue = univ.copy(change.first);
                 newValue = univ.copy(change.second);
+            } else if (t.kind == DomType::JsFile) {
+                //WATCH OUT!
+                //DOM construction for plain JS files is not yet supported
+                //Only parsing of the file
+                //and adding ExternalItem to the Environment will happen here
+
+                auto jsFile = std::make_shared<JsFile>(canonicalPath, code, contentDate);
+                std::shared_ptr<DomEnvironment> envPtr;
+                if (auto ptr = t.file.environment().lock())
+                    envPtr = std::move(ptr);
+                else
+                    envPtr = std::make_shared<DomEnvironment>(
+                            QStringList(), DomEnvironment::Option::NoDependencies, topPtr);
+                envPtr->addJsFile(jsFile);
+                DomItem env(envPtr);
+                if (!jsFile->isValid()) {
+                    QString errs;
+                    DomItem qmlFileObj = env.copy(jsFile);
+                    jsFile->iterateErrors(qmlFileObj, [&errs](const DomItem &, const ErrorMessage &m) {
+                        errs += m.toString();
+                        errs += u"\n";
+                        return true;
+                    });
+                    qCWarning(domLog).noquote().nospace()
+                            << "Parsed invalid file " << canonicalPath << errs;
+                }
+                auto change = updateEntry<JsFile>(univ, jsFile, m_jsFileWithPath, mutex());
+                oldValue = univ.copy(change.first);
+                newValue = univ.copy(change.second);
             } else {
                 Q_ASSERT(false);
             }
@@ -484,6 +519,8 @@ void DomUniverse::execQueue()
                 p = Paths::qmldirFileInfoPath(canonicalPath);
             else if (t.kind == DomType::QmlDirectory)
                 p = Paths::qmlDirectoryInfoPath(canonicalPath);
+            else if (t.kind == DomType::JsFile)
+                p = Paths::jsFileInfoPath(canonicalPath);
             else
                 Q_ASSERT(false);
             t.callback(p, oldValue, newValue);
@@ -1191,6 +1228,7 @@ std::shared_ptr<OwningItem> DomEnvironment::doCopy(const DomItem &) const
     return res;
 }
 
+// TODO(QTBUG-119550) refactor this
 void DomEnvironment::loadFile(const DomItem &self, FileToLoad file, Callback loadCallback,
                               Callback directDepsCallback, Callback endCallback,
                               LoadOptions loadOptions, std::optional<DomType> fileType,
@@ -1342,6 +1380,12 @@ void DomEnvironment::loadFile(const DomItem &self, FileToLoad file, Callback loa
                     loadOptions, fType);
             return;
         }
+    } break;
+    case DomType::JsFile: {
+        self.universe().loadFile(
+                file, callbackForJSFile(self, loadCallback, directDepsCallback, endCallback),
+                loadOptions, fType);
+        return;
     } break;
     default: {
         myErrors().error(tr("Unexpected file to load: '%1'").arg(file.canonicalPath())).handle(h);
@@ -1984,6 +2028,15 @@ DomTop::Callback DomEnvironment::callbackForQmldirFile(const DomItem &self, DomT
     return envCallbackForFile<QmldirFile>(self, &DomEnvironment::m_qmldirFileWithPath,
                                           &DomEnvironment::qmldirFileWithPath, loadCallback,
                                           allDirectDepsCallback, endCallback);
+}
+
+DomItem::Callback DomEnvironment::callbackForJSFile(const DomItem &self, Callback loadCallback,
+                                                     Callback allDirectDepsCallback,
+                                                     Callback endCallback)
+{
+    return envCallbackForFile<JsFile>(self, &DomEnvironment::m_jsFileWithPath,
+                                       &DomEnvironment::jsFileWithPath, loadCallback,
+                                       allDirectDepsCallback, endCallback);
 }
 
 DomEnvironment::DomEnvironment(QStringList loadPaths, Options options,

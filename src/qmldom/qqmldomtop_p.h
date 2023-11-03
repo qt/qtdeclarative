@@ -764,6 +764,9 @@ private:
                                      Callback directDepsCallback, Callback endCallback);
     Callback callbackForQmldirFile(const DomItem &self, Callback loadCallback,
                                    Callback directDepsCallback, Callback endCallback);
+    Callback callbackForJSFile(const DomItem &self, Callback loadCallback, Callback directDepsCallback,
+                               Callback endCallback);
+
 
     std::shared_ptr<ModuleIndex> lookupModuleInEnv(const QString &uri, int majorVersion) const;
     // ModuleLookupResult contains the ModuleIndex pointer, and an indicator whether it was found
