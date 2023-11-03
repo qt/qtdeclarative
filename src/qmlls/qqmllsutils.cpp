@@ -2739,17 +2739,13 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.
-        case DomType::ScriptParameter:
         case DomType::ScriptIfStatement:
-        case DomType::ScriptFunctionDeclaration:
         case DomType::ScriptVariableDeclaration:
         case DomType::ScriptVariableDeclarationEntry:
         case DomType::ScriptReturnStatement:
         case DomType::ScriptArray:
         case DomType::ScriptObject:
         case DomType::ScriptProperty:
-        case DomType::ScriptQualifiedIdentifierExpression:
-        case DomType::ScriptQualifiedIdentifierBit:
         case DomType::ScriptElision:
         case DomType::ScriptArrayEntry:
         case DomType::ScriptPattern:
