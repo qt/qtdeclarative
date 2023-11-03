@@ -2605,6 +2605,22 @@ static bool afterLocation(QQmlJS::SourceLocation left, const CompletionContextSt
     return betweenLocations(left, ctx, QQmlJS::SourceLocation{});
 }
 
+/*!
+\internal
+Returns true if ctx denotes an offset lying before right.begin(), and false otherwise.
+*/
+static bool beforeLocation(const CompletionContextStrings &ctx, QQmlJS::SourceLocation right)
+{
+    if (!right.isValid())
+        return true;
+
+    // note: ctx.offset() == right.begin() means that the cursor lies exactly before right
+    if (ctx.offset() <= right.begin())
+        return true;
+
+    return false;
+}
+
 static QList<CompletionItem> insideForStatementCompletion(const DomItem &currentItem,
                                                     const CompletionContextStrings &ctx)
 {
@@ -2632,6 +2648,29 @@ static QList<CompletionItem> insideForStatementCompletion(const DomItem &current
         return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
     }
 
+    return {};
+}
+
+static QList<CompletionItem> insideScriptLiteralCompletion(const DomItem &currentItem,
+                                                           const CompletionContextStrings &ctx)
+{
+    if (ctx.base().isEmpty())
+        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    return {};
+}
+
+static QList<CompletionItem> insideCallExpression(const DomItem &currentItem,
+                                                  const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
+    const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
+    if (beforeLocation(ctx, leftParenthesis)) {
+        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    }
+    if (betweenLocations(leftParenthesis, ctx, rightParenthesis)) {
+        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    }
     return {};
 }
 
@@ -2672,6 +2711,13 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             return {};
         case DomType::PropertyDefinition:
             return insidePropertyDefinitionCompletion(currentItem, ctx);
+        case DomType::ScriptBinaryExpression:
+            return scriptIdentifierCompletion(currentItem, ctx);
+        case DomType::ScriptLiteral:
+            return insideScriptLiteralCompletion(currentItem, ctx);
+        case DomType::ScriptCallExpression:
+            return insideCallExpression(currentItem, ctx);
+
         default:
             continue;
         }

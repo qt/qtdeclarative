@@ -2104,7 +2104,7 @@ void tst_qmlls_utils::completions_data()
                })
             << QStringList{} << None;
     QTest::newRow("block-scoped-variable")
-            << file << 76 << 21 << ExpectedCompletions({})
+            << file << 76 << 21 << ExpectedCompletions{ { u"test2"_s, CompletionItemKind::Method } }
             << QStringList{ u"helloLetVariable"_s, u"helloVarVariable"_s } << None;
 
     QTest::newRow("singleton") << file << 78 << 33
@@ -2408,8 +2408,6 @@ void tst_qmlls_utils::completions()
                 qDebug() << "Received unexpected completions:" << unexpected.join(u", ");
             }
         }
-        QEXPECT_FAIL("letStatement", "JS Statement completion not implemented yet!", Abort);
-        QEXPECT_FAIL("block-scoped-variable", "JS Statement completion not implemented yet!", Abort);
         QEXPECT_FAIL("singleton", "completion not implemented yet!", Abort);
         QVERIFY(completions.isEmpty());
         return;

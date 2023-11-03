@@ -1761,6 +1761,8 @@ void QQmlDomAstCreator::endVisit(AST::CallExpression *exp)
         return;
 
     auto current = makeGenericScriptElement(exp, DomType::ScriptCallExpression);
+    current->addLocation(LeftParenthesisRegion, exp->lparenToken);
+    current->addLocation(RightParenthesisRegion, exp->rparenToken);
 
     if (exp->arguments) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
