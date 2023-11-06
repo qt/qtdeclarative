@@ -1441,14 +1441,24 @@ void tst_QQuickDrawer::touchOutsideOverlay() // QTBUG-103811
 
 void tst_QQuickDrawer::destroyWhileVisible()
 {
-    QQuickView window;
-    QVERIFY(QQuickTest::showView(window, testFileUrl("itemPartialOverlayModal.qml")));
-    auto *drawer = window.rootObject()->findChild<QQuickDrawer*>();
+    QScopedPointer<QQuickView> window(new QQuickView());
+    QVERIFY(QQuickTest::showView(*window, testFileUrl("itemPartialOverlayModal.qml")));
+    auto *drawer = window->rootObject()->findChild<QQuickDrawer*>();
     QVERIFY(drawer);
 
     drawer->open();
     QTRY_VERIFY(drawer->isOpened());
+
+    QQuickItem *dimmer = QQuickPopupPrivate::get(drawer)->dimmer;
+    QSignalSpy dimmerDeletedSpy(dimmer, &QObject::destroyed);
+
     // don't crash here when the drawer closes with an exit transition
+    window.reset();
+
+    // make sure the dimmer is deleted
+    QTRY_COMPARE(dimmerDeletedSpy.size(), 1);
+
+
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickDrawer)

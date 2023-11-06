@@ -617,7 +617,7 @@ void QQuickPopupPrivate::finalizeExitTransition()
         popupItem->setParentItem(nullptr);
         popupItem->setVisible(false);
     }
-    destroyOverlay();
+    destroyDimmer();
 
     if (hadActiveFocusBeforeExitTransition && window) {
         // restore focus to the next popup in chain, or to the window content if there are no other popups open
@@ -884,7 +884,7 @@ void QQuickPopupPrivate::createOverlay()
     resizeOverlay();
 }
 
-void QQuickPopupPrivate::destroyOverlay()
+void QQuickPopupPrivate::destroyDimmer()
 {
     if (dimmer) {
         qCDebug(lcDimmer) << "destroying dimmer" << dimmer;
@@ -900,7 +900,7 @@ void QQuickPopupPrivate::destroyOverlay()
 
 void QQuickPopupPrivate::toggleOverlay()
 {
-    destroyOverlay();
+    destroyDimmer();
     if (dim)
         createOverlay();
 }
@@ -1774,7 +1774,9 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     if (parent) {
         QObjectPrivate::connect(parent, &QQuickItem::windowChanged, d, &QQuickPopupPrivate::setWindow);
         QQuickItemPrivate::get(d->parentItem)->addItemChangeListener(d, QQuickItemPrivate::Destroyed);
-    } else if (!d->inDestructor) {
+    } else if (d->inDestructor) {
+        d->destroyDimmer();
+    } else {
         // NOTE: if setParentItem is called from the dtor, this bypasses virtual dispatch and calls QQuickPopup::close() directly
         close();
     }
