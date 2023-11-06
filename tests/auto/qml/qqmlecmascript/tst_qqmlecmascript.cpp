@@ -3858,6 +3858,64 @@ void tst_qqmlecmascript::scriptConnect()
         QScopedPointer<QObject> root { component.create() };
         QVERIFY2(root, qPrintable(component.errorString()));
     }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("scriptConnect.8.qml"));
+
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY2(obj, qPrintable(component.errorString()));
+        QVERIFY(obj.data() != nullptr);
+
+        QCOMPARE(obj.data()->property("count"), 0);
+
+        QMetaObject::invokeMethod(obj.data(), "someSignal");
+        QCOMPARE(obj.data()->property("count"), 1);
+
+        QMetaObject::invokeMethod(obj.data(), "itemDestroy");
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
+
+        QMetaObject::invokeMethod(obj.data(), "someSignal");
+        QCOMPARE(obj.data()->property("count"), 1);
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("scriptConnect.9.qml"));
+
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY2(obj, qPrintable(component.errorString()));
+        QVERIFY(obj.data() != nullptr);
+
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(obj.data());
+
+        QCOMPARE(object->property("a"), 0);
+
+        QMetaObject::invokeMethod(object, "someSignal");
+        QCOMPARE(object->property("a"), 1);
+
+        QMetaObject::invokeMethod(object, "destroyObj", Qt::DirectConnection);
+        QApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        QApplication::processEvents();
+
+        QMetaObject::invokeMethod(object, "someSignal");
+
+        QCOMPARE(object->property("a"), 1);
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("scriptConnectSingleton.qml"));
+
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY2(obj, qPrintable(component.errorString()));
+        QVERIFY(obj.data() != nullptr);
+
+        QMetaObject::invokeMethod(obj.data(), "mySignal", Qt::DirectConnection);
+        QCOMPARE(obj.data()->property("a").toInt(), 1);
+        engine.clearSingletons();
+        QMetaObject::invokeMethod(obj.data(), "mySignal", Qt::DirectConnection);
+        QCOMPARE(obj.data()->property("a").toInt(), 1);
+
+    }
 }
 
 void tst_qqmlecmascript::scriptDisconnect()
@@ -3937,6 +3995,60 @@ void tst_qqmlecmascript::scriptDisconnect()
         QCOMPARE(object->property("test").toInt(), 2);
         emit object->argumentSignal(19, "Hello world!", 10.25, MyQmlObject::EnumValue4, Qt::RightButton);
         QCOMPARE(object->property("test").toInt(), 3);
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("scriptDisconnect.5.qml"));
+
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY2(obj, qPrintable(component.errorString()));
+        QVERIFY(obj.data() != nullptr);
+
+        QCOMPARE(obj.data()->property("count"), 0);
+
+        QMetaObject::invokeMethod(obj.data(), "someSignal");
+        QCOMPARE(obj.data()->property("count"), 1);
+
+        QMetaObject::invokeMethod(obj.data(), "disconnectSignal");
+
+        QMetaObject::invokeMethod(obj.data(), "someSignal");
+        QCOMPARE(obj.data()->property("count"), 1);
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("scriptConnect.9.qml"));
+
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY2(obj, qPrintable(component.errorString()));
+        QVERIFY(obj.data() != nullptr);
+
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(obj.data());
+
+        QCOMPARE(object->property("a"), 0);
+
+        QMetaObject::invokeMethod(object, "someSignal");
+        QCOMPARE(object->property("a"), 1);
+
+        QMetaObject::invokeMethod(object, "disconnectSignal", Qt::DirectConnection);
+
+        QMetaObject::invokeMethod(object, "someSignal");
+
+        QCOMPARE(object->property("a"), 1);
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("scriptConnectSingleton.qml"));
+
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY2(obj, qPrintable(component.errorString()));
+        QVERIFY(obj.data() != nullptr);
+
+        QMetaObject::invokeMethod(obj.data(), "mySignal", Qt::DirectConnection);
+        QCOMPARE(obj.data()->property("a").toInt(), 1);
+
+        QMetaObject::invokeMethod(obj.data(), "disconnectSingleton", Qt::DirectConnection);
+        QMetaObject::invokeMethod(obj.data(), "mySignal", Qt::DirectConnection);
+        QCOMPARE(obj.data()->property("a").toInt(), 1);
     }
 }
 

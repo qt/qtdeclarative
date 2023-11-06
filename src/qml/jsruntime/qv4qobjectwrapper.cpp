@@ -1240,7 +1240,16 @@ ReturnedValue QObjectWrapper::method_connect(const FunctionObject *b, const Valu
     }
 
     QPair<QObject *, int> functionData = QObjectMethod::extractQtMethod(f); // align with disconnect
-    if (QObject *receiver = functionData.first) {
+    QObject *receiver = nullptr;
+
+    if (functionData.first)
+        receiver = functionData.first;
+    else if (auto qobjectWrapper = object->as<QV4::QObjectWrapper>())
+        receiver = qobjectWrapper->object();
+    else if (auto typeWrapper = object->as<QV4::QQmlTypeWrapper>())
+        receiver = typeWrapper->object();
+
+    if (receiver) {
         QObjectPrivate::connect(signalObject, signalIndex, receiver, slot, Qt::AutoConnection);
     } else {
         qCInfo(lcObjectConnect,
@@ -1298,7 +1307,16 @@ ReturnedValue QObjectWrapper::method_disconnect(const FunctionObject *b, const V
         &functionData.second
     };
 
-    if (QObject *receiver = functionData.first) {
+    QObject *receiver = nullptr;
+
+    if (functionData.first)
+        receiver = functionData.first;
+    else if (auto qobjectWrapper = functionThisValue->as<QV4::QObjectWrapper>())
+        receiver = qobjectWrapper->object();
+    else if (auto typeWrapper = functionThisValue->as<QV4::QQmlTypeWrapper>())
+        receiver = typeWrapper->object();
+
+    if (receiver) {
         QObjectPrivate::disconnect(signalObject, signalIndex, receiver,
                                    reinterpret_cast<void **>(&a));
     } else {
