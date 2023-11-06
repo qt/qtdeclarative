@@ -691,7 +691,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
     }
 #endif
 
-    QQuickItem *previousItem = nullptr;
+    QPointer<QQuickItem> previousItem;
 
     if (d->popElements(enter)) {
         if (exit) {

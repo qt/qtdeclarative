@@ -1641,4 +1641,42 @@ TestCase {
         control.push(noProperties, { "unknownProperty.test": "crashes" })
         verify(!control.empty)
     }
+
+    Component {
+        id: deletePoppedItem
+
+        StackView {
+            id: stackView
+            anchors.fill: parent
+            property int visibleChangedCounter
+            property bool secondDestroyed: false
+            initialItem: Text {
+                text: "First"
+                onVisibleChanged: {
+                    ++visibleChangedCounter
+                    if (visible)
+                        tryVerify(function() { return secondDestroyed; })
+                }
+            }
+        }
+    }
+
+    Component {
+        id: otherComp
+        Text {
+            text: "Second"
+            property var stackView
+            Component.onDestruction: stackView.secondDestroyed = true
+        }
+    }
+
+    function test_deletePoppedItem() {
+        let control = createTemporaryObject(deletePoppedItem, testCase)
+        verify(control)
+        control.push(otherComp)
+        tryCompare(control, "visibleChangedCounter", 1)
+        control.currentItem.stackView = control
+        let item = control.pop()
+        tryCompare(control, "visibleChangedCounter", 2)
+    }
 }
