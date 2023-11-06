@@ -435,6 +435,7 @@ private slots:
     void typeAnnotationCycle();
     void corpseInQmlList();
     void objectInQmlListAndGc();
+    void asCastToInlineComponent();
 
 private:
     QQmlEngine engine;
@@ -8389,6 +8390,16 @@ void tst_qqmllanguage::objectInQmlListAndGc()
     QObject *child = children.at(&children, 0);
     QVERIFY(child);
     QCOMPARE(child->objectName(), QLatin1String("child"));
+}
+
+void tst_qqmllanguage::asCastToInlineComponent()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("asCastToInlineComponent.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), QLatin1String("value: 20"));
 }
 
 QTEST_MAIN(tst_qqmllanguage)
