@@ -95,7 +95,7 @@ public:
     void reposition();
 
     void createOverlay();
-    void destroyOverlay();
+    void destroyDimmer();
     void toggleOverlay();
     void updateContentPalettes(const QPalette& parentPalette);
     virtual void showOverlay();
