@@ -60,11 +60,16 @@ public:
     static QQuickTextDocumentPrivate *get(QQuickTextDocument *doc) { return doc->d_func(); }
     static const QQuickTextDocumentPrivate *get(const QQuickTextDocument *doc) { return doc->d_func(); }
 
+    void load();
+    void writeTo(const QUrl &fileUrl);
     QTextDocument *document() const;
     void setDocument(QTextDocument *doc);
 
     // so far the QQuickItem given to the QQuickTextDocument ctor is always a QQuickTextEdit
     QQuickTextEdit *editor = nullptr;
+    QUrl url;
+    QMimeType mimeType;
+    std::optional<QStringConverter::Encoding> encoding; // only relevant for HTML
 };
 
 namespace QtPrivate {

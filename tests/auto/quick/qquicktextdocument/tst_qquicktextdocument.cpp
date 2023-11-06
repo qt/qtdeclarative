@@ -5,16 +5,21 @@
 #include <QtTest/QtTest>
 #include <QtQuick/QQuickTextDocument>
 #include <QtQuick/QQuickItem>
+#include <QtQuick/private/qquicktextdocument_p.h>
 #include <QtQuick/private/qquicktextedit_p.h>
 #include <QtQuick/private/qquicktextedit_p_p.h>
+#include <QtCore/QStringConverter>
 #include <QtGui/QTextBlock>
 #include <QtGui/QTextDocument>
 #include <QtGui/QTextDocumentWriter>
-#include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
+#include <QtQml/QQmlEngine>
+#include <QtQml/QQmlFile>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
+using namespace Qt::StringLiterals;
 
 class tst_qquicktextdocument : public QQmlDataTest
 {
@@ -25,6 +30,8 @@ public:
 private slots:
     void textDocumentWriter();
     void customDocument();
+    void sourceAndSave_data();
+    void sourceAndSave();
 };
 
 QString text = QStringLiteral("foo bar");
@@ -145,6 +152,96 @@ void tst_qquicktextdocument::customDocument()
     }
     QVERIFY(foundImage);
     QCOMPARE(fragmentCount, 2);
+}
+
+void tst_qquicktextdocument::sourceAndSave_data()
+{
+    QTest::addColumn<QUrl>("source");
+    QTest::addColumn<std::optional<QStringConverter::Encoding>>("expectedEncoding");
+    QTest::addColumn<QString>("expectedMimeType");
+    QTest::addColumn<int>("minCharCount");
+    QTest::addColumn<QString>("expectedPlainText");
+
+    const std::optional<QStringConverter::Encoding> nullEnc;
+
+    QTest::newRow("plain") << testFileUrl("hello.txt")
+        << nullEnc << "text/plain" << 15 << u"Γειά σου Κόσμε!"_s;
+    QTest::newRow("markdown") << testFileUrl("hello.md")
+        << nullEnc << "text/markdown" << 15 << u"Γειά σου Κόσμε!"_s;
+    QTest::newRow("html") << testFileUrl("hello.html")
+        << std::optional<QStringConverter::Encoding>(QStringConverter::Utf8)
+        << "text/html" << 15 << u"Γειά σου Κόσμε!"_s;
+    QTest::newRow("html-utf16be") << testFileUrl("hello-utf16be.html")
+        << std::optional<QStringConverter::Encoding>(QStringConverter::Utf16BE)
+        << "text/html" << 15 << u"Γειά σου Κόσμε!"_s;
+}
+
+void tst_qquicktextdocument::sourceAndSave()
+{
+    QFETCH(QUrl, source);
+    QFETCH(std::optional<QStringConverter::Encoding>, expectedEncoding);
+    QFETCH(QString, expectedMimeType);
+    QFETCH(int, minCharCount);
+    QFETCH(QString, expectedPlainText);
+
+    QVERIFY(source.isLocalFile());
+
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("text.qml"));
+    QScopedPointer<QQuickTextEdit> textEdit(qobject_cast<QQuickTextEdit*>(c.create()));
+    QCOMPARE(textEdit.isNull(), false);
+    QQuickTextDocument *qqdoc = textEdit->property("textDocument").value<QQuickTextDocument*>();
+    QVERIFY(qqdoc);
+    // text.qml has text: "" but that's not a real change; QQuickTextEdit::setText() returns early
+    // QQuickTextEditPrivate::init() also modifies defaults and then resets the modified state
+    QCOMPARE(qqdoc->isModified(), false);
+    // no stray signals should be visible to QML during init
+    QCOMPARE(textEdit->property("modifiedChangeCount").toInt(), 0);
+    QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 0);
+    QTextDocument *doc = qqdoc->textDocument();
+    QVERIFY(doc);
+    QSignalSpy sourceChangedSpy(qqdoc, &QQuickTextDocument::sourceChanged);
+    QSignalSpy modifiedChangedSpy(qqdoc, &QQuickTextDocument::modifiedChanged);
+
+    QTemporaryDir tmpDir;
+    QVERIFY(tmpDir.isValid());
+    QFile sf(QQmlFile::urlToLocalFileOrQrc(source));
+    QVERIFY(sf.exists());
+    QString tmpPath = tmpDir.filePath(source.fileName());
+    QVERIFY(sf.copy(tmpPath));
+    qCDebug(lcTests) << source << "->" << tmpDir.path() << ":" << tmpPath;
+
+    qqdoc->setProperty("source", QUrl::fromLocalFile(tmpPath));
+    QCOMPARE(sourceChangedSpy.size(), 1);
+    QCOMPARE(textEdit->property("sourceChangeCount").toInt(), 1);
+    const auto *qqdp = QQuickTextDocumentPrivate::get(qqdoc);
+    QVERIFY(qqdp->mimeType.inherits(expectedMimeType));
+    const bool expectHtml = (expectedMimeType == "text/html");
+    QCOMPARE_GE(doc->characterCount(), minCharCount);
+    QCOMPARE(doc->toPlainText().trimmed(), expectedPlainText);
+    QCOMPARE(qqdp->encoding, expectedEncoding);
+
+    textEdit->setText("hello");
+    QCOMPARE(qqdoc->isModified(), false);
+    QCOMPARE_GE(textEdit->property("modifiedChangeCount").toInt(), 1);
+    QCOMPARE(textEdit->property("modifiedChangeCount").toInt(), modifiedChangedSpy.size());
+    modifiedChangedSpy.clear();
+    textEdit->insert(5, "!");
+    QCOMPARE_GE(modifiedChangedSpy.size(), 1);
+    QCOMPARE(qqdoc->isModified(), true);
+
+    qqdoc->save();
+    QFile tf(tmpPath);
+    QVERIFY(tf.open(QIODeviceBase::ReadOnly));
+    auto readBack = tf.readAll();
+    if (expectHtml) {
+        QStringDecoder dec(*expectedEncoding);
+        const QString decStr = dec(readBack);
+        QVERIFY(decStr.contains("hello!</p>"));
+    } else {
+        QVERIFY(readBack.contains("hello!"));
+    }
+    QCOMPARE(textEdit->property("sourceChangeCount").toInt(), sourceChangedSpy.size());
 }
 
 QTEST_MAIN(tst_qquicktextdocument)

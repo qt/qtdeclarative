@@ -1,6 +1,12 @@
-import QtQuick 2.1
+import QtQuick
 
 TextEdit {
-    text: ""
-}
+    id: te
+    property int sourceChangeCount: 0
+    property int modifiedChangeCount: 0
 
+    text: "" // this is not a document modification
+
+    textDocument.onSourceChanged: ++te.sourceChangeCount
+    textDocument.onModifiedChanged: ++te.modifiedChangeCount
+}

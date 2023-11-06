@@ -2646,6 +2646,7 @@ void QQuickTextEditPrivate::init()
     document->setUndoRedoEnabled(false); // flush undo buffer.
     document->setUndoRedoEnabled(true);
     updateDefaultTextOption();
+    document->setModified(false); // we merely changed some defaults: no edits worth saving yet
     q->updateSize();
 #if QT_CONFIG(cursor)
     updateMouseCursorShape();

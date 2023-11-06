@@ -18,7 +18,8 @@ ApplicationWindow {
     width: 1024
     height: 600
     visible: true
-    title: document.fileName + " - Text Editor Example"
+    title: textArea.textDocument.source +
+           " - Text Editor Example" + (textArea.textDocument.modified ? " *" : "")
 
     Component.onCompleted: {
         x = Screen.width / 2 - width / 2
@@ -28,7 +29,18 @@ ApplicationWindow {
     Action {
         id: openAction
         shortcut: StandardKey.Open
-        onTriggered: openDialog.open()
+        onTriggered: {
+            if (textArea.textDocument.modified)
+                discardDialog.open()
+            else
+                openDialog.open()
+        }
+    }
+
+    Action {
+        id: saveAction
+        shortcut: StandardKey.Save
+        onTriggered: textArea.textDocument.save()
     }
 
     Action {
@@ -153,17 +165,18 @@ ApplicationWindow {
         selectedNameFilter.index: 1
         nameFilters: ["Text files (*.txt)", "HTML files (*.html *.htm)", "Markdown files (*.md *.markdown)"]
         currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
-        onAccepted: document.load(selectedFile)
+        onAccepted: {
+            textArea.textDocument.modified = false // we asked earlier, if necessary
+            textArea.textDocument.source = selectedFile
+        }
     }
 
     FileDialog {
         id: saveDialog
         fileMode: FileDialog.SaveFile
-        defaultSuffix: document.fileType
         nameFilters: openDialog.nameFilters
-        selectedNameFilter.index: document.fileType === "txt" ? 0 : 1
         currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
-        onAccepted: document.saveAs(selectedFile)
+        onAccepted: textArea.textDocument.saveAs(selectedFile)
     }
 
     FontDialog {
@@ -190,6 +203,17 @@ ApplicationWindow {
         onButtonClicked: function (button, role) { if (role === MessageDialog.YesRole) Qt.quit() }
     }
 
+    MessageDialog {
+        id : discardDialog
+        title: qsTr("Discard changes?")
+        text: qsTr("The file has been modified. Open a new file anyway?")
+        buttons: MessageDialog.Yes | MessageDialog.No
+        onButtonClicked: function (button, role) {
+            if (role === MessageDialog.YesRole)
+                openDialog.open()
+        }
+    }
+
     header: ToolBar {
         leftPadding: 8
 
@@ -204,6 +228,13 @@ ApplicationWindow {
                     text: "\uF115" // icon-folder-open-empty
                     font.family: "fontello"
                     action: openAction
+                    focusPolicy: Qt.TabFocus
+                }
+                ToolButton {
+                    id: saveButton
+                    text: "\uE80A" // icon-floppy-disk
+                    font.family: "fontello"
+                    action: saveAction
                     focusPolicy: Qt.TabFocus
                 }
                 ToolSeparator {
@@ -383,9 +414,9 @@ ApplicationWindow {
 
         Component.onCompleted: {
             if (Qt.application.arguments.length === 2)
-                document.load("file:" + Qt.application.arguments[1]);
+                textArea.textDocument.source = "file:" + Qt.application.arguments[1];
             else
-                document.load("qrc:/texteditor.html")
+                textArea.textDocument.source = "qrc:/texteditor.html";
         }
         onLoaded: function (text, format) {
             textArea.textFormat = format
@@ -426,6 +457,11 @@ ApplicationWindow {
 
             onLinkActivated: function (link) {
                 Qt.openUrlExternally(link)
+            }
+
+            textDocument.onError: function (message) {
+                errorDialog.text = message
+                errorDialog.open()
             }
         }
 
@@ -471,7 +507,7 @@ ApplicationWindow {
     }
 
     onClosing: function (close) {
-        if (document.modified) {
+        if (textArea.textDocument.modified) {
             quitDialog.open()
             close.accepted = false
         }
