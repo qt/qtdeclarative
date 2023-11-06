@@ -360,8 +360,6 @@ void tst_qmlls_modules::buildDir()
     QTEST_CHECKED(checkCompletions(
             *uri, 3, 0,
             ExpectedCompletions({
-                    { u"property"_s, CompletionItemKind::Keyword },
-                    { u"function"_s, CompletionItemKind::Keyword },
                     { u"Rectangle"_s, CompletionItemKind::Constructor },
             }),
             QStringList({ u"BuildDirType"_s, u"QtQuick"_s, u"width"_s, u"vector4d"_s })));
@@ -389,9 +387,7 @@ void tst_qmlls_modules::buildDir()
                                    ExpectedCompletions({
                                            { u"BuildDirType"_s, CompletionItemKind::Constructor },
                                            { u"Rectangle"_s, CompletionItemKind::Constructor },
-                                           { u"property"_s, CompletionItemKind::Keyword },
                                            { u"width"_s, CompletionItemKind::Property },
-                                           { u"function"_s, CompletionItemKind::Keyword },
                                    }),
                                    QStringList({ u"QtQuick"_s, u"vector4d"_s })));
 }
