@@ -8231,15 +8231,11 @@ void tst_qqmllanguage::deepAliasOnICOrReadonly()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
 
-    // We are mostly testing that it doesn't crash here. The actual bug is fixed separately.
-
-    QEXPECT_FAIL("", "QTBUG-115579 is not fixed yet", Continue);
     QCOMPARE(o->property("borderColor").toString(), QLatin1String("black"));
+    QCOMPARE(o->property("borderObjectName").toString(), QLatin1String("theLeaf"));
 
     const QVariant var = o->property("borderVarvar");
-    QEXPECT_FAIL("", "QTBUG-115579 is not fixed yet", Continue);
     QCOMPARE(var.metaType(), QMetaType::fromType<QString>());
-    QEXPECT_FAIL("", "QTBUG-115579 is not fixed yet", Continue);
     QCOMPARE(var.toString(), QLatin1String("mauve"));
 
     QQmlComponent c2(&engine, testFileUrl("deepAliasOnReadonly.qml"));

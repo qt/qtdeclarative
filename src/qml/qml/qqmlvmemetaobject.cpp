@@ -1045,15 +1045,20 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 int coreIndex = encodedIndex.coreIndex();
                 const int valueTypePropertyIndex = encodedIndex.valueTypeIndex();
 
-                // Remove binding (if any) on write
-                if(c == QMetaObject::WriteProperty) {
-                    int flags = *reinterpret_cast<int*>(a[3]);
-                    if (flags & QQmlPropertyData::RemoveBindingOnAliasWrite) {
-                        QQmlData *targetData = QQmlData::get(target);
-                        if (targetData && targetData->hasBindingBit(coreIndex))
-                            QQmlPropertyPrivate::removeBinding(target, encodedIndex);
+                const auto removePendingBinding
+                        = [c, a](QObject *target, int coreIndex, QQmlPropertyIndex encodedIndex) {
+                    // Remove binding (if any) on write
+                    if (c == QMetaObject::WriteProperty) {
+                        int flags = *reinterpret_cast<int*>(a[3]);
+                        if (flags & QQmlPropertyData::RemoveBindingOnAliasWrite) {
+                            QQmlData *targetData = QQmlData::get(target);
+                            if (targetData && targetData->hasBindingBit(coreIndex)) {
+                                QQmlPropertyPrivate::removeBinding(target, encodedIndex);
+                                targetData->clearBindingBit(coreIndex);
+                            }
+                        }
                     }
-                }
+                };
 
                 if (valueTypePropertyIndex != -1) {
                     if (!targetDData->propertyCache)
@@ -1063,6 +1068,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     QQmlGadgetPtrWrapper *valueType = QQmlGadgetPtrWrapper::instance(
                                 ctxt->engine(), pd->propType());
                     if (valueType) {
+                        removePendingBinding(target, coreIndex, encodedIndex);
                         valueType->read(target, coreIndex);
                         int rv = QMetaObject::metacall(valueType, c, valueTypePropertyIndex, a);
 
@@ -1075,10 +1081,14 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         // deep alias
                         void *argv[1] = { &target };
                         QMetaObject::metacall(target, QMetaObject::ReadProperty, coreIndex, argv);
+                        removePendingBinding(
+                                target, valueTypePropertyIndex,
+                                QQmlPropertyIndex(valueTypePropertyIndex));
                         return QMetaObject::metacall(target, c, valueTypePropertyIndex, a);
                     }
 
                 } else {
+                    removePendingBinding(target, coreIndex, encodedIndex);
                     return QMetaObject::metacall(target, c, coreIndex, a);
                 }
 

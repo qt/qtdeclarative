@@ -909,10 +909,13 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
             && !(bindingFlags & QV4::CompiledData::Binding::IsPropertyObserver)
             && !_valueTypeProperty;
 
-    if (_ddata->hasBindingBit(bindingProperty->coreIndex()) && allowedToRemoveBinding) {
-        QQmlPropertyPrivate::removeBinding(_bindingTarget, QQmlPropertyIndex(bindingProperty->coreIndex()));
-    } else if (bindingProperty->isBindable() && allowedToRemoveBinding) {
-        removePendingBinding(_bindingTarget, bindingProperty->coreIndex());
+    if (allowedToRemoveBinding) {
+        if (bindingProperty->isBindable()) {
+            removePendingBinding(_bindingTarget, bindingProperty->coreIndex());
+        } else {
+            QQmlPropertyPrivate::removeBinding(
+                    _bindingTarget, QQmlPropertyIndex(bindingProperty->coreIndex()));
+        }
     }
 
     if (bindingType == QV4::CompiledData::Binding::Type_Script || binding->isTranslationBinding()) {
@@ -958,6 +961,9 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 qmlBinding = QQmlPropertyBinding::create(bindingProperty, runtimeFunction, _scopeObject, context, currentQmlContext(), _bindingTarget, index);
             }
             sharedState.data()->allQPropertyBindings.push_back(DeferredQPropertyBinding {_bindingTarget, bindingProperty->coreIndex(), qmlBinding });
+
+            QQmlData *data = QQmlData::get(_bindingTarget, true);
+            data->setBindingBit(_bindingTarget, bindingProperty->coreIndex());
         } else {
             // When writing bindings to grouped properties implemented as value types,
             // such as point.x: { someExpression; }, then the binding is installed on
@@ -1469,6 +1475,14 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
 
     while (!sharedState->allQPropertyBindings.isEmpty()) {
         auto& [target, index, qmlBinding] = sharedState->allQPropertyBindings.first();
+
+        QQmlData *data = QQmlData::get(target);
+        if (!data || !data->hasBindingBit(index)) {
+            // The target property has been overwritten since we stashed the binding.
+            sharedState->allQPropertyBindings.pop_front();
+            continue;
+        }
+
         QUntypedBindable bindable;
         void *argv[] = { &bindable };
         // allow interception
