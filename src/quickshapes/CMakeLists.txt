@@ -64,7 +64,7 @@ qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders"
         "shaders_ng/wireframe.vert"
 )
 
-qt_internal_add_shaders(QuickShapesPrivate "shaders_derivatives"
+qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders_derivatives"
     SILENT
     BATCHABLE
     PRECOMPILE
@@ -80,7 +80,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_derivatives"
         "shaders_ng/shapecurve_derivatives.vert.qsb"
 )
 
-qt_internal_add_shaders(QuickShapesPrivate "shaders_lg"
+qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders_lg"
     SILENT
     BATCHABLE
     PRECOMPILE
@@ -97,7 +97,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_lg"
         "shaders_ng/shapecurve_lg.vert.qsb"
 )
 
-qt_internal_add_shaders(QuickShapesPrivate "shaders_lg_derivatives"
+qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders_lg_derivatives"
     SILENT
     BATCHABLE
     PRECOMPILE
@@ -115,7 +115,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_lg_derivatives"
         "shaders_ng/shapecurve_lg_derivatives.vert.qsb"
 )
 
-qt_internal_add_shaders(QuickShapesPrivate "shaders_rg"
+qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders_rg"
     SILENT
     BATCHABLE
     PRECOMPILE
@@ -132,7 +132,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_rg"
         "shaders_ng/shapecurve_rg.vert.qsb"
 )
 
-qt_internal_add_shaders(QuickShapesPrivate "shaders_rg_derivatives"
+qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders_rg_derivatives"
     SILENT
     BATCHABLE
     PRECOMPILE
@@ -150,7 +150,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_rg_derivatives"
         "shaders_ng/shapecurve_rg_derivatives.vert.qsb"
 )
 
-qt_internal_add_shaders(QuickShapesPrivate "shaders_cg"
+qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders_cg"
     SILENT
     BATCHABLE
     PRECOMPILE
@@ -167,7 +167,7 @@ qt_internal_add_shaders(QuickShapesPrivate "shaders_cg"
         "shaders_ng/shapecurve_cg.vert.qsb"
 )
 
-qt_internal_add_shaders(QuickShapesPrivate "shaders_cg_derivatives"
+qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders_cg_derivatives"
     SILENT
     BATCHABLE
     PRECOMPILE
