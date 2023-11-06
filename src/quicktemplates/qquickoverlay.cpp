@@ -265,6 +265,8 @@ void QQuickOverlayPrivate::updateGeometry()
 
     switch (window->contentOrientation()) {
     case Qt::PrimaryOrientation:
+        rotation = this->rotation();
+        Q_FALLTHROUGH();
     case Qt::PortraitOrientation:
         size = window->size();
         break;
