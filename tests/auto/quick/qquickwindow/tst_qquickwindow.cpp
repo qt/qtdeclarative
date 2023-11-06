@@ -549,6 +549,8 @@ private slots:
     void visibleVsVisibility_data();
     void visibleVsVisibility();
 
+    void eventTypes();
+
 private:
     QPointingDevice *touchDevice; // TODO make const after fixing QTBUG-107864
     const QPointingDevice *touchDeviceWithVelocity;
@@ -4120,6 +4122,16 @@ void tst_qquickwindow::visibleVsVisibility()
     QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
     QVERIFY(window);
     QCOMPARE(window->isVisible(), expectVisible);
+}
+
+void tst_qquickwindow::eventTypes()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("eventTypes.qml"));
+    QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+    QVERIFY(created);
 }
 
 QTEST_MAIN(tst_qquickwindow)

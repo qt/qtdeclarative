@@ -46,7 +46,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickKeyEvent : public QObject
     Q_PROPERTY(int count READ count CONSTANT FINAL)
     Q_PROPERTY(quint32 nativeScanCode READ nativeScanCode CONSTANT FINAL)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted FINAL)
-    QML_ANONYMOUS
+    QML_NAMED_ELEMENT(KeyEvent)
+    QML_UNCREATABLE("Should only be used by signal handlers in the Keys attached property")
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
@@ -117,7 +118,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
     Q_PROPERTY(bool isClick READ isClick CONSTANT FINAL)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted FINAL)
     Q_PROPERTY(int flags READ flags CONSTANT REVISION(2, 11) FINAL)
-    QML_ANONYMOUS
+    QML_NAMED_ELEMENT(MouseEvent)
+    QML_UNCREATABLE("Should only be used by mouse event signal handlers, for example in MouseArea")
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
@@ -190,7 +192,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWheelEvent : public QObject
     Q_PROPERTY(int modifiers READ modifiers CONSTANT FINAL)
     Q_PROPERTY(bool inverted READ inverted CONSTANT FINAL)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted FINAL)
-    QML_ANONYMOUS
+    QML_NAMED_ELEMENT(WheelEvent)
+    QML_UNCREATABLE("Should only be used by wheel event signal handlers, for example in MouseArea")
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
@@ -240,7 +243,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted FINAL)
-    QML_ANONYMOUS
+    QML_NAMED_ELEMENT(CloseEvent)
+    QML_UNCREATABLE("Should only be used by Window's closing signal")
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
