@@ -18,6 +18,7 @@ public:
 
 private slots:
     void clearGrabbers();
+    void retainOrientation();
 };
 
 class TestInputHandler : public QQuickPointerDeviceHandler
@@ -197,6 +198,24 @@ void tst_QQuickOverlay::clearGrabbers()
         .release(1, QPoint(40, 40));
 
     QVERIFY(testPointerhandler.m_points.isEmpty());
+}
+
+void tst_QQuickOverlay::retainOrientation()
+{
+    QQuickWindow window;
+    auto *overlay = QQuickOverlay::overlay(&window);
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    qreal rot = 10;
+    overlay->setRotation(rot);
+    const QSizeF sz = overlay->size();
+    window.resize(window.size() + QSize(10, 10));
+    // wait for the resize event to call QQuickOverlay::updateGeometry
+    QTRY_COMPARE_NE(overlay->size(), sz);
+
+    QCOMPARE(overlay->rotation(), rot);
 }
 
 QTEST_MAIN(tst_QQuickOverlay)
