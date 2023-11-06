@@ -182,6 +182,11 @@ public:
         insertRow(row, QModelIndex());
     }
 
+    Q_INVOKABLE void addColumn(int column)
+    {
+        insertColumn(column, QModelIndex());
+    }
+
     Qt::ItemFlags flags(const QModelIndex &index) const override
     {
         Q_UNUSED(index)

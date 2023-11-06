@@ -2773,21 +2773,6 @@ qreal QQuickTableViewPrivate::sizeHintForRow(int row) const
     return rowHeight;
 }
 
-void QQuickTableViewPrivate::updateTableSize()
-{
-    // tableSize is the same as row and column count, and will always
-    // be the same as the number of rows and columns in the model.
-    Q_Q(QQuickTableView);
-
-    const QSize prevTableSize = tableSize;
-    tableSize = calculateTableSize();
-
-    if (prevTableSize.width() != tableSize.width())
-        emit q->columnsChanged();
-    if (prevTableSize.height() != tableSize.height())
-        emit q->rowsChanged();
-}
-
 QSize QQuickTableViewPrivate::calculateTableSize()
 {
     QSize size(0, 0);
@@ -3330,6 +3315,7 @@ void QQuickTableViewPrivate::processRebuildTable()
                 Q_TABLEVIEW_UNREACHABLE(rebuildOptions);
         }
 
+        tableSizeBeforeRebuild = tableSize;
         edgesBeforeRebuild = loadedItems.isEmpty() ? QMargins()
             : QMargins(q->leftColumn(), q->topRow(), q->rightColumn(), q->bottomRow());
     }
@@ -3398,6 +3384,10 @@ void QQuickTableViewPrivate::processRebuildTable()
     }
 
     if (rebuildState == RebuildState::Done) {
+        if (tableSizeBeforeRebuild.width() != tableSize.width())
+            emit q->columnsChanged();
+        if (tableSizeBeforeRebuild.height() != tableSize.height())
+            emit q->rowsChanged();
         if (edgesBeforeRebuild.left() != q->leftColumn())
             emit q->leftColumnChanged();
         if (edgesBeforeRebuild.right() != q->rightColumn())
@@ -3547,7 +3537,7 @@ void QQuickTableViewPrivate::calculateTopLeft(QPoint &topLeftCell, QPointF &topL
 
 void QQuickTableViewPrivate::loadInitialTable()
 {
-    updateTableSize();
+    tableSize = calculateTableSize();
 
     if (positionXAnimation.isRunning()) {
         positionXAnimation.stop();

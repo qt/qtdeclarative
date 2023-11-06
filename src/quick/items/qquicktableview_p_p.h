@@ -379,6 +379,7 @@ public:
     QPoint selectionEndCell = {-1, -1};
 
     QMargins edgesBeforeRebuild;
+    QSize tableSizeBeforeRebuild;
 
     int currentRow = -1;
     int currentColumn = -1;
