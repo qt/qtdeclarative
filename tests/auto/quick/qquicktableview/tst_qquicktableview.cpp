@@ -189,6 +189,10 @@ private slots:
     void positionViewAtCellForLargeCells_data();
     void positionViewAtCellForLargeCells();
     void positionViewAtCellForLargeCellsUsingSubrect();
+    void positionViewAtLastRow_data();
+    void positionViewAtLastRow();
+    void positionViewAtLastColumn_data();
+    void positionViewAtLastColumn();
     void itemAtCell_data();
     void itemAtCell();
     void leftRightTopBottomProperties_data();
@@ -4098,6 +4102,122 @@ void tst_QQuickTableView::positionViewAtCellForLargeCellsUsingSubrect()
     tableView->positionViewAtCell(QPoint(0, 0), QQuickTableView::Contain, QPointF(), subRect);
     QCOMPARE(tableView->contentX(), -(tableView->width() - subRect.right()));
     QCOMPARE(tableView->contentY(), -(tableView->height() - subRect.bottom()));
+}
+
+void tst_QQuickTableView::positionViewAtLastRow_data()
+{
+    QTest::addColumn<QString>("signalToTest");
+    QTest::addColumn<bool>("animate");
+
+    QTest::newRow("positionOnRowsChanged, animate=false") << "positionOnRowsChanged" << false;
+    QTest::newRow("positionOnRowsChanged, animate=true") << "positionOnRowsChanged" << true;
+    QTest::newRow("positionOnContentHeightChanged, animate=false") << "positionOnContentHeightChanged" << false;
+    QTest::newRow("positionOnContentHeightChanged, animate=true") << "positionOnContentHeightChanged" << true;
+}
+
+void tst_QQuickTableView::positionViewAtLastRow()
+{
+    // Check that we can make TableView always scroll to the
+    // last row in the model by positioning the view upon
+    // a rowsChanged callback
+    QFETCH(QString, signalToTest);
+    QFETCH(bool, animate);
+
+    LOAD_TABLEVIEW("positionlast.qml");
+
+    // Use a very large model to indirectly test that we "fast-flick" to
+    // the end at start-up (instead of loading and unloading rows, which
+    // would take forever).
+    TestModel model(2000000, 2000000);
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setAnimate(animate);
+
+    view->rootObject()->setProperty(signalToTest.toUtf8().constData(), true);
+
+    WAIT_UNTIL_POLISHED;
+
+    const qreal delegateSize = 100.;
+    const qreal viewportRowCount = tableView->height() / delegateSize;
+
+    // Check that the viewport is positioned at the last row at start-up
+    QCOMPARE(tableView->rows(), model.rowCount());
+    QCOMPARE(tableView->bottomRow(), model.rowCount() - 1);
+    QCOMPARE(tableView->contentY(), (model.rowCount() - viewportRowCount) * delegateSize);
+
+    // Check that the viewport is positioned at the last
+    // row after more rows are added.
+    for (int row = 0; row < 2; ++row) {
+        model.addRow(model.rowCount() - 1);
+
+        WAIT_UNTIL_POLISHED;
+
+        if (tableView->animate()) {
+            QVERIFY(tableViewPrivate->positionYAnimation.isRunning());
+            QTRY_VERIFY(!tableViewPrivate->positionYAnimation.isRunning());
+        }
+
+        QCOMPARE(tableView->rows(), model.rowCount());
+        QCOMPARE(tableView->bottomRow(), model.rowCount() - 1);
+        QCOMPARE(tableView->contentY(), (model.rowCount() - viewportRowCount) * delegateSize);
+    }
+}
+
+void tst_QQuickTableView::positionViewAtLastColumn_data()
+{
+    QTest::addColumn<QString>("signalToTest");
+    QTest::addColumn<bool>("animate");
+
+    QTest::newRow("positionOnColumnsChanged, animate=false") << "positionOnColumnsChanged" << false;
+    QTest::newRow("positionOnColumnsChanged, animate=true") << "positionOnColumnsChanged" << true;
+    QTest::newRow("positionOnContentWidthChanged, animate=false") << "positionOnContentWidthChanged" << false;
+    QTest::newRow("positionOnContentWidthChanged, animate=true") << "positionOnContentWidthChanged" << true;
+}
+
+void tst_QQuickTableView::positionViewAtLastColumn()
+{
+    // Check that we can make TableView always scroll to the
+    // last column in the model by positioning the view upon
+    // a columnsChanged callback
+    QFETCH(QString, signalToTest);
+    QFETCH(bool, animate);
+
+    LOAD_TABLEVIEW("positionlast.qml");
+
+    // Use a very large model to indirectly test that we "fast-flick" to
+    // the end at start-up (instead of loading and unloading columns, which
+    // would take forever).
+    TestModel model(2000000, 2000000);
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setAnimate(animate);
+
+    view->rootObject()->setProperty(signalToTest.toUtf8().constData(), true);
+
+    WAIT_UNTIL_POLISHED;
+
+    const qreal delegateSize = 100.;
+    const qreal viewportColumnCount = tableView->width() / delegateSize;
+
+    // Check that the viewport is positioned at the last column at start-up
+    QCOMPARE(tableView->columns(), model.columnCount());
+    QCOMPARE(tableView->rightColumn(), model.columnCount() - 1);
+    QCOMPARE(tableView->contentX(), (model.columnCount() - viewportColumnCount) * delegateSize);
+
+    // Check that the viewport is positioned at the last
+    // column after more columns are added.
+    for (int column = 0; column < 2; ++column) {
+        model.addColumn(model.columnCount() - 1);
+
+        WAIT_UNTIL_POLISHED;
+
+        if (tableView->animate()) {
+            QVERIFY(tableViewPrivate->positionXAnimation.isRunning());
+            QTRY_VERIFY(!tableViewPrivate->positionXAnimation.isRunning());
+        }
+
+        QCOMPARE(tableView->columns(), model.columnCount());
+        QCOMPARE(tableView->rightColumn(), model.columnCount() - 1);
+        QCOMPARE(tableView->contentX(), (model.columnCount() - viewportColumnCount) * delegateSize);
+    }
 }
 
 void tst_QQuickTableView::itemAtCell_data()
