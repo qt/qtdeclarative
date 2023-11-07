@@ -499,6 +499,15 @@ int ExecutableCompilationUnit::totalObjectCount() const {
     return inlineComponentData[*icRootName].totalObjectCount;
 }
 
+ResolvedTypeReference *ExecutableCompilationUnit::resolvedType(QMetaType type) const
+{
+    for (ResolvedTypeReference *ref : std::as_const(resolvedTypes)) {
+        if (ref->type().typeId() == type)
+            return ref;
+    }
+    return nullptr;
+}
+
 int ExecutableCompilationUnit::totalParserStatusCount() const {
     if (!icRootName)
         return m_totalParserStatusCount;

@@ -858,53 +858,74 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         const QQmlPropertyData *targetProperty = targetCache->property(coreIndex);
         Q_ASSERT(targetProperty);
 
-        // for deep aliases, valueTypeIndex is always set
-        if (!QQmlMetaType::isValueType(targetProperty->propType()) && valueTypeIndex != -1) {
-            // deep alias property
-            *type = targetProperty->propType();
-            QQmlPropertyCache::ConstPtr typeCache = QQmlMetaType::propertyCacheForType(*type);
-            Q_ASSERT(typeCache);
-            const QQmlPropertyData *typeProperty = typeCache->property(valueTypeIndex);
+        const QMetaType targetPropType = targetProperty->propType();
 
-            if (typeProperty == nullptr) {
-                return qQmlCompileError(alias.referenceLocation,
-                                        QQmlPropertyCacheCreatorBase::tr("Invalid alias target"));
+        const auto resolveType = [](QMetaType targetPropType) {
+            if (targetPropType.flags() & QMetaType::IsEnumeration)
+                return targetPropType.underlyingType();
+            else
+                return targetPropType;
+        };
+
+        const auto populateWithPropertyData = [&](const QQmlPropertyData *property) {
+            *type = resolveType(property->propType());
+            writable = property->isWritable();
+            resettable = property->isResettable();
+            bindable = property->isBindable();
+
+            // Copy type flags
+            propertyFlags->copyPropertyTypeFlags(property->flags());
+            if (property->isVarProperty())
+                propertyFlags->type = QQmlPropertyData::Flags::QVariantType;
+        };
+
+        // for deep aliases, valueTypeIndex is always set
+        if (!QQmlMetaType::isValueType(targetPropType) && valueTypeIndex != -1) {
+            // deep alias property
+
+            QQmlPropertyCache::ConstPtr typeCache
+                    = QQmlMetaType::propertyCacheForType(targetPropType);
+
+            if (!typeCache) {
+                // See if it's a half-resolved composite type
+                if (const QV4::ResolvedTypeReference *typeRef
+                        = objectContainer->resolvedType(targetPropType)) {
+                    typeCache = typeRef->typePropertyCache();
+                }
             }
 
-            *type = typeProperty->propType();
-            writable = typeProperty->isWritable();
-            resettable = typeProperty->isResettable();
-            bindable = typeProperty->isBindable();
+            const QQmlPropertyData *typeProperty = typeCache
+                    ? typeCache->property(valueTypeIndex)
+                    : nullptr;
+            if (typeProperty == nullptr) {
+                return qQmlCompileError(
+                        alias.referenceLocation,
+                        QQmlPropertyCacheCreatorBase::tr("Invalid alias target"));
+            }
+            populateWithPropertyData(typeProperty);
         } else {
             // value type or primitive type or enum
-            *type = targetProperty->propType();
-
-            writable = targetProperty->isWritable();
-            resettable = targetProperty->isResettable();
-            bindable = targetProperty->isBindable();
+            populateWithPropertyData(targetProperty);
 
             if (valueTypeIndex != -1) {
-                const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForValueType(*type);
-                if (valueTypeMetaObject->property(valueTypeIndex).isEnumType())
-                    *type = QMetaType::fromType<int>();
-                else
-                    *type = valueTypeMetaObject->property(valueTypeIndex).metaType();
-            } else {
-                if (targetProperty->isEnum()) {
-                    *type = QMetaType::fromType<int>();
-                } else {
-                    // Copy type flags
-                    propertyFlags->copyPropertyTypeFlags(targetProperty->flags());
+                const QMetaObject *valueTypeMetaObject
+                        = QQmlMetaType::metaObjectForValueType(*type);
+                const QMetaProperty valueTypeMetaProperty
+                        = valueTypeMetaObject->property(valueTypeIndex);
+                *type = resolveType(valueTypeMetaProperty.metaType());
 
-                    if (targetProperty->isVarProperty())
-                        propertyFlags->type = QQmlPropertyData::Flags::QVariantType;
-                }
+                // We can only write or reset the value type property if we can write
+                // the value type itself.
+                resettable = writable && valueTypeMetaProperty.isResettable();
+                writable = writable && valueTypeMetaProperty.isWritable();
+
+                bindable = valueTypeMetaProperty.isBindable();
             }
         }
     }
 
-    propertyFlags->setIsWritable(!(alias.hasFlag(QV4::CompiledData::Alias::IsReadOnly))
-                                 && writable);
+    propertyFlags->setIsWritable(
+            writable && !alias.hasFlag(QV4::CompiledData::Alias::IsReadOnly));
     propertyFlags->setIsResettable(resettable);
     propertyFlags->setIsBindable(bindable);
     return QQmlError();

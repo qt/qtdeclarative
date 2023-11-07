@@ -141,6 +141,7 @@ public:
     QVector<QQmlRefPointer<QQmlScriptData>> dependentScripts;
     ResolvedTypeReferenceMap resolvedTypes;
     ResolvedTypeReference *resolvedType(int id) const { return resolvedTypes.value(id); }
+    ResolvedTypeReference *resolvedType(QMetaType type) const;
 
     bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const;
 
