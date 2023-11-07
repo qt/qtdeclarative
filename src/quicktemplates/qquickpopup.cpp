@@ -841,7 +841,6 @@ static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQ
         item = new QQuickItem;
 
     if (item) {
-        item->setOpacity(popup->isVisible() ? 1.0 : 0.0);
         item->setParentItem(parent);
         item->stackBefore(popup->popupItem());
         item->setZ(popup->z());
@@ -883,8 +882,18 @@ void QQuickPopupPrivate::createOverlay()
     if (!component)
         component = modal ? overlay->modal() : overlay->modeless();
 
-    if (!dimmer)
+    if (!dimmer) {
         dimmer = createDimmer(component, q, overlay);
+        // We cannot update explicitDimmerOpacity when dimmer's opacity changes,
+        // as it is expected to do so when we fade the dimmer in and out in
+        // show/hideOverlay, and any binding of the dimmer's opacity will be
+        // implicitly broken anyway.
+        explicitDimmerOpacity = dimmer->opacity();
+        // initially fully transparent, showOverlay fades the dimmer in.
+        dimmer->setOpacity(0);
+        if (q->isVisible())
+            showOverlay();
+    }
     resizeOverlay();
 }
 
@@ -922,7 +931,7 @@ void QQuickPopupPrivate::showOverlay()
 {
     // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
     if (dim && dimmer)
-        QQmlProperty::write(dimmer, QStringLiteral("opacity"), 1.0);
+        QQmlProperty::write(dimmer, QStringLiteral("opacity"), explicitDimmerOpacity);
 }
 
 void QQuickPopupPrivate::hideOverlay()

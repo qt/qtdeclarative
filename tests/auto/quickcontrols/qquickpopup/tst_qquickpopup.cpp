@@ -102,6 +102,8 @@ private slots:
     void focusMultiplePopup();
     void contentChildrenChange();
     void doubleClickInMouseArea();
+    void fadeDimmer_data();
+    void fadeDimmer();
 
 private:
     static bool hasWindowActivation();
@@ -2285,6 +2287,45 @@ void tst_QQuickPopup::doubleClickInMouseArea()
     // wait enough time for a wrong long press to happen
     QTest::qWait(QGuiApplication::styleHints()->mousePressAndHoldInterval() + 10);
     QCOMPARE(longPressSpy.count(), 0);
+}
+
+void tst_QQuickPopup::fadeDimmer_data()
+{
+    QTest::addColumn<bool>("modality");
+
+    QTest::addRow("modal") << true;
+    QTest::addRow("modeless") << true;
+}
+
+void tst_QQuickPopup::fadeDimmer()
+{
+    QFETCH(const bool, modality);
+    QQuickApplicationHelper helper(this, "fadeDimmer.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *popup = window->contentItem()->findChild<QQuickPopup *>();
+    QVERIFY(popup);
+
+    popup->setModal(modality);
+    popup->open();
+    auto dimmer = QQuickPopupPrivate::get(popup)->dimmer;
+    QVERIFY(dimmer);
+    int opacityChangeCount = 0;
+    connect(dimmer, &QQuickItem::opacityChanged, this, [&opacityChangeCount]{
+        ++opacityChangeCount;
+    });
+    QTRY_VERIFY(popup->isOpened());
+    QTRY_COMPARE(dimmer->opacity(), popup->property("dimmerOpacity").toDouble());
+    QCOMPARE_GT(opacityChangeCount, 2);
+
+    opacityChangeCount = 0;
+    popup->setVisible(false);
+    QTRY_VERIFY(!popup->isVisible());
+    QCOMPARE_GT(opacityChangeCount, 2);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

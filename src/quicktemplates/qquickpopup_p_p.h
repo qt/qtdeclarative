@@ -181,6 +181,7 @@ public:
     QList<QQuickStateAction> exitActions;
     QQuickPopupTransitionManager transitionManager;
     QQuickPopupAnchors *anchors = nullptr;
+    qreal explicitDimmerOpacity = 0;
     qreal prevOpacity = 0;
     qreal prevScale = 0;
 
