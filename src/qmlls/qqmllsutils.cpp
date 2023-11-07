@@ -2580,11 +2580,23 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &c
 
 /*!
 \internal
-Returns true if left and right are valid, with ctx denoting an offset lying between left.end()
-and right.end().
-If the code is currently being written, that is, right is an invalid sourcelocation because it was
-not written by the user yet, then return true when ctx is behind the sourcelocation denoted by left.
-Otherwise, returns false.
+\brief Compare left and right locations to the position denoted by ctx, see special cases below.
+
+Statements and expressions need to provide different completions depending on where the cursor is.
+For example, lets take following for-statement:
+\badcode
+for (let i = 0; <here> ; ++i) {}
+\endcode
+We want to provide script expression completion (method names, property names, available JS
+variables names, QML objects ids, and so on) at the place denoted by \c{<here>}.
+The question is: how do we know that the cursor is really at \c{<here>}? In the case of the
+for-loop, we can compare the position of the cursor with the first and the second semicolon of the
+for loop.
+
+If the first semicolon does not exist, it has an invalid sourcelocation and the cursor is
+definitively \e{not} at \c{<here>}. Therefore, return false when \c{left} is invalid.
+
+If the second semicolon does not exist, then just ignore it: it might not have been written yet.
 */
 static bool betweenLocations(QQmlJS::SourceLocation left, const CompletionContextStrings &ctx,
                              QQmlJS::SourceLocation right)
@@ -2600,6 +2612,11 @@ static bool betweenLocations(QQmlJS::SourceLocation left, const CompletionContex
     // note: ctx.offset() == right.begin() means that the cursor lies exactly before right
     return ctx.offset() <= right.begin();
 }
+
+/*!
+\internal
+Returns true if ctx denotes an offset lying behind left.end(), and false otherwise.
+*/
 static bool afterLocation(QQmlJS::SourceLocation left, const CompletionContextStrings &ctx)
 {
     return betweenLocations(left, ctx, QQmlJS::SourceLocation{});
