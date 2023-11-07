@@ -2413,14 +2413,19 @@ private slots:
 
     void plainJSDOM_data() {
         QTest::addColumn<QString>("filename");
+        QTest::addColumn<QString>("content");
 
-        QTest::newRow("simplestJSStatement") << "simplestJSStatement.js";
-        QTest::newRow("import") << "import.js";
+        QTest::newRow("simplestJSStatement")
+                << "simplestJSStatement.js" << QString(u"let v=1;\n"_s);
+        QTest::newRow("import")
+                << "import.js"
+                << QString(u".import \"main.js\" as Main\nconsole.log(Main.a);\n"_s);
     }
 
     void plainJSDOM() {
         using namespace Qt::StringLiterals;
         QFETCH(QString, filename);
+        QFETCH(QString, content);
 
         QString testFile = baseDir + "/" + filename;
         auto dom = parse(testFile, qmltypeDirs);
@@ -2428,6 +2433,13 @@ private slots:
         QCOMPARE(dom.internalKind(), DomType::JsFile);
         auto filePtr = dom.fileObject().ownerAs<JsFile>();
         QVERIFY(filePtr && filePtr->isValid());
+        auto exprAsString = dom.field(Fields::expression)
+                               .field(Fields::code)
+                               .value()
+                               .toString();
+        QVERIFY(!exprAsString.isEmpty());
+        exprAsString.replace("\r\n", "\n");
+        QCOMPARE(exprAsString, content);
     }
 private:
     struct DomItemWithLocation

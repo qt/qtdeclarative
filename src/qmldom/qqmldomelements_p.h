@@ -387,7 +387,8 @@ public:
         FunctionBody,
         ArgInitializer,
         ArgumentStructure,
-        ReturnType
+        ReturnType,
+        Code, // Used for storing the content of the whole file as "one" Expression
     };
     Q_ENUM(ExpressionType);
     constexpr static DomType kindValue = DomType::ScriptExpression;

@@ -1641,6 +1641,7 @@ AST::Node *firstNodeInRange(AST::Node *n, quint32 minStart = 0, quint32 maxEnd =
 
 void ScriptExpression::setCode(QString code, QString preCode, QString postCode)
 {
+    //TODO refactor and move parsing outside?
     m_codeStr = code;
     const bool qmlMode = (m_expressionType == ExpressionType::BindingExpression);
     if (qmlMode && preCode.isEmpty()) {

@@ -237,12 +237,17 @@ public:
         return std::static_pointer_cast<JsFile>(doCopy(self));
     }
 
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const
+            override; // iterates the *direct* subpaths, returns false if a quick end was requested
+
     std::shared_ptr<QQmlJS::Engine> engine() const { return m_engine; }
     JsResource rootComponent() const { return m_rootComponent; }
 
     static ErrorGroups myParsingErrors();
 private:
+    //Is engine really needed?
     std::shared_ptr<QQmlJS::Engine> m_engine;
+    std::shared_ptr<ScriptExpression> m_script;
     JsResource m_rootComponent;
 };
 

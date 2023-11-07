@@ -305,12 +305,16 @@ JsFile::JsFile(QString filePath, QString code,
     lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/false);
     QQmlJS::Parser parser(m_engine.get());
     //TODO(QTBUG-117849) add mjs support
-    m_isValid = /*isESModule ? parser.parseModule() :*/ parser.parseProgram();
+    setIsValid(/*isESModule ? parser.parseModule() :*/ parser.parseProgram());
     const auto diagnostics = parser.diagnosticMessages();
     for (const DiagnosticMessage &msg : diagnostics) {
         addErrorLocal(
                 std::move(myParsingErrors().errorMessage(msg).withFile(filePath).withPath(m_path)));
     }
+    auto astComments = std::make_shared<AstComments>(m_engine);
+    AstComments::collectComments(m_engine, parser.rootNode(), astComments, MutableDomItem(), nullptr);
+    m_script = std::make_shared<ScriptExpression>(code, m_engine, parser.rootNode(), astComments,
+                                                  ScriptExpression::ExpressionType::Code);
 }
 
 ErrorGroups JsFile::myParsingErrors()
@@ -318,6 +322,16 @@ ErrorGroups JsFile::myParsingErrors()
     static ErrorGroups res = { { DomItem::domErrorGroup, NewErrorGroup("JsFile"),
                                  NewErrorGroup("Parsing") } };
     return res;
+}
+
+bool JsFile::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
+{
+    bool cont = ExternalOwningItem::iterateDirectSubpaths(self, visitor);
+    if (m_script)
+        cont = cont && self.dvItemField(visitor, Fields::expression, [this, &self]() {
+            return self.subOwnerItem(PathEls::Field(Fields::expression), m_script);
+        });
+    return cont;
 }
 
 
