@@ -1574,7 +1574,11 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
         }
     }
 
-    if (isMouse) {
+    if (isMouse
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+        || d->selectByTouchDrag
+#endif
+        ) {
         bool mark = (event->modifiers() & Qt::ShiftModifier) && d->selectByMouse;
         int cursor = d->positionAt(event->position());
         d->moveCursor(cursor, mark);
