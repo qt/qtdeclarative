@@ -154,7 +154,7 @@ void DocumentHandler::load(const QUrl &fileUrl)
     if (QFile::exists(fileName)) {
         QMimeType mime = QMimeDatabase().mimeTypeForFile(fileName);
         QFile file(fileName);
-        if (file.open(QFile::ReadOnly)) {
+        if (file.open(QFile::ReadOnly | QFile::Text)) {
             QByteArray data = file.readAll();
             if (QTextDocument *doc = textDocument()) {
                 doc->setBaseUrl(path.adjusted(QUrl::RemoveFilename));
