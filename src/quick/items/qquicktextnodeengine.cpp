@@ -1068,7 +1068,7 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
         else
             setPosition(blockBoundingRect.topLeft());
 
-        if (text.contains(QChar::ObjectReplacementCharacter)) {
+        if (text.contains(QChar::ObjectReplacementCharacter) && charFormat.objectType() != QTextFormat::NoObject) {
             QTextFrame *frame = qobject_cast<QTextFrame *>(textDocument->objectForFormat(charFormat));
             if (!frame || frame->frameFormat().position() == QTextFrameFormat::InFlow) {
                 int blockRelativePosition = textPos - block.position();
