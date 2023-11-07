@@ -217,4 +217,20 @@ class FixingBadUncreatable
     QML_FOREIGN(BadUncreatable)
     QML_UNCREATABLE("")
 };
+
+class SingletonVesion0 : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+    // is default constructible
+};
+
+class SingletonVesion1 : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+    // is default constructible
+};
 #endif // UNCREATABLE_H
