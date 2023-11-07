@@ -436,6 +436,7 @@ private slots:
     void corpseInQmlList();
     void objectInQmlListAndGc();
     void asCastToInlineComponent();
+    void deepAliasOnICOrReadonly();
 
 private:
     QQmlEngine engine;
@@ -8400,6 +8401,32 @@ void tst_qqmllanguage::asCastToInlineComponent()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->objectName(), QLatin1String("value: 20"));
+}
+
+void tst_qqmllanguage::deepAliasOnICOrReadonly()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("deepAliasOnICUser.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    // We are mostly testing that it doesn't crash here. The actual bug is fixed separately.
+
+    QEXPECT_FAIL("", "QTBUG-115579 is not fixed yet", Continue);
+    QCOMPARE(o->property("borderColor").toString(), QLatin1String("black"));
+
+    const QVariant var = o->property("borderVarvar");
+    QEXPECT_FAIL("", "QTBUG-115579 is not fixed yet", Continue);
+    QCOMPARE(var.metaType(), QMetaType::fromType<QString>());
+    QEXPECT_FAIL("", "QTBUG-115579 is not fixed yet", Continue);
+    QCOMPARE(var.toString(), QLatin1String("mauve"));
+
+    QQmlComponent c2(&engine, testFileUrl("deepAliasOnReadonly.qml"));
+    QVERIFY(c2.isError());
+    QVERIFY(c2.errorString().contains(
+            QLatin1String(
+                    "Invalid property assignment: \"readonlyRectX\" is a read-only property")));
 }
 
 QTEST_MAIN(tst_qqmllanguage)
