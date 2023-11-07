@@ -738,6 +738,7 @@ private slots:
     void methodReturnType();
     void hasIsConstantInParameters();
     void uncreatable();
+    void singletonVesions();
 
 #ifdef QT_QUICK_LIB
     void foreignRevisionedProperty();

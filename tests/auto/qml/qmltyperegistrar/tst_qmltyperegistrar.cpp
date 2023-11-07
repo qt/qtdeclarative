@@ -574,6 +574,26 @@ void tst_qmltyperegistrar::uncreatable()
     qmlRegisterTypesAndRevisions<GoodUncreatableExtended>("A", 1);
 }
 
+void tst_qmltyperegistrar::singletonVesions()
+{
+    QQmlEngine engine;
+    qmlRegisterTypesAndRevisions<SingletonVesion0>("A", 0);
+    qmlRegisterTypesAndRevisions<SingletonVesion1>("B", 1);
+
+    QQmlComponent c(&engine);
+    c.setData("import QtQuick\n"
+              "import A\n"
+              "import B\n"
+              "QtObject {\n"
+              "    property QtObject v0: SingletonVesion0\n"
+              "    property QtObject v1: SingletonVesion1\n"
+              "}", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    auto obj = c.create();
+    QVERIFY2(!obj->property("v0").isNull(), "Singleton version 0 is not registered");
+    QVERIFY2(!obj->property("v1").isNull(), "Singleton version 1 is not registered");
+}
+
 void tst_qmltyperegistrar::baseVersionInQmltypes()
 {
     // Since it has no QML_ADDED_IN_VERSION, WithMethod was added in .0 of the current version.
