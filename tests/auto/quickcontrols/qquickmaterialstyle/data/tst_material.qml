@@ -984,10 +984,10 @@ TestCase {
         verify(textField)
         let placeholderTextItem = textField.children[0]
         verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
-        compare(placeholderTextItem.horizontalAlignment, TextField.AlignLeft)
+        compare(placeholderTextItem.horizontalAlignment, data.horizontalAlignment)
 
         textField.forceActiveFocus()
-        compare(placeholderTextItem.horizontalAlignment, TextField.AlignLeft)
+        compare(placeholderTextItem.horizontalAlignment, data.horizontalAlignment)
         textField.destroy()
     }
 
@@ -995,7 +995,8 @@ TestCase {
         return [
             { tag: "AlignLeft", horizontalAlignment: TextArea.AlignLeft },
             { tag: "AlignHCenter", horizontalAlignment: TextArea.AlignHCenter },
-            { tag: "AlignRight", horizontalAlignment: TextArea.AlignRight }
+            { tag: "AlignRight", horizontalAlignment: TextArea.AlignRight },
+            { tag: "AlignJustify", horizontalAlignment: TextArea.AlignJustify }
         ]
     }
 
@@ -1008,10 +1009,10 @@ TestCase {
         verify(textArea)
         let placeholderTextItem = textArea.children[0]
         verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
-        compare(placeholderTextItem.horizontalAlignment, TextArea.AlignLeft)
+        compare(placeholderTextItem.horizontalAlignment, data.horizontalAlignment)
 
         textArea.forceActiveFocus()
-        compare(placeholderTextItem.horizontalAlignment, TextArea.AlignLeft)
+        compare(placeholderTextItem.horizontalAlignment, data.horizontalAlignment)
     }
 
     function test_placeholderTextPos() {

@@ -32,6 +32,7 @@ class QQuickMaterialTextContainer : public QQuickPaintedItem
     Q_PROPERTY(QColor focusedOutlineColor READ focusedOutlineColor WRITE setFocusedOutlineColor FINAL)
     Q_PROPERTY(qreal focusAnimationProgress READ focusAnimationProgress WRITE setFocusAnimationProgress FINAL)
     Q_PROPERTY(qreal placeholderTextWidth READ placeholderTextWidth WRITE setPlaceholderTextWidth FINAL)
+    Q_PROPERTY(PlaceHolderHAlignment placeholderTextHAlign READ placeholderTextHAlign WRITE setPlaceholderTextHAlign FINAL)
     Q_PROPERTY(bool controlHasText READ controlHasText WRITE setControlHasText NOTIFY controlHasTextChanged FINAL)
     Q_PROPERTY(bool placeholderHasText READ placeholderHasText WRITE setPlaceholderHasText NOTIFY placeholderHasTextChanged FINAL)
     Q_PROPERTY(int horizontalPadding READ horizontalPadding WRITE setHorizontalPadding NOTIFY horizontalPaddingChanged FINAL)
@@ -40,6 +41,14 @@ class QQuickMaterialTextContainer : public QQuickPaintedItem
 
 public:
     explicit QQuickMaterialTextContainer(QQuickItem *parent = nullptr);
+
+    enum PlaceHolderHAlignment {
+        AlignLeft = Qt::AlignLeft,
+        AlignRight = Qt::AlignRight,
+        AlignHCenter = Qt::AlignHCenter,
+        AlignJustify = Qt::AlignJustify
+    };
+    Q_ENUM(PlaceHolderHAlignment)
 
     bool isFilled() const;
     void setFilled(bool filled);
@@ -73,6 +82,9 @@ public:
 
     void paint(QPainter *painter) override;
 
+    PlaceHolderHAlignment placeholderTextHAlign() const;
+    void setPlaceholderTextHAlign(PlaceHolderHAlignment placeHolderTextHAlign);
+
 signals:
     void animateChanged();
     void controlHasActiveFocusChanged();
@@ -102,6 +114,7 @@ private:
     bool m_controlHasText = false;
     bool m_placeholderHasText = false;
     int m_horizontalPadding = 0;
+    PlaceHolderHAlignment m_placeholderTextHAlign;
 };
 
 QT_END_NAMESPACE
