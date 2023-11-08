@@ -179,9 +179,9 @@ void QmlTypesClassDescription::collect(
         // These only apply to the original class
         if (name == S_ELEMENT) {
             if (value == S_AUTO)
-                elementName = classDefName;
+                elementNames.append(classDefName);
             else if (value != S_ANONYMOUS)
-                elementName = value;
+                elementNames.append(value);
         } else if (name == S_CREATABLE) {
             isCreatable = (value != S_FALSE);
         } else if (name == S_CREATION_METHOD) {
@@ -228,7 +228,7 @@ void QmlTypesClassDescription::collect(
         }
     }
 
-    if (addedInRevision.isValid() && !elementName.isEmpty())
+    if (addedInRevision.isValid() && !elementNames.isEmpty())
         revisions.append(addedInRevision);
 
     // If the local type is a namespace the result can only be a namespace,
@@ -280,7 +280,7 @@ void QmlTypesClassDescription::collect(
     }
 
     if (classDef) {
-        if (mode == RelatedType || !elementName.isEmpty()) {
+        if (mode == RelatedType || !elementNames.isEmpty()) {
             collectExtraVersions(classDef, S_PROPERTIES, revisions);
             collectExtraVersions(classDef, S_SLOTS, revisions);
             collectExtraVersions(classDef, S_METHODS, revisions);
@@ -324,23 +324,34 @@ void QmlTypesClassDescription::collect(
         isCreatable = isConstructible;
 
         if (!classDef) {
-            if (elementName.isEmpty() || elementName.front().isLower()) {
+            if (elementNames.isEmpty()) {
                 // If no classDef, we generally assume it's a value type defined by the
                 // foreign/extended trick.
                 accessSemantics = DotQmltypes::S_VALUE;
-            } else {
-                // Objects and namespaces always have metaobjects and therefore classDefs.
-                // However, we may not be able to resolve the metaobject at compile time. See
-                // the "Invisible" test case. In that case, we must not assume anything about
-                // access semantics.
+            }
 
-                qWarning() << "Warning: Refusing to generate non-lowercase name"
-                           << elementName.toString() << "for unknown foreign type";
-                elementName = {};
+            for (auto elementName = elementNames.begin(); elementName != elementNames.end();) {
+                if (elementName->isEmpty() || elementName->front().isLower()) {
+                    // If no classDef, we generally assume it's a value type defined by the
+                    // foreign/extended trick.
+                    accessSemantics = DotQmltypes::S_VALUE;
+                    ++elementName;
+                } else {
+                    // Objects and namespaces always have metaobjects and therefore classDefs.
+                    // However, we may not be able to resolve the metaobject at compile time. See
+                    // the "Invisible" test case. In that case, we must not assume anything about
+                    // access semantics.
 
-                // Make it completely inaccessible.
-                // We cannot get enums from anonymous types after all.
-                accessSemantics = DotQmltypes::S_NONE;
+                    qWarning() << "Warning: Refusing to generate non-lowercase name"
+                               << elementName->toString() << "for unknown foreign type";
+                    elementName = elementNames.erase(elementName);
+
+                    if (elementNames.isEmpty()) {
+                        // Make it completely inaccessible.
+                        // We cannot get enums from anonymous types after all.
+                        accessSemantics = DotQmltypes::S_NONE;
+                    }
+                }
             }
         } else if (classDef->value(S_GADGET).toBool()) {
             accessSemantics = DotQmltypes::S_VALUE;

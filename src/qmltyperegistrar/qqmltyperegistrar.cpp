@@ -222,8 +222,7 @@ void QmlTypeRegistrar::write(QTextStream &output)
         bool targetIsNamespace = classDef.value(S_NAMESPACE).toBool();
 
         QAnyStringView extendedName;
-        bool seenQmlElement = false;
-        QString qmlElementName;
+        QStringList qmlElementNames;
         QTypeRevision addedIn;
         QTypeRevision removedIn;
 
@@ -232,8 +231,7 @@ void QmlTypeRegistrar::write(QTextStream &output)
             const QCborMap v = info.toMap();
             const QAnyStringView name = toStringView(v, S_NAME);
             if (name == S_ELEMENT) {
-                seenQmlElement = true;
-                qmlElementName = v[S_VALUE].toString();
+                qmlElementNames.append(v[S_VALUE].toString());
             } else if (name == S_FOREIGN) {
                 targetName = v[S_VALUE].toString();
             } else if (name == S_FOREIGN_IS_NAMESPACE) {
@@ -251,7 +249,9 @@ void QmlTypeRegistrar::write(QTextStream &output)
             }
         }
 
-        if (seenQmlElement && qmlElementName != S_ANONYMOUS) {
+        for (QString &qmlElementName : qmlElementNames) {
+            if (qmlElementName == S_ANONYMOUS)
+                continue;
             if (qmlElementName == S_AUTO)
                 qmlElementName = className;
             qmlElementInfos[qmlElementName].append({ className, addedIn, removedIn });
@@ -300,7 +300,7 @@ void QmlTypeRegistrar::write(QTextStream &output)
                 return result;
             };
 
-            if (seenQmlElement) {
+            if (!qmlElementNames.isEmpty()) {
                 output << uR"(
     qmlRegisterNamespaceAndRevisions(%1, "%2", %3, nullptr, %4, %5);)"_s
                                   .arg(metaObjectPointer(targetName), m_module)
@@ -310,7 +310,7 @@ void QmlTypeRegistrar::write(QTextStream &output)
                                                               : metaObjectPointer(extendedName));
             }
         } else {
-            if (seenQmlElement) {
+            if (!qmlElementNames.isEmpty()) {
                 auto checkRevisions = [&](const QCborArray &array, QLatin1StringView type) {
                     for (auto it = array.constBegin(); it != array.constEnd(); ++it) {
                         auto object = it->toMap();

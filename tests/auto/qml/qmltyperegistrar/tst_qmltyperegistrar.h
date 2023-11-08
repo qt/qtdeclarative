@@ -702,6 +702,15 @@ struct NotNamespaceForeign {
     QML_ELEMENT
 };
 
+class NameExplosion : public QObject
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT(Name1)
+    QML_NAMED_ELEMENT(Name2)
+    QML_ELEMENT
+    QML_ANONYMOUS
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -762,6 +771,9 @@ private slots:
     void sequenceRegistration();
     void valueTypeSelfReference();
     void foreignNamespaceFromGadget();
+
+    void nameExplosion_data();
+    void nameExplosion();
 
 private:
     QByteArray qmltypesData;

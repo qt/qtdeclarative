@@ -71,11 +71,13 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
     if (!collector.immediateNames.isEmpty())
         m_qml.writeStringListBinding(S_IMMEDIATE_NAMES, collector.immediateNames);
 
-    if (collector.elementName.isEmpty()) // e.g. if QML_ANONYMOUS
+    if (collector.elementNames.isEmpty()) // e.g. if QML_ANONYMOUS
         return;
 
     if (!collector.sequenceValueType.isEmpty()) {
-        qWarning() << "Ignoring name of sequential container:" << collector.elementName.toString();
+        qWarning() << "Ignoring names of sequential container:";
+        for (const QAnyStringView &name : std::as_const(collector.elementNames))
+            qWarning() << " - " << name.toString();
         qWarning() << "Sequential containers are anonymous. Use QML_ANONYMOUS to register them.";
         return;
     }
@@ -92,16 +94,19 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         if (revision.hasMajorVersion() && revision.majorVersion() > m_version.majorVersion())
             break;
 
-        QByteArray exportEntry = m_module + '/';
-        collector.elementName.visit([&](auto view) {
-            processAsUtf8(view, [&](QByteArrayView view) { exportEntry.append(view); });
-        });
-        exportEntry += ' ' + QByteArray::number(revision.hasMajorVersion()
-                                                        ? revision.majorVersion()
-                                                        : m_version.majorVersion());
-        exportEntry += '.' + QByteArray::number(revision.minorVersion());
+        for (const QAnyStringView &elementName : std::as_const(collector.elementNames)) {
+            QByteArray exportEntry = m_module + '/';
 
-        exports.append(exportEntry);
+            elementName.visit([&](auto view) {
+                processAsUtf8(view, [&](QByteArrayView view) { exportEntry.append(view); });
+            });
+            exportEntry += ' ' + QByteArray::number(revision.hasMajorVersion()
+                                                            ? revision.majorVersion()
+                                                            : m_version.majorVersion());
+            exportEntry += '.' + QByteArray::number(revision.minorVersion());
+
+            exports.append(exportEntry);
+        }
         metaObjects.append(QByteArray::number(revision.toEncodedVersion<quint16>()));
     }
 

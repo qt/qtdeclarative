@@ -31,7 +31,7 @@ struct QmlTypesClassDescription
     const QCborMap *resolvedClass = nullptr;
     QAnyStringView file;
     QAnyStringView className;
-    QAnyStringView elementName;
+    QList<QAnyStringView> elementNames;
     QAnyStringView defaultProp;
     QAnyStringView parentProp;
     QAnyStringView superClass;

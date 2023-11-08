@@ -838,29 +838,6 @@ namespace QQmlPrivate
         return qstrcmp(metaObject->classInfo(index).value(), "true") == 0;
     }
 
-    inline const char *classElementName(const QMetaObject *metaObject)
-    {
-        const char *elementName = classInfo(metaObject, "QML.Element");
-        if (qstrcmp(elementName, "auto") == 0) {
-            const char *strippedClassName = metaObject->className();
-            for (const char *c = strippedClassName; *c != '\0'; c++) {
-                if (*c == ':')
-                    strippedClassName = c + 1;
-            }
-
-            return strippedClassName;
-        }
-        if (qstrcmp(elementName, "anonymous") == 0)
-            return nullptr;
-
-        if (!elementName) {
-            qWarning().nospace() << "Missing QML.Element class info \"" << elementName << "\""
-                                 << " for " << metaObject->className();
-        }
-
-        return elementName;
-    }
-
     template<class T, class = std::void_t<>>
     struct QmlExtended
     {

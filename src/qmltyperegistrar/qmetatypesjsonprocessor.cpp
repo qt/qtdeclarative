@@ -152,7 +152,7 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
         const QString className = obj[S_CLASS_NAME].toString();
         const QString foreignClassName = className + u"Foreign";
         const auto classInfos = obj[S_CLASS_INFOS].toArray();
-        QString qmlElement;
+        QStringList qmlElements;
         QString qmlUncreatable;
         QString qmlAttached;
         bool isSingleton = false;
@@ -163,11 +163,11 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
             const auto value = toStringView(entry, S_VALUE);
             if (name == S_ELEMENT) {
                 if (value == S_AUTO) {
-                    qmlElement = u"QML_NAMED_ELEMENT("_s + className + u")"_s;
+                    qmlElements.append(u"QML_NAMED_ELEMENT("_s + className + u")"_s);
                 } else if (value == S_ANONYMOUS) {
-                    qmlElement = u"QML_ANONYMOUS"_s;
+                    qmlElements.append(u"QML_ANONYMOUS"_s);
                 } else {
-                    qmlElement = u"QML_NAMED_ELEMENT("_s + value.toString() + u")";
+                    qmlElements.append(u"QML_NAMED_ELEMENT("_s + value.toString() + u")");
                 }
             } else if (name == S_CREATABLE && value == S_FALSE) {
                 isExplicitlyUncreatable = true;
@@ -179,12 +179,12 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
                 isSingleton = true;
             }
         }
-        if (qmlElement.isEmpty())
+        if (qmlElements.isEmpty())
             continue; // no relevant entries found
         const QString spaces = u"    "_s;
         registrationHelper += u"\nstruct "_s + foreignClassName + u"{\n    Q_GADGET\n"_s;
         registrationHelper += spaces + u"QML_FOREIGN(" + className + u")\n"_s;
-        registrationHelper += spaces + qmlElement + u"\n"_s;
+        registrationHelper += spaces + qmlElements.join(u"\n"_s) + u"\n"_s;
         if (isSingleton)
             registrationHelper += spaces + u"QML_SINGLETON\n"_s;
         if (isExplicitlyUncreatable) {

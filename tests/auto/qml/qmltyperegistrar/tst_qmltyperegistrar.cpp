@@ -804,4 +804,38 @@ void tst_qmltyperegistrar::foreignNamespaceFromGadget()
     }
 }
 
+void tst_qmltyperegistrar::nameExplosion_data()
+{
+    QTest::addColumn<QByteArray>("qml");
+    QTest::addRow("Name1") << QByteArray("import QmlTypeRegistrarTest\nName1{}");
+    QTest::addRow("Name2") << QByteArray("import QmlTypeRegistrarTest\nName2{}");
+    QTest::addRow("NameExplosion") << QByteArray("import QmlTypeRegistrarTest\nNameExplosion{}");
+}
+
+void tst_qmltyperegistrar::nameExplosion()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "NameExplosion"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: [
+            "QmlTypeRegistrarTest/Name1 1.0",
+            "QmlTypeRegistrarTest/Name2 1.0",
+            "QmlTypeRegistrarTest/NameExplosion 1.0"
+        ]
+        exportMetaObjectRevisions: [256]
+    })"));
+
+    QFETCH(QByteArray, qml);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+
+    c.setData(qml, QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)
