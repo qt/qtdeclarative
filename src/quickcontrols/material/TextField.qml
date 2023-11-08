@@ -69,6 +69,7 @@ T.TextField {
         // When the control's size is set larger than its implicit size, use whatever size is smaller
         // so that the gap isn't too big.
         placeholderTextWidth: Math.min(placeholder.width, placeholder.implicitWidth) * placeholder.scale
+        placeholderTextHAlign: control.effectiveHorizontalAlignment
         controlHasActiveFocus: control.activeFocus
         controlHasText: control.length > 0
         placeholderHasText: placeholder.text.length > 0

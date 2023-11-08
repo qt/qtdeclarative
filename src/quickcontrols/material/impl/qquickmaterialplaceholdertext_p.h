@@ -69,6 +69,9 @@ signals:
     void controlImplicitBackgroundHeightChanged();
     void verticalPaddingChanged();
 
+private slots:
+    void adjustTransformOrigin();
+
 private:
     bool shouldFloat() const;
     bool shouldAnimate() const;
