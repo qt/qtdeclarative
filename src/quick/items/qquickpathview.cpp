@@ -1535,6 +1535,14 @@ QQuickItem *QQuickPathView::itemAtIndex(int index) const
     return nullptr;
 }
 
+/*!
+    \internal
+
+    Returns a point in the path, that has the closest distance from \a point.
+    A value in the range 0-1 will be written to \a nearPercent if given, which
+    represents where on the path the \a point is closest to. \c 0 means the very
+    beginning of the path, and \c 1 means the very end.
+*/
 QPointF QQuickPathViewPrivate::pointNear(const QPointF &point, qreal *nearPercent) const
 {
     const auto pathLength = path->path().length();
