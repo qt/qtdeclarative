@@ -266,6 +266,10 @@ With this pragma you can set the context for the translations in the file.
 pragma Translator: myTranslationContext
 \endqml
 
+\qml
+pragma Translator: "myTranslationContext"
+\endqml
+
 For more information on internationalization with QML, see \l{QML: Use qsTr()}{Use qsTr}.
 
 \section1 Imports

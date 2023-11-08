@@ -717,7 +717,8 @@ UiHeaderItemList: UiHeaderItemList UiImport;
 ./
 
 PragmaId: JsIdentifier;
-PragmaValue: JsIdentifier;
+PragmaValue: JsIdentifier
+             | T_STRING_LITERAL;
 
 Semicolon: T_AUTOMATIC_SEMICOLON;
 Semicolon: T_SEMICOLON;
