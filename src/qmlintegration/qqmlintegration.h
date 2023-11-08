@@ -20,6 +20,10 @@ namespace QQmlPrivate {
     struct QmlUncreatable;
     template<class, class>
     struct QmlAnonymous;
+    template<class, class>
+    struct QmlSequence;
+    template<class, class>
+    struct QmlResolved;
 }
 
 template <typename T> class QList;
@@ -146,5 +150,21 @@ QT_END_NAMESPACE
 
 #define QML_UNAVAILABLE \
     QML_FOREIGN(QQmlTypeNotAvailable)
+
+#define QML_FOREIGN(FOREIGN_TYPE) \
+    Q_CLASSINFO("QML.Foreign", #FOREIGN_TYPE) \
+    using QmlForeignType = FOREIGN_TYPE; \
+    template<class, class> friend struct QML_PRIVATE_NAMESPACE::QmlResolved; \
+    template<typename... Args> \
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *); \
+    inline constexpr void qt_qmlMarker_foreign() {}
+
+#define QML_FOREIGN_NAMESPACE(FOREIGN_NAMESPACE) \
+    Q_CLASSINFO("QML.Foreign", #FOREIGN_NAMESPACE) \
+    Q_CLASSINFO("QML.ForeignIsNamespace", "true") \
+    inline constexpr void qt_qmlMarker_foreign() {}
+
+#define QML_CUSTOMPARSER \
+    Q_CLASSINFO("QML.HasCustomParser", "true")
 
 #endif

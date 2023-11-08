@@ -62,7 +62,7 @@ private:
 
 QT_END_NAMESPACE
 
-// TODO: Remove this once the builtins become a proper module.
+// TODO: We still need this because we cannot properly use QML_ATTACHED with QML_FOREIGN.
 QML_DECLARE_TYPEINFO(QQmlComponent, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQMLCOMPONENTATTACHED_P_H

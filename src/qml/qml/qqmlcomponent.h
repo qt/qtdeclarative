@@ -100,7 +100,10 @@ Q_SIGNALS:
 protected:
     QQmlComponent(QQmlComponentPrivate &dd, QObject* parent);
 
-#if QT_DEPRECATED_SINCE(6, 3)
+#if defined(Q_MOC_RUN)
+    // TODO: moc on macOS cannot decipher the deprecation below
+    Q_INVOKABLE void createObject(QQmlV4Function *);
+#elif QT_DEPRECATED_SINCE(6, 3)
     QT_DEPRECATED_X("Use the overload with proper arguments")
     Q_INVOKABLE void createObject(QQmlV4Function *);
 #endif

@@ -2724,9 +2724,12 @@ endif()
 # NAMESPACE: Specifies a namespace the type registration function shall be
 #   generated into. (OPTIONAL)
 #
+# REGISTRATIONS_TARGET: Specifies a separate target the generated .cpp file
+#   shall be added to. If not given, the main backing target is used. (OPTIONAL)
+#
 function(_qt_internal_qml_type_registration target)
     set(args_option)
-    set(args_single NAMESPACE)
+    set(args_single NAMESPACE REGISTRATIONS_TARGET)
     set(args_multi  MANUAL_MOC_JSON_FILES)
 
     get_target_property(skipped ${target} _qt_is_skipped_test)
@@ -2908,20 +2911,25 @@ function(_qt_internal_qml_type_registration target)
     endif()
     add_dependencies(all_qmltyperegistrations ${target}_qmltyperegistration)
 
-    # Both ${target} (via target_sources) and ${target}_qmltyperegistration (via add_custom_target
-    # DEPENDS option) depend on ${type_registration_cpp_file}.
-    # The new Xcode build system requires a common target to drive the generation of files,
-    # otherwise project configuration fails.
-    # Make ${target} the common target, by adding it as a dependency for
-    # ${target}_qmltyperegistration.
-    # The consequence is that the ${target}_qmllint target will now first build ${target} when using
-    # the Xcode generator (mostly only relevant for projects using Qt for iOS).
-    # See QTBUG-95763.
-    if(CMAKE_GENERATOR STREQUAL "Xcode")
-        add_dependencies(${target}_qmltyperegistration ${target})
+    set(effective_target ${target})
+    if(arg_REGISTRATIONS_TARGET)
+        set(effective_target ${arg_REGISTRATIONS_TARGET})
     endif()
 
-    target_sources(${target} PRIVATE ${type_registration_cpp_file})
+    # Both ${effective_target} (via target_sources) and ${target}_qmltyperegistration (via
+    # add_custom_target DEPENDS option) depend on ${type_registration_cpp_file}.
+    # The new Xcode build system requires a common target to drive the generation of files,
+    # otherwise project configuration fails.
+    # Make ${effective_target} the common target, by adding it as a dependency for
+    # ${target}_qmltyperegistration.
+    # The consequence is that the ${target}_qmllint target will now first build ${effective_target}
+    # when using the Xcode generator (mostly only relevant for projects using Qt for iOS).
+    # See QTBUG-95763.
+    if(CMAKE_GENERATOR STREQUAL "Xcode")
+        add_dependencies(${target}_qmltyperegistration ${effective_target})
+    endif()
+
+    target_sources(${effective_target} PRIVATE ${type_registration_cpp_file})
 
     # FIXME: The generated .cpp file has usually lost the path information for
     #        the headers it #include's. Since these generated .cpp files are in
@@ -2930,7 +2938,7 @@ function(_qt_internal_qml_type_registration target)
     #        paths are needed, but add the source directory to at least handle
     #        the common case of headers in the same directory as the target.
     #        See QTBUG-93443.
-    target_include_directories(${target} PRIVATE ${target_source_dir})
+    target_include_directories(${effective_target} PRIVATE ${target_source_dir})
 
     # Circumvent "too many sections" error when doing a 32 bit debug build on Windows with
     # MinGW.
@@ -2947,7 +2955,7 @@ function(_qt_internal_qml_type_registration target)
     if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
         set_source_files_properties(
             ${type_registration_cpp_file}
-            TARGET_DIRECTORY ${target}
+            TARGET_DIRECTORY ${effective_target}
             PROPERTIES
                 SKIP_AUTOGEN TRUE
                 GENERATED TRUE
@@ -2955,7 +2963,7 @@ function(_qt_internal_qml_type_registration target)
         )
     endif()
 
-    target_include_directories(${target} PRIVATE
+    target_include_directories(${effective_target} PRIVATE
         $<TARGET_PROPERTY:${QT_CMAKE_EXPORT_NAMESPACE}::QmlPrivate,INTERFACE_INCLUDE_DIRECTORIES>
     )
 endfunction()

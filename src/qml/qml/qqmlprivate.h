@@ -978,7 +978,7 @@ namespace QQmlPrivate
                 return std::is_copy_constructible_v<T>;
         }
 
-        static QMetaType self()
+        static constexpr QMetaType self()
         {
             if constexpr (std::is_base_of_v<QObject, T>)
                 return QMetaType::fromType<T*>();
@@ -986,7 +986,7 @@ namespace QQmlPrivate
                 return QMetaType::fromType<T>();
         }
 
-        static QMetaType list()
+        static constexpr QMetaType list()
         {
             if constexpr (std::is_base_of_v<QObject, T>)
                 return QMetaType::fromType<QQmlListProperty<T>>();
@@ -994,13 +994,28 @@ namespace QQmlPrivate
                 return QMetaType::fromType<QList<T>>();
         }
 
-        static QMetaSequence sequence()
+        static constexpr QMetaSequence sequence()
         {
             if constexpr (std::is_base_of_v<QObject, T>)
                 return QMetaSequence();
             else
                 return QMetaSequence::fromContainer<QList<T>>();
         }
+
+        static constexpr int size()
+        {
+            return sizeof(T);
+        }
+    };
+
+    template<>
+    struct QmlMetaType<void>
+    {
+        static constexpr bool hasAcceptableCtors() { return true; }
+        static constexpr QMetaType self() { return QMetaType(); }
+        static constexpr QMetaType list() { return QMetaType(); }
+        static constexpr QMetaSequence sequence() { return QMetaSequence(); }
+        static constexpr int size() { return 0; }
     };
 
     template<typename T, typename E, typename WrapperT = T>
@@ -1041,7 +1056,7 @@ namespace QQmlPrivate
             3,
             QmlMetaType<T>::self(),
             QmlMetaType<T>::list(),
-            int(sizeof(T)),
+            QmlMetaType<T>::size(),
             Constructors<T>::createInto,
             nullptr,
             ValueType<T, E>::create,

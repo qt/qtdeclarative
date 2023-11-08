@@ -88,6 +88,12 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
 
     QQmlCustomParser *customParser = nullptr;
     if (auto typeRef = resolvedType(obj->inheritedTypeNameIndex)) {
+
+        // This binding instantiates a separate object. The separate object can have an ID and its
+        // own group properties even if it's then assigned to a value type, for example a 'var', or
+        // anything with an invokable ctor taking a QObject*.
+        populatingValueTypeGroupProperty = false;
+
         const auto type = typeRef->type();
         if (type.isValid())
             customParser = type.customParser();
