@@ -801,7 +801,7 @@ void QQuickTextNodeEngine::addToSceneGraph(QSGInternalTextNode *parentNode,
                 ? m_selectedTextColor
                 : textDecoration.color;
 
-        parentNode->addRectangleNode(textDecoration.rect, color);
+        parentNode->addDecorationNode(textDecoration.rect, color);
     }
 
     // Finally add the selected text on top of everything
