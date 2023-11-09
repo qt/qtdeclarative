@@ -42,7 +42,7 @@
     a set of properties that can be used to position and render each node
     in the tree correctly.
 
-    An example of a custom delegate is shown below:
+    An example of a custom delegate with an animating indicator is shown below:
 
     \snippet qml/treeview/qml-customdelegate.qml 0
 
