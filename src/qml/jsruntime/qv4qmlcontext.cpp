@@ -476,8 +476,8 @@ ReturnedValue QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(Lookup *
 {
     Scope scope(engine);
     auto *func = engine->currentStackFrame->v4Function;
-    PropertyKey name =engine->identifierTable->asPropertyKey(
-                func->compilationUnit->runtimeStrings[l->nameIndex]);
+    ScopedPropertyKey name(scope, engine->identifierTable->asPropertyKey(
+                            func->compilationUnit->runtimeStrings[l->nameIndex]));
 
     // Special hack for bounded signal expressions, where the parameters of signals are injected
     // into the handler expression through the locals of the call context. So for onClicked: { ... }
@@ -491,7 +491,7 @@ ReturnedValue QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(Lookup *
                     const auto location = func->sourceLocation();
                     qCWarning(lcQmlContext).nospace().noquote()
                             << location.sourceFile << ":" << location.line << ":" << location.column
-                            << " Parameter \"" << name.toQString() << "\" is not declared."
+                            << " Parameter \"" << name->toQString() << "\" is not declared."
                             << " Injection of parameters into signal handlers is deprecated."
                             << " Use JavaScript functions with formal parameters instead.";
 
@@ -527,7 +527,7 @@ ReturnedValue QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(Lookup *
         }
     }
     if (!hasProperty)
-        return engine->throwReferenceError(name.toQString());
+        return engine->throwReferenceError(name->toQString());
     return result->asReturnedValue();
 }
 
