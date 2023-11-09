@@ -1,26 +1,31 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 //![0]
 import QtQuick
+import QtQuick.Controls
 
-Window {
-    width: 600
-    height: 400
+ApplicationWindow {
+    width: 800
+    height: 600
     visible: true
 
     TreeView {
+        id: treeView
         anchors.fill: parent
+        anchors.margins: 10
+        clip: true
+
+        selectionModel: ItemSelectionModel {}
+
         // The model needs to be a QAbstractItemModel
         // model: yourTreeModel
 
         delegate: Item {
-            id: treeDelegate
-
             implicitWidth: padding + label.x + label.implicitWidth + padding
             implicitHeight: label.implicitHeight * 1.5
 
-            readonly property real indent: 20
+            readonly property real indentation: 20
             readonly property real padding: 5
 
             // Assigned to by TreeView:
@@ -29,24 +34,52 @@ Window {
             required property bool expanded
             required property int hasChildren
             required property int depth
+            required property int row
+            required property int column
+            required property bool current
 
-            TapHandler {
-                onTapped: treeView.toggleExpanded(row)
+            // Rotate indicator when expanded by the user
+            // (requires TreeView to have a selectionModel)
+            property Animation indicatorAnimation: NumberAnimation {
+                target: indicator
+                property: "rotation"
+                from: expanded ? 0 : 90
+                to: expanded ? 90 : 0
+                duration: 100
+                easing.type: Easing.OutQuart
+            }
+            TableView.onPooled: indicatorAnimation.complete()
+            TableView.onReused: if (current) indicatorAnimation.start()
+            onExpandedChanged: indicator.rotation = expanded ? 90 : 0
+
+            Rectangle {
+                id: background
+                anchors.fill: parent
+                color: row === treeView.currentRow ? palette.highlight : "black"
+                opacity: (treeView.alternatingRows && row % 2 !== 0) ? 0.3 : 0.1
             }
 
-            Text {
+            Label {
                 id: indicator
-                visible: treeDelegate.isTreeNode && treeDelegate.hasChildren
-                x: padding + (treeDelegate.depth * treeDelegate.indent)
-                anchors.verticalCenter: label.verticalCenter
-                text: "▸"
-                rotation: treeDelegate.expanded ? 90 : 0
+                x: padding + (depth * indentation)
+                anchors.verticalCenter: parent.verticalCenter
+                visible: isTreeNode && hasChildren
+                text: "▶"
+
+                TapHandler {
+                    onSingleTapped: {
+                        let index = treeView.index(row, column)
+                        treeView.selectionModel.setCurrentIndex(index, ItemSelectionModel.NoUpdate)
+                        treeView.toggleExpanded(row)
+                    }
+                }
             }
 
-            Text {
+            Label {
                 id: label
-                x: padding + (treeDelegate.isTreeNode ? (treeDelegate.depth + 1) * treeDelegate.indent : 0)
-                width: treeDelegate.width - treeDelegate.padding - x
+                x: padding + (isTreeNode ? (depth + 1) * indentation : 0)
+                anchors.verticalCenter: parent.verticalCenter
+                width: parent.width - padding - x
                 clip: true
                 text: model.display
             }
