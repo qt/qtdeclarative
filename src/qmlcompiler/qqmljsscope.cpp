@@ -460,6 +460,7 @@ QTypeRevision QQmlJSScope::resolveType(
             if (self->accessSemantics() == AccessSemantics::Sequence) {
                 // All sequence types are implicitly extended by JS Array.
                 self->setExtensionTypeName(u"Array"_s);
+                self->setExtensionIsJavaScript(true);
                 self->m_extensionType = context.arrayType();
             }
         } else {
@@ -1048,8 +1049,11 @@ QQmlJSScope::AnnotatedScope QQmlJSScope::extensionType() const
 {
     if (!m_extensionType)
         return { m_extensionType, NotExtension };
-    return { m_extensionType,
-             (m_flags & HasExtensionNamespace) ? ExtensionNamespace : ExtensionType };
+    if (m_flags & ExtensionIsJavaScript)
+        return { m_extensionType, ExtensionJavaScript };
+    if (m_flags & ExtensionIsNamespace)
+        return { m_extensionType, ExtensionNamespace };
+    return { m_extensionType, ExtensionType };
 }
 
 void QQmlJSScope::addOwnRuntimeFunctionIndex(QQmlJSMetaMethod::AbsoluteFunctionIndex index)

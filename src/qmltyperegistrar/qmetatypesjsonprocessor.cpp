@@ -88,38 +88,43 @@ bool MetaTypesJsonProcessor::processTypes(const QStringList &files)
     return true;
 }
 
+bool MetaTypesJsonProcessor::processForeignTypes(const QString &types)
+{
+    QFile typesFile(types);
+    if (!typesFile.open(QIODevice::ReadOnly)) {
+        fprintf(stderr, "Cannot open foreign types file %s\n", qPrintable(types));
+        return false;
+    }
+
+    QJsonParseError error = {0, QJsonParseError::NoError};
+    QCborValue foreignMetaObjects = fromJson(typesFile.readAll(), &error);
+    if (error.error != QJsonParseError::NoError) {
+        fprintf(stderr, "Error %d while parsing %s: %s\n", error.error, qPrintable(types),
+                qPrintable(error.errorString()));
+        return false;
+    }
+
+    const QCborArray foreignObjectsArray = foreignMetaObjects.toArray();
+    for (const QCborValue &metaObject : foreignObjectsArray) {
+        if (!metaObject.isMap()) {
+            fprintf(stderr, "Error parsing %s: JSON is not an object\n",
+                    qPrintable(types));
+            return false;
+        }
+
+        processForeignTypes(metaObject.toMap());
+    }
+
+    return true;
+}
+
 bool MetaTypesJsonProcessor::processForeignTypes(const QStringList &foreignTypesFiles)
 {
     bool success = true;
 
     for (const QString &types : foreignTypesFiles) {
-        QFile typesFile(types);
-        if (!typesFile.open(QIODevice::ReadOnly)) {
-            fprintf(stderr, "Cannot open foreign types file %s\n", qPrintable(types));
+        if (!processForeignTypes(types))
             success = false;
-            continue;
-        }
-
-        QJsonParseError error = {0, QJsonParseError::NoError};
-        QCborValue foreignMetaObjects = fromJson(typesFile.readAll(), &error);
-        if (error.error != QJsonParseError::NoError) {
-            fprintf(stderr, "Error %d while parsing %s: %s\n", error.error, qPrintable(types),
-                    qPrintable(error.errorString()));
-            success = false;
-            continue;
-        }
-
-        const QCborArray foreignObjectsArray = foreignMetaObjects.toArray();
-        for (const QCborValue &metaObject : foreignObjectsArray) {
-            if (!metaObject.isMap()) {
-                fprintf(stderr, "Error parsing %s: JSON is not an object\n",
-                        qPrintable(types));
-                success = false;
-                continue;
-            }
-
-            processForeignTypes(metaObject.toMap());
-        }
     }
     return success;
 }
@@ -244,21 +249,39 @@ static bool qualifiedClassNameLessThan(const QCborMap &a, const QCborMap &b)
 
 void MetaTypesJsonProcessor::addRelatedTypes()
 {
-    QSet<QAnyStringView> processedRelatedNames;
+    QSet<QAnyStringView> processedRelatedNativeNames;
+    QSet<QAnyStringView> processedRelatedJavaScriptNames;
     QQueue<QCborMap> typeQueue;
     typeQueue.append(m_types);
 
     const auto addRelatedName
             = [&](QAnyStringView relatedName, const QList<QAnyStringView> &namespaces) {
-        if (const QCborMap related = QmlTypesClassDescription::findType(
-                    m_types, m_foreignTypes, relatedName, namespaces); !related.isEmpty()) {
-            processedRelatedNames.insert(toStringView(related, S_QUALIFIED_CLASS_NAME));
+        if (const FoundType related = QmlTypesClassDescription::findType(
+                    m_types, m_foreignTypes, relatedName, namespaces)) {
+
+            if (!related.javaScript.isEmpty()) {
+                processedRelatedJavaScriptNames.insert(
+                        toStringView(related.javaScript, S_QUALIFIED_CLASS_NAME));
+            }
+
+            if (!related.native.isEmpty()) {
+                processedRelatedNativeNames.insert(
+                        toStringView(related.native, S_QUALIFIED_CLASS_NAME));
+            }
         }
+    };
+
+    const auto addRelatedType = [&](const QCborMap &type) {
+        const QAnyStringView qualifiedName = toStringView(type, S_QUALIFIED_CLASS_NAME);
+        if (toStringView(type, S_INPUT_FILE).isEmpty())
+            processedRelatedJavaScriptNames.insert(qualifiedName);
+        else
+            processedRelatedNativeNames.insert(qualifiedName);
     };
 
     // First mark all classes registered from this module as already processed.
     for (const QCborMap &type : std::as_const(m_types)) {
-        processedRelatedNames.insert(toStringView(type, S_QUALIFIED_CLASS_NAME));
+        addRelatedType(type);
         const auto classInfos = type.value(S_CLASS_INFOS).toArray();
         for (const QCborValue &classInfo : classInfos) {
             const QCborMap obj = classInfo.toMap();
@@ -278,8 +301,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
             const QCborMap obj = classInfo.toMap();
             const QAnyStringView name = toStringView(obj, S_NAME);
             if (!seenQmlPrefix && startsWith(name, "QML."_L1)) {
-                processedRelatedNames.insert(
-                        toStringView(foreignType, S_QUALIFIED_CLASS_NAME));
+                addRelatedType(foreignType);
                 seenQmlPrefix = true;
             }
             if (name == S_FOREIGN) {
@@ -289,23 +311,51 @@ void MetaTypesJsonProcessor::addRelatedTypes()
         }
     }
 
-    auto addType = [&](QAnyStringView typeName, const QList<QAnyStringView> &namespaces) {
-        if (const QCborMap other = QmlTypesClassDescription::findType(
-                    m_types, m_foreignTypes, typeName, namespaces); !other.isEmpty()) {
-            QAnyStringView qualifiedName = toStringView(other, S_QUALIFIED_CLASS_NAME);
-            m_referencedTypes.append(qualifiedName);
-            if (!processedRelatedNames.contains(qualifiedName)) {
-                processedRelatedNames.insert(qualifiedName);
-                m_types.insert(
-                        std::lower_bound(
-                                m_types.begin(), m_types.end(), other, qualifiedClassNameLessThan),
-                        other);
-                typeQueue.enqueue(other);
+    const auto addReference = [&](const QCborMap &type, QSet<QAnyStringView> *processedRelatedNames,
+                                  FoundType::Origin origin) {
+        if (type.isEmpty())
+            return;
+        QAnyStringView qualifiedName = toStringView(type, S_QUALIFIED_CLASS_NAME);
+        m_referencedTypes.append(qualifiedName);
+        const qsizetype size = processedRelatedNames->size();
+        processedRelatedNames->insert(qualifiedName);
+
+        if (processedRelatedNames->size() == size)
+            return;
+
+        typeQueue.enqueue(type);
+
+        if (origin == FoundType::OwnTypes)
+            return;
+
+        // Add to own types since we need it for our registrations.
+        const auto insert = std::lower_bound(
+                m_types.constBegin(), m_types.constEnd(), type,
+                qualifiedClassNameLessThan);
+        m_types.insert(insert, type);
+
+        // Remove from the foreign types to avoid the ODR warning.
+        const auto remove = std::equal_range(
+                m_foreignTypes.constBegin(), m_foreignTypes.constEnd(), type,
+                qualifiedClassNameLessThan);
+        for (auto it = remove.first; it != remove.second; ++it) {
+            if (*it == type) {
+                m_foreignTypes.erase(it);
+                break;
             }
+        }
+    };
+
+    const auto addType = [&](QAnyStringView typeName, const QList<QAnyStringView> &namespaces) {
+        if (const FoundType other = QmlTypesClassDescription::findType(
+                    m_types, m_foreignTypes, typeName, namespaces)) {
+            addReference(other.native, &processedRelatedNativeNames, other.nativeOrigin);
+            addReference(other.javaScript, &processedRelatedJavaScriptNames, other.javaScriptOrigin);
             return true;
         }
 
-        processedRelatedNames.insert(typeName);
+        processedRelatedNativeNames.insert(typeName);
+        processedRelatedJavaScriptNames.insert(typeName);
         return false;
     };
 
@@ -324,8 +374,9 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                 addType(toStringView(obj, S_VALUE), namespaces);
             } else if (objNameValue == S_FOREIGN) {
                 const QAnyStringView foreignClassName = toStringView(obj, S_VALUE);
-                if (const QCborMap other = QmlTypesClassDescription::findType(
-                            m_foreignTypes, {}, foreignClassName, namespaces); !other.isEmpty()) {
+                if (const FoundType found = QmlTypesClassDescription::findType(
+                            m_foreignTypes, {}, foreignClassName, namespaces)) {
+                    const QCborMap other = found.select(classDef, "Foreign");
                     const auto otherSupers = other.value(S_SUPER_CLASSES).toArray();
                     const QList<QAnyStringView> otherNamespaces
                             = MetaTypesJsonProcessor::namespaces(other);

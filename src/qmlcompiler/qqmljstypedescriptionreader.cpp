@@ -235,6 +235,8 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                 }
             } else if (name == QLatin1String("extension")) {
                 scope->setExtensionTypeName(readStringBinding(script));
+            } else if (name == QLatin1String("extensionIsJavaScript")) {
+                scope->setExtensionIsJavaScript(readBoolBinding(script));
             } else if (name == QLatin1String("extensionIsNamespace")) {
                 scope->setExtensionIsNamespace(readBoolBinding(script));
             } else if (name == QLatin1String("deferredNames")) {

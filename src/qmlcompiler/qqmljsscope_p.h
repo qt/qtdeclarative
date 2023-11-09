@@ -162,9 +162,10 @@ public:
         InlineComponent = 0x40,
         WrappedInImplicitComponent = 0x80,
         HasBaseTypeError = 0x100,
-        HasExtensionNamespace = 0x200,
+        ExtensionIsNamespace = 0x200,
         IsListProperty = 0x400,
         Structured = 0x800,
+        ExtensionIsJavaScript = 0x1000,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
@@ -331,6 +332,7 @@ public:
     enum ExtensionKind {
         NotExtension,
         ExtensionType,
+        ExtensionJavaScript,
         ExtensionNamespace,
     };
     struct AnnotatedScope
@@ -362,7 +364,8 @@ public:
     bool isArrayScope() const { return m_flags & Array; }
     bool isInlineComponent() const { return m_flags & InlineComponent; }
     bool isWrappedInImplicitComponent() const { return m_flags & WrappedInImplicitComponent; }
-    bool extensionIsNamespace() const { return m_flags & HasExtensionNamespace; }
+    bool extensionIsJavaScript() const { return m_flags & ExtensionIsJavaScript; }
+    bool extensionIsNamespace() const { return m_flags & ExtensionIsNamespace; }
     bool isListProperty() const { return m_flags.testFlag(IsListProperty); }
     void setIsListProperty(bool v) { m_flags.setFlag(IsListProperty, v); }
     bool isSingleton() const { return m_flags & Singleton; }
@@ -380,7 +383,8 @@ public:
     void setIsArrayScope(bool v) { m_flags.setFlag(Array, v); }
     void setIsInlineComponent(bool v) { m_flags.setFlag(InlineComponent, v); }
     void setIsWrappedInImplicitComponent(bool v) { m_flags.setFlag(WrappedInImplicitComponent, v); }
-    void setExtensionIsNamespace(bool v) { m_flags.setFlag(HasExtensionNamespace, v); }
+    void setExtensionIsJavaScript(bool v) { m_flags.setFlag(ExtensionIsJavaScript, v); }
+    void setExtensionIsNamespace(bool v) { m_flags.setFlag(ExtensionIsNamespace, v); }
 
 
     void setAccessSemantics(AccessSemantics semantics) { m_semantics = semantics; }

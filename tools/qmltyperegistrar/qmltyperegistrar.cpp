@@ -111,6 +111,8 @@ int main(int argc, char **argv)
 
     processor.postProcessTypes();
 
+    processor.processForeignTypes(
+            QLatin1String(":/qt-project.org/meta_types/jsroot_metatypes.json"));
     if (parser.isSet(foreignTypesOption))
         processor.processForeignTypes(parser.value(foreignTypesOption).split(QLatin1Char(',')));
 

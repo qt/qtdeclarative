@@ -1038,6 +1038,8 @@ public:
     void setValueTypeName(const QString &name) { m_valueTypeName = name; }
     bool hasCustomParser() const { return m_hasCustomParser; }
     void setHasCustomParser(bool v) { m_hasCustomParser = v; }
+    bool extensionIsJavaScript() const { return m_extensionIsJavaScript; }
+    void setExtensionIsJavaScript(bool v) { m_extensionIsJavaScript = v; }
     bool extensionIsNamespace() const { return m_extensionIsNamespace; }
     void setExtensionIsNamespace(bool v) { m_extensionIsNamespace = v; }
     QQmlJSScope::AccessSemantics accessSemantics() const { return m_accessSemantics; }
@@ -1052,6 +1054,7 @@ private:
     QString m_fileName; // remove?
     QStringList m_interfaceNames;
     bool m_hasCustomParser = false;
+    bool m_extensionIsJavaScript = false;
     bool m_extensionIsNamespace = false;
     QString m_valueTypeName;
     QString m_extensionTypeName;

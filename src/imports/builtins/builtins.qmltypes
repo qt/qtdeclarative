@@ -6,6 +6,7 @@ Module {
     Component {
         name: "void"
         extension: "undefined"
+        extensionIsJavaScript: true
         exports: ["QML/void 1.0"]
         accessSemantics: "none"
     }
@@ -25,6 +26,7 @@ Module {
     Component {
         name: "QVariantList"
         extension: "Array"
+        extensionIsJavaScript: true
         valueType: "QVariant"
         accessSemantics: "sequence"
     }
@@ -43,6 +45,7 @@ Module {
         file: "private/qqmlengine_p.h"
         name: "QObject"
         extension: "Object"
+        extensionIsJavaScript: true
         accessSemantics: "reference"
         exports: ["QML/QtObject 1.0"]
         exportMetaObjectRevisions: [256]
@@ -154,6 +157,7 @@ Module {
         file: "qobject.h"
         name: "QObjectList"
         extension: "Array"
+        extensionIsJavaScript: true
         accessSemantics: "sequence"
         valueType: "QObject"
     }
@@ -161,30 +165,35 @@ Module {
     Component {
         name: "qint8"
         extension: "Number"
+        extensionIsJavaScript: true
         accessSemantics: "value"
     }
 
     Component {
         name: "quint8"
         extension: "Number"
+        extensionIsJavaScript: true
         accessSemantics: "value"
     }
 
     Component {
         name: "short"
         extension: "Number"
+        extensionIsJavaScript: true
         accessSemantics: "value"
     }
 
     Component {
         name: "ushort"
         extension: "Number"
+        extensionIsJavaScript: true
         accessSemantics: "value"
     }
 
     Component {
         name: "int"
         extension: "Number"
+        extensionIsJavaScript: true
         exports: ["QML/int 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"
@@ -193,6 +202,7 @@ Module {
     Component {
         name: "uint"
         extension: "Number"
+        extensionIsJavaScript: true
         accessSemantics: "value"
     }
 
@@ -209,12 +219,14 @@ Module {
     Component {
         name: "float"
         extension: "Number"
+        extensionIsJavaScript: true
         accessSemantics: "value"
     }
 
     Component {
         name: "double"
         extension: "Number"
+        extensionIsJavaScript: true
         exports: ["QML/real 1.0", "QML/double 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"
@@ -228,6 +240,7 @@ Module {
     Component {
         name: "QString"
         extension: "String"
+        extensionIsJavaScript: true
         exports: ["QML/string 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"
@@ -236,6 +249,7 @@ Module {
     Component {
         name: "QStringList"
         extension: "Array"
+        extensionIsJavaScript: true
         valueType: "QString"
         accessSemantics: "sequence"
     }
@@ -243,6 +257,7 @@ Module {
     Component {
         name: "bool"
         extension: "Boolean"
+        extensionIsJavaScript: true
         exports: ["QML/bool 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"
@@ -251,6 +266,7 @@ Module {
     Component {
         name: "QDateTime"
         extension: "Date"
+        extensionIsJavaScript: true
         exports: ["QML/date 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"
@@ -269,6 +285,7 @@ Module {
     Component {
         name: "QUrl"
         extension: "URL"
+        extensionIsJavaScript: true
         exports: ["QML/url 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"
@@ -278,12 +295,14 @@ Module {
         name: "QRegularExpression"
         exports: ["QML/regexp 1.0"]
         extension: "RegExp"
+        extensionIsJavaScript: true
         accessSemantics: "value"
     }
 
     Component {
         name: "QByteArray"
         extension: "ArrayBuffer"
+        extensionIsJavaScript: true
         accessSemantics: "value"
     }
 }

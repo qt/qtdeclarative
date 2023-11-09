@@ -17,6 +17,7 @@ using namespace Constants::MetatypesDotJson;
 using namespace Constants::MetatypesDotJson::Qml;
 using namespace QAnyStringViewUtils;
 
+
 static void collectExtraVersions(const QCborMap &component, QLatin1StringView key,
                                  QList<QTypeRevision> &extraVersions)
 {
@@ -32,22 +33,81 @@ static void collectExtraVersions(const QCborMap &component, QLatin1StringView ke
     }
 }
 
-QCborMap QmlTypesClassDescription::findType(
+struct Compare {
+    bool operator()(const QAnyStringView &typeName, const QCborMap &type) const
+    {
+        return typeName < toStringView(type, S_QUALIFIED_CLASS_NAME);
+    }
+
+    bool operator()(const QCborMap &type, const QAnyStringView &typeName) const
+    {
+        return toStringView(type, S_QUALIFIED_CLASS_NAME) < typeName;
+    }
+};
+
+FoundType::FoundType(const QCborMap &single, FoundType::Origin origin)
+{
+    if (toStringView(single, S_INPUT_FILE).isEmpty()) {
+        javaScript = single;
+        javaScriptOrigin = origin;
+    } else {
+        native = single;
+        nativeOrigin = origin;
+    }
+}
+
+QCborMap FoundType::select(const QCborMap &category, QAnyStringView relation) const
+{
+    if (toStringView(category, S_INPUT_FILE).isEmpty()) {
+        if (javaScript.isEmpty()) {
+            qWarning() << relation << "type of" << toStringView(category, S_QUALIFIED_CLASS_NAME)
+                       << "is not a JavaScript type";
+        }
+        return javaScript;
+    }
+
+    if (native.isEmpty()) {
+        qWarning() << relation << "of" << toStringView(category, S_QUALIFIED_CLASS_NAME)
+                   << "is not a native type";
+    }
+    return native;
+}
+
+FoundType QmlTypesClassDescription::findType(
         const QVector<QCborMap> &types, const QVector<QCborMap> &foreign,
         const QAnyStringView &name, const QList<QAnyStringView> &namespaces)
 {
-    const auto compare = [](const QCborMap &type, const QAnyStringView &typeName) {
-        return toStringView(type, S_QUALIFIED_CLASS_NAME) < typeName;
-    };
-
-    const auto tryFindType = [&](QAnyStringView qualifiedName) -> QCborMap {
+    const auto tryFindType = [&](QAnyStringView qualifiedName) -> FoundType {
+        FoundType result;
         for (const QVector<QCborMap> &t : {types, foreign}) {
-            const auto it = std::lower_bound(t.begin(), t.end(), qualifiedName, compare);
-            if (it != t.end() && toStringView(*it, S_QUALIFIED_CLASS_NAME) == qualifiedName)
-                return *it;
+            const auto [first, last] = std::equal_range(
+                    t.begin(), t.end(), qualifiedName, Compare());
+            for (auto it = first; it != last; ++it) {
+                Q_ASSERT(toStringView(*it, S_QUALIFIED_CLASS_NAME) == qualifiedName);
+
+                if (toStringView(*it, S_INPUT_FILE).isEmpty()) {
+                    if (result.javaScript.isEmpty()) {
+                        result.javaScript = *it;
+                        result.javaScriptOrigin = (&t == &types)
+                                ? FoundType::OwnTypes
+                                : FoundType::ForeignTypes;
+                    } else {
+                        qWarning() << "Multiple JavaScript types called"
+                                   << qualifiedName << "found!";
+                    }
+                } else if (result.native.isEmpty()) {
+                    result.native = *it;
+                    result.nativeOrigin = (&t == &types)
+                            ? FoundType::OwnTypes
+                            : FoundType::ForeignTypes;
+                } else {
+                    qWarning() << "Multiple C++ types called" << qualifiedName << "found!"
+                               << "This violates the One Definition Rule!";
+                }
+            }
         }
 
-        return QCborMap();
+        return result;
     };
 
     if (startsWith(name, QLatin1String("::")))
@@ -60,7 +120,7 @@ QCborMap QmlTypesClassDescription::findType(
             qualified.append(QLatin1String("::"));
         }
         name.visit([&](auto data) { qualified.append(data); });
-        if (const QCborMap found = tryFindType(qualified); !found.isEmpty())
+        if (const FoundType found = tryFindType(qualified))
             return found;
 
         qualified.truncate(0);
@@ -81,8 +141,8 @@ void QmlTypesClassDescription::collectSuperClasses(
             const QAnyStringView superName = toStringView(superObject, S_NAME);
 
             const CollectMode superMode = (mode == TopLevel) ? SuperClass : RelatedType;
-            if (const QCborMap other = findType(types, foreign, superName, namespaces);
-                    !other.isEmpty()) {
+            if (const FoundType found = findType(types, foreign, superName, namespaces)) {
+                const QCborMap other = found.select(classDef, "Base");
                 collect(other, types, foreign, superMode, defaultRevision);
                 if (mode == TopLevel && superClass.isEmpty())
                     superClass = toStringView(other, S_QUALIFIED_CLASS_NAME);
@@ -189,22 +249,30 @@ void QmlTypesClassDescription::collect(
             isStructured = (value == S_STRUCTURED);
             isConstructible = isStructured || (value == S_CONSTRUCT);
         } else if (name == S_ATTACHED) {
-            if (const QCborMap attached = collectRelated(
-                        value, types, foreign, defaultRevision, namespaces); !attached.isEmpty()) {
-                attachedType = toStringView(attached, S_QUALIFIED_CLASS_NAME);
+            if (const FoundType attached = collectRelated(
+                        value, types, foreign, defaultRevision, namespaces)) {
+                attachedType = toStringView(
+                        attached.select(classDef, "Attached"), S_QUALIFIED_CLASS_NAME);
             }
         } else if (name == S_EXTENDED) {
-            if (const QCborMap extension = collectRelated(
-                        value, types, foreign, defaultRevision, namespaces); !extension.isEmpty()) {
-                extensionType = toStringView(extension, S_QUALIFIED_CLASS_NAME);
+            if (const FoundType extension = collectRelated(
+                        value, types, foreign, defaultRevision, namespaces)) {
+                javaScriptExtensionType
+                        = toStringView(extension.javaScript, S_QUALIFIED_CLASS_NAME);
+                nativeExtensionType
+                        = toStringView(extension.native, S_QUALIFIED_CLASS_NAME);
             }
+        } else if (name == S_EXTENSION_IS_JAVA_SCRIPT) {
+            if (value == S_TRUE)
+                extensionIsJavaScript = true;
         } else if (name == S_EXTENSION_IS_NAMESPACE) {
             if (value == S_TRUE)
                 extensionIsNamespace = true;
         } else if (name == S_SEQUENCE) {
-            if (const QCborMap element = collectRelated(
-                        value, types, foreign, defaultRevision, namespaces); !element.isEmpty()) {
-                sequenceValueType = toStringView(element, S_QUALIFIED_CLASS_NAME);
+            if (const FoundType element = collectRelated(
+                        value, types, foreign, defaultRevision, namespaces)) {
+                sequenceValueType = toStringView(
+                        element.select(classDef, "Sequence value"), S_QUALIFIED_CLASS_NAME);
             } else {
                 // TODO: get rid of this once we have JSON data for the builtins.
                 sequenceValueType = value;
@@ -239,9 +307,8 @@ void QmlTypesClassDescription::collect(
     QCborMap resolved = classDef;
     if (!foreignTypeName.isEmpty()) {
         // We can re-use a type with own QML.* macros as target of QML.Foreign
-        if (const QCborMap other = findType(foreign, types, foreignTypeName, namespaces);
-                !other.isEmpty()) {
-            resolved = other;
+        if (const FoundType found = findType(foreign, types, foreignTypeName, namespaces)) {
+            resolved = found.select(classDef, "Foreign");
 
             // Default properties are always local.
             defaultProp = {};
@@ -257,25 +324,31 @@ void QmlTypesClassDescription::collect(
                 } else if (parentProp.isEmpty() && foreignName == S_PARENT_PROPERTY) {
                     parentProp = foreignValue;
                 } else if (foreignName == S_ATTACHED) {
-                    if (const QCborMap attached = collectRelated(
-                                foreignValue, types, foreign, defaultRevision, namespaces);
-                            !attached.isEmpty()) {
-                        attachedType = toStringView(attached, S_QUALIFIED_CLASS_NAME);
+                    if (const FoundType attached = collectRelated(
+                                foreignValue, types, foreign, defaultRevision, namespaces)) {
+                        attachedType = toStringView(
+                                attached.select(resolved, "Attached"), S_QUALIFIED_CLASS_NAME);
                     }
                 } else if (foreignName == S_EXTENDED) {
-                    if (const QCborMap extension = collectRelated(
-                                foreignValue, types, foreign, defaultRevision, namespaces);
-                            !extension.isEmpty()) {
-                        extensionType = toStringView(extension, S_QUALIFIED_CLASS_NAME);
+                    if (const FoundType extension = collectRelated(
+                                foreignValue, types, foreign, defaultRevision, namespaces)) {
+                        nativeExtensionType
+                                = toStringView(extension.native, S_QUALIFIED_CLASS_NAME);
+                        javaScriptExtensionType
+                                = toStringView(extension.javaScript, S_QUALIFIED_CLASS_NAME);
                     }
+                } else if (foreignName == S_EXTENSION_IS_JAVA_SCRIPT) {
+                    if (foreignValue == S_TRUE)
+                        extensionIsJavaScript = true;
                 } else if (foreignName == S_EXTENSION_IS_NAMESPACE) {
                     if (foreignValue == S_TRUE)
                         extensionIsNamespace = true;
                 } else if (foreignName == S_SEQUENCE) {
-                    if (const QCborMap element = collectRelated(
-                                foreignValue, types, foreign, defaultRevision, namespaces);
-                            !element.isEmpty()) {
-                        sequenceValueType = toStringView(element, S_QUALIFIED_CLASS_NAME);
+                    if (const FoundType element = collectRelated(
+                                foreignValue, types, foreign, defaultRevision, namespaces)) {
+                        sequenceValueType = toStringView(
+                                element.select(resolved, "Sequence value"),
+                                S_QUALIFIED_CLASS_NAME);
                     }
                 }
             }
@@ -367,15 +440,18 @@ void QmlTypesClassDescription::collect(
     }
 }
 
-QCborMap QmlTypesClassDescription::collectRelated(
+FoundType QmlTypesClassDescription::collectRelated(
         QAnyStringView related, const QVector<QCborMap> &types, const QVector<QCborMap> &foreign,
         QTypeRevision defaultRevision, const QList<QAnyStringView> &namespaces)
 {
-    if (const QCborMap other = findType(types, foreign, related, namespaces); !other.isEmpty()) {
-        collect(other, types, foreign, RelatedType, defaultRevision);
+    if (FoundType other = findType(types, foreign, related, namespaces)) {
+        if (!other.native.isEmpty())
+            collect(other.native, types, foreign, RelatedType, defaultRevision);
+        if (!other.javaScript.isEmpty())
+            collect(other.javaScript, types, foreign, RelatedType, defaultRevision);
         return other;
     }
-    return QCborMap();
+    return FoundType();
 }
 
 QT_END_NAMESPACE

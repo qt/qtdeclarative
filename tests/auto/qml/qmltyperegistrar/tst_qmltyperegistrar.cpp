@@ -838,4 +838,18 @@ void tst_qmltyperegistrar::nameExplosion()
     QVERIFY(!o.isNull());
 }
 
+void tst_qmltyperegistrar::javaScriptExtension()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "JavaScriptExtension"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        extension: "SymbolPrototype"
+        extensionIsJavaScript: true
+        exports: ["QmlTypeRegistrarTest/JavaScriptExtension 1.0"]
+        exportMetaObjectRevisions: [256]
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

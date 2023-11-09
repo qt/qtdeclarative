@@ -27,3 +27,10 @@ qt_internal_add_module(QmlTypeRegistrarPrivate
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS
 )
+
+qt_internal_add_resource(QmlTypeRegistrarPrivate "jsRootMetaTypes"
+    PREFIX
+        "/qt-project.org/meta_types"
+    FILES
+        jsroot_metatypes.json
+)

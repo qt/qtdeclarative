@@ -56,11 +56,31 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         m_qml.writeStringBinding(S_VALUE_TYPE, name);
     }
 
-    if (!collector.extensionType.isEmpty())
-        m_qml.writeStringBinding(S_EXTENSION, collector.extensionType);
+    if (collector.extensionIsJavaScript) {
+        if (!collector.javaScriptExtensionType.isEmpty()) {
+            m_qml.writeStringBinding(S_EXTENSION, collector.javaScriptExtensionType);
+            m_qml.writeBooleanBinding(S_EXTENSION_IS_JAVA_SCRIPT, true);
+        } else {
+            qWarning() << "JavaScript extension type for" << collector.className
+                       << "does not exist";
+        }
 
-    if (collector.extensionIsNamespace)
+        if (collector.extensionIsNamespace) {
+            qWarning() << "Extension type for" << collector.className
+                       << "cannot be both a JavaScript type and a namespace";
+            if (!collector.nativeExtensionType.isEmpty()) {
+                m_qml.writeStringBinding(S_EXTENSION, collector.nativeExtensionType);
+                m_qml.writeBooleanBinding(S_EXTENSION_IS_NAMESPACE, true);
+            }
+        }
+    } else if (!collector.nativeExtensionType.isEmpty()) {
+        m_qml.writeStringBinding(S_EXTENSION, collector.nativeExtensionType);
+        if (collector.extensionIsNamespace)
+            m_qml.writeBooleanBinding(S_EXTENSION_IS_NAMESPACE, true);
+    } else if (collector.extensionIsNamespace) {
+        qWarning() << "Extension namespace for" << collector.className << "does not exist";
         m_qml.writeBooleanBinding(S_EXTENSION_IS_NAMESPACE, true);
+    }
 
     if (!collector.implementsInterfaces.isEmpty())
         m_qml.writeStringListBinding(S_INTERFACES, collector.implementsInterfaces);

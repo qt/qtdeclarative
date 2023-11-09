@@ -23,6 +23,29 @@
 
 QT_BEGIN_NAMESPACE
 
+struct FoundType
+{
+    enum Origin {
+        Unknown,
+        OwnTypes,
+        ForeignTypes,
+    };
+
+    FoundType() = default;
+    FoundType(const QCborMap &single, Origin origin);
+
+    QCborMap native;
+    QCborMap javaScript;
+
+    Origin nativeOrigin = Unknown;
+    Origin javaScriptOrigin = Unknown;
+
+    operator bool() const { return !native.isEmpty() || !javaScript.isEmpty(); }
+
+    QCborMap select(const QCborMap &category, QAnyStringView relation) const;
+
+};
+
 struct QmlTypesClassDescription
 {
     // All the string views in this class are based on string data in the JSON they are parsed from.
@@ -36,7 +59,8 @@ struct QmlTypesClassDescription
     QAnyStringView parentProp;
     QAnyStringView superClass;
     QAnyStringView attachedType;
-    QAnyStringView extensionType;
+    QAnyStringView javaScriptExtensionType;
+    QAnyStringView nativeExtensionType;
     QAnyStringView sequenceValueType;
     QAnyStringView accessSemantics;
     QList<QTypeRevision> revisions;
@@ -47,6 +71,7 @@ struct QmlTypesClassDescription
     bool isSingleton = false;
     bool hasCustomParser = false;
     bool omitFromQmlTypes = false;
+    bool extensionIsJavaScript = false;
     bool extensionIsNamespace = false;
     QList<QAnyStringView> implementsInterfaces;
     QList<QAnyStringView> deferredNames;
@@ -61,12 +86,12 @@ struct QmlTypesClassDescription
     void collect(const QCborMap &classDef, const QVector<QCborMap> &types,
                  const QVector<QCborMap> &foreign, CollectMode mode,
                  QTypeRevision defaultRevision);
-    QCborMap collectRelated(
+    FoundType collectRelated(
             QAnyStringView related, const QVector<QCborMap> &types,
             const QVector<QCborMap> &foreign, QTypeRevision defaultRevision,
             const QList<QAnyStringView> &namespaces);
 
-    static QCborMap findType(
+    static FoundType findType(
             const QVector<QCborMap> &types, const QVector<QCborMap> &foreign,
             const QAnyStringView &name, const QList<QAnyStringView> &namespaces);
 

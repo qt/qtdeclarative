@@ -35,6 +35,7 @@ static constexpr QLatin1StringView S_ENUM                         { "Enum" };
 static constexpr QLatin1StringView S_EXPORTS                      { "exports" };
 static constexpr QLatin1StringView S_EXPORT_META_OBJECT_REVISIONS { "exportMetaObjectRevisions" };
 static constexpr QLatin1StringView S_EXTENSION                    { "extension" };
+static constexpr QLatin1StringView S_EXTENSION_IS_JAVA_SCRIPT     { "extensionIsJavaScript" };
 static constexpr QLatin1StringView S_EXTENSION_IS_NAMESPACE       { "extensionIsNamespace" };
 static constexpr QLatin1StringView S_FILE                         { "file" };
 static constexpr QLatin1StringView S_HAS_CUSTOM_PARSER            { "hasCustomParser" };
@@ -140,6 +141,7 @@ static constexpr QLatin1StringView S_CREATABLE                    { "QML.Creatab
 static constexpr QLatin1StringView S_CREATION_METHOD              { "QML.CreationMethod" };
 static constexpr QLatin1StringView S_ELEMENT                      { "QML.Element" };
 static constexpr QLatin1StringView S_EXTENDED                     { "QML.Extended" };
+static constexpr QLatin1StringView S_EXTENSION_IS_JAVA_SCRIPT     { "QML.ExtensionIsJavaScript" };
 static constexpr QLatin1StringView S_EXTENSION_IS_NAMESPACE       { "QML.ExtensionIsNamespace" };
 static constexpr QLatin1StringView S_FOREIGN                      { "QML.Foreign" };
 static constexpr QLatin1StringView S_FOREIGN_IS_NAMESPACE         { "QML.ForeignIsNamespace" };

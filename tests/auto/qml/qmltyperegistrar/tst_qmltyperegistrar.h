@@ -711,6 +711,14 @@ class NameExplosion : public QObject
     QML_ANONYMOUS
 };
 
+class JavaScriptExtension : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_CLASSINFO("QML.Extended", "SymbolPrototype")
+    Q_CLASSINFO("QML.ExtensionIsJavaScript", "true")
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -774,6 +782,8 @@ private slots:
 
     void nameExplosion_data();
     void nameExplosion();
+
+    void javaScriptExtension();
 
 private:
     QByteArray qmltypesData;

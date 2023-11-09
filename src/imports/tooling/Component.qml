@@ -22,6 +22,7 @@ QtObject {
     property bool isStructured: false
     property bool isComposite: false
     property bool hasCustomParser: false
+    property bool extensionIsJavaScript: false
     property bool extensionIsNamespace: false
     property string accessSemantics: "reference"
     property string defaultProperty

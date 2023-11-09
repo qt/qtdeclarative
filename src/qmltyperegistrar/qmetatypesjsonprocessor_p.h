@@ -29,6 +29,8 @@ public:
     MetaTypesJsonProcessor(bool privateIncludes) : m_privateIncludes(privateIncludes) {}
 
     bool processTypes(const QStringList &files);
+
+    bool processForeignTypes(const QString &foreignTypesFile);
     bool processForeignTypes(const QStringList &foreignTypesFiles);
 
     void postProcessTypes();

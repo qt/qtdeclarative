@@ -1628,8 +1628,11 @@ static std::pair<QQmlJSMetaProperty, int> getMetaPropertyIndex(const QQmlJSScope
         // index is already added as p.index())
         if (type->isSameType(owner))
             return;
-        if (m == QQmlJSScope::ExtensionNamespace) // extension namespace properties are ignored
+
+        // extension namespace and JavaScript properties are ignored
+        if (m == QQmlJSScope::ExtensionNamespace || m == QQmlJSScope::ExtensionJavaScript)
             return;
+
         index += int(type->ownProperties().size());
     };
     QQmlJSUtils::traverseFollowingMetaObjectHierarchy(scope, owner, increment);

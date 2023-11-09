@@ -19,67 +19,101 @@ using namespace Qt::StringLiterals;
 
 Q_LOGGING_CATEGORY(lcTypeResolver, "qt.qml.compiler.typeresolver", QtInfoMsg);
 
+static inline void assertExtension(const QQmlJSScope::ConstPtr &type, QLatin1String extension)
+{
+    Q_ASSERT(type);
+    Q_ASSERT(type->extensionType().scope->internalName() == extension);
+    Q_ASSERT(type->extensionIsJavaScript());
+}
+
 QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     : m_imports(importer->builtinInternalNames()),
       m_trackedTypes(std::make_unique<QHash<QQmlJSScope::ConstPtr, TrackedType>>())
 {
     const QQmlJSImporter::ImportedTypes &builtinTypes = m_imports;
     m_voidType = builtinTypes.type(u"void"_s).scope;
-    Q_ASSERT(m_voidType);
+    assertExtension(m_voidType, "undefined"_L1);
+
     m_nullType = builtinTypes.type(u"std::nullptr_t"_s).scope;
     Q_ASSERT(m_nullType);
+
     m_realType = builtinTypes.type(u"double"_s).scope;
-    Q_ASSERT(m_realType);
+    assertExtension(m_realType, "Number"_L1);
+
     m_floatType = builtinTypes.type(u"float"_s).scope;
-    Q_ASSERT(m_floatType);
+    assertExtension(m_floatType, "Number"_L1);
+
     m_int8Type = builtinTypes.type(u"qint8"_s).scope;
-    Q_ASSERT(m_int8Type);
+    assertExtension(m_int8Type, "Number"_L1);
+
     m_uint8Type = builtinTypes.type(u"quint8"_s).scope;
-    Q_ASSERT(m_uint8Type);
+    assertExtension(m_uint8Type, "Number"_L1);
+
     m_int16Type = builtinTypes.type(u"short"_s).scope;
-    Q_ASSERT(m_int16Type);
+    assertExtension(m_int16Type, "Number"_L1);
+
     m_uint16Type = builtinTypes.type(u"ushort"_s).scope;
-    Q_ASSERT(m_uint16Type);
+    assertExtension(m_uint16Type, "Number"_L1);
+
     m_int32Type = builtinTypes.type(u"int"_s).scope;
-    Q_ASSERT(m_int32Type);
+    assertExtension(m_int32Type, "Number"_L1);
+
     m_uint32Type = builtinTypes.type(u"uint"_s).scope;
-    Q_ASSERT(m_uint32Type);
+    assertExtension(m_uint32Type, "Number"_L1);
+
     m_int64Type = builtinTypes.type(u"qlonglong"_s).scope;
     Q_ASSERT(m_int64Type);
+
     m_uint64Type = builtinTypes.type(u"qulonglong"_s).scope;
     Q_ASSERT(m_uint64Type);
+
     m_boolType = builtinTypes.type(u"bool"_s).scope;
-    Q_ASSERT(m_boolType);
+    assertExtension(m_boolType, "Boolean"_L1);
+
     m_stringType = builtinTypes.type(u"QString"_s).scope;
-    Q_ASSERT(m_stringType);
+    assertExtension(m_stringType, "String"_L1);
+
     m_stringListType = builtinTypes.type(u"QStringList"_s).scope;
-    Q_ASSERT(m_stringListType);
+    assertExtension(m_stringListType, "Array"_L1);
+
     m_byteArrayType = builtinTypes.type(u"QByteArray"_s).scope;
-    Q_ASSERT(m_byteArrayType);
+    assertExtension(m_byteArrayType, "ArrayBuffer"_L1);
+
     m_urlType = builtinTypes.type(u"QUrl"_s).scope;
-    Q_ASSERT(m_urlType);
+    assertExtension(m_urlType, "URL"_L1);
+
     m_dateTimeType = builtinTypes.type(u"QDateTime"_s).scope;
-    Q_ASSERT(m_dateTimeType);
+    assertExtension(m_dateTimeType, "Date"_L1);
+
     m_dateType = builtinTypes.type(u"QDate"_s).scope;
     Q_ASSERT(m_dateType);
+
     m_timeType = builtinTypes.type(u"QTime"_s).scope;
     Q_ASSERT(m_timeType);
+
     m_variantListType = builtinTypes.type(u"QVariantList"_s).scope;
-    Q_ASSERT(m_variantListType);
+    assertExtension(m_variantListType, "Array"_L1);
+
     m_variantMapType = builtinTypes.type(u"QVariantMap"_s).scope;
     Q_ASSERT(m_variantMapType);
     m_varType = builtinTypes.type(u"QVariant"_s).scope;
     Q_ASSERT(m_varType);
+
     m_jsValueType = builtinTypes.type(u"QJSValue"_s).scope;
     Q_ASSERT(m_jsValueType);
+
     m_qObjectType = builtinTypes.type(u"QObject"_s).scope;
-    Q_ASSERT(m_qObjectType);
+    assertExtension(m_qObjectType, "Object"_L1);
+
     m_qObjectListType = builtinTypes.type(u"QObjectList"_s).scope;
-    Q_ASSERT(m_qObjectListType);
+    assertExtension(m_qObjectListType, "Array"_L1);
+
     m_functionType = builtinTypes.type(u"function"_s).scope;
     Q_ASSERT(m_functionType);
+
     m_numberPrototype = builtinTypes.type(u"NumberPrototype"_s).scope;
     Q_ASSERT(m_numberPrototype);
+
     m_arrayPrototype = builtinTypes.type(u"ArrayPrototype"_s).scope;
     Q_ASSERT(m_arrayPrototype);
 
@@ -87,7 +121,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     Q_ASSERT(m_listPropertyType->internalName() == u"QQmlListProperty<QObject>"_s);
     Q_ASSERT(m_listPropertyType->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence);
     Q_ASSERT(m_listPropertyType->valueTypeName() == u"QObject"_s);
-    Q_ASSERT(m_listPropertyType);
+    assertExtension(m_listPropertyType, "Array"_L1);
 
     QQmlJSScope::Ptr emptyType = QQmlJSScope::create();
     emptyType->setAccessSemantics(QQmlJSScope::AccessSemantics::None);
@@ -946,6 +980,7 @@ static QQmlJSRegisterContent::ContentVariant scopeContentVariant(QQmlJSScope::Ex
     case QQmlJSScope::NotExtension:
         return isMethod ? QQmlJSRegisterContent::ScopeMethod : QQmlJSRegisterContent::ScopeProperty;
     case QQmlJSScope::ExtensionType:
+    case QQmlJSScope::ExtensionJavaScript:
         return isMethod ? QQmlJSRegisterContent::ExtensionScopeMethod
                         : QQmlJSRegisterContent::ExtensionScopeProperty;
     case QQmlJSScope::ExtensionNamespace:
@@ -1071,8 +1106,7 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
     if (name.isEmpty() || !name.at(0).isUpper())
         return false;
 
-    const bool inExtension =
-            (mode == QQmlJSScope::ExtensionType) || (mode == QQmlJSScope::ExtensionNamespace);
+    const bool inExtension = (mode != QQmlJSScope::NotExtension);
 
     const auto enums = scope->ownEnumerations();
     for (const auto &enumeration : enums) {

@@ -213,8 +213,12 @@ void QmlTypeRegistrar::write(QTextStream &output)
     QHash<QString, QList<ExclusiveVersionRange>> qmlElementInfos;
 
     for (const QCborMap &classDef : std::as_const(m_types)) {
-        const QString className = classDef[S_QUALIFIED_CLASS_NAME].toString();
 
+        // Do not generate C++ registrations for JavaScript types.
+        if (toStringView(classDef, S_INPUT_FILE).isEmpty())
+            continue;
+
+        const QString className = classDef[S_QUALIFIED_CLASS_NAME].toString();
         QString targetName = className;
 
         // If either the foreign or the local part is a namespace we need to
@@ -269,16 +273,19 @@ void QmlTypeRegistrar::write(QTextStream &output)
             const QList<QAnyStringView> namespaces
                     = MetaTypesJsonProcessor::namespaces(classDef);
 
-            const QCborMap target = QmlTypesClassDescription::findType(
+            const FoundType target = QmlTypesClassDescription::findType(
                     m_types, m_foreignTypes, targetName, namespaces);
 
-            if (target.value(S_OBJECT).toBool())
+            if (!target.javaScript.isEmpty() && target.native.isEmpty())
+                qWarning() << "JavaScript type" << targetName << "cannot be used as namespace";
+
+            if (target.native.value(S_OBJECT).toBool())
                 targetTypeName += QStringLiteral(" *");
 
             // If there is no foreign type, the local one is a namespace.
             // Otherwise, only do metaTypeForNamespace if the target _metaobject_ is a namespace.
             // Not if we merely consider it to be a namespace for QML purposes.
-            if (className == targetName || target.value(S_NAMESPACE).toBool()) {
+            if (className == targetName || target.native.value(S_NAMESPACE).toBool()) {
                 output << uR"(
     {
         Q_CONSTINIT static auto metaType = QQmlPrivate::metaTypeForNamespace(
@@ -287,6 +294,7 @@ void QmlTypeRegistrar::write(QTextStream &output)
         QMetaType(&metaType).id();
     })"_s.arg(targetName, targetTypeName);
             } else {
+                Q_ASSERT(!targetTypeName.isEmpty());
                 output << u"\n    QMetaType::fromType<%1>().id();"_s.arg(targetTypeName);
             }
 
@@ -413,6 +421,7 @@ void QmlTypeRegistrar::write(QTextStream &output)
                     }
                 }
             } else {
+                Q_ASSERT(!className.isEmpty());
                 output << uR"(
     QMetaType::fromType<%1%2>().id();)"_s.arg(
                     className, classDef.value(S_OBJECT).toBool() ? u" *" : u"");
