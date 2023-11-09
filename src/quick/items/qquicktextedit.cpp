@@ -1555,14 +1555,14 @@ void QQuickTextEdit::setInputMethodHints(Qt::InputMethodHints hints)
 void QQuickTextEdit::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickTextEdit);
-    if (!d->inLayout && ((newGeometry.width() != oldGeometry.width() && widthValid())
-        || (newGeometry.height() != oldGeometry.height() && heightValid()))) {
+    if (!d->inLayout && ((newGeometry.width() != oldGeometry.width())
+                         || (newGeometry.height() != oldGeometry.height()))) {
         updateSize();
         updateWholeDocument();
-        moveCursorDelegate();
+        if (widthValid() || heightValid())
+            moveCursorDelegate();
     }
     QQuickImplicitSizeItem::geometryChange(newGeometry, oldGeometry);
-
 }
 
 /*!

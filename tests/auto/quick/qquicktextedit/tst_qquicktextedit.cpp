@@ -6,6 +6,7 @@
 #include <math.h>
 #include <QFile>
 #include <QtQuick/QQuickTextDocument>
+#include <QtQuickTest/QtQuickTest>
 #include <QTextDocument>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
@@ -227,6 +228,7 @@ private slots:
     void rtlAlignmentInColumnLayout_QTBUG_112858();
 
     void fontManipulationWithCursorSelection();
+    void resizeTextEditPolish();
 
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
@@ -6663,6 +6665,35 @@ void tst_qquicktextedit::fontManipulationWithCursorSelection()
     const auto *doc = textEditObject->textDocument()->textDocument();
     for (QTextBlock block = doc->begin(); block != doc->end(); block = block.next())
         QCOMPARE(block.charFormat().font(), font);
+}
+
+void tst_qquicktextedit::resizeTextEditPolish()
+{
+    QQuickView window(testFileUrl("resizeTextEditPolish.qml"));
+    QVERIFY(window.rootObject() != nullptr);
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    auto *edit = window.rootObject()->findChild<QQuickTextEdit *>();
+    QVERIFY(edit != nullptr);
+    QCOMPARE(edit->lineCount(), 1);
+
+    QSignalSpy spy(edit, SIGNAL(lineCountChanged()));
+
+    // Resize item and check for item polished
+    auto *item = edit->parentItem();
+    item->setWidth(item->width() - (item->width() / 2));
+
+    QVERIFY(QQuickTest::qIsPolishScheduled(edit));
+    QVERIFY(QQuickTest::qWaitForPolish(edit));
+
+    QTRY_COMPARE(spy.size(), 1);
+    QVERIFY(edit->lineCount() > 1);
+    QCOMPARE(edit->state(), QString("multi-line"));
+    auto *editPriv = QQuickTextEditPrivate::get(edit);
+    QCOMPARE(editPriv->xoff, 0);
+    QCOMPARE(editPriv->yoff, 0);
 }
 
 QT_END_NAMESPACE
