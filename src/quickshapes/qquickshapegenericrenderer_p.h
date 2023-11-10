@@ -97,8 +97,8 @@ private:
     struct ShapePathData {
         float strokeWidth;
         QPen pen;
-        Color4ub strokeColor;
-        Color4ub fillColor;
+        Color4ub strokeColor = { uchar(0), uchar(0), uchar(0), uchar(0) };
+        Color4ub fillColor = { uchar(0), uchar(0), uchar(0), uchar(0) };
         Qt::FillRule fillRule;
         QPainterPath path;
         FillGradientType fillGradientActive;
