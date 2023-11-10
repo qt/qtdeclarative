@@ -3409,6 +3409,11 @@ void QQuickWindow::endExternalCommands()
     The (x,y) position is relative to the \l Screen if there is only one,
     or to the virtual desktop (arrangement of multiple screens).
 
+    \note Not all windowing systems support setting or querying top level
+    window positions. On such a system, programmatically moving windows
+    may not have any effect, and artificial values may be returned for
+    the current positions, such as \c QPoint(0, 0).
+
     \qml
     Window { x: 100; y: 100; width: 100; height: 100 }
     \endqml
