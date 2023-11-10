@@ -349,12 +349,12 @@ static bool isAllowedInMajorVersion(const QCborValue &member, QTypeRevision maxM
 
 template<typename Postprocess>
 QCborArray members(
-        const QCborMap *classDef, QLatin1StringView key, QTypeRevision maxMajorVersion,
+        const QCborMap &classDef, QLatin1StringView key, QTypeRevision maxMajorVersion,
         Postprocess &&process)
 {
     QCborArray classDefMembers;
 
-    const QCborArray candidates = classDef->value(key).toArray();
+    const QCborArray candidates = classDef.value(key).toArray();
     for (QCborValue member : candidates) {
         if (isAllowedInMajorVersion(member, maxMajorVersion))
             classDefMembers.append(process(std::move(member)));
@@ -364,13 +364,13 @@ QCborArray members(
 }
 
 static QCborArray members(
-        const QCborMap *classDef, QLatin1StringView key, QTypeRevision maxMajorVersion)
+        const QCborMap &classDef, QLatin1StringView key, QTypeRevision maxMajorVersion)
 {
     return members(classDef, key, maxMajorVersion, [](QCborValue &&member) { return member; });
 }
 
 static QCborArray constructors(
-        const QCborMap *classDef, QLatin1StringView key, QTypeRevision maxMajorVersion)
+        const QCborMap &classDef, QLatin1StringView key, QTypeRevision maxMajorVersion)
 {
     return members(classDef, key, maxMajorVersion, [](QCborValue &&member) {
         QCborMap ctor = member.toMap();
@@ -382,9 +382,9 @@ static QCborArray constructors(
 
 void QmlTypesCreator::writeComponents()
 {
-    for (const QCborMap &component : m_ownTypes) {
+    for (const QCborMap &component : std::as_const(m_ownTypes)) {
         QmlTypesClassDescription collector;
-        collector.collect(&component, m_ownTypes, m_foreignTypes,
+        collector.collect(component, m_ownTypes, m_foreignTypes,
                           QmlTypesClassDescription::TopLevel, m_version);
 
         if (collector.omitFromQmlTypes)
@@ -394,7 +394,7 @@ void QmlTypesCreator::writeComponents()
 
         writeClassProperties(collector);
 
-        if (const QCborMap *classDef = collector.resolvedClass) {
+        if (const QCborMap &classDef = collector.resolvedClass; !classDef.isEmpty()) {
             writeEnums(members(classDef, MetatypesDotJson::S_ENUMS, m_version));
 
             writeProperties(members(classDef, MetatypesDotJson::S_PROPERTIES, m_version));
@@ -402,11 +402,12 @@ void QmlTypesCreator::writeComponents()
             writeMethods(members(classDef, MetatypesDotJson::S_SIGNALS, m_version), S_SIGNAL);
             writeMethods(members(classDef, MetatypesDotJson::S_SLOTS, m_version), S_METHOD);
             writeMethods(members(classDef, MetatypesDotJson::S_METHODS, m_version), S_METHOD);
-            writeMethods(constructors(classDef, MetatypesDotJson::S_CONSTRUCTORS, m_version), S_METHOD);
+            writeMethods(constructors(classDef, MetatypesDotJson::S_CONSTRUCTORS, m_version),
+                         S_METHOD);
         }
         m_qml.writeEndObject();
 
-        if (collector.resolvedClass != &component
+        if (collector.resolvedClass != component
                 && std::binary_search(
                     m_referencedTypes.begin(), m_referencedTypes.end(),
                     toStringView(component, MetatypesDotJson::S_QUALIFIED_CLASS_NAME))) {
@@ -418,17 +419,18 @@ void QmlTypesCreator::writeComponents()
             m_qml.writeStartObject(S_COMPONENT);
 
             QmlTypesClassDescription collector;
-            collector.collectLocalAnonymous(&component, m_ownTypes, m_foreignTypes, m_version);
+            collector.collectLocalAnonymous(component, m_ownTypes, m_foreignTypes, m_version);
 
             writeClassProperties(collector);
-            writeEnums(members(&component, MetatypesDotJson::S_ENUMS, m_version));
+            writeEnums(members(component, MetatypesDotJson::S_ENUMS, m_version));
 
-            writeProperties(members(&component, MetatypesDotJson::S_PROPERTIES, m_version));
+            writeProperties(members(component, MetatypesDotJson::S_PROPERTIES, m_version));
 
-            writeMethods(members(&component, MetatypesDotJson::S_SIGNALS, m_version), S_SIGNAL);
-            writeMethods(members(&component, MetatypesDotJson::S_SLOTS, m_version), S_METHOD);
-            writeMethods(members(&component, MetatypesDotJson::S_METHODS, m_version), S_METHOD);
-            writeMethods(constructors(&component, MetatypesDotJson::S_CONSTRUCTORS, m_version), S_METHOD);
+            writeMethods(members(component, MetatypesDotJson::S_SIGNALS, m_version), S_SIGNAL);
+            writeMethods(members(component, MetatypesDotJson::S_SLOTS, m_version), S_METHOD);
+            writeMethods(members(component, MetatypesDotJson::S_METHODS, m_version), S_METHOD);
+            writeMethods(constructors(component, MetatypesDotJson::S_CONSTRUCTORS, m_version),
+                         S_METHOD);
 
             m_qml.writeEndObject();
         }

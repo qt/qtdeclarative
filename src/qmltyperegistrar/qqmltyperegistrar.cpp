@@ -212,7 +212,7 @@ void QmlTypeRegistrar::write(QTextStream &output)
     QVector<QAnyStringView> typesRegisteredAnonymously;
     QHash<QString, QList<ExclusiveVersionRange>> qmlElementInfos;
 
-    for (const QCborMap &classDef : m_types) {
+    for (const QCborMap &classDef : std::as_const(m_types)) {
         const QString className = classDef[S_QUALIFIED_CLASS_NAME].toString();
 
         QString targetName = className;
@@ -269,16 +269,16 @@ void QmlTypeRegistrar::write(QTextStream &output)
             const QList<QAnyStringView> namespaces
                     = MetaTypesJsonProcessor::namespaces(classDef);
 
-            const QCborMap *target = QmlTypesClassDescription::findType(
+            const QCborMap target = QmlTypesClassDescription::findType(
                     m_types, m_foreignTypes, targetName, namespaces);
 
-            if (target && target->value(S_OBJECT).toBool())
+            if (target.value(S_OBJECT).toBool())
                 targetTypeName += QStringLiteral(" *");
 
             // If there is no foreign type, the local one is a namespace.
             // Otherwise, only do metaTypeForNamespace if the target _metaobject_ is a namespace.
             // Not if we merely consider it to be a namespace for QML purposes.
-            if (className == targetName || (target && target->value(S_NAMESPACE).toBool())) {
+            if (className == targetName || target.value(S_NAMESPACE).toBool()) {
                 output << uR"(
     {
         Q_CONSTINIT static auto metaType = QQmlPrivate::metaTypeForNamespace(

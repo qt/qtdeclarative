@@ -28,7 +28,7 @@ struct QmlTypesClassDescription
     // All the string views in this class are based on string data in the JSON they are parsed from.
     // You must keep the relevant QCborValues alive while the QmlTypesClassDescription exists.
 
-    const QCborMap *resolvedClass = nullptr;
+    QCborMap resolvedClass;
     QAnyStringView file;
     QAnyStringView className;
     QList<QAnyStringView> elementNames;
@@ -58,27 +58,27 @@ struct QmlTypesClassDescription
         RelatedType
     };
 
-    void collect(const QCborMap *classDef, const QVector<QCborMap> &types,
+    void collect(const QCborMap &classDef, const QVector<QCborMap> &types,
                  const QVector<QCborMap> &foreign, CollectMode mode,
                  QTypeRevision defaultRevision);
-    const QCborMap *collectRelated(
+    QCborMap collectRelated(
             QAnyStringView related, const QVector<QCborMap> &types,
             const QVector<QCborMap> &foreign, QTypeRevision defaultRevision,
             const QList<QAnyStringView> &namespaces);
 
-    static const QCborMap *findType(
+    static QCborMap findType(
             const QVector<QCborMap> &types, const QVector<QCborMap> &foreign,
             const QAnyStringView &name, const QList<QAnyStringView> &namespaces);
 
-    void collectLocalAnonymous(const QCborMap *classDef,const QVector<QCborMap> &types,
+    void collectLocalAnonymous(const QCborMap &classDef,const QVector<QCborMap> &types,
                       const QVector<QCborMap> &foreign, QTypeRevision defaultRevision);
 
 
 private:
     void collectSuperClasses(
-            const QCborMap *classDef, const QVector<QCborMap> &types,
+            const QCborMap &classDef, const QVector<QCborMap> &types,
             const QVector<QCborMap> &foreign, CollectMode mode, QTypeRevision defaultRevision);
-    void collectInterfaces(const QCborMap *classDef);
+    void collectInterfaces(const QCborMap &classDef);
 };
 
 QT_END_NAMESPACE
