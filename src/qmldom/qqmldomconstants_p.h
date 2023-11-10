@@ -364,6 +364,7 @@ enum FileLocationRegion : int {
     LeftBracketRegion,
     LeftParenthesisRegion,
     MainRegion,
+    OperatorTokenRegion,
     OnTargetRegion,
     OnTokenRegion,
     PragmaKeywordRegion,

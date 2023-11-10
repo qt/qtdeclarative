@@ -2072,10 +2072,11 @@ Generate autocompletions for JS expressions (expressions as in 'expressions and 
 QList<CompletionItem> QQmlLSUtils::scriptIdentifierCompletion(const DomItem &context,
                                                               const CompletionContextStrings &ctx)
 {
+    Q_UNUSED(ctx); // could be needed later
     QList<CompletionItem> result;
     QDuplicateTracker<QString> usedNames;
     QQmlJSScope::ConstPtr nearestScope;
-    const bool hasQualifier = !ctx.base().isEmpty();
+    const bool hasQualifier = isFieldMemberAccess(context);
 
     if (!hasQualifier) {
         result << idsCompletions(context.component())
@@ -2090,7 +2091,9 @@ QList<CompletionItem> QQmlLSUtils::scriptIdentifierCompletion(const DomItem &con
 
         result << enumerationCompletion(nearestScope, &usedNames);
     } else {
-        auto expressionType = QQmlLSUtils::resolveExpressionType(context, ResolveOwnerType);
+        const DomItem owner = context.directParent().field(Fields::left);
+        auto expressionType = QQmlLSUtils::resolveExpressionType(
+                owner, ResolveActualTypeForFieldMemberExpression);
         if (!expressionType || !expressionType->semanticScope)
             return result;
         nearestScope = expressionType->semanticScope;
@@ -2784,6 +2787,25 @@ static QList<CompletionItem> insideForEachStatement(const DomItem &currentItem,
     return {};
 }
 
+static QList<CompletionItem> insideBinaryExpressionCompletion(const DomItem &currentItem,
+                                                              const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation operatorLocation = regions[OperatorTokenRegion];
+
+    if (beforeLocation(ctx, operatorLocation)) {
+        const DomItem lhs = currentItem.field(Fields::left);
+        return QQmlLSUtils::scriptIdentifierCompletion(lhs, ctx);
+    }
+    if (afterLocation(operatorLocation, ctx)) {
+        const DomItem rhs = currentItem.field(Fields::right);
+        return QQmlLSUtils::scriptIdentifierCompletion(rhs, ctx);
+    }
+
+    return {};
+}
+
 QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
                                                const CompletionContextStrings &ctx)
 {
@@ -2842,7 +2864,7 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
         case DomType::PropertyDefinition:
             return insidePropertyDefinitionCompletion(currentParent, ctx);
         case DomType::ScriptBinaryExpression:
-            return scriptIdentifierCompletion(currentParent, ctx);
+            return insideBinaryExpressionCompletion(currentParent, ctx);
         case DomType::ScriptLiteral:
             return insideScriptLiteralCompletion(currentParent, ctx);
         case DomType::ScriptCallExpression:

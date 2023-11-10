@@ -2518,6 +2518,25 @@ void tst_qmlls_utils::completions_data()
                }
             << QStringList{ propertyCompletion }
             << None;
+
+    QTest::newRow("partialBinaryExpressionRHS") << file << 138 << 17
+                                 << ExpectedCompletions{
+                                        { u"log"_s, CompletionItemKind::Method },
+                                        { u"error"_s, CompletionItemKind::Method },
+                                    }
+                                 << QStringList{ propertyCompletion, u"helloVarVariable"_s,
+                                                 u"test1"_s,         u"width"_s,
+                                                 u"height"_s,        u"layer"_s,
+                                                 u"left"_s }
+                                 << None;
+    QTest::newRow("partialBinaryExpressionLHS") << file << 138 << 12
+                                 << ExpectedCompletions{
+                                        { u"qualifiedScriptIdentifiers"_s, CompletionItemKind::Method },
+                                        { u"width"_s, CompletionItemKind::Property },
+                                        { u"layer"_s, CompletionItemKind::Property },
+                                    }
+                                 << QStringList{ u"log"_s, u"error"_s}
+                                 << None;
 }
 
 void tst_qmlls_utils::completions()
@@ -2603,6 +2622,11 @@ void tst_qmlls_utils::completions()
             if (insertOptions & InsertColon) {
                 // note: a property should end with a colon with a space for 'insertText', for
                 // better coding experience.
+
+                QEXPECT_FAIL("attachedProperties",
+                             "Completion for attached properties requires first QTBUG-117380 to be "
+                             "solved",
+                             Abort);
                 QCOMPARE(c.insertText, c.label + u": "_s);
             } else {
 
@@ -2619,9 +2643,6 @@ void tst_qmlls_utils::completions()
                 "there is nothing to complete, or there is nothing behind 'QQ.' and the parser "
                 "fails because of the unexpected '.'",
                 Abort);
-        QEXPECT_FAIL("attachedProperties",
-                     "Completion for attached properties requires first QTBUG-117380 to be solved",
-                     Abort);
         QEXPECT_FAIL("inMethodBody", "Completion for JS Statement/keywords not implemented yet",
                      Abort);
         QEXPECT_FAIL("letStatementAfterEqual", "Completion not implemented yet!", Abort);

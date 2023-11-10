@@ -134,4 +134,7 @@ Zzz {
         for(variable in hello) ++hello;
         for(element of hello) ++hello;
     }
+    function qualifiedScriptIdentifiers() {
+        console.l()
+    }
 }

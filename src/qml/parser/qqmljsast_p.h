@@ -354,6 +354,7 @@ public:
     UiQualifiedId *next;
     QStringView name;
     SourceLocation identifierToken;
+    SourceLocation dotToken;
 };
 
 class QML_PARSER_EXPORT Type: public Node

@@ -880,17 +880,15 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
         }
     } else {
         // Create FieldExpression if the bindable element has dots
-        const auto reparentExp = [](const auto &left, const auto &right){
+        const auto reparentExp = [](const auto &left, const SourceLocation &dotToken,
+                                    const auto &right) {
             SourceLocation s1, s2;
-            left.visitConst([&s1](auto &&el){
-                s1 = el->mainRegionLocation();
-            });
+            left.visitConst([&s1](auto &&el) { s1 = el->mainRegionLocation(); });
 
-            right.visitConst([&s2](auto &&el){
-                s2 = el->mainRegionLocation();
-            });
+            right.visitConst([&s2](auto &&el) { s2 = el->mainRegionLocation(); });
 
             auto result = std::make_shared<ScriptElements::BinaryExpression>(s1, s2);
+            result->addLocation(OperatorTokenRegion, dotToken);
             result->setOp(ScriptElements::BinaryExpression::FieldMemberAccess);
             result->setLeft(left);
             result->setRight(right);
@@ -919,11 +917,10 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
                 bindable = ScriptElementVariant::fromElement(id);
                 continue;
             }
-            bindable = reparentExp(bindable, ScriptElementVariant::fromElement(id));
+            bindable = reparentExp(bindable, exp->dotToken, ScriptElementVariant::fromElement(id));
         }
-        bindingPtr->setBindingIdentifiers(finalizeScriptExpression(bindable,
-                            pathFromOwner.field(Fields::bindingIdentifiers),
-                        rootMap));
+        bindingPtr->setBindingIdentifiers(finalizeScriptExpression(
+                bindable, pathFromOwner.field(Fields::bindingIdentifiers), rootMap));
 
         Q_ASSERT_X(bindingPtr, className, "binding could not be retrieved");
     }
@@ -1319,6 +1316,7 @@ void QQmlDomAstCreator::endVisit(AST::BinaryExpression *exp)
         return;
 
     auto current = makeScriptElement<ScriptElements::BinaryExpression>(exp);
+    current->addLocation(OperatorTokenRegion, exp->operatorToken);
     current->setRight(currentScriptNodeEl().takeVariant());
     removeCurrentScriptNode({});
     current->setLeft(currentScriptNodeEl().takeVariant());
@@ -1701,6 +1699,7 @@ void QQmlDomAstCreator::endVisit(AST::FieldMemberExpression *expression)
 
     auto current = makeScriptElement<ScriptElements::BinaryExpression>(expression);
     current->setOp(ScriptElements::BinaryExpression::FieldMemberAccess);
+    current->addLocation(FileLocationRegion::OperatorTokenRegion, expression->dotToken);
 
     if (expression->base) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
@@ -1733,6 +1732,7 @@ void QQmlDomAstCreator::endVisit(AST::ArrayMemberExpression *expression)
 
     auto current = makeScriptElement<ScriptElements::BinaryExpression>(expression);
     current->setOp(ScriptElements::BinaryExpression::ArrayMemberAccess);
+    current->addLocation(FileLocationRegion::OperatorTokenRegion, expression->lbracketToken);
 
     if (expression->expression) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());

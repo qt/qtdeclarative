@@ -465,11 +465,13 @@ AST::UiQualifiedId *Parser::reparseAsQualifiedId(AST::ExpressionNode *expr)
 {
     QVarLengthArray<QStringView, 4> nameIds;
     QVarLengthArray<SourceLocation, 4> locations;
+    QVarLengthArray<SourceLocation, 4> dotLocations;
 
     AST::ExpressionNode *it = expr;
     while (AST::FieldMemberExpression *m = AST::cast<AST::FieldMemberExpression *>(it)) {
         nameIds.append(m->name);
         locations.append(m->identifierToken);
+        dotLocations.append(m->dotToken);
         it = m->base;
     }
 
@@ -481,6 +483,7 @@ AST::UiQualifiedId *Parser::reparseAsQualifiedId(AST::ExpressionNode *expr)
         for (int i = nameIds.size() - 1; i != -1; --i) {
             currentId = new (pool) AST::UiQualifiedId(currentId, nameIds[i]);
             currentId->identifierToken = locations[i];
+            currentId->dotToken = dotLocations[i];
         }
 
         return currentId->finish();
