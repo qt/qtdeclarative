@@ -2435,7 +2435,7 @@ void tst_qmlls_utils::completions_data()
             << QStringList{ propertyCompletion, letStatementCompletion }
             << None;
 
-    QTest::newRow("whileConsequence")
+    QTest::newRow("doWhileConsequence")
             << file << 131 << 12
             << ExpectedCompletions{ { u"hello"_s, CompletionItemKind::Variable },
                                     { letStatementCompletion, CompletionItemKind::Snippet } }
