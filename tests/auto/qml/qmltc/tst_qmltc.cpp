@@ -79,6 +79,7 @@
 #include "aliases.h"
 #include "inlinecomponentsfromdifferentfiles.h"
 #include "helloexportedworld.h"
+#include "helloexportedworldnofilename.h"
 
 #include "testprivateproperty.h"
 #include "singletons.h"
@@ -3232,6 +3233,13 @@ void tst_qmltc::checkExportsAreCompiling()
 {
     QQmlEngine e;
     QmltcExportedTests::HelloExportedWorld w(&e);
+    QCOMPARE(w.myString(), u"Hello! I should be exported by qmltc"_s);
+}
+
+void tst_qmltc::checkExportsNoFileName()
+{
+    QQmlEngine e;
+    QmltcExportedNoFileNameTest::HelloExportedWorldNoFileName w(&e);
     QCOMPARE(w.myString(), u"Hello! I should be exported by qmltc"_s);
 }
 
