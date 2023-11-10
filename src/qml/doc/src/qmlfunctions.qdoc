@@ -715,7 +715,7 @@
 
 
 /*!
-  \fn int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
+  \fn template <typename T> int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
   \relates QQmlEngine
 
   This template function registers the C++ type in the QML system with
@@ -768,7 +768,7 @@
 */
 
 /*!
-  \fn int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
+  \fn template<typename T, int metaObjectRevision> int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
   \relates QQmlEngine
 
   This template function registers the specified revision of a C++ type in the QML system with
@@ -787,7 +787,7 @@
 */
 
 /*!
-  \fn int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message)
+  \fn template <typename T> int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message)
   \relates QQmlEngine
 
   This template function registers the C++ type in the QML system with
@@ -806,7 +806,7 @@
 */
 
 /*!
-  \fn int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
+  \fn template <typename T, typename E> int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
   \relates QQmlEngine
 
   This template function registers the C++ type and its extension object in the
@@ -821,7 +821,7 @@
 
 
 /*!
-  \fn int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
+  \fn template <typename T, typename E> int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
   \relates QQmlEngine
 
   This template function registers the C++ type and its extension
@@ -936,7 +936,7 @@
 */
 
 /*!
-  \fn int qmlRegisterAnonymousType(const char *uri, int versionMajor)
+  \fn template <typename T> int qmlRegisterAnonymousType(const char *uri, int versionMajor)
   \relates QQmlEngine
 
   This template function registers the C++ type in the QML system as an anonymous type. The
@@ -1145,7 +1145,7 @@
 */
 
 /*!
-   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, std::function<QObject*(QQmlEngine *, QJSEngine *)> callback)
+   \fn template <typename T> int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, std::function<QObject*(QQmlEngine *, QJSEngine *)> callback)
    \relates QQmlEngine
 
    This function may be used to register a singleton type provider \a callback in a particular \a uri

@@ -290,8 +290,8 @@ and \l{QMetaProperty::revision}. This means all the types in your type hierarchy
 to follow the same versioning scheme. This includes any types provided by Qt itself
 that you inherit from.
 
-With \l{qmlRegisterType} and related functions you can register any mapping between
-metaobject revisions and type versions. You then need to use the one-argument forms
+With \l{QQmlEngine::}{qmlRegisterType} and related functions you can register any mapping
+between metaobject revisions and type versions. You then need to use the one-argument forms
 of \l{Q_REVISION} and the \c{REVISION} attribute of \l{Q_PROPERTY}. However, this
 can become rather complex and confusing and is not recommended.
 
