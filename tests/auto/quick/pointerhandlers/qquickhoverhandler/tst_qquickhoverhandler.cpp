@@ -48,6 +48,7 @@ private slots:
     void deviceCursor();
     void addHandlerFromCpp();
     void ensureHoverHandlerWorksWhenItemHasHoverDisabled();
+    void changeCursor();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -669,6 +670,34 @@ void tst_HoverHandler::ensureHoverHandlerWorksWhenItemHasHoverDisabled()
     QTest::mouseMove(window.data(), outside);
     QVERIFY(!handler->isHovered());
     QCOMPARE(spy.size(), 2);
+}
+
+void tst_HoverHandler::changeCursor()
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "changingCursor.qml");
+    QQuickView * window = windowPtr.data();
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickItem *item = window->findChild<QQuickItem *>("brownRect");
+    QVERIFY(item);
+    QQuickHoverHandler *hh = item->findChild<QQuickHoverHandler *>();
+    QVERIFY(hh);
+
+    QPoint itemCenter(item->mapToScene(QPointF(item->width() / 2, item->height() / 2)).toPoint());
+    QSignalSpy hoveredSpy(hh, SIGNAL(hoveredChanged()));
+
+    QTest::mouseMove(window, itemCenter);
+
+    QTRY_COMPARE(hoveredSpy.size(), 1);
+
+#if QT_CONFIG(cursor)
+    QTRY_COMPARE(window->cursor().shape(), Qt::CrossCursor);
+    QTRY_COMPARE(window->cursor().shape(), Qt::OpenHandCursor);
+    QTRY_COMPARE(window->cursor().shape(), Qt::CrossCursor);
+    QTRY_COMPARE(window->cursor().shape(), Qt::OpenHandCursor);
+#endif
 }
 
 QTEST_MAIN(tst_HoverHandler)

@@ -1723,7 +1723,13 @@ void QQuickDeliveryAgentPrivate::flushFrameSynchronousEvents(QQuickWindow *win)
     if (frameSynchronousHoverEnabled && !win->mouseGrabberItem() &&
             !lastMousePosition.isNull() && QQuickWindowPrivate::get(win)->dirtyItemList) {
         qCDebug(lcHoverTrace) << q << "delivering frame-sync hover to root @" << lastMousePosition;
-        deliverHoverEvent(lastMousePosition, lastMousePosition, QGuiApplication::keyboardModifiers(), 0);
+        if (deliverHoverEvent(lastMousePosition, lastMousePosition, QGuiApplication::keyboardModifiers(), 0)) {
+#if QT_CONFIG(cursor)
+            QQuickWindowPrivate::get(rootItem->window())->updateCursor(
+                    sceneTransform ? sceneTransform->map(lastMousePosition) : lastMousePosition, rootItem);
+#endif
+        }
+
         qCDebug(lcHoverTrace) << q << "frame-sync hover delivery done";
     }
 #else

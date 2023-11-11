@@ -12,6 +12,7 @@
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgplaintexture_p.h>
 #include <QtQuick/private/qquickpointerhandler_p.h>
+#include <QtQuick/private/qquickpointerhandler_p_p.h>
 #include <private/qsgrenderloop_p.h>
 #include <private/qsgrhisupport_p.h>
 #include <private/qquickrendercontrol_p.h>
@@ -1677,11 +1678,14 @@ void QQuickWindowPrivate::updateCursor(const QPointF &scenePos, QQuickItem *root
     if (!rootItem)
         rootItem = contentItem;
     auto cursorItemAndHandler = findCursorItemAndHandler(rootItem, scenePos);
-    if (cursorItem != cursorItemAndHandler.first || cursorHandler != cursorItemAndHandler.second) {
+    if (cursorItem != cursorItemAndHandler.first || cursorHandler != cursorItemAndHandler.second ||
+        (cursorItemAndHandler.second && QQuickPointerHandlerPrivate::get(cursorItemAndHandler.second)->cursorDirty)) {
         QWindow *renderWindow = QQuickRenderControl::renderWindowFor(q);
         QWindow *window = renderWindow ? renderWindow : q;
         cursorItem = cursorItemAndHandler.first;
         cursorHandler = cursorItemAndHandler.second;
+        if (cursorHandler)
+            QQuickPointerHandlerPrivate::get(cursorItemAndHandler.second)->cursorDirty = false;
         if (cursorItem) {
             const auto cursor = QQuickItemPrivate::get(cursorItem)->effectiveCursor(cursorHandler);
             qCDebug(lcHoverTrace) << "setting cursor" << cursor << "from" << cursorHandler << "or" << cursorItem;
