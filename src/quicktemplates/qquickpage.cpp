@@ -116,8 +116,10 @@ void QQuickPagePrivate::relayout()
         contentItem->setHeight(q->availableHeight() - hh - fh - hsp - fsp);
     }
 
-    if (header)
+    if (header) {
+        header->setY(0);
         header->setWidth(q->width());
+    }
 
     if (footer) {
         footer->setY(q->height() - footer->height());
