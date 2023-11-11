@@ -258,10 +258,15 @@ void QQuickLabsPlatformSystemTrayIcon::setMenu(QQuickLabsPlatformMenu *menu)
 
     if (m_menu)
         m_menu->setSystemTrayIcon(nullptr);
-    if (menu) {
+
+    if (menu)
         menu->setSystemTrayIcon(this);
-        if (m_handle && m_complete && menu->create())
+
+    if (m_handle && m_complete) {
+        if (menu && menu->create())
             m_handle->updateMenu(menu->handle());
+        else
+            m_handle->updateMenu(nullptr);
     }
 
     m_menu = menu;
