@@ -57,6 +57,7 @@ public:
     bool hadKeepMouseGrab : 1;    // some handlers override target()->setKeepMouseGrab(); this remembers previous state
     bool hadKeepTouchGrab : 1;    // some handlers override target()->setKeepTouchGrab(); this remembers previous state
     bool cursorSet : 1;
+    bool cursorDirty : 1;
 };
 
 QT_END_NAMESPACE

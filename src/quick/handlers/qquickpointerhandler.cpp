@@ -195,11 +195,13 @@ void QQuickPointerHandler::setCursorShape(Qt::CursorShape shape)
         return;
     d->cursorShape = shape;
     d->cursorSet = true;
+    d->cursorDirty = true;
     if (auto *parent = parentItem()) {
         QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(parent);
         itemPriv->hasCursorHandler = true;
         itemPriv->setHasCursorInChild(true);
     }
+
     emit cursorShapeChanged();
 }
 
@@ -875,6 +877,7 @@ QQuickPointerHandlerPrivate::QQuickPointerHandlerPrivate()
   , hadKeepMouseGrab(false)
   , hadKeepTouchGrab(false)
   , cursorSet(false)
+  , cursorDirty(false)
 {
 }
 

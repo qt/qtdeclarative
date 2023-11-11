@@ -23,6 +23,11 @@
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
+static bool isPlatformWayland()
+{
+    return !QGuiApplication::platformName().compare(QLatin1String("wayland"), Qt::CaseInsensitive);
+}
+
 class CircleMask : public QObject
 {
     Q_OBJECT
@@ -121,6 +126,7 @@ private slots:
     void changeAxis();
 #if QT_CONFIG(cursor)
     void cursorShape();
+    void cursorUpdating();
 #endif
     void moveAndReleaseWithoutPress();
     void nestedStopAtBounds();
@@ -1900,6 +1906,38 @@ void tst_QQuickMouseArea::cursorShape()
     QCOMPARE(mouseArea->cursorShape(), Qt::WaitCursor);
     QCOMPARE(mouseArea->cursor().shape(), Qt::WaitCursor);
     QCOMPARE(spy.size(), 2);
+}
+
+void tst_QQuickMouseArea::cursorUpdating()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("cursorUpdating.qml")));
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root);
+    QQuickFlickable *flickable = root->findChild<QQuickFlickable*>();
+    QVERIFY(flickable);
+    QQuickItemPrivate *rootPrivate = QQuickItemPrivate::get(root);
+    QVERIFY(rootPrivate->subtreeCursorEnabled);
+
+    QTest::mouseMove(&window, QPoint(40, 40));
+    QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
+
+    QTest::mouseMove(&window, QPoint(240, 40));
+    QCOMPARE(window.cursor().shape(), Qt::UpArrowCursor);
+
+    if (isPlatformWayland())
+        QSKIP("Wayland: QCursor::setPos() doesn't work.");
+
+    // QTBUG-53987: with the cursor physically hovering, use wheel to
+    // position a different item that requests a different cursor
+    const QPoint p(240, 40);
+    const QPoint pg = window.mapToGlobal(p);
+    QCursor::setPos(pg);
+    QWheelEvent wheelEvent(p, pg, QPoint(60, -400), QPoint(0, -600),
+                           Qt::NoButton, Qt::ControlModifier, Qt::NoScrollPhase, false);
+    QGuiApplication::sendEvent(&window, &wheelEvent);
+    QTRY_VERIFY(flickable->contentY() > 300);
+    QCOMPARE(window.cursor().shape(), Qt::IBeamCursor);
 }
 #endif
 
