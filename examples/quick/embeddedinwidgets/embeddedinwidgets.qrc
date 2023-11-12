@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/qt/qml/embeddedinwidgets">
+    <qresource prefix="/embeddedinwidgets">
         <file>main.qml</file>
         <file>reflect.frag.qsb</file>
     </qresource>
