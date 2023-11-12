@@ -9,7 +9,7 @@ Rectangle {
 
     property Item exampleItem
     width: ListView.view.width
-    height: button.implicitHeight + 22
+    height: col.implicitHeight + 22
 
     signal clicked()
 
@@ -22,8 +22,16 @@ Rectangle {
         GradientStop {
             position: 1
             Behavior on color {ColorAnimation { duration: 100 }}
-            color: tapHandler.pressed ? "#e0e0e0" : button.containsMouse ? "#f5f5f5" : "#eee"
+            color: tapHandler.pressed ? "#e0e0e0" : hoverHandler.hovered ? "#f5f5f5" : "#eee"
         }
+    }
+
+    TapHandler {
+        id: tapHandler
+        onTapped: container.clicked()
+    }
+    HoverHandler {
+        id: hoverHandler
     }
 
     Image {
@@ -36,53 +44,28 @@ Rectangle {
         anchors.rightMargin: 16
     }
 
-    Item {
-        id: button
-        anchors.top: parent.top
+    Column {
+        id: col
+        spacing: 2
         anchors.left: parent.left
-        anchors.bottom: parent.bottom
         anchors.right:image.left
-        implicitHeight: col.height
-        height: implicitHeight
-        width: buttonLabel.width + 20
-        property alias containsMouse: hoverHandler.hovered
-
-        TapHandler {
-            id: tapHandler
-            onTapped: container.clicked()
-        }
-        HoverHandler {
-            id: hoverHandler
-        }
-
-        Column {
-            spacing: 2
-            id: col
-            anchors.verticalCenter: parent.verticalCenter
+        anchors.margins: 10
+        anchors.verticalCenter: parent.verticalCenter
+        Text {
             width: parent.width
-            Text {
-                id: buttonLabel
-                anchors.left: parent.left
-                anchors.leftMargin: 10
-                anchors.right: parent.right
-                anchors.rightMargin: 10
-                text: container.name
-                color: "black"
-                font.pixelSize: 22
-                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                styleColor: "white"
-                style: Text.Raised
-
-            }
-            Text {
-                id: buttonLabel2
-                anchors.left: parent.left
-                anchors.leftMargin: 10
-                text: container.description
-                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                color: "#666"
-                font.pixelSize: 12
-            }
+            text: container.name
+            color: "black"
+            font.pixelSize: 22
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            styleColor: "white"
+            style: Text.Raised
+        }
+        Text {
+            width: parent.width
+            text: container.description
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            color: "#666"
+            font.pixelSize: 12
         }
     }
 

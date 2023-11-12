@@ -174,9 +174,14 @@ Rectangle {
             id: back
             source: "images/back.png"
             anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: 2
+            anchors.verticalCenterOffset: 1
             anchors.left: parent.left
-            anchors.leftMargin: 16
+            anchors.leftMargin: 6
+            width: 38
+            height: 31
+            fillMode: Image.Pad
+            horizontalAlignment: Image.AlignHCenter
+            verticalAlignment: Image.AlignVCenter
 
             TapHandler {
                 id: tapHandler
@@ -188,10 +193,7 @@ Rectangle {
                 }
             }
             Rectangle {
-                anchors.centerIn: back
-                width: 38
-                height: 31
-                anchors.verticalCenterOffset: -1
+                anchors.fill: parent
                 opacity: tapHandler.pressed ? 1 : 0
                 Behavior on opacity { NumberAnimation{ duration: 100 }}
                 gradient: Gradient {
