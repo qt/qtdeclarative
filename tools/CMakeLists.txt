@@ -12,7 +12,7 @@ if(QT_FEATURE_commandlineparser)
 endif()
 add_subdirectory(qmlimportscanner)
 add_subdirectory(qmlformat)
-if (TARGET Qt::LanguageServerPrivate AND QT_FEATURE_commandlineparser
+if (TARGET Qt::LanguageServerPrivate AND QT_FEATURE_commandlineparser AND QT_FEATURE_filesystemwatcher
         AND NOT WASM AND NOT IOS AND NOT ANDROID AND NOT QNX AND NOT INTEGRITY AND NOT WEBOS AND NOT VXWORKS)
     add_subdirectory(qmlls)
 endif()

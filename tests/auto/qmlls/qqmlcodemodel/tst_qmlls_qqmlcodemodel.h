@@ -27,6 +27,9 @@ public:
 private slots:
     void buildPathsForFileUrl_data();
     void buildPathsForFileUrl();
+    void fileNamesToWatch();
+    void findFilePathsFromFileNames_data();
+    void findFilePathsFromFileNames();
 };
 
 #endif // TST_QMLLS_QQMLCODEMODEL_H

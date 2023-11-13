@@ -5,6 +5,9 @@
 
 #include <QtQmlToolingSettings/private/qqmltoolingsettings_p.h>
 #include <QtQmlLS/private/qqmlcodemodel_p.h>
+#include <QtQmlLS/private/qqmllsutils_p.h>
+#include <QtQmlDom/private/qqmldomitem_p.h>
+#include <QtQmlDom/private/qqmldomtop_p.h>
 
 tst_qmlls_qqmlcodemodel::tst_qmlls_qqmlcodemodel() : QQmlDataTest(QT_QQMLCODEMODEL_DATADIR) { }
 
@@ -60,6 +63,72 @@ void tst_qmlls_qqmlcodemodel::buildPathsForFileUrl()
     QStringList result = model.buildPathsForFileUrl(nonExistentUrl);
     QCOMPARE(result.size(), 1);
     QCOMPARE(result.front(), expectedPath);
+}
+
+void tst_qmlls_qqmlcodemodel::findFilePathsFromFileNames_data()
+{
+    QTest::addColumn<QStringList>("fileNames");
+    QTest::addColumn<QStringList>("expectedPaths");
+
+    const QString folder = testFile("sourceFolder");
+    const QString subfolder = testFile("sourceFolder/subSourceFolder/subsubSourceFolder");
+
+    QTest::addRow("notExistingFile") << QStringList{ u"notExistingFile.h"_s } << QStringList{};
+
+    QTest::addRow("myqmlelement") << QStringList{ u"myqmlelement.h"_s }
+                                  << QStringList{ folder + u"/myqmlelement.h"_s,
+                                                  subfolder + u"/myqmlelement.h"_s };
+
+    QTest::addRow("myqmlelement2") << QStringList{ u"myqmlelement2.hpp"_s }
+                                   << QStringList{ folder + u"/myqmlelement2.hpp"_s };
+
+    QTest::addRow("anotherqmlelement") << QStringList{ u"anotherqmlelement.cpp"_s }
+                                       << QStringList{ subfolder + u"/anotherqmlelement.cpp"_s };
+}
+
+void tst_qmlls_qqmlcodemodel::findFilePathsFromFileNames()
+{
+    QFETCH(QStringList, fileNames);
+    QFETCH(QStringList, expectedPaths);
+
+    QmlLsp::QQmlCodeModel model;
+    model.setRootUrls({ testFileUrl(u"sourceFolder"_s).toEncoded() });
+
+    auto result = model.findFilePathsFromFileNames(fileNames);
+    // the order only is required for the QCOMPARE
+    std::sort(result.begin(), result.end());
+    std::sort(expectedPaths.begin(), expectedPaths.end());
+
+    QCOMPARE(result, expectedPaths);
+}
+
+using namespace QQmlJS::Dom;
+
+void tst_qmlls_qqmlcodemodel::fileNamesToWatch()
+{
+    DomItem env = DomEnvironment::create(QStringList(),
+                                         DomEnvironment::Option::SingleThreaded
+                                                 | DomEnvironment::Option::NoDependencies);
+
+    DomItem qmlFile;
+    DomCreationOptions options;
+    options.setFlag(DomCreationOption::WithSemanticAnalysis);
+
+    env.loadFile(
+            FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(),
+                                       testFile("MyCppModule/Main.qml"), options),
+            [&qmlFile](Path, const DomItem &, const DomItem &newIt) {
+                qmlFile = newIt.fileObject();
+            },
+            LoadOption::DefaultLoad);
+    env.loadPendingDependencies();
+
+    const auto fileNames = QmlLsp::QQmlCodeModel::fileNamesToWatch(qmlFile);
+
+    // fileNames also contains some builtins it seems, like:
+    // QSet("qqmlcomponentattached_p.h", "qqmlcomponent.h", "qobject.h", "qqmllist.h",
+    // "helloworld.h", "qqmlengine_p.h")
+    QVERIFY(fileNames.contains(u"helloworld.h"_s));
 }
 
 QTEST_MAIN(tst_qmlls_qqmlcodemodel)
