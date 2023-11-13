@@ -1788,6 +1788,7 @@ void tst_QQuickMenu::scrollable_data()
     QTest::addRow("Window") << QString::fromLatin1("windowScrollable.qml");
     QTest::addRow("ApplicationWindow") << QString::fromLatin1("applicationWindowScrollable.qml");
     QTest::addRow("WithPadding") << QString::fromLatin1("scrollableWithPadding.qml");
+    QTest::addRow("FixedHeight") << QString::fromLatin1("scrollableWithFixedHeight.qml");
 }
 
 void tst_QQuickMenu::scrollable()

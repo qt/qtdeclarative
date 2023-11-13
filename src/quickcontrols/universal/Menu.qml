@@ -23,8 +23,8 @@ T.Menu {
         implicitHeight: contentHeight
         model: control.contentModel
         interactive: Window.window
-                        ? contentHeight + control.topPadding + control.bottomPadding > Window.window.height
-                        : false
+                     ? contentHeight + control.topPadding + control.bottomPadding > control.height
+                     : false
         clip: true
         currentIndex: control.currentIndex
 
