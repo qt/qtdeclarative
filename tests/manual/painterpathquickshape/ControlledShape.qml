@@ -66,8 +66,6 @@ Item {
             Scale {
                 xScale: controlPanel.scale
                 yScale: controlPanel.scale
-                origin.x: shape.implicitWidth / 2
-                origin.y: shape.implicitHeight / 2
             }
         ]
         Shape {
