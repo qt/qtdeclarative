@@ -826,7 +826,8 @@ QRectF QQuickShape::boundingRect() const
     QRectF brect;
     for (QQuickShapePath *path : d->sp) {
         qreal pw = path->strokeColor().alpha() ? path->strokeWidth() : 0;
-        brect = brect.united(path->path().boundingRect().adjusted(-pw/2, -pw/2, pw/2, pw/2));
+        qreal d = path->capStyle() == QQuickShapePath::SquareCap ? pw * M_SQRT1_2 : pw / 2;
+        brect = brect.united(path->path().boundingRect().adjusted(-d, -d, d, d));
     }
 
     return brect;
