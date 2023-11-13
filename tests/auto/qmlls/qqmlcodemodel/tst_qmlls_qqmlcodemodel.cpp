@@ -6,6 +6,8 @@
 #include <QtQmlToolingSettings/private/qqmltoolingsettings_p.h>
 #include <QtQmlLS/private/qqmlcodemodel_p.h>
 
+tst_qmlls_qqmlcodemodel::tst_qmlls_qqmlcodemodel() : QQmlDataTest(QT_QQMLCODEMODEL_DATADIR) { }
+
 void tst_qmlls_qqmlcodemodel::buildPathsForFileUrl_data()
 {
     QTest::addColumn<QString>("pathFromIniFile");

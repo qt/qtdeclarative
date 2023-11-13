@@ -18,9 +18,11 @@
 
 using namespace Qt::StringLiterals;
 
-class tst_qmlls_qqmlcodemodel : public QObject
+class tst_qmlls_qqmlcodemodel : public QQmlDataTest
 {
     Q_OBJECT
+public:
+    tst_qmlls_qqmlcodemodel();
 
 private slots:
     void buildPathsForFileUrl_data();
