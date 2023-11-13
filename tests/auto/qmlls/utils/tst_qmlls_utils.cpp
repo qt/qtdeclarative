@@ -652,403 +652,400 @@ void tst_qmlls_utils::findBaseObject()
                      .toLatin1());
 }
 
+/*! \internal
+    \brief Wrapper for findUsages data.
+*/
+struct UsageData
+{
+    QString testFileName;
+    QList<QQmlLSUtilsLocation> expectedUsages;
+};
+
 void tst_qmlls_utils::findUsages_data()
 {
-    QTest::addColumn<QString>("filePath");
     QTest::addColumn<int>("line");
     QTest::addColumn<int>("character");
-    QTest::addColumn<QList<QQmlLSUtilsLocation>>("expectedUsages");
+    QTest::addColumn<UsageData>("data");
 
-    const QString testFileName = testFile(u"JSUsages.qml"_s);
-    QString testFileContent;
-    {
+    const auto readFileContent = [](const QString &testFileName) {
         QFile file(testFileName);
-        QVERIFY(file.open(QIODeviceBase::ReadOnly));
-        testFileContent = QString::fromUtf8(file.readAll());
-    }
-
-    QList<QQmlLSUtilsLocation> sumUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 13, strlen("sum")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 13, strlen("sum")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 19, strlen("sum")),
+        if (file.open(QIODeviceBase::ReadOnly))
+            return QString::fromUtf8(file.readAll());
+        return QString{};
     };
 
-    QList<QQmlLSUtilsLocation> iUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 17, strlen("i")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 24, strlen("i")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 32, strlen("i")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 36, strlen("i")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 25, strlen("i")),
+    const auto makeUsages = [](const QString &fileName, QList<QQmlLSUtilsLocation> &locations) {
+        UsageData data;
+        std::sort(locations.begin(), locations.end());
+        data.expectedUsages = locations;
+        data.testFileName = fileName;
+        return data;
     };
 
-    QList<QQmlLSUtilsLocation> helloPropertyUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 17, 18, strlen("helloProperty")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 24, 13, strlen("helloProperty")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 24, 29, strlen("helloProperty")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 65, 60, strlen("helloProperty")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 151, 9,
-                                  strlen("helloPropertyChanged")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 153, 5,
-                                  strlen("onHelloPropertyChanged")),
-    };
-
-    QList<QQmlLSUtilsLocation> subItemHelloPropertyUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 32, 20, strlen("helloProperty")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 34, 25, strlen("helloProperty")),
-    };
-
-    QList<QQmlLSUtilsLocation> ICHelloPropertyUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 37, 22, strlen("helloProperty")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 39, 20, strlen("helloProperty")),
-    };
-
-    QList<QQmlLSUtilsLocation> p2Usages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 18, 18, strlen("p2")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 24, 55, strlen("p2")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 32, 36, strlen("p2")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 39, 36, strlen("p2")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 66, 31, strlen("p2")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 67, 37, strlen("p2")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 68, 43, strlen("p2")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 69, 49, strlen("p2")),
-    };
-
-    QList<QQmlLSUtilsLocation> nestedUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 62, 13, strlen("myNested")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 65, 17, strlen("myNested")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 66, 17, strlen("myNested")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 67, 17, strlen("myNested")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 68, 17, strlen("myNested")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 69, 17, strlen("myNested")),
-    };
-
-    QList<QQmlLSUtilsLocation> rootIdUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 81, 9, strlen("rootId")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 84, 20, strlen("rootId")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 108, 13, strlen("rootId")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 114, 13, strlen("rootId")),
-    };
-
-    QList<QQmlLSUtilsLocation> nestedComponent3Usages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 47, 35, strlen("inner")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 65, 32, strlen("inner")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 68, 32, strlen("inner")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 69, 32, strlen("inner")),
-    };
-
-    QList<QQmlLSUtilsLocation> nestedComponent3P2Usages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 68, 38, strlen("p2")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 53, 22, strlen("p2")),
-    };
-
-    QList<QQmlLSUtilsLocation> recursiveUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 72, 14, strlen("recursive")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 74, 24, strlen("recursive")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 74, 34, strlen("recursive")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 74, 51, strlen("recursive")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 74, 68, strlen("recursive")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 76, 20, strlen("recursive")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 79, 34, strlen("recursive")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 84, 27, strlen("recursive")),
-    };
-
-    QList<QQmlLSUtilsLocation> helloSignalUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 88, 12, strlen("helloSignal")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 91, 9, strlen("helloSignal")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 93, 13, strlen("helloSignal")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 97, 17, strlen("helloSignal")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 101, 9, strlen("helloSignal")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 119, 5, strlen("onHelloSignal")),
-    };
-
-    QList<QQmlLSUtilsLocation> widthChangedUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 103, 13, strlen("widthChanged")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 107, 17, strlen("widthChanged")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 108, 20, strlen("widthChanged")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 114, 20, strlen("widthChanged")),
-    };
-
-    QList<QQmlLSUtilsLocation> helloPropertyBindingUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 121, 18,
-                                  strlen("helloPropertyBinding")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 122, 5,
-                                  strlen("helloPropertyBinding")),
-    };
-
-    QList<QQmlLSUtilsLocation> myHelloHandlerUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 118, 14, strlen("myHelloHandler")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 119, 20, strlen("myHelloHandler")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 125, 29, strlen("myHelloHandler")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 126, 24, strlen("myHelloHandler")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 134, 17, strlen("myHelloHandler")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 135, 24, strlen("myHelloHandler")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 136, 21, strlen("myHelloHandler")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 144, 19, strlen("myHelloHandler")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 153, 29, strlen("myHelloHandler")),
-    };
-
-    QList<QQmlLSUtilsLocation> checkHandlersUsages {
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 124, 18, strlen("checkHandlers")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 125, 5,
-                                  strlen("onCheckHandlersChanged")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 128, 9,
-                                  strlen("checkHandlersChanged")),
-    };
-
-    QList<QQmlLSUtilsLocation> checkCppHandlersUsages {
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 126, 5,
-                                  strlen("onChildrenChanged")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 129, 9, strlen("childrenChanged")),
-    };
-    QList<QQmlLSUtilsLocation> checkHandlersUsages2 {
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 131, 18, strlen("_")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 134, 5, strlen("on_Changed")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 138, 9, strlen("_Changed")),
-    };
-    QList<QQmlLSUtilsLocation> checkHandlersUsages3 {
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 132, 18, strlen("______42")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 135, 5,
-                                  strlen("on______42Changed")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 139, 9, strlen("______42Changed")),
-    };
-    QList<QQmlLSUtilsLocation> checkHandlersUsages4 {
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 133, 18, strlen("_123a")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 136, 5,  strlen("on_123AChanged")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 140, 9, strlen("_123aChanged")),
-    };
-
-    QList<QQmlLSUtilsLocation> mouseArea1ClickedUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 159, 9, strlen("onClicked")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 167, 23, strlen("clicked")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 183, 15, strlen("clicked")),
-    };
-
-    QList<QQmlLSUtilsLocation> mouseArea2ClickedUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 166, 22, strlen("onClicked")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 184, 15, strlen("clicked")),
-    };
-
-    QList<QQmlLSUtilsLocation> mouseArea3ClickedUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 168, 23, strlen("clicked")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 178, 9, strlen("onClicked")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 185, 15, strlen("clicked")),
-    };
-
-    QList<QQmlLSUtilsLocation> aParamUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 30, strlen("a")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 16, strlen("a")),
-    };
-    QList<QQmlLSUtilsLocation> bParamUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 38, strlen("b")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 20, strlen("b")),
-    };
-    QList<QQmlLSUtilsLocation> cParamUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 49, strlen("c")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 24, strlen("c")),
-    };
-    QList<QQmlLSUtilsLocation> xParamUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 50, strlen("x")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 28, strlen("x")),
-    };
-    QList<QQmlLSUtilsLocation> yParamUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 53, strlen("y")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 32, strlen("y")),
-    };
-    QList<QQmlLSUtilsLocation> zParamUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 188, 59, strlen("z")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 189, 36, strlen("z")),
-    };
-
-    QList<QQmlLSUtilsLocation> deconstructedAUsages{
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 193, 14, strlen("a")),
-        QQmlLSUtilsLocation::from(testFileName, testFileContent, 194, 17, strlen("a")),
-    };
-
-
-    QString groupPropertyContent;
     {
-        QFile file(testFile("groupPropertyUsage.qml"));
-        QVERIFY(file.open(QIODeviceBase::ReadOnly));
-        groupPropertyContent = QString::fromUtf8(file.readAll());
+        QList<QQmlLSUtilsLocation> expectedUsages;
+        const auto testFileName = testFile("findUsages/jsIdentifier.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        {
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 13, strlen("sum"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 13, strlen("sum"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 19, strlen("sum"));
+            const auto sumUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findSumFromDeclaration") <<  8 << 13 << sumUsages;
+            QTest::addRow("findSumFromUsage") << 10 << 20 << sumUsages;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 17, strlen("i"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 24, strlen("i"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 32, strlen("i"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 36, strlen("i"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 25,  strlen("i"));
+            const auto iUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findIFromDeclaration") << 9 << 17 << iUsages;
+            QTest::addRow("findIFromUsage") << 9 << 24 << iUsages;
+            QTest::addRow("findIFromUsage2") <<  10 << 25 << iUsages;
+        }
     }
-
-    QList<QQmlLSUtilsLocation> groupPropertyUsages1{
-        QQmlLSUtilsLocation::from(testFile("groupPropertyUsage.qml"), groupPropertyContent, 14, 17, strlen("family")),
-        QQmlLSUtilsLocation::from(testFile("groupPropertyUsage.qml"), groupPropertyContent, 23, 35, strlen("family")),
-    };
-
-    QList<QQmlLSUtilsLocation> groupPropertyUsages2{
-        QQmlLSUtilsLocation::from(testFile("groupPropertyUsage.qml"), groupPropertyContent, 23, 5, strlen("font")),
-        QQmlLSUtilsLocation::from(testFile("groupPropertyUsage.qml"), groupPropertyContent, 24, 5, strlen("font")),
-    };
-
-    QString attachedPropertyContent;
     {
-        QFile file(testFile("attachedPropertyUsage.qml"));
-        QVERIFY(file.open(QIODeviceBase::ReadOnly));
-        attachedPropertyContent = QString::fromUtf8(file.readAll());
+        const auto testFileName = testFile("findUsages/property.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 18, strlen("helloProperty"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 13, 13, strlen("helloProperty"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 13, 29, strlen("helloProperty"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 20, 9, strlen("helloProperty"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 21, 9, strlen("helloPropertyChanged"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 23, 5, strlen("onHelloPropertyChanged"));
+            const auto helloPropertyUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findPropertyFromDeclaration") << 8 << 18 << helloPropertyUsages;
+            QTest::addRow("findPropertyFromUsage") << 13 << 13 << helloPropertyUsages;
+            QTest::addRow("findPropertyFromUsage2") << 13 << 29 << helloPropertyUsages;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 36, 20, strlen("helloProperty"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 38, 25, strlen("helloProperty"));
+            const auto subItemHelloPropertyUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findPropertyFromDeclarationInSubItem") << 38 << 25 << subItemHelloPropertyUsages;
+            QTest::addRow("findPropertyFromUsageInSubItem") << 36 << 20 << subItemHelloPropertyUsages;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 27, 22, strlen("helloProperty"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 29, 20, strlen("helloProperty"));
+            const auto ICHelloPropertyUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findPropertyFromDeclarationInIC") << 27 << 22 << ICHelloPropertyUsages;
+            QTest::addRow("findPropertyFromUsageInIC") << 29 << 20 << ICHelloPropertyUsages;
+        }
     }
+    {
+        QList<QQmlLSUtilsLocation> expectedUsages;
+        const auto testFileName = testFile("findUsages/propertyInNested.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 7, 18, strlen("p2"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 33, 31, strlen("p2"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 34, 37, strlen("p2"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 35, 43, strlen("p2"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 36, 49, strlen("p2"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 42, 26, strlen("p2"));
+            const auto p2Usages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findPropertyFromDeclaration2") <<  7 << 18 << p2Usages;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 29, 13, strlen("myNested"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 32, 17, strlen("myNested"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 33, 17, strlen("myNested"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 34, 17, strlen("myNested"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 35, 17, strlen("myNested"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 36, 17, strlen("myNested"));
+            const auto nestedUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findIdFromUsage") <<  36 << 20 << nestedUsages;
+            QTest::addRow("findIdFromDefinition") << 29 << 17 << nestedUsages;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 14, 35, strlen("inner"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 32, 32, strlen("inner"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 35, 32, strlen("inner"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 36, 32, strlen("inner"));
+            const auto nestedComponent3Usages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findPropertyFromUsageInFieldMemberExpression")
+                    << 36 << 34 << nestedComponent3Usages;
 
-    QList<QQmlLSUtilsLocation> attachedPropertyUsages{
-        QQmlLSUtilsLocation::from(testFile("attachedPropertyUsage.qml"), attachedPropertyContent, 9, 5, strlen("Keys")),
-        QQmlLSUtilsLocation::from(testFile("attachedPropertyUsage.qml"), attachedPropertyContent, 12, 25, strlen("Keys")),
-    };
-
-    std::sort(sumUsages.begin(), sumUsages.end());
-    std::sort(iUsages.begin(), iUsages.end());
-    std::sort(subItemHelloPropertyUsages.begin(), subItemHelloPropertyUsages.end());
-    std::sort(ICHelloPropertyUsages.begin(), ICHelloPropertyUsages.end());
-    std::sort(p2Usages.begin(), p2Usages.end());
-    std::sort(nestedUsages.begin(), nestedUsages.end());
-    std::sort(nestedComponent3Usages.begin(), nestedComponent3Usages.end());
-    std::sort(nestedComponent3P2Usages.begin(), nestedComponent3P2Usages.end());
-    std::sort(recursiveUsages.begin(), recursiveUsages.end());
-    std::sort(helloSignalUsages.begin(), helloSignalUsages.end());
-    std::sort(widthChangedUsages.begin(), widthChangedUsages.end());
-    std::sort(helloPropertyBindingUsages.begin(), helloPropertyBindingUsages.end());
-    std::sort(myHelloHandlerUsages.begin(), myHelloHandlerUsages.end());
-    std::sort(checkHandlersUsages.begin(), checkHandlersUsages.end());
-    std::sort(checkCppHandlersUsages.begin(), checkCppHandlersUsages.end());
-    std::sort(checkHandlersUsages2.begin(), checkHandlersUsages2.end());
-    std::sort(checkHandlersUsages3.begin(), checkHandlersUsages3.end());
-    std::sort(checkHandlersUsages4.begin(), checkHandlersUsages4.end());
-    std::sort(mouseArea1ClickedUsages.begin(), mouseArea1ClickedUsages.end());
-    std::sort(mouseArea2ClickedUsages.begin(), mouseArea2ClickedUsages.end());
-    std::sort(mouseArea3ClickedUsages.begin(), mouseArea3ClickedUsages.end());
-    std::sort(aParamUsages.begin(), aParamUsages.end());
-    std::sort(bParamUsages.begin(), bParamUsages.end());
-    std::sort(cParamUsages.begin(), cParamUsages.end());
-    std::sort(xParamUsages.begin(), xParamUsages.end());
-    std::sort(yParamUsages.begin(), yParamUsages.end());
-    std::sort(zParamUsages.begin(), zParamUsages.end());
-    std::sort(deconstructedAUsages.begin(), deconstructedAUsages.end());
-    std::sort(groupPropertyUsages1.begin(), groupPropertyUsages1.end());
-    std::sort(groupPropertyUsages2.begin(), groupPropertyUsages2.end());
-
-    QTest::addRow("findSumFromDeclaration") << testFileName << 8 << 13 << sumUsages;
-    QTest::addRow("findSumFromUsage") << testFileName << 10 << 20 << sumUsages;
-
-    QTest::addRow("findIFromDeclaration") << testFileName << 9 << 17 << iUsages;
-    QTest::addRow("findIFromUsage") << testFileName << 9 << 24 << iUsages;
-    QTest::addRow("findIFromUsage2") << testFileName << 10 << 25 << iUsages;
-
-    QTest::addRow("findPropertyFromDeclaration") << testFileName << 17 << 18 << helloPropertyUsages;
-    QTest::addRow("findPropertyFromDeclaration2") << testFileName << 18 << 18 << p2Usages;
-    QTest::addRow("findPropertyFromDeclarationInSubItem")
-            << testFileName << 34 << 29 << subItemHelloPropertyUsages;
-    QTest::addRow("findPropertyFromDeclarationInIC")
-            << testFileName << 37 << 22 << ICHelloPropertyUsages;
-
-    QTest::addRow("findPropertyFromUsage") << testFileName << 24 << 13 << helloPropertyUsages;
-    QTest::addRow("findPropertyFromUsage2") << testFileName << 24 << 36 << helloPropertyUsages;
-    QTest::addRow("findPropertyFromUsageInSubItem")
-            << testFileName << 32 << 26 << subItemHelloPropertyUsages;
-    QTest::addRow("findPropertyFromUsageInIC") << testFileName << 39 << 20 << ICHelloPropertyUsages;
-
-    QTest::addRow("findIdFromUsage") << testFileName << 67 << 20 << nestedUsages;
-    QTest::addRow("findIdFromDefinition") << testFileName << 62 << 17 << nestedUsages;
-    QTest::addRow("findIdFromUsageInChild") << testFileName << 84 << 22 << rootIdUsages;
-
-    QTest::addRow("findPropertyFromUsageInFieldMemberExpression")
-            << testFileName << 69 << 34 << nestedComponent3Usages;
-
-    QTest::addRow("findFieldMemberExpressionUsageFromPropertyDefinition")
-            << testFileName << 47 << 38 << nestedComponent3Usages;
-
-    QTest::addRow("findProperty2FromUsageInFieldMemberExpression")
-            << testFileName << 68 << 39 << nestedComponent3P2Usages;
-
-    QTest::addRow("findFunctionUsage") << testFileName << 74 << 30 << recursiveUsages;
-    QTest::addRow("findFunctionUsage2") << testFileName << 76 << 24 << recursiveUsages;
-    QTest::addRow("findQualifiedFunctionUsage") << testFileName << 84 << 31 << recursiveUsages;
-    QTest::addRow("findFunctionUsageFromDefinition") << testFileName << 72 << 17 << recursiveUsages;
-    QTest::addRow("findJSMethodFromUsageInBinding")
-            << testFileName << 119 << 27 << myHelloHandlerUsages;
-    QTest::addRow("findJSMethodFromDefinition")
-            << testFileName << 118 << 22 << myHelloHandlerUsages;
-    QTest::addRow("findJSMethodFromDefinition2")
-            << testFileName << 118 << 9 << myHelloHandlerUsages;
-
-    QTest::addRow("findQmlSignalUsageFromDefinition")
-            << testFileName << 88 << 17 << helloSignalUsages;
-    QTest::addRow("findQmlSignalUsageFromUsage") << testFileName << 93 << 17 << helloSignalUsages;
-    QTest::addRow("findQmlSignalUsageFromHandler")
-            << testFileName << 119 << 11 << helloSignalUsages;
-
-    QTest::addRow("findCppSignalUsageFromUsage") << testFileName << 107 << 23 << widthChangedUsages;
-    QTest::addRow("findCppSignalUsageFromQualifiedUsage")
-            << testFileName << 108 << 23 << widthChangedUsages;
-    QTest::addRow("findCppSignalUsageFromQualifiedUsage2")
-            << testFileName << 114 << 24 << widthChangedUsages;
-
-    QTest::addRow("findBindingUsagesFromDefinition")
-            << testFileName << 121 << 21 << helloPropertyBindingUsages;
-    QTest::addRow("findBindingUsagesFromBinding")
-            << testFileName << 122 << 19 << helloPropertyBindingUsages;
-
-    QTest::addRow("findQmlPropertyHandlerFromDefinition")
-            << testFileName << 124 << 18 << checkHandlersUsages;
-    QTest::addRow("findQmlPropertyHandlerFromHandler")
-            << testFileName << 125 << 5 << checkHandlersUsages;
-    QTest::addRow("findQmlPropertyHandlerFromSignalCall")
-            << testFileName << 128 << 9 << checkHandlersUsages;
-
-    QTest::addRow("findCppPropertyHandlerFromHandler")
-            << testFileName << 126 << 5 << checkCppHandlersUsages;
-    QTest::addRow("findCppPropertyHandlerFromSignalCall")
-            << testFileName << 129 << 9 << checkCppHandlersUsages;
-
-    QTest::addRow("findQmlPropertyHandler2FromDefinition")
-            << testFileName << 131 << 18 << checkHandlersUsages2;
-    QTest::addRow("findQmlPropertyHandler3FromDefinition")
-            << testFileName << 132 << 18 << checkHandlersUsages3;
-    QTest::addRow("findQmlPropertyHandler4FromDefinition")
-            << testFileName << 133 << 18 << checkHandlersUsages4;
-
-    QTest::addRow("findSignalsInConnectionObject")
-            << testFileName << 183 << 15 << mouseArea1ClickedUsages;
-    QTest::addRow("findSignalsInConnectionObjectWithNoTarget")
-            << testFileName << 184 << 15 << mouseArea2ClickedUsages;
-    QTest::addRow("findSignalsInConnectionObjectWithTarget")
-            << testFileName << 185 << 15 << mouseArea3ClickedUsages;
-
-    QTest::addRow("findMethodParameterA") << testFileName << 189 << 16 << aParamUsages;
-    QTest::addRow("findMethodParameterAFromUsage") << testFileName << 188 << 30 << aParamUsages;
-
-    QTest::addRow("deconstructed") << testFileName << 194 << 17 << deconstructedAUsages;
-    QTest::addRow("deconstructedFromDefinition")
-            << testFileName << 193 << 14 << deconstructedAUsages;
-
-    QTest::addRow("findMethodParameterXDeconstructed") << testFileName << 188 << 50 << xParamUsages;
-    QTest::addRow("findMethodParameterXDeconstructedFromUsage")
-            << testFileName << 189 << 28 << xParamUsages;
-    QTest::addRow("findMethodParameterYDeconstructed") << testFileName << 188 << 53 << yParamUsages;
-    QTest::addRow("findMethodParameterYDeconstructedFromUsage")
-            << testFileName << 189 << 32 << yParamUsages;
-    QTest::addRow("findMethodParameterZDeconstructed") << testFileName << 188 << 59 << zParamUsages;
-    QTest::addRow("findMethodParameterZDeconstructedFromUsage")
-            << testFileName << 189 << 36 << zParamUsages;
-    QTest::addRow("groupPropertyUsages1")
-            << testFile("groupPropertyUsage.qml") << 14 << 17 << groupPropertyUsages1;
-    QTest::addRow("groupPropertyUsages2")
-            << testFile("groupPropertyUsage.qml") << 23 << 5 << groupPropertyUsages2;
-    QTest::addRow("attachedPropertyUsages")
-            << testFile("attachedPropertyUsage.qml") << 12 << 25 << attachedPropertyUsages;
+            QTest::addRow("findFieldMemberExpressionUsageFromPropertyDefinition")
+                    << 14 << 38 << nestedComponent3Usages;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 35, 38, strlen("p2"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 20, 22, strlen("p2"));
+            const auto nestedComponent3P2Usages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findProperty2FromUsageInFieldMemberExpression")
+                    << 35 << 39 << nestedComponent3P2Usages;
+        }
+    }
+    {
+        QList<QQmlLSUtilsLocation> expectedUsages;
+        const auto testFileName = testFile("findUsages/idUsages.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 7, 9, strlen("rootId"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 11, 17, strlen("rootId"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 12, 20, strlen("rootId"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 17, 9, strlen("rootId"));
+        const auto rootIdUsages = makeUsages(testFileName, expectedUsages);
+        QTest::addRow("findIdFromUsageInChild") << 12 << 20 << rootIdUsages;
+    }
+    {
+        QList<QQmlLSUtilsLocation> expectedUsages;
+        const auto testFileName = testFile("findUsages/recursive.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 14, strlen("recursive"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 24, strlen("recursive"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 34, strlen("recursive"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 51, strlen("recursive"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 68, strlen("recursive"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 12, 20, strlen("recursive"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 15, 34, strlen("recursive"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 19, 27, strlen("recursive"));
+        const auto recursiveUsages = makeUsages(testFileName, expectedUsages);
+        QTest::addRow("findFunctionUsage") << 10 << 30 << recursiveUsages;
+        QTest::addRow("findFunctionUsage2") << 12 << 24 << recursiveUsages;
+        QTest::addRow("findQualifiedFunctionUsage") << 19 << 31 << recursiveUsages;
+        QTest::addRow("findFunctionUsageFromDefinition") << 8 << 17 << recursiveUsages;
+    }
+    {
+        const auto testFileName = testFile("findUsages/signalsAndHandlers.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 12, strlen("helloSignal"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 11, 9, strlen("helloSignal"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 13, 13, strlen("helloSignal"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 17, 17, strlen("helloSignal"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 21, 9, strlen("helloSignal"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 39, 5, strlen("onHelloSignal"));
+            const auto helloSignalUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findQmlSignalUsageFromDefinition") << 8 << 17 << helloSignalUsages;
+            QTest::addRow("findQmlSignalUsageFromUsage") << 13 << 17 << helloSignalUsages;
+            QTest::addRow("findQmlSignalUsageFromHandler") << 39 << 11 << helloSignalUsages;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 23, 13, strlen("widthChanged"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 27, 17, strlen("widthChanged"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 28, 20, strlen("widthChanged"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 34, 20, strlen("widthChanged"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 33, 13, strlen("widthChanged"));
+            const auto widthChangedUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findCppSignalUsageFromUsage") << 27 << 23 << widthChangedUsages;
+            QTest::addRow("findCppSignalUsageFromQualifiedUsage") << 28 << 23 << widthChangedUsages;
+            QTest::addRow("findCppSignalUsageFromQualifiedUsage2") << 34 << 24 << widthChangedUsages;
+        }
+    }
+    {
+        const auto testFileName = testFile("findUsages/binding.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        QList<QQmlLSUtilsLocation> expectedUsages;
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 18,
+                                  strlen("helloPropertyBinding"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 5,
+                                  strlen("helloPropertyBinding"));
+        const auto helloPropertyBindingUsages = makeUsages(testFileName, expectedUsages);
+        QTest::addRow("findBindingUsagesFromDefinition") << 9 << 21 << helloPropertyBindingUsages;
+        QTest::addRow("findBindingUsagesFromBinding") << 10 << 19 << helloPropertyBindingUsages;
+    }
+    {
+        const auto testFileName = testFile("findUsages/signalAndHandlers2.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 7, 14, strlen("myHelloHandler"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 20, strlen("myHelloHandler"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 14, 29, strlen("myHelloHandler"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 15, 24, strlen("myHelloHandler"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 23, 17, strlen("myHelloHandler"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 24, 24, strlen("myHelloHandler"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 25, 21, strlen("myHelloHandler"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 33, 19, strlen("myHelloHandler"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 42, 29, strlen("myHelloHandler"));
+            const auto myHelloHandlerUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findJSMethodFromUsageInBinding") << 8 << 27 << myHelloHandlerUsages;
+            QTest::addRow("findJSMethodFromDefinition") << 7 << 22 << myHelloHandlerUsages;
+            QTest::addRow("findJSMethodFromDefinition2") << 7 << 9 << myHelloHandlerUsages;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 13, 18, strlen("checkHandlers"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 14, 5,
+                                    strlen("onCheckHandlersChanged"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 17, 9,
+                                    strlen("checkHandlersChanged"));
+            const auto checkHandlersUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findQmlPropertyHandlerFromDefinition") << 13 << 18 << checkHandlersUsages;
+            QTest::addRow("findQmlPropertyHandlerFromHandler") <<  14 << 5 << checkHandlersUsages;
+            QTest::addRow("findQmlPropertyHandlerFromSignalCall") << 17 << 9 << checkHandlersUsages;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 15, 5,
+                                    strlen("onChildrenChanged"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 18, 9, strlen("childrenChanged"));
+            const auto checkCppHandlersUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findCppPropertyHandlerFromHandler") << 15 << 5 << checkCppHandlersUsages;
+            QTest::addRow("findCppPropertyHandlerFromSignalCall") << 18 << 9 << checkCppHandlersUsages;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 20, 18, strlen("_"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 23, 5, strlen("on_Changed"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 27, 9, strlen("_Changed"));
+            const auto checkHandlersUsages2 = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findQmlPropertyHandler2FromDefinition") << 20 << 18 << checkHandlersUsages2;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 21, 18, strlen("______42"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 24, 5,
+                                    strlen("on______42Changed"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 28, 9, strlen("______42Changed"));
+            const auto checkHandlersUsages3 = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findQmlPropertyHandler3FromDefinition") << 21 << 18 << checkHandlersUsages3;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 22, 18, strlen("_123a"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 25, 5,  strlen("on_123AChanged"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 29, 9, strlen("_123aChanged"));
+            const auto checkHandlersUsages4 = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findQmlPropertyHandler4FromDefinition") << 22 << 18 << checkHandlersUsages4;
+        }
+    }
+    {
+        QList<QQmlLSUtilsLocation> expectedUsages;
+        const auto testFileName = testFile("findUsages/connections.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 9, strlen("onClicked"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 17, 23, strlen("clicked"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 33, 15, strlen("clicked"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 16, 22, strlen("onClicked"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 34, 15, strlen("clicked"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 18, 23, strlen("clicked"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 28, 9, strlen("onClicked"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 35, 15, strlen("clicked"));
+        const auto signalInConnection = makeUsages(testFileName, expectedUsages);
+        QTest::addRow("findSignalsInConnectionFromSignal") << 33 << 15 << signalInConnection;
+        QTest::addRow("findSignalsInConnectionFromHandler") << 9 << 9 << signalInConnection;
+        QTest::addRow("findSignalsInConnectionFromFunction") << 16 << 22 << signalInConnection;
+    }
+    {
+        const auto testFileName = testFile("findUsages/parametersAndDeconstruction.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 30, strlen("a"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 16, strlen("a"));
+            const auto aParamUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findMethodParameterA") << 9 << 16 << aParamUsages;
+            QTest::addRow("findMethodParameterAFromUsage") << 8 << 30 << aParamUsages;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 50, strlen("x"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 28, strlen("x"));
+            const auto xParamUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findMethodParameterXDeconstructed") << 8 << 50 << xParamUsages;
+            QTest::addRow("findMethodParameterXDeconstructedFromUsage") << 9 << 28 << xParamUsages;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 53, strlen("y"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 32, strlen("y"));
+            const auto yParamUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findMethodParameterYDeconstructed") << 8 << 53 << yParamUsages;
+            QTest::addRow("findMethodParameterYDeconstructedFromUsage") << 9 << 32 << yParamUsages;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 59, strlen("z"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 36, strlen("z"));
+            const auto zParamUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("findMethodParameterZDeconstructed") << 8 << 59 << zParamUsages;
+            QTest::addRow("findMethodParameterZDeconstructedFromUsage") << 9 << 36 << zParamUsages;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 13, 14, strlen("a"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 14, 17, strlen("a"));
+            const auto deconstructedAUsages = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("deconstructed") << 14 << 17 << deconstructedAUsages;
+            QTest::addRow("deconstructedFromDefinition") << 13 << 14 << deconstructedAUsages;
+        }
+    }
+    {
+        const auto testFileName = testFile("findUsages/groupPropertyUsage.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 14, 17, strlen("family"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 23, 35, strlen("family"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 23, 10, strlen("family"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 33, 48, strlen("family"));
+            const auto groupPropertyUsages1 = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("groupPropertyUsages1") << 14 << 17 << groupPropertyUsages1;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 23, 5, strlen("font"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 24, 5, strlen("font"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 12, 13, strlen("font"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 23, 30, strlen("font"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 32, 41, strlen("font"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 33, 43, strlen("font"));
+            const auto groupPropertyUsages2 = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("groupPropertyUsages2") << 23 << 5 << groupPropertyUsages2;
+        }
+    }
+    {
+        const auto testFileName = testFile("findUsages/attachedPropertyUsage.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        QList<QQmlLSUtilsLocation> expectedUsages;
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 5, strlen("Keys"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 12, 25, strlen("Keys"));
+        const auto attachedPropertyUsages = makeUsages(testFileName, expectedUsages);
+        QTest::addRow("attachedPropertyUsages") << 12 << 25 << attachedPropertyUsages;
+    }
+    {
+        const auto testFileName = testFile("findUsages/inlineComponents.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        QList<QQmlLSUtilsLocation> expectedUsages;
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 22, strlen("foo"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 10, 44, strlen("foo"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 14, 27, strlen("foo"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 20, 20, strlen("foo"));
+        const auto inlineUsages = makeUsages(testFileName, expectedUsages);
+        QTest::addRow("inlineUsagesFromProperty") << 9 << 22 << inlineUsages;
+        QTest::addRow("inlineUsagesFromUsageOfBaseProperty") << 14 << 27 << inlineUsages;
+        QTest::addRow("inlineUsagesFromJsScope") << 20 << 20 << inlineUsages;
+    }
 }
 
 void tst_qmlls_utils::findUsages()
 {
-    QFETCH(QString, filePath);
     QFETCH(int, line);
     QFETCH(int, character);
-    QFETCH(QList<QQmlLSUtilsLocation>, expectedUsages);
-    QVERIFY(std::is_sorted(expectedUsages.begin(), expectedUsages.end()));
+    QFETCH(UsageData, data);
+    QVERIFY(std::is_sorted(data.expectedUsages.begin(), data.expectedUsages.end()));
 
     QQmlJS::Dom::DomCreationOptions options;
     options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
     options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
 
-    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+    auto [env, file] = createEnvironmentAndLoadFile(data.testFileName, options);
 
     auto locations = QQmlLSUtils::itemsFromTextLocation(
             file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
@@ -1064,7 +1061,7 @@ void tst_qmlls_utils::findUsages()
     auto usages = QQmlLSUtils::findUsagesOf(locations.front().domItem);
 
     if constexpr (enable_debug_output) {
-        if (usages != expectedUsages) {
+        if (usages != data.expectedUsages) {
             qDebug() << "Got:\n";
             for (auto &x : usages) {
                 qDebug() << x.filename << "(" << x.sourceLocation.startLine << ", "
@@ -1072,15 +1069,16 @@ void tst_qmlls_utils::findUsages()
                          << x.sourceLocation.length;
             }
             qDebug() << "But expected: \n";
-            for (auto &x : expectedUsages) {
+            for (auto &x : data.expectedUsages) {
                 qDebug() << x.filename << "(" << x.sourceLocation.startLine << ", "
                          << x.sourceLocation.startColumn << "), " << x.sourceLocation.offset << "+"
                          << x.sourceLocation.length;
             }
         }
     }
-    QCOMPARE(usages, expectedUsages);
+    QCOMPARE(usages, data.expectedUsages);
 }
+
 
 void tst_qmlls_utils::renameUsages_data()
 {

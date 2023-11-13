@@ -24,4 +24,12 @@ Text {
     font {
         pixelSize: 12
     }
+
+    Item {
+        property var family // should not be in groupPropertyUsages1
+        property int font // should not be in groupPropertyUsages2
+
+        property var realFont: textRoot.font // should be in groupPropertyUsages2
+        property var realFamily: textRoot.font.family // should be in groupPropertyUsages1
+    }
 }

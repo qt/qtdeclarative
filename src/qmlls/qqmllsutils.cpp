@@ -13,6 +13,7 @@
 #include <QtQmlDom/private/qqmldom_utils_p.h>
 #include <QtQml/private/qqmlsignalnames_p.h>
 #include <QtQml/private/qqmljslexer_p.h>
+#include <QtQmlCompiler/private/qqmljsutils_p.h>
 
 #include <algorithm>
 #include <iterator>
@@ -628,89 +629,91 @@ static QStringList namesOfPossibleUsages(const QString &name,
     return namesToCheck;
 }
 
+/*! \internal
+    \brief finds the scope that a property, method or enum is first defined.
+    Starts looking for the name starting from the given scope and traverse
+    through base and extension types.
+*/
+static QQmlJSScope::ConstPtr findDefiningScopeForNames(QQmlJSScope::ConstPtr referrerScope, const QStringList &namesToCheck)
+{
+    QQmlJSScope::ConstPtr result;
+    QQmlJSUtils::searchBaseAndExtensionTypes(referrerScope, [&](QQmlJSScope::ConstPtr scope) {
+        for (const auto &name : namesToCheck) {
+            if (scope->hasOwnProperty(name) || scope->hasOwnMethod(name) || scope->hasOwnEnumeration(name)) {
+                result = scope;
+                return true;
+            }
+        }
+        return false;
+    });
+
+    return result;
+}
+
 static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &name,
                                          QList<QQmlLSUtilsLocation> &result)
 {
-    auto expressionType =
-            QQmlLSUtils::resolveExpressionType(item, QQmlLSUtilsResolveOptions::ResolveOwnerType);
+    const auto expressionType = QQmlLSUtils::resolveExpressionType(item, ResolveOwnerType);
     if (!expressionType)
         return;
-    QQmlJSScope::ConstPtr targetType = expressionType->semanticScope;
 
-    const QStringList namesToCheck = namesOfPossibleUsages(name, targetType);
+    const QStringList namesToCheck = namesOfPossibleUsages(name, expressionType->semanticScope);
+    QQmlJSScope::ConstPtr targetType = findDefiningScopeForNames(expressionType->semanticScope, namesToCheck);
 
-    auto checkName = [&namesToCheck](const QString &nameToCheck) -> bool {
-        return namesToCheck.contains(nameToCheck);
+    const auto addLocationIfTypeMatchesTarget = [&result, &targetType, &namesToCheck](const DomItem &toBeResolved,
+                                                                FileLocationRegion subRegion) {
+        const auto currentType = QQmlLSUtils::resolveExpressionType(
+                toBeResolved, QQmlLSUtilsResolveOptions::ResolveOwnerType);
+        if (!currentType)
+            return;
+
+        const auto foundBaseType =
+                findDefiningScopeForNames(currentType->semanticScope, namesToCheck);
+
+        if (foundBaseType == targetType) {
+            auto tree = FileLocations::treeOf(toBeResolved);
+            QQmlJS::SourceLocation sourceLocation;
+
+            sourceLocation = FileLocations::region(tree, subRegion);
+            if (!sourceLocation.isValid())
+                return;
+
+            QQmlLSUtilsLocation location{ toBeResolved.canonicalFilePath(), sourceLocation };
+            if (!result.contains(location))
+                result.append(location);
+        }
     };
 
-    auto findUsages = [&targetType, &result, &name, &checkName](Path, const DomItem &current,
+    auto findUsages = [&addLocationIfTypeMatchesTarget, &name, &namesToCheck](Path, const DomItem &current,
                                                                 bool) -> bool {
-        bool resolveType = false;
         bool continueForChildren = true;
-        DomItem toBeResolved = current;
-        FileLocationRegion subRegion = MainRegion;
-
         if (auto scope = current.semanticScope()) {
             // is the current property shadowed by some JS identifier? ignore current + its children
             if (scope->ownJSIdentifier(name)) {
                 return false;
             }
         }
-
         switch (current.internalKind()) {
         case DomType::QmlObject:
         case DomType::Binding:
+        case DomType::MethodInfo:
         case DomType::PropertyDefinition: {
             const QString propertyName = current.field(Fields::name).value().toString();
-            if (!checkName(propertyName))
-                return true;
-
-            subRegion = IdentifierRegion;
-            resolveType = true;
-            break;
+            if (namesToCheck.contains(propertyName))
+                addLocationIfTypeMatchesTarget(current, IdentifierRegion);
+            return continueForChildren;
         }
         case DomType::ScriptIdentifierExpression: {
             const QString identifierName = current.field(Fields::identifier).value().toString();
-            if (!checkName(identifierName))
-                return true;
-
-            resolveType = true;
-            break;
-        }
-        case DomType::MethodInfo: {
-            const QString methodName = current.field(Fields::name).value().toString();
-            if (!checkName(methodName))
-                return true;
-
-            subRegion = IdentifierRegion;
-            resolveType = true;
-            break;
+            if (namesToCheck.contains(identifierName))
+                addLocationIfTypeMatchesTarget(current, MainRegion);
+            return continueForChildren;
         }
         default:
-            break;
+            return continueForChildren;
         };
 
-        if (resolveType) {
-            auto currentType = QQmlLSUtils::resolveExpressionType(
-                    toBeResolved, QQmlLSUtilsResolveOptions::ResolveOwnerType);
-            if (!currentType)
-                return continueForChildren;
-
-            qCDebug(QQmlLSUtilsLog) << "Will resolve type of" << toBeResolved.internalKindStr();
-            if (currentType->semanticScope == targetType) {
-                auto tree = FileLocations::treeOf(current);
-                QQmlJS::SourceLocation sourceLocation;
-
-                sourceLocation = FileLocations::region(tree, subRegion);
-                if (!sourceLocation.isValid())
-                    return continueForChildren;
-
-                QQmlLSUtilsLocation location{ current.canonicalFilePath(), sourceLocation };
-                if (!result.contains(location))
-                    result.append(location);
-            }
-        }
-        return continueForChildren;
+        Q_UNREACHABLE_RETURN(continueForChildren);;
     };
 
     item.containingFile()
@@ -792,6 +795,7 @@ QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(const DomItem &item)
         findUsagesHelper(item, name, result);
         break;
     }
+    case DomType::QmlObject:
     case DomType::PropertyDefinition:
     case DomType::Binding:
     case DomType::MethodInfo: {
