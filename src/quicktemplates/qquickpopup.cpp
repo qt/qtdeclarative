@@ -2096,7 +2096,7 @@ void QQuickPopup::setVisible(bool visible)
     if (d->visible == visible && d->transitionState != QQuickPopupPrivate::ExitTransition)
         return;
 
-    if (d->complete) {
+    if (d->complete && d->window) {
         if (visible)
             d->transitionManager.transitionEnter();
         else

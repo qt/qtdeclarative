@@ -53,12 +53,12 @@ TestCase {
     }
 
     function test_properties(data) {
-        var control = createTemporaryObject(toolTip, testCase)
+        let control = createTemporaryObject(toolTip, testCase)
         verify(control)
 
         compare(control[data.property], data.defaultValue)
 
-        var spy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: data.signalName})
+        let spy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: data.signalName})
         verify(spy.valid)
 
         control[data.property] = data.setValue
@@ -75,24 +75,24 @@ TestCase {
     }
 
     function test_attached(data) {
-        var item1 = createTemporaryObject(mouseArea, testCase)
+        let item1 = createTemporaryObject(mouseArea, testCase)
         verify(item1)
 
-        var item2 = createTemporaryObject(mouseArea, testCase)
+        let item2 = createTemporaryObject(mouseArea, testCase)
         verify(item2)
 
         // Reset the properties to the expected default values, in case
         // we're not the first test that uses attached properties to be run.
-        var sharedTip = ToolTip.toolTip
+        let sharedTip = ToolTip.toolTip
         sharedTip[data.property] = data.defaultValue
 
         compare(item1.ToolTip[data.property], data.defaultValue)
         compare(item2.ToolTip[data.property], data.defaultValue)
 
-        var spy1 = signalSpy.createObject(item1, {target: item1.ToolTip, signalName: data.signalName})
+        let spy1 = signalSpy.createObject(item1, {target: item1.ToolTip, signalName: data.signalName})
         verify(spy1.valid)
 
-        var spy2 = signalSpy.createObject(item2, {target: item2.ToolTip, signalName: data.signalName})
+        let spy2 = signalSpy.createObject(item2, {target: item2.ToolTip, signalName: data.signalName})
         verify(spy2.valid)
 
         sharedSpy.signalName = data.signalName
@@ -138,7 +138,7 @@ TestCase {
     }
 
     function test_delay(data) {
-        var control = createTemporaryObject(toolTip, testCase, {delay: data.delay})
+        let control = createTemporaryObject(toolTip, testCase, {delay: data.delay})
 
         compare(control.visible, false)
         if (data.imperative)
@@ -157,7 +157,7 @@ TestCase {
     }
 
     function test_timeout(data) {
-        var control = createTemporaryObject(toolTip, testCase, {timeout: 100})
+        let control = createTemporaryObject(toolTip, testCase, {timeout: 100})
 
         compare(control.visible, false)
         if (data.imperative)
@@ -179,7 +179,6 @@ TestCase {
 
     function test_warning() {
         ignoreWarning(new RegExp(".*QML QtObject: ToolTip must be attached to an Item"))
-        ignoreWarning(new RegExp(".*: QML ToolTip: cannot find any window to open popup in."))
         object.ToolTip.show("") // don't crash (QTBUG-56243)
     }
 
@@ -206,7 +205,7 @@ TestCase {
     }
 
     function test_makeVisibleWhileExitTransitionRunning(data) {
-        var control = createTemporaryObject(toolTipWithExitTransition, testCase)
+        let control = createTemporaryObject(toolTipWithExitTransition, testCase)
 
         // Show, hide, and show the tooltip again. Its exit transition should
         // start and get cancelled, and then its enter transition should run.
@@ -259,18 +258,18 @@ TestCase {
             skip("Mouse hovering not functional on offscreen/minimal platforms")
 
         // Window shortcuts (the default context for Shortcut) require the window to have focus.
-        var window = testCase.Window.window
+        let window = testCase.Window.window
         verify(window)
         window.requestActivate()
         tryCompare(window, "active", true)
 
-        var root = createTemporaryObject(buttonAndShortcutComponent, testCase)
+        let root = createTemporaryObject(buttonAndShortcutComponent, testCase)
         verify(root)
 
         mouseMove(root.button, root.button.width / 2, root.button.height / 2)
         tryCompare(root.button.ToolTip.toolTip, "visible", true)
 
-        var shortcutActivatedSpy = signalSpy.createObject(root, { target: root.shortcut, signalName: "activated" })
+        let shortcutActivatedSpy = signalSpy.createObject(root, { target: root.shortcut, signalName: "activated" })
         verify(shortcutActivatedSpy.valid)
         keyPress(Qt.Key_A)
         compare(shortcutActivatedSpy.count, 1)
@@ -295,13 +294,13 @@ TestCase {
 
     // QTBUG-63644
     function test_hover() {
-        var root = createTemporaryObject(hoverComponent, testCase)
+        let root = createTemporaryObject(hoverComponent, testCase)
         verify(root)
 
-        var tooltip = root.tooltip
+        let tooltip = root.tooltip
         verify(tooltip)
 
-        for (var pos = 0; pos <= 25; pos += 5) {
+        for (let pos = 0; pos <= 25; pos += 5) {
             mouseMove(root, pos, pos)
             verify(tooltip.visible)
         }
@@ -313,7 +312,7 @@ TestCase {
     }
 
     function test_nonAttachedToolTipShowAndHide() {
-        var tip = createTemporaryObject(nonAttachedToolTipComponent, testCase)
+        let tip = createTemporaryObject(nonAttachedToolTipComponent, testCase)
         verify(tip)
         tip.show("hello");
         verify(tip.visible)
@@ -346,11 +345,11 @@ TestCase {
 
     // QTBUG-74226
     function test_attachedTimeout() {
-        var row = createTemporaryObject(timeoutButtonRowComponent, testCase)
+        let row = createTemporaryObject(timeoutButtonRowComponent, testCase)
         verify(row)
 
         // Press the button that has no timeout; it should stay visible.
-        var button2 = row.children[1]
+        let button2 = row.children[1]
         mousePress(button2)
         compare(button2.down, true)
         tryCompare(button2.ToolTip.toolTip, "opened", true)
@@ -365,7 +364,7 @@ TestCase {
         tryCompare(button2.ToolTip, "visible", false)
 
         // Now, press the first button that does have a timeout; it should close on its own eventually.
-        var button1 = row.children[0]
+        let button1 = row.children[0]
         mousePress(button1)
         compare(button1.down, true)
         // We use a short timeout to speed up the test, but tryCompare(...opened, true) then
@@ -402,7 +401,7 @@ TestCase {
 
     // QTBUG-62350
     function test_wrap() {
-        var item = createTemporaryObject(wrapComponent, testCase)
+        let item = createTemporaryObject(wrapComponent, testCase)
         verify(item)
 
         // Avoid "cannot find window to popup in" warning that can occur if it's made visible too early.
@@ -465,5 +464,23 @@ TestCase {
         compare(longTextButton.ToolTip.toolTip.implicitWidth, longTextToolTipImplicitWidth)
         mouseRelease(longTextButton)
         tryCompare(longTextButton.ToolTip.toolTip, "visible", false)
+    }
+
+    Component {
+        id: initiallyVisibleComponent
+
+        Item {
+            ToolTip.text: "Some text"
+            ToolTip.visible: true
+        }
+    }
+
+    // QTBUG-75483
+    function test_initiallyVisible() {
+        failOnWarning(/.?/) //"QML ToolTip: cannot find any window to open popup in" in particularly
+
+        let item = createTemporaryObject(initiallyVisibleComponent, testCase)
+        verify(item)
+        verify(item.ToolTip.visible)
     }
 }
