@@ -72,8 +72,6 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     Q_ASSERT(m_varType);
     m_jsValueType = builtinTypes.type(u"QJSValue"_s).scope;
     Q_ASSERT(m_jsValueType);
-    m_listPropertyType = builtinTypes.type(u"QQmlListProperty<QObject>"_s).scope;
-    Q_ASSERT(m_listPropertyType);
     m_qObjectType = builtinTypes.type(u"QObject"_s).scope;
     Q_ASSERT(m_qObjectType);
     m_qObjectListType = builtinTypes.type(u"QObjectList"_s).scope;
@@ -84,6 +82,12 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     Q_ASSERT(m_numberPrototype);
     m_arrayPrototype = builtinTypes.type(u"ArrayPrototype"_s).scope;
     Q_ASSERT(m_arrayPrototype);
+
+    m_listPropertyType = m_qObjectType->listType();
+    Q_ASSERT(m_listPropertyType->internalName() == u"QQmlListProperty<QObject>"_s);
+    Q_ASSERT(m_listPropertyType->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence);
+    Q_ASSERT(m_listPropertyType->valueTypeName() == u"QObject"_s);
+    Q_ASSERT(m_listPropertyType);
 
     QQmlJSScope::Ptr emptyType = QQmlJSScope::create();
     emptyType->setAccessSemantics(QQmlJSScope::AccessSemantics::None);
