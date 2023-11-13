@@ -566,7 +566,7 @@ void tst_qmltyperegistrar::uncreatable()
     qmlRegisterTypesAndRevisions<GoodUncreatableExtended>("A", 1);
 }
 
-void tst_qmltyperegistrar::singletonVesions()
+void tst_qmltyperegistrar::singletonVersions()
 {
     QQmlEngine engine;
     qmlRegisterTypesAndRevisions<SingletonVesion0>("A", 0);
@@ -581,7 +581,7 @@ void tst_qmltyperegistrar::singletonVesions()
               "    property QtObject v1: SingletonVesion1\n"
               "}", QUrl());
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
-    auto obj = c.create();
+    QScopedPointer<QObject> obj(c.create());
     QVERIFY2(!obj->property("v0").isNull(), "Singleton version 0 is not registered");
     QVERIFY2(!obj->property("v1").isNull(), "Singleton version 1 is not registered");
 }
