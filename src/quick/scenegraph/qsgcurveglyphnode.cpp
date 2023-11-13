@@ -21,6 +21,7 @@ QSGCurveGlyphNode::QSGCurveGlyphNode(QSGRenderContext *context)
     , m_dirtyGeometry(false)
 {
     setFlag(UsePreprocess);
+    setFlag(OwnsMaterial);
 
     // #### To avoid asserts: we should probably merge this with QSGCurveFillNode
     setGeometry(&m_geometry);
