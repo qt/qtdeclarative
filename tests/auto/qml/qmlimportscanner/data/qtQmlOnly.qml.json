@@ -38,5 +38,9 @@
         "relativePath": "QtQml/WorkerScript",
         "type": "module",
         "prefer": ":/qt-project.org/imports/QtQml/WorkerScript/"
+    },
+    {
+        "name": "QML",
+        "type": "module"
     }
 ]

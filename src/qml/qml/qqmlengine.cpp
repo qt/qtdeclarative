@@ -556,6 +556,11 @@ void QQmlEnginePrivate::init()
         qmlRegisterAnonymousType<QByteArray>("QML", 1);
         qmlRegisterAnonymousSequentialContainer<QList<QByteArray>>("QML", 1);
 
+        qmlRegisterType<QObject>("QML", 1, 0, "QtObject");
+
+        qmlRegisterAnonymousType<QQmlComponentAttached>("QML", 1);
+        qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component");
+
         // No need to specifically register those.
         static_assert(std::is_same_v<QStringList, QList<QString>>);
         static_assert(std::is_same_v<QVariantList, QList<QVariant>>);
@@ -564,6 +569,9 @@ void QQmlEnginePrivate::init()
         qRegisterMetaType<QQmlComponent::Status>();
         qRegisterMetaType<QList<QObject*> >();
         qRegisterMetaType<QQmlBinding*>();
+
+        // Protect the module: We don't want any URL interceptor to mess with the builtins.
+        qmlProtectModule("QML", 1);
 
         QQmlData::init();
         baseModulesUninitialized = false;
@@ -2221,7 +2229,4 @@ bool LoadHelper::couldFindModule() const
 
 QT_END_NAMESPACE
 
-#include "moc_qqmlengine_p.cpp"
-
 #include "moc_qqmlengine.cpp"
-

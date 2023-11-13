@@ -42,7 +42,7 @@ Module {
     }
 
     Component {
-        file: "private/qqmlengine_p.h"
+        file: "qobject.h"
         name: "QObject"
         extension: "Object"
         extensionIsJavaScript: true

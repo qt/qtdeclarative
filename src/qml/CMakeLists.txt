@@ -39,6 +39,8 @@ qt_internal_add_qml_module(Qml
     PLUGIN_TARGET qmlplugin
     CLASS_NAME QtQmlPlugin
     PLUGIN_TYPES qmltooling
+    IMPORTS
+        QML/1.0
     SOURCES
         ../3rdparty/masm/assembler/ARM64Assembler.h
         ../3rdparty/masm/assembler/ARMv7Assembler.cpp ../3rdparty/masm/assembler/ARMv7Assembler.h

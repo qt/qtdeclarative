@@ -50,6 +50,10 @@
         "prefer": ":/qt-project.org/imports/QtQml/WorkerScript/"
     },
     {
+        "name": "QML",
+        "type": "module"
+    },
+    {
         "name": "QTBUG-45916.js",
         "type": "javascript"
     },

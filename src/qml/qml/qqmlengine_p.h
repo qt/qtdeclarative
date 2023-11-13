@@ -58,14 +58,6 @@ class QQmlObjectCreator;
 class QQmlProfiler;
 class QQmlPropertyCapture;
 
-struct QObjectForeign {
-    Q_GADGET
-    QML_FOREIGN(QObject)
-    QML_NAMED_ELEMENT(QtObject)
-    QML_ADDED_IN_VERSION(2, 0)
-    Q_CLASSINFO("QML.OmitFromQmlTypes", "true")
-};
-
 // This needs to be declared here so that the pool for it can live in QQmlEnginePrivate.
 // The inline method definitions are in qqmljavascriptexpression_p.h
 class QQmlJavaScriptExpressionGuard : public QQmlNotifierEndpoint

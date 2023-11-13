@@ -16,6 +16,7 @@
 //
 
 #include <QtQml/qqml.h>
+#include <QtQml/qqmlcomponent.h>
 #include <private/qtqmlglobal_p.h>
 #include <QtCore/QObject>
 
@@ -26,13 +27,6 @@ QT_BEGIN_NAMESPACE
 class Q_QML_PRIVATE_EXPORT QQmlComponentAttached : public QObject
 {
     Q_OBJECT
-
-    // Used as attached object for QQmlComponent. We want qqmlcomponentattached_p.h to be #include'd
-    // when registering QQmlComponent, but we cannot #include it from qqmlcomponent.h. Therefore we
-    // force an anonymous type registration here.
-    QML_ANONYMOUS
-    QML_ADDED_IN_VERSION(2, 0)
-    Q_CLASSINFO("QML.OmitFromQmlTypes", "true")
 public:
     QQmlComponentAttached(QObject *parent = nullptr);
     ~QQmlComponentAttached();
@@ -67,5 +61,8 @@ private:
 };
 
 QT_END_NAMESPACE
+
+// TODO: Remove this once the builtins become a proper module.
+QML_DECLARE_TYPEINFO(QQmlComponent, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQMLCOMPONENTATTACHED_P_H
