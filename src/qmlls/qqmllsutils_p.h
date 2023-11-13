@@ -175,6 +175,7 @@ public:
     static QList<CompletionItem> suggestJSStatementCompletion(const DomItem &currentItem);
     static QList<CompletionItem>
     suggestVariableDeclarationStatementCompletion(QQmlLSUtilsAppendOption option = AppendSemicolon);
+    static QPair<QString, QStringList> cmakeBuildCommand(const QString &path);
 };
 QT_END_NAMESPACE
 

@@ -2986,4 +2986,25 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
     return {};
 }
 
+/*!
+\internal
+Returns the name of the cmake program along with the arguments needed to build the
+qmltyperegistration. This command generates the .qmltypes, qmldir and .qrc files required for qmlls
+to provide correct information on C++ defined QML elements.
+
+We assume here that CMake is available in the path. This should be the case for linux and macOS by
+default.
+For windows, having CMake in the path is not too unrealistic, for example,
+https://doc.qt.io/qt-6/windows-building.html#step-2-install-build-requirements claims that you need
+to have CMake in your path to build Qt. So a developer machine running qmlls has a high chance of
+having CMake in their path, if CMake is installed and used.
+*/
+QPair<QString, QStringList> QQmlLSUtils::cmakeBuildCommand(const QString &path)
+{
+    const QPair<QString, QStringList> result{
+        u"cmake"_s, { u"--build"_s, path, u"-t"_s, u"all_qmltyperegistrations"_s }
+    };
+    return result;
+}
+
 QT_END_NAMESPACE

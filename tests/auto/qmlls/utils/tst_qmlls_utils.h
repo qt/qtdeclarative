@@ -72,6 +72,8 @@ private slots:
     void completions_data();
     void completions();
 
+    void cmakeBuildCommand();
+
 private:
     using EnvironmentAndFile = std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>;
 
