@@ -515,6 +515,56 @@ void QQuickShapePath::resetFillGradient()
 }
 
 /*!
+    \qmlproperty PathHints QtQuick.Shapes::ShapePath::pathHints
+
+    This property describes characteristics of the shape. If set, these hints may allow
+    optimized rendering. By default, no hints are set. It can be a combination of the following
+    values:
+
+    \value ShapePath.PathLinear
+        The path only has straight lines, no curves.
+    \value ShapePath.PathQuadratic
+        The path does not have any cubic curves: only lines and quadratic Bezier curves.
+    \value ShapePath.PathConvex
+        The path does not have any dents or holes. All straight lines between two points
+        inside the shape will be completely inside the shape.
+    \value ShapePath.PathFillOnRight
+        The path follows the TrueType convention where outlines around solid fill have their
+        control points ordered clockwise, and outlines around holes in the shape have their
+        control points ordered counter-clockwise.
+    \value ShapePath.PathSolid
+        The path has no holes, or mathematically speaking it is \e{simply connected}.
+    \value ShapePath.PathNonIntersecting
+        The path outline does not cross itself.
+    \value ShapePath.PathNonOverlappingControlPointTriangles
+        The triangles defined by the curve control points do not overlap with each other,
+        or with any of the line segments. Also, no line segments intersect.
+        This implies \c PathNonIntersecting.
+
+    Not all hints are logically independent, but the dependencies are not enforced.
+    For example, \c PathIsLinear implies \c PathIsQuadratic, but it is valid to have \c PathIsLinear
+    without \c PathIsQuadratic.
+
+    The pathHints property describes a set of statements known to be true; the absence of a hint
+    does not necessarily mean that the corresponding statement is false.
+*/
+
+QQuickShapePath::PathHints QQuickShapePath::pathHints() const
+{
+    Q_D(const QQuickShapePath);
+    return d->pathHints;
+}
+
+void QQuickShapePath::setPathHints(PathHints newPathHints)
+{
+     Q_D(QQuickShapePath);
+    if (d->pathHints == newPathHints)
+        return;
+    d->pathHints = newPathHints;
+    emit pathHintsChanged();
+}
+
+/*!
     \qmltype Shape
     //! \instantiates QQuickShape
     \inqmlmodule QtQuick.Shapes

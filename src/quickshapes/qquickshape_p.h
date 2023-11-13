@@ -196,6 +196,7 @@ class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapePath : public QQuickPath
     Q_PROPERTY(QVector<qreal> dashPattern READ dashPattern WRITE setDashPattern NOTIFY dashPatternChanged FINAL)
     Q_PROPERTY(QQuickShapeGradient *fillGradient READ fillGradient WRITE setFillGradient RESET resetFillGradient FINAL)
     Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged REVISION(1, 14) FINAL)
+    Q_PROPERTY(PathHints pathHints READ pathHints WRITE setPathHints NOTIFY pathHintsChanged REVISION(6, 7) FINAL)
     QML_NAMED_ELEMENT(ShapePath)
     QML_ADDED_IN_VERSION(1, 0)
 
@@ -225,6 +226,18 @@ public:
         DashLine = Qt::DashLine
     };
     Q_ENUM(StrokeStyle)
+
+    enum PathHint {
+        PathLinear = 0x1,
+        PathQuadratic = 0x2,
+        PathConvex = 0x4,
+        PathFillOnRight = 0x8,
+        PathSolid = 0x10,
+        PathNonIntersecting = 0x20,
+        PathNonOverlappingControlPointTriangles = 0x40
+    };
+    Q_DECLARE_FLAGS(PathHints, PathHint)
+    Q_FLAG(PathHints)
 
     QQuickShapePath(QObject *parent = nullptr);
     ~QQuickShapePath();
@@ -263,6 +276,9 @@ public:
     void setFillGradient(QQuickShapeGradient *gradient);
     void resetFillGradient();
 
+    PathHints pathHints() const;
+    void setPathHints(PathHints newPathHints);
+
 Q_SIGNALS:
     void shapePathChanged();
     void strokeColorChanged();
@@ -275,6 +291,8 @@ Q_SIGNALS:
     void strokeStyleChanged();
     void dashOffsetChanged();
     void dashPatternChanged();
+
+    void pathHintsChanged();
 
 private:
     Q_DISABLE_COPY(QQuickShapePath)

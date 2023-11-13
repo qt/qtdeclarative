@@ -108,6 +108,7 @@ public:
 
     int dirty;
     QQuickShapeStrokeFillParams sfp;
+    QQuickShapePath::PathHints pathHints;
 };
 
 class QQuickShapePrivate : public QQuickItemPrivate
