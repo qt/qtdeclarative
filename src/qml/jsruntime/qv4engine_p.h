@@ -552,6 +552,7 @@ public:
     Heap::Object *newObject();
     Heap::Object *newObject(Heap::InternalClass *internalClass);
 
+    Heap::String *newString(char16_t c) { return newString(QChar(c)); }
     Heap::String *newString(const QString &s = QString());
     Heap::String *newIdentifier(const QString &text);
 

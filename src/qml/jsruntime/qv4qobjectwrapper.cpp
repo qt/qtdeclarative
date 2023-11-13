@@ -14,6 +14,7 @@
 #include <private/qqmlvaluetypewrapper_p.h>
 #include <private/qqmllistwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
+#include <private/qqmllocale_p.h>
 
 #include <private/qv4arraybuffer_p.h>
 #include <private/qv4functionobject_p.h>
@@ -48,6 +49,7 @@
 #endif
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qqueue.h>
+#include <QtCore/qtypes.h>
 
 #include <vector>
 QT_BEGIN_NAMESPACE
@@ -131,37 +133,143 @@ static ReturnedValue loadProperty(
     if (property.isQList() && propMetaType.flags().testFlag(QMetaType::IsQmlList))
         return QmlListWrapper::create(v4, object, property.coreIndex(), propMetaType);
 
-    // TODO: Check all the builtin types here. See getGadgetProperty() in qqmlvaluetypewrapper.cpp
-    switch (property.isEnum() ? propMetaType.underlyingType().id() : propMetaType.id()) {
-    case QMetaType::Int: {
-        int v = 0;
+    const auto encodeSimple = [&](auto v) {
         property.readProperty(object, &v);
         return Encode(v);
-    }
-    case QMetaType::Bool: {
-        bool v = false;
+    };
+
+    const auto encodeInt = [&](auto v) {
         property.readProperty(object, &v);
-        return Encode(v);
-    }
-    case QMetaType::QString: {
-        QString v;
+        return Encode(int(v));
+    };
+
+    const auto encodeDouble = [&](auto v) {
+        property.readProperty(object, &v);
+        return Encode(double(v));
+    };
+
+    const auto encodeDate = [&](auto v) {
+        property.readProperty(object, &v);
+        return Encode(v4->newDateObject(
+                v, wrapper, property.coreIndex(), referenceFlags(scope.engine, property)));
+    };
+
+    const auto encodeString = [&](auto v) {
         property.readProperty(object, &v);
         return v4->newString(v)->asReturnedValue();
-    }
-    case QMetaType::UInt: {
-        uint v = 0;
+    };
+
+    const auto encodeSequence = [&](QMetaSequence metaSequence) {
+        // Pass nullptr as data. It's lazy-loaded.
+        return QV4::SequencePrototype::newSequence(
+                v4, propMetaType, metaSequence, nullptr,
+                wrapper, property.coreIndex(), referenceFlags(scope.engine, property));
+    };
+
+
+    switch (property.isEnum() ? propMetaType.underlyingType().id() : propMetaType.id()) {
+    case QMetaType::UnknownType:
+    case QMetaType::Void:
+        return Encode::undefined();
+    case QMetaType::Nullptr:
+    case QMetaType::VoidStar:
+        return Encode::null();
+    case QMetaType::Int:
+        return encodeSimple(int());
+    case QMetaType::Bool:
+        return encodeSimple(bool());
+    case QMetaType::QString:
+        return encodeString(QString());
+    case QMetaType::QByteArray: {
+        QByteArray v;
         property.readProperty(object, &v);
-        return Encode(v);
+        return v4->newArrayBuffer(v)->asReturnedValue();
     }
-    case QMetaType::Float: {
-        float v = 0;
+    case QMetaType::QChar:
+        return encodeString(QChar());
+    case QMetaType::Char16:
+        return encodeString(char16_t());
+    case QMetaType::UInt:
+        return encodeSimple(uint());
+    case QMetaType::Float:
+        return encodeSimple(float());
+    case QMetaType::Double:
+        return encodeSimple(double());
+    case QMetaType::Short:
+        return encodeInt(short());
+    case QMetaType::UShort:
+        return encodeInt(ushort());
+    case QMetaType::Char:
+        return encodeInt(char());
+    case QMetaType::UChar:
+        return encodeInt(uchar());
+    case QMetaType::SChar:
+        return encodeInt(qint8());
+    case QMetaType::Long:
+        return encodeDouble(long());
+    case QMetaType::ULong:
+        return encodeDouble(ulong());
+    case QMetaType::LongLong:
+        return encodeDouble(qlonglong());
+    case QMetaType::ULongLong:
+        return encodeDouble(qulonglong());
+    case QMetaType::QDateTime:
+        return encodeDate(QDateTime());
+    case QMetaType::QDate:
+        return encodeDate(QDate());
+    case QMetaType::QTime:
+        return encodeDate(QTime());
+#if QT_CONFIG(regularexpression)
+    case QMetaType::QRegularExpression: {
+        QRegularExpression v;
         property.readProperty(object, &v);
-        return Encode(v);
+        return Encode(v4->newRegExpObject(v));
     }
-    case QMetaType::Double: {
-        double v = 0;
+#endif
+    case QMetaType::QVariantMap: {
+        QVariantMap v;
         property.readProperty(object, &v);
-        return Encode(v);
+        return scope.engine->fromData(
+                propMetaType, &v, wrapper, property.coreIndex(), referenceFlags(v4, property));
+    }
+    case QMetaType::QJsonValue: {
+        QJsonValue v;
+        property.readProperty(object, &v);
+        return QV4::JsonObject::fromJsonValue(v4, v);
+    }
+    case QMetaType::QJsonObject: {
+        QJsonObject v;
+        property.readProperty(object, &v);
+        return QV4::JsonObject::fromJsonObject(v4, v);
+    }
+    case QMetaType::QJsonArray: {
+        QJsonArray v;
+        property.readProperty(object, &v);
+        return QV4::JsonObject::fromJsonArray(v4, v);
+    }
+#if QT_CONFIG(qml_locale)
+    case QMetaType::QLocale: {
+        QLocale v;
+        property.readProperty(object, &v);
+        return QQmlLocale::wrap(v4, v);
+    }
+#endif
+    case QMetaType::QStringList:
+        return encodeSequence(QMetaSequence::fromContainer<QStringList>());
+    case QMetaType::QVariantList:
+        return encodeSequence(QMetaSequence::fromContainer<QVariantList>());
+    case QMetaType::QUrl: {
+        // ### Qt7: We really want this to be a JS URL object, but that would break things.
+        QUrl v;
+        property.readProperty(object, &v);
+        return Encode(v4->newVariantObject(propMetaType, &v));
+    }
+    case QMetaType::QPixmap:
+    case QMetaType::QImage: {
+        // Scarce value types
+        QVariant v(propMetaType);
+        property.readProperty(object, v.data());
+        return Encode(v4->newVariantObject(propMetaType, v.constData()));
     }
     default:
         break;
@@ -205,13 +313,9 @@ static ReturnedValue loadProperty(
     }
 
     // See if it's a sequence type.
-    // Pass nullptr as data. It's lazy-loaded.
     const QQmlType qmlType = QQmlMetaType::qmlListType(propMetaType);
-    if (qmlType.isSequentialContainer()) {
-        return QV4::SequencePrototype::newSequence(
-                v4, propMetaType, qmlType.listMetaSequence(), nullptr,
-                wrapper, property.coreIndex(), referenceFlags(scope.engine, property));
-    }
+    if (qmlType.isSequentialContainer())
+        return encodeSequence(qmlType.listMetaSequence());
 
     QVariant v(propMetaType);
     property.readProperty(object, v.data());
