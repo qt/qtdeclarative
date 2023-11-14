@@ -1241,6 +1241,10 @@ TestCase {
     function test_anchors() {
         var control = createTemporaryObject(popupControl, applicationWindow.contentItem.Overlay.overlay,
             { visible: true, width: 100, height: 100 })
+
+        applicationWindow.visible = true
+        verify(waitForRendering(applicationWindow.contentItem))
+
         verify(control)
         verify(control.visible)
         // If there is a transition then make sure it is finished
@@ -1256,8 +1260,6 @@ TestCase {
         var centerInSpy = createTemporaryObject(signalSpy, testCase, { target: control.anchors, signalName: "centerInChanged" })
         verify(centerInSpy.valid)
 
-        applicationWindow.visible = true
-        verify(waitForRendering(applicationWindow.contentItem))
         verify(overlay.width > 0)
         verify(overlay.height > 0)
 

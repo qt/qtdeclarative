@@ -1502,66 +1502,49 @@ void tst_QQuickPopup::enabled()
 void tst_QQuickPopup::orientation_data()
 {
     QTest::addColumn<Qt::ScreenOrientation>("orientation");
-    QTest::addColumn<QPointF>("position");
 
-    // On Android the screen size will usually be smaller than the 600x300
-    // size of a Window in orientation.qml
-    // Because of that we need to calculate proper positions at runtime.
-#ifndef Q_OS_ANDROID
-    QQuickControlsApplicationHelper helper(this, "orientation.qml");
-    const QSize availableSize = helper.window->size();
-#else
-    const QSize availableSize = QGuiApplication::primaryScreen()->availableSize();
-#endif
-    const int width = availableSize.width();
-    const int height = availableSize.height();
-
-    // The width & height might be odd numbers, so we calculate center in a way
-    // similar to anchors.centerIn.
-    // Also note that when we emulate the screen orientation change (by calling
-    // window->reportContentOrientationChange() in the test), these values need
-    // to be adjusted, because the "logical" (0, 0) of the screen changes.
-    const int widthCenter = (width % 2) ? (width + 1) / 2 : width / 2;
-    const int heightCenter = (height % 2) ? (height + 1) / 2 : height / 2;
-
-    // Rectangle is (60x30); popup is (30x60).
-    // Rectangle is using "anchors.centerIn: parent", and popup is positioned at
-    // (rectangle.width, rectangle.height)
-    QTest::newRow("Portrait") << Qt::PortraitOrientation
-            << QPointF(widthCenter - 30 + 60, heightCenter - 15 + 30);
-    // in landscape orientation the top left corner of physical screen
-    // (not rotated) becomes (0, 0), so we need to adjust our widthCenter
-    QTest::newRow("Landscape") << Qt::LandscapeOrientation
-            << QPointF(heightCenter - 15 + 30, (width - widthCenter) + 30 - 60);
-    // In inverted portrait orientation the bottom right corner of physical
-    // screen (not rotated) becomes (0, 0), so we need to adjust both
-    // widthCenter and heightCenter
-    QTest::newRow("InvertedPortrait") << Qt::InvertedPortraitOrientation
-            << QPointF((width - widthCenter) + 30 - 60, (height - heightCenter) + 15 - 30);
-    // In inverted landscape orientation the bottom right corner of physical
-    // screen (not rotated) becomes (0, 0), so we need to adjust heightCenter
-    QTest::newRow("InvertedLandscape") << Qt::InvertedLandscapeOrientation
-            << QPointF((height - heightCenter) + 15 - 30, widthCenter - 30 + 60);
+    QTest::newRow("Portrait") << Qt::PortraitOrientation;
+    QTest::newRow("Landscape") << Qt::LandscapeOrientation;
+    QTest::newRow("InvertedPortrait") << Qt::InvertedPortraitOrientation;
+    QTest::newRow("InvertedLandscape") << Qt::InvertedLandscapeOrientation;
 }
 
+/*
+    Verify that the popup is centered, and that the dimmer and overlay cover
+    the content item for any content orientation and content rotation.
+*/
 void tst_QQuickPopup::orientation()
 {
     QFETCH(Qt::ScreenOrientation, orientation);
-    QFETCH(QPointF, position);
 
     QQuickControlsApplicationHelper helper(this, "orientation.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
-    window->reportContentOrientationChange(orientation);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
-    QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup *>();
     QVERIFY(popup);
-    popup->open();
     QTRY_VERIFY(popup->isOpened());
-    QCOMPARE(popup->popupItem()->position(), position);
+
+    QQuickItem *dimmer = QQuickPopupPrivate::get(popup)->dimmer;
+    QVERIFY(dimmer);
+    QQuickItem *popupItem = popup->popupItem();
+    QVERIFY(popupItem);
+    QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+    QVERIFY(overlay);
+    QQuickItem *contentItem = window->contentItem();
+    QVERIFY(contentItem);
+
+    const auto rotation = window->screen()->angleBetween(Qt::PrimaryOrientation, orientation);
+    QCOMPARE(popupItem->mapToScene(popupItem->boundingRect().center()), contentItem->boundingRect().center());
+    QCOMPARE(dimmer->boundingRect(), contentItem->boundingRect());
+    QCOMPARE(overlay->boundingRect(), contentItem->boundingRect());
+    window->contentItem()->setRotation(rotation);
+    QCOMPARE(popupItem->mapToScene(popupItem->boundingRect().center()), contentItem->boundingRect().center());
+    QCOMPARE(dimmer->boundingRect(), contentItem->boundingRect());
+    QCOMPARE(overlay->boundingRect(), contentItem->boundingRect());
 }
 
 void tst_QQuickPopup::qquickview()
