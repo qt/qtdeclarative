@@ -1221,44 +1221,44 @@ void tst_qmlls_modules::rangeFormatting()
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
 }
 
-void tst_qmlls_modules::qmldirImportsFromBuild()
+enum AddBuildDirOption : bool { AddBuildDir, DoNotAddBuildDir };
+
+void tst_qmlls_modules::qmldirImports_data()
 {
-    const QString filePath = u"completions/fromBuildDir.qml"_s;
-    const auto uri = openFile(filePath);
-    QVERIFY(uri);
+    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<AddBuildDirOption>("addBuildDirectory");
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+    QTest::addColumn<QString>("expectedCompletion");
 
-    Notifications::AddBuildDirsParams bDirs;
-    UriToBuildDirs ub;
-    ub.baseUri = *uri;
-    ub.buildDirs.append(testFile("buildDir").toUtf8());
-    bDirs.buildDirsToSet.append(ub);
-    m_protocol->typedRpc()->sendNotification(QByteArray(Notifications::AddBuildDirsMethod), bDirs);
-
-    bool diagnosticOk = false;
-    m_protocol->registerPublishDiagnosticsNotificationHandler(
-            [&diagnosticOk, &uri](const QByteArray &, const PublishDiagnosticsParams &p) {
-                if (p.uri != *uri)
-                    return;
-
-                if constexpr (enable_debug_output) {
-                    for (const auto &x : p.diagnostics) {
-                        qDebug() << x.message;
-                    }
-                }
-                QCOMPARE(p.diagnostics.size(), 0);
-                diagnosticOk = true;
-            });
-
-    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 5000);
+    QTest::addRow("fromBuildFolder")
+            << u"completions/fromBuildDir.qml"_s << AddBuildDir << 3 << 1 << u"BuildDirType"_s;
+    QTest::addRow("fromSourceFolder")
+            << u"sourceDir/Main.qml"_s << DoNotAddBuildDir << 3 << 1 << u"Button"_s;
 }
 
-void tst_qmlls_modules::qmldirImportsFromSource()
+void tst_qmlls_modules::qmldirImports()
 {
-    const QString filePath = u"sourceDir/Main.qml"_s;
+    QFETCH(QString, filePath);
+    QFETCH(AddBuildDirOption, addBuildDirectory);
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QString, expectedCompletion);
+
     const auto uri = openFile(filePath);
     QVERIFY(uri);
 
+    if (addBuildDirectory == AddBuildDir) {
+        Notifications::AddBuildDirsParams bDirs;
+        UriToBuildDirs ub;
+        ub.baseUri = *uri;
+        ub.buildDirs.append(testFile("buildDir").toUtf8());
+        bDirs.buildDirsToSet.append(ub);
+        m_protocol->typedRpc()->sendNotification(QByteArray(Notifications::AddBuildDirsMethod), bDirs);
+    }
+
     bool diagnosticOk = false;
+    bool completionOk = false;
     m_protocol->registerPublishDiagnosticsNotificationHandler(
             [&diagnosticOk, &uri](const QByteArray &, const PublishDiagnosticsParams &p) {
                 if (p.uri != *uri)
@@ -1273,7 +1273,25 @@ void tst_qmlls_modules::qmldirImportsFromSource()
                 diagnosticOk = true;
             });
 
-    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 5000);
+    // Currently, the Dom is created twice in qmlls: once for the linting and once for all other
+    // features. Therefore, also test that this second dom also uses the right resource files.
+    CompletionParams cParams;
+    cParams.position.line = line - 1; // LSP is 0 based
+    cParams.position.character = character - 1; // LSP is 0 based
+    cParams.textDocument.uri = *uri;
+
+    m_protocol->requestCompletion(cParams, [&completionOk, &expectedCompletion](auto res) {
+        const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&res);
+
+        QSet<QString> labels;
+        for (const CompletionItem &c : *cItems) {
+            labels << c.label;
+        }
+        QVERIFY(labels.contains(expectedCompletion));
+        completionOk = true;
+    });
+
+    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk && completionOk, 5000);
 }
 
 void tst_qmlls_modules::quickFixes_data()

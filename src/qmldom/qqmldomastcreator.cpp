@@ -2341,8 +2341,7 @@ void createDom(MutableDomItem &&qmlFile, DomCreationOptions options)
             if (auto environmentPtr = qmlFile.environment().ownerAs<DomEnvironment>()) {
                 const QStringList resourceFiles =
                         resourceFilesFromBuildFolders(environmentPtr->loadPaths());
-                mapper = std::make_shared<QQmlJSResourceFileMapper>(
-                        resourceFilesFromBuildFolders(resourceFiles));
+                mapper = std::make_shared<QQmlJSResourceFileMapper>(resourceFiles);
             }
             auto importer =
                     std::make_shared<QQmlJSImporter>(importPathsFrom(qmlFile), mapper.get(), true);

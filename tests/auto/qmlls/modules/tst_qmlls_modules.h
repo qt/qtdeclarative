@@ -58,8 +58,8 @@ private slots:
     void linting();
     void rangeFormatting_data();
     void rangeFormatting();
-    void qmldirImportsFromBuild();
-    void qmldirImportsFromSource();
+    void qmldirImports_data();
+    void qmldirImports();
     void quickFixes_data();
     void quickFixes();
 
