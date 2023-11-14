@@ -560,7 +560,7 @@ bool QQuickPopupPrivate::prepareEnterTransition()
         }
         if (dim)
             createOverlay();
-        showOverlay();
+        showDimmer();
         emit q->aboutToShow();
         visible = true;
         transitionState = EnterTransition;
@@ -597,7 +597,7 @@ bool QQuickPopupPrivate::prepareExitTransition()
         if (focus)
             popupItem->setFocus(false, Qt::PopupFocusReason);
         transitionState = ExitTransition;
-        hideOverlay();
+        hideDimmer();
         emit q->aboutToHide();
         emit q->openedChanged();
     }
@@ -886,15 +886,15 @@ void QQuickPopupPrivate::createOverlay()
         dimmer = createDimmer(component, q, overlay);
         // We cannot update explicitDimmerOpacity when dimmer's opacity changes,
         // as it is expected to do so when we fade the dimmer in and out in
-        // show/hideOverlay, and any binding of the dimmer's opacity will be
+        // show/hideDimmer, and any binding of the dimmer's opacity will be
         // implicitly broken anyway.
         explicitDimmerOpacity = dimmer->opacity();
-        // initially fully transparent, showOverlay fades the dimmer in.
+        // initially fully transparent, showDimmer fades the dimmer in.
         dimmer->setOpacity(0);
         if (q->isVisible())
-            showOverlay();
+            showDimmer();
     }
-    resizeOverlay();
+    resizeDimmer();
 }
 
 void QQuickPopupPrivate::destroyDimmer()
@@ -927,21 +927,21 @@ void QQuickPopupPrivate::updateContentPalettes(const QPalette& parentPalette)
     QQuickItemPrivate::get(popupItem)->updateChildrenPalettes(parentPalette);
 }
 
-void QQuickPopupPrivate::showOverlay()
+void QQuickPopupPrivate::showDimmer()
 {
     // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
     if (dim && dimmer)
         QQmlProperty::write(dimmer, QStringLiteral("opacity"), explicitDimmerOpacity);
 }
 
-void QQuickPopupPrivate::hideOverlay()
+void QQuickPopupPrivate::hideDimmer()
 {
     // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
     if (dim && dimmer)
         QQmlProperty::write(dimmer, QStringLiteral("opacity"), 0.0);
 }
 
-void QQuickPopupPrivate::resizeOverlay()
+void QQuickPopupPrivate::resizeDimmer()
 {
     if (!dimmer)
         return;

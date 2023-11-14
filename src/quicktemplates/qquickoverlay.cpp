@@ -394,7 +394,7 @@ void QQuickOverlay::geometryChange(const QRectF &newGeometry, const QRectF &oldG
     Q_D(QQuickOverlay);
     QQuickItem::geometryChange(newGeometry, oldGeometry);
     for (QQuickPopup *popup : std::as_const(d->allPopups))
-        QQuickPopupPrivate::get(popup)->resizeOverlay();
+        QQuickPopupPrivate::get(popup)->resizeDimmer();
 }
 
 void QQuickOverlay::mousePressEvent(QMouseEvent *event)
