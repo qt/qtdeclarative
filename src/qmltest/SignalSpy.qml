@@ -50,7 +50,7 @@ Item {
         // and since only the sender (target) being destroyed destroys a connection
         // in QML, and not the receiver (us/"spy"), we need to manually disconnect.
         // When QTBUG-118166 is implemented, we can remove this.
-        let signalFunc = target ? target[signalName] : null
+        let signalFunc = target ? qttest_signalFunc(target, signalName) : null
         if (signalFunc)
             signalFunc.disconnect(spy.qtest_activated)
     }
@@ -201,8 +201,7 @@ Item {
         qtest_reentrancy_guard = true;
 
         if (qtest_prevTarget != null) {
-            var prevHandlerName = qtest_signalHandlerName(qtest_prevSignalName)
-            var prevFunc = qtest_prevTarget[prevHandlerName]
+            let prevFunc = qttest_signalFunc(qtest_prevTarget, qtest_prevSignalName)
             if (prevFunc)
                 prevFunc.disconnect(spy.qtest_activated)
             qtest_prevTarget = null
@@ -210,22 +209,16 @@ Item {
         }
         if (target != null && signalName != "") {
             // Look for the signal name in the object
-            var func = target[signalName]
-            if (typeof func !== "function") {
-                // If it is not a function, try looking for signal handler
-                // i.e. (onSignal) this is needed for cases where there is a property
-                // and a signal with the same name, e.g. Mousearea.pressed
-                func = target[qtest_signalHandlerName(signalName)]
-            }
-            if (func === undefined) {
-                spy.qtest_valid = false
-                console.log("Signal '" + signalName + "' not found")
-            } else {
+            let func = qttest_signalFunc(target, signalName)
+            if (func) {
                 qtest_prevTarget = target
                 qtest_prevSignalName = signalName
                 func.connect(spy.qtest_activated)
                 spy.qtest_valid = true
                 spy.qtest_signalArguments = []
+            } else {
+                spy.qtest_valid = false
+                console.log("Signal '" + signalName + "' not found")
             }
         } else {
             spy.qtest_valid = false
@@ -245,5 +238,17 @@ Item {
         if (sn.substr(0, 2) === "on" && sn[2] === sn[2].toUpperCase())
             return sn
         return "on" + sn.substr(0, 1).toUpperCase() + sn.substr(1)
+    }
+
+    /*! \internal */
+    function qttest_signalFunc(_target, _signalName) {
+        let signalFunc = _target[_signalName]
+        if (typeof signalFunc !== "function") {
+            // If it is not a function, try looking for signal handler
+            // i.e. (onSignal) this is needed for cases where there is a property
+            // and a signal with the same name, e.g. Mousearea.pressed
+            signalFunc = _target[qtest_signalHandlerName(_signalName)]
+        }
+        return signalFunc
     }
 }
