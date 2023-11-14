@@ -10,12 +10,19 @@ Rectangle {
     property alias pressed: tap.pressed
     property bool checked: false
     property alias gesturePolicy: tap.gesturePolicy
+    property alias longPressThreshold: tap.longPressThreshold
     property point tappedPosition: Qt.point(0, 0)
+    property real timeHeldWhenTapped: 0
+    property real timeHeldWhenLongPressed: 0
     signal tapped
     signal canceled
 
     width: label.implicitWidth * 1.5; height: label.implicitHeight * 2.0
     border.color: "#9f9d9a"; border.width: 1; radius: height / 4; antialiasing: true
+
+    function assignUndefinedLongPressThreshold() {
+        tap.longPressThreshold = undefined
+    }
 
     gradient: Gradient {
         GradientStop { position: 0.0; color: tap.pressed ? "#b8b5b2" : "#efebe7" }
@@ -25,14 +32,17 @@ Rectangle {
     TapHandler {
         id: tap
         objectName: label.text
-        longPressThreshold: 100 // CI can be insanely slow, so don't demand a timely release to generate onTapped
         onSingleTapped: console.log("Single tap")
         onDoubleTapped: console.log("Double tap")
-        onTapped: {
-            console.log("Tapped")
+        onTapped: (eventPoint, button) => {
+            console.log("Tapped", button, eventPoint)
             tapFlash.start()
             root.tappedPosition = point.scenePosition
             root.tapped()
+            root.timeHeldWhenTapped = tap.timeHeld // eventPoint.timeHeld is already 0
+        }
+        onLongPressed: {
+            root.timeHeldWhenLongPressed = tap.timeHeld
         }
         onCanceled: root.canceled()
     }
