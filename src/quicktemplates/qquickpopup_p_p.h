@@ -96,9 +96,9 @@ public:
     void destroyDimmer();
     void toggleOverlay();
     void updateContentPalettes(const QPalette& parentPalette);
-    virtual void showOverlay();
-    virtual void hideOverlay();
-    virtual void resizeOverlay();
+    virtual void showDimmer();
+    virtual void hideDimmer();
+    virtual void resizeDimmer();
 
     virtual bool prepareEnterTransition();
     virtual bool prepareExitTransition();

@@ -216,17 +216,17 @@ void QQuickDrawerPositioner::reposition()
     QQuickPopupPositioner::reposition();
 }
 
-void QQuickDrawerPrivate::showOverlay()
+void QQuickDrawerPrivate::showDimmer()
 {
     // managed in setPosition()
 }
 
-void QQuickDrawerPrivate::hideOverlay()
+void QQuickDrawerPrivate::hideDimmer()
 {
     // managed in setPosition()
 }
 
-void QQuickDrawerPrivate::resizeOverlay()
+void QQuickDrawerPrivate::resizeDimmer()
 {
     if (!dimmer || !window)
         return;
@@ -799,7 +799,7 @@ void QQuickDrawer::geometryChange(const QRectF &newGeometry, const QRectF &oldGe
 {
     Q_D(QQuickDrawer);
     QQuickPopup::geometryChange(newGeometry, oldGeometry);
-    d->resizeOverlay();
+    d->resizeDimmer();
 }
 
 QT_END_NAMESPACE
