@@ -12,6 +12,7 @@
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
+#include <QtQuickTemplates2/private/qquickoverlay_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -231,7 +232,9 @@ void QQuickDrawerPrivate::resizeDimmer()
     if (!dimmer || !window)
         return;
 
-    QRectF geometry(0, 0, window->width(), window->height());
+    const QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+
+    QRectF geometry(0, 0, overlay ? overlay->width() : 0, overlay ? overlay->height() : 0);
 
     if (edge == Qt::LeftEdge || edge == Qt::RightEdge) {
         geometry.setY(popupItem->y());
