@@ -55,6 +55,7 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
 
 QQuickTapHandler::QQuickTapHandler(QQuickItem *parent)
     : QQuickSinglePointHandler(parent)
+    , m_longPressThreshold(QGuiApplication::styleHints()->mousePressAndHoldInterval())
 {
     if (m_mouseMultiClickDistanceSquared < 0) {
         m_multiTapInterval = qApp->styleHints()->mouseDoubleClickInterval();
@@ -148,18 +149,27 @@ void QQuickTapHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point
     \qmlproperty real QtQuick::TapHandler::longPressThreshold
 
     The time in seconds that an \l eventPoint must be pressed in order to
-    trigger a long press gesture and emit the \l longPressed() signal.
-    If the point is released before this time limit, a tap can be detected
-    if the \l gesturePolicy constraint is satisfied. The default value is
-    QStyleHints::mousePressAndHoldInterval() converted to seconds.
+    trigger a long press gesture and emit the \l longPressed() signal, if the
+    value is greater than \c 0. If the point is released before this time
+    limit, a tap can be detected if the \l gesturePolicy constraint is
+    satisfied. If \c longPressThreshold is \c 0, the timer is disabled and the
+    signal will not be emitted. If \c longPressThreshold is set to \c undefined,
+    the default value is used instead, and can be read back from this property.
+
+    The default value is QStyleHints::mousePressAndHoldInterval() converted to
+    seconds.
 */
 qreal QQuickTapHandler::longPressThreshold() const
 {
-    return longPressThresholdMilliseconds() / 1000.0;
+    return m_longPressThreshold / qreal(1000);
 }
 
 void QQuickTapHandler::setLongPressThreshold(qreal longPressThreshold)
 {
+    if (longPressThreshold < 0) {
+        resetLongPressThreshold();
+        return;
+    }
     int ms = qRound(longPressThreshold * 1000);
     if (m_longPressThreshold == ms)
         return;
@@ -168,9 +178,14 @@ void QQuickTapHandler::setLongPressThreshold(qreal longPressThreshold)
     emit longPressThresholdChanged();
 }
 
-int QQuickTapHandler::longPressThresholdMilliseconds() const
+void QQuickTapHandler::resetLongPressThreshold()
 {
-    return (m_longPressThreshold < 0 ? QGuiApplication::styleHints()->mousePressAndHoldInterval() : m_longPressThreshold);
+    int ms = QGuiApplication::styleHints()->mousePressAndHoldInterval();
+    if (m_longPressThreshold == ms)
+        return;
+
+    m_longPressThreshold = ms;
+    emit longPressThresholdChanged();
 }
 
 void QQuickTapHandler::timerEvent(QTimerEvent *event)
@@ -353,7 +368,8 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QPointerEvent *event,
         connectPreRenderSignal(press);
         updateTimeHeld();
         if (press) {
-            m_longPressTimer.start(longPressThresholdMilliseconds(), this);
+            if (m_longPressThreshold > 0)
+                m_longPressTimer.start(m_longPressThreshold, this);
             m_holdTimer.start();
         } else {
             m_longPressTimer.stop();
