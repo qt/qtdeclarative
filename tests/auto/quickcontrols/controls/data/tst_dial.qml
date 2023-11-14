@@ -504,13 +504,13 @@ TestCase {
 
     function test_wheel_data() {
         return [
-            { tag: "horizontal", orientation: Qt.Horizontal, dx: 120, dy: 0 },
-            { tag: "vertical", orientation: Qt.Vertical, dx: 0, dy: 120 }
+            { tag: "horizontal", dx: 120, dy: 0 },
+            { tag: "vertical", dx: 0, dy: 120 }
         ]
     }
 
     function test_wheel(data) {
-        var control = createTemporaryObject(dialComponent, testCase, {wheelEnabled: true, orientation: data.orientation})
+        var control = createTemporaryObject(dialComponent, testCase, {wheelEnabled: true})
         verify(control)
 
         compare(control.value, 0.0)
