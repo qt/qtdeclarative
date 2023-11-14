@@ -1,10 +1,11 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "qqmltypescreator_p.h"
-#include "qqmltypesclassdescription_p.h"
-#include "qqmltyperegistrarconstants_p.h"
 #include "qanystringviewutils_p.h"
+#include "qqmltyperegistrarconstants_p.h"
+#include "qqmltyperegistrarutils_p.h"
+#include "qqmltypesclassdescription_p.h"
+#include "qqmltypescreator_p.h"
 
 #include <QtCore/qset.h>
 #include <QtCore/qcborarray.h>
@@ -61,13 +62,15 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
             m_qml.writeStringBinding(S_EXTENSION, collector.javaScriptExtensionType);
             m_qml.writeBooleanBinding(S_EXTENSION_IS_JAVA_SCRIPT, true);
         } else {
-            qWarning() << "JavaScript extension type for" << collector.className
-                       << "does not exist";
+            warning(collector.file)
+                    << "JavaScript extension type for" << collector.className
+                    << "does not exist";
         }
 
         if (collector.extensionIsNamespace) {
-            qWarning() << "Extension type for" << collector.className
-                       << "cannot be both a JavaScript type and a namespace";
+            warning(collector.file)
+                    << "Extension type for" << collector.className
+                    << "cannot be both a JavaScript type and a namespace";
             if (!collector.nativeExtensionType.isEmpty()) {
                 m_qml.writeStringBinding(S_EXTENSION, collector.nativeExtensionType);
                 m_qml.writeBooleanBinding(S_EXTENSION_IS_NAMESPACE, true);
@@ -78,7 +81,8 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         if (collector.extensionIsNamespace)
             m_qml.writeBooleanBinding(S_EXTENSION_IS_NAMESPACE, true);
     } else if (collector.extensionIsNamespace) {
-        qWarning() << "Extension namespace for" << collector.className << "does not exist";
+        warning(collector.file)
+                << "Extension namespace for" << collector.className << "does not exist";
         m_qml.writeBooleanBinding(S_EXTENSION_IS_NAMESPACE, true);
     }
 
@@ -95,10 +99,11 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         return;
 
     if (!collector.sequenceValueType.isEmpty()) {
-        qWarning() << "Ignoring names of sequential container:";
+        warning(collector.file) << "Ignoring names of sequential container:";
         for (const QAnyStringView &name : std::as_const(collector.elementNames))
-            qWarning() << " - " << name.toString();
-        qWarning() << "Sequential containers are anonymous. Use QML_ANONYMOUS to register them.";
+            warning(collector.file) << " - " << name.toString();
+        warning(collector.file)
+                << "Sequential containers are anonymous. Use QML_ANONYMOUS to register them.";
         return;
     }
 

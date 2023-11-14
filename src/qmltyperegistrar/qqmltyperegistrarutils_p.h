@@ -21,6 +21,11 @@ QT_BEGIN_NAMESPACE
 
 QTypeRevision handleInMinorVersion(QTypeRevision revision, int majorVersion);
 
+QDebug warning(const QCborMap &classDef);
+QDebug warning(QAnyStringView fileName, int lineNumber = 0);
+
+QDebug error(QAnyStringView fileName, int lineNumber = 0);
+
 QT_END_NAMESPACE
 
 #endif // QQMLTYPEREGISTRAR_UTILS_P_H

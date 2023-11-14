@@ -10,6 +10,7 @@
 #include <cstdlib>
 
 #include <QtQmlTypeRegistrar/private/qqmltyperegistrar_p.h>
+#include <QtQmlTypeRegistrar/private/qqmltyperegistrarutils_p.h>
 
 using namespace Qt::Literals;
 
@@ -120,7 +121,7 @@ int main(int argc, char **argv)
 
     if (parser.isSet(extract)) {
         if (!parser.isSet(outputOption)) {
-            fprintf(stderr, "Error: The output file name must be provided\n");
+            error(module) << "The output file name must be provided";
             return EXIT_FAILURE;
         }
         QString baseName = parser.value(outputOption);
@@ -145,16 +146,15 @@ int main(int argc, char **argv)
         QString outputName = parser.value(outputOption);
         QFile file(outputName);
         if (!file.open(QIODeviceBase::WriteOnly)) {
-            fprintf(stderr, "Error: Cannot open \"%s\" for writing: %s\n",
-                    qPrintable(QDir::toNativeSeparators(outputName)),
-                    qPrintable(file.errorString()));
+            error(QDir::toNativeSeparators(outputName))
+                    << "Cannot open file for writing:" << file.errorString();
             return EXIT_FAILURE;
         }
         QTextStream output(&file);
-        typeRegistrar.write(output);
+        typeRegistrar.write(output, outputName);
     } else {
         QTextStream output(stdout);
-        typeRegistrar.write(output);
+        typeRegistrar.write(output, "stdout");
     }
 
     if (!parser.isSet(pluginTypesOption))
@@ -163,7 +163,7 @@ int main(int argc, char **argv)
     typeRegistrar.setReferencedTypes(processor.referencedTypes());
     const QString qmltypes = parser.value(pluginTypesOption);
     if (!typeRegistrar.generatePluginTypes(qmltypes)) {
-        fprintf(stderr, "Error: Cannot generate qmltypes file %s\n", qPrintable(qmltypes));
+        error(qmltypes) << "Cannot generate qmltypes file";
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;

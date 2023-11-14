@@ -60,15 +60,17 @@ QCborMap FoundType::select(const QCborMap &category, QAnyStringView relation) co
 {
     if (toStringView(category, S_INPUT_FILE).isEmpty()) {
         if (javaScript.isEmpty()) {
-            qWarning() << relation << "type of" << toStringView(category, S_QUALIFIED_CLASS_NAME)
-                       << "is not a JavaScript type";
+            warning(category)
+                    << relation << "type of" << toStringView(category, S_QUALIFIED_CLASS_NAME)
+                    << "is not a JavaScript type";
         }
         return javaScript;
     }
 
     if (native.isEmpty()) {
-        qWarning() << relation << "of" << toStringView(category, S_QUALIFIED_CLASS_NAME)
-                   << "is not a native type";
+        warning(category)
+                << relation << "of" << toStringView(category, S_QUALIFIED_CLASS_NAME)
+                << "is not a native type";
     }
     return native;
 }
@@ -92,8 +94,8 @@ FoundType QmlTypesClassDescription::findType(
                                 ? FoundType::OwnTypes
                                 : FoundType::ForeignTypes;
                     } else {
-                        qWarning() << "Multiple JavaScript types called"
-                                   << qualifiedName << "found!";
+                        warning(result.javaScript)
+                                << "Multiple JavaScript types called" << qualifiedName << "found!";
                     }
                 } else if (result.native.isEmpty()) {
                     result.native = *it;
@@ -101,8 +103,9 @@ FoundType QmlTypesClassDescription::findType(
                             ? FoundType::OwnTypes
                             : FoundType::ForeignTypes;
                 } else {
-                    qWarning() << "Multiple C++ types called" << qualifiedName << "found!"
-                               << "This violates the One Definition Rule!";
+                    warning(result.native)
+                            << "Multiple C++ types called" << qualifiedName << "found!"
+                            << "This violates the One Definition Rule!";
                 }
             }
         }
@@ -421,8 +424,9 @@ void QmlTypesClassDescription::collect(
                     // the "Invisible" test case. In that case, we must not assume anything about
                     // access semantics.
 
-                    qWarning() << "Warning: Refusing to generate non-lowercase name"
-                               << elementName->toString() << "for unknown foreign type";
+                    warning(classDef)
+                            << "Refusing to generate non-lowercase name"
+                            << *elementName << "for unknown foreign type";
                     elementName = elementNames.erase(elementName);
 
                     if (elementNames.isEmpty()) {

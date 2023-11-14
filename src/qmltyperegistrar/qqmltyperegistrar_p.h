@@ -40,7 +40,7 @@ class QmlTypeRegistrar
     QCborValue findTypeForeign(QAnyStringView name) const;
 
 public:
-    void write(QTextStream &os);
+    void write(QTextStream &os, QAnyStringView outFileName);
     bool generatePluginTypes(const QString &pluginTypesFile);
     void setModuleNameAndNamespace(const QString &module, const QString &targetNamespace);
     void setModuleVersions(QTypeRevision moduleVersion, const QList<quint8> &pastMajorVersions,

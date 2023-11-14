@@ -20,6 +20,7 @@ using namespace QAnyStringViewUtils;
 
 struct ExclusiveVersionRange
 {
+    QAnyStringView fileName;
     QString claimerName;
     QTypeRevision addedIn;
     QTypeRevision removedIn;
@@ -58,12 +59,12 @@ bool QmlTypeRegistrar::argumentsFromCommandLineAndFile(QStringList &allArguments
             QString optionsFile = argument;
             optionsFile.remove(0, 1);
             if (optionsFile.isEmpty()) {
-                fprintf(stderr, "The @ option requires an input file");
+                warning(optionsFile) << "The @ option requires an input file";
                 return false;
             }
             QFile f(optionsFile);
             if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                fprintf(stderr, "Cannot open options file specified with @");
+                warning(optionsFile) << "Cannot open options file specified with @";
                 return false;
             }
             while (!f.atEnd()) {
@@ -81,13 +82,13 @@ bool QmlTypeRegistrar::argumentsFromCommandLineAndFile(QStringList &allArguments
 int QmlTypeRegistrar::runExtract(const QString &baseName, const MetaTypesJsonProcessor &processor)
 {
     if (processor.types().isEmpty()) {
-        fprintf(stderr, "Error: No types to register found in library\n");
+        error(baseName) << "No types to register found in library";
         return EXIT_FAILURE;
     }
     QFile headerFile(baseName + u".h");
     bool ok = headerFile.open(QFile::WriteOnly);
     if (!ok) {
-        fprintf(stderr, "Error: Cannot open %s for writing\n", qPrintable(headerFile.fileName()));
+        error(headerFile.fileName()) << "Cannot open header file for writing";
         return EXIT_FAILURE;
     }
     auto prefix = QString::fromLatin1(
@@ -103,7 +104,7 @@ int QmlTypeRegistrar::runExtract(const QString &baseName, const MetaTypesJsonPro
     QFile sourceFile(baseName + u".cpp");
     ok = sourceFile.open(QFile::WriteOnly);
     if (!ok) {
-        fprintf(stderr, "Error: Cannot open %s for writing\n", qPrintable(sourceFile.fileName()));
+        error(sourceFile.fileName()) << "Cannot open implementation file for writing";
         return EXIT_FAILURE;
     }
     // the string split is necessaury because cmake's automoc scanner would otherwise pick up the include
@@ -148,7 +149,7 @@ QString conflictingVersionToString(const ExclusiveVersionRange &r)
     return s;
 };
 
-void QmlTypeRegistrar::write(QTextStream &output)
+void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName)
 {
     output << uR"(/****************************************************************************
 ** Generated QML type registration code
@@ -177,7 +178,7 @@ void QmlTypeRegistrar::write(QTextStream &output)
     if (underscoredModuleAsSymbol != moduleAsSymbol
             || underscoredModuleAsSymbol.isEmpty()
             || underscoredModuleAsSymbol.front().isDigit()) {
-        qWarning() << m_module << "is an invalid QML module URI. You cannot import this.";
+        warning(outFileName) << m_module << "is an invalid QML module URI. You cannot import this.";
     }
 
     const QString functionName = QStringLiteral("qml_register_types_") + moduleAsSymbol;
@@ -218,7 +219,7 @@ void QmlTypeRegistrar::write(QTextStream &output)
         if (toStringView(classDef, S_INPUT_FILE).isEmpty())
             continue;
 
-        const QString className = classDef[S_QUALIFIED_CLASS_NAME].toString();
+        QString className = classDef[S_QUALIFIED_CLASS_NAME].toString();
         QString targetName = className;
 
         // If either the foreign or the local part is a namespace we need to
@@ -226,7 +227,7 @@ void QmlTypeRegistrar::write(QTextStream &output)
         bool targetIsNamespace = classDef.value(S_NAMESPACE).toBool();
 
         QAnyStringView extendedName;
-        QStringList qmlElementNames;
+        QList<QString> qmlElementNames;
         QTypeRevision addedIn;
         QTypeRevision removedIn;
 
@@ -253,12 +254,17 @@ void QmlTypeRegistrar::write(QTextStream &output)
             }
         }
 
-        for (QString &qmlElementName : qmlElementNames) {
+        for (QString qmlElementName : std::as_const(qmlElementNames)) {
             if (qmlElementName == S_ANONYMOUS)
                 continue;
             if (qmlElementName == S_AUTO)
                 qmlElementName = className;
-            qmlElementInfos[qmlElementName].append({ className, addedIn, removedIn });
+            qmlElementInfos[qmlElementName].append({
+                toStringView(classDef, S_INPUT_FILE),
+                className,
+                addedIn,
+                removedIn
+            });
         }
 
         // We want all related metatypes to be registered by name, so that we can look them up
@@ -277,10 +283,10 @@ void QmlTypeRegistrar::write(QTextStream &output)
                     m_types, m_foreignTypes, targetName, namespaces);
 
             if (!target.javaScript.isEmpty() && target.native.isEmpty())
-                qWarning() << "JavaScript type" << targetName << "cannot be used as namespace";
+                warning(target.javaScript) << "JavaScript type cannot be used as namespace";
 
             if (target.native.value(S_OBJECT).toBool())
-                targetTypeName += QStringLiteral(" *");
+                targetTypeName += " *"_L1;
 
             // If there is no foreign type, the local one is a namespace.
             // Otherwise, only do metaTypeForNamespace if the target _metaobject_ is a namespace.
@@ -328,9 +334,9 @@ void QmlTypeRegistrar::write(QTextStream &output)
                         QTypeRevision revision = QTypeRevision::fromEncodedVersion(
                                 object[S_REVISION].toInteger());
                         if (m_moduleVersion < revision) {
-                            qWarning().noquote()
-                                    << "Warning:" << className << "is trying to register" << type
-                                    << object[S_NAME].toString()
+                            warning(classDef)
+                                    << className << "is trying to register" << type
+                                    << toStringView(object, S_NAME)
                                     << "with future version" << revision
                                     << "when module version is only" << m_moduleVersion;
                         }
@@ -453,9 +459,9 @@ void QmlTypeRegistrar::write(QTextStream &output)
                           [&](const auto &q) {
                               registeringCppClasses += u", %1"_s.arg(conflictingVersionToString(q));
                           });
-            qWarning().noquote() << "Warning:" << qmlName
-                                 << "was registered multiple times by following Cpp classes: "
-                                 << registeringCppClasses;
+            warning(conflictingExportStartIt->fileName)
+                    << qmlName << "is registered multiple times by the following C++ classes:"
+                    << registeringCppClasses;
             conflictingExportStartIt = conflictingExportEndIt;
         }
     }

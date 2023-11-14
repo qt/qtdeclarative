@@ -6,6 +6,7 @@
 #include "qanystringviewutils_p.h"
 #include "qqmltyperegistrarconstants_p.h"
 #include "qqmltypesclassdescription_p.h"
+#include "qqmltyperegistrarutils_p.h"
 
 #include <QtCore/qcborarray.h>
 #include <QtCore/qcbormap.h>
@@ -53,14 +54,15 @@ bool MetaTypesJsonProcessor::processTypes(const QStringList &files)
         {
             QFile f(source);
             if (!f.open(QIODevice::ReadOnly)) {
-                fprintf(stderr, "Error opening %s for reading\n", qPrintable(source));
+                error(source) << "Cannot open file for reading";
                 return false;
             }
-            QJsonParseError error = {0, QJsonParseError::NoError};
-            metaObjects = fromJson(f.readAll(), &error);
-            if (error.error != QJsonParseError::NoError) {
-                fprintf(stderr, "Error %d while parsing %s: %s\n", error.error, qPrintable(source),
-                        qPrintable(error.errorString()));
+            QJsonParseError parseError = {0, QJsonParseError::NoError};
+            metaObjects = fromJson(f.readAll(), &parseError);
+            if (parseError.error != QJsonParseError::NoError) {
+                error(source)
+                        << "Failed to parse JSON:" << parseError.error
+                        << parseError.errorString();
                 return false;
             }
         }
@@ -69,8 +71,7 @@ bool MetaTypesJsonProcessor::processTypes(const QStringList &files)
             const QCborArray metaObjectsArray = metaObjects.toArray();
             for (const QCborValue &metaObject : metaObjectsArray) {
                 if (!metaObject.isMap()) {
-                    fprintf(stderr, "Error parsing %s: JSON is not an object\n",
-                            qPrintable(source));
+                    error(source) <<  "JSON is not an object";
                     return false;
                 }
 
@@ -79,8 +80,7 @@ bool MetaTypesJsonProcessor::processTypes(const QStringList &files)
         } else if (metaObjects.isMap()) {
             processTypes(metaObjects.toMap());
         } else {
-            fprintf(stderr, "Error parsing %s: JSON is not an object or an array\n",
-                    qPrintable(source));
+            error(source) << "JSON is not an object or an array";
             return false;
         }
     }
@@ -92,23 +92,23 @@ bool MetaTypesJsonProcessor::processForeignTypes(const QString &types)
 {
     QFile typesFile(types);
     if (!typesFile.open(QIODevice::ReadOnly)) {
-        fprintf(stderr, "Cannot open foreign types file %s\n", qPrintable(types));
+        error(types) << "Cannot open foreign types file";
         return false;
     }
 
-    QJsonParseError error = {0, QJsonParseError::NoError};
-    QCborValue foreignMetaObjects = fromJson(typesFile.readAll(), &error);
-    if (error.error != QJsonParseError::NoError) {
-        fprintf(stderr, "Error %d while parsing %s: %s\n", error.error, qPrintable(types),
-                qPrintable(error.errorString()));
+    QJsonParseError parseError = {0, QJsonParseError::NoError};
+    QCborValue foreignMetaObjects = fromJson(typesFile.readAll(), &parseError);
+    if (parseError.error != QJsonParseError::NoError) {
+        error(types)
+                << "Failed to parse JSON:" << parseError.error
+                << parseError.errorString();
         return false;
     }
 
     const QCborArray foreignObjectsArray = foreignMetaObjects.toArray();
     for (const QCborValue &metaObject : foreignObjectsArray) {
         if (!metaObject.isMap()) {
-            fprintf(stderr, "Error parsing %s: JSON is not an object\n",
-                    qPrintable(types));
+            error(types) <<  "JSON is not an object";
             return false;
         }
 
@@ -219,9 +219,10 @@ MetaTypesJsonProcessor::RegistrationMode MetaTypesJsonProcessor::qmlTypeRegistra
                 return GadgetRegistration;
             if (classDef[S_NAMESPACE].toBool())
                 return NamespaceRegistration;
-            qWarning() << "Not registering classInfo which is neither an object, "
-                          "nor a gadget, nor a namespace:"
-                       << name.toString();
+            warning(classDef)
+                    << "Not registering a classInfo which is neither an object,"
+                    << "nor a gadget, nor a namespace:"
+                    << name.toString();
             break;
         }
     }
@@ -440,11 +441,10 @@ void MetaTypesJsonProcessor::processTypes(const QCborMap &types)
                     && !endsWith(include, QLatin1String(".hh"))
                     && !endsWith(include, QLatin1String(".py"))
                     && contains(include, QLatin1Char('.'))) {
-                fprintf(stderr,
-                        "Class %s is declared in %s, which appears not to be a header.\n"
-                        "The compilation of its registration to QML may fail.\n",
-                        qPrintable(classDef.value(S_QUALIFIED_CLASS_NAME).toString()),
-                        qPrintable(include));
+                warning(classDef)
+                        << "Class" << toStringView(classDef, S_QUALIFIED_CLASS_NAME)
+                        << "is declared in" << include << "which appears not to be a header."
+                        << "The compilation of its registration to QML may fail.";
             }
             m_includes.append(include);
             m_types.append(classDef);

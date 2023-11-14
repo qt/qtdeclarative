@@ -145,9 +145,9 @@ void tst_qmltyperegistrar::metaTypesRegistered()
 
     auto verifyMetaType = [](const char *name, const char *className) {
         const auto foundMetaType = QMetaType::fromName(name);
-        QVERIFY(foundMetaType.isValid());
+        QVERIFY2(foundMetaType.isValid(), name);
         QCOMPARE(foundMetaType.name(), name);
-        QVERIFY(foundMetaType.metaObject());
+        QVERIFY2(foundMetaType.metaObject(), name);
         QCOMPARE(foundMetaType.metaObject()->className(), className);
     };
 
@@ -408,19 +408,20 @@ void tst_qmltyperegistrar::duplicateExportWarnings()
     QVector<QCborMap> typesforeign = processor.foreignTypes();
     r.setTypes(types, typesforeign);
 
-    auto expectWarning = [](QString message) {
-        QTest::ignoreMessage(QtWarningMsg, qPrintable(message));
+    const auto expectWarning = [](const char *message) {
+        QTest::ignoreMessage(QtWarningMsg, message);
     };
-    expectWarning("Warning: ExportedQmlElement was registered multiple times by following Cpp "
-                  "classes:  ExportedQmlElement, ExportedQmlElement2 (added in 1.2), "
-                  "ExportedQmlElementDifferentVersion (added in 1.0) (removed in 1.7)");
-    expectWarning("Warning: SameNameSameExport was registered multiple times by following Cpp "
-                  "classes:  SameNameSameExport, SameNameSameExport2 (added in 1.2), "
-                  "SameNameSameExportDifferentVersion (added in 1.0)");
+    expectWarning("Warning: duplicatedExports.h:: ExportedQmlElement is registered multiple times "
+                  "by the following C++ classes: ExportedQmlElement, ExportedQmlElement2 "
+                  "(added in 1.2), ExportedQmlElementDifferentVersion (added in 1.0) "
+                  "(removed in 1.7)");
+    expectWarning("Warning: duplicatedExports.h:: SameNameSameExport is registered multiple times "
+                  "by the following C++ classes: SameNameSameExport, SameNameSameExport2 "
+                  "(added in 1.2), SameNameSameExportDifferentVersion (added in 1.0)");
 
     QString outputData;
     QTextStream output(&outputData, QIODeviceBase::ReadWrite);
-    r.write(output);
+    r.write(output, "tst_qmltyperegistrar_qmltyperegistrations.cpp");
 }
 
 void tst_qmltyperegistrar::clonedSignal()
