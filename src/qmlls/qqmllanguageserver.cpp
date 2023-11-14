@@ -111,12 +111,22 @@ void QQmlLanguageServer::registerHandlers(QLanguageServer *server,
 void QQmlLanguageServer::setupCapabilities(const QLspSpecification::InitializeParams &clientInfo,
                                            QLspSpecification::InitializeResult &serverInfo)
 {
-    Q_UNUSED(clientInfo);
     QJsonObject expCap;
     if (serverInfo.capabilities.experimental.has_value() && serverInfo.capabilities.experimental->isObject())
         expCap = serverInfo.capabilities.experimental->toObject();
     expCap.insert(u"addBuildDirs"_s, QJsonObject({ { u"supported"_s, true } }));
     serverInfo.capabilities.experimental = expCap;
+
+    if (clientInfo.workspaceFolders) {
+        if (auto workspaceList =
+                    std::get_if<QList<WorkspaceFolder>>(&*clientInfo.workspaceFolders)) {
+            QList<QByteArray> workspaceUris;
+            std::transform(workspaceList->cbegin(), workspaceList->cend(),
+                           std::back_inserter(workspaceUris),
+                           [](const auto &workspaceFolder) { return workspaceFolder.uri; });
+            m_codeModel.setRootUrls(workspaceUris);
+        }
+    }
 }
 
 QString QQmlLanguageServer::name() const
