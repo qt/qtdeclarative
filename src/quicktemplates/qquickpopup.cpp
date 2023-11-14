@@ -946,8 +946,10 @@ void QQuickPopupPrivate::resizeDimmer()
     if (!dimmer)
         return;
 
-    qreal w = window ? window->width() : 0;
-    qreal h = window ? window->height() : 0;
+    const QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+
+    qreal w = overlay ? overlay->width() : 0;
+    qreal h = overlay ? overlay->height() : 0;
     dimmer->setSize(QSizeF(w, h));
 }
 
