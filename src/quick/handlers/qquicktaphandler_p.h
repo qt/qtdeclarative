@@ -109,6 +109,7 @@ private:
     GesturePolicy m_gesturePolicy = GesturePolicy::DragThreshold;
     ExclusiveSignals m_exclusiveSignals = NotExclusive;
     bool m_pressed = false;
+    bool m_longPressed = false;
 
     static quint64 m_multiTapInterval;
     static int m_mouseMultiClickDistanceSquared;

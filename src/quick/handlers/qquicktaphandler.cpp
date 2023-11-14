@@ -78,6 +78,8 @@ bool QQuickTapHandler::wantsEventPoint(const QPointerEvent *event, const QEventP
     bool ret = false;
     bool overThreshold = d_func()->dragOverThreshold(point);
     if (overThreshold && m_gesturePolicy != DragWithinBounds) {
+        if (m_longPressTimer.isActive())
+            qCDebug(lcTapHandler) << objectName() << "drag threshold exceeded";
         m_longPressTimer.stop();
         m_holdTimer.invalidate();
     }
@@ -176,6 +178,7 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
     if (event->timerId() == m_longPressTimer.timerId()) {
         m_longPressTimer.stop();
         qCDebug(lcTapHandler) << objectName() << "longPressed";
+        m_longPressed = true;
         emit longPressed();
     } else if (event->timerId() == m_doubleTapTimer.timerId()) {
         m_doubleTapTimer.stop();
@@ -364,7 +367,9 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QPointerEvent *event,
                 setExclusiveGrab(event, point, press);
         }
         if (!cancel && !press && parentContains(point)) {
-            if (point.timeHeld() < longPressThreshold()) {
+            if (m_longPressed) {
+                qCDebug(lcTapHandler) << objectName() << "long press threshold" << longPressThreshold() << "exceeded:" << point.timeHeld();
+            } else {
                 // Assuming here that pointerEvent()->timestamp() is in ms.
                 const quint64 ts = event->timestamp();
                 const quint64 interval = ts - m_lastTapTimestamp;
@@ -410,10 +415,9 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QPointerEvent *event,
 
                 m_lastTapTimestamp = ts;
                 m_lastTapPos = point.scenePosition();
-            } else {
-                qCDebug(lcTapHandler) << objectName() << "tap threshold" << longPressThreshold() << "exceeded:" << point.timeHeld();
             }
         }
+        m_longPressed = false;
         emit pressedChanged();
         if (!press && m_gesturePolicy != DragThreshold) {
             // on release, ungrab after emitting changed signals
