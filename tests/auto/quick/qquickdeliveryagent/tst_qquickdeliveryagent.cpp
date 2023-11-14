@@ -177,7 +177,8 @@ void tst_qquickdeliveryagent::passiveGrabberOrder()
 
     QPoint pos(75, 75);
     QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, pos);
-    QTest::qWait(1000);
+    QTRY_VERIFY(rootTap->isPressed());
+    QTRY_VERIFY(subsceneTap->isPressed());
     auto devPriv = QPointingDevicePrivate::get(QPointingDevice::primaryPointingDevice());
     const auto &persistentPoint = devPriv->activePoints.values().first();
     qCDebug(lcTests) << "passive grabbers" << persistentPoint.passiveGrabbers << "contexts" << persistentPoint.passiveGrabbersContext;
@@ -187,7 +188,8 @@ void tst_qquickdeliveryagent::passiveGrabberOrder()
     QCOMPARE(persistentPoint.passiveGrabbers.last(), rootTap);
 
     QTest::mouseRelease(&view, Qt::LeftButton);
-    QTest::qWait(100);
+    QTRY_COMPARE(rootTap->isPressed(), false);
+    QTRY_COMPARE(subsceneTap->isPressed(), false);
     // QQuickWindow::event() has failsafe: clear all grabbers after release
     QCOMPARE(persistentPoint.passiveGrabbers.size(), 0);
 

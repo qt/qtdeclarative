@@ -181,6 +181,7 @@ Rectangle {
             TapHandler {
                 id: tapHandler
                 enabled: root.activePageCount > 0
+                gesturePolicy: TapHandler.ReleaseWithinBounds
                 onTapped: {
                     pageContainer.children[pageContainer.children.length - 1].exit()
                 }
