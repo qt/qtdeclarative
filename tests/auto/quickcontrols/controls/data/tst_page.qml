@@ -268,5 +268,18 @@ TestCase {
         compare(control.contentItem.y, control.header.height)
         compare(control.contentItem.width, control.width)
         compare(control.contentItem.height, control.height - control.header.height - control.footer.height)
+
+        // swap places and make sure geometry is updated correctly
+        const oldHeader = control.header
+        const oldFooter = control.footer
+        // reset both first, so one item does not end up in two places at once
+        control.header = null
+        control.footer = null
+        control.header = oldFooter
+        control.footer = oldHeader
+        verify(control.header.visible)
+        verify(control.footer.visible)
+        compare(control.header.y, 0)
+        compare(control.footer.y, control.height - control.footer.height)
     }
 }
