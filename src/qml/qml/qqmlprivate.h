@@ -948,7 +948,7 @@ namespace QQmlPrivate
     };
 
     template<class T>
-    struct QmlInterface<T, std::void_t<typename T::QmlIsInterface>>
+    struct QmlInterface<T, std::void_t<typename T::QmlIsInterface, decltype(qobject_interface_iid<T *>())>>
     {
         static constexpr bool Value = bool(T::QmlIsInterface::yes);
     };
