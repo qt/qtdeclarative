@@ -96,9 +96,9 @@ public:
             if (!m_abort)
                 generateQmlDir();
             if (!m_abort)
-                generateQrcFile();
-            if (!m_abort)
                 generateIndexThemeFile();
+            if (!m_abort)
+                generateQrcFile();
         } catch (std::exception &e) {
             error(e.what());
         }
@@ -1092,48 +1092,44 @@ private:
         progress();
     }
 
+    QString generateQrcSection(const QString &subDir, const QString &prefix, const QString &filter = {})
+    {
+        const QRegularExpression filterRegExp(filter);
+        const QString styleTargetDir = QFileInfo(m_bridge->m_targetDirectory).absoluteFilePath();
+        const QString absoluteSubDirPath = styleTargetDir + (subDir.isEmpty() ? "" : QDir::separator() + subDir);
+        QDirIterator it(absoluteSubDirPath, QDirIterator::Subdirectories);
+
+        QString resourceString = "\t<qresource prefix=\"" + prefix + "\">\n";
+
+        while (it.hasNext()) {
+            const QString file = it.next();
+            if (QFileInfo(file).isDir())
+                continue;
+            const QString relativeFilePath = QDir(absoluteSubDirPath).relativeFilePath(file);
+            if (!filter.isEmpty() && filterRegExp.match(relativeFilePath).hasMatch())
+                continue;
+            if (subDir.isEmpty())
+                resourceString += "\t\t<file>" + relativeFilePath + "</file>\n";
+            else
+                resourceString += "\t\t<file alias=\"" + relativeFilePath + "\">"
+                        + subDir + QDir::separator() + relativeFilePath + "</file>\n";
+        }
+
+        resourceString += "\t</qresource>\n";
+        return resourceString;
+    }
+
     void generateQrcFile()
     {
         debug("Generating Qt resource file");
         const QString styleName = QFileInfo(m_bridge->m_targetDirectory).fileName();
-        const QString targetPath = QFileInfo(m_bridge->m_targetDirectory).absolutePath() + QDir::separator();
 
-        QString resources;
-        resources += "<RCC>\n";
+        QString resources
+                = QStringLiteral("<RCC>\n")
+                += generateQrcSection("", "/qt/qml/" + styleName, "^icons/")
+                += generateQrcSection("icons", "/icons/" + styleName)
+                += "</RCC>\n";
 
-        // Add the style into the prefix "/qt/qml", since this path is the
-        // default controls style search path, and therefore works out-of-the-box
-        resources += "\t<qresource prefix=\"/qt/qml\">\n";
-        QDirIterator it(styleName, QDirIterator::Subdirectories);
-        while (it.hasNext()) {
-            QString file = it.next();
-            if (file.endsWith('.')) {
-                // QDir::NoDotAndDotDot
-                continue;
-            }
-            if (file.startsWith(styleName + "/icons/")) {
-                // icons go into a separate prefix below
-                continue;
-            }
-            resources += "\t\t<file alias=\"" + file + "\">" + targetPath + file + "</file>\n";
-        }
-        resources += "\t</qresource>\n";
-
-        // Add icons into the prefix "/icons", since this path is the
-        // default controls theme search path, and therefore works out-of-the-box
-        resources += "\t<qresource prefix=\"/icons\">\n";
-        resources += "\t\t<file alias=\"" + styleName + "/index.theme\">" + targetPath
-                + styleName + "/icons/index.theme</file>\n";
-
-        for (const QString &iconPath : m_icons) {
-            QString alias = iconPath;
-            alias.replace(QRegularExpression("^icons"), styleName);
-            resources += "\t\t<file alias=\"" + alias + "\">" + targetPath
-                    + styleName + QDir::separator() + iconPath + "</file>\n";
-        }
-        resources += "\t</qresource>\n";
-
-        resources += "</RCC>\n";
         createTextFileInStylefolder(styleName + ".qrc", resources);
         progress();
     }
@@ -1146,7 +1142,7 @@ private:
 
         QString scaleDirectoriesConfig;
         QStringList scaleDirectories;
-        QDirIterator it(styleName + QDir::separator() + "icons");
+        QDirIterator it(targetPath + QDir::separator() + styleName + QDir::separator() + "icons");
         QRegularExpression reGetScale(R"(@(.*)x)");
 
         while (it.hasNext()) {
