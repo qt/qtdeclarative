@@ -1895,10 +1895,12 @@ Item {
             qtest_results.finishTestData()
             qtest_runInternal("cleanup")
             qtest_destroyTemporaryObjects()
-            qtest_results.finishTestDataCleanup()
+
             // wait(0) will call processEvents() so objects marked for deletion
             // in the test function will be deleted.
             wait(0)
+
+            qtest_results.finishTestDataCleanup()
         }
     }
 
