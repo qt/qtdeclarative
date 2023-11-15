@@ -306,18 +306,31 @@ ApplicationWindow {
             visible: showLogCheckbox.checked
             Layout.preferredWidth: parent.width
             Layout.preferredHeight: 200
+            property bool sticky: true
+
             TableView {
                 id: outputView
                 clip: true
-                reuseItems: false
+                animate: false
                 model: filteredModel
+
                 delegate: Label {
                     text: msg
-                    Component.onCompleted: {
+                    onImplicitWidthChanged: {
                         if (implicitWidth > outputView.contentWidth)
                             outputView.contentWidth = implicitWidth
                     }
                 }
+
+                onRowsChanged: {
+                    if (outputScrollView.sticky)
+                        positionViewAtRow(rows - 1, TableView.AlignBottom)
+                }
+            }
+
+            Connections {
+                target: outputScrollView.ScrollBar.vertical
+                onPressedChanged: outputScrollView.sticky = target.pressed ? false : target.position > 0.9
             }
         }
 
