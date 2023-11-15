@@ -226,6 +226,16 @@ function(_qt_internal_deploy_qml_imports_for_target)
                 endforeach()
             endif()
 
+            # Install runtime dependencies on Windows.
+            if(__QT_DEPLOY_SYSTEM_NAME STREQUAL "Windows")
+                foreach(file IN LISTS __QT_DEPLOY_TARGET_${entry_LINKTARGET}_RUNTIME_DLLS)
+                    if(__QT_DEPLOY_VERBOSE)
+                        message(STATUS "runtime dependency for QML plugin '${entry_PLUGIN}':")
+                    endif()
+                    file(INSTALL ${file} DESTINATION "${QT_DEPLOY_PREFIX}/${QT_DEPLOY_BIN_DIR}")
+                endforeach()
+            endif()
+
             if(__QT_DEPLOY_TOOL STREQUAL "GRD" AND __QT_DEPLOY_MUST_ADJUST_PLUGINS_RPATH)
                 # The RPATHs of the installed plugins do not match Qt's original lib directory.
                 # We must set the RPATH to point to QT_DEPLOY_LIBDIR.
