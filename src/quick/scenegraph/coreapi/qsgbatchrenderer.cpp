@@ -1222,8 +1222,13 @@ void Renderer::nodeWasRemoved(Node *node)
         if (e) {
             e->removed = true;
             m_elementsToDelete.add(e);
-            if (m_renderNodeElements.isEmpty())
+            if (m_renderNodeElements.isEmpty()) {
                 m_forceNoDepthBuffer = false;
+                // Must have a full rebuild given useDepthBuffer() now returns
+                // a different value than before, meaning there can once again
+                // be an opaque pass.
+                m_rebuild |= FullRebuild;
+            }
 
             if (e->batch != nullptr)
                 e->batch->needsPurge = true;
