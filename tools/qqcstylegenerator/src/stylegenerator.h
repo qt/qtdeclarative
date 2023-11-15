@@ -677,8 +677,10 @@ private:
 
     void exportGeometry(const QJsonObject &atom, QJsonObject &outputConfig)
     {
-        const auto geometry = getFigmaBoundingBox(atom);
-        const auto geometryIncludingShadow = getFigmaRenderBounds(atom);
+        const QRectF geometry = getFigmaBoundingBox(atom);
+        QRectF geometryIncludingShadow = getFigmaRenderBounds(atom);
+        if (geometryIncludingShadow.isEmpty())
+            geometryIncludingShadow = geometry;
 
         // Note that the geometry we insert into the config file is
         // the geometry of atom/shape without shadows. This means that
@@ -1257,7 +1259,14 @@ private:
     {
         // Figma render bounds is the bounds of the whole item / image
         // in scene coordinates, including drop shadow and other effects.
-        const auto bb = getObject("absoluteRenderBounds", figmaObject);
+        // Note: 'absoluteRenderBounds' can sometimes be 'null'.
+        const auto foundValue = figmaObject.value("absoluteRenderBounds");
+        if (foundValue.isNull())
+            return {};
+        if (!foundValue.isObject())
+            throw std::runtime_error("'absoluteRenderBounds' is not an object!");
+
+        const auto bb = foundValue.toObject();
         const auto x = getValue("x", bb).toDouble();
         const auto y = getValue("y", bb).toDouble();
         const auto width = getValue("width", bb).toDouble();
