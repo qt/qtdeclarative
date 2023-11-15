@@ -473,6 +473,10 @@ private:
     friend class QAccessibleQuickItem;
     friend class QQuickAccessibleAttached;
     friend class QQuickAnchorChanges;
+#ifndef QT_NO_DEBUG_STREAM
+    friend Q_QUICK_EXPORT QDebug operator<<(QDebug debug, QQuickItem *item);
+#endif
+
     Q_DISABLE_COPY(QQuickItem)
     Q_DECLARE_PRIVATE(QQuickItem)
 };
