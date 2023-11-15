@@ -765,7 +765,7 @@ function(_qt_internal_write_deferred_qmlls_ini_file)
         # cmake list separator and windows path separator are both ';', so no replacement needed
         set(concatenated_build_dirs "${_qmlls_ini_build_folders}")
     endif()
-    set(file_content "[General]\nbuildDir=${concatenated_build_dirs}\n")
+    set(file_content "[General]\nbuildDir=${concatenated_build_dirs}\nno-cmake-calls=false\n")
     file(CONFIGURE OUTPUT "${qmlls_ini_file}" CONTENT "${file_content}")
 endfunction()
 

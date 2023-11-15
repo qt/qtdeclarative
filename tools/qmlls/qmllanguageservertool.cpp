@@ -175,6 +175,12 @@ int main(int argv, char *argc[])
                                                     "command line options into consideration"));
     parser.addOption(ignoreSettings);
 
+    QCommandLineOption noCMakeCallsOption(
+            QStringList() << "no-cmake-calls",
+            QLatin1String("Disables automatic CMake rebuilds and C++ file watching."));
+    parser.addOption(noCMakeCallsOption);
+    settings.addOption("no-cmake-calls", "false");
+
     parser.process(app);
 
     if (parser.isSet(writeDefaultsOption)) {
@@ -212,6 +218,19 @@ int main(int argv, char *argc[])
                 std::cout.flush();
             },
             (parser.isSet(ignoreSettings) ? nullptr : &settings));
+
+    const bool disableCMakeCallsViaEnvironment =
+            qmlGetConfigOption<bool, qmlConvertBoolConfigOption>("QMLLS_NO_CMAKE_CALLS");
+
+    if (disableCMakeCallsViaEnvironment || parser.isSet(noCMakeCallsOption)) {
+        if (disableCMakeCallsViaEnvironment) {
+            qWarning() << "Disabling CMake calls via QMLLS_NO_CMAKE_CALLS environment variable.";
+        } else {
+            qWarning() << "Disabling CMake calls via command line switch.";
+        }
+
+        qmlServer.codeModel()->disableCMakeCalls();
+    }
 
     const QStringList envPaths =
             qEnvironmentVariable("QMLLS_BUILD_DIRS").split(u',', Qt::SkipEmptyParts);
