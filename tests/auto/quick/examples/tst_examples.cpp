@@ -68,7 +68,6 @@ tst_examples::tst_examples()
 
 #if !QT_CONFIG(opengl)
     //No support for Particles
-    excludedFiles << "examples/qml/dynamicscene/dynamicscene.qml";
     excludedFiles << "examples/quick/animation/basics/color-animation.qml";
     excludedFiles << "examples/quick/particles/affectors/content/age.qml";
     excludedFiles << "examples/quick/pointerhandlers/multiflame.qml";
