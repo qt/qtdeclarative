@@ -149,7 +149,7 @@ QString conflictingVersionToString(const ExclusiveVersionRange &r)
     return s;
 };
 
-void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName)
+void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) const
 {
     output << uR"(/****************************************************************************
 ** Generated QML type registration code

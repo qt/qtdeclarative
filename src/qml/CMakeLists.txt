@@ -517,12 +517,18 @@ endif()
 _qt_internal_qml_type_registration(QmlBuiltins ${builtins_typeregistration_args})
 add_dependencies(QmlBuiltins QQmlComponentJson)
 
+_qt_internal_get_tool_wrapper_script_path(tool_wrapper)
 add_custom_command(
-    OUTPUT "${qml_build_dir}/jsroot.qmltypes"
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/jsroot.qmltypes"
+    OUTPUT
+        "${qml_build_dir}/jsroot.qmltypes"
+    DEPENDS
+        ${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar
     COMMAND
-        "${CMAKE_COMMAND}" -E copy_if_different
-        "${CMAKE_CURRENT_SOURCE_DIR}/jsroot.qmltypes" "${qml_build_dir}"
+        ${tool_wrapper}
+        $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar>
+        --jsroot --generate-qmltypes "${qml_build_dir}/jsroot.qmltypes"
+    COMMENT "Generating jsroot.qmltypes"
+    VERBATIM
 )
 
 set(builtins_output_files "")
