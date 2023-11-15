@@ -17,6 +17,8 @@ QQC2.ApplicationWindow {
 
     background: Image {
         source: UIStyle.themeImagePath("background")
+        width : parent.width
+        height : parent.height
     }
 
     header: NaviButton {
