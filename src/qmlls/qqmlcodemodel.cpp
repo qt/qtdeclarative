@@ -90,8 +90,17 @@ QQmlCodeModel::QQmlCodeModel(QObject *parent, QQmlToolingSettings *settings)
                      DomEnvironment::Option::SingleThreaded)),
       m_settings(settings)
 {
-    QObject::connect(&m_cppFileWatcher, &QFileSystemWatcher::fileChanged, this,
-                     &QQmlCodeModel::onCppFileChanged);
+}
+
+/*!
+\internal
+Disable the functionality that uses CMake, and remove the already watched paths if there are some.
+*/
+void QQmlCodeModel::disableCMakeCalls()
+{
+    m_cmakeStatus = DoesNotHaveCMake;
+    m_cppFileWatcher.removePaths(m_cppFileWatcher.files());
+    QObject::disconnect(&m_cppFileWatcher, &QFileSystemWatcher::fileChanged, nullptr, nullptr);
 }
 
 QQmlCodeModel::~QQmlCodeModel()
@@ -419,17 +428,34 @@ void QQmlCodeModel::openUpdateEnd()
 
 /*!
 \internal
-Test for CMake on the current system, and save result in m_cmakeStatus.
+Performs initialization for m_cmakeStatus, including testing for CMake on the current system.
 */
-QQmlCodeModel::CMakeStatus QQmlCodeModel::testCMakeStatus()
+void QQmlCodeModel::initializeCMakeStatus(const QString &pathForSettings)
 {
+    if (m_settings) {
+        const QString cmakeCalls = u"no-cmake-calls"_s;
+        m_settings->search(pathForSettings);
+        if (m_settings->isSet(cmakeCalls) && m_settings->value(cmakeCalls).toBool()) {
+            qWarning() << "Disabling CMake calls via .qmlls.ini setting.";
+            m_cmakeStatus = DoesNotHaveCMake;
+            return;
+        }
+    }
+
     QProcess process;
     process.setProgram(u"cmake"_s);
     process.setArguments({ u"--version"_s });
     process.start();
     process.waitForFinished();
     m_cmakeStatus = process.exitCode() == 0 ? HasCMake : DoesNotHaveCMake;
-    return m_cmakeStatus;
+
+    if (m_cmakeStatus == DoesNotHaveCMake) {
+        qWarning() << "Disabling CMake calls because CMake was not found.";
+        return;
+    }
+
+    QObject::connect(&m_cppFileWatcher, &QFileSystemWatcher::fileChanged, this,
+                     &QQmlCodeModel::onCppFileChanged);
 }
 
 /*!
@@ -547,12 +573,13 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
 {
     qCDebug(codeModelLog) << "updating doc" << url << "to version" << version << "("
                           << docText.size() << "chars)";
+
+    const QString fPath = url2Path(url, UrlLookup::ForceLookup);
+    if (m_cmakeStatus == RequiresInitialization)
+        initializeCMakeStatus(fPath);
+
     DomItem newCurrent = m_currentEnv.makeCopy(DomItem::CopyOption::EnvConnected).item();
     QStringList loadPaths = buildPathsForFileUrl(url);
-
-    if (m_cmakeStatus == ToTest) {
-        m_cmakeStatus = testCMakeStatus();
-    }
 
     if (m_cmakeStatus == HasCMake && !loadPaths.isEmpty() && m_rebuildRequired) {
         callCMakeBuild(loadPaths);
@@ -563,7 +590,6 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
     if (std::shared_ptr<DomEnvironment> newCurrentPtr = newCurrent.ownerAs<DomEnvironment>()) {
         newCurrentPtr->setLoadPaths(loadPaths);
     }
-    QString fPath = url2Path(url, UrlLookup::ForceLookup);
     Path p;
     DomCreationOptions options;
     options.setFlag(DomCreationOption::WithScriptExpressions);
