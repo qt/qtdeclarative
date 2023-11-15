@@ -3511,6 +3511,7 @@ function(qt6_generate_deploy_qml_app_script)
         POST_EXCLUDE_REGEXES
         POST_INCLUDE_FILES
         POST_EXCLUDE_FILES
+        DEPLOY_TOOL_OPTIONS
     )
     set(multi_value_options
         ${qt_deploy_runtime_dependencies_options}
