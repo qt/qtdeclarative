@@ -69,6 +69,14 @@ if(TARGET Qt::Quick
         AND NOT rtems)
     add_subdirectory(qmleasing)
 endif()
+if(TARGET Qt::Quick
+        AND TARGET Qt::Svg
+        AND NOT ANDROID
+        AND NOT IOS
+        AND NOT WASM
+        AND NOT rtems)
+    add_subdirectory(svgtoqml)
+endif()
 if(QT_FEATURE_thread AND TARGET Qt::QuickTest AND NOT ANDROID AND NOT WASM AND NOT rtems)
     add_subdirectory(qmltestrunner)
 endif()

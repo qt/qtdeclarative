@@ -1,0 +1,17 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtqml-tooling-svgtoqml.html
+\title svgtoqml
+\brief The SVG to QML converter tool
+\ingroup qtqml-tooling
+
+svgtoqml is a command line tool shipped with Qt that converts an SVG document
+to a QML file. This QML file can then be used as a component in Qt Quick
+applications.
+
+\note svgtoqml is currently in a Tech Preview stage. It only supports
+a limited subset of what the QtSvg module supports.
+
+*/

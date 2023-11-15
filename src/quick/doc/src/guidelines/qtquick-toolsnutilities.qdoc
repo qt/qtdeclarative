@@ -113,4 +113,8 @@ The Qt Quick Compiler consist of two components:
 \l{QML Language Server} is a tool shipped with Qt that helps you edit
 QML code in your favorite (LSP-compatible) editor.
 
+\section1 SVG to QML converter [tech preview]
+
+The \l{svgtoqml} tool converts an SVG document to a QML file that can be used as a component.
+
 */
