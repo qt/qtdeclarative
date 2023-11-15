@@ -8961,6 +8961,16 @@ QDebug operator<<(QDebug debug,
     const QRectF rect(item->position(), QSizeF(item->width(), item->height()));
 
     debug << item->metaObject()->className() << '(' << static_cast<void *>(item);
+
+    // Deferred properties will cause recursion when calling nameForObject
+    // before the component is completed, so guard against this situation.
+    if (item->isComponentComplete()) {
+        if (QQmlContext *context = qmlContext(item)) {
+            const auto objectId = context->nameForObject(item);
+            if (!objectId.isEmpty())
+                debug << ", id=" << objectId;
+        }
+    }
     if (!item->objectName().isEmpty())
         debug << ", name=" << item->objectName();
     debug << ", parent=" << static_cast<void *>(item->parentItem())
