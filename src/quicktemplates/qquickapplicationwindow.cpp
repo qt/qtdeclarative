@@ -332,7 +332,12 @@ QQuickApplicationWindowAttached *QQuickApplicationWindow::qmlAttachedProperties(
 
     \note If the background item has no explicit size specified, it automatically
           follows the control's size. In most cases, there is no need to specify
-          width or height for a background item.
+          width or height for a background item. However, when using Image as
+          the background, for example, a change in \l {Image::}{source} without
+          a change in size can cause the image to be incorrectly sized (at its
+          natural size, rather than the size of the window). This is because the
+          resizing done by ApplicationWindow is not considered "explicit". This is one
+          instance where it is necessary to set the size manually.
 
     \sa {Customizing ApplicationWindow}, contentItem, header, footer
 */
