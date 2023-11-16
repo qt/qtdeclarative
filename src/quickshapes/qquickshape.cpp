@@ -464,6 +464,9 @@ void QQuickShapePath::setDashPattern(const QVector<qreal> &array)
 
     \note If set to something other than \c{null}, the \c fillGradient will take precedence over
     both \l fillItem and \l fillColor.
+
+    By default, up to 256 different gradients may be displayed simultanously. This limit may be
+    customized with the \c QT_QUICKSHAPES_MAX_GRADIENTS environment variable.
  */
 
 QQuickShapeGradient *QQuickShapePath::fillGradient() const

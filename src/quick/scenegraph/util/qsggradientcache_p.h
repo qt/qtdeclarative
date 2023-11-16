@@ -16,6 +16,7 @@
 //
 
 #include <QtCore/qhash.h>
+#include <QtCore/qcache.h>
 #include <QtGui/qbrush.h>
 
 #include <QtQuick/qtquickexports.h>
@@ -41,9 +42,9 @@ struct Q_QUICK_EXPORT QSGGradientCacheKey
 
 inline size_t qHash(const QSGGradientCacheKey &v, size_t seed = 0)
 {
-    size_t h = seed + v.spread;
-    for (int i = 0; i < 3 && i < v.stops.size(); ++i)
-        h += v.stops[i].second.rgba();
+    size_t h = qHash(size_t(v.spread), seed);
+    for (int i = 0; i < 2 && i < v.stops.size(); ++i)
+        h = qHash(v.stops[i].first, qHash(v.stops[i].second.rgba64(), h));
     return h;
 }
 
@@ -59,12 +60,22 @@ public:
         qreal v1; // focal radius (R)
     };
 
+    QSGGradientCache();
     ~QSGGradientCache();
     static QSGGradientCache *cacheForRhi(QRhi *rhi);
     QSGTexture *get(const QSGGradientCacheKey &grad);
 
 private:
-    QHash<QSGGradientCacheKey, QSGPlainTexture *> m_textures;
+    void setTextureData(QSGPlainTexture *tx, const QSGGradientCacheKey &grad);
+
+    struct IndexHolder {
+        ~IndexHolder() { if (freeIndex && idx >= 0) *freeIndex = idx; }
+        qsizetype idx = -1;
+        qsizetype *freeIndex = nullptr;
+    };
+    QList<QSGPlainTexture *> m_textures;
+    QCache<QSGGradientCacheKey, IndexHolder> m_cache;
+    qsizetype m_freeIndex = -1;
 };
 
 QT_END_NAMESPACE
