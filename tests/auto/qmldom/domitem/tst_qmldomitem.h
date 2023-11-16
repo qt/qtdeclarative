@@ -2692,6 +2692,22 @@ private slots:
                  sourceLocationToQCborValue(fileLocations.foundTree->info().regions[ColonTokenRegion]));
     }
 
+    // add qml files here that should not crash the dom construction
+    void crashes_data()
+    {
+        QTest::addColumn<QString>("filePath");
+
+        QTest::addRow("inactiveVisitorMarkerCrash")
+                << baseDir + u"/inactiveVisitorMarkerCrash.qml"_s;
+    }
+    void crashes()
+    {
+        QFETCH(QString, filePath);
+
+        const DomItem rootQmlObject = rootQmlObjectFromFile(filePath, qmltypeDirs);
+        QVERIFY(rootQmlObject);
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

@@ -580,12 +580,12 @@ private:
     template<typename T>
     void endVisitT(T *t)
     {
+        if (m_inactiveVisitorMarker && m_inactiveVisitorMarker->nodeKind == t->kind) {
+            m_inactiveVisitorMarker->count -= 1;
+            if (m_inactiveVisitorMarker->count == 0)
+                m_inactiveVisitorMarker.reset();
+        }
         if (m_inactiveVisitorMarker) {
-            if (m_inactiveVisitorMarker->nodeKind == t->kind) {
-                m_inactiveVisitorMarker->count -= 1;
-                if (m_inactiveVisitorMarker->count == 0)
-                    m_inactiveVisitorMarker.reset();
-            }
             switch (m_inactiveVisitorMarker->stillActiveVisitorKind()) {
             case DomCreator:
                 m_domCreator.endVisit(t);
