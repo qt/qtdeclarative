@@ -25,6 +25,7 @@
 #include <private/qv4calldata_p.h>
 
 #include <QtCore/qsharedpointer.h>
+#include <stack>
 
 QT_BEGIN_NAMESPACE
 
@@ -190,7 +191,9 @@ public:
             global(false),
             qmlGlobal(false),
             throwsReferenceError(false),
-            subscriptLoadedForCall(false)
+            subscriptLoadedForCall(false),
+            isOptional(false),
+            hasSavedCallBaseSlot(false)
         {}
 
         Reference(const Reference &) = default;
@@ -256,8 +259,8 @@ public:
         static Reference
         fromMember(const Reference &baseRef, const QString &name,
                    QQmlJS::SourceLocation sourceLocation = QQmlJS::SourceLocation(),
-                   Moth::BytecodeGenerator::Label jumpLabel = Moth::BytecodeGenerator::Label(),
-                   Moth::BytecodeGenerator::Label targetLabel = Moth::BytecodeGenerator::Label())
+                   bool isOptional = false,
+                   std::vector<Moth::BytecodeGenerator::Jump> *optionalChainJumpsToPatch = nullptr)
         {
             Q_ASSERT(baseRef.isValid());
             Reference r(baseRef.codegen, Member);
@@ -265,8 +268,8 @@ public:
             r.propertyNameIndex = r.codegen->registerString(name);
             r.requiresTDZCheck = baseRef.requiresTDZCheck;
             r.sourceLocation = sourceLocation;
-            r.optionalChainJumpLabel.reset(new Moth::BytecodeGenerator::Label(jumpLabel));
-            r.optionalChainTargetLabel.reset(new Moth::BytecodeGenerator::Label(targetLabel));
+            r.optionalChainJumpsToPatch = optionalChainJumpsToPatch;
+            r.isOptional = isOptional;
             return r;
         }
         static Reference fromSuperProperty(const Reference &property) {
@@ -276,14 +279,13 @@ public:
             r.subscriptRequiresTDZCheck = property.requiresTDZCheck;
             return r;
         }
-        static Reference fromSubscript(const Reference &baseRef, const Reference &subscript, Moth::BytecodeGenerator::Label targetLabel = Moth::BytecodeGenerator::Label()) {
+        static Reference fromSubscript(const Reference &baseRef, const Reference &subscript) {
             Q_ASSERT(baseRef.isStackSlot());
             Reference r(baseRef.codegen, Subscript);
             r.elementBase = baseRef.stackSlot();
             r.elementSubscript = subscript.asRValue();
             r.requiresTDZCheck = baseRef.requiresTDZCheck;
             r.subscriptRequiresTDZCheck = subscript.requiresTDZCheck;
-            r.optionalChainTargetLabel.reset(new Moth::BytecodeGenerator::Label(targetLabel));
             return r;
         }
         static Reference fromConst(Codegen *cg, QV4::ReturnedValue constant) {
@@ -373,9 +375,12 @@ public:
         quint32 qmlGlobal:1;
         quint32 throwsReferenceError:1;
         quint32 subscriptLoadedForCall:1;
+        quint32 isOptional: 1;
+        quint32 hasSavedCallBaseSlot: 1;
         QQmlJS::SourceLocation sourceLocation = QQmlJS::SourceLocation();
-        QSharedPointer<Moth::BytecodeGenerator::Label> optionalChainJumpLabel;
-        QSharedPointer<Moth::BytecodeGenerator::Label> optionalChainTargetLabel;
+        std::vector<Moth::BytecodeGenerator::Jump> *optionalChainJumpsToPatch = nullptr;
+        int savedCallBaseSlot = -1;
+        int savedCallPropertyNameIndex = -1;
 
     private:
         void storeAccumulator() const;
@@ -801,8 +806,15 @@ protected:
     bool _tailCallsAreAllowed = true;
     bool storeSourceLocations = false;
     QSet<QString> m_globalNames;
+
+    struct OptionalChainState
+    {
+        QQmlJS::AST::Node *tailNodeOfChain = nullptr;
+        std::vector<Moth::BytecodeGenerator::Jump> jumpsToPatch;
+        bool actuallyHasOptionals = false;
+    };
     QSet<QQmlJS::AST::Node*> m_seenOptionalChainNodes;
-    QHash<QQmlJS::AST::Node*, Moth::BytecodeGenerator::Label> m_optionalChainLabels;
+    std::stack<OptionalChainState> m_optionalChainsStates;
 
     ControlFlow *controlFlow = nullptr;
 
@@ -836,11 +848,14 @@ protected:
     };
 
 private:
+    Q_DISABLE_COPY(Codegen)
     VolatileMemoryLocations scanVolatileMemoryLocations(QQmlJS::AST::Node *ast);
     void handleConstruct(const Reference &base, QQmlJS::AST::ArgumentList *args);
     void throwError(ErrorType errorType, const QQmlJS::SourceLocation &loc,
                     const QString &detail);
-    std::optional<Moth::BytecodeGenerator::Label> traverseOptionalChain(QQmlJS::AST::Node *node);
+    bool traverseOptionalChain(QQmlJS::AST::Node *node);
+    void optionalChainFinalizer(Reference expressionResult, bool tailOfChain,
+                                bool isDeleteExpression = false);
     Reference loadSubscriptForCall(const Reference &base);
     void generateThrowException(const QString &type, const QString &text = QString());
 };

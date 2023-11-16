@@ -682,7 +682,6 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         QV4::Lookup *l = function->executableCompilationUnit()->runtimeLookups + index;
 
         if (accumulator.isNullOrUndefined()) {
-            acc = Encode::undefined();
             code += offset;
         } else {
             acc = l->getter(l, engine, accumulator);

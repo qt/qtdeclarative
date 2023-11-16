@@ -21,7 +21,6 @@
 #include <private/qqmljsdiagnosticmessage_p.h>
 
 #include <cmath>
-#include <iostream>
 
 #ifdef CONST
 #undef CONST
@@ -1262,35 +1261,26 @@ bool Codegen::visit(ArrayPattern *ast)
 
 bool Codegen::visit(ArrayMemberExpression *ast)
 {
-    auto label = traverseOptionalChain(ast);
-    auto targetLabel = label.has_value() ? label.value() : Moth::BytecodeGenerator::Label();
-
     if (hasError())
         return false;
 
-    if (ast->isOptional)
-        Q_ASSERT(m_optionalChainLabels.contains(ast));
-
+    const bool isTailOfChain = traverseOptionalChain(ast);
 
     TailCallBlocker blockTailCalls(this);
     Reference base = expression(ast->base);
 
     auto writeSkip = [&]() {
-            auto acc = Reference::fromAccumulator(this).storeOnStack();
-            base.loadInAccumulator();
-            bytecodeGenerator->addInstruction(Instruction::CmpEqNull());
-            auto jumpFalse = bytecodeGenerator->jumpFalse();
-            bytecodeGenerator->addInstruction(Instruction::LoadUndefined());
-            bytecodeGenerator->jump().link(m_optionalChainLabels.take(ast));
-            jumpFalse.link();
-            acc.loadInAccumulator();
+        base.loadInAccumulator();
+        bytecodeGenerator->addInstruction(Instruction::CmpEqNull());
+        auto jumpToUndefined = bytecodeGenerator->jumpTrue();
+        m_optionalChainsStates.top().jumpsToPatch.emplace_back(std::move(jumpToUndefined));
     };
 
     if (hasError())
         return false;
     if (base.isSuper()) {
         Reference index = expression(ast->expression).storeOnStack();
-        setExprResult(Reference::fromSuperProperty(index));
+        optionalChainFinalizer(Reference::fromSuperProperty(index), isTailOfChain);
         return false;
     }
     base = base.storeOnStack();
@@ -1300,11 +1290,10 @@ bool Codegen::visit(ArrayMemberExpression *ast)
         QString s = str->value.toString();
         uint arrayIndex = stringToArrayIndex(s);
         if (arrayIndex == UINT_MAX) {
-            auto jumpLabel = ast->isOptional ? m_optionalChainLabels.take(ast) : Moth::BytecodeGenerator::Label();
-
-            setExprResult(Reference::fromMember(base, str->value.toString(),
-                                                ast->expression->firstSourceLocation(), jumpLabel,
-                                                targetLabel));
+            auto ref = Reference::fromMember(base, s, ast->expression->firstSourceLocation(),
+                                             ast->isOptional,
+                                             &m_optionalChainsStates.top().jumpsToPatch);
+            setExprResult(ref);
             return false;
         }
 
@@ -1312,7 +1301,7 @@ bool Codegen::visit(ArrayMemberExpression *ast)
             writeSkip();
 
         Reference index = Reference::fromConst(this, QV4::Encode(arrayIndex));
-        setExprResult(Reference::fromSubscript(base, index, targetLabel));
+        optionalChainFinalizer(Reference::fromSubscript(base, index), isTailOfChain);
         return false;
     }
 
@@ -1325,8 +1314,7 @@ bool Codegen::visit(ArrayMemberExpression *ast)
     if (hasError())
         return false;
 
-    setExprResult(Reference::fromSubscript(base, index, targetLabel));
-
+    optionalChainFinalizer(Reference::fromSubscript(base, index), isTailOfChain);
     return false;
 }
 
@@ -1972,12 +1960,13 @@ bool Codegen::visit(CallExpression *ast)
     if (hasError())
         return false;
 
-    auto label = traverseOptionalChain(ast);
+    const bool isTailOfChain = traverseOptionalChain(ast);
 
     RegisterScope scope(this);
     TailCallBlocker blockTailCalls(this);
 
-    Reference base = expression(ast->base);
+    Reference expr = expression(ast->base);
+    Reference base = expr;
 
     if (hasError())
         return false;
@@ -2001,21 +1990,21 @@ bool Codegen::visit(CallExpression *ast)
         break;
     }
 
+    if (expr.hasSavedCallBaseSlot) {
+        // Hack to preserve `this` context in optional chain calls. See optionalChainFinalizer().
+        base.hasSavedCallBaseSlot = true;
+        base.savedCallBaseSlot = expr.savedCallBaseSlot;
+        base.savedCallPropertyNameIndex = expr.savedCallPropertyNameIndex;
+    }
+
     int thisObject = bytecodeGenerator->newRegister();
     int functionObject = bytecodeGenerator->newRegister();
 
-    if (ast->isOptional || (!base.optionalChainJumpLabel.isNull() && base.optionalChainJumpLabel->isValid())) {
-        if (ast->isOptional)
-            Q_ASSERT(m_optionalChainLabels.contains(ast));
-
-        auto jumpLabel = ast->isOptional ? m_optionalChainLabels.take(ast) : *base.optionalChainJumpLabel.get();
-
+    if (ast->isOptional) {
         base.loadInAccumulator();
         bytecodeGenerator->addInstruction(Instruction::CmpEqNull());
-        auto jumpFalse = bytecodeGenerator->jumpFalse();
-        bytecodeGenerator->addInstruction(Instruction::LoadUndefined());
-        bytecodeGenerator->jump().link(jumpLabel);
-        jumpFalse.link();
+        auto jumpToUndefined = bytecodeGenerator->jumpTrue();
+        m_optionalChainsStates.top().jumpsToPatch.emplace_back(std::move(jumpToUndefined));
     }
 
     auto calldata = pushArgs(ast->arguments);
@@ -2058,20 +2047,12 @@ bool Codegen::visit(CallExpression *ast)
             bytecodeGenerator->addInstruction(call);
         }
 
-        setExprResult(Reference::fromAccumulator(this));
-
-        if (label.has_value())
-            label->link();
-
+        optionalChainFinalizer(Reference::fromAccumulator(this), isTailOfChain);
         return false;
-
     }
 
     handleCall(base, calldata, functionObject, thisObject, ast->isOptional);
-
-    if (label.has_value())
-        label->link();
-
+    optionalChainFinalizer(Reference::fromAccumulator(this), isTailOfChain);
     return false;
 }
 
@@ -2086,19 +2067,30 @@ void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunctio
         bytecodeGenerator->setLocation(base.sourceLocation);
 
     //### Do we really need all these call instructions? can's we load the callee in a temp?
-    if (base.type == Reference::Member) {
+    if (base.type == Reference::Member || base.hasSavedCallBaseSlot) {
         if (useFastLookups) {
             Instruction::CallPropertyLookup call;
-            call.base = base.propertyBase.stackSlot();
-            call.lookupIndex = registerGetterLookup(
+            if (base.hasSavedCallBaseSlot) {
+                call.base = base.savedCallBaseSlot;
+                call.lookupIndex = registerGetterLookup(
+                        base.savedCallPropertyNameIndex, JSUnitGenerator::LookupForCall);
+            } else {
+                call.base = base.propertyBase.stackSlot();
+                call.lookupIndex = registerGetterLookup(
                         base.propertyNameIndex, JSUnitGenerator::LookupForCall);
+            }
             call.argc = calldata.argc;
             call.argv = calldata.argv;
             bytecodeGenerator->addInstruction(call);
         } else {
             Instruction::CallProperty call;
-            call.base = base.propertyBase.stackSlot();
-            call.name = base.propertyNameIndex;
+            if (base.hasSavedCallBaseSlot) {
+                call.base = base.savedCallBaseSlot;
+                call.name = base.savedCallPropertyNameIndex;
+            } else {
+                call.base = base.propertyBase.stackSlot();
+                call.name = base.propertyNameIndex;
+            }
             call.argc = calldata.argc;
             call.argv = calldata.argv;
             bytecodeGenerator->addInstruction(call);
@@ -2163,8 +2155,6 @@ void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunctio
         call.argv = calldata.argv;
         bytecodeGenerator->addInstruction(call);
     }
-
-    setExprResult(Reference::fromAccumulator(this));
 }
 
 Codegen::Arguments Codegen::pushArgs(ArgumentList *args)
@@ -2274,7 +2264,7 @@ bool Codegen::visit(DeleteExpression *ast)
     if (hasError())
         return false;
 
-    auto label = traverseOptionalChain(ast);
+    const bool isTailOfChain = traverseOptionalChain(ast);
 
     RegisterScope scope(this);
     TailCallBlocker blockTailCalls(this);
@@ -2282,8 +2272,8 @@ bool Codegen::visit(DeleteExpression *ast)
     if (hasError())
         return false;
 
-    // If there is a label, there is a chain and that should only be possible with those two kinds of references
-    if (label.has_value())
+    const bool chainActuallyHasOptionals = m_optionalChainsStates.top().actuallyHasOptionals;
+    if (chainActuallyHasOptionals)
         Q_ASSERT(expr.type == Reference::Member || expr.type == Reference::Subscript);
 
     switch (expr.type) {
@@ -2317,10 +2307,11 @@ bool Codegen::visit(DeleteExpression *ast)
         //### maybe add a variant where the base can be in the accumulator?
         expr = expr.asLValue();
 
-        if (!expr.optionalChainJumpLabel.isNull() && expr.optionalChainJumpLabel->isValid()) {
+        if (chainActuallyHasOptionals) {
             expr.loadInAccumulator();
             bytecodeGenerator->addInstruction(Instruction::CmpEqNull());
-            bytecodeGenerator->jumpTrue().link(*expr.optionalChainJumpLabel.get());
+            auto jumpToUndefined = bytecodeGenerator->jumpTrue();
+            m_optionalChainsStates.top().jumpsToPatch.emplace_back(std::move(jumpToUndefined));
         }
 
         Instruction::LoadRuntimeString instr;
@@ -2332,42 +2323,29 @@ bool Codegen::visit(DeleteExpression *ast)
         del.base = expr.propertyBase.stackSlot();
         del.index = index.stackSlot();
         bytecodeGenerator->addInstruction(del);
-        setExprResult(Reference::fromAccumulator(this));
+        auto ref = Reference::fromAccumulator(this);
 
-        if (label.has_value()) {
-            auto jump = bytecodeGenerator->jump();
-            label->link();
-            Instruction::LoadTrue loadTrue;
-            bytecodeGenerator->addInstruction(loadTrue);
-            jump.link();
-        }
-
+        optionalChainFinalizer(ref, isTailOfChain, true);
         return false;
     }
     case Reference::Subscript: {
         //### maybe add a variant where the index can be in the accumulator?
         expr = expr.asLValue();
 
-        if (!expr.optionalChainJumpLabel.isNull() && expr.optionalChainJumpLabel->isValid()) {
+        if (chainActuallyHasOptionals) {
             expr.loadInAccumulator();
             bytecodeGenerator->addInstruction(Instruction::CmpEqNull());
-            bytecodeGenerator->jumpTrue().link(*expr.optionalChainJumpLabel.get());
+            auto jumpToUndefined = bytecodeGenerator->jumpTrue();
+            m_optionalChainsStates.top().jumpsToPatch.emplace_back(std::move(jumpToUndefined));
         }
 
         Instruction::DeleteProperty del;
         del.base = expr.elementBase;
         del.index = expr.elementSubscript.stackSlot();
         bytecodeGenerator->addInstruction(del);
-        setExprResult(Reference::fromAccumulator(this));
+        auto ref = Reference::fromAccumulator(this);
 
-        if (label.has_value()) {
-            auto jump = bytecodeGenerator->jump();
-            label->link();
-            Instruction::LoadTrue loadTrue;
-            bytecodeGenerator->addInstruction(loadTrue);
-            jump.link();
-        }
-
+        optionalChainFinalizer(ref, isTailOfChain, true);
         return false;
     }
     default:
@@ -2400,72 +2378,104 @@ bool Codegen::visit(SuperLiteral *)
     return false;
 }
 
-std::optional<Moth::BytecodeGenerator::Label> Codegen::traverseOptionalChain(Node *node) {
+bool Codegen::traverseOptionalChain(Node *node)
+{
     if (m_seenOptionalChainNodes.contains(node))
-        return {};
+        return false;
 
-    auto label = bytecodeGenerator->newLabel();
-
-    auto isOptionalChainNode = [](const Node *node) {
+    const auto isOptionalChainableNode = [](const Node *node) {
         return node->kind == Node::Kind_FieldMemberExpression ||
                node->kind == Node::Kind_CallExpression ||
                node->kind == Node::Kind_ArrayMemberExpression ||
                node->kind == Node::Kind_DeleteExpression;
     };
-
-    bool labelUsed = false;
-
-    while (isOptionalChainNode(node)) {
+    m_optionalChainsStates.emplace();
+    while (isOptionalChainableNode(node)) {
         m_seenOptionalChainNodes.insert(node);
 
         switch (node->kind) {
         case Node::Kind_FieldMemberExpression: {
-            auto *fme = AST::cast<FieldMemberExpression*>(node);
-
-            if (fme->isOptional) {
-                m_optionalChainLabels.insert(fme, label);
-                labelUsed = true;
-            }
-
+            auto *fme = AST::cast<FieldMemberExpression *>(node);
+            m_optionalChainsStates.top().actuallyHasOptionals |= fme->isOptional;
             node = fme->base;
             break;
         }
         case Node::Kind_CallExpression: {
-            auto *ce = AST::cast<CallExpression*>(node);
-
-            if (ce->isOptional) {
-                m_optionalChainLabels.insert(ce, label);
-                labelUsed = true;
-            }
-
+            auto *ce = AST::cast<CallExpression *>(node);
+            m_optionalChainsStates.top().actuallyHasOptionals |= ce->isOptional;
             node = ce->base;
             break;
         }
         case Node::Kind_ArrayMemberExpression: {
-            auto *ame = AST::cast<ArrayMemberExpression*>(node);
-
-            if (ame->isOptional) {
-                m_optionalChainLabels.insert(ame, label);
-                labelUsed = true;
-            }
-
+            auto *ame = AST::cast<ArrayMemberExpression *>(node);
+            m_optionalChainsStates.top().actuallyHasOptionals |= ame->isOptional;
             node = ame->base;
             break;
         }
-        case Node::Kind_DeleteExpression: {
-            auto *de = AST::cast<DeleteExpression*>(node);
-            node = de->expression;
+        case Node::Kind_DeleteExpression:
+            node = AST::cast<DeleteExpression *>(node)->expression;
             break;
-        }
+        default:
+            Q_UNREACHABLE();
         }
     }
 
-    if (!labelUsed) {
-        label.link(); // If we don't link the unused label here, we would hit an assert later.
-        return {};
+    return true;
+}
+
+void Codegen::optionalChainFinalizer(Reference expressionResult, bool tailOfChain,
+                                     bool isDeleteExpression)
+{
+    auto &chainState = m_optionalChainsStates.top();
+    if (!tailOfChain) {
+        setExprResult(expressionResult);
+        return;
+    } else if (!chainState.actuallyHasOptionals) {
+        setExprResult(expressionResult);
+        m_optionalChainsStates.pop();
+        return;
     }
 
-    return label;
+    auto savedBaseSlot = -1;
+    if (expressionResult.type == Reference::Member)
+        savedBaseSlot = expressionResult.propertyBase.storeOnStack().stackSlot();
+    expressionResult.loadInAccumulator();
+
+    std::optional<Moth::BytecodeGenerator::Jump> jumpToDone;
+    if (!isDeleteExpression) // Delete expressions always return true, avoid the extra jump
+        jumpToDone.emplace(bytecodeGenerator->jump());
+
+    for (auto &jump : chainState.jumpsToPatch)
+        jump.link();
+
+    if (isDeleteExpression)
+        bytecodeGenerator->addInstruction(Instruction::LoadTrue());
+    else
+        bytecodeGenerator->addInstruction(Instruction::LoadUndefined());
+
+    if (jumpToDone.has_value())
+        jumpToDone.value().link();
+
+    auto ref = Reference::fromAccumulator(this);
+    if (expressionResult.type == Reference::Member) {
+        /* Because the whole optional chain is handled at once with a chain finalizer instead of
+         * instruction by instruction, the result of the chain (either undefined or the result of
+         * the optional operation) is stored in the accumulator. This works fine except for one
+         * edge case where the `this` context is required in a call
+         * (see tst_ecmascripttests: language/expressions/optional-chaining/optional-call-preserves-this.js).
+         *
+         * In order to preserve the `this` context in the call, the call base and the property name
+         * index need to be available as with a Member reference. However, since the result must be
+         * in the accumulator the resulting reference is of type Accumulator. Therefore, the call
+         * base and the property name index are `glued` to an accumulator reference to make it work
+         * when deciding which call instruction to use later on.
+         */
+        ref.hasSavedCallBaseSlot = true;
+        ref.savedCallBaseSlot = savedBaseSlot;
+        ref.savedCallPropertyNameIndex = expressionResult.propertyNameIndex;
+    }
+    setExprResult(ref);
+    m_optionalChainsStates.pop();
 }
 
 bool Codegen::visit(FieldMemberExpression *ast)
@@ -2473,9 +2483,10 @@ bool Codegen::visit(FieldMemberExpression *ast)
     if (hasError())
         return false;
 
-    auto label = traverseOptionalChain(ast);
+    const bool isTailOfChain = traverseOptionalChain(ast);
 
     TailCallBlocker blockTailCalls(this);
+
     if (AST::IdentifierExpression *id = AST::cast<AST::IdentifierExpression *>(ast->base)) {
         if (id->name == QLatin1String("new")) {
             // new.target
@@ -2486,26 +2497,16 @@ bool Codegen::visit(FieldMemberExpression *ast)
                 r.isReadonly = true;
                 setExprResult(r);
 
-                if (label.has_value())
-                    label->link();
-
                 return false;
             }
 
-            Reference r = Reference::fromStackSlot(this, CallData::NewTarget);
-            setExprResult(r);
-
-            if (label.has_value())
-                label->link();
-
+            auto ref = Reference::fromStackSlot(this, CallData::NewTarget);
+            optionalChainFinalizer(ref, isTailOfChain);
             return false;
         }
     }
 
     Reference base = expression(ast->base);
-
-    if (ast->isOptional)
-        Q_ASSERT(m_optionalChainLabels.contains(ast));
 
     if (hasError())
         return false;
@@ -2514,19 +2515,15 @@ bool Codegen::visit(FieldMemberExpression *ast)
         load.stringId = registerString(ast->name.toString());
         bytecodeGenerator->addInstruction(load);
         Reference property = Reference::fromAccumulator(this).storeOnStack();
-        setExprResult(Reference::fromSuperProperty(property));
 
-        if (label.has_value())
-            label->link();
-
+        optionalChainFinalizer(Reference::fromSuperProperty(property), isTailOfChain);
         return false;
     }
 
-    setExprResult(Reference::fromMember(
-            base, ast->name.toString(), ast->lastSourceLocation(),
-            ast->isOptional ? m_optionalChainLabels.take(ast) : Moth::BytecodeGenerator::Label(),
-            label.has_value() ? label.value() : Moth::BytecodeGenerator::Label()));
+    auto ref = Reference::fromMember(base, ast->name.toString(), ast->lastSourceLocation(),
+                                     ast->isOptional, &m_optionalChainsStates.top().jumpsToPatch);
 
+    optionalChainFinalizer(ref, isTailOfChain);
     return false;
 }
 
@@ -2580,6 +2577,7 @@ bool Codegen::handleTaggedTemplate(Reference base, TaggedTemplate *ast)
     --calldata.argv;
 
     handleCall(base, calldata, functionObject, thisObject);
+    setExprResult(Reference::fromAccumulator(this));
     return false;
 }
 
@@ -4735,12 +4733,11 @@ QT_WARNING_POP
             codegen->bytecodeGenerator->setLocation(sourceLocation);
 
         if (codegen->useFastLookups) {
-            if (optionalChainJumpLabel->isValid()) {
-                // If we got a valid jump label, this means it's an optional lookup
+            if (optionalChainJumpsToPatch && isOptional) {
                 auto jump = codegen->bytecodeGenerator->jumpOptionalLookup(
                             codegen->registerGetterLookup(
                                 propertyNameIndex, JSUnitGenerator::LookupForStorage));
-                jump.link(*optionalChainJumpLabel.get());
+                optionalChainJumpsToPatch->emplace_back(std::move(jump));
             } else {
                 Instruction::GetLookup load;
                 load.index = codegen->registerGetterLookup(
@@ -4748,17 +4745,14 @@ QT_WARNING_POP
                 codegen->bytecodeGenerator->addInstruction(load);
             }
         } else {
-            if (optionalChainJumpLabel->isValid()) {
+            if (optionalChainJumpsToPatch && isOptional) {
                 auto jump = codegen->bytecodeGenerator->jumpOptionalProperty(propertyNameIndex);
-                jump.link(*optionalChainJumpLabel.get());
+                optionalChainJumpsToPatch->emplace_back(std::move(jump));
             } else {
                 Instruction::LoadProperty load;
                 load.name = propertyNameIndex;
                 codegen->bytecodeGenerator->addInstruction(load);
             }
-        }
-        if (optionalChainTargetLabel->isValid()) {
-            optionalChainTargetLabel->link();
         }
         return;
     case Import: {
@@ -4774,10 +4768,6 @@ QT_WARNING_POP
         Instruction::LoadElement load;
         load.base = elementBase;
         codegen->bytecodeGenerator->addInstruction(load);
-
-        if (optionalChainTargetLabel->isValid()) {
-            optionalChainTargetLabel->link();
-        }
     } return;
     case Invalid:
         break;
