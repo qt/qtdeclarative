@@ -55,6 +55,8 @@ public:
     bool prepareExitTransition() override;
 
     bool setEdge(Qt::Edge edge);
+    Qt::Edge effectiveEdge() const;
+    bool isWithinDragMargin(const QPointF &point) const;
 
     Qt::Edge edge = Qt::LeftEdge;
     qreal offset = 0;
