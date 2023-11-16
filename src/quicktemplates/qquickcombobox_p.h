@@ -243,6 +243,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickComboBox)
-
 #endif // QQUICKCOMBOBOX_P_H

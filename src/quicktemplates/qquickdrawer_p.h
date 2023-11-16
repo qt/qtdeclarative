@@ -73,6 +73,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickDrawer)
-
 #endif // QQUICKDRAWER_P_H

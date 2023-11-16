@@ -61,6 +61,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickLabsPlatformFontDialog)
-
 #endif // QQUICKLABSPLATFORMFONTDIALOG_P_H

@@ -117,6 +117,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickToolTip)
-
 #endif // QQUICKTOOLTIP_P_H

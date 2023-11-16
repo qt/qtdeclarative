@@ -70,6 +70,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMessageDialog)
-
 #endif // QQUICKMESSAGEDIALOG_P_H

@@ -59,6 +59,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickDayOfWeekModel)
-
 #endif // QQUICKDAYOFWEEKMODEL_P_H

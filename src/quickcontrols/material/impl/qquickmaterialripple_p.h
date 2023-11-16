@@ -83,6 +83,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMaterialRipple)
-
 #endif // QQUICKMATERIALRIPPLE_P_H

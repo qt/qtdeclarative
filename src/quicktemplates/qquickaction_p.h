@@ -92,6 +92,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickAction)
-
 #endif // QQUICKACTION_P_H

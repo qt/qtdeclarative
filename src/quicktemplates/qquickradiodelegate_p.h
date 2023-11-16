@@ -43,6 +43,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickRadioDelegate)
-
 #endif // QQUICKRADIODELEGATE_P_H

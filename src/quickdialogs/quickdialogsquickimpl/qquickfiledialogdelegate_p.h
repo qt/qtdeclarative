@@ -55,6 +55,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickFileDialogDelegate)
-
 #endif // QQUICKFILEDIALOGDELEGATE_P_H

@@ -198,6 +198,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickViewTransitionAttached)
-
 #endif // QQUICKITEMVIEWTRANSITION_P_P_H

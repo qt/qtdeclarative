@@ -130,6 +130,4 @@ public:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickScreenInfo)
-
 #endif

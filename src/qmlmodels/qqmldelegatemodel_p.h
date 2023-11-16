@@ -233,7 +233,4 @@ public:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQmlDelegateModel)
-QML_DECLARE_TYPE(QQmlDelegateModelGroup)
-
 #endif // QQMLDATAMODEL_P_H

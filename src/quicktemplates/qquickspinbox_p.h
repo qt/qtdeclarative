@@ -157,6 +157,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickSpinBox)
-
 #endif // QQUICKSPINBOX_P_H

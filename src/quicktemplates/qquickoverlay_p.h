@@ -108,6 +108,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickOverlay)
-
 #endif // QQUICKOVERLAY_P_H

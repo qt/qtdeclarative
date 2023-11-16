@@ -61,13 +61,4 @@ Q_SIGNALS:
 
 QT_END_NAMESPACE
 
-#if QT_CONFIG(validator)
-QML_DECLARE_TYPE(QValidator)
-QML_DECLARE_TYPE(QQuickIntValidator)
-QML_DECLARE_TYPE(QQuickDoubleValidator)
-#if QT_CONFIG(regularexpression)
-QML_DECLARE_TYPE(QRegularExpressionValidator)
-#endif
-#endif
-
 #endif // QQUICKVALIDATOR_P_H

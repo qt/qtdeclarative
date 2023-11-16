@@ -78,6 +78,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMonthModel)
-
 #endif // QQUICKMONTHMODEL_P_H

@@ -84,6 +84,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickLabsPlatformMessageDialog)
-
 #endif // QQUICKLABSPLATFORMMESSAGEDIALOG_P_H

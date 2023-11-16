@@ -75,6 +75,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickFolderDialog)
-
 #endif // QQUICKFOLDERDIALOG_P_H

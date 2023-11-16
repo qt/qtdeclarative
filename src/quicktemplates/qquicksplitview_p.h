@@ -187,8 +187,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickSplitView)
-
-QML_DECLARE_TYPE(QQuickSplitHandleAttached)
-
 #endif // QQUICKSPLITVIEW_P_H

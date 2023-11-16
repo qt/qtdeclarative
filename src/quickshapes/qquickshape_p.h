@@ -404,6 +404,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickShape)
-
 #endif // QQUICKSHAPE_P_H

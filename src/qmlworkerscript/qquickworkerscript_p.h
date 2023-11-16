@@ -91,6 +91,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickWorkerScript)
-
 #endif // QQUICKWORKERSCRIPT_P_H

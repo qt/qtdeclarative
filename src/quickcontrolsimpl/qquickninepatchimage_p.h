@@ -70,6 +70,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickNinePatchImage)
-
 #endif // QQUICKNINEPATCHIMAGE_P_H

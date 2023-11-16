@@ -127,6 +127,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickFileDialog)
-
 #endif // QQUICKFILEDIALOG_P_H

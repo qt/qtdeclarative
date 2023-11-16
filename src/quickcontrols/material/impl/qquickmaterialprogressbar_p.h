@@ -54,6 +54,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMaterialProgressBar)
-
 #endif // QQUICKMATERIALPROGRESSBAR_P_H

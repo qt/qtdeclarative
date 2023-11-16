@@ -178,7 +178,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickStateOperation)
-QML_DECLARE_TYPE(QQuickState)
-
 #endif // QQUICKSTATE_H

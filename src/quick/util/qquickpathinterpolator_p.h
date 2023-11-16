@@ -68,6 +68,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPathInterpolator)
-
 #endif // QQUICKPATHINTERPOLATOR_P_H

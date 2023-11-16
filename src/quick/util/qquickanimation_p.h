@@ -452,16 +452,4 @@ protected:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickAbstractAnimation)
-QML_DECLARE_TYPE(QQuickPauseAnimation)
-QML_DECLARE_TYPE(QQuickScriptAction)
-QML_DECLARE_TYPE(QQuickPropertyAction)
-QML_DECLARE_TYPE(QQuickPropertyAnimation)
-QML_DECLARE_TYPE(QQuickColorAnimation)
-QML_DECLARE_TYPE(QQuickNumberAnimation)
-QML_DECLARE_TYPE(QQuickSequentialAnimation)
-QML_DECLARE_TYPE(QQuickParallelAnimation)
-QML_DECLARE_TYPE(QQuickVector3dAnimation)
-QML_DECLARE_TYPE(QQuickRotationAnimation)
-
 #endif // QQUICKANIMATION_H

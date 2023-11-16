@@ -140,6 +140,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQmlTableModel)
-
 #endif // QQMLTABLEMODEL_P_H

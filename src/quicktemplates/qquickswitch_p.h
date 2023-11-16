@@ -61,6 +61,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickSwitch)
-
 #endif // QQUICKSWITCH_P_H

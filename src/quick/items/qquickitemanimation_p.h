@@ -174,10 +174,4 @@ Q_SIGNALS:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickParentAnimation)
-QML_DECLARE_TYPE(QQuickAnchorAnimation)
-#if QT_CONFIG(quick_path)
-QML_DECLARE_TYPE(QQuickPathAnimation)
-#endif
-
 #endif // QQUICKITEMANIMATION_H

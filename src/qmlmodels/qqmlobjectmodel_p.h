@@ -168,7 +168,4 @@ public:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQmlInstanceModel)
-QML_DECLARE_TYPE(QQmlObjectModel)
-
 #endif // QQMLINSTANCEMODEL_P_H

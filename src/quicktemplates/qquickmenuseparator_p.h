@@ -44,6 +44,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMenuSeparator)
-
 #endif // QQUICKMENUSEPARATOR_P_H

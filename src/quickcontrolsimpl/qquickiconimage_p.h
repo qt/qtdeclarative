@@ -58,6 +58,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickIconImage)
-
 #endif // QQUICKICONIMAGE_P_H

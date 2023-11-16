@@ -79,6 +79,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMonthGrid)
-
 #endif // QQUICKMONTHGRID_P_H

@@ -63,6 +63,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickCheckDelegate)
-
 #endif // QQUICKCHECKDELEGATE_P_H

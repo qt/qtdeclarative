@@ -41,6 +41,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickSaturationLightnessPicker)
-
 #endif // QQUICKSATURATIONLIGHTNESSPICKER_P_H

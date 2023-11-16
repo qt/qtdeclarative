@@ -152,6 +152,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickSlider)
-
 #endif // QQUICKSLIDER_P_H

@@ -255,14 +255,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickKeyEvent)
-QML_DECLARE_TYPE(QQuickMouseEvent)
-#if QT_CONFIG(wheelevent)
-QML_DECLARE_TYPE(QQuickWheelEvent)
-#endif
-QML_DECLARE_TYPE(QQuickCloseEvent)
-QML_DECLARE_TYPE(QPointingDevice)
-QML_DECLARE_TYPE(QPointingDeviceUniqueId)
-QML_DECLARE_TYPE(QPointerEvent)
-
 #endif // QQUICKEVENTS_P_P_H

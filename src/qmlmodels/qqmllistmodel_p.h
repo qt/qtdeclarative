@@ -181,7 +181,4 @@ inline QQmlCustomParser *qmlCreateCustomParser<QQmlListModel>()
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQmlListModel)
-QML_DECLARE_TYPE(QQmlListElement)
-
 #endif // QQMLLISTMODEL_H

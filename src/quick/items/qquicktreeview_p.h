@@ -71,6 +71,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickTreeView)
-
 #endif // QQUICKTREEVIEW_P_H

@@ -188,6 +188,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQmlTableModelColumn)
-
 #endif // QQMLTABLEMODELCOLUMN_P_H

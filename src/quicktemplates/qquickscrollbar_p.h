@@ -183,6 +183,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickScrollBar)
-
 #endif // QQUICKSCROLLBAR_P_H

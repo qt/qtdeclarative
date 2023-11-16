@@ -48,6 +48,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickRoundButton)
-
 #endif // QQUICKROUNDBUTTON_P_H

@@ -191,6 +191,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickRangeSlider)
-
 #endif // QQUICKRANGESLIDER_P_H

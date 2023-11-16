@@ -57,6 +57,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickToolBar)
-
 #endif // QQUICKTOOLBAR_P_H

@@ -47,6 +47,4 @@ protected:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickItemGroup)
-
 #endif // QQUICKITEMGROUP_P_H

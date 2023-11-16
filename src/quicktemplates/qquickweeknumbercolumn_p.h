@@ -66,6 +66,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickWeekNumberColumn)
-
 #endif // QQUICKWEEKNUMBERCOLUMN_P_H

@@ -105,6 +105,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickButtonGroup)
-
 #endif // QQUICKBUTTONGROUP_P_H

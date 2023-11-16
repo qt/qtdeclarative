@@ -77,6 +77,5 @@ private:
 };
 
 QT_END_NAMESPACE
-QML_DECLARE_TYPE(QQuickBorderImage)
 
 #endif // QQUICKBORDERIMAGE_P_H

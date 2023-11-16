@@ -99,6 +99,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickTabBar)
-
 #endif // QQUICKTABBAR_P_H

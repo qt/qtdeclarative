@@ -178,6 +178,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickFontDialogImpl)
-
 #endif // QQUICKFONTDIALOGIMPL_P_H

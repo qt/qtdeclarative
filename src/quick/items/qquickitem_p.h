@@ -1047,12 +1047,4 @@ Q_DECLARE_TYPEINFO(QQuickItemPrivate::ChangeListener, Q_PRIMITIVE_TYPE);
 
 QT_END_NAMESPACE
 
-#if QT_CONFIG(quick_shadereffect)
-QML_DECLARE_TYPE(QQuickItemLayer)
-#endif
-QML_DECLARE_TYPE(QQuickKeysAttached)
-QML_DECLARE_TYPE(QQuickKeyNavigationAttached)
-QML_DECLARE_TYPE(QQuickLayoutMirroringAttached)
-QML_DECLARE_TYPE(QQuickEnterKeyAttached)
-
 #endif // QQUICKITEM_P_H

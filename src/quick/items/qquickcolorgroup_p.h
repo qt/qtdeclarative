@@ -205,6 +205,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickColorGroup)
-
 #endif // QQUICKCOLORGROUP_H

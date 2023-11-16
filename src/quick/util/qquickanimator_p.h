@@ -174,13 +174,4 @@ protected:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickAnimator)
-QML_DECLARE_TYPE(QQuickXAnimator)
-QML_DECLARE_TYPE(QQuickYAnimator)
-QML_DECLARE_TYPE(QQuickScaleAnimator)
-QML_DECLARE_TYPE(QQuickRotationAnimator)
-QML_DECLARE_TYPE(QQuickOpacityAnimator)
-#if QT_CONFIG(quick_shadereffect)
-QML_DECLARE_TYPE(QQuickUniformAnimator)
-#endif
 #endif // QQUICKANIMATOR_P_H

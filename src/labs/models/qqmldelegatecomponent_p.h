@@ -101,7 +101,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQmlDelegateChoice)
-QML_DECLARE_TYPE(QQmlDelegateChooser)
-
 #endif // QQMLDELEGATECOMPONENT_P_H

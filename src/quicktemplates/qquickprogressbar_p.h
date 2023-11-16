@@ -74,6 +74,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickProgressBar)
-
 #endif // QQUICKPROGRESSBAR_P_H

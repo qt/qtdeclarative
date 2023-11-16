@@ -42,6 +42,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQmlPlatform)
-
 #endif // QQMLPLATFORM_P_H

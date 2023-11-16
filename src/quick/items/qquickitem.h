@@ -504,7 +504,4 @@ QDebug Q_QUICK_EXPORT operator<<(QDebug debug,
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickItem)
-QML_DECLARE_TYPE(QQuickTransform)
-
 #endif // QQUICKITEM_H

@@ -72,6 +72,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPageIndicator)
-
 #endif // QQUICKPAGEINDICATOR_P_H

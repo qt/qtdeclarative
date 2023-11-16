@@ -86,6 +86,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickFontMetrics)
-
 #endif // QQUICKFONTMETRICS_H

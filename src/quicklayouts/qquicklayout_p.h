@@ -379,6 +379,4 @@ inline QQuickLayoutAttached *attachedLayoutObject(QQuickItem *item, bool create 
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickLayout)
-
 #endif // QQUICKLAYOUT_P_H

@@ -86,7 +86,6 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickSwipeDelegate)
 Q_DECLARE_METATYPE(QQuickSwipeDelegate::Side)
 
 #endif // QQUICKSWIPEDELEGATE_P_H

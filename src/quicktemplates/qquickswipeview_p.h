@@ -115,6 +115,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickSwipeView)
-
 #endif // QQUICKSWIPEVIEW_P_H

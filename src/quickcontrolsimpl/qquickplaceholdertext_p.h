@@ -40,6 +40,4 @@ private Q_SLOTS:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPlaceholderText)
-
 #endif // QQUICKPLACEHOLDERTEXT_P_H

@@ -64,6 +64,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPackage)
-
 #endif // QQUICKPACKAGE_H

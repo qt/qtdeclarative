@@ -126,6 +126,4 @@ class QPlatformDialogHelperQuickLabsForeign
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickLabsPlatformDialog)
-
 #endif // QQUICKLABSPLATFORMDIALOG_P_H

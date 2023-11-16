@@ -62,6 +62,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickDelayButton)
-
 #endif // QQUICKDELAYBUTTON_P_H

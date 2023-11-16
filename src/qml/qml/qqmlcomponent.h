@@ -139,8 +139,6 @@ struct OverridableAttachedType<QQmlComponent, QQmlComponentAttached>
 
 } // namespace QQmlPrivate
 
-
 QT_END_NAMESPACE
-QML_DECLARE_TYPE(QQmlComponent)
 
 #endif // QQMLCOMPONENT_H

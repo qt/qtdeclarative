@@ -258,6 +258,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickControl)
-
 #endif // QQUICKCONTROL_P_H

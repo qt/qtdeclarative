@@ -163,6 +163,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMouseArea)
-
 #endif // QQUICKMOUSEAREA_P_H

@@ -62,6 +62,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickCheckBox)
-
 #endif // QQUICKCHECKBOX_P_H

@@ -89,6 +89,4 @@ inline QQmlCustomParser *qmlCreateCustomParser<QQuickPropertyChanges>()
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPropertyChanges)
-
 #endif // QQUICKPROPERTYCHANGES_H

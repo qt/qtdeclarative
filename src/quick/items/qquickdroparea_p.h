@@ -161,6 +161,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickDropArea)
-
 #endif // QQUICKDROPAREA_P_H

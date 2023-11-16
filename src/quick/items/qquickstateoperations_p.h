@@ -185,9 +185,5 @@ public:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickParentChange)
-QML_DECLARE_TYPE(QQuickAnchorSet)
-QML_DECLARE_TYPE(QQuickAnchorChanges)
-
 #endif // QQUICKSTATEOPERATIONS_P_H
 

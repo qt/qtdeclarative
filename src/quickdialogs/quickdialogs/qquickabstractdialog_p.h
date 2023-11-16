@@ -124,6 +124,4 @@ protected:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickAbstractDialog)
-
 #endif // QQUICKABSTRACTDIALOG_P_H

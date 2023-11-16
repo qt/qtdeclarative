@@ -148,6 +148,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickTextField)
-
 #endif // QQUICKTEXTFIELD_P_H

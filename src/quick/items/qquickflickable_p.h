@@ -287,6 +287,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickFlickable)
-
 #endif // QQUICKFLICKABLE_P_H

@@ -105,6 +105,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickContainer)
-
 #endif // QQUICKCONTAINER_P_H

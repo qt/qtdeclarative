@@ -681,20 +681,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPathElement)
-QML_DECLARE_TYPE(QQuickPathAttribute)
-QML_DECLARE_TYPE(QQuickCurve)
-QML_DECLARE_TYPE(QQuickPathLine)
-QML_DECLARE_TYPE(QQuickPathMove)
-QML_DECLARE_TYPE(QQuickPathQuad)
-QML_DECLARE_TYPE(QQuickPathCubic)
-QML_DECLARE_TYPE(QQuickPathCatmullRomCurve)
-QML_DECLARE_TYPE(QQuickPathArc)
-QML_DECLARE_TYPE(QQuickPathAngleArc)
-QML_DECLARE_TYPE(QQuickPathSvg)
-QML_DECLARE_TYPE(QQuickPathPercent)
-QML_DECLARE_TYPE(QQuickPathPolyline)
-QML_DECLARE_TYPE(QQuickPath)
-QML_DECLARE_TYPE(QQuickPathText)
-
 #endif // QQUICKPATH_H

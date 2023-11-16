@@ -93,6 +93,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPalette)
-
 #endif // QQUICKPALETTE_H

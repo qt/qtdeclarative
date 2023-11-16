@@ -95,6 +95,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickLabel)
-
 #endif // QQUICKLABEL_P_H

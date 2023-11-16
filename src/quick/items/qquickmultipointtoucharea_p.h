@@ -290,8 +290,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickTouchPoint)
-QML_DECLARE_TYPE(QQuickGrabGestureEvent)
-QML_DECLARE_TYPE(QQuickMultiPointTouchArea)
-
 #endif // QQUICKMULTIPOINTTOUCHAREA_H

@@ -132,6 +132,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickDialogButtonBox)
-
 #endif // QQUICKDIALOGBUTTONBOX_P_H

@@ -43,6 +43,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickTabButton)
-
 #endif // QQUICKTABBUTTON_P_H

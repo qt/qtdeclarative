@@ -41,6 +41,4 @@ protected:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickRadioButton)
-
 #endif // QQUICKRADIOBUTTON_P_H

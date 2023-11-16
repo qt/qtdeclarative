@@ -60,6 +60,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickClippedText)
-
 #endif // QQUICKCLIPPEDTEXT_P_H

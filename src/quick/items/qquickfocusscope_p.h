@@ -32,6 +32,4 @@ public:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickFocusScope)
-
 #endif // QQUICKFOCUSSCOPE_P_H

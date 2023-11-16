@@ -60,6 +60,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickScrollView)
-
 #endif // QQUICKSCROLLVIEW_P_H

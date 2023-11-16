@@ -53,6 +53,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPopupAnchors)
-
 #endif // QQUICKPOPUPANCHORS_P_H

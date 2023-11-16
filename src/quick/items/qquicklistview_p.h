@@ -187,7 +187,4 @@ public:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickListView)
-QML_DECLARE_TYPE(QQuickViewSection)
-
 #endif // QQUICKLISTVIEW_P_H

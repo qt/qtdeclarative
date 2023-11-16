@@ -188,9 +188,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPen)
-QML_DECLARE_TYPE(QQuickGradientStop)
-QML_DECLARE_TYPE(QQuickGradient)
-QML_DECLARE_TYPE(QQuickRectangle)
-
 #endif // QQUICKRECTANGLE_P_H

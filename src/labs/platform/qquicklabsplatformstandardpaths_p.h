@@ -54,10 +54,6 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickLabsPlatformStandardPaths)
-Q_DECLARE_METATYPE(QStandardPaths::StandardLocation)
-Q_DECLARE_METATYPE(QStandardPaths::LocateOptions)
-
 #endif // QT_DEPRECATED_SINCE(6, 4)
 
 #endif // QQUICKLABSPLATFORMSTANDARDPATHS_P_H

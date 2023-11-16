@@ -277,9 +277,5 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPinch)
-QML_DECLARE_TYPE(QQuickPinchEvent)
-QML_DECLARE_TYPE(QQuickPinchArea)
-
 #endif // QQUICKPINCHAREA_H
 

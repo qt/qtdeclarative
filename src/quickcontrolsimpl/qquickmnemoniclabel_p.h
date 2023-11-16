@@ -46,6 +46,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMnemonicLabel)
-
 #endif // QQUICKMNEMONICLABEL_P_H

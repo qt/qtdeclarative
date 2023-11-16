@@ -179,6 +179,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickLabsPlatformMenu)
-
 #endif // QQUICKLABSPLATFORMMENU_P_H

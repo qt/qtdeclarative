@@ -140,6 +140,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickTumbler)
-
 #endif // QQUICKTUMBLER_P_H

@@ -113,6 +113,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickDialog)
-
 #endif // QQUICKDIALOG_P_H

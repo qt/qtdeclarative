@@ -85,6 +85,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickAnimatedImage)
-
 #endif // QQUICKANIMATEDIMAGE_P_H

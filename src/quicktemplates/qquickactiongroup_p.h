@@ -94,6 +94,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickActionGroup)
-
 #endif // QQUICKACTIONGROUP_P_H

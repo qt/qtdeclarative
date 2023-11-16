@@ -104,6 +104,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickIconLabel)
-
 #endif // QQUICKICONLABEL_P_H

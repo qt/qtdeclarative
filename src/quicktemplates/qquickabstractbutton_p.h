@@ -188,6 +188,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickAbstractButton)
-
 #endif // QQUICKABSTRACTBUTTON_P_H

@@ -52,6 +52,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickUniversalBusyIndicator)
-
 #endif // QQUICKUNIVERSALBUSYINDICATOR_P_H

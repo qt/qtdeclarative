@@ -416,6 +416,4 @@ public:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickTextInput)
-
 #endif // QQUICKTEXTINPUT_P_H

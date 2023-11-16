@@ -87,7 +87,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickHorizontalHeaderView)
-QML_DECLARE_TYPE(QQuickVerticalHeaderView)
-
 #endif // QQUICKHEADERVIEW_P_H

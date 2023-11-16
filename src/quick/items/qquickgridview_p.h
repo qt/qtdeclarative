@@ -101,6 +101,4 @@ public:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickGridView)
-
 #endif // QQUICKGRIDVIEW_P_H

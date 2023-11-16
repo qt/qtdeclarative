@@ -145,6 +145,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickColorDialogImpl)
-
 #endif // QQUICKCOLORDIALOGIMPL_P_H

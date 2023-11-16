@@ -249,6 +249,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickStackView)
-
 #endif // QQUICKSTACKVIEW_P_H

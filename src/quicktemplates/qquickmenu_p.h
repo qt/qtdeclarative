@@ -136,6 +136,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMenu)
-
 #endif // QQUICKMENU_P_H

@@ -355,7 +355,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickText)
-QML_DECLARE_TYPE(QQuickTextLine)
-
 #endif // QQUICKTEXT_P_H

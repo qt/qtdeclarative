@@ -162,6 +162,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickDial)
-
 #endif // QQUICKDIAL_P_H

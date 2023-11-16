@@ -67,6 +67,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickWeekNumberModel)
-
 #endif // QQUICKWEEKNUMBERMODEL_P_H
