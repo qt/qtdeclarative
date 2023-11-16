@@ -2861,9 +2861,8 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
                 ? input
                 : convertStored(inputContent.storedType(), genericContained, input);
 
-        if (m_typeResolver->equals(
-                    m_state.accumulatorIn().storedType(), m_typeResolver->metaObjectType())
-                && contained->isComposite()) {
+        if (contained->isComposite() && m_typeResolver->equals(
+                    m_state.accumulatorIn().storedType(), m_typeResolver->metaObjectType())) {
             m_body += conversion(
                         genericContained, outputContent,
                         m_state.accumulatorVariableIn + u"->cast("_s + inputConversion + u')');

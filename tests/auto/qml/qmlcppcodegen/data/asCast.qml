@@ -28,4 +28,14 @@ Item {
     property QtObject dummyAsItem: dummy as Item
     property QtObject dummyAsRectangle: dummy as Rectangle
     property QtObject dummyAsDummy: dummy as Dummy
+
+    property QtObject nullAsObject: null as QtObject
+    property QtObject nullAsItem: null as Item
+    property QtObject nullAsRectangle: null as Rectangle
+    property QtObject nullAsDummy: null as Dummy
+
+    property QtObject undefinedAsObject: undefined as QtObject
+    property QtObject undefinedAsItem: undefined as Item
+    property QtObject undefinedAsRectangle: undefined as Rectangle
+    property QtObject undefinedAsDummy: undefined as Dummy
 }
