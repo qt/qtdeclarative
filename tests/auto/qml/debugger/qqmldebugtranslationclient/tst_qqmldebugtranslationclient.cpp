@@ -105,9 +105,7 @@ private:
             if (newCurrentOutputLine > m_currentOutputLine) {
                 // lets wait a little bit more to not cut anything
                 int triggeredCount = 0;
-                int debugCounter = 0;
                 do {
-                    debugCounter++;
                     triggeredCount = m_process->output().size();
                     QTest::qWait(updateTimeOut);
                     newCurrentOutputLine = m_process->output().size();
