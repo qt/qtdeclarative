@@ -362,6 +362,48 @@ void QQuickDragAttached::setImageSource(const QUrl &url)
 }
 
 /*!
+    \qmlattachedproperty QUrl QtQuick::Drag::imageSourceSize
+    \since 6.8
+
+    This property holds the size of the image that will be used to represent
+    the data during the drag and drop operation. Changing this property after
+    the drag operation has started will have no effect.
+
+    This property sets the maximum number of pixels stored for the loaded
+    image so that large images do not use more memory than necessary.
+    See \l {QtQuick::Image::sourceSize}{Image.sourceSize} for more details.
+
+    The example below shows an SVG image rendered at one size, and re-renders
+    it at a different size for the drag image:
+
+    \snippet qml/externalDragScaledImage.qml 0
+
+    \sa imageSource, Item::grabToImage()
+*/
+
+QSize QQuickDragAttached::imageSourceSize() const
+{
+    Q_D(const QQuickDragAttached);
+    int width = d->imageSourceSize.width();
+    int height = d->imageSourceSize.height();
+    return QSize(width != -1 ? width : d->pixmapLoader.width(),
+                 height != -1 ? height : d->pixmapLoader.height());
+}
+
+void QQuickDragAttached::setImageSourceSize(const QSize &size)
+{
+    Q_D(QQuickDragAttached);
+    if (d->imageSourceSize != size) {
+        d->imageSourceSize = size;
+
+        if (!d->imageSource.isEmpty())
+            d->loadPixmap();
+
+        Q_EMIT imageSourceSizeChanged();
+    }
+}
+
+/*!
     \qmlattachedproperty stringlist QtQuick::Drag::keys
 
     This property holds a list of keys that can be used by a DropArea to filter drag events.
@@ -768,7 +810,7 @@ void QQuickDragAttachedPrivate::loadPixmap()
     const QQmlContext *context = qmlContext(q->parent());
     if (context)
         loadUrl = context->resolvedUrl(imageSource);
-    pixmapLoader.load(context ? context->engine() : nullptr, loadUrl);
+    pixmapLoader.load(context ? context->engine() : nullptr, loadUrl, QRect(), q->imageSourceSize());
 }
 
 Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedActions)

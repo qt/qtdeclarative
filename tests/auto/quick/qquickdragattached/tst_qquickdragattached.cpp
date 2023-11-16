@@ -6,16 +6,29 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/private/qquickdrag_p_p.h>
 
-class tst_QQuickDragAttached: public QObject
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+
+class tst_QQuickDragAttached: public QQmlDataTest
 {
     Q_OBJECT
+public:
+    tst_QQuickDragAttached();
+
 private slots:
     void setMimeData_data();
     void setMimeData();
 
+    void imageSourceSize_data();
+    void imageSourceSize();
+
     void startDrag_data();
     void startDrag();
 };
+
+tst_QQuickDragAttached::tst_QQuickDragAttached()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_QQuickDragAttached::setMimeData_data()
 {
@@ -89,6 +102,45 @@ void tst_QQuickDragAttached::setMimeData()
     expectedCount += mimeData.isEmpty() ? 0 : 1;
     attached.setMimeData({});
     QCOMPARE(spy.count(), expectedCount);
+}
+
+void tst_QQuickDragAttached::imageSourceSize_data()
+{
+    QTest::addColumn<bool>("sizeFirst");
+    QTest::addColumn<QSize>("imageSourceSize");
+    QTest::addColumn<QSize>("expectedSourceSize");
+    QTest::addColumn<QSize>("expectedImageSize");
+
+    QTest::addRow("default size") << false << QSize() << QSize(462, 339) << QSize(462, 339);
+    QTest::addRow("shrunken elongated") << false << QSize(214, 114) << QSize(214, 114) << QSize(214, 114);
+    QTest::addRow("width, neg height") << false << QSize(154, -1) << QSize(154, 339) << QSize(154, 339);
+    QTest::addRow("width, zero height") << false << QSize(154, 0) << QSize(154, 0) << QSize(154, 113);
+
+    QTest::addRow("size first: default size") << true << QSize() << QSize(462, 339) << QSize(462, 339);
+    QTest::addRow("size first: shrunken elongated") << true << QSize(214, 114) << QSize(214, 114) << QSize(214, 114);
+    QTest::addRow("size first: width, neg height") << true << QSize(154, -1) << QSize(154, 113) << QSize(154, 113);
+    QTest::addRow("size first: width, zero height") << true << QSize(154, 0) << QSize(154, 0) << QSize(154, 113);
+}
+
+void tst_QQuickDragAttached::imageSourceSize()
+{
+    QFETCH(bool, sizeFirst);
+    QFETCH(QSize, imageSourceSize);
+    QFETCH(QSize, expectedSourceSize);
+    QFETCH(QSize, expectedImageSize);
+
+    QQuickDragAttached attached(nullptr);
+    QSignalSpy spy(&attached, &QQuickDragAttached::imageSourceSizeChanged);
+
+    if (sizeFirst)
+        attached.setImageSourceSize(imageSourceSize);
+    attached.setImageSource(testFileUrl("qt_logo.svg"));
+    attached.setImageSourceSize(imageSourceSize);
+
+    const int expectedCount = imageSourceSize.width() >= 0 || imageSourceSize.height() >= 0 ? 1 : 0;
+    QCOMPARE(spy.count(), expectedCount);
+    QCOMPARE(attached.imageSourceSize(), expectedSourceSize);
+    QCOMPARE(QQuickDragAttachedPrivate::get(&attached)->pixmapLoader.image().size(), expectedImageSize);
 }
 
 void tst_QQuickDragAttached::startDrag_data()
