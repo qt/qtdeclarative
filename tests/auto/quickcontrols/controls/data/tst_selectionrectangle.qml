@@ -278,7 +278,7 @@ TestCase {
 
         // Ensure that a press and hold doesn't start a selection
         mousePress(tableView, 1, 1, Qt.LeftButton)
-        mousePress(tableView, 1, 1, Qt.LeftButton, Qt.NoModifier, 1000)
+        mouseRelease(tableView, 1, 1, Qt.LeftButton, Qt.NoModifier, 1000)
         verify(!tableView.selectionModel.hasSelection)
     }
 
@@ -537,7 +537,7 @@ TestCase {
         verify(!tableView.selectionModel.hasSelection)
         // Do a press and hold
         mousePress(tableView, 1, 1, Qt.LeftButton)
-        mousePress(tableView, 1, 1, Qt.LeftButton, Qt.NoModifier, 1000)
+        mouseRelease(tableView, 1, 1, Qt.LeftButton, Qt.NoModifier, 1000)
         verify(tableView.selectionModel.hasSelection)
         compare(tableView.selectionModel.selectedIndexes.length, 1)
         verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
@@ -546,7 +546,7 @@ TestCase {
         compare(activeSpy.count, 1)
 
         // Remove selection
-        mouseClick(tableView, 1, 1, Qt.LeftButton)
+        mouseClick(tableView, 100, 100, Qt.LeftButton)
         verify(!tableView.selectionModel.hasSelection)
         compare(draggingSpy.count, 0)
         compare(activeSpy.count, 2)
