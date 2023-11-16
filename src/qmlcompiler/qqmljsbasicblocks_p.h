@@ -81,6 +81,7 @@ private:
     void generate_JumpNoException(int offset) override;
     void generate_JumpNotUndefined(int offset) override;
     void generate_IteratorNext(int value, int offset) override;
+    void generate_GetOptionalLookup(int index, int offset) override;
 
     void generate_Ret() override;
     void generate_ThrowException() override;

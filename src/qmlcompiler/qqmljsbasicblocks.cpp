@@ -231,6 +231,12 @@ void QQmlJSBasicBlocks::generate_IteratorNext(int value, int offset)
     processJump(offset, Conditional);
 }
 
+void QQmlJSBasicBlocks::generate_GetOptionalLookup(int index, int offset)
+{
+    Q_UNUSED(index);
+    processJump(offset, Conditional);
+}
+
 void QQmlJSBasicBlocks::generate_Ret()
 {
     auto currentBlock = basicBlockForInstruction(m_basicBlocks, currentInstructionOffset());

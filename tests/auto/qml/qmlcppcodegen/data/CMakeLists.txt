@@ -10,6 +10,7 @@ set(cpp_sources
     dynamicmeta.h
     enumproblems.h
     enumProperty.h
+    getOptionalLookup.h
     gadgetwithenum.h
     invisible.h
     multiforeign.h
@@ -134,6 +135,7 @@ set(qml_files
     functionLookup.qml
     functionReturningVoid.qml
     functionTakingVar.qml
+    getOptionalLookup.qml
     globals.qml
     hidden/Main.qml
     hidden/Style.qml

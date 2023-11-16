@@ -1202,7 +1202,11 @@ QString QQmlJSCodeGenerator::resolveQObjectPointer(
 void QQmlJSCodeGenerator::generate_GetLookup(int index)
 {
     INJECT_TRACE_INFO(generate_GetLookup);
+    generate_GetLookupHelper(index);
+}
 
+void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
+{
     if (m_state.accumulatorOut().isMethod()) {
         reject(u"lookup of function property."_s);
         return;
@@ -1346,9 +1350,31 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
 
 void QQmlJSCodeGenerator::generate_GetOptionalLookup(int index, int offset)
 {
-    Q_UNUSED(index)
-    Q_UNUSED(offset)
-    BYTECODE_UNIMPLEMENTED();
+    INJECT_TRACE_INFO(generate_GetOptionalLookup);
+
+    auto accumulatorIn = m_state.accumulatorIn();
+    QString accumulatorVarIn = m_state.accumulatorVariableIn;
+
+    const auto &annotation = (*m_annotations)[currentInstructionOffset()];
+    if (accumulatorIn.storedType()->isReferenceType()) {
+        m_body += u"if (!%1)\n"_s.arg(accumulatorVarIn);
+        generateJumpCodeWithTypeConversions(offset);
+    } else if (m_typeResolver->equals(accumulatorIn.storedType(), m_typeResolver->varType())) {
+        m_body += u"if (!%1.isValid() || ((%1.metaType().flags() & QMetaType::PointerToQObject) "
+                  "&& %1.value<QObject *>() == nullptr))\n"_s.arg(accumulatorVarIn);
+        generateJumpCodeWithTypeConversions(offset);
+    } else if (m_typeResolver->equals(accumulatorIn.storedType(), m_typeResolver->jsPrimitiveType())) {
+        m_body += u"if (%1.equals(QJSPrimitiveUndefined()) "
+                  "|| %1.equals(QJSPrimitiveNull()))\n"_s.arg(accumulatorVarIn);
+        generateJumpCodeWithTypeConversions(offset);
+    } else if (annotation.changedRegisterIndex == Accumulator
+               && annotation.changedRegister.variant() == QQmlJSRegisterContent::ObjectEnum) {
+        // Nothing
+    } else {
+        Q_UNREACHABLE(); // No other accumulatorIn stored types should be possible
+    }
+
+    generate_GetLookupHelper(index);
 }
 
 void QQmlJSCodeGenerator::generate_StoreProperty(int nameIndex, int baseReg)
@@ -2689,7 +2715,7 @@ void QQmlJSCodeGenerator::generate_CheckException()
 
 void QQmlJSCodeGenerator::generate_CmpEqNull()
 {
-    INJECT_TRACE_INFO(generate_CmlEqNull);
+    INJECT_TRACE_INFO(generate_CmpEqNull);
     generateEqualityOperation(
             m_typeResolver->globalType(m_typeResolver->nullType()), QString(), u"equals"_s, false);
 }

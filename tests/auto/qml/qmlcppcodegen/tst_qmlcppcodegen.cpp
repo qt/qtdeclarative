@@ -6,6 +6,7 @@
 #include <data/druggeljug.h>
 #include <data/enumProperty.h>
 #include <data/enumproblems.h>
+#include <data/getOptionalLookup.h>
 #include <data/objectwithmethod.h>
 #include <data/weathermoduleurl.h>
 #include <data/withlength.h>
@@ -105,6 +106,8 @@ private slots:
     void functionLookup();
     void functionReturningVoid();
     void functionTakingVar();
+    void getOptionalLookup();
+    void getOptionalLookup_data();
     void globals();
     void idAccess();
     void importsFromImportPath();
@@ -1981,6 +1984,58 @@ void tst_QmlCppCodegen::functionTakingVar()
     e->executeRuntimeFunction(document, 0, o.data(), 1, args, types);
 
     QCOMPARE(o->property("c"), QVariant::fromValue<int>(11));
+}
+
+void tst_QmlCppCodegen::getOptionalLookup_data()
+{
+    QTest::addColumn<QString>("propertyName");
+    QTest::addColumn<QVariant>("expected");
+
+    // Objects
+    QTest::addRow("int on object") << u"to1"_s << QVariant(5);
+    QTest::addRow("string on object") << u"to2"_s << QVariant("6");
+    QTest::addRow("object on object") << u"to3"_s << QVariant::fromValue<QObject *>(nullptr);
+    QTest::addRow("int on null") << u"to4"_s << QVariant(); // undefined
+    QTest::addRow("any on undefined as object") << u"to5"_s << QVariant(); // undefined
+    QTest::addRow("int on string on object") << u"to6"_s << QVariant(1);
+
+    // Value Types
+    QTest::addRow("int on rect") << u"tv1"_s << QVariant(50);
+    QTest::addRow("int on point") << u"tv2"_s << QVariant(-10);
+    QTest::addRow("int on variant as point") << u"tv3"_s << QVariant(5);
+    QTest::addRow("int on undefined as point") << u"tv4"_s << QVariant(); // undefined
+
+    // Enums
+    QTest::addRow("enum on object") << u"te1"_s << QVariant(1);
+    QTest::addRow("enum on type") << u"te2"_s << QVariant(1);
+    QTest::addRow("enums comparison 1") << u"te3"_s << QVariant(false);
+    QTest::addRow("enums comparison 2") << u"te4"_s << QVariant(true);
+
+    // Complex chains
+    QTest::addRow("mixed 1") << u"tc1"_s << QVariant(-10);
+    QTest::addRow("mixed 2") << u"tc2"_s << QVariant(0);
+    QTest::addRow("mixed 3") << u"tc3"_s << QVariant(5);
+    QTest::addRow("early out 1") << u"tc4"_s << QVariant(); // undefined
+    QTest::addRow("early out 2") << u"tc5"_s << QVariant(); // undefined
+    QTest::addRow("early out 3") << u"tc6"_s << QVariant(); // undefined
+    QTest::addRow("complex2") << u"tc7"_s << QVariant(); // undefined
+    QTest::addRow("complex3") << u"tc8"_s << QVariant(2);
+}
+
+void tst_QmlCppCodegen::getOptionalLookup()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/qt/qml/TestTypes/getOptionalLookup.qml"_s);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QFETCH(QString, propertyName);
+    QFETCH(QVariant, expected);
+
+    QVariant actual = o->property(propertyName.toLocal8Bit());
+    QCOMPARE(actual, expected);
 }
 
 void tst_QmlCppCodegen::globals()

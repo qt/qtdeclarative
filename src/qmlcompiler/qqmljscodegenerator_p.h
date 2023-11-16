@@ -317,6 +317,8 @@ private:
     bool inlineConsoleMethod(const QString &name, int argc, int argv);
     bool inlineArrayMethod(const QString &name, int base, int argc, int argv);
 
+    void generate_GetLookupHelper(int index);
+
     QQmlJSScope::ConstPtr mathObject() const
     {
         using namespace Qt::StringLiterals;

@@ -938,9 +938,9 @@ void QQmlJSTypePropagator::generate_GetLookup(int index)
 
 void QQmlJSTypePropagator::generate_GetOptionalLookup(int index, int offset)
 {
-    Q_UNUSED(index);
     Q_UNUSED(offset);
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    saveRegisterStateForJump(offset);
+    propagatePropertyLookup(m_jsUnitGenerator->lookupName(index), index);
 }
 
 void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
