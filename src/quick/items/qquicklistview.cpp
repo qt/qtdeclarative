@@ -325,21 +325,21 @@ private:
             if (view->verticalLayoutDirection() == QQuickItemView::BottomToTop) {
                 if (section())
                     pos += section()->height();
-                return QPointF(itemX(), -itemHeight() - pos);
+                return QPointF(0, -itemHeight() - pos);
             } else {
                 if (section())
                     pos += section()->height();
-                return QPointF(itemX(), pos);
+                return QPointF(0, pos);
             }
         } else {
             if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
                 if (section())
                     pos += section()->width();
-                return QPointF(-itemWidth() - pos, itemY());
+                return QPointF(-itemWidth() - pos, 0);
             } else {
                 if (section())
                     pos += section()->width();
-                return QPointF(pos, itemY());
+                return QPointF(pos, 0);
             }
         }
     }

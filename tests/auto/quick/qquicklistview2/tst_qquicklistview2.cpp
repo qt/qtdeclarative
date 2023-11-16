@@ -60,6 +60,9 @@ private slots:
     void fetchMore_data();
     void fetchMore();
 
+    void changingOrientationResetsPreviousAxisValues_data();
+    void changingOrientationResetsPreviousAxisValues();
+
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -1116,6 +1119,40 @@ void tst_QQuickListView2::fetchMore() // QTBUG-95107
         QCOMPARE_GE(model.m_lines, listView->count()); // fetchMore() was called
     }
 }
+
+void tst_QQuickListView2::changingOrientationResetsPreviousAxisValues_data()
+{
+    QTest::addColumn<QByteArray>("sourceFile");
+    QTest::newRow("ObjectModel") << QByteArray("changingOrientationWithObjectModel.qml");
+    QTest::newRow("ListModel") << QByteArray("changingOrientationWithListModel.qml");
+}
+
+void tst_QQuickListView2::changingOrientationResetsPreviousAxisValues() // QTBUG-115696
+{
+    QFETCH(QByteArray, sourceFile);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl(QString::fromLatin1(sourceFile))));
+    auto *listView = qobject_cast<QQuickListView *>(window.rootObject());
+    QVERIFY(listView);
+
+    // Starts of with vertical orientation. X should be 0 for all delegates, but not Y.
+    QVERIFY(listView->property("isXReset").toBool());
+    QVERIFY(!listView->property("isYReset").toBool());
+
+    listView->setOrientation(QQuickListView::Orientation::Horizontal);
+
+    // Y should be 0 for all delegates, but not X.
+    QVERIFY(!listView->property("isXReset").toBool());
+    QVERIFY(listView->property("isYReset").toBool());
+
+    listView->setOrientation(QQuickListView::Orientation::Vertical);
+
+    // X should be 0 for all delegates, but not Y.
+    QVERIFY(listView->property("isXReset").toBool());
+    QVERIFY(!listView->property("isYReset").toBool());
+}
+
 QTEST_MAIN(tst_QQuickListView2)
 
 #include "tst_qquicklistview2.moc"
