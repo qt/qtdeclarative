@@ -458,6 +458,7 @@ void QQmlJSCodeGenerator::generate_MoveConst(int constIndex, int destTemp)
         input = toNumericString(v4Value.doubleValue());
     } else {
         reject(u"unknown const type"_s);
+        return;
     }
     m_body += conversion(contained, changed, input) + u";\n"_s;
 }

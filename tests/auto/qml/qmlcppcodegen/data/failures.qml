@@ -110,4 +110,6 @@ QtObject {
 
     readonly property int someNumber: 10
     function writeToReadonly() { someNumber = 20 }
+
+    property var silly: [,0]
 }
