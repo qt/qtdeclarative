@@ -37,8 +37,12 @@ TestCase {
         SignalSpy { }
     }
 
+    function init() {
+        failOnWarning(/.?/)
+    }
+
     function test_null() {
-        var group = createTemporaryObject(actionGroup, testCase)
+        let group = createTemporaryObject(actionGroup, testCase)
         verify(group)
 
         group.addAction(null)
@@ -51,9 +55,7 @@ TestCase {
     }
 
     function test_defaults() {
-        failOnWarning(/.?/)
-
-        var group = createTemporaryObject(actionGroup, testCase)
+        let group = createTemporaryObject(actionGroup, testCase)
         verify(group)
         compare(group.actions.length, 0)
         compare(group.checkedAction, null)
@@ -61,16 +63,16 @@ TestCase {
     }
 
     function test_current() {
-        var group = createTemporaryObject(actionGroup, testCase)
+        let group = createTemporaryObject(actionGroup, testCase)
         verify(group)
 
-        var checkedActionSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "checkedActionChanged"})
+        let checkedActionSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "checkedActionChanged"})
         verify(checkedActionSpy.valid)
         verify(!group.checkedAction)
 
-        var action1 = createTemporaryObject(action, testCase, {checked: true})
-        var action2 = createTemporaryObject(action, testCase, {checked: false})
-        var action3 = createTemporaryObject(action, testCase, {checked: true, objectName: "3"})
+        let action1 = createTemporaryObject(action, testCase, {checked: true})
+        let action2 = createTemporaryObject(action, testCase, {checked: false})
+        let action3 = createTemporaryObject(action, testCase, {checked: true, objectName: "3"})
 
         // add checked
         group.addAction(action1)
@@ -130,17 +132,17 @@ TestCase {
     }
 
     function test_actions() {
-        var group = createTemporaryObject(actionGroup, testCase)
+        let group = createTemporaryObject(actionGroup, testCase)
         verify(group)
 
-        var actionsSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "actionsChanged"})
+        let actionsSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "actionsChanged"})
         verify(actionsSpy.valid)
 
         compare(group.actions.length, 0)
         compare(group.checkedAction, null)
 
-        var action1 = createTemporaryObject(action, testCase, {checked: true})
-        var action2 = createTemporaryObject(action, testCase, {checked: false})
+        let action1 = createTemporaryObject(action, testCase, {checked: true})
+        let action2 = createTemporaryObject(action, testCase, {checked: false})
 
         group.actions = [action1, action2]
         compare(group.actions.length, 2)
@@ -149,7 +151,7 @@ TestCase {
         compare(group.checkedAction, action1)
         compare(actionsSpy.count, 2)
 
-        var action3 = createTemporaryObject(action, testCase, {checked: true})
+        let action3 = createTemporaryObject(action, testCase, {checked: true})
 
         group.addAction(action3)
         compare(group.actions.length, 3)
@@ -173,7 +175,7 @@ TestCase {
     }
 
     function test_declarative() {
-        var group = createTemporaryObject(declarativeGroup, testCase)
+        let group = createTemporaryObject(declarativeGroup, testCase)
         verify(group)
 
         compare(group.actions.length, 3)
@@ -190,14 +192,14 @@ TestCase {
     }
 
     function test_triggered(data) {
-        var group = createTemporaryObject(actionGroup, testCase, {exclusive: data.exclusive})
+        let group = createTemporaryObject(actionGroup, testCase, {exclusive: data.exclusive})
         verify(group)
 
-        var triggeredSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "triggered"})
+        let triggeredSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "triggered"})
         verify(triggeredSpy.valid)
 
-        var action1 = createTemporaryObject(action, testCase)
-        var action2 = createTemporaryObject(action, testCase)
+        let action1 = createTemporaryObject(action, testCase)
+        let action2 = createTemporaryObject(action, testCase)
 
         group.addAction(action1)
         group.addAction(action2)
@@ -222,7 +224,7 @@ TestCase {
     }
 
     function test_attached() {
-        var container = createTemporaryObject(attachedGroup, testCase)
+        let container = createTemporaryObject(attachedGroup, testCase)
         verify(container)
 
         verify(!container.group.checkedAction)
@@ -247,13 +249,13 @@ TestCase {
     }
 
     function test_actionDestroyed() {
-        var group = createTemporaryObject(actionGroup, testCase)
+        let group = createTemporaryObject(actionGroup, testCase)
         verify(group)
 
-        var actionsSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "actionsChanged"})
+        let actionsSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "actionsChanged"})
         verify(actionsSpy.valid)
 
-        var action1 = createTemporaryObject(action, testCase, {objectName: "action1", checked: true})
+        let action1 = createTemporaryObject(action, testCase, {objectName: "action1", checked: true})
 
         group.addAction(action1)
         compare(group.actions.length, 1)
@@ -269,15 +271,15 @@ TestCase {
     }
 
     function test_nonExclusive() {
-        var group = createTemporaryObject(nonExclusiveGroup, testCase)
+        let group = createTemporaryObject(nonExclusiveGroup, testCase)
         verify(group)
 
-        var action1 = createTemporaryObject(action, testCase, {checked: true})
+        let action1 = createTemporaryObject(action, testCase, {checked: true})
         group.addAction(action1)
         compare(action1.checked, true)
         compare(group.checkedAction, null)
 
-        var action2 = createTemporaryObject(action, testCase, {checked: true})
+        let action2 = createTemporaryObject(action, testCase, {checked: true})
         group.addAction(action2)
         compare(action1.checked, true)
         compare(action2.checked, true)
@@ -305,18 +307,18 @@ TestCase {
     }
 
     function test_enabled() {
-        var group = createTemporaryObject(actionGroup, testCase)
+        let group = createTemporaryObject(actionGroup, testCase)
         verify(group)
 
         compare(group.enabled, true)
 
-        var action1 = createTemporaryObject(action, testCase)
-        var action2 = createTemporaryObject(action, testCase)
+        let action1 = createTemporaryObject(action, testCase)
+        let action2 = createTemporaryObject(action, testCase)
         compare(action1.enabled, true)
         compare(action2.enabled, true)
 
-        var action1Spy = createTemporaryObject(signalSpy, testCase, {target: action1, signalName: "enabledChanged"})
-        var action2Spy = createTemporaryObject(signalSpy, testCase, {target: action2, signalName: "enabledChanged"})
+        let action1Spy = createTemporaryObject(signalSpy, testCase, {target: action1, signalName: "enabledChanged"})
+        let action2Spy = createTemporaryObject(signalSpy, testCase, {target: action2, signalName: "enabledChanged"})
         verify(action1Spy.valid && action2Spy.valid)
 
         group.addAction(action1)
@@ -392,7 +394,7 @@ TestCase {
     }
 
     function test_controls(data) {
-        var container = createTemporaryObject(data.component, testCase)
+        let container = createTemporaryObject(data.component, testCase)
         verify(container)
 
         verify(!container.group.checkedAction)
