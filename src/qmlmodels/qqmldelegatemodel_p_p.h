@@ -302,7 +302,12 @@ public:
     void emitModelUpdated(const QQmlChangeSet &changeSet, bool reset) override;
     void delegateChanged(bool add = true, bool remove = true);
 
-    bool insert(Compositor::insert_iterator &before, const QV4::Value &object, int groups);
+    enum class InsertionResult {
+        Success,
+        Error,
+        Retry
+    };
+    InsertionResult insert(Compositor::insert_iterator &before, const QV4::Value &object, int groups);
 
     int adaptorModelCount() const;
 
