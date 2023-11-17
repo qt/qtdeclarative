@@ -24,18 +24,20 @@ TestCase {
         SignalSpy { }
     }
 
-    function test_empty() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_empty() {
         let control = createTemporaryObject(component, testCase)
         verify(control)
     }
 
     function test_enabled() {
-        var action = createTemporaryObject(component, testCase)
+        let action = createTemporaryObject(component, testCase)
         verify(action)
 
-        var spy = createTemporaryObject(signalSpy, testCase, {target: action, signalName: "triggered"})
+        let spy = createTemporaryObject(signalSpy, testCase, {target: action, signalName: "triggered"})
         verify(spy.valid)
 
         action.trigger()
@@ -89,7 +91,7 @@ TestCase {
     }
 
     function test_shared() {
-        var container = createTemporaryObject(buttonAndMenu, testCase)
+        let container = createTemporaryObject(buttonAndMenu, testCase)
         verify(container)
 
         keyClick(Qt.Key_B, Qt.ControlModifier)
@@ -126,10 +128,10 @@ TestCase {
     }
 
     function test_repeater() {
-        var container = createTemporaryObject(actionAndRepeater, testCase)
+        let container = createTemporaryObject(actionAndRepeater, testCase)
         verify(container)
 
-        var spy = signalSpy.createObject(container, {target: container.action, signalName: "triggered"})
+        let spy = signalSpy.createObject(container, {target: container.action, signalName: "triggered"})
         verify(spy.valid)
 
         keyClick(Qt.Key_A, Qt.ControlModifier)
@@ -160,7 +162,7 @@ TestCase {
     }
 
     function test_shortcutBinding() {
-        var container = createTemporaryObject(shortcutBinding, testCase);
+        let container = createTemporaryObject(shortcutBinding, testCase);
         verify(container)
         compare(container.indirect.nativeText, container.direct.nativeText);
     }
@@ -188,7 +190,7 @@ TestCase {
 
     function test_shortcutCleanup() {
         {
-            var container = createTemporaryObject(shortcutCleanup, testCase);
+            let container = createTemporaryObject(shortcutCleanup, testCase);
             verify(container)
             container.action.shortcut = "Delete"
             container.menu.open()
