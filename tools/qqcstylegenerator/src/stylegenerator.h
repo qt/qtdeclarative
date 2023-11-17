@@ -68,6 +68,12 @@ public:
         : QObject(nullptr)
         , m_bridge(bridge)
     {
+        try {
+            readInputConfig();
+            resolveGlobalConfig();
+        } catch (std::exception &e) {
+            error(e.what());
+        }
     }
 
     Q_INVOKABLE void generateStyle()
@@ -76,11 +82,7 @@ public:
             progressTo(0);
             JsonTools::clearCache();
             if (!m_abort)
-                readInputConfig();
-            if (!m_abort)
                 downloadFigmaDocument();
-            if (!m_abort)
-                resolveGlobalConfig();
             if (!m_abort)
                 copyFiles();
             if (!m_abort)
@@ -104,6 +106,20 @@ public:
         }
 
         QThread::currentThread()->quit();
+    }
+
+    QStringList availableControls()
+    {
+        // This function returns a list over all the controls (and possibly other
+        // items in the config file) that the user can choose from in order to tweak
+        // what should be generated. m_bridge->m_selectedControls should be populated
+        // with a subset of this list.
+        QStringList controls;
+        controls << m_controls;
+        controls << m_defaultControls;
+        controls << "Icons";
+        std::sort(controls.begin(), controls.end());
+        return controls;
     }
 
 private:
@@ -173,6 +189,18 @@ private:
             const QString atom = getString("atom", exportObj);
             const QStringList exportList = getStringList("export", exportObj, true);
             m_defaultExport[atom] = exportList;
+        }
+        const QJsonArray controlsArray = m_inputConfig.value("controls").toArray();
+        for (const QJsonValue &controlValue : controlsArray) {
+            const QJsonObject controlObj = controlValue.toObject();
+            const QString control = getString("name", controlObj);
+            m_controls << control;
+        }
+        const QJsonArray defaulControlsArray = m_inputConfig.value("default controls").toArray();
+        for (const QJsonValue &controlValue : defaulControlsArray) {
+            const QJsonObject controlObj = controlValue.toObject();
+            const QString control = getString("name", controlObj);
+            m_defaultControls << control;
         }
     }
 
@@ -367,6 +395,7 @@ private:
     {
         QJsonObject qmlConfig = getObject("qml", m_inputConfig);
 
+        const QStringList controls = availableControls();
         const QStringList filesToCopy = getStringList("copy", qmlConfig, false);
         progressLabel("Copying QML files");
         for (const QString &file : filesToCopy) {
@@ -374,8 +403,16 @@ private:
             QDirIterator it(":", QDirIterator::Subdirectories);
             while (it.hasNext()) {
                 const QString filePath = it.next();
-                if (re.match(filePath).hasMatch())
-                    copyFileToStyleFolder(filePath, m_bridge->m_overwriteQml);
+                if (re.match(filePath).hasMatch()) {
+                    const QString baseName = QFileInfo(filePath).baseName();
+                    if (controls.contains(baseName)) {
+                        // This QML file is a control. Only copy the file
+                        // if we're supposed to generate it.
+                        if (!m_bridge->m_selectedControls.contains(baseName))
+                            continue;
+                    }
+                    copyFileToStyleFolder(filePath, false);
+                }
             }
         }
     }
@@ -401,6 +438,11 @@ private:
     void tryGenerateControl(const QJsonObject &controlObj, const QRegularExpression &re, bool isDefault = false) {
         const QString name = getString("name", controlObj);
         if (!re.match(name).hasMatch())
+            return;
+
+        // If an empty pattern was given from the command line, we
+        // respect the controls selected in the UI
+        if (re.pattern().isEmpty() && !m_bridge->m_selectedControls.contains(name))
             return;
 
         try {
@@ -551,6 +593,9 @@ private:
         // Note that we don't generate different icons per theme, since
         // they will be colored with a shader in QML to follow the
         // button icon color.
+        if (!m_bridge->m_selectedControls.contains("Icons"))
+            return;
+
         try {
             QJsonArray iconGroupsArray = getArray("icons", m_inputConfig);
             for (const auto iconGroupValue : iconGroupsArray) {
@@ -1072,12 +1117,6 @@ private:
     void generateQmlDir()
     {
         const QString fileName("qmldir");
-        if (!m_bridge->m_overwriteQml && fileExists(fileName)) {
-            // If the user doesn't want us to regenerate QML, we shouldn't modify the
-            // qmldir either. This allows the user to tweak it by hand, such
-            // as removing unstyled controls, or set a different fallback style.
-            return;
-        }
 
         debug("Generating qmldir");
         const QString styleName = QFileInfo(m_bridge->m_targetDirectory).fileName();
@@ -1138,6 +1177,9 @@ private:
 
     void generateIndexThemeFile()
     {
+        if (!m_bridge->m_selectedControls.contains("Icons"))
+            return;
+
         debug("Generating icons/index.theme");
         const QString styleName = QFileInfo(m_bridge->m_targetDirectory).fileName();
         const QString targetPath = QFileInfo(m_bridge->m_targetDirectory).absolutePath() + QDir::separator();
@@ -1355,6 +1397,8 @@ private:
     QStringList m_imageFormats;
     QMap<QString, QStringList> m_defaultExport;
     QStringList m_themes;
+    QStringList m_controls;
+    QStringList m_defaultControls;
 
     QJsonDocument m_document;
     QJsonObject m_inputConfig;

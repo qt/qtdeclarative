@@ -14,6 +14,7 @@ Bridge::Bridge()
     m_figmaUrlOrId = settings.value("figmaUrlOrId").toString();
     m_figmaToken = settings.value("figmaToken").toString();
     m_overwriteQml = settings.value("overwriteQml").toBool();
+    m_selectedControls = settings.value("selectedControls", availableControls()).toStringList();
 }
 
 Bridge::~Bridge()
@@ -23,6 +24,7 @@ Bridge::~Bridge()
     settings.setValue("figmaUrlOrId", m_figmaUrlOrId);
     settings.setValue("figmaToken", m_figmaToken);
     settings.setValue("overwriteQml", m_overwriteQml);
+    settings.setValue("selectedControls", m_selectedControls);
 }
 
 void Bridge::generate()
@@ -74,4 +76,26 @@ QString Bridge::howToText()
     txt.replace("<code>", "<i>");
     txt.replace("</code>", "</i>");
     return txt;
+}
+
+QStringList Bridge::availableControls() const
+{
+    return StyleGenerator(const_cast<Bridge *>(this)).availableControls();
+}
+
+QStringList Bridge::selectedControls() const
+{
+   return m_selectedControls;
+}
+
+void Bridge::selectControl(const QString &control, bool select)
+{
+    const bool alreadySelected = m_selectedControls.contains(control);
+    if (select == alreadySelected)
+        return;
+
+    if (select)
+        m_selectedControls.append(control);
+    else
+        m_selectedControls.removeOne(control);
 }

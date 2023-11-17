@@ -26,6 +26,9 @@ public:
 
     Q_INVOKABLE QString toLocalFile(const QUrl &url) const;
     Q_INVOKABLE QString howToText();
+    Q_INVOKABLE QStringList availableControls() const;
+    Q_INVOKABLE QStringList selectedControls() const;
+    Q_INVOKABLE void selectControl(const QString &control, bool select);
 
 signals:
     void targetDirectoryChanged();
@@ -58,6 +61,7 @@ public:
     QString m_fileId;
     QString m_figmaToken;
     QString m_controlToGenerate;
+    QStringList m_selectedControls;
 
     bool m_sanity = false;
     bool m_verbose = false;
