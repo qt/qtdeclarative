@@ -40,7 +40,8 @@ class Q_QML_PRIVATE_EXPORT QQmlConnections : public QObject, public QQmlParserSt
     QML_CUSTOMPARSER
 
 public:
-    QQmlConnections(QObject *parent=nullptr);
+    QQmlConnections(QObject *parent = nullptr);
+    ~QQmlConnections();
 
     QObject *target() const;
     void setTarget(QObject *);

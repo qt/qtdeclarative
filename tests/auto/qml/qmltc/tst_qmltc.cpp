@@ -87,6 +87,7 @@
 #include "type.h"
 #include "qmltablemodel.h"
 #include "stringtourl.h"
+#include "signalconnections.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -3257,6 +3258,32 @@ void tst_qmltc::urlToString()
     QUrl second = createdByQmltc.iconLoader2()->source();
     QCOMPARE(first, QUrl("qrc:/qt/qml/path/to/font.ttf"));
     QCOMPARE(second, QUrl("qrc:/qt/qml/path/to/font2.ttf"));
+}
+
+void tst_qmltc::signalConnections()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(signalConnections) createdByQmltc(&e);
+
+    QVERIFY(createdByQmltc.objectName().isEmpty());
+    createdByQmltc.setCycleFirst(true);
+    QTRY_VERIFY(!createdByQmltc.cycleFirst());
+    QCOMPARE(createdByQmltc.objectName(), QLatin1String("first"));
+
+    createdByQmltc.setObjectName(QLatin1String("none"));
+    createdByQmltc.setCycleEnabled(true);
+    QTRY_VERIFY(!createdByQmltc.cycleEnabled());
+
+    createdByQmltc.setCycleFirst(true);
+    QTRY_VERIFY(!createdByQmltc.cycleFirst());
+    QCOMPARE(createdByQmltc.objectName(), QLatin1String("none"));
+
+    createdByQmltc.setCycleEnabled(true);
+    QTRY_VERIFY(!createdByQmltc.cycleEnabled());
+
+    createdByQmltc.setCycleSecond(true);
+    QTRY_VERIFY(!createdByQmltc.cycleSecond());
+    QCOMPARE(createdByQmltc.objectName(), QLatin1String("second"));
 }
 
 QTEST_MAIN(tst_qmltc)

@@ -101,4 +101,5 @@ private slots:
     void qmlTableModel();
 #endif
     void urlToString();
+    void signalConnections();
 };

@@ -111,6 +111,7 @@ set(qml_sources
     mySignals.qml
     stringToUrl.qml
     myCheckBox.qml
+    signalConnections.qml
 
     # support types:
     DefaultPropertySingleChild.qml

@@ -1207,7 +1207,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             if (!v4)
                 break;
 
-            QQmlMetaObject::ArgTypeStorage storage;
+            QQmlMetaObject::ArgTypeStorage<9> storage;
             QQmlMetaObject::methodParameterTypes(This->signal, &storage, nullptr);
 
             int argCount = storage.size();
@@ -1928,7 +1928,7 @@ static ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQmlPro
 
     if (data.hasArguments()) {
 
-        QQmlMetaObject::ArgTypeStorage storage;
+        QQmlMetaObject::ArgTypeStorage<9> storage;
 
         bool ok = false;
         if (data.isConstructor())
@@ -2009,7 +2009,7 @@ static const QQmlPropertyData *ResolveOverloaded(
         int sumMethodMatchScore = bestSumMatchScore;
 
         if (!attempt->isV4Function()) {
-            QQmlMetaObject::ArgTypeStorage storage;
+            QQmlMetaObject::ArgTypeStorage<9> storage;
             int methodArgumentCount = 0;
             if (attempt->hasArguments()) {
                 if (attempt->isConstructor()) {
