@@ -366,8 +366,8 @@ namespace QQmlPrivate
         struct Properties<Parent, void>
         {
             using Func = QQmlAttachedPropertiesFunc<QObject>;
-            static const QMetaObject *staticMetaObject() { return nullptr; };
-            static Func attachedPropertiesFunc() { return nullptr; };
+            static const QMetaObject *staticMetaObject() { return nullptr; }
+            static Func attachedPropertiesFunc() { return nullptr; }
         };
 
         using Type = typename std::conditional<
