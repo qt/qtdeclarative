@@ -826,9 +826,15 @@ void QQmlJSCodeGenerator::generateEnumLookup(int index)
 {
     const QString enumMember = m_state.accumulatorOut().enumMember();
 
-    // If we're referring to the type, there's nothing to do.
-    if (enumMember.isEmpty())
+    if (enumMember.isEmpty()) {
+        // If we're referring to the type, there's nothing to do.
+        // However, we should not get here since no one can ever use the enum metatype.
+        // The lookup is dead code and should be optimized away.
+        // ... unless you are actually trying to store the metatype itself in a property.
+        //     We cannot compile such code.
+        reject(u"Lookup of enum metatype"_s);
         return;
+    }
 
     // If the metaenum has the value, just use it and skip all the rest.
     const QQmlJSMetaEnum metaEnum = m_state.accumulatorOut().enumeration();

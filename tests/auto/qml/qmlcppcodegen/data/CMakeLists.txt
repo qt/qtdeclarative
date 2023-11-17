@@ -57,6 +57,7 @@ set(qml_files
     SelectionRectangle.qml
     ShadowedObjectName.qml
     ShadowedObjectNameDerived.qml
+    StoreMetaEnum.qml
     Test.qml
     TestCase.qml
     WindowDerived.qml
