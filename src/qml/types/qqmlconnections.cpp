@@ -3,16 +3,19 @@
 
 #include "qqmlconnections_p.h"
 
+#include <private/qqmlboundsignal_p.h>
+#include <private/qqmlcontext_p.h>
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlproperty_p.h>
-#include <private/qqmlboundsignal_p.h>
-#include <qqmlcontext.h>
-#include <private/qqmlcontext_p.h>
 #include <private/qqmlvmemetaobject_p.h>
-#include <qqmlinfo.h>
+#include <private/qv4jscall_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
-#include <QtCore/qloggingcategory.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlinfo.h>
+
 #include <QtCore/qdebug.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qstringlist.h>
 
 #include <private/qobject_p.h>
@@ -21,10 +24,110 @@ QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcQmlConnections, "qt.qml.connections")
 
+// This is the equivalent of QQmlBoundSignal for C++ methods as as slots.
+// If a type derived from QQmlConnnections is compiled using qmltc, the
+// JavaScript functions it contains are turned into C++ methods and we cannot
+// use QQmlBoundSignal to connect to those.
+struct QQmlConnectionSlotDispatcher : public QtPrivate::QSlotObjectBase
+{
+    QV4::ExecutionEngine *v4 = nullptr;
+    QObject *receiver = nullptr;
+
+    // Signals rarely have more than one argument.
+    QQmlMetaObject::ArgTypeStorage<2> signalMetaTypes;
+    QQmlMetaObject::ArgTypeStorage<2> slotMetaTypes;
+
+    QMetaObject::Connection connection;
+
+    int slotIndex = -1;
+    bool enabled = true;
+
+    QQmlConnectionSlotDispatcher(
+            QV4::ExecutionEngine *v4, QObject *sender, int signalIndex,
+            QObject *receiver, int slotIndex, bool enabled)
+        : QtPrivate::QSlotObjectBase(&impl)
+        , v4(v4)
+        , receiver(receiver)
+        , slotIndex(slotIndex)
+        , enabled(enabled)
+    {
+        QMetaMethod signal = sender->metaObject()->method(signalIndex);
+        QQmlMetaObject::methodReturnAndParameterTypes(signal, &signalMetaTypes, nullptr);
+
+        QMetaMethod slot = receiver->metaObject()->method(slotIndex);
+        QQmlMetaObject::methodReturnAndParameterTypes(slot, &slotMetaTypes, nullptr);
+    }
+
+    template<typename ArgTypeStorage>
+    struct TypedFunction
+    {
+        Q_DISABLE_COPY_MOVE(TypedFunction)
+    public:
+        TypedFunction(const ArgTypeStorage *storage) : storage(storage) {}
+
+        QMetaType returnMetaType() const { return storage->at(0); }
+        qsizetype parameterCount() const { return storage->size() - 1; }
+        QMetaType parameterMetaType(qsizetype i) const { return storage->at(i + 1); }
+
+    private:
+        const ArgTypeStorage *storage;
+    };
+
+    static void impl(int which, QSlotObjectBase *base, QObject *, void **metaArgs, bool *ret)
+    {
+        switch (which) {
+        case Destroy: {
+            delete static_cast<QQmlConnectionSlotDispatcher *>(base);
+            break;
+        }
+        case Call: {
+            QQmlConnectionSlotDispatcher *self = static_cast<QQmlConnectionSlotDispatcher *>(base);
+            QV4::ExecutionEngine *v4 = self->v4;
+            if (!v4)
+                break;
+
+            if (!self->enabled)
+                break;
+
+            TypedFunction typedFunction(&self->slotMetaTypes);
+            QV4::coerceAndCall(
+                    v4, &typedFunction, metaArgs,
+                    self->signalMetaTypes.data(), self->signalMetaTypes.size() - 1,
+                    [&](void **argv, int) {
+                        self->receiver->metaObject()->metacall(
+                                self->receiver, QMetaObject::InvokeMetaMethod,
+                                self->slotIndex, argv);
+                    });
+
+            if (v4->hasException) {
+                QQmlError error = v4->catchExceptionAsQmlError();
+                if (QQmlEngine *qmlEngine = v4->qmlEngine()) {
+                    QQmlEnginePrivate::get(qmlEngine)->warning(error);
+                } else {
+                    QMessageLogger(
+                            qPrintable(error.url().toString()), error.line(), nullptr)
+                                    .warning().noquote()
+                            << error.toString();
+                }
+            }
+            break;
+        }
+        case Compare:
+            // We're not implementing the Compare protocol here. It's insane.
+            // QQmlConnectionSlotDispatcher compares false to anything. We use
+            // the regular QObject::disconnect with QMetaObject::Connection.
+            *ret = false;
+            break;
+        case NumOperations:
+            break;
+        }
+    };
+};
+
 class QQmlConnectionsPrivate : public QObjectPrivate
 {
 public:
-    QList<QQmlBoundSignal*> boundsignals;
+    QList<QBiPointer<QQmlBoundSignal, QQmlConnectionSlotDispatcher>> boundsignals;
     QQmlGuard<QObject> target;
 
     bool enabled = true;
@@ -105,6 +208,22 @@ QQmlConnections::QQmlConnections(QObject *parent) :
 {
 }
 
+QQmlConnections::~QQmlConnections()
+{
+    Q_D(QQmlConnections);
+
+    // The slot dispatchers hold cyclic references to their connections. Clear them.
+    for (const auto &bound : std::as_const(d->boundsignals)) {
+        if (QQmlConnectionSlotDispatcher *dispatcher = bound.isT2() ? bound.asT2() : nullptr) {
+            // No need to explicitly disconnect anymore since 'this' is the receiver.
+            // But to be safe, explicitly break any cyclic references between the connection
+            // and the slot object.
+            dispatcher->connection = {};
+            dispatcher->destroyIfLastRef();
+        }
+    }
+}
+
 /*!
     \qmlproperty QtObject QtQml::Connections::target
     This property holds the object that sends the signal.
@@ -136,13 +255,19 @@ void QQmlConnections::setTarget(QObject *obj)
     if (d->targetSet && d->target == obj)
         return;
     d->targetSet = true; // even if setting to 0, it is *set*
-    for (QQmlBoundSignal *s : std::as_const(d->boundsignals)) {
+    for (const auto &bound : std::as_const(d->boundsignals)) {
         // It is possible that target is being changed due to one of our signal
         // handlers -> use deleteLater().
-        if (s->isNotifying())
-            (new QQmlBoundSignalDeleter(s))->deleteLater();
-        else
-            delete s;
+        if (QQmlBoundSignal *signal = bound.isT1() ? bound.asT1() : nullptr) {
+            if (signal->isNotifying())
+                (new QQmlBoundSignalDeleter(signal))->deleteLater();
+            else
+                delete signal;
+        } else {
+            QQmlConnectionSlotDispatcher *dispatcher = bound.asT2();
+            QObject::disconnect(std::exchange(dispatcher->connection, {}));
+            dispatcher->destroyIfLastRef();
+        }
     }
     d->boundsignals.clear();
     d->target = obj;
@@ -172,8 +297,12 @@ void QQmlConnections::setEnabled(bool enabled)
 
     d->enabled = enabled;
 
-    for (QQmlBoundSignal *s : std::as_const(d->boundsignals))
-        s->setEnabled(d->enabled);
+    for (const auto &bound : std::as_const(d->boundsignals)) {
+        if (QQmlBoundSignal *signal = bound.isT1() ? bound.asT1() : nullptr)
+            signal->setEnabled(d->enabled);
+        else
+            bound.asT2()->enabled = enabled;
+    }
 
     emit enabledChanged();
 }
@@ -272,33 +401,41 @@ void QQmlConnections::connectSignalsToMethods()
          ++i) {
 
         const QQmlPropertyData *handler = ddata->propertyCache->method(i);
-        if (!handler || !handler->isVMEFunction())
+        if (!handler)
             continue;
 
         const QString propName = handler->name(this);
 
         QQmlProperty prop(target, propName);
         if (prop.isValid() && (prop.type() & QQmlProperty::SignalProperty)) {
-            int signalIndex = QQmlPropertyPrivate::get(prop)->signalIndex();
-            auto *signal = new QQmlBoundSignal(target, signalIndex, this, qmlEngine(this));
-            signal->setEnabled(d->enabled);
-
             QV4::Scope scope(engine);
             QV4::ScopedContext global(scope, engine->rootContext());
 
-            QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(this);
-            Q_ASSERT(vmeMetaObject); // the fact we found the property above should guarentee this
+            if (QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(this)) {
+                int signalIndex = QQmlPropertyPrivate::get(prop)->signalIndex();
+                auto *signal = new QQmlBoundSignal(target, signalIndex, this, qmlEngine(this));
+                signal->setEnabled(d->enabled);
 
-            QV4::ScopedFunctionObject method(scope, vmeMetaObject->vmeMethod(handler->coreIndex()));
+                QV4::ScopedFunctionObject method(
+                        scope, vmeMetaObject->vmeMethod(handler->coreIndex()));
 
-            QQmlBoundSignalExpression *expression =
-                    ctxtdata ? new QQmlBoundSignalExpression(
-                                       target, signalIndex, ctxtdata, this,
-                                       method->as<QV4::FunctionObject>()->function())
-                             : nullptr;
+                QQmlBoundSignalExpression *expression = ctxtdata
+                        ? new QQmlBoundSignalExpression(
+                                target, signalIndex, ctxtdata, this,
+                                method->as<QV4::FunctionObject>()->function())
+                        : nullptr;
 
-            signal->takeExpression(expression);
-            d->boundsignals += signal;
+                signal->takeExpression(expression);
+                d->boundsignals += signal;
+            } else {
+                QQmlConnectionSlotDispatcher *slot = new QQmlConnectionSlotDispatcher(
+                        scope.engine, target, prop.index(),
+                        this, handler->coreIndex(), d->enabled);
+                slot->connection = QObjectPrivate::connect(
+                        target, prop.index(), slot, Qt::AutoConnection);
+                slot->ref();
+                d->boundsignals += slot;
+            }
         } else if (!d->ignoreUnknownSignals
                    && propName.startsWith(QLatin1String("on")) && propName.size() > 2
                    && propName.at(2).isUpper()) {

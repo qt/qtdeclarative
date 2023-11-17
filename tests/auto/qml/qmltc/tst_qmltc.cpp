@@ -86,6 +86,7 @@
 #include "mysignals.h"
 #include "namespacedtypes.h"
 #include "type.h"
+#include "signalconnections.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -3231,6 +3232,32 @@ void tst_qmltc::checkExportsNoFileName()
     QQmlEngine e;
     QmltcExportedNoFileNameTest::HelloExportedWorldNoFileName w(&e);
     QCOMPARE(w.myString(), u"Hello! I should be exported by qmltc"_s);
+}
+
+void tst_qmltc::signalConnections()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(signalConnections) createdByQmltc(&e);
+
+    QVERIFY(createdByQmltc.objectName().isEmpty());
+    createdByQmltc.setCycleFirst(true);
+    QTRY_VERIFY(!createdByQmltc.cycleFirst());
+    QCOMPARE(createdByQmltc.objectName(), QLatin1String("first"));
+
+    createdByQmltc.setObjectName(QLatin1String("none"));
+    createdByQmltc.setCycleEnabled(true);
+    QTRY_VERIFY(!createdByQmltc.cycleEnabled());
+
+    createdByQmltc.setCycleFirst(true);
+    QTRY_VERIFY(!createdByQmltc.cycleFirst());
+    QCOMPARE(createdByQmltc.objectName(), QLatin1String("none"));
+
+    createdByQmltc.setCycleEnabled(true);
+    QTRY_VERIFY(!createdByQmltc.cycleEnabled());
+
+    createdByQmltc.setCycleSecond(true);
+    QTRY_VERIFY(!createdByQmltc.cycleSecond());
+    QCOMPARE(createdByQmltc.objectName(), QLatin1String("second"));
 }
 
 QTEST_MAIN(tst_qmltc)

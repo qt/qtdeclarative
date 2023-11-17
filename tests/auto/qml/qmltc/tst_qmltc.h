@@ -96,4 +96,5 @@ private slots:
     void namespacedName();
     void checkExportsAreCompiling();
     void checkExportsNoFileName();
+    void signalConnections();
 };
