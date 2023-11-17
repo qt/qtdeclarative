@@ -41,5 +41,9 @@ Dialog {
         id: form
     }
 
-    onAccepted: finished(form.fullName.text, form.address.text, form.city.text, form.number.text)
+    onAccepted: {
+        if (form.fullName.text && form.address.text && form.city.text && form.number.text) {
+            finished(form.fullName.text, form.address.text, form.city.text, form.number.text);
+        }
+    }
 }
