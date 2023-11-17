@@ -328,6 +328,7 @@ protected:
     AST::UiQualifiedId *reparseAsQualifiedId(AST::ExpressionNode *expr);
 
     void pushToken(int token);
+    void pushTokenWithEmptyLocation(int token);
     int lookaheadToken(Lexer *lexer);
 
     static DiagnosticMessage compileError(const SourceLocation &location,
@@ -379,6 +380,7 @@ protected:
     QStringView yytokenraw;
     SourceLocation yylloc;
     SourceLocation yyprevlloc;
+    int yyprevtoken = -1;
 
     SavedToken token_buffer[TOKEN_BUFFER_SIZE];
     SavedToken *first_token = nullptr;
@@ -512,9 +514,19 @@ void Parser::pushToken(int token)
     yytoken = token;
 }
 
+void Parser::pushTokenWithEmptyLocation(int token)
+{
+    pushToken(token);
+    yylloc = yyprevlloc;
+    yylloc.offset += yylloc.length;
+    yylloc.startColumn += yylloc.length;
+    yylloc.length = 0;
+}
+
 int Parser::lookaheadToken(Lexer *lexer)
 {
     if (yytoken < 0) {
+        yyprevtoken = yytoken;
         yytoken = lexer->lex();
         yylval = lexer->tokenValue();
         yytokenspell = lexer->tokenSpell();
@@ -610,6 +622,7 @@ bool Parser::parse(int startToken)
 #endif
         if (action > 0) {
             if (action != ACCEPT_STATE) {
+                yyprevtoken = yytoken;
                 yytoken = -1;
                 sym(1).dval = yylval;
                 stringRef(1) = yytokenspell;
@@ -4790,35 +4803,26 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
     if (first_token == last_token) {
         const int errorState = state_stack[tos];
 
+        // automatic insertion of missing identifiers after dots
+        if (yytoken != -1 && m_enableIdentifierInsertion && t_action(errorState, T_IDENTIFIER) && yyprevtoken == T_DOT) {
+#ifdef PARSER_DEBUG
+            qDebug() << "Inserting missing identifier between" << spell[yyprevtoken] << "and"
+                     << spell[yytoken];
+#endif
+            pushTokenWithEmptyLocation(T_IDENTIFIER);
+            action = errorState;
+            goto _Lcheck_token;
+        }
+
+
         // automatic insertion of `;'
         if (yytoken != -1 && ((t_action(errorState, T_AUTOMATIC_SEMICOLON) && lexer->canInsertAutomaticSemicolon(yytoken))
                               || t_action(errorState, T_COMPATIBILITY_SEMICOLON))) {
 #ifdef PARSER_DEBUG
             qDebug() << "Inserting automatic semicolon.";
 #endif
-            SavedToken &tk = token_buffer[0];
-            tk.token = yytoken;
-            tk.dval = yylval;
-            tk.spell = yytokenspell;
-            tk.raw = yytokenraw;
-            tk.loc = yylloc;
-
-            yylloc = yyprevlloc;
-            yylloc.offset += yylloc.length;
-            yylloc.startColumn += yylloc.length;
-            yylloc.length = 0;
-
-            //const QString msg = QCoreApplication::translate("QQmlParser", "Missing `;'");
-            //diagnostic_messages.append(compileError(yyloc, msg, QtWarningMsg));
-
-            first_token = &token_buffer[0];
-            last_token = &token_buffer[1];
-
-            yytoken = T_SEMICOLON;
-            yylval = 0;
-
+            pushTokenWithEmptyLocation(T_SEMICOLON);
             action = errorState;
-
             goto _Lcheck_token;
         }
 

@@ -2519,7 +2519,7 @@ void tst_qmlls_utils::completions_data()
             << QStringList{ propertyCompletion }
             << None;
 
-    QTest::newRow("partialBinaryExpressionRHS") << file << 138 << 17
+    QTest::newRow("binaryExpressionRHS") << file << 138 << 17
                                  << ExpectedCompletions{
                                         { u"log"_s, CompletionItemKind::Method },
                                         { u"error"_s, CompletionItemKind::Method },
@@ -2529,13 +2529,45 @@ void tst_qmlls_utils::completions_data()
                                                  u"height"_s,        u"layer"_s,
                                                  u"left"_s }
                                  << None;
-    QTest::newRow("partialBinaryExpressionLHS") << file << 138 << 12
+    QTest::newRow("binaryExpressionLHS") << file << 138 << 12
                                  << ExpectedCompletions{
                                         { u"qualifiedScriptIdentifiers"_s, CompletionItemKind::Method },
                                         { u"width"_s, CompletionItemKind::Property },
                                         { u"layer"_s, CompletionItemKind::Property },
                                     }
                                  << QStringList{ u"log"_s, u"error"_s}
+                                 << None;
+
+    const QString missingRHSFile = testFile(u"completions/missingRHS.qml"_s);
+    QTest::newRow("binaryExpressionMissingRHS") << missingRHSFile << 12 << 25
+                                 << ExpectedCompletions{
+                                        { u"good"_s, CompletionItemKind::Property },
+                                    }
+                                 << QStringList{ propertyCompletion, u"bad"_s }
+                                 << None;
+    QTest::newRow("binaryExpressionMissingRHSWithDefaultProperty") << missingRHSFile << 14 << 33
+                                 << ExpectedCompletions{
+                                        { u"good"_s, CompletionItemKind::Property },
+                                    }
+                                 << QStringList{ propertyCompletion, u"bad"_s, u"helloSubItem"_s }
+                                 << None;
+
+    QTest::newRow("binaryExpressionMissingRHSWithSemicolon")
+            << testFile(u"completions/missingRHS.parserfail.qml"_s)
+                                                             << 5 << 22
+                                 << ExpectedCompletions{
+                                        { u"good"_s, CompletionItemKind::Property },
+                                    }
+                                 << QStringList{ propertyCompletion, u"bad"_s, u"helloSubItem"_s }
+                                 << None;
+
+    QTest::newRow("binaryExpressionMissingRHSWithStatement") <<
+            testFile(u"completions/missingRHS.parserfail.qml"_s)
+                                                             << 6 << 22
+                                 << ExpectedCompletions{
+                                        { u"good"_s, CompletionItemKind::Property },
+                                    }
+                                 << QStringList{ propertyCompletion, u"bad"_s, u"helloSubItem"_s }
                                  << None;
 }
 
@@ -2558,6 +2590,10 @@ void tst_qmlls_utils::completions()
     auto locations = QQmlLSUtils::itemsFromTextLocation(
             file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
 
+    QEXPECT_FAIL("binaryExpressionMissingRHSWithSemicolon",
+                 "Current parser cannot recover from this error yet!", Abort);
+    QEXPECT_FAIL("binaryExpressionMissingRHSWithStatement",
+                 "Current parser cannot recover from this error yet!", Abort);
     QCOMPARE(locations.size(), 1);
 
     QString code;
@@ -2647,6 +2683,9 @@ void tst_qmlls_utils::completions()
         QEXPECT_FAIL("inMethodBody", "Completion for JS Statement/keywords not implemented yet",
                      Abort);
         QEXPECT_FAIL("letStatementAfterEqual", "Completion not implemented yet!", Abort);
+        QEXPECT_FAIL("binaryExpressionMissingRHSWithDefaultProperty",
+                     "Current parser cannot recover from this error yet!", Abort);
+
         QVERIFY2(labels.contains(exp.label),
                  u"no %1 in %2"_s
                          .arg(exp.label, QStringList(labels.begin(), labels.end()).join(u", "_s))

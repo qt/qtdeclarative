@@ -1707,12 +1707,10 @@ void QQmlDomAstCreator::endVisit(AST::FieldMemberExpression *expression)
         removeCurrentScriptNode({});
     }
 
-    if (!expression->name.empty()) {
-        auto scriptIdentifier =
-                std::make_shared<ScriptElements::IdentifierExpression>(expression->identifierToken);
-        scriptIdentifier->setName(expression->name);
-        current->setRight(ScriptElementVariant::fromElement(scriptIdentifier));
-    }
+    auto scriptIdentifier =
+            std::make_shared<ScriptElements::IdentifierExpression>(expression->identifierToken);
+    scriptIdentifier->setName(expression->name);
+    current->setRight(ScriptElementVariant::fromElement(scriptIdentifier));
 
     pushScriptElement(current);
 }
