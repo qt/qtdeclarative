@@ -27,6 +27,7 @@ public:
 private Q_SLOTS:
     void initTestCase() override;
 
+    //actually testFormat tests CLI of qmlformat
     void testFormat();
     void testFormat_data();
 
@@ -47,8 +48,9 @@ private Q_SLOTS:
     void plainJS();
 private:
     QString readTestFile(const QString &path);
+    //TODO(QTBUG-117849) refactor this helper function
     QString runQmlformat(const QString &fileToFormat, QStringList args, bool shouldSucceed = true,
-                         RunOption rOption = RunOption::OnCopy);
+                         RunOption rOption = RunOption::OnCopy, bool isQml = true);
     QString formatInMemory(const QString &fileToFormat, bool *didSucceed = nullptr,
                            LineWriterOptions options = LineWriterOptions(),
                            WriteOutChecks extraChecks = WriteOutCheck::ReparseCompare,
@@ -365,6 +367,23 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("javascriptBlock")
             << "javascriptBlock.qml"
             << "javascriptBlock.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    //plainJS
+    QTest::newRow("nestedLambdaWithIfElse")
+            << "lambdaWithIfElseInsideLambda.js"
+            << "lambdaWithIfElseInsideLambda.formatted.js" << QStringList{} << RunOption::OnCopy;
+
+    QTest::newRow("indentEquals2")
+            << "threeFunctionsOneLine.js"
+            << "threeFunctions.formattedW2.js" << QStringList{"-w=2"} << RunOption::OnCopy;
+
+    QTest::newRow("tabIndents")
+            << "threeFunctionsOneLine.js"
+            << "threeFunctions.formattedTabs.js" << QStringList{"-t"} << RunOption::OnCopy;
+
+    QTest::newRow("normalizedFunctionSpacing")
+            << "threeFunctionsOneLine.js"
+            << "threeFunctions.formattedFuncSpacing.js"
+            << QStringList{ "-n", "--functions-spacing" } << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()
@@ -374,7 +393,11 @@ void TestQmlformat::testFormat()
     QFETCH(QStringList, args);
     QFETCH(RunOption, runOption);
 
-    QCOMPARE(runQmlformat(testFile(file), args, true, runOption), readTestFile(fileFormatted));
+    bool isQml = file.endsWith(QLatin1String(".qml"));
+    auto formatted = runQmlformat(testFile(file), args, true, runOption, isQml);
+    QEXPECT_FAIL("normalizedFunctionSpacing",
+                 "Normalize && function spacing are not yet supported for JS", Abort);
+    QCOMPARE(formatted, readTestFile(fileFormatted));
 }
 
 void TestQmlformat::plainJS_data()
@@ -599,11 +622,12 @@ void TestQmlformat::testFilesOption()
 }
 
 QString TestQmlformat::runQmlformat(const QString &fileToFormat, QStringList args,
-                                    bool shouldSucceed, RunOption rOptions)
+                                    bool shouldSucceed, RunOption rOptions, bool isQml)
 {
     // Copy test file to temporary location
     QTemporaryDir tempDir;
-    const QString tempFile = tempDir.path() + QDir::separator() + "to_format.qml";
+    const QString ext = isQml ? ".qml" : ".js";
+    const QString tempFile = tempDir.path() + QDir::separator() + "to_format" + ext;
 
     if (rOptions == RunOption::OnCopy) {
         QFile::copy(fileToFormat, tempFile);
