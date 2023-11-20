@@ -1760,6 +1760,26 @@ void QQuickTextInput::geometryChange(const QRectF &newGeometry,
     QQuickImplicitSizeItem::geometryChange(newGeometry, oldGeometry);
 }
 
+void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
+{
+    Q_D(QQuickTextInput);
+    Q_UNUSED(value);
+    switch (change) {
+    case ItemDevicePixelRatioHasChanged:
+        if (d->renderType == NativeRendering) {
+            // Native rendering optimizes for a given pixel grid, so its results must not be scaled.
+            // Text layout code respects the current device pixel ratio automatically, we only need
+            // to rerun layout after the ratio changed.
+            d->updateLayout();
+        }
+        break;
+
+    default:
+        break;
+    }
+    QQuickImplicitSizeItem::itemChange(change, value);
+}
+
 void QQuickTextInputPrivate::ensureVisible(int position, int preeditCursor, int preeditLength)
 {
     Q_Q(QQuickTextInput);

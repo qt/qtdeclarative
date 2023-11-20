@@ -1523,6 +1523,27 @@ void QQuickTextEdit::geometryChange(const QRectF &newGeometry, const QRectF &old
 
 }
 
+void QQuickTextEdit::itemChange(ItemChange change, const ItemChangeData &value)
+{
+    Q_D(QQuickTextEdit);
+    Q_UNUSED(value);
+    switch (change) {
+    case ItemDevicePixelRatioHasChanged:
+        if (d->renderType == NativeRendering) {
+            // Native rendering optimizes for a given pixel grid, so its results must not be scaled.
+            // Text layout code respects the current device pixel ratio automatically, we only need
+            // to rerun layout after the ratio changed.
+            updateSize();
+            updateWholeDocument();
+        }
+        break;
+
+    default:
+        break;
+    }
+    QQuickImplicitSizeItem::itemChange(change, value);
+}
+
 /*!
     Ensures any delayed caching or data loading the class
     needs to performed is complete.

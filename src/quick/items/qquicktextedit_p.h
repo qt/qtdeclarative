@@ -366,6 +366,7 @@ protected:
 #endif
 
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
 
     bool event(QEvent *) override;
     void keyPressEvent(QKeyEvent *) override;
