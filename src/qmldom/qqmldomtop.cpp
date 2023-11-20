@@ -218,7 +218,8 @@ static DomType fileTypeForPath(const DomItem &self, const QString &canonicalFile
         return DomType::QmldirFile;
     } else if (QFileInfo(canonicalFilePath).isDir()) {
         return DomType::QmlDirectory;
-    } else if (canonicalFilePath.endsWith(u".js", Qt::CaseInsensitive)) {
+    } else if (canonicalFilePath.endsWith(u".js", Qt::CaseInsensitive)
+               || canonicalFilePath.endsWith(u".mjs", Qt::CaseInsensitive)) {
         return DomType::JsFile;
     }
     else {

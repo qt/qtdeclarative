@@ -307,8 +307,11 @@ JsFile::JsFile(
     QQmlJS::Lexer lexer(m_engine.get());
     lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/false);
     QQmlJS::Parser parser(m_engine.get());
-    // TODO(QTBUG-117849) add mjs support
-    setIsValid(/*isESModule ? parser.parseModule() :*/ parser.parseProgram());
+
+    bool isESM = filePath.endsWith(u".mjs", Qt::CaseInsensitive);
+    bool isValid = isESM ? parser.parseModule() : parser.parseProgram();
+    setIsValid(isValid);
+
     const auto diagnostics = parser.diagnosticMessages();
     for (const DiagnosticMessage &msg : diagnostics) {
         addErrorLocal(
@@ -320,7 +323,8 @@ JsFile::JsFile(
     CommentCollector collector;
     collector.collectComments(m_engine, parser.rootNode(), astComments);
     m_script = std::make_shared<ScriptExpression>(code, m_engine, parser.rootNode(), astComments,
-                                                  ScriptExpression::ExpressionType::JSCode);
+                                                  isESM ? ScriptExpression::ExpressionType::ESMCode
+                                                        : ScriptExpression::ExpressionType::JSCode);
 }
 
 ErrorGroups JsFile::myParsingErrors()

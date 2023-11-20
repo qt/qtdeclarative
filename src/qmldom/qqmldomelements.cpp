@@ -1718,7 +1718,7 @@ AST::Node *ScriptExpression::parse(const ParseMode mode)
             return parser.parse();
         case ParseMode::JS:
             return parser.parseScript();
-        case ParseMode::MJS:
+        case ParseMode::ESM:
             return parser.parseModule();
         default:
             Q_UNREACHABLE_RETURN(false);

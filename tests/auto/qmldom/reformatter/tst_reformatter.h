@@ -68,7 +68,7 @@ private:
     QString formatJSModuleCode(const QString &jsCode,
                                const LineWriterOptions &lwOptions = defaultLineWriterOptions())
     {
-        return formatPlainJS(jsCode, ScriptExpression::ExpressionType::MJSCode, lwOptions);
+        return formatPlainJS(jsCode, ScriptExpression::ExpressionType::ESMCode, lwOptions);
     }
 
     QString formatPlainJS(const QString &jsCode, ScriptExpression::ExpressionType exprType,

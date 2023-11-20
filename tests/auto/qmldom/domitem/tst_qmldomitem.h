@@ -2406,7 +2406,8 @@ private slots:
         }
     }
 
-    void plainJSDOM_data() {
+    void plainJSDOM_data()
+    {
         QTest::addColumn<QString>("filename");
         QTest::addColumn<QString>("content");
 
@@ -2415,9 +2416,14 @@ private slots:
         QTest::newRow("import")
                 << "import.js"
                 << QString(u".import \"main.js\" as Main\nconsole.log(Main.a);\n"_s);
+        QTest::newRow("simplestJSmodule")
+                << "simplestJSmodule.mjs" << QString(u"export function entry() {}\n"_s);
     }
 
-    void plainJSDOM() {
+    // Verifies that DOM can load .js and .mjs files and
+    // parse / store the content inside the ScriptExpression
+    void plainJSDOM()
+    {
         using namespace Qt::StringLiterals;
         QFETCH(QString, filename);
         QFETCH(QString, content);
@@ -2436,6 +2442,7 @@ private slots:
         exprAsString.replace("\r\n", "\n");
         QCOMPARE(exprAsString, content);
     }
+
 private:
     struct DomItemWithLocation
     {
@@ -3018,11 +3025,12 @@ private slots:
                  u"QQ");
     }
 
-    void mjsExpression()
+    void scriptExpression()
     {
-        const ScriptExpression mjsExpr("export function a(){}",
-                                       ScriptExpression::ExpressionType::MJSCode);
-        QVERIFY(mjsExpr.localErrors().empty());
+        // verifying support of ECMA script modules by ScriptExpression
+        const ScriptExpression esmExport("export function a(){}",
+                                         ScriptExpression::ExpressionType::ESMCode);
+        QVERIFY(esmExport.localErrors().empty());
     }
 
 private:
