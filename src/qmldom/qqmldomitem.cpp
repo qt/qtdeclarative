@@ -1330,9 +1330,13 @@ DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(const DomItem &origi
 DomItem DomItem::writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks) const
 {
     ow.indentNextlines = true;
+    //writeOut, a.k.a. format file
     writeOut(ow);
     ow.eof();
     DomItem fObj = fileObject();
+    //Creating new environment, which will own a reformatted file
+    //using reformatted script expressions, which were
+    //stored inside OW during the ScriptExpression::writeOut step
     DomItem copy = ow.updatedFile(fObj);
     WriteOutCheckResult result = WriteOutCheckResult::Success;
     if (extraChecks & WriteOutCheck::All)

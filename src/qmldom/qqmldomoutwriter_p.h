@@ -147,7 +147,7 @@ public:
             updExp->info().expr = exp;
         }
     }
-    DomItem updatedFile(const DomItem &qmlFile);
+    DomItem updatedFile(const DomItem &fileItem);
 };
 
 } // end namespace Dom

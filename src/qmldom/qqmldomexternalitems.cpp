@@ -301,6 +301,9 @@ JsFile::JsFile(QString filePath, QString code,
                          code)
 {
     m_engine = std::make_shared<QQmlJS::Engine>();
+    LegacyDirectivesCollector directivesCollector(*this);
+    m_engine->setDirectives(&directivesCollector);
+
     QQmlJS::Lexer lexer(m_engine.get());
     lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/false);
     QQmlJS::Parser parser(m_engine.get());
@@ -311,8 +314,10 @@ JsFile::JsFile(QString filePath, QString code,
         addErrorLocal(
                 std::move(myParsingErrors().errorMessage(msg).withFile(filePath).withPath(m_path)));
     }
+
     auto astComments = std::make_shared<AstComments>(m_engine);
-    AstComments::collectComments(m_engine, parser.rootNode(), astComments, MutableDomItem(), nullptr);
+    AstComments::collectComments(m_engine, parser.rootNode(), astComments, MutableDomItem(),
+                                 nullptr);
     m_script = std::make_shared<ScriptExpression>(code, m_engine, parser.rootNode(), astComments,
                                                   ScriptExpression::ExpressionType::Code);
 }
@@ -327,6 +332,7 @@ ErrorGroups JsFile::myParsingErrors()
 bool JsFile::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = ExternalOwningItem::iterateDirectSubpaths(self, visitor);
+    cont = cont && self.dvWrapField(visitor, Fields::fileLocationsTree, m_fileLocationsTree);
     if (m_script)
         cont = cont && self.dvItemField(visitor, Fields::expression, [this, &self]() {
             return self.subOwnerItem(PathEls::Field(Fields::expression), m_script);
@@ -334,6 +340,76 @@ bool JsFile::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) c
     return cont;
 }
 
+void JsFile::writeOut(const DomItem &self, OutWriter &ow) const
+{
+    writeOutDirectives(ow);
+    ow.ensureNewline(2);
+    if (DomItem script = self.field(Fields::expression)) {
+        ow.ensureNewline();
+        script.writeOut(ow);
+    }
+}
+
+void JsFile::addFileImport(const QString &jsfile, const QString &module)
+{
+    LegacyImport import;
+    import.fileName = jsfile;
+    import.asIdentifier = module;
+    m_imports.append(std::move(import));
+}
+
+void JsFile::addModuleImport(const QString &uri, const QString &version, const QString &module)
+{
+    LegacyImport import;
+    import.uri = uri;
+    import.version = version;
+    import.asIdentifier = module;
+    m_imports.append(std::move(import));
+}
+
+void JsFile::LegacyPragmaLibrary::writeOut(OutWriter &lw) const
+{
+    lw.write(u".pragma").space().write(u"library").ensureNewline();
+}
+
+void JsFile::LegacyImport::writeOut(OutWriter &lw) const
+{
+    // either filename or module uri must be present
+    Q_ASSERT(!fileName.isEmpty() || !uri.isEmpty());
+
+    lw.write(u".import").space();
+    if (!uri.isEmpty()) {
+        lw.write(uri).space();
+        if (!version.isEmpty()) {
+            lw.write(version).space();
+        }
+    } else {
+        lw.write(u"\"").write(fileName).write(u"\"").space();
+    }
+    lw.writeRegion(AsTokenRegion).space().write(asIdentifier);
+
+    lw.ensureNewline();
+}
+
+/*!
+ * \internal JsFile::writeOutDirectives
+ * \brief Performs writeOut of the .js Directives (.import, .pragma)
+ *
+ * Watch out!
+ * Currently directives in .js files do not have representative AST::Node-s (see QTBUG-119770),
+ * which makes it hard to preserve attached comments during the WriteOut process,
+ * because currently they are being attached to the first AST::Node.
+ * In case when the first AST::Node is absent, they are not collected, hence lost.
+ */
+void JsFile::writeOutDirectives(OutWriter &ow) const
+{
+    if (m_pragmaLibrary.has_value()) {
+        m_pragmaLibrary->writeOut(ow);
+    }
+    for (const auto &import : m_imports) {
+        import.writeOut(ow);
+    }
+}
 
 std::shared_ptr<OwningItem> QmlFile::doCopy(const DomItem &) const
 {

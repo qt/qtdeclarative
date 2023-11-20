@@ -242,13 +242,80 @@ public:
 
     std::shared_ptr<QQmlJS::Engine> engine() const { return m_engine; }
     JsResource rootComponent() const { return m_rootComponent; }
+    void setFileLocationsTree(FileLocations::Tree v) { m_fileLocationsTree = std::move(v); }
 
     static ErrorGroups myParsingErrors();
+
+    void writeOut(const DomItem &self, OutWriter &lw) const override;
+    void setExpression(std::shared_ptr<ScriptExpression> script) { m_script = std::move(script); }
+
+    void initPragmaLibrary() { m_pragmaLibrary = LegacyPragmaLibrary{}; };
+    void addFileImport(const QString &jsfile, const QString &module);
+    void addModuleImport(const QString &uri, const QString &version, const QString &module);
+
 private:
-    //Is engine really needed?
+    void writeOutDirectives(OutWriter &lw) const;
+
+    /*
+    Entities with Legacy prefix are here to support formatting of the discouraged
+    .import, .pragma directives in .js files.
+    Taking into account that usage of these directives is discouraged and
+    the fact that current usecase is limited to the formatting of .js, it's arguably should not
+    be exposed and kept private.
+
+    LegacyPragma corresponds to the only one existing .pragma library
+
+    LegacyImport is capable of representing the following import statements:
+    .import T_STRING_LITERAL as T_IDENTIFIER
+    .import T_IDENTIFIER (. T_IDENTIFIER)* (T_VERSION_NUMBER (. T_VERSION_NUMBER)?)? as T_IDENTIFIER
+
+    LegacyDirectivesCollector is a workaround for collecting those directives.
+    At the moment of writing .import, .pragma in .js files do not have corresponding
+    representative AST::Node-s. Collecting of those is happening during the lexing
+    */
+
+    struct LegacyPragmaLibrary
+    {
+        void writeOut(OutWriter &lw) const;
+    };
+
+    struct LegacyImport
+    {
+        QString fileName; // file import
+        QString uri; // module import
+        QString version; // used for module import
+        QString asIdentifier; // .import ... as T_Identifier
+
+        void writeOut(OutWriter &lw) const;
+    };
+
+    class LegacyDirectivesCollector : public QQmlJS::Directives
+    {
+    public:
+        LegacyDirectivesCollector(JsFile &file) : m_file(file){};
+
+        void pragmaLibrary() override { m_file.initPragmaLibrary(); };
+        void importFile(const QString &jsfile, const QString &module, int, int) override
+        {
+            m_file.addFileImport(jsfile, module);
+        };
+        void importModule(const QString &uri, const QString &version, const QString &module, int,
+                          int) override
+        {
+            m_file.addModuleImport(uri, version, module);
+        };
+
+    private:
+        JsFile &m_file;
+    };
+
+private:
     std::shared_ptr<QQmlJS::Engine> m_engine;
+    std::optional<LegacyPragmaLibrary> m_pragmaLibrary = std::nullopt;
+    QList<LegacyImport> m_imports;
     std::shared_ptr<ScriptExpression> m_script;
     JsResource m_rootComponent;
+    FileLocations::Tree m_fileLocationsTree;
 };
 
 class QMLDOM_EXPORT QmlFile final : public ExternalOwningItem

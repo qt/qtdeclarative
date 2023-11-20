@@ -42,6 +42,9 @@ private Q_SLOTS:
 
     void testFilesOption_data();
     void testFilesOption();
+
+    void plainJS_data();
+    void plainJS();
 private:
     QString readTestFile(const QString &path);
     QString runQmlformat(const QString &fileToFormat, QStringList args, bool shouldSucceed = true,
@@ -355,6 +358,59 @@ void TestQmlformat::testFormat()
     QFETCH(RunOption, runOption);
 
     QCOMPARE(runQmlformat(testFile(file), args, true, runOption), readTestFile(fileFormatted));
+}
+
+void TestQmlformat::plainJS_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("fileFormatted");
+
+    QTest::newRow("simpleStatement") << "simpleJSStatement.js"
+                                     << "simpleJSStatement.formatted.js";
+    QTest::newRow("simpleFunction") << "simpleOnelinerJSFunc.js"
+                                    << "simpleOnelinerJSFunc.formatted.js";
+    QTest::newRow("simpleLoop") << "simpleLoop.js"
+                                << "simpleLoop.formatted.js";
+    QTest::newRow("messyIfStatement") << "messyIfStatement.js"
+                                      << "messyIfStatement.formatted.js";
+    QTest::newRow("lambdaFunctionWithLoop") << "lambdaFunctionWithLoop.js"
+                                            << "lambdaFunctionWithLoop.formatted.js";
+    QTest::newRow("lambdaWithIfElse") << "lambdaWithIfElse.js"
+                                      << "lambdaWithIfElse.formatted.js";
+    QTest::newRow("nestedLambdaWithIfElse") << "lambdaWithIfElseInsideLambda.js"
+                                            << "lambdaWithIfElseInsideLambda.formatted.js";
+    QTest::newRow("twoFunctions") << "twoFunctions.js"
+                                  << "twoFunctions.formatted.js";
+    QTest::newRow("pragma") << "pragma.js"
+                            << "pragma.formatted.js";
+    QTest::newRow("classConstructor") << "class.js"
+                                      << "class.formatted.js";
+    QTest::newRow("legacyDirectives") << "directives.js"
+                                      << "directives.formatted.js";
+    QTest::newRow("legacyDirectivesWithComments") << "directivesWithComments.js"
+                                                  << "directivesWithComments.formatted.js";
+}
+
+void TestQmlformat::plainJS()
+{
+    QFETCH(QString, file);
+    QFETCH(QString, fileFormatted);
+
+    bool wasSuccessful;
+    LineWriterOptions opts;
+#ifdef Q_OS_WIN
+    opts.lineEndings = QQmlJS::Dom::LineWriterOptions::LineEndings::Windows;
+#endif
+    QString output = formatInMemory(testFile(file), &wasSuccessful, opts, WriteOutCheck::None);
+
+    QVERIFY(wasSuccessful && !output.isEmpty());
+
+    // TODO(QTBUG-119404)
+    QEXPECT_FAIL("classConstructor", "see QTBUG-119404", Abort);
+    // TODO(QTBUG-119770)
+    QEXPECT_FAIL("legacyDirectivesWithComments", "see QTBUG-119770", Abort);
+    auto exp = readTestFile(fileFormatted);
+    QCOMPARE(output, readTestFile(fileFormatted));
 }
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled

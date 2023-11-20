@@ -264,13 +264,61 @@ OutWriter &OutWriter::writeRegion(FileLocationRegion region, QStringView toWrite
     regionEnd(region);
     return *this;
 }
-
-DomItem OutWriter::updatedFile(const DomItem &qmlFile)
+/*!
+\internal
+Creates a DomEnv which will contain a reformatted file also finalises reformatting of the file
+*/
+DomItem OutWriter::updatedFile(const DomItem &fileItem)
 {
-    Q_ASSERT(qmlFile.internalKind() == DomType::QmlFile);
-    if (std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>()) {
-        std::shared_ptr<QmlFile> copyPtr = qmlFilePtr->makeCopy(qmlFile);
-        DomItem env = qmlFile.environment();
+    // TODO(QTBUG-117849) unify for JS and QML files
+    if (std::shared_ptr<JsFile> jsFilePtr = fileItem.ownerAs<JsFile>()) {
+        std::shared_ptr<JsFile> copyPtr = jsFilePtr->makeCopy(fileItem);
+        DomItem env = fileItem.environment();
+        std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>();
+        Q_ASSERT(envPtr);
+        auto newEnvPtr =
+                std::make_shared<DomEnvironment>(envPtr, envPtr->loadPaths(), envPtr->options());
+        newEnvPtr->addJsFile(copyPtr);
+        MutableDomItem copy = MutableDomItem(DomItem(newEnvPtr).copy(copyPtr));
+        FileLocations::Tree newLoc = topLocation;
+        Path filePath = fileItem.canonicalPath();
+        if (newLoc->path() != filePath) {
+            if (newLoc->path()) {
+                if (newLoc->path().length() > filePath.length()
+                    && newLoc->path().mid(0, filePath.length()) == filePath) {
+                    newLoc = FileLocations::createTree(filePath);
+                    FileLocations::Tree loc =
+                            FileLocations::ensure(newLoc, newLoc->path().mid(filePath.length()),
+                                                  AttachedInfo::PathType::Relative);
+                    loc->setSubItems(topLocation->subItems());
+                } else {
+                    qCWarning(writeOutLog)
+                            << "failed to base fileLocations in OutWriter (" << newLoc->path()
+                            << ") to current file (" << filePath << ")";
+                }
+            } else {
+                newLoc = FileLocations::createTree(filePath);
+                Q_ASSERT(newLoc->subItems().isEmpty() && newLoc->info().regions.isEmpty());
+            }
+        }
+        copyPtr->setFileLocationsTree(newLoc);
+        UpdatedScriptExpression::visitTree(
+                reformattedScriptExpressions,
+                [&copy, filePath](Path p, UpdatedScriptExpression::Tree t) {
+                    if (std::shared_ptr<ScriptExpression> exprPtr = t->info().expr) {
+                        Q_ASSERT(p.mid(0, filePath.length()) == filePath);
+                        //Set reformatted expression to the JsFile
+                        //hacky workaround to avoid mutating DOM API
+                        copy.mutableAs<JsFile>()->setExpression(exprPtr);
+                    }
+                    return true;
+                });
+        return copy.item();
+    }
+    Q_ASSERT(fileItem.internalKind() == DomType::QmlFile);
+    if (std::shared_ptr<QmlFile> qmlFilePtr = fileItem.ownerAs<QmlFile>()) {
+        std::shared_ptr<QmlFile> copyPtr = qmlFilePtr->makeCopy(fileItem);
+        DomItem env = fileItem.environment();
         std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>();
         Q_ASSERT(envPtr);
         auto newEnvPtr = std::make_shared<DomEnvironment>(
@@ -278,7 +326,7 @@ DomItem OutWriter::updatedFile(const DomItem &qmlFile)
         newEnvPtr->addQmlFile(copyPtr);
         MutableDomItem copy = MutableDomItem(DomItem(newEnvPtr).copy(copyPtr));
         FileLocations::Tree newLoc = topLocation;
-        Path qmlFilePath = qmlFile.canonicalPath();
+        Path qmlFilePath = fileItem.canonicalPath();
         if (newLoc->path() != qmlFilePath) {
             if (newLoc->path()) {
                 if (newLoc->path().length() > qmlFilePath.length()
