@@ -37,7 +37,6 @@ qt_add_qml_module(viewsexample
     URI views
     QML_FILES
         "delegatemodel/dragselection.qml"
-        "delegatemodel/slideshow.qml"
         "gridview/gridview-example.qml"
         "listview/content/PetsModel.qml"
         "listview/content/PressAndHoldButton.qml"

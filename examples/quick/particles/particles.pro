@@ -2,7 +2,6 @@ TEMPLATE = subdirs
 SUBDIRS += affectors \
     emitters \
     imageparticle \
-    itemparticle \
     system
 
 #Install shared images too

@@ -411,7 +411,7 @@ score data to the web server. If it had returned a QML file (or a URL to a QML f
 way as you did with the blocks.
 
 An alternate way to access and submit web-based data would be to use QML types designed for this purpose. XmlListModel
-makes it very easy to fetch and display XML based data such as RSS in a QML application (see the Flickr demo for an example).
+makes it very easy to fetch and display XML based data such as RSS in a QML application.
 
 
 \section2 That's It!

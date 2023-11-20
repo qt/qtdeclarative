@@ -14,7 +14,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
-add_subdirectory("../../shared" "shared")
+add_subdirectory("../shared" "shared")
 
 qt_add_executable(itemparticleexample WIN32 MACOSX_BUNDLE
     main.cpp

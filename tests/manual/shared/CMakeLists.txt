@@ -21,6 +21,7 @@ qt_add_qml_module(${PROJECT_NAME}_shared
     QML_FILES
         "Button.qml"
         "CheckBox.qml"
+        "FlickrRssModel.qml"
         "Label.qml"
         "LauncherList.qml"
         "SimpleLauncherDelegate.qml"

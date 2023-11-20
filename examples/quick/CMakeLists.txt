@@ -24,7 +24,6 @@ qt_internal_add_example(imageprovider)
 qt_internal_add_example(imageresponseprovider)
 qt_internal_add_example(window)
 add_subdirectory(particles)
-qt_internal_add_example(delegatechooser)
 qt_internal_add_example(shapes)
 qt_internal_add_example(itemvariablerefreshrate)
 add_subdirectory(multieffect)
@@ -49,7 +48,6 @@ set(reused_dir_targets
     window_shared
     shapes_shared
     imageelements_shared
-    delegatechooser_shared
     pointerhandlers_shared
     affectors_shared
     emitters_shared
