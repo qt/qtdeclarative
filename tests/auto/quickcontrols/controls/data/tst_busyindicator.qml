@@ -23,16 +23,18 @@ TestCase {
         MouseArea { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(busyIndicator, testCase)
         verify(control)
         compare(control.running, true)
     }
 
     function test_running() {
-        var control = createTemporaryObject(busyIndicator, testCase)
+        let control = createTemporaryObject(busyIndicator, testCase)
         verify(control)
 
         compare(control.running, true)
@@ -42,10 +44,10 @@ TestCase {
 
     // QTBUG-61785
     function test_mouseArea() {
-        var ma = createTemporaryObject(mouseArea, testCase, {width: testCase.width, height: testCase.height})
+        let ma = createTemporaryObject(mouseArea, testCase, {width: testCase.width, height: testCase.height})
         verify(ma)
 
-        var control = busyIndicator.createObject(ma, {width: testCase.width, height: testCase.height})
+        let control = busyIndicator.createObject(ma, {width: testCase.width, height: testCase.height})
         verify(control)
 
         mousePress(control)
@@ -54,7 +56,7 @@ TestCase {
         mouseRelease(control)
         verify(!ma.pressed)
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
         touch.press(0, control).commit()
         verify(ma.pressed)
 
