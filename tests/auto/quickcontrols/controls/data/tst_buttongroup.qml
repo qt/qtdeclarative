@@ -28,14 +28,6 @@ TestCase {
         SignalSpy { }
     }
 
-    function test_null() {
-        var group = createTemporaryObject(buttonGroup, testCase)
-        verify(group)
-
-        group.addButton(null)
-        group.removeButton(null)
-    }
-
     Component {
         id: button
         Button { }
@@ -46,10 +38,12 @@ TestCase {
         QtObject { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
-        var group = createTemporaryObject(buttonGroup, testCase)
+    function test_defaults() {
+        let group = createTemporaryObject(buttonGroup, testCase)
         verify(group)
         compare(group.buttons.length, 0)
         compare(group.checkedButton, null)
@@ -57,17 +51,25 @@ TestCase {
         compare(group.checkState, Qt.Unchecked)
     }
 
-    function test_current() {
-        var group = createTemporaryObject(buttonGroup, testCase)
+    function test_null() {
+        let group = createTemporaryObject(buttonGroup, testCase)
         verify(group)
 
-        var checkedButtonSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "checkedButtonChanged"})
+        group.addButton(null)
+        group.removeButton(null)
+    }
+
+    function test_current() {
+        let group = createTemporaryObject(buttonGroup, testCase)
+        verify(group)
+
+        let checkedButtonSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "checkedButtonChanged"})
         verify(checkedButtonSpy.valid)
         verify(!group.checkedButton)
 
-        var button1 = createTemporaryObject(button, testCase, {checked: true})
-        var button2 = createTemporaryObject(button, testCase, {checked: false})
-        var button3 = createTemporaryObject(button, testCase, {checked: true, objectName: "3"})
+        let button1 = createTemporaryObject(button, testCase, {checked: true})
+        let button2 = createTemporaryObject(button, testCase, {checked: false})
+        let button3 = createTemporaryObject(button, testCase, {checked: true, objectName: "3"})
 
         // add checked
         group.addButton(button1)
@@ -127,17 +129,17 @@ TestCase {
     }
 
     function test_buttons() {
-        var group = createTemporaryObject(buttonGroup, testCase)
+        let group = createTemporaryObject(buttonGroup, testCase)
         verify(group)
 
-        var buttonsSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "buttonsChanged"})
+        let buttonsSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "buttonsChanged"})
         verify(buttonsSpy.valid)
 
         compare(group.buttons.length, 0)
         compare(group.checkedButton, null)
 
-        var button1 = createTemporaryObject(button, testCase, {checked: true})
-        var button2 = createTemporaryObject(button, testCase, {checked: false})
+        let button1 = createTemporaryObject(button, testCase, {checked: true})
+        let button2 = createTemporaryObject(button, testCase, {checked: false})
 
         group.buttons = [button1, button2]
         compare(group.buttons.length, 2)
@@ -146,7 +148,7 @@ TestCase {
         compare(group.checkedButton, button1)
         compare(buttonsSpy.count, 2)
 
-        var button3 = createTemporaryObject(button, testCase, {checked: true})
+        let button3 = createTemporaryObject(button, testCase, {checked: true})
 
         group.addButton(button3)
         compare(group.buttons.length, 3)
@@ -177,14 +179,14 @@ TestCase {
     }
 
     function test_clicked(data) {
-        var group = createTemporaryObject(buttonGroup, testCase, {exclusive: data.exclusive})
+        let group = createTemporaryObject(buttonGroup, testCase, {exclusive: data.exclusive})
         verify(group)
 
-        var clickedSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "clicked"})
+        let clickedSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "clicked"})
         verify(clickedSpy.valid)
 
-        var button1 = createTemporaryObject(button, testCase)
-        var button2 = createTemporaryObject(button, testCase)
+        let button1 = createTemporaryObject(button, testCase)
+        let button2 = createTemporaryObject(button, testCase)
 
         group.addButton(button1)
         group.addButton(button2)
@@ -252,7 +254,7 @@ TestCase {
     }
 
     function test_controls(data) {
-        var container = createTemporaryObject(data.component, testCase)
+        let container = createTemporaryObject(data.component, testCase)
         verify(container)
 
         verify(!container.group.checkedButton)
@@ -277,13 +279,13 @@ TestCase {
     }
 
     function test_buttonDestroyed() {
-        var group = createTemporaryObject(buttonGroup, testCase)
+        let group = createTemporaryObject(buttonGroup, testCase)
         verify(group)
 
-        var buttonsSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "buttonsChanged"})
+        let buttonsSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "buttonsChanged"})
         verify(buttonsSpy.valid)
 
-        var button1 = createTemporaryObject(button, testCase, {objectName: "button1", checked: true})
+        let button1 = createTemporaryObject(button, testCase, {objectName: "button1", checked: true})
 
         group.addButton(button1)
         compare(group.buttons.length, 1)
@@ -316,7 +318,7 @@ TestCase {
     }
 
     function test_repeater() {
-        var container = createTemporaryObject(repeater, testCase)
+        let container = createTemporaryObject(repeater, testCase)
         verify(container)
 
         verify(container.group.checkedButton)
@@ -324,25 +326,25 @@ TestCase {
     }
 
     function test_nonExclusive() {
-        var group = createTemporaryObject(nonExclusiveGroup, testCase)
+        let group = createTemporaryObject(nonExclusiveGroup, testCase)
         verify(group)
 
         compare(group.checkState, Qt.Unchecked)
 
-        var button1 = createTemporaryObject(button, testCase, {checked: true})
+        let button1 = createTemporaryObject(button, testCase, {checked: true})
         group.addButton(button1)
         compare(button1.checked, true)
         compare(group.checkedButton, null)
         compare(group.checkState, Qt.Checked)
 
-        var button2 = createTemporaryObject(button, testCase, {checked: true})
+        let button2 = createTemporaryObject(button, testCase, {checked: true})
         group.addButton(button2)
         compare(button1.checked, true)
         compare(button2.checked, true)
         compare(group.checkedButton, null)
         compare(group.checkState, Qt.Checked)
 
-        var button3 = createTemporaryObject(button, testCase, {checked: false})
+        let button3 = createTemporaryObject(button, testCase, {checked: false})
         group.addButton(button3)
         compare(button1.checked, true)
         compare(button2.checked, true)
@@ -401,7 +403,7 @@ TestCase {
                 model: ListModel {
                     id: listModel
                     Component.onCompleted: {
-                        for (var i = 0; i < 10; ++i)
+                        for (let i = 0; i < 10; ++i)
                             append({text: i})
                     }
                 }
@@ -410,7 +412,7 @@ TestCase {
     }
 
     function test_checkedButtonDestroyed() {
-        var column = createTemporaryObject(checkedButtonColumn, testCase)
+        let column = createTemporaryObject(checkedButtonColumn, testCase)
         verify(column)
 
         waitForRendering(column)
@@ -452,7 +454,7 @@ TestCase {
     }
 
     function test_resetButtonGroup() {
-        var container = createTemporaryObject(buttonGroupComp, testCase)
+        let container = createTemporaryObject(buttonGroupComp, testCase)
         verify(container)
 
         // Check for initial buttons assigned to button group
