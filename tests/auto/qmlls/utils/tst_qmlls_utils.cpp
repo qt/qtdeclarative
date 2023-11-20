@@ -2551,6 +2551,7 @@ void tst_qmlls_utils::completions()
     QQmlJS::Dom::DomCreationOptions options;
     options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
     options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithRecovery);
 
     auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
 

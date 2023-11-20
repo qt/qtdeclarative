@@ -184,6 +184,7 @@ void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
         DomCreationOptions options;
         options.setFlag(DomCreationOption::WithScriptExpressions);
         options.setFlag(DomCreationOption::WithSemanticAnalysis);
+        options.setFlag(DomCreationOption::WithRecovery);
         FileToLoad fileToLoad =
                 FileToLoad::fromFileSystem(newCurrent.ownerAs<DomEnvironment>(), fPath, options);
         if (!fileToLoad.canonicalPath().isEmpty()) {

@@ -412,7 +412,10 @@ void DomUniverse::execQueue()
         if (!skipParse) {
             QDateTime now(QDateTime::currentDateTimeUtc());
             if (t.kind == DomType::QmlFile) {
-                auto qmlFile = std::make_shared<QmlFile>(canonicalPath, code, contentDate);
+                auto qmlFile = std::make_shared<QmlFile>(canonicalPath, code, contentDate, 0,
+                                                         t.file.options().testFlag(WithRecovery)
+                                                                 ? QmlFile::EnableParserRecovery
+                                                                 : QmlFile::DisableParserRecovery);
                 std::shared_ptr<DomEnvironment> envPtr;
                 if (auto ptr = t.file.environment().lock())
                     envPtr = std::move(ptr);

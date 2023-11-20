@@ -302,6 +302,12 @@ public:
     inline int errorColumnNumber() const
     { return diagnosticMessage().loc.startColumn; }
 
+    inline bool identifierInsertion() const
+    { return m_enableIdentifierInsertion; }
+
+    inline void enableIdentifierInsertion()
+    { m_enableIdentifierInsertion = true; }
+
 protected:
     bool parse(int startToken);
 
@@ -390,6 +396,7 @@ protected:
     CoverExpressionType coverExpressionType = CE_Invalid;
 
     QList<DiagnosticMessage> diagnostic_messages;
+    bool m_enableIdentifierInsertion = false;
 };
 
 } // end of namespace QQmlJS

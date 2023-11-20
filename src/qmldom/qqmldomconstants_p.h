@@ -387,6 +387,7 @@ enum DomCreationOption : char {
     None = 0,
     WithSemanticAnalysis = 1,
     WithScriptExpressions = 2,
+    WithRecovery = 4
 };
 
 Q_DECLARE_FLAGS(DomCreationOptions, DomCreationOption);

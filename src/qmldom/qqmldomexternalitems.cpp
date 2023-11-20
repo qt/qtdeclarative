@@ -315,7 +315,8 @@ QmlFile::QmlFile(const QmlFile &o)
         m_astComments = std::make_shared<AstComments>(*m_astComments);
 }
 
-QmlFile::QmlFile(QString filePath, QString code, QDateTime lastDataUpdateAt, int derivedFrom)
+QmlFile::QmlFile(QString filePath, QString code, QDateTime lastDataUpdateAt, int derivedFrom,
+                 RecoveryOption option)
     : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::qmlFilePath(filePath), derivedFrom,
                          code),
       m_engine(new QQmlJS::Engine),
@@ -325,6 +326,8 @@ QmlFile::QmlFile(QString filePath, QString code, QDateTime lastDataUpdateAt, int
     QQmlJS::Lexer lexer(m_engine.get());
     lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/true);
     QQmlJS::Parser parser(m_engine.get());
+    if (option == EnableParserRecovery)
+        parser.enableIdentifierInsertion();
     m_isValid = parser.parse();
     const auto diagnostics = parser.diagnosticMessages();
     for (const DiagnosticMessage &msg : diagnostics) {

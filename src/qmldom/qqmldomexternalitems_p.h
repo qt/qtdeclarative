@@ -248,10 +248,12 @@ public:
     constexpr static DomType kindValue = DomType::QmlFile;
     DomType kind() const override { return kindValue; }
 
+    enum RecoveryOption { DisableParserRecovery, EnableParserRecovery };
+
     QmlFile(const QmlFile &o);
     QmlFile(QString filePath = QString(), QString code = QString(),
             QDateTime lastDataUpdate = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
-            int derivedFrom = 0);
+            int derivedFrom = 0, RecoveryOption option = DisableParserRecovery);
     static ErrorGroups myParsingErrors();
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const
             override; // iterates the *direct* subpaths, returns false if a quick end was requested
