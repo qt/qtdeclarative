@@ -30,9 +30,11 @@ TestCase {
         SignalSpy { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(button, testCase)
         verify(control)
         compare(control.highlighted, false)
@@ -40,7 +42,7 @@ TestCase {
     }
 
     function test_text() {
-        var control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(button, testCase)
         verify(control)
 
         compare(control.text, "")
@@ -51,10 +53,10 @@ TestCase {
     }
 
     function test_mouse() {
-        var control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(button, testCase)
         verify(control)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         // click
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
@@ -120,11 +122,11 @@ TestCase {
     }
 
     function test_touch() {
-        var control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(button, testCase)
         verify(control)
 
-        var touch = touchEvent(control)
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let touch = touchEvent(control)
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         // click
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
@@ -163,15 +165,15 @@ TestCase {
     }
 
     function test_multiTouch() {
-        var control1 = createTemporaryObject(button, testCase)
+        let control1 = createTemporaryObject(button, testCase)
         verify(control1)
 
-        var pressedCount1 = 0
+        let pressedCount1 = 0
 
-        var pressedSpy1 = signalSpy.createObject(control1, {target: control1, signalName: "pressedChanged"})
+        let pressedSpy1 = signalSpy.createObject(control1, {target: control1, signalName: "pressedChanged"})
         verify(pressedSpy1.valid)
 
-        var touch = touchEvent(control1)
+        let touch = touchEvent(control1)
         touch.press(0, control1, 0, 0).commit().move(0, control1, control1.width - 1, control1.height - 1).commit()
 
         compare(pressedSpy1.count, ++pressedCount1)
@@ -185,12 +187,12 @@ TestCase {
         compare(pressedSpy1.count, pressedCount1)
         compare(control1.pressed, true)
 
-        var control2 = createTemporaryObject(button, testCase, {y: control1.height})
+        let control2 = createTemporaryObject(button, testCase, {y: control1.height})
         verify(control2)
 
-        var pressedCount2 = 0
+        let pressedCount2 = 0
 
-        var pressedSpy2 = signalSpy.createObject(control2, {target: control2, signalName: "pressedChanged"})
+        let pressedSpy2 = signalSpy.createObject(control2, {target: control2, signalName: "pressedChanged"})
         verify(pressedSpy2.valid)
 
         // press the second button
@@ -213,13 +215,13 @@ TestCase {
     }
 
     function test_keys() {
-        var control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(button, testCase)
         verify(control)
 
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         // click
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
@@ -236,8 +238,8 @@ TestCase {
         sequenceSpy.expectedSequence = []
         // Not testing Key_Enter and Key_Return because QGnomeTheme uses them for
         // pressing buttons and the CI uses the QGnomeTheme platform theme.
-        var keys = [Qt.Key_Escape, Qt.Key_Tab]
-        for (var i = 0; i < keys.length; ++i) {
+        let keys = [Qt.Key_Escape, Qt.Key_Tab]
+        for (let i = 0; i < keys.length; ++i) {
             sequenceSpy.reset()
             keyClick(keys[i])
             verify(sequenceSpy.success)
@@ -249,7 +251,7 @@ TestCase {
     }
 
     function test_autoRepeat() {
-        var control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(button, testCase)
         verify(control)
 
         compare(control.autoRepeat, false)
@@ -259,11 +261,11 @@ TestCase {
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        var clickSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
+        let clickSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
         verify(clickSpy.valid)
-        var pressSpy = signalSpy.createObject(control, {target: control, signalName: "pressed"})
+        let pressSpy = signalSpy.createObject(control, {target: control, signalName: "pressed"})
         verify(pressSpy.valid)
-        var releaseSpy = signalSpy.createObject(control, {target: control, signalName: "released"})
+        let releaseSpy = signalSpy.createObject(control, {target: control, signalName: "released"})
         verify(releaseSpy.valid)
 
         // auto-repeat mouse click
@@ -333,18 +335,18 @@ TestCase {
     }
 
     function test_baseline() {
-        var control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(button, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
     }
 
     function test_checkable() {
-        var control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(button, testCase)
         verify(control)
         verify(control.hasOwnProperty("checkable"))
         verify(!control.checkable)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
@@ -386,7 +388,7 @@ TestCase {
     }
 
     function test_highlighted() {
-        var control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(button, testCase)
         verify(control)
         verify(!control.highlighted)
 
@@ -395,11 +397,11 @@ TestCase {
     }
 
     function test_spacing() {
-        var control = createTemporaryObject(button, testCase, { text: "Some long, long, long text" })
+        let control = createTemporaryObject(button, testCase, { text: "Some long, long, long text" })
         verify(control)
         verify(control.contentItem.implicitWidth + control.leftPadding + control.rightPadding > control.background.implicitWidth)
 
-        var textLabel = findChild(control.contentItem, "label")
+        let textLabel = findChild(control.contentItem, "label")
         verify(textLabel)
 
         // The implicitWidth of the IconLabel that all buttons use as their contentItem
@@ -428,7 +430,7 @@ TestCase {
     }
 
     function test_display(data) {
-        var control = createTemporaryObject(button, testCase, {
+        let control = createTemporaryObject(button, testCase, {
             text: "Button",
             display: data.display,
             "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png",
@@ -437,8 +439,8 @@ TestCase {
         verify(control)
         compare(control.icon.source, "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png")
 
-        var iconImage = findChild(control.contentItem, "image")
-        var textLabel = findChild(control.contentItem, "label")
+        let iconImage = findChild(control.contentItem, "image")
+        let textLabel = findChild(control.contentItem, "label")
 
         switch (control.display) {
         case Button.IconOnly:
