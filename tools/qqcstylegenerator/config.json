@@ -1,6 +1,5 @@
 {
     "themes": ["Light", "Dark"],
-    "image formats": ["png", "png@2x"],
     "default export": [
         {"atom": "default", "export": ["image"]},
         {"atom": "background", "export": ["image"]},

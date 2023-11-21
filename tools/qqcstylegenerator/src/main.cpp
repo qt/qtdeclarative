@@ -31,8 +31,11 @@ int main(int argc, char **argv){
         {"sanity",
             QCoreApplication::translate("main", "Run extra sanity checks on the Figma file")},
         {{"g", "generate"},
-            QCoreApplication::translate("main", "Generate only a subset of the controls"),
-            QCoreApplication::translate("main", "A regexp telling which controls to generate")}
+            QCoreApplication::translate("main", "Generate only a subset of the controls, e.g \"RadioButton|CheckBox\""),
+            QCoreApplication::translate("main", "regexp")},
+        {{"f", "format"},
+            QCoreApplication::translate("main", "The image format(s) to use, e.g -f png@1x -f png@2x -f svg"),
+            QCoreApplication::translate("main", "format")}
     });
     parser.addPositionalArgument("figma_file_id",
         QCoreApplication::translate("main", "The figma file ID to create a style from."));
@@ -52,6 +55,8 @@ int main(int argc, char **argv){
         bridge.m_figmaToken = parser.value("token");
     if (parser.isSet("directory"))
         bridge.m_targetDirectory = QDir(parser.value("directory")).absolutePath();
+    if (parser.isSet("format"))
+        bridge.m_selectedImageFormats = parser.values("format");
     if (!parser.positionalArguments().isEmpty())
         bridge.m_figmaUrlOrId = parser.positionalArguments().first();
 

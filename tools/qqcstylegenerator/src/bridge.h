@@ -29,6 +29,8 @@ public:
     Q_INVOKABLE QStringList availableControls() const;
     Q_INVOKABLE QStringList selectedControls() const;
     Q_INVOKABLE void selectControl(const QString &control, bool select);
+    Q_INVOKABLE bool isImageFormatSelected(const QString &format) const;
+    Q_INVOKABLE void selectImageFormat(const QString &format, bool select);
 
 signals:
     void targetDirectoryChanged();
@@ -62,6 +64,7 @@ public:
     QString m_figmaToken;
     QString m_controlToGenerate;
     QStringList m_selectedControls;
+    QStringList m_selectedImageFormats;
 
     bool m_sanity = false;
     bool m_verbose = false;

@@ -15,6 +15,7 @@ Bridge::Bridge()
     m_figmaToken = settings.value("figmaToken").toString();
     m_overwriteQml = settings.value("overwriteQml").toBool();
     m_selectedControls = settings.value("selectedControls", availableControls()).toStringList();
+    m_selectedImageFormats = settings.value("selectedImageFormats", QStringList() << "png@1x" << "png@2x").toStringList();
 }
 
 Bridge::~Bridge()
@@ -25,6 +26,7 @@ Bridge::~Bridge()
     settings.setValue("figmaToken", m_figmaToken);
     settings.setValue("overwriteQml", m_overwriteQml);
     settings.setValue("selectedControls", m_selectedControls);
+    settings.setValue("selectedImageFormats", m_selectedImageFormats);
 }
 
 void Bridge::generate()
@@ -98,4 +100,21 @@ void Bridge::selectControl(const QString &control, bool select)
         m_selectedControls.append(control);
     else
         m_selectedControls.removeOne(control);
+}
+
+bool Bridge::isImageFormatSelected(const QString &format) const
+{
+    return m_selectedImageFormats.contains(format);
+}
+
+void Bridge::selectImageFormat(const QString &format, bool select)
+{
+    const bool alreadySelected = m_selectedImageFormats.contains(format);
+    if (select == alreadySelected)
+        return;
+
+    if (select)
+        m_selectedImageFormats.append(format);
+    else
+        m_selectedImageFormats.removeOne(format);
 }

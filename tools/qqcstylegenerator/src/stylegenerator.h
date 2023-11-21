@@ -26,21 +26,25 @@ struct ImageFormat
         : name(name)
     {
         // Example names: png@2x, svg
-        const int alphaIndex = name.indexOf('@');
-        hasScale = alphaIndex != -1;
+        const int atIndex = name.indexOf('@');
+        const bool hasScale = atIndex != -1;
         if (hasScale) {
-            format = name.first(alphaIndex);
-            scale = name.sliced(alphaIndex + 1).chopped(1);
+            format = name.first(atIndex);
+            scale = name.sliced(atIndex + 1).chopped(1).toFloat();
         } else {
             format = name;
-            scale = "1";
+            scale = 1;
         }
     }
 
-    bool hasScale;
+    QString scaleString() const
+    {
+        return QString::number(scale);
+    }
+
     QString name;
     QString format;
-    QString scale;
+    qreal scale;
 };
 
 struct Radii
@@ -179,10 +183,6 @@ private:
         for (const QJsonValue &themeValue : themesArray)
             m_themes.append(themeValue.toString());
 
-        const QJsonArray imageFormats = m_inputConfig.value("image formats").toArray();
-        for (const QJsonValue &formatValue : imageFormats)
-            m_imageFormats.append(formatValue.toString());
-
         const QJsonArray exportArray = m_inputConfig.value("default export").toArray();
         for (const QJsonValue &exportValue : exportArray) {
             const QJsonObject exportObj = exportValue.toObject();
@@ -208,8 +208,6 @@ private:
     {
         const auto figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
         const QStringList idsList = figmaIdToFileNameMap.keys();
-        const QString format = imageFormat.format;
-        const QString scale = imageFormat.scale;
 
         progressLabel("Downloading image urls with format " + imageFormat.name);
 
@@ -222,7 +220,7 @@ private:
         QList<QString> requestIds;
         QString currentIds;
         QString partialUrl = "https://api.figma.com/v1/images/" + m_bridge->m_fileId +
-                             "?format=" + format + "&scale=" + scale + "&ids=";
+                             "?format=" + imageFormat.format + "&scale=" + imageFormat.scaleString() + "&ids=";
 
         // REST API supports urls of up to 6000 chars so we need to split
         // into multiple requests if the total character length exceeds it
@@ -606,7 +604,7 @@ private:
                 QStringList exportList = getStringList("export", iconGroupConfig);
                 if (exportList.contains("image")) {
                     exportList.removeAll("image");
-                    exportList += m_imageFormats;
+                    exportList += m_bridge->m_selectedImageFormats;
                 }
 
                 const auto componentSetName = getThemeString("component set", iconGroupConfig);
@@ -704,7 +702,7 @@ private:
             else if (atomExport == "layout")
                 exportLayout(obj, atomConfig);
             else if (atomExport == "image")
-                exportImage(obj, m_imageFormats, atomConfig);
+                exportImage(obj, m_bridge->m_selectedImageFormats, atomConfig);
             else if (atomExport.startsWith("png") || atomExport.startsWith("svg"))
                 exportImage(obj, {atomExport}, atomConfig);
             else if (atomExport == "json")
@@ -794,8 +792,8 @@ private:
             for (const ImageFormat imageFormat : imageFormats) {
                 const QString fileNameForReading = imageFolder + imageName + "." + imageFormat.format;
                 const QString fileNameForWriting =  imageFolder
-                        + (imageFormat.hasScale
-                           ? imageName + '@' + imageFormat.scale + "x." + imageFormat.format
+                        + (imageFormat.scale != 1
+                           ? imageName + '@' + imageFormat.scaleString() + "x." + imageFormat.format
                            : imageName + '.' + imageFormat.format);
 
                 auto &figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
@@ -846,7 +844,7 @@ private:
 
         for (const ImageFormat imageFormat : imageFormats) {
             const QString imageFolder = "icons/icons"
-                    + (imageFormat.hasScale ? + "@" + imageFormat.scale + "x" : "") + "/";
+                    + (imageFormat.scale != 1 ? + "@" + imageFormat.scaleString() + "x" : "") + "/";
             const QString fileName = imageFolder + imageName + "." + imageFormat.format;
 
             auto &figmaIdToFileNameMap = m_imagesToDownload[imageFormat.name];
@@ -1394,7 +1392,6 @@ public:
 private:
     Bridge *m_bridge = nullptr;
 
-    QStringList m_imageFormats;
     QMap<QString, QStringList> m_defaultExport;
     QStringList m_themes;
     QStringList m_controls;

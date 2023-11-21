@@ -26,6 +26,7 @@ qt_add_resources(qqcstylegenerator "controls"
         main.qml
         FigmaOptions.qml
         ControlsOptions.qml
+        ExportOptions.qml
         Log.qml
         Usage.qml
         Generate.qml

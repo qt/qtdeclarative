@@ -72,6 +72,7 @@ ApplicationWindow {
                 spacing: 20
                 FigmaOptions { }
                 ControlsOptions { }
+                ExportOptions { }
                 Log { }
                 Usage { }
             }
