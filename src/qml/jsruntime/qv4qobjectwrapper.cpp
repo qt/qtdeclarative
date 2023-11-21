@@ -14,7 +14,9 @@
 #include <private/qqmlvaluetypewrapper_p.h>
 #include <private/qqmllistwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
+#if QT_CONFIG(qml_locale)
 #include <private/qqmllocale_p.h>
+#endif
 
 #include <private/qv4arraybuffer_p.h>
 #include <private/qv4functionobject_p.h>
