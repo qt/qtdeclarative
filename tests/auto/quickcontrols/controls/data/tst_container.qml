@@ -24,16 +24,18 @@ TestCase {
         Rectangle { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(container, testCase)
         verify(control)
         compare(control.count, 0)
     }
 
     function test_implicitSize() {
-        var control = createTemporaryObject(container, testCase)
+        let control = createTemporaryObject(container, testCase)
         verify(control)
 
         compare(control.implicitWidth, 0)
@@ -53,16 +55,16 @@ TestCase {
     }
 
     function test_currentIndex() {
-        var control1 = createTemporaryObject(container, testCase)
+        let control1 = createTemporaryObject(container, testCase)
         verify(control1)
 
-        var control2 = createTemporaryObject(container, testCase)
+        let control2 = createTemporaryObject(container, testCase)
         verify(control2)
 
         compare(control1.currentIndex, -1)
         compare(control2.currentIndex, -1)
 
-        for (var i = 0; i < 3; ++i) {
+        for (let i = 0; i < 3; ++i) {
             control1.addItem(rectangle.createObject(control1))
             control2.addItem(rectangle.createObject(control2))
         }
@@ -130,7 +132,7 @@ TestCase {
 
     // don't crash (QTBUG-61310)
     function test_repeater(data) {
-        var control = createTemporaryObject(data.component, testCase)
+        let control = createTemporaryObject(data.component, testCase)
         verify(control)
 
         compare(control.itemAt(0).objectName, "0")
@@ -140,12 +142,12 @@ TestCase {
     }
 
     function test_removeTakeItem() {
-        var control = createTemporaryObject(container, testCase)
+        let control = createTemporaryObject(container, testCase)
         verify(control)
 
-        var item1 = rectangle.createObject(control)
-        var item2 = rectangle.createObject(control)
-        var item3 = rectangle.createObject(control)
+        let item1 = rectangle.createObject(control)
+        let item2 = rectangle.createObject(control)
+        let item3 = rectangle.createObject(control)
 
         item1.Component.onDestruction.connect(function() { item1 = null })
         item2.Component.onDestruction.connect(function() { item2 = null })
@@ -210,9 +212,9 @@ TestCase {
     }
 
     function test_contentItemDeletionOrder() {
-        var control1 = createTemporaryObject(contentItemDeletionOrder1, testCase)
+        let control1 = createTemporaryObject(contentItemDeletionOrder1, testCase)
         verify(control1)
-        var control2 = createTemporaryObject(contentItemDeletionOrder2, testCase)
+        let control2 = createTemporaryObject(contentItemDeletionOrder2, testCase)
         verify(control2)
     }
 
@@ -251,9 +253,9 @@ TestCase {
     }
 
     function test_backgroundDeletionOrder() {
-        var control1 = createTemporaryObject(backgroundDeletionOrder1, testCase)
+        let control1 = createTemporaryObject(backgroundDeletionOrder1, testCase)
         verify(control1)
-        var control2 = createTemporaryObject(backgroundDeletionOrder2, testCase)
+        let control2 = createTemporaryObject(backgroundDeletionOrder2, testCase)
         verify(control2)
     }
 }
