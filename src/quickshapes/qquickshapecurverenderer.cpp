@@ -352,26 +352,49 @@ void QQuickShapeCurveRenderer::updateNode()
             strokeNode->setColor(pathData.pen.color());
     };
 
-    for (PathData &pathData : m_paths) {
+    NodeList toBeDeleted;
+
+    for (int i = 0; i < m_paths.size(); i++) {
+        PathData &pathData = m_paths[i];
         if (pathData.currentRunner) {
             if (!pathData.currentRunner->isDone)
                 continue;
+            // Find insertion point for new nodes
+            QSGNode *nextNode = nullptr;
+            int j = i;
+            do {
+                const PathData &pd = m_paths[j];
+                if (!pd.fillNodes.isEmpty())
+                    nextNode = pd.fillNodes.first();
+                else if (!pathData.strokeNodes.isEmpty())
+                    nextNode = pd.strokeNodes.first();
+            } while (!nextNode && ++j < m_paths.size());
+
             const PathData &newData = pathData.currentRunner->pathData;
             if (newData.m_dirty & PathDirty)
                 pathData.path = newData.path;
             if (newData.m_dirty & FillDirty) {
                 pathData.fillPath = newData.fillPath;
-                qDeleteAll(pathData.fillNodes);
+                for (auto *node : std::as_const(newData.fillNodes)) {
+                    if (nextNode)
+                        m_rootNode->insertChildNodeBefore(node, nextNode);
+                    else
+                        m_rootNode->appendChildNode(node);
+                }
+                toBeDeleted += pathData.fillNodes;
                 pathData.fillNodes = newData.fillNodes;
-                for (auto *node : std::as_const(pathData.fillNodes))
-                    m_rootNode->appendChildNode(node);
             }
             if (newData.m_dirty & StrokeDirty) {
-                qDeleteAll(pathData.strokeNodes);
+                for (auto *node : std::as_const(newData.strokeNodes)) {
+                    if (nextNode)
+                        m_rootNode->insertChildNodeBefore(node, nextNode);
+                    else
+                        m_rootNode->appendChildNode(node);
+                }
+                toBeDeleted += pathData.strokeNodes;
                 pathData.strokeNodes = newData.strokeNodes;
-                for (auto *node : std::as_const(pathData.strokeNodes))
-                    m_rootNode->appendChildNode(node);
             }
+
             if (newData.m_dirty & UniformsDirty)
                 updateUniforms(pathData);
 
@@ -388,6 +411,7 @@ void QQuickShapeCurveRenderer::updateNode()
             pathData.m_dirty = 0;
         }
     }
+    qDeleteAll(toBeDeleted); // also removes them from m_rootNode's child list
 }
 
 void QQuickShapeCurveRenderer::processPath(PathData *pathData)
