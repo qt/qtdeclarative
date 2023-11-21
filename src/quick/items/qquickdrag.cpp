@@ -704,8 +704,7 @@ QMimeData *QQuickDragAttachedPrivate::createMimeData() const
                     mimeData->setData(mimeType, text.toUtf8().constData());
                 }
             } else {
-                qmlWarning(q) << "Mime data contains a string, but mime type " << mimeType
-                              << " is not a supported text type";
+                mimeData->setData(mimeType, text.toUtf8());
             }
             break;
         }
