@@ -213,6 +213,15 @@ OutWriter &OutWriter::writeRegion(FileLocationRegion region)
     case WhileKeywordRegion:
         codeForRegion = u"while"_s;
         break;
+    case TryKeywordRegion:
+        codeForRegion = u"try"_s;
+        break;
+    case CatchKeywordRegion:
+        codeForRegion = u"catch"_s;
+        break;
+    case FinallyKeywordRegion:
+        codeForRegion = u"finally"_s;
+        break;
 
     // not keywords:
     case ImportUriRegion:

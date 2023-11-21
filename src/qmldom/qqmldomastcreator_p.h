@@ -415,6 +415,15 @@ public:
     bool visit(AST::ClassExpression *) override;
     void endVisit(AST::ClassExpression *) override;
 
+    bool visit(AST::TryStatement *) override;
+    void endVisit(AST::TryStatement *) override;
+
+    bool visit(AST::Catch *) override;
+    void endVisit(AST::Catch *) override;
+
+    bool visit(AST::Finally *) override;
+    void endVisit(AST::Finally *) override;
+
     // lists of stuff whose children do not need a qqmljsscope: visitation order can be custom
     bool visit(AST::ArgumentList *) override;
     bool visit(AST::UiParameterList *) override;

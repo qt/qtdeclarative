@@ -2193,6 +2193,71 @@ void QQmlDomAstCreator::endVisit(AST::ClassExpression *)
 {
 }
 
+bool QQmlDomAstCreator::visit(AST::TryStatement *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::TryStatement *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(statement, DomType::ScriptTryCatchStatement);
+    current->addLocation(FileLocationRegion::TryKeywordRegion, statement->tryToken);
+
+    if (auto exp = statement->finallyExpression) {
+        current->addLocation(FileLocationRegion::FinallyKeywordRegion, exp->finallyToken);
+
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        current->insertChild(Fields::finallyBlock, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    if (auto exp = statement->catchExpression) {
+        current->addLocation(FileLocationRegion::CatchKeywordRegion, exp->catchToken);
+        current->addLocation(FileLocationRegion::LeftParenthesisRegion, exp->lparenToken);
+        current->addLocation(FileLocationRegion::RightParenthesisRegion, exp->rparenToken);
+
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        current->insertChild(Fields::catchBlock, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        current->insertChild(Fields::catchParameter, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    if (statement->statement) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        current->insertChild(Fields::block, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::Catch *)
+{
+    // handled in visit(AST::TryStatement* )
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::Catch *)
+{
+    // handled in endVisit(AST::TryStatement* )
+}
+
+bool QQmlDomAstCreator::visit(AST::Finally *)
+{
+    // handled in visit(AST::TryStatement* )
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::Finally *)
+{
+    // handled in endVisit(AST::TryStatement* )
+}
+
 static const DomEnvironment *environmentFrom(MutableDomItem &qmlFile)
 {
     auto top = qmlFile.top();

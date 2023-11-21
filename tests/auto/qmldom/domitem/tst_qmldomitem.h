@@ -2334,6 +2334,72 @@ private slots:
         QCOMPARE(values.index(2).field(Fields::value).value().toInteger(), -1);
     }
 
+    void tryStatements()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/tryStatements.qml"_s;
+        const DomItem root = rootQmlObjectFromFile(testFile, qmltypeDirs);
+        QVERIFY(root);
+        const DomItem statements = root.path(u".methods[\"f\"][0].body.scriptElement.statements");
+        QCOMPARE(statements.indexes(), 3);
+
+        // test the try blocks
+        for (int i = 0; i < 3; ++i) {
+            const DomItem statement = statements.index(i).field(Fields::block);
+            QVERIFY(statement);
+            QCOMPARE(statement.internalKind(), DomType::ScriptBlockStatement);
+            QCOMPARE(statement.field(Fields::statements)
+                             .index(0)
+                             .field(Fields::identifier)
+                             .value()
+                             .toString(),
+                     u"insideTry"_s);
+        }
+
+        // test the catch blocks
+        for (int i = 0; i < 3; ++i) {
+            const DomItem statement = statements.index(i).field(Fields::catchBlock);
+            if (i == 2) {
+                QVERIFY(!statement); // no catch in last statement
+                continue;
+            }
+
+            QVERIFY(statement);
+            QCOMPARE(statement.internalKind(), DomType::ScriptBlockStatement);
+            QCOMPARE(statement.field(Fields::statements)
+                             .index(0)
+                             .field(Fields::identifier)
+                             .value()
+                             .toString(),
+                     u"insideCatch"_s);
+
+            const DomItem expression = statements.index(i).field(Fields::catchParameter);
+            QVERIFY(expression);
+            QCOMPARE(expression.field(Fields::identifier)
+                             .value()
+                             .toString(),
+                     u"catchExpression"_s);
+        }
+
+        // test the finally blocks
+        for (int i = 0; i < 3; ++i) {
+            const DomItem statement = statements.index(i).field(Fields::finallyBlock);
+            if (i == 1) {
+                QVERIFY(!statement); // no finally in last statement
+                continue;
+            }
+
+            QVERIFY(statement);
+            QCOMPARE(statement.internalKind(), DomType::ScriptBlockStatement);
+            QCOMPARE(statement.field(Fields::statements)
+                             .index(0)
+                             .field(Fields::identifier)
+                             .value()
+                             .toString(),
+                     u"insideFinally"_s);
+        }
+    }
+
 private:
     struct DomItemWithLocation
     {

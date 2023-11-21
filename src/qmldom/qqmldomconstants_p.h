@@ -218,6 +218,7 @@ enum class DomType {
     ScriptWhileStatement,
     ScriptDoWhileStatement,
     ScriptForEachStatement,
+    ScriptTryCatchStatement,
 
     ScriptElementStop, // marker to check if a DomType is a scriptelement or not
 };
@@ -342,6 +343,7 @@ MainRegion denotes the entire FileLocation region.
 enum FileLocationRegion : int {
     AsTokenRegion,
     DoKeywordRegion,
+    CatchKeywordRegion,
     ColonTokenRegion,
     CommaTokenRegion,
     ComponentKeywordRegion,
@@ -351,6 +353,7 @@ enum FileLocationRegion : int {
     EnumKeywordRegion,
     EqualTokenRegion,
     ForKeywordRegion,
+    FinallyKeywordRegion,
     FirstSemicolonTokenRegion,
     FunctionKeywordRegion,
     IdColonTokenRegion,
@@ -378,6 +381,7 @@ enum FileLocationRegion : int {
     RightParenthesisRegion,
     SecondSemicolonRegion,
     SignalKeywordRegion,
+    TryKeywordRegion,
     TypeIdentifierRegion,
     WhileKeywordRegion,
 };
