@@ -83,11 +83,16 @@ int QmlTypeRegistrar::runExtract(const QString &baseName, const MetaTypesJsonPro
         fprintf(stderr, "Error: Cannot open %s for writing\n", qPrintable(headerFile.fileName()));
         return EXIT_FAILURE;
     }
+
+    QString includeGuard = baseName;
+    static const QRegularExpression nonAlNum(QLatin1String("[^a-zA-Z0-9_]"));
+    includeGuard.replace(nonAlNum, QLatin1String("_"));
+
     auto prefix = QString::fromLatin1(
             "#ifndef %1_H\n"
             "#define %1_H\n"
             "#include <QtQml/qqml.h>\n"
-            "#include <QtQml/qqmlmoduleregistration.h>\n").arg(baseName.toUpper());
+            "#include <QtQml/qqmlmoduleregistration.h>\n").arg(includeGuard);
     const QStringList includes = processor.includes();
     for (const QString &include: includes)
         prefix += u"\n#include <%1>"_s.arg(include);
