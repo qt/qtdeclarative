@@ -25,9 +25,11 @@ TestCase {
         }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(checkBox, testCase)
         verify(control)
         compare(control.tristate, false)
@@ -35,7 +37,7 @@ TestCase {
     }
 
     function test_text() {
-        var control = createTemporaryObject(checkBox, testCase)
+        let control = createTemporaryObject(checkBox, testCase)
         verify(control)
 
         compare(control.text, "")
@@ -46,10 +48,10 @@ TestCase {
     }
 
     function test_checked() {
-        var control = createTemporaryObject(checkBox, testCase)
+        let control = createTemporaryObject(checkBox, testCase)
         verify(control)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         sequenceSpy.expectedSequence = []
         compare(control.checked, false)
@@ -72,10 +74,10 @@ TestCase {
     }
 
     function test_checkState() {
-        var control = createTemporaryObject(checkBox, testCase)
+        let control = createTemporaryObject(checkBox, testCase)
         verify(control)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         sequenceSpy.expectedSequence = []
         compare(control.checked, false)
@@ -98,10 +100,10 @@ TestCase {
     }
 
     function test_mouse() {
-        var control = createTemporaryObject(checkBox, testCase)
+        let control = createTemporaryObject(checkBox, testCase)
         verify(control)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         // check
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false, "checkState": Qt.Unchecked }],
@@ -169,12 +171,12 @@ TestCase {
     }
 
     function test_touch() {
-        var control = createTemporaryObject(checkBox, testCase)
+        let control = createTemporaryObject(checkBox, testCase)
         verify(control)
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         // check
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false, "checkState": Qt.Unchecked }],
@@ -235,10 +237,10 @@ TestCase {
     }
 
     function test_keys() {
-        var control = createTemporaryObject(checkBox, testCase)
+        let control = createTemporaryObject(checkBox, testCase)
         verify(control)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         sequenceSpy.expectedSequence = []
         control.forceActiveFocus()
@@ -277,8 +279,8 @@ TestCase {
         sequenceSpy.expectedSequence = []
         // Not testing Key_Enter and Key_Return because QGnomeTheme uses them for
         // pressing buttons and the CI uses the QGnomeTheme platform theme.
-        var keys = [Qt.Key_Escape, Qt.Key_Tab]
-        for (var i = 0; i < keys.length; ++i) {
+        let keys = [Qt.Key_Escape, Qt.Key_Tab]
+        for (let i = 0; i < keys.length; ++i) {
             sequenceSpy.reset()
             keyClick(keys[i])
             compare(control.checked, false)
@@ -295,7 +297,7 @@ TestCase {
     }
 
     function test_checked_binding() {
-        var container = createTemporaryObject(checkedBoundBoxes, testCase)
+        let container = createTemporaryObject(checkedBoundBoxes, testCase)
         verify(container)
 
         compare(container.cb1.checked, false)
@@ -325,7 +327,7 @@ TestCase {
     }
 
     function test_checkState_binding() {
-        var container = createTemporaryObject(checkStateBoundBoxes, testCase)
+        let container = createTemporaryObject(checkStateBoundBoxes, testCase)
         verify(container)
 
         compare(container.cb1.checked, false)
@@ -361,9 +363,9 @@ TestCase {
     }
 
     function test_tristate() {
-        var control = createTemporaryObject(checkBox, testCase, {tristate: true})
+        let control = createTemporaryObject(checkBox, testCase, {tristate: true})
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         sequenceSpy.expectedSequence = []
         control.forceActiveFocus()
@@ -457,7 +459,7 @@ TestCase {
     }
 
     function test_baseline() {
-        var control = createTemporaryObject(checkBox, testCase)
+        let control = createTemporaryObject(checkBox, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
     }
@@ -484,7 +486,7 @@ TestCase {
     }
 
     function test_nextCheckState(data) {
-        var control = createTemporaryObject(nextCheckStateBox, testCase)
+        let control = createTemporaryObject(nextCheckStateBox, testCase)
         verify(control)
 
         // mouse
@@ -496,7 +498,7 @@ TestCase {
         // touch
         control.checkState = data.checkState
         compare(control.checkState, data.checkState)
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
         touch.press(0, control).commit().release(0, control).commit()
         compare(control.checkState, data.expectedState)
 
