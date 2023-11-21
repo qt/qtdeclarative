@@ -18,6 +18,7 @@ qt_internal_add_app(qqcstylegenerator
         Qt::Network
         Qt::Quick
         Qt::QuickControls2
+        Qt::QuickControls2Private
 )
 
 qt_add_resources(qqcstylegenerator "controls"

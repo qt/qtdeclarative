@@ -1107,6 +1107,7 @@ private:
 
         QString qmldir;
         qmldir += "module " + styleName + "\n";
+        qmldir += "import QtQuick.Controls." + m_bridge->selectedFallbackStyle() + "\n";
         for (const QString &control : m_qmlDirControls)
             qmldir += control + version + control + ".qml\n";
 

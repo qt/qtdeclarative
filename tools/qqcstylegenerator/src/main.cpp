@@ -35,7 +35,10 @@ int main(int argc, char **argv){
             QCoreApplication::translate("main", "regexp")},
         {{"f", "format"},
             QCoreApplication::translate("main", "The image format(s) to use, e.g -f png@1x -f png@2x -f svg"),
-            QCoreApplication::translate("main", "format")}
+            QCoreApplication::translate("main", "format")},
+        {{"s", "fallbackstyle"},
+            QCoreApplication::translate("main", "The Qt style to use as fallback for ungenerated controls, e.g -s Fusion"),
+            QCoreApplication::translate("main", "style")}
     });
     parser.addPositionalArgument("figma_file_id",
         QCoreApplication::translate("main", "The figma file ID to create a style from."));

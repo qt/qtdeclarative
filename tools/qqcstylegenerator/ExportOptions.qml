@@ -38,5 +38,22 @@ ColumnLayout {
             onCheckedChanged: bridge.selectImageFormat(text, checked)
         }
     }
+
+    RowLayout {
+        Label {
+            text: "Fallback style:"
+        }
+        ComboBox {
+            Component.onCompleted: {
+                model = bridge.availableFallbackStyles()
+                currentIndex = indexOfValue(bridge.selectedFallbackStyle())
+            }
+
+            onActivated: {
+                bridge.selectFallbackStyle(currentText)
+            }
+        }
+    }
+
 }
 

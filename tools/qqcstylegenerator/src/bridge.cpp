@@ -4,6 +4,7 @@
 #include <QGuiApplication>
 #include <QSettings>
 #include <QRegularExpression>
+#include <QtQuickControls2/private/qquickstyle_p.h>
 #include "bridge.h"
 #include "stylegenerator.h"
 
@@ -16,6 +17,7 @@ Bridge::Bridge()
     m_overwriteQml = settings.value("overwriteQml").toBool();
     m_selectedControls = settings.value("selectedControls", availableControls()).toStringList();
     m_selectedImageFormats = settings.value("selectedImageFormats", QStringList() << "png@1x" << "png@2x").toStringList();
+    m_selectedFallbackStyle = settings.value("selectedFallbackStyle", "Fusion").toString();
 }
 
 Bridge::~Bridge()
@@ -27,6 +29,7 @@ Bridge::~Bridge()
     settings.setValue("overwriteQml", m_overwriteQml);
     settings.setValue("selectedControls", m_selectedControls);
     settings.setValue("selectedImageFormats", m_selectedImageFormats);
+    settings.setValue("selectedFallbackStyle", m_selectedFallbackStyle);
 }
 
 void Bridge::generate()
@@ -117,4 +120,19 @@ void Bridge::selectImageFormat(const QString &format, bool select)
         m_selectedImageFormats.append(format);
     else
         m_selectedImageFormats.removeOne(format);
+}
+
+QStringList Bridge::availableFallbackStyles() const
+{
+    return QQuickStylePrivate::builtInStyles();
+}
+
+QString Bridge::selectedFallbackStyle() const
+{
+    return m_selectedFallbackStyle;
+}
+
+void Bridge::selectFallbackStyle(const QString &style)
+{
+    m_selectedFallbackStyle = style;
 }
