@@ -20,16 +20,18 @@ TestCase {
 
     // TODO: data-fy tst_checkbox (rename to tst_check?) so we don't duplicate its tests here?
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
-        var control = createTemporaryObject(checkDelegate, testCase);
+    function test_defaults() {
+        let control = createTemporaryObject(checkDelegate, testCase);
         verify(control);
         verify(!control.checked);
     }
 
     function test_checked() {
-        var control = createTemporaryObject(checkDelegate, testCase);
+        let control = createTemporaryObject(checkDelegate, testCase);
         verify(control);
 
         mouseClick(control);
@@ -40,17 +42,17 @@ TestCase {
     }
 
     function test_baseline() {
-        var control = createTemporaryObject(checkDelegate, testCase);
+        let control = createTemporaryObject(checkDelegate, testCase);
         verify(control);
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset);
     }
 
     function test_spacing() {
-        var control = createTemporaryObject(checkDelegate, testCase, { text: "Some long, long, long text" })
+        let control = createTemporaryObject(checkDelegate, testCase, { text: "Some long, long, long text" })
         verify(control)
         verify(control.contentItem.implicitWidth + control.leftPadding + control.rightPadding > control.background.implicitWidth)
 
-        var textLabel = findChild(control.contentItem, "label")
+        let textLabel = findChild(control.contentItem, "label")
         verify(textLabel)
 
         // The implicitWidth of the IconLabel that all buttons use as their contentItem should be
@@ -77,7 +79,7 @@ TestCase {
     }
 
     function test_display(data) {
-        var control = createTemporaryObject(checkDelegate, testCase, {
+        let control = createTemporaryObject(checkDelegate, testCase, {
             text: "CheckDelegate",
             display: data.display,
             width: 400,
@@ -87,11 +89,11 @@ TestCase {
         verify(control)
         compare(control.icon.source, "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png")
 
-        var iconImage = findChild(control.contentItem, "image")
-        var textLabel = findChild(control.contentItem, "label")
+        let iconImage = findChild(control.contentItem, "image")
+        let textLabel = findChild(control.contentItem, "label")
 
-        var availableWidth = control.availableWidth - control.indicator.width - control.spacing
-        var indicatorOffset = control.mirrored ? control.indicator.width + control.spacing : 0
+        let availableWidth = control.availableWidth - control.indicator.width - control.spacing
+        let indicatorOffset = control.mirrored ? control.indicator.width + control.spacing : 0
 
         switch (control.display) {
         case CheckDelegate.IconOnly:
@@ -148,7 +150,7 @@ TestCase {
     }
 
     function test_nextCheckState(data) {
-        var control = createTemporaryObject(nextCheckStateDelegate, testCase)
+        let control = createTemporaryObject(nextCheckStateDelegate, testCase)
         verify(control)
 
         // mouse
@@ -160,7 +162,7 @@ TestCase {
         // touch
         control.checkState = data.checkState
         compare(control.checkState, data.checkState)
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
         touch.press(0, control).commit().release(0, control).commit()
         compare(control.checkState, data.expectedState)
 
