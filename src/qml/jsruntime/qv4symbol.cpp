@@ -16,7 +16,7 @@ void Heap::Symbol::init(const QString &s)
     Q_ASSERT(s.at(0) == QLatin1Char('@'));
     QString desc(s);
     StringOrSymbol::init(desc.data_ptr());
-    identifier = PropertyKey::fromStringOrSymbol(this);
+    identifier = PropertyKey::fromStringOrSymbol(internalClass->engine, this);
 }
 
 void Heap::SymbolCtor::init(QV4::ExecutionContext *scope)

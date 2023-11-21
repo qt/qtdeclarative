@@ -2360,12 +2360,14 @@ ReturnedValue GlobalExtensions::method_qsTrIdNoOp(const FunctionObject *, const 
 
 ReturnedValue GlobalExtensions::method_gc(const FunctionObject *b, const Value *, const Value *, int)
 {
-    b->engine()->memoryManager->runGC();
+    auto mm = b->engine()->memoryManager;
+    auto oldLimit = mm->gcStateMachine->timeLimit;
+    mm->setGCTimeLimit(-1); // temporarily use non-incremental gc
+    mm->runGC();
+    mm->gcStateMachine->timeLimit = oldLimit;
 
     return QV4::Encode::undefined();
 }
-
-
 
 ReturnedValue GlobalExtensions::method_string_arg(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {

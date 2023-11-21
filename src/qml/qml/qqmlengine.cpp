@@ -554,6 +554,7 @@ QQmlEngine::QQmlEngine(QQmlEnginePrivate &dd, QObject *parent)
 QQmlEngine::~QQmlEngine()
 {
     Q_D(QQmlEngine);
+    handle()->inShutdown = true;
     QJSEnginePrivate::removeFromDebugServer(this);
 
     // Emit onDestruction signals for the root context before

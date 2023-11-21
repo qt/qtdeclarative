@@ -7,6 +7,7 @@
 #include <qv4string_p.h>
 #include <qv4engine_p.h>
 #include <qv4scopedvalue_p.h>
+#include <private/qv4mm_p.h>
 
 using namespace Qt::Literals::StringLiterals;
 

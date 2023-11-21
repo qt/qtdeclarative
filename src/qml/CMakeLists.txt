@@ -281,7 +281,7 @@ qt_internal_add_qml_module(Qml
         memory/qv4mm.cpp memory/qv4mm_p.h
         memory/qv4mmdefs_p.h
         memory/qv4stacklimits.cpp memory/qv4stacklimits_p.h
-        memory/qv4writebarrier_p.h
+        memory/qv4writebarrier_p.h memory/qv4writebarrier.cpp
         parser/qqmljsast.cpp parser/qqmljsast_p.h
         parser/qqmljsastfwd_p.h
         parser/qqmljsastvisitor.cpp parser/qqmljsastvisitor_p.h

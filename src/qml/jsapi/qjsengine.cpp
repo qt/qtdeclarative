@@ -369,6 +369,7 @@ QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
 */
 QJSEngine::~QJSEngine()
 {
+    m_v4Engine->inShutdown = true;
     QJSEnginePrivate::removeFromDebugServer(this);
     delete m_v4Engine;
 }
