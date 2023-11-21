@@ -13,9 +13,7 @@ class Bridge : public QObject {
     Q_PROPERTY(QString targetDirectory MEMBER m_targetDirectory NOTIFY targetDirectoryChanged)
     Q_PROPERTY(QString figmaUrlOrId MEMBER m_figmaUrlOrId NOTIFY figmaUrlOrIdChanged)
     Q_PROPERTY(QString figmaToken MEMBER m_figmaToken NOTIFY figmaTokenChanged)
-    Q_PROPERTY(bool verbose MEMBER m_verbose NOTIFY verboseChanged)
     Q_PROPERTY(bool sanity MEMBER m_sanity NOTIFY sanityChanged)
-    Q_PROPERTY(bool overwriteQml MEMBER m_overwriteQml NOTIFY overwriteQmlChanged)
 
 public:
     Bridge(bool guiMode);
@@ -71,8 +69,6 @@ public:
     QStringList m_selectedImageFormats;
 
     bool m_sanity = false;
-    bool m_verbose = false;
-    bool m_overwriteQml = false;
     bool m_guiMode = false;
 
 private:

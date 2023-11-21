@@ -452,7 +452,7 @@ private:
         // Copy files (typically the QML control) into the style folder
         QStringList files = getStringList("copy", controlObj, false);
         for (const QString &file : files)
-            copyFileToStyleFolder(file, m_bridge->m_overwriteQml);
+            copyFileToStyleFolder(file, false);
 
         // Add this control to the list of controls that goes into the qmldir file
         m_qmlDirControls.append(controlName);
