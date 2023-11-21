@@ -198,8 +198,9 @@ QT_WARNING_POP
 
             result.code += registerIt->variableName + u" = "_s;
 
-            const QString originalValue = u"*static_cast<"_s + castTargetName(original.storedType())
-                    + u"*>(argumentsPtr["_s + QString::number(argumentIndex) + u"])"_s;
+            const QString originalValue
+                    = u"(*static_cast<"_s + castTargetName(original.storedType())
+                    + u"*>(argumentsPtr["_s + QString::number(argumentIndex) + u"]))"_s;
 
             if (needsConversion)
                 result.code += conversion(original, argument, originalValue);
