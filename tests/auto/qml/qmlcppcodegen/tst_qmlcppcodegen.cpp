@@ -4273,6 +4273,7 @@ void tst_QmlCppCodegen::urlString()
     QCOMPARE(qvariant_cast<QUrl>(rootObject->property("c")), QUrl(u"http://dddddd.com"_s));
     QCOMPARE(qvariant_cast<QUrl>(rootObject->property("d")), QUrl(u"http://aaaaaa.com"_s));
     QCOMPARE(qvariant_cast<QUrl>(rootObject->property("e")), QUrl(u"http://a112233.de"_s));
+    QCOMPARE(rootObject->objectName(), QLatin1String("http://dddddd.com"));
 }
 
 void tst_QmlCppCodegen::valueTypeBehavior()

@@ -9,5 +9,12 @@ QtObject {
     Component.onCompleted: {
         c = "http://dddddd.com";
         self.d = "http://aaaaaa.com";
+        myUrlChanged(c)
+    }
+
+    signal myUrlChanged(urlParam: url)
+
+    onMyUrlChanged: (urlParam) => {
+        objectName = urlParam;
     }
 }
