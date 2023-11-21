@@ -13,6 +13,7 @@
 #include <QtQuick/private/qquickpath_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
+#include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuickTest/QtQuickTest>
 #include <QtQmlModels/private/qqmllistmodel_p.h>
 #include <QtQml/private/qqmlvaluetype_p.h>
@@ -130,6 +131,7 @@ private slots:
     void requiredPropertiesInDelegate();
     void requiredPropertiesInDelegatePreventUnrelated();
     void touchMove();
+    void mousePressAfterFlick();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -2849,6 +2851,47 @@ void tst_QQuickPathView::touchMove()
     QCOMPARE(flickStartedSpy.size(), 1);
     QCOMPARE(flickEndedSpy.size(), 1);
 
+}
+
+void tst_QQuickPathView::mousePressAfterFlick() // QTBUG-115121
+{
+    QScopedPointer<QQuickView> window(createView());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
+    window->setSource(testFileUrl("mousePressAfterFlick.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickPathView *pathview = window->rootObject()->findChild<QQuickPathView *>("pathView");
+    QVERIFY(pathview != nullptr);
+
+    QQuickMouseArea *mouseArea = window->rootObject()->findChild<QQuickMouseArea *>("rootMouseArea");
+    QVERIFY(mouseArea != nullptr);
+
+    QSignalSpy flickingSpy(pathview, SIGNAL(flickingChanged()));
+    QSignalSpy flickStartedSpy(pathview, SIGNAL(flickStarted()));
+    QSignalSpy flickEndedSpy(pathview, SIGNAL(flickEnded()));
+
+    QSignalSpy pressedSpy(mouseArea, &QQuickMouseArea::pressed);
+
+    flickingSpy.clear();
+    flickStartedSpy.clear();
+    flickEndedSpy.clear();
+
+    // Dragging the child mouse area should animate the PathView (MA has no drag target)
+    QPoint from = QPoint((window->width() / 2), (window->height() * 3 / 4));
+    QPoint to = QPoint((window->width() / 2), (window->height() / 4));
+    flick(window.data(), from, to, 100);
+    QVERIFY(pathview->isMoving());
+    QCOMPARE(flickingSpy.size(), 1);
+    QCOMPARE(flickStartedSpy.size(), 1);
+    QCOMPARE(flickEndedSpy.size(), 0);
+
+    // Now while it's still moving, click it.
+    // The PathView should stop at a position
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(window->width() / 2, window->height() / 4));
+    QTRY_VERIFY(!pathview->isMoving());
+    QCOMPARE(flickEndedSpy.size(), 1);
+    QCOMPARE(pressedSpy.size(), 0);
 }
 
 QTEST_MAIN(tst_QQuickPathView)
