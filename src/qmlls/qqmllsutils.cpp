@@ -2884,6 +2884,26 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             return insideDoWhileStatement(currentParent, ctx);
         case DomType::ScriptForEachStatement:
             return insideForEachStatement(currentParent, ctx);
+        case DomType::ScriptTryCatchStatement:
+            /*!
+            \internal
+            The Ecmascript standard specifies that there can only be a block statement between \c
+            try and \c catch(...), \c try and \c finally and \c catch(...) and \c finally, so all of
+            these completions are already handled by the DomType::ScriptBlockStatement completion.
+            The only place in the try statement where there is no BlockStatement and therefore needs
+            its own completion is inside the catch parameter, but that is
+            \quotation
+            An optional identifier or pattern to hold the caught exception for the associated catch
+            block.
+            \endquotation
+            citing
+            https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/try...catch?retiredLocale=de#exceptionvar.
+            This means that no completion is needed inside a catch-expression, as it should contain
+            an identifier that is not yet used anywhere.
+            Therefore, no completion is required at all when inside a try-statement but outside a
+            block-statement.
+            */
+            return {};
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.

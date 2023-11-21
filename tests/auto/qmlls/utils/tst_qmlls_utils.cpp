@@ -2569,6 +2569,29 @@ void tst_qmlls_utils::completions_data()
                                     }
                                  << QStringList{ propertyCompletion, u"bad"_s, u"helloSubItem"_s }
                                  << None;
+
+    QTest::newRow("tryStatements")
+            << testFile(u"completions/tryStatements.qml"_s) << 5 << 14
+            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { forStatementCompletion, CompletionItemKind::Snippet } }
+            << QStringList{} << None;
+
+    QTest::newRow("tryStatementsCatchParameter")
+            << testFile(u"completions/tryStatements.qml"_s) << 5 << 23
+            << ExpectedCompletions{}
+            << QStringList{ letStatementCompletion, forStatementCompletion } << None;
+
+    QTest::newRow("tryStatementsCatchBlock")
+            << testFile(u"completions/tryStatements.qml"_s) << 5 << 27
+            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { forStatementCompletion, CompletionItemKind::Snippet } }
+            << QStringList{} << None;
+
+    QTest::newRow("tryStatementsFinallyBlock")
+            << testFile(u"completions/tryStatements.qml"_s) << 5 << 39
+            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { forStatementCompletion, CompletionItemKind::Snippet } }
+            << QStringList{} << None;
 }
 
 void tst_qmlls_utils::completions()
