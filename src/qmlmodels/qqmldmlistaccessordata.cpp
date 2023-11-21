@@ -133,7 +133,8 @@ QMetaObject *VDMListDelegateDataType::toDynamicMetaObject(QObject *object)
     }
 
     // If the context object is not the model object, we are using required properties.
-    // In that case, allow the creation of extra properties.
+    // In that case, create any extra properties.
+    createMissingProperties(&static_cast<QQmlDMListAccessorData *>(object)->cachedData);
     return this;
 }
 

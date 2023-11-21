@@ -34,6 +34,7 @@ private slots:
     void nestedDelegates();
     void universalModelData();
     void typedModelData();
+    void requiredModelData();
     void deleteRace();
     void persistedItemsStayInCache();
     void unknownContainersAsModel();
@@ -453,6 +454,25 @@ void tst_QQmlDelegateModel::typedModelData()
 
 }
 
+void tst_QQmlDelegateModel::requiredModelData()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("requiredModelData.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QQmlDelegateModel *delegateModel = qobject_cast<QQmlDelegateModel *>(o.data());
+    QVERIFY(delegateModel);
+
+    for (int i = 0; i < 4; ++i) {
+        delegateModel->setProperty("n", i);
+        QObject *delegate = delegateModel->object(0);
+        QVERIFY(delegate);
+        const QVariant a = delegate->property("a");
+        QCOMPARE(a.metaType(), QMetaType::fromType<QString>());
+        QCOMPARE(a.toString(), QLatin1String("a"));
+    }
+}
 
 void tst_QQmlDelegateModel::deleteRace()
 {

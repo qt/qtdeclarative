@@ -147,6 +147,8 @@ public:
             return string;
         else if constexpr (std::is_same_v<String, QByteArray>)
             return QString::fromUtf8(string);
+        else if constexpr (std::is_same_v<String, const char *>)
+            return QString::fromUtf8(string);
         Q_UNREACHABLE_RETURN(QString());
     }
 
@@ -154,9 +156,11 @@ public:
     static QByteArray toUtf8(const String &string)
     {
         if constexpr (std::is_same_v<String, QString>)
-            return string.toUtf8().constData();
+            return string.toUtf8();
         else if constexpr (std::is_same_v<String, QByteArray>)
             return string;
+        else if constexpr (std::is_same_v<String, const char *>)
+            return QByteArray::fromRawData(string, qstrlen(string));
         Q_UNREACHABLE_RETURN(QByteArray());
     }
 
@@ -181,6 +185,38 @@ public:
         }
 
         return QVariant();
+    }
+
+    template<typename String>
+    void createPropertyIfMissing(const String &string)
+    {
+        for (int i = propertyOffset, end = propertyCount(); i < end; ++i) {
+            if (QAnyStringView(property(i).name()) == QAnyStringView(string))
+                return;
+        }
+
+        createProperty(toUtf8(string), nullptr);
+    }
+
+    void createMissingProperties(const QVariant *row)
+    {
+        const QMetaType type = row->metaType();
+        if (type == QMetaType::fromType<QVariantMap>()) {
+            const QVariantMap map = row->toMap();
+            for (auto it = map.keyBegin(), end = map.keyEnd(); it != end; ++it)
+                createPropertyIfMissing(*it);
+        } else if (type == QMetaType::fromType<QVariantHash>()) {
+            const QVariantHash map = row->toHash();
+            for (auto it = map.keyBegin(), end = map.keyEnd(); it != end; ++it)
+                createPropertyIfMissing(*it);
+        } else if (type.flags() & QMetaType::PointerToQObject) {
+            const QMetaObject *metaObject = row->value<QObject *>()->metaObject();
+            for (int i = 0, end = metaObject->propertyCount(); i < end; ++i)
+                createPropertyIfMissing(metaObject->property(i).name());
+        } else if (const QMetaObject *metaObject = metaObjectFromType(type)) {
+            for (int i = 0, end = metaObject->propertyCount(); i < end; ++i)
+                createPropertyIfMissing(metaObject->property(i).name());
+        }
     }
 
     template<typename String>
