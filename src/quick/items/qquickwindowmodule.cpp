@@ -203,7 +203,10 @@ void QQuickWindowQmlImpl::applyWindowVisibility()
     }
 
     if (d->visibility == AutomaticVisibility) {
-        setWindowState(QGuiApplicationPrivate::platformIntegration()->defaultWindowState(flags()));
+        if (parent())
+            setWindowState(Qt::WindowNoState);
+        else
+            setWindowState(QGuiApplicationPrivate::platformIntegration()->defaultWindowState(flags()));
         QQuickWindow::setVisible(d->visible);
     } else {
         QQuickWindow::setVisibility(d->visibility);
