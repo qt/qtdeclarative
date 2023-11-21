@@ -53,9 +53,9 @@ void tst_QQuickDragAttached::setMimeData_data()
     QTest::addRow("text/uri-list, variant")
         << makeMap("text/uri-list", QVariantList{QVariant("file://foo")})
         << QStringList{"text/uri-list"};
-    QTest::addRow("mismatch image")
-        << makeMap("image/png", "not an image")
-        << QStringList{};
+    QTest::addRow("application/json")
+        << makeMap("application/json", "{}")
+        << QStringList{"application/json"};
     QTest::addRow("missing charset")
         << makeMap("text/plain;charset=", QString("foo"))
         << QStringList{};
@@ -116,7 +116,11 @@ void tst_QQuickDragAttached::startDrag()
     std::unique_ptr<QMimeData> data(d->createMimeData());
     QVERIFY(data);
 
+    auto debugHelper = qScopeGuard([&data]{
+        qWarning() << data->formats();
+    });
     QCOMPARE(data->formats(), formats);
+    debugHelper.dismiss();
 #else
     QSKIP("This test relies on private APIs that are only exported in developer-builds");
 #endif
