@@ -5,13 +5,17 @@
 
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 
+#include <qfontdatabase.h>
+
 QT_BEGIN_NAMESPACE
 
 void QQuickImagineTheme::initialize(QQuickTheme *theme)
 {
-    QFont systemFont;
-    systemFont.setFamilies(QStringList{QLatin1String("Open Sans")});
-    theme->setFont(QQuickTheme::System, systemFont);
+    const auto defaultFontFamily = QLatin1String("Open Sans");
+    if (QFontDatabase::hasFamily(defaultFontFamily)) {
+        const QFont systemFont(QStringList{defaultFontFamily});
+        theme->setFont(QQuickTheme::System, systemFont);
+    }
 
     const QColor accentColor = QColor::fromRgb(0x4fc1e9);
     const QColor windowTextColor = QColor::fromRgb(0x434a54);
