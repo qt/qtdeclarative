@@ -32,7 +32,7 @@ DialogsQuickImpl.FileDialogDelegate {
     required property int index
     required property string fileName
     required property url fileUrl
-    required property int fileSize
+    required property string fileSize
     required property date fileModified
     required property bool fileIsDir
 
