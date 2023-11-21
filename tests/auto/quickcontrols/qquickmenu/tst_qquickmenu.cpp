@@ -32,6 +32,8 @@
 using namespace QQuickVisualTestUtils;
 using namespace QQuickControlsTestUtils;
 
+// Native menu tests are in "nativemenus".
+
 class tst_QQuickMenu : public QQmlDataTest
 {
     Q_OBJECT

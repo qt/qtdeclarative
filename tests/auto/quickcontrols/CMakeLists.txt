@@ -17,6 +17,12 @@ if(NOT ANDROID) # QTBUG-100258
 add_subdirectory(focus)
 endif()
 add_subdirectory(font)
+# For now there's no way of knowing (at built time) if the Linux we're on is
+# running with the GTK+ platform theme, which is the only context
+# in which native menus are supported there. So we don't include it.
+if(WIN32 OR MACOS OR IOS OR ANDROID)
+    add_subdirectory(nativemenus)
+endif()
 add_subdirectory(palette)
 add_subdirectory(platform)
 add_subdirectory(pointerhandlers)

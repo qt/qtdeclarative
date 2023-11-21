@@ -9,16 +9,20 @@
 #include "qquickmenubaritem_p.h"
 #include "qquickmenubar_p.h"
 #endif
+#include "qquicknativemenuitem_p.h"
 #include "qquickpopupitem_p_p.h"
 #include "qquickpopuppositioner_p_p.h"
 #include "qquickaction_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qcursor.h>
 #if QT_CONFIG(shortcut)
 #include <QtGui/qkeysequence.h>
 #endif
 #include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/qpa/qplatformtheme.h>
+#include <QtGui/private/qhighdpiscaling_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlcomponent.h>
@@ -30,9 +34,12 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
+#include <QtQuick/private/qquickrendercontrol_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcNativeMenu, "qt.quick.controls.nativemenu")
 
 // copied from qfusionstyle.cpp
 static const int SUBMENU_DELAY = 225;
@@ -228,6 +235,158 @@ void QQuickMenuPrivate::init()
 {
     Q_Q(QQuickMenu);
     contentModel = new QQmlObjectModel(q);
+
+    // TODO: use an env var until we get Qt::AA_DontUseNativeMenu
+    requestNative = qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_USE_NATIVE_MENUS");
+}
+
+bool QQuickMenuPrivate::usingNativeMenu()
+{
+    if (requestNative && !triedToCreateNativeMenu)
+        createNativeMenu();
+
+    return nativeHandle.get();
+}
+
+bool QQuickMenuPrivate::createNativeMenu()
+{
+    Q_ASSERT(!nativeHandle);
+    Q_Q(QQuickMenu);
+    qCDebug(lcNativeMenu) << "createNativeMenu called on" << q;
+
+    if (!nativeHandle) {
+        QPlatformMenu *parentMenuHandle(parentMenu ? get(parentMenu)->nativeHandle.get() : nullptr);
+        if (parentMenu && parentMenuHandle) {
+            qCDebug(lcNativeMenu) << "- creating native sub-menu";
+            nativeHandle.reset(parentMenuHandle->createSubMenu());
+        } else {
+            qCDebug(lcNativeMenu) << "- creating native menu";
+            nativeHandle.reset(QGuiApplicationPrivate::platformTheme()->createPlatformMenu());
+        }
+    }
+
+    triedToCreateNativeMenu = true;
+
+    if (!nativeHandle)
+        return false;
+
+    q->connect(nativeHandle.get(), &QPlatformMenu::aboutToShow, q, &QQuickPopup::aboutToShow);
+    q->connect(nativeHandle.get(), &QPlatformMenu::aboutToHide, q, [this](){
+        qCDebug(lcNativeMenu) << "QPlatformMenu::aboutToHide called; about to call setVisible(false) on Menu";
+        q_func()->setVisible(false);
+    });
+
+    for (QQuickNativeMenuItem *item : std::as_const(nativeItems))
+        nativeHandle->insertMenuItem(item->create(), nullptr);
+
+    // TODO: we call setMenu in QQuickNativeMenuItem::create()
+    // for sub-menus. do we also need to do it here?
+//    if (m_menuItem) {
+//        if (QPlatformMenuItem *handle = m_menuItem->create())
+//            handle->setMenu(d->handle);
+//    }
+
+    return true;
+}
+
+QString nativeMenuItemListToString(const QList<QQuickNativeMenuItem *> &nativeItems)
+{
+    QString str;
+    QTextStream debug(&str);
+    for (const auto *nativeItem : nativeItems)
+        debug << nativeItem->debugText() << ", ";
+    // Remove trailing space and comma.
+    if (!nativeItems.isEmpty())
+        str.chop(2);
+    return str;
+}
+
+void QQuickMenuPrivate::syncWithNativeMenu()
+{
+    Q_Q(QQuickMenu);
+    qCDebug(lcNativeMenu) << "syncWithNativeMenu called on" << q
+        << "complete:" << complete << "visible:" << visible;
+    if (!complete || !usingNativeMenu())
+        return;
+
+    // TODO: call this function when any of the variables below change
+
+    nativeHandle->setText(title);
+    nativeHandle->setEnabled(q->isEnabled());
+    nativeHandle->setVisible(visible);
+    nativeHandle->setMinimumWidth(q->implicitWidth());
+//    nativeHandle->setMenuType(m_type);
+    nativeHandle->setFont(q->font());
+
+//    if (m_menuBar && m_menuBar->handle())
+//        m_menuBar->handle()->syncMenu(handle);
+//#if QT_CONFIG(systemtrayicon)
+//    else if (m_systemTrayIcon && m_systemTrayIcon->handle())
+//        m_systemTrayIcon->handle()->updateMenu(handle);
+//#endif
+
+    qCDebug(lcNativeMenu) << "syncing" << nativeItems.size() << "item(s)...";
+    for (QQuickNativeMenuItem *item : std::as_const(nativeItems)) {
+        qCDebug(lcNativeMenu) << "- syncing" << item << "action" << item->action()
+            << "sub-menu" << item->subMenu() << item->debugText();
+        item->sync();
+    }
+}
+
+void QQuickMenuPrivate::destroyNativeMenu()
+{
+    if (!nativeHandle)
+        return;
+
+    // Ensure that all submenus are unparented before we are destroyed,
+    // so that they don't try to access a destroyed menu.
+    for (QQuickNativeMenuItem *item : std::as_const(nativeItems)) {
+        if (QQuickMenu *subMenu = item->subMenu())
+            QQuickMenuPrivate::get(subMenu)->destroyNativeMenu();
+        item->clearSubMenu();
+    }
+
+    nativeHandle.reset();
+}
+
+static QWindow *effectiveWindow(QWindow *window, QPoint *offset)
+{
+    QQuickWindow *quickWindow = qobject_cast<QQuickWindow *>(window);
+    if (quickWindow) {
+        QWindow *renderWindow = QQuickRenderControl::renderWindowFor(quickWindow, offset);
+        if (renderWindow)
+            return renderWindow;
+    }
+    return window;
+}
+
+void QQuickMenuPrivate::setNativeMenuVisible(bool visible)
+{
+    Q_Q(QQuickMenu);
+    qCDebug(lcNativeMenu) << "setNativeMenuVisible called with visible" << visible;
+    if (visible)
+        emit q->aboutToShow();
+    else
+        emit q->aboutToHide();
+
+    this->visible = visible;
+    syncWithNativeMenu();
+
+    QPoint offset;
+    QWindow *window = effectiveWindow(qGuiApp->topLevelWindows().first(), &offset);
+
+    QRect targetRect;
+#if QT_CONFIG(cursor)
+    QPoint pos = QCursor::pos();
+    if (window)
+        pos = window->mapFromGlobal(pos);
+    targetRect.moveTo(pos);
+#endif
+    if (visible)
+        nativeHandle->showPopup(window, QHighDpi::toNativePixels(targetRect, window),
+            /*menuItem ? menuItem->handle() : */nullptr);
+    else
+        nativeHandle->dismiss();
 }
 
 QQuickItem *QQuickMenuPrivate::itemAt(int index) const
@@ -281,6 +440,146 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
         QObjectPrivate::disconnect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
         QObjectPrivate::disconnect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
     }
+}
+
+int QQuickMenuPrivate::indexOfActionInNativeItems(QQuickAction *action) const
+{
+    const auto existingItemIt = std::find_if(
+        nativeItems.constBegin(), nativeItems.constEnd(), [action](QQuickNativeMenuItem *item) {
+            return item->action() == action;
+        });
+    const int index = existingItemIt != nativeItems.constEnd()
+        ? std::distance(nativeItems.constBegin(), existingItemIt) : -1;
+    return index;
+}
+
+int QQuickMenuPrivate::indexOfMenuInNativeItems(QQuickMenu *menu) const
+{
+    const auto existingItemIt = std::find_if(
+        nativeItems.constBegin(), nativeItems.constEnd(), [menu](QQuickNativeMenuItem *item) {
+            return item->subMenu() == menu;
+        });
+    const int index = existingItemIt != nativeItems.constEnd()
+        ? std::distance(nativeItems.constBegin(), existingItemIt) : -1;
+    return index;
+}
+
+void QQuickMenuPrivate::insertNativeItem(int index, QQuickAction *action)
+{
+    Q_Q(QQuickMenu);
+    Q_ASSERT(usingNativeMenu());
+    qCDebug(lcNativeMenu) << "insertNativeItem called on" << q << "with action" << action->text();
+
+    const int count = nativeItems.count();
+    if (index < 0 || index > count)
+        index = count;
+
+    const int oldIndex = indexOfActionInNativeItems(action);
+    if (oldIndex != -1) {
+        // The action already exists; move it if necessary.
+        if (oldIndex < index)
+            --index;
+        if (oldIndex != index) {
+            qCDebug(lcNativeMenu).nospace() << "- already exists at a different index " << oldIndex
+                << "; moving to" << index;
+            nativeItems.move(oldIndex, index);
+        } else {
+            qCDebug(lcNativeMenu).nospace() << "- already exists at the same index";
+        }
+    } else {
+        auto *nativeMenuItem = new QQuickNativeMenuItem(q, action);
+        nativeItems.insert(index, nativeMenuItem);
+
+        if (nativeMenuItem->create()) {
+            QQuickNativeMenuItem *before = nativeItems.value(index + 1);
+            nativeHandle->insertMenuItem(nativeMenuItem->handle(), before ? before->create() : nullptr);
+            qCDebug(lcNativeMenu) << "- inserted native menu item at index" << index
+                << "before" << (before ? before->debugText() : QStringLiteral("null"));
+        }
+    }
+
+    qCDebug(lcNativeMenu) << "- nativeItems now contains the following items:"
+        << nativeMenuItemListToString(nativeItems);
+
+    contentData.insert(index, action);
+
+    syncWithNativeMenu();
+}
+
+void QQuickMenuPrivate::insertNativeItem(int index, QQuickMenu *menu)
+{
+    Q_Q(QQuickMenu);
+    Q_ASSERT(usingNativeMenu());
+    qCDebug(lcNativeMenu) << "insertNativeItem called on" << q << "with menu" << menu->title();
+
+    const int count = nativeItems.count();
+    if (index < 0 || index > count)
+        index = count;
+
+    const int oldIndex = indexOfMenuInNativeItems(menu);
+    if (oldIndex != -1) {
+        // The menu already exists; move it if necessary.
+        if (oldIndex < index)
+            --index;
+        if (oldIndex != index) {
+            qCDebug(lcNativeMenu).nospace() << "- already exists at a different index " << oldIndex
+                << "; moving to" << index;
+            nativeItems.move(oldIndex, index);
+        } else {
+            qCDebug(lcNativeMenu).nospace() << "- already exists at the same index";
+        }
+    } else {
+        auto *nativeMenuItem = new QQuickNativeMenuItem(q, menu);
+        nativeItems.insert(index, nativeMenuItem);
+
+        if (nativeMenuItem->create()) {
+            QQuickNativeMenuItem *before = nativeItems.value(index + 1);
+            nativeHandle->insertMenuItem(nativeMenuItem->handle(), before ? before->create() : nullptr);
+            qCDebug(lcNativeMenu) << "- inserted native menu item at index" << index
+                << "before" << (before ? before->debugText() : QStringLiteral("null"));
+        }
+    }
+
+    qCDebug(lcNativeMenu) << "- nativeItems now contains the following items:"
+        << nativeMenuItemListToString(nativeItems);
+
+    contentData.insert(index, menu);
+
+    syncWithNativeMenu();
+}
+
+void QQuickMenuPrivate::removeNativeItem(QQuickAction *action)
+{
+    Q_ASSERT(usingNativeMenu());
+
+    const int actionIndex = indexOfActionInNativeItems(action);
+    if (actionIndex == -1)
+        return;
+
+    contentData.removeAt(actionIndex);
+    QQuickNativeMenuItem *nativeItem = nativeItems.takeAt(actionIndex);
+    nativeHandle->removeMenuItem(nativeItem->handle());
+    nativeItem->handle()->setMenu(nullptr);
+    nativeItem->deleteLater();
+    action->deleteLater();
+    syncWithNativeMenu();
+}
+
+void QQuickMenuPrivate::removeNativeItem(QQuickMenu *menu)
+{
+    Q_ASSERT(usingNativeMenu());
+
+    const int menuIndex = indexOfMenuInNativeItems(menu);
+    if (menuIndex == -1)
+        return;
+
+    contentData.removeAt(menuIndex);
+    QQuickNativeMenuItem *nativeItem = nativeItems.takeAt(menuIndex);
+    nativeHandle->removeMenuItem(nativeItem->handle());
+    nativeItem->handle()->setMenu(nullptr);
+    nativeItem->deleteLater();
+    menu->deleteLater();
+    syncWithNativeMenu();
 }
 
 QQuickItem *QQuickMenuPrivate::beginCreateItem()
@@ -688,10 +987,23 @@ void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObj
 
     QQuickItem *item = qobject_cast<QQuickItem *>(obj);
     if (!item) {
-        if (QQuickAction *action = qobject_cast<QQuickAction *>(obj))
-            item = p->createItem(action);
-        else if (QQuickMenu *menu = qobject_cast<QQuickMenu *>(obj))
-            item = p->createItem(menu);
+        // We need to know if the native menu was able to be created
+        // before we start trying to add items.
+        if (p->usingNativeMenu()) {
+            if (QQuickAction *action = qobject_cast<QQuickAction *>(obj)) {
+                qCDebug(lcNativeMenu) << "contentData_append called on" << q << "with action" << action->text();
+                p->insertNativeItem(p->nativeItems.count(), action);
+            } else if (QQuickMenu *menu = qobject_cast<QQuickMenu *>(obj)) {
+                qCDebug(lcNativeMenu) << "contentData_append called on" << q << "with menu" << menu->title();
+                p->insertNativeItem(p->nativeItems.count(), menu);
+            }
+            return;
+        } else {
+            if (QQuickAction *action = qobject_cast<QQuickAction *>(obj))
+                item = p->createItem(action);
+            else if (QQuickMenu *menu = qobject_cast<QQuickMenu *>(obj))
+                item = p->createItem(menu);
+        }
     }
 
     if (item) {
@@ -755,6 +1067,8 @@ QQuickMenu::~QQuickMenu()
         for (QQuickItem *child : std::as_const(children))
             QQuickItemPrivate::get(child)->removeItemChangeListener(d, QQuickItemPrivate::SiblingOrder);
     }
+
+    d->destroyNativeMenu();
 }
 
 /*!
@@ -873,11 +1187,18 @@ QQuickItem *QQuickMenu::takeItem(int index)
 QQuickMenu *QQuickMenu::menuAt(int index) const
 {
     Q_D(const QQuickMenu);
-    QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(d->itemAt(index));
-    if (!item)
-        return nullptr;
+    if (!const_cast<QQuickMenuPrivate *>(d)->usingNativeMenu()) {
+        QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(d->itemAt(index));
+        if (!item)
+            return nullptr;
 
-    return item->subMenu();
+        return item->subMenu();
+    } else {
+        if (index < 0 || index >= d->nativeItems.size())
+            return nullptr;
+
+        return d->nativeItems.at(index)->subMenu();
+    }
 }
 
 /*!
@@ -889,7 +1210,10 @@ QQuickMenu *QQuickMenu::menuAt(int index) const
 void QQuickMenu::addMenu(QQuickMenu *menu)
 {
     Q_D(QQuickMenu);
-    insertMenu(d->contentModel->count(), menu);
+    if (!d->usingNativeMenu())
+        insertMenu(d->contentModel->count(), menu);
+    else
+        insertMenu(d->nativeItems.count(), menu);
 }
 
 /*!
@@ -904,7 +1228,10 @@ void QQuickMenu::insertMenu(int index, QQuickMenu *menu)
     if (!menu)
         return;
 
-    insertItem(index, d->createItem(menu));
+    if (!d->usingNativeMenu())
+        insertItem(index, d->createItem(menu));
+    else
+        d->insertNativeItem(index, menu);
 }
 
 /*!
@@ -919,17 +1246,21 @@ void QQuickMenu::removeMenu(QQuickMenu *menu)
     if (!menu)
         return;
 
-    const int count = d->contentModel->count();
-    for (int i = 0; i < count; ++i) {
-        QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(d->itemAt(i));
-        if (!item || item->subMenu() != menu)
-            continue;
+    if (!d->usingNativeMenu()) {
+        const int count = d->contentModel->count();
+        for (int i = 0; i < count; ++i) {
+            QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(d->itemAt(i));
+            if (!item || item->subMenu() != menu)
+                continue;
 
-        removeItem(item);
-        break;
+            removeItem(item);
+            break;
+        }
+
+        menu->deleteLater();
+    } else {
+        d->removeNativeItem(menu);
     }
-
-    menu->deleteLater();
 }
 
 /*!
@@ -966,11 +1297,18 @@ QQuickMenu *QQuickMenu::takeMenu(int index)
 QQuickAction *QQuickMenu::actionAt(int index) const
 {
     Q_D(const QQuickMenu);
-    QQuickAbstractButton *item = qobject_cast<QQuickAbstractButton *>(d->itemAt(index));
-    if (!item)
-        return nullptr;
+    if (!const_cast<QQuickMenuPrivate *>(d)->usingNativeMenu()) {
+        QQuickAbstractButton *item = qobject_cast<QQuickAbstractButton *>(d->itemAt(index));
+        if (!item)
+            return nullptr;
 
-    return item->action();
+        return item->action();
+    } else {
+        if (index < 0 || index >= d->nativeItems.size())
+            return nullptr;
+
+        return d->nativeItems.at(index)->action();
+    }
 }
 
 /*!
@@ -982,7 +1320,10 @@ QQuickAction *QQuickMenu::actionAt(int index) const
 void QQuickMenu::addAction(QQuickAction *action)
 {
     Q_D(QQuickMenu);
-    insertAction(d->contentModel->count(), action);
+    if (!d->usingNativeMenu())
+        insertAction(d->contentModel->count(), action);
+    else
+        d->insertNativeItem(d->nativeItems.count(), action);
 }
 
 /*!
@@ -997,7 +1338,10 @@ void QQuickMenu::insertAction(int index, QQuickAction *action)
     if (!action)
         return;
 
-    insertItem(index, d->createItem(action));
+    if (!d->usingNativeMenu())
+        insertItem(index, d->createItem(action));
+    else
+        d->insertNativeItem(index, action);
 }
 
 /*!
@@ -1012,17 +1356,21 @@ void QQuickMenu::removeAction(QQuickAction *action)
     if (!action)
         return;
 
-    const int count = d->contentModel->count();
-    for (int i = 0; i < count; ++i) {
-        QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(d->itemAt(i));
-        if (!item || item->action() != action)
-            continue;
+    if (!d->usingNativeMenu()) {
+        const int count = d->contentModel->count();
+        for (int i = 0; i < count; ++i) {
+            QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(d->itemAt(i));
+            if (!item || item->action() != action)
+                continue;
 
-        removeItem(item);
-        break;
+            removeItem(item);
+            break;
+        }
+
+        action->deleteLater();
+    } else {
+        d->removeNativeItem(action);
     }
-
-    action->deleteLater();
 }
 
 /*!
@@ -1047,6 +1395,22 @@ QQuickAction *QQuickMenu::takeAction(int index)
     d->removeItem(index, item);
     item->deleteLater();
     return action;
+}
+
+void QQuickMenu::setVisible(bool visible)
+{
+    Q_D(QQuickMenu);
+    if (visible == d->visible)
+        return;
+
+    if (d->usingNativeMenu()) {
+        d->setNativeMenuVisible(visible);
+        return;
+    }
+
+    // Either the native menu wasn't wanted, or it couldn't be created;
+    // show the non-native menu.
+    QQuickPopup::setVisible(visible);
 }
 
 /*!
@@ -1196,6 +1560,28 @@ void QQuickMenu::resetCascade()
         setCascade(d->parentMenu->cascade());
     else
         setCascade(shouldCascade());
+}
+
+bool QQuickMenu::requestNative() const
+{
+    Q_D(const QQuickMenu);
+    return d->requestNative;
+}
+
+void QQuickMenu::setRequestNative(bool native)
+{
+    Q_D(QQuickMenu);
+    if (d->requestNative == native)
+        return;
+
+    d->requestNative = native;
+    // TODO: do stuff
+    emit requestNativeChanged();
+}
+
+void QQuickMenu::resetRequestNative()
+{
+    setRequestNative(true);
 }
 
 /*!

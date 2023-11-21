@@ -18,6 +18,8 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qpointer.h>
 
+#include <QtGui/qpa/qplatformmenu.h>
+
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 
@@ -27,6 +29,7 @@ class QQuickAction;
 class QQmlComponent;
 class QQmlObjectModel;
 class QQuickMenuItem;
+class QQuickNativeMenuItem;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate
 {
@@ -42,10 +45,23 @@ public:
 
     void init();
 
+    bool usingNativeMenu();
+    bool createNativeMenu();
+    void syncWithNativeMenu();
+    void destroyNativeMenu();
+    void setNativeMenuVisible(bool visible);
+
     QQuickItem *itemAt(int index) const;
     void insertItem(int index, QQuickItem *item);
     void moveItem(int from, int to);
     void removeItem(int index, QQuickItem *item);
+
+    int indexOfActionInNativeItems(QQuickAction *action) const;
+    int indexOfMenuInNativeItems(QQuickMenu *menu) const;
+    void insertNativeItem(int index, QQuickAction *action);
+    void insertNativeItem(int index, QQuickMenu *menu);
+    void removeNativeItem(QQuickAction *action);
+    void removeNativeItem(QQuickMenu *menu);
 
     QQuickItem *beginCreateItem();
     void completeCreateItem();
@@ -94,6 +110,8 @@ public:
     QPalette defaultPalette() const override;
 
     bool cascade = false;
+    bool requestNative = false;
+    bool triedToCreateNativeMenu = false;
     int hoverTimer = 0;
     int currentIndex = -1;
     qreal overlap = 0;
@@ -105,6 +123,10 @@ public:
     QQmlComponent *delegate = nullptr;
     QString title;
     QQuickIcon icon;
+
+    // For native menu support.
+    std::unique_ptr<QPlatformMenu> nativeHandle = nullptr;
+    QList<QQuickNativeMenuItem *> nativeItems;
 };
 
 QT_END_NAMESPACE
