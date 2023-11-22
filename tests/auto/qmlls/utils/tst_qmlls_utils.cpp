@@ -1033,6 +1033,33 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("inlineUsagesFromUsageOfBaseProperty") << 14 << 27 << inlineUsages;
         QTest::addRow("inlineUsagesFromJsScope") << 20 << 20 << inlineUsages;
     }
+    {
+        const auto testFileName = testFile("findUsages/propertyChanges.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        QList<QQmlLSUtilsLocation> expectedUsages;
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 9, strlen("onClicked"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 16, 21, strlen("onClicked"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 19, 25, strlen("onClicked"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 25, 17, strlen("onClicked"));
+        const auto propertyChanges = makeUsages(testFileName, expectedUsages);
+        QTest::addRow("propertyChanges1") << 16 << 21 << propertyChanges;
+    }
+    {
+        const auto testFileName = testFile("findUsages/bindings.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        QList<QQmlLSUtilsLocation> expectedUsages;
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 11, 23, strlen("patronChanged"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 14, 27, strlen("patronChanged"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 21, 27, strlen("patronChanged"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 27, 19, strlen("patronChanged"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 27, 41, strlen("patronChanged"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 34, 17, strlen("patronChanged"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 13, 20, strlen("patronChanged"));
+        expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 20, 23, strlen("\"patronChanged\""));
+        const auto bindings = makeUsages(testFileName, expectedUsages);
+        QTest::addRow("propertyInBindingsFromDecl") << 11 << 22 << bindings;
+        QTest::addRow("generalizedGroupPropertyBindings") << 27 << 19 << bindings;
+    }
 }
 
 void tst_qmlls_utils::findUsages()
@@ -2678,14 +2705,12 @@ void tst_qmlls_utils::completions()
             }
         } else if (c.kind->toInt() == int(CompletionItemKind::Property)) {
             QVERIFY2(!propertiesTracker.hasSeen(c.label), "Duplicate property: " + c.label);
+            QEXPECT_FAIL("attachedProperties",
+                     "Completion for attached properties requires first QTBUG-117380 to be solved",
+                     Abort);
             if (insertOptions & InsertColon) {
                 // note: a property should end with a colon with a space for 'insertText', for
                 // better coding experience.
-
-                QEXPECT_FAIL("attachedProperties",
-                             "Completion for attached properties requires first QTBUG-117380 to be "
-                             "solved",
-                             Abort);
                 QCOMPARE(c.insertText, c.label + u": "_s);
             } else {
 

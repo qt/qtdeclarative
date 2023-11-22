@@ -709,6 +709,12 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
                 addLocationIfTypeMatchesTarget(current, MainRegion);
             return continueForChildren;
         }
+        case DomType::ScriptLiteral: {
+            const QString literal = current.field(Fields::value).value().toString();
+            if (namesToCheck.contains(literal))
+                addLocationIfTypeMatchesTarget(current, MainRegion);
+            return continueForChildren;
+        }
         default:
             return continueForChildren;
         };
@@ -889,10 +895,16 @@ propertyBindingFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, con
             (binding.bindingType() != QQmlSA::BindingType::GroupProperty))
             return {};
 
-        const auto getTypeIdentifier = [&binding]{
+        const auto getTypeIdentifier = [&binding, &referrerScope, &name]{
             switch (binding.bindingType()) {
             case QQmlSA::BindingType::AttachedProperty: return AttachedTypeIdentifier;
-            case QQmlSA::BindingType::GroupProperty: return GroupedPropertyIdentifier;
+            case QQmlSA::BindingType::GroupProperty: {
+                // If generalized group property, then it is actually an id.
+                if (referrerScope->isNameDeferred(name)) {
+                    return QmlObjectIdIdentifier;
+                }
+                return GroupedPropertyIdentifier;
+            }
             default:
                 Q_UNREACHABLE();
             }
@@ -919,9 +931,29 @@ propertyBindingFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, con
     return {};
 }
 
-static QQmlJSScope::ConstPtr findScopeInConnections(QQmlJSScope::ConstPtr scope, const DomItem &item)
+/*! \internal
+    Finds the scope within the special elements like Connections,
+    PropertyChanges, Bindings or AnchorChanges.
+*/
+static QQmlJSScope::ConstPtr findScopeOfSpecialItems(QQmlJSScope::ConstPtr scope, const DomItem &item)
 {
-    if (!scope || (scope->baseType() && scope->baseType()->internalName() != u"QQmlConnections"_s))
+    if (!scope)
+        return {};
+
+    const QSet<QString> specialItems = {u"QQmlConnections"_s,
+                                        u"QQuickPropertyChanges"_s,
+                                        u"QQmlBind"_s,
+                                        u"QQuickAnchorChanges"_s};
+
+    const auto special = QQmlJSUtils::searchBaseAndExtensionTypes(
+            scope, [&specialItems](QQmlJSScope::ConstPtr visitedScope) {
+                const auto typeName = visitedScope->internalName();
+                if (specialItems.contains(typeName))
+                    return true;
+                return false;
+            });
+
+    if (!special)
         return {};
 
     // Perform target name search if there is binding to property "target"
@@ -942,7 +974,7 @@ static QQmlJSScope::ConstPtr findScopeInConnections(QQmlJSScope::ConstPtr scope,
     }
 
     if (!targetName.isEmpty()) {
-        // look for the scope of target
+        // target: someId
         auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
         if (!resolver)
             return {};
@@ -950,7 +982,12 @@ static QQmlJSScope::ConstPtr findScopeInConnections(QQmlJSScope::ConstPtr scope,
         // Note: It does not have to be an ID. It can be a property.
         return resolver->containedType(resolver->scopedType(scope, targetName));
     } else {
-        // No binding to target property, return the container object's scope
+        if (item.internalKind() == DomType::Binding &&
+            item.field(Fields::bindingType).value().toInteger() == int(BindingType::OnBinding)) {
+                // Binding on sth : {} syntax
+                // Target scope is the current scope
+                return scope;
+        }
         return scope->parentScope();
     }
 
@@ -1035,7 +1072,7 @@ resolveFieldMemberExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions 
         }
     }
     qCDebug(QQmlLSUtilsLog) << "Could not find identifier expression for" << item.internalKindStr();
-    return {};
+    return owner;
 }
 
 static std::optional<QQmlLSUtilsExpressionType>
@@ -1145,7 +1182,7 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
             if (name == u"id")
                 return QQmlLSUtilsExpressionType{ name, owner.value(), QmlObjectIdIdentifier };
 
-            if (QQmlJSScope::ConstPtr targetScope = findScopeInConnections(owner.value(), item)) {
+            if (QQmlJSScope::ConstPtr targetScope = findScopeOfSpecialItems(owner.value(), item)) {
                 return QQmlLSUtilsExpressionType{ name, targetScope,
                                                   resolveNameInQmlScope(name, targetScope)->type };
             }
@@ -1183,7 +1220,7 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
                 return {};
 
             if (QQmlJSScope::ConstPtr targetScope =
-                        findScopeInConnections(scope.value()->parentScope(), item)) {
+                        findScopeOfSpecialItems(scope.value()->parentScope(), item)) {
                 return QQmlLSUtilsExpressionType{
                     object->name, targetScope,
                     resolveNameInQmlScope(object->name, targetScope)->type
@@ -1207,6 +1244,18 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
     case DomType::ScriptBinaryExpression: {
         if (isFieldMemberExpression(item)) {
             return resolveExpressionType(item.field(Fields::right), options);
+        }
+        return {};
+    }
+    case DomType::ScriptLiteral: {
+        /* special case
+        Binding { target: someId; property: "someProperty"}
+        */
+        const auto scope = item.qmlObject().semanticScope();
+        const auto name = item.field(Fields::value).value().toString();
+        if (QQmlJSScope::ConstPtr targetScope = findScopeOfSpecialItems(scope, item)) {
+                return QQmlLSUtilsExpressionType{ name, targetScope,
+                                                  resolveNameInQmlScope(name, targetScope)->type };
         }
         return {};
     }
