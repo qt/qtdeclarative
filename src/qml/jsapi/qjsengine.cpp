@@ -345,11 +345,8 @@ QJSEngine::QJSEngine()
 */
 
 QJSEngine::QJSEngine(QObject *parent)
-    : QObject(*new QJSEnginePrivate, parent)
-    , m_v4Engine(new QV4::ExecutionEngine(this))
+    : QJSEngine(*new QJSEnginePrivate, parent)
 {
-    checkForApplicationInstance();
-
     QJSEnginePrivate::addToDebugServer(this);
 }
 
