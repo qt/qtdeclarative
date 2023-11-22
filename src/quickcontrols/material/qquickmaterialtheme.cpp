@@ -6,7 +6,7 @@
 
 #include <QtGui/qpa/qplatformdialoghelper.h>
 #include <QtGui/qfont.h>
-#include <QtGui/qfontinfo.h>
+#include <QtGui/qfontdatabase.h>
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -21,17 +21,15 @@ void QQuickMaterialTheme::initialize(QQuickTheme *theme)
     QFont menuItemFont;
     QFont editorFont;
 
-    QFont font;
-    font.setFamilies(QStringList{QLatin1String("Roboto")});
-    QString family = QFontInfo(font).family();
-
-    if (family != QLatin1String("Roboto")) {
-        font.setFamilies(QStringList{QLatin1String("Noto")});
-        family = QFontInfo(font).family();
+    auto defaultFontFamily = QLatin1String("Roboto");
+    if (!QFontDatabase::hasFamily(defaultFontFamily)) {
+        defaultFontFamily = QLatin1String("Noto"); // fallback
+        if (!QFontDatabase::hasFamily(defaultFontFamily))
+            defaultFontFamily = {};
     }
 
-    if (family == QLatin1String("Roboto") || family == QLatin1String("Noto")) {
-        const QStringList families{family};
+    if (!defaultFontFamily.isEmpty()) {
+        const QStringList families{defaultFontFamily};
         systemFont.setFamilies(families);
         buttonFont.setFamilies(families);
         toolTipFont.setFamilies(families);
