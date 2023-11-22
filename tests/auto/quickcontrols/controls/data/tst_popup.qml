@@ -1431,6 +1431,8 @@ TestCase {
 
         let popup = window.popup
         popup.open()
+        tryCompare(popup, "opened", true)
+        waitForRendering(popup.contentItem)
 
         // mouse clicks into the popup must not propagate to the parent
         mouseClick(window)
