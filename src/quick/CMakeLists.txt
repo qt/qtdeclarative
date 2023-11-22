@@ -154,6 +154,7 @@ qt_internal_add_qml_module(Quick
         scenegraph/qsgdistancefieldglyphnode_p_p.h
         scenegraph/qsgrenderloop.cpp scenegraph/qsgrenderloop_p.h
         scenegraph/qsgrhidistancefieldglyphcache.cpp scenegraph/qsgrhidistancefieldglyphcache_p.h
+        scenegraph/qsgrhiinternaltextnode.cpp scenegraph/qsgrhiinternaltextnode_p.h
         scenegraph/qsgrhilayer.cpp scenegraph/qsgrhilayer_p.h
         scenegraph/qsgrhishadereffectnode.cpp scenegraph/qsgrhishadereffectnode_p.h
         scenegraph/qsgrhisupport.cpp scenegraph/qsgrhisupport_p.h

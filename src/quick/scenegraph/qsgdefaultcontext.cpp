@@ -21,6 +21,7 @@
 #endif
 #include <QtQuick/private/qsgrhishadereffectnode_p.h>
 #include <QtQuick/private/qsginternaltextnode_p.h>
+#include <QtQuick/private/qsgrhiinternaltextnode_p.h>
 
 #include <QOpenGLContext>
 
@@ -144,6 +145,11 @@ QSGInternalImageNode *QSGDefaultContext::createInternalImageNode(QSGRenderContex
 QSGPainterNode *QSGDefaultContext::createPainterNode(QQuickPaintedItem *item)
 {
     return new QSGDefaultPainterNode(item);
+}
+
+QSGInternalTextNode *QSGDefaultContext::createInternalTextNode(QSGRenderContext *renderContext)
+{
+    return new QSGRhiInternalTextNode(renderContext);
 }
 
 QSGGlyphNode *QSGDefaultContext::createGlyphNode(QSGRenderContext *rc,

@@ -156,7 +156,7 @@ public:
     void clearCursor();
 
     void addRectangleNode(const QRectF &rect, const QColor &color);
-    void addDecorationNode(const QRectF &rect, const QColor &color);
+    virtual void addDecorationNode(const QRectF &rect, const QColor &color);
     void addImage(const QRectF &rect, const QImage &image);
     void deleteContent();
     QSGGlyphNode *addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
