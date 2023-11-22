@@ -293,8 +293,8 @@ void QmltcCodeGenerator::generate_createTranslationBindingOnProperty(
 QmltcCodeGenerator::PreparedValue
 QmltcCodeGenerator::wrap_mismatchingTypeConversion(const QQmlJSMetaProperty &p, QString value)
 {
-    auto isDerivedFromBuiltin = [](QQmlJSScope::ConstPtr t, const QString &builtin) {
-        for (; t; t = t->baseType()) {
+    auto isDerivedFromBuiltin = [](const QQmlJSScope::ConstPtr &derived, const QString &builtin) {
+        for (QQmlJSScope::ConstPtr t = derived; t; t = t->baseType()) {
             if (t->internalName() == builtin)
                 return true;
         }
@@ -302,7 +302,7 @@ QmltcCodeGenerator::wrap_mismatchingTypeConversion(const QQmlJSMetaProperty &p, 
     };
     QStringList prologue;
     QStringList epilogue;
-    auto propType = p.type();
+    const QQmlJSScope::ConstPtr propType = p.type();
     if (isDerivedFromBuiltin(propType, u"QVariant"_s)) {
         const QString variantName = u"var_" + p.propertyName();
         prologue << u"{ // accepts QVariant"_s;
