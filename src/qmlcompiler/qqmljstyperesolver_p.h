@@ -78,10 +78,6 @@ public:
     QQmlJSScope::ConstPtr forOfIteratorPtr() const { return m_forOfIteratorPtr; }
 
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
-    QQmlJSScope::ConstPtr scopeForId(
-            const QString &id, const QQmlJSScope::ConstPtr &referrer) const;
-    QString idForScope(
-            const QQmlJSScope::ConstPtr &scope, const QQmlJSScope::ConstPtr &referrer) const;
 
     bool isPrefix(const QString &name) const
     {

@@ -923,6 +923,9 @@ static QQmlJSScope::ConstPtr findScopeInConnections(QQmlJSScope::ConstPtr scope,
     // Perform target name search if there is binding to property "target"
     QString targetName;
     if (scope->hasOwnPropertyBindings(u"target"_s)) {
+        // TODO: propagate the whole binding.
+        //       We can figure out the meaning of target in more cases.
+
         DomItem current = item.qmlObject();
         auto target = current.bindings().key(u"target"_s).index(0);
         if (target) {
@@ -939,7 +942,9 @@ static QQmlJSScope::ConstPtr findScopeInConnections(QQmlJSScope::ConstPtr scope,
         auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
         if (!resolver)
             return {};
-        return resolver->scopeForId(targetName, scope);
+
+        // Note: It does not have to be an ID. It can be a property.
+        return resolver->containedType(resolver->scopedType(scope, targetName));
     } else {
         // No binding to target property, return the container object's scope
         return scope->parentScope();
@@ -1089,9 +1094,9 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
     }
 
     // check if its an id
-    QQmlJSScope::ConstPtr fromId = resolver->scopeForId(name, referrerScope);
-    if (fromId)
-        return QQmlLSUtilsExpressionType{ name, fromId, QmlObjectIdIdentifier };
+    QQmlJSRegisterContent fromId = resolver->scopedType(referrerScope, name);
+    if (fromId.variant() == QQmlJSRegisterContent::ObjectById)
+        return QQmlLSUtilsExpressionType{ name, fromId.type(), QmlObjectIdIdentifier };
 
     const QQmlJSScope::ConstPtr jsGlobal = resolver->jsGlobalObject();
     // check if its a JS global method
@@ -1341,10 +1346,10 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findDefinitionOf(const DomItem &
         auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
         if (!resolver)
             return {};
-        QQmlJSScope::ConstPtr fromId = resolver->scopeForId(name, referrerScope);
-        if (fromId) {
-            DomItem qmlObject = QQmlLSUtils::sourceLocationToDomItem(item.containingFile(),
-                                                                     fromId->sourceLocation());
+        QQmlJSRegisterContent fromId = resolver->scopedType(referrerScope, name);
+        if (fromId.variant() == QQmlJSRegisterContent::ObjectById) {
+            DomItem qmlObject = QQmlLSUtils::sourceLocationToDomItem(
+                    item.containingFile(), fromId.type()->sourceLocation());
             // in the Dom, the id is saved in a QMultiHash inside the Component of an QmlObject.
             DomItem domId = qmlObject.component()
                                     .field(Fields::ids)

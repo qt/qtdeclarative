@@ -80,7 +80,10 @@ QQmlJSUtils::ResolvedAlias QQmlJSUtils::resolveAlias(const QQmlJSTypeResolver *t
 {
     return ::resolveAlias(
             [&](const QString &id, const QQmlJSScope::ConstPtr &referrer) {
-                return typeResolver->scopeForId(id, referrer);
+                const QQmlJSRegisterContent content = typeResolver->scopedType(referrer, id);
+                if (content.variant() == QQmlJSRegisterContent::ObjectById)
+                    return content.type();
+                return QQmlJSScope::ConstPtr();
             },
             property, owner, visitor);
 }
