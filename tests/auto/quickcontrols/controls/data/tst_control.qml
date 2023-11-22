@@ -34,9 +34,11 @@ TestCase {
         SignalSpy { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(component, testCase)
         verify(control)
         compare(control.background, null)
@@ -44,37 +46,37 @@ TestCase {
     }
 
     function test_padding() {
-        var control = createTemporaryObject(component, testCase)
+        let control = createTemporaryObject(component, testCase)
         verify(control)
 
-        var paddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "paddingChanged"})
+        let paddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "paddingChanged"})
         verify(paddingSpy.valid)
 
-        var topPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "topPaddingChanged"})
+        let topPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "topPaddingChanged"})
         verify(topPaddingSpy.valid)
 
-        var leftPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "leftPaddingChanged"})
+        let leftPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "leftPaddingChanged"})
         verify(leftPaddingSpy.valid)
 
-        var rightPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rightPaddingChanged"})
+        let rightPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rightPaddingChanged"})
         verify(rightPaddingSpy.valid)
 
-        var bottomPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "bottomPaddingChanged"})
+        let bottomPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "bottomPaddingChanged"})
         verify(bottomPaddingSpy.valid)
 
-        var horizontalPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "horizontalPaddingChanged"})
+        let horizontalPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "horizontalPaddingChanged"})
         verify(horizontalPaddingSpy.valid)
 
-        var verticalPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "verticalPaddingChanged"})
+        let verticalPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "verticalPaddingChanged"})
         verify(verticalPaddingSpy.valid)
 
-        var paddingChanges = 0
-        var topPaddingChanges = 0
-        var leftPaddingChanges = 0
-        var rightPaddingChanges = 0
-        var bottomPaddingChanges = 0
-        var horizontalPaddingChanges = 0
-        var verticalPaddingChanges = 0
+        let paddingChanges = 0
+        let topPaddingChanges = 0
+        let leftPaddingChanges = 0
+        let rightPaddingChanges = 0
+        let bottomPaddingChanges = 0
+        let horizontalPaddingChanges = 0
+        let verticalPaddingChanges = 0
 
         compare(control.padding, 0)
         compare(control.topPadding, 0)
@@ -315,17 +317,17 @@ TestCase {
     }
 
     function test_availableSize() {
-        var control = createTemporaryObject(component, testCase)
+        let control = createTemporaryObject(component, testCase)
         verify(control)
 
-        var availableWidthSpy = signalSpy.createObject(control, {target: control, signalName: "availableWidthChanged"})
+        let availableWidthSpy = signalSpy.createObject(control, {target: control, signalName: "availableWidthChanged"})
         verify(availableWidthSpy.valid)
 
-        var availableHeightSpy = signalSpy.createObject(control, {target: control, signalName: "availableHeightChanged"})
+        let availableHeightSpy = signalSpy.createObject(control, {target: control, signalName: "availableHeightChanged"})
         verify(availableHeightSpy.valid)
 
-        var availableWidthChanges = 0
-        var availableHeightChanges = 0
+        let availableWidthChanges = 0
+        let availableHeightChanges = 0
 
         control.width = 100
         compare(control.availableWidth, 100)
@@ -385,10 +387,10 @@ TestCase {
     }
 
     function test_mirrored() {
-        var control = createTemporaryObject(component, testCase)
+        let control = createTemporaryObject(component, testCase)
         verify(control)
 
-        var mirroredSpy = signalSpy.createObject(control, {target: control, signalName: "mirroredChanged"})
+        let mirroredSpy = signalSpy.createObject(control, {target: control, signalName: "mirroredChanged"})
         verify(mirroredSpy.valid)
 
         control.locale = Qt.locale("en_US")
@@ -414,7 +416,7 @@ TestCase {
     }
 
     function test_background() {
-        var control = createTemporaryObject(component, testCase)
+        let control = createTemporaryObject(component, testCase)
         verify(control)
 
         control.background = component.createObject(control)
@@ -502,7 +504,7 @@ TestCase {
     }
 
     function test_font() {
-        var control2 = createTemporaryObject(component2, testCase)
+        let control2 = createTemporaryObject(component2, testCase)
         verify(control2)
         verify(control2.item2_2)
         verify(control2.item2_3)
@@ -645,7 +647,7 @@ TestCase {
     }
 
     function test_font_2() {
-        var control3 = createTemporaryObject(component3, testCase)
+        let control3 = createTemporaryObject(component3, testCase)
         verify(control3)
         verify(control3.item3_2)
         verify(control3.item3_3)
@@ -760,14 +762,14 @@ TestCase {
     }
 
     function test_font_3() {
-        var control4 = createTemporaryObject(component4, testCase)
+        let control4 = createTemporaryObject(component4, testCase)
         verify(control4)
         verify(control4.item4_2)
         verify(control4.item4_3)
         verify(control4.item4_4)
 
-        var family = control4.font.family
-        var ps = control4.font.pixelSize
+        let family = control4.font.family
+        let ps = control4.font.pixelSize
 
         compare(control4.item4_2.font.family, control4.font.family)
         compare(control4.item4_3.font.family, control4.font.family)
@@ -797,19 +799,19 @@ TestCase {
     }
 
     function test_font_explicit_attributes(data) {
-        var control = createTemporaryObject(component, testCase)
+        let control = createTemporaryObject(component, testCase)
         verify(control)
 
-        var child = component.createObject(control)
+        let child = component.createObject(control)
         verify(child)
 
-        var controlSpy = signalSpy.createObject(control, {target: control, signalName: "fontChanged"})
+        let controlSpy = signalSpy.createObject(control, {target: control, signalName: "fontChanged"})
         verify(controlSpy.valid)
 
-        var childSpy = signalSpy.createObject(child, {target: child, signalName: "fontChanged"})
+        let childSpy = signalSpy.createObject(child, {target: child, signalName: "fontChanged"})
         verify(childSpy.valid)
 
-        var defaultValue = control.font[data.tag]
+        let defaultValue = control.font[data.tag]
         child.font[data.tag] = defaultValue
 
         compare(child.font[data.tag], defaultValue)
@@ -825,7 +827,7 @@ TestCase {
     }
 
     function test_locale() {
-        var control = createTemporaryObject(component, testCase)
+        let control = createTemporaryObject(component, testCase)
         verify(control)
 
         control.locale = Qt.locale("en_US")
@@ -896,12 +898,12 @@ TestCase {
     }
 
     function test_locale_2() {
-        var control = createTemporaryObject(component5, testCase)
+        let control = createTemporaryObject(component5, testCase)
         verify(control)
         verify(control.item2_2)
         verify(control.item2_3)
 
-        var defaultLocale = Qt.locale()
+        let defaultLocale = Qt.locale()
 
         compare(control.locale.name, defaultLocale.name)
         compare(control.item2_2.locale.name, defaultLocale.name)
@@ -989,14 +991,14 @@ TestCase {
     }
 
     function test_locale_3() {
-        var control = createTemporaryObject(component6, testCase)
+        let control = createTemporaryObject(component6, testCase)
         verify(control)
         verify(control.item6_2)
         verify(control.item6_3)
         verify(control.item6_4)
         verify(control.item6_5)
 
-        var defaultLocale = Qt.locale()
+        let defaultLocale = Qt.locale()
 
         compare(control.locale.name, defaultLocale.name)
         compare(control.item6_5.locale.name, defaultLocale.name)
@@ -1028,7 +1030,7 @@ TestCase {
     }
 
     function test_hover(data) {
-        var control = createTemporaryObject(data.target, testCase, {width: 100, height: 100})
+        let control = createTemporaryObject(data.target, testCase, {width: 100, height: 100})
         verify(control)
 
         compare(control.hovered, false)
@@ -1065,17 +1067,17 @@ TestCase {
     }
 
     function test_hoverEnabled() {
-        var control = createTemporaryObject(component, testCase)
+        let control = createTemporaryObject(component, testCase)
         compare(control.hoverEnabled, Qt.styleHints.useHoverEffects)
 
-        var child = component.createObject(control)
-        var grandChild = component.createObject(child)
+        let child = component.createObject(control)
+        let grandChild = component.createObject(child)
 
-        var childExplicitHoverEnabled = component.createObject(control, {hoverEnabled: true})
-        var grandChildExplicitHoverDisabled = component.createObject(childExplicitHoverEnabled, {hoverEnabled: false})
+        let childExplicitHoverEnabled = component.createObject(control, {hoverEnabled: true})
+        let grandChildExplicitHoverDisabled = component.createObject(childExplicitHoverEnabled, {hoverEnabled: false})
 
-        var childExplicitHoverDisabled = component.createObject(control, {hoverEnabled: false})
-        var grandChildExplicitHoverEnabled = component.createObject(childExplicitHoverDisabled, {hoverEnabled: true})
+        let childExplicitHoverDisabled = component.createObject(control, {hoverEnabled: false})
+        let grandChildExplicitHoverEnabled = component.createObject(childExplicitHoverDisabled, {hoverEnabled: true})
 
         control.hoverEnabled = false
         compare(control.hoverEnabled, false)
@@ -1099,33 +1101,33 @@ TestCase {
     }
 
     function test_implicitSize() {
-        var control = createTemporaryObject(component, testCase)
+        let control = createTemporaryObject(component, testCase)
         verify(control)
 
-        var implicitWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitWidthChanged"})
+        let implicitWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitWidthChanged"})
         verify(implicitWidthSpy.valid)
 
-        var implicitHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitHeightChanged"})
+        let implicitHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitHeightChanged"})
         verify(implicitHeightSpy.valid)
 
-        var implicitContentWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitContentWidthChanged"})
+        let implicitContentWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitContentWidthChanged"})
         verify(implicitContentWidthSpy.valid)
 
-        var implicitContentHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitContentHeightChanged"})
+        let implicitContentHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitContentHeightChanged"})
         verify(implicitContentHeightSpy.valid)
 
-        var implicitBackgroundWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundWidthChanged"})
+        let implicitBackgroundWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundWidthChanged"})
         verify(implicitBackgroundWidthSpy.valid)
 
-        var implicitBackgroundHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundHeightChanged"})
+        let implicitBackgroundHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundHeightChanged"})
         verify(implicitBackgroundHeightSpy.valid)
 
-        var implicitWidthChanges = 0
-        var implicitHeightChanges = 0
-        var implicitContentWidthChanges = 0
-        var implicitContentHeightChanges = 0
-        var implicitBackgroundWidthChanges = 0
-        var implicitBackgroundHeightChanges = 0
+        let implicitWidthChanges = 0
+        let implicitHeightChanges = 0
+        let implicitContentWidthChanges = 0
+        let implicitContentHeightChanges = 0
+        let implicitBackgroundWidthChanges = 0
+        let implicitBackgroundHeightChanges = 0
 
         compare(control.implicitWidth, 0)
         compare(control.implicitHeight, 0)
@@ -1194,12 +1196,12 @@ TestCase {
     }
 
     function test_baseline() {
-        var control = createTemporaryObject(component, testCase)
+        let control = createTemporaryObject(component, testCase)
         verify(control)
 
         compare(control.baselineOffset, 0)
 
-        var baselineSpy = signalSpy.createObject(control, {target: control, signalName: "baselineOffsetChanged"})
+        let baselineSpy = signalSpy.createObject(control, {target: control, signalName: "baselineOffsetChanged"})
         verify(baselineSpy.valid)
 
         control.contentItem = rectangle.createObject(control, {baselineOffset: 12})
@@ -1232,25 +1234,25 @@ TestCase {
     }
 
     function test_inset() {
-        var control = createTemporaryObject(component, testCase, {background: rectangle.createObject(control)})
+        let control = createTemporaryObject(component, testCase, {background: rectangle.createObject(null)})
         verify(control)
 
-        var topInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "topInsetChanged"})
+        let topInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "topInsetChanged"})
         verify(topInsetSpy.valid)
 
-        var leftInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "leftInsetChanged"})
+        let leftInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "leftInsetChanged"})
         verify(leftInsetSpy.valid)
 
-        var rightInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rightInsetChanged"})
+        let rightInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rightInsetChanged"})
         verify(rightInsetSpy.valid)
 
-        var bottomInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "bottomInsetChanged"})
+        let bottomInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "bottomInsetChanged"})
         verify(bottomInsetSpy.valid)
 
-        var topInsetChanges = 0
-        var leftInsetChanges = 0
-        var rightInsetChanges = 0
-        var bottomInsetChanges = 0
+        let topInsetChanges = 0
+        let leftInsetChanges = 0
+        let rightInsetChanges = 0
+        let bottomInsetChanges = 0
 
         compare(control.topInset, 0)
         compare(control.leftInset, 0)
@@ -1412,9 +1414,9 @@ TestCase {
     }
 
     function test_contentItemDeletionOrder() {
-        var control1 = createTemporaryObject(contentItemDeletionOrder1, testCase)
+        let control1 = createTemporaryObject(contentItemDeletionOrder1, testCase)
         verify(control1)
-        var control2 = createTemporaryObject(contentItemDeletionOrder2, testCase)
+        let control2 = createTemporaryObject(contentItemDeletionOrder2, testCase)
         verify(control2)
     }
 
@@ -1453,9 +1455,9 @@ TestCase {
     }
 
     function test_backgroundDeletionOrder() {
-        var control1 = createTemporaryObject(backgroundDeletionOrder1, testCase)
+        let control1 = createTemporaryObject(backgroundDeletionOrder1, testCase)
         verify(control1)
-        var control2 = createTemporaryObject(backgroundDeletionOrder2, testCase)
+        let control2 = createTemporaryObject(backgroundDeletionOrder2, testCase)
         verify(control2)
     }
 }
