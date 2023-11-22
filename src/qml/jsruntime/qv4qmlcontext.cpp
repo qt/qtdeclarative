@@ -269,9 +269,33 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         contextGetterFunction = QQmlContextWrapper::lookupScopeObjectProperty;
     }
 
+    QQmlRefPointer<QQmlContextData> outer = context;
     while (context) {
-        if (auto property = searchContextProperties(v4, context, name, hasProperty, base, lookup, originalLookup, ep))
-            return *property;
+        if (outer == context) {
+            if (auto property = searchContextProperties(
+                        v4, context, name, hasProperty, base, lookup, originalLookup, ep)) {
+                return *property;
+            }
+
+            outer = outer->parent();
+
+            if (const auto cu = context->typeCompilationUnit(); cu && cu->componentsAreBound()) {
+                // If components are bound in this CU, we can search the whole context hierarchy
+                // of the file. Bound components' contexts override their local properties.
+                // You also can't instantiate bound components outside of their creation
+                // context. Therefore this is safe.
+
+                for (;
+                     outer && outer->typeCompilationUnit() == cu;
+                     outer = outer->parent()) {
+                    if (auto property = searchContextProperties(
+                                v4, outer, name, hasProperty, base,
+                                nullptr, originalLookup, ep)) {
+                        return *property;
+                    }
+                }
+            }
+        }
 
         // Search scope object
         if (scopeObject) {

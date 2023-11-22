@@ -167,10 +167,7 @@ public:
     QObject *createWithProperties(QObject *parent, const QVariantMap &properties,
                                   QQmlContext *context, CreateBehavior behavior = CreateDefault);
 
-    bool isBound() const {
-        return compilationUnit
-                && (compilationUnit->unitData()->flags & QV4::CompiledData::Unit::ComponentsBound);
-    }
+    bool isBound() const { return compilationUnit && (compilationUnit->componentsAreBound()); }
 };
 
 QQmlComponentPrivate::ConstructionState::~ConstructionState()
