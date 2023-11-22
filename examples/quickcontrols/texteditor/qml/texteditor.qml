@@ -8,8 +8,6 @@ import QtQuick.Window
 import QtQuick.Dialogs
 import Qt.labs.platform as Platform
 
-import io.qt.examples.texteditor
-
 // TODO:
 // - make designer-friendly
 
@@ -40,6 +38,7 @@ ApplicationWindow {
     Action {
         id: saveAction
         shortcut: StandardKey.Save
+        enabled: textArea.textDocument.modified
         onTriggered: textArea.textDocument.save()
     }
 
@@ -272,7 +271,12 @@ ApplicationWindow {
         title: qsTr("Quit?")
         text: qsTr("The file has been modified. Quit anyway?")
         buttons: MessageDialog.Yes | MessageDialog.No
-        onButtonClicked: function (button, role) { if (role === MessageDialog.YesRole) Qt.quit() }
+        onButtonClicked: function (button, role) {
+            if (role === MessageDialog.YesRole) {
+                textArea.textDocument.modified = false
+                Qt.quit()
+            }
+        }
     }
 
     MessageDialog {
@@ -454,29 +458,6 @@ ApplicationWindow {
         }
     }
 
-    DocumentHandler {
-        id: document
-        document: textArea.textDocument
-        cursorPosition: textArea.cursorPosition
-        selectionStart: textArea.selectionStart
-        selectionEnd: textArea.selectionEnd
-
-        Component.onCompleted: {
-            if (Qt.application.arguments.length === 2)
-                textArea.textDocument.source = "file:" + Qt.application.arguments[1];
-            else
-                textArea.textDocument.source = "qrc:/texteditor.html";
-        }
-        onLoaded: function (text, format) {
-            textArea.textFormat = format
-            textArea.text = text
-        }
-        onError: function (message) {
-            errorDialog.text = message
-            errorDialog.open()
-        }
-    }
-
     Flickable {
         id: flickable
         flickableDirection: Flickable.VerticalFlick
@@ -506,6 +487,13 @@ ApplicationWindow {
 
             onLinkActivated: function (link) {
                 Qt.openUrlExternally(link)
+            }
+
+            Component.onCompleted: {
+                if (Qt.application.arguments.length === 2)
+                    textDocument.source = "file:" + Qt.application.arguments[1];
+                else
+                    textDocument.source = "qrc:/texteditor.html";
             }
 
             textDocument.onError: function (message) {

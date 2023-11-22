@@ -66,36 +66,5 @@
     \skipto /\bDialog\b/
     \printuntil /^\s{4}\}$/
 
-    \section1 C++ Backend
-
-    Both user interfaces use the same C++ backend, which supports opening, formatting,
-    and editing a document. The C++ class, \c DocumentHandler, extends QObject and is
-    registered as a QML type under the namespace \c {io.qt.examples.texteditor 1.0}.
-
-    The following snippets show how the type is registered under a namespace and later
-    imported and instantiated by \e main.qml. For more information about registering C++
-    classes as QML types, see \l {Defining QML Types from C++}.
-
-    QML type registration:
-
-    \code
-    #include <QtQml/qqml.h>
-    ...
-    qmlRegisterType<DocumentHandler>("io.qt.examples.texteditor", 1, 0, "DocumentHandler");
-    ...
-    \endcode
-
-    QML namespace import:
-
-    \code
-    import io.qt.examples.texteditor 1.0
-    \endcode
-
-    QML instance:
-
-    \quotefromfile texteditor/qml/texteditor.qml
-    \skipto DocumentHandler
-    \printuntil /^\s{4}\}$/
-
     \include examples-run.qdocinc
 */

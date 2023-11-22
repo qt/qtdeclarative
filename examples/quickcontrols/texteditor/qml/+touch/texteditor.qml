@@ -6,8 +6,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 
-import io.qt.examples.texteditor
-
 // TODO:
 // - make designer-friendly
 
@@ -56,23 +54,6 @@ ApplicationWindow {
         }
     }
 
-    DocumentHandler {
-        id: document
-        document: textArea.textDocument
-        cursorPosition: textArea.cursorPosition
-        selectionStart: textArea.selectionStart
-        selectionEnd: textArea.selectionEnd
-        // textColor: TODO
-        Component.onCompleted: document.load("qrc:/texteditor.html")
-        onLoaded: {
-            textArea.text = text
-        }
-        onError: {
-            errorDialog.text = message
-            errorDialog.visible = true
-        }
-    }
-
     Flickable {
         id: flickable
         flickableDirection: Flickable.VerticalFlick
@@ -94,6 +75,13 @@ ApplicationWindow {
             background: null
 
             onLinkActivated: Qt.openUrlExternally(link)
+
+            Component.onCompleted: textDocument.source = "qrc:/texteditor.html"
+
+            textDocument.onError: function (message) {
+                errorDialog.text = message
+                errorDialog.visible = true
+            }
         }
 
         ScrollBar.vertical: ScrollBar {}

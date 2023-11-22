@@ -15,7 +15,6 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/texteditor")
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2 OPTIONAL_COMPONENTS Widgets)
 
 qt_add_executable(texteditorexample WIN32 MACOSX_BUNDLE
-    documenthandler.cpp
     texteditor.cpp
 )
 
