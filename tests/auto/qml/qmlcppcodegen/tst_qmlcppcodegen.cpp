@@ -163,6 +163,7 @@ private slots:
     void registerElimination();
     void registerPropagation();
     void revisions();
+    void scopeIdLookup();
     void scopeObjectDestruction();
     void scopeVsObject();
     void sequenceToIterable();
@@ -3443,6 +3444,16 @@ void tst_QmlCppCodegen::revisions()
 
     QCOMPARE(o->property("delayed").toBool(), true);
     QCOMPARE(o->property("gotten").toInt(), 5);
+}
+
+void tst_QmlCppCodegen::scopeIdLookup()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/scopeIdLookup.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QCOMPARE(object->property("objectName").toString(), u"outer"_s);
 }
 
 void tst_QmlCppCodegen::scopeObjectDestruction()

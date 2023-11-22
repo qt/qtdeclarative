@@ -1604,7 +1604,7 @@ TestCase {
         StackView {
             id: stackView
             anchors.fill: parent
-            initialItem: cppComponent
+            initialItem: stackView.cppComponent
 
             property Component cppComponent: ComponentCreator.createComponent("import QtQuick; Rectangle { color: \"navajowhite\" }")
         }

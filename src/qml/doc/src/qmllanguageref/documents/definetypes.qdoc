@@ -254,13 +254,23 @@ The same declaration can also be given for C++-defined types. See
 
 \section2 ComponentBehavior
 
-With this pragma you can restrict components defined in this file to only
-create objects within their original context. This holds for inline
-components as well as Component elements explicitly or implicitly created
-as properties. If a component is bound to its context, you can safely
-use IDs from the rest of the file within the component. Otherwise, the
-engine and the QML tooling cannot know in advance what type, if any, such
-IDs will resolve to at run time.
+You may have multiple components defined in the same QML file. The root
+scope of the QML file is a component, and you may additionally have
+elements of type \l QQmlComponent, explicitly or implicitly created
+as properties, or inline components. Those components are nested. Each
+of the inner components is within one specific outer component. Most of
+the time, IDs defined in an outer component are accessible within all
+its nested inner components. You can, however, create elements from a
+component in any a different context, with different IDs available.
+Doing so breaks the assumption that outer IDs are available. Therefore,
+the engine and the QML tooling cannot generally know in advance what
+type, if any, such IDs will resolve to at run time.
+
+With the ComponentBehavior pragma you can restrict all inner components
+defined in a file to only create objects within their original context.
+If a component is bound to its context, you can safely use IDs from
+outer components in the same file within the component. QML tooling will
+then assume the outer IDs with their specific types to be available.
 
 In order to bind the components to their context specify the \c{Bound}
 argument:
@@ -269,8 +279,33 @@ argument:
 pragma ComponentBehavior: Bound
 \endqml
 
-The default is \c{Unbound}. You can also specify it explicitly. In a
-future version of Qt the default will change to \c{Bound}.
+This implies that, in case of name clashes, IDs defined outside a bound
+component override local properties of objects created from the
+component. Otherwise it wouldn't actually be safe to use the IDs since
+later versions of a module might add more properties to the component.
+If the component is not bound, local properties override IDs defined
+outside the component, but not IDs defined inside the component.
+
+The example below prints the \e r property of the ListView object with
+the id \e color, not the \e r property of the rectangle's color.
+
+\qml
+pragma ComponentBehavior: Bound
+import QtQuick
+
+ListView {
+    id: color
+    property int r: 12
+    model: 1
+    delegate: Rectangle {
+        Component.onCompleted: console.log(color.r)
+    }
+}
+\endqml
+
+The default value of \c ComponentBehavior is \c{Unbound}. You can also
+specify it explicitly. In a future version of Qt the default will change
+to \c{Bound}.
 
 Delegate components bound to their context don't receive their own
 private contexts on instantiation. This means that model data can only

@@ -213,6 +213,11 @@ public:
         return data->flags & CompiledData::Unit::ValueTypesAddressable;
     }
 
+    bool componentsAreBound() const
+    {
+        return data->flags & CompiledData::Unit::ComponentsBound;
+    }
+
     int objectCount() const { return qmlData->nObjects; }
     const CompiledObject *objectAt(int index) const
     {

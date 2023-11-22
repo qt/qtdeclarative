@@ -154,7 +154,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     } else {
         Q_ASSERT(subComponentIndex >= 0);
         if (flags & CreationFlags::InlineComponent) {
-            if (compilationUnit->unitData()->flags & QV4::CompiledData::Unit::ComponentsBound
+            if (compilationUnit->componentsAreBound()
                     && compilationUnit != parentContext->typeCompilationUnit()) {
                 recordError({}, tr("Cannot instantiate bound inline component in different file"));
                 phase = ObjectsCreated;
@@ -164,7 +164,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
             isComponentRoot = true;
         } else {
             Q_ASSERT(flags & CreationFlags::NormalObject);
-            if (compilationUnit->unitData()->flags & QV4::CompiledData::Unit::ComponentsBound
+            if (compilationUnit->componentsAreBound()
                     && sharedState->creationContext != parentContext) {
                 recordError({}, tr("Cannot instantiate bound component "
                                    "outside its creation context"));
