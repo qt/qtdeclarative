@@ -3529,36 +3529,42 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset
 
         for (auto regIt = conversions.constBegin(), regEnd = conversions.constEnd();
              regIt != regEnd; ++regIt) {
-            int registerIndex = regIt.key();
             const QQmlJSRegisterContent targetType = regIt.value().content;
-            if (!targetType.isValid())
+            if (!targetType.isValid() || !isTypeStorable(m_typeResolver, targetType.storedType()))
                 continue;
 
-            QQmlJSRegisterContent currentType;
-            QString currentVariable;
-            if (registerIndex == m_state.changedRegisterIndex()) {
-                currentType = m_state.changedRegister();
-                currentVariable = changedRegisterVariable();
-            } else {
-                auto it = m_state.registers.find(registerIndex);
-                if (it == m_state.registers.end())
-                    continue;
-                currentType = it.value().content;
-                currentVariable = consumedRegisterVariable(registerIndex);
-            }
-
-            // Actually == here. We want the jump code also for equal types
-            if (currentType == targetType
-                    || !isTypeStorable(m_typeResolver, targetType.storedType())) {
-                continue;
-            }
-
+            const int registerIndex = regIt.key();
             const auto variable = m_registerVariables.constFind(RegisterVariablesKey {
                     targetType.storedType()->internalName(),
                     registerIndex,
                     targetType.resultLookupIndex()
             });
-            if (variable == m_registerVariables.end() || variable->variableName == currentVariable)
+
+            if (variable == m_registerVariables.constEnd())
+                continue;
+
+            QQmlJSRegisterContent currentType;
+            QString currentVariable;
+            if (registerIndex == m_state.changedRegisterIndex()) {
+                currentVariable = changedRegisterVariable();
+                if (variable->variableName == currentVariable)
+                    continue;
+
+                currentType = m_state.changedRegister();
+                currentVariable = u"std::move("_s + currentVariable + u')';
+            } else {
+                const auto it = m_state.registers.find(registerIndex);
+                if (it == m_state.registers.end()
+                        || variable->variableName == registerVariable(registerIndex)) {
+                    continue;
+                }
+
+                currentType = it.value().content;
+                currentVariable = consumedRegisterVariable(registerIndex);
+            }
+
+            // Actually == here. We want the jump code also for equal types
+            if (currentType == targetType)
                 continue;
 
             conversionCode += variable->variableName;
@@ -4095,7 +4101,7 @@ QQmlJSCodeGenerator::AccumulatorConverter::~AccumulatorConverter()
     if (accumulatorVariableOut != generator->m_state.accumulatorVariableOut) {
         generator->m_body += accumulatorVariableOut + u" = "_s + generator->conversion(
                     generator->m_state.accumulatorOut(), accumulatorOut,
-                    generator->m_state.accumulatorVariableOut) + u";\n"_s;
+                    u"std::move("_s + generator->m_state.accumulatorVariableOut + u')') + u";\n"_s;
         generator->m_body += u"}\n"_s;
         generator->m_state.setRegister(Accumulator, accumulatorOut);
         generator->m_state.accumulatorVariableOut = accumulatorVariableOut;
