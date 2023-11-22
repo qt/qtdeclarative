@@ -143,7 +143,12 @@ bool Test262Runner::run()
     }
 
     if (threadPool)
-        threadPool->waitForDone();
+        while (!threadPool->waitForDone(10000)) {
+            if (!lcJsTest().isEnabled(QtDebugMsg)) {
+                // heartbeat, only needed when there is no other debug output
+                qDebug("test262: in progress...");
+            }
+        }
 
     const bool testsOk = report();
 
