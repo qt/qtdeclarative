@@ -30,7 +30,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlValueType : public QDynamicMetaObjectData
+class Q_QML_EXPORT QQmlValueType : public QDynamicMetaObjectData
 {
 public:
     QQmlValueType() = default;
@@ -60,7 +60,7 @@ private:
     QMetaObject *m_dynamicMetaObject = nullptr;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlGadgetPtrWrapper : public QObject
+class Q_QML_EXPORT QQmlGadgetPtrWrapper : public QObject
 {
     Q_OBJECT
 public:
@@ -103,7 +103,7 @@ private:
     void *m_gadgetPtr = nullptr;
 };
 
-struct Q_QML_PRIVATE_EXPORT QQmlPointFValueType
+struct Q_QML_EXPORT QQmlPointFValueType
 {
     QPointF v;
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
@@ -127,7 +127,7 @@ public:
     operator QPointF() const { return v; }
 };
 
-struct Q_QML_PRIVATE_EXPORT QQmlPointValueType
+struct Q_QML_EXPORT QQmlPointValueType
 {
     QPoint v;
     Q_PROPERTY(int x READ x WRITE setX FINAL)
@@ -151,7 +151,7 @@ public:
     operator QPoint() const { return v; }
 };
 
-struct Q_QML_PRIVATE_EXPORT QQmlSizeFValueType
+struct Q_QML_EXPORT QQmlSizeFValueType
 {
     QSizeF v;
     Q_PROPERTY(qreal width READ width WRITE setWidth FINAL)
@@ -175,7 +175,7 @@ public:
     operator QSizeF() const { return v; }
 };
 
-struct Q_QML_PRIVATE_EXPORT QQmlSizeValueType
+struct Q_QML_EXPORT QQmlSizeValueType
 {
     QSize v;
     Q_PROPERTY(int width READ width WRITE setWidth FINAL)
@@ -199,7 +199,7 @@ public:
     operator QSize() const { return v; }
 };
 
-struct Q_QML_PRIVATE_EXPORT QQmlRectFValueType
+struct Q_QML_EXPORT QQmlRectFValueType
 {
     QRectF v;
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
@@ -239,7 +239,7 @@ public:
     operator QRectF() const { return v; }
 };
 
-struct Q_QML_PRIVATE_EXPORT QQmlRectValueType
+struct Q_QML_EXPORT QQmlRectValueType
 {
     QRect v;
     Q_PROPERTY(int x READ x WRITE setX FINAL)
@@ -282,7 +282,7 @@ public:
 #if QT_CONFIG(easingcurve)
 namespace QQmlEasingEnums
 {
-Q_NAMESPACE_EXPORT(Q_QML_PRIVATE_EXPORT)
+Q_NAMESPACE_EXPORT(Q_QML_EXPORT)
 QML_NAMED_ELEMENT(Easing)
 QML_ADDED_IN_VERSION(2, 0)
 
@@ -317,7 +317,7 @@ enum Type {
 Q_ENUM_NS(Type)
 };
 
-struct Q_QML_PRIVATE_EXPORT QQmlEasingValueType
+struct Q_QML_EXPORT QQmlEasingValueType
 {
     QEasingCurve v;
     Q_GADGET

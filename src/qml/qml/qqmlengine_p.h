@@ -97,7 +97,7 @@ struct TriggerList : QPropertyChangeTrigger {
     TriggerList *next = nullptr;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlEnginePrivate : public QJSEnginePrivate
+class Q_QML_EXPORT QQmlEnginePrivate : public QJSEnginePrivate
 {
     Q_DECLARE_PUBLIC(QQmlEngine)
 public:
@@ -384,7 +384,7 @@ QQmlEnginePrivate *QQmlEnginePrivate::get(QV4::ExecutionEngine *e)
 }
 
 template<>
-Q_QML_PRIVATE_EXPORT QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type);
+Q_QML_EXPORT QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type);
 
 template<typename T>
 T QQmlEnginePrivate::singletonInstance(const QQmlType &type) {

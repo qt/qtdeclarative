@@ -98,7 +98,7 @@ private:
 };
 
 
-class Q_QML_PRIVATE_EXPORT QQmlInterceptorMetaObject : public QDynamicMetaObjectData
+class Q_QML_EXPORT QQmlInterceptorMetaObject : public QDynamicMetaObjectData
 {
 public:
     QQmlInterceptorMetaObject(QObject *obj, const QQmlPropertyCache::ConstPtr &cache);
@@ -173,7 +173,7 @@ inline QQmlInterceptorMetaObject *QQmlInterceptorMetaObject::get(QObject *obj)
 }
 
 class QQmlVMEMetaObjectEndpoint;
-class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QQmlInterceptorMetaObject
+class Q_QML_EXPORT QQmlVMEMetaObject : public QQmlInterceptorMetaObject
 {
 public:
     QQmlVMEMetaObject(QV4::ExecutionEngine *engine, QObject *obj,

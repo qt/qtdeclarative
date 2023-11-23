@@ -40,7 +40,7 @@ namespace QV4 {
 struct String;
 }
 
-class Q_QML_PRIVATE_EXPORT QQmlType
+class Q_QML_EXPORT QQmlType
 {
 public:
     QQmlType();
@@ -119,7 +119,7 @@ public:
 
     bool isInlineComponentType() const;
 
-    struct Q_QML_PRIVATE_EXPORT SingletonInstanceInfo final
+    struct Q_QML_EXPORT SingletonInstanceInfo final
         : public QQmlRefCounted<SingletonInstanceInfo>
     {
         using Ptr = QQmlRefPointer<SingletonInstanceInfo>;

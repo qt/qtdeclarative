@@ -229,7 +229,7 @@ Q_STATIC_ASSERT(sizeof(HeapItem) == Chunk::SlotSize);
 Q_STATIC_ASSERT(QT_POINTER_SIZE*8 == Chunk::Bits);
 Q_STATIC_ASSERT((1 << Chunk::BitShift) == Chunk::Bits);
 
-struct Q_QML_PRIVATE_EXPORT MarkStack {
+struct Q_QML_EXPORT MarkStack {
     MarkStack(ExecutionEngine *engine);
     ~MarkStack() { /* we drain manually */ }
 

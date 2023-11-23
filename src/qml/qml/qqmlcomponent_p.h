@@ -36,7 +36,7 @@ class QQmlComponent;
 class QQmlEngine;
 
 class QQmlComponentAttached;
-class Q_QML_PRIVATE_EXPORT QQmlComponentPrivate : public QObjectPrivate, public QQmlTypeData::TypeDataCallback
+class Q_QML_EXPORT QQmlComponentPrivate : public QObjectPrivate, public QQmlTypeData::TypeDataCallback
 {
     Q_DECLARE_PUBLIC(QQmlComponent)
 

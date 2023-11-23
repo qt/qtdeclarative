@@ -29,7 +29,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlContext;
-class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlJavaScriptExpression,
+class Q_QML_EXPORT QQmlBinding : public QQmlJavaScriptExpression,
                                          public QQmlAbstractBinding
 {
     friend class QQmlAbstractBinding;

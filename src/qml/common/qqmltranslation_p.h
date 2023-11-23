@@ -21,10 +21,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlTranslation
+class Q_QML_EXPORT QQmlTranslation
 {
 public:
-    class Q_QML_PRIVATE_EXPORT QsTrData
+    class Q_QML_EXPORT QsTrData
     {
         QByteArray context;
         QByteArray text;
@@ -39,7 +39,7 @@ public:
         QString idForQmlDebug() const;
     };
 
-    class Q_QML_PRIVATE_EXPORT QsTrIdData
+    class Q_QML_EXPORT QsTrIdData
     {
         QByteArray id;
         int number;

@@ -94,7 +94,7 @@ public:
     void walkCompositeSingletons(const std::function<void(const QQmlType &)> &callback) const;
 
 private:
-    static Q_QML_PRIVATE_EXPORT QQmlType findType(
+    static Q_QML_EXPORT QQmlType findType(
             const QList<QQmlTypePrivate *> *types, QTypeRevision version);
 
     const QString m_module;

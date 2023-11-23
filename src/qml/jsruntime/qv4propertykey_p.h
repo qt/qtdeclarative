@@ -97,11 +97,11 @@ public:
         return static_cast<StringOrSymbol *>(val.m());
     }
 
-    Q_QML_PRIVATE_EXPORT bool isString() const;
-    Q_QML_PRIVATE_EXPORT bool isSymbol() const;
+    Q_QML_EXPORT bool isString() const;
+    Q_QML_EXPORT bool isSymbol() const;
     bool isCanonicalNumericIndexString() const;
 
-    Q_QML_PRIVATE_EXPORT QString toQString() const;
+    Q_QML_EXPORT QString toQString() const;
     Heap::StringOrSymbol *toStringOrSymbol(ExecutionEngine *e);
     quint64 id() const { return val._val; }
     static PropertyKey fromId(quint64 id) {

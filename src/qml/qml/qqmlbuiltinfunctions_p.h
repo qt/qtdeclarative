@@ -226,7 +226,7 @@ struct ConsoleObject : Object
 
 };
 
-struct Q_QML_PRIVATE_EXPORT GlobalExtensions {
+struct Q_QML_EXPORT GlobalExtensions {
     static void init(Object *globalObject, QJSEngine::Extensions extensions);
 
 #if QT_CONFIG(translation)

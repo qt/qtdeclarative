@@ -90,7 +90,7 @@ static_assert(offsetof(CompilationUnitRuntimeData, runtimeRegularExpressions) ==
 static_assert(offsetof(CompilationUnitRuntimeData, runtimeClasses) == offsetof(CompilationUnitRuntimeData, runtimeRegularExpressions) + sizeof(const StaticValue *));
 static_assert(offsetof(CompilationUnitRuntimeData, imports) == offsetof(CompilationUnitRuntimeData, runtimeClasses) + sizeof(const StaticValue *));
 
-class Q_QML_PRIVATE_EXPORT ExecutableCompilationUnit final
+class Q_QML_EXPORT ExecutableCompilationUnit final
     : public CompilationUnitRuntimeData,
       public QQmlRefCounted<ExecutableCompilationUnit>
 {

@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct Sequence;
-struct Q_QML_PRIVATE_EXPORT SequencePrototype : public QV4::Object
+struct Q_QML_EXPORT SequencePrototype : public QV4::Object
 {
     V4_PROTOTYPE(arrayPrototype)
     void init();
@@ -83,7 +83,7 @@ private:
 
 }
 
-struct Q_QML_PRIVATE_EXPORT Sequence : public QV4::ReferenceObject
+struct Q_QML_EXPORT Sequence : public QV4::ReferenceObject
 {
     V4_OBJECT2(Sequence, QV4::ReferenceObject)
     Q_MANAGED_TYPE(V4Sequence)

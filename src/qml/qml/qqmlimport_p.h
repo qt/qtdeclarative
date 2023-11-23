@@ -115,7 +115,7 @@ public:
     }
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlImports final : public QQmlRefCounted<QQmlImports>
+class Q_QML_EXPORT QQmlImports final : public QQmlRefCounted<QQmlImports>
 {
     Q_DISABLE_COPY_MOVE(QQmlImports)
 public:
@@ -262,7 +262,7 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlImports::ImportFlags)
 
-class Q_QML_PRIVATE_EXPORT QQmlImportDatabase
+class Q_QML_EXPORT QQmlImportDatabase
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlImportDatabase)
 public:

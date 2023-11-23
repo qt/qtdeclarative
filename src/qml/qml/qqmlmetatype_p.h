@@ -30,7 +30,7 @@ class QQmlValueType;
 
 namespace QV4 { class ExecutableCompilationUnit; }
 
-class Q_QML_PRIVATE_EXPORT QQmlMetaType
+class Q_QML_EXPORT QQmlMetaType
 {
     friend class QQmlDesignerMetaObject;
 

@@ -23,7 +23,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlProperty;
-class Q_QML_PRIVATE_EXPORT QQmlPropertyValueInterceptor
+class Q_QML_EXPORT QQmlPropertyValueInterceptor
 {
 public:
     QQmlPropertyValueInterceptor();

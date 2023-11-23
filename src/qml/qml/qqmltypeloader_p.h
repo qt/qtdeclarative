@@ -38,14 +38,14 @@ class QQmlProfiler;
 class QQmlTypeLoaderThread;
 class QQmlEngine;
 
-class Q_QML_PRIVATE_EXPORT QQmlTypeLoader
+class Q_QML_EXPORT QQmlTypeLoader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeLoader)
 public:
     using ChecksumCache = QHash<quintptr, QByteArray>;
     enum Mode { PreferSynchronous, Asynchronous, Synchronous };
 
-    class Q_QML_PRIVATE_EXPORT Blob : public QQmlDataBlob
+    class Q_QML_EXPORT Blob : public QQmlDataBlob
     {
     public:
         Blob(const QUrl &url, QQmlDataBlob::Type type, QQmlTypeLoader *loader);

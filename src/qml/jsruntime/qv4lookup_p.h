@@ -31,7 +31,7 @@ namespace Heap {
 // Note: We cannot hide the copy ctor and assignment operator of this class because it needs to
 //       be trivially copyable. But you should never ever copy it. There are refcounted members
 //       in there.
-struct Q_QML_PRIVATE_EXPORT Lookup {
+struct Q_QML_EXPORT Lookup {
     union {
         ReturnedValue (*getter)(Lookup *l, ExecutionEngine *engine, const Value &object);
         ReturnedValue (*globalGetter)(Lookup *l, ExecutionEngine *engine);

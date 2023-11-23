@@ -24,7 +24,7 @@
 QT_BEGIN_NAMESPACE
 
 class QFileSelector;
-class Q_QML_PRIVATE_EXPORT QQmlApplicationEnginePrivate : public QQmlEnginePrivate
+class Q_QML_EXPORT QQmlApplicationEnginePrivate : public QQmlEnginePrivate
 {
     Q_DECLARE_PUBLIC(QQmlApplicationEngine)
 public:

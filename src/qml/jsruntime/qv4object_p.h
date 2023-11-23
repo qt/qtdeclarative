@@ -377,7 +377,7 @@ private:
     friend struct ObjectPrototype;
 };
 
-struct Q_QML_PRIVATE_EXPORT ObjectOwnPropertyKeyIterator : OwnPropertyKeyIterator
+struct Q_QML_EXPORT ObjectOwnPropertyKeyIterator : OwnPropertyKeyIterator
 {
     uint arrayIndex = 0;
     uint memberIndex = 0;

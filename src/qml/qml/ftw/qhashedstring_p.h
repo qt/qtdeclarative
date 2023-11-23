@@ -26,7 +26,7 @@
 QT_BEGIN_NAMESPACE
 
 class QHashedStringRef;
-class Q_QML_PRIVATE_EXPORT QHashedString : public QString
+class Q_QML_EXPORT QHashedString : public QString
 {
 public:
     inline QHashedString();
@@ -56,7 +56,7 @@ private:
 };
 
 class QHashedCStringRef;
-class Q_QML_PRIVATE_EXPORT QHashedStringRef
+class Q_QML_EXPORT QHashedStringRef
 {
 public:
     inline QHashedStringRef();
