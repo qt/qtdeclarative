@@ -34,7 +34,7 @@ class QQmlDelegateModel;
 class QQmlDelegateModelItem;
 class QQmlDelegateModelItemMetaType;
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlAdaptorModel : public QQmlGuard<QObject>
+class Q_QMLMODELS_EXPORT QQmlAdaptorModel : public QQmlGuard<QObject>
 {
 public:
     class Accessors
