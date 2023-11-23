@@ -16,6 +16,6 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <QtQuickEffects/private/qtquickeffectsexports_p.h>
+#include <QtQuickEffects/qtquickeffectsexports.h>
 
 #endif // QTQUICKEFFECTSGLOBAL_P_H
