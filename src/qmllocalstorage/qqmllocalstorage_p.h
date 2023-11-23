@@ -23,7 +23,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLLOCALSTORAGE_PRIVATE_EXPORT QQmlLocalStorage : public QObject
+class Q_QMLLOCALSTORAGE_EXPORT QQmlLocalStorage : public QObject
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(LocalStorage)

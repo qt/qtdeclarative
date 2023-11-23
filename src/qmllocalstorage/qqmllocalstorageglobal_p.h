@@ -16,6 +16,6 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <QtQmlLocalStorage/private/qtqmllocalstorageexports_p.h>
+#include <QtQmlLocalStorage/qtqmllocalstorageexports.h>
 
 #endif // QQMLLOCALSTORAGEGLOBAL_P_H
