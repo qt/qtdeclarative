@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickControlPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControl : public QQuickItem
+class Q_QUICKTEMPLATES2_EXPORT QQuickControl : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)

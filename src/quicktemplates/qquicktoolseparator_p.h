@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickToolSeparatorPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickToolSeparator : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickToolSeparator : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)

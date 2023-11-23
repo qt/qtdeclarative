@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QQuickSwipeViewAttached;
 class QQuickSwipeViewPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeView : public QQuickContainer
+class Q_QUICKTEMPLATES2_EXPORT QQuickSwipeView : public QQuickContainer
 {
     Q_OBJECT
     // 2.1 (Qt 5.8)
@@ -79,7 +79,7 @@ private:
 
 class QQuickSwipeViewAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeViewAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickSwipeViewAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)

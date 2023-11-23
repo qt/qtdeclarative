@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickIndicatorButtonPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickIndicatorButton : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickIndicatorButton : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)

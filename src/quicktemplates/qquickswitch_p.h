@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickSwitchPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwitch : public QQuickAbstractButton
+class Q_QUICKTEMPLATES2_EXPORT QQuickSwitch : public QQuickAbstractButton
 {
     Q_OBJECT
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)

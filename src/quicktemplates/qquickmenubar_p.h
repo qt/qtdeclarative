@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QQuickMenu;
 class QQuickMenuBarPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuBar : public QQuickContainer
+class Q_QUICKTEMPLATES2_EXPORT QQuickMenuBar : public QQuickContainer
 {
     Q_OBJECT
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)

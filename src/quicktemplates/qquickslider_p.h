@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickSliderPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSlider : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickSlider : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)

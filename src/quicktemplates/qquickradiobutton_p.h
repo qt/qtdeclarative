@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickRadioButtonPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRadioButton : public QQuickAbstractButton
+class Q_QUICKTEMPLATES2_EXPORT QQuickRadioButton : public QQuickAbstractButton
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(RadioButton)

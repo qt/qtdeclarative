@@ -27,9 +27,9 @@ class QString;
 class QObject;
 
 namespace QtQuickPrivate {
-    Q_QUICKTEMPLATES2_PRIVATE_EXPORT void beginDeferred(QObject *object, const QString &property, QQuickUntypedDeferredPointer *delegate, bool isOwnState);
-    Q_QUICKTEMPLATES2_PRIVATE_EXPORT void cancelDeferred(QObject *object, const QString &property);
-    Q_QUICKTEMPLATES2_PRIVATE_EXPORT void completeDeferred(QObject *object, const QString &property, QQuickUntypedDeferredPointer *delegate);
+    Q_QUICKTEMPLATES2_EXPORT void beginDeferred(QObject *object, const QString &property, QQuickUntypedDeferredPointer *delegate, bool isOwnState);
+    Q_QUICKTEMPLATES2_EXPORT void cancelDeferred(QObject *object, const QString &property);
+    Q_QUICKTEMPLATES2_EXPORT void completeDeferred(QObject *object, const QString &property, QQuickUntypedDeferredPointer *delegate);
 }
 
 template<typename T>
