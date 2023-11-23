@@ -480,11 +480,13 @@ QQuadPath::Element::CurvatureFlags QQuadPath::coordinateOrderOfElement(const QQu
     return pathContainsPoint ? Element::FillOnRight : Element::CurvatureFlags(0);
 }
 
-QQuadPath QQuadPath::fromPainterPath(const QPainterPath &path)
+QQuadPath QQuadPath::fromPainterPath(const QPainterPath &path, PathHints hints)
 {
     QQuadPath res;
     res.reserve(path.elementCount());
     res.setFillRule(path.fillRule());
+
+    const bool isQuadratic = hints & PathQuadratic;
 
     QPolygonF quads;
     QPointF sp;
@@ -503,12 +505,18 @@ QQuadPath QQuadPath::fromPainterPath(const QPainterPath &path)
             QPointF cp1 = ep;
             QPointF cp2(path.elementAt(++i));
             ep = path.elementAt(++i);
-            QBezier b = QBezier::fromPoints(sp, cp1, cp2, ep);
-            qt_toQuadratics(b, &quads);
-            for (int i = 1; i < quads.size(); i += 2) {
-                QVector2D cp(quads[i]);
-                QVector2D ep(quads[i + 1]);
-                res.quadTo(cp, ep);
+            if (isQuadratic) {
+                const qreal f = 3.0 / 2.0;
+                const QPointF cp = sp + f * (cp1 - sp);
+                res.quadTo(QVector2D(cp), QVector2D(ep));
+            } else {
+                QBezier b = QBezier::fromPoints(sp, cp1, cp2, ep);
+                qt_toQuadratics(b, &quads);
+                for (int i = 1; i < quads.size(); i += 2) {
+                    QVector2D cp(quads[i]);
+                    QVector2D ep(quads[i + 1]);
+                    res.quadTo(cp, ep);
+                }
             }
             break;
         }
@@ -519,6 +527,7 @@ QQuadPath QQuadPath::fromPainterPath(const QPainterPath &path)
         sp = ep;
     }
 
+    res.setPathHints(hints | PathQuadratic);
     return res;
 }
 
@@ -533,12 +542,16 @@ void QQuadPath::addCurvatureData()
     // can easily detect curvature of all subsequent elements in the subpath.
 
     static bool checkAnomaly = qEnvironmentVariableIntValue("QT_QUICKSHAPES_CHECK_ALL_CURVATURE") != 0;
+    const bool pathHasFillOnRight = testHint(PathFillOnRight);
 
     Element::CurvatureFlags flags = Element::CurvatureUndetermined;
     for (QQuadPath::Element &element : m_elements) {
         Q_ASSERT(element.childCount() == 0);
         if (element.isSubpathStart()) {
-            flags = coordinateOrderOfElement(element);
+            if (pathHasFillOnRight && !checkAnomaly)
+                flags = Element::FillOnRight;
+            else
+                flags = coordinateOrderOfElement(element);
         } else if (checkAnomaly) {
             Element::CurvatureFlags newFlags = coordinateOrderOfElement(element);
             if (flags != newFlags) {
@@ -682,6 +695,8 @@ QQuadPath QQuadPath::flattened() const
     QQuadPath res;
     res.reserve(elementCountRecursive());
     iterateElements([&](const QQuadPath::Element &element) { res.m_elements.append(element); });
+    res.setPathHints(pathHints());
+    res.setFillRule(fillRule());
     return res;
 }
 
@@ -849,6 +864,8 @@ QQuadPath QQuadPath::dashed(qreal lineWidth, const QList<qreal> &dashPattern, qr
             }
         }
     }
+    res.setFillRule(fillRule());
+    res.setPathHints(pathHints());
     return res;
 }
 

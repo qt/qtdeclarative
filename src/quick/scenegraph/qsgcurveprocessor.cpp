@@ -886,8 +886,10 @@ static void handleOverlap(QQuadPath &path, int e1, const QVector2D vertex, int r
 
 }
 
-void QSGCurveProcessor::solveOverlaps(QQuadPath &path)
+void QSGCurveProcessor::solveOverlaps(QQuadPath &path, OverlapSolveMode mode)
 {
+    if (path.testHint(QQuadPath::PathNonOverlappingControlPointTriangles))
+        return;
     for (int i = 0; i < path.elementCount(); i++) {
         auto &element = path.elementAt(i);
         // only concave curve overlap is problematic, as long as we don't allow self-intersecting curves
@@ -904,7 +906,7 @@ void QSGCurveProcessor::solveOverlaps(QQuadPath &path)
         }
     }
 
-    static const int handleConcaveJoint = qEnvironmentVariableIntValue("QT_QUICKSHAPES_WIP_CONCAVE_JOINT");
+    const bool handleConcaveJoint = mode == FullOverlapSolve;
     if (handleConcaveJoint) {
         // Note that the joint between two non-concave elements can also be concave, so we have to
         // test all convex elements to see if there is a vertex in any of them. We could do it the other way
@@ -928,6 +930,7 @@ void QSGCurveProcessor::solveOverlaps(QQuadPath &path)
             }
         }
     }
+    path.setHint(QQuadPath::PathNonOverlappingControlPointTriangles);
 }
 
 // A fast algorithm to find path elements that might overlap. We will only check the overlap of the
@@ -1002,6 +1005,9 @@ QList<QPair<int, int>> QSGCurveProcessor::findOverlappingCandidates(const QQuadP
 // Returns true if the path was changed
 bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
 {
+    if (path.testHint(QQuadPath::PathNonIntersecting))
+        return false;
+
     struct IntersectionData { int e1; int e2; float t1; float t2; bool in1 = false, in2 = false, out1 = false, out2 = false; };
     QList<IntersectionData> intersections;
 
@@ -1346,6 +1352,7 @@ bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
                 qCDebug(lcSGCurveIntersectionSolver) << "All subpaths handled. Looking for unhandled intersections.";
                 if (intersections.isEmpty()) {
                     qCDebug(lcSGCurveIntersectionSolver) << "All intersections handled. I am done.";
+                    fixedPath.setPathHints(path.pathHints() | QQuadPath::PathNonIntersecting);
                     path = fixedPath;
                     return true;
                 }
@@ -1414,6 +1421,7 @@ bool QSGCurveProcessor::solveIntersections(QQuadPath &path, bool alwaysReorder)
     // Check the totalIterations as a sanity check. Should never be triggered.
 
     qWarning() << "Could not solve intersections of path. This should not happen. Returning the path unchanged.";
+
     return false;
 }
 

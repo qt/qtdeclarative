@@ -146,6 +146,9 @@ void QQuickShapeCurveRenderer::setPath(int index, const QQuickPath *path)
     auto &pathData = m_paths[index];
     pathData.originalPath = path->path();
     pathData.m_dirty |= PathDirty;
+    const auto *shapePath = qobject_cast<const QQuickShapePath *>(path);
+    if (shapePath)
+        pathData.pathHints = shapePath->pathHints();
 }
 
 void QQuickShapeCurveRenderer::setStrokeColor(int index, const QColor &color)
@@ -417,14 +420,16 @@ void QQuickShapeCurveRenderer::processPath(PathData *pathData)
     static const bool doIntersetionSolving = !qEnvironmentVariableIntValue("QT_QUICKSHAPES_DISABLE_INTERSECTION_SOLVER");
     static const bool useTriangulatingStroker = qEnvironmentVariableIntValue("QT_QUICKSHAPES_TRIANGULATING_STROKER");
     static const bool simplifyPath = qEnvironmentVariableIntValue("QT_QUICKSHAPES_SIMPLIFY_PATHS");
+    static const QSGCurveProcessor::OverlapSolveMode overlapMode = qEnvironmentVariableIntValue("QT_QUICKSHAPES_WIP_CONCAVE_JOINT")
+            ? QSGCurveProcessor::FullOverlapSolve : QSGCurveProcessor::SkipConcaveJoinsSolve;
 
     int &dirtyFlags = pathData->m_dirty;
 
     if (dirtyFlags & PathDirty) {
         if (simplifyPath)
-            pathData->path = QQuadPath::fromPainterPath(pathData->originalPath.simplified());
+            pathData->path = QQuadPath::fromPainterPath(pathData->originalPath.simplified(), QQuadPath::PathLinear | QQuadPath::PathNonIntersecting | QQuadPath::PathNonOverlappingControlPointTriangles);
         else
-            pathData->path = QQuadPath::fromPainterPath(pathData->originalPath);
+            pathData->path = QQuadPath::fromPainterPath(pathData->originalPath, QQuadPath::PathHints(int(pathData->pathHints)));
         pathData->path.setFillRule(pathData->fillRule);
         pathData->fillPath = {};
         dirtyFlags |= (FillDirty | StrokeDirty);
@@ -438,7 +443,7 @@ void QQuickShapeCurveRenderer::processPath(PathData *pathData)
                     QSGCurveProcessor::solveIntersections(pathData->fillPath);
                 pathData->fillPath.addCurvatureData();
                 if (doOverlapSolving)
-                    QSGCurveProcessor::solveOverlaps(pathData->fillPath);
+                    QSGCurveProcessor::solveOverlaps(pathData->fillPath, overlapMode);
             }
             pathData->fillNodes = addFillNodes(*pathData);
             dirtyFlags |= StrokeDirty;

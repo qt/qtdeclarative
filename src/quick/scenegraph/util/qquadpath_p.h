@@ -27,6 +27,18 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_PRIVATE_EXPORT QQuadPath
 {
 public:
+    // This is a copy of the flags in QQuickShapePath ### TODO: use a common definition
+    enum PathHint : quint8 {
+        PathLinear = 0x1,
+        PathQuadratic = 0x2,
+        PathConvex = 0x4,
+        PathFillOnRight = 0x8,
+        PathSolid = 0x10,
+        PathNonIntersecting = 0x20,
+        PathNonOverlappingControlPointTriangles = 0x40
+    };
+    Q_DECLARE_FLAGS(PathHints, PathHint)
+
     class Element
     {
     public:
@@ -168,7 +180,7 @@ public:
         quint8 m_isSubpathEnd : 1;
         quint8 m_isLine : 1;
         friend class QQuadPath;
-        friend QDebug operator<<(QDebug, const QQuadPath::Element &);
+        friend Q_QUICK_EXPORT QDebug operator<<(QDebug, const QQuadPath::Element &);
     };
 
     void moveTo(const QVector2D &to)
@@ -212,7 +224,7 @@ public:
     bool isEmpty() const { return m_elements.size() == 0; }
     int elementCountRecursive() const;
 
-    static QQuadPath fromPainterPath(const QPainterPath &path);
+    static QQuadPath fromPainterPath(const QPainterPath &path, PathHints hints = {});
     QPainterPath toPainterPath() const;
     QString asSvgString() const;
 
@@ -277,11 +289,33 @@ public:
     static bool isPointOnLine(const QVector2D &p, const QVector2D &sp, const QVector2D &ep);
     static bool isPointNearLine(const QVector2D &p, const QVector2D &sp, const QVector2D &ep);
 
+    bool testHint(PathHint hint) const
+    {
+        return m_hints.testFlag(hint);
+    }
+
+    void setHint(PathHint hint, bool on = true)
+    {
+        m_hints.setFlag(hint, on);
+    }
+
+    PathHints pathHints() const
+    {
+        return m_hints;
+    }
+
+    void setPathHints(PathHints newHints)
+    {
+        m_hints = newHints;
+    }
+
 private:
     void addElement(const QVector2D &control, const QVector2D &to, bool isLine = false);
     Element::CurvatureFlags coordinateOrderOfElement(const Element &element) const;
 
-    friend QDebug operator<<(QDebug, const QQuadPath &);
+    friend Q_QUICK_EXPORT QDebug operator<<(QDebug, const QQuadPath &);
+
+    PathHints m_hints;
     bool subPathToStart = true;
     Qt::FillRule m_fillRule = Qt::OddEvenFill;
     QVector2D currentPoint;
@@ -289,8 +323,10 @@ private:
     QList<Element> m_childElements;
 };
 
-QDebug operator<<(QDebug, const QQuadPath::Element &);
-QDebug operator<<(QDebug, const QQuadPath &);
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuadPath::PathHints);
+
+Q_QUICK_EXPORT QDebug operator<<(QDebug, const QQuadPath::Element &);
+Q_QUICK_EXPORT QDebug operator<<(QDebug, const QQuadPath &);
 
 QT_END_NAMESPACE
 
