@@ -50,7 +50,7 @@ by referring to \c myTextInput.text. Now, both items will display the same
 text:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 Column {
     width: 200; height: 200
@@ -200,7 +200,7 @@ definition becomes:
 An example of property value initialization follows:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 Rectangle {
     color: "red"
@@ -222,7 +222,7 @@ assignment operator, as shown below:
 An example of imperative value assignment follows:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 Rectangle {
     id: rect
@@ -262,7 +262,7 @@ also known as \l{Property Binding}{property bindings}.
 Here is an example that shows both kinds of values being assigned to properties:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 Rectangle {
     // both of these are static value assignments on initialization
@@ -327,7 +327,7 @@ used to hold a list of \l State type objects. The code below initializes the
 value of this property to a list of three \l State objects:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 Item {
     states: [
@@ -341,7 +341,7 @@ Item {
 If the list contains a single item, the square brackets may be omitted:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 Item {
     states: State { name: "running" }
@@ -352,20 +352,20 @@ A \l list type property may be specified in an object declaration with the
 following syntax:
 
 \code
-    [default] property list<<objectType>> propertyName
+    [default] property list<<ObjectType>> propertyName
 \endcode
 
 and, like other property declarations, a property initialization may be
 combined with the property declaration with the following syntax:
 
 \code
-    [default] property list<<objectType>> propertyName: <value>
+    [default] property list<<ObjectType>> propertyName: <value>
 \endcode
 
 An example of list property declaration follows:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 Rectangle {
     // declaration without initialization
@@ -470,7 +470,7 @@ which is connected to the \c text object of the \l Text child:
 
 \qml
 // Button.qml
-import QtQuick 2.0
+import QtQuick
 
 Rectangle {
     property alias buttonText: textItem.text
@@ -585,12 +585,12 @@ property \c someText:
 
 \qml
 // MyLabel.qml
-import QtQuick 2.0
+import QtQuick
 
 Text {
     default property var someText
 
-    text: "Hello, " + someText.text
+    text: `Hello, ${someText.text}`
 }
 \endqml
 
@@ -630,7 +630,7 @@ Item {
 
     Item {
         id: inner
-     }
+    }
 }
 \endqml
 
@@ -645,8 +645,8 @@ to undefined ordering of the elements in the list.
 \qml
 Item {
     // Use either implicit or explicit assignement to the default list property but not both!
-    Rectangle { width: 40 }         // implicit
-    data: [Rectangle{ width: 100 }] // explicit
+    Rectangle { width: 40 }            // implicit
+    data: [ Rectangle { width: 100 } ] // explicit
 }
 \endqml
 
@@ -767,7 +767,7 @@ For example, the \e onClicked signal handler below is declared within the
 clicked, causing a console message to be printed:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 Item {
     width: 100; height: 100
@@ -800,7 +800,7 @@ may be hidden and become inaccessible.)
 Here are three examples of signal declarations:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 Item {
     signal clicked
@@ -864,7 +864,7 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         onReleased: root.deactivated()
-        onPressed: (mouse)=> root.activated(mouse.x, mouse.y)
+        onPressed: mouse => root.activated(mouse.x, mouse.y)
     }
 }
 \endqml
@@ -877,7 +877,9 @@ provided by the client:
 // myapplication.qml
 SquareButton {
     onDeactivated: console.log("Deactivated!")
-    onActivated: (xPosition, yPosition)=> console.log("Activated at " + xPosition + "," + yPosition)
+    onActivated: (xPosition, yPosition) => {
+        console.log(`Activated at {xPosition}, ${yPosition}`)
+    }
 }
 \endqml
 
@@ -899,12 +901,12 @@ implicitly available through the fact that \l TextInput has a
 \c onTextChanged signal handler to be called whenever this property changes:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 TextInput {
     text: "Change this!"
 
-    onTextChanged: console.log("Text has changed to:", text)
+    onTextChanged: console.log(`Text has changed to: ${text}`)
 }
 \endqml
 
@@ -944,11 +946,11 @@ Below is a \l Rectangle with a \c calculateHeight() method that is called when
 assigning the \c height value:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 Rectangle {
     id: rect
 
-    function calculateHeight() : real {
+    function calculateHeight(): real {
         return rect.width / 2;
     }
 
@@ -963,14 +965,14 @@ can then refer to the received \c newX and \c newY parameters to reposition the
 text:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 Item {
     width: 200; height: 200
 
     MouseArea {
         anchors.fill: parent
-        onClicked: (mouse)=> label.moveTo(mouse.x, mouse.y)
+        onClicked: mouse => label.moveTo(mouse.x, mouse.y)
     }
 
     Text {
@@ -1015,7 +1017,7 @@ ListView. This can be used by each individual delegate object to determine
 whether it is the currently selected item in the view:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 ListView {
     width: 240; height: 320
@@ -1039,15 +1041,16 @@ been fully created, its \c Component.onCompleted signal handler will
 automatically be invoked to populate the model:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 ListView {
     width: 240; height: 320
     model: ListModel {
         id: listModel
         Component.onCompleted: {
-            for (var i = 0; i < 10; i++)
-                listModel.append({"Name": "Item " + i})
+            for (let i = 0; i < 10; i++) {
+                append({ Name: `Item ${i}` })
+            }
         }
     }
     delegate: Text { text: index }
@@ -1072,7 +1075,7 @@ attached properties. This time, the delegate is an \l Item and the colored
 \l Rectangle is a child of that item:
 
 \qml
-import QtQuick 2.0
+import QtQuick
 
 ListView {
     width: 240; height: 320
@@ -1082,7 +1085,7 @@ ListView {
 
         Rectangle {
             width: 100; height: 30
-            color: ListView.isCurrentItem ? "red" : "yellow"    // WRONG! This won't work.
+            color: ListView.isCurrentItem ? "red" : "yellow" // WRONG! This won't work.
         }
     }
 }
@@ -1097,14 +1100,13 @@ it cannot access the \c isCurrentItem attached property as
 
 \qml
 ListView {
-    //....
     delegate: Item {
         id: delegateItem
         width: 100; height: 30
 
         Rectangle {
             width: 100; height: 30
-            color: delegateItem.ListView.isCurrentItem ? "red" : "yellow"   // correct
+            color: delegateItem.ListView.isCurrentItem ? "red" : "yellow" // correct
         }
     }
 }
@@ -1141,8 +1143,8 @@ Text {
 
     property int textType: MyText.TextType.Normal
 
-    font.bold: textType == MyText.TextType.Heading
-    font.pixelSize: textType == MyText.TextType.Heading ? 24 : 12
+    font.bold: textType === MyText.TextType.Heading
+    font.pixelSize: textType === MyText.TextType.Heading ? 24 : 12
 }
 \endqml
 

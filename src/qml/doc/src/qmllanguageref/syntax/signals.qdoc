@@ -97,6 +97,7 @@ import QtQuick
 
 Item {
     id: myitem
+
     signal errorOccurred(message: string, line: int, column: int)
 }
 \endqml
@@ -113,7 +114,7 @@ signal.
 If you do not need to handle all parameters, it is possible to omit trailing ones:
 \qml
 Status {
-    onErrorOccurred: function (message) { console.log(message) }
+    onErrorOccurred: message => console.log(message)
 }
 \endqml
 
@@ -247,7 +248,7 @@ Now any objects of the \c SquareButton can connect to the \c activated signal us
 \qml
 // myapplication.qml
 SquareButton {
-    onActivated: (xPosition, yPosition)=> console.log("Activated at " + xPosition + "," + yPosition)
+    onActivated: (xPosition, yPosition) => console.log(`Activated at {xPosition}, ${yPosition}`)
 }
 \endqml
 
@@ -279,14 +280,14 @@ Rectangle {
         relay.messageReceived("Tom", "Happy Birthday")
     }
 
-    function sendToPost(person, notice) {
-        console.log("Sending to post: " + person + ", " + notice)
+    function sendToPost(person: string, notice: string) {
+        console.log(`Sending to post: ${person}, ${notice}`)
     }
-    function sendToTelegraph(person, notice) {
-        console.log("Sending to telegraph: " + person + ", " + notice)
+    function sendToTelegraph(person: string, notice: string) {
+        console.log(`Sending to telegraph: ${person}, ${notice}`)
     }
-    function sendToEmail(person, notice) {
-        console.log("Sending to email: " + person + ", " + notice)
+    function sendToEmail(person: string, notice: string) {
+        console.log(`Sending to email: ${person}, ${notice}`)
     }
 }
 \endqml
@@ -362,7 +363,7 @@ Window {
         property color globalColor: "red"
 
         Button {
-            text: "change global color"
+            text: "Change global color"
             onPressed: {
                 item.globalColor = item.globalColor === Qt.color("red") ? "green" : "red"
             }
@@ -370,7 +371,7 @@ Window {
 
         Button {
             x: 150
-            text: "clear rectangles"
+            text: "Clear rectangles"
             onPressed: repeater.model = 0
         }
 
@@ -387,7 +388,7 @@ Window {
                 Component.onCompleted: {
                     if (index % 2 === 0) {
                         item.globalColorChanged.connect(() => {
-                            rect.color = item.globalColor
+                            color = item.globalColor
                         })
                     }
                 }
