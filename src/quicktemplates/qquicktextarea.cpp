@@ -634,27 +634,6 @@ void QQuickTextArea::setPlaceholderTextColor(const QColor &color)
     emit placeholderTextColorChanged();
 }
 
-/*!
-    \qmlproperty enumeration QtQuick.Controls::TextArea::focusReason
-
-    \include qquickcontrol-focusreason.qdocinc
-*/
-Qt::FocusReason QQuickTextArea::focusReason() const
-{
-    Q_D(const QQuickTextArea);
-    return d->focusReason;
-}
-
-void QQuickTextArea::setFocusReason(Qt::FocusReason reason)
-{
-    Q_D(QQuickTextArea);
-    if (d->focusReason == reason)
-        return;
-
-    d->focusReason = reason;
-    emit focusReasonChanged();
-}
-
 bool QQuickTextArea::contains(const QPointF &point) const
 {
     Q_D(const QQuickTextArea);

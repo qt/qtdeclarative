@@ -122,7 +122,6 @@ public:
     QQuickDeferredPointer<QQuickItem> background;
     QString placeholder;
     QColor placeholderColor;
-    Qt::FocusReason focusReason = Qt::OtherFocusReason;
     QQuickPressHandler pressHandler;
     QQuickFlickable *flickable = nullptr;
 };

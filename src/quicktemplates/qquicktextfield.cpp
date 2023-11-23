@@ -521,27 +521,6 @@ void QQuickTextField::setPlaceholderTextColor(const QColor &color)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick.Controls::TextField::focusReason
-
-    \include qquickcontrol-focusreason.qdocinc
-*/
-Qt::FocusReason QQuickTextField::focusReason() const
-{
-    Q_D(const QQuickTextField);
-    return d->focusReason;
-}
-
-void QQuickTextField::setFocusReason(Qt::FocusReason reason)
-{
-    Q_D(QQuickTextField);
-    if (d->focusReason == reason)
-        return;
-
-    d->focusReason = reason;
-    emit focusReasonChanged();
-}
-
-/*!
     \since QtQuick.Controls 2.1 (Qt 5.8)
     \qmlproperty bool QtQuick.Controls::TextField::hovered
     \readonly
