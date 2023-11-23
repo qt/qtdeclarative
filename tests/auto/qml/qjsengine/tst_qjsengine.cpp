@@ -954,7 +954,7 @@ void tst_QJSEngine::newQObject_ownership()
             QJSValue v = eng.newQObject(ptr);
         }
         QObject *before = ptr;
-        eng.collectGarbage();
+        gc(*eng.handle(), GCFlags::DontSendPostedEvents);
         QCOMPARE(ptr.data(), before);
         delete ptr;
     }
@@ -972,7 +972,7 @@ void tst_QJSEngine::newQObject_ownership()
         {
             QJSValue v = eng.newQObject(ptr);
         }
-        eng.collectGarbage();
+        gc(*eng.handle(), GCFlags::DontSendPostedEvents);
         // no parent, so it should be like ScriptOwnership
         if (ptr)
             QGuiApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
@@ -985,7 +985,7 @@ void tst_QJSEngine::newQObject_ownership()
         {
             QJSValue v = eng.newQObject(child);
         }
-        eng.collectGarbage();
+        gc(*eng.handle(), GCFlags::DontSendPostedEvents);
         // has parent, so it should be like QtOwnership
         QVERIFY(child != nullptr);
     }
@@ -996,7 +996,7 @@ void tst_QJSEngine::newQObject_ownership()
             QQmlEngine::setObjectOwnership(ptr.data(), QQmlEngine::CppOwnership);
             QJSValue v = eng.newQObject(ptr);
         }
-        eng.collectGarbage();
+        gc(*eng.handle(), GCFlags::DontSendPostedEvents);
         if (ptr)
             QGuiApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
         QVERIFY(!ptr.isNull());
@@ -6237,7 +6237,7 @@ public:
     {
         QJSValueList args;
         args << url << host;
-        engine->collectGarbage();
+        gc(*engine->handle(), GCFlags::DontSendPostedEvents);
         QJSValue callResult = jsFindProxyForURL.call(args);
         return callResult.toString().trimmed();
     }
