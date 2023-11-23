@@ -25,7 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickDialogImplFactory
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickDialogImplFactory
 {
 public:
     static std::unique_ptr<QPlatformDialogHelper> createPlatformDialogHelper(QQuickDialogType type, QObject *parent);
