@@ -98,6 +98,7 @@ private:
         QPen pen;
         bool validPenWidth = true;
         int m_dirty = 0;
+        QQuickShapePath::PathHints pathHints;
 
         QPainterPath originalPath;
         QQuadPath path;
