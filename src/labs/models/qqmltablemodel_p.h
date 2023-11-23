@@ -30,7 +30,7 @@ QT_REQUIRE_CONFIG(qml_table_model);
 
 QT_BEGIN_NAMESPACE
 
-class Q_LABSQMLMODELS_PRIVATE_EXPORT QQmlTableModel : public QAbstractTableModel, public QQmlParserStatus
+class Q_LABSQMLMODELS_EXPORT QQmlTableModel : public QAbstractTableModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_PROPERTY(int columnCount READ columnCount NOTIFY columnCountChanged FINAL)
