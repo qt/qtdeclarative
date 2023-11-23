@@ -24,6 +24,10 @@ qt_add_qml_module(responsivelayoutsexample
     URI responsivelayouts
     QML_FILES
         "responsivelayouts.qml"
+    RESOURCES
+        "icons/grid.svg"
+        "icons/text.svg"
+        "icons/settings.svg"
 )
 
 target_link_libraries(responsivelayoutsexample PRIVATE
