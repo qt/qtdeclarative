@@ -17,6 +17,6 @@
 // We mean it.
 //
 
-#include <QtLabsSettings/private/qtlabssettingsexports_p.h>
+#include <QtLabsSettings/qtlabssettingsexports.h>
 
 #endif // QTLABSSETTINGSGLOBAL_P_H
