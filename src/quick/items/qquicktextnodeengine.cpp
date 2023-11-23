@@ -694,6 +694,9 @@ void QQuickTextNodeEngine::mergeProcessedNodes(QList<BinaryTreeNode *> *regularN
         BinaryTreeNode *node = m_processedNodes.data() + i;
 
         if (node->image.isNull()) {
+            if (node->glyphRun.isEmpty())
+                continue;
+
             BinaryTreeNodeKey key(node);
 
             QList<BinaryTreeNode *> &nodes = map[key];
