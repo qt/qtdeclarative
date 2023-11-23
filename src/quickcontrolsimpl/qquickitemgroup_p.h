@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS2IMPL_PRIVATE_EXPORT QQuickItemGroup : public QQuickImplicitSizeItem, protected QQuickItemChangeListener
+class Q_QUICKCONTROLS2IMPL_EXPORT QQuickItemGroup : public QQuickImplicitSizeItem, protected QQuickItemChangeListener
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(ItemGroup)

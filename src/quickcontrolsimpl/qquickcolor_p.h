@@ -22,7 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS2IMPL_PRIVATE_EXPORT QQuickColor : public QObject
+class Q_QUICKCONTROLS2IMPL_EXPORT QQuickColor : public QObject
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(Color)
