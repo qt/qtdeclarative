@@ -24,7 +24,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTapHandler : public QQuickSinglePointHandler
+class Q_QUICK_EXPORT QQuickTapHandler : public QQuickSinglePointHandler
 {
     Q_OBJECT
     Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)

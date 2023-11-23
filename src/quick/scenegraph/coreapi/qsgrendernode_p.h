@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGRenderNodePrivate
+class Q_QUICK_EXPORT QSGRenderNodePrivate
 {
 public:
     QSGRenderNodePrivate();

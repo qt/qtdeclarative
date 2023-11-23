@@ -31,7 +31,7 @@ class QQuickTableViewAttached;
 class QQuickTableViewPrivate;
 class QItemSelectionModel;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable, public QQmlFinalizerHook
+class Q_QUICK_EXPORT QQuickTableView : public QQuickFlickable, public QQmlFinalizerHook
 {
     Q_OBJECT
     Q_INTERFACES(QQmlFinalizerHook)
@@ -286,7 +286,7 @@ private:
     qreal maxYExtent() const override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTableViewAttached : public QObject
+class Q_QUICK_EXPORT QQuickTableViewAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickTableView *view READ view NOTIFY viewChanged FINAL)

@@ -22,7 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultNinePatchNode : public QSGNinePatchNode
+class Q_QUICK_EXPORT QSGDefaultNinePatchNode : public QSGNinePatchNode
 {
 public:
     QSGDefaultNinePatchNode();

@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QQuickItem;
 class QQuickPointerHandler;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickDragAxis : public QObject
+class Q_QUICK_EXPORT QQuickDragAxis : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qreal minimum READ minimum WRITE setMinimum NOTIFY minimumChanged FINAL)

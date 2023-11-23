@@ -22,7 +22,7 @@
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_DEBUG
-Q_QUICK_PRIVATE_EXPORT bool qsg_test_and_clear_material_failure();
+Q_QUICK_EXPORT bool qsg_test_and_clear_material_failure();
 #endif
 
 int qt_sg_envInt(const char *name, int defaultValue);

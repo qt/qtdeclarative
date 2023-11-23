@@ -20,11 +20,11 @@
 #include <QtCore/qdebug.h>
 #include <QtGui/qvector2d.h>
 #include <QtGui/qpainterpath.h>
-#include <QtQuick/private/qtquickexports_p.h>
+#include <QtQuick/qtquickexports.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuadPath
+class Q_QUICK_EXPORT QQuadPath
 {
 public:
     class Element

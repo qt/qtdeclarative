@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickMultiPointHandlerPrivate;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickMultiPointHandler : public QQuickPointerDeviceHandler
+class Q_QUICK_EXPORT QQuickMultiPointHandler : public QQuickPointerDeviceHandler
 {
     Q_OBJECT
     Q_PROPERTY(int minimumPointCount READ minimumPointCount WRITE setMinimumPointCount NOTIFY minimumPointCountChanged FINAL)

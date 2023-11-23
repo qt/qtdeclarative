@@ -31,13 +31,13 @@ QT_REQUIRE_CONFIG(quick_shadereffect);
 
 QT_BEGIN_NAMESPACE
 
-Q_QUICK_PRIVATE_EXPORT const char *qtPositionAttributeName();
-Q_QUICK_PRIVATE_EXPORT const char *qtTexCoordAttributeName();
+Q_QUICK_EXPORT const char *qtPositionAttributeName();
+Q_QUICK_EXPORT const char *qtTexCoordAttributeName();
 
 class QSGGeometry;
 class QRectF;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectMesh : public QObject
+class Q_QUICK_EXPORT QQuickShaderEffectMesh : public QObject
 {
     Q_OBJECT
 
@@ -62,7 +62,7 @@ protected:
     QQuickShaderEffectMesh(QObjectPrivate &dd, QObject *parent = nullptr);
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickGridMesh : public QQuickShaderEffectMesh
+class Q_QUICK_EXPORT QQuickGridMesh : public QQuickShaderEffectMesh
 {
     Q_OBJECT
     Q_PROPERTY(QSize resolution READ resolution WRITE setResolution NOTIFY resolutionChanged FINAL)

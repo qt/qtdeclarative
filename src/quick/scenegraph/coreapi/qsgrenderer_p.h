@@ -29,10 +29,10 @@ class QRhiCommandBuffer;
 class QRhiRenderPassDescriptor;
 class QRhiResourceUpdateBatch;
 
-Q_QUICK_PRIVATE_EXPORT bool qsg_test_and_clear_fatal_render_error();
-Q_QUICK_PRIVATE_EXPORT void qsg_set_fatal_renderer_error();
+Q_QUICK_EXPORT bool qsg_test_and_clear_fatal_render_error();
+Q_QUICK_EXPORT void qsg_set_fatal_renderer_error();
 
-class Q_QUICK_PRIVATE_EXPORT QSGRenderTarget
+class Q_QUICK_EXPORT QSGRenderTarget
 {
 public:
     QSGRenderTarget() { }
@@ -55,7 +55,7 @@ public:
     QPaintDevice *paintDevice = nullptr;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGRenderer : public QSGAbstractRenderer
+class Q_QUICK_EXPORT QSGRenderer : public QSGAbstractRenderer
 {
 public:
     QSGRenderer(QSGRenderContext *context);
@@ -154,7 +154,7 @@ QSGMaterialShader::RenderState QSGRenderer::state(QSGMaterialShader::RenderState
 }
 
 
-class Q_QUICK_PRIVATE_EXPORT QSGNodeDumper : public QSGNodeVisitor {
+class Q_QUICK_EXPORT QSGNodeDumper : public QSGNodeVisitor {
 
 public:
     static void dump(QSGNode *n);

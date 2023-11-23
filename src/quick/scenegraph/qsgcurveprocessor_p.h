@@ -15,12 +15,12 @@
 // We mean it.
 //
 
-#include <QtQuick/private/qtquickexports_p.h>
+#include <QtQuick/qtquickexports.h>
 #include "util/qquadpath_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGCurveProcessor
+class Q_QUICK_EXPORT QSGCurveProcessor
 {
 public:
     typedef std::function<QVector3D(QVector2D)> uvForPointCallback;

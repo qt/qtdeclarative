@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickLoaderPrivate;
 class QQmlV4Function;
-class Q_QUICK_PRIVATE_EXPORT QQuickLoader : public QQuickImplicitSizeItem
+class Q_QUICK_EXPORT QQuickLoader : public QQuickImplicitSizeItem
 {
     Q_OBJECT
 

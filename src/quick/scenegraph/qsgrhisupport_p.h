@@ -34,7 +34,7 @@ class QQuickGraphicsConfiguration;
 // In addition, the class provides handy conversion and query stuff for the
 // renderloop and the QSGRendererInterface implementations.
 //
-class Q_QUICK_PRIVATE_EXPORT QSGRhiSupport
+class Q_QUICK_EXPORT QSGRhiSupport
 {
 public:
     static QSGRhiSupport *instance_internal();

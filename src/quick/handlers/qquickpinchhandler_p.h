@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
+class Q_QUICK_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
 {
     Q_OBJECT
 

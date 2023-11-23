@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickGraphicsConfigurationPrivate
+class Q_QUICK_EXPORT QQuickGraphicsConfigurationPrivate
 {
 public:
     static QQuickGraphicsConfigurationPrivate *get(QQuickGraphicsConfiguration *p) { return p->d; }

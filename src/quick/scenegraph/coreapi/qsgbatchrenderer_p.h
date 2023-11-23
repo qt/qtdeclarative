@@ -723,7 +723,7 @@ protected:
     QHash<Node *, uint> m_visualizeChangeSet;
 };
 
-class Q_QUICK_PRIVATE_EXPORT Renderer : public QSGRenderer
+class Q_QUICK_EXPORT Renderer : public QSGRenderer
 {
 public:
     Renderer(QSGDefaultRenderContext *ctx, QSGRendererInterface::RenderMode renderMode = QSGRendererInterface::RenderMode2D);

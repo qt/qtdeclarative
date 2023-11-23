@@ -39,7 +39,7 @@ class QSGRenderContext;
 
 class QQuickTextNodeEngine;
 
-class Q_QUICK_PRIVATE_EXPORT QSGInternalTextNode : public QSGTextNode
+class Q_QUICK_EXPORT QSGInternalTextNode : public QSGTextNode
 {
 public:
     QSGInternalTextNode(QSGRenderContext *renderContext);

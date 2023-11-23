@@ -81,7 +81,7 @@ private:
 
 #define QT_QUICK_NEW_GEOMETRY_CHANGED_HANDLING
 
-class Q_QUICK_PRIVATE_EXPORT QQuickItemChangeListener
+class Q_QUICK_EXPORT QQuickItemChangeListener
 {
 public:
     virtual ~QQuickItemChangeListener();

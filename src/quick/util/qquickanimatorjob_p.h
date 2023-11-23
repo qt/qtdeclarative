@@ -36,7 +36,7 @@ class QQuickAnimatorController;
 
 class QSGOpacityNode;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickAnimatorProxyJob : public QObject, public QAbstractAnimationJob
+class Q_QUICK_EXPORT QQuickAnimatorProxyJob : public QObject, public QAbstractAnimationJob
 {
     Q_OBJECT
 
@@ -78,7 +78,7 @@ private:
     InternalState m_internalState;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickAnimatorJob : public QAbstractAnimationJob
+class Q_QUICK_EXPORT QQuickAnimatorJob : public QAbstractAnimationJob
 {
 public:
     virtual void setTarget(QQuickItem *target);
@@ -210,28 +210,28 @@ protected:
     Helper *m_helper;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickScaleAnimatorJob : public QQuickTransformAnimatorJob
+class Q_QUICK_EXPORT QQuickScaleAnimatorJob : public QQuickTransformAnimatorJob
 {
 public:
     void updateCurrentTime(int time) override;
     void writeBack() override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickXAnimatorJob : public QQuickTransformAnimatorJob
+class Q_QUICK_EXPORT QQuickXAnimatorJob : public QQuickTransformAnimatorJob
 {
 public:
     void updateCurrentTime(int time) override;
     void writeBack() override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickYAnimatorJob : public QQuickTransformAnimatorJob
+class Q_QUICK_EXPORT QQuickYAnimatorJob : public QQuickTransformAnimatorJob
 {
 public:
     void updateCurrentTime(int time) override;
     void writeBack() override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimatorJob : public QQuickTransformAnimatorJob
+class Q_QUICK_EXPORT QQuickRotationAnimatorJob : public QQuickTransformAnimatorJob
 {
 public:
     QQuickRotationAnimatorJob();
@@ -246,7 +246,7 @@ private:
     QQuickRotationAnimator::RotationDirection m_direction;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickOpacityAnimatorJob : public QQuickAnimatorJob
+class Q_QUICK_EXPORT QQuickOpacityAnimatorJob : public QQuickAnimatorJob
 {
 public:
     QQuickOpacityAnimatorJob();
@@ -263,7 +263,7 @@ private:
 #if QT_CONFIG(quick_shadereffect)
 class QQuickShaderEffect;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimatorJob : public QQuickAnimatorJob
+class Q_QUICK_EXPORT QQuickUniformAnimatorJob : public QQuickAnimatorJob
 {
 public:
     QQuickUniformAnimatorJob();

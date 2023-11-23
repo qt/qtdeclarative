@@ -20,7 +20,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGOpaqueTextureMaterialRhiShader : public QSGMaterialShader
+class Q_QUICK_EXPORT QSGOpaqueTextureMaterialRhiShader : public QSGMaterialShader
 {
 public:
     QSGOpaqueTextureMaterialRhiShader();

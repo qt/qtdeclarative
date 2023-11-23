@@ -4,7 +4,7 @@
 #ifndef QSGCURVESTROKENODE_P_P_H
 #define QSGCURVESTROKENODE_P_P_H
 
-#include <QtQuick/private/qtquickexports_p.h>
+#include <QtQuick/qtquickexports.h>
 #include <QtQuick/qsgmaterial.h>
 
 //
@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 class QSGCurveStrokeNode;
 class QSGCurveStrokeMaterial;
 
-class Q_QUICK_PRIVATE_EXPORT QSGCurveStrokeMaterialShader : public QSGMaterialShader
+class Q_QUICK_EXPORT QSGCurveStrokeMaterialShader : public QSGMaterialShader
 {
 public:
     QSGCurveStrokeMaterialShader()
@@ -38,7 +38,7 @@ public:
 };
 
 
-class Q_QUICK_PRIVATE_EXPORT QSGCurveStrokeMaterial : public QSGMaterial
+class Q_QUICK_EXPORT QSGCurveStrokeMaterial : public QSGMaterial
 {
 public:
     QSGCurveStrokeMaterial(QSGCurveStrokeNode *node)

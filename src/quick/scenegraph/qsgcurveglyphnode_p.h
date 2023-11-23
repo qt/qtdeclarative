@@ -15,7 +15,7 @@
 // We mean it.
 //
 
-#include <private/qtquickexports_p.h>
+#include <qtquickexports.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qsgbasicglyphnode_p.h>
 
@@ -25,7 +25,7 @@ class QSGCurveGlyphAtlas;
 class QSGCurveFillNode;
 class QSGCurveAbstractNode;
 
-class Q_QUICK_PRIVATE_EXPORT QSGCurveGlyphNode : public QSGGlyphNode
+class Q_QUICK_EXPORT QSGCurveGlyphNode : public QSGGlyphNode
 {
 public:
     QSGCurveGlyphNode(QSGRenderContext *context);

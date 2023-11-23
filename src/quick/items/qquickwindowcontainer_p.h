@@ -25,7 +25,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickWindowContainerPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickWindowContainer : public QQuickImplicitSizeItem
+class Q_QUICK_EXPORT QQuickWindowContainer : public QQuickImplicitSizeItem
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(WindowContainer)

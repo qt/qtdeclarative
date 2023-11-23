@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGDefaultRenderContext;
 
-class Q_QUICK_PRIVATE_EXPORT QSGRhiLayer : public QSGLayer
+class Q_QUICK_EXPORT QSGRhiLayer : public QSGLayer
 {
     Q_OBJECT
 

@@ -22,7 +22,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickAnimationControllerPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickAnimationController : public QObject, public QQmlFinalizerHook
+class Q_QUICK_EXPORT QQuickAnimationController : public QObject, public QQmlFinalizerHook
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(QQuickAnimationController)

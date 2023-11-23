@@ -40,7 +40,7 @@ struct QQuickPathData
     QList<QQuickCurve*> curves;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathElement : public QObject
+class Q_QUICK_EXPORT QQuickPathElement : public QObject
 {
     Q_OBJECT
     QML_ANONYMOUS
@@ -51,7 +51,7 @@ Q_SIGNALS:
     void changed();
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathAttribute : public QQuickPathElement
+class Q_QUICK_EXPORT QQuickPathAttribute : public QQuickPathElement
 {
     Q_OBJECT
 
@@ -78,7 +78,7 @@ private:
     qreal _value = 0;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickCurve : public QQuickPathElement
+class Q_QUICK_EXPORT QQuickCurve : public QQuickPathElement
 {
     Q_OBJECT
 
@@ -122,7 +122,7 @@ private:
     QQmlNullableValue<qreal> _relativeY;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathLine : public QQuickCurve
+class Q_QUICK_EXPORT QQuickPathLine : public QQuickCurve
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(PathLine)
@@ -133,7 +133,7 @@ public:
     void addToPath(QPainterPath &path, const QQuickPathData &) override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathMove : public QQuickCurve
+class Q_QUICK_EXPORT QQuickPathMove : public QQuickCurve
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(PathMove)
@@ -144,7 +144,7 @@ public:
     void addToPath(QPainterPath &path, const QQuickPathData &) override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathQuad : public QQuickCurve
+class Q_QUICK_EXPORT QQuickPathQuad : public QQuickCurve
 {
     Q_OBJECT
 
@@ -187,7 +187,7 @@ private:
     QQmlNullableValue<qreal> _relativeControlY;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathCubic : public QQuickCurve
+class Q_QUICK_EXPORT QQuickPathCubic : public QQuickCurve
 {
     Q_OBJECT
 
@@ -255,7 +255,7 @@ private:
     QQmlNullableValue<qreal> _relativeControl2Y;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathCatmullRomCurve : public QQuickCurve
+class Q_QUICK_EXPORT QQuickPathCatmullRomCurve : public QQuickCurve
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(PathCurve)
@@ -266,7 +266,7 @@ public:
     void addToPath(QPainterPath &path, const QQuickPathData &) override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathArc : public QQuickCurve
+class Q_QUICK_EXPORT QQuickPathArc : public QQuickCurve
 {
     Q_OBJECT
     Q_PROPERTY(qreal radiusX READ radiusX WRITE setRadiusX NOTIFY radiusXChanged FINAL)
@@ -316,7 +316,7 @@ private:
     qreal _xAxisRotation = 0;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathAngleArc : public QQuickCurve
+class Q_QUICK_EXPORT QQuickPathAngleArc : public QQuickCurve
 {
     Q_OBJECT
     Q_PROPERTY(qreal centerX READ centerX WRITE setCenterX NOTIFY centerXChanged FINAL)
@@ -376,7 +376,7 @@ private:
     bool _moveToStart = true;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathSvg : public QQuickCurve
+class Q_QUICK_EXPORT QQuickPathSvg : public QQuickCurve
 {
     Q_OBJECT
     Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged FINAL)
@@ -397,7 +397,7 @@ private:
     QString _path;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathPercent : public QQuickPathElement
+class Q_QUICK_EXPORT QQuickPathPercent : public QQuickPathElement
 {
     Q_OBJECT
     Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged FINAL)
@@ -416,7 +416,7 @@ private:
     qreal _value = 0;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathPolyline : public QQuickCurve
+class Q_QUICK_EXPORT QQuickPathPolyline : public QQuickCurve
 {
     Q_OBJECT
     Q_PROPERTY(QPointF start READ start NOTIFY startChanged FINAL)
@@ -440,7 +440,7 @@ private:
     QVector<QPointF> m_path;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathMultiline : public QQuickCurve
+class Q_QUICK_EXPORT QQuickPathMultiline : public QQuickCurve
 {
     Q_OBJECT
     Q_PROPERTY(QPointF start READ start NOTIFY startChanged FINAL)
@@ -478,7 +478,7 @@ struct QQuickCachedBezier
 };
 
 class QQuickPathPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickPath : public QObject, public QQmlParserStatus
+class Q_QUICK_EXPORT QQuickPath : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
 
@@ -579,7 +579,7 @@ public:
     static QPointF sequentialPointAt(const QPainterPath &path, const qreal &pathLength, const QList<AttributePoint> &attributePoints, QQuickCachedBezier &prevBez, qreal p, qreal *angle = nullptr);
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathText : public QQuickPathElement
+class Q_QUICK_EXPORT QQuickPathText : public QQuickPathElement
 {
     Q_OBJECT
     Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged FINAL)

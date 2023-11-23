@@ -25,7 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickScaleGrid : public QObject
+class Q_QUICK_EXPORT QQuickScaleGrid : public QObject
 {
     Q_OBJECT
 

@@ -23,7 +23,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickFrameAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickFrameAnimation : public QObject, public QQmlParserStatus
+class Q_QUICK_EXPORT QQuickFrameAnimation : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickFrameAnimation)

@@ -30,7 +30,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickColorValueType
+class Q_QUICK_EXPORT QQuickColorValueType
 {
     QColor v;
     Q_PROPERTY(qreal r READ r WRITE setR FINAL)
@@ -87,7 +87,7 @@ public:
     operator QColor() const { return v; }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickVector2DValueType
+class Q_QUICK_EXPORT QQuickVector2DValueType
 {
     QVector2D v;
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
@@ -124,7 +124,7 @@ public:
     operator QVector2D() const { return v; }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickVector3DValueType
+class Q_QUICK_EXPORT QQuickVector3DValueType
 {
     QVector3D v;
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
@@ -166,7 +166,7 @@ public:
     operator QVector3D() const { return v; }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickVector4DValueType
+class Q_QUICK_EXPORT QQuickVector4DValueType
 {
     QVector4D v;
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
@@ -210,7 +210,7 @@ public:
     operator QVector4D() const { return v; }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickQuaternionValueType
+class Q_QUICK_EXPORT QQuickQuaternionValueType
 {
     QQuaternion v;
     Q_PROPERTY(qreal scalar READ scalar WRITE setScalar FINAL)
@@ -259,7 +259,7 @@ public:
     operator QQuaternion() const { return v; }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickMatrix4x4ValueType
+class Q_QUICK_EXPORT QQuickMatrix4x4ValueType
 {
     QMatrix4x4 v;
     Q_PROPERTY(qreal m11 READ m11 WRITE setM11 FINAL)
@@ -355,7 +355,7 @@ public:
 
 namespace QQuickFontEnums
 {
-Q_NAMESPACE_EXPORT(Q_QUICK_PRIVATE_EXPORT)
+Q_NAMESPACE_EXPORT(Q_QUICK_EXPORT)
 
 QML_NAMED_ELEMENT(Font)
 QML_ADDED_IN_VERSION(2, 0)
@@ -386,7 +386,7 @@ enum HintingPreference {
 Q_ENUM_NS(HintingPreference)
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickFontValueType
+class Q_QUICK_EXPORT QQuickFontValueType
 {
     QFont v;
     Q_GADGET
@@ -480,7 +480,7 @@ public:
 
 namespace QQuickColorSpaceEnums
 {
-Q_NAMESPACE_EXPORT(Q_QUICK_PRIVATE_EXPORT)
+Q_NAMESPACE_EXPORT(Q_QUICK_EXPORT)
 QML_NAMED_ELEMENT(ColorSpace)
 QML_ADDED_IN_VERSION(2, 15)
 Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
@@ -513,7 +513,7 @@ enum class TransferFunction {
 Q_ENUM_NS(TransferFunction)
 }
 
-class Q_QUICK_PRIVATE_EXPORT QQuickColorSpaceValueType
+class Q_QUICK_EXPORT QQuickColorSpaceValueType
 {
     QColorSpace v;
     Q_GADGET

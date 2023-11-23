@@ -135,7 +135,7 @@ public:
     }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickProfiler : public QObject, public QQmlProfilerDefinitions {
+class Q_QUICK_EXPORT QQuickProfiler : public QObject, public QQmlProfilerDefinitions {
     Q_OBJECT
 public:
 

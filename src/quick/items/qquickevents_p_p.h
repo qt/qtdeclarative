@@ -36,7 +36,7 @@ class QPointerEvent;
 class QMouseEvent;
 class QQuickPointerHandler;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickKeyEvent : public QObject
+class Q_QUICK_EXPORT QQuickKeyEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int key READ key CONSTANT FINAL)
@@ -103,7 +103,7 @@ private:
     bool m_autoRepeat = false;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
+class Q_QUICK_EXPORT QQuickMouseEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qreal x READ x CONSTANT FINAL)
@@ -179,7 +179,7 @@ private:
 };
 
 #if QT_CONFIG(wheelevent)
-class Q_QUICK_PRIVATE_EXPORT QQuickWheelEvent : public QObject
+class Q_QUICK_EXPORT QQuickWheelEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(const QPointingDevice *device READ pointingDevice CONSTANT FINAL)
@@ -239,7 +239,7 @@ private:
 };
 #endif
 
-class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
+class Q_QUICK_EXPORT QQuickCloseEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted FINAL)

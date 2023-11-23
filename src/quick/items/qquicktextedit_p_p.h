@@ -39,7 +39,7 @@ class QQuickTextControl;
 class QSGInternalTextNode;
 class QQuickTextNodeEngine;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
+class Q_QUICK_EXPORT QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
 #if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif
@@ -65,7 +65,7 @@ public:
         bool m_dirty = false;
 
 #ifndef QT_NO_DEBUG_STREAM
-        friend QDebug Q_QUICK_PRIVATE_EXPORT operator<<(QDebug, const Node &);
+        friend QDebug Q_QUICK_EXPORT operator<<(QDebug, const Node &);
 #endif
     };
     typedef QList<Node>::iterator TextNodeIterator;
@@ -223,7 +223,7 @@ public:
 };
 
 #ifndef QT_NO_DEBUG_STREAM
-QDebug Q_QUICK_PRIVATE_EXPORT operator<<(QDebug debug, const QQuickTextEditPrivate::Node &);
+QDebug Q_QUICK_EXPORT operator<<(QDebug debug, const QQuickTextEditPrivate::Node &);
 #endif
 
 QT_END_NAMESPACE

@@ -24,7 +24,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickTranslatePrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickTranslate : public QQuickTransform
+class Q_QUICK_EXPORT QQuickTranslate : public QQuickTransform
 {
     Q_OBJECT
 
@@ -53,7 +53,7 @@ private:
 };
 
 class QQuickScalePrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickScale : public QQuickTransform
+class Q_QUICK_EXPORT QQuickScale : public QQuickTransform
 {
     Q_OBJECT
 
@@ -92,7 +92,7 @@ private:
 };
 
 class QQuickRotationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickRotation : public QQuickTransform
+class Q_QUICK_EXPORT QQuickRotation : public QQuickTransform
 {
     Q_OBJECT
 
@@ -126,7 +126,7 @@ private:
 };
 
 class QQuickMatrix4x4Private;
-class Q_QUICK_PRIVATE_EXPORT QQuickMatrix4x4 : public QQuickTransform
+class Q_QUICK_EXPORT QQuickMatrix4x4 : public QQuickTransform
 {
     Q_OBJECT
 

@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QRhi;
 class QQuickWindowRenderTarget;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickRenderTargetPrivate
+class Q_QUICK_EXPORT QQuickRenderTargetPrivate
 {
 public:
     static QQuickRenderTargetPrivate *get(QQuickRenderTarget *rt) { return rt->d; }

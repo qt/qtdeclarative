@@ -25,7 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGAbstractRendererPrivate : public QObjectPrivate
+class Q_QUICK_EXPORT QSGAbstractRendererPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QSGAbstractRenderer)
 public:

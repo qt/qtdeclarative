@@ -35,7 +35,7 @@ class QQmlError;
 class QQuickItem;
 class QQmlComponent;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickViewPrivate : public QQuickWindowPrivate,
+class Q_QUICK_EXPORT QQuickViewPrivate : public QQuickWindowPrivate,
                        public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickView)

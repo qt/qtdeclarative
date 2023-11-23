@@ -26,7 +26,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickSystemPalettePrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickSystemPalette : public QObject
+class Q_QUICK_EXPORT QQuickSystemPalette : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickSystemPalette)
