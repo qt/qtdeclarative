@@ -20,7 +20,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickTargetDirection : public QQuickDirection
+class Q_QUICKPARTICLES_EXPORT QQuickTargetDirection : public QQuickDirection
 {
     Q_OBJECT
     Q_PROPERTY(qreal targetX READ targetX WRITE setTargetX NOTIFY targetXChanged FINAL)

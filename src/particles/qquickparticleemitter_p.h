@@ -26,7 +26,7 @@
 #include <QPointF>
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleEmitter : public QQuickItem
+class Q_QUICKPARTICLES_EXPORT QQuickParticleEmitter : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QQuickParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged FINAL)
