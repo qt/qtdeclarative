@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE
 class QUrl;
 class QuickTestResultPrivate;
 
-class Q_QUICK_TEST_PRIVATE_EXPORT QuickTestResult : public QObject
+class Q_QUICK_TEST_EXPORT QuickTestResult : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString testCaseName READ testCaseName WRITE setTestCaseName NOTIFY testCaseNameChanged)
