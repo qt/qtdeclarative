@@ -78,8 +78,8 @@ public:
         DebugWireframe = 0x02
     };
 
-    Q_QUICKSHAPES_PRIVATE_EXPORT static int debugVisualization();
-    Q_QUICKSHAPES_PRIVATE_EXPORT static void setDebugVisualization(int options);
+    Q_QUICKSHAPES_EXPORT static int debugVisualization();
+    Q_QUICKSHAPES_EXPORT static void setDebugVisualization(int options);
 
 private:
     struct PathData {

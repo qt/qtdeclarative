@@ -81,7 +81,7 @@ struct QQuickShapeStrokeFillParams
     QQuickShapeGradient *fillGradient;
 };
 
-class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapePathPrivate : public QQuickPathPrivate
+class Q_QUICKSHAPES_EXPORT QQuickShapePathPrivate : public QQuickPathPrivate
 {
     Q_DECLARE_PUBLIC(QQuickShapePath)
 
