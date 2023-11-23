@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlSettingsPrivate;
 
-class Q_QMLCORE_PRIVATE_EXPORT QQmlSettings : public QObject, public QQmlParserStatus
+class Q_QMLCORE_EXPORT QQmlSettings : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
