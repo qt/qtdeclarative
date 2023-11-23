@@ -19,7 +19,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKDIALOGS2_PRIVATE_EXPORT QQuickMessageDialog : public QQuickAbstractDialog
+class Q_QUICKDIALOGS2_EXPORT QQuickMessageDialog : public QQuickAbstractDialog
 {
     Q_OBJECT
 

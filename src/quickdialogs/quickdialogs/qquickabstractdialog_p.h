@@ -32,7 +32,7 @@ QT_BEGIN_NAMESPACE
 class QWindow;
 class QPlatformDialogHelper;
 
-class Q_QUICKDIALOGS2_PRIVATE_EXPORT QQuickAbstractDialog : public QObject, public QQmlParserStatus
+class Q_QUICKDIALOGS2_EXPORT QQuickAbstractDialog : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
