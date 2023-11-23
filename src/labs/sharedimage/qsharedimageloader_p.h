@@ -28,7 +28,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcSharedImage);
 
 class QSharedImageLoaderPrivate;
 
-class Q_LABSSHAREDIMAGE_PRIVATE_EXPORT QSharedImageLoader : public QObject
+class Q_LABSSHAREDIMAGE_EXPORT QSharedImageLoader : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QSharedImageLoader)
