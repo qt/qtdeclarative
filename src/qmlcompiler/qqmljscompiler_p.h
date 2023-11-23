@@ -14,7 +14,7 @@
 //
 // We mean it.
 
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
@@ -32,9 +32,9 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_QMLCOMPILER_PRIVATE_EXPORT Q_DECLARE_LOGGING_CATEGORY(lcAotCompiler);
+Q_QMLCOMPILER_EXPORT Q_DECLARE_LOGGING_CATEGORY(lcAotCompiler);
 
-struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSCompileError
+struct Q_QMLCOMPILER_EXPORT QQmlJSCompileError
 {
     QString message;
     void print();
@@ -45,7 +45,7 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSCompileError
                           const QQmlJS::DiagnosticMessage &diagnostic);
 };
 
-struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSAotFunction
+struct Q_QMLCOMPILER_EXPORT QQmlJSAotFunction
 {
     QStringList includes;
     QStringList argumentTypes;
@@ -53,7 +53,7 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSAotFunction
     QString returnType;
 };
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSAotCompiler
+class Q_QMLCOMPILER_EXPORT QQmlJSAotCompiler
 {
 public:
     enum Flag {
@@ -109,25 +109,25 @@ using QQmlJSSaveFunction
     = std::function<bool(const QV4::CompiledData::SaveableUnitPointer &,
                          const QQmlJSAotFunctionMap &, QString *)>;
 
-bool Q_QMLCOMPILER_PRIVATE_EXPORT qCompileQmlFile(const QString &inputFileName,
+bool Q_QMLCOMPILER_EXPORT qCompileQmlFile(const QString &inputFileName,
                                           QQmlJSSaveFunction saveFunction,
                                           QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error,
                                           bool storeSourceLocation = false,
                                           QV4::Compiler::CodegenWarningInterface *interface =
                                                   QV4::Compiler::defaultCodegenWarningInterface(),
                                           const QString *fileContents = nullptr);
-bool Q_QMLCOMPILER_PRIVATE_EXPORT qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
+bool Q_QMLCOMPILER_EXPORT qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                                           QQmlJSSaveFunction saveFunction,
                                           QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error,
                                           bool storeSourceLocation = false,
                                           QV4::Compiler::CodegenWarningInterface *interface =
                                                   QV4::Compiler::defaultCodegenWarningInterface(),
                                           const QString *fileContents = nullptr);
-bool Q_QMLCOMPILER_PRIVATE_EXPORT qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl,
+bool Q_QMLCOMPILER_EXPORT qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl,
                                          QQmlJSSaveFunction saveFunction,
                                          QQmlJSCompileError *error);
 
-bool Q_QMLCOMPILER_PRIVATE_EXPORT qSaveQmlJSUnitAsCpp(const QString &inputFileName,
+bool Q_QMLCOMPILER_EXPORT qSaveQmlJSUnitAsCpp(const QString &inputFileName,
                                               const QString &outputFileName,
                                               const QV4::CompiledData::SaveableUnitPointer &unit,
                                               const QQmlJSAotFunctionMap &aotFunctions,

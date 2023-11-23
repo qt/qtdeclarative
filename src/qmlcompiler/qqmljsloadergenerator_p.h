@@ -14,7 +14,7 @@
 //
 // We mean it.
 
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
@@ -22,11 +22,11 @@
 
 QT_BEGIN_NAMESPACE
 
-bool Q_QMLCOMPILER_PRIVATE_EXPORT qQmlJSGenerateLoader(const QStringList &compiledFiles,
+bool Q_QMLCOMPILER_EXPORT qQmlJSGenerateLoader(const QStringList &compiledFiles,
                                                const QString &outputFileName,
                                                const QStringList &resourceFileMappings,
                                                QString *errorString);
-QString Q_QMLCOMPILER_PRIVATE_EXPORT qQmlJSSymbolNamespaceForPath(const QString &relativePath);
+QString Q_QMLCOMPILER_EXPORT qQmlJSSymbolNamespaceForPath(const QString &relativePath);
 
 QT_END_NAMESPACE
 

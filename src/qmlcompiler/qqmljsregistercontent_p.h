@@ -22,7 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSRegisterContent
+class Q_QMLCOMPILER_EXPORT QQmlJSRegisterContent
 {
 public:
     enum ContentVariant {

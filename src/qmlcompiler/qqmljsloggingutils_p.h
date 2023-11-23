@@ -16,7 +16,7 @@
 //
 
 #include <QtCore/qstring.h>
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include "qqmljsloggingutils.h"
 

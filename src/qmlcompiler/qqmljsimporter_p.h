@@ -14,7 +14,7 @@
 //
 // We mean it.
 
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include "qqmljscontextualtypes_p.h"
 #include "qqmljsscope_p.h"
@@ -63,7 +63,7 @@ private:
 
 class QQmlJSImportVisitor;
 class QQmlJSLogger;
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSImporter
+class Q_QMLCOMPILER_EXPORT QQmlJSImporter
 {
 public:
     using ImportedTypes = QQmlJS::ContextualTypes;

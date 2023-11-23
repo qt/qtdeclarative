@@ -15,14 +15,14 @@
 // We mean it.
 
 #include <QtCore/qglobal.h>
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlJSImportVisitor;
 class QQmlJSTypeResolver;
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSLiteralBindingCheck
+class Q_QMLCOMPILER_EXPORT QQmlJSLiteralBindingCheck
 {
 public:
     void run(QQmlJSImportVisitor *visitor, QQmlJSTypeResolver *resolver);

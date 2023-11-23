@@ -13,7 +13,7 @@
 //
 // We mean it.
 
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include <QStringList>
 #include <QHash>
@@ -22,7 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
-struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSResourceFileMapper
+struct Q_QMLCOMPILER_EXPORT QQmlJSResourceFileMapper
 {
     struct Entry
     {

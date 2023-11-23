@@ -14,7 +14,7 @@
 //
 // We mean it.
 
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include <QtCore/private/qglobal_p.h>
 #include <QtCore/qscopedpointer.h>
@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QColorOutputPrivate;
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QColorOutput
+class Q_QMLCOMPILER_EXPORT QColorOutput
 {
     enum
     {

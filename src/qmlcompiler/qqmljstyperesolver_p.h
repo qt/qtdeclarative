@@ -15,7 +15,7 @@
 // We mean it.
 
 #include <memory>
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsast_p.h>
@@ -29,7 +29,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlJSImportVisitor;
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypeResolver
+class Q_QMLCOMPILER_EXPORT QQmlJSTypeResolver
 {
 public:
     enum ParentMode { UseDocumentParent, UseParentProperty };
