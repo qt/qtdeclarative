@@ -811,15 +811,16 @@ static QList<TriangleData> customTriangulator2(const QQuadPath &path, float penW
 
 // TODO: we could optimize by preprocessing e1, since we call this function multiple times on the same
 // elements
-static void handleOverlap(QQuadPath &path, int e1, int e2, int recursionLevel = 0)
+// Returns true if a change was made
+static bool handleOverlap(QQuadPath &path, int e1, int e2, int recursionLevel = 0)
 {
     if (!isOverlap(path, e1, e2)) {
-        return;
+        return false;
     }
 
     if (recursionLevel > 8) {
         qCDebug(lcSGCurveProcessor) << "Triangle overlap: recursion level" << recursionLevel << "aborting!";
-        return;
+        return false;
     }
 
     if (path.elementAt(e1).childCount() > 1) {
@@ -839,7 +840,7 @@ static void handleOverlap(QQuadPath &path, int e1, int e2, int recursionLevel = 
         bool overlap1 = isOverlap(path, e11, e2);
         bool overlap2 = isOverlap(path, e12, e2);
         if (!overlap1 && !overlap2)
-            return; // no more overlap: success!
+            return true; // no more overlap: success!
 
         // We need to split more:
         if (path.elementAt(e2).isLine()) {
@@ -863,33 +864,41 @@ static void handleOverlap(QQuadPath &path, int e1, int e2, int recursionLevel = 
             }
         }
     }
+    return true;
 }
 
 // Test if element contains a start point of another element
-static void handleOverlap(QQuadPath &path, int e1, const QVector2D vertex, int recursionLevel = 0)
+// Returns true if a change was made
+static bool handleOverlap(QQuadPath &path, int e1, const QVector2D vertex, int recursionLevel = 0)
 {
     // First of all: Ignore the next element: it trivially overlaps (maybe not necessary: we do check for strict containment)
     if (vertex == path.elementAt(e1).endPoint() || !isOverlap(path, e1, vertex))
-        return;
+        return false;
     if (recursionLevel > 8) {
         qCDebug(lcSGCurveIntersectionSolver) << "Vertex overlap: recursion level" << recursionLevel << "aborting!";
-        return;
+        return false;
     }
 
+    bool changed = false;
     // Don't split if we're already split
-    if (path.elementAt(e1).childCount() == 0)
+    if (path.elementAt(e1).childCount() == 0) {
         path.splitElementAt(e1);
+        changed = true;
+    }
 
-    handleOverlap(path, path.indexOfChildAt(e1, 0), vertex, recursionLevel + 1);
-    handleOverlap(path, path.indexOfChildAt(e1, 1), vertex, recursionLevel + 1);
+    changed = handleOverlap(path, path.indexOfChildAt(e1, 0), vertex, recursionLevel + 1) || changed; // variable at the end to avoid accidentally short-cutting out the call
+    changed = handleOverlap(path, path.indexOfChildAt(e1, 1), vertex, recursionLevel + 1) || changed;
+    return changed;
 }
 
 }
 
-void QSGCurveProcessor::solveOverlaps(QQuadPath &path, OverlapSolveMode mode)
+// Returns true if the path was changed
+bool QSGCurveProcessor::solveOverlaps(QQuadPath &path, OverlapSolveMode mode)
 {
+    bool changed = false;
     if (path.testHint(QQuadPath::PathNonOverlappingControlPointTriangles))
-        return;
+        return false;
     for (int i = 0; i < path.elementCount(); i++) {
         auto &element = path.elementAt(i);
         // only concave curve overlap is problematic, as long as we don't allow self-intersecting curves
@@ -902,7 +911,7 @@ void QSGCurveProcessor::solveOverlaps(QQuadPath &path, OverlapSolveMode mode)
             auto &other = path.elementAt(j);
             if (!other.isConvex() && !other.isLine() && j < i)
                 continue; // We have already tested this combination, so no need to test again
-            handleOverlap(path, i, j);
+            changed = handleOverlap(path, i, j) || changed;
         }
     }
 
@@ -926,11 +935,12 @@ void QSGCurveProcessor::solveOverlaps(QQuadPath &path, OverlapSolveMode mode)
                 if (i == j)
                     continue;
                 const auto &other = path.elementAt(j);
-                handleOverlap(path, i, other.startPoint());
+                changed = handleOverlap(path, i, other.startPoint()) || changed;
             }
         }
     }
     path.setHint(QQuadPath::PathNonOverlappingControlPointTriangles);
+    return changed;
 }
 
 // A fast algorithm to find path elements that might overlap. We will only check the overlap of the

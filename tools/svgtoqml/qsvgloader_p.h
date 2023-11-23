@@ -5,6 +5,7 @@
 #define QSVGQMLWRITER_P_H
 
 #include <QtCore/qtconfigmacros.h>
+#include <QtCore/qflags.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -16,8 +17,15 @@ class QQuickItem;
 class QSvgQmlWriter
 {
 public:
-    static QQuickItem *loadSVG(const QSvgTinyDocument *doc, const QString &outFileName, const QString &typeName, QQuickItem *parentItem = nullptr);
+    enum GeneratorFlag {
+        OptimizePaths = 0x01,
+        CurveRenderer = 0x02,
+        OutlineStrokeMode = 0x04
+    };
+    Q_DECLARE_FLAGS(GeneratorFlags, GeneratorFlag);
+    static QQuickItem *loadSVG(const QSvgTinyDocument *doc, const QString &outFileName, GeneratorFlags flags, const QString &typeName, QQuickItem *parentItem, const QString &commentString);
 };
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSvgQmlWriter::GeneratorFlags);
 
 QT_END_NAMESPACE
 

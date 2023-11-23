@@ -640,10 +640,10 @@ QString QQuadPath::asSvgString() const
 // (technically changing it from O(n) to O(n^2))
 // Note that this function should be called before splitting any elements,
 // so we can assume that the structure is a list and not a tree
-QQuadPath QQuadPath::subPathsClosed() const
+QQuadPath QQuadPath::subPathsClosed(bool *didClose) const
 {
     Q_ASSERT(m_childElements.isEmpty());
-
+    bool closed = false;
     QQuadPath res = *this;
     res.m_elements = {};
     res.m_elements.reserve(elementCount());
@@ -655,6 +655,7 @@ QQuadPath QQuadPath::subPathsClosed() const
             if (subStart >= 0 && m_elements[i - 1].ep != m_elements[subStart].sp) {
                 res.currentPoint = m_elements[i - 1].ep;
                 res.lineTo(m_elements[subStart].sp);
+                closed = true;
                 auto &endElement = res.m_elements.last();
                 endElement.m_isSubpathEnd = true;
                 // lineTo() can bail out if the points are too close.
@@ -673,6 +674,7 @@ QQuadPath QQuadPath::subPathsClosed() const
     if (subStart >= 0 && m_elements.last().ep != m_elements[subStart].sp) {
         res.currentPoint = m_elements.last().ep;
         res.lineTo(m_elements[subStart].sp);
+        closed = true;
     }
     if (!res.m_elements.isEmpty()) {
         auto &endElement = res.m_elements.last();
@@ -687,6 +689,8 @@ QQuadPath QQuadPath::subPathsClosed() const
         Q_ASSERT(res.elementCount() == 4);
     }
 
+    if (didClose)
+        *didClose = closed;
     return res;
 }
 

@@ -44,7 +44,7 @@ public:
                               Qt::PenCapStyle capStyle,
                               addStrokeTriangleCallback addTriangle,
                               int subdivisions = 3);
-    static void solveOverlaps(QQuadPath &path, OverlapSolveMode mode = SkipConcaveJoinsSolve);
+    static bool solveOverlaps(QQuadPath &path, OverlapSolveMode mode = SkipConcaveJoinsSolve);
     static QList<QPair<int, int>> findOverlappingCandidates(const QQuadPath &path);
     static bool solveIntersections(QQuadPath &path, bool alwaysReorder = true);
 };

@@ -16,6 +16,7 @@
 
 #include <private/qquickimagebase_p_p.h>
 #include <private/qquickimage_p.h>
+#include <private/qsgcurveprocessor_p.h>
 
 #include <private/qquadpath_p.h>
 
@@ -52,6 +53,7 @@ public:
     SvgLoaderVisitor();
     ~SvgLoaderVisitor();
     void setShapeTypeName(const QString &name) { m_shapeTypeName = name.toLatin1(); }
+    void setFlags(QSvgQmlWriter::GeneratorFlags flags) { m_flags = flags; }
     QQuickItem *loadQML(QTextStream *stream, const QSvgTinyDocument *doc, QQuickItem *svgItem);
 
 protected:
@@ -92,6 +94,11 @@ private:
     void handleBaseNodeEnd(const QSvgNode *node);
     void handlePathNode(const QSvgNode *node, const QPainterPath &path, Qt::PenCapStyle = Qt::SquareCap);
     void outputShapePath(const QSvgNode *node, const QPainterPath &path, Qt::PenCapStyle capStyle);
+    void outputGradient(const QGradient *grad, QQuickShapePath *shapePath, const QRectF &boundingRect);
+
+    enum PathSelector { FillPath = 0x1, StrokePath = 0x2, FillAndStroke = 0x3 };
+    void outputShapePath(const QSvgNode *node, const QPainterPath *path, const QQuadPath *quadPath, Qt::PenCapStyle capStyle,
+                         PathSelector pathSelector, const QRectF &boundingRect);
 
     QQuickItem *currentItem() { return m_items.top(); }
     void addCurrentItem(QQuickItem *item, const QSvgNode *node = nullptr) {
@@ -119,6 +126,7 @@ private:
     QQuickItem *m_loadedItem = nullptr;
     bool m_generateQML = true;
     bool m_generateItems = false;
+    QSvgQmlWriter::GeneratorFlags m_flags;
 };
 
 SvgLoaderVisitor::SvgLoaderVisitor()
@@ -140,10 +148,14 @@ void SvgLoaderVisitor::handlePathNode(const QSvgNode *node, const QPainterPath &
 {
     handleBaseNodeSetup(node);
 
+    QPainterPath pathCopy = path;
+    auto fillStyle = node->style().fill;
+    if (fillStyle)
+        pathCopy.setFillRule(fillStyle->fillRule());
     if (m_inShapeItem) {
         if (!node->style().transform.isDefault())
             qWarning() << "Skipped transform for node" << node->nodeId() << "type" << node->typeName() << "(this is not supposed to happen)";
-        outputShapePath(node, path, capStyle);
+        outputShapePath(node, pathCopy, capStyle);
     } else {
         if (m_generateItems) {
             auto *shapeItem = new QQuickShape;
@@ -156,7 +168,9 @@ void SvgLoaderVisitor::handlePathNode(const QSvgNode *node, const QPainterPath &
         stream() << shapeName() << " {";
         handleBaseNode(node);
         m_indentLevel++;
-        outputShapePath(node, path, capStyle);
+        if (m_flags & QSvgQmlWriter::CurveRenderer)
+            stream() << "preferredRendererType: Shape.CurveRenderer";
+        outputShapePath(node, pathCopy, capStyle);
         //qDebug() << *node->qpath();
         m_indentLevel--;
         stream() << "}";
@@ -171,6 +185,7 @@ void SvgLoaderVisitor::handlePathNode(const QSvgNode *node, const QPainterPath &
 void SvgLoaderVisitor::visitPathNode(const QSvgPath *node)
 {
     stream() << "// PATH visit " << node->nodeId() << " count: " << node->path().elementCount();
+
     handlePathNode(node, node->path());
 }
 
@@ -545,145 +560,265 @@ static QRectF mapToQtLogicalMode(const QRectF &objModeRect, const QRectF &boundi
     return QRectF(pixelRect.topLeft(), QSizeF(x,y));
 }
 
+static QString toSvgString(const QPainterPath &path)
+{
+    QString svgPathString;
+    QTextStream strm(&svgPathString);
+
+    for (int i = 0; i < path.elementCount(); ++i) {
+        QPainterPath::Element element = path.elementAt(i);
+        if (element.isMoveTo()) {
+            strm << "M " << element.x << " " << element.y << " ";
+        } else if (element.isLineTo()) {
+            strm << "L " << element.x << " " << element.y << " ";
+        } else if (element.isCurveTo()) {
+            QPointF c1(element.x, element.y);
+            ++i;
+            element = path.elementAt(i);
+
+            QPointF c2(element.x, element.y);
+            ++i;
+            element = path.elementAt(i);
+            QPointF ep(element.x, element.y);
+
+            strm <<  "C "
+                 <<  c1.x() << " "
+                 <<  c1.y() << " "
+                 <<  c2.x() << " "
+                 <<  c2.y() << " "
+                 <<  ep.x() << " "
+                 <<  ep.y() << " ";
+        }
+    }
+
+    return svgPathString;
+}
+
+static QString toSvgString(const QQuadPath &path)
+{
+    QString svgPathString;
+    QTextStream strm(&svgPathString);
+    path.iterateElements([&](const QQuadPath::Element &e){
+        if (e.isSubpathStart())
+            strm << "M " << e.startPoint().x() << " " << e.startPoint().y() << " ";
+
+        if (e.isLine()) {
+            strm << "L " << e.endPoint().x() << " " << e.endPoint().y() << " ";
+        } else {
+            strm << "Q " << e.controlPoint().x() << " " << e.controlPoint().y() << " "
+                 << e.endPoint().x() << " " << e.endPoint().y() << " ";
+        }
+    });
+
+    return svgPathString;
+}
+
+void SvgLoaderVisitor::outputGradient(const QGradient *grad, QQuickShapePath *shapePath, const QRectF &boundingRect)
+{
+    auto setStops = [](QQuickShapeGradient *quickGrad, const QGradientStops &stops) {
+        auto stopsProp = quickGrad->stops();
+        for (auto &stop : stops) {
+            auto *stopObj = new QQuickGradientStop(quickGrad);
+            stopObj->setPosition(stop.first);
+            stopObj->setColor(stop.second);
+            stopsProp.append(&stopsProp, stopObj);
+        }
+    };
+
+    if (grad->type() == QGradient::LinearGradient) {
+        auto *linGrad = static_cast<const QLinearGradient *>(grad);
+        stream() << "fillGradient: LinearGradient {";
+        m_indentLevel++;
+
+        QRectF gradRect(linGrad->start(), linGrad->finalStop());
+        QRectF logRect = linGrad->coordinateMode() == QGradient::LogicalMode ? gradRect : mapToQtLogicalMode(gradRect, boundingRect);
+
+        stream() << "x1: " << logRect.left();
+        stream() << "y1: " << logRect.top();
+        stream() << "x2: " << logRect.right();
+        stream() << "y2: " << logRect.bottom();
+        for (auto &stop : linGrad->stops()) {
+            stream() << "GradientStop { position: " << stop.first << "; color: \"" << stop.second.name(QColor::HexArgb) << "\" }";
+        }
+        m_indentLevel--;
+        stream() << "}";
+
+        if (shapePath) {
+            auto *quickGrad = new QQuickShapeLinearGradient(shapePath);
+
+            quickGrad->setX1(logRect.left());
+            quickGrad->setY1(logRect.top());
+            quickGrad->setX2(logRect.right());
+            quickGrad->setY2(logRect.bottom());
+            setStops(quickGrad, linGrad->stops());
+
+            shapePath->setFillGradient(quickGrad);
+        }
+    } else if (grad->type() == QGradient::RadialGradient) {
+        auto *radGrad = static_cast<const QRadialGradient*>(grad);
+        stream() << "fillGradient: RadialGradient {";
+        m_indentLevel++;
+
+        stream() << "centerX: " << radGrad->center().x();
+        stream() << "centerY: " << radGrad->center().y();
+        stream() << "centerRadius: " << radGrad->radius();
+        stream() << "focalX: centerX; focalY: centerY";
+        for (auto &stop : radGrad->stops()) {
+            stream() << "GradientStop { position: " << stop.first << "; color: \"" << stop.second.name(QColor::HexArgb) << "\" }";
+        }
+        m_indentLevel--;
+        stream() << "}";
+
+        if (shapePath) {
+            auto *quickGrad = new QQuickShapeRadialGradient(shapePath);
+            quickGrad->setCenterX(radGrad->center().x());
+            quickGrad->setCenterY(radGrad->center().y());
+            quickGrad->setCenterRadius(radGrad->radius());
+            quickGrad->setFocalX(radGrad->center().x());
+            quickGrad->setFocalY(radGrad->center().y());
+            setStops(quickGrad, radGrad->stops());
+
+            shapePath->setFillGradient(quickGrad);
+        }
+    }
+}
+
 void SvgLoaderVisitor::outputShapePath(const QSvgNode *node, const QPainterPath &path, Qt::PenCapStyle capStyle)
 {
-    QPointF offset; // ??? do we need this?
+    const bool optimize = m_flags.testFlag(QSvgQmlWriter::OptimizePaths);
+    QRectF boundingRect = path.boundingRect();
+    if (optimize) {
+        const bool outlineMode = m_flags.testFlag(QSvgQmlWriter::OutlineStrokeMode);
+        QQuadPath strokePath = QQuadPath::fromPainterPath(path);
+        bool fillPathNeededClose;
+        QQuadPath fillPath = strokePath.subPathsClosed(&fillPathNeededClose);
+        const bool intersectionsFound = QSGCurveProcessor::solveIntersections(fillPath, false);
+        fillPath.addCurvatureData();
+        QSGCurveProcessor::solveOverlaps(fillPath);
 
+        const bool compatibleStrokeAndFill = !fillPathNeededClose && !intersectionsFound;
+
+        if (compatibleStrokeAndFill || outlineMode) {
+            outputShapePath(node, nullptr, &fillPath, capStyle, FillAndStroke, boundingRect);
+        } else {
+            outputShapePath(node, nullptr, &fillPath, capStyle, FillPath, boundingRect);
+            outputShapePath(node, nullptr, &strokePath, capStyle, StrokePath, boundingRect);
+        }
+    } else {
+        outputShapePath(node, &path, nullptr, capStyle, FillAndStroke, boundingRect);
+    }
+}
+
+static QString pathHintString(const QQuadPath &qp)
+{
+    QString res;
+    QTextStream str(&res);
+    auto flags = qp.pathHints();
+    if (!flags)
+        return res;
+    str << "pathHints:";
+    bool first = true;
+
+#define CHECK_PATH_HINT(flagName)              \
+    if (flags.testFlag(QQuadPath::flagName)) { \
+        if (!first)                            \
+            str << " |";                       \
+        first = false;                         \
+        str << " ShapePath." #flagName;        \
+    }
+
+    CHECK_PATH_HINT(PathLinear)
+    CHECK_PATH_HINT(PathQuadratic)
+    CHECK_PATH_HINT(PathConvex)
+    CHECK_PATH_HINT(PathFillOnRight)
+    CHECK_PATH_HINT(PathSolid)
+    CHECK_PATH_HINT(PathNonIntersecting)
+    CHECK_PATH_HINT(PathNonOverlappingControlPointTriangles)
+
+    return res;
+}
+
+void SvgLoaderVisitor::outputShapePath(const QSvgNode *node, const QPainterPath *painterPath, const QQuadPath *quadPath, Qt::PenCapStyle capStyle, PathSelector pathSelector, const QRectF &boundingRect)
+{
+    Q_UNUSED(pathSelector)
+    Q_ASSERT(painterPath || quadPath);
+
+    QString penName = currentStrokeColor();
+    const bool noPen = penName.isEmpty() || penName == u"transparent";
+    if (pathSelector == StrokePath && noPen)
+        return;
+
+    const bool noFill = !currentFillGradient() && currentFillColor() == u"transparent";
+    if (pathSelector == FillPath && noFill)
+        return;
+
+    auto fillRule = QQuickShapePath::FillRule(painterPath ? painterPath->fillRule() : quadPath->fillRule());
     stream() << "ShapePath {";
     m_indentLevel++;
     auto *shapePath = m_generateItems ? new QQuickShapePath : nullptr;
     if (!node->nodeId().isEmpty()) {
-        stream() << "objectName: \"svg_path:" << node->nodeId() << "\"";
-        if (m_generateItems)
+        switch (pathSelector) {
+        case FillPath:
+            stream() << "objectName: \"svg_fill_path:" << node->nodeId() << "\"";
+            break;
+        case StrokePath:
+            stream() << "objectName: \"svg_stroke_path:" << node->nodeId() << "\"";
+            break;
+        case FillAndStroke:
+            stream() << "objectName: \"svg_path:" << node->nodeId() << "\"";
+            break;
+        }
+        if (shapePath)
             shapePath->setObjectName(QStringLiteral("svg_path:") + node->nodeId());
     }
-    stream() << "// boundingRect: " << path.boundingRect().x() << ", " << path.boundingRect().y() << " " << path.boundingRect().width() << "x" << path.boundingRect().height();
-    QString penName = currentStrokeColor();
-    if (penName.isEmpty()) {
+    stream() << "// boundingRect: " << boundingRect.x() << ", " << boundingRect.y() << " " << boundingRect.width() << "x" << boundingRect.height();
+
+    if (noPen || !(pathSelector & StrokePath)) {
         stream() << "strokeColor: \"transparent\"";
-        if (m_generateItems)
+        if (shapePath)
             shapePath->setStrokeColor(Qt::transparent);
     } else {
         stream() << "strokeColor: \"" << penName << "\"";
         stream() << "strokeWidth: " << currentStrokeWidth();
-        if (m_generateItems) {
+        if (shapePath) {
             shapePath->setStrokeColor(QColor::fromString(penName));
             shapePath->setStrokeWidth(currentStrokeWidth());
         }
     }
     if (capStyle == Qt::FlatCap)
-        stream() << "capStyle: ShapePath.FlatCap"; //### TODO
+        stream() << "capStyle: ShapePath.FlatCap"; //### TODO Add the rest of the styles, as well as join styles etc.
 
-    if (m_generateItems)
+    if (shapePath)
         shapePath->setCapStyle(QQuickShapePath::CapStyle(capStyle));
 
-    if (auto *grad = currentFillGradient()) {
-
-        auto setStops = [](QQuickShapeGradient *quickGrad, const QGradientStops &stops) {
-            auto stopsProp = quickGrad->stops();
-            for (auto &stop : stops) {
-                auto *stopObj = new QQuickGradientStop(quickGrad);
-                stopObj->setPosition(stop.first);
-                stopObj->setColor(stop.second);
-                stopsProp.append(&stopsProp, stopObj);
-            }
-        };
-
-        if (grad->type() == QGradient::LinearGradient) {
-            auto *linGrad = static_cast<const QLinearGradient *>(grad);
-//            qDebug() << "grad" << linGrad->start() << linGrad->finalStop() << "mode" << linGrad->coordinateMode();
-//            qDebug() << "path BR" << path.boundingRect();
-            QRectF br = path.boundingRect();
-            stream() << "fillGradient: LinearGradient {";
-            m_indentLevel++;
-
-            QRectF gradRect(linGrad->start(), linGrad->finalStop());
-            QRectF logRect = linGrad->coordinateMode() == QGradient::LogicalMode ? gradRect : mapToQtLogicalMode(gradRect, br);
-
-            stream() << "x1: " << logRect.left();
-            stream() << "y1: " << logRect.top();
-            stream() << "x2: " << logRect.right();
-            stream() << "y2: " << logRect.bottom();
-            for (auto &stop : linGrad->stops()) {
-                stream() << "GradientStop { position: " << stop.first << "; color: \"" << stop.second.name(QColor::HexArgb) << "\" }";
-            }
-            m_indentLevel--;
-            stream() << "}";
-
-            if (m_generateItems) {
-                auto *quickGrad = new QQuickShapeLinearGradient(shapePath);
-
-                quickGrad->setX1(logRect.left());
-                quickGrad->setY1(logRect.top());
-                quickGrad->setX2(logRect.right());
-                quickGrad->setY2(logRect.bottom());
-                setStops(quickGrad, linGrad->stops());
-
-                shapePath->setFillGradient(quickGrad);
-            }
-        } else if (grad->type() == QGradient::RadialGradient) {
-            auto *radGrad = static_cast<const QRadialGradient*>(grad);
-            stream() << "fillGradient: RadialGradient {";
-            m_indentLevel++;
-
-            stream() << "centerX: " << radGrad->center().x();
-            stream() << "centerY: " << radGrad->center().y();
-            stream() << "centerRadius: " << radGrad->radius();
-            stream() << "focalX: centerX; focalY: centerY";
-            for (auto &stop : radGrad->stops()) {
-                stream() << "GradientStop { position: " << stop.first << "; color: \"" << stop.second.name(QColor::HexArgb) << "\" }";
-            }
-            m_indentLevel--;
-            stream() << "}";
-
-            if (m_generateItems) {
-                auto *quickGrad = new QQuickShapeRadialGradient(shapePath);
-                quickGrad->setCenterX(radGrad->center().x());
-                quickGrad->setCenterY(radGrad->center().y());
-                quickGrad->setCenterRadius(radGrad->radius());
-                quickGrad->setFocalX(radGrad->center().x());
-                quickGrad->setFocalY(radGrad->center().y());
-                setStops(quickGrad, radGrad->stops());
-
-                shapePath->setFillGradient(quickGrad);
-            }
-        }
+    if (!(pathSelector & FillPath)) {
+        stream() << "fillColor: \"transparent\"";
+        if (shapePath)
+            shapePath->setFillColor(Qt::transparent);
+    } else if (auto *grad = currentFillGradient()) {
+        outputGradient(grad, shapePath, boundingRect);
     } else {
         stream() << "fillColor: \"" << currentFillColor() << "\"";
-        if (m_generateItems)
+        if (shapePath)
             shapePath->setFillColor(QColor::fromString(currentFillColor()));
     }
-    stream() << "fillRule: ShapePath.WindingFill";
+    if (fillRule == QQuickShapePath::WindingFill)
+        stream() << "fillRule: ShapePath.WindingFill";
+    else
+        stream() << "fillRule: ShapePath.OddEvenFill";
+    if (shapePath)
+        shapePath->setFillRule(fillRule);
 
-    QString svgPathString;
-    QTextStream strm(&svgPathString);
-    for (int i = 0; i < path.elementCount(); ++i) {
-        QPainterPath::Element element = path.elementAt(i);
-        if (element.isMoveTo()) {
-            strm << "M " << (element.x - offset.x()) << " " << (element.y - offset.y()) << " ";
-        } else if (element.isLineTo()) {
-            strm << "L " << (element.x - offset.x()) << " " << (element.y - offset.y()) << " ";
-        } else if (element.isCurveTo()) {
-            QPointF c1((element.x - offset.x()), (element.y - offset.y()));
-            ++i;
-            element = path.elementAt(i);
-
-            QPointF c2((element.x - offset.x()), (element.y - offset.y()));
-            ++i;
-            element = path.elementAt(i);
-
-            strm<<  "C "
-                 <<  (c1.x() - offset.x()) << " "
-                 <<  (c1.y() - offset.y()) << " "
-                 <<  (c2.x() - offset.x()) << " "
-                 <<  (c2.y() - offset.y()) << " "
-                <<  (element.x - offset.x()) << " "
-                 <<  (element.y - offset.y()) << " ";
-        }
+    if (quadPath) {
+        QString hintStr = pathHintString(*quadPath);
+        if (!hintStr.isEmpty())
+            stream() << hintStr;
     }
+
+    QString svgPathString = painterPath ? toSvgString(*painterPath) : toSvgString(*quadPath);
     stream() <<   "PathSvg { path: \"" << svgPathString << "\" }";
 
-    if (m_generateItems) {
+    if (shapePath) {
         auto *pathSvg = new QQuickPathSvg;
         pathSvg->setPath(svgPathString);
         pathSvg->setParent(shapePath);
@@ -807,10 +942,15 @@ bool SvgLoaderVisitor::visitStructureNodeStart(const QSvgStructureNode *node)
 
     if (!forceSeparatePaths && !isTopLevel && isPathContainer(node)) {
         stream() << shapeName() <<" { //combined path container";
+        m_indentLevel++;
+        if (m_flags & QSvgQmlWriter::CurveRenderer)
+            stream() << "preferredRendererType: Shape.CurveRenderer";
+        m_indentLevel--;
+
+        m_inShapeItem = true;
         if (m_generateItems) {
             auto *shapeItem = new QQuickShape;
             shapeItem->setPreferredRendererType(QQuickShape::CurveRenderer); // TODO: settable
-            m_inShapeItem = true;
             m_parentShapeItem = shapeItem;
             addCurrentItem(shapeItem, node);
         }
@@ -908,6 +1048,7 @@ QQuickItem *SvgLoaderVisitor::loadQML(QTextStream *outStream, const QSvgTinyDocu
     Q_ASSERT(outStream);
     m_stream = outStream;
     m_indentLevel = 0;
+
     stream() << "import QtQuick";
     stream() << "import QtQuick.Shapes" << Qt::endl;
 
@@ -949,13 +1090,18 @@ void SvgLoaderVisitor::visitNode(const QSvgNode *node)
     handleBaseNodeEnd(node);
 }
 
-QQuickItem *QSvgQmlWriter::loadSVG(const QSvgTinyDocument *doc, const QString &outFileName, const QString &typeName, QQuickItem *parentItem)
+QQuickItem *QSvgQmlWriter::loadSVG(const QSvgTinyDocument *doc, const QString &outFileName, GeneratorFlags flags, const QString &typeName, QQuickItem *parentItem, const QString &commentString)
 {
     SvgLoaderVisitor visitor;
     if (!typeName.isEmpty())
         visitor.setShapeTypeName(typeName);
+    visitor.setFlags(flags);
     QByteArray result;
     QTextStream str(&result);
+    if (commentString.isEmpty())
+        str << "// Generated from SVG" << Qt::endl;
+    else
+        str << "// " << commentString << Qt::endl;
     auto *loadedItem = visitor.loadQML(&str, doc, parentItem);
     if (!outFileName.isEmpty()) {
         QFile outFile(outFileName);
