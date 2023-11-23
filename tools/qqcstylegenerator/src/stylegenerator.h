@@ -607,15 +607,15 @@ private:
                     exportList += m_bridge->m_selectedImageFormats;
                 }
 
-                const auto componentSetName = getThemeString("component set", iconGroupConfig);
+                const auto containerName = getThemeString("container", iconGroupConfig);
                 const QJsonObject searchRoot = getComponentSearchRoot(iconGroupConfig);
-                const QJsonObject componentSet = getComponentSet(searchRoot, componentSetName);
-                const QString componentSetId = JsonTools::getString("id", componentSet);
-                const QString componentSetPath = JsonTools::resolvedPath(componentSetId);
-                debug("using component set: " + componentSetPath);
+                const QJsonObject containerObj = JsonTools::findChild({"type", "FRAME", "name", containerName}, searchRoot, m_bridge->m_sanity);
+                const QString containerId = JsonTools::getString("id", containerObj);
+                const QString containerPath = JsonTools::resolvedPath(containerId);
+                debug("using container path: " + containerPath);
 
-                // All the children of the component represents an icon
-                const auto children = componentSet.value("children").toArray();
+                // All the children of the container represents an icon
+                const auto children = containerObj.value("children").toArray();
                 progressTo(children.count());
 
                 for (auto it = children.constBegin(); it != children.constEnd(); ++it) {
@@ -823,22 +823,7 @@ private:
     {
         const QString figmaId = getString("id", iconObj);
         const QString figmaName = getString("name", iconObj);
-
-        QString imageName;
-        static QRegularExpression re(R"(Property.*=(.*))");
-        QRegularExpressionMatch match = re.match(figmaName);
-        if (match.hasMatch()) {
-            // The name might be a combination of many properties
-            QStringList propertyNames;
-            const auto properties = figmaName.split(',');
-            for (const auto &propertyName : properties) {
-                QRegularExpressionMatch match = re.match(propertyName);
-                propertyNames << match.captured(1);
-            }
-            imageName = propertyNames.join('_').toLower();
-        } else {
-            imageName = figmaName;
-        }
+        QString imageName = figmaName;
         imageName.replace(' ', '_');
         imageName.replace('-', '_');
 

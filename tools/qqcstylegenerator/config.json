@@ -15,7 +15,7 @@
     {
         "name": "Icons",
         "page": "Components",
-        "component set": "Icon",
+        "container": "IconContainer",
         "export": ["image"]
     }
     ],
