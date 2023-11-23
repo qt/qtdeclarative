@@ -101,6 +101,9 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged FINAL)
     Q_PROPERTY(bool activeFocus READ hasActiveFocus NOTIFY activeFocusChanged FINAL)
     Q_PROPERTY(bool activeFocusOnTab READ activeFocusOnTab WRITE setActiveFocusOnTab NOTIFY activeFocusOnTabChanged FINAL REVISION(2, 1))
+
+    QT6_ONLY(Q_PROPERTY(Qt::FocusPolicy focusPolicy READ focusPolicy WRITE setFocusPolicy NOTIFY focusPolicyChanged))
+    QT7_ONLY(Q_PROPERTY(Qt::FocusPolicy focusPolicy READ focusPolicy WRITE setFocusPolicy NOTIFY focusPolicyChanged FINAL))
     QT6_ONLY(Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged))
     QT7_ONLY(Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL))
 
@@ -272,6 +275,9 @@ public:
     bool isFocusScope() const;
     QQuickItem *scopedFocusItem() const;
 
+    Qt::FocusPolicy focusPolicy() const;
+    void setFocusPolicy(Qt::FocusPolicy policy);
+
     Qt::FocusReason focusReason() const;
     void setFocusReason(Qt::FocusReason reason);
 
@@ -389,6 +395,7 @@ Q_SIGNALS:
     void focusChanged(bool);
     void activeFocusChanged(bool);
     Q_REVISION(6, 7) void focusReasonChanged();
+    Q_REVISION(6, 7) void focusPolicyChanged();
     Q_REVISION(2, 1) void activeFocusOnTabChanged(bool);
     void parentChanged(QQuickItem *);
     void transformOriginChanged(TransformOrigin);

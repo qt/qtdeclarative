@@ -483,6 +483,7 @@ public:
     // focus chain and prevents tabbing outside.
     quint32 isTabFence:1;
     quint32 replayingPressEvent:1;
+    // Bit 40
     quint32 touchEnabled:1;
     quint32 hasCursorHandler:1;
     // set true when this item does not expect events via a subscene delivery agent; false otherwise
@@ -492,7 +493,8 @@ public:
     quint32 subtreeTransformChangedEnabled:1;
     quint32 inDestructor:1; // has entered ~QQuickItem
     quint32 focusReason:4;
-    // Bit 49
+    quint32 focusPolicy:4;
+    // Bit 53
 
     enum DirtyType {
         TransformOrigin         = 0x00000001,

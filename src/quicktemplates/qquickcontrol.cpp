@@ -1362,37 +1362,6 @@ bool QQuickControl::isMirrored() const
     return d->isMirrored();
 }
 
-/*!
-    \qmlproperty enumeration QtQuick.Controls::Control::focusPolicy
-
-    This property determines the way the control accepts focus.
-
-    \value Qt.TabFocus    The control accepts focus by tabbing.
-    \value Qt.ClickFocus  The control accepts focus by clicking.
-    \value Qt.StrongFocus The control accepts focus by both tabbing and clicking.
-    \value Qt.WheelFocus  The control accepts focus by tabbing, clicking, and using the mouse wheel.
-    \value Qt.NoFocus     The control does not accept focus.
-*/
-Qt::FocusPolicy QQuickControl::focusPolicy() const
-{
-    Q_D(const QQuickControl);
-    uint policy = d->focusPolicy;
-    if (activeFocusOnTab())
-        policy |= Qt::TabFocus;
-    return static_cast<Qt::FocusPolicy>(policy);
-}
-
-void QQuickControl::setFocusPolicy(Qt::FocusPolicy policy)
-{
-    Q_D(QQuickControl);
-    if (d->focusPolicy == policy)
-        return;
-
-    d->focusPolicy = policy;
-    setActiveFocusOnTab(policy & Qt::TabFocus);
-    emit focusPolicyChanged();
-}
-
 void QQuickControl::setFocusReason(Qt::FocusReason reason)
 {
     Q_D(const QQuickControl);

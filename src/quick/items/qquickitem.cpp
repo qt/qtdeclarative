@@ -3199,6 +3199,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , subtreeTransformChangedEnabled(true)
     , inDestructor(false)
     , focusReason(Qt::OtherFocusReason)
+    , focusPolicy(Qt::NoFocus)
     , dirtyAttributes(0)
     , nextDirtyItem(nullptr)
     , prevDirtyItem(nullptr)
@@ -6850,6 +6851,7 @@ void QQuickItem::setSmooth(bool smooth)
     This property holds whether the item wants to be in the tab focus
     chain. By default, this is set to \c false.
 */
+// TODO FOCUS: Deprecate
 bool QQuickItem::activeFocusOnTab() const
 {
     Q_D(const QQuickItem);
@@ -7856,6 +7858,40 @@ void QQuickItem::setFocusReason(Qt::FocusReason reason)
 
     d->focusReason = reason;
     emit focusReasonChanged();
+}
+
+/*!
+    \qmlproperty enumeration QtQuick::Item::focusPolicy
+    \since 6.7
+
+    This property determines the way the item accepts focus.
+
+    \value Qt.TabFocus    The item accepts focus by tabbing.
+    \value Qt.ClickFocus  The item accepts focus by clicking.
+    \value Qt.StrongFocus The item accepts focus by both tabbing and clicking.
+    \value Qt.WheelFocus  The item accepts focus by tabbing, clicking, and using the mouse wheel.
+    \value Qt.NoFocus     The item does not accept focus.
+
+    \note This property was a member of {QQuickControl} {Control} until Qt 6.7.
+*/
+Qt::FocusPolicy QQuickItem::focusPolicy() const
+{
+    Q_D(const QQuickItem);
+    uint policy = d->focusPolicy;
+    if (activeFocusOnTab())
+        policy |= Qt::TabFocus;
+    return static_cast<Qt::FocusPolicy>(policy);
+}
+
+void QQuickItem::setFocusPolicy(Qt::FocusPolicy policy)
+{
+    Q_D(QQuickItem);
+    if (d->focusPolicy == policy)
+        return;
+
+    d->focusPolicy = policy;
+    setActiveFocusOnTab(policy & Qt::TabFocus);
+    emit focusPolicyChanged();
 }
 
 /*!

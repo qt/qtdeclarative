@@ -39,7 +39,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL)
-    Q_PROPERTY(Qt::FocusPolicy focusPolicy READ focusPolicy WRITE setFocusPolicy NOTIFY focusPolicyChanged FINAL)
+    QT6_ONLY(Q_PROPERTY(Qt::FocusPolicy focusPolicy READ focusPolicy WRITE setFocusPolicy NOTIFY focusPolicyChanged FINAL))
     QT6_ONLY(Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL))
     Q_PROPERTY(bool visualFocus READ hasVisualFocus NOTIFY visualFocusChanged FINAL)
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL)
@@ -103,9 +103,6 @@ public:
     void resetLocale();
 
     bool isMirrored() const;
-
-    Qt::FocusPolicy focusPolicy() const;
-    void setFocusPolicy(Qt::FocusPolicy policy);
 
     void setFocusReason(Qt::FocusReason reason);
 
@@ -174,7 +171,6 @@ Q_SIGNALS:
     void spacingChanged();
     void localeChanged();
     void mirroredChanged();
-    void focusPolicyChanged();
     void visualFocusChanged();
     void hoveredChanged();
     void hoverEnabledChanged();
