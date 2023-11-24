@@ -935,11 +935,13 @@ function(_qt_internal_target_enable_qmllint target)
         ${qmllint_files}
     )
 
+    set(cmd_dummy ${CMAKE_COMMAND} -E echo "Nothing to do for target ${lint_target}.")
+
     # We need this target to depend on all qml type registrations. This is the
     # only way we can be sure that all *.qmltypes files for any QML modules we
     # depend on will have been generated.
     add_custom_target(${lint_target}
-        COMMAND "$<${have_qmllint_files}:${cmd}>"
+        COMMAND "$<IF:${have_qmllint_files},${cmd},${cmd_dummy}>"
         COMMAND_EXPAND_LISTS
         DEPENDS
             ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint
