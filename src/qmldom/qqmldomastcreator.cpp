@@ -800,6 +800,7 @@ bool QQmlDomAstCreator::visit(AST::UiObjectBinding *el)
                                            .withPath(bPathFromOwner)));
     pushEl(bPathFromOwner, *bPtr, el);
     FileLocations::addRegion(nodeStack.last().fileLocations, ColonTokenRegion, el->colonToken);
+    FileLocations::addRegion(nodeStack.last().fileLocations, IdentifierRegion, combineLocations(el->qualifiedId));
     loadAnnotations(el);
     QmlObject *objValue = bPtr->objectValue();
     Q_ASSERT_X(objValue, className, "could not recover objectValue");

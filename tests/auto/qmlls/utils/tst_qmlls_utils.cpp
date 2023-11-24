@@ -773,6 +773,7 @@ void tst_qmlls_utils::findUsages_data()
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 32, 32, strlen("inner"));
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 35, 32, strlen("inner"));
             expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 36, 32, strlen("inner"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 16, 9, strlen("inner"));
             const auto nestedComponent3Usages = makeUsages(testFileName, expectedUsages);
             QTest::addRow("findPropertyFromUsageInFieldMemberExpression")
                     << 36 << 34 << nestedComponent3Usages;
