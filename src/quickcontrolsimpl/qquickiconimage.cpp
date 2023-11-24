@@ -50,11 +50,22 @@ void QQuickIconImagePrivate::updateIcon()
         const QUrl entryUrl = QUrl::fromLocalFile(entry->filename);
         url = context ? context->resolvedUrl(entryUrl) : entryUrl;
         isThemeIcon = true;
+    } else if (source.isEmpty()) {
+        std::unique_ptr<QIconEngine> iconEngine(QIconLoader::instance()->iconEngine(icon.iconName));
+        if (iconEngine && !iconEngine->isNull()) {
+            // ### TODO that's the best we can do for now to select different pixmaps based on the
+            // QuickItem's state. QQuickIconImage cannot know about the state of the control that
+            // uses it without adding more properties that are then synced up with the control.
+            const QIcon::Mode mode = q->isEnabled() ? QIcon::Normal : QIcon::Disabled;
+            const QImage image = iconEngine->scaledPixmap(size, mode, QIcon::Off, dpr).toImage();
+            setImage(image);
+        }
     } else {
         url = source;
         isThemeIcon = false;
     }
-    q->load();
+    if (!url.isEmpty())
+        q->load();
 
     updatingIcon = false;
 }
@@ -106,6 +117,8 @@ void QQuickIconImage::setName(const QString &name)
 
     d->icon.entries.clear();
     d->icon = QIconLoader::instance()->loadIcon(name);
+    if (d->icon.iconName.isEmpty())
+        d->icon.iconName = name;
     if (isComponentComplete())
         d->updateIcon();
     emit nameChanged();
