@@ -342,6 +342,7 @@ MainRegion denotes the entire FileLocation region.
 enum FileLocationRegion : int {
     AsTokenRegion,
     DoKeywordRegion,
+    CaseKeywordRegion,
     CatchKeywordRegion,
     ColonTokenRegion,
     CommaTokenRegion,

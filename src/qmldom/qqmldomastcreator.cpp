@@ -1947,6 +1947,8 @@ void QQmlDomAstCreator::endVisit(AST::DefaultClause *exp)
         return;
 
     auto current = makeGenericScriptElement(exp, DomType::ScriptDefaultClause);
+    current->addLocation(DefaultKeywordRegion, exp->defaultToken);
+    current->addLocation(ColonTokenRegion, exp->colonToken);
 
     if (exp->statements) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
@@ -1971,6 +1973,8 @@ void QQmlDomAstCreator::endVisit(AST::CaseClause *exp)
         return;
 
     auto current = makeGenericScriptElement(exp, DomType::ScriptCaseClause);
+    current->addLocation(FileLocationRegion::CaseKeywordRegion, exp->caseToken);
+    current->addLocation(FileLocationRegion::ColonTokenRegion, exp->colonToken);
 
     if (exp->statements) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
@@ -2025,6 +2029,8 @@ void QQmlDomAstCreator::endVisit(AST::CaseBlock *exp)
         return;
 
     auto current = makeGenericScriptElement(exp, DomType::ScriptCaseBlock);
+    current->addLocation(FileLocationRegion::LeftBraceRegion, exp->lbraceToken);
+    current->addLocation(FileLocationRegion::RightBraceRegion, exp->rbraceToken);
 
     if (exp->moreClauses) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
@@ -2060,6 +2066,8 @@ void QQmlDomAstCreator::endVisit(AST::SwitchStatement *exp)
         return;
 
     auto current = makeGenericScriptElement(exp, DomType::ScriptSwitchStatement);
+    current->addLocation(FileLocationRegion::LeftParenthesisRegion, exp->lparenToken);
+    current->addLocation(FileLocationRegion::RightParenthesisRegion, exp->rparenToken);
 
     if (exp->block) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());

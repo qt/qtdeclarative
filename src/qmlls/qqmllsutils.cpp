@@ -2511,6 +2511,27 @@ QQmlLSUtils::suggestVariableDeclarationStatementCompletion(QQmlLSUtilsAppendOpti
 
 /*!
 \internal
+Generate the snippets for case and default statements.
+*/
+QList<CompletionItem> QQmlLSUtils::suggestCaseAndDefaultStatementCompletion()
+{
+    QList<CompletionItem> result;
+
+    // case snippet
+    result.append(makeSnippet("case value: statements...", "case ${1:value}:\n\t$0"));
+    // case + brackets snippet
+    result.append(makeSnippet("case value: { statements... }", "case ${1:value}: {\n\t$0\n}"));
+
+    // default snippet
+    result.append(makeSnippet("default: statements...", "default:\n\t$0"));
+    // default + brackets snippet
+    result.append(makeSnippet("default: { statements... }", "default: {\n\t$0\n}"));
+
+    return result;
+}
+
+/*!
+\internal
 Generates snippets or keywords for all possible JS statements where it makes sense. To use whenever
 any JS statement can be expected.
 
@@ -2586,6 +2607,30 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &c
         result.back().kind = int(CompletionItemKind::Keyword);
     }
 
+    // rules for case+default statements:
+    // 1) when inside a CaseBlock, or
+    // 2) inside a CaseClause, as an (non-nested) element of the CaseClause statementlist.
+    // 3) inside a DefaultClause, as an (non-nested) element of the DefaultClause statementlist,
+    //
+    // switch (x) {
+    // // (1)
+    // case 1:
+    //      myProperty = 5;
+    //      // (2) -> could be another statement of current case, but also a new case or default!
+    // default:
+    //      myProperty = 5;
+    //      // (3) -> could be another statement of current default, but also a new case or default!
+    // }
+    const DomType currentKind = currentItem.internalKind();
+    const DomType parentKind = currentItem.directParent().internalKind();
+    if (currentKind == DomType::ScriptCaseBlock || currentKind == DomType::ScriptCaseClause
+        || currentKind == DomType::ScriptDefaultClause
+        || (currentKind == DomType::List
+            && (parentKind == DomType::ScriptCaseClause
+                || parentKind == DomType::ScriptDefaultClause))) {
+        result << suggestCaseAndDefaultStatementCompletion();
+    }
+
     DomItem loopOrSwitchParent = currentItem;
     bool alreadyInLoop = false;
     bool alreadyInSwitch = false;
@@ -2602,40 +2647,38 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &c
             if (alreadyInLoop)
                 continue;
             alreadyInLoop = true;
-            for (auto view : std::array<QUtf8StringView, 2>{ "continue", "break" }) {
+
+            result.emplaceBack();
+            result.back().label = "continue";
+            result.back().kind = int(CompletionItemKind::Keyword);
+
+            // do not add break twice
+            if (!alreadyInSwitch) {
                 result.emplaceBack();
-                result.back().label = view.data();
+                result.back().label = "break";
                 result.back().kind = int(CompletionItemKind::Keyword);
             }
             break;
 
         case DomType::ScriptSwitchStatement:
-            if (alreadyInSwitch)
+            // check if break was already inserted because of switch or loop
+            if (alreadyInSwitch || alreadyInLoop)
                 continue;
             alreadyInSwitch = true;
 
-            // case snippet
-            result.append(makeSnippet("case value: statements...", "case ${1:value}:\n\t$0"));
-            // case + brackets snippet
-            result.append(
-                    makeSnippet("case value: { statements... }", "case ${1:value}: {\n\t$0\n}"));
-
-            // default snippet
-            result.append(makeSnippet("default: statements...", "default:\n\t$0"));
-            // case + brackets snippet
-            result.append(makeSnippet("default: { statements... }", "default: {\n\t$0\n}"));
-
-            // break
             result.emplaceBack();
             result.back().label = "break";
             result.back().kind = int(CompletionItemKind::Keyword);
-            break;
+
         default:
             continue;
         }
-        if (alreadyInLoop && alreadyInSwitch)
+
+        // early exit: cannot suggest more completions
+        if (alreadyInLoop)
             return result;
     }
+
     return result;
 }
 
@@ -2845,6 +2888,132 @@ static QList<CompletionItem> insideForEachStatement(const DomItem &currentItem,
     return {};
 }
 
+static QList<CompletionItem> insideSwitchStatement(const DomItem &currentItem,
+                                                   const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
+    const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
+
+    if (betweenLocations(leftParenthesis, ctx, rightParenthesis)) {
+        const QList<CompletionItem> res = QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+        return res;
+    }
+
+    return {};
+}
+
+static QList<CompletionItem> insideCaseClause(const DomItem &currentItem,
+                                              const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation caseKeyword = regions[CaseKeywordRegion];
+    const QQmlJS::SourceLocation colonToken = regions[ColonTokenRegion];
+
+    if (betweenLocations(caseKeyword, ctx, colonToken)) {
+        const QList<CompletionItem> res = QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+        return res;
+    }
+    if (afterLocation(colonToken, ctx)) {
+        const QList<CompletionItem> res = QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+        return res;
+    }
+
+    return {};
+}
+
+/*!
+\internal
+Checks if a case or default clause does happen before ctx in the code.
+*/
+static bool isCaseOrDefaultBeforeCtx(const DomItem &currentClause,
+                                     const CompletionContextStrings &ctx,
+                                     FileLocationRegion keywordRegion)
+{
+    Q_ASSERT(keywordRegion == QQmlJS::Dom::CaseKeywordRegion
+             || keywordRegion == QQmlJS::Dom::DefaultKeywordRegion);
+
+    if (!currentClause)
+        return false;
+
+    const auto token = FileLocations::treeOf(currentClause)->info().regions[keywordRegion];
+    if (afterLocation(token, ctx))
+        return true;
+
+    return false;
+}
+
+/*!
+\internal
+
+Search for a `case ...:` or a `default: ` clause happening before ctx, and return the
+corresponding DomItem of type DomType::CaseClauses or DomType::DefaultClause.
+
+Return an empty DomItem if neither case nor default was found.
+*/
+static DomItem previousCaseOfCaseBlock(const DomItem &currentItem,
+                                       const CompletionContextStrings &ctx)
+{
+    const DomItem caseClauses = currentItem.field(Fields::caseClauses);
+    for (int i = 0; i < caseClauses.indexes(); ++i) {
+        const DomItem currentClause = caseClauses.index(i);
+        if (isCaseOrDefaultBeforeCtx(currentClause, ctx, QQmlJS::Dom::CaseKeywordRegion)) {
+            return currentClause;
+        }
+    }
+
+    const DomItem defaultClause = currentItem.field(Fields::defaultClause);
+    if (isCaseOrDefaultBeforeCtx(defaultClause, ctx, QQmlJS::Dom::DefaultKeywordRegion))
+        return currentItem.field(Fields::defaultClause);
+
+    const DomItem moreCaseClauses = currentItem.field(Fields::moreCaseClauses);
+    for (int i = 0; i < moreCaseClauses.indexes(); ++i) {
+        const DomItem currentClause = moreCaseClauses.index(i);
+        if (isCaseOrDefaultBeforeCtx(currentClause, ctx, QQmlJS::Dom::CaseKeywordRegion)) {
+            return currentClause;
+        }
+    }
+
+
+    return {};
+}
+
+static QList<CompletionItem> insideCaseBlock(const DomItem &currentItem,
+                                             const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation leftBrace = regions[LeftBraceRegion];
+    const QQmlJS::SourceLocation rightBrace = regions[RightBraceRegion];
+
+    if (!betweenLocations(leftBrace, ctx, rightBrace))
+        return {};
+
+    // if there is a previous case or default clause, you can still add statements to it
+    if (const auto previousCase = previousCaseOfCaseBlock(currentItem, ctx))
+        return QQmlLSUtils::suggestJSStatementCompletion(previousCase);
+
+    // otherwise, only complete case and default
+    return QQmlLSUtils::suggestCaseAndDefaultStatementCompletion();
+}
+
+static QList<CompletionItem> insideDefaultClause(const DomItem &currentItem,
+                                                 const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation colonToken = regions[ColonTokenRegion];
+
+    if (afterLocation(colonToken, ctx)) {
+        const QList<CompletionItem> res = QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+        return res;
+    }
+
+    return {};
+}
+
 static QList<CompletionItem> insideBinaryExpressionCompletion(const DomItem &currentItem,
                                                               const CompletionContextStrings &ctx)
 {
@@ -2862,6 +3031,14 @@ static QList<CompletionItem> insideBinaryExpressionCompletion(const DomItem &cur
     }
 
     return {};
+}
+
+static bool ctxBeforeStatement(const CompletionContextStrings &ctx, const DomItem &currentItem,
+                               FileLocationRegion firstRegion)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const bool result = beforeLocation(ctx, regions[firstRegion]);
+    return result;
 }
 
 QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
@@ -2887,6 +3064,7 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
     for (DomItem currentParent = currentItem; currentParent;
          currentParent = currentParent.directParent()) {
         const DomType currentType = currentParent.internalKind();
+
         switch (currentType) {
         case DomType::Id:
             // suppress completions for ids
@@ -2957,6 +3135,16 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             block-statement.
             */
             return {};
+        case DomType::ScriptSwitchStatement:
+            return insideSwitchStatement(currentParent, ctx);
+        case DomType::ScriptCaseClause:
+            return insideCaseClause(currentParent, ctx);
+        case DomType::ScriptDefaultClause:
+            if (ctxBeforeStatement(ctx, currentParent, QQmlJS::Dom::DefaultKeywordRegion))
+                continue;
+            return insideDefaultClause(currentParent, ctx);
+        case DomType::ScriptCaseBlock:
+            return insideCaseBlock(currentParent, ctx);
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.
@@ -2968,10 +3156,6 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
         case DomType::ScriptElision:
         case DomType::ScriptArrayEntry:
         case DomType::ScriptPattern:
-        case DomType::ScriptSwitchStatement:
-        case DomType::ScriptCaseBlock:
-        case DomType::ScriptCaseClause:
-        case DomType::ScriptDefaultClause:
             return {};
 
         default:

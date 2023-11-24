@@ -222,6 +222,9 @@ OutWriter &OutWriter::writeRegion(FileLocationRegion region)
     case FinallyKeywordRegion:
         codeForRegion = u"finally"_s;
         break;
+    case CaseKeywordRegion:
+        codeForRegion = u"case"_s;
+        break;
 
     // not keywords:
     case ImportUriRegion:

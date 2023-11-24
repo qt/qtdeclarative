@@ -174,6 +174,8 @@ public:
     // JS statement completion
     static QList<CompletionItem> suggestJSStatementCompletion(const DomItem &currentItem);
     static QList<CompletionItem>
+    suggestCaseAndDefaultStatementCompletion();
+    static QList<CompletionItem>
     suggestVariableDeclarationStatementCompletion(QQmlLSUtilsAppendOption option = AppendSemicolon);
     static QPair<QString, QStringList> cmakeBuildCommand(const QString &path);
 };

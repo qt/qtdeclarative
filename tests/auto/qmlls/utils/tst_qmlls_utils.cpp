@@ -2618,6 +2618,153 @@ void tst_qmlls_utils::completions_data()
             << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
                                     { forStatementCompletion, CompletionItemKind::Snippet } }
             << QStringList{} << None;
+
+    QTest::newRow("inSwitchExpression")
+            << testFile(u"completions/switchStatements.qml"_s) << 10 << 16
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"myProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ letStatementCompletion, propertyCompletion, } << None;
+
+    QTest::newRow("beforeCaseStatement")
+            << testFile(u"completions/switchStatements.qml"_s) << 11 << 1
+            << ExpectedCompletions{ { caseStatementCompletion, CompletionItemKind::Snippet },
+                                    { caseStatement2Completion, CompletionItemKind::Snippet },
+                                    { defaultStatementCompletion, CompletionItemKind::Snippet },
+                                    { defaultStatement2Completion, CompletionItemKind::Snippet } }
+            << QStringList{ letStatementCompletion, propertyCompletion, u"x"_s, u"myProperty"_s }
+            << None;
+    QTest::newRow("inCaseExpression")
+            << testFile(u"completions/switchStatements.qml"_s) << 12 << 14
+            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { u"myProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ letStatementCompletion, propertyCompletion, caseStatementCompletion }
+            << None;
+    QTest::newRow("inCaseStatementList")
+            << testFile(u"completions/switchStatements.qml"_s) << 13 << 1
+            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { caseStatementCompletion, CompletionItemKind::Snippet },
+                                    { defaultStatementCompletion, CompletionItemKind::Snippet },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"break"_s, CompletionItemKind::Keyword },
+                                    { u"return"_s, CompletionItemKind::Keyword },
+                                    { u"myProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ propertyCompletion }
+            << None;
+    QTest::newRow("inDefaultStatementList")
+            << testFile(u"completions/switchStatements.qml"_s) << 24 << 1
+            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { caseStatementCompletion, CompletionItemKind::Snippet },
+                                    { defaultStatementCompletion, CompletionItemKind::Snippet },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"break"_s, CompletionItemKind::Keyword },
+                                    { u"return"_s, CompletionItemKind::Keyword },
+                                    { u"myProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ propertyCompletion }
+            << None;
+    QTest::newRow("inMoreCasesStatementList")
+            << testFile(u"completions/switchStatements.qml"_s) << 26 << 1
+            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { caseStatementCompletion, CompletionItemKind::Snippet },
+                                    { defaultStatementCompletion, CompletionItemKind::Snippet },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"break"_s, CompletionItemKind::Keyword },
+                                    { u"return"_s, CompletionItemKind::Keyword },
+                                    { u"myProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ propertyCompletion }
+            << None;
+
+    QTest::newRow("inCaseBeforeBlock")
+            << testFile(u"completions/switchStatements.qml"_s) << 14 << 23
+            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { caseStatementCompletion, CompletionItemKind::Snippet },
+                                    { defaultStatementCompletion, CompletionItemKind::Snippet },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"myProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ propertyCompletion, }
+            << None;
+    QTest::newRow("inCaseBeforeBlock2")
+            << testFile(u"completions/switchStatements.qml"_s) << 14 << 24
+            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"myProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ propertyCompletion, }
+            << None;
+
+
+    QTest::newRow("inCaseNestedStatement")
+            << testFile(u"completions/switchStatements.qml"_s) << 16 << 1
+            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"myProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ propertyCompletion, caseStatementCompletion, defaultStatementCompletion }
+            << None;
+
+    QTest::newRow("inCaseAfterBlock")
+            << testFile(u"completions/switchStatements.qml"_s) << 22 << 1
+            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { caseStatementCompletion, CompletionItemKind::Snippet },
+                                    { defaultStatementCompletion, CompletionItemKind::Snippet },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"myProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ propertyCompletion, }
+            << None;
+
+    QTest::newRow("inCaseBeforeDefault")
+            << testFile(u"completions/switchStatements.qml"_s) << 23 << 1
+            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { caseStatementCompletion, CompletionItemKind::Snippet },
+                                    { defaultStatementCompletion, CompletionItemKind::Snippet },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"myProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ propertyCompletion, }
+            << None;
+
+    QTest::newRow("inCaseAfterDefault")
+            << testFile(u"completions/switchStatements.qml"_s) << 25 << 1
+            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { caseStatementCompletion, CompletionItemKind::Snippet },
+                                    { defaultStatementCompletion, CompletionItemKind::Snippet },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"myProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ propertyCompletion, }
+            << None;
+
+    QTest::newRow("beforeAnyCase")
+            << testFile(u"completions/switchStatements.qml"_s) << 20 << 1
+            << ExpectedCompletions{ { caseStatementCompletion, CompletionItemKind::Snippet },
+                                    { defaultStatementCompletion, CompletionItemKind::Snippet } }
+            << QStringList{ propertyCompletion, letStatementCompletion, u"myProperty"_s, u"x"_s,
+                            u"f"_s }
+            << None;
+
+    QTest::newRow("beforeAnyDefault")
+            << testFile(u"completions/switchStatements.qml"_s) << 32 << 1
+            << ExpectedCompletions{ { caseStatementCompletion, CompletionItemKind::Snippet },
+                                    { defaultStatementCompletion, CompletionItemKind::Snippet } }
+            << QStringList{ propertyCompletion, letStatementCompletion, u"myProperty"_s, u"x"_s,
+                            u"f"_s }
+            << None;
+
+    QTest::newRow("inDefaultAfterDefault")
+            << testFile(u"completions/switchStatements.qml"_s) << 33 << 1
+            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { caseStatementCompletion, CompletionItemKind::Snippet },
+                                    { defaultStatementCompletion, CompletionItemKind::Snippet },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"myProperty"_s, CompletionItemKind::Property } }
+            << QStringList{ propertyCompletion, }
+            << None;
 }
 
 void tst_qmlls_utils::completions()
