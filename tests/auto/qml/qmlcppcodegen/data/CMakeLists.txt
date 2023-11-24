@@ -210,6 +210,7 @@ set(qml_files
     nullAccess.qml
     nullAccessInsideSignalHandler.qml
     nullComparison.qml
+    nullishCoalescing.qml
     numbersInJsPrimitive.qml
     objectInVar.qml
     objectLookupOnListElement.qml

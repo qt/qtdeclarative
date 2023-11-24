@@ -9,10 +9,10 @@ class GOL_Object : public QObject
     Q_OBJECT
     QML_ELEMENT
 
-    Q_PROPERTY(int i READ i WRITE setI)
-    Q_PROPERTY(QString s READ s WRITE setS)
-    Q_PROPERTY(GOL_Object *childA READ childA WRITE setChildA)
-    Q_PROPERTY(Enum e READ e)
+    Q_PROPERTY(int i READ i CONSTANT FINAL)
+    Q_PROPERTY(QString s READ s CONSTANT FINAL)
+    Q_PROPERTY(GOL_Object *childA READ childA WRITE setChildA NOTIFY childAChanged FINAL)
+    Q_PROPERTY(Enum e READ e CONSTANT FINAL)
 
 public:
     GOL_Object(QObject *parent = nullptr) : QObject(parent) { }
@@ -29,6 +29,9 @@ public:
     enum Enum { V1, V2 };
     Q_ENUM(Enum)
     Enum e() const { return Enum::V2; }
+
+signals:
+    void childAChanged();
 
 private:
     int m_i = 5;

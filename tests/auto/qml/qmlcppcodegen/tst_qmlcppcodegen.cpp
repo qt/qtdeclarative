@@ -173,6 +173,8 @@ private slots:
     void nullAccess();
     void nullAccessInsideSignalHandler();
     void nullComparison();
+    void nullishCoalescing();
+    void nullishCoalescing_data();
     void numbersInJsPrimitive();
     void objectInVar();
     void objectLookupOnListElement();
@@ -3466,6 +3468,54 @@ void tst_QmlCppCodegen::nullComparison()
     QCOMPARE(o->property("x").toInt(), 1);
     QCOMPARE(o->property("y").toInt(), 5);
     QCOMPARE(o->property("z").toInt(), 18);
+}
+
+void tst_QmlCppCodegen::nullishCoalescing_data()
+{
+    QTest::addColumn<QString>("propertyName");
+    QTest::addColumn<QVariant>("expected");
+
+    const auto undefinedValue = QVariant();
+    const auto nullValue = QVariant::fromMetaType(QMetaType::fromType<std::nullptr_t>(), nullptr);
+
+    QTest::addRow("trivial-good-int") << "p1" << QVariant(5);
+    QTest::addRow("trivial-good-string") << "p2" << QVariant("6");
+
+    QTest::addRow("trivial-bad-undefined-undefined") << "p3" << undefinedValue;
+    QTest::addRow("trivial-bad-undefined-null") << "p4" << nullValue;
+    QTest::addRow("trivial-bad-undefined-int") << "p5" << QVariant(-1);
+    QTest::addRow("trivial-bad-undefined-string") << "p6" << QVariant("-1");
+
+    QTest::addRow("trivial-bad-null-undefined") << "p7" << undefinedValue;
+    QTest::addRow("trivial-bad-null-null") << "p8" << nullValue;
+    QTest::addRow("trivial-bad-null-int") << "p9" << QVariant(-1);
+    QTest::addRow("trivial-bad-null-string") << "p10" << QVariant("-1");
+
+    QTest::addRow("enum1") << "p11" << QVariant(1);
+
+    QTest::addRow("multiple ?? int") << "p12" << QVariant(1);
+    QTest::addRow("multiple ?? string") << "p13" << QVariant("1");
+    QTest::addRow("multiple ?? mixed2") << "p14" << QVariant("2");
+    QTest::addRow("multiple ?? mixed3") << "p15" << QVariant(1);
+
+    QTest::addRow("optional + nullish bad") << "p16" << QVariant(-1);
+    QTest::addRow("optional + nullish good") << "p17" << QVariant(5);
+}
+
+void tst_QmlCppCodegen::nullishCoalescing()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/qt/qml/TestTypes/nullishCoalescing.qml"_s);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QFETCH(QString, propertyName);
+    QFETCH(QVariant, expected);
+
+    QVariant actual = o->property(propertyName.toLocal8Bit());
+    QCOMPARE(actual, expected);
 }
 
 void tst_QmlCppCodegen::numbersInJsPrimitive()
