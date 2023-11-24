@@ -24,6 +24,11 @@ TestCase {
     }
 
     Component {
+        id: signalSpyComponent
+        SignalSpy {}
+    }
+
+    Component {
         id: buttonComponent
         Button { }
     }
@@ -1214,5 +1219,62 @@ TestCase {
         // Note that we can't use the properties argument of createTemporaryObject due to QTBUG-117201.
         textArea.background = null
         verify(!placeholderTextItem.visible)
+    }
+
+    Component {
+        id: textFieldAndButtonComponent
+
+        FocusScope {
+            focus: true
+            anchors.fill: parent
+
+            property alias textField: textField
+            property alias button: button
+
+            Keys.onEscapePressed: function (event) {
+                event.accepted = true
+                button.forceActiveFocus()
+                textField.forceActiveFocus()
+            }
+
+            TextField {
+                id: textField
+                focus: true
+                placeholderText: "placeholderText"
+                anchors.fill: parent
+            }
+
+            Button {
+                id: button
+                anchors.right: parent.right
+                text: focus ? "focus" : "no focus"
+            }
+        }
+    }
+
+    // QTBUG-118889
+    function test_focusChanges() {
+        let focusScope = createTemporaryObject(textFieldAndButtonComponent, testCase)
+        verify(focusScope)
+        testCase.Window.window.requestActivate()
+        tryCompare(testCase.Window.window, "active", true)
+
+        let textField = focusScope.textField
+        verify(textField.activeFocus)
+        let textFieldActiveFocusSpy = signalSpyComponent.createObject(textField,
+            { target: textField, signalName: "activeFocusChanged" })
+        verify(textFieldActiveFocusSpy.valid)
+
+        let button = focusScope.button
+        let buttonActiveFocusSpy = signalSpyComponent.createObject(button,
+            { target: button, signalName: "activeFocusChanged" })
+        verify(buttonActiveFocusSpy.valid)
+
+        // Shouldn't assert after quickly switching focus.
+        keyClick(Qt.Key_Escape)
+        // true => false => true.
+        compare(textFieldActiveFocusSpy.count, 2)
+        // false => true => false.
+        compare(buttonActiveFocusSpy.count, 2)
     }
 }
