@@ -39,13 +39,12 @@ TestCase {
     }
 
     function init() {
+        failOnWarning(/.?/)
         tryCompare(testCase.Window.window, "active", true)
     }
 
     function test_defaults() {
-        failOnWarning(/.?/)
-
-        var control = createTemporaryObject(dialog, testCase)
+        let control = createTemporaryObject(dialog, testCase)
         verify(control)
         verify(control.header)
         verify(control.footer)
@@ -54,9 +53,9 @@ TestCase {
     }
 
     function test_accept() {
-        var control = createTemporaryObject(dialog, testCase)
+        let control = createTemporaryObject(dialog, testCase)
 
-        var openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
+        let openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
         verify(openedSpy.valid)
 
         control.open()
@@ -64,10 +63,10 @@ TestCase {
         compare(openedSpy.count, 1)
         verify(control.visible)
 
-        var acceptedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "accepted"})
+        let acceptedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "accepted"})
         verify(acceptedSpy.valid)
 
-        var closedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "closed"})
+        let closedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "closed"})
         verify(closedSpy.valid)
 
         control.accept()
@@ -80,9 +79,9 @@ TestCase {
     }
 
     function test_reject() {
-        var control = createTemporaryObject(dialog, testCase)
+        let control = createTemporaryObject(dialog, testCase)
 
-        var openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
+        let openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
         verify(openedSpy.valid)
 
         control.open()
@@ -90,10 +89,10 @@ TestCase {
         compare(openedSpy.count, 1)
         verify(control.visible)
 
-        var rejectedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rejected"})
+        let rejectedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rejected"})
         verify(rejectedSpy.valid)
 
-        var closedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "closed"})
+        let closedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "closed"})
         verify(closedSpy.valid)
 
         control.reject()
@@ -168,46 +167,46 @@ TestCase {
     }
 
     function test_buttonBox(data) {
-        var control = createTemporaryObject(dialog, testCase)
+        let control = createTemporaryObject(dialog, testCase)
 
         if (data.custom)
             control.footer = buttonBox.createObject(testCase)
         control.standardButtons = Dialog.Ok | Dialog.Cancel
-        var box = control.footer
+        let box = control.footer
         verify(box)
         compare(box.standardButtons, Dialog.Ok | Dialog.Cancel)
 
-        var acceptedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "accepted"})
+        let acceptedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "accepted"})
         verify(acceptedSpy.valid)
         box.accepted()
         compare(acceptedSpy.count, 1)
 
-        var rejectedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rejected"})
+        let rejectedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rejected"})
         verify(rejectedSpy.valid)
         box.rejected()
         compare(rejectedSpy.count, 1)
     }
 
     function test_qtbug71444() {
-        var control = createTemporaryObject(qtbug71444, testCase)
+        let control = createTemporaryObject(qtbug71444, testCase)
         verify(control)
     }
 
     function test_standardButtons() {
-        var control = createTemporaryObject(dialog, testCase)
+        let control = createTemporaryObject(dialog, testCase)
 
         control.standardButtons = Dialog.Ok
 
-        var box = control.footer ? control.footer : control.header
+        let box = control.footer ? control.footer : control.header
         verify(box)
         compare(box.count, 1)
-        var okButton = box.itemAt(0)
+        let okButton = box.itemAt(0)
         verify(okButton)
         compare(okButton.text.toUpperCase(), "OK")
 
         control.standardButtons = Dialog.Cancel
         compare(box.count, 1)
-        var cancelButton = control.footer.itemAt(0)
+        let cancelButton = control.footer.itemAt(0)
         verify(cancelButton)
         compare(cancelButton.text.toUpperCase(), "CANCEL")
 
@@ -230,10 +229,10 @@ TestCase {
     }
 
     function test_layout() {
-        var control = createTemporaryObject(dialog, testCase, {width: 100, height: 100})
+        let control = createTemporaryObject(dialog, testCase, {width: 100, height: 100})
         verify(control)
 
-        var openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
+        let openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
         verify(openedSpy.valid)
 
         control.open()
@@ -324,10 +323,10 @@ TestCase {
     }
 
     function test_spacing(data) {
-        var control = createTemporaryObject(dialog, testCase, {spacing: 20, width: 100, height: 100})
+        let control = createTemporaryObject(dialog, testCase, {spacing: 20, width: 100, height: 100})
         verify(control)
 
-        var openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
+        let openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
         verify(openedSpy.valid)
 
         control.open()
@@ -381,14 +380,14 @@ TestCase {
     }
 
     function test_signals(data) {
-        var control = createTemporaryObject(dialog, testCase)
+        let control = createTemporaryObject(dialog, testCase)
         verify(control)
 
         control.standardButtons = data.standardButton
-        var button = control.standardButton(data.standardButton)
+        let button = control.standardButton(data.standardButton)
         verify(button)
 
-        var buttonSpy = signalSpy.createObject(control.contentItem, {target: control, signalName: data.signalName})
+        let buttonSpy = signalSpy.createObject(control.contentItem, {target: control, signalName: data.signalName})
         verify(buttonSpy.valid)
 
         button.clicked()
@@ -432,7 +431,7 @@ TestCase {
         if (Qt.platform.pluginName === "offscreen")
             skip("QTBUG-89909")
 
-        var window = createTemporaryObject(qtbug85884, testCase)
+        let window = createTemporaryObject(qtbug85884, testCase)
         verify(window)
         tryCompare(window, "focusItemActiveFocus", true)
 
