@@ -18,15 +18,17 @@ TestCase {
         DayOfWeekRow { }
     }
 
-    function test_defaults() {
+    function init () {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(component, testCase)
         verify(control)
     }
 
     function test_locale() {
-        var control = component.createObject(testCase)
+        let control = component.createObject(testCase)
 
         verify(control.contentItem.children[0])
 
@@ -43,7 +45,7 @@ TestCase {
     }
 
     function test_font() {
-        var control = component.createObject(testCase)
+        let control = component.createObject(testCase)
 
         verify(control.contentItem.children[0])
 
