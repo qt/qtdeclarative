@@ -38,18 +38,20 @@ TestCase {
         SignalSpy { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(defaultComponent, testCase)
         verify(control)
     }
 
     function test_mouse() {
-        var control = createTemporaryObject(delayButton, testCase)
+        let control = createTemporaryObject(delayButton, testCase)
         verify(control)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         // click
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
@@ -145,12 +147,12 @@ TestCase {
     }
 
     function test_touch() {
-        var control = createTemporaryObject(delayButton, testCase)
+        let control = createTemporaryObject(delayButton, testCase)
         verify(control)
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         // click
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
@@ -224,13 +226,13 @@ TestCase {
     }
 
     function test_keys() {
-        var control = createTemporaryObject(delayButton, testCase)
+        let control = createTemporaryObject(delayButton, testCase)
         verify(control)
 
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         // click
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
@@ -275,8 +277,8 @@ TestCase {
         sequenceSpy.expectedSequence = []
         // Not testing Key_Enter and Key_Return because QGnomeTheme uses them for
         // pressing buttons and the CI uses the QGnomeTheme platform theme.
-        var keys = [Qt.Key_Escape, Qt.Key_Tab]
-        for (var i = 0; i < keys.length; ++i) {
+        let keys = [Qt.Key_Escape, Qt.Key_Tab]
+        for (let i = 0; i < keys.length; ++i) {
             sequenceSpy.reset()
             keyClick(keys[i])
             verify(sequenceSpy.success)
@@ -284,10 +286,10 @@ TestCase {
     }
 
     function test_progress() {
-        var control = createTemporaryObject(delayButton, testCase)
+        let control = createTemporaryObject(delayButton, testCase)
         verify(control)
 
-        var progressSpy = signalSpy.createObject(control, {target: control, signalName: "progressChanged"})
+        let progressSpy = signalSpy.createObject(control, {target: control, signalName: "progressChanged"})
         verify(progressSpy.valid)
 
         compare(control.progress, 0.0)
@@ -297,7 +299,7 @@ TestCase {
     }
 
     function test_baseline() {
-        var control = createTemporaryObject(delayButton, testCase)
+        let control = createTemporaryObject(delayButton, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
     }
