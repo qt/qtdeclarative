@@ -183,6 +183,8 @@ public:
 
     void clearGrabbers(QPointerEvent *event);
 
+    void updateChildWindowStackingOrder(QQuickItem *item = nullptr);
+
     QSGRenderContext *context;
     QSGRenderer *renderer;
     QByteArray visualizationMode; // Default renderer supports "clip", "overdraw", "changes", "batches" and blank.

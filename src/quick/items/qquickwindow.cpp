@@ -8,6 +8,7 @@
 #include "qquickitem_p.h"
 #include "qquickevents_p_p.h"
 #include "qquickgraphicsdevice_p.h"
+#include "qquickwindowcontainer_p.h"
 
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgplaintexture_p.h>
@@ -332,6 +333,22 @@ struct PolishLoopDetector
     int numPolishLoopsInSequence = 0;
 };
 
+static const QQuickItem *firstItemWithDirtyChildrenStacking(const QQuickItem *item)
+{
+    if (QQuickItemPrivate::get(item)->dirtyAttributes
+        & QQuickItemPrivate::ChildrenStackingChanged) {
+        return item;
+    }
+
+    const auto childItems = item->childItems();
+    for (const auto *childItem : childItems) {
+        if (auto *dirtyItem = firstItemWithDirtyChildrenStacking(childItem))
+            return dirtyItem;
+    }
+
+    return nullptr;
+}
+
 void QQuickWindowPrivate::polishItems()
 {
     // An item can trigger polish on another item, or itself for that matter,
@@ -365,6 +382,11 @@ void QQuickWindowPrivate::polishItems()
             deliveryAgentPrivate()->updateFocusItemTransform();
     }
 #endif
+
+    if (auto *dirtyItem = firstItemWithDirtyChildrenStacking(contentItem)) {
+        qCDebug(lcQuickWindow) << dirtyItem << "has dirty child stacking order";
+        updateChildWindowStackingOrder();
+    }
 }
 
 /*!
@@ -1567,6 +1589,23 @@ bool QQuickWindow::event(QEvent *event)
     case QEvent::DevicePixelRatioChange:
         physicalDpiChanged();
         break;
+    case QEvent::ChildWindowAdded: {
+        auto *childEvent = static_cast<QChildWindowEvent*>(event);
+        auto *childWindow = childEvent->child();
+        qCDebug(lcQuickWindow) << "Child window" << childWindow << "added to" << this;
+        if (childWindow->handle()) {
+            // The reparenting has already resulted in the native window
+            // being added to its parent, on top of all other windows. We need
+            // to do a synchronous re-stacking of the windows here, to avoid
+            // leaving the window in the wrong position while waiting for the
+            // asynchronous callback to QQuickWindow::polishItems().
+            d->updateChildWindowStackingOrder();
+        } else {
+            qCDebug(lcQuickWindow) << "No platform window yet."
+                << "Deferring child window stacking until surface creation";
+        }
+        break;
+    }
     default:
         break;
     }
@@ -1580,6 +1619,35 @@ bool QQuickWindow::event(QEvent *event)
         return true;
     else
         return QWindow::event(event);
+}
+
+void QQuickWindowPrivate::updateChildWindowStackingOrder(QQuickItem *item)
+{
+    Q_Q(QQuickWindow);
+
+    if (!item) {
+        qCDebug(lcQuickWindow) << "Updating child window stacking order for" << q;
+        item = contentItem;
+    }
+    auto *itemPrivate = QQuickItemPrivate::get(item);
+    const auto paintOrderChildItems = itemPrivate->paintOrderChildItems();
+    for (auto *child : paintOrderChildItems) {
+        if (auto *windowContainer = qobject_cast<QQuickWindowContainer*>(child)) {
+            auto *window = windowContainer->containedWindow();
+            if (!window) {
+                qCDebug(lcQuickWindow) << windowContainer << "has no contained window yet";
+                continue;
+            }
+            if (window->parent() != q) {
+                qCDebug(lcQuickWindow) << window << "is not yet child of this window";
+                continue;
+            }
+            qCDebug(lcQuickWindow) << "Raising" << window << "owned by" << windowContainer;
+            window->raise();
+        }
+
+        updateChildWindowStackingOrder(child);
+    }
 }
 
 /*! \reimp */
@@ -3590,6 +3658,11 @@ void QQuickWindow::endExternalCommands()
     default, depending on the window manager, it may also be necessary to set
     the \l Window::flags property with a suitable \l Qt::WindowType (such as
     \c Qt::Dialog).
+
+    If a \l{QtQuick::Window::parent}{visual parent} is set on the Window
+    the visual parent will take precedence over the transientParent.
+
+    \sa QtQuick::Window::parent
 */
 
 /*!

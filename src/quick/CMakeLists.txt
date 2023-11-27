@@ -97,6 +97,7 @@ qt_internal_add_qml_module(Quick
         items/qquickview.cpp items/qquickview.h items/qquickview_p.h
         items/qquickwindow.cpp items/qquickwindow.h items/qquickwindow_p.h
         items/qquickwindowattached.cpp items/qquickwindowattached_p.h
+        items/qquickwindowcontainer.cpp items/qquickwindowcontainer_p.h
         items/qquickwindowmodule.cpp items/qquickwindowmodule_p.h
         items/qquickwindowmodule_p_p.h
         qtquickglobal.h qtquickglobal_p.h
