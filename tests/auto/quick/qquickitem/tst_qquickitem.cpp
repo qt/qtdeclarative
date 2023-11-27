@@ -24,7 +24,7 @@
 #include <QTranslator>
 #include <QtCore/qregularexpression.h>
 
-#ifdef TEST_QTBUG_60123
+#ifdef QT_WIDGETS_LIB
 #include <QWidget>
 #include <QMainWindow>
 #endif
@@ -217,7 +217,7 @@ private slots:
 
     void shortcutOverride();
 
-#ifdef TEST_QTBUG_60123
+#ifdef QT_WIDGETS_LIB
     void qtBug60123();
 #endif
 
@@ -2332,7 +2332,7 @@ void tst_qquickitem::shortcutOverride()
     QCOMPARE(view.rootObject()->property("shortcutActivationCount").toInt(), 1);
 }
 
-#ifdef TEST_QTBUG_60123
+#ifdef QT_WIDGETS_LIB
 void tst_qquickitem::qtBug60123()
 {
     QMainWindow main;

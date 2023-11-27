@@ -36,8 +36,6 @@ qt_internal_add_test(tst_qquickitem
 #####################################################################
 
 qt_internal_extend_target(tst_qquickitem CONDITION TARGET Qt::Widgets
-    DEFINES
-        TEST_QTBUG_60123
     LIBRARIES
         Qt::Widgets
 )
