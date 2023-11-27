@@ -19,6 +19,11 @@ int main(int argc, char **argv)
     // Produce reliably the same output for the same input by disabling QHash's random seeding.
     QHashSeed::setDeterministicGlobalSeed();
 
+    // No, you are not supposed to mess with the message pattern.
+    // Qt Creator wants to read those messages as-is and we want the convenience
+    // of QDebug to print them.
+    qputenv("QT_MESSAGE_PATTERN", "%{if-category}%{category}: %{endif}%{message}");
+
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("qmltyperegistrar"));
     QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
