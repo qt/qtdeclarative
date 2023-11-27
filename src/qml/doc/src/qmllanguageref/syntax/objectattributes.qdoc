@@ -807,7 +807,7 @@ In order to be consistent with method declarations, you should prefer the
 type declarations using colons.
 
 If the signal has no parameters, the "()" brackets are optional. If parameters
-are used, the parameter types must be declared, as for the \c string and \c var
+are used, the parameter types must be declared, as for the \c string and \c int
 arguments for the \c actionPerformed signal above. The allowed parameter types
 are the same as those listed under \l {Defining Property Attributes} on this page.
 
