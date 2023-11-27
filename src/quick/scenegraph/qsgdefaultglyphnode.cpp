@@ -47,11 +47,14 @@ void QSGDefaultGlyphNode::update()
     QRawFont font = m_glyphs.rawFont();
     QMargins margins(0, 0, 0, 0);
 
-    if (m_style == QQuickText::Normal) {
+    const auto *fontEngine = QRawFontPrivate::get(font)->fontEngine;
+    const bool isColorFont = fontEngine->glyphFormat == QFontEngine::Format_ARGB;
+
+    if (m_style == QQuickText::Normal || isColorFont) {
         QFontEngine::GlyphFormat glyphFormat;
 
         // Don't try to override glyph format of color fonts
-        if (QRawFontPrivate::get(font)->fontEngine->glyphFormat == QFontEngine::Format_ARGB) {
+        if (isColorFont) {
             glyphFormat = QFontEngine::Format_None;
         } else {
             switch (m_preferredAntialiasingMode) {
