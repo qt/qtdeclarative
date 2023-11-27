@@ -395,6 +395,46 @@ void MetaTypesJsonProcessor::addRelatedTypes()
         return false;
     };
 
+    const auto addSupers = [&](const QCborMap &context, const QList<QAnyStringView> &namespaces) {
+        const auto interfaces = context.value(S_INTERFACES).toArray();
+        for (const QCborValue &iface : interfaces)
+            addInterfaceOrSelfExtension(interfaceName(iface), namespaces);
+
+
+        // We don't warn about missing bases for value types. They don't have to be registered.
+        bool warnAboutSupers = !context[S_GADGET].toBool();
+
+        QList<QAnyStringView> missingSupers;
+
+        const auto supers = context.value(S_SUPER_CLASSES).toArray();
+        for (const QCborValue &super : supers) {
+            const QCborMap superObject = super.toMap();
+            if (superObject.value(S_ACCESS) != S_PUBLIC)
+                continue;
+
+            QAnyStringView typeName = toStringView(superObject, S_NAME);
+            if (const FoundType other = QmlTypesClassDescription::findType(
+                        m_types, m_foreignTypes, typeName, namespaces)) {
+                addReference(
+                        other.native, &processedRelatedNativeNames, other.nativeOrigin);
+                addReference(
+                        other.javaScript, &processedRelatedJavaScriptNames, other.javaScriptOrigin);
+                warnAboutSupers = false;
+            } else {
+                missingSupers.append(typeName);
+            }
+        }
+
+        for (QAnyStringView typeName : std::as_const(missingSupers)) {
+            // If we've found one valid base type, don't complain about the others.
+            if (warnAboutSupers && !unresolvedForeignNames.contains(typeName))
+                warning(context) << typeName << "is used but cannot be found.";
+
+            processedRelatedNativeNames.insert(typeName);
+            processedRelatedJavaScriptNames.insert(typeName);
+        }
+    };
+
     // Then recursively iterate the super types and attached types, marking the
     // ones we are interested in as related.
     while (!typeQueue.isEmpty()) {
@@ -454,16 +494,9 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                     }
                 } else {
                     const QCborMap other = found.select(classDef, "Foreign");
-                    const auto otherSupers = other.value(S_SUPER_CLASSES).toArray();
                     const QList<QAnyStringView> otherNamespaces
                             = MetaTypesJsonProcessor::namespaces(other);
-                    if (!otherSupers.isEmpty()) {
-                        const QCborMap otherSuperObject = otherSupers.first().toMap();
-                        if (otherSuperObject.value(S_ACCESS) == S_PUBLIC) {
-                            addType(classDef, toStringView(otherSuperObject, S_NAME),
-                                    otherNamespaces);
-                        }
-                    }
+                    addSupers(other, otherNamespaces);
 
                     const auto otherClassInfos = other.value(S_CLASS_INFOS).toArray();
                     for (const QCborValue &otherClassInfo : otherClassInfos) {
@@ -487,16 +520,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                     << "is declared as foreign type, but cannot be found.";
         }
 
-        const auto interfaces = classDef.value(S_INTERFACES).toArray();
-        for (const QCborValue &iface : interfaces)
-            addInterfaceOrSelfExtension(interfaceName(iface), namespaces);
-
-        const auto supers = classDef.value(S_SUPER_CLASSES).toArray();
-        for (const QCborValue &super : supers) {
-            const QCborMap superObject = super.toMap();
-            if (superObject.value(S_ACCESS) == S_PUBLIC)
-                addType(classDef, toStringView(superObject, S_NAME), namespaces);
-        }
+        addSupers(classDef, namespaces);
     }
 }
 
