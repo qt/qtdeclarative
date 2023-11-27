@@ -2803,8 +2803,8 @@ void QQuickItem::stackBefore(const QQuickItem *sibling)
 
     parentPrivate->childItems.move(myIndex, myIndex < siblingIndex ? siblingIndex - 1 : siblingIndex);
 
-    parentPrivate->dirty(QQuickItemPrivate::ChildrenStackingChanged);
     parentPrivate->markSortedChildrenDirty(this);
+    parentPrivate->dirty(QQuickItemPrivate::ChildrenStackingChanged);
 
     for (int ii = qMin(siblingIndex, myIndex); ii < parentPrivate->childItems.size(); ++ii)
         QQuickItemPrivate::get(parentPrivate->childItems.at(ii))->siblingOrderChanged();
@@ -2848,8 +2848,8 @@ void QQuickItem::stackAfter(const QQuickItem *sibling)
 
     parentPrivate->childItems.move(myIndex, myIndex > siblingIndex ? siblingIndex + 1 : siblingIndex);
 
-    parentPrivate->dirty(QQuickItemPrivate::ChildrenStackingChanged);
     parentPrivate->markSortedChildrenDirty(this);
+    parentPrivate->dirty(QQuickItemPrivate::ChildrenStackingChanged);
 
     for (int ii = qMin(myIndex, siblingIndex + 1); ii < parentPrivate->childItems.size(); ++ii)
         QQuickItemPrivate::get(parentPrivate->childItems.at(ii))->siblingOrderChanged();
@@ -6002,8 +6002,8 @@ void QQuickItem::setZ(qreal v)
 
     d->dirty(QQuickItemPrivate::ZValue);
     if (d->parentItem) {
-        QQuickItemPrivate::get(d->parentItem)->dirty(QQuickItemPrivate::ChildrenStackingChanged);
         QQuickItemPrivate::get(d->parentItem)->markSortedChildrenDirty(this);
+        QQuickItemPrivate::get(d->parentItem)->dirty(QQuickItemPrivate::ChildrenStackingChanged);
     }
 
     emit zChanged();
