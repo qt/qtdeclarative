@@ -68,9 +68,6 @@ void QSGCurveGlyphNode::setGlyphs(const QPointF &position, const QGlyphRun &glyp
     m_fontSize = font.pixelSize();
     m_position = QPointF(position.x(), position.y() - font.ascent());
 
-    m_curveGlyphAtlas = m_context->curveGlyphAtlas(font);
-
-    m_curveGlyphAtlas->populate(glyphs.glyphIndexes());
 
     m_dirtyGeometry = true;
 
@@ -102,14 +99,15 @@ void QSGCurveGlyphNode::updateGeometry()
     delete m_styleNode;
     m_styleNode = nullptr;
 
-    Q_ASSERT(m_curveGlyphAtlas != nullptr);
+    QSGCurveGlyphAtlas *curveGlyphAtlas = m_context->curveGlyphAtlas(m_glyphs.rawFont());
+    curveGlyphAtlas->populate(m_glyphs.glyphIndexes());
 
     m_glyphNode = new QSGCurveFillNode;
     m_glyphNode->setColor(m_color);
 
     QPointF offset;
 
-    float fontScale = float(m_fontSize / m_curveGlyphAtlas->fontSize());
+    float fontScale = float(m_fontSize / curveGlyphAtlas->fontSize());
     QSGCurveFillNode *raisedSunkenStyleNode = nullptr;
     QSGCurveStrokeNode *outlineNode = nullptr;
     if (m_style == QQuickText::Raised || m_style == QQuickText::Sunken) {
@@ -132,23 +130,23 @@ void QSGCurveGlyphNode::updateGeometry()
     for (qsizetype i = 0; i < indexes.size(); ++i) {
         if (i == 0)
             m_baseLine = positions.at(i);
-        m_curveGlyphAtlas->addGlyph(m_glyphNode,
-                               indexes.at(i),
-                               m_position + positions.at(i),
-                               m_fontSize);
+        curveGlyphAtlas->addGlyph(m_glyphNode,
+                                 indexes.at(i),
+                                 m_position + positions.at(i),
+                                 m_fontSize);
         if (raisedSunkenStyleNode != nullptr) {
-            m_curveGlyphAtlas->addGlyph(raisedSunkenStyleNode,
-                                   indexes.at(i),
-                                   m_position + positions.at(i) + offset,
-                                   m_fontSize);
+            curveGlyphAtlas->addGlyph(raisedSunkenStyleNode,
+                                      indexes.at(i),
+                                      m_position + positions.at(i) + offset,
+                                      m_fontSize);
         }
         if (outlineNode != nullptr) {
             // Since the stroke node will scale everything by fontScale internally (the
             // shader does not support pre-transforming the vertices), we have to also first
             // do the inverse scale on the glyph position to get the correct position.
-            m_curveGlyphAtlas->addStroke(outlineNode,
-                                    indexes.at(i),
-                                    (m_position + positions.at(i)) / fontScale);
+            curveGlyphAtlas->addStroke(outlineNode,
+                                       indexes.at(i),
+                                       (m_position + positions.at(i)) / fontScale);
         }
     }
 

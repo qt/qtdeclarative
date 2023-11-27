@@ -43,7 +43,6 @@ public:
 
 private:
     QSGRenderContext *m_context;
-    QSGCurveGlyphAtlas *m_curveGlyphAtlas = nullptr;
     QSGGeometry m_geometry;
     QColor m_color = Qt::black;
 
