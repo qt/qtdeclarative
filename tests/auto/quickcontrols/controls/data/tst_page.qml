@@ -69,10 +69,12 @@ TestCase {
         ToolBar { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
-        var control = createTemporaryObject(page, testCase)
+    function test_defaults() {
+        let control = createTemporaryObject(page, testCase)
         verify(control)
 
         verify(control.contentItem)
@@ -81,9 +83,7 @@ TestCase {
     }
 
     function test_empty() {
-        failOnWarning(/.?/)
-
-        var control = createTemporaryObject(page, testCase)
+        let control = createTemporaryObject(page, testCase)
         verify(control)
 
         verify(control.contentItem)
@@ -94,7 +94,7 @@ TestCase {
     }
 
     function test_oneChild() {
-        var control = createTemporaryObject(oneChildPage, testCase)
+        let control = createTemporaryObject(oneChildPage, testCase)
         verify(control)
 
         compare(control.contentWidth, 100)
@@ -106,7 +106,7 @@ TestCase {
     }
 
     function test_twoChildren() {
-        var control = createTemporaryObject(twoChildrenPage, testCase)
+        let control = createTemporaryObject(twoChildrenPage, testCase)
         verify(control)
 
         compare(control.contentWidth, 0)
@@ -120,7 +120,7 @@ TestCase {
     }
 
     function test_contentItem() {
-        var control = createTemporaryObject(contentPage, testCase)
+        let control = createTemporaryObject(contentPage, testCase)
         verify(control)
 
         compare(control.contentWidth, 100)
@@ -132,7 +132,7 @@ TestCase {
     }
 
     function test_layout() {
-        var control = createTemporaryObject(page, testCase, {width: 100, height: 100})
+        let control = createTemporaryObject(page, testCase, {width: 100, height: 100})
         verify(control)
 
         compare(control.width, 100)
@@ -220,7 +220,7 @@ TestCase {
     }
 
     function test_spacing(data) {
-        var control = createTemporaryObject(page, testCase, {spacing: 20, width: 100, height: 100})
+        let control = createTemporaryObject(page, testCase, {spacing: 20, width: 100, height: 100})
         verify(control)
 
         control.contentItem.visible = data.content
@@ -246,7 +246,7 @@ TestCase {
     }
 
     function test_headerFooter() {
-        var control = createTemporaryObject(headerFooterPage, testCase, {width: 100, height: 100})
+        let control = createTemporaryObject(headerFooterPage, testCase, {width: 100, height: 100})
         verify(control)
 
         compare(control.width, 100)
