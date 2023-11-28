@@ -2970,7 +2970,6 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
         case DomType::ScriptPattern:
         case DomType::ScriptSwitchStatement:
         case DomType::ScriptCaseBlock:
-        case DomType::ScriptCaseClauses:
         case DomType::ScriptCaseClause:
         case DomType::ScriptDefaultClause:
             return {};

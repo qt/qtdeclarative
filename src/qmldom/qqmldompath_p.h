@@ -491,6 +491,7 @@ QMLDOM_FIELD(minorVersion);
 QMLDOM_FIELD(moduleIndex);
 QMLDOM_FIELD(moduleIndexWithUri);
 QMLDOM_FIELD(moduleScope);
+QMLDOM_FIELD(moreCaseClauses);
 QMLDOM_FIELD(nAllLoadedCallbacks);
 QMLDOM_FIELD(nCallbacks);
 QMLDOM_FIELD(nLoaded);

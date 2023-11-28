@@ -1950,6 +1950,17 @@ private slots:
                              .value()
                              .toString(),
                      u"monster");
+
+            // case "moreCases!"
+            const DomItem moreCases = firstSwitch.field(Fields::caseBlock)
+                                            .field(Fields::moreCaseClauses)
+                                            .index(0)
+                                            .field(Fields::statements)
+                                            .index(0);
+
+            QCOMPARE(moreCases.internalKind(),
+                     DomType::ScriptReturnStatement);
+            QCOMPARE(moreCases.field(Fields::expression).value().toString(), u"moreCaseClauses?");
         }
     }
 

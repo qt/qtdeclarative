@@ -212,7 +212,6 @@ enum class DomType {
     ScriptPattern,
     ScriptSwitchStatement,
     ScriptCaseBlock,
-    ScriptCaseClauses,
     ScriptCaseClause,
     ScriptDefaultClause,
     ScriptWhileStatement,

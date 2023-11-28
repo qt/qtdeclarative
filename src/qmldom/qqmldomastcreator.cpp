@@ -2028,7 +2028,7 @@ void QQmlDomAstCreator::endVisit(AST::CaseBlock *exp)
 
     if (exp->moreClauses) {
         Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
-        current->insertChild(Fields::caseClauses, currentScriptNodeEl().takeList());
+        current->insertChild(Fields::moreCaseClauses, currentScriptNodeEl().takeList());
         removeCurrentScriptNode({});
     }
 

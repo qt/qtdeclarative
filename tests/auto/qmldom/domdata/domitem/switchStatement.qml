@@ -21,6 +21,8 @@ QtObject {
                 return name;
             }
             default: return "monster";
+            case "moreCases!":
+                return "moreCaseClauses?"
         }
     }
 }
