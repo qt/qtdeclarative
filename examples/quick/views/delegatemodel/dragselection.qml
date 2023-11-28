@@ -17,6 +17,7 @@ Item {
 
     Component {
         id: packageDelegate
+//![0]
         Package {
             id: packageRoot
 
@@ -35,10 +36,11 @@ Item {
                 Item {
                     id: draggable
 
+                    Drag.active: visibleContainer.drag.active
+//![0]
+
                     width: 64
                     height: 64
-
-                    Drag.active: visibleContainer.drag.active
 
                     anchors {
                         horizontalCenter: parent.horizontalCenter
