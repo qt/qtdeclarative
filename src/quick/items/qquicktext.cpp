@@ -3388,7 +3388,7 @@ void QQuickText::resetBottomPadding()
 */
 
 /*!
-    \qmlproperty string QtQuick::Text::fontInfo.pixelSize
+    \qmlproperty int QtQuick::Text::fontInfo.pixelSize
     \since 5.9
 
     The pixel size of the font info that has been resolved for the current font
