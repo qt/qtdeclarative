@@ -34,7 +34,10 @@ void QQuickFocusFrame::moveToItem(QQuickItem *item)
 {
     if (!m_focusFrame) {
         const auto context = QQmlEngine::contextForObject(item);
-        if (!context)
+        // In certain cases like QQuickWebEngineView, the item
+        // gets focus even though it has no QQmlEngine associated with its context.
+        // We need the engine for creating the focus frame component.
+        if (!context || !context->engine())
             return;
         m_focusFrame.reset(createFocusFrame(context));
         if (!m_focusFrame) {
