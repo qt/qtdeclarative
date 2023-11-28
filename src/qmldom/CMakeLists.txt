@@ -47,6 +47,7 @@ qt_internal_add_module(QmlDomPrivate
         Qt::QmlPrivate
         Qt::QmlCompilerPrivate
     NO_UNITY_BUILD
+    NO_GENERATE_CPP_EXPORTS
 )
 
 #### Keys ignored in scope 1:.:.:qmldom.pro:<TRUE>:
