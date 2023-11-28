@@ -1060,6 +1060,27 @@ void tst_qmlls_utils::findUsages_data()
         QTest::addRow("propertyInBindingsFromDecl") << 11 << 22 << bindings;
         QTest::addRow("generalizedGroupPropertyBindings") << 27 << 19 << bindings;
     }
+    {
+        const auto testFileName = testFile("findUsages/Enums.qml");
+        const auto testFileContent = readFileContent(testFileName);
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 9, 9, strlen("Patron"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 22, 35, strlen("Patron"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 23, 34, strlen("Patron"));
+            const auto enums = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("enumValuesFromDeclaration") << 9 << 9 << enums;
+            QTest::addRow("enumValuesFromUsage") << 22 << 35 << enums;
+        }
+        {
+            QList<QQmlLSUtilsLocation> expectedUsages;
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 8, 10, strlen("Cats"));
+            expectedUsages << QQmlLSUtilsLocation::from(testFileName, testFileContent, 22, 30, strlen("Cats"));
+            const auto enums = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("enumNameFromDeclaration") << 8 << 10 << enums;
+            QTest::addRow("enumNameFromUsage") << 22 << 30 << enums;
+        }
+    }
 }
 
 void tst_qmlls_utils::findUsages()
@@ -2136,7 +2157,7 @@ void tst_qmlls_utils::completions_data()
                } << None;
 
     QTest::newRow("enumsFromItem")
-            << file << 86 << 44
+            << file << 86 << 33
             << ExpectedCompletions({
                        { u"World"_s, CompletionItemKind::EnumMember },
                        { u"ValueOne"_s, CompletionItemKind::EnumMember },
@@ -2147,11 +2168,10 @@ void tst_qmlls_utils::completions_data()
             << QStringList{
                    u"int"_s,
                    u"Rectangle"_s,
-                   u"foo"_s,
                } << None;
 
     QTest::newRow("enumsFromEnumName")
-            << file << 87 << 50
+            << file << 87 << 40
             << ExpectedCompletions({
                        { u"World"_s, CompletionItemKind::EnumMember },
                })

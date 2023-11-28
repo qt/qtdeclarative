@@ -578,9 +578,12 @@ Returns a list of names, that when belonging to the same targetType, should be c
 This is used to find signal handlers as usages of their corresponding signals, for example.
 */
 static QStringList namesOfPossibleUsages(const QString &name,
+                                        const DomItem &item,
                                          const QQmlJSScope::ConstPtr &targetType)
 {
     QStringList namesToCheck = { name };
+    if (item.internalKind() == DomType::EnumItem || item.internalKind() == DomType::EnumDecl)
+        return namesToCheck;
 
     auto namings = resolveNameInQmlScope(name, targetType);
     if (!namings)
@@ -657,7 +660,7 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
     if (!expressionType)
         return;
 
-    const QStringList namesToCheck = namesOfPossibleUsages(name, expressionType->semanticScope);
+    const QStringList namesToCheck = namesOfPossibleUsages(name, item, expressionType->semanticScope);
     QQmlJSScope::ConstPtr targetType = findDefiningScopeForNames(expressionType->semanticScope, namesToCheck);
 
     const auto addLocationIfTypeMatchesTarget = [&result, &targetType, &namesToCheck](const DomItem &toBeResolved,
@@ -713,6 +716,30 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
             const QString literal = current.field(Fields::value).value().toString();
             if (namesToCheck.contains(literal))
                 addLocationIfTypeMatchesTarget(current, MainRegion);
+            return continueForChildren;
+        }
+        case DomType::EnumItem: {
+            // Only look for the first enum defined. The inner enums
+            // have no way to be accessed.
+            const auto parentPath = current.containingObject().pathFromOwner();
+            const auto index = parentPath.last().headIndex();
+            if (index != 0)
+                return continueForChildren;
+            const QString enumValue = current.field(Fields::name).value().toString();
+            if (namesToCheck.contains(enumValue))
+                addLocationIfTypeMatchesTarget(current, IdentifierRegion);
+            return continueForChildren;
+        }
+        case DomType::EnumDecl: {
+            // Only look for the first enum defined. The inner enums
+            // have no way to be accessed.
+            const auto parentPath = current.pathFromOwner();
+            const auto index = parentPath.last().headIndex();
+            if (index != 0)
+                return continueForChildren;
+            const QString enumValue = current.field(Fields::name).value().toString();
+            if (namesToCheck.contains(enumValue))
+                addLocationIfTypeMatchesTarget(current, IdentifierRegion);
             return continueForChildren;
         }
         default:
@@ -801,6 +828,8 @@ QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(const DomItem &item)
         findUsagesHelper(item, name, result);
         break;
     }
+    case DomType::EnumDecl:
+    case DomType::EnumItem:
     case DomType::QmlObject:
     case DomType::PropertyDefinition:
     case DomType::Binding:
@@ -1037,40 +1066,23 @@ resolveFieldMemberExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions 
         }
     }
 
-    // distinguish between the `someItem.MyEnumerator.MyEnumeratorValue` case and the
-    // `someItem.MyEnumeratorValue` case by using the QQmlLSUtilsIdentifierType::Enumerator,
-    // as they have the same owner type (enumerators do not have their own qqmljsscope).
-    switch (owner->type) {
-    case QQmlLSUtilsIdentifierType::EnumeratorValueIdentifier:
-        // for example, 'someItem.MyEnumerator.MyEnumeratorValue.<current name to be resolved>'
-        // or 'someItem.MyEnumeratorValue.<current name to be resolved>'
-        break;
-    case QQmlLSUtilsIdentifierType::EnumeratorIdentifier:
-        // for example, 'someItem.MyEnumerator.<current name to be resolved>'
-        // do not check name in this case, just assumes its a value of the enumerator so the
-        // autocompletion still works when the user is still typing the enumerator value name.
-        if (auto enumerator = owner->semanticScope->enumeration(owner->name.value_or(QString()));
-            enumerator.isValid()) {
-            return QQmlLSUtilsExpressionType{
-                owner->name, owner->semanticScope,
-                QQmlLSUtilsIdentifierType::EnumeratorValueIdentifier
-            };
+    // Ignore enum usages from other files for now.
+    if (owner->type == QmlComponentIdentifier) {
+        // Check if name is a enum value <TypeName>.<EnumValue>
+        // Enumerations defined in the current file live under the root element scope
+        // This should be changed once we support find-usages in external files
+        const auto scope = item.rootQmlObject(GoTo::MostLikely).semanticScope();
+        if (scope->hasEnumerationKey(name)) {
+            return QQmlLSUtilsExpressionType{name, scope, EnumeratorValueIdentifier};
         }
-        break;
-    default:
-        // for example, 'someItem.<current name to be resolved>'
-        if (auto enumerator = owner->semanticScope->enumeration(name); enumerator.isValid()) {
-            return QQmlLSUtilsExpressionType{ name, owner->semanticScope,
-                                              QQmlLSUtilsIdentifierType::EnumeratorIdentifier };
-        }
-        for (const QQmlJSMetaEnum &enumerator : owner->semanticScope->enumerations()) {
-            if (enumerator.hasKey(name)) {
-                return QQmlLSUtilsExpressionType{
-                    name, owner->semanticScope, QQmlLSUtilsIdentifierType::EnumeratorValueIdentifier
-                };
-            }
+        // Or it is a enum name <TypeName>.<EnumName>.<EnumValue>
+        else if (scope->hasEnumeration(name)) {
+            return QQmlLSUtilsExpressionType{name, scope, EnumeratorIdentifier};
+        } else {
+            return owner;
         }
     }
+
     qCDebug(QQmlLSUtilsLog) << "Could not find identifier expression for" << item.internalKindStr();
     return owner;
 }
@@ -1132,6 +1144,11 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
                 name, attachedScope, QQmlLSUtilsIdentifierType::AttachedTypeIdentifier
             };
         }
+        // Check if it is a component
+        if (item.component().name() == name) {
+            return QQmlLSUtilsExpressionType{ name, item.component().semanticScope(),
+                                            QmlComponentIdentifier };
+        }
     }
 
     // check if its an id
@@ -1150,6 +1167,7 @@ resolveIdentifierExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions o
 
     return {};
 }
+
 /*!
    \internal
     Resolves the type of the given DomItem, when possible (e.g., when there are enough type
@@ -1257,6 +1275,20 @@ QQmlLSUtils::resolveExpressionType(const QQmlJS::Dom::DomItem &item,
                 return QQmlLSUtilsExpressionType{ name, targetScope,
                                                   resolveNameInQmlScope(name, targetScope)->type };
         }
+        return {};
+    }
+    case DomType::EnumItem: {
+        const QString enumValue = item.field(Fields::name).value().toString();
+         QQmlJSScope::ConstPtr referrerScope = item.rootQmlObject(GoTo::MostLikely).semanticScope();
+        if (referrerScope->hasEnumerationKey(enumValue))
+            return QQmlLSUtilsExpressionType{enumValue, referrerScope, EnumeratorValueIdentifier};
+        return {};
+    }
+    case DomType::EnumDecl: {
+        const QString enumName = item.field(Fields::name).value().toString();
+        QQmlJSScope::ConstPtr referrerScope = item.rootQmlObject(GoTo::MostLikely).semanticScope();
+        if (referrerScope->hasEnumeration(enumName))
+            return QQmlLSUtilsExpressionType{enumName, referrerScope, EnumeratorIdentifier};
         return {};
     }
     default: {
@@ -1500,6 +1532,7 @@ expressionTypeWithDefinition(const QQmlLSUtilsExpressionType &ownerType)
     case EnumeratorValueIdentifier:
     case AttachedTypeIdentifier:
     case GroupedPropertyIdentifier:
+    case QmlComponentIdentifier:
         return ownerType.semanticScope;
     }
     return {};
@@ -2155,7 +2188,10 @@ QList<CompletionItem> QQmlLSUtils::scriptIdentifierCompletion(const DomItem &con
         if (!expressionType || !expressionType->semanticScope)
             return result;
         nearestScope = expressionType->semanticScope;
-
+        // Use root element scope to use find the enumerations
+        // This should be changed when we support usages in external files
+        if (expressionType->type == QmlComponentIdentifier)
+                nearestScope = owner.rootQmlObject(GoTo::MostLikely).semanticScope();
         if (expressionType->name) {
             // note: you only get enumeration values in qualified expressions, never alone
             result << enumerationValueCompletion(nearestScope, *expressionType->name);
@@ -2165,6 +2201,9 @@ QList<CompletionItem> QQmlLSUtils::scriptIdentifierCompletion(const DomItem &con
                 !enumerator.isValid()) {
                 result << enumerationCompletion(nearestScope, &usedNames);
             }
+
+            if (expressionType->type == EnumeratorIdentifier)
+                return result;
         }
     }
 

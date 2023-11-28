@@ -1144,6 +1144,7 @@ bool QQmlDomAstCreator::visit(AST::UiEnumDeclaration *el)
     Path enumPathFromOwner =
             current<QmlComponent>().addEnumeration(eDecl, AddOption::KeepExisting, &ePtr);
     pushEl(enumPathFromOwner, *ePtr, el);
+    FileLocations::addRegion(nodeStack.last().fileLocations, IdentifierRegion, el->identifierToken);
     loadAnnotations(el);
     return true;
 }
@@ -1163,8 +1164,12 @@ bool QQmlDomAstCreator::visit(AST::UiEnumMemberList *el)
     EnumItem it(el->member.toString(), el->value);
     EnumDecl &eDecl = std::get<EnumDecl>(currentNode().value);
     Path itPathFromDecl = eDecl.addValue(it);
-    FileLocations::addRegion(createMap(DomType::EnumItem, itPathFromDecl, nullptr), MainRegion,
-                             combine(el->memberToken, el->valueToken));
+    const auto map = createMap(DomType::EnumItem, itPathFromDecl, nullptr);
+    FileLocations::addRegion(map, MainRegion, combine(el->memberToken, el->valueToken));
+    // Adding IdentifierRegion is required for finding enum members usage
+    // But qmlformat is not happy with it, thus only add this region while using qmls
+    if (m_enableScriptExpressions)
+        FileLocations::addRegion(map, IdentifierRegion, el->memberToken);
     return true;
 }
 

@@ -77,14 +77,14 @@ Zzz {
     }
     property var testSingleton: SystemInformation.byteOrder
 
-    Item {
-        id: itemWithEnums
-        enum Hello { World }
-        enum MyEnum { ValueOne, ValueTwo }
-    }
 
-    property var testEnums: itemWithEnums.World
-    property var testEnums2: itemWithEnums.Hello.World
+
+    enum Hello { World }
+    enum MyEnum { ValueOne, ValueTwo }
+
+
+    property var testEnums: Yyy.World
+    property var testEnums2: Yyy.Hello.World
 
     Component.onCompleted: {}
     property var anything: Rectangle{ height: 200 }
