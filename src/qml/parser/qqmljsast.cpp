@@ -1394,6 +1394,11 @@ void TaggedTemplate::accept0(BaseVisitor *visitor)
     visitor->endVisit(this);
 }
 
+void InitializerExpression::accept0(BaseVisitor *visitor)
+{
+    expression->accept0(visitor);
+}
+
 void PatternElement::accept0(BaseVisitor *visitor)
 {
     if (visitor->visit(this)) {

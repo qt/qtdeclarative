@@ -2754,7 +2754,6 @@ void tst_qmlls_utils::completions_data()
             << QStringList{ propertyCompletion, letStatementCompletion, u"myProperty"_s, u"x"_s,
                             u"f"_s }
             << None;
-
     QTest::newRow("inDefaultAfterDefault")
             << testFile(u"completions/switchStatements.qml"_s) << 33 << 1
             << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
@@ -2764,6 +2763,202 @@ void tst_qmlls_utils::completions_data()
                                     { letStatementCompletion, CompletionItemKind::Snippet },
                                     { u"myProperty"_s, CompletionItemKind::Property } }
             << QStringList{ propertyCompletion, }
+            << None;
+
+    // variableDeclaration.qml tests for let/const/var statements + destructuring
+
+    QTest::newRow("letStatement") << testFile(u"completions/variableDeclaration.qml"_s) << 7 << 13
+                                  << ExpectedCompletions{}
+                                  << QStringList{ propertyCompletion, letStatementCompletion,
+                                                  u"x"_s, u"data"_s }
+                                  << None;
+
+    QTest::newRow("letStatement2")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 7 << 26
+            << ExpectedCompletions{}
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s } << None;
+
+    QTest::newRow("letStatementBehindEqual")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 7 << 28
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("letStatementBehindEqual2")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 7 << 33
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("constStatement")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 8 << 19
+            << ExpectedCompletions{}
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s } << None;
+
+    QTest::newRow("constStatementBehindEqual")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 8 << 32
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("varStatement") << testFile(u"completions/variableDeclaration.qml"_s) << 9 << 17
+                                  << ExpectedCompletions{}
+                                  << QStringList{ propertyCompletion, letStatementCompletion,
+                                                  u"x"_s, u"data"_s }
+                                  << None;
+
+    QTest::newRow("varStatementBehindEqual")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 9 << 28
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("objectDeconstruction")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 13 << 20
+            << ExpectedCompletions{}
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s } << None;
+
+    QTest::newRow("objectDeconstructionAloneBehindEqual")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 14 << 51
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("objectDeconstructionAloneBehindEqual2")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 14 << 58
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("objectDeconstruction2BehindEqual")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 15 << 83
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("objectDeconstruction2BehindEqual2")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 15 << 90
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("objectDeconstruction3BehindEqual")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 15 << 140
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("objectDeconstructionBehindComma")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 15 << 143
+            << ExpectedCompletions{}
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
+            << None;
+
+    QTest::newRow("objectDeconstructionBetweenObjects")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 15 << 50
+            << ExpectedCompletions{}
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
+            << None;
+
+    QTest::newRow("objectDeconstructionBetweenDeconstructions")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 15 << 97
+            << ExpectedCompletions{}
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
+            << None;
+
+    QTest::newRow("arrayDeconstructionAlone")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 19 << 24
+            << ExpectedCompletions{}
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
+            << None;
+
+    QTest::newRow("arrayDeconstructionAloneBehindEqual")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 19 << 33
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("arrayDeconstruction2")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 21 << 71
+            << ExpectedCompletions{}
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
+            << None;
+
+    QTest::newRow("arrayDeconstruction2BehindEqual")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 21 << 83
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+    QTest::newRow("arrayDeconstruction3")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 21 << 125
+            << ExpectedCompletions{}
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
+            << None;
+
+    QTest::newRow("arrayDeconstruction3BehindEqual")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 21 << 139
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("arrayDeconstructionIn_Wildcard")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 25 << 64
+            << ExpectedCompletions{}
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
+            << None;
+
+    QTest::newRow("arrayDeconstructionBehind+")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 25 << 132
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("objectDeconstructionForNeedle")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 29 << 111
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("arrayInObjectDeconstructionInObjectInitializer")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 33 << 44
+            << ExpectedCompletions{ {u"x"_s, CompletionItemKind::Variable},
+                                    {u"data"_s, CompletionItemKind::Method},
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion }
+            << None;
+
+    QTest::newRow("arrayInObjectDeconstructionInObjectPropertyName")
+            << testFile(u"completions/variableDeclaration.qml"_s) << 33 << 26
+            << ExpectedCompletions{}
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
             << None;
 }
 

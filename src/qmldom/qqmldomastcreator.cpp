@@ -1585,6 +1585,9 @@ void QQmlDomAstCreator::endVisitHelper(
         AST::PatternElement *pe,
         const std::shared_ptr<ScriptElements::GenericScriptElement> &current)
 {
+    if (pe->equalToken.isValid())
+        current->addLocation(FileLocationRegion::EqualTokenRegion, pe->equalToken);
+
     if (pe->identifierToken.isValid() && !pe->bindingIdentifier.isEmpty()) {
         auto identifier =
                 std::make_shared<ScriptElements::IdentifierExpression>(pe->identifierToken);

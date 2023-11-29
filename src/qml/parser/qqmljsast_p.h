@@ -149,6 +149,7 @@ public:
         Kind_ClassDeclaration,
         Kind_IdentifierExpression,
         Kind_IdentifierPropertyName,
+        Kind_InitializerExpression,
         Kind_ComputedPropertyName,
         Kind_IfStatement,
         Kind_LabelledStatement,
@@ -873,6 +874,39 @@ struct BoundNames : public QVector<BoundName>
     }
 };
 
+/*!
+\internal
+This class is needed to pass the information about the equalToken in the parser, and is only needed
+during AST construction. It behaves exactly like the expression it contains: that avoids changing
+all the usages in qqmljs.g from ExpressionNode to InitializerExpression for every rule expecting a
+InitializerOpt_In or InitializerOpt.
+*/
+class QML_PARSER_EXPORT InitializerExpression : public ExpressionNode
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(InitializerExpression)
+
+    InitializerExpression(ExpressionNode *e) : expression(e) { kind = K; }
+
+    void accept0(BaseVisitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return equalToken; }
+
+    SourceLocation lastSourceLocation() const override { return expression->lastSourceLocation(); }
+
+    FunctionExpression *asFunctionDefinition() override
+    {
+        return expression->asFunctionDefinition();
+    }
+
+    ClassExpression *asClassDefinition() override { return expression->asClassDefinition(); }
+
+    // attributes
+    ExpressionNode *expression;
+    SourceLocation equalToken;
+};
+
 class QML_PARSER_EXPORT PatternElement : public Node
 {
 public:
@@ -893,9 +927,28 @@ public:
         Binding,
     };
 
+private:
+    /*!
+    \internal
+    Hide InitializerExpression from the AST. InitializerExpression is only needed during parsing for
+    the AST construction, and it is not possible for the parser to directly embed the location of
+    equal tokens inside the PatternElement without the InitializerExpression.
+    */
+    void unwrapInitializer()
+    {
+        if (auto unwrapped = AST::cast<InitializerExpression *>(initializer)) {
+            equalToken = unwrapped->equalToken;
+            initializer = unwrapped->expression;
+        }
+    }
+public:
+
     PatternElement(ExpressionNode *i = nullptr, Type t = Literal)
         : initializer(i), type(t)
-    { kind = K; }
+    {
+        kind = K;
+        unwrapInitializer();
+    }
 
     PatternElement(QStringView n, TypeAnnotation *typeAnnotation = nullptr, ExpressionNode *i = nullptr, Type t = Binding)
         : bindingIdentifier(n), initializer(i), type(t)
@@ -903,6 +956,7 @@ public:
     {
         Q_ASSERT(t >= RestElement);
         kind = K;
+        unwrapInitializer();
     }
 
     PatternElement(Pattern *pattern, ExpressionNode *i = nullptr, Type t = Binding)
@@ -910,6 +964,7 @@ public:
     {
         Q_ASSERT(t >= RestElement);
         kind = K;
+        unwrapInitializer();
     }
 
     void accept0(BaseVisitor *visitor) override;
@@ -933,6 +988,7 @@ public:
 
 // attributes
     SourceLocation identifierToken;
+    SourceLocation equalToken;
     QStringView bindingIdentifier;
     ExpressionNode *bindingTarget = nullptr;
     ExpressionNode *initializer = nullptr;

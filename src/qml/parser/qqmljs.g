@@ -2167,7 +2167,9 @@ Initializer: T_EQ AssignmentExpression;
 Initializer_In: T_EQ AssignmentExpression_In;
 /.
 case $rule_number: {
-    sym(1) = sym(2);
+    auto node = new (pool) AST::InitializerExpression(sym(2).Expression);
+    node->equalToken = loc(1);
+    sym(1).Expression = node;
 } break;
 ./
 

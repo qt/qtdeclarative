@@ -3033,6 +3033,70 @@ static QList<CompletionItem> insideBinaryExpressionCompletion(const DomItem &cur
     return {};
 }
 
+/*!
+\internal
+Doing completion in variable declarations requires taking a look at all different cases:
+
+\list
+    \li Normal variable names, like \c{let helloWorld = 123;}
+        In this case, only autocomplete scriptexpressionidentifiers after the '=' token.
+        Do not propose existing names for the variable name, because the variable name needs to be
+        an identifier that is not used anywhere (to avoid shadowing and confusing code),
+
+    \li Deconstructed arrays, like \c{let [ helloWorld, ] = [ 123, ];}
+        In this case, only autocomplete scriptexpressionidentifiers after the '=' token.
+        Do not propose already existing identifiers inside the left hand side array.
+
+    \li Deconstructed arrays with initializers, like \c{let [ helloWorld = someVar, ] = [ 123, ];}
+        Note: this assigns the value of someVar to helloWorld if the right hand side's first element
+        is undefined or does not exist.
+
+        In this case, only autocomplete scriptexpressionidentifiers after the '=' tokens.
+        Only propose already existing identifiers inside the left hand side array when behind a '='
+    token.
+
+    \li Deconstructed Objects, like \c{let { helloWorld, } = { helloWorld: 123, };}
+        In this case, only autocomplete scriptexpressionidentifiers after the '=' token.
+        Do not propose already existing identifiers inside the left hand side object.
+
+    \li Deconstructed Objects with initializers, like \c{let { helloWorld = someVar, } = {};}
+        Note: this assigns the value of someVar to helloWorld if the right hand side's object does
+        not have a property called 'helloWorld'.
+
+        In this case, only autocomplete scriptexpressionidentifiers after the '=' token.
+        Only propose already existing identifiers inside the left hand side object when behind a '='
+        token.
+
+    \li Finally, you are allowed to nest and combine all above possibilities together for all your
+        deconstruction needs, so the exact same completion needs to be done for
+        DomType::ScriptPatternElement too.
+
+\endlist
+*/
+static QList<CompletionItem> insideScriptPattern(const DomItem &currentItem,
+                                                 const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation equal = regions[EqualTokenRegion];
+
+    if (!afterLocation(equal, ctx))
+        return {};
+
+    // otherwise, only complete case and default
+    return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+}
+
+/*!
+\internal
+See comment on insideScriptPattern().
+*/
+static QList<CompletionItem> insideVariableDeclarationEntry(const DomItem &currentItem,
+                                                            const CompletionContextStrings &ctx)
+{
+    return insideScriptPattern(currentItem, ctx);
+}
+
 static bool ctxBeforeStatement(const CompletionContextStrings &ctx, const DomItem &currentItem,
                                FileLocationRegion firstRegion)
 {
@@ -3145,17 +3209,25 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             return insideDefaultClause(currentParent, ctx);
         case DomType::ScriptCaseBlock:
             return insideCaseBlock(currentParent, ctx);
+        case DomType::ScriptVariableDeclaration:
+            // not needed: thats a list of ScriptVariableDeclarationEntry, and those entries cannot
+            // be suggested because they all start with `{`, `[` or an identifier that should not be
+            // in use yet.
+            return {};
+        case DomType::ScriptVariableDeclarationEntry:
+            return insideVariableDeclarationEntry(currentParent, ctx);
+        case DomType::ScriptProperty:
+            // fallthrough: a ScriptProperty is a ScriptPattern but inside a JS Object. It gets the
+            // same completions as a ScriptPattern.
+        case DomType::ScriptPattern:
+            return insideScriptPattern(currentParent, ctx);
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.
-        case DomType::ScriptVariableDeclaration:
-        case DomType::ScriptVariableDeclarationEntry:
         case DomType::ScriptArray:
         case DomType::ScriptObject:
-        case DomType::ScriptProperty:
         case DomType::ScriptElision:
         case DomType::ScriptArrayEntry:
-        case DomType::ScriptPattern:
             return {};
 
         default:
