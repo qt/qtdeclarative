@@ -11,6 +11,8 @@
 #include "qqmltyperegistrarconstants_p.h"
 #include "qqmltyperegistrarutils_p.h"
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 using namespace Qt::Literals;
 using namespace Constants;
@@ -153,6 +155,17 @@ QString conflictingVersionToString(const ExclusiveVersionRange &r)
     }
     return s;
 };
+
+// Return a name for the registration variable containing the module to
+// avoid clashes in Unity builds.
+static QString registrationVarName(const QString &module)
+{
+    auto specialCharPred = [](QChar c) { return !c.isLetterOrNumber(); };
+    QString result = module;
+    result[0] = result.at(0).toLower();
+    result.erase(std::remove_if(result.begin(), result.end(), specialCharPred), result.end());
+    return result + "Registration"_L1;
+}
 
 void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) const
 {
@@ -470,15 +483,16 @@ void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) co
             conflictingExportStartIt = conflictingExportEndIt;
         }
     }
+
     output << uR"(
     qmlRegisterModule("%1", %2, %3);
 }
 
-static const QQmlModuleRegistration registration("%1", %4);
+static const QQmlModuleRegistration %5("%1", %4);
 )"_s.arg(m_module)
                       .arg(majorVersion)
                       .arg(minorVersion)
-                      .arg(functionName);
+                      .arg(functionName, registrationVarName(m_module));
 
     if (!m_targetNamespace.isEmpty())
         output << u"} // namespace %1\n"_s.arg(m_targetNamespace);
