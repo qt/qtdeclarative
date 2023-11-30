@@ -75,6 +75,20 @@ public:
             return isLine() ? 0.5f * (sp + ep) : (0.25f * sp) + (0.5f * cp) + (0.25 * ep);
         }
 
+        /* For a curve, returns the control point. For a line, returns an arbitrary point on the
+         * inside side of the line (assuming the curvature has been set for the path). The point
+         * doesn't need to actually be inside the shape: it just makes for easier calculations
+         * later when it is at the same side as the fill. */
+        QVector2D referencePoint() const
+        {
+            if (isLine()) {
+                QVector2D normal(sp.y() - ep.y(), ep.x() - sp.x());
+                return m_curvatureFlags & Element::FillOnRight ? sp + normal : sp - normal;
+            } else {
+                return cp;
+            }
+        }
+
         int childCount() const { return m_numChildren; }
 
         int indexOfChild(int childNumber) const

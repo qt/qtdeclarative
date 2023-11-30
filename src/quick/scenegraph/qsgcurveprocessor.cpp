@@ -35,7 +35,7 @@ static inline QVector2D curveUv(QVector2D p0, QVector2D p1, QVector2D p2, QVecto
 
 static QVector3D elementUvForPoint(const QQuadPath::Element& e, QVector2D p)
 {
-    auto uv = curveUv(e.startPoint(), e.controlPoint(), e.endPoint(), p);
+    auto uv = curveUv(e.startPoint(), e.referencePoint(), e.endPoint(), p);
     if (e.isLine())
         return { uv.x(), uv.y(), 0.0f };
     else
@@ -179,6 +179,7 @@ static bool isOverlap(const QQuadPath &path, int e1, int e2)
     const QQuadPath::Element &element1 = path.elementAt(e1);
     const QQuadPath::Element &element2 = path.elementAt(e2);
 
+    Q_ASSERT(!element1.isLine());
     TrianglePoints t1{ element1.startPoint(), element1.controlPoint(), element1.endPoint() };
 
     if (element2.isLine()) {
@@ -195,6 +196,7 @@ static bool isOverlap(const QQuadPath &path, int e1, int e2)
 static bool isOverlap(const QQuadPath &path, int index, const QVector2D &vertex)
 {
     const QQuadPath::Element &elem = path.elementAt(index);
+    Q_ASSERT(!elem.isLine());
     return checkTriangleContains(vertex, elem.startPoint(), elem.controlPoint(), elem.endPoint());
 }
 
@@ -308,6 +310,7 @@ QList<TriangleData> simplePointTriangulator(const QList<QVector2D> &pts, const Q
 
 static bool needsSplit(const QQuadPath::Element &el)
 {
+    Q_ASSERT(!el.isLine());
     const auto v1 = el.controlPoint() - el.startPoint();
     const auto v2 = el.endPoint() - el.controlPoint();
     float cos = QVector2D::dotProduct(v1, v2) / (v1.length() * v2.length());
@@ -454,13 +457,14 @@ static QList<TriangleData> customTriangulator2(const QQuadPath &path, float penW
                                 const QVector2D &n1, const QVector2D &n2, const QVector2D &n3, const QVector2D &n4)
     {
         const auto &element = path.elementAt(idx);
+        Q_ASSERT(!element.isLine());
         const auto &s = element.startPoint();
         const auto &c = element.controlPoint();
         const auto &e = element.endPoint();
         // TODO: Don't flatten the path in addCurveStrokeNodes, but iterate over the children here instead
         bool controlPointOnRight = determinant(s, c, e) > 0;
-        QVector2D startNormal = normalVector(element).normalized();
-        QVector2D endNormal = normalVector(element, true).normalized();
+        QVector2D startNormal = normalVector(element);
+        QVector2D endNormal = normalVector(element, true);
         QVector2D controlPointNormal = (startNormal + endNormal).normalized();
         if (controlPointOnRight)
             controlPointNormal = -controlPointNormal;
@@ -786,7 +790,7 @@ void QSGCurveProcessor::processStroke(const QQuadPath &strokePath,
     auto thePath = subdivide(strokePath, subdivisions).flattened(); // TODO: don't flatten, but handle it in the triangulator
     auto triangles = customTriangulator2(thePath, penWidth, joinStyle, capStyle, miterLimit);
 
-    auto addCurveTriangle = [&](const QQuadPath::Element &element, const TriangleData &t){
+    auto addCurveTriangle = [&](const QQuadPath::Element &element, const TriangleData &t) {
         addTriangle(t.points,
                     { element.startPoint(), element.controlPoint(), element.endPoint() },
                     t.normals,

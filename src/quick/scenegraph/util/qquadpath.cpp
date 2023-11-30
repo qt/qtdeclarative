@@ -219,6 +219,8 @@ float QQuadPath::Element::extent() const
 // The t values of max 2 intersection(s) are stored in the fractions array
 int QQuadPath::Element::intersectionsAtY(float y, float *fractions) const
 {
+    Q_ASSERT(!isLine());
+
     const float y0 = startPoint().y() - y;
     const float y1 = controlPoint().y() - y;
     const float y2 = endPoint().y() - y;
@@ -436,13 +438,6 @@ void QQuadPath::addCurvatureData()
 
         if (element.isLine()) {
             element.m_curvatureFlags = flags;
-            // Set the control point to an arbitrary point on the inside side of the line
-            // (doesn't need to actually be inside the shape: it just makes our calculations
-            // easier later if it is at the same side as the fill).
-            const QVector2D &sp = element.sp;
-            const QVector2D &ep = element.ep;
-            QVector2D v = ep - sp;
-            element.cp = flags & Element::FillOnRight ? sp + QVector2D(-v.y(), v.x()) : sp + QVector2D(v.y(), -v.x());
         } else {
             bool controlPointOnLeft = element.isControlPointOnLeft();
             bool isFillOnRight = flags & Element::FillOnRight;
