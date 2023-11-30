@@ -884,6 +884,8 @@ void QQuickPopupPrivate::createOverlay()
 
     if (!dimmer) {
         dimmer = createDimmer(component, q, overlay);
+        if (!dimmer)
+            return;
         // We cannot update explicitDimmerOpacity when dimmer's opacity changes,
         // as it is expected to do so when we fade the dimmer in and out in
         // show/hideDimmer, and any binding of the dimmer's opacity will be
