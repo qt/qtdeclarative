@@ -1,65 +1,77 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import QtQuick.Controls as QQC2
 import WearableStyle
 import "notifications.js" as NotificationData
 
-ListView {
-    id: missedCallsView
 
-    clip: true
-    focus: true
-    boundsBehavior: Flickable.StopAtBounds
-    snapMode: ListView.SnapToItem
+Item {
+    id: notificationpage
 
-    model: ListModel {
-        id: missedCallsList
-    }
+    ListView {
+        id: listview
 
-    Image {
-        id: missedCallIcon
-        width: parent.width / 2
-        anchors.right: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        source: UIStyle.themeImagePath("notifications-missedcall")
-        fillMode: Image.Pad
-    }
+        anchors.fill: parent
+        anchors.margins: 15
+        anchors.topMargin: 40 + 15
+        spacing: 10
+        clip: false
 
-    delegate: Item {
-        height: missedCallsView.height
-        width: missedCallsView.width / 2
-        anchors.left: missedCallsView.contentItem.horizontalCenter
+        model: ListModel {
+            id: missedCallsList
+        }
 
-        Column {
-            spacing: 15
-            anchors.verticalCenter: parent.verticalCenter
+        delegate: ListHeaderItem {
+            id: notificationItem
 
-            Image {
-                anchors.horizontalCenter: parent.horizontalCenter
-                source: UIStyle.themeImagePath(`notifications-avatar${model.gender}`)
+            required property string name
+            required property string date
+            required property string time
+            required property string text
+
+            width: parent.width
+            height: 80
+
+            Item {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 25
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: parent.left
+                    anchors.margins: 10
+                    text: notificationItem.name
+                    color: UIStyle.titletextColor
+                    font: UIStyle.h3
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.right: parent.right
+                    anchors.margins: 10
+                    text: notificationItem.date + " " + notificationItem.time
+                    color: UIStyle.titletextColor
+                    font: UIStyle.p1
+                }
             }
 
-            Text {
-                text: model.name
-                anchors.horizontalCenter: parent.horizontalCenter
-                font.bold: true
-                font.pixelSize: UIStyle.fontSizeS
-                color: UIStyle.themeColorQtGray1
-            }
 
             Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: date + " " + time
-                font.pixelSize: UIStyle.fontSizeXS
-                font.italic: true
-                color: UIStyle.themeColorQtGray2
+                anchors.fill: parent
+                anchors.margins: 10
+                anchors.topMargin: 30
+                text: notificationItem.text
+                wrapMode: Text.WordWrap
+                color: UIStyle.textColor
+                font: UIStyle.p1
+                lineHeight: UIStyle.p1lineHeight
+                lineHeightMode: Text.FixedHeight
             }
         }
-    }
 
-    Component.onCompleted: {
-        NotificationData.populateData(missedCallsList)
+        Component.onCompleted: {
+            NotificationData.populateData(missedCallsList)
+        }
     }
 }
