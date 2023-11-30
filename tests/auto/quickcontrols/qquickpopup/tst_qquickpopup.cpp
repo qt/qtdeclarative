@@ -104,6 +104,7 @@ private slots:
     void doubleClickInMouseArea();
     void fadeDimmer_data();
     void fadeDimmer();
+    void noDimmer();
 
 private:
     static bool hasWindowActivation();
@@ -2326,6 +2327,25 @@ void tst_QQuickPopup::fadeDimmer()
     popup->setVisible(false);
     QTRY_VERIFY(!popup->isVisible());
     QCOMPARE_GT(opacityChangeCount, 2);
+}
+
+void tst_QQuickPopup::noDimmer()
+{
+    QQuickApplicationHelper helper(this, "noDimmer.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *drawer = window->contentItem()->findChild<QQuickDrawer *>();
+    QVERIFY(drawer);
+
+    drawer->open();
+    auto dimmer = QQuickPopupPrivate::get(drawer)->dimmer;
+    QVERIFY(dimmer);
+    // this must not crash
+    QTRY_VERIFY(!drawer->isModal());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
