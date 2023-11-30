@@ -28,6 +28,10 @@ qt_add_qml_module(wearablestyle
         Slider.qml
         Switch.qml
         UIStyle.qml
+    RESOURCES
+        fonts/TitilliumWeb-Bold.ttf
+        fonts/TitilliumWeb-SemiBold.ttf
+        fonts/TitilliumWeb-Regular.ttf
 )
 
 target_link_libraries(wearablestyle PUBLIC

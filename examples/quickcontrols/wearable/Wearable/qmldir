@@ -9,8 +9,8 @@ DemoModeIndicator 254.0 DemoModeIndicator.qml
 FitnessPage 254.0 FitnessPage.qml
 LauncherPage 254.0 LauncherPage.qml
 Main 254.0 Main.qml
-NaviButton 254.0 NaviButton.qml
 NavigationPage 254.0 NavigationPage.qml
+NavigationFallbackPage 254.0 NavigationFallbackPage.qml
 NotificationsPage 254.0 NotificationsPage.qml
 RouteElement 254.0 RouteElement.qml
 SettingsPage 254.0 SettingsPage.qml

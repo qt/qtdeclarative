@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -15,13 +15,14 @@ T.PageIndicator {
     bottomPadding: 7
 
     delegate: Rectangle {
-        implicitWidth: 8
-        implicitHeight: 8
+        required property int index
+
+        implicitWidth: 16
+        implicitHeight: 16
 
         radius: width / 2
-        color: UIStyle.themeColorQtGray3
-
-        opacity: index === control.currentIndex ? 1.0 : 0.35
+        color: index === control.currentIndex ? UIStyle.buttonProgress : UIStyle.pageIndicatorColor
+        border.color: UIStyle.indicatorOutlineColor
 
         Behavior on opacity {
             OpacityAnimator {

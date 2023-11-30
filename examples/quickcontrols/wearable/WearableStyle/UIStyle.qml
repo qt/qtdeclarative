@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 pragma Singleton
@@ -6,58 +6,109 @@ pragma Singleton
 import QtQuick
 import WearableSettings
 
-QtObject {
+Item {
     id: uiStyle
 
-    // Font Sizes
-    readonly property int fontSizeXXS: 10
-    readonly property int fontSizeXS: 15
-    readonly property int fontSizeS: 20
-    readonly property int fontSizeM: 25
-    readonly property int fontSizeL: 30
-    readonly property int fontSizeXL: 35
-    readonly property int fontSizeXXL: 40
+    property font h1: Qt.font({
+        family: fontLoaderSemibold.font.family,
+        weight: fontLoaderSemibold.font.weight,
+        pixelSize: 24
+    })
+    property int h1lineHeight: 28
 
-    // Color Scheme
-    // Green
-    readonly property color colorQtPrimGreen: "#41cd52"
-    readonly property color colorQtAuxGreen1: "#21be2b"
-    readonly property color colorQtAuxGreen2: "#17a81a"
+    property font h2: Qt.font({
+        family: fontLoaderSemibold.font.family,
+        weight: fontLoaderSemibold.font.weight,
+        pixelSize: 20
+    })
+    property int h2lineHeight: 24
 
-    // Red
-    readonly property color colorRed: "#e6173d"
+    property font h3: Qt.font({
+        family: fontLoaderRegular.font.family,
+        weight: fontLoaderRegular.font.weight,
+        pixelSize: 16
+    })
+    property int h3lineHeight: 20
 
-    // Gray
-    readonly property color colorQtGray1: "#09102b"
-    readonly property color colorQtGray2: "#222840"
-    readonly property color colorQtGray3: "#3a4055"
-    readonly property color colorQtGray4: "#53586b"
-    readonly property color colorQtGray5: "#53586b"
-    readonly property color colorQtGray6: "#848895"
-    readonly property color colorQtGray7: "#9d9faa"
-    readonly property color colorQtGray8: "#b5b7bf"
-    readonly property color colorQtGray9: "#cecfd5"
-    readonly property color colorQtGray10: "#f3f3f4"
+    property font h4: Qt.font({
+        family: fontLoaderBold.font.family,
+        weight: fontLoaderBold.font.weight,
+        pixelSize: 16
+    })
+    property int h4lineHeight: 20
 
-    // Light/dark versions of the colors above.
-    // Some UI elements always use a specific color regardless of theme,
-    // which is why we have both sets: so that those elements don't need to hard-code the hex string.
-    readonly property color themeColorQtGray1: WearableSettings.darkTheme ? colorQtGray10 : colorQtGray1
-    readonly property color themeColorQtGray2: WearableSettings.darkTheme ? colorQtGray9 : colorQtGray2
-    readonly property color themeColorQtGray3: WearableSettings.darkTheme ? colorQtGray8 : colorQtGray3
-    readonly property color themeColorQtGray4: WearableSettings.darkTheme ? colorQtGray7 : colorQtGray4
-    readonly property color themeColorQtGray5: WearableSettings.darkTheme ? colorQtGray6 : colorQtGray5
-    readonly property color themeColorQtGray6: WearableSettings.darkTheme ? colorQtGray5 : colorQtGray6
-    readonly property color themeColorQtGray7: WearableSettings.darkTheme ? colorQtGray4 : colorQtGray7
-    readonly property color themeColorQtGray8: WearableSettings.darkTheme ? colorQtGray3 : colorQtGray8
-    readonly property color themeColorQtGray9: WearableSettings.darkTheme ? colorQtGray2 : colorQtGray9
-    readonly property color themeColorQtGray10: WearableSettings.darkTheme ? colorQtGray1 : colorQtGray10
+    property font p1: Qt.font({
+        family: fontLoaderRegular.font.family,
+        weight: fontLoaderRegular.font.weight,
+        pixelSize: 14
+    })
+    property int p1lineHeight: 16
+
+    property font p2: Qt.font({
+        family: fontLoaderRegular.font.family,
+        weight: fontLoaderRegular.font.weight,
+        pixelSize: 20
+    })
+    property int p2lineHeight: 24
+
+    property font tumblerFont: Qt.font({
+        family: fontLoaderRegular.font.family,
+        weight: fontLoaderRegular.font.weight,
+        pixelSize: 32
+    })
+
+    FontLoader {
+        id: fontLoaderBold
+        source: "qrc:/qt/qml/WearableStyle/fonts/TitilliumWeb-Bold.ttf"
+    }
+
+    FontLoader {
+        id: fontLoaderSemibold
+        source: "qrc:/qt/qml/WearableStyle/fonts/TitilliumWeb-SemiBold.ttf"
+    }
+
+    FontLoader {
+        id: fontLoaderRegular
+        source: "qrc:/qt/qml/WearableStyle/fonts/TitilliumWeb-Regular.ttf"
+    }
+
+    readonly property color colorRed: "#E91E63"
+
+    readonly property color buttonGray: WearableSettings.darkTheme ? "#808080" : "#f3f3f4"
+    readonly property color buttonGrayPressed: WearableSettings.darkTheme ? "#707070" : "#cecfd5"
+    readonly property color buttonGrayOutLine: WearableSettings.darkTheme ? "#0D0D0D" : "#999999"
+
+    readonly property color buttonBackground: WearableSettings.darkTheme ? "#262626" : "#CCCCCC"
+    readonly property color buttonProgress: WearableSettings.darkTheme ? "#28C878" : "#19545C"
+
+    readonly property color gradientOverlay1: "#00000000"
+    readonly property color gradientOverlay2: "#1E000000"
+
+    readonly property color background1: WearableSettings.darkTheme ? "#00414A" : "#ABF2CE"
+    readonly property color background2: WearableSettings.darkTheme ? "#07243E" : "#E6E6E6"
+    readonly property color background3: WearableSettings.darkTheme ? "#262626" : "#E6E6E6"
+
+    readonly property color textColor: WearableSettings.darkTheme ? "#E6E6E6" : "#191919"
+    readonly property color titletextColor: WearableSettings.darkTheme ? "#2CDE85" : "#191919"
+
+    readonly property color highlightColor: WearableSettings.darkTheme ? "#33676E" : "#28C878"
+
+    readonly property color pageIndicatorColor: WearableSettings.darkTheme ? "#00000000" : "#E6E6E6"
+    readonly property color indicatorOutlineColor: WearableSettings.darkTheme ? "#707070" : "#999999"
+
+    readonly property color listHeader1: WearableSettings.darkTheme ? "#9E00414A" : "#9E2CDE85"
+    readonly property color listHeader2: WearableSettings.darkTheme ? "#9E0C1C1F" : "#9E00414A"
+
+    readonly property color listItemBackground: WearableSettings.darkTheme ? "#00414A" : "#EAFCF3"
 
     function imagePath(baseImagePath) {
         return `qrc:/qt/qml/Wearable/images/${baseImagePath}.png`
     }
 
     function themeImagePath(baseImagePath) {
-        return `qrc:/qt/qml/Wearable/images/${baseImagePath}${(WearableSettings.darkTheme ? "-dark" : "-light")}.png`
+        return `qrc:/qt/qml/Wearable/images/${baseImagePath}${(WearableSettings.darkTheme ? "-dark" : "-light")}.svg`
+    }
+    function iconPath(baseImagePath) {
+        return `qrc:/qt/qml/Wearable/icons/${baseImagePath}${(WearableSettings.darkTheme ? "-dark" : "-light")}.svg`
     }
 }

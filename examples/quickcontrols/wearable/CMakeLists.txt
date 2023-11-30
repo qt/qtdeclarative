@@ -12,7 +12,7 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/wearable")
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2 OPTIONAL_COMPONENTS Positioning Location)
 
 qt_standard_project_setup()
 
@@ -30,6 +30,18 @@ target_link_libraries(wearableexample PUBLIC
     Qt6::Quick
     Qt6::QuickControls2
 )
+
+if(TARGET Qt6::Positioning)
+    target_link_libraries(wearableexample PUBLIC
+        Qt6::Positioning
+    )
+endif()
+
+if(TARGET Qt6::Location)
+target_link_libraries(wearableexample PUBLIC
+    Qt6::Location
+)
+endif()
 
 if(UNIX AND NOT APPLE AND CMAKE_CROSSCOMPILING)
     find_package(Qt6 REQUIRED COMPONENTS QuickTemplates2)

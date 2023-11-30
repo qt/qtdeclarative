@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -7,20 +7,28 @@ import QtQuick.Templates as T
 T.Switch {
     id: control
 
-    implicitWidth: 48
-    implicitHeight: 26
+    implicitWidth: 64
+    implicitHeight: 34
 
     indicator: Rectangle {
-        x: control.visualPosition * (control.width - width)
+        x: 2 + control.visualPosition * (control.width - width - 4)
         y: (control.height - height) / 2
-        width: 26
-        height: 26
+        width: height
+        height: parent.height - 4
+        radius: height / 2
 
-        radius: 13
-        color: control.down ? UIStyle.themeColorQtGray6 : UIStyle.themeColorQtGray10
-        border.color: !control.checked ? "#999999"
-                                       : (control.down ? UIStyle.colorQtAuxGreen2
-                                                       : UIStyle.colorQtAuxGreen1)
+        color: control.down ? UIStyle.buttonGrayPressed : UIStyle.buttonGray
+        border.color: UIStyle.buttonGrayOutLine
+
+        Rectangle {
+            width: parent.width
+            height: parent.height
+            radius: parent.radius
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: UIStyle.gradientOverlay1 }
+                GradientStop { position: 1.0; color: UIStyle.gradientOverlay2 }
+            }
+        }
 
         Behavior on x {
             enabled: !control.pressed
@@ -29,10 +37,18 @@ T.Switch {
     }
 
     background: Rectangle {
-        radius: 13
-        color: control.checked ? UIStyle.colorQtAuxGreen2 : UIStyle.colorRed
-        border.color: control.checked ? UIStyle.colorQtAuxGreen2
-                                      : UIStyle.themeColorQtGray6
+        radius: 17
+        color: control.checked ? UIStyle.buttonProgress : UIStyle.buttonBackground
+
+        Rectangle {
+            width: parent.width
+            height: parent.height
+            radius: parent.radius
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: UIStyle.gradientOverlay1 }
+                GradientStop { position: 1.0; color: UIStyle.gradientOverlay2 }
+            }
+        }
     }
 }
 
