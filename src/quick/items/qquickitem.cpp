@@ -6727,8 +6727,18 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
     switch (change) {
     case QQuickItem::ItemChildAddedChange: {
         q->itemChange(change, data);
-        if (!subtreeTransformChangedEnabled)
-            subtreeTransformChangedEnabled = true;
+        // The newly added child or any of its descendants may have
+        // ItemObservesViewport set, in which case we need to both
+        // inform the item that the transform has changed, and re-apply
+        // subtreeTransformChangedEnabled to both this item and its
+        // ancestors.
+        if (QQuickItemPrivate::get(data.item)->transformChanged(q)) {
+            if (!subtreeTransformChangedEnabled) {
+                qCDebug(lcVP) << "turned on transformChanged notification for subtree of" << q;
+                subtreeTransformChangedEnabled = true;
+            }
+            enableSubtreeChangeNotificationsForParentHierachy();
+        }
         notifyChangeListeners(QQuickItemPrivate::Children, &QQuickItemChangeListener::itemChildAdded, q, data.item);
         break;
     }
@@ -6958,15 +6968,21 @@ void QQuickItem::setFlag(Flag flag, bool enabled)
 
     // We don't return early if the flag did not change. That's useful in case
     // we need to intentionally trigger this parent-chain traversal again.
-    if (enabled && flag == ItemObservesViewport) {
-        QQuickItem *par = parentItem();
-        while (par) {
-            auto parPriv = QQuickItemPrivate::get(par);
-            if (!parPriv->subtreeTransformChangedEnabled)
-                qCDebug(lcVP) << "turned on transformChanged notification for subtree of" << par;
-            parPriv->subtreeTransformChangedEnabled = true;
-            par = par->parentItem();
-        }
+    if (enabled && flag == ItemObservesViewport)
+        d->enableSubtreeChangeNotificationsForParentHierachy();
+}
+
+void QQuickItemPrivate::enableSubtreeChangeNotificationsForParentHierachy()
+{
+    Q_Q(QQuickItem);
+
+    QQuickItem *par = q->parentItem();
+    while (par) {
+        auto parPriv = QQuickItemPrivate::get(par);
+        if (!parPriv->subtreeTransformChangedEnabled)
+            qCDebug(lcVP) << "turned on transformChanged notification for subtree of" << par;
+        parPriv->subtreeTransformChangedEnabled = true;
+        par = par->parentItem();
     }
 }
 

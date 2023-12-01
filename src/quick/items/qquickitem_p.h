@@ -685,6 +685,8 @@ public:
 
     void itemChange(QQuickItem::ItemChange, const QQuickItem::ItemChangeData &);
 
+    void enableSubtreeChangeNotificationsForParentHierachy();
+
     virtual void mirrorChange() {}
 
     void setHasCursorInChild(bool hasCursor);

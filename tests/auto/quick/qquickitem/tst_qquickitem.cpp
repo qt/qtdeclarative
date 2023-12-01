@@ -230,6 +230,8 @@ private slots:
     void objectCastInDestructor();
     void listsAreNotLists();
 
+    void transformChanged();
+
 private:
 
     enum PaintOrderOp {
@@ -2603,6 +2605,76 @@ void tst_qquickitem::listsAreNotLists()
     QCOMPARE(data.count(&data), 0);
     QCOMPARE(resources.count(&resources), 0);
     QCOMPARE(children.count(&children), 0);
+}
+
+class TransformItemPrivate;
+class TransformItem : public QQuickItem {
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(TransformItem)
+public:
+    TransformItem(QQuickItem *parent = nullptr);
+
+    bool transformChanged = false;
+};
+
+class TransformItemPrivate :public QQuickItemPrivate
+{
+protected:
+    Q_DECLARE_PUBLIC(TransformItem)
+
+    bool transformChanged(QQuickItem *transformedItem) override
+    {
+        Q_Q(TransformItem);
+        q->transformChanged = true;
+        return true;
+    }
+};
+
+TransformItem::TransformItem(QQuickItem *parent)
+    : QQuickItem(*(new TransformItemPrivate), parent)
+{
+}
+
+void tst_qquickitem::transformChanged()
+{
+    QQuickItem rootItem;
+    QQuickItem *parents[2][3] = {};
+    for (int i = 0; i < 2; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            auto *item = new QQuickItem;
+            item->setObjectName(QString("Item-%1.%2").arg(i).arg(j));
+            item->setParentItem(j > 0 ? parents[i][j - 1] : &rootItem);
+            parents[i][j] = item;
+        }
+    }
+
+    // Setting the root item's position will result in transformChanged,
+    // which will clear the subtreeTransformChangedEnabled flag that is
+    // by default set to true, since there are no children that observe
+    // the viewport.
+    parents[0][0]->setPosition(QPoint(100, 100));
+    parents[1][0]->setPosition(QPoint(200, 200));
+
+    TransformItem transformItem;
+    transformItem.setParentItem(parents[0][2]);
+    transformItem.setFlag(QQuickItem::ItemObservesViewport);
+    QCOMPARE(transformItem.mapToScene(QPoint(0, 0)), parents[0][0]->position());
+
+    parents[0][0]->setPosition(QPoint(110, 110));
+    QVERIFY2(transformItem.transformChanged,
+        "Moving an ancestor should trigger transformChanged");
+
+    transformItem.transformChanged = false;
+    transformItem.setParentItem(parents[1][2]);
+    QVERIFY2(transformItem.transformChanged,
+        "Reparenting the item should result in a transformChanged");
+    QCOMPARE(transformItem.mapToScene(QPoint(0, 0)), parents[1][0]->position());
+
+    transformItem.transformChanged = false;
+    parents[1][0]->setPosition(QPoint(220, 220));
+    QVERIFY2(transformItem.transformChanged,
+        "Changing one of the new ancestors should result in transformChanged");
+    QCOMPARE(transformItem.mapToScene(QPoint(0, 0)), parents[1][0]->position());
 }
 
 QTEST_MAIN(tst_qquickitem)
