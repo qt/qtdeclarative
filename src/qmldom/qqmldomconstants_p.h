@@ -219,6 +219,7 @@ enum class DomType {
     ScriptForEachStatement,
     ScriptTryCatchStatement,
     ScriptThrowStatement,
+    ScriptLabelledStatement,
     ScriptBreakStatement,
     ScriptContinueStatement,
 

@@ -3110,6 +3110,24 @@ static QList<CompletionItem> insideThrowStatement(const DomItem &currentItem,
     return {};
 }
 
+static QList<CompletionItem> insideLabelledStatement(const DomItem &currentItem,
+                                                  const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation colon = regions[ColonTokenRegion];
+
+    if (afterLocation(colon, ctx)) {
+        return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+    }
+    // note: the case "beforeLocation(ctx, colon)" probably never happens:
+    // this is because without the colon, the parser will probably not parse this as a
+    // labelledstatement but as a normal expression statement.
+    // So this case only happens when the colon already exists, and the user goes back to the
+    // label name and requests completion for that label.
+    return {};
+}
+
 static bool ctxBeforeStatement(const CompletionContextStrings &ctx, const DomItem &currentItem,
                                FileLocationRegion firstRegion)
 {
@@ -3236,7 +3254,8 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             return insideScriptPattern(currentParent, ctx);
         case DomType::ScriptThrowStatement:
             return insideThrowStatement(currentParent, ctx);
-
+        case DomType::ScriptLabelledStatement:
+            return insideLabelledStatement(currentParent, ctx);
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.

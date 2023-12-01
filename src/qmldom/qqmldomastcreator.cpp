@@ -2292,6 +2292,33 @@ void QQmlDomAstCreator::endVisit(AST::ThrowStatement *statement)
     pushScriptElement(current);
 }
 
+bool QQmlDomAstCreator::visit(AST::LabelledStatement *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::LabelledStatement *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(statement, DomType::ScriptLabelledStatement);
+    current->addLocation(FileLocationRegion::ColonTokenRegion, statement->colonToken);
+
+    auto label = std::make_shared<ScriptElements::IdentifierExpression>(statement->identifierToken);
+    label->setName(statement->label);
+    current->insertChild(Fields::label, ScriptElementVariant::fromElement(label));
+
+
+    if (statement->statement) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        current->insertChild(Fields::statement, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
 bool QQmlDomAstCreator::visit(AST::BreakStatement *)
 {
     return m_enableScriptExpressions;

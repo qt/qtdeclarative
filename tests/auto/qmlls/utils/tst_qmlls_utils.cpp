@@ -2972,6 +2972,51 @@ void tst_qmlls_utils::completions_data()
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"f"_s, CompletionItemKind::Method } }
             << QStringList{ propertyCompletion, letStatementCompletion } << None;
+
+    QTest::newRow("labelledStatement")
+            << testFile(u"completions/labelledStatement.qml"_s) << 5 << 16
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { forStatementCompletion, CompletionItemKind::Snippet },
+                                    }
+            << QStringList{ propertyCompletion, } << None;
+
+    QTest::newRow("nestedLabel")
+            << testFile(u"completions/labelledStatement.qml"_s) << 7 << 22
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { forStatementCompletion, CompletionItemKind::Snippet },
+                                    }
+            << QStringList{ propertyCompletion, } << None;
+
+    QTest::newRow("nestedLabel2")
+            << testFile(u"completions/labelledStatement.qml"_s) << 8 << 26
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { forStatementCompletion, CompletionItemKind::Snippet },
+                                    }
+            << QStringList{ propertyCompletion, } << None;
+
+    QTest::newRow("multiLabel")
+            << testFile(u"completions/labelledStatement.qml"_s) << 15 << 21
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { forStatementCompletion, CompletionItemKind::Snippet },
+                                    }
+            << QStringList{ propertyCompletion, } << None;
+
+    QTest::newRow("multiLabel2")
+            << testFile(u"completions/labelledStatement.qml"_s) << 16 << 21
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method },
+                                    { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { forStatementCompletion, CompletionItemKind::Snippet },
+                                    }
+            << QStringList{ propertyCompletion, } << None;
 }
 
 void tst_qmlls_utils::completions()

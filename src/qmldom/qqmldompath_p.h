@@ -550,6 +550,7 @@ QMLDOM_FIELD(rootComponent);
 QMLDOM_FIELD(scopeType);
 QMLDOM_FIELD(scriptElement);
 QMLDOM_FIELD(sources);
+QMLDOM_FIELD(statement);
 QMLDOM_FIELD(statements);
 QMLDOM_FIELD(status);
 QMLDOM_FIELD(stringValue);

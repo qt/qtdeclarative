@@ -427,6 +427,9 @@ public:
     bool visit(AST::ThrowStatement *) override;
     void endVisit(AST::ThrowStatement *) override;
 
+    bool visit(AST::LabelledStatement *) override;
+    void endVisit(AST::LabelledStatement *) override;
+
     bool visit(AST::ContinueStatement *) override;
     void endVisit(AST::ContinueStatement *) override;
 
