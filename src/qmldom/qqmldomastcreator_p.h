@@ -424,6 +424,9 @@ public:
     bool visit(AST::Finally *) override;
     void endVisit(AST::Finally *) override;
 
+    bool visit(AST::ThrowStatement *) override;
+    void endVisit(AST::ThrowStatement *) override;
+
     // lists of stuff whose children do not need a qqmljsscope: visitation order can be custom
     bool visit(AST::ArgumentList *) override;
     bool visit(AST::UiParameterList *) override;

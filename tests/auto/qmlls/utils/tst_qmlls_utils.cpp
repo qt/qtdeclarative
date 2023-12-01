@@ -2960,6 +2960,18 @@ void tst_qmlls_utils::completions_data()
             << ExpectedCompletions{}
             << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
             << None;
+
+    QTest::newRow("throwStatement")
+            << testFile(u"completions/throwStatement.qml"_s) << 8 << 15
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method } }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+
+    QTest::newRow("throwStatement2")
+            << testFile(u"completions/throwStatement.qml"_s) << 9 << 20
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"f"_s, CompletionItemKind::Method } }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
 }
 
 void tst_qmlls_utils::completions()

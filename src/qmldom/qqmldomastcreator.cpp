@@ -2270,6 +2270,28 @@ void QQmlDomAstCreator::endVisit(AST::Finally *)
     // handled in endVisit(AST::TryStatement* )
 }
 
+bool QQmlDomAstCreator::visit(AST::ThrowStatement *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::ThrowStatement *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(statement, DomType::ScriptThrowStatement);
+    current->addLocation(FileLocationRegion::ThrowKeywordRegion, statement->throwToken);
+
+    if (statement->expression) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        current->insertChild(Fields::expression, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
 static const DomEnvironment *environmentFrom(MutableDomItem &qmlFile)
 {
     auto top = qmlFile.top();

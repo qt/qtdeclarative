@@ -3097,6 +3097,19 @@ static QList<CompletionItem> insideVariableDeclarationEntry(const DomItem &curre
     return insideScriptPattern(currentItem, ctx);
 }
 
+static QList<CompletionItem> insideThrowStatement(const DomItem &currentItem,
+                                                  const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation throwKeyword = regions[ThrowKeywordRegion];
+
+    if (afterLocation(throwKeyword, ctx)) {
+        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    }
+    return {};
+}
+
 static bool ctxBeforeStatement(const CompletionContextStrings &ctx, const DomItem &currentItem,
                                FileLocationRegion firstRegion)
 {
@@ -3221,6 +3234,9 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             // same completions as a ScriptPattern.
         case DomType::ScriptPattern:
             return insideScriptPattern(currentParent, ctx);
+        case DomType::ScriptThrowStatement:
+            return insideThrowStatement(currentParent, ctx);
+
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.
