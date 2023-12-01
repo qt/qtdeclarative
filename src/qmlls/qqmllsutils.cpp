@@ -3128,6 +3128,56 @@ static QList<CompletionItem> insideLabelledStatement(const DomItem &currentItem,
     return {};
 }
 
+/*!
+\internal
+Collect the current set of labels that currentItem can jump to.
+*/
+static QList<CompletionItem> collectLabels(const DomItem &context)
+{
+    QList<CompletionItem> labels;
+    for (DomItem current = context; current; current = current.directParent()) {
+        if (current.internalKind() == DomType::ScriptLabelledStatement) {
+            const QString label = current.field(Fields::label).value().toString();
+            if (label.isEmpty())
+                continue;
+            labels.emplaceBack();
+            labels.back().label = label.toUtf8();
+            labels.back().kind = int(CompletionItemKind::Value); // variable?
+            // TODO: more stuff here?
+        } else if (current.internalKind() == DomType::ScriptExpression) {
+            // quick exit when leaving the JS part
+            return labels;
+        }
+    }
+    return labels;
+}
+
+static QList<CompletionItem> insideContinueStatement(const DomItem &currentItem,
+                                                     const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation continueKeyword = regions[ContinueKeywordRegion];
+
+    if (afterLocation(continueKeyword, ctx)) {
+        return collectLabels(currentItem);
+    }
+    return {};
+}
+
+static QList<CompletionItem> insideBreakStatement(const DomItem &currentItem,
+                                                     const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation breakKeyword = regions[BreakKeywordRegion];
+
+    if (afterLocation(breakKeyword, ctx)) {
+        return collectLabels(currentItem);
+    }
+    return {};
+}
+
 static bool ctxBeforeStatement(const CompletionContextStrings &ctx, const DomItem &currentItem,
                                FileLocationRegion firstRegion)
 {
@@ -3256,6 +3306,10 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             return insideThrowStatement(currentParent, ctx);
         case DomType::ScriptLabelledStatement:
             return insideLabelledStatement(currentParent, ctx);
+        case DomType::ScriptContinueStatement:
+            return insideContinueStatement(currentParent, ctx);
+        case DomType::ScriptBreakStatement:
+            return insideBreakStatement(currentParent, ctx);
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.

@@ -3017,6 +3017,42 @@ void tst_qmlls_utils::completions_data()
                                     { forStatementCompletion, CompletionItemKind::Snippet },
                                     }
             << QStringList{ propertyCompletion, } << None;
+
+    QTest::newRow("continueNested")
+            << testFile(u"completions/continueAndBreakStatement.qml"_s) << 12 << 26
+            << ExpectedCompletions{ { u"nestedLabel1"_s, CompletionItemKind::Value },
+                                    { u"nestedLabel2"_s, CompletionItemKind::Value }, }
+            << QStringList{ propertyCompletion, u"x"_s, u"f"_s, u"multiLabel1"_s } << None;
+
+    QTest::newRow("breakNested")
+            << testFile(u"completions/continueAndBreakStatement.qml"_s) << 13 << 23
+            << ExpectedCompletions{ { u"nestedLabel1"_s, CompletionItemKind::Value },
+                                    { u"nestedLabel2"_s, CompletionItemKind::Value }, }
+            << QStringList{ propertyCompletion, u"x"_s, u"f"_s, u"multiLabel1"_s } << None;
+
+    QTest::newRow("continueMulti")
+            << testFile(u"completions/continueAndBreakStatement.qml"_s) << 20 << 22
+            << ExpectedCompletions{ { u"multiLabel1"_s, CompletionItemKind::Value },
+                                    { u"multiLabel2"_s, CompletionItemKind::Value }, }
+            << QStringList{ propertyCompletion, u"x"_s, u"f"_s, u"nestedLabel1"_s } << None;
+
+    QTest::newRow("breakMulti")
+            << testFile(u"completions/continueAndBreakStatement.qml"_s) << 21 << 19
+            << ExpectedCompletions{ { u"multiLabel1"_s, CompletionItemKind::Value },
+                                    { u"multiLabel2"_s, CompletionItemKind::Value }, }
+            << QStringList{ propertyCompletion, u"x"_s, u"f"_s, u"nestedLabel1"_s } << None;
+
+    QTest::newRow("continueNoLabel") << testFile(u"completions/continueAndBreakStatement.qml"_s)
+                                     << 25 << 22 << ExpectedCompletions{}
+                                     << QStringList{ propertyCompletion, u"x"_s, u"f"_s,
+                                                     u"nestedLabel1"_s, u"multiLabel1"_s }
+                                     << None;
+
+    QTest::newRow("breakNoLabel") << testFile(u"completions/continueAndBreakStatement.qml"_s) << 26
+                                  << 19 << ExpectedCompletions{}
+                                  << QStringList{ propertyCompletion, u"x"_s, u"f"_s,
+                                                  u"nestedLabel1"_s, u"multiLabel1"_s }
+                                  << None;
 }
 
 void tst_qmlls_utils::completions()
