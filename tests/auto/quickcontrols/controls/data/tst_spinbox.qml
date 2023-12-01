@@ -30,10 +30,12 @@ TestCase {
         MouseArea { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
-        var control = createTemporaryObject(spinBox, testCase)
+    function test_defaults() {
+        let control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
         compare(control.from, 0)
@@ -48,7 +50,7 @@ TestCase {
     }
 
     function test_value() {
-        var control = createTemporaryObject(spinBox, testCase)
+        let control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
         compare(control.value, 0)
@@ -63,7 +65,7 @@ TestCase {
     }
 
     function test_range() {
-        var control = createTemporaryObject(spinBox, testCase, {from: 0, to: 100, value: 50})
+        let control = createTemporaryObject(spinBox, testCase, {from: 0, to: 100, value: 50})
         verify(control)
 
         compare(control.from, 0)
@@ -133,7 +135,7 @@ TestCase {
     }
 
     function test_inverted() {
-        var control = createTemporaryObject(spinBox, testCase, {from: 100, to: -100})
+        let control = createTemporaryObject(spinBox, testCase, {from: 100, to: -100})
         verify(control)
 
         compare(control.from, 100)
@@ -170,16 +172,16 @@ TestCase {
     }
 
     function test_mouse(data) {
-        var control = createTemporaryObject(spinBox, testCase, {value: data.value})
+        let control = createTemporaryObject(spinBox, testCase, {value: data.value})
         verify(control)
 
-        var button = control[data.button]
+        let button = control[data.button]
         verify(button)
 
-        var pressedSpy = signalSpy.createObject(control, {target: button, signalName: "pressedChanged"})
+        let pressedSpy = signalSpy.createObject(control, {target: button, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
 
-        var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
+        let valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
         verify(valueModifiedSpy.valid)
 
         mousePress(button.indicator)
@@ -210,27 +212,27 @@ TestCase {
     }
 
     function test_keys(data) {
-        var control = createTemporaryObject(spinBox, testCase, data.properties)
+        let control = createTemporaryObject(spinBox, testCase, data.properties)
         verify(control)
 
-        var upPressedCount = 0
-        var downPressedCount = 0
-        var valueModifiedCount = 0
+        let upPressedCount = 0
+        let downPressedCount = 0
+        let valueModifiedCount = 0
 
-        var upPressedSpy = signalSpy.createObject(control, {target: control.up, signalName: "pressedChanged"})
+        let upPressedSpy = signalSpy.createObject(control, {target: control.up, signalName: "pressedChanged"})
         verify(upPressedSpy.valid)
 
-        var downPressedSpy = signalSpy.createObject(control, {target: control.down, signalName: "pressedChanged"})
+        let downPressedSpy = signalSpy.createObject(control, {target: control.down, signalName: "pressedChanged"})
         verify(downPressedSpy.valid)
 
-        var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
+        let valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
         verify(valueModifiedSpy.valid)
 
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        for (var u = 0; u < data.upSteps.length; ++u) {
-            var wasUpEnabled = control.wrap || control.value < control.to
+        for (let u = 0; u < data.upSteps.length; ++u) {
+            let wasUpEnabled = control.wrap || control.value < control.to
             keyPress(Qt.Key_Up)
             compare(control.up.pressed, wasUpEnabled)
             compare(control.down.pressed, false)
@@ -252,8 +254,8 @@ TestCase {
             compare(valueModifiedSpy.count, valueModifiedCount)
         }
 
-        for (var d = 0; d < data.downSteps.length; ++d) {
-            var wasDownEnabled = control.wrap || control.value > control.from
+        for (let d = 0; d < data.downSteps.length; ++d) {
+            let wasDownEnabled = control.wrap || control.value > control.from
             keyPress(Qt.Key_Down)
             compare(control.down.pressed, wasDownEnabled)
             compare(control.up.pressed, false)
@@ -277,26 +279,26 @@ TestCase {
     }
 
     function test_locale() {
-        var control = createTemporaryObject(spinBox, testCase)
+        let control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
         control.locale = Qt.locale("ar_EG") // Arabic, Egypt
 
-        var numbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"]
-        for (var i = 0; i < 10; ++i) {
+        let numbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"]
+        for (let i = 0; i < 10; ++i) {
             control.value = i
             compare(control.contentItem.text, numbers[i])
         }
     }
 
     function test_baseline() {
-        var control = createTemporaryObject(spinBox, testCase)
+        let control = createTemporaryObject(spinBox, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
     }
 
     function test_focus() {
-        var control = createTemporaryObject(spinBox, testCase, {from: 10, to: 1000, value: 100, focus: true})
+        let control = createTemporaryObject(spinBox, testCase, {from: 10, to: 1000, value: 100, focus: true})
         verify(control)
 
         control.forceActiveFocus()
@@ -315,23 +317,23 @@ TestCase {
     }
 
     function test_initialFocus() {
-        var window = testCase.Window.window
+        let window = testCase.Window.window
         verify(window)
         compare(window.activeFocusItem, window.contentItem)
 
-        var control = createTemporaryObject(spinBox, testCase, { editable: true, focus: true })
+        let control = createTemporaryObject(spinBox, testCase, { editable: true, focus: true })
         verify(control)
         tryCompare(control.contentItem, "activeFocus", true)
     }
 
     function test_editable() {
-        var control = createTemporaryObject(spinBox, testCase)
+        let control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
-        var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
+        let valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
         verify(valueModifiedSpy.valid)
 
-        var displayTextChangedSpy = signalSpy.createObject(control, {target: control, signalName: "displayTextChanged"})
+        let displayTextChangedSpy = signalSpy.createObject(control, {target: control, signalName: "displayTextChanged"})
         verify(displayTextChangedSpy.valid)
 
 
@@ -377,16 +379,16 @@ TestCase {
 
 
     function test_editable_liveUpdate() {
-        var control = createTemporaryObject(spinBox, testCase)
+        let control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
-        var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
+        let valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
         verify(valueModifiedSpy.valid)
 
-        var valueChangedSpy = signalSpy.createObject(control, {target: control, signalName: "valueChanged"})
+        let valueChangedSpy = signalSpy.createObject(control, {target: control, signalName: "valueChanged"})
         verify(valueChangedSpy.valid)
 
-        var displayTextChangedSpy = signalSpy.createObject(control, {target: control, signalName: "displayTextChanged"})
+        let displayTextChangedSpy = signalSpy.createObject(control, {target: control, signalName: "displayTextChanged"})
         verify(displayTextChangedSpy.valid)
 
         control.contentItem.forceActiveFocus()
@@ -474,7 +476,7 @@ TestCase {
     }
 
     function test_editable_doubleSpinBox() {
-        var control = createTemporaryObject(doubleBox, testCase)
+        let control = createTemporaryObject(doubleBox, testCase)
         verify(control)
 
         control.editable = true
@@ -490,13 +492,13 @@ TestCase {
         compare(control.realValue, 5.00)
         compare(control.displayText, "5.00")
 
-        var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
+        let valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
         verify(valueModifiedSpy.valid)
 
-        var valueChangedSpy = signalSpy.createObject(control, {target: control, signalName: "valueChanged"})
+        let valueChangedSpy = signalSpy.createObject(control, {target: control, signalName: "valueChanged"})
         verify(valueChangedSpy.valid)
 
-        var displayTextChangedSpy = signalSpy.createObject(control, {target: control, signalName: "displayTextChangedWithArg"})
+        let displayTextChangedSpy = signalSpy.createObject(control, {target: control, signalName: "displayTextChangedWithArg"})
         verify(displayTextChangedSpy.valid)
 
         control.contentItem.forceActiveFocus()
@@ -658,7 +660,7 @@ TestCase {
         }
 
     function test_groupSeparatorHandling(data) {
-        var control = createTemporaryObject(spinBox, testCase)
+        let control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
         let testLoc = Qt.locale(data.tag)
@@ -699,7 +701,7 @@ TestCase {
     function test_qtbug64151() {
         // Slightly modified example from QTBUG-64151. We use displayText
         // instead of contentItem.text as a workaround.
-        var control = createTemporaryObject(spinBox, testCase)
+        let control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
         control.locale = Qt.locale("en_EN")
@@ -757,7 +759,7 @@ TestCase {
 
     function test_qtbug103205() {
 
-        var control = createTemporaryObject(spinBoxAndAction, testCase)
+        let control = createTemporaryObject(spinBoxAndAction, testCase)
         verify(control)
         verify(control.spinbox)
 
@@ -786,24 +788,24 @@ TestCase {
     }
 
     function test_wheel(data) {
-        var ma = createTemporaryObject(mouseArea, testCase, {width: 100, height: 100})
+        let ma = createTemporaryObject(mouseArea, testCase, {width: 100, height: 100})
         verify(ma)
 
         data.properties.wheelEnabled = true
-        var control = spinBox.createObject(ma, data.properties)
+        let control = spinBox.createObject(ma, data.properties)
         verify(control)
 
-        var valueModifiedCount = 0
-        var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
+        let valueModifiedCount = 0
+        let valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
         verify(valueModifiedSpy.valid)
 
-        var delta = 120
+        let delta = 120
 
-        var spy = signalSpy.createObject(ma, {target: ma, signalName: "wheel"})
+        let spy = signalSpy.createObject(ma, {target: ma, signalName: "wheel"})
         verify(spy.valid)
 
-        for (var u = 0; u < data.upSteps.length; ++u) {
-            var wasUpEnabled = control.wrap || control.value < control.to
+        for (let u = 0; u < data.upSteps.length; ++u) {
+            let wasUpEnabled = control.wrap || control.value < control.to
             mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
             if (wasUpEnabled)
                 ++valueModifiedCount
@@ -812,8 +814,8 @@ TestCase {
             compare(control.value, data.upSteps[u])
         }
 
-        for (var d = 0; d < data.downSteps.length; ++d) {
-            var wasDownEnabled = control.wrap || control.value > control.from
+        for (let d = 0; d < data.downSteps.length; ++d) {
+            let wasDownEnabled = control.wrap || control.value > control.from
             mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
             if (wasDownEnabled)
                 ++valueModifiedCount
@@ -833,7 +835,7 @@ TestCase {
     }
 
     function test_initiallyDisabledIndicators(data) {
-        var control = createTemporaryObject(spinBox, testCase, { from: data.from, value: data.value, to: data.to })
+        let control = createTemporaryObject(spinBox, testCase, { from: data.from, value: data.value, to: data.to })
         verify(control)
 
         compare(control.up.indicator.enabled, data.upEnabled)
@@ -852,10 +854,10 @@ TestCase {
     }
 
     function test_hover(data) {
-        var control = createTemporaryObject(spinBox, testCase, {hoverEnabled: data.hoverEnabled, value: data.value})
+        let control = createTemporaryObject(spinBox, testCase, {hoverEnabled: data.hoverEnabled, value: data.value})
         verify(control)
 
-        var button = control[data.button]
+        let button = control[data.button]
         compare(control.hovered, false)
         compare(button.hovered, false)
 
@@ -876,16 +878,16 @@ TestCase {
 
     // QTBUG-74688
     function test_hoverWhilePressed(data) {
-        var control = createTemporaryObject(spinBox, testCase, { hoverEnabled: true, value: 50 })
+        let control = createTemporaryObject(spinBox, testCase, { hoverEnabled: true, value: 50 })
         verify(control)
 
-        var button = control[data.tag]
+        let button = control[data.tag]
         compare(control.hovered, false)
         compare(button.hovered, false)
 
         // Hover over the indicator. It should be hovered.
-        var buttonXCenter = button.indicator.x + button.indicator.width / 2
-        var buttonYCenter = button.indicator.y + button.indicator.height / 2
+        let buttonXCenter = button.indicator.x + button.indicator.width / 2
+        let buttonYCenter = button.indicator.y + button.indicator.height / 2
         mouseMove(control, buttonXCenter, buttonYCenter)
         compare(button.hovered, true)
 
@@ -908,13 +910,13 @@ TestCase {
     }
 
     function test_valueFromText(data) {
-        var control = createTemporaryObject(spinBox, testCase, {editable: data.editable})
+        let control = createTemporaryObject(spinBox, testCase, {editable: data.editable})
         verify(control)
 
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        var valueFromTextCalls = 0
+        let valueFromTextCalls = 0
         control.valueFromText = function(text, locale) {
             ++valueFromTextCalls
             return Number.fromLocaleString(locale, text);
@@ -931,21 +933,21 @@ TestCase {
     }
 
     function test_callDefaultValueFromText() {
-        var control = createTemporaryObject(spinBox, testCase)
+        let control = createTemporaryObject(spinBox, testCase)
         verify(control)
         compare(control.valueFromText("123", control.locale), 123)
     }
 
     function test_autoRepeat() {
-        var control = createTemporaryObject(spinBox, testCase)
+        let control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
         compare(control.value, 0)
 
-        var valueSpy = signalSpy.createObject(control, {target: control, signalName: "valueChanged"})
+        let valueSpy = signalSpy.createObject(control, {target: control, signalName: "valueChanged"})
         verify(valueSpy.valid)
 
-        var countBefore = 0
+        let countBefore = 0
 
         // repeat up
         mousePress(control.up.indicator)
@@ -997,7 +999,7 @@ TestCase {
     }
 
     function test_initialValue() {
-        var control = createTemporaryObject(spinBox, testCase, {from: 1000, to: 10000})
+        let control = createTemporaryObject(spinBox, testCase, {from: 1000, to: 10000})
         verify(control)
         compare(control.value, 1000)
     }
@@ -1019,7 +1021,7 @@ TestCase {
             }
 
             valueFromText: function(text) {
-                for (var i = 0; i < items.length; ++i) {
+                for (let i = 0; i < items.length; ++i) {
                     if (items[i].toLowerCase().indexOf(text.toLowerCase()) === 0)
                         return i
                 }
@@ -1036,10 +1038,10 @@ TestCase {
     }
 
     function test_textFromValue(data) {
-        var control = createTemporaryObject(data.component, testCase)
+        let control = createTemporaryObject(data.component, testCase)
         verify(control)
 
-        for (var i = 0; i < data.values.length; ++i) {
+        for (let i = 0; i < data.values.length; ++i) {
             control.value = data.values[i]
             compare(control.value, data.values[i])
             compare(control.displayText, data.displayTexts[i])
@@ -1047,7 +1049,7 @@ TestCase {
     }
 
     function test_callDefaultTextFromValue() {
-        var control = createTemporaryObject(spinBox, testCase)
+        let control = createTemporaryObject(spinBox, testCase)
         verify(control)
         compare(control.textFromValue(123, control.locale), "123")
     }
@@ -1063,7 +1065,7 @@ TestCase {
     }
 
     function test_indicatorOverridden() {
-        var control = createTemporaryObject(overriddenSpinBox, testCase)
+        let control = createTemporaryObject(overriddenSpinBox, testCase)
         verify(control)
         compare(control.up.indicator.s, "this is the one");
     }
@@ -1084,9 +1086,8 @@ TestCase {
     }
 
     function test_indicatorOverriddenWithIds() {
-        var control = createTemporaryObject(overriddenSpinBoxWithIds, testCase)
+        let control = createTemporaryObject(overriddenSpinBoxWithIds, testCase)
         verify(control)
-        // TODO: Use failOnWarning() here when it has been implemented
         // Specifying an id will result in both the default indicator implementations
         // and the custom ones being created, but it shouldn't result in any TypeErrors.
         compare(control.up.indicator.s, "up");
@@ -1095,7 +1096,7 @@ TestCase {
 
     function test_valueEnterFromOutsideRange() {
         // Check that changing from 2 to 99 goes to 98 then changing to 99 puts it back to 98
-        var control = createTemporaryObject(spinBox, testCase, {from: 2, to: 98, value: 2, editable: true})
+        let control = createTemporaryObject(spinBox, testCase, {from: 2, to: 98, value: 2, editable: true})
         verify(control)
 
         control.forceActiveFocus()
@@ -1119,7 +1120,7 @@ TestCase {
     }
 
     function test_pressedBeforeIncrementOrDecrement(data) {
-        var control = createTemporaryObject(spinBox, testCase, {from: -8, to: 8, value: 0})
+        let control = createTemporaryObject(spinBox, testCase, {from: -8, to: 8, value: 0})
         verify(control)
 
         control.forceActiveFocus()
@@ -1149,7 +1150,7 @@ TestCase {
     }
 
     function test_nullValidator() {
-        var control = createTemporaryObject(spinBox, testCase, { validator: null })
+        let control = createTemporaryObject(spinBox, testCase, { validator: null })
         verify(control)
     }
 }
