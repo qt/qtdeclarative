@@ -173,9 +173,11 @@ TestCase {
         SignalSpy { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(defaultSelectionRectangle, testCase)
         verify(control)
     }
@@ -601,8 +603,8 @@ TestCase {
         // Select four cells in the middle
         mouseDrag(tableView, cellWidth + 1, cellHeight + 1, (cellWidth * 2) - 2, (cellHeight * 2) - 2, Qt.LeftButton)
         compare(tableView.selectionModel.selectedIndexes.length, 4)
-        for (var x = 1; x < 3; ++x) {
-           for (var y = 1; y < 3; ++y) {
+        for (let x = 1; x < 3; ++x) {
+           for (let y = 1; y < 3; ++y) {
                verify(tableView.selectionModel.isSelected(tableView.model.index(x, y)))
            }
         }
@@ -610,8 +612,8 @@ TestCase {
         // Drag on the top left handle, so that the selection extends to cell 0, 0
         mouseDrag(tableView, cellWidth, cellHeight, -cellWidth / 2, -cellHeight / 2, Qt.LeftButton)
         compare(tableView.selectionModel.selectedIndexes.length, 9)
-        for (x = 0; x < 3; ++x) {
-           for (y = 0; y < 3; ++y) {
+        for (let x = 0; x < 3; ++x) {
+           for (let y = 0; y < 3; ++y) {
                verify(tableView.selectionModel.isSelected(tableView.model.index(x, y)))
            }
         }
@@ -629,8 +631,8 @@ TestCase {
         // Select four cells in the middle
         mouseDrag(tableView, cellWidth + 1, cellHeight + 1, (cellWidth * 2) - 2, (cellHeight * 2) - 2, Qt.LeftButton)
         compare(tableView.selectionModel.selectedIndexes.length, 4)
-        for (var x = 1; x < 3; ++x) {
-           for (var y = 1; y < 3; ++y) {
+        for (let x = 1; x < 3; ++x) {
+           for (let y = 1; y < 3; ++y) {
                verify(tableView.selectionModel.isSelected(tableView.model.index(x, y)))
            }
         }
@@ -653,8 +655,8 @@ TestCase {
         // Select four cells in the middle
         mouseDrag(tableView, cellWidth + 1, cellHeight + 1, (cellWidth * 2) - 2, (cellHeight * 2) - 2, Qt.LeftButton)
         compare(tableView.selectionModel.selectedIndexes.length, 4)
-        for (var x = 1; x < 3; ++x) {
-           for (var y = 1; y < 3; ++y) {
+        for (let x = 1; x < 3; ++x) {
+           for (let y = 1; y < 3; ++y) {
                verify(tableView.selectionModel.isSelected(tableView.model.index(x, y)))
            }
         }
@@ -662,11 +664,10 @@ TestCase {
         // Drag on the bottom right handle, so that the selection expands to cell 9 cells
         mouseDrag(tableView, cellWidth * 3, cellHeight * 3, 10, 10, Qt.LeftButton)
         compare(tableView.selectionModel.selectedIndexes.length, 9)
-        for (x = 1; x < 4; ++x) {
-           for (y = 1; y < 4; ++y) {
+        for (let x = 1; x < 4; ++x) {
+           for (let y = 1; y < 4; ++y) {
                verify(tableView.selectionModel.isSelected(tableView.model.index(x, y)))
            }
         }
     }
-
 }
