@@ -2785,6 +2785,42 @@ private slots:
         QVERIFY(rootQmlObject);
     }
 
+    void continueStatement()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/continueStatement.qml"_s;
+        const DomItem rootQmlObject = rootQmlObjectFromFile(testFile, qmltypeDirs);
+        const DomItem block =
+                rootQmlObject.path(".methods[\"f\"][0].body.scriptElement.statements");
+
+        const DomItem firstContinue = block.index(0);
+        QCOMPARE(firstContinue.internalKind(), DomType::ScriptContinueStatement);
+        QCOMPARE(firstContinue.field(Fields::label).value().toString("UNEXISTING"),
+                 u"helloWorld"_s);
+
+        const DomItem secondContinue = block.index(1);
+        QCOMPARE(secondContinue.internalKind(), DomType::ScriptContinueStatement);
+        QCOMPARE(secondContinue.field(Fields::label).internalKind(), DomType::Empty);
+    }
+
+    void breakStatement()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/breakStatement.qml"_s;
+        const DomItem rootQmlObject = rootQmlObjectFromFile(testFile, qmltypeDirs);
+        const DomItem block =
+                rootQmlObject.path(".methods[\"f\"][0].body.scriptElement.statements");
+
+        const DomItem firstContinue = block.index(0);
+        QCOMPARE(firstContinue.internalKind(), DomType::ScriptBreakStatement);
+        QCOMPARE(firstContinue.field(Fields::label).value().toString("UNEXISTING"),
+                 u"helloWorld"_s);
+
+        const DomItem secondContinue = block.index(1);
+        QCOMPARE(secondContinue.internalKind(), DomType::ScriptBreakStatement);
+        QCOMPARE(secondContinue.field(Fields::label).internalKind(), DomType::Empty);
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

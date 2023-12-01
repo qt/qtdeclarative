@@ -474,6 +474,7 @@ QMLDOM_FIELD(isValid);
 QMLDOM_FIELD(jsFileWithPath);
 QMLDOM_FIELD(kind);
 QMLDOM_FIELD(lastRevision);
+QMLDOM_FIELD(label);
 QMLDOM_FIELD(lastValidRevision);
 QMLDOM_FIELD(left);
 QMLDOM_FIELD(loadInfo);

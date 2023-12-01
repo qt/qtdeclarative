@@ -2292,6 +2292,52 @@ void QQmlDomAstCreator::endVisit(AST::ThrowStatement *statement)
     pushScriptElement(current);
 }
 
+bool QQmlDomAstCreator::visit(AST::BreakStatement *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::BreakStatement *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(statement, DomType::ScriptBreakStatement);
+    current->addLocation(FileLocationRegion::BreakKeywordRegion, statement->breakToken);
+
+    if (!statement->label.isEmpty()) {
+        auto label =
+                std::make_shared<ScriptElements::IdentifierExpression>(statement->identifierToken);
+        label->setName(statement->label);
+        current->insertChild(Fields::label, ScriptElementVariant::fromElement(label));
+    }
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::ContinueStatement *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::ContinueStatement *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(statement, DomType::ScriptContinueStatement);
+    current->addLocation(FileLocationRegion::ContinueKeywordRegion, statement->continueToken);
+
+    if (!statement->label.isEmpty()) {
+        auto label =
+                std::make_shared<ScriptElements::IdentifierExpression>(statement->identifierToken);
+        label->setName(statement->label);
+        current->insertChild(Fields::label, ScriptElementVariant::fromElement(label));
+    }
+
+    pushScriptElement(current);
+}
+
 static const DomEnvironment *environmentFrom(MutableDomItem &qmlFile)
 {
     auto top = qmlFile.top();
