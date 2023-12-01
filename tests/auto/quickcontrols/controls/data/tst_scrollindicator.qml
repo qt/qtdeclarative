@@ -35,19 +35,21 @@ TestCase {
         }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(scrollIndicator, testCase)
         verify(control)
     }
 
     function test_attach() {
-        var container = createTemporaryObject(flickable, testCase)
+        let container = createTemporaryObject(flickable, testCase)
         verify(container)
         waitForRendering(container)
 
-        var vertical = createTemporaryObject(scrollIndicator, null)
+        let vertical = createTemporaryObject(scrollIndicator, null)
         verify(!vertical.parent)
         compare(vertical.size, 0.0)
         compare(vertical.position, 0.0)
@@ -77,7 +79,7 @@ TestCase {
         container.width += 10
         compare(vertical.x, 123)
 
-        var horizontal = createTemporaryObject(scrollIndicator, null)
+        let horizontal = createTemporaryObject(scrollIndicator, null)
         verify(!horizontal.parent)
         compare(horizontal.size, 0.0)
         compare(horizontal.position, 0.0)
@@ -107,7 +109,7 @@ TestCase {
         container.height += 10
         compare(horizontal.y, 123)
 
-        var velocity = container.maximumFlickVelocity
+        let velocity = container.maximumFlickVelocity
 
         compare(container.flicking, false)
         container.flick(-velocity, -velocity)
@@ -129,16 +131,16 @@ TestCase {
         compare(horizontal.size, container.visibleArea.widthRatio)
         compare(horizontal.position, container.visibleArea.xPosition)
 
-        var oldY = vertical.y
-        var oldHeight = vertical.height
+        let oldY = vertical.y
+        let oldHeight = vertical.height
         vertical.parent = testCase
         vertical.y -= 10
         container.height += 10
         compare(vertical.y, oldY - 10)
         compare(vertical.height, oldHeight)
 
-        var oldX = horizontal.x
-        var oldWidth = horizontal.width
+        let oldX = horizontal.x
+        let oldWidth = horizontal.width
         horizontal.parent = testCase
         horizontal.x -= 10
         container.width += 10
@@ -152,14 +154,14 @@ TestCase {
     }
 
     function test_overshoot() {
-        var container = createTemporaryObject(flickable, testCase)
+        let container = createTemporaryObject(flickable, testCase)
         verify(container)
         waitForRendering(container)
 
-        var vertical = scrollIndicator.createObject(container, {size: 0.5})
+        let vertical = scrollIndicator.createObject(container, {size: 0.5})
         container.ScrollIndicator.vertical = vertical
 
-        var horizontal = scrollIndicator.createObject(container, {size: 0.5})
+        let horizontal = scrollIndicator.createObject(container, {size: 0.5})
         container.ScrollIndicator.horizontal = horizontal
 
         // negative vertical overshoot (pos < 0)
@@ -184,7 +186,7 @@ TestCase {
     }
 
     function test_orientation() {
-        var control = createTemporaryObject(scrollIndicator, testCase)
+        let control = createTemporaryObject(scrollIndicator, testCase)
         verify(control)
 
         compare(control.orientation, Qt.Vertical)
@@ -199,10 +201,10 @@ TestCase {
 
     // QTBUG-61785
     function test_mouseArea() {
-        var ma = createTemporaryObject(mouseArea, testCase, {width: testCase.width, height: testCase.height})
+        let ma = createTemporaryObject(mouseArea, testCase, {width: testCase.width, height: testCase.height})
         verify(ma)
 
-        var control = scrollIndicator.createObject(ma, {active: true, size: 0.9, width: testCase.width, height: testCase.height})
+        let control = scrollIndicator.createObject(ma, {active: true, size: 0.9, width: testCase.width, height: testCase.height})
         verify(control)
 
         mousePress(control)
@@ -211,7 +213,7 @@ TestCase {
         mouseRelease(control)
         verify(!ma.pressed)
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
         touch.press(0, control).commit()
         verify(ma.pressed)
 
@@ -220,11 +222,11 @@ TestCase {
     }
 
     function test_minimumSize() {
-        var container = createTemporaryObject(flickable, testCase)
+        let container = createTemporaryObject(flickable, testCase)
         verify(container)
         waitForRendering(container)
 
-        var vertical = scrollIndicator.createObject(container, {minimumSize: 0.1})
+        let vertical = scrollIndicator.createObject(container, {minimumSize: 0.1})
         container.ScrollIndicator.vertical = vertical
 
         compare(container.visibleArea.heightRatio, 0.5)
@@ -268,7 +270,7 @@ TestCase {
     }
 
     function test_resize() {
-        var vertical = createTemporaryObject(scrollIndicator, testCase, { height:200, orientation: Qt.Vertical, size: 0.5, position: 0.5 })
+        let vertical = createTemporaryObject(scrollIndicator, testCase, { height:200, orientation: Qt.Vertical, size: 0.5, position: 0.5 })
         verify(vertical)
 
         vertical.size = 0.8
@@ -279,7 +281,7 @@ TestCase {
         compare(vertical.visualPosition, 0.2)
 
 
-        var horizontal = createTemporaryObject(scrollIndicator, testCase, { width:200, orientation: Qt.Horizontal, size: 0.5, position: 0.5 })
+        let horizontal = createTemporaryObject(scrollIndicator, testCase, { width:200, orientation: Qt.Horizontal, size: 0.5, position: 0.5 })
         verify(horizontal)
 
         horizontal.size = 0.8
