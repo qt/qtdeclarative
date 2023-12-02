@@ -6622,9 +6622,6 @@ QString QQuickItemPrivate::dirtyToString() const
 void QQuickItemPrivate::dirty(DirtyType type)
 {
     Q_Q(QQuickItem);
-    if (type & (TransformOrigin | Transform | BasicTransform | Position | Size))
-        transformChanged(q);
-
     if (!(dirtyAttributes & type) || (window && !prevDirtyItem)) {
         dirtyAttributes |= type;
         if (window && componentComplete) {
@@ -6632,6 +6629,8 @@ void QQuickItemPrivate::dirty(DirtyType type)
             QQuickWindowPrivate::get(window)->dirtyItem(q);
         }
     }
+    if (type & (TransformOrigin | Transform | BasicTransform | Position | Size))
+        transformChanged(q);
 }
 
 void QQuickItemPrivate::addToDirtyList()
