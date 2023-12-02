@@ -28,24 +28,26 @@ TestCase {
         SignalSpy { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(swipeView, testCase)
         verify(control)
     }
 
     function test_current() {
-        var control = createTemporaryObject(swipeView, testCase)
+        let control = createTemporaryObject(swipeView, testCase)
 
-        var currentItemChangedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "currentItemChanged"})
+        let currentItemChangedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "currentItemChanged"})
         verify(currentItemChangedSpy.valid)
 
         compare(control.count, 0)
         compare(control.currentIndex, -1)
         compare(control.currentItem, null)
 
-        var item0 = page.createObject(control, {text: "0"})
+        let item0 = page.createObject(control, {text: "0"})
         control.addItem(item0)
         compare(control.count, 1)
         compare(control.currentIndex, 0)
@@ -54,7 +56,7 @@ TestCase {
         compare(control.contentWidth, item0.implicitWidth)
         compare(control.contentHeight, item0.implicitHeight)
 
-        var item1 = page.createObject(control, {text: "11"})
+        let item1 = page.createObject(control, {text: "11"})
         control.addItem(item1)
         compare(control.count, 2)
         compare(control.currentIndex, 0)
@@ -63,7 +65,7 @@ TestCase {
         compare(control.contentWidth, item0.implicitWidth)
         compare(control.contentHeight, item0.implicitHeight)
 
-        var item2 = page.createObject(control, {text: "222"})
+        let item2 = page.createObject(control, {text: "222"})
         control.addItem(item2)
         compare(control.count, 3)
         compare(control.currentIndex, 0)
@@ -119,7 +121,7 @@ TestCase {
     }
 
     function test_initialCurrent() {
-        var control = createTemporaryObject(initialCurrentSwipeView, testCase)
+        let control = createTemporaryObject(initialCurrentSwipeView, testCase)
 
         compare(control.count, 2)
         compare(control.currentIndex, 1)
@@ -127,7 +129,7 @@ TestCase {
     }
 
     function test_addRemove() {
-        var control = createTemporaryObject(swipeView, testCase)
+        let control = createTemporaryObject(swipeView, testCase)
 
         function verifyCurrentIndexCountDiff() {
             verify(control.currentIndex < control.count)
@@ -135,7 +137,7 @@ TestCase {
         control.currentIndexChanged.connect(verifyCurrentIndexCountDiff)
         control.countChanged.connect(verifyCurrentIndexCountDiff)
 
-        var currentItemChangedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "currentItemChanged"})
+        let currentItemChangedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "currentItemChanged"})
         verify(currentItemChangedSpy.valid)
 
         compare(control.count, 0)
@@ -235,12 +237,12 @@ TestCase {
     }
 
     function test_content() {
-        var control = createTemporaryObject(contentView, testCase)
+        let control = createTemporaryObject(contentView, testCase)
 
         function compareObjectNames(content, names) {
             if (content.length !== names.length)
                 return false
-            for (var i = 0; i < names.length; ++i) {
+            for (let i = 0; i < names.length; ++i) {
                 if (content[i].objectName !== names[i])
                     return false
             }
@@ -280,20 +282,20 @@ TestCase {
     }
 
     function test_repeater() {
-        var control = createTemporaryObject(repeated, testCase)
+        let control = createTemporaryObject(repeated, testCase)
         verify(control)
 
-        var model = control.contentModel
+        let model = control.contentModel
         verify(model)
 
-        var repeater = control.repeater
+        let repeater = control.repeater
         verify(repeater)
 
         compare(repeater.count, 5)
         compare(model.count, 5)
 
-        for (var i = 0; i < 5; ++i) {
-            var item1 = control.itemAt(i)
+        for (let i = 0; i < 5; ++i) {
+            let item1 = control.itemAt(i)
             verify(item1)
             compare(item1.idx, i)
             compare(model.get(i), item1)
@@ -304,8 +306,8 @@ TestCase {
         compare(repeater.count, 3)
         compare(model.count, 3)
 
-        for (var j = 0; j < 3; ++j) {
-            var item2 = control.itemAt(j)
+        for (let j = 0; j < 3; ++j) {
+            let item2 = control.itemAt(j)
             verify(item2)
             compare(item2.idx, j)
             compare(model.get(j), item2)
@@ -334,7 +336,7 @@ TestCase {
     }
 
     function test_order() {
-        var control = createTemporaryObject(ordered, testCase)
+        let control = createTemporaryObject(ordered, testCase)
         verify(control)
 
         compare(control.count, 7)
@@ -395,14 +397,14 @@ TestCase {
     }
 
     function test_move(data) {
-        var control = createTemporaryObject(swipeView, testCase)
+        let control = createTemporaryObject(swipeView, testCase)
 
         compare(control.count, 0)
-        var titles = ["1", "2", "3"]
+        let titles = ["1", "2", "3"]
 
-        var i = 0;
+        let i = 0;
         for (i = 0; i < titles.length; ++i) {
-            var item = pageAttached.createObject(control, {text: titles[i]})
+            let item = pageAttached.createObject(control, {text: titles[i]})
             control.addItem(item)
         }
 
@@ -427,7 +429,7 @@ TestCase {
         compare(control.count, titles.length)
         compare(control.currentIndex, data.currentAfter)
 
-        var title = titles[data.from]
+        let title = titles[data.from]
         titles.splice(data.from, 1)
         titles.splice(data.to, 0, title)
 
@@ -455,13 +457,13 @@ TestCase {
     }
 
     function test_dynamic() {
-        var control = createTemporaryObject(dynamicView, testCase)
+        let control = createTemporaryObject(dynamicView, testCase)
 
         // insertItem(), addItem(), createObject() and static page {}
         compare(control.count, 4)
         compare(control.itemAt(0).text, "inserted")
 
-        var tab = page.createObject(control, {text: "dying"})
+        let tab = page.createObject(control, {text: "dying"})
         compare(control.count, 5)
         compare(control.itemAt(4).text, "dying")
 
@@ -472,9 +474,9 @@ TestCase {
     }
 
     function test_attachedParent() {
-        var control = createTemporaryObject(swipeView, testCase);
+        let control = createTemporaryObject(swipeView, testCase);
 
-        var page = createTemporaryObject(pageAttached, testCase);
+        let page = createTemporaryObject(pageAttached, testCase);
         compare(page.view, null);
         compare(page.index, -1);
         compare(page.isCurrentItem, false);
@@ -509,17 +511,17 @@ TestCase {
     }
 
     function test_orientation() {
-        var control = createTemporaryObject(swipeView, testCase, {width: 200, height: 200})
+        let control = createTemporaryObject(swipeView, testCase, {width: 200, height: 200})
         verify(control)
 
-        for (var i = 0; i < 3; ++i)
+        for (let i = 0; i < 3; ++i)
             control.addItem(page.createObject(control, {text: i}))
 
         compare(control.orientation, Qt.Horizontal)
         compare(control.horizontal, true)
         compare(control.vertical, false)
 
-        for (i = 0; i < control.count; ++i) {
+        for (let i = 0; i < control.count; ++i) {
             control.currentIndex = i
             compare(control.itemAt(i).y, 0)
         }
@@ -529,7 +531,7 @@ TestCase {
         compare(control.horizontal, false)
         compare(control.vertical, true)
 
-        for (i = 0; i < control.count; ++i) {
+        for (let i = 0; i < control.count; ++i) {
             control.currentIndex = i
             compare(control.itemAt(i).x, 0)
         }
@@ -564,7 +566,7 @@ TestCase {
         if (Qt.styleHints.tabFocusBehavior !== Qt.TabFocusAllControls)
             skip("This platform only allows tab focus for text controls")
 
-        var control = createTemporaryObject(focusSwipeViewComponent, testCase)
+        let control = createTemporaryObject(focusSwipeViewComponent, testCase)
         verify(control)
         compare(control.focus, true)
         compare(control.contentItem.focus, true)
@@ -643,7 +645,7 @@ TestCase {
         tryCompare(rect, "visible", true)
         if (Qt.platform.pluginName === "offscreen")
             skip("grabImage() is not functional on the offscreen platform (QTBUG-63185)")
-        var image = grabImage(control)
+        let image = grabImage(control)
         compare(image.pixel(3, 3), "#ffff00")
     }
 
