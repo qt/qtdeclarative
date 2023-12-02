@@ -27,27 +27,29 @@ TestCase {
 
     // TODO: data-fy tst_checkbox (rename to tst_check?) so we don't duplicate its tests here?
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
-        var control = createTemporaryObject(switchDelegate, testCase);
-        verify(control);
-        verify(!control.checked);
+    function test_defaults() {
+        let control = createTemporaryObject(switchDelegate, testCase);
+        verify(control)
+        verify(!control.checked)
     }
 
     function test_checked() {
-        var control = createTemporaryObject(switchDelegate, testCase);
-        verify(control);
+        let control = createTemporaryObject(switchDelegate, testCase);
+        verify(control)
 
-        mouseClick(control);
-        verify(control.checked);
+        mouseClick(control)
+        verify(control.checked)
 
-        mouseClick(control);
-        verify(!control.checked);
+        mouseClick(control)
+        verify(!control.checked)
     }
 
     function test_baseline() {
-        var control = createTemporaryObject(switchDelegate, testCase);
+        let control = createTemporaryObject(switchDelegate, testCase);
         verify(control);
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset);
     }
@@ -60,7 +62,7 @@ TestCase {
     }
 
     function test_pressed(data) {
-        var control = createTemporaryObject(switchDelegate, testCase, {padding: 10})
+        let control = createTemporaryObject(switchDelegate, testCase, {padding: 10})
         verify(control)
 
         // stays pressed when dragged outside
@@ -74,11 +76,11 @@ TestCase {
     }
 
     function test_mouse() {
-        var control = createTemporaryObject(switchDelegate, testCase)
+        let control = createTemporaryObject(switchDelegate, testCase)
         verify(control)
 
         // check
-        var spy = signalSequenceSpy.createObject(control, {target: control})
+        let spy = signalSequenceSpy.createObject(control, {target: control})
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
@@ -175,13 +177,13 @@ TestCase {
     }
 
     function test_touch() {
-        var control = createTemporaryObject(switchDelegate, testCase)
+        let control = createTemporaryObject(switchDelegate, testCase)
         verify(control)
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
 
         // check
-        var spy = signalSequenceSpy.createObject(control, {target: control})
+        let spy = signalSequenceSpy.createObject(control, {target: control})
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
         touch.press(0, control, control.width / 2, control.height / 2).commit()
@@ -273,10 +275,10 @@ TestCase {
     }
 
     function test_mouseDrag() {
-        var control = createTemporaryObject(switchDelegate, testCase, {leftPadding: 100, rightPadding: 100})
+        let control = createTemporaryObject(switchDelegate, testCase, {leftPadding: 100, rightPadding: 100})
         verify(control)
 
-        var spy = signalSequenceSpy.createObject(control, {target: control})
+        let spy = signalSequenceSpy.createObject(control, {target: control})
         compare(control.position, 0.0)
         compare(control.checked, false)
         compare(control.pressed, false)
@@ -378,12 +380,12 @@ TestCase {
     }
 
     function test_touchDrag() {
-        var control = createTemporaryObject(switchDelegate, testCase, {leftPadding: 100, rightPadding: 100})
+        let control = createTemporaryObject(switchDelegate, testCase, {leftPadding: 100, rightPadding: 100})
         verify(control)
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
 
-        var spy = signalSequenceSpy.createObject(control, {target: control})
+        let spy = signalSequenceSpy.createObject(control, {target: control})
         compare(control.position, 0.0)
         compare(control.checked, false)
         compare(control.pressed, false)
@@ -488,11 +490,11 @@ TestCase {
     }
 
     function test_spacing() {
-        var control = createTemporaryObject(switchDelegate, testCase, { text: "Some long, long, long text" })
+        let control = createTemporaryObject(switchDelegate, testCase, { text: "Some long, long, long text" })
         verify(control)
         verify(control.contentItem.implicitWidth + control.leftPadding + control.rightPadding > control.background.implicitWidth)
 
-        var textLabel = findChild(control.contentItem, "label")
+        let textLabel = findChild(control.contentItem, "label")
         verify(textLabel)
 
         // The implicitWidth of the IconLabel that all buttons use as their contentItem should be
@@ -519,7 +521,7 @@ TestCase {
     }
 
     function test_display(data) {
-        var control = createTemporaryObject(switchDelegate, testCase, {
+        let control = createTemporaryObject(switchDelegate, testCase, {
             text: "SwitchDelegate",
             display: data.display,
             width: 400,
@@ -529,11 +531,11 @@ TestCase {
         verify(control)
         compare(control.icon.source, "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png")
 
-        var iconImage = findChild(control.contentItem, "image")
-        var textLabel = findChild(control.contentItem, "label")
+        let iconImage = findChild(control.contentItem, "image")
+        let textLabel = findChild(control.contentItem, "label")
 
-        var availableWidth = control.availableWidth - control.indicator.width - control.spacing
-        var indicatorOffset = control.mirrored ? control.indicator.width + control.spacing : 0
+        let availableWidth = control.availableWidth - control.indicator.width - control.spacing
+        let indicatorOffset = control.mirrored ? control.indicator.width + control.spacing : 0
 
         switch (control.display) {
         case SwitchDelegate.IconOnly:
