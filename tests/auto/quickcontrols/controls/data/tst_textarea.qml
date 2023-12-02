@@ -69,33 +69,35 @@ TestCase {
         id: util
     }
 
-    function test_creation() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
-        var control = createTemporaryObject(textArea, testCase)
+    function test_creation() {
+        let control = createTemporaryObject(textArea, testCase)
         verify(control)
     }
 
     function test_implicitSize() {
-        var control = createTemporaryObject(textArea, testCase)
+        let control = createTemporaryObject(textArea, testCase)
         verify(control)
 
-        var implicitWidthSpy = signalSpy.createObject(control, { target: control, signalName: "implicitWidthChanged"} )
+        let implicitWidthSpy = signalSpy.createObject(control, { target: control, signalName: "implicitWidthChanged"} )
         verify(implicitWidthSpy.valid)
 
-        var implicitHeightSpy = signalSpy.createObject(control, { target: control, signalName: "implicitHeightChanged"} )
+        let implicitHeightSpy = signalSpy.createObject(control, { target: control, signalName: "implicitHeightChanged"} )
         verify(implicitHeightSpy.valid)
 
-        var implicitBackgroundWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundWidthChanged"})
+        let implicitBackgroundWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundWidthChanged"})
         verify(implicitBackgroundWidthSpy.valid)
 
-        var implicitBackgroundHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundHeightChanged"})
+        let implicitBackgroundHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundHeightChanged"})
         verify(implicitBackgroundHeightSpy.valid)
 
-        var implicitWidthChanges = 0
-        var implicitHeightChanges = 0
-        var implicitBackgroundWidthChanges = 0
-        var implicitBackgroundHeightChanges = 0
+        let implicitWidthChanges = 0
+        let implicitHeightChanges = 0
+        let implicitBackgroundWidthChanges = 0
+        let implicitBackgroundHeightChanges = 0
 
         verify(control.implicitWidth >= control.leftPadding + control.rightPadding)
         verify(control.implicitHeight >= control.contentHeight + control.topPadding + control.bottomPadding)
@@ -130,11 +132,11 @@ TestCase {
         compare(implicitWidthSpy.count, ++implicitWidthChanges)
 
         defaultFontMetrics.font = control.font
-        var leading = defaultFontMetrics.leading
-        var ascent = defaultFontMetrics.ascent
-        var descent = defaultFontMetrics.descent
+        let leading = defaultFontMetrics.leading
+        let ascent = defaultFontMetrics.ascent
+        let descent = defaultFontMetrics.descent
 
-        var leadingOverflow = Math.ceil(ascent + descent) < Math.ceil(ascent + descent + leading)
+        let leadingOverflow = Math.ceil(ascent + descent) < Math.ceil(ascent + descent + leading)
 
         // If the font in use triggers QTBUG-83894, it is possible that this will cause
         // the following compare to fail if the implicitHeight from the TextEdit is ued.
@@ -207,7 +209,7 @@ TestCase {
     }
 
     function test_alignment(data) {
-        var control = createTemporaryObject(textArea, testCase, {text: data.text, placeholderText: data.placeholderText})
+        let control = createTemporaryObject(textArea, testCase, {text: data.text, placeholderText: data.placeholderText})
 
         if (data.textAlignment !== undefined) {
             control.horizontalAlignment = data.textAlignment
@@ -216,7 +218,7 @@ TestCase {
 
         // The placeholder text of the Material style doesn't currently respect the alignment of the control.
         if (StyleInfo.styleName !== "Material") {
-            for (var i = 0; i < control.children.length; ++i) {
+            for (let i = 0; i < control.children.length; ++i) {
                 if (control.children[i].hasOwnProperty("horizontalAlignment"))
                     compare(control.children[i].effectiveHorizontalAlignment, data.placeholderAlignment) // placeholder
             }
@@ -225,7 +227,7 @@ TestCase {
         control.verticalAlignment = TextArea.AlignBottom
         compare(control.verticalAlignment, TextArea.AlignBottom)
         if (StyleInfo.styleName !== "Material") {
-            for (var j = 0; j < control.children.length; ++j) {
+            for (let j = 0; j < control.children.length; ++j) {
                 if (control.children[j].hasOwnProperty("verticalAlignment"))
                     compare(control.children[j].verticalAlignment, Text.AlignBottom) // placeholder
             }
@@ -246,19 +248,19 @@ TestCase {
     }
 
     function test_font_explicit_attributes(data) {
-        var control = createTemporaryObject(textArea, testCase)
+        let control = createTemporaryObject(textArea, testCase)
         verify(control)
 
-        var child = textArea.createObject(control)
+        let child = textArea.createObject(control)
         verify(child)
 
-        var controlSpy = signalSpy.createObject(control, {target: control, signalName: "fontChanged"})
+        let controlSpy = signalSpy.createObject(control, {target: control, signalName: "fontChanged"})
         verify(controlSpy.valid)
 
-        var childSpy = signalSpy.createObject(child, {target: child, signalName: "fontChanged"})
+        let childSpy = signalSpy.createObject(child, {target: child, signalName: "fontChanged"})
         verify(childSpy.valid)
 
-        var defaultValue = control.font[data.tag]
+        let defaultValue = control.font[data.tag]
         child.font[data.tag] = defaultValue
 
         compare(child.font[data.tag], defaultValue)
@@ -274,16 +276,16 @@ TestCase {
     }
 
     function test_flickable() {
-        var control = createTemporaryObject(flickable, testCase)
+        let control = createTemporaryObject(flickable, testCase)
         verify(control)
 
-        var textArea = control.TextArea.flickable
+        let textArea = control.TextArea.flickable
         verify(textArea)
 
         if (textArea.background)
             compare(textArea.background.parent, control)
 
-        for (var i = 1; i <= 100; ++i)
+        for (let i = 1; i <= 100; ++i)
             textArea.text += "line\n" + i
 
         verify(textArea.contentWidth > 0)
@@ -294,13 +296,13 @@ TestCase {
 
         compare(textArea.cursorPosition, 0)
 
-        var center = textArea.positionAt(control.width / 2, control.height / 2)
+        let center = textArea.positionAt(control.width / 2, control.height / 2)
         verify(center > 0)
         mouseClick(textArea, control.width / 2, control.height / 2)
         compare(textArea.cursorPosition, center)
 
         // click inside text area, but below flickable
-        var below = textArea.positionAt(control.width / 2, control.height + 1)
+        let below = textArea.positionAt(control.width / 2, control.height + 1)
         verify(below > center)
         mouseClick(textArea, control.width / 2, control.height + 1)
         compare(textArea.cursorPosition, center) // no change
@@ -309,7 +311,7 @@ TestCase {
         control.contentY = -(control.contentHeight - control.height) / 2
 
         // click inside textarea, but above flickable
-        var above = textArea.positionAt(control.width / 2, textArea.topPadding)
+        let above = textArea.positionAt(control.width / 2, textArea.topPadding)
         verify(above > 0 && above < center)
         mouseClick(textArea, control.width / 2, 0)
         compare(textArea.cursorPosition, center) // no change
@@ -319,10 +321,10 @@ TestCase {
         // Test that the TextArea background item is parented out of the
         // TextArea and into the Flicable, and that it has the same size
         // as the flickable.
-        var flickable = createTemporaryObject(flickableCustomBackground, testCase)
+        let flickable = createTemporaryObject(flickableCustomBackground, testCase)
         verify(flickable)
 
-        var textArea = flickable.TextArea.flickable
+        let textArea = flickable.TextArea.flickable
         verify(textArea)
         verify(textArea.background)
         compare(textArea.background.width, flickable.width)
@@ -330,10 +332,10 @@ TestCase {
     }
 
     function test_scrollable_paste_large() {
-        var control = createTemporaryObject(flickableWithScrollBar, testCase)
+        let control = createTemporaryObject(flickableWithScrollBar, testCase)
         verify(control)
 
-        var textArea = control.TextArea.flickable
+        let textArea = control.TextArea.flickable
         verify(textArea)
 
         if (typeof(textArea.paste) !== "function")
@@ -361,7 +363,7 @@ TestCase {
     }
 
     function test_hover(data) {
-        var control = createTemporaryObject(textArea, testCase, {text: "TextArea", hoverEnabled: data.hoverEnabled})
+        let control = createTemporaryObject(textArea, testCase, {text: "TextArea", hoverEnabled: data.hoverEnabled})
         verify(control)
 
         compare(control.hovered, false)
@@ -426,9 +428,9 @@ TestCase {
     }
 
     function test_pressedReleased(data) {
-        var mouseArea = createTemporaryObject(mouseAreaComponent, testCase)
+        let mouseArea = createTemporaryObject(mouseAreaComponent, testCase)
         verify(mouseArea)
-        var control = textArea.createObject(mouseArea, {text: "TextArea"})
+        let control = textArea.createObject(mouseArea, {text: "TextArea"})
         verify(control)
 
         // Give enough room to check presses outside of the control and on the parent.
@@ -458,13 +460,13 @@ TestCase {
         if (data.parentReleaseEvent)
             control.onReleased.connect(checkParentReleaseEvent)
 
-        var controlPressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
+        let controlPressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
         verify(controlPressedSpy.valid)
-        var controlReleasedSpy = signalSpy.createObject(control, { target: control, signalName: "released" })
+        let controlReleasedSpy = signalSpy.createObject(control, { target: control, signalName: "released" })
         verify(controlReleasedSpy.valid)
-        var parentPressedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "pressed" })
+        let parentPressedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "pressed" })
         verify(parentPressedSpy.valid)
-        var parentReleasedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "released" })
+        let parentReleasedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "released" })
         verify(parentReleasedSpy.valid)
 
         mousePress(control, data.x, data.y, data.button)
@@ -496,18 +498,18 @@ TestCase {
     }
 
     function test_ignorePressRelease() {
-        var mouseArea = createTemporaryObject(mouseAreaComponent, testCase)
+        let mouseArea = createTemporaryObject(mouseAreaComponent, testCase)
         verify(mouseArea)
-        var control = ignoreTextArea.createObject(mouseArea)
+        let control = ignoreTextArea.createObject(mouseArea)
         verify(control)
 
-        var controlPressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
+        let controlPressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
         verify(controlPressedSpy.valid)
-        var controlReleasedSpy = signalSpy.createObject(control, { target: control, signalName: "released" })
+        let controlReleasedSpy = signalSpy.createObject(control, { target: control, signalName: "released" })
         verify(controlReleasedSpy.valid)
-        var parentPressedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "pressed" })
+        let parentPressedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "pressed" })
         verify(parentPressedSpy.valid)
-        var parentReleasedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "released" })
+        let parentReleasedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "released" })
         verify(parentReleasedSpy.valid)
 
         // Ignore only press events.
@@ -538,12 +540,12 @@ TestCase {
     }
 
     function test_multiClick() {
-        var control = createTemporaryObject(textArea, testCase, {text: "Qt Quick Controls 2 TextArea", selectByMouse: true})
+        let control = createTemporaryObject(textArea, testCase, {text: "Qt Quick Controls 2 TextArea", selectByMouse: true})
         verify(control)
 
         waitForRendering(control)
         control.width = control.contentWidth
-        var rect = control.positionToRectangle(12)
+        let rect = control.positionToRectangle(12)
 
         // double click -> select word
         mouseDoubleClickSequence(control, rect.x + rect.width / 2, rect.y + rect.height / 2)
@@ -562,7 +564,7 @@ TestCase {
     }
 
     function test_scrollView() {
-        var control = createTemporaryObject(scrollView, testCase)
+        let control = createTemporaryObject(scrollView, testCase)
         verify(control)
 
         // don't crash (QTBUG-62292)
@@ -571,7 +573,7 @@ TestCase {
     }
 
     function test_placeholderTextColor() {
-        var control = createTemporaryObject(textArea, testCase)
+        let control = createTemporaryObject(textArea, testCase)
         verify(control)
 
         // usually default value should not be pure opacue black
@@ -579,32 +581,32 @@ TestCase {
         control.placeholderTextColor = "#12345678"
         compare(control.placeholderTextColor, "#12345678")
 
-        for (var i = 0; i < control.children.length; ++i) {
+        for (let i = 0; i < control.children.length; ++i) {
             if (control.children[i].hasOwnProperty("text"))
                 compare(control.children[i].color, control.placeholderTextColor) // placeholder.color
         }
     }
 
     function test_inset() {
-        var control = createTemporaryObject(textArea, testCase, {background: rectangle.createObject(control)})
+        let control = createTemporaryObject(textArea, testCase, {background: rectangle.createObject(testCase)})
         verify(control)
 
-        var topInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "topInsetChanged"})
+        let topInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "topInsetChanged"})
         verify(topInsetSpy.valid)
 
-        var leftInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "leftInsetChanged"})
+        let leftInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "leftInsetChanged"})
         verify(leftInsetSpy.valid)
 
-        var rightInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rightInsetChanged"})
+        let rightInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rightInsetChanged"})
         verify(rightInsetSpy.valid)
 
-        var bottomInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "bottomInsetChanged"})
+        let bottomInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "bottomInsetChanged"})
         verify(bottomInsetSpy.valid)
 
-        var topInsetChanges = 0
-        var leftInsetChanges = 0
-        var rightInsetChanges = 0
-        var bottomInsetChanges = 0
+        let topInsetChanges = 0
+        let leftInsetChanges = 0
+        let rightInsetChanges = 0
+        let bottomInsetChanges = 0
 
         compare(control.topInset, 0)
         compare(control.leftInset, 0)
@@ -765,7 +767,7 @@ TestCase {
     }
 
     function test_resize_background() {
-        var control = createTemporaryObject(testResizeBackground, testCase)
+        let control = createTemporaryObject(testResizeBackground, testCase)
 
         compare(control.textArea.background.width, control.width)
         compare(control.textArea.background.height, 1)
