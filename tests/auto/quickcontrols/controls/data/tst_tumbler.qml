@@ -60,8 +60,8 @@ TestCase {
 
     // visualItemIndex is from 0 to the amount of visible items.
     function itemCenterPos(visualItemIndex) {
-        var halfDelegateHeight = tumblerDelegateHeight / 2;
-        var yCenter = tumbler.y + tumbler.topPadding + halfDelegateHeight
+        let halfDelegateHeight = tumblerDelegateHeight / 2;
+        let yCenter = tumbler.y + tumbler.topPadding + halfDelegateHeight
             + (tumblerDelegateHeight * visualItemIndex);
         return Qt.point(tumblerXCenter(), yCenter);
     }
@@ -71,22 +71,22 @@ TestCase {
     }
 
     function checkItemSizes() {
-        var contentChildren = tumbler.wrap ? tumblerView.children : tumblerView.contentItem.children;
+        let contentChildren = tumbler.wrap ? tumblerView.children : tumblerView.contentItem.children;
         verify(contentChildren.length >= tumbler.count);
-        for (var i = 0; i < contentChildren.length; ++i) {
+        for (let i = 0; i < contentChildren.length; ++i) {
             compare(contentChildren[i].width, tumbler.availableWidth);
             compare(contentChildren[i].height, tumblerDelegateHeight);
         }
     }
 
     function findView(parent) {
-        for (var i = 0; i < parent.children.length; ++i) {
-            var child = parent.children[i];
+        for (let i = 0; i < parent.children.length; ++i) {
+            let child = parent.children[i];
             if (child.hasOwnProperty("currentIndex")) {
                 return child;
             }
 
-            var grandChild = findView(child);
+            let grandChild = findView(child);
             if (grandChild)
                 return grandChild;
         }
@@ -95,13 +95,13 @@ TestCase {
     }
 
     function findDelegateWithText(parent, text) {
-        for (var i = 0; i < parent.children.length; ++i) {
-            var child = parent.children[i];
+        for (let i = 0; i < parent.children.length; ++i) {
+            let child = parent.children[i];
             if (child.hasOwnProperty("text") && child.text === text) {
                 return child;
             }
 
-            var grandChild = findDelegateWithText(child, text);
+            let grandChild = findDelegateWithText(child, text);
             if (grandChild)
                 return grandChild;
         }
@@ -113,9 +113,11 @@ TestCase {
         text: modelData
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(defaultTumbler, testCase)
         verify(control)
     }
@@ -144,7 +146,7 @@ TestCase {
         waitForRendering(tumbler);
 
         // Set it through user interaction.
-        var pos = Qt.point(tumblerXCenter(), tumbler.height / 2);
+        let pos = Qt.point(tumblerXCenter(), tumbler.height / 2);
         mouseDrag(tumbler, pos.x, pos.y, 0, tumbler.height / 3, Qt.LeftButton, Qt.NoModifier, 200);
         tryCompare(tumblerView, "offset", 1);
         compare(tumbler.currentIndex, 4);
@@ -283,7 +285,7 @@ TestCase {
         tumblerView.highlightMoveDuration = 0;
 
         // Navigate upwards through entire wheel.
-        for (var j = 0; j < tumbler.count - 1; ++j) {
+        for (let j = 0; j < tumbler.count - 1; ++j) {
             keyClick(Qt.Key_Up, Qt.NoModifier);
             tryCompare(tumblerView, "offset", j + 1);
             compare(tumbler.currentIndex, tumbler.count - 1 - j);
@@ -294,7 +296,7 @@ TestCase {
         compare(tumbler.currentIndex, 0);
 
         // Navigate downwards through entire wheel.
-        for (j = 0; j < tumbler.count - 1; ++j) {
+        for (let j = 0; j < tumbler.count - 1; ++j) {
             keyClick(Qt.Key_Down, Qt.NoModifier);
             tryCompare(tumblerView, "offset", tumbler.count - 1 - j);
             compare(tumbler.currentIndex, j + 1);
@@ -314,9 +316,9 @@ TestCase {
         checkItemSizes();
 
         wait(tumblerView.highlightMoveDuration);
-        var firstItemCenterPos = itemCenterPos(1);
-        var firstItem = tumblerView.itemAt(firstItemCenterPos.x, firstItemCenterPos.y);
-        var actualPos = testCase.mapFromItem(firstItem, 0, 0);
+        let firstItemCenterPos = itemCenterPos(1);
+        let firstItem = tumblerView.itemAt(firstItemCenterPos.x, firstItemCenterPos.y);
+        let actualPos = testCase.mapFromItem(firstItem, 0, 0);
         compare(actualPos.x, tumbler.leftPadding);
         compare(actualPos.y, tumbler.topPadding + 40);
 
@@ -332,13 +334,13 @@ TestCase {
         fuzzyCompare(actualPos.x, tumbler.leftPadding, 0.0001);
         fuzzyCompare(actualPos.y, tumbler.topPadding, 0.0001);
 
-        var secondItemCenterPos = itemCenterPos(1);
-        var secondItem = tumblerView.itemAt(secondItemCenterPos.x, secondItemCenterPos.y);
+        let secondItemCenterPos = itemCenterPos(1);
+        let secondItem = tumblerView.itemAt(secondItemCenterPos.x, secondItemCenterPos.y);
         verify(secondItem);
         verify(firstItem.y < secondItem.y);
 
-        var thirdItemCenterPos = itemCenterPos(2);
-        var thirdItem = tumblerView.itemAt(thirdItemCenterPos.x, thirdItemCenterPos.y);
+        let thirdItemCenterPos = itemCenterPos(2);
+        let thirdItem = tumblerView.itemAt(thirdItemCenterPos.x, thirdItemCenterPos.y);
         verify(thirdItem);
         verify(firstItem.y < thirdItem.y);
         verify(secondItem.y < thirdItem.y);
@@ -348,7 +350,7 @@ TestCase {
         tumbler = createTemporaryObject(tumblerComponent, testCase);
         verify(tumbler);
 
-        var mouseArea = createTemporaryQmlObject(
+        let mouseArea = createTemporaryQmlObject(
             "import QtQuick; TextInput { activeFocusOnTab: true; width: 50; height: 50 }", testCase, "");
 
         tumbler.forceActiveFocus();
@@ -360,7 +362,7 @@ TestCase {
     }
 
     function test_datePicker() {
-        var component = Qt.createComponent("TumblerDatePicker.qml");
+        let component = Qt.createComponent("TumblerDatePicker.qml");
         compare(component.status, Component.Ready, component.errorString());
         tumbler = createTemporaryObject(component, testCase);
         // Should not be any warnings.
@@ -422,7 +424,7 @@ TestCase {
     }
 
     function test_listViewTimePicker() {
-        var root = createTemporaryObject(timePickerComponent, testCase);
+        let root = createTemporaryObject(timePickerComponent, testCase);
         verify(root);
 
         mouseDrag(root.minuteTumbler, root.minuteTumbler.width / 2, root.minuteTumbler.height / 2, 0, 50);
@@ -431,7 +433,7 @@ TestCase {
     }
 
     function test_displacement_data() {
-        var data = [
+        let data = [
             // At 0 offset, the first item is current.
             { count: 6, index: 0, offset: 0, expectedDisplacement: 0 },
             { count: 6, index: 1, offset: 0, expectedDisplacement: -1 },
@@ -462,8 +464,8 @@ TestCase {
             // count == 1
             { count: 1, index: 0, offset: 0, expectedDisplacement: 0 }
         ];
-        for (var i = 0; i < data.length; ++i) {
-            var row = data[i];
+        for (let i = 0; i < data.length; ++i) {
+            let row = data[i];
             row.tag = "count=" + row.count
                 + " delegate" + row.index
                 + " offset=" + row.offset
@@ -498,7 +500,7 @@ TestCase {
         tumbler.model = data.count;
         compare(tumbler.count, data.count);
 
-        var delegate = findChild(tumblerView, "delegate" + data.index);
+        let delegate = findChild(tumblerView, "delegate" + data.index);
         verify(delegate);
 
         tumblerView.offset = data.offset;
@@ -555,7 +557,7 @@ TestCase {
 
     function test_explicitlyNonwrapping() {
         // Check that explicitly setting wrap to false works even when it was implicitly false.
-        var explicitlyNonWrapping = createTemporaryObject(twoItemTumbler, testCase);
+        let explicitlyNonWrapping = createTemporaryObject(twoItemTumbler, testCase);
         verify(explicitlyNonWrapping);
         tryCompare(explicitlyNonWrapping, "wrap", false);
 
@@ -572,7 +574,7 @@ TestCase {
 
     function test_explicitlyWrapping() {
         // Check that explicitly setting wrap to true works even when it was implicitly true.
-        var explicitlyWrapping = createTemporaryObject(tenItemTumbler, testCase);
+        let explicitlyWrapping = createTemporaryObject(tenItemTumbler, testCase);
         verify(explicitlyWrapping);
         compare(explicitlyWrapping.wrap, true);
 
@@ -644,14 +646,14 @@ TestCase {
     }
 
     function test_customContentItemAtConstruction(data) {
-        var tumbler = createTemporaryObject(data.component, testCase);
+        let tumbler = createTemporaryObject(data.component, testCase);
         // Shouldn't assert.
 
         tumbler.model = 5;
         compare(tumbler.count, 5);
 
         tumbler.currentIndex = 2;
-        var tumblerView = findView(tumbler);
+        let tumblerView = findView(tumbler);
         compare(tumblerView.currentIndex, 2);
 
         tumblerView.incrementCurrentIndex();
@@ -666,10 +668,10 @@ TestCase {
     }
 
     function findFirstDelegateWithText(view, text) {
-        var delegate = null;
-        var contentItem = view.hasOwnProperty("contentItem") ? view.contentItem : view;
-        for (var i = 0; i < contentItem.children.length && !delegate; ++i) {
-            var child = contentItem.children[i];
+        let delegate = null;
+        let contentItem = view.hasOwnProperty("contentItem") ? view.contentItem : view;
+        for (let i = 0; i < contentItem.children.length && !delegate; ++i) {
+            let child = contentItem.children[i];
             if (child.hasOwnProperty("text") && child.text === text)
                 delegate = child;
         }
@@ -692,16 +694,16 @@ TestCase {
         tumbler.currentIndex = 2;
         compare(tumblerView.currentIndex, 2);
 
-        var contentItemComponent = Qt.createComponent(data.componentPath);
+        let contentItemComponent = Qt.createComponent(data.componentPath);
         compare(contentItemComponent.status, Component.Ready);
 
-        var customContentItem = createTemporaryObject(contentItemComponent, tumbler);
+        let customContentItem = createTemporaryObject(contentItemComponent, tumbler);
         tumbler.contentItem = customContentItem;
         compare(tumbler.count, 5);
         tumblerView = findView(tumbler);
         compare(tumblerView.currentIndex, 2);
 
-        var delegate = findFirstDelegateWithText(tumblerView, "Custom2");
+        let delegate = findFirstDelegateWithText(tumblerView, "Custom2");
         verify(delegate);
         compare(delegate.height, defaultImplicitDelegateHeight);
         tryCompare(delegate.Tumbler, "displacement", 0);
@@ -712,9 +714,9 @@ TestCase {
     }
 
     function test_displacementListView_data() {
-        var offset = defaultListViewTumblerOffset;
+        let offset = defaultListViewTumblerOffset;
 
-        var data = [
+        let data = [
             // At 0 contentY, the first item is current.
             { contentY: offset, expectedDisplacements: [
                 { index: 0, displacement: 0 },
@@ -741,8 +743,8 @@ TestCase {
                 { index: 4, displacement: -0.5 } ]
             }
         ];
-        for (var i = 0; i < data.length; ++i) {
-            var row = data[i];
+        for (let i = 0; i < data.length; ++i) {
+            let row = data[i];
             row.tag = "contentY=" + row.contentY;
         }
         return data;
@@ -758,9 +760,9 @@ TestCase {
         // Ensure assumptions about the tumbler used in our data() function are correct.
         tumblerView = findView(tumbler);
         compare(tumblerView.contentY, -defaultImplicitDelegateHeight);
-        var delegateCount = 0;
-        var listView = tumblerView;
-        var listViewContentItem = tumblerView.contentItem;
+        let delegateCount = 0;
+        let listView = tumblerView;
+        let listViewContentItem = tumblerView.contentItem;
 
         // We use the mouse instead of setting contentY directly, otherwise the
         // items snap back into place. This doesn't seem to be an issue for
@@ -779,25 +781,25 @@ TestCase {
         // to begin with, nothing changes (the displacement was always very close to 0 in the end).
 
         // Ensure that we at least cover the distance required to reach the desired contentY.
-        var distanceToReachContentY = data.contentY - defaultListViewTumblerOffset;
-        var distance = Math.abs(distanceToReachContentY) + tumbler.height / 2;
+        let distanceToReachContentY = data.contentY - defaultListViewTumblerOffset;
+        let distance = Math.abs(distanceToReachContentY) + tumbler.height / 2;
         // If distanceToReachContentY is 0, we're testing 0 displacement, so we don't need to do anything.
         if (distanceToReachContentY != 0) {
             mousePress(tumbler, tumblerXCenter(), tumblerYCenter());
 
-            var dragDirection = distanceToReachContentY > 0 ? -1 : 1;
-            for (var i = 0; i < distance && Math.floor(listView.contentY) !== Math.floor(data.contentY); ++i) {
+            let dragDirection = distanceToReachContentY > 0 ? -1 : 1;
+            for (let i = 0; i < distance && Math.floor(listView.contentY) !== Math.floor(data.contentY); ++i) {
                 mouseMove(tumbler, tumblerXCenter(), tumblerYCenter() + i * dragDirection);
                 wait(1); // because Flickable pays attention to velocity, we need some time between movements (qtdeclarative ebf07c3)
             }
         }
 
-        for (var i = 0; i < data.expectedDisplacements.length; ++i) {
-            var delegate = findChild(listViewContentItem, "delegate" + data.expectedDisplacements[i].index);
+        for (let i = 0; i < data.expectedDisplacements.length; ++i) {
+            let delegate = findChild(listViewContentItem, "delegate" + data.expectedDisplacements[i].index);
             verify(delegate);
             compare(delegate.height, defaultImplicitDelegateHeight);
             // Due to the way we must perform this test, we can't expect high precision.
-            var expectedDisplacement = data.expectedDisplacements[i].displacement;
+            let expectedDisplacement = data.expectedDisplacements[i].displacement;
             fuzzyCompare(delegate.displacement, expectedDisplacement, 0.1,
                 "Delegate of ListView-based Tumbler at index " + data.expectedDisplacements[i].index
                     + " has displacement of " + delegate.displacement + " when it should be " + expectedDisplacement);
@@ -810,10 +812,10 @@ TestCase {
     function test_listViewFlickAboveBounds_data() {
         // Tests that flicking above the bounds when already at the top of the
         // tumbler doesn't result in an incorrect displacement.
-        var data = [];
+        let data = [];
         // Less than two items doesn't make sense. The default visibleItemCount
         // is 3, so we test a bit more than double that.
-        for (var i = 2; i <= 7; ++i) {
+        for (let i = 2; i <= 7; ++i) {
             data.push({ tag: i + " items", model: i });
         }
         return data;
@@ -830,21 +832,21 @@ TestCase {
         mousePress(tumbler, tumblerXCenter(), tumblerYCenter());
 
         // Ensure it's stationary.
-        var listView = tumblerView;
+        let listView = tumblerView;
         compare(listView.contentY, defaultListViewTumblerOffset);
 
         // We could just move up until the contentY changed, but this is safer.
-        var distance = tumbler.height;
-        var changed = false;
+        let distance = tumbler.height;
+        let changed = false;
 
-        for (var i = 0; i < distance && !changed; ++i) {
+        for (let i = 0; i < distance && !changed; ++i) {
             mouseMove(tumbler, tumblerXCenter(), tumblerYCenter() + i, 10);
 
             // Don't test until the contentY has actually changed.
             if (Math.abs(listView.contentY) - listView.preferredHighlightBegin > 0.01) {
 
-                for (var delegateIndex = 0; delegateIndex < Math.min(tumbler.count, tumbler.visibleItemCount); ++delegateIndex) {
-                    var delegate = findChild(listView.contentItem, "delegate" + delegateIndex);
+                for (let delegateIndex = 0; delegateIndex < Math.min(tumbler.count, tumbler.visibleItemCount); ++delegateIndex) {
+                    let delegate = findChild(listView.contentItem, "delegate" + delegateIndex);
                     verify(delegate);
 
                     verify(delegate.displacement <= -delegateIndex, "Delegate at index " + delegateIndex + " has a displacement of "
@@ -871,7 +873,7 @@ TestCase {
     }
 
     function test_visibleItemCount_data() {
-        var data = [
+        let data = [
             // e.g. {0: 2} = {delegate index: y pos / delegate height}
             // Skip item at index 3, because it's out of view.
             { model: 6, visibleItemCount: 5, expectedYPositions: {0: 2, 1: 3, 2: 4, 4: 0} },
@@ -880,7 +882,7 @@ TestCase {
             { model: 2, visibleItemCount: 1, expectedYPositions: {0: 0} },
         ];
 
-        for (var i = 0; i < data.length; ++i) {
+        for (let i = 0; i < data.length; ++i) {
             data[i].tag = "items=" + data[i].model + ", visibleItemCount=" + data[i].visibleItemCount;
         }
         return data;
@@ -895,11 +897,11 @@ TestCase {
         tumbler.model = data.model;
         compare(tumbler.count, data.model);
 
-        for (var delegateIndex = 0; delegateIndex < data.visibleItemCount; ++delegateIndex) {
+        for (let delegateIndex = 0; delegateIndex < data.visibleItemCount; ++delegateIndex) {
             if (data.expectedYPositions.hasOwnProperty(delegateIndex)) {
-                var delegate = findChild(tumblerView, "delegate" + delegateIndex);
+                let delegate = findChild(tumblerView, "delegate" + delegateIndex);
                 verify(delegate, "Delegate found at index " + delegateIndex);
-                var expectedYPos = data.expectedYPositions[delegateIndex] * tumblerDelegateHeight;
+                let expectedYPos = data.expectedYPositions[delegateIndex] * tumblerDelegateHeight;
                 compare(delegate.mapToItem(tumbler.contentItem, 0, 0).y, expectedYPos);
             }
         }
@@ -928,7 +930,7 @@ TestCase {
         createTemporaryObject(noParentDelegateComponent, null);
 
         ignoreWarning(/.*Tumbler: attempting to access attached property on item without an \"index\" property/);
-        var object = createTemporaryObject(noParentDelegateComponent, testCase);
+        let object = createTemporaryObject(noParentDelegateComponent, testCase);
         verify(object);
     }
 
@@ -947,15 +949,15 @@ TestCase {
     }
 
     function test_padding_data() {
-        var data = [];
+        let data = [];
 
         data.push({ padding: 0 });
         data.push({ padding: 10 });
         data.push({ left: 10, top: 10 });
         data.push({ right: 10, bottom: 10 });
 
-        for (var i = 0; i < data.length; ++i) {
-            var tag = "";
+        for (let i = 0; i < data.length; ++i) {
+            let tag = "";
 
             if (data[i].padding !== undefined)
                 tag += "padding: " + data[i].padding + " ";
@@ -1004,24 +1006,24 @@ TestCase {
         compare(tumbler.contentItem.x, tumbler.leftPadding);
         compare(tumbler.contentItem.y, tumbler.topPadding);
 
-        var pathView = tumbler.contentItem;
-        var expectedDelegateHeight = tumbler.availableHeight / tumbler.visibleItemCount;
-        var itemIndicesInVisualOrder = [4, 0, 1];
-        for (var i = 0; i < itemIndicesInVisualOrder.length; ++i) {
-            var delegate = findChild(pathView, "delegate" + itemIndicesInVisualOrder[i]);
+        let pathView = tumbler.contentItem;
+        let expectedDelegateHeight = tumbler.availableHeight / tumbler.visibleItemCount;
+        let itemIndicesInVisualOrder = [4, 0, 1];
+        for (let i = 0; i < itemIndicesInVisualOrder.length; ++i) {
+            let delegate = findChild(pathView, "delegate" + itemIndicesInVisualOrder[i]);
             verify(delegate, "Couldn't find delegate at index " + itemIndicesInVisualOrder[i]
                 + " (iteration " + i + " out of " + (pathView.children.length - 1) + ")");
 
             compare(delegate.width, tumbler.availableWidth);
             compare(delegate.height, expectedDelegateHeight);
 
-            var expectedY = tumbler.topPadding + i * expectedDelegateHeight;
-            var mappedPos = delegate.mapToItem(null, delegate.width / 2, 0);
+            let expectedY = tumbler.topPadding + i * expectedDelegateHeight;
+            let mappedPos = delegate.mapToItem(null, delegate.width / 2, 0);
             fuzzyCompare(mappedPos.y, expectedY, 0.5,
                 "Tumbler's PathView delegate at index " + itemIndicesInVisualOrder[i]
                     + " should have a y pos of " + expectedY + ", but it's actually " + mappedPos.y.toFixed(20));
 
-            var expectedX = tumbler.leftPadding;
+            let expectedX = tumbler.leftPadding;
             compare(delegate.mapToItem(null, 0, 0).x, expectedX,
                 "Tumbler's PathView delegate at index " + itemIndicesInVisualOrder[i]
                     + " should have a x pos of " + expectedX + ", but it's actually " + mappedPos.x.toFixed(20));
@@ -1050,7 +1052,7 @@ TestCase {
         mousePress(tumbler, tumbler.width / 2, tumbler.height / 2, Qt.LeftButton)
         compare(tumbler.moving, false)
 
-        for (var y = tumbler.height / 2; y >= tumbler.height / 4; y -= 10)
+        for (let y = tumbler.height / 2; y >= tumbler.height / 4; y -= 10)
             mouseMove(tumbler, tumbler.width / 2, y, 1)
         compare(tumbler.moving, true)
 
@@ -1084,15 +1086,15 @@ TestCase {
     }
 
     function test_qtbug61374() {
-        var row = createTemporaryObject(qtbug61374Component, testCase);
+        let row = createTemporaryObject(qtbug61374Component, testCase);
         verify(row);
 
-        var tumbler = row.tumbler;
+        let tumbler = row.tumbler;
         tryCompare(tumbler, "currentIndex", 2);
 
         tumblerView = findView(tumbler);
 
-        var label = row.label;
+        let label = row.label;
         compare(label.text, "2");
     }
 
@@ -1124,16 +1126,16 @@ TestCase {
         tryCompare(tumbler, "moving", false)
 
         compare(tumbler.visibleItemCount, 5)
-        for (var i = 0; i < 5; ++i) {
+        for (let i = 0; i < 5; ++i) {
             // Find the item through its text, as that's easier than child/itemAt().
-            var text = data.expectedVisibleIndices[i].toString()
-            var item = findDelegateWithText(tumblerView, text)
+            let text = data.expectedVisibleIndices[i].toString()
+            let item = findDelegateWithText(tumblerView, text)
             verify(item, "found no item with text \"" + text + "\"")
             compare(item.text, data.expectedVisibleIndices[i].toString())
 
             // Ensure that it's at the position we expect.
-            var expectedPos = itemTopLeftPos(i)
-            var actualPos = testCase.mapFromItem(item, 0, 0)
+            let expectedPos = itemTopLeftPos(i)
+            let actualPos = testCase.mapFromItem(item, 0, 0)
             compare(actualPos.x, expectedPos.x, "expected delegate with text " + item.text
                 + " to have an x pos of " + expectedPos.x + " but it was " + actualPos.x)
             compare(actualPos.y, expectedPos.y, "expected delegate with text " + item.text
@@ -1150,7 +1152,7 @@ TestCase {
     }
 
     function test_setCurrentIndexOnImperativeModelChange() {
-        var tumbler = createTemporaryObject(setCurrentIndexOnImperativeModelChangeComponent, testCase);
+        let tumbler = createTemporaryObject(setCurrentIndexOnImperativeModelChangeComponent, testCase);
         verify(tumbler);
 
         tumbler.model = 4
@@ -1187,10 +1189,10 @@ TestCase {
     }
 
     function test_setCurrentIndexOnDeclarativeModelChange() {
-        var root = createTemporaryObject(setCurrentIndexOnDeclarativeModelChangeComponent, testCase);
+        let root = createTemporaryObject(setCurrentIndexOnDeclarativeModelChangeComponent, testCase);
         verify(root);
 
-        var tumbler = root.tumbler;
+        let tumbler = root.tumbler;
         compare(tumbler.count, 4);
         compare(tumbler.wrap, false);
         tumblerView = findView(tumbler);
@@ -1217,7 +1219,7 @@ TestCase {
             currentIndex: 15
         })
 
-        var delegate = findChild(tumblerView, "delegate15")
+        let delegate = findChild(tumblerView, "delegate15")
         verify(delegate)
 
         tryCompare(delegate, "displacement", 0)
@@ -1242,7 +1244,7 @@ TestCase {
     }
 
     function test_initialCurrentIndex() {
-        var tumbler = createTemporaryObject(initialCurrentIndexTumbler, testCase, {wrap: true});
+        let tumbler = createTemporaryObject(initialCurrentIndexTumbler, testCase, {wrap: true});
         compare(tumbler.currentIndex, 4);
         tumbler = createTemporaryObject(initialCurrentIndexTumbler, testCase, {wrap: false});
         compare(tumbler.currentIndex, 4);
@@ -1282,7 +1284,7 @@ TestCase {
         touch.press(0, tumblerView, control.width / 2, control.height / 2).commit()
         // Move slowly, otherwise its considered as flick which cause current index
         // to be varied according to its velocity
-        var scrollOffset = control.height / 2
+        let scrollOffset = control.height / 2
         for (; scrollOffset > delegateHeight / 2; scrollOffset-=5) {
             touch.move(0, tumblerView, control.width / 2, scrollOffset).commit()
         }
