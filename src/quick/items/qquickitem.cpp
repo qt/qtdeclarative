@@ -5377,7 +5377,7 @@ bool QQuickItemPrivate::transformChanged(QQuickItem *transformedItem)
     }
     // If ItemObservesViewport, clipRect() calculates the intersection with the viewport;
     // so each time the item moves in the viewport, its clipnode needs to be updated.
-    if (thisWantsIt && q->clip())
+    if (thisWantsIt && q->clip() && !(dirtyAttributes & QQuickItemPrivate::Clip))
         dirty(QQuickItemPrivate::Clip);
     return ret;
 }
@@ -6629,7 +6629,7 @@ void QQuickItemPrivate::dirty(DirtyType type)
             QQuickWindowPrivate::get(window)->dirtyItem(q);
         }
     }
-    if (type & (TransformOrigin | Transform | BasicTransform | Position | Size))
+    if (type & (TransformOrigin | Transform | BasicTransform | Position | Size | Clip))
         transformChanged(q);
 }
 
