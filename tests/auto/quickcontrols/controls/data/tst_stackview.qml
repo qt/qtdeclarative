@@ -34,32 +34,34 @@ TestCase {
 
     Component { id: withRequired; Item { required property int i }}
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
     }
 
     function test_initialItem() {
-        var control1 = createTemporaryObject(stackViewComponent, testCase)
+        let control1 = createTemporaryObject(stackViewComponent, testCase)
         verify(control1)
         compare(control1.currentItem, null)
         control1.destroy()
 
-        var control2 = createTemporaryObject(stackViewComponent, testCase, {initialItem: item})
+        let control2 = createTemporaryObject(stackViewComponent, testCase, {initialItem: item})
         verify(control2)
         compare(control2.currentItem, item)
         control2.destroy()
 
-        var control3 = createTemporaryObject(stackViewComponent, testCase, {initialItem: itemComponent})
+        let control3 = createTemporaryObject(stackViewComponent, testCase, {initialItem: itemComponent})
         verify(control3)
         verify(control3.currentItem)
         control3.destroy()
     }
 
     function test_currentItem() {
-        var control = createTemporaryObject(stackViewComponent, testCase, {initialItem: item})
+        let control = createTemporaryObject(stackViewComponent, testCase, {initialItem: item})
         verify(control)
         compare(control.currentItem, item)
         control.push(itemComponent)
@@ -69,12 +71,12 @@ TestCase {
     }
 
     function test_busy() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
         compare(control.busy, false)
 
-        var busyCount = 0
-        var busySpy = signalSpy.createObject(control, {target: control, signalName: "busyChanged"})
+        let busyCount = 0
+        let busySpy = signalSpy.createObject(control, {target: control, signalName: "busyChanged"})
         verify(busySpy.valid)
 
         control.push(itemComponent)
@@ -122,15 +124,15 @@ TestCase {
     }
 
     function test_status() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
-        var item1 = itemComponent.createObject(control)
+        let item1 = itemComponent.createObject(control)
         compare(item1.StackView.status, StackView.Inactive)
         control.push(item1)
         compare(item1.StackView.status, StackView.Active)
 
-        var item2 = itemComponent.createObject(control)
+        let item2 = itemComponent.createObject(control)
         compare(item2.StackView.status, StackView.Inactive)
         control.push(item2)
         compare(item2.StackView.status, StackView.Activating)
@@ -146,15 +148,15 @@ TestCase {
     }
 
     function test_index() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
-        var item1 = itemComponent.createObject(control)
+        let item1 = itemComponent.createObject(control)
         compare(item1.StackView.index, -1)
         control.push(item1, StackView.Immediate)
         compare(item1.StackView.index, 0)
 
-        var item2 = itemComponent.createObject(control)
+        let item2 = itemComponent.createObject(control)
         compare(item2.StackView.index, -1)
         control.push(item2, StackView.Immediate)
         compare(item2.StackView.index, 1)
@@ -166,15 +168,15 @@ TestCase {
     }
 
     function test_view() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
-        var item1 = itemComponent.createObject(control)
+        let item1 = itemComponent.createObject(control)
         compare(item1.StackView.view, null)
         control.push(item1, StackView.Immediate)
         compare(item1.StackView.view, control)
 
-        var item2 = itemComponent.createObject(control)
+        let item2 = itemComponent.createObject(control)
         compare(item2.StackView.view, null)
         control.push(item2, StackView.Immediate)
         compare(item2.StackView.view, control)
@@ -186,13 +188,13 @@ TestCase {
     }
 
     function test_depth() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
-        var depthChanges = 0
-        var emptyChanges = 0
-        var depthSpy = signalSpy.createObject(control, {target: control, signalName: "depthChanged"})
-        var emptySpy = signalSpy.createObject(control, {target: control, signalName: "emptyChanged"})
+        let depthChanges = 0
+        let emptyChanges = 0
+        let depthSpy = signalSpy.createObject(control, {target: control, signalName: "depthChanged"})
+        let emptySpy = signalSpy.createObject(control, {target: control, signalName: "emptyChanged"})
         verify(depthSpy.valid)
         verify(emptySpy.valid)
         compare(control.depth, 0)
@@ -269,9 +271,9 @@ TestCase {
     }
 
     function test_size() {
-        var container = createTemporaryObject(itemComponent, testCase, {width: 200, height: 200})
+        let container = createTemporaryObject(itemComponent, testCase, {width: 200, height: 200})
         verify(container)
-        var control = stackViewComponent.createObject(container, {width: 100, height: 100})
+        let control = stackViewComponent.createObject(container, {width: 100, height: 100})
         verify(control)
 
         container.width += 10
@@ -308,7 +310,7 @@ TestCase {
     }
 
     function test_focus(data: var) {
-        var control = createTemporaryObject(stackViewComponent, testCase, {initialItem: item, width: 200, height: 200})
+        let control = createTemporaryObject(stackViewComponent, testCase, {initialItem: item, width: 200, height: 200})
         verify(control)
 
         if (data.focus)
@@ -317,7 +319,7 @@ TestCase {
             control.forceActiveFocus()
         compare(control.activeFocus, data.focus || data.forceActiveFocus)
 
-        var page = control.push(textField, StackView.Immediate)
+        let page = control.push(textField, StackView.Immediate)
         verify(page)
         compare(control.currentItem, page)
         compare(page.activeFocus, control.activeFocus)
@@ -329,12 +331,12 @@ TestCase {
     }
 
     function test_find() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
-        var item1 = itemComponent.createObject(control, {objectName: "1"})
-        var item2 = itemComponent.createObject(control, {objectName: "2"})
-        var item3 = itemComponent.createObject(control, {objectName: "3"})
+        let item1 = itemComponent.createObject(control, {objectName: "1"})
+        let item2 = itemComponent.createObject(control, {objectName: "2"})
+        let item3 = itemComponent.createObject(control, {objectName: "3"})
 
         control.push(item1, StackView.Immediate)
         control.push(item2, StackView.Immediate)
@@ -354,7 +356,7 @@ TestCase {
     }
 
     function test_get() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
         control.push([item, itemComponent, itemComponent], StackView.Immediate)
@@ -371,7 +373,7 @@ TestCase {
     property bool qmlProperty
 
     function test_push() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
         // missing arguments
@@ -387,46 +389,46 @@ TestCase {
         control.push(Qt.createQmlObject('import QtQml; QtObject { }', control))
 
         // push(item)
-        var item1 = itemComponent.createObject(control, {objectName:"1"})
+        let item1 = itemComponent.createObject(control, {objectName:"1"})
         compare(control.push(item1, StackView.Immediate), item1)
         compare(control.depth, 1)
         compare(control.currentItem, item1)
 
         // push([item])
-        var item2 = itemComponent.createObject(control, {objectName:"2"})
+        let item2 = itemComponent.createObject(control, {objectName:"2"})
         compare(control.push([item2], StackView.Immediate), item2)
         compare(control.depth, 2)
         compare(control.currentItem, item2)
 
         // push(item, {properties})
-        var item3 = itemComponent.createObject(control)
+        let item3 = itemComponent.createObject(control)
         compare(control.push(item3, {objectName:"3"}, StackView.Immediate), item3)
         compare(item3.objectName, "3")
         compare(control.depth, 3)
         compare(control.currentItem, item3)
 
         // push([item, {properties}])
-        var item4 = itemComponent.createObject(control)
+        let item4 = itemComponent.createObject(control)
         compare(control.push([item4, {objectName:"4"}], StackView.Immediate), item4)
         compare(item4.objectName, "4")
         compare(control.depth, 4)
         compare(control.currentItem, item4)
 
         // push(component, {properties})
-        var item5 = control.push(itemComponent, {objectName:"5"}, StackView.Immediate)
+        let item5 = control.push(itemComponent, {objectName:"5"}, StackView.Immediate)
         compare(item5.objectName, "5")
         compare(control.depth, 5)
         compare(control.currentItem, item5)
 
         // push([component, {properties}])
-        var item6 = control.push([itemComponent, {objectName:"6"}], StackView.Immediate)
+        let item6 = control.push([itemComponent, {objectName:"6"}], StackView.Immediate)
         compare(item6.objectName, "6")
         compare(control.depth, 6)
         compare(control.currentItem, item6)
 
         // push([component, {binding}]) - with JS variable in binding
-        var jsVariable = false
-        var item7 = control.push([itemComponent, {objectName: Qt.binding(() => {
+        let jsVariable = false
+        let item7 = control.push([itemComponent, {objectName: Qt.binding(() => {
             return jsVariable.toString() })}], StackView.Immediate)
         compare(item7.objectName, "false")
         compare(control.depth, 7)
@@ -437,7 +439,7 @@ TestCase {
 
         // push([component, {binding}]) - with QML property in binding
         qmlProperty = false
-        var item8 = control.push([itemComponent, {objectName: Qt.binding(() => {
+        let item8 = control.push([itemComponent, {objectName: Qt.binding(() => {
             return testCase.qmlProperty.toString() })}], StackView.Immediate)
         compare(item8.objectName, "false")
         compare(control.depth, 8)
@@ -538,11 +540,11 @@ TestCase {
     }
 
     function test_pop() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
-        var items = []
-        for (var i = 0; i < 7; ++i)
+        let items = []
+        for (let i = 0; i < 7; ++i)
             items.push(itemComponent.createObject(control, {objectName:i}))
 
         control.push(items, StackView.Immediate)
@@ -650,7 +652,7 @@ TestCase {
     }
 
     function test_replace() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
         // missing arguments
@@ -666,39 +668,39 @@ TestCase {
         compare(control.replace(Qt.createQmlObject('import QtQml; QtObject { }', control)), null)
 
         // replace(item)
-        var item1 = itemComponent.createObject(control, {objectName:"1"})
+        let item1 = itemComponent.createObject(control, {objectName:"1"})
         compare(control.replace(item1, StackView.Immediate), item1)
         compare(control.depth, 1)
         compare(control.currentItem, item1)
 
         // replace([item])
-        var item2 = itemComponent.createObject(control, {objectName:"2"})
+        let item2 = itemComponent.createObject(control, {objectName:"2"})
         compare(control.replace([item2], StackView.Immediate), item2)
         compare(control.depth, 1)
         compare(control.currentItem, item2)
 
         // replace(item, {properties})
-        var item3 = itemComponent.createObject(control)
+        let item3 = itemComponent.createObject(control)
         compare(control.replace(item3, {objectName:"3"}, StackView.Immediate), item3)
         compare(item3.objectName, "3")
         compare(control.depth, 1)
         compare(control.currentItem, item3)
 
         // replace([item, {properties}])
-        var item4 = itemComponent.createObject(control)
+        let item4 = itemComponent.createObject(control)
         compare(control.replace([item4, {objectName:"4"}], StackView.Immediate), item4)
         compare(item4.objectName, "4")
         compare(control.depth, 1)
         compare(control.currentItem, item4)
 
         // replace(component, {properties})
-        var item5 = control.replace(itemComponent, {objectName:"5"}, StackView.Immediate)
+        let item5 = control.replace(itemComponent, {objectName:"5"}, StackView.Immediate)
         compare(item5.objectName, "5")
         compare(control.depth, 1)
         compare(control.currentItem, item5)
 
         // replace([component, {properties}])
-        var item6 = control.replace([itemComponent, {objectName:"6"}], StackView.Immediate)
+        let item6 = control.replace([itemComponent, {objectName:"6"}], StackView.Immediate)
         compare(item6.objectName, "6")
         compare(control.depth, 1)
         compare(control.currentItem, item6)
@@ -706,7 +708,7 @@ TestCase {
         // replace the topmost item
         control.push(itemComponent)
         compare(control.depth, 2)
-        var item7 = control.replace(control.get(1), itemComponent, StackView.Immediate)
+        let item7 = control.replace(control.get(1), itemComponent, StackView.Immediate)
         compare(control.depth, 2)
         compare(control.currentItem, item7)
 
@@ -715,7 +717,7 @@ TestCase {
         control.push(itemComponent)
         control.push(itemComponent)
         compare(control.depth, 5)
-        var item8 = control.replace(control.get(2), itemComponent, StackView.Immediate)
+        let item8 = control.replace(control.get(2), itemComponent, StackView.Immediate)
         compare(control.depth, 3)
         compare(control.currentItem, item8)
     }
@@ -766,7 +768,7 @@ TestCase {
     }
 
     function test_clear() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
         control.push(itemComponent, StackView.Immediate)
@@ -791,14 +793,14 @@ TestCase {
     }
 
     function test_visibility(data: var) {
-        var control = createTemporaryObject(stackViewComponent, testCase, data.properties)
+        let control = createTemporaryObject(stackViewComponent, testCase, data.properties)
         verify(control)
 
-        var item1 = itemComponent.createObject(control)
+        let item1 = itemComponent.createObject(control)
         control.push(item1, StackView.Immediate)
         verify(item1.visible)
 
-        var item2 = itemComponent.createObject(control)
+        let item2 = itemComponent.createObject(control)
         control.push(item2)
         tryCompare(item1, "visible", false)
         verify(item2.visible)
@@ -861,7 +863,7 @@ TestCase {
     }
 
     function test_transitions(data: var) {
-        var control = createTemporaryObject(transitionView, testCase)
+        let control = createTemporaryObject(transitionView, testCase)
         verify(control)
 
         control.push(itemComponent, data.operation)
@@ -922,14 +924,14 @@ TestCase {
     }
 
     function test_ownership(data: var) {
-        var control = createTemporaryObject(transitionView, testCase, {initialItem: itemComponent})
+        let control = createTemporaryObject(transitionView, testCase, {initialItem: itemComponent})
         verify(control)
 
         // push-pop
         control.push(data.arg, StackView.Immediate)
         verify(control.currentItem)
         verify(control.currentItem.hasOwnProperty("destroyedCallback"))
-        var destroyed = false
+        let destroyed = false
         control.currentItem.destroyedCallback = function() { destroyed = true }
         control.pop(data.operation)
         tryCompare(control, "busy", false)
@@ -958,17 +960,17 @@ TestCase {
     }
 
     function test_destroyOnRemoved() {
-        var control = createTemporaryObject(stackViewComponent, testCase, { initialItem: itemComponent })
+        let control = createTemporaryObject(stackViewComponent, testCase, { initialItem: itemComponent })
         verify(control)
 
-        var item = removeComponent.createObject(control)
+        let item = removeComponent.createObject(control)
         verify(item)
 
-        var removedSpy = signalSpy.createObject(control, { target: item.StackView, signalName: "removed" })
+        let removedSpy = signalSpy.createObject(control, { target: item.StackView, signalName: "removed" })
         verify(removedSpy)
         verify(removedSpy.valid)
 
-        var destructionSpy = signalSpy.createObject(control, { target: item.Component, signalName: "destruction" })
+        let destructionSpy = signalSpy.createObject(control, { target: item.Component, signalName: "destruction" })
         verify(destructionSpy)
         verify(destructionSpy.valid)
 
@@ -1001,10 +1003,10 @@ TestCase {
     }
 
     function test_pushOnRemoved() {
-        var control = createTemporaryObject(stackViewComponent, testCase, { initialItem: itemComponent })
+        let control = createTemporaryObject(stackViewComponent, testCase, { initialItem: itemComponent })
         verify(control)
 
-        var item = control.push(itemComponent, StackView.Immediate)
+        let item = control.push(itemComponent, StackView.Immediate)
         verify(item)
 
         item.StackView.onRemoved.connect(function() {
@@ -1026,7 +1028,7 @@ TestCase {
     }
 
     function test_attached() {
-        var control = createTemporaryObject(stackViewComponent, testCase, {initialItem: attachedItem})
+        let control = createTemporaryObject(stackViewComponent, testCase, {initialItem: attachedItem})
 
         compare(control.get(0).index, 0)
         compare(control.get(0).view, control)
@@ -1058,19 +1060,19 @@ TestCase {
     }
 
     function test_interaction() {
-        var control = createTemporaryObject(stackViewComponent, testCase,
+        let control = createTemporaryObject(stackViewComponent, testCase,
             {initialItem: testButton, width: testCase.width, height: testCase.height})
         verify(control)
 
-        var firstButton = control.currentItem
+        let firstButton = control.currentItem
         verify(firstButton)
 
-        var firstClicks = 0
-        var secondClicks = 0
-        var thirdClicks = 0
+        let firstClicks = 0
+        let secondClicks = 0
+        let thirdClicks = 0
 
         // push - default transition
-        var secondButton = control.push(testButton)
+        let secondButton = control.push(testButton)
         compare(control.busy, true)
         mouseClick(firstButton) // filtered while busy
         mouseClick(secondButton) // filtered while busy
@@ -1081,7 +1083,7 @@ TestCase {
         compare(secondButton.clicks, ++secondClicks)
 
         // replace - default transition
-        var thirdButton = control.replace(testButton)
+        let thirdButton = control.replace(testButton)
         compare(control.busy, true)
         mouseClick(secondButton) // filtered while busy
         mouseClick(thirdButton) // filtered while busy
@@ -1175,11 +1177,11 @@ TestCase {
 
     // QTBUG-50305
     function test_events() {
-        var control = createTemporaryObject(stackViewComponent, testCase,
+        let control = createTemporaryObject(stackViewComponent, testCase,
             {initialItem: mouseArea, width: testCase.width, height: testCase.height})
         verify(control)
 
-        var testItem = control.currentItem
+        let testItem = control.currentItem
         verify(testItem)
 
         testItem.doubleClicked.connect(function() {
@@ -1196,11 +1198,11 @@ TestCase {
     }
 
     function test_ungrab() {
-        var control = createTemporaryObject(stackViewComponent, testCase,
+        let control = createTemporaryObject(stackViewComponent, testCase,
             {initialItem: mouseArea, width: testCase.width, height: testCase.height})
         verify(control)
 
-        var testItem = control.currentItem
+        let testItem = control.currentItem
         verify(testItem)
 
         mousePress(testItem)
@@ -1217,7 +1219,7 @@ TestCase {
     }
 
     function test_failures() {
-        var control = createTemporaryObject(stackViewComponent, testCase, {initialItem: itemComponent})
+        let control = createTemporaryObject(stackViewComponent, testCase, {initialItem: itemComponent})
         verify(control)
 
         ignoreWarning("QQmlComponent: Component is not ready")
@@ -1246,10 +1248,10 @@ TestCase {
     }
 
     function test_properties() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
-        var rect = control.push(rectangle, {color: "#ff0000"})
+        let rect = control.push(rectangle, {color: "#ff0000"})
         compare(rect.color, "#ff0000")
         compare(rect.initialColor, "#ff0000")
     }
@@ -1266,10 +1268,10 @@ TestCase {
     }
 
     function test_signals() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
-        var item1 = signalTest.createObject(control)
+        let item1 = signalTest.createObject(control)
         compare(item1.StackView.status, StackView.Inactive)
         control.push(item1)
         compare(item1.StackView.status, StackView.Active)
@@ -1278,7 +1280,7 @@ TestCase {
         compare(item1.deactivatedSpy.count, 0)
         compare(item1.deactivatingSpy.count, 0)
 
-        var item2 = signalTest.createObject(control)
+        let item2 = signalTest.createObject(control)
         compare(item2.StackView.status, StackView.Inactive)
         control.push(item2)
         compare(item2.StackView.status, StackView.Activating)
@@ -1310,11 +1312,11 @@ TestCase {
 
     // QTBUG-56158
     function test_repeatedPop() {
-        var control = createTemporaryObject(stackViewComponent, testCase,
+        let control = createTemporaryObject(stackViewComponent, testCase,
             {initialItem: itemComponent, width: testCase.width, height: testCase.height})
         verify(control)
 
-        for (var i = 0; i < 12; ++i)
+        for (let i = 0; i < 12; ++i)
             control.push(itemComponent)
         tryCompare(control, "busy", false)
 
@@ -1326,7 +1328,7 @@ TestCase {
     }
 
     function test_pushSameItem() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
         control.push(item, StackView.Immediate)
@@ -1340,7 +1342,7 @@ TestCase {
         compare(control.depth, 1)
 
         // Push a component so that it becomes current.
-        var current = control.push(itemComponent, StackView.Immediate)
+        let current = control.push(itemComponent, StackView.Immediate)
         compare(control.currentItem, current)
         compare(control.depth, 2)
 
@@ -1352,15 +1354,15 @@ TestCase {
     }
 
     function test_visible() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
-        var item1 = itemComponent.createObject(control)
+        let item1 = itemComponent.createObject(control)
         control.push(item1, StackView.Immediate)
         compare(item1.visible, true)
         compare(item1.StackView.visible, item1.visible)
 
-        var item2 = itemComponent.createObject(control)
+        let item2 = itemComponent.createObject(control)
         control.push(item2, StackView.Immediate)
         compare(item1.visible, false)
         compare(item2.visible, true)
@@ -1403,26 +1405,26 @@ TestCase {
     }
 
     function test_resolveInitialItem() {
-        var control = createTemporaryObject(stackViewComponent, testCase, {initialItem: "TestItem.qml"})
+        let control = createTemporaryObject(stackViewComponent, testCase, {initialItem: "TestItem.qml"})
         verify(control)
         verify(control.currentItem)
     }
 
     function test_resolve() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
 
-        var item = control.push("TestItem.qml")
+        let item = control.push("TestItem.qml")
         compare(control.depth, 1)
         verify(item)
     }
 
     // QTBUG-65084
     function test_mouseArea() {
-        var ma = createTemporaryObject(mouseArea, testCase, {width: testCase.width, height: testCase.height})
+        let ma = createTemporaryObject(mouseArea, testCase, {width: testCase.width, height: testCase.height})
         verify(ma)
 
-        var control = stackViewComponent.createObject(ma, {width: testCase.width, height: testCase.height})
+        let control = stackViewComponent.createObject(ma, {width: testCase.width, height: testCase.height})
         verify(control)
 
         mousePress(control)
@@ -1431,7 +1433,7 @@ TestCase {
         mouseRelease(control)
         verify(!ma.pressed)
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
         touch.press(0, control).commit()
         verify(ma.pressed)
 
@@ -1448,7 +1450,7 @@ TestCase {
 
     function test_initalItemOwnership()
     {
-        var control = stackViewFactory()
+        let control = stackViewFactory()
         verify(control)
         gc()
         verify(control.initialItem)
@@ -1620,7 +1622,7 @@ TestCase {
 
     // QTBUG-84381
     function test_clearAndPushAfterDepthChange() {
-        var control = createTemporaryObject(stackViewComponent, testCase, {
+        let control = createTemporaryObject(stackViewComponent, testCase, {
             popEnter: null, popExit: null, pushEnter: null,
             pushExit: null, replaceEnter: null, replaceExit: null
         })
@@ -1753,8 +1755,9 @@ TestCase {
     }
 
     function test_requiredProperties() {
-        var control = createTemporaryObject(stackViewComponent, testCase)
+        let control = createTemporaryObject(stackViewComponent, testCase)
         verify(control)
+        ignoreWarning(/QML StackView: push: Property i was marked as required but not set/)
         let failedPush = control.push(withRequired)
         compare(failedPush, null);
         control.push(withRequired, {"i": 42})
