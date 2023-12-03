@@ -166,7 +166,7 @@ Message {
 \section2 Registering Value Types
 
 Any type with a \l{Q_GADGET} macro can the registered as a
-\l{qtqml-typesystem-valuetypes.html}{QML value type}}. Once such a type is
+\l{qtqml-typesystem-valuetypes.html}{QML value type}. Once such a type is
 registered with the QML type system it can be used as property type in QML
 code. Such an instance can be manipulated from QML; as
 \l{qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++
