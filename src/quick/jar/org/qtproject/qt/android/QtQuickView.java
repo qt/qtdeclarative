@@ -14,6 +14,7 @@ public class QtQuickView extends QtView {
 
     native void createQuickView(String qmlUri, int width, int height, long parentWindowReference);
     native void setRootObjectProperty(long windowReference, String propertyName, Object value);
+    native Object getRootObjectProperty(long windowReference, String propertyName);
 
     public QtQuickView(Context context, String qmlUri, String appName)
         throws InvalidParameterException {
@@ -34,5 +35,13 @@ public class QtQuickView extends QtView {
     public void setProperty(String propertyName, Object value)
     {
         setRootObjectProperty(windowReference(), propertyName, value);
+    }
+
+    // getRootObjectProperty always returns a primitive type or an Object
+    // so it is safe to suppress the unchecked warning
+    @SuppressWarnings("unchecked")
+    public <T extends Object> T getProperty(String propertyName)
+    {
+        return (T)getRootObjectProperty(windowReference(), propertyName);
     }
 }
