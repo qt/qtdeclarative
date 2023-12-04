@@ -3059,6 +3059,82 @@ void tst_qmlls_utils::completions_data()
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { forStatementCompletion, CompletionItemKind::Snippet } }
             << QStringList{ u"helloProperty"_s } << None;
+
+    QTest::newRow("noBreakInMethodBody")
+            << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 8 << 8
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable } }
+            << QStringList{ u"break"_s, u"continue"_s } << None;
+
+    QTest::newRow("breakAndContinueInForLoop")
+            << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 11 << 12
+            << ExpectedCompletions{ { u"break"_s, CompletionItemKind::Keyword },
+                                    { u"continue"_s, CompletionItemKind::Keyword },
+                                    }
+            << QStringList{} << None;
+
+    QTest::newRow("noBreakInSwitch")
+            << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 15 << 12
+            << ExpectedCompletions{ { caseStatementCompletion, CompletionItemKind::Snippet }, }
+            << QStringList{ u"continue"_s, u"break"_s } << None;
+
+    QTest::newRow("breakInSwitchCase")
+            << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 17 << 12
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"break"_s, CompletionItemKind::Keyword },
+                                    }
+            << QStringList{ u"continue"_s } << None;
+
+    QTest::newRow("breakInSwitchDefault")
+            << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 19 << 12
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"break"_s, CompletionItemKind::Keyword },
+                                    }
+            << QStringList{ u"continue"_s } << None;
+
+    QTest::newRow("breakInSwitchSecondCase")
+            << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 21 << 12
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"break"_s, CompletionItemKind::Keyword },
+                                    }
+            << QStringList{ u"continue"_s } << None;
+
+    QTest::newRow("breakInLabel")
+            << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 25 << 12
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"break"_s, CompletionItemKind::Keyword },
+                                    }
+            << QStringList{ u"continue"_s } << None;
+
+    QTest::newRow("forLoopInsideOfLabel")
+            << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 33 << 1
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"break"_s, CompletionItemKind::Keyword },
+                                    { u"continue"_s, CompletionItemKind::Keyword },
+                                    }
+            << QStringList{ } << None;
+
+    QTest::newRow("switchInsideForLoopInsideOfLabel")
+            << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 36 << 1
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"break"_s, CompletionItemKind::Keyword },
+                                    { u"continue"_s, CompletionItemKind::Keyword },
+                                    }
+            << QStringList{ } << None;
+
+    QTest::newRow("switchInsideOfLabel")
+            << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 45 << 1
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"break"_s, CompletionItemKind::Keyword },
+                                    }
+            << QStringList{ u"continue"_s } << None;
+
+    QTest::newRow("forLoopInSwitchInsideOfLabel")
+            << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 47 << 1
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { u"break"_s, CompletionItemKind::Keyword },
+                                    { u"continue"_s, CompletionItemKind::Keyword },
+                                    }
+            << QStringList{ } << None;
 }
 
 void tst_qmlls_utils::completions()

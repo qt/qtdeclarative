@@ -2631,9 +2631,18 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &c
         result << suggestCaseAndDefaultStatementCompletion();
     }
 
-    DomItem loopOrSwitchParent = currentItem;
     bool alreadyInLoop = false;
+    bool alreadyInLabel = false;
     bool alreadyInSwitch = false;
+    /*!
+    \internal
+    Break and continue can be inserted only in following situations:
+    \list
+        \li Break and continue inside a loop.
+        \li Break inside a (nested) LabelledStatement
+        \li Break inside a (nested) SwitchStatement
+    \endlist
+    */
     for (DomItem current = currentItem; current; current = current.directParent()) {
         switch (current.internalKind()) {
         case DomType::ScriptExpression:
@@ -2653,7 +2662,7 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &c
             result.back().kind = int(CompletionItemKind::Keyword);
 
             // do not add break twice
-            if (!alreadyInSwitch) {
+            if (!alreadyInSwitch && !alreadyInLabel) {
                 result.emplaceBack();
                 result.back().label = "break";
                 result.back().kind = int(CompletionItemKind::Keyword);
@@ -2661,10 +2670,19 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &c
             break;
 
         case DomType::ScriptSwitchStatement:
-            // check if break was already inserted because of switch or loop
-            if (alreadyInSwitch || alreadyInLoop)
+            // check if break was already inserted
+            if (alreadyInSwitch || alreadyInLoop || alreadyInLabel)
                 continue;
             alreadyInSwitch = true;
+
+            result.emplaceBack();
+            result.back().label = "break";
+            result.back().kind = int(CompletionItemKind::Keyword);
+        case DomType::ScriptLabelledStatement:
+            // check if break was already inserted because of switch or loop
+            if (alreadyInSwitch || alreadyInLoop || alreadyInLabel)
+                continue;
+            alreadyInLabel = true;
 
             result.emplaceBack();
             result.back().label = "break";
