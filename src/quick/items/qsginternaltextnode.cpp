@@ -48,21 +48,13 @@ QSGGlyphNode *QSGInternalTextNode::addGlyphs(const QPointF &position, const QGly
                                              QSGNode *parentNode)
 {
     QRawFont font = glyphs.rawFont();
-    bool preferNativeGlyphNode = m_renderType == NativeRendering;
-    if (!preferNativeGlyphNode) {
-        QRawFontPrivate *fontPriv = QRawFontPrivate::get(font);
-        if (fontPriv->fontEngine->hasUnreliableGlyphOutline()) {
-            preferNativeGlyphNode = true;
-        } else {
-            QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
-            preferNativeGlyphNode = !fe->isSmoothlyScalable;
-        }
-    }
 
-    QSGTextNode::RenderType preferredRenderType =
-        preferNativeGlyphNode
-            ? QSGTextNode::NativeRendering
-            : m_renderType;
+    QSGTextNode::RenderType preferredRenderType = m_renderType;
+    if (m_renderType != NativeRendering) {
+        if (const QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine)
+            if (fe->hasUnreliableGlyphOutline() || !fe->isSmoothlyScalable)
+                preferredRenderType = QSGTextNode::NativeRendering;
+    }
 
     QSGGlyphNode *node = m_renderContext->sceneGraphContext()->createGlyphNode(m_renderContext,
                                                                                preferredRenderType,
