@@ -154,10 +154,12 @@ TestCase {
     }
 
     function test_alignment(data) {
-        var control = createTemporaryObject(textField, testCase, {text: data.text, placeholderText: data.placeholderText, horizontalAlignment: data.textAlignment})
+        var control = createTemporaryObject(textField, testCase, {text: data.text, placeholderText: data.placeholderText})
 
-        if (data.textAlignment !== undefined)
+        if (data.textAlignment !== undefined) {
+            control.horizontalAlignment = data.textAlignment
             compare(control.horizontalAlignment, data.textAlignment)
+        }
         // The placeholder text of the Material style doesn't currently respect the alignment of the control.
         if (StyleInfo.styleName !== "Material") {
             for (var i = 0; i < control.children.length; ++i) {
@@ -180,7 +182,7 @@ TestCase {
         return [
             {tag: "bold", value: true},
             {tag: "capitalization", value: Font.Capitalize},
-            {tag: "family", value: "Courier"},
+            {tag: "family", value: "Tahoma"},
             {tag: "italic", value: true},
             {tag: "strikeout", value: true},
             {tag: "underline", value: true},
