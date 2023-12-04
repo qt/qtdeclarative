@@ -17,6 +17,7 @@
 #include "qv4global_p.h"
 
 #include <QHash>
+#include <QVarLengthArray>
 #include <climits> // for UINT_MAX
 #include <private/qv4propertykey_p.h>
 #include <private/qv4heap_p.h>
@@ -315,7 +316,7 @@ struct InternalClass : Base {
     SharedInternalClassData<PropertyAttributes> propertyData;
 
     typedef InternalClassTransition Transition;
-    std::vector<Transition> transitions;
+    QVarLengthArray<Transition, 1> transitions;
     InternalClassTransition &lookupOrInsertTransition(const InternalClassTransition &t);
 
     uint size;

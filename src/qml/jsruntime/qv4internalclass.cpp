@@ -227,7 +227,7 @@ void InternalClass::init(ExecutionEngine *engine)
     new (&propertyTable) PropertyHash();
     new (&nameMap) SharedInternalClassData<PropertyKey>(engine);
     new (&propertyData) SharedInternalClassData<PropertyAttributes>(engine);
-    new (&transitions) std::vector<Transition>();
+    new (&transitions) QVarLengthArray<Transition, 1>();
 
     this->engine = engine;
     vtable = QV4::InternalClass::staticVTable();
@@ -244,7 +244,7 @@ void InternalClass::init(Heap::InternalClass *other)
     new (&propertyTable) PropertyHash(other->propertyTable);
     new (&nameMap) SharedInternalClassData<PropertyKey>(other->nameMap);
     new (&propertyData) SharedInternalClassData<PropertyAttributes>(other->propertyData);
-    new (&transitions) std::vector<Transition>();
+    new (&transitions) QVarLengthArray<Transition, 1>();
 
     engine = other->engine;
     vtable = other->vtable;
@@ -275,7 +275,7 @@ void InternalClass::destroy()
     propertyTable.~PropertyHash();
     nameMap.~SharedInternalClassData<PropertyKey>();
     propertyData.~SharedInternalClassData<PropertyAttributes>();
-    transitions.~vector<Transition>();
+    transitions.~QVarLengthArray<Transition, 1>();
     engine = nullptr;
     Base::destroy();
 }
@@ -302,7 +302,7 @@ void InternalClass::changeMember(QV4::Object *object, PropertyKey id, PropertyAt
 
 InternalClassTransition &InternalClass::lookupOrInsertTransition(const InternalClassTransition &t)
 {
-    std::vector<Transition>::iterator it = std::lower_bound(transitions.begin(), transitions.end(), t);
+    QVarLengthArray<Transition, 1>::iterator it = std::lower_bound(transitions.begin(), transitions.end(), t);
     if (it != transitions.end() && *it == t) {
         return *it;
     } else {
@@ -334,7 +334,7 @@ static Heap::InternalClass *cleanInternalClass(Heap::InternalClass *orig)
 
     // We will generally add quite a few transitions here. We have 255 redundant ones.
     // We can expect at least as many significant ones in addition.
-    std::vector<InternalClassTransition> transitions;
+    QVarLengthArray<InternalClassTransition, 1> transitions;
 
     Scope scope(orig->engine);
     Scoped<QV4::InternalClass> child(scope, orig);
