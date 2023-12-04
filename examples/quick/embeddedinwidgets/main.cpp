@@ -38,7 +38,7 @@ MainWindow::MainWindow()
             this, &MainWindow::quickViewStatusChanged);
     connect(m_quickView, &QQuickWindow::sceneGraphError,
             this, &MainWindow::sceneGraphError);
-    m_quickView->setSource(QUrl(QStringLiteral("qrc:///embeddedinwidgets/main.qml")));
+    m_quickView->loadFromModule("embeddedinwidgets", "Main");
 
     QWidget *container = QWidget::createWindowContainer(m_quickView);
     container->setMinimumSize(m_quickView->size());

@@ -29,11 +29,9 @@ target_link_libraries(embeddedinwidgetsexample PRIVATE
 qt_add_qml_module(embeddedinwidgetsexample
     URI embeddedinwidgets
     QML_FILES
-        "main.qml"
+        "Main.qml"
     RESOURCES
         "reflect.frag.qsb"
-    RESOURCE_PREFIX /embeddedinwidgets
-    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS embeddedinwidgetsexample

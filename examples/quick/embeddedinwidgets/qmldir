@@ -1,0 +1,4 @@
+module embeddedinwidgets
+prefer :/qt/qml/embeddedinwidgets/
+Main 254.0 Main.qml
+
