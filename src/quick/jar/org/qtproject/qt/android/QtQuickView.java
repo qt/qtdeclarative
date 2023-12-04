@@ -13,6 +13,7 @@ public class QtQuickView extends QtView {
     private String m_qmlUri;
 
     native void createQuickView(String qmlUri, int width, int height, long parentWindowReference);
+    native void setRootObjectProperty(long windowReference, String propertyName, Object value);
 
     public QtQuickView(Context context, String qmlUri, String appName)
         throws InvalidParameterException {
@@ -28,5 +29,10 @@ public class QtQuickView extends QtView {
     @Override
     protected void createWindow(long parentWindowReference) {
         createQuickView(m_qmlUri, getWidth(), getHeight(), parentWindowReference);
+    }
+
+    public void setProperty(String propertyName, Object value)
+    {
+        setRootObjectProperty(windowReference(), propertyName, value);
     }
 }
