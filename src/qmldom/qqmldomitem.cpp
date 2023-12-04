@@ -3065,7 +3065,7 @@ OwningItem::OwningItem(int derivedFrom)
       m_frozenAt(QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC))
 {}
 
-OwningItem::OwningItem(int derivedFrom, QDateTime lastDataUpdateAt)
+OwningItem::OwningItem(int derivedFrom, const QDateTime &lastDataUpdateAt)
     : m_derivedFrom(derivedFrom),
       m_revision(nextRevision()),
       m_createdAt(QDateTime::currentDateTimeUtc()),

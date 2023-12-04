@@ -28,8 +28,9 @@ using namespace Qt::StringLiterals;
 namespace QQmlJS {
 namespace Dom {
 
-ExternalOwningItem::ExternalOwningItem(QString filePath, QDateTime lastDataUpdateAt, Path path,
-                                       int derivedFrom, QString code)
+ExternalOwningItem::ExternalOwningItem(
+        const QString &filePath, const QDateTime &lastDataUpdateAt, const Path &path,
+        int derivedFrom, const QString &code)
     : OwningItem(derivedFrom, lastDataUpdateAt),
       m_canonicalFilePath(filePath),
       m_code(code),
@@ -315,8 +316,9 @@ QmlFile::QmlFile(const QmlFile &o)
         m_astComments = std::make_shared<AstComments>(*m_astComments);
 }
 
-QmlFile::QmlFile(QString filePath, QString code, QDateTime lastDataUpdateAt, int derivedFrom,
-                 RecoveryOption option)
+QmlFile::QmlFile(
+        const QString &filePath, const QString &code, const QDateTime &lastDataUpdateAt,
+        int derivedFrom, RecoveryOption option)
     : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::qmlFilePath(filePath), derivedFrom,
                          code),
       m_engine(new QQmlJS::Engine),
@@ -434,8 +436,9 @@ bool QmltypesFile::iterateDirectSubpaths(const DomItem &self, DirectVisitor visi
     return cont;
 }
 
-QmlDirectory::QmlDirectory(QString filePath, QStringList dirList, QDateTime lastDataUpdateAt,
-                           int derivedFrom)
+QmlDirectory::QmlDirectory(
+        const QString &filePath, const QStringList &dirList, const QDateTime &lastDataUpdateAt,
+        int derivedFrom)
     : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::qmlDirectoryPath(filePath), derivedFrom,
                          dirList.join(QLatin1Char('\n')))
 {

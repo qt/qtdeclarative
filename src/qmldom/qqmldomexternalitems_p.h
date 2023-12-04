@@ -48,8 +48,9 @@ Every owning item has a file or directory it refers to.
 */
 class QMLDOM_EXPORT ExternalOwningItem: public OwningItem {
 public:
-    ExternalOwningItem(QString filePath, QDateTime lastDataUpdateAt, Path pathFromTop,
-                       int derivedFrom = 0, QString code = QString());
+    ExternalOwningItem(
+            const QString &filePath, const QDateTime &lastDataUpdateAt, const Path &pathFromTop,
+            int derivedFrom = 0, const QString &code = QString());
     ExternalOwningItem(const ExternalOwningItem &o) = default;
     QString canonicalFilePath(const DomItem &) const override;
     QString canonicalFilePath() const;
@@ -114,9 +115,10 @@ protected:
 public:
     constexpr static DomType kindValue = DomType::QmlDirectory;
     DomType kind() const override { return kindValue; }
-    QmlDirectory(QString filePath = QString(), QStringList dirList = QStringList(),
-                 QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
-                 int derivedFrom = 0);
+    QmlDirectory(
+            const QString &filePath = QString(), const QStringList &dirList = QStringList(),
+            const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+            int derivedFrom = 0);
     QmlDirectory(const QmlDirectory &o) = default;
 
     std::shared_ptr<QmlDirectory> makeCopy(const DomItem &self) const
@@ -153,9 +155,10 @@ public:
 
     static ErrorGroups myParsingErrors();
 
-    QmldirFile(QString filePath = QString(), QString code = QString(),
-               QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
-               int derivedFrom = 0)
+    QmldirFile(
+            const QString &filePath = QString(), const QString &code = QString(),
+            const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+            int derivedFrom = 0)
         : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::qmldirFilePath(filePath),
                              derivedFrom, code)
     {
@@ -218,9 +221,9 @@ protected:
 public:
     constexpr static DomType kindValue = DomType::JsFile;
     DomType kind() const override { return kindValue; }
-    JsFile(QString filePath = QString(),
-           QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
-           Path pathFromTop = Path(), int derivedFrom = 0)
+    JsFile(const QString &filePath = QString(),
+           const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+           const Path &pathFromTop = Path(), int derivedFrom = 0)
         : ExternalOwningItem(filePath, lastDataUpdateAt, pathFromTop, derivedFrom)
     {
     }
@@ -251,8 +254,8 @@ public:
     enum RecoveryOption { DisableParserRecovery, EnableParserRecovery };
 
     QmlFile(const QmlFile &o);
-    QmlFile(QString filePath = QString(), QString code = QString(),
-            QDateTime lastDataUpdate = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+    QmlFile(const QString &filePath = QString(), const QString &code = QString(),
+            const QDateTime &lastDataUpdate = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
             int derivedFrom = 0, RecoveryOption option = DisableParserRecovery);
     static ErrorGroups myParsingErrors();
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const
@@ -361,9 +364,10 @@ public:
     constexpr static DomType kindValue = DomType::QmltypesFile;
     DomType kind() const override { return kindValue; }
 
-    QmltypesFile(QString filePath = QString(), QString code = QString(),
-                 QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
-                 int derivedFrom = 0)
+    QmltypesFile(
+            const QString &filePath = QString(), const QString &code = QString(),
+            const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+            int derivedFrom = 0)
         : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::qmltypesFilePath(filePath),
                              derivedFrom, code)
     {
@@ -429,9 +433,10 @@ public:
     constexpr static DomType kindValue = DomType::GlobalScope;
     DomType kind() const override { return kindValue; }
 
-    GlobalScope(QString filePath = QString(),
-                QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
-                int derivedFrom = 0)
+    GlobalScope(
+            const QString &filePath = QString(),
+            const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+            int derivedFrom = 0)
         : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::globalScopePath(filePath),
                              derivedFrom)
     {

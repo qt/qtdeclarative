@@ -1485,7 +1485,7 @@ protected:
 public:
     OwningItem(const OwningItem &o);
     OwningItem(int derivedFrom=0);
-    OwningItem(int derivedFrom, QDateTime lastDataUpdateAt);
+    OwningItem(int derivedFrom, const QDateTime &lastDataUpdateAt);
     OwningItem(const OwningItem &&) = delete;
     OwningItem &operator=(const OwningItem &&) = delete;
     static int nextRevision();
