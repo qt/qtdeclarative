@@ -26,6 +26,7 @@ public:
     explicit QQuickView(QWindow *parent = nullptr);
     QQuickView(QQmlEngine* engine, QWindow *parent);
     explicit QQuickView(const QUrl &source, QWindow *parent = nullptr);
+    explicit QQuickView(QAnyStringView uri, QAnyStringView typeName, QWindow *parent = nullptr);
     QQuickView(const QUrl &source, QQuickRenderControl *renderControl);
     ~QQuickView() override;
 
@@ -52,6 +53,7 @@ public:
 
 public Q_SLOTS:
     void setSource(const QUrl&);
+    void loadFromModule(QAnyStringView uri, QAnyStringView typeName);
     void setInitialProperties(const QVariantMap &initialProperties);
     void setContent(const QUrl& url, QQmlComponent *component, QObject *item);
 

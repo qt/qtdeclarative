@@ -46,7 +46,10 @@ public:
     QQuickViewPrivate();
     ~QQuickViewPrivate();
 
+    enum ExecuteState { Continue, Stop };
+    ExecuteState executeHelper();
     void execute();
+    void execute(QAnyStringView uri, QAnyStringView typeName);
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) override;
     void initResize();
     void updateSize();
