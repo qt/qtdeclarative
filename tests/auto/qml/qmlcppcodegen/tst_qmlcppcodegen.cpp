@@ -1332,6 +1332,7 @@ void tst_QmlCppCodegen::enumConversion()
     QVERIFY(o);
     QCOMPARE(o->property("test").toInt(), 0x04);
     QCOMPARE(o->property("test_1").toBool(), true);
+    QCOMPARE(o->objectName(), u"0m"_s);
 }
 
 void tst_QmlCppCodegen::enumFromBadSingleton()

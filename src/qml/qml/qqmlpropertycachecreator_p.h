@@ -860,15 +860,8 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
 
         const QMetaType targetPropType = targetProperty->propType();
 
-        const auto resolveType = [](QMetaType targetPropType) {
-            if (targetPropType.flags() & QMetaType::IsEnumeration)
-                return targetPropType.underlyingType();
-            else
-                return targetPropType;
-        };
-
         const auto populateWithPropertyData = [&](const QQmlPropertyData *property) {
-            *type = resolveType(property->propType());
+            *type = property->propType();
             writable = property->isWritable();
             resettable = property->isResettable();
             bindable = property->isBindable();
@@ -912,7 +905,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
                         = QQmlMetaType::metaObjectForValueType(*type);
                 const QMetaProperty valueTypeMetaProperty
                         = valueTypeMetaObject->property(valueTypeIndex);
-                *type = resolveType(valueTypeMetaProperty.metaType());
+                *type = valueTypeMetaProperty.metaType();
 
                 // We can only write or reset the value type property if we can write
                 // the value type itself.
