@@ -362,6 +362,13 @@ QString QQuickTextEdit::text() const
 */
 
 /*!
+    \qmlproperty object QtQuick::TextEdit::font.variableAxes
+    \since 6.7
+
+    \include qquicktext.cpp qml-font-variable-axes
+*/
+
+/*!
     \qmlproperty object QtQuick::TextEdit::font.features
     \since 6.6
 

@@ -2797,6 +2797,13 @@ void QQuickPathMultiline::addToPath(QPainterPath &path, const QQuickPathData &)
 */
 
 /*!
+    \qmlproperty object QtQuick::PathText::font.variableAxes
+    \since 6.7
+
+    \include qquicktext.cpp qml-font-variable-axes
+*/
+
+/*!
     \qmlproperty object QtQuick::PathText::font.features
     \since 6.6
 

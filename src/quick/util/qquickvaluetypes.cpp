@@ -1047,6 +1047,36 @@ void QQuickFontValueType::setPreferShaping(bool enable)
         v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() | QFont::PreferNoShaping));
 }
 
+void QQuickFontValueType::setVariableAxes(const QVariantMap &variableAxes)
+{
+    v.clearVariableAxes();
+    for (auto [variableAxisName, variableAxisValue] : variableAxes.asKeyValueRange()) {
+        const auto maybeTag = QFont::Tag::fromString(variableAxisName);
+        if (!maybeTag) {
+            qWarning() << "Invalid variable axis" << variableAxisName << "ignored";
+            continue;
+        }
+
+        bool ok;
+        float value = variableAxisValue.toFloat(&ok);
+        if (!ok) {
+            qWarning() << "Variable axis" << variableAxisName << "value" << variableAxisValue << "is not a floating point value.";
+            continue;
+        }
+
+        v.setVariableAxis(*maybeTag, value);
+    }
+}
+
+QVariantMap QQuickFontValueType::variableAxes() const
+{
+    QVariantMap ret;
+    for (const auto &tag : v.variableAxisTags())
+        ret.insert(QString::fromUtf8(tag.toString()), v.variableAxisValue(tag));
+
+    return ret;
+}
+
 void QQuickFontValueType::setFeatures(const QVariantMap &features)
 {
     v.clearFeatures();

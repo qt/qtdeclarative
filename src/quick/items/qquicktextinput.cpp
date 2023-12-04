@@ -391,6 +391,13 @@ QString QQuickTextInputPrivate::realText() const
 */
 
 /*!
+    \qmlproperty object QtQuick::TextInput::font.variableAxes
+    \since 6.7
+
+    \include qquicktext.cpp qml-font-variable-axes
+*/
+
+/*!
     \qmlproperty object QtQuick::TextInput::font.features
     \since 6.6
 

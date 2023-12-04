@@ -408,6 +408,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFontValueType
     Q_PROPERTY(bool kerning READ kerning WRITE setKerning FINAL)
     Q_PROPERTY(bool preferShaping READ preferShaping WRITE setPreferShaping FINAL)
     Q_PROPERTY(QVariantMap features READ features WRITE setFeatures FINAL)
+    Q_PROPERTY(QVariantMap variableAxes READ variableAxes WRITE setVariableAxes FINAL)
 
     QML_VALUE_TYPE(font)
     QML_FOREIGN(QFont)
@@ -470,6 +471,9 @@ public:
 
     QVariantMap features() const;
     void setFeatures(const QVariantMap &features);
+
+    QVariantMap variableAxes() const;
+    void setVariableAxes(const QVariantMap &variableAxes);
 
     operator QFont() const { return v; }
 };
