@@ -108,8 +108,6 @@ public:
     void resetGlyphCacheResources();
 
 protected:
-    static QString fontKey(const QRawFont &font, int renderTypeQuality);
-
     InitParams m_initParams;
     QRhi *m_rhi;
     int m_maxTextureSize;
@@ -120,7 +118,7 @@ protected:
     bool m_useDepthBufferFor2D;
     QRhiResourceUpdateBatch *m_glyphCacheResourceUpdates;
     QSet<QRhiTexture *> m_pendingGlyphCacheTextures;
-    QHash<QString, QSGCurveGlyphAtlas *> m_curveGlyphAtlases;
+    QHash<FontKey, QSGCurveGlyphAtlas *> m_curveGlyphAtlases;
 };
 
 QT_END_NAMESPACE

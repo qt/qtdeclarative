@@ -24,6 +24,7 @@
 
 #include <private/qtquickglobal_p.h>
 #include <private/qrawfont_p.h>
+#include <private/qfontengine_p.h>
 
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgrendererinterface.h>
@@ -190,18 +191,47 @@ public Q_SLOTS:
     void textureFactoryDestroyed(QObject *o);
 
 protected:
+    struct FontKey {
+        FontKey(const QRawFont &font, int renderTypeQuality);
+
+        QFontEngine::FaceId faceId;
+        QFont::Style style;
+        int weight;
+        int renderTypeQuality;
+        QString familyName;
+        QString styleName;
+    };
+    friend bool operator==(const QSGRenderContext::FontKey &f1, const QSGRenderContext::FontKey &f2);
+    friend size_t qHash(const QSGRenderContext::FontKey &f, size_t seed);
+
     // Hold m_sg with QPointer in the rare case it gets deleted before us.
     QPointer<QSGContext> m_sg;
 
     QMutex m_mutex;
     QHash<QObject *, QSGTexture *> m_textures;
     QSet<QSGTexture *> m_texturesToDelete;
-    QHash<QString, QSGDistanceFieldGlyphCache *> m_glyphCaches;
+    QHash<FontKey, QSGDistanceFieldGlyphCache *> m_glyphCaches;
 
     // References to font engines that are currently in use by native rendering glyph nodes
     // and which must be kept alive as long as they are used in the render thread.
     QHash<QFontEngine *, int> m_fontEnginesToClean;
 };
+
+inline bool operator ==(const QSGRenderContext::FontKey &f1, const QSGRenderContext::FontKey &f2)
+{
+    return f1.faceId == f2.faceId
+        && f1.style == f2.style
+        && f1.weight == f2.weight
+        && f1.renderTypeQuality == f2.renderTypeQuality
+        && f1.familyName == f2.familyName
+        && f1.styleName == f2.styleName;
+}
+
+inline size_t qHash(const QSGRenderContext::FontKey &f, size_t seed = 0)
+{
+    return qHashMulti(seed, f.faceId, f.renderTypeQuality, f.familyName, f.styleName, f.style, f.weight);
+}
+
 
 QT_END_NAMESPACE
 

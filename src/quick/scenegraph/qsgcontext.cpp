@@ -292,6 +292,20 @@ private:
     QElapsedTimer m_wallTime;
 };
 
+QSGRenderContext::FontKey::FontKey(const QRawFont &font, int quality)
+{
+    QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
+    if (fe != nullptr)
+        faceId = fe->faceId();
+    style = font.style();
+    weight = font.weight();
+    renderTypeQuality = quality;
+    if (faceId.filename.isEmpty()) {
+        familyName = font.familyName();
+        styleName = font.styleName();
+    }
+}
+
 /*!
     \class QSGContext
 

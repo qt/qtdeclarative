@@ -227,27 +227,6 @@ QSGTexture *QSGDefaultRenderContext::compressedTextureForFactory(const QSGCompre
     return nullptr;
 }
 
-QString QSGDefaultRenderContext::fontKey(const QRawFont &font, int renderTypeQuality)
-{
-    QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
-    if (fe && !fe->faceId().filename.isEmpty()) {
-        QByteArray keyName =
-                fe->faceId().filename + ' ' + QByteArray::number(fe->faceId().index)
-                + (font.style() != QFont::StyleNormal ? QByteArray(" I") : QByteArray())
-                + (font.weight() != QFont::Normal ? ' ' + QByteArray::number(font.weight()) : QByteArray())
-                + ' ' + QByteArray::number(renderTypeQuality)
-                + QByteArray(" DF");
-        return QString::fromUtf8(keyName);
-    } else {
-        return QString::fromLatin1("%1_%2_%3_%4_%5")
-            .arg(font.familyName())
-            .arg(font.styleName())
-            .arg(font.weight())
-            .arg(font.style())
-            .arg(renderTypeQuality);
-    }
-}
-
 void QSGDefaultRenderContext::initializeRhiShader(QSGMaterialShader *shader, QShader::Variant shaderVariant)
 {
     QSGMaterialShaderPrivate::get(shader)->prepare(shaderVariant);
@@ -263,7 +242,7 @@ void QSGDefaultRenderContext::preprocess()
 
 QSGCurveGlyphAtlas *QSGDefaultRenderContext::curveGlyphAtlas(const QRawFont &font)
 {
-    QString key = fontKey(font, 0);
+    FontKey key = FontKey(font, 0);
     QSGCurveGlyphAtlas *atlas = m_curveGlyphAtlases.value(key, nullptr);
     if (atlas == nullptr) {
         atlas = new QSGCurveGlyphAtlas(font);
@@ -275,7 +254,7 @@ QSGCurveGlyphAtlas *QSGDefaultRenderContext::curveGlyphAtlas(const QRawFont &fon
 
 QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(const QRawFont &font, int renderTypeQuality)
 {
-    QString key = fontKey(font, renderTypeQuality);
+    FontKey key(font, renderTypeQuality);
     QSGDistanceFieldGlyphCache *cache = m_glyphCaches.value(key, 0);
     if (!cache && font.isValid()) {
         cache = new QSGRhiDistanceFieldGlyphCache(this, font, renderTypeQuality);
