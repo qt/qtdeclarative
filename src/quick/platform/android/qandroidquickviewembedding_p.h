@@ -30,6 +30,9 @@ namespace QtAndroidQuickViewEmbedding
     void setRootObjectProperty(JNIEnv *env, jobject, jlong parentWindowReference,
                                jstring propertyName, jobject value);
     Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(setRootObjectProperty)
+    jobject getRootObjectProperty(JNIEnv *env, jobject, jlong parentWindowReference,
+                                  jstring propertyName);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(getRootObjectProperty)
 };
 
 QT_END_NAMESPACE

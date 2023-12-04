@@ -87,11 +87,70 @@ namespace QtAndroidQuickViewEmbedding
             qWarning("Setting the property type of %s is not supported.", valueClassname.data());
     }
 
+    jobject getRootObjectProperty(JNIEnv *env, jobject object, jlong windowReference,
+                                  jstring propertyName)
+    {
+        Q_UNUSED(object);
+        Q_ASSERT(env);
+
+        const QString property = QJniObject(propertyName).toString();
+        QQuickView *view = reinterpret_cast<QQuickView *>(windowReference);
+        QQuickItem *rootObject = view->rootObject();
+        if (!rootObject) {
+            qWarning("Cannot read property %s as the QtQuickView instance (%s)"
+                     "does not own a root object.",
+                     qPrintable(property),
+                     qPrintable(view->source().toString()));
+            return nullptr;
+        }
+
+        const QMetaObject *rootMetaObject = rootObject->metaObject();
+        int propertyIndex = rootMetaObject->indexOfProperty(property.toUtf8().constData());
+        if (propertyIndex < 0) {
+            qWarning("Cannot read property %s as it does not exist in the root QML object.",
+                     qPrintable(property));
+            return nullptr;
+        }
+
+        QMetaProperty metaProperty = rootMetaObject->property(propertyIndex);
+        QVariant propertyValue = metaProperty.read(rootObject);
+        const int propertyTypeId = propertyValue.typeId();
+
+        switch (propertyTypeId) {
+        case QMetaType::Type::Int:
+            return env->NewLocalRef(
+                QJniObject::construct<QtJniTypes::Integer>(get<int>(std::move(propertyValue)))
+                    .object());
+        case QMetaType::Type::Double:
+            return env->NewLocalRef(
+                QJniObject::construct<QtJniTypes::Double>(get<double>(std::move(propertyValue)))
+                    .object());
+        case QMetaType::Type::Float:
+            return env->NewLocalRef(
+                QJniObject::construct<QtJniTypes::Float>(get<float>(std::move(propertyValue)))
+                    .object());
+        case QMetaType::Type::Bool:
+            return env->NewLocalRef(
+                QJniObject::construct<QtJniTypes::Boolean>(get<bool>(std::move(propertyValue)))
+                    .object());
+        case QMetaType::Type::QString:
+            return env->NewLocalRef(
+                QJniObject::fromString(get<QString>(std::move(propertyValue))).object());
+        default:
+            qWarning("Property %s cannot be converted to a supported Java data type.",
+                     qPrintable(property));
+        }
+
+        return nullptr;
+    }
+
     bool registerNatives(QJniEnvironment& env) {
         return env.registerNativeMethods(QtJniTypes::Traits<QtJniTypes::QtQuickView>::className(),
                                          {Q_JNI_NATIVE_SCOPED_METHOD(createQuickView,
                                                                      QtAndroidQuickViewEmbedding),
                                           Q_JNI_NATIVE_SCOPED_METHOD(setRootObjectProperty,
+                                                                     QtAndroidQuickViewEmbedding),
+                                          Q_JNI_NATIVE_SCOPED_METHOD(getRootObjectProperty,
                                                                      QtAndroidQuickViewEmbedding)});
     }
 }
