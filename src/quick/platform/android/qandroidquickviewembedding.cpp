@@ -6,6 +6,7 @@
 #include <QtCore/qjnienvironment.h>
 #include <QtCore/qjniobject.h>
 #include <QtCore/qjnitypes.h>
+#include <QtQuick/qquickitem.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -13,6 +14,13 @@ Q_DECLARE_JNI_CLASS(QtDelegate, "org/qtproject/qt/android/QtEmbeddedContextDeleg
 Q_DECLARE_JNI_CLASS(QtQuickView, "org/qtproject/qt/android/QtQuickView");
 Q_DECLARE_JNI_CLASS(QtWindow, "org/qtproject/qt/android/QtWindow");
 Q_DECLARE_JNI_CLASS(View, "android/view/View");
+
+Q_DECLARE_JNI_CLASS(Void, "java/lang/Void");
+Q_DECLARE_JNI_CLASS(Integer, "java/lang/Integer");
+Q_DECLARE_JNI_CLASS(Double, "java/lang/Double");
+Q_DECLARE_JNI_CLASS(Float, "java/lang/Float");
+Q_DECLARE_JNI_CLASS(Boolean, "java/lang/Boolean");
+Q_DECLARE_JNI_CLASS(String, "java/lang/String");
 
 namespace QtAndroidQuickViewEmbedding
 {
@@ -41,10 +49,50 @@ namespace QtAndroidQuickViewEmbedding
         });
     }
 
+    void setRootObjectProperty(JNIEnv *env, jobject object, jlong windowReference,
+                               jstring propertyName, jobject value)
+    {
+        Q_UNUSED(env);
+        Q_UNUSED(object);
+
+        QQuickItem *rootObject = reinterpret_cast<QQuickView *>(windowReference)->rootObject();
+        if (!rootObject) {
+            qWarning() << "QtQuickView instance does not own a root object.";
+            return;
+        }
+
+        const QString property = QJniObject(propertyName).toString();
+        const QMetaObject *rootMetaObject = rootObject->metaObject();
+        int propertyIndex = rootMetaObject->indexOfProperty(qPrintable(property));
+        if (propertyIndex < 0) {
+            qWarning("Property %s does not exist in the root QML object.", qPrintable(property));
+            return;
+        }
+
+        QMetaProperty metaProperty = rootMetaObject->property(propertyIndex);
+        const QJniObject propertyValue(value);
+        const QByteArray valueClassname = propertyValue.className();
+
+        if (valueClassname == QtJniTypes::Traits<QtJniTypes::String>::className())
+            metaProperty.write(rootObject, propertyValue.toString());
+        else if (valueClassname == QtJniTypes::Traits<QtJniTypes::Integer>::className())
+            metaProperty.write(rootObject, propertyValue.callMethod<jint>("intValue"));
+        else if (valueClassname == QtJniTypes::Traits<QtJniTypes::Double>::className())
+            metaProperty.write(rootObject, propertyValue.callMethod<jdouble>("doubleValue"));
+        else if (valueClassname == QtJniTypes::Traits<QtJniTypes::Float>::className())
+            metaProperty.write(rootObject, propertyValue.callMethod<jfloat>("floatValue"));
+        else if (valueClassname == QtJniTypes::Traits<QtJniTypes::Boolean>::className())
+            metaProperty.write(rootObject, propertyValue.callMethod<jboolean>("booleanValue"));
+        else
+            qWarning("Setting the property type of %s is not supported.", valueClassname.data());
+    }
+
     bool registerNatives(QJniEnvironment& env) {
         return env.registerNativeMethods(QtJniTypes::Traits<QtJniTypes::QtQuickView>::className(),
-                                {Q_JNI_NATIVE_SCOPED_METHOD(createQuickView,
-                                                            QtAndroidQuickViewEmbedding)});
+                                         {Q_JNI_NATIVE_SCOPED_METHOD(createQuickView,
+                                                                     QtAndroidQuickViewEmbedding),
+                                          Q_JNI_NATIVE_SCOPED_METHOD(setRootObjectProperty,
+                                                                     QtAndroidQuickViewEmbedding)});
     }
 }
 
