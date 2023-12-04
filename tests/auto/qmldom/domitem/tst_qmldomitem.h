@@ -2858,6 +2858,17 @@ private slots:
         QCOMPARE(secondContinue.field(Fields::label).internalKind(), DomType::Empty);
     }
 
+    void emptyMethodBody()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/emptyMethodBody.qml"_s;
+        const DomItem rootQmlObject = rootQmlObjectFromFile(testFile, qmltypeDirs);
+        const DomItem block = rootQmlObject.path(".methods[\"f\"][0].body.scriptElement");
+
+        QCOMPARE(block.internalKind(), DomType::ScriptBlockStatement);
+        QCOMPARE(block.field(Fields::statements).indexes(), 0);
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

@@ -1637,15 +1637,6 @@ void tst_qmlls_utils::completions_data()
             { u"component"_s, CompletionItemKind::Keyword },
     });
 
-    const auto jsStatements = ExpectedCompletions({
-            { u"return"_s, CompletionItemKind::Keyword },
-            { u"for"_s, CompletionItemKind::Keyword },
-            { u"while"_s, CompletionItemKind::Keyword },
-            { u"do"_s, CompletionItemKind::Keyword },
-            { u"switch"_s, CompletionItemKind::Keyword },
-            { u"foo"_s, CompletionItemKind::Property },
-    });
-
     const auto mixedTypes = ExpectedCompletions({
             { u"Zzz"_s, CompletionItemKind::Class },
             { u"Item"_s, CompletionItemKind::Class },
@@ -1883,14 +1874,6 @@ void tst_qmlls_utils::completions_data()
     QTest::newRow("inMethodReturnType")
             << file << 17 << 54 << mixedTypes
             << QStringList{ u"QtQuick"_s, u"foo"_s, u"root"_s, } << None;
-
-    QTest::newRow("inMethodBody") << file << 15 << 22
-                                  << (jsStatements
-                                      + ExpectedCompletions({
-                                              { u"foo"_s, CompletionItemKind::Property },
-                                              { u"root"_s, CompletionItemKind::Value },
-                                      }))
-                                  << QStringList{ u"QtQuick"_s, u"vector4d"_s } << None;
 
     QTest::newRow("letStatement") << file << 95 << 13 << ExpectedCompletions({})
                                   << QStringList{ u"QtQuick"_s, u"vector4d"_s, u"root"_s } << None;
@@ -3053,6 +3036,29 @@ void tst_qmlls_utils::completions_data()
                                   << QStringList{ propertyCompletion, u"x"_s, u"f"_s,
                                                   u"nestedLabel1"_s, u"multiLabel1"_s }
                                   << None;
+
+    QTest::newRow("insideMethodBody")
+            << testFile(u"completions/functionBody.qml"_s) << 5 << 1
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { forStatementCompletion, CompletionItemKind::Snippet } }
+            << QStringList{ propertyCompletion } << None;
+
+    QTest::newRow("insideMethodBody2")
+            << testFile(u"completions/functionBody.qml"_s) << 11 << 11
+            << ExpectedCompletions{ { u"helloProperty"_s, CompletionItemKind::Property }, }
+            << QStringList{ u"badProperty"_s, forStatementCompletion } << None;
+
+    QTest::newRow("insideMethodBodyStart")
+            << testFile(u"completions/functionBody.qml"_s) << 11 << 1
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { forStatementCompletion, CompletionItemKind::Snippet } }
+            << QStringList{ u"helloProperty"_s } << None;
+
+    QTest::newRow("insideMethodBodyEnd")
+            << testFile(u"completions/functionBody.qml"_s) << 12 << 1
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    { forStatementCompletion, CompletionItemKind::Snippet } }
+            << QStringList{ u"helloProperty"_s } << None;
 }
 
 void tst_qmlls_utils::completions()
@@ -3162,8 +3168,6 @@ void tst_qmlls_utils::completions()
                 "there is nothing to complete, or there is nothing behind 'QQ.' and the parser "
                 "fails because of the unexpected '.'",
                 Abort);
-        QEXPECT_FAIL("inMethodBody", "Completion for JS Statement/keywords not implemented yet",
-                     Abort);
         QEXPECT_FAIL("letStatementAfterEqual", "Completion not implemented yet!", Abort);
         QEXPECT_FAIL("binaryExpressionMissingRHSWithDefaultProperty",
                      "Current parser cannot recover from this error yet!", Abort);

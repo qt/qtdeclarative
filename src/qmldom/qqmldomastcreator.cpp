@@ -645,6 +645,12 @@ void QQmlDomAstCreator::endVisit(AST::FunctionDeclaration *fDef)
                     currentScriptNodeEl().takeVariant(), bodyPath, bodyTree));
         }
         removeCurrentScriptNode({});
+    } else {
+        // for convenience purposes: insert an empty BlockStatement
+        auto body = std::make_shared<ScriptElements::BlockStatement>(
+                combineLocations(fDef->lbraceToken, fDef->rbraceToken));
+        m.body->setScriptElement(finalizeScriptExpression(ScriptElementVariant::fromElement(body),
+                                                          bodyPath, bodyTree));
     }
 
     if (fDef->typeAnnotation) {

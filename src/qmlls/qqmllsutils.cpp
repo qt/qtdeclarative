@@ -2546,13 +2546,13 @@ Here is a list of statements that do \e{not} get any completions:
     \li DebuggerStatement completion does not strike as being very useful
 \endlist
 */
-QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &currentItem)
+QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &currentItem,
+                                                                const CompletionContextStrings &ctx)
 {
     QList<CompletionItem> result = suggestVariableDeclarationStatementCompletion();
 
     // expression statements
-    CompletionContextStrings empty{ QString(), 0 };
-    result << scriptIdentifierCompletion(currentItem, empty);
+    result << scriptIdentifierCompletion(currentItem, ctx);
 
     // block statement
     result.append(makeSnippet("{ statements... }", "{\n\t$0\n}"));
@@ -2766,7 +2766,7 @@ static QList<CompletionItem> insideForStatementCompletion(const DomItem &current
     }
 
     if (afterLocation(rightParenthesis, ctx)) {
-        return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+        return QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
     }
 
     return {};
@@ -2807,10 +2807,10 @@ static QList<CompletionItem> insideIfStatement(const DomItem &currentItem,
         return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
     }
     if (betweenLocations(rightParenthesis, ctx, elseKeyword)) {
-        return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+        return QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
     }
     if (afterLocation(elseKeyword, ctx)) {
-        return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+        return QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
     }
     return {};
 }
@@ -2838,7 +2838,7 @@ static QList<CompletionItem> insideWhileStatement(const DomItem &currentItem,
         return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
     }
     if (afterLocation(rightParenthesis, ctx)) {
-        return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+        return QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
     }
     return {};
 }
@@ -2853,7 +2853,7 @@ static QList<CompletionItem> insideDoWhileStatement(const DomItem &currentItem,
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
 
     if (betweenLocations(doKeyword, ctx, whileKeyword)) {
-        return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+        return QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
     }
     if (betweenLocations(leftParenthesis, ctx, rightParenthesis)) {
         return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
@@ -2882,7 +2882,7 @@ static QList<CompletionItem> insideForEachStatement(const DomItem &currentItem,
     }
 
     if (afterLocation(rightParenthesis, ctx)) {
-        return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+        return QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
     }
 
     return {};
@@ -2917,7 +2917,7 @@ static QList<CompletionItem> insideCaseClause(const DomItem &currentItem,
         return res;
     }
     if (afterLocation(colonToken, ctx)) {
-        const QList<CompletionItem> res = QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+        const QList<CompletionItem> res = QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
         return res;
     }
 
@@ -2993,7 +2993,7 @@ static QList<CompletionItem> insideCaseBlock(const DomItem &currentItem,
 
     // if there is a previous case or default clause, you can still add statements to it
     if (const auto previousCase = previousCaseOfCaseBlock(currentItem, ctx))
-        return QQmlLSUtils::suggestJSStatementCompletion(previousCase);
+        return QQmlLSUtils::suggestJSStatementCompletion(previousCase, ctx);
 
     // otherwise, only complete case and default
     return QQmlLSUtils::suggestCaseAndDefaultStatementCompletion();
@@ -3007,7 +3007,7 @@ static QList<CompletionItem> insideDefaultClause(const DomItem &currentItem,
     const QQmlJS::SourceLocation colonToken = regions[ColonTokenRegion];
 
     if (afterLocation(colonToken, ctx)) {
-        const QList<CompletionItem> res = QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+        const QList<CompletionItem> res = QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
         return res;
     }
 
@@ -3118,7 +3118,7 @@ static QList<CompletionItem> insideLabelledStatement(const DomItem &currentItem,
     const QQmlJS::SourceLocation colon = regions[ColonTokenRegion];
 
     if (afterLocation(colon, ctx)) {
-        return QQmlLSUtils::suggestJSStatementCompletion(currentItem);
+        return QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
     }
     // note: the case "beforeLocation(ctx, colon)" probably never happens:
     // this is because without the colon, the parser will probably not parse this as a
@@ -3227,14 +3227,12 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             return {};
         case DomType::Binding:
             return insideBindingCompletion(currentParent, ctx);
-        case DomType::ScriptExpression:
-            return scriptIdentifierCompletion(currentParent, ctx);
         case DomType::Import:
             return insideImportCompletion(currentParent, ctx);
         case DomType::ScriptForStatement:
             return insideForStatementCompletion(currentParent, ctx);
         case DomType::ScriptBlockStatement:
-            return QQmlLSUtils::suggestJSStatementCompletion(currentParent);
+            return QQmlLSUtils::suggestJSStatementCompletion(currentParent, ctx);
         case DomType::QmlFile:
             return insideQmlFileCompletion(currentParent, ctx);
         case DomType::QmlObject:
