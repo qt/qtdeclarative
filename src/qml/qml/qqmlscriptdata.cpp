@@ -13,11 +13,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlScriptData::QQmlScriptData()
-    : m_loaded(false)
-{
-}
-
 QQmlRefPointer<QQmlContextData> QQmlScriptData::qmlContextDataForContext(
         const QQmlRefPointer<QQmlContextData> &parentQmlContextData)
 {

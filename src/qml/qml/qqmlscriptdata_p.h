@@ -33,7 +33,7 @@ class Q_AUTOTEST_EXPORT QQmlScriptData final : public QQmlRefCounted<QQmlScriptD
 private:
     friend class QQmlTypeLoader;
 
-    QQmlScriptData();
+    QQmlScriptData() = default;
 
 public:
     QUrl url;
@@ -51,7 +51,7 @@ private:
     QQmlRefPointer<QQmlContextData> qmlContextDataForContext(
             const QQmlRefPointer<QQmlContextData> &parentQmlContextData);
 
-    bool m_loaded;
+    bool m_loaded = false;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> m_precompiledScript;
     QV4::PersistentValue m_value;
 };
