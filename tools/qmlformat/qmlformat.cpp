@@ -168,7 +168,7 @@ static bool parseFile(const QString &filename, const Options &options)
         checks = WriteOutCheck::None;
     }
 
-    MutableDomItem res;
+    bool res = false;
     if (options.inplace) {
         if (options.verbose)
             qWarning().noquote() << "Writing to file" << filename;
@@ -183,7 +183,7 @@ static bool parseFile(const QString &filename, const Options &options)
         res = fileItem.writeOutForFile(ow, checks);
         ow.flush();
     }
-    return bool(res);
+    return res;
 }
 
 Options buildCommandLineOptions(const QCoreApplication &app)

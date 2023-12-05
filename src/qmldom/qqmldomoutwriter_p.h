@@ -147,7 +147,13 @@ public:
             updExp->info().expr = exp;
         }
     }
-    DomItem updatedFile(const DomItem &fileItem);
+    DomItem restoreWrittenFileItem(const DomItem &fileItem);
+
+private:
+    DomItem writtenQmlFileItem(const DomItem &fileItem, Path filePath);
+    DomItem writtenJsFileItem(const DomItem &fileItem, Path filePath);
+    static void logScriptExprUpdateSkipped(DomItem exprItem, Path exprPath,
+                                           std::shared_ptr<ScriptExpression> formattedExpr);
 };
 
 } // end namespace Dom

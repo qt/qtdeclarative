@@ -1334,50 +1334,57 @@ DomItem::WriteOutCheckResult DomItem::performWriteOutChecks(const DomItem &origi
     return WriteOutCheckResult::Success;
 }
 
-DomItem DomItem::writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks) const
+/*!
+   \internal
+    Performes WriteOut of the FileItem and verifies the consistency of the DOM structure.
+
+    OutWriter is essentially a visitor traversing the DOM structure, starting from
+    the current item representing a FileItem.
+    While traversing it might be saving some intermediate information, used later for restoring
+    written out item. Restoration is needed to validate that the DOM structure of the written item
+    has not changed.
+*/
+bool DomItem::writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks) const
 {
     ow.indentNextlines = true;
-    //writeOut, a.k.a. format file
     writeOut(ow);
     ow.eof();
-    DomItem fObj = fileObject();
-    //Creating new environment, which will own a reformatted file
-    //using reformatted script expressions, which were
-    //stored inside OW during the ScriptExpression::writeOut step
-    DomItem copy = ow.updatedFile(fObj);
+
+    auto currentFileItem = fileObject();
+    auto writtenFileItem = ow.restoreWrittenFileItem(currentFileItem);
     WriteOutCheckResult result = WriteOutCheckResult::Success;
     if (extraChecks & WriteOutCheck::All)
-        result = performWriteOutChecks(fObj, copy, ow, extraChecks);
-    return result == WriteOutCheckResult::Success ? copy : DomItem{};
+        result = performWriteOutChecks(currentFileItem, writtenFileItem, ow, extraChecks);
+    return result == WriteOutCheckResult::Success ? bool(writtenFileItem) : false;
 }
 
-DomItem DomItem::writeOut(const QString &path, int nBackups, const LineWriterOptions &options,
-                          FileWriter *fw, WriteOutChecks extraChecks) const
+bool DomItem::writeOut(const QString &path, int nBackups, const LineWriterOptions &options, 
+                       FileWriter *fw, WriteOutChecks extraChecks) const
 {
-    DomItem res = *this;
-    DomItem copy;
     FileWriter localFw;
     if (!fw)
         fw = &localFw;
-    switch (fw->write(
+    auto status = fw->write(
             path,
-            [this, path, &copy, &options, extraChecks](QTextStream &ts) {
+            [this, path, &options, extraChecks](QTextStream &ts) {
                 LineWriter lw([&ts](QStringView s) { ts << s; }, path, options);
                 OutWriter ow(lw);
-                copy = writeOutForFile(ow, extraChecks);
-                return bool(copy);
+                return writeOutForFile(ow, extraChecks);
             },
-            nBackups)) {
+            nBackups);
+    switch (status) {
+    case FileWriter::Status::DidWrite:
+    case FileWriter::Status::SkippedEqual:
+        return true;
     case FileWriter::Status::ShouldWrite:
     case FileWriter::Status::SkippedDueToFailure:
         qCWarning(writeOutLog) << "failure reformatting " << path;
-        break;
-    case FileWriter::Status::DidWrite:
-    case FileWriter::Status::SkippedEqual:
-        res = copy;
-        break;
+        return false;
+    default:
+        qCWarning(writeOutLog) << "Unknown FileWriter::Status ";
+        Q_ASSERT(false);
+        return false;
     }
-    return res;
 }
 
 bool DomItem::isCanonicalChild(const DomItem &item) const

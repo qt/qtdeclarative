@@ -649,7 +649,7 @@ QString TestQmlformat::formatInMemory(const QString &fileToFormat, bool *didSucc
     env->loadPendingDependencies();
     MutableDomItem myFile = tFile.field(Fields::currentItem);
 
-    DomItem writtenOut;
+    bool writtenOut;
     QString resultStr;
     if (myFile.field(Fields::isValid).value().toBool()) {
         WriteOutChecks checks = extraChecks;
@@ -667,7 +667,7 @@ QString TestQmlformat::formatInMemory(const QString &fileToFormat, bool *didSucc
         res.flush();
     }
     if (didSucceed)
-        *didSucceed = bool(writtenOut);
+        *didSucceed = writtenOut;
     return resultStr;
 }
 

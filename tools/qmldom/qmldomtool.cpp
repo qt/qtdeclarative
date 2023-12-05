@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
                 QDir d(rDir);
                 target = d.filePath(f.fileName());
             }
-            MutableDomItem res = qmlFile.writeOut(target, nBackups, lwOptions, &fw, checks);
+            auto res = qmlFile.writeOut(target, nBackups, lwOptions, &fw, checks);
             switch (fw.status) {
             case FileWriter::Status::ShouldWrite:
             case FileWriter::Status::SkippedDueToFailure:
@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
             case FileWriter::Status::SkippedEqual:
                 qDebug() << "no change";
             }
-            hadFailures = hadFailures || !bool(res);
+            hadFailures = hadFailures || !res;
         }
     } else if (parser.isSet(dumpAstOption)) {
         if (pathsToDump.size() > 1) {

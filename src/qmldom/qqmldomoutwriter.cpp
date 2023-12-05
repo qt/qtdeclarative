@@ -267,131 +267,98 @@ OutWriter &OutWriter::writeRegion(FileLocationRegion region, QStringView toWrite
     return *this;
 }
 /*!
-\internal
-Creates a DomEnv which will contain a reformatted file also finalises reformatting of the file
-*/
-DomItem OutWriter::updatedFile(const DomItem &fileItem)
+   \internal
+    Restores written out FileItem using intermediate information saved during DOM traversal.
+    It enables verifying DOM consistency of the written item later.
+
+    At the moment of writing, intermediate information consisting only of UpdatedScriptExpression,
+    however this is subject for change. The process of restoration is the following:
+    1. Creating copy of the initial fileItem
+    2. Updating relevant data/subitems modified during the WriteOut
+    3. Returning an item containing updates.
+ */
+DomItem OutWriter::restoreWrittenFileItem(const DomItem &fileItem)
 {
-    // TODO(QTBUG-117849) unify for JS and QML files
-    if (std::shared_ptr<JsFile> jsFilePtr = fileItem.ownerAs<JsFile>()) {
-        std::shared_ptr<JsFile> copyPtr = jsFilePtr->makeCopy(fileItem);
-        DomItem env = fileItem.environment();
-        std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>();
-        Q_ASSERT(envPtr);
-        auto newEnvPtr =
-                std::make_shared<DomEnvironment>(envPtr, envPtr->loadPaths(), envPtr->options());
-        newEnvPtr->addJsFile(copyPtr);
-        MutableDomItem copy = MutableDomItem(DomItem(newEnvPtr).copy(copyPtr));
-        FileLocations::Tree newLoc = topLocation;
-        Path filePath = fileItem.canonicalPath();
-        if (newLoc->path() != filePath) {
-            if (newLoc->path()) {
-                if (newLoc->path().length() > filePath.length()
-                    && newLoc->path().mid(0, filePath.length()) == filePath) {
-                    newLoc = FileLocations::createTree(filePath);
-                    FileLocations::Tree loc =
-                            FileLocations::ensure(newLoc, newLoc->path().mid(filePath.length()),
-                                                  AttachedInfo::PathType::Relative);
-                    loc->setSubItems(topLocation->subItems());
-                } else {
-                    qCWarning(writeOutLog)
-                            << "failed to base fileLocations in OutWriter (" << newLoc->path()
-                            << ") to current file (" << filePath << ")";
-                }
-            } else {
-                newLoc = FileLocations::createTree(filePath);
-                Q_ASSERT(newLoc->subItems().isEmpty() && newLoc->info().regions.isEmpty());
-            }
-        }
-        copyPtr->setFileLocationsTree(newLoc);
-        UpdatedScriptExpression::visitTree(
-                reformattedScriptExpressions,
-                [&copy, filePath](const Path &p, const UpdatedScriptExpression::Tree &t) {
-                    if (std::shared_ptr<ScriptExpression> exprPtr = t->info().expr) {
-                        Q_ASSERT(p.mid(0, filePath.length()) == filePath);
-                        //Set reformatted expression to the JsFile
-                        //hacky workaround to avoid mutating DOM API
-                        copy.mutableAs<JsFile>()->setExpression(exprPtr);
-                    }
-                    return true;
-                });
-        return copy.item();
+    switch (fileItem.internalKind()) {
+    case DomType::QmlFile:
+        return writtenQmlFileItem(fileItem, fileItem.canonicalPath());
+    case DomType::JsFile:
+        return writtenJsFileItem(fileItem, fileItem.canonicalPath());
+    default:
+        qCWarning(writeOutLog) << fileItem.internalKind() << " is not supported";
+        return DomItem{};
     }
-    Q_ASSERT(fileItem.internalKind() == DomType::QmlFile);
-    if (std::shared_ptr<QmlFile> qmlFilePtr = fileItem.ownerAs<QmlFile>()) {
-        std::shared_ptr<QmlFile> copyPtr = qmlFilePtr->makeCopy(fileItem);
-        DomItem env = fileItem.environment();
-        std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>();
-        Q_ASSERT(envPtr);
-        auto newEnvPtr = std::make_shared<DomEnvironment>(
-                envPtr, envPtr->loadPaths(), envPtr->options());
-        newEnvPtr->addQmlFile(copyPtr);
-        MutableDomItem copy = MutableDomItem(DomItem(newEnvPtr).copy(copyPtr));
-        FileLocations::Tree newLoc = topLocation;
-        Path qmlFilePath = fileItem.canonicalPath();
-        if (newLoc->path() != qmlFilePath) {
-            if (newLoc->path()) {
-                if (newLoc->path().length() > qmlFilePath.length()
-                    && newLoc->path().mid(0, qmlFilePath.length()) == qmlFilePath) {
-                    newLoc = FileLocations::createTree(qmlFilePath);
-                    FileLocations::Tree loc =
-                            FileLocations::ensure(newLoc, newLoc->path().mid(qmlFilePath.length()),
-                                                  AttachedInfo::PathType::Relative);
-                    loc->setSubItems(topLocation->subItems());
-                } else {
-                    qCWarning(writeOutLog)
-                            << "failed to base fileLocations in OutWriter (" << newLoc->path()
-                            << ") to current file (" << qmlFilePath << ")";
-                }
-            } else {
-                newLoc = FileLocations::createTree(qmlFilePath);
-                Q_ASSERT(newLoc->subItems().isEmpty() && newLoc->info().regions.isEmpty());
-            }
-        }
-        copyPtr->setFileLocationsTree(newLoc);
-        UpdatedScriptExpression::visitTree(
-                reformattedScriptExpressions,
-                [&copy, qmlFilePath](const Path &p, const UpdatedScriptExpression::Tree &t) {
-                    if (const std::shared_ptr<ScriptExpression> &exprPtr = t->info().expr) {
-                        Q_ASSERT(p.mid(0, qmlFilePath.length()) == qmlFilePath);
-                        MutableDomItem targetExpr = copy.path(p.mid(qmlFilePath.length()));
-                        if (!targetExpr)
-                            qCWarning(writeOutLog) << "failed to get" << p.mid(qmlFilePath.length())
-                                                   << "from" << copy.canonicalPath();
-                        else if (exprPtr->ast()
-                                 || (!targetExpr.as<ScriptExpression>()
-                                     || !targetExpr.as<ScriptExpression>()->ast()))
-                            targetExpr.setScript(exprPtr);
-                        else {
-                            qCWarning(writeOutLog).noquote()
-                                    << "Skipped update of reformatted ScriptExpression with "
-                                       "code:\n---------------\n"
-                                    << exprPtr->code() << "\n---------------\n preCode:" <<
-                                    [exprPtr](const Sink &s) { sinkEscaped(s, exprPtr->preCode()); }
-                                    << "\n postCode: " <<
-                                    [exprPtr](const Sink &s) { sinkEscaped(s, exprPtr->postCode()); }
-                                    << "\n as it failed standalone reparse with errors:" <<
-                                    [&targetExpr, exprPtr](const Sink &s) {
-                                        targetExpr.item()
-                                                .copy(exprPtr, targetExpr.canonicalPath())
-                                                .iterateErrors(
-                                                        [s](const DomItem &, const ErrorMessage &msg) {
-                                                            s(u"\n  ");
-                                                            msg.dump(s);
-                                                            return true;
-                                                        },
-                                                        true);
-                                    }
-                                    << "\n";
-                        }
-                    }
-                    return true;
-                });
-        return copy.item();
-    }
-    return DomItem();
 }
 
+DomItem OutWriter::writtenQmlFileItem(const DomItem &fileItem, Path filePath)
+{
+    Q_ASSERT(fileItem.internalKind() == DomType::QmlFile);
+    auto mutableFile = fileItem.makeCopy(DomItem::CopyOption::EnvDisconnected);
+    // QmlFile specific visitor for reformattedScriptExpressions tree
+    // lambda function responsible for the update of the initial expression by the formatted one
+    auto exprUpdater = [&mutableFile, filePath](Path p, UpdatedScriptExpression::Tree t) {
+        if (std::shared_ptr<ScriptExpression> formattedExpr = t->info().expr) {
+            Q_ASSERT(p.mid(0, filePath.length()) == filePath);
+            MutableDomItem originalExprItem = mutableFile.path(p.mid(filePath.length()));
+            if (!originalExprItem)
+                qCWarning(writeOutLog) << "failed to get" << p.mid(filePath.length()) << "from"
+                                       << mutableFile.canonicalPath();
+            // Verifying originalExprItem.as<ScriptExpression>() == false is handy
+            // because we can't call setScript on the ScriptExpression itself and it needs to
+            // be called on the container / parent item. See setScript for details
+            else if (formattedExpr->ast()
+                     || (!originalExprItem.as<ScriptExpression>()
+                         || !originalExprItem.as<ScriptExpression>()->ast()))
+                originalExprItem.setScript(formattedExpr);
+            else {
+                logScriptExprUpdateSkipped(originalExprItem.item(),
+                                           originalExprItem.canonicalPath(), formattedExpr);
+            }
+        }
+        return true;
+    };
+    // update relevant formatted expressions
+    UpdatedScriptExpression::visitTree(reformattedScriptExpressions, exprUpdater);
+    return mutableFile.item();
+}
+
+DomItem OutWriter::writtenJsFileItem(const DomItem &fileItem, Path filePath)
+{
+    Q_ASSERT(fileItem.internalKind() == DomType::JsFile);
+    auto mutableFile = fileItem.makeCopy(DomItem::CopyOption::EnvDisconnected);
+    UpdatedScriptExpression::visitTree(
+            reformattedScriptExpressions,
+            [&mutableFile, filePath](Path p, UpdatedScriptExpression::Tree t) {
+                if (std::shared_ptr<ScriptExpression> formattedExpr = t->info().expr) {
+                    Q_ASSERT(p.mid(0, filePath.length()) == filePath);
+                    mutableFile.mutableAs<JsFile>()->setExpression(formattedExpr);
+                }
+                return true;
+            });
+    return mutableFile.item();
+}
+
+void OutWriter::logScriptExprUpdateSkipped(DomItem exprItem, Path exprPath,
+                                           std::shared_ptr<ScriptExpression> formattedExpr)
+{
+    qCWarning(writeOutLog).noquote() << "Skipped update of reformatted ScriptExpression with "
+                                        "code:\n---------------\n"
+                                     << formattedExpr->code() << "\n---------------\n preCode:" <<
+            [formattedExpr](Sink s) { sinkEscaped(s, formattedExpr->preCode()); }
+                                     << "\n postCode: " <<
+            [formattedExpr](Sink s) { sinkEscaped(s, formattedExpr->postCode()); }
+                                     << "\n as it failed standalone reparse with errors:" <<
+            [exprItem, exprPath, formattedExpr](Sink s) {
+                exprItem.copy(formattedExpr, exprPath)
+                        .iterateErrors(
+                                [s](const DomItem &, const ErrorMessage &msg) {
+                                    s(u"\n  ");
+                                    msg.dump(s);
+                                    return true;
+                                },
+                                true);
+            } << "\n";
+}
 } // namespace Dom
 } // namespace QQmlJS
 QT_END_NAMESPACE
