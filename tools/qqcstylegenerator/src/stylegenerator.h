@@ -1151,7 +1151,7 @@ private:
 
         QString resources
                 = QStringLiteral("<RCC>\n")
-                += generateQrcSection("", "/qt/qml/" + styleName, "^icons/")
+                += generateQrcSection("", "/qt/qml/" + styleName, "(^icons/|\\.qrc$)")
                 += generateQrcSection("icons", "/icons/" + styleName)
                 += "</RCC>\n";
 
