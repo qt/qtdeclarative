@@ -21,6 +21,7 @@ Q_DECLARE_JNI_CLASS(Double, "java/lang/Double");
 Q_DECLARE_JNI_CLASS(Float, "java/lang/Float");
 Q_DECLARE_JNI_CLASS(Boolean, "java/lang/Boolean");
 Q_DECLARE_JNI_CLASS(String, "java/lang/String");
+Q_DECLARE_JNI_CLASS(Class, "java/lang/Class");
 
 namespace QtAndroidQuickViewEmbedding
 {
@@ -37,6 +38,7 @@ namespace QtAndroidQuickViewEmbedding
                                         qmlUrl] {
             QWindow *parentWindow = reinterpret_cast<QWindow *>(parentWindowReference);
             QQuickView* view = new QQuickView(parentWindow);
+            new SignalHelper(view);
             view->setSource(qmlUrl);
             view->setColor(QColor(Qt::transparent));
             view->setWidth(width);
@@ -144,6 +146,239 @@ namespace QtAndroidQuickViewEmbedding
         return nullptr;
     }
 
+    int addRootObjectSignalListener(JNIEnv *env, jobject, jlong windowReference, jstring signalName,
+                                   jclass argType, jobject listener)
+    {
+        Q_ASSERT(env);
+        static QHash<QByteArray, int> javaToQMetaType = {
+            { "java/lang/Void", QMetaType::Type::Void },
+            { "java/lang/String", QMetaType::Type::QString },
+            { "java/lang/Integer", QMetaType::Type::Int },
+            { "java/lang/Double", QMetaType::Type::Double },
+            { "java/lang/Float", QMetaType::Type::Float },
+            { "java/lang/Boolean", QMetaType::Type::Bool }
+        };
+
+        QQuickView *view = reinterpret_cast<QQuickView *>(windowReference);
+        if (!view) {
+            qWarning() << "QtQuickView is not loaded or ready yet.";
+            return -1;
+        }
+        QQuickItem *rootObject = view->rootObject();
+        if (!rootObject) {
+            qWarning() << "QtQuickView instance does not own a root object.";
+            return -1;
+        }
+
+        SignalHelper *signalHelper = view->findChild<SignalHelper *>();
+        const QByteArray javaArgClass = QJniObject(argType).className();
+        const char *qArgName =
+                QMetaType(javaToQMetaType.value(javaArgClass, QMetaType::Type::UnknownType)).name();
+        const QString signalMethodName = QJniObject(signalName).toString();
+
+        const QMetaObject *metaObject = rootObject->metaObject();
+        int signalIndex = -1;
+        int propertyIndex = -1;
+
+        QByteArray signalSignature = QMetaObject::normalizedSignature(qPrintable(
+                QStringLiteral("%1(%2)").arg(signalMethodName).arg(QLatin1StringView(qArgName))));
+        signalIndex = metaObject->indexOfSignal(signalSignature.constData());
+
+        // Try to check if the signal is a parameterless notifier of a property
+        // or a property name itself.
+        if (signalIndex == -1) {
+            signalSignature = QMetaObject::normalizedSignature(
+                    qPrintable(QStringLiteral("%1()").arg(signalMethodName)));
+            for (int i = 0; i < metaObject->propertyCount(); ++i) {
+                QMetaProperty metaProperty = metaObject->property(i);
+                QMetaMethod notifyMethod = metaProperty.notifySignal();
+
+                if (signalSignature == notifyMethod.methodSignature()) {
+                    signalIndex = metaObject->property(i).notifySignalIndex();
+                    propertyIndex = i;
+                    break;
+                } else if (signalMethodName == QLatin1StringView(metaProperty.name())) {
+                    signalIndex = metaObject->property(i).notifySignalIndex();
+                    signalSignature = notifyMethod.methodSignature();
+                    propertyIndex = i;
+                    break;
+                }
+            }
+        }
+
+        if (signalIndex == -1)
+            return -1;
+
+        const QMetaObject *helperMetaObject = signalHelper->metaObject();
+        QByteArray helperSignalSignature = signalSignature;
+        helperSignalSignature.replace(0, signalSignature.indexOf('('), "forwardSignal");
+        int helperSlotIndex = helperMetaObject->indexOfSlot(helperSignalSignature.constData());
+        if (helperSlotIndex == -1)
+            return -1;
+
+        // Return the id if the signal is already connected to the same listener.
+        QJniObject listenerJniObject(listener);
+        if (signalHelper->listenersMap.contains(signalSignature)) {
+            auto listenerInfos = signalHelper->listenersMap.values(signalSignature);
+            auto isSameListener = [listenerJniObject](const SignalHelper::ListenerInfo &listenerInfo) {
+                return listenerInfo.listener == listenerJniObject;
+            };
+            auto iterator = std::find_if(listenerInfos.constBegin(),
+                                         listenerInfos.constEnd(),
+                                         isSameListener);
+            if (iterator != listenerInfos.end()) {
+                qWarning("Signal listener with the ID of %i is already connected to %s signal.",
+                         iterator->id,
+                         signalSignature.constData());
+                return iterator->id;
+            }
+        }
+
+        QMetaMethod signalMethod = metaObject->method(signalIndex);
+        QMetaMethod signalForwarderMethod = helperMetaObject->method(helperSlotIndex);
+        signalHelper->connectionHandleCounter++;
+
+        QMetaObject::Connection connection;
+        if (signalHelper->listenersMap.contains(signalSignature)) {
+            connection = signalHelper
+                             ->connections[signalHelper->listenersMap.value(signalSignature).id];
+        } else {
+            connection = QObject::connect(rootObject,
+                                          signalMethod,
+                                          signalHelper,
+                                          signalForwarderMethod);
+        }
+
+        SignalHelper::ListenerInfo listenerInfo;
+        listenerInfo.listener = listenerJniObject;
+        listenerInfo.javaArgType = javaArgClass;
+        listenerInfo.propertyIndex = propertyIndex;
+        listenerInfo.signalSignature = signalSignature;
+        listenerInfo.id = signalHelper->connectionHandleCounter;
+
+        signalHelper->listenersMap.insert(signalSignature, listenerInfo);
+        signalHelper->connections.insert(listenerInfo.id, connection);
+
+        return listenerInfo.id;
+    }
+
+    bool removeRootObjectSignalListener(JNIEnv *, jobject, jlong windowReference,
+                                       jint signalListenerId)
+    {
+        QQuickView *view = reinterpret_cast<QQuickView *>(windowReference);
+        QQuickItem *rootObject = view->rootObject();
+        if (!rootObject) {
+            qWarning() << "QtQuickView instance does not own a root object.";
+            return false;
+        }
+
+        SignalHelper *signalHelper = view->findChild<SignalHelper *>();
+        if (!signalHelper->connections.contains(signalListenerId))
+            return false;
+
+        QByteArray signalSignature;
+        for (auto listenerInfoIter = signalHelper->listenersMap.begin();
+             listenerInfoIter != signalHelper->listenersMap.end();) {
+            if (listenerInfoIter->id == signalListenerId) {
+                signalSignature = listenerInfoIter->signalSignature;
+                signalHelper->listenersMap.erase(listenerInfoIter);
+                break;
+            } else {
+                ++listenerInfoIter;
+            }
+        }
+
+        // disconnect if its the last listener associated with the signal signatures
+        if (!signalHelper->listenersMap.contains(signalSignature))
+            rootObject->disconnect(signalHelper->connections.value(signalListenerId));
+
+        signalHelper->connections.remove(signalListenerId);
+        return true;
+    }
+
+    void SignalHelper::forwardSignal()
+    {
+        invokeListener(sender(), senderSignalIndex(), QVariant());
+    }
+
+    void SignalHelper::forwardSignal(int signalValue)
+    {
+        invokeListener(sender(), senderSignalIndex(), QVariant(signalValue));
+    }
+
+    void SignalHelper::forwardSignal(bool signalValue)
+    {
+        invokeListener(sender(), senderSignalIndex(), QVariant(signalValue));
+    }
+
+    void SignalHelper::forwardSignal(double signalValue)
+    {
+        invokeListener(sender(), senderSignalIndex(), QVariant(signalValue));
+    }
+
+    void SignalHelper::forwardSignal(float signalValue)
+    {
+        invokeListener(sender(), senderSignalIndex(), QVariant(signalValue));
+    }
+
+    void SignalHelper::forwardSignal(QString signalValue)
+    {
+        invokeListener(sender(), senderSignalIndex(), QVariant(signalValue));
+    }
+
+    void SignalHelper::invokeListener(QObject *sender, int senderSignalIndex, QVariant signalValue)
+    {
+        using namespace QtJniTypes;
+
+        const QMetaObject *metaObject = sender->metaObject();
+        const QMetaMethod signalMethod = metaObject->method(senderSignalIndex);
+
+        for (auto listenerInfoIter = listenersMap.constFind(signalMethod.methodSignature());
+             listenerInfoIter != listenersMap.constEnd() &&
+             listenerInfoIter.key() == signalMethod.methodSignature();
+             ++listenerInfoIter) {
+            const ListenerInfo listenerInfo = *listenerInfoIter;
+            const QByteArray javaArgType = listenerInfo.javaArgType;
+            QJniObject jSignalMethodName =
+                    QJniObject::fromString(QLatin1StringView(signalMethod.name()));
+
+            if (listenerInfo.propertyIndex != -1 && javaArgType != Traits<Void>::className())
+                signalValue = metaObject->property(listenerInfo.propertyIndex).read(sender);
+
+            int valueTypeId = signalValue.typeId();
+            QJniObject jValue;
+
+            switch (valueTypeId) {
+            case QMetaType::Type::UnknownType:
+                break;
+            case QMetaType::Type::Int:
+                jValue = qVariantToJniObject<Integer,jint>(signalValue);
+                break;
+            case QMetaType::Type::Double:
+                jValue = qVariantToJniObject<Double,jdouble>(signalValue);
+                break;
+            case QMetaType::Type::Float:
+                jValue = qVariantToJniObject<Float,jfloat>(signalValue);
+                break;
+            case QMetaType::Type::Bool:
+                jValue = qVariantToJniObject<Boolean,jboolean>(signalValue);
+                break;
+            case QMetaType::Type::QString:
+                jValue = QJniObject::fromString(get<QString>(std::move(signalValue)));
+                break;
+            default:
+                qWarning("Mismatching argument types between QML signal (%s) and the Java function "
+                         "(%s). Sending null as argument.",
+                         signalMethod.methodSignature().constData(), javaArgType.constData());
+            }
+
+            listenerInfo.listener
+                .callMethod<void, jstring, jobject>("onSignalEmitted",
+                                                    jSignalMethodName.object<jstring>(),
+                                                    jValue.object());
+        }
+    }
+
     bool registerNatives(QJniEnvironment& env) {
         return env.registerNativeMethods(QtJniTypes::Traits<QtJniTypes::QtQuickView>::className(),
                                          {Q_JNI_NATIVE_SCOPED_METHOD(createQuickView,
@@ -151,6 +386,10 @@ namespace QtAndroidQuickViewEmbedding
                                           Q_JNI_NATIVE_SCOPED_METHOD(setRootObjectProperty,
                                                                      QtAndroidQuickViewEmbedding),
                                           Q_JNI_NATIVE_SCOPED_METHOD(getRootObjectProperty,
+                                                                     QtAndroidQuickViewEmbedding),
+                                          Q_JNI_NATIVE_SCOPED_METHOD(addRootObjectSignalListener,
+                                                                     QtAndroidQuickViewEmbedding),
+                                          Q_JNI_NATIVE_SCOPED_METHOD(removeRootObjectSignalListener,
                                                                      QtAndroidQuickViewEmbedding)});
     }
 }

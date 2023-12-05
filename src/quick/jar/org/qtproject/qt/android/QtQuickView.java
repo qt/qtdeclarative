@@ -6,15 +6,27 @@ package org.qtproject.qt.android;
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
+import android.util.Log;
 
 import java.security.InvalidParameterException;
 
 public class QtQuickView extends QtView {
+    private final static String TAG = "QtQuickView";
+
+    @FunctionalInterface
+    public interface SignalListener<T>
+    {
+        void onSignalEmitted(String signalName, T value);
+    }
+
     private String m_qmlUri;
 
     native void createQuickView(String qmlUri, int width, int height, long parentWindowReference);
     native void setRootObjectProperty(long windowReference, String propertyName, Object value);
     native Object getRootObjectProperty(long windowReference, String propertyName);
+    native int addRootObjectSignalListener(long windowReference, String signalName, Class argType,
+                                          Object listener);
+    native boolean removeRootObjectSignalListener(long windowReference, int signalListenerId);
 
     public QtQuickView(Context context, String qmlUri, String appName)
         throws InvalidParameterException {
@@ -43,5 +55,22 @@ public class QtQuickView extends QtView {
     public <T extends Object> T getProperty(String propertyName)
     {
         return (T)getRootObjectProperty(windowReference(), propertyName);
+    }
+
+    public <T> int addSignalListener(String signalName, Class<T> argType,
+                                    SignalListener<T> listener)
+    {
+        int signalListenerId =
+                addRootObjectSignalListener(windowReference(), signalName, argType, listener);
+        if (signalListenerId < 0) {
+            Log.w(TAG, "The signal " + signalName
+                     + " does not exist in the root object or the arguments do not match with the listener.");
+        }
+        return signalListenerId;
+    }
+
+    public boolean removeSignalListener(int signalListenerId)
+    {
+        return removeRootObjectSignalListener(windowReference(), signalListenerId);
     }
 }

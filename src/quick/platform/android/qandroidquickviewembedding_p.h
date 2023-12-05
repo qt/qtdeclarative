@@ -33,6 +33,46 @@ namespace QtAndroidQuickViewEmbedding
     jobject getRootObjectProperty(JNIEnv *env, jobject, jlong parentWindowReference,
                                   jstring propertyName);
     Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(getRootObjectProperty)
+    int addRootObjectSignalListener(JNIEnv *env, jobject, jlong parentWindowReference,
+                                   jstring signalName, jclass argType, jobject listener);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(addRootObjectSignalListener)
+    bool removeRootObjectSignalListener(JNIEnv *env, jobject, jlong parentWindowReference,
+                                       jint signalListenerId);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(removeRootObjectSignalListener)
+
+    class SignalHelper : public QObject
+    {
+        Q_OBJECT
+    public:
+        struct ListenerInfo
+        {
+            ListenerInfo() : propertyIndex(-1) { }
+            int id;
+            QJniObject listener;
+            QByteArray javaArgType;
+            QByteArray signalSignature;
+            int propertyIndex;
+        };
+
+        int connectionHandleCounter;
+        explicit SignalHelper(QQuickView *parent) : QObject(parent), connectionHandleCounter(0) { }
+        QMultiMap<QByteArray, ListenerInfo> listenersMap;
+        QHash<int, QMetaObject::Connection> connections;
+        void invokeListener(QObject *sender, int senderSignalIndex, QVariant signalValue);
+
+        template<typename JT, typename T>
+        inline QJniObject qVariantToJniObject(const QVariant& v) {
+            return QJniObject(QtJniTypes::Traits<JT>::className(), get<T>(std::move(v)));
+        };
+
+    public slots:
+        void forwardSignal();
+        void forwardSignal(int);
+        void forwardSignal(double);
+        void forwardSignal(float);
+        void forwardSignal(bool);
+        void forwardSignal(QString);
+    };
 };
 
 QT_END_NAMESPACE
