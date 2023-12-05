@@ -89,6 +89,7 @@ private slots:
     void equalityQUrl();
     void equalityTestsWithNullOrUndefined();
     void equalityVarAndNonStorable();
+    void equalityVarAndStorable();
     void equalsUndefined();
     void evadingAmbiguity();
     void exceptionFromInner();
@@ -1656,6 +1657,44 @@ void tst_QmlCppCodegen::equalityVarAndNonStorable()
     QVERIFY(object->property("nullIsUndefined").toBool());
     QVERIFY(object->property("nullVarIsNull").toBool());
     QVERIFY(object->property("nullIsNotUndefined").toBool());
+}
+
+void tst_QmlCppCodegen::equalityVarAndStorable()
+{
+    QQmlEngine engine;
+    QQmlComponent planner(&engine, QUrl(u"qrc:/qt/qml/TestTypes/Planner.qml"_s));
+    QVERIFY2(!planner.isError(), qPrintable(planner.errorString()));
+    QScopedPointer<QObject> p(planner.create());
+    QVERIFY(!p.isNull());
+
+    QQmlComponent variable(&engine, QUrl(u"qrc:/qt/qml/TestTypes/Variable.qml"_s));
+    QVERIFY2(!variable.isError(), qPrintable(variable.errorString()));
+    QScopedPointer<QObject> v(variable.create());
+    QVERIFY(!v.isNull());
+
+    QVERIFY(p->objectName().isEmpty());
+    QMetaObject::invokeMethod(p.data(), "typeErasedRemoveOne", v.data());
+    QCOMPARE(p->objectName(), u"n");
+
+    v->setProperty("value", 1);
+    QMetaObject::invokeMethod(p.data(), "typeErasedRemoveOne", v.data());
+    QCOMPARE(p->objectName(), u"nd");
+
+    QQmlComponent constraint(&engine, QUrl(u"qrc:/qt/qml/TestTypes/BaseConstraint.qml"_s));
+    QVERIFY2(!constraint.isError(), qPrintable(constraint.errorString()));
+    QScopedPointer<QObject> c(constraint.create());
+    QVERIFY(!c.isNull());
+
+    c->setProperty("output", QVariant::fromValue(v.data()));
+    QCOMPARE(v->property("mark").toInt(), 0);
+    QMetaObject::invokeMethod(p.data(), "typeErasedRun", c.data());
+    QCOMPARE(v->property("mark").toInt(), 5);
+
+    QTest::ignoreMessage(QtDebugMsg, "success");
+    QMetaObject::invokeMethod(p.data(), "verify", 10);
+
+    QTest::ignoreMessage(QtCriticalMsg, "failed 10 11");
+    QMetaObject::invokeMethod(p.data(), "verify", 11);
 }
 
 void tst_QmlCppCodegen::equalsUndefined()

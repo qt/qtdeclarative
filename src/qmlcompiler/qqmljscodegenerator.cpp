@@ -976,6 +976,39 @@ void QQmlJSCodeGenerator::generateVariantEqualityComparison(
             + u";\n}"_s;
 }
 
+void QQmlJSCodeGenerator::generateVariantEqualityComparison(
+        const QQmlJSRegisterContent &storableContent, const QString &typedRegisterName,
+        const QString &varRegisterName, bool invert)
+{
+    // enumerations are ===-equal to their underlying type and they are stored as such.
+    // Therefore, use the underlying type right away.
+    const auto contained = storableContent.isEnumeration()
+              ? storableContent.storedType()
+              : m_typeResolver->containedType(storableContent);
+
+    if (contained->isReferenceType()) {
+        const QQmlJSRegisterContent comparable
+                = m_typeResolver->builtinType(m_typeResolver->qObjectType());
+        m_body += m_state.accumulatorVariableOut + u" = "_s + (invert ? u"!"_s : QString()) + u"(("
+                + varRegisterName + u".metaType().flags() & QMetaType::PointerToQObject) "_s
+                + u" && "_s + conversion(storableContent, comparable, typedRegisterName) + u" == "_s
+                + conversion(m_typeResolver->varType(), comparable, varRegisterName) + u");\n";
+        return;
+    }
+
+    if (m_typeResolver->isPrimitive(contained)) {
+        const QQmlJSRegisterContent comparable
+                = m_typeResolver->builtinType(m_typeResolver->jsPrimitiveType());
+        m_body += m_state.accumulatorVariableOut + u" = "_s + (invert ? u"!"_s : QString())
+                + conversion(storableContent, comparable, typedRegisterName)
+                + u".strictlyEquals("_s
+                + conversion(m_typeResolver->varType(), comparable, varRegisterName) + u");\n"_s;
+        return;
+    }
+
+    reject(u"comparison of non-primitive, non-object type to var"_s);
+}
+
 void QQmlJSCodeGenerator::generateArrayInitializer(int argc, int argv)
 {
     const QQmlJSScope::ConstPtr stored = m_state.accumulatorOut().storedType();
@@ -3227,7 +3260,11 @@ void QQmlJSCodeGenerator::generateEqualityOperation(
         const auto original = m_typeResolver->original(content);
         const auto containedOriginal = m_typeResolver->containedType(original);
 
-        if (m_typeResolver->equals(contained, containedOriginal)) {
+        if (m_typeResolver->equals(
+                    m_typeResolver->genericType(containedOriginal), original.storedType())) {
+            // The original type doesn't need any wrapping.
+            return original;
+        } else if (m_typeResolver->equals(contained, containedOriginal)) {
             if (original.isConversion()) {
                 // The original conversion origins are more accurate
                 return original.storedIn(content.storedType());
@@ -3267,6 +3304,16 @@ void QQmlJSCodeGenerator::generateEqualityOperation(
         if (!rhsName.isEmpty() && lhsName.isEmpty()) {
             // lhs content is not storable and rhs is var type
             generateVariantEqualityComparison(lhsContent, rhsName, invert);
+            return;
+        }
+
+        if (m_typeResolver->registerContains(lhsContent, m_typeResolver->varType())) {
+            generateVariantEqualityComparison(rhsContent, rhsName, lhsName, invert);
+            return;
+        }
+
+        if (m_typeResolver->registerContains(rhsContent, m_typeResolver->varType())) {
+            generateVariantEqualityComparison(lhsContent, lhsName, rhsName, invert);
             return;
         }
 

@@ -212,15 +212,11 @@ bool canStrictlyCompareWithVar(
         const QQmlJSScope::ConstPtr &rhsType)
 {
     Q_ASSERT(typeResolver);
-    const auto varType = typeResolver->varType();
-    const auto nullType = typeResolver->nullType();
-    const auto voidType = typeResolver->voidType();
 
-    return (typeResolver->equals(lhsType, varType)
-            && (typeResolver->equals(rhsType, nullType) || typeResolver->equals(rhsType, voidType)))
-            || (typeResolver->equals(rhsType, varType)
-                && (typeResolver->equals(lhsType, nullType)
-                    || typeResolver->equals(lhsType, voidType)));
+    const QQmlJSScope::ConstPtr varType = typeResolver->varType();
+    const bool leftIsVar = typeResolver->equals(lhsType, varType);
+    const bool righttIsVar = typeResolver->equals(rhsType, varType);
+    return leftIsVar != righttIsVar;
 }
 
 /*! \internal

@@ -33,6 +33,7 @@ set(qml_files
     ArraySequenceLengthInterop.qml
     B.qml
     BadType.qml
+    BaseConstraint.qml
     BaseMember.qml
     BindingExpression.qml
     CxxTypeFromDir.qml
@@ -55,12 +56,14 @@ set(qml_files
     ProgressBar/Timeline.qml
     ProgressBar/TimelineAnimation.qml
     RootWithoutId.qml
+    Satisfaction.qml
     SelectionRectangle.qml
     ShadowedObjectName.qml
     ShadowedObjectNameDerived.qml
     StoreMetaEnum.qml
     Test.qml
     TestCase.qml
+    Variable.qml
     WindowDerived.qml
     aliasLookup.qml
     ambiguous1/Ambiguous.qml
