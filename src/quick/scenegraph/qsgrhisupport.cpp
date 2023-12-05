@@ -1516,6 +1516,9 @@ void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet, QQuickW
     QRhiSwapChain::Format swapChainFormat = QRhiSwapChain::SDR;
 
     QByteArray hdrRequest = qgetenv("QSG_RHI_HDR");
+    if (hdrRequest.isEmpty())
+        hdrRequest = window->property("_qt_sg_hdr_format").toByteArray();
+
     if (!hdrRequest.isEmpty()) {
         hdrRequest = hdrRequest.toLower();
         if (hdrRequest == QByteArrayLiteral("scrgb") || hdrRequest == QByteArrayLiteral("extendedsrgblinear"))
