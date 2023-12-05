@@ -18,7 +18,7 @@ class Bridge : public QObject {
     Q_PROPERTY(bool overwriteQml MEMBER m_overwriteQml NOTIFY overwriteQmlChanged)
 
 public:
-    Bridge();
+    Bridge(bool guiMode);
     ~Bridge();
 
     Q_INVOKABLE void generate();
@@ -73,6 +73,7 @@ public:
     bool m_sanity = false;
     bool m_verbose = false;
     bool m_overwriteQml = false;
+    bool m_guiMode = false;
 
 private:
     QString m_progressLabel;

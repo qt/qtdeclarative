@@ -8,28 +8,33 @@
 #include "bridge.h"
 #include "stylegenerator.h"
 
-Bridge::Bridge()
+Bridge::Bridge(bool guiMode)
+    : m_guiMode(guiMode)
 {
-    QSettings settings;
-    m_targetDirectory = settings.value("targetDirectory").toString();
-    m_figmaUrlOrId = settings.value("figmaUrlOrId").toString();
-    m_figmaToken = settings.value("figmaToken").toString();
-    m_overwriteQml = settings.value("overwriteQml").toBool();
-    m_selectedControls = settings.value("selectedControls", availableControls()).toStringList();
-    m_selectedImageFormats = settings.value("selectedImageFormats", QStringList() << "png@1x" << "png@2x").toStringList();
-    m_selectedFallbackStyle = settings.value("selectedFallbackStyle", "Fusion").toString();
+    if (m_guiMode) {
+        QSettings settings;
+        m_targetDirectory = settings.value("targetDirectory").toString();
+        m_figmaUrlOrId = settings.value("figmaUrlOrId").toString();
+        m_figmaToken = settings.value("figmaToken").toString();
+        m_overwriteQml = settings.value("overwriteQml").toBool();
+        m_selectedControls = settings.value("selectedControls", availableControls()).toStringList();
+        m_selectedImageFormats = settings.value("selectedImageFormats", QStringList() << "png@1x" << "png@2x").toStringList();
+        m_selectedFallbackStyle = settings.value("selectedFallbackStyle", "Basic").toString();
+    }
 }
 
 Bridge::~Bridge()
 {
-    QSettings settings;
-    settings.setValue("targetDirectory", m_targetDirectory);
-    settings.setValue("figmaUrlOrId", m_figmaUrlOrId);
-    settings.setValue("figmaToken", m_figmaToken);
-    settings.setValue("overwriteQml", m_overwriteQml);
-    settings.setValue("selectedControls", m_selectedControls);
-    settings.setValue("selectedImageFormats", m_selectedImageFormats);
-    settings.setValue("selectedFallbackStyle", m_selectedFallbackStyle);
+    if (m_guiMode) {
+        QSettings settings;
+        settings.setValue("targetDirectory", m_targetDirectory);
+        settings.setValue("figmaUrlOrId", m_figmaUrlOrId);
+        settings.setValue("figmaToken", m_figmaToken);
+        settings.setValue("overwriteQml", m_overwriteQml);
+        settings.setValue("selectedControls", m_selectedControls);
+        settings.setValue("selectedImageFormats", m_selectedImageFormats);
+        settings.setValue("selectedFallbackStyle", m_selectedFallbackStyle);
+    }
 }
 
 void Bridge::generate()

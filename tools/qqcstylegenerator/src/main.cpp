@@ -25,9 +25,9 @@ int main(int argc, char **argv){
             QCoreApplication::translate("main", "A Figma-generated token that lets the tool access the Figma file."),
             QCoreApplication::translate("main", "token")},
         {{"v", "verbose"},
-            QCoreApplication::translate("main", "Print everything that gets generated.")},
-        {{"s", "silent"},
-            QCoreApplication::translate("main", "Don't show progress")},
+            QCoreApplication::translate("main", "Print essential progress information")},
+        {"veryverbose",
+            QCoreApplication::translate("main", "Print detailed progress information")},
         {"sanity",
             QCoreApplication::translate("main", "Run extra sanity checks on the Figma file")},
         {{"g", "generate"},
@@ -45,25 +45,10 @@ int main(int argc, char **argv){
 
     parser.process(app);
 
-    Bridge bridge;
-    // Use the same options (as stored with QSettings) from the
-    // last session, unless overridden from the command line
-    if (parser.isSet("generate"))
-        bridge.m_controlToGenerate = parser.value("generate");
-    if (parser.isSet("verbose"))
-        bridge.m_verbose = parser.isSet("verbose");
-    if (parser.isSet("sanity"))
-        bridge.m_sanity = parser.isSet("sanity");
-    if (parser.isSet("token"))
-        bridge.m_figmaToken = parser.value("token");
-    if (parser.isSet("directory"))
-        bridge.m_targetDirectory = QDir(parser.value("directory")).absolutePath();
-    if (parser.isSet("format"))
-        bridge.m_selectedImageFormats = parser.values("format");
-    if (!parser.positionalArguments().isEmpty())
-        bridge.m_figmaUrlOrId = parser.positionalArguments().first();
+    const bool guiMode = argc == 1;
+    Bridge bridge(guiMode);
 
-    if (argc == 1) {
+    if (guiMode) {
         // GUI mode
         QQmlApplicationEngine engine;
         engine.rootContext()->setContextProperty("bridge", &bridge);
@@ -76,10 +61,31 @@ int main(int argc, char **argv){
         engine.load(url);
         return app.exec();
     } else {
-        // Command line tool mode
+        // CLI mode
+        if (parser.positionalArguments().isEmpty()
+                || !parser.isSet("directory")
+                || !parser.isSet("token")) {
+            parser.showHelp();
+            return 0;
+        }
+
+        bridge.m_figmaUrlOrId = parser.positionalArguments().first();
+        bridge.m_targetDirectory = QDir(parser.value("directory")).absolutePath();
+        bridge.m_figmaToken = parser.value("token");
+        bridge.m_sanity = parser.isSet("sanity");
+
+        if (parser.isSet("format"))
+            bridge.m_selectedImageFormats = parser.values("format");
+        else
+            bridge.m_selectedImageFormats = {"png@1x"};
+        if (parser.isSet("fallbackstyle"))
+            bridge.m_selectedFallbackStyle = parser.value("fallbackstyle");
+        else
+            bridge.m_selectedFallbackStyle = "Basic";
+
         QObject::connect(&bridge, &Bridge::finished, &app, &QCoreApplication::quit);
         QObject::connect(&bridge, &Bridge::error, &bridge, [](const QString &msg){ qDebug().noquote() << "Failed:" << msg; });
-        if (!parser.isSet("silent")) {
+        if (parser.isSet("verbose") || parser.isSet("veryverbose")) {
             QObject::connect(&bridge, &Bridge::warning, &bridge,
                              [](const QString &msg){ qDebug().noquote() << "Warning:" << msg; });
             QObject::connect(&bridge, &Bridge::progressLabelChanged, &bridge,
@@ -88,7 +94,7 @@ int main(int argc, char **argv){
                              []{ qDebug().noquote() << "* Finished!"; });
             QObject::connect(&bridge, &Bridge::figmaFileNameChanged, &app,
                              [](const QString &name){ qDebug().noquote() << "* Figma name: " + name; });
-            if (parser.isSet("verbose"))
+            if (parser.isSet("veryverbose"))
                 QObject::connect(&bridge, &Bridge::debug, &bridge,
                                  [](const QString &msg){ qDebug().noquote() << msg; });
         }
