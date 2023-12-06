@@ -210,6 +210,7 @@ set(qml_files
     readEnumFromInstance.qml
     registerPropagation.qml
     registerelimination.qml
+    renameAdjust.qml
     revisions.qml
     scopeIdLookup.qml
     scopeVsObject.qml
