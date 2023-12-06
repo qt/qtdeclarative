@@ -41,9 +41,9 @@
     The \a name argument uniquely identifies this set of tests.
 
     This macro is identical to QUICK_TEST_MAIN(), except that it takes an
-    additional argument \a QuickTestSetupClass, a pointer to a QObject-derived
-    class. With this class it is possible to define additional setup code to
-    execute before running the QML test.
+    additional argument \a QuickTestSetupClass, the type of a QObject-derived
+    class which will be instantiated. With this class it is possible to define
+    additional setup code to execute before running the QML test.
 
     \note The macro assumes that your test sources are in the current
     directory, unless the \c QUICK_TEST_SOURCE_DIR environment variable is set.

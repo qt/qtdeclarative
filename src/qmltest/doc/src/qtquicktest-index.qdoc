@@ -168,7 +168,7 @@
     setting context properties on the QML engine, amongst other things.
 
     The macro is identical to \c QUICK_TEST_MAIN, except that it takes an
-    additional \c QObject* argument. The test framework will call slots and
+    additional type argument. The test framework will call slots and
     invokable functions with the following names:
 
     \table
