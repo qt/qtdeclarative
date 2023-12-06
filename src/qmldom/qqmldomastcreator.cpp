@@ -625,65 +625,63 @@ void QQmlDomAstCreator::endVisit(AST::FunctionDeclaration *fDef)
             FileLocations::ensure(currentNodeEl().fileLocations, Path().field(Fields::body));
     const Path bodyPath = Path().field(Fields::scriptElement);
 
+    if (!m_enableScriptExpressions)
+        return;
+
     if (fDef->body) {
-        if (m_enableScriptExpressions && scriptNodeStack.isEmpty())
-            Q_SCRIPTELEMENT_DISABLE();
-        if (m_enableScriptExpressions) {
-            if (currentScriptNodeEl().isList()) {
-                // It is more intuitive to have functions with a block as a body instead of a
-                // list.
-                auto body = makeScriptElement<ScriptElements::BlockStatement>(fDef->body);
-                body->setStatements(currentScriptNodeEl().takeList());
-                if (auto semanticScope = body->statements().semanticScope())
-                    body->setSemanticScope(semanticScope);
-                m.body->setScriptElement(finalizeScriptExpression(
-                        ScriptElementVariant::fromElement(body), bodyPath, bodyTree));
-            } else {
-                m.body->setScriptElement(finalizeScriptExpression(
-                        currentScriptNodeEl().takeVariant(), bodyPath, bodyTree));
-            }
-            removeCurrentScriptNode({});
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        if (currentScriptNodeEl().isList()) {
+            // It is more intuitive to have functions with a block as a body instead of a
+            // list.
+            auto body = std::make_shared<ScriptElements::BlockStatement>(
+                    combineLocations(fDef->lbraceToken, fDef->rbraceToken));
+            body->setStatements(currentScriptNodeEl().takeList());
+            if (auto semanticScope = body->statements().semanticScope())
+                body->setSemanticScope(semanticScope);
+            m.body->setScriptElement(finalizeScriptExpression(
+                    ScriptElementVariant::fromElement(body), bodyPath, bodyTree));
+        } else {
+            m.body->setScriptElement(finalizeScriptExpression(
+                    currentScriptNodeEl().takeVariant(), bodyPath, bodyTree));
         }
+        removeCurrentScriptNode({});
     }
-    if (m_enableScriptExpressions) {
-        if (fDef->typeAnnotation) {
-            auto argLoc = FileLocations::ensure(nodeStack.last().fileLocations,
-                                                Path().field(Fields::returnType),
-                                                AttachedInfo::PathType::Relative);
-            const Path pathToReturnType = Path().field(Fields::scriptElement);
 
-            ScriptElementVariant variant = currentScriptNodeEl().takeVariant();
-            finalizeScriptExpression(variant, pathToReturnType, argLoc);
-            m.returnType->setScriptElement(variant);
-            removeCurrentScriptNode({});
-        }
-        std::vector<FormalParameterList *> reversedInitializerExpressions;
-        for (auto it = fDef->formals; it; it = it->next) {
-            reversedInitializerExpressions.push_back(it);
-        }
-        const size_t size = reversedInitializerExpressions.size();
-        for (size_t idx = size - 1; idx < size; --idx) {
-            if (m_enableScriptExpressions && scriptNodeStack.empty()) {
-                Q_SCRIPTELEMENT_DISABLE();
-                break;
-            }
-            auto argLoc = FileLocations::ensure(
-                    nodeStack.last().fileLocations,
-                    Path().field(Fields::parameters).index(idx).field(Fields::value),
-                    AttachedInfo::PathType::Relative);
-            const Path pathToArgument = Path().field(Fields::scriptElement);
+    if (fDef->typeAnnotation) {
+        auto argLoc = FileLocations::ensure(nodeStack.last().fileLocations,
+                                            Path().field(Fields::returnType),
+                                            AttachedInfo::PathType::Relative);
+        const Path pathToReturnType = Path().field(Fields::scriptElement);
 
-            ScriptElementVariant variant = currentScriptNodeEl().takeVariant();
-            setFormalParameterKind(variant);
-            finalizeScriptExpression(variant, pathToArgument, argLoc);
-            m.parameters[idx].value->setScriptElement(variant);
-            removeCurrentScriptNode({});
-        }
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        ScriptElementVariant variant = currentScriptNodeEl().takeVariant();
+        finalizeScriptExpression(variant, pathToReturnType, argLoc);
+        m.returnType->setScriptElement(variant);
+        removeCurrentScriptNode({});
+    }
+    std::vector<FormalParameterList *> reversedInitializerExpressions;
+    for (auto it = fDef->formals; it; it = it->next) {
+        reversedInitializerExpressions.push_back(it);
+    }
+    const size_t size = reversedInitializerExpressions.size();
+    for (size_t idx = size - 1; idx < size; --idx) {
+        auto argLoc = FileLocations::ensure(
+                nodeStack.last().fileLocations,
+                Path().field(Fields::parameters).index(idx).field(Fields::value),
+                AttachedInfo::PathType::Relative);
+        const Path pathToArgument = Path().field(Fields::scriptElement);
 
-        // there should be no more uncollected script elements
-        if (m_enableScriptExpressions && !scriptNodeStack.empty()) {
-            Q_SCRIPTELEMENT_DISABLE();
-        }
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        ScriptElementVariant variant = currentScriptNodeEl().takeVariant();
+        setFormalParameterKind(variant);
+        finalizeScriptExpression(variant, pathToArgument, argLoc);
+        m.parameters[idx].value->setScriptElement(variant);
+        removeCurrentScriptNode({});
+    }
+
+    // there should be no more uncollected script elements
+    if (m_enableScriptExpressions && !scriptNodeStack.empty()) {
+        Q_SCRIPTELEMENT_DISABLE();
     }
 }
 
