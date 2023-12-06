@@ -3196,6 +3196,26 @@ static QList<CompletionItem> insideBreakStatement(const DomItem &currentItem,
     return {};
 }
 
+static QList<CompletionItem> insideConditionalExpression(const DomItem &currentItem,
+                                                         const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation questionMark = regions[QuestionMarkTokenRegion];
+    const QQmlJS::SourceLocation colon = regions[ColonTokenRegion];
+
+    if (beforeLocation(ctx, questionMark)) {
+        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    }
+    if (betweenLocations(questionMark, ctx, colon)) {
+        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    }
+    if (afterLocation(colon, ctx)) {
+        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    }
+    return {};
+}
+
 static bool ctxBeforeStatement(const CompletionContextStrings &ctx, const DomItem &currentItem,
                                FileLocationRegion firstRegion)
 {
@@ -3326,6 +3346,8 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             return insideContinueStatement(currentParent, ctx);
         case DomType::ScriptBreakStatement:
             return insideBreakStatement(currentParent, ctx);
+        case DomType::ScriptConditionalExpression:
+            return insideConditionalExpression(currentParent, ctx);
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.

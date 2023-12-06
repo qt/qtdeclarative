@@ -2376,6 +2376,41 @@ void QQmlDomAstCreator::endVisit(AST::Expression *commaExpression)
     pushScriptElement(current);
 }
 
+bool QQmlDomAstCreator::visit(AST::ConditionalExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::ConditionalExpression *expression)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(expression, DomType::ScriptConditionalExpression);
+    current->addLocation(FileLocationRegion::QuestionMarkTokenRegion, expression->questionToken);
+    current->addLocation(FileLocationRegion::ColonTokenRegion, expression->colonToken);
+
+    if (expression->ko) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        current->insertChild(Fields::alternative, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    if (expression->ok) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        current->insertChild(Fields::consequence, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    if (expression->expression) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        current->insertChild(Fields::condition, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
 bool QQmlDomAstCreator::visit(AST::ContinueStatement *)
 {
     return m_enableScriptExpressions;

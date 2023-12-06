@@ -222,6 +222,7 @@ enum class DomType {
     ScriptLabelledStatement,
     ScriptBreakStatement,
     ScriptContinueStatement,
+    ScriptConditionalExpression,
 
     ScriptElementStop, // marker to check if a DomType is a scriptelement or not
 };
@@ -379,6 +380,7 @@ enum FileLocationRegion : int {
     PragmaKeywordRegion,
     PragmaValuesRegion,
     PropertyKeywordRegion,
+    QuestionMarkTokenRegion,
     ReadonlyKeywordRegion,
     RequiredKeywordRegion,
     ReturnKeywordRegion,

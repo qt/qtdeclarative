@@ -2896,6 +2896,31 @@ private slots:
                  u"a"_s);
     }
 
+    void conditionalExpression()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/conditionalExpression.qml"_s;
+        const DomItem rootQmlObject = rootQmlObjectFromFile(testFile, qmltypeDirs);
+        const DomItem commaExpression = rootQmlObject.path(".methods[\"f\"][0].body.scriptElement.statements[0]");
+
+        QCOMPARE(commaExpression.internalKind(), DomType::ScriptConditionalExpression);
+        QCOMPARE(commaExpression.field(Fields::condition)
+                         .field(Fields::identifier)
+                         .value()
+                         .toString(),
+                 u"a"_s);
+        QCOMPARE(commaExpression.field(Fields::consequence)
+                         .field(Fields::identifier)
+                         .value()
+                         .toString(),
+                 u"b"_s);
+        QCOMPARE(commaExpression.field(Fields::alternative)
+                         .field(Fields::identifier)
+                         .value()
+                         .toString(),
+                 u"c"_s);
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

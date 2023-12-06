@@ -3143,6 +3143,22 @@ void tst_qmlls_utils::completions_data()
                                     { u"c"_s, CompletionItemKind::Variable },
                                     }
             << QStringList{ propertyCompletion } << None;
+
+    QTest::newRow("conditionalExpressionConsequence")
+            << testFile(u"completions/conditionalExpression.qml"_s) << 5 << 17
+            << ExpectedCompletions{ { u"a"_s, CompletionItemKind::Variable },
+                                    { u"b"_s, CompletionItemKind::Variable },
+                                    { u"c"_s, CompletionItemKind::Variable },
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+
+    QTest::newRow("conditionalExpressionAlternative")
+            << testFile(u"completions/conditionalExpression.qml"_s) << 5 << 30
+            << ExpectedCompletions{ { u"a"_s, CompletionItemKind::Variable },
+                                    { u"b"_s, CompletionItemKind::Variable },
+                                    { u"c"_s, CompletionItemKind::Variable },
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
 }
 
 void tst_qmlls_utils::completions()
