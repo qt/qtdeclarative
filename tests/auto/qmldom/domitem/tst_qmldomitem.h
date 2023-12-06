@@ -2921,6 +2921,47 @@ private slots:
                  u"c"_s);
     }
 
+    void unaryExpression_data()
+    {
+        QTest::addColumn<QString>("fileName");
+        QTest::addColumn<DomType>("type");
+
+        const QString folder = baseDir + u"/unaryExpressions/"_s;
+
+        QTest::addRow("minus") << folder + u"unaryMinus.qml"_s << DomType::ScriptUnaryExpression;
+        QTest::addRow("plus") << folder + u"unaryPlus.qml"_s << DomType::ScriptUnaryExpression;
+        QTest::addRow("tilde") << folder + u"tilde.qml"_s << DomType::ScriptUnaryExpression;
+        QTest::addRow("not") << folder + u"not.qml"_s << DomType::ScriptUnaryExpression;
+        QTest::addRow("typeof") << folder + u"typeof.qml"_s << DomType::ScriptUnaryExpression;
+        QTest::addRow("delete") << folder + u"delete.qml"_s << DomType::ScriptUnaryExpression;
+        QTest::addRow("void") << folder + u"void.qml"_s << DomType::ScriptUnaryExpression;
+        QTest::addRow("increment") << folder + u"increment.qml"_s << DomType::ScriptUnaryExpression;
+        QTest::addRow("decrement") << folder + u"decrement.qml"_s << DomType::ScriptUnaryExpression;
+
+        // post stuff
+        QTest::addRow("postIncrement")
+                << folder + u"postIncrement.qml"_s << DomType::ScriptPostExpression;
+        QTest::addRow("postDecrement")
+                << folder + u"postDecrement.qml"_s << DomType::ScriptPostExpression;
+    }
+
+    void unaryExpression()
+    {
+        using namespace Qt::StringLiterals;
+        QFETCH(QString, fileName);
+        QFETCH(DomType, type);
+        const DomItem rootQmlObject = rootQmlObjectFromFile(fileName, qmltypeDirs);
+        const DomItem firstStatement =
+                rootQmlObject.path(".methods[\"f\"][0].body.scriptElement.statements[0]");
+
+        QCOMPARE(firstStatement.internalKind(), type);
+        QCOMPARE(firstStatement.field(Fields::expression)
+                         .field(Fields::identifier)
+                         .value()
+                         .toString(),
+                 u"a"_s);
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

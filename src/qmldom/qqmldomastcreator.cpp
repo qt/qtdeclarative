@@ -2434,6 +2434,238 @@ void QQmlDomAstCreator::endVisit(AST::ContinueStatement *statement)
     pushScriptElement(current);
 }
 
+/*!
+   \internal
+   Helper to create unary expressions from AST nodes.
+   \sa makeGenericScriptElement
+ */
+std::shared_ptr<ScriptElements::GenericScriptElement>
+QQmlDomAstCreator::makeUnaryExpression(AST::Node *expression, QQmlJS::SourceLocation operatorToken,
+                                       bool hasExpression, UnaryExpressionKind kind)
+{
+    const DomType type = [&kind]() {
+        switch (kind) {
+        case Prefix:
+            return DomType::ScriptUnaryExpression;
+        case Postfix:
+            return DomType::ScriptPostExpression;
+        }
+        Q_UNREACHABLE_RETURN(DomType::ScriptUnaryExpression);
+    }();
+
+    auto current = makeGenericScriptElement(expression, type);
+    current->addLocation(FileLocationRegion::OperatorTokenRegion, operatorToken);
+
+    if (hasExpression) {
+        if (scriptNodeStack.isEmpty() || scriptNodeStack.last().isList()) {
+            Q_SCRIPTELEMENT_DISABLE();
+            return {};
+        }
+        current->insertChild(Fields::expression, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    return current;
+}
+
+bool QQmlDomAstCreator::visit(AST::UnaryMinusExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::UnaryMinusExpression *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current =
+            makeUnaryExpression(statement, statement->minusToken, statement->expression, Prefix);
+    if (!current)
+        return;
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::UnaryPlusExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::UnaryPlusExpression *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current =
+            makeUnaryExpression(statement, statement->plusToken, statement->expression, Prefix);
+    if (!current)
+        return;
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::TildeExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::TildeExpression *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current =
+            makeUnaryExpression(statement, statement->tildeToken, statement->expression, Prefix);
+    if (!current)
+        return;
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::NotExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::NotExpression *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current =
+            makeUnaryExpression(statement, statement->notToken, statement->expression, Prefix);
+    if (!current)
+        return;
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::TypeOfExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::TypeOfExpression *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current =
+            makeUnaryExpression(statement, statement->typeofToken, statement->expression, Prefix);
+    if (!current)
+        return;
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::DeleteExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::DeleteExpression *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current =
+            makeUnaryExpression(statement, statement->deleteToken, statement->expression, Prefix);
+    if (!current)
+        return;
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::VoidExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::VoidExpression *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current =
+            makeUnaryExpression(statement, statement->voidToken, statement->expression, Prefix);
+    if (!current)
+        return;
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::PostDecrementExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::PostDecrementExpression *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current =
+            makeUnaryExpression(statement, statement->decrementToken, statement->base, Postfix);
+    if (!current)
+        return;
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::PostIncrementExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::PostIncrementExpression *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current =
+            makeUnaryExpression(statement, statement->incrementToken, statement->base, Postfix);
+    if (!current)
+        return;
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::PreIncrementExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::PreIncrementExpression *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeUnaryExpression(statement, statement->incrementToken, statement->expression,
+                                       Prefix);
+    if (!current)
+        return;
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::PreDecrementExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::PreDecrementExpression *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeUnaryExpression(statement, statement->decrementToken, statement->expression,
+                                       Prefix);
+    if (!current)
+        return;
+
+    pushScriptElement(current);
+}
+
 static const DomEnvironment *environmentFrom(MutableDomItem &qmlFile)
 {
     auto top = qmlFile.top();

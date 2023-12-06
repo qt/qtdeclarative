@@ -257,6 +257,11 @@ private:
         return myExp;
     }
 
+    enum UnaryExpressionKind { Prefix, Postfix };
+    std::shared_ptr<ScriptElements::GenericScriptElement>
+    makeUnaryExpression(AST::Node *expression, QQmlJS::SourceLocation operatorToken,
+                        bool hasExpression, UnaryExpressionKind type);
+
     static std::shared_ptr<ScriptElements::GenericScriptElement>
     makeGenericScriptElement(SourceLocation location, DomType kind)
     {
@@ -441,6 +446,39 @@ public:
 
     bool visit(AST::ConditionalExpression *) override;
     void endVisit(AST::ConditionalExpression *) override;
+
+    bool visit(AST::UnaryMinusExpression *) override;
+    void endVisit(AST::UnaryMinusExpression *) override;
+
+    bool visit(AST::UnaryPlusExpression *) override;
+    void endVisit(AST::UnaryPlusExpression *) override;
+
+    bool visit(AST::TildeExpression *) override;
+    void endVisit(AST::TildeExpression *) override;
+
+    bool visit(AST::NotExpression *) override;
+    void endVisit(AST::NotExpression *) override;
+
+    bool visit(AST::TypeOfExpression *) override;
+    void endVisit(AST::TypeOfExpression *) override;
+
+    bool visit(AST::DeleteExpression *) override;
+    void endVisit(AST::DeleteExpression *) override;
+
+    bool visit(AST::VoidExpression *) override;
+    void endVisit(AST::VoidExpression *) override;
+
+    bool visit(AST::PostDecrementExpression *) override;
+    void endVisit(AST::PostDecrementExpression *) override;
+
+    bool visit(AST::PostIncrementExpression *) override;
+    void endVisit(AST::PostIncrementExpression *) override;
+
+    bool visit(AST::PreDecrementExpression *) override;
+    void endVisit(AST::PreDecrementExpression *) override;
+
+    bool visit(AST::PreIncrementExpression *) override;
+    void endVisit(AST::PreIncrementExpression *) override;
 
     // lists of stuff whose children do not need a qqmljsscope: visitation order can be custom
     bool visit(AST::ArgumentList *) override;

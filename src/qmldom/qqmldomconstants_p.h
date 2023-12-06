@@ -196,6 +196,8 @@ enum class DomType {
     ScriptLiteral,
     ScriptForStatement,
     ScriptIfStatement,
+    ScriptPostExpression,
+    ScriptUnaryExpression,
     ScriptBinaryExpression,
     ScriptVariableDeclaration,
     ScriptVariableDeclarationEntry,
