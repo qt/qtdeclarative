@@ -1137,9 +1137,6 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventRecursive(
     // All decendants have been visited.
     // Now deliver the event to the item
     return deliverHoverEventToItem(item, scenePos, lastScenePos, modifiers, timestamp, false);
-
-    // Continue propagation / recursion
-    return false;
 }
 
 /*! \internal
