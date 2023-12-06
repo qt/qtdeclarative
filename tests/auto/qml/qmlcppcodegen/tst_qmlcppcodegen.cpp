@@ -163,6 +163,7 @@ private slots:
     void readEnumFromInstance();
     void registerElimination();
     void registerPropagation();
+    void renameAdjust();
     void revisions();
     void scopeIdLookup();
     void scopeObjectDestruction();
@@ -3446,6 +3447,19 @@ void tst_QmlCppCodegen::registerPropagation()
     undefined.clear();
     QMetaObject::invokeMethod(o.data(), "produceUndefined2", Q_RETURN_ARG(QString, undefined));
     QCOMPARE(undefined, u"undefined"_s);
+}
+
+void tst_QmlCppCodegen::renameAdjust()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/renameAdjust.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "success");
+    QTest::ignoreMessage(QtCriticalMsg, "failed 10 11");
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
 }
 
 void tst_QmlCppCodegen::revisions()
