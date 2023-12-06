@@ -20,18 +20,19 @@ particular, you may be interested in the sub-topics
 \l{qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Classes to QML}
 and \l {qtqml-cppintegration-definetypes.html}{Defining QML Types from C++}.
 
-\section1 Running the Tutorial Examples
+\section1 Opening the Tutorial Sources
 
-The code in this tutorial is available as an example project with subprojects
-associated with each tutorial chapter. In \l{Qt Creator Manual}{Qt Creator}, open
-the \uicontrol Welcome mode and select the tutorial from \uicontrol Examples. In
-\uicontrol Edit mode, expand the \e extending-qml project, right-click on the
-subproject (chapter) you want to run and select \uicontrol Run.
+The code in this tutorial is available as part of the Qt sources.
+If you installed Qt with the \QOI, you can
+find the sources in the Qt installation directory under
+Examples/Qt-\QtVersion/qml/tutorials/extending-qml/.
 
-\section1 Creating Tutorial Project
+\section1 Creating Project from Scratch
 
-We create a new project using the \e {Qt Quick Application} template in Qt Creator,
-as instructed in \l {Qt Creator: Creating Qt Quick Projects}.
+Alternatively, you can follow the tutorial by creating the sources from scratch:
+For each chapter, create a new project using the \e {Qt Quick Application} template
+in Qt Creator, as instructed in \l {Qt Creator: Creating Qt Quick Projects}.
+Then follow along by adapting and extending the generated skeleton code.
 
 \section1 Chapter 1: Creating a New Type
 \c extending-qml/chapter1-basics
@@ -54,7 +55,7 @@ a version of 1.0.
 We want this \c PieChart type to be usable from QML like this:
 
 \qml
-    import Charts 1.0
+    import Charts
 
     PieChart {
         width: 100; height: 100
