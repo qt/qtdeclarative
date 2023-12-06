@@ -3135,6 +3135,14 @@ void tst_qmlls_utils::completions_data()
                                     { u"continue"_s, CompletionItemKind::Keyword },
                                     }
             << QStringList{ } << None;
+
+    QTest::newRow("commaExpression")
+            << testFile(u"completions/commaExpression.qml"_s) << 5 << 18
+            << ExpectedCompletions{ { u"a"_s, CompletionItemKind::Variable },
+                                    { u"b"_s, CompletionItemKind::Variable },
+                                    { u"c"_s, CompletionItemKind::Variable },
+                                    }
+            << QStringList{ propertyCompletion } << None;
 }
 
 void tst_qmlls_utils::completions()

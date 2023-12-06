@@ -2869,6 +2869,33 @@ private slots:
         QCOMPARE(block.field(Fields::statements).indexes(), 0);
     }
 
+    void commaExpression()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/commaExpression.qml"_s;
+        const DomItem rootQmlObject = rootQmlObjectFromFile(testFile, qmltypeDirs);
+        const DomItem commaExpression = rootQmlObject.path(".methods[\"f\"][0].body.scriptElement.statements[0]");
+
+        QCOMPARE(commaExpression.internalKind(), DomType::ScriptBinaryExpression);
+        QCOMPARE(commaExpression.field(Fields::right)
+                         .field(Fields::identifier)
+                         .value()
+                         .toString(),
+                 u"c"_s);
+        QCOMPARE(commaExpression.field(Fields::left)
+                         .field(Fields::right)
+                         .field(Fields::identifier)
+                         .value()
+                         .toString(),
+                 u"b"_s);
+        QCOMPARE(commaExpression.field(Fields::left)
+                         .field(Fields::left)
+                         .field(Fields::identifier)
+                         .value()
+                         .toString(),
+                 u"a"_s);
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

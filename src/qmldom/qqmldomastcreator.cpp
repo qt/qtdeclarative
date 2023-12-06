@@ -2346,6 +2346,36 @@ void QQmlDomAstCreator::endVisit(AST::BreakStatement *statement)
     pushScriptElement(current);
 }
 
+// note: thats for comma expressions
+bool QQmlDomAstCreator::visit(AST::Expression *)
+{
+    return m_enableScriptExpressions;
+}
+
+// note: thats for comma expressions
+void QQmlDomAstCreator::endVisit(AST::Expression *commaExpression)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeScriptElement<ScriptElements::BinaryExpression>(commaExpression);
+    current->addLocation(OperatorTokenRegion, commaExpression->commaToken);
+
+    if (commaExpression->right) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        current->setRight(currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    if (commaExpression->left) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        current->setLeft(currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
 bool QQmlDomAstCreator::visit(AST::ContinueStatement *)
 {
     return m_enableScriptExpressions;
