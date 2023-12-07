@@ -822,7 +822,7 @@ void QQuickAbstractButton::setIcon(const QQuickIcon &icon)
     \header \li Display \li Result
     \row \li \c AbstractButton.IconOnly \li \image qtquickcontrols-button-icononly.png
     \row \li \c AbstractButton.TextOnly \li \image qtquickcontrols-button-textonly.png
-    \row \li \c AbstractButton.TextBesideIcon \li \image qtquickcontrols-button-textbesideicon.png
+    \row \li \c AbstractButton.TextBesideIcon (default) \li \image qtquickcontrols-button-textbesideicon.png
     \row \li \c AbstractButton.TextUnderIcon \li \image qtquickcontrols-button-textundericon.png
     \endtable
 
