@@ -88,6 +88,9 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info)
                   const auto *inlineComponentAName = std::get_if<InlineComponentNameType>(&a);
                   const auto *inlineComponentBName = std::get_if<InlineComponentNameType>(&b);
 
+                  if (inlineComponentAName == inlineComponentBName)
+                      return false;
+
                   // the root comes at last, so (a < b) == true when b is the root and a is not
                   if (inlineComponentAName && !inlineComponentBName)
                       return true;
