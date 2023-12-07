@@ -902,12 +902,32 @@ function(_qt_internal_target_enable_qmllint target)
     # Note that the caller is free to change the value of QT_QMLLINT_ALL_TARGET
     # for different QML modules if they wish, which means they can implement
     # their own grouping of the ${target}_qmllint targets.
-    _qt_internal_add_all_qmllint_target(QT_QMLLINT_ALL_TARGET
-        all_qmllint ${lint_target})
-    _qt_internal_add_all_qmllint_target(QT_QMLLINT_JSON_ALL_TARGET
-        all_qmllint_json ${lint_target_json})
-    _qt_internal_add_all_qmllint_target(QT_QMLLINT_MODULE_ALL_TARGET
-        all_qmllint_module ${lint_target_module})
+    if("${QT_QMLLINT_ALL_TARGET}" STREQUAL "")
+        set(QT_QMLLINT_ALL_TARGET all_qmllint)
+    endif()
+    if(NOT TARGET ${QT_QMLLINT_ALL_TARGET})
+        add_custom_target(${QT_QMLLINT_ALL_TARGET})
+    endif()
+    add_dependencies(${QT_QMLLINT_ALL_TARGET} ${lint_target})
+
+    if("${QT_QMLLINT_JSON_ALL_TARGET}" STREQUAL "")
+        set(QT_QMLLINT_JSON_ALL_TARGET all_qmllint_json)
+    endif()
+    if(NOT TARGET ${QT_QMLLINT_JSON_ALL_TARGET})
+        add_custom_target(${QT_QMLLINT_JSON_ALL_TARGET})
+        _qt_internal_assign_to_qmllint_targets_folder(${QT_QMLLINT_JSON_ALL_TARGET})
+    endif()
+    add_dependencies(${QT_QMLLINT_JSON_ALL_TARGET} ${lint_target_json})
+
+    if("${QT_QMLLINT_MODULE_ALL_TARGET}" STREQUAL "")
+        set(QT_QMLLINT_MODULE_ALL_TARGET all_qmllint_module)
+    endif()
+    if(NOT TARGET ${QT_QMLLINT_MODULE_ALL_TARGET})
+        add_custom_target(${QT_QMLLINT_MODULE_ALL_TARGET})
+        _qt_internal_assign_to_qmllint_targets_folder(${QT_QMLLINT_MODULE_ALL_TARGET})
+    endif()
+    add_dependencies(${QT_QMLLINT_MODULE_ALL_TARGET} ${lint_target_module})
+
 endfunction()
 
 # This is a  modified version of __qt_propagate_generated_resource from qtbase.
@@ -957,36 +977,6 @@ function(_qt_internal_propagate_qmlcache_object_lib
     )
 
     set(${output_generated_target} "${resource_target}" PARENT_SCOPE)
-endfunction()
-
-# Create an 'all_qmllint' target. The target's name can be user-controlled by ${target_var} with the
-# default name ${default_target_name}. The parameter ${lint_target} holds the name of the single
-# foo_qmllint target that should be triggered by the all_qmllint target.
-function(_qt_internal_add_all_qmllint_target target_var default_target_name lint_target)
-    set(target_name "${${target_var}}")
-    if("${target_name}" STREQUAL "")
-        set(target_name ${default_target_name})
-    endif()
-    if(NOT TARGET ${target_name})
-        add_custom_target(${target_name})
-        _qt_internal_assign_to_qmllint_targets_folder(${target_name})
-    endif()
-    if(CMAKE_GENERATOR MATCHES "^Visual Studio ")
-        # For the Visual Studio generators we cannot use add_dependencies, because this would enable
-        # ${lint_target} in the default build of the solution. See QTBUG-115166 and upstream CMake
-        # issue #16668 for details. As a work-around, we run the ${lint_target} through 'cmake
-        # --build' as PRE_BUILD step of the all_qmllint target.
-        add_custom_command(
-            TARGET ${target_name} PRE_BUILD
-            COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" -t ${lint_target}
-        )
-
-        # Exclude ${lint_target} from the solution's default build to avoid it being enabled should
-        # the user add a dependency to it.
-        set_property(TARGET ${lint_target} PROPERTY EXCLUDE_FROM_DEFAULT_BUILD ON)
-    else()
-        add_dependencies(${target_name} ${lint_target})
-    endif()
 endfunction()
 
 function(_qt_internal_target_enable_qmlcachegen target output_targets_var qmlcachegen)
