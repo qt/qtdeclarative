@@ -38,6 +38,7 @@ private slots:
     void redirect();
     void qmlSingletonWithinModule();
     void multiSingletonModule();
+    void multiSingletonModuleNoWarning();
     void implicitComponentModule();
     void customDiskCachePath();
     void qrcRootPathUrl();
@@ -531,6 +532,18 @@ void tst_QQMLTypeLoader::multiSingletonModule()
     QVERIFY(obj->property("ok").toBool());
 
     checkCleanCacheLoad(QLatin1String("multiSingletonModule"));
+}
+
+void tst_QQMLTypeLoader::multiSingletonModuleNoWarning()
+{
+    // Should not warn about a "cyclic" dependency between the singletons
+    QTest::failOnWarning(QRegularExpression(".*"));
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("imports/multisingletonmodule/a.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
 }
 
 void tst_QQMLTypeLoader::implicitComponentModule()
