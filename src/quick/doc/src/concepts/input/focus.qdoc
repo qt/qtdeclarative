@@ -18,8 +18,8 @@ scope based extension to Qt's traditional keyboard focus model.
 When the user presses or releases a key, the following occurs:
 \list 1
 \li Qt receives the key action and generates a key event.
-\li If a \l QQuickWindow is the active window, the key event
-is delivered to it.
+\li If a \l QQuickWindow is the \l{QGuiApplication::focusWindow()}{focus window}
+of the application, the key event is delivered to it.
 \li The key event is delivered by the scene to the \l Item with
 \e {active focus}. If no item has active focus, the key event is ignored.
 \li If the \l QQuickItem with active focus accepts the key event, propagation
