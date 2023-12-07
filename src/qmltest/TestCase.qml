@@ -121,8 +121,8 @@ import "testlogger.js" as TestLogger
         name: "CreateBenchmark"
 
         function benchmark_create_component() {
-            var component = Qt.createComponent("item.qml")
-            var obj = component.createObject(top)
+            let component = Qt.createComponent("item.qml")
+            let obj = component.createObject(top)
             obj.destroy()
             component.destroy()
         }
@@ -183,7 +183,7 @@ import "testlogger.js" as TestLogger
         when: windowShown
 
         function test_click() {
-            var item = Qt.createQmlObject("import QtQuick 2.0; Item {}", testCase);
+            let item = Qt.createQmlObject("import QtQuick 2.0; Item {}", testCase);
             verify(item);
 
             // Test item...
@@ -210,7 +210,7 @@ import "testlogger.js" as TestLogger
         when: windowShown
 
         function test_click() {
-            var item = createTemporaryQmlObject("import QtQuick 2.0; Item {}", testCase);
+            let item = createTemporaryQmlObject("import QtQuick 2.0; Item {}", testCase);
             verify(item);
 
             // Test item...
@@ -548,7 +548,7 @@ Item {
         if (!expressionFunction())
             wait(0)
 
-        var i = 0
+        let i = 0
         while (i < timeout && !expressionFunction()) {
             wait(50)
             i += 50
@@ -695,7 +695,7 @@ Item {
             throw new Error("QtQuickTest::fail");
         }
 
-        var object = Qt.createQmlObject(qml, parent, filePath);
+        let object = Qt.createQmlObject(qml, parent, filePath);
         qtest_temporaryObjects.push(object);
         return object;
     }
@@ -736,7 +736,7 @@ Item {
         if (parent === undefined)
             parent = null
 
-        var object = component.createObject(parent, properties ? properties : ({}));
+        let object = component.createObject(parent, properties ? properties : ({}));
         qtest_temporaryObjects.push(object);
         return object;
     }
@@ -747,8 +747,8 @@ Item {
         Destroys all temporary objects that still exist.
     */
     function qtest_destroyTemporaryObjects() {
-        for (var i = 0; i < qtest_temporaryObjects.length; ++i) {
-            var temporaryObject = qtest_temporaryObjects[i];
+        for (let i = 0; i < qtest_temporaryObjects.length; ++i) {
+            let temporaryObject = qtest_temporaryObjects[i];
             // ### the typeof check can be removed when QTBUG-57749 is fixed
             if (temporaryObject && typeof temporaryObject.destroy === "function")
                 temporaryObject.destroy();
@@ -818,13 +818,13 @@ Item {
     // Test suites: http://philrathe.com/tests/equiv
     // Author: Philippe Rathé <prathe@gmail.com>
     function qtest_compareInternal(act, exp) {
-        var success = false;
+        let success = false;
         if (act === exp) {
             success = true; // catch the most you can
         } else if (act === null || exp === null || typeof act === "undefined" || typeof exp === "undefined") {
             success = false; // don't lose time with error prone cases
         } else {
-            var typeExp = qtest_typeof(exp), typeAct = qtest_typeof(act)
+            let typeExp = qtest_typeof(exp), typeAct = qtest_typeof(act)
             if (typeExp !== typeAct) {
                 // allow object vs string comparison (e.g. for colors)
                 // else break on different types
@@ -836,8 +836,8 @@ Item {
                        typeExp === "null" || typeExp === "undefined") {
                 if (exp instanceof act.constructor || act instanceof exp.constructor) {
                     // to catch short annotaion VS 'new' annotation of act declaration
-                    // e.g. var i = 1;
-                    //      var j = new Number(1);
+                    // e.g. let i = 1;
+                    //      let j = new Number(1);
                     success = (act == exp)
                 } else {
                     success = (act === exp)
@@ -873,9 +873,9 @@ Item {
 
     /*! \internal */
     function qtest_compareInternalObjects(act, exp) {
-        var i;
-        var eq = true; // unless we can proove it
-        var aProperties = [], bProperties = []; // collection of strings
+        let i;
+        let eq = true; // unless we can proove it
+        let aProperties = [], bProperties = []; // collection of strings
 
         // comparing constructors is more strict than using instanceof
         if (act.constructor !== exp.constructor) {
@@ -909,7 +909,7 @@ Item {
             return false
         }
 
-        for (var i = 0, len = actual.length; i < len; i++) {
+        for (let i = 0, len = actual.length; i < len; i++) {
             if (!qtest_compareInternal(actual[i], expected[i])) {
                 return false
             }
@@ -928,10 +928,10 @@ Item {
         \sa tryCompare(), fuzzyCompare
     */
     function compare(actual, expected, msg) {
-        var act = qtest_results.stringify(actual)
-        var exp = qtest_results.stringify(expected)
+        let act = qtest_results.stringify(actual)
+        let exp = qtest_results.stringify(expected)
 
-        var success = qtest_compareInternal(actual, expected)
+        let success = qtest_compareInternal(actual, expected)
         if (msg === undefined) {
             if (success)
                 msg = "COMPARE()"
@@ -960,7 +960,7 @@ Item {
         if (delta === undefined)
             qtest_fail("A delta value is required for fuzzyCompare", 2)
 
-        var success = qtest_results.fuzzyCompare(actual, expected, delta)
+        let success = qtest_results.fuzzyCompare(actual, expected, delta)
         if (msg === undefined) {
             if (success)
                 msg = "FUZZYCOMPARE()"
@@ -998,12 +998,12 @@ Item {
         For example:
 
         \code
-        var image = grabImage(rect);
+        let image = grabImage(rect);
         compare(image.red(10, 10), 255);
         compare(image.pixel(20, 20), Qt.rgba(255, 0, 0, 255));
 
         rect.width += 10;
-        var newImage = grabImage(rect);
+        let newImage = grabImage(rect);
         verify(!newImage.equals(image));
         \endcode
 
@@ -1014,7 +1014,7 @@ Item {
         example:
 
         \code
-        var image = grabImage(rect);
+        let image = grabImage(rect);
         try {
             compare(image.width, 100);
         } catch (ex) {
@@ -1043,7 +1043,7 @@ Item {
     */
     function findChild(parent, objectName) {
         // First, search the visual item hierarchy.
-        var child = qtest_findVisualChild(parent, objectName);
+        let child = qtest_findVisualChild(parent, objectName);
         if (child)
             return child;
 
@@ -1056,16 +1056,16 @@ Item {
         if (!parent || parent.children === undefined)
             return null;
 
-        for (var i = 0; i < parent.children.length; ++i) {
+        for (let i = 0; i < parent.children.length; ++i) {
             // Is this direct child of ours the child we're after?
-            var child = parent.children[i];
+            let child = parent.children[i];
             if (child.objectName === objectName)
                 return child;
         }
 
-        for (i = 0; i < parent.children.length; ++i) {
+        for (let i = 0; i < parent.children.length; ++i) {
             // Try the direct child's children.
-            child = qtest_findVisualChild(parent.children[i], objectName);
+            let child = qtest_findVisualChild(parent.children[i], objectName);
             if (child)
                 return child;
         }
@@ -1120,15 +1120,15 @@ Item {
             msg = "property " + prop
         if (!qtest_compareInternal(obj[prop], value))
             wait(0)
-        var i = 0
+        let i = 0
         while (i < timeout && !qtest_compareInternal(obj[prop], value)) {
             wait(50)
             i += 50
         }
-        var actual = obj[prop]
-        var act = qtest_results.stringify(actual)
-        var exp = qtest_results.stringify(value)
-        var success = qtest_compareInternal(actual, value)
+        let actual = obj[prop]
+        let act = qtest_results.stringify(actual)
+        let exp = qtest_results.stringify(value)
+        let success = qtest_compareInternal(actual, value)
         if (!qtest_results.compare(success, msg, act, exp, util.callerFile(), util.callerLine()))
             throw new Error("QtQuickTest::fail")
     }
@@ -1533,15 +1533,15 @@ Item {
             modifiers = Qt.NoModifier
         if (delay == undefined)
             delay = -1
-        var moveDelay = Math.max(1, delay === -1 ? qtest_events.defaultMouseDelay : delay)
+        let moveDelay = Math.max(1, delay === -1 ? qtest_events.defaultMouseDelay : delay)
 
         // Divide dx and dy to have intermediate mouseMove while dragging
         // Fractions of dx/dy need be superior to the dragThreshold
         // to make the drag works though
-        var intermediateDx = Math.round(dx/3)
+        let intermediateDx = Math.round(dx/3)
         if (Math.abs(intermediateDx) < (util.dragThreshold + 1))
             intermediateDx = 0
-        var intermediateDy = Math.round(dy/3)
+        let intermediateDy = Math.round(dy/3)
         if (Math.abs(intermediateDy) < (util.dragThreshold + 1))
             intermediateDy = 0
 
@@ -1549,8 +1549,8 @@ Item {
 
         // Trigger dragging by dragging past the drag threshold, but making sure to only drag
         // along a certain axis if a distance greater than zero was given for that axis.
-        var dragTriggerXDistance = dx > 0 ? (util.dragThreshold + 1) : 0
-        var dragTriggerYDistance = dy > 0 ? (util.dragThreshold + 1) : 0
+        let dragTriggerXDistance = dx > 0 ? (util.dragThreshold + 1) : 0
+        let dragTriggerYDistance = dy > 0 ? (util.dragThreshold + 1) : 0
         mouseMove(item, x + dragTriggerXDistance, y + dragTriggerYDistance, moveDelay, button)
         if (intermediateDx !== 0 || intermediateDy !== 0) {
             mouseMove(item, x + intermediateDx, y + intermediateDy, moveDelay, button)
@@ -1733,7 +1733,7 @@ Item {
                 id: test1
 
                 function test_touch() {
-                    var touch = touchEvent(area);
+                    let touch = touchEvent(area);
                     touch.press(0, area, 10, 10);
                     touch.commit();
                     verify(area.touched);
@@ -1921,7 +1921,7 @@ Item {
                 else
                     qtest_results.startBenchmark(TestResult.RunOnce, qtest_results.dataTag)
                 while (!qtest_results.isBenchmarkDone()) {
-                    var success = qtest_runInternal(prop, arg)
+                    let success = qtest_runInternal(prop, arg)
                     qtest_results.finishTestData()
                     if (!success)
                         break
@@ -1965,10 +1965,10 @@ Item {
 
         if (qtest_results.functionsToRun.length > 0) {
             checkNames = true
-            var found = false
+            let found = false
 
             if (name.length > 0) {
-                for (var index in qtest_results.functionsToRun) {
+                for (let index in qtest_results.functionsToRun) {
                     let caseFuncName = qtest_results.functionsToRun[index]
                     if (caseFuncName.indexOf(name + "::") != 0)
                         continue
@@ -1997,7 +1997,7 @@ Item {
 
         // Run the initTestCase function.
         qtest_results.functionName = "initTestCase"
-        var runTests = true
+        let runTests = true
         if (!qtest_runInternal("initTestCase"))
             runTests = false
         qtest_results.finishTestData()
@@ -2005,12 +2005,12 @@ Item {
         qtest_results.finishTestFunction()
 
         // Run the test methods.
-        var testList = []
+        let testList = []
         if (runTests) {
-            for (var prop in testCase) {
+            for (let prop in testCase) {
                 if (prop.indexOf("test_") != 0 && prop.indexOf("benchmark_") != 0)
                     continue
-                var tail = prop.lastIndexOf("_data");
+                let tail = prop.lastIndexOf("_data");
                 if (tail != -1 && tail == (prop.length - 5))
                     continue
                 testList.push(prop)
@@ -2018,14 +2018,14 @@ Item {
             testList.sort()
         }
 
-        for (var index in testList) {
-            var prop = testList[index]
+        for (let index in testList) {
+            let prop = testList[index]
 
             if (checkNames && !(prop in testsToRun))
                 continue
 
-            var datafunc = prop + "_data"
-            var isBenchmark = (prop.indexOf("benchmark_") == 0)
+            let datafunc = prop + "_data"
+            let isBenchmark = (prop.indexOf("benchmark_") == 0)
             qtest_results.functionName = prop
 
             if (!(datafunc in testCase))
@@ -2033,15 +2033,15 @@ Item {
 
             if (datafunc in testCase) {
                 if (qtest_runInternal(datafunc)) {
-                    var table = qtest_testCaseResult
-                    var haveData = false
+                    let table = qtest_testCaseResult
+                    let haveData = false
 
                     let checkTags = (checkNames && testsToRun[prop].length > 0)
 
                     qtest_results.initTestTable()
-                    for (var index in table) {
+                    for (let index in table) {
                         haveData = true
-                        var row = table[index]
+                        let row = table[index]
                         if (!row.tag)
                             row.tag = "row " + index    // Must have something
                         if (checkTags) {
@@ -2088,13 +2088,13 @@ Item {
         // Complain about missing functions that we were supposed to run.
         if (checkNames) {
             let missingTests = []
-            for (var func in testsToRun) {
+            for (let func in testsToRun) {
                 let caseFuncName = name + '::' + func
                 let tags = testsToRun[func]
                 if (tags.length <= 0)
                     missingTests.push(caseFuncName)
                 else
-                    for (var i in tags)
+                    for (let i in tags)
                         missingTests.push(caseFuncName + ':' + tags[i])
             }
             missingTests.sort()
