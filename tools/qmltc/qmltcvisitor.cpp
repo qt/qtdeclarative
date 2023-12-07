@@ -674,20 +674,20 @@ void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &
         u"case"_s,
         u"catch"_s,
         u"char"_s,
-        u"char8_t"_s,
         u"char16_t"_s,
         u"char32_t"_s,
+        u"char8_t"_s,
         u"class"_s,
-        u"compl"_s,
-        u"concept"_s,
-        u"const"_s,
-        u"consteval"_s,
-        u"constexpr"_s,
-        u"const_cast"_s,
-        u"continue"_s,
         u"co_await"_s,
         u"co_return"_s,
         u"co_yield"_s,
+        u"compl"_s,
+        u"concept"_s,
+        u"const"_s,
+        u"const_cast"_s,
+        u"consteval"_s,
+        u"constexpr"_s,
+        u"continue"_s,
         u"decltype"_s,
         u"default"_s,
         u"delete"_s,
@@ -755,6 +755,7 @@ void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &
         u"xor"_s,
         u"xor_eq"_s,
     };
+    Q_ASSERT(std::is_sorted(std::begin(cppKeywords), std::end(cppKeywords)));
 
     const auto isReserved = [&](QStringView word) {
         if (word.startsWith(QChar(u'_')) && word.size() >= 2
