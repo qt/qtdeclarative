@@ -2333,7 +2333,7 @@ void tst_qmlls_utils::completions_data()
             << None;
 
     QTest::newRow("forStatementIncrement")
-            << file << 103 << 31
+            << file << 103 << 30
             << ExpectedCompletions{
                    { u"helloJSStatements"_s, CompletionItemKind::Method },
                    { u"i"_s, CompletionItemKind::Variable },
@@ -2517,7 +2517,7 @@ void tst_qmlls_utils::completions_data()
             << None;
 
     QTest::newRow("forOfStatementConsequence")
-            << file << 135 << 33
+            << file << 135 << 30
             << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
                                     { constStatementCompletion, CompletionItemKind:: Snippet },
                                     { varStatementCompletion, CompletionItemKind::Snippet },
@@ -3157,6 +3157,72 @@ void tst_qmlls_utils::completions_data()
             << ExpectedCompletions{ { u"a"_s, CompletionItemKind::Variable },
                                     { u"b"_s, CompletionItemKind::Variable },
                                     { u"c"_s, CompletionItemKind::Variable },
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+
+    QTest::newRow("unaryMinus")
+            << testFile(u"completions/unaryExpression.qml"_s) << 5 << 10
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+
+    QTest::newRow("unaryPlus")
+            << testFile(u"completions/unaryExpression.qml"_s) << 6 << 10
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+
+    QTest::newRow("unaryTilde")
+            << testFile(u"completions/unaryExpression.qml"_s) << 7 << 10
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+
+    QTest::newRow("unaryNot")
+            << testFile(u"completions/unaryExpression.qml"_s) << 8 << 10
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+
+    QTest::newRow("typeof")
+            << testFile(u"completions/unaryExpression.qml"_s) << 9 << 16
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+
+    QTest::newRow("delete")
+            << testFile(u"completions/unaryExpression.qml"_s) << 10 << 16
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+
+    QTest::newRow("void")
+            << testFile(u"completions/unaryExpression.qml"_s) << 11 << 14
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+
+    QTest::newRow("postDecrement")
+            << testFile(u"completions/unaryExpression.qml"_s) << 12 << 9
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+
+    QTest::newRow("postIncrement")
+            << testFile(u"completions/unaryExpression.qml"_s) << 13 << 9
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+
+    QTest::newRow("preDecrement")
+            << testFile(u"completions/unaryExpression.qml"_s) << 14 << 11
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
+                                    }
+            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+
+    QTest::newRow("preIncrement")
+            << testFile(u"completions/unaryExpression.qml"_s) << 15 << 11
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion } << None;
 }

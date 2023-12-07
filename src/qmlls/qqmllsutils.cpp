@@ -3216,6 +3216,33 @@ static QList<CompletionItem> insideConditionalExpression(const DomItem &currentI
     return {};
 }
 
+static QList<CompletionItem> insideUnaryExpression(const DomItem &currentItem,
+                                                   const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation operatorToken = regions[OperatorTokenRegion];
+
+    if (afterLocation(operatorToken, ctx)) {
+        return QQmlLSUtils::scriptIdentifierCompletion(currentItem.field(Fields::expression), ctx);
+    }
+
+    return {};
+}
+
+static QList<CompletionItem> insidePostExpression(const DomItem &currentItem,
+                                                         const CompletionContextStrings &ctx)
+{
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+
+    const QQmlJS::SourceLocation operatorToken = regions[OperatorTokenRegion];
+
+    if (beforeLocation(ctx, operatorToken)) {
+        return QQmlLSUtils::scriptIdentifierCompletion(currentItem.field(Fields::expression), ctx);
+    }
+    return {};
+}
+
 static bool ctxBeforeStatement(const CompletionContextStrings &ctx, const DomItem &currentItem,
                                FileLocationRegion firstRegion)
 {
@@ -3348,6 +3375,10 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             return insideBreakStatement(currentParent, ctx);
         case DomType::ScriptConditionalExpression:
             return insideConditionalExpression(currentParent, ctx);
+        case DomType::ScriptUnaryExpression:
+            return insideUnaryExpression(currentParent, ctx);
+        case DomType::ScriptPostExpression:
+            return insidePostExpression(currentParent, ctx);
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.
