@@ -221,6 +221,71 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, uint fo
 /*!
     \overload
 
+    \return a new QQuickRenderTarget referencing a 2D texture array with the
+    specified \a arraySize and OpenGL \a textureId.
+
+    \note This implies multiview rendering (GL_OVR_multiview etc.), which can be
+    relevant with VR/AR especially. \a arraySize is the number of views,
+    typically \c 2. This overload should not be used other cases.
+    See \l QSGMaterial::viewCount() for details on enabling multiview rendering
+    within the Qt Quick scenegraph.
+
+    \a format specifies the native internal format of the texture. Only texture
+    formats that are supported by Qt's rendering infrastructure should be used.
+
+    \a pixelSize specifies the size of the image, in pixels.
+
+    \a sampleCount specific the number of samples. 0 or 1 means no
+    multisampling, while a value like 4 or 8 states that the native object is a
+    multisample texture.
+
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil texture array with a matching
+    number of layers, sample count, and a format of \c D24S8 is created and used
+    automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources, it
+    merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \since 6.8
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
+ */
+QQuickRenderTarget QQuickRenderTarget::fromOpenGLTextureMultiView(uint textureId, uint format, const QSize &pixelSize, int sampleCount, int arraySize)
+{
+    QQuickRenderTarget rt;
+    QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
+
+    if (!textureId) {
+        qWarning("QQuickRenderTarget: textureId is invalid");
+        return rt;
+    }
+
+    if (pixelSize.isEmpty()) {
+        qWarning("QQuickRenderTarget: Cannot create with empty size");
+        return rt;
+    }
+
+    if (arraySize < 1) {
+        qWarning("QQuickRenderTarget: Texture array must have at least one element");
+        return rt;
+    }
+
+    d->type = QQuickRenderTargetPrivate::Type::NativeTextureArray;
+    d->pixelSize = pixelSize;
+    d->sampleCount = qMax(1, sampleCount);
+
+    auto rhiFormat = QSGRhiSupport::toRhiTextureFormatFromGL(format);
+    d->u.nativeTextureArray = { textureId, 0, arraySize, uint(rhiFormat), 0 };
+
+    return rt;
+}
+
+/*!
+    \overload
+
     \return a new QQuickRenderTarget referencing an OpenGL texture
     object specified by \a textureId. The texture is assumed to have a
     format of GL_RGBA (GL_RGBA8).
@@ -445,6 +510,82 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D12Texture(void *texture,
 
     return rt;
 }
+
+/*!
+    \overload
+
+    \return a new QQuickRenderTarget referencing a D3D12 texture array object
+    specified by \a texture. The number of array elements (layers) is given in
+    \a arraySize.
+
+    \note This implies multiview rendering (GL_OVR_multiview etc.), which can be
+    relevant with VR/AR especially. \a arraySize is the number of views,
+    typically \c 2. This overload should not be used other cases.
+    See \l QSGMaterial::viewCount() for details on enabling multiview rendering
+    within the Qt Quick scenegraph.
+
+    \a resourceState must a valid bitmask with bits from D3D12_RESOURCE_STATES,
+    specifying the resource's current state.
+
+    \a format specifies the DXGI_FORMAT of the texture. Only texture formats
+    that are supported by Qt's rendering infrastructure should be used.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specific the number of samples. 0 or 1 means no
+    multisampling, while a value like 4 or 8 states that the native object is a
+    multisample texture.
+
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil texture array with a matching
+    number of layers, sample count, and a format of \l{QRhiTexture::}{D24S8} is
+    created and used automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources, it
+    merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \since 6.8
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
+ */
+QQuickRenderTarget QQuickRenderTarget::fromD3D12TextureMultiView(void *texture,
+                                                                 int resourceState,
+                                                                 uint format,
+                                                                 const QSize &pixelSize,
+                                                                 int sampleCount,
+                                                                 int arraySize)
+{
+    QQuickRenderTarget rt;
+    QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
+
+    if (!texture) {
+        qWarning("QQuickRenderTarget: texture is null");
+        return rt;
+    }
+
+    if (pixelSize.isEmpty()) {
+        qWarning("QQuickRenderTarget: Cannot create with empty size");
+        return rt;
+    }
+
+    if (arraySize < 1) {
+        qWarning("QQuickRenderTarget: Texture array must have at least one element");
+        return rt;
+    }
+
+    d->type = QQuickRenderTargetPrivate::Type::NativeTextureArray;
+    d->pixelSize = pixelSize;
+    d->sampleCount = qMax(1, sampleCount);
+
+    QRhiTexture::Flags flags;
+    auto rhiFormat = QSGRhiSupport::toRhiTextureFormatFromDXGI(format, &flags);
+    d->u.nativeTextureArray = { quint64(texture), resourceState, arraySize, uint(rhiFormat), uint(flags) };
+
+    return rt;
+}
 #endif
 
 /*!
@@ -498,6 +639,74 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, uin
     QRhiTexture::Flags flags;
     auto rhiFormat = QSGRhiSupport::toRhiTextureFormatFromMetal(format, &flags);
     d->u.nativeTexture = { quint64(texture), 0, uint(rhiFormat), uint(flags) };
+
+    return rt;
+}
+
+/*!
+    \overload
+
+    \return a new QQuickRenderTarget referencing a Metal texture array object
+    with \a arraySize elements specified by \a texture.
+
+    \note This implies multiview rendering (GL_OVR_multiview etc.), which can be
+    relevant with VR/AR especially. \a arraySize is the number of views,
+    typically \c 2. This overload should not be used other cases.
+    See \l QSGMaterial::viewCount() for details on enabling multiview rendering
+    within the Qt Quick scenegraph.
+
+    \a format specifies the MTLPixelFormat of the texture. Only texture formats
+    that are supported by Qt's rendering infrastructure should be used.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specific the number of samples. 0 or 1 means no
+    multisampling, while a value like 4 or 8 states that the native object is a
+    multisample texture.
+
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil texture array with a matching
+    number of layers, sample count, and a format of \c D24S8 is created and used
+    automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources, it
+    merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \since 6.8
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
+ */
+QQuickRenderTarget QQuickRenderTarget::fromMetalTextureMultiView(MTLTexture *texture, uint format,
+                                                                 const QSize &pixelSize, int sampleCount, int arraySize)
+{
+    QQuickRenderTarget rt;
+    QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
+
+    if (!texture) {
+        qWarning("QQuickRenderTarget: texture is null");
+        return rt;
+    }
+
+    if (pixelSize.isEmpty()) {
+        qWarning("QQuickRenderTarget: Cannot create with empty size");
+        return rt;
+    }
+
+    if (arraySize < 1) {
+        qWarning("QQuickRenderTarget: Texture array must have at least one element");
+        return rt;
+    }
+
+    d->type = QQuickRenderTargetPrivate::Type::NativeTextureArray;
+    d->pixelSize = pixelSize;
+    d->sampleCount = qMax(1, sampleCount);
+
+    QRhiTexture::Flags flags;
+    auto rhiFormat = QSGRhiSupport::toRhiTextureFormatFromMetal(format, &flags);
+    d->u.nativeTextureArray = { quint64(texture), 0, arraySize, uint(rhiFormat), uint(flags) };
 
     return rt;
 }
@@ -585,6 +794,75 @@ QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLay
     QRhiTexture::Flags flags;
     auto rhiFormat = QSGRhiSupport::toRhiTextureFormatFromVulkan(format, &flags);
     d->u.nativeTexture = { quint64(image), layout, uint(rhiFormat), uint(flags) };
+
+    return rt;
+}
+
+/*!
+    \overload
+
+    \return a new QQuickRenderTarget referencing a Vulkan image object with
+    \a arraySize layers specified by \a image. The current \a layout of the image
+    must be provided as well.
+
+    \note This implies multiview rendering (GL_OVR_multiview etc.), which can be
+    relevant with VR/AR especially. \a arraySize is the number of views,
+    typically \c 2. This overload should not be used other cases.
+    See \l QSGMaterial::viewCount() for details on enabling multiview rendering
+    within the Qt Quick scenegraph.
+
+    \a format specifies the VkFormat of the image. Only image formats that are
+    supported by Qt's rendering infrastructure should be used.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specific the number of samples. 0 or 1 means no
+    multisampling, while a value like 4 or 8 states that the native object is a
+    multisample texture.
+
+    The image is used as the first color attachment of the render target used by
+    the Qt Quick scenegraph. A depth-stencil texture array with a matching
+    number of layers, sample count, and a format of \c D24S8 is created and used
+    automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources, it
+    merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \since 6.8
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
+ */
+QQuickRenderTarget QQuickRenderTarget::fromVulkanImageMultiView(VkImage image, VkImageLayout layout, VkFormat format,
+                                                                const QSize &pixelSize, int sampleCount, int arraySize)
+{
+    QQuickRenderTarget rt;
+    QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
+
+    if (image == VK_NULL_HANDLE) {
+        qWarning("QQuickRenderTarget: image is invalid");
+        return rt;
+    }
+
+    if (pixelSize.isEmpty()) {
+        qWarning("QQuickRenderTarget: Cannot create with empty size");
+        return rt;
+    }
+
+    if (arraySize < 1) {
+        qWarning("QQuickRenderTarget: Texture array must have at least one element");
+        return rt;
+    }
+
+    d->type = QQuickRenderTargetPrivate::Type::NativeTextureArray;
+    d->pixelSize = pixelSize;
+    d->sampleCount = qMax(1, sampleCount);
+
+    QRhiTexture::Flags flags;
+    auto rhiFormat = QSGRhiSupport::toRhiTextureFormatFromVulkan(format, &flags);
+    d->u.nativeTextureArray = { quint64(image), layout, arraySize, uint(rhiFormat), uint(flags) };
 
     return rt;
 }
@@ -716,6 +994,14 @@ bool QQuickRenderTarget::isEqual(const QQuickRenderTarget &other) const noexcept
                 || d->u.nativeTexture.rhiFlags != other.d->u.nativeTexture.rhiFlags)
             return false;
         break;
+    case QQuickRenderTargetPrivate::Type::NativeTextureArray:
+        if (d->u.nativeTextureArray.object != other.d->u.nativeTextureArray.object
+                || d->u.nativeTextureArray.layoutOrState != other.d->u.nativeTextureArray.layoutOrState
+                || d->u.nativeTextureArray.arraySize != other.d->u.nativeTextureArray.arraySize
+                || d->u.nativeTextureArray.rhiFormat != other.d->u.nativeTextureArray.rhiFormat
+                || d->u.nativeTextureArray.rhiFlags != other.d->u.nativeTextureArray.rhiFlags)
+            return false;
+        break;
     case QQuickRenderTargetPrivate::Type::NativeRenderbuffer:
         if (d->u.nativeRenderbufferObject != other.d->u.nativeRenderbufferObject)
             return false;
@@ -766,6 +1052,39 @@ static bool createRhiRenderTarget(const QRhiColorAttachment &colorAttachment,
     return true;
 }
 
+static bool createRhiRenderTargetMultiView(const QRhiColorAttachment &colorAttachment,
+                                           const QSize &pixelSize,
+                                           int arraySize,
+                                           int sampleCount,
+                                           QRhi *rhi,
+                                           QQuickWindowRenderTarget *dst)
+{
+    std::unique_ptr<QRhiTexture> depthStencil(rhi->newTextureArray(QRhiTexture::D24S8, arraySize, pixelSize, sampleCount, QRhiTexture::RenderTarget));
+    if (!depthStencil->create()) {
+        qWarning("Failed to build depth-stencil texture array for QQuickRenderTarget");
+        return false;
+    }
+
+    QRhiTextureRenderTargetDescription rtDesc(colorAttachment);
+    rtDesc.setDepthTexture(depthStencil.get());
+    std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
+    std::unique_ptr<QRhiRenderPassDescriptor> rp(rt->newCompatibleRenderPassDescriptor());
+    rt->setRenderPassDescriptor(rp.get());
+
+    if (!rt->create()) {
+        qWarning("Failed to build multiview texture render target for QQuickRenderTarget");
+        return false;
+    }
+
+    dst->renderTarget = rt.release();
+    dst->rpDesc = rp.release();
+    dst->depthStencilTexture = depthStencil.release();
+    dst->multiViewCount = arraySize;
+    dst->owns = true; // ownership of the native resource itself is not transferred but the QRhi objects are on us now
+
+    return true;
+}
+
 bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst)
 {
     switch (type) {
@@ -788,6 +1107,25 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
         QRhiColorAttachment att(texture.get());
         if (!createRhiRenderTarget(att, pixelSize, sampleCount, rhi, dst))
             return false;
+        dst->texture = texture.release();
+    }
+        return true;
+
+    case Type::NativeTextureArray:
+    {
+        const auto format = u.nativeTextureArray.rhiFormat == QRhiTexture::UnknownFormat ? QRhiTexture::RGBA8
+                                                                                         : QRhiTexture::Format(u.nativeTextureArray.rhiFormat);
+        const auto flags = QRhiTexture::RenderTarget | QRhiTexture::Flags(u.nativeTextureArray.rhiFlags);
+        const int arraySize = u.nativeTextureArray.arraySize;
+        std::unique_ptr<QRhiTexture> texture(rhi->newTextureArray(format, arraySize, pixelSize, sampleCount, flags));
+        if (!texture->createFrom({ u.nativeTextureArray.object, u.nativeTextureArray.layoutOrState })) {
+            qWarning("Failed to build wrapper texture array for QQuickRenderTarget");
+            return false;
+        }
+        QRhiColorAttachment att(texture.get());
+        att.setMultiViewCount(arraySize);
+        if (!createRhiRenderTargetMultiView(att, pixelSize, arraySize, sampleCount, rhi, dst))
+             return false;
         dst->texture = texture.release();
     }
         return true;

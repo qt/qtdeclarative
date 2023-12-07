@@ -407,12 +407,13 @@ int QSGMaterial::compare(const QSGMaterial *other) const
     )
     \endcode
 
-    See \l QRhi::MultiView, \l QRhiColorAttachment::setMultiViewCount(), and \l
-    QRhiGraphicsPipeline::setMultiViewCount() for further, lower-level details
-    on multiview support in Qt. The Qt Quick scene graph renderer is prepared
-    to recognize multiview render targets, when specified via
-    \l QQuickRenderTarget::fromRhiRenderTarget(), and propagate the view count to
-    graphics pipelines and the materials.
+    See \l QRhi::MultiView, \l QRhiColorAttachment::setMultiViewCount(), and
+    \l QRhiGraphicsPipeline::setMultiViewCount() for further, lower-level details
+    on multiview support in Qt. The Qt Quick scene graph renderer is prepared to
+    recognize multiview render targets, when specified via
+    \l QQuickRenderTarget::fromRhiRenderTarget() or the \c MultiView
+    functions such as \l{QQuickRenderTarget::}{fromVulkanImageMultiView()}, and
+    propagate the view count to graphics pipelines and the materials.
 
     \since 6.8
  */

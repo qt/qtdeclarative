@@ -81,6 +81,7 @@ public:
     QRhiTexture *texture = nullptr;
     QRhiRenderBuffer *renderBuffer = nullptr;
     QRhiRenderBuffer *depthStencil = nullptr;
+    QRhiTexture *depthStencilTexture = nullptr; // for multiview
     QPaintDevice *paintDevice = nullptr;
     bool owns = false;
     int multiViewCount = 1;
