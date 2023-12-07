@@ -642,7 +642,7 @@ Item {
             throw new Error("QtQuickTest::fail")
         }
 
-        if (timeout !== undefined && typeof(timeout) != "number") {
+        if (timeout !== undefined && typeof(timeout) !== "number") {
             qtest_results.fail("Second argument must be a number; actual type is " + typeof timeout,
                 util.callerFile(), util.callerLine())
             throw new Error("QtQuickTest::fail")
@@ -828,9 +828,9 @@ Item {
             if (typeExp !== typeAct) {
                 // allow object vs string comparison (e.g. for colors)
                 // else break on different types
-                if ((typeExp === "string" && (typeAct === "object") || typeAct == "declarativeitem")
-                 || ((typeExp === "object" || typeExp == "declarativeitem") && typeAct === "string")) {
-                    success = (act == exp)
+                if ((typeExp === "string" && (typeAct === "object") || typeAct === "declarativeitem")
+                 || ((typeExp === "object" || typeExp === "declarativeitem") && typeAct === "string")) {
+                    success = (act == exp) // @disable-check M126
                 }
             } else if (typeExp === "string" || typeExp === "boolean" ||
                        typeExp === "null" || typeExp === "undefined") {
@@ -838,7 +838,7 @@ Item {
                     // to catch short annotaion VS 'new' annotation of act declaration
                     // e.g. let i = 1;
                     //      let j = new Number(1);
-                    success = (act == exp)
+                    success = (act == exp) // @disable-check M126
                 } else {
                     success = (act === exp)
                 }
@@ -894,8 +894,8 @@ Item {
             bProperties.push(i); // collect exp's properties
         }
 
-        if (aProperties.length == 0 && bProperties.length == 0) { // at least a special case for QUrl
-            return eq && (JSON.stringify(act) == JSON.stringify(exp));
+        if (aProperties.length === 0 && bProperties.length === 0) { // at least a special case for QUrl
+            return eq && (JSON.stringify(act) === JSON.stringify(exp));
         }
 
         // Ensures identical properties name
@@ -905,7 +905,7 @@ Item {
 
     /*! \internal */
     function qtest_compareInternalArrays(actual, expected) {
-        if (actual.length != expected.length) {
+        if (actual.length !== expected.length) {
             return false
         }
 
@@ -1098,18 +1098,18 @@ Item {
         \sa compare(), SignalSpy::wait()
     */
     function tryCompare(obj, prop, ...args) {
-        if (typeof(prop) != "string" && typeof(prop) != "number") {
+        if (typeof(prop) !== "string" && typeof(prop) !== "number") {
             qtest_results.fail("A property name as string or index is required for tryCompare",
                         util.callerFile(), util.callerLine())
             throw new Error("QtQuickTest::fail")
         }
-        if (args.length == 0) {
+        if (args.length === 0) {
             qtest_results.fail("A value is required for tryCompare",
                         util.callerFile(), util.callerLine())
             throw new Error("QtQuickTest::fail")
         }
         let [value, timeout, msg] = args
-        if (timeout !== undefined && typeof(timeout) != "number") {
+        if (timeout !== undefined && typeof(timeout) !== "number") {
             qtest_results.fail("timeout should be a number",
                         util.callerFile(), util.callerLine())
             throw new Error("QtQuickTest::fail")
@@ -1355,9 +1355,9 @@ Item {
     function keyPress(key, modifiers, delay) {
         if (modifiers === undefined)
             modifiers = Qt.NoModifier
-        if (delay == undefined)
+        if (delay === undefined)
             delay = -1
-        if (typeof(key) == "string" && key.length == 1) {
+        if (typeof(key) === "string" && key.length === 1) {
             if (!qtest_events.keyPressChar(key, modifiers, delay))
                 qtest_fail("window not shown", 2)
         } else {
@@ -1381,9 +1381,9 @@ Item {
     function keyRelease(key, modifiers, delay) {
         if (modifiers === undefined)
             modifiers = Qt.NoModifier
-        if (delay == undefined)
+        if (delay === undefined)
             delay = -1
-        if (typeof(key) == "string" && key.length == 1) {
+        if (typeof(key) === "string" && key.length === 1) {
             if (!qtest_events.keyReleaseChar(key, modifiers, delay))
                 qtest_fail("window not shown", 2)
         } else {
@@ -1407,9 +1407,9 @@ Item {
     function keyClick(key, modifiers, delay) {
         if (modifiers === undefined)
             modifiers = Qt.NoModifier
-        if (delay == undefined)
+        if (delay === undefined)
             delay = -1
-        if (typeof(key) == "string" && key.length == 1) {
+        if (typeof(key) === "string" && key.length === 1) {
             if (!qtest_events.keyClickChar(key, modifiers, delay))
                 qtest_fail("window not shown", 2)
         } else {
@@ -1462,7 +1462,7 @@ Item {
             button = Qt.LeftButton
         if (modifiers === undefined)
             modifiers = Qt.NoModifier
-        if (delay == undefined)
+        if (delay === undefined)
             delay = -1
         if (x === undefined)
             x = item.width / 2
@@ -1496,7 +1496,7 @@ Item {
             button = Qt.LeftButton
         if (modifiers === undefined)
             modifiers = Qt.NoModifier
-        if (delay == undefined)
+        if (delay === undefined)
             delay = -1
         if (x === undefined)
             x = item.width / 2
@@ -1531,7 +1531,7 @@ Item {
             button = Qt.LeftButton
         if (modifiers === undefined)
             modifiers = Qt.NoModifier
-        if (delay == undefined)
+        if (delay === undefined)
             delay = -1
         let moveDelay = Math.max(1, delay === -1 ? qtest_events.defaultMouseDelay : delay)
 
@@ -1584,7 +1584,7 @@ Item {
             button = Qt.LeftButton
         if (modifiers === undefined)
             modifiers = Qt.NoModifier
-        if (delay == undefined)
+        if (delay === undefined)
             delay = -1
         if (x === undefined)
             x = item.width / 2
@@ -1625,7 +1625,7 @@ Item {
             button = Qt.LeftButton
         if (modifiers === undefined)
             modifiers = Qt.NoModifier
-        if (delay == undefined)
+        if (delay === undefined)
             delay = -1
         if (x === undefined)
             x = item.width / 2
@@ -1656,9 +1656,9 @@ Item {
         if (!qtest_verifyItem(item, "mouseMove"))
             return
 
-        if (delay == undefined)
+        if (delay === undefined)
             delay = -1
-        if (buttons == undefined)
+        if (buttons === undefined)
             buttons = Qt.NoButton
         if (x === undefined)
             x = item.width / 2
@@ -1688,15 +1688,15 @@ Item {
         if (!qtest_verifyItem(item, "mouseWheel"))
             return
 
-        if (delay == undefined)
+        if (delay === undefined)
             delay = -1
-        if (buttons == undefined)
+        if (buttons === undefined)
             buttons = Qt.NoButton
         if (modifiers === undefined)
             modifiers = Qt.NoModifier
-        if (xDelta == undefined)
+        if (xDelta === undefined)
             xDelta = 0
-        if (yDelta == undefined)
+        if (yDelta === undefined)
             yDelta = 0
         if (!qtest_events.mouseWheel(item, x, y, buttons, modifiers, xDelta, yDelta, delay))
             qtest_fail("window not shown", 2)
@@ -1878,7 +1878,7 @@ Item {
             qtest_testCaseResult = testCase[prop](arg)
         } catch (e) {
             qtest_testCaseResult = []
-            if (e.message.indexOf("QtQuickTest::") != 0) {
+            if (e.message.indexOf("QtQuickTest::") !== 0) {
                 // Test threw an unrecognized exception - fail.
                 qtest_results.fail("Uncaught exception: " + e.message,
                              e.fileName, e.lineNumber)
@@ -1916,7 +1916,7 @@ Item {
                     break
 
                 // Execute the benchmark function.
-                if (prop.indexOf("benchmark_once_") != 0)
+                if (prop.indexOf("benchmark_once_") !== 0)
                     qtest_results.startBenchmark(TestResult.RepeatUntilValidMeasurement, qtest_results.dataTag)
                 else
                     qtest_results.startBenchmark(TestResult.RunOnce, qtest_results.dataTag)
@@ -1970,7 +1970,7 @@ Item {
             if (name.length > 0) {
                 for (let index in qtest_results.functionsToRun) {
                     let caseFuncName = qtest_results.functionsToRun[index]
-                    if (caseFuncName.indexOf(name + "::") != 0)
+                    if (caseFuncName.indexOf(name + "::") !== 0)
                         continue
 
                     found = true
@@ -2008,10 +2008,10 @@ Item {
         let testList = []
         if (runTests) {
             for (let prop in testCase) {
-                if (prop.indexOf("test_") != 0 && prop.indexOf("benchmark_") != 0)
+                if (prop.indexOf("test_") !== 0 && prop.indexOf("benchmark_") !== 0)
                     continue
                 let tail = prop.lastIndexOf("_data");
-                if (tail != -1 && tail == (prop.length - 5))
+                if (tail !== -1 && tail === (prop.length - 5))
                     continue
                 testList.push(prop)
             }
@@ -2025,7 +2025,7 @@ Item {
                 continue
 
             let datafunc = prop + "_data"
-            let isBenchmark = (prop.indexOf("benchmark_") == 0)
+            let isBenchmark = (prop.indexOf("benchmark_") === 0)
             qtest_results.functionName = prop
 
             if (!(datafunc in testCase))
@@ -2119,7 +2119,7 @@ Item {
     }
 
     onWhenChanged: {
-        if (when != qtest_prevWhen) {
+        if (when !== qtest_prevWhen) {
             qtest_prevWhen = when
             if (when)
                 TestSchedule.testCases.push(testCase)
