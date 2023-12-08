@@ -421,26 +421,20 @@ private:
         const QJsonArray defaultControls = getArray("default controls", m_inputConfig);
         progressTo(controlsArray.count() + defaultControls.count());
 
-        QRegularExpression re(m_bridge->m_controlToGenerate);
         for (const auto controlValue: defaultControls) {
             progress();
-            tryGenerateControl(controlValue.toObject(), re, true);
+            tryGenerateControl(controlValue.toObject(), true);
         }
 
         for (const auto controlValue : controlsArray) {
             progress();
-            tryGenerateControl(controlValue.toObject(), re);
+            tryGenerateControl(controlValue.toObject());
         }
     }
 
-    void tryGenerateControl(const QJsonObject &controlObj, const QRegularExpression &re, bool isDefault = false) {
+    void tryGenerateControl(const QJsonObject &controlObj, bool isDefault = false) {
         const QString name = getString("name", controlObj);
-        if (!re.match(name).hasMatch())
-            return;
-
-        // If an empty pattern was given from the command line, we
-        // respect the controls selected in the UI
-        if (re.pattern().isEmpty() && !m_bridge->m_selectedControls.contains(name))
+        if (!m_bridge->m_selectedControls.contains(name))
             return;
 
         try {

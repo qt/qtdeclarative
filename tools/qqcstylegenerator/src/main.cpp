@@ -31,8 +31,8 @@ int main(int argc, char **argv){
         {"sanity",
             QCoreApplication::translate("main", "Run extra sanity checks on the Figma file")},
         {{"g", "generate"},
-            QCoreApplication::translate("main", "Generate only a subset of the controls, e.g \"RadioButton|CheckBox\""),
-            QCoreApplication::translate("main", "regexp")},
+            QCoreApplication::translate("main", "Generate only a subset of the controls, e.g -g RadioButton -g CheckBox"),
+            QCoreApplication::translate("main", "control")},
         {{"f", "format"},
             QCoreApplication::translate("main", "The image format(s) to use, e.g -f png@1x -f png@2x -f svg"),
             QCoreApplication::translate("main", "format")},
@@ -74,6 +74,10 @@ int main(int argc, char **argv){
         bridge.m_figmaToken = parser.value("token");
         bridge.m_sanity = parser.isSet("sanity");
 
+        if (parser.isSet("generate"))
+            bridge.m_selectedControls = parser.values("generate");
+        else
+            bridge.m_selectedControls = bridge.availableControls();
         if (parser.isSet("format"))
             bridge.m_selectedImageFormats = parser.values("format");
         else
