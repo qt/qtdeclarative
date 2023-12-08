@@ -159,6 +159,7 @@ private slots:
     void popContextAfterRet();
     void prefixedType();
     void propertyOfParent();
+    void reduceWithNullThis();
     void readEnumFromInstance();
     void registerElimination();
     void registerPropagation();
@@ -3368,6 +3369,18 @@ void tst_QmlCppCodegen::propertyOfParent()
         expected = !expected;
         object->setProperty("foo", expected);
     }
+}
+
+void tst_QmlCppCodegen::reduceWithNullThis()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/reduceWithNullThis.qml"_s));
+    QVERIFY2(component.isReady(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QCOMPARE(object->property("preferredHeight").toDouble(), 28.0);
+    QCOMPARE(object->property("preferredHeight2").toDouble(), 28.0);
 }
 
 void tst_QmlCppCodegen::readEnumFromInstance()
