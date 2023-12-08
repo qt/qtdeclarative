@@ -146,10 +146,13 @@ ReturnedValue convertAndCall(
         values[0] = nullptr;
     }
 
-    if (const QV4::QObjectWrapper *cppThisObject = thisObject->as<QV4::QObjectWrapper>())
+    if (const QV4::QObjectWrapper *cppThisObject = thisObject
+                ? thisObject->as<QV4::QObjectWrapper>()
+                : nullptr) {
         call(cppThisObject->object(), values, types, argc);
-    else
+    } else {
         call(nullptr, values, types, argc);
+    }
 
     ReturnedValue result;
     if (values[0]) {
