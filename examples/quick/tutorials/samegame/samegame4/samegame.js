@@ -27,10 +27,6 @@ function startNewGame() {
     maxRow = Math.floor(gameCanvas.height / gameCanvas.blockSize);
     maxIndex = maxRow * maxColumn;
 
-    //Close dialogs
-    nameInputDialog.hide();
-    dialog.hide();
-
     //Initialize Board
     board = new Array(maxIndex);
     gameCanvas.score = 0;
@@ -40,6 +36,10 @@ function startNewGame() {
             createBlock(column, row);
         }
     }
+
+    //Close dialogs
+    nameInputDialog.hide();
+    dialog.hide();
 
     gameDuration = new Date();
 }
@@ -191,6 +191,9 @@ function floodMoveCheck(column, row, type) {
 
 //![2]
 function saveHighScore(name) {
+    if (gameCanvas.score == 0)
+        return;
+
     if (scoresURL != "")
         sendHighScore(name);
 
