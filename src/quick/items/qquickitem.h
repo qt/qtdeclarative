@@ -105,7 +105,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     QT6_ONLY(Q_PROPERTY(Qt::FocusPolicy focusPolicy READ focusPolicy WRITE setFocusPolicy NOTIFY focusPolicyChanged))
     QT7_ONLY(Q_PROPERTY(Qt::FocusPolicy focusPolicy READ focusPolicy WRITE setFocusPolicy NOTIFY focusPolicyChanged FINAL))
     QT6_ONLY(Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged))
-    QT7_ONLY(Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL))
+    QT7_ONLY(Q_PROPERTY(Qt::FocusReason focusReason READ focusReason NOTIFY focusReasonChanged FINAL))
 
     Q_PROPERTY(qreal rotation READ rotation WRITE setRotation NOTIFY rotationChanged)
     Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY scaleChanged)

@@ -7838,6 +7838,7 @@ QQuickItem *QQuickItem::scopedFocusItem() const
 
 /*!
     \qmlproperty enumeration QtQuick::Item::focusReason
+    \readonly
     \since 6.7
 
     \input item.qdocinc focus-reason
