@@ -20,8 +20,10 @@ public class QtQuickView extends QtView {
     }
 
     private String m_qmlUri;
+    private String[] m_qmlImportPaths = null;
 
-    native void createQuickView(String qmlUri, int width, int height, long parentWindowReference);
+    native void createQuickView(String qmlUri, int width, int height, long parentWindowReference,
+                                String[] qmlImportPaths);
     native void setRootObjectProperty(long windowReference, String propertyName, Object value);
     native Object getRootObjectProperty(long windowReference, String propertyName);
     native int addRootObjectSignalListener(long windowReference, String signalName, Class argType,
@@ -30,18 +32,24 @@ public class QtQuickView extends QtView {
 
     public QtQuickView(Context context, String qmlUri, String appName)
         throws InvalidParameterException {
+        this(context, qmlUri, appName, null);
+    }
+
+    public QtQuickView(Context context, String qmlUri, String appName, String[] qmlImportPaths)
+            throws InvalidParameterException
+    {
         super(context, appName);
         if (qmlUri == null || qmlUri.isEmpty()) {
             throw new InvalidParameterException(
                 "QtQuickView: argument 'qmlUri' may not be empty or null");
         }
-
         m_qmlUri = qmlUri;
+        m_qmlImportPaths = qmlImportPaths;
     }
 
     @Override
     protected void createWindow(long parentWindowReference) {
-        createQuickView(m_qmlUri, getWidth(), getHeight(), parentWindowReference);
+        createQuickView(m_qmlUri, getWidth(), getHeight(), parentWindowReference, m_qmlImportPaths);
     }
 
     public void setProperty(String propertyName, Object value)

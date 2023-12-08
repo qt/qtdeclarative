@@ -21,11 +21,13 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_JNI_TYPE(StringArray, "[Ljava/lang/String;")
+
 namespace QtAndroidQuickViewEmbedding
 {
     bool registerNatives(QJniEnvironment& env);
     void createQuickView(JNIEnv *env, jobject nativeWindow, jstring qmlUri, jint width, jint height,
-                         jlong parentWindowReference);
+                         jlong parentWindowReference, QtJniTypes::StringArray qmlImportPaths);
     Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(createQuickView)
     void setRootObjectProperty(JNIEnv *env, jobject, jlong parentWindowReference,
                                jstring propertyName, jobject value);

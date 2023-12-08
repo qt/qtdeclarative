@@ -5,6 +5,7 @@
 
 #include <QtCore/qjnienvironment.h>
 #include <QtCore/qjniobject.h>
+#include <QtCore/qjniarray.h>
 #include <QtCore/qjnitypes.h>
 #include <QtQuick/qquickitem.h>
 
@@ -26,23 +27,36 @@ Q_DECLARE_JNI_CLASS(Class, "java/lang/Class");
 namespace QtAndroidQuickViewEmbedding
 {
     void createQuickView(JNIEnv*, jobject nativeWindow, jstring qmlUri, jint width, jint height,
-                         jlong parentWindowReference)
+                         jlong parentWindowReference, QtJniTypes::StringArray qmlImportPaths)
     {
         static_assert (sizeof(jlong) >= sizeof(void*),
                       "Insufficient size of Java type to hold the c++ pointer");
         const QUrl qmlUrl(QJniObject(qmlUri).toString());
+
+        QStringList importPaths;
+        if (qmlImportPaths.isValid()) {
+            QJniArray<QtJniTypes::String> importPathsArray(qmlImportPaths);
+            importPaths.reserve(importPathsArray.size());
+            for (int i = 0; i < importPathsArray.size(); ++i)
+                importPaths << importPathsArray.at(i).toString();
+        }
+
         QMetaObject::invokeMethod(qApp, [qtViewObject = QJniObject(nativeWindow),
                                         parentWindowReference,
                                         width,
                                         height,
-                                        qmlUrl] {
+                                        qmlUrl,
+                                        importPaths] {
             QWindow *parentWindow = reinterpret_cast<QWindow *>(parentWindowReference);
-            QQuickView* view = new QQuickView(parentWindow);
+            QQuickView *view = new QQuickView(parentWindow);
+            QQmlEngine *engine = view->engine();
             new SignalHelper(view);
             view->setSource(qmlUrl);
             view->setColor(QColor(Qt::transparent));
             view->setWidth(width);
             view->setHeight(height);
+            for (const QString &path : importPaths)
+                engine->addImportPath(path);
             const QtJniTypes::QtWindow window = reinterpret_cast<jobject>(view->winId());
             qtViewObject.callMethod<void>("addQtWindow",
                                           window,
