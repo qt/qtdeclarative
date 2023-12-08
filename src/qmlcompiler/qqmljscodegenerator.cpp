@@ -1455,8 +1455,17 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
     // Choose a container that can hold both, the "in" accumulator and what we actually want.
     // If the types are all the same because we can all store them as verbatim C++ types,
     // the container will also be that type.
-    const QQmlJSScope::ConstPtr container = m_typeResolver->merge(specific.storedType(), valueType);
-    const QQmlJSRegisterContent property = specific.storedIn(container);
+
+    QQmlJSRegisterContent property = specific;
+    if (!m_typeResolver->equals(specific.storedType(), valueType)) {
+        if (m_typeResolver->isPrimitive(specific.storedType())
+                && m_typeResolver->isPrimitive(valueType)) {
+            // Preferably store in QJSPrimitiveValue since we need the content pointer below.
+            property = property.storedIn(m_typeResolver->jsPrimitiveType());
+        } else {
+            property = property.storedIn(m_typeResolver->merge(specific.storedType(), valueType));
+        }
+    }
 
     const QString object = registerVariable(baseReg);
     m_body += u"{\n"_s;
@@ -4088,6 +4097,11 @@ QString QQmlJSCodeGenerator::convertContained(const QQmlJSRegisterContent &from,
         // If from is simply a wrapping of a specific type into a more general one, we can convert
         // the original type instead. You can't nest wrappings after all.
         return conversion(originalFrom.storedIn(from.storedType()), to, variable);
+    }
+
+    if (m_typeResolver->isPrimitive(containedFrom) && m_typeResolver->isPrimitive(containedTo)) {
+        const QQmlJSRegisterContent intermediate = from.storedIn(m_typeResolver->jsPrimitiveType());
+        return conversion(intermediate, to, conversion(from, intermediate, variable));
     }
 
     reject(u"internal conversion with incompatible or ambiguous types: %1 -> %2"_s

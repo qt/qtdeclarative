@@ -3870,6 +3870,7 @@ void tst_QmlCppCodegen::setLookupConversion()
     QVERIFY(o->objectName().isEmpty());
     QMetaObject::invokeMethod(o.data(), "t");
     QCOMPARE(o->objectName(), u"a"_s);
+    QCOMPARE(o->property("value").toInt(), 9);
 }
 
 void tst_QmlCppCodegen::shadowedAsCasts()
