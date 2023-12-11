@@ -70,6 +70,7 @@ public:
     bool popupMode = false;
     bool triggering = false;
     bool altPressed = false;
+    bool requestNative = false;
     QQmlComponent *delegate = nullptr;
     QPointer<QQuickMenuBarItem> currentItem;
     QPointer<QQuickItem> windowContentItem;

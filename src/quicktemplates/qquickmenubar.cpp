@@ -626,6 +626,25 @@ QAccessible::Role QQuickMenuBar::accessibleRole() const
 }
 #endif
 
+bool QQuickMenuBar::requestNative() const
+{
+    return d_func()->requestNative;
+}
+
+void QQuickMenuBar::setRequestNative(bool requestNative)
+{
+    Q_D(QQuickMenuBar);
+    if (d->requestNative == requestNative)
+        return;
+    d->requestNative = requestNative;
+    emit requestNativeChanged();
+}
+
+void QQuickMenuBar::resetRequestNative()
+{
+    setRequestNative(false);
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qquickmenubar_p.cpp"

@@ -37,6 +37,7 @@ private slots:
     void addRemove();
     void checkHighlightWhenMenuDismissed();
     void hoverAfterClosingWithEscape();
+    void requestNative();
 
 private:
     static bool hasWindowActivation();
@@ -820,6 +821,25 @@ void tst_qquickmenubar::hoverAfterClosingWithEscape()
     QVERIFY(secondMenu);
     QVERIFY(!secondMenu->isVisible());
 }
+
+void tst_qquickmenubar::requestNative()
+{
+    QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    // uncomment when native menubar implementation is done
+//    QVERIFY(menuBar->requestNative());
+
+    menuBar->setRequestNative(false);
+    QVERIFY(!menuBar->requestNative());
+
+    menuBar->setRequestNative(true);
+    QVERIFY(menuBar->requestNative());
+}
+
 
 QTEST_QUICKCONTROLS_MAIN(tst_qquickmenubar)
 

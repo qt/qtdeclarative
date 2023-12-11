@@ -30,6 +30,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuBar : public QQuickContainer
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     Q_PRIVATE_PROPERTY(QQuickMenuBar::d_func(), QQmlListProperty<QQuickMenu> menus READ menus NOTIFY menusChanged FINAL)
     Q_PRIVATE_PROPERTY(QQuickMenuBar::d_func(), QQmlListProperty<QObject> contentData READ contentData FINAL)
+    Q_PROPERTY(bool requestNative READ requestNative WRITE setRequestNative RESET resetRequestNative
+        NOTIFY requestNativeChanged FINAL REVISION(6, 8))
     QML_NAMED_ELEMENT(MenuBar)
     QML_ADDED_IN_VERSION(2, 3)
 
@@ -45,9 +47,14 @@ public:
     Q_INVOKABLE void removeMenu(QQuickMenu *menu);
     Q_INVOKABLE QQuickMenu *takeMenu(int index);
 
+    bool requestNative() const;
+    void setRequestNative(bool requestNative);
+    void resetRequestNative();
+
 Q_SIGNALS:
     void delegateChanged();
     void menusChanged();
+    void requestNativeChanged();
 
 protected:
     bool eventFilter(QObject *object, QEvent *event) override;
