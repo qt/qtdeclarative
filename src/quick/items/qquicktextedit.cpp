@@ -715,9 +715,8 @@ QQuickTextEdit::HAlignment QQuickTextEdit::hAlign() const
 void QQuickTextEdit::setHAlign(HAlignment align)
 {
     Q_D(QQuickTextEdit);
-    bool forceAlign = d->hAlignImplicit && d->effectiveLayoutMirror;
-    d->hAlignImplicit = false;
-    if (d->setHAlign(align, forceAlign) && isComponentComplete()) {
+
+    if (d->setHAlign(align, true) && isComponentComplete()) {
         d->updateDefaultTextOption();
         updateSize();
     }
@@ -752,20 +751,33 @@ QQuickTextEdit::HAlignment QQuickTextEdit::effectiveHAlign() const
     return effectiveAlignment;
 }
 
-bool QQuickTextEditPrivate::setHAlign(QQuickTextEdit::HAlignment alignment, bool forceAlign)
+bool QQuickTextEditPrivate::setHAlign(QQuickTextEdit::HAlignment align, bool forceAlign)
 {
     Q_Q(QQuickTextEdit);
-    if (hAlign != alignment || forceAlign) {
-        QQuickTextEdit::HAlignment oldEffectiveHAlign = q->effectiveHAlign();
-        hAlign = alignment;
-        emit q->horizontalAlignmentChanged(alignment);
-        if (oldEffectiveHAlign != q->effectiveHAlign())
-            emit q->effectiveHorizontalAlignmentChanged();
+    if (hAlign == align && !forceAlign)
+        return false;
+
+    const bool wasImplicit = hAlignImplicit;
+    const auto oldEffectiveHAlign = q->effectiveHAlign();
+
+    hAlignImplicit = !forceAlign;
+    if (hAlign != align) {
+        hAlign = align;
+        emit q->horizontalAlignmentChanged(align);
+    }
+
+    if (q->effectiveHAlign() != oldEffectiveHAlign) {
+        emit q->effectiveHorizontalAlignmentChanged();
         return true;
+    }
+
+    if (forceAlign && wasImplicit) {
+        // QTBUG-120052 - when horizontal text alignment is set explicitly,
+        // we need notify any other controls that may depend on it, like QQuickPlaceholderText
+        emit q->effectiveHorizontalAlignmentChanged();
     }
     return false;
 }
-
 
 Qt::LayoutDirection QQuickTextEditPrivate::textDirection(const QString &text) const
 {
@@ -789,20 +801,22 @@ Qt::LayoutDirection QQuickTextEditPrivate::textDirection(const QString &text) co
 bool QQuickTextEditPrivate::determineHorizontalAlignment()
 {
     Q_Q(QQuickTextEdit);
-    if (hAlignImplicit && q->isComponentComplete()) {
-        Qt::LayoutDirection direction = contentDirection;
+    if (!hAlignImplicit || !q->isComponentComplete())
+        return false;
+
+    Qt::LayoutDirection direction = contentDirection;
 #if QT_CONFIG(im)
-        if (direction == Qt::LayoutDirectionAuto) {
-            const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
-            direction = textDirection(preeditText);
-        }
-        if (direction == Qt::LayoutDirectionAuto)
-            direction = qGuiApp->inputMethod()->inputDirection();
+    if (direction == Qt::LayoutDirectionAuto) {
+        const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
+        direction = textDirection(preeditText);
+    }
+    if (direction == Qt::LayoutDirectionAuto)
+        direction = qGuiApp->inputMethod()->inputDirection();
 #endif
 
-        return setHAlign(direction == Qt::RightToLeft ? QQuickTextEdit::AlignRight : QQuickTextEdit::AlignLeft);
-    }
-    return false;
+    const auto implicitHAlign = direction == Qt::RightToLeft ?
+            QQuickTextEdit::AlignRight : QQuickTextEdit::AlignLeft;
+    return setHAlign(implicitHAlign);
 }
 
 void QQuickTextEditPrivate::mirrorChange()
