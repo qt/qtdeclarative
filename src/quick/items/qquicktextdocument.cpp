@@ -164,7 +164,7 @@ void QQuickTextDocumentPrivate::load()
                 doc->setModified(false);
             }
         } else {
-            emit q->error(QQuickTextDocument::tr("Cannot load: ") + file.errorString());
+            emit q->error(QQuickTextDocument::tr("Cannot load: %1").arg(file.errorString()));
         }
     }
 }
@@ -182,7 +182,7 @@ void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
     const bool isHtml = type.inherits("text/html"_L1);
     QFile file(filePath);
     if (!file.open(QFile::WriteOnly | QFile::Truncate | (isHtml ? QFile::NotOpen : QFile::Text))) {
-        emit q->error(QQuickTextDocument::tr("Cannot save: ") + file.errorString());
+        emit q->error(QQuickTextDocument::tr("Cannot save: %1").arg(file.errorString()));
         return;
     }
     QByteArray raw;
