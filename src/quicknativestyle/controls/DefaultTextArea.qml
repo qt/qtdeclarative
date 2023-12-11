@@ -34,8 +34,8 @@ T.TextArea {
         id: placeholder
         x: control.leftPadding
         y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
+        width: control.width - (control.leftPadding + control.rightPadding)
+        height: control.height - (control.topPadding + control.bottomPadding)
         text: control.placeholderText
         font: control.font
         color: control.placeholderTextColor
