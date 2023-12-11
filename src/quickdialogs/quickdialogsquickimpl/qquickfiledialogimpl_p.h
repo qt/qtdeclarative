@@ -41,6 +41,7 @@ class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFileDialogImpl : public QQui
     Q_PROPERTY(QStringList nameFilters READ nameFilters NOTIFY nameFiltersChanged FINAL)
     Q_PROPERTY(QQuickFileNameFilter *selectedNameFilter READ selectedNameFilter CONSTANT)
     Q_PROPERTY(QString fileName READ fileName WRITE setFileName NOTIFY selectedFileChanged FINAL)
+    Q_PROPERTY(QString currentFolderName READ currentFolderName NOTIFY selectedFileChanged FINAL)
     QML_NAMED_ELEMENT(FileDialogImpl)
     QML_ATTACHED(QQuickFileDialogImplAttached)
     QML_ADDED_IN_VERSION(6, 2)
@@ -80,6 +81,8 @@ public:
     QString fileName() const;
     void setFileName(const QString &fileName);
 
+    QString currentFolderName() const;
+
 public Q_SLOTS:
     void selectNameFilter(const QString &filter);
 
@@ -107,6 +110,7 @@ class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFileDialogImplAttached : pub
     Q_PROPERTY(QQuickFolderBreadcrumbBar *breadcrumbBar READ breadcrumbBar WRITE setBreadcrumbBar NOTIFY breadcrumbBarChanged)
     Q_PROPERTY(QQuickLabel *fileNameLabel READ fileNameLabel WRITE setFileNameLabel NOTIFY fileNameLabelChanged FINAL)
     Q_PROPERTY(QQuickTextField *fileNameTextField READ fileNameTextField WRITE setFileNameTextField NOTIFY fileNameTextFieldChanged FINAL)
+    Q_PROPERTY(QQuickDialog *overwriteConfirmationDialog READ overwriteConfirmationDialog WRITE setOverwriteConfirmationDialog NOTIFY overwriteConfirmationDialogChanged FINAL)
     Q_MOC_INCLUDE(<QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>)
     Q_MOC_INCLUDE(<QtQuickTemplates2/private/qquickcombobox_p.h>)
     Q_MOC_INCLUDE(<QtQuickTemplates2/private/qquicktextfield_p.h>)
@@ -136,6 +140,9 @@ public:
     QQuickTextField *fileNameTextField() const;
     void setFileNameTextField(QQuickTextField *fileNameTextField);
 
+    QQuickDialog *overwriteConfirmationDialog() const;
+    void setOverwriteConfirmationDialog(QQuickDialog *dialog);
+
 Q_SIGNALS:
     void buttonBoxChanged();
     void nameFiltersComboBoxChanged();
@@ -143,6 +150,7 @@ Q_SIGNALS:
     void breadcrumbBarChanged();
     void fileNameLabelChanged();
     void fileNameTextFieldChanged();
+    void overwriteConfirmationDialogChanged();
 
 private:
     Q_DISABLE_COPY(QQuickFileDialogImplAttached)

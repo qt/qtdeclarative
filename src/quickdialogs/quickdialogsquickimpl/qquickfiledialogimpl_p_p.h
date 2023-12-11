@@ -53,10 +53,12 @@ public:
 
     void handleAccept() override;
     void handleClick(QQuickAbstractButton *button) override;
+    void selectFile();
 
     QSharedPointer<QFileDialogOptions> options;
     QUrl currentFolder;
     QUrl selectedFile;
+    QQuickAbstractButton *lastButtonClicked = nullptr;
     QStringList nameFilters;
     mutable QQuickFileNameFilter *selectedNameFilter = nullptr;
     QString acceptLabel;
@@ -82,6 +84,7 @@ public:
     QPointer<QQuickFolderBreadcrumbBar> breadcrumbBar;
     QPointer<QQuickLabel> fileNameLabel;
     QPointer<QQuickTextField> fileNameTextField;
+    QPointer<QQuickDialog> overwriteConfirmationDialog;
 };
 
 QT_END_NAMESPACE
