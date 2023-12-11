@@ -1118,7 +1118,7 @@ QString QQuickMenu::title() const
     return d->title;
 }
 
-void QQuickMenu::setTitle(QString &title)
+void QQuickMenu::setTitle(const QString &title)
 {
     Q_D(QQuickMenu);
     if (title == d->title)

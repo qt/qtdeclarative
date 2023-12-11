@@ -63,7 +63,7 @@ public:
     QQmlListProperty<QObject> contentData();
 
     QString title() const;
-    void setTitle(QString &title);
+    void setTitle(const QString &title);
 
     QQuickIcon icon() const;
     void setIcon(const QQuickIcon &icon);
