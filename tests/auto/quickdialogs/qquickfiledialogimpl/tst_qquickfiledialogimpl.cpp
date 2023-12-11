@@ -89,6 +89,7 @@ private slots:
     void setSelectedFile();
     void selectNewFileViaTextField_data();
     void selectNewFileViaTextField();
+    void selectExistingFileShouldWarnUserWhenFileModeEqualsSaveFile();
 
 private:
     enum DelegateOrderPolicy
@@ -1374,6 +1375,9 @@ void tst_QQuickFileDialogImpl::setSelectedFile()
     };
     FileDialogTestHelper dialogHelper(
         this, "setSelectedFile.qml", {}, initialProperties);
+
+    dialogHelper.dialog->setOptions(QFileDialogOptions::DontConfirmOverwrite);
+
     OPEN_QUICK_DIALOG();
 
     // The selected file should be what we set.
@@ -1478,6 +1482,87 @@ void tst_QQuickFileDialogImpl::selectNewFileViaTextField()
             QTest::keyClick(dialogHelper.window(), Qt::Key_Backspace);
         QCOMPARE(acceptButton->isEnabled(), false);
     }
+}
+
+void tst_QQuickFileDialogImpl::selectExistingFileShouldWarnUserWhenFileModeEqualsSaveFile()
+{
+    FileDialogTestHelper dialogHelper(this, "fileDialog.qml");
+    dialogHelper.dialog->setFileMode(QQuickFileDialog::SaveFile);
+    dialogHelper.dialog->setSelectedFile(QUrl::fromLocalFile(tempFile1->fileName()));
+
+    OPEN_QUICK_DIALOG();
+    QQuickTest::qWaitForPolish(dialogHelper.window());
+
+    QSignalSpy acceptedSpy(dialogHelper.dialog, SIGNAL(accepted()));
+
+    auto *dialogButtonBox = dialogHelper.quickDialog->footer()->findChild<QQuickDialogButtonBox *>();
+    QVERIFY(dialogButtonBox);
+
+    auto *confirmationDialog = dialogHelper.quickDialog->findChild<QQuickDialog *>("confirmationDialog");
+    QVERIFY(confirmationDialog);
+
+    auto *openButton = dialogButtonBox->standardButton(QPlatformDialogHelper::Open);
+    QVERIFY(openButton);
+
+    auto *confirmationButtonBox = qobject_cast<QQuickDialogButtonBox *>(confirmationDialog->footer());
+    QVERIFY(confirmationButtonBox);
+
+    const QPoint openButtonCenterPos =
+            openButton->mapToScene({ openButton->width() / 2, openButton->height() / 2 }).toPoint();
+
+    QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, openButtonCenterPos);
+
+    QTRY_VERIFY(confirmationDialog->isOpened());
+    QVERIFY(dialogHelper.dialog->isVisible());
+
+    // Yes button should have focus by default
+    QTest::keyClick(dialogHelper.window(), Qt::Key_Space, Qt::NoModifier);
+
+    QTRY_VERIFY(!confirmationDialog->isOpened());
+    QVERIFY(!dialogHelper.dialog->isVisible());
+    QCOMPARE(acceptedSpy.count(), 1);
+
+    // Try again, but click "No" this time.
+    QVERIFY(dialogHelper.openDialog());
+    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+
+    QTest::keyClick(dialogHelper.window(), Qt::Key_Enter, Qt::NoModifier);
+
+    QTRY_VERIFY(confirmationDialog->isOpened());
+    QVERIFY(dialogHelper.dialog->isVisible());
+
+    // Make No button trigger a clicked() event.
+    auto *confirmationNoButton = confirmationButtonBox->standardButton(QPlatformDialogHelper::No);
+    QVERIFY(confirmationNoButton);
+    QVERIFY(clickButton(confirmationNoButton));
+
+    // FileDialog is still opened
+    QTRY_VERIFY(!confirmationDialog->isOpened());
+    QVERIFY(dialogHelper.dialog->isVisible());
+    QCOMPARE(acceptedSpy.count(), 1);
+
+    // Try again
+    QTest::keyClick(dialogHelper.window(), Qt::Key_Enter, Qt::NoModifier);
+
+    QTRY_VERIFY(confirmationDialog->isOpened());
+    QVERIFY(dialogHelper.dialog->isVisible());
+
+    QTest::keyClick(dialogHelper.window(), Qt::Key_Space, Qt::NoModifier);
+
+    QTRY_VERIFY(!confirmationDialog->isOpened());
+    QVERIFY(!dialogHelper.dialog->isVisible());
+    QCOMPARE(acceptedSpy.count(), 2);
+
+    // Make sure that DontConfirmOverwrite works
+    dialogHelper.dialog->setOptions(QFileDialogOptions::DontConfirmOverwrite);
+
+    QVERIFY(dialogHelper.openDialog());
+    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+
+    QTest::keyClick(dialogHelper.window(), Qt::Key_Enter, Qt::NoModifier);
+    QTRY_VERIFY(!confirmationDialog->isOpened());
+    QVERIFY(!dialogHelper.dialog->isVisible());
+    QCOMPARE(acceptedSpy.count(), 3);
 }
 
 QTEST_MAIN(tst_QQuickFileDialogImpl)
