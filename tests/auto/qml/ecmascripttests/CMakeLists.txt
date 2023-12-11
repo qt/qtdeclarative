@@ -20,7 +20,7 @@ list(FILTER test_data EXCLUDE REGEX ".git")
 
 qt_internal_add_test(tst_ecmascripttests
     SOURCES
-        qjstest/test262runner.cpp qjstest/test262runner.h
+        test262runner.cpp test262runner.h
         tst_ecmascripttests.cpp
     LIBRARIES
         Qt::QmlPrivate
@@ -46,8 +46,4 @@ else()
         DEFINES
             QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/test262"
     )
-endif()
-
-if(NOT CMAKE_CROSSCOMPILING)
-    add_subdirectory(qjstest)
 endif()

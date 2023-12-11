@@ -3,20 +3,24 @@
 
 #include "test262runner.h"
 
-#include <qfile.h>
+#include <qdebug.h>
 #include <qdir.h>
 #include <qdiriterator.h>
-#include <qdebug.h>
+#include <qfile.h>
+#include <qjsondocument.h>
+#include <qjsonobject.h>
+#include <qlibraryinfo.h>
 #include <qprocess.h>
 #include <qtemporaryfile.h>
+#include <qthread.h>
 
-#include <private/qv4script_p.h>
-#include "private/qv4globalobject_p.h"
 #include "private/qqmlbuiltinfunctions_p.h"
 #include "private/qv4arraybuffer_p.h"
+#include "private/qv4globalobject_p.h"
 #include <QtCore/QLoggingCategory>
+#include <private/qv4script_p.h>
 
-#include "qrunnable.h"
+using namespace Qt::StringLiterals;
 
 static const char *excludedFeatures[] = {
     "BigInt",
@@ -72,7 +76,7 @@ static ReturnedValue method_detachArrayBuffer(const FunctionObject *f, const Val
     return Encode::null();
 }
 
-static void initD262(ExecutionEngine *e)
+void initD262(ExecutionEngine *e)
 {
     Scope scope(e);
     ScopedObject d262(scope, e->newObject());
@@ -85,7 +89,6 @@ static void initD262(ExecutionEngine *e)
 
 }
 
-QT_END_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcJsTest);
 Q_LOGGING_CATEGORY(lcJsTest, "qt.v4.ecma262.tests", QtWarningMsg);
@@ -99,7 +102,8 @@ Test262Runner::Test262Runner(const QString &command, const QString &dir, const Q
 
 Test262Runner::~Test262Runner()
 {
-    delete threadPool;
+    if (threadPool)
+        delete threadPool;
 }
 
 void Test262Runner::cat()
@@ -113,17 +117,271 @@ void Test262Runner::cat()
     printf("%s", data.content.constData());
 }
 
+void Test262Runner::assignTaskOrTerminate(int processIndex)
+{
+    if (tasks.isEmpty()) {
+        sendDone(processIndex);
+        return;
+    }
+
+    currentTasks[processIndex] = tasks.dequeue();
+    TestData &task = currentTasks[processIndex];
+
+    // Sloppy run + maybe strict run later
+    if (task.runInSloppyMode) {
+        if (task.runInStrictMode)
+            task.stillNeedStrictRun = true;
+        assignSloppy(processIndex);
+        return;
+    }
+
+    // Only strict run
+    if (task.runInStrictMode) {
+        assignStrict(processIndex);
+        return;
+    }
+
+    // TODO: Start a timer for timeouts?
+}
+
+void Test262Runner::assignSloppy(int processIndex)
+{
+    QProcess &p = *processes[processIndex];
+    TestData &task = currentTasks[processIndex];
+
+    QJsonObject json;
+    json.insert("mode", "sloppy");
+    json.insert("testData", QString::fromUtf8(task.content));
+    json.insert("runAsModule", false);
+    json.insert("testCasePath", "");
+    json.insert("harnessForModules", "");
+    p.write(QJsonDocument(json).toJson(QJsonDocument::Compact));
+    p.write("\r\n");
+}
+
+void Test262Runner::assignStrict(int processIndex)
+{
+    QProcess &p = *processes[processIndex];
+    TestData &task = currentTasks[processIndex];
+
+    QJsonObject json;
+    json.insert("mode", "strict");
+    QString strictContent = "'use strict';\n" + QString::fromUtf8(task.content);
+    json.insert("testData", strictContent);
+    json.insert("runAsModule", task.runAsModuleCode);
+    json.insert("testCasePath", QFileInfo(testDir + "/test/" + task.test).absoluteFilePath());
+    json.insert("harnessForModules", QString::fromUtf8(task.harness));
+    p.write(QJsonDocument(json).toJson(QJsonDocument::Compact));
+    p.write("\r\n");
+}
+
+void Test262Runner::sendDone(int processIndex)
+{
+    QProcess &p = *processes[processIndex];
+
+    QJsonObject json;
+    json.insert("done", true);
+    p.write(QJsonDocument(json).toJson(QJsonDocument::Compact));
+    p.write("\r\n");
+}
+
+void Test262Runner::createProcesses()
+{
+    const int processCount = QThread::idealThreadCount();
+    qDebug() << "Running in parallel with" << processCount << "processes";
+    for (int i = 0; i < processCount; ++i) {
+        processes.emplace_back(std::make_unique<QProcess>());
+        QProcess &p = *processes[i];
+        QProcess::connect(&p, &QProcess::started, this, [&, i]() {
+            assignTaskOrTerminate(i);
+        });
+
+        QProcess::connect(&p, &QIODevice::readyRead, this, [&, i]() {
+            QProcess &p = *processes[i];
+            QString output;
+            while (output.isEmpty())
+                output = p.readLine();
+            QJsonDocument response = QJsonDocument::fromJson(output.toUtf8());
+
+            TestData &testData(currentTasks[i]);
+            auto mode = response["mode"].toString();
+            auto state = TestCase::State(response["resultState"].toInt(int(TestCase::State::Fails)));
+            auto errorMessage = response["resultErrorMessage"].toString();
+
+            auto &result = mode == "strict" ? testData.strictResult : testData.sloppyResult;
+            result = TestCase::Result(state, errorMessage);
+            if (testData.negative)
+                result.negateResult();
+
+            if (testData.stillNeedStrictRun) {
+                testData.stillNeedStrictRun = false;
+                assignStrict(i);
+            } else {
+                addResult(testData);
+                assignTaskOrTerminate(i);
+            }
+        });
+
+        QObject::connect(&p, &QProcess::finished, this, [&, i](int, QProcess::ExitStatus status) {
+            if (status != QProcess::NormalExit) {
+                qDebug() << QStringLiteral("Process %1 of %2 exited with a non-normal status")
+                                    .arg(i).arg(processCount - 1);
+            }
+
+            --runningCount;
+            if (runningCount == 0)
+                loop.exit();
+        });
+
+        p.setProgram(QCoreApplication::applicationFilePath());
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        env.insert(u"runnerProcess"_s, u"1"_s);
+        p.setProcessEnvironment(env);
+        ++runningCount;
+        p.start();
+    }
+}
+
+class SingleTest : public QRunnable
+{
+public:
+    SingleTest(Test262Runner *runner, const TestData &data)
+        : runner(runner), data(data)
+    {}
+    void run() override;
+
+    Test262Runner *runner;
+    TestData data;
+};
+
+TestCase::Result getTestExecutionResult(QV4::ExecutionEngine &vm)
+{
+    TestCase::State state;
+    QString errorMessage;
+    if (vm.hasException) {
+        state = TestCase::State::Fails;
+        QV4::Scope scope(&vm);
+        QV4::ScopedValue val(scope, vm.catchException());
+        errorMessage = val->toQString();
+    } else {
+        state = TestCase::State::Passes;
+    }
+    return TestCase::Result(state, errorMessage);
+}
+
+void SingleTest::run()
+{
+    if (data.runInSloppyMode) {
+        QV4::ExecutionEngine vm;
+        Test262Runner::executeTest(vm, data.content);
+        TestCase::Result ok = getTestExecutionResult(vm);
+
+        if (data.negative)
+            ok.negateResult();
+
+        data.sloppyResult = ok;
+    } else {
+        data.sloppyResult = TestCase::Result(TestCase::Skipped);
+    }
+    if (data.runInStrictMode) {
+        QString testCasePath = QFileInfo(runner->testDirectory() + "/test/" + data.test).absoluteFilePath();
+        QByteArray c = "'use strict';\n" + data.content;
+
+        QV4::ExecutionEngine vm;
+        Test262Runner::executeTest(vm, c, testCasePath, data.harness, data.runAsModuleCode);
+        TestCase::Result ok = getTestExecutionResult(vm);
+
+        if (data.negative)
+            ok.negateResult();
+
+        data.strictResult = ok;
+    } else {
+        data.strictResult = TestCase::Result(TestCase::Skipped);
+    }
+    runner->addResult(data);
+}
+
+void Test262Runner::executeTest(QV4::ExecutionEngine &vm, const QString &testData,
+                             const QString &testCasePath, const QString &harnessForModules,
+                             bool runAsModule)
+{
+    QV4::Scope scope(&vm);
+    QV4::GlobalExtensions::init(vm.globalObject,
+                                QJSEngine::ConsoleExtension | QJSEngine::GarbageCollectionExtension);
+    QV4::initD262(&vm);
+
+    if (runAsModule) {
+        const QUrl rootModuleUrl = QUrl::fromLocalFile(testCasePath);
+        // inject all modules with the harness
+        QVector<QUrl> modulesToLoad = { rootModuleUrl };
+        while (!modulesToLoad.isEmpty()) {
+            QUrl url = modulesToLoad.takeFirst();
+            QQmlRefPointer<QV4::ExecutableCompilationUnit> module;
+
+            QFile f(url.toLocalFile());
+            if (f.open(QIODevice::ReadOnly)) {
+                QByteArray content = harnessForModules.toLocal8Bit() + f.readAll();
+                module = vm.compileModule(url.toString(),
+                                          QString::fromUtf8(content.constData(),content.size()),
+                                          QFileInfo(f).lastModified());
+                if (vm.hasException)
+                    break;
+                vm.injectCompiledModule(module);
+            } else {
+                vm.throwError(QStringLiteral("Could not load module"));
+                break;
+            }
+
+            for (const QString &request: module->moduleRequests()) {
+                const QUrl absoluteRequest = module->finalUrl().resolved(QUrl(request));
+                const auto module = vm.moduleForUrl(absoluteRequest);
+                if (module.native == nullptr && module.compiled == nullptr)
+                    modulesToLoad << absoluteRequest;
+            }
+        }
+
+        if (!vm.hasException) {
+            const auto rootModule = vm.loadModule(rootModuleUrl);
+            if (rootModule.compiled && rootModule.compiled->instantiate(&vm))
+                rootModule.compiled->evaluate();
+        }
+    } else {
+        QV4::ScopedContext ctx(scope, vm.rootContext());
+
+        QV4::Script script(ctx, QV4::Compiler::ContextType::Global, testData);
+        script.parse();
+
+        if (!vm.hasException)
+            script.run();
+    }
+}
+
+void Test262Runner::runWithThreadPool()
+{
+    threadPool = new QThreadPool();
+    threadPool->setStackSize(16*1024*1024);
+    qDebug() << "Running in parallel with" << QThread::idealThreadCount() << "threads";
+
+    for (const TestCase &testCase : std::as_const(testCases)) {
+        TestData testData = getTestData(testCase);
+        if (testData.isExcluded || testData.async)
+            continue;
+        SingleTest *test = new SingleTest(this, testData);
+        threadPool->start(test);
+    }
+
+    while (!threadPool->waitForDone(10'000)) {
+        if (lcJsTest().isEnabled(QtDebugMsg)) {
+            // heartbeat, only needed when there is no other debug output
+            qDebug("test262: in progress...");
+        }
+    }
+}
+
 bool Test262Runner::run()
 {
     if (!loadTests())
         return false;
-
-    if (flags & Parallel) {
-        threadPool = new QThreadPool;
-        threadPool->setStackSize(16*1024*1024);
-        if (flags & Verbose)
-            qDebug() << "Running in parallel with" << QThread::idealThreadCount() << "threads.";
-    }
 
     if (flags & ForceJIT)
         qputenv("QV4_JIT_CALL_THRESHOLD", QByteArray("0"));
@@ -136,19 +394,24 @@ bool Test262Runner::run()
     for (auto it = testCases.constBegin(); it != testCases.constEnd(); ++it) {
         auto c = it.value();
         if (!c.skipTestCase) {
-            int result = runSingleTest(c);
-            if (result == -2)
-                return false;
+            TestData data = getTestData(c);
+            if (data.isExcluded || data.async)
+                continue;
+
+            tasks.append(data);
         }
     }
 
-    if (threadPool)
-        while (!threadPool->waitForDone(10000)) {
-            if (!lcJsTest().isEnabled(QtDebugMsg)) {
-                // heartbeat, only needed when there is no other debug output
-                qDebug("test262: in progress...");
-            }
-        }
+    if (command.isEmpty()) {
+#if QT_CONFIG(process)
+        createProcesses();
+        loop.exec();
+#else
+        runWithThreadPool();
+#endif
+    } else {
+        runAsExternalTests();
+    }
 
     const bool testsOk = report();
 
@@ -172,7 +435,7 @@ bool Test262Runner::report()
         if (c.strictResult.state == c.strictExpectation.state
             && c.sloppyResult.state == c.sloppyExpectation.state)
             continue;
-        auto report = [&](TestCase::Result expected, TestCase::Result result, const char *s) {
+        auto report = [&](const TestCase::Result &expected, const TestCase::Result &result, const char *s) {
             if (result.state == TestCase::Crashes)
                 crashes << (it.key() + " crashed in " + s + " mode");
             if (result.state == TestCase::Fails && expected.state == TestCase::Passes)
@@ -465,7 +728,7 @@ void Test262Runner::writeTestExpectations()
     QTemporaryFile expectations;
     expectations.open();
 
-    for (auto c : std::as_const(testCases)) {
+    for (const auto &c : std::as_const(testCases)) {
         TestExpectationLine line = TestExpectationLine::fromTestCase(c);
         expectations.write(line.toLine());
     }
@@ -479,175 +742,47 @@ void Test262Runner::writeTestExpectations()
         qWarning() << "Could not write new TestExpectations file at" << expectationsFile;
 }
 
-static TestCase::Result executeTest(const QByteArray &data, bool runAsModule = false,
-                                    const QString &testCasePath = QString(),
-                                    const QByteArray &harnessForModules = QByteArray())
+void Test262Runner::runAsExternalTests()
 {
-    QString testData = QString::fromUtf8(data.constData(), data.size());
+    for (TestData &testData : tasks) {
+        auto runTest = [&] (const char *header, TestCase::Result *result) {
+            QTemporaryFile tempFile;
+            tempFile.open();
+            tempFile.write(header);
+            tempFile.write(testData.content);
+            tempFile.close();
 
-    QV4::ExecutionEngine vm;
-
-    QV4::Scope scope(&vm);
-
-    QV4::GlobalExtensions::init(vm.globalObject, QJSEngine::ConsoleExtension | QJSEngine::GarbageCollectionExtension);
-    QV4::initD262(&vm);
-
-    if (runAsModule) {
-        const QUrl rootModuleUrl = QUrl::fromLocalFile(testCasePath);
-        // inject all modules with the harness
-        QVector<QUrl> modulesToLoad = { rootModuleUrl };
-        while (!modulesToLoad.isEmpty()) {
-            QUrl url = modulesToLoad.takeFirst();
-            QQmlRefPointer<QV4::ExecutableCompilationUnit> module;
-
-            QFile f(url.toLocalFile());
-            if (f.open(QIODevice::ReadOnly)) {
-                QByteArray content = harnessForModules + f.readAll();
-                module = vm.compileModule(url.toString(), QString::fromUtf8(content.constData(), content.size()), QFileInfo(f).lastModified());
-                if (vm.hasException)
-                    break;
-                vm.injectCompiledModule(module);
-            } else {
-                vm.throwError(QStringLiteral("Could not load module"));
-                break;
+            QProcess process;
+            process.start(command, QStringList(tempFile.fileName()));
+            if (!process.waitForFinished(-1) || process.error() == QProcess::FailedToStart) {
+                qWarning() << "Could not execute" << command;
+                *result = TestCase::Result(TestCase::Crashes);
             }
-
-            for (const QString &request: module->moduleRequests()) {
-                const QUrl absoluteRequest = module->finalUrl().resolved(QUrl(request));
-                const auto module = vm.moduleForUrl(absoluteRequest);
-                if (module.native == nullptr && module.compiled == nullptr)
-                    modulesToLoad << absoluteRequest;
+            if (process.exitStatus() != QProcess::NormalExit) {
+                *result = TestCase::Result(TestCase::Crashes);
             }
-        }
+            bool ok = (process.exitCode() == EXIT_SUCCESS);
+            if (testData.negative)
+                ok = !ok;
+            *result = ok ? TestCase::Result(TestCase::Passes)
+                         : TestCase::Result(TestCase::Fails, process.readAllStandardError());
+        };
 
-        if (!vm.hasException) {
-            const auto rootModule = vm.loadModule(rootModuleUrl);
-            if (rootModule.compiled && rootModule.compiled->instantiate(&vm))
-                rootModule.compiled->evaluate();
-        }
-    } else {
-        QV4::ScopedContext ctx(scope, vm.rootContext());
+        if (testData.runInSloppyMode)
+            runTest("", &testData.sloppyResult);
+        if (testData.runInStrictMode)
+            runTest("'use strict';\n", &testData.strictResult);
 
-        QV4::Script script(ctx, QV4::Compiler::ContextType::Global, testData);
-        script.parse();
-
-        if (!vm.hasException)
-            script.run();
+        addResult(testData);
     }
-
-    if (vm.hasException) {
-        QV4::Scope scope(&vm);
-        QV4::ScopedValue val(scope, vm.catchException());
-        return TestCase::Result(TestCase::Fails, val->toQString());
-    }
-    return TestCase::Result(TestCase::Passes);
-}
-
-class SingleTest : public QRunnable
-{
-public:
-    SingleTest(Test262Runner *runner, const TestData &data)
-        : runner(runner), data(data)
-    {
-        command = runner->command;
-    }
-    void run() override;
-
-    void runExternalTest();
-
-    QString command;
-    Test262Runner *runner;
-    TestData data;
-};
-
-void SingleTest::run()
-{
-    if (!command.isEmpty()) {
-        runExternalTest();
-        return;
-    }
-
-    if (data.runInSloppyMode) {
-        TestCase::Result ok = ::executeTest(data.content);
-        if (data.negative)
-            ok.negateResult();
-
-        data.sloppyResult = ok;
-    } else {
-        data.sloppyResult = TestCase::Result(TestCase::Skipped);
-    }
-    if (data.runInStrictMode) {
-        const QString testCasePath = QFileInfo(runner->testDir + "/test/" + data.test).absoluteFilePath();
-        QByteArray c = "'use strict';\n" + data.content;
-        TestCase::Result ok = ::executeTest(c, data.runAsModuleCode, testCasePath, data.harness);
-        if (data.negative)
-            ok.negateResult();
-
-        data.strictResult = ok;
-    } else {
-        data.strictResult = TestCase::Result(TestCase::Skipped);
-    }
-    runner->addResult(data);
-}
-
-void SingleTest::runExternalTest()
-{
-    auto runTest = [this] (const char *header, TestCase::Result *result) {
-        QTemporaryFile tempFile;
-        tempFile.open();
-        tempFile.write(header);
-        tempFile.write(data.content);
-        tempFile.close();
-
-        QProcess process;
-//        if (flags & Verbose)
-//            process.setReadChannelMode(QProcess::ForwardedChannels);
-
-        process.start(command, QStringList(tempFile.fileName()));
-        if (!process.waitForFinished(-1) || process.error() == QProcess::FailedToStart) {
-            qWarning() << "Could not execute" << command;
-            *result = TestCase::Result(TestCase::Crashes);
-        }
-        if (process.exitStatus() != QProcess::NormalExit) {
-            *result = TestCase::Result(TestCase::Crashes);
-        }
-        bool ok = (process.exitCode() == EXIT_SUCCESS);
-        if (data.negative)
-            ok = !ok;
-        *result = ok ? TestCase::Result(TestCase::Passes)
-                     : TestCase::Result(TestCase::Fails, process.readAllStandardError());
-    };
-
-    if (data.runInSloppyMode)
-        runTest("", &data.sloppyResult);
-    if (data.runInStrictMode)
-        runTest("'use strict';\n", &data.strictResult);
-
-    runner->addResult(data);
-}
-
-int Test262Runner::runSingleTest(TestCase testCase)
-{
-    TestData data = getTestData(testCase);
-//    qDebug() << "starting test" << data.test;
-
-    if (data.isExcluded || data.async)
-        return 0;
-
-    if (threadPool) {
-        SingleTest *test = new SingleTest(this, data);
-        threadPool->start(test);
-        return 0;
-    }
-    SingleTest test(this, data);
-    test.run();
-    return 0;
 }
 
 void Test262Runner::addResult(TestCase result)
 {
     {
+#if !QT_CONFIG(process)
         QMutexLocker locker(&mutex);
+#endif
         Q_ASSERT(result.strictExpectation.state == testCases[result.test].strictExpectation.state);
         Q_ASSERT(result.sloppyExpectation.state == testCases[result.test].sloppyExpectation.state);
         testCases[result.test] = result;
@@ -852,3 +987,5 @@ QByteArray Test262Runner::harness(const QByteArray &name)
     harnessFiles.insert(name, content);
     return content;
 }
+
+QT_END_NAMESPACE
