@@ -356,6 +356,9 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("arrayEndComma")
             << "arrayEndComma.qml"
             << "arrayEndComma.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("escapeChars")
+            << "escapeChars.qml"
+            << "escapeChars.formatted.qml" << QStringList{} << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()
