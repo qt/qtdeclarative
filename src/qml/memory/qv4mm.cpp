@@ -1020,10 +1020,6 @@ void MemoryManager::setGCTimeLimit(int timeMs)
 
 void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPtr)
 {
-    Heap::MapObject *map = nullptr;
-    Heap::MapObject **lastMap = nullptr;
-    Heap::SetObject *set = nullptr;
-    Heap::SetObject **lastSet = nullptr;
 
     for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
         Managed *m = (*it).managed();
@@ -1036,26 +1032,21 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
         }
     }
 
-    map = weakMaps;
-    lastMap = &weakMaps;
-    while (map) {
-        if (map->isMarked()) {
-            map->removeUnmarkedKeys();
-            *lastMap = map;
-            lastMap = &map->nextWeakMap;
-        }
-        map = map->nextWeakMap;
+    for (auto [map, lastMap] = std::tuple {weakMaps, &weakMaps }; map; map = map->nextWeakMap)  {
+        if (!map->isMarked())
+            continue;
+        map->removeUnmarkedKeys();
+        *lastMap = map;
+        lastMap = &map->nextWeakMap;
     }
 
-    set = weakSets;
-    lastSet = &weakSets;
-    while (set) {
-        if (set->isMarked()) {
-            set->removeUnmarkedKeys();
-            *lastSet = set;
-            lastSet = &set->nextWeakSet;
-        }
-        set = set->nextWeakSet;
+    for (auto [set, lastSet] = std::tuple {weakSets, &weakSets}; set; set = set->nextWeakSet) {
+
+        if (!set->isMarked())
+            continue;
+        set->removeUnmarkedKeys();
+        *lastSet = set;
+        lastSet = &set->nextWeakSet;
     }
 
     // onDestruction handlers may have accessed other QObject wrappers and reset their value, so ensure
