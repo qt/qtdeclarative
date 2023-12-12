@@ -48,6 +48,10 @@
     may occur due to differences in available system fonts and font rendering
     engines.
 
+    \note As the Material Design Guidelines change over time, this style may
+    change certain padding or font values, for example, in order to maintain
+    consistency with the guidelines.
+
     \section2 Customization
 
     The Material style supports several customizable attributes. Some of these
