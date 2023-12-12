@@ -926,13 +926,27 @@ function(_qt_internal_target_enable_qmllint target)
     _qt_internal_extend_qml_import_paths(import_args)
 
     _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
-    set(cmd
-        ${tool_wrapper}
-        $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmllint>
+
+    set(qmllint_args
         --bare
         ${import_args}
         ${qrc_args}
         ${qmllint_files}
+    )
+
+    get_target_property(target_binary_dir ${target} BINARY_DIR)
+    set(qmllint_dir ${target_binary_dir}/.rcc/qmllint)
+    set(qmllint_rsp_path ${qmllint_dir}/${target}.rsp)
+
+    file(GENERATE
+        OUTPUT "${qmllint_rsp_path}"
+        CONTENT "$<JOIN:${qmllint_args},\n>\n"
+    )
+
+    set(cmd
+        ${tool_wrapper}
+        $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmllint>
+        @${qmllint_rsp_path}
     )
 
     set(cmd_dummy ${CMAKE_COMMAND} -E echo "Nothing to do for target ${lint_target}.")
@@ -946,18 +960,34 @@ function(_qt_internal_target_enable_qmllint target)
         DEPENDS
             ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint
             ${qmllint_files}
+            ${qmllint_rsp_path}
             $<TARGET_NAME_IF_EXISTS:all_qmltyperegistrations>
         WORKING_DIRECTORY "$<TARGET_PROPERTY:${target},SOURCE_DIR>"
     )
     _qt_internal_assign_to_qmllint_targets_folder(${lint_target})
 
-    set(lint_args "--json" "${CMAKE_BINARY_DIR}/${lint_target}.json")
+    list(APPEND qmllint_args "--json" "${CMAKE_BINARY_DIR}/${lint_target}.json")
+
+    set(qmllint_rsp_path ${qmllint_dir}/${target}_json.rsp)
+
+    file(GENERATE
+        OUTPUT "${qmllint_rsp_path}"
+        CONTENT "$<JOIN:${qmllint_args},\n>\n"
+    )
+
+    set(cmd
+        ${tool_wrapper}
+        $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmllint>
+        @${qmllint_rsp_path}
+    )
+
     add_custom_target(${lint_target_json}
-        COMMAND "$<${have_qmllint_files}:${cmd};${lint_args}>"
+        COMMAND "$<${have_qmllint_files}:${cmd}>"
         COMMAND_EXPAND_LISTS
         DEPENDS
             ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint
             ${qmllint_files}
+            ${qmllint_rsp_path}
             $<TARGET_NAME_IF_EXISTS:all_qmltyperegistrations>
         WORKING_DIRECTORY "$<TARGET_PROPERTY:${target},SOURCE_DIR>"
     )
@@ -968,18 +998,34 @@ function(_qt_internal_target_enable_qmllint target)
    get_target_property(module_uri ${target} QT_QML_MODULE_URI)
 
    _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
+
+   set(qmllint_args
+       ${import_args}
+       ${qrc_args}
+       --module
+       ${module_uri}
+   )
+
+   set(qmllint_rsp_path ${qmllint_dir}/${target}_module.rsp)
+
+   file(GENERATE
+       OUTPUT "${qmllint_rsp_path}"
+       CONTENT "$<JOIN:${qmllint_args},\n>\n"
+   )
+
+   set(cmd
+       ${tool_wrapper}
+       $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmllint>
+       @${qmllint_rsp_path}
+   )
+
    add_custom_target(${lint_target_module}
-       COMMAND
-           ${tool_wrapper}
-           $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmllint>
-           ${import_args}
-           ${qrc_args}
-           --module
-           ${module_uri}
+       COMMAND ${cmd}
        COMMAND_EXPAND_LISTS
        DEPENDS
            ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint
            ${qmllint_files}
+           ${qmllint_rsp_path}
            $<TARGET_NAME_IF_EXISTS:all_qmltyperegistrations>
        WORKING_DIRECTORY "$<TARGET_PROPERTY:${target},SOURCE_DIR>"
    )
