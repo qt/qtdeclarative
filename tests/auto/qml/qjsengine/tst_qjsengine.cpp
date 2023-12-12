@@ -1734,6 +1734,8 @@ void tst_QJSEngine::valueConversion_QVariant()
     }
     // Checking nested QVariants
     {
+        // ### Qt 7: QVariant nesting is evil; we should check if we can get rid of it
+        // main use case for it was QSignalSpy
         QVariant tmp1;
         QVariant tmp2(QMetaType::fromType<QVariant>(), &tmp1);
         QCOMPARE(QMetaType::Type(tmp2.userType()), QMetaType::QVariant);

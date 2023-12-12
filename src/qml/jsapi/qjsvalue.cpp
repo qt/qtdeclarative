@@ -20,6 +20,7 @@
 #include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4urlobject_p.h>
+#include <private/qqmlbuiltins_p.h>
 
 /*!
   \since 5.0
@@ -458,7 +459,12 @@ bool QJSValue::isCallable() const
 */
 bool QJSValue::isVariant() const
 {
-    return QJSValuePrivate::asManagedType<QV4::VariantObject>(this);
+    if (QJSValuePrivate::asManagedType<QV4::VariantObject>(this))
+        return true;
+    if (auto vt = QJSValuePrivate::asManagedType<QV4::QQmlValueTypeWrapper>(this))
+        if (vt->metaObject() == &QQmlVarForeign::staticMetaObject)
+            return true;
+    return false;
 }
 
 /*!
