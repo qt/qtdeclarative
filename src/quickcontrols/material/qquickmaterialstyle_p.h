@@ -76,6 +76,7 @@ class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
     Q_PROPERTY(QColor textFieldFilledContainerColor READ textFieldFilledContainerColor NOTIFY themeChanged FINAL)
 
     Q_PROPERTY(int touchTarget READ touchTarget CONSTANT FINAL)
+    Q_PROPERTY(int buttonVerticalPadding READ buttonVerticalPadding CONSTANT FINAL)
     Q_PROPERTY(int buttonHeight READ buttonHeight CONSTANT FINAL)
     Q_PROPERTY(int delegateHeight READ delegateHeight CONSTANT FINAL)
     Q_PROPERTY(int dialogButtonBoxHeight READ dialogButtonBoxHeight CONSTANT FINAL)
@@ -269,6 +270,9 @@ public:
     Q_INVOKABLE QColor shade(const QColor &color, Shade shade) const;
 
     int touchTarget() const;
+    int buttonVerticalPadding() const;
+    Q_INVOKABLE int buttonLeftPadding(bool flat, bool hasIcon) const;
+    Q_INVOKABLE int buttonRightPadding(bool flat, bool hasIcon, bool hasText) const;
     int buttonHeight() const;
     int delegateHeight() const;
     int dialogButtonBoxHeight() const;
