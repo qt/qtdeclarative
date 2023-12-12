@@ -28,8 +28,7 @@ T.Dialog {
     // https://m3.material.io/components/dialogs/specs#401a48c3-f50c-4fa9-b798-701f5adcf155
     // Specs say level 3 (6 dp) is the default, yet the screenshots there show 0. Native Android defaults to non-zero.
     Material.elevation: 6
-    // https://m3.material.io/components/dialogs/specs#6771d107-624e-47cc-b6d8-2b7b620ba2f1
-    Material.roundedScale: Material.ExtraLargeScale
+    Material.roundedScale: Material.dialogRoundedScale
 
     enter: Transition {
         // grow_fade_in
@@ -63,7 +62,7 @@ T.Dialog {
         bottomPadding: 0
         // TODO: QPlatformTheme::TitleBarFont
         // https://m3.material.io/components/dialogs/specs#401a48c3-f50c-4fa9-b798-701f5adcf155
-        font.pixelSize: 24
+        font.pixelSize: Material.dialogTitleFontPixelSize
         background: PaddedRectangle {
             radius: control.background.radius
             color: control.Material.dialogColor
