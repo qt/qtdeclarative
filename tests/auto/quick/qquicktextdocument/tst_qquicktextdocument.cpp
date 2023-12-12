@@ -156,7 +156,7 @@ void tst_qquicktextdocument::customDocument()
 
 void tst_qquicktextdocument::sourceAndSave_data()
 {
-    QTest::addColumn<QUrl>("source");
+    QTest::addColumn<QString>("source");
     QTest::addColumn<std::optional<QStringConverter::Encoding>>("expectedEncoding");
     QTest::addColumn<QString>("expectedMimeType");
     QTest::addColumn<int>("minCharCount");
@@ -164,27 +164,25 @@ void tst_qquicktextdocument::sourceAndSave_data()
 
     const std::optional<QStringConverter::Encoding> nullEnc;
 
-    QTest::newRow("plain") << testFileUrl("hello.txt")
+    QTest::newRow("plain") << "hello.txt"
         << nullEnc << "text/plain" << 15 << u"Γειά σου Κόσμε!"_s;
-    QTest::newRow("markdown") << testFileUrl("hello.md")
+    QTest::newRow("markdown") << "hello.md"
         << nullEnc << "text/markdown" << 15 << u"Γειά σου Κόσμε!"_s;
-    QTest::newRow("html") << testFileUrl("hello.html")
+    QTest::newRow("html") << "hello.html"
         << std::optional<QStringConverter::Encoding>(QStringConverter::Utf8)
         << "text/html" << 15 << u"Γειά σου Κόσμε!"_s;
-    QTest::newRow("html-utf16be") << testFileUrl("hello-utf16be.html")
+    QTest::newRow("html-utf16be") << "hello-utf16be.html"
         << std::optional<QStringConverter::Encoding>(QStringConverter::Utf16BE)
         << "text/html" << 15 << u"Γειά σου Κόσμε!"_s;
 }
 
 void tst_qquicktextdocument::sourceAndSave()
 {
-    QFETCH(QUrl, source);
+    QFETCH(QString, source);
     QFETCH(std::optional<QStringConverter::Encoding>, expectedEncoding);
     QFETCH(QString, expectedMimeType);
     QFETCH(int, minCharCount);
     QFETCH(QString, expectedPlainText);
-
-    QVERIFY(source.isLocalFile());
 
     QQmlEngine e;
     QQmlComponent c(&e, testFileUrl("text.qml"));
@@ -192,6 +190,7 @@ void tst_qquicktextdocument::sourceAndSave()
     QCOMPARE(textEdit.isNull(), false);
     QQuickTextDocument *qqdoc = textEdit->property("textDocument").value<QQuickTextDocument*>();
     QVERIFY(qqdoc);
+    const QQmlContext *ctxt = e.rootContext();
     // text.qml has text: "" but that's not a real change; QQuickTextEdit::setText() returns early
     // QQuickTextEditPrivate::init() also modifies defaults and then resets the modified state
     QCOMPARE(qqdoc->isModified(), false);
@@ -205,11 +204,12 @@ void tst_qquicktextdocument::sourceAndSave()
 
     QTemporaryDir tmpDir;
     QVERIFY(tmpDir.isValid());
-    QFile sf(QQmlFile::urlToLocalFileOrQrc(source));
+    QFile sf(QQmlFile::urlToLocalFileOrQrc(ctxt->resolvedUrl(testFileUrl(source))));
+    qCDebug(lcTests) << source << "orig ->" << sf.fileName();
     QVERIFY(sf.exists());
-    QString tmpPath = tmpDir.filePath(source.fileName());
+    QString tmpPath = tmpDir.filePath(source);
     QVERIFY(sf.copy(tmpPath));
-    qCDebug(lcTests) << source << "->" << tmpDir.path() << ":" << tmpPath;
+    qCDebug(lcTests) << source << "copy ->" << tmpDir.path() << ":" << tmpPath;
 
     qqdoc->setProperty("source", QUrl::fromLocalFile(tmpPath));
     QCOMPARE(sourceChangedSpy.size(), 1);
