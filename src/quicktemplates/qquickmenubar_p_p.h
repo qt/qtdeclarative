@@ -19,6 +19,7 @@
 #include <QtQuickTemplates2/private/qquickcontainer_p_p.h>
 
 #include <QtCore/qpointer.h>
+#include <QtGui/qpa/qplatformmenu.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -52,6 +53,9 @@ public:
     void onItemTriggered();
     void onMenuAboutToHide();
 
+    QWindow *window() const;
+    QPlatformMenuBar *nativeHandle() const;
+
     qreal getContentWidth() const override;
     qreal getContentHeight() const override;
 
@@ -74,6 +78,9 @@ public:
     QQmlComponent *delegate = nullptr;
     QPointer<QQuickMenuBarItem> currentItem;
     QPointer<QQuickItem> windowContentItem;
+
+private:
+    std::unique_ptr<QPlatformMenuBar> handle;
 };
 
 QT_END_NAMESPACE

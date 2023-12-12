@@ -46,6 +46,8 @@ QT_BEGIN_NAMESPACE
         {Focus Management in Qt Quick Controls}
 */
 
+Q_LOGGING_CATEGORY(lcMenuBar, "qt.quick.controls.menubar")
+
 QQuickItem *QQuickMenuBarPrivate::beginCreateItem(QQuickMenu *menu)
 {
     Q_Q(QQuickMenuBar);
@@ -253,6 +255,34 @@ void QQuickMenuBarPrivate::menus_clear(QQmlListProperty<QQuickMenu> *prop)
 QPalette QQuickMenuBarPrivate::defaultPalette() const
 {
     return QQuickTheme::palette(QQuickTheme::MenuBar);
+}
+
+QWindow* QQuickMenuBarPrivate::window() const
+{
+    Q_Q(const QQuickMenuBar);
+    QObject *obj = q->parent();
+    while (obj) {
+        if (QWindow *window = qobject_cast<QWindow *>(obj))
+            return window;
+        QQuickItem *item = qobject_cast<QQuickItem *>(obj);
+        if (item && item->window())
+            return item->window();
+        obj = obj->parent();
+    }
+    return nullptr;
+}
+
+QPlatformMenuBar* QQuickMenuBarPrivate::nativeHandle() const
+{
+    Q_ASSERT(requestNative);
+    if (!handle) {
+        auto self = const_cast<QQuickMenuBarPrivate *>(this);
+        self->handle.reset(QGuiApplicationPrivate::platformTheme()->createPlatformMenuBar());
+        self->handle->handleReparent(window());
+        qCDebug(lcMenuBar) << "created QPlatformMenuBar:" << bool(handle.get()) << "parent window:" << handle->parentWindow();
+    }
+    Q_ASSERT(handle);
+    return handle.get();
 }
 
 QQuickMenuBar::QQuickMenuBar(QQuickItem *parent)
