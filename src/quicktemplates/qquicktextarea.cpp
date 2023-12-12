@@ -959,13 +959,11 @@ QSGNode *QQuickTextArea::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 void QQuickTextArea::focusInEvent(QFocusEvent *event)
 {
     QQuickTextEdit::focusInEvent(event);
-    setFocusReason(event->reason());
 }
 
 void QQuickTextArea::focusOutEvent(QFocusEvent *event)
 {
     QQuickTextEdit::focusOutEvent(event);
-    setFocusReason(event->reason());
 }
 
 #if QT_CONFIG(quicktemplates2_hover)
