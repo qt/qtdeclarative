@@ -309,23 +309,7 @@ protected:
             PatternProperty *assignment = AST::cast<PatternProperty *>(it->property);
             if (assignment) {
                 preVisit(assignment);
-                const bool isStringLike = [this](const SourceLocation &loc) {
-                    const auto name = loc2Str(loc);
-                    if (name.first() == name.last()) {
-                        if (name.first() == QStringLiteral("\'")
-                            || name.first() == QStringLiteral("\""))
-                            return true;
-                    }
-                    return false;
-                }(assignment->name->propertyNameToken);
-
-                if (isStringLike)
-                    out("\"");
-
                 accept(assignment->name);
-                if (isStringLike)
-                    out("\"");
-
                 bool useInitializer = false;
                 const bool bindingIdentifierExist = !assignment->bindingIdentifier.isEmpty();
                 if (assignment->colonToken.length > 0) {
@@ -396,7 +380,7 @@ protected:
     }
     bool visit(StringLiteralPropertyName *ast) override
     {
-        out(ast->id.toString());
+        out(ast->propertyNameToken);
         return true;
     }
     bool visit(NumericLiteralPropertyName *ast) override
