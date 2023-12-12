@@ -137,14 +137,16 @@ void QQuickTextDocument::setModified(bool modified)
 void QQuickTextDocumentPrivate::load()
 {
     Q_Q(QQuickTextDocument);
-    const QString fileName = QQmlFile::urlToLocalFileOrQrc(url);
+    const QQmlContext *context = qmlContext(editor);
+    const QUrl &resolvedUrl = context ? context->resolvedUrl(url) : url;
+    const QString fileName = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
     if (QFile::exists(fileName)) {
         mimeType = QMimeDatabase().mimeTypeForFile(fileName);
         QFile file(fileName);
         if (file.open(QFile::ReadOnly)) {
             QByteArray data = file.readAll();
             if (auto *doc = editor->document()) {
-                doc->setBaseUrl(url.adjusted(QUrl::RemoveFilename));
+                doc->setBaseUrl(resolvedUrl.adjusted(QUrl::RemoveFilename));
                 if (mimeType.inherits("text/markdown"_L1)) {
                     doc->setMarkdown(QString::fromUtf8(data));
                 } else if (mimeType.inherits("text/html"_L1)) {
