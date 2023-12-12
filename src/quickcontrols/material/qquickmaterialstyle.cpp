@@ -1312,6 +1312,19 @@ int QQuickMaterialStyle::dialogButtonBoxHeight() const
     return globalVariant == Dense ? 48 : 52;
 }
 
+int QQuickMaterialStyle::dialogTitleFontPixelSize() const
+{
+    return globalVariant == Dense ? 16 : 24;
+}
+
+// https://m3.material.io/components/dialogs/specs#6771d107-624e-47cc-b6d8-2b7b620ba2f1
+QQuickMaterialStyle::RoundedScale QQuickMaterialStyle::dialogRoundedScale() const
+{
+    return globalVariant == Dense
+        ? QQuickMaterialStyle::RoundedScale::LargeScale
+        : QQuickMaterialStyle::RoundedScale::ExtraLargeScale;
+}
+
 int QQuickMaterialStyle::frameVerticalPadding() const
 {
     return globalVariant == Dense ? 8 : 12;
