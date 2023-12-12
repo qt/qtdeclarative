@@ -780,7 +780,7 @@ void tst_qmlls_modules::documentFormatting()
             const auto results = std::get<QList<TextEdit>>(response);
             QVERIFY(results.size() == 1);
             QFile file(expectedFile);
-            if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            if (!file.open(QIODevice::ReadOnly)) {
                 qWarning() << "Error while opening the file " << expectedFile;
                 return;
             }
@@ -1185,7 +1185,7 @@ void tst_qmlls_modules::rangeFormatting()
         QVERIFY(result);
 
         QFile file(testFile(expectedAfterFormat));
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        if (!file.open(QIODevice::ReadOnly))
             QFAIL("Error while opening the file ");
 
         const auto text = result->first();
@@ -1193,20 +1193,6 @@ void tst_qmlls_modules::rangeFormatting()
         QCOMPARE(text.range.start.character, expectedRange.start.character);
         QCOMPARE(text.range.end.line, expectedRange.end.line);
         QCOMPARE(text.range.end.character, expectedRange.end.character);
-#if defined(Q_OS_WIN)
-        QEXPECT_FAIL("selectRegion1",
-                     "TODO: Was broken by b6c89c0d1354f24e26c3df45a3524e363c4116bb for windows.",
-                     Abort);
-        QEXPECT_FAIL("selectRegion2",
-                     "TODO: Was broken by b6c89c0d1354f24e26c3df45a3524e363c4116bb for windows.",
-                     Abort);
-        QEXPECT_FAIL("selectSingleLine",
-                     "TODO: Was broken by b6c89c0d1354f24e26c3df45a3524e363c4116bb for windows.",
-                     Abort);
-        QEXPECT_FAIL("selectUnbalanced",
-                     "TODO: Was broken by b6c89c0d1354f24e26c3df45a3524e363c4116bb for windows.",
-                     Abort);
-#endif
         QCOMPARE(text.newText, file.readAll());
     };
 
