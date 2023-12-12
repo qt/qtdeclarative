@@ -30,6 +30,35 @@ using namespace Qt::StringLiterals;
 
 constexpr int JSON_LOGGING_FORMAT_REVISION = 3;
 
+bool argumentsFromCommandLineAndFile(QStringList& allArguments, const QStringList &arguments)
+{
+    allArguments.reserve(arguments.size());
+    for (const QString &argument : arguments) {
+        // "@file" doesn't start with a '-' so we can't use QCommandLineParser for it
+        if (argument.startsWith(u'@')) {
+            QString optionsFile = argument;
+            optionsFile.remove(0, 1);
+            if (optionsFile.isEmpty()) {
+                qWarning().nospace() << "The @ option requires an input file";
+                return false;
+            }
+            QFile f(optionsFile);
+            if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                qWarning().nospace() << "Cannot open options file specified with @";
+                return false;
+            }
+            while (!f.atEnd()) {
+                QString line = QString::fromLocal8Bit(f.readLine().trimmed());
+                if (!line.isEmpty())
+                    allArguments << line;
+            }
+        } else {
+            allArguments << argument;
+        }
+    }
+    return true;
+}
+
 int main(int argv, char *argc[])
 {
     QHashSeed::setDeterministicGlobalSeed();
@@ -189,11 +218,16 @@ All warnings can be set to three levels:
 
     parser.addPositionalArgument(QLatin1String("files"),
                                  QLatin1String("list of qml or js files to verify"));
-    if (!parser.parse(app.arguments())) {
-        if (parser.unknownOptionNames().isEmpty()) {
-            qWarning().noquote() << parser.errorText();
-            return 1;
-        }
+
+    QStringList arguments;
+    if (!argumentsFromCommandLineAndFile(arguments, app.arguments())) {
+        // argumentsFromCommandLine already printed any necessary warnings.
+        return 1;
+    }
+
+    if (!parser.parse(arguments)) {
+        qWarning().noquote() << parser.errorText();
+        return 1;
     }
 
     // Since we can't use QCommandLineParser::process(), we need to handle version and help manually
