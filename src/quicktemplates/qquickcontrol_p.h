@@ -104,8 +104,6 @@ public:
 
     bool isMirrored() const;
 
-    void setFocusReason(Qt::FocusReason reason);
-
     bool hasVisualFocus() const;
 
     bool isHovered() const;

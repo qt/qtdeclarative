@@ -1362,15 +1362,6 @@ bool QQuickControl::isMirrored() const
     return d->isMirrored();
 }
 
-void QQuickControl::setFocusReason(Qt::FocusReason reason)
-{
-    Q_D(const QQuickControl);
-    Qt::FocusReason oldReason = static_cast<Qt::FocusReason>(d->focusReason);
-    QQuickItem::setFocusReason(reason);
-    if (isKeyFocusReason(oldReason) != isKeyFocusReason(reason))
-        emit visualFocusChanged();
-}
-
 /*!
     \qmlproperty bool QtQuick.Controls::Control::visualFocus
     \readonly
@@ -1949,14 +1940,22 @@ QFont QQuickControl::defaultFont() const
 
 void QQuickControl::focusInEvent(QFocusEvent *event)
 {
+    Q_D(QQuickControl);
+    Qt::FocusReason oldReason = static_cast<Qt::FocusReason>(d->focusReason);
     QQuickItem::focusInEvent(event);
-    setFocusReason(event->reason());
+    Qt::FocusReason reason = event->reason();
+    if (isKeyFocusReason(oldReason) != isKeyFocusReason(reason))
+        emit visualFocusChanged();
 }
 
 void QQuickControl::focusOutEvent(QFocusEvent *event)
 {
+    Q_D(QQuickControl);
+    Qt::FocusReason oldReason = static_cast<Qt::FocusReason>(d->focusReason);
     QQuickItem::focusOutEvent(event);
-    setFocusReason(event->reason());
+    Qt::FocusReason reason = event->reason();
+    if (isKeyFocusReason(oldReason) != isKeyFocusReason(reason))
+        emit visualFocusChanged();
 }
 
 #if QT_CONFIG(quicktemplates2_hover)
