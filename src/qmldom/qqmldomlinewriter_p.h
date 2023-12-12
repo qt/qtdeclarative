@@ -88,7 +88,11 @@ public:
     int maxLineLength = -1;
     int strongMaxLineExtra = 20;
     int minContentLength = 10;
+#if defined (Q_OS_WIN)
+    LineEndings lineEndings = LineEndings::Windows;
+#else
     LineEndings lineEndings = LineEndings::Unix;
+#endif
     TrailingSpace codeTrailingSpace = TrailingSpace::Remove;
     TrailingSpace commentTrailingSpace = TrailingSpace::Remove;
     TrailingSpace stringTrailingSpace = TrailingSpace::Preserve;
