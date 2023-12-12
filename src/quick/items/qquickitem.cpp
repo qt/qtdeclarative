@@ -4046,7 +4046,7 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
 
 /*!
     This event handler can be reimplemented in a subclass to receive focus-in
-    events for an item. The event information is provided by the \c event
+    events for an item. The event information is provided by the \a event
     parameter.
 
     \input item.qdocinc accepting-events
@@ -4054,7 +4054,7 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
     If you do reimplement this function, you should call the base class
     implementation.
   */
-void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
+void QQuickItem::focusInEvent(QFocusEvent *event)
 {
 #if QT_CONFIG(accessibility)
     if (QAccessible::isActive()) {
@@ -4064,17 +4064,19 @@ void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
         }
     }
 #endif
+    setFocusReason(event->reason());
 }
 
 /*!
     This event handler can be reimplemented in a subclass to receive focus-out
-    events for an item. The event information is provided by the \c event
+    events for an item. The event information is provided by the \a event
     parameter.
 
     \input item.qdocinc accepting-events
   */
-void QQuickItem::focusOutEvent(QFocusEvent * /*event*/)
+void QQuickItem::focusOutEvent(QFocusEvent *event)
 {
+    setFocusReason(event->reason());
 }
 
 /*!

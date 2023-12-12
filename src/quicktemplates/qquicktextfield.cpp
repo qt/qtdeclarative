@@ -816,13 +816,11 @@ QSGNode *QQuickTextField::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 void QQuickTextField::focusInEvent(QFocusEvent *event)
 {
     QQuickTextInput::focusInEvent(event);
-    setFocusReason(event->reason());
 }
 
 void QQuickTextField::focusOutEvent(QFocusEvent *event)
 {
     QQuickTextInput::focusOutEvent(event);
-    setFocusReason(event->reason());
 }
 
 #if QT_CONFIG(quicktemplates2_hover)
