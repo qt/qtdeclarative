@@ -1216,6 +1216,7 @@ public:
     DomItem(const std::shared_ptr<DomEnvironment> &);
     DomItem(const std::shared_ptr<DomUniverse> &);
 
+    // TODO move to DomEnvironment?
     static DomItem fromCode(const QString &code, DomType fileType = DomType::QmlFile);
 
     // --- start of potentially dangerous stuff, make private? ---

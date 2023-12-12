@@ -568,7 +568,6 @@ private slots:
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
         DomItem tFile;
-        DomItem env(envPtr);
         envPtr->loadFile(
                 FileToLoad::fromFileSystem(envPtr, testFile1),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) {
@@ -614,7 +613,6 @@ private slots:
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
         DomItem tFile; // place where to store the loaded file
-        DomItem env(envPtr);
         envPtr->loadFile(
                 FileToLoad::fromFileSystem(envPtr, testFile),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
@@ -634,6 +632,7 @@ private slots:
         if (!diffs.isEmpty())
             qDebug() << "testDeepCopy.diffs:" << diffs;
         QVERIFY(diffs.isEmpty());
+        DomItem env(envPtr);
         DomItem univFile = env.universe().path(f.canonicalPath());
         MutableDomItem univFileCopy = univFile.makeCopy();
         QStringList univFileDiffs =

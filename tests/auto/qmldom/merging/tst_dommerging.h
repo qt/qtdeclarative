@@ -38,8 +38,6 @@ private slots:
         auto envPtr = std::shared_ptr<QQmlJS::Dom::DomEnvironment>(new QQmlJS::Dom::DomEnvironment(
                 qmltypeDirs,
                 DomEnvironment::Option::SingleThreaded | DomEnvironment::Option::NoDependencies));
-        QQmlJS::Dom::DomItem env(envPtr);
-        QVERIFY(env);
         QString testFile1 = baseDir + QLatin1String("/test1.qml");
 
         envPtr->loadFile(
