@@ -12,6 +12,7 @@
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
 #include <QtQuickTemplates2/private/qquickmenubar_p.h>
+#include <QtQuickTemplates2/private/qquickmenubar_p_p.h>
 #include <QtQuickTemplates2/private/qquickmenubaritem_p.h>
 #include <QtQuickTemplates2/private/qquickmenuitem_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
@@ -38,6 +39,8 @@ private slots:
     void checkHighlightWhenMenuDismissed();
     void hoverAfterClosingWithEscape();
     void requestNative();
+    void containerItems_data();
+    void containerItems();
 
 private:
     static bool hasWindowActivation();
@@ -83,7 +86,7 @@ void tst_qquickmenubar::mouse()
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
 
-    QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
+    QQmlApplicationEngine engine(testFileUrl("menubaritems.qml"));
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
@@ -291,7 +294,7 @@ void tst_qquickmenubar::keys()
     if (!hasWindowActivation())
         QSKIP("Window activation is not supported");
 
-    QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
+    QQmlApplicationEngine engine(testFileUrl("menubaritems.qml"));
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
@@ -487,7 +490,7 @@ void tst_qquickmenubar::mnemonics()
     QSKIP("Mnemonics are not used on this platform");
 #endif
 
-    QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
+    QQmlApplicationEngine engine(testFileUrl("menubaritems.qml"));
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
@@ -636,7 +639,7 @@ void tst_qquickmenubar::altNavigation()
     if (!QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::MenuBarFocusOnAltPressRelease).toBool())
         QSKIP("Menu doesn't get focus via Alt press&release on this platform");
 
-    QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
+    QQmlApplicationEngine engine(testFileUrl("menubaritems.qml"));
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
@@ -824,7 +827,7 @@ void tst_qquickmenubar::hoverAfterClosingWithEscape()
 
 void tst_qquickmenubar::requestNative()
 {
-    QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
+    QQmlApplicationEngine engine(testFileUrl("menubaritems.qml"));
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
     QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
@@ -840,6 +843,65 @@ void tst_qquickmenubar::requestNative()
     QVERIFY(menuBar->requestNative());
 }
 
+void tst_qquickmenubar::containerItems_data()
+{
+    QTest::addColumn<QString>("testUrl");
+    QTest::addColumn<bool>("requestNative");
+    QTest::newRow("menuitems, not native") << QStringLiteral("menubaritems.qml") << false;
+    QTest::newRow("menuitems, native") << QStringLiteral("menubaritems.qml") << true;
+    QTest::newRow("menus, not native") << QStringLiteral("menus.qml") << false;
+    QTest::newRow("menus, native") << QStringLiteral("menus.qml") << true;
+}
+
+void tst_qquickmenubar::containerItems()
+{
+    // Check that the MenuBar ends up containing a MenuBarItem
+    // for each Menu added. This should be the case regardless of
+    // if the MenuBar is native or not. There are several ways
+    // of accessing those MenuBarItems and menus in the MenuBar
+    // API, so check that all end up in sync.
+    QFETCH(QString, testUrl);
+    QFETCH(bool, requestNative);
+
+    QQmlApplicationEngine engine;
+    engine.setInitialProperties({{ "requestNative", requestNative }});
+    engine.load(testFileUrl(testUrl));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    QCOMPARE(menuBar->requestNative(), requestNative);
+
+    QCOMPARE(menuBar->count(), 4);
+    for (int i = 0; i < menuBar->count(); ++i) {
+        QQuickMenu *menu = menuBar->menuAt(i);
+        QVERIFY(menu);
+
+        // Test the itemAt() API
+        QQuickItem *item = menuBar->itemAt(i);
+        QVERIFY(item);
+        auto menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
+        QVERIFY(menuBarItem);
+        QCOMPARE(menuBarItem->menu(), menu);
+
+        // Test the "contentData" list property API
+        auto cd = QQuickMenuBarPrivate::get(menuBar)->contentData();
+        QCOMPARE(cd.count(&cd), menuBar->count());
+        auto cdItem = static_cast<QQuickItem *>(cd.at(&cd, i));
+        QVERIFY(cdItem);
+        auto cdMenuBarItem = qobject_cast<QQuickMenuBarItem *>(cdItem);
+        QVERIFY(cdMenuBarItem);
+        QCOMPARE(cdMenuBarItem->menu(), menu);
+
+        // Test the "menus" list property API
+        auto menus = QQuickMenuBarPrivate::get(menuBar)->menus();
+        QCOMPARE(menus.count(&menus), menuBar->count());
+        auto menusMenu = menus.at(&menus, i);
+        QVERIFY(menusMenu);
+        QCOMPARE(menusMenu, menu);
+    }
+}
 
 QTEST_QUICKCONTROLS_MAIN(tst_qquickmenubar)
 

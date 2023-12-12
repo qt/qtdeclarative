@@ -55,6 +55,10 @@ public:
 
     QWindow *window() const;
     QPlatformMenuBar *nativeHandle() const;
+    QPlatformMenuBar *maybeNativeHandle() const;
+
+    void insertNativeMenu(QQuickMenu *menu);
+    void removeNativeMenu(QQuickMenu *menu);
 
     qreal getContentWidth() const override;
     qreal getContentHeight() const override;

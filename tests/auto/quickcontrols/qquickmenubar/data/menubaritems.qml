@@ -5,13 +5,16 @@ import QtQuick
 import QtQuick.Controls
 
 ApplicationWindow {
+    id: root
     readonly property Button oopsButton: oopsButton
+    property bool requestNative: false
 
     width: 400
     height: 400
     visible: true
 
     header: MenuBar {
+        requestNative: root.requestNative
         MenuBarItem {
             menu: Menu {
                 title: "&File"

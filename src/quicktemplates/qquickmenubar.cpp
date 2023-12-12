@@ -222,14 +222,39 @@ void QQuickMenuBarPrivate::itemImplicitHeightChanged(QQuickItem *item)
 
 void QQuickMenuBarPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
 {
-    QQuickMenuBar *menuBar = static_cast<QQuickMenuBar *>(prop->object);
-    if (QQuickMenu *menu = qobject_cast<QQuickMenu *>(obj))
-        obj = QQuickMenuBarPrivate::get(menuBar)->createItem(menu);
+    auto menuBar = static_cast<QQuickMenuBar *>(prop->object);
+    auto menuBarPriv = QQuickMenuBarPrivate::get(menuBar);
+    const bool requestNative = menuBar->requestNative();
+
+    if (auto menu = qobject_cast<QQuickMenu *>(obj)) {
+        if (QQuickItem *menuBarItem = menuBarPriv->createItem(menu)) {
+            menuBar->addItem(menuBarItem);
+            if (requestNative && menu)
+                menuBarPriv->insertNativeMenu(menu);
+            QQuickContainerPrivate::contentData_append(prop, menuBarItem);
+        }
+        return;
+    }
+
+    if (auto menuBarItem = qobject_cast<QQuickMenuBarItem *>(obj)) {
+        menuBar->addItem(menuBarItem);
+        QQuickMenu *menu = menuBarItem->menu();
+        if (requestNative && menu)
+            menuBarPriv->insertNativeMenu(menu);
+        QQuickContainerPrivate::contentData_append(prop, menuBarItem);
+        return;
+    }
+
     QQuickContainerPrivate::contentData_append(prop, obj);
 }
 
 void QQuickMenuBarPrivate::menus_append(QQmlListProperty<QQuickMenu> *prop, QQuickMenu *obj)
 {
+    // This function is only called if the application assigns a list of menus
+    // directly to the 'menus' property. Otherwise, contentData_append is used.
+    // Since the functions belonging to the 'menus' list anyway returns data from
+    // the menuBar, calls such as "menuBar.menus.length" works as expected
+    // regardless of how the menus were added.
     QQuickMenuBar *menuBar = static_cast<QQuickMenuBar *>(prop->object);
     menuBar->addMenu(obj);
 }
@@ -283,6 +308,56 @@ QPlatformMenuBar* QQuickMenuBarPrivate::nativeHandle() const
     }
     Q_ASSERT(handle);
     return handle.get();
+}
+
+QPlatformMenuBar *QQuickMenuBarPrivate::maybeNativeHandle() const
+{
+    return handle.get();
+}
+
+void QQuickMenuBarPrivate::insertNativeMenu(QQuickMenu *menu)
+{
+    Q_Q(QQuickMenuBar);
+    Q_ASSERT(requestNative);
+    Q_ASSERT(menu);
+
+    QQuickMenu *insertBefore = nullptr;
+    QPlatformMenu *insertBeforeHandle = nullptr;
+
+    // This function assumes that the QQuickMenuBarItem that
+    // corresponds to \a menu has already been added to the container
+    // at the correct index. So we search for it, to determine where to
+    // insert it in the native menubar.
+    bool foundInContainer = false;
+    for (int i = 0; i < q->count(); ++i) {
+        if (q->menuAt(i) != menu)
+            continue;
+
+        foundInContainer = true;
+        if (i < q->count() - 1) {
+            insertBefore = q->menuAt(i + 1);
+            insertBeforeHandle = QQuickMenuPrivate::get(insertBefore)->nativeHandle();
+        }
+        break;
+    }
+
+    Q_ASSERT(foundInContainer);
+    qCDebug(lcMenuBar) << "insert native menu:" << menu << menu->title()
+                       << "before:" << insertBefore << (insertBefore ? insertBefore->title() : QString{});
+
+    QQuickMenuPrivate *menuPrivate = QQuickMenuPrivate::get(menu);
+    nativeHandle()->insertMenu(menuPrivate->nativeHandle(), insertBeforeHandle);
+}
+
+void QQuickMenuBarPrivate::removeNativeMenu(QQuickMenu *menu)
+{
+    if (!maybeNativeHandle())
+        return;
+    QQuickMenuPrivate *menuPrivate = QQuickMenuPrivate::get(menu);
+    if (!menuPrivate->maybeNativeHandle())
+        return;
+    qCDebug(lcMenuBar) << "remove native menu:" << menu << menu->title();
+    nativeHandle()->removeMenu(menuPrivate->nativeHandle());
 }
 
 QQuickMenuBar::QQuickMenuBar(QQuickItem *parent)
@@ -339,8 +414,7 @@ QQuickMenu *QQuickMenuBar::menuAt(int index) const
 */
 void QQuickMenuBar::addMenu(QQuickMenu *menu)
 {
-    Q_D(QQuickMenuBar);
-    addItem(d->createItem(menu));
+    insertMenu(count(), menu);
 }
 
 /*!
@@ -351,7 +425,18 @@ void QQuickMenuBar::addMenu(QQuickMenu *menu)
 void QQuickMenuBar::insertMenu(int index, QQuickMenu *menu)
 {
     Q_D(QQuickMenuBar);
-    insertItem(index, d->createItem(menu));
+    // Always insert menu into the container, even when using a native
+    // menubar, so that container API such as 'count' and 'itemAt'
+    // continues to work as expected. To be 100% cross-platform, we
+    // also require that we're able to create a delegate item in order
+    // to also add a native menu into the native menubar, otherwise an
+    // application can end up having a menubar on desktop where native
+    // menubars are available, but fail to show one everywhere else.
+    if (QQuickItem *item = d->createItem(menu)) {
+        insertItem(index, item);
+        if (d->requestNative)
+            d->insertNativeMenu(menu);
+    }
 }
 
 /*!
@@ -375,6 +460,7 @@ void QQuickMenuBar::removeMenu(QQuickMenu *menu)
         break;
     }
 
+    d->removeNativeMenu(menu);
     menu->deleteLater();
 }
 
