@@ -80,6 +80,8 @@ class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
     Q_PROPERTY(int buttonHeight READ buttonHeight CONSTANT FINAL)
     Q_PROPERTY(int delegateHeight READ delegateHeight CONSTANT FINAL)
     Q_PROPERTY(int dialogButtonBoxHeight READ dialogButtonBoxHeight CONSTANT FINAL)
+    Q_PROPERTY(int dialogTitleFontPixelSize READ dialogTitleFontPixelSize CONSTANT FINAL)
+    Q_PROPERTY(RoundedScale dialogRoundedScale READ dialogRoundedScale CONSTANT FINAL)
     Q_PROPERTY(int frameVerticalPadding READ frameVerticalPadding CONSTANT FINAL)
     Q_PROPERTY(int menuItemHeight READ menuItemHeight CONSTANT FINAL)
     Q_PROPERTY(int menuItemVerticalPadding READ menuItemVerticalPadding CONSTANT FINAL)
@@ -276,6 +278,8 @@ public:
     int buttonHeight() const;
     int delegateHeight() const;
     int dialogButtonBoxHeight() const;
+    int dialogTitleFontPixelSize() const;
+    RoundedScale dialogRoundedScale() const;
     int frameVerticalPadding() const;
     int menuItemHeight() const;
     int menuItemVerticalPadding() const;
