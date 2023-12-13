@@ -90,6 +90,7 @@ private slots:
     void selectNewFileViaTextField_data();
     void selectNewFileViaTextField();
     void selectExistingFileShouldWarnUserWhenFileModeEqualsSaveFile();
+    void fileNameTextFieldOnlyChangesWhenSelectingFiles();
 
 private:
     enum DelegateOrderPolicy
@@ -1563,6 +1564,54 @@ void tst_QQuickFileDialogImpl::selectExistingFileShouldWarnUserWhenFileModeEqual
     QTRY_VERIFY(!confirmationDialog->isOpened());
     QVERIFY(!dialogHelper.dialog->isVisible());
     QCOMPARE(acceptedSpy.count(), 3);
+}
+
+void tst_QQuickFileDialogImpl::fileNameTextFieldOnlyChangesWhenSelectingFiles()
+{
+    const auto tempSubFile1Url = QUrl::fromLocalFile(tempSubFile1->fileName());
+    const auto tempSubDirUrl = QUrl::fromLocalFile(tempSubDir.path());
+    const auto tempFile11Url = QUrl::fromLocalFile(tempFile1->fileName());
+
+    const QVariantMap initialProperties = {
+        { "tempFile1Url", QVariant::fromValue(tempSubFile1Url) },
+        { "fileMode", QVariant::fromValue(QQuickFileDialog::SaveFile) }
+    };
+    FileDialogTestHelper dialogHelper(this, "setSelectedFile.qml", {}, initialProperties);
+
+    OPEN_QUICK_DIALOG();
+    QQuickTest::qWaitForPolish(dialogHelper.window());
+
+    QQuickTextField *fileNameTextField =
+            dialogHelper.quickDialog->findChild<QQuickTextField *>("fileNameTextField");
+    QVERIFY(fileNameTextField);
+
+    auto getSelectedFileInfo = [&dialogHelper]() {
+        return QFileInfo(dialogHelper.dialog->selectedFile().toLocalFile());
+    };
+
+    QVERIFY(getSelectedFileInfo().isFile());
+    QCOMPARE(fileNameTextField->text(), tempSubFile1Url.fileName());
+    QCOMPARE(dialogHelper.dialog->selectedFile(), tempSubFile1Url);
+
+    auto *breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar *>();
+    QVERIFY(breadcrumbBar);
+
+    // Pressing the up button causes tempSubDir to be selected
+    QVERIFY(clickButton(breadcrumbBar->upButton()));
+
+    QVERIFY(getSelectedFileInfo().isDir());
+    QCOMPARE(fileNameTextField->text(), tempSubFile1Url.fileName());
+    QCOMPARE(dialogHelper.dialog->selectedFile(), tempSubDirUrl);
+
+    // Change the selected file from the outside
+    dialogHelper.dialog->close();
+    dialogHelper.dialog->setSelectedFile(tempFile11Url);
+    dialogHelper.openDialog();
+    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+
+    QVERIFY(getSelectedFileInfo().isFile());
+    QCOMPARE(fileNameTextField->text(), tempFile11Url.fileName());
+    QCOMPARE(dialogHelper.dialog->selectedFile(), tempFile11Url);
 }
 
 QTEST_MAIN(tst_QQuickFileDialogImpl)

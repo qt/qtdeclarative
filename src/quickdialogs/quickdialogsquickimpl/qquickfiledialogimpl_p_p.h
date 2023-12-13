@@ -47,6 +47,7 @@ public:
 
     void updateEnabled();
     void updateSelectedFile(const QString &oldFolderPath);
+    void updateFileNameTextEdit();
     static QDir::SortFlags fileListSortFlags();
     static QFileInfoList fileList(const QDir &dir);
     void setFileDialogListViewCurrentIndex(int newCurrentIndex);
