@@ -194,9 +194,7 @@ void tst_qmlls_modules::checkCompletions(const QByteArray &uri, int lineNr, int 
                     } else if (c.kind->toInt() == int(CompletionItemKind::Property)) {
                         QVERIFY2(!propertiesTracker.hasSeen(c.label),
                                  "Duplicate property: " + c.label);
-                        QVERIFY2(c.insertText == c.label + u": "_s,
-                                 "a property should end with a colon with a space for "
-                                 "'insertText', for better coding experience");
+                        QVERIFY(c.insertText->isEmpty());
                     }
                     labels << c.label;
                 }

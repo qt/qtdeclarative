@@ -1637,7 +1637,6 @@ void tst_qmlls_utils::completions_data()
     QTest::addColumn<int>("character");
     QTest::addColumn<ExpectedCompletions>("expected");
     QTest::addColumn<QStringList>("notExpected");
-    QTest::addColumn<InsertOption>("insertOptions");
 
     const QString file = testFile(u"Yyy.qml"_s);
     const QString emptyFile = testFile(u"emptyFile.qml"_s);
@@ -1681,7 +1680,7 @@ void tst_qmlls_utils::completions_data()
                                              { u"Rectangle"_s, CompletionItemKind::Constructor },
                                              { u"width"_s, CompletionItemKind::Property },
                                      })
-                                  << QStringList({ u"QtQuick"_s, u"vector4d"_s }) << InsertColon;
+                                  << QStringList({ u"QtQuick"_s, u"vector4d"_s });
 
     const QString propertyCompletion = u"property type name: value;"_s;
     const QString functionCompletion = u"function name(args...): returnType { statements...}"_s;
@@ -1725,7 +1724,7 @@ void tst_qmlls_utils::completions_data()
                          u"component ${1:name}: ${2:baseType} {\n\t$0\n}"_s },
                })
             // not allowed because required properties need an initializer
-            << QStringList({ u"readonly property type name;"_s }) << InsertColon;
+            << QStringList({ u"readonly property type name;"_s });
 
     QTest::newRow("handlers") << file << 5 << 1
                               << ExpectedCompletions{ {
@@ -1733,16 +1732,15 @@ void tst_qmlls_utils::completions_data()
                                          { u"onDefaultPropertyChanged"_s,
                                            CompletionItemKind::Method },
                                  } }
-                              << QStringList({ u"QtQuick"_s, u"vector4d"_s }) << InsertColon;
+                              << QStringList({ u"QtQuick"_s, u"vector4d"_s });
 
-    QTest::newRow("attachedTypes") << file << 9 << 1 << attachedTypes
-                                   << QStringList{ u"QtQuick"_s, u"vector4d"_s } << InsertColon;
+    QTest::newRow("attachedTypes")
+            << file << 9 << 1 << attachedTypes << QStringList{ u"QtQuick"_s, u"vector4d"_s };
 
-    QTest::newRow("attachedTypesInScript") << file << 6 << 12 << attachedTypes
-                                           << QStringList{ u"QtQuick"_s, u"vector4d"_s } << None;
+    QTest::newRow("attachedTypesInScript")
+            << file << 6 << 12 << attachedTypes << QStringList{ u"QtQuick"_s, u"vector4d"_s };
     QTest::newRow("attachedTypesInLongScript")
-            << file << 10 << 16 << attachedTypes << QStringList{ u"QtQuick"_s, u"vector4d"_s }
-            << None;
+            << file << 10 << 16 << attachedTypes << QStringList{ u"QtQuick"_s, u"vector4d"_s };
 
     QTest::newRow("completionFromRootId") << file << 10 << 21
                                           << ExpectedCompletions({
@@ -1750,7 +1748,7 @@ void tst_qmlls_utils::completions_data()
                                                      { u"lala"_s, CompletionItemKind::Method },
                                                      { u"foo"_s, CompletionItemKind::Property },
                                              })
-                                          << QStringList{ u"QtQuick"_s, u"vector4d"_s } << None;
+                                          << QStringList{ u"QtQuick"_s, u"vector4d"_s };
 
     QTest::newRow("attachedProperties") << file << 89 << 15
                                         << ExpectedCompletions({
@@ -1762,16 +1760,14 @@ void tst_qmlls_utils::completions_data()
                                                         u"Rectangle"_s,
                                                         u"property"_s,
                                                         u"foo"_s,
-                                                        u"onActiveFocusOnTabChanged"_s }
-                                        << InsertColon;
+                                                        u"onActiveFocusOnTabChanged"_s };
 
-    QTest::newRow("inBindingLabel")
-            << file << 6 << 10
-            << ExpectedCompletions({
-                       { u"Rectangle"_s, CompletionItemKind::Constructor },
-                       { u"width"_s, CompletionItemKind::Property },
-               })
-            << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"property"_s }) << InsertColon;
+    QTest::newRow("inBindingLabel") << file << 6 << 10
+                                    << ExpectedCompletions({
+                                               { u"Rectangle"_s, CompletionItemKind::Constructor },
+                                               { u"width"_s, CompletionItemKind::Property },
+                                       })
+                                    << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"property"_s });
 
     QTest::newRow("afterBinding") << file << 6 << 11
                                   << (ExpectedCompletions({
@@ -1781,16 +1777,14 @@ void tst_qmlls_utils::completions_data()
                                               { singletonName, CompletionItemKind::Class },
                                       })
                                       + attachedTypes)
-                                  << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s })
-                                  << None;
+                                  << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s });
 
     QTest::newRow("jsGlobals") << file << 6 << 11
                                << ExpectedCompletions{ {
                                           { u"console"_s, CompletionItemKind::Property },
                                           { u"Math"_s, CompletionItemKind::Property },
                                   } }
-                               << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s })
-                               << None;
+                               << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s });
 
     QTest::newRow("jsGlobals2") << file << 100 << 32
                                 << ExpectedCompletions{ {
@@ -1799,8 +1793,7 @@ void tst_qmlls_utils::completions_data()
                                            { u"E"_s, CompletionItemKind::Property },
                                    } }
                                 << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s,
-                                                 u"foo"_s, u"lala"_s })
-                                << None;
+                                                 u"foo"_s, u"lala"_s });
 
     QTest::newRow("afterLongBinding")
             << file << 10 << 16
@@ -1808,7 +1801,7 @@ void tst_qmlls_utils::completions_data()
                        { u"height"_s, CompletionItemKind::Property },
                        { u"width"_s, CompletionItemKind::Property },
                })
-            << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s, u"Rectangle"_s }) << None;
+            << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s, u"Rectangle"_s });
 
     QTest::newRow("afterId") << file << 5 << 8 << ExpectedCompletions({})
                              << QStringList({
@@ -1818,30 +1811,28 @@ void tst_qmlls_utils::completions_data()
                                         u"width"_s,
                                         u"vector4d"_s,
                                         u"import"_s,
-                                })
-                             << None;
+                                });
 
     QTest::newRow("emptyFile") << emptyFile << 1 << 1
                                << ExpectedCompletions({
                                           { u"import"_s, CompletionItemKind::Keyword },
                                           { u"pragma"_s, CompletionItemKind::Keyword },
                                   })
-                               << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"width"_s }) << None;
+                               << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"width"_s });
 
     QTest::newRow("importImport") << file << 1 << 4
                                   << ExpectedCompletions({
                                              { u"import"_s, CompletionItemKind::Keyword },
                                      })
                                   << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"width"_s,
-                                                   u"Rectangle"_s })
-                                  << None;
+                                                   u"Rectangle"_s });
 
     QTest::newRow("importModuleStart")
             << file << 1 << 8
             << ExpectedCompletions({
                        { u"QtQuick"_s, CompletionItemKind::Module },
                })
-            << QStringList({ u"vector4d"_s, u"width"_s, u"Rectangle"_s, u"import"_s }) << None;
+            << QStringList({ u"vector4d"_s, u"width"_s, u"Rectangle"_s, u"import"_s });
 
     QTest::newRow("importVersionStart")
             << file << 1 << 16
@@ -1849,7 +1840,7 @@ void tst_qmlls_utils::completions_data()
                        { u"2"_s, CompletionItemKind::Constant },
                        { u"as"_s, CompletionItemKind::Keyword },
                })
-            << QStringList({ u"Rectangle"_s, u"import"_s, u"vector4d"_s, u"width"_s }) << None;
+            << QStringList({ u"Rectangle"_s, u"import"_s, u"vector4d"_s, u"width"_s });
 
     // QTest::newRow("importVersionMinor")
     //         << uri << 1 << 18
@@ -1863,21 +1854,21 @@ void tst_qmlls_utils::completions_data()
                                             { u"width"_s, CompletionItemKind::Property },
                                             { u"foo"_s, CompletionItemKind::Property },
                                     })
-                                 << QStringList({ u"import"_s, u"Rectangle"_s }) << None;
+                                 << QStringList({ u"import"_s, u"Rectangle"_s });
 
     QTest::newRow("expandBase2") << file << 11 << 30
                                  << ExpectedCompletions({
                                             { u"width"_s, CompletionItemKind::Property },
                                             { u"color"_s, CompletionItemKind::Property },
                                     })
-                                 << QStringList({ u"foo"_s, u"import"_s, u"Rectangle"_s }) << None;
+                                 << QStringList({ u"foo"_s, u"import"_s, u"Rectangle"_s });
 
     QTest::newRow("asCompletions")
             << file << 26 << 9
             << ExpectedCompletions({
                        { u"Rectangle"_s, CompletionItemKind::Field },
                })
-            << QStringList({ u"foo"_s, u"import"_s, u"lala()"_s, u"width"_s }) << None;
+            << QStringList({ u"foo"_s, u"import"_s, u"lala()"_s, u"width"_s });
 
     QTest::newRow("parameterCompletion")
             << file << 36 << 24
@@ -1885,107 +1876,93 @@ void tst_qmlls_utils::completions_data()
                        { u"helloWorld"_s, CompletionItemKind::Variable },
                        { u"helloMe"_s, CompletionItemKind::Variable },
                })
-            << QStringList() << None;
+            << QStringList();
 
     QTest::newRow("inMethodName") << file << 15 << 14 << ExpectedCompletions({})
                                   << QStringList{ u"QtQuick"_s, u"vector4d"_s, u"foo"_s,
-                                                  u"root"_s,    u"Item"_s,     singletonName }
-                                  << None;
+                                                  u"root"_s,    u"Item"_s,     singletonName };
 
-    QTest::newRow("inMethodReturnType")
-            << file << 17 << 54 << mixedTypes
-            << QStringList{ u"QtQuick"_s, u"foo"_s, u"root"_s, } << None;
+    QTest::newRow("inMethodReturnType") << file << 17 << 54 << mixedTypes
+                                        << QStringList{
+                                               u"QtQuick"_s,
+                                               u"foo"_s,
+                                               u"root"_s,
+                                           };
 
     QTest::newRow("letStatement") << file << 95 << 13 << ExpectedCompletions({})
-                                  << QStringList{ u"QtQuick"_s, u"vector4d"_s, u"root"_s } << None;
+                                  << QStringList{ u"QtQuick"_s, u"vector4d"_s, u"root"_s };
 
-    QTest::newRow("inParameterCompletion")
-            << file << 35 << 39 << ExpectedCompletions({})
-            << QStringList{
-                   u"helloWorld"_s,
-                   u"helloMe"_s,
-               } << None;
+    QTest::newRow("inParameterCompletion") << file << 35 << 39 << ExpectedCompletions({})
+                                           << QStringList{
+                                                  u"helloWorld"_s,
+                                                  u"helloMe"_s,
+                                              };
 
     QTest::newRow("parameterTypeCompletion") << file << 35 << 55 << mixedTypes
                                              << QStringList{
                                                     u"helloWorld"_s,
                                                     u"helloMe"_s,
-                                                } << None;
+                                                };
 
     QTest::newRow("propertyTypeCompletion") << file << 16 << 14 << mixedTypes
-                                             << QStringList{
-                                                    u"helloWorld"_s,
-                                                    u"helloMe"_s,
-                                                } << None;
+                                            << QStringList{
+                                                   u"helloWorld"_s,
+                                                   u"helloMe"_s,
+                                               };
     QTest::newRow("propertyTypeCompletion2") << file << 16 << 23 << mixedTypes
                                              << QStringList{
                                                     u"helloWorld"_s,
                                                     u"helloMe"_s,
-                                                } << None;
-    QTest::newRow("propertyNameCompletion") << file << 16 << 24 << ExpectedCompletions({ })
-                                             << QStringList{
-                                                    u"helloWorld"_s,
-                                                    u"helloMe"_s,
-                                                    u"Zzz"_s,
-                                                    u"Item"_s,
-                                                    u"int"_s,
-                                                    u"date"_s,
-                                                } << None;
-    QTest::newRow("propertyNameCompletion2") << file << 16 << 25 << ExpectedCompletions({ })
-                                             << QStringList{
-                                                    u"helloWorld"_s,
-                                                    u"helloMe"_s,
-                                                    u"Zzz"_s,
-                                                    u"Item"_s,
-                                                    u"int"_s,
-                                                    u"date"_s,
-                                                } << None;
+                                                };
+    QTest::newRow("propertyNameCompletion")
+            << file << 16 << 24 << ExpectedCompletions({})
+            << QStringList{
+                   u"helloWorld"_s, u"helloMe"_s, u"Zzz"_s, u"Item"_s, u"int"_s, u"date"_s,
+               };
+    QTest::newRow("propertyNameCompletion2")
+            << file << 16 << 25 << ExpectedCompletions({})
+            << QStringList{
+                   u"helloWorld"_s, u"helloMe"_s, u"Zzz"_s, u"Item"_s, u"int"_s, u"date"_s,
+               };
 
-    QTest::newRow("propertyDefinitionBinding") << file << 90 << 28 << (ExpectedCompletions({
-            { u"lala"_s, CompletionItemKind::Method},
-            { u"createRectangle"_s, CompletionItemKind::Method},
-            { u"createItem"_s, CompletionItemKind::Method},
-            { u"createAnything"_s, CompletionItemKind::Method},
-    }) += constructorTypes)
-                                               << QStringList{
-                                                      u"helloWorld"_s,
-                                                      u"helloMe"_s,
-                                                      u"int"_s,
-                                                      u"date"_s,
-                                                  } << None;
+    QTest::newRow("propertyDefinitionBinding")
+            << file << 90 << 28
+            << (ExpectedCompletions({
+                        { u"lala"_s, CompletionItemKind::Method },
+                        { u"createRectangle"_s, CompletionItemKind::Method },
+                        { u"createItem"_s, CompletionItemKind::Method },
+                        { u"createAnything"_s, CompletionItemKind::Method },
+                }) += constructorTypes)
+            << QStringList{
+                   u"helloWorld"_s,
+                   u"helloMe"_s,
+                   u"int"_s,
+                   u"date"_s,
+               };
 
-    QTest::newRow("ignoreNonRelatedTypesForPropertyDefinitionBinding") << file << 16 << 29 <<
-            (ExpectedCompletions({
-            { u"createRectangle"_s, CompletionItemKind::Method},
-            { u"createItem"_s, CompletionItemKind::Method},
-            { u"createAnything"_s, CompletionItemKind::Method},
-    }) += rectangleTypes)
-                                               << QStringList{
-                                                      u"Item"_s,
-                                                      u"Zzz"_s,
-                                                      u"helloWorld"_s,
-                                                      u"helloMe"_s,
-                                                      u"int"_s,
-                                                      u"date"_s,
-                                                      u"Item"_s,
-                                                      u"QtObject"_s,
-                                                  } << None;
+    QTest::newRow("ignoreNonRelatedTypesForPropertyDefinitionBinding")
+            << file << 16 << 29
+            << (ExpectedCompletions({
+                        { u"createRectangle"_s, CompletionItemKind::Method },
+                        { u"createItem"_s, CompletionItemKind::Method },
+                        { u"createAnything"_s, CompletionItemKind::Method },
+                }) += rectangleTypes)
+            << QStringList{
+                   u"Item"_s, u"Zzz"_s,  u"helloWorld"_s, u"helloMe"_s,
+                   u"int"_s,  u"date"_s, u"Item"_s,       u"QtObject"_s,
+               };
 
-    QTest::newRow("inBoundObject") << file << 16 << 40 <<
-            (ExpectedCompletions({
-            { u"objectName"_s, CompletionItemKind::Property},
-            { u"width"_s, CompletionItemKind::Property},
-            { propertyCompletion, CompletionItemKind::Snippet },
-            { functionCompletion, CompletionItemKind::Snippet },
-    }) += constructorTypes)
-                                               << QStringList{
-                                                      u"helloWorld"_s,
-                                                      u"helloMe"_s,
-                                                      u"int"_s,
-                                                      u"date"_s,
-                                                      u"QtQuick"_s,
-                                                      u"vector4d"_s,
-                                                  } << InsertColon;
+    QTest::newRow("inBoundObject")
+            << file << 16 << 40
+            << (ExpectedCompletions({
+                        { u"objectName"_s, CompletionItemKind::Property },
+                        { u"width"_s, CompletionItemKind::Property },
+                        { propertyCompletion, CompletionItemKind::Snippet },
+                        { functionCompletion, CompletionItemKind::Snippet },
+                }) += constructorTypes)
+            << QStringList{
+                   u"helloWorld"_s, u"helloMe"_s, u"int"_s, u"date"_s, u"QtQuick"_s, u"vector4d"_s,
+               };
 
     QTest::newRow("qualifiedIdentifierCompletion")
             << file << 37 << 36
@@ -1994,8 +1971,7 @@ void tst_qmlls_utils::completions_data()
                        { u"childAt"_s, CompletionItemKind::Method },
                })
             << QStringList{ u"helloVar"_s, u"someItem"_s, u"color"_s, u"helloWorld"_s,
-                            u"propertyOfZZZ"_s }
-            << None;
+                            u"propertyOfZZZ"_s };
 
     QTest::newRow("scriptExpressionCompletion")
             << file << 60 << 16
@@ -2026,7 +2002,7 @@ void tst_qmlls_utils::completions_data()
                    u"foo"_s,
                    u"jsParameterInBase"_s,
                    u"jsParameterInDerived"_s,
-               } << None;
+               };
 
     QTest::newRow("qualifiedScriptExpressionCompletion")
             << file << 60 << 34
@@ -2052,43 +2028,43 @@ void tst_qmlls_utils::completions_data()
                    u"jsParameterInDerived"_s,
                    u"jsParameterInChild"_s,
                    u"functionInChild"_s,
-               } << None;
+               };
 
-    QTest::newRow("pragma")
-            << pragmaFile << 1 << 8
-            << ExpectedCompletions({
-                       { u"NativeMethodBehavior"_s, CompletionItemKind::Value },
-                       { u"ComponentBehavior"_s, CompletionItemKind::Value },
-                       { u"ListPropertyAssignBehavior"_s, CompletionItemKind::Value },
-                       { u"Singleton"_s, CompletionItemKind::Value },
-                       // note: only complete the Addressible/Inaddressible part of ValueTypeBehavior!
-                       { u"ValueTypeBehavior"_s, CompletionItemKind::Value },
-               })
-            << QStringList{
-                   u"int"_s,
-                   u"Rectangle"_s,
-                   u"FunctionSignatureBehavior"_s,
-                   u"Strict"_s,
-               } << None;
+    QTest::newRow("pragma") << pragmaFile << 1 << 8
+                            << ExpectedCompletions({
+                                       { u"NativeMethodBehavior"_s, CompletionItemKind::Value },
+                                       { u"ComponentBehavior"_s, CompletionItemKind::Value },
+                                       { u"ListPropertyAssignBehavior"_s,
+                                         CompletionItemKind::Value },
+                                       { u"Singleton"_s, CompletionItemKind::Value },
+                                       // note: only complete the Addressible/Inaddressible part of
+                                       // ValueTypeBehavior!
+                                       { u"ValueTypeBehavior"_s, CompletionItemKind::Value },
+                               })
+                            << QStringList{
+                                   u"int"_s,
+                                   u"Rectangle"_s,
+                                   u"FunctionSignatureBehavior"_s,
+                                   u"Strict"_s,
+                               };
 
-    QTest::newRow("pragmaValue")
-            << pragmaFile << 2 << 30
-            << ExpectedCompletions({
-                       { u"AcceptThisObject"_s, CompletionItemKind::Value },
-                       { u"RejectThisObject"_s, CompletionItemKind::Value },
-               })
-            << QStringList{
-                   u"int"_s,
-                   u"Rectangle"_s,
-                   u"FunctionSignatureBehavior"_s,
-                   u"Strict"_s,
-                   u"NativeMethodBehavior"_s,
-                   u"ComponentBehavior"_s,
-                   u"ListPropertyAssignBehavior"_s,
-                   u"Singleton"_s,
-                   u"ValueTypeBehavior"_s,
-                   u"Unbound"_s,
-               } << None;
+    QTest::newRow("pragmaValue") << pragmaFile << 2 << 30
+                                 << ExpectedCompletions({
+                                            { u"AcceptThisObject"_s, CompletionItemKind::Value },
+                                            { u"RejectThisObject"_s, CompletionItemKind::Value },
+                                    })
+                                 << QStringList{
+                                        u"int"_s,
+                                        u"Rectangle"_s,
+                                        u"FunctionSignatureBehavior"_s,
+                                        u"Strict"_s,
+                                        u"NativeMethodBehavior"_s,
+                                        u"ComponentBehavior"_s,
+                                        u"ListPropertyAssignBehavior"_s,
+                                        u"Singleton"_s,
+                                        u"ValueTypeBehavior"_s,
+                                        u"Unbound"_s,
+                                    };
 
     QTest::newRow("pragmaMultiValue")
             << pragmaFile << 3 << 43
@@ -2108,7 +2084,7 @@ void tst_qmlls_utils::completions_data()
                    u"Singleton"_s,
                    u"ValueTypeBehavior"_s,
                    u"Unbound"_s,
-               } << None;
+               };
 
     QTest::newRow("pragmaWithoutValue")
             << pragmaFile << 1 << 17
@@ -2117,7 +2093,8 @@ void tst_qmlls_utils::completions_data()
                        { u"ComponentBehavior"_s, CompletionItemKind::Value },
                        { u"ListPropertyAssignBehavior"_s, CompletionItemKind::Value },
                        { u"Singleton"_s, CompletionItemKind::Value },
-                       // note: only complete the Addressible/Inaddressible part of ValueTypeBehavior!
+                       // note: only complete the Addressible/Inaddressible part of
+                       // ValueTypeBehavior!
                        { u"ValueTypeBehavior"_s, CompletionItemKind::Value },
                })
             << QStringList{
@@ -2125,23 +2102,23 @@ void tst_qmlls_utils::completions_data()
                    u"Rectangle"_s,
                    u"FunctionSignatureBehavior"_s,
                    u"Strict"_s,
-               } << None;
+               };
 
     QTest::newRow("non-block-scoped-variable")
             << file << 69 << 21
             << ExpectedCompletions({
                        { u"helloVarVariable"_s, CompletionItemKind::Variable },
                })
-            << QStringList{} << None;
+            << QStringList{};
     QTest::newRow("block-scoped-variable")
             << file << 76 << 21 << ExpectedCompletions{ { u"test2"_s, CompletionItemKind::Method } }
-            << QStringList{ u"helloLetVariable"_s, u"helloVarVariable"_s } << None;
+            << QStringList{ u"helloLetVariable"_s, u"helloVarVariable"_s };
 
     QTest::newRow("singleton") << file << 78 << 33
                                << ExpectedCompletions({
                                           { singletonName, CompletionItemKind::Class },
                                   })
-                               << QStringList{} << None;
+                               << QStringList{};
 
     QTest::newRow("singletonPropertyAndEnums")
             << file << 78 << 52
@@ -2154,21 +2131,20 @@ void tst_qmlls_utils::completions_data()
                    u"int"_s,
                    u"Rectangle"_s,
                    u"foo"_s,
-               } << None;
+               };
 
-    QTest::newRow("enumsFromItem")
-            << file << 86 << 33
-            << ExpectedCompletions({
-                       { u"World"_s, CompletionItemKind::EnumMember },
-                       { u"ValueOne"_s, CompletionItemKind::EnumMember },
-                       { u"ValueTwo"_s, CompletionItemKind::EnumMember },
-                       { u"Hello"_s, CompletionItemKind::Enum },
-                       { u"MyEnum"_s, CompletionItemKind::Enum },
-               })
-            << QStringList{
-                   u"int"_s,
-                   u"Rectangle"_s,
-               } << None;
+    QTest::newRow("enumsFromItem") << file << 86 << 33
+                                   << ExpectedCompletions({
+                                              { u"World"_s, CompletionItemKind::EnumMember },
+                                              { u"ValueOne"_s, CompletionItemKind::EnumMember },
+                                              { u"ValueTwo"_s, CompletionItemKind::EnumMember },
+                                              { u"Hello"_s, CompletionItemKind::Enum },
+                                              { u"MyEnum"_s, CompletionItemKind::Enum },
+                                      })
+                                   << QStringList{
+                                          u"int"_s,
+                                          u"Rectangle"_s,
+                                      };
 
     QTest::newRow("enumsFromEnumName")
             << file << 87 << 40
@@ -2176,14 +2152,9 @@ void tst_qmlls_utils::completions_data()
                        { u"World"_s, CompletionItemKind::EnumMember },
                })
             << QStringList{
-                   u"int"_s,
-                   u"Rectangle"_s,
-                   u"foo"_s,
-                   u"ValueOne"_s,
-                   u"ValueTwo"_s,
-                   u"Hello"_s,
-                   u"MyEnum"_s,
-               } << None;
+                   u"int"_s,      u"Rectangle"_s, u"foo"_s,    u"ValueOne"_s,
+                   u"ValueTwo"_s, u"Hello"_s,     u"MyEnum"_s,
+               };
 
     QTest::newRow("requiredProperty")
             << file << 97 << 14
@@ -2192,16 +2163,9 @@ void tst_qmlls_utils::completions_data()
                        { u"default"_s, CompletionItemKind::Keyword },
                })
             << QStringList{
-                   u"readonly"_s,
-                   u"required"_s,
-                   u"int"_s,
-                   u"Rectangle"_s,
-                   u"foo"_s,
-                   u"ValueOne"_s,
-                   u"ValueTwo"_s,
-                   u"Hello"_s,
-                   u"MyEnum"_s,
-               } << None;
+                   u"readonly"_s, u"required"_s, u"int"_s,   u"Rectangle"_s, u"foo"_s,
+                   u"ValueOne"_s, u"ValueTwo"_s, u"Hello"_s, u"MyEnum"_s,
+               };
 
     QTest::newRow("readonlyProperty")
             << file << 98 << 13
@@ -2210,16 +2174,9 @@ void tst_qmlls_utils::completions_data()
                        { u"default"_s, CompletionItemKind::Keyword },
                })
             << QStringList{
-                   u"required"_s,
-                   u"readonly"_s,
-                   u"int"_s,
-                   u"Rectangle"_s,
-                   u"foo"_s,
-                   u"ValueOne"_s,
-                   u"ValueTwo"_s,
-                   u"Hello"_s,
-                   u"MyEnum"_s,
-               } << None;
+                   u"required"_s, u"readonly"_s, u"int"_s,   u"Rectangle"_s, u"foo"_s,
+                   u"ValueOne"_s, u"ValueTwo"_s, u"Hello"_s, u"MyEnum"_s,
+               };
 
     QTest::newRow("defaultProperty")
             << file << 99 << 12
@@ -2229,15 +2186,9 @@ void tst_qmlls_utils::completions_data()
                        { u"required"_s, CompletionItemKind::Keyword },
                })
             << QStringList{
-                   u"default"_s,
-                   u"int"_s,
-                   u"Rectangle"_s,
-                   u"foo"_s,
-                   u"ValueOne"_s,
-                   u"ValueTwo"_s,
-                   u"Hello"_s,
-                   u"MyEnum"_s,
-               } << None;
+                   u"default"_s,  u"int"_s,      u"Rectangle"_s, u"foo"_s,
+                   u"ValueOne"_s, u"ValueTwo"_s, u"Hello"_s,     u"MyEnum"_s,
+               };
 
     QTest::newRow("defaultProperty2")
             << file << 99 << 20
@@ -2247,24 +2198,17 @@ void tst_qmlls_utils::completions_data()
                        { u"required"_s, CompletionItemKind::Keyword },
                })
             << QStringList{
-                   u"default"_s,
-                   u"int"_s,
-                   u"Rectangle"_s,
-                   u"foo"_s,
-                   u"ValueOne"_s,
-                   u"ValueTwo"_s,
-                   u"Hello"_s,
-                   u"MyEnum"_s,
-               } << None;
+                   u"default"_s,  u"int"_s,      u"Rectangle"_s, u"foo"_s,
+                   u"ValueOne"_s, u"ValueTwo"_s, u"Hello"_s,     u"MyEnum"_s,
+               };
 
     QTest::newRow("defaultProperty3")
-            << file << 99 << 21
-            << ExpectedCompletions{{ u"int"_s, CompletionItemKind::Class}}
+            << file << 99 << 21 << ExpectedCompletions{ { u"int"_s, CompletionItemKind::Class } }
             << QStringList{
-                       u"property"_s,
-                       u"readonly"_s,
-                       u"required"_s,
-               } << None;
+                   u"property"_s,
+                   u"readonly"_s,
+                   u"required"_s,
+               };
 
     const QString forStatementCompletion = u"for (initializer; condition; increment) statement"_s;
     const QString ifStatementCompletion = u"if (condition) statement"_s;
@@ -2320,26 +2264,21 @@ void tst_qmlls_utils::completions_data()
                             caseStatement2Completion,
                             defaultStatementCompletion,
                             defaultStatement2Completion,
-               } << None;
+               };
 
     QTest::newRow("forStatementLet")
             << file << 103 << 13
-            << ExpectedCompletions{
-                       { letStatementCompletion, CompletionItemKind::Snippet,
-                         u"let ${1:variable} = $0;"_s },
-                       { constStatementCompletion, CompletionItemKind::Snippet,
-                         u"const ${1:variable} = $0;"_s },
-                       { varStatementCompletion, CompletionItemKind::Snippet,
-                         u"var ${1:variable} = $0;"_s },
-                       { u"helloJSStatements"_s, CompletionItemKind::Method }
-                }
+            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet,
+                                      u"let ${1:variable} = $0;"_s },
+                                    { constStatementCompletion, CompletionItemKind::Snippet,
+                                      u"const ${1:variable} = $0;"_s },
+                                    { varStatementCompletion, CompletionItemKind::Snippet,
+                                      u"var ${1:variable} = $0;"_s },
+                                    { u"helloJSStatements"_s, CompletionItemKind::Method } }
             << QStringList{
-                       u"property"_s,
-                       u"readonly"_s,
-                       u"required"_s,
-                       forStatementCompletion,
-                       ifStatementCompletion,
-               } << None;
+                   u"property"_s,          u"readonly"_s,         u"required"_s,
+                   forStatementCompletion, ifStatementCompletion,
+               };
 
     QTest::newRow("forStatementCondition")
             << file << 103 << 25
@@ -2350,7 +2289,7 @@ void tst_qmlls_utils::completions_data()
             << QStringList{ u"property"_s,          u"readonly"_s,           u"required"_s,
                             forStatementCompletion, ifStatementCompletion,   varStatementCompletion,
                             letStatementCompletion, constStatementCompletion, }
-            << None;
+           ;
 
     QTest::newRow("forStatementIncrement")
             << file << 103 << 30
@@ -2361,39 +2300,37 @@ void tst_qmlls_utils::completions_data()
             << QStringList{ u"property"_s,          u"readonly"_s,           u"required"_s,
                             forStatementCompletion, ifStatementCompletion,   varStatementCompletion,
                             letStatementCompletion, constStatementCompletion, }
-            << None;
+           ;
 
     QTest::newRow("forStatementIncrement2")
             << file << 103 << 33
             << ExpectedCompletions{ { u"helloJSStatements"_s, CompletionItemKind::Method } }
-            << QStringList{ u"property"_s,          u"readonly"_s,           u"required"_s,
-                            forStatementCompletion, ifStatementCompletion,   varStatementCompletion,
-                            letStatementCompletion, constStatementCompletion, }
-            << None;
+            << QStringList{
+                   u"property"_s,          u"readonly"_s,
+                   u"required"_s,          forStatementCompletion,
+                   ifStatementCompletion,  varStatementCompletion,
+                   letStatementCompletion, constStatementCompletion,
+               };
 
     QTest::newRow("forStatementWithoutBlock")
             << file << 107 << 12
             << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
-                                    { constStatementCompletion, CompletionItemKind:: Snippet },
+                                    { constStatementCompletion, CompletionItemKind::Snippet },
                                     { varStatementCompletion, CompletionItemKind::Snippet },
                                     { u"helloJSStatements"_s, CompletionItemKind::Method },
                                     { u"j"_s, CompletionItemKind::Variable },
-                                    { forStatementCompletion, CompletionItemKind::Snippet }
-               }
-            << QStringList{ propertyCompletion }
-            << None;
+                                    { forStatementCompletion, CompletionItemKind::Snippet } }
+            << QStringList{ propertyCompletion };
 
     QTest::newRow("blockStatementBeforeBracket")
             << file << 103 << 36
             << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
-                                    { constStatementCompletion, CompletionItemKind:: Snippet },
+                                    { constStatementCompletion, CompletionItemKind::Snippet },
                                     { varStatementCompletion, CompletionItemKind::Snippet },
                                     { u"helloJSStatements"_s, CompletionItemKind::Method },
                                     { u"i"_s, CompletionItemKind::Variable },
-                                    { forStatementCompletion, CompletionItemKind::Snippet }
-               }
-            << QStringList{ propertyCompletion }
-            << None;
+                                    { forStatementCompletion, CompletionItemKind::Snippet } }
+            << QStringList{ propertyCompletion };
 
     QTest::newRow("blockStatementAfterBracket")
             << file << 103 << 37
@@ -2401,10 +2338,8 @@ void tst_qmlls_utils::completions_data()
                                     { constStatementCompletion, CompletionItemKind::Snippet },
                                     { varStatementCompletion, CompletionItemKind::Snippet },
                                     { u"helloJSStatements"_s, CompletionItemKind::Method },
-                                    { forStatementCompletion, CompletionItemKind::Snippet }
-               }
-            << QStringList{ propertyCompletion }
-            << None;
+                                    { forStatementCompletion, CompletionItemKind::Snippet } }
+            << QStringList{ propertyCompletion };
 
     QTest::newRow("ifStatementCondition")
             << file << 110 << 15
@@ -2412,7 +2347,7 @@ void tst_qmlls_utils::completions_data()
                                     { u"hello"_s, CompletionItemKind::Variable },
                }
             << QStringList{ propertyCompletion, letStatementCompletion, constStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("ifStatementConsequence")
             << file << 111 << 12
@@ -2422,7 +2357,7 @@ void tst_qmlls_utils::completions_data()
                                     { u"hello"_s, CompletionItemKind::Variable },
                }
             << QStringList{ propertyCompletion }
-            << None;
+           ;
 
     QTest::newRow("ifStatementAlternative")
             << file << 113 << 12
@@ -2432,75 +2367,65 @@ void tst_qmlls_utils::completions_data()
                                     { u"hello"_s, CompletionItemKind::Variable },
                }
             << QStringList{ propertyCompletion }
-            << None;
+           ;
 
     QTest::newRow("elseIfStatement")
             << file << 121 << 18
             << ExpectedCompletions{  { u"hello"_s, CompletionItemKind::Variable }, }
             << QStringList{ propertyCompletion, letStatementCompletion, ifStatementCompletion }
-            << None;
+           ;
     QTest::newRow("returnStatement")
             << file << 125 << 16
             << ExpectedCompletions{ { u"hello"_s, CompletionItemKind::Variable },
                }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("whileCondition")
             << file << 128 << 16
             << ExpectedCompletions{ { u"hello"_s, CompletionItemKind::Variable }, }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("whileConsequence")
             << file << 128 << 22
             << ExpectedCompletions{ { u"hello"_s, CompletionItemKind::Variable },
                                     { letStatementCompletion, CompletionItemKind::Snippet } }
-            << QStringList{ propertyCompletion } << None;
+            << QStringList{ propertyCompletion };
 
     QTest::newRow("doWhileCondition")
             << file << 131 << 30
             << ExpectedCompletions{ { u"hello"_s, CompletionItemKind::Variable }, }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("doWhileConsequence")
             << file << 131 << 12
             << ExpectedCompletions{ { u"hello"_s, CompletionItemKind::Variable },
                                     { letStatementCompletion, CompletionItemKind::Snippet } }
-            << QStringList{ propertyCompletion } << None;
+            << QStringList{ propertyCompletion };
 
     QTest::newRow("forInStatementLet")
             << file << 134 << 13
-            << ExpectedCompletions{
-                       { letStatementCompletion, CompletionItemKind::Snippet },
-                       { constStatementCompletion, CompletionItemKind::Snippet },
-                       { varStatementCompletion, CompletionItemKind::Snippet },
-                       { u"helloJSStatements"_s, CompletionItemKind::Method }
-                }
+            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { constStatementCompletion, CompletionItemKind::Snippet },
+                                    { varStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"helloJSStatements"_s, CompletionItemKind::Method } }
             << QStringList{
-                       u"property"_s,
-                       u"readonly"_s,
-                       u"required"_s,
-                       forStatementCompletion,
-                       ifStatementCompletion,
-               } << None;
+                   u"property"_s,          u"readonly"_s,         u"required"_s,
+                   forStatementCompletion, ifStatementCompletion,
+               };
 
     QTest::newRow("forOfStatementLet")
             << file << 135 << 13
-            << ExpectedCompletions{
-                       { letStatementCompletion, CompletionItemKind::Snippet },
-                       { constStatementCompletion, CompletionItemKind::Snippet },
-                       { varStatementCompletion, CompletionItemKind::Snippet },
-                       { u"helloJSStatements"_s, CompletionItemKind::Method }
-                }
+            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
+                                    { constStatementCompletion, CompletionItemKind::Snippet },
+                                    { varStatementCompletion, CompletionItemKind::Snippet },
+                                    { u"helloJSStatements"_s, CompletionItemKind::Method } }
             << QStringList{
-                       u"property"_s,
-                       u"readonly"_s,
-                       u"required"_s,
-                       forStatementCompletion,
-                       ifStatementCompletion,
-               } << None;
+                   u"property"_s,          u"readonly"_s,         u"required"_s,
+                   forStatementCompletion, ifStatementCompletion,
+               };
 
     QTest::newRow("forInStatementTarget")
             << file << 134 << 25
@@ -2511,7 +2436,7 @@ void tst_qmlls_utils::completions_data()
             << QStringList{ u"property"_s,          u"readonly"_s,           u"required"_s,
                             forStatementCompletion, ifStatementCompletion,   varStatementCompletion,
                             letStatementCompletion, constStatementCompletion, }
-            << None;
+           ;
 
     QTest::newRow("forOfStatementTarget")
             << file << 135 << 24
@@ -2522,31 +2447,27 @@ void tst_qmlls_utils::completions_data()
             << QStringList{ u"property"_s,          u"readonly"_s,           u"required"_s,
                             forStatementCompletion, ifStatementCompletion,   varStatementCompletion,
                             letStatementCompletion, constStatementCompletion, }
-            << None;
+           ;
 
     QTest::newRow("forInStatementConsequence")
             << file << 134 << 31
             << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
-                                    { constStatementCompletion, CompletionItemKind:: Snippet },
+                                    { constStatementCompletion, CompletionItemKind::Snippet },
                                     { varStatementCompletion, CompletionItemKind::Snippet },
                                     { u"helloJSStatements"_s, CompletionItemKind::Method },
                                     { u"hello"_s, CompletionItemKind::Variable },
-                                    { forStatementCompletion, CompletionItemKind::Snippet }
-               }
-            << QStringList{ propertyCompletion }
-            << None;
+                                    { forStatementCompletion, CompletionItemKind::Snippet } }
+            << QStringList{ propertyCompletion };
 
     QTest::newRow("forOfStatementConsequence")
             << file << 135 << 30
             << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
-                                    { constStatementCompletion, CompletionItemKind:: Snippet },
+                                    { constStatementCompletion, CompletionItemKind::Snippet },
                                     { varStatementCompletion, CompletionItemKind::Snippet },
                                     { u"helloJSStatements"_s, CompletionItemKind::Method },
                                     { u"hello"_s, CompletionItemKind::Variable },
-                                    { forStatementCompletion, CompletionItemKind::Snippet }
-               }
-            << QStringList{ propertyCompletion }
-            << None;
+                                    { forStatementCompletion, CompletionItemKind::Snippet } }
+            << QStringList{ propertyCompletion };
 
     QTest::newRow("binaryExpressionRHS") << file << 138 << 17
                                  << ExpectedCompletions{
@@ -2557,7 +2478,7 @@ void tst_qmlls_utils::completions_data()
                                                  u"test1"_s,         u"width"_s,
                                                  u"height"_s,        u"layer"_s,
                                                  u"left"_s }
-                                 << None;
+                                ;
     QTest::newRow("binaryExpressionLHS") << file << 138 << 12
                                  << ExpectedCompletions{
                                         { u"qualifiedScriptIdentifiers"_s, CompletionItemKind::Method },
@@ -2565,7 +2486,7 @@ void tst_qmlls_utils::completions_data()
                                         { u"layer"_s, CompletionItemKind::Property },
                                     }
                                  << QStringList{ u"log"_s, u"error"_s}
-                                 << None;
+                                ;
 
     const QString missingRHSFile = testFile(u"completions/missingRHS.qml"_s);
     QTest::newRow("binaryExpressionMissingRHS") << missingRHSFile << 12 << 25
@@ -2573,13 +2494,13 @@ void tst_qmlls_utils::completions_data()
                                         { u"good"_s, CompletionItemKind::Property },
                                     }
                                  << QStringList{ propertyCompletion, u"bad"_s }
-                                 << None;
+                                ;
     QTest::newRow("binaryExpressionMissingRHSWithDefaultProperty") << missingRHSFile << 14 << 33
                                  << ExpectedCompletions{
                                         { u"good"_s, CompletionItemKind::Property },
                                     }
                                  << QStringList{ propertyCompletion, u"bad"_s, u"helloSubItem"_s }
-                                 << None;
+                                ;
 
     QTest::newRow("binaryExpressionMissingRHSWithSemicolon")
             << testFile(u"completions/missingRHS.parserfail.qml"_s)
@@ -2588,7 +2509,7 @@ void tst_qmlls_utils::completions_data()
                                         { u"good"_s, CompletionItemKind::Property },
                                     }
                                  << QStringList{ propertyCompletion, u"bad"_s, u"helloSubItem"_s }
-                                 << None;
+                                ;
 
     QTest::newRow("binaryExpressionMissingRHSWithStatement") <<
             testFile(u"completions/missingRHS.parserfail.qml"_s)
@@ -2597,36 +2518,38 @@ void tst_qmlls_utils::completions_data()
                                         { u"good"_s, CompletionItemKind::Property },
                                     }
                                  << QStringList{ propertyCompletion, u"bad"_s, u"helloSubItem"_s }
-                                 << None;
+                                ;
 
     QTest::newRow("tryStatements")
             << testFile(u"completions/tryStatements.qml"_s) << 5 << 14
             << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
                                     { forStatementCompletion, CompletionItemKind::Snippet } }
-            << QStringList{} << None;
+            << QStringList{};
 
     QTest::newRow("tryStatementsCatchParameter")
-            << testFile(u"completions/tryStatements.qml"_s) << 5 << 23
-            << ExpectedCompletions{}
-            << QStringList{ letStatementCompletion, forStatementCompletion } << None;
+            << testFile(u"completions/tryStatements.qml"_s) << 5 << 23 << ExpectedCompletions{}
+            << QStringList{ letStatementCompletion, forStatementCompletion };
 
     QTest::newRow("tryStatementsCatchBlock")
             << testFile(u"completions/tryStatements.qml"_s) << 5 << 27
             << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
                                     { forStatementCompletion, CompletionItemKind::Snippet } }
-            << QStringList{} << None;
+            << QStringList{};
 
     QTest::newRow("tryStatementsFinallyBlock")
             << testFile(u"completions/tryStatements.qml"_s) << 5 << 39
             << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet },
                                     { forStatementCompletion, CompletionItemKind::Snippet } }
-            << QStringList{} << None;
+            << QStringList{};
 
     QTest::newRow("inSwitchExpression")
             << testFile(u"completions/switchStatements.qml"_s) << 10 << 16
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"myProperty"_s, CompletionItemKind::Property } }
-            << QStringList{ letStatementCompletion, propertyCompletion, } << None;
+            << QStringList{
+                   letStatementCompletion,
+                   propertyCompletion,
+               };
 
     QTest::newRow("beforeCaseStatement")
             << testFile(u"completions/switchStatements.qml"_s) << 11 << 1
@@ -2634,18 +2557,16 @@ void tst_qmlls_utils::completions_data()
                                     { caseStatement2Completion, CompletionItemKind::Snippet },
                                     { defaultStatementCompletion, CompletionItemKind::Snippet },
                                     { defaultStatement2Completion, CompletionItemKind::Snippet } }
-            << QStringList{ letStatementCompletion, propertyCompletion, u"x"_s, u"myProperty"_s }
-            << None;
+            << QStringList{ letStatementCompletion, propertyCompletion, u"x"_s, u"myProperty"_s };
     QTest::newRow("inCaseExpression")
             << testFile(u"completions/switchStatements.qml"_s) << 12 << 14
-            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"f"_s, CompletionItemKind::Method },
                                     { u"myProperty"_s, CompletionItemKind::Property } }
-            << QStringList{ letStatementCompletion, propertyCompletion, caseStatementCompletion }
-            << None;
+            << QStringList{ letStatementCompletion, propertyCompletion, caseStatementCompletion };
     QTest::newRow("inCaseStatementList")
             << testFile(u"completions/switchStatements.qml"_s) << 13 << 1
-            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"f"_s, CompletionItemKind::Method },
                                     { caseStatementCompletion, CompletionItemKind::Snippet },
                                     { defaultStatementCompletion, CompletionItemKind::Snippet },
@@ -2653,11 +2574,10 @@ void tst_qmlls_utils::completions_data()
                                     { u"break"_s, CompletionItemKind::Keyword },
                                     { u"return"_s, CompletionItemKind::Keyword },
                                     { u"myProperty"_s, CompletionItemKind::Property } }
-            << QStringList{ propertyCompletion }
-            << None;
+            << QStringList{ propertyCompletion };
     QTest::newRow("inDefaultStatementList")
             << testFile(u"completions/switchStatements.qml"_s) << 24 << 1
-            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"f"_s, CompletionItemKind::Method },
                                     { caseStatementCompletion, CompletionItemKind::Snippet },
                                     { defaultStatementCompletion, CompletionItemKind::Snippet },
@@ -2665,11 +2585,10 @@ void tst_qmlls_utils::completions_data()
                                     { u"break"_s, CompletionItemKind::Keyword },
                                     { u"return"_s, CompletionItemKind::Keyword },
                                     { u"myProperty"_s, CompletionItemKind::Property } }
-            << QStringList{ propertyCompletion }
-            << None;
+            << QStringList{ propertyCompletion };
     QTest::newRow("inMoreCasesStatementList")
             << testFile(u"completions/switchStatements.qml"_s) << 26 << 1
-            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"f"_s, CompletionItemKind::Method },
                                     { caseStatementCompletion, CompletionItemKind::Snippet },
                                     { defaultStatementCompletion, CompletionItemKind::Snippet },
@@ -2677,109 +2596,110 @@ void tst_qmlls_utils::completions_data()
                                     { u"break"_s, CompletionItemKind::Keyword },
                                     { u"return"_s, CompletionItemKind::Keyword },
                                     { u"myProperty"_s, CompletionItemKind::Property } }
-            << QStringList{ propertyCompletion }
-            << None;
+            << QStringList{ propertyCompletion };
 
     QTest::newRow("inCaseBeforeBlock")
             << testFile(u"completions/switchStatements.qml"_s) << 14 << 23
-            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"f"_s, CompletionItemKind::Method },
                                     { caseStatementCompletion, CompletionItemKind::Snippet },
                                     { defaultStatementCompletion, CompletionItemKind::Snippet },
                                     { letStatementCompletion, CompletionItemKind::Snippet },
                                     { u"myProperty"_s, CompletionItemKind::Property } }
-            << QStringList{ propertyCompletion, }
-            << None;
+            << QStringList{
+                   propertyCompletion,
+               };
     QTest::newRow("inCaseBeforeBlock2")
             << testFile(u"completions/switchStatements.qml"_s) << 14 << 24
-            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"f"_s, CompletionItemKind::Method },
                                     { letStatementCompletion, CompletionItemKind::Snippet },
                                     { u"myProperty"_s, CompletionItemKind::Property } }
-            << QStringList{ propertyCompletion, }
-            << None;
-
+            << QStringList{
+                   propertyCompletion,
+               };
 
     QTest::newRow("inCaseNestedStatement")
             << testFile(u"completions/switchStatements.qml"_s) << 16 << 1
-            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"f"_s, CompletionItemKind::Method },
                                     { letStatementCompletion, CompletionItemKind::Snippet },
                                     { u"myProperty"_s, CompletionItemKind::Property } }
-            << QStringList{ propertyCompletion, caseStatementCompletion, defaultStatementCompletion }
-            << None;
+            << QStringList{ propertyCompletion, caseStatementCompletion,
+                            defaultStatementCompletion };
 
     QTest::newRow("inCaseAfterBlock")
             << testFile(u"completions/switchStatements.qml"_s) << 22 << 1
-            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"f"_s, CompletionItemKind::Method },
                                     { caseStatementCompletion, CompletionItemKind::Snippet },
                                     { defaultStatementCompletion, CompletionItemKind::Snippet },
                                     { letStatementCompletion, CompletionItemKind::Snippet },
                                     { u"myProperty"_s, CompletionItemKind::Property } }
-            << QStringList{ propertyCompletion, }
-            << None;
+            << QStringList{
+                   propertyCompletion,
+               };
 
     QTest::newRow("inCaseBeforeDefault")
             << testFile(u"completions/switchStatements.qml"_s) << 23 << 1
-            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"f"_s, CompletionItemKind::Method },
                                     { caseStatementCompletion, CompletionItemKind::Snippet },
                                     { defaultStatementCompletion, CompletionItemKind::Snippet },
                                     { letStatementCompletion, CompletionItemKind::Snippet },
                                     { u"myProperty"_s, CompletionItemKind::Property } }
-            << QStringList{ propertyCompletion, }
-            << None;
+            << QStringList{
+                   propertyCompletion,
+               };
 
     QTest::newRow("inCaseAfterDefault")
             << testFile(u"completions/switchStatements.qml"_s) << 25 << 1
-            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"f"_s, CompletionItemKind::Method },
                                     { caseStatementCompletion, CompletionItemKind::Snippet },
                                     { defaultStatementCompletion, CompletionItemKind::Snippet },
                                     { letStatementCompletion, CompletionItemKind::Snippet },
                                     { u"myProperty"_s, CompletionItemKind::Property } }
-            << QStringList{ propertyCompletion, }
-            << None;
+            << QStringList{
+                   propertyCompletion,
+               };
 
     QTest::newRow("beforeAnyCase")
             << testFile(u"completions/switchStatements.qml"_s) << 20 << 1
             << ExpectedCompletions{ { caseStatementCompletion, CompletionItemKind::Snippet },
                                     { defaultStatementCompletion, CompletionItemKind::Snippet } }
             << QStringList{ propertyCompletion, letStatementCompletion, u"myProperty"_s, u"x"_s,
-                            u"f"_s }
-            << None;
+                            u"f"_s };
 
     QTest::newRow("beforeAnyDefault")
             << testFile(u"completions/switchStatements.qml"_s) << 32 << 1
             << ExpectedCompletions{ { caseStatementCompletion, CompletionItemKind::Snippet },
                                     { defaultStatementCompletion, CompletionItemKind::Snippet } }
             << QStringList{ propertyCompletion, letStatementCompletion, u"myProperty"_s, u"x"_s,
-                            u"f"_s }
-            << None;
+                            u"f"_s };
     QTest::newRow("inDefaultAfterDefault")
             << testFile(u"completions/switchStatements.qml"_s) << 33 << 1
-            << ExpectedCompletions{ { u"x"_s,  CompletionItemKind::Variable },
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"f"_s, CompletionItemKind::Method },
                                     { caseStatementCompletion, CompletionItemKind::Snippet },
                                     { defaultStatementCompletion, CompletionItemKind::Snippet },
                                     { letStatementCompletion, CompletionItemKind::Snippet },
                                     { u"myProperty"_s, CompletionItemKind::Property } }
-            << QStringList{ propertyCompletion, }
-            << None;
+            << QStringList{
+                   propertyCompletion,
+               };
 
     // variableDeclaration.qml tests for let/const/var statements + destructuring
 
     QTest::newRow("letStatement") << testFile(u"completions/variableDeclaration.qml"_s) << 7 << 13
                                   << ExpectedCompletions{}
                                   << QStringList{ propertyCompletion, letStatementCompletion,
-                                                  u"x"_s, u"data"_s }
-                                  << None;
+                                                  u"x"_s, u"data"_s };
 
     QTest::newRow("letStatement2")
             << testFile(u"completions/variableDeclaration.qml"_s) << 7 << 26
             << ExpectedCompletions{}
-            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s };
 
     QTest::newRow("letStatementBehindEqual")
             << testFile(u"completions/variableDeclaration.qml"_s) << 7 << 28
@@ -2787,7 +2707,7 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("letStatementBehindEqual2")
             << testFile(u"completions/variableDeclaration.qml"_s) << 7 << 33
@@ -2795,12 +2715,12 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("constStatement")
             << testFile(u"completions/variableDeclaration.qml"_s) << 8 << 19
             << ExpectedCompletions{}
-            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s };
 
     QTest::newRow("constStatementBehindEqual")
             << testFile(u"completions/variableDeclaration.qml"_s) << 8 << 32
@@ -2808,13 +2728,12 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("varStatement") << testFile(u"completions/variableDeclaration.qml"_s) << 9 << 17
                                   << ExpectedCompletions{}
                                   << QStringList{ propertyCompletion, letStatementCompletion,
-                                                  u"x"_s, u"data"_s }
-                                  << None;
+                                                  u"x"_s, u"data"_s };
 
     QTest::newRow("varStatementBehindEqual")
             << testFile(u"completions/variableDeclaration.qml"_s) << 9 << 28
@@ -2822,12 +2741,12 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("objectDeconstruction")
             << testFile(u"completions/variableDeclaration.qml"_s) << 13 << 20
             << ExpectedCompletions{}
-            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s };
 
     QTest::newRow("objectDeconstructionAloneBehindEqual")
             << testFile(u"completions/variableDeclaration.qml"_s) << 14 << 51
@@ -2835,7 +2754,7 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("objectDeconstructionAloneBehindEqual2")
             << testFile(u"completions/variableDeclaration.qml"_s) << 14 << 58
@@ -2843,7 +2762,7 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("objectDeconstruction2BehindEqual")
             << testFile(u"completions/variableDeclaration.qml"_s) << 15 << 83
@@ -2851,7 +2770,7 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("objectDeconstruction2BehindEqual2")
             << testFile(u"completions/variableDeclaration.qml"_s) << 15 << 90
@@ -2859,7 +2778,7 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("objectDeconstruction3BehindEqual")
             << testFile(u"completions/variableDeclaration.qml"_s) << 15 << 140
@@ -2867,31 +2786,27 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("objectDeconstructionBehindComma")
             << testFile(u"completions/variableDeclaration.qml"_s) << 15 << 143
             << ExpectedCompletions{}
-            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
-            << None;
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s };
 
     QTest::newRow("objectDeconstructionBetweenObjects")
             << testFile(u"completions/variableDeclaration.qml"_s) << 15 << 50
             << ExpectedCompletions{}
-            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
-            << None;
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s };
 
     QTest::newRow("objectDeconstructionBetweenDeconstructions")
             << testFile(u"completions/variableDeclaration.qml"_s) << 15 << 97
             << ExpectedCompletions{}
-            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
-            << None;
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s };
 
     QTest::newRow("arrayDeconstructionAlone")
             << testFile(u"completions/variableDeclaration.qml"_s) << 19 << 24
             << ExpectedCompletions{}
-            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
-            << None;
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s };
 
     QTest::newRow("arrayDeconstructionAloneBehindEqual")
             << testFile(u"completions/variableDeclaration.qml"_s) << 19 << 33
@@ -2899,13 +2814,12 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("arrayDeconstruction2")
             << testFile(u"completions/variableDeclaration.qml"_s) << 21 << 71
             << ExpectedCompletions{}
-            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
-            << None;
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s };
 
     QTest::newRow("arrayDeconstruction2BehindEqual")
             << testFile(u"completions/variableDeclaration.qml"_s) << 21 << 83
@@ -2913,12 +2827,11 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
     QTest::newRow("arrayDeconstruction3")
             << testFile(u"completions/variableDeclaration.qml"_s) << 21 << 125
             << ExpectedCompletions{}
-            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
-            << None;
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s };
 
     QTest::newRow("arrayDeconstruction3BehindEqual")
             << testFile(u"completions/variableDeclaration.qml"_s) << 21 << 139
@@ -2926,13 +2839,12 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("arrayDeconstructionIn_Wildcard")
             << testFile(u"completions/variableDeclaration.qml"_s) << 25 << 64
             << ExpectedCompletions{}
-            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
-            << None;
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s };
 
     QTest::newRow("arrayDeconstructionBehind+")
             << testFile(u"completions/variableDeclaration.qml"_s) << 25 << 132
@@ -2940,7 +2852,7 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("objectDeconstructionForNeedle")
             << testFile(u"completions/variableDeclaration.qml"_s) << 29 << 111
@@ -2948,7 +2860,7 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("arrayInObjectDeconstructionInObjectInitializer")
             << testFile(u"completions/variableDeclaration.qml"_s) << 33 << 44
@@ -2956,25 +2868,24 @@ void tst_qmlls_utils::completions_data()
                                     {u"data"_s, CompletionItemKind::Method},
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion }
-            << None;
+           ;
 
     QTest::newRow("arrayInObjectDeconstructionInObjectPropertyName")
             << testFile(u"completions/variableDeclaration.qml"_s) << 33 << 26
             << ExpectedCompletions{}
-            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s }
-            << None;
+            << QStringList{ propertyCompletion, letStatementCompletion, u"x"_s, u"data"_s };
 
     QTest::newRow("throwStatement")
             << testFile(u"completions/throwStatement.qml"_s) << 8 << 15
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"f"_s, CompletionItemKind::Method } }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("throwStatement2")
             << testFile(u"completions/throwStatement.qml"_s) << 9 << 20
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"f"_s, CompletionItemKind::Method } }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("labelledStatement")
             << testFile(u"completions/labelledStatement.qml"_s) << 5 << 16
@@ -2983,7 +2894,7 @@ void tst_qmlls_utils::completions_data()
                                     { letStatementCompletion, CompletionItemKind::Snippet },
                                     { forStatementCompletion, CompletionItemKind::Snippet },
                                     }
-            << QStringList{ propertyCompletion, } << None;
+            << QStringList{ propertyCompletion, };
 
     QTest::newRow("nestedLabel")
             << testFile(u"completions/labelledStatement.qml"_s) << 7 << 22
@@ -2992,7 +2903,7 @@ void tst_qmlls_utils::completions_data()
                                     { letStatementCompletion, CompletionItemKind::Snippet },
                                     { forStatementCompletion, CompletionItemKind::Snippet },
                                     }
-            << QStringList{ propertyCompletion, } << None;
+            << QStringList{ propertyCompletion, };
 
     QTest::newRow("nestedLabel2")
             << testFile(u"completions/labelledStatement.qml"_s) << 8 << 26
@@ -3001,7 +2912,7 @@ void tst_qmlls_utils::completions_data()
                                     { letStatementCompletion, CompletionItemKind::Snippet },
                                     { forStatementCompletion, CompletionItemKind::Snippet },
                                     }
-            << QStringList{ propertyCompletion, } << None;
+            << QStringList{ propertyCompletion, };
 
     QTest::newRow("multiLabel")
             << testFile(u"completions/labelledStatement.qml"_s) << 15 << 21
@@ -3010,7 +2921,7 @@ void tst_qmlls_utils::completions_data()
                                     { letStatementCompletion, CompletionItemKind::Snippet },
                                     { forStatementCompletion, CompletionItemKind::Snippet },
                                     }
-            << QStringList{ propertyCompletion, } << None;
+            << QStringList{ propertyCompletion, };
 
     QTest::newRow("multiLabel2")
             << testFile(u"completions/labelledStatement.qml"_s) << 16 << 21
@@ -3019,111 +2930,109 @@ void tst_qmlls_utils::completions_data()
                                     { letStatementCompletion, CompletionItemKind::Snippet },
                                     { forStatementCompletion, CompletionItemKind::Snippet },
                                     }
-            << QStringList{ propertyCompletion, } << None;
+            << QStringList{ propertyCompletion, };
 
     QTest::newRow("continueNested")
             << testFile(u"completions/continueAndBreakStatement.qml"_s) << 12 << 26
             << ExpectedCompletions{ { u"nestedLabel1"_s, CompletionItemKind::Value },
                                     { u"nestedLabel2"_s, CompletionItemKind::Value }, }
-            << QStringList{ propertyCompletion, u"x"_s, u"f"_s, u"multiLabel1"_s } << None;
+            << QStringList{ propertyCompletion, u"x"_s, u"f"_s, u"multiLabel1"_s };
 
     QTest::newRow("breakNested")
             << testFile(u"completions/continueAndBreakStatement.qml"_s) << 13 << 23
             << ExpectedCompletions{ { u"nestedLabel1"_s, CompletionItemKind::Value },
                                     { u"nestedLabel2"_s, CompletionItemKind::Value }, }
-            << QStringList{ propertyCompletion, u"x"_s, u"f"_s, u"multiLabel1"_s } << None;
+            << QStringList{ propertyCompletion, u"x"_s, u"f"_s, u"multiLabel1"_s };
 
     QTest::newRow("continueMulti")
             << testFile(u"completions/continueAndBreakStatement.qml"_s) << 20 << 22
             << ExpectedCompletions{ { u"multiLabel1"_s, CompletionItemKind::Value },
                                     { u"multiLabel2"_s, CompletionItemKind::Value }, }
-            << QStringList{ propertyCompletion, u"x"_s, u"f"_s, u"nestedLabel1"_s } << None;
+            << QStringList{ propertyCompletion, u"x"_s, u"f"_s, u"nestedLabel1"_s };
 
     QTest::newRow("breakMulti")
             << testFile(u"completions/continueAndBreakStatement.qml"_s) << 21 << 19
             << ExpectedCompletions{ { u"multiLabel1"_s, CompletionItemKind::Value },
                                     { u"multiLabel2"_s, CompletionItemKind::Value }, }
-            << QStringList{ propertyCompletion, u"x"_s, u"f"_s, u"nestedLabel1"_s } << None;
+            << QStringList{ propertyCompletion, u"x"_s, u"f"_s, u"nestedLabel1"_s };
 
     QTest::newRow("continueNoLabel") << testFile(u"completions/continueAndBreakStatement.qml"_s)
                                      << 25 << 22 << ExpectedCompletions{}
                                      << QStringList{ propertyCompletion, u"x"_s, u"f"_s,
-                                                     u"nestedLabel1"_s, u"multiLabel1"_s }
-                                     << None;
+                                                     u"nestedLabel1"_s, u"multiLabel1"_s };
 
     QTest::newRow("breakNoLabel") << testFile(u"completions/continueAndBreakStatement.qml"_s) << 26
                                   << 19 << ExpectedCompletions{}
                                   << QStringList{ propertyCompletion, u"x"_s, u"f"_s,
-                                                  u"nestedLabel1"_s, u"multiLabel1"_s }
-                                  << None;
+                                                  u"nestedLabel1"_s, u"multiLabel1"_s };
 
     QTest::newRow("insideMethodBody")
             << testFile(u"completions/functionBody.qml"_s) << 5 << 1
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { forStatementCompletion, CompletionItemKind::Snippet } }
-            << QStringList{ propertyCompletion } << None;
+            << QStringList{ propertyCompletion };
 
     QTest::newRow("insideMethodBody2")
             << testFile(u"completions/functionBody.qml"_s) << 11 << 11
             << ExpectedCompletions{ { u"helloProperty"_s, CompletionItemKind::Property }, }
-            << QStringList{ u"badProperty"_s, forStatementCompletion } << None;
+            << QStringList{ u"badProperty"_s, forStatementCompletion };
 
     QTest::newRow("insideMethodBodyStart")
             << testFile(u"completions/functionBody.qml"_s) << 11 << 1
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { forStatementCompletion, CompletionItemKind::Snippet } }
-            << QStringList{ u"helloProperty"_s } << None;
+            << QStringList{ u"helloProperty"_s };
 
     QTest::newRow("insideMethodBodyEnd")
             << testFile(u"completions/functionBody.qml"_s) << 12 << 1
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { forStatementCompletion, CompletionItemKind::Snippet } }
-            << QStringList{ u"helloProperty"_s } << None;
+            << QStringList{ u"helloProperty"_s };
 
     QTest::newRow("noBreakInMethodBody")
             << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 8 << 8
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable } }
-            << QStringList{ u"break"_s, u"continue"_s } << None;
+            << QStringList{ u"break"_s, u"continue"_s };
 
     QTest::newRow("breakAndContinueInForLoop")
             << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 11 << 12
             << ExpectedCompletions{ { u"break"_s, CompletionItemKind::Keyword },
                                     { u"continue"_s, CompletionItemKind::Keyword },
                                     }
-            << QStringList{} << None;
+            << QStringList{};
 
     QTest::newRow("noBreakInSwitch")
             << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 15 << 12
             << ExpectedCompletions{ { caseStatementCompletion, CompletionItemKind::Snippet }, }
-            << QStringList{ u"continue"_s, u"break"_s } << None;
+            << QStringList{ u"continue"_s, u"break"_s };
 
     QTest::newRow("breakInSwitchCase")
             << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 17 << 12
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"break"_s, CompletionItemKind::Keyword },
                                     }
-            << QStringList{ u"continue"_s } << None;
+            << QStringList{ u"continue"_s };
 
     QTest::newRow("breakInSwitchDefault")
             << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 19 << 12
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"break"_s, CompletionItemKind::Keyword },
                                     }
-            << QStringList{ u"continue"_s } << None;
+            << QStringList{ u"continue"_s };
 
     QTest::newRow("breakInSwitchSecondCase")
             << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 21 << 12
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"break"_s, CompletionItemKind::Keyword },
                                     }
-            << QStringList{ u"continue"_s } << None;
+            << QStringList{ u"continue"_s };
 
     QTest::newRow("breakInLabel")
             << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 25 << 12
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"break"_s, CompletionItemKind::Keyword },
                                     }
-            << QStringList{ u"continue"_s } << None;
+            << QStringList{ u"continue"_s };
 
     QTest::newRow("forLoopInsideOfLabel")
             << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 33 << 1
@@ -3131,7 +3040,7 @@ void tst_qmlls_utils::completions_data()
                                     { u"break"_s, CompletionItemKind::Keyword },
                                     { u"continue"_s, CompletionItemKind::Keyword },
                                     }
-            << QStringList{ } << None;
+            << QStringList{ };
 
     QTest::newRow("switchInsideForLoopInsideOfLabel")
             << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 36 << 1
@@ -3139,14 +3048,14 @@ void tst_qmlls_utils::completions_data()
                                     { u"break"_s, CompletionItemKind::Keyword },
                                     { u"continue"_s, CompletionItemKind::Keyword },
                                     }
-            << QStringList{ } << None;
+            << QStringList{ };
 
     QTest::newRow("switchInsideOfLabel")
             << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 45 << 1
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     { u"break"_s, CompletionItemKind::Keyword },
                                     }
-            << QStringList{ u"continue"_s } << None;
+            << QStringList{ u"continue"_s };
 
     QTest::newRow("forLoopInSwitchInsideOfLabel")
             << testFile(u"completions/suggestContinueAndBreak.qml"_s) << 47 << 1
@@ -3154,7 +3063,7 @@ void tst_qmlls_utils::completions_data()
                                     { u"break"_s, CompletionItemKind::Keyword },
                                     { u"continue"_s, CompletionItemKind::Keyword },
                                     }
-            << QStringList{ } << None;
+            << QStringList{ };
 
     QTest::newRow("commaExpression")
             << testFile(u"completions/commaExpression.qml"_s) << 5 << 18
@@ -3162,7 +3071,7 @@ void tst_qmlls_utils::completions_data()
                                     { u"b"_s, CompletionItemKind::Variable },
                                     { u"c"_s, CompletionItemKind::Variable },
                                     }
-            << QStringList{ propertyCompletion } << None;
+            << QStringList{ propertyCompletion };
 
     QTest::newRow("conditionalExpressionConsequence")
             << testFile(u"completions/conditionalExpression.qml"_s) << 5 << 17
@@ -3170,7 +3079,7 @@ void tst_qmlls_utils::completions_data()
                                     { u"b"_s, CompletionItemKind::Variable },
                                     { u"c"_s, CompletionItemKind::Variable },
                                     }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("conditionalExpressionAlternative")
             << testFile(u"completions/conditionalExpression.qml"_s) << 5 << 30
@@ -3178,73 +3087,73 @@ void tst_qmlls_utils::completions_data()
                                     { u"b"_s, CompletionItemKind::Variable },
                                     { u"c"_s, CompletionItemKind::Variable },
                                     }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("unaryMinus")
             << testFile(u"completions/unaryExpression.qml"_s) << 5 << 10
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("unaryPlus")
             << testFile(u"completions/unaryExpression.qml"_s) << 6 << 10
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("unaryTilde")
             << testFile(u"completions/unaryExpression.qml"_s) << 7 << 10
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("unaryNot")
             << testFile(u"completions/unaryExpression.qml"_s) << 8 << 10
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("typeof")
             << testFile(u"completions/unaryExpression.qml"_s) << 9 << 16
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("delete")
             << testFile(u"completions/unaryExpression.qml"_s) << 10 << 16
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("void")
             << testFile(u"completions/unaryExpression.qml"_s) << 11 << 14
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("postDecrement")
             << testFile(u"completions/unaryExpression.qml"_s) << 12 << 9
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("postIncrement")
             << testFile(u"completions/unaryExpression.qml"_s) << 13 << 9
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("preDecrement")
             << testFile(u"completions/unaryExpression.qml"_s) << 14 << 11
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("preIncrement")
             << testFile(u"completions/unaryExpression.qml"_s) << 15 << 11
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     }
-            << QStringList{ propertyCompletion, letStatementCompletion } << None;
+            << QStringList{ propertyCompletion, letStatementCompletion };
 }
 
 void tst_qmlls_utils::completions()
@@ -3254,7 +3163,6 @@ void tst_qmlls_utils::completions()
     QFETCH(int, character);
     QFETCH(ExpectedCompletions, expected);
     QFETCH(QStringList, notExpected);
-    QFETCH(InsertOption, insertOptions);
 
     QQmlJS::Dom::DomCreationOptions options;
     options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
@@ -3332,17 +3240,7 @@ void tst_qmlls_utils::completions()
             }
         } else if (c.kind->toInt() == int(CompletionItemKind::Property)) {
             QVERIFY2(!propertiesTracker.hasSeen(c.label), "Duplicate property: " + c.label);
-            QEXPECT_FAIL("attachedProperties",
-                     "Completion for attached properties requires first QTBUG-117380 to be solved",
-                     Abort);
-            if (insertOptions & InsertColon) {
-                // note: a property should end with a colon with a space for 'insertText', for
-                // better coding experience.
-                QCOMPARE(c.insertText, c.label + u": "_s);
-            } else {
-
-                QCOMPARE(c.insertText, std::nullopt);
-            }
+            QCOMPARE(c.insertText, std::nullopt);
         }
         labels << c.label;
     }
@@ -3357,6 +3255,9 @@ void tst_qmlls_utils::completions()
         QEXPECT_FAIL("letStatementAfterEqual", "Completion not implemented yet!", Abort);
         QEXPECT_FAIL("binaryExpressionMissingRHSWithDefaultProperty",
                      "Current parser cannot recover from this error yet!", Abort);
+        QEXPECT_FAIL("attachedProperties",
+                     "Completion for attached properties requires first QTBUG-117380 to be solved",
+                     Abort);
 
         QVERIFY2(labels.contains(exp.label),
                  u"no %1 in %2"_s
