@@ -152,21 +152,8 @@ bool QQuickControlPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
 }
 #endif
 
-static void setActiveFocus(QQuickControl *control, Qt::FocusReason reason)
-{
-    QQuickControlPrivate *d = QQuickControlPrivate::get(control);
-    if (d->subFocusItem && d->window && d->flags & QQuickItem::ItemIsFocusScope)
-        QQuickWindowPrivate::get(d->window)->clearFocusInScope(control, d->subFocusItem, reason);
-    control->forceActiveFocus(reason);
-}
-
 bool QQuickControlPrivate::handlePress(const QPointF &, ulong)
 {
-    Q_Q(QQuickControl);
-    if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && !QGuiApplication::styleHints()->setFocusOnTouchRelease()) {
-        setActiveFocus(q, Qt::MouseFocusReason);
-        return true;
-    }
     return true;
 }
 
@@ -183,14 +170,8 @@ bool QQuickControlPrivate::handleMove(const QPointF &point, ulong)
 
 bool QQuickControlPrivate::handleRelease(const QPointF &, ulong)
 {
-    Q_Q(QQuickControl);
-    bool accepted = true;
-    if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && QGuiApplication::styleHints()->setFocusOnTouchRelease()) {
-        setActiveFocus(q, Qt::MouseFocusReason);
-        accepted = true;
-    }
     touchId = -1;
-    return accepted;
+    return true;
 }
 
 void QQuickControlPrivate::handleUngrab()
@@ -2054,9 +2035,6 @@ void QQuickControl::touchUngrabEvent()
 void QQuickControl::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickControl);
-    if ((d->focusPolicy & Qt::WheelFocus) == Qt::WheelFocus)
-        setActiveFocus(this, Qt::MouseFocusReason);
-
     event->setAccepted(d->wheelEnabled);
 }
 #endif

@@ -88,6 +88,14 @@ void debugFocusTree(QQuickItem *item, QQuickItem *scope = nullptr, int depth = 1
     }
 }
 
+static void setActiveFocus(QQuickItem *item, Qt::FocusReason reason)
+{
+    QQuickItemPrivate *d = QQuickItemPrivate::get(item);
+    if (d->subFocusItem && d->window && d->flags & QQuickItem::ItemIsFocusScope)
+        QQuickWindowPrivate::get(d->window)->clearFocusInScope(item, d->subFocusItem, reason);
+    item->forceActiveFocus(reason);
+}
+
 /*!
     \qmltype Transform
     \instantiates QQuickTransform
@@ -1695,6 +1703,40 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     } else {
         scopePrivate->subFocusItem = nullptr;
     }
+}
+
+
+bool QQuickItemPrivate::setFocusIfNeeded(QEvent::Type eventType)
+{
+    Q_Q(QQuickItem);
+    const bool setFocusOnRelease = QGuiApplication::styleHints()->setFocusOnTouchRelease();
+    Qt::FocusPolicy policy = Qt::ClickFocus;
+
+    switch (eventType) {
+        case QEvent::MouseButtonPress:
+        case QEvent::MouseButtonDblClick:
+        case QEvent::TouchBegin:
+            if (setFocusOnRelease)
+                return false;
+            break;
+        case QEvent::MouseButtonRelease:
+        case QEvent::TouchEnd:
+            if (!setFocusOnRelease)
+                return false;
+            break;
+        case QEvent::Wheel:
+            policy = Qt::WheelFocus;
+            break;
+        default:
+            break;
+    }
+
+    if ((focusPolicy & policy) == policy) {
+        setActiveFocus(q, Qt::MouseFocusReason);
+        return true;
+    }
+
+    return false;
 }
 
 /*!
@@ -5535,6 +5577,41 @@ bool QQuickItemPrivate::filterKeyEvent(QKeyEvent *e, bool post)
     return e->isAccepted();
 }
 
+void QQuickItemPrivate::deliverPointerEvent(QEvent *event)
+{
+    Q_Q(QQuickItem);
+    const auto eventType = event->type();
+    const bool focusAccepted = setFocusIfNeeded(eventType);
+
+    switch (eventType) {
+    case QEvent::MouseButtonPress:
+        q->mousePressEvent(static_cast<QMouseEvent *>(event));
+        break;
+    case QEvent::MouseButtonRelease:
+        q->mouseReleaseEvent(static_cast<QMouseEvent *>(event));
+        break;
+    case QEvent::MouseButtonDblClick:
+        q->mouseDoubleClickEvent(static_cast<QMouseEvent *>(event));
+        break;
+#if QT_CONFIG(wheelevent)
+    case QEvent::Wheel:
+        q->wheelEvent(static_cast<QWheelEvent*>(event));
+        break;
+#endif
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+    case QEvent::TouchCancel:
+        q->touchEvent(static_cast<QTouchEvent *>(event));
+        break;
+    default:
+        break;
+    }
+
+    if (focusAccepted)
+        event->accept();
+}
+
 void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
 {
     Q_Q(QQuickItem);
@@ -8918,8 +8995,14 @@ bool QQuickItem::event(QEvent *ev)
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
     case QEvent::TouchCancel:
-        touchEvent(static_cast<QTouchEvent*>(ev));
-        break;
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+    case QEvent::MouseButtonDblClick:
+#if QT_CONFIG(wheelevent)
+    case QEvent::Wheel:
+#endif
+        d->deliverPointerEvent(ev);
+    break;
     case QEvent::StyleAnimationUpdate:
         if (isVisible()) {
             ev->accept();
@@ -8951,20 +9034,6 @@ bool QQuickItem::event(QEvent *ev)
     case QEvent::MouseMove:
         mouseMoveEvent(static_cast<QMouseEvent*>(ev));
         break;
-    case QEvent::MouseButtonPress:
-        mousePressEvent(static_cast<QMouseEvent*>(ev));
-        break;
-    case QEvent::MouseButtonRelease:
-        mouseReleaseEvent(static_cast<QMouseEvent*>(ev));
-        break;
-    case QEvent::MouseButtonDblClick:
-        mouseDoubleClickEvent(static_cast<QMouseEvent*>(ev));
-        break;
-#if QT_CONFIG(wheelevent)
-    case QEvent::Wheel:
-        wheelEvent(static_cast<QWheelEvent*>(ev));
-        break;
-#endif
 #if QT_CONFIG(quick_draganddrop)
     case QEvent::DragEnter:
         dragEnterEvent(static_cast<QDragEnterEvent*>(ev));
