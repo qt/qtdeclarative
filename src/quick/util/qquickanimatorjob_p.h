@@ -281,7 +281,7 @@ public:
 
 private:
     QByteArray m_uniform;
-    QQuickShaderEffect *m_effect = nullptr;
+    QPointer<QQuickShaderEffect> m_effect;
 };
 #endif
 
