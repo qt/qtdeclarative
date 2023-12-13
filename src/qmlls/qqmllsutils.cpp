@@ -1538,16 +1538,18 @@ expressionTypeWithDefinition(const QQmlLSUtilsExpressionType &ownerType)
     return {};
 }
 
-std::optional<QQmlLSUtilsErrorMessage>
-QQmlLSUtils::checkNameForRename(const DomItem &item, const QString &dirtyNewName,
-                                std::optional<QQmlLSUtilsExpressionType> ownerType)
+std::optional<QQmlLSUtilsErrorMessage> QQmlLSUtils::checkNameForRename(
+        const DomItem &item, const QString &dirtyNewName,
+        const std::optional<QQmlLSUtilsExpressionType> &ownerType)
 {
+    if (!ownerType) {
+        if (const auto resolved = QQmlLSUtils::resolveExpressionType(item, ResolveOwnerType))
+            return checkNameForRename(item, dirtyNewName, resolved);
+    }
+
     // general checks for ECMAscript identifiers
     if (!isValidEcmaScriptIdentifier(dirtyNewName))
         return QQmlLSUtilsErrorMessage{ 0, u"Invalid EcmaScript identifier!"_s };
-
-    if (!ownerType)
-        ownerType = QQmlLSUtils::resolveExpressionType(item, ResolveOwnerType);
 
     const auto userSemanticScope = item.nearestSemanticScope();
 
@@ -1686,9 +1688,9 @@ Special cases:
     All of the chopping operations are done using the static helpers from QQmlSignalNames.
 \endlist
 */
-QList<QQmlLSUtilsEdit>
-QQmlLSUtils::renameUsagesOf(const DomItem &item, const QString &dirtyNewName,
-                            std::optional<QQmlLSUtilsExpressionType> targetType)
+QList<QQmlLSUtilsEdit> QQmlLSUtils::renameUsagesOf(
+        const DomItem &item, const QString &dirtyNewName,
+        const std::optional<QQmlLSUtilsExpressionType> &targetType)
 {
     QList<QQmlLSUtilsEdit> results;
     const QList<QQmlLSUtilsLocation> locations = findUsagesOf(item);
@@ -1699,15 +1701,18 @@ QQmlLSUtils::renameUsagesOf(const DomItem &item, const QString &dirtyNewName,
     if (!oldName)
         return results;
 
-    if (!targetType)
-        targetType = QQmlLSUtils::resolveExpressionType(
-                item, QQmlLSUtilsResolveOptions::ResolveOwnerType);
-
-    if (!targetType)
+    QQmlJSScope::ConstPtr semanticScope;
+    if (targetType) {
+        semanticScope = targetType->semanticScope;
+    } else if (const auto resolved = QQmlLSUtils::resolveExpressionType(
+                       item, QQmlLSUtilsResolveOptions::ResolveOwnerType)) {
+        semanticScope = resolved->semanticScope;
+    } else {
         return results;
+    }
 
     QString newName;
-    if (const auto resolved = resolveNameInQmlScope(*oldName, targetType->semanticScope)) {
+    if (const auto resolved = resolveNameInQmlScope(*oldName, semanticScope)) {
         newName = newNameFrom(dirtyNewName, resolved->type).value_or(dirtyNewName);
         oldName = resolved->name;
     } else {

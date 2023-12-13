@@ -147,15 +147,15 @@ public:
     static std::optional<QQmlLSUtilsLocation> findDefinitionOf(const DomItem &item);
     static QList<QQmlLSUtilsLocation> findUsagesOf(const DomItem &item);
 
-    static std::optional<QQmlLSUtilsErrorMessage>
-    checkNameForRename(const DomItem &item, const QString &newName,
-                       std::optional<QQmlLSUtilsExpressionType> targetType = std::nullopt);
-    static QList<QQmlLSUtilsEdit>
-    renameUsagesOf(const DomItem &item, const QString &newName,
-                   std::optional<QQmlLSUtilsExpressionType> targetType = std::nullopt);
+    static std::optional<QQmlLSUtilsErrorMessage> checkNameForRename(
+            const DomItem &item, const QString &newName,
+            const std::optional<QQmlLSUtilsExpressionType> &targetType = std::nullopt);
+    static QList<QQmlLSUtilsEdit> renameUsagesOf(
+            const DomItem &item, const QString &newName,
+            const std::optional<QQmlLSUtilsExpressionType> &targetType = std::nullopt);
 
-    static std::optional<QQmlLSUtilsExpressionType>
-    resolveExpressionType(const DomItem &item, QQmlLSUtilsResolveOptions);
+    static std::optional<QQmlLSUtilsExpressionType> resolveExpressionType(
+            const DomItem &item, QQmlLSUtilsResolveOptions);
     static bool isValidEcmaScriptIdentifier(QStringView view);
 
     // completion stuff
