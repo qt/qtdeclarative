@@ -156,12 +156,7 @@ void QQuickPanePrivate::contentChildrenChange()
 {
     Q_Q(QQuickPane);
 
-    // The first child varies depending on how the content item is declared.
-    // If it's declared as a child of the Pane, it will be parented to the
-    // default QQuickContentItem. If it's assigned to the contentItem property
-    // directly, QQuickControl::contentItem will be used."
-    QQuickItem *newFirstChild = ((qobject_cast<QQuickContentItem *>(contentItem))
-        ? contentChildItems().value(0) : *contentItem);
+    QQuickItem *newFirstChild = getFirstChild();
 
     if (newFirstChild != firstChild) {
         if (firstChild)
@@ -189,6 +184,16 @@ qreal QQuickPanePrivate::getContentWidth() const
         return contentChildren.first()->implicitWidth();
 
     return 0;
+}
+
+QQuickItem* QQuickPanePrivate::getFirstChild() const
+{
+    // The first child varies depending on how the content item is declared.
+    // If it's declared as a child of the Pane, it will be parented to the
+    // default QQuickContentItem. If it's assigned to the contentItem property
+    // directly, QQuickControl::contentItem will be used.
+    return (qobject_cast<QQuickContentItem *>(contentItem)
+                    ? contentChildItems().value(0) : contentItem.data());
 }
 
 qreal QQuickPanePrivate::getContentHeight() const
