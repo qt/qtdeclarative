@@ -28,7 +28,7 @@ public:
     constexpr static DomType kindValue = DomType::ModuleScope;
     DomType kind() const override { return kindValue; }
 
-    ModuleScope(QString uri = QString(), const Version &version = Version())
+    ModuleScope(const QString &uri = QString(), const Version &version = Version())
         : uri(uri), version(version)
     {
     }
@@ -86,7 +86,7 @@ public:
 
     QSet<QString> exportNames(const DomItem &self) const;
 
-    QList<DomItem> exportsWithNameAndMinorVersion(const DomItem &self, QString name,
+    QList<DomItem> exportsWithNameAndMinorVersion(const DomItem &self, const QString &name,
                                                   int minorVersion) const;
 
     QString uri() const { return m_uri; }
@@ -99,8 +99,8 @@ public:
         return m_moduleScope.keys();
     }
     ModuleScope *ensureMinorVersion(int minorVersion);
-    void mergeWith(std::shared_ptr<ModuleIndex> o);
-    void addQmltypeFilePath(Path p)
+    void mergeWith(const std::shared_ptr<ModuleIndex> &o);
+    void addQmltypeFilePath(const Path &p)
     {
         QMutexLocker l(mutex());
         if (!m_qmltypesFilesPaths.contains(p))

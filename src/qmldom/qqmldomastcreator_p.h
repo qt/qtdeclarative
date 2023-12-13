@@ -187,17 +187,17 @@ private:
     void removeCurrentNode(std::optional<DomType> expectedType);
     void removeCurrentScriptNode(std::optional<DomType> expectedType);
 
-    void pushEl(Path p, const DomValue &it, AST::Node *n)
+    void pushEl(const Path &p, const DomValue &it, AST::Node *n)
     {
         nodeStack.append({ p, it, createMap(it.kind, p, n) });
     }
 
-    FileLocations::Tree createMap(FileLocations::Tree base, Path p, AST::Node *n);
+    FileLocations::Tree createMap(const FileLocations::Tree &base, const Path &p, AST::Node *n);
 
-    FileLocations::Tree createMap(DomType k, Path p, AST::Node *n);
+    FileLocations::Tree createMap(DomType k, const Path &p, AST::Node *n);
 
     const ScriptElementVariant &
-    finalizeScriptExpression(const ScriptElementVariant &element, Path pathFromOwner,
+    finalizeScriptExpression(const ScriptElementVariant &element, const Path &pathFromOwner,
                              const FileLocations::Tree &ownerFileLocations);
 
     void setScriptExpression (const std::shared_ptr<ScriptExpression>& value);
@@ -284,7 +284,7 @@ private:
     }
 
     template<typename ScriptElementT>
-    void pushScriptElement(ScriptElementT element)
+    void pushScriptElement(const ScriptElementT &element)
     {
         Q_ASSERT_X(m_enableScriptExpressions, "pushScriptElement",
                    "Cannot create script elements when they are disabled!");

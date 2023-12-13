@@ -30,8 +30,8 @@ class Rewriter : protected BaseVisitor
     bool addSemicolons() const { return expressionDepth > 0; }
 
 public:
-    Rewriter(OutWriter &lw, std::shared_ptr<AstComments> comments,
-             std::function<QStringView(SourceLocation)> loc2Str, Node *node)
+    Rewriter(OutWriter &lw, const std::shared_ptr<AstComments> &comments,
+             const std::function<QStringView(SourceLocation)> &loc2Str, Node *node)
         : lw(lw), comments(comments), loc2Str(loc2Str)
     {
         accept(node);
@@ -1235,8 +1235,9 @@ protected:
     }
 };
 
-void reformatAst(OutWriter &lw, std::shared_ptr<AstComments> comments,
-                 const std::function<QStringView(SourceLocation)> loc2Str, AST::Node *n)
+void reformatAst(
+        OutWriter &lw, const std::shared_ptr<AstComments> &comments,
+        const std::function<QStringView(SourceLocation)> &loc2Str, AST::Node *n)
 {
     if (n) {
         Rewriter rewriter(lw, comments, loc2Str, n);

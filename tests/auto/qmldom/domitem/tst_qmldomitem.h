@@ -368,7 +368,7 @@ private slots:
         auto tOwner3 = tOwner.path(u"$env.testOwner");
         QCOMPARE(tOwner3.internalKind(), DomType::MockOwner);
         QList<qint64> values;
-        tOwner.visitTree(Path(), [&values](Path p, DomItem i, bool) {
+        tOwner.visitTree(Path(), [&values](const Path &p, DomItem i, bool) {
             if (i.pathFromOwner() != p)
                 myErrors()
                         .error(QStringLiteral(u"unexpected path %1 %2")
@@ -429,7 +429,7 @@ private slots:
         DomItem obj1 = comp1.field(Fields::objects).index(0);
         QVERIFY(obj1);
 
-        tFile.visitTree(Path(), [&tFile](Path p, DomItem i, bool) {
+        tFile.visitTree(Path(), [&tFile](const Path &p, DomItem i, bool) {
             if (!(i == i.path(i.canonicalPath()))) {
                 DomItem i2 = i.path(i.canonicalPath());
                 qDebug() << p << i.canonicalPath() << i.internalKindStr() << i2.internalKindStr()

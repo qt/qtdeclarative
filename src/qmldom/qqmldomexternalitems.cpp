@@ -215,7 +215,7 @@ void QmldirFile::setAutoExports(const QList<ModuleAutoExport> &autoExport)
     m_autoExports = autoExport;
 }
 
-void QmldirFile::ensureInModuleIndex(const DomItem &self, QString uri) const
+void QmldirFile::ensureInModuleIndex(const DomItem &self, const QString &uri) const
 {
     // ModuleIndex keeps the various sources of types from a given module uri import
     // this method ensures that all major versions that are contained in this qmldir
@@ -231,10 +231,10 @@ void QmldirFile::ensureInModuleIndex(const DomItem &self, QString uri) const
     }
 }
 
-QCborValue pluginData(const QQmlDirParser::Plugin &pl, QStringList cNames)
+QCborValue pluginData(const QQmlDirParser::Plugin &pl, const QStringList &cNames)
 {
     QCborArray names;
-    for (QString n : cNames)
+    for (const QString &n : cNames)
         names.append(n);
     return QCborMap({ { QCborValue(QStringView(Fields::name)), pl.name },
                       { QStringView(Fields::path), pl.path },
@@ -264,7 +264,7 @@ bool QmldirFile::iterateDirectSubpaths(const DomItem &self, DirectVisitor visito
         const QMap<QString, QString> typeFileMap = qmlFiles();
         return self.subMapItem(Map(
                 self.pathFromOwner().field(Fields::qmlFiles),
-                [typeFileMap](const DomItem &map, QString typeV) {
+                [typeFileMap](const DomItem &map, const QString &typeV) {
                     QString path = typeFileMap.value(typeV);
                     if (path.isEmpty())
                         return DomItem();
@@ -294,9 +294,9 @@ QMap<QString, QString> QmldirFile::qmlFiles() const
     return res;
 }
 
-JsFile::JsFile(QString filePath, QString code,
-       QDateTime lastDataUpdateAt,
-       int derivedFrom)
+JsFile::JsFile(
+        const QString &filePath, const QString &code, const QDateTime &lastDataUpdateAt,
+        int derivedFrom)
     : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::qmlFilePath(filePath), derivedFrom,
                          code)
 {
@@ -559,7 +559,7 @@ QmlDirectory::QmlDirectory(
     : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::qmlDirectoryPath(filePath), derivedFrom,
                          dirList.join(QLatin1Char('\n')))
 {
-    for (QString f : dirList) {
+    for (const QString &f : dirList) {
         addQmlFilePath(f);
     }
 }
@@ -572,7 +572,7 @@ bool QmlDirectory::iterateDirectSubpaths(const DomItem &self, DirectVisitor visi
         QDir baseDir(canonicalFilePath());
         return self.subMapItem(Map(
                 self.pathFromOwner().field(Fields::qmlFiles),
-                [this, baseDir](const DomItem &map, QString key) -> DomItem {
+                [this, baseDir](const DomItem &map, const QString &key) -> DomItem {
                     QList<Path> res;
                     auto it = m_qmlFiles.find(key);
                     while (it != m_qmlFiles.end() && it.key() == key) {
@@ -591,7 +591,7 @@ bool QmlDirectory::iterateDirectSubpaths(const DomItem &self, DirectVisitor visi
     return cont;
 }
 
-bool QmlDirectory::addQmlFilePath(QString relativePath)
+bool QmlDirectory::addQmlFilePath(const QString &relativePath)
 {
     QRegularExpression qmlFileRe(QRegularExpression::anchoredPattern(
             uR"((?<compName>[a-zA-z0-9_]+)\.(?:qml|qmlannotation))"));

@@ -15,7 +15,8 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
-OutWriterState::OutWriterState(Path itCanonicalPath, const DomItem &it, FileLocations::Tree fLoc)
+OutWriterState::OutWriterState(
+        const Path &itCanonicalPath, const DomItem &it, const FileLocations::Tree &fLoc)
     : itemCanonicalPath(itCanonicalPath), item(it), currentMap(fLoc)
 {
     DomItem cRegions = it.field(Fields::comments);
@@ -304,7 +305,7 @@ DomItem OutWriter::updatedFile(const DomItem &fileItem)
         copyPtr->setFileLocationsTree(newLoc);
         UpdatedScriptExpression::visitTree(
                 reformattedScriptExpressions,
-                [&copy, filePath](Path p, UpdatedScriptExpression::Tree t) {
+                [&copy, filePath](const Path &p, const UpdatedScriptExpression::Tree &t) {
                     if (std::shared_ptr<ScriptExpression> exprPtr = t->info().expr) {
                         Q_ASSERT(p.mid(0, filePath.length()) == filePath);
                         //Set reformatted expression to the JsFile
@@ -349,8 +350,8 @@ DomItem OutWriter::updatedFile(const DomItem &fileItem)
         copyPtr->setFileLocationsTree(newLoc);
         UpdatedScriptExpression::visitTree(
                 reformattedScriptExpressions,
-                [&copy, qmlFilePath](Path p, UpdatedScriptExpression::Tree t) {
-                    if (std::shared_ptr<ScriptExpression> exprPtr = t->info().expr) {
+                [&copy, qmlFilePath](const Path &p, const UpdatedScriptExpression::Tree &t) {
+                    if (const std::shared_ptr<ScriptExpression> &exprPtr = t->info().expr) {
                         Q_ASSERT(p.mid(0, qmlFilePath.length()) == qmlFilePath);
                         MutableDomItem targetExpr = copy.path(p.mid(qmlFilePath.length()));
                         if (!targetExpr)
@@ -365,11 +366,11 @@ DomItem OutWriter::updatedFile(const DomItem &fileItem)
                                     << "Skipped update of reformatted ScriptExpression with "
                                        "code:\n---------------\n"
                                     << exprPtr->code() << "\n---------------\n preCode:" <<
-                                    [exprPtr](Sink s) { sinkEscaped(s, exprPtr->preCode()); }
+                                    [exprPtr](const Sink &s) { sinkEscaped(s, exprPtr->preCode()); }
                                     << "\n postCode: " <<
-                                    [exprPtr](Sink s) { sinkEscaped(s, exprPtr->postCode()); }
+                                    [exprPtr](const Sink &s) { sinkEscaped(s, exprPtr->postCode()); }
                                     << "\n as it failed standalone reparse with errors:" <<
-                                    [&targetExpr, exprPtr](Sink s) {
+                                    [&targetExpr, exprPtr](const Sink &s) {
                                         targetExpr.item()
                                                 .copy(exprPtr, targetExpr.canonicalPath())
                                                 .iterateErrors(

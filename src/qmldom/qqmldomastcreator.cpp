@@ -184,7 +184,7 @@ void QQmlDomAstCreator::removeCurrentScriptNode(std::optional<DomType> expectedT
    crashes.
  */
 const ScriptElementVariant &
-QQmlDomAstCreator::finalizeScriptExpression(const ScriptElementVariant &element, Path pathFromOwner,
+QQmlDomAstCreator::finalizeScriptExpression(const ScriptElementVariant &element, const Path &pathFromOwner,
                                             const FileLocations::Tree &ownerFileLocations)
 {
     auto e = element.base();
@@ -198,7 +198,7 @@ QQmlDomAstCreator::finalizeScriptExpression(const ScriptElementVariant &element,
     return element;
 }
 
-FileLocations::Tree QQmlDomAstCreator::createMap(FileLocations::Tree base, Path p, AST::Node *n)
+FileLocations::Tree QQmlDomAstCreator::createMap(const FileLocations::Tree &base, const Path &p, AST::Node *n)
 {
     FileLocations::Tree res = FileLocations::ensure(base, p, AttachedInfo::PathType::Relative);
     if (n)
@@ -206,8 +206,9 @@ FileLocations::Tree QQmlDomAstCreator::createMap(FileLocations::Tree base, Path 
     return res;
 }
 
-FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, Path p, AST::Node *n)
+FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, const Path &p, AST::Node *n)
 {
+    Path relative;
     FileLocations::Tree base;
     switch (k) {
     case DomType::QmlObject:
@@ -230,10 +231,10 @@ FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, Path p, AST::Node *n
                 && (p2.checkHeadName(Fields::children) || p2.checkHeadName(Fields::objects)
                     || p2.checkHeadName(Fields::value) || p2.checkHeadName(Fields::annotations)
                     || p2.checkHeadName(Fields::children)))
-                p = p.mid(p.length() - 2, 2);
+                relative = p.mid(p.length() - 2, 2);
             else if (p.last().checkHeadName(Fields::value)
                      && p.last().headKind() == Path::Kind::Field)
-                p = p.last();
+                relative = p.last();
             else {
                 qCWarning(domLog) << "unexpected path to QmlObject in createMap" << p;
                 Q_UNREACHABLE();
@@ -244,6 +245,7 @@ FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, Path p, AST::Node *n
         }
         break;
     case DomType::EnumItem:
+        relative = p;
         base = currentNodeEl().fileLocations;
         break;
     case DomType::QmlComponent:
@@ -251,6 +253,7 @@ FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, Path p, AST::Node *n
     case DomType::Import:
     case DomType::Id:
     case DomType::EnumDecl:
+        relative = p;
         base = rootMap;
         break;
     case DomType::Binding:
@@ -258,7 +261,9 @@ FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, Path p, AST::Node *n
     case DomType::MethodInfo:
         base = currentEl<QmlObject>().fileLocations;
         if (p.length() > 3)
-            p = p.mid(p.length() - 3, 3);
+            relative = p.mid(p.length() - 3, 3);
+        else
+            relative = p;
         break;
 
     default:
@@ -266,7 +271,7 @@ FileLocations::Tree QQmlDomAstCreator::createMap(DomType k, Path p, AST::Node *n
         Q_UNREACHABLE();
         break;
     }
-    return createMap(base, p, n);
+    return createMap(base, relative, n);
 }
 
 QQmlDomAstCreator::QQmlDomAstCreator(const MutableDomItem &qmlFile)

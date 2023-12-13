@@ -375,7 +375,7 @@ bool Token::lexKindIsInvalid(int kind)
     return false;
 }
 
-void Token::dump(Sink s, QStringView line) const
+void Token::dump(const Sink &s, QStringView line) const
 {
     s(u"{");
     sinkInt(s, offset);

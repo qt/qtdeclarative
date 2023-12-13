@@ -292,7 +292,7 @@ class ElementRef
 {
 public:
     ElementRef(AST::Node *node, quint32 size) : element(node), size(size) { }
-    ElementRef(Path path, FileLocationRegion region, quint32 size)
+    ElementRef(const Path &path, FileLocationRegion region, quint32 size)
         : element(RegionRef{ path, region }), size(size)
     {
     }
@@ -348,7 +348,8 @@ public:
     AstRangesVisitor() = default;
 
     void addNodeRanges(AST::Node *rootNode);
-    void addItemRanges(const DomItem &item, FileLocations::Tree itemLocations, Path currentP);
+    void addItemRanges(
+            const DomItem &item, const FileLocations::Tree &itemLocations, const Path &currentP);
 
     void throwRecursionDepthError() override { }
 
@@ -379,7 +380,7 @@ void AstRangesVisitor::addNodeRanges(AST::Node *rootNode)
 }
 
 void AstRangesVisitor::addItemRanges(
-        const DomItem &item, FileLocations::Tree itemLocations, Path currentP)
+        const DomItem &item, const FileLocations::Tree &itemLocations, const Path &currentP)
 {
     if (!itemLocations) {
         if (item)
@@ -438,7 +439,7 @@ bool AstComments::iterateDirectSubpaths(const DomItem &self, DirectVisitor visit
     bool cont = self.dvItemField(visitor, Fields::commentedElements, [this, &self]() {
         return self.subMapItem(Map(
                 self.pathFromOwner().field(Fields::commentedElements),
-                [this](const DomItem &map, QString key) {
+                [this](const DomItem &map, const QString &key) {
                     bool ok;
                     // we expose the comments as map just for debugging purposes,
                     // as key we use the address hex value as key (keys must be strings)
@@ -487,8 +488,9 @@ Collects and associates comments with javascript AST::Node pointers and MutableD
 rootItem
 */
 void AstComments::collectComments(
-        std::shared_ptr<Engine> engine, AST::Node *n, std::shared_ptr<AstComments> ccomm,
-        const MutableDomItem &rootItem, FileLocations::Tree rootItemLocations)
+        const std::shared_ptr<Engine> &engine, AST::Node *n,
+        const std::shared_ptr<AstComments> &ccomm, const MutableDomItem &rootItem,
+        const FileLocations::Tree &rootItemLocations)
 {
     if (!n)
         return;

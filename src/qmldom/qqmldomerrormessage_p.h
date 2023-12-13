@@ -51,8 +51,8 @@ public:
     {}
 
 
-    void dump(Sink sink) const;
-    void dumpId(Sink sink) const;
+    void dump(const Sink &sink) const;
+    void dumpId(const Sink &sink) const;
 
     QLatin1String groupId() const;
     QString groupName() const;
@@ -63,23 +63,28 @@ public:
 class QMLDOM_EXPORT ErrorGroups{
     Q_GADGET
 public:
-    void dump(Sink sink) const;
-    void dumpId(Sink sink) const;
+    void dump(const Sink &sink) const;
+    void dumpId(const Sink &sink) const;
     QCborArray toCbor() const;
 
-    [[nodiscard]] ErrorMessage errorMessage(Dumper msg, ErrorLevel level, Path element = Path(), QString canonicalFilePath = QString(), SourceLocation location = SourceLocation()) const;
-    [[nodiscard]] ErrorMessage errorMessage(const DiagnosticMessage &msg, Path element = Path(), QString canonicalFilePath = QString()) const;
+    [[nodiscard]] ErrorMessage errorMessage(
+            const Dumper &msg, ErrorLevel level, const Path &element = Path(),
+            const QString &canonicalFilePath = QString(), SourceLocation location = SourceLocation()) const;
+    [[nodiscard]] ErrorMessage errorMessage(
+            const DiagnosticMessage &msg, const Path &element = Path(),
+            const QString &canonicalFilePath = QString()) const;
 
-    void fatal(Dumper msg, Path element = Path(), QStringView canonicalFilePath = u"", SourceLocation location = SourceLocation()) const;
+    void fatal(const Dumper &msg, const Path &element = Path(), QStringView canonicalFilePath = u"",
+               SourceLocation location = SourceLocation()) const;
 
-    [[nodiscard]] ErrorMessage debug(QString message) const;
-    [[nodiscard]] ErrorMessage debug(Dumper message) const;
-    [[nodiscard]] ErrorMessage info(QString message) const;
-    [[nodiscard]] ErrorMessage info(Dumper message) const;
-    [[nodiscard]] ErrorMessage warning(QString message) const;
-    [[nodiscard]] ErrorMessage warning(Dumper message) const;
-    [[nodiscard]] ErrorMessage error(QString message) const;
-    [[nodiscard]] ErrorMessage error(Dumper message) const;
+    [[nodiscard]] ErrorMessage debug(const QString &message) const;
+    [[nodiscard]] ErrorMessage debug(const Dumper &message) const;
+    [[nodiscard]] ErrorMessage info(const QString &message) const;
+    [[nodiscard]] ErrorMessage info(const Dumper &message) const;
+    [[nodiscard]] ErrorMessage warning(const QString &message) const;
+    [[nodiscard]] ErrorMessage warning(const Dumper &message) const;
+    [[nodiscard]] ErrorMessage error(const QString &message) const;
+    [[nodiscard]] ErrorMessage error(const Dumper &message) const;
 
     static int cmp(const ErrorGroups &g1, const ErrorGroups &g2);
 
@@ -111,19 +116,24 @@ public:
         return res;
     }
 
-    ErrorMessage(QString message, ErrorGroups errorGroups, Level level = Level::Warning, Path path = Path(), QString file = QString(), SourceLocation location = SourceLocation(), QLatin1String errorId = QLatin1String(""));
-    ErrorMessage(ErrorGroups errorGroups, const DiagnosticMessage &msg, Path path = Path(), QString file = QString(), QLatin1String errorId = QLatin1String(""));
+    ErrorMessage(
+            const QString &message, const ErrorGroups &errorGroups, Level level = Level::Warning,
+            const Path &path = Path(), const QString &file = QString(),
+            SourceLocation location = SourceLocation(), QLatin1String errorId = QLatin1String(""));
+    ErrorMessage(
+            const ErrorGroups &errorGroups, const DiagnosticMessage &msg, const Path &path = Path(),
+            const QString &file = QString(), QLatin1String errorId = QLatin1String(""));
 
     [[nodiscard]] ErrorMessage &withErrorId(QLatin1String errorId);
     [[nodiscard]] ErrorMessage &withPath(const Path &);
-    [[nodiscard]] ErrorMessage &withFile(QString);
+    [[nodiscard]] ErrorMessage &withFile(const QString &);
     [[nodiscard]] ErrorMessage &withFile(QStringView);
     [[nodiscard]] ErrorMessage &withLocation(SourceLocation);
     [[nodiscard]] ErrorMessage &withItem(const DomItem &);
 
     ErrorMessage handle(const ErrorHandler &errorHandler=nullptr);
 
-    void dump(Sink s) const;
+    void dump(const Sink &s) const;
     QString toString() const;
     QCborMap toCbor() const;
     friend int compare(const ErrorMessage &msg1, const ErrorMessage &msg2)
@@ -203,7 +213,7 @@ QMLDOM_EXPORT void silentError(const ErrorMessage &);
 QMLDOM_EXPORT void errorToQDebug(const ErrorMessage &);
 
 QMLDOM_EXPORT void defaultErrorHandler(const ErrorMessage &);
-QMLDOM_EXPORT void setDefaultErrorHandler(ErrorHandler h);
+QMLDOM_EXPORT void setDefaultErrorHandler(const ErrorHandler &h);
 
 } // end namespace Dom
 } // end namespace QQmlJS

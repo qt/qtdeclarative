@@ -137,9 +137,9 @@ public:
         Eof
     };
 
-    LineWriter(SinkF innerSink, QString fileName,
+    LineWriter(const SinkF &innerSink, const QString &fileName,
                const LineWriterOptions &options = LineWriterOptions(), int lineNr = 0,
-               int columnNr = 0, int utf16Offset = 0, QString currentLine = QString());
+               int columnNr = 0, int utf16Offset = 0, const QString &currentLine = QString());
     std::function<void(QStringView)> sink()
     {
         return [this](QStringView s) { this->write(s); };
@@ -148,7 +148,7 @@ public:
     virtual ~LineWriter() { }
 
     QList<SinkF> innerSinks() { return m_innerSinks; }
-    void addInnerSink(SinkF s) { m_innerSinks.append(s); }
+    void addInnerSink(const SinkF &s) { m_innerSinks.append(s); }
     LineWriter &ensureNewline(int nNewlines = 1, TextAddType t = TextAddType::Extra);
     LineWriter &ensureSpace(TextAddType t = TextAddType::Extra);
     LineWriter &ensureSpace(QStringView space, TextAddType t = TextAddType::Extra);
@@ -171,7 +171,7 @@ public:
         endSourceLocation(pLoc);
         return *this;
     }
-    void commitLine(QString eol, TextAddType t = TextAddType::Normal, int untilChar = -1);
+    void commitLine(const QString &eol, TextAddType t = TextAddType::Normal, int untilChar = -1);
     void flush();
     void eof(bool ensureNewline = true);
     SourceLocation committedLocation() const;
@@ -188,7 +188,7 @@ public:
     const QString &currentLine() const { return m_currentLine; }
     const LineWriterOptions &options() const { return m_options; }
     virtual void lineChanged() { }
-    virtual void reindentAndSplit(QString eol, bool eof = false);
+    virtual void reindentAndSplit(const QString &eol, bool eof = false);
     virtual void willCommit() { }
 
 private:

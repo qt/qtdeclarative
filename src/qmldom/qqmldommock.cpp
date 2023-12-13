@@ -36,7 +36,7 @@ bool MockObject::iterateDirectSubpaths(const DomItem &self, DirectVisitor visito
 {
     static QHash<QString, QString> knownFields;
     static QBasicMutex m;
-    auto toField = [](QString f) -> QStringView {
+    auto toField = [](const QString &f) -> QStringView {
         QMutexLocker l(&m);
         if (!knownFields.contains(f))
             knownFields[f] = f;
@@ -91,7 +91,7 @@ bool MockOwner::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor
 {
     static QHash<QString, QString> knownFields;
     static QBasicMutex m;
-    auto toField = [](QString f) -> QStringView {
+    auto toField = [](const QString &f) -> QStringView {
         QMutexLocker l(&m);
         if (!knownFields.contains(f))
             knownFields[f] = f;

@@ -37,14 +37,14 @@ Every group has a unique string identifying it (the \l{groupId}), and it should 
 be translated to get the local name. The best way to acheive this is to create new groups using
 the NewErrorGroup macro.
  */
-void ErrorGroup::dump(Sink sink) const
+void ErrorGroup::dump(const Sink &sink) const
 {
     sink(u"[");
     sink(groupName());
     sink(u"]");
 }
 
-void ErrorGroup::dumpId(Sink sink) const
+void ErrorGroup::dumpId(const Sink &sink) const
 {
     sink(u"[");
     sink(QString(groupId()));
@@ -70,13 +70,13 @@ The simplest way to create new ErrorMessages is to have an ErrorGroups instance,
 and use it to create new ErrorMessages using its debug, warning, error,... methods
  */
 
-void ErrorGroups::dump(Sink sink) const
+void ErrorGroups::dump(const Sink &sink) const
 {
     for (int i = 0; i < groups.size(); ++i)
         groups.at(i).dump(sink);
 }
 
-void ErrorGroups::dumpId(Sink sink) const
+void ErrorGroups::dumpId(const Sink &sink) const
 {
     for (int i = 0; i < groups.size(); ++i)
         groups.at(i).dumpId(sink);
@@ -138,14 +138,16 @@ errorHandler(ErrorMessage::load(QLatin1String("my.company.error1")));
 The \l{withItem} method can be used to set the path file and location if not aready set.
  */
 
-ErrorMessage ErrorGroups::errorMessage(Dumper msg, ErrorLevel level, Path element, QString canonicalFilePath, SourceLocation location) const
+ErrorMessage ErrorGroups::errorMessage(
+        const Dumper &msg, ErrorLevel level, const Path &element, const QString &canonicalFilePath,
+        SourceLocation location) const
 {
     if (level == ErrorLevel::Fatal)
         fatal(msg, element, canonicalFilePath, location);
     return ErrorMessage(dumperToString(msg), *this, level, element, canonicalFilePath, location);
 }
 
-ErrorMessage ErrorGroups::errorMessage(const DiagnosticMessage &msg, Path element, QString canonicalFilePath) const
+ErrorMessage ErrorGroups::errorMessage(const DiagnosticMessage &msg, const Path &element, const QString &canonicalFilePath) const
 {
     ErrorMessage res(*this, msg, element, canonicalFilePath);
     if (res.location == SourceLocation()
@@ -156,7 +158,9 @@ ErrorMessage ErrorGroups::errorMessage(const DiagnosticMessage &msg, Path elemen
     return res;
 }
 
-void ErrorGroups::fatal(Dumper msg, Path element, QStringView canonicalFilePath, SourceLocation location) const
+void ErrorGroups::fatal(
+        const Dumper &msg, const Path &element, QStringView canonicalFilePath,
+        SourceLocation location) const
 {
     enum { FatalMsgMaxLen = 1023 };
     char buf[FatalMsgMaxLen+1];
@@ -192,42 +196,42 @@ void ErrorGroups::fatal(Dumper msg, Path element, QStringView canonicalFilePath,
     qFatal("%s", buf);
 }
 
-ErrorMessage ErrorGroups::debug(QString message) const
+ErrorMessage ErrorGroups::debug(const QString &message) const
 {
     return ErrorMessage(message, *this, ErrorLevel::Debug);
 }
 
-ErrorMessage ErrorGroups::debug(Dumper message) const
+ErrorMessage ErrorGroups::debug(const Dumper &message) const
 {
     return ErrorMessage(dumperToString(message), *this, ErrorLevel::Debug);
 }
 
-ErrorMessage ErrorGroups::info(QString message) const
+ErrorMessage ErrorGroups::info(const QString &message) const
 {
     return ErrorMessage(message, *this, ErrorLevel::Info);
 }
 
-ErrorMessage ErrorGroups::info(Dumper message) const
+ErrorMessage ErrorGroups::info(const Dumper &message) const
 {
     return ErrorMessage(dumperToString(message), *this, ErrorLevel::Info);
 }
 
-ErrorMessage ErrorGroups::warning(QString message) const
+ErrorMessage ErrorGroups::warning(const QString &message) const
 {
     return ErrorMessage(message, *this, ErrorLevel::Warning);
 }
 
-ErrorMessage ErrorGroups::warning(Dumper message) const
+ErrorMessage ErrorGroups::warning(const Dumper &message) const
 {
     return ErrorMessage(dumperToString(message), *this, ErrorLevel::Warning);
 }
 
-ErrorMessage ErrorGroups::error(QString message) const
+ErrorMessage ErrorGroups::error(const QString &message) const
 {
     return ErrorMessage(message, *this, ErrorLevel::Error);
 }
 
-ErrorMessage ErrorGroups::error(Dumper message) const
+ErrorMessage ErrorGroups::error(const Dumper &message) const
 {
     return ErrorMessage(dumperToString(message), *this, ErrorLevel::Error);
 }
@@ -248,17 +252,31 @@ int ErrorGroups::cmp(const ErrorGroups &o1, const ErrorGroups &o2)
     return 0;
 }
 
-ErrorMessage::ErrorMessage(QString msg, ErrorGroups errorGroups, Level level, Path element, QString canonicalFilePath, SourceLocation location, QLatin1String errorId):
-    errorId(errorId), message(msg), errorGroups(errorGroups), level(level), path(element), file(canonicalFilePath), location(location)
+ErrorMessage::ErrorMessage(
+        const QString &msg, const ErrorGroups &errorGroups, Level level, const Path &element,
+        const QString &canonicalFilePath, SourceLocation location, QLatin1String errorId)
+    : errorId(errorId)
+    , message(msg)
+    , errorGroups(errorGroups)
+    , level(level)
+    , path(element)
+    , file(canonicalFilePath)
+    , location(location)
 {
     if (level == Level::Fatal) // we should not end up here, it should have been handled at a higher level already
         errorGroups.fatal(msg, element, canonicalFilePath, location);
 }
 
-ErrorMessage::ErrorMessage(ErrorGroups errorGroups, const DiagnosticMessage &msg, Path element,
-                           QString canonicalFilePath, QLatin1String errorId):
-    errorId(errorId), message(msg.message), errorGroups(errorGroups),
-    level(errorLevelFromQtMsgType(msg.type)), path(element), file(canonicalFilePath), location(msg.loc)
+ErrorMessage::ErrorMessage(
+        const ErrorGroups &errorGroups, const DiagnosticMessage &msg, const Path &element,
+        const QString &canonicalFilePath, QLatin1String errorId)
+    : errorId(errorId)
+    , message(msg.message)
+    , errorGroups(errorGroups)
+    , level(errorLevelFromQtMsgType(msg.type))
+    , path(element)
+    , file(canonicalFilePath)
+    , location(msg.loc)
 {
     if (level == Level::Fatal) // we should not end up here, it should have been handled at a higher level already
         errorGroups.fatal(msg.message, element, canonicalFilePath, location);
@@ -340,7 +358,7 @@ void ErrorMessage::visitRegisteredMessages(function_ref<bool(const ErrorMessage 
 
 ErrorMessage ErrorMessage::load(QLatin1String errorId)
 {
-    ErrorMessage res = myErrors().error([errorId](Sink s){
+    ErrorMessage res = myErrors().error([errorId](const Sink &s){
             s(u"Unregistered error ");
             s(QString(errorId)); });
     {
@@ -367,7 +385,7 @@ ErrorMessage &ErrorMessage::withPath(const Path &path)
     return *this;
 }
 
-ErrorMessage &ErrorMessage::withFile(QString f)
+ErrorMessage &ErrorMessage::withFile(const QString &f)
 {
     file=f;
     return *this;
@@ -408,7 +426,7 @@ ErrorMessage ErrorMessage::handle(const ErrorHandler &errorHandler)
     return *this;
 }
 
-void ErrorMessage::dump(Sink sink) const
+void ErrorMessage::dump(const Sink &sink) const
 {
     if (!file.isEmpty()) {
         sink(file);
@@ -440,7 +458,7 @@ void ErrorMessage::dump(Sink sink) const
 
 QString ErrorMessage::toString() const
 {
-    return dumperToString([this](Sink sink){ this->dump(sink); });
+    return dumperToString([this](const Sink &sink){ this->dump(sink); });
 }
 
 QCborMap ErrorMessage::toCbor() const
@@ -467,7 +485,7 @@ QCborMap ErrorMessage::toCbor() const
  */
 void errorToQDebug(const ErrorMessage &error)
 {
-    dumperToQDebug([&error](Sink s){ error.dump(s); }, error.level);
+    dumperToQDebug([&error](const Sink &s){ error.dump(s); }, error.level);
 }
 
 /*!
@@ -478,7 +496,7 @@ void silentError(const ErrorMessage &)
 {
 }
 
-void errorHandlerHandler(const ErrorMessage &msg, ErrorHandler *h = nullptr)
+void errorHandlerHandler(const ErrorMessage &msg, const ErrorHandler *h = nullptr)
 {
     static ErrorHandler handler = &errorToQDebug;
     if (h) {
@@ -501,7 +519,7 @@ void defaultErrorHandler(const ErrorMessage &error)
  * \internal
  * \brief Sets the default error handler
  */
-void setDefaultErrorHandler(ErrorHandler h)
+void setDefaultErrorHandler(const ErrorHandler &h)
 {
     errorHandlerHandler(ErrorMessage(QString(), ErrorGroups({})), &h);
 }

@@ -39,7 +39,7 @@ QMLDOM_EXPORT QString astNodeDiff(AST::Node *n1, AST::Node *n2, int nContext = 3
                                   AstDumperOptions opt = AstDumperOption::None, int indent = 0,
                                   function_ref<QStringView(SourceLocation)> loc2str1 = noStr,
                                   function_ref<QStringView(SourceLocation)> loc2str2 = noStr);
-QMLDOM_EXPORT void astNodeDumper(Sink s, AST::Node *n, AstDumperOptions opt = AstDumperOption::None,
+QMLDOM_EXPORT void astNodeDumper(const Sink &s, AST::Node *n, AstDumperOptions opt = AstDumperOption::None,
                                  int indent = 1, int baseIndent = 0,
                                  function_ref<QStringView(SourceLocation)> loc2str = noStr);
 QMLDOM_EXPORT QString astNodeDump(AST::Node *n, AstDumperOptions opt = AstDumperOption::None,

@@ -69,7 +69,7 @@ bool DomTop::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) c
 {
     static QHash<QString, QString> knownFields;
     static QBasicMutex m;
-    auto toField = [](QString f) mutable -> QStringView {
+    auto toField = [](const QString &f) mutable -> QStringView {
         QMutexLocker l(&m);
         if (!knownFields.contains(f))
             knownFields[f] = f;
@@ -121,11 +121,12 @@ ErrorGroups DomUniverse::myErrors()
     return groups;
 }
 
-DomUniverse::DomUniverse(QString universeName, Options options):
+DomUniverse::DomUniverse(const QString &universeName, Options options):
     m_name(universeName), m_options(options)
 {}
 
-std::shared_ptr<DomUniverse> DomUniverse::guaranteeUniverse(std::shared_ptr<DomUniverse> univ)
+std::shared_ptr<DomUniverse> DomUniverse::guaranteeUniverse(
+        const std::shared_ptr<DomUniverse> &univ)
 {
     const auto next = [] {
         Q_CONSTINIT static std::atomic<int> counter(0);
@@ -138,7 +139,7 @@ std::shared_ptr<DomUniverse> DomUniverse::guaranteeUniverse(std::shared_ptr<DomU
             QLatin1String("universe") + QString::number(next()));
 }
 
-DomItem DomUniverse::create(QString universeName, Options options)
+DomItem DomUniverse::create(const QString &universeName, Options options)
 {
     auto res = std::make_shared<DomUniverse>(universeName, options);
     return DomItem(res);
@@ -158,37 +159,37 @@ bool DomUniverse::iterateDirectSubpaths(const DomItem &self, DirectVisitor visit
     cont = cont && self.dvItemField(visitor, Fields::globalScopeWithName, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::globalScopeWithName),
-                [this](const DomItem &map, QString key) { return map.copy(globalScopeWithName(key)); },
+                [this](const DomItem &map, const QString &key) { return map.copy(globalScopeWithName(key)); },
                 [this](const DomItem &) { return globalScopeNames(); }, QLatin1String("GlobalScope")));
     });
     cont = cont && self.dvItemField(visitor, Fields::qmlDirectoryWithPath, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::qmlDirectoryWithPath),
-                [this](const DomItem &map, QString key) { return map.copy(qmlDirectoryWithPath(key)); },
+                [this](const DomItem &map, const QString &key) { return map.copy(qmlDirectoryWithPath(key)); },
                 [this](const DomItem &) { return qmlDirectoryPaths(); }, QLatin1String("QmlDirectory")));
     });
     cont = cont && self.dvItemField(visitor, Fields::qmldirFileWithPath, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::qmldirFileWithPath),
-                [this](const DomItem &map, QString key) { return map.copy(qmldirFileWithPath(key)); },
+                [this](const DomItem &map, const QString &key) { return map.copy(qmldirFileWithPath(key)); },
                 [this](const DomItem &) { return qmldirFilePaths(); }, QLatin1String("QmldirFile")));
     });
     cont = cont && self.dvItemField(visitor, Fields::qmlFileWithPath, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::qmlFileWithPath),
-                [this](const DomItem &map, QString key) { return map.copy(qmlFileWithPath(key)); },
+                [this](const DomItem &map, const QString &key) { return map.copy(qmlFileWithPath(key)); },
                 [this](const DomItem &) { return qmlFilePaths(); }, QLatin1String("QmlFile")));
     });
     cont = cont && self.dvItemField(visitor, Fields::jsFileWithPath, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::jsFileWithPath),
-                [this](const DomItem &map, QString key) { return map.copy(jsFileWithPath(key)); },
+                [this](const DomItem &map, const QString &key) { return map.copy(jsFileWithPath(key)); },
                 [this](const DomItem &) { return jsFilePaths(); }, QLatin1String("JsFile")));
     });
     cont = cont && self.dvItemField(visitor, Fields::jsFileWithPath, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::qmltypesFileWithPath),
-                [this](const DomItem &map, QString key) { return map.copy(qmltypesFileWithPath(key)); },
+                [this](const DomItem &map, const QString &key) { return map.copy(qmltypesFileWithPath(key)); },
                 [this](const DomItem &) { return qmltypesFilePaths(); }, QLatin1String("QmltypesFile")));
     });
     cont = cont && self.dvItemField(visitor, Fields::queue, [this, &self]() {
@@ -221,7 +222,7 @@ std::shared_ptr<OwningItem> DomUniverse::doCopy(const DomItem &) const
     return res;
 }
 
-static DomType fileTypeForPath(const DomItem &self, QString canonicalFilePath)
+static DomType fileTypeForPath(const DomItem &self, const QString &canonicalFilePath)
 {
     if (canonicalFilePath.endsWith(u".qml", Qt::CaseInsensitive)
         || canonicalFilePath.endsWith(u".qmlannotation", Qt::CaseInsensitive)) {
@@ -279,7 +280,7 @@ void DomUniverse::loadFile(const DomItem &self, const FileToLoad &file, Callback
 
 template<typename T>
 QPair<std::shared_ptr<ExternalItemPair<T>>, std::shared_ptr<ExternalItemPair<T>>>
-updateEntry(const DomItem &univ, std::shared_ptr<T> newItem,
+updateEntry(const DomItem &univ, const std::shared_ptr<T> &newItem,
             QMap<QString, std::shared_ptr<ExternalItemPair<T>>> &map, QBasicMutex *mutex)
 {
     std::shared_ptr<ExternalItemPair<T>> oldValue;
@@ -533,7 +534,7 @@ void DomUniverse::execQueue()
 void DomUniverse::removePath(const QString &path)
 {
     QMutexLocker l(mutex());
-    auto toDelete = [path](auto it) {
+    const auto toDelete = [path](const auto &it) {
         QString p = it.key();
         return p.startsWith(path) && (p.size() == path.size() || p.at(path.size()) == u'/');
     };
@@ -552,7 +553,7 @@ std::shared_ptr<OwningItem> LoadInfo::doCopy(const DomItem &self) const
                 u"This is a copy of a LoadInfo still in progress, artificially ending it, if you "
                 u"use this you will *not* resume loading"));
         DomEnvironment::myErrors()
-                .warning([&self](Sink sink) {
+                .warning([&self](const Sink &sink) {
                     sink(u"Copying an in progress LoadInfo, which is most likely an error (");
                     self.dump(sink);
                     sink(u")");
@@ -718,7 +719,7 @@ void LoadInfo::finishedLoadingDep(const DomItem &self, const Dependency &d)
         }
     }
     if (!didRemove) {
-        addErrorLocal(DomEnvironment::myErrors().error([&self](Sink sink) {
+        addErrorLocal(DomEnvironment::myErrors().error([&self](const Sink &sink) {
             sink(u"LoadInfo::finishedLoadingDep did not find its dependency in those inProgress "
                  u"()");
             self.dump(sink);
@@ -728,7 +729,7 @@ void LoadInfo::finishedLoadingDep(const DomItem &self, const Dependency &d)
                  && "LoadInfo::finishedLoadingDep did not find its dependency in those inProgress");
     }
     if (unexpectedState) {
-        addErrorLocal(DomEnvironment::myErrors().error([&self](Sink sink) {
+        addErrorLocal(DomEnvironment::myErrors().error([&self](const Sink &sink) {
             sink(u"LoadInfo::finishedLoadingDep found an unexpected state (");
             self.dump(sink);
             sink(u")");
@@ -826,7 +827,7 @@ void LoadInfo::doAddDependencies(const DomItem &self)
             }
         }
         DomItem currentQmlFiles = currentFile.field(Fields::qmlFiles);
-        currentQmlFiles.visitKeys([this, &self](QString, const DomItem &els) {
+        currentQmlFiles.visitKeys([this, &self](const QString &, const DomItem &els) {
             return els.visitIndexes([this, &self](const DomItem &el) {
                 if (const Reference *ref = el.as<Reference>()) {
                     Path canonicalPath = ref->referredObjectPath[2];
@@ -889,9 +890,10 @@ void LoadInfo::addDependency(const DomItem &self, const Dependency &dep)
 
 template<typename T>
 DomTop::Callback envCallbackForFile(
-        const DomItem &self, QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> DomEnvironment::*map,
-        std::shared_ptr<ExternalItemInfo<T>> (DomEnvironment::*lookupF)(const DomItem &, QString,
-                                                                        EnvLookup) const,
+        const DomItem &self,
+        QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> DomEnvironment::*map,
+        std::shared_ptr<ExternalItemInfo<T>> (DomEnvironment::*lookupF)(
+                const DomItem &, const QString &, EnvLookup) const,
         DomTop::Callback loadCallback, DomTop::Callback allDirectDepsCallback,
         DomTop::Callback endCallback)
 {
@@ -1012,7 +1014,7 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
     cont = cont && self.dvItemField(visitor, Fields::globalScopeWithName, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::globalScopeWithName),
-                [&self, this](const DomItem &map, QString key) {
+                [&self, this](const DomItem &map, const QString &key) {
                     return map.copy(globalScopeWithName(self, key));
                 },
                 [&self, this](const DomItem &) { return globalScopeNames(self); },
@@ -1021,7 +1023,7 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
     cont = cont && self.dvItemField(visitor, Fields::qmlDirectoryWithPath, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::qmlDirectoryWithPath),
-                [&self, this](const DomItem &map, QString key) {
+                [&self, this](const DomItem &map, const QString &key) {
                     return map.copy(qmlDirectoryWithPath(self, key));
                 },
                 [&self, this](const DomItem &) { return qmlDirectoryPaths(self); },
@@ -1030,7 +1032,7 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
     cont = cont && self.dvItemField(visitor, Fields::qmldirFileWithPath, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::qmldirFileWithPath),
-                [&self, this](const DomItem &map, QString key) {
+                [&self, this](const DomItem &map, const QString &key) {
                     return map.copy(qmldirFileWithPath(self, key));
                 },
                 [&self, this](const DomItem &) { return qmldirFilePaths(self); },
@@ -1039,7 +1041,7 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
     cont = cont && self.dvItemField(visitor, Fields::qmldirWithPath, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::qmldirWithPath),
-                [&self, this](const DomItem &map, QString key) {
+                [&self, this](const DomItem &map, const QString &key) {
                     return map.copy(qmlDirWithPath(self, key));
                 },
                 [&self, this](const DomItem &) { return qmlDirPaths(self); }, QLatin1String("Qmldir")));
@@ -1047,7 +1049,7 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
     cont = cont && self.dvItemField(visitor, Fields::qmlFileWithPath, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::qmlFileWithPath),
-                [&self, this](const DomItem &map, QString key) {
+                [&self, this](const DomItem &map, const QString &key) {
                     return map.copy(qmlFileWithPath(self, key));
                 },
                 [&self, this](const DomItem &) { return qmlFilePaths(self); }, QLatin1String("QmlFile")));
@@ -1055,7 +1057,7 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
     cont = cont && self.dvItemField(visitor, Fields::jsFileWithPath, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::jsFileWithPath),
-                [this](const DomItem &map, QString key) {
+                [this](const DomItem &map, const QString &key) {
                     DomItem mapOw(map.owner());
                     return map.copy(jsFileWithPath(mapOw, key));
                 },
@@ -1068,7 +1070,7 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
     cont = cont && self.dvItemField(visitor, Fields::qmltypesFileWithPath, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::qmltypesFileWithPath),
-                [this](const DomItem &map, QString key) {
+                [this](const DomItem &map, const QString &key) {
                     DomItem mapOw = map.owner();
                     return map.copy(qmltypesFileWithPath(mapOw, key));
                 },
@@ -1081,10 +1083,10 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
     cont = cont && self.dvItemField(visitor, Fields::moduleIndexWithUri, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::moduleIndexWithUri),
-                [this](const DomItem &map, QString key) {
+                [this](const DomItem &map, const QString &key) {
                     return map.subMapItem(Map(
                             map.pathFromOwner().key(key),
-                            [this, key](const DomItem &submap, QString subKey) {
+                            [this, key](const DomItem &submap, const QString &subKey) {
                                 bool ok;
                                 int i = subKey.toInt(&ok);
                                 if (!ok) {
@@ -1170,7 +1172,7 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
     cont = cont && self.dvItemField(visitor, Fields::loadInfo, [&self, this]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::loadInfo),
-                [this](const DomItem &map, QString pStr) {
+                [this](const DomItem &map, const QString &pStr) {
                     bool hasErrors = false;
                     Path p = Path::fromString(pStr, [&hasErrors](const ErrorMessage &m) {
                         switch (m.level) {
@@ -1229,10 +1231,10 @@ std::shared_ptr<OwningItem> DomEnvironment::doCopy(const DomItem &) const
 }
 
 // TODO(QTBUG-119550) refactor this
-void DomEnvironment::loadFile(const DomItem &self, FileToLoad file, Callback loadCallback,
+void DomEnvironment::loadFile(const DomItem &self, const FileToLoad &file, Callback loadCallback,
                               Callback directDepsCallback, Callback endCallback,
                               LoadOptions loadOptions, std::optional<DomType> fileType,
-                              ErrorHandler h)
+                              const ErrorHandler &h)
 {
     if (file.canonicalPath().isEmpty()) {
         if (!file.content() || file.content()->data.isNull()) {
@@ -1424,9 +1426,9 @@ void DomEnvironment::loadFile(const DomItem &self, FileToLoad file, Callback loa
         });
 }
 
-void DomEnvironment::loadModuleDependency(const DomItem &self, QString uri, Version v,
+void DomEnvironment::loadModuleDependency(const DomItem &self, const QString &uri, Version v,
                                           Callback loadCallback, Callback endCallback,
-                                          ErrorHandler errorHandler)
+                                          const ErrorHandler &errorHandler)
 {
     Q_ASSERT(!uri.contains(u'/'));
     Path p = Paths::moduleIndexPath(uri, v.majorVersion);
@@ -1529,7 +1531,7 @@ void DomEnvironment::loadModuleDependency(const DomItem &self, QString uri, Vers
         });
 }
 
-void DomEnvironment::loadBuiltins(const DomItem &self, Callback callback, ErrorHandler h)
+void DomEnvironment::loadBuiltins(const DomItem &self, Callback callback, const ErrorHandler &h)
 {
     QString builtinsName = QLatin1String("builtins.qmltypes");
     const auto lPaths = loadPaths();
@@ -1602,7 +1604,7 @@ QSet<QString> DomEnvironment::moduleIndexUris(const DomItem &, EnvLookup lookup)
             m_moduleIndexWithUri, lookup);
 }
 
-QSet<int> DomEnvironment::moduleIndexMajorVersions(const DomItem &, QString uri, EnvLookup lookup) const
+QSet<int> DomEnvironment::moduleIndexMajorVersions(const DomItem &, const QString &uri, EnvLookup lookup) const
 {
     QSet<int> res;
     if (lookup != EnvLookup::NoBase && m_base) {
@@ -1639,7 +1641,7 @@ std::shared_ptr<ModuleIndex> DomEnvironment::lookupModuleInEnv(const QString &ur
         return it->value(majorVersion); // null shared_ptr is fine if no match
 }
 
-DomEnvironment::ModuleLookupResult DomEnvironment::moduleIndexWithUriHelper(const DomItem &self, QString uri, int majorVersion, EnvLookup options) const
+DomEnvironment::ModuleLookupResult DomEnvironment::moduleIndexWithUriHelper(const DomItem &self, const QString &uri, int majorVersion, EnvLookup options) const
 {
     std::shared_ptr<ModuleIndex> res;
     if (options != EnvLookup::BaseOnly)
@@ -1671,10 +1673,9 @@ DomEnvironment::ModuleLookupResult DomEnvironment::moduleIndexWithUriHelper(cons
     }
 }
 
-std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(const DomItem &self, QString uri,
-                                                                int majorVersion, EnvLookup options,
-                                                                Changeable changeable,
-                                                                ErrorHandler errorHandler)
+std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(
+        const DomItem &self, const QString &uri, int majorVersion, EnvLookup options,
+        Changeable changeable, const ErrorHandler &errorHandler)
 {
     // sanity checks
     Q_ASSERT((changeable == Changeable::ReadOnly
@@ -1731,7 +1732,7 @@ std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(const DomItem &s
     return newModulePtr;
 }
 
-std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(const DomItem &self, QString uri,
+std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(const DomItem &self, const QString &uri,
                                                                 int majorVersion,
                                                                 EnvLookup options) const
 {
@@ -1741,7 +1742,7 @@ std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(const DomItem &s
 
 
 std::shared_ptr<ExternalItemInfo<QmlDirectory>>
-DomEnvironment::qmlDirectoryWithPath(const DomItem &self, QString path, EnvLookup options) const
+DomEnvironment::qmlDirectoryWithPath(const DomItem &self, const QString &path, EnvLookup options) const
 {
     if (options != EnvLookup::BaseOnly) {
         QMutexLocker l(mutex());
@@ -1765,7 +1766,7 @@ QSet<QString> DomEnvironment::qmlDirectoryPaths(const DomItem &, EnvLookup optio
 }
 
 std::shared_ptr<ExternalItemInfo<QmldirFile>>
-DomEnvironment::qmldirFileWithPath(const DomItem &self, QString path, EnvLookup options) const
+DomEnvironment::qmldirFileWithPath(const DomItem &self, const QString &path, EnvLookup options) const
 {
     if (options != EnvLookup::BaseOnly) {
         QMutexLocker l(mutex());
@@ -1788,7 +1789,7 @@ QSet<QString> DomEnvironment::qmldirFilePaths(const DomItem &, EnvLookup lOption
             m_qmldirFileWithPath, lOptions);
 }
 
-std::shared_ptr<ExternalItemInfoBase> DomEnvironment::qmlDirWithPath(const DomItem &self, QString path,
+std::shared_ptr<ExternalItemInfoBase> DomEnvironment::qmlDirWithPath(const DomItem &self, const QString &path,
                                                                      EnvLookup options) const
 {
     if (auto qmldirFile = qmldirFileWithPath(self, path + QLatin1String("/qmldir"), options))
@@ -1814,7 +1815,7 @@ QSet<QString> DomEnvironment::qmlDirPaths(const DomItem &self, EnvLookup options
 }
 
 std::shared_ptr<ExternalItemInfo<QmlFile>>
-DomEnvironment::qmlFileWithPath(const DomItem &self, QString path, EnvLookup options) const
+DomEnvironment::qmlFileWithPath(const DomItem &self, const QString &path, EnvLookup options) const
 {
     if (options != EnvLookup::BaseOnly) {
         QMutexLocker l(mutex());
@@ -1838,7 +1839,7 @@ QSet<QString> DomEnvironment::qmlFilePaths(const DomItem &, EnvLookup lookup) co
 }
 
 std::shared_ptr<ExternalItemInfo<JsFile>>
-DomEnvironment::jsFileWithPath(const DomItem &self, QString path, EnvLookup options) const
+DomEnvironment::jsFileWithPath(const DomItem &self, const QString &path, EnvLookup options) const
 {
     if (options != EnvLookup::BaseOnly) {
         QMutexLocker l(mutex());
@@ -1861,7 +1862,7 @@ QSet<QString> DomEnvironment::jsFilePaths(const DomItem &, EnvLookup lookup) con
 }
 
 std::shared_ptr<ExternalItemInfo<QmltypesFile>>
-DomEnvironment::qmltypesFileWithPath(const DomItem &self, QString path, EnvLookup options) const
+DomEnvironment::qmltypesFileWithPath(const DomItem &self, const QString &path, EnvLookup options) const
 {
     if (options != EnvLookup::BaseOnly) {
         QMutexLocker l(mutex());
@@ -1884,7 +1885,7 @@ QSet<QString> DomEnvironment::qmltypesFilePaths(const DomItem &, EnvLookup looku
 }
 
 std::shared_ptr<ExternalItemInfo<GlobalScope>>
-DomEnvironment::globalScopeWithName(const DomItem &self, QString name, EnvLookup lookupOptions) const
+DomEnvironment::globalScopeWithName(const DomItem &self, const QString &name, EnvLookup lookupOptions) const
 {
     if (lookupOptions != EnvLookup::BaseOnly) {
         QMutexLocker l(mutex());
@@ -1898,7 +1899,7 @@ DomEnvironment::globalScopeWithName(const DomItem &self, QString name, EnvLookup
 }
 
 std::shared_ptr<ExternalItemInfo<GlobalScope>>
-DomEnvironment::ensureGlobalScopeWithName(const DomItem &self, QString name, EnvLookup lookupOptions)
+DomEnvironment::ensureGlobalScopeWithName(const DomItem &self, const QString &name, EnvLookup lookupOptions)
 {
     if (auto current = globalScopeWithName(self, name, lookupOptions))
         return current;
@@ -1946,7 +1947,7 @@ QSet<QString> DomEnvironment::globalScopeNames(const DomItem &, EnvLookup lookup
     return res;
 }
 
-void DomEnvironment::addLoadInfo(const DomItem &self, std::shared_ptr<LoadInfo> loadInfo)
+void DomEnvironment::addLoadInfo(const DomItem &self, const std::shared_ptr<LoadInfo> &loadInfo)
 {
     if (!loadInfo)
         return;
@@ -1968,7 +1969,7 @@ void DomEnvironment::addLoadInfo(const DomItem &self, std::shared_ptr<LoadInfo> 
     }
 }
 
-std::shared_ptr<LoadInfo> DomEnvironment::loadInfo(Path path) const
+std::shared_ptr<LoadInfo> DomEnvironment::loadInfo(const Path &path) const
 {
     QMutexLocker l(mutex());
     return m_loadInfos.value(path);
@@ -2011,7 +2012,7 @@ DomTop::Callback DomEnvironment::callbackForQmltypesFile(const DomItem &self,
 {
     return envCallbackForFile<QmltypesFile>(
             self, &DomEnvironment::m_qmltypesFileWithPath, &DomEnvironment::qmltypesFileWithPath,
-            [loadCallback](Path p, const DomItem &oldV, const DomItem &newV) {
+            [loadCallback](const Path &p, const DomItem &oldV, const DomItem &newV) {
                 DomItem newFile = newV.field(Fields::currentItem);
                 if (std::shared_ptr<QmltypesFile> newFilePtr = newFile.ownerAs<QmltypesFile>())
                     newFilePtr->ensureInModuleIndex(newFile);
@@ -2039,23 +2040,24 @@ DomItem::Callback DomEnvironment::callbackForJSFile(const DomItem &self, Callbac
                                        allDirectDepsCallback, endCallback);
 }
 
-DomEnvironment::DomEnvironment(QStringList loadPaths, Options options,
-                               shared_ptr<DomUniverse> universe)
+DomEnvironment::DomEnvironment(
+        const QStringList &loadPaths, Options options, const shared_ptr<DomUniverse> &universe)
     : m_options(options),
       m_universe(DomUniverse::guaranteeUniverse(universe)),
       m_loadPaths(loadPaths),
       m_implicitImports(defaultImplicitImports())
 {}
 
-DomItem DomEnvironment::create(QStringList loadPaths, Options options, const DomItem &universe)
+DomItem DomEnvironment::create(
+        const QStringList &loadPaths, Options options, const DomItem &universe)
 {
     std::shared_ptr<DomUniverse> universePtr = universe.ownerAs<DomUniverse>();
     auto envPtr = std::make_shared<DomEnvironment>(loadPaths, options, universePtr);
     return DomItem(envPtr);
 }
 
-DomEnvironment::DomEnvironment(shared_ptr<DomEnvironment> parent, QStringList loadPaths,
-                               Options options)
+DomEnvironment::DomEnvironment(
+        const shared_ptr<DomEnvironment> &parent, const QStringList &loadPaths, Options options)
     : m_options(options),
       m_base(parent),
       m_loadPaths(loadPaths),
@@ -2064,7 +2066,7 @@ DomEnvironment::DomEnvironment(shared_ptr<DomEnvironment> parent, QStringList lo
 
 template<typename T>
 std::shared_ptr<ExternalItemInfo<T>>
-addExternalItem(std::shared_ptr<T> file, QString key,
+addExternalItem(const std::shared_ptr<T> &file, const QString &key,
                 QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> &map, AddOption option,
                 QBasicMutex *mutex)
 {
@@ -2091,49 +2093,50 @@ addExternalItem(std::shared_ptr<T> file, QString key,
     return eInfo;
 }
 
-std::shared_ptr<ExternalItemInfo<QmlFile>> DomEnvironment::addQmlFile(std::shared_ptr<QmlFile> file,
-                                                                      AddOption options)
+std::shared_ptr<ExternalItemInfo<QmlFile>> DomEnvironment::addQmlFile(
+        const std::shared_ptr<QmlFile> &file, AddOption options)
 {
     return addExternalItem<QmlFile>(file, file->canonicalFilePath(), m_qmlFileWithPath, options,
                                     mutex());
 }
 
 std::shared_ptr<ExternalItemInfo<QmlDirectory>>
-DomEnvironment::addQmlDirectory(std::shared_ptr<QmlDirectory> file, AddOption options)
+DomEnvironment::addQmlDirectory(const std::shared_ptr<QmlDirectory> &file, AddOption options)
 {
     return addExternalItem<QmlDirectory>(file, file->canonicalFilePath(), m_qmlDirectoryWithPath,
                                          options, mutex());
 }
 
 std::shared_ptr<ExternalItemInfo<QmldirFile>>
-DomEnvironment::addQmldirFile(std::shared_ptr<QmldirFile> file, AddOption options)
+DomEnvironment::addQmldirFile(const std::shared_ptr<QmldirFile> &file, AddOption options)
 {
     return addExternalItem<QmldirFile>(file, file->canonicalFilePath(), m_qmldirFileWithPath,
                                        options, mutex());
 }
 
 std::shared_ptr<ExternalItemInfo<QmltypesFile>>
-DomEnvironment::addQmltypesFile(std::shared_ptr<QmltypesFile> file, AddOption options)
+DomEnvironment::addQmltypesFile(const std::shared_ptr<QmltypesFile> &file, AddOption options)
 {
     return addExternalItem<QmltypesFile>(file, file->canonicalFilePath(), m_qmltypesFileWithPath,
                                          options, mutex());
 }
 
-std::shared_ptr<ExternalItemInfo<JsFile>> DomEnvironment::addJsFile(std::shared_ptr<JsFile> file,
-                                                                    AddOption options)
+std::shared_ptr<ExternalItemInfo<JsFile>> DomEnvironment::addJsFile(
+        const std::shared_ptr<JsFile> &file, AddOption options)
 {
     return addExternalItem<JsFile>(file, file->canonicalFilePath(), m_jsFileWithPath, options,
                                    mutex());
 }
 
 std::shared_ptr<ExternalItemInfo<GlobalScope>>
-DomEnvironment::addGlobalScope(std::shared_ptr<GlobalScope> scope, AddOption options)
+DomEnvironment::addGlobalScope(const std::shared_ptr<GlobalScope> &scope, AddOption options)
 {
     return addExternalItem<GlobalScope>(scope, scope->name(), m_globalScopeWithName, options,
                                         mutex());
 }
 
-bool DomEnvironment::commitToBase(const DomItem &self, shared_ptr<DomEnvironment> validEnvPtr)
+bool DomEnvironment::commitToBase(
+        const DomItem &self, const shared_ptr<DomEnvironment> &validEnvPtr)
 {
     if (!base())
         return false;
@@ -2290,7 +2293,7 @@ bool DomEnvironment::finishLoadingDependencies(const DomItem &self, int waitMSec
     return !hasPendingLoads;
 }
 
-void DomEnvironment::addWorkForLoadInfo(Path elementCanonicalPath)
+void DomEnvironment::addWorkForLoadInfo(const Path &elementCanonicalPath)
 {
     QMutexLocker l(mutex());
     m_loadsWithWork.enqueue(elementCanonicalPath);
@@ -2441,7 +2444,7 @@ bool ExternalItemPairBase::currentIsValid() const
     return currentItem() == validItem();
 }
 
-RefCacheEntry RefCacheEntry::forPath(const DomItem &el, Path canonicalPath)
+RefCacheEntry RefCacheEntry::forPath(const DomItem &el, const Path &canonicalPath)
 {
     DomItem env = el.environment();
     std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>();
@@ -2457,7 +2460,7 @@ RefCacheEntry RefCacheEntry::forPath(const DomItem &el, Path canonicalPath)
     return cached;
 }
 
-bool RefCacheEntry::addForPath(const DomItem &el, Path canonicalPath, const RefCacheEntry &entry,
+bool RefCacheEntry::addForPath(const DomItem &el, const Path &canonicalPath, const RefCacheEntry &entry,
                                AddOption addOption)
 {
     DomItem env = el.environment();
