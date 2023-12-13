@@ -137,10 +137,22 @@ void QQuickFileDialogImplPrivate::updateSelectedFile(const QString &oldFolderPat
     qCDebug(lcUpdateSelectedFile).nospace() << "updateSelectedFile is setting selectedFile to " << newSelectedFileUrl
         << ", newSelectedFileIndex is " << newSelectedFileIndex;
     q->setSelectedFile(newSelectedFileUrl);
+    updateFileNameTextEdit();
     // If the index is -1, there are no files in the directory, and so fileDialogListView's
     // currentIndex will already be -1.
     if (newSelectedFileIndex != -1)
         tryUpdateFileDialogListViewCurrentIndex(newSelectedFileIndex);
+}
+
+void QQuickFileDialogImplPrivate::updateFileNameTextEdit()
+{
+    QQuickFileDialogImplAttached *attached = attachedOrWarn();
+    if (Q_UNLIKELY(!attached))
+        return;
+
+    const QFileInfo fileInfo(selectedFile.toLocalFile());
+    if (fileInfo.isFile())
+        attached->fileNameTextField()->setText(fileInfo.fileName());
 }
 
 QDir::SortFlags QQuickFileDialogImplPrivate::fileListSortFlags()
@@ -353,6 +365,7 @@ void QQuickFileDialogImpl::setInitialCurrentFolderAndSelectedFile(const QUrl &fi
     qCDebug(lcSelectedFile) << "setting initial currentFolder to" << fileDirUrl << "and selectedFile to" << file;
     setCurrentFolder(fileDirUrl, QQuickFileDialogImpl::SetReason::Internal);
     setSelectedFile(file);
+    d->updateFileNameTextEdit();
     d->setCurrentIndexToInitiallySelectedFile = true;
 
     // If the currentFolder didn't change, the FolderListModel won't change and
@@ -590,6 +603,7 @@ void QQuickFileDialogImplAttachedPrivate::fileDialogListViewCurrentIndexChanged(
     auto fileDialogImplPrivate = QQuickFileDialogImplPrivate::get(fileDialogImpl);
     if (moveReason != QQuickItemViewPrivate::Other) {
         fileDialogImpl->setSelectedFile(fileDialogDelegate->file());
+        fileDialogImplPrivate->updateFileNameTextEdit();
     } else if (fileDialogImplPrivate->setCurrentIndexToInitiallySelectedFile) {
         // When setting selectedFile before opening the FileDialog,
         // we need to ensure that the currentIndex is correct, because the initial change
