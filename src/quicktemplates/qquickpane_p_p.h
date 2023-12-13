@@ -31,6 +31,7 @@ public:
     virtual QQmlListProperty<QObject> contentData();
     virtual QQmlListProperty<QQuickItem> contentChildren();
     virtual QList<QQuickItem *> contentChildItems() const;
+    virtual QQuickItem *getFirstChild() const;
 
     QQuickItem *getContentItem() override;
 

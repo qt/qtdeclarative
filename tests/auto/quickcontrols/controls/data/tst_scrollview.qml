@@ -146,6 +146,7 @@ TestCase {
             }
         }
     }
+
     Component {
         id: scrollableTextAreaWithSibling
         ScrollView {
@@ -727,5 +728,36 @@ TestCase {
         verify(verticalScrollBar.active)
 
         // Shouldn't crash.
+    }
+
+    Component {
+        id: scrollViewContentItemComp
+
+        ScrollView {
+            id: scrollView
+            anchors.fill: parent
+            Column {
+                width: parent.width
+                Repeater {
+                    model: 20
+                    Rectangle {
+                        width: scrollView.width
+                        height: 60
+                        color: (index % 2 == 0) ? "red" : "green"
+                    }
+                }
+            }
+        }
+    }
+
+    function test_scrollViewContentItemSize() {
+        let scrollview = createTemporaryObject(scrollViewContentItemComp, testCase)
+        verify(scrollview)
+        let contentItem = scrollview.contentItem
+        waitForRendering(contentItem)
+        compare(contentItem.contentWidth, 400)
+        compare(contentItem.contentHeight, 1200)
+        compare(scrollview.contentWidth, 400)
+        compare(scrollview.contentHeight, 1200)
     }
 }
