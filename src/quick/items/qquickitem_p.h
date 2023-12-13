@@ -560,6 +560,8 @@ public:
     QPointer<QQuickItem> subFocusItem;
     void updateSubFocusItem(QQuickItem *scope, bool focus);
 
+    bool setFocusIfNeeded(QEvent::Type);
+
     QTransform windowToItemTransform() const;
     QTransform itemToWindowTransform() const;
     void itemToParentTransform(QTransform *) const;
@@ -646,6 +648,8 @@ public:
     void deliverInputMethodEvent(QInputMethodEvent *);
 #endif
     void deliverShortcutOverrideEvent(QKeyEvent *);
+
+    void deliverPointerEvent(QEvent *);
 
     bool anyPointerHandlerWants(const QPointerEvent *event, const QEventPoint &point) const;
     virtual bool handlePointerEvent(QPointerEvent *, bool avoidGrabbers = false);
