@@ -789,8 +789,7 @@ bool DomItem::resolve(Path path, DomItem::Visitor visitor, ErrorHandler errorHan
         toDos[0] = {*this, 0};
     }
     while (!toDos.isEmpty()) {
-        auto toDo = toDos.last();
-        toDos.removeLast();
+        const ResolveToDo toDo = toDos.takeLast();
         {
             auto idNow = toDo.item.id();
             if (idNow == quintptr(0) && toDo.item == *this)
