@@ -1814,18 +1814,6 @@ static QList<CompletionItem> signalHandlerCompletion(const QQmlJSScope::ConstPtr
     return res;
 }
 
-static QList<CompletionItem> &&insertColonsForCompletions(QList<CompletionItem> &&completions)
-{
-    for (auto &completion : completions) {
-        // ignore the completions that already have insertText set
-        if (completion.insertText)
-            continue;
-
-        completion.insertText = QByteArray(completion.label).append(": ");
-    }
-    return std::move(completions);
-}
-
 static QList<CompletionItem> suggestBindingCompletion(const DomItem &containingObject)
 {
     QList<CompletionItem> res;
@@ -1837,8 +1825,8 @@ static QList<CompletionItem> suggestBindingCompletion(const DomItem &containingO
     if (!scope)
         return res;
 
-    res << insertColonsForCompletions(propertyCompletion(scope, nullptr));
-    res << insertColonsForCompletions(signalHandlerCompletion(scope, nullptr));
+    res << propertyCompletion(scope, nullptr);
+    res << signalHandlerCompletion(scope, nullptr);
 
     return res;
 }
