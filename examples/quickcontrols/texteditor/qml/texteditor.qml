@@ -1,10 +1,9 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-import QtQuick
 import QtCore
+import QtQuick
 import QtQuick.Controls
-import QtQuick.Window
 import QtQuick.Dialogs
 
 // TODO:
@@ -17,11 +16,6 @@ ApplicationWindow {
     visible: true
     title: textArea.textDocument.source +
            " - Text Editor Example" + (textArea.textDocument.modified ? " *" : "")
-
-    Component.onCompleted: {
-        x = Screen.width / 2 - width / 2
-        y = Screen.height / 2 - height / 2
-    }
 
     Action {
         id: openAction
@@ -270,7 +264,7 @@ ApplicationWindow {
 
     ColorDialog {
         id: colorDialog
-        selectedColor: "black"
+        selectedColor: textArea.cursorSelection.color
         onAccepted: textArea.cursorSelection.color = selectedColor
     }
 
@@ -304,10 +298,7 @@ ApplicationWindow {
     }
 
     header: ToolBar {
-        leftPadding: 8
-
         Flow {
-            id: flow
             width: parent.width
 
             Row {
