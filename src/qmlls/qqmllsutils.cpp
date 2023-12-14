@@ -1823,14 +1823,28 @@ static QList<CompletionItem> signalHandlerCompletion(const QQmlJSScope::ConstPtr
     return res;
 }
 
-static QList<CompletionItem> suggestBindingCompletion(const DomItem &containingObject)
+static QList<CompletionItem> suggestBindingCompletion(const DomItem &itemAtPosition)
 {
     QList<CompletionItem> res;
 
-    res << QQmlLSUtils::reachableTypes(containingObject, LocalSymbolsType::AttachedType,
-                          CompletionItemKind::Class);
+    const bool isQualified = isFieldMemberAccess(itemAtPosition);
 
-    const QQmlJSScope::ConstPtr scope = containingObject.semanticScope();
+    // TODO: fix type completion for qualified types, see QTBUG-120111
+    if (!isQualified) {
+        res << QQmlLSUtils::reachableTypes(itemAtPosition, LocalSymbolsType::AttachedType,
+                                           CompletionItemKind::Class);
+    }
+
+    const QQmlJSScope::ConstPtr scope = [&]() {
+        if (!isQualified)
+            return itemAtPosition.qmlObject().semanticScope();
+
+        const DomItem owner = itemAtPosition.directParent().field(Fields::left);
+        auto expressionType = QQmlLSUtils::resolveExpressionType(
+                owner, ResolveActualTypeForFieldMemberExpression);
+        return expressionType ? expressionType->semanticScope : QQmlJSScope::ConstPtr{};
+    }();
+
     if (!scope)
         return res;
 
@@ -2449,6 +2463,7 @@ insidePropertyDefinitionCompletion(const DomItem &currentItem,
 static QList<CompletionItem> insideBindingCompletion(const DomItem &currentItem,
                                                      const QQmlLSCompletionPosition &positionInfo)
 {
+    const bool isQualified = isFieldMemberAccess(positionInfo.itemAtPosition);
     const DomItem containingBinding = currentItem.filterUp(
             [](DomType type, const QQmlJS::Dom::DomItem &) { return type == DomType::Binding; },
             FilterUpOptions::ReturnOuter);
@@ -2457,15 +2472,19 @@ static QList<CompletionItem> insideBindingCompletion(const DomItem &currentItem,
     if (cursorAfterColon(containingBinding, positionInfo)) {
         QList<CompletionItem> res;
         res << QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
-        if (auto type = QQmlLSUtils::resolveExpressionType(currentItem, ResolveOwnerType)) {
-            const QStringList names = currentItem.field(Fields::name).toString().split(u'.');
-            const QQmlJSScope *current = resolve(type->semanticScope.get(), names);
-            // add type names when binding to an object type or a property with var type
-            if (!current || current->accessSemantics() == QQmlSA::AccessSemantics::Reference) {
-                LocalSymbolsTypes options;
-                options.setFlag(LocalSymbolsType::ObjectType);
-                res << QQmlLSUtils::reachableTypes(currentItem, options,
-                                                   CompletionItemKind::Constructor);
+
+        // TODO: fix type completion for qualified types, see QTBUG-120111
+        if (!isQualified) {
+            if (auto type = QQmlLSUtils::resolveExpressionType(currentItem, ResolveOwnerType)) {
+                const QStringList names = currentItem.field(Fields::name).toString().split(u'.');
+                const QQmlJSScope *current = resolve(type->semanticScope.get(), names);
+                // add type names when binding to an object type or a property with var type
+                if (!current || current->accessSemantics() == QQmlSA::AccessSemantics::Reference) {
+                    LocalSymbolsTypes options;
+                    options.setFlag(LocalSymbolsType::ObjectType);
+                    res << QQmlLSUtils::reachableTypes(currentItem, options,
+                                                       CompletionItemKind::Constructor);
+                }
             }
         }
         return res;
@@ -2478,18 +2497,15 @@ static QList<CompletionItem> insideBindingCompletion(const DomItem &currentItem,
 
     QList<CompletionItem> res;
     const DomItem containingObject = currentItem.qmlObject();
-    const QStringList toResolve =
-            containingBinding.field(Fields::name).value().toString().split(u'.');
-    if (toResolve.size() == 1) {
-        res << suggestBindingCompletion(containingObject);
-    } else {
-        // TODO: without QTBUG-117380, containingBinding.field(Fields::name) cannot be
-        // resolved to its actual type
-        res << suggestBindingCompletion(containingObject);
+
+    res << suggestBindingCompletion(positionInfo.itemAtPosition);
+
+    // TODO: fix type completion for qualified types, see QTBUG-120111
+    if (!isQualified) {
+        // add Qml Types for default binding
+        res += QQmlLSUtils::reachableTypes(currentItem, LocalSymbolsType::ObjectType,
+                                           CompletionItemKind::Constructor);
     }
-    // add Qml Types for default binding
-    res += QQmlLSUtils::reachableTypes(currentItem, LocalSymbolsType::ObjectType,
-                                       CompletionItemKind::Constructor);
     return res;
 }
 
@@ -2577,6 +2593,8 @@ QList<CompletionItem> QQmlLSUtils::suggestCaseAndDefaultStatementCompletion()
 Generates snippets or keywords for all possible JS statements where it makes sense. To use whenever
 any JS statement can be expected, but when no JS statement is there yet.
 
+Only generates JS expression completions when itemAtPosition is a qualified name.
+
 Here is a list of statements that do \e{not} get any snippets:
 \list
     \li BlockStatement does not need a code snippet, editors automatically include the closing bracket
@@ -2590,11 +2608,12 @@ Here is a list of statements that do \e{not} get any snippets:
 */
 QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &itemAtPosition)
 {
-    QList<CompletionItem> result = suggestVariableDeclarationStatementCompletion();
+    QList<CompletionItem> result = suggestJSExpressionCompletion(itemAtPosition);
+    if (isFieldMemberAccess(itemAtPosition))
+        return result;
 
     // expression statements
-    result << suggestJSExpressionCompletion(itemAtPosition);
-
+    result << suggestVariableDeclarationStatementCompletion();
     // block statement
     result.append(makeSnippet("{ statements... }", "{\n\t$0\n}"));
 
@@ -3322,6 +3341,10 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
     will, in addition to \c{leProperty}, also get completion for the \c{let} statement snippet.
     In this example, the parent used for the completion is the for-statement, of type
     DomType::ScriptForStatement.
+
+    In addition of the parent for the context, use positionInfo to have exact information on where
+    the cursor is (to compare with the SourceLocations of tokens) and which item is at this position
+    (required to provide completion at the correct position, for example for attached properties).
     */
     const QQmlLSCompletionPosition positionInfo{ currentItem, contextStrings };
     for (DomItem currentParent = currentItem; currentParent;
@@ -3350,7 +3373,7 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
         case DomType::ScriptForStatement:
             return insideForStatementCompletion(currentParent, positionInfo);
         case DomType::ScriptBlockStatement:
-            return QQmlLSUtils::suggestJSStatementCompletion(currentParent);
+            return QQmlLSUtils::suggestJSStatementCompletion(positionInfo.itemAtPosition);
         case DomType::QmlFile:
             return insideQmlFileCompletion(currentParent, positionInfo);
         case DomType::QmlObject:
@@ -3361,6 +3384,9 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
         case DomType::PropertyDefinition:
             return insidePropertyDefinitionCompletion(currentParent, positionInfo);
         case DomType::ScriptBinaryExpression:
+            // ignore field member expressions: these need additional context from its parents
+            if (isFieldMemberExpression(currentParent))
+                continue;
             return insideBinaryExpressionCompletion(currentParent, positionInfo);
         case DomType::ScriptLiteral:
             return insideScriptLiteralCompletion(currentParent, positionInfo);

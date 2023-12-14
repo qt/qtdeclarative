@@ -1800,8 +1800,9 @@ void tst_qmlls_utils::completions_data()
             << ExpectedCompletions({
                        { u"height"_s, CompletionItemKind::Property },
                        { u"width"_s, CompletionItemKind::Property },
+                       { u"Rectangle"_s, CompletionItemKind::Constructor },
                })
-            << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s, u"Rectangle"_s });
+            << QStringList({ u"QtQuick"_s, u"property"_s, u"vector4d"_s });
 
     QTest::newRow("afterId") << file << 5 << 8 << ExpectedCompletions({})
                              << QStringList({
@@ -2369,6 +2370,12 @@ void tst_qmlls_utils::completions_data()
             << QStringList{ propertyCompletion }
            ;
 
+    QTest::newRow("binaryExpressionCompletionInsideStatement")
+            << file << 113 << 21
+            << ExpectedCompletions{  { u"hello"_s, CompletionItemKind::Variable }, }
+            << QStringList{ propertyCompletion, forStatementCompletion }
+           ;
+
     QTest::newRow("elseIfStatement")
             << file << 121 << 18
             << ExpectedCompletions{  { u"hello"_s, CompletionItemKind::Variable }, }
@@ -2477,7 +2484,7 @@ void tst_qmlls_utils::completions_data()
                                  << QStringList{ propertyCompletion, u"helloVarVariable"_s,
                                                  u"test1"_s,         u"width"_s,
                                                  u"height"_s,        u"layer"_s,
-                                                 u"left"_s }
+                                                 u"left"_s, forStatementCompletion }
                                 ;
     QTest::newRow("binaryExpressionLHS") << file << 138 << 12
                                  << ExpectedCompletions{
@@ -2485,7 +2492,7 @@ void tst_qmlls_utils::completions_data()
                                         { u"width"_s, CompletionItemKind::Property },
                                         { u"layer"_s, CompletionItemKind::Property },
                                     }
-                                 << QStringList{ u"log"_s, u"error"_s}
+                                 << QStringList{ u"log"_s, u"error"_s, forStatementCompletion}
                                 ;
 
     const QString missingRHSFile = testFile(u"completions/missingRHS.qml"_s);
@@ -3154,6 +3161,38 @@ void tst_qmlls_utils::completions_data()
             << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable },
                                     }
             << QStringList{ propertyCompletion, letStatementCompletion };
+
+    QTest::newRow("attachedPropertyAfterDot")
+            << testFile("completions/attachedAndGroupedProperty.qml") << 8 << 15
+            << ExpectedCompletions({
+                       { u"onCompleted"_s, CompletionItemKind::Method },
+               })
+            << QStringList{ u"QtQuick"_s, u"vector4d"_s, attachedTypeName, u"Rectangle"_s,
+                            u"bad"_s };
+
+    QTest::newRow("groupedPropertyAfterDot")
+            << testFile("completions/attachedAndGroupedProperty.qml") << 10 << 15
+            << ExpectedCompletions({
+                       { u"family"_s, CompletionItemKind::Property },
+               })
+            << QStringList{ u"QtQuick"_s, u"vector4d"_s, attachedTypeName, u"Rectangle"_s,
+                            u"bad"_s, u"onCompleted"_s };
+
+    QTest::newRow("attachedPropertyAfterDotMissingRHS")
+            << testFile("completions/attachedPropertyMissingRHS.qml") << 7 << 17
+            << ExpectedCompletions({
+                       { u"onCompleted"_s, CompletionItemKind::Method },
+               })
+            << QStringList{ u"QtQuick"_s, u"vector4d"_s, attachedTypeName, u"Rectangle"_s,
+                            u"bad"_s };
+
+    QTest::newRow("groupedPropertyAfterDotMissingRHS")
+            << testFile("completions/attachedPropertyMissingRHS.qml") << 7 << 11
+            << ExpectedCompletions({
+                       { u"family"_s, CompletionItemKind::Property },
+               })
+            << QStringList{ u"QtQuick"_s, u"vector4d"_s, attachedTypeName, u"Rectangle"_s,
+                            u"bad"_s, u"onCompleted"_s };
 }
 
 void tst_qmlls_utils::completions()
@@ -3177,6 +3216,10 @@ void tst_qmlls_utils::completions()
     QEXPECT_FAIL("binaryExpressionMissingRHSWithSemicolon",
                  "Current parser cannot recover from this error yet!", Abort);
     QEXPECT_FAIL("binaryExpressionMissingRHSWithStatement",
+                 "Current parser cannot recover from this error yet!", Abort);
+    QEXPECT_FAIL("attachedPropertyAfterDotMissingRHS",
+                 "Current parser cannot recover from this error yet!", Abort);
+    QEXPECT_FAIL("groupedPropertyAfterDotMissingRHS",
                  "Current parser cannot recover from this error yet!", Abort);
     QCOMPARE(locations.size(), 1);
 
@@ -3255,9 +3298,6 @@ void tst_qmlls_utils::completions()
         QEXPECT_FAIL("letStatementAfterEqual", "Completion not implemented yet!", Abort);
         QEXPECT_FAIL("binaryExpressionMissingRHSWithDefaultProperty",
                      "Current parser cannot recover from this error yet!", Abort);
-        QEXPECT_FAIL("attachedProperties",
-                     "Completion for attached properties requires first QTBUG-117380 to be solved",
-                     Abort);
 
         QVERIFY2(labels.contains(exp.label),
                  u"no %1 in %2"_s
