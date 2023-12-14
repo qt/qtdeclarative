@@ -867,6 +867,7 @@ void QQuickShape::setAsynchronous(bool async)
 
 /*!
     \qmlproperty rect QtQuick.Shapes::Shape::boundingRect
+    \readonly
     \since 6.6
 
     Contains the united bounding rect of all sub paths in the shape.
