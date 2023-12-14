@@ -124,7 +124,7 @@ FileDialogImpl {
                 fileDetailRowWidth: nameFiltersComboBox.width
 
                 KeyNavigation.backtab: breadcrumbBar
-                KeyNavigation.tab: nameFiltersComboBox
+                KeyNavigation.tab: fileNameTextField.visible ? fileNameTextField : nameFiltersComboBox
             }
         }
     }
