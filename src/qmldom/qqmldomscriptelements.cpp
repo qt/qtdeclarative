@@ -329,13 +329,15 @@ bool ReturnStatement::iterateDirectSubpaths(const DomItem &self, DirectVisitor v
 void ReturnStatement::updatePathFromOwner(Path p)
 {
     BaseT::updatePathFromOwner(p);
-    m_expression.base()->updatePathFromOwner(p.field(Fields::expression));
+    if (auto ptr = m_expression.base())
+        ptr->updatePathFromOwner(p.field(Fields::expression));
 }
 
 void ReturnStatement::createFileLocations(FileLocations::Tree base)
 {
     BaseT::createFileLocations(base);
-    m_expression.base()->createFileLocations(base);
+    if (auto ptr = m_expression.base())
+        ptr->createFileLocations(base);
 }
 
 void ScriptList::replaceKindForGenericChildren(DomType oldType, DomType newType)
