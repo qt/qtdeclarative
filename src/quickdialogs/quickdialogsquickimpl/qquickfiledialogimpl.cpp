@@ -504,7 +504,10 @@ void QQuickFileDialogImpl::setFileName(const QString &fileName)
     if (previous == fileName)
         return;
 
-    setSelectedFile(QUrl(currentFolder().path() + u'/' + fileName));
+    QUrl newSelectedFile;
+    newSelectedFile.setScheme(currentFolder().scheme());
+    newSelectedFile.setPath(currentFolder().path() + u'/' + fileName);
+    setSelectedFile(newSelectedFile);
 }
 
 QString QQuickFileDialogImpl::currentFolderName() const
