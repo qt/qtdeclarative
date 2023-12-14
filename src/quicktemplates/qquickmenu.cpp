@@ -7,7 +7,7 @@
 #include <private/qtquicktemplates2-config_p.h>
 #if QT_CONFIG(quicktemplates2_container)
 #include "qquickmenubaritem_p.h"
-#include "qquickmenubar_p.h"
+#include "qquickmenubar_p_p.h"
 #endif
 #include "qquicknativemenuitem_p.h"
 #include "qquickpopupitem_p_p.h"
@@ -254,7 +254,12 @@ bool QQuickMenuPrivate::createNativeMenu()
     Q_Q(QQuickMenu);
     qCDebug(lcNativeMenu) << "createNativeMenu called on" << q;
 
-    if (!nativeHandle) {
+    auto parentMenuBar = qobject_cast<QQuickMenuBar *>(q->parent());
+    if (parentMenuBar && parentMenuBar->requestNative()) {
+        qCDebug(lcNativeMenu) << "- creating native menu from native menubar";
+        auto menuBarPrivate = QQuickMenuBarPrivate::get(parentMenuBar);
+        nativeHandle.reset(menuBarPrivate->nativeHandle()->createMenu());
+    } else {
         QPlatformMenu *parentMenuHandle(parentMenu ? get(parentMenu)->nativeHandle.get() : nullptr);
         if (parentMenu && parentMenuHandle) {
             qCDebug(lcNativeMenu) << "- creating native sub-menu";
