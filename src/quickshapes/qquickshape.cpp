@@ -684,6 +684,7 @@ QQuickShape::~QQuickShape()
 
 /*!
     \qmlproperty enumeration QtQuick.Shapes::Shape::rendererType
+    \readonly
 
     This property determines which path rendering backend is active.
 
@@ -789,6 +790,7 @@ void QQuickShape::setVendorExtensionsEnabled(bool enable)
 
 /*!
     \qmlproperty enumeration QtQuick.Shapes::Shape::status
+    \readonly
 
     This property determines the status of the Shape and is relevant when
     Shape.asynchronous is set to \c true.
