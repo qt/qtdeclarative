@@ -2840,7 +2840,8 @@ insideForStatementCompletion(const DomItem &parentForContext,
     if (betweenLocations(leftParenthesis, positionInfo, firstSemicolon)) {
         QList<CompletionItem> res;
         res << QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition)
-            << QQmlLSUtils::suggestVariableDeclarationStatementCompletion();
+            << QQmlLSUtils::suggestVariableDeclarationStatementCompletion(
+                       QQmlLSUtilsAppendOption::AppendNothing);
         return res;
     }
     if (betweenLocations(firstSemicolon, positionInfo, secondSemicolon)

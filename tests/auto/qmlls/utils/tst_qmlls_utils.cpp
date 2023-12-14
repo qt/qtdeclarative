@@ -2216,6 +2216,12 @@ void tst_qmlls_utils::completions_data()
     const QString letStatementCompletion = u"let variable = value;"_s;
     const QString constStatementCompletion = u"const variable = value;"_s;
     const QString varStatementCompletion = u"var variable = value;"_s;
+
+    // for the for loop
+    const QString letStatementCompletionWithoutSemicolon = letStatementCompletion.chopped(1);
+    const QString constStatementCompletionWithoutSemicolon = constStatementCompletion.chopped(1);
+    const QString varStatementCompletionWithoutSemicolon = varStatementCompletion.chopped(1);
+
     const QString caseStatementCompletion = u"case value: statements..."_s;
     const QString caseStatement2Completion = u"case value: { statements... }"_s;
     const QString defaultStatementCompletion = u"default: statements..."_s;
@@ -2269,17 +2275,21 @@ void tst_qmlls_utils::completions_data()
 
     QTest::newRow("forStatementLet")
             << file << 103 << 13
-            << ExpectedCompletions{ { letStatementCompletion, CompletionItemKind::Snippet,
-                                      u"let ${1:variable} = $0;"_s },
-                                    { constStatementCompletion, CompletionItemKind::Snippet,
-                                      u"const ${1:variable} = $0;"_s },
-                                    { varStatementCompletion, CompletionItemKind::Snippet,
-                                      u"var ${1:variable} = $0;"_s },
+            << ExpectedCompletions{ { letStatementCompletionWithoutSemicolon,
+                                      CompletionItemKind::Snippet, u"let ${1:variable} = $0"_s },
+                                    { constStatementCompletionWithoutSemicolon,
+                                      CompletionItemKind::Snippet, u"const ${1:variable} = $0"_s },
+                                    { varStatementCompletionWithoutSemicolon,
+                                      CompletionItemKind::Snippet, u"var ${1:variable} = $0"_s },
                                     { u"helloJSStatements"_s, CompletionItemKind::Method } }
-            << QStringList{
-                   u"property"_s,          u"readonly"_s,         u"required"_s,
-                   forStatementCompletion, ifStatementCompletion,
-               };
+            << QStringList{ u"property"_s,
+                            u"readonly"_s,
+                            u"required"_s,
+                            forStatementCompletion,
+                            ifStatementCompletion,
+                            letStatementCompletion,
+                            constStatementCompletion,
+                            varStatementCompletion };
 
     QTest::newRow("forStatementCondition")
             << file << 103 << 25
