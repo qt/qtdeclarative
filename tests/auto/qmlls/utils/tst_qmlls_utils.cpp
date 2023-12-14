@@ -2397,6 +2397,10 @@ void tst_qmlls_utils::completions_data()
                }
             << QStringList{ propertyCompletion, letStatementCompletion }
            ;
+    QTest::newRow("returnStatement2")
+            << testFile("completions/returnStatement.qml") << 8 << 15
+            << ExpectedCompletions{ { u"x"_s, CompletionItemKind::Variable }, }
+            << QStringList{ propertyCompletion, letStatementCompletion };
 
     QTest::newRow("whileCondition")
             << file << 128 << 16
