@@ -166,15 +166,13 @@ public:
                                                 QQmlJS::Dom::LocalSymbolsTypes typeCompletionType,
                                                 QLspSpecification::CompletionItemKind kind);
 
-    static QList<CompletionItem> scriptIdentifierCompletion(const DomItem &context,
-                                                            const CompletionContextStrings &ctx);
+    static QList<CompletionItem> suggestJSExpressionCompletion(const DomItem &context);
     static QList<CompletionItem> completions(const DomItem& currentItem,
                                              const CompletionContextStrings &ctx);
 
 
     // JS statement completion
-    static QList<CompletionItem> suggestJSStatementCompletion(const DomItem &currentItem,
-                                                              const CompletionContextStrings &ctx);
+    static QList<CompletionItem> suggestJSStatementCompletion(const DomItem &currentItem);
     static QList<CompletionItem>
     suggestCaseAndDefaultStatementCompletion();
     static QList<CompletionItem>

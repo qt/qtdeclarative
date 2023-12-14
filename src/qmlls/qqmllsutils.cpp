@@ -34,6 +34,15 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(QQmlLSUtilsLog, "qt.languageserver.utils")
 Q_LOGGING_CATEGORY(QQmlLSCompletionLog, "qt.languageserver.completions")
 
+namespace {
+struct QQmlLSCompletionPosition
+{
+    DomItem itemAtPosition;
+    CompletionContextStrings cursorPosition;
+    qsizetype offset() const { return cursorPosition.offset(); }
+};
+} // namespace
+
 static QList<CompletionItem> methodCompletion(const QQmlJSScope::ConstPtr &scope,
                                               QDuplicateTracker<QString> *usedNames);
 static QList<CompletionItem> propertyCompletion(const QQmlJSScope::ConstPtr &scope,
@@ -1836,9 +1845,10 @@ static QList<CompletionItem> suggestBindingCompletion(const DomItem &containingO
     return res;
 }
 
-static QList<CompletionItem> insideImportCompletionHelper(const DomItem &file,
-                                                          const CompletionContextStrings &ctx)
+static QList<CompletionItem>
+insideImportCompletionHelper(const DomItem &file, const QQmlLSCompletionPosition &positionInfo)
 {
+    const CompletionContextStrings &ctx = positionInfo.cursorPosition;
     // returns completions for import statements, ctx is supposed to be in an import statement
     QList<CompletionItem> res;
     ImportCompletionType importCompletionType = ImportCompletionType::None;
@@ -2148,34 +2158,36 @@ decltype(auto) collectFromAllJavaScriptParents(const QQmlJSScope::ConstPtr &scop
     return result;
 }
 
-// TODO: rename this to 'expressionCompletion', expression as in expression vs statements
 /*!
 \internal
-Generate autocompletions for JS expressions (expressions as in 'expressions and statements').
+Generate autocompletions for JS expressions, suggest possible properties, methods, etc.
+
+If scriptIdentifier is inside a Field Member Expression, like \c{onCompleted} in
+\c{Component.onCompleted} for example, then this method will only suggest properties, methods, etc
+from the correct type. For the previous example that would be properties, methods, etc. from the
+Component attached type.
 */
-QList<CompletionItem> QQmlLSUtils::scriptIdentifierCompletion(const DomItem &context,
-                                                              const CompletionContextStrings &ctx)
+QList<CompletionItem> QQmlLSUtils::suggestJSExpressionCompletion(const DomItem &scriptIdentifier)
 {
-    Q_UNUSED(ctx); // could be needed later
     QList<CompletionItem> result;
     QDuplicateTracker<QString> usedNames;
     QQmlJSScope::ConstPtr nearestScope;
-    const bool hasQualifier = isFieldMemberAccess(context);
+    const bool hasQualifier = isFieldMemberAccess(scriptIdentifier);
 
     if (!hasQualifier) {
-        result << idsCompletions(context.component())
-               << reachableTypes(context,
+        result << idsCompletions(scriptIdentifier.component())
+               << reachableTypes(scriptIdentifier,
                                  LocalSymbolsType::Singleton | LocalSymbolsType::AttachedType,
                                  CompletionItemKind::Class);
 
-        auto scope = context.nearestSemanticScope();
+        auto scope = scriptIdentifier.nearestSemanticScope();
         if (!scope)
             return result;
         nearestScope = scope;
 
         result << enumerationCompletion(nearestScope, &usedNames);
     } else {
-        const DomItem owner = context.directParent().field(Fields::left);
+        const DomItem owner = scriptIdentifier.directParent().field(Fields::left);
         auto expressionType = QQmlLSUtils::resolveExpressionType(
                 owner, ResolveActualTypeForFieldMemberExpression);
         if (!expressionType || !expressionType->semanticScope)
@@ -2211,7 +2223,7 @@ QList<CompletionItem> QQmlLSUtils::scriptIdentifierCompletion(const DomItem &con
                << collectFromAllJavaScriptParents<methodCompletion>(nearestScope, &usedNames)
                << collectFromAllJavaScriptParents<propertyCompletion>(nearestScope, &usedNames);
 
-        auto file = context.containingFile().as<QmlFile>();
+        auto file = scriptIdentifier.containingFile().as<QmlFile>();
         if (!file)
             return result;
         auto resolver = file->typeResolver();
@@ -2239,14 +2251,15 @@ static const QQmlJSScope *resolve(const QQmlJSScope *current, const QStringList 
     return current;
 }
 
-static bool cursorInFrontOfItem(const DomItem &currentItem,
-                                const CompletionContextStrings &ctx)
+static bool cursorInFrontOfItem(const DomItem &parentForContext,
+                                const QQmlLSCompletionPosition &positionInfo)
 {
-    auto fileLocations = FileLocations::treeOf(currentItem)->info().fullRegion;
-    return ctx.offset() <= fileLocations.offset;
+    auto fileLocations = FileLocations::treeOf(parentForContext)->info().fullRegion;
+    return positionInfo.offset() <= fileLocations.offset;
 }
 
-static bool cursorAfterColon(const DomItem &currentItem, const CompletionContextStrings &ctx)
+static bool cursorAfterColon(const DomItem &currentItem,
+                             const QQmlLSCompletionPosition &positionInfo)
 {
     auto location = FileLocations::treeOf(currentItem)->info();
     auto region = location.regions.constFind(ColonTokenRegion);
@@ -2254,7 +2267,7 @@ static bool cursorAfterColon(const DomItem &currentItem, const CompletionContext
     if (region == location.regions.constEnd())
         return false;
 
-    if (region.value().isValid() && region.value().offset < ctx.offset()) {
+    if (region.value().isValid() && region.value().offset < positionInfo.offset()) {
         return true;
     }
     return false;
@@ -2280,9 +2293,9 @@ static const QMap<QString, QList<QString>> valuesForPragmas{
 };
 
 static QList<CompletionItem> insidePragmaCompletion(QQmlJS::Dom::DomItem currentItem,
-                                                    const CompletionContextStrings &ctx)
+                                                    const QQmlLSCompletionPosition &positionInfo)
 {
-    if (cursorAfterColon(currentItem, ctx)) {
+    if (cursorAfterColon(currentItem, positionInfo)) {
         const QString name = currentItem.field(Fields::name).value().toString();
         auto values = valuesForPragmas.constFind(name);
         if (values == valuesForPragmas.constEnd())
@@ -2323,10 +2336,10 @@ static CompletionItem makeSnippet(QUtf8StringView label, QUtf8StringView insertT
 }
 
 static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &currentItem,
-                                                       const CompletionContextStrings &ctx)
+                                                       const QQmlLSCompletionPosition &positionInfo)
 {
     QList<CompletionItem> res;
-    if (ctx.base().isEmpty()) {
+    if (positionInfo.cursorPosition.base().isEmpty()) {
         // default/required property completion
         for (QUtf8StringView view :
              std::array<QUtf8StringView, 6>{ "", "readonly ", "default ", "default required ",
@@ -2375,14 +2388,15 @@ static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &currentIte
     return res;
 }
 
-static QList<CompletionItem> insidePropertyDefinitionCompletion(const DomItem &currentItem,
-                                                const CompletionContextStrings &ctx)
+static QList<CompletionItem>
+insidePropertyDefinitionCompletion(const DomItem &currentItem,
+                                   const QQmlLSCompletionPosition &positionInfo)
 {
     auto info = FileLocations::treeOf(currentItem)->info();
     const QQmlJS::SourceLocation propertyKeyword = info.regions[PropertyKeywordRegion];
 
     // do completions for the keywords
-    if (ctx.offset() < propertyKeyword.offset + propertyKeyword.length) {
+    if (positionInfo.offset() < propertyKeyword.offset + propertyKeyword.length) {
         const QQmlJS::SourceLocation readonlyKeyword = info.regions[ReadonlyKeywordRegion];
         const QQmlJS::SourceLocation defaultKeyword = info.regions[DefaultKeywordRegion];
         const QQmlJS::SourceLocation requiredKeyword = info.regions[RequiredKeywordRegion];
@@ -2392,21 +2406,21 @@ static QList<CompletionItem> insidePropertyDefinitionCompletion(const DomItem &c
         bool completeDefault = true;
 
         // if there is already a readonly keyword before the cursor: do not auto complete it again
-        if (readonlyKeyword.isValid() && readonlyKeyword.offset < ctx.offset()) {
+        if (readonlyKeyword.isValid() && readonlyKeyword.offset < positionInfo.offset()) {
             completeReadonly = false;
             // also, required keywords do not like readonly keywords
             completeRequired = false;
         }
 
         // same for required
-        if (requiredKeyword.isValid() && requiredKeyword.offset < ctx.offset()) {
+        if (requiredKeyword.isValid() && requiredKeyword.offset < positionInfo.offset()) {
             completeRequired = false;
             // also, required keywords do not like readonly keywords
             completeReadonly = false;
         }
 
         // same for default
-        if (defaultKeyword.isValid() && defaultKeyword.offset < ctx.offset()) {
+        if (defaultKeyword.isValid() && defaultKeyword.offset < positionInfo.offset()) {
             completeDefault = false;
         }
         QList<CompletionItem> items;
@@ -2427,7 +2441,8 @@ static QList<CompletionItem> insidePropertyDefinitionCompletion(const DomItem &c
     }
 
     const QQmlJS::SourceLocation propertyIdentifier = info.regions[IdentifierRegion];
-    if (propertyKeyword.end() <= ctx.offset() && ctx.offset() < propertyIdentifier.offset) {
+    if (propertyKeyword.end() <= positionInfo.offset()
+        && positionInfo.offset() < propertyIdentifier.offset) {
         return QQmlLSUtils::reachableTypes(
                 currentItem, LocalSymbolsType::ObjectType | LocalSymbolsType::ValueType,
                 CompletionItemKind::Class);
@@ -2437,16 +2452,16 @@ static QList<CompletionItem> insidePropertyDefinitionCompletion(const DomItem &c
 }
 
 static QList<CompletionItem> insideBindingCompletion(const DomItem &currentItem,
-                                               const CompletionContextStrings &ctx)
+                                                     const QQmlLSCompletionPosition &positionInfo)
 {
     const DomItem containingBinding = currentItem.filterUp(
             [](DomType type, const QQmlJS::Dom::DomItem &) { return type == DomType::Binding; },
             FilterUpOptions::ReturnOuter);
 
     // do scriptidentifiercompletion after the ':' of a binding
-    if (cursorAfterColon(containingBinding, ctx)) {
+    if (cursorAfterColon(containingBinding, positionInfo)) {
         QList<CompletionItem> res;
-        res << QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+        res << QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
         if (auto type = QQmlLSUtils::resolveExpressionType(currentItem, ResolveOwnerType)) {
             const QStringList names = currentItem.field(Fields::name).toString().split(u'.');
             const QQmlJSScope *current = resolve(type->semanticScope.get(), names);
@@ -2462,8 +2477,8 @@ static QList<CompletionItem> insideBindingCompletion(const DomItem &currentItem,
     }
 
     // ignore the binding if asking for completion in front of the binding
-    if (cursorInFrontOfItem(containingBinding, ctx)) {
-        return insideQmlObjectCompletion(currentItem, ctx);
+    if (cursorInFrontOfItem(containingBinding, positionInfo)) {
+        return insideQmlObjectCompletion(currentItem, positionInfo);
     }
 
     QList<CompletionItem> res;
@@ -2484,14 +2499,14 @@ static QList<CompletionItem> insideBindingCompletion(const DomItem &currentItem,
 }
 
 static QList<CompletionItem> insideImportCompletion(const DomItem &currentItem,
-                                               const CompletionContextStrings &ctx)
+                                                    const QQmlLSCompletionPosition &positionInfo)
 {
     const DomItem containingFile = currentItem.containingFile();
     QList<CompletionItem> res;
-    res += insideImportCompletionHelper(containingFile, ctx);
+    res += insideImportCompletionHelper(containingFile, positionInfo);
 
     // when in front of the import statement: propose types for root Qml Object completion
-    if (cursorInFrontOfItem(currentItem, ctx))
+    if (cursorInFrontOfItem(currentItem, positionInfo))
         res += QQmlLSUtils::reachableTypes(containingFile, LocalSymbolsType::ObjectType,
                                            CompletionItemKind::Constructor);
 
@@ -2499,14 +2514,14 @@ static QList<CompletionItem> insideImportCompletion(const DomItem &currentItem,
 }
 
 static QList<CompletionItem> insideQmlFileCompletion(const DomItem &currentItem,
-                                               const CompletionContextStrings &ctx)
+                                                     const QQmlLSCompletionPosition &positionInfo)
 {
     const DomItem containingFile = currentItem.containingFile();
     QList<CompletionItem> res;
     // completions for code outside the root Qml Object
     // global completions
-    if (ctx.atLineStart()) {
-        if (ctx.base().isEmpty()) {
+    if (positionInfo.cursorPosition.atLineStart()) {
+        if (positionInfo.cursorPosition.base().isEmpty()) {
             for (const QStringView &s : std::array<QStringView, 2>({ u"pragma", u"import" })) {
                 CompletionItem comp;
                 comp.label = s.toUtf8();
@@ -2565,9 +2580,9 @@ QList<CompletionItem> QQmlLSUtils::suggestCaseAndDefaultStatementCompletion()
 /*!
 \internal
 Generates snippets or keywords for all possible JS statements where it makes sense. To use whenever
-any JS statement can be expected.
+any JS statement can be expected, but when no JS statement is there yet.
 
-Here is a list of statements that do \e{not} get any completions:
+Here is a list of statements that do \e{not} get any snippets:
 \list
     \li BlockStatement does not need a code snippet, editors automatically include the closing bracket
     anyway.
@@ -2578,13 +2593,12 @@ Here is a list of statements that do \e{not} get any completions:
     \li DebuggerStatement completion does not strike as being very useful
 \endlist
 */
-QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &currentItem,
-                                                                const CompletionContextStrings &ctx)
+QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &itemAtPosition)
 {
     QList<CompletionItem> result = suggestVariableDeclarationStatementCompletion();
 
     // expression statements
-    result << scriptIdentifierCompletion(currentItem, ctx);
+    result << suggestJSExpressionCompletion(itemAtPosition);
 
     // block statement
     result.append(makeSnippet("{ statements... }", "{\n\t$0\n}"));
@@ -2653,8 +2667,8 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &c
     //      myProperty = 5;
     //      // (3) -> could be another statement of current default, but also a new case or default!
     // }
-    const DomType currentKind = currentItem.internalKind();
-    const DomType parentKind = currentItem.directParent().internalKind();
+    const DomType currentKind = itemAtPosition.internalKind();
+    const DomType parentKind = itemAtPosition.directParent().internalKind();
     if (currentKind == DomType::ScriptCaseBlock || currentKind == DomType::ScriptCaseClause
         || currentKind == DomType::ScriptDefaultClause
         || (currentKind == DomType::List
@@ -2675,7 +2689,7 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &c
         \li Break inside a (nested) SwitchStatement
     \endlist
     */
-    for (DomItem current = currentItem; current; current = current.directParent()) {
+    for (DomItem current = itemAtPosition; current; current = current.directParent()) {
         switch (current.internalKind()) {
         case DomType::ScriptExpression:
             // reached end of script expression
@@ -2752,35 +2766,36 @@ definitively \e{not} at \c{<here>}. Therefore, return false when \c{left} is inv
 
 If the second semicolon does not exist, then just ignore it: it might not have been written yet.
 */
-static bool betweenLocations(QQmlJS::SourceLocation left, const CompletionContextStrings &ctx,
+static bool betweenLocations(QQmlJS::SourceLocation left,
+                             const QQmlLSCompletionPosition &positionInfo,
                              QQmlJS::SourceLocation right)
 {
     if (!left.isValid())
         return false;
     // note: left.end() == ctx.offset() means that the cursor lies exactly after left
-    if (!(left.end() <= ctx.offset()))
+    if (!(left.end() <= positionInfo.offset()))
         return false;
     if (!right.isValid())
         return true;
 
     // note: ctx.offset() == right.begin() means that the cursor lies exactly before right
-    return ctx.offset() <= right.begin();
+    return positionInfo.offset() <= right.begin();
 }
 
 /*!
 \internal
 Returns true if ctx denotes an offset lying behind left.end(), and false otherwise.
 */
-static bool afterLocation(QQmlJS::SourceLocation left, const CompletionContextStrings &ctx)
+static bool afterLocation(QQmlJS::SourceLocation left, const QQmlLSCompletionPosition &positionInfo)
 {
-    return betweenLocations(left, ctx, QQmlJS::SourceLocation{});
+    return betweenLocations(left, positionInfo, QQmlJS::SourceLocation{});
 }
 
 /*!
 \internal
 Returns true if ctx denotes an offset lying before right.begin(), and false otherwise.
 */
-static bool beforeLocation(const CompletionContextStrings &ctx, QQmlJS::SourceLocation right)
+static bool beforeLocation(const QQmlLSCompletionPosition &ctx, QQmlJS::SourceLocation right)
 {
     if (!right.isValid())
         return true;
@@ -2792,182 +2807,189 @@ static bool beforeLocation(const CompletionContextStrings &ctx, QQmlJS::SourceLo
     return false;
 }
 
-static QList<CompletionItem> insideForStatementCompletion(const DomItem &currentItem,
-                                                    const CompletionContextStrings &ctx)
+static QList<CompletionItem>
+insideForStatementCompletion(const DomItem &parentForContext,
+                             const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
     const QQmlJS::SourceLocation firstSemicolon = regions[FirstSemicolonTokenRegion];
     const QQmlJS::SourceLocation secondSemicolon = regions[SecondSemicolonRegion];
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
 
-    if (betweenLocations(leftParenthesis, ctx, firstSemicolon)) {
+    if (betweenLocations(leftParenthesis, positionInfo, firstSemicolon)) {
         QList<CompletionItem> res;
-        res << QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx)
+        res << QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition)
             << QQmlLSUtils::suggestVariableDeclarationStatementCompletion();
         return res;
     }
-    if (betweenLocations(firstSemicolon, ctx, secondSemicolon)
-        || betweenLocations(secondSemicolon, ctx, rightParenthesis)) {
+    if (betweenLocations(firstSemicolon, positionInfo, secondSemicolon)
+        || betweenLocations(secondSemicolon, positionInfo, rightParenthesis)) {
         QList<CompletionItem> res;
-        res << QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+        res << QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
         return res;
     }
 
-    if (afterLocation(rightParenthesis, ctx)) {
-        return QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
+    if (afterLocation(rightParenthesis, positionInfo)) {
+        return QQmlLSUtils::suggestJSStatementCompletion(positionInfo.itemAtPosition);
     }
 
     return {};
 }
 
-static QList<CompletionItem> insideScriptLiteralCompletion(const DomItem &currentItem,
-                                                           const CompletionContextStrings &ctx)
+static QList<CompletionItem>
+insideScriptLiteralCompletion(const DomItem &currentItem,
+                              const QQmlLSCompletionPosition &positionInfo)
 {
-    if (ctx.base().isEmpty())
-        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    Q_UNUSED(currentItem);
+    if (positionInfo.cursorPosition.base().isEmpty())
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     return {};
 }
 
 static QList<CompletionItem> insideCallExpression(const DomItem &currentItem,
-                                                  const CompletionContextStrings &ctx)
+                                                  const QQmlLSCompletionPosition &positionInfo)
 {
     const auto regions = FileLocations::treeOf(currentItem)->info().regions;
     const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
-    if (beforeLocation(ctx, leftParenthesis)) {
-        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    if (beforeLocation(positionInfo, leftParenthesis)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     }
-    if (betweenLocations(leftParenthesis, ctx, rightParenthesis)) {
-        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    if (betweenLocations(leftParenthesis, positionInfo, rightParenthesis)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     }
     return {};
 }
 
 static QList<CompletionItem> insideIfStatement(const DomItem &currentItem,
-                                               const CompletionContextStrings &ctx)
+                                               const QQmlLSCompletionPosition &positionInfo)
 {
     const auto regions = FileLocations::treeOf(currentItem)->info().regions;
     const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
     const QQmlJS::SourceLocation elseKeyword = regions[ElseKeywordRegion];
 
-    if (betweenLocations(leftParenthesis, ctx, rightParenthesis)) {
-        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    if (betweenLocations(leftParenthesis, positionInfo, rightParenthesis)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     }
-    if (betweenLocations(rightParenthesis, ctx, elseKeyword)) {
-        return QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
+    if (betweenLocations(rightParenthesis, positionInfo, elseKeyword)) {
+        return QQmlLSUtils::suggestJSStatementCompletion(positionInfo.itemAtPosition);
     }
-    if (afterLocation(elseKeyword, ctx)) {
-        return QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
+    if (afterLocation(elseKeyword, positionInfo)) {
+        return QQmlLSUtils::suggestJSStatementCompletion(positionInfo.itemAtPosition);
     }
     return {};
 }
 
 static QList<CompletionItem> insideReturnStatement(const DomItem &currentItem,
-                                                   const CompletionContextStrings &ctx)
+                                                   const QQmlLSCompletionPosition &positionInfo)
 {
     const auto regions = FileLocations::treeOf(currentItem)->info().regions;
     const QQmlJS::SourceLocation returnKeyword = regions[ReturnKeywordRegion];
 
-    if (afterLocation(returnKeyword, ctx)) {
-        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    if (afterLocation(returnKeyword, positionInfo)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     }
     return {};
 }
 
 static QList<CompletionItem> insideWhileStatement(const DomItem &currentItem,
-                                                  const CompletionContextStrings &ctx)
+                                                  const QQmlLSCompletionPosition &positionInfo)
 {
     const auto regions = FileLocations::treeOf(currentItem)->info().regions;
     const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
 
-    if (betweenLocations(leftParenthesis, ctx, rightParenthesis)) {
-        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    if (betweenLocations(leftParenthesis, positionInfo, rightParenthesis)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     }
-    if (afterLocation(rightParenthesis, ctx)) {
-        return QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
+    if (afterLocation(rightParenthesis, positionInfo)) {
+        return QQmlLSUtils::suggestJSStatementCompletion(positionInfo.itemAtPosition);
     }
     return {};
 }
 
-static QList<CompletionItem> insideDoWhileStatement(const DomItem &currentItem,
-                                                  const CompletionContextStrings &ctx)
+static QList<CompletionItem> insideDoWhileStatement(const DomItem &parentForContext,
+                                                    const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
     const QQmlJS::SourceLocation doKeyword = regions[DoKeywordRegion];
     const QQmlJS::SourceLocation whileKeyword = regions[WhileKeywordRegion];
     const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
 
-    if (betweenLocations(doKeyword, ctx, whileKeyword)) {
-        return QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
+    if (betweenLocations(doKeyword, positionInfo, whileKeyword)) {
+        return QQmlLSUtils::suggestJSStatementCompletion(positionInfo.itemAtPosition);
     }
-    if (betweenLocations(leftParenthesis, ctx, rightParenthesis)) {
-        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    if (betweenLocations(leftParenthesis, positionInfo, rightParenthesis)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     }
     return {};
 }
 
-static QList<CompletionItem> insideForEachStatement(const DomItem &currentItem,
-                                                              const CompletionContextStrings &ctx)
+static QList<CompletionItem> insideForEachStatement(const DomItem &parentForContext,
+                                                    const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation inOf = regions[InOfTokenRegion];
     const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
 
-    if (betweenLocations(leftParenthesis, ctx, inOf)) {
+    if (betweenLocations(leftParenthesis, positionInfo, inOf)) {
         QList<CompletionItem> res;
-        res << QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx)
+        res << QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition)
             << QQmlLSUtils::suggestVariableDeclarationStatementCompletion();
         return res;
     }
-    if (betweenLocations(inOf, ctx, rightParenthesis)) {
-        const QList<CompletionItem> res = QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    if (betweenLocations(inOf, positionInfo, rightParenthesis)) {
+        const QList<CompletionItem> res =
+                QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
         return res;
     }
 
-    if (afterLocation(rightParenthesis, ctx)) {
-        return QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
+    if (afterLocation(rightParenthesis, positionInfo)) {
+        return QQmlLSUtils::suggestJSStatementCompletion(positionInfo.itemAtPosition);
     }
 
     return {};
 }
 
-static QList<CompletionItem> insideSwitchStatement(const DomItem &currentItem,
-                                                   const CompletionContextStrings &ctx)
+static QList<CompletionItem> insideSwitchStatement(const DomItem &parentForContext,
+                                                   const QQmlLSCompletionPosition positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
     const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
 
-    if (betweenLocations(leftParenthesis, ctx, rightParenthesis)) {
-        const QList<CompletionItem> res = QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    if (betweenLocations(leftParenthesis, positionInfo, rightParenthesis)) {
+        const QList<CompletionItem> res =
+                QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
         return res;
     }
 
     return {};
 }
 
-static QList<CompletionItem> insideCaseClause(const DomItem &currentItem,
-                                              const CompletionContextStrings &ctx)
+static QList<CompletionItem> insideCaseClause(const DomItem &parentForContext,
+                                              const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation caseKeyword = regions[CaseKeywordRegion];
     const QQmlJS::SourceLocation colonToken = regions[ColonTokenRegion];
 
-    if (betweenLocations(caseKeyword, ctx, colonToken)) {
-        const QList<CompletionItem> res = QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    if (betweenLocations(caseKeyword, positionInfo, colonToken)) {
+        const QList<CompletionItem> res =
+                QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
         return res;
     }
-    if (afterLocation(colonToken, ctx)) {
-        const QList<CompletionItem> res = QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
+    if (afterLocation(colonToken, positionInfo)) {
+        const QList<CompletionItem> res =
+                QQmlLSUtils::suggestJSStatementCompletion(positionInfo.itemAtPosition);
         return res;
     }
 
@@ -2979,7 +3001,7 @@ static QList<CompletionItem> insideCaseClause(const DomItem &currentItem,
 Checks if a case or default clause does happen before ctx in the code.
 */
 static bool isCaseOrDefaultBeforeCtx(const DomItem &currentClause,
-                                     const CompletionContextStrings &ctx,
+                                     const QQmlLSCompletionPosition &positionInfo,
                                      FileLocationRegion keywordRegion)
 {
     Q_ASSERT(keywordRegion == QQmlJS::Dom::CaseKeywordRegion
@@ -2989,7 +3011,7 @@ static bool isCaseOrDefaultBeforeCtx(const DomItem &currentClause,
         return false;
 
     const auto token = FileLocations::treeOf(currentClause)->info().regions[keywordRegion];
-    if (afterLocation(token, ctx))
+    if (afterLocation(token, positionInfo))
         return true;
 
     return false;
@@ -3003,25 +3025,25 @@ corresponding DomItem of type DomType::CaseClauses or DomType::DefaultClause.
 
 Return an empty DomItem if neither case nor default was found.
 */
-static DomItem previousCaseOfCaseBlock(const DomItem &currentItem,
-                                       const CompletionContextStrings &ctx)
+static DomItem previousCaseOfCaseBlock(const DomItem &parentForContext,
+                                       const QQmlLSCompletionPosition &positionInfo)
 {
-    const DomItem caseClauses = currentItem.field(Fields::caseClauses);
+    const DomItem caseClauses = parentForContext.field(Fields::caseClauses);
     for (int i = 0; i < caseClauses.indexes(); ++i) {
         const DomItem currentClause = caseClauses.index(i);
-        if (isCaseOrDefaultBeforeCtx(currentClause, ctx, QQmlJS::Dom::CaseKeywordRegion)) {
+        if (isCaseOrDefaultBeforeCtx(currentClause, positionInfo, QQmlJS::Dom::CaseKeywordRegion)) {
             return currentClause;
         }
     }
 
-    const DomItem defaultClause = currentItem.field(Fields::defaultClause);
-    if (isCaseOrDefaultBeforeCtx(defaultClause, ctx, QQmlJS::Dom::DefaultKeywordRegion))
-        return currentItem.field(Fields::defaultClause);
+    const DomItem defaultClause = parentForContext.field(Fields::defaultClause);
+    if (isCaseOrDefaultBeforeCtx(defaultClause, positionInfo, QQmlJS::Dom::DefaultKeywordRegion))
+        return parentForContext.field(Fields::defaultClause);
 
-    const DomItem moreCaseClauses = currentItem.field(Fields::moreCaseClauses);
+    const DomItem moreCaseClauses = parentForContext.field(Fields::moreCaseClauses);
     for (int i = 0; i < moreCaseClauses.indexes(); ++i) {
         const DomItem currentClause = moreCaseClauses.index(i);
-        if (isCaseOrDefaultBeforeCtx(currentClause, ctx, QQmlJS::Dom::CaseKeywordRegion)) {
+        if (isCaseOrDefaultBeforeCtx(currentClause, positionInfo, QQmlJS::Dom::CaseKeywordRegion)) {
             return currentClause;
         }
     }
@@ -3030,54 +3052,55 @@ static DomItem previousCaseOfCaseBlock(const DomItem &currentItem,
     return {};
 }
 
-static QList<CompletionItem> insideCaseBlock(const DomItem &currentItem,
-                                             const CompletionContextStrings &ctx)
+static QList<CompletionItem> insideCaseBlock(const DomItem &parentForContext,
+                                             const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation leftBrace = regions[LeftBraceRegion];
     const QQmlJS::SourceLocation rightBrace = regions[RightBraceRegion];
 
-    if (!betweenLocations(leftBrace, ctx, rightBrace))
+    if (!betweenLocations(leftBrace, positionInfo, rightBrace))
         return {};
 
+    // TODO: looks fishy
     // if there is a previous case or default clause, you can still add statements to it
-    if (const auto previousCase = previousCaseOfCaseBlock(currentItem, ctx))
-        return QQmlLSUtils::suggestJSStatementCompletion(previousCase, ctx);
+    if (const auto previousCase = previousCaseOfCaseBlock(parentForContext, positionInfo))
+        return QQmlLSUtils::suggestJSStatementCompletion(previousCase);
 
     // otherwise, only complete case and default
     return QQmlLSUtils::suggestCaseAndDefaultStatementCompletion();
 }
 
-static QList<CompletionItem> insideDefaultClause(const DomItem &currentItem,
-                                                 const CompletionContextStrings &ctx)
+static QList<CompletionItem> insideDefaultClause(const DomItem &parentForContext,
+                                                 const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation colonToken = regions[ColonTokenRegion];
 
-    if (afterLocation(colonToken, ctx)) {
-        const QList<CompletionItem> res = QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
+    if (afterLocation(colonToken, positionInfo)) {
+        const QList<CompletionItem> res =
+                QQmlLSUtils::suggestJSStatementCompletion(positionInfo.itemAtPosition);
         return res;
     }
 
     return {};
 }
 
-static QList<CompletionItem> insideBinaryExpressionCompletion(const DomItem &currentItem,
-                                                              const CompletionContextStrings &ctx)
+static QList<CompletionItem>
+insideBinaryExpressionCompletion(const DomItem &parentForContext,
+                                 const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation operatorLocation = regions[OperatorTokenRegion];
 
-    if (beforeLocation(ctx, operatorLocation)) {
-        const DomItem lhs = currentItem.field(Fields::left);
-        return QQmlLSUtils::scriptIdentifierCompletion(lhs, ctx);
+    if (beforeLocation(positionInfo, operatorLocation)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     }
-    if (afterLocation(operatorLocation, ctx)) {
-        const DomItem rhs = currentItem.field(Fields::right);
-        return QQmlLSUtils::scriptIdentifierCompletion(rhs, ctx);
+    if (afterLocation(operatorLocation, positionInfo)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     }
 
     return {};
@@ -3123,52 +3146,53 @@ Doing completion in variable declarations requires taking a look at all differen
 
 \endlist
 */
-static QList<CompletionItem> insideScriptPattern(const DomItem &currentItem,
-                                                 const CompletionContextStrings &ctx)
+static QList<CompletionItem> insideScriptPattern(const DomItem &parentForContext,
+                                                 const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation equal = regions[EqualTokenRegion];
 
-    if (!afterLocation(equal, ctx))
+    if (!afterLocation(equal, positionInfo))
         return {};
 
     // otherwise, only complete case and default
-    return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
 }
 
 /*!
 \internal
 See comment on insideScriptPattern().
 */
-static QList<CompletionItem> insideVariableDeclarationEntry(const DomItem &currentItem,
-                                                            const CompletionContextStrings &ctx)
+static QList<CompletionItem>
+insideVariableDeclarationEntry(const DomItem &parentForContext,
+                               const QQmlLSCompletionPosition &positionInfo)
 {
-    return insideScriptPattern(currentItem, ctx);
+    return insideScriptPattern(parentForContext, positionInfo);
 }
 
-static QList<CompletionItem> insideThrowStatement(const DomItem &currentItem,
-                                                  const CompletionContextStrings &ctx)
+static QList<CompletionItem> insideThrowStatement(const DomItem &parentForContext,
+                                                  const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation throwKeyword = regions[ThrowKeywordRegion];
 
-    if (afterLocation(throwKeyword, ctx)) {
-        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    if (afterLocation(throwKeyword, positionInfo)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     }
     return {};
 }
 
-static QList<CompletionItem> insideLabelledStatement(const DomItem &currentItem,
-                                                  const CompletionContextStrings &ctx)
+static QList<CompletionItem> insideLabelledStatement(const DomItem &parentForContext,
+                                                     const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation colon = regions[ColonTokenRegion];
 
-    if (afterLocation(colon, ctx)) {
-        return QQmlLSUtils::suggestJSStatementCompletion(currentItem, ctx);
+    if (afterLocation(colon, positionInfo)) {
+        return QQmlLSUtils::suggestJSStatementCompletion(positionInfo.itemAtPosition);
     }
     // note: the case "beforeLocation(ctx, colon)" probably never happens:
     // this is because without the colon, the parser will probably not parse this as a
@@ -3180,7 +3204,7 @@ static QList<CompletionItem> insideLabelledStatement(const DomItem &currentItem,
 
 /*!
 \internal
-Collect the current set of labels that currentItem can jump to.
+Collect the current set of labels that some DomItem can jump to.
 */
 static QList<CompletionItem> collectLabels(const DomItem &context)
 {
@@ -3202,89 +3226,90 @@ static QList<CompletionItem> collectLabels(const DomItem &context)
     return labels;
 }
 
-static QList<CompletionItem> insideContinueStatement(const DomItem &currentItem,
-                                                     const CompletionContextStrings &ctx)
+static QList<CompletionItem> insideContinueStatement(const DomItem &parentForContext,
+                                                     const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation continueKeyword = regions[ContinueKeywordRegion];
 
-    if (afterLocation(continueKeyword, ctx)) {
-        return collectLabels(currentItem);
+    if (afterLocation(continueKeyword, positionInfo)) {
+        return collectLabels(parentForContext);
     }
     return {};
 }
 
-static QList<CompletionItem> insideBreakStatement(const DomItem &currentItem,
-                                                     const CompletionContextStrings &ctx)
+static QList<CompletionItem> insideBreakStatement(const DomItem &parentForContext,
+                                                  const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation breakKeyword = regions[BreakKeywordRegion];
 
-    if (afterLocation(breakKeyword, ctx)) {
-        return collectLabels(currentItem);
+    if (afterLocation(breakKeyword, positionInfo)) {
+        return collectLabels(parentForContext);
     }
     return {};
 }
 
-static QList<CompletionItem> insideConditionalExpression(const DomItem &currentItem,
-                                                         const CompletionContextStrings &ctx)
+static QList<CompletionItem>
+insideConditionalExpression(const DomItem &parentForContext,
+                            const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation questionMark = regions[QuestionMarkTokenRegion];
     const QQmlJS::SourceLocation colon = regions[ColonTokenRegion];
 
-    if (beforeLocation(ctx, questionMark)) {
-        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    if (beforeLocation(positionInfo, questionMark)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     }
-    if (betweenLocations(questionMark, ctx, colon)) {
-        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    if (betweenLocations(questionMark, positionInfo, colon)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     }
-    if (afterLocation(colon, ctx)) {
-        return QQmlLSUtils::scriptIdentifierCompletion(currentItem, ctx);
+    if (afterLocation(colon, positionInfo)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     }
     return {};
 }
 
-static QList<CompletionItem> insideUnaryExpression(const DomItem &currentItem,
-                                                   const CompletionContextStrings &ctx)
+static QList<CompletionItem> insideUnaryExpression(const DomItem &parentForContext,
+                                                   const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation operatorToken = regions[OperatorTokenRegion];
 
-    if (afterLocation(operatorToken, ctx)) {
-        return QQmlLSUtils::scriptIdentifierCompletion(currentItem.field(Fields::expression), ctx);
+    if (afterLocation(operatorToken, positionInfo)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     }
 
     return {};
 }
 
-static QList<CompletionItem> insidePostExpression(const DomItem &currentItem,
-                                                         const CompletionContextStrings &ctx)
+static QList<CompletionItem> insidePostExpression(const DomItem &parentForContext,
+                                                  const QQmlLSCompletionPosition &positionInfo)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
 
     const QQmlJS::SourceLocation operatorToken = regions[OperatorTokenRegion];
 
-    if (beforeLocation(ctx, operatorToken)) {
-        return QQmlLSUtils::scriptIdentifierCompletion(currentItem.field(Fields::expression), ctx);
+    if (beforeLocation(positionInfo, operatorToken)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
     }
     return {};
 }
 
-static bool ctxBeforeStatement(const CompletionContextStrings &ctx, const DomItem &currentItem,
-                               FileLocationRegion firstRegion)
+static bool ctxBeforeStatement(const QQmlLSCompletionPosition &positionInfo,
+                               const DomItem &parentForContext, FileLocationRegion firstRegion)
 {
-    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
-    const bool result = beforeLocation(ctx, regions[firstRegion]);
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
+    const bool result = beforeLocation(positionInfo, regions[firstRegion]);
     return result;
 }
 
 QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
-                                               const CompletionContextStrings &ctx)
+                                               const CompletionContextStrings &contextStrings)
 {
     /*!
     Completion is not provided on a script identifier expression because script identifier
@@ -3303,6 +3328,7 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
     In this example, the parent used for the completion is the for-statement, of type
     DomType::ScriptForStatement.
     */
+    const QQmlLSCompletionPosition positionInfo{ currentItem, contextStrings };
     for (DomItem currentParent = currentItem; currentParent;
          currentParent = currentParent.directParent()) {
         const DomType currentType = currentParent.internalKind();
@@ -3312,7 +3338,7 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             // suppress completions for ids
             return {};
         case DomType::Pragma:
-            return insidePragmaCompletion(currentItem, ctx);
+            return insidePragmaCompletion(currentItem, positionInfo);
         case DomType::ScriptType: {
             LocalSymbolsTypes options;
             options.setFlag(LocalSymbolsType::ObjectType);
@@ -3323,38 +3349,38 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             // no autocompletion inside of function parameter definition
             return {};
         case DomType::Binding:
-            return insideBindingCompletion(currentParent, ctx);
+            return insideBindingCompletion(currentParent, positionInfo);
         case DomType::Import:
-            return insideImportCompletion(currentParent, ctx);
+            return insideImportCompletion(currentParent, positionInfo);
         case DomType::ScriptForStatement:
-            return insideForStatementCompletion(currentParent, ctx);
+            return insideForStatementCompletion(currentParent, positionInfo);
         case DomType::ScriptBlockStatement:
-            return QQmlLSUtils::suggestJSStatementCompletion(currentParent, ctx);
+            return QQmlLSUtils::suggestJSStatementCompletion(currentParent);
         case DomType::QmlFile:
-            return insideQmlFileCompletion(currentParent, ctx);
+            return insideQmlFileCompletion(currentParent, positionInfo);
         case DomType::QmlObject:
-            return insideQmlObjectCompletion(currentParent, ctx);
+            return insideQmlObjectCompletion(currentParent, positionInfo);
         case DomType::MethodInfo:
             // suppress completions
             return {};
         case DomType::PropertyDefinition:
-            return insidePropertyDefinitionCompletion(currentParent, ctx);
+            return insidePropertyDefinitionCompletion(currentParent, positionInfo);
         case DomType::ScriptBinaryExpression:
-            return insideBinaryExpressionCompletion(currentParent, ctx);
+            return insideBinaryExpressionCompletion(currentParent, positionInfo);
         case DomType::ScriptLiteral:
-            return insideScriptLiteralCompletion(currentParent, ctx);
+            return insideScriptLiteralCompletion(currentParent, positionInfo);
         case DomType::ScriptCallExpression:
-            return insideCallExpression(currentParent, ctx);
+            return insideCallExpression(currentParent, positionInfo);
         case DomType::ScriptIfStatement:
-            return insideIfStatement(currentParent, ctx);
+            return insideIfStatement(currentParent, positionInfo);
         case DomType::ScriptReturnStatement:
-            return insideReturnStatement(currentParent, ctx);
+            return insideReturnStatement(currentParent, positionInfo);
         case DomType::ScriptWhileStatement:
-            return insideWhileStatement(currentParent, ctx);
+            return insideWhileStatement(currentParent, positionInfo);
         case DomType::ScriptDoWhileStatement:
-            return insideDoWhileStatement(currentParent, ctx);
+            return insideDoWhileStatement(currentParent, positionInfo);
         case DomType::ScriptForEachStatement:
-            return insideForEachStatement(currentParent, ctx);
+            return insideForEachStatement(currentParent, positionInfo);
         case DomType::ScriptTryCatchStatement:
             /*!
             \internal
@@ -3376,41 +3402,41 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             */
             return {};
         case DomType::ScriptSwitchStatement:
-            return insideSwitchStatement(currentParent, ctx);
+            return insideSwitchStatement(currentParent, positionInfo);
         case DomType::ScriptCaseClause:
-            return insideCaseClause(currentParent, ctx);
+            return insideCaseClause(currentParent, positionInfo);
         case DomType::ScriptDefaultClause:
-            if (ctxBeforeStatement(ctx, currentParent, QQmlJS::Dom::DefaultKeywordRegion))
+            if (ctxBeforeStatement(positionInfo, currentParent, QQmlJS::Dom::DefaultKeywordRegion))
                 continue;
-            return insideDefaultClause(currentParent, ctx);
+            return insideDefaultClause(currentParent, positionInfo);
         case DomType::ScriptCaseBlock:
-            return insideCaseBlock(currentParent, ctx);
+            return insideCaseBlock(currentParent, positionInfo);
         case DomType::ScriptVariableDeclaration:
             // not needed: thats a list of ScriptVariableDeclarationEntry, and those entries cannot
             // be suggested because they all start with `{`, `[` or an identifier that should not be
             // in use yet.
             return {};
         case DomType::ScriptVariableDeclarationEntry:
-            return insideVariableDeclarationEntry(currentParent, ctx);
+            return insideVariableDeclarationEntry(currentParent, positionInfo);
         case DomType::ScriptProperty:
             // fallthrough: a ScriptProperty is a ScriptPattern but inside a JS Object. It gets the
             // same completions as a ScriptPattern.
         case DomType::ScriptPattern:
-            return insideScriptPattern(currentParent, ctx);
+            return insideScriptPattern(currentParent, positionInfo);
         case DomType::ScriptThrowStatement:
-            return insideThrowStatement(currentParent, ctx);
+            return insideThrowStatement(currentParent, positionInfo);
         case DomType::ScriptLabelledStatement:
-            return insideLabelledStatement(currentParent, ctx);
+            return insideLabelledStatement(currentParent, positionInfo);
         case DomType::ScriptContinueStatement:
-            return insideContinueStatement(currentParent, ctx);
+            return insideContinueStatement(currentParent, positionInfo);
         case DomType::ScriptBreakStatement:
-            return insideBreakStatement(currentParent, ctx);
+            return insideBreakStatement(currentParent, positionInfo);
         case DomType::ScriptConditionalExpression:
-            return insideConditionalExpression(currentParent, ctx);
+            return insideConditionalExpression(currentParent, positionInfo);
         case DomType::ScriptUnaryExpression:
-            return insideUnaryExpression(currentParent, ctx);
+            return insideUnaryExpression(currentParent, positionInfo);
         case DomType::ScriptPostExpression:
-            return insidePostExpression(currentParent, ctx);
+            return insidePostExpression(currentParent, positionInfo);
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.
