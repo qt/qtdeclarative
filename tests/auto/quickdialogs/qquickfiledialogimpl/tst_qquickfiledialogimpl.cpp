@@ -91,6 +91,7 @@ private slots:
     void selectNewFileViaTextField();
     void selectExistingFileShouldWarnUserWhenFileModeEqualsSaveFile();
     void fileNameTextFieldOnlyChangesWhenSelectingFiles();
+    void setSchemeForSelectedFile();
 
 private:
     enum DelegateOrderPolicy
@@ -1612,6 +1613,47 @@ void tst_QQuickFileDialogImpl::fileNameTextFieldOnlyChangesWhenSelectingFiles()
     QVERIFY(getSelectedFileInfo().isFile());
     QCOMPARE(fileNameTextField->text(), tempFile11Url.fileName());
     QCOMPARE(dialogHelper.dialog->selectedFile(), tempFile11Url);
+}
+
+void tst_QQuickFileDialogImpl::setSchemeForSelectedFile()
+{
+    const auto tempSubFile1Url = QUrl::fromLocalFile(tempSubFile1->fileName());
+
+    const QVariantMap initialProperties = {
+        { "tempFile1Url", QVariant::fromValue(tempSubFile1Url) },
+        { "fileMode", QVariant::fromValue(QQuickFileDialog::SaveFile) }
+    };
+    FileDialogTestHelper dialogHelper(this, "setSelectedFile.qml", {}, initialProperties);
+
+    OPEN_QUICK_DIALOG();
+    QQuickTest::qWaitForPolish(dialogHelper.window());
+
+    QQuickTextField *fileNameTextField =
+            dialogHelper.quickDialog->findChild<QQuickTextField *>("fileNameTextField");
+    QVERIFY(fileNameTextField);
+
+    QVERIFY(!tempSubFile1Url.scheme().isEmpty());
+    QVERIFY(!dialogHelper.dialog->selectedFile().scheme().isEmpty());
+    QCOMPARE(tempSubFile1Url, dialogHelper.dialog->selectedFile());
+
+    fileNameTextField->clear();
+
+    const QPoint textFieldCenterPos =
+            fileNameTextField->mapToScene({ fileNameTextField->width() / 2, fileNameTextField->height() / 2 }).toPoint();
+    QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, textFieldCenterPos);
+
+    const QByteArray newFileName("helloworld.txt");
+    for (const auto &c : newFileName)
+        QTest::keyClick(dialogHelper.window(), c);
+    QTest::keyClick(dialogHelper.window(), Qt::Key_Enter, Qt::NoModifier);
+
+    QTRY_COMPARE(fileNameTextField->text(), QString::fromLatin1(newFileName));
+
+    const auto newFilePath =
+        QUrl::fromLocalFile(QFileInfo(tempSubFile1Url.toLocalFile()).dir().absolutePath() + u'/' + newFileName);
+    QVERIFY(!newFilePath.scheme().isEmpty());
+    QVERIFY(!dialogHelper.dialog->selectedFile().scheme().isEmpty());
+    QCOMPARE(dialogHelper.dialog->selectedFile(), newFilePath);
 }
 
 QTEST_MAIN(tst_QQuickFileDialogImpl)
