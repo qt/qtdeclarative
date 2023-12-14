@@ -115,6 +115,9 @@ FileDialogImpl {
             highlighted: ListView.isCurrentItem
             dialog: control
             fileDetailRowWidth: nameFiltersComboBox.width
+
+            KeyNavigation.backtab: breadcrumbBar
+            KeyNavigation.tab: fileNameTextField.visible ? fileNameTextField : nameFiltersComboBox
         }
     }
 
