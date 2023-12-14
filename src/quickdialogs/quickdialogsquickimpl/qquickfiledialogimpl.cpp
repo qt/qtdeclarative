@@ -426,8 +426,9 @@ void QQuickFileDialogImpl::setAcceptLabel(const QString &label)
         return;
     }
 
-    auto buttonType = d->options->acceptMode() == QFileDialogOptions::AcceptSave
-        ? QPlatformDialogHelper::Save : QPlatformDialogHelper::Open;
+    auto buttonType = (d->options && d->options->acceptMode() == QFileDialogOptions::AcceptSave)
+        ? QPlatformDialogHelper::Save
+        : QPlatformDialogHelper::Open;
     acceptButton->setText(!label.isEmpty()
         ? label : QQuickDialogButtonBoxPrivate::buttonText(buttonType));
 }
