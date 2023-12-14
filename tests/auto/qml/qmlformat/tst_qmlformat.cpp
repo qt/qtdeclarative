@@ -137,6 +137,8 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qmlls/utils/data/emptyFile.qml";
     m_invalidFiles << "tests/auto/qmlls/utils/data/completions/missingRHS.qml";
     m_invalidFiles << "tests/auto/qmlls/utils/data/completions/missingRHS.parserfail.qml";
+    m_invalidFiles << "tests/auto/qmlls/utils/data/completions/attachedPropertyMissingRHS.qml";
+    m_invalidFiles << "tests/auto/qmlls/utils/data/completions/groupedPropertyMissingRHS.qml";
 
     // Files that get changed:
     // rewrite of import "bla/bla/.." to import "bla"
