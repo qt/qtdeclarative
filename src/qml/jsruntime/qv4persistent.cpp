@@ -142,6 +142,7 @@ PersistentValueStorage::PersistentValueStorage(ExecutionEngine *engine)
 
 PersistentValueStorage::~PersistentValueStorage()
 {
+    clearFreePageHint();
     Page *p = static_cast<Page *>(firstPage);
     while (p) {
         for (int i = 0; i < kEntriesPerPage; ++i) {
@@ -159,7 +160,9 @@ PersistentValueStorage::~PersistentValueStorage()
 
 Value *PersistentValueStorage::allocate()
 {
-    Page *p = static_cast<Page *>(firstPage);
+    Page *p = static_cast<Page *>(freePageHint);
+    if (p && p->header.freeList == -1)
+        p = static_cast<Page *>(firstPage);
     while (p) {
         if (p->header.freeList != -1)
             break;
@@ -171,9 +174,15 @@ Value *PersistentValueStorage::allocate()
     Value *v = p->values + p->header.freeList;
     p->header.freeList = v->int_32();
 
-    if (p->header.freeList != -1 && p != firstPage && !engine->isGCOngoing) {
-        unlink(p);
-        insertInFront(this, p);
+    if (p->header.freeList != -1 && p != freePageHint) {
+        if (auto oldHint = static_cast<Page *>(freePageHint)) {
+            oldHint->header.refCount--;
+            // no need to free - if the old page were unused,
+            // we would have used it to serve the allocation
+            Q_ASSERT(oldHint->header.refCount);
+        }
+        freePageHint = p;
+        p->header.refCount++;
     }
 
     ++p->header.refCount;
@@ -205,6 +214,17 @@ void PersistentValueStorage::mark(MarkStack *markStack)
 
         p = p->header.next;
     }
+}
+
+void PersistentValueStorage::clearFreePageHint()
+{
+    if (!freePageHint)
+        return;
+    auto page = static_cast<Page *>(freePageHint);
+    if (!--page->header.refCount)
+        freePage(page);
+    freePageHint = nullptr;
+
 }
 
 ExecutionEngine *PersistentValueStorage::getEngine(const Value *v)

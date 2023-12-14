@@ -2816,6 +2816,7 @@ void tst_QJSValue::deleteFromDifferentThread()
     thread->start();
     condition.wait(&mutex);
     QTRY_VERIFY(thread->isFinished());
+    storage.clearFreePageHint();
     QTRY_COMPARE(storage.firstPage, nullptr);
 #endif
 }
