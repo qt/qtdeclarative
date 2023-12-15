@@ -1,4 +1,4 @@
-# Copyright (C) 2022 The Qt Company Ltd.
+# Copyright (C) 2023 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
 cmake_minimum_required(VERSION 3.16)
@@ -28,7 +28,7 @@ qt_add_qml_module(contactlistexample
         "ContactForm.ui.qml"
         "ContactView.ui.qml"
         "SectionDelegate.ui.qml"
-        "contactlist.qml"
+        "ContactList.qml"
         "designer/Backend/ContactModel.qml"
 )
 
