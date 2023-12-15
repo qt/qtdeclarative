@@ -63,6 +63,8 @@ private slots:
     void changingOrientationResetsPreviousAxisValues_data();
     void changingOrientationResetsPreviousAxisValues();
 
+    void clearObjectListModel();
+
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -1151,6 +1153,39 @@ void tst_QQuickListView2::changingOrientationResetsPreviousAxisValues() // QTBUG
     // X should be 0 for all delegates, but not Y.
     QVERIFY(listView->property("isXReset").toBool());
     QVERIFY(!listView->property("isYReset").toBool());
+}
+
+void tst_QQuickListView2::clearObjectListModel()
+{
+    QQmlEngine engine;
+    QQmlComponent delegate(&engine);
+
+    // Need one required property to trigger the incremental rebuilding of metaobjects.
+    delegate.setData("import QtQuick\nItem { required property int index }", QUrl());
+
+    QQuickListView list;
+    engine.setContextForObject(&list, engine.rootContext());
+    list.setDelegate(&delegate);
+    list.setWidth(640);
+    list.setHeight(480);
+
+    QScopedPointer modelObject(new QObject);
+
+    // Use a list that might also carry something non-QObject
+
+    list.setModel(QVariantList {
+        QVariant::fromValue(modelObject.data()),
+        QVariant::fromValue(modelObject.data())
+    });
+
+    QVERIFY(list.itemAtIndex(0));
+
+    modelObject.reset();
+
+    // list should not access dangling pointer from old model data anymore.
+    list.setModel(QVariantList());
+
+    QVERIFY(!list.itemAtIndex(0));
 }
 
 QTEST_MAIN(tst_QQuickListView2)
