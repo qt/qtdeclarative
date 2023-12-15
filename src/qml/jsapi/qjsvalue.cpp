@@ -372,8 +372,11 @@ bool QJSValue::isError() const
 }
 
 /*!
-  Returns true if this QJSValue is an object of the URL class;
+  Returns true if this QJSValue is an object of the URL JavaScript class;
   otherwise returns false.
+
+  \note For a QJSValue that contains a QUrl, this function returns false.
+  However, \c{toVariant().value<QUrl>()} works in both cases.
 */
 bool QJSValue::isUrl() const
 {
