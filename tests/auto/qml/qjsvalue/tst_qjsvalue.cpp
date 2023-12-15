@@ -1124,6 +1124,25 @@ void tst_QJSValue::toVariant()
 
         QCOMPARE(func.toVariant().metaType(), QMetaType::fromType<QJSValue>());
     }
+
+    // object with custom prototype
+    {
+        QJSValue object = eng.evaluate(R"js(
+        (function(){
+            function Person(firstName, lastName) {
+                    this.firstName = firstName;
+                    this.lastName = lastName;
+            }
+            return new Person("John", "Doe");
+        })();
+        )js");
+        QVERIFY(object.isObject());
+        auto asVariant = object.toVariant();
+        QCOMPARE(asVariant.metaType(), QMetaType::fromType<QVariantMap>());
+        auto variantMap = asVariant.value<QVariantMap>();
+        QVERIFY(variantMap.contains("firstName"));
+        QCOMPARE(variantMap["firstName"].toString(), "John");
+    }
 }
 
 void tst_QJSValue::toPrimitive_data()
