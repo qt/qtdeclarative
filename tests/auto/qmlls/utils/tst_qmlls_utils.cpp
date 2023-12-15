@@ -3201,7 +3201,7 @@ void tst_qmlls_utils::completions_data()
                             u"bad"_s };
 
     QTest::newRow("groupedPropertyAfterDotMissingRHS")
-            << testFile("completions/attachedPropertyMissingRHS.qml") << 7 << 11
+            << testFile("completions/groupedPropertyMissingRHS.qml") << 7 << 11
             << ExpectedCompletions({
                        { u"family"_s, CompletionItemKind::Property },
                })
@@ -3230,10 +3230,6 @@ void tst_qmlls_utils::completions()
     QEXPECT_FAIL("binaryExpressionMissingRHSWithSemicolon",
                  "Current parser cannot recover from this error yet!", Abort);
     QEXPECT_FAIL("binaryExpressionMissingRHSWithStatement",
-                 "Current parser cannot recover from this error yet!", Abort);
-    QEXPECT_FAIL("attachedPropertyAfterDotMissingRHS",
-                 "Current parser cannot recover from this error yet!", Abort);
-    QEXPECT_FAIL("groupedPropertyAfterDotMissingRHS",
                  "Current parser cannot recover from this error yet!", Abort);
     QCOMPARE(locations.size(), 1);
 

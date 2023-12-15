@@ -445,8 +445,10 @@ QmlFile::QmlFile(
     QQmlJS::Lexer lexer(m_engine.get());
     lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/true);
     QQmlJS::Parser parser(m_engine.get());
-    if (option == EnableParserRecovery)
+    if (option == EnableParserRecovery) {
         parser.enableIdentifierInsertion();
+        parser.enableIncompleteBindings();
+    }
     m_isValid = parser.parse();
     const auto diagnostics = parser.diagnosticMessages();
     for (const DiagnosticMessage &msg : diagnostics) {
