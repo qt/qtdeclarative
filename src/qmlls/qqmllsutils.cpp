@@ -329,6 +329,12 @@ QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(const DomItem 
                                "not follow the DomItem Structure.";
                     continue;
                 }
+                // the parser inserts empty Script Expressions for bindings that are not completely
+                // written out yet. Ignore them here.
+                if (subItem.domItem.internalKind() == DomType::ScriptExpression
+                    && subLoc->info().fullRegion.length == 0) {
+                    continue;
+                }
                 subItem.fileLocation = subLoc;
                 toDo.append(subItem);
                 inParentButOutsideChildren = false;
@@ -2181,7 +2187,12 @@ QList<CompletionItem> QQmlLSUtils::suggestJSExpressionCompletion(const DomItem &
     QList<CompletionItem> result;
     QDuplicateTracker<QString> usedNames;
     QQmlJSScope::ConstPtr nearestScope;
-    const bool hasQualifier = isFieldMemberAccess(scriptIdentifier);
+
+    // note: there is an edge case, where the user asks for completion right after the dot
+    // of some qualified expression like `root.hello`. In this case, scriptIdentifier is actually
+    // the BinaryExpression instead of the left-hand-side that has not be written down yet.
+    const bool askForCompletionOnDot = isFieldMemberExpression(scriptIdentifier);
+    const bool hasQualifier = isFieldMemberAccess(scriptIdentifier) || askForCompletionOnDot;
 
     if (!hasQualifier) {
         result << idsCompletions(scriptIdentifier.component())
@@ -2196,7 +2207,9 @@ QList<CompletionItem> QQmlLSUtils::suggestJSExpressionCompletion(const DomItem &
 
         result << enumerationCompletion(nearestScope, &usedNames);
     } else {
-        const DomItem owner = scriptIdentifier.directParent().field(Fields::left);
+        const DomItem owner =
+                (askForCompletionOnDot ? scriptIdentifier : scriptIdentifier.directParent())
+                        .field(Fields::left);
         auto expressionType = QQmlLSUtils::resolveExpressionType(
                 owner, ResolveActualTypeForFieldMemberExpression);
         if (!expressionType || !expressionType->semanticScope)

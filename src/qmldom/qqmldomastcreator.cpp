@@ -2653,6 +2653,21 @@ void QQmlDomAstCreator::endVisit(AST::PreIncrementExpression *statement)
     pushScriptElement(current);
 }
 
+bool QQmlDomAstCreator::visit(AST::EmptyStatement *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::EmptyStatement *statement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(statement, DomType::ScriptEmptyStatement);
+    current->addLocation(FileLocationRegion::SemicolonTokenRegion, statement->semicolonToken);
+    pushScriptElement(current);
+}
+
 bool QQmlDomAstCreator::visit(AST::PreDecrementExpression *)
 {
     return m_enableScriptExpressions;

@@ -308,6 +308,12 @@ public:
     inline void enableIdentifierInsertion()
     { m_enableIdentifierInsertion = true; }
 
+    inline bool incompleteBindings() const
+    { return m_enableIncompleteBindings; }
+
+    inline void enableIncompleteBindings()
+    { m_enableIncompleteBindings = true; }
+
 protected:
     bool parse(int startToken);
 
@@ -399,6 +405,7 @@ protected:
 
     QList<DiagnosticMessage> diagnostic_messages;
     bool m_enableIdentifierInsertion = false;
+    bool m_enableIncompleteBindings = false;
 };
 
 } // end of namespace QQmlJS
@@ -1138,6 +1145,20 @@ case $rule_number:
 {
     AST::UiScriptBinding *node = new (pool) AST::UiScriptBinding(sym(1).UiQualifiedId, sym(3).Statement);
     node->colonToken = loc(2);
+    sym(1).Node = node;
+    } break;
+./
+
+UiObjectMember: UiQualifiedId Semicolon;
+/.
+    case $rule_number: {
+    if (!m_enableIncompleteBindings) {
+        diagnostic_messages.append(compileError(loc(1), QLatin1String("Incomplete binding, expected token `:` or `{`")));
+        return false;
+    }
+    AST::EmptyStatement *statement = new (pool) AST::EmptyStatement;
+    statement->semicolonToken = loc(2);
+    AST::UiScriptBinding *node = new (pool) AST::UiScriptBinding(sym(1).UiQualifiedId, statement);
     sym(1).Node = node;
     } break;
 ./

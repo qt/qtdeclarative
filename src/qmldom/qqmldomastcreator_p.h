@@ -480,6 +480,9 @@ public:
     bool visit(AST::PreIncrementExpression *) override;
     void endVisit(AST::PreIncrementExpression *) override;
 
+    bool visit(AST::EmptyStatement *) override;
+    void endVisit(AST::EmptyStatement *) override;
+
     // lists of stuff whose children do not need a qqmljsscope: visitation order can be custom
     bool visit(AST::ArgumentList *) override;
     bool visit(AST::UiParameterList *) override;

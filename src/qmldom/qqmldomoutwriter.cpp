@@ -237,6 +237,9 @@ OutWriter &OutWriter::writeRegion(FileLocationRegion region)
     case QuestionMarkTokenRegion:
         codeForRegion = u"?"_s;
         break;
+    case SemicolonTokenRegion:
+        codeForRegion = u";"_s;
+        break;
 
     // not keywords:
     case ImportUriRegion:
