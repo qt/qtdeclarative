@@ -665,6 +665,7 @@ public:
     // variant conversions
     static QVariant toVariant(
         const QV4::Value &value, QMetaType typeHint, bool createJSValueForObjectsAndSymbols = true);
+    static QVariant toVariantLossy(const QV4::Value &value);
     QV4::ReturnedValue fromVariant(const QVariant &);
     QV4::ReturnedValue fromVariant(
             const QVariant &variant, Heap::Object *parent, int property, uint flags);
