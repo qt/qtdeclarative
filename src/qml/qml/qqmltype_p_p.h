@@ -54,9 +54,6 @@ public:
     QQmlTypePrivate(QQmlType::RegistrationType type);
 
     const ProxyMetaObjects *init() const;
-    const Enums *initEnums(QQmlEnginePrivate *engine) const;
-    void insertEnums(Enums *enums, const QMetaObject *metaObject) const;
-    void insertEnumsFromPropertyCache(Enums *enums, const QQmlPropertyCache::ConstPtr &cache) const;
 
     QUrl sourceUrl() const
     {
@@ -148,6 +145,53 @@ public:
 
     void setName(const QString &uri, const QString &element);
 
+    template<typename String>
+    static int enumValue(
+            const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlEnginePrivate *engine,
+            const String &name, bool *ok)
+    {
+        return doGetEnumValue(d, engine, [&](const QQmlTypePrivate::Enums *enums) {
+            return enums->enums.value(name);
+        }, ok);
+    }
+
+    template<typename String>
+    static int scopedEnumIndex(
+            const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlEnginePrivate *engine,
+            const String &name, bool *ok)
+    {
+        return doGetEnumValue(d, engine, [&](const QQmlTypePrivate::Enums *enums) {
+            return enums->scopedEnumIndex.value(name);
+        }, ok);
+    }
+
+    template<typename String>
+    static int scopedEnumValue(
+            const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlEnginePrivate *engine, int index,
+            const String &name, bool *ok)
+    {
+        return doGetEnumValue(d, engine, [&](const QQmlTypePrivate::Enums *enums) {
+            Q_ASSERT(index > -1 && index < enums->scopedEnums.size());
+            return enums->scopedEnums.at(index)->value(name);
+        }, ok);
+    }
+
+    template<typename String1, typename String2>
+    static int scopedEnumValue(
+            const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlEnginePrivate *engine,
+            const String1 &scopedEnumName, const String2 &name, bool *ok)
+    {
+        return doGetEnumValue(d, engine, [&](const QQmlTypePrivate::Enums *enums) -> const int * {
+            const int *rv = enums->scopedEnumIndex.value(scopedEnumName);
+            if (!rv)
+                return nullptr;
+
+            const int index = *rv;
+            Q_ASSERT(index > -1 && index < enums->scopedEnums.size());
+            return enums->scopedEnums.at(index)->value(name);
+        }, ok);
+    }
+
 private:
     mutable QAtomicPointer<const ProxyMetaObjects> proxyMetaObjects;
     mutable QAtomicPointer<const Enums> enums;
@@ -163,6 +207,29 @@ private:
         QString metaEnumScope;
         bool scoped;
     };
+
+    template<typename Op>
+    static int doGetEnumValue(
+            const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlEnginePrivate *engine,
+            Op &&op, bool *ok)
+    {
+        Q_ASSERT(ok);
+        if (d) {
+            if (const QQmlTypePrivate::Enums *enums = d->initEnums(engine)) {
+                if (const int *rv = op(enums)) {
+                    *ok = true;
+                    return *rv;
+                }
+            }
+        }
+
+        *ok = false;
+        return -1;
+    }
+
+    const Enums *initEnums(QQmlEnginePrivate *engine) const;
+    void insertEnums(Enums *enums, const QMetaObject *metaObject) const;
+    void insertEnumsFromPropertyCache(Enums *enums, const QQmlPropertyCache::ConstPtr &cache) const;
 
     void createListOfPossibleConflictingItems(const QMetaObject *metaObject, QList<EnumInfo> &enumInfoList, QStringList path) const;
     void createEnumConflictReport(const QMetaObject *metaObject, const QString &conflictingKey) const;

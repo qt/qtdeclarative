@@ -148,8 +148,7 @@ public:
     int scopedEnumIndex(QQmlEnginePrivate *engine, const QString &, bool *ok) const;
     int scopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::String *, bool *ok) const;
     int scopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &, bool *ok) const;
-    int scopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &, const QByteArray &, bool *ok) const;
-    int scopedEnumValue(QQmlEnginePrivate *engine, QStringView, QStringView, bool *ok) const;
+    int scopedEnumValue(QQmlEnginePrivate *engine, const QHashedStringRef &, const QHashedStringRef &, bool *ok) const;
 
     const QQmlTypePrivate *priv() const { return d.data(); }
     static void refHandle(const QQmlTypePrivate *priv);
