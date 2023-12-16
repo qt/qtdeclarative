@@ -143,7 +143,7 @@ void QQuickTextDocumentPrivate::load()
     if (QFile::exists(fileName)) {
         mimeType = QMimeDatabase().mimeTypeForFile(fileName);
         QFile file(fileName);
-        if (file.open(QFile::ReadOnly)) {
+        if (file.open(QFile::ReadOnly | QFile::Text)) {
             QByteArray data = file.readAll();
             if (auto *doc = editor->document()) {
                 doc->setBaseUrl(resolvedUrl.adjusted(QUrl::RemoveFilename));
