@@ -792,7 +792,7 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
             myResolveErrors().error(tr("Root context %1 is not known").arg(path.headName())).handle(errorHandler);
             return false;
         }
-        toDos[0] = {root, 1};
+        toDos[0] = {std::move(root), 1};
     } else {
         toDos[0] = {*this, 0};
     }
@@ -888,11 +888,11 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                 if (!branchExhausted)
                     visitTree(
                             Path(),
-                            [toFind, &toDos, iPath](Path, const DomItem &item, bool) {
+                            [&toFind, &toDos, iPath](Path, const DomItem &item, bool) {
                                 // avoid non directly attached?
                                 DomItem newItem = item[toFind];
                                 if (newItem)
-                                    toDos.append({ newItem, iPath });
+                                    toDos.append({ std::move(newItem), iPath });
                                 return true;
                             },
                             VisitOption::VisitSelf | VisitOption::Recurse
@@ -1913,7 +1913,7 @@ static bool visitQualifiedNameLookup(
             }
             if (scope.internalKind() == DomType::QmlObject)
                 scope.visitDirectAccessibleScopes(
-                        [&lookupToDos, subPathNow, iSubPath](const DomItem &el) {
+                        [&lookupToDos, &subPathNow, iSubPath](const DomItem &el) {
                             return el.visitLocalSymbolsNamed(
                                     subPathNow, [&lookupToDos, iSubPath](const DomItem &subEl) {
                                         lookupToDos.append({ subEl, iSubPath });
@@ -1924,7 +1924,7 @@ static bool visitQualifiedNameLookup(
                         visitedRefs);
         } else {
             bool cont = scope.visitDirectAccessibleScopes(
-                    [&visitor, subPathNow, lookupType](const DomItem &el) -> bool {
+                    [&visitor, &subPathNow, lookupType](const DomItem &el) -> bool {
                         if (lookupType == LookupType::Symbol)
                             return el.visitLocalSymbolsNamed(subPathNow, visitor);
                         else
@@ -2464,7 +2464,7 @@ bool DomItem::iterateDirectSubpaths(DirectVisitor v) const
             [this, v](auto &&el) { return el->iterateDirectSubpaths(*this, v); });
 }
 
-DomItem DomItem::subReferencesItem(const PathEls::PathComponent &c, QList<Path> paths) const
+DomItem DomItem::subReferencesItem(const PathEls::PathComponent &c, const QList<Path> &paths) const
 {
     return subListItem(
                 List::fromQList<Path>(pathFromOwner().appendComponent(c), paths,
@@ -3085,8 +3085,9 @@ QList<DomItem> Reference::getAll(
                     qCWarning(refLog)
                             << "getAll of reference at " << selfPath << " visits empty items.";
             }
-            RefCacheEntry::addForPath(env, selfPath,
-                                      RefCacheEntry { RefCacheEntry::Cached::All, canonicalPaths });
+            RefCacheEntry::addForPath(
+                    env, selfPath,
+                    RefCacheEntry { RefCacheEntry::Cached::All, std::move(canonicalPaths) });
         }
     }
     return res;

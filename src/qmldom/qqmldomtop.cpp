@@ -897,11 +897,14 @@ DomTop::Callback envCallbackForFile(
         DomTop::Callback loadCallback, DomTop::Callback allDirectDepsCallback,
         DomTop::Callback endCallback)
 {
-    std::shared_ptr<DomEnvironment> ePtr = self.ownerAs<DomEnvironment>();
-    std::weak_ptr<DomEnvironment> selfPtr = ePtr;
-    std::shared_ptr<DomEnvironment> basePtr = ePtr->base();
-    return [selfPtr, basePtr, map, lookupF, loadCallback, allDirectDepsCallback,
-            endCallback](Path, const DomItem &, const DomItem &newItem) {
+    const std::shared_ptr<DomEnvironment> ePtr = self.ownerAs<DomEnvironment>();
+    return [selfPtr = std::weak_ptr<DomEnvironment>(ePtr),
+            basePtr = ePtr->base(),
+            map, lookupF,
+            loadCallback = std::move(loadCallback),
+            allDirectDepsCallback = std::move(allDirectDepsCallback),
+            endCallback = std::move(endCallback)](
+                   Path, const DomItem &, const DomItem &newItem) {
         shared_ptr<DomEnvironment> envPtr = selfPtr.lock();
         if (!envPtr)
             return;
