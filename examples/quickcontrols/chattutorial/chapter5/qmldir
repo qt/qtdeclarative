@@ -1,0 +1,6 @@
+module chattutorial
+ChatToolBar 1.0 ChatToolBar.qml
+ContactPage 1.0 ContactPage.qml
+ConversationPage 1.0 ConversationPage.qml
+Main 1.0 Main.qml
+typeinfo chapter5.qmltypes

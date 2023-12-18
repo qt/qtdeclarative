@@ -21,15 +21,11 @@ When setting up a new project, it's easiest to use
 basic "Hello World" application with the following files:
 
 \list
-\li \c MainForm.ui.qml - Defines the default UI
-\li \c main.qml - Embeds the default UI in a Window
-\li \c qml.qrc - Lists the \c .qml files that are built into the binary
+\li \c CMakeLists.txt - Instructs CMake how our project should be built
+\li \c Main.qml - Provides a default UI containing an empty Window
 \li \c main.cpp - Loads \c main.qml
-\li \c chattutorial.pro - Provides the qmake configuration
+\li \c qtquickcontrols2.conf - Tells the application which style it should use
 \endlist
-
-\note Delete the \c MainForm.ui.qml and \c qml.qrc files from the project, as
-we will not use them in this tutorial.
 
 \section2 main.cpp
 
@@ -46,42 +42,35 @@ does. QCoreApplication is sufficient for non-graphical applications.
 QGuiApplication is sufficient for graphical applications that do not use
 \l {Qt Widgets}, while QApplication is required for those that do.
 
-The second include makes QQmlApplicationEngine available, along with
-some useful functions required for making C++ types accessible from QML.
+The second include makes QQmlApplicationEngine available, allowing us to
+load our QML.
 
 Within \c main(), we set up the application object and QML engine:
 
 \skipto main
 \printuntil }
 
-It begins with enabling \l {High DPI}{high DPI scaling}, which is not
-part of the default code. It is necessary to do so before the application
-object is constructed.
-
-After that's done, we construct the application object, passing any application
-arguments provided by the user.
-
-Next, the QML engine is created. \l QQmlApplicationEngine is a convenient
-wrapper over QQmlEngine, providing the \l {QQmlApplicationEngine::load}{load()}
-function to easily load QML for an application. It also adds some convenience
-for using \l {Using File Selectors with Qt Quick Controls}{file selectors}.
+\l QQmlApplicationEngine is a convenient wrapper over QQmlEngine, providing the
+\l {QQmlApplicationEngine::}{loadFromModule} function to easily load QML for an
+application. It also adds some convenience for using \l {Using File Selectors
+with Qt Quick Controls}{file selectors}.
 
 Once we've set up things in C++, we can move on to the user interface in QML.
 
-\section2 main.qml
+\section2 Main.qml
 
 Let's modify the default QML code to suit our needs.
 
-\quotefromfile chattutorial/chapter1/main.qml
+\quotefromfile chattutorial/chapter1/Main.qml
 \skipto import
 \printuntil import QtQuick.Controls
 
-First, import the \l {Qt Quick} module. This gives us
-access to graphical primitives such as \l Item, \l Rectangle, \l Text, and so
-on.
-For the full list of types, see the \l {Qt Quick QML Types} documentation.
+You'll notice that the \l {Qt Quick} module has already been imported. This
+gives us access to graphical primitives such as \l Item, \l Rectangle, \l Text,
+and so on. For the full list of types, see the \l {Qt Quick QML Types}
+documentation.
 
-Next, import the Qt Quick Controls module. Amongst other things, this
+Add an import of the Qt Quick Controls module. Amongst other things, this
 provides access to \l ApplicationWindow, which will replace the existing
 root type, \c Window:
 
@@ -89,6 +78,7 @@ root type, \c Window:
 \printuntil visible: true
 \dots
 \skipto }
+\skipuntil }
 \skipuntil }
 \printuntil }
 
@@ -121,14 +111,13 @@ which screen the user is viewing, it is much easier to use \l Page.
 For now, we'll just add one page, but in the next chapter, we'll demonstrate
 how to navigate between several pages.
 
-\quotefromfile chattutorial/chapter1/main.qml
+\quotefromfile chattutorial/chapter1/Main.qml
 \skipto Page
 \printuntil }
 \printuntil }
 
-We replace the default \c{MainForm {...}} code block with a Page, which is
-sized to occupy all the space on the window using the \l {Item::}{anchors.fill}
-property.
+First, we add a Page, which is sized to occupy all the space on the window
+using the \l {Item::}{anchors.fill} property.
 
 Then, we assign a \l Label to its \l {Page::}{header} property. Label extends
 the primitive \l Text item from the Qt Quick module by adding
@@ -155,43 +144,12 @@ bounds, both horizontally and vertically.
 
 \section2 The Project File
 
-The \c .pro or \l {Creating Project Files}{project} file contains all of the
-information needed by \l {qmake Manual}{qmake} to generate a Makefile, which is
-then used to compile and link the application.
+The \c CMakeLists.txt file contains all of the information needed by \l {Build
+with CMake}{CMake} to build our project into an executable that we can run.
 
-\quotefromfile chattutorial/chapter1/chapter1.pro
-\printline TEMPLATE
+For an in-depth explanation of this file, see \l {Building a QML application}.
 
-The first line tells \c qmake which kind of project this is. We're building an
-application, so we use the \c app template.
-
-\printline QT
-
-The next line declares the Qt libraries that we want to use from C++.
-
-\printline CONFIG
-
-This line states that a C++11 compatible compiler is required to build the
-project.
-
-\printline SOURCES
-
-The \c SOURCES variable lists all of the source files that should be compiled.
-A similar variable, \c HEADERS, is available for header files.
-
-\printuntil qtquickcontrols2
-
-The next line tells \c qmake that we have a collection of
-\l {The Qt Resource System}{resources} that should be built into the
-executable.
-
-\skipto target
-\printline
-
-This line replaces deployment settings that come with the default project file.
-It determines where the example is copied, on running "\c{make install}".
-
-Now we can build and run the application:
+Here is what our application currently looks like when run:
 
 \borderedimage qtquickcontrols-chattutorial-chapter1.png
 
@@ -208,7 +166,7 @@ can display text, be checked on and off, and react to mouse clicks.
 
 Here is our ListView:
 
-\quotefromfile chattutorial/chapter2/main.qml
+\quotefromfile chattutorial/chapter2/Main.qml
 \dots 8
 \codeline
 \skipto ListView
@@ -275,7 +233,7 @@ vertical space.
 In this chapter, you'll learn how to use \l StackView to navigate between pages
 in an application. Here's the revised \c main.qml:
 
-\quotefromfile chattutorial/chapter3/main.qml
+\quotefromfile chattutorial/chapter3/Main.qml
 \skipto import
 \printuntil }
 \printuntil }
@@ -637,8 +595,8 @@ changes to be done to \c ContactPage.qml. To be able to use the types,
 we must first import them using the URI we set in \c main.cpp:
 
 \quotefromfile chattutorial/chapter4/ContactPage.qml
-\skipto import io.qt.examples.chattutorial
-\printline import io.qt.examples.chattutorial
+\skipto import chattutorial
+\printline import chattutorial
 
 We then replace the dummy model with the proper one:
 
