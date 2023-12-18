@@ -1070,7 +1070,7 @@ private:
     bool m_extensionIsNamespace = false;
     QString m_valueTypeName;
     QString m_extensionTypeName;
-    QQmlJSScope::AccessSemantics m_accessSemantics;
+    QQmlJSScope::AccessSemantics m_accessSemantics = QQmlJSScope::AccessSemantics::None;
     QQmlJSScope::ConstPtr m_semanticScope;
 };
 
