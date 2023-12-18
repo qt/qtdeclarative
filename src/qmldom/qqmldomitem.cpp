@@ -481,16 +481,24 @@ DomItem DomItem::owner() const
 {
     if (domTypeIsOwningItem(m_kind) || m_kind == DomType::Empty)
         return *this;
-    return std::visit(
-            [this](auto &&el) { return DomItem(this->m_top, el, this->m_ownerPath, el.get()); },
-            *m_owner);
+    return std::visit([this](auto &&el) {
+        if constexpr (std::is_same_v<std::decay_t<decltype(el)>, std::monostate>)
+            return DomItem();
+        else
+            return DomItem(this->m_top, el, this->m_ownerPath, el.get());
+    }, m_owner);
 }
 
 DomItem DomItem::top() const
 {
     if (domTypeIsTopItem(m_kind) || m_kind == DomType::Empty)
         return *this;
-    return std::visit([](auto &&el) { return DomItem(el, el, Path(), el.get()); }, *m_top);
+    return std::visit([](auto &&el) {
+        if constexpr (std::is_same_v<std::decay_t<decltype(el)>, std::monostate>)
+            return DomItem();
+        else
+            return DomItem(el, el, Path(), el.get());
+    }, m_top);
 }
 
 DomItem DomItem::environment() const
@@ -2098,12 +2106,14 @@ MutableDomItem DomItem::makeCopy(DomItem::CopyOption option) const
         return MutableDomItem();
     DomItem o = owner();
     if (option == CopyOption::EnvDisconnected) {
-        DomItem newItem = std::visit(
-                [this, &o](auto &&el) {
-                    auto copyPtr = el->makeCopy(o);
-                    return DomItem(m_top, copyPtr, m_ownerPath, copyPtr.get());
-                },
-                *m_owner);
+        DomItem newItem = std::visit([this, &o](auto &&el) {
+            if constexpr (std::is_same_v<std::decay_t<decltype(el)>, std::monostate>) {
+                return DomItem();
+            } else {
+                auto copyPtr = el->makeCopy(o);
+                return DomItem(m_top, copyPtr, m_ownerPath, copyPtr.get());
+            }
+        }, m_owner);
         return MutableDomItem(newItem.path(pathFromOwner()));
     }
     DomItem env = environment();
@@ -2126,10 +2136,14 @@ MutableDomItem DomItem::makeCopy(DomItem::CopyOption option) const
     }
     DomItem newItem = std::visit(
             [this, newEnvPtr, &o](auto &&el) {
-                auto copyPtr = el->makeCopy(o);
-                return DomItem(newEnvPtr, copyPtr, m_ownerPath, copyPtr.get());
+                if constexpr (std::is_same_v<std::decay_t<decltype(el)>, std::monostate>) {
+                    return DomItem();
+                } else {
+                    auto copyPtr = el->makeCopy(o);
+                    return DomItem(newEnvPtr, copyPtr, m_ownerPath, copyPtr.get());
+                }
             },
-            *m_owner);
+            m_owner);
 
     switch (o.internalKind()) {
     case DomType::QmlDirectory:
@@ -2333,54 +2347,62 @@ QString DomItem::toString() const
 
 int DomItem::derivedFrom() const
 {
-    if (m_owner)
-        return std::visit([](auto &&ow) { return ow->derivedFrom(); }, *m_owner);
-    return 0;
+    return std::visit([](auto &&ow) {
+        if constexpr (std::is_same_v<std::decay_t<decltype(ow)>, std::monostate>)
+            return 0;
+        else
+            return ow->derivedFrom();
+    }, m_owner);
 }
 
 int DomItem::revision() const
 {
-    if (m_owner)
-        return std::visit([](auto &&ow) { return ow->revision(); }, *m_owner);
-    else
-        return -1;
+    return std::visit([](auto &&ow) {
+        if constexpr (std::is_same_v<std::decay_t<decltype(ow)>, std::monostate>)
+            return -1;
+        else
+            return ow->revision();
+    }, m_owner);
 }
 
 QDateTime DomItem::createdAt() const
 {
-    if (m_owner)
-        return std::visit([](auto &&ow) { return ow->createdAt(); }, *m_owner);
-    else
-        return QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
+    return std::visit([](auto &&ow) {
+        if constexpr (std::is_same_v<std::decay_t<decltype(ow)>, std::monostate>)
+            return QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
+        else
+            return ow->createdAt();
+    }, m_owner);
 }
 
 QDateTime DomItem::frozenAt() const
 {
-    if (m_owner)
-        return std::visit([](auto &&ow) { return ow->frozenAt(); }, *m_owner);
-    else
-        return QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
+    return std::visit([](auto &&ow) {
+        if constexpr (std::is_same_v<std::decay_t<decltype(ow)>, std::monostate>)
+            return QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
+        else
+            return ow->frozenAt();
+    }, m_owner);
 }
 
 QDateTime DomItem::lastDataUpdateAt() const
 {
-    if (m_owner)
-        return std::visit([](auto &&ow) { return ow->lastDataUpdateAt(); }, *m_owner);
-    else
-        return QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
+    return std::visit([](auto &&ow) {
+        if constexpr (std::is_same_v<std::decay_t<decltype(ow)>, std::monostate>)
+            return QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
+        else
+            return ow->lastDataUpdateAt();
+    }, m_owner);
 }
 
 void DomItem::addError(ErrorMessage &&msg) const
 {
-    if (m_owner) {
-        DomItem myOwner = owner();
-        std::visit(
-                [this, &myOwner, &msg](auto &&ow) {
-                    ow->addError(myOwner, std::move(msg.withItem(*this)));
-                },
-                *m_owner);
-    } else
-        defaultErrorHandler(msg.withItem(*this));
+    std::visit([this, &msg](auto &&ow) {
+        if constexpr (std::is_same_v<std::decay_t<decltype(ow)>, std::monostate>)
+            defaultErrorHandler(msg.withItem(*this));
+        else
+            ow->addError(owner(), std::move(msg.withItem(*this)));
+    }, m_owner);
 }
 
 ErrorHandler DomItem::errorHandler() const
@@ -2391,13 +2413,16 @@ ErrorHandler DomItem::errorHandler() const
 
 void DomItem::clearErrors(const ErrorGroups &groups, bool iterate) const
 {
-    if (m_owner) {
-        std::visit([&groups](auto &&ow) { ow->clearErrors(groups); }, *m_owner);
-        if (iterate)
-            iterateSubOwners([groups](const DomItem &i){
-                i.clearErrors(groups, true);
-                return true;
-            });
+    std::visit([&groups](auto &&ow) {
+        if constexpr (!std::is_same_v<std::decay_t<decltype(ow)>, std::monostate>)
+            ow->clearErrors(groups);
+    }, m_owner);
+
+    if (iterate) {
+        iterateSubOwners([groups](const DomItem &i){
+            i.clearErrors(groups, true);
+            return true;
+        });
     }
 }
 
@@ -2405,28 +2430,32 @@ bool DomItem::iterateErrors(
         function_ref<bool(const DomItem &, const ErrorMessage &)> visitor, bool iterate,
         Path inPath) const
 {
-    if (m_owner) {
-        DomItem ow = owner();
-        if (!std::visit([&ow, visitor,
-                         inPath](auto &&el) { return el->iterateErrors(ow, visitor, inPath); },
-                        *m_owner))
-            return false;
-        if (iterate && !iterateSubOwners([inPath, visitor](const DomItem &i) {
-                return i.iterateErrors(visitor, true, inPath);
-            }))
-            return false;
+    if (!std::visit([this, visitor, inPath](auto &&el) {
+        if constexpr (std::is_same_v<std::decay_t<decltype(el)>, std::monostate>)
+            return true;
+        else
+            return el->iterateErrors(owner(), visitor, inPath);
+    }, m_owner)) {
+        return false;
     }
+
+    if (iterate && !iterateSubOwners([inPath, visitor](const DomItem &i) {
+        return i.iterateErrors(visitor, true, inPath);
+    })) {
+        return false;
+    }
+
     return true;
 }
 
 bool DomItem::iterateSubOwners(function_ref<bool(const DomItem &)> visitor) const
 {
-    if (m_owner) {
-        DomItem ow = owner();
-        return std::visit([&ow, visitor](auto &&o) { return o->iterateSubOwners(ow, visitor); },
-                          *m_owner);
-    }
-    return true;
+    return std::visit([this, visitor](auto &&o) {
+        if constexpr (std::is_same_v<std::decay_t<decltype(o)>, std::monostate>)
+            return true;
+        else
+            return o->iterateSubOwners(owner(), visitor);
+    }, m_owner);
 }
 
 bool DomItem::iterateDirectSubpaths(DirectVisitor v) const
@@ -2456,16 +2485,22 @@ DomItem DomItem::subReferenceItem(const PathEls::PathComponent &c, const Path &r
 
 shared_ptr<DomTop> DomItem::topPtr() const
 {
-    if (m_top)
-        return std::visit([](auto &&el) -> shared_ptr<DomTop> { return el; }, *m_top);
-    return {};
+    return std::visit([](auto &&el) -> shared_ptr<DomTop> {
+        if constexpr (std::is_same_v<std::decay_t<decltype(el)>, std::monostate>)
+            return {};
+        else
+            return el;
+    }, m_top);
 }
 
 shared_ptr<OwningItem> DomItem::owningItemPtr() const
 {
-    if (m_owner)
-        return std::visit([](auto &&el) -> shared_ptr<OwningItem> { return el; }, *m_owner);
-    return {};
+    return std::visit([](auto &&el) -> shared_ptr<OwningItem> {
+        if constexpr (std::is_same_v<std::decay_t<decltype(el)>, std::monostate>)
+            return {};
+        else
+            return el;
+    }, m_owner);
 }
 
 /*!

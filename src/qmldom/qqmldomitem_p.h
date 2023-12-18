@@ -827,17 +827,29 @@ using ElementT =
                 const ScriptExpression *
         >;
 
-using TopT = std::variant<std::shared_ptr<DomEnvironment>, std::shared_ptr<DomUniverse>>;
+using TopT = std::variant<
+        std::monostate,
+        std::shared_ptr<DomEnvironment>,
+        std::shared_ptr<DomUniverse>>;
 
-using OwnerT =
-        std::variant<std::shared_ptr<ModuleIndex>, std::shared_ptr<MockOwner>,
-                     std::shared_ptr<ExternalItemInfoBase>, std::shared_ptr<ExternalItemPairBase>,
-                     std::shared_ptr<QmlDirectory>, std::shared_ptr<QmldirFile>,
-                     std::shared_ptr<JsFile>, std::shared_ptr<QmlFile>,
-                     std::shared_ptr<QmltypesFile>, std::shared_ptr<GlobalScope>,
-                     std::shared_ptr<ScriptExpression>, std::shared_ptr<AstComments>,
-                     std::shared_ptr<LoadInfo>, std::shared_ptr<AttachedInfo>,
-                     std::shared_ptr<DomEnvironment>, std::shared_ptr<DomUniverse>>;
+using OwnerT = std::variant<
+        std::monostate,
+        std::shared_ptr<ModuleIndex>,
+        std::shared_ptr<MockOwner>,
+        std::shared_ptr<ExternalItemInfoBase>,
+        std::shared_ptr<ExternalItemPairBase>,
+        std::shared_ptr<QmlDirectory>,
+        std::shared_ptr<QmldirFile>,
+        std::shared_ptr<JsFile>,
+        std::shared_ptr<QmlFile>,
+        std::shared_ptr<QmltypesFile>,
+        std::shared_ptr<GlobalScope>,
+        std::shared_ptr<ScriptExpression>,
+        std::shared_ptr<AstComments>,
+        std::shared_ptr<LoadInfo>,
+        std::shared_ptr<AttachedInfo>,
+        std::shared_ptr<DomEnvironment>,
+        std::shared_ptr<DomUniverse>>;
 
 inline bool emptyChildrenVisitor(Path, const DomItem &, bool)
 {
@@ -1250,7 +1262,7 @@ public:
     template<typename Owner, typename T>
     DomItem copy(const Owner &owner, const Path &ownerPath, const T &base) const
     {
-        Q_ASSERT(m_top);
+        Q_ASSERT(!std::holds_alternative<std::monostate>(m_top));
         static_assert(IsInlineDom<std::decay_t<T>>::value, "Expected an inline item or pointer");
         return DomItem(m_top, owner, ownerPath, base);
     }
@@ -1258,23 +1270,26 @@ public:
     template<typename Owner>
     DomItem copy(const Owner &owner, const Path &ownerPath) const
     {
-        Q_ASSERT(m_top);
+        Q_ASSERT(!std::holds_alternative<std::monostate>(m_top));
         return DomItem(m_top, owner, ownerPath, owner.get());
     }
 
     template<typename T>
     DomItem copy(const T &base) const
     {
-        Q_ASSERT(m_top);
+        Q_ASSERT(!std::holds_alternative<std::monostate>(m_top));
         using BaseT = std::decay_t<T>;
         static_assert(!std::is_same_v<BaseT, ElementT>,
                       "variant not supported, pass in the stored types");
-        static_assert(IsInlineDom<BaseT>::value, "expected either a pointer or an inline item");
-        if constexpr (IsSharedPointerToDomObject<BaseT>::value) {
+        static_assert(IsInlineDom<BaseT>::value || std::is_same_v<BaseT, std::monostate>,
+                      "expected either a pointer or an inline item");
+
+        if constexpr (IsSharedPointerToDomObject<BaseT>::value)
             return DomItem(m_top, base, Path(), base.get());
-        } else {
+        else if constexpr (IsInlineDom<BaseT>::value)
             return DomItem(m_top, m_owner, m_ownerPath, base);
-        }
+
+        Q_UNREACHABLE_RETURN(DomItem(m_top, m_owner, m_ownerPath, nullptr));
     }
 
 private:
@@ -1297,8 +1312,8 @@ private:
             if (!el || el->kind() == DomType::Empty) { // avoid null ptr, and allow only a
                 // single kind of Empty
                 m_kind = DomType::Empty;
-                m_top.reset();
-                m_owner.reset();
+                m_top = std::monostate();
+                m_owner = std::monostate();
                 m_ownerPath = Path();
                 m_element = Empty();
             } else {
@@ -1328,8 +1343,8 @@ private:
     friend class TestDomItem;
     friend QMLDOM_EXPORT bool operator==(const DomItem &, const DomItem &);
     DomType m_kind = DomType::Empty;
-    std::optional<TopT> m_top;
-    std::optional<OwnerT> m_owner;
+    TopT m_top;
+    OwnerT m_owner;
     Path m_ownerPath;
     ElementT m_element = Empty();
 };
@@ -1558,22 +1573,22 @@ template<typename T>
 std::shared_ptr<T> DomItem::ownerAs() const
 {
     if constexpr (domTypeIsOwningItem(T::kindValue)) {
-        if (m_owner) {
+        if (!std::holds_alternative<std::monostate>(m_owner)) {
             if constexpr (T::kindValue == DomType::AttachedInfo) {
-                if (std::holds_alternative<std::shared_ptr<AttachedInfo>>(*m_owner))
+                if (std::holds_alternative<std::shared_ptr<AttachedInfo>>(m_owner))
                     return std::static_pointer_cast<T>(
-                            std::get<std::shared_ptr<AttachedInfo>>(*m_owner));
+                            std::get<std::shared_ptr<AttachedInfo>>(m_owner));
             } else if constexpr (T::kindValue == DomType::ExternalItemInfo) {
-                if (std::holds_alternative<std::shared_ptr<ExternalItemInfoBase>>(*m_owner))
+                if (std::holds_alternative<std::shared_ptr<ExternalItemInfoBase>>(m_owner))
                     return std::static_pointer_cast<T>(
-                            std::get<std::shared_ptr<ExternalItemInfoBase>>(*m_owner));
+                            std::get<std::shared_ptr<ExternalItemInfoBase>>(m_owner));
             } else if constexpr (T::kindValue == DomType::ExternalItemPair) {
-                if (std::holds_alternative<std::shared_ptr<ExternalItemPairBase>>(*m_owner))
+                if (std::holds_alternative<std::shared_ptr<ExternalItemPairBase>>(m_owner))
                     return std::static_pointer_cast<T>(
-                            std::get<std::shared_ptr<ExternalItemPairBase>>(*m_owner));
+                            std::get<std::shared_ptr<ExternalItemPairBase>>(m_owner));
             } else {
-                if (std::holds_alternative<std::shared_ptr<T>>(*m_owner)) {
-                    return std::get<std::shared_ptr<T>>(*m_owner);
+                if (std::holds_alternative<std::shared_ptr<T>>(m_owner)) {
+                    return std::get<std::shared_ptr<T>>(m_owner);
                 }
             }
         }
