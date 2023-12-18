@@ -1294,6 +1294,7 @@ bool Codegen::visit(ArrayMemberExpression *ast)
                                              ast->isOptional,
                                              &m_optionalChainsStates.top().jumpsToPatch);
             setExprResult(ref);
+            optionalChainFinalizer(ref, isTailOfChain);
             return false;
         }
 
