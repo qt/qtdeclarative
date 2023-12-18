@@ -311,6 +311,8 @@ private slots:
     void symbolToVariant();
 
     void garbageCollectedObjectMethodBase();
+
+    void optionalChainWithElementLookup();
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -6290,6 +6292,41 @@ void tst_QJSEngine::garbageCollectedObjectMethodBase()
         auto future = std::async(processUrl, url, host);
         QCOMPARE(future.get(), QLatin1String("Error: Insufficient arguments"));
     }
+}
+
+void tst_QJSEngine::optionalChainWithElementLookup()
+{
+    QJSEngine engine;
+
+    const QString program = R"js(
+        (function(xxx) { return xxx?.title["en"] ?? "A" })
+    )js";
+
+    QJSManagedValue func = QJSManagedValue(engine.evaluate(program), &engine);
+    QVERIFY(func.isFunction());
+
+    QCOMPARE(func.call({QJSValue::NullValue}).toString(), "A");
+    QCOMPARE(func.call({QJSValue::UndefinedValue}).toString(), "A");
+
+    const QJSValue nice
+            = engine.toScriptValue(QVariantMap { {"title", QVariantMap { {"en", "B"} } } });
+    QCOMPARE(func.call({nice}).toString(), "B");
+
+    const QJSValue naughty1
+            = engine.toScriptValue(QVariantMap { {"title", QVariantMap { {"fr", "B"} } } });
+    QCOMPARE(func.call({naughty1}).toString(), "A");
+
+    const QJSValue naughty2
+            = engine.toScriptValue(QVariantMap { {"foos", QVariantMap { {"en", "B"} } } });
+    QVERIFY(func.call({naughty2}).isUndefined());
+    QVERIFY(engine.hasError());
+    QCOMPARE(engine.catchError().toString(), "TypeError: Cannot read property 'en' of undefined");
+    QVERIFY(!engine.hasError());
+
+    QVERIFY(func.call({ QJSValue(4) }).isUndefined());
+    QVERIFY(engine.hasError());
+    QCOMPARE(engine.catchError().toString(), "TypeError: Cannot read property 'en' of undefined");
+    QVERIFY(!engine.hasError());
 }
 
 QTEST_MAIN(tst_QJSEngine)
