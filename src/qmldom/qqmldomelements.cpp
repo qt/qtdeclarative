@@ -412,6 +412,11 @@ bool QmlObject::iterateBaseDirectSubpaths(const DomItem &self, DirectVisitor vis
                 [&self](const DomItem &) { return self.propertyInfoNames(); },
                 QLatin1String("PropertyInfo")));
     });
+    if (m_nameIdentifiers) {
+        cont = cont && self.dvItemField(visitor, Fields::nameIdentifiers, [this, &self]() {
+            return self.subScriptElementWrapperItem(m_nameIdentifiers);
+        });
+    }
     return cont;
 }
 
@@ -504,6 +509,11 @@ DomItem QmlObject::field(const DomItem &self, QStringView name) const
                     },
                     [copiedSelf = self](const DomItem &) { return copiedSelf.propertyInfoNames(); },
                     QLatin1String("PropertyInfo")));
+        break;
+    case 15:
+        if (name == Fields::nameIdentifiers && m_nameIdentifiers) {
+            return self.subScriptElementWrapperItem(m_nameIdentifiers);
+        }
         break;
     case 19:
         if (name == Fields::defaultPropertyName)

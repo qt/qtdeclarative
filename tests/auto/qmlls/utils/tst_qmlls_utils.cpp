@@ -189,7 +189,8 @@ void tst_qmlls_utils::findItemFromLocation_data()
                                     << QQmlJS::Dom::DomType::PropertyDefinition << -1 << 26;
 
     QTest::addRow("onCChild") << file1Qml << 16 << positionAfterOneIndent << firstResult << outOfOne
-                              << QQmlJS::Dom::DomType::QmlObject << -1 << positionAfterOneIndent;
+                              << QQmlJS::Dom::DomType::ScriptIdentifierExpression << -1
+                              << positionAfterOneIndent;
 
     // check for off-by-one/overlapping items
     QTest::addRow("closingBraceOfC")
@@ -201,11 +202,12 @@ void tst_qmlls_utils::findItemFromLocation_data()
     QTest::addRow("firstBetweenCandD")
             << file1Qml << 16 << 20 << secondResult << outOfTwo << QQmlJS::Dom::DomType::QmlObject
             << -1 << positionAfterOneIndent;
-    QTest::addRow("secondBetweenCandD") << file1Qml << 16 << 20 << firstResult << outOfTwo
-                                        << QQmlJS::Dom::DomType::QmlObject << -1 << -1;
+    QTest::addRow("secondBetweenCandD")
+            << file1Qml << 16 << 20 << firstResult << outOfTwo
+            << QQmlJS::Dom::DomType::ScriptIdentifierExpression << -1 << -1;
 
     QTest::addRow("afterD") << file1Qml << 16 << 21 << firstResult << outOfOne
-                            << QQmlJS::Dom::DomType::QmlObject << -1 << 20;
+                            << QQmlJS::Dom::DomType::ScriptIdentifierExpression << -1 << 20;
 
     // check what happens between items (it should not crash)
 
@@ -226,7 +228,7 @@ void tst_qmlls_utils::findItemFromLocation_data()
     QTest::addRow("ic") << file1Qml << 15 << 15 << firstResult << outOfOne
                         << QQmlJS::Dom::DomType::QmlComponent << -1 << 5;
     QTest::addRow("ic2") << file1Qml << 15 << 20 << firstResult << outOfOne
-                         << QQmlJS::Dom::DomType::QmlObject << -1 << 18;
+                         << QQmlJS::Dom::DomType::ScriptIdentifierExpression << -1 << 18;
     QTest::addRow("ic3") << file1Qml << 15 << 33 << firstResult << outOfOne
                          << QQmlJS::Dom::DomType::ScriptIdentifierExpression << -1 << 29;
 
@@ -245,8 +247,9 @@ void tst_qmlls_utils::findItemFromLocation_data()
                                << positionAfterOneIndent;
 
     // check rectangle property
-    QTest::addRow("rectangle-property") << file1Qml << 44 << 31 << firstResult << outOfOne
-                                        << QQmlJS::Dom::DomType::Binding << -1 << 24;
+    QTest::addRow("rectangle-property")
+            << file1Qml << 44 << 31 << firstResult << outOfOne
+            << QQmlJS::Dom::DomType::ScriptIdentifierExpression << -1 << 29;
 }
 
 void tst_qmlls_utils::findItemFromLocation()
@@ -1846,9 +1849,9 @@ void tst_qmlls_utils::completions_data()
     QTest::newRow("asCompletions")
             << file << 26 << 9
             << ExpectedCompletions({
-                       { u"Rectangle"_s, CompletionItemKind::Field },
+                       { u"Rectangle"_s, CompletionItemKind::Class },
                })
-            << QStringList({ u"foo"_s, u"import"_s, u"lala()"_s, u"width"_s });
+            << QStringList({ u"foo"_s, u"import"_s, u"lala"_s, u"width"_s });
 
     QTest::newRow("parameterCompletion")
             << file << 36 << 24
@@ -1906,7 +1909,7 @@ void tst_qmlls_utils::completions_data()
                };
 
     QTest::newRow("propertyDefinitionBinding")
-            << file << 90 << 28
+            << file << 90 << 27
             << (ExpectedCompletions({
                         { u"lala"_s, CompletionItemKind::Method },
                         { u"createRectangle"_s, CompletionItemKind::Method },
@@ -1921,7 +1924,7 @@ void tst_qmlls_utils::completions_data()
                };
 
     QTest::newRow("ignoreNonRelatedTypesForPropertyDefinitionBinding")
-            << file << 16 << 29
+            << file << 16 << 28
             << (ExpectedCompletions({
                         { u"createRectangle"_s, CompletionItemKind::Method },
                         { u"createItem"_s, CompletionItemKind::Method },
@@ -3276,12 +3279,6 @@ void tst_qmlls_utils::completions()
     const QString labelsForPrinting = sortedLabels.join(u", "_s);
 
     for (const ExpectedCompletion &exp : expected) {
-        QEXPECT_FAIL(
-                "asCompletions",
-                "Cannot complete after 'QQ.': either there is already a type behind and then "
-                "there is nothing to complete, or there is nothing behind 'QQ.' and the parser "
-                "fails because of the unexpected '.'",
-                Abort);
         QEXPECT_FAIL("letStatementAfterEqual", "Completion not implemented yet!", Abort);
         QEXPECT_FAIL("binaryExpressionMissingRHSWithDefaultProperty",
                      "Current parser cannot recover from this error yet!", Abort);
