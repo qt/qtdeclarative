@@ -1849,7 +1849,7 @@ void tst_qmlls_utils::completions_data()
     QTest::newRow("asCompletions")
             << file << 26 << 9
             << ExpectedCompletions({
-                       { u"Rectangle"_s, CompletionItemKind::Class },
+                       { u"Rectangle"_s, CompletionItemKind::Constructor },
                })
             << QStringList({ u"foo"_s, u"import"_s, u"lala"_s, u"width"_s });
 
@@ -3189,6 +3189,48 @@ void tst_qmlls_utils::completions_data()
                })
             << QStringList{ u"QtQuick"_s, u"vector4d"_s, attachedTypeName, u"Rectangle"_s,
                             u"bad"_s, u"onCompleted"_s };
+
+    QTest::newRow("dotFollowedByDefaultBinding")
+            << testFile("completions/afterDots.qml") << 11 << 31
+            << ExpectedCompletions({
+                       { u"good"_s, CompletionItemKind::Property },
+               })
+            << QStringList{ u"bad"_s,         u"QtQuick"_s,   u"vector4d"_s,
+                            attachedTypeName, u"Rectangle"_s, u"onCompleted"_s };
+
+    QTest::newRow("qualifiedTypeCompletionWithoutQualifier")
+            << testFile("completions/qualifiedTypesCompletion.qml") << 9 << 5
+            << ExpectedCompletions({
+                       { u"T.Button"_s, CompletionItemKind::Constructor },
+                       { u"Button"_s, CompletionItemKind::Constructor },
+                       { u"Rectangle"_s, CompletionItemKind::Constructor },
+               })
+            << QStringList{ u"QtQuick"_s, u"vector4d"_s, u"bad"_s, u"onCompleted"_s };
+
+    QTest::newRow("qualifiedTypeCompletionWithoutQualifier2")
+            << testFile("completions/qualifiedTypesCompletion.qml") << 10 << 19
+            << ExpectedCompletions({
+                       { u"T.Button"_s, CompletionItemKind::Class },
+                       { u"Button"_s, CompletionItemKind::Class },
+                       { u"Rectangle"_s, CompletionItemKind::Class },
+               })
+            << QStringList{ u"QtQuick"_s, u"bad"_s, u"onCompleted"_s };
+
+    QTest::newRow("qualifiedTypeCompletionWithQualifier")
+            << testFile("completions/qualifiedTypesCompletion.qml") << 9 << 7
+            << ExpectedCompletions({
+                       { u"Button"_s, CompletionItemKind::Constructor },
+               })
+            << QStringList{ u"QtQuick"_s, u"vector4d"_s, attachedTypeName, u"Rectangle"_s,
+                            u"bad"_s, u"onCompleted"_s, u"T.Button"_s };
+
+    QTest::newRow("qualifiedTypeCompletionWithQualifier2")
+            << testFile("completions/qualifiedTypesCompletion.qml") << 10 << 21
+            << ExpectedCompletions({
+                       { u"Button"_s, CompletionItemKind::Class },
+               })
+            << QStringList{ u"QtQuick"_s, attachedTypeName, u"Rectangle"_s,
+                            u"bad"_s, u"onCompleted"_s, u"T.Button"_s };
 }
 
 void tst_qmlls_utils::completions()
@@ -3277,8 +3319,6 @@ void tst_qmlls_utils::completions()
 
     for (const ExpectedCompletion &exp : expected) {
         QEXPECT_FAIL("letStatementAfterEqual", "Completion not implemented yet!", Abort);
-        QEXPECT_FAIL("binaryExpressionMissingRHSWithDefaultProperty",
-                     "Current parser cannot recover from this error yet!", Abort);
 
         QVERIFY2(labels.contains(exp.label),
                  u"no %1 in %2"_s

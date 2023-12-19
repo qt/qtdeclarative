@@ -47,6 +47,68 @@ static QList<CompletionItem> methodCompletion(const QQmlJSScope::ConstPtr &scope
                                               QDuplicateTracker<QString> *usedNames);
 static QList<CompletionItem> propertyCompletion(const QQmlJSScope::ConstPtr &scope,
                                                 QDuplicateTracker<QString> *usedNames);
+
+/*!
+\internal
+\brief Compare left and right locations to the position denoted by ctx, see special cases below.
+
+Statements and expressions need to provide different completions depending on where the cursor is.
+For example, lets take following for-statement:
+\badcode
+for (let i = 0; <here> ; ++i) {}
+\endcode
+We want to provide script expression completion (method names, property names, available JS
+variables names, QML objects ids, and so on) at the place denoted by \c{<here>}.
+The question is: how do we know that the cursor is really at \c{<here>}? In the case of the
+for-loop, we can compare the position of the cursor with the first and the second semicolon of the
+for loop.
+
+If the first semicolon does not exist, it has an invalid sourcelocation and the cursor is
+definitively \e{not} at \c{<here>}. Therefore, return false when \c{left} is invalid.
+
+If the second semicolon does not exist, then just ignore it: it might not have been written yet.
+*/
+static bool betweenLocations(QQmlJS::SourceLocation left,
+                             const QQmlLSCompletionPosition &positionInfo,
+                             QQmlJS::SourceLocation right)
+{
+    if (!left.isValid())
+        return false;
+    // note: left.end() == ctx.offset() means that the cursor lies exactly after left
+    if (!(left.end() <= positionInfo.offset()))
+        return false;
+    if (!right.isValid())
+        return true;
+
+    // note: ctx.offset() == right.begin() means that the cursor lies exactly before right
+    return positionInfo.offset() <= right.begin();
+}
+
+/*!
+\internal
+Returns true if ctx denotes an offset lying behind left.end(), and false otherwise.
+*/
+static bool afterLocation(QQmlJS::SourceLocation left, const QQmlLSCompletionPosition &positionInfo)
+{
+    return betweenLocations(left, positionInfo, QQmlJS::SourceLocation{});
+}
+
+/*!
+\internal
+Returns true if ctx denotes an offset lying before right.begin(), and false otherwise.
+*/
+static bool beforeLocation(const QQmlLSCompletionPosition &ctx, QQmlJS::SourceLocation right)
+{
+    if (!right.isValid())
+        return true;
+
+    // note: ctx.offset() == right.begin() means that the cursor lies exactly before right
+    if (ctx.offset() <= right.begin())
+        return true;
+
+    return false;
+}
+
 /*!
    \internal
     Helper to check if item is a Field Member Expression \c {<someExpression>.propertyName}.
@@ -1877,17 +1939,11 @@ static QList<CompletionItem> signalHandlerCompletion(const QQmlJSScope::ConstPtr
 static QList<CompletionItem> suggestBindingCompletion(const DomItem &itemAtPosition)
 {
     QList<CompletionItem> res;
-
-    const bool isQualified = isFieldMemberAccess(itemAtPosition);
-
-    // TODO: fix type completion for qualified types, see QTBUG-120111
-    if (!isQualified) {
-        res << QQmlLSUtils::reachableTypes(itemAtPosition, LocalSymbolsType::AttachedType,
-                                           CompletionItemKind::Class);
-    }
+    res << QQmlLSUtils::reachableTypes(itemAtPosition, LocalSymbolsType::AttachedType,
+                                       CompletionItemKind::Class);
 
     const QQmlJSScope::ConstPtr scope = [&]() {
-        if (!isQualified)
+        if (!isFieldMemberAccess(itemAtPosition))
             return itemAtPosition.qmlObject().semanticScope();
 
         const DomItem owner = itemAtPosition.directParent().field(Fields::left);
@@ -2038,13 +2094,29 @@ QList<CompletionItem> QQmlLSUtils::reachableTypes(const DomItem &el, LocalSymbol
     if (!resolver)
         return {};
 
+    const QString requiredQualifiers = [&el]() -> QString {
+        const bool isAccess = isFieldMemberAccess(el);
+        if (!isAccess && !isFieldMemberExpression(el))
+            return {};
+
+        const DomItem fieldMemberExpressionBeginning =
+                el.filterUp([](DomType, const DomItem &item) { return !isFieldMemberAccess(item); },
+                            FilterUpOptions::ReturnOuter);
+        QStringList qualifiers = fieldMemberExpressionBits(fieldMemberExpressionBeginning, el);
+
+        QString result;
+        for (const QString &qualifier : qualifiers)
+            result.append(qualifier).append(u'.');
+        return result;
+    }();
+
     QList<CompletionItem> res;
     const auto keyValueRange = resolver->importedTypes().asKeyValueRange();
     for (const auto &type : keyValueRange) {
         // ignore special QQmlJSImporterMarkers
         const bool isMarkerType = type.first.contains(u"$internal$.")
                 || type.first.contains(u"$anonymous$.") || type.first.contains(u"$module$.");
-        if (isMarkerType)
+        if (isMarkerType || !type.first.startsWith(requiredQualifiers))
             continue;
 
         auto &scope = type.second.scope;
@@ -2055,7 +2127,7 @@ QList<CompletionItem> QQmlLSUtils::reachableTypes(const DomItem &el, LocalSymbol
             continue;
 
         CompletionItem completion;
-        completion.label = type.first.toUtf8();
+        completion.label = QStringView(type.first).sliced(requiredQualifiers.size()).toUtf8();
         completion.kind = int(kind);
         res << completion;
     }
@@ -2402,11 +2474,56 @@ static CompletionItem makeSnippet(QUtf8StringView label, QUtf8StringView insertT
     return res;
 }
 
-static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &currentItem,
+static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &parentForContext,
                                                        const QQmlLSCompletionPosition &positionInfo)
 {
-    QList<CompletionItem> res;
-    if (positionInfo.cursorPosition.base().isEmpty()) {
+
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
+
+    const QQmlJS::SourceLocation leftBrace = regions[LeftBraceRegion];
+    const QQmlJS::SourceLocation rightBrace = regions[RightBraceRegion];
+
+    if (beforeLocation(positionInfo, leftBrace)) {
+        QList<CompletionItem> res;
+        LocalSymbolsTypes options;
+        options.setFlag(LocalSymbolsType::ObjectType);
+        res << QQmlLSUtils::reachableTypes(positionInfo.itemAtPosition, options,
+                                           CompletionItemKind::Constructor);
+
+        if (isFieldMemberExpression(positionInfo.itemAtPosition)) {
+            /*!
+                \internal
+                In the case that a missing identifier is followed by an assignment to the default
+                property, the parser will create a QmlObject out of both binding and default binding.
+                For example, in
+                \code
+                property int x: root.
+                Item {}
+                \endcode
+                the parser will create one binding containing one QmlObject of type `root.Item`,
+                instead of two bindings (one for `x` and one for the default property).
+                For this special case, if completion is requested inside `root.Item`, then try to
+                also suggest JS expressions.
+
+                Note: suggestJSExpressionCompletion() will suggest nothing if the fieldMemberExpression
+                starts with the name of a qualified module or a filename, so this only adds invalid
+                suggestions in the case that there is something shadowing the qualified module name or
+                filename, like a property name for example.
+
+                Note 2: This does not happen for field member accesses. For example, in
+                \code
+                property int x: root.x
+                Item {}
+                \endcode
+                The parser will create both bindings correctly.
+            */
+            res << QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+        }
+        return res;
+    }
+
+    if (betweenLocations(leftBrace, positionInfo, rightBrace)) {
+        QList<CompletionItem> res;
         // default/required property completion
         for (QUtf8StringView view :
              std::array<QUtf8StringView, 6>{ "", "readonly ", "default ", "default required ",
@@ -2444,15 +2561,16 @@ static QList<CompletionItem> insideQmlObjectCompletion(const DomItem &currentIte
                                "component ${1:name}: ${2:baseType} {\n\t$0\n}"));
 
         // add bindings
-        const DomItem containingObject = currentItem.qmlObject();
+        const DomItem containingObject = parentForContext.qmlObject();
         res += suggestBindingCompletion(containingObject);
 
         // add Qml Types for default binding
-        const DomItem containingFile = currentItem.containingFile();
+        const DomItem containingFile = parentForContext.containingFile();
         res += QQmlLSUtils::reachableTypes(containingFile, LocalSymbolsType::ObjectType,
                                            CompletionItemKind::Constructor);
+        return res;
     }
-    return res;
+    return {};
 }
 
 static QList<CompletionItem>
@@ -2550,7 +2668,7 @@ static QList<CompletionItem> insideBindingCompletion(const DomItem &currentItem,
 
     // ignore the binding if asking for completion in front of the binding
     if (cursorInFrontOfItem(containingBinding, positionInfo)) {
-        return insideQmlObjectCompletion(currentItem, positionInfo);
+        return insideQmlObjectCompletion(currentItem.containingObject(), positionInfo);
     }
 
     QList<CompletionItem> res;
@@ -2816,67 +2934,6 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &i
     }
 
     return result;
-}
-
-/*!
-\internal
-\brief Compare left and right locations to the position denoted by ctx, see special cases below.
-
-Statements and expressions need to provide different completions depending on where the cursor is.
-For example, lets take following for-statement:
-\badcode
-for (let i = 0; <here> ; ++i) {}
-\endcode
-We want to provide script expression completion (method names, property names, available JS
-variables names, QML objects ids, and so on) at the place denoted by \c{<here>}.
-The question is: how do we know that the cursor is really at \c{<here>}? In the case of the
-for-loop, we can compare the position of the cursor with the first and the second semicolon of the
-for loop.
-
-If the first semicolon does not exist, it has an invalid sourcelocation and the cursor is
-definitively \e{not} at \c{<here>}. Therefore, return false when \c{left} is invalid.
-
-If the second semicolon does not exist, then just ignore it: it might not have been written yet.
-*/
-static bool betweenLocations(QQmlJS::SourceLocation left,
-                             const QQmlLSCompletionPosition &positionInfo,
-                             QQmlJS::SourceLocation right)
-{
-    if (!left.isValid())
-        return false;
-    // note: left.end() == ctx.offset() means that the cursor lies exactly after left
-    if (!(left.end() <= positionInfo.offset()))
-        return false;
-    if (!right.isValid())
-        return true;
-
-    // note: ctx.offset() == right.begin() means that the cursor lies exactly before right
-    return positionInfo.offset() <= right.begin();
-}
-
-/*!
-\internal
-Returns true if ctx denotes an offset lying behind left.end(), and false otherwise.
-*/
-static bool afterLocation(QQmlJS::SourceLocation left, const QQmlLSCompletionPosition &positionInfo)
-{
-    return betweenLocations(left, positionInfo, QQmlJS::SourceLocation{});
-}
-
-/*!
-\internal
-Returns true if ctx denotes an offset lying before right.begin(), and false otherwise.
-*/
-static bool beforeLocation(const QQmlLSCompletionPosition &ctx, QQmlJS::SourceLocation right)
-{
-    if (!right.isValid())
-        return true;
-
-    // note: ctx.offset() == right.begin() means that the cursor lies exactly before right
-    if (ctx.offset() <= right.begin())
-        return true;
-
-    return false;
 }
 
 static QList<CompletionItem>
@@ -3417,6 +3474,9 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
         case DomType::Pragma:
             return insidePragmaCompletion(currentItem, positionInfo);
         case DomType::ScriptType: {
+            if (currentParent.directParent().internalKind() == DomType::QmlObject)
+                return insideQmlObjectCompletion(currentParent.directParent(), positionInfo);
+
             LocalSymbolsTypes options;
             options.setFlag(LocalSymbolsType::ObjectType);
             options.setFlag(LocalSymbolsType::ValueType);
