@@ -894,23 +894,20 @@ void LoadInfo::addDependency(const DomItem &self, const Dependency &dep)
 \brief Represents a consistent set of types organized in modules, it is the top level of the DOM
  */
 
-template<typename T>
-DomTop::Callback envCallbackForFile(
-        const DomItem &self,
-        QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> DomEnvironment::*map,
-        std::shared_ptr<ExternalItemInfo<T>> (DomEnvironment::*lookupF)(
-                const DomItem &, const QString &, EnvLookup) const,
-        DomTop::Callback loadCallback, DomTop::Callback allDirectDepsCallback,
-        DomTop::Callback endCallback)
+template <typename T>
+DomTop::Callback
+envCallbackForFile(const DomItem &self,
+                   QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> DomEnvironment::*map,
+                   std::shared_ptr<ExternalItemInfo<T>> (DomEnvironment::*lookupF)(const DomItem &,
+                                                                                   const QString &,
+                                                                                   EnvLookup) const,
+                   DomTop::Callback loadCallback, DomTop::Callback endCallback)
 {
-    const std::shared_ptr<DomEnvironment> ePtr = self.ownerAs<DomEnvironment>();
-    return [selfPtr = std::weak_ptr<DomEnvironment>(ePtr),
-            basePtr = ePtr->base(),
-            map, lookupF,
-            loadCallback = std::move(loadCallback),
-            allDirectDepsCallback = std::move(allDirectDepsCallback),
-            endCallback = std::move(endCallback)](
-                   Path, const DomItem &, const DomItem &newItem) {
+    std::shared_ptr<DomEnvironment> ePtr = self.ownerAs<DomEnvironment>();
+    std::weak_ptr<DomEnvironment> selfPtr = ePtr;
+    std::shared_ptr<DomEnvironment> basePtr = ePtr->base();
+    return [selfPtr, basePtr, map, lookupF, loadCallback, endCallback](Path, const DomItem &,
+                                                                       const DomItem &newItem) {
         shared_ptr<DomEnvironment> envPtr = selfPtr.lock();
         if (!envPtr)
             return;
@@ -959,13 +956,12 @@ DomTop::Callback envCallbackForFile(
         }
         Path p = env.copy(newValue).canonicalPath();
         {
-            auto depLoad = qScopeGuard([p, &env, envPtr, allDirectDepsCallback, endCallback] {
+            auto depLoad = qScopeGuard([p, &env, envPtr, endCallback] {
                 if (!(envPtr->options() & DomEnvironment::Option::NoDependencies)) {
                     auto loadInfo = std::make_shared<LoadInfo>(p);
                     if (!p)
                         Q_ASSERT(false);
                     DomItem loadInfoObj = env.copy(loadInfo);
-                    loadInfo->addEndCallback(loadInfoObj, allDirectDepsCallback);
                     envPtr->addLoadInfo(env, loadInfo);
                 }
                 if (endCallback)
@@ -979,16 +975,6 @@ DomTop::Callback envCallbackForFile(
                 DomItem oldValueObj = env.copy(oldValue);
                 DomItem newValueObj = env.copy(newValue);
                 loadCallback(p, oldValueObj, newValueObj);
-            }
-            if ((envPtr->options() & DomEnvironment::Option::NoDependencies)
-                && allDirectDepsCallback) {
-                DomItem oldValueObj = env.copy(oldValue);
-                DomItem newValueObj = env.copy(newValue);
-                env.addError(DomEnvironment::myErrors().warning(
-                        QLatin1String("calling allDirectDepsCallback immediately for load with "
-                                      "NoDependencies of %1")
-                                .arg(newItem.canonicalFilePath())));
-                allDirectDepsCallback(p, oldValueObj, newValueObj);
             }
         }
     };
@@ -1244,18 +1230,30 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &callback,
                               const ErrorHandler &h)
 {
     if (options() & DomEnvironment::Option::NoDependencies)
-        loadFile(file, callback, DomTop::Callback(), DomTop::Callback(), loadOptions, fileType, h);
+        loadFile(file, callback, DomTop::Callback(), loadOptions, fileType, h);
     else {
         // When the file is required to be loaded with dependencies, those dependencies
         // will be added to the "pending" queue through envCallbackForFile
         // then those should not be forgotten to be loaded.
-        loadFile(file, DomTop::Callback(), DomTop::Callback(), callback, loadOptions, fileType, h);
+        loadFile(file, DomTop::Callback(), callback, loadOptions, fileType, h);
     }
 }
 
+/*!
+    \internal
+    Depending on the options, the function will be called either with loadCallback OR endCallback
+
+    Before loading the file, envCallbackForFile will be created and passed as an argument to
+    universe().loadFile(...).
+    This is a callback which will be called after the load of the file is finished. More
+    specifically when File is required to be loaded without Dependencies only loadCallback is being
+    used. Otherwise, the callback is passed as endCallback. What endCallback means is that this
+    callback will be called only at the very end, once all necessary dependencies are being loaded.
+    Management and handing of this is happening through the m_loadsWithWork.
+*/
 // TODO(QTBUG-119550) refactor this
 void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallback,
-                              const Callback &directDepsCallback, const Callback &endCallback,
+                              const Callback &endCallback,
                               LoadOptions loadOptions, std::optional<DomType> fileType,
                               const ErrorHandler &h)
 {
@@ -1268,8 +1266,6 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
                     .handle(h);
             if (loadCallback)
                 loadCallback(Path(), DomItem::empty, DomItem::empty);
-            if (directDepsCallback)
-                directDepsCallback(Path(), DomItem::empty, DomItem::empty);
             if (endCallback)
                 addAllLoadedCallback(self, [endCallback](Path, const DomItem &, const DomItem &) {
                     endCallback(Path(), DomItem::empty, DomItem::empty);
@@ -1284,8 +1280,7 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
     shared_ptr<ExternalItemInfoBase> oldValue, newValue;
     const DomType fType =
             (bool(fileType) ? (*fileType) : fileTypeForPath(self, file.canonicalPath()));
-    const auto callback =
-            getCallbackFor(fType, self, loadCallback, directDepsCallback, endCallback);
+    const auto callback = getCallbackFor(fType, self, loadCallback, endCallback);
     switch (fType) {
     case DomType::QmlDirectory: {
         const auto &fetchResult = fetchFileFromEnvs<QmlDirectory>(file);
@@ -1331,8 +1326,6 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
         myErrors().error(tr("Unexpected file to load: '%1'").arg(file.canonicalPath())).handle(h);
         if (loadCallback)
             loadCallback(self.canonicalPath(), DomItem::empty, DomItem::empty);
-        if (directDepsCallback)
-            directDepsCallback(self.canonicalPath(), DomItem::empty, DomItem::empty);
         if (endCallback)
             endCallback(self.canonicalPath(), DomItem::empty, DomItem::empty);
         return;
@@ -1346,16 +1339,10 @@ void DomEnvironment::loadFile(const FileToLoad &file, const Callback &loadCallba
             DomItem newValueObj = self.copy(newValue);
             loadCallback(p, oldValueObj, newValueObj);
         }
-        if (directDepsCallback) {
-            DomItem lInfoObj = self.copy(lInfo);
-            lInfo->addEndCallback(lInfoObj, directDepsCallback);
-        }
     } else {
         self.addError(myErrors().error(tr("missing load info in ")));
         if (loadCallback)
             loadCallback(self.canonicalPath(), DomItem::empty, DomItem::empty);
-        if (directDepsCallback)
-            directDepsCallback(self.canonicalPath(), DomItem::empty, DomItem::empty);
     }
     if (endCallback)
         addAllLoadedCallback(self, [p, endCallback](Path, const DomItem &, const DomItem &env) {
@@ -1893,46 +1880,44 @@ QList<Path> DomEnvironment::loadInfoPaths() const
 
 DomItem::Callback DomEnvironment::getCallbackFor(DomType fileType, const DomItem &self,
                                                  const Callback &loadCallback,
-                                                 const Callback &directDepsCallback,
                                                  const Callback &endCallback)
 {
     switch (fileType) {
     case DomType::QmlDirectory:
-        return callbackForQmlDirectory(self, loadCallback, directDepsCallback, endCallback);
+        return callbackForQmlDirectory(self, loadCallback, endCallback);
     case DomType::QmlFile:
-        return callbackForQmlFile(self, loadCallback, directDepsCallback, endCallback);
+        return callbackForQmlFile(self, loadCallback, endCallback);
     case DomType::QmltypesFile:
-        return callbackForQmltypesFile(self, loadCallback, directDepsCallback, endCallback);
+        return callbackForQmltypesFile(self, loadCallback, endCallback);
     case DomType::QmldirFile:
-        return callbackForQmldirFile(self, loadCallback, directDepsCallback, endCallback);
+        return callbackForQmldirFile(self, loadCallback, endCallback);
     case DomType::JsFile:
-        return callbackForJSFile(self, loadCallback, directDepsCallback, endCallback);
+        return callbackForJSFile(self, loadCallback, endCallback);
     default:
         return DomTop::Callback();
     }
 }
 
-DomItem::Callback DomEnvironment::callbackForQmlDirectory(const DomItem &self, Callback loadCallback,
-                                                          Callback allDirectDepsCallback,
+DomItem::Callback DomEnvironment::callbackForQmlDirectory(const DomItem &self,
+                                                          Callback loadCallback,
                                                           Callback endCallback)
 {
     return envCallbackForFile<QmlDirectory>(self, &DomEnvironment::m_qmlDirectoryWithPath,
                                             &DomEnvironment::qmlDirectoryWithPath, loadCallback,
-                                            allDirectDepsCallback, endCallback);
+                                            endCallback);
 }
 
 DomItem::Callback DomEnvironment::callbackForQmlFile(const DomItem &self, Callback loadCallback,
-                                                     Callback allDirectDepsCallback,
+
                                                      Callback endCallback)
 {
     return envCallbackForFile<QmlFile>(self, &DomEnvironment::m_qmlFileWithPath,
-                                       &DomEnvironment::qmlFileWithPath, loadCallback,
-                                       allDirectDepsCallback, endCallback);
+                                       &DomEnvironment::qmlFileWithPath, loadCallback, endCallback);
 }
 
 DomTop::Callback DomEnvironment::callbackForQmltypesFile(const DomItem &self,
                                                          DomTop::Callback loadCallback,
-                                                         Callback allDirectDepsCallback,
+
                                                          DomTop::Callback endCallback)
 {
     return envCallbackForFile<QmltypesFile>(
@@ -1944,25 +1929,23 @@ DomTop::Callback DomEnvironment::callbackForQmltypesFile(const DomItem &self,
                 if (loadCallback)
                     loadCallback(p, oldV, newV);
             },
-            allDirectDepsCallback, endCallback);
+            endCallback);
 }
 
-DomTop::Callback DomEnvironment::callbackForQmldirFile(const DomItem &self, DomTop::Callback loadCallback,
-                                                       Callback allDirectDepsCallback,
+DomTop::Callback DomEnvironment::callbackForQmldirFile(const DomItem &self,
+                                                       DomTop::Callback loadCallback,
                                                        DomTop::Callback endCallback)
 {
     return envCallbackForFile<QmldirFile>(self, &DomEnvironment::m_qmldirFileWithPath,
                                           &DomEnvironment::qmldirFileWithPath, loadCallback,
-                                          allDirectDepsCallback, endCallback);
+                                          endCallback);
 }
 
 DomItem::Callback DomEnvironment::callbackForJSFile(const DomItem &self, Callback loadCallback,
-                                                     Callback allDirectDepsCallback,
-                                                     Callback endCallback)
+                                                    Callback endCallback)
 {
     return envCallbackForFile<JsFile>(self, &DomEnvironment::m_jsFileWithPath,
-                                       &DomEnvironment::jsFileWithPath, loadCallback,
-                                       allDirectDepsCallback, endCallback);
+                                      &DomEnvironment::jsFileWithPath, loadCallback, endCallback);
 }
 
 DomEnvironment::DomEnvironment(

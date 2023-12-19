@@ -840,8 +840,7 @@ public:
 private:
     friend class RefCacheEntry;
 
-    void loadFile(const FileToLoad &file, const Callback &loadCallback,
-                  const Callback &directDepsCallback, const Callback &endCallback,
+    void loadFile(const FileToLoad &file, const Callback &loadCallback, const Callback &endCallback,
                   LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   const ErrorHandler &h = nullptr);
@@ -977,18 +976,15 @@ private:
     }
 
     Callback getCallbackFor(DomType fileType, const DomItem &self, const Callback &loadCallback,
-                            const Callback &directDepsCallback, const Callback &endCallback);
+                            const Callback &endCallback);
     Callback callbackForQmlDirectory(const DomItem &self, Callback loadCallback,
-                                     Callback directDepsCallback, Callback endCallback);
-    Callback callbackForQmlFile(const DomItem &self, Callback loadCallback, Callback directDepsCallback,
-                                Callback endCallback);
+                                     Callback endCallback);
+    Callback callbackForQmlFile(const DomItem &self, Callback loadCallback, Callback endCallback);
     Callback callbackForQmltypesFile(const DomItem &self, Callback loadCallback,
-                                     Callback directDepsCallback, Callback endCallback);
+                                     Callback endCallback);
     Callback callbackForQmldirFile(const DomItem &self, Callback loadCallback,
-                                   Callback directDepsCallback, Callback endCallback);
-    Callback callbackForJSFile(const DomItem &self, Callback loadCallback, Callback directDepsCallback,
-                               Callback endCallback);
-
+                                   Callback endCallback);
+    Callback callbackForJSFile(const DomItem &self, Callback loadCallback, Callback endCallback);
 
     std::shared_ptr<ModuleIndex> lookupModuleInEnv(const QString &uri, int majorVersion) const;
     // ModuleLookupResult contains the ModuleIndex pointer, and an indicator whether it was found
