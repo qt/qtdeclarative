@@ -138,6 +138,7 @@ private slots:
 #endif
     void focusPreserved();
     void accessibilityHandlesViewChange();
+    void cleanupRhi();
 
 private:
     QPointingDevice *device = QTest::createTouchDevice();
@@ -1027,6 +1028,27 @@ void tst_qquickwidget::accessibilityHandlesViewChange()
     (void)iface->child(0);
 }
 
+class CreateDestroyWidget : public QWidget
+{
+public:
+    using QWidget::create;
+    using QWidget::destroy;
+};
+
+void tst_qquickwidget::cleanupRhi()
+{
+#ifdef Q_OS_ANDROID
+    QSKIP("This test crashes on Android (QTBUG-121133)");
+#endif
+    CreateDestroyWidget topLevel;
+    QQuickWidget quickWidget(&topLevel);
+    quickWidget.setSource(testFileUrl("rectangle.qml"));
+    topLevel.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&topLevel));
+
+    topLevel.destroy();
+    topLevel.create();
+}
 
 QTEST_MAIN(tst_qquickwidget)
 
