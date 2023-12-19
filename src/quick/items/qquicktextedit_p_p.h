@@ -52,7 +52,7 @@ public:
     struct Node {
         explicit Node(int startPos = std::numeric_limits<int>::max(),
                       QSGInternalTextNode *node = nullptr)
-            : m_startPos(startPos), m_node(node) { }
+            : m_node(node), m_startPos(startPos) { }
         QSGInternalTextNode *textNode() const { return m_node; }
         void moveStartPos(int delta) { Q_ASSERT(m_startPos + delta > 0); m_startPos += delta; }
         int startPos() const { return m_startPos; }
@@ -60,8 +60,8 @@ public:
         bool dirty() const { return m_dirty; }
 
     private:
-        int m_startPos;
         QSGInternalTextNode *m_node;
+        int m_startPos;
         bool m_dirty = false;
 
 #ifndef QT_NO_DEBUG_STREAM
