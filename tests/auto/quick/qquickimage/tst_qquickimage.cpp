@@ -24,9 +24,12 @@
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 
 // #define DEBUG_WRITE_OUTPUT
+
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
 using namespace QQuickVisualTestUtils;
 
@@ -68,6 +71,7 @@ private slots:
     void sourceClipRect_data();
     void sourceClipRect();
     void progressAndStatusChanges();
+    void progressAndChangeSignalOrder();
     void sourceSizeChanges();
     void correctStatus();
     void highdpi();
@@ -976,6 +980,28 @@ void tst_qquickimage::progressAndStatusChanges()
     QTRY_COMPARE(statusSpy.size(), 4);
 
     delete obj;
+}
+
+void tst_qquickimage::progressAndChangeSignalOrder()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("statusChanged.qml")));
+    QQuickImage *image = qmlobject_cast<QQuickImage *>(window.rootObject());
+    QVERIFY(image);
+
+    QTRY_COMPARE(image->status(), QQuickImageBase::Ready);
+    // QTBUG-120205: implicitSize should be correct when status changes to Ready
+    QCOMPARE(image->property("statusChangedFirstImplicitSize").toSize(), QSize(300, 300));
+    QCOMPARE(image->property("statusChanges").toList().size(), 1); // just Ready
+    const QStringList signalOrder = image->property("changeSignals").toStringList();
+    const QStringList expectedOrder = {"progress", "paintedHeight", "paintedWidth",
+                                        "implicitWidth", "implicitHeight",
+                                        "paintedHeight", "paintedWidth",
+                                        "status", "sourceSize", "frameCount"};
+    qCDebug(lcTests) << "signal order" << signalOrder;
+    // exact order may not be critical, and repeated signals may be silly;
+    // but this way we'll find out when it changes
+    QCOMPARE(signalOrder, expectedOrder);
 }
 
 class TestQImageProvider : public QQuickImageProvider
