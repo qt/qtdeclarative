@@ -801,6 +801,13 @@ bool QQmlDomAstCreator::visit(AST::UiObjectDefinition *el)
                                          sPathFromOwner.field(Fields::nameIdentifiers), rootMap));
     }
     pushEl(sPathFromOwner, *sPtr, el);
+
+    if (m_enableScriptExpressions && el->initializer) {
+        FileLocations::addRegion(nodeStack.last().fileLocations, LeftBraceRegion,
+                                 el->initializer->lbraceToken);
+        FileLocations::addRegion(nodeStack.last().fileLocations, RightBraceRegion,
+                                 el->initializer->rbraceToken);
+    }
     loadAnnotations(el);
     return true;
 }
@@ -875,6 +882,12 @@ bool QQmlDomAstCreator::visit(AST::UiObjectBinding *el)
 
     objValue->addPrototypePath(Paths::lookupTypePath(objValue->name()));
     pushEl(bPathFromOwner.field(Fields::value), *objValue, el->initializer);
+    if (m_enableScriptExpressions && el->initializer) {
+        FileLocations::addRegion(nodeStack.last().fileLocations, LeftBraceRegion,
+                                 el->initializer->lbraceToken);
+        FileLocations::addRegion(nodeStack.last().fileLocations, RightBraceRegion,
+                                 el->initializer->rbraceToken);
+    }
     return true;
 }
 
