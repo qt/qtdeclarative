@@ -904,6 +904,9 @@ public:
     QQmlJSScope::ConstPtr semanticScope() const { return m_scope; }
     void setSemanticScope(const QQmlJSScope::ConstPtr &scope) { m_scope = scope; }
 
+    ScriptElementVariant nameIdentifiers() const { return m_nameIdentifiers; }
+    void setNameIdentifiers(const ScriptElementVariant &name) { m_nameIdentifiers = name; }
+
 private:
     friend class QQmlDomAstCreator;
     QString m_idStr;
@@ -917,6 +920,7 @@ private:
     QList<QmlObject> m_children;
     QList<QmlObject> m_annotations;
     QQmlJSScope::ConstPtr m_scope;
+    ScriptElementVariant m_nameIdentifiers;
 };
 
 class Export

@@ -119,6 +119,46 @@ SourceLocation combineLocations(Node *n)
     return combineLocations(n->firstSourceLocation(), n->lastSourceLocation());
 }
 
+static ScriptElementVariant wrapIntoFieldMemberExpression(const ScriptElementVariant &left,
+                                                          const SourceLocation &dotToken,
+                                                          const ScriptElementVariant &right)
+{
+    SourceLocation s1, s2;
+    left.visitConst([&s1](auto &&el) { s1 = el->mainRegionLocation(); });
+    right.visitConst([&s2](auto &&el) { s2 = el->mainRegionLocation(); });
+
+    auto result = std::make_shared<ScriptElements::BinaryExpression>(s1, s2);
+    result->addLocation(OperatorTokenRegion, dotToken);
+    result->setOp(ScriptElements::BinaryExpression::FieldMemberAccess);
+    result->setLeft(left);
+    result->setRight(right);
+    return ScriptElementVariant::fromElement(result);
+};
+
+/*!
+   \internal
+    Creates a FieldMemberExpression if the qualified id has dots.
+*/
+static ScriptElementVariant fieldMemberExpressionForQualifiedId(AST::UiQualifiedId *qualifiedId)
+{
+    ScriptElementVariant bindable;
+    bool first = true;
+    for (auto exp = qualifiedId; exp; exp = exp->next) {
+        const SourceLocation identifierLoc = exp->identifierToken;
+        auto id = std::make_shared<ScriptElements::IdentifierExpression>(identifierLoc);
+        id->setName(exp->name);
+        if (first) {
+            first = false;
+            bindable = ScriptElementVariant::fromElement(id);
+            continue;
+        }
+        bindable = wrapIntoFieldMemberExpression(bindable, exp->dotToken,
+                                                 ScriptElementVariant::fromElement(id));
+    }
+
+    return bindable;
+}
+
 QQmlDomAstCreator::QmlStackElement &QQmlDomAstCreator::currentQmlObjectOrComponentEl(int idx)
 {
     Q_ASSERT_X(idx < nodeStack.size() && idx >= 0, "currentQmlObjectOrComponentEl",
@@ -746,6 +786,15 @@ bool QQmlDomAstCreator::visit(AST::UiObjectDefinition *el)
                                  el->qualifiedTypeNameId->identifierToken);
     }
     Q_ASSERT_X(sPtr, className, "could not recover new scope");
+
+    if (m_enableScriptExpressions) {
+        auto qmlObjectType = makeGenericScriptElement(el->qualifiedTypeNameId, DomType::ScriptType);
+        qmlObjectType->insertChild(Fields::typeName,
+                                   fieldMemberExpressionForQualifiedId(el->qualifiedTypeNameId));
+        sPtr->setNameIdentifiers(
+                finalizeScriptExpression(ScriptElementVariant::fromElement(qmlObjectType),
+                                         sPathFromOwner.field(Fields::nameIdentifiers), rootMap));
+    }
     pushEl(sPathFromOwner, *sPtr, el);
     loadAnnotations(el);
     return true;
@@ -809,6 +858,16 @@ bool QQmlDomAstCreator::visit(AST::UiObjectBinding *el)
     QmlObject *objValue = bPtr->objectValue();
     Q_ASSERT_X(objValue, className, "could not recover objectValue");
     objValue->setName(toString(el->qualifiedTypeNameId));
+
+    if (m_enableScriptExpressions) {
+        auto qmlObjectType = makeGenericScriptElement(el->qualifiedTypeNameId, DomType::ScriptType);
+        qmlObjectType->insertChild(Fields::typeName,
+                                   fieldMemberExpressionForQualifiedId(el->qualifiedTypeNameId));
+        objValue->setNameIdentifiers(finalizeScriptExpression(
+                ScriptElementVariant::fromElement(qmlObjectType),
+                bPathFromOwner.field(Fields::value).field(Fields::nameIdentifiers), rootMap));
+    }
+
     objValue->addPrototypePath(Paths::lookupTypePath(objValue->name()));
     pushEl(bPathFromOwner.field(Fields::value), *objValue, el->initializer);
     return true;
@@ -884,22 +943,6 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
                             .withPath(pathFromOwner)));
         }
     } else {
-        // Create FieldExpression if the bindable element has dots
-        const auto reparentExp = [](const auto &left, const SourceLocation &dotToken,
-                                    const auto &right) {
-            SourceLocation s1, s2;
-            left.visitConst([&s1](auto &&el) { s1 = el->mainRegionLocation(); });
-
-            right.visitConst([&s2](auto &&el) { s2 = el->mainRegionLocation(); });
-
-            auto result = std::make_shared<ScriptElements::BinaryExpression>(s1, s2);
-            result->addLocation(OperatorTokenRegion, dotToken);
-            result->setOp(ScriptElements::BinaryExpression::FieldMemberAccess);
-            result->setLeft(left);
-            result->setRight(right);
-            return ScriptElementVariant::fromElement(result);
-        };
-
         pathFromOwner =
                 current<QmlObject>().addBinding(bindingV, AddOption::KeepExisting, &bindingPtr);
         QmlStackElement &containingObjectEl = currentEl<QmlObject>();
@@ -911,19 +954,7 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
                                  el->qualifiedId->identifierToken);
         FileLocations::addRegion(bindingFileLocation, ColonTokenRegion, el->colonToken);
 
-        ScriptElementVariant bindable;
-        bool first = true;
-        for (auto exp = el->qualifiedId; exp; exp = exp->next) {
-            const SourceLocation identifierLoc = exp->identifierToken;
-            auto id = std::make_shared<ScriptElements::IdentifierExpression>(identifierLoc);
-            id->setName(exp->name);
-            if (first) {
-                first = false;
-                bindable = ScriptElementVariant::fromElement(id);
-                continue;
-            }
-            bindable = reparentExp(bindable, exp->dotToken, ScriptElementVariant::fromElement(id));
-        }
+        ScriptElementVariant bindable = fieldMemberExpressionForQualifiedId(el->qualifiedId);
         bindingPtr->setBindingIdentifiers(finalizeScriptExpression(
                 bindable, pathFromOwner.field(Fields::bindingIdentifiers), rootMap));
 
@@ -1933,13 +1964,12 @@ void QQmlDomAstCreator::endVisit(AST::Type *exp)
     auto current = makeGenericScriptElement(exp, DomType::ScriptType);
 
     if (exp->typeArgument) {
-        auto currentChild = scriptElementForQualifiedId(exp->typeArgument);
-        current->insertChild(Fields::typeArgument, currentChild);
+        current->insertChild(Fields::typeArgumentName,
+                             fieldMemberExpressionForQualifiedId(exp->typeArgument));
     }
 
     if (exp->typeId) {
-        auto currentChild = scriptElementForQualifiedId(exp->typeId);
-        current->insertChild(Fields::typeName, currentChild);
+        current->insertChild(Fields::typeName, fieldMemberExpressionForQualifiedId(exp->typeId));
     }
 
     pushScriptElement(current);

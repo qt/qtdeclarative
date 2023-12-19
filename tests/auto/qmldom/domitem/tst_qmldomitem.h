@@ -2962,6 +2962,67 @@ private slots:
                  u"a"_s);
     }
 
+    void objectBindings()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/objectBindings.qml"_s;
+        const DomItem rootQmlObject = rootQmlObjectFromFile(testFile, qmltypeDirs);
+
+        const DomItem xBinding = rootQmlObject.path(".bindings[\"x\"][0].value");
+        QCOMPARE(xBinding.field(Fields::name).value().toString(), u"root.QQ.Drag");
+        QCOMPARE(xBinding.field(Fields::nameIdentifiers).internalKind(),
+                 DomType::ScriptType);
+        QCOMPARE(xBinding.field(Fields::nameIdentifiers).field(Fields::typeName).internalKind(),
+                 DomType::ScriptBinaryExpression);
+        QCOMPARE(xBinding.field(Fields::nameIdentifiers)
+                         .field(Fields::typeName)
+                         .field(Fields::operation)
+                         .value()
+                         .toInteger(-1),
+                 ScriptElements::BinaryExpression::FieldMemberAccess);
+
+        QCOMPARE(xBinding.field(Fields::nameIdentifiers).field(Fields::typeName).field(Fields::left).internalKind(),
+                 DomType::ScriptBinaryExpression);
+        QCOMPARE(xBinding.field(Fields::nameIdentifiers)
+                         .field(Fields::typeName)
+                         .field(Fields::left)
+                         .field(Fields::right)
+                         .value()
+                         .toString(),
+                 u"QQ");
+        QCOMPARE(xBinding.field(Fields::nameIdentifiers)
+                         .field(Fields::typeName)
+                         .field(Fields::left)
+                         .field(Fields::left)
+                         .value()
+                         .toString(),
+                 u"root");
+
+        const DomItem item = rootQmlObject.path(".children[0]");
+        QCOMPARE(item.field(Fields::nameIdentifiers).field(Fields::typeName).value().toString(),
+                 u"Item");
+
+        const DomItem qqItem = rootQmlObject.path(".children[1]");
+        QCOMPARE(qqItem.field(Fields::nameIdentifiers)
+                         .field(Fields::typeName)
+                         .field(Fields::operation)
+                         .value()
+                         .toInteger(-1),
+                 ScriptElements::BinaryExpression::FieldMemberAccess);
+        QCOMPARE(qqItem.field(Fields::nameIdentifiers)
+                         .field(Fields::typeName)
+                         .field(Fields::right)
+                         .value()
+                         .toString(),
+                 u"Item");
+        QCOMPARE(qqItem.field(Fields::nameIdentifiers)
+                         .field(Fields::typeName)
+                         .field(Fields::left)
+                         .value()
+                         .toString(),
+                 u"QQ");
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

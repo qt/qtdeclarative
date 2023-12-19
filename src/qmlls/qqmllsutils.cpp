@@ -75,6 +75,42 @@ static bool isFieldMemberAccess(const DomItem &item)
 
 /*!
    \internal
+    Get the bits of a field member expression, like \c{a}, \c{b} and \c{c} for \c{a.b.c}.
+
+   stopAtChild can either be an FieldMemberExpression, a ScriptIdentifierExpression or a default
+   constructed DomItem: This exits early before processing Field::right of an
+   FieldMemberExpression stopAtChild, or before processing a ScriptIdentifierExpression stopAtChild.
+   No early exits if stopAtChild is default constructed.
+*/
+static QStringList fieldMemberExpressionBits(const DomItem &item, const DomItem &stopAtChild = {})
+{
+    const bool isAccess = isFieldMemberAccess(item);
+    const bool isExpression = isFieldMemberExpression(item);
+
+    // assume it is a non-qualified name
+    if (!isAccess && !isExpression)
+        return { item.value().toString() };
+
+    const DomItem stopMarker =
+            isFieldMemberExpression(stopAtChild) ? stopAtChild : stopAtChild.directParent();
+
+    QStringList result;
+    DomItem current =
+            isAccess ? item.directParent() : (isFieldMemberExpression(item) ? item : DomItem{});
+
+    for (; isFieldMemberExpression(current); current = current.field(Fields::right)) {
+        result << current.field(Fields::left).value().toString();
+
+        if (current == stopMarker)
+            return result;
+    }
+    result << current.value().toString();
+
+    return result;
+}
+
+/*!
+   \internal
    The language server protocol calls "URI" what QML calls "URL".
    According to RFC 3986, a URL is a special case of URI that not only
    identifies a resource but also shows how to access it.
@@ -352,10 +388,7 @@ QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(const DomItem 
 
 DomItem QQmlLSUtils::baseObject(const DomItem &object)
 {
-    if (!object.as<QmlObject>())
-        return {};
-
-    auto prototypes = object.field(QQmlJS::Dom::Fields::prototypes);
+    auto prototypes = object.qmlObject().field(QQmlJS::Dom::Fields::prototypes);
     switch (prototypes.indexes()) {
     case 0:
         return {};
@@ -449,8 +482,15 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(const DomIt
                     [](DomType k, const DomItem &) { return k == DomType::ScriptType; },
                     FilterUpOptions::ReturnOuter)) {
 
-            const QString name = type.field(Fields::typeName).value().toString();
-            typeDefinition = object.path(Paths::lookupTypePath(name));
+            const QString name = fieldMemberExpressionBits(type.field(Fields::typeName)).join(u'.');
+            if (type.directParent().internalKind() == DomType::QmlObject) {
+                // is the type name of a QmlObject, like Item in `Item {...}`
+                typeDefinition = baseObject(type.directParent());
+            } else {
+                // is a type annotation, like Item in `function f(x: Item) { ... }`
+                typeDefinition = object.path(Paths::lookupTypePath(name));
+            }
+
             break;
         }
         if (DomItem id = object.filterUp(
@@ -1358,7 +1398,7 @@ DomItem QQmlLSUtils::sourceLocationToDomItem(const DomItem &file,
 static std::optional<QQmlLSUtilsLocation>
 findMethodDefinitionOf(const DomItem &file, QQmlJS::SourceLocation location, const QString &name)
 {
-    DomItem owner = QQmlLSUtils::sourceLocationToDomItem(file, location);
+    DomItem owner = QQmlLSUtils::sourceLocationToDomItem(file, location).qmlObject();
     DomItem method = owner.field(Fields::methods).key(name).index(0);
     auto fileLocation = FileLocations::treeOf(method);
     if (!fileLocation)
@@ -1380,7 +1420,8 @@ static std::optional<QQmlLSUtilsLocation>
 findPropertyDefinitionOf(const DomItem &file, QQmlJS::SourceLocation propertyDefinitionLocation,
                          const QString &name)
 {
-    DomItem propertyOwner = QQmlLSUtils::sourceLocationToDomItem(file, propertyDefinitionLocation);
+    DomItem propertyOwner =
+            QQmlLSUtils::sourceLocationToDomItem(file, propertyDefinitionLocation).qmlObject();
     DomItem propertyDefinition = propertyOwner.field(Fields::propertyDefs).key(name).index(0);
     auto fileLocation = FileLocations::treeOf(propertyDefinition);
     if (!fileLocation)
