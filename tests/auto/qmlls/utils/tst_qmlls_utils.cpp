@@ -3261,6 +3261,7 @@ void tst_qmlls_utils::completions()
     }
 
     QSet<QString> labels;
+    QStringList sortedLabels;
     QDuplicateTracker<QByteArray> modulesTracker;
     QDuplicateTracker<QByteArray> keywordsTracker;
     QDuplicateTracker<QByteArray> classesTracker;
@@ -3296,7 +3297,9 @@ void tst_qmlls_utils::completions()
             QCOMPARE(c.insertText, std::nullopt);
         }
         labels << c.label;
+        sortedLabels << c.label;
     }
+    const QString labelsForPrinting = sortedLabels.join(u", "_s);
 
     for (const ExpectedCompletion &exp : expected) {
         QEXPECT_FAIL(
@@ -3310,9 +3313,7 @@ void tst_qmlls_utils::completions()
                      "Current parser cannot recover from this error yet!", Abort);
 
         QVERIFY2(labels.contains(exp.label),
-                 u"no %1 in %2"_s
-                         .arg(exp.label, QStringList(labels.begin(), labels.end()).join(u", "_s))
-                         .toUtf8());
+                 u"no %1 in %2"_s.arg(exp.label, labelsForPrinting).toUtf8());
         if (labels.contains(exp.label)) {
 
             bool foundEntry = false;
