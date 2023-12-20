@@ -14,10 +14,11 @@ It also warns about some QML anti-patterns. If you want to disable a specific
 warning type, you can find the appropriate flag for doing so by passing
 \c{--help} on the command line.
 
-By default, some issues will result in warnings that will be printed and result
-in a non-zero exit code.
+By default, some issues will result in warnings that will be printed. If there
+are more warnings than a limit which can be configured with \c{--max-warnings},
+the exit code will be non-zero.
 Minor issues however (such as unused imports) are just informational messages
-by default and will not affect the exit code.
+by default and will never affect the exit code.
 qmllint is very configurable and allows for disabling warnings or changing how
 they are treated.
 Users may freely turn any issue into a warning, informational message, or

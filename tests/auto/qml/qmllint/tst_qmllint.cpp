@@ -110,6 +110,8 @@ private Q_SLOTS:
     void environment_data();
     void environment();
 
+    void maxWarnings();
+
 #if QT_CONFIG(library)
     void testPlugin();
     void quickPlugin();
@@ -124,6 +126,11 @@ private:
     };
 
     enum LintType { LintFile, LintModule };
+
+    static QStringList warningsShouldFailArgs() {
+        static QStringList args {"-W", "0"};
+        return args;
+    }
 
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true,
@@ -411,7 +418,7 @@ void TestQmllint::autoqmltypes()
 {
     QProcess process;
     process.setWorkingDirectory(testFile("autoqmltypes"));
-    process.start(m_qmllintPath, { QStringLiteral("test.qml") });
+    process.start(m_qmllintPath, warningsShouldFailArgs() << QStringLiteral("test.qml") );
 
     process.waitForFinished();
 
@@ -425,7 +432,7 @@ void TestQmllint::autoqmltypes()
     {
         QProcess bare;
         bare.setWorkingDirectory(testFile("autoqmltypes"));
-        bare.start(m_qmllintPath, { QStringLiteral("--bare"), QStringLiteral("test.qml") });
+        bare.start(m_qmllintPath, warningsShouldFailArgs() << QStringLiteral("--bare") << QStringLiteral("test.qml") );
         bare.waitForFinished();
 
         const QByteArray errors = bare.readAllStandardError();
@@ -1795,17 +1802,17 @@ void TestQmllint::requiredProperty()
 
 void TestQmllint::settingsFile()
 {
-    QVERIFY(runQmllint("settings/unqualifiedSilent/unqualified.qml", true, QStringList(), false)
+    QVERIFY(runQmllint("settings/unqualifiedSilent/unqualified.qml", true, warningsShouldFailArgs(), false)
                     .isEmpty());
-    QVERIFY(runQmllint("settings/unusedImportWarning/unused.qml", false, QStringList(), false)
+    QVERIFY(runQmllint("settings/unusedImportWarning/unused.qml", false, warningsShouldFailArgs(), false)
                     .contains(QStringLiteral("Warning: %1:2:1: Unused import")
                                       .arg(testFile("settings/unusedImportWarning/unused.qml"))));
-    QVERIFY(runQmllint("settings/bare/bare.qml", false, {}, false, false)
+    QVERIFY(runQmllint("settings/bare/bare.qml", false, warningsShouldFailArgs(), false, false)
                     .contains(QStringLiteral("Failed to find the following builtins: "
                                              "jsroot.qmltypes, builtins.qmltypes")));
-    QVERIFY(runQmllint("settings/qmltypes/qmltypes.qml", false, QStringList(), false)
+    QVERIFY(runQmllint("settings/qmltypes/qmltypes.qml", false, warningsShouldFailArgs(), false)
                     .contains(QStringLiteral("not a qmldir file. Assuming qmltypes.")));
-    QVERIFY(runQmllint("settings/qmlimports/qmlimports.qml", true, QStringList(), false).isEmpty());
+    QVERIFY(runQmllint("settings/qmlimports/qmlimports.qml", true, warningsShouldFailArgs(), false).isEmpty());
 }
 
 void TestQmllint::additionalImplicitImport()
@@ -1915,8 +1922,8 @@ void TestQmllint::missingBuiltinsNoCrash()
 
 void TestQmllint::absolutePath()
 {
-    QString absPathOutput = runQmllint("memberNotFound.qml", false, {}, true, true, true);
-    QString relPathOutput = runQmllint("memberNotFound.qml", false, {}, true, true, false);
+    QString absPathOutput = runQmllint("memberNotFound.qml", false, warningsShouldFailArgs(), true, true, true);
+    QString relPathOutput = runQmllint("memberNotFound.qml", false, warningsShouldFailArgs(), true, true, false);
     const QString absolutePath = QFileInfo(testFile("memberNotFound.qml")).absoluteFilePath();
 
     QVERIFY(absPathOutput.contains(absolutePath));
@@ -2208,7 +2215,7 @@ void TestQmllint::environment_data()
     const QString noWarningExpected;
 
     QTest::addRow("missing-import-dir")
-            << fileThatNeedsImportPath << false << QStringList{}
+            << fileThatNeedsImportPath << false << warningsShouldFailArgs()
             << Environment{ { u"QML_IMPORT_PATH"_s, importPath } } << noWarningExpected;
 
     QTest::addRow("import-dir-via-arg")
@@ -2240,6 +2247,18 @@ void TestQmllint::environment()
     if (!expectedWarning.isEmpty()) {
         QVERIFY(output.contains(expectedWarning));
     }
+}
+
+void TestQmllint::maxWarnings()
+{
+    // warnings are not fatal by default
+    runQmllint(testFile("badScript.qml"), true);
+    // or when max-warnings is set to -1
+    runQmllint(testFile("badScript.qml"), true, {"-W", "-1"});
+    // 1 warning => should fail
+    runQmllint(testFile("badScript.qml"), false, {"--max-warnings", "0"});
+    // only 1 warning => should exit normally
+    runQmllint(testFile("badScript.qml"), true, {"--max-warnings", "1"});
 }
 
 #endif
