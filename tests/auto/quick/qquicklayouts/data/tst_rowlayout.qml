@@ -945,7 +945,19 @@ Item {
                     },
                     layoutWidth:     0,
                     expectedWidths: [0]
-                  }
+                },{
+                  tag: "preferred_infinity",    // Do not crash/assert when the preferred size is infinity
+                  layout: {
+                    type: "RowLayout",
+                    items: [
+                        {minimumWidth:  10, preferredWidth: Number.POSITIVE_INFINITY, fillWidth: true},
+                        {minimumWidth:  20, preferredWidth: Number.POSITIVE_INFINITY, fillWidth: true},
+                      ]
+                  },
+                  layoutWidth:     31,      // Important that this is between minimum and preferred width of the layout.
+                  expectedWidths: [10, 21]  // The result here does not have to be exact. (This
+                                            // test is mostly concerned about not crashing).
+                }
             ];
         }
 
