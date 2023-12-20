@@ -91,6 +91,9 @@ int main(int argc, char **argv)
     parser.addOption(onlyBytecode);
     QCommandLineOption verboseOption("verbose"_L1, QCoreApplication::translate("main", "Output compile warnings"));
     parser.addOption(verboseOption);
+    QCommandLineOption warningsAreErrorsOption("warnings-are-errors"_L1, QCoreApplication::translate("main", "Treat warnings as errors"));
+    parser.addOption(warningsAreErrorsOption);
+
     QCommandLineOption validateBasicBlocksOption("validate-basic-blocks"_L1, QCoreApplication::translate("main", "Performs checks on the basic blocks of a function compiled ahead of time to validate its structure and coherence"));
     parser.addOption(validateBasicBlocksOption);
 
@@ -247,7 +250,7 @@ int main(int argc, char **argv)
             logger.setCategoryIgnored(qmlCompiler, false);
             logger.setCategoryFatal(qmlCompiler, true);
 
-            if (!parser.isSet(verboseOption))
+            if (!parser.isSet(verboseOption) && !parser.isSet(warningsAreErrorsOption))
                 logger.setSilent(true);
 
             QQmlJSAotCompiler cppCodeGen(
@@ -268,6 +271,8 @@ int main(int argc, char **argv)
                 logger.log("Type warnings occurred while compiling file:"_L1,
                            qmlImport, QQmlJS::SourceLocation());
                 logger.processMessages(warnings, qmlImport);
+                if (parser.isSet(warningsAreErrorsOption))
+                    return EXIT_FAILURE;
             }
         }
     } else if (inputFile.endsWith(".js"_L1) || inputFile.endsWith(".mjs"_L1)) {
@@ -278,6 +283,8 @@ int main(int argc, char **argv)
         }
     } else {
         fprintf(stderr, "Ignoring %s input file as it is not QML source code - maybe remove from QML_FILES?\n", qPrintable(inputFile));
+        if (parser.isSet(warningsAreErrorsOption))
+            return EXIT_FAILURE;
     }
 
     return EXIT_SUCCESS;
