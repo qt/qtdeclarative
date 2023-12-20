@@ -770,13 +770,13 @@ void QQuickPathAnimation::setOrientationExitDuration(int duration)
 qreal QQuickPathAnimation::endRotation() const
 {
     Q_D(const QQuickPathAnimation);
-    return d->endRotation.isNull ? qreal(0) : d->endRotation.value;
+    return d->endRotation.isValid() ? d->endRotation.value() : qreal(0);
 }
 
 void QQuickPathAnimation::setEndRotation(qreal rotation)
 {
     Q_D(QQuickPathAnimation);
-    if (!d->endRotation.isNull && d->endRotation == rotation)
+    if (d->endRotation.isValid() && d->endRotation == rotation)
         return;
 
     d->endRotation = rotation;
@@ -946,11 +946,11 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
             //shortest distance to correct orientation
             qreal diff = angle - startRotation;
             while (diff > 180.0) {
-                startRotation.value += 360.0;
+                startRotation = startRotation.value() + 360.0;
                 diff -= 360.0;
             }
             while (diff < -180.0) {
-                startRotation.value -= 360.0;
+                startRotation = startRotation.value() - 360.0;
                 diff += 360.0;
             }
         }

@@ -143,7 +143,7 @@ QQuickPath::~QQuickPath()
 qreal QQuickPath::startX() const
 {
     Q_D(const QQuickPath);
-    return d->startX.isNull ? 0 : d->startX.value;
+    return d->startX.isValid() ? d->startX.value() : 0;
 }
 
 void QQuickPath::setStartX(qreal x)
@@ -165,7 +165,7 @@ bool QQuickPath::hasStartX() const
 qreal QQuickPath::startY() const
 {
     Q_D(const QQuickPath);
-    return d->startY.isNull ? 0 : d->startY.value;
+    return d->startY.isValid() ? d->startY.value() : 0;
 }
 
 void QQuickPath::setStartY(qreal y)
@@ -408,8 +408,8 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
         first.values[attributes.at(ii)] = 0;
     attributePoints << first;
 
-    qreal startX = d->startX.isValid() ? d->startX.value : startPoint.x();
-    qreal startY = d->startY.isValid() ? d->startY.value : startPoint.y();
+    qreal startX = d->startX.isValid() ? d->startX.value() : startPoint.x();
+    qreal startY = d->startY.isValid() ? d->startY.value() : startPoint.y();
     path.moveTo(startX, startY);
 
     const QString percentString = QStringLiteral("_qfx_percent");
@@ -493,8 +493,8 @@ QPainterPath QQuickPath::createShapePath(const QPointF &startPoint, const QPoint
 
     QPainterPath path;
 
-    qreal startX = d->startX.isValid() ? d->startX.value : startPoint.x();
-    qreal startY = d->startY.isValid() ? d->startY.value : startPoint.y();
+    qreal startX = d->startX.isValid() ? d->startX.value() : startPoint.x();
+    qreal startY = d->startY.isValid() ? d->startY.value() : startPoint.y();
     path.moveTo(startX, startY);
 
     int index = 0;
@@ -981,12 +981,12 @@ qreal QQuickPath::attributeAt(const QString &name, qreal percent) const
 
 qreal QQuickCurve::x() const
 {
-    return _x.isNull ? 0 : _x.value;
+    return _x.isValid() ? _x.value() : 0;
 }
 
 void QQuickCurve::setX(qreal x)
 {
-    if (_x.isNull || _x != x) {
+    if (!_x.isValid() || _x != x) {
         _x = x;
         emit xChanged();
         emit changed();
@@ -1000,12 +1000,12 @@ bool QQuickCurve::hasX()
 
 qreal QQuickCurve::y() const
 {
-    return _y.isNull ? 0 : _y.value;
+    return _y.isValid() ? _y.value() : 0;
 }
 
 void QQuickCurve::setY(qreal y)
 {
-    if (_y.isNull || _y != y) {
+    if (!_y.isValid() || _y != y) {
         _y = y;
         emit yChanged();
         emit changed();
@@ -1024,7 +1024,7 @@ qreal QQuickCurve::relativeX() const
 
 void QQuickCurve::setRelativeX(qreal x)
 {
-    if (_relativeX.isNull || _relativeX != x) {
+    if (!_relativeX.isValid() || _relativeX != x) {
         _relativeX = x;
         emit relativeXChanged();
         emit changed();
@@ -1043,7 +1043,7 @@ qreal QQuickCurve::relativeY() const
 
 void QQuickCurve::setRelativeY(qreal y)
 {
-    if (_relativeY.isNull || _relativeY != y) {
+    if (!_relativeY.isValid() || _relativeY != y) {
         _relativeY = y;
         emit relativeYChanged();
         emit changed();
@@ -1402,7 +1402,7 @@ qreal QQuickPathQuad::relativeControlX() const
 
 void QQuickPathQuad::setRelativeControlX(qreal x)
 {
-    if (_relativeControlX.isNull || _relativeControlX != x) {
+    if (!_relativeControlX.isValid() || _relativeControlX != x) {
         _relativeControlX = x;
         emit relativeControlXChanged();
         emit changed();
@@ -1421,7 +1421,7 @@ qreal QQuickPathQuad::relativeControlY() const
 
 void QQuickPathQuad::setRelativeControlY(qreal y)
 {
-    if (_relativeControlY.isNull || _relativeControlY != y) {
+    if (!_relativeControlY.isValid() || _relativeControlY != y) {
         _relativeControlY = y;
         emit relativeControlYChanged();
         emit changed();
@@ -1586,7 +1586,7 @@ qreal QQuickPathCubic::relativeControl1X() const
 
 void QQuickPathCubic::setRelativeControl1X(qreal x)
 {
-    if (_relativeControl1X.isNull || _relativeControl1X != x) {
+    if (!_relativeControl1X.isValid() || _relativeControl1X != x) {
         _relativeControl1X = x;
         emit relativeControl1XChanged();
         emit changed();
@@ -1605,7 +1605,7 @@ qreal QQuickPathCubic::relativeControl1Y() const
 
 void QQuickPathCubic::setRelativeControl1Y(qreal y)
 {
-    if (_relativeControl1Y.isNull || _relativeControl1Y != y) {
+    if (!_relativeControl1Y.isValid() || _relativeControl1Y != y) {
         _relativeControl1Y = y;
         emit relativeControl1YChanged();
         emit changed();
@@ -1624,7 +1624,7 @@ qreal QQuickPathCubic::relativeControl2X() const
 
 void QQuickPathCubic::setRelativeControl2X(qreal x)
 {
-    if (_relativeControl2X.isNull || _relativeControl2X != x) {
+    if (!_relativeControl2X.isValid() || _relativeControl2X != x) {
         _relativeControl2X = x;
         emit relativeControl2XChanged();
         emit changed();
@@ -1643,7 +1643,7 @@ qreal QQuickPathCubic::relativeControl2Y() const
 
 void QQuickPathCubic::setRelativeControl2Y(qreal y)
 {
-    if (_relativeControl2Y.isNull || _relativeControl2Y != y) {
+    if (!_relativeControl2Y.isValid() || _relativeControl2Y != y) {
         _relativeControl2Y = y;
         emit relativeControl2YChanged();
         emit changed();

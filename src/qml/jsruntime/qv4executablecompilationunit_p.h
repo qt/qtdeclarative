@@ -99,10 +99,16 @@ public:
     // finalUrl() and finalUrlString() shall be used to resolve further URLs referred to in the code
     // They are _not_ intercepted and thus represent the "logical" name for the code.
 
-    QUrl url() const { if (m_url.isNull) m_url = QUrl(fileName()); return m_url; }
+    QUrl url() const
+    {
+        if (!m_url.isValid())
+            m_url = QUrl(fileName());
+        return m_url;
+    }
+
     QUrl finalUrl() const
     {
-        if (m_finalUrl.isNull)
+        if (!m_finalUrl.isValid())
             m_finalUrl = QUrl(finalUrlString());
         return m_finalUrl;
     }
