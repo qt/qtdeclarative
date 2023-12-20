@@ -65,8 +65,34 @@ struct ResolvedTypeReferenceMap: public QHash<int, ResolvedTypeReference*>
     bool addToHash(QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums) const;
 };
 
+struct CompilationUnitRuntimeData
+{
+    Heap::String **runtimeStrings = nullptr; // Array
+
+    // pointers either to data->constants() or little-endian memory copy.
+    // We keep this member twice so that the JIT can access it via standard layout.
+    const StaticValue *constants = nullptr;
+
+    QV4::StaticValue *runtimeRegularExpressions = nullptr;
+    Heap::InternalClass **runtimeClasses = nullptr;
+    const StaticValue **imports = nullptr;
+
+    QV4::Lookup *runtimeLookups = nullptr;
+    QVector<QV4::Function *> runtimeFunctions;
+    QVector<QV4::Heap::InternalClass *> runtimeBlocks;
+    mutable QVector<QV4::Heap::Object *> templateObjects;
+};
+
+static_assert(std::is_standard_layout_v<CompilationUnitRuntimeData>);
+static_assert(offsetof(CompilationUnitRuntimeData, runtimeStrings) == 0);
+static_assert(offsetof(CompilationUnitRuntimeData, constants) == sizeof(QV4::Heap::String **));
+static_assert(offsetof(CompilationUnitRuntimeData, runtimeRegularExpressions) == offsetof(CompilationUnitRuntimeData, constants) + sizeof(const StaticValue *));
+static_assert(offsetof(CompilationUnitRuntimeData, runtimeClasses) == offsetof(CompilationUnitRuntimeData, runtimeRegularExpressions) + sizeof(const StaticValue *));
+static_assert(offsetof(CompilationUnitRuntimeData, imports) == offsetof(CompilationUnitRuntimeData, runtimeClasses) + sizeof(const StaticValue *));
+
 class Q_QML_PRIVATE_EXPORT ExecutableCompilationUnit final
     : public CompiledData::CompilationUnit,
+      public CompilationUnitRuntimeData,
       public QQmlRefCounted<ExecutableCompilationUnit>
 {
     Q_DISABLE_COPY_MOVE(ExecutableCompilationUnit)
@@ -107,10 +133,6 @@ public:
         return m_finalUrl;
     }
 
-    QV4::Lookup *runtimeLookups = nullptr;
-    QVector<QV4::Function *> runtimeFunctions;
-    QVector<QV4::Heap::InternalClass *> runtimeBlocks;
-    mutable QVector<QV4::Heap::Object *> templateObjects;
     mutable QQmlNullableValue<QUrl> m_url;
     mutable QQmlNullableValue<QUrl> m_finalUrl;
 
@@ -316,11 +338,17 @@ public:
 
     static bool verifyHeader(const CompiledData::Unit *unit, QDateTime expectedSourceTimeStamp,
                              QString *errorString);
+
+    Heap::Module *module() const { return m_module; }
+    void setModule(Heap::Module *module) { m_module = module; }
+
 protected:
     quint32 totalStringCount() const
     { return data->stringTableSize; }
 
 private:
+    Heap::Module *m_module = nullptr;
+
     struct ResolveSetEntry
     {
         ResolveSetEntry() {}
