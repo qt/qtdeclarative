@@ -40,8 +40,8 @@ bool isRootPath(const QString &path)
 class QQmlPreviewFileEngineIterator : public QAbstractFileEngineIterator
 {
 public:
-    QQmlPreviewFileEngineIterator(QDir::Filters filters, const QStringList &filterNames,
-                                  const QStringList &m_entries);
+    QQmlPreviewFileEngineIterator(const QString &path, QDir::Filters filters,
+                                  const QStringList &filterNames, const QStringList &m_entries);
     ~QQmlPreviewFileEngineIterator();
 
     QString next() override;
@@ -53,10 +53,11 @@ private:
     int m_index;
 };
 
-QQmlPreviewFileEngineIterator::QQmlPreviewFileEngineIterator(QDir::Filters filters,
+QQmlPreviewFileEngineIterator::QQmlPreviewFileEngineIterator(const QString &path,
+                                                             QDir::Filters filters,
                                                              const QStringList &filterNames,
                                                              const QStringList &entries)
-    : QAbstractFileEngineIterator(filters, filterNames), m_entries(entries), m_index(0)
+    : QAbstractFileEngineIterator(path, filters, filterNames), m_entries(entries), m_index(0)
 {
 }
 
@@ -215,14 +216,15 @@ uint QQmlPreviewFileEngine::ownerId(QAbstractFileEngine::FileOwner owner) const
     return m_fallback ? m_fallback->ownerId(owner) : static_cast<uint>(-2);
 }
 
-QAbstractFileEngine::Iterator *QQmlPreviewFileEngine::beginEntryList(QDir::Filters filters,
-                                                                     const QStringList &filterNames)
+QAbstractFileEngine::IteratorUniquePtr QQmlPreviewFileEngine::beginEntryList(
+        const QString &path, QDir::Filters filters, const QStringList &filterNames)
 {
-    return m_fallback ? m_fallback->beginEntryList(filters, filterNames)
-                      : new QQmlPreviewFileEngineIterator(filters, filterNames, m_entries);
+    return m_fallback ? m_fallback->beginEntryList(path, filters, filterNames)
+                      : std::make_unique<QQmlPreviewFileEngineIterator>(
+                              path, filters, filterNames, m_entries);
 }
 
-QAbstractFileEngine::Iterator *QQmlPreviewFileEngine::endEntryList()
+QAbstractFileEngine::IteratorUniquePtr QQmlPreviewFileEngine::endEntryList()
 {
     return m_fallback ? m_fallback->endEntryList() : nullptr;
 }

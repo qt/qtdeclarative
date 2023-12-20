@@ -22,6 +22,8 @@
 #include <private/qfsfileengine_p.h>
 #include <QtCore/qbuffer.h>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlPreviewFileEngine : public QAbstractFileEngine
@@ -43,8 +45,9 @@ public:
     QString fileName(QAbstractFileEngine::FileName file) const override;
     uint ownerId(FileOwner) const override;
 
-    Iterator *beginEntryList(QDir::Filters filters, const QStringList &filterNames) override;
-    Iterator *endEntryList() override;
+    IteratorUniquePtr beginEntryList(const QString &path, QDir::Filters filters,
+                                     const QStringList &filterNames) override;
+    IteratorUniquePtr endEntryList() override;
 
     // Forwarding to fallback if exists
     bool flush() override;
@@ -81,7 +84,7 @@ private:
 
     mutable QBuffer m_contents;
     mutable QStringList m_entries;
-    mutable QScopedPointer<QAbstractFileEngine> m_fallback;
+    mutable std::unique_ptr<QAbstractFileEngine> m_fallback;
     mutable QQmlPreviewFileLoader::Result m_result = QQmlPreviewFileLoader::Unknown;
 };
 
