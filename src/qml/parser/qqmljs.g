@@ -302,17 +302,17 @@ public:
     inline int errorColumnNumber() const
     { return diagnosticMessage().loc.startColumn; }
 
-    inline bool identifierInsertion() const
-    { return m_enableIdentifierInsertion; }
+    inline bool identifierInsertionEnabled() const
+    { return m_identifierInsertionEnabled; }
 
-    inline void enableIdentifierInsertion()
-    { m_enableIdentifierInsertion = true; }
+    inline void setIdentifierInsertionEnabled(bool enable)
+    { m_identifierInsertionEnabled = enable; }
 
-    inline bool incompleteBindings() const
-    { return m_enableIncompleteBindings; }
+    inline bool incompleteBindingsEnabled() const
+    { return m_incompleteBindingsEnabled; }
 
-    inline void enableIncompleteBindings()
-    { m_enableIncompleteBindings = true; }
+    inline void setIncompleteBindingsEnabled(bool enable)
+    { m_incompleteBindingsEnabled = enable; }
 
 protected:
     bool parse(int startToken);
@@ -404,8 +404,8 @@ protected:
     CoverExpressionType coverExpressionType = CE_Invalid;
 
     QList<DiagnosticMessage> diagnostic_messages;
-    bool m_enableIdentifierInsertion = false;
-    bool m_enableIncompleteBindings = false;
+    bool m_identifierInsertionEnabled = false;
+    bool m_incompleteBindingsEnabled = false;
 };
 
 } // end of namespace QQmlJS
@@ -1152,7 +1152,7 @@ case $rule_number:
 UiObjectMember: UiQualifiedId Semicolon;
 /.
     case $rule_number: {
-    if (!m_enableIncompleteBindings) {
+    if (!m_incompleteBindingsEnabled) {
         diagnostic_messages.append(compileError(loc(1), QLatin1String("Incomplete binding, expected token `:` or `{`")));
         return false;
     }
@@ -4827,7 +4827,7 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
         const int errorState = state_stack[tos];
 
         // automatic insertion of missing identifiers after dots
-        if (yytoken != -1 && m_enableIdentifierInsertion && t_action(errorState, T_IDENTIFIER) && yyprevtoken == T_DOT) {
+        if (yytoken != -1 && m_identifierInsertionEnabled && t_action(errorState, T_IDENTIFIER) && yyprevtoken == T_DOT) {
 #ifdef PARSER_DEBUG
             qDebug() << "Inserting missing identifier between" << spell[yyprevtoken] << "and"
                      << spell[yytoken];
