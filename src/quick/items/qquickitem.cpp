@@ -4314,7 +4314,11 @@ void QQuickItem::dropEvent(QDropEvent *event)
     This method will only be called if filtersChildMouseEvents() is \c true.
 
     Return \c true if the specified \a event should not be passed on to the
-    specified child \a item, and \c false otherwise.
+    specified child \a item, and \c false otherwise. If you return \c true, you
+    should also \l {QEvent::accept()}{accept} or \l {QEvent::ignore()}{ignore}
+    the \a event, to signal if event propagation should stop or continue.
+    The \a event will, however, always be sent to all childMouseEventFilters
+    up the parent chain.
 
     \note Despite the name, this function filters all QPointerEvent instances
     during delivery to all children (typically mouse, touch, and tablet

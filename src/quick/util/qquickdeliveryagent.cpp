@@ -2488,15 +2488,18 @@ bool QQuickDeliveryAgentPrivate::sendFilteredPointerEventImpl(QPointerEvent *eve
                 QQuickItemPrivate::get(receiver)->localizedTouchEvent(static_cast<QTouchEvent *>(event), true, &filteringParentTouchEvent);
                 if (filteringParentTouchEvent.type() != QEvent::None) {
                     qCDebug(lcTouch) << "letting parent" << filteringParent << "filter for" << receiver << &filteringParentTouchEvent;
-                    if (filteringParent->childMouseEventFilter(receiver, &filteringParentTouchEvent)) {
+                    filtered = filteringParent->childMouseEventFilter(receiver, &filteringParentTouchEvent);
+                    if (filtered) {
                         qCDebug(lcTouch) << "touch event intercepted by childMouseEventFilter of " << filteringParent;
+                        event->setAccepted(filteringParentTouchEvent.isAccepted());
                         skipDelivery.append(filteringParent);
-                        for (auto point : filteringParentTouchEvent.points()) {
-                            const QQuickItem *exclusiveGrabber = qobject_cast<const QQuickItem *>(event->exclusiveGrabber(point));
-                            if (!exclusiveGrabber || !exclusiveGrabber->keepTouchGrab())
-                                event->setExclusiveGrabber(point, filteringParent);
+                        if (event->isAccepted()) {
+                            for (auto point : filteringParentTouchEvent.points()) {
+                                const QQuickItem *exclusiveGrabber = qobject_cast<const QQuickItem *>(event->exclusiveGrabber(point));
+                                if (!exclusiveGrabber || !exclusiveGrabber->keepTouchGrab())
+                                    event->setExclusiveGrabber(point, filteringParent);
+                            }
                         }
-                        return true;
                     } else if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents)) &&
                                !filteringParent->acceptTouchEvents()) {
                         qCDebug(lcTouch) << "touch event NOT intercepted by childMouseEventFilter of " << filteringParent
@@ -2532,17 +2535,17 @@ bool QQuickDeliveryAgentPrivate::sendFilteredPointerEventImpl(QPointerEvent *eve
                                 // touchMouseId and touchMouseDevice must be set, even if it's only temporarily and isn't grabbed.
                                 touchMouseId = tp.id();
                                 touchMouseDevice = event->pointingDevice();
-                                if (filteringParent->childMouseEventFilter(receiver, &mouseEvent)) {
+                                filtered = filteringParent->childMouseEventFilter(receiver, &mouseEvent);
+                                if (filtered) {
                                     qCDebug(lcTouch) << "touch event intercepted as synth mouse event by childMouseEventFilter of " << filteringParent;
+                                    event->setAccepted(mouseEvent.isAccepted());
                                     skipDelivery.append(filteringParent);
-                                    if (t != QEvent::MouseButtonRelease) {
+                                    if (event->isAccepted() && event->isBeginEvent()) {
                                         qCDebug(lcTouchTarget) << "TP (mouse)" << Qt::hex << tp.id() << "->" << filteringParent;
                                         filteringParentTouchEvent.setExclusiveGrabber(tp, filteringParent);
                                         touchMouseUnset = false; // We want to leave touchMouseId and touchMouseDevice set
-                                        if (mouseEvent.isAccepted())
-                                            filteringParent->grabMouse();
+                                        filteringParent->grabMouse();
                                     }
-                                    filtered = true;
                                 }
                                 if (touchMouseUnset)
                                     // Now that we're done sending a synth mouse event, and it wasn't grabbed,
