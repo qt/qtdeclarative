@@ -562,7 +562,7 @@ public:
     Address loadConstAddress(int constIndex, RegisterID baseReg = ScratchRegister)
     {
         Address addr = loadCompilationUnitPtr(baseReg);
-        addr.offset = offsetof(QV4::CompiledData::CompilationUnitBase, constants);
+        addr.offset = offsetof(QV4::CompilationUnitRuntimeData, constants);
         loadPtr(addr, baseReg);
         addr.offset = constIndex * int(sizeof(QV4::Value));
         return addr;
@@ -571,7 +571,7 @@ public:
     Address loadStringAddress(int stringId)
     {
         Address addr = loadCompilationUnitPtr(ScratchRegister);
-        addr.offset = offsetof(QV4::CompiledData::CompilationUnitBase, runtimeStrings);
+        addr.offset = offsetof(QV4::CompilationUnitRuntimeData, runtimeStrings);
         loadPtr(addr, ScratchRegister);
         return Address(ScratchRegister, stringId * PointerSize);
     }

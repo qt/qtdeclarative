@@ -57,10 +57,13 @@ ExecutableCompilationUnit::ExecutableCompilationUnit() = default;
 ExecutableCompilationUnit::ExecutableCompilationUnit(
         CompiledData::CompilationUnit &&compilationUnit)
     : CompiledData::CompilationUnit(std::move(compilationUnit))
-{}
+{
+    CompilationUnitRuntimeData::constants = CompiledData::CompilationUnit::constants;
+}
 
 ExecutableCompilationUnit::~ExecutableCompilationUnit()
 {
+    delete [] imports;
     unlink();
 }
 
@@ -219,7 +222,7 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
     if (showCode) {
         qDebug() << "=== Constant table";
-        dumpConstantTable(constants, data->constantTableSize);
+        dumpConstantTable(CompiledData::CompilationUnit::constants, data->constantTableSize);
         qDebug() << "=== String table";
         for (uint i = 0, end = totalStringCount(); i < end; ++i)
             qDebug() << "    " << i << ":" << runtimeStrings[i]->toQString();
@@ -887,6 +890,7 @@ bool ExecutableCompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &s
         dataPtrRevert.dismiss();
         free(const_cast<CompiledData::Unit*>(oldDataPtr));
         backingFile = std::move(cacheFile);
+        CompilationUnitRuntimeData::constants = CompiledData::CompilationUnit::constants;
         return true;
     }
 

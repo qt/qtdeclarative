@@ -30,8 +30,9 @@ struct QQmlSourceLocation;
 
 namespace QV4 {
 
-struct Q_QML_EXPORT FunctionData {
-    CompiledData::CompilationUnitBase *compilationUnit;
+struct Q_QML_EXPORT FunctionData
+{
+    CompilationUnitRuntimeData *compilationUnit;
 
     // Intentionally require an ExecutableCompilationUnit but save only a pointer to
     // CompilationUnitBase. This is so that we can take advantage of the standard layout
