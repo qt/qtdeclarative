@@ -187,6 +187,18 @@ All warnings can be set to three levels:
             QLatin1String("directory"));
     parser.addOption(pluginPathsOption);
 
+    QCommandLineOption maxWarnings(
+            QStringList() << "W"
+                          << "max-warnings",
+            QLatin1String("Exit with an error code if more than \"count\" many"
+                          "warnings are found by qmllint. By default or if \"count\" "
+                          "is -1, warnings do not cause qmllint "
+                          "to return with an error exit code."),
+            "count"
+            );
+    parser.addOption(maxWarnings);
+    settings.addOption("MaxWarnings", -1);
+
     auto levelToString = [](const QQmlJS::LoggerCategory &category) -> QString {
         Q_ASSERT(category.isIgnored() || category.level() != QtCriticalMsg);
         if (category.isIgnored())
@@ -463,7 +475,13 @@ All warnings can be set to three levels:
                                          useJson ? &jsonFiles : nullptr, qmlImportPaths,
                                          qmldirFiles, resourceFiles, categories);
         }
-        success &= (lintResult == QQmlJSLinter::LintSuccess);
+        success &= (lintResult == QQmlJSLinter::LintSuccess || lintResult == QQmlJSLinter::HasWarnings);
+        if (success && parser.isSet(maxWarnings))
+        {
+            int value = parser.value(maxWarnings).toInt();
+            if (value != -1 && value < linter.logger()->warnings().size())
+                success = false;
+        }
 
         if (isFixing) {
             if (lintResult != QQmlJSLinter::LintSuccess && lintResult != QQmlJSLinter::HasWarnings)
