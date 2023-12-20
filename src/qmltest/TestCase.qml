@@ -165,6 +165,15 @@ import "testlogger.js" as TestLogger
     and mouseMove() methods can be used to simulate mouse events in a
     similar fashion.
 
+    If your test creates other windows, it's possible that those windows
+    become active, stealing the focus from the TestCase's window. To ensure
+    that the TestCase's window is active, use the following code:
+
+    \code
+    testCase.Window.window.requestActivate()
+    tryCompare(testCase.Window.window, "active", true)
+    \endcode
+
     \b{Note:} keyboard and mouse events can only be delivered once the
     main window has been shown.  Attempts to deliver events before then
     will fail.  Use the \l when and windowShown properties to track
