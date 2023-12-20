@@ -2608,6 +2608,73 @@ QList<CompletionItem> QQmlLSUtils::suggestCaseAndDefaultStatementCompletion()
 
 /*!
 \internal
+Break and continue can be inserted only in following situations:
+\list
+    \li Break and continue inside a loop.
+    \li Break inside a (nested) LabelledStatement
+    \li Break inside a (nested) SwitchStatement
+\endlist
+*/
+static QList<CompletionItem> suggestContinueAndBreakStatementIfNeeded(const DomItem& itemAtPosition)
+{
+    QList<CompletionItem> result;
+
+    bool alreadyInLabel = false;
+    bool alreadyInSwitch = false;
+    for (DomItem current = itemAtPosition; current; current = current.directParent()) {
+        switch (current.internalKind()) {
+        case DomType::ScriptExpression:
+            // reached end of script expression
+            return result;
+
+        case DomType::ScriptForStatement:
+        case DomType::ScriptForEachStatement:
+        case DomType::ScriptWhileStatement:
+        case DomType::ScriptDoWhileStatement:
+            result.emplaceBack();
+            result.back().label = "continue";
+            result.back().kind = int(CompletionItemKind::Keyword);
+
+            // do not add break twice
+            if (!alreadyInSwitch && !alreadyInLabel) {
+                result.emplaceBack();
+                result.back().label = "break";
+                result.back().kind = int(CompletionItemKind::Keyword);
+            }
+            // early exit: cannot suggest more completions
+            return result;
+
+        case DomType::ScriptSwitchStatement:
+            // check if break was already inserted
+            if (alreadyInSwitch || alreadyInLabel)
+                break;
+            alreadyInSwitch = true;
+
+            result.emplaceBack();
+            result.back().label = "break";
+            result.back().kind = int(CompletionItemKind::Keyword);
+            break;
+
+        case DomType::ScriptLabelledStatement:
+            // check if break was already inserted because of switch or loop
+            if (alreadyInSwitch || alreadyInLabel)
+                break;
+            alreadyInLabel = true;
+
+            result.emplaceBack();
+            result.back().label = "break";
+            result.back().kind = int(CompletionItemKind::Keyword);
+            break;
+
+        default:
+            break;
+        }
+    }
+    return result;
+}
+
+/*!
+\internal
 Generates snippets or keywords for all possible JS statements where it makes sense. To use whenever
 any JS statement can be expected, but when no JS statement is there yet.
 
@@ -2709,71 +2776,7 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &i
         result << suggestCaseAndDefaultStatementCompletion();
     }
 
-    bool alreadyInLoop = false;
-    bool alreadyInLabel = false;
-    bool alreadyInSwitch = false;
-    /*!
-    \internal
-    Break and continue can be inserted only in following situations:
-    \list
-        \li Break and continue inside a loop.
-        \li Break inside a (nested) LabelledStatement
-        \li Break inside a (nested) SwitchStatement
-    \endlist
-    */
-    for (DomItem current = itemAtPosition; current; current = current.directParent()) {
-        switch (current.internalKind()) {
-        case DomType::ScriptExpression:
-            // reached end of script expression
-            return result;
-
-        case DomType::ScriptForStatement:
-        case DomType::ScriptForEachStatement:
-        case DomType::ScriptWhileStatement:
-        case DomType::ScriptDoWhileStatement:
-            if (alreadyInLoop)
-                continue;
-            alreadyInLoop = true;
-
-            result.emplaceBack();
-            result.back().label = "continue";
-            result.back().kind = int(CompletionItemKind::Keyword);
-
-            // do not add break twice
-            if (!alreadyInSwitch && !alreadyInLabel) {
-                result.emplaceBack();
-                result.back().label = "break";
-                result.back().kind = int(CompletionItemKind::Keyword);
-            }
-            break;
-
-        case DomType::ScriptSwitchStatement:
-            // check if break was already inserted
-            if (alreadyInSwitch || alreadyInLoop || alreadyInLabel)
-                continue;
-            alreadyInSwitch = true;
-
-            result.emplaceBack();
-            result.back().label = "break";
-            result.back().kind = int(CompletionItemKind::Keyword);
-        case DomType::ScriptLabelledStatement:
-            // check if break was already inserted because of switch or loop
-            if (alreadyInSwitch || alreadyInLoop || alreadyInLabel)
-                continue;
-            alreadyInLabel = true;
-
-            result.emplaceBack();
-            result.back().label = "break";
-            result.back().kind = int(CompletionItemKind::Keyword);
-
-        default:
-            continue;
-        }
-
-        // early exit: cannot suggest more completions
-        if (alreadyInLoop)
-            return result;
-    }
+    result << suggestContinueAndBreakStatementIfNeeded(itemAtPosition);
 
     return result;
 }
