@@ -1224,6 +1224,7 @@ function(_qt_internal_target_enable_qmlcachegen target qmlcachegen)
             ${qmlcache_loader_cpp}
             TARGET_DIRECTORY ${target}
             PROPERTIES GENERATED TRUE
+                       SKIP_AUTOGEN TRUE
         )
     endif()
     get_target_property(target_source_dir ${target} SOURCE_DIR)
