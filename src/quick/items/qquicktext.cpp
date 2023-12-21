@@ -3074,7 +3074,7 @@ void QQuickText::invalidate()
 {
     Q_D(QQuickText);
     d->textHasChanged = true;
-    d->updateLayout();
+    QMetaObject::invokeMethod(this,[&]{q_updateLayout();});
 }
 
 bool QQuickTextPrivate::transformChanged(QQuickItem *transformedItem)
