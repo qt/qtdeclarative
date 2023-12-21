@@ -2312,6 +2312,11 @@ QList<CompletionItem> QQmlLSUtils::suggestJSExpressionCompletion(const DomItem &
     const bool hasQualifier = isFieldMemberAccess(scriptIdentifier) || askForCompletionOnDot;
 
     if (!hasQualifier) {
+        for (QUtf8StringView view : std::array<QUtf8StringView, 3>{ "null", "false", "true" }) {
+            result.emplaceBack();
+            result.back().label = view.data();
+            result.back().kind = int(CompletionItemKind::Value);
+        }
         result << idsCompletions(scriptIdentifier.component())
                << reachableTypes(scriptIdentifier,
                                  LocalSymbolsType::Singleton | LocalSymbolsType::AttachedType,

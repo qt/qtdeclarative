@@ -1971,6 +1971,9 @@ void tst_qmlls_utils::completions_data()
                        // inherited properties (transitive) from C++
                        { u"objectName"_s, CompletionItemKind::Property },
                        { u"someItem"_s, CompletionItemKind::Value },
+                       { u"true"_s, CompletionItemKind::Value },
+                       { u"false"_s, CompletionItemKind::Value },
+                       { u"null"_s, CompletionItemKind::Value },
                })
             << QStringList{
                    u"helloVar"_s,
