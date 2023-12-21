@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include <QtTest/qtest.h>
+#include <QtTest/qsignalspy.h>
 
 #include <QtQuickTest/QtQuickTest>
 
@@ -13,6 +14,7 @@
 #include <QtQml/qqmlapplicationengine.h>
 
 #include <QtQuick/qquickwindow.h>
+#include <QtQuick/private/qquickwindowcontainer_p.h>
 
 class tst_QQuickWindowContainer : public QQmlDataTest
 {
@@ -29,6 +31,8 @@ private slots:
 
     void basicFunctionality_data();
     void basicFunctionality();
+
+    void windowDestroyed();
 
 private:
     std::unique_ptr<QQmlApplicationEngine> m_engine;
@@ -81,6 +85,23 @@ void tst_QQuickWindowContainer::basicFunctionality()
     QCOMPARE(childWindow->parent(), topLevelWindow);
 
     QCOMPARE(childWindow->position(), position);
+}
+
+void tst_QQuickWindowContainer::windowDestroyed()
+{
+    std::unique_ptr<QWindow> window(new QWindow);
+
+    QQuickWindowContainer container;
+    QSignalSpy spy(&container, &QQuickWindowContainer::containedWindowChanged);
+
+    container.setContainedWindow(window.get());
+    QCOMPARE(container.containedWindow(), window.get());
+    QCOMPARE(spy.size(), 1);
+
+    window.reset(nullptr);
+
+    QVERIFY(!container.containedWindow());
+    QCOMPARE(spy.size(), 2);
 }
 
 QTEST_MAIN(tst_QQuickWindowContainer)

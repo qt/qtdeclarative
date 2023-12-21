@@ -237,6 +237,8 @@ void QQuickWindowContainer::setContainedWindow(QWindow *window)
         connect(d->window, &QWindow::heightChanged, this, &QQuickWindowContainer::windowUpdated);
         connect(d->window, &QWindow::visibleChanged, this, &QQuickWindowContainer::windowUpdated);
 
+        connect(d->window, &QObject::destroyed, this, &QQuickWindowContainer::windowDestroyed);
+
         d->window->installEventFilter(this);
 
         if (d->componentComplete)
@@ -494,6 +496,18 @@ bool QQuickWindowContainer::eventFilter(QObject *object, QEvent *event)
     }
 
     return QQuickImplicitSizeItem::eventFilter(object, event);
+}
+
+void QQuickWindowContainer::windowDestroyed()
+{
+    Q_D(QQuickWindowContainer);
+    qCDebug(lcWindowContainer) << "Window" << (void*)d->window << "destroyed";
+
+    d->window->removeEventFilter(this);
+    d->window = nullptr;
+
+    syncWindowToItem(); // Reset state based on not having a window
+    emit containedWindowChanged(d->window);
 }
 
 // ----------------------- Item updates -----------------------
