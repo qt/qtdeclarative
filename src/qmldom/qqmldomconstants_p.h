@@ -226,6 +226,7 @@ enum class DomType {
     ScriptContinueStatement,
     ScriptConditionalExpression,
     ScriptEmptyStatement,
+    ScriptParenthesizedExpression,
 
     ScriptElementStop, // marker to check if a DomType is a scriptelement or not
 };

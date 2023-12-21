@@ -2716,6 +2716,29 @@ void QQmlDomAstCreator::endVisit(AST::EmptyStatement *statement)
     pushScriptElement(current);
 }
 
+bool QQmlDomAstCreator::visit(AST::NestedExpression *)
+{
+    return m_enableScriptExpressions;
+}
+
+void QQmlDomAstCreator::endVisit(AST::NestedExpression *expression)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeGenericScriptElement(expression, DomType::ScriptParenthesizedExpression);
+    current->addLocation(FileLocationRegion::LeftParenthesisRegion, expression->lparenToken);
+    current->addLocation(FileLocationRegion::RightParenthesisRegion, expression->rparenToken);
+
+    if (expression->expression) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty() || scriptNodeStack.last().isList());
+        current->insertChild(Fields::expression, currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
 bool QQmlDomAstCreator::visit(AST::PreDecrementExpression *)
 {
     return m_enableScriptExpressions;

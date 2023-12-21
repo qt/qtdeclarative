@@ -3228,6 +3228,19 @@ void tst_qmlls_utils::completions_data()
                })
             << QStringList{ u"QtQuick"_s, attachedTypeName, u"Rectangle"_s,
                             u"bad"_s, u"onCompleted"_s, u"T.Button"_s };
+
+    QTest::newRow("parenthesizedExpression")
+            << testFile("completions/parenthesizedExpression.qml") << 10 << 10
+            << ExpectedCompletions({
+                       { u"x"_s, CompletionItemKind::Variable },
+               })
+            << QStringList{ u"QtQuick"_s, u"Rectangle"_s, forStatementCompletion };
+
+    QTest::newRow("behindParenthesizedExpression")
+            << testFile("completions/parenthesizedExpression.qml") << 10 << 16
+            << ExpectedCompletions({})
+            << QStringList{ u"QtQuick"_s, attachedTypeName, u"Rectangle"_s, forStatementCompletion,
+                            u"x"_s };
 }
 
 void tst_qmlls_utils::completions()

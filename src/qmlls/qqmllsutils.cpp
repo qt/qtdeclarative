@@ -3433,6 +3433,21 @@ static QList<CompletionItem> insidePostExpression(const DomItem &parentForContex
     return {};
 }
 
+static QList<CompletionItem>
+insideParenthesizedExpression(const DomItem &parentForContext,
+                              const QQmlLSCompletionPosition &positionInfo)
+{
+    const auto regions = FileLocations::treeOf(parentForContext)->info().regions;
+
+    const QQmlJS::SourceLocation leftParenthesis = regions[LeftParenthesisRegion];
+    const QQmlJS::SourceLocation rightParenthesis = regions[RightParenthesisRegion];
+
+    if (betweenLocations(leftParenthesis, positionInfo, rightParenthesis)) {
+        return QQmlLSUtils::suggestJSExpressionCompletion(positionInfo.itemAtPosition);
+    }
+    return {};
+}
+
 static bool ctxBeforeStatement(const QQmlLSCompletionPosition &positionInfo,
                                const DomItem &parentForContext, FileLocationRegion firstRegion)
 {
@@ -3580,6 +3595,9 @@ QList<CompletionItem> QQmlLSUtils::completions(const DomItem &currentItem,
             return insideUnaryExpression(currentParent, positionInfo);
         case DomType::ScriptPostExpression:
             return insidePostExpression(currentParent, positionInfo);
+        case DomType::ScriptParenthesizedExpression:
+            return insideParenthesizedExpression(currentParent, positionInfo);
+
 
         // TODO: Implement those statements.
         // In the meanwhile, suppress completions to avoid weird behaviors.
