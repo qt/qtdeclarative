@@ -103,6 +103,7 @@ set(qml_files
     conversionInDeadCode.qml
     conversions.qml
     conversions2.qml
+    convertPrimitiveToVar.qml
     convertQJSPrimitiveValueToIntegral.qml
     convertToOriginalReadAcumulatorForUnaryOperators.qml
     curlygrouped.qml
