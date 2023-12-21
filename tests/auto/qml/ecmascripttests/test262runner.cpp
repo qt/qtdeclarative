@@ -342,7 +342,7 @@ void Test262Runner::executeTest(QV4::ExecutionEngine &vm, const QString &testDat
 
         if (!vm.hasException) {
             const auto rootModule = vm.loadModule(rootModuleUrl);
-            if (rootModule.compiled && rootModule.compiled->instantiate(&vm))
+            if (rootModule.compiled && rootModule.compiled->instantiate())
                 rootModule.compiled->evaluate();
         }
     } else {

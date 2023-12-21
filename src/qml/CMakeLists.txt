@@ -169,7 +169,7 @@ qt_internal_add_qml_module(Qml
         common/qqmljssourcelocation_p.h
         common/qv4alloca_p.h
         common/qv4calldata_p.h
-        common/qv4compileddata_p.h
+        common/qv4compileddata.cpp common/qv4compileddata_p.h
         common/qv4staticvalue_p.h
         common/qv4stringtoarrayindex_p.h
         common/qqmltranslation.cpp common/qqmltranslation_p.h

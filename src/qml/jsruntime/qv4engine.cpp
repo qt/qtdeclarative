@@ -860,8 +860,13 @@ ExecutionEngine::~ExecutionEngine()
     delete memoryManager;
 
     // Take a temporary reference to the CU so that it doesn't disappear during unlinking.
-    while (!compilationUnits.isEmpty())
-        QQmlRefPointer<ExecutableCompilationUnit>(*compilationUnits.begin())->unlink();
+    while (!compilationUnits.isEmpty()) {
+        QQmlRefPointer<ExecutableCompilationUnit> cu(*compilationUnits.begin());
+        Q_ASSERT(cu->engine == this);
+        cu->clear();
+        cu->engine = nullptr;
+        cu->nextCompilationUnit.remove();
+    }
 
     delete bumperPointerAllocator;
     delete regExpCache;
@@ -2075,11 +2080,10 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(const Q
                 &cacheError)
             : nullptr) {
         return ExecutableCompilationUnit::create(
-                QQmlRefPointer<QV4::CompiledData::CompilationUnit>(
-                        new QV4::CompiledData::CompilationUnit(
-                                cachedUnit->qmlData, cachedUnit->aotCompiledFunctions,
-                                url.fileName(), url.toString()),
-                        QQmlRefPointer<QV4::CompiledData::CompilationUnit>::Adopt));
+                QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>(
+                        cachedUnit->qmlData, cachedUnit->aotCompiledFunctions, url.fileName(),
+                        url.toString()),
+                this);
     }
 
     QFile f(QQmlFile::urlToLocalFileOrQrc(url));
@@ -2113,7 +2117,7 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(
         }
     }
 
-    return ExecutableCompilationUnit::create(std::move(unit));
+    return ExecutableCompilationUnit::create(std::move(unit), this);
 }
 
 void ExecutionEngine::injectCompiledModule(const QQmlRefPointer<ExecutableCompilationUnit> &moduleUnit)

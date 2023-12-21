@@ -32,6 +32,7 @@
 #include <private/qendian_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <private/qv4staticvalue_p.h>
+#include <private/qv4compilationunitmapper_p.h>
 
 #include <functional>
 #include <limits.h>
@@ -1434,6 +1435,8 @@ struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
 
     // pointers either to data->constants() or little-endian memory copy.
     const StaticValue *constants = nullptr;
+
+    std::unique_ptr<CompilationUnitMapper> backingFile;
 public:
     using CompiledObject = CompiledData::Object;
 
@@ -1549,6 +1552,11 @@ public:
             return 0.0;
         return constants[binding->value.constantValueIndex].doubleValue();
     }
+
+    Q_QML_EXPORT static QString localCacheFilePath(const QUrl &url);
+    Q_QML_EXPORT bool loadFromDisk(
+            const QUrl &url, const QDateTime &sourceTimeStamp, QString *errorString);
+    Q_QML_EXPORT bool saveToDisk(const QUrl &unitUrl, QString *errorString);
 
 private:
     QString m_fileName; // initialized from data->sourceFileIndex

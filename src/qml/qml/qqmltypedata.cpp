@@ -90,7 +90,7 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     if (!v4)
         return false;
 
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> unit = QV4::ExecutableCompilationUnit::create();
+    auto unit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>();
     {
         QString error;
         if (!unit->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), &error)) {
@@ -100,11 +100,11 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     }
 
     if (unit->unitData()->flags & QV4::CompiledData::Unit::PendingTypeCompilation) {
-        restoreIR(unit->baseCompilationUnit());
+        restoreIR(unit);
         return true;
     }
 
-    m_compiledData = unit;
+    m_compiledData = QV4::ExecutableCompilationUnit::create(std::move(unit), v4);
 
     QVector<QV4::CompiledData::InlineComponent> ics;
     for (int i = 0, count = m_compiledData->objectCount(); i < count; ++i) {
@@ -819,9 +819,10 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
                 & QV4::CompiledData::Unit::PendingTypeCompilation);
 
     QQmlEnginePrivate * const enginePrivate = QQmlEnginePrivate::get(typeLoader()->engine());
-    QQmlTypeCompiler compiler(enginePrivate, this, m_document.data(), typeNameCache, resolvedTypeCache, dependencyHasher);
-    m_compiledData = compiler.compile();
-    if (!m_compiledData) {
+    QQmlTypeCompiler compiler(
+            enginePrivate, this, m_document.data(), resolvedTypeCache, dependencyHasher);
+    auto compilationUnit = compiler.compile();
+    if (!compilationUnit) {
         qDeleteAll(*resolvedTypeCache);
         resolvedTypeCache->clear();
         setError(compiler.compilationErrors());
@@ -831,15 +832,24 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
     const bool trySaveToDisk = writeCacheFile() && !typeRecompilation;
     if (trySaveToDisk) {
         QString errorString;
-        if (m_compiledData->saveToDisk(url(), &errorString)) {
+        if (compilationUnit->saveToDisk(url(), &errorString)) {
             QString error;
-            if (!m_compiledData->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), &error)) {
+            if (!compilationUnit->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), &error)) {
                 // ignore error, keep using the in-memory compilation unit.
             }
         } else {
-            qCDebug(DBG_DISK_CACHE) << "Error saving cached version of" << m_compiledData->fileName() << "to disk:" << errorString;
+            qCDebug(DBG_DISK_CACHE) << "Error saving cached version of"
+                                    << compilationUnit->fileName() << "to disk:" << errorString;
         }
     }
+
+    m_compiledData = QV4::ExecutableCompilationUnit::create(
+            std::move(compilationUnit), enginePrivate->v4engine());
+    m_compiledData->typeNameCache = typeNameCache;
+    m_compiledData->resolvedTypes = *resolvedTypeCache;
+    m_compiledData->propertyCaches = std::move(*compiler.propertyCaches());
+    Q_ASSERT(m_compiledData->propertyCaches.count()
+             == static_cast<int>(m_compiledData->objectCount()));
 }
 
 void QQmlTypeData::resolveTypes()

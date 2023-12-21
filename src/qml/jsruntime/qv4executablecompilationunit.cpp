@@ -23,15 +23,10 @@
 #include <private/qv4resolvedtypereference_p.h>
 #include <private/qv4objectiterator_p.h>
 
-#include <QtQml/qqmlfile.h>
 #include <QtQml/qqmlpropertymap.h>
 
-#include <QtCore/qdir.h>
-#include <QtCore/qstandardpaths.h>
 #include <QtCore/qfileinfo.h>
-#include <QtCore/qscopeguard.h>
 #include <QtCore/qcryptographichash.h>
-#include <QtCore/QScopedValueRollback>
 
 static_assert(QV4::CompiledData::QmlCompileHashSpace > QML_COMPILE_HASH_LENGTH);
 
@@ -63,23 +58,8 @@ ExecutableCompilationUnit::ExecutableCompilationUnit(
 
 ExecutableCompilationUnit::~ExecutableCompilationUnit()
 {
-    delete [] imports;
-    unlink();
-}
-
-QString ExecutableCompilationUnit::localCacheFilePath(const QUrl &url)
-{
-    static const QByteArray envCachePath = qgetenv("QML_DISK_CACHE_PATH");
-
-    const QString localSourcePath = QQmlFile::urlToLocalFileOrQrc(url);
-    const QString cacheFileSuffix = QFileInfo(localSourcePath + QLatin1Char('c')).completeSuffix();
-    QCryptographicHash fileNameHash(QCryptographicHash::Sha1);
-    fileNameHash.addData(localSourcePath.toUtf8());
-    QString directory = envCachePath.isEmpty()
-            ? QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QLatin1String("/qmlcache/")
-            : QString::fromLocal8Bit(envCachePath) + QLatin1String("/");
-    QDir::root().mkpath(directory);
-    return directory + QString::fromUtf8(fileNameHash.result().toHex()) + QLatin1Char('.') + cacheFileSuffix;
+    clear();
+    nextCompilationUnit.remove();
 }
 
 static QString toString(QV4::ReturnedValue v)
@@ -107,14 +87,12 @@ static void dumpConstantTable(const StaticValue *constants, uint count)
     }
 }
 
-QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
+void ExecutableCompilationUnit::populate()
 {
-    this->engine = engine;
-    engine->compilationUnits.insert(this);
-
     const CompiledData::Unit *data = m_compilationUnit->data;
 
     Q_ASSERT(!runtimeStrings);
+    Q_ASSERT(engine);
     Q_ASSERT(data);
     const quint32 stringCount = totalStringCount();
     // strings need to be 0 in case a GC run happens while we're within the loop below
@@ -235,16 +213,13 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
                  << (data->indexOfRootFunction != -1
                              ? data->indexOfRootFunction : 0);
     }
-
-    if (data->indexOfRootFunction != -1)
-        return runtimeFunctions[data->indexOfRootFunction];
-    else
-        return nullptr;
 }
 
 Heap::Object *ExecutableCompilationUnit::templateObjectAt(int index) const
 {
     const CompiledData::Unit *data = m_compilationUnit->data;
+    Q_ASSERT(data);
+    Q_ASSERT(engine);
 
     Q_ASSERT(index < int(data->templateObjectTableSize));
     if (!templateObjects.size())
@@ -274,10 +249,10 @@ Heap::Object *ExecutableCompilationUnit::templateObjectAt(int index) const
     return templateObjects.at(index);
 }
 
-void ExecutableCompilationUnit::unlink()
+void ExecutableCompilationUnit::clear()
 {
-    if (engine)
-        nextCompilationUnit.remove();
+    delete [] imports;
+    imports = nullptr;
 
     // Clear the QQmlTypes but not the property caches.
     // The property caches may still be necessary to resolve further types.
@@ -297,8 +272,6 @@ void ExecutableCompilationUnit::unlink()
 
     qDeleteAll(resolvedTypes);
     resolvedTypes.clear();
-
-    engine = nullptr;
 
     delete [] runtimeLookups;
     runtimeLookups = nullptr;
@@ -389,6 +362,17 @@ void processInlinComponentType(
     } else {
         populateIcData();
     }
+}
+
+QQmlRefPointer<ExecutableCompilationUnit> ExecutableCompilationUnit::create(
+        QQmlRefPointer<CompiledData::CompilationUnit> &&compilationUnit, ExecutionEngine *engine)
+{
+    auto result = QQmlRefPointer<ExecutableCompilationUnit>(
+            new ExecutableCompilationUnit(std::move(compilationUnit)),
+            QQmlRefPointer<ExecutableCompilationUnit>::Adopt);
+    result->engine = engine;
+    engine->compilationUnits.insert(result.data());
+    return result;
 }
 
 void ExecutableCompilationUnit::finalizeCompositeType(const QQmlType &type)
@@ -561,7 +545,7 @@ QStringList ExecutableCompilationUnit::moduleRequests() const
     return requests;
 }
 
-Heap::Module *ExecutableCompilationUnit::instantiate(ExecutionEngine *engine)
+Heap::Module *ExecutableCompilationUnit::instantiate()
 {
     const CompiledData::Unit *data = m_compilationUnit->data;
 
@@ -571,8 +555,9 @@ Heap::Module *ExecutableCompilationUnit::instantiate(ExecutionEngine *engine)
     if (data->indexOfRootFunction < 0)
         return nullptr;
 
-    if (!this->engine)
-        linkToEngine(engine);
+    Q_ASSERT(engine);
+    if (!runtimeStrings)
+        populate();
 
     Scope scope(engine);
     Scoped<Module> module(scope, engine->memoryManager->allocate<Module>(engine, this));
@@ -586,7 +571,7 @@ Heap::Module *ExecutableCompilationUnit::instantiate(ExecutionEngine *engine)
         if (engine->hasException)
             return nullptr;
         if (dependentModuleUnit.compiled)
-            dependentModuleUnit.compiled->instantiate(engine);
+            dependentModuleUnit.compiled->instantiate();
     }
 
     ScopedString importName(scope);
@@ -701,6 +686,10 @@ const Value *ExecutableCompilationUnit::resolveExportRecursively(
         return &module()->self;
 
     const CompiledData::Unit *data = m_compilationUnit->data;
+
+    Q_ASSERT(data);
+    Q_ASSERT(engine);
+
     Scope scope(engine);
 
     if (auto localExport = lookupNameInExportTable(
@@ -813,6 +802,9 @@ void ExecutableCompilationUnit::getExportedNamesRecursively(
 
     const CompiledData::Unit *data = m_compilationUnit->data;
 
+    Q_ASSERT(data);
+    Q_ASSERT(engine);
+
     for (uint i = 0; i < data->localExportEntryTableSize; ++i) {
         const CompiledData::ExportEntry &entry = data->localExportEntryTable()[i];
         append(stringAt(entry.exportName));
@@ -845,6 +837,8 @@ void ExecutableCompilationUnit::getExportedNamesRecursively(
 
 void ExecutableCompilationUnit::evaluate()
 {
+    Q_ASSERT(engine);
+
     QV4::Scope scope(engine);
     QV4::Scoped<Module> mod(scope, module());
     mod->evaluate();
@@ -852,6 +846,8 @@ void ExecutableCompilationUnit::evaluate()
 
 void ExecutableCompilationUnit::evaluateModuleRequests()
 {
+    Q_ASSERT(engine);
+
     for (const QString &request: moduleRequests()) {
         auto dependentModule = engine->loadModule(QUrl(request), this);
         if (dependentModule.native)
@@ -865,81 +861,6 @@ void ExecutableCompilationUnit::evaluateModuleRequests()
         if (engine->hasException)
             return;
     }
-}
-
-bool ExecutableCompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, QString *errorString)
-{
-    if (!QQmlFile::isLocalFile(url)) {
-        *errorString = QStringLiteral("File has to be a local file.");
-        return false;
-    }
-
-    const QString sourcePath = QQmlFile::urlToLocalFileOrQrc(url);
-    auto cacheFile = std::make_unique<CompilationUnitMapper>();
-
-    const QStringList cachePaths = { sourcePath + QLatin1Char('c'), localCacheFilePath(url) };
-    for (const QString &cachePath : cachePaths) {
-        CompiledData::Unit *mappedUnit = cacheFile->get(cachePath, sourceTimeStamp, errorString);
-        if (!mappedUnit)
-            continue;
-
-        const CompiledData::Unit *oldData = unitData();
-        const CompiledData::Unit * const oldDataPtr
-                = (oldData && !(oldData->flags & QV4::CompiledData::Unit::StaticData))
-                    ? oldData
-                    : nullptr;
-
-        auto dataPtrRevert = qScopeGuard([this, oldData](){
-            m_compilationUnit->setUnitData(oldData);
-        });
-        m_compilationUnit->setUnitData(mappedUnit);
-
-        if (mappedUnit->sourceFileIndex != 0) {
-            if (mappedUnit->sourceFileIndex >=
-                    mappedUnit->stringTableSize + m_compilationUnit->dynamicStrings.size()) {
-                *errorString = QStringLiteral("QML source file index is invalid.");
-                continue;
-            }
-            if (sourcePath !=
-                    QQmlFile::urlToLocalFileOrQrc(stringAt(mappedUnit->sourceFileIndex))) {
-                *errorString = QStringLiteral("QML source file has moved to a different location.");
-                continue;
-            }
-        }
-
-        dataPtrRevert.dismiss();
-        free(const_cast<CompiledData::Unit*>(oldDataPtr));
-        backingFile = std::move(cacheFile);
-        CompilationUnitRuntimeData::constants = m_compilationUnit->constants;
-        return true;
-    }
-
-    return false;
-}
-
-bool ExecutableCompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
-{
-    if (unitData()->sourceTimeStamp == 0) {
-        *errorString = QStringLiteral("Missing time stamp for source file");
-        return false;
-    }
-
-    if (!QQmlFile::isLocalFile(unitUrl)) {
-        *errorString = QStringLiteral("File has to be a local file.");
-        return false;
-    }
-
-    return CompiledData::SaveableUnitPointer(unitData()).saveToDisk<char>(
-            [&unitUrl, errorString](const char *data, quint32 size) {
-        const QString cachePath = localCacheFilePath(unitUrl);
-        if (CompiledData::SaveableUnitPointer::writeDataToFile(
-                    cachePath, data, size, errorString)) {
-            CompilationUnitMapper::invalidate(cachePath);
-            return true;
-        }
-
-        return false;
-    });
 }
 
 /*!

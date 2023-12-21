@@ -1959,8 +1959,9 @@ QV4::ExecutableCompilationUnit *QQmlEnginePrivate::compilationUnitFromUrl(const 
     auto unit = typeLoader.getType(url)->compilationUnit();
     if (!unit)
         return nullptr;
-    if (!unit->engine)
-        unit->linkToEngine(v4engine());
+    Q_ASSERT(unit->engine == v4engine());
+    if (!unit->runtimeStrings)
+        unit->populate();
     return unit;
 }
 

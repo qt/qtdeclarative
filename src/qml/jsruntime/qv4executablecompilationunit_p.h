@@ -100,22 +100,8 @@ public:
     friend class QQmlRefPointer<ExecutableCompilationUnit>;
 
     static QQmlRefPointer<ExecutableCompilationUnit> create(
-            QQmlRefPointer<CompiledData::CompilationUnit> &&compilationUnit)
-    {
-        return QQmlRefPointer<ExecutableCompilationUnit>(
-                new ExecutableCompilationUnit(std::move(compilationUnit)),
-                QQmlRefPointer<ExecutableCompilationUnit>::Adopt);
-    }
-
-    static QQmlRefPointer<ExecutableCompilationUnit> create()
-    {
-        return QQmlRefPointer<ExecutableCompilationUnit>(
-                new ExecutableCompilationUnit(
-                        QQmlRefPointer<CompiledData::CompilationUnit>(
-                                new CompiledData::CompilationUnit,
-                                QQmlRefPointer<CompiledData::CompilationUnit>::Adopt)),
-                QQmlRefPointer<ExecutableCompilationUnit>::Adopt);
-    }
+            QQmlRefPointer<CompiledData::CompilationUnit> &&compilationUnit,
+            ExecutionEngine *engine);
 
     QIntrusiveListNode nextCompilationUnit;
     ExecutionEngine *engine = nullptr;
@@ -199,8 +185,6 @@ public:
         }
         return -1;
     }
-
-    std::unique_ptr<CompilationUnitMapper> backingFile;
 
     // --- interface for QQmlPropertyCacheCreator
     using CompiledObject = const CompiledData::Object;
@@ -306,7 +290,7 @@ public:
     }
 
     QStringList moduleRequests() const;
-    Heap::Module *instantiate(ExecutionEngine *engine);
+    Heap::Module *instantiate();
     const Value *resolveExport(QV4::String *exportName)
     {
         QVector<ResolveSetEntry> resolveSet;
@@ -327,15 +311,7 @@ public:
     void evaluate();
     void evaluateModuleRequests();
 
-    QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
-    void unlink();
-
     void markObjects(MarkStack *markStack);
-
-    bool loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, QString *errorString);
-
-    static QString localCacheFilePath(const QUrl &url);
-    bool saveToDisk(const QUrl &unitUrl, QString *errorString);
 
     QString bindingValueAsString(const CompiledData::Binding *binding) const;
     double bindingValueAsNumber(const CompiledData::Binding *binding) const
@@ -370,6 +346,20 @@ public:
     {
         return m_compilationUnit;
     }
+
+    QV4::Function *rootFunction()
+    {
+        if (!runtimeStrings)
+            populate();
+
+        const auto *data = unitData();
+        return data->indexOfRootFunction != -1
+                ? runtimeFunctions[data->indexOfRootFunction]
+                : nullptr;
+    }
+
+    void populate();
+    void clear();
 
 protected:
     quint32 totalStringCount() const

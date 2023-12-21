@@ -46,7 +46,6 @@ public:
     QQmlTypeCompiler(QQmlEnginePrivate *engine,
                      QQmlTypeData *typeData,
                      QmlIR::Document *document,
-                     const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
                      QV4::ResolvedTypeReferenceMap *resolvedTypeCache,
                      const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
 
@@ -75,7 +74,7 @@ public:
     }
     // ---
 
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> compile();
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compile();
 
     QList<QQmlError> compilationErrors() const { return errors; }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
@@ -130,7 +129,6 @@ private:
     // index in first hash is component index, vector inside contains object indices of objects with id property
     QQmlPropertyCacheVector m_propertyCaches;
 
-    QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
     QQmlTypeData *typeData;
 };
 

@@ -103,8 +103,10 @@ void QQmlObjectCreator::init(QQmlRefPointer<QQmlContextData> providedParentConte
     engine = parentContext->engine();
     v4 = engine->handle();
 
-    if (compilationUnit && !compilationUnit->engine)
-        compilationUnit->linkToEngine(v4);
+    Q_ASSERT(compilationUnit);
+    Q_ASSERT(compilationUnit->engine == v4);
+    if (!compilationUnit->runtimeStrings)
+        compilationUnit->populate();
 
     qmlUnit = compilationUnit->unitData();
     _qobject = nullptr;

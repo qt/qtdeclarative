@@ -34,12 +34,13 @@ QQmlRefPointer<QQmlScriptData> QQmlScriptBlob::scriptData() const
 
 void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 {
+    auto *v4 = QQmlEnginePrivate::getV4Engine(typeLoader()->engine());
     if (readCacheFile()) {
-        QQmlRefPointer<QV4::ExecutableCompilationUnit> unit
-                = QV4::ExecutableCompilationUnit::create();
+        auto unit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>();
         QString error;
         if (unit->loadFromDisk(url(), data.sourceTimeStamp(), &error)) {
-            initializeFromCompilationUnit(unit);
+            initializeFromCompilationUnit(
+                    QV4::ExecutableCompilationUnit::create(std::move(unit), v4));
             return;
         } else {
             qCDebug(DBG_DISK_CACHE()) << "Error loading" << urlString() << "from disk cache:" << error;
@@ -96,32 +97,28 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         unit = std::move(irUnit.javaScriptCompilationUnit);
     }
 
-    auto executableUnit = QV4::ExecutableCompilationUnit::create(std::move(unit));
-
     if (writeCacheFile()) {
         QString errorString;
-        if (executableUnit->saveToDisk(url(), &errorString)) {
+        if (unit->saveToDisk(url(), &errorString)) {
             QString error;
-            if (!executableUnit->loadFromDisk(url(), data.sourceTimeStamp(), &error)) {
+            if (!unit->loadFromDisk(url(), data.sourceTimeStamp(), &error)) {
                 // ignore error, keep using the in-memory compilation unit.
             }
         } else {
             qCDebug(DBG_DISK_CACHE()) << "Error saving cached version of"
-                                      << executableUnit->fileName() << "to disk:" << errorString;
+                                      << unit->fileName() << "to disk:" << errorString;
         }
     }
 
-    initializeFromCompilationUnit(executableUnit);
+    initializeFromCompilationUnit(QV4::ExecutableCompilationUnit::create(std::move(unit), v4));
 }
 
 void QQmlScriptBlob::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
 {
     initializeFromCompilationUnit(QV4::ExecutableCompilationUnit::create(
-            QQmlRefPointer<QV4::CompiledData::CompilationUnit>(
-                    new QV4::CompiledData::CompilationUnit(
-                            unit->qmlData, unit->aotCompiledFunctions,
-                            urlString(), finalUrlString()),
-                    QQmlRefPointer<QV4::CompiledData::CompilationUnit>::Adopt)));
+            QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>(
+                    unit->qmlData, unit->aotCompiledFunctions, urlString(), finalUrlString()),
+            QQmlEnginePrivate::getV4Engine(typeLoader()->engine())));
 }
 
 void QQmlScriptBlob::done()

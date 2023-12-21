@@ -256,7 +256,7 @@ QQmlRefPointer<ExecutableCompilationUnit> FunctionCtor::parse(ExecutionEngine *e
     if (engine->hasException)
         return nullptr;
 
-    return ExecutableCompilationUnit::create(cg.generateCompilationUnit());
+    return ExecutableCompilationUnit::create(cg.generateCompilationUnit(), engine);
 }
 
 ReturnedValue FunctionCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
@@ -268,7 +268,7 @@ ReturnedValue FunctionCtor::virtualCallAsConstructor(const FunctionObject *f, co
     if (engine->hasException)
         return Encode::undefined();
 
-    Function *vmf = compilationUnit->linkToEngine(engine);
+    Function *vmf = compilationUnit->rootFunction();
     ExecutionContext *global = engine->scriptContext();
     ReturnedValue o = Encode(FunctionObject::createScriptFunction(global, vmf));
 

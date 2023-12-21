@@ -24,19 +24,19 @@ DEFINE_BOOL_CONFIG_OPTION(
 
 Q_LOGGING_CATEGORY(lcQmlTypeCompiler, "qt.qml.typecompiler");
 
-QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData,
-                                   QmlIR::Document *parsedQML, const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
-                                   QV4::ResolvedTypeReferenceMap *resolvedTypeCache, const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
+QQmlTypeCompiler::QQmlTypeCompiler(
+        QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *parsedQML,
+        QV4::ResolvedTypeReferenceMap *resolvedTypeCache,
+        const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
     : resolvedTypes(resolvedTypeCache)
     , engine(engine)
     , dependencyHasher(dependencyHasher)
     , document(parsedQML)
-    , typeNameCache(typeNameCache)
     , typeData(typeData)
 {
 }
 
-QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
 {
     // Build property caches and VME meta object data
 
@@ -142,14 +142,7 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
     if (!errors.isEmpty())
         return nullptr;
 
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit
-            = QV4::ExecutableCompilationUnit::create(std::move(
-                    document->javaScriptCompilationUnit));
-    compilationUnit->typeNameCache = typeNameCache;
-    compilationUnit->resolvedTypes = *resolvedTypes;
-    compilationUnit->propertyCaches = std::move(m_propertyCaches);
-    Q_ASSERT(compilationUnit->propertyCaches.count() == static_cast<int>(compilationUnit->objectCount()));
-    return compilationUnit;
+    return std::move(document->javaScriptCompilationUnit);
 }
 
 void QQmlTypeCompiler::recordError(const QV4::CompiledData::Location &location, const QString &description)
