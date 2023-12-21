@@ -2793,24 +2793,14 @@ QList<CompletionItem> QQmlLSUtils::suggestJSStatementCompletion(const DomItem &i
     // block statement
     result.append(makeSnippet("{ statements... }", "{\n\t$0\n}"));
 
-    // if statement
-    result.append(makeSnippet("if (condition) statement", "if ($1)\n\t$0"));
-
     // if + brackets statement
     result.append(makeSnippet("if (condition) { statements }", "if ($1) {\n\t$0\n}"));
 
     // do statement
-    result.append(makeSnippet( "do { statements } while (condition);", "do {\n\t$1\n} while ($0);"));
-
-    // while statement
-    result.append(makeSnippet("while (condition) statement", "while ($1)\n\t$0"));
+    result.append(makeSnippet("do { statements } while (condition);", "do {\n\t$1\n} while ($0);"));
 
     // while + brackets statement
     result.append(makeSnippet("while (condition) { statements...}", "while ($1) {\n\t$0\n}"));
-
-    // for loop statement
-    result.append(
-            makeSnippet("for (initializer; condition; increment) statement", "for ($1;$2;$3)\n\t$0"));
 
     // for + brackets loop statement
     result.append(makeSnippet("for (initializer; condition; increment) { statements... }",

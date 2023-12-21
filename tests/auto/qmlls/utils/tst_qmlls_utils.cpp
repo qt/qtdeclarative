@@ -2193,7 +2193,7 @@ void tst_qmlls_utils::completions_data()
                    u"required"_s,
                };
 
-    const QString forStatementCompletion = u"for (initializer; condition; increment) statement"_s;
+    const QString forStatementCompletion = u"for (initializer; condition; increment) { statements... }"_s;
     const QString ifStatementCompletion = u"if (condition) statement"_s;
     const QString letStatementCompletion = u"let variable = value;"_s;
     const QString constStatementCompletion = u"const variable = value;"_s;
@@ -2222,19 +2222,13 @@ void tst_qmlls_utils::completions_data()
                                       u"var ${1:variable} = $0;"_s },
                                     { u"{ statements... }"_s, CompletionItemKind::Snippet,
                                       u"{\n\t$0\n}"_s },
-                                    { u"if (condition) statement"_s, CompletionItemKind::Snippet,
-                                      u"if ($1)\n\t$0"_s },
                                     { u"if (condition) { statements }"_s,
                                       CompletionItemKind::Snippet, u"if ($1) {\n\t$0\n}"_s },
                                     { u"do { statements } while (condition);"_s,
                                       CompletionItemKind::Snippet, u"do {\n\t$1\n} while ($0);"_s },
-                                    { u"while (condition) statement"_s, CompletionItemKind::Snippet,
-                                      u"while ($1)\n\t$0"_s },
                                     { u"while (condition) { statements...}"_s,
                                       CompletionItemKind::Snippet, u"while ($1) {\n\t$0\n}"_s },
-                                    { u"for (initializer; condition; increment) statement"_s,
-                                      CompletionItemKind::Snippet, u"for ($1;$2;$3)\n\t$0"_s },
-                                    { u"for (initializer; condition; increment) { statements... }"_s,
+                                    { forStatementCompletion,
                                       CompletionItemKind::Snippet, u"for ($1;$2;$3) {\n\t$0\n}"_s },
                                     { u"try { statements... } catch(error) { statements... }"_s,
                                       CompletionItemKind::Snippet, u"try {\n\t$1\n} catch($2) {\n\t$0\n}"_s },
