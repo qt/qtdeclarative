@@ -68,6 +68,7 @@ private:
     void windowUpdated();
     void syncWindowToItem();
     void parentWindowChanged(QQuickWindow *window);
+    void windowDestroyed();
 };
 
 QT_END_NAMESPACE
