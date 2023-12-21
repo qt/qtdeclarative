@@ -105,6 +105,7 @@ private slots:
     void largeTextInDelayedLoader();
     void lineLaidOut();
     void lineLaidOutRelayout();
+    void lineLaidOutFontUpdate();
     void lineLaidOutHAlign();
     void lineLaidOutImplicitWidth();
 
@@ -3138,6 +3139,29 @@ void tst_qquicktext::lineLaidOutRelayout()
         }
         y += line.height();
     }
+}
+
+void tst_qquicktext::lineLaidOutFontUpdate()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("lineLayoutFontUpdate.qml")));
+
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    auto *myText = window->rootObject()->findChild<QQuickText*>("exampleText");
+    QVERIFY(myText != nullptr);
+
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
+    QVERIFY(textPrivate != nullptr);
+
+    QCOMPARE(textPrivate->layout.lineCount(), 2);
+
+    QTextLine firstLine = textPrivate->layout.lineAt(0);
+    QTextLine secondLine = textPrivate->layout.lineAt(1);
+
+    QCOMPARE(firstLine.rect().x(), secondLine.rect().x() + 40);
+    QCOMPARE(firstLine.rect().width(), secondLine.rect().width() - 40);
 }
 
 void tst_qquicktext::lineLaidOutHAlign()
