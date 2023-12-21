@@ -91,8 +91,7 @@ static_assert(offsetof(CompilationUnitRuntimeData, runtimeClasses) == offsetof(C
 static_assert(offsetof(CompilationUnitRuntimeData, imports) == offsetof(CompilationUnitRuntimeData, runtimeClasses) + sizeof(const StaticValue *));
 
 class Q_QML_PRIVATE_EXPORT ExecutableCompilationUnit final
-    : public CompiledData::CompilationUnit,
-      public CompilationUnitRuntimeData,
+    : public CompilationUnitRuntimeData,
       public QQmlRefCounted<ExecutableCompilationUnit>
 {
     Q_DISABLE_COPY_MOVE(ExecutableCompilationUnit)
@@ -101,7 +100,7 @@ public:
     friend class QQmlRefPointer<ExecutableCompilationUnit>;
 
     static QQmlRefPointer<ExecutableCompilationUnit> create(
-            CompiledData::CompilationUnit &&compilationUnit)
+            QQmlRefPointer<CompiledData::CompilationUnit> &&compilationUnit)
     {
         return QQmlRefPointer<ExecutableCompilationUnit>(
                 new ExecutableCompilationUnit(std::move(compilationUnit)),
@@ -111,12 +110,18 @@ public:
     static QQmlRefPointer<ExecutableCompilationUnit> create()
     {
         return QQmlRefPointer<ExecutableCompilationUnit>(
-                new ExecutableCompilationUnit,
+                new ExecutableCompilationUnit(
+                        QQmlRefPointer<CompiledData::CompilationUnit>(
+                                new CompiledData::CompilationUnit,
+                                QQmlRefPointer<CompiledData::CompilationUnit>::Adopt)),
                 QQmlRefPointer<ExecutableCompilationUnit>::Adopt);
     }
 
     QIntrusiveListNode nextCompilationUnit;
     ExecutionEngine *engine = nullptr;
+
+    QString finalUrlString() const { return m_compilationUnit->finalUrlString(); }
+    QString fileName() const { return m_compilationUnit->fileName(); }
 
     // url() and fileName() shall be used to load the actual QML/JS code or to show errors or
     // warnings about that code. They include any potential URL interceptions and thus represent the
@@ -128,14 +133,14 @@ public:
     QUrl url() const
     {
         if (!m_url.isValid())
-            m_url = QUrl(fileName());
+            m_url = QUrl(m_compilationUnit->fileName());
         return m_url;
     }
 
     QUrl finalUrl() const
     {
         if (!m_finalUrl.isValid())
-            m_finalUrl = QUrl(finalUrlString());
+            m_finalUrl = QUrl(m_compilationUnit->finalUrlString());
         return m_finalUrl;
     }
 
@@ -216,48 +221,48 @@ public:
 
     ListPropertyAssignBehavior listPropertyAssignBehavior() const
     {
-        if (data->flags & CompiledData::Unit::ListPropertyAssignReplace)
+        if (unitData()->flags & CompiledData::Unit::ListPropertyAssignReplace)
             return ListPropertyAssignBehavior::Replace;
-        if (data->flags & CompiledData::Unit::ListPropertyAssignReplaceIfNotDefault)
+        if (unitData()->flags & CompiledData::Unit::ListPropertyAssignReplaceIfNotDefault)
             return ListPropertyAssignBehavior::ReplaceIfNotDefault;
         return ListPropertyAssignBehavior::Append;
     }
 
     bool ignoresFunctionSignature() const
     {
-        return data->flags & CompiledData::Unit::FunctionSignaturesIgnored;
+        return unitData()->flags & CompiledData::Unit::FunctionSignaturesIgnored;
     }
 
     bool nativeMethodsAcceptThisObjects() const
     {
-        return data->flags & CompiledData::Unit::NativeMethodsAcceptThisObject;
+        return unitData()->flags & CompiledData::Unit::NativeMethodsAcceptThisObject;
     }
 
     bool valueTypesAreCopied() const
     {
-        return data->flags & CompiledData::Unit::ValueTypesCopied;
+        return unitData()->flags & CompiledData::Unit::ValueTypesCopied;
     }
 
     bool valueTypesAreAddressable() const
     {
-        return data->flags & CompiledData::Unit::ValueTypesAddressable;
+        return unitData()->flags & CompiledData::Unit::ValueTypesAddressable;
     }
 
     bool componentsAreBound() const
     {
-        return data->flags & CompiledData::Unit::ComponentsBound;
+        return unitData()->flags & CompiledData::Unit::ComponentsBound;
     }
 
-    int objectCount() const { return qmlData->nObjects; }
+    int objectCount() const { return qmlData()->nObjects; }
     const CompiledObject *objectAt(int index) const
     {
-        return qmlData->objectAt(index);
+        return qmlData()->objectAt(index);
     }
 
-    int importCount() const { return qmlData->nImports; }
+    int importCount() const { return qmlData()->nImports; }
     const CompiledData::Import *importAt(int index) const
     {
-        return qmlData->importAt(index);
+        return qmlData()->importAt(index);
     }
 
     Heap::Object *templateObjectAt(int index) const;
@@ -282,22 +287,22 @@ public:
 
     FunctionIterator objectFunctionsBegin(const CompiledObject *object) const
     {
-        return FunctionIterator(data, object, 0);
+        return FunctionIterator(unitData(), object, 0);
     }
 
     FunctionIterator objectFunctionsEnd(const CompiledObject *object) const
     {
-        return FunctionIterator(data, object, object->nFunctions);
+        return FunctionIterator(unitData(), object, object->nFunctions);
     }
 
     bool isESModule() const
     {
-        return data->flags & CompiledData::Unit::IsESModule;
+        return unitData()->flags & CompiledData::Unit::IsESModule;
     }
 
     bool isSharedLibrary() const
     {
-        return data->flags & CompiledData::Unit::IsSharedLibrary;
+        return unitData()->flags & CompiledData::Unit::IsSharedLibrary;
     }
 
     QStringList moduleRequests() const;
@@ -333,6 +338,14 @@ public:
     bool saveToDisk(const QUrl &unitUrl, QString *errorString);
 
     QString bindingValueAsString(const CompiledData::Binding *binding) const;
+    double bindingValueAsNumber(const CompiledData::Binding *binding) const
+    {
+        return m_compilationUnit->bindingValueAsNumber(binding);
+    }
+    QString bindingValueAsScriptString(const CompiledData::Binding *binding) const
+    {
+        return m_compilationUnit->bindingValueAsScriptString(binding);
+    }
 
     struct TranslationDataIndex
     {
@@ -348,11 +361,22 @@ public:
     Heap::Module *module() const { return m_module; }
     void setModule(Heap::Module *module) { m_module = module; }
 
+    const CompiledData::Unit *unitData() const { return m_compilationUnit->data; }
+    const CompiledData::QmlUnit *qmlData() const { return m_compilationUnit->qmlData; }
+
+    QString stringAt(uint index) const { return m_compilationUnit->stringAt(index); }
+
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> baseCompilationUnit() const
+    {
+        return m_compilationUnit;
+    }
+
 protected:
     quint32 totalStringCount() const
-    { return data->stringTableSize; }
+    { return unitData()->stringTableSize; }
 
 private:
+    QQmlRefPointer<CompiledData::CompilationUnit> m_compilationUnit;
     Heap::Module *m_module = nullptr;
 
     struct ResolveSetEntry
@@ -365,7 +389,7 @@ private:
     };
 
     ExecutableCompilationUnit();
-    ExecutableCompilationUnit(CompiledData::CompilationUnit &&compilationUnit);
+    ExecutableCompilationUnit(QQmlRefPointer<CompiledData::CompilationUnit> &&compilationUnit);
     ~ExecutableCompilationUnit();
 
     const Value *resolveExportRecursively(QV4::String *exportName,

@@ -509,7 +509,7 @@ void tst_qqmljsscope::scriptIndices()
     QmlIR::Document document(false); // we need QmlIR information here
     QQmlJSScope::ConstPtr root = run(u"functionAndBindingIndices.qml"_s, &document);
     QVERIFY(root);
-    QVERIFY(document.javaScriptCompilationUnit.unitData());
+    QVERIFY(document.javaScriptCompilationUnit->unitData());
 
     // compare QQmlJSScope and QmlIR:
 
@@ -756,8 +756,8 @@ void tst_qqmljsscope::compilationUnitsAreCompatible()
 
     QmlIR::Document document(false); // we need QmlIR information here
     QVERIFY(run(url, &document));
-    QVERIFY(document.javaScriptCompilationUnit.unitData());
-    getRuntimeInfoFromCompilationUnit(document.javaScriptCompilationUnit.unitData(),
+    QVERIFY(document.javaScriptCompilationUnit->unitData());
+    getRuntimeInfoFromCompilationUnit(document.javaScriptCompilationUnit->unitData(),
                                       cachegenFunctions);
     if (QTest::currentTestFailed())
         return;

@@ -2174,7 +2174,7 @@ QString GlobalExtensions::currentTranslationContext(ExecutionEngine *engine)
     // The first non-empty source URL in the call stack determines the translation context.
     while (frame && context.isEmpty()) {
         if (ExecutableCompilationUnit *unit = frame->v4Function->executableCompilationUnit()) {
-            auto translationContextIndex = unit->data->translationContextIndex();
+            auto translationContextIndex = unit->unitData()->translationContextIndex();
             if (translationContextIndex)
                 context = unit->stringAt(*translationContextIndex);
             if (!context.isEmpty())

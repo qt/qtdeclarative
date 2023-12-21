@@ -61,7 +61,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         return;
     }
 
-    QV4::CompiledData::CompilationUnit unit;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit;
 
     if (m_isModule) {
         QList<QQmlJS::DiagnosticMessage> diagnostics;
@@ -117,7 +117,11 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 void QQmlScriptBlob::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
 {
     initializeFromCompilationUnit(QV4::ExecutableCompilationUnit::create(
-            QV4::CompiledData::CompilationUnit(unit->qmlData, unit->aotCompiledFunctions, urlString(), finalUrlString())));
+            QQmlRefPointer<QV4::CompiledData::CompilationUnit>(
+                    new QV4::CompiledData::CompilationUnit(
+                            unit->qmlData, unit->aotCompiledFunctions,
+                            urlString(), finalUrlString()),
+                    QQmlRefPointer<QV4::CompiledData::CompilationUnit>::Adopt)));
 }
 
 void QQmlScriptBlob::done()

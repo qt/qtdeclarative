@@ -363,8 +363,8 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
         const quint32 saveFlags
                 = QV4::CompiledData::Unit::StaticData
                 | QV4::CompiledData::Unit::PendingTypeCompilation;
-        QV4::CompiledData::SaveableUnitPointer saveable(irDocument.javaScriptCompilationUnit.data,
-                                                        saveFlags);
+        QV4::CompiledData::SaveableUnitPointer saveable(
+                irDocument.javaScriptCompilationUnit->unitData(), saveFlags);
         if (!saveFunction(saveable, aotFunctionsByIndex, &error->message))
             return false;
     }
@@ -373,7 +373,7 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
 
 bool qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl, QQmlJSSaveFunction saveFunction, QQmlJSCompileError *error)
 {
-    QV4::CompiledData::CompilationUnit unit;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit;
 
     QString sourceCode;
     {
@@ -397,7 +397,7 @@ bool qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl, Q
         unit = QV4::Compiler::Codegen::compileModule(/*debugMode*/false, url, sourceCode,
                                                      QDateTime(), &diagnostics);
         error->appendDiagnostics(inputFileName, diagnostics);
-        if (!unit.unitData())
+        if (!unit || !unit->unitData())
             return false;
     } else {
         QmlIR::Document irDocument(/*debugMode*/false);
@@ -455,7 +455,8 @@ bool qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl, Q
     }
 
     QQmlJSAotFunctionMap empty;
-    return saveFunction(QV4::CompiledData::SaveableUnitPointer(unit.data), empty, &error->message);
+    return saveFunction(
+            QV4::CompiledData::SaveableUnitPointer(unit->unitData()), empty, &error->message);
 }
 
 static const char *wrapCallCode = R"(

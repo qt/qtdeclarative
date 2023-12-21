@@ -85,7 +85,7 @@ protected:
 private:
     bool tryLoadFromDiskCache();
     bool loadFromSource();
-    void restoreIR(QV4::CompiledData::CompilationUnit &&unit);
+    void restoreIR(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit);
     void continueLoadFromIR();
     void resolveTypes();
     QQmlError buildTypeResolutionCaches(

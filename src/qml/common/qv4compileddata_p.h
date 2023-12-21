@@ -30,7 +30,9 @@
 #endif
 
 #include <private/qendian_p.h>
+#include <private/qqmlrefcount_p.h>
 #include <private/qv4staticvalue_p.h>
+
 #include <functional>
 #include <limits.h>
 
@@ -1421,9 +1423,9 @@ using DependentTypesHasher = std::function<QByteArray()>;
 
 // This is how this hooks into the existing structures:
 
-struct CompilationUnit
+struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
 {
-    Q_DISABLE_COPY(CompilationUnit)
+    Q_DISABLE_COPY_MOVE(CompilationUnit)
 
     const Unit *data = nullptr;
     const QmlUnit *qmlData = nullptr;
@@ -1463,32 +1465,6 @@ public:
         delete [] constants;
         constants = nullptr;
 #endif
-    }
-
-    CompilationUnit(CompilationUnit &&other) noexcept
-    {
-        *this = std::move(other);
-    }
-
-    CompilationUnit &operator=(CompilationUnit &&other) noexcept
-    {
-        if (this != &other) {
-            data = other.data;
-            other.data = nullptr;
-            qmlData = other.qmlData;
-            other.qmlData = nullptr;
-            dynamicStrings = std::move(other.dynamicStrings);
-            other.dynamicStrings.clear();
-            aotCompiledFunctions = other.aotCompiledFunctions;
-            other.aotCompiledFunctions = nullptr;
-            constants = other.constants;
-            other.constants = nullptr;
-            m_fileName = std::move(other.m_fileName);
-            other.m_fileName.clear();
-            m_finalUrlString = std::move(other.m_finalUrlString);
-            other.m_finalUrlString.clear();
-        }
-        return *this;
     }
 
     const Unit *unitData() const { return data; }

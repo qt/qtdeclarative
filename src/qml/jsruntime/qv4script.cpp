@@ -133,7 +133,7 @@ Function *Script::function()
     return vmFunction;
 }
 
-QV4::CompiledData::CompilationUnit Script::precompile(
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(
         QV4::Compiler::Module *module, QQmlJS::Engine *jsEngine,
         Compiler::JSUnitGenerator *unitGenerator, const QString &fileName, const QString &finalUrl,
         const QString &source, QList<QQmlError> *reportedErrors,
@@ -198,7 +198,10 @@ Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlCo
                 : nullptr) {
         QQmlRefPointer<QV4::ExecutableCompilationUnit> jsUnit
                 = QV4::ExecutableCompilationUnit::create(
-                        QV4::CompiledData::CompilationUnit(cachedUnit->qmlData, cachedUnit->aotCompiledFunctions));
+                    QQmlRefPointer<QV4::CompiledData::CompilationUnit>(
+                        new QV4::CompiledData::CompilationUnit(
+                                cachedUnit->qmlData, cachedUnit->aotCompiledFunctions),
+                        QQmlRefPointer<QV4::CompiledData::CompilationUnit>::Adopt));
         return new QV4::Script(engine, qmlContext, jsUnit);
     }
 

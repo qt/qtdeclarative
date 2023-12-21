@@ -351,7 +351,7 @@ void tst_qmlcachegen::signalHandlerParameters()
         };
 
         QVERIFY(isStringIndexInStringTable(compilationUnit->objectAt(0)->signalAt(0)->parameterAt(0)->nameIndex));
-        QVERIFY(!compilationUnit->dynamicStrings.isEmpty());
+        QVERIFY(!compilationUnit->baseCompilationUnit()->dynamicStrings.isEmpty());
     }
 }
 

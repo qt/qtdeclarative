@@ -112,7 +112,7 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
             return nullptr;
     }
 
-    if (!document->javaScriptCompilationUnit.unitData()) {
+    if (!document->javaScriptCompilationUnit || !document->javaScriptCompilationUnit->unitData()) {
         // Compile JS binding expressions and signal handlers if necessary
         {
             // We can compile script strings ahead of time, but they must be compiled
@@ -196,7 +196,7 @@ int QQmlTypeCompiler::registerConstant(QV4::ReturnedValue v)
 
 const QV4::CompiledData::Unit *QQmlTypeCompiler::qmlUnit() const
 {
-    return document->javaScriptCompilationUnit.unitData();
+    return document->javaScriptCompilationUnit->unitData();
 }
 
 const QQmlImports *QQmlTypeCompiler::imports() const

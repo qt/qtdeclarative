@@ -731,8 +731,9 @@ public:
             const QString &name, bool lhs,
             const QQmlJS::SourceLocation &accessLocation = QQmlJS::SourceLocation());
 
-    QV4::CompiledData::CompilationUnit generateCompilationUnit(bool generateUnitData = true);
-    static QV4::CompiledData::CompilationUnit compileModule(
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> generateCompilationUnit(
+            bool generateUnitData = true);
+    static QQmlRefPointer<QV4::CompiledData::CompilationUnit> compileModule(
             bool debugMode, const QString &url, const QString &sourceCode,
             const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics);
 

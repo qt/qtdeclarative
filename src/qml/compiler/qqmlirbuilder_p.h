@@ -472,7 +472,7 @@ struct Q_QML_COMPILER_EXPORT Document
     QVector<Object*> objects;
     QV4::Compiler::JSUnitGenerator jsGenerator;
 
-    QV4::CompiledData::CompilationUnit javaScriptCompilationUnit;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> javaScriptCompilationUnit;
 
     bool isSingleton() const {
         return std::any_of(pragmas.constBegin(), pragmas.constEnd(), [](const Pragma *pragma) {

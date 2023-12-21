@@ -55,10 +55,10 @@ namespace QV4 {
 ExecutableCompilationUnit::ExecutableCompilationUnit() = default;
 
 ExecutableCompilationUnit::ExecutableCompilationUnit(
-        CompiledData::CompilationUnit &&compilationUnit)
-    : CompiledData::CompilationUnit(std::move(compilationUnit))
+        QQmlRefPointer<CompiledData::CompilationUnit> &&compilationUnit)
+    : m_compilationUnit(std::move(compilationUnit))
 {
-    CompilationUnitRuntimeData::constants = CompiledData::CompilationUnit::constants;
+    constants = m_compilationUnit->constants;
 }
 
 ExecutableCompilationUnit::~ExecutableCompilationUnit()
@@ -111,6 +111,8 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
 {
     this->engine = engine;
     engine->compilationUnits.insert(this);
+
+    const CompiledData::Unit *data = m_compilationUnit->data;
 
     Q_ASSERT(!runtimeStrings);
     Q_ASSERT(data);
@@ -182,7 +184,7 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
             || !(engine->diskCacheOptions() & ExecutionEngine::DiskCache::AotNative);
 
     const QQmlPrivate::AOTCompiledFunction *aotFunction
-            = ignoreAotCompiledFunctions ? nullptr : aotCompiledFunctions;
+            = ignoreAotCompiledFunctions ? nullptr : m_compilationUnit->aotCompiledFunctions;
 
     auto advanceAotFunction = [&](int i) -> const QQmlPrivate::AOTCompiledFunction * {
         if (aotFunction) {
@@ -222,7 +224,7 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
     if (showCode) {
         qDebug() << "=== Constant table";
-        dumpConstantTable(CompiledData::CompilationUnit::constants, data->constantTableSize);
+        dumpConstantTable(constants, data->constantTableSize);
         qDebug() << "=== String table";
         for (uint i = 0, end = totalStringCount(); i < end; ++i)
             qDebug() << "    " << i << ":" << runtimeStrings[i]->toQString();
@@ -242,6 +244,8 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
 
 Heap::Object *ExecutableCompilationUnit::templateObjectAt(int index) const
 {
+    const CompiledData::Unit *data = m_compilationUnit->data;
+
     Q_ASSERT(index < int(data->templateObjectTableSize));
     if (!templateObjects.size())
         templateObjects.resize(data->templateObjectTableSize);
@@ -282,7 +286,8 @@ void ExecutableCompilationUnit::unlink()
         ic.qmlType = QQmlType();
 
     if (runtimeLookups) {
-        for (uint i = 0; i < data->lookupTableSize; ++i)
+        const uint lookupTableSize = unitData()->lookupTableSize;
+        for (uint i = 0; i < lookupTableSize; ++i)
             runtimeLookups[i].releasePropertyCache();
     }
 
@@ -312,6 +317,8 @@ void ExecutableCompilationUnit::unlink()
 
 void ExecutableCompilationUnit::markObjects(QV4::MarkStack *markStack)
 {
+    const CompiledData::Unit *data = m_compilationUnit->data;
+
     if (runtimeStrings) {
         for (uint i = 0, end = totalStringCount(); i < end; ++i)
             if (runtimeStrings[i])
@@ -521,6 +528,8 @@ int ExecutableCompilationUnit::totalParserStatusCount() const {
 
 bool ExecutableCompilationUnit::verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const
 {
+    const CompiledData::Unit *data = m_compilationUnit->data;
+
     if (!dependencyHasher) {
         for (size_t i = 0; i < sizeof(data->dependencyMD5Checksum); ++i) {
             if (data->dependencyMD5Checksum[i] != 0)
@@ -543,6 +552,8 @@ QQmlType ExecutableCompilationUnit::qmlTypeForComponent(const QString &inlineCom
 
 QStringList ExecutableCompilationUnit::moduleRequests() const
 {
+    const CompiledData::Unit *data = m_compilationUnit->data;
+
     QStringList requests;
     requests.reserve(data->moduleRequestTableSize);
     for (uint i = 0; i < data->moduleRequestTableSize; ++i)
@@ -552,6 +563,8 @@ QStringList ExecutableCompilationUnit::moduleRequests() const
 
 Heap::Module *ExecutableCompilationUnit::instantiate(ExecutionEngine *engine)
 {
+    const CompiledData::Unit *data = m_compilationUnit->data;
+
     if (isESModule() && module())
         return module();
 
@@ -687,6 +700,7 @@ const Value *ExecutableCompilationUnit::resolveExportRecursively(
     if (exportName->toQString() == QLatin1String("*"))
         return &module()->self;
 
+    const CompiledData::Unit *data = m_compilationUnit->data;
     Scope scope(engine);
 
     if (auto localExport = lookupNameInExportTable(
@@ -797,6 +811,8 @@ void ExecutableCompilationUnit::getExportedNamesRecursively(
         names->append(name);
     };
 
+    const CompiledData::Unit *data = m_compilationUnit->data;
+
     for (uint i = 0; i < data->localExportEntryTableSize; ++i) {
         const CompiledData::ExportEntry &entry = data->localExportEntryTable()[i];
         append(stringAt(entry.exportName));
@@ -867,21 +883,25 @@ bool ExecutableCompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &s
         if (!mappedUnit)
             continue;
 
+        const CompiledData::Unit *oldData = unitData();
         const CompiledData::Unit * const oldDataPtr
-                = (data && !(data->flags & QV4::CompiledData::Unit::StaticData)) ? data
-                                                                                     : nullptr;
-        const CompiledData::Unit *oldData = data;
-        auto dataPtrRevert = qScopeGuard([this, oldData](){
-            setUnitData(oldData);
-        });
-        setUnitData(mappedUnit);
+                = (oldData && !(oldData->flags & QV4::CompiledData::Unit::StaticData))
+                    ? oldData
+                    : nullptr;
 
-        if (data->sourceFileIndex != 0) {
-            if (data->sourceFileIndex >= data->stringTableSize + dynamicStrings.size()) {
+        auto dataPtrRevert = qScopeGuard([this, oldData](){
+            m_compilationUnit->setUnitData(oldData);
+        });
+        m_compilationUnit->setUnitData(mappedUnit);
+
+        if (mappedUnit->sourceFileIndex != 0) {
+            if (mappedUnit->sourceFileIndex >=
+                    mappedUnit->stringTableSize + m_compilationUnit->dynamicStrings.size()) {
                 *errorString = QStringLiteral("QML source file index is invalid.");
                 continue;
             }
-            if (sourcePath != QQmlFile::urlToLocalFileOrQrc(stringAt(data->sourceFileIndex))) {
+            if (sourcePath !=
+                    QQmlFile::urlToLocalFileOrQrc(stringAt(mappedUnit->sourceFileIndex))) {
                 *errorString = QStringLiteral("QML source file has moved to a different location.");
                 continue;
             }
@@ -890,7 +910,7 @@ bool ExecutableCompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &s
         dataPtrRevert.dismiss();
         free(const_cast<CompiledData::Unit*>(oldDataPtr));
         backingFile = std::move(cacheFile);
-        CompilationUnitRuntimeData::constants = CompiledData::CompilationUnit::constants;
+        CompilationUnitRuntimeData::constants = m_compilationUnit->constants;
         return true;
     }
 
@@ -899,7 +919,7 @@ bool ExecutableCompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &s
 
 bool ExecutableCompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 {
-    if (data->sourceTimeStamp == 0) {
+    if (unitData()->sourceTimeStamp == 0) {
         *errorString = QStringLiteral("Missing time stamp for source file");
         return false;
     }
@@ -961,7 +981,7 @@ QString ExecutableCompilationUnit::bindingValueAsString(const CompiledData::Bind
         break;
     }
 #endif
-    return CompilationUnit::bindingValueAsString(binding);
+    return m_compilationUnit->bindingValueAsString(binding);
 }
 
 QString ExecutableCompilationUnit::translateFrom(TranslationDataIndex index) const
@@ -969,7 +989,7 @@ QString ExecutableCompilationUnit::translateFrom(TranslationDataIndex index) con
 #if !QT_CONFIG(translation)
     return QString();
 #else
-    const CompiledData::TranslationData &translation = data->translations()[index.index];
+    const CompiledData::TranslationData &translation = unitData()->translations()[index.index];
 
     if (index.byId) {
         QByteArray id = stringAt(translation.stringIndex).toUtf8();
@@ -993,7 +1013,7 @@ QString ExecutableCompilationUnit::translateFrom(TranslationDataIndex index) con
     if (hasContext) {
         context = stringAt(translation.contextIndex).toUtf8();
     } else {
-        auto pragmaTranslationContext = data->translationContextIndex();
+        auto pragmaTranslationContext = unitData()->translationContextIndex();
         context = stringAt(*pragmaTranslationContext).toUtf8();
         context = context.isEmpty() ? fileContext() : context;
     }

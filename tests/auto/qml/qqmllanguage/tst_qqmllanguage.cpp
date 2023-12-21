@@ -2624,7 +2624,7 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         memcpy(qmlUnit, readOnlyQmlUnit.data(), readOnlyQmlUnit->unitSize);
 
         qmlUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
-        compilationUnit->setUnitData(qmlUnit);
+        compilationUnit->baseCompilationUnit()->setUnitData(qmlUnit);
 
         const QV4::CompiledData::Object *rootObject = compilationUnit->objectAt(/*root object*/0);
         QCOMPARE(compilationUnit->stringAt(rootObject->inheritedTypeNameIndex), QString("MyTypeObject"));

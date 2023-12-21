@@ -2075,9 +2075,11 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(const Q
                 &cacheError)
             : nullptr) {
         return ExecutableCompilationUnit::create(
-                    QV4::CompiledData::CompilationUnit(
-                        cachedUnit->qmlData, cachedUnit->aotCompiledFunctions,
-                        url.fileName(), url.toString()));
+                QQmlRefPointer<QV4::CompiledData::CompilationUnit>(
+                        new QV4::CompiledData::CompilationUnit(
+                                cachedUnit->qmlData, cachedUnit->aotCompiledFunctions,
+                                url.fileName(), url.toString()),
+                        QQmlRefPointer<QV4::CompiledData::CompilationUnit>::Adopt));
     }
 
     QFile f(QQmlFile::urlToLocalFileOrQrc(url));

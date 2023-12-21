@@ -54,7 +54,7 @@ const TranslationBindingInformation TranslationBindingInformation::create(
     QQmlTranslation translation;
     if (binding->type() == QV4::CompiledData::Binding::Type_TranslationById) {
         const QV4::CompiledData::TranslationData data =
-                compilationUnit->data->translations()[binding->value.translationDataIndex];
+                compilationUnit->unitData()->translations()[binding->value.translationDataIndex];
         const QString id = compilationUnit->stringAt(data.stringIndex);
         const int n = data.number;
 
@@ -63,7 +63,7 @@ const TranslationBindingInformation TranslationBindingInformation::create(
         Q_ASSERT(binding->type() == QV4::CompiledData::Binding::Type_Translation);
 
         const QV4::CompiledData::TranslationData data =
-                compilationUnit->data->translations()[binding->value.translationDataIndex];
+                compilationUnit->unitData()->translations()[binding->value.translationDataIndex];
         const QString text = compilationUnit->stringAt(data.stringIndex);
         const QString comment = compilationUnit->stringAt(data.commentIndex);
         const bool hasContext

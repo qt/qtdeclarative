@@ -100,7 +100,7 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     }
 
     if (unit->unitData()->flags & QV4::CompiledData::Unit::PendingTypeCompilation) {
-        restoreIR(std::move(*unit));
+        restoreIR(unit->baseCompilationUnit());
         return true;
     }
 
@@ -651,7 +651,10 @@ void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *un
     loader.load();
     m_document->jsModule.fileName = urlString();
     m_document->jsModule.finalUrl = finalUrlString();
-    m_document->javaScriptCompilationUnit = QV4::CompiledData::CompilationUnit(unit->qmlData, unit->aotCompiledFunctions);
+    m_document->javaScriptCompilationUnit
+            = QQmlRefPointer<QV4::CompiledData::CompilationUnit>(
+                new QV4::CompiledData::CompilationUnit(unit->qmlData, unit->aotCompiledFunctions),
+                QQmlRefPointer<QV4::CompiledData::CompilationUnit>::Adopt);
     continueLoadFromIR();
 }
 
@@ -686,14 +689,14 @@ bool QQmlTypeData::loadFromSource()
     return true;
 }
 
-void QQmlTypeData::restoreIR(QV4::CompiledData::CompilationUnit &&unit)
+void QQmlTypeData::restoreIR(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit)
 {
     m_document.reset(new QmlIR::Document(isDebugging()));
-    QQmlIRLoader loader(unit.unitData(), m_document.data());
+    QQmlIRLoader loader(unit->unitData(), m_document.data());
     loader.load();
     m_document->jsModule.fileName = urlString();
     m_document->jsModule.finalUrl = finalUrlString();
-    m_document->javaScriptCompilationUnit = std::move(unit);
+    m_document->javaScriptCompilationUnit = unit;
     continueLoadFromIR();
 }
 
@@ -809,8 +812,11 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
 {
     Q_ASSERT(m_compiledData.isNull());
 
-    const bool typeRecompilation = m_document && m_document->javaScriptCompilationUnit.unitData()
-            && (m_document->javaScriptCompilationUnit.unitData()->flags & QV4::CompiledData::Unit::PendingTypeCompilation);
+    const bool typeRecompilation = m_document
+            && m_document->javaScriptCompilationUnit
+            && m_document->javaScriptCompilationUnit->unitData()
+            && (m_document->javaScriptCompilationUnit->unitData()->flags
+                & QV4::CompiledData::Unit::PendingTypeCompilation);
 
     QQmlEnginePrivate * const enginePrivate = QQmlEnginePrivate::get(typeLoader()->engine());
     QQmlTypeCompiler compiler(enginePrivate, this, m_document.data(), typeNameCache, resolvedTypeCache, dependencyHasher);
