@@ -59,8 +59,12 @@ if(APPLE)
         "-framework AVFoundation"
         "-framework AVKit"
     )
-    # Xcode fails to sign Contents/PlugIns/shared/qmldir
-    set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO")
+    if(NOT CMAKE_SYSTEM_NAME STREQUAL "iOS")
+        # Xcode fails to sign Contents/PlugIns/shared/qmldir
+        set_target_properties(windowembedding PROPERTIES
+            XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO"
+        )
+    endif()
 endif()
 
 # The add_qml_module_to_macos_app_bundle helper from 'shared'
