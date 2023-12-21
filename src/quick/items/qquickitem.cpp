@@ -4653,7 +4653,7 @@ static bool unwrapMapFromToFromItemArgs(QQmlV4Function *args, const QQuickItem *
     \input item.qdocinc mapping
 
     If \a item is a \c null value, this maps the point or rect from the coordinate system of
-    the root QML view.
+    the \l{Scene Coordinates}{scene}.
 
     The versions accepting point and rect are since Qt 5.15.
 */
@@ -4711,7 +4711,7 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
     \input item.qdocinc mapping
 
     If \a item is a \c null value, this maps the point or rect to the coordinate system of the
-    root QML view.
+    \l{Scene Coordinates}{scene}.
 
     The versions accepting point and rect are since Qt 5.15.
 */
