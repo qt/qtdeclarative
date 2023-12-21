@@ -10,11 +10,5 @@ QtObject {
        property int bad
        property int myP: root.
        Item { }
-       property int myP2: root.;
-       bad: 43
-       function f() {
-           root.;
-           for (;;) {}
-       }
    }
 }

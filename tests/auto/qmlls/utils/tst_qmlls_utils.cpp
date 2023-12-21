@@ -3195,6 +3195,24 @@ void tst_qmlls_utils::completions_data()
             << QStringList{ u"bad"_s,         u"QtQuick"_s,   u"vector4d"_s,
                             attachedTypeName, u"Rectangle"_s, u"onCompleted"_s };
 
+    QTest::newRow("dotFollowedByBinding")
+            << testFile("completions/afterDots.qml") << 13 << 32
+            << ExpectedCompletions({
+                       { u"good"_s, CompletionItemKind::Property },
+               })
+            << QStringList{ u"bad"_s,         u"QtQuick"_s,   u"vector4d"_s,
+                            attachedTypeName, u"Rectangle"_s, u"onCompleted"_s };
+
+    QTest::newRow("dotFollowedByForStatement")
+            << testFile("completions/afterDots.qml") << 16 << 17
+            << ExpectedCompletions({
+                       { u"good"_s, CompletionItemKind::Property },
+               })
+            << QStringList{
+                   u"bad"_s,       u"QtQuick"_s,     u"vector4d"_s,         attachedTypeName,
+                   u"Rectangle"_s, u"onCompleted"_s, forStatementCompletion
+               };
+
     QTest::newRow("qualifiedTypeCompletionWithoutQualifier")
             << testFile("completions/qualifiedTypesCompletion.qml") << 9 << 5
             << ExpectedCompletions({
