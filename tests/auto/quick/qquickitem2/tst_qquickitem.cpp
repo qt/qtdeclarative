@@ -17,6 +17,7 @@
 #include <QtQuick/private/qquickanchors_p.h>
 #include <QtGui/qstylehints.h>
 #include <private/qquickitem_p.h>
+#include <QtQuickTest/QtQuickTest>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
@@ -88,6 +89,7 @@ private slots:
     void mapCoordinates_data();
     void mapCoordinatesRect();
     void mapCoordinatesRect_data();
+    void mapCoordinatesWithWindows();
     void propertyChanges();
     void nonexistentPropertyConnection();
     void transforms();
@@ -2798,6 +2800,76 @@ void tst_QQuickItem::mapCoordinatesRect_data()
 
     for (int i=-20; i<=20; i+=5)
         QTest::newRow(QTest::toString(i)) << i << i << i << i;
+}
+
+void tst_QQuickItem::mapCoordinatesWithWindows()
+{
+    QQmlComponent component(&engine, testFileUrl("mapCoordinatesWithWindows.qml"));
+    std::unique_ptr<QObject> root(component.create());
+    QVERIFY(root);
+
+    auto *windowA = root->property("windowA").value<QQuickWindow*>();
+    QVERIFY(windowA);
+
+    // The window container geometry, parenting, etc, is applied
+    // during polish, so to test these we need to wait for one.
+    QVERIFY(QQuickTest::qWaitForPolish(windowA));
+
+    auto *childItem = windowA->findChild<QQuickItem*>("childItem");
+    QVERIFY(childItem);
+
+    QPoint itemPos = childItem->position().toPoint();
+    QCOMPARE(childItem->mapToScene({0, 0}), itemPos);
+    QCOMPARE(childItem->mapToGlobal({0, 0}), windowA->position() + itemPos);
+
+    auto *childItemInChildWindow = windowA->findChild<QQuickItem*>("childItemInChildWindow");
+    QVERIFY(childItemInChildWindow);
+
+    QPoint windowItemPos = childItemInChildWindow->position().toPoint();
+    QCOMPARE(childItemInChildWindow->mapToScene({0, 0}), windowItemPos);
+    QCOMPARE(childItemInChildWindow->mapToGlobal({0, 0}), windowA->position()
+        + childItemInChildWindow->window()->position() + windowItemPos);
+
+    QCOMPARE(childItemInChildWindow->mapToItem(nullptr, {0, 0}), windowItemPos);
+
+    auto globalItemOffset = [](QQuickItem *a, QQuickItem *b) {
+        return a->mapToGlobal({0, 0}) - b->mapToGlobal({0, 0});
+    };
+
+    QCOMPARE(childItemInChildWindow->mapToItem(childItem, {0, 0}),
+        globalItemOffset(childItemInChildWindow, childItem));
+    QCOMPARE(childItemInChildWindow->mapFromItem(childItem, {0, 0}),
+        globalItemOffset(childItem, childItemInChildWindow));
+
+    QCOMPARE(childItem->mapToItem(childItemInChildWindow, {0, 0}),
+        globalItemOffset(childItem, childItemInChildWindow));
+    QCOMPARE(childItem->mapFromItem(childItemInChildWindow, {0, 0}),
+        globalItemOffset(childItemInChildWindow, childItem));
+
+    auto *windowB = root->property("windowB").value<QQuickWindow*>();
+    QVERIFY(windowA);
+    auto *childItemInOtherWindow = windowB->findChild<QQuickItem*>("childItem");
+    QVERIFY(childItemInOtherWindow);
+
+    QCOMPARE(childItemInOtherWindow->mapToItem(childItem, {0, 0}),
+        globalItemOffset(childItemInOtherWindow, childItem));
+    QCOMPARE(childItemInOtherWindow->mapFromItem(childItem, {0, 0}),
+        globalItemOffset(childItem, childItemInOtherWindow));
+
+    QCOMPARE(childItem->mapToItem(childItemInOtherWindow, {0, 0}),
+        globalItemOffset(childItem, childItemInOtherWindow));
+    QCOMPARE(childItem->mapFromItem(childItemInOtherWindow, {0, 0}),
+        globalItemOffset(childItemInOtherWindow, childItem));
+
+    QCOMPARE(childItemInOtherWindow->mapToItem(childItemInChildWindow, {0, 0}),
+        globalItemOffset(childItemInOtherWindow, childItemInChildWindow));
+    QCOMPARE(childItemInOtherWindow->mapFromItem(childItemInChildWindow, {0, 0}),
+        globalItemOffset(childItemInChildWindow, childItemInOtherWindow));
+
+    QCOMPARE(childItemInChildWindow->mapToItem(childItemInOtherWindow, {0, 0}),
+        globalItemOffset(childItemInChildWindow, childItemInOtherWindow));
+    QCOMPARE(childItemInChildWindow->mapFromItem(childItemInOtherWindow, {0, 0}),
+        globalItemOffset(childItemInOtherWindow, childItemInChildWindow));
 }
 
 void tst_QQuickItem::transforms_data()

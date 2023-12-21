@@ -8734,8 +8734,12 @@ void QQuickItem::setContainmentMask(QObject *mask)
 QPointF QQuickItem::mapToItem(const QQuickItem *item, const QPointF &point) const
 {
     QPointF p = mapToScene(point);
-    if (item)
+    if (item) {
+        if (item->window() != window())
+            p = item->window()->mapFromGlobal(window()->mapToGlobal(p));
+
         p = item->mapFromScene(p);
+    }
     return p;
 }
 
@@ -8827,7 +8831,13 @@ QRectF QQuickItem::mapRectToScene(const QRectF &rect) const
 */
 QPointF QQuickItem::mapFromItem(const QQuickItem *item, const QPointF &point) const
 {
-    QPointF p = item?item->mapToScene(point):point;
+    QPointF p = point;
+    if (item) {
+        p = item->mapToScene(point);
+
+        if (item->window() != window())
+            p = window()->mapFromGlobal(item->window()->mapToGlobal(p));
+    }
     return mapFromScene(p);
 }
 
