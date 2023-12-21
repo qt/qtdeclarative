@@ -215,6 +215,7 @@ set(qml_files
     registerPropagation.qml
     registerelimination.qml
     renameAdjust.qml
+    returnAfterReject.qml
     revisions.qml
     scopeIdLookup.qml
     scopeVsObject.qml
