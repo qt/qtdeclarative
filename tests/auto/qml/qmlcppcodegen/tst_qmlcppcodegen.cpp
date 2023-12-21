@@ -183,6 +183,7 @@ private slots:
     void registerElimination();
     void registerPropagation();
     void renameAdjust();
+    void returnAfterReject();
     void revisions();
     void scopeIdLookup();
     void scopeObjectDestruction();
@@ -3800,6 +3801,16 @@ void tst_QmlCppCodegen::renameAdjust()
 
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
+}
+
+void tst_QmlCppCodegen::returnAfterReject()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/returnAfterReject.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("bar").toInt(), 123);
 }
 
 void tst_QmlCppCodegen::revisions()

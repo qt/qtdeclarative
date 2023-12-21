@@ -4054,12 +4054,14 @@ QString QQmlJSCodeGenerator::convertContained(const QQmlJSRegisterContent &from,
     if (!m_typeResolver->registerIsStoredIn(to, m_typeResolver->varType()) &&
             !m_typeResolver->registerIsStoredIn(to, m_typeResolver->jsPrimitiveType())) {
         reject(u"internal conversion into unsupported wrapper type."_s);
+        return QString();
     }
 
     bool isExtension = false;
     if (m_typeResolver->canPopulate(containedTo, containedFrom, &isExtension)) {
         reject(u"populating "_s + containedTo->internalName()
                + u" from "_s + containedFrom->internalName());
+        return QString();
     } else if (const auto ctor = m_typeResolver->selectConstructor(
                 containedTo, containedFrom, &isExtension); ctor.isValid()) {
         const auto argumentTypes = ctor.parameters();
