@@ -179,6 +179,7 @@ public:
     int lineCount = 0;
     int firstBlockInViewport = -1;   // can be wrong after scrolling sometimes
     int firstBlockPastViewport = -1; // only for the autotest
+    int renderedBlockCount = -1;     // only for the autotest
     QRectF renderedRegion;
 
     enum UpdateType {
