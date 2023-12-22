@@ -109,29 +109,8 @@ public:
     QString finalUrlString() const { return m_compilationUnit->finalUrlString(); }
     QString fileName() const { return m_compilationUnit->fileName(); }
 
-    // url() and fileName() shall be used to load the actual QML/JS code or to show errors or
-    // warnings about that code. They include any potential URL interceptions and thus represent the
-    // "physical" location of the code.
-    //
-    // finalUrl() and finalUrlString() shall be used to resolve further URLs referred to in the code
-    // They are _not_ intercepted and thus represent the "logical" name for the code.
-
-    QUrl url() const
-    {
-        if (!m_url.isValid())
-            m_url = QUrl(m_compilationUnit->fileName());
-        return m_url;
-    }
-
-    QUrl finalUrl() const
-    {
-        if (!m_finalUrl.isValid())
-            m_finalUrl = QUrl(m_compilationUnit->finalUrlString());
-        return m_finalUrl;
-    }
-
-    mutable QQmlNullableValue<QUrl> m_url;
-    mutable QQmlNullableValue<QUrl> m_finalUrl;
+    QUrl url() const { return m_compilationUnit->url(); }
+    QUrl finalUrl() const { return m_compilationUnit->finalUrl(); }
 
     // QML specific fields
     QQmlPropertyCacheVector propertyCaches;
@@ -243,10 +222,10 @@ public:
         return qmlData()->objectAt(index);
     }
 
-    int importCount() const { return qmlData()->nImports; }
+    int importCount() const { return m_compilationUnit->importCount(); }
     const CompiledData::Import *importAt(int index) const
     {
-        return qmlData()->importAt(index);
+        return m_compilationUnit->importAt(index);
     }
 
     Heap::Object *templateObjectAt(int index) const;
@@ -289,7 +268,6 @@ public:
         return unitData()->flags & CompiledData::Unit::IsSharedLibrary;
     }
 
-    QStringList moduleRequests() const;
     Heap::Module *instantiate();
     const Value *resolveExport(QV4::String *exportName)
     {

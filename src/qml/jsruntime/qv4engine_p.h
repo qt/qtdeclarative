@@ -862,7 +862,6 @@ private:
 
     QVector<Deletable *> m_extensionData;
 
-    mutable QMutex moduleMutex;
     QHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> modules;
 
     // QV4::PersistentValue would be preferred, but using QHash will create copies,

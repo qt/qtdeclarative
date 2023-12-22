@@ -534,17 +534,6 @@ QQmlType ExecutableCompilationUnit::qmlTypeForComponent(const QString &inlineCom
     return inlineComponentData[inlineComponentName].qmlType;
 }
 
-QStringList ExecutableCompilationUnit::moduleRequests() const
-{
-    const CompiledData::Unit *data = m_compilationUnit->data;
-
-    QStringList requests;
-    requests.reserve(data->moduleRequestTableSize);
-    for (uint i = 0; i < data->moduleRequestTableSize; ++i)
-        requests << stringAt(data->moduleRequestTable()[i]);
-    return requests;
-}
-
 Heap::Module *ExecutableCompilationUnit::instantiate()
 {
     const CompiledData::Unit *data = m_compilationUnit->data;
@@ -565,7 +554,8 @@ Heap::Module *ExecutableCompilationUnit::instantiate()
     if (isESModule())
         setModule(module->d());
 
-    for (const QString &request: moduleRequests()) {
+    const QStringList moduleRequests = m_compilationUnit->moduleRequests();
+    for (const QString &request: moduleRequests) {
         const QUrl url(request);
         const auto dependentModuleUnit = engine->loadModule(url, this);
         if (engine->hasException)
@@ -848,7 +838,8 @@ void ExecutableCompilationUnit::evaluateModuleRequests()
 {
     Q_ASSERT(engine);
 
-    for (const QString &request: moduleRequests()) {
+    const QStringList moduleRequests = m_compilationUnit->moduleRequests();
+    for (const QString &request: moduleRequests) {
         auto dependentModule = engine->loadModule(QUrl(request), this);
         if (dependentModule.native)
             continue;

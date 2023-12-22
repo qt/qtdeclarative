@@ -131,6 +131,9 @@ public:
     QQmlRefPointer<QQmlTypeData> getType(const QUrl &unNormalizedUrl, Mode mode = PreferSynchronous);
     QQmlRefPointer<QQmlTypeData> getType(const QByteArray &, const QUrl &url, Mode mode = PreferSynchronous);
 
+    void injectScript(const QUrl &relativeUrl, const QV4::Value &value);
+    QQmlRefPointer<QQmlScriptBlob> injectedScript(const QUrl &relativeUrl);
+
     QQmlRefPointer<QQmlScriptBlob> getScript(const QUrl &unNormalizedUrl);
     QQmlRefPointer<QQmlQmldirData> getQmldir(const QUrl &);
 

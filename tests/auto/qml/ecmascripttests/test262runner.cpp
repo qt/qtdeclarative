@@ -332,7 +332,8 @@ void Test262Runner::executeTest(QV4::ExecutionEngine &vm, const QString &testDat
                 break;
             }
 
-            for (const QString &request: module->moduleRequests()) {
+            const QStringList moduleRequests = module->baseCompilationUnit()->moduleRequests();
+            for (const QString &request: moduleRequests) {
                 const QUrl absoluteRequest = module->finalUrl().resolved(QUrl(request));
                 const auto module = vm.moduleForUrl(absoluteRequest);
                 if (module.native == nullptr && module.compiled == nullptr)

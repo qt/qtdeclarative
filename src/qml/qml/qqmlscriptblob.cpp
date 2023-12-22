@@ -32,15 +32,18 @@ QQmlRefPointer<QQmlScriptData> QQmlScriptBlob::scriptData() const
     return m_scriptData;
 }
 
+bool QQmlScriptBlob::isNative() const
+{
+    return m_scriptData && !m_scriptData->m_value.isEmpty();
+}
+
 void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 {
-    auto *v4 = QQmlEnginePrivate::getV4Engine(typeLoader()->engine());
     if (readCacheFile()) {
         auto unit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>();
         QString error;
         if (unit->loadFromDisk(url(), data.sourceTimeStamp(), &error)) {
-            initializeFromCompilationUnit(
-                    QV4::ExecutableCompilationUnit::create(std::move(unit), v4));
+            initializeFromCompilationUnit(std::move(unit));
             return;
         } else {
             qCDebug(DBG_DISK_CACHE()) << "Error loading" << urlString() << "from disk cache:" << error;
@@ -110,15 +113,13 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         }
     }
 
-    initializeFromCompilationUnit(QV4::ExecutableCompilationUnit::create(std::move(unit), v4));
+    initializeFromCompilationUnit(std::move(unit));
 }
 
-void QQmlScriptBlob::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
+void QQmlScriptBlob::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *cachedUnit)
 {
-    initializeFromCompilationUnit(QV4::ExecutableCompilationUnit::create(
-            QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>(
-                    unit->qmlData, unit->aotCompiledFunctions, urlString(), finalUrlString()),
-            QQmlEnginePrivate::getV4Engine(typeLoader()->engine())));
+    initializeFromCompilationUnit(QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>(
+            cachedUnit->qmlData, cachedUnit->aotCompiledFunctions, urlString(), finalUrlString()));
 }
 
 void QQmlScriptBlob::done()
@@ -167,6 +168,14 @@ void QQmlScriptBlob::done()
     m_scripts.clear();
 }
 
+void QQmlScriptBlob::completed()
+{
+    if (m_scriptData && m_scriptData->m_precompiledScript) {
+        QQmlEnginePrivate::getV4Engine(typeLoader()->engine())
+                ->injectCompiledModule(m_scriptData->m_precompiledScript);
+    }
+}
+
 QString QQmlScriptBlob::stringAt(int index) const
 {
     return m_scriptData->m_precompiledScript->stringAt(index);
@@ -183,17 +192,22 @@ void QQmlScriptBlob::scriptImported(const QQmlRefPointer<QQmlScriptBlob> &blob, 
     m_scripts << ref;
 }
 
-void QQmlScriptBlob::initializeFromCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit)
+void QQmlScriptBlob::initializeFromCompilationUnit(
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> &&unit)
 {
     Q_ASSERT(!m_scriptData);
+    Q_ASSERT(unit);
+
     m_scriptData.adopt(new QQmlScriptData());
     m_scriptData->url = finalUrl();
     m_scriptData->urlString = finalUrlString();
-    m_scriptData->m_precompiledScript = unit;
+    m_scriptData->m_precompiledScript = QV4::ExecutableCompilationUnit::create(
+            std::move(unit), QQmlEnginePrivate::getV4Engine(typeLoader()->engine()));
 
     m_importCache->setBaseUrl(finalUrl(), finalUrlString());
 
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> script = m_scriptData->m_precompiledScript;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> script
+            = m_scriptData->m_precompiledScript->baseCompilationUnit();
 
     if (!m_isModule) {
         QList<QQmlError> errors;
@@ -212,21 +226,24 @@ void QQmlScriptBlob::initializeFromCompilationUnit(const QQmlRefPointer<QV4::Exe
         }
     }
 
-    auto *v4 = QQmlEnginePrivate::getV4Engine(typeLoader()->engine());
-
-    v4->injectCompiledModule(unit);
-
-    for (const QString &request: unit->moduleRequests()) {
-        const auto module = v4->moduleForUrl(QUrl(request), unit.data());
-        if (module.compiled || module.native)
+    const QStringList moduleRequests = script->moduleRequests();
+    for (const QString &request: moduleRequests) {
+        const QUrl relativeRequest = QUrl(request);
+        if (m_typeLoader->injectedScript(relativeRequest))
             continue;
 
-        const QUrl absoluteRequest = unit->finalUrl().resolved(QUrl(request));
-        QQmlRefPointer<QQmlScriptBlob> blob = typeLoader()->getScript(absoluteRequest);
-        addDependency(blob.data());
-        scriptImported(blob, /* ### */QV4::CompiledData::Location(), /*qualifier*/QString(), /*namespace*/QString());
+        const QUrl absoluteRequest = script->finalUrl().resolved(relativeRequest);
+        QQmlRefPointer<QQmlScriptBlob> absoluteBlob = typeLoader()->getScript(absoluteRequest);
+        if (absoluteBlob->m_scriptData && absoluteBlob->m_scriptData->m_precompiledScript)
+            continue;
+
+        addDependency(absoluteBlob.data());
+        scriptImported(
+                absoluteBlob, /* ### */QV4::CompiledData::Location(), /*qualifier*/QString(),
+                /*namespace*/QString());
     }
 }
+
 
 /*!
     \internal

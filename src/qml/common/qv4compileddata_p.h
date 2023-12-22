@@ -16,14 +16,15 @@
 
 #include <functional>
 
-#include <QtCore/qhashfunctions.h>
-#include <QtCore/qstring.h>
-#include <QtCore/qscopeguard.h>
-#include <QtCore/qvector.h>
-#include <QtCore/qstringlist.h>
 #include <QtCore/qhash.h>
-#include <QtCore/qversionnumber.h>
+#include <QtCore/qhashfunctions.h>
 #include <QtCore/qlocale.h>
+#include <QtCore/qscopeguard.h>
+#include <QtCore/qstring.h>
+#include <QtCore/qstringlist.h>
+#include <QtCore/qurl.h>
+#include <QtCore/qvector.h>
+#include <QtCore/qversionnumber.h>
 
 #if QT_CONFIG(temporaryfile)
 #include <QtCore/qsavefile.h>
@@ -33,6 +34,7 @@
 #include <private/qqmlrefcount_p.h>
 #include <private/qv4staticvalue_p.h>
 #include <private/qv4compilationunitmapper_p.h>
+#include <private/qqmlnullablevalue_p.h>
 
 #include <functional>
 #include <limits.h>
@@ -1558,9 +1560,38 @@ public:
             const QUrl &url, const QDateTime &sourceTimeStamp, QString *errorString);
     Q_QML_EXPORT bool saveToDisk(const QUrl &unitUrl, QString *errorString);
 
+    int importCount() const { return qmlData->nImports; }
+    const CompiledData::Import *importAt(int index) const { return qmlData->importAt(index); }
+
+    Q_QML_EXPORT QStringList moduleRequests() const;
+
+    // url() and fileName() shall be used to load the actual QML/JS code or to show errors or
+    // warnings about that code. They include any potential URL interceptions and thus represent the
+    // "physical" location of the code.
+    //
+    // finalUrl() and finalUrlString() shall be used to resolve further URLs referred to in the code
+    // They are _not_ intercepted and thus represent the "logical" name for the code.
+
+    QUrl url() const
+    {
+        if (!m_url.isValid())
+            m_url = QUrl(fileName());
+        return m_url;
+    }
+
+    QUrl finalUrl() const
+    {
+        if (!m_finalUrl.isValid())
+            m_finalUrl = QUrl(finalUrlString());
+        return m_finalUrl;
+    }
+
 private:
     QString m_fileName; // initialized from data->sourceFileIndex
     QString m_finalUrlString; // initialized from data->finalUrlIndex
+
+    mutable QQmlNullableValue<QUrl> m_url;
+    mutable QQmlNullableValue<QUrl> m_finalUrl;
 };
 
 class SaveableUnitPointer

@@ -108,6 +108,15 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
             });
 }
 
+QStringList CompilationUnit::moduleRequests() const
+{
+    QStringList requests;
+    requests.reserve(data->moduleRequestTableSize);
+    for (uint i = 0; i < data->moduleRequestTableSize; ++i)
+        requests << stringAt(data->moduleRequestTable()[i]);
+    return requests;
+}
+
 } // namespace CompiledData
 } // namespace QV4
 

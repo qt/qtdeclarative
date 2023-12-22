@@ -2124,14 +2124,12 @@ void ExecutionEngine::injectCompiledModule(const QQmlRefPointer<ExecutableCompil
 {
     // Injection can happen from the QML type loader thread for example, but instantiation and
     // evaluation must be limited to the ExecutionEngine's thread.
-    QMutexLocker moduleGuard(&moduleMutex);
     modules.insert(moduleUnit->finalUrl(), moduleUnit);
 }
 
 ExecutionEngine::Module ExecutionEngine::moduleForUrl(
         const QUrl &url, const ExecutableCompilationUnit *referrer) const
 {
-    QMutexLocker moduleGuard(&moduleMutex);
     const auto nativeModule = nativeModules.find(url);
     if (nativeModule != nativeModules.end())
         return Module { nullptr, *nativeModule };
@@ -2147,7 +2145,6 @@ ExecutionEngine::Module ExecutionEngine::moduleForUrl(
 
 ExecutionEngine::Module ExecutionEngine::loadModule(const QUrl &url, const ExecutableCompilationUnit *referrer)
 {
-    QMutexLocker moduleGuard(&moduleMutex);
     const auto nativeModule = nativeModules.find(url);
     if (nativeModule != nativeModules.end())
         return Module { nullptr, *nativeModule };
@@ -2159,20 +2156,15 @@ ExecutionEngine::Module ExecutionEngine::loadModule(const QUrl &url, const Execu
     if (existingModule != modules.end())
         return Module { *existingModule, nullptr };
 
-    moduleGuard.unlock();
-
     auto newModule = compileModule(resolved);
-    if (newModule) {
-        moduleGuard.relock();
+    if (newModule)
         modules.insert(resolved, newModule);
-    }
 
     return Module { newModule, nullptr };
 }
 
 QV4::Value *ExecutionEngine::registerNativeModule(const QUrl &url, const QV4::Value &module)
 {
-    QMutexLocker moduleGuard(&moduleMutex);
     const auto existingModule = nativeModules.find(url);
     if (existingModule != nativeModules.end())
         return nullptr;
@@ -2180,6 +2172,11 @@ QV4::Value *ExecutionEngine::registerNativeModule(const QUrl &url, const QV4::Va
     QV4::Value *val = this->memoryManager->m_persistentValues->allocate();
     *val = module.asReturnedValue();
     nativeModules.insert(url, val);
+
+    // Make sure the type loader doesn't try to resolve the script anymore.
+    if (m_qmlEngine)
+        QQmlEnginePrivate::get(m_qmlEngine)->typeLoader.injectScript(url, *val);
+
     return val;
 }
 

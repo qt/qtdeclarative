@@ -39,17 +39,19 @@ public:
     };
 
     QQmlRefPointer<QQmlScriptData> scriptData() const;
+    bool isNative() const;
 
 protected:
     void dataReceived(const SourceCodeData &) override;
     void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit) override;
     void done() override;
+    void completed() override;
 
     QString stringAt(int index) const override;
 
 private:
     void scriptImported(const QQmlRefPointer<QQmlScriptBlob> &blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace) override;
-    void initializeFromCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit);
+    void initializeFromCompilationUnit(QQmlRefPointer<QV4::CompiledData::CompilationUnit> &&cu);
     void initializeFromNative(const QV4::Value &value);
 
     QList<ScriptReference> m_scripts;

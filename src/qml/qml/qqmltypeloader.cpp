@@ -554,15 +554,12 @@ bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &da
 bool QQmlTypeLoader::Blob::addScriptImport(const QQmlTypeLoader::Blob::PendingImportPtr &import)
 {
     const QUrl url(import->uri);
-    const auto module = m_typeLoader->engine()->handle()->moduleForUrl(url);
-    QQmlRefPointer<QQmlScriptBlob> blob;
-    if (module.native) {
-        blob.adopt(new QQmlScriptBlob(url, m_typeLoader));
-        blob->initializeFromNative(*module.native);
-        blob->tryDone();
-    } else {
-        blob = typeLoader()->getScript(finalUrl().resolved(url));
-    }
+    QQmlTypeLoader *loader = typeLoader();
+    QQmlRefPointer<QQmlScriptBlob> blob = loader->injectedScript(url);
+    if (!blob)
+        blob = loader->getScript(finalUrl().resolved(url));
+    else
+        Q_ASSERT(blob->status() == QQmlDataBlob::Status::Complete);
     addDependency(blob.data());
     scriptImported(blob, import->location, import->qualifier, QString());
     return true;
@@ -996,6 +993,26 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QByteArray &data, con
     QQmlTypeLoader::loadWithStaticData(typeData, data, mode);
 
     return QQmlRefPointer<QQmlTypeData>(typeData, QQmlRefPointer<QQmlTypeData>::Adopt);
+}
+
+void QQmlTypeLoader::injectScript(const QUrl &relativeUrl, const QV4::Value &value)
+{
+    LockHolder<QQmlTypeLoader> holder(this);
+
+    QQmlScriptBlob *blob = new QQmlScriptBlob(relativeUrl, this);
+    blob->initializeFromNative(value);
+    blob->m_isDone = true;
+    blob->m_data.setStatus(QQmlDataBlob::Complete);
+    m_scriptCache.insert(relativeUrl, blob);
+}
+
+QQmlRefPointer<QQmlScriptBlob> QQmlTypeLoader::injectedScript(const QUrl &relativeUrl)
+{
+    LockHolder<QQmlTypeLoader> holder(this);
+    const auto it = m_scriptCache.constFind(relativeUrl);
+    return (it != m_scriptCache.constEnd() && (*it)->isNative())
+            ? *it
+            : QQmlRefPointer<QQmlScriptBlob>();
 }
 
 /*!
