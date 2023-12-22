@@ -155,7 +155,7 @@ QQuickWindowContainer::~QQuickWindowContainer()
 
     disconnect(this);
     if (d->window) {
-        auto ownership = qmlEngine(this)->objectOwnership(d->window);
+        auto ownership = QJSEngine::objectOwnership(d->window);
         qCDebug(lcWindowContainer) << "Contained window" << d->window
             << "has" << (ownership == QQmlEngine::JavaScriptOwnership ?
                          "JavaScript" : "C++") << "ownership";
