@@ -34,6 +34,7 @@ private slots:
 
     void windowDestroyed();
     void windowLifetimeFollowsContainer();
+    void deferredVisibilityWithoutWindow();
 
 private:
     std::unique_ptr<QQmlApplicationEngine> m_engine;
@@ -125,6 +126,22 @@ void tst_QQuickWindowContainer::windowLifetimeFollowsContainer()
     }
 
     QVERIFY(windowGuard);
+}
+
+void tst_QQuickWindowContainer::deferredVisibilityWithoutWindow()
+{
+    auto *topLevelWindow = qobject_cast<QQuickWindow*>(m_engine->rootObjects().first());
+    auto *childWindow = topLevelWindow->findChild<QQuickWindow*>("childWindow");
+    QVERIFY(childWindow);
+    QVERIFY(QQuickTest::qWaitForPolish(topLevelWindow));
+
+    QSignalSpy spy(childWindow, &QWindow::visibleChanged);
+    m_engine.reset(nullptr);
+
+    // Deleting the engine should only hide the window once,
+    // not hide, show, and then hide again, which would be
+    // the result of applying visibility without a window.
+    QCOMPARE(spy.count(), 1);
 }
 
 QTEST_MAIN(tst_QQuickWindowContainer)

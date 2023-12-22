@@ -198,12 +198,11 @@ void QQuickWindowQmlImpl::applyWindowVisibility()
     if (visible) {
         if (d->visualParent) {
             // Even though we're complete, and have a visual parent set,
-            // that visual parent item may not be part of a window yet.
-            // Showing this window now would make it a top level, which
-            // is not what we want.
-            auto *parentItem = qobject_cast<QQuickItem*>(d->visualParent);
-            if (parentItem && !QWindow::parent()) {
-                qCDebug(lcQuickWindow) << "No parent window yet. Deferring.";
+            // we may not be part of a window yet, or we may have been
+            // removed from a window that's going away. Showing this window
+            // now would make it a top level, which is not what we want.
+            if (!QWindow::parent()) {
+                qCDebug(lcQuickWindow) << "Waiting for visual parent to reparent us into a window";
                 // We apply the visibility again on ParentWindowChange
                 return;
             }
