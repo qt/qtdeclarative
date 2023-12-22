@@ -33,6 +33,7 @@ private slots:
     void basicFunctionality();
 
     void windowDestroyed();
+    void windowLifetimeFollowsContainer();
 
 private:
     std::unique_ptr<QQmlApplicationEngine> m_engine;
@@ -102,6 +103,28 @@ void tst_QQuickWindowContainer::windowDestroyed()
 
     QVERIFY(!container.containedWindow());
     QCOMPARE(spy.size(), 2);
+}
+
+void tst_QQuickWindowContainer::windowLifetimeFollowsContainer()
+{
+    QWindow window;
+    QPointer<QWindow> windowGuard = &window;
+
+    QQuickWindowContainer container;
+    container.setContainedWindow(&window);
+
+    {
+        QQuickWindow quickWindow;
+        container.setParentItem(quickWindow.contentItem());
+        quickWindow.show();
+        QVERIFY(QQuickTest::qWaitForPolish(&quickWindow));
+        QCOMPARE(window.parent(), &quickWindow);
+
+        // Decouple container from Quick window
+        container.setParentItem(nullptr);
+    }
+
+    QVERIFY(windowGuard);
 }
 
 QTEST_MAIN(tst_QQuickWindowContainer)
