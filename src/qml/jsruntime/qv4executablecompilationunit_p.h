@@ -84,16 +84,6 @@ public:
         return m_compilationUnit->typeNameCache;
     }
 
-    void setTypeNameCache(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache)
-    {
-        m_compilationUnit->typeNameCache = typeNameCache;
-    }
-
-    const QQmlPropertyCacheVector *propertyCachesPtr() const
-    {
-        return &m_compilationUnit->propertyCaches;
-    }
-
     QQmlPropertyCacheVector *propertyCachesPtr()
     {
         return &m_compilationUnit->propertyCaches;
@@ -109,13 +99,6 @@ public:
     QHash<int, IdentifierHash> namedObjectsPerComponentCache;
     inline IdentifierHash namedObjectsPerComponent(int componentObjectIndex);
 
-    const QString *icRootName() const { return m_compilationUnit->icRootName.get(); }
-    QString *icRootName() { return m_compilationUnit->icRootName.get(); }
-    void setIcRootName(std::unique_ptr<QString> &&icRootName)
-    {
-        m_compilationUnit->icRootName = std::move(icRootName);
-    }
-
     int totalBindingsCount() const { return m_compilationUnit->totalBindingsCount(); }
     int totalParserStatusCount() const { return m_compilationUnit->totalParserStatusCount(); }
     int totalObjectCount() const { return m_compilationUnit->totalObjectCount(); }
@@ -125,29 +108,12 @@ public:
         return m_compilationUnit->resolvedType(id);
     }
 
-    ResolvedTypeReference *resolvedType(QMetaType type) const
-    {
-        return m_compilationUnit->resolvedType(type);
-    }
-
-    void setResolvedTypes(const CompiledData::ResolvedTypeReferenceMap &resolvedTypes)
-    {
-        m_compilationUnit->resolvedTypes = resolvedTypes;
-    }
-
-    bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const
-    {
-        return m_compilationUnit->verifyChecksum(dependencyHasher);
-    }
-
     QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const
     {
         return m_compilationUnit->qmlTypeForComponent(inlineComponentName);
     }
 
-    QQmlType qmlType() const { return m_compilationUnit->qmlType; }
-
-    QMetaType metaType() const { return qmlType().typeId(); }
+    QMetaType metaType() const { return m_compilationUnit->qmlType.typeId(); }
 
     int inlineComponentId(const QString &inlineComponentName) const
     {
@@ -160,12 +126,6 @@ public:
     using CompiledBinding = CompiledData::CompilationUnit::CompiledBinding;
     using IdToObjectMap = CompiledData::CompilationUnit::IdToObjectMap;
 
-    using ListPropertyAssignBehavior = CompiledData::CompilationUnit::ListPropertyAssignBehavior;
-    ListPropertyAssignBehavior listPropertyAssignBehavior() const
-    {
-        return m_compilationUnit->listPropertyAssignBehavior();
-    }
-
     bool nativeMethodsAcceptThisObjects() const
     {
         return m_compilationUnit->nativeMethodsAcceptThisObjects();
@@ -176,7 +136,6 @@ public:
     bool valueTypesAreAddressable() const { return m_compilationUnit->valueTypesAreAddressable(); }
     bool componentsAreBound() const { return m_compilationUnit->componentsAreBound(); }
     bool isESModule() const { return m_compilationUnit->isESModule(); }
-    bool isSharedLibrary() const { return m_compilationUnit->isSharedLibrary(); }
 
     int objectCount() const { return m_compilationUnit->objectCount(); }
     const CompiledObject *objectAt(int index) const
@@ -184,25 +143,7 @@ public:
         return m_compilationUnit->objectAt(index);
     }
 
-    int importCount() const { return m_compilationUnit->importCount(); }
-    const CompiledData::Import *importAt(int index) const
-    {
-        return m_compilationUnit->importAt(index);
-    }
-
     Heap::Object *templateObjectAt(int index) const;
-
-    using FunctionIterator = CompiledData::CompilationUnit::FunctionIterator;
-    FunctionIterator objectFunctionsBegin(const CompiledObject *object) const
-    {
-        return m_compilationUnit->objectFunctionsBegin(object);
-    }
-
-    FunctionIterator objectFunctionsEnd(const CompiledObject *object) const
-    {
-        return m_compilationUnit->objectFunctionsEnd(object);
-    }
-
 
     Heap::Module *instantiate();
     const Value *resolveExport(QV4::String *exportName)
@@ -252,16 +193,10 @@ public:
     void setModule(Heap::Module *module) { m_module = module; }
 
     const CompiledData::Unit *unitData() const { return m_compilationUnit->data; }
-    const CompiledData::QmlUnit *qmlData() const { return m_compilationUnit->qmlData; }
 
     QString stringAt(uint index) const { return m_compilationUnit->stringAt(index); }
 
     const QVector<QQmlRefPointer<QQmlScriptData>> *dependentScriptsPtr() const
-    {
-        return &m_compilationUnit->dependentScripts;
-    }
-
-    QVector<QQmlRefPointer<QQmlScriptData>> *dependentScriptsPtr()
     {
         return &m_compilationUnit->dependentScripts;
     }
@@ -286,17 +221,6 @@ public:
         return data->indexOfRootFunction != -1
                 ? runtimeFunctions[data->indexOfRootFunction]
                 : nullptr;
-    }
-
-    const QHash<QString, CompiledData::InlineComponentData> &inlineComponentData() const
-    {
-        return m_compilationUnit->inlineComponentData;
-    }
-
-    void setInlineComponentData(
-            const QHash<QString, CompiledData::InlineComponentData> &inlineComponentData)
-    {
-        m_compilationUnit->inlineComponentData = inlineComponentData;
     }
 
     void populate();

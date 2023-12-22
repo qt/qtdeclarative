@@ -51,11 +51,6 @@ QQmlTypeData::~QQmlTypeData()
     m_resolvedTypes.clear();
 }
 
-const QList<QQmlTypeData::ScriptReference> &QQmlTypeData::resolvedScripts() const
-{
-    return m_scripts;
-}
-
 QV4::CompiledData::CompilationUnit *QQmlTypeData::compilationUnit() const
 {
     return m_compiledData.data();
