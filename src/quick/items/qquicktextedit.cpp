@@ -2523,14 +2523,17 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
         d->firstBlockInViewport = -1;
         d->firstBlockPastViewport = -1;
+        int frameCount = -1;
         while (!frames.isEmpty()) {
             QTextFrame *textFrame = frames.takeFirst();
+            ++frameCount;
+            if (frameCount > 0)
+                firstDirtyPos = 0;
+            qCDebug(lcVP) << "frame" << frameCount << textFrame
+                          << "from" << positionToRectangle(textFrame->firstPosition()).topLeft()
+                          << "to" << positionToRectangle(textFrame->lastPosition()).bottomRight();
             frames.append(textFrame->childFrames());
             frameDecorationsEngine.addFrameDecorations(d->document, textFrame);
-
-            if (textFrame->lastPosition() < firstDirtyPos
-                    || textFrame->firstPosition() >= firstCleanNode.startPos())
-                continue;
             resetEngine(&engine, d->color, d->selectedTextColor, d->selectionColor);
 
             if (textFrame->firstPosition() > textFrame->lastPosition()
@@ -2613,8 +2616,13 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                                 }
                                 break; // skip rest of blocks in this frame
                             }
-                            if (inView && !block.text().isEmpty() && coveredRegion.isValid())
+                            if (inView && !block.text().isEmpty() && coveredRegion.isValid()) {
                                 d->renderedRegion = d->renderedRegion.united(coveredRegion);
+                                // In case we're going to visit more (nested) frames after this, ensure that we
+                                // don't omit any blocks that fit within the region that we claim as fully rendered.
+                                if (!frames.isEmpty())
+                                    viewport = viewport.united(d->renderedRegion);
+                            }
                         }
                         if (inView && d->firstBlockInViewport < 0)
                             d->firstBlockInViewport = block.blockNumber();
@@ -3283,6 +3291,7 @@ void QQuickTextEditPrivate::addCurrentTextNodeToRoot(QQuickTextNodeEngine *engin
     it = textNodeMap.insert(it, TextNode(startPos, node));
     ++it;
     root->appendChildNode(node);
+    ++renderedBlockCount;
 }
 
 QSGInternalTextNode *QQuickTextEditPrivate::createTextNode()
