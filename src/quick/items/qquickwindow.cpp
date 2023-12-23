@@ -5349,6 +5349,8 @@ void QQuickWindow::endExternalCommands()
 
     Setting visible to false is the same as setting \l visibility to \l {QWindow::}{Hidden}.
 
+    The default value is \c false, unless overridden by setting \l visibility.
+
     \sa visibility
  */
 
