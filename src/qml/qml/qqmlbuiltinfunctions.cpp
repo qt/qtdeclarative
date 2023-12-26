@@ -2356,7 +2356,15 @@ ReturnedValue GlobalExtensions::method_qsTrIdNoOp(const FunctionObject *, const 
 }
 #endif // translation
 
+/*!
+    \qmlmethod void Qt::gc()
 
+    Runs the garbage collector.
+
+    This is equivalent to calling QJSEngine::collectGarbage().
+
+    \sa {Garbage Collection}
+*/
 ReturnedValue GlobalExtensions::method_gc(const FunctionObject *b, const Value *, const Value *, int)
 {
     auto mm = b->engine()->memoryManager;

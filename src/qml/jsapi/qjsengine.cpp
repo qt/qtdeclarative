@@ -389,7 +389,11 @@ QJSEngine::~QJSEngine()
     when the QJSEngine decides that it's wise to do so (i.e. when a certain number of new objects
     have been created). However, you can call this function to explicitly request that garbage
     collection should be performed as soon as possible.
-*/
+
+
+    \sa {Garbage Collection}
+    \sa {Qt::}{gc()}
+ */
 void QJSEngine::collectGarbage()
 {
     m_v4Engine->memoryManager->runGC();
