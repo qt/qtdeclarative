@@ -2051,12 +2051,11 @@ DomEnvironment::DomEnvironment(
       m_implicitImports(defaultImplicitImports())
 {}
 
-DomItem DomEnvironment::create(
-        const QStringList &loadPaths, Options options, const DomItem &universe)
+std::shared_ptr<DomEnvironment> DomEnvironment::create(const QStringList &loadPaths,
+                                                       Options options, const DomItem &universe)
 {
     std::shared_ptr<DomUniverse> universePtr = universe.ownerAs<DomUniverse>();
-    auto envPtr = std::make_shared<DomEnvironment>(loadPaths, options, universePtr);
-    return DomItem(envPtr);
+    return std::make_shared<DomEnvironment>(loadPaths, options, universePtr);
 }
 
 DomEnvironment::DomEnvironment(

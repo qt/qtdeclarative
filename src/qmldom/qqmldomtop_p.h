@@ -708,8 +708,9 @@ public:
     explicit DomEnvironment(const std::shared_ptr<DomEnvironment> &parent,
                             const QStringList &loadPaths, Options options = Option::SingleThreaded);
     DomEnvironment(const DomEnvironment &o) = delete;
-    static DomItem create(const QStringList &loadPaths, Options options = Option::SingleThreaded,
-                          const DomItem &universe = DomItem::empty);
+    static std::shared_ptr<DomEnvironment> create(const QStringList &loadPaths,
+                                                  Options options = Option::SingleThreaded,
+                                                  const DomItem &universe = DomItem::empty);
 
     std::shared_ptr<ExternalItemInfo<QmlFile>> addQmlFile(
             const std::shared_ptr<QmlFile> &file, AddOption option = AddOption::KeepExisting);
