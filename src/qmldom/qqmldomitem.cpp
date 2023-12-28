@@ -2527,11 +2527,8 @@ void DomItem::loadFile(
         std::optional<DomType> fileType) const
 {
     DomItem topEl = top();
-    if (topEl.internalKind() == DomType::DomEnvironment
-        || topEl.internalKind() == DomType::DomUniverse) {
-        if (auto univ = topEl.ownerAs<DomUniverse>())
-            univ->loadFile(*this, file, callback, loadOptions, fileType);
-        else if (auto env = topEl.ownerAs<DomEnvironment>()) {
+    if (topEl.internalKind() == DomType::DomEnvironment) {
+        if (auto env = topEl.ownerAs<DomEnvironment>()) {
             if (env->options() & DomEnvironment::Option::NoDependencies)
                 env->loadFile(topEl, file, callback, DomTop::Callback(), DomTop::Callback(),
                               loadOptions, fileType);
@@ -2539,9 +2536,9 @@ void DomItem::loadFile(
                 env->loadFile(topEl, file, DomTop::Callback(), DomTop::Callback(), callback,
                               loadOptions, fileType);
         } else
-            Q_ASSERT(false && "expected either DomUniverse or DomEnvironment cast to succeed");
+            Q_ASSERT(false && "expected DomEnvironment cast to succeed");
     } else {
-        addError(myErrors().warning(tr("loadFile called without DomEnvironment or DomUniverse.")));
+        addError(myErrors().warning(tr("loadFile called without DomEnvironment.")));
         // TODO(QTBUG-119550) fix this bug. see task for details
         callback(Paths::qmlFileInfoPath(file.canonicalPath()), DomItem::empty, DomItem::empty);
     }

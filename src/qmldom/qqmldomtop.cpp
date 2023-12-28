@@ -1288,8 +1288,8 @@ void DomEnvironment::loadFile(const DomItem &self, const FileToLoad &file, Callb
             }
         }
         if (!newValue) {
-            self.universe().loadFile(
-                    file,
+            universe()->loadFile(
+                    self.universe(), file,
                     callbackForQmlDirectory(self, loadCallback, directDepsCallback, endCallback),
                     loadOptions, fType);
             return;
@@ -1318,8 +1318,9 @@ void DomEnvironment::loadFile(const DomItem &self, const FileToLoad &file, Callb
             }
         }
         if (!newValue) {
-            self.universe().loadFile(
-                    file, callbackForQmlFile(self, loadCallback, directDepsCallback, endCallback),
+            universe()->loadFile(
+                    self.universe(), file,
+                    callbackForQmlFile(self, loadCallback, directDepsCallback, endCallback),
                     loadOptions, fType);
             return;
         }
@@ -1348,8 +1349,8 @@ void DomEnvironment::loadFile(const DomItem &self, const FileToLoad &file, Callb
             }
         }
         if (!newValue) {
-            self.universe().loadFile(
-                    file,
+            universe()->loadFile(
+                    self.universe(), file,
                     callbackForQmltypesFile(self, loadCallback, directDepsCallback, endCallback),
                     loadOptions, fType);
             return;
@@ -1379,17 +1380,17 @@ void DomEnvironment::loadFile(const DomItem &self, const FileToLoad &file, Callb
             }
         }
         if (!newValue) {
-            self.universe().loadFile(
-                    file,
+            universe()->loadFile(
+                    self.universe(), file,
                     callbackForQmldirFile(self, loadCallback, directDepsCallback, endCallback),
                     loadOptions, fType);
             return;
         }
     } break;
     case DomType::JsFile: {
-        self.universe().loadFile(
-                file, callbackForJSFile(self, loadCallback, directDepsCallback, endCallback),
-                loadOptions, fType);
+        universe()->loadFile(self.universe(), file,
+                             callbackForJSFile(self, loadCallback, directDepsCallback, endCallback),
+                             loadOptions, fType);
         return;
     } break;
     default: {
