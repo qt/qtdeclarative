@@ -674,8 +674,7 @@ void LoadInfo::advanceLoad(const DomItem &self)
                                 // call it later.
                                 finishedLoadingDep(copiedSelf, dep);
                             },
-                            nullptr, nullptr, LoadOption::DefaultLoad, dep.fileType,
-                            self.errorHandler());
+                            LoadOption::DefaultLoad, dep.fileType, self.errorHandler());
                 else
                     Q_ASSERT(false && "missing environment");
             } else {
@@ -1231,6 +1230,22 @@ std::shared_ptr<OwningItem> DomEnvironment::doCopy(const DomItem &) const
         res = std::make_shared<DomEnvironment>(
                 m_loadPaths, m_options, m_universe);
     return res;
+}
+
+void DomEnvironment::loadFile(const DomItem &self, const FileToLoad &file, const Callback &callback,
+                              LoadOptions loadOptions, std::optional<DomType> fileType,
+                              const ErrorHandler &h)
+{
+    if (options() & DomEnvironment::Option::NoDependencies)
+        loadFile(self, file, callback, DomTop::Callback(), DomTop::Callback(), loadOptions,
+                 fileType, h);
+    else {
+        // When the file is required to be loaded with dependencies, those dependencies
+        // will be added to the "pending" queue through envCallbackForFile
+        // then those should not be forgotten to be loaded.
+        loadFile(self, file, DomTop::Callback(), DomTop::Callback(), callback, loadOptions,
+                 fileType, h);
+    }
 }
 
 // TODO(QTBUG-119550) refactor this

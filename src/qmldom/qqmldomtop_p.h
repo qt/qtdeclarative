@@ -658,13 +658,14 @@ public:
 
     std::shared_ptr<DomEnvironment> makeCopy(const DomItem &self) const;
 
-    void loadFile(const DomItem &self, const FileToLoad &file, Callback loadCallback,
-                  Callback directDepsCallback, Callback endCallback, LoadOptions loadOptions,
+    void loadFile(const DomItem &self, const FileToLoad &file, const Callback &callback,
+                  LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>(),
-                  const ErrorHandler &h = nullptr);
-    void loadModuleDependency(
-            const DomItem &self, const QString &uri, Version v, Callback loadCallback = nullptr,
-            Callback endCallback = nullptr, const ErrorHandler & = nullptr);
+                  const ErrorHandler &h = nullptr /* used only in loadPendingDependencies*/);
+
+    void loadModuleDependency(const DomItem &self, const QString &uri, Version v,
+                              Callback loadCallback = nullptr, Callback endCallback = nullptr,
+                              const ErrorHandler & = nullptr);
     void loadBuiltins(
             const DomItem &self, Callback callback = nullptr, const ErrorHandler &h = nullptr);
     void removePath(const QString &path);
@@ -756,7 +757,13 @@ public:
 
 private:
     friend class RefCacheEntry;
-    template<typename T>
+
+    void loadFile(const DomItem &self, const FileToLoad &file, Callback loadCallback,
+                  Callback directDepsCallback, Callback endCallback, LoadOptions loadOptions,
+                  std::optional<DomType> fileType = std::optional<DomType>(),
+                  const ErrorHandler &h = nullptr);
+
+    template <typename T>
     QSet<QString> getStrings(function_ref<QSet<QString>()> getBase, const QMap<QString, T> &selfMap,
                              EnvLookup lookup) const;
 

@@ -2529,12 +2529,7 @@ void DomItem::loadFile(
     DomItem topEl = top();
     if (topEl.internalKind() == DomType::DomEnvironment) {
         if (auto env = topEl.ownerAs<DomEnvironment>()) {
-            if (env->options() & DomEnvironment::Option::NoDependencies)
-                env->loadFile(topEl, file, callback, DomTop::Callback(), DomTop::Callback(),
-                              loadOptions, fileType);
-            else
-                env->loadFile(topEl, file, DomTop::Callback(), DomTop::Callback(), callback,
-                              loadOptions, fileType);
+            env->loadFile(topEl, file, callback, loadOptions, fileType);
         } else
             Q_ASSERT(false && "expected DomEnvironment cast to succeed");
     } else {
