@@ -668,7 +668,7 @@ void LoadInfo::advanceLoad(const DomItem &self)
                 DomItem env = self.environment();
                 if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>())
                     envPtr->loadFile(
-                            env, FileToLoad::fromFileSystem(envPtr, dep.filePath),
+                            FileToLoad::fromFileSystem(envPtr, dep.filePath),
                             [this, copiedSelf = self, dep](Path, const DomItem &, const DomItem &) {
                                 // Need to explicitly copy self here since we might store this and
                                 // call it later.
@@ -1232,28 +1232,27 @@ std::shared_ptr<OwningItem> DomEnvironment::doCopy(const DomItem &) const
     return res;
 }
 
-void DomEnvironment::loadFile(const DomItem &self, const FileToLoad &file, const Callback &callback,
+void DomEnvironment::loadFile(const FileToLoad &file, const Callback &callback,
                               LoadOptions loadOptions, std::optional<DomType> fileType,
                               const ErrorHandler &h)
 {
     if (options() & DomEnvironment::Option::NoDependencies)
-        loadFile(self, file, callback, DomTop::Callback(), DomTop::Callback(), loadOptions,
-                 fileType, h);
+        loadFile(file, callback, DomTop::Callback(), DomTop::Callback(), loadOptions, fileType, h);
     else {
         // When the file is required to be loaded with dependencies, those dependencies
         // will be added to the "pending" queue through envCallbackForFile
         // then those should not be forgotten to be loaded.
-        loadFile(self, file, DomTop::Callback(), DomTop::Callback(), callback, loadOptions,
-                 fileType, h);
+        loadFile(file, DomTop::Callback(), DomTop::Callback(), callback, loadOptions, fileType, h);
     }
 }
 
 // TODO(QTBUG-119550) refactor this
-void DomEnvironment::loadFile(const DomItem &self, const FileToLoad &file, Callback loadCallback,
+void DomEnvironment::loadFile(const FileToLoad &file, Callback loadCallback,
                               Callback directDepsCallback, Callback endCallback,
                               LoadOptions loadOptions, std::optional<DomType> fileType,
                               const ErrorHandler &h)
 {
+    DomItem self(shared_from_this());
     if (file.canonicalPath().isEmpty()) {
         if (!file.content() || file.content()->data.isNull()) {
             // file's content inavailable and no path to retrieve it
@@ -1558,9 +1557,9 @@ void DomEnvironment::loadBuiltins(const DomItem &self, Callback callback, const 
         QDir dir(path);
         QFileInfo fInfo(dir.filePath(builtinsName));
         if (fInfo.isFile()) {
-            self.loadFile(FileToLoad::fromFileSystem(self.ownerAs<DomEnvironment>(),
-                                                     fInfo.canonicalFilePath()),
-                          callback, LoadOption::DefaultLoad);
+            loadFile(FileToLoad::fromFileSystem(self.ownerAs<DomEnvironment>(),
+                                                fInfo.canonicalFilePath()),
+                     callback, LoadOption::DefaultLoad);
             return;
         }
     }

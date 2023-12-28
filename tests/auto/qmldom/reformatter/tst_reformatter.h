@@ -145,15 +145,16 @@ private slots:
         QString baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/reformatter");
         QStringList qmltypeDirs =
                 QStringList({ baseDir, QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 qmltypeDirs,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
         QString testFilePath = baseDir + QLatin1Char('/') + inFile;
         DomItem tFile;
+        DomItem env(envPtr);
         env.loadBuiltins();
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFilePath),
+        envPtr->loadFile(
+                FileToLoad::fromFileSystem(envPtr, testFilePath),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
         env.loadPendingDependencies();
@@ -252,14 +253,15 @@ private slots:
         QString baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/reformatter");
         QStringList qmltypeDirs =
                 QStringList({ baseDir, QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 qmltypeDirs,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
         QString testFilePath = baseDir + QLatin1Char('/') + inFile;
         DomItem tFile;
+        DomItem env(envPtr);
         env.loadBuiltins();
-        env.loadFile(
+        envPtr->loadFile(
                 FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFilePath),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);

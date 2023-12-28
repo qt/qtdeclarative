@@ -77,17 +77,16 @@ void QQmlDocumentFormatting::process(RequestPointerArgument request)
     // by the 'WithScriptExpression' required by other qmlls features. Do not pass any import paths
     // here, as else the DomEnvironment will try to parse all QML modules that it can find (and that
     // takes quite some time and is not needed to format the code).
-    const DomItem newCurrent = DomEnvironment::create({});
+    auto newCurrentPtr = DomEnvironment::create({});
     const DomCreationOptions creationOptions = DomCreationOption::None;
     DomItem fileWithoutScriptExpressions;
-    newCurrent.loadFile(
-            FileToLoad::fromMemory(newCurrent.ownerAs<DomEnvironment>(), file.canonicalFilePath(),
-                                   code, creationOptions),
+    newCurrentPtr->loadFile(
+            FileToLoad::fromMemory(newCurrentPtr, file.canonicalFilePath(), code, creationOptions),
             [&fileWithoutScriptExpressions](Path, const DomItem &, const DomItem &newValue) {
                 fileWithoutScriptExpressions = newValue.fileObject();
             },
             {});
-    newCurrent.loadPendingDependencies();
+    DomItem(newCurrentPtr).loadPendingDependencies();
 
     // TODO: implement formatting options
     // For now, qmlformat's default options.

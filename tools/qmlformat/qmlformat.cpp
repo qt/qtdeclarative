@@ -48,13 +48,14 @@ struct Options
 
 bool parseFile(const QString &filename, const Options &options)
 {
-    DomItem env =
+    auto envPtr =
             DomEnvironment::create(QStringList(),
                                    QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                                            | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
     DomItem tFile; // place where to store the loaded file
-    env.loadFile(
-            FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), filename),
+    DomItem env(envPtr);
+    envPtr->loadFile(
+            FileToLoad::fromFileSystem(envPtr, filename),
             [&tFile](Path, const DomItem &, const DomItem &newIt) {
                 tFile = newIt; // callback called when everything is loaded that receives the loaded
                                // external file pair (path, oldValue, newValue)

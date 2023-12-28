@@ -32,7 +32,7 @@ int main()
 
     qDebug() << "Creating an environment loading qml from the directories" << qmltypeDirs;
     qDebug() << "single threaded, no dependencies";
-    DomItem env =
+    auto envPtr =
             DomEnvironment::create(qmltypeDirs,
                                    QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                                            | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
@@ -42,9 +42,9 @@ int main()
     // env.loadBuiltins();
 
     qDebug() << "loading the file" << testFilePath;
-    env.loadFile(
+    envPtr->loadFile(
 #if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
-            FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFilePath),
+            FileToLoad::fromFileSystem(envPtr, testFilePath),
 #else
             testFilePath, QString(),
 #endif

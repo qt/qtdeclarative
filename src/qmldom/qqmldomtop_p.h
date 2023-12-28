@@ -627,7 +627,8 @@ public:
     QList<Path> canonicalPaths;
 };
 
-class QMLDOM_EXPORT DomEnvironment final : public DomTop
+class QMLDOM_EXPORT DomEnvironment final : public DomTop,
+                                           public std::enable_shared_from_this<DomEnvironment>
 {
     Q_GADGET
     Q_DECLARE_TR_FUNCTIONS(DomEnvironment);
@@ -658,8 +659,7 @@ public:
 
     std::shared_ptr<DomEnvironment> makeCopy(const DomItem &self) const;
 
-    void loadFile(const DomItem &self, const FileToLoad &file, const Callback &callback,
-                  LoadOptions loadOptions,
+    void loadFile(const FileToLoad &file, const Callback &callback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   const ErrorHandler &h = nullptr /* used only in loadPendingDependencies*/);
 
@@ -758,8 +758,8 @@ public:
 private:
     friend class RefCacheEntry;
 
-    void loadFile(const DomItem &self, const FileToLoad &file, Callback loadCallback,
-                  Callback directDepsCallback, Callback endCallback, LoadOptions loadOptions,
+    void loadFile(const FileToLoad &file, Callback loadCallback, Callback directDepsCallback,
+                  Callback endCallback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   const ErrorHandler &h = nullptr);
 

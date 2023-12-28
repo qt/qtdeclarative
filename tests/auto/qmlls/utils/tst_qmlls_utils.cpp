@@ -36,7 +36,7 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
     QStringList qmltypeDirs =
             QStringList({ dataDirectory(), QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
 
-    QQmlJS::Dom::DomItem env = QQmlJS::Dom::DomEnvironment::create(
+    auto envPtr = QQmlJS::Dom::DomEnvironment::create(
             qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded);
 
     // This should be exactly the same options as qmlls uses in qqmlcodemodel.
@@ -47,9 +47,9 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
             | QQmlJS::Dom::DomCreationOption::WithRecovery;
 
     QQmlJS::Dom::DomItem file;
-    env.loadFile(
-            QQmlJS::Dom::FileToLoad::fromFileSystem(env.ownerAs<QQmlJS::Dom::DomEnvironment>(),
-                                                    filePath, options),
+    QQmlJS::Dom::DomItem env(envPtr);
+    envPtr->loadFile(
+            QQmlJS::Dom::FileToLoad::fromFileSystem(envPtr, filePath, options),
             [&file](QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &,
                     const QQmlJS::Dom::DomItem &newIt) { file = newIt; },
             QQmlJS::Dom::LoadOption::DefaultLoad);

@@ -2522,23 +2522,6 @@ DomItem::DomItem(const std::shared_ptr<DomUniverse> &universePtr):
 {
 }
 
-void DomItem::loadFile(
-        const FileToLoad &file, const DomTop::Callback &callback, LoadOptions loadOptions,
-        std::optional<DomType> fileType) const
-{
-    DomItem topEl = top();
-    if (topEl.internalKind() == DomType::DomEnvironment) {
-        if (auto env = topEl.ownerAs<DomEnvironment>()) {
-            env->loadFile(topEl, file, callback, loadOptions, fileType);
-        } else
-            Q_ASSERT(false && "expected DomEnvironment cast to succeed");
-    } else {
-        addError(myErrors().warning(tr("loadFile called without DomEnvironment.")));
-        // TODO(QTBUG-119550) fix this bug. see task for details
-        callback(Paths::qmlFileInfoPath(file.canonicalPath()), DomItem::empty, DomItem::empty);
-    }
-}
-
 void DomItem::loadModuleDependency(
         const QString &uri, Version version,
         const std::function<void(const Path &, const DomItem &, const DomItem &)> &callback,
@@ -2591,18 +2574,18 @@ DomItem DomItem::fromCode(const QString &code, DomType fileType)
 {
     if (code.isEmpty())
         return DomItem();
-    DomItem env =
+    auto env =
             DomEnvironment::create(QStringList(),
                                    QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                                            | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
     DomItem tFile;
 
-    env.loadFile(
-            FileToLoad::fromMemory(env.ownerAs<DomEnvironment>(), QString(), code),
+    env->loadFile(
+            FileToLoad::fromMemory(env, QString(), code),
             [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
             LoadOption::DefaultLoad, std::make_optional(fileType));
-    env.loadPendingDependencies();
+    DomItem(env).loadPendingDependencies();
     return tFile.fileObject();
 }
 

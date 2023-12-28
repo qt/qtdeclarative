@@ -200,11 +200,11 @@ void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
         options.setFlag(DomCreationOption::WithScriptExpressions);
         options.setFlag(DomCreationOption::WithSemanticAnalysis);
         options.setFlag(DomCreationOption::WithRecovery);
-        FileToLoad fileToLoad =
-                FileToLoad::fromFileSystem(newCurrent.ownerAs<DomEnvironment>(), fPath, options);
+        auto newCurrentPtr = newCurrent.ownerAs<DomEnvironment>();
+        FileToLoad fileToLoad = FileToLoad::fromFileSystem(newCurrentPtr, fPath, options);
         if (!fileToLoad.canonicalPath().isEmpty()) {
             newCurrent.loadBuiltins();
-            newCurrent.loadFile(fileToLoad, [](Path, const DomItem &, const DomItem &) {}, {});
+            newCurrentPtr->loadFile(fileToLoad, [](Path, const DomItem &, const DomItem &) {}, {});
             newCurrent.loadPendingDependencies();
             newCurrent.commitToBase(m_validEnv.ownerAs<DomEnvironment>());
         }
@@ -594,15 +594,15 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
     const DomCreationOptions options = DomCreationOptions{}
             | DomCreationOption::WithScriptExpressions | DomCreationOption::WithSemanticAnalysis
             | DomCreationOption::WithRecovery;
-    newCurrent.loadFile(
-            FileToLoad::fromMemory(newCurrent.ownerAs<DomEnvironment>(), fPath, docText, options),
-            [&p, this](Path, const DomItem &, const DomItem &newValue) {
-                const DomItem file = newValue.fileObject();
-                p = file.canonicalPath();
-                if (m_cmakeStatus == HasCMake)
-                    addFileWatches(file);
-            },
-            {});
+    auto newCurrentPtr = newCurrent.ownerAs<DomEnvironment>();
+    newCurrentPtr->loadFile(FileToLoad::fromMemory(newCurrentPtr, fPath, docText, options),
+                            [&p, this](Path, const DomItem &, const DomItem &newValue) {
+                                const DomItem file = newValue.fileObject();
+                                p = file.canonicalPath();
+                                if (m_cmakeStatus == HasCMake)
+                                    addFileWatches(file);
+                            },
+                            {});
     newCurrent.loadPendingDependencies();
     if (p) {
         newCurrent.commitToBase(m_validEnv.ownerAs<DomEnvironment>());

@@ -634,16 +634,16 @@ QString TestQmlformat::formatInMemory(const QString &fileToFormat, bool *didSucc
                                       LineWriterOptions options, WriteOutChecks extraChecks,
                                       WriteOutChecks largeChecks)
 {
-    DomItem env = DomEnvironment::create(
+    auto env = DomEnvironment::create(
             QStringList(), // as we load no dependencies we do not need any paths
             QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                     | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
     DomItem tFile;
-    env.loadFile(
-            FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), fileToFormat),
+    env->loadFile(
+            FileToLoad::fromFileSystem(env, fileToFormat),
             [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
             LoadOption::DefaultLoad);
-    env.loadPendingDependencies();
+    DomItem(env).loadPendingDependencies();
     MutableDomItem myFile = tFile.field(Fields::currentItem);
 
     DomItem writtenOut;

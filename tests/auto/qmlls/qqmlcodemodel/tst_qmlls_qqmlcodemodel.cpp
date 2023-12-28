@@ -106,7 +106,7 @@ using namespace QQmlJS::Dom;
 
 void tst_qmlls_qqmlcodemodel::fileNamesToWatch()
 {
-    DomItem env = DomEnvironment::create(QStringList(),
+    auto envPtr = DomEnvironment::create(QStringList(),
                                          DomEnvironment::Option::SingleThreaded
                                                  | DomEnvironment::Option::NoDependencies);
 
@@ -114,9 +114,9 @@ void tst_qmlls_qqmlcodemodel::fileNamesToWatch()
     DomCreationOptions options;
     options.setFlag(DomCreationOption::WithSemanticAnalysis);
 
-    env.loadFile(
-            FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(),
-                                       testFile("MyCppModule/Main.qml"), options),
+    DomItem env(envPtr);
+    envPtr->loadFile(
+            FileToLoad::fromFileSystem(envPtr, testFile("MyCppModule/Main.qml"), options),
             [&qmlFile](Path, const DomItem &, const DomItem &newIt) {
                 qmlFile = newIt.fileObject();
             },

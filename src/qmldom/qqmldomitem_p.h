@@ -1217,11 +1217,6 @@ public:
     DomItem(const std::shared_ptr<DomUniverse> &);
 
     static DomItem fromCode(const QString &code, DomType fileType = DomType::QmlFile);
-    void loadFile(
-            const FileToLoad &file,
-            const std::function<void(const Path &, const DomItem &, const DomItem &)> &callback,
-            LoadOptions loadOptions,
-            std::optional<DomType> fileType = std::optional<DomType>()) const;
     void loadModuleDependency(
             const QString &uri, Version v,
             const std::function<void(const Path &, const DomItem &, const DomItem &)> &callback = nullptr,
