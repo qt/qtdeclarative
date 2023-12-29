@@ -248,10 +248,12 @@ static DomType fileTypeForPath(const DomItem &self, const QString &canonicalFile
     return DomType::Empty;
 }
 
-void DomUniverse::loadFile(const DomItem &self, const FileToLoad &file, Callback callback,
-                           LoadOptions loadOptions, std::optional<DomType> fileType)
+void DomUniverse::loadFile(const FileToLoad &file, Callback callback, LoadOptions loadOptions,
+                           std::optional<DomType> fileType)
 {
-    DomType fType = (bool(fileType) ? (*fileType) : fileTypeForPath(self, file.canonicalPath()));
+    DomItem selfItem(shared_from_this());
+    DomType fType =
+            (bool(fileType) ? (*fileType) : fileTypeForPath(selfItem, file.canonicalPath()));
     switch (fType) {
     case DomType::QmlFile:
     case DomType::QmltypesFile:
@@ -261,15 +263,16 @@ void DomUniverse::loadFile(const DomItem &self, const FileToLoad &file, Callback
         // Protect the queue from concurrent access.
         QMutexLocker l(mutex());
         m_queue.enqueue(ParsingTask{ QDateTime::currentDateTimeUtc(), loadOptions, fType, file,
-                                     self.ownerAs<DomUniverse>(), callback });
+                                     shared_from_this(), callback });
         break;
     }
     default:
-        self.addError(myErrors()
-                              .error(tr("Ignoring request to load file %1 of unexpected type %2, "
-                                        "calling callback immediately")
-                                             .arg(file.canonicalPath(), domTypeToString(fType)))
-                              .handle());
+        selfItem.addError(
+                myErrors()
+                        .error(tr("Ignoring request to load file %1 of unexpected type %2, "
+                                  "calling callback immediately")
+                                       .arg(file.canonicalPath(), domTypeToString(fType)))
+                        .handle());
         Q_ASSERT(false && "loading non supported file type");
         callback(Path(), DomItem::empty, DomItem::empty);
         return;
@@ -1301,7 +1304,7 @@ void DomEnvironment::loadFile(const FileToLoad &file, Callback loadCallback,
         }
         if (!newValue) {
             universe()->loadFile(
-                    self.universe(), file,
+                    file,
                     callbackForQmlDirectory(self, loadCallback, directDepsCallback, endCallback),
                     loadOptions, fType);
             return;
@@ -1331,8 +1334,7 @@ void DomEnvironment::loadFile(const FileToLoad &file, Callback loadCallback,
         }
         if (!newValue) {
             universe()->loadFile(
-                    self.universe(), file,
-                    callbackForQmlFile(self, loadCallback, directDepsCallback, endCallback),
+                    file, callbackForQmlFile(self, loadCallback, directDepsCallback, endCallback),
                     loadOptions, fType);
             return;
         }
@@ -1362,7 +1364,7 @@ void DomEnvironment::loadFile(const FileToLoad &file, Callback loadCallback,
         }
         if (!newValue) {
             universe()->loadFile(
-                    self.universe(), file,
+                    file,
                     callbackForQmltypesFile(self, loadCallback, directDepsCallback, endCallback),
                     loadOptions, fType);
             return;
@@ -1393,14 +1395,14 @@ void DomEnvironment::loadFile(const FileToLoad &file, Callback loadCallback,
         }
         if (!newValue) {
             universe()->loadFile(
-                    self.universe(), file,
+                    file,
                     callbackForQmldirFile(self, loadCallback, directDepsCallback, endCallback),
                     loadOptions, fType);
             return;
         }
     } break;
     case DomType::JsFile: {
-        universe()->loadFile(self.universe(), file,
+        universe()->loadFile(file,
                              callbackForJSFile(self, loadCallback, directDepsCallback, endCallback),
                              loadOptions, fType);
         return;

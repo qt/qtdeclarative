@@ -195,7 +195,8 @@ private:
     QMap<QString, OwnerT> m_extraOwningItems;
 };
 
-class QMLDOM_EXPORT DomUniverse final : public DomTop
+class QMLDOM_EXPORT DomUniverse final : public DomTop,
+                                        public std::enable_shared_from_this<DomUniverse>
 {
     Q_GADGET
     Q_DECLARE_TR_FUNCTIONS(DomUniverse);
@@ -227,7 +228,7 @@ public:
         return std::static_pointer_cast<DomUniverse>(doCopy(self));
     }
 
-    void loadFile(const DomItem &self, const FileToLoad &file, Callback callback, LoadOptions loadOptions,
+    void loadFile(const FileToLoad &file, Callback callback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>());
     void execQueue();
 
