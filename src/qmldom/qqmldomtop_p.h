@@ -663,11 +663,11 @@ public:
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   const ErrorHandler &h = nullptr /* used only in loadPendingDependencies*/);
 
-    void loadModuleDependency(const DomItem &self, const QString &uri, Version v,
-                              Callback loadCallback = nullptr, Callback endCallback = nullptr,
+    void loadModuleDependency(const QString &uri, Version v, const Callback &callback = nullptr,
                               const ErrorHandler & = nullptr);
-    void loadBuiltins(
-            const DomItem &self, Callback callback = nullptr, const ErrorHandler &h = nullptr);
+
+    void loadBuiltins(const DomItem &self, Callback callback = nullptr,
+                      const ErrorHandler &h = nullptr);
     void removePath(const QString &path);
 
     std::shared_ptr<DomUniverse> universe() const;
@@ -762,6 +762,10 @@ private:
                   Callback endCallback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   const ErrorHandler &h = nullptr);
+
+    void loadModuleDependency(const DomItem &self, const QString &uri, Version v,
+                              Callback loadCallback = nullptr, Callback endCallback = nullptr,
+                              const ErrorHandler & = nullptr);
 
     template <typename T>
     QSet<QString> getStrings(function_ref<QSet<QString>()> getBase, const QMap<QString, T> &selfMap,

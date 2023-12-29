@@ -654,8 +654,10 @@ void LoadInfo::advanceLoad(const DomItem &self)
     case Status::InProgress:
         if (depValid) {
             refreshedDataAt(QDateTime::currentDateTimeUtc());
+            auto envPtr = self.environment().ownerAs<DomEnvironment>();
+            Q_ASSERT(envPtr && "missing environment");
             if (!dep.uri.isEmpty()) {
-                self.loadModuleDependency(
+                envPtr->loadModuleDependency(
                         dep.uri, dep.version,
                         [this, copiedSelf = self, dep](Path, const DomItem &, const DomItem &) {
                             // Need to explicitly copy self here since we might store this and
@@ -665,18 +667,14 @@ void LoadInfo::advanceLoad(const DomItem &self)
                         self.errorHandler());
                 Q_ASSERT(dep.filePath.isEmpty() && "dependency with both uri and file");
             } else if (!dep.filePath.isEmpty()) {
-                DomItem env = self.environment();
-                if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>())
-                    envPtr->loadFile(
-                            FileToLoad::fromFileSystem(envPtr, dep.filePath),
-                            [this, copiedSelf = self, dep](Path, const DomItem &, const DomItem &) {
-                                // Need to explicitly copy self here since we might store this and
-                                // call it later.
-                                finishedLoadingDep(copiedSelf, dep);
-                            },
-                            LoadOption::DefaultLoad, dep.fileType, self.errorHandler());
-                else
-                    Q_ASSERT(false && "missing environment");
+                envPtr->loadFile(
+                        FileToLoad::fromFileSystem(envPtr, dep.filePath),
+                        [this, copiedSelf = self, dep](Path, const DomItem &, const DomItem &) {
+                            // Need to explicitly copy self here since we might store this and
+                            // call it later.
+                            finishedLoadingDep(copiedSelf, dep);
+                        },
+                        LoadOption::DefaultLoad, dep.fileType, self.errorHandler());
             } else {
                 Q_ASSERT(false && "dependency without uri and filePath");
             }
@@ -1442,6 +1440,18 @@ void DomEnvironment::loadFile(const FileToLoad &file, Callback loadCallback,
             DomItem el = env.path(p);
             endCallback(p, el, el);
         });
+}
+
+void DomEnvironment::loadModuleDependency(
+        const QString &uri, Version version,
+        const std::function<void(const Path &, const DomItem &, const DomItem &)> &callback,
+        const ErrorHandler &errorHandler)
+{
+    DomItem envItem(shared_from_this());
+    if (options() & DomEnvironment::Option::NoDependencies)
+        loadModuleDependency(envItem, uri, version, callback, nullptr, errorHandler);
+    else
+        loadModuleDependency(envItem, uri, version, nullptr, callback, errorHandler);
 }
 
 void DomEnvironment::loadModuleDependency(const DomItem &self, const QString &uri, Version v,

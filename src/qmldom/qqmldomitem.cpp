@@ -2522,26 +2522,6 @@ DomItem::DomItem(const std::shared_ptr<DomUniverse> &universePtr):
 {
 }
 
-void DomItem::loadModuleDependency(
-        const QString &uri, Version version,
-        const std::function<void(const Path &, const DomItem &, const DomItem &)> &callback,
-        const ErrorHandler &errorHandler) const
-{
-    DomItem topEl = top();
-    if (topEl.internalKind() == DomType::DomEnvironment) {
-        if (auto envPtr = topEl.ownerAs<DomEnvironment>()) {
-            if (envPtr->options() & DomEnvironment::Option::NoDependencies)
-                envPtr->loadModuleDependency(topEl, uri, version, callback, nullptr, errorHandler);
-            else
-                envPtr->loadModuleDependency(topEl, uri, version, nullptr, callback, errorHandler);
-        } else
-            Q_ASSERT(false && "loadDependency expected the DomEnvironment cast to succeed");
-    } else {
-        addError(myErrors().warning(tr("loadModuleDependency called without DomEnvironment.")));
-        callback(Paths::moduleScopePath(uri, version), DomItem::empty, DomItem::empty);
-    }
-}
-
 void DomItem::loadBuiltins(
         const std::function<void(const Path &, const DomItem &, const DomItem &)> &callback,
         const ErrorHandler &h) const
