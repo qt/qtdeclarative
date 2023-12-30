@@ -114,8 +114,6 @@ void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, 
     if (result == MAP_FAILED)
         CRASH();
 
-    while (madvise(result, bytes, MADV_DONTNEED) == -1 && errno == EAGAIN) { }
-
     if (fd != -1)
         close(fd);
 #else
