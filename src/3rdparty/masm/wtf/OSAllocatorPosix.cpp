@@ -114,10 +114,7 @@ void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, 
     if (result == MAP_FAILED)
         CRASH();
 
-    while (madvise(result, bytes, MADV_DONTNEED)) {
-        if (errno != EAGAIN)
-            CRASH();
-    }
+    while (madvise(result, bytes, MADV_DONTNEED) == -1 && errno == EAGAIN) { }
 
     if (fd != -1)
         close(fd);
@@ -250,8 +247,10 @@ void OSAllocator::decommit(void* address, size_t bytes)
     mmap(address, bytes, PROT_NONE, MAP_FIXED | MAP_LAZY | MAP_PRIVATE | MAP_ANON, -1, 0);
 #elif OS(LINUX)
     while (madvise(address, bytes, MADV_DONTNEED)) {
-        if (errno != EAGAIN)
-            CRASH();
+        if (errno != EAGAIN) {
+            memset(address, 0, bytes); // We rely on madvise to zero-out the memory
+            break;
+        }
     }
     if (mprotect(address, bytes, PROT_NONE))
         CRASH();
