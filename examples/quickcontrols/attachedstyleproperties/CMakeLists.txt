@@ -46,7 +46,5 @@ install(TARGETS attachedstylepropertiesexample
 include(../../quick/shared/QtBundleQmlModuleForMacOS.cmake)
 
 set(app_target "attachedstylepropertiesexample")
-set(qml_plugin_target "MyStyleplugin")
-set(qml_module_uri "MyStyle")
-add_qml_module_to_macos_app_bundle(
-    "${app_target}" "${qml_plugin_target}" "${qml_module_uri}")
+set(qml_module_target "MyStyle")
+add_qml_module_to_macos_app_bundle("${app_target}" "${qml_module_target}")
