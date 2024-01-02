@@ -747,7 +747,7 @@ QQuickShape::~QQuickShape()
            with the \c software backend.
 
     \value Shape.CurveRenderer
-           Experimental GPU-based renderer, added as technology preview in Qt 6.6.
+           GPU-based renderer that aims to preserve curvature at any scale.
            In contrast to \c Shape.GeometryRenderer, curves are not approximated by short straight
            lines. Instead, curves are rendered using a specialized fragment shader. This improves
            visual quality and avoids re-tesselation performance hit when zooming. Also,
@@ -758,23 +758,11 @@ QQuickShape::~QQuickShape()
     with the \c software backend. In that case, \c Shape.SoftwareRenderer will be used.
     \c Shape.CurveRenderer may be requested using the \l preferredRendererType property.
 
-    Note that \c Shape.CurveRenderer is currently regarded as experimental. The enum name of
-    this renderer may change in future versions of Qt, and some shapes may render incorrectly.
-    Among the known limitations are:
-    \list 1
-      \li Only quadratic curves are inherently supported. Cubic curves will be approximated by
-          quadratic curves.
-      \li Shapes where elements intersect are not rendered correctly. The \l [QML] {Path::simplify}
-          {Path.simplify} property may be used to remove self-intersections from such shapes, but
-          may incur a performance cost and reduced visual quality.
-      \li Shapes that span a large numerical range, such as a long string of text, may have
-          issues. Consider splitting these shapes into multiple ones, for instance by making
-          a \l PathText for each individual word.
-      \li If the shape is being rendered into a Qt Quick 3D scene, the
-          \c GL_OES_standard_derivatives extension to OpenGL is required when the OpenGL
-          RHI backend is in use (this is available by default on OpenGL ES 3 and later, but
-          optional in OpenGL ES 2).
-    \endlist
+    \note The \c Shape.CurveRenderer will approximate cubic curves with quadratic ones and may
+    therefore diverge slightly from the mathematically correct visualization of the shape. In
+    addition, if the shape is being rendered into a Qt Quick 3D scene and the OpenGL backend for
+    RHI is active, the \c GL_OES_standard_derivatives extension to OpenGL is required (this is
+    available by default on OpenGL ES 3 and later, but optional in OpenGL ES 2.)
 */
 
 QQuickShape::RendererType QQuickShape::rendererType() const
@@ -797,9 +785,6 @@ QQuickShape::RendererType QQuickShape::rendererType() const
     \c Shape.SoftwareRenderer can currently not be selected without running the scenegraph with
     the \c software backend, in which case it will be selected regardless of the
     \c preferredRendererType.
-
-    \note This API is considered tech preview and may change or be removed in future versions of
-    Qt.
 
     See \l rendererType for more information on the implications.
 */

@@ -134,7 +134,7 @@ Rectangle {
         id: settings
         RadioButton {
             id: curveRendererCheckBox
-            text: "Curve Renderer [tech preview]"
+            text: "Curve Renderer"
             onCheckedChanged: {
                 loader1.item.preferredRendererType = checked ? Shape.CurveRenderer : Shape.GeometryRenderer
             }
