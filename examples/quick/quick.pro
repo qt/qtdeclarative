@@ -23,7 +23,6 @@ SUBDIRS =   quick-accessibility \
             imageresponseprovider \
             window \
             particles \
-            shapes \
             itemvariablerefreshrate \
             multieffect
 
