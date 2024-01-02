@@ -359,16 +359,13 @@ void QQuickShapeCurveRenderer::updateNode()
         if (pathData.currentRunner) {
             if (!pathData.currentRunner->isDone)
                 continue;
-            // Find insertion point for new nodes
-            QSGNode *nextNode = nullptr;
-            int j = i;
-            do {
+            // Find insertion point for new nodes. Default is the first stroke node of this path
+            QSGNode *nextNode = pathData.strokeNodes.value(0);
+            // If that is 0, use the first node (stroke or fill) of later paths, if any
+            for (int j = i + 1; !nextNode && j < m_paths.size(); j++) {
                 const PathData &pd = m_paths[j];
-                if (!pd.fillNodes.isEmpty())
-                    nextNode = pd.fillNodes.first();
-                else if (!pathData.strokeNodes.isEmpty())
-                    nextNode = pd.strokeNodes.first();
-            } while (!nextNode && ++j < m_paths.size());
+                nextNode = pd.fillNodes.isEmpty() ? pd.strokeNodes.value(0) : pd.fillNodes.value(0);
+            }
 
             const PathData &newData = pathData.currentRunner->pathData;
             if (newData.m_dirty & PathDirty)
