@@ -8,13 +8,13 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/shapes")
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickshapes/shapes")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
-add_subdirectory("../shared" "shared")
+add_subdirectory("../../quick/shared" "shared")
 
 qt_add_executable(shapesexample
     WIN32

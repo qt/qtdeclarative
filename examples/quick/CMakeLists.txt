@@ -24,7 +24,6 @@ qt_internal_add_example(imageprovider)
 qt_internal_add_example(imageresponseprovider)
 qt_internal_add_example(window)
 add_subdirectory(particles)
-qt_internal_add_example(shapes)
 qt_internal_add_example(itemvariablerefreshrate)
 add_subdirectory(multieffect)
 if(QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3)
@@ -46,7 +45,6 @@ set(reused_dir_targets
     positioners_shared
     text_shared
     window_shared
-    shapes_shared
     imageelements_shared
     pointerhandlers_shared
     affectors_shared
