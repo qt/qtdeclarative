@@ -51,15 +51,19 @@ Q_LOGGING_CATEGORY(QQSHAPE_LOG_TIME_DIRTY_SYNC, "qt.shape.time.sync")
     rendered, so applying a very high scale to the shape may show artifacts where it is visible
     that the curves are represented by a sequence of smaller, straight lines.
 
-    \note Qt Quick Shapes relies on multi-sampling for anti-aliasing. This can be enabled for the
-    entire application or window using the corresponding settings in QSurfaceFormat. It can also
-    be enabled for only the shape, by setting its \l{Item::layer.enabled}{layer.enabled} property to
-    true and then adjusting the \l{Item::layer.samples}{layer.samples} property. In the latter case,
-    multi-sampling will not be applied to the entire scene, but the shape will be rendered via an
-    intermediate off-screen buffer.
+    \note By default, Qt Quick Shapes relies on multi-sampling for anti-aliasing. This can be
+    enabled for the entire application or window using the corresponding settings in QSurfaceFormat.
+    It can also be enabled for only the shape, by setting its \l{Item::layer.enabled}{layer.enabled}
+    property to true and then adjusting the \l{Item::layer.samples}{layer.samples} property. In the
+    latter case, multi-sampling will not be applied to the entire scene, but the shape will be
+    rendered via an intermediate off-screen buffer. Alternatively, the
+    \l{QtQuick.Shapes::Shape::preferredRendererType}{preferredRendererType} property can be set
+    to \c{Shape.CurveRenderer}. This has anti-aliasing built in and generally renders the shapes
+    at a higher quality, but at some additional performance cost.
 
     For further information, the \l{Qt Quick Examples - Shapes}{Shapes example} shows how to
-    implement different types of shapes, fills and strokes.
+    implement different types of shapes, fills and strokes, and the \l{Weather Forecast Example}
+    shows examples of different ways shapes might be useful in a user interface.
 */
 
 void QQuickShapes_initializeModule()
@@ -145,7 +149,7 @@ QQuickShapeStrokeFillParams::QQuickShapeStrokeFillParams()
 
     \image visualpath-code-example.png
 
-    \sa {Qt Quick Examples - Shapes}, Shape
+    \sa {Qt Quick Examples - Shapes}, {Weather Forecast Example}, Shape
  */
 
 QQuickShapePathPrivate::QQuickShapePathPrivate()
@@ -672,7 +676,7 @@ void QQuickShapePath::setPathHints(PathHints newPathHints)
 
     \endlist
 
-    \sa {Qt Quick Examples - Shapes}, Path, PathMove, PathLine, PathQuad, PathCubic, PathArc, PathSvg
+    \sa {Qt Quick Examples - Shapes}, {Weather Forecast Example}, Path, PathMove, PathLine, PathQuad, PathCubic, PathArc, PathSvg
 */
 
 QQuickShapePrivate::QQuickShapePrivate()
