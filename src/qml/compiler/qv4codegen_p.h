@@ -854,7 +854,7 @@ private:
     void throwError(ErrorType errorType, const QQmlJS::SourceLocation &loc,
                     const QString &detail);
     bool traverseOptionalChain(QQmlJS::AST::Node *node);
-    void optionalChainFinalizer(Reference expressionResult, bool tailOfChain,
+    void optionalChainFinalizer(const Reference &expressionResult, bool tailOfChain,
                                 bool isDeleteExpression = false);
     Reference loadSubscriptForCall(const Reference &base);
     void generateThrowException(const QString &type, const QString &text = QString());

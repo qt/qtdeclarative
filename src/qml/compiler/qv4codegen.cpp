@@ -2424,7 +2424,7 @@ bool Codegen::traverseOptionalChain(Node *node)
     return true;
 }
 
-void Codegen::optionalChainFinalizer(Reference expressionResult, bool tailOfChain,
+void Codegen::optionalChainFinalizer(const Reference &expressionResult, bool tailOfChain,
                                      bool isDeleteExpression)
 {
     auto &chainState = m_optionalChainsStates.top();
