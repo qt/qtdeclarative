@@ -749,14 +749,14 @@ public:
     void visitConst(F &&visitor) const
     {
         if (m_data)
-            std::visit(visitor, *m_data);
+            std::visit(std::forward<F>(visitor), *m_data);
     }
 
     template<typename F>
     void visit(F &&visitor)
     {
         if (m_data)
-            std::visit(visitor, *m_data);
+            std::visit(std::forward<F>(visitor), *m_data);
     }
     std::optional<ScriptElementT> data() { return m_data; }
     void setData(const ScriptElementT &data) { m_data = data; }
@@ -1128,7 +1128,7 @@ public:
     bool dvValueField(DirectVisitor visitor, QStringView f, const T &value,
                       ConstantData::Options options = ConstantData::Options::MapIsMap) const
     {
-        return this->dvValue<T>(visitor, PathEls::Field(f), value, options);
+        return this->dvValue<T>(std::move(visitor), PathEls::Field(f), value, options);
     }
     template<typename F>
     bool dvValueLazy(DirectVisitor visitor, const PathEls::PathComponent &c, F valueF,
@@ -1137,7 +1137,7 @@ public:
     bool dvValueLazyField(DirectVisitor visitor, QStringView f, F valueF,
                           ConstantData::Options options = ConstantData::Options::MapIsMap) const
     {
-        return this->dvValueLazy(visitor, PathEls::Field(f), valueF, options);
+        return this->dvValueLazy(std::move(visitor), PathEls::Field(f), valueF, options);
     }
     DomItem subLocationItem(const PathEls::PathComponent &c, SourceLocation loc) const
     {
@@ -1149,22 +1149,24 @@ public:
     DomItem subReferenceItem(const PathEls::PathComponent &c, const Path &referencedObject) const;
     bool dvReference(DirectVisitor visitor, const PathEls::PathComponent &c, const Path &referencedObject) const
     {
-        return dvItem(visitor, c, [c, this, referencedObject]() {
+        return dvItem(std::move(visitor), c, [c, this, referencedObject]() {
             return this->subReferenceItem(c, referencedObject);
         });
     }
     bool dvReferences(
             DirectVisitor visitor, const PathEls::PathComponent &c, const QList<Path> &paths) const
     {
-        return dvItem(visitor, c, [c, this, paths]() { return this->subReferencesItem(c, paths); });
+        return dvItem(std::move(visitor), c, [c, this, paths]() {
+            return this->subReferencesItem(c, paths);
+        });
     }
     bool dvReferenceField(DirectVisitor visitor, QStringView f, const Path &referencedObject) const
     {
-        return dvReference(visitor, PathEls::Field(f), referencedObject);
+        return dvReference(std::move(visitor), PathEls::Field(f), referencedObject);
     }
     bool dvReferencesField(DirectVisitor visitor, QStringView f, const QList<Path> &paths) const
     {
-        return dvReferences(visitor, PathEls::Field(f), paths);
+        return dvReferences(std::move(visitor), PathEls::Field(f), paths);
     }
     bool dvItem(DirectVisitor visitor, const PathEls::PathComponent &c, function_ref<DomItem()> it) const
     {
@@ -1172,7 +1174,7 @@ public:
     }
     bool dvItemField(DirectVisitor visitor, QStringView f, function_ref<DomItem()> it) const
     {
-        return dvItem(visitor, PathEls::Field(f), it);
+        return dvItem(std::move(visitor), PathEls::Field(f), it);
     }
     DomItem subListItem(const List &list) const;
     DomItem subMapItem(const Map &map) const;
@@ -1207,7 +1209,7 @@ public:
     template<typename T>
     bool dvWrapField(DirectVisitor visitor, QStringView f, T &obj) const
     {
-        return dvWrap<T>(visitor, PathEls::Field(f), obj);
+        return dvWrap<T>(std::move(visitor), PathEls::Field(f), obj);
     }
 
     DomItem() = default;
@@ -2233,7 +2235,7 @@ inline DomKind DomBase::domKind() const
 inline bool DomBase::iterateDirectSubpathsConst(const DomItem &self, DirectVisitor visitor) const
 {
     Q_ASSERT(self.base() == this);
-    return self.iterateDirectSubpaths(visitor);
+    return self.iterateDirectSubpaths(std::move(visitor));
 }
 
 inline DomItem DomBase::containingObject(const DomItem &self) const
