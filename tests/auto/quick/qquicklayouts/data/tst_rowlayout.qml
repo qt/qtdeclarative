@@ -1292,25 +1292,25 @@ Item {
         Component {
             id: sizeHintBindingLoopComp
             Item {
-                id: root
-                anchors.fill: parent
+                id: root
+                anchors.fill: parent
                 property var customWidth: 100
-                RowLayout {
-                    id: col
+                RowLayout {
+                    id: col
                     Item {
-                        id: item
-                        implicitHeight: 80
-                        implicitWidth: Math.max(col2.implicitWidth, root.customWidth + 20)
+                        id: item
+                        implicitHeight: 80
+                        implicitWidth: Math.max(col2.implicitWidth, root.customWidth + 20)
                         ColumnLayout {
-                            id: col2
-                            width: parent.width
-                            Item {
-                                id: rect
-                                implicitWidth: root.customWidth
-                                implicitHeight: 80
-                            }
-                        }
-                    }
+                            id: col2
+                            width: parent.width
+                            Item {
+                                id: rect
+                                implicitWidth: root.customWidth
+                                implicitHeight: 80
+                            }
+                        }
+                    }
                 }
             }
         }
