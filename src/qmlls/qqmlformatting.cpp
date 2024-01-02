@@ -71,6 +71,24 @@ void QQmlDocumentFormatting::process(RequestPointerArgument request)
         return;
     }
 
+    const auto &code = qmlFile->code();
+
+    // Recreate the Dom to avoid misformatting comments, due to the FileLocations added
+    // by the 'WithScriptExpression' required by other qmlls features. Do not pass any import paths
+    // here, as else the DomEnvironment will try to parse all QML modules that it can find (and that
+    // takes quite some time and is not needed to format the code).
+    const DomItem newCurrent = DomEnvironment::create({});
+    const DomCreationOptions creationOptions = DomCreationOption::None;
+    DomItem fileWithoutScriptExpressions;
+    newCurrent.loadFile(
+            FileToLoad::fromMemory(newCurrent.ownerAs<DomEnvironment>(), file.canonicalFilePath(),
+                                   code, creationOptions),
+            [&fileWithoutScriptExpressions](Path, const DomItem &, const DomItem &newValue) {
+                fileWithoutScriptExpressions = newValue.fileObject();
+            },
+            {});
+    newCurrent.loadPendingDependencies();
+
     // TODO: implement formatting options
     // For now, qmlformat's default options.
     LineWriterOptions options;
@@ -80,10 +98,9 @@ void QQmlDocumentFormatting::process(RequestPointerArgument request)
     QLspSpecification::TextEdit formattedText;
     LineWriter lw([&formattedText](QStringView s) {formattedText.newText += s.toUtf8(); }, QString(), options);
     OutWriter ow(lw);
-    MutableDomItem formatted = file.writeOutForFile(ow, WriteOutCheck::None);
+    MutableDomItem formatted = fileWithoutScriptExpressions.writeOutForFile(ow, WriteOutCheck::None);
     ow.flush();
 
-    const auto &code = qmlFile->code();
     const auto [endLine, endColumn] = QQmlLSUtils::textRowAndColumnFrom(code, code.length());
 
     Q_UNUSED(endColumn);
