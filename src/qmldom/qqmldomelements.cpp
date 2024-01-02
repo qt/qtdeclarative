@@ -121,18 +121,11 @@ bool Component::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor
 
 DomItem Component::field(const DomItem &self, QStringView name) const
 {
-    switch (name.size()) {
-    case 4:
-        if (name == Fields::name)
-            return self.wrapField(Fields::name, m_name);
-        break;
-    case 7:
-        if (name == Fields::objects)
-            return self.wrapField(Fields::objects, m_objects);
-        break;
-    default:
-        break;
-    }
+    if (name == Fields::name)
+        return self.wrapField(Fields::name, m_name);
+    if (name == Fields::objects)
+        return self.wrapField(Fields::objects, m_objects);
+
     return DomBase::field(self, name);
 }
 
@@ -443,90 +436,59 @@ bool QmlObject::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor
 
 DomItem QmlObject::field(const DomItem &self, QStringView name) const
 {
-    switch (name.size()) {
-    case 4:
-        if (name == Fields::name)
-            return self.subDataItem(PathEls::Field(Fields::name), this->name());
-        break;
-    case 5:
-        if (name == Fields::idStr) {
-            if (idStr().isEmpty())
-                return DomItem();
-            return self.subDataItem(PathEls::Field(Fields::idStr), idStr());
-        }
-        break;
-    case 7:
-        if (name == Fields::methods)
-            return self.wrapField(Fields::methods, m_methods);
-        break;
-    case 8:
-        switch (name.at(1).unicode()) {
-        case u'i':
-            if (name == Fields::bindings)
-                return self.wrapField(Fields::bindings, m_bindings);
-            break;
-        case u'o':
-            if (name == Fields::comments)
-                return CommentableDomElement::field(self, name);
-            break;
-        case u'h':
-            if (name == Fields::children)
-                return self.wrapField(Fields::children, m_children);
-            break;
-        default:
-            break;
-        }
-        break;
-    case 9:
-        if (name == Fields::nextScope) {
-            if (nextScopePath())
-                return self.subReferenceItem(PathEls::Field(Fields::nextScope), nextScopePath());
-            else
-                return DomItem();
-        }
-        break;
-    case 10:
-        if (name == Fields::prototypes) {
-            if (prototypePaths().isEmpty())
-                return DomItem();
-            return self.subReferencesItem(PathEls::Field(Fields::prototypes), m_prototypePaths);
-        }
-        break;
-    case 11:
-        if (name == Fields::annotations)
-            return self.wrapField(Fields::annotations, m_annotations);
-        break;
-    case 12:
+    if (name == Fields::name)
+        return self.subDataItem(PathEls::Field(Fields::name), this->name());
+    if (name == Fields::idStr) {
+        if (idStr().isEmpty())
+            return DomItem();
+        return self.subDataItem(PathEls::Field(Fields::idStr), idStr());
+    }
+    if (name == Fields::methods)
+        return self.wrapField(Fields::methods, m_methods);
+    if (name == Fields::bindings)
+        return self.wrapField(Fields::bindings, m_bindings);
+    if (name == Fields::comments)
+        return CommentableDomElement::field(self, name);
+    if (name == Fields::children)
+        return self.wrapField(Fields::children, m_children);
+
+    if (name == Fields::nextScope) {
+        if (nextScopePath())
+            return self.subReferenceItem(PathEls::Field(Fields::nextScope), nextScopePath());
+        else
+            return DomItem();
+    }
+    if (name == Fields::prototypes) {
+        if (prototypePaths().isEmpty())
+            return DomItem();
+        return self.subReferencesItem(PathEls::Field(Fields::prototypes), m_prototypePaths);
+    }
+    if (name == Fields::annotations)
+        return self.wrapField(Fields::annotations, m_annotations);
+    if (name == Fields::propertyDefs)
         return self.wrapField(Fields::propertyDefs, m_propertyDefs);
-        break;
-    case 13:
-        if (name == Fields::propertyInfos)
-            // Need to explicitly copy self here since we might store this and call it later.
-            return self.subMapItem(Map(
-                    pathFromOwner().field(Fields::propertyInfos),
-                    [copiedSelf = self](const DomItem &map, const QString &k) {
-                        return map.wrap(PathEls::Key(k), copiedSelf.propertyInfoWithName(k));
-                    },
-                    [copiedSelf = self](const DomItem &) { return copiedSelf.propertyInfoNames(); },
-                    QLatin1String("PropertyInfo")));
-        break;
-    case 15:
-        if (name == Fields::nameIdentifiers && m_nameIdentifiers) {
-            return self.subScriptElementWrapperItem(m_nameIdentifiers);
-        }
-        break;
-    case 19:
-        if (name == Fields::defaultPropertyName)
-            return self.subDataItem(PathEls::Field(Fields::defaultPropertyName),
-                                    defaultPropertyName(self));
-        break;
-    default:
-        break;
+    if (name == Fields::propertyInfos) {
+        // Need to explicitly copy self here since we might store this and call it later.
+        return self.subMapItem(Map(
+                pathFromOwner().field(Fields::propertyInfos),
+                [copiedSelf = self](const DomItem &map, const QString &k) {
+                    return map.wrap(PathEls::Key(k), copiedSelf.propertyInfoWithName(k));
+                },
+                [copiedSelf = self](const DomItem &) { return copiedSelf.propertyInfoNames(); },
+                QLatin1String("PropertyInfo")));
+    }
+    if (name == Fields::nameIdentifiers && m_nameIdentifiers) {
+        return self.subScriptElementWrapperItem(m_nameIdentifiers);
+    }
+    if (name == Fields::defaultPropertyName) {
+        return self.subDataItem(PathEls::Field(Fields::defaultPropertyName),
+                                defaultPropertyName(self));
     }
     static QStringList knownLookups({ QString::fromUtf16(Fields::fileLocationsTree) });
-    if (!knownLookups.contains(name))
+    if (!knownLookups.contains(name)) {
         qCWarning(domLog()) << "Asked non existing field " << name << " in QmlObject "
                             << pathFromOwner();
+    }
     return DomItem();
 }
 
