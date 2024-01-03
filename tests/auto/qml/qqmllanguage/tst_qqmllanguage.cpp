@@ -438,6 +438,8 @@ private slots:
     void asCastToInlineComponent();
     void deepAliasOnICOrReadonly();
 
+    void optionalChainCallOnNullProperty();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -8435,6 +8437,17 @@ void tst_qqmllanguage::deepAliasOnICOrReadonly()
     QVERIFY(c2.errorString().contains(
             QLatin1String(
                     "Invalid property assignment: \"readonlyRectX\" is a read-only property")));
+}
+
+void tst_qqmllanguage::optionalChainCallOnNullProperty()
+{
+    QTest::failOnWarning(QRegularExpression(".*Cannot call method 'destroy' of null.*"));
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("optionalChainCallOnNullProperty.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
 }
 
 QTEST_MAIN(tst_qqmllanguage)
