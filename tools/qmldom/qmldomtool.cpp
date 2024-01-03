@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
     DomItem env(envPtr);
     qDebug() << "will load\n";
     if (dep != Dependencies::None)
-        env.loadBuiltins();
+        envPtr->loadBuiltins();
     QList<DomItem> loadedFiles(positionalArguments.size());
     qsizetype iPos = 0;
     for (const QString &s : std::as_const(positionalArguments)) {

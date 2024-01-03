@@ -151,8 +151,7 @@ private slots:
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
         QString testFilePath = baseDir + QLatin1Char('/') + inFile;
         DomItem tFile;
-        DomItem env(envPtr);
-        env.loadBuiltins();
+        envPtr->loadBuiltins();
         envPtr->loadFile(
                 FileToLoad::fromFileSystem(envPtr, testFilePath),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
@@ -259,10 +258,9 @@ private slots:
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
         QString testFilePath = baseDir + QLatin1Char('/') + inFile;
         DomItem tFile;
-        DomItem env(envPtr);
-        env.loadBuiltins();
+        envPtr->loadBuiltins();
         envPtr->loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFilePath),
+                FileToLoad::fromFileSystem(envPtr, testFilePath),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
         envPtr->loadPendingDependencies();

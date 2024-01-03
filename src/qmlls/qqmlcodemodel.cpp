@@ -203,7 +203,7 @@ void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
         auto newCurrentPtr = newCurrent.ownerAs<DomEnvironment>();
         FileToLoad fileToLoad = FileToLoad::fromFileSystem(newCurrentPtr, fPath, options);
         if (!fileToLoad.canonicalPath().isEmpty()) {
-            newCurrent.loadBuiltins();
+            newCurrentPtr->loadBuiltins();
             newCurrentPtr->loadFile(fileToLoad, [](Path, const DomItem &, const DomItem &) {}, {});
             newCurrentPtr->loadPendingDependencies();
             newCurrent.commitToBase(m_validEnv.ownerAs<DomEnvironment>());

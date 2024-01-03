@@ -1559,7 +1559,7 @@ void DomEnvironment::loadModuleDependency(const DomItem &self, const QString &ur
         });
 }
 
-void DomEnvironment::loadBuiltins(const DomItem &self, Callback callback, const ErrorHandler &h)
+void DomEnvironment::loadBuiltins(const Callback &callback, const ErrorHandler &h)
 {
     QString builtinsName = QLatin1String("builtins.qmltypes");
     const auto lPaths = loadPaths();
@@ -1567,8 +1567,7 @@ void DomEnvironment::loadBuiltins(const DomItem &self, Callback callback, const 
         QDir dir(path);
         QFileInfo fInfo(dir.filePath(builtinsName));
         if (fInfo.isFile()) {
-            loadFile(FileToLoad::fromFileSystem(self.ownerAs<DomEnvironment>(),
-                                                fInfo.canonicalFilePath()),
+            loadFile(FileToLoad::fromFileSystem(shared_from_this(), fInfo.canonicalFilePath()),
                      callback, LoadOption::DefaultLoad);
             return;
         }

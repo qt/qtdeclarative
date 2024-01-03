@@ -662,12 +662,10 @@ public:
     void loadFile(const FileToLoad &file, const Callback &callback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   const ErrorHandler &h = nullptr /* used only in loadPendingDependencies*/);
-
+    void loadBuiltins(const Callback &callback = nullptr, const ErrorHandler &h = nullptr);
     void loadModuleDependency(const QString &uri, Version v, const Callback &callback = nullptr,
                               const ErrorHandler & = nullptr);
 
-    void loadBuiltins(const DomItem &self, Callback callback = nullptr,
-                      const ErrorHandler &h = nullptr);
     void removePath(const QString &path);
 
     std::shared_ptr<DomUniverse> universe() const;

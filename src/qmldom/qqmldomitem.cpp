@@ -2522,17 +2522,6 @@ DomItem::DomItem(const std::shared_ptr<DomUniverse> &universePtr):
 {
 }
 
-void DomItem::loadBuiltins(
-        const std::function<void(const Path &, const DomItem &, const DomItem &)> &callback,
-        const ErrorHandler &h) const
-{
-    DomItem env = environment();
-    if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>())
-        envPtr->loadBuiltins(env, callback, h);
-    else
-        myErrors().error(tr("Cannot load builtins without DomEnvironment")).handle(h);
-}
-
 /*!
 \brief Creates a new document with the given code
 

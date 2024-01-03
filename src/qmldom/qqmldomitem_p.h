@@ -1217,9 +1217,6 @@ public:
     DomItem(const std::shared_ptr<DomUniverse> &);
 
     static DomItem fromCode(const QString &code, DomType fileType = DomType::QmlFile);
-    void loadBuiltins(
-            const std::function<void(const Path &, const DomItem &, const DomItem &)> &callback = nullptr,
-            const ErrorHandler & = nullptr) const;
 
     // --- start of potentially dangerous stuff, make private? ---
 

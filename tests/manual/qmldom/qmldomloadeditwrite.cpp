@@ -39,7 +39,6 @@ int main()
 
     QString testFilePath = baseDir + QLatin1String("/file1.qml");
     DomItem tFile; // place where to store the loaded file
-    // env.loadBuiltins();
 
     qDebug() << "loading the file" << testFilePath;
     envPtr->loadFile(
