@@ -1317,6 +1317,11 @@ and qmldir information.
 */
 void QQmlTypeLoader::clearCache()
 {
+    // Pending messages typically hold references to the blobs they want to be delivered to.
+    // We don't want them anymore.
+    if (m_thread)
+        m_thread->discardMessages();
+
     for (TypeCache::Iterator iter = m_typeCache.begin(), end = m_typeCache.end(); iter != end; ++iter)
         (*iter)->release();
     for (ScriptCache::Iterator iter = m_scriptCache.begin(), end = m_scriptCache.end(); iter != end; ++iter)
