@@ -574,13 +574,7 @@ void QQuickWindowPrivate::syncSceneGraph()
 
     animationController->afterNodeSync();
 
-    // Copy the current state of clearing from window into renderer.
     renderer->setClearColor(clearColor);
-    // Cannot skip clearing the color buffer in Qt 6 anymore.
-    const QSGAbstractRenderer::ClearMode mode = QSGAbstractRenderer::ClearColorBuffer
-                                                | QSGAbstractRenderer::ClearStencilBuffer
-                                                | QSGAbstractRenderer::ClearDepthBuffer;
-    renderer->setClearMode(mode);
 
     renderer->setVisualizationMode(visualizationMode);
 

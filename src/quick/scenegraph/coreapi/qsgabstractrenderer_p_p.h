@@ -36,7 +36,6 @@ public:
 
     QSGRootNode *m_root_node;
     QColor m_clear_color;
-    QSGAbstractRenderer::ClearMode m_clear_mode;
 
     QRect m_device_rect;
     QRect m_viewport_rect;

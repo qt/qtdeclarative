@@ -14,19 +14,6 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \enum QSGAbstractRenderer::ClearModeBit
-
-    Used with setClearMode() to indicate which buffer should
-    be cleared before the scene render.
-
-    \value ClearColorBuffer Clear the color buffer using clearColor().
-    \value ClearDepthBuffer Clear the depth buffer.
-    \value ClearStencilBuffer Clear the stencil buffer.
-
-    \sa setClearMode(), setClearColor()
- */
-
-/*!
     \enum QSGAbstractRenderer::MatrixTransformFlag
 
     Used with setProjectionMatrixToRect() to indicate the expectations towards
@@ -61,7 +48,6 @@ QT_BEGIN_NAMESPACE
 QSGAbstractRendererPrivate::QSGAbstractRendererPrivate()
     : m_root_node(nullptr)
     , m_clear_color(Qt::transparent)
-    , m_clear_mode(QSGAbstractRenderer::ClearColorBuffer | QSGAbstractRenderer::ClearDepthBuffer)
 {
 }
 
@@ -297,10 +283,9 @@ QMatrix4x4 QSGAbstractRenderer::projectionMatrixWithNativeNDC() const
 }
 
 /*!
-    Use \a color to clear the framebuffer when clearMode() is
-    set to QSGAbstractRenderer::ClearColorBuffer.
+    Sets the \a color to clear the framebuffer.
 
-    \sa clearColor(), setClearMode()
+    \sa clearColor()
  */
 void QSGAbstractRenderer::setClearColor(const QColor &color)
 {
@@ -312,36 +297,12 @@ void QSGAbstractRenderer::setClearColor(const QColor &color)
     Returns the color that clears the framebuffer at the beginning
     of the rendering.
 
-    \sa setClearColor(), clearMode()
+    \sa setClearColor()
  */
 QColor QSGAbstractRenderer::clearColor() const
 {
     Q_D(const QSGAbstractRenderer);
     return d->m_clear_color;
-}
-
-/*!
-    Defines which attachment of the framebuffer should be cleared
-    before each scene render with the \a mode flag.
-
-    \sa clearMode(), setClearColor()
- */
-void QSGAbstractRenderer::setClearMode(ClearMode mode)
-{
-    Q_D(QSGAbstractRenderer);
-    d->m_clear_mode = mode;
-}
-
-/*!
-    Flags defining which attachment of the framebuffer will be cleared
-    before each scene render.
-
-    \sa setClearMode(), clearColor()
- */
-QSGAbstractRenderer::ClearMode QSGAbstractRenderer::clearMode() const
-{
-    Q_D(const QSGAbstractRenderer);
-    return d->m_clear_mode;
 }
 
 /*!
