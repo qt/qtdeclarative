@@ -3879,10 +3879,8 @@ QString QQmlJSCodeGenerator::convertStored(
             return variable + u".toDouble()"_s;
         if (m_typeResolver->equals(to, boolType))
             return variable + u".toBoolean()"_s;
-        if (m_typeResolver->isSignedInteger(to))
-            return variable + u".toInteger()"_s;
-        if (m_typeResolver->isUnsignedInteger(to))
-            return u"uint("_s + variable + u".toInteger())"_s;
+        if (m_typeResolver->isIntegral(to))
+            return u"%1(%2.toInteger())"_s.arg(to->internalName(), variable);
         if (m_typeResolver->equals(to, m_typeResolver->stringType()))
             return variable + u".toString()"_s;
         if (m_typeResolver->equals(to, jsValueType))
