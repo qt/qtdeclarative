@@ -2001,7 +2001,7 @@ bool Codegen::visit(CallExpression *ast)
     int thisObject = bytecodeGenerator->newRegister();
     int functionObject = bytecodeGenerator->newRegister();
 
-    if (ast->isOptional) {
+    if (ast->isOptional || m_optionalChainsStates.top().actuallyHasOptionals) {
         base.loadInAccumulator();
         bytecodeGenerator->addInstruction(Instruction::CmpEqNull());
         auto jumpToUndefined = bytecodeGenerator->jumpTrue();
