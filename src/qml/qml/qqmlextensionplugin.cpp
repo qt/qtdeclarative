@@ -166,8 +166,20 @@ void QQmlEngineExtensionPlugin::initializeEngine(QQmlEngine *engine, const char 
     \since 6.2
     \relates QQmlEngineExtensionPlugin
 
-    Ensures the plugin whose metadata-declaring class is named \a PluginName
-    is linked into static builds.
+    Ensures the plugin whose metadata-declaring plugin extension class is named
+    \a PluginName is linked into static builds. For the modules created using
+    \l qt_add_qml_module, the default plugin extension class name is computed
+    from the QML module URI by replacing dots with underscores, unless the
+    \c CLASS_NAME argument is specified.
+
+    For example:
+    \badcode
+        qt_add_qml_module(myplugin
+            # The plugin extension class name in this case is my_Company_QmlComponents.
+            URI my.Company.QmlComponents
+            ...
+        )
+    \endcode
 
     \sa Q_IMPORT_PLUGIN
 */
