@@ -8,7 +8,7 @@
     \l {QFileSelector}{File selectors} provide a convenient way of selecting
     file variants. Qt offers the platform name and the locale as built-in
     selectors. Qt Quick Controls extends the built-in selectors with the name
-    (lowercase) of the style that an application is running with.
+    (Capitalized) of the style that an application is running with.
 
     By using file selectors, style-specific tweaks can be applied without
     creating a hard dependency to a style. From the available file variants,
