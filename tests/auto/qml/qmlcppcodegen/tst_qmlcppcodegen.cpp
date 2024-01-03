@@ -71,6 +71,7 @@ private slots:
     void conversionDecrement();
     void conversionInDeadCode();
     void conversions();
+    void convertQJSPrimitiveValueToIntegral();
     void convertToOriginalReadAcumulatorForUnaryOperators();
     void cppValueTypeList();
     void dateConstruction();
@@ -1304,6 +1305,15 @@ void tst_QmlCppCodegen::conversions()
     QVERIFY(object->metaObject()->invokeMethod(object.data(), "retUndefined",
                                                Q_RETURN_ARG(QVariant, undef)));
     QVERIFY(!undef.isValid());
+}
+
+void tst_QmlCppCodegen::convertQJSPrimitiveValueToIntegral()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/convertQJSPrimitiveValueToIntegral.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
 }
 
 void tst_QmlCppCodegen::convertToOriginalReadAcumulatorForUnaryOperators()

@@ -4,6 +4,7 @@
 set(cpp_sources
     ambiguous.h
     birthdayparty.cpp birthdayparty.h
+    convertQJSPrimitiveValueToIntegral.h
     cppbaseclass.h
     druggeljug.h
     dummyobjekt.h
@@ -102,6 +103,7 @@ set(qml_files
     conversionInDeadCode.qml
     conversions.qml
     conversions2.qml
+    convertQJSPrimitiveValueToIntegral.qml
     convertToOriginalReadAcumulatorForUnaryOperators.qml
     curlygrouped.qml
     cycleHead.qml
