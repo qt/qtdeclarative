@@ -54,8 +54,8 @@ public:
     void setProjectionMatrixToRect(const QRectF &rect, MatrixTransformFlags flags);
     void setProjectionMatrixToRect(const QRectF &rect, MatrixTransformFlags flags,
                                    bool nativeNDCFlipY);
-    void setProjectionMatrix(const QMatrix4x4 &matrix, int index);
-    void setProjectionMatrixWithNativeNDC(const QMatrix4x4 &matrix, int index);
+    void setProjectionMatrix(const QMatrix4x4 &matrix, int index = 0);
+    void setProjectionMatrixWithNativeNDC(const QMatrix4x4 &matrix, int index = 0);
     QMatrix4x4 projectionMatrix(int index) const;
     QMatrix4x4 projectionMatrixWithNativeNDC(int index) const;
     int projectionMatrixCount() const;

@@ -247,6 +247,8 @@ void QSGAbstractRenderer::setProjectionMatrixToRect(const QRectF &rect, MatrixTr
 /*!
     Use \a matrix to project the QSGNode coordinates onto surface pixels.
 
+    \a index specifies the view index when multiview rendering is in use.
+
     \sa projectionMatrix(), setProjectionMatrixToRect()
  */
 void QSGAbstractRenderer::setProjectionMatrix(const QMatrix4x4 &matrix, int index)
