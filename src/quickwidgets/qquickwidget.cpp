@@ -1665,7 +1665,7 @@ bool QQuickWidget::event(QEvent *e)
             QPointerEvent *pointerEvent = static_cast<QPointerEvent *>(e);
             auto deliveredPoints = pointerEvent->points();
             for (auto &point : deliveredPoints) {
-                if (pointerEvent->exclusiveGrabber(point))
+                if (pointerEvent->exclusiveGrabber(point) || !pointerEvent->passiveGrabbers(point).isEmpty())
                     point.setAccepted(true);
             }
         }

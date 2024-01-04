@@ -11,6 +11,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
+#include <QtQuick/private/qquicktaphandler_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtGui/QWindow>
@@ -128,6 +129,8 @@ private slots:
     void synthMouseFromTouch();
     void touchTapMouseArea();
     void touchTapButton();
+    void touchTapHandler_data();
+    void touchTapHandler();
     void touchMultipleWidgets();
     void tabKey();
     void resizeOverlay();
@@ -680,6 +683,44 @@ void tst_qquickwidget::touchTapButton()
     QTest::touchEvent(&window, device).release(0, point, &window).commit();
     QTRY_VERIFY(rootItem->property("wasReleased").toBool());
     QTRY_VERIFY(rootItem->property("wasClicked").toBool());
+}
+
+void tst_qquickwidget::touchTapHandler_data()
+{
+    QTest::addColumn<bool>("guiSynthMouse"); // AA_SynthesizeMouseForUnhandledTouchEvents
+    QTest::addColumn<QQuickTapHandler::GesturePolicy>("gesturePolicy");
+
+    // QTest::newRow("nosynth: passive grab") << false << QQuickTapHandler::DragThreshold; // still failing
+    QTest::newRow("nosynth: exclusive grab") << false << QQuickTapHandler::ReleaseWithinBounds;
+    QTest::newRow("allowsynth: passive grab") << true << QQuickTapHandler::DragThreshold; // QTBUG-113558
+    QTest::newRow("allowsynth: exclusive grab") << true << QQuickTapHandler::ReleaseWithinBounds;
+}
+
+void tst_qquickwidget::touchTapHandler()
+{
+    QFETCH(bool, guiSynthMouse);
+    QFETCH(QQuickTapHandler::GesturePolicy, gesturePolicy);
+
+    QCoreApplication::setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents, guiSynthMouse);
+    QQuickWidget quick;
+    QVERIFY(quick.testAttribute(Qt::WA_AcceptTouchEvents));
+    quick.setSource(testFileUrl("tapHandler.qml"));
+    quick.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&quick));
+
+    QQuickItem *rootItem = quick.rootObject();
+    QVERIFY(rootItem);
+    QQuickTapHandler *th = rootItem->findChild<QQuickTapHandler *>();
+    QVERIFY(th);
+    th->setGesturePolicy(gesturePolicy);
+    QSignalSpy tappedSpy(th, &QQuickTapHandler::tapped);
+
+    const QPoint p(50, 50);
+    QTest::touchEvent(&quick, device).press(0, p, &quick);
+    QTRY_COMPARE(th->isPressed(), true);
+    QTest::touchEvent(&quick, device).release(0, p, &quick);
+    QTRY_COMPARE(tappedSpy.size(), 1);
+    QCOMPARE(th->isPressed(), false);
 }
 
 void tst_qquickwidget::touchMultipleWidgets()
