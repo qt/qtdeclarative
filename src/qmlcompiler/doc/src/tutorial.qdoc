@@ -65,7 +65,7 @@ warnings.
 \endlist
 
 In our example, we have only one logging category, \c{hello-world}. For each category, we have to
-create a \l{QQmlJS::LoggerWarningId}{LoggerWarningId} object in our plugin.
+create a \l{QQmlSA::}{LoggerWarningId} object in our plugin.
 
 \quotefromfile tutorials/helloworld/chapter1/helloplugin.cpp
 \skipto static constexpr QQmlSA::LoggerWarningId

@@ -3646,8 +3646,10 @@ void QQuickWindow::endExternalCommands()
     \l{Window::data}{default property} or a dedicated property, will automatically
     set up a transient parent relationship to the containing Item or Window,
     unless the \l transientParent property is explicitly set. This applies
-    when creating Window items via \l Qt.createComponent or \l Qt.createQmlObject
-    as well, if an Item or Window is passed as the \c parent argument.
+    when creating Window items via \l [QML] {QtQml::Qt::createComponent()}
+    {Qt.createComponent} or \l [QML] {QtQml::Qt::createQmlObject()}
+    {Qt.createQmlObject} as well, if an Item or Window is passed as the
+    \c parent argument.
 
     A Window with a transient parent will not be shown until its transient
     parent is shown, even if the \l visible property is \c true. Setting

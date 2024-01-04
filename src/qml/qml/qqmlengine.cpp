@@ -509,7 +509,7 @@ void QQmlEnginePrivate::init()
   \inmodule QtQml
   \brief The QQmlEngine class provides an environment for instantiating QML components.
 
-  A QQmlEngine is used to manage \l{components}{QQmlComponent} and objects created from
+  A QQmlEngine is used to manage \l{QQmlComponent}{components} and objects created from
   them and execute their bindings and functions. QQmlEngine also inherits from
   \l{QJSEngine} which allows seamless integration between your QML components and
   JavaScript code.
