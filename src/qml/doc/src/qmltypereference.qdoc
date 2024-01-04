@@ -58,9 +58,9 @@ provided:
 
 \section1 Sequence Types
 
-The following \l{qtqml-typesystem-topic.html#sequence-types}{QML sequence types}
-are provided by the Qt QML module in addition to the ones registered with each
-value type and object type:
+The following \l{QML Sequence Types}{QML sequence types} are provided by the Qt
+QML module in addition to the ones registered with each value type and object
+type:
 
 \list
   \li \c {std::vector<QString>}
