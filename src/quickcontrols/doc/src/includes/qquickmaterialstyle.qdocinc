@@ -77,3 +77,8 @@
             for example \c "Grey".
 \endtable
 //! [env]
+
+//! [placeholder-text-multiple-lines]
+As per the Material guidelines, placeholder text should be kept short and not
+take up multiple lines.
+//! [placeholder-text-multiple-lines]

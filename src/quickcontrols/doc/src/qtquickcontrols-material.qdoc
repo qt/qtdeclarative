@@ -32,7 +32,7 @@
     \section1 Detailed Description
     \target detailed-desc-material
 
-    The Material style is based on the \l {https://www.google.com/design/spec/material-design/introduction.html}
+    The Material style is based on the \l {https://m3.material.io}
     {Google Material Design Guidelines}. It allows for a unified experience
     across platforms and device sizes.
 
@@ -259,12 +259,16 @@
     \l {Item::}{clip} to \c true. To avoid this, \l {Control::}{topInset} is
     set to an appropriate value in these cases.
 
+    \include qquickmaterialstyle.qdocinc placeholder-text-multiple-lines
+
     \section3 TextField
 
     The same \l {material-control-specific-notes-textarea}{issue with clipping}
     explained above for TextArea can also occur with \l TextField. To avoid
     this, \l {Control::}{topInset} is set to an appropriate value when the
     TextField sets clip to \c true.
+
+    \include qquickmaterialstyle.qdocinc placeholder-text-multiple-lines
 
     \section1 Attached Property Documentation
 
