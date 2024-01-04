@@ -64,6 +64,7 @@ ApplicationWindow {
             text: qsTr("Right click on the window background to open a context menu. "
                + "Right click on the TextArea to access its edit context menu.\n\n"
                + "Things to check:\n\n"
+               + "- Do the menu items trigger their actions (check console for output)?\n"
                + "- Do the Edit menu items (in the MenuBar menu and edit context menu)"
                + " work as expected with the TextArea?\n"
                + "  - Are they enabled/disabled as expected?\n"
@@ -77,14 +78,35 @@ ApplicationWindow {
             Layout.fillHeight: true
         }
 
-        RowLayout {
-            Button {
-                text: qsTr("Add context menu item")
-                onClicked: backgroundContextMenu.appendAction()
-            }
-            Button {
-                text: qsTr("Remove context menu item")
-                onClicked: backgroundContextMenu.removeLastAction()
+        GroupBox {
+            title: qsTr("Context menu")
+
+            Layout.fillWidth: true
+
+            RowLayout {
+                anchors.fill: parent
+
+                Button {
+                    text: qsTr("Add action")
+                    onClicked: backgroundContextMenu.appendAction()
+                }
+                Button {
+                    text: qsTr("Remove action")
+                    onClicked: backgroundContextMenu.removeLastAction()
+                }
+
+                Button {
+                    text: qsTr("Add sub-menu action")
+                    onClicked: subMenu.appendAction()
+                }
+                Button {
+                    text: qsTr("Remove sub-menu action")
+                    onClicked: subMenu.removeLastAction()
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
             }
         }
 
@@ -115,6 +137,10 @@ ApplicationWindow {
         Action {}
     }
 
+    component ContextAction: Action {
+        onTriggered: print("triggered", text)
+    }
+
     Menu {
         id: backgroundContextMenu
 
@@ -132,29 +158,55 @@ ApplicationWindow {
             backgroundContextMenu.removeAction(backgroundContextMenu.actionAt(backgroundContextMenu.contentData.length - 1))
         }
 
-        Action {
+        ContextAction {
             text: qsTr("Context menu item 1")
         }
-        Action {
+        ContextAction {
             text: qsTr("Context menu item 2")
         }
-        Action {
+        ContextAction {
             text: qsTr("Context menu item 3")
+        }
+
+        // TODO: separator
+
+        Menu {
+            id: subMenu
+            title: qsTr("Sub-menu")
+
+            function appendAction() {
+                let action = actionComponent.createObject(null, { text: qsTr("Extra sub-menu item") })
+                subMenu.addAction(action)
+            }
+
+            function removeLastAction() {
+                subMenu.removeAction(subMenu.actionAt(subMenu.contentData.length - 1))
+            }
+
+            ContextAction {
+                text: qsTr("Sub-menu item 1")
+            }
+            ContextAction {
+                text: qsTr("Sub-menu item 2")
+            }
+            ContextAction {
+                text: qsTr("Sub-menu item 3")
+            }
         }
     }
 
     Menu {
         id: editContextMenu
 
-        Action {
+        ContextAction {
             text: qsTr("Cut")
             enabled: textArea.selectedText.length > 0
         }
-        Action {
+        ContextAction {
             text: qsTr("Copy")
             enabled: textArea.selectedText.length > 0
         }
-        Action {
+        ContextAction {
             text: qsTr("Paste")
             enabled: textArea.activeFocus
         }

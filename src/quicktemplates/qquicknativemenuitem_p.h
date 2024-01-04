@@ -39,6 +39,7 @@ public:
     QPlatformMenuItem *handle() const;
     QPlatformMenuItem *create();
     void sync();
+    void reset();
 
     QQuickNativeIconLoader *iconLoader() const;
 

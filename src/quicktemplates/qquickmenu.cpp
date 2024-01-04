@@ -548,9 +548,18 @@ void QQuickMenuPrivate::insertNativeItem(int index, QQuickMenu *menu)
     syncWithNativeMenu();
 }
 
-void QQuickMenuPrivate::removeNativeItem(QQuickAction *action)
+void QQuickMenuPrivate::removeNativeItem(QQuickNativeMenuItem *nativeItem, DestroyPolicy destroyPolicy)
+{
+    if (nativeItem->action())
+        removeNativeItem(nativeItem->action(), destroyPolicy);
+    else
+        removeNativeItem(nativeItem->subMenu(), destroyPolicy);
+}
+
+void QQuickMenuPrivate::removeNativeItem(QQuickAction *action, DestroyPolicy destroyPolicy)
 {
     Q_ASSERT(usingNativeMenu());
+    qCDebug(lcNativeMenu) << "removeNativeItem called with" << action;
 
     const int actionIndex = indexOfActionInNativeItems(action);
     if (actionIndex == -1)
@@ -559,15 +568,22 @@ void QQuickMenuPrivate::removeNativeItem(QQuickAction *action)
     contentData.removeAt(actionIndex);
     QQuickNativeMenuItem *nativeItem = nativeItems.takeAt(actionIndex);
     nativeHandle->removeMenuItem(nativeItem->handle());
-    nativeItem->handle()->setMenu(nullptr);
+    // We call deleteLater on the native item, but our QObject destructor will
+    // synchronously destroy any Actions we own before the native item is destroyed.
+    // In the meantime, QQuickNativeMenuItem code that uses the action could be executed,
+    // so we need to make sure that the native items don't have a reference to the actions,
+    // hence the call to reset().
+    nativeItem->reset();
     nativeItem->deleteLater();
-    action->deleteLater();
+    if (destroyPolicy == DestroyPolicy::Destroy)
+        action->deleteLater();
     syncWithNativeMenu();
 }
 
-void QQuickMenuPrivate::removeNativeItem(QQuickMenu *menu)
+void QQuickMenuPrivate::removeNativeItem(QQuickMenu *menu, DestroyPolicy destroyPolicy)
 {
     Q_ASSERT(usingNativeMenu());
+    qCDebug(lcNativeMenu) << "removeNativeItem called with" << menu;
 
     const int menuIndex = indexOfMenuInNativeItems(menu);
     if (menuIndex == -1)
@@ -576,9 +592,10 @@ void QQuickMenuPrivate::removeNativeItem(QQuickMenu *menu)
     contentData.removeAt(menuIndex);
     QQuickNativeMenuItem *nativeItem = nativeItems.takeAt(menuIndex);
     nativeHandle->removeMenuItem(nativeItem->handle());
-    nativeItem->handle()->setMenu(nullptr);
+    nativeItem->reset();
     nativeItem->deleteLater();
-    menu->deleteLater();
+    if (destroyPolicy == DestroyPolicy::Destroy)
+        menu->deleteLater();
     syncWithNativeMenu();
 }
 
@@ -1056,8 +1073,14 @@ QQuickMenu::~QQuickMenu()
     // We have to do this to ensure that the change listeners are removed.
     // It's too late to do this in ~QQuickMenuPrivate, as contentModel has already
     // been destroyed before that is called.
-    while (d->contentModel->count() > 0)
-        d->removeItem(0, d->itemAt(0));
+    if (!d->usingNativeMenu()) {
+        while (d->contentModel->count() > 0)
+            d->removeItem(0, d->itemAt(0));
+    } else {
+        qCDebug(lcNativeMenu) << "destroying" << d->nativeItems.count() << "native menu item(s) of" << this;
+        while (d->nativeItems.count() > 0)
+            d->removeNativeItem(d->nativeItems.at(0));
+    }
 
     if (d->contentItem) {
         QQuickItemPrivate::get(d->contentItem)->removeItemChangeListener(d, QQuickItemPrivate::Children);
@@ -1274,16 +1297,30 @@ void QQuickMenu::removeMenu(QQuickMenu *menu)
 QQuickMenu *QQuickMenu::takeMenu(int index)
 {
     Q_D(QQuickMenu);
-    QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(d->itemAt(index));
-    if (!item)
+    if (!d->usingNativeMenu()) {
+        QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(d->itemAt(index));
+        if (!item)
+            return nullptr;
+
+        QQuickMenu *subMenu = item->subMenu();
+        if (!subMenu)
+            return nullptr;
+
+        d->removeItem(index, item);
+        item->deleteLater();
+        return subMenu;
+    }
+
+    // Using native menu.
+    if (index < 0 || index >= d->nativeItems.size())
         return nullptr;
 
-    QQuickMenu *subMenu = item->subMenu();
+    QQuickNativeMenuItem *nativeItem = d->nativeItems.at(index);
+    auto *subMenu = nativeItem->subMenu();
     if (!subMenu)
         return nullptr;
 
-    d->removeItem(index, item);
-    item->deleteLater();
+    d->removeNativeItem(subMenu, QQuickMenuPrivate::DestroyPolicy::DoNotDestroy);
     return subMenu;
 }
 

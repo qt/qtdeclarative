@@ -59,7 +59,7 @@ QQuickNativeMenuItem::QQuickNativeMenuItem(QQuickMenu *parentMenu, QQuickMenu *s
 
 QQuickNativeMenuItem::~QQuickNativeMenuItem()
 {
-    qCDebug(lcNativeMenuItem) << "destroying" << debugText();
+    qCDebug(lcNativeMenuItem) << "destroying" << this << debugText();
 }
 
 QQuickAction *QQuickNativeMenuItem::action() const
@@ -155,6 +155,17 @@ void QQuickNativeMenuItem::sync()
         if (menuPrivate->nativeHandle)
             menuPrivate->nativeHandle->syncMenuItem(m_handle.get());
     }
+}
+
+void QQuickNativeMenuItem::reset()
+{
+    m_parentMenu = nullptr;
+    m_subMenu = nullptr;
+    m_action = nullptr;
+    m_iconLoader = nullptr;
+    m_handle->setMenu(nullptr);
+    m_handle.reset();
+    m_shortcutId = -1;
 }
 
 QQuickNativeIconLoader *QQuickNativeMenuItem::iconLoader() const

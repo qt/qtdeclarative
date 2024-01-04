@@ -148,7 +148,7 @@ void tst_NativeMenus::dynamicActions()
 
 void tst_NativeMenus::dynamicSubmenus()
 {
-    QQuickControlsApplicationHelper helper(this, QLatin1String("emptyMenu.qml"));
+    QQuickControlsApplicationHelper helper(this, QLatin1String("dynamicSubmenus.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
@@ -158,19 +158,61 @@ void tst_NativeMenus::dynamicSubmenus()
     QVERIFY(contextMenu);
     auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
 
-    // Check that sub-menus (with no menu items, yet) can be appended to an empty parent menu.
-    QVERIFY(QMetaObject::invokeMethod(window, "addMenu",
-        Q_ARG(QQuickMenu *, contextMenu), Q_ARG(QString, "subMenu1")));
+    // We construct the sub-menu first in QML. At least on Windows, menu items
+    // added to an empty sub-menu won't show up (tested with Widgets): QTBUG-120494.
+    // So, this adds an already-populated menu as a sub-menu.
+    QVERIFY(QMetaObject::invokeMethod(window, "addSubMenu", Q_ARG(QString, "subMenu1")));
     auto subMenu1 = contextMenu->menuAt(0);
+    auto *subMenu1Private = QQuickMenuPrivate::get(subMenu1);
     QVERIFY(subMenu1);
     QCOMPARE(subMenu1->title(), "subMenu1");
     QCOMPARE(contextMenuPrivate->contentData.at(0), subMenu1);
+    QCOMPARE(contextMenuPrivate->contentData.size(), 1);
+    {
+        auto subMenuAction1 = subMenu1->actionAt(0);
+        QVERIFY(subMenuAction1);
+        QCOMPARE(subMenuAction1->text(), "subMenu1Action1");
+        QCOMPARE(subMenu1Private->contentData.at(0), subMenuAction1);
+    }
 
-    //
+    // Check that actions can be appended after existing items in the sub-menu.
+    QCOMPARE(subMenu1->actionAt(1), nullptr);
     QVERIFY(QMetaObject::invokeMethod(window, "addAction",
-        Q_ARG(QQuickMenu *, subMenu1), Q_ARG(QString, "subMenuAction1")));
+        Q_ARG(QQuickMenu *, subMenu1), Q_ARG(QString, "subMenu1Action2")));
+    {
+        auto subMenu1Action2 = subMenu1->actionAt(1);
+        QVERIFY(subMenu1Action2);
+        QCOMPARE(subMenu1Action2->text(), "subMenu1Action2");
+        QCOMPARE(subMenu1Private->contentData.at(1), subMenu1Action2);
+        QCOMPARE(subMenu1Private->contentData.size(), 2);
+    }
 
-    // TODO: insert another sub-menu action before the first one
+    // Check that actions can be inserted before existing items in the sub-menu.
+    QVERIFY(QMetaObject::invokeMethod(window, "insertAction",
+        Q_ARG(QQuickMenu *, subMenu1), Q_ARG(int, 0), Q_ARG(QString, "subMenu1Action0")));
+    {
+        auto subMenu1Action0 = subMenu1->actionAt(0);
+        QVERIFY(subMenu1Action0);
+        QCOMPARE(subMenu1Action0->text(), "subMenu1Action0");
+        QCOMPARE(subMenu1Private->contentData.at(0), subMenu1Action0);
+        QCOMPARE(subMenu1Private->contentData.size(), 3);
+    }
+
+    {
+        // Check that takeMenu works.
+        auto *takenSubMenu = contextMenu->takeMenu(0);
+        QCOMPARE(takenSubMenu, subMenu1);
+        QCOMPARE(contextMenuPrivate->contentData.size(), 0);
+
+        // Check that the sub-menu can be added back in to the menu.
+        contextMenu->addMenu(takenSubMenu);
+        QCOMPARE(contextMenuPrivate->contentData.size(), 1);
+    }
+
+    // Check that removeMenu works.
+    QVERIFY(contextMenu->menuAt(0));
+    contextMenu->removeMenu(contextMenu->menuAt(0));
+    QCOMPARE(contextMenuPrivate->contentData.size(), 0);
 }
 
 // TODO: add a test that mixes items with native items

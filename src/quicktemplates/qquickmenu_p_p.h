@@ -60,8 +60,14 @@ public:
     int indexOfMenuInNativeItems(QQuickMenu *menu) const;
     void insertNativeItem(int index, QQuickAction *action);
     void insertNativeItem(int index, QQuickMenu *menu);
-    void removeNativeItem(QQuickAction *action);
-    void removeNativeItem(QQuickMenu *menu);
+
+    enum class DestroyPolicy {
+        Destroy,
+        DoNotDestroy
+    };
+    void removeNativeItem(QQuickNativeMenuItem *nativeItem, DestroyPolicy destroyPolicy = DestroyPolicy::Destroy);
+    void removeNativeItem(QQuickAction *action, DestroyPolicy destroyPolicy = DestroyPolicy::Destroy);
+    void removeNativeItem(QQuickMenu *menu, DestroyPolicy destroyPolicy = DestroyPolicy::Destroy);
 
     QQuickItem *beginCreateItem();
     void completeCreateItem();
