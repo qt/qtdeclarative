@@ -71,14 +71,6 @@ inline QString dependenciesLiteral() { return QStringLiteral("dependencies"); }
 inline QString moduleLiteral()       { return QStringLiteral("module"); }
 inline QString javascriptLiteral()   { return QStringLiteral("javascript"); }
 inline QString directoryLiteral()    { return QStringLiteral("directory"); }
-inline QString componentsLiteral()
-{
-    return QStringLiteral("components");
-}
-inline QString scriptsLiteral()
-{
-    return QStringLiteral("scripts");
-}
 
 void printUsage(const QString &appNameIn)
 {
@@ -158,42 +150,21 @@ QVariantMap pluginsForModulePath(const QString &modulePath) {
     QString plugins;
     QString classnames;
     QStringList dependencies;
-    QStringList componentFiles;
-    QStringList scriptFiles;
     QByteArray line;
     do {
         line = qmldirFile.readLine();
-        const QList<QByteArray> sections = line.split(' ');
-        if (sections.size() > 0) {
-            const QByteArray &sectionType = sections.at(0);
-            if (sectionType == "plugin") {
-                plugins += QString::fromUtf8(line.split(' ').at(1));
-                plugins += QLatin1Char(' ');
-            } else if (sectionType == "classname") {
-                classnames += QString::fromUtf8(line.split(' ').at(1));
-                classnames += QLatin1Char(' ');
-            } else if (sectionType == "depends") {
-                if (sections.size() != 3)
-                    std::cerr << "depends: expected 2 arguments: module identifier and version"
-                              << std::endl;
-                else
-                    dependencies << QString::fromUtf8(sections.at(1)) + QLatin1Char(' ')
-                                    + QString::fromUtf8(sections.at(2)).simplified();
-            } else if (sections.size() == 2 && sectionType != "module"
-                       && sectionType != "typeinfo") {
-                componentFiles.append(modulePath + QLatin1Char('/')
-                                      + QString::fromUtf8(sections.at(1)).trimmed());
-            } else if (sections.size() == 3
-                       || (sectionType == "singleton" && sections.size() == 4)) {
-                int fileNameIndex = (sectionType == "singleton") ? 3 : 2;
-                const QString fileName = QString::fromUtf8(sections.at(fileNameIndex)).trimmed();
-                const QString filePath = modulePath + QLatin1Char('/') + fileName;
-                if (fileName.endsWith(QLatin1String(".js"))
-                    || fileName.endsWith(QLatin1String(".mjs")))
-                    scriptFiles.append(filePath);
-                else
-                    componentFiles.append(filePath);
-            }
+        if (line.startsWith("plugin")) {
+            plugins += QString::fromUtf8(line.split(' ').at(1));
+            plugins += QLatin1Char(' ');
+        } else if (line.startsWith("classname")) {
+            classnames += QString::fromUtf8(line.split(' ').at(1));
+            classnames += QLatin1Char(' ');
+        } else if (line.startsWith("depends")) {
+            const QList<QByteArray> dep = line.split(' ');
+            if (dep.length() != 3)
+                std::cerr << "depends: expected 2 arguments: module identifier and version" << std::endl;
+            else
+                dependencies << QString::fromUtf8(dep[1]) + QLatin1Char(' ') + QString::fromUtf8(dep[2]).simplified();
         }
 
     } while (line.length() > 0);
@@ -202,12 +173,7 @@ QVariantMap pluginsForModulePath(const QString &modulePath) {
     pluginInfo[pluginsLiteral()] = plugins.simplified();
     pluginInfo[classnamesLiteral()] = classnames.simplified();
     if (dependencies.length())
-        dependencies.removeDuplicates();
         pluginInfo[dependenciesLiteral()] = dependencies;
-    if (!componentFiles.isEmpty())
-        pluginInfo[componentsLiteral()] = componentFiles;
-    if (!scriptFiles.isEmpty())
-        pluginInfo[scriptsLiteral()] = scriptFiles;
     return pluginInfo;
 }
 
@@ -281,8 +247,6 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
             QVariantMap plugininfo = pluginsForModulePath(import.value(pathLiteral()).toString());
             QString plugins = plugininfo.value(pluginsLiteral()).toString();
             QString classnames = plugininfo.value(classnamesLiteral()).toString();
-            QStringList components = plugininfo.value(componentsLiteral()).toStringList();
-            QStringList scripts = plugininfo.value(scriptsLiteral()).toStringList();
             if (!plugins.isEmpty())
                 import.insert(QStringLiteral("plugin"), plugins);
             if (!classnames.isEmpty())
@@ -297,12 +261,6 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
                     depImport[versionLiteral()] = dep[1].toString();
                     importsCopy.append(depImport);
                 }
-            }
-            if (!components.isEmpty()) {
-                import.insert(componentsLiteral(), components);
-            }
-            if (!scripts.isEmpty()) {
-                import.insert(scriptsLiteral(), scripts);
             }
         }
         done.append(import);

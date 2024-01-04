@@ -188,8 +188,12 @@ void QQuickShapeGenericRenderer::setPath(int index, const QQuickPath *path)
 void QQuickShapeGenericRenderer::setStrokeColor(int index, const QColor &color)
 {
     ShapePathData &d(m_sp[index]);
+    const bool wasTransparent = d.strokeColor.a == 0;
     d.strokeColor = colorToColor4ub(color);
+    const bool isTransparent = d.strokeColor.a == 0;
     d.syncDirty |= DirtyColor;
+    if (wasTransparent && !isTransparent)
+        d.syncDirty |= DirtyStrokeGeom;
 }
 
 void QQuickShapeGenericRenderer::setStrokeWidth(int index, qreal w)

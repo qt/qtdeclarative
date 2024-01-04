@@ -120,6 +120,7 @@ public:
             dragStartOffset = 0;
             fixingUp = false;
             inOvershoot = false;
+            contentPositionChangedExternallyDuringDrag = false;
         }
 
         void markExtentsDirty() {

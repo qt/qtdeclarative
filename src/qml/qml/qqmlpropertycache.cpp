@@ -51,8 +51,8 @@
 
 #include <QtCore/qdebug.h>
 #include <QtCore/QCryptographicHash>
+#include <QtCore/private/qtools_p.h>
 
-#include <ctype.h> // for toupper
 #include <limits.h>
 #include <algorithm>
 
@@ -571,7 +571,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
                 QVarLengthArray<char, 128> str(length+3);
                 str[0] = 'o';
                 str[1] = 'n';
-                str[2] = toupper(rawName[0]);
+                str[2] = QtMiscUtils::toAsciiUpper(rawName[0]);
                 if (length > 1)
                     memcpy(&str[3], &rawName[1], length - 1);
                 str[length + 2] = '\0';

@@ -419,8 +419,10 @@ ReturnedValue QQmlTypeWrapper::virtualInstanceOf(const Object *typeObject, const
             return Encode(false);
 
         QQmlRefPointer<QQmlTypeData> td = qenginepriv->typeLoader.getType(typeWrapper->d()->type().sourceUrl());
-        ExecutableCompilationUnit *cu = td->compilationUnit();
-        myQmlType = qenginepriv->metaObjectForType(cu->metaTypeId);
+        if (ExecutableCompilationUnit *cu = td->compilationUnit())
+            myQmlType = qenginepriv->metaObjectForType(cu->metaTypeId);
+        else
+            return Encode(false); // It seems myQmlType has some errors, so we could not compile it.
     } else {
         myQmlType = qenginepriv->metaObjectForType(myTypeId);
     }

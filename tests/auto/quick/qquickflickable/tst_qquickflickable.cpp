@@ -2642,7 +2642,12 @@ void tst_qquickflickable::setContentPositionWhileDragging() // QTBUG-104966
     } else if (newExtent >= 0) {
         // ...or reduce the content size be be less than current (contentX, contentY) position
         // This forces the content item to move.
-        expectedContentPos = moveDelta;
+        // contentY: 150
+        // 320 - 150 = 170 pixels down to bottom
+        // Now reduce contentHeight to 200
+        // since we are at the bottom, and the flickable is 100 pixels tall, contentY must land
+        // at newExtent - 100.
+
         if (isHorizontal) {
             flickable->setContentWidth(newExtent);
         } else {
@@ -2652,6 +2657,7 @@ void tst_qquickflickable::setContentPositionWhileDragging() // QTBUG-104966
         // We therefore cannot scroll/flick it further down. Drag it up towards the top instead
         // (by moving mouse down).
         pos += moveDelta;
+        expectedContentPos = unitDelta * (newExtent - (isHorizontal ? flickable->width() : flickable->height()));
     }
 
     QTest::mouseMove(window.data(), pos);
