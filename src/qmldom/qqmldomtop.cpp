@@ -243,8 +243,7 @@ void DomUniverse::loadFile(const FileToLoad &file, Callback callback, LoadOption
     case DomType::QmldirFile:
     case DomType::QmlDirectory:
     case DomType::JsFile: {
-        return parse(ParsingTask{ QDateTime::currentDateTimeUtc(), loadOptions, fType, file,
-                                  shared_from_this(), callback });
+        return parse(file, fType, loadOptions, callback);
         break;
     }
     default:
@@ -302,207 +301,191 @@ updateEntry(const DomItem &univ, const std::shared_ptr<T> &newItem,
     return qMakePair(oldValue, newValue);
 }
 
-void DomUniverse::parse(ParsingTask t)
+void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadOptions,
+                        Callback callback)
 {
-    shared_ptr<DomUniverse> topPtr = t.requestingUniverse.lock();
-    QString canonicalPath = t.file.canonicalPath();
-    if (!topPtr) {
-        myErrors()
-                .error(tr("Ignoring callback for loading of %1: universe is not valid anymore")
-                               .arg(canonicalPath))
-                .handle();
-    }
-
-    QString code = t.file.content() ? t.file.content()->data : QString();
-    QDateTime contentDate = t.file.content() ? t.file.content()->date
-                                             : QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
+    QString canonicalPath = file.canonicalPath();
+    QString code = file.content() ? file.content()->data : QString();
+    QDateTime contentDate = file.content() ? file.content()->date
+                                           : QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC);
 
     bool skipParse = false;
     DomItem oldValue; // old ExternalItemPair (might be empty, or equal to newValue)
     DomItem newValue; // current ExternalItemPair
-    DomItem univ = DomItem(topPtr);
+    DomItem univ = DomItem(shared_from_this());
     QVector<ErrorMessage> messages;
 
-    if (t.kind == DomType::QmlFile || t.kind == DomType::QmltypesFile
-        || t.kind == DomType::QmldirFile || t.kind == DomType::QmlDirectory
-        || t.kind == DomType::JsFile) {
-        auto getValue = [&t, this, &canonicalPath]() -> std::shared_ptr<ExternalItemPairBase> {
-            if (t.kind == DomType::QmlFile)
-                return m_qmlFileWithPath.value(canonicalPath);
-            else if (t.kind == DomType::QmltypesFile)
-                return m_qmlFileWithPath.value(canonicalPath);
-            else if (t.kind == DomType::QmldirFile)
-                return m_qmlFileWithPath.value(canonicalPath);
-            else if (t.kind == DomType::QmlDirectory)
-                return m_qmlDirectoryWithPath.value(canonicalPath);
-            else if (t.kind == DomType::JsFile)
-                return m_jsFileWithPath.value(canonicalPath);
-            else
-                Q_ASSERT(false);
-            return {};
-        };
-        if (code.isEmpty()) {
-            QFile file(canonicalPath);
-            QFileInfo path(canonicalPath);
-            if (canonicalPath.isEmpty()) {
-                messages.append(myErrors().error(tr("Non existing path %1").arg(canonicalPath)));
-                skipParse = true; // nothing to parse from the non-existing path
-            }
-            {
-                QMutexLocker l(mutex());
-                auto value = getValue();
-                if (!(t.loadOptions & LoadOption::ForceLoad) && value) {
-                    // use value also when its path is non-existing
-                    if (value && value->currentItem()
-                        && (canonicalPath.isEmpty()
-                            || path.lastModified() < value->currentItem()->lastDataUpdateAt())) {
-                        oldValue = newValue = univ.copy(value);
-                        skipParse = true;
-                    }
-                }
-            }
-            if (!skipParse) {
-                contentDate = QDateTime::currentDateTimeUtc();
-                if (path.isDir()) {
-                    code = QDir(canonicalPath)
-                                   .entryList(QDir::NoDotAndDotDot | QDir::Files, QDir::Name)
-                                   .join(QLatin1Char('\n'));
-                } else if (!file.open(QIODevice::ReadOnly)) {
-                    code = QStringLiteral(u"");
-                    messages.append(myErrors().error(tr("Error opening path %1: %2 %3")
-                                                             .arg(canonicalPath,
-                                                                  QString::number(file.error()),
-                                                                  file.errorString())));
-                } else {
-                    code = QString::fromUtf8(file.readAll());
-                    file.close();
-                }
-            }
+    auto getValue = [fType, this, &canonicalPath]() -> std::shared_ptr<ExternalItemPairBase> {
+        if (fType == DomType::QmlFile)
+            return m_qmlFileWithPath.value(canonicalPath);
+        else if (fType == DomType::QmltypesFile)
+            return m_qmlFileWithPath.value(canonicalPath);
+        else if (fType == DomType::QmldirFile)
+            return m_qmlFileWithPath.value(canonicalPath);
+        else if (fType == DomType::QmlDirectory)
+            return m_qmlDirectoryWithPath.value(canonicalPath);
+        else if (fType == DomType::JsFile)
+            return m_jsFileWithPath.value(canonicalPath);
+        else
+            Q_ASSERT(false);
+        return {};
+    };
+    if (code.isEmpty()) {
+        QFile file(canonicalPath);
+        QFileInfo path(canonicalPath);
+        if (canonicalPath.isEmpty()) {
+            messages.append(myErrors().error(tr("Non existing path %1").arg(canonicalPath)));
+            skipParse = true; // nothing to parse from the non-existing path
         }
-        if (!skipParse) {
+        {
             QMutexLocker l(mutex());
-            if (auto value = getValue()) {
-                QString oldCode = value->currentItem()->code();
-                if (value && value->currentItem() && !oldCode.isNull() && oldCode == code) {
+            auto value = getValue();
+            if (!(loadOptions & LoadOption::ForceLoad) && value) {
+                // use value also when its path is non-existing
+                if (value && value->currentItem()
+                    && (canonicalPath.isEmpty()
+                        || path.lastModified() < value->currentItem()->lastDataUpdateAt())) {
+                    oldValue = newValue = univ.copy(value);
                     skipParse = true;
-                    newValue = oldValue = univ.copy(value);
-                    if (value->currentItem()->lastDataUpdateAt() < contentDate)
-                        value->currentItem()->refreshedDataAt(contentDate);
                 }
             }
         }
         if (!skipParse) {
-            QDateTime now(QDateTime::currentDateTimeUtc());
-            if (t.kind == DomType::QmlFile) {
-                auto qmlFile = std::make_shared<QmlFile>(canonicalPath, code, contentDate, 0,
-                                                         t.file.options().testFlag(WithRecovery)
-                                                                 ? QmlFile::EnableParserRecovery
-                                                                 : QmlFile::DisableParserRecovery);
-                std::shared_ptr<DomEnvironment> envPtr;
-                if (auto ptr = t.file.environment().lock())
-                    envPtr = std::move(ptr);
-                else
-                    envPtr = std::make_shared<DomEnvironment>(
-                            QStringList(), DomEnvironment::Option::NoDependencies, topPtr);
-                envPtr->addQmlFile(qmlFile);
-                DomItem env(envPtr);
-                if (qmlFile->isValid()) {
-                    createDom(MutableDomItem(env.copy(qmlFile)), t.file.options());
-                } else {
-                    QString errs;
-                    DomItem qmlFileObj = env.copy(qmlFile);
-                    qmlFile->iterateErrors(qmlFileObj, [&errs](const DomItem &, const ErrorMessage &m) {
-                        errs += m.toString();
-                        errs += u"\n";
-                        return true;
-                    });
-                    qCWarning(domLog).noquote().nospace()
-                            << "Parsed invalid file " << canonicalPath << errs;
-                }
-                auto change = updateEntry<QmlFile>(univ, qmlFile, m_qmlFileWithPath, mutex());
-                oldValue = univ.copy(change.first);
-                newValue = univ.copy(change.second);
-            } else if (t.kind == DomType::QmltypesFile) {
-                auto qmltypesFile = std::make_shared<QmltypesFile>(
-                        canonicalPath, code, contentDate);
-                QmltypesReader reader(univ.copy(qmltypesFile));
-                reader.parse();
-                auto change = updateEntry<QmltypesFile>(univ, qmltypesFile, m_qmltypesFileWithPath,
-                                                        mutex());
-                oldValue = univ.copy(change.first);
-                newValue = univ.copy(change.second);
-            } else if (t.kind == DomType::QmldirFile) {
-                shared_ptr<QmldirFile> qmldirFile =
-                        QmldirFile::fromPathAndCode(canonicalPath, code);
-                auto change =
-                        updateEntry<QmldirFile>(univ, qmldirFile, m_qmldirFileWithPath, mutex());
-                oldValue = univ.copy(change.first);
-                newValue = univ.copy(change.second);
-            } else if (t.kind == DomType::QmlDirectory) {
-                auto qmlDirectory = std::make_shared<QmlDirectory>(
-                        canonicalPath, code.split(QLatin1Char('\n')), contentDate);
-                auto change = updateEntry<QmlDirectory>(univ, qmlDirectory, m_qmlDirectoryWithPath,
-                                                        mutex());
-                oldValue = univ.copy(change.first);
-                newValue = univ.copy(change.second);
-            } else if (t.kind == DomType::JsFile) {
-                //WATCH OUT!
-                //DOM construction for plain JS files is not yet supported
-                //Only parsing of the file
-                //and adding ExternalItem to the Environment will happen here
-
-                auto jsFile = std::make_shared<JsFile>(canonicalPath, code, contentDate);
-                std::shared_ptr<DomEnvironment> envPtr;
-                if (auto ptr = t.file.environment().lock())
-                    envPtr = std::move(ptr);
-                else
-                    envPtr = std::make_shared<DomEnvironment>(
-                            QStringList(), DomEnvironment::Option::NoDependencies, topPtr);
-                envPtr->addJsFile(jsFile);
-                DomItem env(envPtr);
-                if (!jsFile->isValid()) {
-                    QString errs;
-                    DomItem qmlFileObj = env.copy(jsFile);
-                    jsFile->iterateErrors(qmlFileObj, [&errs](const DomItem &, const ErrorMessage &m) {
-                        errs += m.toString();
-                        errs += u"\n";
-                        return true;
-                    });
-                    qCWarning(domLog).noquote().nospace()
-                            << "Parsed invalid file " << canonicalPath << errs;
-                }
-                auto change = updateEntry<JsFile>(univ, jsFile, m_jsFileWithPath, mutex());
-                oldValue = univ.copy(change.first);
-                newValue = univ.copy(change.second);
+            contentDate = QDateTime::currentDateTimeUtc();
+            if (path.isDir()) {
+                code = QDir(canonicalPath)
+                               .entryList(QDir::NoDotAndDotDot | QDir::Files, QDir::Name)
+                               .join(QLatin1Char('\n'));
+            } else if (!file.open(QIODevice::ReadOnly)) {
+                code = QStringLiteral(u"");
+                messages.append(
+                        myErrors().error(tr("Error opening path %1: %2 %3")
+                                                 .arg(canonicalPath, QString::number(file.error()),
+                                                      file.errorString())));
             } else {
-                Q_ASSERT(false);
+                code = QString::fromUtf8(file.readAll());
+                file.close();
             }
         }
-
-        for (auto it = messages.begin(), end = messages.end(); it != end; ++it)
-            newValue.addError(std::move(*it));
-        messages.clear();
-
-        // to do: tell observers?
-        // execute callback
-        if (t.callback) {
-            Path p;
-            if (t.kind == DomType::QmlFile)
-                p = Paths::qmlFileInfoPath(canonicalPath);
-            else if (t.kind == DomType::QmltypesFile)
-                p = Paths::qmltypesFileInfoPath(canonicalPath);
-            else if (t.kind == DomType::QmldirFile)
-                p = Paths::qmldirFileInfoPath(canonicalPath);
-            else if (t.kind == DomType::QmlDirectory)
-                p = Paths::qmlDirectoryInfoPath(canonicalPath);
-            else if (t.kind == DomType::JsFile)
-                p = Paths::jsFileInfoPath(canonicalPath);
-            else
-                Q_ASSERT(false);
-            t.callback(p, oldValue, newValue);
+    }
+    if (!skipParse) {
+        QMutexLocker l(mutex());
+        if (auto value = getValue()) {
+            QString oldCode = value->currentItem()->code();
+            if (value && value->currentItem() && !oldCode.isNull() && oldCode == code) {
+                skipParse = true;
+                newValue = oldValue = univ.copy(value);
+                if (value->currentItem()->lastDataUpdateAt() < contentDate)
+                    value->currentItem()->refreshedDataAt(contentDate);
+            }
         }
-    } else {
-        Q_ASSERT(false && "Unhandled kind in queue");
+    }
+    if (!skipParse) {
+        QDateTime now(QDateTime::currentDateTimeUtc());
+        if (fType == DomType::QmlFile) {
+            auto qmlFile = std::make_shared<QmlFile>(canonicalPath, code, contentDate, 0,
+                                                     file.options().testFlag(WithRecovery)
+                                                             ? QmlFile::EnableParserRecovery
+                                                             : QmlFile::DisableParserRecovery);
+            std::shared_ptr<DomEnvironment> envPtr;
+            if (auto ptr = file.environment().lock())
+                envPtr = std::move(ptr);
+            else
+                envPtr = std::make_shared<DomEnvironment>(
+                        QStringList(), DomEnvironment::Option::NoDependencies, shared_from_this());
+            envPtr->addQmlFile(qmlFile);
+            DomItem env(envPtr);
+            if (qmlFile->isValid()) {
+                createDom(MutableDomItem(env.copy(qmlFile)), file.options());
+            } else {
+                QString errs;
+                DomItem qmlFileObj = env.copy(qmlFile);
+                qmlFile->iterateErrors(qmlFileObj, [&errs](const DomItem &, const ErrorMessage &m) {
+                    errs += m.toString();
+                    errs += u"\n";
+                    return true;
+                });
+                qCWarning(domLog).noquote().nospace()
+                        << "Parsed invalid file " << canonicalPath << errs;
+            }
+            auto change = updateEntry<QmlFile>(univ, qmlFile, m_qmlFileWithPath, mutex());
+            oldValue = univ.copy(change.first);
+            newValue = univ.copy(change.second);
+        } else if (fType == DomType::QmltypesFile) {
+            auto qmltypesFile = std::make_shared<QmltypesFile>(canonicalPath, code, contentDate);
+            QmltypesReader reader(univ.copy(qmltypesFile));
+            reader.parse();
+            auto change =
+                    updateEntry<QmltypesFile>(univ, qmltypesFile, m_qmltypesFileWithPath, mutex());
+            oldValue = univ.copy(change.first);
+            newValue = univ.copy(change.second);
+        } else if (fType == DomType::QmldirFile) {
+            shared_ptr<QmldirFile> qmldirFile = QmldirFile::fromPathAndCode(canonicalPath, code);
+            auto change = updateEntry<QmldirFile>(univ, qmldirFile, m_qmldirFileWithPath, mutex());
+            oldValue = univ.copy(change.first);
+            newValue = univ.copy(change.second);
+        } else if (fType == DomType::QmlDirectory) {
+            auto qmlDirectory = std::make_shared<QmlDirectory>(
+                    canonicalPath, code.split(QLatin1Char('\n')), contentDate);
+            auto change =
+                    updateEntry<QmlDirectory>(univ, qmlDirectory, m_qmlDirectoryWithPath, mutex());
+            oldValue = univ.copy(change.first);
+            newValue = univ.copy(change.second);
+        } else if (fType == DomType::JsFile) {
+            // WATCH OUT!
+            // DOM construction for plain JS files is not yet supported
+            // Only parsing of the file
+            // and adding ExternalItem to the Environment will happen here
+
+            auto jsFile = std::make_shared<JsFile>(canonicalPath, code, contentDate);
+            std::shared_ptr<DomEnvironment> envPtr;
+            if (auto ptr = file.environment().lock())
+                envPtr = std::move(ptr);
+            else
+                envPtr = std::make_shared<DomEnvironment>(
+                        QStringList(), DomEnvironment::Option::NoDependencies, shared_from_this());
+            envPtr->addJsFile(jsFile);
+            DomItem env(envPtr);
+            if (!jsFile->isValid()) {
+                QString errs;
+                DomItem qmlFileObj = env.copy(jsFile);
+                jsFile->iterateErrors(qmlFileObj, [&errs](const DomItem &, const ErrorMessage &m) {
+                    errs += m.toString();
+                    errs += u"\n";
+                    return true;
+                });
+                qCWarning(domLog).noquote().nospace()
+                        << "Parsed invalid file " << canonicalPath << errs;
+            }
+            auto change = updateEntry<JsFile>(univ, jsFile, m_jsFileWithPath, mutex());
+            oldValue = univ.copy(change.first);
+            newValue = univ.copy(change.second);
+        } else {
+            Q_ASSERT(false);
+        }
+    }
+
+    for (auto it = messages.begin(), end = messages.end(); it != end; ++it)
+        newValue.addError(std::move(*it));
+    messages.clear();
+
+    // to do: tell observers?
+    // execute callback
+    if (callback) {
+        Path p;
+        if (fType == DomType::QmlFile)
+            p = Paths::qmlFileInfoPath(canonicalPath);
+        else if (fType == DomType::QmltypesFile)
+            p = Paths::qmltypesFileInfoPath(canonicalPath);
+        else if (fType == DomType::QmldirFile)
+            p = Paths::qmldirFileInfoPath(canonicalPath);
+        else if (fType == DomType::QmlDirectory)
+            p = Paths::qmlDirectoryInfoPath(canonicalPath);
+        else if (fType == DomType::JsFile)
+            p = Paths::jsFileInfoPath(canonicalPath);
+        else
+            Q_ASSERT(false);
+        callback(p, oldValue, newValue);
     }
 }
 

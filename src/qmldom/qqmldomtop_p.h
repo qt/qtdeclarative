@@ -36,33 +36,6 @@ using namespace Qt::Literals::StringLiterals;
 namespace QQmlJS {
 namespace Dom {
 
-class QMLDOM_EXPORT ParsingTask
-{
-public:
-    QCborMap toCbor() const
-    {
-        return QCborMap({ { QString::fromUtf16(Fields::requestedAt), QCborValue(requestedAt) },
-                          { QString::fromUtf16(Fields::loadOptions), int(loadOptions) },
-                          { QString::fromUtf16(Fields::kind), int(kind) },
-                          { QString::fromUtf16(Fields::canonicalPath), file.canonicalPath() },
-                          { QString::fromUtf16(Fields::logicalPath), file.logicalPath() },
-                          { QString::fromUtf16(Fields::contents),
-                            file.content() ? file.content()->data : QString() },
-                          { QString::fromUtf16(Fields::contentsDate),
-                            QCborValue(file.content() ? file.content()->date
-                                                      : QDateTime::fromMSecsSinceEpoch(
-                                                              0, QTimeZone::UTC)) },
-                          { QString::fromUtf16(Fields::hasCallback), bool(callback) } });
-    }
-
-    QDateTime requestedAt;
-    LoadOptions loadOptions;
-    DomType kind;
-    FileToLoad file;
-    std::weak_ptr<DomUniverse> requestingUniverse; // make it a shared_ptr?
-    function<void(Path, const DomItem &, const DomItem &)> callback;
-};
-
 class QMLDOM_EXPORT ExternalItemPairBase: public OwningItem { // all access should have the lock of the DomUniverse containing this
     Q_DECLARE_TR_FUNCTIONS(ExternalItemPairBase);
 public:
@@ -226,7 +199,7 @@ public:
 
     void loadFile(const FileToLoad &file, Callback callback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>());
-    void parse(ParsingTask t);
+    void parse(const FileToLoad &file, DomType fType, LoadOptions loadOptions, Callback callback);
 
     void removePath(const QString &dir);
 
