@@ -335,6 +335,9 @@ void QQuickAnimatedImage::load()
             movieRequestFinished();
         } else {
 #if QT_CONFIG(qml_network)
+            if (d->reply)
+                return;
+
             d->setStatus(Loading);
             d->setProgress(0);
             QNetworkRequest req(d->url);
@@ -368,7 +371,16 @@ void QQuickAnimatedImage::movieRequestFinished()
         }
 
         d->redirectCount=0;
-        d->setMovie(new QMovie(d->reply));
+
+        auto movie = new QMovie(d->reply);
+        // From this point, we no longer need to handle the reply.
+        // I.e. it will be used only as a data source for QMovie,
+        // so it should live as long as the movie lives.
+        d->reply->disconnect(this);
+        d->reply->setParent(movie);
+        d->reply = nullptr;
+
+        d->setMovie(movie);
     }
 #endif
 
