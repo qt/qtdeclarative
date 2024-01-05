@@ -143,6 +143,7 @@ set(qml_files
     hidden/Main.qml
     hidden/Style.qml
     idAccess.qml
+    ignoredFunctionReturn.qml
     immediateQuit.qml
     imports/QmlBench/Globals.qml
     importsFromImportPath.qml

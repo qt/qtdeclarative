@@ -3024,13 +3024,15 @@ void QObjectMethod::callInternalWithMetaTypes(
             // (if it's destructible).
             QObject *qobjectPtr = nullptr;
             const QMetaType resultType = method->propType();
-            if (resultType.flags() & QMetaType::PointerToQObject) {
-                qobjectPtr = *static_cast<QObject **>(argv[0]);
-            } else if (resultType == QMetaType::fromType<QVariant>()) {
-                const QVariant *result = static_cast<const QVariant *>(argv[0]);
-                const QMetaType variantType = result->metaType();
-                if (variantType.flags() & QMetaType::PointerToQObject)
-                    qobjectPtr = *static_cast<QObject *const *>(result->data());
+            if (argv[0]) {
+                if (resultType.flags() & QMetaType::PointerToQObject) {
+                    qobjectPtr = *static_cast<QObject **>(argv[0]);
+                } else if (resultType == QMetaType::fromType<QVariant>()) {
+                    const QVariant *result = static_cast<const QVariant *>(argv[0]);
+                    const QMetaType variantType = result->metaType();
+                    if (variantType.flags() & QMetaType::PointerToQObject)
+                        qobjectPtr = *static_cast<QObject *const *>(result->data());
+                }
             }
 
             if (qobjectPtr) {
