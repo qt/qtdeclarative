@@ -315,21 +315,6 @@ void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadO
     DomItem univ = DomItem(shared_from_this());
     QVector<ErrorMessage> errors;
 
-    auto getValue = [fType, this, &canonicalPath]() -> std::shared_ptr<ExternalItemPairBase> {
-        if (fType == DomType::QmlFile)
-            return m_qmlFileWithPath.value(canonicalPath);
-        else if (fType == DomType::QmltypesFile)
-            return m_qmlFileWithPath.value(canonicalPath);
-        else if (fType == DomType::QmldirFile)
-            return m_qmlFileWithPath.value(canonicalPath);
-        else if (fType == DomType::QmlDirectory)
-            return m_qmlDirectoryWithPath.value(canonicalPath);
-        else if (fType == DomType::JsFile)
-            return m_jsFileWithPath.value(canonicalPath);
-        else
-            Q_ASSERT(false);
-        return {};
-    };
     if (code.isEmpty()) {
         QFile file(canonicalPath);
         QFileInfo path(canonicalPath);
@@ -338,8 +323,14 @@ void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadO
             skipParse = true; // nothing to parse from the non-existing path
         }
         {
+            // This check is for the purpose of verifying whether the Universe has "lastModified"
+            // version of the ExtItemPair->current
+            // Mutex is being helpful here to guarantee that there are no changes
+            // done on the Value and CurrentItem during the checks.
+            // This is to sync this piece, piece on the line 355 and updateEntry method,
+            // where the update of the timestamp or the data might happen
             QMutexLocker l(mutex());
-            auto value = getValue();
+            auto value = getPathValueOrNull(fType, canonicalPath);
             if (!(loadOptions & LoadOption::ForceLoad) && value) {
                 // use value also when its path is non-existing
                 if (value && value->currentItem()
@@ -355,8 +346,13 @@ void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadO
         }
     }
     if (!skipParse) {
+        // This section is here to check whether the value (if present) has the most
+        // up-to-date content of the ExtItemPair->current and if so upd the timestamp.
+        // Mutex is being helpful here to guarantee that there are no changes
+        // done on the Value and CurrentItem during the checks.
+        // This is to sync this piece and updateEntry method, where the upd might happen
         QMutexLocker l(mutex());
-        if (auto value = getValue()) {
+        if (auto value = getPathValueOrNull(fType, canonicalPath)) {
             QString oldCode = value->currentItem()->code();
             if (value && value->currentItem() && !oldCode.isNull() && oldCode == code) {
                 skipParse = true;
@@ -526,6 +522,31 @@ std::shared_ptr<JsFile> DomUniverse::parseJsFile(const QString &code, const File
                 << "Parsed invalid file " << file.canonicalPath() << errs;
     }
     return jsFile;
+}
+
+/*!
+    \internal
+    Queries the corresponding path map attempting to get the value
+    *WARNING* Usage of this function should be protected by the read lock
+ */
+std::shared_ptr<ExternalItemPairBase> DomUniverse::getPathValueOrNull(DomType fType,
+                                                                      const QString &path)
+{
+    switch (fType) {
+    case DomType::QmlFile:
+        return m_qmlFileWithPath.value(path);
+    case DomType::QmltypesFile:
+        return m_qmltypesFileWithPath.value(path);
+    case DomType::QmldirFile:
+        return m_qmldirFileWithPath.value(path);
+    case DomType::QmlDirectory:
+        return m_qmlDirectoryWithPath.value(path);
+    case DomType::JsFile:
+        return m_jsFileWithPath.value(path);
+    default:
+        Q_ASSERT(false);
+    }
+    return nullptr;
 }
 
 std::shared_ptr<OwningItem> LoadInfo::doCopy(const DomItem &self) const

@@ -320,7 +320,7 @@ private:
                                           const QDateTime &contentDate);
     std::shared_ptr<JsFile> parseJsFile(const QString &code, const FileToLoad &file,
                                         const QDateTime &contentDate);
-
+    std::shared_ptr<ExternalItemPairBase> getPathValueOrNull(DomType fType, const QString &path);
 private:
     QString m_name;
     QMap<QString, std::shared_ptr<ExternalItemPair<GlobalScope>>> m_globalScopeWithName;
