@@ -111,6 +111,7 @@ private slots:
     void getOptionalLookup_data();
     void globals();
     void idAccess();
+    void ignoredFunctionReturn();
     void importsFromImportPath();
     void inPlaceDecrement();
     void inaccessibleProperty();
@@ -2140,6 +2141,15 @@ void tst_QmlCppCodegen::idAccess()
     QObject *ttt = qmlContext(object.data())->objectForName(u"ttt"_s);
     QFont f = qvariant_cast<QFont>(ttt->property("font"));
     QCOMPARE(f.pointSize(), 22);
+}
+
+void tst_QmlCppCodegen::ignoredFunctionReturn()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/ignoredFunctionReturn.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
 }
 
 void tst_QmlCppCodegen::importsFromImportPath()
