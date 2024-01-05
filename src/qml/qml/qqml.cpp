@@ -1982,8 +1982,12 @@ static void initTypeWrapperLookup(
     if (importNamespace != AOTCompiledContext::InvalidStringId) {
         QV4::Scope scope(context->engine->handle());
         QV4::ScopedString import(scope, context->compilationUnit->runtimeStrings[importNamespace]);
+
+        QQmlTypeLoader *typeLoader = scope.engine->typeLoader();
+        Q_ASSERT(typeLoader);
         if (const QQmlImportRef *importRef
-                = context->qmlContext->imports()->query(import).importNamespace) {
+                = context->qmlContext->imports()->query(import, typeLoader).importNamespace) {
+
             QV4::Scoped<QV4::QQmlTypeWrapper> wrapper(
                         scope, QV4::QQmlTypeWrapper::create(
                             scope.engine, nullptr, context->qmlContext->imports(), importRef));
@@ -2042,12 +2046,16 @@ void AOTCompiledContext::initLoadAttachedLookup(
     QV4::ScopedString name(scope, compilationUnit->runtimeStrings[l->nameIndex]);
 
     QQmlType type;
+    QQmlTypeLoader *typeLoader = scope.engine->typeLoader();
+    Q_ASSERT(typeLoader);
     if (importNamespace != InvalidStringId) {
         QV4::ScopedString import(scope, compilationUnit->runtimeStrings[importNamespace]);
-        if (const QQmlImportRef *importRef = qmlContext->imports()->query(import).importNamespace)
-            type = qmlContext->imports()->query(name, importRef).type;
+        if (const QQmlImportRef *importRef
+                = qmlContext->imports()->query(import, typeLoader).importNamespace) {
+            type = qmlContext->imports()->query(name, importRef, typeLoader).type;
+        }
     } else {
-        type = qmlContext->imports()->query<QQmlImport::AllowRecursion>(name).type;
+        type = qmlContext->imports()->query<QQmlImport::AllowRecursion>(name, typeLoader).type;
     }
 
     if (!type.isValid()) {

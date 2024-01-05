@@ -2134,9 +2134,8 @@ LoadHelper::ResolveTypeResult LoadHelper::resolveType(QAnyStringView typeName)
     QTypeRevision versionReturn;
     QList<QQmlError> errors;
     QQmlImportNamespace *ns_return = nullptr;
-    m_importCache->resolveType(typeName.toString(), &type, &versionReturn,
-                               &ns_return,
-                               &errors);
+    m_importCache->resolveType(
+            typeLoader(), typeName.toString(), &type, &versionReturn, &ns_return, &errors);
     return {ResolveTypeResult::ModuleFound, type};
 }
 

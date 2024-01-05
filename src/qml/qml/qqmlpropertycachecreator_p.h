@@ -364,8 +364,9 @@ inline QQmlPropertyCache::ConstPtr QQmlPropertyCacheCreator<ObjectContainer>::pr
             Q_ASSERT(typeRef);
             QQmlType qmltype = typeRef->type();
             if (!qmltype.isValid()) {
-                imports->resolveType(stringAt(binding->propertyNameIndex),
-                                     &qmltype, nullptr, nullptr, nullptr);
+                imports->resolveType(
+                        QQmlTypeLoader::get(enginePrivate), stringAt(binding->propertyNameIndex),
+                        &qmltype, nullptr, nullptr);
             }
 
             const QMetaObject *attachedMo = qmltype.attachedPropertiesType(enginePrivate);
@@ -666,8 +667,9 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
             QQmlType qmltype;
             bool selfReference = false;
             if (!imports->resolveType(
-                    stringAt(p->commonTypeOrTypeNameIndex()), &qmltype, nullptr, nullptr,
-                    nullptr, QQmlType::AnyRegistrationType, &selfReference)) {
+                        QQmlTypeLoader::get(enginePrivate),
+                        stringAt(p->commonTypeOrTypeNameIndex()), &qmltype, nullptr, nullptr,
+                        nullptr, QQmlType::AnyRegistrationType, &selfReference)) {
                 return qQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Invalid property type"));
             }
 
@@ -749,8 +751,9 @@ inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter
         *customTypeName = typeName;
     QQmlType qmltype;
     bool selfReference = false;
-    if (!imports->resolveType(typeName, &qmltype, nullptr, nullptr, nullptr,
-                              QQmlType::AnyRegistrationType, &selfReference))
+    if (!imports->resolveType(
+                &enginePrivate->typeLoader, typeName, &qmltype, nullptr, nullptr, nullptr,
+                QQmlType::AnyRegistrationType, &selfReference))
         return QMetaType();
 
     if (!qmltype.isComposite()) {

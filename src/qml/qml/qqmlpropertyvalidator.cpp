@@ -201,7 +201,8 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
             QQmlType type;
             QQmlImportNamespace *typeNamespace = nullptr;
             imports->resolveType(
-                        stringAt(binding->propertyNameIndex), &type, nullptr, &typeNamespace);
+                    QQmlTypeLoader::get(enginePrivate), stringAt(binding->propertyNameIndex),
+                    &type, nullptr, &typeNamespace);
             if (typeNamespace)
                 return recordError(binding->location, tr("Invalid use of namespace"));
             return recordError(binding->location, tr("Invalid attached object assignment"));

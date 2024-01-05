@@ -421,24 +421,29 @@ static OptionalReturnedValue getPropertyFromImports(
     if (!qmlContext || !qmlContext->imports())
         return OptionalReturnedValue();
 
-    QQmlTypeNameCache::Result r = qmlContext->imports()->query(name);
-
     if (hasProperty)
         *hasProperty = true;
 
-    if (!r.isValid())
-        return OptionalReturnedValue();
+    if (QQmlTypeLoader *typeLoader = v4->typeLoader()) {
+        QQmlTypeNameCache::Result r = qmlContext->imports()->query(name, typeLoader);
 
-    if (r.scriptIndex != -1) {
-        return OptionalReturnedValue(Encode::undefined());
-    } else if (r.type.isValid()) {
-        return OptionalReturnedValue(QQmlTypeWrapper::create(v4, qobj,r.type, Heap::QQmlTypeWrapper::ExcludeEnums));
-    } else if (r.importNamespace) {
-        return OptionalReturnedValue(QQmlTypeWrapper::create(
-                                         v4, qobj, qmlContext->imports(), r.importNamespace,
-                                         Heap::QQmlTypeWrapper::ExcludeEnums));
+        if (!r.isValid())
+            return OptionalReturnedValue();
+
+        if (r.scriptIndex != -1) {
+            return OptionalReturnedValue(Encode::undefined());
+        } else if (r.type.isValid()) {
+            return OptionalReturnedValue(
+                    QQmlTypeWrapper::create(v4, qobj,r.type, Heap::QQmlTypeWrapper::ExcludeEnums));
+        } else if (r.importNamespace) {
+            return OptionalReturnedValue(QQmlTypeWrapper::create(
+                    v4, qobj, qmlContext->imports(), r.importNamespace,
+                    Heap::QQmlTypeWrapper::ExcludeEnums));
+        }
+        Q_UNREACHABLE_RETURN(OptionalReturnedValue());
+    } else {
+        return OptionalReturnedValue();
     }
-    Q_UNREACHABLE_RETURN(OptionalReturnedValue());
 }
 
 ReturnedValue QObjectWrapper::getQmlProperty(

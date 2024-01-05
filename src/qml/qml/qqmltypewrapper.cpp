@@ -192,14 +192,15 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
     QObject *object = w->d()->object;
     QQmlType type = w->d()->type();
 
+    QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(v4->qmlEngine());
     if (type.isValid()) {
 
         // singleton types are handled differently to other types.
         if (type.isSingleton()) {
-            QQmlEnginePrivate *e = QQmlEnginePrivate::get(v4->qmlEngine());
+
             QJSValue scriptSingleton;
             if (type.isQObjectSingleton() || type.isCompositeSingleton()) {
-                if (QObject *qobjectSingleton = e->singletonInstance<QObject*>(type)) {
+                if (QObject *qobjectSingleton = enginePrivate->singletonInstance<QObject*>(type)) {
                     // check for enum value
                     const bool includeEnums = w->d()->mode == Heap::QQmlTypeWrapper::IncludeEnums;
                     if (includeEnums && name->startsWithUpper()) {
@@ -208,7 +209,7 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
                         if (ok)
                             return QV4::Value::fromInt32(value).asReturnedValue();
 
-                        value = type.scopedEnumIndex(QQmlEnginePrivate::get(v4->qmlEngine()), name, &ok);
+                        value = type.scopedEnumIndex(enginePrivate, name, &ok);
                         if (ok) {
                             Scoped<QQmlScopedEnumWrapper> enumWrapper(scope, v4->memoryManager->allocate<QQmlScopedEnumWrapper>());
                             enumWrapper->d()->typePrivate = type.priv();
@@ -229,7 +230,7 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
                     return result;
                 }
             } else if (type.isQJSValueSingleton()) {
-                QJSValue scriptSingleton = e->singletonInstance<QJSValue>(type);
+                QJSValue scriptSingleton = enginePrivate->singletonInstance<QJSValue>(type);
                 if (!scriptSingleton.isUndefined()) {
                     // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
                     QV4::ScopedObject o(scope, QJSValuePrivate::asReturnedValue(&scriptSingleton));
@@ -244,11 +245,11 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
 
             if (name->startsWithUpper()) {
                 bool ok = false;
-                int value = type.enumValue(QQmlEnginePrivate::get(v4->qmlEngine()), name, &ok);
+                int value = type.enumValue(enginePrivate, name, &ok);
                 if (ok)
                     return QV4::Value::fromInt32(value).asReturnedValue();
 
-                value = type.scopedEnumIndex(QQmlEnginePrivate::get(v4->qmlEngine()), name, &ok);
+                value = type.scopedEnumIndex(enginePrivate, name, &ok);
                 if (ok) {
                     Scoped<QQmlScopedEnumWrapper> enumWrapper(scope, v4->memoryManager->allocate<QQmlScopedEnumWrapper>());
                     enumWrapper->d()->typePrivate = type.priv();
@@ -278,7 +279,8 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
 
     } else if (w->d()->typeNamespace) {
         Q_ASSERT(w->d()->importNamespace);
-        QQmlTypeNameCache::Result r = w->d()->typeNamespace->query(name, w->d()->importNamespace);
+        QQmlTypeNameCache::Result r = w->d()->typeNamespace->query(
+                name, w->d()->importNamespace, QQmlTypeLoader::get(enginePrivate));
 
         if (r.isValid()) {
             if (r.type.isValid()) {

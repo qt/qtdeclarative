@@ -780,14 +780,16 @@ void QQmlBindPrivate::decodeBinding(
             Q_ASSERT(typeReference);
             QQmlType attachedType = typeReference->type();
             if (!attachedType.isValid()) {
-                const QQmlTypeNameCache::Result result
-                        = deferredData->context->imports()->query(propertySuffix);
-                if (!result.isValid()) {
-                    qmlWarning(q).nospace()
-                            << "Unknown name " << propertySuffix << ". The binding is ignored.";
-                    return;
+                if (QQmlTypeLoader *typeLoader = compilationUnit->engine->typeLoader()) {
+                    const QQmlTypeNameCache::Result result
+                            = deferredData->context->imports()->query(propertySuffix, typeLoader);
+                    if (!result.isValid()) {
+                        qmlWarning(q).nospace()
+                                << "Unknown name " << propertySuffix << ". The binding is ignored.";
+                        return;
+                    }
+                    attachedType = result.type;
                 }
-                attachedType = result.type;
             }
 
             QQmlContext *context = qmlContext(q);

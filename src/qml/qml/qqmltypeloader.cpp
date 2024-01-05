@@ -455,7 +455,7 @@ QQmlTypeLoader::Blob::PendingImport::PendingImport(
 
 QQmlTypeLoader::Blob::Blob(const QUrl &url, QQmlDataBlob::Type type, QQmlTypeLoader *loader)
   : QQmlDataBlob(url, type, loader)
-  , m_importCache(new QQmlImports(loader), QQmlRefPointer<QQmlImports>::Adopt)
+  , m_importCache(new QQmlImports(), QQmlRefPointer<QQmlImports>::Adopt)
 {
 }
 
@@ -530,8 +530,7 @@ bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &da
     typeLoader()->setQmldirContent(qmldirIdentifier, data->content());
 
     const QTypeRevision version = m_importCache->updateQmldirContent(
-                typeLoader()->importDatabase(), import->uri, import->qualifier, qmldirIdentifier,
-                qmldirUrl, errors);
+            typeLoader(), import->uri, import->qualifier, qmldirIdentifier, qmldirUrl, errors);
     if (!version.isValid())
         return false;
 
@@ -567,7 +566,6 @@ bool QQmlTypeLoader::Blob::addScriptImport(const QQmlTypeLoader::Blob::PendingIm
 
 bool QQmlTypeLoader::Blob::addFileImport(const QQmlTypeLoader::Blob::PendingImportPtr &import, QList<QQmlError> *errors)
 {
-    QQmlImportDatabase *importDatabase = typeLoader()->importDatabase();
     QQmlImports::ImportFlags flags;
 
     QUrl importUrl(import->uri);
@@ -581,8 +579,8 @@ bool QQmlTypeLoader::Blob::addFileImport(const QQmlTypeLoader::Blob::PendingImpo
     }
 
     const QTypeRevision version = m_importCache->addFileImport(
-                importDatabase, import->uri, import->qualifier, import->version, flags,
-                import->precedence, nullptr, errors);
+            typeLoader(), import->uri, import->qualifier, import->version, flags,
+            import->precedence, nullptr, errors);
     if (!version.isValid())
         return false;
 
@@ -619,9 +617,8 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
                 [&](const QString &qmldirFilePath, const QString &qmldirUrl) {
         // This is a local library import
         const QTypeRevision actualVersion = m_importCache->addLibraryImport(
-                    importDatabase, import->uri, import->qualifier,
-                    import->version, qmldirFilePath, qmldirUrl, import->flags, import->precedence,
-                    errors);
+                typeLoader(), import->uri, import->qualifier, import->version, qmldirFilePath,
+                qmldirUrl, import->flags, import->precedence, errors);
         if (!actualVersion.isValid())
             return false;
 
@@ -679,8 +676,8 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
             || QQmlMetaType::latestModuleVersion(import->uri).isValid())) {
 
         if (!m_importCache->addLibraryImport(
-                    importDatabase, import->uri, import->qualifier, import->version,
-                    QString(), QString(), import->flags, import->precedence, errors).isValid()) {
+                    typeLoader(), import->uri, import->qualifier, import->version, QString(),
+                    QString(), import->flags, import->precedence, errors).isValid()) {
             return false;
         }
     } else {
@@ -699,9 +696,9 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
         if (!remotePathList.isEmpty()) {
             // Add this library and request the possible locations for it
             const QTypeRevision version = m_importCache->addLibraryImport(
-                        importDatabase, import->uri, import->qualifier, import->version,
-                        QString(), QString(), import->flags | QQmlImports::ImportIncomplete,
-                        import->precedence, errors);
+                    typeLoader(), import->uri, import->qualifier, import->version, QString(),
+                    QString(), import->flags | QQmlImports::ImportIncomplete, import->precedence,
+                    errors);
 
             if (!version.isValid())
                 return false;

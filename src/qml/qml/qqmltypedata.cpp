@@ -588,13 +588,12 @@ bool QQmlTypeData::loadImplicitImport()
 
     m_importCache->setBaseUrl(finalUrl(), finalUrlString());
 
-    QQmlImportDatabase *importDatabase = typeLoader()->importDatabase();
     // For local urls, add an implicit import "." as most overridden lookup.
     // This will also trigger the loading of the qmldir and the import of any native
     // types from available plugins.
     QList<QQmlError> implicitImportErrors;
     QString localQmldir;
-    m_importCache->addImplicitImport(importDatabase, &localQmldir, &implicitImportErrors);
+    m_importCache->addImplicitImport(typeLoader(), &localQmldir, &implicitImportErrors);
 
     // When loading with QQmlImports::ImportImplicit, the imports are _appended_ to the namespace
     // in the order they are loaded. Therefore, the addImplicitImport above gets the highest
@@ -1039,17 +1038,17 @@ bool QQmlTypeData::resolveType(const QString &typeName, QTypeRevision &version,
     QQmlImportNamespace *typeNamespace = nullptr;
     QList<QQmlError> errors;
 
-    bool typeFound = m_importCache->resolveType(typeName, &ref.type, &version,
-                                                &typeNamespace, &errors, registrationType,
-                                                typeRecursionDetected);
+    bool typeFound = m_importCache->resolveType(
+            typeLoader(), typeName, &ref.type, &version, &typeNamespace, &errors, registrationType,
+            typeRecursionDetected);
     if (!typeNamespace && !typeFound && !m_implicitImportLoaded) {
         // Lazy loading of implicit import
         if (loadImplicitImport()) {
             // Try again to find the type
             errors.clear();
-            typeFound = m_importCache->resolveType(typeName, &ref.type, &version,
-                                                   &typeNamespace, &errors, registrationType,
-                                                   typeRecursionDetected);
+            typeFound = m_importCache->resolveType(
+                    typeLoader(), typeName, &ref.type, &version, &typeNamespace, &errors,
+                    registrationType, typeRecursionDetected);
         } else {
             return false; //loadImplicitImport() hit an error, and called setError already
         }

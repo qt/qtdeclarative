@@ -109,6 +109,7 @@ class QQmlError;
 class QJSEngine;
 class QQmlEngine;
 class QQmlContextData;
+class QQmlTypeLoader;
 
 namespace QV4 {
 namespace Debugging {
@@ -172,6 +173,14 @@ public:
     QJSEngine *jsEngine() const { return publicEngine; }
     QQmlEngine *qmlEngine() const { return m_qmlEngine; }
     QJSEngine *publicEngine;
+
+    template<typename TypeLoader = QQmlTypeLoader>
+    TypeLoader *typeLoader()
+    {
+        if (m_qmlEngine)
+            return TypeLoader::get(m_qmlEngine);
+        return nullptr;
+    }
 
     enum JSObjects {
         RootContext,

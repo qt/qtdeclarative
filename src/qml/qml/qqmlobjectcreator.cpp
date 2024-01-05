@@ -788,16 +788,17 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         QV4::ResolvedTypeReference *tr = resolvedType(binding->propertyNameIndex);
         Q_ASSERT(tr);
         QQmlType attachedType = tr->type();
+        QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
         if (!attachedType.isValid()) {
             QQmlTypeNameCache::Result res = context->imports()->query(
-                        stringAt(binding->propertyNameIndex));
+                    stringAt(binding->propertyNameIndex), QQmlTypeLoader::get(enginePrivate));
             if (res.isValid())
                 attachedType = res.type;
             else
                 return false;
         }
         QObject *qmlObject = qmlAttachedPropertiesObject(
-                _qobject, attachedType.attachedPropertiesFunction(QQmlEnginePrivate::get(engine)));
+                _qobject, attachedType.attachedPropertiesFunction(enginePrivate));
         if (!qmlObject) {
             recordError(binding->location,
                         QStringLiteral("Could not create attached properties object '%1'")

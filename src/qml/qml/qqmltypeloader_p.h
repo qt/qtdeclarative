@@ -122,6 +122,23 @@ public:
     QQmlTypeLoader(QQmlEngine *);
     ~QQmlTypeLoader();
 
+    template<
+            typename Engine,
+            typename EnginePrivate = QQmlEnginePrivate,
+            typename = std::enable_if_t<std::is_same_v<Engine, QQmlEngine>>>
+    static QQmlTypeLoader *get(Engine *engine)
+    {
+        return get(EnginePrivate::get(engine));
+    }
+
+    template<
+            typename Engine,
+            typename = std::enable_if_t<std::is_same_v<Engine, QQmlEnginePrivate>>>
+    static QQmlTypeLoader *get(Engine *engine)
+    {
+        return &engine->typeLoader;
+    }
+
     QQmlImportDatabase *importDatabase() const;
     ChecksumCache *checksumCache() { return &m_checksumCache; }
     const ChecksumCache *checksumCache() const { return &m_checksumCache; }

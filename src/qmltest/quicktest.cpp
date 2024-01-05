@@ -287,7 +287,7 @@ class TestCaseCollector
 public:
     typedef QList<QString> TestCaseList;
 
-    TestCaseCollector(const QFileInfo &fileInfo, QQmlEngine *engine)
+    TestCaseCollector(const QFileInfo &fileInfo, QQmlEngine *engine) : m_engine(engine)
     {
         QString path = fileInfo.absoluteFilePath();
         if (path.startsWith(QLatin1String(":/")))
@@ -311,6 +311,7 @@ public:
 private:
     TestCaseList m_testCases;
     QList<QQmlError> m_errors;
+    QQmlEngine *m_engine = nullptr;
 
     struct TestCaseEnumerationResult
     {
@@ -353,7 +354,8 @@ private:
             if (!typeQualifier.isEmpty())
                 testCaseTypeName = typeQualifier % QLatin1Char('.') % testCaseTypeName;
 
-            testCaseType = compilationUnit->typeNameCache->query(testCaseTypeName).type;
+            testCaseType = compilationUnit->typeNameCache->query(
+                    testCaseTypeName, QQmlTypeLoader::get(m_engine)).type;
             if (testCaseType.isValid())
                 break;
         }
