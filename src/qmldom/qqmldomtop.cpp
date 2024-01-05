@@ -121,9 +121,7 @@ ErrorGroups DomUniverse::myErrors()
     return groups;
 }
 
-DomUniverse::DomUniverse(const QString &universeName, Options options):
-    m_name(universeName), m_options(options)
-{}
+DomUniverse::DomUniverse(const QString &universeName) : m_name(universeName) { }
 
 std::shared_ptr<DomUniverse> DomUniverse::guaranteeUniverse(
         const std::shared_ptr<DomUniverse> &univ)
@@ -139,9 +137,9 @@ std::shared_ptr<DomUniverse> DomUniverse::guaranteeUniverse(
             QLatin1String("universe") + QString::number(next()));
 }
 
-DomItem DomUniverse::create(const QString &universeName, Options options)
+DomItem DomUniverse::create(const QString &universeName)
 {
-    auto res = std::make_shared<DomUniverse>(universeName, options);
+    auto res = std::make_shared<DomUniverse>(universeName);
     return DomItem(res);
 }
 
@@ -155,7 +153,6 @@ bool DomUniverse::iterateDirectSubpaths(const DomItem &self, DirectVisitor visit
     bool cont = true;
     cont = cont && DomTop::iterateDirectSubpaths(self, visitor);
     cont = cont && self.dvValueField(visitor, Fields::name, name());
-    cont = cont && self.dvValueField(visitor, Fields::options, int(options()));
     cont = cont && self.dvItemField(visitor, Fields::globalScopeWithName, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::globalScopeWithName),
@@ -277,8 +274,7 @@ void DomUniverse::loadFile(const FileToLoad &file, Callback callback, LoadOption
         callback(Path(), DomItem::empty, DomItem::empty);
         return;
     }
-    if (m_options & Option::SingleThreaded)
-        execQueue(); // immediate execution in the same thread
+    execQueue(); // immediate execution in the same thread
 }
 
 template<typename T>

@@ -204,21 +204,15 @@ protected:
     std::shared_ptr<OwningItem> doCopy(const DomItem &self) const override;
 
 public:
-    enum class Option{
-        Default,
-        SingleThreaded
-    };
-    Q_ENUM(Option)
-    Q_DECLARE_FLAGS(Options, Option);
     constexpr static DomType kindValue = DomType::DomUniverse;
     DomType kind() const override {  return kindValue; }
 
     static ErrorGroups myErrors();
 
-    DomUniverse(const QString &universeName, Options options = Option::SingleThreaded);
+    DomUniverse(const QString &universeName);
     DomUniverse(const DomUniverse &) = delete;
     static std::shared_ptr<DomUniverse> guaranteeUniverse(const std::shared_ptr<DomUniverse> &univ);
-    static DomItem create(const QString &universeName, Options options = Option::SingleThreaded);
+    static DomItem create(const QString &universeName);
 
     Path canonicalPath() const override;
     using DomTop::canonicalPath;
@@ -342,17 +336,15 @@ public:
     QString name() const {
         return m_name;
     }
-    Options options() const {
-        return m_options;
-    }
-    QQueue<ParsingTask> queue() const {
+
+    QQueue<ParsingTask> queue() const
+    {
         QMutexLocker l(mutex());
         return m_queue;
     }
 
 private:
     QString m_name;
-    Options m_options;
     QMap<QString, std::shared_ptr<ExternalItemPair<GlobalScope>>> m_globalScopeWithName;
     QMap<QString, std::shared_ptr<ExternalItemPair<QmlDirectory>>> m_qmlDirectoryWithPath;
     QMap<QString, std::shared_ptr<ExternalItemPair<QmldirFile>>> m_qmldirFileWithPath;
@@ -361,8 +353,6 @@ private:
     QMap<QString, std::shared_ptr<ExternalItemPair<QmltypesFile>>> m_qmltypesFileWithPath;
     QQueue<ParsingTask> m_queue;
 };
-
-    Q_DECLARE_OPERATORS_FOR_FLAGS(DomUniverse::Options)
 
 class QMLDOM_EXPORT ExternalItemInfoBase: public OwningItem {
     Q_DECLARE_TR_FUNCTIONS(ExternalItemInfoBase);
