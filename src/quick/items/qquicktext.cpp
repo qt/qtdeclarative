@@ -2725,7 +2725,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 
     node->setColor(QColor::fromRgba(d->color));
     node->setStyleColor(QColor::fromRgba(d->styleColor));
-    node->setAnchorColor(QColor::fromRgba(d->linkColor));
+    node->setLinkColor(QColor::fromRgba(d->linkColor));
 
     if (d->richText) {
         node->setViewport(clipRect());

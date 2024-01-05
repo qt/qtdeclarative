@@ -40,8 +40,8 @@ public:
     virtual void setStyleColor(const QColor &styleColor) = 0;
     virtual QColor styleColor() const = 0;
 
-    virtual void setAnchorColor(const QColor &anchorColor) = 0;
-    virtual QColor anchorColor() const = 0;
+    virtual void setLinkColor(const QColor &linkColor) = 0;
+    virtual QColor linkColor() const = 0;
 
     virtual void setSelectionColor(const QColor &selectionColor) = 0;
     virtual QColor selectionColor() const = 0;

@@ -148,7 +148,7 @@ void QSGInternalTextNode::addTextDocument(const QPointF &position, QTextDocument
     engine.setTextColor(m_color);
     engine.setSelectedTextColor(m_selectionTextColor);
     engine.setSelectionColor(m_selectionColor);
-    engine.setAnchorColor(m_anchorColor);
+    engine.setAnchorColor(m_linkColor);
     engine.setPosition(position);
 
     QList<QTextFrame *> frames;
@@ -177,7 +177,7 @@ void QSGInternalTextNode::addTextDocument(const QPointF &position, QTextDocument
                 Q_ASSERT(!engine.currentLine().isValid());
 
                 QTextBlock block = it.currentBlock();
-                engine.addTextBlock(textDocument, block, position, m_color, m_anchorColor, selectionStart, selectionEnd,
+                engine.addTextBlock(textDocument, block, position, m_color, m_linkColor, selectionStart, selectionEnd,
                                     (textDocument->characterCount() > QQuickTextPrivate::largeTextSizeThreshold ?
                                          m_viewport : QRectF()));
                 ++it;
@@ -196,7 +196,7 @@ void QSGInternalTextNode::addTextLayout(const QPointF &position, QTextLayout *te
     engine.setTextColor(m_color);
     engine.setSelectedTextColor(m_selectionTextColor);
     engine.setSelectionColor(m_selectionColor);
-    engine.setAnchorColor(m_anchorColor);
+    engine.setAnchorColor(m_linkColor);
     engine.setPosition(position);
 
 #if QT_CONFIG(im)
