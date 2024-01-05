@@ -313,6 +313,12 @@ public:
     }
 
 private:
+    std::shared_ptr<QmlFile> parseQmlFile(const QString &code, const FileToLoad &file,
+                                          const QDateTime &contentDate);
+    std::shared_ptr<JsFile> parseJsFile(const QString &code, const FileToLoad &file,
+                                        const QDateTime &contentDate);
+
+private:
     QString m_name;
     QMap<QString, std::shared_ptr<ExternalItemPair<GlobalScope>>> m_globalScopeWithName;
     QMap<QString, std::shared_ptr<ExternalItemPair<QmlDirectory>>> m_qmlDirectoryWithPath;

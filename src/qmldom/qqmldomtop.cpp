@@ -383,31 +383,7 @@ void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadO
     if (!skipParse) {
         QDateTime now(QDateTime::currentDateTimeUtc());
         if (fType == DomType::QmlFile) {
-            auto qmlFile = std::make_shared<QmlFile>(canonicalPath, code, contentDate, 0,
-                                                     file.options().testFlag(WithRecovery)
-                                                             ? QmlFile::EnableParserRecovery
-                                                             : QmlFile::DisableParserRecovery);
-            std::shared_ptr<DomEnvironment> envPtr;
-            if (auto ptr = file.environment().lock())
-                envPtr = std::move(ptr);
-            else
-                envPtr = std::make_shared<DomEnvironment>(
-                        QStringList(), DomEnvironment::Option::NoDependencies, shared_from_this());
-            envPtr->addQmlFile(qmlFile);
-            DomItem env(envPtr);
-            if (qmlFile->isValid()) {
-                createDom(MutableDomItem(env.copy(qmlFile)), file.options());
-            } else {
-                QString errs;
-                DomItem qmlFileObj = env.copy(qmlFile);
-                qmlFile->iterateErrors(qmlFileObj, [&errs](const DomItem &, const ErrorMessage &m) {
-                    errs += m.toString();
-                    errs += u"\n";
-                    return true;
-                });
-                qCWarning(domLog).noquote().nospace()
-                        << "Parsed invalid file " << canonicalPath << errs;
-            }
+            auto qmlFile = parseQmlFile(code, file, contentDate);
             auto change = updateEntry<QmlFile>(univ, qmlFile, m_qmlFileWithPath, mutex());
             oldValue = univ.copy(change.first);
             newValue = univ.copy(change.second);
@@ -432,31 +408,7 @@ void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadO
             oldValue = univ.copy(change.first);
             newValue = univ.copy(change.second);
         } else if (fType == DomType::JsFile) {
-            // WATCH OUT!
-            // DOM construction for plain JS files is not yet supported
-            // Only parsing of the file
-            // and adding ExternalItem to the Environment will happen here
-
-            auto jsFile = std::make_shared<JsFile>(canonicalPath, code, contentDate);
-            std::shared_ptr<DomEnvironment> envPtr;
-            if (auto ptr = file.environment().lock())
-                envPtr = std::move(ptr);
-            else
-                envPtr = std::make_shared<DomEnvironment>(
-                        QStringList(), DomEnvironment::Option::NoDependencies, shared_from_this());
-            envPtr->addJsFile(jsFile);
-            DomItem env(envPtr);
-            if (!jsFile->isValid()) {
-                QString errs;
-                DomItem qmlFileObj = env.copy(jsFile);
-                jsFile->iterateErrors(qmlFileObj, [&errs](const DomItem &, const ErrorMessage &m) {
-                    errs += m.toString();
-                    errs += u"\n";
-                    return true;
-                });
-                qCWarning(domLog).noquote().nospace()
-                        << "Parsed invalid file " << canonicalPath << errs;
-            }
+            auto jsFile = parseJsFile(code, file, contentDate);
             auto change = updateEntry<JsFile>(univ, jsFile, m_jsFileWithPath, mutex());
             oldValue = univ.copy(change.first);
             newValue = univ.copy(change.second);
@@ -501,6 +453,67 @@ void DomUniverse::removePath(const QString &path)
     m_qmlFileWithPath.removeIf(toDelete);
     m_jsFileWithPath.removeIf(toDelete);
     m_qmltypesFileWithPath.removeIf(toDelete);
+}
+
+std::shared_ptr<QmlFile> DomUniverse::parseQmlFile(const QString &code, const FileToLoad &file,
+                                                   const QDateTime &contentDate)
+{
+    auto qmlFile = std::make_shared<QmlFile>(file.canonicalPath(), code, contentDate, 0,
+                                             file.options().testFlag(WithRecovery)
+                                                     ? QmlFile::EnableParserRecovery
+                                                     : QmlFile::DisableParserRecovery);
+    std::shared_ptr<DomEnvironment> envPtr;
+    if (auto ptr = file.environment().lock())
+        envPtr = std::move(ptr);
+    else
+        envPtr = std::make_shared<DomEnvironment>(
+                QStringList(), DomEnvironment::Option::NoDependencies, shared_from_this());
+    envPtr->addQmlFile(qmlFile);
+    DomItem env(envPtr);
+    if (qmlFile->isValid()) {
+        createDom(MutableDomItem(env.copy(qmlFile)), file.options());
+    } else {
+        QString errs;
+        DomItem qmlFileObj = env.copy(qmlFile);
+        qmlFile->iterateErrors(qmlFileObj, [&errs](const DomItem &, const ErrorMessage &m) {
+            errs += m.toString();
+            errs += u"\n";
+            return true;
+        });
+        qCWarning(domLog).noquote().nospace()
+                << "Parsed invalid file " << file.canonicalPath() << errs;
+    }
+    return qmlFile;
+}
+
+std::shared_ptr<JsFile> DomUniverse::parseJsFile(const QString &code, const FileToLoad &file,
+                                                 const QDateTime &contentDate)
+{
+    // WATCH OUT!
+    // DOM construction for plain JS files is not yet supported
+    // Only parsing of the file
+    // and adding ExternalItem to the Environment will happen here
+    auto jsFile = std::make_shared<JsFile>(file.canonicalPath(), code, contentDate);
+    std::shared_ptr<DomEnvironment> envPtr;
+    if (auto ptr = file.environment().lock())
+        envPtr = std::move(ptr);
+    else
+        envPtr = std::make_shared<DomEnvironment>(
+                QStringList(), DomEnvironment::Option::NoDependencies, shared_from_this());
+    envPtr->addJsFile(jsFile);
+    DomItem env(envPtr);
+    if (!jsFile->isValid()) {
+        QString errs;
+        DomItem qmlFileObj = env.copy(jsFile);
+        jsFile->iterateErrors(qmlFileObj, [&errs](const DomItem &, const ErrorMessage &m) {
+            errs += m.toString();
+            errs += u"\n";
+            return true;
+        });
+        qCWarning(domLog).noquote().nospace()
+                << "Parsed invalid file " << file.canonicalPath() << errs;
+    }
+    return jsFile;
 }
 
 std::shared_ptr<OwningItem> LoadInfo::doCopy(const DomItem &self) const
