@@ -110,17 +110,17 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QSGTextNode::setAnchorColor(const QColor &anchorColor)
+    \fn void QSGTextNode::setLinkColor(const QColor &linkColor)
 
-    Sets the color of anchors (or hyperlinks) to \a anchorColor in the text.
+    Sets the color of or hyperlinks to \a linkColor in the text.
 
     The default is blue: \c QColor(0, 0, 255).
 */
 
 /*!
-    \fn QColor QSGTextNode::anchorColor() const
+    \fn QColor QSGTextNode::linkColor() const
 
-    Returns the color of anchors (or hyperlinks) in the text.
+    Returns the color of hyperlinks in the text.
 */
 
 /*!
