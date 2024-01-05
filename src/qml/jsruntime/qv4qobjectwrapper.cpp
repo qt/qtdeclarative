@@ -1518,9 +1518,18 @@ void QObjectWrapper::destroyObject(bool lastCall)
                     ddata->ownContext.reset();
                     ddata->context = nullptr;
                 }
-                // This object is notionally destroyed now
+
+                // This object is notionally destroyed now. It might still live until the next
+                // event loop iteration, but it won't need its connections, CU, or deferredData
+                // anymore.
+
                 ddata->isQueuedForDeletion = true;
                 ddata->disconnectNotifiers(QQmlData::DeleteNotifyList::No);
+                ddata->compilationUnit.reset();
+
+                qDeleteAll(ddata->deferredData);
+                ddata->deferredData.clear();
+
                 if (lastCall)
                     delete o;
                 else

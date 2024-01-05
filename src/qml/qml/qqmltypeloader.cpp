@@ -1335,7 +1335,6 @@ void QQmlTypeLoader::clearCache()
     m_importDirCache.clear();
     m_importQmlDirCache.clear();
     m_checksumCache.clear();
-    QQmlMetaType::freeUnusedTypesAndCaches();
 }
 
 void QQmlTypeLoader::updateTypeCacheTrimThreshold()

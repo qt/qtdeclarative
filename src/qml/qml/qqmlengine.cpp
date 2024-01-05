@@ -623,9 +623,19 @@ QQmlEngine::~QQmlEngine()
 void QQmlEngine::clearComponentCache()
 {
     Q_D(QQmlEngine);
+
+    // Contexts can hold on to CUs but live on the JS heap.
+    // Use a non-incremental GC run to get rid of those.
+    QV4::MemoryManager *mm = handle()->memoryManager;
+    auto oldLimit = mm->gcStateMachine->timeLimit;
+    mm->setGCTimeLimit(-1);
+    mm->runGC();
+    mm->gcStateMachine->timeLimit = std::move(oldLimit);
+
     d->typeLoader.lock();
     d->typeLoader.clearCache();
     d->typeLoader.unlock();
+    QQmlMetaType::freeUnusedTypesAndCaches();
 }
 
 /*!

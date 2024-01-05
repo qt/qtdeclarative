@@ -1535,6 +1535,27 @@ static bool hasActiveInlineComponents(const QQmlMetaTypeData *data, const QQmlTy
     return false;
 }
 
+static int doCountInternalCompositeTypeSelfReferences(
+        QQmlMetaTypeData *data,
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
+{
+    int result = 0;
+    auto doCheck = [&](const QtPrivate::QMetaTypeInterface *iface) {
+        if (!iface)
+            return;
+
+        const auto it = data->compositeTypes.constFind(iface);
+        if (it != data->compositeTypes.constEnd() && *it == compilationUnit)
+            ++result;
+    };
+
+    doCheck(compilationUnit->qmlType.typeId().iface());
+    for (auto &&inlineData: compilationUnit->inlineComponentData)
+        doCheck(inlineData.qmlType.typeId().iface());
+
+    return result;
+}
+
 void QQmlMetaType::freeUnusedTypesAndCaches()
 {
     QQmlMetaTypeDataPtr data;
@@ -1542,6 +1563,21 @@ void QQmlMetaType::freeUnusedTypesAndCaches()
     // in case this is being called during program exit, `data` might be destructed already
     if (!data.isValid())
         return;
+
+    bool droppedAtLeastOneComposite;
+    do {
+        droppedAtLeastOneComposite = false;
+        auto it = data->compositeTypes.begin();
+        while (it != data->compositeTypes.end()) {
+            if (!(*it)->engine
+                    || (*it)->count() <= doCountInternalCompositeTypeSelfReferences(data, *it)) {
+                it = data->compositeTypes.erase(it);
+                droppedAtLeastOneComposite = true;
+            } else {
+                ++it;
+            }
+        }
+    } while (droppedAtLeastOneComposite);
 
     bool deletedAtLeastOneType;
     do {
@@ -1931,22 +1967,7 @@ int QQmlMetaType::countInternalCompositeTypeSelfReferences(
     const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
 {
     QQmlMetaTypeDataPtr data;
-
-    int result = 0;
-    auto doCheck = [&](const QtPrivate::QMetaTypeInterface *iface) {
-        if (!iface)
-            return;
-
-        const auto it = data->compositeTypes.constFind(iface);
-        if (it != data->compositeTypes.constEnd() && *it == compilationUnit)
-            ++result;
-    };
-
-    doCheck(compilationUnit->qmlType.typeId().iface());
-    for (auto &&inlineData: compilationUnit->inlineComponentData)
-        doCheck(inlineData.qmlType.typeId().iface());
-
-    return result;
+    return doCountInternalCompositeTypeSelfReferences(data, compilationUnit);
 }
 
 QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlMetaType::obtainExecutableCompilationUnit(
