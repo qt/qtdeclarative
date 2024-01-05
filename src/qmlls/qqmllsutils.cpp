@@ -445,13 +445,19 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(const DomIt
         typeDefinition = object.field(Fields::type).proceedToScope();
         break;
     case QQmlJS::Dom::DomType::ScriptIdentifierExpression: {
-        if (object.directParent().internalKind() == DomType::ScriptType) {
-            DomItem type =
-                    object.filterUp([](DomType k, const DomItem &) { return k == DomType::ScriptType; },
-                                    FilterUpOptions::ReturnOuter);
+        if (DomItem type = object.filterUp(
+                    [](DomType k, const DomItem &) { return k == DomType::ScriptType; },
+                    FilterUpOptions::ReturnOuter)) {
 
             const QString name = type.field(Fields::typeName).value().toString();
             typeDefinition = object.path(Paths::lookupTypePath(name));
+            break;
+        }
+        if (DomItem id = object.filterUp(
+                    [](DomType k, const DomItem &) { return k == DomType::Id; },
+                    FilterUpOptions::ReturnOuter)) {
+
+            typeDefinition = id.field(Fields::referredObject).proceedToScope();
             break;
         }
 
@@ -460,17 +466,15 @@ std::optional<QQmlLSUtilsLocation> QQmlLSUtils::findTypeDefinitionOf(const DomIt
         if (!scope)
             return {};
 
-        typeDefinition = QQmlLSUtils::sourceLocationToDomItem(
-                object.containingFile(), scope->semanticScope->sourceLocation());
-
-        switch (scope->type) {
-        case QmlObjectIdIdentifier:
-            break;
-        default:
-            typeDefinition = typeDefinition.component();
+        if (scope->type == QmlObjectIdIdentifier) {
+            return QQmlLSUtilsLocation{ scope->semanticScope->filePath(),
+                                        scope->semanticScope->sourceLocation() };
         }
 
-        return locationFromDomItem(typeDefinition, FileLocationRegion::IdentifierRegion);
+        typeDefinition = QQmlLSUtils::sourceLocationToDomItem(
+                object.containingFile(), scope->semanticScope->sourceLocation());
+        return locationFromDomItem(typeDefinition.component(),
+                                   FileLocationRegion::IdentifierRegion);
     }
     default:
         qDebug() << "QQmlLSUtils::findTypeDefinitionOf: Found unimplemented Type"
