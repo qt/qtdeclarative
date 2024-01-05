@@ -591,9 +591,9 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
         newCurrentPtr->setLoadPaths(loadPaths);
     }
     Path p;
-    DomCreationOptions options;
-    options.setFlag(DomCreationOption::WithScriptExpressions);
-    options.setFlag(DomCreationOption::WithSemanticAnalysis);
+    const DomCreationOptions options = DomCreationOptions{}
+            | DomCreationOption::WithScriptExpressions | DomCreationOption::WithSemanticAnalysis
+            | DomCreationOption::WithRecovery;
     newCurrent.loadFile(
             FileToLoad::fromMemory(newCurrent.ownerAs<DomEnvironment>(), fPath, docText, options),
             [&p, this](Path, const DomItem &, const DomItem &newValue) {

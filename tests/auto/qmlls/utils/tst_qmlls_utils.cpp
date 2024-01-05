@@ -27,10 +27,9 @@ static QString printSet(const QSet<QString> &s)
 }
 
 std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>
-tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath,
-                                              QQmlJS::Dom::DomCreationOptions options)
+tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
 {
-    CacheKey cacheKey = { filePath, options };
+    CacheKey cacheKey = filePath;
     if (auto entry = cache.find(cacheKey); entry != cache.end())
         return *entry;
 
@@ -39,6 +38,13 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath,
 
     QQmlJS::Dom::DomItem env = QQmlJS::Dom::DomEnvironment::create(
             qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded);
+
+    // This should be exactly the same options as qmlls uses in qqmlcodemodel.
+    // Otherwise, this test will not test the codepaths also used by qmlls and will be useless.
+    const QQmlJS::Dom::DomCreationOptions options = QQmlJS::Dom::DomCreationOptions{}
+            | QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis
+            | QQmlJS::Dom::DomCreationOption::WithScriptExpressions
+            | QQmlJS::Dom::DomCreationOption::WithRecovery;
 
     QQmlJS::Dom::DomItem file;
     env.loadFile(
@@ -152,9 +158,8 @@ void tst_qmlls_utils::findItemFromLocation_data()
             // start of the a identifier of the "a" binding
             << -1 << positionAfterOneIndent;
     QTest::addRow("findIntBinding2") << file1Qml << 30 << 8 << firstResult << outOfOne
-                                     << QQmlJS::Dom::DomType::Binding
-                                     // start of the a identifier of the "a" binding
-                                     << -1 << positionAfterOneIndent;
+                                     << QQmlJS::Dom::DomType::ScriptLiteral
+                                     << -1 << 8;
 
     QTest::addRow("colorBinding") << file1Qml << 39 << 13 << firstResult << outOfOne
                                   << QQmlJS::Dom::DomType::ScriptIdentifierExpression << -1
@@ -165,9 +170,7 @@ void tst_qmlls_utils::findItemFromLocation_data()
                                      // start of the "property"-token of the "d" property
                                      << -1 << positionAfterOneIndent;
     QTest::addRow("findVarBinding") << file1Qml << 31 << 8 << firstResult << outOfOne
-                                    << QQmlJS::Dom::DomType::Binding
-                                    // start of the "property"-token of the "d" property
-                                    << -1 << positionAfterOneIndent;
+                                    << QQmlJS::Dom::DomType::ScriptLiteral << -1 << 8;
     QTest::addRow("beforeEProperty")
             << file1Qml << 13 << positionAfterOneIndent << firstResult << outOfOne
             << QQmlJS::Dom::DomType::PropertyDefinition
@@ -192,8 +195,9 @@ void tst_qmlls_utils::findItemFromLocation_data()
     QTest::addRow("closingBraceOfC")
             << file1Qml << 16 << 19 << firstResult << outOfOne << QQmlJS::Dom::DomType::QmlObject
             << -1 << positionAfterOneIndent;
-    QTest::addRow("beforeClosingBraceOfC") << file1Qml << 16 << 18 << firstResult << outOfOne
-                                           << QQmlJS::Dom::DomType::Id << -1 << 8;
+    QTest::addRow("beforeClosingBraceOfC")
+            << file1Qml << 16 << 18 << firstResult << outOfOne
+            << QQmlJS::Dom::DomType::ScriptIdentifierExpression << -1 << 12;
     QTest::addRow("firstBetweenCandD")
             << file1Qml << 16 << 20 << secondResult << outOfTwo << QQmlJS::Dom::DomType::QmlObject
             << -1 << positionAfterOneIndent;
@@ -224,19 +228,21 @@ void tst_qmlls_utils::findItemFromLocation_data()
     QTest::addRow("ic2") << file1Qml << 15 << 20 << firstResult << outOfOne
                          << QQmlJS::Dom::DomType::QmlObject << -1 << 18;
     QTest::addRow("ic3") << file1Qml << 15 << 33 << firstResult << outOfOne
-                         << QQmlJS::Dom::DomType::Id << -1 << 25;
+                         << QQmlJS::Dom::DomType::ScriptIdentifierExpression << -1 << 29;
 
     QTest::addRow("function") << file1Qml << 33 << 5 << firstResult << outOfOne
                               << QQmlJS::Dom::DomType::MethodInfo << -1 << positionAfterOneIndent;
-    QTest::addRow("function-parameter") << file1Qml << 33 << 20 << firstResult << outOfOne
-                                        << QQmlJS::Dom::DomType::MethodParameter << -1 << 16;
+    QTest::addRow("function-parameter")
+            << file1Qml << 33 << 20 << firstResult << outOfOne
+            << QQmlJS::Dom::DomType::ScriptIdentifierExpression << -1 << 19;
     // The return type of a function has no own DomItem. Instead, the return type of a function
     // is saved into the MethodInfo.
     QTest::addRow("function-return")
-            << file1Qml << 33 << 41 << firstResult << outOfOne << QQmlJS::Dom::DomType::MethodInfo
-            << -1 << positionAfterOneIndent;
+            << file1Qml << 33 << 41 << firstResult << outOfOne
+            << QQmlJS::Dom::DomType::ScriptIdentifierExpression << -1 << 41;
     QTest::addRow("function2") << file1Qml << 36 << 17 << firstResult << outOfOne
-                               << QQmlJS::Dom::DomType::MethodInfo << -1 << positionAfterOneIndent;
+                               << QQmlJS::Dom::DomType::MethodInfo << -1
+                               << positionAfterOneIndent;
 
     // check rectangle property
     QTest::addRow("rectangle-property") << file1Qml << 44 << 31 << firstResult << outOfOne
@@ -265,10 +271,7 @@ void tst_qmlls_utils::findItemFromLocation()
     Q_ASSERT(expectedLine > 0);
     Q_ASSERT(expectedCharacter > 0);
 
-    QQmlJS::Dom::DomCreationOptions options;
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
-
-    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+    auto [env, file] = createEnvironmentAndLoadFile(filePath);
 
     auto locations = QQmlLSUtils::itemsFromTextLocation(
             file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
@@ -402,11 +405,7 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
     Q_ASSERT(expectedLine > 0);
     Q_ASSERT(expectedCharacter > 0);
 
-    QQmlJS::Dom::DomCreationOptions options;
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
-
-    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+    auto [env, file] = createEnvironmentAndLoadFile(filePath);
 
     auto locations = QQmlLSUtils::itemsFromTextLocation(
             file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
@@ -464,7 +463,7 @@ void tst_qmlls_utils::findLocationOfItem_data()
     QTest::addRow("property-a2") << file1Qml << 9 << 10 << -1 << positionAfterOneIndent;
     QTest::addRow("nested-C") << file1Qml << 20 << 9 << -1 << -1;
     QTest::addRow("nested-C2") << file1Qml << 23 << 13 << -1 << -1;
-    QTest::addRow("D") << file1Qml << 17 << 33 << -1 << 28;
+    QTest::addRow("D") << file1Qml << 17 << 33 << -1 << 32;
     QTest::addRow("property-d") << file1Qml << 12 << 15 << -1 << positionAfterOneIndent;
 
     QTest::addRow("import") << file1Qml << 4 << 6 << -1 << 1;
@@ -489,10 +488,7 @@ void tst_qmlls_utils::findLocationOfItem()
     Q_ASSERT(expectedLine > 0);
     Q_ASSERT(expectedCharacter > 0);
 
-    QQmlJS::Dom::DomCreationOptions options;
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
-
-    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+    auto [env, file] = createEnvironmentAndLoadFile(filePath);
 
     // grab item using already tested QQmlLSUtils::findLastItemsContaining
     auto locations = QQmlLSUtils::itemsFromTextLocation(
@@ -542,11 +538,13 @@ void tst_qmlls_utils::findBaseObject_data()
     ePNMyInlineComponent << u"inBaseTypeDotQml"_s << u"inTypeDotQml"_s << u"inMyInlineComponent"_s;
 
     // marker properties for MyNestedInlineComponent
-    QSet<QString> ePNMyNestedInlineComponent;
-    ePNMyNestedInlineComponent << u"inBaseTypeDotQml"_s << u"inTypeDotQml"_s
-                               << u"inMyInlineComponent"_s;
-    QSet<QString> nEPNMyNestedInlineComponent;
-    nEPNMyNestedInlineComponent << u"inMyNestedInlineComponent"_s;
+    const QSet<QString> ePNMyNestedInlineComponent{ u"inMyNestedInlineComponent"_s };
+    const QSet<QString> nEPNMyNestedInlineComponent{ u"inBaseTypeDotQml"_s, u"inTypeDotQml"_s,
+                                                     u"inMyInlineComponent"_s };
+
+    // marker properties for MyBaseInlineComponent
+    const QSet<QString> ePNMyBaseInlineComponent{ u"inBaseTypeDotQml"_s };
+    const QSet<QString> nEPNMyBaseInlineComponent{ u"inTypeDotQml"_s, u"inMyInlineComponent"_s };
 
     const int rootElementDefLine = 6;
     QTest::addRow("root-element") << testFile(u"Type.qml"_s) << rootElementDefLine << 5
@@ -575,17 +573,17 @@ void tst_qmlls_utils::findBaseObject_data()
                                     << ePNBaseType << nEPNBaseType;
 
     const int inlineIcDefLine = 23;
-    QTest::addRow("inline-ic") << testFile(u"Type.qml"_s) << inlineIcDefLine << 35
-                               << ePNMyInlineComponent << nEPNMyInlineComponent;
-    QTest::addRow("inline-ic-from-id") << testFile(u"Type.qml"_s) << inlineIcDefLine + 1 << 48
-                                       << ePNMyInlineComponent << nEPNMyInlineComponent;
+    QTest::addRow("inline-ic") << testFile(u"Type.qml"_s) << inlineIcDefLine << 38
+                               << ePNMyBaseInlineComponent << nEPNMyBaseInlineComponent;
+    QTest::addRow("inline-ic-from-id") << testFile(u"Type.qml"_s) << inlineIcDefLine + 1 << 28
+                                       << ePNMyBaseInlineComponent << nEPNMyBaseInlineComponent;
 
     const int inlineNestedIcDefLine = 27;
-    QTest::addRow("inline-ic2") << testFile(u"Type.qml"_s) << inlineNestedIcDefLine << 22
+    QTest::addRow("inline-ic2") << testFile(u"Type.qml"_s) << inlineNestedIcDefLine << 46
                                 << ePNMyNestedInlineComponent << nEPNMyNestedInlineComponent;
     QTest::addRow("inline-ic2-from-id")
-            << testFile(u"Type.qml"_s) << inlineNestedIcDefLine << 22 << ePNMyNestedInlineComponent
-            << nEPNMyNestedInlineComponent;
+            << testFile(u"Type.qml"_s) << inlineNestedIcDefLine + 1 << 23
+            << ePNMyNestedInlineComponent << nEPNMyNestedInlineComponent;
 }
 
 void tst_qmlls_utils::findBaseObject()
@@ -603,10 +601,7 @@ void tst_qmlls_utils::findBaseObject()
     Q_ASSERT(line > 0);
     Q_ASSERT(character > 0);
 
-    QQmlJS::Dom::DomCreationOptions options;
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
-
-    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+    auto [env, file] = createEnvironmentAndLoadFile(filePath);
 
     // grab item using already tested QQmlLSUtils::findLastItemsContaining
     auto locations = QQmlLSUtils::itemsFromTextLocation(
@@ -622,14 +617,11 @@ void tst_qmlls_utils::findBaseObject()
     auto typeLocation = QQmlLSUtils::findTypeDefinitionOf(locations.front().domItem);
     QEXPECT_FAIL("inline-ic", failOnInlineComponentsMessage, Abort);
     QEXPECT_FAIL("inline-ic2", failOnInlineComponentsMessage, Abort);
-    QEXPECT_FAIL("inline-ic2-from-id", failOnInlineComponentsMessage, Abort);
     QVERIFY(typeLocation);
     QQmlJS::Dom::DomItem type = QQmlLSUtils::sourceLocationToDomItem(
             locations.front().domItem.goToFile(typeLocation->filename),
             typeLocation->sourceLocation);
     auto base = QQmlLSUtils::baseObject(type);
-
-    QEXPECT_FAIL("inline-ic-from-id", failOnInlineComponentsMessage, Abort);
 
     if constexpr (enable_debug_output) {
         if (!base)
@@ -637,6 +629,8 @@ void tst_qmlls_utils::findBaseObject()
                      << locations.front().domItem.toString();
     }
 
+    QEXPECT_FAIL("inline-ic-from-id", failOnInlineComponentsMessage, Abort);
+    QEXPECT_FAIL("inline-ic2-from-id", failOnInlineComponentsMessage, Abort);
     QVERIFY(base);
 
     const QSet<QString> propertyDefs = base.field(QQmlJS::Dom::Fields::propertyDefs).keys();
@@ -1090,11 +1084,7 @@ void tst_qmlls_utils::findUsages()
     QFETCH(UsageData, data);
     QVERIFY(std::is_sorted(data.expectedUsages.begin(), data.expectedUsages.end()));
 
-    QQmlJS::Dom::DomCreationOptions options;
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
-
-    auto [env, file] = createEnvironmentAndLoadFile(data.testFileName, options);
+    auto [env, file] = createEnvironmentAndLoadFile(data.testFileName);
 
     auto locations = QQmlLSUtils::itemsFromTextLocation(
             file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
@@ -1313,11 +1303,7 @@ void tst_qmlls_utils::renameUsages()
 
     QVERIFY(std::is_sorted(expectedRenames.begin(), expectedRenames.end()));
 
-    QQmlJS::Dom::DomCreationOptions options;
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
-
-    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+    auto [env, file] = createEnvironmentAndLoadFile(filePath);
 
     auto locations = QQmlLSUtils::itemsFromTextLocation(
             file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
@@ -1482,11 +1468,7 @@ void tst_qmlls_utils::findDefinitionFromLocation()
     Q_ASSERT(expectedLine > 0);
     Q_ASSERT(expectedCharacter > 0);
 
-    QQmlJS::Dom::DomCreationOptions options;
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
-
-    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+    auto [env, file] = createEnvironmentAndLoadFile(filePath);
 
     auto locations = QQmlLSUtils::itemsFromTextLocation(
             file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
@@ -1585,11 +1567,8 @@ void tst_qmlls_utils::resolveExpressionType()
     Q_ASSERT(line > 0);
     Q_ASSERT(character > 0);
 
-    QQmlJS::Dom::DomCreationOptions options;
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
 
-    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+    auto [env, file] = createEnvironmentAndLoadFile(filePath);
 
     auto locations = QQmlLSUtils::itemsFromTextLocation(
             file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
@@ -3217,12 +3196,7 @@ void tst_qmlls_utils::completions()
     QFETCH(ExpectedCompletions, expected);
     QFETCH(QStringList, notExpected);
 
-    QQmlJS::Dom::DomCreationOptions options;
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
-    options.setFlag(QQmlJS::Dom::DomCreationOption::WithRecovery);
-
-    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+    auto [env, file] = createEnvironmentAndLoadFile(filePath);
 
     auto locations = QQmlLSUtils::itemsFromTextLocation(
             file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);

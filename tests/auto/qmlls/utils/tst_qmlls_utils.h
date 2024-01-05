@@ -77,12 +77,12 @@ private slots:
 private:
     using EnvironmentAndFile = std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>;
 
-    EnvironmentAndFile createEnvironmentAndLoadFile(const QString &file,
-                                                    QQmlJS::Dom::DomCreationOptions options);
+    EnvironmentAndFile createEnvironmentAndLoadFile(const QString &file);
 
-    using CacheKey = std::pair<QString, QQmlJS::Dom::DomCreationOptions>;
+    using CacheKey = QString;
     // avoid loading the same file over and over when running all the tests
     QHash<CacheKey, EnvironmentAndFile> cache;
+
 };
 
 #endif // TST_QMLLS_UTILS_H
