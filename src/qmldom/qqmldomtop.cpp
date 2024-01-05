@@ -189,20 +189,6 @@ bool DomUniverse::iterateDirectSubpaths(const DomItem &self, DirectVisitor visit
                 [this](const DomItem &map, const QString &key) { return map.copy(qmltypesFileWithPath(key)); },
                 [this](const DomItem &) { return qmltypesFilePaths(); }, QLatin1String("QmltypesFile")));
     });
-    cont = cont && self.dvItemField(visitor, Fields::queue, [this, &self]() {
-        QQueue<ParsingTask> q = queue();
-        return self.subListItem(List(
-                Path::Field(Fields::queue),
-                [q](const DomItem &list, index_type i) {
-                    if (i >= 0 && i < q.size())
-                        return list.subDataItem(PathEls::Index(i), q.at(i).toCbor(),
-                                                ConstantData::Options::FirstMapIsFields);
-                    else
-                        return DomItem();
-                },
-                [q](const DomItem &) { return index_type(q.size()); }, nullptr,
-                QLatin1String("ParsingTask")));
-    });
     return cont;
 }
 
@@ -257,10 +243,8 @@ void DomUniverse::loadFile(const FileToLoad &file, Callback callback, LoadOption
     case DomType::QmldirFile:
     case DomType::QmlDirectory:
     case DomType::JsFile: {
-        // Protect the queue from concurrent access.
-        QMutexLocker l(mutex());
-        m_queue.enqueue(ParsingTask{ QDateTime::currentDateTimeUtc(), loadOptions, fType, file,
-                                     shared_from_this(), callback });
+        return parse(ParsingTask{ QDateTime::currentDateTimeUtc(), loadOptions, fType, file,
+                                  shared_from_this(), callback });
         break;
     }
     default:
@@ -274,7 +258,6 @@ void DomUniverse::loadFile(const FileToLoad &file, Callback callback, LoadOption
         callback(Path(), DomItem::empty, DomItem::empty);
         return;
     }
-    execQueue(); // immediate execution in the same thread
 }
 
 template<typename T>
@@ -319,16 +302,8 @@ updateEntry(const DomItem &univ, const std::shared_ptr<T> &newItem,
     return qMakePair(oldValue, newValue);
 }
 
-void DomUniverse::execQueue()
+void DomUniverse::parse(ParsingTask t)
 {
-    ParsingTask t;
-    {
-        // Protect the queue from concurrent access.
-        QMutexLocker l(mutex());
-        if (m_queue.isEmpty())
-            return;
-        t = m_queue.dequeue();
-    }
     shared_ptr<DomUniverse> topPtr = t.requestingUniverse.lock();
     QString canonicalPath = t.file.canonicalPath();
     if (!topPtr) {
@@ -349,7 +324,8 @@ void DomUniverse::execQueue()
     QVector<ErrorMessage> messages;
 
     if (t.kind == DomType::QmlFile || t.kind == DomType::QmltypesFile
-        || t.kind == DomType::QmldirFile || t.kind == DomType::QmlDirectory || t.kind == DomType::JsFile) {
+        || t.kind == DomType::QmldirFile || t.kind == DomType::QmlDirectory
+        || t.kind == DomType::JsFile) {
         auto getValue = [&t, this, &canonicalPath]() -> std::shared_ptr<ExternalItemPairBase> {
             if (t.kind == DomType::QmlFile)
                 return m_qmlFileWithPath.value(canonicalPath);

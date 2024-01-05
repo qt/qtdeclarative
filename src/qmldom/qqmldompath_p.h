@@ -539,7 +539,6 @@ QMLDOM_FIELD(qmldirWithPath);
 QMLDOM_FIELD(qmltypesFileWithPath);
 QMLDOM_FIELD(qmltypesFiles);
 QMLDOM_FIELD(qualifiedImports);
-QMLDOM_FIELD(queue);
 QMLDOM_FIELD(rawComment);
 QMLDOM_FIELD(read);
 QMLDOM_FIELD(referredObject);

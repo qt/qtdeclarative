@@ -36,9 +36,11 @@ using namespace Qt::Literals::StringLiterals;
 namespace QQmlJS {
 namespace Dom {
 
-class QMLDOM_EXPORT ParsingTask {
+class QMLDOM_EXPORT ParsingTask
+{
 public:
-    QCborMap toCbor() const {
+    QCborMap toCbor() const
+    {
         return QCborMap({ { QString::fromUtf16(Fields::requestedAt), QCborValue(requestedAt) },
                           { QString::fromUtf16(Fields::loadOptions), int(loadOptions) },
                           { QString::fromUtf16(Fields::kind), int(kind) },
@@ -224,7 +226,7 @@ public:
 
     void loadFile(const FileToLoad &file, Callback callback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>());
-    void execQueue();
+    void parse(ParsingTask t);
 
     void removePath(const QString &dir);
 
@@ -337,12 +339,6 @@ public:
         return m_name;
     }
 
-    QQueue<ParsingTask> queue() const
-    {
-        QMutexLocker l(mutex());
-        return m_queue;
-    }
-
 private:
     QString m_name;
     QMap<QString, std::shared_ptr<ExternalItemPair<GlobalScope>>> m_globalScopeWithName;
@@ -351,7 +347,6 @@ private:
     QMap<QString, std::shared_ptr<ExternalItemPair<QmlFile>>> m_qmlFileWithPath;
     QMap<QString, std::shared_ptr<ExternalItemPair<JsFile>>> m_jsFileWithPath;
     QMap<QString, std::shared_ptr<ExternalItemPair<QmltypesFile>>> m_qmltypesFileWithPath;
-    QQueue<ParsingTask> m_queue;
 };
 
 class QMLDOM_EXPORT ExternalItemInfoBase: public OwningItem {
