@@ -99,10 +99,6 @@ public:
     friend class QQmlRefCounted<ExecutableCompilationUnit>;
     friend class QQmlRefPointer<ExecutableCompilationUnit>;
 
-    static QQmlRefPointer<ExecutableCompilationUnit> create(
-            QQmlRefPointer<CompiledData::CompilationUnit> &&compilationUnit,
-            ExecutionEngine *engine);
-
     QIntrusiveListNode nextCompilationUnit;
     ExecutionEngine *engine = nullptr;
 
@@ -289,7 +285,7 @@ public:
     void evaluate();
     void evaluateModuleRequests();
 
-    void markObjects(MarkStack *markStack);
+    void markObjects(MarkStack *markStack) const;
 
     QString bindingValueAsString(const CompiledData::Binding *binding) const;
     double bindingValueAsNumber(const CompiledData::Binding *binding) const
@@ -344,6 +340,8 @@ protected:
     { return unitData()->stringTableSize; }
 
 private:
+    friend struct ExecutionEngine;
+
     QQmlRefPointer<CompiledData::CompilationUnit> m_compilationUnit;
     Heap::Module *m_module = nullptr;
 
@@ -359,6 +357,10 @@ private:
     ExecutableCompilationUnit();
     ExecutableCompilationUnit(QQmlRefPointer<CompiledData::CompilationUnit> &&compilationUnit);
     ~ExecutableCompilationUnit();
+
+    static QQmlRefPointer<ExecutableCompilationUnit> create(
+            QQmlRefPointer<CompiledData::CompilationUnit> &&compilationUnit,
+            ExecutionEngine *engine);
 
     const Value *resolveExportRecursively(QV4::String *exportName,
                                           QVector<ResolveSetEntry> *resolveSet);

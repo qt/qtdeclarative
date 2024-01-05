@@ -860,8 +860,8 @@ ExecutionEngine::~ExecutionEngine()
     delete memoryManager;
 
     // Take a temporary reference to the CU so that it doesn't disappear during unlinking.
-    while (!compilationUnits.isEmpty()) {
-        QQmlRefPointer<ExecutableCompilationUnit> cu(*compilationUnits.begin());
+    while (!m_compilationUnits.isEmpty()) {
+        QQmlRefPointer<ExecutableCompilationUnit> cu(*m_compilationUnits.begin());
         Q_ASSERT(cu->engine == this);
         cu->clear();
         cu->engine = nullptr;
@@ -1330,7 +1330,7 @@ void ExecutionEngine::markObjects(MarkStack *markStack)
 
     identifierTable->markObjects(markStack);
 
-    for (auto compilationUnit: compilationUnits)
+    for (const auto &compilationUnit : m_compilationUnits)
         compilationUnit->markObjects(markStack);
 }
 
@@ -2079,11 +2079,10 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(const Q
                     : QQmlMetaType::RequireFullyTyped,
                 &cacheError)
             : nullptr) {
-        return ExecutableCompilationUnit::create(
+        return executableCompilationUnit(
                 QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>(
                         cachedUnit->qmlData, cachedUnit->aotCompiledFunctions, url.fileName(),
-                        url.toString()),
-                this);
+                        url.toString()));
     }
 
     QFile f(QQmlFile::urlToLocalFileOrQrc(url));
@@ -2117,6 +2116,12 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(
         }
     }
 
+    return executableCompilationUnit(std::move(unit));
+}
+
+QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::executableCompilationUnit(
+        QQmlRefPointer<CompiledData::CompilationUnit> &&unit)
+{
     return ExecutableCompilationUnit::create(std::move(unit), this);
 }
 

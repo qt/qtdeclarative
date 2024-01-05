@@ -124,8 +124,7 @@ int main(int argc, char *argv[])
                 QString error;
                 if (unit->loadFromDisk(QUrl::fromLocalFile(fn), QFileInfo(fn).lastModified(), &error)) {
                     script.reset(new QV4::Script(
-                            &vm, nullptr, QV4::ExecutableCompilationUnit::create(
-                                                  std::move(unit), &vm)));
+                            &vm, nullptr, vm.executableCompilationUnit(std::move(unit))));
                 } else {
                     std::cout << "Error loading" << qPrintable(fn) << "from disk cache:" << qPrintable(error) << std::endl;
                 }

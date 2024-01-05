@@ -496,7 +496,10 @@ public:
     Symbol *symbol_unscopables() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_unscopables); }
     Symbol *symbol_revokableProxy() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_revokableProxy); }
 
-    QIntrusiveList<ExecutableCompilationUnit, &ExecutableCompilationUnit::nextCompilationUnit> compilationUnits;
+    using CompilationUnitList = QIntrusiveList<
+            ExecutableCompilationUnit, &ExecutableCompilationUnit::nextCompilationUnit>;
+    CompilationUnitList &compilationUnits() { return m_compilationUnits; }
+    const CompilationUnitList &compilationUnits() const { return m_compilationUnits; }
 
     quint32 m_engineId;
 
@@ -755,6 +758,9 @@ public:
     QQmlRefPointer<ExecutableCompilationUnit> compileModule(
             const QUrl &url, const QString &sourceCode, const QDateTime &sourceTimeStamp);
 
+    QQmlRefPointer<ExecutableCompilationUnit> executableCompilationUnit(
+            QQmlRefPointer<QV4::CompiledData::CompilationUnit> &&unit);
+
     void injectCompiledModule(const QQmlRefPointer<ExecutableCompilationUnit> &moduleUnit);
     QV4::Value *registerNativeModule(const QUrl &url, const QV4::Value &module);
 
@@ -878,6 +884,8 @@ private:
     // Instead, we allocate a raw pointer using the same manual memory management
     // technique in QV4::PersistentValue.
     QHash<QUrl, Value *> nativeModules;
+
+    CompilationUnitList m_compilationUnits;
 };
 
 #define CHECK_STACK_LIMITS(v4) \

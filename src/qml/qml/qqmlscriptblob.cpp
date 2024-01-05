@@ -201,8 +201,9 @@ void QQmlScriptBlob::initializeFromCompilationUnit(
     m_scriptData.adopt(new QQmlScriptData());
     m_scriptData->url = finalUrl();
     m_scriptData->urlString = finalUrlString();
-    m_scriptData->m_precompiledScript = QV4::ExecutableCompilationUnit::create(
-            std::move(unit), QQmlEnginePrivate::getV4Engine(typeLoader()->engine()));
+    m_scriptData->m_precompiledScript
+            = QQmlEnginePrivate::getV4Engine(typeLoader()->engine())->executableCompilationUnit(
+                std::move(unit));
 
     m_importCache->setBaseUrl(finalUrl(), finalUrlString());
 

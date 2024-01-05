@@ -288,7 +288,7 @@ void ExecutableCompilationUnit::clear()
     runtimeClasses = nullptr;
 }
 
-void ExecutableCompilationUnit::markObjects(QV4::MarkStack *markStack)
+void ExecutableCompilationUnit::markObjects(QV4::MarkStack *markStack) const
 {
     const CompiledData::Unit *data = m_compilationUnit->data;
 
@@ -371,7 +371,7 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutableCompilationUnit::create(
             new ExecutableCompilationUnit(std::move(compilationUnit)),
             QQmlRefPointer<ExecutableCompilationUnit>::Adopt);
     result->engine = engine;
-    engine->compilationUnits.insert(result.data());
+    engine->compilationUnits().insert(result.data());
     return result;
 }
 

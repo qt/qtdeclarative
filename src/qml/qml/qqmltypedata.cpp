@@ -104,7 +104,7 @@ bool QQmlTypeData::tryLoadFromDiskCache()
         return true;
     }
 
-    m_compiledData = QV4::ExecutableCompilationUnit::create(std::move(unit), v4);
+    m_compiledData = v4->executableCompilationUnit(std::move(unit));
 
     QVector<QV4::CompiledData::InlineComponent> ics;
     for (int i = 0, count = m_compiledData->objectCount(); i < count; ++i) {
@@ -842,8 +842,8 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
         }
     }
 
-    m_compiledData = QV4::ExecutableCompilationUnit::create(
-            std::move(compilationUnit), enginePrivate->v4engine());
+    m_compiledData = enginePrivate->v4engine()->executableCompilationUnit(
+            std::move(compilationUnit));
     m_compiledData->typeNameCache = typeNameCache;
     m_compiledData->resolvedTypes = *resolvedTypeCache;
     m_compiledData->propertyCaches = std::move(*compiler.propertyCaches());

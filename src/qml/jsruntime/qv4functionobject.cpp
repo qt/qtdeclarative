@@ -256,7 +256,7 @@ QQmlRefPointer<ExecutableCompilationUnit> FunctionCtor::parse(ExecutionEngine *e
     if (engine->hasException)
         return nullptr;
 
-    return ExecutableCompilationUnit::create(cg.generateCompilationUnit(), engine);
+    return engine->executableCompilationUnit(cg.generateCompilationUnit());
 }
 
 ReturnedValue FunctionCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
