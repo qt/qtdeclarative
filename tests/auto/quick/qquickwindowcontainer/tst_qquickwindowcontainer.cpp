@@ -35,6 +35,7 @@ private slots:
     void windowDestroyed();
     void windowLifetimeFollowsContainer();
     void deferredVisibilityWithoutWindow();
+    void windowComponent();
 
 private:
     std::unique_ptr<QQmlApplicationEngine> m_engine;
@@ -142,6 +143,48 @@ void tst_QQuickWindowContainer::deferredVisibilityWithoutWindow()
     // not hide, show, and then hide again, which would be
     // the result of applying visibility without a window.
     QCOMPARE(spy.count(), 1);
+}
+
+void tst_QQuickWindowContainer::windowComponent()
+{
+    auto *root = qobject_cast<QQuickWindow *>(m_engine->rootObjects().first());
+    QVERIFY(root);
+    auto *itemParent = root->findChild<QQuickItem*>("itemParent");
+    auto *windowParent = root->findChild<QQuickWindow*>("windowParent");
+    QVERIFY(itemParent);
+    QVERIFY(windowParent);
+
+    root->setVisible(true);
+    QVERIFY(QQuickTest::qWaitForPolish(root));
+    windowParent->setVisible(true);
+    QVERIFY(QQuickTest::qWaitForPolish(windowParent));
+
+    QObject *window_item = root->property("window_item").value<QObject*>();
+    QObject *window_window = root->property("window_window").value<QObject*>();
+    QObject *window_item_parent = root->property("window_item_parent").value<QObject*>();
+    QObject *window_window_parent = root->property("window_window_parent").value<QObject*>();
+
+    QVERIFY(window_item);
+    QVERIFY(window_window);
+    QVERIFY(window_item_parent);
+    QVERIFY(window_window_parent);
+
+    QCOMPARE(window_item->parent(), itemParent);
+    QCOMPARE(window_window->parent(), windowParent);
+    QCOMPARE(window_item_parent->parent(), root);
+    QCOMPARE(window_window_parent->parent(), windowParent);
+
+    QCOMPARE(qobject_cast<QQuickWindow *>(window_item)->transientParent(), root);
+    QCOMPARE(qobject_cast<QQuickWindow *>(window_window)->transientParent(), windowParent);
+    QCOMPARE(qobject_cast<QQuickWindow *>(window_item)->parent(), nullptr);
+    QCOMPARE(qobject_cast<QQuickWindow *>(window_window)->parent(), nullptr);
+
+    QEXPECT_FAIL("", "The automatic transient parent logic doesn't account for visual parent", Continue);
+    QCOMPARE(qobject_cast<QQuickWindow *>(window_item_parent)->transientParent(), nullptr);
+    QEXPECT_FAIL("", "The automatic transient parent logic doesn't account for visual parent", Continue);
+    QCOMPARE(qobject_cast<QQuickWindow *>(window_window_parent)->transientParent(), nullptr);
+    QCOMPARE(qobject_cast<QQuickWindow *>(window_item_parent)->parent(), root);
+    QCOMPARE(qobject_cast<QQuickWindow *>(window_window_parent)->parent(), windowParent);
 }
 
 QTEST_MAIN(tst_QQuickWindowContainer)
