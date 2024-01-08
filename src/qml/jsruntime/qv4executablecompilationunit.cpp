@@ -374,7 +374,7 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutableCompilationUnit::create(
 void ExecutableCompilationUnit::finalizeCompositeType(const QQmlType &type)
 {
     // Add to type registry of composites
-    if (propertyCaches.needsVMEMetaObject(/*root object*/0)) {
+    if (m_compilationUnit->propertyCaches.needsVMEMetaObject(/*root object*/0)) {
         // qmlType is only valid for types that have references to themselves.
         if (type.isValid()) {
             qmlType = type;

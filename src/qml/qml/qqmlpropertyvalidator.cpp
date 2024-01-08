@@ -35,7 +35,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(
     , compilationUnit(compilationUnit)
     , imports(imports)
     , qmlUnit(compilationUnit->unitData())
-    , propertyCaches(compilationUnit->propertyCaches)
+    , propertyCaches(*compilationUnit->propertyCachesPtr())
     , bindingPropertyDataPerObject(&compilationUnit->baseCompilationUnit()->bindingPropertyDataPerObject)
 {
     bindingPropertyDataPerObject->resize(compilationUnit->objectCount());
@@ -639,7 +639,7 @@ bool QQmlPropertyValidator::canCoerce(QMetaType to, QQmlPropertyCache::ConstPtr 
         // Therefore we need to check the ICs here
         for (const auto& icDatum : compilationUnit->inlineComponentData()) {
             if (icDatum.qmlType.typeId() == to) {
-                toMo = compilationUnit->propertyCaches.at(icDatum.objectIndex);
+                toMo = compilationUnit->propertyCachesPtr()->at(icDatum.objectIndex);
                 break;
             }
         }
@@ -749,7 +749,8 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(const QQmlPropertyData *p
             // Therefore we need to check the ICs here
             for (const auto& icDatum: compilationUnit->inlineComponentData()) {
                 if (icDatum.qmlType.typeId() == property->propType()) {
-                    propertyMetaObject = compilationUnit->propertyCaches.at(icDatum.objectIndex);
+                    propertyMetaObject
+                            = compilationUnit->propertyCachesPtr()->at(icDatum.objectIndex);
                     break;
                 }
             }

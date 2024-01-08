@@ -246,7 +246,7 @@ static QQmlPropertyCache::ConstPtr propertyCacheForPotentialInlineComponentType(
         // this is an inline component, and what we have in the iterator is currently the parent compilation unit
         for (auto &&icDatum: (*iter)->inlineComponentData())
             if (icDatum.qmlType.typeId() == t)
-                return (*iter)->propertyCaches.at(icDatum.objectIndex);
+                return (*iter)->propertyCachesPtr()->at(icDatum.objectIndex);
     }
     return (*iter)->rootPropertyCache();
 }

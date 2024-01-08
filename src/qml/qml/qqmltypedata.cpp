@@ -249,7 +249,7 @@ QQmlError QQmlTypeData::createTypeAndPropertyCaches(
 
     {
         QQmlPropertyCacheCreator<QV4::ExecutableCompilationUnit> propertyCacheCreator(
-                &m_compiledData->propertyCaches, &pendingGroupPropertyBindings, engine,
+                m_compiledData->propertyCachesPtr(), &pendingGroupPropertyBindings, engine,
                 m_compiledData.data(), m_importCache.data(), typeClassName());
 
         QQmlError error = propertyCacheCreator.verifyNoICCycle();
@@ -263,19 +263,21 @@ QQmlError QQmlTypeData::createTypeAndPropertyCaches(
                 return result.error;
             } else {
                 QQmlComponentAndAliasResolver resolver(
-                            m_compiledData.data(), engine, &m_compiledData->propertyCaches);
+                            m_compiledData.data(), engine, m_compiledData->propertyCachesPtr());
                 if (const QQmlError error = resolver.resolve(result.processedRoot);
                         error.isValid()) {
                     return error;
                 }
-                pendingGroupPropertyBindings.resolveMissingPropertyCaches(&m_compiledData->propertyCaches);
+                pendingGroupPropertyBindings.resolveMissingPropertyCaches(
+                        m_compiledData->propertyCachesPtr());
                 pendingGroupPropertyBindings.clear(); // anything that can be processed is now processed
             }
 
         } while (result.canResume);
     }
 
-    pendingGroupPropertyBindings.resolveMissingPropertyCaches(&m_compiledData->propertyCaches);
+    pendingGroupPropertyBindings.resolveMissingPropertyCaches(
+            m_compiledData->propertyCachesPtr());
     return QQmlError();
 }
 
@@ -848,8 +850,8 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
             std::move(compilationUnit));
     m_compiledData->typeNameCache = typeNameCache;
     m_compiledData->setResolvedTypes(*resolvedTypeCache);
-    m_compiledData->propertyCaches = std::move(*compiler.propertyCaches());
-    Q_ASSERT(m_compiledData->propertyCaches.count()
+    *m_compiledData->propertyCachesPtr() = std::move(*compiler.propertyCaches());
+    Q_ASSERT(m_compiledData->propertyCachesPtr()->count()
              == static_cast<int>(m_compiledData->objectCount()));
 }
 
@@ -985,7 +987,7 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                 Q_ASSERT(!icName.isEmpty());
 
                 const auto compilationUnit = resolvedType->typeData->compilationUnit();
-                ref->setTypePropertyCache(compilationUnit->propertyCaches.at(
+                ref->setTypePropertyCache(compilationUnit->propertyCachesPtr()->at(
                     compilationUnit->inlineComponentId(icName)));
                 ref->setType(qmlType);
                 Q_ASSERT(ref->type().isInlineComponentType());

@@ -33,6 +33,7 @@
 
 #include <private/qendian_p.h>
 #include <private/qqmlnullablevalue_p.h>
+#include <private/qqmlpropertycachevector_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmltype_p.h>
 #include <private/qv4compilationunitmapper_p.h>
@@ -1483,6 +1484,8 @@ struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
 
     ResolvedTypeReferenceMap resolvedTypes;
 
+    QQmlPropertyCacheVector propertyCaches;
+
 public:
     using CompiledObject = CompiledData::Object;
 
@@ -1617,6 +1620,11 @@ public:
 
     ResolvedTypeReference *resolvedType(int id) const { return resolvedTypes.value(id); }
     ResolvedTypeReference *resolvedType(QMetaType type) const;
+
+    QQmlPropertyCache::ConstPtr rootPropertyCache() const
+    {
+        return propertyCaches.at(/*root object*/0);
+    }
 
 private:
     QString m_fileName; // initialized from data->sourceFileIndex

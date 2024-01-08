@@ -78,11 +78,22 @@ public:
     QUrl url() const { return m_compilationUnit->url(); }
     QUrl finalUrl() const { return m_compilationUnit->finalUrl(); }
 
-    // QML specific fields
-    QQmlPropertyCacheVector propertyCaches;
-    QQmlPropertyCache::ConstPtr rootPropertyCache() const { return propertyCaches.at(/*root object*/0); }
-
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
+
+    const QQmlPropertyCacheVector *propertyCachesPtr() const
+    {
+        return &m_compilationUnit->propertyCaches;
+    }
+
+    QQmlPropertyCacheVector *propertyCachesPtr()
+    {
+        return &m_compilationUnit->propertyCaches;
+    }
+
+    QQmlPropertyCache::ConstPtr rootPropertyCache() const
+    {
+        return m_compilationUnit->rootPropertyCache();
+    }
 
     // mapping from component object index (CompiledData::Unit object index that points to component) to identifier hash of named objects
     // this is initialized on-demand by QQmlContextData
