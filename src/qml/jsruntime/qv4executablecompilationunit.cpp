@@ -260,8 +260,6 @@ void ExecutableCompilationUnit::clear()
             runtimeLookups[i].releasePropertyCache();
     }
 
-    dependentScripts.clear();
-
     delete [] runtimeLookups;
     runtimeLookups = nullptr;
 

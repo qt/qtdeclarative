@@ -1013,7 +1013,8 @@ void tst_qmldiskcache::cacheModuleScripts()
 
         auto componentPrivate = QQmlComponentPrivate::get(&component);
         QVERIFY(componentPrivate);
-        auto compilationUnit = componentPrivate->compilationUnit->dependentScripts.first()->compilationUnit();
+        auto compilationUnit = componentPrivate->compilationUnit->dependentScriptsPtr()
+                                       ->first()->compilationUnit();
         QVERIFY(compilationUnit);
         auto unitData = compilationUnit->unitData();
         QVERIFY(unitData);

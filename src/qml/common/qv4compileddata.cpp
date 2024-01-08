@@ -3,6 +3,7 @@
 
 #include "qv4compileddata_p.h"
 
+#include <private/qqmlscriptdata_p.h>
 #include <private/qqmltypenamecache_p.h>
 #include <private/qv4resolvedtypereference_p.h>
 

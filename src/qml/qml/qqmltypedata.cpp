@@ -557,7 +557,7 @@ void QQmlTypeData::done()
 
     {
         // Collect imported scripts
-        m_compiledData->dependentScripts.reserve(m_scripts.size());
+        m_compiledData->dependentScriptsPtr()->reserve(m_scripts.size());
         for (int scriptIndex = 0; scriptIndex < m_scripts.size(); ++scriptIndex) {
             const QQmlTypeData::ScriptReference &script = m_scripts.at(scriptIndex);
 
@@ -573,7 +573,7 @@ void QQmlTypeData::done()
             m_compiledData->typeNameCache()->add(
                     qualifier.toString(), scriptIndex, enclosingNamespace);
             QQmlRefPointer<QQmlScriptData> scriptData = script.script->scriptData();
-            m_compiledData->dependentScripts << scriptData;
+            *m_compiledData->dependentScriptsPtr() << scriptData;
         }
     }
 }

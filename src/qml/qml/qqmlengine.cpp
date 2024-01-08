@@ -1989,18 +1989,18 @@ QQmlEnginePrivate::createInternalContext(const QQmlRefPointer<QV4::ExecutableCom
     context->setImports(unit->typeNameCache());
     context->initFromTypeCompilationUnit(unit, subComponentIndex);
 
-    if (isComponentRoot && unit->dependentScripts.size()) {
+    const auto *dependentScripts = unit->dependentScriptsPtr();
+    const qsizetype dependentScriptsSize = dependentScripts->size();
+    if (isComponentRoot && dependentScriptsSize) {
         QV4::ExecutionEngine *v4 = v4engine();
         Q_ASSERT(v4);
         QV4::Scope scope(v4);
 
-        QV4::ScopedObject scripts(scope, v4->newArrayObject(unit->dependentScripts.size()));
+        QV4::ScopedObject scripts(scope, v4->newArrayObject(dependentScriptsSize));
         context->setImportedScripts(QV4::PersistentValue(v4, scripts.asReturnedValue()));
         QV4::ScopedValue v(scope);
-        for (int i = 0; i < unit->dependentScripts.size(); ++i) {
-            QQmlRefPointer<QQmlScriptData> s = unit->dependentScripts.at(i);
-            scripts->put(i, (v = s->scriptValueForContext(context)));
-        }
+        for (qsizetype i = 0; i < dependentScriptsSize; ++i)
+            scripts->put(i, (v = dependentScripts->at(i)->scriptValueForContext(context)));
     }
 
     return context;

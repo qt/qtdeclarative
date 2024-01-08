@@ -121,7 +121,6 @@ public:
     int totalBindingsCount() const { return m_compilationUnit->totalBindingsCount(); }
     int totalParserStatusCount() const { return m_compilationUnit->totalParserStatusCount(); }
     int totalObjectCount() const { return m_compilationUnit->totalObjectCount(); }
-    QVector<QQmlRefPointer<QQmlScriptData>> dependentScripts;
 
     ResolvedTypeReference *resolvedType(int id) const
     {
@@ -284,6 +283,16 @@ public:
     const CompiledData::QmlUnit *qmlData() const { return m_compilationUnit->qmlData; }
 
     QString stringAt(uint index) const { return m_compilationUnit->stringAt(index); }
+
+    const QVector<QQmlRefPointer<QQmlScriptData>> *dependentScriptsPtr() const
+    {
+        return &m_compilationUnit->dependentScripts;
+    }
+
+    QVector<QQmlRefPointer<QQmlScriptData>> *dependentScriptsPtr()
+    {
+        return &m_compilationUnit->dependentScripts;
+    }
 
     const CompiledData::BindingPropertyData *bindingPropertyDataPerObjectAt(
             qsizetype objectIndex) const

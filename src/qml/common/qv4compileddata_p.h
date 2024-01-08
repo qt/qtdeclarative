@@ -58,6 +58,7 @@ class QQmlTypeNameCache;
 class QQmlType;
 class QQmlEngine;
 class QQmlPropertyData;
+class QQmlScriptData;
 
 namespace QQmlPrivate {
 struct AOTCompiledFunction;
@@ -1492,6 +1493,8 @@ struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
     QQmlPropertyCacheVector propertyCaches;
 
     QQmlType qmlType;
+
+    QVector<QQmlRefPointer<QQmlScriptData>> dependentScripts;
 
 public:
     using CompiledObject = CompiledData::Object;
