@@ -1636,6 +1636,8 @@ bool QQuickTableViewPrivate::startSelection(const QPointF &pos)
     if (selectionMode == QQuickTableView::SingleSelection
             || selectionMode == QQuickTableView::ContiguousSelection)
         clearSelection();
+    else if (selectionModel)
+        existingSelection = selectionModel->selection();
 
     selectionStartCell = QPoint(-1, -1);
     selectionEndCell = QPoint(-1, -1);
@@ -1774,39 +1776,49 @@ void QQuickTableViewPrivate::updateSelection(const QRect &oldSelection, const QR
     const QRect oldRect = oldSelection.normalized();
     const QRect newRect = newSelection.normalized();
 
+    QItemSelection select;
+    QItemSelection deselect;
+
     // Select cells inside the new selection rect
     {
         const QModelIndex startIndex = qaim->index(newRect.y(), newRect.x());
         const QModelIndex endIndex = qaim->index(newRect.y() + newRect.height(), newRect.x() + newRect.width());
-        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
+        select = QItemSelection(startIndex, endIndex);
     }
 
     // Unselect cells in the new minus old rects
     if (oldRect.x() < newRect.x()) {
         const QModelIndex startIndex = qaim->index(oldRect.y(), oldRect.x());
         const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), newRect.x() - 1);
-        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
+        deselect.merge(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
     } else if (oldRect.x() + oldRect.width() > newRect.x() + newRect.width()) {
         const QModelIndex startIndex = qaim->index(oldRect.y(), newRect.x() + newRect.width() + 1);
         const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), oldRect.x() + oldRect.width());
-        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
+        deselect.merge(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
     }
 
     if (oldRect.y() < newRect.y()) {
         const QModelIndex startIndex = qaim->index(oldRect.y(), oldRect.x());
         const QModelIndex endIndex = qaim->index(newRect.y() - 1, oldRect.x() + oldRect.width());
-        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
+        deselect.merge(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
     } else if (oldRect.y() + oldRect.height() > newRect.y() + newRect.height()) {
         const QModelIndex startIndex = qaim->index(newRect.y() + newRect.height() + 1, oldRect.x());
         const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), oldRect.x() + oldRect.width());
-        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
+        deselect.merge(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
     }
+
+    // Don't clear the selection that existed before the user started a new selection block
+    deselect.merge(existingSelection, QItemSelectionModel::Deselect);
+
+    selectionModel->select(deselect, QItemSelectionModel::Deselect);
+    selectionModel->select(select, QItemSelectionModel::Select);
 }
 
 void QQuickTableViewPrivate::clearSelection()
 {
     selectionStartCell = QPoint(-1, -1);
     selectionEndCell = QPoint(-1, -1);
+    existingSelection.clear();
 
     if (selectionModel)
         selectionModel->clearSelection();
