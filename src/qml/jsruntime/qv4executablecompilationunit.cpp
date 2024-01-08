@@ -475,27 +475,9 @@ void ExecutableCompilationUnit::finalizeCompositeType(const QQmlType &type)
         }
     }
 
-    m_totalBindingsCount = bindingCount;
-    m_totalParserStatusCount = parserStatusCount;
-    m_totalObjectCount = objectCount;
-}
-
-int ExecutableCompilationUnit::totalBindingsCount() const {
-    if (!m_compilationUnit->icRootName)
-        return m_totalBindingsCount;
-    return m_compilationUnit->inlineComponentData[*icRootName()].totalBindingCount;
-}
-
-int ExecutableCompilationUnit::totalObjectCount() const {
-    if (!m_compilationUnit->icRootName)
-        return m_totalObjectCount;
-    return m_compilationUnit->inlineComponentData[*icRootName()].totalObjectCount;
-}
-
-int ExecutableCompilationUnit::totalParserStatusCount() const {
-    if (!m_compilationUnit->icRootName)
-        return m_totalParserStatusCount;
-    return m_compilationUnit->inlineComponentData[*icRootName()].totalParserStatusCount;
+    m_compilationUnit->m_totalBindingsCount = bindingCount;
+    m_compilationUnit->m_totalParserStatusCount = parserStatusCount;
+    m_compilationUnit->m_totalObjectCount = objectCount;
 }
 
 bool ExecutableCompilationUnit::verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const

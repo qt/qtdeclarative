@@ -1474,6 +1474,10 @@ struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
 
     std::unique_ptr<CompilationUnitMapper> backingFile;
 
+    int m_totalBindingsCount = 0; // Number of bindings used in this type
+    int m_totalParserStatusCount = 0; // Number of instantiated types that are QQmlParserStatus subclasses
+    int m_totalObjectCount = 0; // Number of objects explicitly instantiated
+
     std::unique_ptr<QString> icRootName;
     QHash<QString, InlineComponentData> inlineComponentData;
 
@@ -1625,6 +1629,10 @@ public:
     {
         return propertyCaches.at(/*root object*/0);
     }
+
+    int totalBindingsCount() const;
+    int totalParserStatusCount() const;
+    int totalObjectCount() const;
 
     int inlineComponentId(const QString &inlineComponentName) const
     {

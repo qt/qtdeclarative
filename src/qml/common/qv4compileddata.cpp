@@ -170,6 +170,27 @@ ResolvedTypeReference *CompilationUnit::resolvedType(QMetaType type) const
 
 }
 
+int CompilationUnit::totalBindingsCount() const
+{
+    if (!icRootName)
+        return m_totalBindingsCount;
+    return inlineComponentData[*icRootName].totalBindingCount;
+}
+
+int CompilationUnit::totalObjectCount() const
+{
+    if (!icRootName)
+        return m_totalObjectCount;
+    return inlineComponentData[*icRootName].totalObjectCount;
+}
+
+int CompilationUnit::totalParserStatusCount() const
+{
+    if (!icRootName)
+        return m_totalParserStatusCount;
+    return inlineComponentData[*icRootName].totalParserStatusCount;
+}
+
 } // namespace CompiledData
 } // namespace QV4
 

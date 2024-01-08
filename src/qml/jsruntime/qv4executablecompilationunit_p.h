@@ -102,10 +102,6 @@ public:
 
     void finalizeCompositeType(const QQmlType &type);
 
-    int m_totalBindingsCount = 0; // Number of bindings used in this type
-    int m_totalParserStatusCount = 0; // Number of instantiated types that are QQmlParserStatus subclasses
-    int m_totalObjectCount = 0; // Number of objects explicitly instantiated
-
     const QString *icRootName() const { return m_compilationUnit->icRootName.get(); }
     QString *icRootName() { return m_compilationUnit->icRootName.get(); }
     void setIcRootName(std::unique_ptr<QString> &&icRootName)
@@ -113,10 +109,9 @@ public:
         m_compilationUnit->icRootName = std::move(icRootName);
     }
 
-    int totalBindingsCount() const;
-    int totalParserStatusCount() const;
-    int totalObjectCount() const;
-
+    int totalBindingsCount() const { return m_compilationUnit->totalBindingsCount(); }
+    int totalParserStatusCount() const { return m_compilationUnit->totalParserStatusCount(); }
+    int totalObjectCount() const { return m_compilationUnit->totalObjectCount(); }
     QVector<QQmlRefPointer<QQmlScriptData>> dependentScripts;
 
     ResolvedTypeReference *resolvedType(int id) const
