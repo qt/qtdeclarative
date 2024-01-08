@@ -157,7 +157,7 @@ private slots:
                 FileToLoad::fromFileSystem(envPtr, testFilePath),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         MutableDomItem myFile = tFile.field(Fields::currentItem);
 
@@ -265,7 +265,7 @@ private slots:
                 FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFilePath),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         QString resultStr;
         QTextStream res(&resultStr);

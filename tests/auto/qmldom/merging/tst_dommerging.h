@@ -47,7 +47,7 @@ private slots:
                 [this](Path, const DomItem &, const DomItem &newIt) { this->tFile = newIt; },
                 LoadOption::DefaultLoad);
         envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, baseDir), {}, LoadOption::DefaultLoad);
-        envPtr->loadPendingDependencies(env);
+        envPtr->loadPendingDependencies();
 
         QVERIFY(tFile);
         tFile = tFile.field(Fields::currentItem);

@@ -1224,7 +1224,6 @@ public:
     void loadBuiltins(
             const std::function<void(const Path &, const DomItem &, const DomItem &)> &callback = nullptr,
             const ErrorHandler & = nullptr) const;
-    void loadPendingDependencies() const;
 
     // --- start of potentially dangerous stuff, make private? ---
 

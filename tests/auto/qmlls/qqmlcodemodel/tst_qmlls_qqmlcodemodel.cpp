@@ -114,14 +114,13 @@ void tst_qmlls_qqmlcodemodel::fileNamesToWatch()
     DomCreationOptions options;
     options.setFlag(DomCreationOption::WithSemanticAnalysis);
 
-    DomItem env(envPtr);
     envPtr->loadFile(
             FileToLoad::fromFileSystem(envPtr, testFile("MyCppModule/Main.qml"), options),
             [&qmlFile](Path, const DomItem &, const DomItem &newIt) {
                 qmlFile = newIt.fileObject();
             },
             LoadOption::DefaultLoad);
-    env.loadPendingDependencies();
+    envPtr->loadPendingDependencies();
 
     const auto fileNames = QmlLsp::QQmlCodeModel::fileNamesToWatch(qmlFile);
 

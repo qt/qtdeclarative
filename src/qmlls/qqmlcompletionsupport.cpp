@@ -135,7 +135,7 @@ DomItem CompletionRequest::patchInvalidFileForParser(const DomItem &file, qsizet
                                     result = newValue.fileObject();
                                 },
                                 {});
-        newCurrent.loadPendingDependencies();
+        newCurrentPtr->loadPendingDependencies();
         return result;
     }
 

@@ -734,8 +734,8 @@ public:
     std::shared_ptr<LoadInfo> loadInfo(const Path &path) const;
     QList<Path> loadInfoPaths() const;
     QHash<Path, std::shared_ptr<LoadInfo>> loadInfos() const;
-    void loadPendingDependencies(const DomItem &self);
-    bool finishLoadingDependencies(const DomItem &self, int waitMSec = 30000);
+    void loadPendingDependencies();
+    bool finishLoadingDependencies(int waitMSec = 30000);
     void addWorkForLoadInfo(const Path &elementCanonicalPath);
 
     Options options() const;

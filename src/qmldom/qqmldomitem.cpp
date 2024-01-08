@@ -2553,15 +2553,6 @@ void DomItem::loadBuiltins(
         myErrors().error(tr("Cannot load builtins without DomEnvironment")).handle(h);
 }
 
-void DomItem::loadPendingDependencies() const
-{
-    DomItem env = environment();
-    if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>())
-        envPtr->loadPendingDependencies(env);
-    else
-        myErrors().error(tr("Called loadPendingDependencies without environment")).handle();
-}
-
 /*!
 \brief Creates a new document with the given code
 
@@ -2585,7 +2576,7 @@ DomItem DomItem::fromCode(const QString &code, DomType fileType)
             FileToLoad::fromMemory(env, QString(), code),
             [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
             LoadOption::DefaultLoad, std::make_optional(fileType));
-    DomItem(env).loadPendingDependencies();
+    env->loadPendingDependencies();
     return tFile.fileObject();
 }
 

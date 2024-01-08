@@ -86,7 +86,7 @@ void QQmlDocumentFormatting::process(RequestPointerArgument request)
                 fileWithoutScriptExpressions = newValue.fileObject();
             },
             {});
-    DomItem(newCurrentPtr).loadPendingDependencies();
+    newCurrentPtr->loadPendingDependencies();
 
     // TODO: implement formatting options
     // For now, qmlformat's default options.

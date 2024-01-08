@@ -643,7 +643,7 @@ QString TestQmlformat::formatInMemory(const QString &fileToFormat, bool *didSucc
             FileToLoad::fromFileSystem(env, fileToFormat),
             [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
             LoadOption::DefaultLoad);
-    DomItem(env).loadPendingDependencies();
+    env->loadPendingDependencies();
     MutableDomItem myFile = tFile.field(Fields::currentItem);
 
     DomItem writtenOut;

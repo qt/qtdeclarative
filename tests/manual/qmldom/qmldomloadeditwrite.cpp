@@ -55,7 +55,7 @@ int main()
             LoadOption::DefaultLoad);
 
     // trigger the load
-    env.loadPendingDependencies();
+    envPtr->loadPendingDependencies();
 
     // # Read only API: DomItem is a generic pointer for read only access to Dom Itmes :)
     {

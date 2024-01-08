@@ -54,7 +54,7 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
                     const QQmlJS::Dom::DomItem &newIt) { file = newIt; },
             QQmlJS::Dom::LoadOption::DefaultLoad);
 
-    env.loadPendingDependencies();
+    envPtr->loadPendingDependencies();
     env.loadBuiltins();
 
     return cache[cacheKey] = std::make_tuple(env, file);

@@ -2239,8 +2239,9 @@ bool DomEnvironment::commitToBase(
     return true;
 }
 
-void DomEnvironment::loadPendingDependencies(const DomItem &self)
+void DomEnvironment::loadPendingDependencies()
 {
+    DomItem self(shared_from_this());
     while (true) {
         Path elToDo;
         std::shared_ptr<LoadInfo> loadInfo;
@@ -2282,12 +2283,12 @@ void DomEnvironment::loadPendingDependencies(const DomItem &self)
     }
 }
 
-bool DomEnvironment::finishLoadingDependencies(const DomItem &self, int waitMSec)
+bool DomEnvironment::finishLoadingDependencies(int waitMSec)
 {
     bool hasPendingLoads = true;
     QDateTime endTime = QDateTime::currentDateTimeUtc().addMSecs(waitMSec);
     for (int i = 0; i < waitMSec / 10 + 2; ++i) {
-        loadPendingDependencies(self);
+        loadPendingDependencies();
         auto lInfos = loadInfos();
         auto it = lInfos.cbegin();
         auto end = lInfos.cend();

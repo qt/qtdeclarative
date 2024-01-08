@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
                 },
                 LoadOption::DefaultLoad, fileType);
     }
-    envPtr->loadPendingDependencies(env);
+    envPtr->loadPendingDependencies();
     bool hadFailures = false;
     const qsizetype largestFileSizeToCheck = 32000;
 

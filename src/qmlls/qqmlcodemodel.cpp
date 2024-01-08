@@ -205,7 +205,7 @@ void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
         if (!fileToLoad.canonicalPath().isEmpty()) {
             newCurrent.loadBuiltins();
             newCurrentPtr->loadFile(fileToLoad, [](Path, const DomItem &, const DomItem &) {}, {});
-            newCurrent.loadPendingDependencies();
+            newCurrentPtr->loadPendingDependencies();
             newCurrent.commitToBase(m_validEnv.ownerAs<DomEnvironment>());
         }
         {
@@ -603,7 +603,7 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
                                     addFileWatches(file);
                             },
                             {});
-    newCurrent.loadPendingDependencies();
+    newCurrentPtr->loadPendingDependencies();
     if (p) {
         newCurrent.commitToBase(m_validEnv.ownerAs<DomEnvironment>());
         DomItem item = m_currentEnv.path(p);

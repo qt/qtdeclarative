@@ -53,7 +53,6 @@ bool parseFile(const QString &filename, const Options &options)
                                    QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                                            | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
     DomItem tFile; // place where to store the loaded file
-    DomItem env(envPtr);
     envPtr->loadFile(
             FileToLoad::fromFileSystem(envPtr, filename),
             [&tFile](Path, const DomItem &, const DomItem &newIt) {
@@ -61,7 +60,7 @@ bool parseFile(const QString &filename, const Options &options)
                                // external file pair (path, oldValue, newValue)
             },
             LoadOption::DefaultLoad);
-    env.loadPendingDependencies();
+    envPtr->loadPendingDependencies();
     DomItem qmlFile = tFile.fileObject();
     std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>();
     if (!qmlFilePtr || !qmlFilePtr->isValid()) {

@@ -419,7 +419,7 @@ private slots:
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
         envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, baseDir), {}, LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         QVERIFY(tFile);
         tFile = tFile.field(Fields::currentItem);
@@ -505,7 +505,7 @@ private slots:
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
         envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, baseDir), {}, LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         QVERIFY(tFile);
         tFile = tFile.field(Fields::currentItem);
@@ -576,7 +576,7 @@ private slots:
                     tFile = newIt.fileObject();
                 },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         QVERIFY(tFile);
         QList<QmlUri> importedModules;
@@ -620,7 +620,7 @@ private slots:
                 FileToLoad::fromFileSystem(envPtr, testFile),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
         DomItem f = tFile.fileObject();
         QString dump1;
         f.dump([&dump1](QStringView v) { dump1.append(v); });
@@ -750,14 +750,13 @@ private slots:
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
         DomItem tFile;
-        DomItem env(envPtr);
         envPtr->loadFile(
                 FileToLoad::fromFileSystem(envPtr, testFile1),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) {
                     tFile = newIt.fileObject();
                 },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         DomItem rootObj = tFile.qmlObject(GoTo::MostLikely);
         checkAliases(rootObj);
@@ -775,14 +774,13 @@ private slots:
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
         DomItem tFile;
-        DomItem env(envPtr);
         envPtr->loadFile(
                 FileToLoad::fromFileSystem(envPtr, testFile),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) {
                     tFile = newIt.fileObject();
                 },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         auto rootQmlObject = tFile.rootQmlObject(GoTo::MostLikely);
 
@@ -812,14 +810,13 @@ private slots:
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
         DomItem tFile;
-        DomItem env(envPtr);
         envPtr->loadFile(
                 FileToLoad::fromFileSystem(envPtr, testFile),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) {
                     tFile = newIt.fileObject();
                 },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         auto rootQmlObject = tFile.rootQmlObject(GoTo::MostLikely);
 
@@ -875,14 +872,13 @@ private slots:
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
-        DomItem env(envPtr);
         envPtr->loadFile(
                 FileToLoad::fromFileSystem(envPtr, fileName, WithSemanticAnalysis),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) {
                     tFile = newIt.fileObject();
                 },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         auto root = tFile.rootQmlObject(GoTo::MostLikely);
 
@@ -2642,7 +2638,6 @@ private slots:
         options.setFlag(DomCreationOption::WithScriptExpressions);
         options.setFlag(DomCreationOption::WithSemanticAnalysis);
 
-        DomItem env(envPtr);
         envPtr->loadFile(
                 FileToLoad::fromFileSystem(envPtr, filePathA, options),
                 [&fileA](Path, const DomItem &, const DomItem &newIt) {
@@ -2656,7 +2651,7 @@ private slots:
                     fileB = newIt.fileObject();
                 },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         QCOMPARE(fileA.goToFile(canonicalFilePathB), fileB);
     }
@@ -2679,7 +2674,6 @@ private slots:
         options.setFlag(DomCreationOption::WithScriptExpressions);
         options.setFlag(DomCreationOption::WithSemanticAnalysis);
 
-        DomItem env(envPtr);
         envPtr->loadFile(
                 FileToLoad::fromFileSystem(envPtr, filePath, options),
                 [&fileA](Path, const DomItem &, const DomItem &newIt) {
@@ -2687,7 +2681,7 @@ private slots:
                 },
                 LoadOption::DefaultLoad);
 
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
 
         QCOMPARE(fileA.top().goUp(1), DomItem());
         QCOMPARE(fileA.top().directParent(), DomItem());
@@ -2727,14 +2721,13 @@ private:
         options.setFlag(DomCreationOption::WithScriptExpressions);
         options.setFlag(DomCreationOption::WithSemanticAnalysis);
 
-        DomItem env(envPtr);
         envPtr->loadFile(
                 FileToLoad::fromFileSystem(envPtr, path, options),
                 [&fileItem](Path, const DomItem &, const DomItem &newIt) {
                     fileItem = newIt.fileObject();
                 },
                 LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadPendingDependencies();
         return fileItem;
     }
 
