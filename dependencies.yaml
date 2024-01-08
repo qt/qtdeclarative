@@ -12,5 +12,5 @@ dependencies:
     ref: 92a339af0e172a76a5dbfe10f7d7c34add8cf603
     required: false
   ../qtsvg:
-    ref: 378c479cd28b35fb0db648fba230d49b222b67e7
+    ref: 5b59a91a9b32a3b3d1d8f27b658bafaf065c46c6
     required: false
