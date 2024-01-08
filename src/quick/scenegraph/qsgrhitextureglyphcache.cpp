@@ -110,35 +110,41 @@ void QSGRhiTextureGlyphCache::prepareGlyphImage(QImage *img)
 
     if (img->format() == QImage::Format_Mono) {
         *img = std::move(*img).convertToFormat(QImage::Format_Grayscale8);
-    } else if (img->depth() == 32) {
-        if (img->format() == QImage::Format_RGB32 || img->format() == QImage::Format_ARGB32_Premultiplied) {
-            // We need to make the alpha component equal to the average of the RGB values.
-            // This is needed when drawing sub-pixel antialiased text on translucent targets.
-            for (int y = 0; y < maskHeight; ++y) {
-                QRgb *src = (QRgb *) img->scanLine(y);
-                for (int x = 0; x < maskWidth; ++x) {
-                    int r = qRed(src[x]);
-                    int g = qGreen(src[x]);
-                    int b = qBlue(src[x]);
-                    int avg;
-                    if (img->format() == QImage::Format_RGB32)
-                        avg = (r + g + b + 1) / 3; // "+1" for rounding.
-                    else // Format_ARGB_Premultiplied
-                        avg = qAlpha(src[x]);
-
-                    src[x] = qRgba(r, g, b, avg);
+    } else if (img->format() == QImage::Format_RGB32 || img->format() == QImage::Format_ARGB32_Premultiplied) {
+        // We need to make the alpha component equal to the average of the RGB values.
+        // This is needed when drawing sub-pixel antialiased text on translucent targets.
+        if (img->format() == QImage::Format_RGB32
 #if Q_BYTE_ORDER != Q_BIG_ENDIAN
-                    if (supportsBgra) {
-                        m_bgra = true;
-                    } else {
+            || !supportsBgra
+#endif
+        ) {
+            for (int y = 0; y < maskHeight; ++y) {
+                QRgb *src = reinterpret_cast<QRgb *>(img->scanLine(y));
+                for (int x = 0; x < maskWidth; ++x) {
+                    QRgb &rgb = src[x];
+
+                    if (img->format() == QImage::Format_RGB32) {
+                        int r = qRed(rgb);
+                        int g = qGreen(rgb);
+                        int b = qBlue(rgb);
+                        int avg = (r + g + b + 1) / 3; // "+1" for rounding.
+                        rgb = qRgba(r, g, b, avg);
+                    }
+
+#if Q_BYTE_ORDER != Q_BIG_ENDIAN
+                    if (!supportsBgra) {
                         // swizzle the bits to accommodate for the RGBA upload.
-                        src[x] = ARGB2RGBA(src[x]);
+                        rgb = ARGB2RGBA(rgb);
                         m_bgra = false;
                     }
 #endif
                 }
             }
         }
+#if Q_BYTE_ORDER != Q_BIG_ENDIAN
+        if (supportsBgra)
+            m_bgra = true;
+#endif
     }
 }
 
@@ -149,9 +155,9 @@ void QSGRhiTextureGlyphCache::fillTexture(const Coord &c, glyph_t glyph, const Q
 
     if (!m_resizeWithTextureCopy) {
         QImageTextureGlyphCache::fillTexture(c, glyph, subPixelPosition);
-        mask = image();
-        subresDesc.setSourceTopLeft(QPoint(c.x, c.y));
-        subresDesc.setSourceSize(QSize(c.w, c.h));
+        // Explicitly copy() here to avoid fillTexture detaching the *entire* image() when
+        // it is still referenced by QRhiTextureSubresourceUploadDescription.
+        mask = image().copy(QRect(c.x, c.y, c.w, c.h));
     } else {
         mask = textureMapForGlyph(glyph, subPixelPosition);
     }
