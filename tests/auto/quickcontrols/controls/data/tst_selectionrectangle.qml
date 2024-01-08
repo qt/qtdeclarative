@@ -316,7 +316,14 @@ TestCase {
         verify(tableView.selectionModel.isSelected(tableView.selectionModel.model.index(0, 1)))
     }
 
-    function test_tableView_contiguousSelection() {
+    function test_tableView_contiguousSelection_data() {
+        return [
+            { startFromCurrentIndex: false },
+            { startFromCurrentIndex: true },
+        ]
+    }
+
+    function test_tableView_contiguousSelection(data) {
         let tableView = createTemporaryObject(tableviewComp, testCase)
         verify(tableView)
         let selectionRectangle = tableView.selectionRectangle
@@ -325,13 +332,21 @@ TestCase {
         selectionRectangle.selectionMode = SelectionRectangle.Drag
         tableView.selectionMode = TableView.ContiguousSelection
 
-        // Select two cells by dragging
-        verify(!tableView.selectionModel.hasSelection)
-        mouseDrag(tableView, 1, 1, (cellWidth * 2) - 2, 1, Qt.LeftButton)
-        verify(tableView.selectionModel.hasSelection)
-        compare(tableView.selectionModel.selectedIndexes.length, 2)
-        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
-        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 1)))
+        if (data.startFromCurrentIndex) {
+            // Click on a cell to set current index, but set no selection.
+            // A later shift-click should then start a new selection from the
+            // current cell.
+            mouseClick(tableView, 1, 1, Qt.LeftButton, Qt.NoModifier)
+            verify(!tableView.selectionModel.hasSelection)
+            compare(tableView.selectionModel.currentIndex, tableView.index(0, 0))
+        } else {
+            // Start a new selection by dragging on two cells
+            mouseDrag(tableView, 1, 1, (cellWidth * 2) - 2, 1, Qt.LeftButton)
+            verify(tableView.selectionModel.hasSelection)
+            compare(tableView.selectionModel.selectedIndexes.length, 2)
+            verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
+            verify(tableView.selectionModel.isSelected(tableView.model.index(0, 1)))
+        }
 
         // A shift click should extend the selection
         mouseClick(tableView, (cellWidth * 4) - 3, 1, Qt.LeftButton, Qt.ShiftModifier)
