@@ -417,6 +417,23 @@ TestCase {
         for (let r = 0; r < 2; ++r)
             for (let c = 0; c < 3; ++c)
                 verify(tableView.selectionModel.isSelected(tableView.model.index(r, c)))
+
+        // Shift click the second selection so that it overlaps with the first
+        mouseClick(tableView, 1, 1, Qt.LeftButton, Qt.ShiftModifier)
+        compare(tableView.selectionModel.selectedIndexes.length, 4)
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 1)))
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 2)))
+        verify(tableView.selectionModel.isSelected(tableView.model.index(1, 0)))
+
+        // Shift click the selection back again. The first selection on
+        // row 0 should still be present, even if the second selection
+        // no longer overlaps it.
+        mouseClick(tableView, (cellWidth * 3) - 2, (cellHeight * 2) - 1, Qt.LeftButton, Qt.ShiftModifier)
+        compare(tableView.selectionModel.selectedIndexes.length, 6)
+        for (let r = 0; r < 2; ++r)
+            for (let c = 0; c < 3; ++c)
+                verify(tableView.selectionModel.isSelected(tableView.model.index(r, c)))
     }
 
     function test_handle_position() {

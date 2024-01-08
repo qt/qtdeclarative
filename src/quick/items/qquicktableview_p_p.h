@@ -377,6 +377,7 @@ public:
 
     QPoint selectionStartCell = {-1, -1};
     QPoint selectionEndCell = {-1, -1};
+    QItemSelection existingSelection;
 
     QMargins edgesBeforeRebuild;
     QSize tableSizeBeforeRebuild;
