@@ -323,7 +323,7 @@
 
     In the following example, the elevation of the pane is set to \c 6
     in order to achieve the look of an
-    \l {https://material.google.com/components/cards.html}{elevated card}:
+    \l {https://m3.material.io/components/cards/overview}{elevated card}:
 
     \table
         \row
