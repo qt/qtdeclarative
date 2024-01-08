@@ -191,6 +191,21 @@ int CompilationUnit::totalParserStatusCount() const
     return inlineComponentData[*icRootName].totalParserStatusCount;
 }
 
+bool CompilationUnit::verifyChecksum(const DependentTypesHasher &dependencyHasher) const
+{
+    if (!dependencyHasher) {
+        for (size_t i = 0; i < sizeof(data->dependencyMD5Checksum); ++i) {
+            if (data->dependencyMD5Checksum[i] != 0)
+                return false;
+        }
+        return true;
+    }
+    const QByteArray checksum = dependencyHasher();
+    return checksum.size() == sizeof(data->dependencyMD5Checksum)
+            && memcmp(data->dependencyMD5Checksum, checksum.constData(),
+                      sizeof(data->dependencyMD5Checksum)) == 0;
+}
+
 } // namespace CompiledData
 } // namespace QV4
 

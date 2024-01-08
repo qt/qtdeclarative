@@ -480,23 +480,6 @@ void ExecutableCompilationUnit::finalizeCompositeType(const QQmlType &type)
     m_compilationUnit->m_totalObjectCount = objectCount;
 }
 
-bool ExecutableCompilationUnit::verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const
-{
-    const CompiledData::Unit *data = m_compilationUnit->data;
-
-    if (!dependencyHasher) {
-        for (size_t i = 0; i < sizeof(data->dependencyMD5Checksum); ++i) {
-            if (data->dependencyMD5Checksum[i] != 0)
-                return false;
-        }
-        return true;
-    }
-    const QByteArray checksum = dependencyHasher();
-    return checksum.size() == sizeof(data->dependencyMD5Checksum)
-            && memcmp(data->dependencyMD5Checksum, checksum.constData(),
-                      sizeof(data->dependencyMD5Checksum)) == 0;
-}
-
 QQmlType ExecutableCompilationUnit::qmlTypeForComponent(const QString &inlineComponentName) const
 {
     if (inlineComponentName.isEmpty())

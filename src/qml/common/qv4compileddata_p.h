@@ -1647,6 +1647,8 @@ public:
         return -1;
     }
 
+    bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const;
+
 private:
     QString m_fileName; // initialized from data->sourceFileIndex
     QString m_finalUrlString; // initialized from data->finalUrlIndex

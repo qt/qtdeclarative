@@ -129,7 +129,10 @@ public:
         m_compilationUnit->resolvedTypes = resolvedTypes;
     }
 
-    bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const;
+    bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const
+    {
+        return m_compilationUnit->verifyChecksum(dependencyHasher);
+    }
 
     QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const;
 
