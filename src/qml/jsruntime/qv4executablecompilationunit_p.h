@@ -33,9 +33,6 @@ class QQmlEnginePrivate;
 
 namespace QV4 {
 
-// index is per-object binding index
-typedef QVector<const QQmlPropertyData *> BindingPropertyData;
-
 class CompilationUnitMapper;
 class ResolvedTypeReference;
 // map from name index
@@ -92,11 +89,6 @@ public:
     QQmlPropertyCache::ConstPtr rootPropertyCache() const { return propertyCaches.at(/*root object*/0); }
 
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
-
-    // index is object index. This allows fast access to the
-    // property data when initializing bindings, avoiding expensive
-    // lookups by string (property name).
-    QVector<BindingPropertyData> bindingPropertyDataPerObject;
 
     // mapping from component object index (CompiledData::Unit object index that points to component) to identifier hash of named objects
     // this is initialized on-demand by QQmlContextData
@@ -298,6 +290,12 @@ public:
     const CompiledData::QmlUnit *qmlData() const { return m_compilationUnit->qmlData; }
 
     QString stringAt(uint index) const { return m_compilationUnit->stringAt(index); }
+
+    const CompiledData::BindingPropertyData *bindingPropertyDataPerObjectAt(
+            qsizetype objectIndex) const
+    {
+        return &m_compilationUnit->bindingPropertyDataPerObject.at(objectIndex);
+    }
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> baseCompilationUnit() const
     {

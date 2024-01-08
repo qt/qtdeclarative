@@ -1256,11 +1256,12 @@ void QQmlData::deferData(
     deferData->context = context;
 
     const QV4::CompiledData::Object *compiledObject = compilationUnit->objectAt(objectIndex);
-    const QV4::BindingPropertyData &propertyData = compilationUnit->bindingPropertyDataPerObject.at(objectIndex);
+    const QV4::CompiledData::BindingPropertyData *propertyData
+            = compilationUnit->bindingPropertyDataPerObjectAt(objectIndex);
 
     const QV4::CompiledData::Binding *binding = compiledObject->bindingTable();
     for (quint32 i = 0; i < compiledObject->nBindings; ++i, ++binding) {
-        const QQmlPropertyData *property = propertyData.at(i);
+        const QQmlPropertyData *property = propertyData->at(i);
         if (binding->hasFlag(QV4::CompiledData::Binding::IsDeferredBinding))
             deferData->bindings.insert(property ? property->coreIndex() : -1, binding);
     }

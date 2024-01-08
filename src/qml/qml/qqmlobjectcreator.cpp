@@ -657,10 +657,11 @@ void QQmlObjectCreator::setupBindings(BindingSetupFlags mode)
     QQmlListProperty<void> savedList;
     qSwap(_currentList, savedList);
 
-    const QV4::BindingPropertyData &propertyData = compilationUnit->bindingPropertyDataPerObject.at(_compiledObjectIndex);
+    const QV4::CompiledData::BindingPropertyData *propertyData
+            = compilationUnit->bindingPropertyDataPerObjectAt(_compiledObjectIndex);
 
     if (_compiledObject->idNameIndex) {
-        const QQmlPropertyData *idProperty = propertyData.last();
+        const QQmlPropertyData *idProperty = propertyData->last();
         Q_ASSERT(!idProperty || !idProperty->isValid() || idProperty->name(_qobject) == QLatin1String("id"));
         if (idProperty && idProperty->isValid() && idProperty->isWritable() && idProperty->propType().id() == QMetaType::QString) {
             QV4::CompiledData::Binding idBinding;
@@ -707,7 +708,7 @@ void QQmlObjectCreator::setupBindings(BindingSetupFlags mode)
 
     const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
-        const QQmlPropertyData *const property = propertyData.at(i);
+        const QQmlPropertyData *const property = propertyData->at(i);
         if (property) {
             const QQmlPropertyData *targetProperty = property;
             if (targetProperty->isAlias()) {

@@ -55,6 +55,7 @@ class QIODevice;
 class QQmlTypeNameCache;
 class QQmlType;
 class QQmlEngine;
+class QQmlPropertyData;
 
 namespace QQmlPrivate {
 struct AOTCompiledFunction;
@@ -75,6 +76,9 @@ struct Function;
 class EvalISelFactory;
 
 namespace CompiledData {
+
+// index is per-object binding index
+using BindingPropertyData = QVector<const QQmlPropertyData *>;
 
 struct String;
 struct Function;
@@ -1463,6 +1467,11 @@ struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
 
     std::unique_ptr<QString> icRootName;
     QHash<QString, InlineComponentData> inlineComponentData;
+
+    // index is object index. This allows fast access to the
+    // property data when initializing bindings, avoiding expensive
+    // lookups by string (property name).
+    QVector<BindingPropertyData> bindingPropertyDataPerObject;
 
 public:
     using CompiledObject = CompiledData::Object;

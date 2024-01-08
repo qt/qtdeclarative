@@ -36,7 +36,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(
     , imports(imports)
     , qmlUnit(compilationUnit->unitData())
     , propertyCaches(compilationUnit->propertyCaches)
-    , bindingPropertyDataPerObject(&compilationUnit->bindingPropertyDataPerObject)
+    , bindingPropertyDataPerObject(&compilationUnit->baseCompilationUnit()->bindingPropertyDataPerObject)
 {
     bindingPropertyDataPerObject->resize(compilationUnit->objectCount());
 }
@@ -133,7 +133,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         defaultProperty = propertyCache->defaultProperty();
     }
 
-    QV4::BindingPropertyData collectedBindingPropertyData(obj->nBindings);
+    QV4::CompiledData::BindingPropertyData collectedBindingPropertyData(obj->nBindings);
 
     binding = obj->bindingTable();
     for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
