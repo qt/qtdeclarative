@@ -354,7 +354,7 @@ private:
             if (!typeQualifier.isEmpty())
                 testCaseTypeName = typeQualifier % QLatin1Char('.') % testCaseTypeName;
 
-            testCaseType = compilationUnit->typeNameCache->query(
+            testCaseType = compilationUnit->typeNameCache()->query(
                     testCaseTypeName, QQmlTypeLoader::get(m_engine)).type;
             if (testCaseType.isValid())
                 break;

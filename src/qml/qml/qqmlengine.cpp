@@ -1986,7 +1986,7 @@ QQmlEnginePrivate::createInternalContext(const QQmlRefPointer<QV4::ExecutableCom
     QQmlRefPointer<QQmlContextData> context;
     context = QQmlContextData::createRefCounted(parentContext);
     context->setInternal(true);
-    context->setImports(unit->typeNameCache);
+    context->setImports(unit->typeNameCache());
     context->initFromTypeCompilationUnit(unit, subComponentIndex);
 
     if (isComponentRoot && unit->dependentScripts.size()) {

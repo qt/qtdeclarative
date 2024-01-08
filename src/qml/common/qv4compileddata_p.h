@@ -1487,6 +1487,7 @@ struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
     QVector<BindingPropertyData> bindingPropertyDataPerObject;
 
     ResolvedTypeReferenceMap resolvedTypes;
+    QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
 
     QQmlPropertyCacheVector propertyCaches;
 
@@ -1495,18 +1496,16 @@ struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
 public:
     using CompiledObject = CompiledData::Object;
 
-    CompilationUnit(const Unit *unitData = nullptr, const QString &fileName = QString(),
-                    const QString &finalUrlString = QString())
-    {
-        setUnitData(unitData, nullptr, fileName, finalUrlString);
-    }
-
     explicit CompilationUnit(const Unit *unitData, const QQmlPrivate::AOTCompiledFunction *aotCompiledFunctions,
                              const QString &fileName = QString(), const QString &finalUrlString = QString())
         : CompilationUnit(unitData, fileName, finalUrlString)
     {
         this->aotCompiledFunctions = aotCompiledFunctions;
     }
+
+    Q_QML_EXPORT CompilationUnit(
+            const Unit *unitData = nullptr, const QString &fileName = QString(),
+            const QString &finalUrlString = QString());
 
     Q_QML_EXPORT ~CompilationUnit();
 

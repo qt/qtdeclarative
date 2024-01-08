@@ -1367,7 +1367,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
     if (customParser && obj->hasFlag(QV4::CompiledData::Object::HasCustomParserBindings)) {
         customParser->engine = QQmlEnginePrivate::get(engine);
-        customParser->imports = compilationUnit->typeNameCache.data();
+        customParser->imports = compilationUnit->typeNameCache().data();
 
         QList<const QV4::CompiledData::Binding *> bindings;
         const QV4::CompiledData::Object *obj = compilationUnit->objectAt(index);

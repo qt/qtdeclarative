@@ -3,6 +3,7 @@
 
 #include "qv4compileddata_p.h"
 
+#include <private/qqmltypenamecache_p.h>
 #include <private/qv4resolvedtypereference_p.h>
 
 #include <QtQml/qqmlfile.h>
@@ -37,6 +38,12 @@ bool ResolvedTypeReferenceMap::addToHash(
     }
 
     return true;
+}
+
+CompilationUnit::CompilationUnit(
+        const Unit *unitData, const QString &fileName, const QString &finalUrlString)
+{
+    setUnitData(unitData, nullptr, fileName, finalUrlString);
 }
 
 CompilationUnit::~CompilationUnit()

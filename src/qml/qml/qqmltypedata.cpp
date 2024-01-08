@@ -239,7 +239,7 @@ QQmlError QQmlTypeData::createTypeAndPropertyCaches(
         const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache)
 {
     Q_ASSERT(m_compiledData);
-    m_compiledData->typeNameCache = typeNameCache;
+    m_compiledData->setTypeNameCache(typeNameCache);
     m_compiledData->setResolvedTypes(resolvedTypeCache);
     m_compiledData->setInlineComponentData(m_inlineComponentData);
 
@@ -570,7 +570,8 @@ void QQmlTypeData::done()
                 qualifier = qualifier.mid(lastDotIndex+1);
             }
 
-            m_compiledData->typeNameCache->add(qualifier.toString(), scriptIndex, enclosingNamespace);
+            m_compiledData->typeNameCache()->add(
+                    qualifier.toString(), scriptIndex, enclosingNamespace);
             QQmlRefPointer<QQmlScriptData> scriptData = script.script->scriptData();
             m_compiledData->dependentScripts << scriptData;
         }
@@ -848,7 +849,7 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
 
     m_compiledData = enginePrivate->v4engine()->executableCompilationUnit(
             std::move(compilationUnit));
-    m_compiledData->typeNameCache = typeNameCache;
+    m_compiledData->setTypeNameCache(typeNameCache);
     m_compiledData->setResolvedTypes(*resolvedTypeCache);
     *m_compiledData->propertyCachesPtr() = std::move(*compiler.propertyCaches());
     Q_ASSERT(m_compiledData->propertyCachesPtr()->count()

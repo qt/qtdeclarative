@@ -262,8 +262,6 @@ void ExecutableCompilationUnit::clear()
 
     dependentScripts.clear();
 
-    typeNameCache.reset();
-
     delete [] runtimeLookups;
     runtimeLookups = nullptr;
 

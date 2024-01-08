@@ -148,9 +148,10 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
         if (type == 0)
             return QQmlType();
 
+        const auto base = unit->baseCompilationUnit();
         const QQmlType qmltype = typeLoader
-                ? unit->typeNameCache->query<QQmlImport::AllowRecursion>(
-                                             unit->stringAt(type), typeLoader).type
+                ? base->typeNameCache->query<QQmlImport::AllowRecursion>(
+                                             base->stringAt(type), typeLoader).type
                 : QQmlType();
 
         if (!qmltype.isValid() || qmltype.typeId().isValid())
@@ -158,7 +159,7 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
 
         if (!qmltype.isComposite()) {
             return qmltype.isInlineComponentType()
-                ? unit->qmlTypeForComponent(qmltype.elementName())
+                ? base->qmlTypeForComponent(qmltype.elementName())
                 : QQmlType();
         }
 

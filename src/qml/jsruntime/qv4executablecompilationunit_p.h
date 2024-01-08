@@ -15,14 +15,15 @@
 // We mean it.
 //
 
+#include <private/qintrusivelist_p.h>
+#include <private/qqmlmetatype_p.h>
+#include <private/qqmlnullablevalue_p.h>
+#include <private/qqmlpropertycachevector_p.h>
+#include <private/qqmlrefcount_p.h>
+#include <private/qqmltype_p.h>
+#include <private/qqmltypenamecache_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qv4identifierhash_p.h>
-#include <private/qqmlrefcount_p.h>
-#include <private/qintrusivelist_p.h>
-#include <private/qqmlpropertycachevector_p.h>
-#include <private/qqmltype_p.h>
-#include <private/qqmlnullablevalue_p.h>
-#include <private/qqmlmetatype_p.h>
 
 #include <memory>
 
@@ -78,7 +79,15 @@ public:
     QUrl url() const { return m_compilationUnit->url(); }
     QUrl finalUrl() const { return m_compilationUnit->finalUrl(); }
 
-    QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
+    QQmlRefPointer<QQmlTypeNameCache> typeNameCache() const
+    {
+        return m_compilationUnit->typeNameCache;
+    }
+
+    void setTypeNameCache(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache)
+    {
+        m_compilationUnit->typeNameCache = typeNameCache;
+    }
 
     const QQmlPropertyCacheVector *propertyCachesPtr() const
     {
