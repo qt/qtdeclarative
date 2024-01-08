@@ -31,27 +31,6 @@ QT_BEGIN_NAMESPACE
 class QQmlScriptData;
 class QQmlEnginePrivate;
 
-struct InlineComponentData {
-
-    InlineComponentData() = default;
-    InlineComponentData(
-            const QQmlType &qmlType, int objectIndex, int nameIndex, int totalObjectCount,
-            int totalBindingCount, int totalParserStatusCount)
-        : qmlType(qmlType)
-        , objectIndex(objectIndex)
-        , nameIndex(nameIndex)
-        , totalObjectCount(totalObjectCount)
-        , totalBindingCount(totalBindingCount)
-        , totalParserStatusCount(totalParserStatusCount) {}
-
-    QQmlType qmlType;
-    int objectIndex = -1;
-    int nameIndex = -1;
-    int totalObjectCount = 0;
-    int totalBindingCount = 0;
-    int totalParserStatusCount = 0;
-};
-
 namespace QV4 {
 
 // index is per-object binding index
@@ -129,7 +108,13 @@ public:
     int m_totalBindingsCount = 0; // Number of bindings used in this type
     int m_totalParserStatusCount = 0; // Number of instantiated types that are QQmlParserStatus subclasses
     int m_totalObjectCount = 0; // Number of objects explicitly instantiated
-    std::unique_ptr<QString> icRootName;
+
+    const QString *icRootName() const { return m_compilationUnit->icRootName.get(); }
+    QString *icRootName() { return m_compilationUnit->icRootName.get(); }
+    void setIcRootName(std::unique_ptr<QString> &&icRootName)
+    {
+        m_compilationUnit->icRootName = std::move(icRootName);
+    }
 
     int totalBindingsCount() const;
     int totalParserStatusCount() const;
@@ -145,8 +130,6 @@ public:
     QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const;
 
     QQmlType qmlType;
-
-    QHash<QString, InlineComponentData> inlineComponentData;
 
     int inlineComponentId(const QString &inlineComponentName) const
     {
@@ -330,6 +313,17 @@ public:
         return data->indexOfRootFunction != -1
                 ? runtimeFunctions[data->indexOfRootFunction]
                 : nullptr;
+    }
+
+    const QHash<QString, CompiledData::InlineComponentData> &inlineComponentData() const
+    {
+        return m_compilationUnit->inlineComponentData;
+    }
+
+    void setInlineComponentData(
+            const QHash<QString, CompiledData::InlineComponentData> &inlineComponentData)
+    {
+        m_compilationUnit->inlineComponentData = inlineComponentData;
     }
 
     void populate();

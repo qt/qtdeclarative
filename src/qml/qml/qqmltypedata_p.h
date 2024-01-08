@@ -83,6 +83,8 @@ protected:
     QString stringAt(int index) const override;
 
 private:
+    using InlineComponentData = QV4::CompiledData::InlineComponentData;
+
     bool tryLoadFromDiskCache();
     bool loadFromSource();
     void restoreIR(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit);

@@ -241,7 +241,7 @@ QQmlError QQmlTypeData::createTypeAndPropertyCaches(
     Q_ASSERT(m_compiledData);
     m_compiledData->typeNameCache = typeNameCache;
     m_compiledData->resolvedTypes = resolvedTypeCache;
-    m_compiledData->inlineComponentData = m_inlineComponentData;
+    m_compiledData->setInlineComponentData(m_inlineComponentData);
 
     QQmlEnginePrivate * const engine = QQmlEnginePrivate::get(typeLoader()->engine());
 
@@ -300,6 +300,8 @@ static bool addTypeReferenceChecksumsToHash(
 
 // local helper function for inline components
 namespace  {
+using InlineComponentData = QV4::CompiledData::InlineComponentData;
+
 template<typename ObjectContainer>
 void setupICs(
         const ObjectContainer &container, QHash<QString, InlineComponentData> *icData,
@@ -512,7 +514,7 @@ void QQmlTypeData::done()
 
     {
         QQmlEnginePrivate *const enginePrivate = QQmlEnginePrivate::get(typeLoader()->engine());
-        m_compiledData->inlineComponentData = m_inlineComponentData;
+        m_compiledData->setInlineComponentData(m_inlineComponentData);
         {
             // Sanity check property bindings
             QQmlPropertyValidator validator(enginePrivate, m_importCache.data(), m_compiledData);

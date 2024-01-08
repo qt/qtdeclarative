@@ -31,10 +31,11 @@
 #endif
 
 #include <private/qendian_p.h>
-#include <private/qqmlrefcount_p.h>
-#include <private/qv4staticvalue_p.h>
-#include <private/qv4compilationunitmapper_p.h>
 #include <private/qqmlnullablevalue_p.h>
+#include <private/qqmlrefcount_p.h>
+#include <private/qqmltype_p.h>
+#include <private/qv4compilationunitmapper_p.h>
+#include <private/qv4staticvalue_p.h>
 
 #include <functional>
 #include <limits.h>
@@ -1424,7 +1425,27 @@ struct TypeReferenceMap : QHash<int, TypeReference>
 
 using DependentTypesHasher = std::function<QByteArray()>;
 
-// This is how this hooks into the existing structures:
+struct InlineComponentData {
+
+    InlineComponentData() = default;
+    InlineComponentData(
+            const QQmlType &qmlType, int objectIndex, int nameIndex, int totalObjectCount,
+            int totalBindingCount, int totalParserStatusCount)
+        : qmlType(qmlType)
+        , objectIndex(objectIndex)
+        , nameIndex(nameIndex)
+        , totalObjectCount(totalObjectCount)
+        , totalBindingCount(totalBindingCount)
+        , totalParserStatusCount(totalParserStatusCount)
+    {}
+
+    QQmlType qmlType;
+    int objectIndex = -1;
+    int nameIndex = -1;
+    int totalObjectCount = 0;
+    int totalBindingCount = 0;
+    int totalParserStatusCount = 0;
+};
 
 struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
 {
@@ -1439,6 +1460,10 @@ struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
     const StaticValue *constants = nullptr;
 
     std::unique_ptr<CompilationUnitMapper> backingFile;
+
+    std::unique_ptr<QString> icRootName;
+    QHash<QString, InlineComponentData> inlineComponentData;
+
 public:
     using CompiledObject = CompiledData::Object;
 

@@ -257,8 +257,6 @@ void ExecutableCompilationUnit::clear()
     // Clear the QQmlTypes but not the property caches.
     // The property caches may still be necessary to resolve further types.
     qmlType = QQmlType();
-    for (auto &ic : inlineComponentData)
-        ic.qmlType = QQmlType();
 
     if (runtimeLookups) {
         const uint lookupTableSize = unitData()->lookupTableSize;
@@ -341,8 +339,9 @@ IdentifierHash ExecutableCompilationUnit::createNamedObjectsPerComponent(int com
 
 template<typename F>
 void processInlinComponentType(
-    const QQmlType &type, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
-    F &&populateIcData)
+        const QQmlType &type,
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit,
+        F &&populateIcData)
 {
     if (type.isInlineComponentType()) {
         QString icRootName;
@@ -433,19 +432,20 @@ void ExecutableCompilationUnit::finalizeCompositeType(const QQmlType &type)
             if (leftCurrentInlineComponent)
                 break;
             const QString lastICRootName = stringAt(ic.nameIndex);
-            inlineComponentData[lastICRootName].totalBindingCount += obj->nBindings;
+            m_compilationUnit->inlineComponentData[lastICRootName].totalBindingCount
+                    += obj->nBindings;
 
             if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
                 const auto type = typeRef->type();
                 if (type.isValid() && type.parserStatusCast() != -1)
-                    ++inlineComponentData[lastICRootName].totalParserStatusCount;
+                    ++m_compilationUnit->inlineComponentData[lastICRootName].totalParserStatusCount;
 
-                ++inlineComponentData[lastICRootName].totalObjectCount;
+                ++m_compilationUnit->inlineComponentData[lastICRootName].totalObjectCount;
                 if (const auto compilationUnit = typeRef->compilationUnit()) {
                     // if the type is an inline component type, we have to extract the information from it
                     // This requires that inline components are visited in the correct order
-                    processInlinComponentType(type, compilationUnit, [&]() {
-                        auto &icData = inlineComponentData[lastICRootName];
+                    processInlinComponentType(type, compilationUnit->m_compilationUnit, [&]() {
+                        auto &icData = m_compilationUnit->inlineComponentData[lastICRootName];
                         icData.totalBindingCount += compilationUnit->totalBindingsCount();
                         icData.totalParserStatusCount += compilationUnit->totalParserStatusCount();
                         icData.totalObjectCount += compilationUnit->totalObjectCount();
@@ -469,7 +469,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(const QQmlType &type)
                 ++parserStatusCount;
             ++objectCount;
             if (const auto compilationUnit = typeRef->compilationUnit()) {
-                processInlinComponentType(type, compilationUnit, [&](){
+                processInlinComponentType(type, compilationUnit->m_compilationUnit, [&](){
                     bindingCount += compilationUnit->totalBindingsCount();
                     parserStatusCount += compilationUnit->totalParserStatusCount();
                     objectCount += compilationUnit->totalObjectCount();
@@ -484,15 +484,15 @@ void ExecutableCompilationUnit::finalizeCompositeType(const QQmlType &type)
 }
 
 int ExecutableCompilationUnit::totalBindingsCount() const {
-    if (!icRootName)
+    if (!m_compilationUnit->icRootName)
         return m_totalBindingsCount;
-    return inlineComponentData[*icRootName].totalBindingCount;
+    return m_compilationUnit->inlineComponentData[*icRootName()].totalBindingCount;
 }
 
 int ExecutableCompilationUnit::totalObjectCount() const {
-    if (!icRootName)
+    if (!m_compilationUnit->icRootName)
         return m_totalObjectCount;
-    return inlineComponentData[*icRootName].totalObjectCount;
+    return m_compilationUnit->inlineComponentData[*icRootName()].totalObjectCount;
 }
 
 ResolvedTypeReference *ExecutableCompilationUnit::resolvedType(QMetaType type) const
@@ -505,9 +505,9 @@ ResolvedTypeReference *ExecutableCompilationUnit::resolvedType(QMetaType type) c
 }
 
 int ExecutableCompilationUnit::totalParserStatusCount() const {
-    if (!icRootName)
+    if (!m_compilationUnit->icRootName)
         return m_totalParserStatusCount;
-    return inlineComponentData[*icRootName].totalParserStatusCount;
+    return m_compilationUnit->inlineComponentData[*icRootName()].totalParserStatusCount;
 }
 
 bool ExecutableCompilationUnit::verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const
@@ -531,7 +531,7 @@ QQmlType ExecutableCompilationUnit::qmlTypeForComponent(const QString &inlineCom
 {
     if (inlineComponentName.isEmpty())
         return qmlType;
-    return inlineComponentData[inlineComponentName].qmlType;
+    return m_compilationUnit->inlineComponentData[inlineComponentName].qmlType;
 }
 
 Heap::Module *ExecutableCompilationUnit::instantiate()
