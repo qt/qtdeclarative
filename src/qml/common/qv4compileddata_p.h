@@ -1626,6 +1626,19 @@ public:
         return propertyCaches.at(/*root object*/0);
     }
 
+    int inlineComponentId(const QString &inlineComponentName) const
+    {
+        for (uint i = 0; i < qmlData->nObjects; ++i) {
+            auto *object = qmlData->objectAt(i);
+            for (auto it = object->inlineComponentsBegin(), end = object->inlineComponentsEnd();
+                 it != end; ++it) {
+                if (stringAt(it->nameIndex) == inlineComponentName)
+                    return it->objectIndex;
+            }
+        }
+        return -1;
+    }
+
 private:
     QString m_fileName; // initialized from data->sourceFileIndex
     QString m_finalUrlString; // initialized from data->finalUrlIndex

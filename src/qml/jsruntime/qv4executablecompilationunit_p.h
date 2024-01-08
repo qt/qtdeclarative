@@ -142,15 +142,7 @@ public:
 
     int inlineComponentId(const QString &inlineComponentName) const
     {
-        for (int i = 0; i < objectCount(); ++i) {
-            auto *object = objectAt(i);
-            for (auto it = object->inlineComponentsBegin(), end = object->inlineComponentsEnd();
-                 it != end; ++it) {
-                if (stringAt(it->nameIndex) == inlineComponentName)
-                    return it->objectIndex;
-            }
-        }
-        return -1;
+        return m_compilationUnit->inlineComponentId(inlineComponentName);
     }
 
     // --- interface for QQmlPropertyCacheCreator
