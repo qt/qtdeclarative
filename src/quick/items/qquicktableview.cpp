@@ -1645,6 +1645,7 @@ bool QQuickTableViewPrivate::startSelection(const QPointF &pos)
 
 void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
 {
+    Q_Q(QQuickTableView);
     if (loadedItems.isEmpty())
         return;
     if (!selectionModel) {
@@ -1663,11 +1664,19 @@ void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
     }
 
     const QRect prevSelection = selection();
-    const QPoint clampedCell = clampedCellAtPos(pos);
+
+    QPoint clampedCell;
+    if (pos.x() == -1) {
+        // Special case: use current cell as start cell
+        clampedCell = q->cellAtIndex(selectionModel->currentIndex());
+    } else {
+        clampedCell = clampedCellAtPos(pos);
+        if (cellIsValid(clampedCell))
+            setCurrentIndex(clampedCell);
+    }
+
     if (!cellIsValid(clampedCell))
         return;
-
-    setCurrentIndex(clampedCell);
 
     switch (selectionBehavior) {
     case QQuickTableView::SelectCells:
