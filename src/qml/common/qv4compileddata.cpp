@@ -206,6 +206,13 @@ bool CompilationUnit::verifyChecksum(const DependentTypesHasher &dependencyHashe
                       sizeof(data->dependencyMD5Checksum)) == 0;
 }
 
+QQmlType CompilationUnit::qmlTypeForComponent(const QString &inlineComponentName) const
+{
+    if (inlineComponentName.isEmpty())
+        return qmlType;
+    return inlineComponentData[inlineComponentName].qmlType;
+}
+
 } // namespace CompiledData
 } // namespace QV4
 

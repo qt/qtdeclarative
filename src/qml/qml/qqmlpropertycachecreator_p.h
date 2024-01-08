@@ -880,7 +880,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
                 Q_ASSERT(type->isValid());
             }
         } else {
-            *type = typeRef->compilationUnit()->qmlType.typeId();
+            *type = typeRef->compilationUnit()->metaType();
         }
 
         *version = typeRef->version();

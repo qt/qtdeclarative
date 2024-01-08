@@ -134,9 +134,14 @@ public:
         return m_compilationUnit->verifyChecksum(dependencyHasher);
     }
 
-    QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const;
+    QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const
+    {
+        return m_compilationUnit->qmlTypeForComponent(inlineComponentName);
+    }
 
-    QQmlType qmlType;
+    QQmlType qmlType() const { return m_compilationUnit->qmlType; }
+
+    QMetaType metaType() const { return qmlType().typeId(); }
 
     int inlineComponentId(const QString &inlineComponentName) const
     {

@@ -254,10 +254,6 @@ void ExecutableCompilationUnit::clear()
     delete [] imports;
     imports = nullptr;
 
-    // Clear the QQmlTypes but not the property caches.
-    // The property caches may still be necessary to resolve further types.
-    qmlType = QQmlType();
-
     if (runtimeLookups) {
         const uint lookupTableSize = unitData()->lookupTableSize;
         for (uint i = 0; i < lookupTableSize; ++i)
@@ -377,9 +373,9 @@ void ExecutableCompilationUnit::finalizeCompositeType(const QQmlType &type)
     if (m_compilationUnit->propertyCaches.needsVMEMetaObject(/*root object*/0)) {
         // qmlType is only valid for types that have references to themselves.
         if (type.isValid()) {
-            qmlType = type;
+            m_compilationUnit->qmlType = type;
         } else {
-            qmlType = QQmlMetaType::findCompositeType(
+            m_compilationUnit->qmlType = QQmlMetaType::findCompositeType(
                     finalUrl(), this, (unitData()->flags & CompiledData::Unit::IsSingleton)
                             ? QQmlMetaType::Singleton
                             : QQmlMetaType::NonSingleton);
@@ -391,9 +387,9 @@ void ExecutableCompilationUnit::finalizeCompositeType(const QQmlType &type)
         auto *typeRef = m_compilationUnit->resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
         if (const auto compilationUnit = typeRef->compilationUnit())
-            qmlType = compilationUnit->qmlType;
+            m_compilationUnit->qmlType = compilationUnit->m_compilationUnit->qmlType;
         else
-            qmlType = typeRef->type();
+            m_compilationUnit->qmlType = typeRef->type();
     }
 
     // Collect some data for instantiation later.
@@ -478,13 +474,6 @@ void ExecutableCompilationUnit::finalizeCompositeType(const QQmlType &type)
     m_compilationUnit->m_totalBindingsCount = bindingCount;
     m_compilationUnit->m_totalParserStatusCount = parserStatusCount;
     m_compilationUnit->m_totalObjectCount = objectCount;
-}
-
-QQmlType ExecutableCompilationUnit::qmlTypeForComponent(const QString &inlineComponentName) const
-{
-    if (inlineComponentName.isEmpty())
-        return qmlType;
-    return m_compilationUnit->inlineComponentData[inlineComponentName].qmlType;
 }
 
 Heap::Module *ExecutableCompilationUnit::instantiate()

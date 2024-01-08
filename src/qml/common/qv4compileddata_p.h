@@ -1490,6 +1490,8 @@ struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
 
     QQmlPropertyCacheVector propertyCaches;
 
+    QQmlType qmlType;
+
 public:
     using CompiledObject = CompiledData::Object;
 
@@ -1648,6 +1650,9 @@ public:
     }
 
     bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const;
+
+    QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const;
+    QMetaType metaType() const { return qmlType.typeId(); }
 
 private:
     QString m_fileName; // initialized from data->sourceFileIndex

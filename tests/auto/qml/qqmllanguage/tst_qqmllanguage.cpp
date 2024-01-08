@@ -5800,7 +5800,7 @@ void tst_qqmllanguage::selfReference()
 
     const QMetaObject *metaObject = o->metaObject();
     QMetaProperty selfProperty = metaObject->property(metaObject->indexOfProperty("self"));
-    QCOMPARE(selfProperty.metaType().id(), compilationUnit->qmlType.typeId().id());
+    QCOMPARE(selfProperty.metaType().id(), compilationUnit->metaType().id());
 
     QByteArray typeName = selfProperty.typeName();
     QVERIFY(typeName.endsWith('*'));
@@ -5809,7 +5809,7 @@ void tst_qqmllanguage::selfReference()
 
     QMetaMethod selfFunction = metaObject->method(metaObject->indexOfMethod("returnSelf()"));
     QVERIFY(selfFunction.isValid());
-    QCOMPARE(selfFunction.returnType(), compilationUnit->qmlType.typeId().id());
+    QCOMPARE(selfFunction.returnType(), compilationUnit->metaType().id());
 
     QMetaMethod selfSignal;
 
@@ -5823,7 +5823,7 @@ void tst_qqmllanguage::selfReference()
 
     QVERIFY(selfSignal.isValid());
     QCOMPARE(selfSignal.parameterCount(), 1);
-    QCOMPARE(selfSignal.parameterType(0), compilationUnit->qmlType.typeId().id());
+    QCOMPARE(selfSignal.parameterType(0), compilationUnit->metaType().id());
 }
 
 void tst_qqmllanguage::selfReferencingSingleton()

@@ -1555,7 +1555,7 @@ static int doCountInternalCompositeTypeSelfReferences(
             ++result;
     };
 
-    doCheck(compilationUnit->qmlType.typeId().iface());
+    doCheck(compilationUnit->metaType().iface());
     for (auto &&inlineData: compilationUnit->inlineComponentData())
         doCheck(inlineData.qmlType.typeId().iface());
 
@@ -1945,7 +1945,7 @@ void QQmlMetaType::registerInternalCompositeType(
         data->compositeTypes.insert(iface, compilationUnit);
     };
 
-    doInsert(compilationUnit->qmlType.typeId().iface());
+    doInsert(compilationUnit->metaType().iface());
     for (auto &&inlineData: compilationUnit->inlineComponentData())
         doInsert(inlineData.qmlType.typeId().iface());
 }
@@ -1964,7 +1964,7 @@ void QQmlMetaType::unregisterInternalCompositeType(
             data->compositeTypes.erase(it);
     };
 
-    doRemove(compilationUnit->qmlType.typeId().iface());
+    doRemove(compilationUnit->metaType().iface());
     for (auto &&inlineData: compilationUnit->inlineComponentData())
         doRemove(inlineData.qmlType.typeId().iface());
 }

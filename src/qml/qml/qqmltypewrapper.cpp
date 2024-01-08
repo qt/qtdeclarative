@@ -410,7 +410,7 @@ static ReturnedValue instanceOfQObject(const QV4::QQmlTypeWrapper *typeWrapper, 
         QQmlEnginePrivate *qenginepriv = QQmlEnginePrivate::get(engine->qmlEngine());
         QQmlRefPointer<QQmlTypeData> td = qenginepriv->typeLoader.getType(typeWrapper->d()->type().sourceUrl());
         if (ExecutableCompilationUnit *cu = td->compilationUnit())
-            myQmlType = QQmlMetaType::metaObjectForType(cu->qmlType.typeId());
+            myQmlType = QQmlMetaType::metaObjectForType(cu->metaType());
         else
             return Encode(false); // It seems myQmlType has some errors, so we could not compile it.
     } else {
