@@ -26,7 +26,7 @@ Q_LOGGING_CATEGORY(lcQmlTypeCompiler, "qt.qml.typecompiler");
 
 QQmlTypeCompiler::QQmlTypeCompiler(
         QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *parsedQML,
-        QV4::ResolvedTypeReferenceMap *resolvedTypeCache,
+        QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache,
         const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
     : resolvedTypes(resolvedTypeCache)
     , engine(engine)

@@ -367,8 +367,8 @@ private:
         if (object->hasFlag(Object::IsInlineComponentRoot))
             return result;
 
-        if (const auto superTypeUnit = compilationUnit->resolvedTypes.value(
-                    object->inheritedTypeNameIndex)->compilationUnit()) {
+        if (const auto superTypeUnit = compilationUnit->resolvedType(object->inheritedTypeNameIndex)
+                                               ->compilationUnit()) {
             // We have a non-C++ super type, which could indicate we're a subtype of a TestCase
             if (testCaseType.isValid() && superTypeUnit->url() == testCaseType.sourceUrl())
                 result.isTestCase = true;

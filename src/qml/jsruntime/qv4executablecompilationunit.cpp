@@ -268,9 +268,6 @@ void ExecutableCompilationUnit::clear()
 
     typeNameCache.reset();
 
-    qDeleteAll(resolvedTypes);
-    resolvedTypes.clear();
-
     delete [] runtimeLookups;
     runtimeLookups = nullptr;
 
@@ -391,7 +388,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(const QQmlType &type)
         QQmlMetaType::registerInternalCompositeType(this);
     } else {
         const QV4::CompiledData::Object *obj = objectAt(/*root object*/0);
-        auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
+        auto *typeRef = m_compilationUnit->resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
         if (const auto compilationUnit = typeRef->compilationUnit())
             qmlType = compilationUnit->qmlType;
@@ -435,7 +432,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(const QQmlType &type)
             m_compilationUnit->inlineComponentData[lastICRootName].totalBindingCount
                     += obj->nBindings;
 
-            if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
+            if (auto *typeRef = m_compilationUnit->resolvedTypes.value(obj->inheritedTypeNameIndex)) {
                 const auto type = typeRef->type();
                 if (type.isValid() && type.parserStatusCast() != -1)
                     ++m_compilationUnit->inlineComponentData[lastICRootName].totalParserStatusCount;
@@ -463,7 +460,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(const QQmlType &type)
             continue;
 
         bindingCount += obj->nBindings;
-        if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
+        if (auto *typeRef = m_compilationUnit->resolvedTypes.value(obj->inheritedTypeNameIndex)) {
             const auto type = typeRef->type();
             if (type.isValid() && type.parserStatusCast() != -1)
                 ++parserStatusCount;
@@ -493,15 +490,6 @@ int ExecutableCompilationUnit::totalObjectCount() const {
     if (!m_compilationUnit->icRootName)
         return m_totalObjectCount;
     return m_compilationUnit->inlineComponentData[*icRootName()].totalObjectCount;
-}
-
-ResolvedTypeReference *ExecutableCompilationUnit::resolvedType(QMetaType type) const
-{
-    for (ResolvedTypeReference *ref : std::as_const(resolvedTypes)) {
-        if (ref->type().typeId() == type)
-            return ref;
-    }
-    return nullptr;
 }
 
 int ExecutableCompilationUnit::totalParserStatusCount() const {
@@ -852,29 +840,6 @@ void ExecutableCompilationUnit::evaluateModuleRequests()
         if (engine->hasException)
             return;
     }
-}
-
-/*!
-    \internal
-    This function creates a temporary key vector and sorts it to guarantuee a stable
-    hash. This is used to calculate a check-sum on dependent meta-objects.
- */
-bool ResolvedTypeReferenceMap::addToHash(
-        QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums) const
-{
-    std::vector<int> keys (size());
-    int i = 0;
-    for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
-        keys[i] = it.key();
-        ++i;
-    }
-    std::sort(keys.begin(), keys.end());
-    for (int key: keys) {
-        if (!this->operator[](key)->addToHash(hash, checksums))
-            return false;
-    }
-
-    return true;
 }
 
 QString ExecutableCompilationUnit::bindingValueAsString(const CompiledData::Binding *binding) const

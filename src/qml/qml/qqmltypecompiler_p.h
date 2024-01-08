@@ -46,7 +46,7 @@ public:
     QQmlTypeCompiler(QQmlEnginePrivate *engine,
                      QQmlTypeData *typeData,
                      QmlIR::Document *document,
-                     QV4::ResolvedTypeReferenceMap *resolvedTypeCache,
+                     QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache,
                      const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
 
     // --- interface used by QQmlPropertyCacheCreator
@@ -63,7 +63,7 @@ public:
     QString stringAt(int idx) const;
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsBegin(const QmlIR::Object *object) const { return object->functionsBegin(); }
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsEnd(const QmlIR::Object *object) const { return object->functionsEnd(); }
-    QV4::ResolvedTypeReferenceMap *resolvedTypes = nullptr;
+    QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypes = nullptr;
     ListPropertyAssignBehavior listPropertyAssignBehavior() const
     {
         for (const QmlIR::Pragma *pragma: document->pragmas) {

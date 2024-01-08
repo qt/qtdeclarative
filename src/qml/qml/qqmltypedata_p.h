@@ -92,13 +92,14 @@ private:
     void resolveTypes();
     QQmlError buildTypeResolutionCaches(
             QQmlRefPointer<QQmlTypeNameCache> *typeNameCache,
-            QV4::ResolvedTypeReferenceMap *resolvedTypeCache
+            QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache
             ) const;
     void compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
-                 QV4::ResolvedTypeReferenceMap *resolvedTypeCache,
+                 QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache,
                  const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
-    QQmlError createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
-                                          const QV4::ResolvedTypeReferenceMap &resolvedTypeCache);
+    QQmlError createTypeAndPropertyCaches(
+            const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
+            const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
     bool resolveType(const QString &typeName, QTypeRevision &version,
                      TypeReference &ref, int lineNumber = -1, int columnNumber = -1,
                      bool reportErrors = true,

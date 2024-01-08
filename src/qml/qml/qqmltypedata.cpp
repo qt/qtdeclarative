@@ -236,11 +236,11 @@ bool QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::wrapImplicit
 
 QQmlError QQmlTypeData::createTypeAndPropertyCaches(
         const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
-        const QV4::ResolvedTypeReferenceMap &resolvedTypeCache)
+        const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache)
 {
     Q_ASSERT(m_compiledData);
     m_compiledData->typeNameCache = typeNameCache;
-    m_compiledData->resolvedTypes = resolvedTypeCache;
+    m_compiledData->setResolvedTypes(resolvedTypeCache);
     m_compiledData->setInlineComponentData(m_inlineComponentData);
 
     QQmlEnginePrivate * const engine = QQmlEnginePrivate::get(typeLoader()->engine());
@@ -440,7 +440,7 @@ void QQmlTypeData::done()
     else
         setupICs(m_compiledData, &m_inlineComponentData, finalUrl(), m_compiledData);
 
-    QV4::ResolvedTypeReferenceMap resolvedTypeCache;
+    QV4::CompiledData::ResolvedTypeReferenceMap resolvedTypeCache;
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
     {
         QQmlError error = buildTypeResolutionCaches(&typeNameCache, &resolvedTypeCache);
@@ -482,7 +482,7 @@ void QQmlTypeData::done()
                 return;
 
             // We want to keep our resolve types ...
-            m_compiledData->resolvedTypes.clear();
+            m_compiledData->setResolvedTypes({});
             // ... but we don't want the property caches we've created for the broken CU.
             for (QV4::ResolvedTypeReference *ref: std::as_const(resolvedTypeCache)) {
                 const auto compilationUnit = ref->compilationUnit();
@@ -808,7 +808,7 @@ QString QQmlTypeData::stringAt(int index) const
 }
 
 void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
-                           QV4::ResolvedTypeReferenceMap *resolvedTypeCache,
+                           QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache,
                            const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
 {
     Q_ASSERT(m_compiledData.isNull());
@@ -847,7 +847,7 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
     m_compiledData = enginePrivate->v4engine()->executableCompilationUnit(
             std::move(compilationUnit));
     m_compiledData->typeNameCache = typeNameCache;
-    m_compiledData->resolvedTypes = *resolvedTypeCache;
+    m_compiledData->setResolvedTypes(*resolvedTypeCache);
     m_compiledData->propertyCaches = std::move(*compiler.propertyCaches());
     Q_ASSERT(m_compiledData->propertyCaches.count()
              == static_cast<int>(m_compiledData->objectCount()));
@@ -958,7 +958,7 @@ void QQmlTypeData::resolveTypes()
 
 QQmlError QQmlTypeData::buildTypeResolutionCaches(
         QQmlRefPointer<QQmlTypeNameCache> *typeNameCache,
-        QV4::ResolvedTypeReferenceMap *resolvedTypeCache) const
+        QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache) const
 {
     typeNameCache->adopt(new QQmlTypeNameCache(m_importCache));
 

@@ -16,6 +16,7 @@
 
 #include <functional>
 
+#include <QtCore/qcryptographichash.h>
 #include <QtCore/qhash.h>
 #include <QtCore/qhashfunctions.h>
 #include <QtCore/qlocale.h>
@@ -74,11 +75,18 @@ struct InternalClass;
 
 struct Function;
 class EvalISelFactory;
+class ResolvedTypeReference;
 
 namespace CompiledData {
 
 // index is per-object binding index
 using BindingPropertyData = QVector<const QQmlPropertyData *>;
+
+// map from name index
+struct ResolvedTypeReferenceMap: public QHash<int, ResolvedTypeReference*>
+{
+    bool addToHash(QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums) const;
+};
 
 struct String;
 struct Function;
@@ -1473,6 +1481,8 @@ struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
     // lookups by string (property name).
     QVector<BindingPropertyData> bindingPropertyDataPerObject;
 
+    ResolvedTypeReferenceMap resolvedTypes;
+
 public:
     using CompiledObject = CompiledData::Object;
 
@@ -1489,22 +1499,7 @@ public:
         this->aotCompiledFunctions = aotCompiledFunctions;
     }
 
-    ~CompilationUnit()
-    {
-        if (data) {
-            if (data->qmlUnit() != qmlData)
-                free(const_cast<QmlUnit *>(qmlData));
-            qmlData = nullptr;
-
-            if (!(data->flags & QV4::CompiledData::Unit::StaticData))
-                free(const_cast<Unit *>(data));
-        }
-        data = nullptr;
-#if Q_BYTE_ORDER == Q_BIG_ENDIAN
-        delete [] constants;
-        constants = nullptr;
-#endif
-    }
+    Q_QML_EXPORT ~CompilationUnit();
 
     const Unit *unitData() const { return data; }
 
@@ -1619,6 +1614,9 @@ public:
             m_finalUrl = QUrl(finalUrlString());
         return m_finalUrl;
     }
+
+    ResolvedTypeReference *resolvedType(int id) const { return resolvedTypes.value(id); }
+    ResolvedTypeReference *resolvedType(QMetaType type) const;
 
 private:
     QString m_fileName; // initialized from data->sourceFileIndex

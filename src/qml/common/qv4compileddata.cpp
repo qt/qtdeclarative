@@ -3,9 +3,10 @@
 
 #include "qv4compileddata_p.h"
 
+#include <private/qv4resolvedtypereference_p.h>
+
 #include <QtQml/qqmlfile.h>
 
-#include <QtCore/qcryptographichash.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qscopeguard.h>
 #include <QtCore/qstandardpaths.h>
@@ -14,6 +15,48 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 namespace CompiledData {
+
+/*!
+    \internal
+    This function creates a temporary key vector and sorts it to guarantuee a stable
+    hash. This is used to calculate a check-sum on dependent meta-objects.
+ */
+bool ResolvedTypeReferenceMap::addToHash(
+        QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums) const
+{
+    std::vector<int> keys (size());
+    int i = 0;
+    for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
+        keys[i] = it.key();
+        ++i;
+    }
+    std::sort(keys.begin(), keys.end());
+    for (int key: keys) {
+        if (!this->operator[](key)->addToHash(hash, checksums))
+            return false;
+    }
+
+    return true;
+}
+
+CompilationUnit::~CompilationUnit()
+{
+    qDeleteAll(resolvedTypes);
+
+    if (data) {
+        if (data->qmlUnit() != qmlData)
+            free(const_cast<QmlUnit *>(qmlData));
+        qmlData = nullptr;
+
+        if (!(data->flags & QV4::CompiledData::Unit::StaticData))
+            free(const_cast<Unit *>(data));
+    }
+    data = nullptr;
+#if Q_BYTE_ORDER == Q_BIG_ENDIAN
+    delete [] constants;
+    constants = nullptr;
+#endif
+}
 
 QString CompilationUnit::localCacheFilePath(const QUrl &url)
 {
@@ -115,6 +158,16 @@ QStringList CompilationUnit::moduleRequests() const
     for (uint i = 0; i < data->moduleRequestTableSize; ++i)
         requests << stringAt(data->moduleRequestTable()[i]);
     return requests;
+}
+
+ResolvedTypeReference *CompilationUnit::resolvedType(QMetaType type) const
+{
+    for (ResolvedTypeReference *ref : std::as_const(resolvedTypes)) {
+        if (ref->type().typeId() == type)
+            return ref;
+    }
+    return nullptr;
+
 }
 
 } // namespace CompiledData

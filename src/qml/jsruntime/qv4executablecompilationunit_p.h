@@ -34,12 +34,6 @@ class QQmlEnginePrivate;
 namespace QV4 {
 
 class CompilationUnitMapper;
-class ResolvedTypeReference;
-// map from name index
-struct ResolvedTypeReferenceMap: public QHash<int, ResolvedTypeReference*>
-{
-    bool addToHash(QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums) const;
-};
 
 struct CompilationUnitRuntimeData
 {
@@ -113,9 +107,21 @@ public:
     int totalObjectCount() const;
 
     QVector<QQmlRefPointer<QQmlScriptData>> dependentScripts;
-    ResolvedTypeReferenceMap resolvedTypes;
-    ResolvedTypeReference *resolvedType(int id) const { return resolvedTypes.value(id); }
-    ResolvedTypeReference *resolvedType(QMetaType type) const;
+
+    ResolvedTypeReference *resolvedType(int id) const
+    {
+        return m_compilationUnit->resolvedType(id);
+    }
+
+    ResolvedTypeReference *resolvedType(QMetaType type) const
+    {
+        return m_compilationUnit->resolvedType(type);
+    }
+
+    void setResolvedTypes(const CompiledData::ResolvedTypeReferenceMap &resolvedTypes)
+    {
+        m_compilationUnit->resolvedTypes = resolvedTypes;
+    }
 
     bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const;
 
