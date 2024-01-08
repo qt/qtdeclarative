@@ -72,22 +72,12 @@ void QQmlTypeLoaderThread::loadWithCachedUnitAsync(const QQmlDataBlob::Ptr &b, c
 
 void QQmlTypeLoaderThread::callCompleted(const QQmlDataBlob::Ptr &b)
 {
-#if !QT_CONFIG(thread)
-    if (!isThisThread())
-        postMethodToThread(&This::callCompletedMain, b);
-#else
     postMethodToMain(&This::callCompletedMain, b);
-#endif
 }
 
 void QQmlTypeLoaderThread::callDownloadProgressChanged(const QQmlDataBlob::Ptr &b, qreal p)
 {
-#if !QT_CONFIG(thread)
-    if (!isThisThread())
-        postMethodToThread(&This::callDownloadProgressChangedMain, b, p);
-#else
     postMethodToMain(&This::callDownloadProgressChangedMain, b, p);
-#endif
 }
 
 void QQmlTypeLoaderThread::initializeEngine(QQmlExtensionInterface *iface,
