@@ -152,7 +152,6 @@ public:
     using CompiledObject = const CompiledData::Object;
     using CompiledFunction = const CompiledData::Function;
     using CompiledBinding = const CompiledData::Binding;
-    enum class ListPropertyAssignBehavior { Append, Replace, ReplaceIfNotDefault };
 
     // Empty dummy. We don't need to do this when loading from cache.
     class IdToObjectMap
@@ -165,39 +164,23 @@ public:
         bool contains(int) { return false; }
     };
 
+    using ListPropertyAssignBehavior = CompiledData::CompilationUnit::ListPropertyAssignBehavior;
     ListPropertyAssignBehavior listPropertyAssignBehavior() const
     {
-        if (unitData()->flags & CompiledData::Unit::ListPropertyAssignReplace)
-            return ListPropertyAssignBehavior::Replace;
-        if (unitData()->flags & CompiledData::Unit::ListPropertyAssignReplaceIfNotDefault)
-            return ListPropertyAssignBehavior::ReplaceIfNotDefault;
-        return ListPropertyAssignBehavior::Append;
-    }
-
-    bool ignoresFunctionSignature() const
-    {
-        return unitData()->flags & CompiledData::Unit::FunctionSignaturesIgnored;
+        return m_compilationUnit->listPropertyAssignBehavior();
     }
 
     bool nativeMethodsAcceptThisObjects() const
     {
-        return unitData()->flags & CompiledData::Unit::NativeMethodsAcceptThisObject;
+        return m_compilationUnit->nativeMethodsAcceptThisObjects();
     }
 
-    bool valueTypesAreCopied() const
-    {
-        return unitData()->flags & CompiledData::Unit::ValueTypesCopied;
-    }
-
-    bool valueTypesAreAddressable() const
-    {
-        return unitData()->flags & CompiledData::Unit::ValueTypesAddressable;
-    }
-
-    bool componentsAreBound() const
-    {
-        return unitData()->flags & CompiledData::Unit::ComponentsBound;
-    }
+    bool ignoresFunctionSignature() const { return m_compilationUnit->ignoresFunctionSignature(); }
+    bool valueTypesAreCopied() const { return m_compilationUnit->valueTypesAreCopied(); }
+    bool valueTypesAreAddressable() const { return m_compilationUnit->valueTypesAreAddressable(); }
+    bool componentsAreBound() const { return m_compilationUnit->componentsAreBound(); }
+    bool isESModule() const { return m_compilationUnit->isESModule(); }
+    bool isSharedLibrary() const { return m_compilationUnit->isSharedLibrary(); }
 
     int objectCount() const { return qmlData()->nObjects; }
     const CompiledObject *objectAt(int index) const
@@ -239,16 +222,6 @@ public:
     FunctionIterator objectFunctionsEnd(const CompiledObject *object) const
     {
         return FunctionIterator(unitData(), object, object->nFunctions);
-    }
-
-    bool isESModule() const
-    {
-        return unitData()->flags & CompiledData::Unit::IsESModule;
-    }
-
-    bool isSharedLibrary() const
-    {
-        return unitData()->flags & CompiledData::Unit::IsSharedLibrary;
     }
 
     Heap::Module *instantiate();

@@ -1651,6 +1651,51 @@ public:
 
     bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const;
 
+    enum class ListPropertyAssignBehavior { Append, Replace, ReplaceIfNotDefault };
+    ListPropertyAssignBehavior listPropertyAssignBehavior() const
+    {
+        if (unitData()->flags & CompiledData::Unit::ListPropertyAssignReplace)
+            return ListPropertyAssignBehavior::Replace;
+        if (unitData()->flags & CompiledData::Unit::ListPropertyAssignReplaceIfNotDefault)
+            return ListPropertyAssignBehavior::ReplaceIfNotDefault;
+        return ListPropertyAssignBehavior::Append;
+    }
+
+    bool ignoresFunctionSignature() const
+    {
+        return unitData()->flags & CompiledData::Unit::FunctionSignaturesIgnored;
+    }
+
+    bool nativeMethodsAcceptThisObjects() const
+    {
+        return unitData()->flags & CompiledData::Unit::NativeMethodsAcceptThisObject;
+    }
+
+    bool valueTypesAreCopied() const
+    {
+        return unitData()->flags & CompiledData::Unit::ValueTypesCopied;
+    }
+
+    bool valueTypesAreAddressable() const
+    {
+        return unitData()->flags & CompiledData::Unit::ValueTypesAddressable;
+    }
+
+    bool componentsAreBound() const
+    {
+        return unitData()->flags & CompiledData::Unit::ComponentsBound;
+    }
+
+    bool isESModule() const
+    {
+        return unitData()->flags & CompiledData::Unit::IsESModule;
+    }
+
+    bool isSharedLibrary() const
+    {
+        return unitData()->flags & CompiledData::Unit::IsSharedLibrary;
+    }
+
     QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const;
     QMetaType metaType() const { return qmlType.typeId(); }
 
