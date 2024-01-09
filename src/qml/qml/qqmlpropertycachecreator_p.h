@@ -685,7 +685,14 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
                 } else if (selfReference) {
                     compositeType = objectContainer->qmlTypeForComponent();
                 } else {
-                    compositeType = qmltype;
+                    // compositeType may not be the same type as qmlType because multiple engines
+                    // may load different types for the same document. Therefore we have to ask
+                    // our engine's type loader here.
+                    QQmlRefPointer<QQmlTypeData> tdata
+                            = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
+                    Q_ASSERT(tdata);
+                    Q_ASSERT(tdata->isComplete());
+                    compositeType = tdata->compilationUnit()->qmlTypeForComponent();
                 }
 
                 if (p->isList()) {

@@ -440,6 +440,8 @@ private slots:
 
     void optionalChainCallOnNullProperty();
 
+    void ambiguousComponents();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -3925,6 +3927,7 @@ void tst_qqmllanguage::initTestCase()
 
     // Register a Composite Singleton.
     qmlRegisterSingletonType(testFileUrl("singleton/RegisteredCompositeSingletonType.qml"), "org.qtproject.Test", 1, 0, "RegisteredSingleton");
+    qmlRegisterType(testFileUrl("Comps/OverlayDrawer.qml"), "Comps", 2, 0, "OverlayDrawer");
 }
 
 void tst_qqmllanguage::aliasPropertyChangeSignals()
@@ -8448,6 +8451,38 @@ void tst_qqmllanguage::optionalChainCallOnNullProperty()
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_qqmllanguage::ambiguousComponents()
+{
+    auto e1 = std::make_unique<QQmlEngine>();
+    e1->addImportPath(dataDirectory());
+
+    {
+        QQmlComponent c(e1.get());
+        c.loadUrl(testFileUrl("ambiguousComponents.qml"));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+        QScopedPointer<QObject> o(c.create());
+        QTest::ignoreMessage(QtDebugMsg, "do");
+        QMetaObject::invokeMethod(o.data(), "dodo");
+    }
+
+    QQmlEngine e2;
+    e2.addImportPath(dataDirectory());
+    QQmlComponent c2(&e2);
+    c2.loadUrl(testFileUrl("ambiguousComponents.qml"));
+    QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+
+    QScopedPointer<QObject> o2(c2.create());
+    QTest::ignoreMessage(QtDebugMsg, "do");
+    QMetaObject::invokeMethod(o2.data(), "dodo");
+
+    e1.reset();
+
+    // We can still invoke the function. This means its CU belongs to e2.
+    QTest::ignoreMessage(QtDebugMsg, "do");
+    QMetaObject::invokeMethod(o2.data(), "dodo");
 }
 
 QTEST_MAIN(tst_qqmllanguage)
