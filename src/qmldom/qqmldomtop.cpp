@@ -235,16 +235,33 @@ void DomUniverse::loadFile(const FileToLoad &file, Callback callback, LoadOption
                            std::optional<DomType> fileType)
 {
     DomItem selfItem(shared_from_this());
-    DomType fType =
-            (bool(fileType) ? (*fileType) : fileTypeForPath(selfItem, file.canonicalPath()));
+    const auto &canonicalPath = file.canonicalPath();
+    DomType fType = (bool(fileType) ? (*fileType) : fileTypeForPath(selfItem, canonicalPath));
     switch (fType) {
     case DomType::QmlFile:
     case DomType::QmltypesFile:
     case DomType::QmldirFile:
     case DomType::QmlDirectory:
     case DomType::JsFile: {
-        return parse(file, fType, callback);
-        break;
+        const auto &valueChange = parse(file, fType);
+        // execute callback
+        if (callback) {
+            Path p;
+            if (fType == DomType::QmlFile)
+                p = Paths::qmlFileInfoPath(canonicalPath);
+            else if (fType == DomType::QmltypesFile)
+                p = Paths::qmltypesFileInfoPath(canonicalPath);
+            else if (fType == DomType::QmldirFile)
+                p = Paths::qmldirFileInfoPath(canonicalPath);
+            else if (fType == DomType::QmlDirectory)
+                p = Paths::qmlDirectoryInfoPath(canonicalPath);
+            else if (fType == DomType::JsFile)
+                p = Paths::jsFileInfoPath(canonicalPath);
+            else
+                Q_ASSERT(false);
+            callback(p, valueChange.formerItem, valueChange.currentItem);
+        }
+        return;
     }
     default:
         selfItem.addError(
@@ -301,7 +318,7 @@ updateEntry(const DomItem &univ, const std::shared_ptr<T> &newItem,
     return qMakePair(oldValue, newValue);
 }
 
-void DomUniverse::parse(const FileToLoad &file, DomType fType, Callback callback)
+DomUniverse::ValueChange DomUniverse::parse(const FileToLoad &file, DomType fType)
 {
     QString canonicalPath = file.canonicalPath();
     QString code = file.content() ? file.content()->data : QString();
@@ -398,25 +415,7 @@ void DomUniverse::parse(const FileToLoad &file, DomType fType, Callback callback
             Q_ASSERT(false);
         }
     }
-
-    // to do: tell observers?
-    // execute callback
-    if (callback) {
-        Path p;
-        if (fType == DomType::QmlFile)
-            p = Paths::qmlFileInfoPath(canonicalPath);
-        else if (fType == DomType::QmltypesFile)
-            p = Paths::qmltypesFileInfoPath(canonicalPath);
-        else if (fType == DomType::QmldirFile)
-            p = Paths::qmldirFileInfoPath(canonicalPath);
-        else if (fType == DomType::QmlDirectory)
-            p = Paths::qmlDirectoryInfoPath(canonicalPath);
-        else if (fType == DomType::JsFile)
-            p = Paths::jsFileInfoPath(canonicalPath);
-        else
-            Q_ASSERT(false);
-        callback(p, oldValue, newValue);
-    }
+    return { oldValue, newValue };
 }
 
 void DomUniverse::removePath(const QString &path)

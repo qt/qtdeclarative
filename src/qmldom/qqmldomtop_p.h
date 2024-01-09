@@ -199,7 +199,6 @@ public:
 
     void loadFile(const FileToLoad &file, Callback callback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>());
-    void parse(const FileToLoad &file, DomType fType, Callback callback);
 
     void removePath(const QString &dir);
 
@@ -321,6 +320,17 @@ private:
     // contains either Content with the timestamp when it was read or an Error
     using ReadResult = std::variant<ContentWithDate, ErrorMessage>;
     ReadResult readFileContent(const QString &canonicalPath) const;
+
+    // Helper structure reflecting the change in the map after parsing completed
+    // formerItem - DomItem representing value existing in the map before the parsing.
+    // Might be empty (if didn't exist / failure) or equal to currentItem
+    // currentItem - DomItem representing current map value
+    struct ValueChange
+    {
+        DomItem formerItem;
+        DomItem currentItem;
+    };
+    ValueChange parse(const FileToLoad &file, DomType fType);
 
     std::shared_ptr<QmlFile> parseQmlFile(const QString &code, const FileToLoad &file,
                                           const QDateTime &contentDate);
