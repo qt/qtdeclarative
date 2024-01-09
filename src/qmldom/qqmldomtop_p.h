@@ -313,6 +313,9 @@ public:
     }
 
 private:
+    QString readFileContent(const QString &canonicalPath, QDateTime &contentDate,
+                            QVector<ErrorMessage> &errors);
+
     std::shared_ptr<QmlFile> parseQmlFile(const QString &code, const FileToLoad &file,
                                           const QDateTime &contentDate);
     std::shared_ptr<JsFile> parseJsFile(const QString &code, const FileToLoad &file,

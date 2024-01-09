@@ -313,7 +313,7 @@ void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadO
     DomItem oldValue; // old ExternalItemPair (might be empty, or equal to newValue)
     DomItem newValue; // current ExternalItemPair
     DomItem univ = DomItem(shared_from_this());
-    QVector<ErrorMessage> messages;
+    QVector<ErrorMessage> errors;
 
     auto getValue = [fType, this, &canonicalPath]() -> std::shared_ptr<ExternalItemPairBase> {
         if (fType == DomType::QmlFile)
@@ -334,7 +334,7 @@ void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadO
         QFile file(canonicalPath);
         QFileInfo path(canonicalPath);
         if (canonicalPath.isEmpty()) {
-            messages.append(myErrors().error(tr("Non existing path %1").arg(canonicalPath)));
+            errors.append(myErrors().error(tr("Non existing path %1").arg(canonicalPath)));
             skipParse = true; // nothing to parse from the non-existing path
         }
         {
@@ -351,21 +351,7 @@ void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadO
             }
         }
         if (!skipParse) {
-            contentDate = QDateTime::currentDateTimeUtc();
-            if (path.isDir()) {
-                code = QDir(canonicalPath)
-                               .entryList(QDir::NoDotAndDotDot | QDir::Files, QDir::Name)
-                               .join(QLatin1Char('\n'));
-            } else if (!file.open(QIODevice::ReadOnly)) {
-                code = QStringLiteral(u"");
-                messages.append(
-                        myErrors().error(tr("Error opening path %1: %2 %3")
-                                                 .arg(canonicalPath, QString::number(file.error()),
-                                                      file.errorString())));
-            } else {
-                code = QString::fromUtf8(file.readAll());
-                file.close();
-            }
+            code = readFileContent(canonicalPath, contentDate, errors);
         }
     }
     if (!skipParse) {
@@ -417,9 +403,9 @@ void DomUniverse::parse(const FileToLoad &file, DomType fType, LoadOptions loadO
         }
     }
 
-    for (auto it = messages.begin(), end = messages.end(); it != end; ++it)
+    for (auto it = errors.begin(), end = errors.end(); it != end; ++it)
         newValue.addError(std::move(*it));
-    messages.clear();
+    errors.clear();
 
     // to do: tell observers?
     // execute callback
@@ -453,6 +439,32 @@ void DomUniverse::removePath(const QString &path)
     m_qmlFileWithPath.removeIf(toDelete);
     m_jsFileWithPath.removeIf(toDelete);
     m_qmltypesFileWithPath.removeIf(toDelete);
+}
+
+QString DomUniverse::readFileContent(const QString &canonicalPath, QDateTime &contentDate,
+                                     QVector<ErrorMessage> &errors)
+{
+    if (canonicalPath.isEmpty()) {
+        errors.append(myErrors().error(tr("Non existing path %1").arg(canonicalPath)));
+        return QString();
+    }
+    QFile file(canonicalPath);
+    QFileInfo fileInfo(canonicalPath);
+    contentDate = QDateTime::currentDateTimeUtc();
+    if (fileInfo.isDir()) {
+        return QDir(canonicalPath)
+                .entryList(QDir::NoDotAndDotDot | QDir::Files, QDir::Name)
+                .join(QLatin1Char('\n'));
+    }
+    if (!file.open(QIODevice::ReadOnly)) {
+        errors.append(myErrors().error(
+                tr("Error opening path %1: %2 %3")
+                        .arg(canonicalPath, QString::number(file.error()), file.errorString())));
+        return QString();
+    }
+    auto content = QString::fromUtf8(file.readAll());
+    file.close();
+    return content;
 }
 
 std::shared_ptr<QmlFile> DomUniverse::parseQmlFile(const QString &code, const FileToLoad &file,
