@@ -29,7 +29,7 @@ struct QQmlNullableValue
         , m_isNull(o.m_isNull)
     {}
 
-    QQmlNullableValue(QQmlNullableValue<T> &&o)
+    QQmlNullableValue(QQmlNullableValue<T> &&o) noexcept
         : m_value(std::move(o.value))
         , m_isNull(std::exchange(o.m_isNull, true))
     {}
@@ -39,7 +39,7 @@ struct QQmlNullableValue
         , m_isNull(false)
     {}
 
-    QQmlNullableValue(T &&t)
+    QQmlNullableValue(T &&t) noexcept
         : m_value(std::move(t))
         , m_isNull(false)
     {}
@@ -53,7 +53,7 @@ struct QQmlNullableValue
         return *this;
     }
 
-    QQmlNullableValue<T> &operator=(QQmlNullableValue<T> &&o)
+    QQmlNullableValue<T> &operator=(QQmlNullableValue<T> &&o) noexcept
     {
         if (&o != this) {
             m_value = std::move(o.m_value);
@@ -69,7 +69,7 @@ struct QQmlNullableValue
         return *this;
     }
 
-    QQmlNullableValue<T> &operator=(T &&t)
+    QQmlNullableValue<T> &operator=(T &&t) noexcept
     {
         m_value = std::move(t);
         m_isNull = false;
